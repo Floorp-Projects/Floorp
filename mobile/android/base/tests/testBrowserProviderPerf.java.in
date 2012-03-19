@@ -1,0 +1,130 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.SystemClock;
+import android.util.Log;
+
+import java.lang.reflect.Method;
+import java.util.UUID;
+import java.util.Random;
+
+/*
+ * This test is meant to exercise the performance of Fennec's
+ * history and bookmarks content provider.
+ */
+public class testBrowserProviderPerf extends ContentProviderTest {
+    private final int NUMBER_OF_URLS = 10000;
+    private final int NUMBER_OF_KNOWN_URLS = 200;
+    private final int BATCH_SIZE = 500;
+
+    private final String KNOWN_PREFIX = "mymozillatest";
+
+    private Method mFilterMethod;
+    private Random mGenerator;
+
+    private Uri mHistoryUri;
+    private String mHistoryTitleCol;
+    private String mHistoryUrlCol;
+    private String mHistoryVisitsCol;
+    private String mHistoryFaviconCol;
+    private String mHistoryThumbnailCol;
+    private String mHistoryLastVisitedCol;
+
+    private void loadFilterMethod() throws Exception {
+        Class browserDBClass = mClassLoader.loadClass("org.mozilla.gecko.db.BrowserDB");
+
+        mFilterMethod =
+            browserDBClass.getDeclaredMethod("filter", ContentResolver.class,
+                                             CharSequence.class, int.class);
+    }
+
+    private void loadContractInfo() throws Exception {
+        mHistoryUri = getContentUri("History");
+
+        mHistoryTitleCol = getStringColumn("History", "TITLE");
+        mHistoryUrlCol = getStringColumn("History", "URL");
+        mHistoryVisitsCol = getStringColumn("History", "VISITS");
+        mHistoryLastVisitedCol = getStringColumn("History", "DATE_LAST_VISITED");
+        mHistoryFaviconCol = getStringColumn("History", "FAVICON");
+    }
+
+    private ContentValues createHistoryEntry(String title, String url, int visits,
+            long lastVisited, byte[] favicon) throws Exception {
+        ContentValues historyEntry = new ContentValues();
+
+        historyEntry.put(mHistoryTitleCol, title);
+        historyEntry.put(mHistoryUrlCol, url);
+        historyEntry.put(mHistoryVisitsCol, visits);
+        historyEntry.put(mHistoryLastVisitedCol, lastVisited);
+        historyEntry.put(mHistoryFaviconCol, favicon);
+
+        return historyEntry;
+    }
+
+    private ContentValues createRandomHistoryEntry() throws Exception {
+        return createRandomHistoryEntry("");
+    }
+
+    private ContentValues createRandomHistoryEntry(String knownPrefix) throws Exception {
+        String randomStr = knownPrefix + UUID.randomUUID().toString();
+        int visits = mGenerator.nextInt(500);
+
+        return createHistoryEntry(randomStr, randomStr, visits,
+            System.currentTimeMillis(), randomStr.getBytes("UTF8"));
+    }
+
+    private void addTonsOfUrls() throws Exception {
+        ContentValues[] entries = new ContentValues[BATCH_SIZE];
+
+        for (int i = 0; i < NUMBER_OF_URLS / BATCH_SIZE; i++) {
+            entries = new ContentValues[BATCH_SIZE];
+
+            for (int j = 0; j < BATCH_SIZE; j++) {
+                entries[j] = createRandomHistoryEntry();
+            }
+
+            mProvider.bulkInsert(mHistoryUri, entries);
+        }
+
+        entries = new ContentValues[NUMBER_OF_KNOWN_URLS];
+        for (int i = 0; i < NUMBER_OF_KNOWN_URLS; i++) {
+            entries[i] = createRandomHistoryEntry(KNOWN_PREFIX);
+        }
+
+        mProvider.bulkInsert(mHistoryUri, entries);
+    }
+
+    public void setUp() throws Exception {
+        super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY");
+
+        mGenerator = new Random(19580427);
+
+        loadContractInfo();
+        loadFilterMethod();
+    }
+
+    public void testBrowserProviderPerf() throws Exception {
+        setTestType("talos");
+
+        addTonsOfUrls();
+
+        long start = SystemClock.uptimeMillis();
+
+        Cursor c = (Cursor) mFilterMethod.invoke(null, mResolver, KNOWN_PREFIX, 100);
+        c.getCount(); // ensure query is not lazy loaded
+
+        long end = SystemClock.uptimeMillis();
+
+        mAsserter.dumpLog("__start_report" + Long.toString(end - start) + "__end_report");
+    }
+
+    public void tearDown() throws Exception {
+        super.tearDown();
+    }
+}
