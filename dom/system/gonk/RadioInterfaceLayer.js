@@ -194,15 +194,15 @@ RadioInterfaceLayer.prototype = {
         // This one will handle its own notifications.
         this.handleEnumerateCalls(message.calls);
         break;
-      case "registrationstatechange":
-        this.updateDataConnection(message.registrationState);
+      case "voiceregistrationstatechange":
+        this.updateDataConnection(message.voiceRegistrationState);
         break;
-      case "gprsregistrationstatechange":
-        let state = message.gprsRegistrationState;
+      case "dataregistrationstatechange":
+        let state = message.dataRegistrationState;
         this.updateDataConnection(state);
 
         //TODO for simplicity's sake, for now we only look at
-        // gprsRegistrationState for the radio registration state.
+        // dataRegistrationState for the radio registration state.
 
         if (!state || state.regState == RIL.NETWORK_CREG_STATE_UNKNOWN) {
           this.resetRadioState();
