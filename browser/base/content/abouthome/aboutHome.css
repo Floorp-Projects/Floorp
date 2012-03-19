@@ -54,10 +54,6 @@ html {
 
 body {
   margin: 0;
-  height: 100%;
-}
-
-#container {
   display: -moz-box;
   -moz-box-orient: vertical;
   width: 100%;
