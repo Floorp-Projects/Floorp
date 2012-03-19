@@ -425,7 +425,7 @@ void *_mmap(void *addr, size_t length, int prot, int flags,
 #endif
 
 #ifdef MOZ_MEMORY_DARWIN
-static const bool __isthreaded = true;
+static const bool isthreaded = true;
 #endif
 
 #if defined(MOZ_MEMORY_SOLARIS) && defined(MAP_ALIGN) && !defined(JEMALLOC_NEVER_USES_MAP_ALIGN)
@@ -461,7 +461,7 @@ static const bool __isthreaded = true;
 #endif
 #define PIC
 #ifndef MOZ_MEMORY_DARWIN
-static const bool __isthreaded = true;
+static const bool isthreaded = true;
 #else
 #  define NO_TLS
 #endif
@@ -1566,7 +1566,7 @@ static bool
 malloc_mutex_init(malloc_mutex_t *mutex)
 {
 #if defined(MOZ_MEMORY_WINDOWS)
-	if (__isthreaded)
+	if (isthreaded)
 		if (! __crtInitCritSecAndSpinCount(mutex, _CRT_SPINCOUNT))
 			return (true);
 #elif defined(MOZ_MEMORY_DARWIN)
@@ -1603,7 +1603,7 @@ malloc_mutex_lock(malloc_mutex_t *mutex)
 #elif defined(MOZ_MEMORY)
 	pthread_mutex_lock(mutex);
 #else
-	if (__isthreaded)
+	if (isthreaded)
 		_SPINLOCK(&mutex->lock);
 #endif
 }
@@ -1619,7 +1619,7 @@ malloc_mutex_unlock(malloc_mutex_t *mutex)
 #elif defined(MOZ_MEMORY)
 	pthread_mutex_unlock(mutex);
 #else
-	if (__isthreaded)
+	if (isthreaded)
 		_SPINUNLOCK(&mutex->lock);
 #endif
 }
@@ -1628,7 +1628,7 @@ static bool
 malloc_spin_init(malloc_spinlock_t *lock)
 {
 #if defined(MOZ_MEMORY_WINDOWS)
-	if (__isthreaded)
+	if (isthreaded)
 		if (! __crtInitCritSecAndSpinCount(lock, _CRT_SPINCOUNT))
 			return (true);
 #elif defined(MOZ_MEMORY_DARWIN)
@@ -1663,7 +1663,7 @@ malloc_spin_lock(malloc_spinlock_t *lock)
 #elif defined(MOZ_MEMORY)
 	pthread_mutex_lock(lock);
 #else
-	if (__isthreaded)
+	if (isthreaded)
 		_SPINLOCK(&lock->lock);
 #endif
 }
@@ -1678,7 +1678,7 @@ malloc_spin_unlock(malloc_spinlock_t *lock)
 #elif defined(MOZ_MEMORY)
 	pthread_mutex_unlock(lock);
 #else
-	if (__isthreaded)
+	if (isthreaded)
 		_SPINUNLOCK(&lock->lock);
 #endif
 }
@@ -1733,7 +1733,7 @@ malloc_spin_lock(pthread_mutex_t *lock)
 {
 	unsigned ret = 0;
 
-	if (__isthreaded) {
+	if (isthreaded) {
 		if (_pthread_mutex_trylock(lock) != 0) {
 			unsigned i;
 			volatile unsigned j;
@@ -1766,7 +1766,7 @@ static inline void
 malloc_spin_unlock(pthread_mutex_t *lock)
 {
 
-	if (__isthreaded)
+	if (isthreaded)
 		_pthread_mutex_unlock(lock);
 }
 #endif
@@ -2963,7 +2963,7 @@ choose_arena(void)
 	 * introduces a bootstrapping issue.
 	 */
 #ifndef NO_TLS
-	if (__isthreaded == false) {
+	if (isthreaded == false) {
 	    /* Avoid the overhead of TLS for single-threaded operation. */
 	    return (arenas[0]);
 	}
@@ -2979,7 +2979,7 @@ choose_arena(void)
 		assert(ret != NULL);
 	}
 #else
-	if (__isthreaded && narenas > 1) {
+	if (isthreaded && narenas > 1) {
 		unsigned long ind;
 
 		/*
@@ -3036,7 +3036,7 @@ choose_arena_hard(void)
 {
 	arena_t *ret;
 
-	assert(__isthreaded);
+	assert(isthreaded);
 
 #ifdef MALLOC_BALANCE
 	/* Seed the PRNG used for arena load balancing. */
