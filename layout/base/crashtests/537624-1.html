@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var a = document.getElementById("a");
+  var b = document.getElementById("b");
+  a.insertBefore(b, a.firstChild);
+}
+
+</script>
+</head>
+
+<body onload="boom();"><span id="a"><div></div></span><span id="b"><span style="display: none;"></span><span style="display: none;"></span></span></body>
+
+</html>

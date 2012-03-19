@@ -958,76 +958,14 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
                   aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT &&
                   aEvent->eventStructType != NS_GESTURENOTIFY_EVENT &&
                   aEvent->eventStructType != NS_MOZTOUCH_EVENT &&
-#ifdef MOZ_TOUCH
                   aEvent->eventStructType != NS_TOUCH_EVENT &&
-#endif
                   aEvent->eventStructType != NS_QUERY_CONTENT_EVENT))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
   const nsGUIEvent* GUIEvent = static_cast<const nsGUIEvent*>(aEvent);
-#ifdef MOZ_TOUCH
   return GetEventCoordinatesRelativeTo(aEvent,
                                        GUIEvent->refPoint,
                                        aFrame);
-#else
-  if (!GUIEvent->widget)
-    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-
-  nsIView* view = aFrame->GetView();
-  if (view) {
-    nsIWidget* widget = view->GetWidget();
-    if (widget && widget == GUIEvent->widget) {
-      // Special case this cause it happens a lot.
-      // This also fixes bug 664707, events in the extra-special case of select
-      // dropdown popups that are transformed.
-      nsPresContext* presContext = aFrame->PresContext();
-      nsPoint pt(presContext->DevPixelsToAppUnits(GUIEvent->refPoint.x),
-                 presContext->DevPixelsToAppUnits(GUIEvent->refPoint.y));
-      return pt - view->ViewToWidgetOffset();
-    }
-  }
-
-  /* If we walk up the frame tree and discover that any of the frames are
-   * transformed, we need to do extra work to convert from the global
-   * space to the local space.
-   */
-  nsIFrame* rootFrame = aFrame;
-  bool transformFound = false;
-
-  for (nsIFrame* f = aFrame; f; f = GetCrossDocParentFrame(f)) {
-    if (f->IsTransformed())
-      transformFound = true;
-    rootFrame = f;
-  }
-
-  nsIView* rootView = rootFrame->GetView();
-  if (!rootView)
-    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-
-  nsPoint widgetToView = TranslateWidgetToView(rootFrame->PresContext(),
-                               GUIEvent->widget, GUIEvent->refPoint,
-                               rootView);
-
-  if (widgetToView == nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE))
-    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-
-  // Convert from root document app units to app units of the document aFrame
-  // is in.
-  PRInt32 rootAPD = rootFrame->PresContext()->AppUnitsPerDevPixel();
-  PRInt32 localAPD = aFrame->PresContext()->AppUnitsPerDevPixel();
-  widgetToView = widgetToView.ConvertAppUnits(rootAPD, localAPD);
-
-  /* If we encountered a transform, we can't do simple arithmetic to figure
-   * out how to convert back to aFrame's coordinates and must use the CTM.
-   */
-  if (transformFound)
-    return TransformRootPointToFrame(aFrame, widgetToView);
-
-  /* Otherwise, all coordinate systems are translations of one another,
-   * so we can just subtract out the different.
-   */
-  return widgetToView - aFrame->GetOffsetToCrossDoc(rootFrame);
-#endif
 }
 
 nsPoint
@@ -4054,9 +3992,9 @@ nsLayoutUtils::GetRectDifferenceStrips(const nsRect& aR1, const nsRect& aR2,
 }
 
 nsDeviceContext*
-nsLayoutUtils::GetDeviceContextForScreenInfo(nsIDocShell* aDocShell)
+nsLayoutUtils::GetDeviceContextForScreenInfo(nsPIDOMWindow* aWindow)
 {
-  nsCOMPtr<nsIDocShell> docShell = aDocShell;
+  nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
   while (docShell) {
     // Now make sure our size is up to date.  That will mean that the device
     // context does the right thing on multi-monitor systems when we return it to

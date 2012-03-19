@@ -148,9 +148,15 @@ function test()
     return ios.newURI(aSpec, null, null);
   };
 
-  // Favicon data to store
-  fs.setFaviconDataFromDataURL(uri(testURIs[1]), expectedURIs[1],
-                               (Date.now() + 60 * 60 * 24 * 1000) * 1000);
+  // Set the favicon data.  Note that the "moz-anno:" protocol requires the
+  // favicon to be stored in the database, but the replaceFaviconDataFromDataURL
+  // function will not save the favicon unless it is associated with a page.
+  // Thus, we must associate the icon with a page explicitly in order for it to
+  // be visible through the protocol.
+  fs.replaceFaviconDataFromDataURL(uri(testURIs[1]), expectedURIs[1],
+                                   (Date.now() + 60 * 60 * 24 * 1000) * 1000);
+  fs.setAndFetchFaviconForPage(uri("http://example.com/favicon_annotations"),
+                               uri(testURIs[1]), true);
 
   // And start our test process.
   loadNextTest();
