@@ -703,7 +703,7 @@ XPCJSRuntime::GCCallback(JSRuntime *rt, JSGCStatus status)
 }
 
 /* static */ void
-XPCJSRuntime::FinalizeCallback(JSContext *cx, JSFinalizeStatus status)
+XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status)
 {
     XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
     if (!self)
@@ -734,7 +734,7 @@ XPCJSRuntime::FinalizeCallback(JSContext *cx, JSFinalizeStatus status)
                 Enumerate(WrappedJSDyingJSObjectFinder, dyingWrappedJSArray);
 
             // Find dying scopes.
-            XPCWrappedNativeScope::FinishedMarkPhaseOfGC(cx, self);
+            XPCWrappedNativeScope::StartFinalizationPhaseOfGC(fop, self);
 
             // Sweep compartments.
             self->GetCompartmentMap().EnumerateRead((XPCCompartmentMap::EnumReadFunction)
@@ -850,7 +850,7 @@ XPCJSRuntime::FinalizeCallback(JSContext *cx, JSFinalizeStatus status)
 #endif
 
             // Sweep scopes needing cleanup
-            XPCWrappedNativeScope::FinishedFinalizationPhaseOfGC(cx);
+            XPCWrappedNativeScope::FinishedFinalizationPhaseOfGC();
 
             // Now we are going to recycle any unused WrappedNativeTearoffs.
             // We do this by iterating all the live callcontexts (on all

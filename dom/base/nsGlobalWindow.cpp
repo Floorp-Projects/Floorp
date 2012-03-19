@@ -808,7 +808,7 @@ public:
     return true;
   }
   JSString *obj_toString(JSContext *cx, JSObject *wrapper);
-  void finalize(JSContext *cx, JSObject *proxy);
+  void finalize(JSFreeOp *fop, JSObject *proxy);
 
   static nsOuterWindowProxy singleton;
 };
@@ -823,7 +823,7 @@ nsOuterWindowProxy::obj_toString(JSContext *cx, JSObject *proxy)
 }
 
 void
-nsOuterWindowProxy::finalize(JSContext *cx, JSObject *proxy)
+nsOuterWindowProxy::finalize(JSFreeOp *fop, JSObject *proxy)
 {
   nsISupports *global =
     static_cast<nsISupports*>(js::GetProxyExtra(proxy, 0).toPrivate());

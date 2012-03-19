@@ -314,16 +314,16 @@ struct JSCompartment
 
     /* Set of all unowned base shapes in the compartment. */
     js::BaseShapeSet             baseShapes;
-    void sweepBaseShapeTable(JSContext *cx);
+    void sweepBaseShapeTable();
 
     /* Set of initial shapes in the compartment. */
     js::InitialShapeSet          initialShapes;
-    void sweepInitialShapeTable(JSContext *cx);
+    void sweepInitialShapeTable();
 
     /* Set of default 'new' or lazy types in the compartment. */
     js::types::TypeObjectSet     newTypeObjects;
     js::types::TypeObjectSet     lazyTypeObjects;
-    void sweepNewTypeObjectTable(JSContext *cx, js::types::TypeObjectSet &table);
+    void sweepNewTypeObjectTable(js::types::TypeObjectSet &table);
 
     js::types::TypeObject        *emptyTypeObject;
 
@@ -384,7 +384,7 @@ struct JSCompartment
 
     void markTypes(JSTracer *trc);
     void discardJitCode(JSContext *cx);
-    void sweep(JSContext *cx, bool releaseTypes);
+    void sweep(js::FreeOp *fop, bool releaseTypes);
     void purge();
 
     void setGCLastBytes(size_t lastBytes, size_t lastMallocBytes, js::JSGCInvocationKind gckind);
@@ -459,7 +459,7 @@ struct JSCompartment
     void clearTraps(JSContext *cx);
 
   private:
-    void sweepBreakpoints(JSContext *cx);
+    void sweepBreakpoints(js::FreeOp *fop);
 
   public:
     js::WatchpointMap *watchpointMap;

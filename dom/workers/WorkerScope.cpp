@@ -159,9 +159,9 @@ protected:
   }
 
   virtual void
-  _Finalize(JSContext* aCx) MOZ_OVERRIDE
+  _Finalize(JSFreeOp* aFop) MOZ_OVERRIDE
   {
-    EventTarget::_Finalize(aCx);
+    EventTarget::_Finalize(aFop);
   }
 
 private:
@@ -826,14 +826,14 @@ private:
   }
 
   static void
-  Finalize(JSContext* aCx, JSObject* aObj)
+  Finalize(JSFreeOp* aFop, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == Class());
     DedicatedWorkerGlobalScope* scope =
       UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj, Class());
     if (scope) {
       DestroyProtoOrIfaceCache(aObj);
-      scope->_Finalize(aCx);
+      scope->_Finalize(aFop);
     }
   }
 

@@ -496,9 +496,9 @@ strictargs_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static void
-args_finalize(JSContext *cx, JSObject *obj)
+args_finalize(FreeOp *fop, JSObject *obj)
 {
-    cx->free_(reinterpret_cast<void *>(obj->asArguments().data()));
+    fop->free_(reinterpret_cast<void *>(obj->asArguments().data()));
 }
 
 static void

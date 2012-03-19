@@ -2043,7 +2043,7 @@ WorkerPrivateParent<Derived>::_Trace(JSTracer* aTrc)
 
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::_Finalize(JSContext* aCx)
+WorkerPrivateParent<Derived>::_Finalize(JSFreeOp* aFop)
 {
   AssertIsOnParentThread();
 
@@ -2053,7 +2053,7 @@ WorkerPrivateParent<Derived>::_Finalize(JSContext* aCx)
   // Clear the JS object.
   mJSObject = nsnull;
 
-  if (!TerminatePrivate(aCx, true)) {
+  if (!TerminatePrivate(aFop->context, true)) {
     NS_WARNING("Failed to terminate!");
   }
 
@@ -2069,7 +2069,7 @@ WorkerPrivateParent<Derived>::_Finalize(JSContext* aCx)
     NS_ADDREF(extraSelfRef = this);
   }
 
-  EventTarget::_Finalize(aCx);
+  EventTarget::_Finalize(aFop);
 
   if (extraSelfRef) {
     nsCOMPtr<nsIRunnable> runnable =

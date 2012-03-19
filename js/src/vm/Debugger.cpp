@@ -1462,9 +1462,9 @@ Debugger::trace(JSTracer *trc)
 }
 
 void
-Debugger::sweepAll(JSContext *cx)
+Debugger::sweepAll(FreeOp *fop)
 {
-    JSRuntime *rt = cx->runtime;
+    JSRuntime *rt = fop->runtime();
 
     for (JSCList *p = &rt->debuggerList; (p = JS_NEXT_LINK(p)) != &rt->debuggerList;) {
         Debugger *dbg = Debugger::fromLinks(p);
@@ -1476,7 +1476,7 @@ Debugger::sweepAll(JSContext *cx)
              * objects, this must be done before finalize time.
              */
             for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
-                dbg->removeDebuggeeGlobal(cx, e.front(), NULL, &e);
+                dbg->removeDebuggeeGlobal(fop->context, e.front(), NULL, &e);
         }
 
     }
@@ -1487,7 +1487,7 @@ Debugger::sweepAll(JSContext *cx)
         for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
             GlobalObject *global = e.front();
             if (IsAboutToBeFinalized(global))
-                detachAllDebuggersFromGlobal(cx, global, &e);
+                detachAllDebuggersFromGlobal(fop->context, global, &e);
         }
     }
 }
@@ -1503,13 +1503,13 @@ Debugger::detachAllDebuggersFromGlobal(JSContext *cx, GlobalObject *global,
 }
 
 void
-Debugger::finalize(JSContext *cx, JSObject *obj)
+Debugger::finalize(FreeOp *fop, JSObject *obj)
 {
     Debugger *dbg = fromJSObject(obj);
     if (!dbg)
         return;
     JS_ASSERT(dbg->debuggees.empty());
-    cx->delete_(dbg);
+    fop->delete_(dbg);
 }
 
 Class Debugger::jsclass = {

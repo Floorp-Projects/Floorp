@@ -747,7 +747,7 @@ public:
     void UnmarkSkippableJSHolders();
 
     static void GCCallback(JSRuntime *rt, JSGCStatus status);
-    static void FinalizeCallback(JSContext *cx, JSFinalizeStatus status);
+    static void FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status);
 
     inline void AddVariantRoot(XPCTraceableVariant* variant);
     inline void AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS);
@@ -1562,10 +1562,10 @@ public:
     SuspectAllWrappers(XPCJSRuntime* rt, nsCycleCollectionTraversalCallback &cb);
 
     static void
-    FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt);
+    StartFinalizationPhaseOfGC(JSFreeOp *fop, XPCJSRuntime* rt);
 
     static void
-    FinishedFinalizationPhaseOfGC(JSContext* cx);
+    FinishedFinalizationPhaseOfGC();
 
     static void
     MarkAllWrappedNativesAndProtos();
@@ -2308,7 +2308,7 @@ public:
         {NS_ASSERTION(!mScriptableInfo, "leak here!"); mScriptableInfo = si;}
 
     bool CallPostCreatePrototype(XPCCallContext& ccx);
-    void JSProtoObjectFinalized(JSContext *cx, JSObject *obj);
+    void JSProtoObjectFinalized(js::FreeOp *fop, JSObject *obj);
 
     void SystemIsBeingShutDown();
 

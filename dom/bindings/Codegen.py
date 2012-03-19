@@ -470,7 +470,7 @@ class CGClassFinalizeHook(CGAbstractClassHook):
     A hook for finalize, used to release our native object.
     """
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'obj')]
+        args = [Argument('JSFreeOp*', 'fop'), Argument('JSObject*', 'obj')]
         CGAbstractClassHook.__init__(self, descriptor, FINALIZE_HOOK_NAME,
                                      'void', args)
 

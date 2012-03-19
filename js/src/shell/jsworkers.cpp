@@ -576,7 +576,7 @@ class ThreadPool
     }
 
 
-    static void jsFinalize(JSContext *cx, JSObject *obj) {
+    static void jsFinalize(JSFreeOp *fop, JSObject *obj) {
         if (ThreadPool *tp = unwrap(obj))
             delete tp;
     }
@@ -712,7 +712,7 @@ class Worker MOZ_FINAL : public WorkerParent
         }
     }
 
-    static void jsFinalize(JSContext *cx, JSObject *obj) {
+    static void jsFinalize(JSFreeOp *fop, JSObject *obj) {
         JS_ASSERT(JS_GetClass(obj) == &jsWorkerClass);
         if (Worker *w = (Worker *) JS_GetPrivate(obj))
             delete w;

@@ -218,8 +218,9 @@ js_FinishAtomState(JSRuntime *rt)
         return;
     }
 
+    FreeOp fop(rt, false, false, NULL);
     for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront())
-        r.front().asPtr()->finalize(rt);
+        r.front().asPtr()->finalize(&fop);
 }
 
 bool

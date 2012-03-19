@@ -453,9 +453,9 @@ DefinePropertiesAndBrand(JSContext *cx, JSObject *obj, JSPropertySpec *ps, JSFun
 }
 
 void
-GlobalDebuggees_finalize(JSContext *cx, JSObject *obj)
+GlobalDebuggees_finalize(FreeOp *fop, JSObject *obj)
 {
-    cx->delete_((GlobalObject::DebuggerVector *) obj->getPrivate());
+    fop->delete_((GlobalObject::DebuggerVector *) obj->getPrivate());
 }
 
 static Class

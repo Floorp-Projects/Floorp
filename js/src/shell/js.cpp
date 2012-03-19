@@ -4087,14 +4087,14 @@ its_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 }
 
 static void
-its_finalize(JSContext *cx, JSObject *obj)
+its_finalize(JSFreeOp *fop, JSObject *obj)
 {
     jsval *rootedVal;
     if (its_noisy)
         fprintf(gOutFile, "finalizing it\n");
     rootedVal = (jsval *) JS_GetPrivate(obj);
     if (rootedVal) {
-      JS_RemoveValueRoot(cx, rootedVal);
+      JS_RemoveValueRoot(fop->context, rootedVal);
       JS_SetPrivate(obj, NULL);
       delete rootedVal;
     }

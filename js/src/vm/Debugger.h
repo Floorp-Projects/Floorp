@@ -174,7 +174,7 @@ class Debugger {
 
     static void traceObject(JSTracer *trc, JSObject *obj);
     void trace(JSTracer *trc);
-    static void finalize(JSContext *cx, JSObject *obj);
+    static void finalize(FreeOp *fop, JSObject *obj);
     void markKeysInCompartment(JSTracer *tracer);
 
     static Class jsclass;
@@ -263,7 +263,7 @@ class Debugger {
      */
     static void markCrossCompartmentDebuggerObjectReferents(JSTracer *tracer);
     static bool markAllIteratively(GCMarker *trc);
-    static void sweepAll(JSContext *cx);
+    static void sweepAll(FreeOp *fop);
     static void detachAllDebuggersFromGlobal(JSContext *cx, GlobalObject *global,
                                              GlobalObjectSet::Enum *compartmentEnum);
 

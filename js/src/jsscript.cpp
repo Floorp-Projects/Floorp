@@ -1392,27 +1392,27 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
 }
 
 void
-JSScript::finalize(JSContext *cx, bool background)
+JSScript::finalize(FreeOp *fop)
 {
-    js_CallDestroyScriptHook(cx, this);
+    js_CallDestroyScriptHook(fop->context, this);
 
     JS_ASSERT_IF(principals, originPrincipals);
     if (principals)
-        JS_DropPrincipals(cx->runtime, principals);
+        JS_DropPrincipals(fop->runtime(), principals);
     if (originPrincipals)
-        JS_DropPrincipals(cx->runtime, originPrincipals);
+        JS_DropPrincipals(fop->runtime(), originPrincipals);
 
     if (types)
         types->destroy();
 
 #ifdef JS_METHODJIT
-    mjit::ReleaseScriptCode(cx, this);
+    mjit::ReleaseScriptCode(fop->context, this);
 #endif
 
-    destroyScriptCounts(cx);
+    destroyScriptCounts(fop->context);
 
     if (sourceMap)
-        cx->free_(sourceMap);
+        fop->free_(sourceMap);
 
     if (debug) {
         jsbytecode *end = code + length;
@@ -1420,15 +1420,15 @@ JSScript::finalize(JSContext *cx, bool background)
             if (BreakpointSite *site = getBreakpointSite(pc)) {
                 /* Breakpoints are swept before finalization. */
                 JS_ASSERT(site->firstBreakpoint() == NULL);
-                site->clearTrap(cx, NULL, NULL);
+                site->clearTrap(fop->context, NULL, NULL);
                 JS_ASSERT(getBreakpointSite(pc) == NULL);
             }
         }
-        cx->free_(debug);
+        fop->free_(debug);
     }
 
     JS_POISON(data, 0xdb, computedSizeOfData());
-    cx->free_(data);
+    fop->free_(data);
 }
 
 namespace js {

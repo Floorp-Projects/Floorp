@@ -1175,13 +1175,13 @@ static const char xml_namespace_str[] = "http://www.w3.org/XML/1998/namespace";
 static const char xmlns_namespace_str[] = "http://www.w3.org/2000/xmlns/";
 
 void
-JSXML::finalize(JSContext *cx, bool builtin)
+JSXML::finalize(FreeOp *fop)
 {
     if (JSXML_HAS_KIDS(this)) {
-        xml_kids.finish(cx);
+        xml_kids.finish(fop->context);
         if (xml_class == JSXML_CLASS_ELEMENT) {
-            xml_namespaces.finish(cx);
-            xml_attrs.finish(cx);
+            xml_namespaces.finish(fop->context);
+            xml_attrs.finish(fop->context);
         }
     }
 #ifdef DEBUG_notme
@@ -7901,13 +7901,13 @@ xmlfilter_trace(JSTracer *trc, JSObject *obj)
 }
 
 static void
-xmlfilter_finalize(JSContext *cx, JSObject *obj)
+xmlfilter_finalize(FreeOp *fop, JSObject *obj)
 {
     JSXMLFilter *filter = (JSXMLFilter *) obj->getPrivate();
     if (!filter)
         return;
 
-    cx->delete_(filter);
+    fop->delete_(filter);
 }
 
 Class js_XMLFilterClass = {
