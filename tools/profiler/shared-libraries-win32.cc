@@ -51,10 +51,10 @@ struct CodeViewRecord70
   uint32_t signature;
   GUID pdbSignature;
   uint32_t pdbAge;
-  uint8_t pdbFileName[1];
+  char pdbFileName[1];
 };
 
-static bool GetPdbInfo(uintptr_t aStart, nsID& aSignature, uint32_t& aAge)
+static bool GetPdbInfo(uintptr_t aStart, nsID& aSignature, uint32_t& aAge, char** aPdbName)
 {
   if (!aStart) {
     return false;
@@ -95,6 +95,17 @@ static bool GetPdbInfo(uintptr_t aStart, nsID& aSignature, uint32_t& aAge)
   aSignature.m1 = pdbSignature.Data2;
   aSignature.m2 = pdbSignature.Data3;
   memcpy(aSignature.m3, pdbSignature.Data4, sizeof(pdbSignature.Data4));
+
+  // The PDB file name could be different from module filename, so report both
+  // e.g. The PDB for C:\Windows\SysWOW64\ntdll.dll is wntdll.pdb
+  char * leafName = strrchr(debugInfo->pdbFileName, '\\');
+  if (leafName) {
+    // Only report the file portion of the path
+    *aPdbName = leafName + 1;
+  } else {
+    *aPdbName = debugInfo->pdbFileName;
+  }
+
   return true;
 }
 
@@ -110,12 +121,14 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     do {
       nsID pdbSig;
       uint32_t pdbAge;
-      if (GetPdbInfo((uintptr_t)module.modBaseAddr, pdbSig, pdbAge)) {
+      char *pdbName = NULL;
+      if (GetPdbInfo((uintptr_t)module.modBaseAddr, pdbSig, pdbAge, &pdbName)) {
         SharedLibrary shlib((uintptr_t)module.modBaseAddr,
                             (uintptr_t)module.modBaseAddr+module.modBaseSize,
                             0, // DLLs are always mapped at offset 0 on Windows
                             pdbSig,
                             pdbAge,
+                            pdbName,
                             module.szModule);
         sharedLibraryInfo.AddSharedLibrary(shlib);
       }
