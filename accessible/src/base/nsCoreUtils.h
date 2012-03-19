@@ -181,14 +181,13 @@ public:
    * @param aStartOffset  an offset inside the start node
    * @param aEndNode      end node of a range
    * @param aEndOffset    an offset inside the end node
-   * @param aVertical     how to align vertically, specified in percents, and when.
-   * @param aHorizontal     how to align horizontally, specified in percents, and when.
+   * @param aVPercent     how to align vertically, specified in percents
+   * @param aHPercent     how to align horizontally, specified in percents
    */
   static nsresult ScrollSubstringTo(nsIFrame *aFrame,
                                     nsIDOMNode *aStartNode, PRInt32 aStartIndex,
                                     nsIDOMNode *aEndNode, PRInt32 aEndIndex,
-                                    nsIPresShell::ScrollAxis aVertical,
-                                    nsIPresShell::ScrollAxis aHorizontal);
+                                    PRInt16 aVPercent, PRInt16 aHPercent);
 
   /**
    * Scrolls the given frame to the point, used for implememntation of
@@ -203,11 +202,11 @@ public:
 
   /**
    * Converts scroll type constant defined in nsIAccessibleScrollType to
-   * vertical and horizontal parameters.
+   * vertical and horizontal percents.
    */
   static void ConvertScrollTypeToPercents(PRUint32 aScrollType,
-                                          nsIPresShell::ScrollAxis *aVertical,
-                                          nsIPresShell::ScrollAxis *aHorizontal);
+                                          PRInt16 *aVPercent,
+                                          PRInt16 *aHPercent);
 
   /**
    * Returns coordinates relative screen for the top level window.
