@@ -110,94 +110,6 @@ static const char *sExtensionNames[] = {
     NULL
 };
 
-bool
-LibrarySymbolLoader::OpenLibrary(const char *library)
-{
-    PRLibSpec lspec;
-    lspec.type = PR_LibSpec_Pathname;
-    lspec.value.pathname = library;
-
-    mLibrary = PR_LoadLibraryWithFlags(lspec, PR_LD_LAZY | PR_LD_LOCAL);
-    if (!mLibrary)
-        return false;
-
-    return true;
-}
-
-bool
-LibrarySymbolLoader::LoadSymbols(SymLoadStruct *firstStruct, bool tryplatform, const char *prefix)
-{
-    return LoadSymbols(mLibrary, firstStruct, tryplatform ? mLookupFunc : nsnull, prefix);
-}
-
-PRFuncPtr
-LibrarySymbolLoader::LookupSymbol(PRLibrary *lib,
-                                  const char *sym,
-                                  PlatformLookupFunction lookupFunction)
-{
-    PRFuncPtr res = 0;
-
-    // try finding it in the library directly, if we have one
-    if (lib) {
-        res = PR_FindFunctionSymbol(lib, sym);
-    }
-
-    // then try looking it up via the lookup symbol
-    if (!res && lookupFunction) {
-        res = lookupFunction(sym);
-    }
-
-    // finally just try finding it in the process
-    if (!res) {
-        PRLibrary *leakedLibRef;
-        res = PR_FindFunctionSymbolAndLibrary(sym, &leakedLibRef);
-    }
-
-    return res;
-}
-
-bool
-LibrarySymbolLoader::LoadSymbols(PRLibrary *lib,
-                                 SymLoadStruct *firstStruct,
-                                 PlatformLookupFunction lookupFunction,
-                                 const char *prefix)
-{
-    char sbuf[MAX_SYMBOL_LENGTH * 2];
-    int failCount = 0;
-
-    SymLoadStruct *ss = firstStruct;
-    while (ss->symPointer) {
-        *ss->symPointer = 0;
-
-        for (int i = 0; i < MAX_SYMBOL_NAMES; i++) {
-            if (ss->symNames[i] == nsnull)
-                break;
-
-            const char *s = ss->symNames[i];
-            if (prefix && *prefix != 0) {
-                strcpy(sbuf, prefix);
-                strcat(sbuf, ss->symNames[i]);
-                s = sbuf;
-            }
-
-            PRFuncPtr p = LookupSymbol(lib, s, lookupFunction);
-            if (p) {
-                *ss->symPointer = p;
-                break;
-            }
-        }
-
-        if (*ss->symPointer == 0) {
-            fprintf (stderr, "Can't find symbol '%s'\n", ss->symNames[0]);
-            failCount++;
-        }
-
-        ss++;
-    }
-
-    return failCount == 0 ? true : false;
-}
-
 /*
  * XXX - we should really know the ARB/EXT variants of these
  * instead of only handling the symbol if it's exposed directly.
@@ -948,6 +860,7 @@ TiledTextureImage::TiledTextureImage(GLContext* aGL,
     , mGL(aGL)
     , mUseNearestFilter(aUseNearestFilter)
     , mTextureState(Created)
+    , mIterationCallback(nsnull)
 {
     mTileSize = mGL->WantsSmallTiles() ? 256 : mGL->GetMaxTextureSize();
     if (aSize != nsIntSize(0,0)) {
@@ -972,14 +885,19 @@ TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
     }
 
     bool result = true;
-    for (unsigned i = 0; i < mImages.Length(); i++) {
-        int xPos = (i % mColumns) * mTileSize;
-        int yPos = (i / mColumns) * mTileSize;
+    int oldCurrentImage = mCurrentImage;
+    BeginTileIteration();
+    do {
+        nsIntRect tileRect = GetTileRect();
+        int xPos = tileRect.x;
+        int yPos = tileRect.y;
+
         nsIntRegion tileRegion;
-        nsIntRect tileRect = nsIntRect(nsIntPoint(xPos, yPos), mImages[i]->GetSize());
         tileRegion.And(region, tileRect); // intersect with tile
+
         if (tileRegion.IsEmpty())
             continue;
+
         if (mGL->CanUploadSubTextures()) {
           tileRegion.MoveBy(-xPos, -yPos); // translate into tile local space
         } else {
@@ -987,10 +905,17 @@ TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
           tileRect.x = tileRect.y = 0;
           tileRegion = nsIntRegion(tileRect);
         }
-        result &= mImages[i]->DirectUpdate(aSurf,
-                                           tileRegion,
-                                           aFrom + nsIntPoint(xPos, yPos));
-    }
+
+        result &= mImages[mCurrentImage]->
+          DirectUpdate(aSurf, tileRegion, aFrom + nsIntPoint(xPos, yPos));
+
+        // Override a callback cancelling iteration if the texture wasn't valid.
+        // We need to force the update in that situation, or we may end up
+        // showing invalid/out-of-date texture data.
+    } while (NextTile() ||
+             (mTextureState != Valid && mCurrentImage < mImages.Length()));
+    mCurrentImage = oldCurrentImage;
+
     mShaderType = mImages[0]->GetShaderProgramType();
     mTextureState = Valid;
     return result;
@@ -1141,11 +1066,21 @@ void TiledTextureImage::BeginTileIteration()
 
 bool TiledTextureImage::NextTile()
 {
-    if (mCurrentImage + 1 < mImages.Length()) {
-        mCurrentImage++;
-        return true;
-    }
-    return false;
+    bool continueIteration = true;
+
+    if (mIterationCallback)
+        continueIteration = mIterationCallback(this, mCurrentImage,
+                                               mIterationCallbackData);
+
+    mCurrentImage++;
+    return continueIteration && (mCurrentImage < mImages.Length());
+}
+
+void TiledTextureImage::SetIterationCallback(TileIterationCallback aCallback,
+                                             void* aCallbackData)
+{
+    mIterationCallback = aCallback;
+    mIterationCallbackData = aCallbackData;
 }
 
 nsIntRect TiledTextureImage::GetTileRect()

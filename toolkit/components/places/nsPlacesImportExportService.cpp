@@ -2126,36 +2126,6 @@ nsPlacesImportExportService::ImportHTMLFromURI(nsIURI* aURI,
 }
 
 
-NS_IMETHODIMP
-nsPlacesImportExportService::ImportHTMLFromFileToFolder(nsILocalFile* aFile,
-                                                        PRInt64 aFolderId,
-                                                        bool aIsInitialImport)
-{
-  NotifyImportObservers(RESTORE_BEGIN_NSIOBSERVER_TOPIC,
-                        aFolderId,
-                        aIsInitialImport);
-
-  // this version is exposed on the interface and disallows changing of roots
-  nsresult rv = ImportHTMLFromFileInternal(aFile,
-                                           false,
-                                           aFolderId,
-                                           aIsInitialImport);
-
-  if (NS_FAILED(rv)) {
-    NotifyImportObservers(RESTORE_FAILED_NSIOBSERVER_TOPIC,
-                          aFolderId,
-                          aIsInitialImport);
-  }
-  else {
-    NotifyImportObservers(RESTORE_SUCCESS_NSIOBSERVER_TOPIC,
-                          aFolderId,
-                          aIsInitialImport);
-  }
-
-  return rv;
-}
-
-
 nsresult
 nsPlacesImportExportService::ImportHTMLFromFileInternal(nsILocalFile* aFile,
                                                         bool aAllowRootChanges,

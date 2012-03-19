@@ -52,6 +52,8 @@
 #include "methodjit/MethodJIT.h"
 #endif
 
+#include "vm/ObjectImpl-inl.h"
+
 namespace js {
 
 namespace mjit {

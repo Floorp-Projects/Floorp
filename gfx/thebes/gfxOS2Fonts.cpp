@@ -373,13 +373,13 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         PRUint8 fcProperty;
         // add style to pattern
         switch (GetStyle()->style) {
-        case FONT_STYLE_ITALIC:
+        case NS_FONT_STYLE_ITALIC:
             fcProperty = FC_SLANT_ITALIC;
             break;
-        case FONT_STYLE_OBLIQUE:
+        case NS_FONT_STYLE_OBLIQUE:
             fcProperty = FC_SLANT_OBLIQUE;
             break;
-        case FONT_STYLE_NORMAL:
+        case NS_FONT_STYLE_NORMAL:
         default:
             fcProperty = FC_SLANT_ROMAN;
         }
@@ -454,7 +454,7 @@ cairo_scaled_font_t *gfxOS2Font::CairoScaledFont()
     cairo_matrix_t fontMatrix;
     // synthetic oblique by skewing via the font matrix
     if (!mFontEntry->mItalic &&
-        (mStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)))
+        (mStyle.style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)))
     {
         const double kSkewFactor = 0.2126; // 12 deg skew as used in e.g. ftview
         cairo_matrix_init(&fontMatrix, size, 0, -kSkewFactor*size, size, 0, 0);
@@ -595,7 +595,7 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLen
                                          const Parameters* aParams, PRUint32 aFlags)
 {
     NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
 
@@ -629,7 +629,7 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLengt
 #endif
     NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
     NS_ASSERTION(aFlags & TEXT_IS_8BIT, "8bit should have been set");
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
 

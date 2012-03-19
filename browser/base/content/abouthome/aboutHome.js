@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Marco Bonardo <mak77@bonardo.net> (original author)
  *   Mihai Sucan <mihai.sucan@gmail.com>
+ *   Frank Yan <fyan@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -155,6 +156,9 @@ function onLoad(event)
   document.getElementById("searchText").focus();
 
   loadSnippets();
+
+  fitToWidth();
+  window.addEventListener("resize", fitToWidth);
 }
 
 
@@ -210,13 +214,17 @@ function loadSnippets()
   let updateURL = localStorage["snippets-update-url"];
   if (updateURL && (!lastUpdate ||
                     Date.now() - lastUpdate > SNIPPETS_UPDATE_INTERVAL_MS)) {
+    // Try to update from network.
+    let xhr = new XMLHttpRequest();
+    try {
+      xhr.open("GET", updateURL, true);
+    } catch (ex) {
+      showSnippets();
+      return;
+    }
     // Even if fetching should fail we don't want to spam the server, thus
     // set the last update time regardless its results.  Will retry tomorrow.
     localStorage["snippets-last-update"] = Date.now();
-
-    // Try to update from network.
-    let xhr = new XMLHttpRequest();
-    xhr.open('GET', updateURL, true);
     xhr.onerror = function (event) {
       showSnippets();
     };
@@ -260,7 +268,7 @@ function showSnippets()
   let defaultSnippetsElt = document.getElementById("defaultSnippets");
   let entries = defaultSnippetsElt.querySelectorAll("span");
   // Choose a random snippet.  Assume there is always at least one.
-  let randIndex = Math.round(Math.random() * (entries.length - 1));
+  let randIndex = Math.floor(Math.random() * entries.length);
   let entry = entries[randIndex];
   // Inject url in the eventual link.
   if (DEFAULT_SNIPPETS_URLS[randIndex]) {
@@ -269,27 +277,17 @@ function showSnippets()
     // up in the translation.
     if (links.length == 1) {
       links[0].href = DEFAULT_SNIPPETS_URLS[randIndex];
-      activateSnippetsButtonClick(entry);
     }
   }
   // Move the default snippet to the snippets element.
   snippetsElt.appendChild(entry);
 }
 
-/**
- * Searches a single link element in aElt and binds its href to the click
- * action of the snippets button.
- *
- * @param aElt
- *        Element to search the link into.
- */
-function activateSnippetsButtonClick(aElt) {
-  let links = aElt.getElementsByTagName("a");
-  if (links.length == 1) {
-    document.getElementById("snippets")
-            .addEventListener("click", function(aEvent) {
-      if (aEvent.target.nodeName != "a")
-        window.location = links[0].href;
-    }, false);
+function fitToWidth() {
+  if (window.scrollMaxX) {
+    document.body.setAttribute("narrow", "true");
+  } else if (document.body.hasAttribute("narrow")) {
+    document.body.removeAttribute("narrow");
+    fitToWidth();
   }
 }

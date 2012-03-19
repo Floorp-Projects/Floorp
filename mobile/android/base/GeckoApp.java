@@ -1321,7 +1321,7 @@ abstract public class GeckoApp
                 // want to load the image straight away. If tab is still
                 // loading, we only load the favicon once the page's content
                 // is fully loaded (see handleContentLoaded()).
-                if (tab.getState() != tab.STATE_LOADING) {
+                if (tab.getState() != Tab.STATE_LOADING) {
                     mMainHandler.post(new Runnable() {
                         public void run() {
                             loadFavicon(tab);
@@ -1700,7 +1700,7 @@ abstract public class GeckoApp
             // loading it twice
             intent.setAction(Intent.ACTION_MAIN);
             intent.setData(null);
-            passedUri = null;
+            passedUri = "about:empty";
         }
 
         sGeckoThread = new GeckoThread(intent, passedUri, mRestoreSession);
@@ -2379,9 +2379,9 @@ abstract public class GeckoApp
             // if we're not adding a new tab, show the old url
             Tab tab = Tabs.getInstance().getSelectedTab();
             if (tab != null) {
-                Tab.HistoryEntry he = tab.getLastHistoryEntry();
-                if (he != null) {
-                    intent.putExtra(AwesomeBar.CURRENT_URL_KEY, he.mUri);
+                String url = tab.getURL();
+                if (url != null) {
+                    intent.putExtra(AwesomeBar.CURRENT_URL_KEY, url);
                 }
             }
         }

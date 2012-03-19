@@ -1664,12 +1664,22 @@ Tab.prototype = {
   },
 
   sendViewportUpdate: function() {
-    if (BrowserApp.selectedTab != this)
-      return;
-    if (!BrowserApp.isBrowserContentDocumentDisplayed())
-      return;
-    let message = this.getViewport();
-    message.type = "Viewport:Update";
+    let message;
+    if (BrowserApp.selectedTab == this) {
+      // for foreground tabs, send the viewport update unless the document
+      // displayed is different from the content document
+      if (!BrowserApp.isBrowserContentDocumentDisplayed())
+        return;
+      message = this.getViewport();
+      message.type = "Viewport:Update";
+    } else {
+      // for bcakground tabs, request a new display port calculation, so that
+      // when we do switch to that tab, we have the correct display port and
+      // don't need to draw twice (once to allow the first-paint viewport to
+      // get to java, and again once java figures out the display port).
+      message = this.getViewport();
+      message.type = "Viewport:CalculateDisplayPort";
+    }
     let displayPort = sendMessageToJava({ gecko: message });
     if (displayPort != null)
       this.setDisplayPort(message.x, message.y, JSON.parse(displayPort));
@@ -1689,7 +1699,7 @@ Tab.prototype = {
         // event fires; it's not clear that doing so is worth the effort.
         var backgroundColor = null;
         try {
-          let browser = this.selectedBrowser;
+          let browser = BrowserApp.selectedBrowser;
           if (browser) {
             let { contentDocument, contentWindow } = browser;
             let computedStyle = contentWindow.getComputedStyle(contentDocument.body);
@@ -2028,26 +2038,16 @@ Tab.prototype = {
         aMetadata.maxZoom *= scaleRatio;
     }
     ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
-    this.updateViewportSize();
+    this.updateViewportSize(gScreenWidth);
   },
 
   /** Update viewport when the metadata or the window size changes. */
-  updateViewportSize: function updateViewportSize() {
+  updateViewportSize: function updateViewportSize(aOldScreenWidth) {
     // When this function gets called on window resize, we must execute
     // this.sendViewportUpdate() so that refreshDisplayPort is called.
     // Ensure that when making changes to this function that code path
     // is not accidentally removed (the call to sendViewportUpdate() is
     // at the very end).
-
-    if (window.outerWidth == 0 || window.outerHeight == 0) {
-        // this happens sometimes when starting up fennec. we don't want zero
-        // values corrupting our viewport numbers, so ignore this one.
-        return;
-    }
-
-    let oldScreenWidth = gScreenWidth;
-    gScreenWidth = window.outerWidth;
-    gScreenHeight = window.outerHeight;
 
     let browser = this.browser;
     if (!browser)
@@ -2109,7 +2109,7 @@ Tab.prototype = {
     // In all of these cases, we maintain how much actual content is visible
     // within the screen width. Note that "actual content" may be different
     // with respect to CSS pixels because of the CSS viewport size changing.
-    let zoomScale = (screenW * oldBrowserWidth) / (oldScreenWidth * viewportW);
+    let zoomScale = (screenW * oldBrowserWidth) / (aOldScreenWidth * viewportW);
     this.setResolution(this._zoom * zoomScale, false);
     this.sendViewportUpdate();
   },
@@ -2813,6 +2813,11 @@ var FormAssistant = {
         // Remove focus from the textbox to avoid some bad IME interactions
         this._currentInputElement.blur();
         this._currentInputElement.value = aData;
+
+        let event = this._currentInputElement.ownerDocument.createEvent("Events");
+        event.initEvent("DOMAutoComplete", true, true);
+        this._currentInputElement.dispatchEvent(event);
+
         break;
 
       case "FormAssist:Hidden":
@@ -3199,10 +3204,22 @@ var ViewportHandler = {
         break;
 
       case "resize":
+        // guard against zero values corrupting our viewport numbers. this happens sometimes
+        // during initialization.
+        if (window.outerWidth == 0 || window.outerHeight == 0)
+          break;
+
         // check dimensions changed to avoid infinite loop because updateViewportSize
         // triggers a resize on the content window and will trigger this listener again
-        if (window.outerWidth != gScreenWidth || window.outerHeight != gScreenHeight)
-          BrowserApp.selectedTab.updateViewportSize();
+        if (window.outerWidth == gScreenWidth && window.outerHeight == gScreenHeight)
+          break;
+
+        let oldScreenWidth = gScreenWidth;
+        gScreenWidth = window.outerWidth;
+        gScreenHeight = window.outerHeight;
+        let tabs = BrowserApp.tabs;
+        for (let i = 0; i < tabs.length; i++)
+          tabs[i].updateViewportSize(oldScreenWidth);
         break;
     }
   },

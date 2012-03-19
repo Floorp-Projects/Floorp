@@ -53,7 +53,6 @@
 #include "nsCOMPtr.h"
 #include "nsColor.h"
 #include "gfxContext.h"
-#include "gfxImageSurface.h"
 #include "nsLayoutUtils.h"
 #include "nsContentUtils.h"
 

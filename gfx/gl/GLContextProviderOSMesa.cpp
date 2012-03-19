@@ -37,6 +37,7 @@
 
 #include "GLContextProvider.h"
 #include "GLContext.h"
+#include "GLLibraryLoader.h"
 #include "nsDebug.h"
 #include "nsString.h"
 #include "nsIWidget.h"
@@ -118,7 +119,7 @@ OSMesaLibrary::EnsureInitialized()
         return false;
     }
 
-    LibrarySymbolLoader::SymLoadStruct symbols[] = {
+    GLLibraryLoader::SymLoadStruct symbols[] = {
         { (PRFuncPtr*) &fCreateContextExt, { "OSMesaCreateContextExt", NULL } },
         { (PRFuncPtr*) &fMakeCurrent, { "OSMesaMakeCurrent", NULL } },
         { (PRFuncPtr*) &fPixelStore, { "OSMesaPixelStore", NULL } },
@@ -129,7 +130,7 @@ OSMesaLibrary::EnsureInitialized()
         { NULL, { NULL } }
     };
 
-    if (!LibrarySymbolLoader::LoadSymbols(mOSMesaLibrary, &symbols[0])) {
+    if (!GLLibraryLoader::LoadSymbols(mOSMesaLibrary, &symbols[0])) {
         LogMessage("Couldn't find required entry points in OSMesa libary");
         return false;
     }

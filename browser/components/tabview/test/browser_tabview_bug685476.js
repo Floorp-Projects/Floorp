@@ -6,19 +6,21 @@ function test() {
 
   showTabView(function () {
     let tab = gBrowser.addTab();
-    gBrowser.pinTab(tab);
     registerCleanupFunction(function () gBrowser.removeTab(tab));
 
-    let cw = TabView.getContentWindow();
-    let body = cw.document.body;
-    let [appTabIcon] = cw.iQ(".appTabTray .appTabIcon");
+    whenAppTabIconAdded(function() {
+      let cw = TabView.getContentWindow();
+      let body = cw.document.body;
+      let [appTabIcon] = cw.iQ(".appTabTray .appTabIcon");
 
-    EventUtils.synthesizeMouseAtCenter(appTabIcon, {type: "mousedown"}, cw);
-    EventUtils.synthesizeMouse(body, 500, 100, {type: "mousemove"}, cw);
-    EventUtils.synthesizeMouse(body, 500, 100, {type: "mouseup"}, cw);
+      EventUtils.synthesizeMouseAtCenter(appTabIcon, {type: "mousedown"}, cw);
+      EventUtils.synthesizeMouse(body, 500, 100, {type: "mousemove"}, cw);
+      EventUtils.synthesizeMouse(body, 500, 100, {type: "mouseup"}, cw);
 
-    ok(TabView.isVisible(), "tabview is still visible");
+      ok(TabView.isVisible(), "tabview is still visible");
 
-    hideTabView(finish);
+      hideTabView(finish);
+    });
+    gBrowser.pinTab(tab);
   });
 }

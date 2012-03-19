@@ -182,8 +182,18 @@ ProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, b
         return false;
     /* The control-flow here differs from ::get() because of the fall-through case below. */
     if (desc.obj) {
-        if (desc.attrs & JSPROP_READONLY)
+        // Check for read-only properties.
+        if (desc.attrs & JSPROP_READONLY) {
+            if (strict) {
+                JSAutoByteString bytes(cx, JSID_TO_STRING(id));
+                if (!bytes)
+                    return false;
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_CANT_REDEFINE_PROP, bytes.ptr());
+                return false;
+            }
             return true;
+        }
         if (!desc.setter) {
             // Be wary of the odd explicit undefined setter case possible through
             // Object.defineProperty.
@@ -208,8 +218,18 @@ ProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, b
     if (!getPropertyDescriptor(cx, proxy, id, true, &desc))
         return false;
     if (desc.obj) {
-        if (desc.attrs & JSPROP_READONLY)
+        // Check for read-only properties.
+        if (desc.attrs & JSPROP_READONLY) {
+            if (strict) {
+                JSAutoByteString bytes(cx, JSID_TO_STRING(id));
+                if (!bytes)
+                    return false;
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_CANT_REDEFINE_PROP, bytes.ptr());
+                return false;
+            }
             return true;
+        }
         if (!desc.setter) {
             // Be wary of the odd explicit undefined setter case possible through
             // Object.defineProperty.

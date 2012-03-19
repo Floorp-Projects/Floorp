@@ -474,7 +474,7 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
         return false;
 
     if (status == mjit::Compile_Okay)
-        return mjit::JaegerShot(cx, false);
+        return mjit::JaegerStatusToSuccess(mjit::JaegerShot(cx, false));
 #endif
 
     return Interpret(cx, fp);
@@ -490,7 +490,6 @@ bool
 js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
 {
     JS_ASSERT(args.length() <= StackSpace::ARGS_LENGTH_MAX);
-
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
     /* MaybeConstruct is a subset of InitialFrameFlags */
@@ -1127,45 +1126,6 @@ DoIncDec(JSContext *cx, JSScript *script, jsbytecode *pc, const Value &v, Value 
     return true;
 }
 
-const Value &
-js::GetUpvar(JSContext *cx, unsigned closureLevel, UpvarCookie cookie)
-{
-    JS_ASSERT(closureLevel >= cookie.level() && cookie.level() > 0);
-    const unsigned targetLevel = closureLevel - cookie.level();
-
-    StackFrame *fp = FindUpvarFrame(cx, targetLevel);
-    unsigned slot = cookie.slot();
-    const Value *vp;
-
-    if (!fp->isFunctionFrame() || fp->isEvalFrame()) {
-        vp = fp->slots() + fp->numFixed();
-    } else if (slot < fp->numFormalArgs()) {
-        vp = fp->formalArgs();
-    } else if (slot == UpvarCookie::CALLEE_SLOT) {
-        vp = &fp->calleev();
-        slot = 0;
-    } else {
-        slot -= fp->numFormalArgs();
-        JS_ASSERT(slot < fp->numSlots());
-        vp = fp->slots();
-    }
-
-    return vp[slot];
-}
-
-extern StackFrame *
-js::FindUpvarFrame(JSContext *cx, unsigned targetLevel)
-{
-    StackFrame *fp = cx->fp();
-    while (true) {
-        JS_ASSERT(fp && fp->isScriptFrame());
-        if (fp->script()->staticLevel == targetLevel)
-            break;
-        fp = fp->prev();
-    }
-    return fp;
-}
-
 #define PUSH_COPY(v)             do { *regs.sp++ = v; assertSameCompartment(cx, regs.sp[-1]); } while (0)
 #define PUSH_COPY_SKIP_CHECK(v)  *regs.sp++ = v
 #define PUSH_NULL()              regs.sp++->setNull()
@@ -1283,7 +1243,6 @@ js::AssertValidPropertyCacheHit(JSContext *cx,
  * same way as non-call bytecodes.
  */
 JS_STATIC_ASSERT(JSOP_NAME_LENGTH == JSOP_CALLNAME_LENGTH);
-JS_STATIC_ASSERT(JSOP_GETFCSLOT_LENGTH == JSOP_CALLFCSLOT_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETARG_LENGTH == JSOP_CALLARG_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETLOCAL_LENGTH == JSOP_CALLLOCAL_LENGTH);
 JS_STATIC_ASSERT(JSOP_XMLNAME_LENGTH == JSOP_CALLXMLNAME_LENGTH);
@@ -1784,6 +1743,10 @@ ADD_EMPTY_CASE(JSOP_UNUSED20)
 ADD_EMPTY_CASE(JSOP_UNUSED21)
 ADD_EMPTY_CASE(JSOP_UNUSED22)
 ADD_EMPTY_CASE(JSOP_UNUSED23)
+ADD_EMPTY_CASE(JSOP_UNUSED24)
+ADD_EMPTY_CASE(JSOP_UNUSED25)
+ADD_EMPTY_CASE(JSOP_UNUSED26)
+ADD_EMPTY_CASE(JSOP_UNUSED27)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
 #if JS_HAS_XML_SUPPORT
@@ -1818,8 +1781,9 @@ check_backedge:
         void *ncode =
             script->nativeCodeForPC(regs.fp()->isConstructing(), regs.pc);
         JS_ASSERT(ncode);
-        mjit::JaegerStatus status =
-            mjit::JaegerShotAtSafePoint(cx, ncode, true);
+        mjit::JaegerStatus status = mjit::JaegerShotAtSafePoint(cx, ncode, true);
+        if (status == mjit::Jaeger_ThrowBeforeEnter)
+            goto error;
         CHECK_PARTIAL_METHODJIT(status);
         interpReturnOK = (status == mjit::Jaeger_Returned);
         if (entryFrame != regs.fp())
@@ -2750,10 +2714,21 @@ BEGIN_CASE(JSOP_EVAL)
 }
 END_CASE(JSOP_EVAL)
 
+BEGIN_CASE(JSOP_FUNAPPLY)
+    if (regs.sp[-1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
+        CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
+        if (!IsNativeFunction(args.calleev(), js_fun_apply)) {
+            JS_ASSERT(args.length() == 2);
+            if (!script->applySpeculationFailed(cx))
+                goto error;
+            args[1] = ObjectValue(regs.fp()->argsObj());
+        }
+    }
+    /* FALL THROUGH */
+
 BEGIN_CASE(JSOP_NEW)
 BEGIN_CASE(JSOP_CALL)
 BEGIN_CASE(JSOP_FUNCALL)
-BEGIN_CASE(JSOP_FUNAPPLY)
 {
     CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
     JS_ASSERT(args.base() >= regs.fp()->base());
@@ -2828,7 +2803,7 @@ BEGIN_CASE(JSOP_FUNAPPLY)
         if (status == mjit::Compile_Okay) {
             mjit::JaegerStatus status = mjit::JaegerShot(cx, true);
             CHECK_PARTIAL_METHODJIT(status);
-            interpReturnOK = (status == mjit::Jaeger_Returned);
+            interpReturnOK = mjit::JaegerStatusToSuccess(status);
             CHECK_INTERRUPT_HANDLER();
             goto jit_return;
         }
@@ -3080,27 +3055,10 @@ END_VARLEN_CASE
 }
 
 BEGIN_CASE(JSOP_ARGUMENTS)
-{
-    Value rval;
-    if (cx->typeInferenceEnabled() && !script->strictModeCode) {
-        if (!script->ensureRanInference(cx))
-            goto error;
-        if (script->createdArgs) {
-            ArgumentsObject *arguments = js_GetArgsObject(cx, regs.fp());
-            if (!arguments)
-                goto error;
-            rval = ObjectValue(*arguments);
-        } else {
-            rval = MagicValue(JS_LAZY_ARGUMENTS);
-        }
-    } else {
-        ArgumentsObject *arguments = js_GetArgsObject(cx, regs.fp());
-        if (!arguments)
-            goto error;
-        rval = ObjectValue(*arguments);
-    }
-    PUSH_COPY(rval);
-}
+    if (script->needsArgsObj())
+        PUSH_COPY(ObjectValue(regs.fp()->argsObj()));
+    else
+        PUSH_COPY(MagicValue(JS_OPTIMIZED_ARGUMENTS));
 END_CASE(JSOP_ARGUMENTS)
 
 BEGIN_CASE(JSOP_GETARG)
@@ -3129,18 +3087,6 @@ END_CASE(JSOP_GETLOCAL)
 BEGIN_CASE(JSOP_SETLOCAL)
     regs.fp()->localSlot(GET_SLOTNO(regs.pc)) = regs.sp[-1];
 END_CASE(JSOP_SETLOCAL)
-
-BEGIN_CASE(JSOP_GETFCSLOT)
-BEGIN_CASE(JSOP_CALLFCSLOT)
-{
-    JS_ASSERT(regs.fp()->isNonEvalFunctionFrame());
-    unsigned index = GET_UINT16(regs.pc);
-    JSObject *obj = &argv[-2].toObject();
-
-    PUSH_COPY(obj->toFunction()->getFlatClosureUpvar(index));
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
-}
-END_CASE(JSOP_GETFCSLOT)
 
 BEGIN_CASE(JSOP_DEFCONST)
 BEGIN_CASE(JSOP_DEFVAR)
@@ -3182,8 +3128,6 @@ BEGIN_CASE(JSOP_DEFFUN)
          */
         obj2 = &regs.fp()->scopeChain();
     } else {
-        JS_ASSERT(!fun->isFlatClosure());
-
         obj2 = GetScopeChain(cx, regs.fp());
         if (!obj2)
             goto error;
@@ -3288,7 +3232,6 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
      */
     JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc + SLOTNO_LEN));
     JS_ASSERT(fun->isInterpreted());
-    JS_ASSERT(!fun->isFlatClosure());
 
     JSObject *parent;
     if (fun->isNullClosure()) {
@@ -3307,18 +3250,6 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
     regs.fp()->varSlot(GET_SLOTNO(regs.pc)) = ObjectValue(*obj);
 }
 END_CASE(JSOP_DEFLOCALFUN)
-
-BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
-{
-    JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc + SLOTNO_LEN));
-
-    JSObject *obj = js_NewFlatClosure(cx, fun);
-    if (!obj)
-        goto error;
-
-    regs.fp()->varSlot(GET_SLOTNO(regs.pc)) = ObjectValue(*obj);
-}
-END_CASE(JSOP_DEFLOCALFUN_FC)
 
 BEGIN_CASE(JSOP_LAMBDA)
 {
@@ -3402,19 +3333,6 @@ BEGIN_CASE(JSOP_LAMBDA)
     PUSH_OBJECT(*obj);
 }
 END_CASE(JSOP_LAMBDA)
-
-BEGIN_CASE(JSOP_LAMBDA_FC)
-{
-    JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
-
-    JSObject *obj = js_NewFlatClosure(cx, fun);
-    if (!obj)
-        goto error;
-    JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
-
-    PUSH_OBJECT(*obj);
-}
-END_CASE(JSOP_LAMBDA_FC)
 
 BEGIN_CASE(JSOP_CALLEE)
     JS_ASSERT(regs.fp()->isNonEvalFunctionFrame());
@@ -4191,7 +4109,6 @@ BEGIN_CASE(JSOP_GENERATOR)
     JSObject *obj = js_NewGenerator(cx);
     if (!obj)
         goto error;
-    JS_ASSERT(!regs.fp()->hasCallObj() && !regs.fp()->hasArgsObj());
     regs.fp()->setReturnValue(ObjectValue(*obj));
     interpReturnOK = true;
     if (entryFrame != regs.fp())

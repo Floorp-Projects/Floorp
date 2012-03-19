@@ -46,6 +46,8 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "prlong.h"
+#include "nsNetUtil.h"
+#include "nsIProtocolHandler.h"
 
 #include "woff.h"
 
@@ -82,7 +84,7 @@ gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSr
     mSrcIndex = 0;
     mWeight = aWeight;
     mStretch = aStretch;
-    mItalic = (aItalicStyle & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
+    mItalic = (aItalicStyle & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) != 0;
     mFeatureSettings.AppendElements(aFeatureSettings);
     mLanguageOverride = aLanguageOverride;
     mIsUserFont = true;
@@ -127,7 +129,7 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
     bool found;
 
     if (aWeight == 0)
-        aWeight = FONT_WEIGHT_NORMAL;
+        aWeight = NS_FONT_WEIGHT_NORMAL;
 
     // stretch, italic/oblique ==> zero implies normal
 
@@ -154,8 +156,8 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
     if (LOG_ENABLED()) {
         LOG(("userfonts (%p) added (%s) with style: %s weight: %d stretch: %d",
              this, NS_ConvertUTF16toUTF8(aFamilyName).get(),
-             (aItalicStyle & FONT_STYLE_ITALIC ? "italic" :
-                 (aItalicStyle & FONT_STYLE_OBLIQUE ? "oblique" : "normal")),
+             (aItalicStyle & NS_FONT_STYLE_ITALIC ? "italic" :
+                 (aItalicStyle & NS_FONT_STYLE_OBLIQUE ? "oblique" : "normal")),
              aWeight, aStretch));
     }
 #endif
@@ -452,131 +454,21 @@ gfxUserFontSet::CopyWOFFMetadata(const PRUint8* aFontData,
 // This is called when a font download finishes.
 // Ownership of aFontData passes in here, and the font set must
 // ensure that it is eventually deleted via NS_Free().
-bool 
+bool
 gfxUserFontSet::OnLoadComplete(gfxProxyFontEntry *aProxy,
                                const PRUint8 *aFontData, PRUint32 aLength,
                                nsresult aDownloadStatus)
 {
     // download successful, make platform font using font data
     if (NS_SUCCEEDED(aDownloadStatus)) {
-        gfxFontEntry *fe = nsnull;
-
-        gfxUserFontType fontType =
-            gfxFontUtils::DetermineFontDataType(aFontData, aLength);
-
-        // Save a copy of the metadata block (if present) for nsIDOMFontFace
-        // to use if required. Ownership of the metadata block will be passed
-        // to the gfxUserFontData record below.
-        // NOTE: after the non-OTS codepath using PrepareOpenTypeData is
-        // removed, we should defer this until after we've created the new
-        // fontEntry.
-        nsTArray<PRUint8> metadata;
-        PRUint32 metaOrigLen = 0;
-        if (fontType == GFX_USERFONT_WOFF) {
-            CopyWOFFMetadata(aFontData, aLength, &metadata, &metaOrigLen);
-        }
-
-        // Unwrap/decompress/sanitize or otherwise munge the downloaded data
-        // to make a usable sfnt structure.
-
-        // Because platform font activation code may replace the name table
-        // in the font with a synthetic one, we save the original name so that
-        // it can be reported via the nsIDOMFontFace API.
-        nsAutoString originalFullName;
-
-        if (gfxPlatform::GetPlatform()->SanitizeDownloadedFonts()) {
-           // Call the OTS sanitizer; this will also decode WOFF to sfnt
-            // if necessary. The original data in aFontData is left unchanged.
-            PRUint32 saneLen;
-            const PRUint8* saneData =
-                SanitizeOpenTypeData(aFontData, aLength, saneLen,
-                                     fontType == GFX_USERFONT_WOFF);
-            if (!saneData) {
-                LogMessage(aProxy, "rejected by sanitizer");
-            }
-            if (saneData) {
-                // The sanitizer ensures that we have a valid sfnt and a usable
-                // name table, so this should never fail unless we're out of
-                // memory, and GetFullNameFromSFNT is not directly exposed to
-                // arbitrary/malicious data from the web.
-                gfxFontUtils::GetFullNameFromSFNT(saneData, saneLen,
-                                                  originalFullName);
-                // Here ownership of saneData is passed to the platform,
-                // which will delete it when no longer required
-                fe = gfxPlatform::GetPlatform()->MakePlatformFont(aProxy,
-                                                                  saneData,
-                                                                  saneLen);
-                if (!fe) {
-                    LogMessage(aProxy, "not usable by platform");
-                }
-            }
-        } else {
-            // FIXME: this code can be removed once we remove the pref to
-            // disable the sanitizer; the PrepareOpenTypeData and
-            // ValidateSFNTHeaders functions will then be obsolete.
-            aFontData = PrepareOpenTypeData(aFontData, &aLength);
-
-            if (aFontData) {
-                if (gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength)) {
-                    // ValidateSFNTHeaders has checked that we have a valid
-                    // sfnt structure and a usable 'name' table
-                    gfxFontUtils::GetFullNameFromSFNT(aFontData, aLength,
-                                                      originalFullName);
-                    // Here ownership of aFontData is passed to the platform,
-                    // which will delete it when no longer required
-                    fe = gfxPlatform::GetPlatform()->MakePlatformFont(aProxy,
-                                                                      aFontData,
-                                                                      aLength);
-                    if (!fe) {
-                        LogMessage(aProxy, "not usable by platform");
-                    }
-                    aFontData = nsnull; // we must NOT free this below!
-                } else {
-                    // the data was unusable, so just discard it
-                    // (error will be reported below, if logging is enabled)
-                    LogMessage(aProxy, "SFNT header or tables invalid");
-                }
-            }
-        }
-
-        if (aFontData) {
-            NS_Free((void*)aFontData);
-            aFontData = nsnull;
-        }
+        gfxFontEntry *fe = LoadFont(aProxy, aFontData, aLength);
+        aFontData = nsnull;
 
         if (fe) {
-            // copy OpenType feature/language settings from the proxy to the
-            // newly-created font entry
-            fe->mFeatureSettings.AppendElements(aProxy->mFeatureSettings);
-            fe->mLanguageOverride = aProxy->mLanguageOverride;
-            StoreUserFontData(fe, aProxy, originalFullName,
-                              &metadata, metaOrigLen);
-#ifdef PR_LOGGING
-            // must do this before ReplaceFontEntry() because that will
-            // clear the proxy's mFamily pointer!
-            if (LOG_ENABLED()) {
-                nsCAutoString fontURI;
-                aProxy->mSrcList[aProxy->mSrcIndex].mURI->GetSpec(fontURI);
-                LOG(("userfonts (%p) [src %d] loaded uri: (%s) for (%s) gen: %8.8x\n",
-                     this, aProxy->mSrcIndex, fontURI.get(),
-                     NS_ConvertUTF16toUTF8(aProxy->mFamily->Name()).get(),
-                     PRUint32(mGeneration)));
-            }
-#endif
-            ReplaceFontEntry(aProxy, fe);
             IncrementGeneration();
             return true;
-        } else {
-#ifdef PR_LOGGING
-            if (LOG_ENABLED()) {
-                nsCAutoString fontURI;
-                aProxy->mSrcList[aProxy->mSrcIndex].mURI->GetSpec(fontURI);
-                LOG(("userfonts (%p) [src %d] failed uri: (%s) for (%s) error making platform font\n",
-                     this, aProxy->mSrcIndex, fontURI.get(),
-                     NS_ConvertUTF16toUTF8(aProxy->mFamily->Name()).get()));
-            }
-#endif
         }
+
     } else {
         // download failed
         LogMessage(aProxy, "download failed", nsIScriptError::errorFlag,
@@ -622,7 +514,7 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
     while (aProxyEntry->mSrcIndex < numSrc) {
         const gfxFontFaceSrc& currSrc = aProxyEntry->mSrcList[aProxyEntry->mSrcIndex];
 
-        // src local ==> lookup and load
+        // src local ==> lookup and load immediately
 
         if (currSrc.mIsLocal) {
             gfxFontEntry *fe =
@@ -651,22 +543,49 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
         else {
             if (gfxPlatform::GetPlatform()->IsFontFormatSupported(currSrc.mURI,
                     currSrc.mFormatFlags)) {
-                nsresult rv = StartLoad(aProxyEntry, &currSrc);
-                bool loadOK = NS_SUCCEEDED(rv);
-                if (loadOK) {
-#ifdef PR_LOGGING
-                    if (LOG_ENABLED()) {
-                        nsCAutoString fontURI;
-                        currSrc.mURI->GetSpec(fontURI);
-                        LOG(("userfonts (%p) [src %d] loading uri: (%s) for (%s)\n",
-                             this, aProxyEntry->mSrcIndex, fontURI.get(),
-                             NS_ConvertUTF16toUTF8(aProxyEntry->mFamily->Name()).get()));
+
+                nsresult rv;
+                bool loadDoesntSpin = false;
+                rv = NS_URIChainHasFlags(currSrc.mURI,
+                       nsIProtocolHandler::URI_SYNC_LOAD_IS_OK,
+                       &loadDoesntSpin);
+
+                if (NS_SUCCEEDED(rv) && loadDoesntSpin) {
+                    PRUint8 *buffer = nsnull;
+                    PRUint32 bufferLength = 0;
+
+                    // sync load font immediately
+                    rv = SyncLoadFontData(aProxyEntry, &currSrc, buffer,
+                                          bufferLength);
+
+                    if (NS_SUCCEEDED(rv) &&
+                        LoadFont(aProxyEntry, buffer, bufferLength)) {
+                        return STATUS_LOADED;
+                    } else {
+                        LogMessage(aProxyEntry, "font load failed",
+                                   nsIScriptError::errorFlag, rv);
                     }
-#endif
-                    return STATUS_LOADING;
+
                 } else {
-                    LogMessage(aProxyEntry, "download failed",
-                               nsIScriptError::errorFlag, rv);
+                    // otherwise load font async
+                    rv = StartLoad(aProxyEntry, &currSrc);
+                    PRBool loadOK = NS_SUCCEEDED(rv);
+
+                    if (loadOK) {
+#ifdef PR_LOGGING
+                        if (LOG_ENABLED()) {
+                            nsCAutoString fontURI;
+                            currSrc.mURI->GetSpec(fontURI);
+                            LOG(("userfonts (%p) [src %d] loading uri: (%s) for (%s)\n",
+                                 this, aProxyEntry->mSrcIndex, fontURI.get(),
+                                 NS_ConvertUTF16toUTF8(aProxyEntry->mFamily->Name()).get()));
+                        }
+#endif
+                        return STATUS_LOADING;
+                    } else {
+                        LogMessage(aProxyEntry, "download failed",
+                                   nsIScriptError::errorFlag, rv);
+                    }
                 }
             } else {
                 // We don't log a warning to the web console yet,
@@ -702,6 +621,131 @@ gfxUserFontSet::IncrementGeneration()
 }
 
 
+gfxFontEntry*
+gfxUserFontSet::LoadFont(gfxProxyFontEntry *aProxy,
+                         const PRUint8 *aFontData, PRUint32 &aLength)
+{
+    gfxFontEntry *fe = nsnull;
+
+    gfxUserFontType fontType =
+        gfxFontUtils::DetermineFontDataType(aFontData, aLength);
+
+    // Save a copy of the metadata block (if present) for nsIDOMFontFace
+    // to use if required. Ownership of the metadata block will be passed
+    // to the gfxUserFontData record below.
+    // NOTE: after the non-OTS codepath using PrepareOpenTypeData is
+    // removed, we should defer this until after we've created the new
+    // fontEntry.
+    nsTArray<PRUint8> metadata;
+    PRUint32 metaOrigLen = 0;
+    if (fontType == GFX_USERFONT_WOFF) {
+        CopyWOFFMetadata(aFontData, aLength, &metadata, &metaOrigLen);
+    }
+
+    // Unwrap/decompress/sanitize or otherwise munge the downloaded data
+    // to make a usable sfnt structure.
+
+    // Because platform font activation code may replace the name table
+    // in the font with a synthetic one, we save the original name so that
+    // it can be reported via the nsIDOMFontFace API.
+    nsAutoString originalFullName;
+
+    if (gfxPlatform::GetPlatform()->SanitizeDownloadedFonts()) {
+       // Call the OTS sanitizer; this will also decode WOFF to sfnt
+        // if necessary. The original data in aFontData is left unchanged.
+        PRUint32 saneLen;
+        const PRUint8* saneData =
+            SanitizeOpenTypeData(aFontData, aLength, saneLen,
+                                 fontType == GFX_USERFONT_WOFF);
+        if (!saneData) {
+            LogMessage(aProxy, "rejected by sanitizer");
+        }
+        if (saneData) {
+            // The sanitizer ensures that we have a valid sfnt and a usable
+            // name table, so this should never fail unless we're out of
+            // memory, and GetFullNameFromSFNT is not directly exposed to
+            // arbitrary/malicious data from the web.
+            gfxFontUtils::GetFullNameFromSFNT(saneData, saneLen,
+                                              originalFullName);
+            // Here ownership of saneData is passed to the platform,
+            // which will delete it when no longer required
+            fe = gfxPlatform::GetPlatform()->MakePlatformFont(aProxy,
+                                                              saneData,
+                                                              saneLen);
+            if (!fe) {
+                LogMessage(aProxy, "not usable by platform");
+            }
+        }
+    } else {
+        // FIXME: this code can be removed once we remove the pref to
+        // disable the sanitizer; the PrepareOpenTypeData and
+        // ValidateSFNTHeaders functions will then be obsolete.
+        aFontData = PrepareOpenTypeData(aFontData, &aLength);
+
+        if (aFontData) {
+            if (gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength)) {
+                // ValidateSFNTHeaders has checked that we have a valid
+                // sfnt structure and a usable 'name' table
+                gfxFontUtils::GetFullNameFromSFNT(aFontData, aLength,
+                                                  originalFullName);
+                // Here ownership of aFontData is passed to the platform,
+                // which will delete it when no longer required
+                fe = gfxPlatform::GetPlatform()->MakePlatformFont(aProxy,
+                                                                  aFontData,
+                                                                  aLength);
+                if (!fe) {
+                    LogMessage(aProxy, "not usable by platform");
+                }
+                aFontData = nsnull; // we must NOT free this!
+            } else {
+                // the data was unusable, so just discard it
+                // (error will be reported below, if logging is enabled)
+                LogMessage(aProxy, "SFNT header or tables invalid");
+            }
+        }
+    }
+
+    if (aFontData) {
+        NS_Free((void*)aFontData);
+        aFontData = nsnull;
+    }
+
+    if (fe) {
+        // copy OpenType feature/language settings from the proxy to the
+        // newly-created font entry
+        fe->mFeatureSettings.AppendElements(aProxy->mFeatureSettings);
+        fe->mLanguageOverride = aProxy->mLanguageOverride;
+        StoreUserFontData(fe, aProxy, originalFullName,
+                          &metadata, metaOrigLen);
+#ifdef PR_LOGGING
+        // must do this before ReplaceFontEntry() because that will
+        // clear the proxy's mFamily pointer!
+        if (LOG_ENABLED()) {
+            nsCAutoString fontURI;
+            aProxy->mSrcList[aProxy->mSrcIndex].mURI->GetSpec(fontURI);
+            LOG(("userfonts (%p) [src %d] loaded uri: (%s) for (%s) gen: %8.8x\n",
+                 this, aProxy->mSrcIndex, fontURI.get(),
+                 NS_ConvertUTF16toUTF8(aProxy->mFamily->Name()).get(),
+                 PRUint32(mGeneration)));
+        }
+#endif
+        ReplaceFontEntry(aProxy, fe);
+    } else {
+#ifdef PR_LOGGING
+        if (LOG_ENABLED()) {
+            nsCAutoString fontURI;
+            aProxy->mSrcList[aProxy->mSrcIndex].mURI->GetSpec(fontURI);
+            LOG(("userfonts (%p) [src %d] failed uri: (%s) for (%s)"
+                 " error making platform font\n",
+                 this, aProxy->mSrcIndex, fontURI.get(),
+                 NS_ConvertUTF16toUTF8(aProxy->mFamily->Name()).get()));
+        }
+#endif
+    }
+
+    return fe;
+}
+
 gfxMixedFontFamily*
 gfxUserFontSet::GetFamily(const nsAString& aFamilyName) const
 {
@@ -710,3 +754,4 @@ gfxUserFontSet::GetFamily(const nsAString& aFamilyName) const
 
     return mFontFamilies.GetWeak(key);
 }
+

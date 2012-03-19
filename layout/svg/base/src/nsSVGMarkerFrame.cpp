@@ -226,7 +226,7 @@ nsSVGMarkerFrame::GetMarkBBoxContribution(const gfxMatrix &aToBBoxUserspace,
       // to use UnionEdges, but we must special case the first bbox so that we don't
       // include the initial gfxRect(0,0,0,0).
       gfxRect childBBox = child->GetBBoxContribution(tm, aFlags);
-      if (firstChild) {
+      if (firstChild && (childBBox.Width() > 0 || childBBox.Height() > 0)) {
         bbox = childBBox;
         firstChild = false;
         continue;

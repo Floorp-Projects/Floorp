@@ -116,12 +116,12 @@ interface nsIRILDataCallback : nsISupports
                            in unsigned long length);
 };
 
-[scriptable, uuid(78fc7ef6-0941-4fc8-89ff-de9398ef478a)]
+[scriptable, uuid(7a439b15-d398-4c57-9772-15aa6d3bc34f)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
   const unsigned short CALL_STATE_DIALING = 1;
-  const unsigned short CALL_STATE_RINGING = 2;
+  const unsigned short CALL_STATE_ALERTING = 2;
   const unsigned short CALL_STATE_BUSY = 3;
   const unsigned short CALL_STATE_CONNECTING = 4;
   const unsigned short CALL_STATE_CONNECTED = 5;

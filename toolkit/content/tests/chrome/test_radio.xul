@@ -41,7 +41,8 @@ function test_radio()
   window.blur();
 
   var accessKeyDetails = (navigator.platform.indexOf("Mac") >= 0) ?
-                         { ctrlKey : true } : { altKey : true, shiftKey: true };
+                         { altKey : true, ctrlKey : true } :
+                         { altKey : true, shiftKey: true };
   synthesizeKey("t", accessKeyDetails);  
 
   var radiogroup = $("radiogroup-initwithselected");

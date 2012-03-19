@@ -51,7 +51,7 @@ extern "C" {
 __declspec(dllimport) void * __stdcall TlsGetValue(unsigned long);
 __declspec(dllimport) int __stdcall TlsSetValue(unsigned long, void *);
 __declspec(dllimport) unsigned long __stdcall TlsAlloc();
-};
+}
 #else
 # include <pthread.h>
 # include <signal.h>
