@@ -244,13 +244,15 @@ private:
     return static_cast<Derived*>(const_cast<WorkerPrivateParent*>(this));
   }
 
+  // aCx is null when called from the finalizer
   bool
-  NotifyPrivate(JSContext* aCx, Status aStatus, bool aFromJSFinalizer);
+  NotifyPrivate(JSContext* aCx, Status aStatus);
 
+  // aCx is null when called from the finalizer
   bool
-  TerminatePrivate(JSContext* aCx, bool aFromJSFinalizer)
+  TerminatePrivate(JSContext* aCx)
   {
-    return NotifyPrivate(aCx, Terminating, aFromJSFinalizer);
+    return NotifyPrivate(aCx, Terminating);
   }
 
 public:
@@ -262,7 +264,7 @@ public:
   bool
   Notify(JSContext* aCx, Status aStatus)
   {
-    return NotifyPrivate(aCx, aStatus, false);
+    return NotifyPrivate(aCx, aStatus);
   }
 
   bool
@@ -300,7 +302,7 @@ public:
   {
     AssertIsOnParentThread();
     RootJSObject(aCx, false);
-    return TerminatePrivate(aCx, false);
+    return TerminatePrivate(aCx);
   }
 
   bool

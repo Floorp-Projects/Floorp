@@ -1347,7 +1347,6 @@ typedef JSType
 typedef struct JSFreeOp JSFreeOp;
 
 struct JSFreeOp {
-    JSContext   *context;
 #ifndef __cplusplus
     JSRuntime   *runtime;
 #else
@@ -1355,8 +1354,8 @@ struct JSFreeOp {
     JSRuntime   *runtime_;
 
   protected:
-    JSFreeOp(JSRuntime *rt, JSContext *cx)
-      : context(cx), runtime_(rt) { }
+    JSFreeOp(JSRuntime *rt)
+      : runtime_(rt) { }
 
   public:
     JSRuntime *runtime() const {
@@ -2989,6 +2988,9 @@ JS_free(JSContext *cx, void *p);
 extern JS_PUBLIC_API(void)
 JS_freeop(JSFreeOp *fop, void *p);
 
+extern JS_PUBLIC_API(JSFreeOp *)
+JS_GetDefaultFreeOp(JSRuntime *rt);    
+
 extern JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext *cx, size_t nbytes);
 
@@ -3059,20 +3061,32 @@ JS_AddNamedScriptRoot(JSContext *cx, JSScript **rp, const char *name);
 extern JS_PUBLIC_API(JSBool)
 JS_AddNamedGCThingRoot(JSContext *cx, void **rp, const char *name);
 
-extern JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(void)
 JS_RemoveValueRoot(JSContext *cx, jsval *vp);
 
-extern JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(void)
 JS_RemoveStringRoot(JSContext *cx, JSString **rp);
 
-extern JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(void)
 JS_RemoveObjectRoot(JSContext *cx, JSObject **rp);
 
-extern JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(void)
 JS_RemoveScriptRoot(JSContext *cx, JSScript **rp);
 
-extern JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(void)
 JS_RemoveGCThingRoot(JSContext *cx, void **rp);
+
+extern JS_PUBLIC_API(void)
+JS_RemoveValueRootRT(JSRuntime *rt, jsval *vp);
+
+extern JS_PUBLIC_API(void)
+JS_RemoveStringRootRT(JSRuntime *rt, JSString **rp);
+
+extern JS_PUBLIC_API(void)
+JS_RemoveObjectRootRT(JSRuntime *rt, JSObject **rp);
+
+extern JS_PUBLIC_API(void)
+JS_RemoveScriptRootRT(JSRuntime *rt, JSScript **rp);
 
 /* TODO: remove these APIs */
 
@@ -3082,7 +3096,7 @@ js_AddRootRT(JSRuntime *rt, jsval *vp, const char *name);
 extern JS_FRIEND_API(JSBool)
 js_AddGCThingRootRT(JSRuntime *rt, void **rp, const char *name);
 
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(void)
 js_RemoveRoot(JSRuntime *rt, void *rp);
 
 /*

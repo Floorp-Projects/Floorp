@@ -776,6 +776,7 @@ JSRuntime::JSRuntime()
     gcLock(NULL),
     gcHelperThread(thisFromCtor()),
 #endif
+    defaultFreeOp_(thisFromCtor(), false, false, NULL),
     debuggerMutations(0),
     securityCallbacks(const_cast<JSSecurityCallbacks *>(&NullSecurityCallbacks)),
     destroyPrincipals(NULL),
@@ -2235,6 +2236,12 @@ JS_freeop(JSFreeOp *fop, void *p)
     return FreeOp::get(fop)->free_(p);
 }
 
+JS_PUBLIC_API(JSFreeOp *)
+JS_GetDefaultFreeOp(JSRuntime *rt)
+{
+    return rt->defaultFreeOp();
+}
+
 JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext *cx, size_t nbytes)
 {
@@ -2337,39 +2344,63 @@ JS_AddNamedGCThingRoot(JSContext *cx, void **rp, const char *name)
 
 /* We allow unrooting from finalizers within the GC */
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(void)
 JS_RemoveValueRoot(JSContext *cx, jsval *vp)
 {
     CHECK_REQUEST(cx);
-    return js_RemoveRoot(cx->runtime, (void *)vp);
+    js_RemoveRoot(cx->runtime, (void *)vp);
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(void)
 JS_RemoveStringRoot(JSContext *cx, JSString **rp)
 {
     CHECK_REQUEST(cx);
-    return js_RemoveRoot(cx->runtime, (void *)rp);
+    js_RemoveRoot(cx->runtime, (void *)rp);
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(void)
 JS_RemoveObjectRoot(JSContext *cx, JSObject **rp)
 {
     CHECK_REQUEST(cx);
-    return js_RemoveRoot(cx->runtime, (void *)rp);
+    js_RemoveRoot(cx->runtime, (void *)rp);
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(void)
 JS_RemoveScriptRoot(JSContext *cx, JSScript **rp)
 {
     CHECK_REQUEST(cx);
-    return js_RemoveRoot(cx->runtime, (void *)rp);
+    js_RemoveRoot(cx->runtime, (void *)rp);
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(void)
 JS_RemoveGCThingRoot(JSContext *cx, void **rp)
 {
     CHECK_REQUEST(cx);
-    return js_RemoveRoot(cx->runtime, (void *)rp);
+    js_RemoveRoot(cx->runtime, (void *)rp);
+}
+
+JS_PUBLIC_API(void)
+JS_RemoveValueRootRT(JSRuntime *rt, jsval *vp)
+{
+    js_RemoveRoot(rt, (void *)vp);
+}
+
+JS_PUBLIC_API(void)
+JS_RemoveStringRootRT(JSRuntime *rt, JSString **rp)
+{
+    js_RemoveRoot(rt, (void *)rp);
+}
+
+JS_PUBLIC_API(void)
+JS_RemoveObjectRootRT(JSRuntime *rt, JSObject **rp)
+{
+    js_RemoveRoot(rt, (void *)rp);
+}
+
+JS_PUBLIC_API(void)
+JS_RemoveScriptRoot(JSRuntime *rt, JSScript **rp)
+{
+    js_RemoveRoot(rt, (void *)rp);
 }
 
 JS_NEVER_INLINE JS_PUBLIC_API(void)

@@ -1548,9 +1548,7 @@ XMLHttpRequest::MaybePin(nsresult& aRv)
   }
 
   if (!mWorkerPrivate->AddFeature(cx, this)) {
-    if (!JS_RemoveObjectRoot(cx, &mJSObject)) {
-      NS_ERROR("JS_RemoveObjectRoot failed!");
-    }
+    JS_RemoveObjectRoot(cx, &mJSObject);
     aRv = NS_ERROR_FAILURE;
     return;
   }
@@ -1664,9 +1662,7 @@ XMLHttpRequest::Unpin()
 
   JSContext* cx = GetJSContext();
 
-  if (!JS_RemoveObjectRoot(cx, &mJSObject)) {
-    NS_ERROR("JS_RemoveObjectRoot failed!");
-  }
+  JS_RemoveObjectRoot(cx, &mJSObject);
 
   mWorkerPrivate->RemoveFeature(cx, this);
 
