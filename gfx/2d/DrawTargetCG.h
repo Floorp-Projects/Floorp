@@ -147,7 +147,7 @@ public:
   virtual void StrokeLine(const Point &, const Point &, const Pattern &, const StrokeOptions &, const DrawOptions &);
   virtual void Stroke(const Path *, const Pattern &, const StrokeOptions &, const DrawOptions &);
   virtual void Fill(const Path *, const Pattern &, const DrawOptions &);
-  virtual void FillGlyphs(ScaledFont *, const GlyphBuffer&, const Pattern &, const DrawOptions &);
+  virtual void FillGlyphs(ScaledFont *, const GlyphBuffer&, const Pattern &, const DrawOptions &, const GlyphRenderingOptions *);
   virtual void Mask(const Pattern &aSource,
                     const Pattern &aMask,
                     const DrawOptions &aOptions = DrawOptions());
