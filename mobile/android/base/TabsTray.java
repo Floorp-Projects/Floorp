@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Build;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
@@ -45,6 +46,8 @@ public class TabsTray extends Activity implements Tabs.OnTabsChangedListener {
     // 100 for item + 2 for divider
     private static final int TABS_LIST_ITEM_HEIGHT = 102;
     private static final int TABS_ADD_TAB_HEIGHT = 50;
+
+    private static final String ABOUT_HOME = "about:home";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -266,6 +269,8 @@ public class TabsTray extends Activity implements Tabs.OnTabsChangedListener {
             Drawable thumbnailImage = tab.getThumbnail();
             if (thumbnailImage != null)
                 thumbnail.setImageDrawable(thumbnailImage);
+            else if (TextUtils.equals(tab.getURL(), ABOUT_HOME))
+                thumbnail.setImageResource(R.drawable.abouthome_thumbnail);
             else
                 thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
 
