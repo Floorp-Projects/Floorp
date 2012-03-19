@@ -1,5 +1,7 @@
+#filter substitution
 <?xml version="1.0" encoding="utf-8"?>
-<merge xmlns:android="http://schemas.android.com/apk/res/android">
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@">
 
     <LinearLayout android:layout_width="fill_parent"
                   android:orientation="vertical"
@@ -121,100 +123,26 @@
 
         </RelativeLayout>
 
-        <TextView android:id="@+id/last_tabs_title"
-                  android:layout_width="fill_parent"
-                  android:layout_height="26dip"
-                  android:paddingLeft="12dip"
-                  android:background="@drawable/abouthome_separator"
-                  android:textSize="12sp"
-                  android:textColor="#000000"
-                  android:textStyle="bold"
-                  android:gravity="left|center_vertical"
-                  android:visibility="gone"
-                  android:text="@string/abouthome_last_tabs_title"/>
+        <org.mozilla.gecko.AboutHomeSection android:id="@+id/last_tabs"
+                                            android:layout_width="fill_parent"
+                                            android:layout_height="wrap_content"
+                                            android:visibility="gone"
+                                            gecko:title="@string/abouthome_last_tabs_title"
+                                            gecko:more_text="@string/abouthome_last_tabs_open"/>
 
-        <LinearLayout android:id="@+id/last_tabs"
-                      android:orientation="vertical"
-                      android:layout_width="fill_parent"
-                      android:layout_height="wrap_content"/>
+        <org.mozilla.gecko.AboutHomeSection android:id="@+id/recommended_addons"
+                                            android:layout_width="fill_parent"
+                                            android:layout_height="wrap_content"
+                                            android:visibility="gone"
+                                            gecko:title="@string/abouthome_addons_title"
+                                            gecko:more_text="@string/abouthome_addons_browse"/>
 
-        <org.mozilla.gecko.LinkTextView android:id="@+id/last_tabs_open_all"
-                                        android:layout_width="fill_parent"
-                                        android:layout_height="47dip"
-                                        android:background="@drawable/abouthome_separator"
-                                        android:textColor="#22629e"
-                                        android:textSize="12sp"
-                                        android:gravity="center"
-                                        android:visibility="gone"
-                                        android:text="@string/abouthome_last_tabs_open"/>
-
-        <TextView android:id="@+id/recommended_addons_title"
-                  android:layout_width="fill_parent"
-                  android:layout_height="26dip"
-                  android:paddingLeft="12dip"
-                  android:background="@drawable/abouthome_separator"
-                  android:textSize="12sp"
-                  android:textColor="#000000"
-                  android:textStyle="bold"
-                  android:gravity="left|center_vertical"
-                  android:visibility="gone"
-                  android:text="@string/abouthome_addons_title"/>
-
-        <LinearLayout android:id="@+id/recommended_addons"
-                      android:orientation="vertical"
-                      android:layout_width="fill_parent"
-                      android:layout_height="wrap_content"
-                      android:visibility="gone"
-                      android:isScrollContainer="false"/>
-
-        <org.mozilla.gecko.LinkTextView android:id="@+id/all_addons_text"
-                                        android:layout_width="fill_parent"
-                                        android:layout_height="47dip"
-                                        android:background="@drawable/abouthome_separator"
-                                        android:textColor="#22629e"
-                                        android:textSize="12sp"
-                                        android:gravity="center"
-                                        android:visibility="gone"
-                                        android:text="@string/abouthome_addons_browse"/>
-
-        <TextView android:id="@+id/remote_tabs_title"
-                  android:layout_width="fill_parent"
-                  android:layout_height="26dip"
-                  android:paddingLeft="12dip"
-                  android:background="@drawable/abouthome_separator"
-                  android:textSize="12sp"
-                  android:textColor="#000000"
-                  android:textStyle="bold"
-                  android:gravity="left|center_vertical"
-                  android:visibility="gone"
-                  android:text="@string/remote_tabs"/>
-
-        <TextView android:id="@+id/remote_tabs_client"
-                  android:layout_width="fill_parent"
-                  android:layout_height="26dip"
-                  android:paddingLeft="12dip"
-                  android:background="@drawable/abouthome_separator"
-                  android:textSize="12sp"
-                  android:textColor="#666666"
-                  android:gravity="left|center_vertical"
-                  android:visibility="gone"/>
-
-        <LinearLayout android:id="@+id/remote_tabs"
-                      android:orientation="vertical"
-                      android:layout_width="fill_parent"
-                      android:layout_height="wrap_content"
-                      android:visibility="gone"
-                      android:isScrollContainer="false"/>
-
-        <org.mozilla.gecko.LinkTextView android:id="@+id/all_remote_tabs_text"
-                                        android:layout_width="fill_parent"
-                                        android:layout_height="47dip"
-                                        android:background="@drawable/abouthome_separator"
-                                        android:textColor="#22629e"
-                                        android:textSize="12sp"
-                                        android:gravity="center"
-                                        android:visibility="gone"
-                                        android:text="@string/remote_tabs_show_all"/>
+        <org.mozilla.gecko.AboutHomeSection android:id="@+id/remote_tabs"
+                                            android:layout_width="fill_parent"
+                                            android:layout_height="wrap_content"
+                                            android:visibility="gone"
+                                            gecko:title="@string/remote_tabs"
+                                            gecko:more_text="@string/remote_tabs_show_all"/>
 
     </LinearLayout>
 
