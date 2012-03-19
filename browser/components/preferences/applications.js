@@ -1833,11 +1833,11 @@ var gApplicationsPane = {
     var uri = this._ioSvc.newURI(aWebAppURITemplate, null, null);
 
     // Unfortunately we can't use the favicon service to get the favicon,
-    // because the service looks in the annotations table for a record with
-    // the exact URL we give it, and users won't have such records for URLs
-    // they don't visit, and users won't visit the web app's URL template,
-    // they'll only visit URLs derived from that template (i.e. with %s
-    // in the template replaced by the URL of the content being handled).
+    // because the service looks for a record with the exact URL we give it, and
+    // users won't have such records for URLs they don't visit, and users won't
+    // visit the handler's URL template, they'll only visit URLs derived from
+    // that template (i.e. with %s in the template replaced by the URL of the
+    // content being handled).
 
     if (/^https?/.test(uri.scheme) && this._prefSvc.getBoolPref("browser.chrome.favicons"))
       return uri.prePath + "/favicon.ico";
