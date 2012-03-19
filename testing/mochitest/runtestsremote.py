@@ -223,6 +223,7 @@ class MochiRemote(Mochitest):
     _dm = None
     localProfile = None
     logLines = []
+    _reuseProfile = False
 
     def __init__(self, automation, devmgr, options):
         self._automation = automation
@@ -236,6 +237,12 @@ class MochiRemote(Mochitest):
     def cleanup(self, manifest, options):
         self._dm.getFile(self.remoteLog, self.localLog)
         self._dm.removeFile(self.remoteLog)
+
+        if self._reuseProfile:
+            print "Not removing profile since we need it in the next run!"
+            self._dm.removeFile(self.remoteProfile + '/.parentlock');
+            return
+
         self._dm.removeDir(self.remoteProfile)
 
         if (options.pidFile != ""):
@@ -315,9 +322,10 @@ class MochiRemote(Mochitest):
             options.profilePath = self.localProfile
         manifest = Mochitest.buildProfile(self, options)
         self.localProfile = options.profilePath
-        self._dm.removeDir(self.remoteProfile)
-        if self._dm.pushDir(options.profilePath, self.remoteProfile) == None:
-            raise devicemanager.FileError("Unable to copy profile to device.")
+        if not self._reuseProfile:
+            self._dm.removeDir(self.remoteProfile)
+            if self._dm.pushDir(options.profilePath, self.remoteProfile) == None:
+                raise devicemanager.FileError("Unable to copy profile to device.")
 
         options.profilePath = self.remoteProfile
         return manifest
@@ -328,8 +336,9 @@ class MochiRemote(Mochitest):
         options.profilePath = self.localProfile
         retVal = Mochitest.buildURLOptions(self, options, env)
         #we really need testConfig.js (for browser chrome)
-        if self._dm.pushDir(options.profilePath, self.remoteProfile) == None:
-            raise devicemanager.FileError("Unable to copy profile to device.")
+        if not self._reuseProfile:
+            if self._dm.pushDir(options.profilePath, self.remoteProfile) == None:
+                raise devicemanager.FileError("Unable to copy profile to device.")
 
         options.profilePath = self.remoteProfile
         options.logFile = self.localLog
@@ -419,6 +428,7 @@ def main():
             dm = devicemanagerADB.DeviceManagerADB()
     else:
          dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort)
+
     auto.setDeviceManager(dm)
     options = parser.verifyRemoteOptions(options, auto)
     if (options == None):
@@ -486,12 +496,14 @@ def main():
             try:
                 retVal = mochitest.runTests(options)
                 mochitest.addLogData()
+                mochitest._reuseProfile = True
             except:
                 print "TEST-UNEXPECTED-FAIL | %s | Exception caught while running robocop tests." % sys.exc_info()[1]
                 mochitest.stopWebServer(options)
                 mochitest.stopWebSocketServer(options)
+                mochitest._reuseProfile = False
                 try:
-                    self.cleanup(None, options)
+                    mochitest.cleanup(None, options)
                 except:
                     pass
                 sys.exit(1)
@@ -499,7 +511,10 @@ def main():
             print "No tests run. Did you pass an invalid TEST_PATH?"
             retVal = 1
 
-        retVal = mochitest.printLog() 
+        retVal = mochitest.printLog()
+        # We do not cleanup the profile for each run of robocop until the end
+        mochitest._reuseProfile = False
+        mochitest.cleanup(None, options)
     else:
       try:
         retVal = mochitest.runTests(options)
@@ -508,7 +523,7 @@ def main():
         mochitest.stopWebServer(options)
         mochitest.stopWebSocketServer(options)
         try:
-            self.cleanup(None, options)
+            mochitest.cleanup(None, options)
         except:
             pass
         sys.exit(1)
