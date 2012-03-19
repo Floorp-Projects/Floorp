@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<script>
+function boom()
+{
+  var a = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  var b = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  var x = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  var y = document.createElementNS("http://www.w3.org/1999/xhtml", "basefont");
+  var z = document.createElementNS("http://www.w3.org/1999/xhtml", "body");
+  z.setAttributeNS(null, "link", "#333333");
+
+  document.documentElement.appendChild(a);
+  b.appendChild(x);
+  b.appendChild(y);
+  document.documentElement.offsetHeight;
+  a.appendChild(b);
+  document.documentElement.offsetHeight;
+  document.createElementNS("http://www.w3.org/1999/xhtml", "div").appendChild(y);
+  b.appendChild(z);
+}
+</script>
+<body onload="boom();"></body>
