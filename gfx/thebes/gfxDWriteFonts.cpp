@@ -52,6 +52,8 @@
 // Chosen this as to resemble DWrite's own oblique face style.
 #define OBLIQUE_SKEW_FACTOR 0.3
 
+using namespace mozilla::gfx;
+
 // This is also in gfxGDIFont.cpp. Would be nice to put it somewhere common,
 // but we can't declare it in the gfxFont.h or gfxFontUtils.h headers
 // because those are exported, and the cairo headers aren't.
@@ -707,6 +709,19 @@ gfxDWriteFont::GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
     width = NS_lround(MeasureGlyphWidth(aGID) * 65536.0);
     mGlyphWidths.Put(aGID, width);
     return width;
+}
+
+TemporaryRef<GlyphRenderingOptions>
+gfxDWriteFont::GetGlyphRenderingOptions()
+{
+  if (UsingClearType()) {
+    return Factory::CreateDWriteGlyphRenderingOptions(
+      gfxWindowsPlatform::GetPlatform()->GetRenderingParams(GetForceGDIClassic() ?
+        gfxWindowsPlatform::TEXT_RENDERING_GDI_CLASSIC : gfxWindowsPlatform::TEXT_RENDERING_NORMAL));
+  } else {
+    return Factory::CreateDWriteGlyphRenderingOptions(gfxWindowsPlatform::GetPlatform()->
+      GetRenderingParams(gfxWindowsPlatform::TEXT_RENDERING_NO_CLEARTYPE));
+  }
 }
 
 bool
