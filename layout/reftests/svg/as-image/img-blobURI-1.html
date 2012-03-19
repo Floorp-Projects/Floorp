@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <!-- This test checks to be sure we can render SVG-as-an-image
-     from a MozBlobBuilder-generated 'blob' URI. -->
+     from a 'blob' URI. -->
 <html class="reftest-wait">
 <head>
   <script>
     function go() {
       // Generate a blob URL encoding of an SVG document
-      var filedataURL = generateMozFiledataURL();
+      var blobURL = generateBlobURL();
 
       // Tell our img element to render the URL
       var img = document.getElementsByTagName("img")[0]
-      img.src = filedataURL;
+      img.src = blobURL;
 
       // Once our img loads, take reftest snapshot.
       img.addEventListener("load", function() {
@@ -20,14 +20,12 @@
 
     // Helper function -- returns a blob URL representing a
     // 100x100 fully-lime SVG document.
-    function generateMozFiledataURL() {
-      var blobBuilder = new self.MozBlobBuilder;
+    function generateBlobURL() {
       var svg =
         '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
           '<rect height="100%" width="100%" fill="lime"/>' +
         '</svg>';
-      blobBuilder.append(svg);
-      return self.URL.createObjectURL(blobBuilder.getBlob("image/svg+xml"));
+      return self.URL.createObjectURL(new Blob([svg], {type: "image/svg+xml"}));
     }
   </script>
 </head>
