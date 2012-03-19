@@ -219,8 +219,7 @@ JSClass Blob::sClass = {
   "Blob",
   JSCLASS_HAS_PRIVATE,
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize,
-  JSCLASS_NO_OPTIONAL_MEMBERS
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize
 };
 
 JSPropertySpec Blob::sProperties[] = {
@@ -370,8 +369,7 @@ JSClass File::sClass = {
   "File",
   JSCLASS_HAS_PRIVATE,
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize,
-  JSCLASS_NO_OPTIONAL_MEMBERS
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize
 };
 
 JSPropertySpec File::sProperties[] = {

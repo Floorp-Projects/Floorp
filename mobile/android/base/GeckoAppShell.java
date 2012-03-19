@@ -1099,9 +1099,13 @@ public class GeckoAppShell
         GeckoApp.mAppContext.setFullScreen(fullscreen);
     }
 
-    public static String showFilePicker(String aFilters) {
+    public static String showFilePickerForExtensions(String aExtensions) {
         return GeckoApp.mAppContext.
-            showFilePicker(getMimeTypeFromExtensions(aFilters));
+            showFilePicker(getMimeTypeFromExtensions(aExtensions));
+    }
+
+    public static String showFilePickerForMimeType(String aMimeType) {
+        return GeckoApp.mAppContext.showFilePicker(aMimeType);
     }
 
     public static void performHapticFeedback(boolean aIsLongPress) {
@@ -1626,8 +1630,6 @@ public class GeckoAppShell
         }
     }
 
-    static SynchronousQueue<String> sPromptQueue = null;
-
     public static void registerGeckoEventListener(String event, GeckoEventListener listener) {
         if (mEventListeners == null)
             mEventListeners = new HashMap<String, ArrayList<GeckoEventListener>>();
@@ -1687,8 +1689,6 @@ public class GeckoAppShell
             String type = geckoObject.getString("type");
             
             if (type.equals("Prompt:Show")) {
-                if (sPromptQueue == null)
-                    sPromptQueue = new SynchronousQueue<String>();
                 getHandler().post(new Runnable() {
                     public void run() {
                         getPromptService().processMessage(geckoObject);
@@ -1697,9 +1697,7 @@ public class GeckoAppShell
 
                 String promptServiceResult = "";
                 try {
-                    while (null == (promptServiceResult = sPromptQueue.poll(1, TimeUnit.MILLISECONDS))) {
-                        processNextNativeEvent();
-                    }
+                    promptServiceResult = PromptService.waitForReturn();
                 } catch (InterruptedException e) {
                     Log.i(LOGTAG, "showing prompt ",  e);
                 }
