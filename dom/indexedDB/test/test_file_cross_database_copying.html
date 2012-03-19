@@ -61,9 +61,6 @@
         refResult = result;
         continue;
       }
-
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-      isnot(result.mozFullPath, refResult.mozFullPath, "Different os files");
     }
 
     for (let i = 1; i < databases.length; i++) {
@@ -85,9 +82,6 @@
       let result = event.target.result;
       verifyBlob(result, refResult, 2);
       yield;
-
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-      isnot(result.mozFullPath, refResult.mozFullPath, "Different os files");
     }
 
     is(bufferCache.length, 2, "Correct length");
