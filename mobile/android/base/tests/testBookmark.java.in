@@ -21,20 +21,11 @@ public class testBookmark extends BaseTest {
 
         // Open the bookmark list and check the root folder view
         ListView bookmarksList = openBookmarksList();
-        checkRootFolderView(bookmarksList);
+        mAsserter.ok(bookmarksList != null, "checking that bookmarks list exists", "bookmarks list exists");
 
-        // Move to the "Mobile Bookmarks" folder (the first item is the header view)
-        mSolo.clickInList(2);
-
-        // Check that header view says "Mobile Bookmarks"
-        mAsserter.ok(mSolo.getText("Mobile Bookmarks") != null, "checking that header is correct", "bookmarks folder header is correct");
-
-        // Check that pressing the back buton goes up a folder level
-        mSolo.goBack();
-        checkRootFolderView(bookmarksList);
-        
-        // Move back to the "Mobile Bookmarks" folder
-        mSolo.clickInList(2);
+        // No folders should be visible if no desktop bookmarks exist
+        mAsserter.is(bookmarksList.getChildCount(), 2,
+            "bookmarks list has 2 children (the bookmark we added and the hidden header)");
 
         // Click on the bookmark we created (the first item is the header view)
         mSolo.clickInList(2);
@@ -61,16 +52,6 @@ public class testBookmark extends BaseTest {
 
         // Just return null if we can't find the bookmarks list view
         return null;
-    }
-
-    private void checkRootFolderView(ListView bookmarksList) {
-        // Wait for the folders to be displayed
-        mSolo.waitForText("Mobile Bookmarks");
-
-        mAsserter.ok(bookmarksList != null, "checking that bookmarks list exists", "bookmarks list exists");
-
-        // The root view should have 5 children
-        mAsserter.is(bookmarksList.getChildCount(), 5, "bookmarks list has 5 children (a header and 4 folders)");
     }
 
     // This method opens the menu and selects the "Bookmark" menu item
@@ -102,9 +83,6 @@ public class testBookmark extends BaseTest {
         //guard against this, navigate back to the bookmarks list and wait until
         //it is empty.
         ListView bookmarkList = openBookmarksList();
-
-        // Move to the "Mobile Bookmarks" folder (the first item is the header view)
-        mSolo.clickInList(2);
 
         final ListAdapter adapter = bookmarkList.getAdapter();
         waitForTest(new BooleanTest() {
