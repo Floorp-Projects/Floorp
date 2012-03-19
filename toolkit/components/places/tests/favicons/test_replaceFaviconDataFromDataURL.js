@@ -62,17 +62,6 @@ function addVisit(aURI) {
                    0);
 }
 
-function checkAddSucceeded(pageURI, mimetype, data) {
-  let savedFaviconURI = iconsvc.getFaviconForPage(pageURI);
-  let outMimeType = {};
-  let outData = iconsvc.getFaviconData(savedFaviconURI, outMimeType, {});
-
-  // Ensure input and output are identical
-  do_check_eq(mimetype, outMimeType.value);
-  do_check_true(compareArrays(data, outData));
-  do_check_guid_for_uri(pageURI);
-}
-
 function checkCallbackSucceeded(callbackMimetype, callbackData, sourceMimetype, sourceData) {
   do_check_eq(callbackMimetype, sourceMimetype);
   do_check_true(compareArrays(callbackData, sourceData));
@@ -95,10 +84,12 @@ add_test(function test_replaceFaviconDataFromDataURL_validHistoryURI() {
   iconsvc.setAndFetchFaviconForPage(pageURI, favicon.uri, true,
     function test_replaceFaviconDataFromDataURL_validHistoryURI_check(aURI, aDataLen, aData, aMimeType) {
       checkCallbackSucceeded(aMimeType, aData, favicon.mimetype, favicon.data);
-      checkAddSucceeded(pageURI, favicon.mimetype, favicon.data);
-
-      favicon.file.remove(false);
-      waitForClearHistory(run_next_test);
+      checkFaviconDataForPage(
+        pageURI, favicon.mimetype, favicon.data,
+        function test_replaceFaviconDataFromDataURL_validHistoryURI_callback() {
+          favicon.file.remove(false);
+          waitForClearHistory(run_next_test);
+        });
     });
 });
 
@@ -116,11 +107,13 @@ add_test(function test_replaceFaviconDataFromDataURL_overrideDefaultFavicon() {
     pageURI, firstFavicon.uri, true,
     function test_replaceFaviconDataFromDataURL_overrideDefaultFavicon_check(aURI, aDataLen, aData, aMimeType) {
       checkCallbackSucceeded(aMimeType, aData, secondFavicon.mimetype, secondFavicon.data);
-      checkAddSucceeded(pageURI, secondFavicon.mimetype, secondFavicon.data);
-
-      firstFavicon.file.remove(false);
-      secondFavicon.file.remove(false);
-      waitForClearHistory(run_next_test);
+      checkFaviconDataForPage(
+        pageURI, secondFavicon.mimetype, secondFavicon.data,
+        function test_replaceFaviconDataFromDataURL_overrideDefaultFavicon_callback() {
+          firstFavicon.file.remove(false);
+          secondFavicon.file.remove(false);
+          waitForClearHistory(run_next_test);
+        });
     });
 });
 
@@ -137,15 +130,18 @@ add_test(function test_replaceFaviconDataFromDataURL_replaceExisting() {
     pageURI, firstFavicon.uri, true,
     function test_replaceFaviconDataFromDataURL_replaceExisting_firstSet_check(aURI, aDataLen, aData, aMimeType) {
       checkCallbackSucceeded(aMimeType, aData, firstFavicon.mimetype, firstFavicon.data);
-      checkAddSucceeded(pageURI, firstFavicon.mimetype, firstFavicon.data);
-
-      iconsvc.replaceFaviconDataFromDataURL(firstFavicon.uri, createDataURLForFavicon(secondFavicon));
-      waitForAsyncUpdates(function() {
-        checkAddSucceeded(pageURI, secondFavicon.mimetype, secondFavicon.data);
-        firstFavicon.file.remove(false);
-        secondFavicon.file.remove(false);
-        waitForClearHistory(run_next_test);
-      });
+      checkFaviconDataForPage(
+        pageURI, firstFavicon.mimetype, firstFavicon.data,
+        function test_replaceFaviconDataFromDataURL_replaceExisting_firstCallback() {
+          iconsvc.replaceFaviconDataFromDataURL(firstFavicon.uri, createDataURLForFavicon(secondFavicon));
+          checkFaviconDataForPage(
+            pageURI, secondFavicon.mimetype, secondFavicon.data,
+            function test_replaceFaviconDataFromDataURL_replaceExisting_secondCallback() {
+              firstFavicon.file.remove(false);
+              secondFavicon.file.remove(false);
+              waitForClearHistory(run_next_test);
+            });
+        });
     });
 });
 
@@ -163,11 +159,13 @@ add_test(function test_replaceFaviconDataFromDataURL_unrelatedReplace() {
     pageURI, favicon.uri, true,
     function test_replaceFaviconDataFromDataURL_unrelatedReplace_check(aURI, aDataLen, aData, aMimeType) {
       checkCallbackSucceeded(aMimeType, aData, favicon.mimetype, favicon.data);
-      checkAddSucceeded(pageURI, favicon.mimetype, favicon.data);
-
-      favicon.file.remove(false);
-      unrelatedFavicon.file.remove(false);
-      waitForClearHistory(run_next_test);
+      checkFaviconDataForPage(
+        pageURI, favicon.mimetype, favicon.data,
+        function test_replaceFaviconDataFromDataURL_unrelatedReplace_callback() {
+          favicon.file.remove(false);
+          unrelatedFavicon.file.remove(false);
+          waitForClearHistory(run_next_test);
+        });
     });
 });
 
@@ -214,11 +212,13 @@ add_test(function test_replaceFaviconDataFromDataURL_twiceReplace() {
     pageURI, firstFavicon.uri, true,
     function test_replaceFaviconDataFromDataURL_twiceReplace_check(aURI, aDataLen, aData, aMimeType) {
       checkCallbackSucceeded(aMimeType, aData, secondFavicon.mimetype, secondFavicon.data);
-      checkAddSucceeded(pageURI, secondFavicon.mimetype, secondFavicon.data);
-
-      firstFavicon.file.remove(false);
-      secondFavicon.file.remove(false);
-      waitForClearHistory(run_next_test);
+      checkFaviconDataForPage(
+        pageURI, secondFavicon.mimetype, secondFavicon.data,
+        function test_replaceFaviconDataFromDataURL_twiceReplace_callback() {
+          firstFavicon.file.remove(false);
+          secondFavicon.file.remove(false);
+          waitForClearHistory(run_next_test);
+        });
     });
 });
 
@@ -238,17 +238,19 @@ add_test(function test_replaceFaviconDataFromDataURL_afterRegularAssign() {
 
   iconsvc.setAndFetchFaviconForPage(
     pageURI, firstFavicon.uri, true,
-    function test_replaceFaviconDataFromDataURL_twiceReplace_check(aURI, aDataLen, aData, aMimeType) {
+    function test_replaceFaviconDataFromDataURL_afterRegularAssign_check(aURI, aDataLen, aData, aMimeType) {
       checkCallbackSucceeded(aMimeType, aData, secondFavicon.mimetype, secondFavicon.data);
-      checkAddSucceeded(pageURI, secondFavicon.mimetype, secondFavicon.data);
-
-      firstFavicon.file.remove(false);
-      secondFavicon.file.remove(false);
-      waitForClearHistory(run_next_test);
+      checkFaviconDataForPage(
+        pageURI, secondFavicon.mimetype, secondFavicon.data,
+        function test_replaceFaviconDataFromDataURL_afterRegularAssign_callback() {
+          firstFavicon.file.remove(false);
+          secondFavicon.file.remove(false);
+          waitForClearHistory(run_next_test);
+        });
     });
 });
 
-add_test(function test_replaceFaviconDataFromDataURL_afterRegularAssign() {
+add_test(function test_replaceFaviconDataFromDataURL_beforeRegularAssign() {
   do_log_info("test replaceFaviconDataFromDataURL before replaceFaviconData");
 
   let pageURI = uri("http://test7.bar/");
@@ -264,13 +266,15 @@ add_test(function test_replaceFaviconDataFromDataURL_afterRegularAssign() {
 
   iconsvc.setAndFetchFaviconForPage(
     pageURI, firstFavicon.uri, true,
-    function test_replaceFaviconDataFromDataURL_twiceReplace_check(aURI, aDataLen, aData, aMimeType) {
+    function test_replaceFaviconDataFromDataURL_beforeRegularAssign_check(aURI, aDataLen, aData, aMimeType) {
       checkCallbackSucceeded(aMimeType, aData, secondFavicon.mimetype, secondFavicon.data);
-      checkAddSucceeded(pageURI, secondFavicon.mimetype, secondFavicon.data);
-
-      firstFavicon.file.remove(false);
-      secondFavicon.file.remove(false);
-      waitForClearHistory(run_next_test);
+      checkFaviconDataForPage(
+        pageURI, secondFavicon.mimetype, secondFavicon.data,
+        function test_replaceFaviconDataFromDataURL_beforeRegularAssign_callback() {
+          firstFavicon.file.remove(false);
+          secondFavicon.file.remove(false);
+          waitForClearHistory(run_next_test);
+        });
     });
 });
 

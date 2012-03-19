@@ -50,6 +50,7 @@ XPCSHELL_TESTS = \
   autocomplete \
   bookmarks \
   expiration \
+  favicons \
   inline \
   migration \
   network \
