@@ -81,8 +81,12 @@ public:
     mObservers.AppendElement(aObserver);
   }
 
-  void RemoveObserver(Observer<T>* aObserver) {
-    mObservers.RemoveElement(aObserver);
+  /**
+   * Remove the observer from the observer list.
+   * @return Whether the observer has been found in the list.
+   */
+  bool RemoveObserver(Observer<T>* aObserver) {
+    return mObservers.RemoveElement(aObserver);
   }
 
   PRUint32 Length() {
