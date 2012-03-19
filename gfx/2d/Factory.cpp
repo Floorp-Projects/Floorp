@@ -217,6 +217,15 @@ Factory::GetDirect3D10Device()
   return mD3D10Device;
 }
 
+TemporaryRef<GlyphRenderingOptions>
+Factory::CreateDWriteGlyphRenderingOptions(IDWriteRenderingParams *aParams)
+{
+  RefPtr<GlyphRenderingOptions> options =
+    new GlyphRenderingOptionsDWrite(aParams);
+
+  return options;
+}
+
 #endif // XP_WIN
 
 #ifdef USE_CAIRO
