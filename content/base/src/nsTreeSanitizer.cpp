@@ -1098,10 +1098,14 @@ nsTreeSanitizer::MustPrune(PRInt32 aNamespace,
                        nsGkAtoms::datalist == aLocal)) {
       return true;
     }
-    if (mDropMedia && (nsGkAtoms::img == aLocal ||
+    if (mDropMedia && (nsGkAtoms::img == aLocal
+#ifdef MOZ_MEDIA
+                       ||
                        nsGkAtoms::video == aLocal ||
                        nsGkAtoms::audio == aLocal ||
-                       nsGkAtoms::source == aLocal)) {
+                       nsGkAtoms::source == aLocal
+#endif
+                       )) {
       return true;
     }
     if (nsGkAtoms::meta == aLocal &&
