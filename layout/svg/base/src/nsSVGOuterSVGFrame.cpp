@@ -837,3 +837,11 @@ nsSVGOuterSVGFrame::IsRootOfImage()
 
   return false;
 }
+
+bool
+nsSVGOuterSVGFrame::VerticalScrollbarNotNeeded() const
+{
+  nsSVGLength2 &height = static_cast<nsSVGSVGElement*>(mContent)->
+                           mLengthAttributes[nsSVGSVGElement::HEIGHT];
+  return height.IsPercentage() && height.GetBaseValInSpecifiedUnits() <= 100;
+}
