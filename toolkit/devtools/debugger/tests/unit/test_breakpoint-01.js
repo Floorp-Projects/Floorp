@@ -15,7 +15,9 @@ function run_test()
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect(function () {
-    attachTestGlobalClientAndResume(gClient, "test-stack", function (aResponse, aThreadClient) {
+    attachTestGlobalClientAndResume(gClient,
+                                    "test-stack",
+                                    function (aResponse, aThreadClient) {
       gThreadClient = aThreadClient;
       test_simple_breakpoint();
     });
@@ -27,10 +29,13 @@ function test_simple_breakpoint()
 {
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let path = getFilePath('test_breakpoint-01.js');
-    gThreadClient.setBreakpoint({ url: path, line: gDebuggee.line0 + 3}, function (aResponse, bpClient) {
+    let location = { url: path, line: gDebuggee.line0 + 3};
+    gThreadClient.setBreakpoint(location, function (aResponse, bpClient) {
       gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         // Check the return value.
         do_check_eq(aPacket.type, "paused");
+        do_check_eq(aPacket.frame.where.url, path);
+        do_check_eq(aPacket.frame.where.line, location.line);
         do_check_eq(aPacket.why.type, "breakpoint");
         do_check_eq(aPacket.why.actors[0], bpClient.actor);
         // Check that the breakpoint worked.

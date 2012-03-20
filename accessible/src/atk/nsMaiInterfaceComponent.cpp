@@ -37,29 +37,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMaiInterfaceComponent.h"
+#include "InterfaceInitFuncs.h"
 
 #include "nsAccessibleWrap.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
+#include "nsMai.h"
 
-void
-componentInterfaceInitCB(AtkComponentIface *aIface)
-{
-    NS_ASSERTION(aIface, "Invalid Interface");
-    if(!aIface)
-        return;
+extern "C" {
 
-    /*
-     * Use default implementation in atk for contains, get_position,
-     * and get_size
-     */
-    aIface->ref_accessible_at_point = refAccessibleAtPointCB;
-    aIface->get_extents = getExtentsCB;
-    aIface->grab_focus = grabFocusCB;
-}
-
-AtkObject*
+static AtkObject*
 refAccessibleAtPointCB(AtkComponent* aComponent, gint aAccX, gint aAccY,
                        AtkCoordType aCoordType)
 {
@@ -67,7 +54,7 @@ refAccessibleAtPointCB(AtkComponent* aComponent, gint aAccX, gint aAccY,
                                     aAccX, aAccY, aCoordType);
 }
 
-void
+static void
 getExtentsCB(AtkComponent* aComponent, gint* aX, gint* aY,
              gint* aWidth, gint* aHeight, AtkCoordType aCoordType)
 {
@@ -75,7 +62,7 @@ getExtentsCB(AtkComponent* aComponent, gint* aX, gint* aY,
                    aX, aY, aWidth, aHeight, aCoordType);
 }
 
-gboolean
+static gboolean
 grabFocusCB(AtkComponent* aComponent)
 {
   nsAccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aComponent));
@@ -84,6 +71,7 @@ grabFocusCB(AtkComponent* aComponent)
 
   nsresult rv = accWrap->TakeFocus();
   return (NS_FAILED(rv)) ? FALSE : TRUE;
+}
 }
 
 AtkObject*
@@ -139,4 +127,20 @@ getExtentsHelper(nsAccessibleWrap* aAccWrap,
   *aY = y;
   *aWidth = width;
   *aHeight = height;
+}
+
+void
+componentInterfaceInitCB(AtkComponentIface* aIface)
+{
+  NS_ASSERTION(aIface, "Invalid Interface");
+  if(NS_UNLIKELY(!aIface))
+    return;
+
+  /*
+   * Use default implementation in atk for contains, get_position,
+   * and get_size
+   */
+  aIface->ref_accessible_at_point = refAccessibleAtPointCB;
+  aIface->get_extents = getExtentsCB;
+  aIface->grab_focus = grabFocusCB;
 }

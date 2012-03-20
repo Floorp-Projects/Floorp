@@ -430,8 +430,7 @@ static const JSClass sCPOW_NewEnumerateState_JSClass = {
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub,
-    JS_ConvertStub,   CPOW_NewEnumerateState_Finalize,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    JS_ConvertStub,   CPOW_NewEnumerateState_Finalize
 };
 
 bool

@@ -25,3 +25,5 @@ convert.patch contains the following changes:
 win64.patch: SSE2 optimization for Microsoft Visual C++ x64 version
 
 TypeFromSize.patch: Bug 656185 - Add a method to detect YUVType from plane sizes.
+
+QuellGccWarnings.patch: Bug 711895 - Avoid some GCC compilation warnings.
