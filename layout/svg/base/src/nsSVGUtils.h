@@ -94,16 +94,11 @@ class Element;
 // SVG Frame state bits
 #define NS_STATE_IS_OUTER_SVG                    NS_FRAME_STATE_BIT(20)
 
-#define NS_STATE_SVG_DIRTY                       NS_FRAME_STATE_BIT(21)
-
 /* are we the child of a non-display container? */
 #define NS_STATE_SVG_NONDISPLAY_CHILD            NS_FRAME_STATE_BIT(22)
 
 // If this bit is set, we are a <clipPath> element or descendant.
 #define NS_STATE_SVG_CLIPPATH_CHILD              NS_FRAME_STATE_BIT(23)
-
-// If this bit is set, redraw is suspended.
-#define NS_STATE_SVG_REDRAW_SUSPENDED            NS_FRAME_STATE_BIT(24)
 
 /**
  * Byte offsets of channels in a native packed gfxColor or cairo image surface.
@@ -398,19 +393,6 @@ public:
    */
   static void
   NotifyChildrenOfSVGChange(nsIFrame *aFrame, PRUint32 aFlags);
-
-  /*
-   * Tells child frames that redraw is suspended
-   */
-  static void
-  NotifyRedrawSuspended(nsIFrame *aFrame);
-
-  /*
-   * Tells child frames that redraw is no longer suspended
-   * @return true if any of the child frames are dirty
-   */
-  static void
-  NotifyRedrawUnsuspended(nsIFrame *aFrame);
 
   /*
    * Get frame's covered region by walking the children and doing union.

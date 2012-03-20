@@ -86,7 +86,6 @@ public:
 
   // nsISVGChildFrame interface:
   virtual void NotifySVGChanged(PRUint32 aFlags);
-  virtual void NotifyRedrawUnsuspended();
   // Override these four to ensure that UpdateGlyphPositioning is called
   // to bring glyph positions up to date
   NS_IMETHOD PaintSVG(nsRenderingContext* aContext,

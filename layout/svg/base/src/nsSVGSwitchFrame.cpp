@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsSVGEffects.h"
 #include "nsSVGGFrame.h"
 #include "nsSVGSwitchElement.h"
 #include "nsSVGUtils.h"
@@ -83,7 +84,6 @@ public:
   NS_IMETHODIMP_(nsRect) GetCoveredRegion();
   NS_IMETHOD UpdateCoveredRegion();
   NS_IMETHOD InitialUpdate();
-  virtual void NotifyRedrawUnsuspended();
   virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                       PRUint32 aFlags);
 
@@ -184,20 +184,11 @@ nsSVGSwitchFrame::UpdateCoveredRegion()
 NS_IMETHODIMP
 nsSVGSwitchFrame::InitialUpdate()
 {
-  nsSVGUtils::UpdateGraphic(this);
+  static_cast<nsSVGSwitchElement*>(mContent)->UpdateActiveChild();
+
+  nsSVGEffects::InvalidateRenderingObservers(this);
 
   return nsSVGSwitchFrameBase::InitialUpdate();
-}
-
-void
-nsSVGSwitchFrame::NotifyRedrawUnsuspended()
-{
-  RemoveStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
-
-  if (GetStateBits() & NS_STATE_SVG_DIRTY)
-    nsSVGUtils::UpdateGraphic(this);
-
-  nsSVGSwitchFrameBase::NotifyRedrawUnsuspended();
 }
 
 gfxRect

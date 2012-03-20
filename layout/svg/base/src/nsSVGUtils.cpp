@@ -657,12 +657,11 @@ nsSVGUtils::InvalidateCoveredRegion(nsIFrame *aFrame)
   if (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return;
 
-  if (aFrame->GetStateBits() & NS_STATE_SVG_REDRAW_SUSPENDED) {
-    aFrame->AddStateBits(NS_STATE_SVG_DIRTY);
+  if (aFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+    // The nsSVGOuterSVGFrame has not received its first reflow,
+    // and when it does its entire area will be invalidated.
     return;
   }
-
-  aFrame->RemoveStateBits(NS_STATE_SVG_DIRTY);
 
   nsSVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame(aFrame);
   NS_ASSERTION(outerSVGFrame, "no outer svg frame");
@@ -688,12 +687,11 @@ nsSVGUtils::UpdateGraphic(nsIFrame *aFrame)
   if (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return;
 
-  if (aFrame->GetStateBits() & NS_STATE_SVG_REDRAW_SUSPENDED) {
-    aFrame->AddStateBits(NS_STATE_SVG_DIRTY);
+  if (aFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+    // The nsSVGOuterSVGFrame has not received its first reflow,
+    // and when it does its entire area will be invalidated.
     return;
   }
-
-  aFrame->RemoveStateBits(NS_STATE_SVG_DIRTY);
 
   nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
   if (!svgFrame)
@@ -968,38 +966,6 @@ nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, PRUint32 aFlags)
       // recurse into the children of container frames e.g. <clipPath>, <mask>
       // in case they have child frames with transformation matrices
       NotifyChildrenOfSVGChange(kid, aFlags);
-    }
-    kid = kid->GetNextSibling();
-  }
-}
-
-void
-nsSVGUtils::NotifyRedrawSuspended(nsIFrame *aFrame)
-{
-  aFrame->AddStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
-
-  nsIFrame *kid = aFrame->GetFirstPrincipalChild();
-
-  while (kid) {
-    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
-    if (SVGFrame) {
-      SVGFrame->NotifyRedrawSuspended();
-    }
-    kid = kid->GetNextSibling();
-  }
-}
-
-void
-nsSVGUtils::NotifyRedrawUnsuspended(nsIFrame *aFrame)
-{
-  aFrame->RemoveStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
-
-  nsIFrame *kid = aFrame->GetFirstPrincipalChild();
-
-  while (kid) {
-    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
-    if (SVGFrame) {
-      SVGFrame->NotifyRedrawUnsuspended();
     }
     kid = kid->GetNextSibling();
   }

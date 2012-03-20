@@ -227,9 +227,9 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 == svg-in-foreignObject-01.xhtml svg-in-foreignObject-01-ref.xhtml
 == svg-in-foreignObject-02.xhtml svg-in-foreignObject-01-ref.xhtml # reuse -01-ref.xhtml
 == switch-01.svg pass.svg
-== suspend-01.svg about:blank
+== suspend-01.svg pass.svg
 == suspend-02.svg pass.svg
-fails == suspend-03.svg pass.svg # bug 724242
+== suspend-03.svg pass.svg
 == suspend-04.svg pass.svg
 == suspend-05.svg pass.svg
 == suspend-06.svg pass.svg

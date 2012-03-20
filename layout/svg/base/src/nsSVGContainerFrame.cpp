@@ -101,8 +101,7 @@ nsSVGDisplayContainerFrame::Init(nsIContent* aContent,
 {
   if (!(GetStateBits() & NS_STATE_IS_OUTER_SVG)) {
     AddStateBits(aParent->GetStateBits() &
-      (NS_STATE_SVG_NONDISPLAY_CHILD | NS_STATE_SVG_CLIPPATH_CHILD |
-       NS_STATE_SVG_REDRAW_SUSPENDED));
+      (NS_STATE_SVG_NONDISPLAY_CHILD | NS_STATE_SVG_CLIPPATH_CHILD));
   }
   nsresult rv = nsSVGContainerFrame::Init(aContent, aParent, aPrevInFlow);
   return rv;
@@ -142,9 +141,6 @@ NS_IMETHODIMP
 nsSVGDisplayContainerFrame::RemoveFrame(ChildListID aListID,
                                         nsIFrame* aOldFrame)
 {
-  // Force the invalidation before it's too late
-  RemoveStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
-
   nsSVGUtils::InvalidateCoveredRegion(aOldFrame);
 
   nsresult rv = nsSVGContainerFrame::RemoveFrame(aListID, aOldFrame);
@@ -207,6 +203,20 @@ nsSVGDisplayContainerFrame::InitialUpdate()
                "Yikes! We've been called already! Hopefully we weren't called "
                "before our nsSVGOuterSVGFrame's initial Reflow()!!!");
 
+  // If the NS_FRAME_FIRST_REFLOW bit has been removed from our parent frame,
+  // then our outer-<svg> has previously had its initial reflow. In that case
+  // we need to make sure that that bit has been removed from ourself _before_
+  // recursing over our children to ensure that they know too. Otherwise, we
+  // need to remove it _after_ recursing over our children so that they know
+  // the initial reflow is currently underway.
+
+  bool outerSVGHasHadFirstReflow =
+    (GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW) == 0;
+
+  if (outerSVGHasHadFirstReflow) {
+    mState &= ~NS_FRAME_FIRST_REFLOW; // tell our children
+  }
+
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
@@ -217,8 +227,7 @@ nsSVGDisplayContainerFrame::InitialUpdate()
 
   NS_ASSERTION(!(mState & NS_FRAME_IN_REFLOW),
                "We don't actually participate in reflow");
-  
-  // Do unset the various reflow bits, though.
+
   mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
               NS_FRAME_HAS_DIRTY_CHILDREN);
   
@@ -236,18 +245,6 @@ nsSVGDisplayContainerFrame::NotifySVGChanged(PRUint32 aFlags)
                     "Invalidation logic may need adjusting");
 
   nsSVGUtils::NotifyChildrenOfSVGChange(this, aFlags);
-}
-
-void
-nsSVGDisplayContainerFrame::NotifyRedrawSuspended()
-{
-  nsSVGUtils::NotifyRedrawSuspended(this);
-}
-
-void
-nsSVGDisplayContainerFrame::NotifyRedrawUnsuspended()
-{
-  nsSVGUtils::NotifyRedrawUnsuspended(this);
 }
 
 gfxRect

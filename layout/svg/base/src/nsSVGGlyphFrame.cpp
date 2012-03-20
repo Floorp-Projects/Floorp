@@ -511,10 +511,22 @@ nsSVGGlyphFrame::InitialUpdate()
   NS_ASSERTION(!(mState & NS_FRAME_IN_REFLOW),
                "We don't actually participate in reflow");
 
-  // Do unset the various reflow bits, though.
   mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
               NS_FRAME_HAS_DIRTY_CHILDREN);
-  
+
+  if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    // We only invalidate if our outer-<svg> has already had its
+    // initial reflow (since if it hasn't, its entire area will be
+    // invalidated when it gets that initial reflow):
+    nsSVGUtils::InvalidateCoveredRegion(this);
+
+    // We also only call UpdateCoveredRegion here, since if our
+    // outer-<svg> has yet to receive its initial reflow,
+    // we're going to get updated when our nsSVGTextFrame's
+    // InitialUpdate calls UpdateGlyphPositioning.
+    UpdateCoveredRegion();
+  }
+
   return NS_OK;
 }  
 
@@ -534,21 +546,6 @@ nsSVGGlyphFrame::NotifySVGChanged(PRUint32 aFlags)
   if (!(aFlags & DO_NOT_NOTIFY_RENDERING_OBSERVERS)) {
     nsSVGUtils::UpdateGraphic(this);
   }
-}
-
-void
-nsSVGGlyphFrame::NotifyRedrawSuspended()
-{
-  AddStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
-}
-
-void
-nsSVGGlyphFrame::NotifyRedrawUnsuspended()
-{
-  RemoveStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
-
-  if (GetStateBits() & NS_STATE_SVG_DIRTY)
-    nsSVGUtils::UpdateGraphic(this);
 }
 
 void
