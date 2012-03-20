@@ -48,6 +48,7 @@ class nsIInterfaceRequestor;
 class nsIEventTarget;
 class nsITransport;
 class nsHttpRequestHead;
+class nsHttpPipeline;
 
 //----------------------------------------------------------------------------
 // Abstract base class for a HTTP transaction:
@@ -133,6 +134,11 @@ public:
     virtual nsresult SetPipelinePosition(PRInt32) = 0;
     virtual PRInt32  PipelinePosition() = 0;
 
+    // If we used rtti this would be the result of doing
+    // dynamic_cast<nsHttpPipeline *>(this).. i.e. it can be nsnull for
+    // non pipeline implementations of nsAHttpTransaction
+    virtual nsHttpPipeline *QueryPipeline() { return nsnull; }
+    
     // Every transaction is classified into one of the types below. When using
     // HTTP pipelines, only transactions with the same type appear on the same
     // pipeline.
