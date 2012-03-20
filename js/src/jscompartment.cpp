@@ -466,7 +466,7 @@ JSCompartment::markTypes(JSTracer *trc)
 }
 
 void
-JSCompartment::discardJitCode(JSContext *cx)
+JSCompartment::discardJitCode(FreeOp *fop)
 {
     /*
      * Kick all frames on the stack into the interpreter, and release all JIT
@@ -477,7 +477,7 @@ JSCompartment::discardJitCode(JSContext *cx)
 
     for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        mjit::ReleaseScriptCode(cx, script);
+        mjit::ReleaseScriptCode(fop, script);
 
         /*
          * Use counts for scripts are reset on GC. After discarding code we
@@ -521,7 +521,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DISCARD_CODE);
-        discardJitCode(fop->context);
+        discardJitCode(fop);
     }
 
     if (!activeAnalysis) {
@@ -552,7 +552,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
             for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
                 JSScript *script = i.get<JSScript>();
                 if (script->types) {
-                    types::TypeScript::Sweep(fop->context, script);
+                    types::TypeScript::Sweep(fop, script);
 
                     if (releaseTypes) {
                         script->types->destroy();
@@ -565,7 +565,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 
         {
             gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_SWEEP_TYPES);
-            types.sweep(fop->context);
+            types.sweep(fop);
         }
 
         {
@@ -677,12 +677,12 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b)
     debugModeBits = (debugModeBits & ~unsigned(DebugFromC)) | (b ? DebugFromC : 0);
     JS_ASSERT(debugMode() == enabledAfter);
     if (enabledBefore != enabledAfter)
-        updateForDebugMode(cx);
+        updateForDebugMode(cx->runtime->defaultFreeOp());
     return true;
 }
 
 void
-JSCompartment::updateForDebugMode(JSContext *cx)
+JSCompartment::updateForDebugMode(FreeOp *fop)
 {
     for (ContextIter acx(rt); !acx.done(); acx.next()) {
         if (acx->compartment == this) 
@@ -704,7 +704,7 @@ JSCompartment::updateForDebugMode(JSContext *cx)
     for (gc::CellIter i(this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->debugMode != enabled) {
-            mjit::ReleaseScriptCode(cx, script);
+            mjit::ReleaseScriptCode(fop, script);
             script->clearAnalysis();
             script->debugMode = enabled;
         }
@@ -722,12 +722,12 @@ JSCompartment::addDebuggee(JSContext *cx, js::GlobalObject *global)
     }
     debugModeBits |= DebugFromJS;
     if (!wasEnabled)
-        updateForDebugMode(cx);
+        updateForDebugMode(cx->runtime->defaultFreeOp());
     return true;
 }
 
 void
-JSCompartment::removeDebuggee(JSContext *cx,
+JSCompartment::removeDebuggee(FreeOp *fop,
                               js::GlobalObject *global,
                               js::GlobalObjectSet::Enum *debuggeesEnum)
 {
@@ -741,7 +741,7 @@ JSCompartment::removeDebuggee(JSContext *cx,
     if (debuggees.empty()) {
         debugModeBits &= ~DebugFromJS;
         if (wasEnabled && !debugMode())
-            updateForDebugMode(cx);
+            updateForDebugMode(fop);
     }
 }
 
@@ -761,7 +761,7 @@ JSCompartment::clearTraps(JSContext *cx)
     for (gc::CellIter i(this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->hasAnyBreakpointsOrStepMode())
-            script->clearTraps(cx);
+            script->clearTraps(cx->runtime->defaultFreeOp());
     }
 }
 
@@ -786,7 +786,7 @@ JSCompartment::sweepBreakpoints(FreeOp *fop)
             for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
                 nextbp = bp->nextInSite();
                 if (scriptGone || IsAboutToBeFinalized(bp->debugger->toJSObject()))
-                    bp->destroy(fop->context);
+                    bp->destroy(fop);
             }
         }
     }

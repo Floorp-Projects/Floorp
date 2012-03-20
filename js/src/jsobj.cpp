@@ -858,7 +858,7 @@ class EvalScriptGuard
 
     ~EvalScriptGuard() {
         if (script_) {
-            js_CallDestroyScriptHook(cx_, script_);
+            CallDestroyScriptHook(cx_->runtime->defaultFreeOp(), script_);
             script_->isActiveEval = false;
             script_->isCachedEval = true;
             script_->evalHashLink() = *bucket_;

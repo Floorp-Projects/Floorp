@@ -707,7 +707,7 @@ JSRuntime::JSRuntime()
     nativeStackQuota(0),
     interpreterFrames(NULL),
     cxCallback(NULL),
-    compartmentCallback(NULL),
+    destroyCompartmentCallback(NULL),
     activityCallback(NULL),
     activityCallbackArg(NULL),
 #ifdef JS_THREADSAFE
@@ -776,7 +776,7 @@ JSRuntime::JSRuntime()
     gcLock(NULL),
     gcHelperThread(thisFromCtor()),
 #endif
-    defaultFreeOp_(thisFromCtor(), false, false, NULL),
+    defaultFreeOp_(thisFromCtor(), false, false),
     debuggerMutations(0),
     securityCallbacks(const_cast<JSSecurityCallbacks *>(&NullSecurityCallbacks)),
     destroyPrincipals(NULL),
@@ -1325,12 +1325,10 @@ JS_GetImplementationVersion(void)
     return "JavaScript-C 1.8.5+ 2011-04-16";
 }
 
-JS_PUBLIC_API(JSCompartmentCallback)
-JS_SetCompartmentCallback(JSRuntime *rt, JSCompartmentCallback callback)
+JS_PUBLIC_API(void)
+JS_SetDestroyCompartmentCallback(JSRuntime *rt, JSDestroyCompartmentCallback callback)
 {
-    JSCompartmentCallback old = rt->compartmentCallback;
-    rt->compartmentCallback = callback;
-    return old;
+    rt->destroyCompartmentCallback = callback;
 }
 
 JS_PUBLIC_API(JSWrapObjectCallback)
@@ -3052,7 +3050,7 @@ JS_IdArrayGet(JSContext *cx, JSIdArray *ida, int index)
 JS_PUBLIC_API(void)
 JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
 {
-    cx->free_(ida);
+    DestroyIdArray(cx->runtime->defaultFreeOp(), ida);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4276,7 +4274,7 @@ prop_iter_finalize(FreeOp *fop, JSObject *obj)
     if (obj->getSlot(JSSLOT_ITER_INDEX).toInt32() >= 0) {
         /* Non-native case: destroy the ida enumerated when obj was created. */
         JSIdArray *ida = (JSIdArray *) pdata;
-        JS_DestroyIdArray(fop->context, ida);
+        DestroyIdArray(fop, ida);
     }
 }
 

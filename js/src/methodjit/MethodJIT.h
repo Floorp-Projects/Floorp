@@ -866,8 +866,8 @@ struct JITScript
 
     size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf);
 
-    void destroy(JSContext *cx);
-    void destroyChunk(JSContext *cx, unsigned chunkIndex, bool resetUses = true);
+    void destroy(FreeOp *fop);
+    void destroyChunk(FreeOp *fop, unsigned chunkIndex, bool resetUses = true);
 };
 
 /*
@@ -907,15 +907,15 @@ CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
              bool construct, CompileRequest request);
 
 void
-ReleaseScriptCode(JSContext *cx, JSScript *script, bool construct);
+ReleaseScriptCode(FreeOp *fop, JSScript *script, bool construct);
 
 inline void
-ReleaseScriptCode(JSContext *cx, JSScript *script)
+ReleaseScriptCode(FreeOp *fop, JSScript *script)
 {
     if (script->jitCtor)
-        mjit::ReleaseScriptCode(cx, script, true);
+        mjit::ReleaseScriptCode(fop, script, true);
     if (script->jitNormal)
-        mjit::ReleaseScriptCode(cx, script, false);
+        mjit::ReleaseScriptCode(fop, script, false);
 }
 
 // Expand all stack frames inlined by the JIT within a compartment.
