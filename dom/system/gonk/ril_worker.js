@@ -777,7 +777,7 @@ let RIL = {
     let token = Buf.newParcel(REQUEST_SIM_IO, options);
     Buf.writeUint32(options.command);
     Buf.writeUint32(options.fileid);
-    Buf.writeString(options.path);
+    Buf.writeString(options.pathid);
     Buf.writeUint32(options.p1);
     Buf.writeUint32(options.p2);
     Buf.writeUint32(options.p3);
