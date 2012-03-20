@@ -73,14 +73,8 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
     private VirtualLayer mRootLayer;
 
-    /* The viewport that Gecko is currently displaying. */
+    /* The Gecko viewport as per the UI thread. Must be touched only on the UI thread. */
     private ViewportMetrics mGeckoViewport;
-
-    /*
-     * The display port that Gecko is currently displaying. This is stored only
-     * to avoid having to create a Rect on every composition.
-     */
-    private Rect mGeckoDisplayPort;
 
     /*
      * The viewport metrics being used to draw the current frame. This is only
@@ -102,7 +96,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
         mScreenSize = new IntSize(0, 0);
         mWindowSize = new IntSize(0, 0);
         mDisplayPort = new RectF();
-        mGeckoDisplayPort = new Rect();
         mCurrentViewTransform = new ViewTransform(0, 0, 1);
     }
 
@@ -124,27 +117,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
         layerController.setRoot(mRootLayer);
 
         sendResizeEventIfNecessary(true);
-    }
-
-    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
-    public boolean beginDrawing(int width, int height, String metadata) {
-        try {
-            JSONObject viewportObject = new JSONObject(metadata);
-            mGeckoViewport = new ViewportMetrics(viewportObject);
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Aborting draw, bad viewport description: " + metadata);
-            return false;
-        }
-
-        return true;
-    }
-
-    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
-    public void endDrawing() {
-        synchronized (mLayerController) {
-            RectF position = mGeckoViewport.getViewport();
-            mRootLayer.setPositionAndResolution(RectUtils.round(position), mGeckoViewport.getZoomFactor());
-        }
     }
 
     RectF getDisplayPort() {
@@ -267,17 +239,23 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
         mDisplayPort = calculateDisplayPort(mLayerController.getViewportMetrics());
         GeckoAppShell.sendEventToGecko(GeckoEvent.createViewportEvent(viewportMetrics, mDisplayPort));
+        mGeckoViewport = viewportMetrics;
     }
 
     /** Implementation of GeckoEventResponder/GeckoEventListener. */
     public void handleMessage(String event, JSONObject message) {
         try {
             if ("Viewport:Update".equals(event)) {
-                ViewportMetrics newMetrics = new ViewportMetrics(message);
+                final ViewportMetrics newMetrics = new ViewportMetrics(message);
                 synchronized (mLayerController) {
                     // keep the old viewport size, but update everything else
                     ImmutableViewportMetrics oldMetrics = mLayerController.getViewportMetrics();
                     newMetrics.setSize(oldMetrics.getSize());
+                    mLayerController.post(new Runnable() {
+                        public void run() {
+                            mGeckoViewport = newMetrics;
+                        }
+                    });
                     mLayerController.setViewportMetrics(newMetrics);
                     mLayerController.abortPanZoomAnimation();
                     mDisplayPort = calculateDisplayPort(mLayerController.getViewportMetrics());
@@ -324,11 +302,16 @@ public class GeckoLayerClient implements GeckoEventResponder,
             adjustViewport();
     }
 
+    /*
+     * This function returns the last viewport that we sent to Gecko. If any additional events are
+     * being sent to Gecko that are relative on the Gecko viewport position, they must (a) be relative
+     * to this viewport, and (b) be sent on the UI thread to avoid races. As long as these two
+     * conditions are satisfied, and the events being sent to Gecko are processed in FIFO order, the
+     * events will properly be relative to the Gecko viewport position. Note that if Gecko updates
+     * its viewport independently, we get notified synchronously and also update this on the UI thread.
+     */
     public ViewportMetrics getGeckoViewportMetrics() {
-        // Return a copy, as we modify this inside the Gecko thread
-        if (mGeckoViewport != null)
-            return new ViewportMetrics(mGeckoViewport);
-        return null;
+        return mGeckoViewport;
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature.
@@ -401,8 +384,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
         mCurrentViewTransform.y = mFrameMetrics.viewportRectTop;
         mCurrentViewTransform.scale = mFrameMetrics.zoomFactor;
 
-        mGeckoDisplayPort.set(x, y, x + width, y + height);
-        mRootLayer.setDisplayPort(mGeckoDisplayPort);
+        mRootLayer.setPositionAndResolution(x, y, x + width, y + height, resolution);
 
         if (layersUpdated && mDrawListener != null) {
             /* Used by robocop for testing purposes */

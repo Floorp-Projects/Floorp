@@ -50,11 +50,11 @@ public class VirtualLayer extends Layer {
         // No-op.
     }
 
-    void setPositionAndResolution(Rect newPosition, float newResolution) {
+    void setPositionAndResolution(int left, int top, int right, int bottom, float newResolution) {
         // This is an optimized version of the following code:
         // beginTransaction();
         // try {
-        //     setPosition(newPosition);
+        //     setPosition(new Rect(left, top, right, bottom));
         //     setResolution(newResolution);
         //     performUpdates(null);
         // } finally {
@@ -63,21 +63,9 @@ public class VirtualLayer extends Layer {
 
         // it is safe to drop the transaction lock in this instance (i.e. for the
         // VirtualLayer that is just a shadow of what gecko is painting) because
-        // the position and resolution of this layer are never used for anything
-        // meaningful.
-        // XXX The above is not true any more; the compositor uses these values
-        // in order to determine where to draw the checkerboard. The values are
-        // also used in LayerController's convertViewPointToLayerPoint function.
-        mPosition = newPosition;
+        // the position and resolution of this layer are always touched on the compositor
+        // thread, and therefore do not require synchronization.
+        mPosition.set(left, top, right, bottom);
         mResolution = newResolution;
-    }
-
-    @Override
-    public void setDisplayPort(Rect displayPort) {
-        // Similar to the above, this removes the lock from setDisplayPort. As
-        // this is currently only called by the Compositor, and it is only
-        // accessed by the composition thread, it is safe to remove the locks
-        // from this call.
-        mDisplayPort = displayPort;
     }
 }

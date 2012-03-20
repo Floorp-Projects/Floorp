@@ -93,8 +93,6 @@ jmethodID AndroidLocation::jGetSpeedMethod = 0;
 jmethodID AndroidLocation::jGetTimeMethod = 0;
 
 jclass AndroidGeckoLayerClient::jGeckoLayerClientClass = 0;
-jmethodID AndroidGeckoLayerClient::jBeginDrawingMethod = 0;
-jmethodID AndroidGeckoLayerClient::jEndDrawingMethod = 0;
 jmethodID AndroidGeckoLayerClient::jSetFirstPaintViewport = 0;
 jmethodID AndroidGeckoLayerClient::jSetPageSize = 0;
 jmethodID AndroidGeckoLayerClient::jSyncViewportInfoMethod = 0;
@@ -270,8 +268,6 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
 
     jGeckoLayerClientClass = getClassGlobalRef("org/mozilla/gecko/gfx/GeckoLayerClient");
 
-    jBeginDrawingMethod = getMethod("beginDrawing", "(IILjava/lang/String;)Z");
-    jEndDrawingMethod = getMethod("endDrawing", "()V");
     jSetFirstPaintViewport = getMethod("setFirstPaintViewport", "(FFFFF)V");
     jSetPageSize = getMethod("setPageSize", "(FFF)V");
     jSyncViewportInfoMethod = getMethod("syncViewportInfo",
@@ -654,32 +650,6 @@ AndroidGeckoSurfaceView::Draw2D(jobject buffer, int stride)
         return;
 
     env->CallVoidMethod(wrapped_obj, jDraw2DBufferMethod, buffer, stride);
-}
-
-bool
-AndroidGeckoLayerClient::BeginDrawing(int aWidth, int aHeight, const nsAString &aMetadata)
-{
-    NS_ASSERTION(!isNull(), "BeginDrawing() called on null layer client!");
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return false;
-
-    AndroidBridge::AutoLocalJNIFrame jniFrame(env);
-    jstring jMetadata = env->NewString(nsPromiseFlatString(aMetadata).get(), aMetadata.Length());
-
-    return env->CallBooleanMethod(wrapped_obj, jBeginDrawingMethod, aWidth, aHeight, jMetadata);
-}
-
-void
-AndroidGeckoLayerClient::EndDrawing()
-{
-    NS_ASSERTION(!isNull(), "EndDrawing() called on null layer client!");
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return;
-
-    AndroidBridge::AutoLocalJNIFrame jniFrame(env);
-    return env->CallVoidMethod(wrapped_obj, jEndDrawingMethod);
 }
 
 void
