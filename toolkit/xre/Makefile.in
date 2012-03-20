@@ -36,6 +36,7 @@ CPPSRCS = \
   nsAppData.cpp \
   nsSigHandlers.cpp \
   nsEmbedFunctions.cpp \
+  ProfileReset.cpp \
   $(NULL)
 
 ifeq ($(MOZ_GL_DEFAULT_PROVIDER),GLX)
