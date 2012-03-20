@@ -142,8 +142,8 @@ function RadioInterfaceLayer() {
   this.worker.onmessage = this.onmessage.bind(this);
   debug("Starting Worker\n");
   this.radioState = {
-    radioState:     null,
-    cardState:      null,
+    radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
+    cardState:      RIL.GECKO_CARDSTATE_UNAVAILABLE,
     connected:      null,
     roaming:        null,
     signalStrength: null,
