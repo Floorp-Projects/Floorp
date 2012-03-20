@@ -119,6 +119,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mPriority(0)
     , mRestartCount(0)
     , mCaps(0)
+    , mClassification(CLASS_GENERAL)
     , mPipelinePosition(0)
     , mClosed(false)
     , mConnected(false)
@@ -148,6 +149,40 @@ nsHttpTransaction::~nsHttpTransaction()
 
     delete mResponseHead;
     delete mChunkedDecoder;
+}
+
+nsHttpTransaction::Classifier
+nsHttpTransaction::Classify()
+{
+    if (!(mCaps & NS_HTTP_ALLOW_PIPELINING))
+        return (mClassification = CLASS_SOLO);
+
+    if (mRequestHead->PeekHeader(nsHttp::If_Modified_Since) ||
+        mRequestHead->PeekHeader(nsHttp::If_None_Match))
+        return (mClassification = CLASS_REVALIDATION);
+
+    const char *accept = mRequestHead->PeekHeader(nsHttp::Accept);
+    if (accept && !PL_strncmp(accept, "image/", 6))
+        return (mClassification = CLASS_IMAGE);
+
+    if (accept && !PL_strncmp(accept, "text/css", 8))
+        return (mClassification = CLASS_SCRIPT);
+
+    mClassification = CLASS_GENERAL;
+
+    PRInt32 queryPos = mRequestHead->RequestURI().FindChar('?');
+    if (queryPos == kNotFound) {
+        if (StringEndsWith(mRequestHead->RequestURI(),
+                           NS_LITERAL_CSTRING(".js")))
+            mClassification = CLASS_SCRIPT;
+    }
+    else if (queryPos >= 3 &&
+             Substring(mRequestHead->RequestURI(), queryPos - 3, 3).
+             EqualsLiteral(".js")) {
+        mClassification = CLASS_SCRIPT;
+    }
+
+    return mClassification;
 }
 
 nsresult
@@ -300,6 +335,8 @@ nsHttpTransaction::Init(PRUint8 caps,
                      nsIOService::gDefaultSegmentSize,
                      nsIOService::gDefaultSegmentCount);
     if (NS_FAILED(rv)) return rv;
+
+    Classify();
 
     NS_ADDREF(*responseBody = mPipeIn);
     return NS_OK;
@@ -661,9 +698,15 @@ nsHttpTransaction::Close(nsresult reason)
     // mReceivedData == FALSE.  (see bug 203057 for more info.)
     //
     if (reason == NS_ERROR_NET_RESET || reason == NS_OK) {
-        if (!mReceivedData && (!mSentData || connReused)) {
+        if (!mReceivedData && (!mSentData || connReused || mPipelinePosition)) {
             // if restarting fails, then we must proceed to close the pipe,
             // which will notify the channel that the transaction failed.
+            
+            if (mPipelinePosition) {
+                gHttpHandler->ConnMgr()->PipelineFeedbackInfo(
+                    mConnInfo, nsHttpConnectionMgr::RedCanceledPipeline,
+                    nsnull, 0);
+            }
             if (NS_SUCCEEDED(Restart()))
                 return;
         }
@@ -671,6 +714,21 @@ nsHttpTransaction::Close(nsresult reason)
 
     bool relConn = true;
     if (NS_SUCCEEDED(reason)) {
+        if (!mResponseIsComplete) {
+            // The response has not been delimited with a high-confidence
+            // algorithm like Content-Length or Chunked Encoding. We
+            // need to use a strong framing mechanism to pipeline.
+            gHttpHandler->ConnMgr()->PipelineFeedbackInfo(
+                mConnInfo, nsHttpConnectionMgr::BadInsufficientFraming,
+                nsnull, mClassification);
+        }
+        else if (mPipelinePosition) {
+            // report this success as feedback
+            gHttpHandler->ConnMgr()->PipelineFeedbackInfo(
+                mConnInfo, nsHttpConnectionMgr::GoodCompletedOK,
+                nsnull, mPipelinePosition);
+        }
+
         // the server has not sent the final \r\n terminating the header
         // section, and there may still be a header line unparsed.  let's make
         // sure we parse the remaining header line, and then hopefully, the
@@ -717,10 +775,10 @@ nsHttpTransaction::AddTransaction(nsAHttpTransaction *trans)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-PRUint16
-nsHttpTransaction::PipelineDepthAvailable()
+PRUint32
+nsHttpTransaction::PipelineDepth()
 {
-    return 0;
+    return IsDone() ? 0 : 1;
 }
 
 nsresult
@@ -871,6 +929,9 @@ nsHttpTransaction::ParseLineSegment(char *segment, PRUint32 len)
             nsresult rv = ParseLine(mLineBuf.BeginWriting());
             mLineBuf.Truncate();
             if (NS_FAILED(rv)) {
+                gHttpHandler->ConnMgr()->PipelineFeedbackInfo(
+                    mConnInfo, nsHttpConnectionMgr::RedCorruptedContent,
+                    nsnull, 0);
                 return rv;
             }
         }
@@ -1065,6 +1126,10 @@ nsHttpTransaction::HandleContentStart()
             break;
         }
         mConnection->SetLastTransactionExpectedNoContent(mNoContent);
+        if (mInvalidResponseBytesRead)
+            gHttpHandler->ConnMgr()->PipelineFeedbackInfo(
+                mConnInfo, nsHttpConnectionMgr::BadInsufficientFraming,
+                nsnull, mClassification);
 
         if (mNoContent)
             mContentLength = 0;

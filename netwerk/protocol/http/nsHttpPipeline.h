@@ -57,7 +57,7 @@ public:
     NS_DECL_NSAHTTPTRANSACTION
     NS_DECL_NSAHTTPSEGMENTREADER
 
-    nsHttpPipeline(PRUint16 maxPipelineDepth);
+    nsHttpPipeline();
     virtual ~nsHttpPipeline();
 
 private:
@@ -82,7 +82,6 @@ private:
         return mResponseQ[i];
     }
 
-    PRUint16                      mMaxPipelineDepth;
     nsAHttpConnection            *mConnection;
     nsTArray<nsAHttpTransaction*> mRequestQ;  // array of transactions
     nsTArray<nsAHttpTransaction*> mResponseQ; // array of transactions

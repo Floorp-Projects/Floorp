@@ -140,9 +140,6 @@ typedef PRUint8 nsHttpVersion;
 // some default values
 //-----------------------------------------------------------------------------
 
-// hard upper limit on the number of requests that can be pipelined
-#define NS_HTTP_MAX_PIPELINED_REQUESTS 8 
-
 #define NS_HTTP_DEFAULT_PORT  80
 #define NS_HTTPS_DEFAULT_PORT 443
 

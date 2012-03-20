@@ -502,16 +502,17 @@ nsHttpChannel::SetupTransaction()
     if (mCaps & NS_HTTP_ALLOW_PIPELINING) {
         //
         // disable pipelining if:
-        //   (1) pipelining has been explicitly disabled
-        //   (2) request corresponds to a top-level document load (link click)
-        //   (3) request method is non-idempotent
+        //   (1) pipelining has been disabled by config
+        //   (2) pipelining has been disabled by connection mgr info
+        //   (3) request corresponds to a top-level document load (link click)
+        //   (4) request method is non-idempotent
+        //   (5) request is marked slow (e.g XHR)
         //
-        // XXX does the toplevel document check really belong here?  or, should
-        //     we push it out entirely to necko consumers?
-        //
-        if (!mAllowPipelining || (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) ||
+        if (!mAllowPipelining ||
+           (mLoadFlags & (LOAD_INITIAL_DOCUMENT_URI | INHIBIT_PIPELINE)) ||
             !(mRequestHead.Method() == nsHttp::Get ||
               mRequestHead.Method() == nsHttp::Head ||
+              mRequestHead.Method() == nsHttp::Options ||
               mRequestHead.Method() == nsHttp::Propfind ||
               mRequestHead.Method() == nsHttp::Proppatch)) {
             LOG(("  pipelining disallowed\n"));
@@ -1772,7 +1773,10 @@ nsHttpChannel::EnsureAssocReq()
                    endofmethod - method)) {
         LOG(("  Assoc-Req failure Method %s", method));
         if (mConnectionInfo)
-            mConnectionInfo->BanPipelining();
+            gHttpHandler->ConnMgr()->
+                PipelineFeedbackInfo(mConnectionInfo,
+                                     nsHttpConnectionMgr::RedCorruptedContent,
+                                     nsnull, 0);
 
         nsCOMPtr<nsIConsoleService> consoleService =
             do_GetService(NS_CONSOLESERVICE_CONTRACTID);
@@ -1802,7 +1806,10 @@ nsHttpChannel::EnsureAssocReq()
     if (!equals) {
         LOG(("  Assoc-Req failure URL %s", assoc_val));
         if (mConnectionInfo)
-            mConnectionInfo->BanPipelining();
+            gHttpHandler->ConnMgr()->
+                PipelineFeedbackInfo(mConnectionInfo,
+                                     nsHttpConnectionMgr::RedCorruptedContent,
+                                     nsnull, 0);
 
         nsCOMPtr<nsIConsoleService> consoleService =
             do_GetService(NS_CONSOLESERVICE_CONTRACTID);
