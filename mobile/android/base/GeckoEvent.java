@@ -91,7 +91,7 @@ public class GeckoEvent {
     private static final int PROXIMITY_EVENT = 23;
     private static final int ACTIVITY_RESUMING = 24;
     private static final int SCREENSHOT = 25;
-    private static final int SENSOR_ACCURACY = 26;
+    private static final int UNUSED2_EVENT = 26;
     private static final int SCREENORIENTATION_CHANGED = 27;
 
     public static final int IME_COMPOSITION_END = 0;
@@ -283,6 +283,20 @@ public class GeckoEvent {
         }
     }
 
+    private static int HalSensorAccuracyFor(int androidAccuracy) {
+        switch (androidAccuracy) {
+        case SensorManager.SENSOR_STATUS_UNRELIABLE:
+            return GeckoHalDefines.SENSOR_ACCURACY_UNRELIABLE;
+        case SensorManager.SENSOR_STATUS_ACCURACY_LOW:
+            return GeckoHalDefines.SENSOR_ACCURACY_LOW;
+        case SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM:
+            return GeckoHalDefines.SENSOR_ACCURACY_MED;
+        case SensorManager.SENSOR_STATUS_ACCURACY_HIGH:
+            return GeckoHalDefines.SENSOR_ACCURACY_HIGH;
+        }
+        return GeckoHalDefines.SENSOR_ACCURACY_UNKNOWN;
+    }
+
     public static GeckoEvent createSensorEvent(SensorEvent s) {
         int sensor_type = s.sensor.getType();
         GeckoEvent event = null;
@@ -292,6 +306,7 @@ public class GeckoEvent {
         case Sensor.TYPE_ACCELEROMETER:
             event = new GeckoEvent(SENSOR_EVENT);
             event.mFlags = GeckoHalDefines.SENSOR_ACCELERATION;
+            event.mMetaState = HalSensorAccuracyFor(s.accuracy);
             event.mX = s.values[0];
             event.mY = s.values[1];
             event.mZ = s.values[2];
@@ -300,6 +315,7 @@ public class GeckoEvent {
         case 10 /* Requires API Level 9, so just use the raw value - Sensor.TYPE_LINEAR_ACCELEROMETER*/ :
             event = new GeckoEvent(SENSOR_EVENT);
             event.mFlags = GeckoHalDefines.SENSOR_LINEAR_ACCELERATION;
+            event.mMetaState = HalSensorAccuracyFor(s.accuracy);
             event.mX = s.values[0];
             event.mY = s.values[1];
             event.mZ = s.values[2];
@@ -308,6 +324,7 @@ public class GeckoEvent {
         case Sensor.TYPE_ORIENTATION:
             event = new GeckoEvent(SENSOR_EVENT);
             event.mFlags = GeckoHalDefines.SENSOR_ORIENTATION;
+            event.mMetaState = HalSensorAccuracyFor(s.accuracy);
             event.mX = s.values[0];
             event.mY = s.values[1];
             event.mZ = s.values[2];
@@ -316,6 +333,7 @@ public class GeckoEvent {
         case Sensor.TYPE_GYROSCOPE:
             event = new GeckoEvent(SENSOR_EVENT);
             event.mFlags = GeckoHalDefines.SENSOR_GYROSCOPE;
+            event.mMetaState = HalSensorAccuracyFor(s.accuracy);
             event.mX = Math.toDegrees(s.values[0]);
             event.mY = Math.toDegrees(s.values[1]);
             event.mZ = Math.toDegrees(s.values[2]);
@@ -438,12 +456,6 @@ public class GeckoEvent {
         event.mPoints[0] = new Point(sw, sh);
         event.mPoints[1] = new Point(dw, dh);
         event.mMetaState = tabId;
-        return event;
-    }
-
-    public static GeckoEvent createSensorAccuracyEvent(int accuracy) {
-        GeckoEvent event = new GeckoEvent(SENSOR_ACCURACY);
-        event.mFlags = accuracy;
         return event;
     }
 
