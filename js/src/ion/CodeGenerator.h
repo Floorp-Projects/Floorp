@@ -106,6 +106,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitNewArray(LNewArray *lir);
     bool visitNewObject(LNewObject *lir);
     bool visitArrayLength(LArrayLength *lir);
+    bool visitTypedArrayLength(LTypedArrayLength *lir);
     bool visitStringLength(LStringLength *lir);
     bool visitInitializedLength(LInitializedLength *lir);
     bool visitSetInitializedLength(LSetInitializedLength *lir);
