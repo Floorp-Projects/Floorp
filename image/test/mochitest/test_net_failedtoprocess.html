@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that a image decoding error producs a net:failed-to-process-uri
+observer event with the nsIURI of the failed image as the subject
+-->
+<head>
+  <title>Test for image net:failed-to-process-uri</title>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+
+var observer = {
+  QueryInterface: function (aIID) {
+    if (aIID.equals(Ci.nsISupports) ||
+        aIID.equals(Ci.nsIObserver))
+      return this;
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  observe: function(subject, topic, data) {
+    ok(topic == "net:failed-to-process-uri", "wrong topic");
+    subject = subject.QueryInterface(Ci.nsIURI);
+    ok(subject.asciiSpec == "chrome://mochitests/content/chrome/image/test/mochitest/invalid.jpg", "wrong subject");
+    SimpleTest.finish();
+  }
+};
+
+var obs = Cc["@mozilla.org/observer-service;1"].getService();
+obs = obs.QueryInterface(Ci.nsIObserverService);
+obs.addObserver(observer, "net:failed-to-process-uri", false);
+
+</script>
+</pre>
+<img src="damon.jpg">
+<img src="invalid.jpg">
+</body>
+</html>
