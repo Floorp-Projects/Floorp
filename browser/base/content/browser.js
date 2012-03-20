@@ -156,6 +156,9 @@ __defineSetter__("PluralForm", function (val) {
   return this.PluralForm = val;
 });
 
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
+                                  "resource:///modules/TelemetryStopwatch.jsm");
+
 #ifdef MOZ_SERVICES_SYNC
 XPCOMUtils.defineLazyGetter(this, "Weave", function() {
   let tmp = {};
@@ -3644,6 +3647,19 @@ function toOpenWindowByType(inType, uri, features)
 
 function OpenBrowserWindow()
 {
+  var telemetryObj = {};
+  TelemetryStopwatch.start("FX_NEW_WINDOW_MS", telemetryObj);
+
+  function newDocumentShown(doc, topic, data) {
+    if (topic == "document-shown" &&
+        doc != document &&
+        doc.defaultView == win) {
+      Services.obs.removeObserver(newDocumentShown, "document-shown");
+      TelemetryStopwatch.finish("FX_NEW_WINDOW_MS", telemetryObj);
+    }
+  };
+  Services.obs.addObserver(newDocumentShown, "document-shown", false);
+
   var charsetArg = new String();
   var handler = Components.classes["@mozilla.org/browser/clh;1"]
                           .getService(Components.interfaces.nsIBrowserHandler);
