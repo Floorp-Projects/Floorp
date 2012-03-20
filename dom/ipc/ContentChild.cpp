@@ -96,6 +96,8 @@
 #include "nsPermissionManager.h"
 #endif
 
+#include "nsDeviceMotion.h"
+
 #if defined(MOZ_WIDGET_ANDROID)
 #include "APKOpen.h"
 #endif
@@ -737,6 +739,28 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
 #endif
 
   return true;
+}
+
+bool
+ContentChild::RecvDeviceMotionChanged(const long int& type,
+                                      const double& x, const double& y,
+                                      const double& z)
+{
+    nsCOMPtr<nsIDeviceMotionUpdate> dmu = 
+        do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+    if (dmu)
+        dmu->DeviceMotionChanged(type, x, y, z);
+    return true;
+}
+
+bool
+ContentChild::RecvNeedsCalibration()
+{
+    nsCOMPtr<nsIDeviceMotionUpdate> dmu = 
+        do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+    if (dmu)
+        dmu->NeedsCalibration();
+    return true;
 }
 
 bool

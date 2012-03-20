@@ -585,7 +585,6 @@ public class GeckoAppShell
 
         switch(aSensortype) {
         case GeckoHalDefines.SENSOR_ORIENTATION:
-            Log.i(LOGTAG, "Enabling SENSOR_ORIENTATION");
             if(gOrientationSensor == null)
                 gOrientationSensor = sm.getDefaultSensor(Sensor.TYPE_ORIENTATION);
             if (gOrientationSensor != null)
@@ -593,7 +592,6 @@ public class GeckoAppShell
             break;
 
         case GeckoHalDefines.SENSOR_ACCELERATION:
-            Log.i(LOGTAG, "Enabling SENSOR_ACCELERATION");
             if(gAccelerometerSensor == null)
                 gAccelerometerSensor = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             if (gAccelerometerSensor != null)
@@ -601,7 +599,6 @@ public class GeckoAppShell
             break;
 
         case GeckoHalDefines.SENSOR_PROXIMITY:
-            Log.i(LOGTAG, "Enabling SENSOR_PROXIMITY");
             if(gProximitySensor == null)
                 gProximitySensor = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
             if (gProximitySensor != null)
@@ -609,22 +606,19 @@ public class GeckoAppShell
             break;
 
         case GeckoHalDefines.SENSOR_LINEAR_ACCELERATION:
-            Log.i(LOGTAG, "Enabling SENSOR_LINEAR_ACCELERATION");
             if(gLinearAccelerometerSensor == null)
-                gLinearAccelerometerSensor = sm.getDefaultSensor(10 /* API Level 9 - TYPE_LINEAR_ACCELERATION */);
+                gLinearAccelerometerSensor = sm.getDefaultSensor(10);
             if (gLinearAccelerometerSensor != null)
                 sm.registerListener(GeckoApp.mAppContext, gLinearAccelerometerSensor, sDefaultSensorHint);
             break;
 
         case GeckoHalDefines.SENSOR_GYROSCOPE:
-            Log.i(LOGTAG, "Enabling SENSOR_GYROSCOPE");
             if(gGyroscopeSensor == null)
                 gGyroscopeSensor = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
             if (gGyroscopeSensor != null)
                 sm.registerListener(GeckoApp.mAppContext, gGyroscopeSensor, sDefaultSensorHint);
             break;
-        default:
-            Log.e(LOGTAG, "Error! SENSOR type used " + aSensortype);
+
         }
     }
 
@@ -634,36 +628,29 @@ public class GeckoAppShell
 
         switch (aSensortype) {
         case GeckoHalDefines.SENSOR_ORIENTATION:
-            Log.i(LOGTAG, "Disabling SENSOR_ORIENTATION");
             if (gOrientationSensor != null)
                 sm.unregisterListener(GeckoApp.mAppContext, gOrientationSensor);
             break;
 
         case GeckoHalDefines.SENSOR_ACCELERATION:
-            Log.i(LOGTAG, "Disabling SENSOR_ACCELERATION");
             if (gAccelerometerSensor != null)
                 sm.unregisterListener(GeckoApp.mAppContext, gAccelerometerSensor);
             break;
 
         case GeckoHalDefines.SENSOR_PROXIMITY:
-            Log.i(LOGTAG, "Disabling SENSOR_PROXIMITY");
             if (gProximitySensor != null)
                 sm.unregisterListener(GeckoApp.mAppContext, gProximitySensor);
             break;
 
         case GeckoHalDefines.SENSOR_LINEAR_ACCELERATION:
-            Log.i(LOGTAG, "Disabling SENSOR_LINEAR_ACCELERATION");
             if (gLinearAccelerometerSensor != null)
                 sm.unregisterListener(GeckoApp.mAppContext, gLinearAccelerometerSensor);
             break;
 
         case GeckoHalDefines.SENSOR_GYROSCOPE:
-            Log.i(LOGTAG, "Disabling SENSOR_GYROSCOPE");
             if (gGyroscopeSensor != null)
                 sm.unregisterListener(GeckoApp.mAppContext, gGyroscopeSensor);
             break;
-        default:
-            Log.e(LOGTAG, "Error! SENSOR type used " + aSensortype);
         }
     }
 

@@ -133,6 +133,9 @@ child:
     // nsIPermissionManager messages
     AddPermission(Permission permission);
 
+    DeviceMotionChanged(long type, double x, double y, double z);
+    NeedsCalibration();
+
     ScreenSizeChanged(gfxIntSize size);
 
     FlushMemory(nsString reason);
@@ -197,6 +200,8 @@ parent:
     
     AddGeolocationListener();
     RemoveGeolocationListener();
+    AddDeviceMotionListener();
+    RemoveDeviceMotionListener();
 
     ConsoleMessage(nsString message);
     ScriptError(nsString message, nsString sourceName, nsString sourceLine,

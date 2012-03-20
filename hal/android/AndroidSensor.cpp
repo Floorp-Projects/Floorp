@@ -43,14 +43,32 @@ using namespace mozilla::hal;
 namespace mozilla {
 namespace hal_impl {
 
+/**
+ * Translate ID of sensor type from Sensor service to Android.
+ *
+ * Must be consistent with the definition of sensor types in
+ * embedding/android/GeckoAppShell.java
+ */
+static int
+MapSensorType(SensorType aSensorType) {
+  return (SENSOR_UNKNOWN <= aSensorType && aSensorType < NUM_SENSOR_TYPE) ?
+    aSensorType + 1 : -1;
+}
+
 void
 EnableSensorNotifications(SensorType aSensor) {
-  AndroidBridge::Bridge()->EnableSensor(aSensor);
+  int androidSensor = MapSensorType(aSensor);
+  
+  MOZ_ASSERT(androidSensor != -1);
+  AndroidBridge::Bridge()->EnableSensor(androidSensor);
 }
 
 void
 DisableSensorNotifications(SensorType aSensor) {
-  AndroidBridge::Bridge()->DisableSensor(aSensor);
+  int androidSensor = MapSensorType(aSensor);
+  
+  MOZ_ASSERT(androidSensor != -1);
+  AndroidBridge::Bridge()->DisableSensor(androidSensor);
 }
 
 } // hal_impl
