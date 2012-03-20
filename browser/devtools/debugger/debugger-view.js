@@ -281,6 +281,27 @@ DebuggerView.Stackframes = {
   },
 
   /**
+   * Listener handling the step over button click event.
+   */
+  _onStepOverClick: function DVF__onStepOverClick() {
+    ThreadState.activeThread.stepOver();
+  },
+
+  /**
+   * Listener handling the step in button click event.
+   */
+  _onStepInClick: function DVF__onStepInClick() {
+    ThreadState.activeThread.stepIn();
+  },
+
+  /**
+   * Listener handling the step out button click event.
+   */
+  _onStepOutClick: function DVF__onStepOutClick() {
+    ThreadState.activeThread.stepOut();
+  },
+
+  /**
    * Specifies if the active thread has more frames which need to be loaded.
    */
   _dirty: false,
@@ -296,10 +317,16 @@ DebuggerView.Stackframes = {
   initialize: function DVF_initialize() {
     let close = document.getElementById("close");
     let resume = document.getElementById("resume");
+    let stepOver = document.getElementById("step-over");
+    let stepIn = document.getElementById("step-in");
+    let stepOut = document.getElementById("step-out");
     let frames = document.getElementById("stackframes");
 
     close.addEventListener("click", this._onCloseButtonClick, false);
     resume.addEventListener("click", this._onResumeButtonClick, false);
+    stepOver.addEventListener("click", this._onStepOverClick, false);
+    stepIn.addEventListener("click", this._onStepInClick, false);
+    stepOut.addEventListener("click", this._onStepOutClick, false);
     frames.addEventListener("scroll", this._onFramesScroll, false);
     window.addEventListener("resize", this._onFramesScroll, false);
 
@@ -312,10 +339,16 @@ DebuggerView.Stackframes = {
   destroy: function DVF_destroy() {
     let close = document.getElementById("close");
     let resume = document.getElementById("resume");
+    let stepOver = document.getElementById("step-over");
+    let stepIn = document.getElementById("step-in");
+    let stepOut = document.getElementById("step-out");
     let frames = this._frames;
 
     close.removeEventListener("click", this._onCloseButtonClick, false);
     resume.removeEventListener("click", this._onResumeButtonClick, false);
+    stepOver.removeEventListener("click", this._onStepOverClick, false);
+    stepIn.removeEventListener("click", this._onStepInClick, false);
+    stepOut.removeEventListener("click", this._onStepOutClick, false);
     frames.removeEventListener("click", this._onFramesClick, false);
     frames.removeEventListener("scroll", this._onFramesScroll, false);
     window.removeEventListener("resize", this._onFramesScroll, false);
@@ -1198,3 +1231,6 @@ let DVF = DebuggerView.Stackframes;
 DVF._onFramesScroll = DVF._onFramesScroll.bind(DVF);
 DVF._onCloseButtonClick = DVF._onCloseButtonClick.bind(DVF);
 DVF._onResumeButtonClick = DVF._onResumeButtonClick.bind(DVF);
+DVF._onStepOverClick = DVF._onStepOverClick.bind(DVF);
+DVF._onStepInClick = DVF._onStepInClick.bind(DVF);
+DVF._onStepOutClick = DVF._onStepOutClick.bind(DVF);

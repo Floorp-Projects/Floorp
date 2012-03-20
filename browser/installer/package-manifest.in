@@ -69,6 +69,7 @@
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@
 #endif
 #ifdef XP_WIN32
+#ifdef MOZ_WIN32_REDIST
 #ifndef MOZ_DEBUG
 #if _MSC_VER == 1400
 @BINPATH@/Microsoft.VC80.CRT.manifest
@@ -86,6 +87,7 @@
 #elif _MSC_VER == 1700
 @BINPATH@/msvcp110.dll
 @BINPATH@/msvcr110.dll
+#endif
 #endif
 #endif
 #endif
