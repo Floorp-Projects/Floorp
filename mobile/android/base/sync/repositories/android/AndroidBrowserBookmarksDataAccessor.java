@@ -128,8 +128,7 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
   public void checkAndBuildSpecialGuids() throws NullCursorException {
     final String[] specialGUIDs = AndroidBrowserBookmarksRepositorySession.SPECIAL_GUIDS;
     Cursor cur = fetch(specialGUIDs);
-    long mobileRoot  = 0;
-    long desktopRoot = 0;
+    long placesRoot = 0;
 
     // Map from GUID to whether deleted. Non-presence implies just that.
     HashMap<String, Boolean> statuses = new HashMap<String, Boolean>(specialGUIDs.length);
@@ -137,11 +136,8 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
       if (cur.moveToFirst()) {
         while (!cur.isAfterLast()) {
           String guid = RepoUtils.getStringFromCursor(cur, BrowserContract.SyncColumns.GUID);
-          if (guid.equals("mobile")) {
-            mobileRoot = RepoUtils.getLongFromCursor(cur, BrowserContract.CommonColumns._ID);
-          }
-          if (guid.equals("desktop")) {
-            desktopRoot = RepoUtils.getLongFromCursor(cur, BrowserContract.CommonColumns._ID);
+          if ("places".equals(guid)) {
+            placesRoot = RepoUtils.getLongFromCursor(cur, BrowserContract.CommonColumns._ID);
           }
           // Make sure none of these folders are marked as deleted.
           boolean deleted = RepoUtils.getLongFromCursor(cur, BrowserContract.SyncColumns.IS_DELETED) == 1;
@@ -165,17 +161,17 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
         }
       } else {
         // Insert.
-        if (guid.equals("mobile")) {
-          Logger.info(LOG_TAG, "No mobile folder. Inserting one.");
-          mobileRoot = insertSpecialFolder("mobile", 0);
-        } else if (guid.equals("places")) {
+        if (guid.equals("places")) {
           // This is awkward.
-          Logger.info(LOG_TAG, "No places root. Inserting one under mobile (" + mobileRoot + ").");
-          desktopRoot = insertSpecialFolder("places", mobileRoot);
+          Logger.info(LOG_TAG, "No places root. Inserting one.");
+          placesRoot = insertSpecialFolder("places", 0);
+        } else if (guid.equals("mobile")) {
+          Logger.info(LOG_TAG, "No mobile folder. Inserting one under the places root.");
+          insertSpecialFolder("mobile", placesRoot);
         } else {
           // unfiled, menu, toolbar.
-          Logger.info(LOG_TAG, "No " + guid + " root. Inserting one under places (" + desktopRoot + ").");
-          insertSpecialFolder(guid, desktopRoot);
+          Logger.info(LOG_TAG, "No " + guid + " root. Inserting one under places (" + placesRoot + ").");
+          insertSpecialFolder(guid, placesRoot);
         }
       }
     }

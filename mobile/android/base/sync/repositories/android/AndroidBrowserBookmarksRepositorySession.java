@@ -102,8 +102,8 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
    */
   public static String[] SPECIAL_GUIDS = new String[] {
     // Mobile and desktop places roots have to come first.
-    "mobile",
     "places",
+    "mobile",
     "toolbar",
     "menu",
     "unfiled"
@@ -196,9 +196,12 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     dataAccessor = (AndroidBrowserBookmarksDataAccessor) dbHelper;
   }
 
-  private boolean rowIsFolder(Cursor cur) {
-    long type = RepoUtils.getLongFromCursor(cur, BrowserContract.Bookmarks.TYPE);
-    return type == BrowserContract.Bookmarks.TYPE_FOLDER;
+  private static long getTypeFromCursor(Cursor cur) {
+    return RepoUtils.getLongFromCursor(cur, BrowserContract.Bookmarks.TYPE);
+  }
+
+  private static boolean rowIsFolder(Cursor cur) {
+    return getTypeFromCursor(cur) == BrowserContract.Bookmarks.TYPE_FOLDER;
   }
 
   private String getGUIDForID(long androidID) {
@@ -838,8 +841,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
       return logBookmark(rec);
     }
 
-    long type = RepoUtils.getIntFromCursor(cur, BrowserContract.Bookmarks.TYPE);
-    boolean isFolder = type == BrowserContract.Bookmarks.TYPE_FOLDER;
+    boolean isFolder = rowIsFolder(cur);
 
     rec.title = RepoUtils.getStringFromCursor(cur, BrowserContract.Bookmarks.TITLE);
     rec.bookmarkURI = RepoUtils.getStringFromCursor(cur, BrowserContract.Bookmarks.URL);
