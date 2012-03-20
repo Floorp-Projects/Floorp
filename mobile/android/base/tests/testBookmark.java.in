@@ -12,6 +12,7 @@ public class testBookmark extends BaseTest {
     private static final int MAX_WAIT_MS = 3000; 
     private static final String ABOUT_HOME_URL = "about:home";
     private static final String BOOKMARK_URL = "/robocop/robocop_blank_01.html";
+    private static final String BOOKMARK_TITLE = "Browser Blank Page 01";
 
     public void testBookmark() {
         setTestType("mochitest");
@@ -21,6 +22,10 @@ public class testBookmark extends BaseTest {
 
         // Open the bookmark list and check the root folder view
         ListView bookmarksList = openBookmarksList();
+
+        // Wait for bookmark to appear in list
+        mSolo.waitForText(BOOKMARK_TITLE);
+
         mAsserter.ok(bookmarksList != null, "checking that bookmarks list exists", "bookmarks list exists");
 
         // No folders should be visible if no desktop bookmarks exist
