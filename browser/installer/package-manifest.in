@@ -429,6 +429,7 @@
 @BINPATH@/modules/*
 
 ; Safe Browsing
+#ifdef MOZ_SAFE_BROWSING
 @BINPATH@/components/nsSafebrowsingApplication.manifest
 @BINPATH@/components/nsSafebrowsingApplication.js
 @BINPATH@/components/nsURLClassifier.manifest
@@ -436,6 +437,7 @@
 @BINPATH@/components/nsUrlClassifierListManager.js
 @BINPATH@/components/nsUrlClassifierLib.js
 @BINPATH@/components/url-classifier.xpt
+#endif
 
 ; GNOME hooks
 #ifdef MOZ_ENABLE_GNOME_COMPONENT
