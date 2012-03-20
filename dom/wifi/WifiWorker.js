@@ -1222,6 +1222,7 @@ function WifiWorker() {
       self.currentNetwork =
         { bssid: WifiManager.connectionInfo.bssid,
           ssid: quote(WifiManager.connectionInfo.ssid) };
+      self._fireEvent("onconnecting", { network: netToDOM(self.currentNetwork) });
     } else if (this.state === "ASSOCIATED") {
       self.currentNetwork.netId = this.id;
       WifiManager.getNetworkConfiguration(self.currentNetwork, function (){});
