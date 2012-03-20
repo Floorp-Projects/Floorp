@@ -176,8 +176,6 @@ public:
 
     void AcknowledgeEventSync();
 
-    void EnableDeviceMotion(bool aEnable);
-
     void EnableLocation(bool aEnable);
 
     void EnableSensor(int aSensorType);

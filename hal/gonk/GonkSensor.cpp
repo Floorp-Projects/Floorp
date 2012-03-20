@@ -60,6 +60,7 @@ SensorseventToSensorData(const sensors_event_t& data, SensorData* aSensorData)
   aSensorData->values()[0] = data.data[0];
   aSensorData->values()[1] = data.data[1];
   aSensorData->values()[2] = data.data[2];
+  aSensorData->accuracy()  = SENSOR_ACCURACY_UNKNOWN;
   return true;
 }
 
