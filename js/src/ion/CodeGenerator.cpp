@@ -581,8 +581,9 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     // Non-native iff (callee->flags & JSFUN_KINDMASK >= JSFUN_INTERPRETED).
     // This is equivalent to testing if any of the bits in JSFUN_KINDMASK are set.
     if (!call->hasSingleTarget()) {
-        masm.branchTest32(Assembler::Zero, Address(calleereg, offsetof(JSFunction, flags)),
-                          Imm32(JSFUN_INTERPRETED), &invoke);
+        Address flags(calleereg, offsetof(JSFunction, flags));
+        masm.load16_mask(flags, Imm32(JSFUN_KINDMASK), nargsreg);
+        masm.branch32(Assembler::LessThan, nargsreg, Imm32(JSFUN_INTERPRETED), &invoke);
     } else {
         // Native single targets are handled by LCallNative.
         JS_ASSERT(!call->getSingleTarget()->isNative());
