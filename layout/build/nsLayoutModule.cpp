@@ -156,8 +156,10 @@ using mozilla::dom::gonk::AudioManager;
 #include "nsSystemPrincipal.h"
 #include "nsNullPrincipal.h"
 #include "nsNetCID.h"
+#ifndef MOZ_WIDGET_GONK
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_PLATFORM_MAEMO)
 #include "nsHapticFeedback.h"
+#endif
 #endif
 #include "nsParserUtils.h"
 
@@ -241,14 +243,7 @@ static void Shutdown();
 #endif
 
 #include "nsGeolocation.h"
-#ifndef MOZ_WIDGET_GONK
-#if defined(XP_UNIX)    || \
-    defined(_WINDOWS)   || \
-    defined(machintosh) || \
-    defined(android)
 #include "nsDeviceMotion.h"
-#endif
-#endif
 #include "nsCSPService.h"
 #include "nsISmsService.h"
 #include "nsISmsDatabaseService.h"
@@ -296,13 +291,10 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(SystemWorkerManager,
 
 #ifdef MOZ_WIDGET_GONK
 NS_GENERIC_FACTORY_CONSTRUCTOR(AudioManager)
-#else
-#if defined(XP_UNIX)    || \
-    defined(_WINDOWS)   || \
-    defined(machintosh) || \
-    defined(android)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceMotion)
 #endif
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceMotion)
+
+#ifndef MOZ_WIDGET_GONK
 #if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHapticFeedback)
 #endif
@@ -793,14 +785,9 @@ NS_DEFINE_NAMED_CID(NS_NULLPRINCIPAL_CID);
 NS_DEFINE_NAMED_CID(NS_SECURITYNAMESET_CID);
 NS_DEFINE_NAMED_CID(THIRDPARTYUTIL_CID);
 NS_DEFINE_NAMED_CID(NS_STRUCTUREDCLONECONTAINER_CID);
+NS_DEFINE_NAMED_CID(NS_DEVICE_MOTION_CID);
 
 #ifndef MOZ_WIDGET_GONK
-#if defined(XP_UNIX)    || \
-    defined(_WINDOWS)   || \
-    defined(machintosh) || \
-    defined(android)
-NS_DEFINE_NAMED_CID(NS_DEVICE_MOTION_CID);
-#endif
 #if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
 NS_DEFINE_NAMED_CID(NS_HAPTICFEEDBACK_CID);
 #endif
@@ -1067,13 +1054,8 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_SYSTEMPRINCIPAL_CID, false, NULL, nsSystemPrincipalConstructor },
   { &kNS_NULLPRINCIPAL_CID, false, NULL, nsNullPrincipalConstructor },
   { &kNS_SECURITYNAMESET_CID, false, NULL, nsSecurityNameSetConstructor },
-#ifndef MOZ_WIDGET_GONK
-#if defined(XP_UNIX)    || \
-    defined(_WINDOWS)   || \
-    defined(machintosh) || \
-    defined(android)
   { &kNS_DEVICE_MOTION_CID, false, NULL, nsDeviceMotionConstructor },
-#endif
+#ifndef MOZ_WIDGET_GONK
 #if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
   { &kNS_HAPTICFEEDBACK_CID, false, NULL, nsHapticFeedbackConstructor },
 #endif
@@ -1206,13 +1188,8 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_SYSTEMPRINCIPAL_CONTRACTID, &kNS_SYSTEMPRINCIPAL_CID },
   { NS_NULLPRINCIPAL_CONTRACTID, &kNS_NULLPRINCIPAL_CID },
   { NS_SECURITYNAMESET_CONTRACTID, &kNS_SECURITYNAMESET_CID },
-#ifndef MOZ_WIDGET_GONK
-#if defined(XP_UNIX)    || \
-    defined(_WINDOWS)   || \
-    defined(machintosh) || \
-    defined(android)
   { NS_DEVICE_MOTION_CONTRACTID, &kNS_DEVICE_MOTION_CID },
-#endif
+#ifndef MOZ_WIDGET_GONK
 #if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
   { "@mozilla.org/widget/hapticfeedback;1", &kNS_HAPTICFEEDBACK_CID },
 #endif
