@@ -55,7 +55,8 @@ DOMWifiManager.prototype = {
     this._messages = ["WifiManager:setEnabled:Return:OK", "WifiManager:setEnabled:Return:NO",
                       "WifiManager:getNetworks:Return:OK", "WifiManager:getNetworks:Return:NO",
                       "WifiManager:associate:Return:OK", "WifiManager:associate:Return:NO",
-                      "WifiManager:onassociate", "WifiManager:onconnect", "WifiManager:ondisconnect"];
+                      "WifiManager:onconnecting", "WifiManager:onassociate",
+                      "WifiManager:onconnect", "WifiManager:ondisconnect"];
     this._mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
 
     this._messages.forEach((function(msgName) {
@@ -82,6 +83,7 @@ DOMWifiManager.prototype = {
 
       Services.obs.removeObserver(this, "inner-window-destroyed");
       this._window = null;
+      this._onConnecting = null;
       this._onAssociate = null;
       this._onConnect = null;
       this._onDisconnect = null;
@@ -147,6 +149,11 @@ DOMWifiManager.prototype = {
         Services.DOMRequest.fireError(request, "Unable to add the network");
         break;
 
+      case "WifiManager:onconnecting":
+        this._currentNetwork = msg.network;
+        this._fireOnConnecting(msg.network);
+        break;
+
       case "WifiManager:onassociate":
         this._currentNetwork = msg.network;
         this._fireOnAssociate(msg.network);
@@ -162,6 +169,11 @@ DOMWifiManager.prototype = {
         this._currentNetwork = null;
         break;
     }
+  },
+
+  _fireOnConnecting: function onConnecting(network) {
+    if (this._onConnecting)
+      this._onConnecting.handleEvent(new WifiStateChangeEvent(network));
   },
 
   _fireOnAssociate: function onAssociate(network) {
@@ -215,6 +227,12 @@ DOMWifiManager.prototype = {
     if (!this._hasPrivileges)
       throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
     return this._currentNetwork;
+  },
+
+  set onconnecting(callback) {
+    if (!this._hasPrivileges)
+      throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
+    this._onConnecting = callback;
   },
 
   set onassociate(callback) {
