@@ -343,6 +343,7 @@ nsHttpHandler::Init()
         mObserverService->AddObserver(this, "net:clear-active-logins", true);
         mObserverService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, true);
         mObserverService->AddObserver(this, "net:prune-dead-connections", true);
+        mObserverService->AddObserver(this, "net:failed-to-process-uri", true);
     }
  
     return NS_OK;
@@ -1633,6 +1634,11 @@ nsHttpHandler::Observe(nsISupports *subject,
         if (mConnMgr) {
             mConnMgr->PruneDeadConnections();
         }
+    }
+    else if (strcmp(topic, "net:failed-to-process-uri") == 0) {
+        nsCOMPtr<nsIURI> uri = do_QueryInterface(subject);
+        if (uri && mConnMgr)
+            mConnMgr->ReportFailedToProcess(uri);
     }
   
     return NS_OK;

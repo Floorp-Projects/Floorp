@@ -205,6 +205,8 @@ public:
                                   nsHttpConnection *,
                                   PRUint32);
 
+    void ReportFailedToProcess(nsIURI *uri);
+
     //-------------------------------------------------------------------------
     // NOTE: functions below may be called only on the socket thread.
     //-------------------------------------------------------------------------
