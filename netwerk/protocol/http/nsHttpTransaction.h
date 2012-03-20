@@ -199,6 +199,7 @@ private:
 
     PRUint16                        mRestartCount;        // the number of times this transaction has been restarted
     PRUint8                         mCaps;
+    PRInt32                         mPipelinePosition;
 
     // state flags, all logically boolean, but not packed together into a
     // bitfield so as to avoid bitfield-induced races.  See bug 560579.

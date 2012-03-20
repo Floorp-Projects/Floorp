@@ -736,8 +736,13 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
         }
     }
     mKeepAliveMask = mKeepAlive;
-    mConnInfo->SetSupportsPipelining(mSupportsPipelining);
 
+    // Update the pipelining status in the connection info object
+    // and also read it back. It is possible the ci status is
+    // locked to false if pipelining has been banned on this ci due to
+    // some kind of observed flaky behavior
+    mSupportsPipelining = mConnInfo->SetSupportsPipelining(mSupportsPipelining);
+    
     // if this connection is persistent, then the server may send a "Keep-Alive"
     // header specifying the maximum number of times the connection can be
     // reused as well as the maximum amount of time the connection can be idle

@@ -110,6 +110,7 @@ public:
     PRUint16       GetIdleSynTimeout()       { return mIdleSynTimeout; }
     bool           FastFallbackToIPv4()      { return mFastFallbackToIPv4; }
     PRUint32       MaxSocketCount();
+    bool           EnforceAssocReq()         { return mEnforceAssocReq; }
 
     bool           IsPersistentHttpsCachingEnabled() { return mEnablePersistentHttpsCaching; }
     bool           IsTelemetryEnabled() { return mTelemetryEnabled; }
@@ -300,6 +301,7 @@ private:
     PRUint8  mQoSBits;
 
     bool mPipeliningOverSSL;
+    bool mEnforceAssocReq;
 
     // cached value of whether or not the browser is in private browsing mode.
     enum {
