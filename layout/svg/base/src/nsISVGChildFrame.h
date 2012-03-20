@@ -88,13 +88,13 @@ public:
 
   // Get bounds in our gfxContext's coordinates space (in app units)
   NS_IMETHOD_(nsRect) GetCoveredRegion()=0;
-  NS_IMETHOD UpdateCoveredRegion()=0;
 
-  // Called once on SVG child frames except descendants of <defs>, either
-  // when their nsSVGOuterSVGFrame receives its initial reflow (i.e. once
-  // the SVG viewport dimensions are known), or else when they're inserted
-  // into the frame tree (if they're inserted after the initial reflow).
-  NS_IMETHOD InitialUpdate()=0;
+  // Called on SVG child frames (except NS_STATE_SVG_NONDISPLAY_CHILD frames)
+  // to update and then invalidate their cached bounds. This method is not
+  // called until after the nsSVGOuterSVGFrame has had its initial reflow
+  // (i.e. once the SVG viewport dimensions are known). It should also only
+  // be called by nsSVGOuterSVGFrame during its reflow.
+  virtual void UpdateBounds()=0;
 
   // Flags to pass to NotifySVGChange:
   //

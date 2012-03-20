@@ -122,14 +122,23 @@ nsSVGDisplayContainerFrame::InsertFrames(ChildListID aListID,
   // Insert the new frames
   nsSVGContainerFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
 
-  // Call InitialUpdate on the new frames ONLY if our nsSVGOuterSVGFrame has had
-  // its initial reflow (our NS_FRAME_FIRST_REFLOW bit is clear) - bug 399863.
-  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+  // If we are not a non-display SVG frame and we do not have a bounds update
+  // pending, then we need to schedule one for our new children:
+  if (!(GetStateBits() &
+        (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN |
+         NS_STATE_SVG_NONDISPLAY_CHILD))) {
     for (nsIFrame* kid = firstNewFrame; kid != firstOldFrame;
          kid = kid->GetNextSibling()) {
       nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
       if (SVGFrame) {
-        SVGFrame->InitialUpdate(); 
+        NS_ABORT_IF_FALSE(!(kid->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
+                          "Check for this explicitly in the |if|, then");
+        // Remove bits so that ScheduleBoundsUpdate will work:
+        kid->RemoveStateBits(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
+                             NS_FRAME_HAS_DIRTY_CHILDREN);
+        // No need to invalidate the new kid's old bounds, so we just use
+        // nsSVGUtils::ScheduleBoundsUpdate.
+        nsSVGUtils::ScheduleBoundsUpdate(kid);
       }
     }
   }
@@ -141,7 +150,7 @@ NS_IMETHODIMP
 nsSVGDisplayContainerFrame::RemoveFrame(ChildListID aListID,
                                         nsIFrame* aOldFrame)
 {
-  nsSVGUtils::InvalidateCoveredRegion(aOldFrame);
+  nsSVGUtils::InvalidateBounds(aOldFrame);
 
   nsresult rv = nsSVGContainerFrame::RemoveFrame(aListID, aOldFrame);
 
@@ -183,25 +192,18 @@ nsSVGDisplayContainerFrame::GetCoveredRegion()
   return nsSVGUtils::GetCoveredRegion(mFrames);
 }
 
-NS_IMETHODIMP
-nsSVGDisplayContainerFrame::UpdateCoveredRegion()
+void
+nsSVGDisplayContainerFrame::UpdateBounds()
 {
-  for (nsIFrame* kid = mFrames.FirstChild(); kid;
-       kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
-    if (SVGFrame) {
-      SVGFrame->UpdateCoveredRegion();
-    }
-  }
-  return NS_OK;
-}
+  NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingUpdateBounds(this),
+               "This call is probaby a wasteful mistake");
 
-NS_IMETHODIMP
-nsSVGDisplayContainerFrame::InitialUpdate()
-{
-  NS_ASSERTION(GetStateBits() & NS_FRAME_FIRST_REFLOW,
-               "Yikes! We've been called already! Hopefully we weren't called "
-               "before our nsSVGOuterSVGFrame's initial Reflow()!!!");
+  NS_ABORT_IF_FALSE(!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
+                    "UpdateBounds mechanism not designed for this");
+
+  if (!nsSVGUtils::NeedsUpdatedBounds(this)) {
+    return;
+  }
 
   // If the NS_FRAME_FIRST_REFLOW bit has been removed from our parent frame,
   // then our outer-<svg> has previously had its initial reflow. In that case
@@ -221,17 +223,17 @@ nsSVGDisplayContainerFrame::InitialUpdate()
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
-      SVGFrame->InitialUpdate();
+      NS_ABORT_IF_FALSE(!(kid->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
+                        "Check for this explicitly in the |if|, then");
+      SVGFrame->UpdateBounds();
     }
   }
 
-  NS_ASSERTION(!(mState & NS_FRAME_IN_REFLOW),
-               "We don't actually participate in reflow");
-
   mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
               NS_FRAME_HAS_DIRTY_CHILDREN);
-  
-  return NS_OK;
+
+  // XXXsvgreflow once we store bounds on containers, do...
+  // nsSVGUtils::InvalidateBounds(this);
 }  
 
 void

@@ -82,8 +82,6 @@ public:
   NS_IMETHOD PaintSVG(nsRenderingContext* aContext, const nsIntRect *aDirtyRect);
   NS_IMETHODIMP_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
   NS_IMETHODIMP_(nsRect) GetCoveredRegion();
-  NS_IMETHOD UpdateCoveredRegion();
-  NS_IMETHOD InitialUpdate();
   virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                       PRUint32 aFlags);
 
@@ -164,31 +162,6 @@ nsSVGSwitchFrame::GetCoveredRegion()
     }
   }
   return rect;
-}
-
-NS_IMETHODIMP
-nsSVGSwitchFrame::UpdateCoveredRegion()
-{
-  static_cast<nsSVGSwitchElement*>(mContent)->UpdateActiveChild();
-
-  nsIFrame *kid = GetActiveChildFrame();
-  if (kid) {
-    nsISVGChildFrame* child = do_QueryFrame(kid);
-    if (child) {
-      child->UpdateCoveredRegion();
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGSwitchFrame::InitialUpdate()
-{
-  static_cast<nsSVGSwitchElement*>(mContent)->UpdateActiveChild();
-
-  nsSVGEffects::InvalidateRenderingObservers(this);
-
-  return nsSVGSwitchFrameBase::InitialUpdate();
 }
 
 gfxRect
