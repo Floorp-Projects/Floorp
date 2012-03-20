@@ -352,6 +352,10 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
             values.AppendElement(curEvent->Z());
             break;
 
+        case hal::SENSOR_PROXIMITY:
+            values.AppendElement(curEvent->X());
+            break;
+
         default:
             __android_log_print(ANDROID_LOG_ERROR,
                                 "Gecko", "### SENSOR_EVENT fired, but type wasn't known %d",
@@ -373,15 +377,6 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
             gLocationCallback->Update(curEvent->GeoPosition());
         else
             NS_WARNING("Received location event without geoposition!");
-        break;
-    }
-
-    case AndroidGeckoEvent::PROXIMITY_EVENT: {
-        InfallibleTArray<float> values;
-        values.AppendElement(curEvent->Distance());
-        
-        hal::SensorData sdata(hal::SENSOR_PROXIMITY, PR_Now(), values, hal::SENSOR_ACCURACY_UNKNOWN);
-        hal::NotifySensorChange(sdata);
         break;
     }
 
