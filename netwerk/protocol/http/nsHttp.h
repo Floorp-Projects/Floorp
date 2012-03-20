@@ -166,6 +166,11 @@ struct nsHttp
     static nsresult CreateAtomTable();
     static void DestroyAtomTable();
 
+    // The mutex is valid any time the Atom Table is valid
+    // This mutex is used in the unusual case that the network thread and
+    // main thread might access the same data
+    static mozilla::Mutex *GetLock();
+
     // will dynamically add atoms to the table if they don't already exist
     static nsHttpAtom ResolveAtom(const char *);
     static nsHttpAtom ResolveAtom(const nsACString &s)
