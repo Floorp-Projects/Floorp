@@ -184,6 +184,10 @@ public class BrowserProvider extends ContentProvider {
 
     private HashMap<String, DatabaseHelper> mDatabasePerProfile;
 
+    private interface BookmarkMigrator {
+        public void updateForNewTable(ContentValues bookmark);
+    }
+
     static final String qualifyColumn(String table, String column) {
         return table + "." + column;
     }
@@ -396,7 +400,8 @@ public class BrowserProvider extends ContentProvider {
                    guid.equals(Bookmarks.TAGS_FOLDER_GUID);
         }
 
-        private void migrateBookmarkFolder(SQLiteDatabase db, int folderId) {
+        private void migrateBookmarkFolder(SQLiteDatabase db, int folderId,
+                BookmarkMigrator migrator) {
             Cursor c = null;
 
             debug("Migrating bookmark folder with id = " + folderId);
@@ -450,6 +455,9 @@ public class BrowserProvider extends ContentProvider {
                         continue;
                     }
 
+                    if (migrator != null)
+                        migrator.updateForNewTable(values);
+
                     debug("Migrating bookmark: " + values.getAsString(Bookmarks.TITLE));
                     db.insert(TABLE_BOOKMARKS, Bookmarks.URL, values);
 
@@ -481,11 +489,15 @@ public class BrowserProvider extends ContentProvider {
             final int nSubFolders = subFolders.size();
             for (int i = 0; i < nSubFolders; i++) {
                 int subFolderId = subFolders.get(i);
-                migrateBookmarkFolder(db, subFolderId);
+                migrateBookmarkFolder(db, subFolderId, migrator);
             }
         }
 
         private void migrateBookmarksTable(SQLiteDatabase db) {
+            migrateBookmarksTable(db, null);
+        }
+
+        private void migrateBookmarksTable(SQLiteDatabase db, BookmarkMigrator migrator) {
             debug("Renaming bookmarks table to " + TABLE_BOOKMARKS_TMP);
             db.execSQL("ALTER TABLE " + TABLE_BOOKMARKS +
                        " RENAME TO " + TABLE_BOOKMARKS_TMP);
@@ -503,7 +515,7 @@ public class BrowserProvider extends ContentProvider {
             createOrUpdateSpecialFolder(db, Bookmarks.PLACES_FOLDER_GUID,
                 R.string.bookmarks_folder_places, 0);
 
-            migrateBookmarkFolder(db, Bookmarks.FIXED_ROOT_ID);
+            migrateBookmarkFolder(db, Bookmarks.FIXED_ROOT_ID, migrator);
 
             // Ensure all special folders exist and have the
             // right folder hierarchy.
