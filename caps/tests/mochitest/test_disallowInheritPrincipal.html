@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=732413
+-->
+<head>
+  <title>Test for Bug 732413</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=732413">Mozilla Bug 732413</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 732413
+    Passing DISALLOW_INHERIT_PRINCIPAL flag should be effective even if
+    aPrincipal is the system principal.
+ **/
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
+var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                       .getService(nsIScriptSecurityManager);
+var sysPrincipal = secMan.getSystemPrincipal();
+isnot(sysPrincipal, undefined, "Should have a principal");
+isnot(sysPrincipal, null, "Should have a non-null principal");
+is(secMan.isSystemPrincipal(sysPrincipal), true,
+   "Should have system principal here");
+
+
+var ioService = Components.classes["@mozilla.org/network/io-service;1"].
+                getService(Components.interfaces.nsIIOService);
+var inheritingURI = ioService.newURI("javascript:1+1", null, null);
+
+// First try a normal call to checkLoadURIWithPrincipal
+try {
+  secMan.checkLoadURIWithPrincipal(sysPrincipal, inheritingURI,
+                                   nsIScriptSecurityManager.STANDARD);
+  ok(true, "checkLoadURI allowed the load");
+} catch (e) {
+  ok(false, "checkLoadURI failed unexpectedly: " + e);
+}
+
+// Now call checkLoadURIWithPrincipal with DISALLOW_INHERIT_PRINCIPAL
+try {
+  secMan.checkLoadURIWithPrincipal(sysPrincipal, inheritingURI,
+                                   nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
+  ok(false, "checkLoadURI allowed the load unexpectedly");
+} catch (e) {
+  ok(true, "checkLoadURI prevented load of principal-inheriting URI");
+}
+
+</script>
+</pre>
+</body>
+</html>

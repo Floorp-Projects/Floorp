@@ -62,6 +62,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget, base::Thread* aCompositor
   , mCurrentCompositeTask(NULL)
   , mPaused(false)
   , mIsFirstPaint(false)
+  , mLayersUpdated(false)
 {
   MOZ_COUNT_CTOR(CompositorParent);
 }
@@ -286,7 +287,17 @@ CompositorParent::TransformShadowTree()
 
   // We synchronise the viewport information with Java after sending the above
   // notifications, so that Java can take these into account in its response.
-  SyncViewportInfo();
+  if (metrics) {
+    // Calculate the absolute display port to send to Java
+    nsIntRect displayPort = metrics->mDisplayPort;
+    nsIntPoint scrollOffset = metrics->mViewportScrollOffset;
+    displayPort.x += scrollOffset.x;
+    displayPort.y += scrollOffset.y;
+
+    mozilla::AndroidBridge::Bridge()->SyncViewportInfo(displayPort, 1/rootScaleX, mLayersUpdated,
+                                                       mScrollOffset, mXScale, mYScale);
+    mLayersUpdated = false;
+  }
 
   // Handle transformations for asynchronous panning and zooming. We determine the
   // zoom used by Gecko from the transformation set on the root layer, and we
@@ -312,29 +323,11 @@ CompositorParent::TransformShadowTree()
 #endif
 }
 
-#ifdef MOZ_WIDGET_ANDROID
-void
-CompositorParent::SyncViewportInfo()
-{
-  ContainerLayer* container = GetPrimaryScrollableLayer()->AsContainerLayer();
-  const FrameMetrics* metrics = &container->GetFrameMetrics();
-
-  if (metrics) {
-    // Calculate the absolute display port to send to Java
-    nsIntRect displayPort = container->GetFrameMetrics().mDisplayPort;
-    nsIntPoint scrollOffset = metrics->mViewportScrollOffset;
-    displayPort.x += scrollOffset.x;
-    displayPort.y += scrollOffset.y;
-
-    mozilla::AndroidBridge::Bridge()->SyncViewportInfo(displayPort, mScrollOffset, mXScale, mYScale);
-  }
-}
-#endif
-
 void
 CompositorParent::ShadowLayersUpdated(bool isFirstPaint)
 {
   mIsFirstPaint = mIsFirstPaint || isFirstPaint;
+  mLayersUpdated = true;
   const nsTArray<PLayersParent*>& shadowParents = ManagedPLayersParent();
   NS_ABORT_IF_FALSE(shadowParents.Length() <= 1,
                     "can only support at most 1 ShadowLayersParent");

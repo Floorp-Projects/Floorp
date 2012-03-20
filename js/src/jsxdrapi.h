@@ -109,7 +109,6 @@ struct JSXDRState {
     JSXDRMode   mode;
     JSXDROps    *ops;
     JSContext   *cx;
-    void        *userdata;
     const char  *sharedFilename;
     JSPrincipals *principals;
     JSPrincipals *originPrincipals;
@@ -135,6 +134,16 @@ JS_XDRMemResetData(JSXDRState *xdr);
 
 extern JS_PUBLIC_API(void)
 JS_XDRDestroy(JSXDRState *xdr);
+
+/*
+ * Set principals that should be assigned to decoded scripts and functions.
+ * The principals is not held via JS_HoldPrincipals/JS_DropPrincipals unless
+ * they are stored in a decoded script. Thus the caller must either ensure
+ * that the principals outlive the XDR instance or are explicitly set to NULL
+ * before they release by the caller.
+ */
+extern JS_PUBLIC_API(void)
+JS_XDRSetPrincipals(JSXDRState *xdr, JSPrincipals *principals, JSPrincipals *originPrincipals);
 
 extern JS_PUBLIC_API(JSBool)
 JS_XDRUint8(JSXDRState *xdr, uint8_t *b);

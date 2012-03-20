@@ -1254,6 +1254,10 @@ public:
         return -1;
     }
 
+    // Return Azure GlyphRenderingOptions for drawing this font.
+    virtual mozilla::TemporaryRef<mozilla::gfx::GlyphRenderingOptions>
+      GetGlyphRenderingOptions() { return nsnull; }
+
     gfxFloat SynthesizeSpaceWidth(PRUint32 aCh);
 
     // Font metrics
@@ -2275,19 +2279,19 @@ public:
     }
 
     bool CharIsSpace(PRUint32 aPos) {
-        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        NS_ASSERTION(aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].CharIsSpace();
     }
     bool CharIsTab(PRUint32 aPos) {
-        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        NS_ASSERTION(aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].CharIsTab();
     }
     bool CharIsNewline(PRUint32 aPos) {
-        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        NS_ASSERTION(aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].CharIsNewline();
     }
     bool CharIsLowSurrogate(PRUint32 aPos) {
-        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        NS_ASSERTION(aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].CharIsLowSurrogate();
     }
 

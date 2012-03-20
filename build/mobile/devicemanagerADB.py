@@ -15,6 +15,7 @@ class DeviceManagerADB(DeviceManager):
     self._sock = None
     self.useRunAs = False
     self.haveRoot = False
+    self.useDDCopy = False
     self.useZip = False
     self.packageName = None
     self.tempDir = None

@@ -671,7 +671,7 @@ nsSMILAnimationFunction::ScaleSimpleProgress(double aProgress,
     return aProgress;
 
   PRUint32 i = 0;
-  for (; i < numTimes - 2 && aProgress >= mKeyTimes[i+1]; ++i);
+  for (; i < numTimes - 2 && aProgress >= mKeyTimes[i+1]; ++i) { }
 
   if (aCalcMode == CALC_DISCRETE) {
     // discrete calcMode behaviour differs in that each keyTime defines the time

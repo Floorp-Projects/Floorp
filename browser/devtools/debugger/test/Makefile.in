@@ -67,6 +67,7 @@ _BROWSER_TEST_FILES = \
 	browser_dbg_stack-02.js \
 	browser_dbg_stack-03.js \
 	browser_dbg_stack-04.js \
+	browser_dbg_stack-05.js \
 	browser_dbg_location-changes.js \
 	browser_dbg_script-switching.js \
 	browser_dbg_pause-resume.js \

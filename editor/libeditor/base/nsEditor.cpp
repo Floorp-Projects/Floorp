@@ -341,6 +341,13 @@ nsEditor::PostCreate()
     if (target) {
       InitializeSelection(target);
     }
+
+    // If the text control gets reframed during focus, Focus() would not be
+    // called, so take a chance here to see if we need to spell check the text
+    // control.
+    nsEditorEventListener* listener =
+      reinterpret_cast<nsEditorEventListener*> (mEventListener.get());
+    listener->SpellCheckIfNeeded();
   }
   return NS_OK;
 }

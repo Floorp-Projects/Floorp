@@ -240,7 +240,8 @@ public:
 
     int GetDPI();
 
-    void ShowFilePicker(nsAString& aFilePath, nsAString& aFilters);
+    void ShowFilePickerForExtensions(nsAString& aFilePath, const nsAString& aExtensions);
+    void ShowFilePickerForMimeType(nsAString& aFilePath, const nsAString& aMimeType);
 
     void PerformHapticFeedback(bool aIsLongPress);
 
@@ -408,7 +409,8 @@ public:
                              base::Thread* aCompositorThread);
     void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight);
     void SetPageSize(float aZoom, float aPageWidth, float aPageHeight);
-    void SyncViewportInfo(const nsIntRect& aDisplayPort, nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
+    void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
+                          nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
 
     jobject CreateSurface();
     void DestroySurface(jobject surface);
@@ -469,7 +471,8 @@ protected:
     jmethodID jGetClipboardText;
     jmethodID jSetClipboardText;
     jmethodID jShowAlertNotification;
-    jmethodID jShowFilePicker;
+    jmethodID jShowFilePickerForExtensions;
+    jmethodID jShowFilePickerForMimeType;
     jmethodID jAlertsProgressListener_OnProgress;
     jmethodID jAlertsProgressListener_OnCancel;
     jmethodID jGetDpi;

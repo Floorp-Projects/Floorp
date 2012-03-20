@@ -147,17 +147,13 @@ var dialog = {
       else if (app instanceof Ci.nsIWebHandlerApp) {
         let uri = ios.newURI(app.uriTemplate, null, null);
         if (/^https?/.test(uri.scheme)) {
-          let iconURI;
-          try {
-            iconURI = Cc["@mozilla.org/browser/favicon-service;1"].
-                      getService(Ci.nsIFaviconService).
-                      getFaviconForPage(ios.newURI(uri.prePath, null, null)).
-                      spec;
-          }
-          catch (e) {
-            iconURI = uri.prePath + "/favicon.ico";
-          }
-          elm.setAttribute("image", iconURI);
+          // Unfortunately we can't use the favicon service to get the favicon,
+          // because the service looks for a record with the exact URL we give
+          // it, and users won't have such records for URLs they don't visit,
+          // and users won't visit the handler's URL template, they'll only
+          // visit URLs derived from that template (i.e. with %s in the template
+          // replaced by the URL of the content being handled).
+          elm.setAttribute("image", uri.prePath + "/favicon.ico");
         }
         elm.setAttribute("description", uri.prePath);
       }
