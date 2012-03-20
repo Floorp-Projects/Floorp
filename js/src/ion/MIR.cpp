@@ -520,11 +520,19 @@ MBinaryArithInstruction::foldsTo(bool useValueNumbers)
     if (MDefinition *folded = EvaluateConstantOperands(this))
         return folded;
 
-    if (IsConstant(lhs, getIdentity()))
-        return rhs; // x op id => x
+    // 0 + -0 = 0. So we can't remove addition
+    if (isAdd() && specialization_ != MIRType_Int32)
+        return this;
 
     if (IsConstant(rhs, getIdentity()))
         return lhs;
+
+    // subtraction isn't commutative. So we can't remove subtraction when lhs equals 0
+    if (isSub())
+        return this;
+
+    if (IsConstant(lhs, getIdentity()))
+        return rhs; // x op id => x
 
     return this;
 }
