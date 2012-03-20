@@ -37,11 +37,19 @@
 #ifndef __NS_SVGPAINTSERVERFRAME_H__
 #define __NS_SVGPAINTSERVERFRAME_H__
 
+#include "nsCOMPtr.h"
+#include "nsFrame.h"
+#include "nsIFrame.h"
+#include "nsQueryFrame.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGUtils.h"
 
 class gfxContext;
+class gfxPattern;
+class nsStyleContext;
 class nsSVGGeometryFrame;
+
+struct gfxRect;
 
 typedef nsSVGContainerFrame nsSVGPaintServerFrameBase;
 

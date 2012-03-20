@@ -35,6 +35,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
+
+#include "nsRenderingContext.h"
 #include "imgIContainer.h"
 #include "nsStubImageDecoderObserver.h"
 #include "nsImageLoadingContent.h"
