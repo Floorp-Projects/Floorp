@@ -1286,6 +1286,13 @@ MacroAssemblerARMCompat::load16(const Address &address, const Register &dest)
 }
 
 void
+MacroAssemblerARMCompat::load16(const Address &address, Imm32 mask, const Register &dest)
+{
+    load16(address, dest);
+    and32(mask, dest);
+}
+
+void
 MacroAssemblerARMCompat::load16(const BaseIndex &src, const Register &dest)
 {
     Register index = src.index;
