@@ -47,6 +47,7 @@
 
 #include "nsHttpChannel.h"
 #include "nsHttpHandler.h"
+#include "nsStandardURL.h"
 #include "nsIApplicationCacheService.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIAuthInformation.h"
@@ -70,6 +71,7 @@
 #include "nsDOMError.h"
 #include "nsAlgorithm.h"
 #include "sampler.h"
+#include "nsIConsoleService.h"
 
 using namespace mozilla;
 
@@ -767,6 +769,10 @@ nsHttpChannel::CallOnStartRequest()
     // install stream converter if required
     rv = ApplyContentConversions();
     if (NS_FAILED(rv)) return rv;
+
+    rv = EnsureAssocReq();
+    if (NS_FAILED(rv))
+        return rv;
 
     // if this channel is for a download, close off access to the cache.
     if (mCacheEntry && mChannelIsForDownload) {
@@ -1709,6 +1715,111 @@ nsHttpChannel::Hash(const char *buf, nsACString &hash)
     rv = mHasher->Finish(true, hash);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    return NS_OK;
+}
+
+nsresult
+nsHttpChannel::EnsureAssocReq()
+{
+    // Confirm Assoc-Req response header on pipelined transactions
+    // per draft-nottingham-http-pipeline-01.txt
+    // of the form: GET http://blah.com/foo/bar?qv
+    // return NS_OK as long as we don't find a violation
+    // (i.e. no header is ok, as are malformed headers, as are
+    // transactions that have not been pipelined (unless those have been
+    // opted in via pragma))
+
+    if (!mResponseHead)
+        return NS_OK;
+
+    const char *assoc_val = mResponseHead->PeekHeader(nsHttp::Assoc_Req);
+    if (!assoc_val)
+        return NS_OK;
+
+    if (!mTransaction || !mURI)
+        return NS_OK;
+    
+    if (!mTransaction->PipelinePosition()) {
+        // "Pragma: X-Verify-Assoc-Req" can be used to verify even non pipelined
+        // transactions. It is used by test harness.
+
+        const char *pragma_val = mResponseHead->PeekHeader(nsHttp::Pragma);
+        if (!pragma_val ||
+            !nsHttp::FindToken(pragma_val, "X-Verify-Assoc-Req",
+                               HTTP_HEADER_VALUE_SEPS))
+            return NS_OK;
+    }
+
+    char *method = net_FindCharNotInSet(assoc_val, HTTP_LWS);
+    if (!method)
+        return NS_OK;
+    
+    bool equals;
+    char *endofmethod;
+    
+    assoc_val = nsnull;
+    endofmethod = net_FindCharInSet(method, HTTP_LWS);
+    if (endofmethod)
+        assoc_val = net_FindCharNotInSet(endofmethod, HTTP_LWS);
+    if (!assoc_val)
+        return NS_OK;
+    
+    // check the method
+    PRInt32 methodlen = PL_strlen(mRequestHead.Method().get());
+    if ((methodlen != (endofmethod - method)) ||
+        PL_strncmp(method,
+                   mRequestHead.Method().get(),
+                   endofmethod - method)) {
+        LOG(("  Assoc-Req failure Method %s", method));
+        if (mConnectionInfo)
+            mConnectionInfo->BanPipelining();
+
+        nsCOMPtr<nsIConsoleService> consoleService =
+            do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+        if (consoleService) {
+            nsAutoString message
+                (NS_LITERAL_STRING("Failed Assoc-Req. Received "));
+            AppendASCIItoUTF16(
+                mResponseHead->PeekHeader(nsHttp::Assoc_Req),
+                message);
+            message += NS_LITERAL_STRING(" expected method ");
+            AppendASCIItoUTF16(mRequestHead.Method().get(), message);
+            consoleService->LogStringMessage(message.get());
+        }
+
+        if (gHttpHandler->EnforceAssocReq())
+            return NS_ERROR_CORRUPTED_CONTENT;
+        return NS_OK;
+    }
+    
+    // check the URL
+    nsCOMPtr<nsIURI> assoc_url;
+    if (NS_FAILED(NS_NewURI(getter_AddRefs(assoc_url), assoc_val)) ||
+        !assoc_url)
+        return NS_OK;
+
+    mURI->Equals(assoc_url, &equals);
+    if (!equals) {
+        LOG(("  Assoc-Req failure URL %s", assoc_val));
+        if (mConnectionInfo)
+            mConnectionInfo->BanPipelining();
+
+        nsCOMPtr<nsIConsoleService> consoleService =
+            do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+        if (consoleService) {
+            nsAutoString message
+                (NS_LITERAL_STRING("Failed Assoc-Req. Received "));
+            AppendASCIItoUTF16(
+                mResponseHead->PeekHeader(nsHttp::Assoc_Req),
+                message);
+            message += NS_LITERAL_STRING(" expected URL ");
+            AppendASCIItoUTF16(mSpec.get(), message);
+            consoleService->LogStringMessage(message.get());
+        }
+
+        if (gHttpHandler->EnforceAssocReq())
+            return NS_ERROR_CORRUPTED_CONTENT;
+    }
     return NS_OK;
 }
 

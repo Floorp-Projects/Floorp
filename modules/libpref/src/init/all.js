@@ -811,6 +811,10 @@ pref("network.http.pipelining.maxrequests" , 4);
 // Prompt for 307 redirects
 pref("network.http.prompt-temp-redirect", true);
 
+// If true generate CORRUPTED_CONTENT errors for entities that
+// contain an invalid Assoc-Req response header
+pref("network.http.assoc-req.enforce", false);
+
 // On networks deploying QoS, it is recommended that these be lockpref()'d,
 // since inappropriate marking can easily overwhelm bandwidth reservations
 // for certain services (i.e. EF for VoIP, AF4x for interactive video,
