@@ -2049,6 +2049,7 @@ abstract public class GeckoApp
 
         unregisterReceiver(mConnectivityReceiver);
         GeckoNetworkManager.getInstance().stop();
+        GeckoScreenOrientationListener.getInstance().stop();
     }
 
     @Override
@@ -2080,8 +2081,13 @@ abstract public class GeckoApp
             refreshActionBar();
         }
 
-        registerReceiver(mConnectivityReceiver, mConnectivityFilter);
-        GeckoNetworkManager.getInstance().start();
+        mMainHandler.post(new Runnable() {
+          public void run() {
+            registerReceiver(mConnectivityReceiver, mConnectivityFilter);
+            GeckoNetworkManager.getInstance().start();
+            GeckoScreenOrientationListener.getInstance().start();
+          }
+        });
 
         if (mOwnActivityDepth > 0)
             mOwnActivityDepth--;
@@ -2168,6 +2174,7 @@ abstract public class GeckoApp
         }
 
         GeckoNetworkManager.getInstance().stop();
+        GeckoScreenOrientationListener.getInstance().stop();
 
         super.onDestroy();
 
@@ -2783,15 +2790,10 @@ abstract public class GeckoApp
     public LayerController getLayerController() { return mLayerController; }
 
     // accelerometer
-    public void onAccuracyChanged(Sensor sensor, int accuracy)
-    {
-        Log.w(LOGTAG, "onAccuracyChanged "+accuracy);
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createSensorAccuracyEvent(accuracy));
-    }
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     public void onSensorChanged(SensorEvent event)
     {
-        Log.w(LOGTAG, "onSensorChanged "+event);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createSensorEvent(event));
     }
 
@@ -2799,7 +2801,6 @@ abstract public class GeckoApp
     public void onLocationChanged(Location location)
     {
         Log.w(LOGTAG, "onLocationChanged "+location);
-
         GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(location));
     }
 

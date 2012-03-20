@@ -97,6 +97,7 @@
 #include "gfxFont.h"
 #include "gfxBlur.h"
 #include "gfxUtils.h"
+#include "nsRenderingContext.h"
 
 #include "nsFrameManager.h"
 #include "nsFrameLoader.h"

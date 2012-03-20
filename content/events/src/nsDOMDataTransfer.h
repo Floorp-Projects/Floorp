@@ -100,6 +100,7 @@ protected:
                     bool aCursorState,
                     bool aIsExternal,
                     bool aUserCancelled,
+                    bool aIsCrossDomainSubFrameDrop,
                     nsTArray<nsTArray<TransferItem> >& aItems,
                     nsIDOMElement* aDragImage,
                     PRUint32 aDragImageX,
@@ -192,6 +193,10 @@ protected:
 
   // true if the user cancelled the drag. Used only for the dragend event.
   bool mUserCancelled;
+
+  // true if this is a cross-domain drop from a subframe where access to the
+  // data should be prevented
+  bool mIsCrossDomainSubFrameDrop;
 
   // array of items, each containing an array of format->data pairs
   nsTArray<nsTArray<TransferItem> > mItems;

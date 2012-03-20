@@ -37,8 +37,20 @@
 #ifndef NSSVGTEXTPATHFRAME_H
 #define NSSVGTEXTPATHFRAME_H
 
+#include "gfxTypes.h"
+#include "nsCOMPtr.h"
+#include "nsFrame.h"
+#include "nsISVGChildFrame.h"
+#include "nsLiteralString.h"
+#include "nsQueryFrame.h"
 #include "nsSVGTSpanFrame.h"
-#include "SVGLengthList.h"
+
+class gfxFlattenedPath;
+class nsIAtom;
+class nsIContent;
+class nsIFrame;
+class nsIPresShell;
+class nsStyleContext;
 
 namespace mozilla {
 class SVGNumberList;
@@ -48,6 +60,8 @@ typedef nsSVGTSpanFrame nsSVGTextPathFrameBase;
 
 class nsSVGTextPathFrame : public nsSVGTextPathFrameBase
 {
+  typedef mozilla::SVGNumberList SVGNumberList;
+
   friend nsIFrame*
   NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:

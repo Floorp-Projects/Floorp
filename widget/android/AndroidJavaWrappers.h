@@ -466,7 +466,6 @@ public:
     double X() { return mX; }
     double Y() { return mY; }
     double Z() { return mZ; }
-    double Distance() { return mDistance; }
     const nsIntRect& Rect() { return mRect; }
     nsAString& Characters() { return mCharacters; }
     nsAString& CharactersExtra() { return mCharactersExtra; }
@@ -484,6 +483,7 @@ public:
     nsGeoPosition* GeoPosition() { return mGeoPosition; }
     double Bandwidth() { return mBandwidth; }
     bool CanBeMetered() { return mCanBeMetered; }
+    short ScreenOrientation() { return mScreenOrientation; }
 
 protected:
     int mAction;
@@ -507,6 +507,7 @@ protected:
     nsRefPtr<nsGeoPosition> mGeoPosition;
     double mBandwidth;
     bool mCanBeMetered;
+    short mScreenOrientation;
 
     void ReadIntArray(nsTArray<int> &aVals,
                       JNIEnv *jenv,
@@ -558,34 +559,34 @@ protected:
     static jfieldID jBandwidthField;
     static jfieldID jCanBeMeteredField;
 
+    static jfieldID jScreenOrientationField;
+
 public:
     enum {
         NATIVE_POKE = 0,
         KEY_EVENT = 1,
         MOTION_EVENT = 2,
         SENSOR_EVENT = 3,
-        UNUSED1_EVENT = 4,
-        LOCATION_EVENT = 5,
-        IME_EVENT = 6,
-        DRAW = 7,
-        SIZE_CHANGED = 8,
-        ACTIVITY_STOPPING = 9,
-        ACTIVITY_PAUSING = 10,
-        ACTIVITY_SHUTDOWN = 11,
-        LOAD_URI = 12,
-        SURFACE_CREATED = 13,
-        SURFACE_DESTROYED = 14,
-        GECKO_EVENT_SYNC = 15,
-        FORCED_RESIZE = 16,
-        ACTIVITY_START = 17,
-        BROADCAST = 19,
-        VIEWPORT = 20,
-        VISITED = 21,
-        NETWORK_CHANGED = 22,
-        PROXIMITY_EVENT = 23,
-        ACTIVITY_RESUMING = 24,
-        SCREENSHOT = 25,
-        SENSOR_ACCURACY = 26,
+        LOCATION_EVENT = 4,
+        IME_EVENT = 5,
+        DRAW = 6,
+        SIZE_CHANGED = 7,
+        ACTIVITY_STOPPING = 8,
+        ACTIVITY_PAUSING = 9,
+        ACTIVITY_SHUTDOWN = 10,
+        LOAD_URI = 11,
+        SURFACE_CREATED = 12,
+        SURFACE_DESTROYED = 13,
+        GECKO_EVENT_SYNC = 14,
+        FORCED_RESIZE = 15,
+        ACTIVITY_START = 16,
+        BROADCAST = 17,
+        VIEWPORT = 18,
+        VISITED = 19,
+        NETWORK_CHANGED = 20,
+        ACTIVITY_RESUMING = 21,
+        SCREENSHOT = 22,
+        SCREENORIENTATION_CHANGED = 23,
         dummy_java_enum_list_end
     };
 

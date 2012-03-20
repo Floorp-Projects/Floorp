@@ -69,6 +69,7 @@
 #include "gfxRect.h"
 #include "gfxContext.h"
 #include "gfxFont.h"
+#include "nsRenderingContext.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCSSRendering.h"
 #include "nsContentUtils.h"

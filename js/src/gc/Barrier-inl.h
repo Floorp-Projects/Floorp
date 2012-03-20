@@ -291,12 +291,19 @@ inline void
 HeapId::pre()
 {
 #ifdef JSGC_INCREMENTAL
-    if (JS_UNLIKELY(JSID_IS_OBJECT(value))) {
+    if (JSID_IS_OBJECT(value)) {
         JSObject *obj = JSID_TO_OBJECT(value);
         JSCompartment *comp = obj->compartment();
         if (comp->needsBarrier()) {
             js::gc::MarkObjectUnbarriered(comp->barrierTracer(), &obj, "write barrier");
             JS_ASSERT(obj == JSID_TO_OBJECT(value));
+        }
+    } else if (JSID_IS_STRING(value)) {
+        JSString *str = JSID_TO_STRING(value);
+        JSCompartment *comp = str->compartment();
+        if (comp->needsBarrier()) {
+            js::gc::MarkStringUnbarriered(comp->barrierTracer(), &str, "write barrier");
+            JS_ASSERT(str == JSID_TO_STRING(value));
         }
     }
 #endif
@@ -310,7 +317,8 @@ HeapId::post()
 inline HeapId &
 HeapId::operator=(jsid id)
 {
-    pre();
+    if (id != value)
+        pre();
     JS_ASSERT(!IsPoisonedId(id));
     value = id;
     post();
@@ -320,7 +328,8 @@ HeapId::operator=(jsid id)
 inline HeapId &
 HeapId::operator=(const HeapId &v)
 {
-    pre();
+    if (v.value != value)
+        pre();
     JS_ASSERT(!IsPoisonedId(v.value));
     value = v.value;
     post();

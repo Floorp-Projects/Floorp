@@ -60,6 +60,7 @@
 #include "nsPresContext.h"
 #include "nsIDocShell.h"
 #include "nsPIDOMWindow.h"
+#include "mozilla/dom/ScreenOrientation.h"
 
 #ifdef DEBUG
 #define ALOG_BRIDGE(args...) ALOG(args)
@@ -179,6 +180,10 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jEnableNetworkNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableNetworkNotifications", "()V");
     jDisableNetworkNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "disableNetworkNotifications", "()V");
     jEmitGeckoAccessibilityEvent = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "emitGeckoAccessibilityEvent", "(I[Ljava/lang/String;Ljava/lang/String;ZZZ)V");
+
+    jGetScreenOrientation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getScreenOrientation", "()S");
+    jEnableScreenOrientationNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableScreenOrientationNotifications", "()V");
+    jDisableScreenOrientationNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "disableScreenOrientationNotifications", "()V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -312,28 +317,6 @@ AndroidBridge::AcknowledgeEventSync()
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jAcknowledgeEventSync);
 }
-
-void
-AndroidBridge::EnableDeviceMotion(bool aEnable)
-{
-    ALOG_BRIDGE("AndroidBridge::EnableDeviceMotion");
-
-    // bug 734855 - we probably can make this finer grain based on
-    // the DOM APIs that are being invoked.
-    if (aEnable) {
-        EnableSensor(hal::SENSOR_ORIENTATION);
-        EnableSensor(hal::SENSOR_ACCELERATION);
-        EnableSensor(hal::SENSOR_LINEAR_ACCELERATION);
-        EnableSensor(hal::SENSOR_GYROSCOPE);
-    }
-    else {
-        DisableSensor(hal::SENSOR_ORIENTATION);
-        DisableSensor(hal::SENSOR_ACCELERATION);
-        DisableSensor(hal::SENSOR_LINEAR_ACCELERATION);
-        DisableSensor(hal::SENSOR_GYROSCOPE);
-    }
-}
-
 
 void
 AndroidBridge::EnableLocation(bool aEnable)
@@ -2086,6 +2069,27 @@ AndroidBridge::HideSurface(jobject surface)
                                             "(Landroid/view/Surface;)V");
   env->CallStaticVoidMethod(cls, method, surface);
 #endif
+}
+
+void
+AndroidBridge::GetScreenOrientation(dom::ScreenOrientationWrapper& aOrientation)
+{
+    ALOG_BRIDGE("AndroidBridge::GetScreenOrientation");
+    aOrientation.orientation = static_cast<dom::ScreenOrientation>(mJNIEnv->CallStaticShortMethod(mGeckoAppShellClass, jGetScreenOrientation));
+}
+
+void
+AndroidBridge::EnableScreenOrientationNotifications()
+{
+    ALOG_BRIDGE("AndroidBridge::EnableScreenOrientationNotifications");
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEnableScreenOrientationNotifications);
+}
+
+void
+AndroidBridge::DisableScreenOrientationNotifications()
+{
+    ALOG_BRIDGE("AndroidBridge::DisableScreenOrientationNotifications");
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jDisableScreenOrientationNotifications);
 }
 
 

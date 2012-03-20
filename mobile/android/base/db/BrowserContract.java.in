@@ -108,6 +108,12 @@ public class BrowserContract {
         public static final String TOOLBAR_FOLDER_GUID = "toolbar";
         public static final String UNFILED_FOLDER_GUID = "unfiled";
 
+        public static final int TYPE_FOLDER = 0;
+        public static final int TYPE_BOOKMARK = 1;
+        public static final int TYPE_SEPARATOR = 2;
+        public static final int TYPE_LIVEMARK = 3;
+        public static final int TYPE_QUERY = 4;
+
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "bookmarks");
         public static final Uri PARENTS_CONTENT_URI = Uri.withAppendedPath(CONTENT_URI, "parents");
         // Hacky API for bulk-updating positions. Bug 728783.
@@ -115,7 +121,7 @@ public class BrowserContract {
 
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/bookmark";
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/bookmark";
-        public static final String IS_FOLDER = "folder";
+        public static final String TYPE = "type";
         public static final String PARENT = "parent";
         public static final String POSITION = "position";
         public static final String TAGS = "tags";
