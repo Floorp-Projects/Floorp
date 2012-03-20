@@ -82,14 +82,15 @@ public class GeckoEvent {
     private static final int SURFACE_CREATED = 12;
     private static final int SURFACE_DESTROYED = 13;
     private static final int GECKO_EVENT_SYNC = 14;
-    private static final int ACTIVITY_START = 15;
-    private static final int BROADCAST = 16;
-    private static final int VIEWPORT = 17;
-    private static final int VISITED = 18;
-    private static final int NETWORK_CHANGED = 19;
-    private static final int ACTIVITY_RESUMING = 20;
-    private static final int SCREENSHOT = 21;
-    private static final int SCREENORIENTATION_CHANGED = 22;
+    private static final int FORCED_RESIZE = 15;
+    private static final int ACTIVITY_START = 16;
+    private static final int BROADCAST = 17;
+    private static final int VIEWPORT = 18;
+    private static final int VISITED = 19;
+    private static final int NETWORK_CHANGED = 20;
+    private static final int ACTIVITY_RESUMING = 21;
+    private static final int SCREENSHOT = 22;
+    private static final int SCREENORIENTATION_CHANGED = 23;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
