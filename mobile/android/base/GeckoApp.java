@@ -2081,9 +2081,13 @@ abstract public class GeckoApp
             refreshActionBar();
         }
 
-        registerReceiver(mConnectivityReceiver, mConnectivityFilter);
-        GeckoNetworkManager.getInstance().start();
-        GeckoScreenOrientationListener.getInstance().start();
+        mMainHandler.post(new Runnable() {
+          public void run() {
+            registerReceiver(mConnectivityReceiver, mConnectivityFilter);
+            GeckoNetworkManager.getInstance().start();
+            GeckoScreenOrientationListener.getInstance().start();
+          }
+        });
 
         if (mOwnActivityDepth > 0)
             mOwnActivityDepth--;
