@@ -197,7 +197,8 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
   }
 
   private boolean rowIsFolder(Cursor cur) {
-    return RepoUtils.getLongFromCursor(cur, BrowserContract.Bookmarks.IS_FOLDER) == 1;
+    long type = RepoUtils.getLongFromCursor(cur, BrowserContract.Bookmarks.TYPE);
+    return type == BrowserContract.Bookmarks.TYPE_FOLDER;
   }
 
   private String getGUIDForID(long androidID) {
@@ -837,7 +838,8 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
       return logBookmark(rec);
     }
 
-    boolean isFolder  = RepoUtils.getIntFromCursor(cur, BrowserContract.Bookmarks.IS_FOLDER) == 1;
+    long type = RepoUtils.getIntFromCursor(cur, BrowserContract.Bookmarks.TYPE);
+    boolean isFolder = type == BrowserContract.Bookmarks.TYPE_FOLDER;
 
     rec.title = RepoUtils.getStringFromCursor(cur, BrowserContract.Bookmarks.TITLE);
     rec.bookmarkURI = RepoUtils.getStringFromCursor(cur, BrowserContract.Bookmarks.URL);

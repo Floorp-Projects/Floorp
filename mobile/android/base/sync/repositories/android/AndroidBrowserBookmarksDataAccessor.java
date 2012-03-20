@@ -26,7 +26,8 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
   /*
    * Fragments of SQL to make our lives easier.
    */
-  private static final String BOOKMARK_IS_FOLDER = BrowserContract.Bookmarks.IS_FOLDER + " = 1";
+  private static final String BOOKMARK_IS_FOLDER = BrowserContract.Bookmarks.TYPE + " = " +
+                                                   BrowserContract.Bookmarks.TYPE_FOLDER;
   private static final String GUID_NOT_TAGS_OR_PLACES = BrowserContract.SyncColumns.GUID + " NOT IN ('" +
                                                         BrowserContract.Bookmarks.TAGS_FOLDER_GUID + "', '" +
                                                         BrowserContract.Bookmarks.PLACES_FOLDER_GUID + "')";
@@ -206,7 +207,9 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
 
     // Only bookmark and folder types should make it this far.
     // Other types should be filtered out and dropped.
-    cv.put(BrowserContract.Bookmarks.IS_FOLDER,   rec.type.equalsIgnoreCase(TYPE_FOLDER) ? 1 : 0);
+    cv.put(BrowserContract.Bookmarks.TYPE, rec.type.equalsIgnoreCase(TYPE_FOLDER) ?
+                                           BrowserContract.Bookmarks.TYPE_FOLDER :
+                                           BrowserContract.Bookmarks.TYPE_BOOKMARK);
 
     // Note that we don't set the modified timestamp: we allow the
     // content provider to do that for us.
