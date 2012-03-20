@@ -71,28 +71,25 @@ public class GeckoEvent {
     private static final int KEY_EVENT = 1;
     private static final int MOTION_EVENT = 2;
     private static final int SENSOR_EVENT = 3;
-    private static final int UNUSED1_EVENT = 4;
-    private static final int LOCATION_EVENT = 5;
-    private static final int IME_EVENT = 6;
-    private static final int DRAW = 7;
-    private static final int SIZE_CHANGED = 8;
-    private static final int ACTIVITY_STOPPING = 9;
-    private static final int ACTIVITY_PAUSING = 10;
-    private static final int ACTIVITY_SHUTDOWN = 11;
-    private static final int LOAD_URI = 12;
-    private static final int SURFACE_CREATED = 13;
-    private static final int SURFACE_DESTROYED = 14;
-    private static final int GECKO_EVENT_SYNC = 15;
-    private static final int ACTIVITY_START = 17;
-    private static final int BROADCAST = 19;
-    private static final int VIEWPORT = 20;
-    private static final int VISITED = 21;
-    private static final int NETWORK_CHANGED = 22;
-    private static final int PROXIMITY_EVENT = 23;
-    private static final int ACTIVITY_RESUMING = 24;
-    private static final int SCREENSHOT = 25;
-    private static final int UNUSED2_EVENT = 26;
-    private static final int SCREENORIENTATION_CHANGED = 27;
+    private static final int LOCATION_EVENT = 4;
+    private static final int IME_EVENT = 5;
+    private static final int DRAW = 6;
+    private static final int SIZE_CHANGED = 7;
+    private static final int ACTIVITY_STOPPING = 8;
+    private static final int ACTIVITY_PAUSING = 9;
+    private static final int ACTIVITY_SHUTDOWN = 10;
+    private static final int LOAD_URI = 11;
+    private static final int SURFACE_CREATED = 12;
+    private static final int SURFACE_DESTROYED = 13;
+    private static final int GECKO_EVENT_SYNC = 14;
+    private static final int ACTIVITY_START = 15;
+    private static final int BROADCAST = 16;
+    private static final int VIEWPORT = 17;
+    private static final int VISITED = 18;
+    private static final int NETWORK_CHANGED = 19;
+    private static final int ACTIVITY_RESUMING = 20;
+    private static final int SCREENSHOT = 21;
+    private static final int SCREENORIENTATION_CHANGED = 22;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -124,7 +121,6 @@ public class GeckoEvent {
     public Point[] mPointRadii;
     public Rect mRect;
     public double mX, mY, mZ;
-    public double mDistance;
 
     public int mMetaState, mFlags;
     public int mKeyCode, mUnicodeChar;
@@ -340,10 +336,9 @@ public class GeckoEvent {
             break;
 
         case Sensor.TYPE_PROXIMITY:
-            // bug 734854 - maybe we can get rid of this event.  is
-            // values[1] and values[2] valid?
-            event = new GeckoEvent(PROXIMITY_EVENT);
-            event.mDistance = s.values[0];
+            event = new GeckoEvent(SENSOR_EVENT);
+            event.mFlags = GeckoHalDefines.SENSOR_PROXIMITY;
+            event.mX = s.values[0];
             break;
         }
         return event;
