@@ -61,6 +61,9 @@
 .annotationHTML.breakpoint {
   background-image: url("chrome://browser/skin/devtools/orion-breakpoint.png");
 }
+.annotationHTML.debugLocation {
+  background-image: url("chrome://browser/skin/devtools/orion-debug-location.png");
+}
 
 /* Styles for the overview ruler  */
 .annotationOverview {
@@ -76,6 +79,10 @@
 .annotationOverview.breakpoint {
   background-color: lightblue;
   border: 1px solid blue;
+}
+.annotationOverview.debugLocation {
+  background-color: white;
+  border: 1px solid green;
 }
 .annotationOverview.currentBracket {
   background-color: lightgray;
