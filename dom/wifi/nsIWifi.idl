@@ -92,7 +92,9 @@ interface nsIDOMWifiManager : nsISupports {
     readonly attribute jsval connectedNetwork;
 
     /**
-     * These three functions serve as state notification listeners.
+     * These four functions serve as state notification listeners.
+     * onconnecting: Fires when we start the process of connecting to a
+     *               network.
      * onassociate: Fires when we have connected to an access point but do not
      *              yet have an IP address.
      * onconnect: Fires once we are fully connected to an access point and can
@@ -102,6 +104,7 @@ interface nsIDOMWifiManager : nsISupports {
      *               connected to a network but have disconnected for any
      *               reason (transition: onconnect -> ondisconnect).
      */
+             attribute nsIDOMEventListener onconnecting;
              attribute nsIDOMEventListener onassociate;
              attribute nsIDOMEventListener onconnect;
              attribute nsIDOMEventListener ondisconnect;
