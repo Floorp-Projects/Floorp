@@ -1186,13 +1186,14 @@ function appendMrNameSpan(aP, aKind, aKidsState, aDescription, aUnsafeName,
   }
 }
 
-// This is used to record the (safe) IDs of which sub-trees have been toggled,
-// so the collapsed/expanded state can be replicated when the page is
-// regenerated.  It can end up holding IDs of nodes that no longer exist, e.g.
-// for compartments that have been closed.  This doesn't seem like a big deal,
-// because the number is limited by the number of entries the user has changed
-// from their original state.
-let gTogglesBySafeTreeId = {};
+// This is used to record the (safe) IDs of which sub-trees have been manually
+// expanded (marked as true) and collapsed (marked as false).  It's used to
+// replicate the collapsed/expanded state when the page is updated.  It can end
+// up holding IDs of nodes that no longer exist, e.g. for compartments that
+// have been closed.  This doesn't seem like a big deal, because the number is
+// limited by the number of entries the user has changed from their original
+// state.
+let gShowSubtreesBySafeTreeId = {};
 
 function assertClassListContains(e, className) {
   assert(e, "undefined " + className);
@@ -1216,6 +1217,7 @@ function toggle(aEvent)
   let minusSpan = outerSpan.childNodes[3];
   assertClassListContains(plusSpan,  "mrSep");
   assertClassListContains(minusSpan, "mrSep");
+  let isExpansion = !plusSpan.classList.contains("hidden");
   plusSpan .classList.toggle("hidden");
   minusSpan.classList.toggle("hidden");
 
@@ -1226,10 +1228,10 @@ function toggle(aEvent)
 
   // Record/unrecord that this sub-tree was toggled.
   let safeTreeId = outerSpan.id;
-  if (gTogglesBySafeTreeId[safeTreeId]) {
-    delete gTogglesBySafeTreeId[safeTreeId];
+  if (gShowSubtreesBySafeTreeId[safeTreeId] !== undefined) {
+    delete gShowSubtreesBySafeTreeId[safeTreeId];
   } else {
-    gTogglesBySafeTreeId[safeTreeId] = true;
+    gShowSubtreesBySafeTreeId[safeTreeId] = isExpansion;
   }
 }
 
@@ -1346,8 +1348,8 @@ function appendTreeElements(aPOuter, aT, aProcess)
       // involves reinstating any previous toggling of the sub-tree.
       let safeTreeId = flipBackslashes(aProcess + ":" + unsafePath);
       showSubtrees = !aT._hideKids;
-      if (gTogglesBySafeTreeId[safeTreeId]) {
-        showSubtrees = !showSubtrees;
+      if (gShowSubtreesBySafeTreeId[safeTreeId] !== undefined) {
+        showSubtrees = gShowSubtreesBySafeTreeId[safeTreeId];
       }
       d = appendElement(aP, "span", "hasKids");
       d.id = safeTreeId;
