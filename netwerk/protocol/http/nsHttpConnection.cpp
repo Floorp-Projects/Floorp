@@ -86,6 +86,7 @@ nsHttpConnection::nsHttpConnection()
     , mCompletedProxyConnect(false)
     , mLastTransactionExpectedNoContent(false)
     , mIdleMonitoring(false)
+    , mProxyConnectInProgress(false)
     , mHttp1xTransactionCount(0)
     , mNPNComplete(false)
     , mSetupNPNCalled(false)
@@ -153,6 +154,7 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info,
     NS_ENSURE_TRUE(!mConnInfo, NS_ERROR_ALREADY_INITIALIZED);
 
     mConnInfo = info;
+    mSupportsPipelining = mConnInfo->SupportsPipelining();
     mMaxHangTime = PR_SecondsToInterval(maxHangTime);
     mLastReadTime = PR_IntervalNow();
 
@@ -369,6 +371,7 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, PRUint8 caps, PRInt32 pri)
         rv = SetupProxyConnect();
         if (NS_FAILED(rv))
             goto failed_activation;
+        mProxyConnectInProgress = true;
     }
 
     // Clear the per activation counter
@@ -733,6 +736,7 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
         }
     }
     mKeepAliveMask = mKeepAlive;
+    mConnInfo->SetSupportsPipelining(mSupportsPipelining);
 
     // if this connection is persistent, then the server may send a "Keep-Alive"
     // header specifying the maximum number of times the connection can be
@@ -1094,6 +1098,7 @@ nsHttpConnection::OnSocketWritable()
             }
 
             LOG(("  writing transaction request stream\n"));
+            mProxyConnectInProgress = false;
             rv = mTransaction->ReadSegments(this, nsIOService::gDefaultSegmentSize, &n);
         }
 

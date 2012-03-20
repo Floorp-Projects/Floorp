@@ -2075,6 +2075,13 @@ SpdySession::Status()
   return NS_ERROR_UNEXPECTED;
 }
 
+PRUint8
+SpdySession::Caps()
+{
+  NS_ABORT_IF_FALSE(false, "SpdySession::Caps()");
+  return 0;
+}
+
 PRUint32
 SpdySession::Available()
 {
@@ -2132,6 +2139,26 @@ SpdySession::TakeSubTransactions(
   return NS_OK;
 }
 
+nsresult
+SpdySession::AddTransaction(nsAHttpTransaction *)
+{
+  // This API is meant for pipelining, SpdySession's should be
+  // extended with AddStream()
+
+  NS_ABORT_IF_FALSE(false,
+                    "SpdySession::AddTransaction() should not be called");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+PRUint16
+SpdySession::PipelineDepthAvailable()
+{
+  // any attempt at pipelining will be turned into parallelism
+
+  return 0;
+}
+
 //-----------------------------------------------------------------------------
 // Pass through methods of nsAHttpConnection
 //-----------------------------------------------------------------------------
@@ -2177,6 +2204,13 @@ nsresult
 SpdySession::PushBack(const char *buf, PRUint32 len)
 {
   return mConnection->PushBack(buf, len);
+}
+
+bool
+SpdySession::IsProxyConnectInProgress()
+{
+    NS_ABORT_IF_FALSE(mConnection, "no connection");
+    return mConnection->IsProxyConnectInProgress();
 }
 
 bool

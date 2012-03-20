@@ -92,12 +92,14 @@ private:
 // nsHttpPipeline <public>
 //-----------------------------------------------------------------------------
 
-nsHttpPipeline::nsHttpPipeline()
-    : mConnection(nsnull)
+nsHttpPipeline::nsHttpPipeline(PRUint16 maxPipelineDepth)
+    : mMaxPipelineDepth(maxPipelineDepth)
+    , mConnection(nsnull)
     , mStatus(NS_OK)
     , mRequestIsPartial(false)
     , mResponseIsPartial(false)
     , mClosed(false)
+    , mUtilizedPipeline(false)
     , mPushBackBuf(nsnull)
     , mPushBackLen(0)
     , mPushBackMax(0)
@@ -124,6 +126,9 @@ nsHttpPipeline::AddTransaction(nsAHttpTransaction *trans)
 {
     LOG(("nsHttpPipeline::AddTransaction [this=%x trans=%x]\n", this, trans));
 
+    if (mRequestQ.Length() || mResponseQ.Length())
+        mUtilizedPipeline = true;
+
     NS_ADDREF(trans);
     mRequestQ.AppendElement(trans);
 
@@ -135,6 +140,27 @@ nsHttpPipeline::AddTransaction(nsAHttpTransaction *trans)
     }
 
     return NS_OK;
+}
+
+PRUint16
+nsHttpPipeline::PipelineDepthAvailable()
+{
+    PRUint16 currentTransactions = mRequestQ.Length() + mResponseQ.Length();
+
+    // Check to see if there are too many transactions currently in use.
+    if (currentTransactions >= mMaxPipelineDepth)
+        return 0;
+
+    // Check to see if this connection is being used by a non-pipelineable
+    // transaction already.
+    nsAHttpTransaction *trans = Request(0);
+    if (!trans)
+        trans = Response(0);
+    if (trans && !(trans->Caps() & NS_HTTP_ALLOW_PIPELINING))
+        return 0;
+
+    // There is still some room available.
+    return mMaxPipelineDepth - currentTransactions;
 }
 
 //-----------------------------------------------------------------------------
@@ -164,9 +190,26 @@ nsHttpPipeline::OnHeadersAvailable(nsAHttpTransaction *trans,
 
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     NS_ASSERTION(mConnection, "no connection");
+    
+    nsRefPtr<nsHttpConnectionInfo> ci;
+    GetConnectionInfo(getter_AddRefs(ci));
 
+    NS_ABORT_IF_FALSE(ci, "no connection info");
+    
+    bool pipeliningBefore = ci->SupportsPipelining();
+    
     // trans has now received its response headers; forward to the real connection
-    return mConnection->OnHeadersAvailable(trans, requestHead, responseHead, reset);
+    nsresult rv = mConnection->OnHeadersAvailable(trans,
+                                                  requestHead,
+                                                  responseHead,
+                                                  reset);
+    
+    if (!pipeliningBefore && ci->SupportsPipelining())
+        // The received headers have expanded the eligible
+        // pipeline depth for this connection
+        gHttpHandler->ConnMgr()->ProcessPipelinePendingQForCI(ci);
+
+    return rv;
 }
 
 nsresult
@@ -261,7 +304,9 @@ nsHttpPipeline::IsPersistent()
 bool
 nsHttpPipeline::IsReused()
 {
-    return true; // pipelining requires this
+    if (!mUtilizedPipeline && mConnection)
+        return mConnection->IsReused();
+    return true;
 }
 
 nsresult
@@ -307,6 +352,13 @@ nsHttpPipeline::PushBack(const char *data, PRUint32 length)
     mPushBackLen = length;
 
     return NS_OK;
+}
+
+bool
+nsHttpPipeline::IsProxyConnectInProgress()
+{
+    NS_ABORT_IF_FALSE(mConnection, "no connection");
+    return mConnection->IsProxyConnectInProgress();
 }
 
 bool
@@ -425,8 +477,13 @@ nsHttpPipeline::GetSecurityCallbacks(nsIInterfaceRequestor **result,
 {
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
-    // return security callbacks from first request
+    // depending on timing this could be either the request or the response
+    // that is needed - but they both go to the same host. A request for these
+    // callbacks directly in nsHttpTransaction would not make a distinction
+    // over whether the the request had been transmitted yet.
     nsAHttpTransaction *trans = Request(0);
+    if (!trans)
+        trans = Response(0);
     if (trans)
         trans->GetSecurityCallbacks(result, target);
     else {
@@ -546,6 +603,16 @@ nsHttpPipeline::Status()
     return mStatus;
 }
 
+PRUint8
+nsHttpPipeline::Caps()
+{
+    nsAHttpTransaction *trans = Request(0);
+    if (!trans)
+        trans = Response(0);
+
+    return trans ? trans->Caps() : 0;
+}
+
 PRUint32
 nsHttpPipeline::Available()
 {
@@ -632,6 +699,17 @@ nsHttpPipeline::WriteSegments(nsAHttpSegmentWriter *writer,
     nsresult rv;
 
     trans = Response(0);
+    // This code deals with the establishment of a CONNECT tunnel through
+    // an HTTP proxy. It allows the connection to do the CONNECT/200
+    // HTTP transaction to establish an SSL tunnel as a precursor to the
+    // actual pipeline of regular HTTP transactions.
+    if (!trans && mRequestQ.Length() &&
+        mConnection->IsProxyConnectInProgress()) {
+        LOG(("nsHttpPipeline::WriteSegments [this=%p] Forced Delegation\n",
+             this));
+        trans = Request(0);
+    }
+
     if (!trans) {
         if (mRequestQ.Length() > 0)
             rv = NS_BASE_STREAM_WOULD_BLOCK;
@@ -701,22 +779,32 @@ nsHttpPipeline::Close(nsresult reason)
     nsAHttpTransaction *trans;
 
     // any pending requests can ignore this error and be restarted
+    // unless it is during a CONNECT tunnel request
     count = mRequestQ.Length();
-    for (i=0; i<count; ++i) {
+    for (i = 0; i < count; ++i) {
         trans = Request(i);
-        trans->Close(NS_ERROR_NET_RESET);
+        if (mConnection && mConnection->IsProxyConnectInProgress())
+            trans->Close(reason);
+        else
+            trans->Close(NS_ERROR_NET_RESET);
         NS_RELEASE(trans);
     }
     mRequestQ.Clear();
 
     trans = Response(0);
     if (trans) {
-        // if the current response is partially complete, then it cannot be
-        // restarted and will have to fail with the status of the connection.
-        if (mResponseIsPartial)
+        // The current transaction can be restarted via reset
+        // if the response has not started to arrive and the reason
+        // for failure is innocuous (e.g. not an SSL error)
+        if (!mResponseIsPartial &&
+            (reason == NS_ERROR_NET_RESET ||
+             reason == NS_OK ||
+             reason == NS_BASE_STREAM_CLOSED)) {
+            trans->Close(NS_ERROR_NET_RESET);            
+        }
+        else {
             trans->Close(reason);
-        else
-            trans->Close(NS_ERROR_NET_RESET);
+        }
         NS_RELEASE(trans);
         
         // any remaining pending responses can be restarted
