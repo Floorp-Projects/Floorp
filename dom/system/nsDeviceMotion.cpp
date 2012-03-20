@@ -140,6 +140,9 @@ nsDeviceMotion::nsDeviceMotion()
 
 nsDeviceMotion::~nsDeviceMotion()
 {
+  if (mStarted)
+    Shutdown();
+
   if (mTimeoutTimer)
     mTimeoutTimer->Cancel();
 }
