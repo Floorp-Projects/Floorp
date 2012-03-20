@@ -843,6 +843,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void movePtr(const Address &src, const Register &dest);
 
     void load16(const Address &address, const Register &dest);
+    void load16_mask(const Address &address, Imm32 mask, const Register &dest);
     void load16(const BaseIndex &src, const Register &dest);
     void load32(const Address &address, const Register &dest);
     void load32(const ImmWord &imm, const Register &dest);

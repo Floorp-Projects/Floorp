@@ -223,6 +223,22 @@ class MacroAssemblerX86Shared : public Assembler
     void store32(const Register &src, const Address &dest) {
         movl(src, Operand(dest));
     }
+    void load16(const Address &src, const Register &dest) {
+        movzxh(Operand(src), dest);
+    }
+    void load16(const BaseIndex &src, const Register &dest) {
+        movzxh(Operand(src), dest);
+    }
+    void store16(const Register &src, const Address &dest) {
+        movzxh(src, Operand(dest));
+    }
+    void store16(const Register &src, const BaseIndex &dest) {
+        movzxh(src, Operand(dest));
+    }
+    void load16_mask(const Address &src, Imm32 mask, const Register &dest) {
+        load32(src, dest);
+        and32(mask, dest);
+    }
 
     template <typename T>
     void computeEffectiveAddress(const T &address, Register dest) {

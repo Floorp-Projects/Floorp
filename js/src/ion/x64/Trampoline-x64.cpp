@@ -335,7 +335,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
 
     // Load the number of |undefined|s to push into %rcx.
     masm.movq(Operand(rsp, IonJSFrameLayout::offsetOfCalleeToken()), rax);
-    masm.load16(Operand(rax, offsetof(JSFunction, nargs)), rcx);
+    masm.movzxh(Operand(rax, offsetof(JSFunction, nargs)), rcx);
     masm.subq(r8, rcx);
 
     masm.moveValue(UndefinedValue(), r10);
