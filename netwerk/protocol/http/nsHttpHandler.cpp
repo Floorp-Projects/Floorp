@@ -185,16 +185,11 @@ nsHttpHandler::nsHttpHandler()
     , mMaxConnectionsPerServer(8)
     , mMaxPersistentConnectionsPerServer(2)
     , mMaxPersistentConnectionsPerProxy(4)
-    , mMaxPipelinedRequests(32)
-    , mMaxOptimisticPipelinedRequests(4)
-    , mPipelineAggressive(false)
-    , mMaxPipelineObjectSize(300000)
-    , mPipelineReadTimeout(PR_MillisecondsToInterval(10000))
+    , mMaxPipelinedRequests(2)
     , mRedirectionLimit(10)
     , mPhishyUserPassLength(1)
     , mQoSBits(0x00)
     , mPipeliningOverSSL(false)
-    , mEnforceAssocReq(false)
     , mInPrivateBrowsingMode(PRIVATE_BROWSING_UNKNOWN)
     , mLastUniqueID(NowInSeconds())
     , mSessionStartTime(0)
@@ -343,7 +338,6 @@ nsHttpHandler::Init()
         mObserverService->AddObserver(this, "net:clear-active-logins", true);
         mObserverService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, true);
         mObserverService->AddObserver(this, "net:prune-dead-connections", true);
-        mObserverService->AddObserver(this, "net:failed-to-process-uri", true);
     }
  
     return NS_OK;
@@ -369,8 +363,7 @@ nsHttpHandler::InitConnectionMgr()
                         mMaxPersistentConnectionsPerServer,
                         mMaxPersistentConnectionsPerProxy,
                         mMaxRequestDelay,
-                        mMaxPipelinedRequests,
-                        mMaxOptimisticPipelinedRequests);
+                        mMaxPipelinedRequests);
     return rv;
 }
 
@@ -1022,44 +1015,10 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("pipelining.maxrequests"))) {
         rv = prefs->GetIntPref(HTTP_PREF("pipelining.maxrequests"), &val);
         if (NS_SUCCEEDED(rv)) {
-            mMaxPipelinedRequests = clamped(val, 1, 0xffff);
+            mMaxPipelinedRequests = clamped(val, 1, NS_HTTP_MAX_PIPELINED_REQUESTS);
             if (mConnMgr)
                 mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_PIPELINED_REQUESTS,
                                       mMaxPipelinedRequests);
-        }
-    }
-
-    if (PREF_CHANGED(HTTP_PREF("pipelining.max-optimistic-requests"))) {
-        rv = prefs->
-            GetIntPref(HTTP_PREF("pipelining.max-optimistic-requests"), &val);
-        if (NS_SUCCEEDED(rv)) {
-            mMaxOptimisticPipelinedRequests = clamped(val, 1, 0xffff);
-            if (mConnMgr)
-                mConnMgr->UpdateParam
-                    (nsHttpConnectionMgr::MAX_OPTIMISTIC_PIPELINED_REQUESTS,
-                     mMaxOptimisticPipelinedRequests);
-        }
-    }
-
-    if (PREF_CHANGED(HTTP_PREF("pipelining.aggressive"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("pipelining.aggressive"), &cVar);
-        if (NS_SUCCEEDED(rv))
-            mPipelineAggressive = cVar;
-    }
-
-    if (PREF_CHANGED(HTTP_PREF("pipelining.maxsize"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("pipelining.maxsize"), &val);
-        if (NS_SUCCEEDED(rv)) {
-            mMaxPipelineObjectSize =
-                static_cast<PRInt64>(clamped(val, 1000, 100000000));
-        }
-    }
-
-    if (PREF_CHANGED(HTTP_PREF("pipelining.read-timeout"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("pipelining.read-timeout"), &val);
-        if (NS_SUCCEEDED(rv)) {
-            mPipelineReadTimeout =
-                PR_MillisecondsToInterval(clamped(val, 500, 0xffff));
         }
     }
 
@@ -1142,13 +1101,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         if (NS_SUCCEEDED(rv)) {
             mPromptTempRedirect = cVar;
         }
-    }
-
-    if (PREF_CHANGED(HTTP_PREF("assoc-req.enforce"))) {
-        cVar = false;
-        rv = prefs->GetBoolPref(HTTP_PREF("assoc-req.enforce"), &cVar);
-        if (NS_SUCCEEDED(rv))
-            mEnforceAssocReq = cVar;
     }
 
     // enable Persistent caching for HTTPS - bug#205921    
@@ -1634,11 +1586,6 @@ nsHttpHandler::Observe(nsISupports *subject,
         if (mConnMgr) {
             mConnMgr->PruneDeadConnections();
         }
-    }
-    else if (strcmp(topic, "net:failed-to-process-uri") == 0) {
-        nsCOMPtr<nsIURI> uri = do_QueryInterface(subject);
-        if (uri && mConnMgr)
-            mConnMgr->ReportFailedToProcess(uri);
     }
   
     return NS_OK;

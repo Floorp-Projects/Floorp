@@ -187,12 +187,6 @@ nsHttp::DestroyAtomTable()
     }
 }
 
-Mutex *
-nsHttp::GetLock()
-{
-    return sLock;
-}
-
 // this function may be called from multiple threads
 nsHttpAtom
 nsHttp::ResolveAtom(const char *str)

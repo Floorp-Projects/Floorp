@@ -182,7 +182,6 @@ private:
     nsresult ContinueProcessFallback(nsresult);
     bool     ResponseWouldVary();
     void     HandleAsyncAbort();
-    nsresult EnsureAssocReq();
 
     nsresult ContinueOnStartRequest1(nsresult);
     nsresult ContinueOnStartRequest2(nsresult);

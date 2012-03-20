@@ -806,22 +806,10 @@ pref("network.http.pipelining.ssl"  , false); // disable pipelining over SSL
 pref("network.http.proxy.pipelining", false);
 
 // Max number of requests in the pipeline
-pref("network.http.pipelining.maxrequests" , 32);
-
-// An optimistic request is one pipelined when policy might allow a new
-// connection instead
-pref("network.http.pipelining.max-optimistic-requests" , 4);
-
-pref("network.http.pipelining.aggressive", false);
-pref("network.http.pipelining.maxsize" , 300000);
-pref("network.http.pipelining.read-timeout", 10000);
+pref("network.http.pipelining.maxrequests" , 4);
 
 // Prompt for 307 redirects
 pref("network.http.prompt-temp-redirect", true);
-
-// If true generate CORRUPTED_CONTENT errors for entities that
-// contain an invalid Assoc-Req response header
-pref("network.http.assoc-req.enforce", false);
 
 // On networks deploying QoS, it is recommended that these be lockpref()'d,
 // since inappropriate marking can easily overwhelm bandwidth reservations
