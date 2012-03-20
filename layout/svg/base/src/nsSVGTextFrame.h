@@ -39,9 +39,9 @@
 #ifndef NS_SVGTEXTFRAME_H
 #define NS_SVGTEXTFRAME_H
 
-#include "nsSVGTextContainerFrame.h"
-#include "gfxRect.h"
 #include "gfxMatrix.h"
+#include "gfxRect.h"
+#include "nsSVGTextContainerFrame.h"
 
 class nsRenderingContext;
 

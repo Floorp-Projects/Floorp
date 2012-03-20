@@ -37,7 +37,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
+
 #include "nsGkAtoms.h"
+#include "nsRenderingContext.h"
 #include "nsSVGMarkerFrame.h"
 #include "nsSVGUtils.h"
 #include "nsSVGEffects.h"

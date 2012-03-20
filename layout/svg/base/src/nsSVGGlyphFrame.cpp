@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsSVGGlyphFrame.h"
+
+#include "nsRenderingContext.h"
 #include "nsSVGTextFrame.h"
 #include "mozilla/LookAndFeel.h"
 #include "nsTextFragment.h"
@@ -45,7 +48,6 @@
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGRect.h"
 #include "DOMSVGPoint.h"
-#include "nsSVGGlyphFrame.h"
 #include "nsSVGTextPathFrame.h"
 #include "nsSVGPathElement.h"
 #include "nsSVGRect.h"

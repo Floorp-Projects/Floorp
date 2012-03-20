@@ -42,6 +42,7 @@
 #include "nsIDOMSVGSVGElement.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsRegion.h"
+#include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsSVGUtils.h"

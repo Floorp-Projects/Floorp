@@ -37,12 +37,22 @@
 #ifndef NS_SVGCONTAINERFRAME_H
 #define NS_SVGCONTAINERFRAME_H
 
-#include "nsContainerFrame.h"
-#include "nsISVGChildFrame.h"
-#include "gfxRect.h"
 #include "gfxMatrix.h"
+#include "gfxRect.h"
+#include "nsContainerFrame.h"
+#include "nsFrame.h"
+#include "nsIFrame.h"
+#include "nsISVGChildFrame.h"
+#include "nsQueryFrame.h"
+#include "nsRect.h"
 
+class nsFrameList;
+class nsIContent;
+class nsIPresShell;
 class nsRenderingContext;
+class nsStyleContext;
+
+struct nsPoint;
 
 typedef nsContainerFrame nsSVGContainerFrameBase;
 

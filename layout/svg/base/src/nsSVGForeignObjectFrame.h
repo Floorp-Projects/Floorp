@@ -40,11 +40,10 @@
 #define NSSVGFOREIGNOBJECTFRAME_H__
 
 #include "nsContainerFrame.h"
-#include "nsISVGChildFrame.h"
-#include "nsSVGUtils.h"
-#include "nsRegion.h"
 #include "nsIPresShell.h"
-#include "mozilla/Attributes.h"
+#include "nsISVGChildFrame.h"
+#include "nsRegion.h"
+#include "nsSVGUtils.h"
 
 class nsRenderingContext;
 class nsSVGOuterSVGFrame;

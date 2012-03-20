@@ -39,9 +39,20 @@
 #ifndef NSSVGTSPANFRAME_H
 #define NSSVGTSPANFRAME_H
 
-#include "nsSVGTextContainerFrame.h"
-#include "nsISVGGlyphFragmentNode.h"
 #include "gfxMatrix.h"
+#include "nsFrame.h"
+#include "nsISVGGlyphFragmentNode.h"
+#include "nsLiteralString.h"
+#include "nsQueryFrame.h"
+#include "nsSVGTextContainerFrame.h"
+
+class nsIAtom;
+class nsIContent;
+class nsIDOMSVGPoint;
+class nsIFrame;
+class nsIPresShell;
+class nsStyleContext;
+class nsSVGGlyphFrame;
 
 typedef nsSVGTextContainerFrame nsSVGTSpanFrameBase;
 

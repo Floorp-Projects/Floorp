@@ -34,10 +34,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsSVGClipPathFrame.h"
+
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMSVGClipPathElement.h"
-#include "nsSVGClipPathFrame.h"
+#include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsSVGUtils.h"
 #include "nsSVGEffects.h"

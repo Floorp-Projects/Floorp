@@ -39,21 +39,21 @@
 #ifndef __NS_ISVGCHILDFRAME_H__
 #define __NS_ISVGCHILDFRAME_H__
 
-
-#include "nsQueryFrame.h"
-#include "nsCOMPtr.h"
-#include "nsRect.h"
 #include "gfxRect.h"
-#include "gfxMatrix.h"
+#include "nsQueryFrame.h"
+#include "nsRect.h"
 
-class gfxContext;
+class gfxMatrix;
+class nsIFrame;
 class nsRenderingContext;
 
+struct nsPoint;
+
 namespace mozilla {
-class SVGAnimatedNumberList;
-class SVGNumberList;
 class SVGAnimatedLengthList;
+class SVGAnimatedNumberList;
 class SVGLengthList;
+class SVGNumberList;
 class SVGUserUnitList;
 }
 
