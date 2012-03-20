@@ -47,6 +47,7 @@
 #include "nsAutoPtr.h"
 #include "prinrval.h"
 #include "SpdySession.h"
+#include "mozilla/TimeStamp.h"
 
 #include "nsIStreamListener.h"
 #include "nsISocketTransport.h"
@@ -92,7 +93,7 @@ public:
     nsresult Init(nsHttpConnectionInfo *info, PRUint16 maxHangTime,
                   nsISocketTransport *, nsIAsyncInputStream *,
                   nsIAsyncOutputStream *, nsIInterfaceRequestor *,
-                  nsIEventTarget *);
+                  nsIEventTarget *, PRIntervalTime);
 
     // Activate causes the given transaction to be processed on this
     // connection.  It fails if there is already an existing transaction unless
@@ -105,7 +106,7 @@ public:
     //-------------------------------------------------------------------------
     // XXX document when these are ok to call
 
-    bool     SupportsPipelining() { return mSupportsPipelining; }
+    bool     SupportsPipelining() { return mSupportsPipelining && IsKeepAlive(); }
     bool     IsKeepAlive() { return mUsingSpdy ||
                                     (mKeepAliveMask && mKeepAlive); }
     bool     CanReuse();   // can this connection be reused?
@@ -168,6 +169,12 @@ public:
     // When the connection is active this is called every 15 seconds
     void  ReadTimeoutTick(PRIntervalTime now);
 
+    nsAHttpTransaction::Classifier Classification() { return mClassification; }
+    void Classify(nsAHttpTransaction::Classifier newclass)
+    {
+        mClassification = newclass;
+    }
+
 private:
     // called to cause the underlying socket to start speaking SSL
     nsresult ProxyStartSSL();
@@ -217,7 +224,7 @@ private:
 
     nsRefPtr<nsHttpConnectionInfo> mConnInfo;
 
-    PRUint32                        mLastReadTime;
+    PRIntervalTime                  mLastReadTime;
     PRIntervalTime                  mMaxHangTime;    // max download time before dropping keep-alive status
     PRIntervalTime                  mIdleTimeout;    // value of keep-alive: timeout=
     PRIntervalTime                  mConsiderReusedAfterInterval;
@@ -227,6 +234,8 @@ private:
     PRInt64                         mTotalBytesRead;     // total data read
 
     nsRefPtr<nsIAsyncInputStream>   mInputOverflow;
+
+    PRIntervalTime                  mRtt;
 
     bool                            mKeepAlive;
     bool                            mKeepAliveMask;
@@ -240,6 +249,8 @@ private:
     // The number of <= HTTP/1.1 transactions performed on this connection. This
     // excludes spdy transactions.
     PRUint32                        mHttp1xTransactionCount;
+
+    nsAHttpTransaction::Classifier  mClassification;
 
     // SPDY related
     bool                            mNPNComplete;
