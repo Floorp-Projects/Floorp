@@ -813,6 +813,7 @@ pref("network.http.pipelining.maxrequests" , 32);
 pref("network.http.pipelining.max-optimistic-requests" , 4);
 
 pref("network.http.pipelining.aggressive", false);
+pref("network.http.pipelining.maxsize" , 300000);
 
 // Prompt for 307 redirects
 pref("network.http.prompt-temp-redirect", true);

@@ -274,15 +274,17 @@ nsHttpPipeline::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
         killPipeline = true;
     }
 
+    // Marking this connection as non-reusable prevents other items from being
+    // added to it and causes it to be torn down soon. Don't tear it down yet
+    // as that would prevent Response(0) from being processed.
+    DontReuse();
+
     trans->Close(reason);
     NS_RELEASE(trans);
 
-    if (killPipeline) {
-        if (mConnection)
-            mConnection->CloseTransaction(this, reason);
-        else
-            Close(reason);
-    }
+    if (killPipeline)
+        // reschedule anything from this pipeline onto a different connection
+        CancelPipeline(reason);
 }
 
 void
@@ -323,6 +325,13 @@ nsHttpPipeline::IsReused()
     if (!mUtilizedPipeline && mConnection)
         return mConnection->IsReused();
     return true;
+}
+
+void
+nsHttpPipeline::DontReuse()
+{
+    if (mConnection)
+        mConnection->DontReuse();
 }
 
 nsresult
@@ -405,6 +414,24 @@ nsHttpPipeline::Transport()
     if (!mConnection)
         return nsnull;
     return mConnection->Transport();
+}
+
+nsAHttpTransaction::Classifier
+nsHttpPipeline::Classification()
+{
+    if (mConnection)
+        return mConnection->Classification();
+
+    LOG(("nsHttpPipeline::Classification this=%p "
+         "has null mConnection using CLASS_SOLO default", this));
+    return nsAHttpTransaction::CLASS_SOLO;
+}
+
+void
+nsHttpPipeline::Classify(nsAHttpTransaction::Classifier newclass)
+{
+    if (mConnection)
+        mConnection->Classify(newclass);
 }
 
 void
@@ -776,6 +803,52 @@ nsHttpPipeline::WriteSegments(nsAHttpSegmentWriter *writer,
     return rv;
 }
 
+PRUint32
+nsHttpPipeline::CancelPipeline(nsresult originalReason)
+{
+    PRUint32 i, reqLen, respLen, total;
+    nsAHttpTransaction *trans;
+
+    reqLen = mRequestQ.Length();
+    respLen = mResponseQ.Length();
+    total = reqLen + respLen;
+
+    // don't count the first response, if presnet
+    if (respLen)
+        total--;
+
+    if (!total)
+        return 0;
+
+    // any pending requests can ignore this error and be restarted
+    // unless it is during a CONNECT tunnel request
+    for (i = 0; i < reqLen; ++i) {
+        trans = Request(i);
+        if (mConnection && mConnection->IsProxyConnectInProgress())
+            trans->Close(originalReason);
+        else
+            trans->Close(NS_ERROR_NET_RESET);
+        NS_RELEASE(trans);
+    }
+    mRequestQ.Clear();
+
+    // any pending responses can be restarted except for the first one,
+    // that we might want to finish on this pipeline or cancel individually
+    for (i = 1; i < respLen; ++i) {
+        trans = Response(i);
+        trans->Close(NS_ERROR_NET_RESET);
+        NS_RELEASE(trans);
+    }
+
+    if (respLen > 1)
+        mResponseQ.TruncateLength(1);
+
+    DontReuse();
+    Classify(nsAHttpTransaction::CLASS_SOLO);
+
+    return total;
+}
+
 void
 nsHttpPipeline::Close(nsresult reason)
 {
@@ -790,55 +863,37 @@ nsHttpPipeline::Close(nsresult reason)
     mStatus = reason;
     mClosed = true;
 
-    PRUint32 i, count;
-    nsAHttpTransaction *trans;
-
-    // any pending requests can ignore this error and be restarted
-    // unless it is during a CONNECT tunnel request
-    count = mRequestQ.Length();
-    for (i = 0; i < count; ++i) {
-        trans = Request(i);
-        if (mConnection && mConnection->IsProxyConnectInProgress())
-            trans->Close(reason);
-        else
-            trans->Close(NS_ERROR_NET_RESET);
-        NS_RELEASE(trans);
-    }
-    mRequestQ.Clear();
-
-    trans = Response(0);
-    
     nsRefPtr<nsHttpConnectionInfo> ci;
     GetConnectionInfo(getter_AddRefs(ci));
-    if (ci && (trans || count))
+    PRUint32 numRescheduled = CancelPipeline(reason);
+
+    // numRescheduled can be 0 if there is just a single response in the
+    // pipeline object. That isn't really a meaningful pipeline that
+    // has been forced to be rescheduled so it does not need to generate
+    // negative feedback.
+    if (ci && numRescheduled)
         gHttpHandler->ConnMgr()->PipelineFeedbackInfo(
             ci, nsHttpConnectionMgr::RedCanceledPipeline, nsnull, 0);
 
-    if (trans) {
-        // The current transaction can be restarted via reset
-        // if the response has not started to arrive and the reason
-        // for failure is innocuous (e.g. not an SSL error)
-        if (!mResponseIsPartial &&
-            (reason == NS_ERROR_NET_RESET ||
-             reason == NS_OK ||
-             reason == NS_BASE_STREAM_CLOSED)) {
-            trans->Close(NS_ERROR_NET_RESET);            
-        }
-        else {
-            trans->Close(reason);
-        }
-        NS_RELEASE(trans);
-        
-        // any remaining pending responses can be restarted
-        count = mResponseQ.Length();
-        for (i=1; i<count; ++i) {
-            trans = Response(i);
-            trans->Close(NS_ERROR_NET_RESET);
-            NS_RELEASE(trans);
-        }
-        mResponseQ.Clear();
+    nsAHttpTransaction *trans = Response(0);
+    if (!trans)
+        return;
+
+    // The current transaction can be restarted via reset
+    // if the response has not started to arrive and the reason
+    // for failure is innocuous (e.g. not an SSL error)
+    if (!mResponseIsPartial &&
+        (reason == NS_ERROR_NET_RESET ||
+         reason == NS_OK ||
+         reason == NS_BASE_STREAM_CLOSED)) {
+        trans->Close(NS_ERROR_NET_RESET);
+    }
+    else {
+        trans->Close(reason);
     }
 
+    NS_RELEASE(trans);
+    mResponseQ.Clear();
 }
 
 nsresult

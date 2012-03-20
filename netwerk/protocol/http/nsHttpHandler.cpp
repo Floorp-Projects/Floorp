@@ -188,6 +188,7 @@ nsHttpHandler::nsHttpHandler()
     , mMaxPipelinedRequests(32)
     , mMaxOptimisticPipelinedRequests(4)
     , mPipelineAggressive(false)
+    , mMaxPipelineObjectSize(300000)
     , mRedirectionLimit(10)
     , mPhishyUserPassLength(1)
     , mQoSBits(0x00)
@@ -1042,6 +1043,14 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetBoolPref(HTTP_PREF("pipelining.aggressive"), &cVar);
         if (NS_SUCCEEDED(rv))
             mPipelineAggressive = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("pipelining.maxsize"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("pipelining.maxsize"), &val);
+        if (NS_SUCCEEDED(rv)) {
+            mMaxPipelineObjectSize =
+                static_cast<PRInt64>(clamped(val, 1000, 100000000));
+        }
     }
 
     if (PREF_CHANGED(HTTP_PREF("pipelining.ssl"))) {
