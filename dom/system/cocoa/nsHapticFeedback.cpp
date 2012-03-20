@@ -1,11 +1,10 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: sw=2 ts=8 et ft=cpp : */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at:
+ * the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -13,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Code.
+ * The Original Code is Mozilla code.
  *
- * The Initial Developer of the Original Code is
- *   The Mozilla Foundation
+ * The Initial Developer of the Original Code is Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Sinker Li <thinker@codemud.net>
+ *   Brad Lassey <blassey@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,49 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __HAL_SENSOR_H_
-#define __HAL_SENSOR_H_
+#include "nsHapticFeedback.h"
 
-#include "mozilla/Observer.h"
+NS_IMPL_ISUPPORTS1(nsHapticFeedback, nsIHapticFeedback)
 
-namespace mozilla {
-namespace hal {
-
-/**
- * Enumeration of sensor types.  They are used to specify type while
- * register or unregister an observer for a sensor of given type.
- */
-enum SensorType {
-  SENSOR_UNKNOWN = -1,
-  SENSOR_ORIENTATION,
-  SENSOR_ACCELERATION,
-  SENSOR_PROXIMITY,
-  SENSOR_LINEAR_ACCELERATION,
-  SENSOR_GYROSCOPE,
-  NUM_SENSOR_TYPE
-};
-
-class SensorData;
-
-typedef Observer<SensorData> ISensorObserver;
-
+NS_IMETHODIMP
+nsHapticFeedback::PerformSimpleAction(PRInt32 aType)
+{
+    // Todo
+    return NS_OK;
 }
-}
-
-
-#include "IPC/IPCMessageUtils.h"
-
-namespace IPC {
-  /**
-   * Serializer for SensorType
-   */
-  template <>
-  struct ParamTraits<mozilla::hal::SensorType>:
-    public EnumSerializer<mozilla::hal::SensorType,
-                          mozilla::hal::SENSOR_UNKNOWN,
-                          mozilla::hal::NUM_SENSOR_TYPE> {
-  };
-
-} // namespace IPC
-
-#endif /* __HAL_SENSOR_H_ */

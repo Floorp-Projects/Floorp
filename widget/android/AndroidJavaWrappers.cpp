@@ -165,6 +165,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jXField = getField("mX", "D");
     jYField = getField("mY", "D");
     jZField = getField("mZ", "D");
+    jDistanceField = getField("mDistance", "D");
     jRectField = getField("mRect", "Landroid/graphics/Rect;");
 
     jCharactersField = getField("mCharacters", "Ljava/lang/String;");
@@ -474,7 +475,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
              mY = jenv->GetDoubleField(jobj, jYField);
              mZ = jenv->GetDoubleField(jobj, jZField);
              mFlags = jenv->GetIntField(jobj, jFlagsField);
-             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
              break;
 
         case LOCATION_EVENT: {
@@ -506,6 +506,12 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
+        case PROXIMITY_EVENT: {
+            mDistance = jenv->GetDoubleField(jobj, jDistanceField);
+            break;
+        }
+
+        case SENSOR_ACCURACY:
         case ACTIVITY_STOPPING:
         case ACTIVITY_START:
         case ACTIVITY_PAUSING:
@@ -528,7 +534,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
     }
 
-#ifdef DEBUG_ANDROID_EVENTS
+#ifndef DEBUG_ANDROID_EVENTS
     ALOG("AndroidGeckoEvent: %p : %d", (void*)jobj, mType);
 #endif
 }
