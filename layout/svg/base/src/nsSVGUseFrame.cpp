@@ -163,7 +163,7 @@ nsSVGUseFrame::AttributeChanged(PRInt32         aNameSpaceID,
           static_cast<nsSVGUseElement*>(mContent)->HasValidDimensions()) {
 
         mHasValidDimensions = !mHasValidDimensions;
-        nsSVGUtils::UpdateGraphic(this);
+        nsSVGUtils::InvalidateAndScheduleBoundsUpdate(this);
       }
     }
   } else if (aNameSpaceID == kNameSpaceID_XLink &&

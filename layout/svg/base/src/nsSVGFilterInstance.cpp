@@ -35,6 +35,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGFilterInstance.h"
+
+#include "nsRenderingContext.h"
 #include "nsSVGUtils.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "gfxPlatform.h"
