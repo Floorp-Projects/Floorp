@@ -1123,7 +1123,7 @@ const GECKO_NETWORK_STATE_DISCONNECTING = 3;
 const GECKO_NETWORK_STATE_DISCONNECTED = 4;
 
 // Other Gecko-specific constants
-const GECKO_RADIOSTATE_UNAVAILABLE   = "unavailable";
+const GECKO_RADIOSTATE_UNAVAILABLE   = null;
 const GECKO_RADIOSTATE_OFF           = "off";
 const GECKO_RADIOSTATE_READY         = "ready";
 
