@@ -178,6 +178,12 @@ public:
   // This will fail if all aLength bytes are not written
   nsresult WriteCacheFile(PRInt64 aOffset, const void* aData, PRInt32 aLength);
 
+  PRInt64 AllocateResourceID()
+  {
+    mReentrantMonitor.AssertCurrentThreadIn();
+    return mNextResourceID++;
+  }
+
   // mReentrantMonitor must be held, called on main thread.
   // These methods are used by the stream to set up and tear down streams,
   // and to handle reads and writes.
@@ -1578,7 +1584,7 @@ nsMediaCache::OpenStream(nsMediaCacheStream* aStream)
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   LOG(PR_LOG_DEBUG, ("Stream %p opened", aStream));
   mStreams.AppendElement(aStream);
-  aStream->mResourceID = mNextResourceID++;
+  aStream->mResourceID = AllocateResourceID();
 
   // Queue an update since a new stream has been opened.
   gMediaCache->QueueUpdate();
@@ -1856,6 +1862,13 @@ nsMediaCacheStream::NotifyDataEnded(nsresult aStatus)
 
   ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
 
+  if (NS_FAILED(aStatus)) {
+    // Disconnect from other streams sharing our resource, since they
+    // should continue trying to load. Our load might have been deliberately
+    // canceled and that shouldn't affect other streams.
+    mResourceID = gMediaCache->AllocateResourceID();
+  }
+
   PRInt32 blockOffset = PRInt32(mChannelOffset%BLOCK_SIZE);
   if (blockOffset > 0) {
     // Write back the partial block
@@ -1882,6 +1895,7 @@ nsMediaCacheStream::NotifyDataEnded(nsresult aStatus)
   }
 
   mChannelEnded = true;
+  gMediaCache->QueueUpdate();
 }
 
 nsMediaCacheStream::~nsMediaCacheStream()
@@ -2334,6 +2348,9 @@ nsMediaCacheStream::Init()
 nsresult
 nsMediaCacheStream::InitAsClone(nsMediaCacheStream* aOriginal)
 {
+  if (!aOriginal->IsAvailableForSharing())
+    return NS_ERROR_FAILURE;
+
   if (mInitialized)
     return NS_OK;
 
