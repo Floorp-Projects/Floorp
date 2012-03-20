@@ -41,12 +41,10 @@ interface nsIDOMWindow;
 [scriptable, uuid(1B406E32-CF42-471E-A470-6FD600BF4C7B)]
 interface nsIDeviceMotionData : nsISupports
 {
-  // Keep in sync with hal/HalSensor.h
-  const unsigned long TYPE_ORIENTATION = 0;
-  const unsigned long TYPE_ACCELERATION = 1;
-  const unsigned long TYPE_PROXIMITY = 2;
-  const unsigned long TYPE_LINEAR_ACCELERATION = 3;
-  const unsigned long TYPE_GYROSCOPE = 4;
+  const unsigned long TYPE_ACCELERATION = 0;
+  const unsigned long TYPE_ORIENTATION = 1;
+  const unsigned long TYPE_LINEAR_ACCELERATION = 2;
+  const unsigned long TYPE_GYROSCOPE = 3;
 
   readonly attribute unsigned long type;
 
@@ -73,4 +71,15 @@ interface nsIDeviceMotion : nsISupports
   [noscript] void addWindowListener(in nsIDOMWindow aWindow);
   [noscript] void removeWindowListener(in nsIDOMWindow aWindow);
 
+};
+
+/* for use by IPC system to notify non-chrome processes of 
+ * device motion events
+ */
+[uuid(C12C0157-DCFF-41B5-83F3-89179BF6CA4E)]
+interface nsIDeviceMotionUpdate : nsIDeviceMotion
+{
+  /* must be called on the main thread or else */
+  void deviceMotionChanged(in unsigned long type, in double x, in double y, in double z);
+  void needsCalibration();
 };

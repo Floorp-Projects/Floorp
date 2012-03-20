@@ -51,6 +51,7 @@
 #include "nsIPrefService.h"
 #include "nsIPermissionManager.h"
 #include "nsIDOMGeoPositionCallback.h"
+#include "nsIDeviceMotion.h"
 #include "nsIMemoryReporter.h"
 #include "nsCOMArray.h"
 
@@ -70,6 +71,7 @@ class ContentParent : public PContentParent
                     , public nsIObserver
                     , public nsIThreadObserver
                     , public nsIDOMGeoPositionCallback
+                    , public nsIDeviceMotionListener
 {
 private:
     typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
@@ -83,6 +85,7 @@ public:
     NS_DECL_NSIOBSERVER
     NS_DECL_NSITHREADOBSERVER
     NS_DECL_NSIDOMGEOPOSITIONCALLBACK
+    NS_DECL_NSIDEVICEMOTIONLISTENER
 
     TabParent* CreateTab(PRUint32 aChromeFlags);
 
@@ -215,6 +218,8 @@ private:
 
     virtual bool RecvAddGeolocationListener();
     virtual bool RecvRemoveGeolocationListener();
+    virtual bool RecvAddDeviceMotionListener();
+    virtual bool RecvRemoveDeviceMotionListener();
 
     virtual bool RecvConsoleMessage(const nsString& aMessage);
     virtual bool RecvScriptError(const nsString& aMessage,

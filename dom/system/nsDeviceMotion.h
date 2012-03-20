@@ -47,8 +47,6 @@
 #include "nsIDOMDeviceMotionEvent.h"
 #include "nsDOMDeviceMotionEvent.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/HalSensor.h"
-
 
 #define NS_DEVICE_MOTION_CID \
 { 0xecba5203, 0x77da, 0x465a, \
@@ -58,17 +56,16 @@
 
 class nsIDOMWindow;
 
-class nsDeviceMotion : public nsIDeviceMotion, public mozilla::hal::ISensorObserver
+class nsDeviceMotion : public nsIDeviceMotionUpdate
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDEVICEMOTION
+  NS_DECL_NSIDEVICEMOTIONUPDATE
 
   nsDeviceMotion();
 
   virtual ~nsDeviceMotion();
-
-  void Notify(const mozilla::hal::SensorData& aSensorData);
 
 private:
   nsCOMArray<nsIDeviceMotionListener> mListeners;
@@ -82,7 +79,6 @@ private:
   static void TimeoutHandler(nsITimer *aTimer, void *aClosure);
 
  protected:
-  void FireNeedsCalibration();
 
   void FireNeedsCalibration(nsIDOMDocument *domdoc,
 			    nsIDOMEventTarget *target);
@@ -100,15 +96,15 @@ private:
                           double y,
                           double z);
 
-  void Startup();
-  void Shutdown();
+  virtual void Startup()  = 0;
+  virtual void Shutdown() = 0;
 
   bool mEnabled;
   mozilla::TimeStamp mLastDOMMotionEventTime;
-  mozilla::hal::SensorAccuracyType mLastAccuracy;
   nsRefPtr<nsDOMDeviceAcceleration> mLastAcceleration;
   nsRefPtr<nsDOMDeviceAcceleration> mLastAccelerationIncluduingGravity;
   nsRefPtr<nsDOMDeviceRotationRate> mLastRotationRate;
+
 };
 
 #endif

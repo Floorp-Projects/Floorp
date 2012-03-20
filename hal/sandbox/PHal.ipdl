@@ -49,7 +49,6 @@ using mozilla::hal::FlashMode;
 using mozilla::hal::LightType;
 using mozilla::hal::LightMode;
 using mozilla::hal::SensorType;
-using mozilla::hal::SensorAccuracyType;
 using mozilla::hal::WakeLockControl;
 using mozilla::dom::ScreenOrientation;
 
@@ -75,7 +74,6 @@ namespace hal {
     SensorType sensor;
     PRTime timestamp;
     float[] values;
-    SensorAccuracyType accuracy;
   };
 
   struct NetworkInformation {

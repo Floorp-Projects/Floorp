@@ -1,11 +1,10 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: sw=2 ts=8 et ft=cpp : */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at:
+ * the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -13,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Code.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- *   The Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Sinker Li <thinker@codemud.net>
+ *   Michael Wu <mwu@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,49 +35,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __HAL_SENSOR_H_
-#define __HAL_SENSOR_H_
+#include "mozilla/dom/ContentChild.h"
+#include "nsDeviceMotionSystem.h"
 
-#include "mozilla/Observer.h"
+#include "AndroidBridge.h"
+#include "nsXULAppAPI.h"
 
-namespace mozilla {
-namespace hal {
+using namespace mozilla;
 
-/**
- * Enumeration of sensor types.  They are used to specify type while
- * register or unregister an observer for a sensor of given type.
- */
-enum SensorType {
-  SENSOR_UNKNOWN = -1,
-  SENSOR_ORIENTATION,
-  SENSOR_ACCELERATION,
-  SENSOR_PROXIMITY,
-  SENSOR_LINEAR_ACCELERATION,
-  SENSOR_GYROSCOPE,
-  NUM_SENSOR_TYPE
-};
+extern nsDeviceMotionSystem *gDeviceMotionSystem;
 
-class SensorData;
-
-typedef Observer<SensorData> ISensorObserver;
-
-}
+nsDeviceMotionSystem::nsDeviceMotionSystem()
+{
+    gDeviceMotionSystem = this;
 }
 
+nsDeviceMotionSystem::~nsDeviceMotionSystem()
+{
+}
 
-#include "IPC/IPCMessageUtils.h"
+void nsDeviceMotionSystem::Startup()
+{
+    if (XRE_GetProcessType() == GeckoProcessType_Default)
+        AndroidBridge::Bridge()->EnableDeviceMotion(true);
+    else
+        mozilla::dom::ContentChild::GetSingleton()->
+            SendAddDeviceMotionListener();
+}
 
-namespace IPC {
-  /**
-   * Serializer for SensorType
-   */
-  template <>
-  struct ParamTraits<mozilla::hal::SensorType>:
-    public EnumSerializer<mozilla::hal::SensorType,
-                          mozilla::hal::SENSOR_UNKNOWN,
-                          mozilla::hal::NUM_SENSOR_TYPE> {
-  };
-
-} // namespace IPC
-
-#endif /* __HAL_SENSOR_H_ */
+void nsDeviceMotionSystem::Shutdown()
+{
+    if (XRE_GetProcessType() == GeckoProcessType_Default)
+        AndroidBridge::Bridge()->EnableDeviceMotion(false);
+    else
+        mozilla::dom::ContentChild::GetSingleton()->
+            SendRemoveDeviceMotionListener();
+}

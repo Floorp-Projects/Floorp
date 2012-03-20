@@ -46,7 +46,6 @@ VPATH       = \
   $(srcdir)/sandbox \
   $(srcdir)/linux \
   $(srcdir)/windows \
-  $(srcdir)/cocoa \
   $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
@@ -99,14 +98,6 @@ CPPSRCS += \
   WindowsHal.cpp \
   WindowsBattery.cpp \
   FallbackSensor.cpp \
-  $(NULL)
-else ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += \
-  FallbackHal.cpp \
-  $(NULL)
-CMMSRCS += \
-  CocoaSensor.mm \
-  smslib.mm \
   $(NULL)
 else
 CPPSRCS += \

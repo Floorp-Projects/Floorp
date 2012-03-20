@@ -96,6 +96,7 @@
 #include "mozilla/hal_sandbox/PHalParent.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
+#include "nsDeviceMotion.h"
 #include "mozilla/Util.h"
 
 #include "nsIMemoryReporter.h"
@@ -336,6 +337,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     }
 
     RecvRemoveGeolocationListener();
+    RecvRemoveDeviceMotionListener();
 
     nsCOMPtr<nsIThreadInternal>
         threadInt(do_QueryInterface(NS_GetCurrentThread()));
@@ -683,10 +685,11 @@ ContentParent::RecvGetShowPasswordSetting(bool* showPassword)
     return true;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(ContentParent,
+NS_IMPL_THREADSAFE_ISUPPORTS4(ContentParent,
                               nsIObserver,
                               nsIThreadObserver,
-                              nsIDOMGeoPositionCallback)
+                              nsIDOMGeoPositionCallback,
+                              nsIDeviceMotionListener)
 
 NS_IMETHODIMP
 ContentParent::Observe(nsISupports* aSubject,
@@ -1213,6 +1216,26 @@ ContentParent::RecvRemoveGeolocationListener()
   return true;
 }
 
+bool
+ContentParent::RecvAddDeviceMotionListener()
+{
+    nsCOMPtr<nsIDeviceMotion> dm = 
+        do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+    if (dm)
+        dm->AddListener(this);
+    return true;
+}
+
+bool
+ContentParent::RecvRemoveDeviceMotionListener()
+{
+    nsCOMPtr<nsIDeviceMotion> dm = 
+        do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+    if (dm)
+        dm->RemoveListener(this);
+    return true;
+}
+
 NS_IMETHODIMP
 ContentParent::HandleEvent(nsIDOMGeoPosition* postion)
 {
@@ -1254,6 +1277,26 @@ ContentParent::RecvScriptError(const nsString& aMessage,
   svc->LogMessage(msg);
   return true;
 }
+
+NS_IMETHODIMP
+ContentParent::OnMotionChange(nsIDeviceMotionData *aDeviceData) {
+    PRUint32 type;
+    double x, y, z;
+    aDeviceData->GetType(&type);
+    aDeviceData->GetX(&x);
+    aDeviceData->GetY(&y);
+    aDeviceData->GetZ(&z);
+
+    unused << SendDeviceMotionChanged(type, x, y, z);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ContentParent::NeedsCalibration() {
+    unused << SendNeedsCalibration();
+    return NS_OK;
+}
+
 
 } // namespace dom
 } // namespace mozilla
