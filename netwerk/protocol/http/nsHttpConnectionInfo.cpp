@@ -101,6 +101,27 @@ nsHttpConnectionInfo::Clone() const
 }
 
 bool
+nsHttpConnectionInfo::SupportsPipelining()
+{
+    return mSupportsPipelining;
+}
+
+bool
+nsHttpConnectionInfo::SetSupportsPipelining(bool support)
+{
+    if (!mBannedPipelining)
+        mSupportsPipelining = support;
+    return mSupportsPipelining;
+}
+
+void
+nsHttpConnectionInfo::BanPipelining()
+{
+    mBannedPipelining = true;
+    mSupportsPipelining = false;
+}
+
+bool
 nsHttpConnectionInfo::ShouldForceConnectMethod()
 {
     if (!mProxyInfo)

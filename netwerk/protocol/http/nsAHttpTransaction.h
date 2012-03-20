@@ -123,6 +123,12 @@ public:
     
     // called to count the number of sub transactions that can be added
     virtual PRUint16 PipelineDepthAvailable() = 0;
+
+    // Used to inform the connection that it is being used in a pipelined
+    // context. That may influence the handling of some errors.
+    // The value is the pipeline position.
+    virtual nsresult SetPipelinePosition(PRInt32) = 0;
+    virtual PRInt32  PipelinePosition() = 0;
 };
 
 #define NS_DECL_NSAHTTPTRANSACTION \
@@ -144,7 +150,9 @@ public:
     PRUint32 Http1xTransactionCount();                                  \
     nsresult TakeSubTransactions(nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions); \
     nsresult AddTransaction(nsAHttpTransaction *);                      \
-    PRUint16 PipelineDepthAvailable();
+    PRUint16 PipelineDepthAvailable();                                  \
+    nsresult SetPipelinePosition(PRInt32);                              \
+    PRInt32  PipelinePosition();
 
 //-----------------------------------------------------------------------------
 // nsAHttpSegmentReader

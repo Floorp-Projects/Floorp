@@ -2159,6 +2159,24 @@ SpdySession::PipelineDepthAvailable()
   return 0;
 }
 
+nsresult
+SpdySession::SetPipelinePosition(PRInt32 position)
+{
+  // This API is meant for pipelining, SpdySession's should be
+  // extended with AddStream()
+
+  NS_ABORT_IF_FALSE(false,
+                    "SpdySession::SetPipelinePosition() should not be called");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+PRInt32
+SpdySession::PipelinePosition()
+{
+    return 0;
+}
+
 //-----------------------------------------------------------------------------
 // Pass through methods of nsAHttpConnection
 //-----------------------------------------------------------------------------

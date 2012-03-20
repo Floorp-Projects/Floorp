@@ -190,6 +190,7 @@ nsHttpHandler::nsHttpHandler()
     , mPhishyUserPassLength(1)
     , mQoSBits(0x00)
     , mPipeliningOverSSL(false)
+    , mEnforceAssocReq(false)
     , mInPrivateBrowsingMode(PRIVATE_BROWSING_UNKNOWN)
     , mLastUniqueID(NowInSeconds())
     , mSessionStartTime(0)
@@ -1101,6 +1102,13 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         if (NS_SUCCEEDED(rv)) {
             mPromptTempRedirect = cVar;
         }
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("assoc-req.enforce"))) {
+        cVar = false;
+        rv = prefs->GetBoolPref(HTTP_PREF("assoc-req.enforce"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mEnforceAssocReq = cVar;
     }
 
     // enable Persistent caching for HTTPS - bug#205921    
