@@ -1973,6 +1973,33 @@ nsHttpChannel::ProcessNotModified()
     NS_ENSURE_TRUE(mCachedResponseHead, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_INITIALIZED);
 
+    // If the 304 response contains a Last-Modified different than the
+    // one in our cache that is pretty suspicious and is, in at least the
+    // case of bug 716840, a sign of the server having previously corrupted
+    // our cache with a bad response. Take the minor step here of just dooming
+    // that cache entry so there is a fighting chance of getting things on the
+    // right track as well as disabling pipelining for that host.
+
+    nsCAutoString lastModified;
+    nsCAutoString lastModified304;
+
+    rv = mCachedResponseHead->GetHeader(nsHttp::Last_Modified,
+                                        lastModified);
+    if (NS_SUCCEEDED(rv))
+        rv = mResponseHead->GetHeader(nsHttp::Last_Modified, 
+                                      lastModified304);
+    if (NS_SUCCEEDED(rv) && !lastModified304.Equals(lastModified)) {
+        LOG(("Cache Entry and 304 Last-Modified Headers Do Not Match "
+             "%s and %s\n", lastModified.get(), lastModified304.get()));
+
+        mCacheEntry->Doom();
+        if (mConnectionInfo)
+            gHttpHandler->ConnMgr()->
+                PipelineFeedbackInfo(mConnectionInfo,
+                                     nsHttpConnectionMgr::RedCorruptedContent,
+                                     nsnull, 0);
+    }
+
     // merge any new headers with the cached response headers
     rv = mCachedResponseHead->UpdateHeaders(mResponseHead->Headers());
     if (NS_FAILED(rv)) return rv;
