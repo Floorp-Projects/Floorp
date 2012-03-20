@@ -45,7 +45,6 @@
 class THEBES_API GL_CONTEXT_PROVIDER_NAME
 {
 public:
-    typedef GLContext::ContextFlags ContextFlags;
     /**
      * Create a context that renders to the surface of the widget that is
      * passed in.  The context is always created with an RGB pixel format,
@@ -91,8 +90,7 @@ public:
      */
     static already_AddRefed<GLContext>
     CreateOffscreen(const gfxIntSize& aSize,
-                    const ContextFormat& aFormat = ContextFormat::BasicRGBA32Format,
-                    const ContextFlags aFlags = GLContext::ContextFlagsNone);
+                    const ContextFormat& aFormat = ContextFormat::BasicRGBA32Format);
 
     /**
      * Try to create a GL context from native surface for arbitrary gfxASurface
