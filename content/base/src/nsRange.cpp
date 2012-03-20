@@ -2107,7 +2107,7 @@ nsRange::InsertNode(nsIDOMNode* aN)
     nsCOMPtr<nsIDOMNode> tSCParentNode;
     res = tStartContainer->GetParentNode(getter_AddRefs(tSCParentNode));
     if(NS_FAILED(res)) return res;
-    NS_ENSURE_STATE(tSCParentNode);
+    NS_ENSURE_TRUE(tSCParentNode, NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
 
     PRInt32 tEndOffset;
     GetEndOffset(&tEndOffset);
