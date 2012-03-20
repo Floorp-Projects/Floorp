@@ -46,8 +46,7 @@ GLContextProviderNull::CreateForWindow(nsIWidget*)
 
 already_AddRefed<GLContext>
 GLContextProviderNull::CreateOffscreen(const gfxIntSize&,
-                                       const ContextFormat&,
-                                       const ContextFlags)
+                                       const ContextFormat&)
 {
     return nsnull;
 }
