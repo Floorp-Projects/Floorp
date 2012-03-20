@@ -125,8 +125,6 @@ public:
                                PRInt32         aModType);
 
   // nsISVGSVGFrame interface:
-  virtual void SuspendRedraw();
-  virtual void UnsuspendRedraw();
   virtual void NotifyViewportChange();
 
   // nsSVGContainerFrame methods:
@@ -176,7 +174,6 @@ protected:
 
   nsAutoPtr<gfxMatrix> mCanvasTM;
 
-  PRInt32 mRedrawSuspendCount;
   float mFullZoom;
 
   bool mViewportInitialized;

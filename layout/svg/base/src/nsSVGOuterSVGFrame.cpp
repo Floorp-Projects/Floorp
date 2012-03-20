@@ -141,7 +141,6 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGOuterSVGFrame)
 
 nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
     : nsSVGOuterSVGFrameBase(aContext)
-    , mRedrawSuspendCount(0)
     , mFullZoom(0)
     , mViewportInitialized(false)
 #ifdef XP_MACOSX
@@ -183,8 +182,6 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
     // not need to be removed
     doc->AddMutationObserverUnlessExists(&sSVGMutationObserver);
   }
-
-  SuspendRedraw();  // UnsuspendRedraw is in DidReflow
 
   return rv;
 }
@@ -432,6 +429,11 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
   nsresult rv = nsSVGOuterSVGFrameBase::DidReflow(aPresContext,aReflowState,aStatus);
 
   if (firstReflow) {
+    // Temporarily add back the NS_FRAME_FIRST_REFLOW bit to indicate
+    // to the children that we are still to receive the invalidation
+    // for our first reflow:
+    AddStateBits(NS_FRAME_FIRST_REFLOW);
+
     // call InitialUpdate() on all frames:
     nsIFrame* kid = mFrames.FirstChild();
     while (kid) {
@@ -441,8 +443,9 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
       }
       kid = kid->GetNextSibling();
     }
-    
-    UnsuspendRedraw(); // For the SuspendRedraw in InitSVG
+
+    // And now remove it again:
+    RemoveStateBits(NS_FRAME_FIRST_REFLOW);
   } else {
     // Now that all viewport establishing descendants have their correct size,
     // tell our foreignObject descendants to reflow their children.
@@ -685,26 +688,6 @@ nsSVGOuterSVGFrame::GetType() const
 
 //----------------------------------------------------------------------
 // nsISVGSVGFrame methods:
-
-void
-nsSVGOuterSVGFrame::SuspendRedraw()
-{
-  if (++mRedrawSuspendCount != 1)
-    return;
-
-  nsSVGUtils::NotifyRedrawSuspended(this);
-}
-
-void
-nsSVGOuterSVGFrame::UnsuspendRedraw()
-{
-  NS_ASSERTION(mRedrawSuspendCount >=0, "unbalanced suspend count!");
-
-  if (--mRedrawSuspendCount > 0)
-    return;
-
-  nsSVGUtils::NotifyRedrawUnsuspended(this);
-}
 
 void
 nsSVGOuterSVGFrame::NotifyViewportChange()
