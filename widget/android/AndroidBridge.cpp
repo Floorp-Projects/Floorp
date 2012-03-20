@@ -319,28 +319,6 @@ AndroidBridge::AcknowledgeEventSync()
 }
 
 void
-AndroidBridge::EnableDeviceMotion(bool aEnable)
-{
-    ALOG_BRIDGE("AndroidBridge::EnableDeviceMotion");
-
-    // bug 734855 - we probably can make this finer grain based on
-    // the DOM APIs that are being invoked.
-    if (aEnable) {
-        EnableSensor(hal::SENSOR_ORIENTATION);
-        EnableSensor(hal::SENSOR_ACCELERATION);
-        EnableSensor(hal::SENSOR_LINEAR_ACCELERATION);
-        EnableSensor(hal::SENSOR_GYROSCOPE);
-    }
-    else {
-        DisableSensor(hal::SENSOR_ORIENTATION);
-        DisableSensor(hal::SENSOR_ACCELERATION);
-        DisableSensor(hal::SENSOR_LINEAR_ACCELERATION);
-        DisableSensor(hal::SENSOR_GYROSCOPE);
-    }
-}
-
-
-void
 AndroidBridge::EnableLocation(bool aEnable)
 {
     ALOG_BRIDGE("AndroidBridge::EnableLocation");
