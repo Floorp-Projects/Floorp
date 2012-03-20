@@ -43,10 +43,10 @@
 #include "nsQueryFrame.h"
 #include "nsRect.h"
 
-class gfxMatrix;
 class nsIFrame;
 class nsRenderingContext;
 
+struct gfxMatrix;
 struct nsPoint;
 
 namespace mozilla {
