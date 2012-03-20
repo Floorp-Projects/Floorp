@@ -57,6 +57,7 @@ JAVAFILES = \
   GeckoBatteryManager.java \
   VideoPlayer.java \
   GeckoNetworkManager.java \
+  GeckoScreenOrientationListener.java \
   $(NULL)
 
 ifdef MOZ_WEBSMS_BACKEND
