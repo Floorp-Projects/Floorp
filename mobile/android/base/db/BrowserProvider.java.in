@@ -485,7 +485,7 @@ public class BrowserProvider extends ContentProvider {
             }
         }
 
-        private void upgradeDatabaseFrom1to2(SQLiteDatabase db) {
+        private void migrateBookmarksTable(SQLiteDatabase db) {
             debug("Renaming bookmarks table to " + TABLE_BOOKMARKS_TMP);
             db.execSQL("ALTER TABLE " + TABLE_BOOKMARKS +
                        " RENAME TO " + TABLE_BOOKMARKS_TMP);
@@ -511,6 +511,10 @@ public class BrowserProvider extends ContentProvider {
 
             debug("Dropping bookmarks temporary table");
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_BOOKMARKS_TMP);
+        }
+
+        private void upgradeDatabaseFrom1to2(SQLiteDatabase db) {
+            migrateBookmarksTable(db);
         }
 
         private void upgradeDatabaseFrom2to3(SQLiteDatabase db) {
