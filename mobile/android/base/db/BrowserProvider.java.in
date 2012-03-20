@@ -55,7 +55,7 @@ public class BrowserProvider extends ContentProvider {
 
     static final String DATABASE_NAME = "browser.db";
 
-    static final int DATABASE_VERSION = 3;
+    static final int DATABASE_VERSION = 4;
 
     // Maximum age of deleted records to be cleaned up (20 days in ms)
     static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
@@ -90,8 +90,8 @@ public class BrowserProvider extends ContentProvider {
     // Schema matches
     static final int SCHEMA = 400;
 
-    static final String DEFAULT_BOOKMARKS_SORT_ORDER = Bookmarks.IS_FOLDER
-            + " DESC, " + Bookmarks.POSITION + " ASC, " + Bookmarks._ID
+    static final String DEFAULT_BOOKMARKS_SORT_ORDER = Bookmarks.TYPE
+            + " ASC, " + Bookmarks.POSITION + " ASC, " + Bookmarks._ID
             + " ASC";
 
     static final String DEFAULT_HISTORY_SORT_ORDER = History.DATE_LAST_VISITED + " DESC";
@@ -128,7 +128,7 @@ public class BrowserProvider extends ContentProvider {
         map.put(Bookmarks.URL, Bookmarks.URL);
         map.put(Bookmarks.FAVICON, Bookmarks.FAVICON);
         map.put(Bookmarks.THUMBNAIL, Bookmarks.THUMBNAIL);
-        map.put(Bookmarks.IS_FOLDER, Bookmarks.IS_FOLDER);
+        map.put(Bookmarks.TYPE, Bookmarks.TYPE);
         map.put(Bookmarks.PARENT, Bookmarks.PARENT);
         map.put(Bookmarks.POSITION, Bookmarks.POSITION);
         map.put(Bookmarks.TAGS, Bookmarks.TAGS);
@@ -188,6 +188,19 @@ public class BrowserProvider extends ContentProvider {
         public void updateForNewTable(ContentValues bookmark);
     }
 
+    private class BookmarkMigrator3to4 implements BookmarkMigrator {
+        public void updateForNewTable(ContentValues bookmark) {
+            Integer isFolder = bookmark.getAsInteger("folder");
+            if (isFolder == null || isFolder != 1) {
+                bookmark.put(Bookmarks.TYPE, Bookmarks.TYPE_BOOKMARK);
+            } else {
+                bookmark.put(Bookmarks.TYPE, Bookmarks.TYPE_FOLDER);
+            }
+
+            bookmark.remove("folder");
+        }
+    }
+
     static final String qualifyColumn(String table, String column) {
         return table + "." + column;
     }
@@ -239,7 +252,7 @@ public class BrowserProvider extends ContentProvider {
                     Bookmarks._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                     Bookmarks.TITLE + " TEXT," +
                     Bookmarks.URL + " TEXT," +
-                    Bookmarks.IS_FOLDER + " INTEGER NOT NULL DEFAULT 0," +
+                    Bookmarks.TYPE + " INTEGER NOT NULL DEFAULT " + Bookmarks.TYPE_BOOKMARK + "," +
                     Bookmarks.PARENT + " INTEGER," +
                     Bookmarks.POSITION + " INTEGER NOT NULL," +
                     Bookmarks.KEYWORD + " TEXT," +
@@ -360,7 +373,7 @@ public class BrowserProvider extends ContentProvider {
                 String guid, int titleId, int position) {
             ContentValues values = new ContentValues();
             values.put(Bookmarks.GUID, guid);
-            values.put(Bookmarks.IS_FOLDER, 1);
+            values.put(Bookmarks.TYPE, Bookmarks.TYPE_FOLDER);
             values.put(Bookmarks.POSITION, position);
 
             if (guid.equals(Bookmarks.PLACES_FOLDER_GUID))
@@ -461,8 +474,8 @@ public class BrowserProvider extends ContentProvider {
                     debug("Migrating bookmark: " + values.getAsString(Bookmarks.TITLE));
                     db.insert(TABLE_BOOKMARKS, Bookmarks.URL, values);
 
-                    Integer isFolder = values.getAsInteger(Bookmarks.IS_FOLDER);
-                    if (isFolder != null && isFolder == 1)
+                    Integer type = values.getAsInteger(Bookmarks.TYPE);
+                    if (type != null && type == Bookmarks.TYPE_FOLDER)
                         subFolders.add(values.getAsInteger(Bookmarks._ID));
                 }
             } finally {
@@ -541,6 +554,10 @@ public class BrowserProvider extends ContentProvider {
             createHistoryWithImagesView(db);
         }
 
+        private void upgradeDatabaseFrom3to4(SQLiteDatabase db) {
+            migrateBookmarksTable(db, new BookmarkMigrator3to4());
+        }
+
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             debug("Upgrading browser.db: " + db.getPath() + " from " +
@@ -558,6 +575,10 @@ public class BrowserProvider extends ContentProvider {
 
                     case 3:
                         upgradeDatabaseFrom2to3(db);
+                        break;
+
+                    case 4:
+                        upgradeDatabaseFrom3to4(db);
                         break;
                  }
              }
@@ -950,10 +971,10 @@ public class BrowserProvider extends ContentProvider {
 
                 String url = values.getAsString(Bookmarks.URL);
                 ContentValues imageValues = extractImageValues(values, url);
-                Integer isFolder = values.getAsInteger(Bookmarks.IS_FOLDER);
+                Integer type = values.getAsInteger(Bookmarks.TYPE);
 
-                if ((isFolder == null || isFolder != 1) && imageValues != null
-                        && !TextUtils.isEmpty(url)) {
+                if ((type == null || type != Bookmarks.TYPE_FOLDER)
+                        && imageValues != null && !TextUtils.isEmpty(url)) {
                     debug("Inserting bookmark image for URL: " + url);
                     updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
                             new String[] { url });
