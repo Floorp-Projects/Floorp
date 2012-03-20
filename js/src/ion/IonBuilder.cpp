@@ -3583,19 +3583,27 @@ IonBuilder::jsop_length_fastPath()
       }
 
       case JSVAL_TYPE_OBJECT: {
-        if (sig.inTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY))
-            return false;
+        if (!sig.inTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY)) {
+            MDefinition *obj = current->pop();
+            MElements *elements = MElements::New(obj);
+            current->add(elements);
 
-        MDefinition *obj = current->pop();
-        MElements *elements = MElements::New(obj);
-        current->add(elements);
+            // Read length.
+            MArrayLength *length = new MArrayLength(elements);
+            current->add(length);
+            current->push(length);
+            return true;
+        }
 
-        // Read length.
-        MArrayLength *length = new MArrayLength(elements);
-        current->add(length);
-        current->push(length);
+        if (!sig.inTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY)) {
+            MDefinition *obj = current->pop();
+            MTypedArrayLength *length = MTypedArrayLength::New(obj);
+            current->add(length);
+            current->push(length);
+            return true;
+        }
 
-        return true;
+        return false;
       }
 
       default:

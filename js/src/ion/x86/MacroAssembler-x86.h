@@ -491,6 +491,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void unboxInt32(const ValueOperand &src, const Register &dest) {
         movl(src.payloadReg(), dest);
     }
+    void unboxInt32(const Address &src, const Register &dest) {
+        movl(payloadOf(src), dest);
+    }
     void unboxBoolean(const ValueOperand &src, const Register &dest) {
         movl(src.payloadReg(), dest);
     }

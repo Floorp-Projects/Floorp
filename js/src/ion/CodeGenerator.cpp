@@ -871,6 +871,15 @@ CodeGenerator::visitArrayLength(LArrayLength *lir)
 }
 
 bool
+CodeGenerator::visitTypedArrayLength(LTypedArrayLength *lir)
+{
+    Register obj = ToRegister(lir->object());
+    Register out = ToRegister(lir->output());
+    masm.unboxInt32(Address(obj, TypedArray::lengthOffset()), out);
+    return true;
+}
+
+bool
 CodeGenerator::visitStringLength(LStringLength *lir)
 {
     Address lengthAndFlags(ToRegister(lir->string()), JSString::offsetOfLengthAndFlags());

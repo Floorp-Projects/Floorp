@@ -989,6 +989,13 @@ LIRGenerator::visitArrayLength(MArrayLength *ins)
 }
 
 bool
+LIRGenerator::visitTypedArrayLength(MTypedArrayLength *ins)
+{
+    JS_ASSERT(ins->object()->type() == MIRType_Object);
+    return define(new LTypedArrayLength(useRegisterAtStart(ins->object())), ins);
+}
+
+bool
 LIRGenerator::visitInitializedLength(MInitializedLength *ins)
 {
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);

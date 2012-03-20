@@ -112,6 +112,7 @@ namespace ion {
     _(GuardShape)                                                           \
     _(GuardClass)                                                           \
     _(ArrayLength)                                                          \
+    _(TypedArrayLength)                                                     \
     _(InitializedLength)                                                    \
     _(SetInitializedLength)                                                 \
     _(Not)                                                                  \

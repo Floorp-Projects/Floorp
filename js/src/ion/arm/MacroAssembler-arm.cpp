@@ -1659,6 +1659,12 @@ MacroAssemblerARMCompat::unboxInt32(const ValueOperand &operand, const Register 
 }
 
 void
+MacroAssemblerARMCompat::unboxInt32(const Address &src, const Register &dest)
+{
+    ma_ldr(payloadOf(src), dest);
+}
+
+void
 MacroAssemblerARMCompat::unboxBoolean(const ValueOperand &operand, const Register &dest)
 {
     ma_mov(operand.payloadReg(), dest);
