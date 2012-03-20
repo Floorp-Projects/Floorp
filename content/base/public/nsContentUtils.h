@@ -1515,6 +1515,13 @@ public:
   // returns it.
   static PRUint32 FilterDropEffect(PRUint32 aAction, PRUint32 aEffectAllowed);
 
+  /*
+   * Return true if the target of a drop event is a content document that is
+   * an ancestor of the document for the source of the drag.
+   */
+  static bool CheckForSubFrameDrop(nsIDragSession* aDragSession,
+                                   nsDragEvent* aDropEvent);
+
   /**
    * Return true if aURI is a local file URI (i.e. file://).
    */
