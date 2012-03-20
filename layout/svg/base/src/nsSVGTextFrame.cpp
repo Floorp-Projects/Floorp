@@ -233,28 +233,34 @@ nsSVGTextFrame::GetFrameForPoint(const nsPoint &aPoint)
   return nsSVGTextFrameBase::GetFrameForPoint(aPoint);
 }
 
-NS_IMETHODIMP
-nsSVGTextFrame::UpdateCoveredRegion()
+void
+nsSVGTextFrame::UpdateBounds()
 {
-  UpdateGlyphPositioning(true);
-  
-  return nsSVGTextFrameBase::UpdateCoveredRegion();
-}
+  NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingUpdateBounds(this),
+               "This call is probaby a wasteful mistake");
 
-NS_IMETHODIMP
-nsSVGTextFrame::InitialUpdate()
-{
-  // Removes NS_FRAME_FIRST_REFLOW from our descendants and us:
-  nsresult rv = nsSVGTextFrameBase::InitialUpdate();
+  NS_ABORT_IF_FALSE(!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
+                    "UpdateBounds mechanism not designed for this");
 
-  // With NS_FRAME_FIRST_REFLOW removed, this will update text
-  // positions, covered regions, and invalidate. The invalidation
-  // part is redundant work if our outer-<svg> hasn't had its
-  // first reflow, but that's not too bad.
+  if (!nsSVGUtils::NeedsUpdatedBounds(this)) {
+    NS_ASSERTION(!mPositioningDirty, "How did this happen?");
+    return;
+  }
+
+  // UpdateGlyphPositioning may have been called under DOM calls and set
+  // mPositioningDirty to false. We may now have better positioning, though, so
+  // set it to true so that UpdateGlyphPositioning will do its work.
+  mPositioningDirty = true;
+
   UpdateGlyphPositioning(false);
 
-  return rv;
-}  
+  // With glyph positions updated, our descendants can invalidate their new
+  // areas correctly:
+  nsSVGTextFrameBase::UpdateBounds();
+
+  // XXXsvgreflow once we store bounds on containers, call
+  // nsSVGUtils::InvalidateBounds(this) if not first reflow.
+}
 
 gfxRect
 nsSVGTextFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
@@ -291,8 +297,9 @@ nsSVGTextFrame::GetCanvasTM()
 void
 nsSVGTextFrame::NotifyGlyphMetricsChange()
 {
+  nsSVGUtils::InvalidateAndScheduleBoundsUpdate(this);
+
   mPositioningDirty = true;
-  UpdateGlyphPositioning(false);
 }
 
 void
@@ -448,5 +455,4 @@ nsSVGTextFrame::UpdateGlyphPositioning(bool aForceGlobalTransform)
     }
     firstFrame = frame;
   }
-  nsSVGUtils::UpdateGraphic(this);
 }
