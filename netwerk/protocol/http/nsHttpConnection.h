@@ -106,7 +106,7 @@ public:
     //-------------------------------------------------------------------------
     // XXX document when these are ok to call
 
-    bool     SupportsPipelining() { return mSupportsPipelining && IsKeepAlive(); }
+    bool     SupportsPipelining();
     bool     IsKeepAlive() { return mUsingSpdy ||
                                     (mKeepAliveMask && mKeepAlive); }
     bool     CanReuse();   // can this connection be reused?
@@ -249,6 +249,11 @@ private:
     // The number of <= HTTP/1.1 transactions performed on this connection. This
     // excludes spdy transactions.
     PRUint32                        mHttp1xTransactionCount;
+
+    // Keep-Alive: max="mRemainingConnectionUses" provides the number of future
+    // transactions (including the current one) that the server expects to allow
+    // on this persistent connection.
+    PRUint32                        mRemainingConnectionUses;
 
     nsAHttpTransaction::Classifier  mClassification;
 

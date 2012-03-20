@@ -86,6 +86,7 @@ nsHttpConnection::nsHttpConnection()
     , mIdleMonitoring(false)
     , mProxyConnectInProgress(false)
     , mHttp1xTransactionCount(0)
+    , mRemainingConnectionUses(0xffffffff)
     , mClassification(nsAHttpTransaction::CLASS_GENERAL)
     , mNPNComplete(false)
     , mSetupNPNCalled(false)
@@ -534,9 +535,28 @@ nsHttpConnection::DontReuse()
         mSpdySession->DontReuse();
 }
 
+// Checked by the Connection Manager before scheduling a pipelined transaction
+bool
+nsHttpConnection::SupportsPipelining()
+{
+    if (mTransaction &&
+        mTransaction->PipelineDepth() >= mRemainingConnectionUses) {
+        LOG(("nsHttpConnection::SupportsPipelining this=%p deny pipeline "
+             "because current depth %d exceeds max remaining uses %d\n",
+             this, mTransaction->PipelineDepth(), mRemainingConnectionUses));
+        return false;
+    }
+    return mSupportsPipelining && IsKeepAlive();
+}
+
 bool
 nsHttpConnection::CanReuse()
 {
+    if ((mTransaction ? mTransaction->PipelineDepth() : 0) >=
+        mRemainingConnectionUses) {
+        return false;
+    }
+
     bool canReuse;
     
     if (mUsingSpdy)
@@ -733,9 +753,13 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
         // HTTP/1.1 connections are by default persistent
         if (val && !PL_strcasecmp(val, "close")) {
             mKeepAlive = false;
-            // persistent connections are required for pipelining to work
-            gHttpHandler->ConnMgr()->PipelineFeedbackInfo(
-                mConnInfo, nsHttpConnectionMgr::BadExplicitClose, this, 0);
+
+            // persistent connections are required for pipelining to work - if
+            // this close was not pre-announced then generate the negative
+            // BadExplicitClose feedback
+            if (mRemainingConnectionUses > 1)
+                gHttpHandler->ConnMgr()->PipelineFeedbackInfo(
+                    mConnInfo, nsHttpConnectionMgr::BadExplicitClose, this, 0);
         }
         else {
             mKeepAlive = true;
@@ -783,6 +807,7 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
     // a "keep-alive" connection is by definition capable of being reused, and
     // we only care about being able to reuse it once.  if a timeout is not 
     // specified then we use our advertized timeout value.
+    bool foundKeepAliveMax = false;
     if (mKeepAlive) {
         val = responseHead->PeekHeader(nsHttp::Keep_Alive);
 
@@ -792,6 +817,15 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
                 mIdleTimeout = PR_SecondsToInterval((PRUint32) atoi(cp + 8));
             else
                 mIdleTimeout = gHttpHandler->SpdyTimeout();
+
+            cp = PL_strcasestr(val, "max=");
+            if (cp) {
+                int val = atoi(cp + 4);
+                if (val > 0) {
+                    foundKeepAliveMax = true;
+                    mRemainingConnectionUses = static_cast<PRUint32>(val);
+                }
+            }
         }
         else {
             mIdleTimeout = gHttpHandler->SpdyTimeout();
@@ -800,6 +834,9 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
         LOG(("Connection can be reused [this=%p idle-timeout=%usec]\n",
              this, PR_IntervalToSeconds(mIdleTimeout)));
     }
+
+    if (!foundKeepAliveMax && mRemainingConnectionUses && !mUsingSpdy)
+        --mRemainingConnectionUses;
 
     if (!mProxyConnectStream)
         HandleAlternateProtocol(responseHead);
