@@ -1938,12 +1938,6 @@ nsHttpConnectionMgr::ActivateTimeoutTick()
     LOG(("nsHttpConnectionMgr::ActivateTimeoutTick() "
          "this=%p mReadTimeoutTick=%p\n"));
 
-    // right now the spdy timeout code is the only thing hooked to the timeout
-    // tick, so disable it if spdy is not being used. However pipelining code
-    // will also want this functionality soon.
-    if (!gHttpHandler->IsSpdyEnabled())
-        return;
-
     // The timer tick should be enabled if it is not already pending.
     // Upon running the tick will rearm itself if there are active
     // connections available.
@@ -1961,8 +1955,7 @@ nsHttpConnectionMgr::ActivateTimeoutTick()
 
     NS_ABORT_IF_FALSE(!mReadTimeoutTickArmed, "timer tick armed");
     mReadTimeoutTickArmed = true;
-    // pipeline will expect a 1000ms granuality
-    mReadTimeoutTick->Init(this, 15000, nsITimer::TYPE_REPEATING_SLACK);
+    mReadTimeoutTick->Init(this, 1000, nsITimer::TYPE_REPEATING_SLACK);
 }
 
 void

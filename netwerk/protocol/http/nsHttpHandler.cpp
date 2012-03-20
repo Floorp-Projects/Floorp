@@ -189,6 +189,7 @@ nsHttpHandler::nsHttpHandler()
     , mMaxOptimisticPipelinedRequests(4)
     , mPipelineAggressive(false)
     , mMaxPipelineObjectSize(300000)
+    , mPipelineReadTimeout(PR_MillisecondsToInterval(10000))
     , mRedirectionLimit(10)
     , mPhishyUserPassLength(1)
     , mQoSBits(0x00)
@@ -1050,6 +1051,14 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         if (NS_SUCCEEDED(rv)) {
             mMaxPipelineObjectSize =
                 static_cast<PRInt64>(clamped(val, 1000, 100000000));
+        }
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("pipelining.read-timeout"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("pipelining.read-timeout"), &val);
+        if (NS_SUCCEEDED(rv)) {
+            mPipelineReadTimeout =
+                PR_MillisecondsToInterval(clamped(val, 500, 0xffff));
         }
     }
 

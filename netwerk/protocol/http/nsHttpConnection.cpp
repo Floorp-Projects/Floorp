@@ -959,8 +959,56 @@ nsHttpConnection::ReadTimeoutTick(PRIntervalTime now)
         return;
     }
     
-    // Pending patches places pipeline rescheduling code will go here
+    PRIntervalTime delta = PR_IntervalNow() - mLastReadTime;
 
+    // we replicate some of the checks both here and in OnSocketReadable() as
+    // they will be discovered under different conditions. The ones here
+    // will generally be discovered if we are totally hung and OSR does
+    // not get called at all, however OSR discovers them with lower latency
+    // if the issue is just very slow (but not stalled) reading.
+    //
+    // Right now we only take action if pipelining is involved, but this would
+    // be the place to add general read timeout handling if it is desired.
+
+    const PRIntervalTime k1000ms = PR_MillisecondsToInterval(1000);
+
+    if (delta < k1000ms)
+        return;
+
+    PRUint32 pipelineDepth = mTransaction->PipelineDepth();
+
+    // this just reschedules blocked transactions. no transaction
+    // is aborted completely.
+    LOG(("cancelling pipeline due to a %ums stall - depth %d\n",
+         PR_IntervalToMilliseconds(delta), pipelineDepth));
+
+    if (pipelineDepth > 1) {
+        nsHttpPipeline *pipeline = mTransaction->QueryPipeline();
+        NS_ABORT_IF_FALSE(pipeline, "pipelinedepth > 1 without pipeline");
+        // code this defensively for the moment and check for null in opt build
+        if (pipeline)
+            pipeline->CancelPipeline(NS_ERROR_NET_TIMEOUT);
+    }
+    
+    if (delta < gHttpHandler->GetPipelineTimeout())
+        return;
+
+    if (pipelineDepth <= 1 && !mTransaction->PipelinePosition())
+        return;
+    
+    // nothing has transpired on this pipelined socket for many
+    // seconds. Call that a total stall and close the transaction.
+    // There is a chance the transaction will be restarted again
+    // depending on its state.. that will come back araound
+    // without pipelining on, so this won't loop.
+
+    LOG(("canceling transaction stalled for %ums on a pipeline"
+         "of depth %d and scheduled originally at pos %d\n",
+         PR_IntervalToMilliseconds(delta),
+         pipelineDepth, mTransaction->PipelinePosition()));
+
+    // This will also close the connection
+    CloseTransaction(mTransaction, NS_ERROR_NET_TIMEOUT);
 }
 
 void
@@ -1286,8 +1334,20 @@ nsHttpConnection::OnSocketReadable()
     const PRIntervalTime k1200ms = PR_MillisecondsToInterval(1200);
 
     if (delta > k1200ms) {
+        LOG(("Read delta ms of %u causing slow read major "
+             "event and pipeline cancellation",
+             PR_IntervalToMilliseconds(delta)));
+
         gHttpHandler->ConnMgr()->PipelineFeedbackInfo(
             mConnInfo, nsHttpConnectionMgr::BadSlowReadMajor, this, 0);
+
+        if (mTransaction->PipelineDepth() > 1) {
+            nsHttpPipeline *pipeline = mTransaction->QueryPipeline();
+            NS_ABORT_IF_FALSE(pipeline, "pipelinedepth > 1 without pipeline");
+            // code this defensively for the moment and check for null
+            if (pipeline)
+                pipeline->CancelPipeline(NS_ERROR_NET_TIMEOUT);
+        }
     }
     else if (delta > k400ms) {
         gHttpHandler->ConnMgr()->PipelineFeedbackInfo(
