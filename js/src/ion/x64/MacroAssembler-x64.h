@@ -528,6 +528,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void unboxInt32(const Operand &src, const Register &dest) {
         movl(src, dest);
     }
+    void unboxInt32(const Address &src, const Register &dest) {
+        unboxInt32(Operand(src), dest);
+    }
     void unboxBoolean(const ValueOperand &src, const Register &dest) {
         movl(Operand(src.valueReg()), dest);
     }

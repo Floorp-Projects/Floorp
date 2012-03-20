@@ -2620,6 +2620,41 @@ class MArrayLength
     }
 };
 
+// Read the length of a typed array.
+class MTypedArrayLength
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
+{
+    MTypedArrayLength(MDefinition *obj)
+      : MUnaryInstruction(obj)
+    {
+        setResultType(MIRType_Int32);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(TypedArrayLength);
+
+    static MTypedArrayLength *New(MDefinition *obj) {
+        return new MTypedArrayLength(obj);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    bool congruentTo(MDefinition *const &ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        // The typed array |length| property is immutable, so there is no
+        // implicit dependency.
+        return AliasSet::None();
+    }
+};
+
 // Perform !-operation
 class MNot
   : public MUnaryInstruction,

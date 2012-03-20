@@ -160,6 +160,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitTypeBarrier(MTypeBarrier *ins);
     bool visitMonitorTypes(MMonitorTypes *ins);
     bool visitArrayLength(MArrayLength *ins);
+    bool visitTypedArrayLength(MTypedArrayLength *ins);
     bool visitInitializedLength(MInitializedLength *ins);
     bool visitSetInitializedLength(MSetInitializedLength *ins);
     bool visitNot(MNot *ins);

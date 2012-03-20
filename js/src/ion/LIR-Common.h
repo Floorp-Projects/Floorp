@@ -1411,6 +1411,24 @@ class LArrayLength : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Read the length of a typed array.
+class LTypedArrayLength : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(TypedArrayLength);
+
+    LTypedArrayLength(const LAllocation &obj) {
+        setOperand(0, obj);
+    }
+
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
 // Bailout if index >= length.
 class LBoundsCheck : public LInstructionHelper<0, 2, 0>
 {

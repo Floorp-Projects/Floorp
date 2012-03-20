@@ -155,6 +155,7 @@
     _(IteratorMore)                 \
     _(IteratorEnd)                  \
     _(ArrayLength)                  \
+    _(TypedArrayLength)             \
     _(StringLength)                 \
     _(TypeOfV)                      \
     _(ToIdV)                        \
