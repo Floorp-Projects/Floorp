@@ -443,6 +443,10 @@ struct TreeContext {                /* tree context for semantic checks */
                 flags & (TCF_FUN_PARAM_ARGUMENTS | TCF_FUN_LOCAL_ARGUMENTS));
     }
 
+    void noteLocalOverwritesArguments() {
+        flags |= TCF_FUN_LOCAL_ARGUMENTS;
+    }
+
     void noteArgumentsNameUse(ParseNode *node) {
         JS_ASSERT(inFunction());
         JS_ASSERT(node->isKind(PNK_NAME));
