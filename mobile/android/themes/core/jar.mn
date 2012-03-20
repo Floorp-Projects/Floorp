@@ -1,11 +1,7 @@
 #filter substitution
 
 chrome.jar:
-% skin browser classic/1.0 %skin/ os!=Android
-% skin browser classic/1.0 %skin/ os=Android osversion<2.3
-% skin browser froyo/1.0 %skin/
-# NOTE: If you add a new file here, you'll need to add it to the gingerbread
-# and honeycomb sections at the bottom of this file
+% skin browser classic/1.0 %skin/
   skin/aboutPage.css                        (aboutPage.css)
   skin/about.css                            (about.css)
   skin/aboutAddons.css                      (aboutAddons.css)
@@ -29,17 +25,11 @@ chrome.jar:
   skin/images/checkbox_unchecked_disabled.png (images/checkbox_unchecked_disabled.png)
   skin/images/checkbox_unchecked_pressed.png  (images/checkbox_unchecked_pressed.png)
   skin/images/dropmarker.svg                (images/dropmarker.svg)
-  skin/images/popup-selected-item-hdpi.png  (images/popup-selected-item-hdpi.png)
   skin/images/errorpage-warning.png         (images/errorpage-warning.png)
   skin/images/errorpage-warning.png         (images/errorpage-warning.png)
   skin/images/errorpage-larry-white.png     (images/errorpage-larry-white.png)
   skin/images/errorpage-larry-black.png     (images/errorpage-larry-black.png)
   skin/images/throbber.png                  (images/throbber.png)
-  skin/images/alert-addons-30.png           (images/alert-addons-30.png)
-  skin/images/alert-downloads-30.png        (images/alert-downloads-30.png)
-  skin/images/forward-default-hdpi.png      (images/forward-default-hdpi.png)
-  skin/images/remotetabs-32.png             (images/remotetabs-32.png)
-  skin/images/sidebarbutton-active-hdpi.png (images/sidebarbutton-active-hdpi.png)
   skin/images/search-clear-30.png           (images/search-clear-30.png)
   skin/images/play-hdpi.png                 (images/play-hdpi.png)
   skin/images/pause-hdpi.png                (images/pause-hdpi.png)
@@ -54,105 +44,3 @@ chrome.jar:
   skin/images/row-bg-light.png              (images/row-bg-light.png)
   skin/images/row-bg-normal.png             (images/row-bg-normal.png)
   skin/images/addons-amo-hdpi.png           (images/addons-amo-hdpi.png)
-
-chrome.jar:
-% skin browser classic/1.0 %skin/gingerbread/ os=Android osversion=2.3 osversion=2.3.3 osversion=2.3.4 osversion=2.3.5 osversion=2.3.6 osversion=2.3.7
-% skin browser gingerbread/1.0 %skin/gingerbread/
-  skin/gingerbread/aboutPage.css                        (aboutPage.css)
-  skin/gingerbread/about.css                            (about.css)
-  skin/gingerbread/aboutAddons.css                      (aboutAddons.css)
-* skin/gingerbread/browser.css                          (gingerbread/browser.css)
-* skin/gingerbread/content.css                          (gingerbread/content.css)
-  skin/gingerbread/config.css                           (config.css)
-  skin/gingerbread/touchcontrols.css                    (touchcontrols.css)
-  skin/gingerbread/netError.css                         (netError.css)
-% override chrome://global/skin/about.css chrome://browser/skin/about.css
-% override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
-% override chrome://global/skin/netError.css chrome://browser/skin/netError.css
-
-  skin/gingerbread/images/urlbar-bg.png                 (gingerbread/images/urlbar-bg.png)
-  skin/gingerbread/images/addons-32.png                 (images/addons-32.png)
-  skin/gingerbread/images/arrowleft-16.png              (gingerbread/images/arrowleft-16.png)
-  skin/gingerbread/images/arrowright-16.png             (gingerbread/images/arrowright-16.png)
-  skin/gingerbread/images/arrowdown-16.png              (gingerbread/images/arrowdown-16.png)
-  skin/gingerbread/images/checkbox_checked.png          (images/checkbox_checked.png)
-  skin/gingerbread/images/checkbox_checked_disabled.png (images/checkbox_checked_disabled.png)
-  skin/gingerbread/images/checkbox_checked_pressed.png  (images/checkbox_checked_pressed.png)
-  skin/gingerbread/images/checkbox_unchecked.png          (images/checkbox_unchecked.png)
-  skin/gingerbread/images/checkbox_unchecked_disabled.png (images/checkbox_unchecked_disabled.png)
-  skin/gingerbread/images/checkbox_unchecked_pressed.png  (images/checkbox_unchecked_pressed.png)
-  skin/gingerbread/images/dropmarker.svg                (images/dropmarker.svg)
-  skin/gingerbread/images/popup-selected-item-hdpi.png  (gingerbread/images/popup-selected-item-hdpi.png)
-  skin/gingerbread/images/throbber.png                  (gingerbread/images/throbber.png)
-  skin/gingerbread/images/alert-addons-30.png           (gingerbread/images/alert-addons-30.png)
-  skin/gingerbread/images/alert-downloads-30.png        (gingerbread/images/alert-downloads-30.png)
-  skin/gingerbread/images/forward-default-hdpi.png      (gingerbread/images/forward-default-hdpi.png)
-  skin/gingerbread/images/remotetabs-32.png             (gingerbread/images/remotetabs-32.png)
-  skin/gingerbread/images/search-clear-30.png           (gingerbread/images/search-clear-30.png)
-  skin/gingerbread/images/play-hdpi.png                 (gingerbread/images/play-hdpi.png)
-  skin/gingerbread/images/pause-hdpi.png                (gingerbread/images/pause-hdpi.png)
-  skin/gingerbread/images/mute-hdpi.png                 (gingerbread/images/mute-hdpi.png)
-  skin/gingerbread/images/unmute-hdpi.png               (gingerbread/images/unmute-hdpi.png)
-  skin/gingerbread/images/scrubber-hdpi.png             (gingerbread/images/scrubber-hdpi.png)
-  skin/gingerbread/images/errorpage-warning.png         (images/errorpage-warning.png)
-  skin/gingerbread/images/errorpage-larry-white.png     (images/errorpage-larry-white.png)
-  skin/gingerbread/images/errorpage-larry-black.png     (images/errorpage-larry-black.png)
-  skin/gingerbread/images/about-bg-lightblue.png        (images/about-bg-lightblue.png)
-  skin/gingerbread/images/about-bg-darkblue.png         (images/about-bg-darkblue.png)
-  skin/gingerbread/images/about-btn-darkgrey.png        (images/about-btn-darkgrey.png)
-  skin/gingerbread/images/logo-hdpi.png                 (images/logo-hdpi.png)
-  skin/gingerbread/images/wordmark-hdpi.png             (images/wordmark-hdpi.png)
-  skin/gingerbread/images/row-bg-light.png              (images/row-bg-light.png)
-  skin/gingerbread/images/row-bg-normal.png             (images/row-bg-normal.png)
-  skin/gingerbread/images/addons-amo-hdpi.png           (images/addons-amo-hdpi.png)
-
-chrome.jar:
-% skin browser classic/1.0 %skin/honeycomb/ os=Android osversion>=3.0
-% skin browser honeycomb/1.0 %skin/honeycomb/
-  skin/honeycomb/aboutPage.css                        (aboutPage.css)
-  skin/honeycomb/about.css                            (about.css)
-  skin/honeycomb/aboutAddons.css                      (aboutAddons.css)
-* skin/honeycomb/browser.css                          (honeycomb/browser.css)
-* skin/honeycomb/content.css                          (content.css)
-  skin/honeycomb/config.css                           (config.css)
-  skin/honeycomb/touchcontrols.css                    (touchcontrols.css)
-  skin/honeycomb/netError.css                         (netError.css)
-% override chrome://global/skin/about.css chrome://browser/skin/about.css
-% override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
-% override chrome://global/skin/netError.css chrome://browser/skin/netError.css
-
-  skin/honeycomb/images/addons-32.png                 (images/addons-32.png)
-  skin/honeycomb/images/arrowleft-16.png              (honeycomb/images/arrowleft-16.png)
-  skin/honeycomb/images/arrowright-16.png             (honeycomb/images/arrowright-16.png)
-  skin/honeycomb/images/arrowdown-16.png              (honeycomb/images/arrowdown-16.png)
-  skin/honeycomb/images/checkbox_checked.png          (images/checkbox_checked.png)
-  skin/honeycomb/images/checkbox_checked_disabled.png (images/checkbox_checked_disabled.png)
-  skin/honeycomb/images/checkbox_checked_pressed.png  (images/checkbox_checked_pressed.png)
-  skin/honeycomb/images/checkbox_unchecked.png          (images/checkbox_unchecked.png)
-  skin/honeycomb/images/checkbox_unchecked_disabled.png (images/checkbox_unchecked_disabled.png)
-  skin/honeycomb/images/checkbox_unchecked_pressed.png  (images/checkbox_unchecked_pressed.png)
-  skin/honeycomb/images/dropmarker.svg                (images/dropmarker.svg)
-  skin/honeycomb/images/popup-selected-item-hdpi.png  (honeycomb/images/popup-selected-item-hdpi.png)
-  skin/honeycomb/images/throbber.png                  (honeycomb/images/throbber.png)
-  skin/honeycomb/images/alert-addons-30.png           (honeycomb/images/alert-addons-30.png)
-  skin/honeycomb/images/alert-downloads-30.png        (honeycomb/images/alert-downloads-30.png)
-  skin/honeycomb/images/forward-default-hdpi.png      (honeycomb/images/forward-default-hdpi.png)
-  skin/honeycomb/images/remotetabs-32.png             (honeycomb/images/remotetabs-32.png)
-  skin/honeycomb/images/sidebarbutton-active-hdpi.png (honeycomb/images/sidebarbutton-active-hdpi.png)
-  skin/honeycomb/images/search-clear-30.png           (honeycomb/images/search-clear-30.png)
-  skin/honeycomb/images/play-hdpi.png                 (honeycomb/images/play-hdpi.png)
-  skin/honeycomb/images/pause-hdpi.png                (honeycomb/images/pause-hdpi.png)
-  skin/honeycomb/images/mute-hdpi.png                 (honeycomb/images/mute-hdpi.png)
-  skin/honeycomb/images/unmute-hdpi.png               (honeycomb/images/unmute-hdpi.png)
-  skin/honeycomb/images/scrubber-hdpi.png             (honeycomb/images/scrubber-hdpi.png)
-  skin/honeycomb/images/errorpage-warning.png         (images/errorpage-warning.png)
-  skin/honeycomb/images/errorpage-larry-white.png     (images/errorpage-larry-white.png)
-  skin/honeycomb/images/errorpage-larry-black.png     (images/errorpage-larry-black.png)
-  skin/honeycomb/images/about-bg-lightblue.png        (images/about-bg-lightblue.png)
-  skin/honeycomb/images/about-bg-darkblue.png         (images/about-bg-darkblue.png)
-  skin/honeycomb/images/about-btn-darkgrey.png        (images/about-btn-darkgrey.png)
-  skin/honeycomb/images/logo-hdpi.png                 (images/logo-hdpi.png)
-  skin/honeycomb/images/wordmark-hdpi.png             (images/wordmark-hdpi.png)
-  skin/honeycomb/images/row-bg-light.png              (images/row-bg-light.png)
-  skin/honeycomb/images/row-bg-normal.png             (images/row-bg-normal.png)
-  skin/honeycomb/images/addons-amo-hdpi.png           (images/addons-amo-hdpi.png)
