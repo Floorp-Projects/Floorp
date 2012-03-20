@@ -254,11 +254,18 @@ NS_QUERYFRAME_TAIL_INHERITING(nsSVGGlyphFrameBase)
 NS_IMETHODIMP
 nsSVGGlyphFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
 {
-  ClearTextRun();
+  // NotifyGlyphMetricsChange takes care of calling
+  // nsSVGUtils::InvalidateAndScheduleBoundsUpdate on the appropriate frames.
+
   NotifyGlyphMetricsChange();
+
+  ClearTextRun();
   if (IsTextEmpty()) {
-    // That's it for this frame. Leave no trace we were here
-    nsSVGUtils::UpdateGraphic(this);
+    // The one time that NotifyGlyphMetricsChange fails to call
+    // nsSVGUtils::InvalidateAndScheduleBoundsUpdate properly is when all our
+    // text is gone, since it skips empty frames. So we have to invalidate
+    // ourself.
+    nsSVGUtils::InvalidateBounds(this);
   }
 
   return NS_OK;
@@ -445,9 +452,15 @@ nsSVGGlyphFrame::GetCoveredRegion()
   return mCoveredRegion;
 }
 
-NS_IMETHODIMP
-nsSVGGlyphFrame::UpdateCoveredRegion()
+void
+nsSVGGlyphFrame::UpdateBounds()
 {
+  NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingUpdateBounds(this),
+               "This call is probaby a wasteful mistake");
+
+  NS_ABORT_IF_FALSE(!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
+                    "UpdateBounds mechanism not designed for this");
+
   mRect.SetEmpty();
 
   // XXX here we have tmpCtx use its default identity matrix, but does this
@@ -458,7 +471,7 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
   if (hasStroke) {
     SetupCairoStrokeGeometry(tmpCtx);
   } else if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_None) {
-    return NS_OK;
+    return;
   }
 
   CharacterIterator iter(this, true);
@@ -498,19 +511,6 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
   mCoveredRegion = nsSVGUtils::TransformFrameRectToOuterSVG(
     mRect, GetCanvasTM(), PresContext());
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGGlyphFrame::InitialUpdate()
-{
-  NS_ASSERTION(GetStateBits() & NS_FRAME_FIRST_REFLOW,
-               "Yikes! We've been called already! Hopefully we weren't called "
-               "before our nsSVGOuterSVGFrame's initial Reflow()!!!");
-
-  NS_ASSERTION(!(mState & NS_FRAME_IN_REFLOW),
-               "We don't actually participate in reflow");
-
   mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
               NS_FRAME_HAS_DIRTY_CHILDREN);
 
@@ -518,16 +518,8 @@ nsSVGGlyphFrame::InitialUpdate()
     // We only invalidate if our outer-<svg> has already had its
     // initial reflow (since if it hasn't, its entire area will be
     // invalidated when it gets that initial reflow):
-    nsSVGUtils::InvalidateCoveredRegion(this);
-
-    // We also only call UpdateCoveredRegion here, since if our
-    // outer-<svg> has yet to receive its initial reflow,
-    // we're going to get updated when our nsSVGTextFrame's
-    // InitialUpdate calls UpdateGlyphPositioning.
-    UpdateCoveredRegion();
+    nsSVGUtils::InvalidateBounds(this, true);
   }
-
-  return NS_OK;
 }  
 
 void
@@ -540,11 +532,14 @@ nsSVGGlyphFrame::NotifySVGChanged(PRUint32 aFlags)
   NS_ABORT_IF_FALSE(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
                     "Invalidation logic may need adjusting");
 
+  // XXXjwatt: seems to me that this could change the glyph metrics,
+  // in which case we should call NotifyGlyphMetricsChange instead.
+  if (!(aFlags & DO_NOT_NOTIFY_RENDERING_OBSERVERS)) {
+    nsSVGUtils::InvalidateAndScheduleBoundsUpdate(this);
+  }
+
   if (aFlags & TRANSFORM_CHANGED) {
     ClearTextRun();
-  }
-  if (!(aFlags & DO_NOT_NOTIFY_RENDERING_OBSERVERS)) {
-    nsSVGUtils::UpdateGraphic(this);
   }
 }
 

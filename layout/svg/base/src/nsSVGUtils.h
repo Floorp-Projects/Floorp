@@ -291,15 +291,56 @@ public:
   static nsRect FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect);
 
   /**
-   * Invalidates the area covered by the frame
+   * Invalidates the area that is painted by the frame without updating its
+   * bounds.
+   *
+   * This is similar to InvalidateOverflowRect(). It will go away when we
+   * support display list based invalidation of SVG.
    */
-  static void InvalidateCoveredRegion(nsIFrame *aFrame);
+  static void InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate = false);
 
-  /*
-   * Update the area covered by the frame allowing for the frame to
-   * have moved.
+  /**
+   * Schedules an update of the frame's bounds (which will in turn invalidate
+   * the new area that the frame should paint to).
+   *
+   * This does nothing when passed an NS_STATE_SVG_NONDISPLAY_CHILD frame.
+   * In future we may want to allow UpdateBounds to be called on such frames,
+   * but that would be better implemented as a ForceUpdateBounds function to
+   * be called synchronously while painting them without marking or paying
+   * attention to dirty bits like this function.
+   *
+   * This is very similar to PresShell::FrameNeedsReflow. The main reason that
+   * we have this function instead of using FrameNeedsReflow is because we need
+   * to be able to call it under nsSVGOuterSVGFrame::NotifyViewportChange when
+   * that function is called by nsSVGOuterSVGFrame::Reflow. FrameNeedsReflow
+   * is not suitable for calling during reflow though, and it asserts as much.
+   * The reason that we want to be callable under NotifyViewportChange is
+   * because we want to synchronously notify and dirty the nsSVGOuterSVGFrame's
+   * children so that when nsSVGOuterSVGFrame::DidReflow is called its children
+   * will be updated for the new size as appropriate. Otherwise we'd have to
+   * post an event to the event loop to mark dirty flags and request an update.
+   *
+   * Another reason that we don't currently want to call
+   * PresShell::FrameNeedsReflow is because passing eRestyle to it to get it to
+   * mark descendants dirty would cause it to descend through
+   * nsSVGForeignObjectFrame frames to mark their children dirty, but we want to
+   * handle nsSVGForeignObjectFrame specially. It would also do unnecessary work
+   * descending into NS_STATE_SVG_NONDISPLAY_CHILD frames.
    */
-  static void UpdateGraphic(nsIFrame *aFrame);
+  static void ScheduleBoundsUpdate(nsIFrame *aFrame);
+
+  /**
+   * Invalidates the area that the frame last painted to, then schedules an
+   * update of the frame's bounds (which will in turn invalidate the new area
+   * that the frame should paint to).
+   */
+  static void InvalidateAndScheduleBoundsUpdate(nsIFrame *aFrame);
+
+  /**
+   * Returns true if the frame or any of its children need UpdateBounds
+   * to be called on them.
+   */
+  static bool NeedsUpdatedBounds(nsIFrame *aFrame);
 
   /*
    * Update the filter invalidation region for ancestor frames, if relevant.
@@ -523,6 +564,8 @@ public:
 #ifdef DEBUG
   static void
   WritePPM(const char *fname, gfxImageSurface *aSurface);
+
+  static bool OuterSVGIsCallingUpdateBounds(nsIFrame *aFrame);
 #endif
 
   /**

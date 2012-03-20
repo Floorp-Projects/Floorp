@@ -7621,12 +7621,11 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     if (aChange & nsChangeHint_RepaintFrame) {
       if (aFrame->IsFrameOfType(nsIFrame::eSVG)) {
         if (aChange & nsChangeHint_UpdateEffects) {
-          // Invalidate the frame's old bounds, update its bounds, invalidate its new
-          // bounds, and then inform anyone observing _us_ that we've changed:
-          nsSVGUtils::UpdateGraphic(aFrame);
+          // Invalidate and update our area:
+          nsSVGUtils::InvalidateAndScheduleBoundsUpdate(aFrame);
         } else {
           // Just invalidate our area:
-          nsSVGUtils::InvalidateCoveredRegion(aFrame);
+          nsSVGUtils::InvalidateBounds(aFrame);
         }
       } else {
         aFrame->InvalidateOverflowRect();
