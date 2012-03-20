@@ -283,7 +283,7 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
         public void populateSuggestionsList(JSONArray suggestions) {
             try {
                 for (int i = 0; i < suggestions.length(); i++) {
-                    JSONObject suggestion = (JSONObject) suggestions.get(i);
+                    JSONObject suggestion = suggestions.getJSONObject(i);
                     String label = suggestion.getString("label");
                     String value = suggestion.getString("value");
                     add(new Pair<String, String>(label, value));
