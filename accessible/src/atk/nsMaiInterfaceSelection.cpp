@@ -37,25 +37,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMaiInterfaceSelection.h"
+#include "InterfaceInitFuncs.h"
 
-void
-selectionInterfaceInitCB(AtkSelectionIface *aIface)
-{
-    NS_ASSERTION(aIface, "Invalid aIface");
-    if (!aIface)
-        return;
+#include "nsAccessibleWrap.h"
+#include "nsMai.h"
 
-    aIface->add_selection = addSelectionCB;
-    aIface->clear_selection = clearSelectionCB;
-    aIface->ref_selection = refSelectionCB;
-    aIface->get_selection_count = getSelectionCountCB;
-    aIface->is_child_selected = isChildSelectedCB;
-    aIface->remove_selection = removeSelectionCB;
-    aIface->select_all_selection = selectAllSelectionCB;
-}
+#include <atk/atk.h>
 
-gboolean
+extern "C" {
+
+static gboolean
 addSelectionCB(AtkSelection *aSelection, gint i)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
@@ -65,7 +56,7 @@ addSelectionCB(AtkSelection *aSelection, gint i)
     return accWrap->AddItemToSelection(i);
 }
 
-gboolean
+static gboolean
 clearSelectionCB(AtkSelection *aSelection)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
@@ -75,7 +66,7 @@ clearSelectionCB(AtkSelection *aSelection)
     return accWrap->UnselectAll();
 }
 
-AtkObject *
+static AtkObject*
 refSelectionCB(AtkSelection *aSelection, gint i)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
@@ -93,7 +84,7 @@ refSelectionCB(AtkSelection *aSelection, gint i)
     return atkObj;
 }
 
-gint
+static gint
 getSelectionCountCB(AtkSelection *aSelection)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
@@ -103,7 +94,7 @@ getSelectionCountCB(AtkSelection *aSelection)
     return accWrap->SelectedItemCount();
 }
 
-gboolean
+static gboolean
 isChildSelectedCB(AtkSelection *aSelection, gint i)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
@@ -113,7 +104,7 @@ isChildSelectedCB(AtkSelection *aSelection, gint i)
     return accWrap->IsItemSelected(i);
 }
 
-gboolean
+static gboolean
 removeSelectionCB(AtkSelection *aSelection, gint i)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
@@ -123,7 +114,7 @@ removeSelectionCB(AtkSelection *aSelection, gint i)
     return accWrap->RemoveItemFromSelection(i);
 }
 
-gboolean
+static gboolean
 selectAllSelectionCB(AtkSelection *aSelection)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
@@ -131,4 +122,21 @@ selectAllSelectionCB(AtkSelection *aSelection)
         return FALSE;
 
     return accWrap->SelectAll();
+}
+}
+
+void
+selectionInterfaceInitCB(AtkSelectionIface* aIface)
+{
+  NS_ASSERTION(aIface, "Invalid aIface");
+  if (NS_UNLIKELY(!aIface))
+    return;
+
+  aIface->add_selection = addSelectionCB;
+  aIface->clear_selection = clearSelectionCB;
+  aIface->ref_selection = refSelectionCB;
+  aIface->get_selection_count = getSelectionCountCB;
+  aIface->is_child_selected = isChildSelectedCB;
+  aIface->remove_selection = removeSelectionCB;
+  aIface->select_all_selection = selectAllSelectionCB;
 }
