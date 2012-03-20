@@ -1313,23 +1313,23 @@ JITChunk::~JITChunk()
 }
 
 void
-JITScript::destroy(JSContext *cx)
+JITScript::destroy(FreeOp *fop)
 {
     for (unsigned i = 0; i < nchunks; i++)
-        destroyChunk(cx, i);
+        destroyChunk(fop, i);
 
     if (shimPool)
         shimPool->release();
 }
 
 void
-JITScript::destroyChunk(JSContext *cx, unsigned chunkIndex, bool resetUses)
+JITScript::destroyChunk(FreeOp *fop, unsigned chunkIndex, bool resetUses)
 {
     ChunkDescriptor &desc = chunkDescriptor(chunkIndex);
 
     if (desc.chunk) {
-        Probes::discardMJITCode(cx, this, script, desc.chunk->code.m_code.executableAddress());
-        cx->delete_(desc.chunk);
+        Probes::discardMJITCode(fop, this, script, desc.chunk->code.m_code.executableAddress());
+        fop->delete_(desc.chunk);
         desc.chunk = NULL;
 
         CrossChunkEdge *edges = this->edges();
@@ -1341,7 +1341,7 @@ JITScript::destroyChunk(JSContext *cx, unsigned chunkIndex, bool resetUses)
                 edge.sourceTrampoline = NULL;
 #endif
                 if (edge.jumpTableEntries) {
-                    cx->delete_(edge.jumpTableEntries);
+                    fop->delete_(edge.jumpTableEntries);
                     edge.jumpTableEntries = NULL;
                 }
             } else if (edge.target >= desc.begin && edge.target < desc.end) {
@@ -1438,7 +1438,7 @@ mjit::JITChunk::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf)
 }
 
 void
-mjit::ReleaseScriptCode(JSContext *cx, JSScript *script, bool construct)
+mjit::ReleaseScriptCode(FreeOp *fop, JSScript *script, bool construct)
 {
     // NB: The recompiler may call ReleaseScriptCode, in which case it
     // will get called again when the script is destroyed, so we
@@ -1448,8 +1448,8 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script, bool construct)
     void **parity = construct ? &script->jitArityCheckCtor : &script->jitArityCheckNormal;
 
     if (*pjit) {
-        (*pjit)->destroy(cx);
-        cx->free_(*pjit);
+        (*pjit)->destroy(fop);
+        fop->free_(*pjit);
         *pjit = NULL;
         *parity = NULL;
     }

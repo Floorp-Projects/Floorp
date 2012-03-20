@@ -1754,4 +1754,10 @@ js_PurgeScopeChain(JSContext *cx, JSObject *obj, jsid id)
     return true;
 }
 
+inline void
+js::DestroyIdArray(FreeOp *fop, JSIdArray *ida)
+{
+    fop->free_(ida);
+}
+
 #endif /* jsobjinlines_h___ */
