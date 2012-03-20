@@ -275,7 +275,7 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
     jSetFirstPaintViewport = getMethod("setFirstPaintViewport", "(FFFFF)V");
     jSetPageSize = getMethod("setPageSize", "(FFF)V");
     jSyncViewportInfoMethod = getMethod("syncViewportInfo",
-                                        "(IIII)Lorg/mozilla/gecko/gfx/ViewTransform;");
+                                        "(IIIIF)Lorg/mozilla/gecko/gfx/ViewTransform;");
     jCreateFrameMethod = getMethod("createFrame", "()Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
     jActivateProgramMethod = getMethod("activateProgram", "()V");
     jDeactivateProgramMethod = getMethod("deactivateProgram", "()V");
@@ -707,7 +707,7 @@ AndroidGeckoLayerClient::SetPageSize(float aZoom, float aPageWidth, float aPageH
 }
 
 void
-AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
+AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
 {
     NS_ASSERTION(!isNull(), "SyncViewportInfo called on null layer client!");
     JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
@@ -719,7 +719,8 @@ AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, nsIntPo
 
     jobject viewTransformJObj = env->CallObjectMethod(wrapped_obj, jSyncViewportInfoMethod,
                                                       aDisplayPort.x, aDisplayPort.y,
-                                                      aDisplayPort.width, aDisplayPort.height);
+                                                      aDisplayPort.width, aDisplayPort.height,
+                                                      aDisplayResolution);
     NS_ABORT_IF_FALSE(viewTransformJObj, "No view transform object!");
     viewTransform.Init(viewTransformJObj);
 
