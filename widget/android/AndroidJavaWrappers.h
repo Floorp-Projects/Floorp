@@ -586,7 +586,7 @@ public:
         NETWORK_CHANGED = 20,
         ACTIVITY_RESUMING = 21,
         SCREENSHOT = 22,
-        SCREENORIENTATION_CHANGED = 22,
+        SCREENORIENTATION_CHANGED = 23,
         dummy_java_enum_list_end
     };
 
