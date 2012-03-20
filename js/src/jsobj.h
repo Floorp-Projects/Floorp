@@ -1622,6 +1622,9 @@ NonNullObject(JSContext *cx, const Value &v);
 extern const char *
 InformalValueTypeName(const Value &v);
 
+inline void
+DestroyIdArray(FreeOp *fop, JSIdArray *ida);
+
 }  /* namespace js */
 
 #endif /* jsobj_h___ */

@@ -926,15 +926,15 @@ JSXMLArray<T>::trim()
 
 template<class T>
 void
-JSXMLArray<T>::finish(JSContext *cx)
+JSXMLArray<T>::finish(FreeOp *fop)
 {
-    if (!cx->runtime->gcRunning) {
+    if (!fop->runtime()->gcRunning) {
         /* We need to clear these to trigger a write barrier. */
         for (uint32_t i = 0; i < length; i++)
             vector[i].~HeapPtr<T>();
     }
 
-    cx->free_(vector);
+    fop->free_(vector);
 
     while (JSXMLArrayCursor<T> *cursor = cursors)
         cursor->disconnect();
@@ -1178,10 +1178,10 @@ void
 JSXML::finalize(FreeOp *fop)
 {
     if (JSXML_HAS_KIDS(this)) {
-        xml_kids.finish(fop->context);
+        xml_kids.finish(fop);
         if (xml_class == JSXML_CLASS_ELEMENT) {
-            xml_namespaces.finish(fop->context);
-            xml_attrs.finish(fop->context);
+            xml_namespaces.finish(fop);
+            xml_attrs.finish(fop);
         }
     }
 #ifdef DEBUG_notme
@@ -4485,7 +4485,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
             cursor.index = matchIndex;
             kid = cursor.getCurrent();
             if (JSXML_HAS_KIDS(kid)) {
-                kid->xml_kids.finish(cx);
+                kid->xml_kids.finish(cx->runtime->defaultFreeOp());
                 kid->xml_kids.init();
                 ok = kid->xml_kids.setCapacity(cx, 1);
             }

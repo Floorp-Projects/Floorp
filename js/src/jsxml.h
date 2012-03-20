@@ -72,7 +72,7 @@ struct JSXMLArray
         cursors = NULL;
     }
 
-    void finish(JSContext *cx);
+    void finish(js::FreeOp *fop);
 
     bool setCapacity(JSContext *cx, uint32_t capacity);
     void trim();

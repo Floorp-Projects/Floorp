@@ -635,7 +635,7 @@ struct JSScript : public js::gc::Cell
     }
 
     bool initScriptCounts(JSContext *cx);
-    void destroyScriptCounts(JSContext *cx);
+    void destroyScriptCounts(js::FreeOp *fop);
 
     jsbytecode *main() {
         return code + mainOffset;
@@ -751,10 +751,10 @@ struct JSScript : public js::gc::Cell
 
   private:
     /*
-     * Attempt to recompile with or without single-stepping support, as directed
+     * Recompile with or without single-stepping support, as directed
      * by stepModeEnabled().
      */
-    bool recompileForStepMode(JSContext *cx);
+    void recompileForStepMode(js::FreeOp *fop);
 
     /* Attempt to change this->stepMode to |newValue|. */
     bool tryNewStepMode(JSContext *cx, uint32_t newValue);
@@ -774,10 +774,10 @@ struct JSScript : public js::gc::Cell
     js::BreakpointSite *getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc,
                                                   js::GlobalObject *scriptGlobal);
 
-    void destroyBreakpointSite(JSRuntime *rt, jsbytecode *pc);
+    void destroyBreakpointSite(js::FreeOp *fop, jsbytecode *pc);
 
     void clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSObject *handler);
-    void clearTraps(JSContext *cx);
+    void clearTraps(js::FreeOp *fop);
 
     void markTrapClosures(JSTracer *trc);
 
@@ -836,10 +836,10 @@ StackDepth(JSScript *script)
 extern JS_FRIEND_API(void)
 js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun);
 
-extern void
-js_CallDestroyScriptHook(JSContext *cx, JSScript *script);
-
 namespace js {
+
+extern void
+CallDestroyScriptHook(FreeOp *fop, JSScript *script);
 
 extern const char *
 SaveScriptFilename(JSContext *cx, const char *filename);

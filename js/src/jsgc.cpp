@@ -2765,7 +2765,7 @@ GCHelperThread::replenishAndFreeLater(void *ptr)
 void
 GCHelperThread::doSweep()
 {
-    if (JSContext *cx = finalizationContext) {
+    if (finalizationContext) {
         finalizationContext = NULL;
         AutoUnlockGC unlock(rt);
 
@@ -2773,7 +2773,7 @@ GCHelperThread::doSweep()
          * We must finalize in the insert order, see comments in
          * finalizeObjects.
          */
-        FreeOp fop(rt, false, true, cx);
+        FreeOp fop(rt, false, true);
         for (ArenaHeader **i = finalizeVector.begin(); i != finalizeVector.end(); ++i)
             ArenaLists::backgroundFinalize(&fop, *i);
         finalizeVector.resize(0);
@@ -2833,7 +2833,7 @@ static void
 SweepCompartments(FreeOp *fop, JSGCInvocationKind gckind)
 {
     JSRuntime *rt = fop->runtime();
-    JSCompartmentCallback callback = rt->compartmentCallback;
+    JSDestroyCompartmentCallback callback = rt->destroyCompartmentCallback;
 
     /* Skip the atomsCompartment. */
     JSCompartment **read = rt->compartments.begin() + 1;
@@ -2850,7 +2850,7 @@ SweepCompartments(FreeOp *fop, JSGCInvocationKind gckind)
         {
             compartment->arenas.checkEmptyFreeLists();
             if (callback)
-                JS_ALWAYS_TRUE(callback(fop->context, compartment, JSCOMPARTMENT_DESTROY));
+                callback(fop, compartment);
             if (compartment->principals)
                 JS_DropPrincipals(rt, compartment->principals);
             fop->delete_(compartment);
@@ -3115,7 +3115,7 @@ SweepPhase(JSContext *cx, JSGCInvocationKind gckind)
     for (GCCompartmentsIter c(rt); !c.done(); c.next())
         c->arenas.purge();
 
-    FreeOp fop(rt, !!cx->gcBackgroundFree, false, cx);
+    FreeOp fop(rt, !!cx->gcBackgroundFree, false);
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_FINALIZE_START);
         if (rt->gcFinalizeCallback)
@@ -3416,7 +3416,7 @@ IncrementalGCSlice(JSContext *cx, int64_t budget, JSGCInvocationKind gckind)
 
         for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
             gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DISCARD_CODE);
-            c->discardJitCode(cx);
+            c->discardJitCode(rt->defaultFreeOp());
         }
 
         BeginMarkPhase(rt);
@@ -4175,7 +4175,7 @@ StartVerifyBarriers(JSContext *cx)
         r.front()->bitmap.clear();
 
     for (CompartmentsIter c(rt); !c.done(); c.next())
-        c->discardJitCode(cx);
+        c->discardJitCode(rt->defaultFreeOp());
 
     VerifyTracer *trc = new (js_malloc(sizeof(VerifyTracer))) VerifyTracer;
 
@@ -4329,7 +4329,7 @@ EndVerifyBarriers(JSContext *cx)
         c->needsBarrier_ = false;
 
     for (CompartmentsIter c(rt); !c.done(); c.next())
-        c->discardJitCode(cx);
+        c->discardJitCode(rt->defaultFreeOp());
 
     rt->gcVerifyData = NULL;
     rt->gcIncrementalState = NO_INCREMENTAL;
@@ -4423,7 +4423,7 @@ static void ReleaseAllJITCode(JSContext *cx)
         mjit::ClearAllFrames(c);
         for (CellIter i(c, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
-            mjit::ReleaseScriptCode(cx, script);
+            mjit::ReleaseScriptCode(cx->runtime->defaultFreeOp(), script);
         }
     }
 #endif

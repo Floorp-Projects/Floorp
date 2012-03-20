@@ -204,7 +204,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc, JSTrapHandler handle
     BreakpointSite *site = script->getOrCreateBreakpointSite(cx, pc, NULL);
     if (!site)
         return false;
-    site->setTrap(cx, handler, closure);
+    site->setTrap(cx->runtime->defaultFreeOp(), handler, closure);
     return true;
 }
 
@@ -213,7 +213,7 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
              JSTrapHandler *handlerp, jsval *closurep)
 {
     if (BreakpointSite *site = script->getBreakpointSite(pc)) {
-        site->clearTrap(cx, handlerp, closurep);
+        site->clearTrap(cx->runtime->defaultFreeOp(), handlerp, closurep);
     } else {
         if (handlerp)
             *handlerp = NULL;
@@ -225,7 +225,7 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 JS_PUBLIC_API(void)
 JS_ClearScriptTraps(JSContext *cx, JSScript *script)
 {
-    script->clearTraps(cx);
+    script->clearTraps(cx->runtime->defaultFreeOp());
 }
 
 JS_PUBLIC_API(void)

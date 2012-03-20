@@ -283,58 +283,45 @@ ScriptGlobal(JSContext *cx, JSScript *script, GlobalObject *scriptGlobal)
     JS_NOT_REACHED("ScriptGlobal: live non-held script not on stack");
 }
 
-bool
-BreakpointSite::recompile(JSContext *cx, bool forTrap)
+void
+BreakpointSite::recompile(FreeOp *fop)
 {
 #ifdef JS_METHODJIT
     if (script->hasJITCode()) {
-        Maybe<AutoCompartment> ac;
-        if (!forTrap) {
-            ac.construct(cx, ScriptGlobal(cx, script, scriptGlobal));
-            if (!ac.ref().enter())
-                return false;
-        }
-        mjit::Recompiler::clearStackReferences(cx, script);
-        mjit::ReleaseScriptCode(cx, script);
+        mjit::Recompiler::clearStackReferences(fop, script);
+        mjit::ReleaseScriptCode(fop, script);
     }
 #endif
-    return true;
-}
-
-bool
-BreakpointSite::inc(JSContext *cx)
-{
-    if (enabledCount == 0 && !trapHandler) {
-        if (!recompile(cx, false))
-            return false;
-    }
-    enabledCount++;
-    return true;
 }
 
 void
-BreakpointSite::dec(JSContext *cx)
+BreakpointSite::inc(FreeOp *fop)
+{
+    if (enabledCount == 0 && !trapHandler)
+        recompile(fop);
+    enabledCount++;
+}
+
+void
+BreakpointSite::dec(FreeOp *fop)
 {
     JS_ASSERT(enabledCount > 0);
     enabledCount--;
     if (enabledCount == 0 && !trapHandler)
-        recompile(cx, false);  /* ignore failure */
-}
-
-bool
-BreakpointSite::setTrap(JSContext *cx, JSTrapHandler handler, const Value &closure)
-{
-    if (enabledCount == 0) {
-        if (!recompile(cx, true))
-            return false;
-    }
-    trapHandler = handler;
-    trapClosure = closure;
-    return true;
+        recompile(fop);
 }
 
 void
-BreakpointSite::clearTrap(JSContext *cx, JSTrapHandler *handlerp, Value *closurep)
+BreakpointSite::setTrap(FreeOp *fop, JSTrapHandler handler, const Value &closure)
+{
+    if (enabledCount == 0)
+        recompile(fop);
+    trapHandler = handler;
+    trapClosure = closure;
+}
+
+void
+BreakpointSite::clearTrap(FreeOp *fop, JSTrapHandler *handlerp, Value *closurep)
 {
     if (handlerp)
         *handlerp = trapHandler;
@@ -344,19 +331,19 @@ BreakpointSite::clearTrap(JSContext *cx, JSTrapHandler *handlerp, Value *closure
     trapHandler = NULL;
     trapClosure = UndefinedValue();
     if (enabledCount == 0) {
-        if (!cx->runtime->gcRunning) {
+        if (!fop->runtime()->gcRunning) {
             /* If the GC is running then the script is being destroyed. */
-            recompile(cx, true);  /* ignore failure */
+            recompile(fop);
         }
-        destroyIfEmpty(cx->runtime);
+        destroyIfEmpty(fop);
     }
 }
 
 void
-BreakpointSite::destroyIfEmpty(JSRuntime *rt)
+BreakpointSite::destroyIfEmpty(FreeOp *fop)
 {
     if (JS_CLIST_IS_EMPTY(&breakpoints) && !trapHandler)
-        script->destroyBreakpointSite(rt, pc);
+        script->destroyBreakpointSite(fop, pc);
 }
 
 Breakpoint *
@@ -396,15 +383,14 @@ Breakpoint::fromSiteLinks(JSCList *links)
 }
 
 void
-Breakpoint::destroy(JSContext *cx)
+Breakpoint::destroy(FreeOp *fop)
 {
     if (debugger->enabled)
-        site->dec(cx);
+        site->dec(fop);
     JS_REMOVE_LINK(&debuggerLinks);
     JS_REMOVE_LINK(&siteLinks);
-    JSRuntime *rt = cx->runtime;
-    site->destroyIfEmpty(rt);
-    rt->delete_(this);
+    site->destroyIfEmpty(fop);
+    fop->delete_(this);
 }
 
 Breakpoint *
@@ -1476,7 +1462,7 @@ Debugger::sweepAll(FreeOp *fop)
              * objects, this must be done before finalize time.
              */
             for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
-                dbg->removeDebuggeeGlobal(fop->context, e.front(), NULL, &e);
+                dbg->removeDebuggeeGlobal(fop, e.front(), NULL, &e);
         }
 
     }
@@ -1487,19 +1473,19 @@ Debugger::sweepAll(FreeOp *fop)
         for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
             GlobalObject *global = e.front();
             if (IsAboutToBeFinalized(global))
-                detachAllDebuggersFromGlobal(fop->context, global, &e);
+                detachAllDebuggersFromGlobal(fop, global, &e);
         }
     }
 }
 
 void
-Debugger::detachAllDebuggersFromGlobal(JSContext *cx, GlobalObject *global,
+Debugger::detachAllDebuggersFromGlobal(FreeOp *fop, GlobalObject *global,
                                        GlobalObjectSet::Enum *compartmentEnum)
 {
     const GlobalObject::DebuggerVector *debuggers = global->getDebuggers();
     JS_ASSERT(!debuggers->empty());
     while (!debuggers->empty())
-        debuggers->back()->removeDebuggeeGlobal(cx, global, compartmentEnum, NULL);
+        debuggers->back()->removeDebuggeeGlobal(fop, global, compartmentEnum, NULL);
 }
 
 void
@@ -1575,23 +1561,10 @@ Debugger::setEnabled(JSContext *cx, unsigned argc, Value *vp)
 
     if (enabled != dbg->enabled) {
         for (Breakpoint *bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
-            if (enabled) {
-                if (!bp->site->inc(cx)) {
-                    /*
-                     * Roll back the changes on error to keep the
-                     * BreakpointSite::enabledCount counters correct.
-                     */
-                    for (Breakpoint *bp2 = dbg->firstBreakpoint();
-                         bp2 != bp;
-                         bp2 = bp2->nextInDebugger())
-                    {
-                        bp->site->dec(cx);
-                    }
-                    return false;
-                }
-            } else {
-                bp->site->dec(cx);
-            }
+            if (enabled)
+                bp->site->inc(cx->runtime->defaultFreeOp());
+            else
+                bp->site->dec(cx->runtime->defaultFreeOp());
         }
     }
 
@@ -1756,7 +1729,7 @@ Debugger::removeDebuggee(JSContext *cx, unsigned argc, Value *vp)
         return false;
     GlobalObject *global = &referent->global();
     if (dbg->debuggees.has(global))
-        dbg->removeDebuggeeGlobal(cx, global, NULL, NULL);
+        dbg->removeDebuggeeGlobal(cx->runtime->defaultFreeOp(), global, NULL, NULL);
     args.rval().setUndefined();
     return true;
 }
@@ -1946,7 +1919,7 @@ Debugger::addDebuggeeGlobal(JSContext *cx, GlobalObject *global)
 }
 
 void
-Debugger::removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
+Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
                                GlobalObjectSet::Enum *compartmentEnum,
                                GlobalObjectSet::Enum *debugEnum)
 {
@@ -1992,7 +1965,7 @@ Debugger::removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
      */
     v->erase(p);
     if (v->empty())
-        global->compartment()->removeDebuggee(cx, global, compartmentEnum);
+        global->compartment()->removeDebuggee(fop, global, compartmentEnum);
     if (debugEnum)
         debugEnum->removeFront();
     else
@@ -2608,14 +2581,13 @@ DebuggerScript_setBreakpoint(JSContext *cx, unsigned argc, Value *vp)
     BreakpointSite *site = script->getOrCreateBreakpointSite(cx, pc, scriptGlobal);
     if (!site)
         return false;
-    if (site->inc(cx)) {
-        if (cx->runtime->new_<Breakpoint>(dbg, site, handler)) {
-            args.rval().setUndefined();
-            return true;
-        }
-        site->dec(cx);
+    site->inc(cx->runtime->defaultFreeOp());
+    if (cx->runtime->new_<Breakpoint>(dbg, site, handler)) {
+        args.rval().setUndefined();
+        return true;
     }
-    site->destroyIfEmpty(cx->runtime);
+    site->dec(cx->runtime->defaultFreeOp());
+    site->destroyIfEmpty(cx->runtime->defaultFreeOp());
     return false;
 }
 
