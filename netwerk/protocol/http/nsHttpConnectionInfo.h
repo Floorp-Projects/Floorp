@@ -60,8 +60,6 @@ public:
         : mRef(0)
         , mProxyInfo(proxyInfo)
         , mUsingSSL(usingSSL)
-        , mSupportsPipelining(false)
-        , mBannedPipelining(false)
     {
         LOG(("Creating nsHttpConnectionInfo @%x\n", this));
 
@@ -131,10 +129,6 @@ public:
     bool          ShouldForceConnectMethod();
     const nsCString &GetHost() { return mHost; }
 
-    bool          SupportsPipelining();
-    bool          SetSupportsPipelining(bool support);
-    void          BanPipelining();
-
 private:
     nsrefcnt               mRef;
     nsCString              mHashKey;
@@ -143,8 +137,6 @@ private:
     nsCOMPtr<nsProxyInfo>  mProxyInfo;
     bool                   mUsingHttpProxy;
     bool                   mUsingSSL;
-    bool                   mSupportsPipelining;
-    bool                   mBannedPipelining;
 };
 
 #endif // nsHttpConnectionInfo_h__

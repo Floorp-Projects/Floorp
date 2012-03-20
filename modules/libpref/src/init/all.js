@@ -806,7 +806,13 @@ pref("network.http.pipelining.ssl"  , false); // disable pipelining over SSL
 pref("network.http.proxy.pipelining", false);
 
 // Max number of requests in the pipeline
-pref("network.http.pipelining.maxrequests" , 4);
+pref("network.http.pipelining.maxrequests" , 32);
+
+// An optimistic request is one pipelined when policy might allow a new
+// connection instead
+pref("network.http.pipelining.max-optimistic-requests" , 4);
+
+pref("network.http.pipelining.aggressive", false);
 
 // Prompt for 307 redirects
 pref("network.http.prompt-temp-redirect", true);
