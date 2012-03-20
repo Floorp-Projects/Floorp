@@ -392,7 +392,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
       * everytime we're called. NOTE: we might be able to return a ImmutableViewportMetrics
       * which would avoid the copy into mCurrentViewTransform.
       */
-    public ViewTransform syncViewportInfo(int x, int y, int width, int height) {
+    public ViewTransform syncViewportInfo(int x, int y, int width, int height, float resolution) {
         // getViewportMetrics is thread safe so we don't need to synchronize
         // on mLayerController.
         // We save the viewport metrics here, so we later use it later in
