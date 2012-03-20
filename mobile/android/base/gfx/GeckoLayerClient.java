@@ -145,11 +145,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
             RectF position = mGeckoViewport.getViewport();
             mRootLayer.setPositionAndResolution(RectUtils.round(position), mGeckoViewport.getZoomFactor());
         }
-
-        /* Used by robocop for testing purposes */
-        if (mDrawListener != null) {
-            mDrawListener.drawFinished();
-        }
     }
 
     RectF getDisplayPort() {
@@ -392,7 +387,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
       * everytime we're called. NOTE: we might be able to return a ImmutableViewportMetrics
       * which would avoid the copy into mCurrentViewTransform.
       */
-    public ViewTransform syncViewportInfo(int x, int y, int width, int height, float resolution) {
+    public ViewTransform syncViewportInfo(int x, int y, int width, int height, float resolution, boolean layersUpdated) {
         // getViewportMetrics is thread safe so we don't need to synchronize
         // on mLayerController.
         // We save the viewport metrics here, so we later use it later in
@@ -408,6 +403,11 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
         mGeckoDisplayPort.set(x, y, x + width, y + height);
         mRootLayer.setDisplayPort(mGeckoDisplayPort);
+
+        if (layersUpdated && mDrawListener != null) {
+            /* Used by robocop for testing purposes */
+            mDrawListener.drawFinished();
+        }
 
         return mCurrentViewTransform;
     }
