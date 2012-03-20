@@ -22,6 +22,14 @@
           src="../browser.js"></script>
 
   <script type="application/javascript">
+    function hasTabModalPrompts() {
+      try {
+        return SpecialPowers.getBoolPref("prompts.tab_modal.enabled");
+      } catch (ex) {
+        return false;
+      }
+    }
+
     function showAlert()
     {
       this.eventSeq = [
@@ -72,8 +80,12 @@
       gQueue.invoke(); // will call SimpleTest.finish()
     }
 
-    SimpleTest.waitForExplicitFinish();
-    openBrowserWindow(doTests);
+    if (!hasTabModalPrompts()) {
+      todo(false, "Test disabled when tab modal prompts are not enabled.");
+    } else {
+      SimpleTest.waitForExplicitFinish();
+      openBrowserWindow(doTests);
+    }
   </script>
 
 </head>

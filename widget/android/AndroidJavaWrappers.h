@@ -202,19 +202,16 @@ public:
     AndroidGeckoLayerClient() {}
     AndroidGeckoLayerClient(jobject jobj) { Init(jobj); }
 
-    bool BeginDrawing(int aWidth, int aHeight, const nsAString &aMetadata);
-    void EndDrawing();
     void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight);
     void SetPageSize(float aZoom, float aPageWidth, float aPageHeight);
-    void SyncViewportInfo(const nsIntRect& aDisplayPort, nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
+    void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
+                          nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
     void CreateFrame(AndroidLayerRendererFrame& aFrame);
     void ActivateProgram();
     void DeactivateProgram();
 
 protected:
     static jclass jGeckoLayerClientClass;
-    static jmethodID jBeginDrawingMethod;
-    static jmethodID jEndDrawingMethod;
     static jmethodID jSetFirstPaintViewport;
     static jmethodID jSetPageSize;
     static jmethodID jSyncViewportInfoMethod;

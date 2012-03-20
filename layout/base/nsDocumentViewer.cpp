@@ -2705,24 +2705,27 @@ DocumentViewerImpl::GetPrintable(bool *aPrintable)
 
 NS_IMETHODIMP DocumentViewerImpl::ScrollToNode(nsIDOMNode* aNode)
 {
-   NS_ENSURE_ARG(aNode);
-   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
-   nsCOMPtr<nsIPresShell> presShell;
-   NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
+  NS_ENSURE_ARG(aNode);
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
+  nsCOMPtr<nsIPresShell> presShell;
+  NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
 
-   // Get the nsIContent interface, because that's what we need to
-   // get the primary frame
+  // Get the nsIContent interface, because that's what we need to
+  // get the primary frame
 
-   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-   // Tell the PresShell to scroll to the primary frame of the content.
-   NS_ENSURE_SUCCESS(presShell->ScrollContentIntoView(content,
-                                                      NS_PRESSHELL_SCROLL_TOP,
-                                                      NS_PRESSHELL_SCROLL_ANYWHERE,
-                                                      nsIPresShell::SCROLL_OVERFLOW_HIDDEN),
-                     NS_ERROR_FAILURE);
-   return NS_OK;
+  // Tell the PresShell to scroll to the primary frame of the content.
+  NS_ENSURE_SUCCESS(
+    presShell->ScrollContentIntoView(content,
+                                     nsIPresShell::ScrollAxis(
+                                       nsIPresShell::SCROLL_TOP,
+                                       nsIPresShell::SCROLL_ALWAYS),
+                                     nsIPresShell::ScrollAxis(),
+                                     nsIPresShell::SCROLL_OVERFLOW_HIDDEN),
+    NS_ERROR_FAILURE);
+  return NS_OK;
 }
 
 void

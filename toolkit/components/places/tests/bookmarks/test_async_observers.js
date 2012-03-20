@@ -5,7 +5,6 @@
  * events like visit or favicon additions. */
 
 const NOW = Date.now() * 1000;
-const ICON_URI = NetUtil.newURI(do_get_file("../unit/favicon-normal32.png"));
 
 let observer = {
   bookmarks: [],
@@ -28,7 +27,7 @@ let observer = {
     do_check_neq(this.bookmarks.indexOf(aItemId), -1);
     if (aProperty == "favicon") {
       do_check_false(aIsAnnotation);
-      do_check_eq(aNewValue, ICON_URI.spec);
+      do_check_eq(aNewValue, SMALLPNG_DATA_URI.spec);
       do_check_eq(aLastModified, 0);
       do_check_eq(aItemType, PlacesUtils.bookmarks.TYPE_BOOKMARK);
     }
@@ -75,8 +74,8 @@ let gTests = [
   function add_icon_test()
   {
     observer.reset();
-    PlacesUtils.favicons.setAndLoadFaviconForPage(NetUtil.newURI("http://book.ma.rk/"),
-                                                  ICON_URI, true);
+    PlacesUtils.favicons.setAndFetchFaviconForPage(NetUtil.newURI("http://book.ma.rk/"),
+                                                   SMALLPNG_DATA_URI, true);
   },
   function remove_page_test()
   {

@@ -580,7 +580,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             Rect rootMask = null;
             Layer rootLayer = mView.getController().getRoot();
             if (rootLayer != null) {
-                RectF rootBounds = rootLayer.getDisplayPortBounds(mPageContext);
+                RectF rootBounds = rootLayer.getBounds(mPageContext);
                 rootBounds.offset(-mPageContext.viewport.left, -mPageContext.viewport.top);
                 rootMask = new Rect();
                 rootBounds.roundOut(rootMask);

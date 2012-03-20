@@ -93,6 +93,9 @@ fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == 61
 == 698291-1.html 698291-1-ref.html
 == 698706-1.html 698706-1-ref.html
 == 704837-1.html 704837-1-ref.html
+== 712600-1.html 712600-1-ref.html
+== 712600-2.html 712600-2-ref.html
+== 712600-3.html 712600-3-ref.html
 == 718236-1.html 718236-1-ref.html
 == 718236-2.html 718236-2-ref.html
 == 718236-3.html 718236-3-ref.html

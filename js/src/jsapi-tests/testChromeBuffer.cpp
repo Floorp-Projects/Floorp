@@ -13,9 +13,7 @@ JSClass global_class = {
     JS_StrictPropertyStub,
     JS_EnumerateStub,
     JS_ResolveStub,
-    JS_ConvertStub,
-    JS_FinalizeStub,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    JS_ConvertStub
 };
 
 JS::Anchor<JSObject *> trusted_glob, trusted_fun;

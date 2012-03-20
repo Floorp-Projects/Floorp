@@ -219,8 +219,7 @@ static const struct pm_const {
 static JSClass pm_class = {
     "PerfMeasurement", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, pm_finalize,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, pm_finalize
 };
 
 // Helpers (declared above)

@@ -62,6 +62,7 @@ SYNC_PP_RES_XML=res/xml/sync_syncadapter.xml res/xml/sync_options.xml
 
 FENNEC_JAVA_FILES = \
   AboutHomeContent.java \
+  AboutHomeSection.java \
   AlertNotification.java \
   AwesomeBar.java \
   AwesomeBarTabs.java \
@@ -169,6 +170,10 @@ FENNEC_PP_JAVA_FILES = \
   SmsManager.java \
   $(NULL)
 
+FENNEC_PP_XML_FILES = \
+  res/layout/abouthome_content.xml \
+  $(NULL)
+
 
 ifneq (,$(findstring -march=armv7,$(OS_CFLAGS)))
 MIN_CPU_VERSION=7
@@ -203,6 +208,7 @@ GARBAGE += \
   gecko.ap_  \
   res/values/strings.xml \
   R.java \
+  $(FENNEC_PP_XML_FILES) \
   $(SYNC_PP_RES_XML) \
   package-name.txt \
   Manifest.java \
@@ -263,11 +269,11 @@ RES_LAYOUT = \
   res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \
   res/layout/select_dialog_list.xml \
-  res/layout/abouthome_content.xml \
-  res/layout/abouthome_topsite_item.xml \
   res/layout/abouthome_addon_row.xml \
   res/layout/abouthome_last_tabs_row.xml \
+  res/layout/abouthome_section.xml \
   res/layout/abouthome_remote_tab_row.xml \
+  res/layout/abouthome_topsite_item.xml \
   $(NULL)
 
 RES_LAYOUT_V11 = \
@@ -280,6 +286,7 @@ RES_LAYOUT_LAND_V14 = \
 
 RES_VALUES = \
   $(SYNC_RES_VALUES) \
+  res/values/attrs.xml \
   res/values/arrays.xml \
   res/values/colors.xml \
   res/values/styles.xml \
@@ -318,6 +325,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/abouthome_sync_logo.png \
   res/drawable/abouthome_sync_bg.9.png \
   res/drawable/abouthome_sync_pressed_bg.9.png \
+  res/drawable/abouthome_thumbnail.png \
   res/drawable/awesomebar_tab.9.png \
   res/drawable/awesomebar_tab_pressed.9.png \
   res/drawable/ic_addons_empty.png \
@@ -367,6 +375,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/abouthome_sync_logo.png \
   res/drawable-hdpi/abouthome_sync_bg.9.png \
   res/drawable-hdpi/abouthome_sync_pressed_bg.9.png \
+  res/drawable-hdpi/abouthome_thumbnail.png \
   res/drawable-hdpi/awesomebar_tab.9.png \
   res/drawable-hdpi/awesomebar_tab_pressed.9.png \
   res/drawable-hdpi/ic_addons_empty.png \
@@ -430,6 +439,7 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/abouthome_sync_logo.png \
   res/drawable-xhdpi-v11/abouthome_sync_bg.9.png \
   res/drawable-xhdpi-v11/abouthome_sync_pressed_bg.9.png \
+  res/drawable-xhdpi-v11/abouthome_thumbnail.png \
   res/drawable-xhdpi-v11/awesomebar_tab.9.png \
   res/drawable-xhdpi-v11/awesomebar_tab_pressed.9.png \
   res/drawable-xhdpi-v11/ic_addons_empty.png \
@@ -621,7 +631,10 @@ classes.dex: $(FENNEC_JAVA_FILES) $(FENNEC_PP_JAVA_FILES) $(SYNC_JAVA_FILES) $(S
 	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes -classpath classes $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
 	$(DX) --dex --output=$@ classes
 
-PP_RES_XML=$(SYNC_PP_RES_XML)
+PP_RES_XML= \
+  $(SYNC_PP_RES_XML) \
+  $(FENNEC_PP_XML_FILES) \
+  $(NULL)
 
 # This is kinda awful; if any of the source files change, we remake them all.
 $(PP_RES_XML): $(patsubst res/%,$(srcdir)/resources/%.in,$(PP_RES_XML))

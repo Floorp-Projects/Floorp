@@ -123,13 +123,6 @@ private:
   // Platform specific functions
 #ifdef MOZ_WIDGET_ANDROID
   /**
-   * Informs Java of the current display port, and asks Java for its viewport
-   * position and zoom, to use in updating the world transform in
-   * TransformShadowTree.
-   */
-  void SyncViewportInfo();
-
-  /**
    * Does a breadth-first search to find the first layer in the tree with a
    * displayport set.
    */
@@ -157,6 +150,10 @@ private:
   // front-end (e.g. Java on Android) about this so that it take the new page
   // size and zoom into account when providing us with the next view transform.
   bool mIsFirstPaint;
+
+  // This flag is set during a layers update, so that the first composition
+  // after a layers update has it set. It is cleared after that first composition.
+  bool mLayersUpdated;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };

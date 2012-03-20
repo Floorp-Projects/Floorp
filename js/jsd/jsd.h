@@ -379,10 +379,6 @@ jsd_GetErrorReporter(JSDContext*        jsdc,
                      JSD_ErrorReporter* reporter,
                      void**             callerdata);
 
-static JSBool
-jsd_DebugErrorHook(JSContext *cx, const char *message,
-                   JSErrorReport *report, void *closure);
-
 /***************************************************************************/
 /* Script functions */
 

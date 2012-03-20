@@ -74,6 +74,7 @@ let KeywordURLResetPrompter = {
         popup:     null,
         callback: function(aNotificationBar, aButton) {
           Services.prefs.clearUserPref("keyword.URL");
+          Services.prefs.clearUserPref("browser.search.defaultenginename");
           try {
             // If the currently loaded URI still has the same base domain as the
             // keyword URI (this is used as a rough approximation of whether the

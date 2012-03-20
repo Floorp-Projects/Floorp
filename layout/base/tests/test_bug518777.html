@@ -24,6 +24,8 @@ iframe source is
 
 /** Test for Bug 518777 **/
 
+SimpleTest.waitForExplicitFinish();
+
 function dotest() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
@@ -44,6 +46,8 @@ function dotest() {
     }
   }
   ok(!failed, "all pixels blue");
+
+  SimpleTest.finish();
 }
 </script>
 </pre>

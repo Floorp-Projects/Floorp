@@ -9,3 +9,4 @@ cp $1/media/base/yuv_row_posix.cc yuv_row_c.cpp
 patch -p3 <convert.patch
 patch -p3 <win64.patch
 patch -p3 <TypeFromSize.patch
+patch -p3 <QuellGccWarnings.patch
