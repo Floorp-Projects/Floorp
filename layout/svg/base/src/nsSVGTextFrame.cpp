@@ -216,15 +216,6 @@ nsSVGTextFrame::NotifySVGChanged(PRUint32 aFlags)
   }
 }
 
-void
-nsSVGTextFrame::NotifyRedrawUnsuspended()
-{
-  RemoveStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
-
-  UpdateGlyphPositioning(false);
-  nsSVGTextFrameBase::NotifyRedrawUnsuspended();
-}
-
 NS_IMETHODIMP
 nsSVGTextFrame::PaintSVG(nsRenderingContext* aContext,
                          const nsIntRect *aDirtyRect)
@@ -253,8 +244,13 @@ nsSVGTextFrame::UpdateCoveredRegion()
 NS_IMETHODIMP
 nsSVGTextFrame::InitialUpdate()
 {
+  // Removes NS_FRAME_FIRST_REFLOW from our descendants and us:
   nsresult rv = nsSVGTextFrameBase::InitialUpdate();
-  
+
+  // With NS_FRAME_FIRST_REFLOW removed, this will update text
+  // positions, covered regions, and invalidate. The invalidation
+  // part is redundant work if our outer-<svg> hasn't had its
+  // first reflow, but that's not too bad.
   UpdateGlyphPositioning(false);
 
   return rv;
@@ -344,7 +340,7 @@ nsSVGTextFrame::SetWhitespaceHandling(nsSVGGlyphFrame *aFrame)
 void
 nsSVGTextFrame::UpdateGlyphPositioning(bool aForceGlobalTransform)
 {
-  if ((GetStateBits() & NS_STATE_SVG_REDRAW_SUSPENDED) || !mPositioningDirty)
+  if (!mPositioningDirty)
     return;
 
   mPositioningDirty = false;

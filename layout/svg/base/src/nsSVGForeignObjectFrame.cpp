@@ -48,6 +48,7 @@
 #include "nsIURI.h"
 #include "nsSVGRect.h"
 #include "nsINameSpaceManager.h"
+#include "nsSVGEffects.h"
 #include "nsSVGForeignObjectElement.h"
 #include "nsSVGContainerFrame.h"
 #include "gfxContext.h"
@@ -91,9 +92,9 @@ nsSVGForeignObjectFrame::Init(nsIContent* aContent,
 
   nsresult rv = nsSVGForeignObjectFrameBase::Init(aContent, aParent, aPrevInFlow);
   AddStateBits(aParent->GetStateBits() &
-               (NS_STATE_SVG_NONDISPLAY_CHILD | NS_STATE_SVG_CLIPPATH_CHILD |
-                NS_STATE_SVG_REDRAW_SUSPENDED));
-  if (NS_SUCCEEDED(rv)) {
+               (NS_STATE_SVG_NONDISPLAY_CHILD | NS_STATE_SVG_CLIPPATH_CHILD));
+  if (NS_SUCCEEDED(rv) &&
+      !(mState & NS_STATE_SVG_NONDISPLAY_CHILD)) {
     nsSVGUtils::GetOuterSVGFrame(this)->RegisterForeignObject(this);
   }
   return rv;
@@ -101,7 +102,10 @@ nsSVGForeignObjectFrame::Init(nsIContent* aContent,
 
 void nsSVGForeignObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  nsSVGUtils::GetOuterSVGFrame(this)->UnregisterForeignObject(this);
+  // Only unregister if we registered in the first place:
+  if (!(mState & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+    nsSVGUtils::GetOuterSVGFrame(this)->UnregisterForeignObject(this);
+  }
   nsSVGForeignObjectFrameBase::DestroyFrom(aDestructRoot);
 }
 
@@ -155,6 +159,9 @@ nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
                                 const nsHTMLReflowState& aReflowState,
                                 nsReflowStatus&          aStatus)
 {
+  NS_ABORT_IF_FALSE(!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
+                    "Should not have been called");
+
   // InitialUpdate and AttributeChanged make sure mRect is up to date before
   // we're called (UpdateCoveredRegion sets mRect).
 
@@ -183,12 +190,26 @@ nsSVGForeignObjectFrame::InvalidateInternal(const nsRect& aDamageRect,
 {
   // This is called by our descendants when they change.
 
-  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+  if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+    // When our outer-<svg> gets its first reflow its entire area
+    // will be invalidated.
     return;
+  }
+
+  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
+    nsSVGEffects::InvalidateRenderingObservers(this);
+    return;
+  }
 
   nsRegion* region = (aFlags & INVALIDATE_CROSS_DOC)
     ? &mSubDocDirtyRegion : &mSameDocDirtyRegion;
   region->Or(*region, aDamageRect + nsPoint(aX, aY));
+
+  // XXXjwatt: Why are we calling FlushDirtyRegion here? Don't we only get
+  // called under DoReflow? In which case the FlushDirtyRegion call at the end
+  // of that method should be sufficient, no? And what is the point in having
+  // the mSubDocDirtyRegion/mSameDocDirtyRegion members if we flush immediately
+  // after we add anything to them?
   FlushDirtyRegion(aFlags);
 }
 
@@ -375,18 +396,38 @@ nsSVGForeignObjectFrame::InitialUpdate()
                "Yikes! We've been called already! Hopefully we weren't called "
                "before our nsSVGOuterSVGFrame's initial Reflow()!!!");
 
+  // XXX make this an NS_ABORT_IF_FALSE after fixing the failure
+  // caused by layout/base/crashtests/615146-1.html
+  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
+    return NS_OK;
+  }
+
+  // Do this before the DoReflow call so that DoReflow uses the correct
+  // dimensions:
   UpdateCoveredRegion();
 
   // Make sure to not allow interrupts if we're not being reflown as a root
   nsPresContext::InterruptPreventer noInterrupts(PresContext());
+
+  // This also calls nsSVGUtils::UpdateGraphic, which calls
+  // nsSVGEffects::InvalidateRenderingObservers (but returns without
+  // unnecessarily invalidating and re-updating our covered region,
+  // since we haven't removed NS_FRAME_FIRST_REFLOW yet):
   DoReflow();
 
   NS_ASSERTION(!(mState & NS_FRAME_IN_REFLOW),
                "We don't actually participate in reflow");
-  
-  // Do unset the various reflow bits, though.
+
+  // Now unset the various reflow bits:
   mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
               NS_FRAME_HAS_DIRTY_CHILDREN);
+
+  if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    // We only invalidate if our outer-<svg> has already had its
+    // initial reflow (since if it hasn't, its entire area will be
+    // invalidated when it gets that initial reflow):
+    nsSVGUtils::InvalidateCoveredRegion(this);
+  }
 
   return NS_OK;
 }
@@ -444,26 +485,6 @@ nsSVGForeignObjectFrame::NotifySVGChanged(PRUint32 aFlags)
     if (!PresContext()->PresShell()->IsReflowLocked()) {
       UpdateGraphic(); // update mRect before requesting reflow
       RequestReflow(nsIPresShell::eResize);
-    }
-  }
-}
-
-void
-nsSVGForeignObjectFrame::NotifyRedrawSuspended()
-{
-  AddStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
-}
-
-void
-nsSVGForeignObjectFrame::NotifyRedrawUnsuspended()
-{
-  RemoveStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
-
-  if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
-    if (GetStateBits() & NS_STATE_SVG_DIRTY) {
-      UpdateGraphic(); // invalidate our entire area
-    } else {
-      FlushDirtyRegion(0); // only invalidate areas dirtied by our descendants
     }
   }
 }
@@ -545,6 +566,9 @@ void nsSVGForeignObjectFrame::UpdateGraphic()
 void
 nsSVGForeignObjectFrame::MaybeReflowFromOuterSVGFrame()
 {
+  NS_ABORT_IF_FALSE(!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
+                    "Should not have been called");
+
   // If IsDisabled() is true, then we know that our DoReflow() call will return
   // early, leaving us with a marked-dirty but not-reflowed kid. That'd be bad;
   // it'd mean that all future calls to this method would be doomed to take the
@@ -577,16 +601,9 @@ nsSVGForeignObjectFrame::MaybeReflowFromOuterSVGFrame()
 void
 nsSVGForeignObjectFrame::DoReflow()
 {
-  NS_ASSERTION(!(nsSVGUtils::GetOuterSVGFrame(this)->
-                             GetStateBits() & NS_FRAME_FIRST_REFLOW),
-               "Calling InitialUpdate too early - must not call DoReflow!!!");
-
   // Skip reflow if we're zero-sized, unless this is our first reflow.
   if (IsDisabled() &&
       !(GetStateBits() & NS_FRAME_FIRST_REFLOW))
-    return;
-
-  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return;
 
   nsPresContext *presContext = PresContext();
@@ -643,7 +660,10 @@ nsSVGForeignObjectFrame::DoReflow()
                     NS_FRAME_NO_MOVE_FRAME);
   
   mInReflow = false;
-  FlushDirtyRegion(0);
+
+  if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+    FlushDirtyRegion(0);
+  }
 }
 
 void
@@ -672,9 +692,11 @@ nsSVGForeignObjectFrame::InvalidateDirtyRect(nsSVGOuterSVGFrame* aOuter,
 void
 nsSVGForeignObjectFrame::FlushDirtyRegion(PRUint32 aFlags)
 {
+  NS_ABORT_IF_FALSE(!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
+                    "Should not have been called");
+
   if ((mSameDocDirtyRegion.IsEmpty() && mSubDocDirtyRegion.IsEmpty()) ||
-      mInReflow ||
-      (GetStateBits() & NS_STATE_SVG_REDRAW_SUSPENDED))
+      mInReflow)
     return;
 
   nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
