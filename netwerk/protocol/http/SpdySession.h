@@ -75,9 +75,10 @@ public:
 
   bool AddStream(nsAHttpTransaction *, PRInt32);
   bool CanReuse() { return !mShouldGoAway && !mClosed; }
+  void DontReuse();
   bool RoomForMoreStreams();
 
-  // When the connection is active this is called every 1 second
+  // When the connection is active this is called every 15 seconds
   void ReadTimeoutTick(PRIntervalTime now);
   
   // Idle time represents time since "goodput".. e.g. a data or header frame

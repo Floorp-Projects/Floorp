@@ -110,7 +110,6 @@ public:
     PRUint16       GetIdleSynTimeout()       { return mIdleSynTimeout; }
     bool           FastFallbackToIPv4()      { return mFastFallbackToIPv4; }
     PRUint32       MaxSocketCount();
-    bool           EnforceAssocReq()         { return mEnforceAssocReq; }
 
     bool           IsPersistentHttpsCachingEnabled() { return mEnablePersistentHttpsCaching; }
     bool           IsTelemetryEnabled() { return mTelemetryEnabled; }
@@ -232,13 +231,6 @@ public:
     static nsresult GenerateHostPort(const nsCString& host, PRInt32 port,
                                      nsCString& hostLine);
 
-    bool GetPipelineAggressive()     { return mPipelineAggressive; }
-    void GetMaxPipelineObjectSize(PRInt64 &outVal)
-    {
-        outVal = mMaxPipelineObjectSize;
-    }
-    PRIntervalTime GetPipelineTimeout()   { return mPipelineReadTimeout; }
-
 private:
 
     //
@@ -295,12 +287,7 @@ private:
     PRUint8  mMaxConnectionsPerServer;
     PRUint8  mMaxPersistentConnectionsPerServer;
     PRUint8  mMaxPersistentConnectionsPerProxy;
-    PRUint16 mMaxPipelinedRequests;
-    PRUint16 mMaxOptimisticPipelinedRequests;
-    bool     mPipelineAggressive;
-    PRInt64  mMaxPipelineObjectSize;
-
-    PRIntervalTime mPipelineReadTimeout;
+    PRUint8  mMaxPipelinedRequests;
 
     PRUint8  mRedirectionLimit;
 
@@ -313,7 +300,6 @@ private:
     PRUint8  mQoSBits;
 
     bool mPipeliningOverSSL;
-    bool mEnforceAssocReq;
 
     // cached value of whether or not the browser is in private browsing mode.
     enum {

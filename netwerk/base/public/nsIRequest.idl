@@ -160,13 +160,6 @@ interface nsIRequest : nsISupports
      */
 
     /**
-     *  This flag prevents loading of the request with an HTTP pipeline.
-     *  Generally this is because the resource is expected to take a
-     *  while to load and may cause head of line blocking problems.
-     */
-    const unsigned long INHIBIT_PIPELINE = 1 << 6;
-
-    /**
      * This flag prevents caching of any kind.  It does not, however, prevent
      * cached content from being used to satisfy this request.
      */
