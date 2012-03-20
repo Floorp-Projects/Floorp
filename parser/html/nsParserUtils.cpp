@@ -79,9 +79,9 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 NS_IMETHODIMP
 nsParserUtils::ConvertToPlainText(const nsAString& aFromStr,
-                                           PRUint32 aFlags,
-                                           PRUint32 aWrapCol,
-                                           nsAString& aToStr)
+                                  PRUint32 aFlags,
+                                  PRUint32 aWrapCol,
+                                  nsAString& aToStr)
 {
   return nsContentUtils::ConvertToPlainText(aFromStr,
     aToStr,
@@ -142,15 +142,28 @@ nsParserUtils::Sanitize(const nsAString& aFromStr,
   return encoder->EncodeToString(aToStr);
 }
 
-// The feed version of nsContentUtils::CreateContextualFragment It
-// creates a fragment, but doesn't go to all the effort to preserve
-// context like innerHTML does, because feed DOMs shouldn't have that.
 NS_IMETHODIMP
 nsParserUtils::ParseFragment(const nsAString& aFragment,
-                                      bool aIsXML,
-                                      nsIURI* aBaseURI,
-                                      nsIDOMElement* aContextElement,
-                                      nsIDOMDocumentFragment** aReturn)
+                             bool aIsXML,
+                             nsIURI* aBaseURI,
+                             nsIDOMElement* aContextElement,
+                             nsIDOMDocumentFragment** aReturn)
+{
+  return nsParserUtils::ParseFragment(aFragment,
+                                      0,
+                                      aIsXML,
+                                      aBaseURI,
+                                      aContextElement,
+                                      aReturn);
+}
+
+NS_IMETHODIMP
+nsParserUtils::ParseFragment(const nsAString& aFragment,
+                             PRUint32 aFlags,
+                             bool aIsXML,
+                             nsIURI* aBaseURI,
+                             nsIDOMElement* aContextElement,
+                             nsIDOMDocumentFragment** aReturn)
 {
   NS_ENSURE_ARG(aContextElement);
   *aReturn = nsnull;
@@ -239,7 +252,7 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
       }
     }
     if (fragment) {
-      nsTreeSanitizer sanitizer;
+      nsTreeSanitizer sanitizer(aFlags);
       sanitizer.Sanitize(fragment);
     }
   }

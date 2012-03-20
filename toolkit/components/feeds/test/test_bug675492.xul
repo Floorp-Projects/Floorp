@@ -22,9 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=675492
   /** Test for Bug 675492 **/
 
   Components
-    .classes["@mozilla.org/feed-unescapehtml;1"]
-    .getService(Components.interfaces.nsIScriptableUnescapeHTML)
-    .parseFragment("<p>test</p>", false, null, document.createElementNS("http://www.w3.org/1999/xhtml", "body"));
+    .classes["@mozilla.org/parserutils;1"]
+    .getService(Components.interfaces.nsIParserUtils)
+    .parseFragment("<p>test</p>", 0, false, null, document.createElementNS("http://www.w3.org/1999/xhtml", "body"));
   ok(true, "No crash!");
   ]]>
   </script>
