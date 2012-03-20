@@ -39,8 +39,12 @@
 #include "nsIDOMDOMRequest.idl"
 #include "nsIDOMEvent.idl"
 
-[scriptable, uuid(9DCE05BF-659C-4427-A050-0EAC3BB6C1C0)]
+[scriptable, uuid(abb936bc-ba81-4c23-8dfa-3e5d96557044)]
 interface nsIWifi : nsISupports {
+    /**
+     * Shutdown the wifi system.
+     */
+    void shutdown();
 };
 
 [scriptable, uuid(1509221f-470e-4445-b476-88e74fd5c617)]
