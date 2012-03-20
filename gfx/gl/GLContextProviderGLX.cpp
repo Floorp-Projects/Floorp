@@ -1292,8 +1292,7 @@ DONE_CREATING_PIXMAP:
 
 already_AddRefed<GLContext>
 GLContextProviderGLX::CreateOffscreen(const gfxIntSize& aSize,
-                                      const ContextFormat& aFormat,
-                                      const ContextFlags)
+                                      const ContextFormat& aFormat)
 {
     nsRefPtr<GLContextGLX> glContext =
         CreateOffscreenPixmapContext(aSize, aFormat, true);

@@ -751,8 +751,7 @@ CreateWindowOffscreenContext(const ContextFormat& aFormat)
 
 already_AddRefed<GLContext>
 GLContextProviderWGL::CreateOffscreen(const gfxIntSize& aSize,
-                                      const ContextFormat& aFormat,
-                                      const ContextFlags)
+                                      const ContextFormat& aFormat)
 {
     if (!sWGLLibrary.EnsureInitialized()) {
         return nsnull;
