@@ -3703,6 +3703,9 @@ poznan.pl
 wroc.pl
 zakopane.pl
 
+// pm : http://www.afnic.fr/medias/documents/AFNIC-naming-policy2012.pdf
+pm
+
 // pn : http://www.government.pn/PnRegistry/policies.htm
 pn
 gov.pn
@@ -4682,6 +4685,9 @@ health.vn
 // list of 2nd level tlds ?
 vu
 
+// wf : http://www.afnic.fr/medias/documents/AFNIC-naming-policy2012.pdf
+wf
+
 // ws : http://en.wikipedia.org/wiki/.ws
 // http://samoanic.ws/index.dhtml
 ws
@@ -4690,6 +4696,9 @@ net.ws
 org.ws
 gov.ws
 edu.ws
+
+// yt : http://www.afnic.fr/medias/documents/AFNIC-naming-policy2012.pdf
+yt
 
 // IDN ccTLDs
 // Please sort by ISO 3166 ccTLD, then punicode string
