@@ -10,6 +10,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 
+import org.mozilla.gecko.sync.Logger;
+
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpResponse;
@@ -25,8 +27,26 @@ import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
  *
  */
 public class SyncStorageCollectionRequest extends SyncStorageRequest {
+  private static final String LOG_TAG = "CollectionRequest";
+
   public SyncStorageCollectionRequest(URI uri) {
     super(uri);
+  }
+
+  protected volatile boolean aborting = false;
+
+  /**
+   * Instruct the request that it should process no more records,
+   * and decline to notify any more delegate callbacks.
+   */
+  public void abort() {
+    aborting = true;
+    try {
+      this.resource.request.abort();
+    } catch (Exception e) {
+      // Just in case.
+      Logger.warn(LOG_TAG, "Got exception in abort: " + e);
+    }
   }
 
   @Override
@@ -54,6 +74,10 @@ public class SyncStorageCollectionRequest extends SyncStorageRequest {
 
     @Override
     public void handleHttpResponse(HttpResponse response) {
+      if (aborting) {
+        return;
+      }
+
       if (response.getStatusLine().getStatusCode() != 200) {
         super.handleHttpResponse(response);
         return;
@@ -83,7 +107,8 @@ public class SyncStorageCollectionRequest extends SyncStorageRequest {
         String line;
 
         // This relies on connection timeouts at the HTTP layer.
-        while (null != (line = br.readLine())) {
+        while (!aborting &&
+               null != (line = br.readLine())) {
           try {
             delegate.handleRequestProgress(line);
           } catch (Exception ex) {
@@ -92,8 +117,14 @@ public class SyncStorageCollectionRequest extends SyncStorageRequest {
             return;
           }
         }
+        if (aborting) {
+          // So we don't hit the success case below.
+          return;
+        }
       } catch (IOException ex) {
-        delegate.handleRequestError(ex);
+        if (!aborting) {
+          delegate.handleRequestError(ex);
+        }
         BaseResource.consumeEntity(entity);
         return;
       } finally {
