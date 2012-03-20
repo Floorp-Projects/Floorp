@@ -2049,6 +2049,7 @@ abstract public class GeckoApp
 
         unregisterReceiver(mConnectivityReceiver);
         GeckoNetworkManager.getInstance().stop();
+        GeckoScreenOrientationListener.getInstance().stop();
     }
 
     @Override
@@ -2082,6 +2083,7 @@ abstract public class GeckoApp
 
         registerReceiver(mConnectivityReceiver, mConnectivityFilter);
         GeckoNetworkManager.getInstance().start();
+        GeckoScreenOrientationListener.getInstance().start();
 
         if (mOwnActivityDepth > 0)
             mOwnActivityDepth--;
@@ -2168,6 +2170,7 @@ abstract public class GeckoApp
         }
 
         GeckoNetworkManager.getInstance().stop();
+        GeckoScreenOrientationListener.getInstance().stop();
 
         super.onDestroy();
 
