@@ -150,16 +150,14 @@ const SNIPPETS_UPDATE_INTERVAL_MS = 86400000; // 1 Day.
 
 let gSearchEngine;
 
-function onLoad(event)
-{
+document.addEventListener("DOMContentLoaded", function init() {
   setupSearchEngine();
   document.getElementById("searchText").focus();
 
   loadSnippets();
-
-  fitToWidth();
-  window.addEventListener("resize", fitToWidth);
-}
+});
+window.addEventListener("load", fitToWidth);
+window.addEventListener("resize", fitToWidth);
 
 
 function onSearchSubmit(aEvent)

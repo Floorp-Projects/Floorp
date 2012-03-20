@@ -72,6 +72,7 @@ jfieldID AndroidGeckoEvent::jRangeBackColorField = 0;
 jfieldID AndroidGeckoEvent::jLocationField = 0;
 jfieldID AndroidGeckoEvent::jBandwidthField = 0;
 jfieldID AndroidGeckoEvent::jCanBeMeteredField = 0;
+jfieldID AndroidGeckoEvent::jScreenOrientationField = 0;
 
 jclass AndroidPoint::jPointClass = 0;
 jfieldID AndroidPoint::jXField = 0;
@@ -164,7 +165,6 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jXField = getField("mX", "D");
     jYField = getField("mY", "D");
     jZField = getField("mZ", "D");
-    jDistanceField = getField("mDistance", "D");
     jRectField = getField("mRect", "Landroid/graphics/Rect;");
 
     jCharactersField = getField("mCharacters", "Ljava/lang/String;");
@@ -183,6 +183,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jLocationField = getField("mLocation", "Landroid/location/Location;");
     jBandwidthField = getField("mBandwidth", "D");
     jCanBeMeteredField = getField("mCanBeMetered", "Z");
+    jScreenOrientationField = getField("mScreenOrientation", "S");
 }
 
 void
@@ -473,6 +474,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
              mY = jenv->GetDoubleField(jobj, jYField);
              mZ = jenv->GetDoubleField(jobj, jZField);
              mFlags = jenv->GetIntField(jobj, jFlagsField);
+             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
              break;
 
         case LOCATION_EVENT: {
@@ -504,12 +506,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
-        case PROXIMITY_EVENT: {
-            mDistance = jenv->GetDoubleField(jobj, jDistanceField);
-            break;
-        }
-
-        case SENSOR_ACCURACY:
         case ACTIVITY_STOPPING:
         case ACTIVITY_START:
         case ACTIVITY_PAUSING:
@@ -523,11 +519,16 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             ReadPointArray(mPoints, jenv, jPoints, 2);
         }
 
+        case SCREENORIENTATION_CHANGED: {
+            mScreenOrientation = jenv->GetShortField(jobj, jScreenOrientationField);
+            break;
+        }
+
         default:
             break;
     }
 
-#ifndef DEBUG_ANDROID_EVENTS
+#ifdef DEBUG_ANDROID_EVENTS
     ALOG("AndroidGeckoEvent: %p : %d", (void*)jobj, mType);
 #endif
 }

@@ -3965,9 +3965,12 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
         mDocument->GetAnimationController()->FlushResampleRequests();
       }
 
-      nsAutoScriptBlocker scriptBlocker;
-      mFrameConstructor->CreateNeededFrames();
-      mFrameConstructor->ProcessPendingRestyles();
+      // The FlushResampleRequests() above flushed style changes.
+      if (!mIsDestroying) {
+        nsAutoScriptBlocker scriptBlocker;
+        mFrameConstructor->CreateNeededFrames();
+        mFrameConstructor->ProcessPendingRestyles();
+      }
     }
 
     // Dispatch any 'animationstart' events those (or earlier) restyles
