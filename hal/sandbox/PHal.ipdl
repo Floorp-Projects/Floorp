@@ -39,7 +39,7 @@
 
 include protocol PContent;
 include protocol PBrowser;
-include "nspr/prtime.h";
+include "prtime.h";
 include "mozilla/HalSensor.h";
 include "mozilla/HalTypes.h";
 include "mozilla/dom/ScreenOrientation.h";
