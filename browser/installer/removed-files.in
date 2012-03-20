@@ -1352,35 +1352,29 @@ xpicleanup@BIN_SUFFIX@
   components/jsd3250.dll
   components/nsPostUpdateWin.js
   js3250.dll
-  mozcpp19.dll
-  mozcrt19.dll
-  #ifndef MOZ_WIN32_REDIST
-    #define _MSC_VER_REDIST 0000
-  #else
-    #define _MSC_VER_REDIST _MSC_VER
-  #endif
-  #if _MSC_VER_REDIST != 1400
+  plugins/npnul32.dll
+  #if _MSC_VER != 1400
     Microsoft.VC80.CRT.manifest
     msvcm80.dll
     msvcp80.dll
     msvcr80.dll
   #endif
-  #if _MSC_VER_REDIST != 1500
+  #if _MSC_VER != 1500
     Microsoft.VC90.CRT.manifest
     msvcm90.dll
     msvcp90.dll
     msvcr90.dll
   #endif
-  #if _MSC_VER_REDIST != 1600
+  #if _MSC_VER != 1600
     msvcp100.dll
     msvcr100.dll
   #endif
-  #if _MSC_VER_REDIST != 1700
+  #if _MSC_VER != 1700
     msvcp110.dll
     msvcr110.dll
   #endif
-  #undef _MSC_VER_REDIST
-  plugins/npnul32.dll
+  mozcrt19.dll
+  mozcpp19.dll
 #endif
 @DLL_PREFIX@xpcom_core@DLL_SUFFIX@
 components/@DLL_PREFIX@jar50@DLL_SUFFIX@
