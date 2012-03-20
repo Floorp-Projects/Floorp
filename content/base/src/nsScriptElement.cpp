@@ -61,24 +61,11 @@ nsScriptElement::ScriptAvailable(nsresult aResult,
     nsCOMPtr<nsIContent> cont =
       do_QueryInterface((nsIScriptElement*) this);
 
-    nsRefPtr<nsPresContext> presContext =
-      nsContentUtils::GetContextForContent(cont);
-
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsScriptErrorEvent event(true, NS_LOAD_ERROR);
-
-    event.lineNr = aLineNo;
-
-    NS_NAMED_LITERAL_STRING(errorString, "Error loading script");
-    event.errorMsg = errorString.get();
-
-    nsCAutoString spec;
-    aURI->GetSpec(spec);
-
-    NS_ConvertUTF8toUTF16 fileName(spec);
-    event.fileName = fileName.get();
-
-    nsEventDispatcher::Dispatch(cont, presContext, &event, nsnull, &status);
+    return nsContentUtils::DispatchTrustedEvent(cont->OwnerDoc(),
+                                                cont,
+                                                NS_LITERAL_STRING("error"),
+                                                false /* bubbles */,
+                                                false /* cancelable */);
   }
 
   return NS_OK;
