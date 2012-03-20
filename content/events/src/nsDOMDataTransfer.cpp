@@ -42,6 +42,7 @@
 #include "prlog.h"
 #include "nsString.h"
 #include "nsIServiceManager.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIVariant.h"
 #include "nsISupportsPrimitives.h"
 #include "nsDOMClassInfoID.h"
@@ -55,6 +56,8 @@
 #include "nsIContent.h"
 #include "nsCRT.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsIWebNavigation.h"
+#include "nsIDocShellTreeItem.h"
 
 using namespace mozilla;
 
@@ -97,6 +100,7 @@ nsDOMDataTransfer::nsDOMDataTransfer()
     mReadOnly(false),
     mIsExternal(false),
     mUserCancelled(false),
+    mIsCrossDomainSubFrameDrop(false),
     mDragImageX(0),
     mDragImageY(0)
 {
@@ -110,6 +114,7 @@ nsDOMDataTransfer::nsDOMDataTransfer(PRUint32 aEventType)
     mReadOnly(true),
     mIsExternal(true),
     mUserCancelled(false),
+    mIsCrossDomainSubFrameDrop(false),
     mDragImageX(0),
     mDragImageY(0)
 {
@@ -121,6 +126,7 @@ nsDOMDataTransfer::nsDOMDataTransfer(PRUint32 aEventType,
                                      bool aCursorState,
                                      bool aIsExternal,
                                      bool aUserCancelled,
+                                     bool aIsCrossDomainSubFrameDrop,
                                      nsTArray<nsTArray<TransferItem> >& aItems,
                                      nsIDOMElement* aDragImage,
                                      PRUint32 aDragImageX,
@@ -132,6 +138,7 @@ nsDOMDataTransfer::nsDOMDataTransfer(PRUint32 aEventType,
     mReadOnly(true),
     mIsExternal(aIsExternal),
     mUserCancelled(aUserCancelled),
+    mIsCrossDomainSubFrameDrop(aIsCrossDomainSubFrameDrop),
     mItems(aItems),
     mDragImage(aDragImage),
     mDragImageX(aDragImageX),
@@ -463,12 +470,16 @@ nsDOMDataTransfer::MozGetDataAt(const nsAString& aFormat,
 
   nsTArray<TransferItem>& item = mItems[aIndex];
 
-  // allow access to any data in the drop and dragdrop events, or if the
-  // UniversalXPConnect privilege is set, otherwise only allow access to
-  // data from the same principal.
+  // Check if the caller is allowed to access the drag data. Callers with
+  // UniversalXPConnect privileges can always read the data. During the
+  // drop event, allow retrieving the data except in the case where the
+  // source of the drag is in a child frame of the caller. In that case,
+  // we only allow access to data of the same principal. During other events,
+  // only allow access to the data with the same principal.
   nsIPrincipal* principal = nsnull;
-  if (mEventType != NS_DRAGDROP_DROP && mEventType != NS_DRAGDROP_DRAGDROP &&
-      !nsContentUtils::CallerHasUniversalXPConnect()) {
+  if (mIsCrossDomainSubFrameDrop ||
+      (mEventType != NS_DRAGDROP_DROP && mEventType != NS_DRAGDROP_DRAGDROP &&
+       !nsContentUtils::CallerHasUniversalXPConnect())) {
     nsresult rv = NS_OK;
     principal = GetCurrentPrincipal(&rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -615,6 +626,11 @@ nsDOMDataTransfer::AddElement(nsIDOMElement* aElement)
 {
   NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
 
+  if (aElement) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+    NS_ENSURE_TRUE(content, NS_ERROR_INVALID_ARG);
+  }
+
   if (mReadOnly)
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 
@@ -625,12 +641,13 @@ nsDOMDataTransfer::AddElement(nsIDOMElement* aElement)
 
 nsresult
 nsDOMDataTransfer::Clone(PRUint32 aEventType, bool aUserCancelled,
+                         bool aIsCrossDomainSubFrameDrop,
                          nsIDOMDataTransfer** aNewDataTransfer)
 {
   nsDOMDataTransfer* newDataTransfer =
     new nsDOMDataTransfer(aEventType, mEffectAllowed, mCursorState,
-                          mIsExternal, aUserCancelled, mItems,
-                          mDragImage, mDragImageX, mDragImageY);
+                          mIsExternal, aUserCancelled, aIsCrossDomainSubFrameDrop,
+                          mItems, mDragImage, mDragImageX, mDragImageY);
   NS_ENSURE_TRUE(newDataTransfer, NS_ERROR_OUT_OF_MEMORY);
 
   *aNewDataTransfer = newDataTransfer;
