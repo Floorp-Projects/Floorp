@@ -49,13 +49,12 @@
 #include "nsAutoPtr.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsISocketTransportService.h"
-#include "mozilla/TimeStamp.h"
 
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsIX509Cert3.h"
 
-#include "nsHttpPipeline.h"
+class nsHttpPipeline;
 
 //-----------------------------------------------------------------------------
 
@@ -73,8 +72,7 @@ public:
         MAX_PERSISTENT_CONNECTIONS_PER_HOST,
         MAX_PERSISTENT_CONNECTIONS_PER_PROXY,
         MAX_REQUEST_DELAY,
-        MAX_PIPELINED_REQUESTS,
-        MAX_OPTIMISTIC_PIPELINED_REQUESTS
+        MAX_PIPELINED_REQUESTS
     };
 
     //-------------------------------------------------------------------------
@@ -89,8 +87,7 @@ public:
                   PRUint16 maxPersistentConnectionsPerHost,
                   PRUint16 maxPersistentConnectionsPerProxy,
                   PRUint16 maxRequestDelay,
-                  PRUint16 maxPipelinedRequests,
-                  PRUint16 maxOptimisticPipelinedRequests);
+                  PRUint16 maxPipelinedRequests);
     nsresult Shutdown();
 
     //-------------------------------------------------------------------------
@@ -141,80 +138,17 @@ public:
     void ReportSpdyAlternateProtocol(nsHttpConnection *);
     void RemoveSpdyAlternateProtocol(nsACString &key);
 
-    // Pipielining Interfaces and Datatypes
-
-    const static PRUint32 kPipelineInfoTypeMask = 0xffff0000;
-    const static PRUint32 kPipelineInfoIDMask   = ~kPipelineInfoTypeMask;
-
-    const static PRUint32 kPipelineInfoTypeRed     = 0x00010000;
-    const static PRUint32 kPipelineInfoTypeBad     = 0x00020000;
-    const static PRUint32 kPipelineInfoTypeNeutral = 0x00040000;
-    const static PRUint32 kPipelineInfoTypeGood    = 0x00080000;
-
-    enum PipelineFeedbackInfoType
-    {
-        // Used when an HTTP response less than 1.1 is received
-        RedVersionTooLow = kPipelineInfoTypeRed | kPipelineInfoTypeBad | 0x0001,
-
-        // Used when a HTTP Server response header that is on the banned from
-        // pipelining list is received
-        RedBannedServer = kPipelineInfoTypeRed | kPipelineInfoTypeBad | 0x0002,
-    
-        // Used when a response is terminated early, when it fails an
-        // integrity check such as assoc-req or when a 304 contained a Last-Modified
-        // differnet than the entry being validated.
-        RedCorruptedContent = kPipelineInfoTypeRed | kPipelineInfoTypeBad | 0x0004,
-
-        // Used when a pipeline is only partly satisfied - for instance if the
-        // server closed the connection after responding to the first
-        // request but left some requests unprocessed.
-        RedCanceledPipeline = kPipelineInfoTypeRed | kPipelineInfoTypeBad | 0x0005,
-
-        // Used when a connection that we expected to stay persistently open
-        // was closed by the server. Not used when simply timed out.
-        BadExplicitClose = kPipelineInfoTypeBad | 0x0003,
-
-        // Used when there is a gap of around 400 - 1200ms in between data being
-        // read from the server
-        BadSlowReadMinor = kPipelineInfoTypeBad | 0x0006,
-
-        // Used when there is a gap of > 1200ms in between data being
-        // read from the server
-        BadSlowReadMajor = kPipelineInfoTypeBad | 0x0007,
-
-        // Used when a response is received that is not framed with either chunked
-        // encoding or a complete content length.
-        BadInsufficientFraming = kPipelineInfoTypeBad | 0x0008,
-        
-        // Used when a very large response is recevied in a potential pipelining
-        // context. Large responses cause head of line blocking.
-        BadUnexpectedLarge = kPipelineInfoTypeBad | 0x000B,
-
-        // Used when a response is received that has headers that appear to support
-        // pipelining.
-        NeutralExpectedOK = kPipelineInfoTypeNeutral | 0x0009,
-
-        // Used when a response is received successfully to a pipelined request.
-        GoodCompletedOK = kPipelineInfoTypeGood | 0x000A
-    };
-    
-    // called to provide information relevant to the pipelining manager
-    // may be called from any thread
-    void     PipelineFeedbackInfo(nsHttpConnectionInfo *,
-                                  PipelineFeedbackInfoType info,
-                                  nsHttpConnection *,
-                                  PRUint32);
-
-    void ReportFailedToProcess(nsIURI *uri);
-
     //-------------------------------------------------------------------------
     // NOTE: functions below may be called only on the socket thread.
     //-------------------------------------------------------------------------
 
+    // removes the next transaction for the specified connection from the
+    // pending transaction queue.
+    void AddTransactionToPipeline(nsHttpPipeline *);
+
     // called to force the transaction queue to be processed once more, giving
     // preference to the specified connection.
     nsresult ProcessPendingQ(nsHttpConnectionInfo *);
-    bool     ProcessPendingQForEntry(nsHttpConnectionInfo *);
 
     // This is used to force an idle connection to be closed and removed from
     // the idle connection list. It is called when the idle connection detects
@@ -226,41 +160,26 @@ public:
     // bit different.
     void ReportSpdyConnection(nsHttpConnection *, bool usingSpdy);
 
-    
-    bool     SupportsPipelining(nsHttpConnectionInfo *);
-
 private:
     virtual ~nsHttpConnectionMgr();
-
-    enum PipeliningState {
-        // Host has proven itself pipeline capable through past experience and
-        // large pipeline depths are allowed on multiple connections.
-        PS_GREEN,
-
-        // Not enough information is available yet with this host to be certain
-        // of pipeline capability. Small pipelines on a single connection are
-        // allowed in order to decide whether or not to proceed to green.
-        PS_YELLOW,
-
-        // One or more bad events has happened that indicate that pipelining
-        // to this host (or a particular type of transaction with this host)
-        // is a bad idea. Pipelining is not currently allowed, but time and
-        // other positive experiences will eventually allow it to try again.
-        PS_RED
-    };
-    
     class nsHalfOpenSocket;
-
+    
     // nsConnectionEntry
     //
     // mCT maps connection info hash key to nsConnectionEntry object, which
     // contains list of active and idle connections as well as the list of
     // pending transactions.
     //
-    class nsConnectionEntry
+    struct nsConnectionEntry
     {
-    public:
-        nsConnectionEntry(nsHttpConnectionInfo *ci);
+        nsConnectionEntry(nsHttpConnectionInfo *ci)
+          : mConnInfo(ci),
+            mUsingSpdy(false),
+            mTestedSpdy(false),
+            mSpdyPreferred(false)
+        {
+            NS_ADDREF(mConnInfo);
+        }
         ~nsConnectionEntry();
 
         nsHttpConnectionInfo        *mConnInfo;
@@ -268,54 +187,6 @@ private:
         nsTArray<nsHttpConnection*>  mActiveConns; // active connections
         nsTArray<nsHttpConnection*>  mIdleConns;   // idle persistent connections
         nsTArray<nsHalfOpenSocket*>  mHalfOpens;
-
-        // Pipeline depths for various states
-        const static PRUint32 kPipelineUnlimited  = 1024; // fully open - extended green
-        const static PRUint32 kPipelineOpen       = 6;    // 6 on each conn - normal green
-        const static PRUint32 kPipelineRestricted = 2;    // 2 on just 1 conn in yellow
-        
-        nsHttpConnectionMgr::PipeliningState PipelineState();
-        void OnPipelineFeedbackInfo(
-            nsHttpConnectionMgr::PipelineFeedbackInfoType info,
-            nsHttpConnection *, PRUint32);
-        bool SupportsPipelining();
-        PRUint32 MaxPipelineDepth(nsAHttpTransaction::Classifier classification);
-        void CreditPenalty();
-
-        nsHttpConnectionMgr::PipeliningState mPipelineState;
-
-        void SetYellowConnection(nsHttpConnection *);
-        void OnYellowComplete();
-        PRUint32                  mYellowGoodEvents;
-        PRUint32                  mYellowBadEvents;
-        nsHttpConnection         *mYellowConnection;
-
-        // initialGreenDepth is the max depth of a pipeline when you first
-        // transition to green. Normally this is kPipelineOpen, but it can
-        // be kPipelineUnlimited in aggressive mode.
-        PRUint32                  mInitialGreenDepth;
-
-        // greenDepth is the current max allowed depth of a pipeline when
-        // in the green state. Normally this starts as kPipelineOpen and
-        // grows to kPipelineUnlimited after a pipeline of depth 3 has been
-        // successfully transacted.
-        PRUint32                  mGreenDepth;
-
-        // pipeliningPenalty is the current amount of penalty points this host
-        // entry has earned for participating in events that are not conducive
-        // to good pipelines - such as head of line blocking, canceled pipelines,
-        // etc.. penalties are paid back either through elapsed time or simply
-        // healthy transactions. Having penalty points means that this host is
-        // not currently eligible for pipelines.
-        PRInt16                   mPipeliningPenalty;
-
-        // some penalty points only apply to particular classifications of
-        // transactions - this allows a server that perhaps has head of line
-        // blocking problems on CGI queries to still serve JS pipelined.
-        PRInt16                   mPipeliningClassPenalty[nsAHttpTransaction::CLASS_MAX];
-
-        // for calculating penalty repair credits
-        mozilla::TimeStamp        mLastCreditTime;
 
         // Spdy sometimes resolves the address in the socket manager in order
         // to re-coalesce sharded HTTP hosts. The dotted decimal address is
@@ -401,9 +272,6 @@ private:
         nsCOMPtr<nsIAsyncOutputStream> mStreamOut;
         nsCOMPtr<nsIAsyncInputStream>  mStreamIn;
 
-        mozilla::TimeStamp             mPrimarySynStarted;
-        mozilla::TimeStamp             mBackupSynStarted;
-
         // for syn retry
         nsCOMPtr<nsITimer>             mSynTimer;
         nsCOMPtr<nsISocketTransport>   mBackupTransport;
@@ -428,7 +296,7 @@ private:
     PRUint16 mMaxPersistConnsPerProxy;
     PRUint16 mMaxRequestDelay; // in seconds
     PRUint16 mMaxPipelinedRequests;
-    PRUint16 mMaxOptimisticPipelinedRequests;
+
     bool mIsShuttingDown;
 
     //-------------------------------------------------------------------------
@@ -442,18 +310,12 @@ private:
     static PLDHashOperator PurgeExcessIdleConnectionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
     static PLDHashOperator ClosePersistentConnectionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
     bool     ProcessPendingQForEntry(nsConnectionEntry *);
-    bool     IsUnderPressure(nsConnectionEntry *ent,
-                             nsHttpTransaction::Classifier classification);
     bool     AtActiveConnectionLimit(nsConnectionEntry *, PRUint8 caps);
-    nsresult TryDispatchTransaction(nsConnectionEntry *ent,
-                                    bool onlyReusedConnection,
-                                    nsHttpTransaction *trans);
-    nsresult DispatchTransaction(nsConnectionEntry *,
-                                 nsHttpTransaction *,
-                                 nsHttpConnection *);
-    nsresult BuildPipeline(nsConnectionEntry *,
-                           nsAHttpTransaction *,
-                           nsHttpPipeline **);
+    void     GetConnection(nsConnectionEntry *, nsHttpTransaction *,
+                           bool, nsHttpConnection **);
+    nsresult DispatchTransaction(nsConnectionEntry *, nsHttpTransaction *,
+                                 PRUint8 caps, nsHttpConnection *);
+    bool     BuildPipeline(nsConnectionEntry *, nsAHttpTransaction *, nsHttpPipeline **);
     nsresult ProcessNewTransaction(nsHttpTransaction *);
     nsresult EnsureSocketThreadTargetIfOnline();
     void     ClosePersistentConnections(nsConnectionEntry *ent);
@@ -461,13 +323,6 @@ private:
     void     AddActiveConn(nsHttpConnection *, nsConnectionEntry *);
     void     StartedConnect();
     void     RecvdConnect();
-
-    bool     MakeNewConnection(nsConnectionEntry *ent,
-                               nsHttpTransaction *trans);
-    bool     AddToShortestPipeline(nsConnectionEntry *ent,
-                                   nsHttpTransaction *trans,
-                                   nsHttpTransaction::Classifier classification,
-                                   PRUint16 depthLimit);
 
     // Manage the preferred spdy connection entry for this address
     nsConnectionEntry *GetSpdyPreferredEnt(nsConnectionEntry *aOriginalEntry);
@@ -541,7 +396,6 @@ private:
     void OnMsgReclaimConnection    (PRInt32, void *);
     void OnMsgUpdateParam          (PRInt32, void *);
     void OnMsgClosePersistentConnections (PRInt32, void *);
-    void OnMsgProcessFeedback      (PRInt32, void *);
 
     // Total number of active connections in all of the ConnectionEntry objects
     // that are accessed from mCT connection table.

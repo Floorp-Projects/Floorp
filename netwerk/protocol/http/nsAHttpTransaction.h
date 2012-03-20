@@ -48,7 +48,6 @@ class nsIInterfaceRequestor;
 class nsIEventTarget;
 class nsITransport;
 class nsHttpRequestHead;
-class nsHttpPipeline;
 
 //----------------------------------------------------------------------------
 // Abstract base class for a HTTP transaction:
@@ -64,8 +63,6 @@ class nsAHttpTransaction : public nsISupports
 public:
     // called by the connection when it takes ownership of the transaction.
     virtual void SetConnection(nsAHttpConnection *) = 0;
-
-    // used to obtain the connection associated with this transaction
     virtual nsAHttpConnection *Connection() = 0;
 
     // called by the connection to get security callbacks to set on the
@@ -80,7 +77,6 @@ public:
     // called to check the transaction status.
     virtual bool     IsDone() = 0;
     virtual nsresult Status() = 0;
-    virtual PRUint8  Caps() = 0;
 
     // called to find out how much request data is available for writing.
     virtual PRUint32 Available() = 0;
@@ -118,49 +114,6 @@ public:
     //
     virtual nsresult TakeSubTransactions(
         nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions) = 0;
-
-    // called to add a sub-transaction in the case of pipelined transactions
-    // classes that do not implement sub transactions
-    // return NS_ERROR_NOT_IMPLEMENTED
-    virtual nsresult AddTransaction(nsAHttpTransaction *transaction) = 0;
-    
-    // The total length of the outstanding pipeline comprised of transacations
-    // and sub-transactions.
-    virtual PRUint32 PipelineDepth() = 0;
-
-    // Used to inform the connection that it is being used in a pipelined
-    // context. That may influence the handling of some errors.
-    // The value is the pipeline position (> 1).
-    virtual nsresult SetPipelinePosition(PRInt32) = 0;
-    virtual PRInt32  PipelinePosition() = 0;
-
-    // If we used rtti this would be the result of doing
-    // dynamic_cast<nsHttpPipeline *>(this).. i.e. it can be nsnull for
-    // non pipeline implementations of nsAHttpTransaction
-    virtual nsHttpPipeline *QueryPipeline() { return nsnull; }
-    
-    // Every transaction is classified into one of the types below. When using
-    // HTTP pipelines, only transactions with the same type appear on the same
-    // pipeline.
-    enum Classifier  {
-        // Transactions that expect a short 304 (no-content) response
-        CLASS_REVALIDATION,
-
-        // Transactions for content expected to be CSS or JS
-        CLASS_SCRIPT,
-
-        // Transactions for content expected to be an image
-        CLASS_IMAGE,
-
-        // Transactions that cannot involve a pipeline 
-        CLASS_SOLO,
-
-        // Transactions that do not fit any of the other categories. HTML
-        // is normally GENERAL.
-        CLASS_GENERAL,
-
-        CLASS_MAX
-    };
 };
 
 #define NS_DECL_NSAHTTPTRANSACTION \
@@ -172,7 +125,6 @@ public:
                            nsresult status, PRUint64 progress); \
     bool     IsDone(); \
     nsresult Status(); \
-    PRUint8  Caps();   \
     PRUint32 Available(); \
     nsresult ReadSegments(nsAHttpSegmentReader *, PRUint32, PRUint32 *); \
     nsresult WriteSegments(nsAHttpSegmentWriter *, PRUint32, PRUint32 *); \
@@ -180,11 +132,7 @@ public:
     void     SetSSLConnectFailed();                                     \
     nsHttpRequestHead *RequestHead();                                   \
     PRUint32 Http1xTransactionCount();                                  \
-    nsresult TakeSubTransactions(nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions); \
-    nsresult AddTransaction(nsAHttpTransaction *);                      \
-    PRUint32 PipelineDepth();                                           \
-    nsresult SetPipelinePosition(PRInt32);                              \
-    PRInt32  PipelinePosition();
+    nsresult TakeSubTransactions(nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions);
 
 //-----------------------------------------------------------------------------
 // nsAHttpSegmentReader
