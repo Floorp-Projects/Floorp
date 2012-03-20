@@ -62,6 +62,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget, base::Thread* aCompositor
   , mCurrentCompositeTask(NULL)
   , mPaused(false)
   , mIsFirstPaint(false)
+  , mLayersUpdated(false)
 {
   MOZ_COUNT_CTOR(CompositorParent);
 }
@@ -293,7 +294,9 @@ CompositorParent::TransformShadowTree()
     displayPort.x += scrollOffset.x;
     displayPort.y += scrollOffset.y;
 
-    mozilla::AndroidBridge::Bridge()->SyncViewportInfo(displayPort, 1/rootScaleX, mScrollOffset, mXScale, mYScale);
+    mozilla::AndroidBridge::Bridge()->SyncViewportInfo(displayPort, 1/rootScaleX, mLayersUpdated,
+                                                       mScrollOffset, mXScale, mYScale);
+    mLayersUpdated = false;
   }
 
   // Handle transformations for asynchronous panning and zooming. We determine the
@@ -324,6 +327,7 @@ void
 CompositorParent::ShadowLayersUpdated(bool isFirstPaint)
 {
   mIsFirstPaint = mIsFirstPaint || isFirstPaint;
+  mLayersUpdated = true;
   const nsTArray<PLayersParent*>& shadowParents = ManagedPLayersParent();
   NS_ABORT_IF_FALSE(shadowParents.Length() <= 1,
                     "can only support at most 1 ShadowLayersParent");
