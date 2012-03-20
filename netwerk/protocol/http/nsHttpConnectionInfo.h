@@ -60,6 +60,7 @@ public:
         : mRef(0)
         , mProxyInfo(proxyInfo)
         , mUsingSSL(usingSSL)
+        , mSupportsPipelining(false)
     {
         LOG(("Creating nsHttpConnectionInfo @%x\n", this));
 
@@ -125,6 +126,11 @@ public:
     void          SetAnonymous(bool anon)         
                                          { mHashKey.SetCharAt(anon ? 'A' : '.', 2); }
     bool          GetAnonymous()         { return mHashKey.CharAt(2) == 'A'; }
+
+    bool          SupportsPipelining()   { return mSupportsPipelining; }
+    void          SetSupportsPipelining(bool support)
+                                         { mSupportsPipelining = support; }
+
     bool          ShouldForceConnectMethod();
     const nsCString &GetHost() { return mHost; }
 
@@ -136,6 +142,7 @@ private:
     nsCOMPtr<nsProxyInfo>  mProxyInfo;
     bool                   mUsingHttpProxy;
     bool                   mUsingSSL;
+    bool                   mSupportsPipelining;
 };
 
 #endif // nsHttpConnectionInfo_h__

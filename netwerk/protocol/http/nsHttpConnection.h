@@ -41,7 +41,6 @@
 
 #include "nsHttp.h"
 #include "nsHttpConnectionInfo.h"
-#include "nsAHttpConnection.h"
 #include "nsAHttpTransaction.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
@@ -55,6 +54,9 @@
 #include "nsIAsyncOutputStream.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIEventTarget.h"
+
+class nsHttpRequestHead;
+class nsHttpResponseHead;
 
 //-----------------------------------------------------------------------------
 // nsHttpConnection - represents a connection to a HTTP server (or proxy)
@@ -114,6 +116,11 @@ public:
 
     void     DontReuse();
     void     DropTransport() { DontReuse(); mSocketTransport = 0; }
+
+    bool     IsProxyConnectInProgress()
+    {
+        return mProxyConnectInProgress;
+    }
 
     bool     LastTransactionExpectedNoContent()
     {
@@ -228,6 +235,7 @@ private:
     bool                            mCompletedProxyConnect;
     bool                            mLastTransactionExpectedNoContent;
     bool                            mIdleMonitoring;
+    bool                            mProxyConnectInProgress;
 
     // The number of <= HTTP/1.1 transactions performed on this connection. This
     // excludes spdy transactions.

@@ -113,7 +113,6 @@ public:
                   nsIAsyncInputStream  **responseBody);
 
     // attributes
-    PRUint8                Caps()           { return mCaps; }
     nsHttpConnectionInfo  *ConnectionInfo() { return mConnInfo; }
     nsHttpResponseHead    *ResponseHead()   { return mHaveAllHeaders ? mResponseHead : nsnull; }
     nsISupports           *SecurityInfo()   { return mSecurityInfo; }
