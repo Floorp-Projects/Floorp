@@ -39,19 +39,21 @@
 #ifndef __NS_SVGGLYPHFRAME_H__
 #define __NS_SVGGLYPHFRAME_H__
 
-#include "nsSVGGeometryFrame.h"
+#include "gfxFont.h"
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsISVGChildFrame.h"
+#include "nsSVGGeometryFrame.h"
 #include "nsSVGUtils.h"
-#include "gfxContext.h"
-#include "gfxFont.h"
 #include "nsTextFragment.h"
 
+class CharacterIterator;
+class gfxContext;
+class nsIDOMSVGRect;
 class nsRenderingContext;
+class nsSVGGlyphFrame;
 class nsSVGTextFrame;
 class nsSVGTextPathFrame;
-class nsSVGGlyphFrame;
-class CharacterIterator;
+
 struct CharacterPosition;
 
 typedef gfxFont::DrawMode DrawMode;

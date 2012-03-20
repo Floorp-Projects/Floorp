@@ -39,15 +39,26 @@
 #ifndef __NS_SVGPATHGEOMETRYFRAME_H__
 #define __NS_SVGPATHGEOMETRYFRAME_H__
 
+#include "gfxMatrix.h"
+#include "gfxRect.h"
 #include "nsFrame.h"
 #include "nsISVGChildFrame.h"
-#include "nsSVGUtils.h"
-#include "nsGkAtoms.h"
+#include "nsLiteralString.h"
+#include "nsQueryFrame.h"
+#include "nsRect.h"
 #include "nsSVGGeometryFrame.h"
+#include "nsSVGUtils.h"
 
+class gfxContext;
+class nsIAtom;
+class nsIFrame;
+class nsIPresShell;
 class nsRenderingContext;
+class nsStyleContext;
 class nsSVGMarkerFrame;
 class nsSVGMarkerProperty;
+
+struct nsPoint;
 
 typedef nsSVGGeometryFrame nsSVGPathGeometryFrameBase;
 

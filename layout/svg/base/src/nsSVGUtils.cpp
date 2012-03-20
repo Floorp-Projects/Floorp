@@ -36,9 +36,11 @@
 
 // include nsSVGUtils.h first to ensure definition of M_SQRT1_2 is picked up
 #include "nsSVGUtils.h"
+
 #include "nsIDOMDocument.h"
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGSVGElement.h"
+#include "nsRenderingContext.h"
 #include "nsStyleCoord.h"
 #include "nsPresContext.h"
 #include "nsSVGSVGElement.h"

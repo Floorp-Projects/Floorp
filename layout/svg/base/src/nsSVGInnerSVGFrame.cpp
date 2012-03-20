@@ -37,6 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGInnerSVGFrame.h"
+
+#include "nsRenderingContext.h"
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsIDOMSVGAnimatedRect.h"

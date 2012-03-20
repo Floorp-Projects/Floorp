@@ -39,11 +39,9 @@
 #ifndef __NS_SVGOUTERSVGFRAME_H__
 #define __NS_SVGOUTERSVGFRAME_H__
 
-#include "nsSVGContainerFrame.h"
-#include "nsISVGSVGFrame.h"
-#include "nsIDOMSVGPoint.h"
-#include "nsIDOMSVGNumber.h"
 #include "gfxMatrix.h"
+#include "nsISVGSVGFrame.h"
+#include "nsSVGContainerFrame.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGOuterSVGFrame class
