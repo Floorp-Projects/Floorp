@@ -417,6 +417,19 @@ class ObjectImpl : public gc::Cell
     inline void privateWriteBarrierPost(void **oldval);
     void markChildren(JSTracer *trc);
 
+    /* Private data accessors. */
+
+    inline void *&privateRef(uint32_t nfixed) const; /* XXX should be private, not protected! */
+
+    inline bool hasPrivate() const;
+    inline void *getPrivate() const;
+    inline void setPrivate(void *data);
+    inline void setPrivateUnbarriered(void *data);
+    inline void initPrivate(void *data);
+
+    /* Access private data for an object with a known number of fixed slots. */
+    inline void *getPrivate(size_t nfixed) const;
+
     /* JIT Accessors */
     static size_t offsetOfShape() { return offsetof(ObjectImpl, shape_); }
     HeapPtrShape *addressOfShape() { return &shape_; }
