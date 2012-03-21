@@ -64,7 +64,7 @@ ReleaseObject(void *data)
 }
 
 static PLDHashOperator
-AppendAndRemoveThread(const void *key, nsRefPtr<nsThread> &thread, void *arg)
+AppendAndRemoveThread(PRThread *key, nsRefPtr<nsThread> &thread, void *arg)
 {
   nsThreadArray *threads = static_cast<nsThreadArray *>(arg);
   threads->AppendElement(thread);

@@ -1643,7 +1643,7 @@ public:
 
 protected:
 
-    nsDataHashtable<nsVoidPtrHashKey, void*> mUserData;
+    nsDataHashtable<nsPtrHashKey<void>, void*> mUserData;
 
     void SetIsGLES2(bool aIsGLES2) {
         NS_ASSERTION(!mInitialized, "SetIsGLES2 can only be called before initialization!");

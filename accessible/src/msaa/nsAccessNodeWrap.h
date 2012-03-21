@@ -152,7 +152,7 @@ public: // construction, destruction
   static LRESULT CALLBACK WindowProc(HWND hWnd, UINT Msg,
                                      WPARAM WParam, LPARAM lParam);
 
-  static nsRefPtrHashtable<nsVoidPtrHashKey, nsDocAccessible> sHWNDCache;
+  static nsRefPtrHashtable<nsPtrHashKey<void>, nsDocAccessible> sHWNDCache;
 
 protected:
 
