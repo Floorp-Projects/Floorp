@@ -588,7 +588,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       return AppendToDocument(asContent, aBuilder);
     }
     case eTreeOpMarkAsBroken: {
-      aBuilder->MarkAsBroken();
+      aBuilder->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
       return rv;
     }
     case eTreeOpRunScript: {
