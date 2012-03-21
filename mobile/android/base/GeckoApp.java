@@ -1592,15 +1592,11 @@ abstract public class GeckoApp
     // The ActionBar needs to be refreshed on rotation as different orientation uses different resources
     public void refreshActionBar() {
         if (Build.VERSION.SDK_INT >= 11) {
-            mBrowserToolbar = (BrowserToolbar) getLayoutInflater().inflate(R.layout.browser_toolbar, null);
-            mBrowserToolbar.init();
+            LinearLayout actionBar = (LinearLayout) getLayoutInflater().inflate(R.layout.browser_toolbar, null);
+            mBrowserToolbar.from(actionBar);
             mBrowserToolbar.refresh();
             GeckoActionBar.setBackgroundDrawable(this, getResources().getDrawable(R.drawable.gecko_actionbar_bg));
-            GeckoActionBar.setDisplayOptions(this, ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM |
-                                                                                  ActionBar.DISPLAY_SHOW_HOME |
-                                                                                  ActionBar.DISPLAY_SHOW_TITLE |
-                                                                                  ActionBar.DISPLAY_USE_LOGO);
-            GeckoActionBar.setCustomView(this, mBrowserToolbar);
+            GeckoActionBar.setCustomView(this, actionBar);
         }
     }
 
@@ -1633,11 +1629,15 @@ abstract public class GeckoApp
 
         setContentView(R.layout.gecko_app);
 
+        LinearLayout actionBar;
         if (Build.VERSION.SDK_INT >= 11) {
-            mBrowserToolbar = (BrowserToolbar) GeckoActionBar.getCustomView(this);
+            actionBar = (LinearLayout) GeckoActionBar.getCustomView(this);
         } else {
-            mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
+            actionBar = (LinearLayout) findViewById(R.id.browser_toolbar);
         }
+
+        mBrowserToolbar = new BrowserToolbar(mAppContext);
+        mBrowserToolbar.from(actionBar);
 
         // setup gecko layout
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
@@ -1670,7 +1670,6 @@ abstract public class GeckoApp
             checkAndLaunchUpdate();
         }
 
-        mBrowserToolbar.init();
         mBrowserToolbar.setTitle(mLastTitle);
 
         String passedUri = null;

@@ -27,7 +27,9 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
-    <style name="Gecko.App"/>
+    <style name="Gecko.App">
+        <item name="android:windowBackground">@drawable/abouthome_bg_repeat</item>
+    </style>
     
     <style name="Gecko.Light.AwesomeBar"/>
     
