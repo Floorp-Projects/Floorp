@@ -470,6 +470,38 @@ StackFrames.prototype = {
       this._addExpander(thisVar, frame.this);
     }
 
+    if (frame.environment) {
+      // Add nodes for every argument.
+      let variables = frame.environment.bindings.arguments;
+      for each (let variable in variables) {
+        let name = Object.getOwnPropertyNames(variable)[0];
+        let paramVar = localScope.addVar(name);
+        let paramVal = variable[name].value;
+        paramVar.setGrip(paramVal);
+        this._addExpander(paramVar, paramVal);
+      }
+
+      // Add nodes for every other variable in scope.
+      variables = frame.environment.bindings.variables;
+      for (let variable in variables) {
+        let paramVar = localScope.addVar(variable);
+        let paramVal = variables[variable].value;
+        paramVar.setGrip(paramVal);
+        this._addExpander(paramVar, paramVal);
+      }
+
+      // If we already found 'arguments', we are done here.
+      if ("arguments" in frame.environment.bindings.variables) {
+        // Signal that variables have been fetched.
+        DebuggerController.dispatchEvent("Debugger:FetchedVariables");
+        return;
+      }
+    }
+
+    // Sometimes in call frames with arguments we don't get 'arguments' in the
+    // environment (bug 746601) and we have to construct it manually. Note, that
+    // in this case arguments.callee will be absent, even in the cases where it
+    // shouldn't be.
     if (frame.arguments && frame.arguments.length > 0) {
       // Add "arguments".
       let argsVar = localScope.addVar("arguments");
@@ -479,33 +511,20 @@ StackFrames.prototype = {
       });
       this._addExpander(argsVar, frame.arguments);
 
-      // Add variables for every argument.
-      let objClient = this.activeThread.pauseGrip(frame.callee);
-      objClient.getSignature(function SF_getSignature(aResponse) {
-        for (let i = 0, l = aResponse.parameters.length; i < l; i++) {
-          let param = aResponse.parameters[i];
-          let paramVar = localScope.addVar(param);
-          let paramVal = frame.arguments[i];
-
-          paramVar.setGrip(paramVal);
-          this._addExpander(paramVar, paramVal);
-        }
-
-        // Signal that call parameters have been fetched.
-        DebuggerController.dispatchEvent("Debugger:FetchedParameters");
-
-      }.bind(this));
+      // Signal that variables have been fetched.
+      DebuggerController.dispatchEvent("Debugger:FetchedVariables");
     }
+
   },
 
   /**
-   * Adds a onexpand callback for a variable, lazily handling the addition of
+   * Adds an 'onexpand' callback for a variable, lazily handling the addition of
    * new properties.
    */
   _addExpander: function SF__addExpander(aVar, aObject) {
     // No need for expansion for null and undefined values, but we do need them
     // for frame.arguments which is a regular array.
-    if (!aObject || typeof aObject !== "object" ||
+    if (!aVar || !aObject || typeof aObject !== "object" ||
         (aObject.type !== "object" && !Array.isArray(aObject))) {
       return;
     }
