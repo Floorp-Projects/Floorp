@@ -225,8 +225,29 @@ ContactDB.prototype = {
       // Add search fields
       if (aContact.properties[field] && contact.search[field]) {
         for (let i = 0; i <= aContact.properties[field].length; i++) {
-          if (aContact.properties[field][i])
-            contact.search[field].push(aContact.properties[field][i].toLowerCase());
+          if (aContact.properties[field][i]) {
+            if (field == "tel") {
+              // Special case telephone number. 
+              // "+1-234-567" should also be found with 1234, 234-56, 23456
+
+              // Chop off the first characters
+              let number = aContact.properties[field][i];
+              for(let i = 0; i < number.length; i++) {
+                contact.search[field].push(number.substring(i, number.length));
+              }
+              // Store +1-234-567 as ["1234567", "234567"...]
+              let digits = number.match(/\d/g);
+              if (digits && number.length != digits.length) {
+                digits = digits.join('');
+                for(let i = 0; i < digits.length; i++) {
+                  contact.search[field].push(digits.substring(i, digits.length));
+                }
+              }
+              debug("lookup: " + JSON.stringify(contact.search[field]));
+            } else {
+              contact.search[field].push(aContact.properties[field][i].toLowerCase());
+            }
+          }
         }
       }
     }
