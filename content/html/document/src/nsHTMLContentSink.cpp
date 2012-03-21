@@ -407,7 +407,10 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
   nsAutoString key;
   for (; i != limit; i += step) {
     // Get lower-cased key
-    nsContentUtils::ASCIIToLower(aNode.GetKeyAt(i), key);
+    nsresult rv = nsContentUtils::ASCIIToLower(aNode.GetKeyAt(i), key);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(key);
 

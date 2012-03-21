@@ -37,6 +37,7 @@
 
 #include "nsSVGIntegrationUtils.h"
 
+#include "nsRenderingContext.h"
 #include "nsSVGUtils.h"
 #include "nsSVGEffects.h"
 #include "nsRegion.h"

@@ -2206,6 +2206,10 @@ XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "history",
                                    "@mozilla.org/browser/nav-history-service;1",
                                    "nsINavHistoryService");
 
+XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "asyncHistory",
+                                   "@mozilla.org/browser/history;1",
+                                   "mozIAsyncHistory");
+
 XPCOMUtils.defineLazyGetter(PlacesUtils, "bhistory", function() {
   return PlacesUtils.history.QueryInterface(Ci.nsIBrowserHistory);
 });

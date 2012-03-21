@@ -72,6 +72,7 @@ jfieldID AndroidGeckoEvent::jRangeBackColorField = 0;
 jfieldID AndroidGeckoEvent::jLocationField = 0;
 jfieldID AndroidGeckoEvent::jBandwidthField = 0;
 jfieldID AndroidGeckoEvent::jCanBeMeteredField = 0;
+jfieldID AndroidGeckoEvent::jScreenOrientationField = 0;
 
 jclass AndroidPoint::jPointClass = 0;
 jfieldID AndroidPoint::jXField = 0;
@@ -183,6 +184,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jLocationField = getField("mLocation", "Landroid/location/Location;");
     jBandwidthField = getField("mBandwidth", "D");
     jCanBeMeteredField = getField("mCanBeMetered", "Z");
+    jScreenOrientationField = getField("mScreenOrientation", "S");
 }
 
 void
@@ -521,6 +523,11 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
         case SCREENSHOT: {
             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
             ReadPointArray(mPoints, jenv, jPoints, 2);
+        }
+
+        case SCREENORIENTATION_CHANGED: {
+            mScreenOrientation = jenv->GetShortField(jobj, jScreenOrientationField);
+            break;
         }
 
         default:
