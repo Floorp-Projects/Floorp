@@ -772,7 +772,7 @@ nsXULPDGlobalObject::GetScriptContext()
 JSObject*
 nsXULPDGlobalObject::GetGlobalJSObject()
 {
-  return mJSObject;
+  return xpc_UnmarkGrayObject(mJSObject);
 }
 
 
