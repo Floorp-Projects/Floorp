@@ -2375,7 +2375,7 @@ InitTypedArrayClass(JSContext *cx, GlobalObject *global)
         return NULL;
 
     JSFunction *ctor =
-        global->createConstructor(cx, ArrayType::class_constructor, ArrayType::fastClass(),
+        global->createConstructor(cx, ArrayType::class_constructor,
                                   cx->runtime->atomState.classAtoms[ArrayType::key], 3);
     if (!ctor)
         return NULL;
@@ -2446,7 +2446,7 @@ InitArrayBufferClass(JSContext *cx, GlobalObject *global)
         return NULL;
 
     JSFunction *ctor =
-        global->createConstructor(cx, ArrayBuffer::class_constructor, &ArrayBufferClass,
+        global->createConstructor(cx, ArrayBuffer::class_constructor,
                                   CLASS_ATOM(cx, ArrayBuffer), 1);
     if (!ctor)
         return NULL;

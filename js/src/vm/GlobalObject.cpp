@@ -393,8 +393,8 @@ GlobalObject::isRuntimeCodeGenEnabled(JSContext *cx)
 }
 
 JSFunction *
-GlobalObject::createConstructor(JSContext *cx, Native ctor, Class *clasp, JSAtom *name,
-                                unsigned length, gc::AllocKind kind)
+GlobalObject::createConstructor(JSContext *cx, Native ctor, JSAtom *name, unsigned length,
+                                gc::AllocKind kind)
 {
     RootedVarObject self(cx, this);
     return js_NewFunction(cx, NULL, ctor, length, JSFUN_CONSTRUCTOR, self, name, kind);

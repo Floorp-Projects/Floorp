@@ -1032,7 +1032,7 @@ InitErrorClass(JSContext *cx, GlobalObject *global, int type, JSObject &proto)
     }
 
     /* Create the corresponding constructor. */
-    JSFunction *ctor = global->createConstructor(cx, Exception, &ErrorClass, name, 1,
+    JSFunction *ctor = global->createConstructor(cx, Exception, name, 1,
                                                  JSFunction::ExtendedFinalizeKind);
     if (!ctor)
         return NULL;
