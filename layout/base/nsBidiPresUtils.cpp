@@ -489,14 +489,12 @@ MakeContinuationFluid(nsIFrame* aFrame, nsIFrame* aNext)
 
 // If aFrame is the last child of its parent, convert bidi continuations to
 // fluid continuations for all of its inline ancestors.
+// If it isn't the last child, make sure that its continuation is fluid.
 static void
 JoinInlineAncestors(nsIFrame* aFrame)
 {
-  if (aFrame->GetNextSibling()) {
-    return;
-  }
-  nsIFrame* frame = aFrame->GetParent();
-  while (frame && IsBidiSplittable(frame)) {
+  nsIFrame* frame = aFrame;
+  do {
     nsIFrame* next = frame->GetNextContinuation();
     if (next) {
       // Don't join frames if they come from different paragraph depths (i.e.
@@ -510,7 +508,7 @@ JoinInlineAncestors(nsIFrame* aFrame)
     if (frame->GetNextSibling())
       break;
     frame = frame->GetParent();
-  }
+  } while (frame && IsBidiSplittable(frame));
 }
 
 static nsresult
