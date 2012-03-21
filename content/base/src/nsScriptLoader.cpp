@@ -1283,10 +1283,10 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
   // inserting the request in the array. However it's an unlikely case
   // so if you see this assertion it is likely something else that is
   // wrong, especially if you see it more than once.
-  NS_ASSERTION(mDeferRequests.IndexOf(aRequest) >= 0 ||
-               mAsyncRequests.IndexOf(aRequest) >= 0 ||
-               mNonAsyncExternalScriptInsertedRequests.IndexOf(aRequest) >= 0 ||
-               mXSLTRequests.IndexOf(aRequest) >= 0 ||
+  NS_ASSERTION(mDeferRequests.Contains(aRequest) ||
+               mAsyncRequests.Contains(aRequest) ||
+               mNonAsyncExternalScriptInsertedRequests.Contains(aRequest) ||
+               mXSLTRequests.Contains(aRequest)  ||
                mPreloads.Contains(aRequest, PreloadRequestComparator()) ||
                mParserBlockingRequest,
                "aRequest should be pending!");
