@@ -77,7 +77,6 @@ EXPORTS_mozilla/dom = \
 LOCAL_INCLUDES = -I$(srcdir)/js/xpconnect/src
 
 CPPSRCS		= \
-		mozSanitizingSerializer.cpp \
 		nsAtomListUtils.cpp \
 		nsAttrAndChildArray.cpp \
 		nsAttrValue.cpp \

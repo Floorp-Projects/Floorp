@@ -245,12 +245,12 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
                      bool aLastCall,
                      nsDTDMode aMode) // ignored
 {
-  if (mExecutor->IsBroken()) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsresult rv;
+  if (NS_FAILED(rv = mExecutor->IsBroken())) {
+    return rv;
   }
   if (aSourceBuffer.Length() > PR_INT32_MAX) {
-    mExecutor->MarkAsBroken();
-    return NS_ERROR_OUT_OF_MEMORY;
+    return mExecutor->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
   }
 
   // Maintain a reference to ourselves so we don't go away
@@ -446,8 +446,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     heapBuffer = stackBuffer.FalliblyCopyAsOwningBuffer();
     if (!heapBuffer) {
       // Allocation failed. The parser is now broken.
-      mExecutor->MarkAsBroken();
-      return NS_ERROR_OUT_OF_MEMORY;
+      return mExecutor->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
     }
   }
 

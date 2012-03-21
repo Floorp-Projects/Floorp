@@ -89,39 +89,42 @@ ArgumentsObject::data() const
     return reinterpret_cast<js::ArgumentsData *>(getFixedSlot(DATA_SLOT).toPrivate());
 }
 
+inline bool
+ArgumentsObject::isElementDeleted(uint32_t i) const
+{
+    return IsBitArrayElementSet(data()->deletedBits, initialLength(), i);
+}
+
+inline bool
+ArgumentsObject::isAnyElementDeleted() const
+{
+    return IsAnyBitArrayElementSet(data()->deletedBits, initialLength());
+}
+
+inline void
+ArgumentsObject::markElementDeleted(uint32_t i)
+{
+    SetBitArrayElement(data()->deletedBits, initialLength(), i);
+}
+
 inline const js::Value &
 ArgumentsObject::element(uint32_t i) const
 {
-    JS_ASSERT(i < initialLength());
+    JS_ASSERT(!isElementDeleted(i));
     return data()->slots[i];
-}
-
-inline const js::Value *
-ArgumentsObject::elements() const
-{
-    return Valueify(data()->slots);
 }
 
 inline void
 ArgumentsObject::setElement(uint32_t i, const js::Value &v)
 {
-    JS_ASSERT(i < initialLength());
+    JS_ASSERT(!isElementDeleted(i));
     data()->slots[i] = v;
 }
 
 inline bool
 ArgumentsObject::getElement(uint32_t i, Value *vp)
 {
-    if (i >= initialLength())
-        return false;
-
-    *vp = element(i);
-
-    /*
-     * If the argument was overwritten, it could be in any object slot, so we
-     * can't optimize.
-     */
-    if (vp->isMagic(JS_ARGS_HOLE))
+    if (i >= initialLength() || isElementDeleted(i))
         return false;
 
     /*
@@ -133,6 +136,8 @@ ArgumentsObject::getElement(uint32_t i, Value *vp)
     JS_ASSERT_IF(isStrictArguments(), !fp);
     if (fp)
         *vp = fp->canonicalActualArg(i);
+    else
+        *vp = element(i);
     return true;
 }
 
@@ -144,8 +149,6 @@ struct STATIC_SKIP_INFERENCE CopyNonHoleArgsTo
     ArgumentsObject &argsobj;
     Value *dst;
     bool operator()(uint32_t argi, Value *src) {
-        if (argsobj.element(argi).isMagic(JS_ARGS_HOLE))
-            return false;
         *dst++ = *src;
         return true;
     }
@@ -159,21 +162,18 @@ ArgumentsObject::getElements(uint32_t start, uint32_t count, Value *vp)
     JS_ASSERT(start + count >= start);
 
     uint32_t length = initialLength();
-    if (start > length || start + count > length)
+    if (start > length || start + count > length || isAnyElementDeleted())
         return false;
 
     StackFrame *fp = maybeStackFrame();
 
     /* If there's no stack frame for this, argument values are in elements(). */
     if (!fp) {
-        const Value *srcbeg = elements() + start;
+        const Value *srcbeg = Valueify(data()->slots) + start;
         const Value *srcend = srcbeg + count;
         const Value *src = srcbeg;
-        for (Value *dst = vp; src < srcend; ++dst, ++src) {
-            if (src->isMagic(JS_ARGS_HOLE))
-                return false;
+        for (Value *dst = vp; src < srcend; ++dst, ++src)
             *dst = *src;
-        }
         return true;
     }
 
@@ -209,7 +209,7 @@ NormalArgumentsObject::callee() const
 inline void
 NormalArgumentsObject::clearCallee()
 {
-    data()->callee.set(compartment(), MagicValue(JS_ARGS_HOLE));
+    data()->callee.set(compartment(), MagicValue(JS_OVERWRITTEN_CALLEE));
 }
 
 } // namespace js
