@@ -191,14 +191,14 @@ js::ObjectImpl::nativeGetSlot(unsigned slot) const
 }
 
 inline void
-js::ObjectImpl::setSlot(unsigned slot, const Value &value)
+js::ObjectImpl::setSlot(unsigned slot, const js::Value &value)
 {
     MOZ_ASSERT(slotInRange(slot));
     getSlotRef(slot).set(this->asObjectPtr(), slot, value);
 }
 
 inline void
-js::ObjectImpl::initSlot(unsigned slot, const Value &value)
+js::ObjectImpl::initSlot(unsigned slot, const js::Value &value)
 {
     MOZ_ASSERT(getSlot(slot).isUndefined() || getSlot(slot).isMagic(JS_ARRAY_HOLE));
     MOZ_ASSERT(slotInRange(slot));
@@ -206,20 +206,20 @@ js::ObjectImpl::initSlot(unsigned slot, const Value &value)
 }
 
 inline void
-js::ObjectImpl::initSlotUnchecked(unsigned slot, const Value &value)
+js::ObjectImpl::initSlotUnchecked(unsigned slot, const js::Value &value)
 {
     getSlotAddressUnchecked(slot)->init(this->asObjectPtr(), slot, value);
 }
 
 inline void
-js::ObjectImpl::setFixedSlot(unsigned slot, const Value &value)
+js::ObjectImpl::setFixedSlot(unsigned slot, const js::Value &value)
 {
     MOZ_ASSERT(slot < numFixedSlots());
     fixedSlots()[slot].set(this->asObjectPtr(), slot, value);
 }
 
 inline void
-js::ObjectImpl::initFixedSlot(unsigned slot, const Value &value)
+js::ObjectImpl::initFixedSlot(unsigned slot, const js::Value &value)
 {
     MOZ_ASSERT(slot < numFixedSlots());
     fixedSlots()[slot].init(this->asObjectPtr(), slot, value);
