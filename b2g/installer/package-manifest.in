@@ -620,4 +620,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/CameraContent.js
 @BINPATH@/components/AlertsService.js
 @BINPATH@/components/ContentPermissionPrompt.js
+#ifdef MOZ_UPDATER
+@BINPATH@/components/UpdatePrompt.js
+#endif
 @BINPATH@/components/MozKeyboard.js
