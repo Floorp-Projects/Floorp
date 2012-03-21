@@ -6787,9 +6787,12 @@ mjit::Compiler::jsop_newinit()
         stubArg = (void *) baseobj;
     }
 
-    /* Don't bake in types for non-compileAndGo scripts. */
+    /*
+     * Don't bake in types for non-compileAndGo scripts, or at initializers
+     * producing objects with singleton types.
+     */
     types::TypeObject *type = NULL;
-    if (globalObj) {
+    if (globalObj && !types::UseNewTypeForInitializer(cx, script, PC)) {
         type = types::TypeScript::InitObject(cx, script, PC,
                                              isArray ? JSProto_Array : JSProto_Object);
         if (!type)
@@ -6800,7 +6803,7 @@ mjit::Compiler::jsop_newinit()
         gc::GetGCKindSlots(gc::FINALIZE_OBJECT_LAST) - ObjectElements::VALUES_PER_HEADER;
 
     if (!cx->typeInferenceEnabled() ||
-        !globalObj ||
+        !type ||
         (isArray && count > maxArraySlots) ||
         (!isArray && !baseobj) ||
         (!isArray && baseobj->hasDynamicSlots())) {
@@ -6817,16 +6820,13 @@ mjit::Compiler::jsop_newinit()
     }
 
     JSObject *templateObject;
-    if (isArray) {
+    if (isArray)
         templateObject = NewDenseUnallocatedArray(cx, count);
-        if (!templateObject)
-            return false;
-        templateObject->setType(type);
-    } else {
-        templateObject = CopyInitializerObject(cx, baseobj, type);
-        if (!templateObject)
-            return false;
-    }
+    else
+        templateObject = CopyInitializerObject(cx, baseobj);
+    if (!templateObject)
+        return false;
+    templateObject->setType(type);
 
     RegisterID result = frame.allocReg();
     Jump emptyFreeList = masm.getNewObject(cx, result, templateObject);

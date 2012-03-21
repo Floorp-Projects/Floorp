@@ -905,8 +905,12 @@ stubs::NewInitArray(VMFrame &f, uint32_t count)
         THROW();
 
     TypeObject *type = (TypeObject *) f.scratch;
-    if (type)
+    if (type) {
         obj->setType(type);
+    } else {
+        if (!SetInitializerObjectType(f.cx, f.script(), f.pc(), obj))
+            THROW();
+    }
 
     f.regs.sp[0].setObject(*obj);
 }
@@ -917,22 +921,25 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
     JSContext *cx = f.cx;
     TypeObject *type = (TypeObject *) f.scratch;
 
-    if (!baseobj) {
-        gc::AllocKind kind = GuessObjectGCKind(0);
-        JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
-        if (!obj)
-            THROW();
-        if (type)
-            obj->setType(type);
-        f.regs.sp[0].setObject(*obj);
-        return;
-    }
+    JSObject *obj;
 
-    JS_ASSERT(type);
-    JSObject *obj = CopyInitializerObject(cx, baseobj, type);
+    if (baseobj) {
+        obj = CopyInitializerObject(cx, baseobj);
+    } else {
+        gc::AllocKind kind = GuessObjectGCKind(0);
+        obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
+    }
 
     if (!obj)
         THROW();
+
+    if (type) {
+        obj->setType(type);
+    } else {
+        if (!SetInitializerObjectType(cx, f.script(), f.pc(), obj))
+            THROW();
+    }
+
     f.regs.sp[0].setObject(*obj);
 }
 
