@@ -15,8 +15,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
   <script type="application/javascript"
     src="states.js"></script>
 
+  <!-- chrome-harness.js breaks this test (bug 736886) -->
+  <!--
   <script type="application/javascript"
           src="chrome://mochikit/content/chrome-harness.js"/>
+  -->
 
   <script type="application/javascript">
     function doTest()
@@ -41,9 +44,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
            "Wrong attribute on document!");
 
         // nsIAccessibleDocument
+        // getRootDirectory() depends on broken chrome-harness.js include (bug
+        // 736886)
+        /*
         var rootDir = getRootDirectory(window.location.href);
         is(docAcc.URL, rootDir.path + "test_nsIAccessibleDocument.html",
            "Wrong URL for document!");
+        */
+        todo(false, "chrome-harness.js include is broken (bug 736886)");
         is(docAcc.title, "nsIAccessibleDocument chrome tests",        
            "Wrong title for document!");
         is(docAcc.mimeType, "text/html",

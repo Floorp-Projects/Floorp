@@ -29,6 +29,7 @@
     </style>
 
     <style name="Gecko.App">
+        <item name="android:windowBackground">@drawable/abouthome_bg_repeat</item>
         <item name="android:actionBarStyle">@style/ActionBar.GeckoApp</item>
     </style>
 

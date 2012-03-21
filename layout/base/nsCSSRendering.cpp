@@ -71,6 +71,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsBlockFrame.h"
 #include "gfxContext.h"
+#include "nsRenderingContext.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "gfxPlatform.h"
 #include "gfxImageSurface.h"

@@ -153,11 +153,11 @@ DiscardTracker::Initialize()
   // Create the timer.
   sTimer = do_CreateInstance("@mozilla.org/timer;1");
 
-  // Read the timeout pref and start the timer.
-  ReloadTimeout();
-
   // Mark us as initialized
   sInitialized = true;
+
+  // Read the timeout pref and start the timer.
+  ReloadTimeout();
 
   return NS_OK;
 }
@@ -194,9 +194,12 @@ DiscardTracker::ReloadTimeout()
 nsresult
 DiscardTracker::EnableTimer()
 {
-  // Nothing to do if the timer's already on.
-  if (sTimerOn)
+  // Nothing to do if the timer's already on or we haven't yet been
+  // initialized.  !sTimer probably means we've shut down, so just ignore that,
+  // too.
+  if (sTimerOn || !sInitialized || !sTimer)
     return NS_OK;
+
   sTimerOn = true;
 
   // Activate the timer.  Have it call us back in (sMinDiscardTimeoutMs / 2)
@@ -215,7 +218,7 @@ void
 DiscardTracker::DisableTimer()
 {
   // Nothing to do if the timer's already off.
-  if (!sTimerOn)
+  if (!sTimerOn || !sTimer)
     return;
   sTimerOn = false;
 

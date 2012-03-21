@@ -24,12 +24,10 @@
 /** Tests for Bug 545812 **/
 
 // Ensure the full-screen api is enabled, and will be disabled on test exit.
-var prevEnabled = SpecialPowers.getBoolPref("full-screen-api.enabled");
 SpecialPowers.setBoolPref("full-screen-api.enabled", true);
 
 // Disable the requirement for trusted contexts only, so the tests are easier
 // to write.
-var prevTrusted = SpecialPowers.getBoolPref("full-screen-api.allow-trusted-requests-only");
 SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
 
 // Run the tests which go full-screen in new windows, as mochitests normally
@@ -50,6 +48,7 @@ var testWindow = null;
 var gTestIndex = 0;
 
 const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
+const isOSXLion = navigator.userAgent.indexOf("Mac OS X 10.7") != -1;
 
 function nextTest() {
   if (isWinXP) {
@@ -59,13 +58,34 @@ function nextTest() {
   }
   if (testWindow) {
     testWindow.close();
+    if (isOSXLion) {
+      // On OS X Lion, tests cause problems. Timeouts are a bad way to get around
+      // the problem and may lead to future [orange], but they are the only option
+      // at this point.
+      SimpleTest.waitForFocus(function() { setTimeout(runNextTest, 3000); });
+      return;
+    }
   }
+  runNextTest();
+}
+
+function runNextTest() {
   if (gTestIndex < gTestWindows.length) {
     testWindow = window.open(gTestWindows[gTestIndex], "", "width=500,height=500");
+    // We'll wait for the window to load, then make sure our window is refocused
+    // before starting the test, which will get kicked off on "focus".
+    // This ensures that we're essentially back on the primary "desktop" on
+    // OS X Lion before we run the test.
+    testWindow.addEventListener("load", function onload() {
+      testWindow.removeEventListener("load", onload, false);
+      SimpleTest.waitForFocus(function() {
+        SimpleTest.waitForFocus(testWindow.begin, testWindow);
+      });
+    }, false);
     gTestIndex++;
   } else {
-    SpecialPowers.setBoolPref("full-screen-api.enabled", prevEnabled);
-    SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", prevTrusted);	
+    SpecialPowers.clearUserPref("full-screen-api.enabled");
+    SpecialPowers.clearUserPref("full-screen-api.allow-trusted-requests-only");
     SimpleTest.finish();
   }
 }

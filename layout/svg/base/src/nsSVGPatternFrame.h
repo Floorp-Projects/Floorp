@@ -39,16 +39,15 @@
 #ifndef __NS_SVGPATTERNFRAME_H__
 #define __NS_SVGPATTERNFRAME_H__
 
-#include "nsSVGPaintServerFrame.h"
 #include "gfxMatrix.h"
-#include "nsIDOMSVGAnimTransformList.h"
+#include "nsSVGPaintServerFrame.h"
 
-class nsIFrame;
-class nsSVGLength2;
-class nsSVGElement;
-class nsSVGViewBox;
-class gfxContext;
 class gfxASurface;
+class gfxContext;
+class nsIFrame;
+class nsSVGElement;
+class nsSVGLength2;
+class nsSVGViewBox;
 
 namespace mozilla {
 class SVGAnimatedPreserveAspectRatio;

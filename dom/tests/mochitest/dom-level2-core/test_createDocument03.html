@@ -118,6 +118,8 @@ function createDocument03() {
       success = false;
 		}
 		//assertTrue("no_throw_WRONG_DOCUMENT_ERR",success);
+      // Ensure at least one SimpleTest check is reported. (Bug 483992)
+      ok(success, "createDocument() succeeded");
 	}
 
 }

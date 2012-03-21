@@ -94,6 +94,7 @@
         macanimationtype="document"
         screenX="4" screenY="4"
         browsingmode="normal"
+        fullscreenbutton="true"
         persist="screenX screenY width height sizemode">
 
 # All JS files which are not content (only) dependent that browser.xul
@@ -1059,7 +1060,7 @@
     </svg:mask>
     <svg:mask id="winstripe-urlbar-back-button-mask" maskContentUnits="userSpaceOnUse">
       <svg:rect x="0" y="0" width="10000" height="50" fill="white"/>
-      <svg:circle cx="-11" cy="13" r="15"/>
+      <svg:circle cx="-11" cy="18" r="15"/>
     </svg:mask>
   </svg:svg>
 #endif
