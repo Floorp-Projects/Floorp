@@ -4,12 +4,16 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMElement;
+interface nsIDOMDocumentFragment;
+interface nsIURI;
+
 /**
  * Non-Web HTML parser functionality to Firefox extensions and XULRunner apps. 
  * Don't use this from within Gecko--use nsContentUtils, nsTreeSanitizer, etc.
  * directly instead.
  */
-[scriptable, uuid(290f49bb-0619-4bda-8006-ab31bec7231a)]
+[scriptable, uuid(a1101145-0025-411e-8873-fdf57bf28128)]
 interface nsIParserUtils : nsISupports
 {
 
@@ -100,6 +104,22 @@ interface nsIParserUtils : nsISupports
   AString convertToPlainText(in AString src,
                              in unsigned long flags,
                              in unsigned long wrapCol);
+
+  /**
+   * Parses markup into a sanitized document fragment.
+   *
+   * @param fragment the input markup
+   * @param flags sanitization option flags defined above
+   * @param isXML true if |fragment| is XML and false if HTML
+   * @param baseURI the base URL for this fragment
+   * @param element the context node for the fragment parsing algorithm
+   */
+  nsIDOMDocumentFragment parseFragment(in AString fragment,
+                                       in unsigned long flags,
+                                       in boolean isXML,
+                                       in nsIURI baseURI,
+                                       in nsIDOMElement element);
+
 };
 
 %{ C++

@@ -20,7 +20,7 @@ Tests:
   <title>Test for Bug 700764</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 </head>
-<body onload="start();">
+<body>
 
 <div id="fse">
   <div id="fse-inner">
@@ -54,13 +54,9 @@ function e(id) {
   return document.getElementById(id);
 }
 
-function start() {
-  SimpleTest.waitForFocus(
-    function() {
-      addListener("change", change1);
-      e("fse").mozRequestFullScreen();
-    }
-  );
+function begin() {
+  addListener("change", change1);
+  e("fse").mozRequestFullScreen();
 }
 
 function change1() {

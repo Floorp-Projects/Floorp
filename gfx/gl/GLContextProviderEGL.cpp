@@ -507,7 +507,6 @@ public:
     bool SwapBuffers()
     {
         if (mSurface && !mPlatformContext) {
-            //sEGLLibrary.fSetSwapRectangleANDROID(EGL_DISPLAY(), mSurface, 0, 0, gScreenBounds.width, gScreenBounds.height);
             return sEGLLibrary.fSwapBuffers(EGL_DISPLAY(), mSurface);
         } else {
             return false;

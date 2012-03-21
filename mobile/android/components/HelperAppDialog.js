@@ -40,11 +40,7 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
-#ifdef ANDROID
 const URI_GENERIC_ICON_DOWNLOAD = "drawable://alertdownloads";
-#else
-const URI_GENERIC_ICON_DOWNLOAD = "chrome://browser/skin/images/alert-downloads-30.png";
-#endif
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");

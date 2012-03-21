@@ -34,8 +34,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDocument.h"
 #include "nsSVGMaskFrame.h"
+
+#include "nsIDocument.h"
+#include "nsRenderingContext.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGMaskElement.h"
 #include "nsSVGEffects.h"

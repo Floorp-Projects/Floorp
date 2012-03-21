@@ -37,14 +37,22 @@
 #ifndef __NS_SVGFILTERFRAME_H__
 #define __NS_SVGFILTERFRAME_H__
 
+#include "nsFrame.h"
+#include "nsQueryFrame.h"
 #include "nsRect.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGUtils.h"
 
+class nsIAtom;
+class nsIContent;
+class nsIFrame;
+class nsIPresShell;
 class nsRenderingContext;
+class nsStyleContext;
 class nsSVGFilterPaintCallback;
 
 typedef nsSVGContainerFrame nsSVGFilterFrameBase;
+
 class nsSVGFilterFrame : public nsSVGFilterFrameBase
 {
   friend nsIFrame*

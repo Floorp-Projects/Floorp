@@ -70,7 +70,7 @@ public class BrowserContractHelpers extends BrowserContract {
     SyncColumns.IS_DELETED,
     Bookmarks.TITLE,
     Bookmarks.URL,
-    Bookmarks.IS_FOLDER,
+    Bookmarks.TYPE,
     Bookmarks.PARENT,
     Bookmarks.POSITION,
     Bookmarks.TAGS,

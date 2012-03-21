@@ -98,15 +98,29 @@ implements RecordsChannelDelegate,
     this.getSynchronizer().repositoryA.createSession(this, context);
   }
 
-  // TODO: implement aborting.
-  public void abort() {
+  // These are accessed by `abort` and `synchronize`, both of which are synchronized.
+  // Guarded by `this`.
+  protected RecordsChannel channelAToB;
+  protected RecordsChannel channelBToA;
+
+  public synchronized void abort() {
+    // Guaranteed to have been begun by the time we get to run.
+    if (channelAToB != null) {
+      channelAToB.abort();
+    }
+
+    // Not guaranteed. It's possible for the second flow to begin after we've aborted.
+    // TODO: stop this from happening!
+    if (channelBToA != null) {
+      channelBToA.abort();
+    }
     this.delegate.onSynchronizeAborted(this);
   }
 
   /**
    * Please don't call this until you've been notified with onInitialized.
    */
-  public void synchronize() {
+  public synchronized void synchronize() {
     // First thing: decide whether we should.
     if (!sessionA.dataAvailable() &&
         !sessionB.dataAvailable()) {
@@ -123,7 +137,7 @@ implements RecordsChannelDelegate,
 
     // This is the *second* record channel to flow.
     // I, SynchronizerSession, am the delegate for the *second* flow.
-    final RecordsChannel channelBToA = new RecordsChannel(this.sessionB, this.sessionA, this);
+    channelBToA = new RecordsChannel(this.sessionB, this.sessionA, this);
 
     // This is the delegate for the *first* flow.
     RecordsChannelDelegate channelAToBDelegate = new RecordsChannelDelegate() {
@@ -164,7 +178,7 @@ implements RecordsChannelDelegate,
     };
 
     // This is the *first* channel to flow.
-    final RecordsChannel channelAToB = new RecordsChannel(this.sessionA, this.sessionB, channelAToBDelegate);
+    channelAToB = new RecordsChannel(this.sessionA, this.sessionB, channelAToBDelegate);
 
     Logger.info(LOG_TAG, "Starting A to B flow. Channel is " + channelAToB);
     try {

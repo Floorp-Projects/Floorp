@@ -26,8 +26,8 @@
       var plugin1 = document.getElementById("plugin1");
       var plugin2 = document.getElementById("plugin2");
 
-      // Don't run any tests if we're not testing the Cocoa event model.
       if (plugin1.getEventModel() != 1) {
+        window.opener.todo(false, "Skipping this test when not testing the Cocoa event model");
         window.opener.testsFinished();
         return;
       }
