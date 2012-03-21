@@ -3095,8 +3095,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Now create the String function. */
-    JSFunction *ctor = global->createConstructor(cx, js_String, &StringClass,
-                                                 CLASS_ATOM(cx, String), 1);
+    JSFunction *ctor = global->createConstructor(cx, js_String, CLASS_ATOM(cx, String), 1);
     if (!ctor)
         return NULL;
 
