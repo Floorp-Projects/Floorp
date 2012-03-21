@@ -8348,13 +8348,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
            sameExceptHashes && !newHash.IsEmpty());
 
         if (doShortCircuitedLoad) {
-            // If our load group contains a LOAD_DOCUMENT_URI request with a
-            // channel which doesn't match our document's channel, cancel it.
-            //
-            // That is, a short-circuited load will cancel a non-short-circuited
-            // load of a different document.
-            StopOutstandingOtherDocumentLoad();
-
             // Save the current URI; we need it if we fire a hashchange later.
             nsCOMPtr<nsIURI> oldURI = mCurrentURI;
 
@@ -8652,47 +8645,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     }
 
     return rv;
-}
-
-// If our load group contains a LOAD_DOCUMENT_URI channel that's not our
-// document's channel, cancel it.
-void
-nsDocShell::StopOutstandingOtherDocumentLoad()
-{
-    nsCOMPtr<nsIChannel> docChannel = GetCurrentDocChannel();
-    if (!docChannel || !mLoadGroup) {
-        return;
-    }
-
-    nsCOMPtr<nsISimpleEnumerator> requests;
-    mLoadGroup->GetRequests(getter_AddRefs(requests));
-    if (!requests) {
-        return;
-    }
-
-    while (true) {
-        bool hasMoreElements = false;
-        requests->HasMoreElements(&hasMoreElements);
-        if (!hasMoreElements) {
-            break;
-        }
-
-        nsCOMPtr<nsISupports> next;
-        requests->GetNext(getter_AddRefs(next));
-
-        nsCOMPtr<nsIChannel> channel = do_QueryInterface(next);
-        if (!channel) {
-            continue;
-        }
-
-        nsLoadFlags flags;
-        channel->GetLoadFlags(&flags);
-
-        // As promised, cancel the channel if it's loading a different document.
-        if ((flags & nsIChannel::LOAD_DOCUMENT_URI) && channel != docChannel) {
-            channel->Cancel(NS_BINDING_ABORTED);
-        }
-    }
 }
 
 nsIPrincipal*
