@@ -161,6 +161,12 @@ input[type=button] {
   opacity: 0 !important;
 }
 
+@media (-moz-touch-enabled) {
+  .newtab-control {
+    opacity: 1;
+  }
+}
+
 .newtab-control-pin:-moz-locale-dir(ltr),
 .newtab-control-block:-moz-locale-dir(rtl) {
   left: 4px;
