@@ -2027,7 +2027,7 @@ types::UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc)
         return false;
 
     JSOp op = JSOp(*pc);
-    if (op == JSOP_NEWOBJECT || op == JSOP_NEWINIT && (JSProtoKey)pc[1] == JSProto_Object) {
+    if (op == JSOP_NEWOBJECT || (op == JSOP_NEWINIT && GET_UINT8(pc) == JSProto_Object)) {
         AutoEnterTypeInference enter(cx);
 
         if (!script->ensureRanAnalysis(cx, NULL))
