@@ -793,6 +793,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
               RemoveBidiContinuation(aBpd, frame,
                                      frameIndex, newIndex, lineOffset);
               frameIndex = newIndex;
+              lastFrame = frame = aBpd->FrameAt(frameIndex);
             }
           } else if (fragmentLength > 0 && runLength > fragmentLength) {
             /*
@@ -1586,6 +1587,16 @@ nsBidiPresUtils::RemoveBidiContinuation(BidiParagraphData *aBpd,
         }
       }
     }
+  }
+
+  // Make sure that the last continuation we made fluid does not itself have a
+  // fluid continuation (this can happen when re-resolving after dynamic changes
+  // to content)
+  nsIFrame* lastFrame = aBpd->FrameAt(aLastIndex);
+  nsIFrame* next = lastFrame->GetNextInFlow();
+  if (next) {
+    lastFrame->SetNextContinuation(next);
+    next->SetPrevContinuation(lastFrame);
   }
 }
 
