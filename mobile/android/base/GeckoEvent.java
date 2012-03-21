@@ -88,7 +88,7 @@ public class GeckoEvent {
     private static final int VIEWPORT = 20;
     private static final int VISITED = 21;
     private static final int NETWORK_CHANGED = 22;
-    private static final int PROXIMITY_EVENT = 23;
+    private static final int UNUSED3_EVENT = 23;
     private static final int ACTIVITY_RESUMING = 24;
     private static final int SCREENSHOT = 25;
     private static final int UNUSED2_EVENT = 26;
@@ -124,7 +124,6 @@ public class GeckoEvent {
     public Point[] mPointRadii;
     public Rect mRect;
     public double mX, mY, mZ;
-    public double mDistance;
 
     public int mMetaState, mFlags;
     public int mKeyCode, mUnicodeChar;
@@ -340,10 +339,9 @@ public class GeckoEvent {
             break;
 
         case Sensor.TYPE_PROXIMITY:
-            // bug 734854 - maybe we can get rid of this event.  is
-            // values[1] and values[2] valid?
-            event = new GeckoEvent(PROXIMITY_EVENT);
-            event.mDistance = s.values[0];
+            event = new GeckoEvent(SENSOR_EVENT);
+            event.mFlags = GeckoHalDefines.SENSOR_PROXIMITY;
+            event.mX = s.values[0];
             break;
         }
         return event;
