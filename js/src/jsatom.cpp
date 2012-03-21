@@ -117,104 +117,19 @@ const char *const js_common_atom_names[] = {
     "boolean",                  /* typeAtoms[JSTYPE_BOOLEAN]    */
     js_null_str,                /* typeAtoms[JSTYPE_NULL]       */
     "xml",                      /* typeAtoms[JSTYPE_XML]        */
-    js_null_str,                /* nullAtom                     */
+    js_null_str                 /* nullAtom                     */
 
-#define JS_PROTO(name,code,init) js_##name##_str,
+#define JS_PROTO(name,code,init) ,js_##name##_str
 #include "jsproto.tbl"
 #undef JS_PROTO
 
-    js_anonymous_str,           /* anonymousAtom                */
-    js_apply_str,               /* applyAtom                    */
-    js_arguments_str,           /* argumentsAtom                */
-    js_arity_str,               /* arityAtom                    */
-    js_BYTES_PER_ELEMENT_str,   /* BYTES_PER_ELEMENTAtom        */
-    js_call_str,                /* callAtom                     */
-    js_callee_str,              /* calleeAtom                   */
-    js_caller_str,              /* callerAtom                   */
-    js_class_prototype_str,     /* classPrototypeAtom           */
-    js_constructor_str,         /* constructorAtom              */
-    js_each_str,                /* eachAtom                     */
-    js_eval_str,                /* evalAtom                     */
-    js_fileName_str,            /* fileNameAtom                 */
-    js_get_str,                 /* getAtom                      */
-    js_global_str,              /* globalAtom                   */
-    js_ignoreCase_str,          /* ignoreCaseAtom               */
-    js_index_str,               /* indexAtom                    */
-    js_input_str,               /* inputAtom                    */
-    "toISOString",              /* toISOStringAtom              */
-    js_iterator_str,            /* iteratorAtom                 */
-    js_join_str,                /* joinAtom                     */
-    js_lastIndex_str,           /* lastIndexAtom                */
-    js_length_str,              /* lengthAtom                   */
-    js_lineNumber_str,          /* lineNumberAtom               */
-    js_message_str,             /* messageAtom                  */
-    js_multiline_str,           /* multilineAtom                */
-    js_name_str,                /* nameAtom                     */
-    js_next_str,                /* nextAtom                     */
-    js_noSuchMethod_str,        /* noSuchMethodAtom             */
-    "[object Null]",            /* objectNullAtom               */
-    "[object Undefined]",       /* objectUndefinedAtom          */
-    "of",                       /* ofAtom                       */
-    js_proto_str,               /* protoAtom                    */
-    js_set_str,                 /* setAtom                      */
-    js_source_str,              /* sourceAtom                   */
-    js_stack_str,               /* stackAtom                    */
-    js_sticky_str,              /* stickyAtom                   */
-    js_toGMTString_str,         /* toGMTStringAtom              */
-    js_toLocaleString_str,      /* toLocaleStringAtom           */
-    js_toSource_str,            /* toSourceAtom                 */
-    js_toString_str,            /* toStringAtom                 */
-    js_toUTCString_str,         /* toUTCStringAtom              */
-    js_valueOf_str,             /* valueOfAtom                  */
-    js_toJSON_str,              /* toJSONAtom                   */
-    "(void 0)",                 /* void0Atom                    */
-    js_enumerable_str,          /* enumerableAtom               */
-    js_configurable_str,        /* configurableAtom             */
-    js_writable_str,            /* writableAtom                 */
-    js_value_str,               /* valueAtom                    */
-    js_test_str,                /* testAtom                     */
-    "use strict",               /* useStrictAtom                */
-    "loc",                      /* locAtom                      */
-    "line",                     /* lineAtom                     */
-    "Infinity",                 /* InfinityAtom                 */
-    "NaN",                      /* NaNAtom                      */
-    "builder",                  /* builderAtom                  */
-
-#if JS_HAS_XML_SUPPORT
-    js_etago_str,               /* etagoAtom                    */
-    js_namespace_str,           /* namespaceAtom                */
-    js_ptagc_str,               /* ptagcAtom                    */
-    js_qualifier_str,           /* qualifierAtom                */
-    js_space_str,               /* spaceAtom                    */
-    js_stago_str,               /* stagoAtom                    */
-    js_star_str,                /* starAtom                     */
-    js_starQualifier_str,       /* starQualifierAtom            */
-    js_tagc_str,                /* tagcAtom                     */
-    js_xml_str,                 /* xmlAtom                      */
-    "@mozilla.org/js/function", /* functionNamespaceURIAtom     */
-#endif
-
-    "Proxy",                    /* ProxyAtom                    */
-
-    "getOwnPropertyDescriptor", /* getOwnPropertyDescriptorAtom */
-    "getPropertyDescriptor",    /* getPropertyDescriptorAtom    */
-    "defineProperty",           /* definePropertyAtom           */
-    "delete",                   /* deleteAtom                   */
-    "getOwnPropertyNames",      /* getOwnPropertyNames          */
-    "enumerate",                /* enumerateAtom                */
-    "fix",                      /* fixAtom                      */
-
-    "has",                      /* hasAtom                      */
-    "hasOwn",                   /* hasOwnAtom                   */
-    "keys",                     /* keysAtom                     */
-    "iterate",                  /* iterateAtom                  */
-
-    "WeakMap",                  /* WeakMapAtom                  */
-
-    "byteLength",               /* byteLengthAtom               */
-
-    "return",                   /* returnAtom                   */
-    "throw"                     /* throwAtom                    */
+#define DEFINE_ATOM(id, text)          ,js_##id##_str
+#define DEFINE_PROTOTYPE_ATOM(id)      ,js_##id##_str
+#define DEFINE_KEYWORD_ATOM(id)        ,js_##id##_str
+#include "jsatom.tbl"
+#undef DEFINE_ATOM
+#undef DEFINE_PROTOTYPE_ATOM
+#undef DEFINE_KEYWORD_ATOM
 };
 
 void
@@ -248,73 +163,25 @@ JS_STATIC_ASSERT(JS_ARRAY_LENGTH(js_common_atom_names) < 256);
 
 const size_t js_common_atom_count = JS_ARRAY_LENGTH(js_common_atom_names);
 
-const char js_anonymous_str[]       = "anonymous";
-const char js_apply_str[]           = "apply";
-const char js_arguments_str[]       = "arguments";
-const char js_arity_str[]           = "arity";
-const char js_BYTES_PER_ELEMENT_str[] = "BYTES_PER_ELEMENT";
-const char js_call_str[]            = "call";
-const char js_callee_str[]          = "callee";
-const char js_caller_str[]          = "caller";
-const char js_class_prototype_str[] = "prototype";
-const char js_constructor_str[]     = "constructor";
-const char js_each_str[]            = "each";
-const char js_eval_str[]            = "eval";
-const char js_fileName_str[]        = "fileName";
-const char js_get_str[]             = "get";
-const char js_getter_str[]          = "getter";
-const char js_global_str[]          = "global";
-const char js_ignoreCase_str[]      = "ignoreCase";
-const char js_index_str[]           = "index";
-const char js_input_str[]           = "input";
-const char js_iterator_str[]        = "__iterator__";
-const char js_join_str[]            = "join";
-const char js_lastIndex_str[]       = "lastIndex";
-const char js_length_str[]          = "length";
-const char js_lineNumber_str[]      = "lineNumber";
-const char js_message_str[]         = "message";
-const char js_multiline_str[]       = "multiline";
-const char js_name_str[]            = "name";
-const char js_next_str[]            = "next";
-const char js_noSuchMethod_str[]    = "__noSuchMethod__";
-const char js_object_str[]          = "object";
-const char js_proto_str[]           = "__proto__";
-const char js_setter_str[]          = "setter";
-const char js_set_str[]             = "set";
-const char js_source_str[]          = "source";
-const char js_stack_str[]           = "stack";
-const char js_sticky_str[]          = "sticky";
-const char js_toGMTString_str[]     = "toGMTString";
-const char js_toLocaleString_str[]  = "toLocaleString";
-const char js_toSource_str[]        = "toSource";
-const char js_toString_str[]        = "toString";
-const char js_toUTCString_str[]     = "toUTCString";
 const char js_undefined_str[]       = "undefined";
-const char js_valueOf_str[]         = "valueOf";
-const char js_toJSON_str[]          = "toJSON";
-const char js_enumerable_str[]      = "enumerable";
-const char js_configurable_str[]    = "configurable";
-const char js_writable_str[]        = "writable";
-const char js_value_str[]           = "value";
-const char js_test_str[]            = "test";
+const char js_object_str[]          = "object";
 
-#if JS_HAS_XML_SUPPORT
-const char js_etago_str[]           = "</";
-const char js_namespace_str[]       = "namespace";
-const char js_ptagc_str[]           = "/>";
-const char js_qualifier_str[]       = "::";
-const char js_space_str[]           = " ";
-const char js_stago_str[]           = "<";
-const char js_star_str[]            = "*";
-const char js_starQualifier_str[]   = "*::";
-const char js_tagc_str[]            = ">";
-const char js_xml_str[]             = "xml";
-#endif
+#define DEFINE_ATOM(id, text)          const char js_##id##_str[] = text;
+#define DEFINE_PROTOTYPE_ATOM(id)
+#define DEFINE_KEYWORD_ATOM(id)
+#include "jsatom.tbl"
+#undef DEFINE_ATOM
+#undef DEFINE_PROTOTYPE_ATOM
+#undef DEFINE_KEYWORD_ATOM
 
 #if JS_HAS_GENERATORS
 const char js_close_str[]           = "close";
 const char js_send_str[]            = "send";
 #endif
+
+/* Constant strings that are not atomized. */
+const char js_getter_str[]          = "getter";
+const char js_setter_str[]          = "setter";
 
 /*
  * For a browser build from 2007-08-09 after the browser starts up there are

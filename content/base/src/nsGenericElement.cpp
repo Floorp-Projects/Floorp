@@ -170,18 +170,6 @@ PRUint32 nsMutationGuard::sMutationCount = 0;
 
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 
-void
-nsWrapperCache::RemoveExpandoObject()
-{
-  JSObject *expando = GetExpandoObjectPreserveColor();
-  if (expando) {
-    JSCompartment *compartment = js::GetObjectCompartment(expando);
-    xpc::CompartmentPrivate *priv =
-      static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
-    priv->RemoveDOMExpandoObject(expando);
-  }
-}
-
 //----------------------------------------------------------------------
 
 nsINode::nsSlots::~nsSlots()
@@ -1697,13 +1685,10 @@ nsINode::SetExplicitBaseURI(nsIURI* aURI)
 
 //----------------------------------------------------------------------
 
-static JSObject*
+static inline JSObject*
 GetJSObjectChild(nsWrapperCache* aCache)
 {
-  if (aCache->PreservingWrapper()) {
-    return aCache->GetWrapperPreserveColor();
-  }
-  return aCache->GetExpandoObjectPreserveColor();
+  return aCache->PreservingWrapper() ? aCache->GetWrapperPreserveColor() : NULL;
 }
 
 static bool
@@ -4631,16 +4616,16 @@ nsGenericElement::CanSkipInCC(nsINode* aNode)
     return false;
   }
 
-  // Bail out early if aNode is somewhere in anonymous content,
-  // or otherwise unusual.
-  if (UnoptimizableCCNode(aNode)) {
-    return false;
-  }
-
   nsIDocument* currentDoc = aNode->GetCurrentDoc();
   if (currentDoc &&
       nsCCUncollectableMarker::InGeneration(currentDoc->GetMarkedCCGeneration())) {
     return !NeedsScriptTraverse(aNode);
+  }
+
+  // Bail out early if aNode is somewhere in anonymous content,
+  // or otherwise unusual.
+  if (UnoptimizableCCNode(aNode)) {
+    return false;
   }
 
   nsINode* root =
@@ -4777,6 +4762,13 @@ NodeHasActiveFrame(nsIDocument* aCurrentDoc, nsINode* aNode)
          aNode->AsElement()->GetPrimaryFrame();
 }
 
+bool
+OwnedByBindingManager(nsIDocument* aCurrentDoc, nsINode* aNode)
+{
+  return aNode->IsElement() &&
+    aCurrentDoc->BindingManager()->GetBinding(aNode->AsElement());
+}
+
 // CanSkip checks if aNode is black, and if it is, returns
 // true. If aNode is in a black DOM tree, CanSkip may also remove other objects
 // from purple buffer and unmark event listeners and user data.
@@ -4795,10 +4787,12 @@ nsGenericElement::CanSkip(nsINode* aNode, bool aRemovingAllowed)
   nsIDocument* currentDoc = aNode->GetCurrentDoc();
   if (currentDoc &&
       nsCCUncollectableMarker::InGeneration(currentDoc->GetMarkedCCGeneration()) &&
-      (!unoptimizable || NodeHasActiveFrame(currentDoc, aNode))) {
+      (!unoptimizable || NodeHasActiveFrame(currentDoc, aNode) ||
+       OwnedByBindingManager(currentDoc, aNode))) {
     MarkNodeChildren(aNode);
     return true;
   }
+
   if (unoptimizable) {
     return false;
   }

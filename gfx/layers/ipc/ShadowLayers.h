@@ -302,12 +302,6 @@ public:
     return mParentBackend;
   }
 
-  /*
-   * No need to use double buffer in system memory with GPU rendering,
-   * texture used as front buffer.
-   */
-  bool ShouldDoubleBuffer() { return GetParentBackendType() == LayerManager::LAYERS_BASIC; }
-
   /**
    * Flag the next paint as the first for a document.
    */

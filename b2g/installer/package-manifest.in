@@ -144,6 +144,7 @@
 @BINPATH@/components/directory.xpt
 @BINPATH@/components/docshell.xpt
 @BINPATH@/components/dom.xpt
+@BINPATH@/components/dom_apps.xpt
 @BINPATH@/components/dom_base.xpt
 #ifdef MOZ_B2G_RIL
 @BINPATH@/components/dom_telephony.xpt
@@ -290,7 +291,6 @@
 @BINPATH@/components/xuldoc.xpt
 @BINPATH@/components/xultmpl.xpt
 @BINPATH@/components/zipwriter.xpt
-@BINPATH@/components/webapps.xpt
 
 ; JavaScript components
 @BINPATH@/components/ConsoleAPI.manifest
@@ -407,10 +407,10 @@
 @BINPATH@/components/RadioInterfaceLayer.js
 @BINPATH@/components/SmsDatabaseService.manifest
 @BINPATH@/components/SmsDatabaseService.js
-@BINPATH@/components/nsWifiWorker.js
-@BINPATH@/components/nsWifiWorker.manifest
-@BINPATH@/components/nsDOMWifiManager.js
-@BINPATH@/components/nsDOMWifiManager.manifest
+@BINPATH@/components/WifiWorker.js
+@BINPATH@/components/WifiWorker.manifest
+@BINPATH@/components/DOMWifiManager.js
+@BINPATH@/components/DOMWifiManager.manifest
 #endif
 #ifdef XP_MACOSX
 @BINPATH@/components/libalerts.dylib
@@ -430,6 +430,8 @@
 #endif
 @BINPATH@/components/TelemetryPing.js
 @BINPATH@/components/TelemetryPing.manifest
+@BINPATH@/components/Webapps.js
+@BINPATH@/components/Webapps.manifest
 
 ; Modules
 @BINPATH@/modules/*
@@ -615,3 +617,6 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/B2GComponents.manifest
 @BINPATH@/components/B2GComponents.xpt
 @BINPATH@/components/CameraContent.js
+@BINPATH@/components/AlertsService.js
+@BINPATH@/components/ContentPermissionPrompt.js
+@BINPATH@/components/MozKeyboard.js

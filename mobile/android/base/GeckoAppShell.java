@@ -150,8 +150,8 @@ public class GeckoAppShell
     public static native void callObserver(String observerKey, String topic, String data);
     public static native void removeObserver(String observerKey);
     public static native void loadGeckoLibsNative(String apkName);
-    public static native void loadSQLiteLibsNative(String apkName);
-    public static native void loadNSSLibsNative(String apkName);
+    public static native void loadSQLiteLibsNative(String apkName, boolean shouldExtract);
+    public static native void loadNSSLibsNative(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
 
     public static void registerGlobalExceptionHandler() {
@@ -278,6 +278,15 @@ public class GeckoAppShell
 
         File cacheFile = getCacheDir(context);
         putenv("GRE_HOME=" + getGREDir(context).getPath());
+        File[] files = cacheFile.listFiles();
+        if (files != null) {
+            Iterator<File> cacheFiles = Arrays.asList(files).iterator();
+            while (cacheFiles.hasNext()) {
+                File libFile = cacheFiles.next();
+                if (libFile.getName().endsWith(".so"))
+                    libFile.delete();
+            }
+        }
 
         // setup the libs cache
         String linkerCache = System.getenv("MOZ_LINKER_CACHE");
@@ -370,7 +379,7 @@ public class GeckoAppShell
             loadMozGlue();
             // the extract libs parameter is being removed in bug 732069
             loadLibsSetup(context);
-            loadSQLiteLibsNative(apkName);
+            loadSQLiteLibsNative(apkName, false);
             sSQLiteLibsLoaded = true;
         }
     }
@@ -383,7 +392,7 @@ public class GeckoAppShell
                 return;
             loadMozGlue();
             loadLibsSetup(context);
-            loadNSSLibsNative(apkName);
+            loadNSSLibsNative(apkName, false);
             sNSSLibsLoaded = true;
         }
     }
@@ -1090,9 +1099,13 @@ public class GeckoAppShell
         GeckoApp.mAppContext.setFullScreen(fullscreen);
     }
 
-    public static String showFilePicker(String aFilters) {
+    public static String showFilePickerForExtensions(String aExtensions) {
         return GeckoApp.mAppContext.
-            showFilePicker(getMimeTypeFromExtensions(aFilters));
+            showFilePicker(getMimeTypeFromExtensions(aExtensions));
+    }
+
+    public static String showFilePickerForMimeType(String aMimeType) {
+        return GeckoApp.mAppContext.showFilePicker(aMimeType);
     }
 
     public static void performHapticFeedback(boolean aIsLongPress) {
@@ -1617,8 +1630,6 @@ public class GeckoAppShell
         }
     }
 
-    static SynchronousQueue<String> sPromptQueue = null;
-
     public static void registerGeckoEventListener(String event, GeckoEventListener listener) {
         if (mEventListeners == null)
             mEventListeners = new HashMap<String, ArrayList<GeckoEventListener>>();
@@ -1678,8 +1689,6 @@ public class GeckoAppShell
             String type = geckoObject.getString("type");
             
             if (type.equals("Prompt:Show")) {
-                if (sPromptQueue == null)
-                    sPromptQueue = new SynchronousQueue<String>();
                 getHandler().post(new Runnable() {
                     public void run() {
                         getPromptService().processMessage(geckoObject);
@@ -1688,9 +1697,7 @@ public class GeckoAppShell
 
                 String promptServiceResult = "";
                 try {
-                    while (null == (promptServiceResult = sPromptQueue.poll(1, TimeUnit.MILLISECONDS))) {
-                        processNextNativeEvent();
-                    }
+                    promptServiceResult = PromptService.waitForReturn();
                 } catch (InterruptedException e) {
                     Log.i(LOGTAG, "showing prompt ",  e);
                 }
@@ -1986,5 +1993,17 @@ public class GeckoAppShell
 
     public static byte[] decodeBase64(String s, int flags) {
         return decodeBase64(s.getBytes(), flags);
+    }
+
+    public static short getScreenOrientation() {
+        return GeckoScreenOrientationListener.getInstance().getScreenOrientation();
+    }
+
+    public static void enableScreenOrientationNotifications() {
+        GeckoScreenOrientationListener.getInstance().enableNotifications();
+    }
+
+    public static void disableScreenOrientationNotifications() {
+        GeckoScreenOrientationListener.getInstance().disableNotifications();
     }
 }

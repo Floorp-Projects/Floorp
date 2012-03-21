@@ -46,6 +46,7 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_FILES = \
                  browser_NetworkPrioritizer.js \
                  browser_TelemetryTimestamps.js \
+                 browser_keywordURLReset.js \
                  $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows) 

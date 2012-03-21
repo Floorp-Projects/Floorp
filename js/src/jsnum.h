@@ -149,8 +149,6 @@ js_InitNumberClass(JSContext *cx, JSObject *obj);
 /*
  * String constants for global function names, used in jsapi.c and jsnum.c.
  */
-extern const char js_Infinity_str[];
-extern const char js_NaN_str[];
 extern const char js_isNaN_str[];
 extern const char js_isFinite_str[];
 extern const char js_parseFloat_str[];

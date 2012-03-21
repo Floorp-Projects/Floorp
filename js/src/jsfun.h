@@ -102,7 +102,7 @@ struct JSFunction : public JSObject
         } i;
         void            *nativeOrScript;
     } u;
-    JSAtom          *atom;        /* name for diagnostics and decompiling */
+    js::HeapPtrAtom  atom;        /* name for diagnostics and decompiling */
 
     bool optimizedClosure()  const { return kind() > JSFUN_INTERPRETED; }
     bool isInterpreted()     const { return kind() >= JSFUN_INTERPRETED; }

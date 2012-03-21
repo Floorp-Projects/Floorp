@@ -352,8 +352,10 @@ nsGenericHTMLElement::SetAttribute(const nsAString& aName,
     nsCOMPtr<nsIAtom> nameAtom;
     if (IsInHTMLDocument()) {
       nsAutoString lower;
-      nsContentUtils::ASCIIToLower(aName, lower);
-      nameAtom = do_GetAtom(lower);
+      rv = nsContentUtils::ASCIIToLower(aName, lower);
+      if (NS_SUCCEEDED(rv)) {
+        nameAtom = do_GetAtom(lower);
+      }
     }
     else {
       nameAtom = do_GetAtom(aName);
@@ -983,11 +985,14 @@ nsGenericHTMLElement::ScrollIntoView(bool aTop, PRUint8 optional_argc)
     aTop = true;
   }
 
-  PRIntn vpercent = aTop ? NS_PRESSHELL_SCROLL_TOP :
-    NS_PRESSHELL_SCROLL_BOTTOM;
+  PRInt16 vpercent = aTop ? nsIPresShell::SCROLL_TOP :
+    nsIPresShell::SCROLL_BOTTOM;
 
-  presShell->ScrollContentIntoView(this, vpercent,
-                                   NS_PRESSHELL_SCROLL_ANYWHERE,
+  presShell->ScrollContentIntoView(this,
+                                   nsIPresShell::ScrollAxis(
+                                     vpercent,
+                                     nsIPresShell::SCROLL_ALWAYS),
+                                   nsIPresShell::ScrollAxis(),
                                    nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 
   return NS_OK;

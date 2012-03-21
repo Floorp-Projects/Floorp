@@ -667,6 +667,54 @@ XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx,
 
 // static
 XPCNativeSet*
+XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx,
+                           XPCNativeSet* firstSet,
+                           XPCNativeSet* secondSet,
+                           bool preserveFirstSetOrder)
+{
+    // Figure out how many interfaces we'll need in the new set.
+    PRUint32 uniqueCount = firstSet->mInterfaceCount;
+    for (PRUint32 i = 0; i < secondSet->mInterfaceCount; ++i) {
+        if (!firstSet->HasInterface(secondSet->mInterfaces[i]))
+            uniqueCount++;
+    }
+
+    // If everything in secondSet was a duplicate, we can just use the first
+    // set.
+    if (uniqueCount == firstSet->mInterfaceCount)
+        return firstSet;
+
+    // If the secondSet is just a superset of the first, we can use it provided
+    // that the caller doesn't care about ordering.
+    if (!preserveFirstSetOrder && uniqueCount == secondSet->mInterfaceCount)
+        return secondSet;
+
+    // Ok, darn. Now we have to make a new set.
+    //
+    // It would be faster to just create the new set all at once, but that
+    // would involve wrangling with some pretty hairy code - especially since
+    // a lot of stuff assumes that sets are created by adding one interface to an
+    // existing set. So let's just do the slow and easy thing and hope that the
+    // above optimizations handle the common cases.
+    XPCNativeSet* currentSet = firstSet;
+    for (PRUint32 i = 0; i < secondSet->mInterfaceCount; ++i) {
+        XPCNativeInterface* iface = secondSet->mInterfaces[i];
+        if (!currentSet->HasInterface(iface)) {
+            // Create a new augmented set, inserting this interface at the end.
+            PRUint32 pos = currentSet->mInterfaceCount;
+            currentSet = XPCNativeSet::GetNewOrUsed(ccx, currentSet, iface, pos);
+            if (!currentSet)
+                return nsnull;
+        }
+    }
+
+    // We've got the union set. Hand it back to the caller.
+    MOZ_ASSERT(currentSet->mInterfaceCount == uniqueCount);
+    return currentSet;
+}
+
+// static
+XPCNativeSet*
 XPCNativeSet::NewInstance(XPCCallContext& ccx,
                           XPCNativeInterface** array,
                           PRUint16 count)

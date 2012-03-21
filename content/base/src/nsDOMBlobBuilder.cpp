@@ -45,6 +45,7 @@
 #include "nsJSUtils.h"
 #include "nsContentUtils.h"
 #include "DictionaryHelpers.h"
+#include "nsIScriptError.h"
 
 using namespace mozilla;
 
@@ -326,7 +327,8 @@ NS_IMPL_ADDREF(nsDOMBlobBuilder)
 NS_IMPL_RELEASE(nsDOMBlobBuilder)
 NS_INTERFACE_MAP_BEGIN(nsDOMBlobBuilder)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozBlobBuilder)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMozBlobBuilder)
+  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozBlobBuilder)
 NS_INTERFACE_MAP_END
 
@@ -437,4 +439,25 @@ nsresult NS_NewBlobBuilder(nsISupports* *aSupports)
 {
   nsDOMBlobBuilder* builder = new nsDOMBlobBuilder();
   return CallQueryInterface(builder, aSupports);
+}
+
+NS_IMETHODIMP
+nsDOMBlobBuilder::Initialize(nsISupports* aOwner,
+                             JSContext* aCx,
+                             JSObject* aObj,
+                             PRUint32 aArgc,
+                             jsval* aArgv)
+{
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aOwner));
+  if (!window) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+  if (!doc) {
+    return NS_OK;
+  }
+
+  doc->WarnOnceAbout(nsIDocument::eMozBlobBuilder);
+  return NS_OK;
 }

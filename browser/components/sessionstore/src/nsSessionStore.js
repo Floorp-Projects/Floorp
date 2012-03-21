@@ -131,7 +131,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/debug.js");
 
 Cu.import("resource:///modules/TelemetryTimestamps.jsm");
-Cu.import("resource:///modules/TelemetryStopwatch.jsm");
+Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   Cu.import("resource://gre/modules/NetUtil.jsm");

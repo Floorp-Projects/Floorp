@@ -71,6 +71,7 @@ import org.json.*;
 import android.os.*;
 import android.app.*;
 import android.text.*;
+import android.text.format.Time;
 import android.view.*;
 import android.view.inputmethod.*;
 import android.view.ViewGroup.LayoutParams;
@@ -176,7 +177,8 @@ abstract public class GeckoApp
 
     private static final int FILE_PICKER_REQUEST = 1;
     private static final int AWESOMEBAR_REQUEST = 2;
-    private static final int CAMERA_CAPTURE_REQUEST = 3;
+    private static final int CAMERA_IMAGE_CAPTURE_REQUEST = 3;
+    private static final int CAMERA_VIDEO_CAPTURE_REQUEST = 4;
 
     public static boolean checkLaunchState(LaunchState checkState) {
         synchronized(sLaunchState) {
@@ -942,9 +944,6 @@ abstract public class GeckoApp
                 final String uri = message.getString("uri");
                 final String title = message.getString("title");
                 handleLoadError(tabId, uri, title);
-            } else if (event.equals("onCameraCapture")) {
-                //GeckoApp.mAppContext.doCameraCapture(message.getString("path"));
-                doCameraCapture();
             } else if (event.equals("Doorhanger:Add")) {
                 handleDoorHanger(message);
             } else if (event.equals("Doorhanger:Remove")) {
@@ -1593,15 +1592,11 @@ abstract public class GeckoApp
     // The ActionBar needs to be refreshed on rotation as different orientation uses different resources
     public void refreshActionBar() {
         if (Build.VERSION.SDK_INT >= 11) {
-            mBrowserToolbar = (BrowserToolbar) getLayoutInflater().inflate(R.layout.browser_toolbar, null);
-            mBrowserToolbar.init();
+            LinearLayout actionBar = (LinearLayout) getLayoutInflater().inflate(R.layout.browser_toolbar, null);
+            mBrowserToolbar.from(actionBar);
             mBrowserToolbar.refresh();
             GeckoActionBar.setBackgroundDrawable(this, getResources().getDrawable(R.drawable.gecko_actionbar_bg));
-            GeckoActionBar.setDisplayOptions(this, ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM |
-                                                                                  ActionBar.DISPLAY_SHOW_HOME |
-                                                                                  ActionBar.DISPLAY_SHOW_TITLE |
-                                                                                  ActionBar.DISPLAY_USE_LOGO);
-            GeckoActionBar.setCustomView(this, mBrowserToolbar);
+            GeckoActionBar.setCustomView(this, actionBar);
         }
     }
 
@@ -1634,11 +1629,15 @@ abstract public class GeckoApp
 
         setContentView(R.layout.gecko_app);
 
+        LinearLayout actionBar;
         if (Build.VERSION.SDK_INT >= 11) {
-            mBrowserToolbar = (BrowserToolbar) GeckoActionBar.getCustomView(this);
+            actionBar = (LinearLayout) GeckoActionBar.getCustomView(this);
         } else {
-            mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
+            actionBar = (LinearLayout) findViewById(R.id.browser_toolbar);
         }
+
+        mBrowserToolbar = new BrowserToolbar(mAppContext);
+        mBrowserToolbar.from(actionBar);
 
         // setup gecko layout
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
@@ -1671,7 +1670,6 @@ abstract public class GeckoApp
             checkAndLaunchUpdate();
         }
 
-        mBrowserToolbar.init();
         mBrowserToolbar.setTitle(mLastTitle);
 
         String passedUri = null;
@@ -1679,9 +1677,10 @@ abstract public class GeckoApp
         if (uri != null && uri.length() > 0)
             passedUri = mLastTitle = uri;
 
+        mRestoreSession |= getProfile().shouldRestoreSession();
         if (passedUri == null || passedUri.equals("about:home")) {
             // show about:home if we aren't restoring previous session
-            if (! getProfile().hasSession()) {
+            if (!mRestoreSession) {
                 mBrowserToolbar.updateTabCount(1);
                 showAboutHome();
             }
@@ -1700,7 +1699,7 @@ abstract public class GeckoApp
             // loading it twice
             intent.setAction(Intent.ACTION_MAIN);
             intent.setData(null);
-            passedUri = null;
+            passedUri = "about:empty";
         }
 
         sGeckoThread = new GeckoThread(intent, passedUri, mRestoreSession);
@@ -2049,6 +2048,7 @@ abstract public class GeckoApp
 
         unregisterReceiver(mConnectivityReceiver);
         GeckoNetworkManager.getInstance().stop();
+        GeckoScreenOrientationListener.getInstance().stop();
     }
 
     @Override
@@ -2080,8 +2080,13 @@ abstract public class GeckoApp
             refreshActionBar();
         }
 
-        registerReceiver(mConnectivityReceiver, mConnectivityFilter);
-        GeckoNetworkManager.getInstance().start();
+        mMainHandler.post(new Runnable() {
+          public void run() {
+            registerReceiver(mConnectivityReceiver, mConnectivityFilter);
+            GeckoNetworkManager.getInstance().start();
+            GeckoScreenOrientationListener.getInstance().start();
+          }
+        });
 
         if (mOwnActivityDepth > 0)
             mOwnActivityDepth--;
@@ -2168,6 +2173,7 @@ abstract public class GeckoApp
         }
 
         GeckoNetworkManager.getInstance().stop();
+        GeckoScreenOrientationListener.getInstance().stop();
 
         super.onDestroy();
 
@@ -2342,24 +2348,184 @@ abstract public class GeckoApp
         Log.i(LOGTAG, "Profile migration took " + timeDiff + " ms");
     }
 
-    private SynchronousQueue<String> mFilePickerResult = new SynchronousQueue<String>();
-    public String showFilePicker(String aMimeType) {
+    /**
+     * The FilePickerPromptRunnable has to be called to show an intent-like
+     * context menu UI using the PromptService.
+     */
+    private class FilePickerPromptRunnable implements Runnable {
+        public FilePickerPromptRunnable(String aTitle, PromptService.PromptListItem[] aItems) {
+            super();
+            mTitle = aTitle;
+            mItems = aItems;
+        }
+
+        public void run() {
+            GeckoAppShell.getPromptService().Show(mTitle, "", null, mItems, false);
+        }
+
+        private String mTitle;
+        private PromptService.PromptListItem[] mItems;
+    }
+
+    private int addIntentActivitiesToList(Intent intent, ArrayList<PromptService.PromptListItem> items, ArrayList<Intent> aIntents) {
+        PackageManager pm = mAppContext.getPackageManager();
+        final List<ResolveInfo> lri =
+            pm.queryIntentActivityOptions(GeckoApp.mAppContext.getComponentName(), null, intent, 0);
+
+        if (lri == null) {
+            return 0;
+        }
+
+        for (int i=0; i<lri.size(); i++) {
+            final ResolveInfo ri = lri.get(i);
+            Intent rintent = new Intent(intent);
+            rintent.setComponent(new ComponentName(
+                    ri.activityInfo.applicationInfo.packageName,
+                    ri.activityInfo.name));
+
+            PromptService.PromptListItem item = new PromptService.PromptListItem(ri.loadLabel(pm).toString());
+            item.icon = ri.loadIcon(pm);
+            items.add(item);
+            aIntents.add(rintent);
+        }
+
+        return lri.size();
+    }
+
+    private int AddFilePickingActivities(ArrayList<PromptService.PromptListItem> aItems, String aType, ArrayList<Intent> aIntents) {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType(aType);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType(aMimeType);
-        GeckoApp.this.
-            startActivityForResult(
-                Intent.createChooser(intent, getString(R.string.choose_file)),
-                FILE_PICKER_REQUEST);
+
+        return addIntentActivitiesToList(intent, aItems, aIntents);
+    }
+
+    static private String generateImageName() {
+        Time now = new Time();
+        now.setToNow();
+        return now.format("%Y-%m-%d %H.%M.%S") + ".jpg";
+    }
+
+    private PromptService.PromptListItem[] getItemsAndIntentsForFilePicker(String aMimeType, ArrayList<Intent> aIntents) {
+        ArrayList<PromptService.PromptListItem> items = new ArrayList<PromptService.PromptListItem>();
+
+        if (aMimeType.equals("audio/*")) {
+            if (AddFilePickingActivities(items, "audio/*", aIntents) <= 0) {
+                AddFilePickingActivities(items, "*/*", aIntents);
+            }
+        } else if (aMimeType.equals("image/*")) {
+            mImageFilePath = generateImageName();
+            Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+            intent.putExtra(MediaStore.EXTRA_OUTPUT,
+                            Uri.fromFile(new File(Environment.getExternalStorageDirectory(),
+                                                  mImageFilePath)));
+            addIntentActivitiesToList(intent, items, aIntents);
+
+            if (AddFilePickingActivities(items, "image/*", aIntents) <= 0) {
+              AddFilePickingActivities(items, "*/*", aIntents);
+            }
+        } else if (aMimeType.equals("video/*")) {
+            Intent intent = new Intent(android.provider.MediaStore.ACTION_VIDEO_CAPTURE);
+            addIntentActivitiesToList(intent, items, aIntents);
+
+            if (AddFilePickingActivities(items, "video/*", aIntents) <= 0) {
+              AddFilePickingActivities(items, "*/*", aIntents);
+            }
+        } else {
+            mImageFilePath = generateImageName();
+            Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+            intent.putExtra(MediaStore.EXTRA_OUTPUT,
+                            Uri.fromFile(new File(Environment.getExternalStorageDirectory(),
+                                                  mImageFilePath)));
+            addIntentActivitiesToList(intent, items, aIntents);
+
+            intent = new Intent(android.provider.MediaStore.ACTION_VIDEO_CAPTURE);
+            addIntentActivitiesToList(intent, items, aIntents);
+
+            AddFilePickingActivities(items, "*/*", aIntents);
+        }
+
+        return items.toArray(new PromptService.PromptListItem[] {});
+    }
+
+    private String getFilePickerTitle(String aMimeType) {
+        if (aMimeType.equals("audio/*")) {
+            return getString(R.string.filepicker_audio_title);
+        } else if (aMimeType.equals("image/*")) {
+            return getString(R.string.filepicker_image_title);
+        } else if (aMimeType.equals("video/*")) {
+            return getString(R.string.filepicker_video_title);
+        } else {
+            return getString(R.string.filepicker_title);
+        }
+    }
+
+    private Intent getFilePickerIntent(String aMimeType) {
+        ArrayList<Intent> intents = new ArrayList<Intent>();
+        PromptService.PromptListItem[] items = getItemsAndIntentsForFilePicker(aMimeType, intents);
+
+        if (intents.size() == 0) {
+            Log.i(LOGTAG, "no activities for the file picker!");
+            return null;
+        }
+
+        if (intents.size() == 1)
+            return intents.get(0);
+
+        GeckoAppShell.getHandler().post(new FilePickerPromptRunnable(getFilePickerTitle(aMimeType), items));
+
+        String promptServiceResult = "";
+        try {
+            promptServiceResult = PromptService.waitForReturn();
+        } catch (InterruptedException e) {
+            Log.e(LOGTAG, "showing prompt failed: ",  e);
+            return null;
+        }
+
+        int itemId = -1;
+        try {
+            itemId = new JSONObject(promptServiceResult).getInt("button");
+
+            if (itemId == -1) {
+                return null;
+            }
+        } catch (org.json.JSONException e) {
+            Log.e(LOGTAG, "result from promptservice was invalid: ", e);
+            return null;
+        }
+
+        return intents.get(itemId);
+    }
+
+    private String mImageFilePath = "";
+    private SynchronousQueue<String> mFilePickerResult = new SynchronousQueue<String>();
+
+    public String showFilePicker(String aMimeType) {
+        Intent intent = getFilePickerIntent(aMimeType);
+
+        if (intent == null) {
+            return "";
+        }
+
+        if (intent.getAction().equals(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)) {
+            startActivityForResult(intent, CAMERA_IMAGE_CAPTURE_REQUEST);
+        } else if (intent.getAction().equals(android.provider.MediaStore.ACTION_VIDEO_CAPTURE)) {
+            startActivityForResult(intent, CAMERA_VIDEO_CAPTURE_REQUEST);
+        } else if (intent.getAction().equals(Intent.ACTION_GET_CONTENT)) {
+            startActivityForResult(intent, FILE_PICKER_REQUEST);
+        } else {
+            Log.e(LOGTAG, "We should not get an intent with another action!");
+            return "";
+        }
+
         String filePickerResult = "";
 
         try {
             while (null == (filePickerResult = mFilePickerResult.poll(1, TimeUnit.MILLISECONDS))) {
-                Log.i(LOGTAG, "processing events from showFilePicker ");
                 GeckoAppShell.processNextNativeEvent();
             }
         } catch (InterruptedException e) {
-            Log.i(LOGTAG, "showing file picker ",  e);
+            Log.e(LOGTAG, "showing file picker failed: ",  e);
         }
 
         return filePickerResult;
@@ -2527,25 +2693,41 @@ abstract public class GeckoApp
                     loadRequest(url, type, searchEngine, userEntered);
             }
             break;
-        case CAMERA_CAPTURE_REQUEST:
-            Log.i(LOGTAG, "Returning from CAMERA_CAPTURE_REQUEST: " + resultCode);
-            File file = new File(Environment.getExternalStorageDirectory(), "cameraCapture-" + Integer.toString(kCaptureIndex) + ".jpg");
-            kCaptureIndex++;
-            GeckoEvent e = GeckoEvent.createBroadcastEvent("cameraCaptureDone", resultCode == Activity.RESULT_OK ?
-                                          "{\"ok\": true,  \"path\": \"" + file.getPath() + "\" }" :
-                                          "{\"ok\": false, \"path\": \"" + file.getPath() + "\" }");
-            GeckoAppShell.sendEventToGecko(e);
+        case CAMERA_IMAGE_CAPTURE_REQUEST:
+            try {
+                if (resultCode != Activity.RESULT_OK) {
+                    mFilePickerResult.put("");
+                    break;
+                }
+
+                File file = new File(Environment.getExternalStorageDirectory(), mImageFilePath);
+                mImageFilePath = "";
+                mFilePickerResult.put(file.getAbsolutePath());
+            } catch (InterruptedException e) {
+                Log.i(LOGTAG, "error returning file picker result", e);
+            }
+
+            break;
+        case CAMERA_VIDEO_CAPTURE_REQUEST:
+            try {
+                if (data == null || resultCode != Activity.RESULT_OK) {
+                    mFilePickerResult.put("");
+                    break;
+                }
+
+                Cursor cursor = managedQuery(data.getData(),
+                                             new String[] { MediaStore.Video.Media.DATA },
+                                             null,
+                                             null,
+                                             null);
+                cursor.moveToFirst();
+                mFilePickerResult.put(cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)));
+            } catch (InterruptedException e) {
+                Log.i(LOGTAG, "error returning file picker result", e);
+            }
+
             break;
        }
-    }
-
-    public void doCameraCapture() {
-        File file = new File(Environment.getExternalStorageDirectory(), "cameraCapture-" + Integer.toString(kCaptureIndex) + ".jpg");
-
-        Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
-
-        startActivityForResult(intent, CAMERA_CAPTURE_REQUEST);
     }
 
     // If searchEngine is provided, url will be used as the search query.

@@ -99,6 +99,13 @@ _TEST_FILES =	parser_datreader.js \
 		test_bug715739.html \
 		$(NULL)
 
+# Test disabled on mobile. See bug 737020.
+ifneq ($(OS_TARGET),Android)
+ifndef MOZ_PLATFORM_MAEMO
+		_TEST_FILES += test_bug709083.html
+endif
+endif
+
 # Disabled test due to orange on Linux
 #		test_bug568470.html \
 #		file_bug568470.sjs \

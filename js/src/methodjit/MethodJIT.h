@@ -454,8 +454,22 @@ enum JaegerStatus
      * The trap has been reinstalled, but should not execute again when
      * resuming execution.
      */
-    Jaeger_UnfinishedAtTrap = 3
+    Jaeger_UnfinishedAtTrap = 3,
+
+    /*
+     * An exception was thrown before entering jit code, so the caller should
+     * 'goto error'.
+     */
+    Jaeger_ThrowBeforeEnter = 4
 };
+
+static inline bool
+JaegerStatusToSuccess(JaegerStatus status)
+{
+    JS_ASSERT(status != Jaeger_Unfinished);
+    JS_ASSERT(status != Jaeger_UnfinishedAtTrap);
+    return status == Jaeger_Returned;
+}
 
 /*
  * Method JIT compartment data. Currently, there is exactly one per

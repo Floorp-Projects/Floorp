@@ -1,4 +1,0 @@
-# nsDOMWifiManager.js
-component {2cf775a7-1837-410c-9e26-323c42e076da} nsDOMWifiManager.js
-contract @mozilla.org/wifimanager;1 {2cf775a7-1837-410c-9e26-323c42e076da}
-category JavaScript-navigator-property mozWifiManager @mozilla.org/wifimanager;1

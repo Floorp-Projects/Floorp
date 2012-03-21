@@ -266,7 +266,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
      * Called whenever a new frame is about to be drawn.
      */
     public void onDrawFrame(GL10 gl) {
-        RenderContext pageContext = createPageContext(), screenContext = createScreenContext();
+        RenderContext pageContext = createPageContext(mView.getController().getViewportMetrics());
+        RenderContext screenContext = createScreenContext();
         Frame frame = createFrame(pageContext, screenContext);
         synchronized (mView.getController()) {
             frame.beginDrawing();
@@ -306,14 +307,10 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         return createContext(viewport, pageSize, 1.0f);
     }
 
-    public RenderContext createPageContext() {
-        LayerController layerController = mView.getController();
-
-        Rect viewport = new Rect();
-        layerController.getViewport().round(viewport);
-
-        FloatSize pageSize = new FloatSize(layerController.getPageSize());
-        float zoomFactor = layerController.getZoomFactor();
+    public RenderContext createPageContext(ImmutableViewportMetrics metrics) {
+        Rect viewport = RectUtils.round(metrics.getViewport());
+        FloatSize pageSize = metrics.getPageSize();
+        float zoomFactor = metrics.zoomFactor;
         return createContext(new RectF(viewport), pageSize, zoomFactor);
     }
 
@@ -546,24 +543,6 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
                 mUpdated &= layer.update(mPageContext); // called on compositor thread
 
             GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
-
-            // If a layer update requires further work, schedule another redraw
-            if (!mUpdated)
-                mView.requestRender();
-
-            PanningPerfAPI.recordFrameTime();
-
-            /* Used by robocop for testing purposes */
-            IntBuffer pixelBuffer = mPixelBuffer;
-            if (mUpdated && pixelBuffer != null) {
-                synchronized (pixelBuffer) {
-                    pixelBuffer.position(0);
-                    GLES20.glReadPixels(0, 0, (int)mScreenContext.viewport.width(),
-                                        (int)mScreenContext.viewport.height(), GLES20.GL_RGBA,
-                                        GLES20.GL_UNSIGNED_BYTE, pixelBuffer);
-                    pixelBuffer.notify();
-                }
-            }
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */

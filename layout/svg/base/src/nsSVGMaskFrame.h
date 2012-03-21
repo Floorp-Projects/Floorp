@@ -37,9 +37,10 @@
 #ifndef __NS_SVGMASKFRAME_H__
 #define __NS_SVGMASKFRAME_H__
 
-#include "nsSVGContainerFrame.h"
 #include "gfxPattern.h"
 #include "gfxMatrix.h"
+#include "nsSVGContainerFrame.h"
+#include "nsSVGUtils.h"
 
 class gfxContext;
 class nsRenderingContext;

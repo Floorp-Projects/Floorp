@@ -41,7 +41,7 @@
 
 interface nsIDOMEventListener;
 
-[scriptable, builtinclass, uuid(832b7551-ff53-403f-9e2c-d7d28e2bb40b)]
+[scriptable, builtinclass, uuid(f741d52a-38bd-48f8-838b-cf4cd74a6ea5)]
 interface nsIDOMTelephonyCall : nsIDOMEventTarget
 {
   readonly attribute DOMString number;
@@ -54,7 +54,7 @@ interface nsIDOMTelephonyCall : nsIDOMEventTarget
   attribute nsIDOMEventListener onstatechange;
 
   attribute nsIDOMEventListener ondialing;
-  attribute nsIDOMEventListener onringing;
+  attribute nsIDOMEventListener onalerting;
   attribute nsIDOMEventListener onbusy;
   attribute nsIDOMEventListener onconnecting;
   attribute nsIDOMEventListener onconnected;

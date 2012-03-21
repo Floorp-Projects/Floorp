@@ -38,7 +38,7 @@ public class testBrowserProvider extends ContentProviderTest {
     private String mBookmarksFaviconCol;
     private String mBookmarksThumbnailCol;
     private String mBookmarksParentCol;
-    private String mBookmarksIsFolderCol;
+    private String mBookmarksTypeCol;
     private String mBookmarksPositionCol;
     private String mBookmarksTagsCol;
     private String mBookmarksDescriptionCol;
@@ -47,6 +47,8 @@ public class testBrowserProvider extends ContentProviderTest {
     private String mBookmarksIsDeletedCol;
     private String mBookmarksDateCreatedCol;
     private String mBookmarksDateModifiedCol;
+    private int mBookmarksTypeFolder;
+    private int mBookmarksTypeBookmark;
     private long mMobileFolderId;
 
     private String mHistoryIdCol;
@@ -83,7 +85,7 @@ public class testBrowserProvider extends ContentProviderTest {
         mBookmarksFaviconCol = getStringColumn("Bookmarks", "FAVICON");
         mBookmarksThumbnailCol = getStringColumn("Bookmarks", "THUMBNAIL");
         mBookmarksParentCol = getStringColumn("Bookmarks", "PARENT");
-        mBookmarksIsFolderCol = getStringColumn("Bookmarks", "IS_FOLDER");
+        mBookmarksTypeCol = getStringColumn("Bookmarks", "TYPE");
         mBookmarksPositionCol = getStringColumn("Bookmarks", "POSITION");
         mBookmarksTagsCol = getStringColumn("Bookmarks", "TAGS");
         mBookmarksDescriptionCol = getStringColumn("Bookmarks", "DESCRIPTION");
@@ -92,6 +94,9 @@ public class testBrowserProvider extends ContentProviderTest {
         mBookmarksIsDeletedCol = getStringColumn("Bookmarks", "IS_DELETED");
         mBookmarksDateCreatedCol = getStringColumn("Bookmarks", "DATE_CREATED");
         mBookmarksDateModifiedCol = getStringColumn("Bookmarks", "DATE_MODIFIED");
+
+        mBookmarksTypeFolder = getIntColumn("Bookmarks", "TYPE_FOLDER");
+        mBookmarksTypeBookmark = getIntColumn("Bookmarks", "TYPE_BOOKMARK");
 
         mHistoryIdCol = getStringColumn("History", "_ID");
         mHistoryTitleCol = getStringColumn("History", "TITLE");
@@ -149,14 +154,13 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     private ContentValues createBookmark(String title, String url, long parentId,
-            int isFolder, int position, String tags, String description,
-                String keyword) throws Exception {
+            int type, int position, String tags, String description, String keyword) throws Exception {
         ContentValues bookmark = new ContentValues();
 
         bookmark.put(mBookmarksTitleCol, title);
         bookmark.put(mBookmarksUrlCol, url);
         bookmark.put(mBookmarksParentCol, parentId);
-        bookmark.put(mBookmarksIsFolderCol, isFolder);
+        bookmark.put(mBookmarksTypeCol, type);
         bookmark.put(mBookmarksPositionCol, position);
         bookmark.put(mBookmarksTagsCol, tags);
         bookmark.put(mBookmarksDescriptionCol, description);
@@ -167,7 +171,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
     private ContentValues createOneBookmark() throws Exception {
         return createBookmark("Example", "http://example.com", mMobileFolderId,
-                0, 0, "tags", "description", "keyword");
+                mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
     }
 
     private Cursor getBookmarkByGuid(String guid) throws Exception {
@@ -238,7 +242,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     public void setUp() throws Exception {
-        super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY_URI");
+        super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY");
         loadContractInfo();
 
         mTests.add(new TestSpecialFolders());
@@ -360,8 +364,8 @@ public class testBrowserProvider extends ContentProviderTest {
                          "Inserted bookmark has correct description");
             mAsserter.is(c.getString(c.getColumnIndex(mBookmarksPositionCol)), b.getAsString(mBookmarksPositionCol),
                          "Inserted bookmark has correct position");
-            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksIsFolderCol)), b.getAsString(mBookmarksIsFolderCol),
-                         "Inserted bookmark has correct is-folder flag");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksTypeCol)), b.getAsString(mBookmarksTypeCol),
+                         "Inserted bookmark has correct type");
             mAsserter.is(c.getString(c.getColumnIndex(mBookmarksParentCol)), b.getAsString(mBookmarksParentCol),
                          "Inserted bookmark has correct parent ID");
             mAsserter.is(c.getString(c.getColumnIndex(mBookmarksIsDeletedCol)), String.valueOf(0),
@@ -371,9 +375,9 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(new Long(id), new Long(-1),
                          "Should not be able to insert bookmark with null position");
 
-            id = insertWithNullCol(mBookmarksIsFolderCol);
+            id = insertWithNullCol(mBookmarksTypeCol);
             mAsserter.is(new Long(id), new Long(-1),
-                         "Should not be able to insert bookmark with null is-folder flag");
+                         "Should not be able to insert bookmark with null type");
 
             b = createOneBookmark();
             b.put(mBookmarksParentCol, -1);
@@ -387,6 +391,16 @@ public class testBrowserProvider extends ContentProviderTest {
                 mAsserter.is(new Long(id), new Long(-1),
                              "Should not be able to insert bookmark with invalid parent");
             }
+
+            b = createOneBookmark();
+            b.remove(mBookmarksTypeCol);
+            id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+            c = getBookmarkById(id);
+
+            mAsserter.is(c.moveToFirst(), true, "Inserted bookmark found");
+
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksTypeCol)), String.valueOf(mBookmarksTypeBookmark),
+                         "Inserted bookmark has correct default type");
         }
     }
 
@@ -464,14 +478,14 @@ public class testBrowserProvider extends ContentProviderTest {
 
             if (Build.VERSION.SDK_INT >= 8) {
                 ContentValues b = createBookmark("Folder", null, mMobileFolderId,
-                        1 /* is folder */, 0, "folderTags", "folderDescription", "folderKeyword");
+                        mBookmarksTypeFolder, 0, "folderTags", "folderDescription", "folderKeyword");
 
                 long parentId = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
                 c = getBookmarkById(parentId);
                 mAsserter.is(c.moveToFirst(), true, "Inserted bookmarks folder found");
 
-                b = createBookmark("Example", "http://example.com", parentId, 0, 0, "tags",
-                        "description", "keyword");
+                b = createBookmark("Example", "http://example.com", parentId,
+                        mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
 
                 id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
                 c = getBookmarkById(id);
@@ -538,7 +552,7 @@ public class testBrowserProvider extends ContentProviderTest {
             u.put(mBookmarksTagsCol, b.getAsString(mBookmarksTagsCol) + "CHANGED");
             u.put(mBookmarksDescriptionCol, b.getAsString(mBookmarksDescriptionCol) + "CHANGED");
             u.put(mBookmarksKeywordCol, b.getAsString(mBookmarksKeywordCol) + "CHANGED");
-            u.put(mBookmarksIsFolderCol, 1);
+            u.put(mBookmarksTypeCol, mBookmarksTypeFolder);
             u.put(mBookmarksPositionCol, 10);
 
             int updated = mProvider.update(mBookmarksUri, u,
@@ -562,8 +576,8 @@ public class testBrowserProvider extends ContentProviderTest {
                          "Inserted bookmark has correct description");
             mAsserter.is(c.getString(c.getColumnIndex(mBookmarksPositionCol)), u.getAsString(mBookmarksPositionCol),
                          "Inserted bookmark has correct position");
-            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksIsFolderCol)), u.getAsString(mBookmarksIsFolderCol),
-                         "Inserted bookmark has correct is-folder flag");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksTypeCol)), u.getAsString(mBookmarksTypeCol),
+                         "Inserted bookmark has correct type");
 
             mAsserter.is(new Long(c.getLong(c.getColumnIndex(mBookmarksDateCreatedCol))),
                          new Long(dateCreated),
@@ -577,9 +591,9 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is((updated > 0), false,
                          "Should not be able to update bookmark with null position");
 
-            updated = updateWithNullCol(id, mBookmarksIsFolderCol);
+            updated = updateWithNullCol(id, mBookmarksTypeCol);
             mAsserter.is((updated > 0), false,
-                         "Should not be able to update bookmark with null is-folder flag");
+                         "Should not be able to update bookmark with null type");
 
             u = new ContentValues();
             u.put(mBookmarksUrlCol, "http://examples2.com");

@@ -2801,10 +2801,12 @@ pref("font.alias-list", "sans,sans-serif,serif,monospace");
 pref("font.name.serif.el", "Droid Serif");
 pref("font.name.sans-serif.el", "Droid Sans");
 pref("font.name.monospace.el", "Droid Sans Mono");
+pref("font.name-list.sans-serif.el", "Roboto, Droid Sans");
 
 pref("font.name.serif.he", "Droid Serif");
 pref("font.name.sans-serif.he", "Droid Sans");
 pref("font.name.monospace.he", "Droid Sans Mono");
+pref("font.name-list.sans-serif.he", "Droid Sans Hebrew, Droid Sans");
 
 pref("font.name.serif.ja", "Droid Serif");
 pref("font.name.sans-serif.ja", "Droid Sans Japanese");
@@ -2819,10 +2821,12 @@ pref("font.name.monospace.ko", "Droid Sans Mono");
 pref("font.name.serif.th", "Droid Serif");
 pref("font.name.sans-serif.th", "Droid Sans");
 pref("font.name.monospace.th", "Droid Sans Mono");
+pref("font.name-list.sans-serif.th", "Droid Sans Thai, Droid Sans");
 
 pref("font.name.serif.tr", "Droid Serif");
 pref("font.name.sans-serif.tr", "Droid Sans");
 pref("font.name.monospace.tr", "Droid Sans Mono");
+pref("font.name-list.sans-serif.tr", "Roboto, Droid Sans");
 
 pref("font.name.serif.x-baltic", "Droid Serif");
 pref("font.name.sans-serif.x-baltic", "Droid Sans");

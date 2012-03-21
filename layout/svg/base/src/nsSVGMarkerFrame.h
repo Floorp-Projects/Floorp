@@ -37,14 +37,23 @@
 #ifndef __NS_SVGMARKERFRAME_H__
 #define __NS_SVGMARKERFRAME_H__
 
-#include "nsSVGContainerFrame.h"
 #include "gfxMatrix.h"
+#include "gfxRect.h"
+#include "nsFrame.h"
+#include "nsLiteralString.h"
+#include "nsQueryFrame.h"
+#include "nsSVGContainerFrame.h"
+#include "nsSVGUtils.h"
 
-class gfxContext;
-class nsRenderingContext;
-class nsSVGPathGeometryFrame;
-class nsIURI;
+class nsIAtom;
 class nsIContent;
+class nsIFrame;
+class nsIPresShell;
+class nsRenderingContext;
+class nsStyleContext;
+class nsSVGPathGeometryFrame;
+class nsSVGSVGElement;
+
 struct nsSVGMark;
 
 typedef nsSVGContainerFrame nsSVGMarkerFrameBase;

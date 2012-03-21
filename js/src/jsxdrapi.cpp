@@ -236,7 +236,6 @@ JS_XDRInitBase(JSXDRState *xdr, JSXDRMode mode, JSContext *cx)
 {
     xdr->mode = mode;
     xdr->cx = cx;
-    xdr->userdata = NULL;
     xdr->sharedFilename = NULL;
     xdr->principals = NULL;
     xdr->originPrincipals = NULL;
@@ -305,6 +304,14 @@ JS_XDRDestroy(JSXDRState *xdr)
     JSContext *cx = xdr->cx;
     xdr->ops->finalize(xdr);
     cx->free_(xdr);
+}
+
+JS_PUBLIC_API(void)
+JS_XDRSetPrincipals(JSXDRState *xdr, JSPrincipals *principals, JSPrincipals *originPrincipals)
+{
+    JS_ASSERT(xdr->mode == JSXDR_DECODE);
+    xdr->principals = principals;
+    xdr->originPrincipals = JSScript::normalizeOriginPrincipals(principals, originPrincipals);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -532,95 +539,10 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
     return JS_TRUE;
 }
 
-static bool
-XDRPrincipals(JSXDRState *xdr)
-{
-    const uint8_t HAS_PRINCIPALS   = 1;
-    const uint8_t HAS_ORIGIN       = 2;
-
-    uint8_t flags = 0;
-    if (xdr->mode == JSXDR_ENCODE) {
-        if (xdr->principals)
-            flags |= HAS_PRINCIPALS;
-
-        /*
-         * For the common case when principals == originPrincipals we want to
-         * avoid serializing the same principal twice. As originPrincipals are
-         * normalized and principals imply originPrincipals we simply set
-         * HAS_ORIGIN only if originPrincipals is set and different from
-         * principals. During decoding we re-normalize originPrincipals.
-         */
-        JS_ASSERT_IF(xdr->principals, xdr->originPrincipals);
-        if (xdr->originPrincipals && xdr->originPrincipals != xdr->principals)
-            flags |= HAS_ORIGIN;
-    }
-
-    if (!JS_XDRUint8(xdr, &flags))
-        return false;
-
-    if (flags & (HAS_PRINCIPALS | HAS_ORIGIN)) {
-        const JSSecurityCallbacks *scb = JS_GetSecurityCallbacks(xdr->cx->runtime);
-        if (xdr->mode == JSXDR_DECODE) {
-            if (!scb || !scb->principalsTranscoder) {
-                JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
-                                     JSMSG_CANT_DECODE_PRINCIPALS);
-                return false;
-            }
-        } else {
-            JS_ASSERT(scb);
-            JS_ASSERT(scb->principalsTranscoder);
-        }
-
-        if (flags & HAS_PRINCIPALS) {
-            if (!scb->principalsTranscoder(xdr, &xdr->principals))
-                return false;
-        }
-
-        if (flags & HAS_ORIGIN) {
-            if (!scb->principalsTranscoder(xdr, &xdr->originPrincipals))
-                return false;
-        } else if (xdr->mode == JSXDR_DECODE && xdr->principals) {
-            xdr->originPrincipals = xdr->principals;
-            JS_HoldPrincipals(xdr->principals);
-        }
-    }
-
-    return true;
-}
-
-namespace {
-
-struct AutoDropXDRPrincipals {
-    JSXDRState *const xdr;
-
-    AutoDropXDRPrincipals(JSXDRState *xdr)
-      : xdr(xdr) { }
-
-    ~AutoDropXDRPrincipals() {
-        if (xdr->mode == JSXDR_DECODE) {
-            if (xdr->principals)
-                JS_DropPrincipals(xdr->cx->runtime, xdr->principals);
-            if (xdr->originPrincipals)
-                JS_DropPrincipals(xdr->cx->runtime, xdr->originPrincipals);
-        }
-        xdr->principals = NULL;
-        xdr->originPrincipals = NULL;
-    }
-};
-
-} /* namespace anonymous */
-
 JS_PUBLIC_API(JSBool)
 JS_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
 {
-    AutoDropXDRPrincipals drop(xdr);
-    if (xdr->mode == JSXDR_ENCODE) {
-        JSScript *script = (*objp)->toFunction()->script();
-        xdr->principals = script->principals;
-        xdr->originPrincipals = script->originPrincipals;
-    }
-
-    return XDRPrincipals(xdr) && XDRFunctionObject(xdr, objp);
+    return XDRFunctionObject(xdr, objp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -650,16 +572,8 @@ JS_XDRScript(JSXDRState *xdr, JSScript **scriptp)
         return false;
     }
 
-    {
-        AutoDropXDRPrincipals drop(xdr);
-        if (xdr->mode == JSXDR_ENCODE) {
-            xdr->principals = script->principals;
-            xdr->originPrincipals = script->originPrincipals;
-        }
-        
-        if (!XDRPrincipals(xdr) || !XDRScript(xdr, &script))
-            return false;
-    }
+    if (!XDRScript(xdr, &script))
+        return false;
 
     if (xdr->mode == JSXDR_DECODE) {
         JS_ASSERT(!script->compileAndGo);

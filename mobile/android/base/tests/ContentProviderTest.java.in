@@ -7,6 +7,9 @@ import android.content.ContentProvider;
 import android.content.ContentProviderClient;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.ContentProviderResult;
+import android.content.ContentProviderOperation;
+import android.content.OperationApplicationException;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Build;
@@ -39,7 +42,7 @@ abstract class ContentProviderTest extends AndroidTestCase {
     protected ArrayList<Runnable> mTests;
     protected Class mProviderClass;
     protected Class mProviderContract;
-    protected Uri mProviderAuthority;
+    protected String mProviderAuthority;
     protected IsolatedContext mProviderContext;
     protected String mLogFile;
 
@@ -60,10 +63,72 @@ abstract class ContentProviderTest extends AndroidTestCase {
         }
     }
 
+    private class DelegatingTestContentProvider extends ContentProvider {
+        ContentProvider mTargetProvider;
+
+        public DelegatingTestContentProvider(ContentProvider targetProvider) {
+            super();
+            mTargetProvider = targetProvider;
+        }
+
+        private Uri appendTestParam(Uri uri) {
+            try {
+                return appendUriParam(uri, "PARAM_IS_TEST", "1");
+            } catch (Exception e) {}
+
+            return null;
+        }
+
+        @Override
+        public boolean onCreate() {
+            return mTargetProvider.onCreate();
+        }
+
+        @Override
+        public String getType(Uri uri) {
+            return mTargetProvider.getType(uri);
+        }
+
+        @Override
+        public int delete(Uri uri, String selection, String[] selectionArgs) {
+            return mTargetProvider.delete(appendTestParam(uri), selection, selectionArgs);
+        }
+
+        @Override
+        public Uri insert(Uri uri, ContentValues values) {
+            return mTargetProvider.insert(appendTestParam(uri), values);
+        }
+
+        @Override
+        public int update(Uri uri, ContentValues values, String selection,
+                String[] selectionArgs) {
+            return mTargetProvider.update(appendTestParam(uri), values,
+                selection, selectionArgs);
+        }
+
+        @Override
+        public Cursor query(Uri uri, String[] projection, String selection,
+                String[] selectionArgs, String sortOrder) {
+            return mTargetProvider.query(appendTestParam(uri), projection, selection,
+                selectionArgs, sortOrder);
+        }
+
+        @Override
+        public ContentProviderResult[] applyBatch (ArrayList<ContentProviderOperation> operations)
+            throws OperationApplicationException {
+            return mTargetProvider.applyBatch(operations);
+        }
+
+        @Override
+        public int bulkInsert(Uri uri, ContentValues[] values) {
+            return mTargetProvider.bulkInsert(appendTestParam(uri), values);
+        }
+    }
+
     private void setUpProviderClassAndAuthority(String providerClassName,
-            String authorityUriField) throws Exception {
+            String authorityField) throws Exception {
         mProviderContract = mClassLoader.loadClass("org.mozilla.gecko.db.BrowserContract");
-        mProviderAuthority = (Uri) mProviderContract.getField(authorityUriField).get(null);
+        mProviderAuthority = (String) mProviderContract.getField(authorityField).get(null);
         mProviderClass = mClassLoader.loadClass(providerClassName);
     }
 
@@ -79,10 +144,13 @@ abstract class ContentProviderTest extends AndroidTestCase {
 
         mProviderContext = new IsolatedContext(mResolver, targetContextWrapper);
 
-        mProvider = (ContentProvider) mProviderClass.newInstance();
+        ContentProvider targetProvider = (ContentProvider) mProviderClass.newInstance();
+        targetProvider.attachInfo(mProviderContext, null);
+
+        mProvider = new DelegatingTestContentProvider(targetProvider);
         mProvider.attachInfo(mProviderContext, null);
 
-        mResolver.addProvider(mProviderAuthority.toString(), mProvider);
+        mResolver.addProvider(mProviderAuthority, mProvider);
     }
 
     private void loadRobotiumConfig() {
@@ -93,8 +161,7 @@ abstract class ContentProviderTest extends AndroidTestCase {
 
     public Uri getContentUri(String className) throws Exception {
         Class aClass = mClassLoader.loadClass("org.mozilla.gecko.db.BrowserContract$" + className);
-        Uri contentUri = (Uri) aClass.getField("CONTENT_URI").get(null);
-        return appendUriParam(contentUri, "PARAM_IS_TEST", "1");
+        return (Uri) aClass.getField("CONTENT_URI").get(null);
     }
 
     public String getStringColumn(String className, String columnId) throws Exception {

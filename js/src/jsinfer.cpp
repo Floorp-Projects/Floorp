@@ -678,14 +678,17 @@ TypeSet::addCall(JSContext *cx, TypeCallsite *site)
 class TypeConstraintArith : public TypeConstraint
 {
 public:
+    JSScript *script;
+    jsbytecode *pc;
+
     /* Type set receiving the result of the arithmetic. */
     TypeSet *target;
 
     /* For addition operations, the other operand. */
     TypeSet *other;
 
-    TypeConstraintArith(TypeSet *target, TypeSet *other)
-        : TypeConstraint("arith"), target(target), other(other)
+    TypeConstraintArith(JSScript *script, jsbytecode *pc, TypeSet *target, TypeSet *other)
+        : TypeConstraint("arith"), script(script), pc(pc), target(target), other(other)
     {
         JS_ASSERT(target);
     }
@@ -694,9 +697,9 @@ public:
 };
 
 void
-TypeSet::addArith(JSContext *cx, TypeSet *target, TypeSet *other)
+TypeSet::addArith(JSContext *cx, JSScript *script, jsbytecode *pc, TypeSet *target, TypeSet *other)
 {
-    add(cx, cx->typeLifoAlloc().new_<TypeConstraintArith>(target, other));
+    add(cx, cx->typeLifoAlloc().new_<TypeConstraintArith>(script, pc, target, other));
 }
 
 /* Subset constraint which transforms primitive values into appropriate objects. */
@@ -1299,27 +1302,29 @@ TypeConstraintArith::newType(JSContext *cx, TypeSet *source, Type type)
         } else if (type.isPrimitive(JSVAL_TYPE_DOUBLE)) {
             if (other->hasAnyFlag(TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL |
                                   TYPE_FLAG_INT32 | TYPE_FLAG_DOUBLE | TYPE_FLAG_BOOLEAN |
-                                  TYPE_FLAG_ANYOBJECT) ||
-                other->getObjectCount() != 0) {
+                                  TYPE_FLAG_ANYOBJECT)) {
                 target->addType(cx, Type::DoubleType());
+            } else if (other->getObjectCount() != 0) {
+                TypeDynamicResult(cx, script, pc, Type::DoubleType());
             }
         } else if (type.isPrimitive(JSVAL_TYPE_STRING)) {
             target->addType(cx, Type::StringType());
-        } else {
-            if (other->hasAnyFlag(TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL |
-                                  TYPE_FLAG_INT32 | TYPE_FLAG_BOOLEAN |
-                                  TYPE_FLAG_ANYOBJECT) ||
-                other->getObjectCount() != 0) {
-                target->addType(cx, Type::Int32Type());
-            }
-            if (other->hasAnyFlag(TYPE_FLAG_DOUBLE))
-                target->addType(cx, Type::DoubleType());
+        } else if (other->hasAnyFlag(TYPE_FLAG_DOUBLE)) {
+            target->addType(cx, Type::DoubleType());
+        } else if (other->hasAnyFlag(TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL |
+                                     TYPE_FLAG_INT32 | TYPE_FLAG_BOOLEAN |
+                                     TYPE_FLAG_ANYOBJECT)) {
+            target->addType(cx, Type::Int32Type());
+        } else if (other->getObjectCount() != 0) {
+            TypeDynamicResult(cx, script, pc, Type::Int32Type());
         }
     } else {
         if (type.isUnknown())
             target->addType(cx, Type::UnknownType());
         else if (type.isPrimitive(JSVAL_TYPE_DOUBLE))
             target->addType(cx, Type::DoubleType());
+        else if (!type.isAnyObject() && type.isObject())
+            TypeDynamicResult(cx, script, pc, Type::Int32Type());
         else
             target->addType(cx, Type::Int32Type());
     }
@@ -3616,10 +3621,10 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_LOCALDEC: {
         uint32_t slot = GetBytecodeSlot(script, pc);
         if (trackSlot(slot)) {
-            poppedTypes(pc, 0)->addArith(cx, &pushed[0]);
+            poppedTypes(pc, 0)->addArith(cx, script, pc, &pushed[0]);
         } else if (slot < TotalSlots(script)) {
             TypeSet *types = TypeScript::SlotTypes(script, slot);
-            types->addArith(cx, types);
+            types->addArith(cx, script, pc, types);
             types->addSubset(cx, &pushed[0]);
         } else {
             pushed[0].addType(cx, Type::UnknownType());
@@ -3702,21 +3707,21 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
 
       case JSOP_ADD:
-        poppedTypes(pc, 0)->addArith(cx, &pushed[0], poppedTypes(pc, 1));
-        poppedTypes(pc, 1)->addArith(cx, &pushed[0], poppedTypes(pc, 0));
+        poppedTypes(pc, 0)->addArith(cx, script, pc, &pushed[0], poppedTypes(pc, 1));
+        poppedTypes(pc, 1)->addArith(cx, script, pc, &pushed[0], poppedTypes(pc, 0));
         break;
 
       case JSOP_SUB:
       case JSOP_MUL:
       case JSOP_MOD:
       case JSOP_DIV:
-        poppedTypes(pc, 0)->addArith(cx, &pushed[0]);
-        poppedTypes(pc, 1)->addArith(cx, &pushed[0]);
+        poppedTypes(pc, 0)->addArith(cx, script, pc, &pushed[0]);
+        poppedTypes(pc, 1)->addArith(cx, script, pc, &pushed[0]);
         break;
 
       case JSOP_NEG:
       case JSOP_POS:
-        poppedTypes(pc, 0)->addArith(cx, &pushed[0]);
+        poppedTypes(pc, 0)->addArith(cx, script, pc, &pushed[0]);
         break;
 
       case JSOP_LAMBDA:

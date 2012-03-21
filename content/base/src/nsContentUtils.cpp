@@ -178,6 +178,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsEventStateManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsParserConstants.h"
+#include "nsIWebNavigation.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -1249,7 +1250,9 @@ nsContentUtils::IsHTMLVoid(nsIAtom* aLocalName)
     (aLocalName == nsGkAtoms::link) ||
     (aLocalName == nsGkAtoms::meta) ||
     (aLocalName == nsGkAtoms::param) ||
+#ifdef MOZ_MEDIA
     (aLocalName == nsGkAtoms::source) ||
+#endif
     (aLocalName == nsGkAtoms::track) ||
     (aLocalName == nsGkAtoms::wbr);
 }
@@ -3658,9 +3661,9 @@ nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent,
   // that is a know case when we'd normally fire a mutation event, but can't
   // make that safe and so we suppress it at this time. Ideally this should
   // go away eventually.
-  NS_ASSERTION(aChild->IsNodeOfType(nsINode::eCONTENT) &&
+  NS_ASSERTION((aChild->IsNodeOfType(nsINode::eCONTENT) &&
                static_cast<nsIContent*>(aChild)->
-                 IsInNativeAnonymousSubtree() ||
+                 IsInNativeAnonymousSubtree()) ||
                IsSafeToRunScript() ||
                sDOMNodeRemovedSuppressCount,
                "Want to fire DOMNodeRemoved event, but it's not safe");
@@ -5178,8 +5181,15 @@ nsContentUtils::SetDataTransferInEvent(nsDragEvent* aDragEvent)
     dragSession->SetDataTransfer(initialDataTransfer);
   }
 
+  bool isCrossDomainSubFrameDrop = false;
+  if (aDragEvent->message == NS_DRAGDROP_DROP ||
+      aDragEvent->message == NS_DRAGDROP_DRAGDROP) {
+    isCrossDomainSubFrameDrop = CheckForSubFrameDrop(dragSession, aDragEvent);
+  }
+
   // each event should use a clone of the original dataTransfer.
   initialDataTransfer->Clone(aDragEvent->message, aDragEvent->userCancelled,
+                             isCrossDomainSubFrameDrop,
                              getter_AddRefs(aDragEvent->dataTransfer));
   NS_ENSURE_TRUE(aDragEvent->dataTransfer, NS_ERROR_OUT_OF_MEMORY);
 
@@ -5239,6 +5249,52 @@ nsContentUtils::FilterDropEffect(PRUint32 aAction, PRUint32 aEffectAllowed)
   if (aEffectAllowed & nsIDragService::DRAGDROP_ACTION_LINK)
     return nsIDragService::DRAGDROP_ACTION_LINK;
   return nsIDragService::DRAGDROP_ACTION_NONE;
+}
+
+/* static */
+bool
+nsContentUtils::CheckForSubFrameDrop(nsIDragSession* aDragSession, nsDragEvent* aDropEvent)
+{
+  nsCOMPtr<nsIContent> target = do_QueryInterface(aDropEvent->originalTarget);
+  if (!target && !target->OwnerDoc()) {
+    return true;
+  }
+  
+  nsIDocument* targetDoc = target->OwnerDoc();
+  nsCOMPtr<nsIWebNavigation> twebnav = do_GetInterface(targetDoc->GetWindow());
+  nsCOMPtr<nsIDocShellTreeItem> tdsti = do_QueryInterface(twebnav);
+  if (!tdsti) {
+    return true;
+  }
+
+  PRInt32 type = -1;
+  if (NS_FAILED(tdsti->GetItemType(&type))) {
+    return true;
+  }
+
+  // Always allow dropping onto chrome shells.
+  if (type == nsIDocShellTreeItem::typeChrome) {
+    return false;
+  }
+
+  // If there is no source node, then this is a drag from another
+  // application, which should be allowed.
+  nsCOMPtr<nsIDOMDocument> sourceDocument;
+  aDragSession->GetSourceDocument(getter_AddRefs(sourceDocument));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(sourceDocument);
+  if (doc) {
+    // Get each successive parent of the source document and compare it to
+    // the drop document. If they match, then this is a drag from a child frame.
+    do {
+      doc = doc->GetParentDocument();
+      if (doc == targetDoc) {
+        // The drag is from a child frame.
+        return true;
+      }
+    } while (doc);
+  }
+
+  return false;
 }
 
 /* static */
@@ -5322,11 +5378,14 @@ nsContentUtils::GetCurrentJSContext()
 }
 
 /* static */
-void
+nsresult
 nsContentUtils::ASCIIToLower(nsAString& aStr)
 {
   PRUnichar* iter = aStr.BeginWriting();
   PRUnichar* end = aStr.EndWriting();
+  if (NS_UNLIKELY(!iter || !end)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   while (iter != end) {
     PRUnichar c = *iter;
     if (c >= 'A' && c <= 'Z') {
@@ -5334,16 +5393,20 @@ nsContentUtils::ASCIIToLower(nsAString& aStr)
     }
     ++iter;
   }
+  return NS_OK;
 }
 
 /* static */
-void
+nsresult
 nsContentUtils::ASCIIToLower(const nsAString& aSource, nsAString& aDest)
 {
   PRUint32 len = aSource.Length();
   aDest.SetLength(len);
   if (aDest.Length() == len) {
     PRUnichar* dest = aDest.BeginWriting();
+    if (NS_UNLIKELY(!dest)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     const PRUnichar* iter = aSource.BeginReading();
     const PRUnichar* end = aSource.EndReading();
     while (iter != end) {
@@ -5353,15 +5416,20 @@ nsContentUtils::ASCIIToLower(const nsAString& aSource, nsAString& aDest)
       ++iter;
       ++dest;
     }
+    return NS_OK;
   }
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 /* static */
-void
+nsresult
 nsContentUtils::ASCIIToUpper(nsAString& aStr)
 {
   PRUnichar* iter = aStr.BeginWriting();
   PRUnichar* end = aStr.EndWriting();
+  if (NS_UNLIKELY(!iter || !end)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   while (iter != end) {
     PRUnichar c = *iter;
     if (c >= 'a' && c <= 'z') {
@@ -5369,16 +5437,20 @@ nsContentUtils::ASCIIToUpper(nsAString& aStr)
     }
     ++iter;
   }
+  return NS_OK;
 }
 
 /* static */
-void
+nsresult
 nsContentUtils::ASCIIToUpper(const nsAString& aSource, nsAString& aDest)
 {
   PRUint32 len = aSource.Length();
   aDest.SetLength(len);
   if (aDest.Length() == len) {
     PRUnichar* dest = aDest.BeginWriting();
+    if (NS_UNLIKELY(!dest)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     const PRUnichar* iter = aSource.BeginReading();
     const PRUnichar* end = aSource.EndReading();
     while (iter != end) {
@@ -5388,7 +5460,9 @@ nsContentUtils::ASCIIToUpper(const nsAString& aSource, nsAString& aDest)
       ++iter;
       ++dest;
     }
+    return NS_OK;
   }
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 /* static */
@@ -6541,11 +6615,19 @@ nsContentUtils::ReleaseWrapper(nsISupports* aScriptObjectHolder,
                                nsWrapperCache* aCache)
 {
   if (aCache->PreservingWrapper()) {
-    DropJSObjects(aScriptObjectHolder);
+    JSObject* obj = aCache->GetWrapperPreserveColor();
+    if (aCache->IsProxy()) {
+      JSCompartment *compartment = js::GetObjectCompartment(obj);
+      xpc::CompartmentPrivate *priv =
+        static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
+      priv->RemoveDOMExpandoObject(obj);
+    }
+    else {
+      DropJSObjects(aScriptObjectHolder);
+    }
+
     aCache->SetPreservingWrapper(false);
   }
-
-  aCache->ClearWrapperIfProxy();
 }
 
 // static
@@ -6558,13 +6640,6 @@ nsContentUtils::TraceWrapper(nsWrapperCache* aCache, TraceCallback aCallback,
     if (wrapper) {
       aCallback(nsIProgrammingLanguage::JAVASCRIPT, wrapper,
                 "Preserved wrapper", aClosure);
-    }
-  }
-  else {
-    JSObject *expando = aCache->GetExpandoObjectPreserveColor();
-    if (expando) {
-      aCallback(nsIProgrammingLanguage::JAVASCRIPT, expando, "Expando object",
-                aClosure);
     }
   }
 }

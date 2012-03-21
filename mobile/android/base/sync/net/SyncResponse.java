@@ -115,6 +115,16 @@ public class SyncResponse {
     return ExtendedJSONObject.parse(content);
   }
 
+  /**
+   * Return the body as a <b>non-null</b> <code>ExtendedJSONObject</code>.
+   *
+   * @return A non-null <code>ExtendedJSONObject</code>.
+   *
+   * @throws IllegalStateException
+   * @throws IOException
+   * @throws ParseException
+   * @throws NonObjectJSONException
+   */
   public ExtendedJSONObject jsonObjectBody() throws IllegalStateException,
                                             IOException, ParseException,
                                             NonObjectJSONException {

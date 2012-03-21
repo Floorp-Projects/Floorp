@@ -197,10 +197,128 @@ ThreadActor.prototype = {
     return { type: "detached" };
   },
 
+  /**
+   * Pause the debuggee, by entering a nested event loop, and return a 'paused'
+   * packet to the client.
+   *
+   * @param Debugger.Frame aFrame
+   *        The newest debuggee frame in the stack.
+   * @param object aReason
+   *        An object with a 'type' property containing the reason for the pause.
+   */
+  _pauseAndRespond: function TA__pauseAndRespond(aFrame, aReason) {
+    try {
+      let packet = this._paused(aFrame);
+      if (!packet) {
+        return undefined;
+      }
+      packet.why = aReason;
+      this.conn.send(packet);
+      return this._nest();
+    } catch(e) {
+      Cu.reportError("Got an exception during TA__pauseAndRespond: " + e +
+                     ": " + e.stack);
+      return undefined;
+    }
+  },
+
+  /**
+   * Handle a protocol request to resume execution of the debuggee.
+   */
   onResume: function TA_onResume(aRequest) {
+    if (aRequest && aRequest.forceCompletion) {
+      // TODO: remove this when Debugger.Frame.prototype.pop is implemented in
+      // bug 736733.
+      if (typeof this.frame.pop != "function") {
+        return { error: "notImplemented",
+                 message: "forced completion is not yet implemented." };
+      }
+
+      this.dbg.getNewestFrame().pop(aRequest.completionValue);
+      let packet = this._resumed();
+      DebuggerServer.xpcInspector.exitNestedEventLoop();
+      return { type: "resumeLimit", frameFinished: aRequest.forceCompletion };
+    }
+
+    if (aRequest && aRequest.resumeLimit) {
+      // Bind these methods because some of the hooks are called with 'this'
+      // set to the current frame.
+      let pauseAndRespond = this._pauseAndRespond.bind(this);
+      let createValueGrip = this.createValueGrip.bind(this);
+
+      let startFrame = this._youngestFrame;
+      let startLine;
+      if (this._youngestFrame.script) {
+        let offset = this._youngestFrame.offset;
+        startLine = this._youngestFrame.script.getOffsetLine(offset);
+      }
+
+      // Define the JS hook functions for stepping.
+
+      let onEnterFrame = function TA_onEnterFrame(aFrame) {
+        return pauseAndRespond(aFrame, { type: "resumeLimit" });
+      };
+
+      let onPop = function TA_onPop(aCompletion) {
+        // onPop is called with 'this' set to the current frame.
+
+        // Note that we're popping this frame; we need to watch for
+        // subsequent step events on its caller.
+        this.reportedPop = true;
+
+        return pauseAndRespond(this, { type: "resumeLimit" });
+      }
+
+      let onStep = function TA_onStep() {
+        // onStep is called with 'this' set to the current frame.
+
+        // If we've changed frame or line, then report that.
+        if (this !== startFrame ||
+            (this.script &&
+             this.script.getOffsetLine(this.offset) != startLine)) {
+          return pauseAndRespond(this, { type: "resumeLimit" });
+        }
+
+        // Otherwise, let execution continue.
+        return undefined;
+      }
+
+      switch (aRequest.resumeLimit.type) {
+        case "step":
+          this.dbg.onEnterFrame = onEnterFrame;
+          // Fall through.
+        case "next":
+          let stepFrame = this._getNextStepFrame(startFrame);
+          if (stepFrame) {
+            stepFrame.onStep = onStep;
+            stepFrame.onPop = onPop;
+          }
+          break;
+        case "finish":
+          stepFrame = this._getNextStepFrame(startFrame);
+          if (stepFrame) {
+            stepFrame.onPop = onPop;
+          }
+          break;
+        default:
+          return { error: "badParameterType",
+                   message: "Unknown resumeLimit type" };
+      }
+    }
     let packet = this._resumed();
     DebuggerServer.xpcInspector.exitNestedEventLoop();
     return packet;
+  },
+
+  /**
+   * Helper method that returns the next frame when stepping.
+   */
+  _getNextStepFrame: function TA__getNextStepFrame(aFrame) {
+    let stepFrame = aFrame.reportedPop ? aFrame.older : aFrame;
+    if (!stepFrame || !stepFrame.script) {
+      stepFrame = null;
+    }
+    return stepFrame;
   },
 
   onClientEvaluate: function TA_onClientEvaluate(aRequest) {
@@ -472,6 +590,13 @@ ThreadActor.prototype = {
       return undefined;
     }
 
+    // Clear stepping hooks.
+    this.dbg.onEnterFrame = undefined;
+    if (aFrame) {
+      aFrame.onStep = undefined;
+      aFrame.onPop = undefined;
+    }
+
     this._state = "paused";
 
     // Save the pause frame (if any) as the youngest frame for
@@ -730,19 +855,7 @@ ThreadActor.prototype = {
    *        The stack frame that contained the debugger statement.
    */
   onDebuggerStatement: function TA_onDebuggerStatement(aFrame) {
-    try {
-      let packet = this._paused(aFrame);
-      if (!packet) {
-        return undefined;
-      }
-      packet.why = { type: "debuggerStatement" };
-      this.conn.send(packet);
-      return this._nest();
-    } catch(e) {
-      Cu.reportError("Got an exception during onDebuggerStatement: " + e +
-                     ": " + e.stack);
-      return undefined;
-    }
+    return this._pauseAndRespond(aFrame, { type: "debuggerStatement" });
   },
 
   /**
@@ -1153,8 +1266,20 @@ FrameActor.prototype = {
    *        The protocol request object.
    */
   onPop: function FA_onPop(aRequest) {
-    return { error: "notImplemented",
-             message: "Popping frames is not yet implemented." };
+    // TODO: remove this when Debugger.Frame.prototype.pop is implemented
+    if (typeof this.frame.pop != "function") {
+      return { error: "notImplemented",
+               message: "Popping frames is not yet implemented." };
+    }
+
+    while (this.frame != this.threadActor.dbg.getNewestFrame()) {
+      this.threadActor.dbg.getNewestFrame().pop();
+    }
+    this.frame.pop(aRequest.completionValue);
+
+    // TODO: return the watches property when frame pop watch actors are
+    // implemented.
+    return { from: this.actorID };
   }
 };
 
@@ -1189,19 +1314,9 @@ BreakpointActor.prototype = {
    *        The stack frame that contained the breakpoint.
    */
   hit: function BA_hit(aFrame) {
-    try {
-      let packet = this.threadActor._paused(aFrame);
-      if (!packet) {
-        return undefined;
-      }
-      // TODO: add the rest of the breakpoints on that line.
-      packet.why = { type: "breakpoint", actors: [ this.actorID ] };
-      this.conn.send(packet);
-      return this.threadActor._nest();
-    } catch(e) {
-      Cu.reportError("Got an exception during hit: " + e + ': ' + e.stack);
-      return undefined;
-    }
+    // TODO: add the rest of the breakpoints on that line (bug 676602).
+    let reason = { type: "breakpoint", actors: [ this.actorID ] };
+    return this.threadActor._pauseAndRespond(aFrame, reason);
   },
 
   /**
