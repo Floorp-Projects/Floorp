@@ -686,17 +686,19 @@ UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 }
 
 void
-xpc_UnmarkGrayObjectRecursive(JSObject *obj)
+xpc_UnmarkGrayGCThingRecursive(void *thing, JSGCTraceKind kind)
 {
-    NS_ASSERTION(obj, "Don't pass me null!");
+    MOZ_ASSERT(thing, "Don't pass me null!");
+    MOZ_ASSERT(kind != JSTRACE_SHAPE, "UnmarkGrayGCThingRecursive not intended for Shapes");
 
     // Unmark.
-    js::gc::AsCell(obj)->unmark(js::gc::GRAY);
+    static_cast<js::gc::Cell *>(thing)->unmark(js::gc::GRAY);
 
     // Trace children.
     UnmarkGrayTracer trc;
-    JS_TracerInit(&trc, JS_GetObjectRuntime(obj), UnmarkGrayChildren);
-    JS_TraceChildren(&trc, obj, JSTRACE_OBJECT);
+    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+    JS_TracerInit(&trc, rt, UnmarkGrayChildren);
+    JS_TraceChildren(&trc, thing, kind);
 }
 
 struct TraversalTracer : public JSTracer
