@@ -389,7 +389,7 @@ public class GeckoEvent {
                                                  int rangeType, int rangeStyles,
                                                  int rangeForeColor, int rangeBackColor) {
         GeckoEvent event = new GeckoEvent(IME_EVENT);
-        event.InitIMERange(IME_SET_TEXT, offset, count, rangeType, rangeStyles,
+        event.InitIMERange(IME_ADD_RANGE, offset, count, rangeType, rangeStyles,
                            rangeForeColor, rangeBackColor);
         return event;
     }
