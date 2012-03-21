@@ -150,6 +150,7 @@ function RadioInterfaceLayer() {
     bars:           null,
     operator:       null,
     type:           null,
+    msisdn:         null,
   };
 }
 RadioInterfaceLayer.prototype = {
@@ -277,6 +278,9 @@ RadioInterfaceLayer.prototype = {
                + " dst=" + message.dstFlag
                + " timestamp=" + message.localTimeStampInMS);
         }
+        break;
+      case "siminfo":
+        this.radioState.msisdn = message.msisdn;
         break;
       default:
         throw new Error("Don't know about this message type: " + message.type);

@@ -127,6 +127,10 @@ notations = docType.notations;
 	}
 
 	}
+    else {
+      // Ensure at least one SimpleTest check is reported. (Bug 483992)
+      todo_isnot(builder.contentType, "text/html", "Fake default check");
+    }
 	
 }
 
