@@ -295,17 +295,29 @@ NormalArgumentsObject::optimizedGetElem(JSContext *cx, StackFrame *fp, const Val
 {
     JS_ASSERT(!fp->hasArgsObj());
 
+    /* Fast path: no need to convert to id when elem is already an int in range. */
     if (elem.isInt32()) {
         int32_t i = elem.toInt32();
         if (i >= 0 && uint32_t(i) < fp->numActualArgs()) {
-            *vp = fp->canonicalActualArg(elem.toInt32());
+            *vp = fp->canonicalActualArg(i);
             return true;
         }
     }
 
+    /* Slow path: create and canonicalize an id, then emulate args_resolve. */
+
     jsid id;
     if (!ValueToId(cx, elem, &id))
         return false;
+    id = js_CheckForStringIndex(id);
+
+    if (JSID_IS_INT(id)) {
+        int32_t i = JSID_TO_INT(id);
+        if (i >= 0 && uint32_t(i) < fp->numActualArgs()) {
+            *vp = fp->canonicalActualArg(i);
+            return true;
+        }
+    }
 
     if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
         *vp = Int32Value(fp->numActualArgs());
