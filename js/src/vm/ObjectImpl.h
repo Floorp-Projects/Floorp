@@ -129,6 +129,10 @@ class DenseElementsHeader : public ElementsHeader
         return ElementsHeader::length;
     }
 
+    bool defineElement(JSContext *cx, ObjectImpl *obj,
+                       uint32_t index, const Value &value,
+                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+
   private:
     inline bool isDenseElements() const MOZ_DELETE;
     inline DenseElementsHeader & asDenseElements() MOZ_DELETE;
@@ -150,6 +154,10 @@ class SparseElementsHeader : public ElementsHeader
         return ElementsHeader::length;
     }
 
+    bool defineElement(JSContext *cx, ObjectImpl *obj,
+                       uint32_t index, const Value &value,
+                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+
   private:
     inline bool isSparseElements() const MOZ_DELETE;
     inline SparseElementsHeader & asSparseElements() MOZ_DELETE;
@@ -166,32 +174,101 @@ class TypedElementsHeader : public ElementsHeader
         return ElementsHeader::length;
     }
 
+    bool defineElement(JSContext *cx, ObjectImpl *obj,
+                       uint32_t index, const Value &value,
+                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+
   private:
     TypedElementsHeader(const TypedElementsHeader &other) MOZ_DELETE;
     void operator=(const TypedElementsHeader &other) MOZ_DELETE;
 };
 
-class Uint8ElementsHeader : public TypedElementsHeader<uint8_t> { };
-class Int8ElementsHeader : public TypedElementsHeader<int8_t> { };
-class Uint16ElementsHeader : public TypedElementsHeader<uint16_t> { };
-class Int16ElementsHeader : public TypedElementsHeader<int16_t> { };
-class Uint32ElementsHeader : public TypedElementsHeader<uint32_t> { };
-class Int32ElementsHeader : public TypedElementsHeader<int32_t> { };
-class Float32ElementsHeader : public TypedElementsHeader<float> { };
-class Float64ElementsHeader : public TypedElementsHeader<double> { };
+class Uint8ElementsHeader : public TypedElementsHeader<uint8_t>
+{
+  private:
+    inline bool isUint8Elements() const MOZ_DELETE;
+    inline Uint8ElementsHeader & asUint8Elements() MOZ_DELETE;
+    Uint8ElementsHeader(const Uint8ElementsHeader &other) MOZ_DELETE;
+    void operator=(const Uint8ElementsHeader &other) MOZ_DELETE;
+};
+class Int8ElementsHeader : public TypedElementsHeader<int8_t>
+{
+  private:
+    bool isInt8Elements() const MOZ_DELETE;
+    Int8ElementsHeader & asInt8Elements() MOZ_DELETE;
+    Int8ElementsHeader(const Int8ElementsHeader &other) MOZ_DELETE;
+    void operator=(const Int8ElementsHeader &other) MOZ_DELETE;
+};
+class Uint16ElementsHeader : public TypedElementsHeader<uint16_t>
+{
+  private:
+    bool isUint16Elements() const MOZ_DELETE;
+    Uint16ElementsHeader & asUint16Elements() MOZ_DELETE;
+    Uint16ElementsHeader(const Uint16ElementsHeader &other) MOZ_DELETE;
+    void operator=(const Uint16ElementsHeader &other) MOZ_DELETE;
+};
+class Int16ElementsHeader : public TypedElementsHeader<int16_t>
+{
+  private:
+    bool isInt16Elements() const MOZ_DELETE;
+    Int16ElementsHeader & asInt16Elements() MOZ_DELETE;
+    Int16ElementsHeader(const Int16ElementsHeader &other) MOZ_DELETE;
+    void operator=(const Int16ElementsHeader &other) MOZ_DELETE;
+};
+class Uint32ElementsHeader : public TypedElementsHeader<uint32_t>
+{
+  private:
+    bool isUint32Elements() const MOZ_DELETE;
+    Uint32ElementsHeader & asUint32Elements() MOZ_DELETE;
+    Uint32ElementsHeader(const Uint32ElementsHeader &other) MOZ_DELETE;
+    void operator=(const Uint32ElementsHeader &other) MOZ_DELETE;
+};
+class Int32ElementsHeader : public TypedElementsHeader<int32_t>
+{
+  private:
+    bool isInt32Elements() const MOZ_DELETE;
+    Int32ElementsHeader & asInt32Elements() MOZ_DELETE;
+    Int32ElementsHeader(const Int32ElementsHeader &other) MOZ_DELETE;
+    void operator=(const Int32ElementsHeader &other) MOZ_DELETE;
+};
+class Float32ElementsHeader : public TypedElementsHeader<float>
+{
+  private:
+    bool isFloat32Elements() const MOZ_DELETE;
+    Float32ElementsHeader & asFloat32Elements() MOZ_DELETE;
+    Float32ElementsHeader(const Float32ElementsHeader &other) MOZ_DELETE;
+    void operator=(const Float32ElementsHeader &other) MOZ_DELETE;
+};
+class Float64ElementsHeader : public TypedElementsHeader<double>
+{
+  private:
+    bool isFloat64Elements() const MOZ_DELETE;
+    Float64ElementsHeader & asFloat64Elements() MOZ_DELETE;
+    Float64ElementsHeader(const Float64ElementsHeader &other) MOZ_DELETE;
+    void operator=(const Float64ElementsHeader &other) MOZ_DELETE;
+};
 
 class Uint8ClampedElementsHeader : public TypedElementsHeader<uint8_t>
 {
+  public:
+    bool defineElement(JSContext *cx, ObjectImpl *obj,
+                       uint32_t index, const Value &value,
+                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+
   private:
     inline bool isUint8Clamped() const MOZ_DELETE;
     inline Uint8ClampedElementsHeader & asUint8ClampedElements() MOZ_DELETE;
-
     Uint8ClampedElementsHeader(const Uint8ClampedElementsHeader &other) MOZ_DELETE;
     void operator=(const Uint8ClampedElementsHeader &other) MOZ_DELETE;
 };
 
 class ArrayBufferElementsHeader : public ElementsHeader
 {
+  public:
+    bool defineElement(JSContext *cx, ObjectImpl *obj,
+                       uint32_t index, const Value &value,
+                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+
   private:
     inline bool isArrayBufferElements() const MOZ_DELETE;
     inline ArrayBufferElementsHeader & asArrayBufferElements() MOZ_DELETE;
@@ -458,6 +535,13 @@ class ObjectImpl : public gc::Cell
     inline const Value & getDenseArrayElement(uint32_t idx);
     inline uint32_t getDenseArrayInitializedLength();
 
+    bool makeElementsSparse(JSContext *cx) {
+        NEW_OBJECT_REPRESENTATION_ONLY();
+
+        MOZ_NOT_REACHED("NYI");
+        return false;
+    }
+
   protected:
 #ifdef DEBUG
     void checkShapeConsistency();
@@ -517,6 +601,25 @@ class ObjectImpl : public gc::Cell
 
     HeapSlot *fixedSlots() const {
         return reinterpret_cast<HeapSlot *>(uintptr_t(this) + sizeof(ObjectImpl));
+    }
+
+    friend class ElementsHeader;
+    friend class DenseElementsHeader;
+    friend class SparseElementsHeader;
+
+    enum DenseElementsResult {
+        Failure,
+        ConvertToSparse,
+        Succeeded
+    };
+
+    DenseElementsResult ensureDenseElementsInitialized(JSContext *cx, uint32_t index,
+                                                       uint32_t extra)
+    {
+        NEW_OBJECT_REPRESENTATION_ONLY();
+
+        MOZ_NOT_REACHED("NYI");
+        return Failure;
     }
 
     /*
@@ -716,6 +819,10 @@ class ObjectImpl : public gc::Cell
     static size_t getPrivateDataOffset(size_t nfixed) { return getFixedSlotOffset(nfixed); }
     static size_t offsetOfSlots() { return offsetof(ObjectImpl, slots); }
 };
+
+extern bool
+DefineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const Value &value,
+              PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 
 } /* namespace js */
 
