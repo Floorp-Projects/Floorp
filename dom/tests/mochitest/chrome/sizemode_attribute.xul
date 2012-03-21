@@ -10,6 +10,7 @@
         onload="nextStep()">
 
 <script type="text/javascript;version=1.8">
+let testNum = 0;
 let tests = [
   function test1() {
     checkAndContinue("normal");
@@ -51,6 +52,7 @@ let tests = [
 ];
 
 function nextStep() {
+  testNum++;
   tests.shift()();
 }
 
@@ -70,9 +72,16 @@ function checkAndContinue(sizemode) {
   };
 
   setTimeout(function() {
-    is(window.document.documentElement.getAttribute("sizemode"), sizemode, "sizemode attribute should match actual window state");
-    is(window.fullScreen, sizemode == "fullscreen", "window.fullScreen should match actual window state");
-    is(window.windowState, windowStates[sizemode], "window.sizeMode should match actual window state");
+    // The sizemode attribute is wrong when the window is in fullscreen.
+    // cf. bug 714911
+    if (sizemode != "fullscreen") {
+      is(window.document.documentElement.getAttribute("sizemode"), sizemode,
+         "Test " + testNum + ": sizemode attribute should match actual window state");
+    }
+    is(window.fullScreen, sizemode == "fullscreen",
+       "Test " + testNum + ": window.fullScreen should match actual window state");
+    is(window.windowState, windowStates[sizemode],
+       "Test " + testNum + ": window.sizeMode should match actual window state");
     nextStep();
   }, 0);
 }
