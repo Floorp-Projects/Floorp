@@ -170,19 +170,32 @@ xpc_GCThingIsGrayCCThing(void *thing);
 
 // Implemented in nsXPConnect.cpp.
 extern void
-xpc_UnmarkGrayObjectRecursive(JSObject* obj);
+xpc_UnmarkGrayGCThingRecursive(void *thing, JSGCTraceKind kind);
 
 // Remove the gray color from the given JSObject and any other objects that can
 // be reached through it.
-inline void
+inline JSObject *
 xpc_UnmarkGrayObject(JSObject *obj)
 {
     if (obj) {
         if (xpc_IsGrayGCThing(obj))
-            xpc_UnmarkGrayObjectRecursive(obj);
+            xpc_UnmarkGrayGCThingRecursive(obj, JSTRACE_OBJECT);
         else if (js::IsIncrementalBarrierNeededOnObject(obj))
             js::IncrementalReferenceBarrier(obj);
     }
+    return obj;
+}
+
+inline JSScript *
+xpc_UnmarkGrayScript(JSScript *script)
+{
+    if (script) {
+        if (xpc_IsGrayGCThing(script))
+            xpc_UnmarkGrayGCThingRecursive(script, JSTRACE_SCRIPT);
+        else if (js::IsIncrementalBarrierNeededOnScript(script))
+            js::IncrementalReferenceBarrier(script);
+    }
+    return script;
 }
 
 // If aVariant is an XPCVariant, this marks the object to be in aGeneration.
