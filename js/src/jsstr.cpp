@@ -2647,7 +2647,6 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-#if JS_HAS_PERL_SUBSTR
 static JSBool
 str_substr(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -2696,7 +2695,6 @@ out:
     args.rval() = StringValue(str);
     return true;
 }
-#endif /* JS_HAS_PERL_SUBSTR */
 
 /*
  * Python-esque sequence operations.
@@ -2981,9 +2979,7 @@ static JSFunctionSpec string_methods[] = {
     JS_FN("search",            str_search,            1,JSFUN_GENERIC_NATIVE),
     JS_FN("replace",           str_replace,           2,JSFUN_GENERIC_NATIVE),
     JS_FN("split",             str_split,             2,JSFUN_GENERIC_NATIVE),
-#if JS_HAS_PERL_SUBSTR
     JS_FN("substr",            str_substr,            2,JSFUN_GENERIC_NATIVE),
-#endif
 
     /* Python-esque sequence methods. */
     JS_FN("concat",            str_concat,            1,JSFUN_GENERIC_NATIVE),
