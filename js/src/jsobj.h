@@ -665,17 +665,6 @@ struct JSObject : public js::ObjectImpl
 
     inline js::GlobalObject &global() const;
 
-    /* Private data accessors. */
-
-    inline bool hasPrivate() const;
-    inline void *getPrivate() const;
-    inline void setPrivate(void *data);
-    inline void setPrivateUnbarriered(void *data);
-    inline void initPrivate(void *data);
-
-    /* Access private data for an object with a known number of fixed slots. */
-    inline void *getPrivate(size_t nfixed) const;
-
     /* N.B. Infallible: NULL means 'no principal', not an error. */
     inline JSPrincipals *principals(JSContext *cx);
 
@@ -701,8 +690,6 @@ struct JSObject : public js::ObjectImpl
     bool isSealedOrFrozen(JSContext *cx, ImmutabilityType it, bool *resultp);
 
     static inline unsigned getSealedOrFrozenAttributes(unsigned attrs, ImmutabilityType it);
-
-    inline void *&privateRef(uint32_t nfixed) const;
 
   public:
     bool preventExtensions(JSContext *cx, js::AutoIdVector *props);

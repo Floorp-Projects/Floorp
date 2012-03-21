@@ -22,7 +22,7 @@
 
 namespace js {
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 Debug_SetSlotRangeToCrashOnTouch(HeapSlot *vec, size_t len)
 {
 #ifdef DEBUG
@@ -30,7 +30,7 @@ Debug_SetSlotRangeToCrashOnTouch(HeapSlot *vec, size_t len)
 #endif
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 Debug_SetSlotRangeToCrashOnTouch(HeapSlot *begin, HeapSlot *end)
 {
 #ifdef DEBUG
@@ -304,7 +304,7 @@ js::ObjectImpl::readBarrier(ObjectImpl *obj)
         MOZ_ASSERT(!comp->rt->gcRunning);
         JSObject *tmp = obj->asObjectPtr();
         MarkObjectUnbarriered(comp->barrierTracer(), &tmp, "read barrier");
-        JS_ASSERT(tmp == obj->asObjectPtr());
+        MOZ_ASSERT(tmp == obj->asObjectPtr());
     }
 #endif
 }
@@ -342,7 +342,7 @@ js::ObjectImpl::writeBarrierPre(ObjectImpl *obj)
         MOZ_ASSERT(!comp->rt->gcRunning);
         JSObject *tmp = obj->asObjectPtr();
         MarkObjectUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
-        JS_ASSERT(tmp == obj->asObjectPtr());
+        MOZ_ASSERT(tmp == obj->asObjectPtr());
     }
 #endif
 }
@@ -350,6 +350,61 @@ js::ObjectImpl::writeBarrierPre(ObjectImpl *obj)
 /* static */ inline void
 js::ObjectImpl::writeBarrierPost(ObjectImpl *obj, void *addr)
 {
+}
+
+inline bool
+js::ObjectImpl::hasPrivate() const
+{
+    return getClass()->hasPrivate();
+}
+
+inline void *&
+js::ObjectImpl::privateRef(uint32_t nfixed) const
+{
+    /*
+     * The private pointer of an object can hold any word sized value.
+     * Private pointers are stored immediately after the last fixed slot of
+     * the object.
+     */
+    MOZ_ASSERT(nfixed == numFixedSlots());
+    MOZ_ASSERT(hasPrivate());
+    HeapSlot *end = &fixedSlots()[nfixed];
+    return *reinterpret_cast<void**>(end);
+}
+
+inline void *
+js::ObjectImpl::getPrivate() const
+{
+    return privateRef(numFixedSlots());
+}
+
+inline void *
+js::ObjectImpl::getPrivate(size_t nfixed) const
+{
+    return privateRef(nfixed);
+}
+
+inline void
+js::ObjectImpl::setPrivate(void *data)
+{
+    void **pprivate = &privateRef(numFixedSlots());
+
+    privateWriteBarrierPre(pprivate);
+    *pprivate = data;
+    privateWriteBarrierPost(pprivate);
+}
+
+inline void
+js::ObjectImpl::setPrivateUnbarriered(void *data)
+{
+    void **pprivate = &privateRef(numFixedSlots());
+    *pprivate = data;
+}
+
+inline void
+js::ObjectImpl::initPrivate(void *data)
+{
+    privateRef(numFixedSlots()) = data;
 }
 
 #endif /* ObjectImpl_inl_h__ */
