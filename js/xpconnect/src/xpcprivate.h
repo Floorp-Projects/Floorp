@@ -1219,7 +1219,7 @@ public:
         if (mCcx)
             return mCcx->GetScopeForNewJSObjects();
 
-        return mObj;
+        return xpc_UnmarkGrayObject(mObj);
     }
     void SetScopeForNewJSObjects(JSObject *obj)
     {
@@ -1235,7 +1235,7 @@ public:
         if (mCcx)
             return mCcx->GetFlattenedJSObject();
 
-        return mFlattenedJSObject;
+        return xpc_UnmarkGrayObject(mFlattenedJSObject);
     }
     XPCCallContext &GetXPCCallContext()
     {
@@ -1244,8 +1244,9 @@ public:
             mCcxToDestroy = mCcx =
                 new (data) XPCCallContext(mCallerLanguage, mCx,
                                           mCallBeginRequest == CALL_BEGINREQUEST,
-                                          mObj,
-                                          mFlattenedJSObject, mWrapper,
+                                           xpc_UnmarkGrayObject(mObj),
+                                           xpc_UnmarkGrayObject(mFlattenedJSObject),
+                                           mWrapper,
                                           mTearOff);
             if (!mCcx->IsValid()) {
                 NS_ERROR("This is not supposed to fail!");
@@ -1452,10 +1453,18 @@ public:
     GetComponents() const {return mComponents;}
 
     JSObject*
-    GetGlobalJSObject() const {return mGlobalJSObject;}
+    GetGlobalJSObject() const
+        {return xpc_UnmarkGrayObject(mGlobalJSObject);}
 
     JSObject*
-    GetPrototypeJSObject() const {return mPrototypeJSObject;}
+    GetGlobalJSObjectPreserveColor() const {return mGlobalJSObject;}
+
+    JSObject*
+    GetPrototypeJSObject() const
+        {return xpc_UnmarkGrayObject(mPrototypeJSObject);}
+
+    JSObject*
+    GetPrototypeJSObjectPreserveColor() const {return mPrototypeJSObject;}
 
     // Getter for the prototype that we use for wrappers that have no
     // helper.
@@ -2168,7 +2177,7 @@ public:
     GetRuntime() const {return mScope->GetRuntime();}
 
     JSObject*
-    GetJSProtoObject() const {return mJSProtoObject;}
+    GetJSProtoObject() const {return xpc_UnmarkGrayObject(mJSProtoObject);}
 
     nsIClassInfo*
     GetClassInfo()     const {return mClassInfo;}
@@ -2956,8 +2965,7 @@ public:
      * This getter clears the gray bit before handing out the JSObject which
      * means that the object is guaranteed to be kept alive past the next CC.
      */
-    JSObject* GetJSObject() const {xpc_UnmarkGrayObject(mJSObj);
-                                   return mJSObj;}
+    JSObject* GetJSObject() const {return xpc_UnmarkGrayObject(mJSObj);}
 
     /**
      * This getter does not change the color of the JSObject meaning that the
@@ -4417,8 +4425,7 @@ struct CompartmentPrivate
      */
     JSObject *LookupExpandoObject(XPCWrappedNative *wn) {
         JSObject *obj = LookupExpandoObjectPreserveColor(wn);
-        xpc_UnmarkGrayObject(obj);
-        return obj;
+        return xpc_UnmarkGrayObject(obj);
     }
 
     bool RegisterDOMExpandoObject(JSObject *expando) {

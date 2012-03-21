@@ -158,7 +158,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
 
 #ifdef DEBUG
         for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext)
-            NS_ASSERTION(aGlobal != cur->GetGlobalJSObject(), "dup object");
+            MOZ_ASSERT(aGlobal != cur->GetGlobalJSObjectPreserveColor(), "dup object");
 #endif
 
         mNext = gScopes;
@@ -773,7 +773,7 @@ XPCWrappedNativeScope::FindInJSObjectScope(JSContext* cx, JSObject* obj,
         DEBUG_TrackScopeTraversal();
 
         for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
-            if (obj == cur->GetGlobalJSObject()) {
+            if (obj == cur->GetGlobalJSObjectPreserveColor()) {
                 found = cur;
                 break;
             }
