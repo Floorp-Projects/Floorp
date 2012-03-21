@@ -790,7 +790,6 @@ JSObject::setSingletonType(JSContext *cx)
     if (!cx->typeInferenceEnabled())
         return true;
 
-    JS_ASSERT(!lastProperty()->previous());
     JS_ASSERT(!hasLazyType());
     JS_ASSERT_IF(getProto(), type() == getProto()->getNewType(cx, NULL));
 
@@ -1775,7 +1774,7 @@ NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::
 
 /* Make an object with pregenerated shape from a NEWOBJECT bytecode. */
 static inline JSObject *
-CopyInitializerObject(JSContext *cx, JSObject *baseobj, types::TypeObject *type)
+CopyInitializerObject(JSContext *cx, JSObject *baseobj)
 {
     JS_ASSERT(baseobj->getClass() == &ObjectClass);
     JS_ASSERT(!baseobj->inDictionaryMode());
@@ -1789,8 +1788,6 @@ CopyInitializerObject(JSContext *cx, JSObject *baseobj, types::TypeObject *type)
 
     if (!obj)
         return NULL;
-
-    obj->setType(type);
 
     if (!obj->setLastProperty(cx, baseobj->lastProperty()))
         return NULL;
