@@ -9,65 +9,34 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/MigrationUtils.jsm");
 
 function ProfileMigrator() {
 }
 
 ProfileMigrator.prototype = {
   migrate: function PM_migrate(aStartup, aKey) {
-    // By opening the wizard with a supplied migrator, it will automatically
-    // migrate from it.
-    let key = null, migrator = null;
-    let skipImportSourcePage = Cc["@mozilla.org/supports-PRBool;1"]
-                                 .createInstance(Ci.nsISupportsPRBool);
-    if (aKey) {
-      key = aKey;
-      migrator = this._getMigratorIfSourceExists(key);
-      if (!migrator) {
+    let key = aKey;
+    let skipSourcePage = false;
+    if (key.length > 0) {
+      if (!MigrationUtils.getMigrator(key)) {
         Cu.reportError("Invalid migrator key specified or source does not exist.");
-        return;
+        return;   
       }
+
       // If the migrator was passed to us from the caller, use that migrator
       // and skip the import source page.
-      skipImportSourcePage.data = true;
-    } else {
-      [key, migrator] = this._getDefaultMigrator();
+      skipSourcePage = true;
     }
+    else {
+      key = this._getDefaultMigrator();
+    }
+
     if (!key)
-        return;
+      return;
 
-    let params = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-    params.appendElement(this._toCString(key), false);
-    params.appendElement(migrator, false);
-    params.appendElement(aStartup, false);
-    params.appendElement(skipImportSourcePage, false);
-
-    Services.ww.openWindow(null,
-                           "chrome://browser/content/migration/migration.xul",
-                           "_blank",
-                           "chrome,dialog,modal,centerscreen,titlebar",
-                           params);
-  },
-
-  _toCString: function PM__toCString(aStr) {
-    let cstr = Cc["@mozilla.org/supports-cstring;1"].
-               createInstance(Ci.nsISupportsCString);
-    cstr.data = aStr;
-    return cstr;
-  },
-
-  _getMigratorIfSourceExists: function PM__getMigratorIfSourceExists(aKey) {
-    try {
-      let cid = "@mozilla.org/profile/migrator;1?app=browser&type=" + aKey;
-      let migrator = Cc[cid].createInstance(Ci.nsIBrowserProfileMigrator);
-      if (migrator.sourceExists)
-        return migrator;
-    } catch (ex) {
-      Cu.reportError("Could not get migrator: " + ex);
-    }
-    return null;
+    MigrationUtils.showMigrationWizard(null, aStartup, key, skipSourcePage);
   },
 
   // We don't yet support checking for the default browser on all platforms,
@@ -144,12 +113,12 @@ ProfileMigrator.prototype = {
       migratorsOrdered.sort(function(a, b) b == defaultBrowser ? 1 : 0);
 
     for (let i = 0; i < migratorsOrdered.length; i++) {
-      let migrator = this._getMigratorIfSourceExists(migratorsOrdered[i]);
+      let migrator = MigrationUtils.getMigrator(migratorsOrdered[i]);
       if (migrator)
-        return [migratorsOrdered[i], migrator];
+        return migratorsOrdered[i];
     }
 
-    return ["", null];
+    return "";
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIProfileMigrator]),

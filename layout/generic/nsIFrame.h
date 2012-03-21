@@ -1652,6 +1652,16 @@ public:
   virtual nsSize GetIntrinsicRatio() = 0;
 
   /**
+   * Bit-flags to pass to ComputeSize in |aFlags| parameter.
+   */
+  enum {
+    /* Set if the frame is in a context where non-replaced blocks should
+     * shrink-wrap (e.g., it's floating, absolutely positioned, or
+     * inline-block). */
+    eShrinkWrap =        1 << 0
+  };
+
+  /**
    * Compute the size that a frame will occupy.  Called while
    * constructing the nsHTMLReflowState to be used to Reflow the frame,
    * in order to fill its mComputedWidth and mComputedHeight member
@@ -1682,18 +1692,15 @@ public:
    *                 positioning.
    * @param aBorder  The sum of the vertical / horizontal border widths
    *                 of the frame.
-   * @param aPadding  The sum of the vertical / horizontal margins of
-   *                  the frame, including actual values resulting from
-   *                  percentages.
-   * @param aShrinkWrap  Whether the frame is in a context where
-   *                     non-replaced blocks should shrink-wrap (e.g.,
-   *                     it's floating, absolutely positioned, or
-   *                     inline-block).
+   * @param aPadding The sum of the vertical / horizontal margins of
+   *                 the frame, including actual values resulting from
+   *                 percentages.
+   * @param aFlags   Flags to further customize behavior (definitions above).
    */
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             bool aShrinkWrap) = 0;
+                             PRUint32 aFlags) = 0;
 
   /**
    * Compute a tight bounding rectangle for the frame. This is a rectangle
@@ -2522,12 +2529,16 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY(BaseLevelProperty, nsnull)
   NS_DECLARE_FRAME_PROPERTY(EmbeddingLevelProperty, nsnull)
+  NS_DECLARE_FRAME_PROPERTY(ParagraphDepthProperty, nsnull)
 
 #define NS_GET_BASE_LEVEL(frame) \
 NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::BaseLevelProperty()))
 
 #define NS_GET_EMBEDDING_LEVEL(frame) \
 NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
+
+#define NS_GET_PARAGRAPH_DEPTH(frame) \
+NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
 
   /**
    * Return true if and only if this frame obeys visibility:hidden.

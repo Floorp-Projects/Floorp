@@ -299,6 +299,7 @@ load 536720.xul
 load 537059-1.xhtml
 load 537141-1.xhtml
 load 537562-1.xhtml
+load 537624-1.html
 load 537631-1.html
 load 538082-1.xul
 load 538207-1.xhtml
@@ -351,3 +352,6 @@ load 707098.html
 load 722137.html
 load 725535.html
 load 727601.html
+asserts(0-2) pref(dom.disable_open_during_load,false) load 735943.html # the assertion is bug 735966
+asserts(0-2) load 736389-1.xhtml # sometimes the above assertions are delayed and is reported on this test instead
+load 736924-1.html

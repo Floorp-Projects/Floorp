@@ -386,3 +386,6 @@ load text-overflow-bug713610.html
 load 700031.xhtml
 load first-letter-638937.html
 asserts(18) load first-letter-638937-2.html
+load 737313-1.html
+load 737313-2.html
+load 737313-3.html

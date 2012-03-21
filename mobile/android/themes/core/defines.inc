@@ -1,5 +1,31 @@
 %filter substitution
 
+%define color_background_active #525252
+%define color_background_default #000
+%define color_text_default #fff
+%define color_divider_border #333333
+%define color_button_border #5a5a5a
+%define color_dialog_border #5a5a5a
+%define color_background_dlgbuttons #9a9a9a
+%define color_background_panel #d6d6d6
+%define color_text_panel #000
+%define color_background_header #292929
+%define color_text_header #999999
+%define color_background_scroller #9a9a9a
+%define color_background_inverse #fff
+%define color_text_inverse #000
+%define color_text_button #000
+%define color_text_disabled #808080
+%define color_text_placeholder #808080
+%define color_text_as_link #febc2b
+
+%define color_background_highlight #febc2b
+%define color_background_highlight_overlay rgba(254, 188, 43, 0.8)
+%define color_text_highlight #000
+
+%define color_subtext_default lightgray
+%define color_subtext_inverse #414141
+
 %define font_xlarge 5.08mozmm
 %define font_xnormal 2.75mozmm
 %define font_normal 2.54mozmm
@@ -14,6 +40,7 @@
 %define touch_button_xlarge 7.62mozmm
 %define touch_button_large 6.77mozmm
 %define touch_button_small 5.93mozmm
+%define touch_button_minwidth 11.86mozmm
 %define touch_action_minwidth 21.17mozmm
 %define touch_normal 6.77mozmm
 
@@ -68,7 +95,7 @@
 
 %define sidebar_width_minimum 8.47mozmm
 %define sidebar_button_height 7.41mozmm
-%define documenttab_margin_bottom 0.53mozmm
+%define documenttab_margin_bottom 0.85mozmm
 
 %define placelabel_padding 8.47mozmm
 %define placeitem_padding 4.23mozmm

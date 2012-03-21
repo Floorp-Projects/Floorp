@@ -605,6 +605,13 @@ let RIL = {
   currentDataCalls: {},
 
   /**
+   * Hash map for received multipart sms fragments. Messages are hashed with
+   * its sender address and concatenation reference number. Three additional
+   * attributes `segmentMaxSeq`, `receivedSegments`, `segments` are inserted.
+   */
+  _receivedSmsSegmentsMap: {},
+
+  /**
    * Mute or unmute the radio.
    */
   _muted: true,
@@ -981,9 +988,18 @@ let RIL = {
     options.SMSC = this.SMSC;
 
     //TODO: verify values on 'options'
-    //TODO: the data encoding and length in octets should eventually be
-    // computed on the mainthread and passed down to us.
-    GsmPDUHelper.calculateUserDataLength(options);
+
+    if (options.segmentMaxSeq > 1) {
+      if (!options.segmentSeq) {
+        // Fist segment to send
+        options.segmentSeq = 1;
+        options.body = options.segments[0].body;
+        options.encodedBodyLength = options.segments[0].encodedBodyLength;
+      }
+    } else {
+      options.body = options.fullBody;
+      options.encodedBodyLength = options.encodedFullBodyLength;
+    }
 
     Buf.newParcel(REQUEST_SEND_SMS, options);
     Buf.writeUint32(2);
@@ -1252,7 +1268,8 @@ let RIL = {
         // Ignore 2 bytes prefix, which is 4 chars
         let number = GsmPDUHelper.readStringAsBCD().toString().substr(4); 
         if (DEBUG) debug("MSISDN: " + number);
-        this.MSISDN = number;
+        this.MSISDN = number || null;
+        this.sendDOMMessage({type: "siminfo", msisdn: this.MSISDN});
         break;
     } 
   },
@@ -1367,6 +1384,59 @@ let RIL = {
     // Update our mute status. If there is anything in our currentCalls map then
     // we know it's a voice call and we should leave audio on.
     this.muted = Object.getOwnPropertyNames(this.currentCalls).length == 0;
+  },
+
+  /**
+   * Helper for processing received multipart SMS.
+   *
+   * @return null for handled segments, and an object containing full message
+   *         body once all segments are received.
+   */
+  _processReceivedSmsSegment: function _processReceivedSmsSegment(original) {
+    let hash = original.sender + ":" + original.header.segmentRef;
+    let seq = original.header.segmentSeq;
+
+    let options = this._receivedSmsSegmentsMap[hash];
+    if (!options) {
+      options = original;
+      this._receivedSmsSegmentsMap[hash] = options;
+
+      options.segmentMaxSeq = original.header.segmentMaxSeq;
+      options.receivedSegments = 0;
+      options.segments = [];
+    } else if (options.segments[seq]) {
+      // Duplicated segment?
+      if (DEBUG) {
+        debug("Got duplicated segment no." + seq + " of a multipart SMS: "
+              + JSON.stringify(original));
+      }
+      return null;
+    }
+
+    options.segments[seq] = original.body;
+    options.receivedSegments++;
+    if (options.receivedSegments < options.segmentMaxSeq) {
+      if (DEBUG) {
+        debug("Got segment no." + seq + " of a multipart SMS: "
+              + JSON.stringify(options));
+      }
+      return null;
+    }
+
+    // Remove from map
+    delete this._receivedSmsSegmentsMap[hash];
+
+    // Rebuild full body
+    options.fullBody = "";
+    for (let i = 1; i <= options.segmentMaxSeq; i++) {
+      options.fullBody += options.segments[i];
+    }
+
+    if (DEBUG) {
+      debug("Got full multipart SMS: " + JSON.stringify(options));
+    }
+
+    return options;
   },
 
   _handleChangedCallState: function _handleChangedCallState(changedCall) {
@@ -1658,6 +1728,20 @@ RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
   options.messageRef = Buf.readUint32();
   options.ackPDU = Buf.readString();
   options.errorCode = Buf.readUint32();
+
+  //TODO handle errors (bug 727319)
+  if ((options.segmentMaxSeq > 1)
+      && (options.segmentSeq < options.segmentMaxSeq)) {
+    // Setup attributes for sending next segment
+    let next = options.segmentSeq;
+    options.body = options.segments[next].body;
+    options.encodedBodyLength = options.segments[next].encodedBodyLength;
+    options.segmentSeq = next + 1;
+
+    this.sendSMS(options);
+    return;
+  }
+
   options.type = "sms-sent";
   this.sendDOMMessage(options);
 };
@@ -1932,8 +2016,16 @@ RIL[UNSOLICITED_RESPONSE_NEW_SMS] = function UNSOLICITED_RESPONSE_NEW_SMS(length
     }
   }
 
-  message.type = "sms-received";
-  this.sendDOMMessage(message);
+  if (message.header && (message.header.segmentMaxSeq > 1)) {
+    message = this._processReceivedSmsSegment(message);
+  } else {
+    message.fullBody = message.body;
+  }
+
+  if (message) {
+    message.type = "sms-received";
+    this.sendDOMMessage(message);
+  }
 
   //TODO: this might be a lie? do we want to wait for the mainthread to
   // report back?
@@ -2041,13 +2133,6 @@ RIL[UNSOLICITED_RESEND_INCALL_MUTE] = null;
  * timestamp, etc.
  */
 let GsmPDUHelper = {
-
-  /**
-   * List of tuples of national language identifier pairs.
-   */
-  enabledGsmTableTuples: [
-    [PDU_NL_IDENTIFIER_DEFAULT, PDU_NL_IDENTIFIER_DEFAULT],
-  ],
 
   /**
    * Read one character (2 bytes) from a RIL string and decode as hex.
@@ -2370,137 +2455,6 @@ let GsmPDUHelper = {
   },
 
   /**
-   * Calculate encoded length using specified locking/single shift table
-   *
-   * @param message
-   *        message string to be encoded.
-   * @param langTable
-   *        locking shift table string.
-   * @param langShiftTable
-   *        single shift table string.
-   *
-   * @return encoded length in septets.
-   *
-   * @note that the algorithm used in this function must match exactly with
-   * #writeStringAsSeptets.
-   */
-  _calculateLangEncodedSeptets: function _calculateLangEncodedSeptets(message, langTable, langShiftTable) {
-    let length = 0;
-    for (let msgIndex = 0; msgIndex < message.length; msgIndex++) {
-      let septet = langTable.indexOf(message.charAt(msgIndex));
-
-      // According to 3GPP TS 23.038, section 6.1.1 General notes, "The
-      // characters marked '1)' are not used but are displayed as a space."
-      if (septet == PDU_NL_EXTENDED_ESCAPE) {
-        continue;
-      }
-
-      if (septet >= 0) {
-        length++;
-        continue;
-      }
-
-      septet = langShiftTable.indexOf(message.charAt(msgIndex));
-      if (septet == -1) {
-        return -1;
-      }
-
-      // According to 3GPP TS 23.038 B.2, "This code represents a control
-      // character and therefore must not be used for language specific
-      // characters."
-      if (septet == PDU_NL_RESERVED_CONTROL) {
-        continue;
-      }
-
-      // The character is not found in locking shfit table, but could be
-      // encoded as <escape><char> with single shift table. Note that it's
-      // still possible for septet to has the value of PDU_NL_EXTENDED_ESCAPE,
-      // but we can display it as a space in this case as said in previous
-      // comment.
-      length += 2;
-    }
-
-    return length;
-  },
-
-  /**
-   * Calculate user data length and its encoding.
-   *
-   * The `options` parameter object should contain the `body` attribute, and
-   * the `dcs`, `userDataHeaderLength`, `encodedBodyLength`, `langIndex`,
-   * `langShiftIndex` attributes will be set as return:
-   *
-   * @param body
-   *        String containing the message body.
-   * @param dcs
-   *        Data coding scheme. One of the PDU_DCS_MSG_CODING_*BITS_ALPHABET
-   *        constants.
-   * @param userDataHeaderLength
-   *        Length of embedded user data header, in bytes. The whole header
-   *        size will be userDataHeaderLength + 1; 0 for no header.
-   * @param encodedBodyLength
-   *        Length of the message body when encoded with the given DCS. For
-   *        UCS2, in bytes; for 7-bit, in septets.
-   * @param langIndex
-   *        Table index used for normal 7-bit encoded character lookup.
-   * @param langShiftIndex
-   *        Table index used for escaped 7-bit encoded character lookup.
-   */
-  calculateUserDataLength: function calculateUserDataLength(options) {
-    //TODO: support multipart SMS, see bug 712933
-    options.dcs = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
-    options.langIndex = PDU_NL_IDENTIFIER_DEFAULT;
-    options.langShiftIndex = PDU_NL_IDENTIFIER_DEFAULT;
-    options.encodedBodyLength = 0;
-    options.userDataHeaderLength = 0;
-
-    let needUCS2 = true;
-    let minUserDataSeptets = Number.MAX_VALUE;
-    for (let i = 0; i < this.enabledGsmTableTuples.length; i++) {
-      let [langIndex, langShiftIndex] = this.enabledGsmTableTuples[i];
-
-      const langTable = PDU_NL_LOCKING_SHIFT_TABLES[langIndex];
-      const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[langShiftIndex];
-
-      let bodySeptets = this._calculateLangEncodedSeptets(options.body,
-                                                          langTable,
-                                                          langShiftTable);
-      if (bodySeptets < 0) {
-        continue;
-      }
-
-      let headerLen = 0;
-      if (langIndex != PDU_NL_IDENTIFIER_DEFAULT) {
-        headerLen += 3; // IEI + len + langIndex
-      }
-      if (langShiftIndex != PDU_NL_IDENTIFIER_DEFAULT) {
-        headerLen += 3; // IEI + len + langShiftIndex
-      }
-
-      // Calculate full user data length, note the extra byte is for header len
-      let headerSeptets = Math.ceil((headerLen ? headerLen + 1 : 0) * 8 / 7);
-      let userDataSeptets = bodySeptets + headerSeptets;
-      if (userDataSeptets >= minUserDataSeptets) {
-        continue;
-      }
-
-      needUCS2 = false;
-      minUserDataSeptets = userDataSeptets;
-
-      options.encodedBodyLength = bodySeptets;
-      options.userDataHeaderLength = headerLen;
-      options.langIndex = langIndex;
-      options.langShiftIndex = langShiftIndex;
-    }
-
-    if (needUCS2) {
-      options.dcs = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
-      options.encodedBodyLength = options.body.length * 2;
-      options.userDataHeaderLength = 0;
-    }
-  },
-
-  /**
    * Read 1 + UDHL octets and construct user data header at return.
    *
    * @return A header object with properties contained in received message.
@@ -2528,6 +2482,30 @@ let GsmPDUHelper = {
       dataAvailable -= 2;
 
       switch (id) {
+        case PDU_IEI_CONCATENATED_SHORT_MESSAGES_8BIT: {
+          let ref = this.readHexOctet();
+          let max = this.readHexOctet();
+          let seq = this.readHexOctet();
+          dataAvailable -= 3;
+          if (max && seq && (seq <= max)) {
+            header.segmentRef = ref;
+            header.segmentMaxSeq = max;
+            header.segmentSeq = seq;
+          }
+          break;
+        }
+        case PDU_IEI_CONCATENATED_SHORT_MESSAGES_16BIT: {
+          let ref = (this.readHexOctet() << 8) | this.readHexOctet();
+          let max = this.readHexOctet();
+          let seq = this.readHexOctet();
+          dataAvailable -= 4;
+          if (max && seq && (seq <= max)) {
+            header.segmentRef = ref;
+            header.segmentMaxSeq = max;
+            header.segmentSeq = seq;
+          }
+          break;
+        }
         case PDU_IEI_NATIONAL_LANGUAGE_SINGLE_SHIFT:
           let langShiftIndex = this.readHexOctet();
           --dataAvailable;
@@ -2582,6 +2560,20 @@ let GsmPDUHelper = {
   writeUserDataHeader: function writeUserDataHeader(options) {
     this.writeHexOctet(options.userDataHeaderLength);
 
+    if (options.segmentMaxSeq > 1) {
+      if (options.segmentRef16Bit) {
+        this.writeHexOctet(PDU_IEI_CONCATENATED_SHORT_MESSAGES_16BIT);
+        this.writeHexOctet(4);
+        this.writeHexOctet((options.segmentRef >> 8) & 0xFF);
+      } else {
+        this.writeHexOctet(PDU_IEI_CONCATENATED_SHORT_MESSAGES_8BIT);
+        this.writeHexOctet(3);
+      }
+      this.writeHexOctet(options.segmentRef & 0xFF);
+      this.writeHexOctet(options.segmentMaxSeq & 0xFF);
+      this.writeHexOctet(options.segmentSeq & 0xFF);
+    }
+
     if (options.langIndex != PDU_NL_IDENTIFIER_DEFAULT) {
       this.writeHexOctet(PDU_IEI_NATIONAL_LANGUAGE_LOCKING_SHIFT);
       this.writeHexOctet(1);
@@ -2598,8 +2590,17 @@ let GsmPDUHelper = {
   /**
    * User data can be 7 bit (default alphabet) data, 8 bit data, or 16 bit
    * (UCS2) data.
+   *
+   * @param msg
+   *        message object for output.
+   * @param length
+   *        length of user data to read in octets.
+   * @param codingScheme
+   *        coding scheme used to decode user data.
+   * @param hasHeader
+   *        whether a header is embedded.
    */
-  readUserData: function readUserData(length, codingScheme, hasHeader) {
+  readUserData: function readUserData(msg, length, codingScheme, hasHeader) {
     if (DEBUG) {
       debug("Reading " + length + " bytes of user data.");
       debug("Coding scheme: " + codingScheme);
@@ -2636,43 +2637,45 @@ let GsmPDUHelper = {
         break;
     }
 
-    let header;
+    if (DEBUG) debug("PDU: message encoding is " + encoding + " bit.");
+
     let paddingBits = 0;
     if (hasHeader) {
-      header = this.readUserDataHeader();
+      msg.header = this.readUserDataHeader();
 
       if (encoding == PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
-        let headerBits = (header.length + 1) * 8;
+        let headerBits = (msg.header.length + 1) * 8;
         let headerSeptets = Math.ceil(headerBits / 7);
 
         length -= headerSeptets;
         paddingBits = headerSeptets * 7 - headerBits;
       } else {
-        length -= (header.length + 1);
+        length -= (msg.header.length + 1);
       }
     }
 
-    if (DEBUG) debug("PDU: message encoding is " + encoding + " bit.");
+    msg.body = null;
     switch (encoding) {
       case PDU_DCS_MSG_CODING_7BITS_ALPHABET:
         // 7 bit encoding allows 140 octets, which means 160 characters
         // ((140x8) / 7 = 160 chars)
         if (length > PDU_MAX_USER_DATA_7BIT) {
           if (DEBUG) debug("PDU error: user data is too long: " + length);
-          return null;
+          break;
         }
 
-        return this.readSeptetsToString(length,
-                                        paddingBits,
-                                        hasHeader ? header.langIndex : PDU_NL_IDENTIFIER_DEFAULT,
-                                        hasHeader ? header.langShiftIndex : PDU_NL_IDENTIFIER_DEFAULT);
+        let langIndex = hasHeader ? msg.header.langIndex : PDU_NL_IDENTIFIER_DEFAULT;
+        let langShiftIndex = hasHeader ? msg.header.langShiftIndex : PDU_NL_IDENTIFIER_DEFAULT;
+        msg.body = this.readSeptetsToString(length, paddingBits, langIndex,
+                                            langShiftIndex);
+        break;
       case PDU_DCS_MSG_CODING_8BITS_ALPHABET:
         // Unsupported.
-        return null;
+        break;
       case PDU_DCS_MSG_CODING_16BITS_ALPHABET:
-        return this.readUCS2String(length);
+        msg.body = this.readUCS2String(length);
+        break;
     }
-    return null;
   },
 
   /**
@@ -2786,9 +2789,8 @@ let GsmPDUHelper = {
 
     // - TP-User-Data -
     if (userDataLength > 0) {
-      msg.body = this.readUserData(userDataLength,
-                                   dataCodingScheme,
-                                   hasUserDataHeader);
+      this.readUserData(msg, userDataLength, dataCodingScheme,
+                        hasUserDataHeader);
     }
 
     return msg;

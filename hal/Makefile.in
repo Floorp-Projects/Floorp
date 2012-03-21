@@ -110,6 +110,11 @@ ifneq (gonk,$(MOZ_WIDGET_TOOLKIT)) #{
 CPPSRCS += FallbackLights.cpp FallbackTime.cpp
 endif #}
 
+# Screen Orientation backend
+ifneq (android,$(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += ScreenOrientationFallback.cpp
+endif
+
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk

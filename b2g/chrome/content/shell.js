@@ -17,6 +17,7 @@ const LocalFile = CC('@mozilla.org/file/local;1',
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/ContactService.jsm');
+Cu.import('resource://gre/modules/Webapps.jsm');
 
 XPCOMUtils.defineLazyGetter(Services, 'env', function() {
   return Cc['@mozilla.org/process/environment;1']
@@ -66,7 +67,7 @@ function startupHttpd(baseDir, port) {
 function addPermissions(urls) {
   let permissions = [
     'indexedDB', 'indexedDB-unlimited', 'webapps-manage', 'offline-app',
-    'content-camera', 'webcontacts-manage', 'wifi-manage'
+    'content-camera', 'webcontacts-manage', 'wifi-manage', 'desktop-notification'
   ];
   urls.forEach(function(url) {
     let uri = Services.io.newURI(url, null, null);
@@ -164,6 +165,10 @@ var shell = {
     } catch (e) {
       dump('Error loading ' + frameScriptUrl + ' as a frame script: ' + e + '\n');
     }
+
+    CustomEventManager.init();
+
+    WebappsHelper.init();
 
     let browser = this.contentBrowser;
     browser.homePage = homeURL;
@@ -421,3 +426,107 @@ Services.obs.addObserver(function onConsoleAPILogEvent(subject, topic, data) {
   serverSocket.asyncListen(listener);
 })();
 
+CustomEventManager = {
+  init: function custevt_init() {
+    window.addEventListener("ContentStart", (function(evt) {
+      content.addEventListener("mozContentEvent", this, false, true);
+    }).bind(this), false);
+  },
+
+  handleEvent: function custevt_handleEvent(evt) {
+    let detail = evt.detail;
+    dump("XXX FIXME : Got a mozContentEvent: " + detail.type);
+
+    switch(detail.type) {
+      case "desktop-notification-click":
+      case "desktop-notification-close":
+        AlertsHelper.handleEvent(detail);
+        break;
+      case "webapps-install-granted":
+      case "webapps-install-denied":
+        WebappsHelper.handleEvent(detail);
+        break;
+    }
+  }
+}
+
+AlertsHelper = {
+  _listeners: {},
+  _count: 0,
+
+  handleEvent: function alert_handleEvent(detail) {
+    if (!detail || !detail.id)
+      return;
+
+    let listener = this._listeners[detail.id];
+    let topic = detail.type == "desktop-notification-click" ? "alertclickcallback" : "alertfinished";
+    listener.observer.observe(null, topic, listener.cookie);
+
+    // we're done with this notification
+    if (topic === "alertfinished")
+      delete this._listeners[detail.id];
+  },
+
+  registerListener: function alert_registerListener(cookie, alertListener) {
+    let id = "alert" + this._count++;
+    this._listeners[id] = { observer: alertListener, cookie: cookie };
+    return id;
+  },
+
+  showAlertNotification: function alert_showAlertNotification(imageUrl, title, text, textClickable, 
+                                                              cookie, alertListener, name) {
+    let id = this.registerListener(cookie, alertListener);
+    shell.sendEvent(content, "mozChromeEvent", { type: "desktop-notification", id: id, icon: imageUrl, 
+                                                 title: title, text: text } );
+  }
+}
+
+WebappsHelper = {
+  _installers: {},
+  _count: 0,
+
+  init: function webapps_init() {
+    Services.obs.addObserver(this, "webapps-launch", false);
+    Services.obs.addObserver(this, "webapps-ask-install", false);
+  },
+
+  registerInstaller: function webapps_registerInstaller(data) {
+    let id = "installer" + this._count++;
+    this._installers[id] = data;
+    return id;
+  },
+
+  handleEvent: function webapps_handleEvent(detail) {
+    if (!detail || !detail.id)
+      return;
+
+    let installer = this._installers[detail.id];
+    switch (detail.type) {
+      case "webapps-install-granted":
+        DOMApplicationRegistry.confirmInstall(installer);
+        break;
+      case "webapps-install-denied":
+        DOMApplicationRegistry.denyInstall(installer);
+        break;
+    }
+  },
+
+  observe: function webapps_observe(subject, topic, data) {
+    let json = JSON.parse(data);
+    switch(topic) {
+      case "webapps-launch":
+        DOMApplicationRegistry.getManifestFor(json.origin, function(aManifest) {
+          if (!aManifest)
+            return;
+
+          let manifest = new DOMApplicationManifest(aManifest, json.origin);
+          shell.sendEvent(content, "mozChromeEvent", { type: "webapps-launch", url: manifest.fullLaunchPath(), origin: json.origin });
+        });
+        break;
+      case "webapps-ask-install":
+        let id = this.registerInstaller(json);
+        shell.sendEvent(content, "mozChromeEvent", { type: "webapps-ask-install", id: id, app: json.app } );
+        break;
+    }
+  }
+}

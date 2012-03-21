@@ -3,3 +3,7 @@
 == image-zoom-1.html image-zoom-1-ref.html
 == image-zoom-2.html image-zoom-1-ref.html
 == invalid-url-image-1.html invalid-url-image-1-ref.html
+== sync-image-switch-1a.html sync-image-switch-1-ref.html
+== sync-image-switch-1b.html sync-image-switch-1-ref.html
+== sync-image-switch-1c.html sync-image-switch-1-ref.html
+== sync-image-switch-1d.html sync-image-switch-1-ref.html

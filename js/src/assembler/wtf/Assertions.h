@@ -70,7 +70,7 @@
 #include <inttypes.h>
 #endif
 
-#if WTF_PLATFORM_SYMBIAN
+#if WTF_OS_SYMBIAN
 #include <e32def.h>
 #include <e32debug.h>
 #endif
@@ -145,7 +145,7 @@ void WTFLogVerbose(const char* file, int line, const char* function, WTFLogChann
 /* CRASH -- gets us into the debugger or the crash reporter -- signals are ignored by the crash reporter so we must do better */
 
 #ifndef CRASH
-#if WTF_PLATFORM_SYMBIAN
+#if WTF_OS_SYMBIAN
 #define CRASH() do { \
     __DEBUGGER(); \
     User::Panic(_L("Webkit CRASH"),0); \
@@ -160,7 +160,7 @@ void WTFLogVerbose(const char* file, int line, const char* function, WTFLogChann
 
 /* ASSERT, ASSERT_WITH_MESSAGE, ASSERT_NOT_REACHED */
 
-#if WTF_PLATFORM_WIN_OS || WTF_PLATFORM_SYMBIAN
+#if WTF_PLATFORM_WIN || WTF_OS_SYMBIAN
 /* FIXME: Change to use something other than ASSERT to avoid this conflict with the underlying platform */
 #undef ASSERT
 #endif

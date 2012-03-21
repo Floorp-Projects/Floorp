@@ -161,6 +161,12 @@ function assertEquals(descr, expected, actual) {
         is(2, obj.nodeType, descr);
         var specd = obj.specified;
     }
+/*
+    else {
+      // Ensure at least one SimpleTest check is reported. (Bug 483992)
+      todo_is(type, "Attr", "[DOMTestCase.assertInstanceOf()] Fake default check.");
+    }
+*/
   }
 
   function assertSame(descr, expected, actual) {
@@ -168,6 +174,13 @@ function assertEquals(descr, expected, actual) {
         is(expected.nodeType, actual.nodeType, descr);
         is(expected.nodeValue, actual.nodeValue, descr);
     }
+/*
+    else {
+      // Ensure at least one SimpleTest check is reported. (Bug 483992)
+      todo_isnot(expected, actual, "[DOMTestCase.assertSame()] Fake default check." +
+                                   " (Type=" + actual.nodeType + ", Value=" + actual.nodeValue + ")");
+    }
+*/
   }
 
   function assertURIEquals(assertID, scheme, path, host, file, name, query, fragment, isAbsolute, actual) {

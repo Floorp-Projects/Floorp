@@ -63,6 +63,8 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 #define JIS0212_INDEX gJIS0212Index
 #define SJIS_UNMAPPED	0x30fb
 #define UNICODE_REPLACEMENT_CHARACTER 0xfffd
+#define IN_GR_RANGE(b) \
+  ((PRUint8(0xa1) <= PRUint8(b)) && (PRUint8(b) <= PRUint8(0xfe)))
 
 NS_IMETHODIMP nsShiftJISToUnicode::Convert(
    const char * aSrc, PRInt32 * aSrcLen,
@@ -345,7 +347,7 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
 
           case 3: // JIS 0212
           {
-            if(*src & 0x80)
+            if (IN_GR_RANGE(*src))
             {
               mData = JIS0212_INDEX[*src & 0x7F];
               if(mData != 0xFFFD )
@@ -355,30 +357,39 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
                  mState = 5; // error
               }
             } else {
-              mState = 5; // error
+              // First "JIS 0212" byte is not in the valid GR range: save it
+              if (mErrBehavior == kOnError_Signal)
+                goto error_invalidchar;
+              *dest++ = 0xFFFD;
+              --src;
+              mState = 0;
+              if(dest >= destEnd)
+                goto error1;
             }
           }
           break;
           case 4:
           {
             PRUint8 off = sbIdx[*src];
-            if(0xFF == off) {
-              if (mErrBehavior == kOnError_Signal)
-                goto error_invalidchar;
-               *dest++ = 0xFFFD;
-            } else {
-               *dest++ = gJapaneseMap[mData+off];
+            if(0xFF != off) {
+              *dest++ = gJapaneseMap[mData+off];
+              mState = 0;
+              if(dest >= destEnd)
+                goto error1;
+              break;
             }
-            mState = 0;
-            if(dest >= destEnd)
-              goto error1;
+            // else fall through to error handler
           }
-          break;
           case 5: // two bytes undefined
           {
             if (mErrBehavior == kOnError_Signal)
               goto error_invalidchar;
             *dest++ = 0xFFFD;
+            // Undefined JIS 0212 two byte sequence. If the second byte is in
+            // the valid range for a two byte sequence (0xa1 - 0xfe) consume
+            // both bytes. Otherwise resynchronize on the second byte.
+            if (!IN_GR_RANGE(*src))
+              --src;
             mState = 0;
             if(dest >= destEnd)
               goto error1;

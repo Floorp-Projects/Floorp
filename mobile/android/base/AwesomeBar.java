@@ -413,6 +413,10 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         super.onResume();
         if (mText != null && mText.getText() != null)
             updateGoButton(mText.getText().toString());
+
+        // Invlidate the cached value that keeps track of whether or
+        // not desktop bookmarks exist
+        BrowserDB.invalidateCachedState();
     }
 
     @Override
@@ -493,7 +497,8 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
             Cursor cursor = (Cursor) selectedItem;
 
             // Don't show the context menu for folders
-            if (!(list == findViewById(R.id.bookmarks_list) && cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.IS_FOLDER)) == 1)) {
+            if (!(list == findViewById(R.id.bookmarks_list) &&
+                  cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.TYPE)) == Bookmarks.TYPE_FOLDER)) {
                 String keyword = null;
                 int keywordCol = cursor.getColumnIndex(URLColumns.KEYWORD);
                 if (keywordCol != -1)

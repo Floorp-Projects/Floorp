@@ -70,6 +70,8 @@ typedef ptrdiff_t GLsizeiptr;
 typedef ptrdiff_t GLintptr;
 #endif
 
+#endif /* #if !defined(__gltypes_h_) && !defined(__gl_h_) */
+
 #ifndef GLAPIENTRY
 # ifdef WIN32
 #  define GLAPIENTRY APIENTRY
@@ -79,8 +81,6 @@ typedef ptrdiff_t GLintptr;
 #  define GLAPI
 # endif
 #endif
-
-#endif /* #if !defined(__gltypes_h_) && !defined(__gl_h_) */
 
 #define LOCAL_GL_VERSION_1_1 1
 #define LOCAL_GL_ACCUM 0x0100

@@ -3087,10 +3087,6 @@ JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     return DefaultValue(cx, obj, type, vp);
 }
 
-JS_PUBLIC_API(void)
-JS_FinalizeStub(JSContext *cx, JSObject *obj)
-{}
-
 JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              JSClass *clasp, JSNative constructor, unsigned nargs,

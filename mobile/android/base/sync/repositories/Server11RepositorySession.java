@@ -1,39 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Android Sync Client.
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Richard Newman <rnewman@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync.repositories;
 
@@ -43,7 +10,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.json.simple.JSONArray;
@@ -51,6 +20,7 @@ import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.DelayedWorkTracker;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.HTTPFailureException;
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.UnexpectedJSONException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.net.SyncStorageCollectionRequest;
@@ -64,7 +34,6 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDeleg
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
-import android.util.Log;
 import ch.boye.httpclientandroidlib.entity.ContentProducer;
 import ch.boye.httpclientandroidlib.entity.EntityTemplate;
 
@@ -92,6 +61,48 @@ public class Server11RepositorySession extends RepositorySession {
   private static final int PER_BATCH_OVERHEAD    = 5 - PER_RECORD_OVERHEAD;
 
   /**
+   * Return the X-Weave-Timestamp header from <code>response</code>, or the
+   * current time if it is missing.
+   * <p>
+   * <b>Warning:</b> this can cause the timestamp of <code>response</code> to
+   * cross domains (from server clock to local clock), which could cause records
+   * to be skipped on account of clock drift. This should never happen, because
+   * <i>every</i> server response should have a well-formed X-Weave-Timestamp
+   * header.
+   *
+   * @param response
+   *          The <code>SyncStorageResponse</code> to interrogate.
+   * @return Normalized timestamp in milliseconds.
+   */
+  public static long getNormalizedTimestamp(SyncStorageResponse response) {
+    long normalizedTimestamp = -1;
+    try {
+      normalizedTimestamp = response.normalizedWeaveTimestamp();
+    } catch (NumberFormatException e) {
+      Logger.warn(LOG_TAG, "Malformed X-Weave-Timestamp header received.", e);
+    }
+    if (-1 == normalizedTimestamp) {
+      Logger.warn(LOG_TAG, "Computing stand-in timestamp from local clock. Clock drift could cause records to be skipped.");
+      normalizedTimestamp = System.currentTimeMillis();
+    }
+    return normalizedTimestamp;
+  }
+
+  /**
+   * Used to track outstanding requests, so that we can abort them as needed.
+   */
+  private Set<SyncStorageCollectionRequest> pending = Collections.synchronizedSet(new HashSet<SyncStorageCollectionRequest>());
+
+  @Override
+  public void abort() {
+    super.abort();
+    for (SyncStorageCollectionRequest request : pending) {
+      request.abort();
+    }
+    pending.clear();
+  }
+
+  /**
    * Convert HTTP request delegate callbacks into fetch callbacks within the
    * context of this RepositorySession.
    *
@@ -101,6 +112,20 @@ public class Server11RepositorySession extends RepositorySession {
   public class RequestFetchDelegateAdapter extends WBOCollectionRequestDelegate {
     RepositorySessionFetchRecordsDelegate delegate;
     private DelayedWorkTracker workTracker = new DelayedWorkTracker();
+
+    // So that we can clean up.
+    private SyncStorageCollectionRequest request;
+
+    public void setRequest(SyncStorageCollectionRequest request) {
+      this.request = request;
+    }
+    private void removeRequestFromPending() {
+      if (this.request == null) {
+        return;
+      }
+      pending.remove(this.request);
+      this.request = null;
+    }
 
     public RequestFetchDelegateAdapter(RepositorySessionFetchRecordsDelegate delegate) {
       this.delegate = delegate;
@@ -118,29 +143,19 @@ public class Server11RepositorySession extends RepositorySession {
 
     @Override
     public void handleRequestSuccess(SyncStorageResponse response) {
-      Log.i(LOG_TAG, "Fetch done.");
+      Logger.debug(LOG_TAG, "Fetch done.");
+      removeRequestFromPending();
 
-      long normalizedTimestamp = -1;
-      try {
-        normalizedTimestamp = response.normalizedWeaveTimestamp();
-      } catch (NumberFormatException e) {
-        Log.w(LOG_TAG, "Malformed X-Weave-Timestamp header received.", e);
-      }
-      if (-1 == normalizedTimestamp) {
-        Log.w(LOG_TAG, "Computing stand-in timestamp from local clock. Clock drift could cause records to be skipped.");
-        normalizedTimestamp = new Date().getTime();
-      }
-
-      Log.d(LOG_TAG, "Fetch completed. Timestamp is " + normalizedTimestamp);
-      final long ts = normalizedTimestamp;
+      final long normalizedTimestamp = getNormalizedTimestamp(response);
+      Logger.debug(LOG_TAG, "Fetch completed. Timestamp is " + normalizedTimestamp);
 
       // When we're done processing other events, finish.
       workTracker.delayWorkItem(new Runnable() {
         @Override
         public void run() {
-          Log.d(LOG_TAG, "Delayed onFetchCompleted running.");
+          Logger.debug(LOG_TAG, "Delayed onFetchCompleted running.");
           // TODO: verify number of returned records.
-          delegate.onFetchCompleted(ts);
+          delegate.onFetchCompleted(normalizedTimestamp);
         }
       });
     }
@@ -153,12 +168,13 @@ public class Server11RepositorySession extends RepositorySession {
 
     @Override
     public void handleRequestError(final Exception ex) {
-      Log.i(LOG_TAG, "Got request error.", ex);
+      removeRequestFromPending();
+      Logger.warn(LOG_TAG, "Got request error.", ex);
       // When we're done processing other events, finish.
       workTracker.delayWorkItem(new Runnable() {
         @Override
         public void run() {
-          Log.i(LOG_TAG, "Running onFetchFailed.");
+          Logger.debug(LOG_TAG, "Running onFetchFailed.");
           delegate.onFetchFailed(ex, null);
         }
       });
@@ -170,7 +186,7 @@ public class Server11RepositorySession extends RepositorySession {
       try {
         delegate.onFetchedRecord(record);
       } catch (Exception ex) {
-        Log.i(LOG_TAG, "Got exception calling onFetchedRecord with WBO.", ex);
+        Logger.warn(LOG_TAG, "Got exception calling onFetchedRecord with WBO.", ex);
         // TODO: handle this better.
         throw new RuntimeException(ex);
       } finally {
@@ -233,12 +249,16 @@ public class Server11RepositorySession extends RepositorySession {
                                      boolean full,
                                      String sort,
                                      String ids,
-                                     SyncStorageRequestDelegate delegate)
+                                     RequestFetchDelegateAdapter delegate)
                                          throws URISyntaxException {
 
     URI collectionURI = serverRepository.collectionURI(full, newer, limit, sort, ids);
     SyncStorageCollectionRequest request = new SyncStorageCollectionRequest(collectionURI);
     request.delegate = delegate;
+
+    // So it can clean up.
+    delegate.setRequest(request);
+    pending.add(request);
     request.get();
   }
 
@@ -359,7 +379,7 @@ public class Server11RepositorySession extends RepositorySession {
     public RecordUploadRunnable(RepositorySessionStoreDelegate storeDelegate,
                                 ArrayList<byte[]> outgoing,
                                 long byteCount) {
-      Log.i(LOG_TAG, "Preparing RecordUploadRunnable for " +
+      Logger.debug(LOG_TAG, "Preparing RecordUploadRunnable for " +
                      outgoing.size() + " records (" +
                      byteCount + " bytes).");
       this.outgoing  = outgoing;
@@ -378,38 +398,48 @@ public class Server11RepositorySession extends RepositorySession {
 
     @Override
     public void handleRequestSuccess(SyncStorageResponse response) {
-      Log.i(LOG_TAG, "POST of " + outgoing.size() + " records done.");
+      Logger.debug(LOG_TAG, "POST of " + outgoing.size() + " records done.");
 
       ExtendedJSONObject body;
       try {
-        body = response.jsonObjectBody();
+        body = response.jsonObjectBody(); // jsonObjectBody() throws or returns non-null.
       } catch (Exception e) {
-        Log.e(LOG_TAG, "Got exception parsing POST success body.", e);
+        Logger.error(LOG_TAG, "Got exception parsing POST success body.", e);
         // TODO
         return;
       }
-      long modified = body.getTimestamp("modified");
-      Log.i(LOG_TAG, "POST request success. Modified timestamp: " + modified);
+
+      // Be defensive when logging timestamp.
+      if (body.containsKey("modified")) {
+        Long modified = body.getTimestamp("modified");
+        if (modified != null) {
+          Logger.debug(LOG_TAG, "POST request success. Modified timestamp: " + modified.longValue());
+        } else {
+          Logger.warn(LOG_TAG, "POST success body contains malformed 'modified': " + body.toJSONString());
+        }
+      } else {
+        Logger.warn(LOG_TAG, "POST success body does not contain key 'modified': " + body.toJSONString());
+      }
 
       try {
         JSONArray          success = body.getArray("success");
         ExtendedJSONObject failed  = body.getObject("failed");
         if ((success != null) &&
             (success.size() > 0)) {
-          Log.d(LOG_TAG, "Successful records: " + success.toString());
+          Logger.debug(LOG_TAG, "Successful records: " + success.toString());
           // TODO: how do we notify without the whole record?
 
-          long ts = response.normalizedWeaveTimestamp();
-          Log.d(LOG_TAG, "Passing back upload X-Weave-Timestamp: " + ts);
-          bumpUploadTimestamp(ts);
+          long normalizedTimestamp = getNormalizedTimestamp(response);
+          Logger.debug(LOG_TAG, "Passing back upload X-Weave-Timestamp: " + normalizedTimestamp);
+          bumpUploadTimestamp(normalizedTimestamp);
         }
         if ((failed != null) &&
             (failed.object.size() > 0)) {
-          Log.d(LOG_TAG, "Failed records: " + failed.object.toString());
+          Logger.debug(LOG_TAG, "Failed records: " + failed.object.toString());
           // TODO: notify.
         }
       } catch (UnexpectedJSONException e) {
-        Log.e(LOG_TAG, "Got exception processing success/failed in POST success body.", e);
+        Logger.error(LOG_TAG, "Got exception processing success/failed in POST success body.", e);
         // TODO
         return;
       }
@@ -424,7 +454,7 @@ public class Server11RepositorySession extends RepositorySession {
 
     @Override
     public void handleRequestError(final Exception ex) {
-      Log.i(LOG_TAG, "Got request error: " + ex, ex);
+      Logger.warn(LOG_TAG, "Got request error: " + ex, ex);
       delegate.onRecordStoreFailed(ex);
     }
 
@@ -477,7 +507,7 @@ public class Server11RepositorySession extends RepositorySession {
     public void run() {
       if (outgoing == null ||
           outgoing.size() == 0) {
-        Log.i(LOG_TAG, "No items: RecordUploadRunnable returning immediately.");
+        Logger.debug(LOG_TAG, "No items: RecordUploadRunnable returning immediately.");
         return;
       }
 

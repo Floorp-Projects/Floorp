@@ -3,7 +3,7 @@
 == bidi-001-j.html bidi-001-ref.html
 == bidi-001-v.html bidi-001-ref.html
 == bidi-002.html bidi-002-ref.html
-== bidi-003.html bidi-003-ref.html
+fails-if(Android) == bidi-003.html bidi-003-ref.html # bug 736726
 == bidi-004.html bidi-004-ref.html
 == bidi-004-j.html bidi-004-ref.html
 == bidi-005.html bidi-005-ref.html
@@ -93,6 +93,9 @@ fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == 61
 == 698291-1.html 698291-1-ref.html
 == 698706-1.html 698706-1-ref.html
 == 704837-1.html 704837-1-ref.html
+== 712600-1.html 712600-1-ref.html
+== 712600-2.html 712600-2-ref.html
+== 712600-3.html 712600-3-ref.html
 == 718236-1.html 718236-1-ref.html
 == 718236-2.html 718236-2-ref.html
 == 718236-3.html 718236-3-ref.html

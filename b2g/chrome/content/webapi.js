@@ -4,74 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-dump('======================= webapi+apps.js ======================= \n');
-
 'use strict';
+
+dump('======================= webapi+apps.js ======================= \n');
 
 let { classes: Cc, interfaces: Ci, utils: Cu }  = Components;
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
+Cu.import('resource://gre/modules/Geometry.jsm');
 
 XPCOMUtils.defineLazyGetter(Services, 'fm', function() {
   return Cc['@mozilla.org/focus-manager;1']
            .getService(Ci.nsIFocusManager);
 });
-
-(function() {
-  function generateAPI(window) {
-    let navigator = window.navigator;
-
-    XPCOMUtils.defineLazyGetter(navigator, 'mozKeyboard', function() {
-      return new MozKeyboard();
-    });
-  };
-
-  let progressListener = {
-    onStateChange: function onStateChange(progress, request,
-                                          flags, status) {
-    },
-
-    onProgressChange: function onProgressChange(progress, request,
-                                                curSelf, maxSelf,
-                                                curTotal, maxTotal) {
-    },
-
-    onLocationChange: function onLocationChange(progress, request,
-                                                locationURI, flags) {
-      content.addEventListener('appwillopen', function(evt) {
-        let appManager = content.wrappedJSObject.Gaia.AppManager;
-        let topWindow = appManager.foregroundWindow.contentWindow;
-        generateAPI(topWindow);
-      });
-
-      generateAPI(content.wrappedJSObject);
-    },
-
-    onStatusChange: function onStatusChange(progress, request,
-                                            status, message) {
-    },
-
-    onSecurityChange: function onSecurityChange(progress, request,
-                                                state) {
-    },
-
-    QueryInterface: function QueryInterface(aIID) {
-      if (aIID.equals(Ci.nsIWebProgressListener) ||
-          aIID.equals(Ci.nsISupportsWeakReference) ||
-          aIID.equals(Ci.nsISupports)) {
-          return this;
-      }
-
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    }
-  };
-
-  let flags = Ci.nsIWebProgress.NOTIFY_LOCATION;
-  let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIWebProgress);
-  flags = Ci.nsIWebProgress.NOTIFY_ALL;
-  webProgress.addProgressListener(progressListener, flags);
-})();
 
 // MozKeyboard
 (function VirtualKeyboardManager() {
@@ -138,27 +83,6 @@ XPCOMUtils.defineLazyGetter(Services, 'fm', function() {
     addEventListener(type, constructor, true);
   });
 })();
-
-
-function MozKeyboard() {
-}
-
-MozKeyboard.prototype = {
-  sendKey: function mozKeyboardSendKey(keyCode, charCode) {
-    charCode = (charCode == undefined) ? keyCode : charCode;
-
-    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
-    ['keydown', 'keypress', 'keyup'].forEach(function sendKey(type) {
-      utils.sendKeyEvent(type, keyCode, charCode, null);
-    });
-  }
-};
-
-let { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
-Cu.import('resource://gre/modules/Geometry.jsm');
-Cu.import('resource://gre/modules/Services.jsm');
 
 const ContentPanning = {
   init: function cp_init() {
@@ -328,7 +252,6 @@ const ContentPanning = {
 
 ContentPanning.init();
 
-
 // Min/max velocity of kinetic panning. This is in pixels/millisecond.
 const kMinVelocity = 0.4;
 const kMaxVelocity = 6;
@@ -497,4 +420,3 @@ const KineticPanning = {
     content.mozRequestAnimationFrame(callback);
   }
 };
-

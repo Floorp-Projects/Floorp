@@ -1247,6 +1247,10 @@ InspectorUI.prototype = {
       if (computed) {
         computed.parentNode.removeChild(computed);
       }
+      let autosizer = node.querySelector(".autosizer");
+      if (autosizer) {
+        autosizer.parentNode.removeChild(autosizer);
+      }
     }
 
     let text = node.textContent;

@@ -191,6 +191,12 @@ public:
   virtual void Resume() = 0;
   // Get the current principal for the channel
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
+  // If this returns false, then we shouldn't try to clone this MediaResource
+  // because its underlying resources are not suitable for reuse (e.g.
+  // because the underlying connection has been lost, or this resource
+  // just can't be safely cloned). If this returns true, CloneData could
+  // still fail. If this returns false, CloneData should not be called.
+  virtual bool CanClone() { return false; }
   // Create a new stream of the same type that refers to the same URI
   // with a new channel. Any cached data associated with the original
   // stream should be accessible in the new stream too.
@@ -391,6 +397,7 @@ public:
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
   // Return true if the stream has been closed.
   bool IsClosed() const { return mCacheStream.IsClosed(); }
+  virtual bool     CanClone();
   virtual MediaResource* CloneData(nsMediaDecoder* aDecoder);
   virtual nsresult ReadFromCache(char* aBuffer, PRInt64 aOffset, PRUint32 aCount);
   virtual void     EnsureCacheUpToDate();

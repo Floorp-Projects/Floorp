@@ -36,8 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsSVGEffects.h"
 #include "nsSVGGFrame.h"
 #include "nsSVGSwitchElement.h"
+#include "nsSVGUtils.h"
 #include "gfxRect.h"
 #include "gfxMatrix.h"
 
@@ -80,9 +82,6 @@ public:
   NS_IMETHOD PaintSVG(nsRenderingContext* aContext, const nsIntRect *aDirtyRect);
   NS_IMETHODIMP_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
   NS_IMETHODIMP_(nsRect) GetCoveredRegion();
-  NS_IMETHOD UpdateCoveredRegion();
-  NS_IMETHOD InitialUpdate();
-  virtual void NotifyRedrawUnsuspended();
   virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                       PRUint32 aFlags);
 
@@ -163,40 +162,6 @@ nsSVGSwitchFrame::GetCoveredRegion()
     }
   }
   return rect;
-}
-
-NS_IMETHODIMP
-nsSVGSwitchFrame::UpdateCoveredRegion()
-{
-  static_cast<nsSVGSwitchElement*>(mContent)->UpdateActiveChild();
-
-  nsIFrame *kid = GetActiveChildFrame();
-  if (kid) {
-    nsISVGChildFrame* child = do_QueryFrame(kid);
-    if (child) {
-      child->UpdateCoveredRegion();
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGSwitchFrame::InitialUpdate()
-{
-  nsSVGUtils::UpdateGraphic(this);
-
-  return nsSVGSwitchFrameBase::InitialUpdate();
-}
-
-void
-nsSVGSwitchFrame::NotifyRedrawUnsuspended()
-{
-  RemoveStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
-
-  if (GetStateBits() & NS_STATE_SVG_DIRTY)
-    nsSVGUtils::UpdateGraphic(this);
-
-  nsSVGSwitchFrameBase::NotifyRedrawUnsuspended();
 }
 
 gfxRect

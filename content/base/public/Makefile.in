@@ -66,7 +66,6 @@ nsIScriptElement.h \
 nsIStyleSheetLinkingElement.h \
 nsIContentSerializer.h \
 nsIXPathEvaluatorInternal.h \
-mozISanitizingSerializer.h \
 nsCaseTreatment.h \
 nsContentCID.h \
 nsCopySupport.h \

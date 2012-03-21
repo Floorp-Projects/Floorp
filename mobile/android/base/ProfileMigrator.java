@@ -153,7 +153,9 @@ public class ProfileMigrator {
         "       MAX(history.visit_date) AS h_date, "      +
         "       COUNT(*) AS h_visits, "                   +
         // see BrowserDB.filterAllSites for this formula
-        "       MAX(1, (((MAX(history.visit_date)/1000) - ?) / 86400000 + 120)) AS a_recent, " +
+        "       MAX(1, 100 * 225 / (" +
+                  "((MAX(history.visit_date)/1000 - ?) / 86400000) * " +
+                  "((MAX(history.visit_date)/1000 - ?) / 86400000) + 225)) AS a_recent, " +
         "       favicon.data            AS f_data, "      +
         "       favicon.mime_type       AS f_mime_type, " +
         "       places.guid             AS p_guid, "      +
@@ -442,9 +444,11 @@ public class ProfileMigrator {
             mOperations = new ArrayList<ContentProviderOperation>();
 
             try {
+                final String currentTime = Long.toString(System.currentTimeMillis());
                 final String[] queryParams = new String[] {
                     /* current time */
-                    Long.toString(System.currentTimeMillis()),
+                    currentTime,
+                    currentTime,
                     /*
                        History entries to return. No point
                        in retrieving more than we can store.
@@ -527,7 +531,7 @@ public class ProfileMigrator {
                 parent = mRerootMap.get(parent);
             }
             values.put(Bookmarks.PARENT, parent);
-            values.put(Bookmarks.IS_FOLDER, (folder ? 1 : 0));
+            values.put(Bookmarks.TYPE, (folder ? Bookmarks.TYPE_FOLDER : Bookmarks.TYPE_BOOKMARK));
 
             Cursor cursor = null;
             ContentProviderOperation.Builder builder = null;

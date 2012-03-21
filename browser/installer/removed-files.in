@@ -15,7 +15,6 @@
 @DLL_PREFIX@mozjs@DLL_SUFFIX@
 #endif
 LICENSE
-update.locale
 browserconfig.properties
 chrome/US.jar
 chrome/app-chrome.manifest
@@ -695,6 +694,15 @@ uninstall/UninstallDeerPark.exe
 uninstall/UninstallFirefox.exe
 uninstall/uninst.exe
 uninstall/uninstall.exe
+update.locale
+#ifndef MOZ_UPDATER
+  #ifdef XP_MACOSX
+    updater.app/
+  #else
+    updater@BIN_SUFFIX@
+  #endif
+  updater.ini
+#endif
 xpicleanup@BIN_SUFFIX@
 #ifdef MOZ_OMNIJAR
   omni.jar
@@ -927,10 +935,10 @@ xpicleanup@BIN_SUFFIX@
   components/nsTelephonyWorker.js
   components/Telephony.manifest
   components/Telephony.js
-  components/nsWifiWorker.js
-  components/nsWifiWorker.manifest
-  components/nsDOMWifiManager.js
-  components/nsDOMWifiManager.manifest
+  components/WifiWorker.js
+  components/WifiWorker.manifest
+  components/DOMWifiManager.js
+  components/DOMWifiManager.manifest
 #endif
   components/txEXSLTRegExFunctions.js
   components/Weave.js

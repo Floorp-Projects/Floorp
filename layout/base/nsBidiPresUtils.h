@@ -283,11 +283,18 @@ public:
   static nsIFrame* GetFrameToLeftOf(const nsIFrame*  aFrame,
                                     nsIFrame*        aFirstFrameOnLine,
                                     PRInt32          aNumFramesOnLine);
+
+  static nsIFrame* GetFirstLeaf(nsIFrame* aFrame);
     
   /**
    * Get the bidi embedding level of the given (inline) frame.
    */
   static nsBidiLevel GetFrameEmbeddingLevel(nsIFrame* aFrame);
+    
+  /**
+   * Get the paragraph depth of the given (inline) frame.
+   */
+  static PRUint8 GetParagraphDepth(nsIFrame* aFrame);
 
   /**
    * Get the bidi base level of the given (inline) frame.

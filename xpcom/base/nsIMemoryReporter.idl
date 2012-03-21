@@ -105,12 +105,17 @@ interface nsIMemoryReporter : nsISupports
    *   So in the example above, |a| may not count any allocations counted by
    *   |d|, and vice versa.
    *
+   *   Reporters in this category must have kind HEAP or NONHEAP, units BYTES,
+   *   and a description that is a sentence (i.e. starts with a capital letter
+   *   and ends with a period, or similar).
+   *
    * - Paths starting with "smaps/" represent regions of virtual memory that the
    *   process has mapped.  The rest of the path describes the type of
    *   measurement; for instance, the reporter "smaps/rss/[stack]" might report
    *   how much of the process's stack is currently in physical memory.
    *
-   *   Reporters in this category must have kind NONHEAP and units BYTES.
+   *   Reporters in this category must have kind NONHEAP, units BYTES, and
+   *   a non-empty description.
    *
    * - Paths starting with "compartments/" represent the names of JS
    *   compartments.  Reporters in this category must paths of the form
@@ -119,7 +124,8 @@ interface nsIMemoryReporter : nsISupports
    *
    * - All other paths represent cross-cutting values and may overlap with any
    *   other reporter.  Reporters in this category must have paths that do not
-   *   contain '/' separators, and kind OTHER.
+   *   contain '/' separators, kind OTHER, and a description that is a
+   *   sentence.
    */
   readonly attribute AUTF8String path;
 

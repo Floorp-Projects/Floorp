@@ -54,6 +54,7 @@
 #endif
 
 #include "GLDefs.h"
+#include "GLLibraryLoader.h"
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
@@ -84,46 +85,6 @@ namespace mozilla {
 namespace gl {
 class GLContext;
 
-class LibrarySymbolLoader
-{
-public:
-    bool OpenLibrary(const char *library);
-
-    typedef PRFuncPtr (GLAPIENTRY * PlatformLookupFunction) (const char *);
-
-    enum {
-        MAX_SYMBOL_NAMES = 5,
-        MAX_SYMBOL_LENGTH = 128
-    };
-
-    typedef struct {
-        PRFuncPtr *symPointer;
-        const char *symNames[MAX_SYMBOL_NAMES];
-    } SymLoadStruct;
-
-    bool LoadSymbols(SymLoadStruct *firstStruct,
-                       bool tryplatform = false,
-                       const char *prefix = nsnull);
-
-    /*
-     * Static version of the functions in this class
-     */
-    static PRFuncPtr LookupSymbol(PRLibrary *lib,
-                                  const char *symname,
-                                  PlatformLookupFunction lookupFunction = nsnull);
-    static bool LoadSymbols(PRLibrary *lib,
-                              SymLoadStruct *firstStruct,
-                              PlatformLookupFunction lookupFunction = nsnull,
-                              const char *prefix = nsnull);
-protected:
-    LibrarySymbolLoader() {
-        mLibrary = nsnull;
-        mLookupFunc = nsnull;
-    }
-
-    PRLibrary *mLibrary;
-    PlatformLookupFunction mLookupFunc;
-};
 
 enum ShaderProgramType {
     RGBALayerProgramType,
@@ -221,6 +182,18 @@ public:
 
     virtual bool NextTile() {
         return false;
+    };
+
+    // Function prototype for a tile iteration callback. Returning false will
+    // cause iteration to be interrupted (i.e. the corresponding NextTile call
+    // will return false).
+    typedef bool (* TileIterationCallback)(TextureImage* aImage,
+                                           int aTileNumber,
+                                           void* aCallbackData);
+
+    // Sets a callback to be called every time NextTile is called.
+    virtual void SetIterationCallback(TileIterationCallback aCallback,
+                                      void* aCallbackData) {
     };
 
     virtual nsIntRect GetTileRect() {
@@ -446,6 +419,8 @@ public:
     virtual PRUint32 GetTileCount();
     virtual void BeginTileIteration();
     virtual bool NextTile();
+    virtual void SetIterationCallback(TileIterationCallback aCallback,
+                                      void* aCallbackData);
     virtual nsIntRect GetTileRect();
     virtual GLuint GetTextureID() {
         return mImages[mCurrentImage]->GetTextureID();
@@ -456,6 +431,8 @@ public:
     virtual void ApplyFilter();
 protected:
     unsigned int mCurrentImage;
+    TileIterationCallback mIterationCallback;
+    void* mIterationCallbackData;
     nsTArray< nsRefPtr<TextureImage> > mImages;
     bool mInUpdate;
     nsIntSize mSize;
@@ -534,7 +511,7 @@ struct THEBES_API ContextFormat
 };
 
 class GLContext
-    : public LibrarySymbolLoader
+    : public GLLibraryLoader
 {
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GLContext)
 public:

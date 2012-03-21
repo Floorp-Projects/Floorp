@@ -53,6 +53,7 @@
 #include "jsatom.h"
 #include "jsfriendapi.h"
 #include "jsgc.h"
+#include "jsxdrapi.h"
 #include "dom_quickstubs.h"
 #include "nsNullPrincipal.h"
 #include "nsIURI.h"
@@ -63,7 +64,9 @@
 #include "WrapperFactory.h"
 #include "AccessCheck.h"
 
+#ifdef MOZ_JSDEBUGGER
 #include "jsdIDebuggerService.h"
+#endif
 
 #include "XPCQuickStubs.h"
 #include "dombindings.h"
@@ -506,7 +509,7 @@ struct NoteWeakMapsTracer : public js::WeakMapTracer
 };
 
 static void
-TraceWeakMapping(js::WeakMapTracer *trc, JSObject *m, 
+TraceWeakMapping(js::WeakMapTracer *trc, JSObject *m,
                  void *k, JSGCTraceKind kkind,
                  void *v, JSGCTraceKind vkind)
 {
@@ -593,7 +596,7 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
 #endif
 
     GetRuntime()->AddXPConnectRoots(cb);
- 
+
     NoteWeakMapsTracer trc(GetRuntime()->GetJSRuntime(), TraceWeakMapping, cb);
     js::TraceWeakMaps(&trc);
 
@@ -2443,8 +2446,10 @@ nsXPConnect::Peek(JSContext * *_retval)
     return NS_OK;
 }
 
+#ifdef MOZ_JSDEBUGGER
 void
-nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
+nsXPConnect::CheckForDebugMode(JSRuntime *rt)
+{
     JSContext *cx = NULL;
 
     if (gDebugMode == gDesiredDebugMode) {
@@ -2511,6 +2516,14 @@ fail:
         JS_SetRuntimeDebugMode(rt, false);
     gDesiredDebugMode = gDebugMode = false;
 }
+#else //MOZ_JSDEBUGGER not defined
+void
+nsXPConnect::CheckForDebugMode(JSRuntime *rt)
+{
+    gDesiredDebugMode = gDebugMode = false;
+}
+#endif //#ifdef MOZ_JSDEBUGGER
+
 
 NS_EXPORT_(void)
 xpc_ActivateDebugMode()
@@ -2780,6 +2793,173 @@ nsXPConnect::NotifyDidPaint()
 
     js::NotifyDidPaint(cx);
     return NS_OK;
+}
+
+const PRUint8 HAS_PRINCIPALS_FLAG               = 1;
+const PRUint8 HAS_ORIGIN_PRINCIPALS_FLAG        = 2;
+
+static nsresult
+WriteScriptOrFunction(nsIObjectOutputStream *stream, JSContext *cx,
+                      JSScript *script, JSObject *functionObj)
+{
+    // Exactly one of script or functionObj must be given
+    MOZ_ASSERT(!script != !functionObj);
+
+    if (!script)
+        script = JS_GetFunctionScript(cx, JS_GetObjectFunction(functionObj));
+
+    nsIPrincipal *principal =
+        nsJSPrincipals::get(JS_GetScriptPrincipals(script));
+    nsIPrincipal *originPrincipal =
+        nsJSPrincipals::get(JS_GetScriptOriginPrincipals(script));
+
+    PRUint8 flags = 0;
+    if (principal)
+        flags |= HAS_PRINCIPALS_FLAG;
+
+    // Optimize for the common case when originPrincipals == principals. As
+    // originPrincipals is set to principals when the former is null we can
+    // simply skip the originPrincipals when they are the same as principals.
+    if (originPrincipal && originPrincipal != principal)
+        flags |= HAS_ORIGIN_PRINCIPALS_FLAG;
+
+    nsresult rv = stream->Write8(flags);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (flags & HAS_PRINCIPALS_FLAG) {
+        rv = stream->WriteObject(principal, true);
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    if (flags & HAS_ORIGIN_PRINCIPALS_FLAG) {
+        rv = stream->WriteObject(originPrincipal, true);
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    JSXDRState *xdr = JS_XDRNewMem(cx, JSXDR_ENCODE);
+    if (!xdr)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    JSBool ok;
+    {
+        JSAutoRequest ar(cx);
+        if (functionObj)
+            ok = JS_XDRFunctionObject(xdr, &functionObj);
+        else
+            ok = JS_XDRScript(xdr, &script);
+    }
+
+    if (!ok) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    } else {
+        // Get the encoded JSXDRState data and write it.  The JSXDRState owns
+        // this buffer memory and will free it beneath JS_XDRDestroy.
+        uint32_t size;
+        const char* data = reinterpret_cast<const char*>(::JS_XDRMemGetData(xdr, &size));
+        NS_ASSERTION(data, "no decoded JSXDRState data!");
+
+        rv = stream->Write32(size);
+        if (NS_SUCCEEDED(rv))
+            rv = stream->WriteBytes(data, size);
+    }
+
+    JS_XDRDestroy(xdr);
+
+    return rv;
+}
+
+static nsresult
+ReadScriptOrFunction(nsIObjectInputStream *stream, JSContext *cx,
+                     JSScript **scriptp, JSObject **functionObjp)
+{
+    // Exactly one of script or functionObj must be given
+    MOZ_ASSERT(!scriptp != !functionObjp);
+
+    PRUint8 flags;
+    nsresult rv = stream->Read8(&flags);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsJSPrincipals* principal = nsnull;
+    nsCOMPtr<nsIPrincipal> readPrincipal;
+    if (flags & HAS_PRINCIPALS_FLAG) {
+        rv = stream->ReadObject(true, getter_AddRefs(readPrincipal));
+        if (NS_FAILED(rv))
+            return rv;
+        principal = nsJSPrincipals::get(readPrincipal);
+    }
+
+    nsJSPrincipals* originPrincipal = nsnull;
+    nsCOMPtr<nsIPrincipal> readOriginPrincipal;
+    if (flags & HAS_ORIGIN_PRINCIPALS_FLAG) {
+        rv = stream->ReadObject(true, getter_AddRefs(readOriginPrincipal));
+        if (NS_FAILED(rv))
+            return rv;
+        originPrincipal = nsJSPrincipals::get(readOriginPrincipal);
+    }
+
+    PRUint32 size;
+    rv = stream->Read32(&size);
+    if (NS_FAILED(rv))
+        return rv;
+
+    char* data;
+    rv = stream->ReadBytes(size, &data);
+    if (NS_FAILED(rv))
+        return rv;
+
+    JSXDRState *xdr = JS_XDRNewMem(cx, JSXDR_DECODE);
+    if (!xdr) {
+        nsMemory::Free(data);
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    JS_XDRMemSetData(xdr, data, size);
+    JS_XDRSetPrincipals(xdr, principal, originPrincipal);
+
+    JSBool ok;
+    {
+        JSAutoRequest ar(cx);
+        if (scriptp)
+            ok = JS_XDRScript(xdr, scriptp);
+        else
+            ok = JS_XDRFunctionObject(xdr, functionObjp);
+    }
+
+    // We cannot rely on XDR automatically freeing the data memory as we must
+    // use nsMemory::Free to release it.
+    JS_XDRMemSetData(xdr, NULL, 0);
+    JS_XDRDestroy(xdr);
+    nsMemory::Free(data);
+
+    return ok ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsXPConnect::WriteScript(nsIObjectOutputStream *stream, JSContext *cx, JSScript *script)
+{
+    return WriteScriptOrFunction(stream, cx, script, nsnull);
+}
+
+NS_IMETHODIMP
+nsXPConnect::ReadScript(nsIObjectInputStream *stream, JSContext *cx, JSScript **scriptp)
+{
+    return ReadScriptOrFunction(stream, cx, scriptp, nsnull);
+}
+
+NS_IMETHODIMP
+nsXPConnect::WriteFunction(nsIObjectOutputStream *stream, JSContext *cx, JSObject *functionObj)
+{
+    return WriteScriptOrFunction(stream, cx, nsnull, functionObj);
+}
+
+NS_IMETHODIMP
+nsXPConnect::ReadFunction(nsIObjectInputStream *stream, JSContext *cx, JSObject **functionObjp)
+{
+    return ReadScriptOrFunction(stream, cx, nsnull, functionObjp);
 }
 
 /* These are here to be callable from a debugger */

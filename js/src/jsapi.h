@@ -1531,16 +1531,6 @@ typedef JSBool
 (* JSSubsumePrincipalsOp)(JSPrincipals *principals1, JSPrincipals *principals2);
 
 /*
- * XDR-encode or -decode a principals instance, based on whether xdr->mode is
- * JSXDR_ENCODE, in which case *principalsp should be encoded; or JSXDR_DECODE,
- * in which case implementations must return a held (via JSPRINCIPALS_HOLD),
- * non-null *principalsp out parameter.  Return true on success, false on any
- * error, which the implementation must have reported.
- */
-typedef JSBool
-(* JSPrincipalsTranscoder)(JSXDRState *xdr, JSPrincipals **principalsp);
-
-/*
  * Return a weak reference to the principals associated with obj, possibly via
  * the immutable parent chain leading from obj to a top-level container (e.g.,
  * a window object in the DOM level 0).  If there are no principals associated
@@ -3609,9 +3599,6 @@ JS_ResolveStub(JSContext *cx, JSObject *obj, jsid id);
 extern JS_PUBLIC_API(JSBool)
 JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
 
-extern JS_PUBLIC_API(void)
-JS_FinalizeStub(JSContext *cx, JSObject *obj);
-
 struct JSConstDoubleSpec {
     double          dval;
     const char      *name;
@@ -4130,7 +4117,6 @@ JS_DropPrincipals(JSRuntime *rt, JSPrincipals *principals);
 struct JSSecurityCallbacks {
     JSCheckAccessOp            checkObjectAccess;
     JSSubsumePrincipalsOp      subsumePrincipals;
-    JSPrincipalsTranscoder     principalsTranscoder;
     JSObjectPrincipalsFinder   findObjectPrincipals;
     JSCSPEvalChecker           contentSecurityPolicyAllows;
 };

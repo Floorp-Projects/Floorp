@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+var asvg = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><script xlink:href="data:text/javascript," /><rect width="100" height="100" fill="green"><set attributeName="fill" attributeType="CSS" to="red" begin="0s" end="2s" dur="2s" fill="remove" /></rect></svg>';
+
+function boom()
+{
+  var f = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe"); f.src = "data:text/html,1"; document.body.appendChild(f);
+  var w;
+
+  setTimeout(function() {
+    w = window.open("data:text/html,<body onload=window.close()>", "_blank", "width=200,height=200");
+    // Note that most of the code below will execute before the window appears, and in fact before "w" becomes non-null.
+  }, 0);
+
+  setTimeout(function() {
+    setTimeout(function() { }, 0);
+    f.contentWindow.location = "data:image/svg+xml," + encodeURIComponent(asvg);
+
+    setTimeout(function() {
+      setTimeout(function() {
+        setTimeout(function() {
+          document.body.style.MozColumnCount = "2";
+          document.documentElement.className = "";
+        }, 20);
+      }, 0);
+    }, 0);
+  }, 20);
+}
+
+    window.addEventListener("MozReftestInvalidate", boom, false);
+</script>
+</head>
+
+<body></body>
+</html>
