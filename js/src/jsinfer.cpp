@@ -2016,6 +2016,30 @@ types::UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc)
 }
 
 bool
+types::UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc)
+{
+    /*
+     * Objects created outside loops in global and eval scripts should have
+     * singleton types. For now this is only done for plain objects, not arrays.
+     */
+
+    if (!cx->typeInferenceEnabled() || script->function())
+        return false;
+
+    JSOp op = JSOp(*pc);
+    if (op == JSOP_NEWOBJECT || op == JSOP_NEWINIT && (JSProtoKey)pc[1] == JSProto_Object) {
+        AutoEnterTypeInference enter(cx);
+
+        if (!script->ensureRanAnalysis(cx, NULL))
+            return false;
+
+        return !script->analysis()->getCode(pc).inLoop;
+    }
+
+    return false;
+}
+
+bool
 types::ArrayPrototypeHasIndexedProperty(JSContext *cx, JSScript *script)
 {
     if (!cx->typeInferenceEnabled() || !script->hasGlobal())
@@ -3164,6 +3188,9 @@ GetInitializerType(JSContext *cx, JSScript *script, jsbytecode *pc)
     if (!script->hasGlobal())
         return NULL;
 
+    if (UseNewTypeForInitializer(cx, script, pc))
+        return NULL;
+
     JSOp op = JSOp(*pc);
     JS_ASSERT(op == JSOP_NEWARRAY || op == JSOP_NEWOBJECT || op == JSOP_NEWINIT);
 
@@ -3795,8 +3822,15 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_NEWINIT:
       case JSOP_NEWARRAY:
       case JSOP_NEWOBJECT: {
-        TypeObject *initializer = GetInitializerType(cx, script, pc);
         TypeSet *types = script->analysis()->bytecodeTypes(pc);
+        types->addSubset(cx, &pushed[0]);
+
+        if (UseNewTypeForInitializer(cx, script, pc)) {
+            /* Defer types pushed by this bytecode until runtime. */
+            break;
+        }
+
+        TypeObject *initializer = GetInitializerType(cx, script, pc);
         if (script->hasGlobal()) {
             if (!initializer)
                 return false;
@@ -3805,7 +3839,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
             JS_ASSERT(!initializer);
             types->addType(cx, Type::UnknownType());
         }
-        types->addSubset(cx, &pushed[0]);
         break;
       }
 

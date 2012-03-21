@@ -3392,13 +3392,8 @@ BEGIN_CASE(JSOP_NEWINIT)
         gc::AllocKind kind = GuessObjectGCKind(0);
         obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
     }
-    if (!obj)
+    if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj))
         goto error;
-
-    TypeObject *type = TypeScript::InitObject(cx, script, regs.pc, (JSProtoKey) i);
-    if (!type)
-        goto error;
-    obj->setType(type);
 
     PUSH_OBJECT(*obj);
     CHECK_INTERRUPT_HANDLER();
@@ -3409,13 +3404,8 @@ BEGIN_CASE(JSOP_NEWARRAY)
 {
     unsigned count = GET_UINT24(regs.pc);
     JSObject *obj = NewDenseAllocatedArray(cx, count);
-    if (!obj)
+    if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj))
         goto error;
-
-    TypeObject *type = TypeScript::InitObject(cx, script, regs.pc, JSProto_Array);
-    if (!type)
-        goto error;
-    obj->setType(type);
 
     PUSH_OBJECT(*obj);
     CHECK_INTERRUPT_HANDLER();
@@ -3426,12 +3416,8 @@ BEGIN_CASE(JSOP_NEWOBJECT)
 {
     JSObject *baseobj = script->getObject(GET_UINT32_INDEX(regs.pc));
 
-    TypeObject *type = TypeScript::InitObject(cx, script, regs.pc, JSProto_Object);
-    if (!type)
-        goto error;
-
-    JSObject *obj = CopyInitializerObject(cx, baseobj, type);
-    if (!obj)
+    JSObject *obj = CopyInitializerObject(cx, baseobj);
+    if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj))
         goto error;
 
     PUSH_OBJECT(*obj);
