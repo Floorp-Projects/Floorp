@@ -203,10 +203,10 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
             height = (int) (rect.getDouble(3) * zoom);
         } catch (JSONException e) { } 
 
-        int listWidth = mWidth;
-        int listHeight = mHeight;
-        int listLeft = left < 0 ? 0 : left;
-        int listTop = top + height;
+        int popupWidth = mWidth;
+        int popupHeight = mHeight;
+        int popupLeft = left < 0 ? 0 : left;
+        int popupTop = top + height;
 
         FloatSize viewport = GeckoApp.mAppContext.getLayerController().getViewportSize();
 
@@ -221,38 +221,38 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
         // If the textbox is smaller than the screen-width,
         // shrink the list's width
         if ((left + width) < viewport.width) 
-            listWidth = left < 0 ? left + width : width;
+            popupWidth = left < 0 ? left + width : width;
 
-        // listWidth can be negative if it is a constant - FILL_PARENT or MATCH_PARENT
-        if (listWidth >= 0 && listWidth < sMinWidth) {
-            listWidth = sMinWidth;
+        // popupWidth can be negative if it is a constant - FILL_PARENT or MATCH_PARENT
+        if (popupWidth >= 0 && popupWidth < sMinWidth) {
+            popupWidth = sMinWidth;
 
-            if ((listLeft + listWidth) > viewport.width)
-                listLeft = (int) (viewport.width - listWidth);
+            if ((popupLeft + popupWidth) > viewport.width)
+                popupLeft = (int) (viewport.width - popupWidth);
         }
 
-        listHeight = sRowHeight * getAdapter().getCount();
+        popupHeight = sRowHeight * getAdapter().getCount();
 
         // The text box doesnt fit below
-        if ((listTop + listHeight) > viewport.height) {
+        if ((popupTop + popupHeight) > viewport.height) {
             // Find where the maximum space is, and fit it there
-            if ((viewport.height - listTop) > top) {
+            if ((viewport.height - popupTop) > top) {
                 // Shrink the height to fit it below the text-box
-                listHeight = (int) (viewport.height - listTop);
+                popupHeight = (int) (viewport.height - popupTop);
             } else {
-                if (listHeight < top) {
+                if (popupHeight < top) {
                     // No shrinking needed to fit on top
-                    listTop = (top - listHeight);
+                    popupTop = (top - popupHeight);
                 } else {
                     // Shrink to available space on top
-                    listTop = 0;
-                    listHeight = top;
+                    popupTop = 0;
+                    popupHeight = top;
                 }
            }
         }
 
-        mLayout = new RelativeLayout.LayoutParams(listWidth, listHeight);
-        mLayout.setMargins(listLeft, listTop, 0, 0);
+        mLayout = new RelativeLayout.LayoutParams(popupWidth, popupHeight);
+        mLayout.setMargins(popupLeft, popupTop, 0, 0);
         setLayoutParams(mLayout);
         requestLayout();
 
