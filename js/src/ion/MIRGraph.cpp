@@ -88,6 +88,16 @@ MIRGraph::addBlock(MBasicBlock *block)
 }
 
 void
+MIRGraph::insertBlockAfter(MBasicBlock *at, MBasicBlock *block)
+{
+    block->setId(blockIdGen_++);
+    blocks_.insertAfter(at, block);
+#ifdef DEBUG
+    numBlocks_++;
+#endif
+}
+
+void
 MIRGraph::unmarkBlocks() {
     for (MBasicBlockIterator i(blocks_.begin()); i != blocks_.end(); i++)
         i->unmark();

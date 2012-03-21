@@ -982,6 +982,7 @@ IonBuilder::processIfEnd(CFGState &state)
     }
 
     current = state.branch.ifFalse;
+    graph_.moveBlockToEnd(current);
     pc = current->pc();
     return ControlStatus_Joined;
 }
@@ -996,6 +997,7 @@ IonBuilder::processIfElseTrueEnd(CFGState &state)
     state.stopAt = state.branch.falseEnd;
     pc = state.branch.ifFalse->pc();
     current = state.branch.ifFalse;
+    graph_.moveBlockToEnd(current);
     return ControlStatus_Jumped;
 }
 
@@ -1054,7 +1056,10 @@ IonBuilder::processBrokenLoop(CFGState &state)
     // structure never actually loops, the condition itself can still fail and
     // thus we must resume at the successor, if one exists.
     current = state.loop.successor;
-    JS_ASSERT_IF(current, current->loopDepth() == loopDepth_);
+    if (current) {
+        JS_ASSERT(current->loopDepth() == loopDepth_);
+        graph_.moveBlockToEnd(current);
+    }
 
     // Join the breaks together and continue parsing.
     if (state.loop.breaks) {
@@ -1096,8 +1101,10 @@ IonBuilder::finishLoop(CFGState &state, MBasicBlock *successor)
     // including the successor.
     if (!state.loop.entry->setBackedge(current))
         return ControlStatus_Error;
-    if (successor)
+    if (successor) {
+        graph_.moveBlockToEnd(successor);
         successor->inheritPhis(state.loop.entry);
+    }
 
     if (state.loop.breaks) {
         // Propagate phis placed in the header to individual break exit points.
@@ -1350,6 +1357,9 @@ IonBuilder::processNextTableSwitchCase(CFGState &state)
     if (current) {
         current->end(MGoto::New(successor));
         successor->addPredecessor(current);
+
+        // Insert successor after the current block, to maintain RPO.
+        graph_.moveBlockToEnd(successor);
     }
 
     // If this is the last successor the block should stop at the end of the tableswitch
@@ -1409,6 +1419,7 @@ IonBuilder::processAndOrEnd(CFGState &state)
         return ControlStatus_Error;
 
     current = state.branch.ifFalse;
+    graph_.moveBlockToEnd(current);
     pc = current->pc();
     return ControlStatus_Joined;
 }
@@ -1879,6 +1890,9 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
 
         pc2 += JUMP_OFFSET_LEN;
     }
+
+    // Move defaultcase to the end, to maintain RPO.
+    graph_.moveBlockToEnd(defaultcase);
 
     JS_ASSERT(tableswitch->numCases() == (uint32)(high - low + 1));
     JS_ASSERT(tableswitch->numSuccessors() > 0);
@@ -2747,6 +2761,14 @@ IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc)
 }
 
 MBasicBlock *
+IonBuilder::newBlockAfter(MBasicBlock *at, MBasicBlock *predecessor, jsbytecode *pc)
+{
+    MBasicBlock *block = MBasicBlock::New(graph(), info(), predecessor, pc, MBasicBlock::NORMAL);
+    graph_.insertBlockAfter(at, block);
+    return block;
+}
+
+MBasicBlock *
 IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc, uint32 loopDepth)
 {
     MBasicBlock *block = MBasicBlock::New(graph(), info(), predecessor, pc, MBasicBlock::NORMAL);
@@ -2761,8 +2783,9 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopHead, jsby
     JS_ASSERT(loopEntry == info().osrPc());
 
     // Create two blocks: one for the OSR entry with no predecessors, one for
-    // the preheader, which has the OSR entry block as a predecessor.
-    MBasicBlock *osrBlock  = newBlock(loopEntry);
+    // the preheader, which has the OSR entry block as a predecessor. The
+    // OSR block is always the second block (with id 1).
+    MBasicBlock *osrBlock  = newBlockAfter(*graph_.begin(), loopEntry);
     MBasicBlock *preheader = newBlock(predecessor, loopEntry);
 
     MOsrEntry *entry = MOsrEntry::New();

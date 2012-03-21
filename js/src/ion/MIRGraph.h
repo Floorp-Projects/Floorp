@@ -488,6 +488,8 @@ class MIRGraph
     }
 
     void addBlock(MBasicBlock *block);
+    void insertBlockAfter(MBasicBlock *at, MBasicBlock *block);
+
     void unmarkBlocks();
 
     void setExitAccumulator(MIRGraphExits *accum) {
@@ -544,6 +546,11 @@ class MIRGraph
 #ifdef DEBUG
         numBlocks_--;
 #endif
+    }
+    void moveBlockToEnd(MBasicBlock *block) {
+        JS_ASSERT(block->id());
+        blocks_.remove(block);
+        blocks_.pushBack(block);
     }
 #ifdef DEBUG
     size_t numBlocks() const {

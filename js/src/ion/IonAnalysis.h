@@ -65,7 +65,7 @@ bool
 ApplyTypeInformation(MIRGraph &graph);
 
 bool
-ReorderBlocks(MIRGraph &graph);
+RenumberBlocks(MIRGraph &graph);
 
 bool
 BuildDominatorTree(MIRGraph &graph);
