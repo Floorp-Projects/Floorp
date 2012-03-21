@@ -466,7 +466,6 @@ public:
     double X() { return mX; }
     double Y() { return mY; }
     double Z() { return mZ; }
-    double Distance() { return mDistance; }
     const nsIntRect& Rect() { return mRect; }
     nsAString& Characters() { return mCharacters; }
     nsAString& CharactersExtra() { return mCharactersExtra; }
@@ -502,7 +501,6 @@ protected:
     int mRangeType, mRangeStyles;
     int mRangeForeColor, mRangeBackColor;
     double mX, mY, mZ;
-    double mDistance;
     int mPointerIndex;
     nsString mCharacters, mCharactersExtra;
     nsRefPtr<nsGeoPosition> mGeoPosition;
@@ -586,7 +584,7 @@ public:
         VIEWPORT = 20,
         VISITED = 21,
         NETWORK_CHANGED = 22,
-        PROXIMITY_EVENT = 23,
+        UNUSED3_EVENT = 23,
         ACTIVITY_RESUMING = 24,
         SCREENSHOT = 25,
         UNUSED2_EVENT = 26,
