@@ -98,6 +98,7 @@
 #include "nsUnicharUtils.h"
 #include "nsIWindowsRegKey.h"
 #include "nsISupportsPrimitives.h"
+#include "jsapi.h"
 
 #define kNotFound -1
 
@@ -480,16 +481,9 @@ nsIEProfileMigrator::GetSourceExists(bool* aResult)
 }
 
 NS_IMETHODIMP
-nsIEProfileMigrator::GetSourceHasMultipleProfiles(bool* aResult)
+nsIEProfileMigrator::GetSourceProfiles(JS::Value* aResult)
 {
-  *aResult = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIEProfileMigrator::GetSourceProfiles(nsIArray** aResult)
-{
-  *aResult = nsnull;
+  *aResult = JSVAL_NULL;
   return NS_OK;
 }
 
