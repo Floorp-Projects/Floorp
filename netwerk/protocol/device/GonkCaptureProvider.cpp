@@ -71,21 +71,21 @@ class CameraHardwareInterface {
 
     static CameraHardwareInterface* openCamera(PRUint32 aCamera);
     
-    virtual ~CameraHardwareInterface() { };
+    virtual ~CameraHardwareInterface() { }
     
-    virtual bool ok();
-    virtual void enableMsgType(int32_t msgType);
-    virtual void disableMsgType(int32_t msgType);
-    virtual bool msgTypeEnabled(int32_t msgType);
+    virtual bool ok() = 0;
+    virtual void enableMsgType(int32_t msgType) = 0;
+    virtual void disableMsgType(int32_t msgType) = 0;
+    virtual bool msgTypeEnabled(int32_t msgType) = 0;
     virtual void setCallbacks(notify_callback notify_cb,
                               data_callback data_cb,
                               data_callback_timestamp data_cb_timestamp,
-                              void* user);
-    virtual status_t startPreview();
-    virtual void stopPreview();
-    virtual void release();
-    virtual status_t setParameters(const CameraParameters& params);
-    virtual CameraParameters getParameters() const;
+                              void* user) = 0;
+    virtual status_t startPreview() = 0;
+    virtual void stopPreview() = 0;
+    virtual void release() = 0;
+    virtual status_t setParameters(const CameraParameters& params) = 0;
+    virtual CameraParameters getParameters() const = 0;
 
   protected:
     CameraHardwareInterface(PRUint32 aCamera = 0) { };

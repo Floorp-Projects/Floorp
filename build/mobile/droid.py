@@ -57,7 +57,10 @@ class DroidMixin(object):
     if self.processExist(app):
       return False
 
-    acmd = [ "am", "start", "-a", intent, "-W", "-n", "%s/.%s" % (app, activity)]
+    acmd = [ "am", "start", "-W", "-n", "%s/.%s" % (app, activity)]
+
+    if intent:
+      acmd.extend(["-a", intent])
 
     if extra_args:
       acmd.extend(["--es", "args", " ".join(extra_args)])

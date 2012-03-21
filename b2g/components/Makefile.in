@@ -51,6 +51,9 @@ XPIDLSRCS = \
 EXTRA_PP_COMPONENTS = \
         B2GComponents.manifest \
         CameraContent.js \
+        AlertsService.js \
+        ContentPermissionPrompt.js \
+        MozKeyboard.js \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -78,10 +78,10 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 
 NS_IMETHODIMP
-nsParserUtils::ConvertToPlainText(const nsAString & aFromStr,
-                                           PRUint32 aFlags,
-                                           PRUint32 aWrapCol,
-                                           nsAString & aToStr)
+nsParserUtils::ConvertToPlainText(const nsAString& aFromStr,
+                                  PRUint32 aFlags,
+                                  PRUint32 aWrapCol,
+                                  nsAString& aToStr)
 {
   return nsContentUtils::ConvertToPlainText(aFromStr,
     aToStr,
@@ -90,8 +90,8 @@ nsParserUtils::ConvertToPlainText(const nsAString & aFromStr,
 }
 
 NS_IMETHODIMP
-nsParserUtils::Unescape(const nsAString & aFromStr,
-                                 nsAString & aToStr)
+nsParserUtils::Unescape(const nsAString& aFromStr,
+                        nsAString& aToStr)
 {
   return nsContentUtils::ConvertToPlainText(aFromStr,
     aToStr,
@@ -100,15 +100,70 @@ nsParserUtils::Unescape(const nsAString & aFromStr,
     0);
 }
 
-// The feed version of nsContentUtils::CreateContextualFragment It
-// creates a fragment, but doesn't go to all the effort to preserve
-// context like innerHTML does, because feed DOMs shouldn't have that.
 NS_IMETHODIMP
-nsParserUtils::ParseFragment(const nsAString &aFragment,
-                                      bool aIsXML,
-                                      nsIURI* aBaseURI,
-                                      nsIDOMElement* aContextElement,
-                                      nsIDOMDocumentFragment** aReturn)
+nsParserUtils::Sanitize(const nsAString& aFromStr,
+                        PRUint32 aFlags,
+                        nsAString& aToStr)
+{
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), "about:blank");
+  nsCOMPtr<nsIPrincipal> principal =
+    do_CreateInstance("@mozilla.org/nullprincipal;1");
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  nsresult rv = nsContentUtils::CreateDocument(EmptyString(),
+                                               EmptyString(),
+                                               nsnull,
+                                               uri,
+                                               uri,
+                                               principal,
+                                               nsnull,
+                                               DocumentFlavorHTML,
+                                               getter_AddRefs(domDocument));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
+  rv = nsContentUtils::ParseDocumentHTML(aFromStr, document, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsTreeSanitizer sanitizer(aFlags);
+  sanitizer.Sanitize(document);
+
+  nsCOMPtr<nsIDocumentEncoder> encoder =
+    do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/html");
+
+  encoder->NativeInit(document,
+                      NS_LITERAL_STRING("text/html"),
+                      nsIDocumentEncoder::OutputDontRewriteEncodingDeclaration |
+                      nsIDocumentEncoder::OutputNoScriptContent |
+                      nsIDocumentEncoder::OutputEncodeBasicEntities |
+                      nsIDocumentEncoder::OutputLFLineBreak |
+                      nsIDocumentEncoder::OutputRaw);
+
+  return encoder->EncodeToString(aToStr);
+}
+
+NS_IMETHODIMP
+nsParserUtils::ParseFragment(const nsAString& aFragment,
+                             bool aIsXML,
+                             nsIURI* aBaseURI,
+                             nsIDOMElement* aContextElement,
+                             nsIDOMDocumentFragment** aReturn)
+{
+  return nsParserUtils::ParseFragment(aFragment,
+                                      0,
+                                      aIsXML,
+                                      aBaseURI,
+                                      aContextElement,
+                                      aReturn);
+}
+
+NS_IMETHODIMP
+nsParserUtils::ParseFragment(const nsAString& aFragment,
+                             PRUint32 aFlags,
+                             bool aIsXML,
+                             nsIURI* aBaseURI,
+                             nsIDOMElement* aContextElement,
+                             nsIDOMDocumentFragment** aReturn)
 {
   NS_ENSURE_ARG(aContextElement);
   *aReturn = nsnull;
@@ -197,7 +252,7 @@ nsParserUtils::ParseFragment(const nsAString &aFragment,
       }
     }
     if (fragment) {
-      nsTreeSanitizer sanitizer(false, false);
+      nsTreeSanitizer sanitizer(aFlags);
       sanitizer.Sanitize(fragment);
     }
   }

@@ -860,7 +860,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                     if (gTopLevelWindows[i]->mIsVisible)
                         gTopLevelWindows[i]->Resize(gAndroidBounds.width,
                                                     gAndroidBounds.height,
-                                                    true);
+                                                    false);
                 }
             }
 
@@ -1158,13 +1158,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     }
     layers::renderTraceEventEnd("Check supress", "424242");
 
-    layers::renderTraceEventStart("Get Drawable", "424343");
-    nsAutoString metadata;
-    if (metadataProvider) {
-        metadataProvider->GetDrawMetadata(metadata);
-    }
-    layers::renderTraceEventEnd("Get Drawable", "424343");
-
     layers::renderTraceEventStart("Get surface", "424545");
     static unsigned char bits2[32 * 32 * 2];
     nsRefPtr<gfxImageSurface> targetSurface =
@@ -1172,26 +1165,14 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
                             gfxASurface::ImageFormatRGB16_565);
     layers::renderTraceEventEnd("Get surface", "424545");
 
-    layers::renderTraceEventStart("Check Bridge", "434444");
-    nsIntRect dirtyRect = ae->Rect().Intersect(nsIntRect(0, 0, gAndroidBounds.width, gAndroidBounds.height));
-
-    AndroidGeckoLayerClient &client = AndroidBridge::Bridge()->GetLayerClient();
-    if (!client.BeginDrawing(gAndroidBounds.width, gAndroidBounds.height, metadata)) {
-        return;
-    }
-    layers::renderTraceEventEnd("Check Bridge", "434444");
-
     layers::renderTraceEventStart("Widget draw to", "434646");
+    nsIntRect dirtyRect = ae->Rect().Intersect(nsIntRect(0, 0, gAndroidBounds.width, gAndroidBounds.height));
     if (targetSurface->CairoStatus()) {
         ALOG("### Failed to create a valid surface from the bitmap");
     } else {
         DrawTo(targetSurface, dirtyRect);
     }
     layers::renderTraceEventEnd("Widget draw to", "434646");
-
-    layers::renderTraceEventStart("Widget end draw", "434747");
-    client.EndDrawing();
-    layers::renderTraceEventEnd("Widget end draw", "434747");
     return;
 #endif
 

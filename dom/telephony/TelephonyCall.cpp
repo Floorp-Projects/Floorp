@@ -79,7 +79,7 @@ TelephonyCall::ChangeStateInternal(PRUint16 aCallState, bool aFireEvents)
       stateString.AssignLiteral("dialing");
       break;
     case nsIRadioInterfaceLayer::CALL_STATE_ALERTING:
-      stateString.AssignLiteral("ringing");
+      stateString.AssignLiteral("alerting");
       break;
     case nsIRadioInterfaceLayer::CALL_STATE_BUSY:
       stateString.AssignLiteral("busy");
@@ -158,7 +158,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TelephonyCall,
                                                Telephony, "mTelephony")
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(statechange)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(dialing)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(ringing)
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(alerting)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(busy)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(connecting)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(connected)
@@ -172,7 +172,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TelephonyCall,
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTelephony)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(statechange)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(dialing)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(ringing)
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(alerting)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(busy)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(connecting)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(connected)
@@ -240,7 +240,7 @@ TelephonyCall::HangUp()
 
 NS_IMPL_EVENT_HANDLER(TelephonyCall, statechange)
 NS_IMPL_EVENT_HANDLER(TelephonyCall, dialing)
-NS_IMPL_EVENT_HANDLER(TelephonyCall, ringing)
+NS_IMPL_EVENT_HANDLER(TelephonyCall, alerting)
 NS_IMPL_EVENT_HANDLER(TelephonyCall, busy)
 NS_IMPL_EVENT_HANDLER(TelephonyCall, connecting)
 NS_IMPL_EVENT_HANDLER(TelephonyCall, connected)

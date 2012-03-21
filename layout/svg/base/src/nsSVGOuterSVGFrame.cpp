@@ -37,10 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGOuterSVGFrame.h"
+
 #include "nsIDOMSVGSVGElement.h"
+#include "nsRenderingContext.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextFrame.h"
-#include "nsSVGForeignObjectFrame.h"
 #include "DOMSVGTests.h"
 #include "nsDisplayList.h"
 #include "nsStubMutationObserver.h"
@@ -141,7 +142,6 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGOuterSVGFrame)
 
 nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
     : nsSVGOuterSVGFrameBase(aContext)
-    , mRedrawSuspendCount(0)
     , mFullZoom(0)
     , mViewportInitialized(false)
 #ifdef XP_MACOSX
@@ -166,6 +166,11 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
   // Check for conditional processing attributes here rather than in
   // nsCSSFrameConstructor::FindSVGData because we want to avoid
   // simply giving failing outer <svg> elements an nsSVGContainerFrame.
+  // We don't create other SVG frames if PassesConditionalProcessingTests
+  // returns false, but since we do create nsSVGOuterSVGFrame frames we
+  // prevent them from painting by [ab]use NS_STATE_SVG_NONDISPLAY_CHILD. The
+  // frame will be recreated via an nsChangeHint_ReconstructFrame restyle if
+  // the value returned by PassesConditionalProcessingTests changes.
   nsSVGSVGElement *svg = static_cast<nsSVGSVGElement*>(aContent);
   if (!svg->PassesConditionalProcessingTests()) {
     AddStateBits(NS_STATE_SVG_NONDISPLAY_CHILD);
@@ -183,8 +188,6 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
     // not need to be removed
     doc->AddMutationObserverUnlessExists(&sSVGMutationObserver);
   }
-
-  SuspendRedraw();  // UnsuspendRedraw is in DidReflow
 
   return rv;
 }
@@ -309,7 +312,7 @@ nsSVGOuterSVGFrame::GetIntrinsicRatio()
 nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                 nsSize aCBSize, nscoord aAvailableWidth,
                                 nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                                bool aShrinkWrap)
+                                PRUint32 aFlags)
 {
   nsSVGSVGElement* content = static_cast<nsSVGSVGElement*>(mContent);
 
@@ -414,14 +417,6 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
   return NS_OK;
 }
 
-static PLDHashOperator
-ReflowForeignObject(nsVoidPtrHashKey *aEntry, void* aUserArg)
-{
-  static_cast<nsSVGForeignObjectFrame*>
-    (const_cast<void*>(aEntry->GetKey()))->MaybeReflowFromOuterSVGFrame();
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
                               const nsHTMLReflowState*  aReflowState,
@@ -432,30 +427,40 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
   nsresult rv = nsSVGOuterSVGFrameBase::DidReflow(aPresContext,aReflowState,aStatus);
 
   if (firstReflow) {
-    // call InitialUpdate() on all frames:
+    // Temporarily add back the NS_FRAME_FIRST_REFLOW bit to indicate
+    // to the children that we are still to receive the invalidation
+    // for our first reflow:
+    AddStateBits(NS_FRAME_FIRST_REFLOW);
+  }
+
+#ifdef DEBUG
+  mCallingUpdateBounds = true;
+#endif
+
+  if (!(mState & NS_STATE_SVG_NONDISPLAY_CHILD)) {
     nsIFrame* kid = mFrames.FirstChild();
     while (kid) {
       nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
-      if (SVGFrame) {
-        SVGFrame->InitialUpdate(); 
+      if (SVGFrame && !(kid->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+        SVGFrame->UpdateBounds(); 
       }
       kid = kid->GetNextSibling();
     }
-    
-    UnsuspendRedraw(); // For the SuspendRedraw in InitSVG
-  } else {
-    // Now that all viewport establishing descendants have their correct size,
-    // tell our foreignObject descendants to reflow their children.
-    if (mForeignObjectHash.IsInitialized()) {
-#ifdef DEBUG
-      PRUint32 count =
-#endif
-        mForeignObjectHash.EnumerateEntries(ReflowForeignObject, nsnull);
-      NS_ASSERTION(count == mForeignObjectHash.Count(),
-                   "We didn't reflow all our nsSVGForeignObjectFrames!");
-    }
   }
-  
+
+#ifdef DEBUG
+  mCallingUpdateBounds = false;
+#endif
+
+  if (firstReflow) {
+    // And now remove it again:
+    RemoveStateBits(NS_FRAME_FIRST_REFLOW);
+  }
+
+  // Make sure elements styled by :hover get updated if script/animation moves
+  // them under or out from under the pointer:
+  PresContext()->PresShell()->SynthesizeMouseMove(false);
+
   return rv;
 }
 
@@ -687,26 +692,6 @@ nsSVGOuterSVGFrame::GetType() const
 // nsISVGSVGFrame methods:
 
 void
-nsSVGOuterSVGFrame::SuspendRedraw()
-{
-  if (++mRedrawSuspendCount != 1)
-    return;
-
-  nsSVGUtils::NotifyRedrawSuspended(this);
-}
-
-void
-nsSVGOuterSVGFrame::UnsuspendRedraw()
-{
-  NS_ASSERTION(mRedrawSuspendCount >=0, "unbalanced suspend count!");
-
-  if (--mRedrawSuspendCount > 0)
-    return;
-
-  nsSVGUtils::NotifyRedrawUnsuspended(this);
-}
-
-void
 nsSVGOuterSVGFrame::NotifyViewportChange()
 {
   // no point in doing anything when were not init'ed yet:
@@ -764,36 +749,6 @@ nsSVGOuterSVGFrame::GetCanvasTM()
 //----------------------------------------------------------------------
 // Implementation helpers
 
-void
-nsSVGOuterSVGFrame::RegisterForeignObject(nsSVGForeignObjectFrame* aFrame)
-{
-  NS_ASSERTION(aFrame, "Who on earth is calling us?!");
-
-  if (!mForeignObjectHash.IsInitialized()) {
-    if (!mForeignObjectHash.Init()) {
-      NS_ERROR("Failed to initialize foreignObject hash.");
-      return;
-    }
-  }
-
-  NS_ASSERTION(!mForeignObjectHash.GetEntry(aFrame),
-               "nsSVGForeignObjectFrame already registered!");
-
-  mForeignObjectHash.PutEntry(aFrame);
-
-  NS_ASSERTION(mForeignObjectHash.GetEntry(aFrame),
-               "Failed to register nsSVGForeignObjectFrame!");
-}
-
-void
-nsSVGOuterSVGFrame::UnregisterForeignObject(nsSVGForeignObjectFrame* aFrame)
-{
-  NS_ASSERTION(aFrame, "Who on earth is calling us?!");
-  NS_ASSERTION(mForeignObjectHash.GetEntry(aFrame),
-               "nsSVGForeignObjectFrame not in registry!");
-  return mForeignObjectHash.RemoveEntry(aFrame);
-}
-
 bool
 nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame)
 {
@@ -836,4 +791,12 @@ nsSVGOuterSVGFrame::IsRootOfImage()
   }
 
   return false;
+}
+
+bool
+nsSVGOuterSVGFrame::VerticalScrollbarNotNeeded() const
+{
+  nsSVGLength2 &height = static_cast<nsSVGSVGElement*>(mContent)->
+                           mLengthAttributes[nsSVGSVGElement::HEIGHT];
+  return height.IsPercentage() && height.GetBaseValInSpecifiedUnits() <= 100;
 }

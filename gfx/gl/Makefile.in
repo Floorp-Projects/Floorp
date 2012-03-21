@@ -51,6 +51,7 @@ EXPORTS	= \
 	GLContextSymbols.h \
 	GLContextProvider.h \
 	GLContextProviderImpl.h \
+	GLLibraryLoader.h \
 	EGLUtils.h \
 	ForceDiscreteGPUHelperCGL.h \
 	$(NULL)
@@ -70,6 +71,7 @@ endif
 
 CPPSRCS	= \
 	GLContext.cpp \
+	GLLibraryLoader.cpp \
 	GLContextProviderOSMesa.cpp \
 	$(NULL)
 
@@ -118,9 +120,15 @@ else
 CPPSRCS += GLContextProvider$(GL_PROVIDER).cpp
 endif
 
+ifeq ($(GL_PROVIDER),EGL)
+CPPSRCS += GLLibraryEGL.cpp
+endif
+
 # Win32 is a special snowflake, for ANGLE
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS += GLContextProviderEGL.cpp
+CPPSRCS += \
+	GLContextProviderEGL.cpp \
+	GLLibraryEGL.cpp
 endif
 
 ifdef MOZ_JAVA_COMPOSITOR

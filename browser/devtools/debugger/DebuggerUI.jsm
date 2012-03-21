@@ -49,7 +49,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
-Cu.import("resource:///modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/source-editor.jsm");
 
 let EXPORTED_SYMBOLS = ["DebuggerUI"];
@@ -578,6 +578,7 @@ DebuggerUI.prototype = {
     script.contentType = aContentType;
     elt.setUserData("sourceScript", script, null);
     dbg._updateEditorBreakpoints();
+    dbg.debuggerWindow.StackFrames.updateEditor();
   }
 };
 

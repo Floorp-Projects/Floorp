@@ -92,6 +92,7 @@ public class GeckoEvent {
     private static final int ACTIVITY_RESUMING = 24;
     private static final int SCREENSHOT = 25;
     private static final int SENSOR_ACCURACY = 26;
+    private static final int SCREENORIENTATION_CHANGED = 27;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -138,6 +139,8 @@ public class GeckoEvent {
     public boolean mCanBeMetered;
 
     public int mNativeWindow;
+
+    public short mScreenOrientation;
 
     private GeckoEvent(int evType) {
         mType = evType;
@@ -441,6 +444,12 @@ public class GeckoEvent {
     public static GeckoEvent createSensorAccuracyEvent(int accuracy) {
         GeckoEvent event = new GeckoEvent(SENSOR_ACCURACY);
         event.mFlags = accuracy;
+        return event;
+    }
+
+    public static GeckoEvent createScreenOrientationEvent(short aScreenOrientation) {
+        GeckoEvent event = new GeckoEvent(SCREENORIENTATION_CHANGED);
+        event.mScreenOrientation = aScreenOrientation;
         return event;
     }
 }

@@ -82,3 +82,49 @@ if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -n "$MOZ_DEBUG_FLAGS"; then
 fi
 
 ])
+
+dnl GCC and clang will fail if given an unknown warning option like -Wfoobar. 
+dnl But later versions won't fail if given an unknown negated warning option
+dnl like -Wno-foobar.  So when we are check for support of negated warning 
+dnl options, we actually test the positive form, but add the negated form to 
+dnl the flags variable.
+
+AC_DEFUN([MOZ_C_SUPPORTS_WARNING],
+[
+    AC_CACHE_CHECK(whether the C compiler supports $1$2, $3,
+        [
+            AC_LANG_SAVE
+            AC_LANG_C
+            _SAVE_CFLAGS="$CFLAGS"
+            CFLAGS="$CFLAGS -W$2"
+            AC_TRY_COMPILE([],
+                           [return(0);],
+                           $3="yes",
+                           $3="no")
+            CFLAGS="$_SAVE_CFLAGS"
+            AC_LANG_RESTORE
+        ])
+    if test "${$3}" = "yes"; then
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} $1$2"
+    fi
+])
+
+AC_DEFUN([MOZ_CXX_SUPPORTS_WARNING],
+[
+    AC_CACHE_CHECK(whether the C++ compiler supports $1$2, $3,
+        [
+            AC_LANG_SAVE
+            AC_LANG_CPLUSPLUS
+            _SAVE_CXXFLAGS="$CXXFLAGS"
+            CXXFLAGS="$CXXFLAGS -W$2"
+            AC_TRY_COMPILE([],
+                           [return(0);],
+                           $3="yes",
+                           $3="no")
+            CXXFLAGS="$_SAVE_CXXFLAGS"
+            AC_LANG_RESTORE
+        ])
+    if test "${$3}" = "yes"; then
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} $1$2"
+    fi
+])

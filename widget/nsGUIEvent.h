@@ -1549,6 +1549,11 @@ public:
                  aEvent->widget,
                  NS_TOUCH_EVENT)
   {
+    isShift = aEvent->isShift;
+    isControl = aEvent->isControl;
+    isMeta = aEvent->isMeta;
+    isAlt = aEvent->isAlt;
+    time = aEvent->time;
     touches.AppendElements(aEvent->touches);
     MOZ_COUNT_CTOR(nsTouchEvent);
   }

@@ -48,8 +48,9 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = 	test_bug423375.html \
                 test_bug246699.html \
                 test_bug292789.html \
-		test_bug470804.html \
-		$(NULL)
+                test_bug470804.html \
+                test_disallowInheritPrincipal.html \
+                $(NULL)
 
 test_bug292789.html : % : %.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \

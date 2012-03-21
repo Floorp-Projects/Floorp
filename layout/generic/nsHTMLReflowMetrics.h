@@ -71,11 +71,11 @@ private:
   nsRect mRects[2];
 public:
   nsRect& Overflow(size_t aIndex) {
-    NS_ASSERTION(0 <= aIndex && aIndex < 2, "index out of range");
+    NS_ASSERTION(aIndex < 2, "index out of range");
     return mRects[aIndex];
   }
   const nsRect& Overflow(size_t aIndex) const {
-    NS_ASSERTION(0 <= aIndex && aIndex < 2, "index out of range");
+    NS_ASSERTION(aIndex < 2, "index out of range");
     return mRects[aIndex];
   }
 

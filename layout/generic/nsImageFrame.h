@@ -62,6 +62,7 @@ class nsDisplayImage;
 class nsPresContext;
 class nsImageFrame;
 class nsTransform2D;
+class nsImageLoadingContent;
 
 namespace mozilla {
 namespace layers {
@@ -215,7 +216,7 @@ protected:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             bool aShrinkWrap);
+                             PRUint32 aFlags) MOZ_OVERRIDE;
 
   bool IsServerImageMap();
 
@@ -250,6 +251,7 @@ protected:
 
 protected:
   friend class nsImageListener;
+  friend class nsImageLoadingContent;
   nsresult OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
   nsresult OnDataAvailable(imgIRequest *aRequest, bool aCurrentFrame,
                            const nsIntRect *rect);
@@ -259,6 +261,10 @@ protected:
   nsresult FrameChanged(imgIRequest *aRequest,
                         imgIContainer *aContainer,
                         const nsIntRect *aDirtyRect);
+  /**
+   * Notification that aRequest will now be the current request.
+   */
+  void NotifyNewCurrentRequest(imgIRequest *aRequest, nsresult aStatus);
 
 private:
   // random helpers

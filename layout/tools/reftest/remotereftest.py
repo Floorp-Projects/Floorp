@@ -382,8 +382,7 @@ user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
                 print "Warning: cleaning up pidfile '%s' was unsuccessful from the test harness" % self.pidFile
 
 def main():
-    dm_none = devicemanagerADB.DeviceManagerADB(None, None)
-    automation = RemoteAutomation(dm_none)
+    automation = RemoteAutomation(None)
     parser = RemoteOptions(automation)
     options, args = parser.parse_args()
 
@@ -395,7 +394,7 @@ def main():
         if (options.deviceIP):
             dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort)
         else:
-            dm = dm_none
+            dm = devicemanagerADB.DeviceManagerADB(None, None)
     else:
          dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort)
     automation.setDeviceManager(dm)

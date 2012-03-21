@@ -254,16 +254,6 @@ inline bool instanceIsProxy(JSObject *obj)
     return js::IsProxy(obj) &&
            js::GetProxyHandler(obj)->family() == ProxyFamily();
 }
-extern JSClass ExpandoClass;
-inline bool isExpandoObject(JSObject *obj)
-{
-    return js::GetObjectJSClass(obj) == &ExpandoClass;
-}
-
-enum {
-    JSPROXYSLOT_PROTOSHAPE = 0,
-    JSPROXYSLOT_EXPANDO = 1
-};
 
 typedef JSObject*
 (*DefineInterface)(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled);

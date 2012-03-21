@@ -143,7 +143,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(
     KIND_OTHER,
     UNITS_BYTES,
     GetD2DSurfaceVramUsage,
-    "Video memory used by D2D surfaces")
+    "Video memory used by D2D surfaces.")
 
 #endif
 
@@ -1347,6 +1347,9 @@ gfxWindowsPlatform::FontsPrefsChanged(const char *aPref)
     }
 }
 
+#define ENHANCED_CONTRAST_REGISTRY_KEY \
+    HKEY_CURRENT_USER, "Software\\Microsoft\\Avalon.Graphics\\DISPLAY1\\EnhancedContrastLevel"
+
 void
 gfxWindowsPlatform::SetupClearTypeParams()
 {
@@ -1404,6 +1407,59 @@ gfxWindowsPlatform::SetupClearTypeParams()
             mMeasuringMode = DWRITE_MEASURING_MODE_NATURAL;
             break;
         }
+
+        nsRefPtr<IDWriteRenderingParams> defaultRenderingParams;
+        GetDWriteFactory()->CreateRenderingParams(getter_AddRefs(defaultRenderingParams));
+        // For EnhancedContrast, we override the default if the user has not set it
+        // in the registry (by using the ClearType Tuner).
+        if (contrast >= 0.0 && contrast <= 10.0) {
+	    contrast = contrast;
+        } else {
+            HKEY hKey;
+            if (RegOpenKeyExA(ENHANCED_CONTRAST_REGISTRY_KEY,
+                              0, KEY_READ, &hKey) == ERROR_SUCCESS)
+            {
+                contrast = defaultRenderingParams->GetEnhancedContrast();
+                RegCloseKey(hKey);
+            } else {
+                contrast = 1.0;
+            }
+        }
+
+        // For parameters that have not been explicitly set,
+        // we copy values from default params (or our overridden value for contrast)
+        if (gamma < 1.0 || gamma > 2.2) {
+            gamma = defaultRenderingParams->GetGamma();
+        }
+
+        if (level < 0.0 || level > 1.0) {
+            level = defaultRenderingParams->GetClearTypeLevel();
+        }
+
+        DWRITE_PIXEL_GEOMETRY dwriteGeometry =
+          static_cast<DWRITE_PIXEL_GEOMETRY>(geometry);
+        DWRITE_RENDERING_MODE renderMode =
+          static_cast<DWRITE_RENDERING_MODE>(mode);
+
+        if (dwriteGeometry < DWRITE_PIXEL_GEOMETRY_FLAT ||
+            dwriteGeometry > DWRITE_PIXEL_GEOMETRY_BGR) {
+            dwriteGeometry = defaultRenderingParams->GetPixelGeometry();
+        }
+
+        if (renderMode < DWRITE_RENDERING_MODE_DEFAULT ||
+            renderMode > DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC) {
+            renderMode = defaultRenderingParams->GetRenderingMode();
+        }
+
+        mRenderingParams[TEXT_RENDERING_NO_CLEARTYPE] = defaultRenderingParams;
+
+        GetDWriteFactory()->CreateCustomRenderingParams(gamma, contrast, level,
+	    dwriteGeometry, renderMode,
+            getter_AddRefs(mRenderingParams[TEXT_RENDERING_NORMAL]));
+
+        GetDWriteFactory()->CreateCustomRenderingParams(gamma, contrast, level,
+	    dwriteGeometry, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
+            getter_AddRefs(mRenderingParams[TEXT_RENDERING_GDI_CLASSIC]));
     }
 #endif
 }

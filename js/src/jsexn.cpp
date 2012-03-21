@@ -292,8 +292,8 @@ struct SuppressErrorsGuard
 
 struct AppendWrappedArg {
     JSContext *cx;
-    Vector<Value> &values;
-    AppendWrappedArg(JSContext *cx, Vector<Value> &values)
+    AutoValueVector &values;
+    AppendWrappedArg(JSContext *cx, AutoValueVector &values)
       : cx(cx),
         values(values)
     {}
@@ -342,7 +342,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     JSCheckAccessOp checkAccess = cx->runtime->securityCallbacks->checkObjectAccess;
 
     Vector<JSStackTraceStackElem> frames(cx);
-    Vector<Value> values(cx);
+    AutoValueVector values(cx);
     {
         SuppressErrorsGuard seg(cx);
         for (FrameRegsIter i(cx); !i.done(); ++i) {
