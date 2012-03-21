@@ -245,7 +245,7 @@ static void Shutdown();
     defined(_WINDOWS)   || \
     defined(machintosh) || \
     defined(android)
-#include "nsDeviceMotionSystem.h"
+#include "nsDeviceMotion.h"
 #endif
 #endif
 #include "nsCSPService.h"
@@ -300,7 +300,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(AudioManager)
     defined(_WINDOWS)   || \
     defined(machintosh) || \
     defined(android)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceMotionSystem)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceMotion)
 #endif
 #if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHapticFeedback)
@@ -1068,7 +1068,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
     defined(_WINDOWS)   || \
     defined(machintosh) || \
     defined(android)
-  { &kNS_DEVICE_MOTION_CID, false, NULL, nsDeviceMotionSystemConstructor },
+  { &kNS_DEVICE_MOTION_CID, false, NULL, nsDeviceMotionConstructor },
 #endif
 #if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
   { &kNS_HAPTICFEEDBACK_CID, false, NULL, nsHapticFeedbackConstructor },
