@@ -135,6 +135,8 @@ public class GeckoAppShell
     private static Sensor gOrientationSensor = null;
     private static Sensor gProximitySensor = null;
 
+    private static boolean mLocationHighAccuracy = false;
+
     /* The Android-side API: API methods that Android calls */
 
     // Initialization methods
@@ -562,6 +564,19 @@ public class GeckoAppShell
 
                     if (enable) {
                         Criteria criteria = new Criteria();
+                        criteria.setSpeedRequired(false);
+                        criteria.setBearingRequired(false);
+                        criteria.setAltitudeRequired(false);
+                        if (mLocationHighAccuracy) {
+                            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+                            criteria.setCostAllowed(true);
+                            criteria.setPowerRequirement(Criteria.POWER_HIGH);
+                        } else {
+                            criteria.setAccuracy(Criteria.ACCURACY_COARSE);
+                            criteria.setCostAllowed(false);
+                            criteria.setPowerRequirement(Criteria.POWER_LOW);
+                        }
+
                         String provider = lm.getBestProvider(criteria, true);
                         if (provider == null)
                             return;
@@ -577,6 +592,11 @@ public class GeckoAppShell
                     }
                 }
             });
+    }
+
+    public static void enableLocationHighAccuracy(final boolean enable) {
+        Log.i(LOGTAG, "Location provider - high accuracy: " + enable);
+        mLocationHighAccuracy = enable;
     }
 
     public static void enableSensor(int aSensortype) {
