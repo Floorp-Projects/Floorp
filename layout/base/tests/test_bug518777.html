@@ -7,6 +7,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=518777
   <title>Test for Bug 518777</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script>
+  SimpleTest.waitForExplicitFinish();
+
+  function dotest() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    var source = document.getElementById("source").contentWindow;
+    var canvas = document.getElementById("scratch");
+    var context = canvas.getContext("2d");
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawWindow(source, 25, 25, canvas.width, canvas.height,
+                       "transparent");
+
+    var data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    var i;
+    for (i = 0; i < data.length; i += 4) {
+      if (data[i] != 0 || data[i + 1] != 0 || data[i + 2] != 255 || data[i + 3] != 255)
+        break;
+    }
+    ok(i >= data.length, "all pixels blue");
+
+    SimpleTest.finish();
+  }
+  </script>
 </head>
 <body>
 <p><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=518777">Mozilla Bug 518777</a></p>
@@ -20,36 +46,6 @@ iframe source is
 <canvas id="scratch" width="50" height="50"></canvas>
 
 <pre id="test">
-<script type="application/javascript">
-
-/** Test for Bug 518777 **/
-
-SimpleTest.waitForExplicitFinish();
-
-function dotest() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  var canvas = document.getElementById('scratch');
-  var source = document.getElementById('source').contentWindow;
-  var context = canvas.getContext("2d");
-
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  context.drawWindow(source, 25, 25, canvas.width, canvas.height,
-                     "transparent");
-
-  var data = context.getImageData(0, 0, canvas.width, canvas.height).data;
-  var failed = false;
-  for (var i = 0; i < data.length; i+=4) {
-    if (data[i] != 0 || data[i+1] != 0 || data[i+2] != 255 || data[i+3] != 255) {
-      failed = true;
-      break;
-    }
-  }
-  ok(!failed, "all pixels blue");
-
-  SimpleTest.finish();
-}
-</script>
 </pre>
 </body>
 </html>
