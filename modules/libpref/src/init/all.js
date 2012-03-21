@@ -2051,7 +2051,6 @@ pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 pref("print.extend_native_print_dialog", true);
 
 // Locate Java by scanning the Sun JRE installation directory with a minimum version
-// Note: Does not scan if security.enable_java is not true
 pref("plugin.scan.SunJRE", "1.3");
 
 // Locate plugins by scanning the Adobe Acrobat installation directory with a minimum version
