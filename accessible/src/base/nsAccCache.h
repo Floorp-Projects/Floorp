@@ -64,11 +64,11 @@ ClearCacheEntry(const void* aKey, nsRefPtr<T>& aAccessible, void* aUserArg)
 /**
  * Clear the cache and shutdown the accessibles.
  */
-template <class T>
+
 static void
-ClearCache(nsRefPtrHashtable<nsVoidPtrHashKey, T> & aCache)
+ClearCache(nsAccessibleHashtable & aCache)
 {
-  aCache.Enumerate(ClearCacheEntry<T>, nsnull);
+  aCache.Enumerate(ClearCacheEntry<nsAccessible>, nsnull);
 }
 
 /**
@@ -92,12 +92,12 @@ CycleCollectorTraverseCacheEntry(const void *aKey, T *aAccessible,
 /**
  * Traverse the accessible cache for cycle collector.
  */
-template <class T>
+
 static void
-CycleCollectorTraverseCache(nsRefPtrHashtable<nsVoidPtrHashKey, T> & aCache,
+CycleCollectorTraverseCache(nsAccessibleHashtable & aCache,
                             nsCycleCollectionTraversalCallback *aCallback)
 {
-  aCache.EnumerateRead(CycleCollectorTraverseCacheEntry<T>, aCallback);
+  aCache.EnumerateRead(CycleCollectorTraverseCacheEntry<nsAccessible>, aCallback);
 }
 
 #endif
