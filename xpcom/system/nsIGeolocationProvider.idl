@@ -67,7 +67,7 @@ interface nsIGeolocationUpdate : nsISupports {
  * startup is called, any geo location change should call
  * callback.update().
  */
-[scriptable, uuid(701413ED-0F51-64F7-71C7-4369D8E07D6E)]
+[scriptable, uuid(483BE98B-F747-490A-8AF1-53146D2D5373)]
 interface nsIGeolocationProvider : nsISupports {
 
   /**
@@ -87,6 +87,12 @@ interface nsIGeolocationProvider : nsISupports {
    * Shuts down the location device.
    */
   void shutdown();
+
+  /**
+   * hint to provide to use any amount of power to provide a better result
+   */
+  void setHighAccuracy(in boolean enable);
+
 };
 
 %{C++
