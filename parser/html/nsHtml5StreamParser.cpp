@@ -947,10 +947,10 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     nsHtml5OwningUTF16Buffer::FalliblyCreate(
       NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
   if (!newBuf) {
-    mExecutor->MarkAsBroken(); // marks this stream parser as terminated,
-                               // which prevents entry to code paths that
-                               // would use mFirstBuffer or mLastBuffer.
-    return NS_ERROR_OUT_OF_MEMORY;
+    // marks this stream parser as terminated,
+    // which prevents entry to code paths that
+    // would use mFirstBuffer or mLastBuffer.
+    return mExecutor->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
   }
   NS_ASSERTION(!mFirstBuffer, "How come we have the first buffer set?");
   NS_ASSERTION(!mLastBuffer, "How come we have the last buffer set?");
@@ -1143,8 +1143,9 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
                                PRUint32 aSourceOffset,
                                PRUint32 aLength)
 {
-  if (mExecutor->IsBroken()) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsresult rv;
+  if (NS_FAILED(rv = mExecutor->IsBroken())) {
+    return rv;
   }
 
   NS_ASSERTION(mRequest == aRequest, "Got data on wrong stream.");
@@ -1152,10 +1153,9 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
   const mozilla::fallible_t fallible = mozilla::fallible_t();
   nsAutoArrayPtr<PRUint8> data(new (fallible) PRUint8[aLength]);
   if (!data) {
-    mExecutor->MarkAsBroken();
-    return NS_ERROR_OUT_OF_MEMORY;
+    return mExecutor->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
   }
-  nsresult rv = aInStream->Read(reinterpret_cast<char*>(data.get()),
+  rv = aInStream->Read(reinterpret_cast<char*>(data.get()),
   aLength, &totalRead);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(totalRead <= aLength, "Read more bytes than were available?");
