@@ -194,3 +194,13 @@
  * support likely to be made opt-in at some future time.
  */
 #define OLD_GETTER_SETTER_METHODS       1
+
+/* A kill-switch for bug 586842.  Embedders shouldn't touch this! */
+#define USE_NEW_OBJECT_REPRESENTATION 0
+
+#if USE_NEW_OBJECT_REPRESENTATION
+#  define NEW_OBJECT_REPRESENTATION_ONLY() ((void)0)
+#else
+#  define NEW_OBJECT_REPRESENTATION_ONLY() \
+     MOZ_NOT_REACHED("don't call this!  to be used in the new object representation")
+#endif
