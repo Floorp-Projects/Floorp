@@ -1,0 +1,6 @@
+. $topsrcdir/browser/config/mozconfigs/linux32/nightly
+
+ac_add_options --enable-valgrind
+ac_add_options --disable-jemalloc
+ac_add_options --disable-elf-hack
+ac_add_options --enable-optimize="-g -O -freorder-blocks"
