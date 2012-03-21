@@ -175,10 +175,6 @@ public:
      */
     static gfxPlatform *GetPlatform();
 
-    /**
-     * Start up Thebes.
-     */
-    static void Init();
 
     /**
      * Shut down Thebes.
@@ -481,6 +477,11 @@ protected:
     mozilla::gfx::BackendType mPreferredDrawTargetBackend;
 
 private:
+    /**
+     * Start up Thebes.
+     */
+    static void Init();
+
     virtual qcms_profile* GetPlatformCMSOutputProfile();
 
     nsRefPtr<gfxASurface> mScreenReferenceSurface;
