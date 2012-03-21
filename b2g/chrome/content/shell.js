@@ -110,7 +110,7 @@ var shell = {
   start: function shell_init() {
     let homeURL = this.homeURL;
     if (!homeURL) {
-      let msg = 'Fatal error during startup: [No homescreen found]';
+      let msg = 'Fatal error during startup: No homescreen found: try setting B2G_HOMESCREEN';
       return alert(msg);
     }
 
