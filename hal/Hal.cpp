@@ -415,7 +415,7 @@ DisableSensorNotifications(SensorType aSensor) {
 }
 
 typedef mozilla::ObserverList<SensorData> SensorObserverList;
-static SensorObserverList *gSensorObservers = NULL;
+static SensorObserverList* gSensorObservers = NULL;
 
 static SensorObserverList &
 GetSensorObservers(SensorType sensor_type) {
@@ -447,6 +447,8 @@ UnregisterSensorObserver(SensorType aSensor, ISensorObserver *aObserver) {
   observers.RemoveObserver(aObserver);
   if(observers.Length() == 0) {
     DisableSensorNotifications(aSensor);
+    delete [] gSensorObservers;
+    gSensorObservers = nsnull;
   }
 }
 
