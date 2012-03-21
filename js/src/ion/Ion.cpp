@@ -649,16 +649,17 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
     if (!builder.build())
         return false;
     IonSpewPass("BuildSSA");
-    AssertGraphCoherency(graph);
+    // Note: don't call AssertGraphCoherency before SplitCriticalEdges,
+    // the graph is not in RPO at this point.
 
     if (!SplitCriticalEdges(&builder, graph))
         return false;
     IonSpewPass("Split Critical Edges");
     AssertGraphCoherency(graph);
 
-    if (!ReorderBlocks(graph))
+    if (!RenumberBlocks(graph))
         return false;
-    IonSpewPass("Reorder Blocks");
+    IonSpewPass("Renumber Blocks");
     AssertGraphCoherency(graph);
 
     if (!BuildDominatorTree(graph))
