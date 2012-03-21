@@ -442,6 +442,10 @@ CustomEventManager = {
       case "desktop-notification-close":
         AlertsHelper.handleEvent(detail);
         break;
+      case "webapps-install-granted":
+      case "webapps-install-denied":
+        WebappsHelper.handleEvent(detail);
+        break;
     }
   }
 }
@@ -478,18 +482,51 @@ AlertsHelper = {
 }
 
 WebappsHelper = {
+  _installers: {},
+  _count: 0,
+
   init: function webapps_init() {
     Services.obs.addObserver(this, "webapps-launch", false);
+    Services.obs.addObserver(this, "webapps-ask-install", false);
+  },
+
+  registerInstaller: function webapps_registerInstaller(data) {
+    let id = "installer" + this._count++;
+    this._installers[id] = data;
+    return id;
+  },
+
+  handleEvent: function webapps_handleEvent(detail) {
+    if (!detail || !detail.id)
+      return;
+
+    let installer = this._installers[detail.id];
+    switch (detail.type) {
+      case "webapps-install-granted":
+        DOMApplicationRegistry.confirmInstall(installer);
+        break;
+      case "webapps-install-denied":
+        DOMApplicationRegistry.denyInstall(installer);
+        break;
+    }
   },
 
   observe: function webapps_observe(subject, topic, data) {
     let json = JSON.parse(data);
-    DOMApplicationRegistry.getManifestFor(json.origin, function(aManifest) {
-      if (!aManifest)
-        return;
+    switch(topic) {
+      case "webapps-launch":
+        DOMApplicationRegistry.getManifestFor(json.origin, function(aManifest) {
+          if (!aManifest)
+            return;
 
-      let manifest = new DOMApplicationManifest(aManifest, json.origin);
-      shell.sendEvent(content, "mozChromeEvent", { type: "webapps-launch", url: manifest.fullLaunchPath(), origin: json.origin });
-    });
+          let manifest = new DOMApplicationManifest(aManifest, json.origin);
+          shell.sendEvent(content, "mozChromeEvent", { type: "webapps-launch", url: manifest.fullLaunchPath(), origin: json.origin });
+        });
+        break;
+      case "webapps-ask-install":
+        let id = this.registerInstaller(json);
+        shell.sendEvent(content, "mozChromeEvent", { type: "webapps-ask-install", id: id, app: json.app } );
+        break;
+    }
   }
 }

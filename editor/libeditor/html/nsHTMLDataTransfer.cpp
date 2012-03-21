@@ -56,6 +56,7 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsISelectionController.h"
 #include "nsIFileChannel.h"
+#include "nsIPrivateDOMEvent.h"
 
 #include "nsIDocumentObserver.h"
 #include "nsIDocumentStateListener.h"
