@@ -1159,6 +1159,20 @@ mjit::Compiler::generatePrologue()
             }
         }
 
+        if (script->mayNeedArgsObj()) {
+            /*
+             * Make sure that fp->u.nactual is always coherent. This may be
+             * inspected directly by JIT code, and is not guaranteed to be
+             * correct if the UNDERFLOW and OVERFLOW flags are not set.
+             */
+            Jump hasArgs = masm.branchTest32(Assembler::NonZero, FrameFlagsAddress(),
+                                             Imm32(StackFrame::UNDERFLOW_ARGS |
+                                                   StackFrame::OVERFLOW_ARGS));
+            masm.storePtr(ImmPtr((void *)(size_t) script->function()->nargs),
+                          Address(JSFrameReg, StackFrame::offsetOfNumActual()));
+            hasArgs.linkTo(masm.label(), &masm);
+        }
+
         j.linkTo(masm.label(), &masm);
     }
 
