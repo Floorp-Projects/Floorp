@@ -59,7 +59,7 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += nsSafariProfileMigrator.cpp \
            nsBrowserProfileMigratorUtils.cpp \
            $(NULL)
-endif            
+endif
 
 EXTRA_PP_COMPONENTS = \
   ProfileMigrator.js \
@@ -69,6 +69,10 @@ EXTRA_PP_COMPONENTS = \
 
 EXTRA_COMPONENTS = \
 	BrowserProfileMigrators.manifest \
+	$(NULL)
+
+EXTRA_PP_JS_MODULES = \
+	MigrationUtils.jsm \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
