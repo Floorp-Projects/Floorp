@@ -5474,8 +5474,8 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
       nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
       jsval v;
-      rv = WrapNative(cx, frameWin->GetGlobalJSObject(), frame,
-                      &NS_GET_IID(nsIDOMWindow), true, &v,
+      rv = WrapNative(cx, xpc_UnmarkGrayObject(frameWin->GetGlobalJSObject()),
+                      frame, &NS_GET_IID(nsIDOMWindow), true, &v,
                       getter_AddRefs(holder));
       NS_ENSURE_SUCCESS(rv, rv);
 
