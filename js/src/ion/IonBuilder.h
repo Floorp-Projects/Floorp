@@ -241,10 +241,14 @@ class IonBuilder : public MIRGenerator
     MBasicBlock *addBlock(MBasicBlock *block, uint32 loopDepth);
     MBasicBlock *newBlock(MBasicBlock *predecessor, jsbytecode *pc);
     MBasicBlock *newBlock(MBasicBlock *predecessor, jsbytecode *pc, uint32 loopDepth);
+    MBasicBlock *newBlockAfter(MBasicBlock *at, MBasicBlock *predecessor, jsbytecode *pc);
     MBasicBlock *newOsrPreheader(MBasicBlock *header, jsbytecode *loopHead, jsbytecode *loopEntry);
     MBasicBlock *newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc);
     MBasicBlock *newBlock(jsbytecode *pc) {
         return newBlock(NULL, pc);
+    }
+    MBasicBlock *newBlockAfter(MBasicBlock *at, jsbytecode *pc) {
+        return newBlockAfter(at, NULL, pc);
     }
 
     // Given a list of pending breaks, creates a new block and inserts a Goto
