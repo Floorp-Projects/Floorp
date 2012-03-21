@@ -2039,6 +2039,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     newInnerWindow = currentInner;
 
     if (aDocument != oldDoc) {
+      xpc_UnmarkGrayObject(currentInner->mJSObject);
       nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
     }
 
@@ -2047,6 +2048,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     // don't expose that API because the implementation would be
     // identical to that of JS_TransplantObject, so we just call that
     // instead.
+    xpc_UnmarkGrayObject(mJSObject);
     if (!JS_TransplantObject(cx, mJSObject, mJSObject)) {
       return NS_ERROR_FAILURE;
     }
@@ -2129,7 +2131,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       mJSObject = mContext->GetNativeGlobal();
       SetWrapper(mJSObject);
     } else {
-      JSObject *outerObject = NewOuterWindowProxy(cx, newInnerWindow->mJSObject);
+      JSObject *outerObject = NewOuterWindowProxy(cx, xpc_UnmarkGrayObject(newInnerWindow->mJSObject));
       if (!outerObject) {
         NS_ERROR("out of memory");
         return NS_ERROR_FAILURE;
@@ -2200,7 +2202,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         proto = nsnull;
       }
 
-      if (!JS_SetPrototype(cx, mJSObject, proto)) {
+      if (!JS_SetPrototype(cx, mJSObject, xpc_UnmarkGrayObject(proto))) {
         NS_ERROR("can't set prototype");
         return NS_ERROR_FAILURE;
       }
