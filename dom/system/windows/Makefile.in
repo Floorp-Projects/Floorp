@@ -55,7 +55,6 @@ LOCAL_INCLUDES += -I$(topsrcdir)/content/events/src
 include $(topsrcdir)/config/config.mk
 
 CPPSRCS     = \
-        nsDeviceMotionSystem.cpp \
         nsHapticFeedback.cpp \
         $(NULL)
 
