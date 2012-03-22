@@ -2064,8 +2064,7 @@ SpdySession::SetSSLConnectFailed()
 bool
 SpdySession::IsDone()
 {
-  NS_ABORT_IF_FALSE(false, "SpdySession::IsDone()");
-  return false;
+  return !mStreamTransactionHash.Count();
 }
 
 nsresult
@@ -2151,12 +2150,10 @@ SpdySession::AddTransaction(nsAHttpTransaction *)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-PRUint16
-SpdySession::PipelineDepthAvailable()
+PRUint32
+SpdySession::PipelineDepth()
 {
-  // any attempt at pipelining will be turned into parallelism
-
-  return 0;
+  return IsDone() ? 0 : 1;
 }
 
 nsresult

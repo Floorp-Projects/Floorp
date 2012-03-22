@@ -185,7 +185,9 @@ nsHttpHandler::nsHttpHandler()
     , mMaxConnectionsPerServer(8)
     , mMaxPersistentConnectionsPerServer(2)
     , mMaxPersistentConnectionsPerProxy(4)
-    , mMaxPipelinedRequests(2)
+    , mMaxPipelinedRequests(32)
+    , mMaxOptimisticPipelinedRequests(4)
+    , mPipelineAggressive(false)
     , mRedirectionLimit(10)
     , mPhishyUserPassLength(1)
     , mQoSBits(0x00)
@@ -364,7 +366,8 @@ nsHttpHandler::InitConnectionMgr()
                         mMaxPersistentConnectionsPerServer,
                         mMaxPersistentConnectionsPerProxy,
                         mMaxRequestDelay,
-                        mMaxPipelinedRequests);
+                        mMaxPipelinedRequests,
+                        mMaxOptimisticPipelinedRequests);
     return rv;
 }
 
@@ -1016,11 +1019,29 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("pipelining.maxrequests"))) {
         rv = prefs->GetIntPref(HTTP_PREF("pipelining.maxrequests"), &val);
         if (NS_SUCCEEDED(rv)) {
-            mMaxPipelinedRequests = clamped(val, 1, NS_HTTP_MAX_PIPELINED_REQUESTS);
+            mMaxPipelinedRequests = clamped(val, 1, 0xffff);
             if (mConnMgr)
                 mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_PIPELINED_REQUESTS,
                                       mMaxPipelinedRequests);
         }
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("pipelining.max-optimistic-requests"))) {
+        rv = prefs->
+            GetIntPref(HTTP_PREF("pipelining.max-optimistic-requests"), &val);
+        if (NS_SUCCEEDED(rv)) {
+            mMaxOptimisticPipelinedRequests = clamped(val, 1, 0xffff);
+            if (mConnMgr)
+                mConnMgr->UpdateParam
+                    (nsHttpConnectionMgr::MAX_OPTIMISTIC_PIPELINED_REQUESTS,
+                     mMaxOptimisticPipelinedRequests);
+        }
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("pipelining.aggressive"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("pipelining.aggressive"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mPipelineAggressive = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("pipelining.ssl"))) {
