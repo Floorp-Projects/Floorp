@@ -103,8 +103,8 @@ static GpsCallbacks gCallbacks = {
 
 GonkGPSGeolocationProvider::GonkGPSGeolocationProvider()
   : mStarted(false)
+  , mGpsInterface(nsnull)
 {
-  mGpsInterface = GetGPSInterface();
 }
 
 GonkGPSGeolocationProvider::~GonkGPSGeolocationProvider()
@@ -143,7 +143,12 @@ GonkGPSGeolocationProvider::GetGPSInterface()
     return NULL;
 
   gps_device_t* gps_device = (gps_device_t *)device;
-  return gps_device->get_gps_interface(gps_device);
+  const GpsInterface* result = gps_device->get_gps_interface(gps_device);
+
+  if (result->size != sizeof(GpsInterface)) {
+    return nsnull;
+  }
+  return result;
 }
 
 NS_IMETHODIMP
@@ -152,15 +157,21 @@ GonkGPSGeolocationProvider::Startup()
   if (mStarted)
     return NS_OK;
 
+  mGpsInterface = GetGPSInterface();
+
   NS_ENSURE_TRUE(mGpsInterface, NS_ERROR_FAILURE);
 
   PRInt32 update = Preferences::GetInt("geo.default.update", 1000);
 
-  mGpsInterface->init(&gCallbacks);
+  if (mGpsInterface->init(&gCallbacks) != 0)
+    return NS_ERROR_FAILURE;
+
   mGpsInterface->start();
   mGpsInterface->set_position_mode(GPS_POSITION_MODE_STANDALONE,
                                    GPS_POSITION_RECURRENCE_PERIODIC,
                                    update, 0, 0);
+
+  mStarted = true;
   return NS_OK;
 }
 
@@ -168,7 +179,6 @@ NS_IMETHODIMP
 GonkGPSGeolocationProvider::Watch(nsIGeolocationUpdate* aCallback)
 {
   mLocationCallback = aCallback;
-
   return NS_OK;
 }
 
@@ -178,9 +188,10 @@ GonkGPSGeolocationProvider::Shutdown()
   if (!mStarted)
     return NS_OK;
 
+  NS_ENSURE_TRUE(mGpsInterface, NS_OK);
+
   mGpsInterface->stop();
   mGpsInterface->cleanup();
-
   return NS_OK;
 }
 
