@@ -175,6 +175,12 @@ nsHttpPipeline::PipelinePosition()
     return 2;
 }
 
+nsHttpPipeline *
+nsHttpPipeline::QueryPipeline()
+{
+    return this;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpPipeline::nsISupports
 //-----------------------------------------------------------------------------
