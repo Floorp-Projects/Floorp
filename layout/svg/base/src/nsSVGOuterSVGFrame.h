@@ -176,7 +176,7 @@ protected:
 
   nsAutoPtr<gfxMatrix> mCanvasTM;
 
-  PRInt32 mRedrawSuspendCount;
+  PRUint32 mRedrawSuspendCount;
   float mFullZoom;
 
   bool mViewportInitialized;
