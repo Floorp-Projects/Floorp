@@ -557,6 +557,8 @@ ImageLayerOGL::AllocateTexturesCairo(CairoImage *aImage)
   GLuint tex = texture.GetTextureID();
   gl->fActiveTexture(LOCAL_GL_TEXTURE0);
 
+  SetClamping(gl, tex);
+
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
   if (sGLXLibrary.SupportsTextureFromPixmap(aImage->mSurface)) {
     if (aImage->mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
