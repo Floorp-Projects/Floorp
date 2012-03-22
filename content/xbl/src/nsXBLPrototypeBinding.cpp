@@ -2325,7 +2325,7 @@ bool CheckTagNameWhiteList(PRInt32 aNameSpaceID, nsIAtom *aTagName)
     }
   }
   else if (aNameSpaceID == kNameSpaceID_SVG &&
-           aTagName == nsGkAtoms::generic) {
+           aTagName == nsGkAtoms::generic_) {
     return true;
   }
 
