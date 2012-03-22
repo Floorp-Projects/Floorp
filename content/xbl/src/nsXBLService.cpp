@@ -1106,11 +1106,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
     }
   }
 
-  if (!info)
-    return NS_OK;
- 
-  *aResult = info;
-  NS_IF_ADDREF(*aResult);
+  info.forget(aResult);
 
   return NS_OK;
 }
