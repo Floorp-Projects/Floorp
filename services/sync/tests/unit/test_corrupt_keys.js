@@ -50,14 +50,11 @@ add_test(function test_locally_changed_keys() {
     Svc.Session = {
       getBrowserState: function () JSON.stringify(myTabs)
     };
-    
-    Weave.Service.username = "johndoe";
-    Weave.Service.password = "ilovejane";
-    Weave.Service.passphrase = passphrase;
-    
-    Weave.Service.serverURL = TEST_SERVER_URL;
-    Weave.Service.clusterURL = TEST_CLUSTER_URL;
-    
+
+    setBasicCredentials("johndoe", "password", passphrase);
+    Service.serverURL = TEST_SERVER_URL;
+    Service.clusterURL = TEST_CLUSTER_URL;
+
     Engines.register(HistoryEngine);
     Weave.Service._registerEngines();
     
@@ -79,7 +76,7 @@ add_test(function test_locally_changed_keys() {
     // Upload keys.
     generateNewKeys();
     let serverKeys = CollectionKeys.asWBO("crypto", "keys");
-    serverKeys.encrypt(Weave.Service.syncKeyBundle);
+    serverKeys.encrypt(Weave.Identity.syncKeyBundle);
     do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
     
     // Check that login works.

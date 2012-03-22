@@ -49,7 +49,6 @@ Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/ext/StringBundle.js");
 Cu.import("resource://services-sync/log4moz.js");
-Cu.import("resource://services-sync/status.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
@@ -1233,12 +1232,14 @@ let Utils = {
    * Status.backoffInterval is higher.
    *
    */
-  calculateBackoff: function calculateBackoff(attempts, base_interval) {
+  calculateBackoff: function calculateBackoff(attempts, baseInterval,
+                                              statusInterval) {
     let backoffInterval = attempts *
-                          (Math.floor(Math.random() * base_interval) +
-                           base_interval);
-    return Math.max(Math.min(backoffInterval, MAXIMUM_BACKOFF_INTERVAL), Status.backoffInterval);
-  }
+                          (Math.floor(Math.random() * baseInterval) +
+                           baseInterval);
+    return Math.max(Math.min(backoffInterval, MAXIMUM_BACKOFF_INTERVAL),
+                    statusInterval);
+  },
 };
 
 XPCOMUtils.defineLazyGetter(Utils, "_utf8Converter", function() {

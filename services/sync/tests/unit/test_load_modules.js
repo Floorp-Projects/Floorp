@@ -15,6 +15,7 @@ const modules = [
                  "ext/Preferences.js",
                  "identity.js",
                  "jpakeclient.js",
+                 "keys.js",
                  "log4moz.js",
                  "main.js",
                  "notifications.js",

@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/engines.js");
@@ -5,6 +8,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/engines/tabs.js");
 Cu.import("resource://services-sync/log4moz.js");
   
@@ -114,24 +118,24 @@ add_test(function v4_upgrade() {
     let serverKeys;
     let serverResp;
 
-      
+
     function retrieve_server_default() {
       serverKeys = serverResp = serverDecrypted = null;
-      
+
       serverKeys = new CryptoWrapper("crypto", "keys");
       serverResp = serverKeys.fetch(Weave.Service.cryptoKeysURL).response;
       do_check_true(serverResp.success);
-      
-      serverDecrypted = serverKeys.decrypt(Weave.Service.syncKeyBundle);
+
+      serverDecrypted = serverKeys.decrypt(Weave.Identity.syncKeyBundle);
       _("Retrieved WBO:       " + JSON.stringify(serverDecrypted));
       _("serverKeys:          " + JSON.stringify(serverKeys));
-      
+
       return serverDecrypted.default;
     }
-      
+
     function retrieve_and_compare_default(should_succeed) {
       let serverDefault = retrieve_server_default();
-      let localDefault = CollectionKeys.keyForCollection().keyPair;
+      let localDefault = CollectionKeys.keyForCollection().keyPairB64;
       
       _("Retrieved keyBundle: " + JSON.stringify(serverDefault));
       _("Local keyBundle:     " + JSON.stringify(localDefault));
@@ -141,15 +145,15 @@ add_test(function v4_upgrade() {
       else
         do_check_neq(JSON.stringify(serverDefault), JSON.stringify(localDefault));
     }
-    
+
     // Uses the objects set above.
     function set_server_keys(pair) {
       serverDecrypted.default = pair;
       serverKeys.cleartext = serverDecrypted;
-      serverKeys.encrypt(Weave.Service.syncKeyBundle);
+      serverKeys.encrypt(Weave.Identity.syncKeyBundle);
       serverKeys.upload(Weave.Service.cryptoKeysURL);
     }
-    
+
     _("Checking we have the latest keys.");
     retrieve_and_compare_default(true);
     
@@ -232,21 +236,15 @@ add_test(function v5_upgrade() {
     Svc.Session = {
       getBrowserState: function () JSON.stringify(myTabs)
     };
-    
+
     Status.resetSync();
-    
-    Weave.Service.username = "johndoe";
-    Weave.Service.password = "ilovejane";
-    Weave.Service.passphrase = passphrase;
-    
+
+    setBasicCredentials("johndoe", "ilovejane", passphrase);
     Weave.Service.serverURL = TEST_SERVER_URL;
     Weave.Service.clusterURL = TEST_CLUSTER_URL;
-    
-    //
+
     // Test an upgrade where the contents of the server would cause us to error
     // -- keys decrypted with a different sync key, for example.
-    //     
-
     _("Testing v4 -> v5 (or similar) upgrade.");
     function update_server_keys(syncKeyBundle, wboName, collWBO) {
       generateNewKeys();
@@ -254,28 +252,27 @@ add_test(function v5_upgrade() {
       serverKeys.encrypt(syncKeyBundle);
       do_check_true(serverKeys.upload(Weave.Service.storageURL + collWBO).success);
     }
-    
+
     _("Bumping version.");
     // Bump version on the server.
     let m = new WBORecord("meta", "global");
     m.payload = {"syncID": "foooooooooooooooooooooooooo",
                  "storageVersion": STORAGE_VERSION + 1};
     m.upload(Weave.Service.metaURL);
-    
+
     _("New meta/global: " + JSON.stringify(meta_global));
-    
+
     // Fill the keys with bad data.
-    let badKeys = new SyncKeyBundle(null, null, "aaaaaaaaaaaaaaaaaaaaaaaaaa");
-    badKeys.generateEntry();
+    let badKeys = new SyncKeyBundle("foobar", "aaaaaaaaaaaaaaaaaaaaaaaaaa");
     update_server_keys(badKeys, "keys", "crypto/keys");  // v4
     update_server_keys(badKeys, "bulk", "crypto/bulk");  // v5
-    
-    // ... and get new ones.
+
+    _("Generating new keys.");
     generateNewKeys();
-    
+
     // Now sync and see what happens. It should be a version fail, not a crypto
     // fail.
-    
+
     _("Logging in.");
     try {
       Weave.Service.login("johndoe", "ilovejane", passphrase);
@@ -289,7 +286,7 @@ add_test(function v5_upgrade() {
 
     // Clean up.
     Weave.Service.startOver();
-    
+
   } finally {
     Weave.Svc.Prefs.resetBranch("");
     server.stop(run_next_test);

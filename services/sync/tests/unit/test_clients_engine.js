@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/identity.js");
@@ -48,7 +51,7 @@ add_test(function test_bad_hmac() {
   function uploadNewKeys() {
     generateNewKeys();
     let serverKeys = CollectionKeys.asWBO("crypto", "keys");
-    serverKeys.encrypt(Weave.Service.syncKeyBundle);
+    serverKeys.encrypt(Weave.Identity.syncKeyBundle);
     do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
   }
 
@@ -77,7 +80,7 @@ add_test(function test_bad_hmac() {
     Clients.resetClient();
     generateNewKeys();
     let serverKeys = CollectionKeys.asWBO("crypto", "keys");
-    serverKeys.encrypt(Weave.Service.syncKeyBundle);
+    serverKeys.encrypt(Weave.Identity.syncKeyBundle);
     do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
 
     _("Sync.");
@@ -164,10 +167,8 @@ add_test(function test_properties() {
 
 add_test(function test_sync() {
   _("Ensure that Clients engine uploads a new client record once a week.");
-  
-  Svc.Prefs.set("serverURL", TEST_SERVER_URL);
-  Svc.Prefs.set("clusterURL", TEST_CLUSTER_URL);
-  Svc.Prefs.set("username", "foo");
+
+  new SyncTestingInfrastructure();
   generateNewKeys();
 
   let contents = {
@@ -405,9 +406,7 @@ add_test(function test_process_incoming_commands() {
 add_test(function test_command_sync() {
   _("Ensure that commands are synced across clients.");
 
-  Svc.Prefs.set("serverURL", TEST_SERVER_URL);
-  Svc.Prefs.set("clusterURL", TEST_CLUSTER_URL);
-  Svc.Prefs.set("username", "foo");
+  new SyncTestingInfrastructure();
 
   Clients._store.wipe();
   generateNewKeys();
