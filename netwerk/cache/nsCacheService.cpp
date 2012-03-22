@@ -1035,6 +1035,91 @@ private:
 };
 
 /******************************************************************************
+ * nsNotifyDoomListener
+ *****************************************************************************/
+
+class nsNotifyDoomListener : public nsRunnable {
+public:
+    nsNotifyDoomListener(nsICacheListener *listener,
+                         nsresult status)
+        : mListener(listener)      // transfers reference
+        , mStatus(status)
+    {}
+
+    NS_IMETHOD Run()
+    {
+        mListener->OnCacheEntryDoomed(mStatus);
+        NS_RELEASE(mListener);
+        return NS_OK;
+    }
+
+private:
+    nsICacheListener *mListener;
+    nsresult          mStatus;
+};
+
+/******************************************************************************
+ * nsDoomEvent
+ *****************************************************************************/
+
+class nsDoomEvent : public nsRunnable {
+public:
+    nsDoomEvent(nsCacheSession *session,
+                const nsACString &key,
+                nsICacheListener *listener)
+    {
+        mKey = *session->ClientID();
+        mKey.Append(':');
+        mKey.Append(key);
+        mStoragePolicy = session->StoragePolicy();
+        mListener = listener;
+        mThread = do_GetCurrentThread();
+        // We addref the listener here and release it in nsNotifyDoomListener
+        // on the callers thread. If posting of nsNotifyDoomListener event fails
+        // we leak the listener which is better than releasing it on a wrong
+        // thread.
+        NS_IF_ADDREF(mListener);
+    }
+
+    NS_IMETHOD Run()
+    {
+        nsCacheServiceAutoLock lock;
+
+        bool foundActive = true;
+        nsresult status = NS_ERROR_NOT_AVAILABLE;
+        nsCacheEntry *entry;
+        entry = nsCacheService::gService->mActiveEntries.GetEntry(&mKey);
+        if (!entry) {
+            bool collision = false;
+            foundActive = false;
+            entry = nsCacheService::gService->SearchCacheDevices(&mKey,
+                                                                 mStoragePolicy,
+                                                                 &collision);
+        }
+
+        if (entry) {
+            status = NS_OK;
+            nsCacheService::gService->DoomEntry_Internal(entry, foundActive);
+        }
+
+        if (mListener) {
+            mThread->Dispatch(new nsNotifyDoomListener(mListener, status),
+                              NS_DISPATCH_NORMAL);
+            // posted event will release the reference on the correct thread
+            mListener = nsnull;
+        }
+
+        return NS_OK;
+    }
+
+private:
+    nsCString             mKey;
+    nsCacheStoragePolicy  mStoragePolicy;
+    nsICacheListener     *mListener;
+    nsCOMPtr<nsIThread>   mThread;
+};
+
+/******************************************************************************
  * nsCacheService
  *****************************************************************************/
 nsCacheService *   nsCacheService::gService = nsnull;
@@ -1347,6 +1432,22 @@ nsCacheService::IsStorageEnabledForPolicy(nsCacheStoragePolicy  storagePolicy,
 
     *result = gService->IsStorageEnabledForPolicy_Locked(storagePolicy);
     return NS_OK;
+}
+
+
+nsresult
+nsCacheService::DoomEntry(nsCacheSession   *session,
+                          const nsACString &key,
+                          nsICacheListener *listener)
+{
+    CACHE_LOG_DEBUG(("Dooming entry for session %p, key %s\n",
+                     session, PromiseFlatCString(key).get()));
+    NS_ASSERTION(gService, "nsCacheService::gService is null.");
+
+    if (!gService->mInitialized)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    return DispatchToCacheIOThread(new nsDoomEvent(session, key, listener));
 }
 
 
