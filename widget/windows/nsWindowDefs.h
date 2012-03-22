@@ -281,7 +281,7 @@ struct KeyPair {
     : mGeneral(PRUint8(aGeneral)), mSpecific(PRUint8(aSpecific)) {}
 };
 
-#ifndef TITLEBARINFOEX
+#if (WINVER < 0x0600)
 struct TITLEBARINFOEX
 {
     DWORD cbSize;
