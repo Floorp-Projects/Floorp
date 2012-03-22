@@ -489,14 +489,12 @@ MakeContinuationFluid(nsIFrame* aFrame, nsIFrame* aNext)
 
 // If aFrame is the last child of its parent, convert bidi continuations to
 // fluid continuations for all of its inline ancestors.
+// If it isn't the last child, make sure that its continuation is fluid.
 static void
 JoinInlineAncestors(nsIFrame* aFrame)
 {
-  if (aFrame->GetNextSibling()) {
-    return;
-  }
-  nsIFrame* frame = aFrame->GetParent();
-  while (frame && IsBidiSplittable(frame)) {
+  nsIFrame* frame = aFrame;
+  do {
     nsIFrame* next = frame->GetNextContinuation();
     if (next) {
       // Don't join frames if they come from different paragraph depths (i.e.
@@ -510,7 +508,7 @@ JoinInlineAncestors(nsIFrame* aFrame)
     if (frame->GetNextSibling())
       break;
     frame = frame->GetParent();
-  }
+  } while (frame && IsBidiSplittable(frame));
 }
 
 static nsresult
@@ -793,6 +791,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
               RemoveBidiContinuation(aBpd, frame,
                                      frameIndex, newIndex, lineOffset);
               frameIndex = newIndex;
+              lastFrame = frame = aBpd->FrameAt(frameIndex);
             }
           } else if (fragmentLength > 0 && runLength > fragmentLength) {
             /*
@@ -1586,6 +1585,16 @@ nsBidiPresUtils::RemoveBidiContinuation(BidiParagraphData *aBpd,
         }
       }
     }
+  }
+
+  // Make sure that the last continuation we made fluid does not itself have a
+  // fluid continuation (this can happen when re-resolving after dynamic changes
+  // to content)
+  nsIFrame* lastFrame = aBpd->FrameAt(aLastIndex);
+  nsIFrame* next = lastFrame->GetNextInFlow();
+  if (next) {
+    lastFrame->SetNextContinuation(next);
+    next->SetPrevContinuation(lastFrame);
   }
 }
 

@@ -1897,7 +1897,8 @@ GLContextEGL::CreateEGLPixmapOffscreenContext(const gfxIntSize& aSize,
 // often without the ability to texture from them directly.
 already_AddRefed<GLContext>
 GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
-                                      const ContextFormat& aFormat)
+                                      const ContextFormat& aFormat,
+                                      const ContextFlags aFlags)
 {
     if (!sEGLLibrary.EnsureInitialized()) {
         return nsnull;
@@ -1917,7 +1918,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
 
     gfxIntSize fboSize = usePBuffers ? glContext->OffscreenActualSize() : aSize;
-    if (!glContext->ResizeOffscreenFBO(fboSize, !usePBuffers))
+    if (!(aFlags & GLContext::ContextFlagsGlobal) && !glContext->ResizeOffscreenFBO(fboSize, !usePBuffers))
         return nsnull;
 
     return glContext.forget();
@@ -1928,7 +1929,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
     if (!glContext)
         return nsnull;
 
-    if (!glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), true))
+    if (!(aFlags & GLContext::ContextFlagsGlobal) && !glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), true))
         return nsnull;
 
     return glContext.forget();
@@ -1940,7 +1941,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
     }
 
-    if (!gUseBackingSurface && !glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), true)) {
+    if (!(aFlags & GLContext::ContextFlagsGlobal) && !gUseBackingSurface && !glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), true)) {
         // we weren't able to create the initial
         // offscreen FBO, so this is dead
         return nsnull;
@@ -1999,7 +2000,8 @@ GLContextProviderEGL::GetGlobalContext()
         // CreateOffscreen can call us re-entrantly.
         nsRefPtr<GLContext> ctx =
             GLContextProviderEGL::CreateOffscreen(gfxIntSize(16, 16),
-                                                  ContextFormat(ContextFormat::BasicRGB24));
+                                                  ContextFormat(ContextFormat::BasicRGB24),
+                                                  GLContext::ContextFlagsGlobal);
         gGlobalContext = ctx;
         if (gGlobalContext)
             gGlobalContext->SetIsGlobalSharedContext(true);

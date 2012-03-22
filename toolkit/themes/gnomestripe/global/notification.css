@@ -35,15 +35,15 @@ notification[type="critical"] {
 
 /* Default icons for notifications */
 
-notification[type="info"] .messageImage {
+.messageImage[type="info"] {
   list-style-image: url("moz-icon://stock/gtk-dialog-info?size=menu");
 }
 
-notification[type="warning"] .messageImage {
+.messageImage[type="warning"] {
   list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=menu");
 }
 
-notification[type="critical"] .messageImage {
+.messageImage[type="critical"] {
   list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
 }
 

@@ -526,12 +526,12 @@ nsSVGEffects::GetFilterProperty(nsIFrame *aFrame)
 }
 
 static PLDHashOperator
-GatherEnumerator(nsVoidPtrHashKey* aEntry, void* aArg)
+GatherEnumerator(nsPtrHashKey<nsSVGRenderingObserver>* aEntry, void* aArg)
 {
   nsTArray<nsSVGRenderingObserver*>* array =
     static_cast<nsTArray<nsSVGRenderingObserver*>*>(aArg);
-  array->AppendElement(static_cast<nsSVGRenderingObserver*>(
-          const_cast<void*>(aEntry->GetKey())));
+  array->AppendElement(aEntry->GetKey());
+          
   return PL_DHASH_REMOVE;
 }
 

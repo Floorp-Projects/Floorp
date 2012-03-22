@@ -33,9 +33,6 @@ public final class GeckoProfile {
     private File mMozDir;
     private File mDir;
 
-    // this short timeout is a temporary fix until bug 735399 is implemented
-    private static final long SESSION_TIMEOUT = 30 * 1000; // 30 seconds
-
     public static GeckoProfile get(Context context) {
         return get(context, null);
     }
@@ -83,19 +80,12 @@ public final class GeckoProfile {
         return mDir;
     }
 
-    public boolean shouldRestoreSession() {
+    public boolean hasSession() {
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start check sessionstore.js exists");
         File dir = getDir();
-        if (dir == null)
-            return false;
-
-        File sessionFile = new File(dir, "sessionstore.js");
-        if (!sessionFile.exists())
-            return false;
-
-        boolean shouldRestore = (System.currentTimeMillis() - sessionFile.lastModified() < SESSION_TIMEOUT);
+        boolean hasSession = (dir != null && new File(dir, "sessionstore.js").exists());
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - finish check sessionstore.js exists");
-        return shouldRestore;
+        return hasSession;
     }
 
     public String readSessionFile(boolean geckoReady) {

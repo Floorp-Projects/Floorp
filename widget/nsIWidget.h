@@ -118,8 +118,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0xf60ba9a0, 0x3013, 0x4381, \
-    { 0xb7, 0xd4, 0x34, 0xeb, 0x0c, 0xe7, 0x79, 0x0e } }
+  { 0xe7af49c1, 0xd11b, 0x4070, \
+    { 0x99, 0x7a, 0x2d, 0x2b, 0x7, 0x4b, 0xea, 0xf4 } }
 
 /*
  * Window shadow styles
@@ -1375,6 +1375,35 @@ class nsIWidget : public nsISupports {
     virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
                                                 PRUint32 aNativeMessage,
                                                 PRUint32 aModifierFlags) = 0;
+
+    /**
+     * Utility method intended for testing. Dispatching native mouse scroll
+     * events may move the mouse cursor.
+     *
+     * @param aPoint            Mouse cursor position in screen coordinates.
+     *                          In device pixels, the origin at the top left of
+     *                          the primary display.
+     * @param aNativeMessage    Platform native message.
+     * @param aDeltaX           The delta value for X direction.  If the native
+     *                          message doesn't indicate X direction scrolling,
+     *                          this may be ignored.
+     * @param aDeltaY           The delta value for Y direction.  If the native
+     *                          message doesn't indicate Y direction scrolling,
+     *                          this may be ignored.
+     * @param aDeltaZ           The delta value for Z direction.  If the native
+     *                          message doesn't indicate Z direction scrolling,
+     *                          this may be ignored.
+     * @param aModifierFlags    Must be values of Modifiers, or zero.
+     * @param aAdditionalFlags  See nsIDOMWidnowUtils' consts and their
+     *                          document.
+     */
+    virtual nsresult SynthesizeNativeMouseScrollEvent(nsIntPoint aPoint,
+                                                      PRUint32 aNativeMessage,
+                                                      double aDeltaX,
+                                                      double aDeltaY,
+                                                      double aDeltaZ,
+                                                      PRUint32 aModifierFlags,
+                                                      PRUint32 aAdditionalFlags) = 0;
 
     /**
      * Activates a native menu item at the position specified by the index

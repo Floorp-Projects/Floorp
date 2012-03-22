@@ -40,7 +40,7 @@
 #include "nsISupports.idl"
 #include "nsIFile.idl"
 
-[scriptable, uuid(c177b6b0-5ef1-44f5-bc67-6bcf7d2518e5)]
+[scriptable, uuid(02719ffb-1a87-46cd-b8d3-5583f3267b32)]
 interface nsITelemetrySessionData : nsISupports
 {
   /**
@@ -101,7 +101,7 @@ interface nsITelemetry : nsISupports
   readonly attribute jsval histogramSnapshots;
 
   /*
-   * An object containing information about slow SQL prepared statements.
+   * An object containing information about slow SQL statements.
    *
    * {
    *   mainThread: { "sqlString1": [<hit count>, <total time>], "sqlString2": [...], ... },
@@ -111,12 +111,25 @@ interface nsITelemetry : nsISupports
    * where:
    *   mainThread: Slow statements that executed on the main thread
    *   otherThreads: Slow statements that executed on a non-main thread
-   *   sqlString - String of the offending prepared statement
+   *   sqlString - String of the offending statement (see note)
    *   hit count - The number of times this statement required longer than the threshold time to execute
    *   total time - The sum of all execution times above the threshold time for this statement
+   *
+   * Note that dynamic SQL strings and SQL strings executed against addon DBs could contain private information.
+   * This property represents such SQL as aggregate database-level stats and the sqlString contains the database
+   * filename instead.
    */
   [implicit_jscontext]
   readonly attribute jsval slowSQL;
+
+  /*
+   * See slowSQL above.
+   *
+   * An object containing full strings of every slow SQL statement if toolkit.telemetry.debugSlowSql = true
+   * The returned SQL strings may contain private information and should not be reported to Telemetry.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval debugSlowSQL;
 
   /*
    * An array of chrome hang reports. Each element is a hang report represented

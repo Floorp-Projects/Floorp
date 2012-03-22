@@ -115,7 +115,7 @@ const KEY_UPDROOT         = "UpdRootD";
 const DIR_UPDATES         = "updates";
 const FILE_UPDATE_STATUS  = "update.status";
 const FILE_UPDATE_VERSION = "update.version";
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
 const FILE_UPDATE_ARCHIVE = "update.apk";
 #else
 const FILE_UPDATE_ARCHIVE = "update.mar";
