@@ -49,7 +49,7 @@ XPIDLSRCS = nsIUpdateTimerManager.idl
 EXTRA_PP_COMPONENTS = nsUpdateTimerManager.js nsUpdateTimerManager.manifest
 
 ifdef MOZ_UPDATER
-ifneq ($(OS_TARGET),Android)
+ifneq (android,$(MOZ_WIDGET_TOOLKIT))
 DIRS += common
 DIRS += updater
 endif
@@ -68,7 +68,7 @@ else
 # used for other things.  We need to build update/common
 # which the maintenance service uses.
 ifdef MOZ_MAINTENANCE_SERVICE
-ifneq ($(OS_TARGET),Android)
+ifneq (android,$(MOZ_WIDGET_TOOLKIT))
 DIRS += common
 endif
 endif

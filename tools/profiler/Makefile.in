@@ -57,6 +57,25 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/ipc/chromium/src \
   $(NULL)
 
+ifneq (,$(MOZ_PROFILING))
+ifneq (,$(filter Android,$(OS_TARGET)))
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/tools/profiler/libunwind/src/include \
+  -I$(DEPTH)/tools/profiler/libunwind/src/include \
+  $(NULL)
+
+SHARED_LIBRARY_LIBS += \
+  $(DEPTH)/tools/profiler/libunwind/src/src/.libs/libunwind-arm.$(LIB_SUFFIX) \
+  $(NULL)
+
+export::
+	$(call SUBMAKE,,libunwind/src)
+
+distclean::
+	$(call SUBMAKE,$@,libunwind/src)
+endif
+endif
+
 MODULE          = profiler
 MODULE_NAME     = nsProfilerModule
 LIBRARY_NAME    = profiler
