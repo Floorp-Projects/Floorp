@@ -1219,31 +1219,29 @@ bool UnoptimizableCCNode(nsINode* aNode)
 bool
 nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
 {
-  if (!cb.WantAllTraces()) {
-    nsIDocument *currentDoc = tmp->GetCurrentDoc();
-    if (currentDoc &&
-        nsCCUncollectableMarker::InGeneration(currentDoc->GetMarkedCCGeneration())) {
+  nsIDocument *currentDoc = tmp->GetCurrentDoc();
+  if (currentDoc &&
+      nsCCUncollectableMarker::InGeneration(cb, currentDoc->GetMarkedCCGeneration())) {
+    return false;
+  }
+
+  if (nsCCUncollectableMarker::sGeneration) {
+    // If we're black no need to traverse.
+    if (tmp->IsBlack() || tmp->InCCBlackTree()) {
       return false;
     }
 
-    if (nsCCUncollectableMarker::sGeneration) {
-      // If we're black no need to traverse.
-      if (tmp->IsBlack() || tmp->InCCBlackTree()) {
+    if (!UnoptimizableCCNode(tmp)) {
+      // If we're in a black document, return early.
+      if ((currentDoc && currentDoc->IsBlack())) {
         return false;
       }
-
-      if (!UnoptimizableCCNode(tmp)) {
-        // If we're in a black document, return early.
-        if ((currentDoc && currentDoc->IsBlack())) {
-          return false;
-        }
-        // If we're not in anonymous content and we have a black parent,
-        // return early.
-        nsIContent* parent = tmp->GetParent();
-        if (parent && !UnoptimizableCCNode(parent) && parent->IsBlack()) {
-          NS_ABORT_IF_FALSE(parent->IndexOf(tmp) >= 0, "Parent doesn't own us?");
-          return false;
-        }
+      // If we're not in anonymous content and we have a black parent,
+      // return early.
+      nsIContent* parent = tmp->GetParent();
+      if (parent && !UnoptimizableCCNode(parent) && parent->IsBlack()) {
+        NS_ABORT_IF_FALSE(parent->IndexOf(tmp) >= 0, "Parent doesn't own us?");
+        return false;
       }
     }
   }
