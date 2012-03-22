@@ -802,11 +802,8 @@ GLFormatForImage(gfxASurface::gfxImageFormat aFormat)
 {
     switch (aFormat) {
     case gfxASurface::ImageFormatARGB32:
-        return LOCAL_GL_RGBA;
     case gfxASurface::ImageFormatRGB24:
-        // this often isn't correct, because we can't guarantee that
-        // the alpha byte will be 0xff coming from the image surface
-        NS_WARNING("Using GL_RGBA for ImageFormatRGB24, are you sure you know what you're doing?");
+        // Thebes only supports RGBX, not packed RGB.
         return LOCAL_GL_RGBA;
     case gfxASurface::ImageFormatRGB16_565:
         return LOCAL_GL_RGB;
@@ -867,18 +864,14 @@ public:
             }
             Resize(aSize);
         } else {
-            // Convert RGB24 to either ARGB32 on mobile.  We can't
-            // generate GL_RGB data, so we'll always have an alpha byte
-            // for RGB24.  No easy way to upload that to GL.
-            // 
-            // Note that if we start using RGB565 here, we'll need to
-            // watch for a) setting the correct format; and b) getting
-            // the stride right.
             if (mUpdateFormat == gfxASurface::ImageFormatRGB24) {
-                mUpdateFormat = gfxASurface::ImageFormatARGB32;
+                // RGB24 means really RGBX for Thebes, which means we have to
+                // use the right shader and ignore the uninitialized alpha
+                // value.
+                mShaderType = BGRXLayerProgramType;
+            } else {
+                mShaderType = BGRALayerProgramType;
             }
-            // We currently always use BGRA type textures
-            mShaderType = BGRALayerProgramType;
         }
     }
 
