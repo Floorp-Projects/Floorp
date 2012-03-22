@@ -138,6 +138,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mPreserveStream(false)
 {
     LOG(("Creating nsHttpTransaction @%x\n", this));
+    gHttpHandler->GetMaxPipelineObjectSize(mMaxPipelineObjectSize);
 }
 
 nsHttpTransaction::~nsHttpTransaction()
@@ -1137,6 +1138,10 @@ nsHttpTransaction::HandleContentStart()
             // grab the content-length from the response headers
             mContentLength = mResponseHead->ContentLength();
 
+            if ((mClassification != CLASS_SOLO) &&
+                (mContentLength > mMaxPipelineObjectSize))
+                CancelPipeline(nsHttpConnectionMgr::BadUnexpectedLarge);
+            
             // handle chunked encoding here, so we'll know immediately when
             // we're done with the socket.  please note that _all_ other
             // decoding is done when the channel receives the content data
@@ -1230,6 +1235,13 @@ nsHttpTransaction::HandleContent(char *buf,
 
     LOG(("nsHttpTransaction::HandleContent [this=%x count=%u read=%u mContentRead=%lld mContentLength=%lld]\n",
         this, count, *contentRead, mContentRead, mContentLength));
+
+    // Check the size of chunked responses. If we exceed the max pipeline size
+    // for this response reschedule the pipeline
+    if ((mClassification != CLASS_SOLO) &&
+        mChunkedDecoder &&
+        (mContentRead > mMaxPipelineObjectSize))
+        CancelPipeline(nsHttpConnectionMgr::BadUnexpectedLarge);
 
     // check for end-of-file
     if ((mContentRead == mContentLength) ||
@@ -1328,6 +1340,23 @@ nsHttpTransaction::ProcessData(char *buf, PRUint32 count, PRUint32 *countRead)
     }
 
     return NS_OK;
+}
+
+void
+nsHttpTransaction::CancelPipeline(PRUint32 reason)
+{
+    // reason is casted through a uint to avoid compiler header deps
+    gHttpHandler->ConnMgr()->PipelineFeedbackInfo(
+        mConnInfo,
+        static_cast<nsHttpConnectionMgr::PipelineFeedbackInfoType>(reason),
+        nsnull, mClassification);
+
+    mConnection->CancelPipeline(NS_ERROR_CORRUPTED_CONTENT);
+
+    // Avoid pipelining this transaction on restart by classifying it as solo.
+    // This also prevents BadUnexpectedLarge from being reported more
+    // than one time per transaction.
+    mClassification = CLASS_SOLO;
 }
 
 //-----------------------------------------------------------------------------
