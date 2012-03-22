@@ -23,7 +23,7 @@
 namespace js {
 
 static MOZ_ALWAYS_INLINE void
-Debug_SetSlotRangeToCrashOnTouch(HeapSlot *vec, size_t len)
+Debug_SetSlotRangeToCrashOnTouch(HeapSlot *vec, uint32_t len)
 {
 #ifdef DEBUG
     Debug_SetValueRangeToCrashOnTouch((Value *) vec, len);
@@ -83,28 +83,28 @@ js::ObjectImpl::getDenseArrayElements()
 }
 
 inline const js::Value &
-js::ObjectImpl::getDenseArrayElement(unsigned idx)
+js::ObjectImpl::getDenseArrayElement(uint32_t idx)
 {
     MOZ_ASSERT(isDenseArray() && idx < getDenseArrayInitializedLength());
     return elements[idx];
 }
 
 inline void
-js::ObjectImpl::getSlotRangeUnchecked(size_t start, size_t length,
+js::ObjectImpl::getSlotRangeUnchecked(uint32_t start, uint32_t length,
                                       HeapSlot **fixedStart, HeapSlot **fixedEnd,
                                       HeapSlot **slotsStart, HeapSlot **slotsEnd)
 {
     MOZ_ASSERT(!isDenseArray());
     MOZ_ASSERT(start + length >= start);
 
-    size_t fixed = numFixedSlots();
+    uint32_t fixed = numFixedSlots();
     if (start < fixed) {
         if (start + length < fixed) {
             *fixedStart = &fixedSlots()[start];
             *fixedEnd = &fixedSlots()[start + length];
             *slotsStart = *slotsEnd = NULL;
         } else {
-            size_t localCopy = fixed - start;
+            uint32_t localCopy = fixed - start;
             *fixedStart = &fixedSlots()[start];
             *fixedEnd = &fixedSlots()[start + localCopy];
             *slotsStart = &slots[0];
@@ -118,7 +118,7 @@ js::ObjectImpl::getSlotRangeUnchecked(size_t start, size_t length,
 }
 
 inline void
-js::ObjectImpl::getSlotRange(size_t start, size_t length,
+js::ObjectImpl::getSlotRange(uint32_t start, uint32_t length,
                              HeapSlot **fixedStart, HeapSlot **fixedEnd,
                              HeapSlot **slotsStart, HeapSlot **slotsEnd)
 {
@@ -127,7 +127,7 @@ js::ObjectImpl::getSlotRange(size_t start, size_t length,
 }
 
 inline bool
-js::ObjectImpl::hasContiguousSlots(size_t start, size_t count) const
+js::ObjectImpl::hasContiguousSlots(uint32_t start, uint32_t count) const
 {
     /*
      * Check that the range [start, start+count) is either all inline or all
@@ -138,7 +138,7 @@ js::ObjectImpl::hasContiguousSlots(size_t start, size_t count) const
 }
 
 inline void
-js::ObjectImpl::invalidateSlotRange(size_t start, size_t length)
+js::ObjectImpl::invalidateSlotRange(uint32_t start, uint32_t length)
 {
 #ifdef DEBUG
     MOZ_ASSERT(!isDenseArray());
@@ -151,7 +151,7 @@ js::ObjectImpl::invalidateSlotRange(size_t start, size_t length)
 }
 
 inline void
-js::ObjectImpl::initializeSlotRange(size_t start, size_t length)
+js::ObjectImpl::initializeSlotRange(uint32_t start, uint32_t length)
 {
     /*
      * No bounds check, as this is used when the object's shape does not
@@ -161,7 +161,7 @@ js::ObjectImpl::initializeSlotRange(size_t start, size_t length)
     getSlotRangeUnchecked(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
 
     JSCompartment *comp = compartment();
-    size_t offset = start;
+    uint32_t offset = start;
     for (HeapSlot *sp = fixedStart; sp < fixedEnd; sp++)
         sp->init(comp, this->asObjectPtr(), offset++, UndefinedValue());
     for (HeapSlot *sp = slotsStart; sp < slotsEnd; sp++)
@@ -175,7 +175,7 @@ js::ObjectImpl::isNative() const
 }
 
 inline js::HeapSlot &
-js::ObjectImpl::nativeGetSlotRef(unsigned slot)
+js::ObjectImpl::nativeGetSlotRef(uint32_t slot)
 {
     MOZ_ASSERT(isNative());
     MOZ_ASSERT(slot < slotSpan());
@@ -183,7 +183,7 @@ js::ObjectImpl::nativeGetSlotRef(unsigned slot)
 }
 
 inline const js::Value &
-js::ObjectImpl::nativeGetSlot(unsigned slot) const
+js::ObjectImpl::nativeGetSlot(uint32_t slot) const
 {
     MOZ_ASSERT(isNative());
     MOZ_ASSERT(slot < slotSpan());
@@ -191,14 +191,14 @@ js::ObjectImpl::nativeGetSlot(unsigned slot) const
 }
 
 inline void
-js::ObjectImpl::setSlot(unsigned slot, const js::Value &value)
+js::ObjectImpl::setSlot(uint32_t slot, const js::Value &value)
 {
     MOZ_ASSERT(slotInRange(slot));
     getSlotRef(slot).set(this->asObjectPtr(), slot, value);
 }
 
 inline void
-js::ObjectImpl::initSlot(unsigned slot, const js::Value &value)
+js::ObjectImpl::initSlot(uint32_t slot, const js::Value &value)
 {
     MOZ_ASSERT(getSlot(slot).isUndefined() || getSlot(slot).isMagic(JS_ARRAY_HOLE));
     MOZ_ASSERT(slotInRange(slot));
@@ -206,20 +206,20 @@ js::ObjectImpl::initSlot(unsigned slot, const js::Value &value)
 }
 
 inline void
-js::ObjectImpl::initSlotUnchecked(unsigned slot, const js::Value &value)
+js::ObjectImpl::initSlotUnchecked(uint32_t slot, const js::Value &value)
 {
     getSlotAddressUnchecked(slot)->init(this->asObjectPtr(), slot, value);
 }
 
 inline void
-js::ObjectImpl::setFixedSlot(unsigned slot, const js::Value &value)
+js::ObjectImpl::setFixedSlot(uint32_t slot, const js::Value &value)
 {
     MOZ_ASSERT(slot < numFixedSlots());
     fixedSlots()[slot].set(this->asObjectPtr(), slot, value);
 }
 
 inline void
-js::ObjectImpl::initFixedSlot(unsigned slot, const js::Value &value)
+js::ObjectImpl::initFixedSlot(uint32_t slot, const js::Value &value)
 {
     MOZ_ASSERT(slot < numFixedSlots());
     fixedSlots()[slot].init(this->asObjectPtr(), slot, value);
@@ -233,7 +233,7 @@ js::ObjectImpl::slotSpan() const
     return lastProperty()->slotSpan();
 }
 
-inline size_t
+inline uint32_t
 js::ObjectImpl::numDynamicSlots() const
 {
     return dynamicSlotsCount(numFixedSlots(), slotSpan());
@@ -275,8 +275,8 @@ js::ObjectImpl::inDictionaryMode() const
     return lastProperty()->inDictionary();
 }
 
-/* static */ inline size_t
-js::ObjectImpl::dynamicSlotsCount(size_t nfixed, size_t span)
+/* static */ inline uint32_t
+js::ObjectImpl::dynamicSlotsCount(uint32_t nfixed, uint32_t span)
 {
     if (span <= nfixed)
         return 0;
@@ -284,7 +284,7 @@ js::ObjectImpl::dynamicSlotsCount(size_t nfixed, size_t span)
     if (span <= SLOT_CAPACITY_MIN)
         return SLOT_CAPACITY_MIN;
 
-    size_t slots = RoundUpPow2(span);
+    uint32_t slots = RoundUpPow2(span);
     MOZ_ASSERT(slots >= span);
     return slots;
 }
@@ -379,7 +379,7 @@ js::ObjectImpl::getPrivate() const
 }
 
 inline void *
-js::ObjectImpl::getPrivate(size_t nfixed) const
+js::ObjectImpl::getPrivate(uint32_t nfixed) const
 {
     return privateRef(nfixed);
 }
