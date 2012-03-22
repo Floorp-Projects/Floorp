@@ -452,13 +452,13 @@ BrowserGlue.prototype = {
     } catch (e) { }
     if (shell) {
 #ifdef DEBUG
-      var shouldCheck = false;
+      let shouldCheck = false;
 #else
-      var shouldCheck = shell.shouldCheckDefaultBrowser;
+      let shouldCheck = shell.shouldCheckDefaultBrowser;
 #endif
-      var willRecoverSession = false;
+      let willRecoverSession = false;
       try {
-        var ss = Cc["@mozilla.org/browser/sessionstartup;1"].
+        let ss = Cc["@mozilla.org/browser/sessionstartup;1"].
                  getService(Ci.nsISessionStartup);
         willRecoverSession =
           (ss.sessionType == Ci.nsISessionStartup.RECOVER_SESSION);
@@ -466,6 +466,7 @@ BrowserGlue.prototype = {
       catch (ex) { /* never mind; suppose SessionStore is broken */ }
       if (shouldCheck && !shell.isDefaultBrowser(true) && !willRecoverSession) {
         Services.tm.mainThread.dispatch(function() {
+          var win = this.getMostRecentBrowserWindow();
           var brandBundle = win.document.getElementById("bundle_brand");
           var shellBundle = win.document.getElementById("bundle_shell");
   
@@ -483,7 +484,7 @@ BrowserGlue.prototype = {
           if (rv == 0)
             shell.setDefaultBrowser(true, false);
           shell.shouldCheckDefaultBrowser = checkEveryTime.value;
-        }, Ci.nsIThread.DISPATCH_NORMAL);
+        }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
       }
     }
   },

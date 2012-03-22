@@ -341,8 +341,7 @@ main (int argc, char **argv) {
     if (NS_FAILED(rv))
         return -1;
 
-    rv = gfxPlatform::Init();
-    if (NS_FAILED(rv))
+    if (!gfxPlatform::GetPlatform())
         return -1;
 
     // let's get all the xpcom goop out of the system

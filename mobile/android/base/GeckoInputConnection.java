@@ -595,13 +595,7 @@ public class GeckoInputConnection
                 GeckoEvent.createIMEEvent(GeckoEvent.IME_SET_SELECTION, start, before));
         }
 
-        if (count == 0) {
-            if (DEBUG) Log.d(LOGTAG, ". . . onTextChanged: IME_DELETE_TEXT");
-            GeckoAppShell.sendEventToGecko(
-                GeckoEvent.createIMEEvent(GeckoEvent.IME_DELETE_TEXT, 0, 0));
-        } else {
-            sendTextToGecko(s.subSequence(start, start + count), start + count);
-        }
+        sendTextToGecko(s.subSequence(start, start + count), start + count);
 
         if (DEBUG) {
             Log.d(LOGTAG, ". . . onTextChanged: IME_SET_SELECTION, start=" + (start + count)
@@ -610,6 +604,11 @@ public class GeckoInputConnection
 
         GeckoAppShell.sendEventToGecko(
             GeckoEvent.createIMEEvent(GeckoEvent.IME_SET_SELECTION, start + count, 0));
+
+        // End composition if all characters in the word have been deleted.
+        // This fixes autocomplete results not appearing.
+        if (count == 0)
+            endComposition();
 
         // Block this thread until all pending events are processed
         GeckoAppShell.geckoEventSync();

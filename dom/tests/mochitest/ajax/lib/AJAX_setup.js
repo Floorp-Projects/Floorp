@@ -8,7 +8,7 @@ function runAJAXTest() {
 
   var test = AJAXtests.shift();
   var testframe = document.getElementById("testframe");
-  testframe.src = test;
+  setTimeout(function() { testframe.src = test; }, 0);
 }
 
 function onManifestLoad(manifest) {

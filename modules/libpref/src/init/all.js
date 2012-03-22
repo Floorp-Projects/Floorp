@@ -320,6 +320,9 @@ pref("toolkit.telemetry.server", "https://data.mozilla.com");
 pref("toolkit.telemetry.server_owner", "Mozilla");
 // Information page about telemetry (temporary ; will be about:telemetry in the end)
 pref("toolkit.telemetry.infoURL", "http://www.mozilla.com/legal/privacy/firefox.html#telemetry");
+// Determines whether full SQL strings are returned when they might contain sensitive info
+// i.e. dynamically constructed SQL strings or SQL executed by addons against addon DBs
+pref("toolkit.telemetry.debugSlowSql", false);
 
 // Disable remote debugging protocol logging
 pref("devtools.debugger.log", false);
@@ -1348,7 +1351,7 @@ pref("mousewheel.horizscroll.withmetakey.sysnumlines",true);
 // Note: Currently OS X trackpad and magic mouse don't use our smooth scrolling
 // Note: These are relevant only when "general.smoothScroll" is enabled
 pref("general.smoothScroll.pixels.durationMinMS", 200);
-pref("general.smoothScroll.pixels.durationMaxMS", 800);
+pref("general.smoothScroll.pixels.durationMaxMS", 400);
 pref("general.smoothScroll.lines.durationMinMS", 150);
 pref("general.smoothScroll.lines.durationMaxMS", 150);
 pref("general.smoothScroll.pages.durationMinMS", 150);
@@ -2048,7 +2051,6 @@ pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 pref("print.extend_native_print_dialog", true);
 
 // Locate Java by scanning the Sun JRE installation directory with a minimum version
-// Note: Does not scan if security.enable_java is not true
 pref("plugin.scan.SunJRE", "1.3");
 
 // Locate plugins by scanning the Adobe Acrobat installation directory with a minimum version
