@@ -145,7 +145,7 @@ pref("browser.sessionhistory.max_entries", 50);
 
 /* session store */
 pref("browser.sessionstore.resume_session_once", false);
-pref("browser.sessionstore.resume_from_crash", true);
+pref("browser.sessionstore.resume_from_crash", false);
 pref("browser.sessionstore.resume_from_crash_timeout", 60); // minutes
 pref("browser.sessionstore.interval", 10000); // milliseconds
 pref("browser.sessionstore.max_tabs_undo", 1);
