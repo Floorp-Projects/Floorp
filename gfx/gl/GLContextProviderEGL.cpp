@@ -1910,7 +1910,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
     }
 
-#if defined(ANDROID) || defined(XP_WIN)
+#if !defined(MOZ_X11)
     bool usePBuffers = false; // Generally, prefer FBOs to PBuffers
 
     if (sEGLLibrary.IsANGLE())
