@@ -333,6 +333,7 @@ private:
 
     void Init();
     void MarkDirty();
+    void NotifyUserPrefsMayOverrideSystemSettings();
 
     PRInt32 GetScrollAmount(bool aForVertical) const
     {
@@ -374,6 +375,24 @@ private:
       return mScrollMessageHandledAsWheelMessage;
     }
 
+    PRInt32 GetOverriddenVerticalScrollAmout()
+    {
+      Init();
+      return mOverriddenVerticalScrollAmount;
+    }
+
+    PRInt32 GetOverriddenHorizontalScrollAmout()
+    {
+      Init();
+      return mOverriddenHorizontalScrollAmount;
+    }
+
+    PRInt32 GetMouseScrollTransactionTimeout()
+    {
+      Init();
+      return mMouseScrollTransactionTimeout;
+    }
+
   private:
     void Init();
 
@@ -386,6 +405,9 @@ private:
     bool mInitialized;
     bool mPixelScrollingEnabled;
     bool mScrollMessageHandledAsWheelMessage;
+    PRInt32 mOverriddenVerticalScrollAmount;
+    PRInt32 mOverriddenHorizontalScrollAmount;
+    PRInt32 mMouseScrollTransactionTimeout;
   };
 
   UserPrefs mUserPrefs;
