@@ -119,6 +119,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mPriority(0)
     , mRestartCount(0)
     , mCaps(0)
+    , mPipelinePosition(0)
     , mClosed(false)
     , mConnected(false)
     , mHaveStatusLine(false)
@@ -720,6 +721,19 @@ PRUint16
 nsHttpTransaction::PipelineDepthAvailable()
 {
     return 0;
+}
+
+nsresult
+nsHttpTransaction::SetPipelinePosition(PRInt32 position)
+{
+    mPipelinePosition = position;
+    return NS_OK;
+}
+ 
+PRInt32
+nsHttpTransaction::PipelinePosition()
+{
+    return mPipelinePosition;
 }
 
 //-----------------------------------------------------------------------------
