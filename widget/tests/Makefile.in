@@ -122,6 +122,8 @@ _CHROME_FILES  += taskbar_previews.xul \
 		test_chrome_context_menus_win.xul \
 		test_plugin_input_event.html \
 		chrome_context_menus_win.xul \
+		test_mouse_scroll.xul \
+		window_mouse_scroll_win.html \
 		$(NULL)
 
 _TEST_FILES +=	test_bug565392.html \

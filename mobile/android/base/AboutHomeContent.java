@@ -102,7 +102,7 @@ public class AboutHomeContent extends ScrollView
     private static final int NUMBER_OF_COLS_PORTRAIT = 2;
     private static final int NUMBER_OF_COLS_LANDSCAPE = 3;
 
-    private static final int NUMBER_OF_REMOTE_TABS = 10;
+    private static final int NUMBER_OF_REMOTE_TABS = 5;
 
     static enum UpdateFlags {
         TOP_SITES,

@@ -886,20 +886,18 @@ CSPSource.fromURI = function(aURI, self, enforceSelfChecks) {
   // for port.  In fact, there's no way to represent "*" differently than 
   // a blank port in an nsURI, since "*" turns into -1, and so does an 
   // absence of port declaration.
+
+  // port is never inherited from self -- this gets too confusing.
+  // Instead, whatever scheme is used (an explicit one or the inherited
+  // one) dictates the port if no port is explicitly stated.
+  // Set it to undefined here and the default port will be resolved in the
+  // getter for .port.
+  sObj._port = undefined;
   try {
     // if there's no port, an exception will get thrown
     // (NS_ERROR_FAILURE)
     if (aURI.port > 0) {
       sObj._port = aURI.port;
-    } else {
-      // port is never inherited from self -- this gets too confusing.
-      // Instead, whatever scheme is used (an explicit one or the inherited
-      // one) dictates the port if no port is explicitly stated.
-      if (sObj._scheme) {
-        sObj._port = gIoService.getProtocolHandler(sObj._scheme).defaultPort;
-        if (sObj._port < 1) 
-          sObj._port = undefined;
-      }
     }
   } catch(e) {
     sObj._port = undefined;
@@ -948,8 +946,8 @@ CSPSource.fromString = function(aStr, self, enforceSelfChecks) {
       CSPError("self keyword used, but no self data specified");
       return null;
     }
-    sObj._isSelf = true;
     sObj._self = self.clone();
+    sObj._isSelf = true;
     return sObj;
   }
 
@@ -1079,35 +1077,39 @@ CSPSource.validSchemeName = function(aStr) {
 CSPSource.prototype = {
 
   get scheme () {
+    if (this._isSelf && this._self)
+      return this._self.scheme;
     if (!this._scheme && this._self)
       return this._self.scheme;
     return this._scheme;
   },
 
   get host () {
+    if (this._isSelf && this._self)
+      return this._self.host;
     if (!this._host && this._self)
       return this._self.host;
     return this._host;
   },
 
   /** 
-   * If 'self' has port hard-defined, and this doesn't have a port
-   * hard-defined, use the self's port.  Otherwise, if both are implicit,
-   * resolve default port for this scheme.
+   * If this doesn't have a nonstandard port (hard-defined), use the default
+   * port for this source's scheme. Should never inherit port from 'self'.
    */
   get port () {
+    if (this._isSelf && this._self)
+      return this._self.port;
     if (this._port) return this._port;
-    // if no port, get the default port for the scheme.
-    if (this._scheme) {
+    // if no port, get the default port for the scheme
+    // (which may be inherited from 'self')
+    if (this.scheme) {
       try {
-        var port = gIoService.getProtocolHandler(this._scheme).defaultPort;
+        var port = gIoService.getProtocolHandler(this.scheme).defaultPort;
         if (port > 0) return port;
       } catch(e) {
         // if any errors happen, fail gracefully.
       }
     }
-    // if there was no scheme (and thus no default scheme), return self.port
-    if (this._self && this._self.port) return this._self.port;
 
     return undefined;
   },
@@ -1121,12 +1123,12 @@ CSPSource.prototype = {
       return this._self.toString();
 
     var s = "";
-    if (this._scheme)
-      s = s + this._scheme + "://";
+    if (this.scheme)
+      s = s + this.scheme + "://";
     if (this._host)
       s = s + this._host;
-    if (this._port)
-      s = s + ":" + this._port;
+    if (this.port)
+      s = s + ":" + this.port;
     return s;
   },
 

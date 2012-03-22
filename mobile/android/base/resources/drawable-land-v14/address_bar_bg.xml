@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:right="34dp">
+        <bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+            android:src="@drawable/address_bar_texture_land"
+            android:tileMode="repeat"
+            android:dither="false"/>
+     </item>
+
+</layer-list>

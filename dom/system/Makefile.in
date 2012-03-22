@@ -53,10 +53,6 @@ ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 DIRS = windows
 endif
 
-ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS = cocoa
-endif
-
 ifneq (,$(filter android,$(MOZ_WIDGET_TOOLKIT)))
 DIRS = android
 endif
@@ -96,6 +92,6 @@ include $(topsrcdir)/config/config.mk
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
-
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 

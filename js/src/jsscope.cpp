@@ -512,76 +512,6 @@ NormalizeGetterAndSetter(JSContext *cx, JSObject *obj,
     return true;
 }
 
-#ifdef DEBUG
-# define CHECK_SHAPE_CONSISTENCY(obj) obj->checkShapeConsistency()
-
-void
-JSObject::checkShapeConsistency()
-{
-    static int throttle = -1;
-    if (throttle < 0) {
-        if (const char *var = getenv("JS_CHECK_SHAPE_THROTTLE"))
-            throttle = atoi(var);
-        if (throttle < 0)
-            throttle = 0;
-    }
-    if (throttle == 0)
-        return;
-
-    JS_ASSERT(isNative());
-
-    Shape *shape = lastProperty();
-    Shape *prev = NULL;
-
-    if (inDictionaryMode()) {
-        JS_ASSERT(shape->hasTable());
-
-        PropertyTable &table = shape->table();
-        for (uint32_t fslot = table.freelist; fslot != SHAPE_INVALID_SLOT;
-             fslot = getSlot(fslot).toPrivateUint32()) {
-            JS_ASSERT(fslot < slotSpan());
-        }
-
-        for (int n = throttle; --n >= 0 && shape->parent; shape = shape->parent) {
-            JS_ASSERT_IF(shape != lastProperty(), !shape->hasTable());
-
-            Shape **spp = table.search(shape->propid(), false);
-            JS_ASSERT(SHAPE_FETCH(spp) == shape);
-        }
-
-        shape = lastProperty();
-        for (int n = throttle; --n >= 0 && shape; shape = shape->parent) {
-            JS_ASSERT_IF(shape->slot() != SHAPE_INVALID_SLOT, shape->slot() < slotSpan());
-            if (!prev) {
-                JS_ASSERT(shape == lastProperty());
-                JS_ASSERT(shape->listp == &shape_);
-            } else {
-                JS_ASSERT(shape->listp == &prev->parent);
-            }
-            prev = shape;
-        }
-    } else {
-        for (int n = throttle; --n >= 0 && shape->parent; shape = shape->parent) {
-            if (shape->hasTable()) {
-                PropertyTable &table = shape->table();
-                JS_ASSERT(shape->parent);
-                for (Shape::Range r(shape); !r.empty(); r.popFront()) {
-                    Shape **spp = table.search(r.front().propid(), false);
-                    JS_ASSERT(SHAPE_FETCH(spp) == &r.front());
-                }
-            }
-            if (prev) {
-                JS_ASSERT(prev->maybeSlot() >= shape->maybeSlot());
-                shape->kids.checkConsistency(prev);
-            }
-            prev = shape;
-        }
-    }
-}
-#else
-# define CHECK_SHAPE_CONSISTENCY(obj) ((void)0)
-#endif
-
 Shape *
 JSObject::addProperty(JSContext *cx, jsid id,
                       PropertyOp getter, StrictPropertyOp setter,
@@ -680,11 +610,11 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
             shape->parent->handoffTableTo(shape);
         }
 
-        CHECK_SHAPE_CONSISTENCY(self);
+        self->checkShapeConsistency();
         return shape;
     }
 
-    CHECK_SHAPE_CONSISTENCY(self);
+    self->checkShapeConsistency();
     return NULL;
 }
 
@@ -841,7 +771,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
         Shape *newShape = self->getChildProperty(cx, shape->parent, child);
 
         if (!newShape) {
-            CHECK_SHAPE_CONSISTENCY(self);
+            self->checkShapeConsistency();
             return NULL;
         }
 
@@ -860,7 +790,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
         JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
     }
 
-    CHECK_SHAPE_CONSISTENCY(self);
+    self->checkShapeConsistency();
 
     return shape;
 }
@@ -904,7 +834,7 @@ JSObject::changeProperty(JSContext *cx, Shape *shape, unsigned attrs, unsigned m
     Shape *newShape = putProperty(cx, shape->propid(), getter, setter, shape->maybeSlot(),
                                   attrs, shape->flags, shape->maybeShortid());
 
-    CHECK_SHAPE_CONSISTENCY(this);
+    checkShapeConsistency();
     return newShape;
 }
 
@@ -1021,7 +951,7 @@ JSObject::removeProperty(JSContext *cx, jsid id)
         self->removeLastProperty(cx);
     }
 
-    CHECK_SHAPE_CONSISTENCY(self);
+    self->checkShapeConsistency();
     return true;
 }
 
@@ -1043,7 +973,7 @@ JSObject::clear(JSContext *cx)
     JS_ALWAYS_TRUE(setLastProperty(cx, shape));
 
     JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
-    CHECK_SHAPE_CONSISTENCY(this);
+    checkShapeConsistency();
 }
 
 void
