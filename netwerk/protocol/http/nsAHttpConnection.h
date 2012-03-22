@@ -127,6 +127,11 @@ public:
     // than it should have (eg. containing part of the next pipelined response).
     virtual nsresult PushBack(const char *data, PRUint32 length) = 0;
 
+    // Used to determine if the connection wants read events even though
+    // it has not written out a transaction. Used when a connection has issued
+    // a preamble such as a proxy ssl CONNECT sequence.
+    virtual bool IsProxyConnectInProgress() = 0;
+
     // Used by a transaction to manage the state of previous response bodies on
     // the same connection and work around buggy servers.
     virtual bool LastTransactionExpectedNoContent() = 0;
@@ -154,6 +159,7 @@ public:
     bool IsPersistent(); \
     bool IsReused(); \
     nsresult PushBack(const char *, PRUint32); \
+    bool IsProxyConnectInProgress(); \
     bool LastTransactionExpectedNoContent(); \
     void   SetLastTransactionExpectedNoContent(bool); \
     nsHttpConnection *TakeHttpConnection(); \
