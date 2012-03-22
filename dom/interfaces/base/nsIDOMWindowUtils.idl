@@ -70,7 +70,7 @@ interface nsIDOMFile;
 interface nsIFile;
 interface nsIDOMTouch;
 
-[scriptable, uuid(5740d0fe-9f4e-431f-b8b3-b82f9b7ff4cf)]
+[scriptable, uuid(43feb172-30e1-4ff1-b021-004f973da516)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -367,6 +367,26 @@ interface nsIDOMWindowUtils : nsISupports {
                             in long aNativeMessage,
                             in long aModifierFlags,
                             in nsIDOMElement aElement);
+
+  /**
+   * See nsIWidget::SynthesizeNativeMouseScrollEvent
+   *
+   * Will be called on the widget that contains aElement.
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
+   * NOTE: The synthesized native event may be fired asynchronously.
+   */
+  void sendNativeMouseScrollEvent(in long aScreenX,
+                                  in long aScreenY,
+                                  in unsigned long aNativeMessage,
+                                  in double aDeltaX,
+                                  in double aDeltaY,
+                                  in double aDeltaZ,
+                                  in unsigned long aModifierFlags,
+                                  in unsigned long aAdditionalFlags,
+                                  in nsIDOMElement aElement);
 
   /**
    * See nsIWidget::ActivateNativeMenuItemAt
