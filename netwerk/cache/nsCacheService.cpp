@@ -1020,7 +1020,8 @@ public:
                                                       nsnull);
 
         // Don't delete the request if it was queued
-        if (rv != NS_ERROR_CACHE_WAIT_FOR_VALIDATION)
+        if (!(mRequest->IsBlocking() &&
+            rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION))
             delete mRequest;
 
         return NS_OK;
@@ -1662,11 +1663,13 @@ nsCacheService::ProcessRequest(nsCacheRequest *           request,
             // entry->RequestAccess queues request on entry
             rv = entry->RequestAccess(request, &accessGranted);
             if (rv != NS_ERROR_CACHE_WAIT_FOR_VALIDATION) break;
-            
-            if (request->mListener) // async exits - validate, doom, or close will resume
-                return rv;
-            
+
             if (request->IsBlocking()) {
+                if (request->mListener) {
+                    // async exits - validate, doom, or close will resume
+                    return rv;
+                }
+
                 // XXX this is probably wrong...
                 Unlock();
                 rv = request->WaitForValidation();
@@ -1773,7 +1776,8 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
         rv = gService->ProcessRequest(request, true, result);
 
         // delete requests that have completed
-        if (!(listener && (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION)))
+        if (!(listener && blockingMode &&
+            (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION)))
             delete request;
     }
 

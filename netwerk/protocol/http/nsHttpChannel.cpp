@@ -2117,40 +2117,23 @@ nsHttpChannel::OpenCacheEntry()
                                  getter_AddRefs(session));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        if (mLoadFlags & LOAD_BYPASS_LOCAL_CACHE_IF_BUSY) {
-            // must use synchronous open for LOAD_BYPASS_LOCAL_CACHE_IF_BUSY
-            rv = session->OpenCacheEntry(cacheKey,
-                                         nsICache::ACCESS_READ, false,
-                                         getter_AddRefs(mCacheEntry));
-            if (NS_SUCCEEDED(rv)) {
-                mCacheEntry->GetAccessGranted(&mCacheAccess);
-                LOG(("nsHttpChannel::OpenCacheEntry [this=%p grantedAccess=%d]",
-                    this, mCacheAccess));
-                mLoadedFromApplicationCache = true;
-                return NS_OK;
-            } else if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
-                LOG(("bypassing local cache since it is busy\n"));
-                // Don't try to load normal cache entry
-                return NS_ERROR_NOT_AVAILABLE;
-            }
-        } else {
-            mOnCacheEntryAvailableCallback =
-                &nsHttpChannel::OnOfflineCacheEntryAvailable;
-            // We open with ACCESS_READ only, because we don't want to
-            // overwrite the offline cache entry non-atomically.
-            // ACCESS_READ will prevent us from writing to the offline
-            // cache as a normal cache entry.
-            rv = session->AsyncOpenCacheEntry(cacheKey,
-                                              nsICache::ACCESS_READ,
-                                              this);
+        mOnCacheEntryAvailableCallback =
+            &nsHttpChannel::OnOfflineCacheEntryAvailable;
+        // We open with ACCESS_READ only, because we don't want to overwrite
+        // the offline cache entry non-atomically. ACCESS_READ will prevent us
+        // from writing to the offline cache as a normal cache entry.
+        rv = session->AsyncOpenCacheEntry(
+            cacheKey,
+            nsICache::ACCESS_READ,
+            this,
+            mLoadFlags & LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
 
-            if (NS_SUCCEEDED(rv)) {
-                mAsyncCacheOpen = true;
-                return NS_OK;
-            }
+        if (NS_SUCCEEDED(rv)) {
+            mAsyncCacheOpen = true;
+            return NS_OK;
         }
 
-        // sync or async opening failed
+        // opening cache entry failed
         return OnOfflineCacheEntryAvailable(nsnull, nsICache::ACCESS_NONE,
                                             rv, true);
     }
@@ -2172,6 +2155,12 @@ nsHttpChannel::OnOfflineCacheEntryAvailable(nsICacheEntryDescriptor *aEntry,
         mLoadedFromApplicationCache = true;
         mCacheEntry = aEntry;
         mCacheAccess = aAccess;
+    }
+
+    if (aEntryStatus == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
+        LOG(("bypassing local cache since it is busy\n"));
+        // Don't try to load normal cache entry
+        return aIsSync ? NS_ERROR_NOT_AVAILABLE : Connect(false);
     }
 
     if (mCanceled && NS_FAILED(mStatus)) {
@@ -2260,38 +2249,17 @@ nsHttpChannel::OpenNormalCacheEntry(bool aIsSync)
     rv = DetermineCacheAccess(&accessRequested);
     if (NS_FAILED(rv)) return rv;
 
-    if (mLoadFlags & LOAD_BYPASS_LOCAL_CACHE_IF_BUSY) {
-        if (!aIsSync) {
-            // Unexpected state: we were called from OnCacheEntryAvailable(),
-            // so LOAD_BYPASS_LOCAL_CACHE_IF_BUSY shouldn't be set. Unless
-            // somebody altered mLoadFlags between OpenCacheEntry() and
-            // OnCacheEntryAvailable()...
-            NS_WARNING(
-                "OpenNormalCacheEntry() called from OnCacheEntryAvailable() "
-                "when LOAD_BYPASS_LOCAL_CACHE_IF_BUSY was specified");
-        }
+    mOnCacheEntryAvailableCallback =
+        &nsHttpChannel::OnNormalCacheEntryAvailable;
+    rv = session->AsyncOpenCacheEntry(
+        cacheKey,
+        accessRequested,
+        this,
+        mLoadFlags & LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
 
-        // must use synchronous open for LOAD_BYPASS_LOCAL_CACHE_IF_BUSY
-        rv = session->OpenCacheEntry(cacheKey, accessRequested, false,
-                                     getter_AddRefs(mCacheEntry));
-        if (NS_SUCCEEDED(rv)) {
-            mCacheEntry->GetAccessGranted(&mCacheAccess);
-            LOG(("nsHttpChannel::OpenCacheEntry [this=%p grantedAccess=%d]",
-                this, mCacheAccess));
-        }
-        else if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
-            LOG(("bypassing local cache since it is busy\n"));
-            rv = NS_ERROR_NOT_AVAILABLE;
-        }
-    }
-    else {
-        mOnCacheEntryAvailableCallback =
-            &nsHttpChannel::OnNormalCacheEntryAvailable;
-        rv = session->AsyncOpenCacheEntry(cacheKey, accessRequested, this);
-        if (NS_SUCCEEDED(rv)) {
-            mAsyncCacheOpen = true;
-            return NS_OK;
-        }
+    if (NS_SUCCEEDED(rv)) {
+        mAsyncCacheOpen = true;
+        return NS_OK;
     }
 
     if (!aIsSync)
@@ -2312,6 +2280,10 @@ nsHttpChannel::OnNormalCacheEntryAvailable(nsICacheEntryDescriptor *aEntry,
     if (NS_SUCCEEDED(aEntryStatus)) {
         mCacheEntry = aEntry;
         mCacheAccess = aAccess;
+    }
+
+    if (aEntryStatus == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
+        LOG(("bypassing local cache since it is busy\n"));
     }
 
     if (mCanceled && NS_FAILED(mStatus)) {

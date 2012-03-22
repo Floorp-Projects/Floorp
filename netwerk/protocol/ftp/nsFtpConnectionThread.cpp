@@ -2288,7 +2288,7 @@ nsFtpState::CheckCache()
     }
 
     if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
-        rv = session->AsyncOpenCacheEntry(key, accessReq, this);
+        rv = session->AsyncOpenCacheEntry(key, accessReq, this, false);
         return NS_SUCCEEDED(rv);
     }
 
