@@ -84,6 +84,10 @@ endif
 ifeq (android, $(MOZ_WIDGET_TOOLKIT))
 # Add Android specific code
 EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
+ifdef MOZ_MEMORY
+# To properly wrap jemalloc's pthread_atfork call.
+EXTRA_DSO_LDOPTS += -Wl,--wrap=pthread_atfork
+endif
 SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,$(DEPTH)/other-licenses/android)
 SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,../android)
 endif
