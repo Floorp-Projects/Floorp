@@ -170,6 +170,8 @@ _BROWSER_FILES = \
                  browser_tabview_bug706430.js \
                  browser_tabview_bug706736.js \
                  browser_tabview_bug707466.js \
+                 browser_tabview_bug715454.js \
+                 browser_tabview_bug716880.js \
                  browser_tabview_bug728887.js \
                  browser_tabview_click_group.js \
                  browser_tabview_dragdrop.js \

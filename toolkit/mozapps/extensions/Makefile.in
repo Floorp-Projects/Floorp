@@ -41,7 +41,7 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifeq (,$(filter aurora beta release,$(MOZ_UPDATE_CHANNEL)))
+ifeq (,$(filter aurora beta release esr,$(MOZ_UPDATE_CHANNEL)))
 DEFINES += -DMOZ_COMPATIBILITY_NIGHTLY=1
 endif
 

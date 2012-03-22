@@ -254,6 +254,11 @@ SystemWorkerManager::Shutdown()
   StopRil();
 
   mRILWorker = nsnull;
+  nsCOMPtr<nsIWifi> wifi(do_QueryInterface(mWifiWorker));
+  if (wifi) {
+    wifi->Shutdown();
+    wifi = nsnull;
+  }
   mWifiWorker = nsnull;
 
   nsCOMPtr<nsIObserverService> obs =
