@@ -1892,16 +1892,10 @@ class StackIter
 
     bool isScript() const { JS_ASSERT(!done()); return state_ == SCRIPTED; }
     bool isScripted() const { JS_ASSERT(!done()); return state_ == SCRIPTED || state_ == ION; }
-
-    bool isFunctionFrame() const;
-    bool isEvalFrame() const;
-    bool isNonEvalFunctionFrame() const;
-
     StackFrame *fp() const { JS_ASSERT(!done() && isScript()); return fp_; }
     Value      *sp() const { JS_ASSERT(!done() && isScript()); return sp_; }
     jsbytecode *pc() const { JS_ASSERT(!done() && isScripted()); return pc_; }
-    JSScript   *script() const { JS_ASSERT(!done() && isScripted()); return script_; }
-    Value       calleev() const;
+    JSScript *script() const { JS_ASSERT(!done() && isScripted()); return script_; }
 
     bool isNativeCall() const { JS_ASSERT(!done()); return state_ != SCRIPTED; }
     CallArgs nativeArgs() const { JS_ASSERT(!done() && isNativeCall()); return args_; }
