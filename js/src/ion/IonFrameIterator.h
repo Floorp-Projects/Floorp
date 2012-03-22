@@ -63,6 +63,49 @@ enum FrameType
 class IonCommonFrameLayout;
 class IonActivation;
 class IonJSFrameLayout;
+class IonFrameIterator;
+
+class InlineFrameIterator
+{
+    // We cannot declare a BwdInlineFrameIterator here due to multiple circular
+    // dependencies, so we need to keep the IonFrameIterator to build a new one
+    // each time and save the pc & script.
+    const IonFrameIterator *bottom_;
+    size_t frameCount_;
+    JSScript *script_;
+    jsbytecode *pc_;
+
+  private:
+    size_t getInlinedFrame(size_t nb);
+
+  public:
+    InlineFrameIterator(const IonFrameIterator *bottom)
+      : bottom_(bottom)
+    {
+        if (bottom_)
+            frameCount_ = getInlinedFrame(-1);
+    }
+
+    inline JSScript *script() const {
+        JS_ASSERT(bottom_);
+        return script_;
+    }
+    inline jsbytecode *pc() const {
+        JS_ASSERT(bottom_);
+        return pc_;
+    }
+
+    inline InlineFrameIterator &operator++() {
+        JS_ASSERT(bottom_);
+        JS_ASSERT(more());
+        getInlinedFrame(--frameCount_);
+        return *this;
+    }
+    inline bool more() const {
+        JS_ASSERT(bottom_);
+        return frameCount_;
+    }
+};
 
 class IonFrameIterator
 {
@@ -105,10 +148,7 @@ class IonFrameIterator
     inline bool isScripted() const {
         return type_ == IonFrame_JS;
     }
-    bool isFunctionFrame() const;
-
     void *calleeToken() const;
-    JSFunction *callee() const;
     JSScript *script() const;
 
     // Returns the return address of the frame above this one (that is, the
@@ -132,58 +172,6 @@ class IonFrameIterator
         return type_ != IonFrame_Entry;
     }
     IonFrameIterator &operator++();
-};
-
-class InlineFrameIterator
-{
-    // We cannot declare a BwdInlineFrameIterator here due to multiple circular
-    // dependencies, so we need to keep the IonFrameIterator to build a new one
-    // each time and save the pc & script.
-    const IonFrameIterator *bottom_;
-    size_t frameCount_;
-    JSFunction *callee_;
-    JSScript *script_;
-    jsbytecode *pc_;
-
-  private:
-    size_t getInlinedFrame(size_t nb);
-
-  public:
-    InlineFrameIterator(const IonFrameIterator *bottom)
-      : bottom_(bottom)
-    {
-        if (bottom_)
-            frameCount_ = getInlinedFrame(-1);
-    }
-
-    bool isFunctionFrame() const {
-        JS_ASSERT(bottom_);
-        // Inline frames always have a callee.
-        return frameCount_ != 0 || bottom_->isFunctionFrame();
-    }
-    JSFunction *callee() const {
-        JS_ASSERT(bottom_);
-        return callee_;
-    }
-    inline JSScript *script() const {
-        JS_ASSERT(bottom_);
-        return script_;
-    }
-    inline jsbytecode *pc() const {
-        JS_ASSERT(bottom_);
-        return pc_;
-    }
-
-    inline InlineFrameIterator &operator++() {
-        JS_ASSERT(bottom_);
-        JS_ASSERT(more());
-        getInlinedFrame(--frameCount_);
-        return *this;
-    }
-    inline bool more() const {
-        JS_ASSERT(bottom_);
-        return frameCount_;
-    }
 };
 
 class IonActivationIterator
