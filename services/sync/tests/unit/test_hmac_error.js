@@ -18,11 +18,9 @@ function shared_setup() {
   hmacErrorCount = 0;
 
   // Do not instantiate SyncTestingInfrastructure; we need real crypto.
+  setBasicCredentials("foo", "foo", "aabcdeabcdeabcdeabcdeabcde");
   Service.serverURL  = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Service.username   = "foo";
-  Service.password   = "foo";
-  Service.passphrase = "aabcdeabcdeabcdeabcdeabcde";
 
   // Make sure RotaryEngine is the only one we sync.
   Engines._engines = {};

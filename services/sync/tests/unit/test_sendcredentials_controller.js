@@ -7,9 +7,7 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
 function run_test() {
-  Service.account    = "johndoe";
-  Service.password   = "ilovejane";
-  Service.passphrase = Utils.generatePassphrase();
+  setBasicCredentials("johndoe", "ilovejane", Utils.generatePassphrase());
   Service.serverURL  = "http://weave.server/";
 
   initTestLogging("Trace");
@@ -31,9 +29,9 @@ function make_sendCredentials_test(topic) {
         sendAndCompleteCalled = true;
 
         // Verify it sends the correct data.
-        do_check_eq(data.account,   Service.account);
-        do_check_eq(data.password,  Service.password);
-        do_check_eq(data.synckey,   Service.passphrase);
+        do_check_eq(data.account,   Identity.account);
+        do_check_eq(data.password,  Identity.basicPassword);
+        do_check_eq(data.synckey,   Identity.syncKey);
         do_check_eq(data.serverURL, Service.serverURL);
 
         this.controller.onComplete();

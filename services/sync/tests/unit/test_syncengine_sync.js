@@ -18,6 +18,13 @@ function cleanAndGo(server) {
   server.stop(run_next_test);
 }
 
+function configureService(username, password) {
+  Service.clusterURL = TEST_CLUSTER_URL;
+
+  Identity.account = username || "foo";
+  Identity.basicPassword = password || "password";
+}
+
 function createServerAndConfigureClient() {
   let engine = new RotaryEngine();
 
