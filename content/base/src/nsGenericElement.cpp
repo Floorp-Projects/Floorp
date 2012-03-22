@@ -159,6 +159,8 @@
 
 #include "mozilla/CORSMode.h"
 
+#include "nsStyledElement.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -3214,6 +3216,28 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   nsNodeUtils::ParentChainChanged(this);
 
+  if (aDocument && HasID() && !aBindingParent) {
+    aDocument->AddToIdTable(this, DoGetID());
+  }
+
+  if (MayHaveStyle() && !IsXUL()) {
+    // XXXbz if we already have a style attr parsed, this won't do
+    // anything... need to fix that.
+    // If MayHaveStyle() is true, we must be an nsStyledElement
+    static_cast<nsStyledElement*>(this)->ReparseStyleAttribute(false);
+  }
+
+  if (aDocument) {
+    // If we're in a document now, let our mapped attrs know what their new
+    // sheet is.  This is safe to run for non-mapped-attribute elements too;
+    // it'll just do a small bit of unnecessary work.  But most elements in
+    // practice are mapped-attribute elements.
+    nsHTMLStyleSheet* sheet = aDocument->GetAttributeStyleSheet();
+    if (sheet) {
+      mAttrsAndChildren.SetMappedAttrStyleSheet(sheet);
+    }
+  }
+
   // XXXbz script execution during binding can trigger some of these
   // postcondition asserts....  But we do want that, since things will
   // generally be quite broken when that happens.
@@ -3231,6 +3255,9 @@ nsGenericElement::UnbindFromTree(bool aDeep, bool aNullParent)
   NS_PRECONDITION(aDeep || (!GetCurrentDoc() && !GetBindingParent()),
                   "Shallow unbind won't clear document and binding parent on "
                   "kids!");
+
+  RemoveFromIdTable();
+
   // Make sure to unbind this node before doing the kids
   nsIDocument *document =
     HasFlag(NODE_FORCE_XBL_BINDINGS) ? OwnerDoc() : GetCurrentDoc();

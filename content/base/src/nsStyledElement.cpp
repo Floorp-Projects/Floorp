@@ -220,51 +220,6 @@ nsStyledElementNotElementCSSInlineStyle::GetInlineStyleRule()
   return nsnull;
 }
 
-nsresult
-nsStyledElementNotElementCSSInlineStyle::BindToTree(nsIDocument* aDocument,
-                                                    nsIContent* aParent,
-                                                    nsIContent* aBindingParent,
-                                                    bool aCompileEventHandlers)
-{
-  nsresult rv = nsStyledElementBase::BindToTree(aDocument, aParent,
-                                                aBindingParent,
-                                                aCompileEventHandlers);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aDocument && HasID() && !GetBindingParent()) {
-    aDocument->AddToIdTable(this, DoGetID());
-  }
-
-  if (!IsXUL()) {
-    // XXXbz if we already have a style attr parsed, this won't do
-    // anything... need to fix that.
-    ReparseStyleAttribute(false);
-  }
-
-  if (aDocument) {
-    // If we're in a document now, let our mapped attrs know what their new
-    // sheet is.  This is safe to run for non-mapped-attribute elements too;
-    // it'll just do a small bit of unnecessary work.  But most elements in
-    // practice are mapped-attribute elements.
-    nsHTMLStyleSheet* sheet = aDocument->GetAttributeStyleSheet();
-    if (sheet) {
-      mAttrsAndChildren.SetMappedAttrStyleSheet(sheet);
-    }
-  }
-
-  return NS_OK;
-}
-
-void
-nsStyledElementNotElementCSSInlineStyle::UnbindFromTree(bool aDeep,
-                                                        bool aNullParent)
-{
-  RemoveFromIdTable();
-
-  nsStyledElementBase::UnbindFromTree(aDeep, aNullParent);
-}
-
-
 // ---------------------------------------------------------------
 // Others and helpers
 
