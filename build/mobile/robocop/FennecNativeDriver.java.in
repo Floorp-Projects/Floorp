@@ -284,17 +284,22 @@ public class FennecNativeDriver implements Driver {
         return 0.0f;
     }
 
-    private GLSurfaceView getSurfaceView() {
-        for (View v : mSolo.getCurrentViews()) {
-            if (v instanceof GLSurfaceView) {
-                return (GLSurfaceView)v;
+    private View getSurfaceView() {
+        try {
+            Class c = Class.forName("org.mozilla.gecko.gfx.LayerView");
+            for (View v : mSolo.getCurrentViews()) {
+                if (c.isInstance(v)) {
+                    return v;
+                }
             }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         }
         return null;
     }
 
     public PaintedSurface getPaintedSurface() {
-        GLSurfaceView view = getSurfaceView();
+        View view = getSurfaceView();
         if (view == null) {
             return null;
         }
