@@ -60,16 +60,12 @@ class InlineFrameReverseIterator
 {
     FrameRecovery fr_;
     SnapshotIterator si_;
-    JSFunction *callee_;
     JSScript *script_;
     jsbytecode *pc_;
 
   public:
     InlineFrameReverseIterator(const IonFrameIterator &bottom);
 
-    inline JSFunction *callee() const {
-        return callee_;
-    }
     inline JSScript *script() const {
         return script_;
     }
@@ -210,7 +206,6 @@ FrameRecovery::ionScript() const
 InlineFrameReverseIterator::InlineFrameReverseIterator(const IonFrameIterator &bottom)
   : fr_(FrameRecovery::FromIterator(bottom)),
     si_(fr_),
-    callee_(bottom.isFunctionFrame() ? bottom.callee() : NULL),
     script_(fr_.script()),
     pc_(script_->code + si_.pcOffset())
 {
@@ -232,17 +227,14 @@ InlineFrameReverseIterator::operator++()
         si_.skip(si_.readSlot());
     }
 
-    // We do not expect failures here, because if we inlined the function, this
-    // means we can also insert a constant value in the snapshot, and avoid
-    // storing it either on the stack or in a register.
+    // FIXME: We need a machine state, because the function could be live in a
+    // register during an ool callVM.
     Value funValue = si_.read();
     while (si_.more())
         si_.skip(si_.readSlot());
 
     // Update script and pc, and continue in the next inlined frame.
-    JSFunction *fun = funValue.toObject().toFunction();
-    callee_ = fun;
-    script_ = fun->script();
+    script_ = funValue.toObject().toFunction()->script();
     si_.readFrame();
     pc_ = script_->code + si_.pcOffset();
 
@@ -258,7 +250,6 @@ InlineFrameIterator::getInlinedFrame(size_t n)
         ++bit;
         ++frameCount;
     }
-    callee_ = bit.callee();
     script_ = bit.script();
     pc_ = bit.pc();
     return frameCount;
@@ -303,19 +294,6 @@ CalleeToken
 IonFrameIterator::calleeToken() const
 {
     return ((IonJSFrameLayout *) current_)->calleeToken();
-}
-
-JSFunction *
-IonFrameIterator::callee() const
-{
-    JS_ASSERT(isFunctionFrame());
-    return CalleeTokenToFunction(calleeToken());
-}
-
-bool
-IonFrameIterator::isFunctionFrame() const
-{
-    return js::ion::CalleeTokenIsFunction(calleeToken());
 }
 
 JSScript *
