@@ -192,7 +192,7 @@ class ObjectImpl : public gc::Cell
     inline bool isArray() const;
 
     inline HeapSlotArray getDenseArrayElements();
-    inline const Value & getDenseArrayElement(unsigned idx);
+    inline const Value & getDenseArrayElement(uint32_t idx);
     inline uint32_t getDenseArrayInitializedLength();
 
   protected:
@@ -207,10 +207,10 @@ class ObjectImpl : public gc::Cell
      * Get internal pointers to the range of values starting at start and
      * running for length.
      */
-    inline void getSlotRangeUnchecked(size_t start, size_t length,
+    inline void getSlotRangeUnchecked(uint32_t start, uint32_t length,
                                       HeapSlot **fixedStart, HeapSlot **fixedEnd,
                                       HeapSlot **slotsStart, HeapSlot **slotsEnd);
-    inline void getSlotRange(size_t start, size_t length,
+    inline void getSlotRange(uint32_t start, uint32_t length,
                              HeapSlot **fixedStart, HeapSlot **fixedEnd,
                              HeapSlot **slotsStart, HeapSlot **slotsEnd);
 
@@ -219,22 +219,22 @@ class ObjectImpl : public gc::Cell
     friend struct Shape;
     friend class NewObjectCache;
 
-    inline bool hasContiguousSlots(size_t start, size_t count) const;
+    inline bool hasContiguousSlots(uint32_t start, uint32_t count) const;
 
-    inline void invalidateSlotRange(size_t start, size_t count);
-    inline void initializeSlotRange(size_t start, size_t count);
+    inline void invalidateSlotRange(uint32_t start, uint32_t count);
+    inline void initializeSlotRange(uint32_t start, uint32_t count);
 
     /*
      * Initialize a flat array of slots to this object at a start slot.  The
      * caller must ensure that are enough slots.
      */
-    void initSlotRange(size_t start, const Value *vector, size_t length);
+    void initSlotRange(uint32_t start, const Value *vector, uint32_t length);
 
     /*
      * Copy a flat array of slots to this object at a start slot. Caller must
      * ensure there are enough slots in this object.
      */
-    void copySlotRange(size_t start, const Value *vector, size_t length);
+    void copySlotRange(uint32_t start, const Value *vector, uint32_t length);
 
 #ifdef DEBUG
     enum SentinelAllowed {
@@ -246,7 +246,7 @@ class ObjectImpl : public gc::Cell
      * Check that slot is in range for the object's allocated slots.
      * If sentinelAllowed then slot may equal the slot capacity.
      */
-    bool slotInRange(unsigned slot, SentinelAllowed sentinel = SENTINEL_NOT_ALLOWED) const;
+    bool slotInRange(uint32_t slot, SentinelAllowed sentinel = SENTINEL_NOT_ALLOWED) const;
 #endif
 
     /* Minimum size for dynamically allocated slots. */
@@ -274,7 +274,7 @@ class ObjectImpl : public gc::Cell
         return type_;
     }
 
-    size_t numFixedSlots() const {
+    uint32_t numFixedSlots() const {
         return reinterpret_cast<const shadow::Object *>(this)->numFixedSlots();
     }
 
@@ -293,7 +293,7 @@ class ObjectImpl : public gc::Cell
     inline uint32_t slotSpan() const;
 
     /* Compute dynamicSlotsCount() for this object. */
-    inline size_t numDynamicSlots() const;
+    inline uint32_t numDynamicSlots() const;
 
     const Shape * nativeLookup(JSContext *cx, jsid id);
 
@@ -320,22 +320,22 @@ class ObjectImpl : public gc::Cell
      */
     inline bool inDictionaryMode() const;
 
-    const Value &getSlot(unsigned slot) const {
+    const Value &getSlot(uint32_t slot) const {
         MOZ_ASSERT(slotInRange(slot));
-        size_t fixed = numFixedSlots();
+        uint32_t fixed = numFixedSlots();
         if (slot < fixed)
             return fixedSlots()[slot];
         return slots[slot - fixed];
     }
 
-    HeapSlot *getSlotAddressUnchecked(unsigned slot) {
-        size_t fixed = numFixedSlots();
+    HeapSlot *getSlotAddressUnchecked(uint32_t slot) {
+        uint32_t fixed = numFixedSlots();
         if (slot < fixed)
             return fixedSlots() + slot;
         return slots + (slot - fixed);
     }
 
-    HeapSlot *getSlotAddress(unsigned slot) {
+    HeapSlot *getSlotAddress(uint32_t slot) {
         /*
          * This can be used to get the address of the end of the slots for the
          * object, which may be necessary when fetching zero-length arrays of
@@ -345,32 +345,32 @@ class ObjectImpl : public gc::Cell
         return getSlotAddressUnchecked(slot);
     }
 
-    HeapSlot &getSlotRef(unsigned slot) {
+    HeapSlot &getSlotRef(uint32_t slot) {
         MOZ_ASSERT(slotInRange(slot));
         return *getSlotAddress(slot);
     }
 
-    inline HeapSlot &nativeGetSlotRef(unsigned slot);
-    inline const Value &nativeGetSlot(unsigned slot) const;
+    inline HeapSlot &nativeGetSlotRef(uint32_t slot);
+    inline const Value &nativeGetSlot(uint32_t slot) const;
 
-    inline void setSlot(unsigned slot, const Value &value);
-    inline void initSlot(unsigned slot, const Value &value);
-    inline void initSlotUnchecked(unsigned slot, const Value &value);
+    inline void setSlot(uint32_t slot, const Value &value);
+    inline void initSlot(uint32_t slot, const Value &value);
+    inline void initSlotUnchecked(uint32_t slot, const Value &value);
 
     /* For slots which are known to always be fixed, due to the way they are allocated. */
 
-    HeapSlot &getFixedSlotRef(unsigned slot) {
+    HeapSlot &getFixedSlotRef(uint32_t slot) {
         MOZ_ASSERT(slot < numFixedSlots());
         return fixedSlots()[slot];
     }
 
-    const Value &getFixedSlot(unsigned slot) const {
+    const Value &getFixedSlot(uint32_t slot) const {
         MOZ_ASSERT(slot < numFixedSlots());
         return fixedSlots()[slot];
     }
 
-    inline void setFixedSlot(unsigned slot, const Value &value);
-    inline void initFixedSlot(unsigned slot, const Value &value);
+    inline void setFixedSlot(uint32_t slot, const Value &value);
+    inline void initFixedSlot(uint32_t slot, const Value &value);
 
     /*
      * Get the number of dynamic slots to allocate to cover the properties in
@@ -378,7 +378,7 @@ class ObjectImpl : public gc::Cell
      * capacity is not stored explicitly, and the allocated size of the slot
      * array is kept in sync with this count.
      */
-    static inline size_t dynamicSlotsCount(size_t nfixed, size_t span);
+    static inline uint32_t dynamicSlotsCount(uint32_t nfixed, uint32_t span);
 
     /* Memory usage functions. */
     inline size_t sizeOfThis() const;
@@ -428,7 +428,7 @@ class ObjectImpl : public gc::Cell
     inline void initPrivate(void *data);
 
     /* Access private data for an object with a known number of fixed slots. */
-    inline void *getPrivate(size_t nfixed) const;
+    inline void *getPrivate(uint32_t nfixed) const;
 
     /* JIT Accessors */
     static size_t offsetOfShape() { return offsetof(ObjectImpl, shape_); }
