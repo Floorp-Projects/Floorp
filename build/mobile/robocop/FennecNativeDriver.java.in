@@ -39,17 +39,19 @@
 
 package @ANDROID_PACKAGE_NAME@;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.List;
-import java.io.FileOutputStream;
-import java.io.DataOutputStream;
 
 import java.lang.Class;
 import java.lang.reflect.InvocationTargetException;
@@ -319,10 +321,12 @@ public class FennecNativeDriver implements Driver {
         String mapFile = "/mnt/sdcard/pixels.map";
 
         FileOutputStream fos = null;
+        BufferedOutputStream bos = null;
         DataOutputStream dos = null;
         try {
             fos = new FileOutputStream(mapFile);
-            dos = new DataOutputStream(fos);
+            bos = new BufferedOutputStream(fos);
+            dos = new DataOutputStream(bos);
 
             for (int y = h - 1; y >= 0; y--) {
                 for (int x = 0; x < w; x++) {
@@ -330,20 +334,25 @@ public class FennecNativeDriver implements Driver {
                     dos.writeInt((agbr & 0xFF00FF00) | ((agbr >> 16) & 0x000000FF) | ((agbr << 16) & 0x00FF0000));
                 }
             }
-            return new PaintedSurface(mapFile, w, h);
         } catch (IOException e) {
             throw new RoboCopException("exception with pixel writer on file: " + mapFile);
         } finally {
             try {
-                if (dos != null && fos != null) {
+                if (dos != null) {
                     dos.flush();
                     dos.close();
+                }
+                // closing dos automatically closes bos
+                if (fos != null) {
+                    fos.flush();
                     fos.close();
                 }
             } catch (IOException e) {
+                e.printStackTrace();
                 throw new RoboCopException("exception closing pixel writer on file: " + mapFile);
             }
         }
+        return new PaintedSurface(mapFile, w, h);
     }
 
     public int mHeight=0;
