@@ -602,7 +602,7 @@ private:
 #endif
     nsAutoPtr<XPCCallContext> mCycleCollectionContext;
 
-    typedef nsBaseHashtable<nsVoidPtrHashKey, nsISupports*, nsISupports*> ScopeSet;
+    typedef nsBaseHashtable<nsPtrHashKey<void>, nsISupports*, nsISupports*> ScopeSet;
     ScopeSet mScopes;
     nsCOMPtr<nsIXPCScriptable> mBackstagePass;
 

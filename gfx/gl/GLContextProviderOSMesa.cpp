@@ -259,7 +259,8 @@ GLContextProviderOSMesa::CreateForWindow(nsIWidget *aWidget)
 
 already_AddRefed<GLContext>
 GLContextProviderOSMesa::CreateOffscreen(const gfxIntSize& aSize,
-                                         const ContextFormat& aFormat)
+                                         const ContextFormat& aFormat,
+                                         const ContextFlags)
 {
     if (!sOSMesaLibrary.EnsureInitialized()) {
         return nsnull;

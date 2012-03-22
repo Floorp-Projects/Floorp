@@ -280,7 +280,7 @@ public:
   void RemoveAll();
 
 private:
-  nsTHashtable<nsVoidPtrHashKey> mObservers;
+  nsTHashtable<nsPtrHashKey<nsSVGRenderingObserver> > mObservers;
 };
 
 class nsSVGEffects {

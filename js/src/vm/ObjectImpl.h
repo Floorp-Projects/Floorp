@@ -19,6 +19,8 @@
 
 namespace js {
 
+class ObjectImpl;
+
 /*
  * Header structure for object element arrays. This structure is immediately
  * followed by an array of elements, with the elements member in an object
@@ -28,6 +30,7 @@ namespace js {
 class ObjectElements
 {
     friend struct ::JSObject;
+    friend class ObjectImpl;
 
     /* Number of allocated slots. */
     uint32_t capacity;
@@ -171,10 +174,80 @@ class ObjectImpl : public gc::Cell
 
     JSObject * asObjectPtr() { return reinterpret_cast<JSObject *>(this); }
 
+    /* These functions are public, and they should remain public. */
+
+  public:
+    JSObject * getProto() const {
+        return type_->proto;
+    }
+
+    inline bool isExtensible() const;
+
+    /*
+     * XXX Once the property/element split of bug 586842 is complete, these
+     *     methods should move back to JSObject.
+     */
+    inline bool isDenseArray() const;
+    inline bool isSlowArray() const;
+    inline bool isArray() const;
+
+    inline HeapSlotArray getDenseArrayElements();
+    inline const Value & getDenseArrayElement(unsigned idx);
+    inline uint32_t getDenseArrayInitializedLength();
+
+  protected:
+#ifdef DEBUG
+    void checkShapeConsistency();
+#else
+    void checkShapeConsistency() { }
+#endif
+
+  private:
+    /*
+     * Get internal pointers to the range of values starting at start and
+     * running for length.
+     */
+    inline void getSlotRangeUnchecked(size_t start, size_t length,
+                                      HeapSlot **fixedStart, HeapSlot **fixedEnd,
+                                      HeapSlot **slotsStart, HeapSlot **slotsEnd);
+    inline void getSlotRange(size_t start, size_t length,
+                             HeapSlot **fixedStart, HeapSlot **fixedEnd,
+                             HeapSlot **slotsStart, HeapSlot **slotsEnd);
+
   protected:
     friend struct GCMarker;
     friend struct Shape;
     friend class NewObjectCache;
+
+    inline bool hasContiguousSlots(size_t start, size_t count) const;
+
+    inline void invalidateSlotRange(size_t start, size_t count);
+    inline void initializeSlotRange(size_t start, size_t count);
+
+    /*
+     * Initialize a flat array of slots to this object at a start slot.  The
+     * caller must ensure that are enough slots.
+     */
+    void initSlotRange(size_t start, const Value *vector, size_t length);
+
+    /*
+     * Copy a flat array of slots to this object at a start slot. Caller must
+     * ensure there are enough slots in this object.
+     */
+    void copySlotRange(size_t start, const Value *vector, size_t length);
+
+#ifdef DEBUG
+    enum SentinelAllowed {
+        SENTINEL_NOT_ALLOWED,
+        SENTINEL_ALLOWED
+    };
+
+    /*
+     * Check that slot is in range for the object's allocated slots.
+     * If sentinelAllowed then slot may equal the slot capacity.
+     */
+    bool slotInRange(unsigned slot, SentinelAllowed sentinel = SENTINEL_NOT_ALLOWED) const;
+#endif
 
     /* Minimum size for dynamically allocated slots. */
     static const uint32_t SLOT_CAPACITY_MIN = 8;
@@ -193,6 +266,8 @@ class ObjectImpl : public gc::Cell
         MOZ_ASSERT(shape_);
         return shape_;
     }
+
+    inline bool isNative() const;
 
     types::TypeObject *type() const {
         MOZ_ASSERT(!hasLazyType());
@@ -215,7 +290,10 @@ class ObjectImpl : public gc::Cell
      */
     bool hasLazyType() const { return type_->lazy(); }
 
-    inline bool isNative() const;
+    inline uint32_t slotSpan() const;
+
+    /* Compute dynamicSlotsCount() for this object. */
+    inline size_t numDynamicSlots() const;
 
     const Shape * nativeLookup(JSContext *cx, jsid id);
 
@@ -241,6 +319,58 @@ class ObjectImpl : public gc::Cell
      * a doubly-linked list.
      */
     inline bool inDictionaryMode() const;
+
+    const Value &getSlot(unsigned slot) const {
+        MOZ_ASSERT(slotInRange(slot));
+        size_t fixed = numFixedSlots();
+        if (slot < fixed)
+            return fixedSlots()[slot];
+        return slots[slot - fixed];
+    }
+
+    HeapSlot *getSlotAddressUnchecked(unsigned slot) {
+        size_t fixed = numFixedSlots();
+        if (slot < fixed)
+            return fixedSlots() + slot;
+        return slots + (slot - fixed);
+    }
+
+    HeapSlot *getSlotAddress(unsigned slot) {
+        /*
+         * This can be used to get the address of the end of the slots for the
+         * object, which may be necessary when fetching zero-length arrays of
+         * slots (e.g. for callObjVarArray).
+         */
+        MOZ_ASSERT(slotInRange(slot, SENTINEL_ALLOWED));
+        return getSlotAddressUnchecked(slot);
+    }
+
+    HeapSlot &getSlotRef(unsigned slot) {
+        MOZ_ASSERT(slotInRange(slot));
+        return *getSlotAddress(slot);
+    }
+
+    inline HeapSlot &nativeGetSlotRef(unsigned slot);
+    inline const Value &nativeGetSlot(unsigned slot) const;
+
+    inline void setSlot(unsigned slot, const Value &value);
+    inline void initSlot(unsigned slot, const Value &value);
+    inline void initSlotUnchecked(unsigned slot, const Value &value);
+
+    /* For slots which are known to always be fixed, due to the way they are allocated. */
+
+    HeapSlot &getFixedSlotRef(unsigned slot) {
+        MOZ_ASSERT(slot < numFixedSlots());
+        return fixedSlots()[slot];
+    }
+
+    const Value &getFixedSlot(unsigned slot) const {
+        MOZ_ASSERT(slot < numFixedSlots());
+        return fixedSlots()[slot];
+    }
+
+    inline void setFixedSlot(unsigned slot, const Value &value);
+    inline void initFixedSlot(unsigned slot, const Value &value);
 
     /*
      * Get the number of dynamic slots to allocate to cover the properties in
@@ -304,15 +434,6 @@ class ObjectImpl : public gc::Cell
     }
     static size_t getPrivateDataOffset(size_t nfixed) { return getFixedSlotOffset(nfixed); }
     static size_t offsetOfSlots() { return offsetof(ObjectImpl, slots); }
-
-    /* These functions are public, and they should remain public. */
-
-  public:
-    JSObject * getProto() const {
-        return type_->proto;
-    }
-
-    inline bool isExtensible() const;
 };
 
 } /* namespace js */

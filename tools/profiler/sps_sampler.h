@@ -89,6 +89,20 @@ extern bool stack_key_initialized;
 #warning Please add support for your architecture in chromium_types.h
 #endif
 
+#define PROFILE_DEFAULT_ENTRY 100000
+#ifdef ANDROID
+// We use a lower frequency on Android, in order to make things work
+// more smoothly on phones.  This value can be adjusted later with
+// some libunwind optimizations.
+// In one sample measurement on Galaxy Nexus, out of about 700 backtraces,
+// 60 of them took more than 25ms, and the average and standard deviation
+// were 6.17ms and 9.71ms respectively.
+#define PROFILE_DEFAULT_INTERVAL 25
+#else
+#define PROFILE_DEFAULT_INTERVAL 10
+#endif
+#define PROFILE_DEFAULT_FEATURES NULL
+#define PROFILE_DEFAULT_FEATURE_COUNT 0
 
 // STORE_SEQUENCER: Because signals can interrupt our profile modification
 //                  we need to make stores are not re-ordered by the compiler
@@ -184,7 +198,7 @@ public:
     if (!aMarker) {
       return; //discard
     }
-    if (mMarkerPointer == mozilla::ArrayLength(mMarkers)) {
+    if (size_t(mMarkerPointer) == mozilla::ArrayLength(mMarkers)) {
       return; //array full, silently drop
     }
     mMarkers[mMarkerPointer] = aMarker;
@@ -213,7 +227,7 @@ public:
 
   void push(const char *aName)
   {
-    if (mStackPointer >= mozilla::ArrayLength(mStack)) {
+    if (size_t(mStackPointer) >= mozilla::ArrayLength(mStack)) {
       mDroppedStackEntries++;
       return;
     }

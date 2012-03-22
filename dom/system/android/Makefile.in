@@ -53,7 +53,6 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 CPPSRCS     = \
-        nsDeviceMotionSystem.cpp \
         AndroidLocationProvider.cpp \
         nsHapticFeedback.cpp \
         $(NULL)
