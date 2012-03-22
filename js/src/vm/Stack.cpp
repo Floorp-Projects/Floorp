@@ -1348,6 +1348,71 @@ StackIter::operator==(const StackIter &rhs) const
               (!isScript() && nativeArgs().base() == rhs.nativeArgs().base()))));
 }
 
+bool
+StackIter::isFunctionFrame() const
+{
+    JS_ASSERT(!done());
+    switch (state_) {
+      case ION:
+        return ionInlineFrames_.isFunctionFrame();
+      case SCRIPTED:
+        return fp()->isFunctionFrame();
+      default:
+        return true;
+    }
+    JS_NOT_REACHED("Unreachable");
+    return false;
+}
+
+bool
+StackIter::isEvalFrame() const
+{
+    JS_ASSERT(!done());
+    switch (state_) {
+      case SCRIPTED:
+        return fp()->isEvalFrame();
+      default:
+        return false;
+    }
+    JS_NOT_REACHED("Unreachable");
+    return false;
+}
+
+bool
+StackIter::isNonEvalFunctionFrame() const
+{
+    JS_ASSERT(!done());
+    switch (state_) {
+      case SCRIPTED:
+        return fp()->isNonEvalFunctionFrame();
+      default:
+        return !isEvalFrame() && isFunctionFrame();
+    }
+    JS_NOT_REACHED("Unreachable");
+    return false;
+}
+
+Value
+StackIter::calleev() const
+{
+    JS_ASSERT(isFunctionFrame());
+    switch (state_) {
+      case ION:
+        return ObjectValue(*ionInlineFrames_.callee());
+      case SCRIPTED:
+      {
+        Value v;
+        if (!fp()->getValidCalleeObject(cx_, &v))
+            v.setNull();
+        return v;
+      }
+      default:
+        return nativeArgs().calleev();
+    }
+    JS_NOT_REACHED("Unreachable");
+    return Value();
+}
+
 /*****************************************************************************/
 
 AllFramesIter::AllFramesIter(StackSpace &space)

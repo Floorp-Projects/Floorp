@@ -2163,24 +2163,22 @@ DumpStack(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     StackIter iter(cx);
-    JS_ASSERT(iter.nativeArgs().callee().toFunction()->native() == DumpStack);
+    JS_ASSERT((iter.isScripted() && !iter.isScript()) ||
+              iter.nativeArgs().callee().toFunction()->native() == DumpStack);
     ++iter;
 
     uint32_t index = 0;
     for (; !iter.done(); ++index, ++iter) {
         Value v;
-        if (iter.isScript()) {
-            if (iter.fp()->isNonEvalFunctionFrame()) {
-                if (!iter.fp()->getValidCalleeObject(cx, &v))
-                    return false;
-            } else if (iter.fp()->isEvalFrame()) {
-                v = StringValue(evalStr);
-            } else {
-                v = StringValue(globalStr);
-            }
+        if (iter.isNonEvalFunctionFrame()) {
+            v = iter.calleev();
+        } else if (iter.isEvalFrame()) {
+            v = StringValue(evalStr);
         } else {
-            v = iter.nativeArgs().calleev();
+            v = StringValue(globalStr);
         }
+        if (v.isNull())
+            return false;
         if (!JS_SetElement(cx, arr, index, &v))
             return false;
     }
