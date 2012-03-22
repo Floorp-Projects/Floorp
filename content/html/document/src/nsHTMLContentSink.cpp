@@ -40,6 +40,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * This file is near-OBSOLETE. It is used for about:blank only and for the
+ * HTML element factory.
+ * Don't bother adding new stuff in this file.
+ */
+
 #include "mozilla/Util.h"
 
 #include "nsContentSink.h"
@@ -155,6 +161,10 @@ static const contentCreatorCallback sContentCreatorCallbacks[] = {
 class SinkContext;
 class HTMLContentSink;
 
+/**
+ * This class is near-OBSOLETE. It is used for about:blank only.
+ * Don't bother adding new stuff in this file.
+ */
 class HTMLContentSink : public nsContentSink,
 #ifdef DEBUG
                         public nsIDebugDumpContent,
