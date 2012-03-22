@@ -160,8 +160,9 @@ public:
         // pipelining list is received
         RedBannedServer = kPipelineInfoTypeRed | kPipelineInfoTypeBad | 0x0002,
     
-        // Used when a response is terminated early, or when it fails an
-        // integrity check such as assoc-req
+        // Used when a response is terminated early, when it fails an
+        // integrity check such as assoc-req or when a 304 contained a Last-Modified
+        // differnet than the entry being validated.
         RedCorruptedContent = kPipelineInfoTypeRed | kPipelineInfoTypeBad | 0x0004,
 
         // Used when a pipeline is only partly satisfied - for instance if the
