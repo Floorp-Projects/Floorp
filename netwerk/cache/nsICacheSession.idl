@@ -46,7 +46,7 @@
 interface nsICacheEntryDescriptor;
 interface nsICacheListener;
 
-[scriptable, uuid(2ec1026f-e3a5-481c-908e-8d559235b721)]
+[scriptable, uuid(1dd7708c-de48-4ffe-b5aa-cd218c762887)]
 interface nsICacheSession : nsISupports
 {
     /**
@@ -98,4 +98,11 @@ interface nsICacheSession : nsISupports
      * are currently enabled for instantiation if they don't already exist.
      */
     boolean isStorageEnabled();
+
+    /**
+     * Asynchronously doom an entry specified by the key. Listener will be
+     * notified about the status of the operation. Null may be passed if caller
+     * doesn't care about the result.
+     */
+    void doomEntry(in ACString key, in nsICacheListener listener);
 };

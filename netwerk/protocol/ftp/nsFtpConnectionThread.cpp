@@ -2096,6 +2096,14 @@ nsFtpState::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
+nsFtpState::OnCacheEntryDoomed(nsresult status)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
 nsFtpState::OnStartRequest(nsIRequest *request, nsISupports *context)
 {
     mStorReplyReceived = false;

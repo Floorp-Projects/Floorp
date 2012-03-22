@@ -4891,6 +4891,12 @@ nsHttpChannel::OnCacheEntryAvailableInternal(nsICacheEntryDescriptor *entry,
     return Connect(false);
 }
 
+NS_IMETHODIMP
+nsHttpChannel::OnCacheEntryDoomed(nsresult status)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult
 nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
 {
@@ -5209,19 +5215,7 @@ nsHttpChannel::DoInvalidateCacheEntry(nsACString &key)
     if (NS_FAILED(rv))
         return;
 
-    // Now, find the actual cache-entry
-    nsCOMPtr<nsICacheEntryDescriptor> tmpCacheEntry;
-    rv = session->OpenCacheEntry(key, nsICache::ACCESS_READ,
-                                 false,
-                                 getter_AddRefs(tmpCacheEntry));
-
-    // If entry was found, set its expiration-time = 0
-    if(NS_SUCCEEDED(rv)) {
-        tmpCacheEntry->SetExpirationTime(0);
-        LOG(("  cache-entry invalidated [key=%s]\n", key.Data()));
-    } else {
-        LOG(("  cache-entry not found [key=%s]\n", key.Data()));
-    }
+    session->DoomEntry(key, nsnull);
 }
 
 nsCacheStoragePolicy
