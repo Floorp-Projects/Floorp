@@ -53,12 +53,6 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 
-ifndef MOZ_ENABLE_QTMOBILITY
-CPPSRCS     = \
-        nsDeviceMotionSystem.cpp \
-        $(NULL)
-endif
-
 ifdef MOZ_MAEMO_LIBLOCATION
         CPPSRCS         += MaemoLocationProvider.cpp
         LOCAL_INCLUDES  += $(MOZ_PLATFORM_MAEMO_CFLAGS) \
@@ -71,18 +65,14 @@ CPPSRCS += nsHapticFeedback.cpp
 LOCAL_INCLUDES  += $(MOZ_DBUS_CFLAGS) \
                    $(NULL)
 ifdef MOZ_ENABLE_QTMOBILITY
-MOCSRCS         += moc_QTMLocationProvider.cpp moc_nsQTMDeviceMotionSystem.cpp
+MOCSRCS         += moc_QTMLocationProvider.cpp
 CPPSRCS         += $(MOCSRCS) \
                    QTMLocationProvider.cpp \
-                   nsQTMDeviceMotionSystem.cpp \
                    $(NULL)
 LOCAL_INCLUDES  += $(MOZ_QT_CFLAGS) \
                    -I$(topsrcdir)/dom/src/geolocation \
                    $(NULL)
 endif
 endif
-
-# We fire the nsDOMDeviceAcceleration
-LOCAL_INCLUDES += -I$(topsrcdir)/content/events/src
 
 include $(topsrcdir)/config/rules.mk

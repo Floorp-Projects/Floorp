@@ -374,8 +374,6 @@ Debug_SetValueRangeToCrashOnTouch(HeapValue *vec, size_t len)
     Debug_SetValueRangeToCrashOnTouch((Value *) vec, len);
 #endif
 }
-JSObject*
-NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type);
 
 bool
 Throw(JSContext *cx, const Value &v);
@@ -426,22 +424,6 @@ ModValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
 template <bool strict>
 bool
 SetProperty(JSContext *cx, JSObject *obj, JSAtom *atom, const Value &value);
-
-static JS_ALWAYS_INLINE void
-Debug_SetSlotRangeToCrashOnTouch(HeapSlot *vec, size_t len)
-{
-#ifdef DEBUG
-    Debug_SetValueRangeToCrashOnTouch((Value *) vec, len);
-#endif
-}
-
-static JS_ALWAYS_INLINE void
-Debug_SetSlotRangeToCrashOnTouch(HeapSlot *begin, HeapSlot *end)
-{
-#ifdef DEBUG
-    Debug_SetValueRangeToCrashOnTouch((Value *) begin, end - begin);
-#endif
-}
 
 template <bool strict>
 bool

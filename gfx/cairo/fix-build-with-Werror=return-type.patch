@@ -1,0 +1,21 @@
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+--- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
++++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+@@ -436,16 +436,17 @@ _cairo_quartz_cairo_operator_to_quartz_c
+ 	case CAIRO_OPERATOR_DIFFERENCE:
+ 	case CAIRO_OPERATOR_EXCLUSION:
+ 	case CAIRO_OPERATOR_HSL_HUE:
+ 	case CAIRO_OPERATOR_HSL_SATURATION:
+ 	case CAIRO_OPERATOR_HSL_COLOR:
+ 	case CAIRO_OPERATOR_HSL_LUMINOSITY:
+         default:
+ 	    assert (0);
++	    return kPrivateCGCompositeClear;
+     }
+ }
+ 
+ static cairo_int_status_t
+ _cairo_quartz_surface_set_cairo_operator (cairo_quartz_surface_t *surface, cairo_operator_t op)
+ {
+     ND((stderr, "%p _cairo_quartz_surface_set_cairo_operator %d\n", surface, op));
+ 

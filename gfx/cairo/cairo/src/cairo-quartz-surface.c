@@ -441,6 +441,7 @@ _cairo_quartz_cairo_operator_to_quartz_composite (cairo_operator_t op)
 	case CAIRO_OPERATOR_HSL_LUMINOSITY:
         default:
 	    assert (0);
+	    return kPrivateCGCompositeClear;
     }
 }
 

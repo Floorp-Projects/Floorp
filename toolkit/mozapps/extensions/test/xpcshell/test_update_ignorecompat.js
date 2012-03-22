@@ -5,8 +5,7 @@
 // This verifies that add-on update checks work correctly when compatibility
 // check is disabled.
 
-
-const PREF_GETADDONS_BYIDS = "extensions.getAddons.get.url";
+const PREF_GETADDONS_BYIDS_PERFORMANCE = "extensions.getAddons.getWithPerformance.url";
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 
 // The test extension uses an insecure update url.
@@ -57,7 +56,8 @@ function run_test_1() {
     }
   });
 
-  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, "http://localhost:4444/data/test_update.xml");
+  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS_PERFORMANCE,
+                             "http://localhost:4444/data/test_update.xml");
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
   // Fake a timer event
   gInternalManager.notify(null);

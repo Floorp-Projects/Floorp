@@ -201,7 +201,7 @@ JS_XDRScript(JSXDRState *xdr, JSScript **scriptp);
  * and saved versions. If deserialization fails, the data should be
  * invalidated if possible.
  */
-#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 110)
+#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 111)
 
 JS_END_EXTERN_C
 

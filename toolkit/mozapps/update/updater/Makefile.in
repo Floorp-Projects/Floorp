@@ -98,6 +98,12 @@ CMMSRCS += progressui_osx.mm launchchild_osx.mm
 OS_LIBS += -framework Cocoa
 endif
 
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT)) #{
+HAVE_PROGRESSUI = 1
+STL_FLAGS =
+CPPSRCS += progressui_gonk.cpp
+endif #}
+
 ifndef HAVE_PROGRESSUI
 CPPSRCS += progressui_null.cpp
 endif
