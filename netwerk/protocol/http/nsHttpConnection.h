@@ -167,7 +167,7 @@ public:
 
     bool UsingSpdy() { return mUsingSpdy; }
 
-    // When the connection is active this is called every 15 seconds
+    // When the connection is active this is called every 1 second
     void  ReadTimeoutTick(PRIntervalTime now);
 
     nsAHttpTransaction::Classifier Classification() { return mClassification; }
@@ -175,6 +175,9 @@ public:
     {
         mClassification = newclass;
     }
+
+    // When the connection is active this is called every second
+    void  ReadTimeoutTick();
 
 private:
     // called to cause the underlying socket to start speaking SSL
