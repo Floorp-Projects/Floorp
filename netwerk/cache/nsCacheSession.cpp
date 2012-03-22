@@ -128,3 +128,9 @@ NS_IMETHODIMP nsCacheSession::IsStorageEnabled(bool *result)
 
     return nsCacheService::IsStorageEnabledForPolicy(StoragePolicy(), result);
 }
+
+NS_IMETHODIMP nsCacheSession::DoomEntry(const nsACString &key,
+                                        nsICacheListener *listener)
+{
+    return nsCacheService::DoomEntry(this, key, listener);
+}
