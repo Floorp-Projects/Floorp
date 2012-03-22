@@ -148,6 +148,7 @@
 #include "nsBlobProtocolHandler.h"
 
 #include "nsCharsetAlias.h"
+#include "nsCharsetSource.h"
 #include "nsIParser.h"
 #include "nsIContentSink.h"
 

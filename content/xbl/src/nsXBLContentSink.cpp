@@ -42,7 +42,6 @@
 #include "nsIDocument.h"
 #include "nsBindingManager.h"
 #include "nsIDOMNode.h"
-#include "nsIParser.h"
 #include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsHTMLTokens.h"
