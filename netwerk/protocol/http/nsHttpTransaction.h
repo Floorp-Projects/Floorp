@@ -138,6 +138,7 @@ public:
 
 private:
     nsresult Restart();
+    nsresult RestartInProgress();
     char    *LocateHttpStart(char *buf, PRUint32 len,
                              bool aAllowPartialMatch);
     nsresult ParseLine(char *line);
@@ -228,6 +229,66 @@ private:
     // mClosed           := transaction has been explicitly closed
     // mTransactionDone  := transaction ran to completion or was interrupted
     // mResponseComplete := transaction ran to completion
+
+    // For Restart-In-Progress Functionality
+    PRInt64                         mToReadBeforeRestart;
+    bool                            mReportedStart;
+    bool                            mReportedResponseHeader;
+
+    // protected by nsHttp::GetLock()
+    nsHttpResponseHead             *mForTakeResponseHead;
+    bool                            mTakenResponseHeader;
+
+    class RestartVerifier 
+    {
+
+        // When a idemptotent transaction has received part of its response body
+        // and incurs an error it can be restarted. To do this we mark the place
+        // where we stopped feeding the body to the consumer and start the
+        // network call over again. If everything we track (headers, length, etc..)
+        // matches up to the place where we left off then the consumer starts being
+        // fed data again with the new information. This can be done N times up
+        // to the normal restart (i.e. with no response info) limit.
+
+    public:
+        RestartVerifier()
+            : mContentLength(-1)
+            , mAlreadyProcessed(0)
+            , mActive(false)
+            , mSetup(false)
+        {}
+        ~RestartVerifier() {}
+        
+        void Set(PRInt64 contentLength, nsHttpResponseHead *head);
+        bool Verify(PRInt64 contentLength, nsHttpResponseHead *head);
+        bool Active() { return mActive; }
+        void SetActive(bool val) { mActive = val; }
+        bool IsSetup() { return mSetup; }
+        PRInt64 AlreadyProcessed() { return mAlreadyProcessed; }
+        void SetAlreadyProcessed(PRInt64 val) { mAlreadyProcessed = val; }
+
+    private:
+        // This is the data from the first complete response header
+        // used to make sure that all subsequent response headers match
+
+        PRInt64                         mContentLength;
+        nsCString                       mETag;
+        nsCString                       mLastModified;
+        nsCString                       mContentRange;
+        nsCString                       mContentEncoding;
+        nsCString                       mTransferEncoding;
+
+        // This is the amount of data that has been passed to the channel
+        // from previous iterations of the transaction and must therefore
+        // be skipped in the new one.
+        PRInt64                         mAlreadyProcessed;
+
+        // true when iteration > 0 has started
+        bool                            mActive;
+
+        // true when ::Set has been called with a response header
+        bool                            mSetup;
+    } mRestartInProgressVerifier;
 };
 
 #endif // nsHttpTransaction_h__
