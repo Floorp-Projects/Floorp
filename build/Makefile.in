@@ -69,7 +69,9 @@ ifdef MOZ_APP_BASENAME
 DIST_FILES = application.ini
 
 ifneq (android,$(MOZ_WIDGET_TOOLKIT))
+ifdef MOZ_UPDATER
 DIST_FILES += update-settings.ini
+endif
 endif
 
 ifdef LIBXUL_SDK
@@ -160,9 +162,11 @@ leaktest.py: leaktest.py.in
 GARBAGE += leaktest.py
 
 ifneq (android,$(MOZ_WIDGET_TOOLKIT))
+ifdef MOZ_UPDATER
 update-settings.ini: update-settings.ini.in $(APP_INI_DEPS)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
 GARBAGE += update-settings.ini
+endif
 endif
 
 ifdef MOZ_APP_BASENAME
