@@ -241,6 +241,17 @@ nsStyledElementNotElementCSSInlineStyle::BindToTree(nsIDocument* aDocument,
     ReparseStyleAttribute(false);
   }
 
+  if (aDocument) {
+    // If we're in a document now, let our mapped attrs know what their new
+    // sheet is.  This is safe to run for non-mapped-attribute elements too;
+    // it'll just do a small bit of unnecessary work.  But most elements in
+    // practice are mapped-attribute elements.
+    nsHTMLStyleSheet* sheet = aDocument->GetAttributeStyleSheet();
+    if (sheet) {
+      mAttrsAndChildren.SetMappedAttrStyleSheet(sheet);
+    }
+  }
+
   return NS_OK;
 }
 
