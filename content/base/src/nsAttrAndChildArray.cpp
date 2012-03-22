@@ -576,10 +576,11 @@ nsAttrAndChildArray::SetAndTakeMappedAttr(nsIAtom* aLocalName,
 }
 
 nsresult
-nsAttrAndChildArray::SetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet)
+nsAttrAndChildArray::DoSetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet)
 {
-  if (!mImpl || !mImpl->mMappedAttrs ||
-      aSheet == mImpl->mMappedAttrs->GetStyleSheet()) {
+  NS_PRECONDITION(mImpl && mImpl->mMappedAttrs,
+                  "Should have mapped attrs here!");
+  if (aSheet == mImpl->mMappedAttrs->GetStyleSheet()) {
     return NS_OK;
   }
 
