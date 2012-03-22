@@ -1081,6 +1081,30 @@ protected:
 
   bool mGLBufferIsPremultiplied;
   bool mNeedsYFlip;
+
+  nsRefPtr<gfxImageSurface> mCachedTempSurface;
+  gfxIntSize mCachedSize;
+  gfxImageFormat mCachedFormat;
+
+  gfxImageSurface* GetTempSurface(const gfxIntSize& aSize, const gfxImageFormat aFormat)
+  {
+    if (!mCachedTempSurface ||
+        aSize.width != mCachedSize.width ||
+        aSize.height != mCachedSize.height ||
+        aFormat != mCachedFormat)
+    {
+      mCachedTempSurface = new gfxImageSurface(aSize, aFormat);
+      mCachedSize = aSize;
+      mCachedFormat = aFormat;
+    }
+
+    return mCachedTempSurface;
+  }
+
+  void DiscardTempSurface()
+  {
+    mCachedTempSurface = nsnull;
+  }
 };
 
 void
@@ -1139,7 +1163,7 @@ BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface)
     mGLContext->MakeCurrent();
 
 #if defined (MOZ_X11) && defined (MOZ_EGL_XRENDER_COMPOSITE)
-    mGLContext->fFinish();
+    mGLContext->GuaranteeResolve();
     gfxASurface* offscreenSurface = mGLContext->GetOffscreenPixmapSurface();
 
     // XRender can only blend premuliplied alpha, so only allow xrender
@@ -1147,16 +1171,22 @@ BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface)
     if (offscreenSurface && (mGLBufferIsPremultiplied || (GetContentFlags() & CONTENT_OPAQUE))) {  
         mSurface = offscreenSurface;
         mNeedsYFlip = false;
+        return;
     }
-    else
 #endif
-    {
-    nsRefPtr<gfxImageSurface> isurf = aDestSurface ?
-        static_cast<gfxImageSurface*>(aDestSurface) :
-        new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
-                            (GetContentFlags() & CONTENT_OPAQUE)
-                              ? gfxASurface::ImageFormatRGB24
-                              : gfxASurface::ImageFormatARGB32);
+    gfxImageSurface* isurf = nsnull;
+    if (aDestSurface) {
+      DiscardTempSurface();
+      isurf = static_cast<gfxImageSurface*>(aDestSurface);
+    } else {
+      nsIntSize size(mBounds.width, mBounds.height);
+      gfxImageFormat format = (GetContentFlags() & CONTENT_OPAQUE)
+                                ? gfxASurface::ImageFormatRGB24
+                                : gfxASurface::ImageFormatARGB32;
+
+      isurf = GetTempSurface(size, format);
+    }
+
 
     if (!isurf || isurf->CairoStatus() != 0) {
       return;
@@ -1193,7 +1223,6 @@ BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface)
       mSurface = isurf;
     }
   }
-}
 }
 
 void
