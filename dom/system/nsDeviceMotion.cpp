@@ -126,7 +126,6 @@ nsDeviceMotion::nsDeviceMotion()
   mEnabled(true)
 {
   mLastDOMMotionEventTime = TimeStamp::Now();
-  mLastAccuracy = SENSOR_ACCURACY_UNKNOWN;
 
   nsCOMPtr<nsIPrefBranch> prefSrv = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefSrv) {
