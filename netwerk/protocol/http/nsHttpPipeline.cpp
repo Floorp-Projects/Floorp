@@ -131,11 +131,20 @@ nsHttpPipeline::AddTransaction(nsAHttpTransaction *trans)
 
     NS_ADDREF(trans);
     mRequestQ.AppendElement(trans);
+    PRInt32 qlen = mRequestQ.Length();
+    
+    if (qlen != 1) {
+        trans->SetPipelinePosition(qlen);
+    }
+    else {
+        // do it for this case in case an idempotent cancellation
+        // is being repeated and an old value needs to be cleared
+        trans->SetPipelinePosition(0);
+    }
 
     if (mConnection && !mClosed) {
         trans->SetConnection(this);
-
-        if (mRequestQ.Length() == 1)
+        if (qlen == 1)
             mConnection->ResumeSend();
     }
 
@@ -161,6 +170,24 @@ nsHttpPipeline::PipelineDepthAvailable()
 
     // There is still some room available.
     return mMaxPipelineDepth - currentTransactions;
+}
+
+nsresult
+nsHttpPipeline::SetPipelinePosition(PRInt32 position)
+{
+    nsAHttpTransaction *trans = Response(0);
+    if (trans)
+        return trans->SetPipelinePosition(position);
+    return NS_OK;
+}
+
+PRInt32
+nsHttpPipeline::PipelinePosition()
+{
+    nsAHttpTransaction *trans = Response(0);
+    if (trans)
+        return trans->PipelinePosition();
+    return 2;
 }
 
 //-----------------------------------------------------------------------------
