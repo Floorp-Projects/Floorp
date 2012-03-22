@@ -227,22 +227,36 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     vp->setNull();
 
     /* Find fun's top-most activation record. */
-    StackIter iter(cx);
-    for (; !iter.done(); ++iter) {
-        if (!iter.isFunctionFrame() || iter.isEvalFrame())
+    StackFrame *fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE);
+    for (; fp; fp = fp->prev()) {
+        if (!fp->isFunctionFrame() || fp->isEvalFrame())
             continue;
-        Value callee = iter.calleev();
-        if (callee.isNull())
+        Value callee;
+        if (!fp->getValidCalleeObject(cx, &callee))
             return false;
         if (&callee.toObject() == fun)
             break;
     }
-    if (iter.done())
+    if (!fp)
         return true;
 
-    StackFrame *fp = NULL;
-    if (iter.isScript())
-        fp = iter.fp();
+#ifdef JS_METHODJIT
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom) && fp && fp->prev()) {
+        /*
+         * If the frame was called from within an inlined frame, mark the
+         * innermost function as uninlineable to expand its frame and allow us
+         * to recover its callee object.
+         */
+        JSInlinedSite *inlined;
+        jsbytecode *prevpc = fp->prev()->pcQuadratic(cx->stack, fp, &inlined);
+        if (inlined) {
+            mjit::JITChunk *chunk = fp->prev()->jit()->chunk(prevpc);
+            JSFunction *fun = chunk->inlineFrames()[inlined->inlineIndex].fun;
+            fun->script()->uninlineable = true;
+            MarkTypeObjectFlags(cx, fun, OBJECT_FLAG_UNINLINEABLE);
+        }
+    }
+#endif
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.argumentsAtom)) {
         /* Warn if strict about f.arguments or equivalent unqualified uses. */
@@ -251,19 +265,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             return false;
         }
 
-        ArgumentsObject *argsobj;
-        if (!fp) {
-            JSObject &f = iter.callee();
-            if (!&f)
-                return false;
-            // Currently we don't have a way to recover the number of actual
-            // arguments from an Ion Frame.  This should be modified later with
-            // the implementation of JSOP_ARGUMENTS (Bug 735406).
-            argsobj = ArgumentsObject::createPoison(cx, f.toFunction()->nargs, f);
-        } else {
-            argsobj = ArgumentsObject::createUnexpected(cx, fp);
-        }
-
+        ArgumentsObject *argsobj = ArgumentsObject::createUnexpected(cx, fp);
         if (!argsobj)
             return false;
 
@@ -271,38 +273,16 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         return true;
     }
 
-    StackIter prev(iter);
-    ++prev;
-
-#ifdef JS_METHODJIT
-    StackFrame *fpPrev = NULL;
-    if (!prev.done() && prev.isScript())
-        fpPrev = prev.fp();
-
-    if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom) && fp && fpPrev) {
-        /*
-         * If the frame was called from within an inlined frame, mark the
-         * innermost function as uninlineable to expand its frame and allow us
-         * to recover its callee object.
-         */
-        JSInlinedSite *inlined;
-        jsbytecode *prevpc = fpPrev->pcQuadratic(cx->stack, fp, &inlined);
-        if (inlined) {
-            mjit::JITChunk *chunk = fpPrev->jit()->chunk(prevpc);
-            JSFunction *fun = chunk->inlineFrames()[inlined->inlineIndex].fun;
-            fun->script()->uninlineable = true;
-            MarkTypeObjectFlags(cx, fun, OBJECT_FLAG_UNINLINEABLE);
-        }
-    }
-#endif
-
     if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom)) {
-        if (prev.done())
+        if (!fp->prev())
             return true;
 
-        if (!prev.isFunctionFrame())
+        StackFrame *frame = fp->prev();
+        while (frame && frame->isDummyFrame())
+            frame = frame->prev();
+
+        if (frame && !frame->getValidCalleeObject(cx, vp))
             return false;
-        *vp = prev.calleev();
 
         if (!vp->isObject()) {
             JS_ASSERT(vp->isNull());

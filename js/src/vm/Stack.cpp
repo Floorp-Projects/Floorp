@@ -1392,27 +1392,6 @@ StackIter::isNonEvalFunctionFrame() const
     return false;
 }
 
-JSObject &
-StackIter::callee() const
-{
-    JS_ASSERT(isFunctionFrame());
-    switch (state_) {
-      case ION:
-        return *ionInlineFrames_.callee();
-      case SCRIPTED:
-      {
-        Value v;
-        if (!fp()->getValidCalleeObject(cx_, &v))
-            return *(JSObject *) NULL;
-        return v.toObject();
-      }
-      default:
-        return nativeArgs().callee();
-    }
-    JS_NOT_REACHED("Unreachable");
-    return *(JSObject *) NULL;
-}
-
 Value
 StackIter::calleev() const
 {

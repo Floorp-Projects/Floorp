@@ -1901,7 +1901,6 @@ class StackIter
     Value      *sp() const { JS_ASSERT(!done() && isScript()); return sp_; }
     jsbytecode *pc() const { JS_ASSERT(!done() && isScripted()); return pc_; }
     JSScript   *script() const { JS_ASSERT(!done() && isScripted()); return script_; }
-    JSObject   &callee() const;
     Value       calleev() const;
 
     bool isNativeCall() const { JS_ASSERT(!done()); return state_ != SCRIPTED; }
