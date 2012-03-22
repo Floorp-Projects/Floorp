@@ -390,7 +390,7 @@ class TableTicker: public Sampler {
 
 private:
   // Not implemented on platforms which do not support backtracing
-  static void doBacktrace(ThreadProfile &aProfile, TickSample* aSample);
+  void doBacktrace(ThreadProfile &aProfile, TickSample* aSample);
 
 private:
   // This represent the application's main thread (SAMPLER_INIT)
