@@ -570,6 +570,7 @@ _TEST_FILES2 = \
 		bug696301-script-2.js \
 		test_bug737565.html \
 		test_bug737612.html \
+		test_bug738108.html \
 		$(NULL)
 
 _CHROME_FILES =	\
