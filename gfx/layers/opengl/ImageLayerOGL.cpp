@@ -243,14 +243,22 @@ ImageLayerOGL::RenderLayer(int,
       return;
     }
 
-    if (!yuvImage->GetBackendData(LayerManager::LAYERS_OPENGL)) {
-      AllocateTexturesYCbCr(yuvImage);
-    }
-
     PlanarYCbCrOGLBackendData *data =
       static_cast<PlanarYCbCrOGLBackendData*>(yuvImage->GetBackendData(LayerManager::LAYERS_OPENGL));
 
-    if (!data || data->mTextures->GetGLContext() != mOGLManager->glForResources()) {
+    if (data && data->mTextures->GetGLContext() != gl()) {
+      // If these textures were allocated by another layer manager,
+      // clear them out and re-allocate below.
+      data = nsnull;
+      yuvImage->SetBackendData(LayerManager::LAYERS_OPENGL, nsnull);
+    }
+
+    if (!data) {
+      AllocateTexturesYCbCr(yuvImage);
+      data = static_cast<PlanarYCbCrOGLBackendData*>(yuvImage->GetBackendData(LayerManager::LAYERS_OPENGL));
+    }
+
+    if (!data || data->mTextures->GetGLContext() != gl()) {
       // XXX - Can this ever happen? If so I need to fix this!
       return;
     }
@@ -293,14 +301,22 @@ ImageLayerOGL::RenderLayer(int,
       return;
     }
 
-    if (!cairoImage->GetBackendData(LayerManager::LAYERS_OPENGL)) {
-      AllocateTexturesCairo(cairoImage);
-    }
-
     CairoOGLBackendData *data =
       static_cast<CairoOGLBackendData*>(cairoImage->GetBackendData(LayerManager::LAYERS_OPENGL));
 
-    if (!data || data->mTexture.GetGLContext() != mOGLManager->glForResources()) {
+    if (data && data->mTexture.GetGLContext() != gl()) {
+      // If this texture was allocated by another layer manager, clear
+      // it out and re-allocate below.
+      data = nsnull;
+      cairoImage->SetBackendData(LayerManager::LAYERS_OPENGL, nsnull);
+    }
+
+    if (!data) {
+      AllocateTexturesCairo(cairoImage);
+      data = static_cast<CairoOGLBackendData*>(cairoImage->GetBackendData(LayerManager::LAYERS_OPENGL));
+    }
+
+    if (!data || data->mTexture.GetGLContext() != gl()) {
       // XXX - Can this ever happen? If so I need to fix this!
       return;
     }
@@ -510,20 +526,18 @@ ImageLayerOGL::AllocateTexturesYCbCr(PlanarYCbCrImage *aImage)
 
   PlanarYCbCrImage::Data &data = aImage->mData;
 
-  GLContext *gl = mOGLManager->glForResources();
-
-  gl->MakeCurrent();
+  gl()->MakeCurrent();
  
-  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_Y, data.mYSize, gl, &backendData->mTextures[0]);
-  InitTexture(gl, backendData->mTextures[0].GetTextureID(), LOCAL_GL_LUMINANCE, data.mYSize);
+  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_Y, data.mYSize, gl(), &backendData->mTextures[0]);
+  InitTexture(gl(), backendData->mTextures[0].GetTextureID(), LOCAL_GL_LUMINANCE, data.mYSize);
 
-  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data.mCbCrSize, gl, &backendData->mTextures[1]);
-  InitTexture(gl, backendData->mTextures[1].GetTextureID(), LOCAL_GL_LUMINANCE, data.mCbCrSize);
+  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data.mCbCrSize, gl(), &backendData->mTextures[1]);
+  InitTexture(gl(), backendData->mTextures[1].GetTextureID(), LOCAL_GL_LUMINANCE, data.mCbCrSize);
 
-  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data.mCbCrSize, gl, &backendData->mTextures[2]);
-  InitTexture(gl, backendData->mTextures[2].GetTextureID(), LOCAL_GL_LUMINANCE, data.mCbCrSize);
+  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data.mCbCrSize, gl(), &backendData->mTextures[2]);
+  InitTexture(gl(), backendData->mTextures[2].GetTextureID(), LOCAL_GL_LUMINANCE, data.mCbCrSize);
 
-  UploadYUVToTexture(gl, aImage->mData,
+  UploadYUVToTexture(gl(), aImage->mData,
                      &backendData->mTextures[0],
                      &backendData->mTextures[1],
                      &backendData->mTextures[2]);
@@ -543,7 +557,7 @@ ImageLayerOGL::AllocateTexturesCairo(CairoImage *aImage)
 
   GLTexture &texture = backendData->mTexture;
 
-  texture.Allocate(mOGLManager->glForResources());
+  texture.Allocate(gl());
 
   if (!texture.IsAllocated()) {
     return;
@@ -611,9 +625,9 @@ ShadowImageLayerOGL::Init(const SharedImage& aFront)
     mCbCrSize = surfU->GetSize();
 
     if (!mYUVTexture[0].IsAllocated()) {
-      mYUVTexture[0].Allocate(mOGLManager->glForResources());
-      mYUVTexture[1].Allocate(mOGLManager->glForResources());
-      mYUVTexture[2].Allocate(mOGLManager->glForResources());
+      mYUVTexture[0].Allocate(gl());
+      mYUVTexture[1].Allocate(gl());
+      mYUVTexture[2].Allocate(gl());
     }
 
     NS_ASSERTION(mYUVTexture[0].IsAllocated() &&
