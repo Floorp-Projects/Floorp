@@ -39,13 +39,16 @@
 #define NS_IPARSER___
 
 
-/**
- * MODULE NOTES:
- *  
- *  This class defines the iparser interface. This XPCOM
- *  inteface is all that parser clients ever need to see.
+ /**
+ * This GECKO-INTERNAL interface is on track to being REMOVED (or refactored
+ * to the point of being near-unrecognizable).
  *
- **/
+ * Please DO NOT #include this file in comm-central code, in your XULRunner
+ * app or binary extensions.
+ *
+ * Please DO NOT #include this into new files even inside Gecko. It is more
+ * likely than not that #including this header is the wrong thing to do.
+ */
 
 #include "nsISupports.h"
 #include "nsIStreamListener.h"
@@ -54,6 +57,7 @@
 #include "nsTArray.h"
 #include "nsIAtom.h"
 #include "nsParserBase.h"
+#include "nsCharsetSource.h" // avoid burning comm-central
 
 #define NS_IPARSER_IID \
 { 0xd064f0d6, 0x44e3, 0x4366, \
@@ -85,28 +89,6 @@ enum eParserDocType {
   eHTML_Strict
 };
 
-
-// define Charset source constants
-// note: the value order defines the priority; higher numbers take priority
-#define kCharsetUninitialized           0
-#define kCharsetFromWeakDocTypeDefault  1
-#define kCharsetFromUserDefault         2
-#define kCharsetFromDocTypeDefault      3 // This and up confident for XHR
-#define kCharsetFromCache               4
-#define kCharsetFromParentFrame         5
-#define kCharsetFromAutoDetection       6
-#define kCharsetFromHintPrevDoc         7
-#define kCharsetFromMetaPrescan         8 // this one and smaller: HTML5 Tentative
-#define kCharsetFromMetaTag             9 // this one and greater: HTML5 Confident
-#define kCharsetFromIrreversibleAutoDetection 10
-#define kCharsetFromByteOrderMark      11
-#define kCharsetFromChannel            12
-#define kCharsetFromOtherComponent     13
-// Levels below here will be forced onto childframes too
-#define kCharsetFromParentForced       14
-#define kCharsetFromUserForced         15
-#define kCharsetFromPreviousLoading    16
-
 enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
 
 /** 
@@ -127,8 +109,14 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDebugDumpContent, NS_IDEBUG_DUMP_CONTENT_IID)
 
 /**
- *  This class defines the iparser interface. This XPCOM
- *  inteface is all that parser clients ever need to see.
+ * This GECKO-INTERNAL interface is on track to being REMOVED (or refactored
+ * to the point of being near-unrecognizable).
+ *
+ * Please DO NOT #include this file in comm-central code, in your XULRunner
+ * app or binary extensions.
+ *
+ * Please DO NOT #include this into new files even inside Gecko. It is more
+ * likely than not that #including this header is the wrong thing to do.
  */
 class nsIParser : public nsParserBase {
   public:
