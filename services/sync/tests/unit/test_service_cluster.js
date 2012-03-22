@@ -16,7 +16,7 @@ function test_findCluster() {
   let server;
   try {
     Service.serverURL = TEST_SERVER_URL;
-    Service.username = "johndoe";
+    Identity.account = "johndoe";
 
     _("_findCluster() throws on network errors (e.g. connection refused).");
     do_check_throws(function() {
@@ -36,23 +36,23 @@ function test_findCluster() {
     do_check_eq(cluster, "http://weave.user.node/");
 
     _("A 'null' response is converted to null.");
-    Service.username = "jimdoe";
+    Identity.account = "jimdoe";
     cluster = Service._findCluster();
     do_check_eq(cluster, null);
 
     _("If a 404 is encountered, the server URL is taken as the cluster URL");
-    Service.username = "janedoe";
+    Identity.account = "janedoe";
     cluster = Service._findCluster();
     do_check_eq(cluster, Service.serverURL);
 
     _("A 400 response will throw an error.");
-    Service.username = "juliadoe";
+    Identity.account = "juliadoe";
     do_check_throws(function() {
       Service._findCluster();
     });
 
     _("Any other server response (e.g. 500) will throw an error.");
-    Service.username = "joedoe";
+    Identity.account = "joedoe";
     do_check_throws(function() {
       Service._findCluster();
     });
@@ -74,7 +74,7 @@ function test_setCluster() {
   });
   try {
     Service.serverURL = TEST_SERVER_URL;
-    Service.username = "johndoe";
+    Identity.account = "johndoe";
 
     _("Check initial state.");
     do_check_eq(Service.clusterURL, "");
@@ -88,9 +88,9 @@ function test_setCluster() {
     do_check_eq(Service.clusterURL, "http://weave.user.node/");
 
     _("A 'null' response won't make a difference either.");
-    Service.username = "jimdoe";
+    Identity.account = "jimdoe";
     do_check_false(Service._setCluster());
-    do_check_eq(Service.clusterURL, "http://weave.user.node/");      
+    do_check_eq(Service.clusterURL, "http://weave.user.node/");
 
   } finally {
     Svc.Prefs.resetBranch("");
@@ -106,7 +106,7 @@ function test_updateCluster() {
   });
   try {
     Service.serverURL = TEST_SERVER_URL;
-    Service.username = "johndoe";
+    Identity.account = "johndoe";
 
     _("Check initial state.");
     do_check_eq(Service.clusterURL, "");
@@ -125,7 +125,7 @@ function test_updateCluster() {
     do_check_eq(parseFloat(Svc.Prefs.get("lastClusterUpdate")), lastUpdate);
 
     _("Time travel 30 mins into the past and the update will work.");
-    Service.username = "janedoe";
+    Identity.account = "janedoe";
     Svc.Prefs.set("lastClusterUpdate", (lastUpdate - 30*60*1000).toString());
 
     before = Date.now();

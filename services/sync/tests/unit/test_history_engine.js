@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/engines/history.js");
 Cu.import("resource://services-sync/constants.js");
@@ -5,16 +8,13 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/util.js");
 
-var syncTesting = new SyncTestingInfrastructure();
-
 add_test(function test_processIncoming_mobile_history_batched() {
   _("SyncEngine._processIncoming works on history engine.");
 
   let FAKE_DOWNLOAD_LIMIT = 100;
-  
-  Svc.Prefs.set("serverURL", TEST_SERVER_URL);
-  Svc.Prefs.set("clusterURL", TEST_CLUSTER_URL);
-  Svc.Prefs.set("username", "foo");
+
+  new SyncTestingInfrastructure();
+
   Svc.Prefs.set("client.type", "mobile");
   PlacesUtils.history.removeAllPages();
   Engines.register(HistoryEngine);

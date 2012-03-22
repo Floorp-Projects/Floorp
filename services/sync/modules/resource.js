@@ -37,9 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ["Resource", "AsyncResource",
-                          "Auth", "BrokenBasicAuthenticator",
-                          "BasicAuthenticator", "NoOpAuthenticator"];
+const EXPORTED_SYMBOLS = [
+  "AsyncResource",
+  "Resource"
+];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -50,67 +51,9 @@ Cu.import("resource://services-sync/async.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
+Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/util.js");
-
-XPCOMUtils.defineLazyGetter(this, "Auth", function () {
-  return new AuthMgr();
-});
-
-// XXX: the authenticator api will probably need to be changed to support
-// other methods (digest, oauth, etc)
-
-function NoOpAuthenticator() {}
-NoOpAuthenticator.prototype = {
-  onRequest: function NoOpAuth_onRequest(headers) {
-    return headers;
-  }
-};
-
-// Warning: This will drop the high unicode bytes from passwords.
-// Use BasicAuthenticator to send non-ASCII passwords UTF8-encoded.
-function BrokenBasicAuthenticator(identity) {
-  this._id = identity;
-}
-BrokenBasicAuthenticator.prototype = {
-  onRequest: function BasicAuth_onRequest(headers) {
-    headers['authorization'] = 'Basic ' +
-      btoa(this._id.username + ':' + this._id.password);
-    return headers;
-  }
-};
-
-function BasicAuthenticator(identity) {
-  this._id = identity;
-}
-BasicAuthenticator.prototype = {
-  onRequest: function onRequest(headers) {
-    headers['authorization'] = 'Basic ' +
-      btoa(this._id.username + ':' + this._id.passwordUTF8);
-    return headers;
-  }
-};
-
-function AuthMgr() {
-  this._authenticators = {};
-  this.defaultAuthenticator = new NoOpAuthenticator();
-}
-AuthMgr.prototype = {
-  defaultAuthenticator: null,
-
-  registerAuthenticator: function AuthMgr_register(match, authenticator) {
-    this._authenticators[match] = authenticator;
-  },
-
-  lookupAuthenticator: function AuthMgr_lookup(uri) {
-    for (let match in this._authenticators) {
-      if (uri.match(match))
-        return this._authenticators[match];
-    }
-    return this.defaultAuthenticator;
-  }
-};
-
 
 /*
  * AsyncResource represents a remote network resource, identified by a URI.
@@ -150,6 +93,14 @@ AsyncResource.prototype = {
   // Caches the latest server timestamp (X-Weave-Timestamp header).
   serverTime: null,
 
+  /**
+   * Callback to be invoked at request time to add authentication details.
+   *
+   * By default, a global authenticator is provided. If this is set, it will
+   * be used instead of the global one.
+   */
+  authenticator: null,
+
   // The string to use as the base User-Agent in Sync requests.
   // These strings will look something like
   // 
@@ -167,29 +118,13 @@ AsyncResource.prototype = {
   // Wait 5 minutes before killing a request.
   ABORT_TIMEOUT: 300000,
 
-  // ** {{{ AsyncResource.authenticator }}} **
-  //
-  // Getter and setter for the authenticator module
-  // responsible for this particular resource. The authenticator
-  // module may modify the headers to perform authentication
-  // while performing a request for the resource, for example.
-  get authenticator() {
-    if (this._authenticator)
-      return this._authenticator;
-    else
-      return Auth.lookupAuthenticator(this.spec);
-  },
-  set authenticator(value) {
-    this._authenticator = value;
-  },
-
   // ** {{{ AsyncResource.headers }}} **
   //
   // Headers to be included when making a request for the resource.
   // Note: Header names should be all lower case, there's no explicit
   // check for duplicates due to case!
   get headers() {
-    return this.authenticator.onRequest(this._headers);
+    return this._headers;
   },
   set headers(value) {
     this._headers = value;
@@ -235,7 +170,7 @@ AsyncResource.prototype = {
   // through. It is never called directly, only {{{_doRequest}}} uses it
   // to obtain a request channel.
   //
-  _createRequest: function Res__createRequest() {
+  _createRequest: function Res__createRequest(method) {
     let channel = Services.io.newChannel(this.spec, null, null)
                           .QueryInterface(Ci.nsIRequest)
                           .QueryInterface(Ci.nsIHttpChannel);
@@ -253,9 +188,24 @@ AsyncResource.prototype = {
       channel.setRequestHeader("user-agent", ua, false);
     }
 
-    // Avoid calling the authorizer more than once.
     let headers = this.headers;
-    for (let key in headers) {
+
+    let authenticator = this.authenticator;
+    if (!authenticator) {
+      authenticator = Identity.getResourceAuthenticator();
+    }
+    if (authenticator) {
+      let result = authenticator(this, method);
+      if (result && result.headers) {
+        for (let [k, v] in Iterator(result.headers)) {
+          headers[k.toLowerCase()] = v;
+        }
+      }
+    } else {
+      this._log.debug("No authenticator found.");
+    }
+
+    for (let [key, value] in Iterator(headers)) {
       if (key == 'authorization')
         this._log.trace("HTTP Header " + key + ": ***** (suppressed)");
       else
@@ -270,7 +220,7 @@ AsyncResource.prototype = {
   _doRequest: function _doRequest(action, data, callback) {
     this._log.trace("In _doRequest.");
     this._callback = callback;
-    let channel = this._createRequest();
+    let channel = this._createRequest(action);
 
     if ("undefined" != typeof(data))
       this._data = data;

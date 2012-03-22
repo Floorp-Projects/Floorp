@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-sync/async.js");
+Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/engines.js");
@@ -260,14 +261,22 @@ FakeCryptoService.prototype = {
   }
 };
 
+function setBasicCredentials(username, password, syncKey) {
+  let auth = Identity;
+  auth.username = username;
+  auth.basicPassword = password;
+  auth.syncKey = syncKey;
+}
 
-function SyncTestingInfrastructure() {
-  Cu.import("resource://services-sync/identity.js");
+function SyncTestingInfrastructure(username, password, syncKey) {
+  Cu.import("resource://services-sync/service.js");
 
-  ID.set('WeaveID',
-         new Identity('Mozilla Services Encryption Passphrase', 'foo'));
-  ID.set('WeaveCryptoID',
-         new Identity('Mozilla Services Encryption Passphrase', 'foo'));
+  Identity.account = username || "foo";
+  Identity.basicPassword = password || "password";
+  Identity.syncKey = syncKey || "foo";
+
+  Service.serverURL = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
 
   this.logStats = initTestLogging();
   this.fakeFilesystem = new FakeFilesystemService({});

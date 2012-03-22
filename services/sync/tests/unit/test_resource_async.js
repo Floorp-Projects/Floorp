@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/log4moz.js");
@@ -261,19 +264,8 @@ add_test(function test_basicauth() {
   _("Test that the BasicAuthenticator doesn't screw up header case.");
   let res1 = new AsyncResource("http://localhost:8080/foo");
   res1.setHeader("Authorization", "Basic foobar");
-  res1.authenticator = new NoOpAuthenticator();
   do_check_eq(res1._headers["authorization"], "Basic foobar");
   do_check_eq(res1.headers["authorization"], "Basic foobar");
-  let id = new Identity("secret", "guest", "guest");
-  res1.authenticator = new BasicAuthenticator(id);
-
-  // In other words... it correctly overwrites our downcased version
-  // when accessed through .headers.
-  do_check_eq(res1._headers["authorization"], "Basic foobar");
-  do_check_eq(res1.headers["authorization"], "Basic Z3Vlc3Q6Z3Vlc3Q=");
-  do_check_eq(res1._headers["authorization"], "Basic Z3Vlc3Q6Z3Vlc3Q=");
-  do_check_true(!res1._headers["Authorization"]);
-  do_check_true(!res1.headers["Authorization"]);
 
   run_next_test();
 });
@@ -292,7 +284,7 @@ add_test(function test_get_protected_fail() {
 
 add_test(function test_get_protected_success() {
   _("GET a password protected resource");
-  let auth = new BasicAuthenticator(new Identity("secret", "guest", "guest"));
+  let auth = Identity.getBasicResourceAuthenticator("guest", "guest");
   let res3 = new AsyncResource("http://localhost:8080/protected");
   res3.authenticator = auth;
   do_check_eq(res3.authenticator, auth);

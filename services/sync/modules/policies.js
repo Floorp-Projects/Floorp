@@ -420,7 +420,9 @@ let SyncScheduler = {
    * non-syncing.
    */
   scheduleAtInterval: function scheduleAtInterval(minimumInterval) {
-    let interval = Utils.calculateBackoff(this._syncErrors, MINIMUM_BACKOFF_INTERVAL);
+    let interval = Utils.calculateBackoff(this._syncErrors,
+                                          MINIMUM_BACKOFF_INTERVAL,
+                                          Status.backoffInterval);
     if (minimumInterval) {
       interval = Math.max(minimumInterval, interval);
     }
@@ -907,9 +909,9 @@ SendCredentialsController.prototype = {
 
   sendCredentials: function sendCredentials() {
     this._log.trace("Sending credentials.");
-    let credentials = {account:   Weave.Service.account,
-                       password:  Weave.Service.password,
-                       synckey:   Weave.Service.passphrase,
+    let credentials = {account:   Weave.Identity.account,
+                       password:  Weave.Identity.basicPassword,
+                       synckey:   Weave.Identity.syncKey,
                        serverURL: Weave.Service.serverURL};
     this.jpakeclient.sendAndComplete(credentials);
   },
