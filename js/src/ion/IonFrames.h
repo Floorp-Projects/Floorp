@@ -151,7 +151,7 @@ class SafepointIndex
         return safepointOffset_;
     }
     void adjustDisplacement(uint32 offset) {
-        JS_ASSERT(offset >= 0 && uint32(offset) >= displacement_);
+        JS_ASSERT(offset >= displacement_);
         displacement_ = offset;
     }
     inline SnapshotOffset snapshotOffset() const;
