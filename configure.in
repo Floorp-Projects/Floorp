@@ -4969,6 +4969,15 @@ then
 
     if test -z "$QTDIR"; then
         PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore QtOpenGL)
+        PKG_CHECK_MODULES(MOZ_QT5, QtWidgets QtMultimedia QtPrintSupport QtQuick1,
+                      MOZ_ENABLE_QT5=1,
+                      MOZ_ENABLE_QT5=)
+        if test "$MOZ_ENABLE_QT5"; then
+            echo "Using qt5"
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $MOZ_QT5_CFLAGS"
+            MOZ_QT_LIBS="$MOZ_QT_LIBS $MOZ_QT5_LIBS"
+        fi
+
         AC_CHECK_PROGS(HOST_MOC, $MOC moc, "")
         AC_CHECK_PROGS(HOST_RCC, $RCC rcc, "")
     else
@@ -4981,8 +4990,19 @@ then
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtCore"
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtNetwork"
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtXml"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtDeclarative"
         HOST_MOC="$QTDIR/bin/moc"
         HOST_RCC="$QTDIR/bin/rcc"
+
+        # QtWidgets was introduced only in Qt5
+        if test -d $QTDIR/include/QtWidgets; then
+            echo "Using qt5"
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtWidgets"
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtMultimedia"
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtPrintSupport"
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtQuick1"
+            MOZ_QT_LIBS="$MOZ_QT_LIBS -lQtWidgets -lQtMultimedia -lQtPrintSupport -lQtQuick1"
+        fi
     fi
     if test -z "$HOST_MOC"; then
         AC_MSG_ERROR([No acceptable moc preprocessor found. Qt SDK is not installed or --with-qt is
