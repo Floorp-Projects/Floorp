@@ -297,14 +297,19 @@ public class Favicons {
             } catch (Exception e) {
                 // Trying to read icons from nested jar files will fail
                 if (mFaviconUrl.startsWith("jar:jar:")) {
-                    InputStream stream = GeckoJarReader.getStream(mFaviconUrl);
-                    if (stream != null) {
-                        image = new BitmapDrawable(stream);
-                    } else {
-                        Log.d(LOGTAG, "Error getting favicon from jar: " + e);
+                    try {
+                        InputStream stream = GeckoJarReader.getStream(mFaviconUrl);
+                        if (stream != null) {
+                            image = new BitmapDrawable(stream);
+                            stream.close();
+                        } else {
+                            Log.d(LOGTAG, "Error getting favicon from jar: " + e);
+                        }
+                    } catch(IOException ex) {
+                        Log.e(LOGTAG, "Error closing stream", ex);
                     }
                 } else {
-                    Log.d(LOGTAG, "Error downloading favicon: " + e);
+                    Log.e(LOGTAG, "Error downloading favicon", e);
                 }
             } finally {
                 if (urlConnection != null && urlConnection instanceof HttpURLConnection) {
