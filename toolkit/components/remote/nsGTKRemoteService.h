@@ -67,7 +67,7 @@ private:
                          nsIWeakReference* aWindow);
 
 
-  static PLDHashOperator StartupHandler(const void* aKey,
+  static PLDHashOperator StartupHandler(GtkWidget* aKey,
                                         nsIWeakReference* aData,
                                         void* aClosure);
 
@@ -80,7 +80,7 @@ private:
   virtual void SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
                                               PRUint32 aTimestamp);
 
-  nsInterfaceHashtable<nsVoidPtrHashKey, nsIWeakReference> mWindows;
+  nsInterfaceHashtable<nsPtrHashKey<GtkWidget>, nsIWeakReference> mWindows;
   GtkWidget* mServerWindow;  
 };
 

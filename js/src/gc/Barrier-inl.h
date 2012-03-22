@@ -37,12 +37,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef jsgc_barrier_inl_h___
+#define jsgc_barrier_inl_h___
+
 #include "jsgcmark.h"
 
 #include "gc/Barrier.h"
 
-#ifndef jsgc_barrier_inl_h___
-#define jsgc_barrier_inl_h___
+#include "vm/ObjectImpl-inl.h"
+#include "vm/String-inl.h"
 
 namespace js {
 

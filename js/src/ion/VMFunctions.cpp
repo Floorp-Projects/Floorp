@@ -198,6 +198,26 @@ CloseIteratorFromIon(JSContext *cx, JSObject *obj)
     return result;
 }
 
+JSObject*
+NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type)
+{
+    JSObject *obj = NewDenseAllocatedArray(cx, count);
+    if (!obj)
+        return NULL;
+
+    if (!type) {
+        if (!obj->setSingletonType(cx))
+            return NULL;
+
+        types::TypeScript::Monitor(cx, ObjectValue(*obj));
+    } else {
+        obj->setType(type);
+    }
+
+    return obj;
+}
+
+
 } // namespace ion
 } // namespace js
 

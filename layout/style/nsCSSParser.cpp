@@ -7935,12 +7935,6 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
     aMinElems = 1U;
     aMaxElems = 2U;
     break;
-  case eCSSKeyword_skew:
-    /* Exactly one or two angles. */
-    variantIndex = eTwoAngles;
-    aMinElems = 1U;
-    aMaxElems = 2U;
-    break;
   case eCSSKeyword_scale:
     /* One or two scale factors. */
     variantIndex = eTwoNumbers;

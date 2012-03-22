@@ -16,7 +16,6 @@ user_pref("dom.max_chrome_script_run_time", 0);
 user_pref("javascript.allow.mailnews", true);
 user_pref("javascript.options.showInConsole", true);
 user_pref("layout.css.report_errors", true);
-user_pref("security.enable_java", false);
 user_pref("security.warn_entering_secure", false);
 user_pref("security.warn_entering_weak", false);
 user_pref("security.warn_leaving_secure", false);

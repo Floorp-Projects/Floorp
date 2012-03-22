@@ -271,7 +271,7 @@ test(
 test(
     function test_CSPSourceList_fromString_twohost() {
       var str = "foo.bar:21 https://ras.bar";
-      var parsed = "foo.bar:21 https://ras.bar";
+      var parsed = "http://foo.bar:21 https://ras.bar:443";
       var sd = CSPSourceList.fromString(str, "http://self.com:80");
       //"two-host list should parse"
       do_check_neq(null,sd);
@@ -482,7 +482,6 @@ test(function test_CSPRep_fromString_withself() {
       //"img-src does not enforce default rule, 'self'.
       do_check_false(cspr.permits("https://foo.com:400", SD.IMG_SRC));
       //"img-src does not allow self
-      CSPdebug(cspr);
       do_check_true(cspr.permits(self, SD.IMG_SRC));
       //"script-src is too relaxed
       do_check_false(cspr.permits("http://evil.com", SD.SCRIPT_SRC));
@@ -575,6 +574,52 @@ test(function test_CSP_ReportURI_parsing() {
       do_check_in_array(parsedURIs, uri_valid_relative2_expanded);
       do_check_in_array(parsedURIs, uri_valid_absolute);
       do_check_eq(parsedURIs.length, 2);
+    });
+
+test(
+    function test_bug672961_withNonstandardSelfPort() {
+      /**
+       * When a protected document has a non-standard port, other host names
+       * listed as sources should inherit the scheme of the protected document
+       * but NOT the port.  Other hosts should use the default port for the
+       * inherited scheme.  For example, since 443 is default for HTTPS:
+       *
+       *   Document with CSP: https://foobar.com:4443
+       *   Transmitted policy:
+       *       "allow 'self' a.com"
+       *   Explicit policy:
+       *       "allow https://foobar.com:4443 https://a.com:443"
+       *
+       * This test examines scheme and nonstandard port inheritance.
+       */
+
+      var src;
+      src = CSPSource.create("a.com", "https://foobar.com:4443");
+      //"src should inherit and require https scheme
+      do_check_false(src.permits("http://a.com"));
+      //"src should inherit scheme 'https'"
+      do_check_true(src.permits("https://a.com"));
+      //"src should get default port 
+      do_check_true(src.permits("https://a.com:443"));
+      
+      src = CSPSource.create("http://a.com", "https://foobar.com:4443");
+      //"src should require http scheme"
+      do_check_false(src.permits("https://a.com"));
+      //"src should keep scheme 'http'"
+      do_check_true(src.permits("http://a.com"));
+      //"src should inherit default port for 'http'"
+      do_check_true(src.permits("http://a.com:80"));
+      
+      src = CSPSource.create("'self'", "https://foobar.com:4443");
+      //"src should inherit nonstandard port from self
+      do_check_true(src.permits("https://foobar.com:4443"));
+      do_check_false(src.permits("https://foobar.com"));
+      do_check_false(src.permits("https://foobar.com:443"));
+
+      //"src should inherit and require https scheme from self
+      do_check_false(src.permits("http://foobar.com:4443"));
+      do_check_false(src.permits("http://foobar.com"));
+
     });
 
 /*

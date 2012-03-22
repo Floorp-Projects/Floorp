@@ -139,6 +139,7 @@
 #include "jsstrinlines.h"
 
 #include "vm/ArgumentsObject-inl.h"
+#include "vm/ObjectImpl-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace mozilla;

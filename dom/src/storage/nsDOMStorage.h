@@ -82,7 +82,7 @@ using mozilla::dom::StorageParent;
 
 class DOMStorageImpl;
 
-class nsDOMStorageEntry : public nsVoidPtrHashKey
+class nsDOMStorageEntry : public nsPtrHashKey<const void>
 {
 public:
   nsDOMStorageEntry(KeyTypePointer aStr);

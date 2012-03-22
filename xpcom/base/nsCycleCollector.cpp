@@ -782,7 +782,7 @@ struct GCGraph
 
 // XXX Would be nice to have an nsHashSet<KeyType> API that has
 // Add/Remove/Has rather than PutEntry/RemoveEntry/GetEntry.
-typedef nsTHashtable<nsVoidPtrHashKey> PointerSet;
+typedef nsTHashtable<nsPtrHashKey<const void> > PointerSet;
 
 static inline void
 ToParticipant(nsISupports *s, nsXPCOMCycleCollectionParticipant **cp);
@@ -1012,7 +1012,7 @@ static bool
 AddPurpleRoot(GCGraphBuilder &builder, nsISupports *root);
 
 static PLDHashOperator
-selectionCallback(nsVoidPtrHashKey* key, void* userArg)
+selectionCallback(nsPtrHashKey<const void>* key, void* userArg)
 {
     CallbackClosure *closure = static_cast<CallbackClosure*>(userArg);
     if (AddPurpleRoot(closure->mBuilder,
@@ -2185,7 +2185,7 @@ nsPurpleBuffer::RemoveSkippable(bool removeChildlessNodes)
 
 #ifdef DEBUG_CC
 static PLDHashOperator
-noteAllCallback(nsVoidPtrHashKey* key, void* userArg)
+noteAllCallback(nsPtrHashKey<const void>* key, void* userArg)
 {
     GCGraphBuilder *builder = static_cast<GCGraphBuilder*>(userArg);
     builder->NoteXPCOMRoot(
@@ -3359,7 +3359,7 @@ nsCycleCollector::Shutdown()
 #ifdef DEBUG_CC
 
 static PLDHashOperator
-AddExpectedGarbage(nsVoidPtrHashKey *p, void *arg)
+AddExpectedGarbage(nsPtrHashKey<const void> *p, void *arg)
 {
     GCGraphBuilder *builder = static_cast<GCGraphBuilder*>(arg);
     nsISupports *root =

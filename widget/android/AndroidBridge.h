@@ -176,9 +176,8 @@ public:
 
     void AcknowledgeEventSync();
 
-    void EnableDeviceMotion(bool aEnable);
-
     void EnableLocation(bool aEnable);
+    void EnableLocationHighAccuracy(bool aEnable);
 
     void EnableSensor(int aSensorType);
 
@@ -464,6 +463,7 @@ protected:
     jmethodID jNotifyScreenShot;
     jmethodID jAcknowledgeEventSync;
     jmethodID jEnableLocation;
+    jmethodID jEnableLocationHighAccuracy;
     jmethodID jEnableSensor;
     jmethodID jDisableSensor;
     jmethodID jReturnIMEQueryResult;

@@ -57,8 +57,13 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 
 PROGRAM = screenshot$(BIN_SUFFIX)
 CPPSRCS = win32-screenshot.cpp
+OS_LIBS += $(call EXPAND_LIBNAME,gdiplus)
 MOZ_GLUE_PROGRAM_LDFLAGS =
 USE_STATIC_LIBS = 1
+
+ifdef GNU_CC
+WIN32_EXE_LDFLAGS = -municode
+endif
 
 endif # windows
 
