@@ -51,38 +51,23 @@
 using namespace js;
 using namespace js::ion;
 
-/*
- * Loads regs.fp into OsrFrameReg.
- * Exists as a prologue to generateEnterJIT().
- */
-IonCode *
-IonCompartment::generateOsrPrologue(JSContext *cx)
-{
-    MacroAssembler masm(cx);
-
-    // Load fifth argument, skipping pushed return address.
-    masm.movl(Operand(esp, 6 * sizeof(void *)), OsrFrameReg);
-
-    // Caller always invokes generateEnterJIT() first.
-    // Jump to default entry, threading OsrFrameReg through it.
-    JS_ASSERT(enterJIT_);
-    masm.jmp(enterJIT_);
-
-    Linker linker(masm);
-    return linker.newCode(cx);
-}
+enum EnterJitEbpArgumentOffset {
+    ARG_JITCODE     = 2 * sizeof(void *),
+    ARG_ARGC        = 3 * sizeof(void *),
+    ARG_ARGV        = 4 * sizeof(void *),
+    ARG_STACKFRAME  = 5 * sizeof(void *),
+    ARG_CALLEETOKEN = 6 * sizeof(void *),
+    ARG_RESULT      = 7 * sizeof(void *)
+};
 
 /*
- * This method generates a trampoline on x86 for a c++ function with
- * the following signature:
- *   JSBool blah(void *code, int argc, Value *argv, Value *vp)
- *   ...using standard cdecl calling convention
+ * Generates a trampoline for a C++ function with the EnterIonCode signature,
+ * using the standard cdecl calling convention.
  */
 IonCode *
 IonCompartment::generateEnterJIT(JSContext *cx)
 {
     MacroAssembler masm(cx);
-    // OsrFrameReg (edx) may not be used below.
 
     // Save old stack frame pointer, set new stack frame pointer.
     masm.push(ebp);
@@ -96,8 +81,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     masm.push(edi);
 
     // eax <- 8*argc, eax is now the offset betwen argv and the last
-    // parameter    --argc is in ebp + 12
-    masm.movl(Operand(ebp, 12), eax);
+    masm.movl(Operand(ebp, ARG_ARGC), eax);
     masm.shll(Imm32(3), eax);
 
     // We need to ensure that the stack is aligned on a 12-byte boundary, so
@@ -121,7 +105,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     ***************************************************************/
 
     // ebx = argv   --argv pointer is in ebp + 16
-    masm.movl(Operand(ebp, 16), ebx);
+    masm.movl(Operand(ebp, ARG_ARGV), ebx);
 
     // eax = argv[8(argc)]  --eax now points one value past the last argument
     masm.addl(ebx, eax);
@@ -146,14 +130,18 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     }
 
     // Push the callee token.
-    masm.push(Operand(ebp, 24));
+    masm.push(Operand(ebp, ARG_CALLEETOKEN));
 
     // Save the stack size so we can remove arguments and alignment after the
     // call.
-    masm.movl(Operand(ebp, 12), eax);
+    masm.movl(Operand(ebp, ARG_ARGC), eax);
     masm.shll(Imm32(3), eax);
     masm.addl(eax, ecx);
     masm.addl(Imm32(4), ecx);
+
+    // Load the StackFrame address into the OsrFrameReg.
+    // This address is also used for setting the constructing bit on all paths.
+    masm.movl(Operand(ebp, ARG_STACKFRAME), OsrFrameReg);
 
     // Create a frame descriptor.
     masm.makeFrameDescriptor(ecx, IonFrame_Entry);
@@ -163,28 +151,23 @@ IonCompartment::generateEnterJIT(JSContext *cx)
         Call passed-in code, get return value and fill in the
         passed in return value pointer
     ***************************************************************/
-    // Call code  --code pointer is in ebp + 8
-    masm.call(Operand(ebp, 8));
+    masm.call(Operand(ebp, ARG_JITCODE));
 
     // Pop arguments off the stack.
-    // eax <- 8*argc (size of all arugments we pushed on the stack)
+    // eax <- 8*argc (size of all arguments we pushed on the stack)
     masm.pop(eax);
-    masm.shrl(Imm32(FRAMETYPE_BITS), eax); // Unmark EntryFrame.
+    masm.shrl(Imm32(FRAMESIZE_SHIFT), eax); // Unmark EntryFrame.
     masm.addl(eax, esp);
 
-    // |ebp| could have been clobbered by the inner function. For now, re-grab
-    // |vp| directly off the stack:
-    //
-    //  +32 vp
-    //  +28 argv
-    //  +24 argc
-    //  +20 code
-    //  +16 <return>
-    //  +12 ebp
+    // |ebp| could have been clobbered by the inner function.
+    // Grab the address for the Value result from the argument stack.
+    //  +18 ... arguments ...
+    //  +14 <return>
+    //  +10 ebp <- original %ebp pointing here.
     //  +8  ebx
     //  +4  esi
     //  +0  edi
-    masm.movl(Operand(esp, 32), eax);
+    masm.movl(Operand(esp, ARG_RESULT + 3 * sizeof(void *)), eax);
     masm.storeValue(JSReturnOperand, Operand(eax, 0));
 
     /**************************************************************
@@ -396,7 +379,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
 
     // Remove the rectifier frame.
     masm.pop(ebp);            // ebp <- descriptor with FrameType.
-    masm.shrl(Imm32(FRAMETYPE_BITS), ebp); // ebp <- descriptor.
+    masm.shrl(Imm32(FRAMESIZE_SHIFT), ebp); // ebp <- descriptor.
     masm.pop(edi);            // Discard calleeToken.
     masm.addl(ebp, esp);      // Discard pushed arguments.
 

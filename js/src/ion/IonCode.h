@@ -349,7 +349,7 @@ struct IonScript
     }
     const SafepointIndex *getSafepointIndex(uint32 disp) const;
     const SafepointIndex *getSafepointIndex(uint8 *retAddr) const {
-        JS_ASSERT(retAddr > method()->raw());
+        JS_ASSERT(containsCodeAddress(retAddr));
         return getSafepointIndex(retAddr - method()->raw());
     }
     const OsiIndex *getOsiIndex(uint32 disp) const;

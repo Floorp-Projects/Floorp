@@ -51,31 +51,6 @@
 using namespace js;
 using namespace js::ion;
 
-/* 
- * Loads regs.fp into OsrFrameReg.
- * Exists as a prologue to generateEnterJIT().
- */
-IonCode *
-IonCompartment::generateOsrPrologue(JSContext *cx)
-{
-    MacroAssembler masm(cx);
-
-#if defined(_WIN64)
-    const Operand fp = Operand(rsp, 16 + ShadowStackSpace);
-    masm.movq(fp, OsrFrameReg);
-#else
-    JS_ASSERT(OsrFrameReg == IntArgReg5); // Nothing to do.
-#endif
-
-    // Caller always invokes generateEnterJIT() first.
-    // Jump to default entry, threading OsrFrameReg through it.
-    JS_ASSERT(enterJIT_);
-    masm.jmp(enterJIT_);
-
-    Linker linker(masm);
-    return linker.newCode(cx);
-}
-
 /* This method generates a trampoline on x64 for a c++ function with
  * the following signature:
  *   JSBool blah(void *code, int argc, Value *argv, Value *vp)
@@ -86,25 +61,27 @@ IonCompartment::generateEnterJIT(JSContext *cx)
 {
     MacroAssembler masm(cx);
 
-    const Register reg_code = IntArgReg0;
-    const Register reg_argc = IntArgReg1;
-    const Register reg_argv = IntArgReg2;
-    const Register reg_vp   = IntArgReg3;
+    const Register reg_code  = IntArgReg0;
+    const Register reg_argc  = IntArgReg1;
+    const Register reg_argv  = IntArgReg2;
+    const Register reg_frame = IntArgReg3;
+
 #if defined(_WIN64)
-    const Operand token = Operand(rbp, 16 + ShadowStackSpace);
-    // OsrFrameReg (r10 on WIN64) may not be used below.
+    // TODO: All these values are wrong. Need to test.
+    JS_ASSERT(!"Need to determine correct offsets for generateEnterJIT() args on Win64.");
+    const Operand token  = Operand(rbp, 16 + ShadowStackSpace);
+    const Operand result = Operand(rbp, 24 + ShadowStackSpace);
 #else
-    const Register token = IntArgReg4;
-    // OsrFrameReg (r9, ArgReg5) may not be used below.
+    const Register token  = IntArgReg4;
+    const Register result = IntArgReg5;
 #endif
 
     // Save old stack frame pointer, set new stack frame pointer.
     masm.push(rbp);
     masm.mov(rsp, rbp);
 
-    // Save non-volatile registers. These must be saved by the trampoline,
-    // rather than the JIT'd code, because they are scanned by the conservative
-    // scanner.
+    // Save non-volatile registers. These must be saved by the trampoline, rather
+    // than by the JIT'd code, because they are scanned by the conservative scanner.
     masm.push(rbx);
     masm.push(r12);
     masm.push(r13);
@@ -116,7 +93,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
 #endif
 
     // Save arguments passed in registers needed after function call.
-    masm.push(reg_vp);
+    masm.push(result);
 
     // Remember stack depth without padding and arguments.
     masm.mov(rsp, r14);
@@ -165,8 +142,12 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     Push the number of bytes we've pushed so far on the stack and call
     *****************************************************************/
     masm.subq(rsp, r14);
-    masm.shlq(Imm32(FRAMETYPE_BITS), r14);
-    masm.orl(Imm32(IonFrame_Entry), r14);
+
+    // Don't need to load OsrFrameReg -- it's always passed by the caller.
+    JS_ASSERT(OsrFrameReg == IntArgReg3);
+
+    // Create a frame descriptor.
+    masm.makeFrameDescriptor(r14, IonFrame_Entry);
     masm.push(r14);
 
     // Call function.
@@ -174,7 +155,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
 
     // Pop arguments and padding from stack.
     masm.pop(r14);              // Pop and decode descriptor.
-    masm.shrq(Imm32(FRAMETYPE_BITS), r14);
+    masm.shrq(Imm32(FRAMESIZE_SHIFT), r14);
     masm.addq(r14, rsp);        // Remove arguments.
 
     /*****************************************************************
@@ -380,14 +361,13 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
         masm.j(Assembler::NonZero, &copyLoopTop);
     }
 
-    // Construct sizeDescriptor.
+    // Construct descriptor.
     masm.subq(rsp, rbp);
-    masm.shlq(Imm32(FRAMETYPE_BITS), rbp);
-    masm.orq(Imm32(IonFrame_Rectifier), rbp);
+    masm.makeFrameDescriptor(rbp, IonFrame_Rectifier);
 
-    // Construct IonJSFrame.
-    masm.push(rax); // calleeToken.
-    masm.push(rbp); // sizeDescriptor.
+    // Construct IonJSFrameLayout.
+    masm.push(rax); // calleeToken
+    masm.push(rbp); // descriptor
 
     // Call the target function.
     // Note that this code assumes the function is JITted.
@@ -399,7 +379,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
 
     // Remove the rectifier frame.
     masm.pop(rbp);            // rbp <- descriptor with FrameType.
-    masm.shrq(Imm32(FRAMETYPE_BITS), rbp);
+    masm.shrq(Imm32(FRAMESIZE_SHIFT), rbp);
     masm.pop(r11);            // Discard calleeToken.
     masm.addq(rbp, rsp);      // Discard pushed arguments.
 

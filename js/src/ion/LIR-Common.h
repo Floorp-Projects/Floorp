@@ -306,6 +306,34 @@ class LToIdV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
     static const size_t Index = BOX_PIECES;
 };
 
+// Allocate an object for |new| on the caller-side.
+class LCreateThis : public LInstructionHelper<BOX_PIECES, 2, 0>
+{
+  public:
+    LIR_HEADER(CreateThis);
+
+    LCreateThis(const LAllocation &callee, const LAllocation &prototype)
+    {
+        setOperand(0, callee);
+        setOperand(1, prototype);
+    }
+
+    const LAllocation *getCallee() {
+        return getOperand(0);
+    }
+    const LAllocation *getPrototype() {
+        return getOperand(1);
+    }
+
+    // If inline allocation fails, calls into the VM.
+    bool isCall() const {
+        return true;
+    }
+    MCreateThis *mir() const {
+        return mir_->toCreateThis();
+    }
+};
+
 // Writes an argument for a function call to the frame's argument vector.
 class LStackArg : public LInstructionHelper<0, BOX_PIECES, 0>
 {
@@ -331,19 +359,14 @@ class LCallGeneric : public LCallInstructionHelper<BOX_PIECES, 1, 2>
     // Zero for a function without arguments.
     uint32 argslot_;
 
-    // Known single target. If unknown or polymorphic, then NULL.
-    JSFunction *target_;
-
   public:
     LIR_HEADER(CallGeneric);
 
-    LCallGeneric(JSFunction *target,
-                 const LAllocation &func,
+    LCallGeneric(const LAllocation &func,
                  uint32 argslot,
                  const LDefinition &nargsreg,
                  const LDefinition &tmpobjreg)
-      : argslot_(argslot),
-        target_(target)
+      : argslot_(argslot)
     {
         setOperand(0, func);
         setTemp(0, nargsreg);
@@ -363,11 +386,10 @@ class LCallGeneric : public LCallInstructionHelper<BOX_PIECES, 1, 2>
     }
 
     bool hasSingleTarget() const {
-        return target_ != NULL;
+        return getSingleTarget() != NULL;
     }
     JSFunction *getSingleTarget() const {
-        JS_ASSERT(hasSingleTarget());
-        return target_;
+        return mir()->getSingleTarget();
     }
 
     const LAllocation *getFunction() {
@@ -382,18 +404,17 @@ class LCallGeneric : public LCallInstructionHelper<BOX_PIECES, 1, 2>
 };
 
 // Generates a monomorphic callsite for a known, native target.
-class LCallNative : public LCallInstructionHelper<BOX_PIECES, 0, 4> // FIXME: How many really?
+class LCallNative : public LCallInstructionHelper<BOX_PIECES, 0, 4>
 {
-    JSFunction *function_;
     uint32 argslot_;
 
   public:
     LIR_HEADER(CallNative);
 
-    LCallNative(JSFunction *function, uint32 argslot,
+    LCallNative(uint32 argslot,
                 const LDefinition &argJSContext, const LDefinition &argUintN,
                 const LDefinition &argVp, const LDefinition &tmpreg)
-      : function_(function), argslot_(argslot)
+      : argslot_(argslot)
     {
         // Registers used for callWithABI().
         setTemp(0, argJSContext);
@@ -405,7 +426,7 @@ class LCallNative : public LCallInstructionHelper<BOX_PIECES, 0, 4> // FIXME: Ho
     }
 
     JSFunction *function() const {
-        return function_;
+        return mir()->getSingleTarget();
     }
     uint32 argslot() const {
         return argslot_;
@@ -432,6 +453,41 @@ class LCallNative : public LCallInstructionHelper<BOX_PIECES, 0, 4> // FIXME: Ho
 
     const LAllocation *getTempReg() {
         return getTemp(3)->output();
+    }
+};
+
+// Generates a polymorphic callsite for |new|, where |this| has not been
+// pre-allocated by the caller.
+class LCallConstructor : public LInstructionHelper<BOX_PIECES, 1, 0>
+{
+    uint32 argslot_;
+
+  public:
+    LIR_HEADER(CallConstructor);
+
+    LCallConstructor(const LAllocation &func, uint32 argslot)
+      : argslot_(argslot)
+    {
+        setOperand(0, func);
+    }
+
+    uint32 argslot() const {
+        return argslot_;
+    }
+    MCall *mir() const {
+        return mir_->toCall();
+    }
+
+    uint32 nargs() const {
+        JS_ASSERT(mir()->argc() >= 1);
+        return mir()->argc() - 1; // |this| is not a formal argument.
+    }
+    bool isCall() const {
+        return true;
+    }
+
+    const LAllocation *getFunction() {
+        return getOperand(0);
     }
 };
 

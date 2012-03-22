@@ -73,31 +73,16 @@ IonBuilder::discardCall(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb)
     if (!discardCallArgs(argc, argv, bb))
         return false;
 
-    // Discard function it would be removed by DCE if it is not captured by a
-    // resume point.
+    // Function MDefinition instruction implicitly consumed by inlining.
     bb->pop();
+
     return true;
 }
 
 bool
-IonBuilder::optimizeNativeCall(uint32 argc)
+IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc)
 {
-    /* Ensure that the function is a native function. */
-    types::TypeSet *calleeTypes = oracle->getCallTarget(script, argc, pc);
-    if (!calleeTypes)
-        return false;
-
-    JSObject *funObject = calleeTypes->getSingleton(cx);
-    if (!funObject)
-        return false;
-
-    if (!funObject->isFunction())
-        return false;
-    JSFunction *fun = funObject->toFunction();
-
-    JSNative native = fun->maybeNative();
-    if (!native)
-        return false;
+    JSNative native = target->native();
 
     /* Check if there is a match for the current native function */
 
@@ -125,6 +110,7 @@ IonBuilder::optimizeNativeCall(uint32 argc)
 
     types::TypeSet *arg1Types = oracle->getCallArg(script, argc, 1, pc);
     MIRType arg1Type = MIRTypeFromValueType(arg1Types->getKnownTypeTag(cx));
+
     if (argc == 1) {
         if (native == js_math_abs) {
             // argThis == MPassArg(MConstant(Math))

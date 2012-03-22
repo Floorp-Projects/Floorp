@@ -491,7 +491,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     // higher level tag testing code
     Condition testInt32(Condition cond, const ValueOperand &value);
-
     Condition testBoolean(Condition cond, const ValueOperand &value);
     Condition testDouble(Condition cond, const ValueOperand &value);
     Condition testNull(Condition cond, const ValueOperand &value);
@@ -499,6 +498,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testString(Condition cond, const ValueOperand &value);
     Condition testObject(Condition cond, const ValueOperand &value);
     Condition testMagic(Condition cond, const ValueOperand &value);
+
+    Condition testPrimitive(Condition cond, const ValueOperand &value);
 
     // register-based tests
     Condition testInt32(Condition cond, const Register &tag);
@@ -510,12 +511,19 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testNumber(Condition cond, const Register &tag);
     Condition testMagic(Condition cond, const Register &tag);
 
+    Condition testPrimitive(Condition cond, const Register &tag);
+
     Condition testGCThing(Condition cond, const Address &address);
     Condition testGCThing(Condition cond, const BaseIndex &address);
 
     template <typename T>
     void branchTestGCThing(Condition cond, const T &t, Label *label) {
         Condition c = testGCThing(cond, t);
+        ma_b(label, c);
+    }
+    template <typename T>
+    void branchTestPrimitive(Condition cond, const T &t, Label *label) {
+        Condition c = testPrimitive(cond, t);
         ma_b(label, c);
     }
 
@@ -763,8 +771,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void storePayload(Register src, Register base, Register index, int32 shift = defaultShift);
     void storeTypeTag(ImmTag tag, Operand dest);
     void storeTypeTag(ImmTag tag, Register base, Register index, int32 shift = defaultShift);
+
     void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
-        ma_lsl(Imm32(FRAMETYPE_BITS), frameSizeReg, frameSizeReg);
+        ma_lsl(Imm32(FRAMESIZE_SHIFT), frameSizeReg, frameSizeReg);
         ma_orr(Imm32(type), frameSizeReg);
     }
 

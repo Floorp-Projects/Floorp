@@ -255,6 +255,14 @@ InlineFrameIterator::getInlinedFrame(size_t n)
     return frameCount;
 }
 
+IonFrameIterator::IonFrameIterator(IonJSFrameLayout *fp)
+  : current_((uint8 *)fp),
+    type_(IonFrame_JS),
+    returnAddressToFp_(fp->returnAddress()),
+    frameSize_(fp->prevFrameLocalSize())
+{
+}
+
 bool
 IonFrameIterator::checkInvalidation() const
 {

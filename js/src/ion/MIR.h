@@ -1101,7 +1101,7 @@ class MCall
         return target_;
     }
 
-    bool isConstruct() const {
+    bool isConstructing() const {
         return construct_;
     }
 
@@ -1328,8 +1328,15 @@ class MUnbox : public MUnaryInstruction
         mode_(mode)
     {
         JS_ASSERT(ins->type() == MIRType_Value);
+        JS_ASSERT(type == MIRType_Boolean ||
+                  type == MIRType_Int32   ||
+                  type == MIRType_Double  || 
+                  type == MIRType_String  ||
+                  type == MIRType_Object);
+
         setResultType(type);
         setMovable();
+
         if (mode_ == TypeBarrier || mode_ == TypeGuard)
             setGuard();
         if (mode_ == TypeGuard)
@@ -1391,6 +1398,54 @@ class MGuardObject : public MUnaryInstruction, public SingleObjectPolicy
     }
 };
 
+// Caller-side allocation of |this| for |new|:
+// Given a prototype operand, construct |this| for JSOP_NEW.
+// For native constructors, returns MagicValue(JS_IS_CONSTRUCTING).
+class MCreateThis
+  : public MAryInstruction<2>,
+    public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >
+{
+    // Template for |this|, provided by TI, or NULL.
+    JSObject *templateObject_;
+
+    MCreateThis(MDefinition *callee, MDefinition *prototype, JSObject *templateObject)
+      : templateObject_(templateObject)
+    {
+        initOperand(0, callee);
+        initOperand(1, prototype);
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(CreateThis);
+    static MCreateThis *New(MDefinition *callee, MDefinition *prototype,
+                            JSObject *templateObject)
+    {
+        return new MCreateThis(callee, prototype, templateObject);
+    }
+
+    MDefinition *getCallee() const {
+        return getOperand(0);
+    }
+    MDefinition *getPrototype() const {
+        return getOperand(1);
+    }
+    bool hasTemplateObject() const {
+        return !!templateObject_;
+    }
+    JSObject *getTemplateObject() const {
+        return templateObject_;
+    }
+
+    // Although creation of |this| modifies global state, it is safely repeatable.
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 // Passes an MDefinition to an MCall. Must occur between an MPrepareCall and
 // MCall. Boxes the input and stores it to the correct location on stack.
 //
@@ -1435,6 +1490,9 @@ class MPassArg
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+
+    // Include argnum_ with instruction output: MPassArg order is arbitrary.
+    void printOpcode(FILE *fp);
 };
 
 // Converts a primitive (either typed or untyped) to a double. If the input is
@@ -3528,9 +3586,11 @@ class MCallGetProperty
     public BoxInputsPolicy
 {
     JSAtom *atom_;
+    bool markEffectful_;
 
     MCallGetProperty(MDefinition *value, JSAtom *atom)
-      : MUnaryInstruction(value), atom_(atom)
+      : MUnaryInstruction(value), atom_(atom),
+        markEffectful_(true)
     {
         setResultType(MIRType_Value);
     }
@@ -3549,6 +3609,18 @@ class MCallGetProperty
     }
     TypePolicy *typePolicy() {
         return this;
+    }
+
+    // Constructors need to perform a GetProp on the function prototype.
+    // Since getters cannot be set on the prototype, fetching is non-effectful.
+    // The operation may be safely repeated in case of bailout.
+    void markUneffectful() {
+        markEffectful_ = false;
+    }
+    AliasSet getAliasSet() const {
+        if (markEffectful_)
+            return AliasSet::Store(AliasSet::Any);
+        return AliasSet::None();
     }
 };
 
@@ -3916,6 +3988,10 @@ class MResumePoint : public MNode
     // Overwrites an operand without updating its Uses.
     void setOperand(size_t index, MDefinition *operand) {
         JS_ASSERT(index < stackDepth_);
+        
+        if (operand->isPassArg())
+            operand = operand->toPassArg()->getArgument();
+
         operands_[index] = operand;
     }
 

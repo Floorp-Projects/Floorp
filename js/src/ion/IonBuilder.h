@@ -176,16 +176,6 @@ class IonBuilder : public MIRGenerator
 
     static int CmpSuccessors(const void *a, const void *b);
 
-    struct InliningData
-    {
-        bool shouldInline;
-        JSFunction *callee;
-
-        InliningData()
-          : shouldInline(false), callee(NULL)
-        { }
-    };
-
   public:
     IonBuilder(JSContext *cx, JSObject *scopeChain, TempAllocator &temp, MIRGraph &graph,
                TypeOracle *oracle, CompileInfo &info, size_t inliningDepth = 0, uint32 loopDepth = 0);
@@ -206,9 +196,8 @@ class IonBuilder : public MIRGenerator
         return js_IonOptions.inlining;
     }
 
-    bool shouldInlineCurrentCall(uint32 argc, InliningData *data);
     JSFunction *getSingleCallTarget(uint32 argc, jsbytecode *pc);
-    bool getInliningTarget(uint32 argc, jsbytecode *pc, JSFunction **out);
+    bool canInlineTarget(JSFunction *target);
 
     void popCfgStack();
     bool processDeferredContinues(CFGState &state);
@@ -283,6 +272,14 @@ class IonBuilder : public MIRGenerator
     bool pushConstant(const Value &v);
     bool pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::TypeSet *observed);
     void monitorResult(MInstruction *ins, types::TypeSet *types);
+
+    JSObject *getSingletonPrototype(JSFunction *target);
+
+    MDefinition *createThisNative();
+    MDefinition *createThisScripted(MDefinition *callee);
+    MDefinition *createThisScriptedSingleton(JSFunction *target, JSObject *proto, MDefinition *callee);
+    MDefinition *createThis(JSFunction *target, MDefinition *callee);
+
     bool jsop_add(MDefinition *left, MDefinition *right);
     bool jsop_bitnot();
     bool jsop_bitop(JSOp op);
@@ -336,7 +333,7 @@ class IonBuilder : public MIRGenerator
     // specialized and which can enable GVN & LICM on these native calls.
     bool discardCallArgs(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb);
     bool discardCall(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb);
-    bool optimizeNativeCall(uint32 argc);
+    bool inlineNativeCall(JSFunction *target, uint32 argc);
 
     /* Inlining. */
 
@@ -347,9 +344,9 @@ class IonBuilder : public MIRGenerator
         InliningStatus_Inlined
     };
 
-    bool jsop_call_inline(uint32 argc, IonBuilder &inlineBuilder, InliningData *data);
-    InliningStatus maybeInline(uint32 argc);
-    bool makeInliningDecision(uint32 argc, InliningData *data);
+    bool jsop_call_inline(uint32 argc, IonBuilder &inlineBuilder);
+    bool inlineScriptedCall(JSFunction *target, uint32 argc);
+    bool makeInliningDecision(JSFunction *target);
 
   public:
     // A builder is inextricably tied to a particular script.

@@ -100,11 +100,13 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitElements(LElements *lir);
     bool visitTypeBarrier(LTypeBarrier *lir);
     bool visitMonitorTypes(LMonitorTypes *lir);
-    bool visitCallNative(LCallNative *lir);
-    bool visitCallGeneric(LCallGeneric *lir);
+    bool visitCallNative(LCallNative *call);
+    bool visitCallGeneric(LCallGeneric *call);
+    bool visitCallConstructor(LCallConstructor *call);
     bool visitDoubleToInt32(LDoubleToInt32 *lir);
     bool visitNewArray(LNewArray *lir);
     bool visitNewObject(LNewObject *lir);
+    bool visitCreateThis(LCreateThis *lir);
     bool visitArrayLength(LArrayLength *lir);
     bool visitTypedArrayLength(LTypedArrayLength *lir);
     bool visitStringLength(LStringLength *lir);

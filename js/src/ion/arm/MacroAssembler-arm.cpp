@@ -1558,6 +1558,12 @@ MacroAssemblerARMCompat::testMagic(Assembler::Condition cond, const ValueOperand
     return testMagic(cond, value.typeReg());
 }
 
+Assembler::Condition
+MacroAssemblerARMCompat::testPrimitive(Assembler::Condition cond, const ValueOperand &value)
+{
+    return testPrimitive(cond, value.typeReg());
+}
+
 // Register-based tests.
 Assembler::Condition
 MacroAssemblerARMCompat::testInt32(Assembler::Condition cond, const Register &tag)
@@ -1610,6 +1616,14 @@ MacroAssemblerARMCompat::testMagic(Assembler::Condition cond, const Register &ta
     JS_ASSERT(cond == Equal || cond == NotEqual);
     ma_cmp(tag, ImmTag(JSVAL_TAG_MAGIC));
     return cond;
+}
+
+Assembler::Condition
+MacroAssemblerARMCompat::testPrimitive(Assembler::Condition cond, const Register &tag)
+{
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    ma_cmp(tag, ImmTag(JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET));
+    return cond == Equal ? Below : AboveOrEqual;
 }
 
 Assembler::Condition
