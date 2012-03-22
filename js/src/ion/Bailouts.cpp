@@ -270,7 +270,7 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
 
     JSFunction *fun = calleeVal.toObject().toFunction();
     JSScript *script = fun->script();
-    CallArgs inlineArgs = CallArgsFromSp(callerArgc, regs.sp);
+    CallArgs inlineArgs = CallArgsFromArgv(fun->nargs, regs.sp - callerArgc);
     
     // Bump the stack pointer to make it look like the inline args have been pushed, but they will
     // really get filled in by RestoreOneFrame.
