@@ -53,10 +53,8 @@ namespace ion {
 
 class FrameSizeClass;
 
-typedef void (*EnterIonCode)(void *code, int argc, Value *argv, Value *vp,
-                             CalleeToken calleeToken);
-typedef void (*DoOsrIonCode)(void *code, int argc, Value *argv, Value *vp,
-                               CalleeToken calleeToken, StackFrame *fp);
+typedef void (*EnterIonCode)(void *code, int argc, Value *argv, StackFrame *fp,
+                             CalleeToken calleeToken, Value *vp);
 
 class IonActivation;
 
@@ -71,9 +69,6 @@ class IonCompartment
 
     // Trampoline for entering JIT code. Contains OSR prologue.
     ReadBarriered<IonCode> enterJIT_;
-
-    // OSR prologue to enterJIT_.
-    ReadBarriered<IonCode> osrPrologue_;
 
     // Vector mapping frame class sizes to bailout tables.
     js::Vector<ReadBarriered<IonCode>, 4, SystemAllocPolicy> bailoutTables_;
@@ -95,7 +90,6 @@ class IonCompartment
     VMWrapperMap *functionWrappers_;
 
   private:
-    IonCode *generateOsrPrologue(JSContext *cx);
     IonCode *generateEnterJIT(JSContext *cx);
     IonCode *generateReturnError(JSContext *cx);
     IonCode *generateArgumentsRectifier(JSContext *cx);
@@ -165,22 +159,6 @@ class IonCompartment
         return enterJIT_.get()->as<EnterIonCode>();
     }
 
-    DoOsrIonCode osrPrologueInfallible() {
-        JS_ASSERT(osrPrologue_);
-        return osrPrologue_.get()->as<DoOsrIonCode>();
-    }
-
-    DoOsrIonCode osrPrologue(JSContext *cx) {
-        if (!enterJIT(cx))
-            return NULL;
-        if (!osrPrologue_) {
-            osrPrologue_ = generateOsrPrologue(cx);
-            if (!osrPrologue_)
-                return NULL;
-        }
-        return osrPrologue_.get()->as<DoOsrIonCode>();
-    }
-
     IonCode *preBarrier(JSContext *cx) {
         if (!preBarrier_) {
             preBarrier_ = generatePreBarrier(cx);
@@ -195,12 +173,6 @@ class BailoutClosure;
 
 class IonActivation
 {
-  public:
-    enum Kind {
-        FUNCTION,
-        OSR
-    };
-
   private:
     JSContext *cx_;
     JSCompartment *compartment_;
@@ -210,10 +182,9 @@ class IonActivation
     uint8 *prevIonTop_;
     JSContext *prevIonJSContext_;
     JSObject *savedEnumerators_;
-    Kind kind_;
 
   public:
-    IonActivation(JSContext *cx, StackFrame *fp, IonActivation::Kind kind);
+    IonActivation(JSContext *cx, StackFrame *fp);
     ~IonActivation();
 
     StackFrame *entryfp() const {
@@ -251,10 +222,6 @@ class IonActivation
     void updateSavedEnumerators(JSObject *obj) {
         savedEnumerators_ = obj;
     }
-    Kind kind() const {
-        return kind_;
-    }
-
     static inline size_t offsetOfSavedEnumerators() {
         return offsetof(IonActivation, savedEnumerators_);
     }

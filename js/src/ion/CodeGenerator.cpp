@@ -539,7 +539,6 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     uint32 callargslot = call->argslot();
     uint32 unusedStack = StackOffsetOfPassedArg(callargslot);
 
-
     masm.checkStackAlignment();
 
     // Unless already known, guard that calleereg is actually a function object.
@@ -548,31 +547,6 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
         masm.cmpPtr(nargsreg, ImmWord(&js::FunctionClass));
         if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
             return false;
-    }
-
-    // As a temporary hack for JSOP_NEW support, always call out to InvokeConstructor
-    // in the case of a constructing call.
-    // TODO: Bug 701692: performant support for JSOP_NEW.
-    if (call->mir()->isConstruct()) {
-        typedef bool (*pf)(JSContext *, JSFunction *, uint32, Value *, Value *);
-        static const VMFunction InvokeConstructorFunctionInfo =
-            FunctionInfo<pf>(InvokeConstructorFunction);
-
-        // Nestle %esp up to the argument vector.
-        // Each path must account for framePushed_ separately, for callVM to be valid.
-        masm.freeStack(unusedStack);
-
-        pushArg(StackPointer);          // argv.
-        pushArg(Imm32(call->nargs()));  // argc.
-        pushArg(calleereg);             // JSFunction *.
-
-        if (!callVM(InvokeConstructorFunctionInfo, call))
-            return false;
-
-        // Un-nestle %esp from the argument vector. No prefix was pushed.
-        masm.reserveStack(unusedStack);
-
-        return true;
     }
 
     Label end, invoke;
@@ -649,7 +623,6 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     if (!markSafepoint(call))
         return false;
 
-
     // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
     // The return address has already been removed from the Ion frame.
     int prefixGarbage = sizeof(IonJSFrameLayout) - sizeof(void *);
@@ -680,6 +653,49 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     }
 
     masm.bind(&end);
+
+    // If the return value of the constructing function is Primitive,
+    // replace the return value with the Object from CreateThis.
+    if (call->mir()->isConstructing()) {
+        Label notPrimitive;
+
+        masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand, &notPrimitive);
+        masm.loadValue(Address(StackPointer, unusedStack), JSReturnOperand);
+
+        masm.bind(&notPrimitive);
+    }
+
+    return true;
+}
+
+bool
+CodeGenerator::visitCallConstructor(LCallConstructor *call)
+{
+    JS_ASSERT(call->mir()->isConstructing());
+
+    // Holds the function object.
+    const LAllocation *callee = call->getFunction();
+    Register calleereg = ToRegister(callee);
+
+    uint32 callargslot = call->argslot();
+    uint32 unusedStack = StackOffsetOfPassedArg(callargslot);
+
+    typedef bool (*pf)(JSContext *, JSFunction *, uint32, Value *, Value *);
+    static const VMFunction InvokeConstructorFunctionInfo =
+        FunctionInfo<pf>(InvokeConstructorFunction);
+
+    // Nestle %esp up to the argument vector.
+    masm.freeStack(unusedStack);
+
+    pushArg(StackPointer);          // argv.
+    pushArg(Imm32(call->nargs()));  // argc.
+    pushArg(calleereg);             // JSFunction *.
+
+    if (!callVM(InvokeConstructorFunctionInfo, call))
+        return false;
+
+    // Un-nestle %esp from the argument vector. No prefix was pushed.
+    masm.reserveStack(unusedStack);
 
     return true;
 }
@@ -861,6 +877,27 @@ CodeGenerator::visitNewObject(LNewObject *lir)
     pushArg(ImmGCPtr(lir->mir()->type()));
     pushArg(ImmGCPtr(lir->mir()->baseObj()));
     return callVM(Info, lir);
+}
+
+bool
+CodeGenerator::visitCreateThis(LCreateThis *lir)
+{
+    Register calleeReg = ToRegister(lir->getCallee());
+    Register protoReg  = ToRegister(lir->getPrototype());
+
+    {
+        typedef JSObject *(*pf)(JSContext *cx, JSObject *callee, JSObject *proto);
+        static const VMFunction CreateThisInfo =
+            FunctionInfo<pf>(js_CreateThisForFunctionWithProto);
+
+        pushArg(protoReg);
+        pushArg(calleeReg);
+
+        if (!callVM(CreateThisInfo, lir))
+            return false;
+    }
+
+    return true;
 }
 
 bool

@@ -193,6 +193,10 @@ class OsiIndex
 //    0 returnAddress
 //   .. locals ..
 
+// The descriptor is organized into three sections:
+// [ frame size | constructing bit | frame type ]
+// < highest - - - - - - - - - - - - - - lowest >
+static const uintptr_t FRAMESIZE_SHIFT = 3;
 static const uintptr_t FRAMETYPE_BITS = 3;
 static const uintptr_t FRAMETYPE_MASK = (1 << FRAMETYPE_BITS) - 1;
 
@@ -358,7 +362,7 @@ void MarkIonActivations(JSRuntime *rt, JSTracer *trc);
 static inline uint32
 MakeFrameDescriptor(uint32 frameSize, FrameType type)
 {
-    return (frameSize << FRAMETYPE_BITS) | type;
+    return (frameSize << FRAMESIZE_SHIFT) | type;
 }
 
 } // namespace ion

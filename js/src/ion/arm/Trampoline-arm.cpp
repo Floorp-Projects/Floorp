@@ -72,37 +72,25 @@ GenerateReturn(MacroAssembler &masm, int returnCode)
 }
 
 /*
- * Loads regs.fp into OsrFrameReg.
- * Exists as a prologue to generateEnterJIT().
- */
-IonCode *
-IonCompartment::generateOsrPrologue(JSContext *cx)
-{
-    // ARM only has four volatile registers, all of which currently hold
-    // arguments. Furthermore, it is impractical to store to the stack here to
-    // free up registers, since generateEnterJIT() would have to know to remove
-    // those stores. Given that a register is necessary for branching on ARM,
-    // a separate OSR prologue simply cannot exist on this architecture.
-    //
-    // Since branching is impossible and we don't want to duplicate
-    // generateEnterJIT(), that function performs double-service by always
-    // loading into the OsrFrameReg as if it had been called with a sixth
-    // argument. So we just hijack enterJIT_, which already exists.
-
-    JS_ASSERT(enterJIT_);
-    return enterJIT_;
-}
-
-/* This method generates a trampoline on x86 for a c++ function with
+ * This method generates a trampoline on x86 for a c++ function with
  * the following signature:
- *   JSBool blah(void *code, int argc, Value *argv, Value *vp, CalleeToken calleeToken)*
- *                    =r0       =r1          =r2          =r3
+ *   void enter(void *code, int argc, Value *argv, StackFrame *fp, CalleeToken
+ *              calleeToken, Value *vp)
  *   ...using standard EABI calling convention
-
  */
 IonCode *
 IonCompartment::generateEnterJIT(JSContext *cx)
 {
+    const Register reg_code  = r0;
+    const Register reg_argc  = r1;
+    const Register reg_argv  = r2;
+    const Register reg_frame = r3;
+
+    const DTRAddr slot_token = DTRAddr(sp, DtrOffImm(40));
+    const DTRAddr slot_vp    = DTRAddr(sp, DtrOffImm(44));
+
+    JS_ASSERT(OsrFrameReg == reg_frame);
+
     MacroAssembler masm(cx);
     Assembler *aasm = &masm;
 
@@ -110,7 +98,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     // rather than the JIT'd code, because they are scanned by the conservative
     // scanner.
     masm.startDataTransferM(IsStore, sp, DB, WriteBack);
-    masm.transferReg(r3); // [sp]  save the pointer we'll write our return value into
+    masm.transferReg(r0); // [sp] -- Unnecessary, except for alignment.
     masm.transferReg(r4); // [sp,4]
     masm.transferReg(r5); // [sp,8]
     masm.transferReg(r6); // [sp,12]
@@ -123,18 +111,10 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     masm.transferReg(lr);  // [sp,36]
     // The 5th argument is located at [sp, 40]
     masm.finishDataTransfer();
-    // Load said argument into r11
-    aasm->as_dtr(IsLoad, 32, Offset, r11, DTRAddr(sp, DtrOffImm(40)));
 
-    // If this code is being executed as part of OSR, there is a sixth argument.
-    // In the case of non-OSR code, loading into OsrFrameReg as if there were a
-    // sixth argument has no effect.
-    // The sixth argument is located at [sp, 44].
-    masm.as_dtr(IsLoad, 32, Offset, OsrFrameReg, DTRAddr(sp, DtrOffImm(44)));
-    // The OsrFrameReg may not be used below.
-#if 0
-    JS_STATIC_ASSERT(OsrFrameReg == r10);
-#endif
+    // Load calleeToken into r11.
+    aasm->as_dtr(IsLoad, 32, Offset, r11, slot_token);
+
     aasm->as_mov(r9, lsl(r1, 3)); // r9 = 8*argc
     // The size of the IonFrame is actually 16, and we pushed r3 when we aren't
     // going to pop it, BUT, we pop the return value, rather than just branching
@@ -182,7 +162,9 @@ IonCompartment::generateEnterJIT(JSContext *cx)
         aasm->as_b(&header, Assembler::NonZero);
         masm.bind(&footer);
     }
+
     masm.makeFrameDescriptor(r9, IonFrame_Entry);
+
 #ifdef DEBUG
     masm.ma_mov(Imm32(0xdeadbeef), r8);
 #endif
@@ -192,28 +174,39 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     masm.transferReg(r9);  // [sp',8]  = argc*8+20
     masm.transferReg(r11); // [sp',12]  = callee token
     masm.finishDataTransfer();
+
     // Throw our return address onto the stack.  this setup seems less-than-ideal
     aasm->as_dtr(IsStore, 32, Offset, pc, DTRAddr(sp, DtrOffImm(0)));
+
     // Call the function.  using lr as the link register would be *so* nice
     aasm->as_blx(r0);
+
     // The top of the stack now points to *ABOVE* the address that we previously stored the
     // return address into.
     // Load off of the stack the size of our local stack
     aasm->as_dtr(IsLoad, 32, Offset, r5, DTRAddr(sp, DtrOffImm(4)));
+
     // TODO: these can be fused into one! I don't think this is true since I added in the lsr.
-    aasm->as_add(sp, sp, lsr(r5,FRAMETYPE_BITS));
-    // Reach into our saved arguments, and find the pointer to where we want
-    // to write our return value.
-    aasm->as_dtr(IsLoad, 32, PostIndex, r5, DTRAddr(sp, DtrOffImm(4)));
+    aasm->as_add(sp, sp, lsr(r5, FRAMESIZE_SHIFT));
+
+    // Extract return Value location from function arguments.
+    aasm->as_dtr(IsLoad, 32, Offset, r5, slot_vp);
+
+    // Get rid of the bogus r0 push.
+    aasm->as_add(sp, sp, Imm8(4));
+
     // We're using a load-double here.  In order for that to work,
     // the data needs to be stored in two consecutive registers,
     // make sure this is the case
     ASSERT(JSReturnReg_Type.code() == JSReturnReg_Data.code()+1);
+
     // The lower reg also needs to be an even regster.
     ASSERT((JSReturnReg_Data.code() & 1) == 0);
     aasm->as_extdtr(IsStore, 64, true, Offset,
                     JSReturnReg_Data, EDtrAddr(r5, EDtrOffImm(0)));
+
     GenerateReturn(masm, JS_TRUE);
+
     Linker linker(masm);
     return linker.newCode(cx);
 }
@@ -359,7 +352,8 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
 
     masm.moveValue(UndefinedValue(), r5, r4);
 
-    masm.ma_mov(sp, r3); // Save %rsp.
+    masm.ma_mov(sp, r3); // Save %sp.
+    masm.ma_mov(sp, r7); // Save %sp again.
 
     // Push undefined.
     {
@@ -386,9 +380,11 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
         masm.ma_sub(r8, Imm32(1), r8, SetCond);
         masm.ma_b(&copyLoopTop, Assembler::Unsigned);
     }
+
     // translate the framesize from values into bytes
     masm.ma_add(r6, Imm32(1), r6);
     masm.ma_lsl(Imm32(3), r6, r6);
+
     // Construct sizeDescriptor.
     masm.makeFrameDescriptor(r6, IonFrame_Rectifier);
 
@@ -418,7 +414,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     // padding
     // return address
     masm.ma_add(sp, Imm32(8), sp);
-    masm.ma_alu(sp, lsr(r4, FRAMETYPE_BITS), sp, op_add);      // Discard pushed arguments.
+    masm.ma_alu(sp, lsr(r4, FRAMESIZE_SHIFT), sp, op_add);      // Discard pushed arguments.
 
     masm.ret();
     Linker linker(masm);

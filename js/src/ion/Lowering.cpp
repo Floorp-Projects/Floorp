@@ -180,50 +180,57 @@ LIRGenerator::visitPassArg(MPassArg *arg)
 }
 
 bool
+LIRGenerator::visitCreateThis(MCreateThis *ins)
+{
+    LCreateThis *lir = new LCreateThis(useFixed(ins->getCallee(), CallTempReg0),
+                                       useFixed(ins->getPrototype(), CallTempReg1));
+    
+    // Boxed for passing the argument.
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitCall(MCall *call)
 {
-    uint32 argc = call->argc();
-    JS_ASSERT(call->getFunction()->type() == MIRType_Object);
-
     JS_ASSERT(CallTempReg0 != CallTempReg1);
     JS_ASSERT(CallTempReg0 != ArgumentsRectifierReg);
     JS_ASSERT(CallTempReg1 != ArgumentsRectifierReg);
+    JS_ASSERT(call->getFunction()->type() == MIRType_Object);
 
     // Height of the current argument vector.
     uint32 argslot = getArgumentSlotForCall();
-
-    // If the callsite is known-monomorphic (calls an MConstant),
-    // extract the target function.
     JSFunction *target = call->getSingleTarget();
 
-    LInstruction *ins = NULL;
-
-    // Monomorphic native calls lower to LCallNative.
     if (target && target->isNative()) {
-        LCallNative *lcall = new LCallNative(target, argslot,
-                tempFixed(CallTempReg0), tempFixed(CallTempReg1), tempFixed(CallTempReg2),
-                tempFixed(CallTempReg3));
-        if (!defineReturn(lcall, call))
+        LCallNative *lir = new LCallNative(argslot, tempFixed(CallTempReg0),
+                tempFixed(CallTempReg1), tempFixed(CallTempReg2), tempFixed(CallTempReg3));
+
+        if (!defineReturn(lir, call))
             return false;
-        ins = (LInstruction *)lcall;
+        if (!assignSafepoint(lir, call))
+            return false;
+    } else if (!target && call->isConstructing()) {
+        LCallConstructor *lir = new LCallConstructor(useFixed(call->getFunction(), CallTempReg0),
+                                                       argslot);
+        if (!defineVMReturn(lir, call))
+            return false;
+        if (!assignSafepoint(lir, call))
+            return false;
     } else {
-        LCallGeneric *lcall = new LCallGeneric(target, useFixed(call->getFunction(), CallTempReg0),
+        LCallGeneric *lir = new LCallGeneric(useFixed(call->getFunction(), CallTempReg0),
             argslot, tempFixed(ArgumentsRectifierReg), tempFixed(CallTempReg2));
 
         // Bailout is only needed in the case of possible non-JSFunction callee.
-        if (!target && !assignSnapshot(lcall))
+        if (!target && !assignSnapshot(lir))
             return false;
-        if (!defineReturn(lcall, call))
+
+        if (!defineReturn(lir, call))
             return false;
-        ins = (LInstruction *)lcall;
+        if (!assignSafepoint(lir, call))
+            return false;
     }
 
-    JS_ASSERT(ins);
-
-    if (!assignSafepoint(ins, call))
-        return false;
-
-    freeArguments(argc);
+    freeArguments(call->argc());
     return true;
 }
 
@@ -1423,8 +1430,8 @@ SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint
     fprintf(IonSpewFile, "\n");
 
     fprintf(IonSpewFile, "    pc: %p (script: %p, offset: %d)\n",
-            resumePoint->pc(),
-            resumePoint->block()->info().script(),
+            (void *)resumePoint->pc(),
+            (void *)resumePoint->block()->info().script(),
             resumePoint->pc() - resumePoint->block()->info().script()->code);
 
     for (size_t i = 0; i < resumePoint->numOperands(); i++) {

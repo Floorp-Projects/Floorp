@@ -146,12 +146,7 @@ static const uint32 NumFloatArgRegs = 8;
 static const FloatRegister FloatArgRegs[NumFloatArgRegs] = { xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7 };
 #endif
 
-// Threaded by the OsrPrologue through EnterJIT to the OsrEntry.
-#if defined(_WIN64)
-static const Register OsrFrameReg = r10;
-#else
-static const Register OsrFrameReg = IntArgReg5;
-#endif
+static const Register OsrFrameReg = IntArgReg3;
 
 static const Register PreBarrierReg = rdx;
 

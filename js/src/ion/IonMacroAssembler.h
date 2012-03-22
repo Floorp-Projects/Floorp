@@ -71,8 +71,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         AutoRooter(JSContext *cx, MacroAssembler *masm)
           : AutoGCRooter(cx, IONMASM),
             masm_(masm)
-        {
-        }
+        { }
 
         MacroAssembler *masm() const {
             return masm_;
@@ -86,14 +85,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     MacroAssembler()
       : autoRooter_(GetIonContext()->cx, thisFromCtor()),
         enoughMemory_(true)
-    {
-    }
+    { }
 
     MacroAssembler(JSContext *cx)
       : autoRooter_(cx, thisFromCtor()),
         enoughMemory_(true)
-    {
-    }
+    { }
 
     MoveResolver &moveResolver() {
         return moveResolver_;
@@ -156,16 +153,14 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadPtr(Address(dest, offsetof(JSRuntime, ionActivation)), dest);
     }
 
-    void loadTypedOrValue(Address address, TypedOrValueRegister dest)
-    {
+    void loadTypedOrValue(Address address, TypedOrValueRegister dest) {
         if (dest.hasValue())
             loadValue(address, dest.valueReg());
         else
             loadUnboxedValue(address, dest.typedReg());
     }
 
-    void storeTypedOrValue(TypedOrValueRegister src, Address address)
-    {
+    void storeTypedOrValue(TypedOrValueRegister src, Address address) {
         if (src.hasValue())
             storeValue(src.valueReg(), address);
         else if (src.type() == MIRType_Double)
@@ -174,22 +169,19 @@ class MacroAssembler : public MacroAssemblerSpecific
             storeValue(ValueTypeFromMIRType(src.type()), src.typedReg().gpr(), address);
     }
 
-    void storeConstantOrRegister(ConstantOrRegister src, Address address)
-    {
+    void storeConstantOrRegister(ConstantOrRegister src, Address address) {
         if (src.constant())
             storeValue(src.value(), address);
         else
             storeTypedOrValue(src.reg(), address);
     }
 
-    void storeCallResult(Register reg)
-    {
+    void storeCallResult(Register reg) {
         if (reg != ReturnReg)
             mov(ReturnReg, reg);
     }
 
-    void storeCallResultValue(AnyRegister dest)
-    {
+    void storeCallResultValue(AnyRegister dest) {
 #if defined(JS_NUNBOX32)
         unboxValue(ValueOperand(JSReturnReg_Type, JSReturnReg_Data), dest);
 #elif defined(JS_PUNBOX64)
@@ -199,8 +191,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
     }
 
-    void storeCallResultValue(ValueOperand dest)
-    {
+    void storeCallResultValue(ValueOperand dest) {
 #if defined(JS_NUNBOX32)
         // reshuffle the return registers used for a call result to store into
         // dest, using ReturnReg as a scratch register if necessary. This must
@@ -229,8 +220,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
     }
 
-    void storeCallResultValue(TypedOrValueRegister dest)
-    {
+    void storeCallResultValue(TypedOrValueRegister dest) {
         if (dest.hasValue())
             storeCallResultValue(dest.valueReg());
         else

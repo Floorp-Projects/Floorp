@@ -149,7 +149,7 @@ ion::EliminatePhis(MIRGraph &graph)
         }
     }
 
-    // Iteratively mark all phis reacahble from live phis.
+    // Iteratively mark all phis reachable from live phis.
     while (!worklist.empty()) {
         MPhi *phi = worklist.popCopy();
 
@@ -169,6 +169,9 @@ ion::EliminatePhis(MIRGraph &graph)
         while (iter != block->phisEnd()) {
             if (iter->isInWorklist()) {
                 iter->setNotInWorklist();
+                iter++;
+            } else if (iter->slot() == 1) {
+                // Skip phis of the |this| value.
                 iter++;
             } else {
                 iter->setUnused();

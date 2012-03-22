@@ -1267,7 +1267,7 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
     savedOption_(savedOption)
 #ifdef JS_ION
     , ionActivations_(cx),
-    ionFrames_(NULL),
+    ionFrames_((uint8_t *)NULL),
     ionInlineFrames_(NULL)
 #endif
 {

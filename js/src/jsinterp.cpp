@@ -462,7 +462,7 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
         if (status == ion::Method_Error)
             return false;
         if (status == ion::Method_Compiled)
-            return ion::Cannon(cx, fp);
+            return ion::Cannon(cx, fp, false);
     }
 #endif
 
@@ -1810,6 +1810,7 @@ BEGIN_CASE(JSOP_LOOPENTRY)
         if (status == ion::Method_Error)
             goto error;
         if (status == ion::Method_Compiled) {
+            JS_ASSERT(regs.fp()->isScriptFrame());
             interpReturnOK = ion::SideCannon(cx, regs.fp(), regs.pc);
             if (entryFrame != regs.fp())
                 goto jit_return;
@@ -2776,22 +2777,9 @@ BEGIN_CASE(JSOP_FUNCALL)
     RESET_USE_METHODJIT();
 
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
-	
-#ifdef JS_ION
-    if (!newType && ion::IsEnabled()) {
-        ion::MethodStatus status = ion::CanEnter(cx, script, regs.fp());
-        if (status == ion::Method_Error)
-            goto error;
-        if (status == ion::Method_Compiled) {
-            interpReturnOK = ion::Cannon(cx, regs.fp());
-            CHECK_INTERRUPT_HANDLER();
-            goto jit_return;
-        }
-    }
-#endif
 
 #ifdef JS_METHODJIT
-    if (!newType) {
+    if (!newType && cx->methodJitEnabled) {
         /* Try to ensure methods are method JIT'd.  */
         mjit::CompileRequest request = (interpMode == JSINTERP_NORMAL)
                                        ? mjit::CompileRequest_Interpreter
@@ -2804,6 +2792,19 @@ BEGIN_CASE(JSOP_FUNCALL)
             mjit::JaegerStatus status = mjit::JaegerShot(cx, true);
             CHECK_PARTIAL_METHODJIT(status);
             interpReturnOK = mjit::JaegerStatusToSuccess(status);
+            CHECK_INTERRUPT_HANDLER();
+            goto jit_return;
+        }
+    }
+#endif
+
+#ifdef JS_ION
+    if (!newType && ion::IsEnabled()) {
+        ion::MethodStatus status = ion::CanEnter(cx, script, regs.fp());
+        if (status == ion::Method_Error)
+            goto error;
+        if (status == ion::Method_Compiled) {
+            interpReturnOK = ion::Cannon(cx, regs.fp(), newType);
             CHECK_INTERRUPT_HANDLER();
             goto jit_return;
         }

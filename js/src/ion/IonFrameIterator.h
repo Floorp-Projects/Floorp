@@ -122,6 +122,8 @@ class IonFrameIterator
         frameSize_(0)
     { }
 
+    IonFrameIterator(IonJSFrameLayout *fp);
+
     // Current frame information.
     FrameType type() const {
         return type_;
