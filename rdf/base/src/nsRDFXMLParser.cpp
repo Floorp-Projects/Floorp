@@ -41,6 +41,7 @@
 
 #include "nsIComponentManager.h"
 #include "nsIParser.h"
+#include "nsCharsetSource.h"
 #include "nsIRDFContentSink.h"
 #include "nsParserCIID.h"
 #include "nsStringStream.h"
