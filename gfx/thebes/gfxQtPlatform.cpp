@@ -46,6 +46,8 @@
 
 #include "gfxFontconfigUtils.h"
 
+#include "mozilla/gfx/2D.h"
+
 #include "cairo.h"
 
 #include "gfxImageSurface.h"
@@ -81,6 +83,7 @@
 
 using namespace mozilla;
 using namespace mozilla::unicode;
+using namespace mozilla::gfx;
 
 #define DEFAULT_RENDER_MODE RENDER_DIRECT
 
@@ -596,3 +599,11 @@ gfxQtPlatform::GetOffscreenFormat()
 {
     return sOffscreenFormat;
 }
+
+bool
+gfxQtPlatform::SupportsAzure(BackendType& aBackend)
+{
+  aBackend = BACKEND_SKIA;
+  return true;
+}
+
