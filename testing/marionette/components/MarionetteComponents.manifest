@@ -1,0 +1,4 @@
+# Marionette
+component {786a1369-dca5-4adc-8486-33d23c88010a} marionettecomponent.js
+contract @mozilla.org/marionette;1 {786a1369-dca5-4adc-8486-33d23c88010a}
+category profile-after-change MarionetteComponent @mozilla.org/marionette;1
