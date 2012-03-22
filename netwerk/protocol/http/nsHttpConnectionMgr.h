@@ -55,7 +55,7 @@
 #include "nsITimer.h"
 #include "nsIX509Cert3.h"
 
-class nsHttpPipeline;
+#include "nsHttpPipeline.h"
 
 //-----------------------------------------------------------------------------
 
@@ -161,7 +161,7 @@ public:
         RedBannedServer = kPipelineInfoTypeRed | kPipelineInfoTypeBad | 0x0002,
     
         // Used when a response is terminated early, or when it fails an
-        // integrity check such as assoc-req or md5
+        // integrity check such as assoc-req
         RedCorruptedContent = kPipelineInfoTypeRed | kPipelineInfoTypeBad | 0x0004,
 
         // Used when a pipeline is only partly satisfied - for instance if the
@@ -184,6 +184,10 @@ public:
         // Used when a response is received that is not framed with either chunked
         // encoding or a complete content length.
         BadInsufficientFraming = kPipelineInfoTypeBad | 0x0008,
+        
+        // Used when a very large response is recevied in a potential pipelining
+        // context. Large responses cause head of line blocking.
+        BadUnexpectedLarge = kPipelineInfoTypeBad | 0x000B,
 
         // Used when a response is received that has headers that appear to support
         // pipelining.

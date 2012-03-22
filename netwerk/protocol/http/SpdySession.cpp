@@ -2034,6 +2034,30 @@ SpdySession::Transport()
   return mConnection->Transport();
 }
 
+PRUint32
+SpdySession::CancelPipeline(nsresult reason)
+{
+  // we don't pipeline inside spdy, so this isn't an issue
+  return 0;
+}
+
+nsAHttpTransaction::Classifier
+SpdySession::Classification()
+{
+  if (!mConnection)
+    return nsAHttpTransaction::CLASS_GENERAL;
+  return mConnection->Classification();
+}
+
+void
+SpdySession::Classify(nsAHttpTransaction::Classifier newclass)
+{
+  if (!mConnection)
+    return;
+  
+  mConnection->Classify(newclass);
+}
+
 //-----------------------------------------------------------------------------
 // unused methods of nsAHttpTransaction
 // We can be sure of this because SpdySession is only constructed in

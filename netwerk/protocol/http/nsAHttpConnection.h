@@ -39,8 +39,8 @@
 #define nsAHttpConnection_h__
 
 #include "nsISupports.h"
+#include "nsAHttpTransaction.h"
 
-class nsAHttpTransaction;
 class nsHttpRequestHead;
 class nsHttpResponseHead;
 class nsHttpConnectionInfo;
@@ -120,9 +120,10 @@ public:
     // persistent... important in determining the end of a response.
     virtual bool IsPersistent() = 0;
 
-    // called to determine if a connection has been reused.
+    // called to determine or set if a connection has been reused.
     virtual bool IsReused() = 0;
-    
+    virtual void   DontReuse() = 0;
+
     // called by a transaction when the transaction reads more from the socket
     // than it should have (eg. containing part of the next pipelined response).
     virtual nsresult PushBack(const char *data, PRUint32 length) = 0;
@@ -144,6 +145,14 @@ public:
     // Get the nsISocketTransport used by the connection without changing
     //  references or ownership.
     virtual nsISocketTransport *Transport() = 0;
+
+    // Cancel and reschedule transactions deeper than the current response.
+    // Returns the number of canceled transactions.
+    virtual PRUint32 CancelPipeline(nsresult originalReason) = 0;
+
+    // Read and write class of transaction that is carried on this connection
+    virtual nsAHttpTransaction::Classifier Classification() = 0;
+    virtual void Classify(nsAHttpTransaction::Classifier newclass) = 0;
 };
 
 #define NS_DECL_NSAHTTPCONNECTION \
@@ -158,11 +167,15 @@ public:
     void GetSecurityInfo(nsISupports **); \
     bool IsPersistent(); \
     bool IsReused(); \
+    void DontReuse();  \
     nsresult PushBack(const char *, PRUint32); \
     bool IsProxyConnectInProgress(); \
     bool LastTransactionExpectedNoContent(); \
-    void   SetLastTransactionExpectedNoContent(bool); \
+    void SetLastTransactionExpectedNoContent(bool); \
     nsHttpConnection *TakeHttpConnection(); \
-    nsISocketTransport *Transport();
+    nsISocketTransport *Transport();        \
+    PRUint32 CancelPipeline(nsresult originalReason);   \
+    nsAHttpTransaction::Classifier Classification();    \
+    void Classify(nsAHttpTransaction::Classifier);
 
 #endif // nsAHttpConnection_h__
