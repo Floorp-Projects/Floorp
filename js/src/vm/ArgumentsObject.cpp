@@ -178,6 +178,12 @@ ArgumentsObject::createUnexpected(JSContext *cx, StackFrame *fp)
     return argsobj;
 }
 
+ArgumentsObject *
+ArgumentsObject::createPoison(JSContext *cx, uint32_t argc, JSObject &callee)
+{
+    return ArgumentsObject::create(cx, argc, callee);
+}
+
 static JSBool
 args_delProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
