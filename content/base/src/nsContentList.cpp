@@ -81,8 +81,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsBaseContentList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsBaseContentList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-  if (nsCCUncollectableMarker::sGeneration && tmp->IsBlack() &&
-      !cb.WantAllTraces()) {
+  if (nsCCUncollectableMarker::sGeneration && tmp->IsBlack()) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_OF_NSCOMPTR(mElements)
