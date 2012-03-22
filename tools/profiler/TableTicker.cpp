@@ -38,15 +38,13 @@
 
 #include <string>
 #include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include "sps_sampler.h"
 #include "platform.h"
 #include "nsXULAppAPI.h"
 #include "nsThreadUtils.h"
 #include "prenv.h"
 #include "shared-libraries.h"
+#include "mozilla/StringBuilder.h"
 #include "mozilla/StackWalk.h"
 #include "JSObjectBuilder.h"
 
@@ -149,7 +147,7 @@ public:
     , mTagName(aTagName)
   { }
 
-  friend std::ostream& operator<<(std::ostream& stream, const ProfileEntry& entry);
+  string TagToString(ThreadProfile *profile);
 
 private:
   friend class ThreadProfile;
@@ -260,7 +258,14 @@ public:
     mWritePos = mLastFlushPos;
   }
 
-  friend std::ostream& operator<<(std::ostream& stream, const Profile& profile);
+  void ToString(StringBuilder &profile)
+  {
+    int readPos = mReadPos;
+    while (readPos != mLastFlushPos) {
+      profile.Append(mEntries[readPos].TagToString(this).c_str());
+      readPos = (readPos + 1) % mEntrySize;
+    }
+  }
 
   JSObject *ToJSObject(JSContext *aCx)
   {
@@ -302,6 +307,16 @@ public:
     mReadPos = oldReadPos;
 
     return profile;
+  }
+
+  void WriteProfile(FILE* stream)
+  {
+    int readPos = mReadPos;
+    while (readPos != mLastFlushPos) {
+      string tag = mEntries[readPos].TagToString(this);
+      fwrite(tag.data(), 1, tag.length(), stream);
+      readPos = (readPos + 1) % mEntrySize;
+    }
   }
 
   ProfileStack* GetStack()
@@ -416,11 +431,10 @@ public:
     }
 #endif
 
-    std::ofstream stream;
-    stream.open(buff);
-    if (stream.is_open()) {
-      stream << *(t->GetPrimaryThreadProfile());
-      stream.close();
+    FILE* stream = ::fopen(buff, "w");
+    if (stream) {
+      t->GetPrimaryThreadProfile()->WriteProfile(stream);
+      ::fclose(stream);
       LOG("Saved to " FOLDER "profile_TYPE_PID.txt");
     } else {
       LOG("Fail to open profile log file.");
@@ -661,32 +675,31 @@ void TableTicker::Tick(TickSample* sample)
   }
 }
 
-std::ostream& operator<<(std::ostream& stream, const Profile& profile)
+string ProfileEntry::TagToString(ThreadProfile *profile)
 {
-  int readPos = profile.mReadPos;
-  while (readPos != profile.mLastFlushPos) {
-    stream << profile.mEntries[readPos];
-    readPos = (readPos + 1) % profile.mEntrySize;
-  }
-  return stream;
-}
-
-std::ostream& operator<<(std::ostream& stream, const ProfileEntry& entry)
-{
-  if (entry.mTagName == 'r') {
-    stream << entry.mTagName << "-" << std::fixed << entry.mTagFloat << "\n";
-  } else if (entry.mTagName == 'l') {
-    stream << entry.mTagName << "-" << static_cast<const void*>(entry.mTagData) << "\n";
+  string tag = "";
+  if (mTagName == 'r') {
+    char buff[50];
+    snprintf(buff, 50, "%-40f", mTagFloat);
+    tag += string(1, mTagName) + string("-") + string(buff) + string("\n");
+  } else if (mTagName == 'l') {
+    char tagBuff[1024];
+    Address pc = mTagAddress;
+    snprintf(tagBuff, 1024, "l-%p\n", pc);
+    tag += string(tagBuff);
   } else {
-    stream << entry.mTagName << "-" << entry.mTagData << "\n";
+    tag += string(1, mTagName) + string("-") + string(mTagData) + string("\n");
   }
 
 #ifdef ENABLE_SPS_LEAF_DATA
-  if (entry.mLeafAddress) {
-    stream << entry.mTagName << "-" << entry.mLeafAddress << "\n";
+  if (mLeafAddress) {
+    char tagBuff[1024];
+    unsigned long pc = (unsigned long)mLeafAddress;
+    snprintf(tagBuff, 1024, "l-%llu\n", pc);
+    tag += string(tagBuff);
   }
 #endif
-  return stream;
+  return tag;
 }
 
 void mozilla_sampler_init()
@@ -754,12 +767,11 @@ char* mozilla_sampler_get_profile()
     return NULL;
   }
 
-  std::stringstream profile;
-  profile << *(t->GetPrimaryThreadProfile());
+  StringBuilder profile;
+  t->GetPrimaryThreadProfile()->ToString(profile);
 
-  std::string profileString = profile.str();
-  char *rtn = (char*)malloc( (profileString.length() + 1) * sizeof(char) );
-  strcpy(rtn, profileString.c_str());
+  char *rtn = (char*)malloc( (profile.Length()+1) * sizeof(char) );
+  strcpy(rtn, profile.Buffer());
   return rtn;
 }
 
