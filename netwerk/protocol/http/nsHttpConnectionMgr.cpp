@@ -2073,6 +2073,12 @@ nsHttpConnectionMgr::nsConnectionHandle::IsReused()
     return mConn->IsReused();
 }
 
+void
+nsHttpConnectionMgr::nsConnectionHandle::DontReuse()
+{
+    mConn->DontReuse();
+}
+
 nsresult
 nsHttpConnectionMgr::nsConnectionHandle::PushBack(const char *buf, PRUint32 bufLen)
 {
@@ -2517,6 +2523,32 @@ nsHttpConnectionMgr::nsConnectionHandle::IsProxyConnectInProgress()
     return mConn->IsProxyConnectInProgress();
 }
 
+PRUint32
+nsHttpConnectionMgr::nsConnectionHandle::CancelPipeline(nsresult reason)
+{
+    // no pipeline to cancel
+    return 0;
+}
+
+nsAHttpTransaction::Classifier
+nsHttpConnectionMgr::nsConnectionHandle::Classification()
+{
+    if (mConn)
+        return mConn->Classification();
+
+    LOG(("nsConnectionHandle::Classification this=%p "
+         "has null mConn using CLASS_SOLO default", this));
+    return nsAHttpTransaction::CLASS_SOLO;
+}
+
+void
+nsHttpConnectionMgr::
+nsConnectionHandle::Classify(nsAHttpTransaction::Classifier newclass)
+{
+    if (mConn)
+        mConn->Classify(newclass);
+}
+
 // nsConnectionEntry
 
 nsHttpConnectionMgr::
@@ -2581,7 +2613,8 @@ nsConnectionEntry::OnPipelineFeedbackInfo(
     nsAHttpTransaction::Classifier classification;
     if (conn)
         classification = conn->Classification();
-    else if (info == BadInsufficientFraming)
+    else if (info == BadInsufficientFraming ||
+             info == BadUnexpectedLarge)
         classification = (nsAHttpTransaction::Classifier) data;
     else
         classification = nsAHttpTransaction::CLASS_SOLO;
@@ -2639,6 +2672,9 @@ nsConnectionEntry::OnPipelineFeedbackInfo(
             break;
         case BadInsufficientFraming:
             mPipeliningClassPenalty[classification] += 7000;
+            break;
+        case BadUnexpectedLarge:
+            mPipeliningClassPenalty[classification] += 120;
             break;
 
         default:

@@ -149,6 +149,7 @@ private:
     void     DeleteSelfOnConsumerThread();
 
     Classifier Classify();
+    void       CancelPipeline(PRUint32 reason);
 
     static NS_METHOD ReadRequestSegment(nsIInputStream *, void *, const char *,
                                         PRUint32, PRUint32, PRUint32 *);
@@ -204,6 +205,7 @@ private:
     PRUint8                         mCaps;
     enum Classifier                 mClassification;
     PRInt32                         mPipelinePosition;
+    PRInt64                         mMaxPipelineObjectSize;
 
     // state flags, all logically boolean, but not packed together into a
     // bitfield so as to avoid bitfield-induced races.  See bug 560579.
