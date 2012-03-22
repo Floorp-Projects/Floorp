@@ -870,11 +870,14 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent)
 
     ProcessSpdyPendingQ(ent);
 
-    PRInt32 count = ent->mPendingQ.Length();
+    PRUint32 count = ent->mPendingQ.Length();
     nsHttpTransaction *trans;
     nsresult rv;
-    
-    for (PRInt32 i = 0; i < count; ++i) {
+    bool dispatchedSuccessfully = false;
+
+    // iterate the pending list until one is dispatched successfully. Keep
+    // iterating afterwards only until a transaction fails to dispatch.
+    for (PRUint32 i = 0; i < count; ++i) {
         trans = ent->mPendingQ[i];
 
         // When this transaction has already established a half-open
@@ -895,8 +898,16 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent)
             LOG(("  dispatching pending transaction...\n"));
             ent->mPendingQ.RemoveElementAt(i);
             NS_RELEASE(trans);
-            return true;
+
+            // reset index and array length after RemoveElelmentAt()
+            dispatchedSuccessfully = true;
+            count = ent->mPendingQ.Length();
+            --i;
+            continue;
         }
+
+        if (dispatchedSuccessfully)
+            return true;
 
         NS_ABORT_IF_FALSE(count == ((PRInt32) ent->mPendingQ.Length()),
                           "something mutated pending queue from "
