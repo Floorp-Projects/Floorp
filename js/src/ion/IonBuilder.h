@@ -344,7 +344,7 @@ class IonBuilder : public MIRGenerator
         InliningStatus_Inlined
     };
 
-    bool jsop_call_inline(JSFunction *callee, uint32 argc, IonBuilder &inlineBuilder);
+    bool jsop_call_inline(uint32 argc, IonBuilder &inlineBuilder);
     bool inlineScriptedCall(JSFunction *target, uint32 argc);
     bool makeInliningDecision(JSFunction *target);
 
