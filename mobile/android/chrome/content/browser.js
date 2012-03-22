@@ -234,6 +234,7 @@ var BrowserApp = {
     PermissionsHelper.init();
     CharacterEncoding.init();
     SearchEngines.init();
+    ActivityObserver.init();
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -1591,6 +1592,10 @@ Tab.prototype = {
       this.browser.setAttribute("type", "content-targetable");
       this.browser.docShellIsActive = false;
     }
+  },
+
+  getActive: function getActive() {
+      return this.browser.docShellIsActive;
   },
 
   setDisplayPort: function(aViewportX, aViewportY, aDisplayPortRect) {
@@ -4418,5 +4423,28 @@ var SearchEngines = {
         }
       }
     });
+  }
+};
+
+var ActivityObserver = {
+  init: function ao_init() {
+    Services.obs.addObserver(this, "application-background", false);
+    Services.obs.addObserver(this, "application-foreground", false);
+  },
+
+  observe: function ao_observe(aSubject, aTopic, aData) {
+    let isForeground = false
+    switch (aTopic) {
+      case "application-background" :
+        isForeground = false;
+        break;
+      case "application-foreground" :
+        isForeground = true;
+        break;
+    }
+
+    if (BrowserApp.selectedTab.getActive() != isForeground) {
+      BrowserApp.selectedTab.setActive(isForeground);
+    }
   }
 };
