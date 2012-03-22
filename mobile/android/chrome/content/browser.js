@@ -327,7 +327,7 @@ var BrowserApp = {
     });
 
     if (this.isAppUpdated())
-      this.onUpdate();
+      this.onAppUpdated();
   },
 
   isAppUpdated: function() {
