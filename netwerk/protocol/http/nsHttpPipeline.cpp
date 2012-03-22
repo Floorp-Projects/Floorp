@@ -373,12 +373,6 @@ nsHttpPipeline::TakeSubTransactions(
     if (mResponseQ.Length() || mRequestIsPartial)
         return NS_ERROR_ALREADY_OPENED;
 
-    // request queue could be empty if it was already canceled, in which
-    // case it is safe to treat this as a case without any
-    // sub-transactions.
-    if (!mRequestQ.Length())
-        return NS_ERROR_NOT_IMPLEMENTED;
-
     PRInt32 i, count = mRequestQ.Length();
     for (i = 0; i < count; ++i) {
         nsAHttpTransaction *trans = Request(i);
