@@ -4148,7 +4148,6 @@ if test -n "$_WRAP_MALLOC"; then
     if test "$GNU_CC"; then
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=malloc,--wrap=calloc,--wrap=valloc,--wrap=free,--wrap=realloc,--wrap=memalign"
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=__builtin_new,--wrap=__builtin_vec_new,--wrap=__builtin_delete,--wrap=__builtin_vec_delete"
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=PR_Free,--wrap=PR_Malloc,--wrap=PR_Calloc,--wrap=PR_Realloc"
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=strdup,--wrap=strndup"
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=posix_memalign,--wrap=malloc_usable_size"
     else

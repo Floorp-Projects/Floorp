@@ -6211,17 +6211,6 @@ malloc_shutdown()
  * names it is given with __wrap_.
  */
 #define wrap(a) __wrap_ ## a
-
-/* Extra wrappers for NSPR alloc functions */
-void *
-__wrap_PR_Malloc(size_t size) __attribute__((alias("__wrap_malloc")));
-void *
-__wrap_PR_Calloc(size_t num, size_t size) __attribute__((alias("__wrap_calloc")));
-void *
-__wrap_PR_Realloc(void *ptr, size_t size) __attribute__((alias("__wrap_realloc")));
-void
-__wrap_PR_Free(void *ptr) __attribute__((alias("__wrap_free")));
-
 #else
 #define wrap(a) je_ ## a
 #endif
