@@ -1286,10 +1286,10 @@ MacroAssemblerARMCompat::load16(const Address &address, const Register &dest)
 }
 
 void
-MacroAssemblerARMCompat::load16(const Address &address, Imm32 mask, const Register &dest)
+MacroAssemblerARMCompat::load16_mask(const Address &address, Imm32 mask, const Register &dest)
 {
     load16(address, dest);
-    and32(mask, dest);
+    ma_and(mask, dest, dest);
 }
 
 void
