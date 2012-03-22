@@ -990,6 +990,29 @@ nsHttpConnectionMgr::PipelineFeedbackInfo(nsHttpConnectionInfo *ci,
         ent->OnPipelineFeedbackInfo(info, conn, data);
 }
 
+void
+nsHttpConnectionMgr::ReportFailedToProcess(nsIURI *uri)
+{
+    NS_ABORT_IF_FALSE(uri, "precondition");
+
+    nsCAutoString host;
+    PRInt32 port = -1;
+    bool usingSSL = false;
+
+    nsresult rv = uri->SchemeIs("https", &usingSSL);
+    if (NS_SUCCEEDED(rv))
+        rv = uri->GetAsciiHost(host);
+    if (NS_SUCCEEDED(rv))
+        rv = uri->GetPort(&port);
+    if (NS_FAILED(rv) || host.IsEmpty())
+        return;
+
+    nsRefPtr<nsHttpConnectionInfo> ci =
+        new nsHttpConnectionInfo(host, port, nsnull, usingSSL);
+    
+    PipelineFeedbackInfo(ci, RedCorruptedContent, nsnull, 0);
+}
+
 // we're at the active connection limit if any one of the following conditions is true:
 //  (1) at max-connections
 //  (2) keep-alive enabled and at max-persistent-connections-per-server/proxy
