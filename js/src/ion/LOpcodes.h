@@ -62,7 +62,9 @@
     _(DefVar)                       \
     _(CallGeneric)                  \
     _(CallNative)                   \
+    _(CallConstructor)              \
     _(StackArg)                     \
+    _(CreateThis)                   \
     _(BitNotI)                      \
     _(BitNotV)                      \
     _(BitOpI)                       \

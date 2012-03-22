@@ -117,6 +117,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitDefVar(MDefVar *ins);
     bool visitPrepareCall(MPrepareCall *ins);
     bool visitPassArg(MPassArg *arg);
+    bool visitCreateThis(MCreateThis *ins);
     bool visitCall(MCall *call);
     bool visitTest(MTest *test);
     bool visitCompare(MCompare *comp);

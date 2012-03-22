@@ -567,6 +567,9 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
+    void orl(const Register &reg, const Register &dest) {
+        masm.orl_rr(reg.code(), dest.code());
+    }
     void orl(Imm32 imm, const Register &reg) {
         masm.orl_ir(imm.value, reg.code());
     }

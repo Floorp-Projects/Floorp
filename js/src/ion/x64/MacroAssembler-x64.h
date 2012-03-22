@@ -233,6 +233,20 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         return cond == Equal ? AboveOrEqual : Below;
     }
 
+    Condition testMagic(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_MAGIC));
+        return cond;
+    }
+    Condition testError(Condition cond, const Register &tag) {
+        return testMagic(cond, tag);
+    }
+    Condition testPrimitive(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET));
+        return cond == Equal ? Below : AboveOrEqual;
+    }
+
     Condition testUndefined(Condition cond, const ValueOperand &src) {
         splitTag(src, ScratchReg);
         return testUndefined(cond, ScratchReg);
@@ -274,6 +288,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     Condition testGCThing(Condition cond, const BaseIndex &src) {
         splitTag(src, ScratchReg);
         return testGCThing(cond, ScratchReg);
+    }
+    Condition testPrimitive(Condition cond, const ValueOperand &src) {
+        splitTag(src, ScratchReg);
+        return testPrimitive(cond, ScratchReg);
     }
 
     void cmpPtr(const Register &lhs, const ImmWord rhs) {
@@ -458,14 +476,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cond = testMagic(cond, tag);
         j(cond, label);
     }
-    Condition testMagic(Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpl(tag, ImmTag(JSVAL_TAG_MAGIC));
-        return cond;
-    }
-    Condition testError(Condition cond, const Register &tag) {
-        return testMagic(cond, tag);
-    }
 
     // Type-testing instructions on x64 will clobber ScratchReg, when used on
     // ValueOperands.
@@ -500,6 +510,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     template <typename T>
     void branchTestGCThing(Condition cond, const T &src, Label *label) {
         cond = testGCThing(cond, src);
+        j(cond, label);
+    }
+    template <typename T>
+    void branchTestPrimitive(Condition cond, const T &t, Label *label) {
+        cond = testPrimitive(cond, t);
         j(cond, label);
     }
     void branchTestMagic(Condition cond, const ValueOperand &src, Label *label) {
@@ -709,7 +724,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void handleException();
 
     void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
-        shlq(Imm32(FRAMETYPE_BITS), frameSizeReg);
+        shlq(Imm32(FRAMESIZE_SHIFT), frameSizeReg);
         orq(Imm32(type), frameSizeReg);
     }
 

@@ -109,11 +109,16 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
         MResumePoint *mir = *it;
         for (size_t j = 0; j < mir->numOperands(); ++i, ++j) {
             MDefinition *ins = mir->getOperand(j);
+            JS_ASSERT(!ins->isPassArg());
+
             LAllocation *type = snapshot->typeOfSlot(i);
             LAllocation *payload = snapshot->payloadOfSlot(i);
 
             if (ins->isPassArg())
                 ins = ins->toPassArg()->getArgument();
+
+            // Guards should never be eliminated.
+            JS_ASSERT_IF(ins->isUnused(), !ins->isGuard());
 
             // The register allocation will fill these fields in with actual
             // register/stack assignments. During code generation, we can restore

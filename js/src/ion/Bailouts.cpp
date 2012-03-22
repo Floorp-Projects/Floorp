@@ -88,8 +88,7 @@ class IonBailoutIterator
     IonBailoutIterator(FrameRecovery &in, const uint8 *start, const uint8 *end)
       : in_(in),
         reader_(start, end)
-    {
-    }
+    { }
 
     Value readBogus() {
         reader_.readSlot();
@@ -208,6 +207,11 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
         Value thisv = iter.read();
         fp->formalArgs()[-1] = thisv;
 
+        // The new |this| must have already been constructed prior to an Ion
+        // constructor running.
+        if (fp->isConstructing())
+            JS_ASSERT(!thisv.isPrimitive());
+
         JS_ASSERT(iter.slots() >= CountArgSlots(fp->fun()));
         IonSpew(IonSpew_Bailouts, " frame slots %u, nargs %u, nfixed %u",
                 iter.slots(), fp->fun()->nargs, fp->script()->nfixed);
@@ -260,7 +264,7 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     // which will not be the case when we inline getters (in which case it would be a
     // JSOP_GETPROP). That will have to be handled differently.
     FrameRegs &regs = cx->regs();
-    JS_ASSERT(JSOp(*regs.pc) == JSOP_CALL);
+    JS_ASSERT(JSOp(*regs.pc) == JSOP_CALL || JSOp(*regs.pc) == JSOP_NEW);
     int callerArgc = GET_ARGC(regs.pc);
     const Value &calleeVal = regs.sp[-callerArgc - 2];
 
@@ -272,7 +276,11 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     // really get filled in by RestoreOneFrame.
     regs.sp = inlineArgs.end();
 
-    if (!cx->stack.pushInlineFrame(cx, regs, inlineArgs, *fun, script, INITIAL_NONE))
+    InitialFrameFlags flags = INITIAL_NONE;
+    if (JSOp(*regs.pc) == JSOP_NEW)
+        flags = INITIAL_CONSTRUCT;
+
+    if (!cx->stack.pushInlineFrame(cx, regs, inlineArgs, *fun, script, flags))
         return NULL;
 
     StackFrame *fp = cx->stack.fp();
@@ -284,6 +292,30 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     return fp;
 }
 
+static void
+DeriveConstructing(StackFrame *fp, StackFrame *entryFp, IonJSFrameLayout *js)
+{
+    IonFrameIterator fiter(js);
+
+    // Skip the current frame and look at the caller's.
+    do {
+        ++fiter;
+    } while (fiter.type() != IonFrame_JS && fiter.type() != IonFrame_Entry);
+
+    if (fiter.type() == IonFrame_JS) {
+        // In the case of a JS frame, look up the pc from the snapshot.
+        InlineFrameIterator ifi = InlineFrameIterator(&fiter);
+        JS_ASSERT(js_CodeSpec[*ifi.pc()].format & JOF_INVOKE);
+
+        if ((JSOp)*ifi.pc() == JSOP_NEW)
+            fp->setConstructing();
+    } else {
+        JS_ASSERT(fiter.type() == IonFrame_Entry);
+        if (entryFp->isConstructing())
+            fp->setConstructing();
+    }
+}
+
 static uint32
 ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
 {
@@ -291,6 +323,9 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
             in.script()->filename, in.script()->lineno, (void *) in.ionScript());
     IonSpew(IonSpew_Bailouts, " reading from snapshot offset %u size %u",
             in.snapshotOffset(), in.ionScript()->snapshotsSize());
+
+    // Must be stored before the bailout frame is pushed.
+    StackFrame *entryFp = cx->fp();
 
     JS_ASSERT(in.snapshotOffset() < in.ionScript()->snapshotsSize());
     const uint8 *start = in.ionScript()->snapshots() + in.snapshotOffset();
@@ -326,6 +361,8 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
 
     if (in.callee())
         fp->formalArgs()[-2].setObject(*in.callee());
+
+    DeriveConstructing(fp, entryFp, in.fp());
 
     for (size_t i = 0;; ++i) {
         IonSpew(IonSpew_Bailouts, " restoring frame %u (lower is older)", i);

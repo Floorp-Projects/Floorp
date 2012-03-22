@@ -451,6 +451,18 @@ MPrepareCall::argc() const
 }
 
 void
+MPassArg::printOpcode(FILE *fp)
+{
+    PrintOpcodeName(fp, op());
+    fprintf(fp, " %d ", argnum_);
+    for (size_t j = 0; j < numOperands(); j++) {
+        getOperand(j)->printName(fp);
+        if (j != numOperands() - 1)
+            fprintf(fp, " ");
+    }
+}
+
+void
 MCall::addArg(size_t argnum, MPassArg *arg)
 {
     // The operand vector is initialized in reverse order by the IonBuilder.

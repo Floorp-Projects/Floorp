@@ -1102,6 +1102,10 @@ class StackFrame
         return InitialFrameFlags(flags_ & mask);
     }
 
+    void setConstructing() {
+        flags_ |= CONSTRUCTING;
+    }
+
     bool isConstructing() const {
         return !!(flags_ & CONSTRUCTING);
     }

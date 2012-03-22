@@ -74,7 +74,6 @@ InvokeConstructorFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *ar
     // Data in the argument vector is arranged for a JIT -> JIT call.
     Value *argvWithoutThis = argv + 1;
 
-    // Run the function in the interpreter.
     bool ok = InvokeConstructor(cx, fval, argc, argvWithoutThis, rval);
     return ok;
 }

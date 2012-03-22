@@ -79,7 +79,7 @@ static const Register pc  = { Registers::pc };
 
 static const Register ScratchRegister = {Registers::ip};
 
-static const Register OsrFrameReg = r10;
+static const Register OsrFrameReg = r3;
 static const Register ArgumentsRectifierReg = r8;
 static const Register CallTempReg0 = r5;
 static const Register CallTempReg1 = r6;
