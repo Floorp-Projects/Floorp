@@ -304,9 +304,8 @@ void
 CanvasLayerOGL::CleanupResources()
 {
   if (mTexture) {
-    GLContext* cx = mOGLManager->glForResources();
-    cx->MakeCurrent();
-    cx->fDeleteTextures(1, &mTexture);
+    gl()->MakeCurrent();
+    gl()->fDeleteTextures(1, &mTexture);
   }
 }
 
