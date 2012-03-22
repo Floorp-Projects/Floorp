@@ -227,12 +227,15 @@ nsHttpConnection::StartSpdy()
              "into SpdySession %p\n", mTransaction.get(), mSpdySession.get()));
     }
     else {
-        NS_ABORT_IF_FALSE(!list.IsEmpty(), "sub transaction list empty");
-        
         PRInt32 count = list.Length();
 
         LOG(("nsHttpConnection::StartSpdy moving transaction list len=%d "
              "into SpdySession %p\n", count, mSpdySession.get()));
+
+        if (!count) {
+            mTransaction->Close(NS_ERROR_ABORT);
+            return;
+        }
 
         for (PRInt32 index = 0; index < count; ++index) {
             if (!mSpdySession) {
@@ -530,7 +533,7 @@ nsHttpConnection::CanReuse()
 {
     bool canReuse;
     
-    if (mUsingSpdy)
+    if (mSpdySession)
         canReuse = mSpdySession->CanReuse();
     else
         canReuse = IsKeepAlive();
@@ -560,7 +563,8 @@ nsHttpConnection::CanDirectlyActivate()
     // time through Activate(). In practice this means this is a healthy SPDY
     // connection with room for more concurrent streams.
     
-    return UsingSpdy() && CanReuse() && mSpdySession->RoomForMoreStreams();
+    return UsingSpdy() && CanReuse() &&
+        mSpdySession && mSpdySession->RoomForMoreStreams();
 }
 
 PRIntervalTime
