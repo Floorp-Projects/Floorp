@@ -865,13 +865,16 @@ bool
 MouseScrollHandler::LastEventInfo::CanContinueTransaction(
                                      const EventInfo& aNewEvent)
 {
+  PRInt32 timeout = MouseScrollHandler::sInstance->
+                      mUserPrefs.GetMouseScrollTransactionTimeout();
   return !mWnd ||
            (mWnd == aNewEvent.GetWindowHandle() &&
             IsPositive() == aNewEvent.IsPositive() &&
             mIsVertical == aNewEvent.IsVertical() &&
             mIsPage == aNewEvent.IsPage() &&
-            TimeStamp::Now() - mTimeStamp <=
-              TimeDuration::FromMilliseconds(DEFAULT_TIMEOUT_DURATION));
+            (timeout < 0 ||
+             TimeStamp::Now() - mTimeStamp <=
+               TimeDuration::FromMilliseconds(timeout)));
 }
 
 void
@@ -1053,12 +1056,25 @@ MouseScrollHandler::SystemSettings::Init()
 
   mInitialized = true;
 
-  if (!::SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &mScrollLines, 0)) {
+  MouseScrollHandler::UserPrefs& userPrefs =
+    MouseScrollHandler::sInstance->mUserPrefs;
+
+  mScrollLines = userPrefs.GetOverriddenVerticalScrollAmout();
+  if (mScrollLines >= 0) {
+    // overridden by the pref.
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::SystemSettings::Init(): mScrollLines is overridden by "
+       "the pref: %d",
+       mScrollLines));
+  } else if (!::SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0,
+                                     &mScrollLines, 0)) {
     PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
       ("MouseScroll::SystemSettings::Init(): ::SystemParametersInfo("
          "SPI_GETWHEELSCROLLLINES) failed"));
     mScrollLines = 3;
-  } else if (mScrollLines > WHEEL_DELTA) {
+  }
+
+  if (mScrollLines > WHEEL_DELTA) {
     PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
       ("MouseScroll::SystemSettings::Init(): the result of "
          "::SystemParametersInfo(SPI_GETWHEELSCROLLLINES) is too large: %d",
@@ -1072,7 +1088,15 @@ MouseScrollHandler::SystemSettings::Init()
     mScrollLines = WHEEL_PAGESCROLL;
   }
 
-  if (!::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0, &mScrollChars, 0)) {
+  mScrollChars = userPrefs.GetOverriddenHorizontalScrollAmout();
+  if (mScrollChars >= 0) {
+    // overridden by the pref.
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::SystemSettings::Init(): mScrollChars is overridden by "
+       "the pref: %d",
+       mScrollChars));
+  } else if (!::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0,
+                                     &mScrollChars, 0)) {
     PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
       ("MouseScroll::SystemSettings::Init(): ::SystemParametersInfo("
          "SPI_GETWHEELSCROLLCHARS) failed, %s",
@@ -1080,7 +1104,9 @@ MouseScrollHandler::SystemSettings::Init()
          "this is unexpected on Vista or later" :
          "but on XP or earlier, this is not a problem"));
     mScrollChars = 1;
-  } else if (mScrollChars > WHEEL_DELTA) {
+  }
+
+  if (mScrollChars > WHEEL_DELTA) {
     PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
       ("MouseScroll::SystemSettings::Init(): the result of "
          "::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS) is too large: %d",
@@ -1146,12 +1172,24 @@ MouseScrollHandler::UserPrefs::Init()
     Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
   mScrollMessageHandledAsWheelMessage =
     Preferences::GetBool("mousewheel.emulate_at_wm_scroll", false);
+  mOverriddenVerticalScrollAmount =
+    Preferences::GetInt("mousewheel.windows.vertical_amount_override", -1);
+  mOverriddenHorizontalScrollAmount =
+    Preferences::GetInt("mousewheel.windows.horizontal_amount_override", -1);
+  mMouseScrollTransactionTimeout =
+    Preferences::GetInt("mousewheel.windows.transaction.timeout",
+                        DEFAULT_TIMEOUT_DURATION);
 
   PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
     ("MouseScroll::UserPrefs::Init(): initialized, "
-       "mPixelScrollingEnabled=%s, mScrollMessageHandledAsWheelMessage=%s",
+       "mPixelScrollingEnabled=%s, mScrollMessageHandledAsWheelMessage=%s, "
+       "mOverriddenVerticalScrollAmount=%d, "
+       "mOverriddenHorizontalScrollAmount=%d, "
+       "mMouseScrollTransactionTimeout=%d",
      GetBoolName(mPixelScrollingEnabled),
-     GetBoolName(mScrollMessageHandledAsWheelMessage)));
+     GetBoolName(mScrollMessageHandledAsWheelMessage),
+     mOverriddenVerticalScrollAmount, mOverriddenHorizontalScrollAmount,
+     mMouseScrollTransactionTimeout));
 }
 
 void
@@ -1160,6 +1198,8 @@ MouseScrollHandler::UserPrefs::MarkDirty()
   PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
     ("MouseScrollHandler::UserPrefs::MarkDirty(): Marking UserPrefs dirty"));
   mInitialized = false;
+  // Some prefs might override system settings, so, we should mark them dirty.
+  MouseScrollHandler::sInstance->mSystemSettings.MarkDirty();
   // When user prefs for mousewheel are changed, we should reset current
   // transaction.
   MOZ_ASSERT(sInstance,
