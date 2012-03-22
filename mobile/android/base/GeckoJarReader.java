@@ -26,11 +26,12 @@ public class GeckoJarReader {
         Stack<String> jarUrls = parseUrl(url);
         ZipInputStream inputStream = null;
 
+        ZipFile zip = null;
         try {
             // Load the initial jar file as a zip
             URL fileUrl = new URL(jarUrls.pop());
             File file = new File(fileUrl.getPath());
-            ZipFile zip = new ZipFile(file);
+            zip = new ZipFile(file);
             ZipEntry entry = null;
 
             // loop through children jar files until we reach the innermost one
@@ -63,6 +64,14 @@ public class GeckoJarReader {
             Log.e(LOGTAG, "Exception ", ex);
         } catch (Exception ex) {
             Log.e(LOGTAG, "Exception ", ex);
+        } finally {
+            if (zip != null) {
+                try {
+                    zip.close();
+                } catch(IOException ex) {
+                    Log.e(LOGTAG, "Error closing zip", ex);
+                }
+            }
         }
 
         return inputStream;
