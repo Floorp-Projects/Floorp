@@ -39,8 +39,12 @@
 #include "nsIDOMDOMRequest.idl"
 #include "nsIDOMEvent.idl"
 
-[scriptable, uuid(9DCE05BF-659C-4427-A050-0EAC3BB6C1C0)]
+[scriptable, uuid(abb936bc-ba81-4c23-8dfa-3e5d96557044)]
 interface nsIWifi : nsISupports {
+    /**
+     * Shutdown the wifi system.
+     */
+    void shutdown();
 };
 
 [scriptable, uuid(1509221f-470e-4445-b476-88e74fd5c617)]
@@ -88,7 +92,9 @@ interface nsIDOMWifiManager : nsISupports {
     readonly attribute jsval connectedNetwork;
 
     /**
-     * These three functions serve as state notification listeners.
+     * These four functions serve as state notification listeners.
+     * onconnecting: Fires when we start the process of connecting to a
+     *               network.
      * onassociate: Fires when we have connected to an access point but do not
      *              yet have an IP address.
      * onconnect: Fires once we are fully connected to an access point and can
@@ -98,6 +104,7 @@ interface nsIDOMWifiManager : nsISupports {
      *               connected to a network but have disconnected for any
      *               reason (transition: onconnect -> ondisconnect).
      */
+             attribute nsIDOMEventListener onconnecting;
              attribute nsIDOMEventListener onassociate;
              attribute nsIDOMEventListener onconnect;
              attribute nsIDOMEventListener ondisconnect;

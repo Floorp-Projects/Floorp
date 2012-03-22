@@ -43,6 +43,14 @@ DOMRequestIpcHelper.prototype = {
       delete this._requests[aId];
   },
 
+  takeRequest: function(aId) {
+    if (!this._requests[aId])
+      return null;
+    let request = this._requests[aId];
+    delete this._requests[aId];
+    return request;
+  },
+
   _getRandomId: function() {
     return Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
   },
