@@ -63,6 +63,8 @@ class nsAHttpTransaction : public nsISupports
 public:
     // called by the connection when it takes ownership of the transaction.
     virtual void SetConnection(nsAHttpConnection *) = 0;
+
+    // used to obtain the connection associated with this transaction
     virtual nsAHttpConnection *Connection() = 0;
 
     // called by the connection to get security callbacks to set on the
@@ -121,14 +123,38 @@ public:
     // return NS_ERROR_NOT_IMPLEMENTED
     virtual nsresult AddTransaction(nsAHttpTransaction *transaction) = 0;
     
-    // called to count the number of sub transactions that can be added
-    virtual PRUint16 PipelineDepthAvailable() = 0;
+    // The total length of the outstanding pipeline comprised of transacations
+    // and sub-transactions.
+    virtual PRUint32 PipelineDepth() = 0;
 
     // Used to inform the connection that it is being used in a pipelined
     // context. That may influence the handling of some errors.
-    // The value is the pipeline position.
+    // The value is the pipeline position (> 1).
     virtual nsresult SetPipelinePosition(PRInt32) = 0;
     virtual PRInt32  PipelinePosition() = 0;
+
+    // Every transaction is classified into one of the types below. When using
+    // HTTP pipelines, only transactions with the same type appear on the same
+    // pipeline.
+    enum Classifier  {
+        // Transactions that expect a short 304 (no-content) response
+        CLASS_REVALIDATION,
+
+        // Transactions for content expected to be CSS or JS
+        CLASS_SCRIPT,
+
+        // Transactions for content expected to be an image
+        CLASS_IMAGE,
+
+        // Transactions that cannot involve a pipeline 
+        CLASS_SOLO,
+
+        // Transactions that do not fit any of the other categories. HTML
+        // is normally GENERAL.
+        CLASS_GENERAL,
+
+        CLASS_MAX
+    };
 };
 
 #define NS_DECL_NSAHTTPTRANSACTION \
@@ -150,7 +176,7 @@ public:
     PRUint32 Http1xTransactionCount();                                  \
     nsresult TakeSubTransactions(nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions); \
     nsresult AddTransaction(nsAHttpTransaction *);                      \
-    PRUint16 PipelineDepthAvailable();                                  \
+    PRUint32 PipelineDepth();                                           \
     nsresult SetPipelinePosition(PRInt32);                              \
     PRInt32  PipelinePosition();
 

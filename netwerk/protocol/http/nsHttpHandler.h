@@ -232,6 +232,8 @@ public:
     static nsresult GenerateHostPort(const nsCString& host, PRInt32 port,
                                      nsCString& hostLine);
 
+    bool GetPipelineAggressive()     { return mPipelineAggressive; }
+
 private:
 
     //
@@ -288,7 +290,9 @@ private:
     PRUint8  mMaxConnectionsPerServer;
     PRUint8  mMaxPersistentConnectionsPerServer;
     PRUint8  mMaxPersistentConnectionsPerProxy;
-    PRUint8  mMaxPipelinedRequests;
+    PRUint16 mMaxPipelinedRequests;
+    PRUint16 mMaxOptimisticPipelinedRequests;
+    bool     mPipelineAggressive;
 
     PRUint8  mRedirectionLimit;
 
