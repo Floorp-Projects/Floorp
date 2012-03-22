@@ -77,6 +77,7 @@ public:
     // called to check the transaction status.
     virtual bool     IsDone() = 0;
     virtual nsresult Status() = 0;
+    virtual PRUint8  Caps() = 0;
 
     // called to find out how much request data is available for writing.
     virtual PRUint32 Available() = 0;
@@ -114,6 +115,14 @@ public:
     //
     virtual nsresult TakeSubTransactions(
         nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions) = 0;
+
+    // called to add a sub-transaction in the case of pipelined transactions
+    // classes that do not implement sub transactions
+    // return NS_ERROR_NOT_IMPLEMENTED
+    virtual nsresult AddTransaction(nsAHttpTransaction *transaction) = 0;
+    
+    // called to count the number of sub transactions that can be added
+    virtual PRUint16 PipelineDepthAvailable() = 0;
 };
 
 #define NS_DECL_NSAHTTPTRANSACTION \
@@ -125,6 +134,7 @@ public:
                            nsresult status, PRUint64 progress); \
     bool     IsDone(); \
     nsresult Status(); \
+    PRUint8  Caps();   \
     PRUint32 Available(); \
     nsresult ReadSegments(nsAHttpSegmentReader *, PRUint32, PRUint32 *); \
     nsresult WriteSegments(nsAHttpSegmentWriter *, PRUint32, PRUint32 *); \
@@ -132,7 +142,9 @@ public:
     void     SetSSLConnectFailed();                                     \
     nsHttpRequestHead *RequestHead();                                   \
     PRUint32 Http1xTransactionCount();                                  \
-    nsresult TakeSubTransactions(nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions);
+    nsresult TakeSubTransactions(nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions); \
+    nsresult AddTransaction(nsAHttpTransaction *);                      \
+    PRUint16 PipelineDepthAvailable();
 
 //-----------------------------------------------------------------------------
 // nsAHttpSegmentReader
