@@ -709,7 +709,7 @@ nsWyciwygChannel::OpenCacheEntry(const nsACString & aCacheKey,
     rv = cacheSession->OpenCacheEntry(aCacheKey, aAccessMode, false,
                                       getter_AddRefs(mCacheEntry));
   else
-    rv = cacheSession->AsyncOpenCacheEntry(aCacheKey, aAccessMode, this);
+    rv = cacheSession->AsyncOpenCacheEntry(aCacheKey, aAccessMode, this, false);
 
   return rv;
 }

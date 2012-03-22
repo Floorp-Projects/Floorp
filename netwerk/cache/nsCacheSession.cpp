@@ -102,13 +102,14 @@ nsCacheSession::OpenCacheEntry(const nsACString &         key,
 
 NS_IMETHODIMP nsCacheSession::AsyncOpenCacheEntry(const nsACString & key,
                                                   nsCacheAccessMode accessRequested,
-                                                  nsICacheListener *listener)
+                                                  nsICacheListener *listener,
+                                                  bool              noWait)
 {
     nsresult rv;
     rv = nsCacheService::OpenCacheEntry(this,
                                         key,
                                         accessRequested,
-                                        nsICache::BLOCKING,
+                                        !noWait,
                                         listener,
                                         nsnull); // no result
 
