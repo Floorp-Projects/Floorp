@@ -16,7 +16,7 @@
 #include <vector>
 #define ASSERT(a) MOZ_ASSERT(a)
 #ifdef ANDROID
-#ifdef defined(__arm__) || defined(__thumb__)
+#if defined(__arm__) || defined(__thumb__)
 #define ENABLE_SPS_LEAF_DATA
 #endif
 #define LOG(text) __android_log_print(ANDROID_LOG_ERROR, "profiler", "%s", text);
@@ -90,6 +90,10 @@ class OS {
   // Please use delete to reclaim the storage for the returned Mutex.
   static Mutex* CreateMutex();
 
+  // On supported platforms, setup a signal handler which would start
+  // and stop the profiler.
+  static void RegisterStartStopHandlers();
+
  private:
   static const int msPerSecond = 1000;
 
@@ -160,11 +164,13 @@ class TickSample {
         sp(NULL),
         fp(NULL),
         function(NULL),
+        context(NULL),
         frames_count(0) {}
   Address pc;  // Instruction pointer.
   Address sp;  // Stack pointer.
   Address fp;  // Frame pointer.
   Address function;  // The last called JS function.
+  void*   context;   // The context from the signal handler, if available
   static const int kMaxFramesCount = 64;
   Address stack[kMaxFramesCount];  // Call stack.
   int frames_count;  // Number of captured frames.

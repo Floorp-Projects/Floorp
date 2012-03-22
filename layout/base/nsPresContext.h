@@ -1132,7 +1132,7 @@ public:
 
 protected:
 
-  nsRefPtrHashtable<nsVoidPtrHashKey, nsImageLoader>
+  nsRefPtrHashtable<nsPtrHashKey<nsIFrame>, nsImageLoader>
                         mImageLoaders[IMAGE_LOAD_TYPE_COUNT];
 
   nsWeakPtr             mContainer;

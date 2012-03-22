@@ -28,7 +28,7 @@ function test() {
 
       moveTabToAnotherGroup(groupItemOne.getChild(2).tab, groupItemOne, groupItemTwo, function() {
         moveTabToAnotherGroup(groupItemOne.getChild(1).tab, groupItemOne, groupItemTwo, function() {
-          cw.UI.setActive(groupItemOne);
+          groupItemOne.close();
           hideTabView(finish);
         });
       });

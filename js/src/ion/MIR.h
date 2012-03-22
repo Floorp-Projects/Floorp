@@ -979,10 +979,9 @@ class MNewArray : public MNullaryInstruction
 class MNewObject : public MNullaryInstruction
 {
     HeapPtrObject baseObj_;
-    HeapPtr<types::TypeObject> type_;
 
-    MNewObject(JSObject *baseObj, types::TypeObject *type)
-      : baseObj_(baseObj), type_(type)
+    MNewObject(JSObject *baseObj)
+      : baseObj_(baseObj)
     {
         setResultType(MIRType_Object);
     }
@@ -990,15 +989,12 @@ class MNewObject : public MNullaryInstruction
   public:
     INSTRUCTION_HEADER(NewObject);
 
-    static MNewObject *New(JSObject *baseObj, types::TypeObject *type) {
-        return new MNewObject(baseObj, type);
+    static MNewObject *New(JSObject *baseObj) {
+        return new MNewObject(baseObj);
     }
 
     JSObject *baseObj() const {
         return baseObj_;
-    }
-    types::TypeObject *type() const {
-        return type_;
     }
 };
 

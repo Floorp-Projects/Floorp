@@ -590,7 +590,8 @@ CreateOffscreenFBOContext(const ContextFormat& aFormat,
 
 already_AddRefed<GLContext>
 GLContextProviderCGL::CreateOffscreen(const gfxIntSize& aSize,
-                                      const ContextFormat& aFormat)
+                                      const ContextFormat& aFormat,
+                                      const ContextFlags flags)
 {
     ContextFormat actualFormat(aFormat);
 

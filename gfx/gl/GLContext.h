@@ -571,6 +571,11 @@ public:
 #endif
     }
 
+    enum ContextFlags {
+        ContextFlagsNone = 0x0,
+        ContextFlagsGlobal = 0x1
+    };
+
     enum GLContextType {
         ContextTypeUnknown,
         ContextTypeWGL,
@@ -692,6 +697,7 @@ public:
     enum {
         RendererAdreno200,
         RendererAdreno205,
+        RendererSGX530,
         RendererSGX540,
         RendererOther
     };
@@ -1643,7 +1649,7 @@ public:
 
 protected:
 
-    nsDataHashtable<nsVoidPtrHashKey, void*> mUserData;
+    nsDataHashtable<nsPtrHashKey<void>, void*> mUserData;
 
     void SetIsGLES2(bool aIsGLES2) {
         NS_ASSERTION(!mInitialized, "SetIsGLES2 can only be called before initialization!");
