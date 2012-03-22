@@ -45,11 +45,12 @@ class PixelTest extends BaseTest {
 
     // this matches the algorithm in robocop_boxes.html
     protected final int[] getBoxColorAt(int x, int y) {
-        x -= (x % 100);
-        y -= (y % 100);
-        int r = (x + y) % 255;
-        int g = 255 - (y / 10);
-        int b = 255 - (x / 10);
+        int r = ((int)Math.floor(x / 3) % 256);
+        r = r & 0xF8;
+        int g = (x + y) % 256;
+        g = g & 0xFC;
+        int b = ((int)Math.floor(y / 3) % 256);
+        b = b & 0xF8;
         return new int[] { r, g, b };
     }
 
