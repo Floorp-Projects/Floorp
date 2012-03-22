@@ -74,7 +74,7 @@ class nsIFrame;
 class nsIAtom;
 class nsIView;
 
-typedef nsRefPtrHashtable<nsVoidPtrHashKey, nsAccessible>
+typedef nsRefPtrHashtable<nsPtrHashKey<const void>, nsAccessible>
   nsAccessibleHashtable;
 
 // see nsAccessible::GetAttrValue

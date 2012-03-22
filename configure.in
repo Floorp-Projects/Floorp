@@ -8893,6 +8893,42 @@ if test "$CAIRO_FEATURES_H"; then
   fi
 fi
 
+dnl Build libunwind for Android profiling builds
+if test "$OS_TARGET" = "Android" -a "$MOZ_PROFILING"; then
+  old_ac_configure_arg="$ac_configure_args"
+  ac_configure_args="--build=${build} --host=${target_alias} --disable-shared --enable-block-signals=no"
+  if test "$MOZ_DEBUG"; then
+    ac_configure_args="$ac_configure_args --enable-debug"
+  fi
+  if test "$DSO_PIC_CFLAGS"; then
+    ac_configure_args="$ac_configure_args --with-pic"
+  fi
+  ac_configure_args="$ac_configure_args \
+      CC=\"$CC\" \
+      CXX=\"$CXX\" \
+      CPP=\"$CPP\" \
+      CFLAGS=\"$CFLAGS\" \
+      CXXFLAGS=\"$CXXFLAGS\" \
+      CPPFLAGS=\"$CPPFLAGS\" \
+      LD=\"$LD\" \
+      LDFLAGS=\"$LDFLAGS\" \
+      AR=\"$AR\" \
+      RANLIB=\"$RANLIB\" \
+      STRIP=\"$STRIP\" \
+      LIBS=\"$LIBS\""
+
+  # Use a separate cache file for libunwind, since it does not use caching.
+  mkdir -p $_objdir/tools/profiler/libunwind/src
+  old_cache_file=$cache_file
+  cache_file=$_objdir/tools/profiler/libunwind/src/config.cache
+  old_config_files=$CONFIG_FILES
+  unset CONFIG_FILES
+  AC_OUTPUT_SUBDIRS(tools/profiler/libunwind/src)
+  cache_file=$old_cache_file
+  ac_configure_args="$old_ac_configure_args"
+  CONFIG_FILES=$old_config_files
+fi
+
 # Run freetype configure script
 
 if test "$MOZ_TREE_FREETYPE"; then

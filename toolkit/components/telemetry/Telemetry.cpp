@@ -58,6 +58,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/Preferences.h"
 
 namespace {
 
@@ -130,9 +131,8 @@ public:
   static bool CanRecord();
   static already_AddRefed<nsITelemetry> CreateTelemetryInstance();
   static void ShutdownTelemetry();
-  static void RecordSlowStatement(const nsACString &statement,
-                                  const nsACString &dbName,
-                                  PRUint32 delay);
+  static void RecordSlowStatement(const nsACString &sql, const nsACString &dbName,
+                                  PRUint32 delay, bool isDynamicString);
 #if defined(MOZ_ENABLE_PROFILER_SPS)
   static void RecordChromeHang(PRUint32 duration,
                                const Telemetry::HangStack &callStack,
@@ -142,6 +142,9 @@ public:
   struct StmtStats {
     PRUint32 hitCount;
     PRUint32 totalTime;
+    bool isDynamicSql;
+    bool isTrackedDb;
+    bool isAggregate;
   };
   typedef nsBaseHashtableET<nsCStringHashKey, StmtStats> SlowSQLEntryType;
   struct HangReport {
@@ -153,9 +156,18 @@ public:
   };
 
 private:
-  static bool StatementReflector(SlowSQLEntryType *entry, JSContext *cx,
-                                 JSObject *obj);
-  bool AddSQLInfo(JSContext *cx, JSObject *rootObj, bool mainThread);
+  static void StoreSlowSQL(const nsACString &offender, PRUint32 delay,
+                           bool isDynamicSql, bool isTrackedDB, bool isAggregate);
+
+  static bool ReflectPublicSql(SlowSQLEntryType *entry, JSContext *cx,
+                               JSObject *obj);
+  static bool ReflectPrivateSql(SlowSQLEntryType *entry, JSContext *cx,
+                                JSObject *obj);
+  static bool ReflectSql(SlowSQLEntryType *entry, JSContext *cx, JSObject *obj);
+
+  bool AddSQLInfo(JSContext *cx, JSObject *rootObj, bool mainThread,
+                  bool includePrivateStrings);
+  bool GetSQLStats(JSContext *cx, jsval *ret, bool includePrivateSql);
 
   // Like GetHistogramById, but returns the underlying C++ object, not the JS one.
   nsresult GetHistogramByName(const nsACString &name, Histogram **ret);
@@ -510,14 +522,13 @@ TelemetryImpl::NewHistogram(const nsACString &name, PRUint32 min, PRUint32 max, 
 }
 
 bool
-TelemetryImpl::StatementReflector(SlowSQLEntryType *entry, JSContext *cx,
-                                  JSObject *obj)
+TelemetryImpl::ReflectSql(SlowSQLEntryType *entry, JSContext *cx, JSObject *obj)
 {
   const nsACString &sql = entry->GetKey();
   jsval hitCount = UINT_TO_JSVAL(entry->mData.hitCount);
   jsval totalTime = UINT_TO_JSVAL(entry->mData.totalTime);
 
-  JSObject *arrayObj = JS_NewArrayObject(cx, 2, nsnull);
+  JSObject *arrayObj = JS_NewArrayObject(cx, 0, nsnull);
   if (!arrayObj) {
     return false;
   }
@@ -531,17 +542,38 @@ TelemetryImpl::StatementReflector(SlowSQLEntryType *entry, JSContext *cx,
 }
 
 bool
-TelemetryImpl::AddSQLInfo(JSContext *cx, JSObject *rootObj, bool mainThread)
+TelemetryImpl::ReflectPublicSql(SlowSQLEntryType *entry, JSContext *cx,
+                                JSObject *obj)
+{
+  bool isPrivateSql = entry->mData.isDynamicSql || (!entry->mData.isTrackedDb);
+  if (!isPrivateSql || entry->mData.isAggregate)
+    return ReflectSql(entry, cx, obj);
+  return true;
+}
+
+bool
+TelemetryImpl::ReflectPrivateSql(SlowSQLEntryType *entry, JSContext *cx,
+                                 JSObject *obj)
+{
+  if (!entry->mData.isAggregate)
+    return ReflectSql(entry, cx, obj);
+  return true;
+}
+
+bool
+TelemetryImpl::AddSQLInfo(JSContext *cx, JSObject *rootObj, bool mainThread,
+                          bool includePrivateStrings)
 {
   JSObject *statsObj = JS_NewObject(cx, NULL, NULL, NULL);
   if (!statsObj)
     return false;
   JS::AutoObjectRooter root(cx, statsObj);
 
-  AutoHashtable<SlowSQLEntryType> &sqlMap = (mainThread
-                                             ? mSlowSQLOnMainThread
-                                             : mSlowSQLOnOtherThread);
-  if (!sqlMap.ReflectHashtable(StatementReflector, cx, statsObj)) {
+  AutoHashtable<SlowSQLEntryType> &sqlMap =
+    (mainThread ? mSlowSQLOnMainThread : mSlowSQLOnOtherThread);
+  AutoHashtable<SlowSQLEntryType>::ReflectEntryFunc reflectFunction =
+    (includePrivateStrings ? ReflectPrivateSql : ReflectPublicSql);
+  if(!sqlMap.ReflectHashtable(reflectFunction, cx, statsObj)) {
     return false;
   }
 
@@ -937,23 +969,41 @@ TelemetryImpl::GetAddonHistogramSnapshots(JSContext *cx, jsval *ret)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TelemetryImpl::GetSlowSQL(JSContext *cx, jsval *ret)
+bool
+TelemetryImpl::GetSQLStats(JSContext *cx, jsval *ret, bool includePrivateSql)
 {
   JSObject *root_obj = JS_NewObject(cx, NULL, NULL, NULL);
   if (!root_obj)
-    return NS_ERROR_FAILURE;
+    return false;
   *ret = OBJECT_TO_JSVAL(root_obj);
 
   MutexAutoLock hashMutex(mHashMutex);
   // Add info about slow SQL queries on the main thread
-  if (!AddSQLInfo(cx, root_obj, true))
-    return NS_ERROR_FAILURE;
+  if (!AddSQLInfo(cx, root_obj, true, includePrivateSql))
+    return false;
   // Add info about slow SQL queries on other threads
-  if (!AddSQLInfo(cx, root_obj, false))
-    return NS_ERROR_FAILURE;
+  if (!AddSQLInfo(cx, root_obj, false, includePrivateSql))
+    return false;
+  
+  return true;
+}
 
-  return NS_OK;
+NS_IMETHODIMP
+TelemetryImpl::GetSlowSQL(JSContext *cx, jsval *ret)
+{
+  if (GetSQLStats(cx, ret, false))
+    return NS_OK;
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetDebugSlowSQL(JSContext *cx, jsval *ret)
+{
+  bool revealPrivateSql =
+    Preferences::GetBool("toolkit.telemetry.debugSlowSql", false);
+  if (GetSQLStats(cx, ret, revealPrivateSql))
+    return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -1534,14 +1584,9 @@ TelemetryImpl::ShutdownTelemetry()
 }
 
 void
-TelemetryImpl::RecordSlowStatement(const nsACString &statement,
-                                   const nsACString &dbName,
-                                   PRUint32 delay)
+TelemetryImpl::StoreSlowSQL(const nsACString &sql, PRUint32 delay,
+                            bool isDynamicSql, bool isTrackedDB, bool isAggregate)
 {
-  MOZ_ASSERT(sTelemetry);
-  if (!sTelemetry->mCanRecord || !sTelemetry->mTrackedDBs.GetEntry(dbName))
-    return;
-
   AutoHashtable<SlowSQLEntryType> *slowSQLMap = NULL;
   if (NS_IsMainThread())
     slowSQLMap = &(sTelemetry->mSlowSQLOnMainThread);
@@ -1549,16 +1594,47 @@ TelemetryImpl::RecordSlowStatement(const nsACString &statement,
     slowSQLMap = &(sTelemetry->mSlowSQLOnOtherThread);
 
   MutexAutoLock hashMutex(sTelemetry->mHashMutex);
-  SlowSQLEntryType *entry = slowSQLMap->GetEntry(statement);
+
+  SlowSQLEntryType *entry = slowSQLMap->GetEntry(sql);
   if (!entry) {
-    entry = slowSQLMap->PutEntry(statement);
+    entry = slowSQLMap->PutEntry(sql);
     if (NS_UNLIKELY(!entry))
       return;
+    entry->mData.isDynamicSql = isDynamicSql;
+    entry->mData.isTrackedDb = isTrackedDB;
+    entry->mData.isAggregate = isAggregate;
+
     entry->mData.hitCount = 0;
     entry->mData.totalTime = 0;
   }
+
   entry->mData.hitCount++;
   entry->mData.totalTime += delay;
+}
+
+void
+TelemetryImpl::RecordSlowStatement(const nsACString &sql, const nsACString &dbName,
+                                   PRUint32 delay, bool isDynamicString)
+{
+  MOZ_ASSERT(sTelemetry);
+  if (!sTelemetry->mCanRecord)
+    return;
+
+  bool isTrackedDb = sTelemetry->mTrackedDBs.Contains(dbName);
+  bool isPrivate = (!isTrackedDb) || isDynamicString;
+  if (isPrivate) {
+    // Report aggregate DB-level statistics to Telemetry for potentially
+    // sensitive SQL strings
+    nsCAutoString aggregate;
+    aggregate.AppendPrintf("Untracked SQL for %s", dbName.BeginReading());
+    StoreSlowSQL(aggregate, delay, isDynamicString, isTrackedDb, true);
+  }
+
+  // Record original SQL string
+  nsCAutoString fullSql(sql);
+  if (!isTrackedDb)
+    fullSql.AppendPrintf(" -- Untracked DB %s", dbName.BeginReading());
+  StoreSlowSQL(fullSql, delay, isDynamicString, isTrackedDb, false);
 }
 
 #if defined(MOZ_ENABLE_PROFILER_SPS)
@@ -1659,9 +1735,10 @@ GetHistogramById(ID id)
 void
 RecordSlowSQLStatement(const nsACString &statement,
                        const nsACString &dbName,
-                       PRUint32 delay)
+                       PRUint32 delay,
+                       bool isDynamicString)
 {
-  TelemetryImpl::RecordSlowStatement(statement, dbName, delay);
+  TelemetryImpl::RecordSlowStatement(statement, dbName, delay, isDynamicString);
 }
 
 void Init()

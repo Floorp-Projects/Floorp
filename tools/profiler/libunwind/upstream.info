@@ -1,0 +1,2 @@
+UPSTREAM_REPO=git://github.com/ehsan/libunwind.git
+UPSTREAM_COMMIT=bf6079087f2901e55d737e517a4225e905913e81

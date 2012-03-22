@@ -529,6 +529,9 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
     nsIGeneratingKeypairInfoDialogs * dialogs;
     nsKeygenThread *KeygenRunnable = 0;
     nsCOMPtr<nsIKeygenThread> runnable;
+    
+    // permanent and sensitive flags for keygen
+    PK11AttrFlags attrFlags = PK11_ATTR_TOKEN | PK11_ATTR_SENSITIVE | PK11_ATTR_PRIVATE;
 
     // Get the key size //
     for (size_t i = 0; i < number_of_key_size_choices; ++i) {
@@ -671,10 +674,11 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
 
     if (NS_FAILED(rv) || !KeygenRunnable) {
         rv = NS_OK;
-        privateKey = PK11_GenerateKeyPair(slot, keyGenMechanism, params,
-                                          &publicKey, true, true, m_ctx);
+        privateKey = PK11_GenerateKeyPairWithFlags(slot, keyGenMechanism, params,
+                                                   &publicKey, attrFlags, m_ctx);
     } else {
-        KeygenRunnable->SetParams( slot, keyGenMechanism, params, true, true, m_ctx );
+        KeygenRunnable->SetParams( slot, attrFlags, nsnull, 0,
+                                   keyGenMechanism, params, m_ctx );
 
         runnable = do_QueryInterface(KeygenRunnable);
         
@@ -694,7 +698,11 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
 
             NS_RELEASE(dialogs);
             if (NS_SUCCEEDED(rv)) {
-                rv = KeygenRunnable->GetParams(&privateKey, &publicKey);
+                PK11SlotInfo *used_slot = nsnull;
+                rv = KeygenRunnable->ConsumeResult(&used_slot, &privateKey, &publicKey);
+                if (NS_SUCCEEDED(rv) && used_slot) {
+                  PK11_FreeSlot(used_slot);
+                }
             }
         }
     }

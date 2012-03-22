@@ -227,12 +227,11 @@ if __name__ == '__main__':
     results = None
     try:
         results = ResultsSink(output_file, OPTIONS)
+        for t in skipped_list:
+            results.push(NullTestOutput(t))
         run_tests(test_list, results)
     finally:
         os.chdir(curdir)
-
-    for t in skipped_list:
-        results.push(NullTestOutput(t))
 
     if output_file != sys.stdout:
         output_file.close()

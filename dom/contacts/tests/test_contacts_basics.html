@@ -49,7 +49,7 @@ var properties1 = {
   familyName: ["TestFamilyName","Wagner"],
   givenName: ["Test1","Test2"],
   nickname: "nicktest",
-  tel: ["123456"],
+  tel: ["123456", "+9-876-5432"],
   adr: adr1
 };
 
@@ -216,6 +216,51 @@ var steps = [
     var options = {filterBy: ["name"],
                    filterOp: "contains",
                    filterValue: properties1.name.substring(0,3)};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      checkContacts(createResult1, properties1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring tel1");
+    var options = {filterBy: ["tel"],
+                   filterOp: "contains",
+                   filterValue: properties1.tel[1].substring(1,5)};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      checkContacts(createResult1, properties1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring tel2");
+    var options = {filterBy: ["tel"],
+                   filterOp: "contains",
+                   filterValue: "7654"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      checkContacts(createResult1, properties1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring tel3");
+    var options = {filterBy: ["tel"],
+                   filterOp: "contains",
+                   filterValue: "876-5432"};
     req = mozContacts.find(options);
     req.onsuccess = function () {
       ok(req.result.length == 1, "Found exactly 1 contact.");
