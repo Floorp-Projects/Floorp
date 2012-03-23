@@ -152,6 +152,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
    *
   */
   public static final Map<String, String> SPECIAL_GUID_PARENTS;
+
   static {
     HashMap<String, String> m = new HashMap<String, String>();
     m.put("places",  null);
@@ -162,6 +163,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     m.put("mobile",  "places");
     SPECIAL_GUID_PARENTS = Collections.unmodifiableMap(m);
   }
+
 
   /**
    * A map of guids to their localized name strings.

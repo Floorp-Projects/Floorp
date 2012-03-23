@@ -173,6 +173,9 @@ struct JSStructuredCloneWriter {
     js::SCOutput &out;
 
     // Vector of objects with properties remaining to be written.
+    //
+    // NB: These can span multiple compartments, so the compartment must be
+    // entered before any manipulation is performed.
     js::AutoValueVector objs;
 
     // counts[i] is the number of properties of objs[i] remaining to be written.

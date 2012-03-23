@@ -92,6 +92,7 @@ public:
   bool ImageComplete() const;
 
   void SetHasNoAlpha();
+  void SetAsNonPremult(bool aIsNonPremult);
 
   bool GetCompositingFailed() const;
   void SetCompositingFailed(bool val);
@@ -180,6 +181,7 @@ private: // data
   // Total length is PaletteDataLength() + GetImageDataLength().
   PRUint8*     mPalettedImageData;
 
+  // Note that the data stored in gfxRGBA is *non-alpha-premultiplied*.
   gfxRGBA      mSinglePixelColor;
 
   PRInt32      mTimeout; // -1 means display forever
@@ -192,6 +194,7 @@ private: // data
   bool mNeverUseDeviceSurface;
   bool mFormatChanged;
   bool mCompositingFailed;
+  bool mNonPremult;
   /** Indicates if the image data is currently locked */
   bool mLocked;
 

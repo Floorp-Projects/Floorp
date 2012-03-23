@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+<script type="application/javascript">
+
+  // Set up the objects for cloning.
+  function setup() {
+    window.testObject = { myNumber: 42,
+                          myDomain: window.location.domain };
+    window.blob = (new MozBlobBuilder()).getBlob('text/plain');
+    window.fileList = document.getElementById('fileinput').files;
+  }
+
+  // Called by the chrome parent window.
+  function tryToClone(obj, shouldSucceed, message) {
+    var success = false;
+    var sink = window.frames[0];
+    try { sink.postMessage(obj, '*'); success = true; }
+    catch (e) { message = message + ' (threw: ' + e.message + ')'; }
+    is(success, shouldSucceed, message);
+  }
+
+</script>
+</head>
+<body onload="setup()">
+<input id="fileinput" type="file"></input>
+<iframe id="sink">
+</body>
+</html>

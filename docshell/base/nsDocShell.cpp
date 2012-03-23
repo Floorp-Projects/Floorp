@@ -10850,11 +10850,9 @@ nsDocShell::EnsureScriptEnvironment()
     nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mScriptGlobal));
     win->SetDocShell(static_cast<nsIDocShell *>(this));
 
-    // Ensure the script object is set to run javascript - other languages
-    // setup on demand.
-    // XXXmarkh - should this be setup to run the default language for this doc?
+    // Ensure the script object is set up to run script.
     nsresult rv;
-    rv = mScriptGlobal->EnsureScriptEnvironment(nsIProgrammingLanguage::JAVASCRIPT);
+    rv = mScriptGlobal->EnsureScriptEnvironment();
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;

@@ -142,7 +142,7 @@ static const NSString* AXRoles [] = {
   NSAccessibilityGroupRole,                     // ROLE_FOOTER
   NSAccessibilityGroupRole,                     // ROLE_PARAGRAPH
   @"AXRuler",                                   // ROLE_RULER. 10.4+ only, so we re-define the constant.
-  NSAccessibilityComboBoxRole,                  // ROLE_AUTOCOMPLETE
+  NSAccessibilityUnknownRole,                   // ROLE_AUTOCOMPLETE
   NSAccessibilityTextFieldRole,                 // ROLE_EDITBAR
   NSAccessibilityTextFieldRole,                 // ROLE_ENTRY
   NSAccessibilityStaticTextRole,                // ROLE_CAPTION

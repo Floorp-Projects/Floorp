@@ -532,12 +532,12 @@ nsEventListenerManager::AddScriptEventListener(nsIAtom *aName,
 
   // This might be the first reference to this language in the global
   // We must init the language before we attempt to fetch its context.
-  if (NS_FAILED(global->EnsureScriptEnvironment(aLanguage))) {
+  if (NS_FAILED(global->EnsureScriptEnvironment())) {
     NS_WARNING("Failed to setup script environment for this language");
     // but fall through and let the inevitable failure below handle it.
   }
 
-  nsIScriptContext* context = global->GetScriptContext(aLanguage);
+  nsIScriptContext* context = global->GetScriptContext();
   NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
   JSObject* scope = global->GetGlobalJSObject();
