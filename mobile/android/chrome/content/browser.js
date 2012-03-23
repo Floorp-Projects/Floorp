@@ -2218,18 +2218,32 @@ Tab.prototype = {
         // Is it on the top level?
         let contentDocument = aSubject;
         if (contentDocument == this.browser.contentDocument) {
-          // reset CSS viewport and zoom to default on new page
+          // reset CSS viewport and zoom to default on new page, and then calculate
+          // them properly using the actual metadata from the page. note that the
+          // updateMetadata call takes into account the existing CSS viewport size
+          // and zoom when calculating the new ones, so we need to reset these
+          // things here before calling updateMetadata.
           this.setBrowserSize(kDefaultCSSViewportWidth, kDefaultCSSViewportHeight);
           this.setResolution(gScreenWidth / this.browserWidth, false);
-          // and then use the metadata to figure out how it needs to be updated
           ViewportHandler.updateMetadata(this);
 
-          // If we draw without a display-port, things can go wrong. While it's
-          // almost certain a display-port has been set via the
-          // MozScrolledAreaChanged event, make sure by sending a viewport
-          // update here. As it's the first paint, this will end up being a
-          // display-port request only.
-          this.sendViewportUpdate();
+          // Note that if we draw without a display-port, things can go wrong. By the
+          // time we execute this, it's almost certain a display-port has been set via
+          // the MozScrolledAreaChanged event. If that didn't happen, the updateMetadata
+          // call above does so at the end of the updateViewportSize function. As long
+          // as that is happening, we don't need to do it again here.
+
+          if (contentDocument instanceof ImageDocument) {
+            // for images, scale to fit width. this needs to happen *after* the call
+            // to updateMetadata above, because that call sets the CSS viewport which
+            // will affect the page size (i.e. contentDocument.body.scroll*) that we
+            // use in this calculation. also we call sendViewportUpdate after changing
+            // the resolution so that the display port gets recalculated appropriately.
+            let fitZoom = Math.min(gScreenWidth / contentDocument.body.scrollWidth,
+                                   gScreenHeight / contentDocument.body.scrollHeight);
+            this.setResolution(fitZoom, false);
+            this.sendViewportUpdate();
+          }
 
           BrowserApp.displayedDocumentChanged();
           this.contentDocumentIsDisplayed = true;
