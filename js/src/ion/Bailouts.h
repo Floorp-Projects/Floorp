@@ -124,29 +124,6 @@ namespace ion {
 
 static const BailoutId INVALID_BAILOUT_ID = BailoutId(-1);
 
-// Different kinds of bailouts. When extending this enum, make sure to check
-// the bits reserved for bailout kinds.
-enum BailoutKind
-{
-    // A normal bailout triggered from type, shape, and assorted overflow
-    // guards in the compiler.
-    Bailout_Normal,
-
-    // A bailout at the very start of a function indicates that there may be
-    // a type mismatch in the arguments that necessitates a reflow.
-    Bailout_ArgumentCheck,
-
-    // A bailout required to monitor a newly observed type in a type inference
-    // barrier.
-    Bailout_TypeBarrier,
-
-    // A bailout required to monitor the result of a VM call.
-    Bailout_Monitor,
-
-    // A bailout to trigger recompilation to inline calls when the script is hot.
-    Bailout_RecompileCheck
-};
-
 static const uint32 BAILOUT_KIND_BITS = 3;
 static const uint32 BAILOUT_RESUME_BITS = 1;
 

@@ -43,7 +43,7 @@
 #include "jscompartment.h"
 #include "jsinterp.h"
 #include "Bailouts.h"
-#include "Snapshots.h"
+#include "SnapshotReader.h"
 #include "Ion.h"
 #include "IonCompartment.h"
 #include "IonSpewer.h"
