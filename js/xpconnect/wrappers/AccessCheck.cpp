@@ -306,6 +306,15 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
 
     JSObject *obj = Wrapper::wrappedObject(wrapper);
 
+    // LocationPolicy checks PUNCTURE first, so we should never get here for
+    // Location wrappers. For all other wrappers interested in cross-origin
+    // semantics, we want to allow puncturing only for the same-origin
+    // document.domain case.
+    if (act == Wrapper::PUNCTURE) {
+        MOZ_ASSERT(!WrapperFactory::IsLocationObject(obj));
+        return documentDomainMakesSameOrigin(cx, obj);
+    }
+
     const char *name;
     js::Class *clasp = js::GetObjectClass(obj);
     NS_ASSERTION(Jsvalify(clasp) != &XrayUtils::HolderClass, "shouldn't have a holder here");
@@ -497,6 +506,10 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
     if (act == Wrapper::CALL) {
         perm = PermitObjectAccess;
         return true;
+    }
+    if (act == Wrapper::PUNCTURE) {
+        perm = DenyAccess;
+        return false;
     }
 
     perm = DenyAccess;

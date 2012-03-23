@@ -100,8 +100,35 @@ class JS_FRIEND_API(Wrapper) : public ProxyHandler
 
     virtual void trace(JSTracer *trc, JSObject *wrapper) MOZ_OVERRIDE;
 
-    /* Policy enforcement traps. */
-    enum Action { GET, SET, CALL };
+    /* Policy enforcement traps.
+     *
+     * enter() allows the policy to specify whether the caller may perform |act|
+     * on the underlying object's |id| property. In the case when |act| is CALL,
+     * |id| is generally JSID_VOID.
+     *
+     * leave() allows the policy to undo various scoped state changes taken in
+     * enter(). If enter() succeeds, leave() must be called upon completion of
+     * the approved action.
+     *
+     * The |act| parameter to enter() specifies the action being performed. GET,
+     * SET, and CALL are self-explanatory, but PUNCTURE requires more explanation:
+     *
+     * GET and SET allow for a very fine-grained security membrane, through
+     * which access can be granted or denied on a per-property, per-object, and
+     * per-action basis. Sometimes though, we just want to asks if we can access
+     * _everything_ behind the wrapper barrier. For example, when the structured
+     * clone algorithm runs up against a cross-compartment wrapper, it needs to
+     * know whether it can enter the compartment and keep cloning, or whether it
+     * should throw. This is the role of PUNCTURE.
+     *
+     * PUNCTURE allows the policy to specify whether the wrapper barrier may
+     * be lifted - that is to say, whether the caller is allowed to access
+     * anything that the wrapped object could access. This is a very powerful
+     * permission, and thus should generally be denied for security wrappers
+     * except under very special circumstances. When |act| is PUNCTURE, |id|
+     * should be JSID_VOID.
+     * */
+    enum Action { GET, SET, CALL, PUNCTURE };
     virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act, bool *bp);
     virtual void leave(JSContext *cx, JSObject *wrapper);
 
