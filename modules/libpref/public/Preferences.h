@@ -352,6 +352,12 @@ public:
 
 protected:
   nsresult NotifyServiceObservers(const char *aSubject);
+  /**
+   * Reads the default pref file or, if that failed, try to save a new one.
+   *
+   * @return NS_OK if either action succeeded,
+   *         or the error code related to the read attempt.
+   */
   nsresult UseDefaultPrefFile();
   nsresult UseUserPrefFile();
   nsresult ReadAndOwnUserPrefFile(nsIFile *aFile);
