@@ -1456,9 +1456,6 @@ function Tab(aURL, aParams) {
   this._zoom = 1.0;
   this.userScrollPos = { x: 0, y: 0 };
   this.contentDocumentIsDisplayed = true;
-  this.clickToPlayPluginDoorhangerShown = false;
-  this.clickToPlayPluginsActivated = false;
-  this.loadEventProcessed = false;
 }
 
 Tab.prototype = {
@@ -1766,7 +1763,6 @@ Tab.prototype = {
       }
 
       case "load": {
-        this.loadEventProcessed = true;
         // Show a plugin doorhanger if there are no clickable overlays showing
         let contentWindow = this.browser.contentWindow;
         let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -1889,20 +1885,14 @@ Tab.prototype = {
 
       case "PluginClickToPlay": {
         let plugin = aEvent.target;
-
-        if (this.clickToPlayPluginsActivated) {
-          PluginHelper.playPlugin(plugin);
+        let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+        if (!overlay)
           return;
-        }
 
         // If the overlay is too small, hide the overlay and act like this
         // is a hidden plugin object
-        let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-        if (!overlay || PluginHelper.isTooSmall(plugin, overlay)) {
-          if (overlay)
-            overlay.style.visibility = "hidden";
-          if (this.loadEventProcessed && !this.clickToPlayPluginDoorhangerShown)
-            PluginHelper.showDoorHanger(this);
+        if (PluginHelper.isTooSmall(plugin, overlay)) {
+          overlay.style.visibility = "hidden";
           return;
         }
 
@@ -1913,10 +1903,7 @@ Tab.prototype = {
               return;
             e.preventDefault();
           }
-          let win = e.target.ownerDocument.defaultView.top;
-          let tab = BrowserApp.getTabForWindow(win);
-          tab.clickToPlayPluginsActivated = true;
-          PluginHelper.playAllPlugins(win);
+          PluginHelper.playAllPlugins(e.target.ownerDocument.defaultView);
         }, true);
         break;
       }
@@ -1976,11 +1963,6 @@ Tab.prototype = {
       documentURI = browser.contentDocument.documentURIObject.spec;
       contentType = browser.contentDocument.contentType;
     }
-
-    // Reset state of click-to-play plugin notifications.
-    this.clickToPlayPluginDoorhangerShown = false;
-    this.clickToPlayPluginsActivated = false;
-    this.loadEventProcessed = false;
 
     let message = {
       gecko: {
@@ -3881,7 +3863,6 @@ var ClipboardHelper = {
 
 var PluginHelper = {
   showDoorHanger: function(aTab) {
-    aTab.clickToPlayPluginDoorhangerShown = true;
     let message = Strings.browser.GetStringFromName("clickToPlayPlugins.message");
     let buttons = [
       {
@@ -3908,13 +3889,11 @@ var PluginHelper = {
     if (!plugins || !plugins.length)
       return;
 
-    plugins.forEach(this.playPlugin);
-  },
-
-  playPlugin: function(plugin) {
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    if (!objLoadingContent.activated)
-      objLoadingContent.playPlugin();
+    for (let plugin of plugins) {
+      let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+      if (!objLoadingContent.activated)
+        objLoadingContent.playPlugin();
+    }
   },
 
   getPluginPreference: function getPluginPreference() {
