@@ -151,12 +151,18 @@ struct LocationPolicy : public Policy {
         // We should only be dealing with Location objects here.
         MOZ_ASSERT(WrapperFactory::IsLocationObject(js::UnwrapObject(wrapper)));
 
+        // Default to deny.
+        perm = DenyAccess;
+
+        // Location object security is complicated enough. Don't allow punctures.
+        if (act == js::Wrapper::PUNCTURE)
+            return false;
+
         if (AccessCheck::isCrossOriginAccessPermitted(cx, wrapper, id, act) ||
             AccessCheck::isLocationObjectSameOrigin(cx, wrapper)) {
             perm = PermitPropertyAccess;
             return true;
         }
-        perm = DenyAccess;
         JSAutoEnterCompartment ac;
         if (!ac.enter(cx, wrapper))
             return false;
