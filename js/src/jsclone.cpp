@@ -513,6 +513,8 @@ JSStructuredCloneWriter::startObject(JSObject *obj)
 bool
 JSStructuredCloneWriter::startWrite(const js::Value &v)
 {
+    assertSameCompartment(context(), v);
+
     if (v.isString()) {
         return writeString(SCTAG_STRING, v.toString());
     } else if (v.isNumber()) {
@@ -525,6 +527,19 @@ JSStructuredCloneWriter::startWrite(const js::Value &v)
         return out.writePair(SCTAG_UNDEFINED, 0);
     } else if (v.isObject()) {
         JSObject *obj = &v.toObject();
+
+        // The object might be a security wrapper. See if we can clone what's
+        // behind it. If we can, unwrap the object.
+        obj = UnwrapObjectChecked(context(), obj);
+        if (!obj)
+            return false;
+
+        // If we unwrapped above, we'll need to enter the underlying compartment.
+        // Let the AutoEnterCompartment do the right thing for us.
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(context(), obj))
+            return false;
+
         if (obj->isRegExp()) {
             RegExpObject &reobj = obj->asRegExp();
             return out.writePair(SCTAG_REGEXP_OBJECT, reobj.getFlags()) &&
@@ -564,6 +579,12 @@ JSStructuredCloneWriter::write(const Value &v)
 
     while (!counts.empty()) {
         JSObject *obj = &objs.back().toObject();
+
+        // The objects in |obj| can live in other compartments.
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(context(), obj))
+            return false;
+
         if (counts.back()) {
             counts.back()--;
             jsid id = ids.back();
