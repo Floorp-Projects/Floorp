@@ -51,7 +51,6 @@
 #include "jstypes.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
-#include "jsdhash.h"
 #include "jslock.h"
 #include "jsutil.h"
 #include "jsversion.h"
