@@ -52,6 +52,8 @@ namespace XrayUtils {
 
 extern JSClass HolderClass;
 
+JSObject *createHolder(JSContext *cx, JSObject *wrappedNative, JSObject *parent);
+
 bool
 IsTransparent(JSContext *cx, JSObject *wrapper);
 
@@ -93,8 +95,6 @@ class XrayWrapper : public Base {
     virtual bool call(JSContext *cx, JSObject *wrapper, unsigned argc, js::Value *vp);
     virtual bool construct(JSContext *cx, JSObject *wrapper,
                            unsigned argc, js::Value *argv, js::Value *rval);
-
-    static JSObject *createHolder(JSContext *cx, JSObject *wrappedNative, JSObject *parent);
 
     static XrayWrapper singleton;
 
