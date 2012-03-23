@@ -103,6 +103,9 @@ holder_get(JSContext *cx, JSObject *holder, jsid id, jsval *vp);
 static JSBool
 holder_set(JSContext *cx, JSObject *holder, jsid id, JSBool strict, jsval *vp);
 
+
+static XPCWrappedNative *GetWrappedNative(JSObject *obj);
+
 namespace XrayUtils {
 
 JSClass HolderClass = {
@@ -111,6 +114,35 @@ JSClass HolderClass = {
     JS_PropertyStub,        JS_PropertyStub, holder_get,      holder_set,
     JS_EnumerateStub,       JS_ResolveStub,  JS_ConvertStub
 };
+
+JSObject *
+createHolder(JSContext *cx, JSObject *wrappedNative, JSObject *parent)
+{
+    JSObject *holder = JS_NewObjectWithGivenProto(cx, &HolderClass, nsnull, parent);
+    if (!holder)
+        return nsnull;
+
+    CompartmentPrivate *priv =
+        (CompartmentPrivate *)JS_GetCompartmentPrivate(js::GetObjectCompartment(holder));
+    JSObject *inner = JS_ObjectToInnerObject(cx, wrappedNative);
+    XPCWrappedNative *wn = GetWrappedNative(inner);
+    Value expando = ObjectOrNullValue(priv->LookupExpandoObject(wn));
+
+    // A note about ownership: the holder has a direct pointer to the wrapped
+    // native that we're wrapping. Normally, we'd have to AddRef the pointer
+    // so that it doesn't have to be collected, but then we'd have to tell the
+    // cycle collector. Fortunately for us, we know that the Xray wrapper
+    // itself has a reference to the flat JS object which will hold the
+    // wrapped native alive. Furthermore, the reachability of that object and
+    // the associated holder are exactly the same, so we can use that for our
+    // strong reference.
+    JS_ASSERT(IS_WN_WRAPPER(wrappedNative) ||
+              js::GetObjectClass(wrappedNative)->ext.innerObject);
+    js::SetReservedSlot(holder, JSSLOT_WN, PrivateValue(wn));
+    js::SetReservedSlot(holder, JSSLOT_RESOLVING, PrivateValue(NULL));
+    js::SetReservedSlot(holder, JSSLOT_EXPANDO, expando);
+    return holder;
+}
 
 }
 
@@ -1042,35 +1074,6 @@ XrayWrapper<Base>::construct(JSContext *cx, JSObject *wrapper, unsigned argc,
     return true;
 }
 
-template <typename Base>
-JSObject *
-XrayWrapper<Base>::createHolder(JSContext *cx, JSObject *wrappedNative, JSObject *parent)
-{
-    JSObject *holder = JS_NewObjectWithGivenProto(cx, &HolderClass, nsnull, parent);
-    if (!holder)
-        return nsnull;
-
-    CompartmentPrivate *priv =
-        (CompartmentPrivate *)JS_GetCompartmentPrivate(js::GetObjectCompartment(holder));
-    JSObject *inner = JS_ObjectToInnerObject(cx, wrappedNative);
-    XPCWrappedNative *wn = GetWrappedNative(inner);
-    Value expando = ObjectOrNullValue(priv->LookupExpandoObject(wn));
-
-    // A note about ownership: the holder has a direct pointer to the wrapped
-    // native that we're wrapping. Normally, we'd have to AddRef the pointer
-    // so that it doesn't have to be collected, but then we'd have to tell the
-    // cycle collector. Fortunately for us, we know that the Xray wrapper
-    // itself has a reference to the flat JS object which will hold the
-    // wrapped native alive. Furthermore, the reachability of that object and
-    // the associated holder are exactly the same, so we can use that for our
-    // strong reference.
-    JS_ASSERT(IS_WN_WRAPPER(wrappedNative) ||
-              js::GetObjectClass(wrappedNative)->ext.innerObject);
-    js::SetReservedSlot(holder, JSSLOT_WN, PrivateValue(wn));
-    js::SetReservedSlot(holder, JSSLOT_RESOLVING, PrivateValue(NULL));
-    js::SetReservedSlot(holder, JSSLOT_EXPANDO, expando);
-    return holder;
-}
 
 XrayProxy::XrayProxy(unsigned flags)
   : XrayWrapper<CrossCompartmentWrapper>(flags)
