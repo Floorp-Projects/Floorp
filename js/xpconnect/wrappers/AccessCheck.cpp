@@ -49,7 +49,6 @@
 #include "XPCWrapper.h"
 #include "XrayWrapper.h"
 #include "FilteringWrapper.h"
-#include "WrapperFactory.h"
 
 #include "jsfriendapi.h"
 
@@ -89,6 +88,9 @@ AccessCheck::isSameOrigin(JSCompartment *a, JSCompartment *b)
 bool
 AccessCheck::isLocationObjectSameOrigin(JSContext *cx, JSObject *wrapper)
 {
+    // The caller must ensure that the given wrapper wraps a Location object.
+    MOZ_ASSERT(WrapperFactory::IsLocationObject(js::UnwrapObject(wrapper)));
+
     // Location objects are parented to the outer window for which they
     // were created. This gives us an easy way to determine whether our
     // object is same origin with the current inner window:
@@ -320,8 +322,13 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
     if (IsWindow(name) && IsFrameId(cx, obj, id))
         return true;
 
-    // We only reach this point for cross origin location objects (see
-    // SameOriginOrCrossOriginAccessiblePropertiesOnly::check).
+    // Do the dynamic document.domain check.
+    //
+    // Location also needs a dynamic access check, but it's a different one, and
+    // we do it in LocationPolicy::check. Before LocationPolicy::check does that
+    // though, it first calls this function to check whether the property is
+    // accessible to anyone regardless of origin. So make sure not to do the
+    // document.domain check in that case.
     if (!IsLocation(name) && documentDomainMakesSameOrigin(cx, obj))
         return true;
 
