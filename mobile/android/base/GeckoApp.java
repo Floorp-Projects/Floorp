@@ -453,10 +453,10 @@ abstract public class GeckoApp
 
         forward.setEnabled(tab.canDoForward());
 
-        // Disable share menuitem for about:, chrome: and file: URIs
+        // Disable share menuitem for about:, chrome:, file:, and resource: URIs
         String scheme = Uri.parse(tab.getURL()).getScheme();
         share.setEnabled(!(scheme.equals("about") || scheme.equals("chrome") ||
-                           scheme.equals("file")));
+                           scheme.equals("file") || scheme.equals("resource")));
 
         // Disable save as PDF for about:home and xul pages
         saveAsPDF.setEnabled(!(tab.getURL().equals("about:home") ||
@@ -1677,9 +1677,10 @@ abstract public class GeckoApp
         if (uri != null && uri.length() > 0)
             passedUri = mLastTitle = uri;
 
+        mRestoreSession |= getProfile().shouldRestoreSession();
         if (passedUri == null || passedUri.equals("about:home")) {
             // show about:home if we aren't restoring previous session
-            if (! getProfile().hasSession()) {
+            if (!mRestoreSession) {
                 mBrowserToolbar.updateTabCount(1);
                 showAboutHome();
             }
@@ -1742,9 +1743,15 @@ abstract public class GeckoApp
              * run experience, perhaps?
              */
             mLayerController = new LayerController(this);
-            mPlaceholderLayerClient = new PlaceholderLayerClient(mLayerController, mLastViewport);
+            View v = mLayerController.getView();
 
-            mGeckoLayout.addView(mLayerController.getView(), 0);
+            mPlaceholderLayerClient = new PlaceholderLayerClient(mLayerController, mLastViewport);
+            if (!mPlaceholderLayerClient.loadScreenshot()) {
+                // Instead of flickering the checkerboard, show a white screen until Gecko paints
+                v.setBackgroundColor(Color.WHITE);
+            }
+
+            mGeckoLayout.addView(v, 0);
         }
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);

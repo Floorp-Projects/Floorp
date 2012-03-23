@@ -204,7 +204,7 @@ nsHTMLOutputAccessible::RelationByType(PRUint32 aType)
 {
   Relation rel = nsAccessibleWrap::RelationByType(aType);
   if (aType == nsIAccessibleRelation::RELATION_CONTROLLED_BY)
-    rel.AppendIter(new IDRefsIterator(mContent, nsGkAtoms::_for));
+    rel.AppendIter(new IDRefsIterator(mDoc, mContent, nsGkAtoms::_for));
 
   return rel;
 }
