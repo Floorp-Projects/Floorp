@@ -2225,7 +2225,6 @@ ia64*-hpux*)
         PKG_SKIP_STRIP=1
         XARGS=xargs
         DOXYGEN=:
-        GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
         ASM_SUFFIX=asm
         OBJ_SUFFIX=obj
         LIB_SUFFIX=lib
