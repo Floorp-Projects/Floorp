@@ -90,6 +90,8 @@ struct THEBES_API gfxFontFeature {
                      // to features that select among multiple alternatives
 };
 
+struct FontListSizes;
+
 inline bool
 operator<(const gfxFontFeature& a, const gfxFontFeature& b)
 {
@@ -313,6 +315,12 @@ public:
     hb_blob_t *ShareFontTableAndGetBlob(PRUint32 aTag,
                                         FallibleTArray<PRUint8>* aTable);
 
+    // For memory reporting
+    virtual void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
+    virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
+
     nsString         mName;
 
     bool             mItalic      : 1;
@@ -466,6 +474,11 @@ private:
         hb_blob_t *GetBlob() const;
 
         void Clear();
+
+        static size_t
+        SizeOfEntryExcludingThis(FontTableHashEntry *aEntry,
+                                 nsMallocSizeOfFun   aMallocSizeOf,
+                                 void*               aUserArg);
 
     private:
         static void DeleteFontTableBlobData(void *aBlobData);
@@ -632,6 +645,12 @@ public:
     // so we can use simplified style-matching;
     // if so set the mIsSimpleFamily flag (defaults to False before we've checked)
     void CheckForSimpleFamily();
+
+    // For memory reporter
+    virtual void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
+    virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
 
 protected:
     // fills in an array with weights of faces that match style,

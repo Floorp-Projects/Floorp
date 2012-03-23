@@ -274,6 +274,9 @@ public:
 
     virtual bool TestCharacterMap(PRUint32 aCh);
 
+    virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
+
     // create a font entry for a font with a given name
     static GDIFontEntry* CreateFontEntry(const nsAString& aName,
                                          gfxWindowsFontType aFontType,
@@ -347,6 +350,11 @@ public:
     virtual bool ResolveFontName(const nsAString& aFontName,
                                    nsAString& aResolvedFontName);
 
+    virtual void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
+    virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
+
 private:
     friend class gfxWindowsPlatform;
 
@@ -361,7 +369,7 @@ private:
                                           DWORD fontType,
                                           LPARAM lParam);
 
-    typedef nsDataHashtable<nsStringHashKey, nsRefPtr<gfxFontFamily> > FontTable;
+    typedef nsRefPtrHashtable<nsStringHashKey, gfxFontFamily> FontTable;
 
     FontTable mFontSubstitutes;
     nsTArray<nsString> mNonExistingFonts;
