@@ -45,7 +45,7 @@
 #include "jsfun.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "IonRegisters.h"
+#include "Registers.h"
 #include "IonCode.h"
 #include "IonFrameIterator.h"
 

@@ -51,7 +51,7 @@
 #include "FixedArityList.h"
 #include "LOpcodes.h"
 #include "TypeOracle.h"
-#include "IonRegisters.h"
+#include "Registers.h"
 #include "MIR.h"
 #include "MIRGraph.h"
 #include "shared/Assembler-shared.h"

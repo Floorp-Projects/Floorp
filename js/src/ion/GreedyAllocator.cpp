@@ -680,10 +680,6 @@ GreedyAllocator::assertValidRegisterState()
     for (AnyRegisterIterator iter; iter.more(); iter++) {
         AnyRegister reg = *iter;
         VirtualRegister *vr = state[reg];
-        if (!reg.allocatable()) {
-            JS_ASSERT(!vr);
-            continue;
-        }
         JS_ASSERT(!vr == state.free.has(reg));
         JS_ASSERT_IF(vr, vr->reg() == reg);
     }
