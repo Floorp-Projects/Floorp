@@ -70,7 +70,6 @@ import org.mozilla.gecko.gfx.InputConnectionHandler;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.SynchronousQueue;
 
 public class GeckoInputConnection
     extends BaseInputConnection
@@ -104,9 +103,6 @@ public class GeckoInputConnection
     private boolean mBatchMode;
     private ExtractedTextRequest mUpdateRequest;
     private final ExtractedText mUpdateExtract = new ExtractedText();
-    private int mSelectionStart;
-    private int mSelectionLength;
-    private final SynchronousQueue<String> mQueryResult = new SynchronousQueue<String>();
 
     public static GeckoInputConnection create(View targetView) {
         if (DEBUG)
@@ -953,15 +949,6 @@ public class GeckoInputConnection
             notifySelectionChange(imm, start, end);
         else
             notifyTextChange(imm, text, start, end, newEnd);
-    }
-
-    public void returnIMEQueryResult(String result, int selectionStart, int selectionLength) {
-        mSelectionStart = selectionStart;
-        mSelectionLength = selectionLength;
-        try {
-            mQueryResult.put(result);
-        } catch (InterruptedException e) {
-        }
     }
 
     /* Delay updating IME states (see bug 573800) */
