@@ -53,8 +53,6 @@
 #include "nsIURL.h"
 #include "nsIChannel.h"
 #include "nsXPIDLString.h"
-#include "nsIParser.h"
-#include "nsParserCIID.h"
 #include "plstr.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"

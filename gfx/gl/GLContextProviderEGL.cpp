@@ -280,7 +280,7 @@ public:
         , mBound(false)
         , mIsPBuffer(false)
         , mIsDoubleBuffered(false)
-        , mPBufferCanBindToTexture(false)
+        , mCanBindToTexture(false)
     {
         // any EGL contexts will always be GLESv2
         SetIsGLES2(true);
@@ -444,6 +444,15 @@ public:
         }
 #endif
         if (aForce || sEGLLibrary.fGetCurrentContext() != mContext) {
+#ifdef MOZ_WIDGET_QT
+            // Shared Qt GL context need to be informed about context switch
+            if (mSharedContext) {
+                QGLContext* qglCtx = static_cast<QGLContext*>(static_cast<GLContextEGL*>(mSharedContext.get())->mPlatformContext);
+                if (qglCtx) {
+                    qglCtx->doneCurrent();
+                }
+            }
+#endif
             succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
                                                  mSurface, mSurface,
                                                  mContext);
@@ -600,7 +609,7 @@ protected:
 
     bool mIsPBuffer;
     bool mIsDoubleBuffered;
-    bool mPBufferCanBindToTexture;
+    bool mCanBindToTexture;
 
     static EGLSurface CreatePBufferSurfaceTryingPowerOfTwo(EGLConfig config,
                                                            EGLenum bindToTextureFormat,
@@ -656,7 +665,7 @@ GLContextEGL::BindTex2DOffscreen(GLContext *aOffscreen)
 
     GLContextEGL *offs = static_cast<GLContextEGL*>(aOffscreen);
 
-    if (offs->mIsPBuffer && offs->mPBufferCanBindToTexture) {
+    if (offs->mCanBindToTexture) {
         bool ok = sEGLLibrary.fBindTexImage(EGL_DISPLAY(),
                                               offs->mSurface,
                                               LOCAL_EGL_BACK_BUFFER);
@@ -686,7 +695,7 @@ GLContextEGL::UnbindTex2DOffscreen(GLContext *aOffscreen)
 
     GLContextEGL *offs = static_cast<GLContextEGL*>(aOffscreen);
 
-    if (offs->mIsPBuffer && offs->mPBufferCanBindToTexture) {
+    if (offs->mCanBindToTexture) {
         sEGLLibrary.fReleaseTexImage(EGL_DISPLAY(),
                                      offs->mSurface,
                                      LOCAL_EGL_BACK_BUFFER);
@@ -704,7 +713,7 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 
         EGLSurface surface =
             CreatePBufferSurfaceTryingPowerOfTwo(mConfig,
-                                                 mPBufferCanBindToTexture
+                                                 mCanBindToTexture
                                                  ? (mCreationFormat.minAlpha
                                                     ? LOCAL_EGL_TEXTURE_RGBA
                                                     : LOCAL_EGL_TEXTURE_RGB)
@@ -793,11 +802,8 @@ GLFormatForImage(gfxASurface::gfxImageFormat aFormat)
 {
     switch (aFormat) {
     case gfxASurface::ImageFormatARGB32:
-        return LOCAL_GL_RGBA;
     case gfxASurface::ImageFormatRGB24:
-        // this often isn't correct, because we can't guarantee that
-        // the alpha byte will be 0xff coming from the image surface
-        NS_WARNING("Using GL_RGBA for ImageFormatRGB24, are you sure you know what you're doing?");
+        // Thebes only supports RGBX, not packed RGB.
         return LOCAL_GL_RGBA;
     case gfxASurface::ImageFormatRGB16_565:
         return LOCAL_GL_RGB;
@@ -858,18 +864,14 @@ public:
             }
             Resize(aSize);
         } else {
-            // Convert RGB24 to either ARGB32 on mobile.  We can't
-            // generate GL_RGB data, so we'll always have an alpha byte
-            // for RGB24.  No easy way to upload that to GL.
-            // 
-            // Note that if we start using RGB565 here, we'll need to
-            // watch for a) setting the correct format; and b) getting
-            // the stride right.
             if (mUpdateFormat == gfxASurface::ImageFormatRGB24) {
-                mUpdateFormat = gfxASurface::ImageFormatARGB32;
+                // RGB24 means really RGBX for Thebes, which means we have to
+                // use the right shader and ignore the uninitialized alpha
+                // value.
+                mShaderType = BGRXLayerProgramType;
+            } else {
+                mShaderType = BGRALayerProgramType;
             }
-            // We currently always use BGRA type textures
-            mShaderType = BGRALayerProgramType;
         }
     }
 
@@ -1379,6 +1381,7 @@ DepthToGLFormat(int aDepth)
     return ContextFormat::BasicRGBA32;
 }
 
+static nsRefPtr<GLContext> gGlobalContext;
 
 #ifdef MOZ_WIDGET_QT
 already_AddRefed<GLContext>
@@ -1406,6 +1409,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
         glContext->SetIsDoubleBuffered(context->format().doubleBuffer());
 
         glContext->SetPlatformContext(context);
+        gGlobalContext = glContext;
 
         return glContext.forget();
     }
@@ -1739,7 +1743,7 @@ TRY_ATTRIBS_AGAIN:
         return nsnull;
     }
 
-    glContext->mPBufferCanBindToTexture = configCanBindToTexture;
+    glContext->mCanBindToTexture = configCanBindToTexture;
 
     if (!bufferUnused) {  // We *are* using the buffer
       glContext->SetOffscreenSize(aSize, pbsize);
@@ -1888,6 +1892,8 @@ GLContextEGL::CreateEGLPixmapOffscreenContext(const gfxIntSize& aSize,
 
     glContext->HoldSurface(thebesSurface);
 
+    glContext->mCanBindToTexture = true;
+
     return glContext.forget();
 }
 
@@ -1987,8 +1993,6 @@ GLContextProviderEGL::CreateForNativePixmapSurface(gfxASurface* aSurface)
     return nsnull;
 #endif
 }
-
-static nsRefPtr<GLContext> gGlobalContext;
 
 GLContext *
 GLContextProviderEGL::GetGlobalContext()

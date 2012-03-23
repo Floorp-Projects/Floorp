@@ -57,6 +57,7 @@
 #include "expat_config.h"
 #include "expat.h"
 #include "nsINestedURI.h"
+#include "nsCharsetSource.h"
 
 using namespace mozilla;
 
