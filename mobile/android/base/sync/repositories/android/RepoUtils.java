@@ -93,7 +93,7 @@ public class RepoUtils {
     return cur.getLong(cur.getColumnIndex(colId));
   }
 
-  public static long getIntFromCursor(Cursor cur, String colId) {
+  public static int getIntFromCursor(Cursor cur, String colId) {
     return cur.getInt(cur.getColumnIndex(colId));
   }
 
