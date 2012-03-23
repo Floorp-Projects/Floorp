@@ -62,9 +62,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "BookmarkHTMLUtils",
-                                  "resource://gre/modules/BookmarkHTMLUtils.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "KeywordURLResetPrompter",
                                   "resource:///modules/KeywordURLResetPrompter.jsm");
 
@@ -231,6 +228,10 @@ BrowserGlue.prototype = {
         // no longer needed, since history was initialized completely.
         Services.obs.removeObserver(this, "places-database-locked");
         this._isPlacesLockedObserver = false;
+
+        // Now apply distribution customized bookmarks.
+        // This should always run after Places initialization.
+        this._distributionCustomizer.applyBookmarks();
         break;
       case "places-database-locked":
         this._isPlacesDatabaseLocked = true;
@@ -256,6 +257,13 @@ BrowserGlue.prototype = {
         // Customization has finished, we don't need the customizer anymore.
         delete this._distributionCustomizer;
         break;
+      case "bookmarks-restore-success":
+      case "bookmarks-restore-failed":
+        Services.obs.removeObserver(this, "bookmarks-restore-success");
+        Services.obs.removeObserver(this, "bookmarks-restore-failed");
+        if (topic == "bookmarks-restore-success" && data == "html-initial")
+          this.ensurePlacesDefaultQueriesInitialized();
+        break;
       case "browser-glue-test": // used by tests
         if (data == "post-update-notification") {
           if (Services.prefs.prefHasUserValue("app.update.postupdate"))
@@ -279,9 +287,6 @@ BrowserGlue.prototype = {
           KeywordURLResetPrompter.prompt(this.getMostRecentBrowserWindow(),
                                          keywordURI);
         }
-        break;
-      case "initial-migration":
-        this._initialMigrationPerformed = true;
         break;
     }
   }, 
@@ -985,9 +990,18 @@ BrowserGlue.prototype = {
     // If the database is corrupt or has been newly created we should
     // import bookmarks.
     var dbStatus = PlacesUtils.history.databaseStatus;
-    var importBookmarks = !this._initialMigrationPerformed &&
-                          (dbStatus == PlacesUtils.history.DATABASE_STATUS_CREATE ||
-                           dbStatus == PlacesUtils.history.DATABASE_STATUS_CORRUPT);
+    var importBookmarks = dbStatus == PlacesUtils.history.DATABASE_STATUS_CREATE ||
+                          dbStatus == PlacesUtils.history.DATABASE_STATUS_CORRUPT;
+
+    if (dbStatus == PlacesUtils.history.DATABASE_STATUS_CREATE) {
+      // If the database has just been created, but we already have any
+      // bookmark, this is not the initial import.  This can happen after a
+      // migration from a different browser since migrators run before us.
+      // In such a case we should not import, unless some pref has been set.
+      if (PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarksMenuFolderId, 0) != -1 ||
+          PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.toolbarFolderId, 0) != -1)
+        importBookmarks = false;
+    }
 
     // Check if user or an extension has required to import bookmarks.html
     var importBookmarksHTML = false;
@@ -1044,9 +1058,6 @@ BrowserGlue.prototype = {
     // delayed till the import operations has finished.  Not doing so would
     // cause them to be overwritten by the newly imported bookmarks.
     if (!importBookmarks) {
-      // Now apply distribution customized bookmarks.
-      // This should always run after Places initialization.
-      this._distributionCustomizer.applyBookmarks();
       this.ensurePlacesDefaultQueriesInitialized();
     }
     else {
@@ -1080,28 +1091,25 @@ BrowserGlue.prototype = {
       }
 
       if (bookmarksURI) {
+        // Add an import observer.  It will ensure that smart bookmarks are
+        // created once the operation is complete.
+        Services.obs.addObserver(this, "bookmarks-restore-success", false);
+        Services.obs.addObserver(this, "bookmarks-restore-failed", false);
+
         // Import from bookmarks.html file.
         try {
-          BookmarkHTMLUtils.importFromURL(bookmarksURI.spec, true, (function (success) {
-            if (success) {
-              // Now apply distribution customized bookmarks.
-              // This should always run after Places initialization.
-              this._distributionCustomizer.applyBookmarks();
-              // Ensure that smart bookmarks are created once the operation is
-              // complete.
-              this.ensurePlacesDefaultQueriesInitialized();
-            }
-            else {
-              Cu.reportError("Bookmarks.html file could be corrupt.");
-            }
-          }).bind(this));
+          var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].
+                         getService(Ci.nsIPlacesImportExportService);
+          importer.importHTMLFromURI(bookmarksURI, true /* overwrite existing */);
         } catch (err) {
+          // Report the error, but ignore it.
           Cu.reportError("Bookmarks.html file could be corrupt. " + err);
+          Services.obs.removeObserver(this, "bookmarks-restore-success");
+          Services.obs.removeObserver(this, "bookmarks-restore-failed");
         }
       }
-      else {
+      else
         Cu.reportError("Unable to find bookmarks.html file.");
-      }
 
       // Reset preferences, so we won't try to import again at next run
       if (importBookmarksHTML)

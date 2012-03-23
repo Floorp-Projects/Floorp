@@ -57,8 +57,8 @@ function run_test() {
     - export as json, import, test
   */
 
-  // import the importer
-  Cu.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
+  // get places import/export service
+  var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].getService(Ci.nsIPlacesImportExportService);
 
   // avoid creating the places smart folder during tests
   Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch).
@@ -83,14 +83,8 @@ function run_test() {
   // 2. run the test-suite
   // Note: we do not empty the db before this import to catch bugs like 380999
   try {
-    BookmarkHTMLUtils.importFromFile(bookmarksFileOld, true, after_import);
+    importer.importHTMLFromFile(bookmarksFileOld, true);
   } catch(ex) { do_throw("couldn't import legacy bookmarks file: " + ex); }
-}
-
-function after_import(success) {
-  if (!success) {
-    do_throw("Couldn't import legacy bookmarks file.");
-  }
   populate();
   validate();
 
@@ -101,8 +95,6 @@ function after_import(success) {
     // 3. import bookmarks.exported.json
     // 4. run the test-suite
     try {
-      var jsonFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-      jsonFile.append("bookmarks.exported.json");
       PlacesUtils.backups.saveBookmarksToJSONFile(jsonFile);
     } catch(ex) { do_throw("couldn't export to file: " + ex); }
     LOG("exported json");

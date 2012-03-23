@@ -85,7 +85,7 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
 const MIN_TRANSACTIONS_FOR_BATCH = 5;
 
 // The RESTORE_*_NSIOBSERVER_TOPIC constants should match the #defines of the
-// same names in browser/components/places/src/nsPlacesExportService.cpp
+// same names in browser/components/places/src/nsPlacesImportExportService.cpp
 const RESTORE_BEGIN_NSIOBSERVER_TOPIC = "bookmarks-restore-begin";
 const RESTORE_SUCCESS_NSIOBSERVER_TOPIC = "bookmarks-restore-success";
 const RESTORE_FAILED_NSIOBSERVER_TOPIC = "bookmarks-restore-failed";

@@ -55,7 +55,6 @@ var ps = Cc["@mozilla.org/preferences-service;1"].
          getService(Ci.nsIPrefBranch);
 var ies = Cc["@mozilla.org/browser/places/import-export-service;1"].
           getService(Ci.nsIPlacesImportExportService);
-Cu.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
 
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
@@ -73,14 +72,8 @@ function run_test() {
   // import bookmarks from corrupt file
   var corruptBookmarksFile = do_get_file("bookmarks.corrupt.html");
   try {
-    BookmarkHTMLUtils.importFromFile(corruptBookmarksFile, true, after_import);
+    ies.importHTMLFromFile(corruptBookmarksFile, true);
   } catch(ex) { do_throw("couldn't import corrupt bookmarks file: " + ex); }
-}
-
-function after_import(success) {
-  if (!success) {
-    do_throw("Couldn't import corrupt bookmarks file.");
-  }
 
   // Check that every bookmark is correct
   // Corrupt bookmarks should not have been imported
@@ -112,16 +105,14 @@ function after_import(success) {
 
     // Import bookmarks
     try {
-      BookmarkHTMLUtils.importFromFile(bookmarksFile, true, before_database_check);
+      ies.importHTMLFromFile(bookmarksFile, true);
     } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
-  });
-}
 
-function before_database_check(success) {
     // Check that every bookmark is correct
     database_check();
 
     waitForAsyncUpdates(do_test_finished);
+  });
 }
 
 /*
