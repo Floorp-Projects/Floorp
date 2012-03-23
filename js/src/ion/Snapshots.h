@@ -44,7 +44,7 @@
 
 #include "Ion.h"
 #include "IonCode.h"
-#include "IonRegisters.h"
+#include "Registers.h"
 #include "CompactBuffer.h"
 #include "Bailouts.h"
 

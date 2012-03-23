@@ -42,7 +42,7 @@
 #ifndef jsion_include_safepoints_h_
 #define jsion_include_safepoints_h_
 
-#include "IonRegisters.h"
+#include "Registers.h"
 #include "CompactBuffer.h"
 #include "BitSet.h"
 

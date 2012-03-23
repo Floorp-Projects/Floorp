@@ -43,7 +43,8 @@
 
 #include <limits.h>
 #include "ion/IonAllocPolicy.h"
-#include "ion/IonRegisters.h"
+#include "ion/Registers.h"
+#include "ion/RegisterSets.h"
 
 namespace js {
 namespace ion {

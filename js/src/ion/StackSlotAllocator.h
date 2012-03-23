@@ -42,7 +42,7 @@
 #ifndef jsion_stack_slot_allocator_h_
 #define jsion_stack_slot_allocator_h_
 
-#include "IonRegisters.h"
+#include "Registers.h"
 
 namespace js {
 namespace ion {

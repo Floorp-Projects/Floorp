@@ -1572,10 +1572,10 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
     // Compute free-until positions for all registers
     CodePosition freeUntilPos[AnyRegister::Total];
     bool needFloat = current->reg()->isDouble();
-    for (size_t i = 0; i < AnyRegister::Total; i++) {
-        AnyRegister reg = AnyRegister::FromCode(i);
-        if (reg.allocatable() && reg.isFloat() == needFloat)
-            freeUntilPos[i] = CodePosition::MAX;
+    for (AnyRegisterIterator regs(RegisterSet::All()); regs.more(); regs++) {
+        AnyRegister reg = *regs;
+        if (reg.isFloat() == needFloat)
+            freeUntilPos[reg.code()] = CodePosition::MAX;
     }
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
         if (i->getAllocation()->isRegister()) {
@@ -1665,10 +1665,10 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
     // Compute next-used positions for all registers
     CodePosition nextUsePos[AnyRegister::Total];
     bool needFloat = current->reg()->isDouble();
-    for (size_t i = 0; i < AnyRegister::Total; i++) {
-        AnyRegister reg = AnyRegister::FromCode(i);
-        if (reg.allocatable() && reg.isFloat() == needFloat)
-            nextUsePos[i] = CodePosition::MAX;
+    for (AnyRegisterIterator regs(RegisterSet::All()); regs.more(); regs++) {
+        AnyRegister reg = *regs;
+        if (reg.isFloat() == needFloat)
+            nextUsePos[reg.code()] = CodePosition::MAX;
     }
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
         if (i->getAllocation()->isRegister()) {
