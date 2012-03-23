@@ -318,7 +318,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                     if (proxy) {
                         wrapper = &XrayProxy::singleton;
                     } else {
-                        typedef XrayWrapper<CrossCompartmentSecurityWrapper> Xray;
+                        typedef XrayWrapper<CrossCompartmentWrapper> Xray;
                         usingXray = true;
                         wrapper = &Xray::singleton;
                     }
