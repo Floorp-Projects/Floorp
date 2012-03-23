@@ -3553,9 +3553,8 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 
                 NS_ASSERTION(global != nsnull, "master prototype w/o global?!");
                 if (global) {
-                    PRUint32 stid = scriptProto->mScriptObject.mLangID;
                     nsIScriptContext *scriptContext = \
-                          global->GetScriptContext(stid);
+                          global->GetScriptContext();
                     NS_ASSERTION(scriptContext != nsnull,
                                  "Failed to get script context for language");
                     if (scriptContext)
@@ -3619,14 +3618,13 @@ nsXULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
     NS_PRECONDITION(aScript != nsnull, "null ptr");
     NS_ENSURE_TRUE(aScript, NS_ERROR_NULL_POINTER);
     NS_ENSURE_TRUE(mScriptGlobalObject, NS_ERROR_NOT_INITIALIZED);
-    PRUint32 stid = aScript->mScriptObject.mLangID;
 
     nsresult rv;
-    rv = mScriptGlobalObject->EnsureScriptEnvironment(stid);
+    rv = mScriptGlobalObject->EnsureScriptEnvironment();
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIScriptContext> context =
-      mScriptGlobalObject->GetScriptContext(stid);
+      mScriptGlobalObject->GetScriptContext();
     // failure getting a script context is fatal.
     NS_ENSURE_TRUE(context != nsnull, NS_ERROR_UNEXPECTED);
 
