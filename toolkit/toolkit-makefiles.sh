@@ -792,7 +792,6 @@ if [ "$ENABLE_TESTS" ]; then
     dom/tests/mochitest/dom-level2-html/files/Makefile
     dom/tests/mochitest/general/Makefile
     dom/tests/mochitest/geolocation/Makefile
-    dom/tests/mochitest/globalstorage/Makefile
     dom/tests/mochitest/localstorage/Makefile
     dom/tests/mochitest/orientation/Makefile
     dom/tests/mochitest/sessionstorage/Makefile
