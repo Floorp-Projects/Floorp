@@ -4782,7 +4782,7 @@ cairo-gtk2|cairo-gtk2-x11)
     MOZ_ENABLE_GTK2=1
     MOZ_ENABLE_XREMOTE=1
     MOZ_WEBGL=1
-    MOZ_WEBGL_GLX=1
+    MOZ_GL_DEFAULT_PROVIDER=GLX
 
     AC_DEFINE(MOZ_X11)
     MOZ_X11=1
@@ -4800,7 +4800,7 @@ cairo-qt)
     MOZ_ENABLE_QT=1
     if test -z "$WITHOUT_X11"; then
       MOZ_ENABLE_XREMOTE=1
-      MOZ_WEBGL_GLX=1
+      MOZ_GL_DEFAULT_PROVIDER=GLX
       MOZ_X11=1
       AC_DEFINE(MOZ_X11)
       XT_LIBS=
@@ -6737,7 +6737,7 @@ if test $MOZ_PLATFORM_MAEMO; then
    fi
 
    MOZ_GFX_OPTIMIZE_MOBILE=1
-   MOZ_WEBGL_GLX=
+   MOZ_GL_DEFAULT_PROVIDER=EGL
    MOZ_MAEMO_LIBLOCATION=
 
    if test $MOZ_PLATFORM_MAEMO = 5; then
@@ -6863,6 +6863,22 @@ if test -n "$MOZ_EGL_XRENDER_COMPOSITE"; then
 fi
 
 AC_SUBST(MOZ_EGL_XRENDER_COMPOSITE)
+
+dnl ========================================================
+dnl GL provider
+dnl ========================================================
+MOZ_GL_PROVIDER=
+MOZ_ARG_WITH_STRING(gl-provider,
+[  --with-gl-provider=ID
+                          Set GL provider backend type],
+[ val=`echo $withval`
+    MOZ_GL_PROVIDER="$val"])
+
+if test -n "$MOZ_GL_PROVIDER"; then
+MOZ_GL_DEFAULT_PROVIDER=$MOZ_GL_PROVIDER
+AC_SUBST(MOZ_GL_PROVIDER)
+AC_DEFINE_UNQUOTED(MOZ_GL_PROVIDER, GLContextProvider$MOZ_GL_PROVIDER)
+fi
 
 dnl ========================================================
 dnl = faststripe theme
@@ -8718,12 +8734,12 @@ if test "$MOZ_X11"; then
 fi # MOZ_X11
 
 dnl Check for headers, etc. needed by WebGL.
-if test -n "$MOZ_WEBGL_GLX"; then
+if test "$MOZ_GL_DEFAULT_PROVIDER" = "GLX"; then
     MOZ_CHECK_HEADER(GL/glx.h)
     if test "$ac_cv_header_GL_glx_h" != "yes"; then
         AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa-devel (openSUSE))])
     fi
-fi # MOZ_WEBGL_GLX
+fi # MOZ_GL_DEFAULT_PROVIDER=GLX
 fi # COMPILE_ENVIRONMENT
 
 if test "$USE_FC_FREETYPE"; then
