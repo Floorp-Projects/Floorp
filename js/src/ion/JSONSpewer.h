@@ -85,6 +85,7 @@ class JSONSpewer
     void beginFunction(JSScript *script);
     void beginPass(const char * pass);
     void spewMDef(MDefinition *def);
+    void spewMResumePoint(MResumePoint *rp);
     void spewMIR(MIRGraph *mir);
     void spewLIns(LInstruction *ins);
     void spewLIR(MIRGraph *mir);

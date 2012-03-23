@@ -212,6 +212,37 @@ JSONSpewer::beginPass(const char *pass)
 }
 
 void
+JSONSpewer::spewMResumePoint(MResumePoint *rp)
+{
+    beginObjectProperty("resumePoint");
+
+    if (rp->caller())
+        integerProperty("caller", rp->caller()->block()->id());
+
+    property("mode");
+    switch (rp->mode()) {
+      case MResumePoint::ResumeAt:
+        fprintf(fp_, "\"At\"");
+        break;
+      case MResumePoint::ResumeAfter:
+        fprintf(fp_, "\"After\"");
+        break;
+      case MResumePoint::Outer:
+        fprintf(fp_, "\"Outer\"");
+        break;
+    }
+
+    beginListProperty("operands");
+    for (MResumePoint *iter = rp; iter; iter = iter->caller()) {
+        for (int i = iter->numOperands() - 1; i >= 0; i--)
+            integerValue(iter->getOperand(i)->id());
+    }
+    endList();
+
+    endObject();
+}
+
+void
 JSONSpewer::spewMDef(MDefinition *def)
 {
     beginObject();
@@ -240,6 +271,11 @@ JSONSpewer::spewMDef(MDefinition *def)
     endList();
 
     stringProperty("type", StringFromMIRType(def->type()));
+
+    if (def->isInstruction()) {
+        if (MResumePoint *rp = def->toInstruction()->resumePoint())
+            spewMResumePoint(rp);
+    }
 
     endObject();
 }
@@ -283,6 +319,8 @@ JSONSpewer::spewMIR(MIRGraph *mir)
         for (MInstructionIterator i(block->begin()); i != block->end(); i++)
             spewMDef(*i);
         endList();
+
+        spewMResumePoint(block->entryResumePoint());
 
         endObject();
     }
