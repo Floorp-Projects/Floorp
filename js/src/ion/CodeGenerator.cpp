@@ -871,9 +871,10 @@ CodeGenerator::visitNewArray(LNewArray *lir)
 bool
 CodeGenerator::visitNewObject(LNewObject *lir)
 {
-    typedef JSObject *(*pf)(JSContext *, JSObject *);
-    static const VMFunction Info = FunctionInfo<pf>(CopyInitializerObject);
+    typedef JSObject *(*pf)(JSContext *, JSObject *, types::TypeObject *);
+    static const VMFunction Info = FunctionInfo<pf>(NewInitObject);
 
+    pushArg(ImmGCPtr(lir->mir()->type()));
     pushArg(ImmGCPtr(lir->mir()->baseObj()));
     return callVM(Info, lir);
 }
