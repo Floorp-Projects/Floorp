@@ -1570,7 +1570,8 @@ abstract public class GeckoApp
                 view.setVisibility(View.VISIBLE);
             }
 
-            mPluginContainer.updateViewLayout(view, lp);
+            if (mPluginContainer.indexOfChild(view) >= 0)
+                mPluginContainer.updateViewLayout(view, lp);
         }
     }
 
