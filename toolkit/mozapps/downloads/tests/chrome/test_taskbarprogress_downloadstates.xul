@@ -211,6 +211,7 @@ function testSetup()
   } catch (ex) { }
 
   if (!isWin7OrHigher) {
+    ok(true, "This test only runs on Windows 7 or higher");
     return;
   }
 

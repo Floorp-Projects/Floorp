@@ -87,6 +87,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435442
     0%, 100% { line-height: 3; margin-top: 20px }
     50% { margin-top: 120px }
   }
+
+  @-moz-keyframes cascade {
+    0%, 25%, 100% { top: 0 }
+    50%, 75% { top: 100px }
+    0%, 75%, 100% { left: 0 }
+    25%, 50% { left: 100px }
+  }
+  @-moz-keyframes cascade2 {
+    0% { text-indent: 0 }
+    25% { text-indent: 30px; -moz-animation-timing-function: ease-in } /* beaten by rule below */
+    50% { text-indent: 0 }
+    25% { text-indent: 50px }
+    100% { text-indent: 100px }
+  }
   </style>
 </head>
 <body>
@@ -1251,6 +1265,54 @@ advance_clock(375);
 is(cs.marginTop, "0px", "bug 686656 test 2 at 1000ms");
 done_div();
 display.style.overflow = "";
+
+// Test that cascading between keyframes rules is per-property rather
+// than per-rule (bug ), and that the timing function isn't taken from a
+// rule that's skipped.  (Bug 738003)
+new_div("-moz-animation: cascade 1s linear forwards; position: relative");
+is(cs.top, "0px", "cascade test (top) at 0ms");
+is(cs.left, "0px", "cascade test (top) at 0ms");
+advance_clock(125);
+is(cs.top, "0px", "cascade test (top) at 125ms");
+is(cs.left, "50px", "cascade test (top) at 125ms");
+advance_clock(125);
+is(cs.top, "0px", "cascade test (top) at 250ms");
+is(cs.left, "100px", "cascade test (top) at 250ms");
+advance_clock(125);
+is(cs.top, "50px", "cascade test (top) at 375ms");
+is(cs.left, "100px", "cascade test (top) at 375ms");
+advance_clock(125);
+is(cs.top, "100px", "cascade test (top) at 500ms");
+is(cs.left, "100px", "cascade test (top) at 500ms");
+advance_clock(125);
+is(cs.top, "100px", "cascade test (top) at 625ms");
+is(cs.left, "50px", "cascade test (top) at 625ms");
+advance_clock(125);
+is(cs.top, "100px", "cascade test (top) at 750ms");
+is(cs.left, "0px", "cascade test (top) at 750ms");
+advance_clock(125);
+is(cs.top, "50px", "cascade test (top) at 875ms");
+is(cs.left, "0px", "cascade test (top) at 875ms");
+advance_clock(125);
+is(cs.top, "0px", "cascade test (top) at 1000ms");
+is(cs.left, "0px", "cascade test (top) at 1000ms");
+done_div();
+
+new_div("-moz-animation: cascade2 8s linear forwards");
+is(cs.textIndent, "0px", "cascade2 test at 0s");
+advance_clock(1000);
+is(cs.textIndent, "25px", "cascade2 test at 1s");
+advance_clock(1000);
+is(cs.textIndent, "50px", "cascade2 test at 2s");
+advance_clock(1000);
+is(cs.textIndent, "25px", "cascade2 test at 3s");
+advance_clock(1000);
+is(cs.textIndent, "0px", "cascade2 test at 4s");
+advance_clock(3000);
+is(cs.textIndent, "75px", "cascade2 test at 7s");
+advance_clock(1000);
+is(cs.textIndent, "100px", "cascade2 test at 8s");
+done_div();
 
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 

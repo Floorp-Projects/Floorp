@@ -46,6 +46,8 @@ include $(topsrcdir)/config/rules.mk
 
 TEST_FILES = \
   test_domrequest.html \
+  test_gsp-standards.html \
+  test_gsp-quirks.html \
   $(NULL)
 
 libs:: $(TEST_FILES)

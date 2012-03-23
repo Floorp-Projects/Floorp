@@ -253,16 +253,6 @@ public:
   void* GetThebesLayerCallbackData() const
   { return mThebesLayerCallbackData; }
 
-  // This is a GLContext that can be used for resource
-  // management (creation, destruction).  It is guaranteed
-  // to be either the same as the gl() context, or a context
-  // that is in the same share pool.
-  GLContext *glForResources() const {
-    if (mGLContext->GetSharedContext())
-      return mGLContext->GetSharedContext();
-    return mGLContext;
-  }
-
   /*
    * Helper functions for our layers
    */

@@ -123,6 +123,9 @@ class Bytecode
     /* Whether this is in a try block. */
     bool inTryBlock : 1;
 
+    /* Whether this is in a loop. */
+    bool inLoop : 1;
+
     /* Method JIT safe point. */
     bool safePoint : 1;
 
@@ -1173,7 +1176,7 @@ class ScriptAnalysis
 
     /* Bytecode helpers */
     inline bool addJump(JSContext *cx, unsigned offset,
-                        unsigned *currentOffset, unsigned *forwardJump,
+                        unsigned *currentOffset, unsigned *forwardJump, unsigned *forwardLoop,
                         unsigned stackDepth);
     void checkAliasedName(JSContext *cx, jsbytecode *pc);
 

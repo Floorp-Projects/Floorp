@@ -1284,13 +1284,16 @@ public:
 
     nsRefPtr<WorkerRunnableEventTarget> kungFuDeathGrip = this;
 
+    // Run the runnable we're given now (should just call DummyCallback()),
+    // otherwise the timer thread will leak it...  If we run this after
+    // dispatch running the event can race against resetting the timer.
+    aRunnable->Run();
+
     // This can fail if we're racing to terminate or cancel, should be handled
     // by the terminate or cancel code.
     mWorkerRunnable->Dispatch(nsnull);
 
-    // Run the runnable we're given now (should just call DummyCallback()),
-    // otherwise the timer thread will leak it...
-    return aRunnable->Run();
+    return NS_OK;
   }
 
   NS_IMETHOD

@@ -101,6 +101,7 @@
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 
+#include "vm/ObjectImpl-inl.h"
 #include "vm/RegExpObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
 #include "vm/Stack-inl.h"
@@ -4103,7 +4104,7 @@ JS_SetElement(JSContext *cx, JSObject *obj, uint32_t index, jsval *vp)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
+    assertSameCompartment(cx, obj, *vp);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
     return obj->setElement(cx, index, vp, false);
 }

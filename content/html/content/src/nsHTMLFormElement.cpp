@@ -1104,7 +1104,11 @@ nsresult
 nsHTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
                               bool aUpdateValidity, bool aNotify)
 {
-  NS_ASSERTION(aChild->GetParent(), "Form control should have a parent");
+  // If an element has a @form, we can assume it *might* be able to not have
+  // a parent and still be in the form.
+  NS_ASSERTION(aChild->HasAttr(kNameSpaceID_None, nsGkAtoms::form) ||
+               aChild->GetParent(),
+               "Form control should have a parent");
 
   // Determine whether to add the new element to the elements or
   // the not-in-elements list.
