@@ -3262,7 +3262,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
 #endif
 
-#if defined(MOZ_UPDATER) && !defined(ANDROID)
+#if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
     // Check for and process any available updates
     nsCOMPtr<nsIFile> updRoot;
     bool persistent;

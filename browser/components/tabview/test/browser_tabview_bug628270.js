@@ -70,7 +70,8 @@ function test() {
     let groupItem = getGroupItem(1);
     let tabItem = groupItem.getChild(0);
 
-    gBrowser.removeTab(tabItem.tab);
+    EventUtils.synthesizeMouseAtCenter(
+      tabItem.$close[0], {}, TabView.getContentWindow());
     assertNumberOfTabsInGroup(groupItem, 1);
 
     restoreTab(function () {
@@ -79,7 +80,7 @@ function test() {
       activateFirstGroupItem();
       gBrowser.removeTab(gBrowser.tabs[1]);
       gBrowser.removeTab(gBrowser.tabs[1]);
-      finishTest();
+      hideTabView(finishTest);
     });
   }
 
@@ -88,12 +89,10 @@ function test() {
   registerCleanupFunction(function () TabView.hide());
 
   showTabView(function () {
-    hideTabView(function () {
-      cw = TabView.getContentWindow();
-      assertValidPrerequisites();
+    cw = TabView.getContentWindow();
+    assertValidPrerequisites();
 
-      createGroupItem();
-      afterAllTabsLoaded(testRestoreTabFromInactiveGroup);
-    });
+    createGroupItem();
+    afterAllTabsLoaded(testRestoreTabFromInactiveGroup);
   });
 }

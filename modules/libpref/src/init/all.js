@@ -320,6 +320,9 @@ pref("toolkit.telemetry.server", "https://data.mozilla.com");
 pref("toolkit.telemetry.server_owner", "Mozilla");
 // Information page about telemetry (temporary ; will be about:telemetry in the end)
 pref("toolkit.telemetry.infoURL", "http://www.mozilla.com/legal/privacy/firefox.html#telemetry");
+// Determines whether full SQL strings are returned when they might contain sensitive info
+// i.e. dynamically constructed SQL strings or SQL executed by addons against addon DBs
+pref("toolkit.telemetry.debugSlowSql", false);
 
 // Disable remote debugging protocol logging
 pref("devtools.debugger.log", false);
@@ -806,10 +809,22 @@ pref("network.http.pipelining.ssl"  , false); // disable pipelining over SSL
 pref("network.http.proxy.pipelining", false);
 
 // Max number of requests in the pipeline
-pref("network.http.pipelining.maxrequests" , 4);
+pref("network.http.pipelining.maxrequests" , 32);
+
+// An optimistic request is one pipelined when policy might allow a new
+// connection instead
+pref("network.http.pipelining.max-optimistic-requests" , 4);
+
+pref("network.http.pipelining.aggressive", false);
+pref("network.http.pipelining.maxsize" , 300000);
+pref("network.http.pipelining.read-timeout", 10000);
 
 // Prompt for 307 redirects
 pref("network.http.prompt-temp-redirect", true);
+
+// If true generate CORRUPTED_CONTENT errors for entities that
+// contain an invalid Assoc-Req response header
+pref("network.http.assoc-req.enforce", false);
 
 // On networks deploying QoS, it is recommended that these be lockpref()'d,
 // since inappropriate marking can easily overwhelm bandwidth reservations
@@ -1348,7 +1363,7 @@ pref("mousewheel.horizscroll.withmetakey.sysnumlines",true);
 // Note: Currently OS X trackpad and magic mouse don't use our smooth scrolling
 // Note: These are relevant only when "general.smoothScroll" is enabled
 pref("general.smoothScroll.pixels.durationMinMS", 200);
-pref("general.smoothScroll.pixels.durationMaxMS", 800);
+pref("general.smoothScroll.pixels.durationMaxMS", 400);
 pref("general.smoothScroll.lines.durationMinMS", 150);
 pref("general.smoothScroll.lines.durationMaxMS", 150);
 pref("general.smoothScroll.pages.durationMinMS", 150);
@@ -2048,7 +2063,6 @@ pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 pref("print.extend_native_print_dialog", true);
 
 // Locate Java by scanning the Sun JRE installation directory with a minimum version
-// Note: Does not scan if security.enable_java is not true
 pref("plugin.scan.SunJRE", "1.3");
 
 // Locate plugins by scanning the Adobe Acrobat installation directory with a minimum version

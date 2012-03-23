@@ -32,24 +32,16 @@
  *  If a filename is specified as the first argument on the commandline,
  *  then the image will be saved to that filename. Otherwise, the image will
  *  be saved as "screenshot.png" in the current working directory.
- *
- *  Requires GDI+. All linker dependencies are specified explicitly in this
- *  file, so you can compile screenshot.exe by simply running:
- *    cl screenshot.cpp
  */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <gdiplus.h>
 
-#pragma comment(lib, "user32.lib")
-#pragma comment(lib, "gdi32.lib")
-#pragma comment(lib, "gdiplus.lib")
-
 using namespace Gdiplus;
 
 // From http://msdn.microsoft.com/en-us/library/ms533843%28VS.85%29.aspx
-int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
+static int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
 {
   UINT  num = 0;          // number of image encoders
   UINT  size = 0;         // size of the image encoder array in bytes
@@ -80,6 +72,9 @@ int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
   return -1;  // Failure
 }
 
+#ifdef __MINGW32__
+extern "C"
+#endif
 int wmain(int argc, wchar_t** argv)
 {
   GdiplusStartupInput gdiplusStartupInput;

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script>
+
+function boom()
+{
+  // Force frame construction
+  document.documentElement.offsetHeight;
+
+  // A dynamic change
+  document.getElementById("x").firstChild.data = "\u062A"
+}
+
+window.addEventListener("load", boom, false);
+
+    </script>
+  </head>
+  <body>
+    <div><span><span id="x">&#x06CD;B</span>C</span></div>
+  </body>
+</html>

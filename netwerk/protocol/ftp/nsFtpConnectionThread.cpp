@@ -2096,6 +2096,14 @@ nsFtpState::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
+nsFtpState::OnCacheEntryDoomed(nsresult status)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
 nsFtpState::OnStartRequest(nsIRequest *request, nsISupports *context)
 {
     mStorReplyReceived = false;
@@ -2288,7 +2296,7 @@ nsFtpState::CheckCache()
     }
 
     if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
-        rv = session->AsyncOpenCacheEntry(key, accessReq, this);
+        rv = session->AsyncOpenCacheEntry(key, accessReq, this, false);
         return NS_SUCCEEDED(rv);
     }
 

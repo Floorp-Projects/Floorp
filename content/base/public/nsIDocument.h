@@ -111,6 +111,7 @@ class imgIRequest;
 class nsISHEntry;
 class nsDOMNavigationTiming;
 class nsWindowSizes;
+class nsIObjectLoadingContent;
 
 namespace mozilla {
 namespace css {
@@ -649,7 +650,9 @@ public:
    * Get this document's attribute stylesheet.  May return null if
    * there isn't one.
    */
-  virtual nsHTMLStyleSheet* GetAttributeStyleSheet() const = 0;
+  nsHTMLStyleSheet* GetAttributeStyleSheet() const {
+    return mAttrStyleSheet;
+  }
 
   /**
    * Get this document's inline style sheet.  May return null if there
@@ -1564,6 +1567,10 @@ public:
   // state is unlocked/false.
   virtual nsresult SetImageLockingState(bool aLocked) = 0;
 
+  virtual nsresult AddPlugin(nsIObjectLoadingContent* aPlugin) = 0;
+  virtual void RemovePlugin(nsIObjectLoadingContent* aPlugin) = 0;
+  virtual void GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins) = 0;
+
   virtual nsresult GetStateObject(nsIVariant** aResult) = 0;
 
   virtual nsDOMNavigationTiming* GetNavigationTiming() const = 0;
@@ -1700,6 +1707,7 @@ protected:
   // The cleanup is handled by the nsDocument destructor.
   nsNodeInfoManager* mNodeInfoManager; // [STRONG]
   mozilla::css::Loader* mCSSLoader; // [STRONG]
+  nsHTMLStyleSheet* mAttrStyleSheet;
 
   // The set of all object, embed, applet, video and audio elements for
   // which this is the owner document. (They might not be in the document.)

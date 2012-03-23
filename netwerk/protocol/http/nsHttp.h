@@ -140,9 +140,6 @@ typedef PRUint8 nsHttpVersion;
 // some default values
 //-----------------------------------------------------------------------------
 
-// hard upper limit on the number of requests that can be pipelined
-#define NS_HTTP_MAX_PIPELINED_REQUESTS 8 
-
 #define NS_HTTP_DEFAULT_PORT  80
 #define NS_HTTPS_DEFAULT_PORT 443
 
@@ -168,6 +165,11 @@ struct nsHttp
 {
     static nsresult CreateAtomTable();
     static void DestroyAtomTable();
+
+    // The mutex is valid any time the Atom Table is valid
+    // This mutex is used in the unusual case that the network thread and
+    // main thread might access the same data
+    static mozilla::Mutex *GetLock();
 
     // will dynamically add atoms to the table if they don't already exist
     static nsHttpAtom ResolveAtom(const char *);
