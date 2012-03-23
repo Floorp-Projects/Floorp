@@ -178,8 +178,6 @@ CanvasLayerOGL::UpdateSurface()
   if (mCanvasGLContext &&
       mCanvasGLContext->GetContextType() == gl()->GetContextType())
   {
-    DiscardTempSurface();
-
     // Can texture share, just make sure it's resolved first
     mCanvasGLContext->MakeCurrent();
     mCanvasGLContext->GuaranteeResolve();
@@ -192,7 +190,6 @@ CanvasLayerOGL::UpdateSurface()
     }
   } else {
     nsRefPtr<gfxASurface> updatedAreaSurface;
-
     if (mDrawTarget) {
       // TODO: This is suboptimal - We should have direct handling for the surface types instead of
       // going via a gfxASurface.
@@ -200,24 +197,23 @@ CanvasLayerOGL::UpdateSurface()
     } else if (mCanvasSurface) {
       updatedAreaSurface = mCanvasSurface;
     } else if (mCanvasGLContext) {
-      gfxIntSize size(mBounds.width, mBounds.height);
       nsRefPtr<gfxImageSurface> updatedAreaImageSurface =
-        GetTempSurface(size, gfxASurface::ImageFormatARGB32);
-
+        new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
+                            gfxASurface::ImageFormatARGB32);
       mCanvasGLContext->ReadPixelsIntoImageSurface(0, 0,
                                                    mBounds.width,
                                                    mBounds.height,
                                                    updatedAreaImageSurface);
-
       updatedAreaSurface = updatedAreaImageSurface;
     }
 
     mOGLManager->MakeCurrent();
-    mLayerProgram = gl()->UploadSurfaceToTexture(updatedAreaSurface,
-                                                 mBounds,
-                                                 mTexture,
-                                                 false,
-                                                 nsIntPoint(0, 0));
+    mLayerProgram =
+      gl()->UploadSurfaceToTexture(updatedAreaSurface,
+                                   mBounds,
+                                   mTexture,
+                                   false,
+                                   nsIntPoint(0, 0));
   }
 }
 
