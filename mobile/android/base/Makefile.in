@@ -97,6 +97,7 @@ FENNEC_JAVA_FILES = \
   GeckoStateListDrawable.java \
   GeckoThread.java \
   GlobalHistory.java \
+  GeckoViewsFactory.java \
   LinkPreference.java \
   LinkTextView.java \
 	NSSBridge.java \
