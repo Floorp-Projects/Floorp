@@ -1617,7 +1617,7 @@ nsDocAccessible::AddDependentIDsFor(nsAccessible* aRelProvider,
         continue;
     }
 
-    IDRefsIterator iter(aRelProvider->GetContent(), relAttr);
+    IDRefsIterator iter(this, aRelProvider->GetContent(), relAttr);
     while (true) {
       const nsDependentSubstring id = iter.NextID();
       if (id.IsEmpty())
@@ -1668,7 +1668,7 @@ nsDocAccessible::RemoveDependentIDsFor(nsAccessible* aRelProvider,
     if (aRelAttr && aRelAttr != *kRelationAttrs[idx])
       continue;
 
-    IDRefsIterator iter(aRelProvider->GetContent(), relAttr);
+    IDRefsIterator iter(this, aRelProvider->GetContent(), relAttr);
     while (true) {
       const nsDependentSubstring id = iter.NextID();
       if (id.IsEmpty())
