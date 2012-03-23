@@ -2681,8 +2681,8 @@ nsHTMLDocument::EditingStateChanged()
     rv = LoadChromeSheetSync(uri, true, getter_AddRefs(sheet));
     NS_ENSURE_TRUE(sheet, rv);
 
-    rv = agentSheets.AppendObject(sheet);
-    NS_ENSURE_SUCCESS(rv, rv);
+    bool result = agentSheets.AppendObject(sheet);
+    NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
 
     // Should we update the editable state of all the nodes in the document? We
     // need to do this when the designMode value changes, as that overrides
@@ -2695,8 +2695,8 @@ nsHTMLDocument::EditingStateChanged()
       rv = LoadChromeSheetSync(uri, true, getter_AddRefs(sheet));
       NS_ENSURE_TRUE(sheet, rv);
 
-      rv = agentSheets.AppendObject(sheet);
-      NS_ENSURE_SUCCESS(rv, rv);
+      result = agentSheets.AppendObject(sheet);
+      NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
 
       // Disable scripting and plugins.
       rv = editSession->DisableJSAndPlugins(window);
