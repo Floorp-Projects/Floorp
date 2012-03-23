@@ -1,8 +1,0 @@
-url-prefix ../../jsreftest.html?test=ecma_5/Expressions/
-script 11.1.5-01.js
-script named-accessor-function.js
-script nested-delete-name-in-evalcode.js
-script object-literal-accessor-arguments.js
-script object-literal-accessor-property-name.js
-script primitive-this-boxing-behavior.js
-script string-literal-escape-sequences.js

@@ -1,7 +1,0 @@
-url-prefix ../../jsreftest.html?test=js1_3/Script/
-script delete-001.js
-skip script function-001-n.js # obsolete test
-script function-002.js
-script in-001.js
-script new-001.js
-script switch-001.js

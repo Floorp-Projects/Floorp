@@ -67,8 +67,6 @@ if __name__ == '__main__':
                   help='hide progress bar')
     op.add_option('-j', '--worker-count', dest='worker_count', type=int, default=2,
                   help='number of worker threads to run tests on (default 2)')
-    op.add_option('-m', '--manifest', dest='manifest',
-                  help='select manifest file')
     op.add_option('-t', '--timeout', dest='timeout', type=float, default=150.0,
                   help='set test timeout in seconds')
     op.add_option('-d', '--exclude-random', dest='random', action='store_false',
@@ -89,8 +87,6 @@ if __name__ == '__main__':
                   help='run tests in valgrind')
     op.add_option('--valgrind-args', dest='valgrind_args',
                   help='extra args to pass to valgrind')
-    op.add_option('-c', '--check-manifest', dest='check_manifest', action='store_true',
-                  help='check for test files not listed in the manifest')
     op.add_option('--failure-file', dest='failure_file',
                   help='write tests that have not passed to the given file')
     op.add_option('--run-slow-tests', dest='run_slow_tests', action='store_true',
@@ -99,9 +95,11 @@ if __name__ == '__main__':
                   help='config data for xulRuntime (avoids search for config/autoconf.mk)')
     op.add_option('--no-extensions', dest='no_extensions', action='store_true',
                   help='run only tests conforming to the ECMAScript 5 standard')
+    op.add_option('--make-manifests', dest='make_manifests',
+                  help='generate manifest files for the reftest harness')
     (OPTIONS, args) = op.parse_args()
     if len(args) < 1:
-        if not OPTIONS.check_manifest:
+        if not OPTIONS.make_manifests:
             op.error('missing JS_SHELL argument')
         JS, args = None, []
     else:
@@ -137,14 +135,6 @@ if __name__ == '__main__':
         output_file == sys.stdout or OPTIONS.tinderbox):
         OPTIONS.hide_progress = True
 
-    if OPTIONS.manifest is None:
-        filename = os.path.join(os.path.dirname(__file__), 'jstests.list')
-        if os.path.isfile(filename):
-            OPTIONS.manifest = filename
-        else:
-            print >> sys.stderr, 'no manifest file given and defaults not found'
-            sys.exit(2)
-
     import manifest
     if JS is None:
         xul_tester = manifest.NullXULInfoTester()
@@ -156,11 +146,13 @@ if __name__ == '__main__':
             xul_debug = xul_debug.lower() is 'true'
             xul_info = manifest.XULInfo(xul_abi, xul_os, xul_debug)
         xul_tester = manifest.XULInfoTester(xul_info, JS)
-    test_list = manifest.parse(OPTIONS.manifest, xul_tester)
+
+    test_dir = os.path.dirname(__file__)
+    test_list = manifest.load(test_dir, xul_tester)
     skipped_list = []
 
-    if OPTIONS.check_manifest:
-        manifest.check_manifest(test_list)
+    if OPTIONS.make_manifests:
+        manifest.make_manifests(OPTIONS.make_manifests, test_list)
         if JS is None:
             sys.exit()
 
@@ -213,16 +205,14 @@ if __name__ == '__main__':
         cmd = test_list[0].get_command(TestCase.js_cmd_prefix)
         if OPTIONS.show_cmd:
             print list2cmdline(cmd)
-        manifest_dir = os.path.dirname(OPTIONS.manifest)
-        if manifest_dir not in ('', '.'):
-            os.chdir(manifest_dir)
+        if test_dir not in ('', '.'):
+            os.chdir(test_dir)
         call(cmd)
         sys.exit()
 
     curdir = os.getcwd()
-    manifest_dir = os.path.dirname(OPTIONS.manifest)
-    if manifest_dir not in ('', '.'):
-        os.chdir(manifest_dir)
+    if test_dir not in ('', '.'):
+        os.chdir(test_dir)
 
     results = None
     try:

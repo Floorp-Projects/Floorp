@@ -1,3 +1,4 @@
+// |reftest| skip-if(Android) -- bug 686143, skip temporarily to see what happens to the frequency and location of Android timeouts
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
