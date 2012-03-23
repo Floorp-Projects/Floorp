@@ -44,6 +44,7 @@
 #include "nsITextControlElement.h"
 #include "nsITextControlFrame.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIContent.h"
 
 class nsTextInputListener;
 class nsTextControlFrame;
@@ -237,6 +238,12 @@ public:
   }
   void WillInitEagerly() { mSelectionRestoreEagerInit = true; }
   bool HasNeverInitializedBefore() const { return !mEverInited; }
+
+  void UpdateEditableState(bool aNotify) {
+    if (mRootNode) {
+      mRootNode->UpdateEditableState(aNotify);
+    }
+  }
 
 private:
   friend class RestoreSelectionState;
