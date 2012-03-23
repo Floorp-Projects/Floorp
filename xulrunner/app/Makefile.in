@@ -228,7 +228,7 @@ clean clobber::
 	rm -rf $(DIST)/$(FRAMEWORK_NAME).framework
 endif
 
-README_FILE = $(topsrcdir)/README.txt
+README_FILE = $(srcdir)/../README.xulrunner
 
 libs::
 	$(INSTALL) $(IFLAGS1) $(README_FILE) $(DIST)/bin

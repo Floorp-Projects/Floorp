@@ -794,12 +794,12 @@ nsHTMLCanvasElement::GetSizeExternal()
 }
 
 NS_IMETHODIMP
-nsHTMLCanvasElement::RenderContextsExternal(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter)
+nsHTMLCanvasElement::RenderContextsExternal(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter, PRUint32 aFlags)
 {
   if (!mCurrentContext)
     return NS_OK;
 
-  return mCurrentContext->Render(aContext, aFilter);
+  return mCurrentContext->Render(aContext, aFilter, aFlags);
 }
 
 nsresult NS_NewCanvasRenderingContext2DThebes(nsIDOMCanvasRenderingContext2D** aResult);

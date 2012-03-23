@@ -33,10 +33,10 @@ public class testBookmark extends BaseTest {
             "bookmarks list has 2 children (the bookmark we added and the hidden header)");
 
         // Click on the bookmark we created (the first item is the header view)
+        // and wait for the bookmarked page to load
+        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
         mSolo.clickInList(2);
-
-        // Wait for the bookmarked page to load
-        mActions.expectGeckoEvent("DOMContentLoaded").blockForEvent();
+        contentEventExpecter.blockForEvent();
 
         // Clean up the bookmark we created
         cleanUpBookmark();

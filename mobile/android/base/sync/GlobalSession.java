@@ -9,6 +9,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.json.simple.parser.ParseException;
@@ -155,7 +156,26 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
     config.password      = password;
     config.syncKeyBundle = syncKeyBundle;
 
+    registerCommands();
     prepareStages();
+  }
+
+  protected void registerCommands() {
+    CommandProcessor processor = CommandProcessor.getProcessor();
+
+    processor.registerCommand("resetEngine", new CommandRunner() {
+      @Override
+      public void executeCommand(List<String> args) {
+        resetClient(new String[] { args.get(0) });
+      }
+    });
+
+    processor.registerCommand("resetAll", new CommandRunner() {
+      @Override
+      public void executeCommand(List<String> args) {
+        resetClient(null);
+      }
+    });
   }
 
   protected void prepareStages() {
@@ -415,7 +435,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
     String localSyncID = this.getSyncID();
     if (!remoteSyncID.equals(localSyncID)) {
       // Sync ID has changed. Reset timestamps and fetch new keys.
-      resetClient();
+      resetClient(null);
       if (config.collectionKeys != null) {
         config.collectionKeys.clear();
       }
@@ -468,7 +488,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
 
       @Override
       public void onWiped(long timestamp) {
-        session.resetClient();
+        session.resetClient(null);
         session.config.collectionKeys.clear();      // TODO: make sure we clear our keys timestamp.
         session.config.persistToPrefs();
 
@@ -643,10 +663,12 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
    * Reset our state. Clear our sync ID, reset each engine, drop any
    * cached records.
    */
-  private void resetClient() {
+  private void resetClient(String[] engines) {
+    if (engines == null) {
+      // Set `engines` to be *all* the engines.
+    }
     // TODO: futz with config?!
     // TODO: engines?!
-
   }
 
   /**

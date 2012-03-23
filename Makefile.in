@@ -72,6 +72,11 @@ tier_base_dirs += \
   other-licenses/skia-npapi \
   $(NULL)
 endif
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+tier_base_dirs += \
+  other-licenses/android \
+  $(NULL)
+endif
 
 ifdef MOZ_MEMORY
 tier_base_dirs += memory/jemalloc

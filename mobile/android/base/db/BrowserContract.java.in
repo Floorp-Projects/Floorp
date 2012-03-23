@@ -82,6 +82,11 @@ public class BrowserContract {
         public static final String THUMBNAIL = "thumbnail";
     }
 
+    public interface HistoryColumns {
+        public static final String DATE_LAST_VISITED = "date";
+        public static final String VISITS = "visits";
+    }
+
     public interface DeletedColumns {
         public static final String ID = "id";
         public static final String GUID = "guid";
@@ -129,14 +134,20 @@ public class BrowserContract {
         public static final String KEYWORD = "keyword";
     }
 
-    public static final class History implements CommonColumns, URLColumns, ImageColumns, SyncColumns {
+    public static final class History implements CommonColumns, URLColumns, HistoryColumns, ImageColumns, SyncColumns {
         private History() {}
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "history");
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/browser-history";
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/browser-history";
+    }
 
-        public static final String DATE_LAST_VISITED = "date";
-        public static final String VISITS = "visits";
+    // Combined bookmarks and history
+    public static final class Combined implements CommonColumns, URLColumns, HistoryColumns, ImageColumns  {
+        private Combined() {}
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "combined");
+
+        public static final String BOOKMARK_ID = "bookmark_id";
+        public static final String HISTORY_ID = "history_id";
     }
 
     public static final class Schema {

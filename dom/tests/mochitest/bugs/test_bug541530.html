@@ -25,6 +25,15 @@ ok(window === orig, "can't override window");
 ok(window.location === location, "properties are properly aliased");
 ok(document.location === location, "properties are properly aliased");
 
+var canDefine = false;
+try {
+    var foo;
+    __defineGetter__.call(foo, 'bar', function() {});
+    __defineSetter__.call(foo, 'bar', function() {});
+    canDefine = true;
+} catch (e) {}
+ok(canDefine, "Should have access to __defineGetter__ and __defineSetter__");
+
 try {
     __defineGetter__('window', function() {});
     ok(false, "should not be able to defineGetter(window)");
@@ -32,41 +41,57 @@ try {
 }
 
 try {
-    window.__defineGetter__('location', function(){});
+    __defineGetter__.call(window, 'location', function(){});
     ok(false, "should not be able to defineGetter(window.location)");
 } catch (e) {
 }
 
 try {
-    window.location.__defineGetter__('href', function(){});
+    __defineGetter__.call(window.location, 'href', function(){});
     ok(false, "shouldn't be able to override location.href");
 } catch (e) {
+    ok(/shadow/.exec(e.message), "Should be caught by the anti-shadow mechanism.");
 }
 
+// Try deleting the property.
+delete window.location.href;
+ok(typeof window.location.href !== 'undefined',
+   "shouldn't be able to delete the inherited property");
+delete Object.getPrototypeOf(window.location).href;
+ok(typeof window.location.href !== 'undefined',
+   "shouldn't be able to delete the property off of the prototype");
+
 try {
-    window.location.__proto__.__defineGetter__('href', function(){});
+    __defineGetter__.call(Object.getPrototypeOf(window.location), 'href', function(){});
     ok(false, "shouldn't be able to use the prototype");
 } catch (e) {
 }
 
 try {
-    window.location.__defineSetter__('href', function(){});
+    __defineSetter__.call(window.location, 'href', function(){});
     ok(false, "overrode a setter for location.href?");
 } catch (e) {
+    ok(/shadow/.exec(e.message), "Should be caught by the anti-shadow mechanism.");
 }
 
 try {
-    document.__defineGetter__('location', function(){});
+    __defineGetter__.call(document, 'location', function(){});
     ok(false, "shouldn't be able to override document.location");
 } catch (e) {
 }
 
-is(location.watch, undefined, "watch doesn't exist on location objects");
+// Make sure watch works correctly.
+var watchTest = {a: 42};
+var watchHandler = function(prop, oldval, newval) { return 22; }
+Object.prototype.watch.call(watchTest, 'a', watchHandler);
+watchTest.a = 1;
+is(watchTest.a, 22, "Watch works correctly");
+
+// Now make sure we can't watch location.
 try {
-    Object.prototype.watch.call(location, function() {});
+    Object.prototype.watch.call(location, 'href', function(prop, oldval, newval) {});
     ok(false, "shouldn't be able to set a watchpoint on location");
-} catch (e) {
-}
+} catch (e) {}
 
 ok(window === orig, "can't override window");
 ok(window.location === origLocation, "properties are properly aliased");
