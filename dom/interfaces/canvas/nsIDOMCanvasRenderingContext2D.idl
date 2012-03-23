@@ -67,7 +67,7 @@ interface nsIDOMImageData : nsISupports
 {
   readonly attribute unsigned long width;
   readonly attribute unsigned long height;
-  readonly attribute jsval data;
+  [implicit_jscontext] readonly attribute jsval data;
 };
 
 [scriptable, uuid(c835c768-2dcc-461c-82f5-3653710d2942)]

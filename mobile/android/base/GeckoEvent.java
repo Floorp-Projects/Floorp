@@ -63,6 +63,9 @@ import android.util.Log;
  * Fields have different meanings depending on the event type.
  */
 
+/* This class is referenced by Robocop via reflection; use care when 
+ * modifying the signature.
+ */
 public class GeckoEvent {
     private static final String LOGTAG = "GeckoEvent";
 

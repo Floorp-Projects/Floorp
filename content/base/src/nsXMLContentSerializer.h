@@ -51,7 +51,6 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsString.h"
-#include "nsIParser.h"
 
 #define kIndentStr NS_LITERAL_STRING("  ")
 #define kEndTag NS_LITERAL_STRING("</")

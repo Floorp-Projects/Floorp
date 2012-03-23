@@ -205,6 +205,10 @@ setting > vbox {
   font-weight: bold;
 }
 
+.preferences-description {
+  margin-top: 4px;
+}
+
 .preferences-description:empty {
   display: none;
 }
@@ -217,7 +221,7 @@ setting[type="string"] {
 }
 
 .preferences-alignment > textbox {
-  margin-top: 12px;
+  margin: 12px 0 0 0;
   font-size: 22px !important;
 }
 
@@ -225,16 +229,16 @@ checkbox {
   -moz-binding: url("chrome://global/content/bindings/checkbox.xml#checkbox-with-spacing") !important;
 }
 
+checkbox[label=""] > .checkbox-label-box,
+checkbox:not([label]) > .checkbox-label-box {
+  display: none;
+}
+
 .checkbox-check {
-  border: 2px transparent;
-  -moz-border-top-colors: -moz-initial;
-  -moz-border-right-colors: -moz-initial;
-  -moz-border-bottom-colors: -moz-initial;
-  -moz-border-left-colors: -moz-initial;
-  -moz-box-sizing: border-box;
+  background: url("chrome://browser/skin/images/checkbox_unchecked.png") no-repeat 50% 50%;
+  border: 0 transparent;
   width: 48px;
   height: 48px;
-  background: url("chrome://browser/skin/images/checkbox_unchecked.png") no-repeat 50% 50%;
 }
 
 setting:active checkbox > .checkbox-spacer-box > .checkbox-check {
@@ -257,6 +261,62 @@ checkbox[checked="true"][disabled="true"] > .checkbox-spacer-box > .checkbox-che
   background-image: url("chrome://browser/skin/images/checkbox_checked_disabled.png");
 }
 
+/* Textbox */
+
+textbox[type="number"] > spinbuttons {
+  visibility: collapse;
+}
+
+textbox {
+  background: white -moz-linear-gradient(top, rgba(27,113,177,0.5) 0, rgba(198,225,246,0.2) 3px, rgba(255,255,255,0.2) 16px);
+  border-radius: 3px;
+  border-color: rgb(94,128,153);
+  padding: 0 !important;
+}
+
+.textbox-input-box {
+  padding: 8px 12px;
+}
+
+/* Menulist */
+
+menulist {
+  -moz-appearance: none !important;
+  -moz-user-focus: ignore;
+  /* min-width: 200px !important; */
+  color: #000 !important;
+  border-radius: 5px;
+  border-color: rgb(94,128,153);
+  border-style: solid;
+  padding: 8px 12px;
+  background: white;
+  border: 1px solid #cacdd5;
+  border-style: solid;
+  border-color: rgb(94,128,153);
+  min-width: 200px;
+}
+
+.menulist-label {
+  background-color: transparent !important;
+}
+
+menulist > menupopup > menuitem > label{
+-moz-padding-start:3px !important;
+-moz-padding-end:7px !important;
+}
+
+menulist > dropmarker {
+  height: 32px;
+  width: 32px;
+  margin-left: @margin_snormal@;
+  background-color: transparent; /* for windows */
+  border: none;                  /* for windows */
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  list-style-image: url("chrome://browser/skin/images/dropmarker.svg") !important;
+  -moz-image-region: auto;
+  display: block;
+}
 
 /* XBL bindings */
 

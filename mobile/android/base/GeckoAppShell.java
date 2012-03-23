@@ -372,6 +372,7 @@ public class GeckoAppShell
         putLocaleEnv();
     }
 
+    /* This method is referenced by Robocop via reflection. */
     public static void loadSQLiteLibs(Context context, String apkName) {
         if (sSQLiteLibsLoaded)
             return;
@@ -482,6 +483,7 @@ public class GeckoAppShell
         } catch (NoSuchElementException e) {}
     }
 
+    /* This method is referenced by Robocop via reflection. */
     public static void sendEventToGecko(GeckoEvent e) {
         if (GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning)) {
             notifyGeckoOfEvent(e);
@@ -1663,6 +1665,7 @@ public class GeckoAppShell
         }
     }
 
+    /* This method is referenced by Robocop via reflection. */
     public static void registerGeckoEventListener(String event, GeckoEventListener listener) {
         if (mEventListeners == null)
             mEventListeners = new HashMap<String, ArrayList<GeckoEventListener>>();
@@ -1692,6 +1695,7 @@ public class GeckoAppShell
         }
     }
 
+    /* This method is referenced by Robocop via reflection. */
     public static void unregisterGeckoEventListener(String event, GeckoEventListener listener) {
         if (mEventListeners == null)
             return;

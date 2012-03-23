@@ -159,6 +159,8 @@
 
 #include "mozilla/CORSMode.h"
 
+#include "nsStyledElement.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -1219,29 +1221,31 @@ bool UnoptimizableCCNode(nsINode* aNode)
 bool
 nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
 {
-  nsIDocument *currentDoc = tmp->GetCurrentDoc();
-  if (currentDoc &&
-      nsCCUncollectableMarker::InGeneration(cb, currentDoc->GetMarkedCCGeneration())) {
-    return false;
-  }
-
-  if (nsCCUncollectableMarker::sGeneration) {
-    // If we're black no need to traverse.
-    if (tmp->IsBlack() || tmp->InCCBlackTree()) {
+  if (NS_LIKELY(!cb.WantAllTraces())) {
+    nsIDocument *currentDoc = tmp->GetCurrentDoc();
+    if (currentDoc &&
+        nsCCUncollectableMarker::InGeneration(currentDoc->GetMarkedCCGeneration())) {
       return false;
     }
 
-    if (!UnoptimizableCCNode(tmp)) {
-      // If we're in a black document, return early.
-      if ((currentDoc && currentDoc->IsBlack())) {
+    if (nsCCUncollectableMarker::sGeneration) {
+      // If we're black no need to traverse.
+      if (tmp->IsBlack() || tmp->InCCBlackTree()) {
         return false;
       }
-      // If we're not in anonymous content and we have a black parent,
-      // return early.
-      nsIContent* parent = tmp->GetParent();
-      if (parent && !UnoptimizableCCNode(parent) && parent->IsBlack()) {
-        NS_ABORT_IF_FALSE(parent->IndexOf(tmp) >= 0, "Parent doesn't own us?");
-        return false;
+
+      if (!UnoptimizableCCNode(tmp)) {
+        // If we're in a black document, return early.
+        if ((currentDoc && currentDoc->IsBlack())) {
+          return false;
+        }
+        // If we're not in anonymous content and we have a black parent,
+        // return early.
+        nsIContent* parent = tmp->GetParent();
+        if (parent && !UnoptimizableCCNode(parent) && parent->IsBlack()) {
+          NS_ABORT_IF_FALSE(parent->IndexOf(tmp) >= 0, "Parent doesn't own us?");
+          return false;
+        }
       }
     }
   }
@@ -3088,10 +3092,9 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                   aBindingParent == aParent,
                   "Native anonymous content must have its parent as its "
                   "own binding parent");
-
-  if (!aBindingParent && aParent) {
-    aBindingParent = aParent->GetBindingParent();
-  }
+  NS_PRECONDITION(aBindingParent || !aParent ||
+                  aBindingParent == aParent->GetBindingParent(),
+                  "We should be passed the right binding parent");
 
 #ifdef MOZ_XUL
   // First set the binding parent
@@ -3214,6 +3217,28 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   nsNodeUtils::ParentChainChanged(this);
 
+  if (aDocument && HasID() && !aBindingParent) {
+    aDocument->AddToIdTable(this, DoGetID());
+  }
+
+  if (MayHaveStyle() && !IsXUL()) {
+    // XXXbz if we already have a style attr parsed, this won't do
+    // anything... need to fix that.
+    // If MayHaveStyle() is true, we must be an nsStyledElement
+    static_cast<nsStyledElement*>(this)->ReparseStyleAttribute(false);
+  }
+
+  if (aDocument) {
+    // If we're in a document now, let our mapped attrs know what their new
+    // sheet is.  This is safe to run for non-mapped-attribute elements too;
+    // it'll just do a small bit of unnecessary work.  But most elements in
+    // practice are mapped-attribute elements.
+    nsHTMLStyleSheet* sheet = aDocument->GetAttributeStyleSheet();
+    if (sheet) {
+      mAttrsAndChildren.SetMappedAttrStyleSheet(sheet);
+    }
+  }
+
   // XXXbz script execution during binding can trigger some of these
   // postcondition asserts....  But we do want that, since things will
   // generally be quite broken when that happens.
@@ -3231,6 +3256,9 @@ nsGenericElement::UnbindFromTree(bool aDeep, bool aNullParent)
   NS_PRECONDITION(aDeep || (!GetCurrentDoc() && !GetBindingParent()),
                   "Shallow unbind won't clear document and binding parent on "
                   "kids!");
+
+  RemoveFromIdTable();
+
   // Make sure to unbind this node before doing the kids
   nsIDocument *document =
     HasFlag(NODE_FORCE_XBL_BINDINGS) ? OwnerDoc() : GetCurrentDoc();
@@ -3783,7 +3811,9 @@ nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
   nsIContent* parent =
     IsNodeOfType(eDOCUMENT) ? nsnull : static_cast<nsIContent*>(this);
 
-  rv = aKid->BindToTree(doc, parent, nsnull, true);
+  rv = aKid->BindToTree(doc, parent,
+                        parent ? parent->GetBindingParent() : nsnull,
+                        true);
   if (NS_FAILED(rv)) {
     if (GetFirstChild() == aKid) {
       mFirstChild = aKid->GetNextSibling();
@@ -4003,7 +4033,14 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
                   "Nodes that are not documents, document fragments or "
                   "elements can't be parents!");
 
-  if (aParent && nsContentUtils::ContentIsDescendantOf(aParent, aNewChild)) {
+  // A common case is that aNewChild has no kids, in which case
+  // aParent can't be a descendant of aNewChild unless they're
+  // actually equal to each other.  Fast-path that case, since aParent
+  // could be pretty deep in the DOM tree.
+  if (aParent &&
+      (aNewChild == aParent ||
+       (aNewChild->GetFirstChild() &&
+        nsContentUtils::ContentIsDescendantOf(aParent, aNewChild)))) {
     return false;
   }
 
@@ -6063,7 +6100,7 @@ ParseSelectorList(nsINode* aNode,
 }
 
 // Actually find elements matching aSelectorList (which must not be
-// null) and which are descendants of aRoot and put them in Alist.  If
+// null) and which are descendants of aRoot and put them in aList.  If
 // onlyFirstMatch, then stop once the first one is found.
 template<bool onlyFirstMatch, class T>
 inline static nsresult FindMatchingElements(nsINode* aRoot,
@@ -6108,8 +6145,9 @@ inline static nsresult FindMatchingElements(nsINode* aRoot,
       for (PRInt32 i = 0; i < elements->Count(); ++i) {
         Element *element = static_cast<Element*>(elements->ElementAt(i));
         if (!aRoot->IsElement() ||
-            nsContentUtils::ContentIsDescendantOf(element, aRoot)) {
-          // We have an element with the right id and it's a descendant
+            (element != aRoot &&
+             nsContentUtils::ContentIsDescendantOf(element, aRoot))) {
+          // We have an element with the right id and it's a strict descendant
           // of aRoot.  Make sure it really matches the selector.
           if (nsCSSRuleProcessor::SelectorListMatches(element, matchingContext,
                                                       selectorList)) {

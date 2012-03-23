@@ -40,7 +40,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "WyciwygChannelChild.h"
 
-#include "nsIParser.h"
+#include "nsCharsetSource.h"
 #include "nsStringStream.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"

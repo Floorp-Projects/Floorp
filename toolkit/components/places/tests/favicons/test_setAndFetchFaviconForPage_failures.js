@@ -86,7 +86,7 @@ add_test(function test_aboutURI()
 
 add_test(function test_privateBrowsing_nonBookmarkedURI()
 {
-  if (!"@mozilla.org/privatebrowsing;1" in Cc) {
+  if (!("@mozilla.org/privatebrowsing;1" in Cc)) {
     run_next_test();
     return;
   }

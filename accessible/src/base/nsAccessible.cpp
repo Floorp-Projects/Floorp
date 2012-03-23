@@ -2015,14 +2015,14 @@ nsAccessible::RelationByType(PRUint32 aType)
       Relation rel(new RelatedAccIterator(Document(), mContent,
                                           nsGkAtoms::aria_labelledby));
       if (mContent->Tag() == nsGkAtoms::label)
-        rel.AppendIter(new IDRefsIterator(mContent, mContent->IsHTML() ?
+        rel.AppendIter(new IDRefsIterator(mDoc, mContent, mContent->IsHTML() ?
                                           nsGkAtoms::_for :
                                           nsGkAtoms::control));
 
       return rel;
     }
     case nsIAccessibleRelation::RELATION_LABELLED_BY: {
-      Relation rel(new IDRefsIterator(mContent,
+      Relation rel(new IDRefsIterator(mDoc, mContent,
                                       nsGkAtoms::aria_labelledby));
       if (mContent->IsHTML()) {
         rel.AppendIter(new HTMLLabelIterator(Document(), this));
@@ -2033,8 +2033,8 @@ nsAccessible::RelationByType(PRUint32 aType)
       return rel;
     }
     case nsIAccessibleRelation::RELATION_DESCRIBED_BY: {
-      Relation rel(new IDRefsIterator(mContent,
-                                        nsGkAtoms::aria_describedby));
+      Relation rel(new IDRefsIterator(mDoc, mContent,
+                                      nsGkAtoms::aria_describedby));
       if (mContent->IsXUL())
         rel.AppendIter(new XULDescriptionIterator(Document(), mContent));
 
@@ -2049,7 +2049,7 @@ nsAccessible::RelationByType(PRUint32 aType)
       // tied to a control.
       if (mContent->Tag() == nsGkAtoms::description &&
           mContent->IsXUL())
-        rel.AppendIter(new IDRefsIterator(mContent,
+        rel.AppendIter(new IDRefsIterator(mDoc, mContent,
                                           nsGkAtoms::control));
 
       return rel;
@@ -2091,13 +2091,13 @@ nsAccessible::RelationByType(PRUint32 aType)
       return Relation(new RelatedAccIterator(Document(), mContent,
                                              nsGkAtoms::aria_controls));
     case nsIAccessibleRelation::RELATION_CONTROLLER_FOR: {
-      Relation rel(new IDRefsIterator(mContent,
+      Relation rel(new IDRefsIterator(mDoc, mContent,
                                       nsGkAtoms::aria_controls));
       rel.AppendIter(new HTMLOutputIterator(Document(), mContent));
       return rel;
     }
     case nsIAccessibleRelation::RELATION_FLOWS_TO:
-      return Relation(new IDRefsIterator(mContent,
+      return Relation(new IDRefsIterator(mDoc, mContent,
                                          nsGkAtoms::aria_flowto));
     case nsIAccessibleRelation::RELATION_FLOWS_FROM:
       return Relation(new RelatedAccIterator(Document(), mContent,

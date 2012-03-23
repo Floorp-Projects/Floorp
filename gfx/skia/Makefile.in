@@ -333,6 +333,22 @@ CPPSRCS += \
 OS_CXXFLAGS += $(MOZ_PANGO_CFLAGS)
 endif
 
+ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += \
+	SkFontHost_FreeType.cpp \
+	SkFontHost_gamma_none.cpp \
+	SkMMapStream.cpp \
+	SkOSFile.cpp \
+	$(NULL)
+ifeq (Linux,$(OS_TARGET))
+CPPSRCS += \
+	SkFontHost_linux.cpp \
+	SkTime_Unix.cpp \
+	$(NULL)
+endif
+OS_CXXFLAGS += $(MOZ_PANGO_CFLAGS)
+endif
+
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
 EXPORTS_skia += \
 	include/config/sk_stdint.h \

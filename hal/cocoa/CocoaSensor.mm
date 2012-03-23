@@ -33,7 +33,11 @@ void UpdateHandler(nsITimer *aTimer, void *aClosure)
 }
 
 void
-EnableSensorNotifications(SensorType aSensor) {
+EnableSensorNotifications(SensorType aSensor)
+{
+  if (aSensor != SENSOR_ACCELERATION)
+    return;
+
   if (sUpdateTimer)
     return;
 
@@ -49,7 +53,11 @@ EnableSensorNotifications(SensorType aSensor) {
 }
 
 void
-DisableSensorNotifications(SensorType aSensor) {
+DisableSensorNotifications(SensorType aSensor)
+{
+  if (aSensor != SENSOR_ACCELERATION)
+    return;
+
   if (sUpdateTimer) {
     sUpdateTimer->Cancel();
     NS_RELEASE(sUpdateTimer);

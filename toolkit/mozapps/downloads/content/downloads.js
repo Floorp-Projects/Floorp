@@ -477,6 +477,7 @@ function Startup()
             getService(Ci.nsIObserverService);
   obs.addObserver(gDownloadObserver, "download-manager-remove-download", false);
   obs.addObserver(gDownloadObserver, "private-browsing", false);
+  obs.addObserver(gDownloadObserver, "private-browsing-change-granted", false);
   obs.addObserver(gDownloadObserver, "browser-lastwindow-close-granted", false);
 
   // Clear the search box and move focus to the list on escape from the box
@@ -502,6 +503,7 @@ function Shutdown()
   let obs = Cc["@mozilla.org/observer-service;1"].
             getService(Ci.nsIObserverService);
   obs.removeObserver(gDownloadObserver, "private-browsing");
+  obs.removeObserver(gDownloadObserver, "private-browsing-change-granted");
   obs.removeObserver(gDownloadObserver, "download-manager-remove-download");
   obs.removeObserver(gDownloadObserver, "browser-lastwindow-close-granted");
 
@@ -525,6 +527,12 @@ let gDownloadObserver = {
         let id = aSubject.QueryInterface(Ci.nsISupportsPRUint32);
         let dl = getDownload(id.data);
         removeFromView(dl);
+        break;
+      case "private-browsing-change-granted":
+        // Finalize our statements cause the connection will be closed by the
+        // service during the private browsing transition.
+        gStmt.finalize();
+        gStmt = null;
         break;
       case "private-browsing":
         if (aData == "enter" || aData == "exit") {

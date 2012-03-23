@@ -455,6 +455,10 @@ pref("ril.data.apn", "");
 pref("ril.data.user", "");
 pref("ril.data.passwd", "");
 
+//Enable/disable marionette server, set listening port
+pref("marionette.defaultPrefs.enabled", true);
+pref("marionette.defaultPrefs.port", 2828);
+
 #ifdef MOZ_UPDATER
 pref("app.update.enabled", true);
 pref("app.update.auto", true);

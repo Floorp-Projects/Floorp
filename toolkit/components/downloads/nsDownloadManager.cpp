@@ -319,9 +319,23 @@ nsDownloadManager::GetMemoryDBConnection() const
   return conn.forget();
 }
 
+void
+nsDownloadManager::CloseDB()
+{
+  DebugOnly<nsresult> rv = mGetIdsForURIStatement->Finalize();
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  rv = mUpdateDownloadStatement->Finalize();
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  rv = mDBConn->Close();
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+}
+
 nsresult
 nsDownloadManager::InitMemoryDB()
 {
+  bool ready = false;
+  if (mDBConn && NS_SUCCEEDED(mDBConn->GetConnectionReady(&ready)) && ready)
+    CloseDB();
   mDBConn = GetMemoryDBConnection();
   if (!mDBConn)
     return NS_ERROR_NOT_AVAILABLE;
@@ -345,6 +359,9 @@ nsDownloadManager::InitFileDB()
   rv = dbFile->Append(DM_DB_NAME);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  bool ready = false;
+  if (mDBConn && NS_SUCCEEDED(mDBConn->GetConnectionReady(&ready)) && ready)
+    CloseDB();
   mDBConn = GetFileDBConnection(dbFile);
   NS_ENSURE_TRUE(mDBConn, NS_ERROR_NOT_AVAILABLE);
 
@@ -1940,10 +1957,7 @@ nsDownloadManager::Observe(nsISupports *aSubject,
     if (dl2)
       return CancelDownload(id);
   } else if (strcmp(aTopic, "profile-before-change") == 0) {
-    mGetIdsForURIStatement->Finalize();
-    mUpdateDownloadStatement->Finalize();
-    mozilla::DebugOnly<nsresult> rv = mDBConn->Close();
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    CloseDB();
   } else if (strcmp(aTopic, "quit-application") == 0) {
     // Try to pause all downloads and, if appropriate, mark them as auto-resume
     // unless user has specified that downloads should be canceled

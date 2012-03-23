@@ -148,6 +148,7 @@
 #include "nsBlobProtocolHandler.h"
 
 #include "nsCharsetAlias.h"
+#include "nsCharsetSource.h"
 #include "nsIParser.h"
 #include "nsIContentSink.h"
 
@@ -1628,8 +1629,10 @@ nsDocument::~nsDocument()
   while (--indx >= 0) {
     mCatalogSheets[indx]->SetOwningDocument(nsnull);
   }
-  if (mAttrStyleSheet)
+  if (mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nsnull);
+    NS_RELEASE(mAttrStyleSheet);
+  }
   if (mStyleAttrStyleSheet)
     mStyleAttrStyleSheet->SetOwningDocument(nsnull);
 
@@ -1651,14 +1654,6 @@ nsDocument::~nsDocument()
   // XXX Ideally we'd do this cleanup in the nsIDocument destructor.
   if (mNodeInfoManager) {
     mNodeInfoManager->DropDocumentReference();
-  }
-
-  if (mAttrStyleSheet) {
-    mAttrStyleSheet->SetOwningDocument(nsnull);
-  }
-  
-  if (mStyleAttrStyleSheet) {
-    mStyleAttrStyleSheet->SetOwningDocument(nsnull);
   }
 
   delete mHeaderData;
@@ -2273,8 +2268,11 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     }
     mAttrStyleSheet->Reset(aURI);
   } else {
-    rv = NS_NewHTMLStyleSheet(getter_AddRefs(mAttrStyleSheet), aURI, this);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURI, this);
+    if (NS_FAILED(rv)) {
+      NS_IF_RELEASE(mAttrStyleSheet);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   // Don't use AddStyleSheet, since it'll put the sheet into style

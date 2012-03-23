@@ -345,6 +345,41 @@
       }
     }
 
+    function hideImageMap(aContainerID, aImageID)
+    {
+      this.container = getAccessible(aContainerID);
+      this.imageMap = null;
+      this.imageMapNode = getNode(aImageID);
+
+      function getImageMap(aThisObj)
+      {
+        return aThisObj.imageMap;
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getImageMap, this),
+        new invokerChecker(EVENT_REORDER, aContainerID)
+      ];
+
+      this.invoke = function hideImageMap_invoke()
+      {
+        this.imageMap = getAccessible(this.imageMapNode);
+        this.imageMapNode.style.display = "none";
+      }
+
+      this.finalCheck = function hideImageMap_finalCheck()
+      {
+        var accTree =
+          { SECTION: [ ] };
+        testAccessibleTree(this.container, accTree);
+      }
+
+      this.getID = function hideImageMap_getID()
+      {
+        return "display:none image";
+      }
+    }
+
     //gA11yEventDumpToConsole = true;
 
     var gQueue = null;
@@ -359,6 +394,7 @@
       gQueue.push(new restoreNameOnMap("container", "imgmap", "map"));
       gQueue.push(new removeMap("container", "imgmap", "map"));
       gQueue.push(new insertMap("container", "imgmap"));
+      gQueue.push(new hideImageMap("container", "imgmap"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

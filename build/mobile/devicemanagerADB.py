@@ -418,25 +418,26 @@ class DeviceManagerADB(DeviceManager):
       outerr = self.runCmd(["pull",  remoteFile, localFile]).communicate()
 
       # Now check stderr for errors
-      errl = outerr[1].splitlines()
-      if (len(errl) == 1):
-        if (((errl[0].find("Permission denied") != -1)
-          or (errl[0].find("does not exist") != -1))
-          and self.useRunAs):
-          # If we lack permissions to read but have run-as, then we should try
-          # to copy the file to a world-readable location first before attempting
-          # to pull it again.
-          remoteTmpFile = self.getTempDir() + "/" + os.path.basename(remoteFile)
-          self.checkCmdAs(["shell", "dd", "if=" + remoteFile, "of=" + remoteTmpFile])
-          self.checkCmdAs(["shell", "chmod", "777", remoteTmpFile])
-          self.runCmd(["pull",  remoteTmpFile, localFile]).stdout.read()
-          # Clean up temporary file
-          self.checkCmdAs(["shell", "rm", remoteTmpFile])
+      if outerr[1]:
+        errl = outerr[1].splitlines()
+        if (len(errl) == 1):
+          if (((errl[0].find("Permission denied") != -1)
+            or (errl[0].find("does not exist") != -1))
+            and self.useRunAs):
+            # If we lack permissions to read but have run-as, then we should try
+            # to copy the file to a world-readable location first before attempting
+            # to pull it again.
+            remoteTmpFile = self.getTempDir() + "/" + os.path.basename(remoteFile)
+            self.checkCmdAs(["shell", "dd", "if=" + remoteFile, "of=" + remoteTmpFile])
+            self.checkCmdAs(["shell", "chmod", "777", remoteTmpFile])
+            self.runCmd(["pull",  remoteTmpFile, localFile]).stdout.read()
+            # Clean up temporary file
+            self.checkCmdAs(["shell", "rm", remoteTmpFile])
 
       f = open(localFile)
       ret = f.read()
       f.close()
-      return ret;      
+      return ret
     except:
       return None
 
