@@ -79,6 +79,25 @@ public class PlaceholderLayerClient {
         } else {
             mViewport = new ViewportMetrics();
         }
+        loadScreenshot();
+
+
+        if (mViewportUnknown)
+            mViewport.setViewport(mLayerController.getViewport());
+        mLayerController.setViewportMetrics(mViewport);
+
+        BufferedCairoImage image = new BufferedCairoImage(mBuffer, mWidth, mHeight, mFormat);
+        SingleTileLayer tileLayer = new SingleTileLayer(image);
+
+        tileLayer.beginTransaction();   // calling thread irrelevant; nobody else has a ref to tileLayer yet
+        try {
+            Point origin = PointUtils.round(mViewport.getOrigin());
+            tileLayer.setPosition(new Rect(origin.x, origin.y, origin.x + mWidth, origin.y + mHeight));
+        } finally {
+            tileLayer.endTransaction();
+        }
+
+        mLayerController.setRoot(tileLayer);
     }
 
     public void destroy() {
@@ -88,7 +107,7 @@ public class PlaceholderLayerClient {
         }
     }
 
-    public boolean loadScreenshot() {
+    boolean loadScreenshot() {
         if (GeckoApp.mAppContext.mLastScreen == null)
             return false;
 
@@ -112,18 +131,6 @@ public class PlaceholderLayerClient {
             mLayerController.setPageSize(mViewport.getPageSize());
         }
 
-        BufferedCairoImage image = new BufferedCairoImage(mBuffer, mWidth, mHeight, mFormat);
-        SingleTileLayer tileLayer = new SingleTileLayer(image);
-
-        tileLayer.beginTransaction();   // calling thread irrelevant; nobody else has a ref to tileLayer yet
-        try {
-            Point origin = PointUtils.round(mViewport.getOrigin());
-            tileLayer.setPosition(new Rect(origin.x, origin.y, origin.x + mWidth, origin.y + mHeight));
-        } finally {
-            tileLayer.endTransaction();
-        }
-
-        mLayerController.setRoot(tileLayer);
         return true;
     }
 }

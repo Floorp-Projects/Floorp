@@ -38,7 +38,6 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoInputConnection;
 import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.InputConnectionHandler;
@@ -78,14 +77,6 @@ public class LayerView extends FlexibleGLSurfaceView {
     private static String LOGTAG = "GeckoLayerView";
     /* List of events to be processed if the page does not prevent them. Should only be touched on the main thread */
     private LinkedList<MotionEvent> mEventQueue = new LinkedList<MotionEvent>();
-    /* Must be a PAINT_xxx constant */
-    private int mPaintState = PAINT_NONE;
-
-    /* Flags used to determine when to show the painted surface. The integer
-     * order must correspond to the order in which these states occur. */
-    public static final int PAINT_NONE = 0;
-    public static final int PAINT_BEFORE_FIRST = 1;
-    public static final int PAINT_AFTER_FIRST = 2;
 
 
     public LayerView(Context context, LayerController controller) {
@@ -245,18 +236,6 @@ public class LayerView extends FlexibleGLSurfaceView {
 
     public LayerRenderer getLayerRenderer() {
         return mRenderer;
-    }
-    
-    /* paintState must be a PAINT_xxx constant. The state will only be changed
-     * if paintState represents a state that occurs after the current state. */
-    public void setPaintState(int paintState) {
-        if (paintState > mPaintState) {
-            mPaintState = paintState;
-        }
-    }
-
-    public int getPaintState() {
-        return mPaintState;
     }
 }
 
