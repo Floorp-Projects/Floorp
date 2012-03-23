@@ -297,15 +297,6 @@ private:
   const TimeStamp mStart;
 };
 
-jsval
-livemarkInfoToJSVal(PRInt64 aId,
-                    const nsACString& aGUID,
-                    const nsAString& aTitle,
-                    PRInt64 aParentId,
-                    PRInt32 aIndex,
-                    nsCOMPtr<nsIURI>& aFeedURI,
-                    nsCOMPtr<nsIURI>& aSiteURI);
-
 } // namespace places
 } // namespace mozilla
 

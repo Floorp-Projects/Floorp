@@ -99,10 +99,5 @@ void GetMigrateDataFromArray(MigrationData* aDataArray,
 // this is already cloned, modify it to your heart's content
 void GetProfilePath(nsIProfileStartup* aStartup, nsCOMPtr<nsIFile>& aProfileDir);
 
-/**
- * Imports default bookmarks to the profile.
- */
-nsresult ImportDefaultBookmarks();
-
 #endif
 

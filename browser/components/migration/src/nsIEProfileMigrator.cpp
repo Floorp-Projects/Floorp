@@ -1398,11 +1398,6 @@ nsIEProfileMigrator::CopyFavoritesBatched(bool aReplace)
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
-    // If importing defaults fails for whatever reason, let the import process
-    // continue.
-    DebugOnly<nsresult> rv = ImportDefaultBookmarks();
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "Should be able to import default bookmarks");
-
     // Locate the Links toolbar folder, we want to replace the Personal Toolbar
     // content with Favorites in this folder.
     // On versions minor or equal to IE6 the folder name is stored in the
