@@ -327,7 +327,9 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         const char *rendererMatchStrings[RendererOther] = {
                 "Adreno 200",
                 "Adreno 205",
-                "PowerVR SGX 540"
+                "PowerVR SGX 530",
+                "PowerVR SGX 540",
+
         };
         mRenderer = RendererOther;
         for (int i = 0; i < RendererOther; ++i) {
@@ -570,8 +572,15 @@ GLContext::CanUploadSubTextures()
 {
     // There are certain GPUs that we don't want to use glTexSubImage2D on
     // because that function can be very slow and/or buggy
-    return (Renderer() != RendererAdreno200 &&
-            Renderer() != RendererAdreno205);
+    if (Renderer() == RendererAdreno200 || Renderer() == RendererAdreno205)
+        return false;
+
+    // On PowerVR glTexSubImage does a readback, so it will be slower
+    // than just doing a glTexImage2D() directly. i.e. 26ms vs 10ms
+    if (Renderer() == RendererSGX540 || Renderer() == RendererSGX530)
+        return false;
+
+    return true;
 }
 
 bool

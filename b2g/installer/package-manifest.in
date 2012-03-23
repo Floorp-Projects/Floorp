@@ -617,6 +617,13 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/B2GComponents.manifest
 @BINPATH@/components/B2GComponents.xpt
 @BINPATH@/components/CameraContent.js
+@BINPATH@/chrome/marionette@JAREXT@
+@BINPATH@/chrome/marionette.manifest
+@BINPATH@/components/MarionetteComponents.manifest
+@BINPATH@/components/marionettecomponent.js
 @BINPATH@/components/AlertsService.js
 @BINPATH@/components/ContentPermissionPrompt.js
+#ifdef MOZ_UPDATER
+@BINPATH@/components/UpdatePrompt.js
+#endif
 @BINPATH@/components/MozKeyboard.js

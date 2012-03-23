@@ -67,7 +67,8 @@ function startupHttpd(baseDir, port) {
 function addPermissions(urls) {
   let permissions = [
     'indexedDB', 'indexedDB-unlimited', 'webapps-manage', 'offline-app',
-    'content-camera', 'webcontacts-manage', 'wifi-manage', 'desktop-notification'
+    'content-camera', 'webcontacts-manage', 'wifi-manage', 'desktop-notification',
+    'geolocation'
   ];
   urls.forEach(function(url) {
     let uri = Services.io.newURI(url, null, null);
@@ -110,7 +111,7 @@ var shell = {
   start: function shell_init() {
     let homeURL = this.homeURL;
     if (!homeURL) {
-      let msg = 'Fatal error during startup: [No homescreen found]';
+      let msg = 'Fatal error during startup: No homescreen found: try setting B2G_HOMESCREEN';
       return alert(msg);
     }
 

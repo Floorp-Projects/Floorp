@@ -680,6 +680,16 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
                     pixelBuffer.notify();
                 }
             }
+
+            // Remove white screen once we've painted
+            if (mView.getPaintState() == LayerView.PAINT_BEFORE_FIRST) {
+                GeckoAppShell.getMainHandler().postAtFrontOfQueue(new Runnable() {
+                    public void run() {
+                        mView.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+                    }
+                });
+                mView.setPaintState(LayerView.PAINT_AFTER_FIRST);
+            }
         }
     }
 }

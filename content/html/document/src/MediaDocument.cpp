@@ -48,7 +48,7 @@
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDocShell.h"
-#include "nsIParser.h" // kCharsetFrom* macro definition
+#include "nsCharsetSource.h" // kCharsetFrom* macro definition
 #include "nsNodeInfoManager.h"
 #include "nsContentUtils.h"
 

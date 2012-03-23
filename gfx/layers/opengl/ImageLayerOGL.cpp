@@ -243,14 +243,22 @@ ImageLayerOGL::RenderLayer(int,
       return;
     }
 
-    if (!yuvImage->GetBackendData(LayerManager::LAYERS_OPENGL)) {
-      AllocateTexturesYCbCr(yuvImage);
-    }
-
     PlanarYCbCrOGLBackendData *data =
       static_cast<PlanarYCbCrOGLBackendData*>(yuvImage->GetBackendData(LayerManager::LAYERS_OPENGL));
 
-    if (!data || data->mTextures->GetGLContext() != mOGLManager->glForResources()) {
+    if (data && data->mTextures->GetGLContext() != gl()) {
+      // If these textures were allocated by another layer manager,
+      // clear them out and re-allocate below.
+      data = nsnull;
+      yuvImage->SetBackendData(LayerManager::LAYERS_OPENGL, nsnull);
+    }
+
+    if (!data) {
+      AllocateTexturesYCbCr(yuvImage);
+      data = static_cast<PlanarYCbCrOGLBackendData*>(yuvImage->GetBackendData(LayerManager::LAYERS_OPENGL));
+    }
+
+    if (!data || data->mTextures->GetGLContext() != gl()) {
       // XXX - Can this ever happen? If so I need to fix this!
       return;
     }
@@ -293,14 +301,22 @@ ImageLayerOGL::RenderLayer(int,
       return;
     }
 
-    if (!cairoImage->GetBackendData(LayerManager::LAYERS_OPENGL)) {
-      AllocateTexturesCairo(cairoImage);
-    }
-
     CairoOGLBackendData *data =
       static_cast<CairoOGLBackendData*>(cairoImage->GetBackendData(LayerManager::LAYERS_OPENGL));
 
-    if (!data || data->mTexture.GetGLContext() != mOGLManager->glForResources()) {
+    if (data && data->mTexture.GetGLContext() != gl()) {
+      // If this texture was allocated by another layer manager, clear
+      // it out and re-allocate below.
+      data = nsnull;
+      cairoImage->SetBackendData(LayerManager::LAYERS_OPENGL, nsnull);
+    }
+
+    if (!data) {
+      AllocateTexturesCairo(cairoImage);
+      data = static_cast<CairoOGLBackendData*>(cairoImage->GetBackendData(LayerManager::LAYERS_OPENGL));
+    }
+
+    if (!data || data->mTexture.GetGLContext() != gl()) {
       // XXX - Can this ever happen? If so I need to fix this!
       return;
     }
@@ -442,23 +458,11 @@ ImageLayerOGL::RenderLayer(int,
 }
 
 static void
-InitTexture(GLContext* aGL, GLuint aTexture, GLenum aFormat, const gfxIntSize& aSize)
+SetClamping(GLContext* aGL, GLuint aTexture)
 {
   aGL->fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
-  aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-  aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
   aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
   aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
-
-  aGL->fTexImage2D(LOCAL_GL_TEXTURE_2D,
-                   0,
-                   aFormat,
-                   aSize.width,
-                   aSize.height,
-                   0,
-                   aFormat,
-                   LOCAL_GL_UNSIGNED_BYTE,
-                   NULL);
 }
 
 static void
@@ -510,20 +514,18 @@ ImageLayerOGL::AllocateTexturesYCbCr(PlanarYCbCrImage *aImage)
 
   PlanarYCbCrImage::Data &data = aImage->mData;
 
-  GLContext *gl = mOGLManager->glForResources();
-
-  gl->MakeCurrent();
+  gl()->MakeCurrent();
  
-  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_Y, data.mYSize, gl, &backendData->mTextures[0]);
-  InitTexture(gl, backendData->mTextures[0].GetTextureID(), LOCAL_GL_LUMINANCE, data.mYSize);
+  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_Y, data.mYSize, gl(), &backendData->mTextures[0]);
+  SetClamping(gl(), backendData->mTextures[0].GetTextureID());
 
-  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data.mCbCrSize, gl, &backendData->mTextures[1]);
-  InitTexture(gl, backendData->mTextures[1].GetTextureID(), LOCAL_GL_LUMINANCE, data.mCbCrSize);
+  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data.mCbCrSize, gl(), &backendData->mTextures[1]);
+  SetClamping(gl(), backendData->mTextures[1].GetTextureID());
 
-  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data.mCbCrSize, gl, &backendData->mTextures[2]);
-  InitTexture(gl, backendData->mTextures[2].GetTextureID(), LOCAL_GL_LUMINANCE, data.mCbCrSize);
+  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data.mCbCrSize, gl(), &backendData->mTextures[2]);
+  SetClamping(gl(), backendData->mTextures[2].GetTextureID());
 
-  UploadYUVToTexture(gl, aImage->mData,
+  UploadYUVToTexture(gl(), aImage->mData,
                      &backendData->mTextures[0],
                      &backendData->mTextures[1],
                      &backendData->mTextures[2]);
@@ -543,7 +545,7 @@ ImageLayerOGL::AllocateTexturesCairo(CairoImage *aImage)
 
   GLTexture &texture = backendData->mTexture;
 
-  texture.Allocate(mOGLManager->glForResources());
+  texture.Allocate(gl());
 
   if (!texture.IsAllocated()) {
     return;
@@ -554,6 +556,8 @@ ImageLayerOGL::AllocateTexturesCairo(CairoImage *aImage)
 
   GLuint tex = texture.GetTextureID();
   gl->fActiveTexture(LOCAL_GL_TEXTURE0);
+
+  SetClamping(gl, tex);
 
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
   if (sGLXLibrary.SupportsTextureFromPixmap(aImage->mSurface)) {
@@ -611,9 +615,9 @@ ShadowImageLayerOGL::Init(const SharedImage& aFront)
     mCbCrSize = surfU->GetSize();
 
     if (!mYUVTexture[0].IsAllocated()) {
-      mYUVTexture[0].Allocate(mOGLManager->glForResources());
-      mYUVTexture[1].Allocate(mOGLManager->glForResources());
-      mYUVTexture[2].Allocate(mOGLManager->glForResources());
+      mYUVTexture[0].Allocate(gl());
+      mYUVTexture[1].Allocate(gl());
+      mYUVTexture[2].Allocate(gl());
     }
 
     NS_ASSERTION(mYUVTexture[0].IsAllocated() &&
@@ -622,9 +626,9 @@ ShadowImageLayerOGL::Init(const SharedImage& aFront)
                  "Texture allocation failed!");
 
     gl()->MakeCurrent();
-    InitTexture(gl(), mYUVTexture[0].GetTextureID(), LOCAL_GL_LUMINANCE, mSize);
-    InitTexture(gl(), mYUVTexture[1].GetTextureID(), LOCAL_GL_LUMINANCE, mCbCrSize);
-    InitTexture(gl(), mYUVTexture[2].GetTextureID(), LOCAL_GL_LUMINANCE, mCbCrSize);
+    SetClamping(gl(), mYUVTexture[0].GetTextureID());
+    SetClamping(gl(), mYUVTexture[1].GetTextureID());
+    SetClamping(gl(), mYUVTexture[2].GetTextureID());
     return true;
   }
   return false;

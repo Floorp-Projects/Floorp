@@ -70,7 +70,7 @@ interface nsIDOMFile;
 interface nsIFile;
 interface nsIDOMTouch;
 
-[scriptable, uuid(5740d0fe-9f4e-431f-b8b3-b82f9b7ff4cf)]
+[scriptable, uuid(c7f303a1-4f7b-4d38-a192-c3f0e25dadb1)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -367,6 +367,52 @@ interface nsIDOMWindowUtils : nsISupports {
                             in long aNativeMessage,
                             in long aModifierFlags,
                             in nsIDOMElement aElement);
+
+  /**
+   * See nsIWidget::SynthesizeNativeMouseScrollEvent
+   *
+   * Will be called on the widget that contains aElement.
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
+   * NOTE: The synthesized native event may be fired asynchronously.
+   *
+   * @param aNativeMessage
+   *   On Windows:  WM_MOUSEWHEEL (0x020A), WM_MOUSEHWHEEL(0x020E),
+   *                WM_VSCROLL (0x0115) or WM_HSCROLL (0x114).
+   */
+  void sendNativeMouseScrollEvent(in long aScreenX,
+                                  in long aScreenY,
+                                  in unsigned long aNativeMessage,
+                                  in double aDeltaX,
+                                  in double aDeltaY,
+                                  in double aDeltaZ,
+                                  in unsigned long aModifierFlags,
+                                  in unsigned long aAdditionalFlags,
+                                  in nsIDOMElement aElement);
+
+  /**
+   * The values of aAdditionalFlags.
+   */
+
+  /**
+   * If MOUSESCROLL_PREFER_WIDGET_AT_POINT is set, widget will dispatch
+   * the event to a widget which is under the cursor.  Otherwise, dispatch to
+   * a default target on the platform.  E.g., on Windows, it's focused window.
+   */
+  const unsigned long MOUSESCROLL_PREFER_WIDGET_AT_POINT = 0x00000001;
+
+  /**
+   * The platform specific values of aAdditionalFlags.  Must be over 0x00010000.
+   */
+
+  /**
+   * If MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL is set and aNativeMessage is
+   * WM_VSCROLL or WM_HSCROLL, widget will set the window handle to the lParam
+   * instead of NULL.
+   */
+  const unsigned long MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL = 0x00010000;
 
   /**
    * See nsIWidget::ActivateNativeMenuItemAt
@@ -1053,4 +1099,15 @@ interface nsIDOMWindowUtils : nsISupports {
    * otherwise.
    */
   readonly attribute boolean paintingSuppressed;
+
+  /**
+   * Returns an array of plugins on the page for opt-in activation.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible).
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
+   */
+  [implicit_jscontext]
+  readonly attribute jsval plugins;
 };

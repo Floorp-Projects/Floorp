@@ -2034,6 +2034,30 @@ SpdySession::Transport()
   return mConnection->Transport();
 }
 
+PRUint32
+SpdySession::CancelPipeline(nsresult reason)
+{
+  // we don't pipeline inside spdy, so this isn't an issue
+  return 0;
+}
+
+nsAHttpTransaction::Classifier
+SpdySession::Classification()
+{
+  if (!mConnection)
+    return nsAHttpTransaction::CLASS_GENERAL;
+  return mConnection->Classification();
+}
+
+void
+SpdySession::Classify(nsAHttpTransaction::Classifier newclass)
+{
+  if (!mConnection)
+    return;
+  
+  mConnection->Classify(newclass);
+}
+
 //-----------------------------------------------------------------------------
 // unused methods of nsAHttpTransaction
 // We can be sure of this because SpdySession is only constructed in
@@ -2064,8 +2088,7 @@ SpdySession::SetSSLConnectFailed()
 bool
 SpdySession::IsDone()
 {
-  NS_ABORT_IF_FALSE(false, "SpdySession::IsDone()");
-  return false;
+  return !mStreamTransactionHash.Count();
 }
 
 nsresult
@@ -2073,6 +2096,13 @@ SpdySession::Status()
 {
   NS_ABORT_IF_FALSE(false, "SpdySession::Status()");
   return NS_ERROR_UNEXPECTED;
+}
+
+PRUint8
+SpdySession::Caps()
+{
+  NS_ABORT_IF_FALSE(false, "SpdySession::Caps()");
+  return 0;
 }
 
 PRUint32
@@ -2132,6 +2162,42 @@ SpdySession::TakeSubTransactions(
   return NS_OK;
 }
 
+nsresult
+SpdySession::AddTransaction(nsAHttpTransaction *)
+{
+  // This API is meant for pipelining, SpdySession's should be
+  // extended with AddStream()
+
+  NS_ABORT_IF_FALSE(false,
+                    "SpdySession::AddTransaction() should not be called");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+PRUint32
+SpdySession::PipelineDepth()
+{
+  return IsDone() ? 0 : 1;
+}
+
+nsresult
+SpdySession::SetPipelinePosition(PRInt32 position)
+{
+  // This API is meant for pipelining, SpdySession's should be
+  // extended with AddStream()
+
+  NS_ABORT_IF_FALSE(false,
+                    "SpdySession::SetPipelinePosition() should not be called");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+PRInt32
+SpdySession::PipelinePosition()
+{
+    return 0;
+}
+
 //-----------------------------------------------------------------------------
 // Pass through methods of nsAHttpConnection
 //-----------------------------------------------------------------------------
@@ -2177,6 +2243,13 @@ nsresult
 SpdySession::PushBack(const char *buf, PRUint32 len)
 {
   return mConnection->PushBack(buf, len);
+}
+
+bool
+SpdySession::IsProxyConnectInProgress()
+{
+    NS_ABORT_IF_FALSE(mConnection, "no connection");
+    return mConnection->IsProxyConnectInProgress();
 }
 
 bool

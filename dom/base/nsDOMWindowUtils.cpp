@@ -51,6 +51,7 @@
 #include "nsRefreshDriver.h"
 #include "nsDOMTouchEvent.h"
 #include "nsIDOMTouchEvent.h"
+#include "nsObjectLoadingContent.h"
 
 #include "nsIScrollableFrame.h"
 
@@ -60,7 +61,7 @@
 #include "nsIFrame.h"
 #include "nsIWidget.h"
 #include "nsGUIEvent.h"
-#include "nsIParser.h"
+#include "nsCharsetSource.h"
 #include "nsJSEnvironment.h"
 #include "nsJSUtils.h"
 
@@ -76,6 +77,7 @@
 #include "nsCSSProps.h"
 #include "nsDOMFile.h"
 #include "BasicLayers.h"
+#include "nsTArrayHelpers.h"
 
 #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
 #include <gdk/gdk.h>
@@ -744,6 +746,35 @@ nsDOMWindowUtils::SendNativeMouseEvent(PRInt32 aScreenX,
 
   return widget->SynthesizeNativeMouseEvent(nsIntPoint(aScreenX, aScreenY),
                                             aNativeMessage, aModifierFlags);
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SendNativeMouseScrollEvent(PRInt32 aScreenX,
+                                             PRInt32 aScreenY,
+                                             PRUint32 aNativeMessage,
+                                             double aDeltaX,
+                                             double aDeltaY,
+                                             double aDeltaZ,
+                                             PRUint32 aModifierFlags,
+                                             PRUint32 aAdditionalFlags,
+                                             nsIDOMElement* aElement)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  // get the widget to send the event to
+  nsCOMPtr<nsIWidget> widget = GetWidgetForElement(aElement);
+  if (!widget) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return widget->SynthesizeNativeMouseScrollEvent(nsIntPoint(aScreenX,
+                                                             aScreenY),
+                                                  aNativeMessage,
+                                                  aDeltaX, aDeltaY, aDeltaZ,
+                                                  aModifierFlags,
+                                                  aAdditionalFlags);
 }
 
 NS_IMETHODIMP
@@ -2201,3 +2232,26 @@ nsDOMWindowUtils::GetPaintingSuppressed(bool *aPaintingSuppressed)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::GetPlugins(JSContext* cx, jsval* aPlugins)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsIDOMDocument* ddoc = mWindow->GetExtantDocument();
+
+  nsresult rv;
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(ddoc, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsTArray<nsIObjectLoadingContent*> plugins;
+  doc->GetPlugins(plugins);
+
+  JSObject* jsPlugins = nsnull;
+  rv = nsTArrayToJSArray(cx, plugins, &jsPlugins);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aPlugins = OBJECT_TO_JSVAL(jsPlugins);
+  return NS_OK;
+}

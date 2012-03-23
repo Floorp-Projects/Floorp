@@ -163,6 +163,9 @@ WifiGeoPositionProvider.prototype = {
     this.started = false;
   },
 
+  setHighAccuracy: function(enable) {
+  },
+
   getAccessTokenForURL: function(url)
   {
     // check to see if we have an access token:

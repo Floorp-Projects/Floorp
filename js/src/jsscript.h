@@ -452,16 +452,6 @@ struct JSScript : public js::gc::Cell
     uint16_t        nClosedArgs; /* number of args which are closed over. */
     uint16_t        nClosedVars; /* number of vars which are closed over. */
 
-    /*
-     * To ensure sizeof(JSScript) % gc::Cell::CellSize  == 0 on we must pad
-     * the script with 4 bytes. We use them to store tiny scripts like empty
-     * scripts.
-     */
-#if JS_BITS_PER_WORD == 64
-#define JS_SCRIPT_INLINE_DATA_LIMIT 4
-    uint8_t         inlineData[JS_SCRIPT_INLINE_DATA_LIMIT];
-#endif
-
     const char      *filename;  /* source filename or null */
     JSAtom          **atoms;    /* maps immediate index to literal struct */
   private:

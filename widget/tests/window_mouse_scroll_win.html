@@ -1,0 +1,1908 @@
+<html lang="en-US"
+      style="font-family: Arial; font-size: 10px; line-height: 16px;">
+<head>
+  <title>Test for mouse scroll handling on Windows</title>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body onunload="onUnload();">
+<div id="display" style="width: 5000px; height: 5000px;">
+<p id="p1" style="font-size: 16px; width: 100px; height: 100px;">1st &lt;p&gt;.</p>
+<p id="p2" style="font-size: 32px; width: 100px; height: 100px;">2nd &lt;p&gt;.</p>
+</div>
+<script class="testbody" type="application/javascript">
+
+window.opener.wrappedJSObject.SimpleTest.waitForFocus(prepareTests, window);
+
+const nsIDOMWindowUtils = Components.interfaces.nsIDOMWindowUtils;
+
+const WHEEL_PAGESCROLL = 4294967295;
+
+const WM_VSCROLL     = 0x0115;
+const WM_HSCROLL     = 0x0114;
+const WM_MOUSEWHEEL  = 0x020A;
+const WM_MOUSEHWHEEL = 0x020E;
+
+const SB_LINEUP    = 0;
+const SB_LINELEFT  = 0;
+const SB_LINEDOWN  = 1;
+const SB_LINERIGHT = 1;
+const SB_PAGEUP    = 2;
+const SB_PAGELEFT  = 2;
+const SB_PAGEDOWN  = 3;
+const SB_PAGERIGHT = 3;
+
+const SHIFT_L = 0x0100;
+const SHIFT_R = 0x0200;
+const CTRL_L  = 0x0400;
+const CTRL_R  = 0x0800;
+const ALT_L   = 0x1000;
+const ALT_R   = 0x2000;
+
+const DOM_PAGE_SCROLL_DELTA = 32768;
+
+const kSystemScrollSpeedOverridePref = "mousewheel.system_scroll_override_on_root_content.enabled";
+
+const kAltKeyVActionPref        = "mousewheel.withaltkey.action";
+const kAltKeyVSysNumLinesPref   = "mousewheel.withaltkey.sysnumlines";
+const kAltKeyHActionPref        = "mousewheel.horizscroll.withaltkey.action";
+const kAltKeyHSysNumLinesPref   = "mousewheel.horizscroll.withaltkey.sysnumlines";
+const kCtrlKeyVActionPref       = "mousewheel.withcontrolkey.action";
+const kCtrlKeyVSysNumLinesPref  = "mousewheel.withcontrolkey.sysnumlines";
+const kCtrlKeyHActionPref       = "mousewheel.horizscroll.withcontrolkey.action";
+const kCtrlKeyHSysNumLinesPref  = "mousewheel.horizscroll.withcontrolkey.sysnumlines";
+const kShiftKeyVActionPref      = "mousewheel.withshiftkey.action";
+const kShiftKeyVSysNumLinesPref = "mousewheel.withshiftkey.sysnumlines";
+const kShiftKeyHActionPref      = "mousewheel.horizscroll.withshiftkey.action";
+const kShiftKeyHSysNumLinesPref = "mousewheel.horizscroll.withshiftkey.sysnumlines";
+
+
+const kPixelEnabledPref           = "mousewheel.enable_pixel_scrolling";
+const kEmulateWheelByWMSCROLLPref = "mousewheel.emulate_at_wm_scroll";
+const kVAmountPref                = "mousewheel.windows.vertical_amount_override";
+const kHAmountPref                = "mousewheel.windows.horizontal_amount_override";
+const kTimeoutPref                = "mousewheel.windows.transaction.timeout";
+
+const kMouseLineScrollEvent  = "DOMMouseScroll";
+const kMousePixelScrollEvent = "MozMousePixelScroll";
+
+const kVAxis = Components.interfaces.nsIDOMMouseScrollEvent.VERTICAL_AXIS;
+const kHAxis = Components.interfaces.nsIDOMMouseScrollEvent.HORIZONTAL_AXIS;
+
+var gLineHeight = 0;
+var gCharWidth  = 0;
+var gPageHeight = 0;
+var gPageWidth  = 0;
+
+var gP1 = document.getElementById("p1");
+var gP2 = document.getElementById("p2");
+
+var gOtherWindow;
+
+function ok(aCondition, aMessage)
+{
+  window.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
+}
+
+function is(aLeft, aRight, aMessage)
+{
+  window.opener.wrappedJSObject.SimpleTest.is(aLeft, aRight, aMessage);
+}
+
+function isnot(aLeft, aRight, aMessage)
+{
+  window.opener.wrappedJSObject.SimpleTest.isnot(aLeft, aRight, aMessage);
+}
+
+function todo_is(aLeft, aRight, aMessage)
+{
+  window.opener.wrappedJSObject.SimpleTest.todo_is(aLeft, aRight, aMessage);
+}
+
+function onUnload()
+{
+  SpecialPowers.clearUserPref(kAltKeyVActionPref);
+  SpecialPowers.clearUserPref(kAltKeyVSysNumLinesPref);
+  SpecialPowers.clearUserPref(kAltKeyHActionPref);
+  SpecialPowers.clearUserPref(kAltKeyHSysNumLinesPref);
+  SpecialPowers.clearUserPref(kCtrlKeyVActionPref);
+  SpecialPowers.clearUserPref(kCtrlKeyVSysNumLinesPref);
+  SpecialPowers.clearUserPref(kCtrlKeyHActionPref);
+  SpecialPowers.clearUserPref(kCtrlKeyHSysNumLinesPref);
+  SpecialPowers.clearUserPref(kShiftKeyVActionPref);
+  SpecialPowers.clearUserPref(kShiftKeyVSysNumLinesPref);
+  SpecialPowers.clearUserPref(kShiftKeyHActionPref);
+  SpecialPowers.clearUserPref(kShiftKeyHSysNumLinesPref);
+
+  SpecialPowers.clearUserPref(kSystemScrollSpeedOverridePref);
+  SpecialPowers.clearUserPref(kPixelEnabledPref);
+  SpecialPowers.clearUserPref(kEmulateWheelByWMSCROLLPref);
+  SpecialPowers.clearUserPref(kVAmountPref);
+  SpecialPowers.clearUserPref(kHAmountPref);
+  SpecialPowers.clearUserPref(kTimeoutPref);
+  window.opener.wrappedJSObject.SimpleTest.finish();
+}
+
+function getWindowUtils(aWindow)
+{
+  if (!aWindow) {
+    aWindow = window;
+  }
+  return aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(nsIDOMWindowUtils);
+}
+
+function getPointInScreen(aElement, aWindow)
+{
+  if (!aWindow) {
+    aWindow = window;
+  }
+  var bounds = aElement.getBoundingClientRect();
+  return { x: bounds.left + aWindow.mozInnerScreenX,
+           y: bounds.top + aWindow.mozInnerScreenY };
+}
+
+function cut(aNum)
+{
+  return (aNum >= 0) ? Math.floor(aNum) : Math.ceil(aNum);
+}
+
+/**
+ * Make each steps for the tests in following arrays in global scope. Each item
+ * of the arrays will be executed after previous test is finished.
+ *
+ * description:
+ *   Set the description of the test.  This will be used for the message of is()
+ *   or the others.
+ *
+ * message:
+ *   aNativeMessage of nsIDOMWindowUtils.sendNativeMouseScrollEvent().
+ *   Must be WM_MOUSEWHEEL, WM_MOUSEHWHEEL, WM_VSCROLL or WM_HSCROLL.
+ *
+ * delta:
+ *   The native delta value for WM_MOUSEWHEEL or WM_MOUSEHWHEEL.
+ *   Or one of the SB_* const value for WM_VSCROLL or WM_HSCROLL.
+ *
+ * target:
+ *   The target element, under the mouse cursor.
+ *
+ * window:
+ *   The window which is used for getting nsIDOMWindowUtils.
+ *
+ * modifiers:
+ *   Pressed modifier keys, 0 means no modifier key is pressed.
+ *   Otherwise, one or more values of SHIFT_L, SHIFT_R, CTRL_L, CTRL_R,
+ *   ALT_L or ALT_R.
+ *
+ * additionalFlags:
+ *   aAdditionalFlags of nsIDOMWindowUtils.sendNativeMouseScrollEvent().
+ *   See the document of nsIDOMWindowUtils for the detail of the values.
+ *
+ * onLineScrollEvent:
+ *   Must be a function or null.
+ *   If the value is a function, it will be called when DOMMouseScroll event
+ *   is received by the synthesized event.
+ *   If return true, the common checks are canceled.
+ *
+ * onPixelScrollEvent:
+ *   Must be a function or null.
+ *   If the value is a function, it will be called when MozMousePixelScroll
+ *   event is received by the synthesized event.
+ *   If return true, the common checks are canceled.
+ *
+ * expected:
+ *   Must not be null and this must have:
+ *     axis:
+ *       kVAxis if the synthesized event causes vertical scroll. Otherwise,
+ *       it causes horizontal scroll, kHAxis.
+ *     lines:
+ *       Integer value which is expected detail attribute value of
+ *       DOMMouseScroll.  If the event shouldn't be fired, must be 0.
+ *     pixels:
+ *       Integer value or a function which returns double value.  The value is
+ *       expected detail attribute value of MozMousePixelScroll.
+ *       If the event shouldn't be fired, must be 0.
+ *
+ *   Note that if both lines and pixels are 0, the test framework waits
+ *   a few seconds. After that, go to next test.
+ *
+ * init:
+ *   Must be a function or null.  If this value is a function, it's called
+ *   before synthesizing the native event.
+ *
+ * finish:
+ *   Must be a function or null.  If this value is a function, it's called
+ *   after received all expected events or timeout if no events are expected.
+ */
+
+// First, get the computed line height, char width, page height and page width.
+var gPreparingSteps = [
+  { description: "Preparing gLineHeight #1",
+    message: WM_MOUSEWHEEL, delta: -60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    onLineScrollEvent: function (aEvent) {
+      return true;
+    },
+    onPixelScrollEvent: function (aEvent) {
+      gLineHeight = aEvent.detail;
+      return true;
+    },
+    expected: {
+      axis: kVAxis, lines: 0, pixels: 1,
+    },
+    init: function () {
+      SpecialPowers.setIntPref(kVAmountPref, 1);
+      SpecialPowers.setIntPref(kHAmountPref, 1);
+    },
+  },
+  { description: "Preparing gLineHeight #2",
+    message: WM_MOUSEWHEEL, delta: -60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    onLineScrollEvent: function (aEvent) {
+      return true;
+    },
+    onPixelScrollEvent: function (aEvent) {
+      gLineHeight += aEvent.detail;
+      return true;
+    },
+    expected: {
+      axis: kVAxis, lines: 1, pixels: 1,
+    },
+  },
+  { description: "Preparing gCharWidth #1",
+    message: WM_MOUSEHWHEEL, delta: 60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    onLineScrollEvent: function (aEvent) {
+      return true;
+    },
+    onPixelScrollEvent: function (aEvent) {
+      gCharWidth = aEvent.detail;
+      return true;
+    },
+    expected: {
+      axis: kVAxis, lines: 0, pixels: 1,
+    },
+  },
+  { description: "Preparing gCharWidth #2",
+    message: WM_MOUSEHWHEEL, delta: 60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    onLineScrollEvent: function (aEvent) {
+      return true;
+    },
+    onPixelScrollEvent: function (aEvent) {
+      gCharWidth += aEvent.detail;
+      return true;
+    },
+    expected: {
+      axis: kVAxis, lines: 1, pixels: 1,
+    },
+  },
+  { description: "Preparing gPageHeight #1",
+    message: WM_MOUSEWHEEL, delta: -60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    onLineScrollEvent: function (aEvent) {
+      return true;
+    },
+    onPixelScrollEvent: function (aEvent) {
+      gPageHeight = aEvent.detail;
+      return true;
+    },
+    expected: {
+      axis: kHAxis, lines: 0, pixels: 1,
+    },
+    init: function () {
+      SpecialPowers.setIntPref(kVAmountPref, 0xFFFF);
+      SpecialPowers.setIntPref(kHAmountPref, 0xFFFF);
+    },
+  },
+  { description: "Preparing gPageHeight #2",
+    message: WM_MOUSEWHEEL, delta: -60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    onLineScrollEvent: function (aEvent) {
+      return true;
+    },
+    onPixelScrollEvent: function (aEvent) {
+      gPageHeight += aEvent.detail;
+      return true;
+    },
+    expected: {
+      axis: kHAxis, lines: 1, pixels: 1,
+    },
+  },
+  { description: "Preparing gPageWidth #1",
+    message: WM_MOUSEHWHEEL, delta: 60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    onLineScrollEvent: function (aEvent) {
+      return true;
+    },
+    onPixelScrollEvent: function (aEvent) {
+      gPageWidth = aEvent.detail;
+      return true;
+    },
+    expected: {
+      axis: kHAxis, lines: 0, pixels: 1,
+    },
+  },
+  { description: "Preparing gPageWidth",
+    message: WM_MOUSEHWHEEL, delta: 60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    onLineScrollEvent: function (aEvent) {
+      return true;
+    },
+    onPixelScrollEvent: function (aEvent) {
+      gPageWidth += aEvent.detail;
+      return true;
+    },
+    expected: {
+      axis: kHAxis, lines: 1, pixels: 1,
+    },
+    finish: function () {
+      ok(gLineHeight > 0, "gLineHeight isn't positive got " + gLineHeight);
+      ok(gCharWidth > 0, "gCharWidth isn't positive got " + gCharWidth);
+      ok(gPageHeight > 0, "gPageHeight isn't positive got " + gPageHeight);
+      ok(gPageWidth > 0, "gPageWidth isn't positive got " + gPageWidth);
+
+      ok(gPageHeight > gLineHeight,
+         "gPageHeight must be larger than gLineHeight");
+      ok(gPageWidth > gCharWidth,
+         "gPageWidth must be larger than gCharWidth");
+      runNextTest(gBasicTests, 0)
+    }
+  },
+];
+
+var gBasicTests = [
+  // Widget shouldn't dispatch a pixel event if the delta can be devided by
+  // lines to be scrolled.  However, pixel events should be fired by ESM.
+  { description: "WM_MOUSEWHEEL, -120, 3 lines",
+    message: WM_MOUSEWHEEL, delta: -120,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 3, pixels: function () { return gLineHeight * 3; },
+    },
+    init: function () {
+      SpecialPowers.setIntPref(kVAmountPref, 3);
+      SpecialPowers.setIntPref(kHAmountPref, 3);
+    },
+  },
+
+  { description: "WM_MOUSEWHEEL, 120, -3 lines",
+    message: WM_MOUSEWHEEL, delta: 120,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: -3, pixels: function () { return gLineHeight * -3; },
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, 120, 3 chars",
+    message: WM_MOUSEHWHEEL, delta: 120,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 3, pixels: function () { return gCharWidth * 3; },
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, -120, -3 chars",
+    message: WM_MOUSEHWHEEL, delta: -120,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: -3, pixels: function () { return gCharWidth * -3; },
+    },
+  },
+
+  // When pixel scroll is enabled (default), pixel scroll event should be fired
+  // always but line scroll event should be fired only when accumulated
+  // delta value is over a line.
+  { description: "WM_MOUSEWHEEL, -20, 0.5 lines",
+    message: WM_MOUSEWHEEL, delta: -20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: function () { return gLineHeight / 2; },
+    },
+  },
+  { description: "WM_MOUSEWHEEL, -20, 0.5 lines (pending: 0.5 lines)",
+    message: WM_MOUSEWHEEL, delta: -20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 1,
+      pixels: function () { return ((gLineHeight / 2) + (gLineHeight % 2)); },
+    },
+  },
+  { description: "WM_MOUSEWHEEL, -20, 0.5 lines",
+    message: WM_MOUSEWHEEL, delta: -20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: function () { return gLineHeight / 2; },
+    },
+  },
+
+  { description: "WM_MOUSEWHEEL, 20, -0.5 lines (pending: 0.5 lines)",
+    message: WM_MOUSEWHEEL, delta: 20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: function () { return gLineHeight / -2; },
+    },
+  },
+  { description: "WM_MOUSEWHEEL, 20, -0.5 lines (pending: -0.5 lines)",
+    message: WM_MOUSEWHEEL, delta: 20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: -1,
+      pixels: function () { return -((gLineHeight / 2) + (gLineHeight % 2)); },
+    },
+  },
+  { description: "WM_MOUSEWHEEL, 20, -0.5 lines",
+    message: WM_MOUSEWHEEL, delta: 20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: function () { return gLineHeight / -2; },
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, 20, 0.5 chars",
+    message: WM_MOUSEHWHEEL, delta: 20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: function () { return gCharWidth / 2; },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, 20, 0.5 chars (pending: 0.5 chars)",
+    message: WM_MOUSEHWHEEL, delta: 20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 1,
+      pixels: function () { return ((gCharWidth / 2) + (gCharWidth % 2)); },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, 20, 0.5 chars",
+    message: WM_MOUSEHWHEEL, delta: 20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: function () { return gCharWidth / 2; },
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, -20, -0.5 chars (pending: 0.5 chars)",
+    message: WM_MOUSEHWHEEL, delta: -20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: function () { return gCharWidth / -2; },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, -20, -0.5 chars (pending: -0.5 chars)",
+    message: WM_MOUSEHWHEEL, delta: -20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: -1,
+      pixels: function () { return -((gCharWidth / 2) + (gCharWidth % 2)); },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, -20, -0.5 chars",
+    message: WM_MOUSEHWHEEL, delta: -20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: function () { return gCharWidth / -2; },
+    },
+  },
+
+  // When pixel scroll is disabled, pixel scroll event shouldn't be fired
+  // without line scroll event.
+  { description: "WM_MOUSEWHEEL, -20, 0.5 lines, pixel scrolling is disabled",
+    message: WM_MOUSEWHEEL, delta: -20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: 0,
+    },
+    init: function () {
+      SpecialPowers.setBoolPref(kPixelEnabledPref, false);
+    },
+  },
+  { description: "WM_MOUSEWHEEL, -20, 0.5 lines (pending: 0.5 lines), pixel scrolling is disabled",
+    message: WM_MOUSEWHEEL, delta: -20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+  { description: "WM_MOUSEWHEEL, -20, 0.5 lines, pixel scrolling is disabled",
+    message: WM_MOUSEWHEEL, delta: -20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: 0,
+    },
+  },
+
+  { description: "WM_MOUSEWHEEL, 20, -0.5 lines (pending: 0.5 lines), pixel scrolling is disabled",
+    message: WM_MOUSEWHEEL, delta: 20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: 0,
+    },
+  },
+  { description: "WM_MOUSEWHEEL, 20, -0.5 lines (pending: -0.5 lines), pixel scrolling is disabled",
+    message: WM_MOUSEWHEEL, delta: 20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: -1, pixels: function () { return -gLineHeight; },
+    },
+  },
+  { description: "WM_MOUSEWHEEL, 20, -0.5 lines, pixel scrolling is disabled",
+    message: WM_MOUSEWHEEL, delta: 20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: 0,
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, 20, 0.5 chars, pixel scrolling is disabled",
+    message: WM_MOUSEHWHEEL, delta: 20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: 0,
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, 20, 0.5 chars (pending: 0.5 chars), pixel scrolling is disabled",
+    message: WM_MOUSEHWHEEL, delta: 20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, 20, 0.5 chars, pixel scrolling is disabled",
+    message: WM_MOUSEHWHEEL, delta: 20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: 0,
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, -20, -0.5 chars (pending: 0.5 chars), pixel scrolling is disabled",
+    message: WM_MOUSEHWHEEL, delta: -20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: 0,
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, -20, -0.5 chars (pending: -0.5 chars), pixel scrolling is disabled",
+    message: WM_MOUSEHWHEEL, delta: -20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: -1, pixels: function () { return -gCharWidth; },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, -20, -0.5 chars, pixel scrolling is disabled",
+    message: WM_MOUSEHWHEEL, delta: -20,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: 0,
+    },
+    finish: function () {
+      SpecialPowers.setBoolPref(kPixelEnabledPref, true);
+    },
+  },
+
+  // Even if the mouse cursor is an element whose font-size is different than
+  // the scrollable element, the pixel scroll amount shouldn't be changed.
+  // Widget shouldn't dispatch a pixel event if the delta can be devided by
+  // lines to be scrolled.  However, pixel events should be fired by ESM.
+  { description: "WM_MOUSEWHEEL, -120, 3 lines, on the other div whose font-size is larger",
+    message: WM_MOUSEWHEEL, delta: -120,
+    target: gP2, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 3, pixels: function () { return gLineHeight * 3; },
+    },
+  },
+
+  { description: "WM_MOUSEWHEEL, 120, -3 lines, on the other div whose font-size is larger",
+    message: WM_MOUSEWHEEL, delta: 120,
+    target: gP2, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: -3, pixels: function () { return gLineHeight * -3; },
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, 120, 3 chars, on the other div whose font-size is larger",
+    message: WM_MOUSEHWHEEL, delta: 120,
+    target: gP2, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 3, pixels: function () { return gCharWidth * 3; },
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, -120, -3 chars, on the other div whose font-size is larger",
+    message: WM_MOUSEHWHEEL, delta: -120,
+    target: gP2, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: -3, pixels: function () { return gCharWidth * -3; },
+    },
+  },
+
+  // Modifier key tests
+  { description: "WM_MOUSEWHEEL, -40, 1 line with left Shift",
+    message: WM_MOUSEWHEEL, delta: -40,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: SHIFT_L,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+  { description: "WM_MOUSEWHEEL, -40, 1 line with right Shift",
+    message: WM_MOUSEWHEEL, delta: -40,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: SHIFT_R,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+  { description: "WM_MOUSEWHEEL, -40, 1 line with left Ctrl",
+    message: WM_MOUSEWHEEL, delta: -40,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: CTRL_L,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+  { description: "WM_MOUSEWHEEL, -40, 1 line with right Ctrl",
+    message: WM_MOUSEWHEEL, delta: -40,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: CTRL_R,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+  { description: "WM_MOUSEWHEEL, -40, 1 line with left Alt",
+    message: WM_MOUSEWHEEL, delta: -40,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: ALT_L,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+  { description: "WM_MOUSEWHEEL, -40, 1 line with right Alt",
+    message: WM_MOUSEWHEEL, delta: -40,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: ALT_R,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, 40, 1 character with left Shift",
+    message: WM_MOUSEHWHEEL, delta: 40,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: SHIFT_L,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, 40, 1 character with right Shift",
+    message: WM_MOUSEHWHEEL, delta: 40,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: SHIFT_R,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, 40, 1 character with left Ctrl",
+    message: WM_MOUSEHWHEEL, delta: 40,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: CTRL_L,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, 40, 1 character with right Ctrl",
+    message: WM_MOUSEHWHEEL, delta: 40,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: CTRL_R,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, 40, 1 character with left Alt",
+    message: WM_MOUSEHWHEEL, delta: 40,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: ALT_L,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, 40, 1 character with right Alt",
+    message: WM_MOUSEHWHEEL, delta: 40,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: ALT_R,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+
+    finish: function () {
+      runNextTest(gScrollMessageTests, 0);
+    }
+  },
+];
+
+var gPageScrllTests = [
+  // Widget shouldn't dispatch a pixel event if the delta means one page scroll.
+  // However, pixel events should be fired by ESM.
+  { description: "WM_MOUSEWHEEL, -120, 1 page",
+    message: WM_MOUSEWHEEL, delta: -120,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return gPageHeight; },
+    },
+    init: function () {
+      SpecialPowers.setIntPref(kVAmountPref, WHEEL_PAGESCROLL);
+      SpecialPowers.setIntPref(kHAmountPref, WHEEL_PAGESCROLL);
+      SpecialPowers.setBoolPref(kPixelEnabledPref, true);
+    },
+  },
+
+  { description: "WM_MOUSEWHEEL, 120, -1 page",
+    message: WM_MOUSEWHEEL, delta: 120,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: -DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return gPageHeight; },
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, 120, 1 page",
+    message: WM_MOUSEHWHEEL, delta: 120,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return gPageWidth; },
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, -120, -1 page",
+    message: WM_MOUSEHWHEEL, delta: -120,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: -DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return gPageWidth; },
+    },
+  },
+
+  // When pixel scroll is enabled (default), pixel scroll event should be fired
+  // always but line scroll event should be fired only when accumulated
+  // delta value is over a line.
+  { description: "WM_MOUSEWHEEL, -60, 0.5 pages",
+    message: WM_MOUSEWHEEL, delta: -60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: function () { return gPageHeight / 2; },
+    },
+  },
+  { description: "WM_MOUSEWHEEL, -60, 0.5 pages (pending: 0.5 pages)",
+    message: WM_MOUSEWHEEL, delta: -60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return ((gPageHeight / 2) + (gPageHeight % 2)); },
+    },
+  },
+  { description: "WM_MOUSEWHEEL, -60, 0.5 pages",
+    message: WM_MOUSEWHEEL, delta: -60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: function () { return gPageHeight / 2; },
+    },
+  },
+
+  { description: "WM_MOUSEWHEEL, 60, -0.5 pages (pending: 0.5 pages)",
+    message: WM_MOUSEWHEEL, delta: 60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: function () { return gPageHeight / -2; },
+    },
+  },
+  { description: "WM_MOUSEWHEEL, 60, -0.5 pages (pending: -0.5 pages)",
+    message: WM_MOUSEWHEEL, delta: 60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: -DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return -((gPageHeight / 2) + (gPageHeight % 2)); },
+    },
+  },
+  { description: "WM_MOUSEWHEEL, 60, -0.5 pages",
+    message: WM_MOUSEWHEEL, delta: 60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: function () { return gPageHeight / -2; },
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, 60, 0.5 pages",
+    message: WM_MOUSEHWHEEL, delta: 60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: function () { return gPageWidth / 2; },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, 60, 0.5 pages (pending: 0.5 pages)",
+    message: WM_MOUSEHWHEEL, delta: 60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return ((gPageWidth / 2) + (gPageWidth % 2)); },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, 60, 0.5 pages",
+    message: WM_MOUSEHWHEEL, delta: 60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: function () { return gPageWidth / 2; },
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, -60, -0.5 pages (pending: 0.5 pages)",
+    message: WM_MOUSEHWHEEL, delta: -60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: function () { return gCharWidth / -2; },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, -60, -0.5 pages (pending: -0.5 pages)",
+    message: WM_MOUSEHWHEEL, delta: -60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: -DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return -((gCharWidth / 2) + (gCharWidth % 2)); },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, -60, -0.5 pages",
+    message: WM_MOUSEHWHEEL, delta: -60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: function () { return gCharWidth / -2; },
+    },
+  },
+
+  // When pixel scroll is disabled, pixel scroll event shouldn't be fired
+  // without line scroll event.
+  { description: "WM_MOUSEWHEEL, -60, 0.5 pages, pixel scrolling is disabled",
+    message: WM_MOUSEWHEEL, delta: -60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: 0,
+    },
+    init: function () {
+      SpecialPowers.setBoolPref(kPixelEnabledPref, false);
+    },
+  },
+  { description: "WM_MOUSEWHEEL, -60, 0.5 pages (pending: 0.5 pages), pixel scrolling is disabled",
+    message: WM_MOUSEWHEEL, delta: -60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return gPageHeight; },
+    },
+  },
+  { description: "WM_MOUSEWHEEL, -60, 0.5 pages, pixel scrolling is disabled",
+    message: WM_MOUSEWHEEL, delta: -60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: 0,
+    },
+  },
+
+  { description: "WM_MOUSEWHEEL, 60, -0.5 pages (pending: 0.5 pages), pixel scrolling is disabled",
+    message: WM_MOUSEWHEEL, delta: 60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: 0,
+    },
+  },
+  { description: "WM_MOUSEWHEEL, 60, -0.5 pages (pending: -0.5 pages), pixel scrolling is disabled",
+    message: WM_MOUSEWHEEL, delta: 60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: -DOM_PAGE_SCROLL_DELTA, pixels: -gPageHeight,
+    },
+  },
+  { description: "WM_MOUSEWHEEL, 60, -0.5 pages, pixel scrolling is disabled",
+    message: WM_MOUSEWHEEL, delta: 60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: 0,
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, 60, 0.5 pages, pixel scrolling is disabled",
+    message: WM_MOUSEHWHEEL, delta: 60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: 0,
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, 60, 0.5 pages (pending: 0.5 pages), pixel scrolling is disabled",
+    message: WM_MOUSEHWHEEL, delta: 60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return gPageWidth; },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, 60, 0.5 pages, pixel scrolling is disabled",
+    message: WM_MOUSEHWHEEL, delta: 60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: 0,
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, -60, -0.5 pages (pending: 0.5 pages), pixel scrolling is disabled",
+    message: WM_MOUSEHWHEEL, delta: -60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: 0,
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, -60, -0.5 pages (pending: -0.5 pages), pixel scrolling is disabled",
+    message: WM_MOUSEHWHEEL, delta: -60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: -DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return -gPageWidth; },
+    },
+  },
+  { description: "WM_MOUSEHWHEEL, -60, -0.5 pages, pixel scrolling is disabled",
+    message: WM_MOUSEHWHEEL, delta: -60,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: 0,
+    },
+
+    finish: function () {
+      runNextTest(gScrollMessageTests, 0);
+    }
+  },
+];
+
+var gScrollMessageTests = [
+  // Widget should dispatch neither line scroll event nor pixel scroll event if
+  // the WM_*SCROLL's lParam is NULL and mouse wheel emulation is disabled.
+  { description: "WM_VSCROLL, SB_LINEDOWN, lParam is NULL, emulation disabled",
+    message: WM_VSCROLL, delta: SB_LINEDOWN,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: 0,
+    },
+    init: function () {
+      SpecialPowers.setIntPref(kVAmountPref, 3);
+      SpecialPowers.setIntPref(kHAmountPref, 3);
+      SpecialPowers.setBoolPref(kEmulateWheelByWMSCROLLPref, false);
+    },
+  },
+
+  { description: "WM_VSCROLL, SB_LINEUP, lParam is NULL, emulation disabled",
+    message: WM_VSCROLL, delta: SB_LINEUP,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 0, pixels: 0,
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_LINERIGHT, lParam is NULL, emulation disabled",
+    message: WM_HSCROLL, delta: SB_LINERIGHT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: 0,
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_LINELEFT, lParam is NULL, emulation disabled",
+    message: WM_HSCROLL, delta: SB_LINELEFT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 0, pixels: 0,
+    },
+  },
+
+  // Widget should emulate mouse wheel behavior for WM_*SCROLL even if the
+  // kEmulateWheelByWMSCROLLPref is disabled but the message's lParam is not
+  // NULL. Then, widget doesn't dispatch a pixel event for WM_*SCROLL messages,
+  // but ESM dispatches it instead.
+  { description: "WM_VSCROLL, SB_LINEUP, lParam is not NULL, emulation disabled",
+    message: WM_VSCROLL, delta: SB_LINEUP,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kVAxis, lines: -1, pixels: function () { return -gLineHeight; },
+    },
+    init: function () {
+      SpecialPowers.setBoolPref(kEmulateWheelByWMSCROLLPref, false);
+    },
+  },
+
+  { description: "WM_VSCROLL, SB_LINEDOWN, lParam is not NULL, emulation disabled",
+    message: WM_VSCROLL, delta: SB_LINEDOWN,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_LINELEFT, lParam is not NULL, emulation disabled",
+    message: WM_HSCROLL, delta: SB_LINELEFT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kHAxis, lines: -1, pixels: function () { return -gCharWidth; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_LINERIGHT, lParam is not NULL, emulation disabled",
+    message: WM_HSCROLL, delta: SB_LINERIGHT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+  },
+
+  { description: "WM_VSCROLL, SB_PAGEUP, lParam is not NULL, emulation disabled",
+    message: WM_VSCROLL, delta: SB_PAGEUP,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kVAxis, lines: -DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return -gPageHeight; },
+    },
+  },
+
+  { description: "WM_VSCROLL, SB_PAGEDOWN, lParam is not NULL, emulation disabled",
+    message: WM_VSCROLL, delta: SB_PAGEDOWN,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kVAxis, lines: DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return gPageHeight; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_PAGELEFT, lParam is not NULL, emulation disabled",
+    message: WM_HSCROLL, delta: SB_PAGELEFT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kHAxis, lines: -DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return -gPageWidth; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_PAGERIGHT, lParam is not NULL, emulation disabled",
+    message: WM_HSCROLL, delta: SB_PAGERIGHT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kHAxis, lines: DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return gPageWidth; },
+    },
+  },
+
+  // Widget should emulate mouse wheel behavior for WM_*SCROLL when the
+  // kEmulateWheelByWMSCROLLPref is enabled even if the message's lParam is
+  // NULL. Then, widget doesn't dispatch a pixel event for WM_*SCROLL messages,
+  // but ESM dispatches it instead.
+  { description: "WM_VSCROLL, SB_LINEUP, lParam is NULL, emulation enabled",
+    message: WM_VSCROLL, delta: SB_LINEUP,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: -1, pixels: function () { return -gLineHeight; },
+    },
+    init: function () {
+      SpecialPowers.setBoolPref(kEmulateWheelByWMSCROLLPref, true);
+    },
+  },
+
+  { description: "WM_VSCROLL, SB_LINEDOWN, lParam is NULL, emulation enabled",
+    message: WM_VSCROLL, delta: SB_LINEDOWN,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_LINELEFT, lParam is NULL, emulation enabled",
+    message: WM_HSCROLL, delta: SB_LINELEFT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: -1, pixels: function () { return -gCharWidth; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_LINERIGHT, lParam is NULL, emulation enabled",
+    message: WM_HSCROLL, delta: SB_LINERIGHT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+  },
+
+  { description: "WM_VSCROLL, SB_PAGEUP, lParam is NULL, emulation enabled",
+    message: WM_VSCROLL, delta: SB_PAGEUP,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: -DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return -gPageHeight; },
+    },
+  },
+
+  { description: "WM_VSCROLL, SB_PAGEDOWN, lParam is NULL, emulation enabled",
+    message: WM_VSCROLL, delta: SB_PAGEDOWN,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return gPageHeight; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_PAGELEFT, lParam is NULL, emulation enabled",
+    message: WM_HSCROLL, delta: SB_PAGELEFT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: -DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return -gPageWidth; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_PAGERIGHT, lParam is NULL, emulation enabled",
+    message: WM_HSCROLL, delta: SB_PAGERIGHT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: DOM_PAGE_SCROLL_DELTA,
+      pixels: function () { return gPageWidth; },
+    },
+  },
+
+  // Modifier key tests for WM_*SCROLL
+  { description: "WM_VSCROLL, SB_LINEDOWN, lParam is not NULL, emulation disabled, with left Shift",
+    message: WM_VSCROLL, delta: SB_LINEDOWN,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: SHIFT_L,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+    init: function () {
+      SpecialPowers.setBoolPref(kEmulateWheelByWMSCROLLPref, false);
+    },
+  },
+  { description: "WM_VSCROLL, SB_LINEDOWN, lParam is not NULL, emulation disabled, with right Shift",
+    message: WM_VSCROLL, delta: SB_LINEDOWN,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: SHIFT_R,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+  { description: "WM_VSCROLL, SB_LINEDOWN, lParam is not NULL, emulation disabled, with left Ctrl",
+    message: WM_VSCROLL, delta: SB_LINEDOWN,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: CTRL_L,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+  { description: "WM_VSCROLL, SB_LINEDOWN, lParam is not NULL, emulation disabled, with right Ctrl",
+    message: WM_VSCROLL, delta: SB_LINEDOWN,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: CTRL_L,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+  { description: "WM_VSCROLL, SB_LINEDOWN, lParam is not NULL, emulation disabled, with left Alt",
+    message: WM_VSCROLL, delta: SB_LINEDOWN,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: ALT_L,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+  { description: "WM_VSCROLL, SB_LINEDOWN, lParam is not NULL, emulation disabled, with right Alt",
+    message: WM_VSCROLL, delta: SB_LINEDOWN,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: ALT_R,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_LINERIGHT, lParam is not NULL, emulation disabled, with left Shift",
+    message: WM_HSCROLL, delta: SB_LINERIGHT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: SHIFT_L,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+  },
+  { description: "WM_HSCROLL, SB_LINERIGHT, lParam is not NULL, emulation disabled, with right Shift",
+    message: WM_HSCROLL, delta: SB_LINERIGHT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: SHIFT_R,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+  },
+  { description: "WM_HSCROLL, SB_LINERIGHT, lParam is not NULL, emulation disabled, with left Ctrl",
+    message: WM_HSCROLL, delta: SB_LINERIGHT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: CTRL_L,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+  },
+  { description: "WM_HSCROLL, SB_LINERIGHT, lParam is not NULL, emulation disabled, with right Ctrl",
+    message: WM_HSCROLL, delta: SB_LINERIGHT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: CTRL_L,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+  },
+  { description: "WM_HSCROLL, SB_LINERIGHT, lParam is not NULL, emulation disabled, with left Alt",
+    message: WM_HSCROLL, delta: SB_LINERIGHT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: ALT_L,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+  },
+  { description: "WM_HSCROLL, SB_LINERIGHT, lParam is not NULL, emulation disabled, with right Alt",
+    message: WM_HSCROLL, delta: SB_LINERIGHT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: ALT_R,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+
+    finish: function () {
+      runDeactiveWindowTests();
+    }
+  },
+];
+
+var gDeactiveWindowTests = [
+  // Typically, mouse drivers send wheel messages to focused window.
+  // However, we prefer to scroll a scrollable element under the mouse cursor.
+  { description: "WM_MOUSEWHEEL, -120, 3 lines, window is deactive",
+    message: WM_MOUSEWHEEL, delta: -120,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 3, pixels: function () { return gLineHeight * 3; },
+    },
+    init: function () {
+      SpecialPowers.setIntPref(kVAmountPref, 3);
+      SpecialPowers.setIntPref(kHAmountPref, 3);
+    },
+    onLineScrollEvent: function (aEvent) {
+      var fm = Components.classes["@mozilla.org/focus-manager;1"].
+            getService(Components.interfaces.nsIFocusManager);
+      is(fm.activeWindow, gOtherWindow, "The other window isn't activated");
+    },
+  },
+
+  { description: "WM_MOUSEWHEEL, 120, -3 lines, window is deactive",
+    message: WM_MOUSEWHEEL, delta: 120,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: -3, pixels: function () { return gLineHeight * -3; },
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, 120, 3 chars, window is deactive",
+    message: WM_MOUSEHWHEEL, delta: 120,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 3, pixels: function () { return gCharWidth * 3; },
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, -120, -3 chars, window is deactive",
+    message: WM_MOUSEHWHEEL, delta: -120,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: -3, pixels: function () { return gCharWidth * -3; },
+    },
+  },
+
+  // Of course, even if some drivers prefer the cursor position, we don't need
+  // to change anything.
+  { description: "WM_MOUSEWHEEL, -120, 3 lines, window is deactive (receive the message directly)",
+    message: WM_MOUSEWHEEL, delta: -120,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_PREFER_WIDGET_AT_POINT,
+    expected: {
+      axis: kVAxis, lines: 3, pixels: function () { return gLineHeight * 3; },
+    },
+  },
+
+  { description: "WM_MOUSEWHEEL, 120, -3 lines, window is deactive (receive the message directly)",
+    message: WM_MOUSEWHEEL, delta: 120,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_PREFER_WIDGET_AT_POINT,
+    expected: {
+      axis: kVAxis, lines: -3, pixels: function () { return gLineHeight * -3; },
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, 120, 3 chars, window is deactive (receive the message directly)",
+    message: WM_MOUSEHWHEEL, delta: 120,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_PREFER_WIDGET_AT_POINT,
+    expected: {
+      axis: kHAxis, lines: 3, pixels: function () { return gCharWidth * 3; },
+    },
+  },
+
+  { description: "WM_MOUSEHWHEEL, -120, -3 chars, window is deactive (receive the message directly)",
+    message: WM_MOUSEHWHEEL, delta: -120,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_PREFER_WIDGET_AT_POINT,
+    expected: {
+      axis: kHAxis, lines: -3, pixels: function () { return gCharWidth * -3; },
+    },
+  },
+
+  // Same for WM_*SCROLL if lParam is not NULL
+  { description: "WM_VSCROLL, SB_LINEUP, lParam is not NULL, emulation disabled, window is deactive",
+    message: WM_VSCROLL, delta: SB_LINEUP,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kVAxis, lines: -1, pixels: function () { return -gLineHeight; },
+    },
+    init: function () {
+      SpecialPowers.setBoolPref(kEmulateWheelByWMSCROLLPref, false);
+    },
+  },
+
+  { description: "WM_VSCROLL, SB_LINEDOWN, lParam is not NULL, emulation disabled, window is deactive",
+    message: WM_VSCROLL, delta: SB_LINEDOWN,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_LINELEFT, lParam is not NULL, emulation disabled, window is deactive",
+    message: WM_HSCROLL, delta: SB_LINELEFT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kHAxis, lines: -1, pixels: function () { return -gCharWidth; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_LINERIGHT, lParam is not NULL, emulation disabled, window is deactive",
+    message: WM_HSCROLL, delta: SB_LINERIGHT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+  },
+
+  // Same for WM_*SCROLL if lParam is NULL but emulation is enabled
+  { description: "WM_VSCROLL, SB_LINEUP, lParam is NULL, emulation enabled, window is deactive",
+    message: WM_VSCROLL, delta: SB_LINEUP,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: -1, pixels: function () { return -gLineHeight; },
+    },
+    init: function () {
+      SpecialPowers.setBoolPref(kEmulateWheelByWMSCROLLPref, true);
+    },
+  },
+
+  { description: "WM_VSCROLL, SB_LINEDOWN, lParam is NULL, emulation enabled, window is deactive",
+    message: WM_VSCROLL, delta: SB_LINEDOWN,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_LINELEFT, lParam is NULL, emulation enabled, window is deactive",
+    message: WM_HSCROLL, delta: SB_LINELEFT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: -1, pixels: function () { return -gCharWidth; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_LINERIGHT, lParam is NULL, emulation enabled, window is deactive",
+    message: WM_HSCROLL, delta: SB_LINERIGHT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: 0,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+  },
+
+  // Same for WM_*SCROLL if lParam is not NULL and message sent to the deactive window directly
+  { description: "WM_VSCROLL, SB_LINEUP, lParam is not NULL, emulation disabled, window is deactive (receive the message directly)",
+    message: WM_VSCROLL, delta: SB_LINEUP,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL |
+                     nsIDOMWindowUtils.MOUSESCROLL_PREFER_WIDGET_AT_POINT,
+    expected: {
+      axis: kVAxis, lines: -1, pixels: function () { return -gLineHeight; },
+    },
+    init: function () {
+      SpecialPowers.setBoolPref(kEmulateWheelByWMSCROLLPref, false);
+    },
+  },
+
+  { description: "WM_VSCROLL, SB_LINEDOWN, lParam is not NULL, emulation disabled, window is deactive (receive the message directly)",
+    message: WM_VSCROLL, delta: SB_LINEDOWN,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL |
+                     nsIDOMWindowUtils.MOUSESCROLL_PREFER_WIDGET_AT_POINT,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_LINELEFT, lParam is not NULL, emulation disabled, window is deactive (receive the message directly)",
+    message: WM_HSCROLL, delta: SB_LINELEFT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL |
+                     nsIDOMWindowUtils.MOUSESCROLL_PREFER_WIDGET_AT_POINT,
+    expected: {
+      axis: kHAxis, lines: -1, pixels: function () { return -gCharWidth; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_LINERIGHT, lParam is not NULL, emulation disabled, window is deactive (receive the message directly)",
+    message: WM_HSCROLL, delta: SB_LINERIGHT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL |
+                     nsIDOMWindowUtils.MOUSESCROLL_PREFER_WIDGET_AT_POINT,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+  },
+
+  // Same for WM_*SCROLL if lParam is NULL but emulation is enabled, and message sent to the deactive window directly
+  { description: "WM_VSCROLL, SB_LINEUP, lParam is NULL, emulation enabled, window is deactive (receive the message directly)",
+    message: WM_VSCROLL, delta: SB_LINEUP,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_PREFER_WIDGET_AT_POINT,
+    expected: {
+      axis: kVAxis, lines: -1, pixels: function () { return -gLineHeight; },
+    },
+    init: function () {
+      SpecialPowers.setBoolPref(kEmulateWheelByWMSCROLLPref, true);
+    },
+  },
+
+  { description: "WM_VSCROLL, SB_LINEDOWN, lParam is NULL, emulation enabled, window is deactive (receive the message directly)",
+    message: WM_VSCROLL, delta: SB_LINEDOWN,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_PREFER_WIDGET_AT_POINT,
+    expected: {
+      axis: kVAxis, lines: 1, pixels: function () { return gLineHeight; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_LINELEFT, lParam is NULL, emulation enabled, window is deactive (receive the message directly)",
+    message: WM_HSCROLL, delta: SB_LINELEFT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_PREFER_WIDGET_AT_POINT,
+    expected: {
+      axis: kHAxis, lines: -1, pixels: function () { return -gCharWidth; },
+    },
+  },
+
+  { description: "WM_HSCROLL, SB_LINERIGHT, lParam is NULL, emulation enabled, window is deactive (receive the message directly)",
+    message: WM_HSCROLL, delta: SB_LINERIGHT,
+    target: gP1, x: 10, y: 10, window: window,
+    modifiers: 0,
+    additionalFlags: nsIDOMWindowUtils.MOUSESCROLL_PREFER_WIDGET_AT_POINT,
+    expected: {
+      axis: kHAxis, lines: 1, pixels: function () { return gCharWidth; },
+    },
+
+    finish: function () {
+      gOtherWindow.close();
+      gOtherWindow = null;
+      window.close();
+    }
+  },
+];
+
+function runDeactiveWindowTests()
+{
+  gOtherWindow = window.open("data:text/html,", "_blank",
+                             "chrome,width=100,height=100,top=700,left=700");
+
+  window.opener.wrappedJSObject.SimpleTest.waitForFocus(function () {
+    runNextTest(gDeactiveWindowTests, 0);
+  }, gOtherWindow);
+}
+
+function runNextTest(aTests, aIndex)
+{
+  if (aIndex > 0 && aTests[aIndex - 1] && aTests[aIndex - 1].finish) {
+    aTests[aIndex - 1].finish();
+  }
+
+  if (aTests.length == aIndex) {
+    return;
+  }
+
+  var test = aTests[aIndex++];
+  if (test.init) {
+    test.init();
+  }
+  test.handled = { lines: false, pixels: false };
+
+  switch (test.message) {
+    case WM_MOUSEWHEEL:
+    case WM_MOUSEHWHEEL:
+    case WM_VSCROLL:
+    case WM_HSCROLL:
+      var expectedLines = test.expected.lines;
+      var expectedPixels =
+        cut((typeof test.expected.pixels == "function") ?
+               test.expected.pixels() : test.expected.pixels);
+      var handler = function (aEvent) {
+        var doCommonTests = true;
+
+        if (!aEvent) {
+          ok(!test.handled.lines,
+             test.description + ", line scroll event has been handled");
+          ok(!test.handled.pixels,
+             test.description + ", pixel scroll event has been handled");
+          doCommonTests = false;
+        } else if (aEvent.type == kMouseLineScrollEvent) {
+          ok(!test.handled.lines,
+             test.description + ":(" + aEvent.type + "), same event has already been handled");
+          test.handled.lines = true;
+          isnot(expectedLines, 0,
+                test.description + ":(" + aEvent.type + "), event shouldn't be fired");
+          if (test.onLineScrollEvent && test.onLineScrollEvent(aEvent)) {
+            doCommonTests = false;
+          }
+        } else if (aEvent.type == kMousePixelScrollEvent) {
+          ok(!test.handled.pixels,
+             test.description + ":(" + aEvent.type + "), same event has already been handled");
+          test.handled.pixels = true;
+          isnot(expectedPixels, 0,
+                test.description + ":(" + aEvent.type + "), event shouldn't be fired");
+          if (test.onPixelScrollEvent && test.onPixelScrollEvent(aEvent)) {
+            doCommonTests = false;
+          }
+        }
+
+        if (doCommonTests) {
+          var expectedDelta =
+            (aEvent.type == kMouseLineScrollEvent) ?
+              expectedLines : expectedPixels;
+          is(aEvent.target.id, test.target.id,
+             test.description + ":(" + aEvent.type + "), ID mismatch");
+          is(aEvent.axis, test.expected.axis,
+             test.description + ":(" + aEvent.type + "), axis mismatch");
+          ok(aEvent.detail != 0,
+             test.description + ":(" + aEvent.type + "), delta must not be 0");
+          if (aEvent.type == kMousePixelScrollEvent &&
+              (test.message == WM_VSCROLL || test.message == WM_HSCROLL) &&
+              (test.delta == SB_PAGEUP || test.delta == SB_PAGEDOWN)) {
+            // pixel delta value generated by ESM is buggy.
+            todo_is(aEvent.detail, expectedDelta,
+                    test.description + ":(" + aEvent.type + "), delta mismatch");
+          } else {
+            is(aEvent.detail, expectedDelta,
+               test.description + ":(" + aEvent.type + "), delta mismatch");
+          }
+
+          is(aEvent.shiftKey, (test.modifiers & (SHIFT_L | SHIFT_R)) != 0,
+             test.description + ":(" + aEvent.type + "), shiftKey mismatch");
+          is(aEvent.ctrlKey, (test.modifiers & (CTRL_L | CTRL_R)) != 0,
+             test.description + ":(" + aEvent.type + "), ctrlKey mismatch");
+          is(aEvent.altKey, (test.modifiers & (ALT_L | ALT_R)) != 0,
+             test.description + ":(" + aEvent.type + "), altKey mismatch");
+        }
+
+        if (!aEvent || (test.handled.lines || expectedLines == 0) &&
+                       (test.handled.pixels || expectedPixels == 0)) {
+          // Don't scroll actually.
+          if (aEvent) {
+            aEvent.preventDefault();
+          }
+          test.target.removeEventListener(kMouseLineScrollEvent, handler, true);
+          test.target.removeEventListener(kMousePixelScrollEvent, handler, true);
+          setTimeout(runNextTest, 0, aTests, aIndex);
+        }
+      };
+
+      test.target.addEventListener(kMouseLineScrollEvent, handler, true);
+      test.target.addEventListener(kMousePixelScrollEvent, handler, true);
+
+      if (expectedLines == 0 && expectedPixels == 0) {
+        // The timeout might not be enough if system is slow by other process,
+        // so, the test might be passed unexpectedly.  However, it must be able
+        // to be detected by random orange.
+        setTimeout(handler, 500);
+      }
+
+      var utils = getWindowUtils(test.window);
+      var ptInScreen = getPointInScreen(test.target, test.window);
+      var isVertical =
+        ((test.message == WM_MOUSEWHEEL) || (test.message == WM_VSCROLL));
+      var deltaX = !isVertical ? test.delta : 0;
+      var deltaY = isVertical  ? test.delta : 0;
+      utils.sendNativeMouseScrollEvent(ptInScreen.x + test.x,
+                                       ptInScreen.y + test.y,
+                                       test.message, deltaX, deltaY, 0,
+                                       test.modifiers,
+                                       test.additionalFlags,
+                                       test.target);
+      break;
+    default:
+      ok(false, test.description + ": invalid message");
+      // Let's timeout.
+  }
+}
+
+function prepareTests()
+{
+  // Disable special action with modifier key
+  SpecialPowers.setIntPref(kAltKeyVActionPref, 0);
+  SpecialPowers.setIntPref(kCtrlKeyVActionPref, 0);
+  SpecialPowers.setIntPref(kShiftKeyVActionPref, 0);
+  SpecialPowers.setIntPref(kAltKeyHActionPref, 0);
+  SpecialPowers.setIntPref(kCtrlKeyHActionPref, 0);
+  SpecialPowers.setIntPref(kShiftKeyHActionPref, 0);
+  SpecialPowers.setBoolPref(kAltKeyVSysNumLinesPref, true);
+  SpecialPowers.setBoolPref(kCtrlKeyVSysNumLinesPref, true);
+  SpecialPowers.setBoolPref(kShiftKeyVSysNumLinesPref, true);
+  SpecialPowers.setBoolPref(kAltKeyHSysNumLinesPref, true);
+  SpecialPowers.setBoolPref(kCtrlKeyHSysNumLinesPref, true);
+  SpecialPowers.setBoolPref(kShiftKeyHSysNumLinesPref, true);
+
+  SpecialPowers.setBoolPref(kSystemScrollSpeedOverridePref, false);
+  SpecialPowers.setBoolPref(kPixelEnabledPref, true);
+  SpecialPowers.setIntPref(kTimeoutPref, -1);
+
+  runNextTest(gPreparingSteps, 0);
+}
+
+</script>
+</body>
+
+</html>

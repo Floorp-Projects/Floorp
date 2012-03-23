@@ -42,7 +42,6 @@
 #include "nsIDocument.h"
 #include "nsBindingManager.h"
 #include "nsIDOMNode.h"
-#include "nsIParser.h"
 #include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsHTMLTokens.h"
@@ -424,8 +423,13 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
   bool ret = true;
   if (aTagName == nsGkAtoms::bindings) {
     ENSURE_XBL_STATE(mState == eXBL_InDocument);
-      
-    mDocInfo = NS_NewXBLDocumentInfo(mDocument);
+
+    NS_ASSERTION(mDocument, "Must have a document!");
+    nsRefPtr<nsXBLDocumentInfo> info = new nsXBLDocumentInfo(mDocument);
+
+    // We keep a weak ref. We're creating a cycle between doc/binding manager/doc info.
+    mDocInfo = info;
+
     if (!mDocInfo) {
       mState = eXBL_Error;
       return true;
@@ -434,16 +438,14 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
     mDocument->BindingManager()->PutXBLDocumentInfo(mDocInfo);
 
     nsIURI *uri = mDocument->GetDocumentURI();
-      
+
     bool isChrome = false;
     bool isRes = false;
 
     uri->SchemeIs("chrome", &isChrome);
     uri->SchemeIs("resource", &isRes);
     mIsChromeOrResource = isChrome || isRes;
-      
-    nsXBLDocumentInfo* info = mDocInfo;
-    NS_RELEASE(info); // We keep a weak ref. We've created a cycle between doc/binding manager/doc info.
+
     mState = eXBL_InBindings;
   }
   else if (aTagName == nsGkAtoms::binding) {

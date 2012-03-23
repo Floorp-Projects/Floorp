@@ -991,8 +991,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   // In debug builds, warnings are enabled in chrome context if
   // javascript.options.strict.debug is true
   bool strictDebug = Preferences::GetBool(js_strict_debug_option_str);
-  // Note this callback is also called from context's InitClasses thus we don't
-  // need to enable this directly from InitContext
   if (strictDebug && (newDefaultJSOptions & JSOPTION_STRICT) == 0) {
     if (chromeWindow)
       newDefaultJSOptions |= JSOPTION_STRICT;
@@ -2105,6 +2103,8 @@ nsJSContext::InitContext()
 
   ::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter);
 
+  JSOptionChangedCallback(js_options_dot_str, this);
+
   return NS_OK;
 }
 
@@ -2826,8 +2826,6 @@ nsJSContext::InitClasses(JSObject* aGlobalObj)
   // Attempt to initialize DMD functions
   ::JS_DefineFunctions(mContext, aGlobalObj, DMDFunctions);
 #endif
-
-  JSOptionChangedCallback(js_options_dot_str, this);
 
   return rv;
 }

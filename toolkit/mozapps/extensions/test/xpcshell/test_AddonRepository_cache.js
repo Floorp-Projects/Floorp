@@ -674,6 +674,7 @@ function run_test_12() {
 // database, and that XPI add-ons still do not use any of repository properties
 function run_test_13() {
   check_database_exists(true);
+  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS_PERF, GETADDONS_EMPTY);
 
   trigger_background_update(function() {
     // Database should have been deleted
@@ -690,7 +691,6 @@ function run_test_13() {
 // enabled but has no information
 function run_test_14() {
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
-  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, GETADDONS_EMPTY);
 
   trigger_background_update(function() {
     check_database_exists(true);

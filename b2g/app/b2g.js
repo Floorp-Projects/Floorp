@@ -454,3 +454,28 @@ pref("ril.data.roaming.enabled", false);
 pref("ril.data.apn", "");
 pref("ril.data.user", "");
 pref("ril.data.passwd", "");
+
+//Enable/disable marionette server, set listening port
+pref("marionette.defaultPrefs.enabled", true);
+pref("marionette.defaultPrefs.port", 2828);
+
+#ifdef MOZ_UPDATER
+pref("app.update.enabled", true);
+pref("app.update.auto", true);
+pref("app.update.silent", true);
+pref("app.update.mode", 0);
+pref("app.update.incompatible.mode", 0);
+pref("app.update.service.enabled", true);
+
+// The URL hosting the update manifest.
+//pref("app.update.url", "http://localhost/updates.xml");
+// Interval at which update manifest is fetched.  In units of seconds.
+pref("app.update.interval", 86400); // 24 hours
+// First interval to elapse before checking for update.  In units of
+// milliseconds.  Capped at 10 seconds.
+pref("app.update.timerFirstInterval", 30000);
+
+// Enable update logging for now, to diagnose growing pains in the
+// field.
+pref("app.update.log", true);
+#endif
