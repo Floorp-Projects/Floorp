@@ -1,4 +1,0 @@
-url-prefix ../../jsreftest.html?test=ecma_5/Number/
-script 15.7.4.2.js
-script defaultvalue.js
-script toString-radix-handling.js
