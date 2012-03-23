@@ -2289,7 +2289,7 @@ IonBuilder::jsop_notearg()
 }
 
 bool
-IonBuilder::jsop_call_inline(uint32 argc, IonBuilder &inlineBuilder)
+IonBuilder::jsop_call_inline(JSFunction *callee, uint32 argc, IonBuilder &inlineBuilder)
 {
 #ifdef DEBUG
     uint32 origStackDepth = current->stackDepth();
@@ -2297,6 +2297,11 @@ IonBuilder::jsop_call_inline(uint32 argc, IonBuilder &inlineBuilder)
 
     // |top| jumps into the callee subgraph -- save it for later use.
     MBasicBlock *top = current;
+
+    // Add the function constant before the resume point whihc map call
+    // arguments.
+    MConstant *constFun = MConstant::New(ObjectValue(*callee));
+    current->add(constFun);
 
     // This resume point collects outer variables only; it is never used to
     // directly build a snapshot.
@@ -2313,6 +2318,12 @@ IonBuilder::jsop_call_inline(uint32 argc, IonBuilder &inlineBuilder)
     // Arguments are popped right-to-left so we have to fill |args| backwards.
     if (!discardCallArgs(argc, argv, top))
         return false;
+
+    // Replace the potential object load by the corresponding constant version
+    // which is inlined here.
+    inlineResumePoint->replaceOperand(inlineResumePoint->numOperands() - (argc + 2), constFun);
+    current->pop();
+    current->push(constFun);
 
     MDefinition *thisDefn = argv[0];
 
@@ -2442,13 +2453,13 @@ IonBuilder::inlineScriptedCall(JSFunction *target, uint32 argc)
             return false;
         IonBuilder inlineBuilder(cx, NULL, temp(), graph(), &oracle,
                                  *info, inliningDepth + 1, loopDepth_);
-        return jsop_call_inline(argc, inlineBuilder);
+        return jsop_call_inline(target, argc, inlineBuilder);
     }
 
     DummyOracle oracle;
     IonBuilder inlineBuilder(cx, NULL, temp(), graph(), &oracle,
                              *info, inliningDepth + 1, loopDepth_);
-    return jsop_call_inline(argc, inlineBuilder);
+    return jsop_call_inline(target, argc, inlineBuilder);
 }
 
 MDefinition *
