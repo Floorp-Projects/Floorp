@@ -29,15 +29,14 @@ function run_test() {
   do_check_eq(PlacesUtils.history.databaseStatus,
               PlacesUtils.history.DATABASE_STATUS_CREATE);
 
-  //A migrator would run before nsBrowserGlue Places initialization, so mimic
-  //that behavior adding a bookmark and notifying the migration.
+  // A migrator would run before nsBrowserGlue, so we mimic that behavior
+  // adding a bookmark.
   PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarks.bookmarksMenuFolder, uri("http://mozilla.org/"),
                     PlacesUtils.bookmarks.DEFAULT_INDEX, "migrated");
 
   // Initialize nsBrowserGlue.
   let bg = Cc["@mozilla.org/browser/browserglue;1"].
-           getService(Ci.nsIObserver);
-  bg.observe(null, "initial-migration", null)
+           getService(Ci.nsIBrowserGlue);
 
   let bookmarksObserver = {
     onBeginUpdateBatch: function() {},
