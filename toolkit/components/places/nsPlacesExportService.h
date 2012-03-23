@@ -1,5 +1,5 @@
-#ifndef nsPlacesImportExportService_h__
-#define nsPlacesImportExportService_h__
+#ifndef nsPlacesExportService_h_
+#define nsPlacesExportService_h_
 
 #include "nsIPlacesImportExportService.h"
 
@@ -13,19 +13,17 @@
 #include "nsINavBookmarksService.h"
 #include "nsIChannel.h"
 
-class nsPlacesImportExportService : public nsIPlacesImportExportService,
-                                    public nsINavHistoryBatchCallback
+class nsPlacesExportService : public nsIPlacesImportExportService
 {
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPLACESIMPORTEXPORTSERVICE
-    NS_DECL_NSINAVHISTORYBATCHCALLBACK
-    nsPlacesImportExportService();
+    nsPlacesExportService();
 
   /**
    * Obtains the service's object.
    */
-  static nsPlacesImportExportService* GetSingleton();
+  static nsPlacesExportService* GetSingleton();
 
   /**
    * Initializes the service's object.  This should only be called once.
@@ -33,8 +31,8 @@ class nsPlacesImportExportService : public nsIPlacesImportExportService,
   nsresult Init();
 
   private:
-    static nsPlacesImportExportService* gImportExportService;
-    virtual ~nsPlacesImportExportService();
+    static nsPlacesExportService* gExportService;
+    virtual ~nsPlacesExportService();
 
   protected:
     nsCOMPtr<nsIFaviconService> mFaviconService;
@@ -43,13 +41,6 @@ class nsPlacesImportExportService : public nsIPlacesImportExportService,
     nsCOMPtr<nsINavHistoryService> mHistoryService;
     nsCOMPtr<mozIAsyncLivemarks> mLivemarkService;
 
-    nsCOMPtr<nsIChannel> mImportChannel;
-    bool mIsImportDefaults;
-
-    nsresult ImportHTMLFromFileInternal(nsILocalFile* aFile, bool aAllowRootChanges,
-                                       PRInt64 aFolder, bool aIsImportDefaults);
-    nsresult ImportHTMLFromURIInternal(nsIURI* aURI, bool aAllowRootChanges,
-                                       PRInt64 aFolder, bool aIsImportDefaults);
     nsresult WriteContainer(nsINavHistoryResultNode* aFolder, const nsACString& aIndent, nsIOutputStream* aOutput);
     nsresult WriteContainerHeader(nsINavHistoryResultNode* aFolder, const nsACString& aIndent, nsIOutputStream* aOutput);
     nsresult WriteTitle(nsINavHistoryResultNode* aItem, nsIOutputStream* aOutput);
@@ -69,4 +60,4 @@ class nsPlacesImportExportService : public nsIPlacesImportExportService,
     }
 };
 
-#endif // nsPlacesImportExportService_h__
+#endif // nsPlacesExportService_h_
