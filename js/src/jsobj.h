@@ -866,11 +866,6 @@ struct JSObject : public js::ObjectImpl
     inline void setQNameLocalName(JSAtom *name);
 
     /*
-     * Proxy-specific getters and setters.
-     */
-    inline js::Wrapper *getWrapperHandler() const;
-
-    /*
      * Back to generic stuff.
      */
     inline bool isCallable();
