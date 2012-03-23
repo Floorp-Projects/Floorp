@@ -542,7 +542,9 @@ public:
         { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD Reset()
         { /* (InitializeWithSurface) */ return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD Render(gfxContext *ctx, gfxPattern::GraphicsFilter f);
+    NS_IMETHOD Render(gfxContext *ctx,
+                      gfxPattern::GraphicsFilter f,
+                      PRUint32 aFlags = RenderFlagPremultAlpha);
     NS_IMETHOD GetInputStream(const char* aMimeType,
                               const PRUnichar* aEncoderOptions,
                               nsIInputStream **aStream);

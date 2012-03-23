@@ -1,4 +1,3 @@
-conformance/context/premultiplyalpha-test.html
 conformance/glsl/misc/glsl-function-nodes.html
 conformance/more/conformance/quickCheckAPI-S_V.html
 conformance/programs/program-test.html
