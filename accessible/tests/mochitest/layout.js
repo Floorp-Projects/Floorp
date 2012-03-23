@@ -107,16 +107,42 @@ function getBounds(aID)
  */
 function getBoundsForDOMElm(aID)
 {
+  var x = 0, y = 0, width = 0, height = 0;
+
   var elm = getNode(aID);
+  if (elm.localName == "area") {
+    var mapName = elm.parentNode.getAttribute("name");
+    var selector = "[usemap='#" + mapName + "']";
+    var img = elm.ownerDocument.querySelector(selector);
+
+    var areaCoords = elm.coords.split(",");
+    var areaX = parseInt(areaCoords[0]);
+    var areaY = parseInt(areaCoords[1]);
+    var areaWidth = parseInt(areaCoords[2]) - areaX;
+    var areaHeight = parseInt(areaCoords[3]) - areaY;
+
+    var rect = img.getBoundingClientRect();
+    x = rect.left + areaX;
+    y = rect.top + areaY;
+    width = areaWidth;
+    height = areaHeight;
+  }
+  else {
+    var rect = elm.getBoundingClientRect();
+    x = rect.left;
+    y = rect.top;
+    width = rect.width;
+    height = rect.height;
+  }
+
   var elmWindow = elm.ownerDocument.defaultView;
   var winUtil = elmWindow.
     QueryInterface(Components.interfaces.nsIInterfaceRequestor).
     getInterface(Components.interfaces.nsIDOMWindowUtils);
 
   var ratio = winUtil.screenPixelsPerCSSPixel;
-  var rect = elm.getBoundingClientRect();
-  return [ (rect.left + elmWindow.mozInnerScreenX) * ratio,
-           (rect.top + elmWindow.mozInnerScreenY) * ratio,
-           rect.width * ratio,
-           rect.height * ratio ];
+  return [ (x + elmWindow.mozInnerScreenX) * ratio,
+           (y + elmWindow.mozInnerScreenY) * ratio,
+           width * ratio,
+           height * ratio ];
 }
