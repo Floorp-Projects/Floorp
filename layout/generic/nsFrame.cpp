@@ -86,7 +86,6 @@
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
-#include "nsIHTMLContentSink.h" 
 #include "nsCSSFrameConstructor.h"
 
 #include "nsFrameTraversal.h"
