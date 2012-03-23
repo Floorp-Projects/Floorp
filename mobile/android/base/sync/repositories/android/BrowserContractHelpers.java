@@ -4,11 +4,13 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
-import android.net.Uri;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
-// This will exist implicitly when we're merged into Fennec, or explicitly
-// due to our own imported copy of Fennec's BrowserContract.java.in.
 import org.mozilla.gecko.db.BrowserContract;
+
+import android.net.Uri;
 
 public class BrowserContractHelpers extends BrowserContract {
   protected static Uri withSyncAndDeleted(Uri u) {
@@ -77,4 +79,52 @@ public class BrowserContractHelpers extends BrowserContract {
     Bookmarks.DESCRIPTION,
     Bookmarks.KEYWORD
   };
+
+  // Mapping from Sync types to Fennec types.
+  public static final String[] BOOKMARK_TYPE_CODE_TO_STRING = {
+    // Observe omissions: "microsummary", "item".
+    "folder", "bookmark", "separator", "livemark", "query"
+  };
+  private static final int MAX_BOOKMARK_TYPE_CODE = BOOKMARK_TYPE_CODE_TO_STRING.length - 1;
+  public static final Map<String, Integer> BOOKMARK_TYPE_STRING_TO_CODE;
+  static {
+    HashMap<String, Integer> t = new HashMap<String, Integer>();
+    t.put("folder",    Bookmarks.TYPE_FOLDER);
+    t.put("bookmark",  Bookmarks.TYPE_BOOKMARK);
+    t.put("separator", Bookmarks.TYPE_SEPARATOR);
+    t.put("livemark",  Bookmarks.TYPE_LIVEMARK);
+    t.put("query",     Bookmarks.TYPE_QUERY);
+    BOOKMARK_TYPE_STRING_TO_CODE = Collections.unmodifiableMap(t);
+  }
+
+  /**
+   * Convert a database bookmark type code into the Sync string equivalent.
+   *
+   * @param code one of the <code>Bookmarks.TYPE_*</code> enumerations.
+   * @return the string equivalent, or null if not found.
+   */
+  public static String typeStringForCode(int code) {
+    if (0 <= code && code <= MAX_BOOKMARK_TYPE_CODE) {
+      return BOOKMARK_TYPE_CODE_TO_STRING[code];
+    }
+    return null;
+  }
+
+  /**
+   * Convert a Sync type string into a Fennec type code.
+   *
+   * @param type a type string, such as "livemark".
+   * @return the type code, or -1 if not found.
+   */
+  public static int typeCodeForString(String type) {
+    Integer found = BOOKMARK_TYPE_STRING_TO_CODE.get(type);
+    if (found == null) {
+      return -1;
+    }
+    return found.intValue();
+  }
+
+  public static boolean isSupportedType(String type) {
+    return BOOKMARK_TYPE_STRING_TO_CODE.containsKey(type);
+  }
 }
