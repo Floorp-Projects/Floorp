@@ -51,7 +51,6 @@
 #include "nsRefreshDriver.h"
 #include "nsDOMTouchEvent.h"
 #include "nsIDOMTouchEvent.h"
-#include "nsObjectLoadingContent.h"
 
 #include "nsIScrollableFrame.h"
 
@@ -77,7 +76,6 @@
 #include "nsCSSProps.h"
 #include "nsDOMFile.h"
 #include "BasicLayers.h"
-#include "nsTArrayHelpers.h"
 
 #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
 #include <gdk/gdk.h>
@@ -2232,26 +2230,3 @@ nsDOMWindowUtils::GetPaintingSuppressed(bool *aPaintingSuppressed)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMWindowUtils::GetPlugins(JSContext* cx, jsval* aPlugins)
-{
-  if (!IsUniversalXPConnectCapable()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  nsIDOMDocument* ddoc = mWindow->GetExtantDocument();
-
-  nsresult rv;
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(ddoc, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsTArray<nsIObjectLoadingContent*> plugins;
-  doc->GetPlugins(plugins);
-
-  JSObject* jsPlugins = nsnull;
-  rv = nsTArrayToJSArray(cx, plugins, &jsPlugins);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aPlugins = OBJECT_TO_JSVAL(jsPlugins);
-  return NS_OK;
-}
