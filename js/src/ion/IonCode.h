@@ -59,6 +59,10 @@ namespace ion {
 // bit on offsets.
 static const uint32 MAX_BUFFER_SIZE = (1 << 30) - 1;
 
+// Maximum number of scripted arg and stack slots.
+static const uint32 SNAPSHOT_MAX_NARGS = 127;
+static const uint32 SNAPSHOT_MAX_STACK = 127;
+
 class MacroAssembler;
 
 class IonCode : public gc::Cell

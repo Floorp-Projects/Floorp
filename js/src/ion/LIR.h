@@ -55,7 +55,6 @@
 #include "MIR.h"
 #include "MIRGraph.h"
 #include "shared/Assembler-shared.h"
-#include "Snapshots.h"
 #include "Safepoints.h"
 #include "Bailouts.h"
 #include "VMFunctions.h"

@@ -43,7 +43,6 @@
 #define jsion_frames_inl_h__
 
 #include "ion/IonFrames.h"
-#include "ion/Snapshots.h"
 #include "ion/IonFrameIterator.h"
 #include "ion/LIR.h"
 

@@ -50,6 +50,7 @@
 #include "IonSpewer.h"
 #include "IonMacroAssembler.h"
 #include "jsgcmark.h"
+#include "SnapshotReader.h"
 
 namespace js {
 namespace ion {
