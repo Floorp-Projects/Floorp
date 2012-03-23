@@ -1616,9 +1616,10 @@ if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
        STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/gnu-libstdc++/include -I$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH/include -D_GLIBCXX_PERMIT_BACKWARD_HASH"
        STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH"
        STLPORT_LIBS="-lstdc++"
-    elif test -e "$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
-       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
-       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/"
+    elif test -e "$android_ndk/sources/cxx-stl/stlport/src/iostream.cpp" ; then
+       STLPORT_SOURCES="$android_ndk/sources/cxx-stl/stlport"
+       STLPORT_CPPFLAGS="-I$_objdir/build/stlport -I$android_ndk/sources/cxx-stl/stlport/stlport"
+       STLPORT_LDFLAGS="-L$_objdir/build/stlport -L$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/"
        STLPORT_LIBS="-lstlport_static"
     elif  test -e "$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
        STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
@@ -1632,6 +1633,8 @@ if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
     LDFLAGS="$LDFLAGS $STLPORT_LDFLAGS"
     LIBS="$LIBS $STLPORT_LIBS"
 fi
+
+AC_SUBST([STLPORT_SOURCES])
 
 dnl ========================================================
 dnl Suppress Clang Argument Warnings
@@ -9105,6 +9108,9 @@ if test -n "$MOZ_GLUE_PROGRAM_LDFLAGS"; then
    export MOZ_GLUE_PROGRAM_LDFLAGS
 fi
 export MOZ_APP_NAME
+export STLPORT_CPPFLAGS
+export STLPORT_LDFLAGS
+export STLPORT_LIBS
 AC_OUTPUT_SUBDIRS(js/src)
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 
