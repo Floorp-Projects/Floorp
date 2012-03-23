@@ -1,3 +1,4 @@
+// |reftest| skip-if((isDebugBuild&&!xulRuntime.shell)||Android)  -- hang
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 

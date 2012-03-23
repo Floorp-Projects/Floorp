@@ -1,3 +1,4 @@
+// |reftest| skip-if(!xulRuntime.shell&&(Android||xulRuntime.OS=="WINNT")) silentfail
 /*
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/

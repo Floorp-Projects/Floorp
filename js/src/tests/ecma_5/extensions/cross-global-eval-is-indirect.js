@@ -1,3 +1,4 @@
+// |reftest| skip-if(!xulRuntime.shell) -- needs newGlobal()
 /*
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/

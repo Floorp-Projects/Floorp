@@ -1,4 +1,0 @@
-url-prefix ../../jsreftest.html?test=js1_5/Error/
-script regress-354246.js
-script regress-412324.js
-script regress-465377.js
