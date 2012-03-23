@@ -65,7 +65,7 @@
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/Element.h"
 #include "nsCharsetAlias.h"
-#include "nsIHTMLContentSink.h"
+#include "nsIFrame.h"
 #include "nsContentUtils.h"
 #include "txXMLUtils.h"
 #include "nsContentSink.h"

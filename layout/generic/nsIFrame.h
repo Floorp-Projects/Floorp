@@ -45,6 +45,8 @@
 #error This header/class should only be used within Mozilla code. It should not be used by extensions.
 #endif
 
+#define MAX_REFLOW_DEPTH 200
+
 /* nsIFrame is in the process of being deCOMtaminated, i.e., this file is eventually
    going to be eliminated, and all callers will use nsFrame instead.  At the moment
    we're midway through this process, so you will see inlined functions and member
