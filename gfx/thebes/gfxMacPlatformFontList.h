@@ -111,9 +111,6 @@ public:
     virtual nsresult GetFontTable(PRUint32 aTableTag,
                                   FallibleTArray<PRUint8>& aBuffer);
 
-    virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
-                                     FontListSizes*    aSizes) const;
-
 protected:
     virtual bool HasFontTable(PRUint32 aTableTag);
 
@@ -136,9 +133,6 @@ public:
 
     virtual nsresult GetFontTable(PRUint32 aTableTag,
                                   FallibleTArray<PRUint8>& aBuffer);
-
-    virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
-                                     FontListSizes*    aSizes) const;
 
 protected:
     virtual bool HasFontTable(PRUint32 aTableTag);
