@@ -4138,10 +4138,6 @@ class MResumePoint : public MNode
     // Overwrites an operand without updating its Uses.
     void setOperand(size_t index, MDefinition *operand) {
         JS_ASSERT(index < stackDepth_);
-        
-        if (operand->isPassArg())
-            operand = operand->toPassArg()->getArgument();
-
         operands_[index] = operand;
     }
 
