@@ -1750,8 +1750,11 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
         bodyStart = GetNextPc(bodyStart);
     } else {
         // No loop condition, such as for(j = 0; ; j++)
-        JS_ASSERT(JSOp(*bodyStart) == JSOP_NOP);
-        bodyStart = GetNextPc(bodyStart);
+        if (op != JSOP_NOP) {
+            // If the loop starts with POP, we have to skip a NOP.
+            JS_ASSERT(JSOp(*bodyStart) == JSOP_NOP);
+            bodyStart = GetNextPc(bodyStart);
+        }
         loopEntry = GetNextPc(bodyStart);
     }
     jsbytecode *loopHead = bodyStart;
