@@ -351,12 +351,23 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                                         ExposedPropertiesOnly>::singleton;
         }
     } else if (AccessCheck::isSameOrigin(origin, target)) {
-        // Same origin we use a transparent wrapper, unless the compartment asks
-        // for an Xray or the wrapper needs a SOW.
+        // For the same-origin case we use a transparent wrapper, unless one
+        // of the following is true:
+        // * The wrapper is a Location object.
+        // * The wrapper is flagged as needing a SOW.
+        // * The context compartment specifically requested Xray vision into
+        //   same-origin compartments.
+        //
+        // The first two cases always require a security wrapper for non-chrome
+        // access, regardless of the origin of the object.
         bool proxy;
         if (AccessCheck::needsSystemOnlyWrapper(obj)) {
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                         OnlyIfSubjectIsSystem>::singleton;
+        } else if (IsLocationObject(obj)) {
+            typedef XrayWrapper<CrossCompartmentSecurityWrapper> Xray;
+            usingXray = true;
+            wrapper = &FilteringWrapper<Xray, LocationPolicy>::singleton;
         } else if (targetdata && targetdata->wantXrays && CanXray(obj, &proxy)) {
             if (proxy) {
                 wrapper = &XrayProxy::singleton;
