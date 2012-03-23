@@ -4893,7 +4893,7 @@ EmitFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
            : EmitNormalFor(cx, bce, pn, top);
 }
 
-static bool
+static JS_NEVER_INLINE bool
 EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
 #if JS_HAS_XML_SUPPORT
@@ -4918,35 +4918,29 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                  fun->kind() == JSFUN_INTERPRETED);
 
     {
-        /*
-         * Generate code for the function's body.  bce2 is not allocated on the
-         * stack because doing so significantly reduces the maximum depth of
-         * nested functions we can handle.  See bug 696284.
-         */
-        AutoPtr<BytecodeEmitter> bce2(cx);
-        bce2 = cx->new_<BytecodeEmitter>(bce->parser, pn->pn_pos.begin.lineno);
-        if (!bce2 || !bce2->init(cx))
+        BytecodeEmitter bce2(bce->parser, pn->pn_pos.begin.lineno);
+        if (!bce2.init(cx))
             return false;
 
-        bce2->flags = pn->pn_funbox->tcflags | TCF_COMPILING | TCF_IN_FUNCTION |
+        bce2.flags = pn->pn_funbox->tcflags | TCF_COMPILING | TCF_IN_FUNCTION |
                      (bce->flags & TCF_FUN_MIGHT_ALIAS_LOCALS);
-        bce2->bindings.transfer(cx, &pn->pn_funbox->bindings);
-        bce2->setFunction(fun);
-        bce2->funbox = pn->pn_funbox;
-        bce2->parent = bce;
-        bce2->globalScope = bce->globalScope;
+        bce2.bindings.transfer(cx, &pn->pn_funbox->bindings);
+        bce2.setFunction(fun);
+        bce2.funbox = pn->pn_funbox;
+        bce2.parent = bce;
+        bce2.globalScope = bce->globalScope;
 
         /*
          * js::frontend::SetStaticLevel limited static nesting depth to fit in
          * 16 bits and to reserve the all-ones value, thereby reserving the
-         * magic FREE_UPVAR_COOKIE value. Note the bce2->staticLevel assignment
+         * magic FREE_UPVAR_COOKIE value. Note the bce2.staticLevel assignment
          * below.
          */
         JS_ASSERT(bce->staticLevel < JS_BITMASK(16) - 1);
-        bce2->staticLevel = bce->staticLevel + 1;
+        bce2.staticLevel = bce->staticLevel + 1;
 
         /* We measured the max scope depth when we parsed the function. */
-        if (!EmitFunctionScript(cx, bce2.get(), pn->pn_body))
+        if (!EmitFunctionScript(cx, &bce2, pn->pn_body))
             return false;
     }
 
