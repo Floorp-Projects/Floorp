@@ -53,7 +53,6 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "SystemWorkerManager.h"
-#include "nsTArrayHelpers.h"
 
 #include "CallEvent.h"
 #include "TelephonyCall.h"
@@ -69,6 +68,53 @@ namespace {
 typedef nsAutoTArray<Telephony*, 2> TelephonyList;
 
 TelephonyList* gTelephonyList;
+
+template <class T>
+inline nsresult
+nsTArrayToJSArray(JSContext* aCx, JSObject* aGlobal,
+                  const nsTArray<nsRefPtr<T> >& aSourceArray,
+                  JSObject** aResultArray)
+{
+  NS_ASSERTION(aCx, "Null context!");
+  NS_ASSERTION(aGlobal, "Null global!");
+
+  JSAutoRequest ar(aCx);
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(aCx, aGlobal)) {
+    NS_WARNING("Failed to enter compartment!");
+    return NS_ERROR_FAILURE;
+  }
+
+  JSObject* arrayObj;
+
+  if (aSourceArray.IsEmpty()) {
+    arrayObj = JS_NewArrayObject(aCx, 0, nsnull);
+  } else {
+    nsTArray<jsval> valArray;
+    valArray.SetLength(aSourceArray.Length());
+
+    for (PRUint32 index = 0; index < valArray.Length(); index++) {
+      nsISupports* obj = aSourceArray[index]->ToISupports();
+      nsresult rv =
+        nsContentUtils::WrapNative(aCx, aGlobal, obj, &valArray[index]);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    arrayObj = JS_NewArrayObject(aCx, valArray.Length(), valArray.Elements());
+  }
+
+  if (!arrayObj) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // XXX This is not what Jonas wants. He wants it to be live.
+  if (!JS_FreezeObject(aCx, arrayObj)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aResultArray = arrayObj;
+  return NS_OK;
+}
 
 } // anonymous namespace
 
@@ -306,7 +352,8 @@ Telephony::GetCalls(jsval* aCalls)
     NS_ENSURE_SUCCESS(rv, rv);
     if (sc) {
       rv =
-        nsTArrayToJSArray(mScriptContext->GetNativeContext(), mCalls, &calls);
+        nsTArrayToJSArray(sc->GetNativeContext(),
+                          sc->GetNativeGlobal(), mCalls, &calls);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (!mRooted) {
