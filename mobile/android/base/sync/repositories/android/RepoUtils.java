@@ -146,7 +146,7 @@ public class RepoUtils {
         Logger.pii(LOG_TAG, "> URI:              " + rec.histURI);
       }
     } catch (Exception e) {
-      Logger.debug(LOG_TAG, "Exception logging bookmark record " + rec, e);
+      Logger.debug(LOG_TAG, "Exception logging history record " + rec, e);
     }
     return rec;
   }
@@ -154,10 +154,10 @@ public class RepoUtils {
   public static void logClient(ClientRecord rec) {
     if (Logger.logVerbose(LOG_TAG)) {
       Logger.trace(LOG_TAG, "Returning client record " + rec.guid + " (" + rec.androidID + ")");
-      Logger.trace(LOG_TAG, "Client Name: " + rec.name);
-      Logger.trace(LOG_TAG, "Client Type: " + rec.type);
+      Logger.trace(LOG_TAG, "Client Name:   " + rec.name);
+      Logger.trace(LOG_TAG, "Client Type:   " + rec.type);
       Logger.trace(LOG_TAG, "Last Modified: " + rec.lastModified);
-      Logger.trace(LOG_TAG, "Deleted: " + rec.deleted);
+      Logger.trace(LOG_TAG, "Deleted:       " + rec.deleted);
     }
   }
 
@@ -217,19 +217,26 @@ public class RepoUtils {
     return "                                     ".substring(0, i);
   }
 
+  private static String dashes(int i) {
+    return "-------------------------------------".substring(0, i);
+  }
+
   public static void dumpCursor(Cursor cur) {
+    dumpCursor(cur, 18, "records");
+  }
+
+  public static void dumpCursor(Cursor cur, int columnWidth, String tag) {
     int originalPosition = cur.getPosition();
     try {
       String[] columnNames = cur.getColumnNames();
       int columnCount      = cur.getColumnCount();
 
-      // 12 chars each column.
       for (int i = 0; i < columnCount; ++i) {
-        System.out.print(fixedWidth(12, columnNames[i]) + " | ");
+        System.out.print(fixedWidth(columnWidth, columnNames[i]) + " | ");
       }
-      System.out.println("");
+      System.out.println("(" + cur.getCount() + " " + tag + ")");
       for (int i = 0; i < columnCount; ++i) {
-        System.out.print("------------" + " | ");
+        System.out.print(dashes(columnWidth) + " | ");
       }
       System.out.println("");
       if (!cur.moveToFirst()) {
@@ -238,15 +245,17 @@ public class RepoUtils {
       }
 
       cur.moveToFirst();
-      while (cur.moveToNext()) {
+      while (!cur.isAfterLast()) {
         for (int i = 0; i < columnCount; ++i) {
-          System.out.print(fixedWidth(12, cur.getString(i)) + " | ");
+          System.out.print(fixedWidth(columnWidth, cur.getString(i)) + " | ");
         }
         System.out.println("");
+        cur.moveToNext();
       }
-      for (int i = 0; i < columnCount; ++i) {
-        System.out.print("---------------");
+      for (int i = 0; i < columnCount-1; ++i) {
+        System.out.print(dashes(columnWidth + 3));
       }
+      System.out.print(dashes(columnWidth + 3 - 1));
       System.out.println("");
     } finally {
       cur.moveToPosition(originalPosition);
