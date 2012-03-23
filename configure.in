@@ -2450,7 +2450,6 @@ ia64*-hpux*)
         ZIP=zip
         UNZIP=unzip
         DOXYGEN=:
-        GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
         ASM_SUFFIX=asm
         OBJ_SUFFIX=obj
         LIB_SUFFIX=lib
