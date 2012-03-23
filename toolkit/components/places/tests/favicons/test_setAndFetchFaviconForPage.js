@@ -52,8 +52,8 @@ add_test(function test_aboutURI_bookmarked()
 
 add_test(function test_privateBrowsing_bookmarked()
 {
-  if (!"@mozilla.org/privatebrowsing;1" in Cc) {
-    run_next_next();
+  if (!("@mozilla.org/privatebrowsing;1" in Cc)) {
+    run_next_test();
     return;
   }
 

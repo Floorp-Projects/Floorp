@@ -15,12 +15,16 @@ function test() {
     registerCleanupFunction(function() {
       aAddon.userDisabled = true;
     });
-  });
 
+    continueTest();
+  });
+}
+
+function continueTest() {
   var tab = gBrowser.addTab(TESTROOT + "file_pdfjs_test.pdf");
   var newTabBrowser = gBrowser.getBrowserForTab(tab);
-  newTabBrowser.addEventListener("load", function () {
-    newTabBrowser.removeEventListener("load", arguments.callee, true);
+  newTabBrowser.addEventListener("load", function onLoad() {
+    newTabBrowser.removeEventListener("load", onLoad, true);
 
     var hasViewer = newTabBrowser.contentDocument.querySelector('div#viewer');
     var hasPDFJS = 'PDFJS' in newTabBrowser.contentWindow.wrappedJSObject;
