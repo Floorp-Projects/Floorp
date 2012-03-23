@@ -1224,7 +1224,7 @@ nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
   }
 
   if (FocusMgr()->IsFocused(this)) {
-    PRInt32 lineNumber = GetCaretLineNumber();
+    PRInt32 lineNumber = CaretLineNumber();
     if (lineNumber >= 1) {
       nsAutoString strLineNumber;
       strLineNumber.AppendInt(lineNumber);
@@ -1680,7 +1680,7 @@ nsHyperTextAccessible::GetCaretOffset(PRInt32 *aCaretOffset)
 }
 
 PRInt32
-nsHyperTextAccessible::GetCaretLineNumber()
+nsHyperTextAccessible::CaretLineNumber()
 {
   // Provide the line number for the caret, relative to the
   // currently focused node. Use a 1-based index

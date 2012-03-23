@@ -61,6 +61,7 @@ import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -109,6 +110,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         Log.d(LOGTAG, "creating awesomebar");
 
         mResolver = Tabs.getInstance().getContentResolver();
+        LayoutInflater.from(this).setFactory(GeckoViewsFactory.getInstance());
 
         setContentView(R.layout.awesomebar);
 

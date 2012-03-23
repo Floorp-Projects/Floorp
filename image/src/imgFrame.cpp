@@ -145,12 +145,13 @@ imgFrame::imgFrame() :
   mSinglePixel(false),
   mNeverUseDeviceSurface(false),
   mFormatChanged(false),
-  mCompositingFailed(false)
+  mCompositingFailed(false),
+  mNonPremult(false),
 #ifdef USE_WIN_SURFACE
-  , mIsDDBSurface(false)
+  mIsDDBSurface(false),
 #endif
-  , mLocked(false)
-  , mInformedDiscardTracker(false)
+  mLocked(false),
+  mInformedDiscardTracker(false)
 {
   static bool hasCheckedOptimize = false;
   if (!hasCheckedOptimize) {
@@ -254,6 +255,11 @@ nsresult imgFrame::Optimize()
   if (mPalettedImageData || mOptSurface || mSinglePixel)
     return NS_OK;
 
+  // Don't do single-color opts on non-premult data.
+  // Cairo doesn't support non-premult single-colors.
+  if (mNonPremult)
+    return NS_OK;
+
   /* Figure out if the entire image is a constant color */
 
   // this should always be true
@@ -270,11 +276,12 @@ nsresult imgFrame::Optimize()
       if (mFormat == gfxASurface::ImageFormatARGB32 ||
           mFormat == gfxASurface::ImageFormatRGB24)
       {
-        mSinglePixelColor = gfxRGBA
-          (firstPixel,
-           (mFormat == gfxImageSurface::ImageFormatRGB24 ?
-            gfxRGBA::PACKED_XRGB :
-            gfxRGBA::PACKED_ARGB_PREMULTIPLIED));
+        // Should already be premult if desired.
+        gfxRGBA::PackedColorType inputType = gfxRGBA::PACKED_XRGB;
+        if (mFormat == gfxASurface::ImageFormatARGB32)
+          inputType = gfxRGBA::PACKED_ARGB_PREMULTIPLIED;
+
+        mSinglePixelColor = gfxRGBA(firstPixel, inputType);
 
         mSinglePixel = true;
 
@@ -434,6 +441,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
     }
     tmpCtx.Rectangle(available);
     tmpCtx.Fill();
+
     return SurfaceWithFormat(new gfxSurfaceDrawable(surface, size), format);
   }
 
@@ -516,6 +524,8 @@ nsresult imgFrame::Extract(const nsIntRect& aRegion, imgFrame** aResult)
   nsresult rv = subImage->Init(0, 0, aRegion.width, aRegion.height, 
                                mFormat, mPaletteDepth);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  subImage->SetAsNonPremult(mNonPremult);
 
   // scope to destroy ctx
   {
@@ -770,6 +780,11 @@ void imgFrame::SetHasNoAlpha()
       mFormat = gfxASurface::ImageFormatRGB24;
       mFormatChanged = true;
   }
+}
+
+void imgFrame::SetAsNonPremult(bool aIsNonPremult)
+{
+  mNonPremult = aIsNonPremult;
 }
 
 bool imgFrame::GetCompositingFailed() const

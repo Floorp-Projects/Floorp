@@ -52,6 +52,10 @@ ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 DIRS += android
 endif
 
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+DIRS += gonk
+endif
+
 DIRS += build
 
 TEST_DIRS = tests

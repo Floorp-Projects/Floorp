@@ -300,6 +300,13 @@ Decoder::PostDecodeDone()
   NS_ABORT_IF_FALSE(!mDecodeDone, "Decode already done!");
   mDecodeDone = true;
 
+  // Set premult before DecodingComplete(), since DecodingComplete() calls Optimize()
+  int frames = GetFrameCount();
+  bool isNonPremult = GetDecodeFlags() & DECODER_NO_PREMULTIPLY_ALPHA;
+  for (int i = 0; i < frames; i++) {
+    mImage.SetFrameAsNonPremult(i, isNonPremult);
+  }
+
   // Notify
   mImage.DecodingComplete();
   if (mObserver) {
