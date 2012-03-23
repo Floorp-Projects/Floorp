@@ -42,7 +42,7 @@
 #ifndef jsion_move_group_resolver_h__
 #define jsion_move_group_resolver_h__
 
-#include "IonRegisters.h"
+#include "Registers.h"
 #include "InlineList.h"
 #include "IonAllocPolicy.h"
 
