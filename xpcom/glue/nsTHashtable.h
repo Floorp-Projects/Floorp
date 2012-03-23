@@ -288,14 +288,11 @@ public:
   size_t SizeOfExcludingThis(SizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
                              nsMallocSizeOfFun mallocSizeOf, void *userArg = NULL) const
   {
-    if (!IsInitialized()) {
-      return 0;
-    }
-    if (sizeOfEntryExcludingThis) {
+    if (IsInitialized()) {
       s_SizeOfArgs args = { sizeOfEntryExcludingThis, userArg };
       return PL_DHashTableSizeOfExcludingThis(&mTable, s_SizeOfStub, mallocSizeOf, &args);
     }
-    return PL_DHashTableSizeOfExcludingThis(&mTable, NULL, mallocSizeOf);
+    return 0;
   }
 
 #ifdef DEBUG

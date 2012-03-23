@@ -246,8 +246,7 @@ GDIFontEntry::ReadCMAP()
 
 #ifdef PR_LOGGING
     LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %d\n",
-                  NS_ConvertUTF16toUTF8(mName).get(),
-                  mCharacterMap.SizeOfExcludingThis(moz_malloc_size_of)));
+                  NS_ConvertUTF16toUTF8(mName).get(), mCharacterMap.GetSize()));
     if (LOG_CMAPDATA_ENABLED()) {
         char prefix[256];
         sprintf(prefix, "(cmapdata) name: %.220s",
@@ -460,14 +459,6 @@ GDIFontEntry::CreateFontEntry(const nsAString& aName,
     return fe;
 }
 
-void
-GDIFontEntry::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
-                                  FontListSizes*    aSizes) const
-{
-    aSizes->mFontListSize += aMallocSizeOf(this);
-    SizeOfExcludingThis(aMallocSizeOf, aSizes);
-}
-
 /***************************************************************
  *
  * GDIFontFamily
@@ -667,7 +658,7 @@ gfxGDIFontList::GetFontSubstitutes()
     nsAutoString substituteName;
     substituteName.AssignLiteral("Courier");
     BuildKeyNameFromFontName(substituteName);
-    if (!mFontSubstitutes.GetWeak(substituteName)) {
+    if (!mFontSubstitutes.Get(substituteName)) {
         gfxFontFamily *ff;
         nsAutoString actualFontName;
         actualFontName.AssignLiteral("Courier New");
@@ -752,6 +743,7 @@ gfxFontEntry*
 gfxGDIFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                                 const nsAString& aFullname)
 {
+    bool found;
     gfxFontEntry *lookup;
 
     // initialize name lookup tables if needed
@@ -760,8 +752,8 @@ gfxGDIFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
     }
 
     // lookup in name lookup tables, return null if not found
-    if (!(lookup = mPostscriptNames.GetWeak(aFullname)) &&
-        !(lookup = mFullnames.GetWeak(aFullname))) 
+    if (!(lookup = mPostscriptNames.GetWeak(aFullname, &found)) &&
+        !(lookup = mFullnames.GetWeak(aFullname, &found))) 
     {
         return nsnull;
     }
@@ -1046,8 +1038,8 @@ gfxGDIFontList::ResolveFontName(const nsAString& aFontName, nsAString& aResolved
     nsAutoString keyName(aFontName);
     BuildKeyNameFromFontName(keyName);
 
-    gfxFontFamily *ff = mFontSubstitutes.GetWeak(keyName);
-    if (ff) {
+    nsRefPtr<gfxFontFamily> ff;
+    if (mFontSubstitutes.Get(keyName, &ff)) {
         aResolvedFontName = ff->Name();
         return true;
     }
@@ -1059,28 +1051,4 @@ gfxGDIFontList::ResolveFontName(const nsAString& aFontName, nsAString& aResolved
         return true;
 
     return false;
-}
-
-void
-gfxGDIFontList::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
-                                    FontListSizes*    aSizes) const
-{
-    gfxPlatformFontList::SizeOfExcludingThis(aMallocSizeOf, aSizes);
-    aSizes->mFontListSize +=
-        mFontSubstitutes.SizeOfExcludingThis(SizeOfFamilyNameEntryExcludingThis,
-                                             aMallocSizeOf);
-    aSizes->mFontListSize +=
-        mNonExistingFonts.SizeOfExcludingThis(aMallocSizeOf);
-    for (PRUint32 i = 0; i < mNonExistingFonts.Length(); ++i) {
-        aSizes->mFontListSize +=
-            mNonExistingFonts[i].SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-    }
-}
-
-void
-gfxGDIFontList::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
-                                    FontListSizes*    aSizes) const
-{
-    aSizes->mFontListSize += aMallocSizeOf(this);
-    SizeOfExcludingThis(aMallocSizeOf, aSizes);
 }
