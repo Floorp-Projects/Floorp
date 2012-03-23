@@ -1572,10 +1572,8 @@ nsGlobalWindow::UnmarkGrayTimers()
 //*****************************************************************************
 
 nsresult
-nsGlobalWindow::SetScriptContext(PRUint32 lang_id, nsIScriptContext *aScriptContext)
+nsGlobalWindow::SetScriptContext(nsIScriptContext *aScriptContext)
 {
-  NS_ASSERTION(lang_id == nsIProgrammingLanguage::JAVASCRIPT,
-               "We don't support this language ID");
   NS_ASSERTION(IsOuterWindow(), "Uh, SetScriptContext() called on inner window!");
 
   NS_ASSERTION(!aScriptContext || !mContext, "Bad call to SetContext()!");
@@ -1601,11 +1599,9 @@ nsGlobalWindow::SetScriptContext(PRUint32 lang_id, nsIScriptContext *aScriptCont
 }
 
 nsresult
-nsGlobalWindow::EnsureScriptEnvironment(PRUint32 aLangID)
+nsGlobalWindow::EnsureScriptEnvironment()
 {
-  NS_ASSERTION(aLangID == nsIProgrammingLanguage::JAVASCRIPT,
-               "We don't support this language ID");
-  FORWARD_TO_OUTER(EnsureScriptEnvironment, (aLangID), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_OUTER(EnsureScriptEnvironment, (), NS_ERROR_NOT_INITIALIZED);
 
   if (mJSObject)
       return NS_OK;
@@ -1614,20 +1610,18 @@ nsGlobalWindow::EnsureScriptEnvironment(PRUint32 aLangID)
                "mJSObject is null, but we have an inner window?");
 
   nsCOMPtr<nsIScriptRuntime> scriptRuntime;
-  nsresult rv = NS_GetScriptRuntimeByID(aLangID, getter_AddRefs(scriptRuntime));
+  nsresult rv = NS_GetScriptRuntimeByID(nsIProgrammingLanguage::JAVASCRIPT,
+                                        getter_AddRefs(scriptRuntime));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIScriptContext> context = scriptRuntime->CreateContext();
-  return SetScriptContext(aLangID, context);
+  return SetScriptContext(context);
 }
 
 nsIScriptContext *
-nsGlobalWindow::GetScriptContext(PRUint32 lang)
+nsGlobalWindow::GetScriptContext()
 {
-  NS_ASSERTION(lang == nsIProgrammingLanguage::JAVASCRIPT,
-               "We don't support this language ID");
-
-  FORWARD_TO_OUTER(GetScriptContext, (lang), nsnull);
+  FORWARD_TO_OUTER(GetScriptContext, (), nsnull);
   return mContext;
 }
 
@@ -1637,7 +1631,7 @@ nsGlobalWindow::GetContext()
   FORWARD_TO_OUTER(GetContext, (), nsnull);
 
   // check GetContext is indeed identical to GetScriptContext()
-  NS_ASSERTION(mContext == GetScriptContext(nsIProgrammingLanguage::JAVASCRIPT),
+  NS_ASSERTION(mContext == GetScriptContext(),
                "GetContext confused?");
   return mContext;
 }
