@@ -70,6 +70,8 @@ import org.json.*;
 import com.jayway.android.robotium.solo.Solo;
 
 public class FennecNativeDriver implements Driver {
+    private static final int FRAME_TIME_THRESHOLD = 17;     // allow 17ms per frame (~60fps)
+
     // Map of IDs to element names.
     private HashMap mLocators = null;
     private Activity mActivity;
@@ -225,21 +227,15 @@ public class FennecNativeDriver implements Driver {
     public int stopFrameRecording() {
         Class [] parameters = new Class[1];
         parameters[0] = null;
-        List frames;
 
         try {
             Object [] params = null;
-            frames = (List)_stopFrameRecording.invoke(null, params);
-            Object [] framearray = frames.toArray();
-            Long last = new Long(0);
-            Long threshold = new Long(17);
+            List<Long> frames = (List<Long>)_stopFrameRecording.invoke(null, params);
             int numDelays = 0;
-            for (int i=0; i < framearray.length; i++) {
-                Long val = (Long)framearray[i];
-                if ((val - last) > threshold) {
+            for (int i = 1; i < frames.size(); i++) {
+                if (frames.get(i) - frames.get(i-1) > FRAME_TIME_THRESHOLD) {
                     numDelays++;
                 }
-                last = val;
             }
             return numDelays;
         } catch (IllegalAccessException e) {
@@ -265,18 +261,15 @@ public class FennecNativeDriver implements Driver {
     public float stopCheckerboardRecording() {
         Class [] parameters = new Class[1];
         parameters[0] = null;
-        List checkerboard;
 
         try {
             Object [] params = null;
-            checkerboard = (List)_stopCheckerboardRecording.invoke(null, params);
-            Object [] amountarray = checkerboard.toArray();
-            double completeness = 0;
-            for (Object obj : amountarray) {
-                float val = (Float)obj;
-                completeness += (1.0 - (double)val) / (double)amountarray.length;
+            List<Float> checkerboard = (List<Float>)_stopCheckerboardRecording.invoke(null, params);
+            float completeness = 0;
+            for (float val : checkerboard) {
+                completeness += (1.0f - val);
             }
-            return (float)completeness;
+            return completeness / (float)checkerboard.size();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
