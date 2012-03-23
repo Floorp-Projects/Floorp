@@ -85,6 +85,7 @@
     _(IsNullOrUndefinedAndBranch)   \
     _(AbsI)                         \
     _(AbsD)                         \
+    _(SqrtD)                        \
     _(NotI)                         \
     _(NotD)                         \
     _(NotV)                         \

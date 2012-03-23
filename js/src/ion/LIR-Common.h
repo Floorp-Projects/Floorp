@@ -965,6 +965,23 @@ class LAbsD : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Absolute value of an integer.
+class LSqrtD : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(SqrtD);
+    LSqrtD(const LAllocation &num) {
+        setOperand(0, num);
+    }
+
+    const LAllocation *input() {
+        return this->getOperand(0);
+    }
+    const LDefinition *output() {
+        return this->getDef(0);
+    }
+};
+
 // Adds two integers, returning an integer value.
 class LAddI : public LBinaryMath<0>
 {

@@ -528,6 +528,15 @@ LIRGenerator::visitAbs(MAbs *ins)
 }
 
 bool
+LIRGenerator::visitSqrt(MSqrt *ins)
+{
+    MDefinition *num = ins->num();
+    JS_ASSERT(num->type() == MIRType_Double);
+    LSqrtD *lir = new LSqrtD(useRegister(num));
+    return define(lir, ins);
+}
+
+bool
 LIRGenerator::visitAdd(MAdd *ins)
 {
     MDefinition *lhs = ins->getOperand(0);
