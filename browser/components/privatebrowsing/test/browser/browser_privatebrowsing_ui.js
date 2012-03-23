@@ -58,20 +58,30 @@ function test() {
   ok(gPrivateBrowsingUI, "The gPrivateBrowsingUI object exists");
   is(pb.privateBrowsingEnabled, false, "The private browsing mode should not be started initially");
   is(gPrivateBrowsingUI.privateBrowsingEnabled, false, "gPrivateBrowsingUI should expose the correct private browsing status");
+  is(gPrivateBrowsingUI.privateWindow, false, "gPrivateBrowsingUI should expose the correct per-window private browsing status");
   ok(pbMenuItem, "The Private Browsing menu item exists");
   is(pbMenuItem.getAttribute("label"), pbMenuItem.getAttribute("startlabel"), "The Private Browsing menu item should read \"Start Private Browsing\"");
   gPrivateBrowsingUI.toggleMode();
   is(pb.privateBrowsingEnabled, true, "The private browsing mode should be started");
   is(gPrivateBrowsingUI.privateBrowsingEnabled, true, "gPrivateBrowsingUI should expose the correct private browsing status");
+  is(gPrivateBrowsingUI.privateWindow, true, "gPrivateBrowsingUI should expose the correct per-window private browsing status");
   // check to see if the Private Browsing mode was activated successfully
   is(observerData, "enter", "Private Browsing mode was activated using the gPrivateBrowsingUI object");
   is(pbMenuItem.getAttribute("label"), pbMenuItem.getAttribute("stoplabel"), "The Private Browsing menu item should read \"Stop Private Browsing\"");
   gPrivateBrowsingUI.toggleMode()
   is(pb.privateBrowsingEnabled, false, "The private browsing mode should not be started");
   is(gPrivateBrowsingUI.privateBrowsingEnabled, false, "gPrivateBrowsingUI should expose the correct private browsing status");
+  is(gPrivateBrowsingUI.privateWindow, false, "gPrivateBrowsingUI should expose the correct per-window private browsing status");
   // check to see if the Private Browsing mode was deactivated successfully
   is(observerData, "exit", "Private Browsing mode was deactivated using the gPrivateBrowsingUI object");
   is(pbMenuItem.getAttribute("label"), pbMenuItem.getAttribute("startlabel"), "The Private Browsing menu item should read \"Start Private Browsing\"");
+
+  // These are tests for the privateWindow setter.  Note that the setter should
+  // not be used anywhere else for now!
+  gPrivateBrowsingUI.privateWindow = true;
+  is(gPrivateBrowsingUI.privateWindow, true, "gPrivateBrowsingUI should accept the correct per-window private browsing status");
+  gPrivateBrowsingUI.privateWindow = false;
+  is(gPrivateBrowsingUI.privateWindow, false, "gPrivateBrowsingUI should accept the correct per-window private browsing status");
 
   // now, test using the <command> object
   let cmd = document.getElementById("Tools:PrivateBrowsing");
