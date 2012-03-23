@@ -1008,9 +1008,6 @@ JSScript::NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t
     }
 
     PodZero(script);
-#ifdef JS_CRASH_DIAGNOSTICS
-    script->cookie1[0] = script->cookie2[0] = JS_SCRIPT_COOKIE;
-#endif
     script->data  = data;
     script->length = length;
     script->version = version;
@@ -1346,25 +1343,9 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
     JS_ClearScriptTraps(cx, script);
 }
 
-#ifdef JS_CRASH_DIAGNOSTICS
-
-void
-JSScript::CheckScript(JSScript *prev)
-{
-    if (cookie1[0] != JS_SCRIPT_COOKIE || cookie2[0] != JS_SCRIPT_COOKIE) {
-        crash::StackBuffer<sizeof(JSScript), 0x87> buf1(this);
-        crash::StackBuffer<sizeof(JSScript), 0x88> buf2(prev);
-        JS_OPT_ASSERT(false);
-    }
-}
-
-#endif /* JS_CRASH_DIAGNOSTICS */
-
 void
 JSScript::finalize(JSContext *cx, bool background)
 {
-    CheckScript(NULL);
-
     js_CallDestroyScriptHook(cx, this);
 
     JS_ASSERT_IF(principals, originPrincipals);
@@ -1805,8 +1786,6 @@ JSScript::clearTraps(JSContext *cx)
 void
 JSScript::markChildren(JSTracer *trc)
 {
-    CheckScript(NULL);
-
     JS_ASSERT_IF(trc->runtime->gcCheckCompartment,
                  compartment() == trc->runtime->gcCheckCompartment);
 
