@@ -1283,13 +1283,14 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   // Only do a URI equality check for things that aren't stopped plugins.
   // This is because we still need to load again if the plugin has been stopped.
   if (mType == eType_Document || mType == eType_Image || mInstanceOwner) {
-    if (mURI && aURI && !aForceLoad) {
+    if (mURI && aURI) {
       bool equal;
       nsresult rv = mURI->Equals(aURI, &equal);
-      if (NS_SUCCEEDED(rv) && equal) {
+      if (NS_SUCCEEDED(rv) && equal && !aForceLoad) {
         // URI didn't change, do nothing
         return NS_OK;
       }
+      StopPluginInstance();
     }
   }
 
