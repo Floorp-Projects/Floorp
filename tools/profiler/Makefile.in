@@ -69,6 +69,8 @@ SHARED_LIBRARY_LIBS += \
   $(NULL)
 
 export::
+	# Avoid building libunwind documentation
+	$(topsrcdir)/tools/profiler/libunwind/dont_build_docs.sh $(DEPTH)/tools/profiler/libunwind/src/doc/Makefile
 	$(call SUBMAKE,,libunwind/src)
 
 distclean::

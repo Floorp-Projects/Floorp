@@ -458,23 +458,11 @@ ImageLayerOGL::RenderLayer(int,
 }
 
 static void
-InitTexture(GLContext* aGL, GLuint aTexture, GLenum aFormat, const gfxIntSize& aSize)
+SetClamping(GLContext* aGL, GLuint aTexture)
 {
   aGL->fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
-  aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-  aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
   aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
   aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
-
-  aGL->fTexImage2D(LOCAL_GL_TEXTURE_2D,
-                   0,
-                   aFormat,
-                   aSize.width,
-                   aSize.height,
-                   0,
-                   aFormat,
-                   LOCAL_GL_UNSIGNED_BYTE,
-                   NULL);
 }
 
 static void
@@ -529,13 +517,13 @@ ImageLayerOGL::AllocateTexturesYCbCr(PlanarYCbCrImage *aImage)
   gl()->MakeCurrent();
  
   mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_Y, data.mYSize, gl(), &backendData->mTextures[0]);
-  InitTexture(gl(), backendData->mTextures[0].GetTextureID(), LOCAL_GL_LUMINANCE, data.mYSize);
+  SetClamping(gl(), backendData->mTextures[0].GetTextureID());
 
   mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data.mCbCrSize, gl(), &backendData->mTextures[1]);
-  InitTexture(gl(), backendData->mTextures[1].GetTextureID(), LOCAL_GL_LUMINANCE, data.mCbCrSize);
+  SetClamping(gl(), backendData->mTextures[1].GetTextureID());
 
   mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data.mCbCrSize, gl(), &backendData->mTextures[2]);
-  InitTexture(gl(), backendData->mTextures[2].GetTextureID(), LOCAL_GL_LUMINANCE, data.mCbCrSize);
+  SetClamping(gl(), backendData->mTextures[2].GetTextureID());
 
   UploadYUVToTexture(gl(), aImage->mData,
                      &backendData->mTextures[0],
@@ -568,6 +556,8 @@ ImageLayerOGL::AllocateTexturesCairo(CairoImage *aImage)
 
   GLuint tex = texture.GetTextureID();
   gl->fActiveTexture(LOCAL_GL_TEXTURE0);
+
+  SetClamping(gl, tex);
 
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
   if (sGLXLibrary.SupportsTextureFromPixmap(aImage->mSurface)) {
@@ -636,9 +626,9 @@ ShadowImageLayerOGL::Init(const SharedImage& aFront)
                  "Texture allocation failed!");
 
     gl()->MakeCurrent();
-    InitTexture(gl(), mYUVTexture[0].GetTextureID(), LOCAL_GL_LUMINANCE, mSize);
-    InitTexture(gl(), mYUVTexture[1].GetTextureID(), LOCAL_GL_LUMINANCE, mCbCrSize);
-    InitTexture(gl(), mYUVTexture[2].GetTextureID(), LOCAL_GL_LUMINANCE, mCbCrSize);
+    SetClamping(gl(), mYUVTexture[0].GetTextureID());
+    SetClamping(gl(), mYUVTexture[1].GetTextureID());
+    SetClamping(gl(), mYUVTexture[2].GetTextureID());
     return true;
   }
   return false;

@@ -523,12 +523,16 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
     mozilla::ArrayLength(pc_array),
     0
   };
+
+  // Start with the current function.
+  StackWalkCallback(aSample->pc, &array);
+
 #ifdef XP_MACOSX
   pthread_t pt = GetProfiledThread(platform_data());
   void *stackEnd = reinterpret_cast<void*>(-1);
   if (pt)
     stackEnd = static_cast<char*>(pthread_get_stackaddr_np(pt));
-  nsresult rv = FramePointerStackWalk(StackWalkCallback, 1, &array, reinterpret_cast<void**>(aSample->fp), stackEnd);
+  nsresult rv = FramePointerStackWalk(StackWalkCallback, 0, &array, reinterpret_cast<void**>(aSample->fp), stackEnd);
 #else
   nsresult rv = NS_StackWalk(StackWalkCallback, 0, &array, thread);
 #endif

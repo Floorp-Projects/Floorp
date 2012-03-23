@@ -791,7 +791,7 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
     } else if (kvp.key.EqualsLiteral(QUERYKEY_TAG)) {
       nsCAutoString unescaped(kvp.value);
       NS_UnescapeURL(unescaped); // modifies input
-      nsString tag = NS_ConvertUTF8toUTF16(unescaped);
+      NS_ConvertUTF8toUTF16 tag(unescaped);
       if (!tags.Contains(tag)) {
         NS_ENSURE_TRUE(tags.AppendElement(tag), NS_ERROR_OUT_OF_MEMORY);
       }

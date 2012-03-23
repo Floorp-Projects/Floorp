@@ -1001,29 +1001,14 @@ JSScript::NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t
 
     size += length * sizeof(jsbytecode) + nsrcnotes * sizeof(jssrcnote);
 
-    uint8_t *data = NULL;
-#if JS_SCRIPT_INLINE_DATA_LIMIT
-    if (size <= JS_SCRIPT_INLINE_DATA_LIMIT) {
-        /*
-         * Check that if inlineData is big enough to store const values, we
-         * can do that without any special alignment requirements given that
-         * the script as a GC thing is always aligned on Cell::CellSize.
-         */
-        JS_STATIC_ASSERT(Cell::CellSize % sizeof(Value) == 0);
-        JS_STATIC_ASSERT(JS_SCRIPT_INLINE_DATA_LIMIT < sizeof(Value) ||
-                         offsetof(JSScript, inlineData) % sizeof(Value) == 0);
-    } else
-#endif
-    {
-        /*
-         * We assume that calloc aligns on sizeof(Value) if the size we ask to
-         * allocate divides sizeof(Value).
-         */
-        JS_STATIC_ASSERT(sizeof(Value) == sizeof(double));
-        data = static_cast<uint8_t *>(cx->calloc_(JS_ROUNDUP(size, sizeof(Value))));
-        if (!data)
-            return NULL;
-    }
+    /*
+     * We assume that calloc aligns on sizeof(Value) if the size we ask to
+     * allocate divides sizeof(Value).
+     */
+    JS_STATIC_ASSERT(sizeof(Value) == sizeof(double));
+    uint8_t *data = static_cast<uint8_t *>(cx->calloc_(JS_ROUNDUP(size, sizeof(Value))));
+    if (!data)
+        return NULL;
 
     JSScript *script = js_NewGCScript(cx);
     if (!script) {
@@ -1034,10 +1019,6 @@ JSScript::NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t
     PodZero(script);
 #ifdef JS_CRASH_DIAGNOSTICS
     script->cookie1[0] = script->cookie2[0] = JS_SCRIPT_COOKIE;
-#endif
-#if JS_SCRIPT_INLINE_DATA_LIMIT
-    if (!data)
-        data = script->inlineData;
 #endif
     script->data  = data;
     script->length = length;
@@ -1325,11 +1306,6 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
 size_t
 JSScript::computedSizeOfData()
 {
-#if JS_SCRIPT_INLINE_DATA_LIMIT
-    if (data == inlineData)
-        return 0;
-#endif
-
     uint8_t *dataEnd = code + length * sizeof(jsbytecode) + numNotes() * sizeof(jssrcnote);
     JS_ASSERT(dataEnd >= data);
     return dataEnd - data;
@@ -1338,11 +1314,6 @@ JSScript::computedSizeOfData()
 size_t
 JSScript::sizeOfData(JSMallocSizeOfFun mallocSizeOf)
 {
-#if JS_SCRIPT_INLINE_DATA_LIMIT
-    if (data == inlineData)
-        return 0;
-#endif
-
     return mallocSizeOf(data);
 }
 
@@ -1436,13 +1407,8 @@ JSScript::finalize(JSContext *cx, bool background)
         cx->free_(debug);
     }
 
-#if JS_SCRIPT_INLINE_DATA_LIMIT
-    if (data != inlineData)
-#endif
-    {
-        JS_POISON(data, 0xdb, computedSizeOfData());
-        cx->free_(data);
-    }
+    JS_POISON(data, 0xdb, computedSizeOfData());
+    cx->free_(data);
 }
 
 namespace js {
