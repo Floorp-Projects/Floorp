@@ -49,7 +49,6 @@ EXPORTS		= \
 		nsAXPCNativeCallContext.h \
 		xpc_map_end.h \
 		nsAutoJSValHolder.h \
-		nsTArrayHelpers.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

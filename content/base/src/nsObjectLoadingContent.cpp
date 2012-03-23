@@ -115,18 +115,6 @@ static PRLogModuleInfo* gObjectLog = PR_NewLogModule("objlc");
 
 #include "mozilla/Preferences.h"
 
-static bool gClickToPlayPlugins = false;
-
-static void
-InitPrefCache()
-{
-  static bool initializedPrefCache = false;
-  if (!initializedPrefCache) {
-    mozilla::Preferences::AddBoolVarCache(&gClickToPlayPlugins, "plugins.click_to_play");
-  }
-  initializedPrefCache = true;
-}
-
 class nsAsyncInstantiateEvent : public nsRunnable {
 public:
   nsObjectLoadingContent *mContent;
@@ -558,25 +546,6 @@ bool nsObjectLoadingContent::IsPluginEnabledByExtension(nsIURI* uri, nsCString& 
   return false;
 }
 
-nsresult
-nsObjectLoadingContent::BindToTree(nsIDocument* aDocument, nsIContent* /*aParent*/,
-                                   nsIContent* /*aBindingParent*/,
-                                   bool /*aCompileEventHandlers*/)
-{
-  if (aDocument)
-    return aDocument->AddPlugin(this);
-  return NS_OK;
-}
-
-void
-nsObjectLoadingContent::UnbindFromTree(bool /*aDeep*/, bool /*aNullParent*/)
-{
-  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIObjectLoadingContent*>(this));
-  MOZ_ASSERT(thisContent);
-  nsIDocument* ownerDoc = thisContent->OwnerDoc();
-  ownerDoc->RemovePlugin(this);
-}
-
 nsObjectLoadingContent::nsObjectLoadingContent()
   : mPendingInstantiateEvent(nsnull)
   , mChannel(nsnull)
@@ -585,14 +554,11 @@ nsObjectLoadingContent::nsObjectLoadingContent()
   , mUserDisabled(false)
   , mSuppressed(false)
   , mNetworkCreated(true)
+  // If plugins.click_to_play is false, plugins should always play
+  , mShouldPlay(!mozilla::Preferences::GetBool("plugins.click_to_play", false))
   , mSrcStreamLoading(false)
   , mFallbackReason(ePluginOtherState)
 {
-  InitPrefCache();
-  // If plugins.click_to_play is false, plugins should always play
-  mShouldPlay = !gClickToPlayPlugins;
-  // If plugins.click_to_play is true, track the activated state of plugins.
-  mActivated = !gClickToPlayPlugins;
 }
 
 nsObjectLoadingContent::~nsObjectLoadingContent()
@@ -2240,13 +2206,5 @@ nsObjectLoadingContent::PlayPlugin()
     return NS_OK;
 
   mShouldPlay = true;
-  mActivated = true;
   return LoadObject(mURI, true, mContentType, true);
-}
-
-NS_IMETHODIMP
-nsObjectLoadingContent::GetActivated(bool* aActivated)
-{
-  *aActivated = mActivated;
-  return NS_OK;
 }
