@@ -402,6 +402,44 @@ gfxFontEntry::CheckForGraphiteTables()
 }
 #endif
 
+/* static */ size_t
+gfxFontEntry::FontTableHashEntry::SizeOfEntryExcludingThis
+    (FontTableHashEntry *aEntry,
+     nsMallocSizeOfFun   aMallocSizeOf,
+     void*               aUserArg)
+{
+    if (aEntry->mBlob) {
+        FontListSizes *sizes = static_cast<FontListSizes*>(aUserArg);
+        sizes->mFontTableCacheSize += aMallocSizeOf(aEntry->mBlob);
+        sizes->mFontTableCacheSize +=
+            aMallocSizeOf(hb_blob_get_data(aEntry->mBlob, NULL));
+    }
+
+    // the size of the blob is recorded in the FontListSizes record,
+    // so we return 0 here for the function result
+    return 0;
+}
+
+void
+gfxFontEntry::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                  FontListSizes*    aSizes) const
+{
+    aSizes->mFontListSize += mName.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    aSizes->mCharMapsSize += mCharacterMap.SizeOfExcludingThis(aMallocSizeOf);
+    aSizes->mFontTableCacheSize +=
+        mFontTableCache.SizeOfExcludingThis(
+            FontTableHashEntry::SizeOfEntryExcludingThis,
+            aMallocSizeOf, aSizes);
+}
+
+void
+gfxFontEntry::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                  FontListSizes*    aSizes) const
+{
+    aSizes->mFontListSize += aMallocSizeOf(this);
+    SizeOfExcludingThis(aMallocSizeOf, aSizes);
+}
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // class gfxFontFamily
@@ -976,6 +1014,32 @@ gfxFontFamily::FindFont(const nsAString& aPostscriptName)
     return nsnull;
 }
 
+void
+gfxFontFamily::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                   FontListSizes*    aSizes) const
+{
+    aSizes->mFontListSize +=
+        mName.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    aSizes->mCharMapsSize += mCharacterMap.SizeOfExcludingThis(aMallocSizeOf);
+
+    aSizes->mFontListSize +=
+        mAvailableFonts.SizeOfExcludingThis(aMallocSizeOf);
+    for (PRUint32 i = 0; i < mAvailableFonts.Length(); ++i) {
+        gfxFontEntry *fe = mAvailableFonts[i];
+        if (fe) {
+            fe->SizeOfIncludingThis(aMallocSizeOf, aSizes);
+        }
+    }
+}
+
+void
+gfxFontFamily::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                   FontListSizes*    aSizes) const
+{
+    aSizes->mFontListSize += aMallocSizeOf(this);
+    SizeOfExcludingThis(aMallocSizeOf, aSizes);
+}
+ 
 /*
  * gfxFontCache - global cache of gfxFont instances.
  * Expires unused fonts after a short interval;

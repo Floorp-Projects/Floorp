@@ -47,6 +47,7 @@
 #include "gfxFont.h"
 #include "gfxPlatform.h"
 
+#include "nsIMemoryReporter.h"
 #include "mozilla/FunctionTimer.h"
 
 // gfxPlatformFontList is an abstract class for the global font list on the system;
@@ -56,6 +57,18 @@
 // so we do our own font family/style management here instead.
 
 // Much of this is based on the old gfxQuartzFontCache, but adapted for use on all platforms.
+
+struct FontListSizes {
+    FontListSizes()
+        : mFontListSize(0), mFontTableCacheSize(0), mCharMapsSize(0)
+    { }
+
+    size_t mFontListSize; // size of the font list and dependent objects
+                          // (font family and face names, etc), but NOT
+                          // including the font table cache and the cmaps
+    size_t mFontTableCacheSize; // memory used for the gfxFontEntry table caches
+    size_t mCharMapsSize; // memory used for cmap coverage info
+};
 
 class gfxPlatformFontList : protected gfxFontInfoLoader
 {
@@ -141,7 +154,20 @@ public:
     // (platforms may override, eg Mac)
     virtual bool GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
 
+    virtual void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
+    virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
+
 protected:
+    class MemoryReporter
+        : public nsIMemoryMultiReporter
+    {
+    public:
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSIMEMORYMULTIREPORTER
+    };
+
     gfxPlatformFontList(bool aNeedFullnamePostscriptNames = true);
 
     static gfxPlatformFontList *sPlatformFontList;
@@ -199,6 +225,13 @@ protected:
     virtual void InitLoader();
     virtual bool RunLoader();
     virtual void FinishLoader();
+
+    // used by memory reporter to accumulate sizes of family names in the hash
+    static size_t
+    SizeOfFamilyNameEntryExcludingThis(const nsAString&               aKey,
+                                       const nsRefPtr<gfxFontFamily>& aFamily,
+                                       nsMallocSizeOfFun              aMallocSizeOf,
+                                       void*                          aUserArg);
 
     // canonical family name ==> family entry (unique, one name per family entry)
     nsRefPtrHashtable<nsStringHashKey, gfxFontFamily> mFontFamilies;

@@ -389,6 +389,23 @@ FT2FontEntry::GetFontTable(PRUint32 aTableTag,
     return NS_OK;
 }
 
+void
+FT2FontEntry::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                  FontListSizes*    aSizes) const
+{
+    gfxFontEntry::SizeOfExcludingThis(aMallocSizeOf, aSizes);
+    aSizes->mFontListSize +=
+        mFilename.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+}
+
+void
+FT2FontEntry::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                  FontListSizes*    aSizes) const
+{
+    aSizes->mFontListSize += aMallocSizeOf(this);
+    SizeOfExcludingThis(aMallocSizeOf, aSizes);
+}
+
 /*
  * FT2FontFamily
  * A standard gfxFontFamily; just adds a method used to support sending
