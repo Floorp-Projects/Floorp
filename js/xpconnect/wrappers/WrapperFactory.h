@@ -37,6 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef _xpc_WRAPPERFACTORY_H
+#define _xpc_WRAPPERFACTORY_H
+
 #include "jsapi.h"
 #include "jswrapper.h"
 
@@ -102,3 +105,5 @@ class WrapperFactory {
 extern js::Wrapper WaiveXrayWrapperWrapper;
 
 }
+
+#endif /* _xpc_WRAPPERFACTORY_H */

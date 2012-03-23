@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "WrapperFactory.h"
 #include "CrossOriginWrapper.h"
 #include "FilteringWrapper.h"
 #include "XrayWrapper.h"
@@ -390,8 +389,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                 // Location objects can become same origin after navigation, so we might
                 // have to grant transparent access later on.
                 if (IsLocationObject(obj)) {
-                    wrapper = &FilteringWrapper<Xray,
-                        SameOriginOrCrossOriginAccessiblePropertiesOnly>::singleton;
+                    wrapper = &FilteringWrapper<Xray, LocationPolicy>::singleton;
                 } else {
                     wrapper = &FilteringWrapper<Xray,
                         CrossOriginAccessiblePropertiesOnly>::singleton;
@@ -411,8 +409,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     return wrapperObj;
 }
 
-typedef FilteringWrapper<XrayWrapper<SameCompartmentSecurityWrapper>,
-                         SameOriginOrCrossOriginAccessiblePropertiesOnly> LW;
+typedef FilteringWrapper<XrayWrapper<SameCompartmentSecurityWrapper>, LocationPolicy> LW;
 
 bool
 WrapperFactory::IsLocationObject(JSObject *obj)
