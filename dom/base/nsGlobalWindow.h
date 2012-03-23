@@ -317,13 +317,13 @@ public:
     return mJSObject;
   }
 
-  virtual nsresult EnsureScriptEnvironment(PRUint32 aLangID);
+  virtual nsresult EnsureScriptEnvironment();
 
-  virtual nsIScriptContext *GetScriptContext(PRUint32 lang);
+  virtual nsIScriptContext *GetScriptContext();
 
   // Set a new script language context for this global.  The native global
   // for the context is created by the context's GetNativeGlobal() method.
-  virtual nsresult SetScriptContext(PRUint32 lang, nsIScriptContext *aContext);
+  virtual nsresult SetScriptContext(nsIScriptContext *aContext);
   
   virtual void OnFinalize(JSObject* aObject);
   virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts);
