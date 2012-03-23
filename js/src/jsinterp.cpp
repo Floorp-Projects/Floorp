@@ -4468,6 +4468,16 @@ js::GetElement(JSContext *cx, const Value &lref, const Value &rref, Value *res)
 }
 
 bool
+js::GetElementMonitored(JSContext *cx, const Value &lref, const Value &rref, Value *res)
+{
+    if (!GetElement(cx, lref, rref, res))
+        return false;
+
+    TypeScript::Monitor(cx, *res);
+    return true;
+}
+
+bool
 js::CallElement(JSContext *cx, const Value &lref, const Value &rref, Value *res)
 {
     return GetElementOperation(cx, JSOP_CALLELEM, lref, rref, res);

@@ -70,7 +70,7 @@ bool
 CodeGeneratorX64::visitDouble(LDouble *ins)
 {
     const LDefinition *out = ins->output();
-    masm.loadDouble(ins->getDouble(), ToFloatRegister(out));
+    masm.loadConstantDouble(ins->getDouble(), ToFloatRegister(out));
     return true;
 }
 

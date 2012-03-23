@@ -293,11 +293,12 @@ class MacroAssembler : public MacroAssemblerSpecific
             store32(Imm32(key.constant()), dest);
     }
 
-    void branchKey(Condition cond, const Address &dest, const Int32Key &key, Label *label) {
+    template<typename T>
+    void branchKey(Condition cond, const T &length, const Int32Key &key, Label *label) {
         if (key.isRegister())
-            branch32(cond, dest, key.reg(), label);
+            branch32(cond, length, key.reg(), label);
         else
-            branch32(cond, dest, Imm32(key.constant()), label);
+            branch32(cond, length, Imm32(key.constant()), label);
     }
 
     template <typename T>
@@ -326,6 +327,13 @@ class MacroAssembler : public MacroAssemblerSpecific
         if (type == JSVAL_TYPE_UNKNOWN)
             bind(&done);
     }
+
+    template<typename T>
+    void loadFromTypedArray(int arrayType, const T &src, AnyRegister dest, Register temp, Label *fail);
+
+    template<typename T>
+    void loadFromTypedArray(int arrayType, const T &src, const ValueOperand &dest, bool allowDouble,
+                            Label *fail);
 };
 
 } // namespace ion

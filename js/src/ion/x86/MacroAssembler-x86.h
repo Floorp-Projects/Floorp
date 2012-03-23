@@ -501,6 +501,12 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
+    // Note: this function clobbers the source register.
+    void boxDouble(const FloatRegister &src, const ValueOperand &dest) {
+        movd(src, dest.payloadReg());
+        psrlq(Imm32(4), src);
+        movd(src, dest.typeReg());
+    }
     void unboxInt32(const ValueOperand &src, const Register &dest) {
         movl(src.payloadReg(), dest);
     }
@@ -608,9 +614,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movsd(operand, dest);
         bind(&end);
     }
-    void loadDouble(Address address, FloatRegister dest) {
-        movsd(Operand(address), dest);
-    }
     void storeDouble(FloatRegister src, Address dest) {
         movsd(src, Operand(dest));
     }
@@ -631,6 +634,20 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     void loadInstructionPointerAfterCall(const Register &dest) {
         movl(Operand(StackPointer, 0x0), dest);
+    }
+
+    // Note: this function clobbers the source register.
+    void convertUInt32ToDouble(const Register &src, const FloatRegister &dest) {
+        // src is [0, 2^32-1]
+        subl(Imm32(0x80000000), src);
+
+        // Now src is [-2^31, 2^31-1] - int range, but not the same value.
+        cvtsi2sd(src, dest);
+
+        // dest is now a double with the int range.
+        // correct the double value by adding 0x80000000.
+        static const double NegativeOne = 2147483648.0;
+        addsd(Operand(&NegativeOne), dest);
     }
 
     // Setup a call to C/C++ code, given the number of general arguments it

@@ -535,6 +535,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
+    void boxDouble(const FloatRegister &src, const ValueOperand &dest) {
+        movqsd(src, dest.valueReg());
+    }
+
     // Note that the |dest| register here may be ScratchReg, so we shouldn't
     // use it.
     void unboxInt32(const ValueOperand &src, const Register &dest) {
@@ -633,7 +637,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cvtsi2sd(Operand(operand.valueReg()), dest);
     }
 
-    void loadDouble(double d, const FloatRegister &dest) {
+    void loadConstantDouble(double d, const FloatRegister &dest) {
         jsdpun dpun;
         dpun.d = d;
         if (dpun.u64 == 0) {
@@ -644,10 +648,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         }
     }
     void loadStaticDouble(const double *dp, const FloatRegister &dest) {
-        loadDouble(*dp, dest);
-    }
-    void loadDouble(Address src, FloatRegister dest) {
-        movsd(Operand(src), dest);
+        loadConstantDouble(*dp, dest);
     }
     void storeDouble(FloatRegister src, Address dest) {
         movsd(src, Operand(dest));
@@ -693,6 +694,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
     void loadInstructionPointerAfterCall(const Register &dest) {
         movq(Operand(StackPointer, 0x0), dest);
+    }
+
+    void convertUInt32ToDouble(const Register &src, const FloatRegister &dest) {
+        cvtsq2sd(src, dest);
     }
 
     // Setup a call to C/C++ code, given the number of general arguments it

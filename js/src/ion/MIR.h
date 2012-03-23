@@ -193,7 +193,8 @@ class AliasSet {
         ObjectFields      = 1 << 0, // shape, class, slots, length etc.
         Element           = 1 << 1, // A member of obj->elements.
         Slot              = 1 << 2, // A member of obj->slots.
-        Last              = Slot,
+        TypedArrayElement = 1 << 3, // A typed array element.
+        Last              = TypedArrayElement,
         Any               = Last | (Last - 1),
 
         // Indicates load or store.
@@ -2709,6 +2710,39 @@ class MTypedArrayLength
     }
 };
 
+// Load a typed array's elements vector.
+class MTypedArrayElements
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
+{
+    MTypedArrayElements(MDefinition *object)
+      : MUnaryInstruction(object)
+    {
+        setResultType(MIRType_Elements);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(TypedArrayElements);
+
+    static MTypedArrayElements *New(MDefinition *object) {
+        return new MTypedArrayElements(object);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    bool congruentTo(MDefinition *const &ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::ObjectFields);
+    }
+};
+
 // Perform !-operation
 class MNot
   : public MUnaryInstruction,
@@ -3029,6 +3063,96 @@ class MStoreElementHole
         // StoreElementHole can update the initialized length, the array length
         // or reallocate obj->elements.
         return AliasSet::Store(AliasSet::Element | AliasSet::ObjectFields);
+    }
+};
+
+class MLoadTypedArrayElement
+  : public MBinaryInstruction
+{
+    int arrayType_;
+
+    MLoadTypedArrayElement(MDefinition *elements, MDefinition *index, int arrayType)
+      : MBinaryInstruction(elements, index), arrayType_(arrayType)
+    {
+        setResultType(MIRType_Value);
+        setMovable();
+        JS_ASSERT(elements->type() == MIRType_Elements);
+        JS_ASSERT(index->type() == MIRType_Int32);
+        JS_ASSERT(arrayType >= 0 && arrayType < TypedArray::TYPE_MAX);
+    }
+
+  public:
+    INSTRUCTION_HEADER(LoadTypedArrayElement);
+
+    static MLoadTypedArrayElement *New(MDefinition *elements, MDefinition *index, int arrayType) {
+        return new MLoadTypedArrayElement(elements, index, arrayType);
+    }
+
+    int arrayType() const {
+        return arrayType_;
+    }
+    bool fallible() const {
+        // Bailout if the result does not fit in an int32.
+        return arrayType_ == TypedArray::TYPE_UINT32 && type() == MIRType_Int32;
+    }
+    MDefinition *elements() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::TypedArrayElement);
+    }
+};
+
+// Load a value from a typed array. Out-of-bounds accesses are handled using
+// a VM call.
+class MLoadTypedArrayElementHole
+  : public MBinaryInstruction,
+    public SingleObjectPolicy
+{
+    int arrayType_;
+    bool allowDouble_;
+
+    MLoadTypedArrayElementHole(MDefinition *object, MDefinition *index, int arrayType, bool allowDouble)
+      : MBinaryInstruction(object, index), arrayType_(arrayType), allowDouble_(allowDouble)
+    {
+        setResultType(MIRType_Value);
+        setMovable();
+        JS_ASSERT(index->type() == MIRType_Int32);
+        JS_ASSERT(arrayType >= 0 && arrayType < TypedArray::TYPE_MAX);
+    }
+
+  public:
+    INSTRUCTION_HEADER(LoadTypedArrayElementHole);
+
+    static MLoadTypedArrayElementHole *New(MDefinition *object, MDefinition *index, int arrayType, bool allowDouble) {
+        return new MLoadTypedArrayElementHole(object, index, arrayType, allowDouble);
+    }
+
+    int arrayType() const {
+        return arrayType_;
+    }
+    bool allowDouble() const {
+        return allowDouble_;
+    }
+    bool fallible() const {
+        return arrayType_ == TypedArray::TYPE_UINT32 && !allowDouble_;
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    AliasSet getAliasSet() const {
+        // Out-of-bounds accesses are handled using a VM call, this may
+        // invoke getters on the prototype chain.
+        return AliasSet::Store(AliasSet::Any);
     }
 };
 
