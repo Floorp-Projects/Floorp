@@ -161,8 +161,8 @@ template<> PXOW PXOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
                                 WrapperFactory::PARTIALLY_TRANSPARENT);
 template<> NNXOW NNXOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
                                   WrapperFactory::PARTIALLY_TRANSPARENT);
-template<> LW  LW::singleton(0);
-template<> XLW XLW::singleton(0);
+template<> LW  LW::singleton(WrapperFactory::SHADOWING_FORBIDDEN);
+template<> XLW XLW::singleton(WrapperFactory::SHADOWING_FORBIDDEN);
 
 template class SOW;
 template class COW;
