@@ -53,7 +53,6 @@
 #include "nsHtml5DocumentMode.h"
 #include "nsIScriptElement.h"
 #include "nsIParser.h"
-#include "nsCOMArray.h"
 #include "nsAHtml5TreeOpSink.h"
 #include "nsHtml5TreeOpStage.h"
 #include "nsIURI.h"
@@ -104,7 +103,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     nsTArray<nsIContentPtr>              mElementsSeenInThisAppendBatch;
     nsTArray<nsHtml5PendingNotification> mPendingNotifications;
     nsHtml5StreamParser*                 mStreamParser;
-    nsCOMArray<nsIContent>               mOwnedElements;
+    nsTArray<nsCOMPtr<nsIContent> >      mOwnedElements;
     
     /**
      * URLs already preloaded/preloading.
@@ -393,7 +392,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     void Reset();
     
     inline void HoldElement(nsIContent* aContent) {
-      mOwnedElements.AppendObject(aContent);
+      mOwnedElements.AppendElement(aContent);
     }
 
     void DropHeldElements();
