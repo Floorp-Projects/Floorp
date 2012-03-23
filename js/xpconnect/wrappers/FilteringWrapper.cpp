@@ -146,9 +146,9 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id,
 #define NNXOW FilteringWrapper<CrossCompartmentSecurityWrapper, \
                                CrossOriginAccessiblePropertiesOnly>
 #define LW    FilteringWrapper<XrayWrapper<SameCompartmentSecurityWrapper>, \
-                               SameOriginOrCrossOriginAccessiblePropertiesOnly>
+                               LocationPolicy>
 #define XLW   FilteringWrapper<XrayWrapper<CrossCompartmentSecurityWrapper>, \
-                               SameOriginOrCrossOriginAccessiblePropertiesOnly>
+                               LocationPolicy>
 
 template<> SOW SOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
                               WrapperFactory::SOW_FLAG);
