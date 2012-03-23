@@ -162,6 +162,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitMonitorTypes(MMonitorTypes *ins);
     bool visitArrayLength(MArrayLength *ins);
     bool visitTypedArrayLength(MTypedArrayLength *ins);
+    bool visitTypedArrayElements(MTypedArrayElements *ins);
     bool visitInitializedLength(MInitializedLength *ins);
     bool visitSetInitializedLength(MSetInitializedLength *ins);
     bool visitNot(MNot *ins);
@@ -171,6 +172,8 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitLoadElementHole(MLoadElementHole *ins);
     bool visitStoreElement(MStoreElement *ins);
     bool visitStoreElementHole(MStoreElementHole *ins);
+    bool visitLoadTypedArrayElement(MLoadTypedArrayElement *ins);
+    bool visitLoadTypedArrayElementHole(MLoadTypedArrayElementHole *ins);
     bool visitLoadFixedSlot(MLoadFixedSlot *ins);
     bool visitStoreFixedSlot(MStoreFixedSlot *ins);
     bool visitGetPropertyCache(MGetPropertyCache *ins);

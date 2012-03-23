@@ -1003,6 +1003,13 @@ LIRGenerator::visitTypedArrayLength(MTypedArrayLength *ins)
 }
 
 bool
+LIRGenerator::visitTypedArrayElements(MTypedArrayElements *ins)
+{
+    JS_ASSERT(ins->type() == MIRType_Elements);
+    return define(new LTypedArrayElements(useRegisterAtStart(ins->object())), ins);
+}
+
+bool
 LIRGenerator::visitInitializedLength(MInitializedLength *ins)
 {
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);
@@ -1178,6 +1185,45 @@ LIRGenerator::visitStoreElementHole(MStoreElementHole *ins)
     }
 
     return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitLoadTypedArrayElement(MLoadTypedArrayElement *ins)
+{
+    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
+    JS_ASSERT(ins->index()->type() == MIRType_Int32);
+
+    const LUse elements = useRegister(ins->elements());
+    const LAllocation index = useRegisterOrConstant(ins->index());
+
+    JS_ASSERT(IsNumberType(ins->type()));
+
+    // We need a temp register for Uint32Array with known double result.
+    LDefinition tempDef = LDefinition::BogusTemp();
+    if (ins->arrayType() == TypedArray::TYPE_UINT32 && ins->type() == MIRType_Double)
+        tempDef = temp();
+
+    LLoadTypedArrayElement *lir = new LLoadTypedArrayElement(elements, index, tempDef);
+    if (ins->fallible() && !assignSnapshot(lir))
+        return false;
+    return define(lir, ins);
+}
+
+bool
+LIRGenerator::visitLoadTypedArrayElementHole(MLoadTypedArrayElementHole *ins)
+{
+    JS_ASSERT(ins->object()->type() == MIRType_Object);
+    JS_ASSERT(ins->index()->type() == MIRType_Int32);
+
+    JS_ASSERT(ins->type() == MIRType_Value);
+
+    const LUse object = useRegister(ins->object());
+    const LAllocation index = useRegisterOrConstant(ins->index());
+
+    LLoadTypedArrayElementHole *lir = new LLoadTypedArrayElementHole(object, index);
+    if (ins->fallible() && !assignSnapshot(lir))
+        return false;
+    return defineBox(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool

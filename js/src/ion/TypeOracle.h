@@ -120,7 +120,10 @@ class TypeOracle
         *barrier = NULL;
         return NULL;
     }
-    virtual bool elementReadIsDense(JSScript *script, jsbytecode *pc) {
+    virtual bool elementReadIsDenseArray(JSScript *script, jsbytecode *pc) {
+        return false;
+    }
+    virtual bool elementReadIsTypedArray(JSScript *script, jsbytecode *pc, int *arrayType) {
         return false;
     }
     virtual bool elementReadIsPacked(JSScript *script, jsbytecode *pc) {
@@ -233,7 +236,8 @@ class TypeInferenceOracle : public TypeOracle
     types::TypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc);
     types::TypeSet *getCallArg(JSScript *caller, uint32 argc, uint32 arg, jsbytecode *pc);
     types::TypeSet *getCallReturn(JSScript *caller, jsbytecode *pc);
-    bool elementReadIsDense(JSScript *script, jsbytecode *pc);
+    bool elementReadIsDenseArray(JSScript *script, jsbytecode *pc);
+    bool elementReadIsTypedArray(JSScript *script, jsbytecode *pc, int *atype);
     bool elementReadIsPacked(JSScript *script, jsbytecode *pc);
     void elementReadGeneric(JSScript *script, jsbytecode *pc, bool *cacheable, bool *monitorResult);
     bool elementWriteIsDense(JSScript *script, jsbytecode *pc);

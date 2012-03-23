@@ -60,6 +60,7 @@ class OutOfLineUnboxDouble;
 class OutOfLineCache;
 class OutOfLineStoreElementHole;
 class OutOfLineTypeOfV;
+class OutOfLineLoadTypedArray;
 
 class CodeGenerator : public CodeGeneratorSpecific
 {
@@ -109,6 +110,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCreateThis(LCreateThis *lir);
     bool visitArrayLength(LArrayLength *lir);
     bool visitTypedArrayLength(LTypedArrayLength *lir);
+    bool visitTypedArrayElements(LTypedArrayElements *lir);
     bool visitStringLength(LStringLength *lir);
     bool visitInitializedLength(LInitializedLength *lir);
     bool visitSetInitializedLength(LSetInitializedLength *lir);
@@ -144,6 +146,9 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitStoreElementV(LStoreElementV *lir);
     bool visitStoreElementHoleT(LStoreElementHoleT *lir);
     bool visitStoreElementHoleV(LStoreElementHoleV *lir);
+    bool visitLoadTypedArrayElement(LLoadTypedArrayElement *lir);
+    bool visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole *lir);
+    bool visitOutOfLineLoadTypedArray(OutOfLineLoadTypedArray *ool);
     bool visitCallIteratorStart(LCallIteratorStart *lir);
     bool visitIteratorStart(LIteratorStart *lir);
     bool visitIteratorNext(LIteratorNext *lir);

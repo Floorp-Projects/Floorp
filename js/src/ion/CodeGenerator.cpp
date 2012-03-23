@@ -917,6 +917,15 @@ CodeGenerator::visitTypedArrayLength(LTypedArrayLength *lir)
 }
 
 bool
+CodeGenerator::visitTypedArrayElements(LTypedArrayElements *lir)
+{
+    Register obj = ToRegister(lir->object());
+    Register out = ToRegister(lir->output());
+    masm.loadPtr(Address(obj, TypedArray::dataOffset()), out);
+    return true;
+}
+
+bool
 CodeGenerator::visitStringLength(LStringLength *lir)
 {
     Address lengthAndFlags(ToRegister(lir->string()), JSString::offsetOfLengthAndFlags());
@@ -2426,6 +2435,116 @@ CodeGenerator::visitLoadElementHole(LLoadElementHole *lir)
     masm.bind(&undefined);
     masm.moveValue(UndefinedValue(), out);
     masm.bind(&done);
+    return true;
+}
+
+bool
+CodeGenerator::visitLoadTypedArrayElement(LLoadTypedArrayElement *lir)
+{
+    Register elements = ToRegister(lir->elements());
+    Register temp = lir->temp()->isBogusTemp() ? InvalidReg : ToRegister(lir->temp());
+    AnyRegister out = ToAnyRegister(lir->output());
+
+    int arrayType = lir->mir()->arrayType();
+    int shift = TypedArray::slotWidth(arrayType);
+
+    Label fail;
+    if (lir->index()->isConstant()) {
+        Address source(elements, ToInt32(lir->index()) * shift);
+        masm.loadFromTypedArray(arrayType, source, out, temp, &fail);
+    } else {
+        BaseIndex source(elements, ToRegister(lir->index()), ScaleFromShift(shift));
+        masm.loadFromTypedArray(arrayType, source, out, temp, &fail);
+    }
+
+    if (fail.used() && !bailoutFrom(&fail, lir->snapshot()))
+        return false;
+
+    return true;
+}
+
+class OutOfLineLoadTypedArray : public OutOfLineCodeBase<CodeGenerator>
+{
+    LLoadTypedArrayElementHole *ins_;
+
+  public:
+    OutOfLineLoadTypedArray(LLoadTypedArrayElementHole *ins)
+      : ins_(ins)
+    { }
+
+    bool accept(CodeGenerator *codegen) {
+        return codegen->visitOutOfLineLoadTypedArray(this);
+    }
+
+    LLoadTypedArrayElementHole *ins() const {
+        return ins_;
+    }
+};
+
+bool
+CodeGenerator::visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole *lir)
+{
+    Register object = ToRegister(lir->object());
+    const ValueOperand out = ToOutValue(lir);
+
+    OutOfLineLoadTypedArray *ool = new OutOfLineLoadTypedArray(lir);
+    if (!addOutOfLineCode(ool))
+        return false;
+
+    // Load the length.
+    Register scratch = out.scratchReg();
+    Int32Key key = ToInt32Key(lir->index());
+    masm.unboxInt32(Address(object, TypedArray::lengthOffset()), scratch);
+
+    // OOL path if index >= length.
+    masm.branchKey(Assembler::BelowOrEqual, scratch, key, ool->entry());
+
+    // Load the elements vector.
+    masm.loadPtr(Address(object, TypedArray::dataOffset()), scratch);
+
+    int arrayType = lir->mir()->arrayType();
+    int shift = TypedArray::slotWidth(arrayType);
+
+    Label fail;
+    if (key.isConstant()) {
+        Address source(scratch, key.constant() * shift);
+        masm.loadFromTypedArray(arrayType, source, out, lir->mir()->allowDouble(), &fail);
+    } else {
+        BaseIndex source(scratch, key.reg(), ScaleFromShift(shift));
+        masm.loadFromTypedArray(arrayType, source, out, lir->mir()->allowDouble(), &fail);
+    }
+
+    if (fail.used() && !bailoutFrom(&fail, lir->snapshot()))
+        return false;
+
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
+CodeGenerator::visitOutOfLineLoadTypedArray(OutOfLineLoadTypedArray *ool)
+{
+    LLoadTypedArrayElementHole *ins = ool->ins();
+    saveLive(ins);
+
+    Register object = ToRegister(ins->object());
+    ValueOperand out = ToOutValue(ins);
+
+    typedef bool (*pf)(JSContext *, const Value &, const Value &, Value *);
+    static const VMFunction Info = FunctionInfo<pf>(js::GetElementMonitored);
+
+    if (ins->index()->isConstant())
+        pushArg(*ins->index()->toConstant());
+    else
+        pushArg(TypedOrValueRegister(MIRType_Int32, ToAnyRegister(ins->index())));
+    pushArg(TypedOrValueRegister(MIRType_Object, AnyRegister(object)));
+    if (!callVM(Info, ins))
+        return false;
+
+    masm.storeCallResultValue(out);
+    restoreLive(ins);
+
+    masm.jump(ool->rejoin());
     return true;
 }
 

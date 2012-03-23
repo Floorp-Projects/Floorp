@@ -56,6 +56,24 @@ enum Scale {
     TimesEight
 };
 
+static inline Scale
+ScaleFromShift(int shift)
+{
+    switch (shift) {
+      case 1:
+        return TimesOne;
+      case 2:
+        return TimesTwo;
+      case 4:
+        return TimesFour;
+      case 8:
+        return TimesEight;
+    }
+
+    JS_NOT_REACHED("Invalid scale");
+    return TimesOne;
+}
+
 // Used for 32-bit immediates which do not require relocation.
 struct Imm32
 {

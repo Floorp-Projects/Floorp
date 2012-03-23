@@ -203,7 +203,7 @@ TypeInferenceOracle::propertyReadBarrier(JSScript *script, jsbytecode *pc)
 }
 
 bool
-TypeInferenceOracle::elementReadIsDense(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::elementReadIsDenseArray(JSScript *script, jsbytecode *pc)
 {
     // Check whether the object is a dense array and index is int32 or double.
     types::TypeSet *obj = script->analysis()->poppedTypes(pc, 1);
@@ -218,6 +218,46 @@ TypeInferenceOracle::elementReadIsDense(JSScript *script, jsbytecode *pc)
         return false;
 
     return !obj->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY);
+}
+
+bool
+TypeInferenceOracle::elementReadIsTypedArray(JSScript *script, jsbytecode *pc, int *arrayType)
+{
+    // Check whether the object is a typed array and index is int32 or double.
+    types::TypeSet *obj = script->analysis()->poppedTypes(pc, 1);
+    types::TypeSet *id = script->analysis()->poppedTypes(pc, 0);
+
+    JSValueType objType = obj->getKnownTypeTag(cx);
+    if (objType != JSVAL_TYPE_OBJECT)
+        return false;
+
+    JSValueType idType = id->getKnownTypeTag(cx);
+    if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
+        return false;
+
+    if (obj->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY))
+        return false;
+
+    *arrayType = obj->getTypedArrayType(cx);
+    if (*arrayType == TypedArray::TYPE_MAX)
+        return false;
+
+    JS_ASSERT(*arrayType >= 0 && *arrayType < TypedArray::TYPE_MAX);
+
+    // Unlike dense arrays, the types of elements in typed arrays are not
+    // guaranteed to be present in the object's type, and we need to use
+    // knowledge about the possible contents of the array vs. the types
+    // that have been read out of it to figure out how to do the load.
+    types::TypeSet *result = propertyRead(script, pc);
+    if (*arrayType == TypedArray::TYPE_FLOAT32 || *arrayType == TypedArray::TYPE_FLOAT64) {
+        if (!result->hasType(types::Type::DoubleType()))
+            return false;
+    } else {
+        if (!result->hasType(types::Type::Int32Type()))
+            return false;
+    }
+
+    return true;
 }
 
 bool

@@ -202,3 +202,127 @@ MacroAssembler::branchTestValueTruthy(const ValueOperand &value, Label *ifTrue, 
     jump(ifTrue);
     bind(&ifFalse);
 }
+
+template<typename T>
+void
+MacroAssembler::loadFromTypedArray(int arrayType, const T &src, AnyRegister dest, Register temp,
+                                   Label *fail)
+{
+#ifdef JS_CPU_ARM
+    JS_NOT_REACHED("NYI typed arrays ARM");
+#else
+    switch (arrayType) {
+      case TypedArray::TYPE_INT8:
+        load8SignExtend(src, dest.gpr());
+        break;
+      case TypedArray::TYPE_UINT8:
+      case TypedArray::TYPE_UINT8_CLAMPED:
+        load8(src, dest.gpr());
+        break;
+      case TypedArray::TYPE_INT16:
+        load16SignExtend(src, dest.gpr());
+        break;
+      case TypedArray::TYPE_UINT16:
+        load16(src, dest.gpr());
+        break;
+      case TypedArray::TYPE_INT32:
+        load32(src, dest.gpr());
+        break;
+      case TypedArray::TYPE_UINT32:
+        if (dest.isFloat()) {
+            load32(src, temp);
+            convertUInt32ToDouble(temp, dest.fpu());
+        } else {
+            load32(src, dest.gpr());
+            test32(dest.gpr(), dest.gpr());
+            j(Assembler::Signed, fail);
+        }
+        break;
+      case TypedArray::TYPE_FLOAT32:
+      case TypedArray::TYPE_FLOAT64:
+      {
+        if (arrayType == js::TypedArray::TYPE_FLOAT32)
+            loadFloat(src, dest.fpu());
+        else
+            loadDouble(src, dest.fpu());
+
+        // Make sure NaN gets canonicalized.
+        Label notNaN;
+        branchCompareDoubles(Assembler::NoParity, dest.fpu(), dest.fpu(), &notNaN);
+        {
+            loadStaticDouble(&js_NaN, dest.fpu());
+        }
+        bind(&notNaN);
+        break;
+      }
+      default:
+        JS_NOT_REACHED("Invalid typed array type");
+        break;
+    }
+#endif
+}
+
+template void MacroAssembler::loadFromTypedArray(int arrayType, const Address &src, AnyRegister dest,
+                                                 Register temp, Label *fail);
+template void MacroAssembler::loadFromTypedArray(int arrayType, const BaseIndex &src, AnyRegister dest,
+                                                 Register temp, Label *fail);
+
+template<typename T>
+void
+MacroAssembler::loadFromTypedArray(int arrayType, const T &src, const ValueOperand &dest,
+                                   bool allowDouble, Label *fail)
+{
+#ifdef JS_CPU_ARM
+    JS_NOT_REACHED("NYI typed arrays ARM");
+#else
+    switch (arrayType) {
+      case TypedArray::TYPE_INT8:
+      case TypedArray::TYPE_UINT8:
+      case TypedArray::TYPE_UINT8_CLAMPED:
+      case TypedArray::TYPE_INT16:
+      case TypedArray::TYPE_UINT16:
+      case TypedArray::TYPE_INT32:
+        loadFromTypedArray(arrayType, src, AnyRegister(dest.scratchReg()), InvalidReg, NULL);
+        tagValue(JSVAL_TYPE_INT32, dest.scratchReg(), dest);
+        break;
+      case TypedArray::TYPE_UINT32:
+        load32(src, dest.scratchReg());
+        test32(dest.scratchReg(), dest.scratchReg());
+        if (allowDouble) {
+            // If the value fits in an int32, store an int32 type tag.
+            // Else, convert the value to double and box it.
+            Label done, isDouble;
+            j(Assembler::Signed, &isDouble);
+            {
+                tagValue(JSVAL_TYPE_INT32, dest.scratchReg(), dest);
+                jump(&done);
+            }
+            bind(&isDouble);
+            {
+                convertUInt32ToDouble(dest.scratchReg(), ScratchFloatReg);
+                boxDouble(ScratchFloatReg, dest);
+            }
+            bind(&done);
+        } else {
+            // Bailout if the value does not fit in an int32.
+            j(Assembler::Signed, fail);
+            tagValue(JSVAL_TYPE_INT32, dest.scratchReg(), dest);
+        }
+        break;
+      case TypedArray::TYPE_FLOAT32:
+      case TypedArray::TYPE_FLOAT64:
+        loadFromTypedArray(arrayType, src, AnyRegister(ScratchFloatReg), dest.scratchReg(), NULL);
+        boxDouble(ScratchFloatReg, dest);
+        break;
+      default:
+        JS_NOT_REACHED("Invalid typed array type");
+        break;
+    }
+#endif
+}
+
+template void MacroAssembler::loadFromTypedArray(int arrayType, const Address &src, const ValueOperand &dest,
+                                                 bool allowDouble, Label *fail);
+template void MacroAssembler::loadFromTypedArray(int arrayType, const BaseIndex &src, const ValueOperand &dest,
+                                                 bool allowDouble, Label *fail);
+

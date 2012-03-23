@@ -104,7 +104,14 @@ class MacroAssemblerX86Shared : public Assembler
             return Parity;
         }
     }
-
+    void compareDoubles(const FloatRegister &lhs, const FloatRegister &rhs) {
+        ucomisd(lhs, rhs);
+    }
+    void branchCompareDoubles(Condition cond, const FloatRegister &lhs, const FloatRegister &rhs,
+                              Label *label) {
+        compareDoubles(lhs, rhs);
+        j(cond, label);
+    }
     void move32(const Address &address, const Register &dest) {
         movl(Operand(address), dest);
     }
@@ -214,20 +221,23 @@ class MacroAssemblerX86Shared : public Assembler
         cmpl(dest, Imm32(INT_MIN));
         j(Assembler::Equal, fail);
     }
-    void load32(const Address &address, Register dest) {
-        movl(Operand(address), dest);
+    void load8(const Address &src, const Register &dest) {
+        movzbl(Operand(src), dest);
     }
-    void store32(Imm32 src, const Address &dest) {
-        movl(src, Operand(dest));
+    void load8(const BaseIndex &src, const Register &dest) {
+        movzbl(Operand(src), dest);
     }
-    void store32(const Register &src, const Address &dest) {
-        movl(src, Operand(dest));
+    void load8SignExtend(const Address &src, const Register &dest) {
+        movxbl(Operand(src), dest);
+    }
+    void load8SignExtend(const BaseIndex &src, const Register &dest) {
+        movxbl(Operand(src), dest);
     }
     void load16(const Address &src, const Register &dest) {
-        movzxh(Operand(src), dest);
+        movzwl(Operand(src), dest);
     }
     void load16(const BaseIndex &src, const Register &dest) {
-        movzxh(Operand(src), dest);
+        movzwl(Operand(src), dest);
     }
     void store16(const Register &src, const Address &dest) {
         movzxh(src, Operand(dest));
@@ -238,6 +248,38 @@ class MacroAssemblerX86Shared : public Assembler
     void load16_mask(const Address &src, Imm32 mask, const Register &dest) {
         load32(src, dest);
         and32(mask, dest);
+    }
+    void load16SignExtend(const Address &src, const Register &dest) {
+        movxwl(Operand(src), dest);
+    }
+    void load16SignExtend(const BaseIndex &src, const Register &dest) {
+        movxwl(Operand(src), dest);
+    }
+    void load32(const Address &address, Register dest) {
+        movl(Operand(address), dest);
+    }
+    void load32(const BaseIndex &src, Register dest) {
+        movl(Operand(src), dest);
+    }
+    void store32(Imm32 src, const Address &dest) {
+        movl(src, Operand(dest));
+    }
+    void store32(const Register &src, const Address &dest) {
+        movl(src, Operand(dest));
+    }
+    void loadDouble(const Address &src, FloatRegister dest) {
+        movsd(Operand(src), dest);
+    }
+    void loadDouble(const BaseIndex &src, FloatRegister dest) {
+        movsd(Operand(src), dest);
+    }
+    void loadFloat(const Address &src, FloatRegister dest) {
+        movss(Operand(src), dest);
+        cvtss2sd(dest, dest);
+    }
+    void loadFloat(const BaseIndex &src, FloatRegister dest) {
+        movss(Operand(src), dest);
+        cvtss2sd(dest, dest);
     }
 
     template <typename T>
