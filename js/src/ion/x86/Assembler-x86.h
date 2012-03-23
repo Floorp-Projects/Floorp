@@ -158,7 +158,7 @@ class Operand
         base_(reg.code()),
         disp_(disp)
     { }
-    explicit Operand(void *address)
+    explicit Operand(const void *address)
       : kind_(ADDRESS),
         base_(reinterpret_cast<int32>(address))
     { }

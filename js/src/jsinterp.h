@@ -400,6 +400,9 @@ bool
 GetElement(JSContext *cx, const Value &lref, const Value &rref, Value *res);
 
 bool
+GetElementMonitored(JSContext *cx, const Value &lref, const Value &rref, Value *res);
+
+bool
 CallElement(JSContext *cx, const Value &lref, const Value &rref, Value *res);
 
 bool

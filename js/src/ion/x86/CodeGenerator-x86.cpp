@@ -138,13 +138,10 @@ CodeGeneratorX86::visitBox(LBox *box)
 bool
 CodeGeneratorX86::visitBoxDouble(LBoxDouble *box)
 {
-    const LDefinition *payload = box->getDef(PAYLOAD_INDEX);
-    const LDefinition *type = box->getDef(TYPE_INDEX);
     const LAllocation *in = box->getOperand(0);
+    const ValueOperand out = ToOutValue(box);
 
-    masm.movd(ToFloatRegister(in), ToRegister(payload));
-    masm.psrlq(Imm32(4), ToFloatRegister(in));
-    masm.movd(ToFloatRegister(in), ToRegister(type));
+    masm.boxDouble(ToFloatRegister(in), out);
     return true;
 }
 

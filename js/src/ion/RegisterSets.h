@@ -303,6 +303,9 @@ struct Int32Key {
     inline bool isRegister() const {
         return isRegister_;
     }
+    inline bool isConstant() const {
+        return !isRegister_;
+    }
 };
 
 template <typename T>

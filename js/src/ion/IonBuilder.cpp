@@ -3472,8 +3472,14 @@ IonBuilder::jsop_bindname(PropertyName *name)
 bool
 IonBuilder::jsop_getelem()
 {
-    if (oracle->elementReadIsDense(script, pc))
+    if (oracle->elementReadIsDenseArray(script, pc))
         return jsop_getelem_dense();
+
+#ifndef JS_CPU_ARM
+    int arrayType = TypedArray::TYPE_MAX;
+    if (oracle->elementReadIsTypedArray(script, pc, &arrayType))
+        return jsop_getelem_typed(arrayType);
+#endif
 
     MDefinition *rhs = current->pop();
     MDefinition *lhs = current->pop();
@@ -3577,6 +3583,92 @@ IonBuilder::jsop_getelem_dense()
 
     current->push(load);
     return pushTypeBarrier(load, types, barrier);
+}
+
+bool
+IonBuilder::jsop_getelem_typed(int arrayType)
+{
+    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::TypeSet *types = oracle->propertyRead(script, pc);
+
+    MDefinition *id = current->pop();
+    MDefinition *obj = current->pop();
+
+    bool maybeUndefined = types->hasType(types::Type::UndefinedType());
+
+    // Reading from an Uint32Array will result in a double for values
+    // that don't fit in an int32. We have to bailout if this happens
+    // and the instruction is not known to return a double.
+    bool allowDouble = types->hasType(types::Type::DoubleType());
+
+    // Ensure id is an integer.
+    MInstruction *idInt32 = MToInt32::New(id);
+    current->add(idInt32);
+    id = idInt32;
+
+    if (!maybeUndefined) {
+        // Assume the index is in range, so that we can hoist the length,
+        // elements vector and bounds check.
+
+        // If we are reading in-bounds elements, we can use knowledge about
+        // the array type to determine the result type. This may be more
+        // precise than the known pushed type.
+        MIRType knownType;
+        switch (arrayType) {
+          case TypedArray::TYPE_INT8:
+          case TypedArray::TYPE_UINT8:
+          case TypedArray::TYPE_UINT8_CLAMPED:
+          case TypedArray::TYPE_INT16:
+          case TypedArray::TYPE_UINT16:
+          case TypedArray::TYPE_INT32:
+            knownType = MIRType_Int32;
+            break;
+          case TypedArray::TYPE_UINT32:
+            knownType = allowDouble ? MIRType_Double : MIRType_Int32;
+            break;
+          case TypedArray::TYPE_FLOAT32:
+          case TypedArray::TYPE_FLOAT64:
+            knownType = MIRType_Double;
+            break;
+          default:
+            JS_NOT_REACHED("Unknown typed array type");
+            return false;
+        }
+
+        // Get the length.
+        MTypedArrayLength *length = MTypedArrayLength::New(obj);
+        current->add(length);
+
+        // Bounds check.
+        MBoundsCheck *check = MBoundsCheck::New(id, length);
+        current->add(check);
+
+        // Get the elements vector.
+        MTypedArrayElements *elements = MTypedArrayElements::New(obj);
+        current->add(elements);
+
+        // Load the element.
+        MLoadTypedArrayElement *load = MLoadTypedArrayElement::New(elements, id, arrayType);
+        current->add(load);
+        current->push(load);
+
+        load->setResultType(knownType);
+
+        // Note: we can ignore the type barrier here, we know the type must
+        // be valid and unbarriered.
+        JS_ASSERT_IF(knownType == MIRType_Int32, types->hasType(types::Type::Int32Type()));
+        JS_ASSERT_IF(knownType == MIRType_Double, types->hasType(types::Type::DoubleType()));
+        return true;
+    } else {
+        // Assume we will read out-of-bound values. In this case the
+        // bounds check will be part of the instruction, and the instruction
+        // will always return a Value.
+        MLoadTypedArrayElementHole *load = MLoadTypedArrayElementHole::New(obj, id, arrayType, allowDouble);
+        current->add(load);
+        current->push(load);
+
+        return resumeAfter(load) && pushTypeBarrier(load, types, barrier);
+    }
 }
 
 bool

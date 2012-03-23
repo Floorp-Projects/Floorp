@@ -114,6 +114,7 @@ namespace ion {
     _(GuardClass)                                                           \
     _(ArrayLength)                                                          \
     _(TypedArrayLength)                                                     \
+    _(TypedArrayElements)                                                   \
     _(InitializedLength)                                                    \
     _(SetInitializedLength)                                                 \
     _(Not)                                                                  \
@@ -123,6 +124,8 @@ namespace ion {
     _(LoadElementHole)                                                      \
     _(StoreElement)                                                         \
     _(StoreElementHole)                                                     \
+    _(LoadTypedArrayElement)                                                \
+    _(LoadTypedArrayElementHole)                                            \
     _(LoadFixedSlot)                                                        \
     _(StoreFixedSlot)                                                       \
     _(CallGetProperty)                                                      \

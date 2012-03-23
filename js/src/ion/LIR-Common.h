@@ -1485,6 +1485,23 @@ class LTypedArrayLength : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Load a typed array's elements vector.
+class LTypedArrayElements : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(TypedArrayElements);
+
+    LTypedArrayElements(const LAllocation &object) {
+        setOperand(0, object);
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
 // Bailout if index >= length.
 class LBoundsCheck : public LInstructionHelper<0, 2, 0>
 {
@@ -1733,6 +1750,56 @@ class LStoreElementHoleT : public LInstructionHelper<0, 4, 0>
     }
     const LAllocation *value() {
         return getOperand(3);
+    }
+};
+
+// Load a typed value from a typed array's elements vector.
+class LLoadTypedArrayElement : public LInstructionHelper<1, 2, 1>
+{
+  public:
+    LIR_HEADER(LoadTypedArrayElement);
+
+    LLoadTypedArrayElement(const LAllocation &elements, const LAllocation &index,
+                           const LDefinition &temp) {
+        setOperand(0, elements);
+        setOperand(1, index);
+        setTemp(0, temp);
+    }
+    const MLoadTypedArrayElement *mir() const {
+        return mir_->toLoadTypedArrayElement();
+    }
+    const LAllocation *elements() {
+        return getOperand(0);
+    }
+    const LAllocation *index() {
+        return getOperand(1);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
+class LLoadTypedArrayElementHole : public LInstructionHelper<BOX_PIECES, 2, 0>
+{
+  public:
+    LIR_HEADER(LoadTypedArrayElementHole);
+    BOX_OUTPUT_ACCESSORS();
+
+    LLoadTypedArrayElementHole(const LAllocation &object, const LAllocation &index) {
+        setOperand(0, object);
+        setOperand(1, index);
+    }
+    const MLoadTypedArrayElementHole *mir() const {
+        return mir_->toLoadTypedArrayElementHole();
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    const LAllocation *index() {
+        return getOperand(1);
     }
 };
 

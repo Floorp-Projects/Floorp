@@ -259,8 +259,46 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
-
-    void movzxh(const Operand &src, const Register &dest) {
+    void movss(const Operand &src, const FloatRegister &dest) {
+        switch (src.kind()) {
+          case Operand::REG_DISP:
+            masm.movss_mr(src.disp(), src.base(), dest.code());
+            break;
+          case Operand::SCALE:
+            masm.movss_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
+    void cvtss2sd(const FloatRegister &src, const FloatRegister &dest) {
+        masm.cvtss2sd_rr(src.code(), dest.code());
+    }
+    void movzbl(const Operand &src, const Register &dest) {
+        switch (src.kind()) {
+          case Operand::REG_DISP:
+            masm.movzbl_mr(src.disp(), src.base(), dest.code());
+            break;
+          case Operand::SCALE:
+            masm.movzbl_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
+    void movxbl(const Operand &src, const Register &dest) {
+        switch (src.kind()) {
+          case Operand::REG_DISP:
+            masm.movxbl_mr(src.disp(), src.base(), dest.code());
+            break;
+          case Operand::SCALE:
+            masm.movxbl_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
+    void movzwl(const Operand &src, const Register &dest) {
         switch (src.kind()) {
           case Operand::REG_DISP:
             masm.movzwl_mr(src.disp(), src.base(), dest.code());
@@ -280,6 +318,19 @@ class AssemblerX86Shared
             break;
           case Operand::SCALE:
             masm.movw_rm(src.code(), dest.disp(), dest.base(), dest.index(), dest.scale());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
+
+    void movxwl(const Operand &src, const Register &dest) {
+        switch (src.kind()) {
+          case Operand::REG_DISP:
+            masm.movxwl_mr(src.disp(), src.base(), dest.code());
+            break;
+          case Operand::SCALE:
+            masm.movxwl_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
           default:
             JS_NOT_REACHED("unexpected operand kind");
@@ -849,6 +900,23 @@ class AssemblerX86Shared
     }
     void addsd(const FloatRegister &src, const FloatRegister &dest) {
         masm.addsd_rr(src.code(), dest.code());
+    }
+    void addsd(const Operand &src, const FloatRegister &dest) {
+        switch (src.kind()) {
+          case Operand::FPREG:
+            masm.addsd_rr(src.fpu(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.addsd_mr(src.disp(), src.base(), dest.code());
+            break;
+#ifdef JS_CPU_X86
+          case Operand::ADDRESS:
+            masm.addsd_mr(src.address(), dest.code());
+            break;
+#endif
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
     }
     void subsd(const FloatRegister &src, const FloatRegister &dest) {
         masm.subsd_rr(src.code(), dest.code());

@@ -133,6 +133,8 @@
     _(StoreElementT)                \
     _(StoreElementHoleV)            \
     _(StoreElementHoleT)            \
+    _(LoadTypedArrayElement)        \
+    _(LoadTypedArrayElementHole)    \
     _(LoadFixedSlotV)               \
     _(LoadFixedSlotT)               \
     _(StoreFixedSlotV)              \
@@ -158,6 +160,7 @@
     _(IteratorEnd)                  \
     _(ArrayLength)                  \
     _(TypedArrayLength)             \
+    _(TypedArrayElements)           \
     _(StringLength)                 \
     _(TypeOfV)                      \
     _(ToIdV)                        \
