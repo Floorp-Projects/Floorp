@@ -19,11 +19,13 @@ include $(topsrcdir)/dom/dom-config.mk
 
 CPPSRCS = \
   BluetoothAdapter.cpp \
+  BluetoothDevice.cpp \
   $(NULL)
 
 XPIDLSRCS = \
   nsIDOMNavigatorBluetooth.idl \
   nsIDOMBluetoothAdapter.idl \
+  nsIDOMBluetoothDevice.idl \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
