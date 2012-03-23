@@ -100,9 +100,9 @@ public class FennecNativeActions implements Actions {
             parameters[0] = mGe;
             mSendGE = mGas.getMethod("sendEventToGecko", parameters);
 
-            mGetLayerClient = activity.getClass().getMethod("getSoftwareLayerClient");
-            Class gslc = mClassLoader.loadClass("org.mozilla.gecko.gfx.GeckoSoftwareLayerClient");
-            mDrawListener = mClassLoader.loadClass("org.mozilla.gecko.gfx.GeckoSoftwareLayerClient$DrawListener");
+            mGetLayerClient = activity.getClass().getMethod("getLayerClient");
+            Class gslc = mClassLoader.loadClass("org.mozilla.gecko.gfx.GeckoLayerClient");
+            mDrawListener = mClassLoader.loadClass("org.mozilla.gecko.gfx.GeckoLayerClient$DrawListener");
             mSetDrawListener = gslc.getDeclaredMethod("setDrawListener", mDrawListener);
          } catch (ClassNotFoundException e) {
              e.printStackTrace();

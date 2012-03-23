@@ -404,14 +404,16 @@ Preferences::ReadUserPrefs(nsIFile *aFile)
   nsresult rv;
 
   if (nsnull == aFile) {
-
     NotifyServiceObservers(NS_PREFSERVICE_READ_TOPIC_ID);
 
     rv = UseDefaultPrefFile();
-    UseUserPrefFile();
+    // A user pref file is optional.
+    // Ignore all errors related to it, so we retain 'rv' value :-|
+    (void) UseUserPrefFile();
   } else {
     rv = ReadAndOwnUserPrefFile(aFile);
   }
+
   return rv;
 }
 
@@ -587,7 +589,7 @@ Preferences::NotifyServiceObservers(const char *aTopic)
 nsresult
 Preferences::UseDefaultPrefFile()
 {
-  nsresult rv, rv2;
+  nsresult rv;
   nsCOMPtr<nsIFile> aFile;
 
   rv = NS_GetSpecialDirectory(NS_APP_PREFS_50_FILE, getter_AddRefs(aFile));
@@ -597,8 +599,10 @@ Preferences::UseDefaultPrefFile()
     // exist, so save a new one. mUserPrefReadFailed will be
     // used to catch an error in actually reading the file.
     if (NS_FAILED(rv)) {
-      rv2 = SavePrefFileInternal(aFile);
-      NS_ASSERTION(NS_SUCCEEDED(rv2), "Failed to save new shared pref file");
+      if (NS_FAILED(SavePrefFileInternal(aFile)))
+        NS_ERROR("Failed to save new shared pref file");
+      else
+        rv = NS_OK;
     }
   }
   

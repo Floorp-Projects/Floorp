@@ -113,6 +113,7 @@ public class SQLiteBridge {
         return rawQuery(sb.toString(), selectionArgs);
     }
 
+    /* This method is referenced by Robocop via reflection. */
     public Cursor rawQuery(String sql, String[] selectionArgs)
         throws SQLiteBridgeException {
         return internalQuery(sql, selectionArgs);

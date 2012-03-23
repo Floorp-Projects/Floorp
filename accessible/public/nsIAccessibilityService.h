@@ -163,12 +163,6 @@ public:
   virtual void PresShellDestroyed(nsIPresShell *aPresShell) = 0;
 
   /**
-   * Recreate an accessible for the given content node in the presshell.
-   */
-  virtual void RecreateAccessible(nsIPresShell* aPresShell,
-                                  nsIContent* aContent) = 0;
-
-  /**
    * Fire accessible event of the given type for the given target.
    *
    * @param aEvent   [in] accessible event type

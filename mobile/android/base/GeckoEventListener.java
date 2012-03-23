@@ -39,6 +39,9 @@ package org.mozilla.gecko;
 
 import org.json.JSONObject;
 
+/* This class is referenced by Robocop via reflection; use care when 
+ * modifying the signature.
+ */ 
 public interface GeckoEventListener {
     public void handleMessage(String event, JSONObject message);
 }

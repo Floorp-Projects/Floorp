@@ -1,0 +1,7 @@
+marionette.jar:
+% content marionette %content/
+  content/marionette-actors.js      (marionette-actors.js)
+  content/marionette-listener.js    (marionette-listener.js)
+  content/marionette-elements.js    (marionette-elements.js)
+  content/marionette-log-obj.js     (marionette-log-obj.js)
+  content/marionette-simpletest.js  (marionette-simpletest.js)

@@ -334,7 +334,7 @@ nsHTMLTableCellAccessible::GetHeaderCells(PRInt32 aRowOrColumnHeaderCell,
                                           nsIArray **aHeaderCells)
 {
   // Get header cells from @header attribute.
-  IDRefsIterator iter(mContent, nsGkAtoms::headers);
+  IDRefsIterator iter(mDoc, mContent, nsGkAtoms::headers);
   nsIContent* headerCellElm = iter.NextElem();
   if (headerCellElm) {
     nsresult rv = NS_OK;

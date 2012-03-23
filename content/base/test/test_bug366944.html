@@ -1,0 +1,49 @@
+<!doctype html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=366944
+-->
+<title>Test for Bug 366944</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=366944">Mozilla Bug 366944</a>
+<script>
+
+/** Test for Bug 366944 **/
+var testNodes = [document, document.doctype, document.createDocumentFragment()];
+for (var i = 0; i < testNodes.length; i++) {
+  var range = document.createRange();
+  // If a non-Text node is partially contained, we expect to throw for that
+  // first
+  range.setStart(document.head, 0);
+  range.setEnd(document.body, 0);
+  var threw = false;
+  var desc = " (surrounding a range with partially-contained Element "
+    + "with " + (i == 0 ? "document" : i == 1 ? "doctype" : "docfrag") + ")";
+  try {
+    range.surroundContents(testNodes[i]);
+  } catch(e) {
+    threw = true;
+    is(Object.getPrototypeOf(e), DOMException.prototype,
+       "Must throw DOMException" + desc);
+    is(e.name, "InvalidStateError", "Must throw InvalidStateError" + desc);
+  }
+  ok(threw, "Must throw" + desc);
+
+  range.setStart(document.body, 0);
+  range.setEnd(document.body, 1);
+  threw = false;
+  desc = " (surrounding a regular range "
+    + "with " + (i == 0 ? "document" : i == 1 ? "doctype" : "docfrag") + ")";
+  try {
+    range.surroundContents(testNodes[i]);
+  } catch(e) {
+    threw = true;
+    is(Object.getPrototypeOf(e), DOMException.prototype,
+       "Must throw DOMException" + desc);
+    is(e.name, "InvalidNodeTypeError",
+       "Must throw InvalidNodeTypeError" + desc);
+  }
+  ok(threw, "Must throw" + desc);
+}
+
+</script>

@@ -384,8 +384,6 @@ class MochiRemote(Mochitest):
                 failed += 1
             elif line.startswith("INFO TEST-KNOWN"):
                 todo += 1
-
-            logFile.append("%s %s" % (incr, line))
             incr += 1
 
         logFile.append("%s INFO TEST-START | Shutdown" % incr)

@@ -45,10 +45,12 @@
 
 #include "nsdefs.h"
 #include <winuser.h>
+#include <tpcshrd.h>
 #include "nsPoint.h"
 #include "nsGUIEvent.h"
 
-#ifndef HGESTUREINFO  // needs WINVER >= 0x0601
+// Desktop builds target apis for 502. Win8 Metro builds target 602.
+#if WINVER < 0x0602
 
 DECLARE_HANDLE(HGESTUREINFO);
 
@@ -156,16 +158,8 @@ typedef struct tagGESTURENOTIFYSTRUCT {
 #define GCF_INCLUDE_ANCESTORS           0x00000001
 
 // Window events we need to respond to or receive
-#define WM_TABLET_QUERYSYSTEMGESTURESTATUS 0x02CC
 #define WM_GESTURE                         0x0119
 #define WM_GESTURENOTIFY                   0x011A
-
-// WM_TABLET_QUERYSYSTEMGESTURESTATUS return values
-#define TABLET_ROTATE_GESTURE_ENABLE    0x02000000
-
-#endif /* #ifndef HGESTUREINFO */
-
-#ifndef HTOUCHINPUT // needs WINVER >= 0x0601
 
 typedef struct _TOUCHINPUT {
   LONG      x;
@@ -202,7 +196,10 @@ typedef HANDLE HTOUCHINPUT;
 #define TWF_FINETOUCH          0x0001
 #define TWF_WANTPALM           0x0002
 
-#endif /* #ifndef HTOUCHINPUT */
+#endif // WINVER < 0x0602
+
+// WM_TABLET_QUERYSYSTEMGESTURESTATUS return values
+#define TABLET_ROTATE_GESTURE_ENABLE    0x02000000
 
 class nsPointWin : public nsIntPoint
 {

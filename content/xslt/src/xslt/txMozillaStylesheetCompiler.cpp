@@ -50,6 +50,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsIParser.h"
+#include "nsCharsetSource.h"
 #include "nsIRequestObserver.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentPolicyUtils.h"

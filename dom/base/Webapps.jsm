@@ -405,7 +405,7 @@ DOMApplicationManifest = function(aManifest, aOrigin) {
   else if (this._manifest.locales) {
     // try with the language part of the locale ("en" for en-GB) only
     let lang = locale.split('-')[0];
-    if (land != locale && this._manifest.locales[lang])
+    if (lang != locale && this._manifest.locales[lang])
       this._localeRoot = this._manifest.locales[lang];
   }
 }
