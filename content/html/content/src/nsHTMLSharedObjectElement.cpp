@@ -283,11 +283,6 @@ nsHTMLSharedObjectElement::BindToTree(nsIDocument *aDocument,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsObjectLoadingContent::BindToTree(aDocument, aParent,
-                                          aBindingParent,
-                                          aCompileEventHandlers);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // If we already have all the children, start the load.
   if (mIsDoneAddingChildren) {
     void (nsHTMLSharedObjectElement::*start)() =
@@ -303,7 +298,6 @@ nsHTMLSharedObjectElement::UnbindFromTree(bool aDeep,
                                           bool aNullParent)
 {
   RemovedFromDocument();
-  nsObjectLoadingContent::UnbindFromTree(aDeep, aNullParent);
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 

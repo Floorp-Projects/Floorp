@@ -70,7 +70,7 @@ interface nsIDOMFile;
 interface nsIFile;
 interface nsIDOMTouch;
 
-[scriptable, uuid(c7f303a1-4f7b-4d38-a192-c3f0e25dadb1)]
+[scriptable, uuid(43feb172-30e1-4ff1-b021-004f973da516)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1099,15 +1099,4 @@ interface nsIDOMWindowUtils : nsISupports {
    * otherwise.
    */
   readonly attribute boolean paintingSuppressed;
-
-  /**
-   * Returns an array of plugins on the page for opt-in activation.
-   *
-   * Cannot be accessed from unprivileged context (not content-accessible).
-   * Will throw a DOM security error if called without UniversalXPConnect
-   * privileges.
-   *
-   */
-  [implicit_jscontext]
-  readonly attribute jsval plugins;
 };
