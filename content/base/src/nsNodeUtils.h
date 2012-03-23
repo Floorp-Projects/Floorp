@@ -39,6 +39,7 @@
 #define nsNodeUtils_h___
 
 #include "nsINode.h"
+#include "nsIContent.h"
 
 struct CharacterDataChangeInfo;
 struct JSContext;
@@ -140,7 +141,16 @@ public:
    * @param aContent  The piece of content that had its parent changed.
    * @see nsIMutationObserver::ParentChainChanged
    */
-  static void ParentChainChanged(nsIContent *aContent);
+  static inline void ParentChainChanged(nsIContent *aContent)
+  {
+    nsINode::nsSlots* slots = aContent->GetExistingSlots();
+    if (slots && !slots->mMutationObservers.IsEmpty()) {
+      NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
+                                         nsIMutationObserver,
+                                         ParentChainChanged,
+                                         (aContent));
+    }
+  }
 
   /**
    * To be called when reference count of aNode drops to zero.

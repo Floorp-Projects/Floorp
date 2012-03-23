@@ -390,13 +390,18 @@ def main():
         print "Error: you must provide a device IP to connect to via the --device option"
         sys.exit(1)
 
-    if (options.dm_trans == "adb"):
-        if (options.deviceIP):
-            dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort)
+    try:
+        if (options.dm_trans == "adb"):
+            if (options.deviceIP):
+                dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort)
+            else:
+                dm = devicemanagerADB.DeviceManagerADB(None, None)
         else:
-            dm = devicemanagerADB.DeviceManagerADB(None, None)
-    else:
-         dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort)
+            dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort)
+    except devicemanager.DMError:
+        print "Error: exception while initializing devicemanager.  Most likely the device is not in a testable state."
+        sys.exit(1)
+
     automation.setDeviceManager(dm)
 
     if (options.remoteProductName != None):

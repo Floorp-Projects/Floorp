@@ -44,7 +44,7 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDocumentTransformer.h"
 #include "nsNetUtil.h"
-#include "nsIParser.h"
+#include "nsCharsetSource.h"
 #include "nsCharsetAlias.h"
 #include "nsIPrincipal.h"
 #include "txURIUtils.h"
