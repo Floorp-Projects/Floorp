@@ -1623,6 +1623,8 @@ abstract public class GeckoApp
             mRestoreSession = savedInstanceState.getBoolean(SAVED_STATE_SESSION);
         }
 
+        LayoutInflater.from(this).setFactory(GeckoViewsFactory.getInstance());
+
         super.onCreate(savedInstanceState);
 
         mOrientation = getResources().getConfiguration().orientation;
