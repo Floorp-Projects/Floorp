@@ -216,6 +216,24 @@ NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type)
     return obj;
 }
 
+JSObject*
+NewInitObject(JSContext *cx, JSObject *baseObj, types::TypeObject *type)
+{
+    JSObject *obj = CopyInitializerObject(cx, baseObj);
+    if (!obj)
+        return NULL;
+
+    if (!type) {
+        if (!obj->setSingletonType(cx))
+            return NULL;
+
+        types::TypeScript::Monitor(cx, ObjectValue(*obj));
+    } else {
+        obj->setType(type);
+    }
+
+    return obj;
+}
 
 } // namespace ion
 } // namespace js

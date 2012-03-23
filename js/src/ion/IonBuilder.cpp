@@ -2739,7 +2739,14 @@ IonBuilder::jsop_newobject(JSObject *baseObj)
     // Don't bake in the TypeObject for non-CNG scripts.
     JS_ASSERT(script->hasGlobal());
 
-    MNewObject *ins = MNewObject::New(baseObj);
+    types::TypeObject *type = NULL;
+    if (!types::UseNewTypeForInitializer(cx, script, pc)) {
+        type = types::TypeScript::InitObject(cx, script, pc, JSProto_Object);
+        if (!type)
+            return false;
+    }
+
+    MNewObject *ins = MNewObject::New(baseObj, type);
 
     current->add(ins);
     current->push(ins);
