@@ -3233,6 +3233,13 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, bool *_retval)
   if (!window)
     return NS_ERROR_FAILURE;
 
+  if (commandID.LowerCaseEqualsLiteral("usecss")) {
+    // Per spec, state is supported for styleWithCSS but not useCSS, so we just
+    // return false always.
+    *_retval = false;
+    return NS_OK;
+  }
+
   nsCAutoString cmdToDispatch, paramToCheck;
   bool dummy, dummy2;
   if (!ConvertToMidasInternalCommand(commandID, commandID,
