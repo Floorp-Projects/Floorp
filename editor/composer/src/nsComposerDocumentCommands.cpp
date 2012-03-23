@@ -63,6 +63,7 @@
 
 //defines
 #define STATE_ENABLED  "state_enabled"
+#define STATE_ALL "state_all"
 #define STATE_ATTRIBUTE "state_attribute"
 #define STATE_DATA "state_data"
 
@@ -378,7 +379,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
 
     bool isCSS;
     htmleditor->GetIsCSSEnabled(&isCSS);
-    return aParams->SetBooleanValue(STATE_ATTRIBUTE, isCSS);
+    return aParams->SetBooleanValue(STATE_ALL, isCSS);
   }
 
   if (!nsCRT::strcmp(aCommandName, "cmd_insertBrOnReturn"))
