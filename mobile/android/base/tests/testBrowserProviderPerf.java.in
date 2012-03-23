@@ -19,7 +19,10 @@ import java.util.Random;
  * history and bookmarks content provider.
  */
 public class testBrowserProviderPerf extends ContentProviderTest {
-    private final int NUMBER_OF_URLS = 10000;
+    private final int NUMBER_OF_BASIC_HISTORY_URLS = 10000;
+    private final int NUMBER_OF_BASIC_BOOKMARK_URLS = 500;
+    private final int NUMBER_OF_COMBINED_URLS = 500;
+
     private final int NUMBER_OF_KNOWN_URLS = 200;
     private final int BATCH_SIZE = 500;
 
@@ -28,7 +31,24 @@ public class testBrowserProviderPerf extends ContentProviderTest {
     private Method mFilterMethod;
     private Random mGenerator;
 
+    private final String MOBILE_FOLDER_GUID = "mobile";
+    private long mMobileFolderId;
+
+    private Uri mBookmarksUri;
     private Uri mHistoryUri;
+
+    private String mBookmarksIdCol;
+    private String mBookmarksTitleCol;
+    private String mBookmarksUrlCol;
+    private String mBookmarksParentCol;
+    private String mBookmarksTypeCol;
+    private String mBookmarksPositionCol;
+    private String mBookmarksTagsCol;
+    private String mBookmarksDescriptionCol;
+    private String mBookmarksKeywordCol;
+    private String mBookmarksGuidCol;
+    private int mBookmarksTypeBookmark;
+
     private String mHistoryTitleCol;
     private String mHistoryUrlCol;
     private String mHistoryVisitsCol;
@@ -45,13 +65,67 @@ public class testBrowserProviderPerf extends ContentProviderTest {
     }
 
     private void loadContractInfo() throws Exception {
+        mBookmarksUri = getContentUri("Bookmarks");
         mHistoryUri = getContentUri("History");
+
+        mBookmarksIdCol = getStringColumn("Bookmarks", "_ID");
+        mBookmarksTitleCol = getStringColumn("Bookmarks", "TITLE");
+        mBookmarksUrlCol = getStringColumn("Bookmarks", "URL");
+        mBookmarksParentCol = getStringColumn("Bookmarks", "PARENT");
+        mBookmarksTypeCol = getStringColumn("Bookmarks", "TYPE");
+        mBookmarksPositionCol = getStringColumn("Bookmarks", "POSITION");
+        mBookmarksTagsCol = getStringColumn("Bookmarks", "TAGS");
+        mBookmarksDescriptionCol = getStringColumn("Bookmarks", "DESCRIPTION");
+        mBookmarksKeywordCol= getStringColumn("Bookmarks", "KEYWORD");
+        mBookmarksGuidCol= getStringColumn("Bookmarks", "GUID");
+        mBookmarksTypeBookmark = getIntColumn("Bookmarks", "TYPE_BOOKMARK");
 
         mHistoryTitleCol = getStringColumn("History", "TITLE");
         mHistoryUrlCol = getStringColumn("History", "URL");
         mHistoryVisitsCol = getStringColumn("History", "VISITS");
         mHistoryLastVisitedCol = getStringColumn("History", "DATE_LAST_VISITED");
         mHistoryFaviconCol = getStringColumn("History", "FAVICON");
+    }
+
+    private void loadMobileFolderId() throws Exception {
+        Cursor c = mProvider.query(mBookmarksUri, null,
+                                   mBookmarksGuidCol + " = ?",
+                                   new String[] { MOBILE_FOLDER_GUID },
+                                   null);
+        c.moveToFirst();
+        mMobileFolderId = c.getLong(c.getColumnIndex(mBookmarksIdCol));
+
+        c.close();
+    }
+
+    private ContentValues createBookmarkEntry(String title, String url, long parentId,
+            int type, int position, String tags, String description, String keyword) throws Exception {
+        ContentValues bookmark = new ContentValues();
+
+        bookmark.put(mBookmarksTitleCol, title);
+        bookmark.put(mBookmarksUrlCol, url);
+        bookmark.put(mBookmarksParentCol, parentId);
+        bookmark.put(mBookmarksTypeCol, type);
+        bookmark.put(mBookmarksPositionCol, position);
+        bookmark.put(mBookmarksTagsCol, tags);
+        bookmark.put(mBookmarksDescriptionCol, description);
+        bookmark.put(mBookmarksKeywordCol, keyword);
+
+        return bookmark;
+    }
+
+    private ContentValues createBookmarkEntryWithUrl(String url) throws Exception {
+        return createBookmarkEntry(url, url, mMobileFolderId,
+            mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
+    }
+
+    private ContentValues createRandomBookmarkEntry() throws Exception {
+        return createRandomBookmarkEntry("");
+    }
+
+    private ContentValues createRandomBookmarkEntry(String knownPrefix) throws Exception {
+        String randomStr = createRandomUrl(knownPrefix);
+        return createBookmarkEntryWithUrl(randomStr);
     }
 
     private ContentValues createHistoryEntry(String title, String url, int visits,
@@ -67,37 +141,75 @@ public class testBrowserProviderPerf extends ContentProviderTest {
         return historyEntry;
     }
 
+    private ContentValues createHistoryEntryWithUrl(String url) throws Exception {
+        int visits = mGenerator.nextInt(500);
+        return createHistoryEntry(url, url, visits,
+            System.currentTimeMillis(), url.getBytes("UTF8"));
+    }
+
     private ContentValues createRandomHistoryEntry() throws Exception {
         return createRandomHistoryEntry("");
     }
 
     private ContentValues createRandomHistoryEntry(String knownPrefix) throws Exception {
-        String randomStr = knownPrefix + UUID.randomUUID().toString();
-        int visits = mGenerator.nextInt(500);
+        String randomStr = createRandomUrl(knownPrefix);
+        return createHistoryEntryWithUrl(randomStr);
+    }
 
-        return createHistoryEntry(randomStr, randomStr, visits,
-            System.currentTimeMillis(), randomStr.getBytes("UTF8"));
+    private String createRandomUrl(String knownPrefix) throws Exception {
+        return knownPrefix + UUID.randomUUID().toString();
     }
 
     private void addTonsOfUrls() throws Exception {
-        ContentValues[] entries = new ContentValues[BATCH_SIZE];
+        // Create some random bookmark entries
+        ContentValues[] bookmarkEntries = new ContentValues[BATCH_SIZE];
 
-        for (int i = 0; i < NUMBER_OF_URLS / BATCH_SIZE; i++) {
-            entries = new ContentValues[BATCH_SIZE];
+        for (int i = 0; i < NUMBER_OF_BASIC_BOOKMARK_URLS / BATCH_SIZE; i++) {
+            bookmarkEntries = new ContentValues[BATCH_SIZE];
 
             for (int j = 0; j < BATCH_SIZE; j++) {
-                entries[j] = createRandomHistoryEntry();
+                bookmarkEntries[j] = createRandomBookmarkEntry();
             }
 
-            mProvider.bulkInsert(mHistoryUri, entries);
+            mProvider.bulkInsert(mBookmarksUri, bookmarkEntries);
         }
 
-        entries = new ContentValues[NUMBER_OF_KNOWN_URLS];
+        // Create some random history entries
+        ContentValues[] historyEntries = new ContentValues[BATCH_SIZE];
+
+        for (int i = 0; i < NUMBER_OF_BASIC_HISTORY_URLS / BATCH_SIZE; i++) {
+            historyEntries = new ContentValues[BATCH_SIZE];
+
+            for (int j = 0; j < BATCH_SIZE; j++) {
+                historyEntries[j] = createRandomHistoryEntry();
+            }
+
+            mProvider.bulkInsert(mHistoryUri, historyEntries);
+        }
+
+
+        // Create random bookmark/history entries with the same url
+        for (int i = 0; i < NUMBER_OF_COMBINED_URLS / BATCH_SIZE; i++) {
+            bookmarkEntries = new ContentValues[BATCH_SIZE];
+            historyEntries = new ContentValues[BATCH_SIZE];
+
+            for (int j = 0; j < BATCH_SIZE; j++) {
+                String url = createRandomUrl("");
+                bookmarkEntries[j] = createBookmarkEntryWithUrl(url);
+                historyEntries[j] = createHistoryEntryWithUrl(url);
+            }
+
+            mProvider.bulkInsert(mBookmarksUri, bookmarkEntries);
+            mProvider.bulkInsert(mHistoryUri, historyEntries);
+        }
+
+        // Create some history entries with a known prefix
+        historyEntries = new ContentValues[NUMBER_OF_KNOWN_URLS];
         for (int i = 0; i < NUMBER_OF_KNOWN_URLS; i++) {
-            entries[i] = createRandomHistoryEntry(KNOWN_PREFIX);
+            historyEntries[i] = createRandomHistoryEntry(KNOWN_PREFIX);
         }
 
-        mProvider.bulkInsert(mHistoryUri, entries);
+        mProvider.bulkInsert(mHistoryUri, historyEntries);
     }
 
     public void setUp() throws Exception {
@@ -112,6 +224,7 @@ public class testBrowserProviderPerf extends ContentProviderTest {
     public void testBrowserProviderPerf() throws Exception {
         setTestType("talos");
 
+        loadMobileFolderId();
         addTonsOfUrls();
 
         long start = SystemClock.uptimeMillis();
@@ -122,6 +235,8 @@ public class testBrowserProviderPerf extends ContentProviderTest {
         long end = SystemClock.uptimeMillis();
 
         mAsserter.dumpLog("__start_report" + Long.toString(end - start) + "__end_report");
+
+        c.close();
     }
 
     public void tearDown() throws Exception {
