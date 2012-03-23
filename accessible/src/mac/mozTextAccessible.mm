@@ -245,7 +245,7 @@ using namespace mozilla::a11y;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSAccessibilityPostNotification([self hasRepresentedView] ? [self representedView] : self, 
+  NSAccessibilityPostNotification(GetObjectOrRepresentedView(self),
                                   NSAccessibilityValueChangedNotification);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
