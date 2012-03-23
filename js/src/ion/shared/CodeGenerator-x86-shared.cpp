@@ -409,6 +409,15 @@ CodeGeneratorX86Shared::visitAbsD(LAbsD *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitSqrtD(LSqrtD *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister output = ToFloatRegister(ins->output());
+    masm.sqrtsd(input, output);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitAddI(LAddI *ins)
 {
     if (ins->rhs()->isConstant())

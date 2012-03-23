@@ -1961,6 +1961,36 @@ class MAbs
     }
 };
 
+class MSqrt
+  : public MUnaryInstruction,
+    public ArithPolicy
+{
+    MSqrt(MDefinition *num)
+      : MUnaryInstruction(num)
+    {
+        specialization_ = MIRType_Double;
+        setResultType(MIRType_Double);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Sqrt);
+    static MSqrt *New(MDefinition *num) {
+        return new MSqrt(num);
+    }
+    MDefinition *num() const {
+        return getOperand(0);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    bool congruentTo(MDefinition *const &ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
 
 class MAdd : public MBinaryArithInstruction
 {

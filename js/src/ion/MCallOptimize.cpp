@@ -124,6 +124,18 @@ IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc)
                 return true;
             }
         }
+        if (native == js_math_sqrt) {
+            // argThis == MPassArg(MConstant(Math))
+            if ((arg1Type == MIRType_Double || arg1Type == MIRType_Int32) &&
+                returnType == MIRType_Double) {
+                if (!discardCall(argc, argv, current))
+                    return false;
+                MSqrt *ins = MSqrt::New(argv[1]);
+                current->add(ins);
+                current->push(ins);
+                return true;
+            }
+        }
         if (native == js_math_floor) {
             // argThis == MPassArg(MConstant(Math))
             if (arg1Type == MIRType_Double && returnType == MIRType_Int32) {
