@@ -53,6 +53,10 @@ ifeq (WINNT,$(OS_ARCH))
 DIRS = win32
 endif
 
+ifdef STLPORT_SOURCES
+DIRS += stlport
+endif
+
 DIRS += pgo
 
 TEST_DIRS += autoconf/test
