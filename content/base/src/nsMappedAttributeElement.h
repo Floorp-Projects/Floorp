@@ -65,10 +65,6 @@ protected:
   {}
 
 public:
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
   static void MapNoAttributesInto(const nsMappedAttributes* aAttributes, 

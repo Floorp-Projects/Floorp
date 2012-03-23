@@ -1,0 +1,127 @@
+<html>
+
+<head>
+  <title>Testing of isFromUserInput in text events</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    /**
+     * Remove text data from HTML input.
+     */
+    function removeTextFromInput(aID, aStart, aEnd, aText, aFromUser)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.eventSeq = [
+        new textChangeChecker(aID, aStart, aEnd, aText, false, aFromUser)
+      ];
+
+      this.invoke = function removeTextFromInput_invoke()
+      {
+        const nsIDOMNSEditableElement =
+          Components.interfaces.nsIDOMNSEditableElement;
+
+        this.DOMNode.focus();
+        this.DOMNode.setSelectionRange(aStart, aEnd);
+
+        synthesizeKey("VK_DELETE", {});
+      }
+
+      this.getID = function removeTextFromInput_getID()
+      {
+        return "Remove text from " + aStart + " to " + aEnd + " for " +
+          prettyName(aID);
+      }
+    }
+
+    /**
+     * Remove text data from text node.
+     */
+    function removeTextFromContentEditable(aID, aStart, aEnd, aText, aFromUser)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.eventSeq = [
+        new textChangeChecker(aID, aStart, aEnd, aText, false, aFromUser)
+      ];
+
+      this.invoke = function removeTextFromContentEditable_invoke()
+      {
+        const nsIDOMNSEditableElement =
+          Components.interfaces.nsIDOMNSEditableElement;
+
+        this.DOMNode.focus();
+        this.textNode = getNode(aID).firstChild;
+        var selection = window.getSelection();
+        var range = document.createRange();
+        range.setStart(this.textNode, aStart);
+        range.setEnd(this.textNode, aEnd-1);
+        selection.addRange(range);
+
+        synthesizeKey("VK_DELETE", {});
+      }
+
+      this.getID = function removeTextFromContentEditable_getID()
+      {
+        return "Remove text from " + aStart + " to " + aEnd + " for " +
+          prettyName(aID);
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Do tests
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+
+    var gQueue = null;
+
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      // Focused editable text node
+      gQueue.push(new removeTextFromContentEditable("div", 0, 3, "hel", true));
+
+      // Focused editable HTML input
+      gQueue.push(new removeTextFromInput("input", 1, 2, "n", true));
+
+      gQueue.invoke(); // Will call SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+
+  </script>
+</head>
+
+
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=686909"
+     title="isFromUserInput flag on accessible text change events not correct">
+    Mozilla Bug 686909
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+  <div id="eventdump"></div>
+
+  <div id="div" contentEditable="true">hello</div>
+  <input id="input" value="input">
+
+</body>
+
+</html>

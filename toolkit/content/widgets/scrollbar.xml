@@ -17,7 +17,7 @@
   </binding>
 
   <binding id="scrollbar" extends="chrome://global/content/bindings/scrollbar.xml#scrollbar-base">
-    <content allowclickthrough="always">
+    <content clickthrough="always">
       <xul:scrollbarbutton sbattr="scrollbar-up-top" type="decrement" xbl:inherits="curpos,maxpos,disabled,sborient=orient"/>
       <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" xbl:inherits="curpos,maxpos,disabled,sborient=orient"/>
       <xul:slider flex="1" xbl:inherits="disabled,curpos,maxpos,pageincrement,increment,orient,sborient=orient">

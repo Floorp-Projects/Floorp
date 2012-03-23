@@ -60,8 +60,6 @@ public:
     nsHttpPipeline();
     virtual ~nsHttpPipeline();
 
-    nsresult AddTransaction(nsAHttpTransaction *);
-
 private:
     nsresult FillSendBuf();
     
@@ -84,6 +82,9 @@ private:
         return mResponseQ[i];
     }
 
+    // overload of nsAHttpTransaction::QueryPipeline()
+    nsHttpPipeline *QueryPipeline();
+
     nsAHttpConnection            *mConnection;
     nsTArray<nsAHttpTransaction*> mRequestQ;  // array of transactions
     nsTArray<nsAHttpTransaction*> mResponseQ; // array of transactions
@@ -98,6 +99,10 @@ private:
 
     // indicates whether or not the pipeline has been explicitly closed.
     bool mClosed;
+
+    // indicates whether or not a true pipeline (more than 1 request without
+    // a synchronous response) has been formed.
+    bool mUtilizedPipeline;
 
     // used when calling ReadSegments/WriteSegments on a transaction.
     nsAHttpSegmentReader *mReader;

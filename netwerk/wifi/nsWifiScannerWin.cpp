@@ -42,8 +42,6 @@
 #include "windows.h"
 #include "wlanapi.h"
 
-#include <ntddndis.h>
-#include "winioctl.h"
 #include "stdlib.h"
 
 #include "nsWifiMonitor.h"

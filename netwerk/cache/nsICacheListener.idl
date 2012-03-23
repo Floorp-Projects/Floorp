@@ -47,7 +47,7 @@
 
 interface nsICacheEntryDescriptor;
 
-[scriptable, uuid(638c3848-778b-4851-8ff3-9400f65b8773)]
+[scriptable, uuid(8eadf2ed-8cac-4961-8025-6da6d5827e74)]
 interface nsICacheListener : nsISupports
 {
     /**
@@ -58,4 +58,11 @@ interface nsICacheListener : nsISupports
     void onCacheEntryAvailable(in nsICacheEntryDescriptor descriptor,
                                in nsCacheAccessMode       accessGranted,
                                in nsresult                status);
+
+    /**
+     * Called when nsCacheSession::DoomEntry() is completed. The status
+     * parameter is NS_OK when the entry was doomed, or NS_ERROR_NOT_AVAILABLE
+     * when there is no such entry.
+     */
+    void onCacheEntryDoomed(in nsresult status);
 };

@@ -44,7 +44,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIScriptElement.h"
-#include "nsIParser.h"
+#include "nsCharsetSource.h"
 #include "nsIRefreshURI.h"
 #include "nsPIDOMWindow.h"
 #include "nsIContent.h"

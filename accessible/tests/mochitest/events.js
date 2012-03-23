@@ -29,6 +29,9 @@ const EVENT_TEXT_SELECTION_CHANGED = nsIAccessibleEvent.EVENT_TEXT_SELECTION_CHA
 const EVENT_VALUE_CHANGE = nsIAccessibleEvent.EVENT_VALUE_CHANGE;
 const EVENT_VIRTUALCURSOR_CHANGED = nsIAccessibleEvent.EVENT_VIRTUALCURSOR_CHANGED;
 
+const kNotFromUserInput = 0;
+const kFromUserInput = 1;
+
 ////////////////////////////////////////////////////////////////////////////////
 // General
 
@@ -1332,8 +1335,9 @@ function nofocusChecker(aID)
 
 /**
  * Text inserted/removed events checker.
+ * @param aFromUser  [in, optional] kNotFromUserInput or kFromUserInput
  */
-function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted)
+function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted, aFromUser)
 {
   this.target = getNode(aID);
   this.type = aIsInserted ? EVENT_TEXT_INSERTED : EVENT_TEXT_REMOVED;
@@ -1353,6 +1357,9 @@ function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted)
        "Text was " + changeInfo + " for " + prettyName(aID));
     is(aEvent.modifiedText, modifiedText,
        "Wrong " + changeInfo + " text for " + prettyName(aID));
+    if (typeof aFromUser != "undefined")
+      is(aEvent.isFromUserInput, aFromUser,
+         "wrong value of isFromUserInput() for " + prettyName(aID));
   }
 }
 

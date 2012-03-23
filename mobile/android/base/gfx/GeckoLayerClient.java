@@ -367,6 +367,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
             // a full viewport update, which is fine because if browser.js has somehow moved to
             // be out of sync with this first-paint viewport, then we force them back in sync.
             mLayerController.abortPanZoomAnimation();
+            mLayerController.getView().setPaintState(LayerView.PAINT_BEFORE_FIRST);
         }
     }
 

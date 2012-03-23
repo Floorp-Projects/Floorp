@@ -78,6 +78,7 @@ _TEST_FILES =\
 		test_focus_selects.html \
 		test_focus_tabbox.xul \
 		test_focus_tree.xul \
+		test_fromUserInput.html \
 		test_menu.xul \
 		test_mutation.html \
 		test_mutation.xhtml \

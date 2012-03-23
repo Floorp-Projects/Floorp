@@ -122,6 +122,14 @@ if [ "$COMPILER_DEPEND" = "" -a "$MOZ_NATIVE_MAKEDEPEND" = "" ]; then
   "
 fi
 
+if [ "$ENABLE_MARIONETTE" ]; then
+  add_makefiles "
+    testing/marionette/Makefile
+    testing/marionette/components/Makefile
+    testing/marionette/tests/Makefile
+  "
+fi
+
 if [ "$ENABLE_TESTS" ]; then
   add_makefiles "
     build/autoconf/test/Makefile

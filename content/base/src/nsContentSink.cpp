@@ -58,7 +58,6 @@
 #include "nsIHttpChannel.h"
 #include "nsIContent.h"
 #include "nsIScriptElement.h"
-#include "nsIParser.h"
 #include "nsContentErrors.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"

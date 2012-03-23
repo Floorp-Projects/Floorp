@@ -46,7 +46,7 @@
 interface nsICacheEntryDescriptor;
 interface nsICacheListener;
 
-[scriptable, uuid(ae9e84b5-3e2d-457e-8fcd-5bbd2a8b832e)]
+[scriptable, uuid(1dd7708c-de48-4ffe-b5aa-cd218c762887)]
 interface nsICacheSession : nsISupports
 {
     /**
@@ -76,13 +76,17 @@ interface nsICacheSession : nsISupports
                                            in boolean           blockingMode);
 
     /**
-     * Asynchronous cache access. Does not block the calling thread.
-     * Instead, the listener will be notified when the descriptor is
-     * available.
+     * Asynchronous cache access. Does not block the calling thread. Instead,
+     * the listener will be notified when the descriptor is available. If
+     * 'noWait' is set to true, the listener will be notified immediately with
+     * status NS_ERROR_CACHE_WAIT_FOR_VALIDATION rather than queuing the request
+     * when another descriptor has been given WRITE access but hasn't validated
+     * the entry yet.
      */
-    void asyncOpenCacheEntry(in ACString          key,
-                             in nsCacheAccessMode accessRequested,
-                             in nsICacheListener  listener);
+    void asyncOpenCacheEntry(in ACString           key,
+                             in nsCacheAccessMode  accessRequested,
+                             in nsICacheListener   listener,
+                             [optional] in boolean noWait);
 
     /**
      * Evict all entries for this session's clientID according to its storagePolicy.
@@ -94,4 +98,11 @@ interface nsICacheSession : nsISupports
      * are currently enabled for instantiation if they don't already exist.
      */
     boolean isStorageEnabled();
+
+    /**
+     * Asynchronously doom an entry specified by the key. Listener will be
+     * notified about the status of the operation. Null may be passed if caller
+     * doesn't care about the result.
+     */
+    void doomEntry(in ACString key, in nsICacheListener listener);
 };

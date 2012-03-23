@@ -39,7 +39,7 @@
 
 #include "nsXMLDocument.h"
 #include "nsParserCIID.h"
-#include "nsIParser.h"
+#include "nsCharsetSource.h"
 #include "nsIXMLContentSink.h"
 #include "nsPresContext.h" 
 #include "nsIContent.h"

@@ -72,7 +72,7 @@ nsAndroidHistory::RegisterVisitedCallback(nsIURI *aURI, Link *aContent)
   nsCAutoString uri;
   nsresult rv = aURI->GetSpec(uri);
   if (NS_FAILED(rv)) return rv;
-  nsString uriString = NS_ConvertUTF8toUTF16(uri);
+  NS_ConvertUTF8toUTF16 uriString(uri);
 
   nsTArray<Link*>* list = mListeners.Get(uriString);
   if (! list) {
@@ -98,7 +98,7 @@ nsAndroidHistory::UnregisterVisitedCallback(nsIURI *aURI, Link *aContent)
   nsCAutoString uri;
   nsresult rv = aURI->GetSpec(uri);
   if (NS_FAILED(rv)) return rv;
-  nsString uriString = NS_ConvertUTF8toUTF16(uri);
+  NS_ConvertUTF8toUTF16 uriString(uri);
 
   nsTArray<Link*>* list = mListeners.Get(uriString);
   if (! list)
@@ -126,7 +126,7 @@ nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, PRUint32 aFlag
     nsCAutoString uri;
     nsresult rv = aURI->GetSpec(uri);
     if (NS_FAILED(rv)) return rv;
-    nsString uriString = NS_ConvertUTF8toUTF16(uri);
+    NS_ConvertUTF8toUTF16 uriString(uri);
     bridge->MarkURIVisited(uriString);
   }
   return NS_OK;
