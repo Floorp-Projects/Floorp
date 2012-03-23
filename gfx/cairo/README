@@ -176,6 +176,8 @@ quartz-mark-dirty.patch: Add a quartz implementation of mark_dirty_rectangle (bu
 
 expose-snapshot.patch: Make functions to add snapshots public, as well as allow creating null surfaces publically. (bug 715658)
 
+fix-build-with-Werror=return-type.patch: Fix builds with -Werror=return-type (bug 737909)
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
