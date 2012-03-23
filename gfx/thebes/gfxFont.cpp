@@ -1935,6 +1935,10 @@ gfxFont::GetShapedWord(gfxContext *aContext,
                      aFlags);
 
     CacheHashEntry *entry = mWordCache.PutEntry(key);
+    if (!entry) {
+        NS_WARNING("failed to create word cache entry - expect missing text");
+        return nsnull;
+    }
     gfxShapedWord *sw = entry->mShapedWord;
     Telemetry::Accumulate(Telemetry::WORD_CACHE_LOOKUP_LEN, aLength);
     Telemetry::Accumulate(Telemetry::WORD_CACHE_LOOKUP_SCRIPT, aRunScript);
@@ -1950,20 +1954,21 @@ gfxFont::GetShapedWord(gfxContext *aContext,
                                                     aRunScript,
                                                     aAppUnitsPerDevUnit,
                                                     aFlags);
-    NS_ASSERTION(sw != nsnull,
-                 "failed to create gfxShapedWord - expect missing text");
     if (!sw) {
+        NS_WARNING("failed to create gfxShapedWord - expect missing text");
         return nsnull;
     }
 
-    bool ok;
+    bool ok = false;
     if (sizeof(T) == sizeof(PRUnichar)) {
         ok = ShapeWord(aContext, sw, (const PRUnichar*)aText);
     } else {
         nsAutoString utf16;
         AppendASCIItoUTF16(nsDependentCSubstring((const char*)aText, aLength),
                            utf16);
-        ok = ShapeWord(aContext, sw, utf16.BeginReading());
+        if (utf16.Length() == aLength) {
+            ok = ShapeWord(aContext, sw, utf16.BeginReading());
+        }
     }
     NS_WARN_IF_FALSE(ok, "failed to shape word - expect garbled text");
 
