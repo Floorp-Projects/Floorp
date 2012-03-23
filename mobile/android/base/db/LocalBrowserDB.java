@@ -45,6 +45,7 @@ import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.ImageColumns;
 import org.mozilla.gecko.db.BrowserContract.Images;
+import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.db.DBUtils;
 
@@ -88,6 +89,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     private final Uri mParentsUriWithProfile;
     private final Uri mHistoryUriWithProfile;
     private final Uri mImagesUriWithProfile;
+    private final Uri mCombinedUriWithProfile;
     private final Uri mDeletedHistoryUriWithProfile;
 
     private static final String[] DEFAULT_BOOKMARK_COLUMNS =
@@ -109,6 +111,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         mParentsUriWithProfile = appendProfile(Bookmarks.PARENTS_CONTENT_URI);
         mHistoryUriWithProfile = appendProfile(History.CONTENT_URI);
         mImagesUriWithProfile = appendProfile(Images.CONTENT_URI);
+        mCombinedUriWithProfile = appendProfile(Combined.CONTENT_URI);
 
         mDeletedHistoryUriWithProfile = mHistoryUriWithProfile.buildUpon().
             appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1").build();
@@ -129,22 +132,27 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                                                                          String.valueOf(limit)).build();
     }
 
+    private Uri combinedUriWithLimit(int limit) {
+        return mCombinedUriWithProfile.buildUpon().appendQueryParameter(BrowserContract.PARAM_LIMIT,
+                String.valueOf(limit)).build();
+    }
+
     private Uri appendProfile(Uri uri) {
         return uri.buildUpon().appendQueryParameter(BrowserContract.PARAM_PROFILE, mProfile).build();
     }
 
     private Cursor filterAllSites(ContentResolver cr, String[] projection, CharSequence constraint,
             int limit, CharSequence urlFilter) {
-        // The history selection queries for sites with a url or title
+        // The combined history/bookmarks selection queries for sites with a url or title
         // containing the constraint string
-        String selection = "(" + History.URL + " LIKE ? OR " +
-                                 History.TITLE + " LIKE ?)";
+        String selection = "(" + Combined.URL + " LIKE ? OR " +
+                                 Combined.TITLE + " LIKE ?)";
 
         final String historySelectionArg = "%" + constraint.toString() + "%";
         String[] selectionArgs = new String[] { historySelectionArg, historySelectionArg };
 
         if (urlFilter != null) {
-            selection = DBUtils.concatenateWhere(selection, "(" + History.URL + " NOT LIKE ?)");
+            selection = DBUtils.concatenateWhere(selection, "(" + Combined.URL + " NOT LIKE ?)");
             selectionArgs = DBUtils.appendSelectionArgs(selectionArgs, new String[] { urlFilter.toString() });
         }
 
@@ -154,10 +162,10 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         // approximation using the Cauchy distribution: multiplier = 15^2 / (age^2 + 15^2).
         // Using 15 as our scale parameter, we get a constant 15^2 = 225. Following this math,
         // frecencyScore = numVisits * max(1, 100 * 225 / (age*age + 225)). (See bug 704977)
-        final String age = "(" + History.DATE_LAST_VISITED + " - " + System.currentTimeMillis() + ") / 86400000";
-        final String sortOrder = History.VISITS + " * MAX(1, 100 * 225 / (" + age + "*" + age + " + 225)) DESC";
+        final String age = "(" + Combined.DATE_LAST_VISITED + " - " + System.currentTimeMillis() + ") / 86400000";
+        final String sortOrder = Combined.VISITS + " * MAX(1, 100 * 225 / (" + age + "*" + age + " + 225)) DESC";
 
-        Cursor c = cr.query(historyUriWithLimit(limit),
+        Cursor c = cr.query(combinedUriWithLimit(limit),
                             projection,
                             selection,
                             selectionArgs,
@@ -168,10 +176,10 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     public Cursor filter(ContentResolver cr, CharSequence constraint, int limit) {
         return filterAllSites(cr,
-                              new String[] { History._ID,
-                                             History.URL,
-                                             History.TITLE,
-                                             History.FAVICON },
+                              new String[] { Combined._ID,
+                                             Combined.URL,
+                                             Combined.TITLE,
+                                             Combined.FAVICON },
                               constraint,
                               limit,
                               null);
@@ -179,10 +187,10 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     public Cursor getTopSites(ContentResolver cr, int limit) {
         return filterAllSites(cr,
-                              new String[] { History._ID,
-                                             History.URL,
-                                             History.TITLE,
-                                             History.THUMBNAIL },
+                              new String[] { Combined._ID,
+                                             Combined.URL,
+                                             Combined.TITLE,
+                                             Combined.THUMBNAIL },
                               "",
                               limit,
                               BrowserDB.ABOUT_PAGES_URL_FILTER);
