@@ -49,9 +49,9 @@
 #include "ion/IonMacroAssembler.h"
 #include "ion/IonFrames.h"
 #include "ion/IonMacroAssembler.h"
-#include "ion/Snapshots.h"
 #include "ion/Safepoints.h"
 #include "ion/VMFunctions.h"
+#include "ion/SnapshotWriter.h"
 
 namespace js {
 namespace ion {

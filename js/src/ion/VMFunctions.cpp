@@ -41,7 +41,6 @@
 #include "Ion.h"
 #include "IonCompartment.h"
 #include "jsinterp.h"
-#include "ion/Snapshots.h"
 #include "ion/IonFrames.h"
 
 #include "jsinterpinlines.h"

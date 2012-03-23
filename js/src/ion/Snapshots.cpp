@@ -40,11 +40,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "MIRGenerator.h"
-#include "Snapshots.h"
 #include "IonFrames.h"
 #include "jsscript.h"
 #include "IonLinker.h"
 #include "IonSpewer.h"
+#include "SnapshotReader.h"
+#include "SnapshotWriter.h"
 
 #ifdef TRACK_SNAPSHOTS
 #include "MIR.h"

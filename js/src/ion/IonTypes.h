@@ -57,6 +57,31 @@ typedef int8_t int8;
 typedef uint32 SnapshotOffset;
 typedef uint32 BailoutId;
 
+static const SnapshotOffset INVALID_SNAPSHOT_OFFSET = uint32(-1);
+
+// Different kinds of bailouts. When extending this enum, make sure to check
+// the bits reserved for bailout kinds in Bailouts.h
+enum BailoutKind
+{
+    // A normal bailout triggered from type, shape, and assorted overflow
+    // guards in the compiler.
+    Bailout_Normal,
+
+    // A bailout at the very start of a function indicates that there may be
+    // a type mismatch in the arguments that necessitates a reflow.
+    Bailout_ArgumentCheck,
+
+    // A bailout required to monitor a newly observed type in a type inference
+    // barrier.
+    Bailout_TypeBarrier,
+
+    // A bailout required to monitor the result of a VM call.
+    Bailout_Monitor,
+
+    // A bailout to trigger recompilation to inline calls when the script is hot.
+    Bailout_RecompileCheck
+};
+
 } // namespace ion
 } // namespace js
 
