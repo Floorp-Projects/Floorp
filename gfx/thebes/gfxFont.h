@@ -59,6 +59,7 @@
 #include "nsISupportsImpl.h"
 #include "gfxPattern.h"
 #include "mozilla/HashFunctions.h"
+#include "nsIMemoryReporter.h"
 
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
 
@@ -742,6 +743,15 @@ struct gfxTextRange {
  * completely, with all its words, and avoid the cost of aging the words
  * individually. That only happens with longer-lived fonts.
  */
+struct FontCacheSizes {
+    FontCacheSizes()
+        : mFontInstances(0), mShapedWords(0)
+    { }
+
+    size_t mFontInstances; // memory used by instances of gfxFont subclasses
+    size_t mShapedWords; // memory used by the per-font shapedWord caches
+};
+
 class THEBES_API gfxFontCache MOZ_FINAL : public nsExpirationTracker<gfxFont,3> {
 public:
     enum {
@@ -795,7 +805,20 @@ public:
         mFonts.EnumerateEntries(ClearCachedWordsForFont, nsnull);
     }
 
+    void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                             FontCacheSizes*   aSizes) const;
+    void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                             FontCacheSizes*   aSizes) const;
+
 protected:
+    class MemoryReporter
+        : public nsIMemoryMultiReporter
+    {
+    public:
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSIMEMORYMULTIREPORTER
+    };
+
     void DestroyFont(gfxFont *aFont);
 
     static gfxFontCache *gGlobalCache;
@@ -827,6 +850,10 @@ protected:
 
         gfxFont* mFont;
     };
+
+    static size_t SizeOfFontEntryExcludingThis(HashEntry*        aHashEntry,
+                                               nsMallocSizeOfFun aMallocSizeOf,
+                                               void*             aUserArg);
 
     nsTHashtable<HashEntry> mFonts;
 
@@ -999,6 +1026,9 @@ public:
 
     PRUint32 GetAppUnitsPerDevUnit() { return mAppUnitsPerDevUnit; }
 
+    size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+    size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
 private:
     class HashEntry : public nsUint32HashKey {
     public:
@@ -1035,9 +1065,7 @@ private:
             return widths[indexInBlock];
         }
 
-#ifdef DEBUG
-        PRUint32 ComputeSize();
-#endif
+        PRUint32 SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
         
         ~GlyphWidths();
 
@@ -1056,7 +1084,7 @@ private:
 
         nsTArray<PtrBits> mBlocks;
     };
-    
+
     GlyphWidths             mContainedGlyphWidths;
     nsTHashtable<HashEntry> mTightGlyphExtents;
     PRUint32                mAppUnitsPerDevUnit;
@@ -1493,6 +1521,11 @@ public:
         }
     }
 
+    virtual void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontCacheSizes*   aSizes) const;
+    virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontCacheSizes*   aSizes) const;
+
 protected:
     // Call the appropriate shaper to generate glyphs for aText and store
     // them into aShapedWord.
@@ -1576,6 +1609,11 @@ protected:
 
         nsAutoPtr<gfxShapedWord> mShapedWord;
     };
+
+    static size_t
+    WordCacheEntrySizeOfExcludingThis(CacheHashEntry*   aHashEntry,
+                                      nsMallocSizeOfFun aMallocSizeOf,
+                                      void*             aUserArg);
 
     nsTHashtable<CacheHashEntry> mWordCache;
 

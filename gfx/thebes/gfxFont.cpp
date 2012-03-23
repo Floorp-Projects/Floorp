@@ -47,7 +47,6 @@
 #include "nsReadableUtils.h"
 #include "nsExpirationTracker.h"
 #include "nsILanguageAtomService.h"
-#include "nsIMemoryReporter.h"
 #include "nsITimer.h"
 
 #include "gfxFont.h"
@@ -1048,6 +1047,52 @@ gfxFontFamily::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
  * shaped-word caches to free up memory.
  */
 
+NS_IMPL_ISUPPORTS1(gfxFontCache::MemoryReporter, nsIMemoryMultiReporter)
+
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(FontCacheMallocSizeOf, "font-cache")
+
+NS_IMETHODIMP
+gfxFontCache::MemoryReporter::GetName(nsACString &aName)
+{
+    aName.AssignLiteral("font-cache");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+gfxFontCache::MemoryReporter::CollectReports
+    (nsIMemoryMultiReporterCallback* aCb,
+     nsISupports* aClosure)
+{
+    FontCacheSizes sizes;
+
+    gfxFontCache::GetCache()->SizeOfIncludingThis(&FontCacheMallocSizeOf,
+                                                  &sizes);
+
+    aCb->Callback(EmptyCString(),
+                  NS_LITERAL_CSTRING("explicit/gfx/font-cache"),
+                  nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
+                  sizes.mFontInstances,
+                  NS_LITERAL_CSTRING("Memory used for active font instances."),
+                  aClosure);
+
+    aCb->Callback(EmptyCString(),
+                  NS_LITERAL_CSTRING("explicit/gfx/font-shaped-words"),
+                  nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
+                  sizes.mShapedWords,
+                  NS_LITERAL_CSTRING("Memory used to cache shaped glyph data."),
+                  aClosure);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+gfxFontCache::MemoryReporter::GetExplicitNonHeap(PRInt64* aAmount)
+{
+    // This reporter only measures heap memory.
+    *aAmount = 0;
+    return NS_OK;
+}
+
 // Observer for the memory-pressure notification, to trigger
 // flushing of the shaped-word caches
 class MemoryPressureObserver : public nsIObserver,
@@ -1079,7 +1124,11 @@ gfxFontCache::Init()
 {
     NS_ASSERTION(!gGlobalCache, "Where did this come from?");
     gGlobalCache = new gfxFontCache();
-    return gGlobalCache ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    if (!gGlobalCache) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_RegisterMemoryMultiReporter(new MemoryReporter);
+    return NS_OK;
 }
 
 void
@@ -1238,6 +1287,39 @@ gfxFontCache::ClearCachedWordsForFont(HashEntry* aHashEntry, void* aUserData)
 {
     aHashEntry->mFont->ClearCachedWords();
     return PL_DHASH_NEXT;
+}
+
+/*static*/
+size_t
+gfxFontCache::SizeOfFontEntryExcludingThis(HashEntry*        aHashEntry,
+                                           nsMallocSizeOfFun aMallocSizeOf,
+                                           void*             aUserArg)
+{
+    HashEntry *entry = static_cast<HashEntry*>(aHashEntry);
+    FontCacheSizes *sizes = static_cast<FontCacheSizes*>(aUserArg);
+    entry->mFont->SizeOfExcludingThis(aMallocSizeOf, sizes);
+
+    // The font records its size in the |sizes| parameter, so we return zero
+    // here to the hashtable enumerator.
+    return 0;
+}
+
+void
+gfxFontCache::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                  FontCacheSizes*   aSizes) const
+{
+    // TODO: add the overhead of the expiration tracker (generation arrays)
+
+    mFonts.SizeOfExcludingThis(SizeOfFontEntryExcludingThis,
+                               aMallocSizeOf, aSizes);
+}
+
+void
+gfxFontCache::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                  FontCacheSizes*   aSizes) const
+{
+    aSizes->mFontInstances += aMallocSizeOf(this);
+    SizeOfExcludingThis(aMallocSizeOf, aSizes);
 }
 
 void
@@ -2589,10 +2671,40 @@ gfxFont::SynthesizeSpaceWidth(PRUint32 aCh)
     }
 }
 
+/*static*/ size_t
+gfxFont::WordCacheEntrySizeOfExcludingThis(CacheHashEntry*   aHashEntry,
+                                           nsMallocSizeOfFun aMallocSizeOf,
+                                           void*             aUserArg)
+{
+    return aMallocSizeOf(aHashEntry->mShapedWord.get());
+}
+
+void
+gfxFont::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                             FontCacheSizes*   aSizes) const
+{
+    for (PRUint32 i = 0; i < mGlyphExtentsArray.Length(); ++i) {
+        aSizes->mFontInstances +=
+            mGlyphExtentsArray[i]->SizeOfIncludingThis(aMallocSizeOf);
+    }
+    aSizes->mShapedWords +=
+        mWordCache.SizeOfExcludingThis(WordCacheEntrySizeOfExcludingThis,
+                                       aMallocSizeOf);
+}
+
+void
+gfxFont::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                             FontCacheSizes*   aSizes) const
+{
+    aSizes->mFontInstances += aMallocSizeOf(this);
+    SizeOfExcludingThis(aMallocSizeOf, aSizes);
+}
+
 gfxGlyphExtents::~gfxGlyphExtents()
 {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
-    gGlyphExtentsWidthsTotalSize += mContainedGlyphWidths.ComputeSize();
+    gGlyphExtentsWidthsTotalSize +=
+        mContainedGlyphWidths.SizeOfExcludingThis(&FontCacheMallocSizeOf);
     gGlyphExtentsCount++;
 #endif
     MOZ_COUNT_DTOR(gfxGlyphExtents);
@@ -2636,21 +2748,19 @@ gfxGlyphExtents::GlyphWidths::~GlyphWidths()
     }
 }
 
-#ifdef DEBUG
 PRUint32
-gfxGlyphExtents::GlyphWidths::ComputeSize()
+gfxGlyphExtents::GlyphWidths::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
     PRUint32 i;
-    PRUint32 size = mBlocks.Capacity()*sizeof(PtrBits);
+    PRUint32 size = mBlocks.SizeOfExcludingThis(aMallocSizeOf);
     for (i = 0; i < mBlocks.Length(); ++i) {
         PtrBits bits = mBlocks[i];
         if (bits && !(bits & 0x1)) {
-            size += BLOCK_SIZE*sizeof(PRUint16);
+            size += aMallocSizeOf(reinterpret_cast<void*>(bits));
         }
     }
     return size;
 }
-#endif
 
 void
 gfxGlyphExtents::GlyphWidths::Set(PRUint32 aGlyphID, PRUint16 aWidth)
@@ -2700,6 +2810,19 @@ gfxGlyphExtents::SetTightGlyphExtents(PRUint32 aGlyphID, const gfxRect& aExtents
     entry->y = aExtentsAppUnits.Y();
     entry->width = aExtentsAppUnits.Width();
     entry->height = aExtentsAppUnits.Height();
+}
+
+size_t
+gfxGlyphExtents::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+    return mContainedGlyphWidths.SizeOfExcludingThis(aMallocSizeOf) +
+        mTightGlyphExtents.SizeOfExcludingThis(nsnull, aMallocSizeOf);
+}
+
+size_t
+gfxGlyphExtents::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
 gfxFontGroup::gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle, gfxUserFontSet *aUserFontSet)

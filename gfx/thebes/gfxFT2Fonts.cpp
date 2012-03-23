@@ -661,3 +661,20 @@ gfxFT2Font::FillGlyphDataForChar(PRUint32 ch, CachedGlyphData *gd)
     gd->rsbDelta = face->glyph->rsb_delta;
     gd->xAdvance = face->glyph->advance.x;
 }
+
+void
+gfxFT2Font::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                FontCacheSizes*   aSizes) const
+{
+    gfxFont::SizeOfExcludingThis(aMallocSizeOf, aSizes);
+    aSizes->mFontInstances +=
+        mCharGlyphCache.SizeOfExcludingThis(nsnull, aMallocSizeOf);
+}
+
+void
+gfxFT2Font::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                FontCacheSizes*   aSizes) const
+{
+    aSizes->mFontInstances += aMallocSizeOf(this);
+    SizeOfExcludingThis(aMallocSizeOf, aSizes);
+}
