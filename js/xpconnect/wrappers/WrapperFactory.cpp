@@ -342,8 +342,10 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
             wn->HasProto() && wn->GetProto()->ClassIsDOMObject()) {
             typedef XrayWrapper<CrossCompartmentSecurityWrapper> Xray;
             usingXray = true;
-            wrapper = &FilteringWrapper<Xray,
-                                        CrossOriginAccessiblePropertiesOnly>::singleton;
+            if (IsLocationObject(obj))
+                wrapper = &FilteringWrapper<Xray, LocationPolicy>::singleton;
+            else
+                wrapper = &FilteringWrapper<Xray, CrossOriginAccessiblePropertiesOnly>::singleton;
         } else {
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                         ExposedPropertiesOnly>::singleton;
