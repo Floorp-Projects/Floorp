@@ -400,9 +400,10 @@ var PlacesOrganizer = {
             Ci.nsIFilePicker.modeOpen);
     fp.appendFilters(Ci.nsIFilePicker.filterHTML);
     if (fp.show() != Ci.nsIFilePicker.returnCancel) {
-      if (fp.fileURL) {
-        Components.utils.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
-        BookmarkHTMLUtils.importFromURL(fp.fileURL.spec, false);
+      if (fp.file) {
+        var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].
+                       getService(Ci.nsIPlacesImportExportService);
+        importer.importHTMLFromFile(fp.file, false);
       }
     }
   },
