@@ -21,6 +21,12 @@ XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
   return Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
 });
 
+#ifdef MOZ_WIDGET_GONK
+  const DIRECTORY_NAME = "webappsDir";
+#else
+  const DIRECTORY_NAME = "ProfD";
+#endif
+
 let DOMApplicationRegistry = {
   appsFile: null,
   webapps: { },
@@ -36,8 +42,8 @@ let DOMApplicationRegistry = {
 
     Services.obs.addObserver(this, "xpcom-shutdown", false);
 
-    let appsDir = FileUtils.getDir("ProfD", ["webapps"], true, true);
-    this.appsFile = FileUtils.getFile("ProfD", ["webapps", "webapps.json"], true);
+    let appsDir = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], true, true);
+    this.appsFile = FileUtils.getFile(DIRECTORY_NAME, ["webapps", "webapps.json"], true);
 
     if (!this.appsFile.exists())
       return;
@@ -162,7 +168,7 @@ let DOMApplicationRegistry = {
 
     // install an application again is considered as an update
     if (id) {
-      let dir = FileUtils.getDir("ProfD", ["webapps", id], true, true);
+      let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
       try {
         dir.remove(true);
       } catch(e) {
@@ -173,7 +179,7 @@ let DOMApplicationRegistry = {
       id = uuidGenerator.generateUUID().toString();
     }
 
-    let dir = FileUtils.getDir("ProfD", ["webapps", id], true, true);
+    let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
 
     let manFile = dir.clone();
     manFile.append("manifest.json");
@@ -217,7 +223,7 @@ let DOMApplicationRegistry = {
 
     let index = aIndex || 0;
     let id = aData[index].id;
-    let file = FileUtils.getFile("ProfD", ["webapps", id, "manifest.json"], true);
+    let file = FileUtils.getFile(DIRECTORY_NAME, ["webapps", id, "manifest.json"], true);
     this._loadJSONAsync(file, (function(aJSON) {
       aData[index].manifest = aJSON;
       if (index == aData.length - 1)
@@ -234,7 +240,7 @@ let DOMApplicationRegistry = {
       if (app.origin == aData.origin) {
         found = true;
         delete this.webapps[id];
-        let dir = FileUtils.getDir("ProfD", ["webapps", id], true, true);
+        let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
         try {
           dir.remove(true);
         } catch (e) {
@@ -340,7 +346,7 @@ let DOMApplicationRegistry = {
           continue;
         let origin = this.webapps[record.id].origin;
         delete this.webapps[record.id];
-        let dir = FileUtils.getDir("ProfD", ["webapps", record.id], true, true);
+        let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", record.id], true, true);
         try {
           dir.remove(true);
         } catch (e) {
@@ -378,7 +384,7 @@ let DOMApplicationRegistry = {
     let ids = this.getAllIDs();
     for (let id in ids) {
       delete this.webapps[id];
-      let dir = FileUtils.getDir("ProfD", ["webapps", id], true, true);
+      let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
       try {
         dir.remove(true);
       } catch (e) {
