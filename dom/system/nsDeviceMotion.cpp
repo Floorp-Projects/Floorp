@@ -126,7 +126,6 @@ nsDeviceMotion::nsDeviceMotion()
   mEnabled(true)
 {
   mLastDOMMotionEventTime = TimeStamp::Now();
-  mLastAccuracy = SENSOR_ACCURACY_UNKNOWN;
 
   nsCOMPtr<nsIPrefBranch> prefSrv = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefSrv) {
@@ -240,13 +239,6 @@ nsDeviceMotion::Notify(const mozilla::hal::SensorData& aSensorData)
   double y = aSensorData.values()[1];
   double z = aSensorData.values()[2];
 
-  SensorAccuracyType accuracy = aSensorData.accuracy();
-
-  if (accuracy <= SENSOR_ACCURACY_LOW && mLastAccuracy >= SENSOR_ACCURACY_MED) {
-    FireNeedsCalibration();
-  }
-  mLastAccuracy = accuracy;
-
   nsCOMArray<nsIDeviceMotionListener> listeners = mListeners;
   for (PRUint32 i = listeners.Count(); i > 0 ; ) {
     --i;
@@ -283,62 +275,6 @@ nsDeviceMotion::Notify(const mozilla::hal::SensorData& aSensorData)
         FireDOMOrientationEvent(domdoc, target, x, y, z);
     }
   }
-}
-
-void
-nsDeviceMotion::FireNeedsCalibration()
-{
-  if (!mEnabled)
-    return;
-
-  nsCOMArray<nsIDeviceMotionListener> listeners = mListeners;
-  for (PRUint32 i = listeners.Count(); i > 0 ; ) {
-    --i;
-    listeners[i]->NeedsCalibration();
-  }
-
-  nsCOMArray<nsIDOMWindow> windowListeners;
-  for (PRUint32 i = 0; i < mWindowListeners.Length(); i++) {
-    windowListeners.AppendObject(mWindowListeners[i]);
-  }
-
-  for (PRUint32 i = windowListeners.Count(); i > 0 ; ) {
-    --i;
-
-    // check to see if this window is in the background.  if
-    // it is, don't send any device motion to it.
-    nsCOMPtr<nsPIDOMWindow> pwindow = do_QueryInterface(windowListeners[i]);
-    if (!pwindow ||
-        !pwindow->GetOuterWindow() ||
-        pwindow->GetOuterWindow()->IsBackground())
-      continue;
-
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    windowListeners[i]->GetDocument(getter_AddRefs(domdoc));
-
-    if (domdoc) {
-	nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(windowListeners[i]);
-        FireNeedsCalibration(domdoc, target);
-    }
-  }
-}
-
-void
-nsDeviceMotion::FireNeedsCalibration(nsIDOMDocument *domdoc,
-				    nsIDOMEventTarget *target)
-{
-  nsCOMPtr<nsIDOMEvent> event;
-  domdoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  if (!event)
-    return;
-
-  event->InitEvent(NS_LITERAL_STRING("compassneedscalibration"), true, false);
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
-  if (privateEvent)
-    privateEvent->SetTrusted(true);
-  
-  bool defaultActionEnabled = true;
-  target->DispatchEvent(event, &defaultActionEnabled);
 }
 
 void

@@ -51,6 +51,7 @@ import android.util.Log;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.net.URLConnection;
 import java.net.HttpURLConnection;
@@ -294,7 +295,17 @@ public class Favicons {
                     image = (BitmapDrawable) Drawable.createFromStream(byteStream, "src");
                 }
             } catch (Exception e) {
-                Log.d(LOGTAG, "Error downloading favicon: " + e);
+                // Trying to read icons from nested jar files will fail
+                if (mFaviconUrl.startsWith("jar:jar:")) {
+                    InputStream stream = GeckoJarReader.getStream(mFaviconUrl);
+                    if (stream != null) {
+                        image = new BitmapDrawable(stream);
+                    } else {
+                        Log.d(LOGTAG, "Error getting favicon from jar: " + e);
+                    }
+                } else {
+                    Log.d(LOGTAG, "Error downloading favicon: " + e);
+                }
             } finally {
                 if (urlConnection != null && urlConnection instanceof HttpURLConnection) {
                     HttpURLConnection httpConnection = (HttpURLConnection) urlConnection;

@@ -47,7 +47,7 @@
 #include "nsContentUtils.h"
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
-#include "nsIParser.h"
+#include "nsCharsetSource.h"
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 

@@ -60,7 +60,7 @@
 #include "nsIFrame.h"
 #include "nsIWidget.h"
 #include "nsGUIEvent.h"
-#include "nsIParser.h"
+#include "nsCharsetSource.h"
 #include "nsJSEnvironment.h"
 #include "nsJSUtils.h"
 

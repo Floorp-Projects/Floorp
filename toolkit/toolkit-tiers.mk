@@ -273,6 +273,10 @@ ifdef MOZ_MAPINFO
 tier_platform_dirs	+= tools/codesighs
 endif
 
+ifdef ENABLE_MARIONETTE
+tier_platform_dirs += testing/marionette
+endif
+
 ifdef ENABLE_TESTS
 tier_platform_dirs += testing/mochitest
 tier_platform_dirs += testing/xpcshell

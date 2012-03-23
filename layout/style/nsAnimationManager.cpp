@@ -587,27 +587,16 @@ private:
 
 struct KeyframeData {
   float mKey;
+  PRUint32 mIndex; // store original order since sort algorithm is not stable
   nsCSSKeyframeRule *mRule;
 };
 
-typedef InfallibleTArray<KeyframeData> KeyframeDataArray;
-
-static PLDHashOperator
-AppendKeyframeData(const float &aKey, nsCSSKeyframeRule *aRule, void *aData)
-{
-  KeyframeDataArray *array = static_cast<KeyframeDataArray*>(aData);
-  KeyframeData *data = array->AppendElement();
-  data->mKey = aKey;
-  data->mRule = aRule;
-  return PL_DHASH_NEXT;
-}
-
 struct KeyframeDataComparator {
   bool Equals(const KeyframeData& A, const KeyframeData& B) const {
-    return A.mKey == B.mKey;
+    return A.mKey == B.mKey && A.mIndex == B.mIndex;
   }
   bool LessThan(const KeyframeData& A, const KeyframeData& B) const {
-    return A.mKey < B.mKey;
+    return A.mKey < B.mKey || (A.mKey == B.mKey && A.mIndex < B.mIndex);
   }
 };
 
@@ -685,11 +674,15 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       continue;
     }
 
-    // Build the set of unique keyframes in the @keyframes rule.  Per
-    // css3-animations, later keyframes with the same key replace
-    // earlier ones (no cascading).
-    nsDataHashtable<PercentageHashKey, nsCSSKeyframeRule*> keyframes;
-    keyframes.Init(16); // FIXME: make infallible!
+    // While current drafts of css3-animations say that later keyframes
+    // with the same key entirely replace earlier ones (no cascading),
+    // this is a bad idea and contradictory to the rest of CSS.  So
+    // we're going to keep all the keyframes for each key and then do
+    // the replacement on a per-property basis rather than a per-rule
+    // basis, just like everything else in CSS.
+
+    AutoInfallibleTArray<KeyframeData, 16> sortedKeyframes;
+
     for (PRUint32 ruleIdx = 0, ruleEnd = rule->StyleRuleCount();
          ruleIdx != ruleEnd; ++ruleIdx) {
       css::Rule* cssRule = rule->GetStyleRuleAt(ruleIdx);
@@ -707,13 +700,14 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
         // (And PercentageHashKey currently assumes we either ignore or
         // clamp them.)
         if (0.0f <= key && key <= 1.0f) {
-          keyframes.Put(key, kfRule);
+          KeyframeData *data = sortedKeyframes.AppendElement();
+          data->mKey = key;
+          data->mIndex = ruleIdx;
+          data->mRule = kfRule;
         }
       }
     }
 
-    KeyframeDataArray sortedKeyframes;
-    keyframes.EnumerateRead(AppendKeyframeData, &sortedKeyframes);
     sortedKeyframes.Sort(KeyframeDataComparator());
 
     if (sortedKeyframes.Length() == 0) {
@@ -742,18 +736,37 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
         continue;
       }
 
+      // Build a list of the keyframes to use for this property.  This
+      // means we need every keyframe with the property in it, except
+      // for those keyframes where a later keyframe with the *same key*
+      // also has the property.
+      AutoInfallibleTArray<PRUint32, 16> keyframesWithProperty;
+      float lastKey = 100.0f; // an invalid key
+      for (PRUint32 kfIdx = 0, kfEnd = sortedKeyframes.Length();
+           kfIdx != kfEnd; ++kfIdx) {
+        KeyframeData &kf = sortedKeyframes[kfIdx];
+        if (!kf.mRule->Declaration()->HasProperty(prop)) {
+          continue;
+        }
+        if (kf.mKey == lastKey) {
+          // Replace previous occurrence of same key.
+          keyframesWithProperty[keyframesWithProperty.Length() - 1] = kfIdx;
+        } else {
+          keyframesWithProperty.AppendElement(kfIdx);
+        }
+        lastKey = kf.mKey;
+      }
+
       AnimationProperty &propData = *aDest.mProperties.AppendElement();
       propData.mProperty = prop;
 
       KeyframeData *fromKeyframe = nsnull;
       nsRefPtr<nsStyleContext> fromContext;
       bool interpolated = true;
-      for (PRUint32 kfIdx = 0, kfEnd = sortedKeyframes.Length();
-           kfIdx != kfEnd; ++kfIdx) {
+      for (PRUint32 wpIdx = 0, wpEnd = keyframesWithProperty.Length();
+           wpIdx != wpEnd; ++wpIdx) {
+        PRUint32 kfIdx = keyframesWithProperty[wpIdx];
         KeyframeData &toKeyframe = sortedKeyframes[kfIdx];
-        if (!toKeyframe.mRule->Declaration()->HasProperty(prop)) {
-          continue;
-        }
 
         nsRefPtr<nsStyleContext> toContext =
           resolvedStyles.Get(mPresContext, aStyleContext, toKeyframe.mRule);
