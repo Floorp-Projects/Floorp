@@ -4566,43 +4566,6 @@ EmitWith(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 }
 
 static bool
-SetMethodFunction(JSContext *cx, FunctionBox *funbox, JSAtom *atom)
-{
-    RootedVarObject parent(cx);
-    parent = funbox->function()->getParent();
-
-    /*
-     * Replace a boxed function with a new one with a method atom. Methods
-     * require a function with the extended size finalize kind, which normal
-     * functions don't have. We don't eagerly allocate functions with the
-     * expanded size for boxed functions, as most functions are not methods.
-     */
-    JSFunction *fun = js_NewFunction(cx, NULL, NULL,
-                                     funbox->function()->nargs,
-                                     funbox->function()->flags,
-                                     parent,
-                                     funbox->function()->atom,
-                                     JSFunction::ExtendedFinalizeKind);
-    if (!fun)
-        return false;
-
-    JSScript *script = funbox->function()->script();
-    if (script) {
-        fun->setScript(script);
-        if (!script->typeSetFunction(cx, fun))
-            return false;
-    }
-
-    JS_ASSERT(funbox->function()->joinable());
-    fun->setJoinable();
-
-    fun->setMethodAtom(atom);
-
-    funbox->object = fun;
-    return true;
-}
-
-static bool
 EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 {
     StmtInfo stmtInfo;
@@ -5371,23 +5334,6 @@ EmitStatement(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         }
 #endif
         if (op != JSOP_NOP) {
-            /*
-             * Specialize JSOP_SETPROP to JSOP_SETMETHOD to defer or
-             * avoid null closure cloning. Do this only for assignment
-             * statements that are not completion values wanted by a
-             * script evaluator, to ensure that the joined function
-             * can't escape directly.
-             */
-            if (!wantval &&
-                pn2->isKind(PNK_ASSIGN) &&
-                pn2->pn_left->isOp(JSOP_SETPROP) &&
-                pn2->pn_right->isOp(JSOP_LAMBDA) &&
-                pn2->pn_right->pn_funbox->joinable())
-            {
-                if (!SetMethodFunction(cx, pn2->pn_right->pn_funbox, pn2->pn_left->pn_atom))
-                    return false;
-                pn2->pn_left->setOp(JSOP_SETMETHOD);
-            }
             if (!EmitTree(cx, bce, pn2))
                 return false;
             if (Emit1(cx, bce, op) < 0)
@@ -5894,28 +5840,13 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (!bce->makeAtomIndex(pn3->pn_atom, &index))
                 return false;
 
-            /* Check whether we can optimize to JSOP_INITMETHOD. */
-            ParseNode *init = pn2->pn_right;
-            bool lambda = init->isOp(JSOP_LAMBDA);
-            if (lambda)
-                ++methodInits;
-            if (op == JSOP_INITPROP && lambda && init->pn_funbox->joinable()) {
+            /*
+             * Disable NEWOBJECT on initializers that set __proto__, which has
+             * a non-standard setter on objects.
+             */
+            if (pn3->pn_atom == cx->runtime->atomState.protoAtom)
                 obj = NULL;
-                op = JSOP_INITMETHOD;
-                if (!SetMethodFunction(cx, init->pn_funbox, pn3->pn_atom))
-                    return JS_FALSE;
-                pn2->setOp(op);
-            } else {
-                /*
-                 * Disable NEWOBJECT on initializers that set __proto__, which has
-                 * a non-standard setter on objects.
-                 */
-                if (pn3->pn_atom == cx->runtime->atomState.protoAtom)
-                    obj = NULL;
-                op = JSOP_INITPROP;
-                if (lambda)
-                    ++slowMethodInits;
-            }
+            op = JSOP_INITPROP;
 
             if (obj) {
                 JS_ASSERT(!obj->inDictionaryMode());

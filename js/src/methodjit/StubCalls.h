@@ -62,7 +62,6 @@ void JS_FASTCALL Interrupt(VMFrame &f, jsbytecode *pc);
 void JS_FASTCALL RecompileForInline(VMFrame &f);
 void JS_FASTCALL InitElem(VMFrame &f, uint32_t last);
 void JS_FASTCALL InitProp(VMFrame &f, PropertyName *name);
-void JS_FASTCALL InitMethod(VMFrame &f, PropertyName *name);
 
 void JS_FASTCALL HitStackQuota(VMFrame &f);
 void * JS_FASTCALL FixupArity(VMFrame &f, uint32_t argc);
@@ -137,10 +136,6 @@ void JS_FASTCALL SetConst(VMFrame &f, PropertyName *name);
 template<JSBool strict> void JS_FASTCALL DefFun(VMFrame &f, JSFunction *fun);
 void JS_FASTCALL RegExp(VMFrame &f, JSObject *regex);
 JSObject * JS_FASTCALL Lambda(VMFrame &f, JSFunction *fun);
-JSObject * JS_FASTCALL LambdaJoinableForInit(VMFrame &f, JSFunction *fun);
-JSObject * JS_FASTCALL LambdaJoinableForSet(VMFrame &f, JSFunction *fun);
-JSObject * JS_FASTCALL LambdaJoinableForCall(VMFrame &f, JSFunction *fun);
-JSObject * JS_FASTCALL LambdaJoinableForNull(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL FlatLambda(VMFrame &f, JSFunction *fun);
 void JS_FASTCALL Arguments(VMFrame &f);
 void JS_FASTCALL EnterBlock(VMFrame &f, JSObject *obj);

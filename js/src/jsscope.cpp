@@ -498,16 +498,9 @@ NormalizeGetterAndSetter(JSContext *cx, JSObject *obj,
         JS_ASSERT(!(attrs & JSPROP_SETTER));
         setter = NULL;
     }
-    if (flags & Shape::METHOD) {
-        JS_ASSERT_IF(getter, getter == JS_PropertyStub);
-        JS_ASSERT(!setter);
-        JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
+    if (getter == JS_PropertyStub) {
+        JS_ASSERT(!(attrs & JSPROP_GETTER));
         getter = NULL;
-    } else {
-        if (getter == JS_PropertyStub) {
-            JS_ASSERT(!(attrs & JSPROP_GETTER));
-            getter = NULL;
-        }
     }
 
     return true;
@@ -808,9 +801,6 @@ JSObject::changeProperty(JSContext *cx, Shape *shape, unsigned attrs, unsigned m
     JS_ASSERT(!((attrs ^ shape->attrs) & JSPROP_SHARED) ||
               !(attrs & JSPROP_SHARED));
 
-    /* Don't allow method properties to be changed to have a getter or setter. */
-    JS_ASSERT_IF(shape->isMethod(), !getter && !setter);
-
     types::MarkTypePropertyConfigured(cx, this, shape->propid());
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER))
         types::AddTypePropertyId(cx, this, shape->propid(), types::Type::UnknownType());
@@ -1039,44 +1029,6 @@ JSObject::replaceWithNewEquivalentShape(JSContext *cx, Shape *oldShape, Shape *n
     if (spp)
         SHAPE_STORE_PRESERVING_COLLISION(spp, newShape);
     return newShape;
-}
-
-Shape *
-JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
-{
-    JS_ASSERT(shape.isMethod());
-
-    if (!inDictionaryMode() && !toDictionaryMode(cx))
-        return NULL;
-
-    Shape *spare = js_NewGCShape(cx);
-    if (!spare)
-        return NULL;
-    new (spare) Shape(shape.base()->unowned(), 0);
-
-#ifdef DEBUG
-    JS_ASSERT(canHaveMethodBarrier());
-    JS_ASSERT(!shape.setter());
-    JS_ASSERT(!shape.hasShortID());
-#endif
-
-    /*
-     * Clear Shape::METHOD from flags as we are despecializing from a
-     * method memoized in the property tree to a plain old function-valued
-     * property.
-     */
-    Shape *result =
-        putProperty(cx, shape.propid(), NULL, NULL, shape.slot(),
-                    shape.attrs,
-                    shape.getFlags() & ~Shape::METHOD,
-                    0);
-    if (!result)
-        return NULL;
-
-    if (result != lastProperty())
-        JS_ALWAYS_TRUE(generateOwnShape(cx, spare));
-
-    return result;
 }
 
 bool

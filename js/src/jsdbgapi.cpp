@@ -645,17 +645,6 @@ JS_GetFrameCalleeObject(JSContext *cx, JSStackFrame *fp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetValidFrameCalleeObject(JSContext *cx, JSStackFrame *fp, jsval *vp)
-{
-    Value v;
-
-    if (!Valueify(fp)->getValidCalleeObject(cx, &v))
-        return false;
-    *vp = v.isObject() ? v : JSVAL_VOID;
-    return true;
-}
-
-JS_PUBLIC_API(JSBool)
 JS_IsDebuggerFrame(JSContext *cx, JSStackFrame *fp)
 {
     return Valueify(fp)->isDebuggerFrame();

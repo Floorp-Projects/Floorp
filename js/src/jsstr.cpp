@@ -3312,7 +3312,7 @@ js_ValueToSource(JSContext *cx, const Value &v)
     Value rval = NullValue();
     Value fval;
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.toSourceAtom);
-    if (!js_GetMethod(cx, &v.toObject(), id, JSGET_NO_METHOD_BARRIER, &fval))
+    if (!js_GetMethod(cx, &v.toObject(), id, 0, &fval))
         return NULL;
     if (js_IsCallable(fval)) {
         if (!Invoke(cx, v, fval, 0, NULL, &rval))

@@ -617,11 +617,9 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_NEWARRAY:
           case JSOP_NEWOBJECT:
           case JSOP_ENDINIT:
-          case JSOP_INITMETHOD:
           case JSOP_INITPROP:
           case JSOP_INITELEM:
           case JSOP_SETPROP:
-          case JSOP_SETMETHOD:
           case JSOP_IN:
           case JSOP_INSTANCEOF:
           case JSOP_LINENO:
@@ -1522,7 +1520,6 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             break;
 
           case JSOP_INITPROP:
-          case JSOP_INITMETHOD:
             stack[stackDepth - 1].v = code->poppedValues[1];
             break;
 
