@@ -57,7 +57,6 @@
 #include "nsTArray.h"
 #include "nsIAtom.h"
 #include "nsParserBase.h"
-#include "nsCharsetSource.h" // avoid burning comm-central
 
 #define NS_IPARSER_IID \
 { 0xd064f0d6, 0x44e3, 0x4366, \
