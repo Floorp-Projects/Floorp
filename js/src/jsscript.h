@@ -793,12 +793,6 @@ StackDepth(JSScript *script)
     return script->nslots - script->nfixed;
 }
 
-extern void
-js_MarkScriptFilename(const char *filename);
-
-extern void
-js_SweepScriptFilenames(JSCompartment *comp);
-
 /*
  * New-script-hook calling is factored from NewScriptFromEmitter so that it
  * and callers of XDRScript can share this code.  In the case of callers
@@ -812,6 +806,15 @@ extern void
 js_CallDestroyScriptHook(JSContext *cx, JSScript *script);
 
 namespace js {
+
+extern void
+MarkScriptFilename(const char *filename);
+
+extern void
+SweepScriptFilenames(JSCompartment *comp);
+
+extern void
+FreeScriptFilenames(JSCompartment *comp);
 
 struct ScriptOpcodeCountsPair
 {

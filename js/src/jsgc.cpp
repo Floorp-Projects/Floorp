@@ -3252,7 +3252,7 @@ SweepPhase(JSContext *cx, JSGCInvocationKind gckind)
          * script's filename. See bug 323267.
          */
         for (GCCompartmentsIter c(rt); !c.done(); c.next())
-            js_SweepScriptFilenames(c);
+            SweepScriptFilenames(c);
 
         /*
          * This removes compartments from rt->compartment, so we do it last to make
