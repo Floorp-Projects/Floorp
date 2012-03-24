@@ -2065,26 +2065,6 @@ nsJSContext::CreateNativeGlobalForInner(
   return NS_OK;
 }
 
-nsresult
-nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, JSObject *aOuterGlobal)
-{
-  NS_ENSURE_ARG(aNewInner);
-#ifdef DEBUG
-  JSObject *newInnerJSObject = aNewInner->GetGlobalJSObject();
-#endif
-
-  // Now that we're connecting the outer global to the inner one,
-  // we must have transplanted it. The JS engine tries to maintain
-  // the global object's compartment as its default compartment,
-  // so update that now since it might have changed.
-  JS_SetGlobalObject(mContext, aOuterGlobal);
-  NS_ASSERTION(JS_GetPrototype(aOuterGlobal) ==
-               JS_GetPrototype(newInnerJSObject),
-               "outer and inner globals should have the same prototype");
-
-  return NS_OK;
-}
-
 JSContext*
 nsJSContext::GetNativeContext()
 {
@@ -2104,47 +2084,6 @@ nsJSContext::InitContext()
   ::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter);
 
   JSOptionChangedCallback(js_options_dot_str, this);
-
-  return NS_OK;
-}
-
-nsresult
-nsJSContext::CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
-                               nsIScriptGlobalObject *aCurrentInner)
-{
-  mGlobalObjectRef = aGlobalObject;
-
-  nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(aGlobalObject));
-
-  if (chromeWindow) {
-    // Always enable E4X for XUL and other chrome content -- there is no
-    // need to preserve the <!-- script hiding hack from JS-in-HTML daze
-    // (introduced in 1995 for graceful script degradation in Netscape 1,
-    // Mosaic, and other pre-JS browsers).
-    JS_SetOptions(mContext, JS_GetOptions(mContext) | JSOPTION_XML);
-  }
-
-  JSObject *outer =
-    NS_NewOuterWindowProxy(mContext, aCurrentInner->GetGlobalJSObject());
-  if (!outer) {
-    return NS_ERROR_FAILURE;
-  }
-
-  js::SetProxyExtra(outer, 0, js::PrivateValue(aGlobalObject));
-
-  return SetOuterObject(outer);
-}
-
-nsresult
-nsJSContext::SetOuterObject(JSObject* aOuterObject)
-{
-  // Force our context's global object to be the outer.
-  // NB: JS_SetGlobalObject sets mContext->compartment.
-  JS_SetGlobalObject(mContext, aOuterObject);
-
-  // Set up the prototype for the outer object.
-  JSObject *inner = JS_GetParent(aOuterObject);
-  JS_SetPrototype(mContext, aOuterObject, JS_GetPrototype(inner));
 
   return NS_OK;
 }

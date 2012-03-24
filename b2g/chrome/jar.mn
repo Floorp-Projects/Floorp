@@ -9,9 +9,6 @@ chrome.jar:
 #ifndef MOZ_TOUCH
   content/touch.js                      (content/touch.js)
 #endif
-#ifndef MOZ_WIDGET_GONK
-  content/httpd.js                      (content/httpd.js)
-#endif
   content/webapi.js                     (content/webapi.js)
   content/content.css                   (content/content.css)
 

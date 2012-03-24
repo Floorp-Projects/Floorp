@@ -95,6 +95,8 @@ public:
   /* Get the ID of this language. */
   virtual PRUint32 GetScriptTypeID() = 0;
 
+  virtual void SetGlobalObject(nsIScriptGlobalObject* aGlobalObject) = 0;
+
   /**
    * Compile and execute a script.
    *
@@ -304,31 +306,9 @@ public:
                                       nsISupports **aHolder) = 0;
 
   /**
-   * Connect this context to a new inner window, to allow "prototype"
-   * chaining from the inner to the outer.
-   * Called after both the the inner and outer windows are initialized
-   **/
-  virtual nsresult ConnectToInner(nsIScriptGlobalObject *aNewInner,
-                                  JSObject *aOuterGlobal) = 0;
-
-
-  /**
    * Initialize the context generally. Does not create a global object.
    **/
   virtual nsresult InitContext() = 0;
-
-  /**
-   * Creates the outer window for this context.
-   *
-   * @param aGlobalObject The script global object to use as our global.
-   */
-  virtual nsresult CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
-                                     nsIScriptGlobalObject *aCurrentInner) = 0;
-
-  /**
-   * Given an outer object, updates this context with that outer object.
-   */
-  virtual nsresult SetOuterObject(JSObject* aOuterObject) = 0;
 
   /**
    * Prepares this context for use with the current inner window for the

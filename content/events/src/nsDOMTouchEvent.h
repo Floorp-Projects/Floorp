@@ -139,14 +139,14 @@ public:
 
   nsDOMTouchList(nsISupports *aParent) : mParent(aParent)
   {
-    SetIsProxy();
+    SetIsDOMBinding();
   }
   nsDOMTouchList(nsISupports *aParent,
                  nsTArray<nsCOMPtr<nsIDOMTouch> > &aTouches)
    : mPoints(aTouches),
      mParent(aParent)
   {
-    SetIsProxy();
+    SetIsDOMBinding();
   }
 
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,

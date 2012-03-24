@@ -24,3 +24,8 @@ contract @mozilla.org/updates/update-prompt;1 {88b3eb21-d072-4e3b-886d-f89d8c49f
 component {397a7fdf-2254-47be-b74e-76625a1a66d5} MozKeyboard.js
 contract @mozilla.org/b2g-keyboard;1 {397a7fdf-2254-47be-b74e-76625a1a66d5}
 category JavaScript-navigator-property mozKeyboard @mozilla.org/b2g-keyboard;1
+
+# DirectoryProvider.js
+component {9181eb7c-6f87-11e1-90b1-4f59d80dd2e5} DirectoryProvider.js
+contract @mozilla.org/browser/directory-provider;1 {9181eb7c-6f87-11e1-90b1-4f59d80dd2e5}
+category xpcom-directory-providers browser-directory-provider @mozilla.org/browser/directory-provider;1
