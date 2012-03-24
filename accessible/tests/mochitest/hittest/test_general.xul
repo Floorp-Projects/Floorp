@@ -15,32 +15,21 @@
   <script type="application/javascript"
           src="../common.js" />
   <script type="application/javascript"
+          src="../events.js" />
+  <script type="application/javascript"
           src="../layout.js" />
 
   <script type="application/javascript">
   <![CDATA[
     function doTest()
     {
-      // Initialize the tree
-      var view = new nsTableTreeView(5);
-
-      var tree = getNode("tree");
-      var treeBox = tree.treeBoxObject;
-      treeBox.view = view;
-
-      // Tests
-      var treecols = getNode("treecols");
-      var x = treecols.boxObject.x;
-      var y = treecols.boxObject.y;
-
-      testChildAtPoint(tree, x, y, false, treecols);
-      testChildAtPoint(tree, x, y, true, "col1");
+      hitTest("tree", "treecols", "col1");
 
       SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTest);
+    addA11yXULTreeLoadEvent(doTest, "tree", new nsTableTreeView(5));
   ]]>
   </script>
 
