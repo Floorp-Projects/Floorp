@@ -306,15 +306,6 @@ public:
                                       nsISupports **aHolder) = 0;
 
   /**
-   * Connect this context to a new inner window, to allow "prototype"
-   * chaining from the inner to the outer.
-   * Called after both the the inner and outer windows are initialized
-   **/
-  virtual nsresult ConnectToInner(nsIScriptGlobalObject *aNewInner,
-                                  JSObject *aOuterGlobal) = 0;
-
-
-  /**
    * Initialize the context generally. Does not create a global object.
    **/
   virtual nsresult InitContext() = 0;

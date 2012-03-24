@@ -2065,26 +2065,6 @@ nsJSContext::CreateNativeGlobalForInner(
   return NS_OK;
 }
 
-nsresult
-nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, JSObject *aOuterGlobal)
-{
-  NS_ENSURE_ARG(aNewInner);
-#ifdef DEBUG
-  JSObject *newInnerJSObject = aNewInner->GetGlobalJSObject();
-#endif
-
-  // Now that we're connecting the outer global to the inner one,
-  // we must have transplanted it. The JS engine tries to maintain
-  // the global object's compartment as its default compartment,
-  // so update that now since it might have changed.
-  JS_SetGlobalObject(mContext, aOuterGlobal);
-  NS_ASSERTION(JS_GetPrototype(aOuterGlobal) ==
-               JS_GetPrototype(newInnerJSObject),
-               "outer and inner globals should have the same prototype");
-
-  return NS_OK;
-}
-
 JSContext*
 nsJSContext::GetNativeContext()
 {
