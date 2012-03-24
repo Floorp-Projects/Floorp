@@ -40,6 +40,7 @@
 
 #include "jsapi.h"
 #include "jsdbgapi.h"
+#include "jsxdrapi.h"
 
 #include "nsJSPrincipals.h"
 
@@ -53,20 +54,31 @@ using namespace mozilla::scache;
 // principals to the system principals.
 nsresult
 ReadCachedScript(StartupCache* cache, nsACString &uri, JSContext *cx,
-                 nsIPrincipal *systemPrincipal, JSScript **scriptp)
+                 nsIPrincipal *systemPrincipal, JSScript **script)
 {
     nsAutoArrayPtr<char> buf;
     PRUint32 len;
     nsresult rv = cache->GetBuffer(PromiseFlatCString(uri).get(),
                                    getter_Transfers(buf), &len);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
         return rv; // don't warn since NOT_AVAILABLE is an ok error
+    }
 
-    JSScript *script = JS_DecodeScript(cx, buf, len, nsJSPrincipals::get(systemPrincipal), nsnull);
-    if (!script)
+    JSXDRState *xdr = ::JS_XDRNewMem(cx, JSXDR_DECODE);
+    if (!xdr) {
         return NS_ERROR_OUT_OF_MEMORY;
-    *scriptp = script;
-    return NS_OK;
+    }
+
+    ::JS_XDRMemSetData(xdr, buf, len);
+    ::JS_XDRSetPrincipals(xdr, nsJSPrincipals::get(systemPrincipal), nsnull);
+
+    JSBool ok = ::JS_XDRScript(xdr, script);
+    
+    // Prevent XDR from automatically freeing the buffer.
+    ::JS_XDRMemSetData(xdr, NULL, 0);
+    ::JS_XDRDestroy(xdr);
+
+    return ok ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsresult
@@ -76,13 +88,21 @@ WriteCachedScript(StartupCache* cache, nsACString &uri, JSContext *cx,
     MOZ_ASSERT(JS_GetScriptPrincipals(script) == nsJSPrincipals::get(systemPrincipal));
     MOZ_ASSERT(JS_GetScriptOriginPrincipals(script) == nsJSPrincipals::get(systemPrincipal));
 
-    uint32_t size;
-    void *data = JS_EncodeScript(cx, script, &size);
-    if (!data)
+    JSXDRState *xdr = ::JS_XDRNewMem(cx, JSXDR_ENCODE);
+    if (!xdr) {
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-    MOZ_ASSERT(size);
-    nsresult rv = cache->PutBuffer(PromiseFlatCString(uri).get(), static_cast<char *>(data), size);
-    js_free(data);
+    nsresult rv;
+    if (!::JS_XDRScript(xdr, &script)) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    } else {
+        uint32_t size;
+        char* data = static_cast<char *>(::JS_XDRMemGetData(xdr, &size));
+        MOZ_ASSERT(size);
+        rv = cache->PutBuffer(PromiseFlatCString(uri).get(), data, size);
+    }
+
+    ::JS_XDRDestroy(xdr);
     return rv;
 }

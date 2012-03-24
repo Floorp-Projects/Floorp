@@ -4,6 +4,7 @@
 
 #include "tests.h"
 #include "jsscript.h"
+#include "jsxdrapi.h"
 
 static JSScript *
 CompileScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *obj,
@@ -27,18 +28,44 @@ CompileScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *obj,
     return script;
 }
 
-JSScript *
-FreezeThaw(JSContext *cx, JSScript *script)
+template<typename T>
+T *
+FreezeThawImpl(JSContext *cx, T *thing, JSBool (*xdrAction)(JSXDRState *xdr, T **))
 {
     // freeze
+    JSXDRState *w = JS_XDRNewMem(cx, JSXDR_ENCODE);
+    if (!w)
+        return NULL;
+
+    void *memory = NULL;
     uint32_t nbytes;
-    void *memory = JS_EncodeScript(cx, script, &nbytes);
+    if (xdrAction(w, &thing)) {
+        void *p = JS_XDRMemGetData(w, &nbytes);
+        if (p) {
+            memory = JS_malloc(cx, nbytes);
+            if (memory)
+                memcpy(memory, p, nbytes);
+        }
+    }
+    JS_XDRDestroy(w);
     if (!memory)
         return NULL;
 
     // thaw
-    script = JS_DecodeScript(cx, memory, nbytes, script->principals, script->originPrincipals);
-    js_free(memory);
+    JSXDRState *r = JS_XDRNewMem(cx, JSXDR_DECODE);
+    JS_XDRMemSetData(r, memory, nbytes);
+
+    JSScript *script = GetScript(cx, thing);
+    JS_XDRSetPrincipals(r, script->principals, script->originPrincipals);
+    if (!xdrAction(r, &thing))
+        thing = NULL;
+    JS_XDRDestroy(r);  // this frees `memory
+    return thing;
+}
+
+static JSScript *
+GetScript(JSContext *cx, JSScript *script)
+{
     return script;
 }
 
@@ -48,21 +75,16 @@ GetScript(JSContext *cx, JSObject *funobj)
     return JS_GetFunctionScript(cx, JS_GetObjectFunction(funobj));
 }
 
-JSObject *
+static JSScript *
+FreezeThaw(JSContext *cx, JSScript *script)
+{
+    return FreezeThawImpl(cx, script, JS_XDRScript);
+}
+
+static JSObject *
 FreezeThaw(JSContext *cx, JSObject *funobj)
 {
-    // freeze
-    uint32_t nbytes;
-    void *memory = JS_EncodeInterpretedFunction(cx, funobj, &nbytes);
-    if (!memory)
-        return NULL;
-
-    // thaw
-    JSScript *script = GetScript(cx, funobj);
-    funobj = JS_DecodeInterpretedFunction(cx, memory, nbytes,
-                                          script->principals, script->originPrincipals);
-    js_free(memory);
-    return funobj;
+    return FreezeThawImpl(cx, funobj, JS_XDRFunctionObject);
 }
 
 static JSPrincipals testPrincipals[] = {
