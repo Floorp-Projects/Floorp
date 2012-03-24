@@ -415,7 +415,8 @@ static const char kRoleNames[][20] = {
   "gridcell",            //ROLE_GRID_CELL
   "embedded object",     //ROLE_EMBEDDED_OBJECT
   "note",                //ROLE_NOTE
-  "figure"               //ROLE_FIGURE
+  "figure",              //ROLE_FIGURE
+  "check rich option"    //ROLE_CHECK_RICH_OPTION
 };
 
 /**

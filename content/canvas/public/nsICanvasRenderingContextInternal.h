@@ -74,6 +74,10 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICANVASRENDERINGCONTEXTINTERNAL_IID)
 
+  enum {
+    RenderFlagPremultAlpha = 0x1
+  };
+
   // This method should NOT hold a ref to aParentCanvas; it will be called
   // with nsnull when the element is going away.
   NS_IMETHOD SetCanvasElement(nsHTMLCanvasElement* aParentCanvas) = 0;
@@ -85,7 +89,9 @@ public:
   NS_IMETHOD InitializeWithSurface(nsIDocShell *docShell, gfxASurface *surface, PRInt32 width, PRInt32 height) = 0;
 
   // Render the canvas at the origin of the given gfxContext
-  NS_IMETHOD Render(gfxContext *ctx, gfxPattern::GraphicsFilter aFilter) = 0;
+  NS_IMETHOD Render(gfxContext *ctx,
+                    gfxPattern::GraphicsFilter aFilter,
+                    PRUint32 aFlags = RenderFlagPremultAlpha) = 0;
 
   // Gives you a stream containing the image represented by this context.
   // The format is given in aMimeTime, for example "image/png".

@@ -48,4 +48,7 @@ EXTRA_PP_COMPONENTS = \
 	nsSessionStartup.js \
 	$(NULL)
 
+libs::
+	$(NSINSTALL) $(srcdir)/*.jsm $(FINAL_TARGET)/modules/sessionstore
+
 include $(topsrcdir)/config/rules.mk

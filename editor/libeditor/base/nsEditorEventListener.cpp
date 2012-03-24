@@ -676,11 +676,7 @@ nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
   nsCOMPtr<nsIContent> dropParent = do_QueryInterface(parent);
   NS_ENSURE_TRUE(dropParent, NS_ERROR_FAILURE);
 
-  if (!dropParent->IsEditable()) {
-    return NS_OK;
-  }
-
-  if (CanDrop(aDragEvent)) {
+  if (dropParent->IsEditable() && CanDrop(aDragEvent)) {
     aDragEvent->PreventDefault(); // consumed
 
     if (mCaret) {
@@ -754,11 +750,7 @@ nsEditorEventListener::Drop(nsIDOMDragEvent* aMouseEvent)
   nsCOMPtr<nsIContent> dropParent = do_QueryInterface(parent);
   NS_ENSURE_TRUE(dropParent, NS_ERROR_FAILURE);
 
-  if (!dropParent->IsEditable()) {
-    return NS_OK;
-  }
-
-  if (!CanDrop(aMouseEvent)) {
+  if (!dropParent->IsEditable() || !CanDrop(aMouseEvent)) {
     // was it because we're read-only?
     if (mEditor->IsReadonly() || mEditor->IsDisabled())
     {

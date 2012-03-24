@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test changing src attribute</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTests()">
+  <p id="display"></p>
+
+  <embed id="plugin1" src="about:blank" type="application/x-test" width="200" height="200"></embed>
+
+  <script type="application/javascript;version=1.8">
+  SimpleTest.waitForExplicitFinish();
+
+  var p = document.getElementById('plugin1');
+
+  var destroyed = false;
+  function onDestroy() {
+    destroyed = true;
+  }
+
+  function runTests() {
+    p.startWatchingInstanceCount();
+    p.callOnDestroy(onDestroy);
+
+    p.setAttribute("src", "loremipsum.txt");
+
+    is(destroyed, true, "Instance should have been destroyed.");
+    is(p.getInstanceCount(), 1, "One new instance should have been created.");
+
+    p.stopWatchingInstanceCount();
+
+    SimpleTest.finish();
+  }
+  </script>
+</body>
+</html>
+

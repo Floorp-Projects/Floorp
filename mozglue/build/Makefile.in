@@ -92,6 +92,13 @@ SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,$(DEPTH)/other-license
 SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,../android)
 endif
 
+ifeq (gonk, $(MOZ_WIDGET_TOOLKIT))
+# To properly wrap jemalloc's pthread_atfork call.
+EXTRA_DSO_LDOPTS += -Wl,--wrap=pthread_atfork
+SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,$(DEPTH)/other-licenses/android)
+SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,gonk,../gonk)
+endif
+
 ifdef MOZ_LINKER
 # Add custom dynamic linker
 SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,linker,../linker)

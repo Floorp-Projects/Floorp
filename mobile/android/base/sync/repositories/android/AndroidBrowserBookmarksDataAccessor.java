@@ -211,7 +211,7 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
     // content provider to do that for us.
     return cv;
   }
-  
+
   /**
    * Returns a cursor over non-deleted records that list the given androidID as a parent.
    */

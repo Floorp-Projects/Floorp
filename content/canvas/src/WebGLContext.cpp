@@ -561,7 +561,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 }
 
 NS_IMETHODIMP
-WebGLContext::Render(gfxContext *ctx, gfxPattern::GraphicsFilter f)
+WebGLContext::Render(gfxContext *ctx, gfxPattern::GraphicsFilter f, PRUint32 aFlags)
 {
     if (!gl)
         return NS_OK;
@@ -572,7 +572,15 @@ WebGLContext::Render(gfxContext *ctx, gfxPattern::GraphicsFilter f)
         return NS_ERROR_FAILURE;
 
     gl->ReadPixelsIntoImageSurface(0, 0, mWidth, mHeight, surf);
-    gfxUtils::PremultiplyImageSurface(surf);
+
+    bool srcPremultAlpha = mOptions.premultipliedAlpha;
+    bool dstPremultAlpha = aFlags & RenderFlagPremultAlpha;
+
+    if (!srcPremultAlpha && dstPremultAlpha) {
+        gfxUtils::PremultiplyImageSurface(surf);
+    } else if (srcPremultAlpha && !dstPremultAlpha) {
+        gfxUtils::UnpremultiplyImageSurface(surf);
+    }
 
     nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
     pat->SetFilter(f);
@@ -608,7 +616,8 @@ WebGLContext::GetInputStream(const char* aMimeType,
 
     nsRefPtr<gfxContext> tmpcx = new gfxContext(surf);
     // Use Render() to make sure that appropriate y-flip gets applied
-    nsresult rv = Render(tmpcx, gfxPattern::FILTER_NEAREST);
+    PRUint32 flags = mOptions.premultipliedAlpha ? RenderFlagPremultAlpha : 0;
+    nsresult rv = Render(tmpcx, gfxPattern::FILTER_NEAREST, flags);
     if (NS_FAILED(rv))
         return rv;
 
@@ -625,11 +634,22 @@ WebGLContext::GetInputStream(const char* aMimeType,
     if (!encoder)
         return NS_ERROR_FAILURE;
 
+    int format = imgIEncoder::INPUT_FORMAT_HOSTARGB;
+    if (!mOptions.premultipliedAlpha) {
+        // We need to convert to INPUT_FORMAT_RGBA, otherwise
+        // we are automatically considered premult, and unpremult'd.
+        // Yes, it is THAT silly.
+        // Except for different lossy conversions by color,
+        // we could probably just change the label, and not change the data.
+        gfxUtils::ConvertBGRAtoRGBA(surf);
+        format = imgIEncoder::INPUT_FORMAT_RGBA;
+    }
+
     rv = encoder->InitFromData(surf->Data(),
                                mWidth * mHeight * 4,
                                mWidth, mHeight,
                                surf->Stride(),
-                               imgIEncoder::INPUT_FORMAT_HOSTARGB,
+                               format,
                                nsDependentString(aEncoderOptions));
     NS_ENSURE_SUCCESS(rv, rv);
 

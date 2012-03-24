@@ -155,7 +155,10 @@ endif
 # causes assertions on Win64. See bug 719579.
 ifeq ($(OS_ARCH),WINNT)
 ifdef MOZ_MEMORY
-DEFINES += -DHAVE_MALLOC_USABLE_SIZE
+DEFINES += \
+  -DHAVE_MALLOC_USABLE_SIZE \
+  -DSQLITE_WITHOUT_MSIZE \
+  $(NULL)
 endif
 endif
 
