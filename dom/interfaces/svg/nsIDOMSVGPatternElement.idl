@@ -51,7 +51,7 @@ interface nsIDOMSVGAnimatedEnumeration;
 interface nsIDOMSVGAnimatedTransformList;
 interface nsIDOMSVGAnimatedLength;
 
-[scriptable, uuid(b8b4500d-e389-42b6-ae54-dd163d6c7c03)]
+[scriptable, uuid(1dfae3d2-49d3-48a5-a0f0-8d71dbad5fb6)]
 interface nsIDOMSVGPatternElement 
   : nsIDOMSVGElement
 /*

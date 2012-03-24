@@ -790,10 +790,15 @@ namespace roles {
   FIGURE = 124,
 
   /**
+   * Represents a rich item with a check box.
+   */
+  CHECK_RICH_OPTION = 125,
+
+  /**
    * It's not role actually. This constant is important to help ensure
    * nsRoleMap's are synchronized.
    */
-  LAST_ENTRY = 125
+  LAST_ENTRY = 126
   };
 } // namespace role
 typedef enum mozilla::a11y::roles::Role role;

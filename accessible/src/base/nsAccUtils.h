@@ -108,14 +108,6 @@ public:
   static PRInt32 GetARIAOrDefaultLevel(nsAccessible *aAccessible);
 
   /**
-   * Compute position in group (posinset) and group size (setsize) for
-   * nsIDOMXULSelectControlItemElement node.
-   */
-  static void GetPositionAndSizeForXULSelectControlItem(nsIContent *aContent,
-                                                        PRInt32 *aPosInSet,
-                                                        PRInt32 *aSetSize);
-
-  /**
    * Compute group level for nsIDOMXULContainerItemElement node.
    */
   static PRInt32 GetLevelForXULContainerItem(nsIContent *aContent);

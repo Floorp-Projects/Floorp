@@ -886,8 +886,6 @@ SaveScriptFilename(JSContext *cx, const char *filename)
     return sfe->filename;
 }
 
-} /* namespace js */
-
 /*
  * Back up from a saved filename by its offset within its hash table entry.
  */
@@ -895,14 +893,14 @@ SaveScriptFilename(JSContext *cx, const char *filename)
     ((ScriptFilenameEntry *) ((fn) - offsetof(ScriptFilenameEntry, filename)))
 
 void
-js_MarkScriptFilename(const char *filename)
+MarkScriptFilename(const char *filename)
 {
     ScriptFilenameEntry *sfe = FILENAME_TO_SFE(filename);
     sfe->marked = true;
 }
 
 void
-js_SweepScriptFilenames(JSCompartment *comp)
+SweepScriptFilenames(JSCompartment *comp)
 {
     ScriptFilenameTable &table = comp->scriptFilenameTable;
     for (ScriptFilenameTable::Enum e(table); !e.empty(); e.popFront()) {
@@ -915,6 +913,18 @@ js_SweepScriptFilenames(JSCompartment *comp)
         }
     }
 }
+
+void
+FreeScriptFilenames(JSCompartment *comp)
+{
+    ScriptFilenameTable &table = comp->scriptFilenameTable;
+    for (ScriptFilenameTable::Enum e(table); !e.empty(); e.popFront())
+        Foreground::free_(e.front());
+
+    table.clear();
+}
+
+} /* namespace js */
 
 /*
  * JSScript data structures memory alignment:
@@ -1888,7 +1898,7 @@ JSScript::markChildren(JSTracer *trc)
         MarkObject(trc, &globalObject, "object");
 
     if (IS_GC_MARKING_TRACER(trc) && filename)
-        js_MarkScriptFilename(filename);
+        MarkScriptFilename(filename);
 
     bindings.trace(trc);
 

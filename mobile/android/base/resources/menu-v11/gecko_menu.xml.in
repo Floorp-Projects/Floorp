@@ -28,8 +28,7 @@
           android:title="@string/addons"/>
 
     <item android:id="@+id/downloads"
-          android:title="@string/downloads"
-          android:visible="false"/>
+          android:title="@string/downloads"/>
 
     <item android:id="@+id/char_encoding"
           android:visible="false"
@@ -37,6 +36,11 @@
 
     <item android:id="@+id/settings"
           android:title="@string/settings" />
+
+#ifdef MOZ_PROFILING
+    <item android:id="@+id/toggle_profiling"
+          android:title="@string/toggle_profiling" />
+#endif
 
     <item android:id="@+id/quit"
           android:title="@string/quit"

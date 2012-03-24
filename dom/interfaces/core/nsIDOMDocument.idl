@@ -66,7 +66,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(d7cdd08e-1bfd-4bc3-9742-d66586781ee2)]
+[scriptable, uuid(ac4942fe-1679-4000-aaa7-41dee590a120)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -369,7 +369,7 @@ interface nsIDOMDocument : nsIDOMNode
    *
    * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
    */
-  readonly attribute nsIDOMHTMLElement mozFullScreenElement;
+  readonly attribute nsIDOMElement mozFullScreenElement;
 
   /**
    * Causes the document to leave DOM full-screen mode, if it's in

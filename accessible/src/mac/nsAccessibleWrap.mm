@@ -110,9 +110,6 @@ nsAccessibleWrap::GetNativeType ()
     case roles::CHECKBUTTON:
       return [mozCheckboxAccessible class];
       
-    case roles::AUTOCOMPLETE:
-      return [mozComboboxAccessible class];
-
     case roles::HEADING:
       return [mozHeadingAccessible class];
 
