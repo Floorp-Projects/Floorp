@@ -177,6 +177,7 @@
 #include "nsFrameLoader.h"
 #include "nsEscape.h"
 #include "nsObjectLoadingContent.h"
+#include "nsHtml5TreeOpExecutor.h"
 #ifdef MOZ_MEDIA
 #include "nsHTMLMediaElement.h"
 #endif // MOZ_MEDIA
@@ -3156,7 +3157,8 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
 bool
 nsDocument::TryChannelCharset(nsIChannel *aChannel,
                               PRInt32& aCharsetSource,
-                              nsACString& aCharset)
+                              nsACString& aCharset,
+                              nsHtml5TreeOpExecutor* aExecutor)
 {
   if(kCharsetFromChannel <= aCharsetSource) {
     return true;
@@ -3170,6 +3172,8 @@ nsDocument::TryChannelCharset(nsIChannel *aChannel,
       if(NS_SUCCEEDED(rv)) {
         aCharsetSource = kCharsetFromChannel;
         return true;
+      } else if (aExecutor && !charsetVal.IsEmpty()) {
+        aExecutor->ComplainAboutBogusProtocolCharset(this);
       }
     }
   }

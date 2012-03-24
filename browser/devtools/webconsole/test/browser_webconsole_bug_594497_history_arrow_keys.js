@@ -161,7 +161,7 @@ registerCleanupFunction(function() {
 
 function test() {
   Services.prefs.setBoolPref("devtools.gcli.enable", false);
-  addTab("data:text/html,Web Console test for bug 594497 and bug 619598");
+  addTab("data:text/html;charset=utf-8,Web Console test for bug 594497 and bug 619598");
   browser.addEventListener("load", tabLoad, true);
 }
 

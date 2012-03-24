@@ -13,7 +13,7 @@ let menuitems = [], menupopups = [], huds = [], tabs = [];
 function test()
 {
   // open tab 1
-  addTab("data:text/html,Web Console test for bug 602572: log bodies checkbox. tab 1");
+  addTab("data:text/html;charset=utf-8,Web Console test for bug 602572: log bodies checkbox. tab 1");
   tabs.push(tab);
 
   browser.addEventListener("load", function(aEvent) {
@@ -22,7 +22,7 @@ function test()
     openConsole();
 
     // open tab 2
-    addTab("data:text/html,Web Console test for bug 602572: log bodies checkbox. tab 2");
+    addTab("data:text/html;charset=utf-8,Web Console test for bug 602572: log bodies checkbox. tab 2");
     tabs.push(tab);
 
     browser.addEventListener("load", function(aEvent) {
