@@ -146,8 +146,6 @@ public:
                                       nsIPrincipal *aPrincipal,
                                       JSObject** aNativeGlobal,
                                       nsISupports **aHolder);
-  virtual nsresult ConnectToInner(nsIScriptGlobalObject *aNewInner,
-                                  JSObject *aOuterGlobal);
   virtual nsresult InitContext();
   virtual nsresult InitOuterWindow();
   virtual bool IsContextInitialized();
