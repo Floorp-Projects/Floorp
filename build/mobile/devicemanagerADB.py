@@ -774,7 +774,8 @@ class DeviceManagerADB(DeviceManager):
                                              "is unknown" in runAsOut):
         raise DMError("run-as failed sanity check")
 
-      self.checkCmd(["push", os.path.abspath(sys.argv[0]), tmpDir + "/tmpfile"])
+      tmpfile = tempfile.NamedTemporaryFile()
+      self.checkCmd(["push", tmpfile.name, tmpDir + "/tmpfile"])
       if self.useDDCopy:
         self.checkCmd(["shell", "run-as", self.packageName, "dd", "if=" + tmpDir + "/tmpfile", "of=" + devroot + "/sanity/tmpfile"])
       else:
