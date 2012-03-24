@@ -170,6 +170,7 @@ static const PRUint32 atkRoleMap[] = {
     ATK_ROLE_PANEL,               // roles::EMBEDDED_OBJECT      122
     ATK_ROLE_SECTION,             // roles::NOTE                 123
     ATK_ROLE_PANEL,               // roles::FIGURE               124
+    ATK_ROLE_CHECK_BOX,           // roles::CHECK_RICH_OPTION    125
     kROLE_ATK_LAST_ENTRY          // roles::LAST_ENTRY
 };
 

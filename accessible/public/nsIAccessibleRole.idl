@@ -793,9 +793,14 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_FIGURE = 124;
 
   /**
+   * Represents a rich item with a check box.
+   */
+  const unsigned long ROLE_CHECK_RICH_OPTION = 125;
+
+  /**
    * It's not role actually. This constant is important to help ensure
    * nsRoleMap's are synchronized.
    */
-  const unsigned long ROLE_LAST_ENTRY = 125;
+  const unsigned long ROLE_LAST_ENTRY = 126;
 };
 
