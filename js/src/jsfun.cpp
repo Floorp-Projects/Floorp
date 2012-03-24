@@ -227,18 +227,52 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     vp->setNull();
 
     /* Find fun's top-most activation record. */
-    StackFrame *fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE);
-    for (; fp; fp = fp->prev()) {
-        if (!fp->isFunctionFrame() || fp->isEvalFrame())
+    StackIter iter(cx);
+    for (; !iter.done(); ++iter) {
+        if (!iter.isFunctionFrame() || iter.isEvalFrame())
             continue;
-        Value callee;
-        if (!fp->getValidCalleeObject(cx, &callee))
+        Value callee = iter.calleev();
+        if (callee.isNull())
             return false;
         if (&callee.toObject() == fun)
             break;
     }
-    if (!fp)
+    if (iter.done())
         return true;
+
+    StackFrame *fp = NULL;
+    if (iter.isScript())
+        fp = iter.fp();
+
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.argumentsAtom)) {
+        /* Warn if strict about f.arguments or equivalent unqualified uses. */
+        if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING | JSREPORT_STRICT, js_GetErrorMessage,
+                                          NULL, JSMSG_DEPRECATED_USAGE, js_arguments_str)) {
+            return false;
+        }
+
+        ArgumentsObject *argsobj;
+        if (!fp) {
+            JSObject &f = iter.callee();
+            if (!&f)
+                return false;
+            // Currently we don't have a way to recover the number of actual
+            // arguments from an Ion Frame.  This should be modified later with
+            // the implementation of JSOP_ARGUMENTS (Bug 735406).
+            argsobj = ArgumentsObject::createPoison(cx, f.toFunction()->nargs, f);
+        } else {
+            argsobj = ArgumentsObject::createUnexpected(cx, fp);
+        }
+
+        if (!argsobj)
+            return false;
+
+        *vp = ObjectValue(*argsobj);
+        return true;
+    }
+
+    StackIter prev(iter);
+    ++prev;
 
 #ifdef JS_METHODJIT
     if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom) && fp && fp->prev()) {
@@ -258,35 +292,17 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     }
 #endif
 
-    if (JSID_IS_ATOM(id, cx->runtime->atomState.argumentsAtom)) {
-        /* Warn if strict about f.arguments or equivalent unqualified uses. */
-        if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING | JSREPORT_STRICT, js_GetErrorMessage,
-                                          NULL, JSMSG_DEPRECATED_USAGE, js_arguments_str)) {
-            return false;
-        }
-
-        ArgumentsObject *argsobj = ArgumentsObject::createUnexpected(cx, fp);
-        if (!argsobj)
-            return false;
-
-        *vp = ObjectValue(*argsobj);
-        return true;
-    }
-
     if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom)) {
-        if (!fp->prev())
+        if (prev.done())
             return true;
 
-        StackFrame *frame = fp->prev();
-        while (frame && frame->isDummyFrame())
-            frame = frame->prev();
-
-        if (frame && !frame->getValidCalleeObject(cx, vp))
-            return false;
+        if (!prev.isFunctionFrame())
+            return true;
+        *vp = prev.calleev();
 
         if (!vp->isObject()) {
             JS_ASSERT(vp->isNull());
-            return true;
+            return false;
         }
 
         /* Censor the caller if it is from another compartment. */

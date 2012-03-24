@@ -156,6 +156,12 @@ class ArgumentsObject : public JSObject
     static ArgumentsObject *createUnexpected(JSContext *cx, StackFrame *fp);
 
     /*
+     * Cannot recover any fields of the arguments object, and replace it by
+     * the poison value.
+     */
+    static ArgumentsObject *createPoison(JSContext *cx, uint32_t argc, JSObject &callee);
+
+    /*
      * Return the initial length of the arguments.  This may differ from the
      * current value of arguments.length!
      */
