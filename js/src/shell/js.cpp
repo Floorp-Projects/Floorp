@@ -4725,6 +4725,15 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
             return OptionFailure("ion-licm", str);
     }
 
+    if (const char *str = op->getStringOption("ion-range-analysis")) {
+        if (strcmp(str, "on") == 0)
+            ion::js_IonOptions.rangeAnalysis = true;
+        else if (strcmp(str, "off") == 0)
+            ion::js_IonOptions.rangeAnalysis = false;
+        else
+            return OptionFailure("ion-range-analysis", str);
+    }
+
     if (const char *str = op->getStringOption("ion-inlining")) {
         if (strcmp(str, "on") == 0)
             ion::js_IonOptions.inlining = true;
@@ -5022,6 +5031,8 @@ main(int argc, char **argv, char **envp)
                                "  optimistic: use optimistic GVN")
         || !op.addStringOption('\0', "ion-licm", "on/off",
                                "Loop invariant code motion (default: on, off to disable)")
+        || !op.addStringOption('\0', "ion-range-analysis", "on/off",
+                               "Range Analysis (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-inlining", "on/off",
                                "Inline methods where possible (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-osr", "on/off",

@@ -185,6 +185,12 @@ MDefinition::foldsTo(bool useValueNumbers)
     return this;
 }
 
+void
+MDefinition::analyzeRange()
+{
+    return;
+}
+
 MDefinition *
 MTest::foldsTo(bool useValueNumbers)
 {
@@ -521,6 +527,58 @@ MBinaryBitwiseInstruction::infer(const TypeOracle::Binary &b)
     }
 }
 
+static inline bool
+NeedNegativeZeroCheck(MDefinition *def)
+{
+    // Test if all uses have the same symantic for -0 and 0
+    for (MUseIterator use = def->usesBegin(); use != def->usesEnd(); use++) {
+        if (use->node()->isResumePoint())
+            return true;
+
+        MDefinition *use_def = use->node()->toDefinition();
+        switch (use_def->op()) {
+          case MDefinition::Op_Add: {
+            // x + y gives -0, when both x and y are -0
+            // - When other operand can't produce -0 (i.e. all opcodes, except MUL/DIV)
+            //   Remove negative zero check on this operand 
+            // - When both operands can produce -0 (both MUL/DIV opcode)
+            //   We can remove the check eagerly on this operand.
+            MDefinition *operand = use_def->getOperand(0);
+            if (operand == def)
+                operand = use_def->getOperand(1);
+
+            // Check if check is possibly eagerly removed on other operand
+            // and don't remove check eagerly on this operand in that case.
+            if (operand->isMul()) {
+                MMul *mul = operand->toMul();
+                if (!mul->canBeNegativeZero())
+                    return true;
+            } else if (operand->isDiv()) {
+                MDiv *div = operand->toDiv();
+                if (!div->canBeNegativeZero())
+                    return true;
+            }
+            break;
+          }
+          case MDefinition::Op_Mod:
+          case MDefinition::Op_Sub:
+            // If the Mul/Div is the first operand. We still need the check
+            if (use_def->getOperand(0) == def)
+                return true;
+            break;
+          case MDefinition::Op_Compare:
+          case MDefinition::Op_BitAnd:
+          case MDefinition::Op_BitOr:
+          case MDefinition::Op_BitXor:
+          case MDefinition::Op_Abs:
+            break;
+          default:
+            return true;
+        }
+    }
+    return false;
+}
+
 MDefinition *
 MBinaryArithInstruction::foldsTo(bool useValueNumbers)
 {
@@ -565,6 +623,41 @@ MDiv::foldsTo(bool useValueNumbers)
 
     return this;
 }
+
+void
+MDiv::analyzeRange() {
+    // This is only meaningfull when doing integer division
+    if (specialization_ != MIRType_Int32)
+        return;
+
+    // Try removing divide by zero check
+    if (rhs()->isConstant() && !rhs()->toConstant()->value().isInt32(0))
+        canBeDivideByZero_ =  false;
+
+    // If lhs is a constant int != INT32_MIN, then
+    // negative overflow check can be skipped.
+    if (lhs()->isConstant() && !lhs()->toConstant()->value().isInt32(INT32_MIN))
+        canBeNegativeOverflow_ = false;
+
+    // If rhs is a constant int != -1, likewise.
+    if (rhs()->isConstant() && !rhs()->toConstant()->value().isInt32(-1))
+        canBeNegativeOverflow_ = false;
+
+    // If lhs is != 0, then negative zero check can be skipped.
+    if (lhs()->isConstant() && !lhs()->toConstant()->value().isInt32(0))
+        canBeNegativeZero_ = false;
+
+    // If rhs is >= 0, likewise.
+    if (rhs()->isConstant()) {
+        const js::Value &val = rhs()->toConstant()->value();
+        if (val.isInt32() && val.toInt32() >= 0)
+            canBeNegativeZero_ = false;
+    }
+
+    if (canBeNegativeZero_)
+        canBeNegativeZero_ = NeedNegativeZeroCheck(this);
+}
+
 
 static inline MDefinition *
 TryFold(MDefinition *original, MDefinition *replacement)
@@ -623,19 +716,35 @@ MMod::foldsTo(bool useValueNumbers)
     return this;
 }
 
-MDefinition *
-MMul::foldsTo(bool useValueNumbers)
+void
+MMul::analyzeRange()
 {
-    MDefinition *out = MBinaryArithInstruction::foldsTo(useValueNumbers);
-    if (out != this)
-        return out;
+    // Try to remove the check for negative zero
+    // This only makes sense when using the integer multiplication
+    if (specialization() != MIRType_Int32)
+        return;
 
-    MDefinition *lhs = getOperand(0);
-    MDefinition *rhs = getOperand(1);
-    if (lhs->congruentTo(rhs))
+    if (lhs()->congruentTo(rhs())) {
         canBeNegativeZero_ = false;
+        return;
+    }
 
-    return this;
+    // If lhs is > 0, no need for negative zero check.
+    if (lhs()->isConstant()) {
+        const js::Value &val = lhs()->toConstant()->value();
+        if (val.isInt32() && val.toInt32() > 0)
+            canBeNegativeZero_ = false;
+    }
+
+    // If rhs is > 0, likewise.
+    if (rhs()->isConstant()) {
+        const js::Value &val = rhs()->toConstant()->value();
+        if (val.isInt32() && val.toInt32() > 0)
+            canBeNegativeZero_ = false;
+    }
+
+    if (canBeNegativeZero_)
+        canBeNegativeZero_ = NeedNegativeZeroCheck(this);
 }
 
 void

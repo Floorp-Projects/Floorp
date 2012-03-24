@@ -95,6 +95,11 @@ struct IonOptions
     // Default: true
     bool inlining;
 
+    // Toggles whether Range Analysis is used.
+    //
+    // Default: true
+    bool rangeAnalysis;
+
     // How many invocations or loop iterations are needed before functions
     // are compiled.
     //
@@ -122,6 +127,7 @@ struct IonOptions
         osr(true),
         lsra(true),
         inlining(true),
+        rangeAnalysis(true),
         usesBeforeCompile(40),
         usesBeforeInlining(10240)
     { }

@@ -48,6 +48,7 @@
 #include "GreedyAllocator.h"
 #include "LICM.h"
 #include "ValueNumbering.h"
+#include "RangeAnalysis.h"
 #include "LinearScan.h"
 #include "jscompartment.h"
 #include "IonCompartment.h"
@@ -699,6 +700,14 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
         if (!licm.analyze())
             return false;
         IonSpewPass("LICM");
+        AssertGraphCoherency(graph);
+    }
+
+    if (js_IonOptions.rangeAnalysis) {
+        RangeAnalysis rangeAnalysis(graph);
+        if (!rangeAnalysis.analyze())
+            return false;
+        IonSpewPass("Range Analysis");
         AssertGraphCoherency(graph);
     }
 
