@@ -276,9 +276,8 @@ class ClonedBlockObject : public BlockObject
     bool containsVar(PropertyName *name, Value *vp, JSContext *cx);
 };
 
-template<XDRMode mode>
-bool
-XDRStaticBlockObject(XDRState<mode> *xdr, JSScript *script, StaticBlockObject **objp);
+extern bool
+XDRStaticBlockObject(JSXDRState *xdr, JSScript *script, StaticBlockObject **objp);
 
 }  /* namespace js */
 
