@@ -123,6 +123,7 @@ _TEST_FILES = \
   test_xhr_implicit_cancel.html \
   xhr_implicit_cancel_worker.js \
   test_xhr_timeout.html \
+  test_blobConstructor.html \
   $(NULL)
 
 _SUBDIR_TEST_FILES = \
