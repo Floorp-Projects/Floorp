@@ -3,35 +3,97 @@ package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
 import android.app.Activity;
+import android.database.Cursor;
+import android.view.MenuItem;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.lang.reflect.Method;
+import android.content.ContentResolver;
 
-public class testBookmark extends BaseTest {
+public class testBookmark extends BaseTest  {
     private static final int MAX_WAIT_MS = 3000; 
     private static final String ABOUT_HOME_URL = "about:home";
-    private static final String BOOKMARK_URL = "/robocop/robocop_blank_01.html";
-    private static final String BOOKMARK_TITLE = "Browser Blank Page 01";
+    private static String BOOKMARK_URL = "/robocop/robocop_blank_01.html";
+    private static String BOOKMARK_TITLE = "Browser Blank Page 01";
+
+    private ClassLoader mClassLoader;
+    private Method mAddBookmark;
+    private Method mRemoveBookmark;
+    private Method mIsBookmarked;
+    private String[] defaultBookmarks = new String[] {
+        "about:firefox",
+        "about:home",
+        "http://support.mozilla.org/en-US/mobile",
+        "https://addons.mozilla.org/en-US/mobile/"
+    };
 
     public void testBookmark() {
         setTestType("mochitest");
-        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        BOOKMARK_URL = getAbsoluteUrl(BOOKMARK_URL);
 
-        setUpBookmark();
+        mClassLoader = getActivity().getApplicationContext().getClassLoader();
+        try {
+            Class browserDB = mClassLoader.loadClass("org.mozilla.gecko.db.BrowserDB");
+            mAddBookmark = browserDB.getMethod("addBookmark", ContentResolver.class, String.class, String.class);
+            mRemoveBookmark = browserDB.getMethod("removeBookmarksWithURL", ContentResolver.class, String.class);
+            mIsBookmarked = browserDB.getMethod("isBookmark", ContentResolver.class, String.class);
+        } catch (java.lang.ClassNotFoundException ex) {
+            mAsserter.is(true, false, "Unable to find class");
+        } catch (java.lang.NoSuchMethodException ex) {
+            mAsserter.is(true, false, "Unable to find method");
+        }
+
+        runAwesomeScreenTest();
+        runMenuTest();
+    }
+
+    public void runMenuTest() {
+        try {
+            boolean isbookmark = (Boolean)mIsBookmarked.invoke(null, getActivity().getContentResolver(), BOOKMARK_URL);
+            mAsserter.is(isbookmark, false, "Page is not bookmarked initially");
+            setUpBookmark(); // loads the page, taps the star button, and waits for the "Bookmark Added" message
+            mAsserter.is(waitForBookmarked(true), true, "Tapping star button bookmarked page");
+
+            cleanUpBookmark(); // loads the page, taps the star button, and waits for the "Bookmark Removed" message
+            mAsserter.is(waitForBookmarked(false), false, "Tapping star button bookmarked page");
+        } catch(java.lang.IllegalAccessException ex) {
+            mAsserter.is(true, false, "Can not call addBookmark");
+        } catch(java.lang.reflect.InvocationTargetException ex) {
+            mAsserter.is(true, false, "Error calling addBookmark");
+        }
+    }
+
+    public void runAwesomeScreenTest() {
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
 
         // Open the bookmark list and check the root folder view
         ListView bookmarksList = openBookmarksList();
 
         // Wait for bookmark to appear in list
-        mSolo.waitForText(BOOKMARK_TITLE);
+        mSolo.waitForText(ABOUT_HOME_URL);
 
         mAsserter.ok(bookmarksList != null, "checking that bookmarks list exists", "bookmarks list exists");
 
         // No folders should be visible if no desktop bookmarks exist
-        mAsserter.is(bookmarksList.getChildCount(), 2,
-            "bookmarks list has 2 children (the bookmark we added and the hidden header)");
+        mAsserter.is(bookmarksList.getChildCount(), 5,
+            "bookmarks list has 5 children (the default bookmarks and the hidden header)");
 
+        for (int i = 1; i < bookmarksList.getChildCount(); i++) {
+            Cursor c = (Cursor)bookmarksList.getItemAtPosition(i);
+            String url = c.getString(c.getColumnIndexOrThrow("url"));
+            mAsserter.ok(Arrays.binarySearch(defaultBookmarks, url) > -1,
+                         "Find default bookmark", "Default bookmark for " + url + " found");
+        }
+
+        insertOneBookmark();
+        mSolo.waitForText(BOOKMARK_TITLE);
+
+        mAsserter.is(bookmarksList.getChildCount(), 6,
+            "bookmarks list has 6 children (the default bookmarks, the new one, and the hidden header)");
+ 
         // Click on the bookmark we created (the first item is the header view)
         // and wait for the bookmarked page to load
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
@@ -39,7 +101,51 @@ public class testBookmark extends BaseTest {
         contentEventExpecter.blockForEvent();
 
         // Clean up the bookmark we created
-        cleanUpBookmark();
+        deleteBookmark();
+    }
+
+    private boolean waitForBookmarked(final boolean isBookmarked) {
+        waitForTest(new BooleanTest() {
+            public boolean test() {
+                try {
+                   return isBookmarked == (Boolean)mIsBookmarked.invoke(null, getActivity().getContentResolver(), BOOKMARK_URL);
+                } catch(java.lang.IllegalAccessException ex) {
+                    mAsserter.is(true, false, "Can not call addBookmark");
+                } catch(java.lang.reflect.InvocationTargetException ex) {
+                    mAsserter.is(true, false, "Error calling addBookmark");
+                }
+                return false;
+            }
+        }, MAX_WAIT_MS);
+        try {
+            Boolean res = (Boolean)mIsBookmarked.invoke(null, getActivity().getContentResolver(), BOOKMARK_URL);
+            return res.booleanValue();
+        } catch(java.lang.IllegalAccessException ex) {
+            mAsserter.is(true, false, "Can not call addBookmark");
+        } catch(java.lang.reflect.InvocationTargetException ex) {
+            mAsserter.is(true, false, "Error calling addBookmark");
+        }
+        return !isBookmarked;
+    }
+
+    private void insertOneBookmark() {
+        try {
+            mAddBookmark.invoke(null, getActivity().getContentResolver(), BOOKMARK_TITLE, BOOKMARK_URL);
+        } catch(java.lang.IllegalAccessException ex) {
+            mAsserter.is(true, false, "Can not call addBookmark");
+        } catch(java.lang.reflect.InvocationTargetException ex) {
+            mAsserter.is(true, false, "Error calling addBookmark");
+        }
+    }
+
+    private void deleteBookmark() {
+        try {
+            mRemoveBookmark.invoke(null, getActivity().getContentResolver(), BOOKMARK_URL);
+        } catch(java.lang.IllegalAccessException ex) {
+            mAsserter.is(true, false, "Can not call removeBookmark");
+        } catch(java.lang.reflect.InvocationTargetException ex) {
+            mAsserter.is(true, false, "Error calling removeBookmark");
+        }
     }
 
     private ListView openBookmarksList() {
@@ -69,7 +175,7 @@ public class testBookmark extends BaseTest {
 
     private void setUpBookmark() {
         // Bookmark a page for the test
-        loadUrl(getAbsoluteUrl(BOOKMARK_URL));
+        loadUrl(BOOKMARK_URL);
         toggleBookmark();
         mAsserter.is(mSolo.waitForText("Bookmark added"), true, "bookmark added sucessfully");
 
@@ -79,21 +185,8 @@ public class testBookmark extends BaseTest {
 
     private void cleanUpBookmark() {
         // Go back to the page we bookmarked
-        loadUrl(getAbsoluteUrl(BOOKMARK_URL));
+        loadUrl(BOOKMARK_URL);
         toggleBookmark();
         mAsserter.is(mSolo.waitForText("Bookmark removed"), true, "bookmark removed successfully");
-
-        //If the test ends too quickly, the bookmark database may not be updated correctly
-        //before the Fennec process is killed, and the item will not be removed. To 
-        //guard against this, navigate back to the bookmarks list and wait until
-        //it is empty.
-        ListView bookmarkList = openBookmarksList();
-
-        final ListAdapter adapter = bookmarkList.getAdapter();
-        waitForTest(new BooleanTest() {
-            public boolean test() {
-                return adapter != null && adapter.isEmpty();
-            }
-        }, MAX_WAIT_MS);
     }
 }
