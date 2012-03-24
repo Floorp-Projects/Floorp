@@ -103,11 +103,9 @@ if [ "$MOZ_SAFE_BROWSING" ]; then
 fi
 
 if [ "$MOZ_WIDGET_TOOLKIT" = "windows" ]; then
-  if [ "$MOZ_INSTALLER" ]; then
-    add_makefiles "
-      browser/installer/windows/Makefile
-    "
-  fi
+  add_makefiles "
+    browser/installer/windows/Makefile
+  "
 fi
 
 if [ "$MOZ_WIDGET_TOOLKIT" = "gtk2" -o "$MOZ_WIDGET_TOOLKIT" = "qt" ]; then

@@ -136,7 +136,7 @@ nsAnonymousContentList::nsAnonymousContentList(nsIContent *aContent,
 
   // We don't reference count our Anonymous reference (to avoid circular
   // references). We'll be told when the Anonymous goes away.
-  SetIsProxy();
+  SetIsDOMBinding();
 }
 
 nsAnonymousContentList::~nsAnonymousContentList()

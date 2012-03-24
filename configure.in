@@ -4530,7 +4530,6 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
 MOZ_FLEXBOX=
-MOZ_INSTALLER=1
 MOZ_JSDEBUGGER=1
 MOZ_AUTH_EXTENSION=1
 MOZ_OGG=1
@@ -4613,7 +4612,6 @@ case "${target}" in
         fi
 
         NSS_DISABLE_DBM=1
-        MOZ_INSTALLER=
         NECKO_WIFI=
         MOZ_THEME_FASTSTRIPE=1
         MOZ_TREE_FREETYPE=1
@@ -6294,7 +6292,7 @@ dnl Installer
 dnl ========================================================
 dnl Abort Windows build if the required major version and
 dnl minimum minor version of Unicode NSIS isn't in the path.
-if test -n "$MOZ_INSTALLER" -a "$OS_ARCH" = "WINNT"; then
+if test "$OS_ARCH" = "WINNT"; then
     REQ_NSIS_MAJOR_VER=2
     MIN_NSIS_MINOR_VER=33
     MOZ_PATH_PROGS(MAKENSISU, $MAKENSISU makensisu-2.46 makensisu makensis)
@@ -8372,7 +8370,6 @@ AC_SUBST(MOZ_DEBUG_FLAGS)
 AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
 AC_SUBST(MOZ_EXTENSIONS)
-AC_SUBST(MOZ_INSTALLER)
 AC_SUBST(MOZ_JSDEBUGGER)
 AC_SUBST(MOZ_LOG_REFCNT)
 AC_SUBST(MOZ_LEAKY)
