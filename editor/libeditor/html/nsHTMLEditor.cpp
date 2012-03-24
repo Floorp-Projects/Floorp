@@ -1205,9 +1205,8 @@ nsHTMLEditor::GetIsDocumentEditable(bool *aIsDocumentEditable)
 {
   NS_ENSURE_ARG_POINTER(aIsDocumentEditable);
 
-  nsCOMPtr<nsIDOMDocument> doc;
-  GetDocument(getter_AddRefs(doc));
-  *aIsDocumentEditable = doc ? IsModifiable() : false;
+  nsCOMPtr<nsIDOMDocument> doc = GetDOMDocument();
+  *aIsDocumentEditable = doc && IsModifiable();
 
   return NS_OK;
 }
@@ -1220,8 +1219,7 @@ bool nsHTMLEditor::IsModifiable()
 NS_IMETHODIMP
 nsHTMLEditor::UpdateBaseURL()
 {
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDOMDocument> domDoc = GetDOMDocument();
   NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
 
   // Look for an HTML <base> tag
@@ -3135,11 +3133,7 @@ nsHTMLEditor::GetLinkedObjects(nsISupportsArray** aNodeList)
   NS_ENSURE_TRUE(iter, NS_ERROR_NULL_POINTER);
   if ((NS_SUCCEEDED(res)))
   {
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    nsEditor::GetDocument(getter_AddRefs(domdoc));
-    NS_ENSURE_TRUE(domdoc, NS_ERROR_UNEXPECTED);
-
-    nsCOMPtr<nsIDocument> doc (do_QueryInterface(domdoc));
+    nsCOMPtr<nsIDocument> doc = GetDocument();
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
     iter->Init(doc->GetRootElement());
@@ -3440,11 +3434,7 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
   NS_ENSURE_TRUE(iter, NS_ERROR_NULL_POINTER);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  nsEditor::GetDocument(getter_AddRefs(domdoc));
-  NS_ENSURE_TRUE(domdoc, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
   iter->Init(doc->GetRootElement());
@@ -4050,32 +4040,6 @@ nsHTMLEditor::GetEnclosingTable(nsIDOMNode *aNode)
   return tbl;
 }
 
-
-#ifdef PRE_NODE_IN_BODY
-nsCOMPtr<nsIDOMElement> nsHTMLEditor::FindPreElement()
-{
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  nsEditor::GetDocument(getter_AddRefs(domdoc));
-  NS_ENSURE_TRUE(domdoc, 0);
-
-  nsCOMPtr<nsIDocument> doc (do_QueryInterface(domdoc));
-  NS_ENSURE_TRUE(doc, 0);
-
-  nsCOMPtr<nsIContent> rootContent = doc->GetRootElement();
-  NS_ENSURE_TRUE(rootContent, 0);
-
-  nsCOMPtr<nsIDOMNode> rootNode (do_QueryInterface(rootContent));
-  NS_ENSURE_TRUE(rootNode, 0);
-
-  nsString prestr ("PRE");  // GetFirstNodeOfType requires capitals
-  nsCOMPtr<nsIDOMNode> preNode;
-  if (NS_FAILED(nsEditor::GetFirstNodeOfType(rootNode, prestr,
-                                             getter_AddRefs(preNode))))
-    return 0;
-
-  return do_QueryInterface(preNode);
-}
-#endif /* PRE_NODE_IN_BODY */
 
 /* this method scans the selection for adjacent text nodes
  * and collapses them into a single text node.
