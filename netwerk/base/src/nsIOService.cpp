@@ -1188,7 +1188,7 @@ nsIOService::EscapeString(const nsACString& aString,
                           PRUint32 aEscapeType,
                           nsACString& aResult)
 {
-  NS_ENSURE_ARG_RANGE(aEscapeType, 0, 4);
+  NS_ENSURE_ARG_MAX(aEscapeType, 4);
 
   nsCAutoString stringCopy(aString);
   nsCString result;
