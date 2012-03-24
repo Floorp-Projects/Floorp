@@ -3,6 +3,7 @@
  */
 
 #include "tests.h"
+#include "jsxdrapi.h"
 
 static JSBool
 nativeGet(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
