@@ -145,6 +145,17 @@ class Bindings
     uint16_t numVars() const { return nvars; }
     unsigned count() const { return nargs + nvars; }
 
+    /*
+     * These functions map between argument/var indices [0, nargs/nvars) and
+     * and Bindings indices [0, nargs + nvars).
+     */
+    bool bindingIsArg(uint16_t i) const { return i < nargs; }
+    bool bindingIsLocal(uint16_t i) const { return i >= nargs; }
+    uint16_t argToBinding(uint16_t i) { JS_ASSERT(i < nargs); return i; }
+    uint16_t localToBinding(uint16_t i) { return i + nargs; }
+    uint16_t bindingToArg(uint16_t i) { JS_ASSERT(bindingIsArg(i)); return i; }
+    uint16_t bindingToLocal(uint16_t i) { JS_ASSERT(bindingIsLocal(i)); return i - nargs; }
+
     /* Ensure these bindings have a shape lineage. */
     inline bool ensureShape(JSContext *cx);
 
@@ -220,7 +231,7 @@ class Bindings
 
     /*
      * This method returns the local variable, argument, etc. names used by a
-     * script.  This function must be called only when hasLocalNames().
+     * script.  This function must be called only when count() > 0.
      *
      * The elements of the vector with index less than nargs correspond to the
      * the names of arguments. An index >= nargs addresses a var binding.
@@ -807,6 +818,8 @@ struct JSScript : public js::gc::Cell
 #ifdef DEBUG
     bool varIsAliased(unsigned varSlot);
     bool argIsAliased(unsigned argSlot);
+    bool argLivesInArgumentsObject(unsigned argSlot);
+    bool argLivesInCallObject(unsigned argSlot);
 #endif
   private:
     /*

@@ -49,6 +49,7 @@
 
 #include "ds/LifoAlloc.h"
 #include "js/TemplateLib.h"
+#include "vm/ScopeObject.h"
 
 struct JSScript;
 
@@ -389,6 +390,17 @@ static inline uint32_t GetBytecodeSlot(JSScript *script, jsbytecode *pc)
       case JSOP_LOCALINC:
       case JSOP_LOCALDEC:
         return LocalSlot(script, GET_SLOTNO(pc));
+
+      case JSOP_GETALIASEDVAR:
+      case JSOP_CALLALIASEDVAR:
+      case JSOP_SETALIASEDVAR:
+      {
+          ScopeCoordinate sc = ScopeCoordinate(pc);
+          return script->bindings.bindingIsArg(sc.binding)
+                 ? ArgSlot(script->bindings.bindingToArg(sc.binding))
+                 : LocalSlot(script, script->bindings.bindingToLocal(sc.binding));
+      }
+
 
       case JSOP_THIS:
         return ThisSlot();
@@ -1174,7 +1186,6 @@ class ScriptAnalysis
     inline bool addJump(JSContext *cx, unsigned offset,
                         unsigned *currentOffset, unsigned *forwardJump, unsigned *forwardLoop,
                         unsigned stackDepth);
-    void checkAliasedName(JSContext *cx, jsbytecode *pc);
 
     /* Lifetime helpers */
     inline void addVariable(JSContext *cx, LifetimeVariable &var, unsigned offset,

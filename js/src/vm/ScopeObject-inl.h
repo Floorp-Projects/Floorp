@@ -45,6 +45,20 @@
 
 namespace js {
 
+inline
+ScopeCoordinate::ScopeCoordinate(jsbytecode *pc)
+  : hops(GET_UINT16(pc)), binding(GET_UINT16(pc + 2))
+{
+    JS_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
+}
+
+inline JSAtom *
+ScopeCoordinateAtom(JSScript *script, jsbytecode *pc)
+{
+    JS_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
+    return script->getAtom(GET_UINT32_INDEX(pc + 2 * sizeof(uint16_t)));
+}
+
 inline JSObject &
 ScopeObject::enclosingScope() const
 {
@@ -255,6 +269,12 @@ inline bool
 StaticBlockObject::isAliased(unsigned i)
 {
     return slotValue(i).isTrue();
+}
+
+inline bool
+StaticBlockObject::containsVarAtDepth(uint32_t depth)
+{
+    return depth >= stackDepth() && depth < stackDepth() + slotCount();
 }
 
 inline StaticBlockObject &
