@@ -356,9 +356,8 @@ js_IsNamedLambda(JSFunction *fun) { return (fun->flags & JSFUN_LAMBDA) && fun->a
 
 namespace js {
 
-template<XDRMode mode>
-bool
-XDRInterpretedFunction(XDRState<mode> *xdr, JSObject **objp, JSScript *parentScript);
+extern JSBool
+XDRFunctionObject(JSXDRState *xdr, JSObject **objp);
 
 } /* namespace js */
 

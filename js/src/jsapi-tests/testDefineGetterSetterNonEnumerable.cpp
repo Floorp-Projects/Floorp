@@ -3,6 +3,7 @@
  */
 
 #include "tests.h"
+#include "jsxdrapi.h"
 
 static JSBool
 native(JSContext *cx, unsigned argc, jsval *vp)
