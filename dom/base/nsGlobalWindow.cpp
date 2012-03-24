@@ -77,6 +77,7 @@
 #include "jsapi.h"              // for JSAutoRequest
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
 #include "jsfriendapi.h"        // for JS_GetGlobalForFrame
+#include "jswrapper.h"
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsJSEnvironment.h"
@@ -799,6 +800,21 @@ nsPIDOMWindow::~nsPIDOMWindow() {}
 // nsOuterWindowProxy: Outer Window Proxy
 //*****************************************************************************
 
+class nsOuterWindowProxy : public js::Wrapper
+{
+public:
+  nsOuterWindowProxy() : js::Wrapper(0) {}
+
+  virtual bool isOuterWindow() {
+    return true;
+  }
+  JSString *obj_toString(JSContext *cx, JSObject *wrapper);
+  void finalize(JSContext *cx, JSObject *proxy);
+
+  static nsOuterWindowProxy singleton;
+};
+
+
 JSString *
 nsOuterWindowProxy::obj_toString(JSContext *cx, JSObject *proxy)
 {
@@ -822,8 +838,8 @@ nsOuterWindowProxy::finalize(JSContext *cx, JSObject *proxy)
 nsOuterWindowProxy
 nsOuterWindowProxy::singleton;
 
-JSObject *
-NS_NewOuterWindowProxy(JSContext *cx, JSObject *parent)
+static JSObject*
+NewOuterWindowProxy(JSContext *cx, JSObject *parent)
 {
   JSAutoEnterCompartment ac;
   if (!ac.enter(cx, parent)) {
@@ -1883,6 +1899,46 @@ ReparentWaiverWrappers(JSDHashTable *table, JSDHashEntryHdr *hdr,
 }
 
 nsresult
+nsGlobalWindow::CreateOuterObject(nsGlobalWindow* aNewInner)
+{
+  mContext->SetGlobalObject(this);
+
+  JSContext* cx = mContext->GetNativeContext();
+
+  if (IsChromeWindow()) {
+    // Always enable E4X for XUL and other chrome content -- there is no
+    // need to preserve the <!-- script hiding hack from JS-in-HTML daze
+    // (introduced in 1995 for graceful script degradation in Netscape 1,
+    // Mosaic, and other pre-JS browsers).
+    JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_XML);
+  }
+
+  JSObject* outer = NewOuterWindowProxy(cx, aNewInner->FastGetGlobalJSObject());
+  if (!outer) {
+    return NS_ERROR_FAILURE;
+  }
+
+  js::SetProxyExtra(outer, 0,
+    js::PrivateValue(static_cast<nsIScriptGlobalObject*>(this)));
+
+  return SetOuterObject(cx, outer);
+}
+
+nsresult
+nsGlobalWindow::SetOuterObject(JSContext* aCx, JSObject* aOuterObject)
+{
+  // Force our context's global object to be the outer.
+  // NB: JS_SetGlobalObject sets aCx->compartment.
+  JS_SetGlobalObject(aCx, aOuterObject);
+
+  // Set up the prototype for the outer object.
+  JSObject* inner = JS_GetParent(aOuterObject);
+  JS_SetPrototype(aCx, aOuterObject, JS_GetPrototype(inner));
+
+  return NS_OK;
+}
+
+nsresult
 nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                                nsISupports* aState,
                                bool aForceReuseInnerWindow)
@@ -2097,14 +2153,13 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     mInnerWindow = newInnerWindow;
 
     if (!mJSObject) {
-      mContext->CreateOuterObject(this, newInnerWindow);
+      CreateOuterObject(newInnerWindow);
       mContext->DidInitializeContext();
 
       mJSObject = mContext->GetNativeGlobal();
       SetWrapper(mJSObject);
     } else {
-      JSObject *outerObject =
-        NS_NewOuterWindowProxy(cx, newInnerWindow->mJSObject);
+      JSObject *outerObject = NewOuterWindowProxy(cx, newInnerWindow->mJSObject);
       if (!outerObject) {
         NS_ERROR("out of memory");
         return NS_ERROR_FAILURE;
@@ -2133,7 +2188,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
         JS_SetParent(cx, mJSObject, newInnerWindow->mJSObject);
 
-        mContext->SetOuterObject(mJSObject);
+        SetOuterObject(cx, mJSObject);
 
         JSCompartment *compartment = js::GetObjectCompartment(mJSObject);
         xpc::CompartmentPrivate *priv =

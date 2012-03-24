@@ -102,7 +102,6 @@
 
 // JS includes
 #include "jsapi.h"
-#include "jswrapper.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -230,26 +229,6 @@ private:
   // reference count for shared usage
   nsAutoRefCnt mRefCnt;
 };
-
-//*****************************************************************************
-// nsOuterWindow: Outer Window Proxy
-//*****************************************************************************
-
-class nsOuterWindowProxy : public js::Wrapper
-{
-public:
-  nsOuterWindowProxy() : js::Wrapper((unsigned)0) {}
-
-  virtual bool isOuterWindow() {
-    return true;
-  }
-  JSString *obj_toString(JSContext *cx, JSObject *wrapper);
-  void finalize(JSContext *cx, JSObject *proxy);
-
-  static nsOuterWindowProxy singleton;
-};
-
-JSObject *NS_NewOuterWindowProxy(JSContext *cx, JSObject *parent);
 
 //*****************************************************************************
 // nsGlobalWindow: Global Object for Scripting
@@ -842,6 +821,9 @@ protected:
   bool GetIsTabModalPromptAllowed();
 
   inline PRInt32 DOMMinTimeoutValue() const;
+
+  nsresult CreateOuterObject(nsGlobalWindow* aNewInner);
+  nsresult SetOuterObject(JSContext* aCx, JSObject* aOuterObject);
 
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
