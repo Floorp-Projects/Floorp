@@ -469,9 +469,8 @@ ParseRegExpFlags(JSContext *cx, JSString *flagStr, RegExpFlag *flagsOut);
 inline bool
 RegExpToShared(JSContext *cx, JSObject &obj, RegExpGuard *g);
 
-template<XDRMode mode>
 bool
-XDRScriptRegExpObject(XDRState<mode> *xdr, HeapPtrObject *objp);
+XDRScriptRegExpObject(JSXDRState *xdr, HeapPtrObject *objp);
 
 } /* namespace js */
 

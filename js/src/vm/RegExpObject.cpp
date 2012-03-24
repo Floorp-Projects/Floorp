@@ -42,7 +42,6 @@
 #include "vm/MatchPairs.h"
 #include "vm/RegExpStatics.h"
 #include "vm/StringBuffer.h"
-#include "vm/Xdr.h"
 
 #include "jsobjinlines.h"
 
@@ -747,38 +746,36 @@ js::ParseRegExpFlags(JSContext *cx, JSString *flagStr, RegExpFlag *flagsOut)
     return true;
 }
 
-template<XDRMode mode>
+#if JS_HAS_XDR
+# include "jsxdrapi.h"
+
 bool
-js::XDRScriptRegExpObject(XDRState<mode> *xdr, HeapPtrObject *objp)
+js::XDRScriptRegExpObject(JSXDRState *xdr, HeapPtrObject *objp)
 {
     JSAtom *source = 0;
     uint32_t flagsword = 0;
 
-    if (mode == XDR_ENCODE) {
+    if (xdr->mode == JSXDR_ENCODE) {
         JS_ASSERT(objp);
         RegExpObject &reobj = (*objp)->asRegExp();
         source = reobj.getSource();
         flagsword = reobj.getFlags();
     }
-    if (!XDRAtom(xdr, &source) || !xdr->codeUint32(&flagsword))
+    if (!js_XDRAtom(xdr, &source) || !JS_XDRUint32(xdr, &flagsword))
         return false;
-    if (mode == XDR_DECODE) {
+    if (xdr->mode == JSXDR_DECODE) {
         RegExpFlag flags = RegExpFlag(flagsword);
-        RegExpObject *reobj = RegExpObject::createNoStatics(xdr->cx(), source, flags, NULL);
+        RegExpObject *reobj = RegExpObject::createNoStatics(xdr->cx, source, flags, NULL);
         if (!reobj)
             return false;
 
-        if (!reobj->clearParent(xdr->cx()))
+        if (!reobj->clearParent(xdr->cx))
             return false;
-        if (!reobj->clearType(xdr->cx()))
+        if (!reobj->clearType(xdr->cx))
             return false;
         objp->init(reobj);
     }
     return true;
 }
+#endif /* !JS_HAS_XDR */
 
-template bool
-js::XDRScriptRegExpObject(XDRState<XDR_ENCODE> *xdr, HeapPtrObject *objp);
-
-template bool
-js::XDRScriptRegExpObject(XDRState<XDR_DECODE> *xdr, HeapPtrObject *objp);

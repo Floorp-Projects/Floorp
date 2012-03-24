@@ -85,6 +85,7 @@
 #define JS_HAS_OBJ_PROTO_PROP   0       /* has o.__proto__ etc. */
 #endif
 #define JS_HAS_OBJ_WATCHPOINT   0       /* has o.watch and o.unwatch */
+#define JS_HAS_XDR              0       /* has XDR API and internal support */
 #define JS_HAS_TOSOURCE         0       /* has Object/Array toSource method */
 #define JS_HAS_CATCH_GUARD      0       /* has exception handling catch guard */
 #define JS_HAS_UNEVAL           0       /* has uneval() top-level function */
@@ -107,6 +108,7 @@
 #define JS_HAS_STR_HTML_HELPERS 1       /* has str.anchor, str.bold, etc. */
 #define JS_HAS_OBJ_PROTO_PROP   1       /* has o.__proto__ etc. */
 #define JS_HAS_OBJ_WATCHPOINT   1       /* has o.watch and o.unwatch */
+#define JS_HAS_XDR              1       /* has XDR API and internal support */
 #define JS_HAS_TOSOURCE         1       /* has Object/Array toSource method */
 #define JS_HAS_CATCH_GUARD      1       /* has exception handling catch guard */
 #define JS_HAS_UNEVAL           1       /* has uneval() top-level function */
@@ -125,6 +127,7 @@
 #define JS_HAS_STR_HTML_HELPERS 1       /* has str.anchor, str.bold, etc. */
 #define JS_HAS_OBJ_PROTO_PROP   1       /* has o.__proto__ etc. */
 #define JS_HAS_OBJ_WATCHPOINT   1       /* has o.watch and o.unwatch */
+#define JS_HAS_XDR              1       /* has XDR API and internal support */
 #define JS_HAS_TOSOURCE         1       /* has Object/Array toSource method */
 #define JS_HAS_CATCH_GUARD      1       /* has exception handling catch guard */
 #define JS_HAS_UNEVAL           1       /* has uneval() top-level function */
@@ -143,6 +146,7 @@
 #define JS_HAS_STR_HTML_HELPERS 1       /* has str.anchor, str.bold, etc. */
 #define JS_HAS_OBJ_PROTO_PROP   1       /* has o.__proto__ etc. */
 #define JS_HAS_OBJ_WATCHPOINT   1       /* has o.watch and o.unwatch */
+#define JS_HAS_XDR              1       /* has XDR API and internal support */
 #define JS_HAS_TOSOURCE         1       /* has Object/Array toSource method */
 #define JS_HAS_CATCH_GUARD      1       /* has exception handling catch guard */
 #define JS_HAS_UNEVAL           1       /* has uneval() top-level function */
@@ -161,6 +165,7 @@
 #define JS_HAS_STR_HTML_HELPERS 1       /* has str.anchor, str.bold, etc. */
 #define JS_HAS_OBJ_PROTO_PROP   1       /* has o.__proto__ etc. */
 #define JS_HAS_OBJ_WATCHPOINT   1       /* has o.watch and o.unwatch */
+#define JS_HAS_XDR              1       /* has XDR API and internal support */
 #define JS_HAS_TOSOURCE         1       /* has Object/Array toSource method */
 #define JS_HAS_CATCH_GUARD      1       /* has exception handling catch guard */
 #define JS_HAS_UNEVAL           1       /* has uneval() top-level function */
