@@ -51,9 +51,7 @@ PARALLEL_DIRS = \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
-ifdef MOZ_INSTALLER
 DIRS += installer/windows
-endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
