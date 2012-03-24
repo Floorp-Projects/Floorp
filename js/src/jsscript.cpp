@@ -108,6 +108,14 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
     if (!ensureShape(cx))
         return false;
 
+    if (nargs + nvars == BINDING_COUNT_LIMIT) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             (kind == ARGUMENT)
+                             ? JSMSG_TOO_MANY_FUN_ARGS
+                             : JSMSG_TOO_MANY_LOCALS);
+        return false;
+    }
+
     /*
      * We still follow 10.2.3 of ES3 and make argument and variable properties
      * of the Call objects enumerable. ES5 reformulated all of its Clause 10 to
@@ -135,14 +143,6 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
         if (kind == CONSTANT)
             attrs |= JSPROP_READONLY;
         slot += nargs + nvars;
-    }
-
-    if (*indexp == BINDING_COUNT_LIMIT) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             (kind == ARGUMENT)
-                             ? JSMSG_TOO_MANY_FUN_ARGS
-                             : JSMSG_TOO_MANY_LOCALS);
-        return false;
     }
 
     jsid id;
@@ -1965,10 +1965,19 @@ JSScript::varIsAliased(unsigned varSlot)
 bool
 JSScript::argIsAliased(unsigned argSlot)
 {
-    if (bindingsAccessedDynamically)
-        return true;
+    return argLivesInCallObject(argSlot) || needsArgsObj();
+}
 
-    if (needsArgsObj())
+bool
+JSScript::argLivesInArgumentsObject(unsigned argSlot)
+{
+    return needsArgsObj() && !argLivesInCallObject(argSlot);
+}
+
+bool
+JSScript::argLivesInCallObject(unsigned argSlot)
+{
+    if (bindingsAccessedDynamically)
         return true;
 
     for (uint32_t i = 0; i < numClosedArgs(); ++i) {

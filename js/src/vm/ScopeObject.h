@@ -47,6 +47,30 @@
 namespace js {
 
 /*
+ * A "scope coordinate" describes how to get from head of the scope chain to a
+ * given lexically-enclosing variable. A scope coordinate has two dimensions:
+ *  - hops: the number of scope objects on the scope chain to skip
+ *  - binding: which binding on the scope object
+ *
+ * XXX: Until bug 659577 lands, this is all for show and all ScopeCoordinates
+ * have hops fixed at 0 and 'binding' is just the js::Bindings binding for args
+ * and vars and the stack depth for let bindings. Thus, aliased-var access
+ * touches the StackFrame like it always did and 'binding' must be first
+ * converted to either an arg or local slot (using Bindings::bindingToLocal or
+ * bindingToArg). With bug 659577, ScopeObject will have a 'var' function that
+ * takes a ScopeCoordinate.
+ */
+struct ScopeCoordinate
+{
+    uint16_t hops;
+    uint16_t binding;
+    inline ScopeCoordinate(jsbytecode *pc);
+};
+
+inline JSAtom *
+ScopeCoordinateAtom(JSScript *script, jsbytecode *pc);
+
+/*
  * Scope objects
  *
  * Scope objects are technically real JSObjects but only belong on the scope
@@ -231,6 +255,7 @@ class StaticBlockObject : public BlockObject
     inline void setEnclosingBlock(StaticBlockObject *blockObj);
 
     void setStackDepth(uint32_t depth);
+    bool containsVarAtDepth(uint32_t depth);
 
     /*
      * Frontend compilation temporarily uses the object's slots to link

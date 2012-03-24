@@ -1543,12 +1543,8 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
         const char *name = js_SrcNoteSpec[type].name;
         if (type == SRC_LABEL) {
             /* Check if the source note is for a switch case. */
-            if (switchTableStart <= offset && offset < switchTableEnd) {
+            if (switchTableStart <= offset && offset < switchTableEnd)
                 name = "case";
-            } else {
-                JSOp op = JSOp(script->code[offset]);
-                JS_ASSERT(op == JSOP_LABEL);
-            }
         }
         Sprint(sp, "%3u: %4u %5u [%4u] %-8s", unsigned(sn - notes), lineno, offset, delta, name);
         switch (type) {
@@ -1587,7 +1583,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
             Sprint(sp, " atom %u (", index);
             size_t len = PutEscapedString(NULL, 0, atom, '\0');
             if (char *buf = sp->reserve(len)) {
-                PutEscapedString(buf, len, atom, 0);
+                PutEscapedString(buf, len + 1, atom, 0);
                 buf[len] = 0;
             }
             Sprint(sp, ")");

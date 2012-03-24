@@ -657,6 +657,7 @@ struct BytecodeEmitter : public TreeContext
     bool compilingForEval() const { return !!(flags & TCF_COMPILE_FOR_EVAL); }
     JSVersion version() const { return parser->versionWithFlags(); }
 
+    bool isAliasedName(ParseNode *pn);
     bool shouldNoteClosedName(ParseNode *pn);
     bool noteClosedVar(ParseNode *pn);
     bool noteClosedArg(ParseNode *pn);
