@@ -322,6 +322,7 @@ class MDefinition : public MNode
     }
     bool congruentIfOperandsEqual(MDefinition * const &ins) const;
     virtual MDefinition *foldsTo(bool useValueNumbers);
+    virtual void analyzeRange();
 
     MNode::Kind kind() const {
         return MNode::Definition;
@@ -2054,7 +2055,7 @@ class MMul : public MBinaryArithInstruction
         return new MMul(left, right);
     }
 
-    MDefinition *foldsTo(bool useValueNumbers);
+    void analyzeRange();
 
     double getIdentity() {
         return 1;
@@ -2075,8 +2076,15 @@ class MMul : public MBinaryArithInstruction
 
 class MDiv : public MBinaryArithInstruction
 {
+    bool canBeNegativeZero_;
+    bool canBeNegativeOverflow_;
+    bool canBeDivideByZero_;
+
     MDiv(MDefinition *left, MDefinition *right)
-      : MBinaryArithInstruction(left, right)
+      : MBinaryArithInstruction(left, right),
+        canBeNegativeZero_(true),
+        canBeNegativeOverflow_(true),
+        canBeDivideByZero_(true)
     {
         setResultType(MIRType_Value);
     }
@@ -2088,51 +2096,23 @@ class MDiv : public MBinaryArithInstruction
     }
 
     MDefinition *foldsTo(bool useValueNumbers);
+    void analyzeRange();
+
     double getIdentity() {
         JS_NOT_REACHED("not used");
         return 1;
     }
 
-    bool canBeDivideByZero() {
-        MDefinition *rhs = getOperand(1);
-        if (rhs->isConstant() && !rhs->toConstant()->value().isInt32(0))
-            return false;
-        else
-            return true;
+    bool canBeNegativeZero() {
+        return canBeNegativeZero_;
     }
 
     bool canBeNegativeOverflow() {
-        MDefinition *lhs = getOperand(0);
-        MDefinition *rhs = getOperand(1);
-
-        // If lhs is a constant int != INT32_MIN, then
-        // negative overflow check can be skipped.
-        if (lhs->isConstant() && !lhs->toConstant()->value().isInt32(INT32_MIN))
-            return false;
-
-        // If rhs is a constant int != -1, likewise.
-        if (rhs->isConstant() && !rhs->toConstant()->value().isInt32(-1))
-            return false;
-
-        return true;
+        return canBeNegativeOverflow_;
     }
 
-    bool canBeNegativeZero() {
-        MDefinition *lhs = getOperand(0);
-        MDefinition *rhs = getOperand(1);
-
-        // If lhs is != 0, then negative zero check can be skipped.
-        if (lhs->isConstant() && !lhs->toConstant()->value().isInt32(0))
-            return false;
-
-        // If rhs is > 0, likewise.
-        if (rhs->isConstant()) {
-            const js::Value &val = rhs->toConstant()->value();
-            if (val.isInt32() && val.toInt32() >= 0)
-                return false;
-        }
-
-        return true;
+    bool canBeDivideByZero() {
+        return canBeDivideByZero_;
     }
 };
 
