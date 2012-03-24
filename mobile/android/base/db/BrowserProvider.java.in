@@ -6,14 +6,20 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.db;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.lang.Class;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import org.mozilla.gecko.GeckoBackgroundThread;
 import org.mozilla.gecko.GeckoProfile;
@@ -45,6 +51,8 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
+import android.graphics.BitmapFactory;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
@@ -424,7 +432,84 @@ public class BrowserProvider extends ContentProvider {
 
             createOrUpdateAllSpecialFolders(db);
 
-            // FIXME: Create default bookmarks here (bug 728224)
+            createDefaultBookmarks(db, "^bookmarkdefaults_title_");
+        }
+
+        private void createDefaultBookmarks(SQLiteDatabase db, String pattern) {
+            Class stringsClass = R.string.class;
+
+            Field[] fields = stringsClass.getFields();
+            Pattern p = Pattern.compile(pattern);
+
+            ContentValues bookmarksValues = new ContentValues();
+            bookmarksValues.put(Bookmarks.PARENT, guidToID(db, Bookmarks.MOBILE_FOLDER_GUID));
+            long now = System.currentTimeMillis();
+            bookmarksValues.put(Bookmarks.DATE_CREATED, now);
+            bookmarksValues.put(Bookmarks.DATE_MODIFIED, now);
+
+            ContentValues historyValues = new ContentValues();
+
+            int pos = 1;
+            for (int i = 0; i < fields.length; i++) {
+                String name = fields[i].getName();
+                Matcher m = p.matcher(name);
+                if (!m.find())
+                    continue;
+
+                try {
+                    int titleid = fields[i].getInt(null);
+                    String title = mContext.getString(titleid);
+
+                    Field urlField = stringsClass.getField(name.replace("_title_", "_url_"));
+                    int urlId = urlField.getInt(null);
+                    String url = mContext.getString(urlId);
+
+                    bookmarksValues.put(Bookmarks.TITLE, title);
+                    bookmarksValues.put(Bookmarks.URL, url);
+                    bookmarksValues.put(Bookmarks.GUID, Utils.generateGuid());
+                    bookmarksValues.put(Bookmarks.POSITION, pos);
+                    long id = db.insertOrThrow(TABLE_BOOKMARKS, Bookmarks.TITLE, bookmarksValues);
+
+                    historyValues.put(History.TITLE, title);
+                    historyValues.put(History.URL, url);
+                    id = db.insertOrThrow(TABLE_HISTORY, History.VISITS, historyValues);
+
+                    setDefaultFavicon(db, name, url);
+                    pos++;
+                } catch (java.lang.IllegalAccessException ex) {
+                    Log.e(LOGTAG, "Can't create bookmark " + name, ex);
+                } catch (java.lang.NoSuchFieldException ex) {
+                    Log.e(LOGTAG, "Can't create bookmark " + name, ex);
+                }
+            }
+        }
+
+        private void setDefaultFavicon(SQLiteDatabase db, String name, String url) {
+            Class drawablesClass = R.drawable.class;
+            ByteArrayOutputStream stream = null;
+            try {
+                // Look for a drawable with the id R.drawable.bookmarkdefaults_favicon_*
+                Field faviconField = drawablesClass.getField(name.replace("_title_", "_favicon_"));
+                if (faviconField == null)
+                  return;
+
+                int faviconId = faviconField.getInt(null);
+                Bitmap bitmap = BitmapFactory.decodeResource(mContext.getResources(), faviconId);
+                stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            } catch (java.lang.IllegalAccessException ex) {
+                Log.e(LOGTAG, "Can't create favicon " + name, ex);
+            } catch (java.lang.NoSuchFieldException ex) {
+                Log.e(LOGTAG, "Can't create favicon " + name, ex);
+            }
+
+            if (stream != null) {
+                ContentValues values = new ContentValues();
+                values.put(Images.FAVICON, stream.toByteArray());
+                values.put(Images.URL, url);
+                values.put(Images.IS_DELETED, 0);
+                db.insertOrThrow(TABLE_IMAGES, Images.URL, values);
+            }
         }
 
         private void createOrUpdateAllSpecialFolders(SQLiteDatabase db) {
