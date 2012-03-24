@@ -6616,7 +6616,7 @@ nsContentUtils::ReleaseWrapper(nsISupports* aScriptObjectHolder,
 {
   if (aCache->PreservingWrapper()) {
     JSObject* obj = aCache->GetWrapperPreserveColor();
-    if (aCache->IsProxy()) {
+    if (aCache->IsDOMBinding()) {
       JSCompartment *compartment = js::GetObjectCompartment(obj);
       xpc::CompartmentPrivate *priv =
         static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));

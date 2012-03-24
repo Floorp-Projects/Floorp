@@ -393,9 +393,7 @@ nsHTMLEditor::ShowResizersInner(nsIDOMElement *aResizedElement)
 
   // and listen to the "resize" event on the window first, get the
   // window from the document...
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(doc->GetWindow());
@@ -489,9 +487,7 @@ nsHTMLEditor::HideResizers(void)
   }
   mMouseMotionListenerP = nsnull;
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  nsCOMPtr<nsIDocument> doc = GetDocument();
   if (!doc) { return NS_ERROR_NULL_POINTER; }
   target = do_QueryInterface(doc->GetWindow());
   if (!target) { return NS_ERROR_NULL_POINTER; }
@@ -667,8 +663,7 @@ nsHTMLEditor::SetResizeIncrements(PRInt32 aX, PRInt32 aY,
 nsresult
 nsHTMLEditor::SetResizingInfoPosition(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt32 aH)
 {
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  nsEditor::GetDocument(getter_AddRefs(domdoc));
+  nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
 
   NS_NAMED_LITERAL_STRING(leftStr, "left");
   NS_NAMED_LITERAL_STRING(topStr, "top");

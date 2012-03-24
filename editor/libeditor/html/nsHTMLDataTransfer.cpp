@@ -1205,10 +1205,8 @@ bool nsHTMLEditor::IsSafeToInsertData(nsIDOMDocument* aSourceDoc)
 {
   // Try to determine whether we should use a sanitizing fragment sink
   bool isSafe = false;
-  nsCOMPtr<nsIDOMDocument> destdomdoc;
-  GetDocument(getter_AddRefs(destdomdoc));
 
-  nsCOMPtr<nsIDocument> destdoc = do_QueryInterface(destdomdoc);
+  nsCOMPtr<nsIDocument> destdoc = GetDocument();
   NS_ASSERTION(destdoc, "Where is our destination doc?");
   nsCOMPtr<nsISupports> container = destdoc->GetContainer();
   nsCOMPtr<nsIDocShellTreeItem> dsti(do_QueryInterface(container));
@@ -1590,8 +1588,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
       }
 
       // handle transferable hooks
-      nsCOMPtr<nsIDOMDocument> domdoc;
-      GetDocument(getter_AddRefs(domdoc));
+      nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
       if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, trans))
         return NS_OK;
 
@@ -1609,8 +1606,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteTransferable(nsITransferable *aTransferable)
     return NS_OK;
 
   // handle transferable hooks
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  GetDocument(getter_AddRefs(domdoc));
+  nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
   if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, aTransferable))
     return NS_OK;
 
@@ -2249,10 +2245,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   nsCOMPtr<nsIDOMNode> contextAsNode, tmp;  
   nsresult res = NS_OK;
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  GetDocument(getter_AddRefs(domDoc));
-
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
   
   // if we have context info, create a fragment for that

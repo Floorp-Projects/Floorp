@@ -110,6 +110,9 @@ let PageThumbs = {
    */
   captureAndStore: function PageThumbs_captureAndStore(aBrowser, aCallback) {
     let url = aBrowser.currentURI.spec;
+    let channel = aBrowser.docShell.currentDocumentChannel;
+    let originalURL = channel.originalURI.spec;
+
     this.capture(aBrowser.contentWindow, function (aInputStream) {
       let telemetryStoreTime = new Date();
 
@@ -117,6 +120,20 @@ let PageThumbs = {
         if (aSuccessful) {
           Services.telemetry.getHistogramById("FX_THUMBNAILS_STORE_TIME_MS")
             .add(new Date() - telemetryStoreTime);
+
+          // We've been redirected. Create a copy of the current thumbnail for
+          // the redirect source. We need to do this because:
+          //
+          // 1) Users can drag any kind of links onto the newtab page. If those
+          //    links redirect to a different URL then we want to be able to
+          //    provide thumbnails for both of them.
+          //
+          // 2) The newtab page should actually display redirect targets, only.
+          //    Because of bug 559175 this information can get lost when using
+          //    Sync and therefore also redirect sources appear on the newtab
+          //    page. We also want thumbnails for those.
+          if (url != originalURL)
+            PageThumbsCache._copy(url, originalURL);
         }
 
         if (aCallback)
@@ -204,6 +221,54 @@ let PageThumbsCache = {
   getWriteEntry: function Cache_getWriteEntry(aKey, aCallback) {
     // Try to open the desired cache entry.
     this._openCacheEntry(aKey, Ci.nsICache.ACCESS_WRITE, aCallback);
+  },
+
+  /**
+   * Copies an existing cache entry's data to a new cache entry.
+   * @param aSourceKey The key that contains the data to copy.
+   * @param aTargetKey The key that will be the copy of aSourceKey's data.
+   */
+  _copy: function Cache_copy(aSourceKey, aTargetKey) {
+    let sourceEntry, targetEntry, waitingCount = 2;
+
+    function finish() {
+      if (sourceEntry)
+        sourceEntry.close();
+
+      if (targetEntry)
+        targetEntry.close();
+    }
+
+    function copyDataWhenReady() {
+      if (--waitingCount > 0)
+        return;
+
+      if (!sourceEntry || !targetEntry) {
+        finish();
+        return;
+      }
+
+      let inputStream = sourceEntry.openInputStream(0);
+      let outputStream = targetEntry.openOutputStream(0);
+
+      // Copy the image data to a new entry.
+      NetUtil.asyncCopy(inputStream, outputStream, function (aResult) {
+        if (Components.isSuccessCode(aResult))
+          targetEntry.markValid();
+
+        finish();
+      });
+    }
+
+    this.getReadEntry(aSourceKey, function (aSourceEntry) {
+      sourceEntry = aSourceEntry;
+      copyDataWhenReady();
+    });
+
+    this.getWriteEntry(aTargetKey, function (aTargetEntry) {
+      targetEntry = aTargetEntry;
+      copyDataWhenReady();
+    });
   },
 
   /**
