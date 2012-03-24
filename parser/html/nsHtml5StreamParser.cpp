@@ -277,7 +277,9 @@ nsHtml5StreamParser::Notify(const char* aCharset, nsDetectionConfident aConf)
         // We've already committed to a decoder. Request a reload from the
         // docshell.
         nsCAutoString charset(aCharset);
-        mTreeBuilder->NeedsCharsetSwitchTo(charset, kCharsetFromAutoDetection);
+        mTreeBuilder->NeedsCharsetSwitchTo(charset,
+                                           kCharsetFromAutoDetection,
+                                           0);
         FlushTreeOpsAndDisarmTimer();
         Interrupt();
       }
@@ -433,6 +435,10 @@ nsHtml5StreamParser::SniffBOMlessUTF16BasicLatin(const PRUint8* aFromSegment,
   mCharsetSource = kCharsetFromIrreversibleAutoDetection;
   mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
   mFeedChardet = false;
+  mTreeBuilder->MaybeComplainAboutCharset("EncBomlessUtf16",
+                                          true,
+                                          0);
+
 }
 
 void
@@ -978,6 +984,11 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     }
   }
 
+  if (mCharsetSource == kCharsetFromParentFrame) {
+    // Remember this in case chardet overwrites mCharsetSource
+    mInitialEncodingWasFromParentFrame = true;
+  }
+
   if (mCharsetSource >= kCharsetFromAutoDetection) {
     mFeedChardet = false;
   }
@@ -1177,6 +1188,9 @@ nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
   if (newEncoding.LowerCaseEqualsLiteral("utf-16") ||
       newEncoding.LowerCaseEqualsLiteral("utf-16be") ||
       newEncoding.LowerCaseEqualsLiteral("utf-16le")) {
+    mTreeBuilder->MaybeComplainAboutCharset("EncMetaUtf16",
+                                            true,
+                                            mTokenizer->getLineNumber());
     newEncoding.Assign("UTF-8");
   }
 
@@ -1184,10 +1198,24 @@ nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
   bool eq;
   rv = nsCharsetAlias::Equals(newEncoding, mCharset, &eq);
   if (NS_FAILED(rv)) {
-    NS_NOTREACHED("Charset name equality check failed.");
+    // the encoding name is bogus
+    mTreeBuilder->MaybeComplainAboutCharset("EncMetaUnsupported",
+                                            true,
+                                            mTokenizer->getLineNumber());
     return false;
   }
   if (eq) {
+    if (mCharsetSource < kCharsetFromMetaPrescan) {
+      if (mInitialEncodingWasFromParentFrame) {
+        mTreeBuilder->MaybeComplainAboutCharset("EncLateMetaFrame",
+                                                false,
+                                                mTokenizer->getLineNumber());
+      } else {
+        mTreeBuilder->MaybeComplainAboutCharset("EncLateMeta",
+                                                false,
+                                                mTokenizer->getLineNumber());
+      }
+    }
     mCharsetSource = kCharsetFromMetaTag; // become confident
     mFeedChardet = false; // don't feed chardet when confident
     return false;
@@ -1199,7 +1227,7 @@ nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
   
   rv = nsCharsetAlias::GetPreferred(newEncoding, preferred);
   if (NS_FAILED(rv)) {
-    // the encoding name is bogus
+    NS_NOTREACHED("Finding the preferred name failed.");
     return false;
   }
   
@@ -1212,6 +1240,9 @@ nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
       preferred.LowerCaseEqualsLiteral("x-imap4-modified-utf7") ||
       preferred.LowerCaseEqualsLiteral("x-user-defined")) {
     // Not a rough ASCII superset
+    mTreeBuilder->MaybeComplainAboutCharset("EncMetaNonRoughSuperset",
+                                            true,
+                                            mTokenizer->getLineNumber());
     return false;
   }
   aEncoding.Assign(preferred);
@@ -1229,10 +1260,6 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
     return false;
   }
 
-  if (mReparseForbidden) {
-    return false; // not reparsing even if we wanted to
-  }
-
   nsCAutoString newEncoding;
   CopyUTF16toUTF8(*aEncoding, newEncoding);
 
@@ -1240,10 +1267,23 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
     return false;
   }
 
+  if (mReparseForbidden) {
+    // This mReparseForbidden check happens after the call to
+    // PreferredForInternalEncodingDecl so that if that method calls
+    // MaybeComplainAboutCharset, its charset complaint wins over the one
+    // below.
+    mTreeBuilder->MaybeComplainAboutCharset("EncLateMetaTooLate",
+                                            true,
+                                            mTokenizer->getLineNumber());
+    return false; // not reparsing even if we wanted to
+  }
+
   // Avoid having the chardet ask for another restart after this restart
   // request.
   mFeedChardet = false;
-  mTreeBuilder->NeedsCharsetSwitchTo(newEncoding, kCharsetFromMetaTag);
+  mTreeBuilder->NeedsCharsetSwitchTo(newEncoding,
+                                     kCharsetFromMetaTag,
+                                     mTokenizer->getLineNumber());
   FlushTreeOpsAndDisarmTimer();
   Interrupt();
   // the tree op executor will cause the stream parser to terminate
@@ -1307,6 +1347,26 @@ nsHtml5StreamParser::ParseAvailableData()
               return;
             }
             mAtEOF = true;
+            if (mCharsetSource < kCharsetFromMetaTag) {
+              if (mInitialEncodingWasFromParentFrame) {
+                // Unfortunately, this check doesn't take effect for
+                // cross-origin frames, so cross-origin ad frames that have
+                // no text and only an image or a Flash embed get the more
+                // severe message from the next if block. The message is
+                // technically accurate, though.
+                mTreeBuilder->MaybeComplainAboutCharset("EncNoDeclarationFrame",
+                                                        false,
+                                                        0);
+              } else if (mMode == NORMAL) {
+                mTreeBuilder->MaybeComplainAboutCharset("EncNoDeclaration",
+                                                        true,
+                                                        0);
+              } else if (mMode == PLAIN_TEXT) {
+                mTreeBuilder->MaybeComplainAboutCharset("EncNoDeclarationPlain",
+                                                        true,
+                                                        0);
+              }
+            }
             mTokenizer->eof();
             mTreeBuilder->StreamEnded();
             if (mMode == VIEW_SOURCE_HTML || mMode == VIEW_SOURCE_XML) {

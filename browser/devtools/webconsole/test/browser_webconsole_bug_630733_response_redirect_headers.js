@@ -51,7 +51,7 @@ function performTest(aEvent)
 
 function test()
 {
-  addTab("data:text/html,<p>Web Console test for bug 630733");
+  addTab("data:text/html;charset=utf-8,<p>Web Console test for bug 630733");
 
   browser.addEventListener("load", function(aEvent) {
     browser.removeEventListener(aEvent.type, arguments.callee, true);

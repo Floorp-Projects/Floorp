@@ -133,6 +133,7 @@
 #include "mozilla/Preferences.h"
 #include "nsMimeTypes.h"
 #include "nsIRequest.h"
+#include "nsHtml5TreeOpExecutor.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -731,11 +732,17 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   nsCOMPtr<nsIWyciwygChannel> wyciwygChannel;
   
+  // For error reporting
+  nsHtml5TreeOpExecutor* executor = nsnull;
+  if (loadAsHtml5) {
+    executor = static_cast<nsHtml5TreeOpExecutor*> (mParser->GetContentSink());
+  }
+
   if (!IsHTML() || !docShell) { // no docshell for text/html XHR
     charsetSource = IsHTML() ? kCharsetFromWeakDocTypeDefault
                              : kCharsetFromDocTypeDefault;
     charset.AssignLiteral("UTF-8");
-    TryChannelCharset(aChannel, charsetSource, charset);
+    TryChannelCharset(aChannel, charsetSource, charset, executor);
     parserCharsetSource = charsetSource;
     parserCharset = charset;
   } else {
@@ -757,7 +764,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       // Don't actually get the charset from the channel if this is a
       // wyciwyg channel; it'll always be UTF-16
       if (!wyciwygChannel &&
-          TryChannelCharset(aChannel, charsetSource, charset)) {
+          TryChannelCharset(aChannel, charsetSource, charset, executor)) {
         // Use the channel's charset (e.g., charset from HTTP
         // "Content-Type" header).
       }

@@ -19,7 +19,7 @@ registerCleanupFunction(function() {
 
 function test() {
   Services.prefs.setBoolPref("devtools.gcli.enable", false);
-  addTab("data:text/html,Web Console autocompletion bug in document.body");
+  addTab("data:text/html;charset=utf-8,Web Console autocompletion bug in document.body");
   browser.addEventListener("load", onLoad, true);
 }
 

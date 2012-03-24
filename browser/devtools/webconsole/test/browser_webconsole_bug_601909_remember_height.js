@@ -90,7 +90,7 @@ function setHeight(aHeight)
 
 function test()
 {
-  addTab("data:text/html,Web Console test for bug 601909");
+  addTab("data:text/html;charset=utf-8,Web Console test for bug 601909");
   browser.addEventListener("load", performTests, true);
 }
 

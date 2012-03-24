@@ -56,6 +56,6 @@ function tabLoad(aEvent) {
 }
 
 function test() {
-  addTab("data:text/html,Web Console test for bug 613642: remember scroll location");
+  addTab("data:text/html;charset=utf-8,Web Console test for bug 613642: remember scroll location");
   browser.addEventListener("load", tabLoad, true);
 }

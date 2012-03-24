@@ -31,7 +31,7 @@ function onLoad(aEvent) {
 
     // The next test makes sure that timers with the same name but in separate
     // tabs, do not contain the same value.
-    addTab("data:text/html,<script type='text/javascript'>" +
+    addTab("data:text/html;charset=utf-8,<script type='text/javascript'>" +
            "console.timeEnd('bTimer');</script>");
     openConsole();
     browser.addEventListener("load", testTimerIndependenceInTabs, true);
@@ -52,7 +52,7 @@ function testTimerIndependenceInTabs(aEvent) {
     // The next test makes sure that timers with the same name but in separate
     // pages, do not contain the same value.
     browser.addEventListener("load", testTimerIndependenceInSameTab, true);
-    content.location = "data:text/html,<script type='text/javascript'>" +
+    content.location = "data:text/html;charset=utf-8,<script type='text/javascript'>" +
            "console.time('bTimer');</script>";
   });
 }
@@ -71,7 +71,7 @@ function testTimerIndependenceInSameTab(aEvent) {
     // Now the following console.timeEnd() call shouldn't display anything,
     // if the timers in different pages are not related.
     browser.addEventListener("load", testTimerIndependenceInSameTabAgain, true);
-    content.location = "data:text/html,<script type='text/javascript'>" +
+    content.location = "data:text/html;charset=utf-8,<script type='text/javascript'>" +
            "console.timeEnd('bTimer');</script>";
   });
 }
