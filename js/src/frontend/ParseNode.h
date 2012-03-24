@@ -1554,8 +1554,6 @@ struct FunctionBox : public ObjectBox
 
     JSFunction *function() const { return (JSFunction *) object; }
 
-    bool joinable() const;
-
     /*
      * True if this function is inside the scope of a with-statement, an E4X
      * filter-expression, or a function that uses direct eval.

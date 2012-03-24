@@ -532,15 +532,10 @@ OPDEF(JSOP_LENGTH,        217, "length",       NULL,  5,  1,  1, 18,  JOF_ATOM|J
 OPDEF(JSOP_HOLE,          218, "hole",         NULL,  1,  0,  1,  0,  JOF_BYTE)
 
 OPDEF(JSOP_UNUSED17,      219,"unused17",      NULL,  1,  0,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED24,      220,"unused18",      NULL,  1,  0,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED25,      221,"unused19",      NULL,  1,  0,  0,  0,  JOF_BYTE)
-
-/*
- * Joined function object as method optimization support.
- */
-OPDEF(JSOP_SETMETHOD,     222,"setmethod",     NULL,  5,  2,  1,  3,  JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING)
-OPDEF(JSOP_INITMETHOD,    223,"initmethod",    NULL,  5,  2,  1,  3,  JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING)
-
+OPDEF(JSOP_UNUSED24,      220,"unused24",      NULL,  1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED25,      221,"unused25",      NULL,  1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED29,      222,"unused29",      NULL,  1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED30,      223,"unused30",      NULL,  1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED16,      224,"unused16",      NULL,  1,  0,  0,  0,  JOF_BYTE)
 
 /* Pop the stack, convert to a jsid (int or string), and push back. */

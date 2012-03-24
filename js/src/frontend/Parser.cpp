@@ -1069,8 +1069,6 @@ LeaveFunction(ParseNode *fn, TreeContext *funtc, PropertyName *funName = NULL,
                 dn->setOp(JSOP_CALLEE);
                 dn->pn_cookie.set(funtc->staticLevel, UpvarCookie::CALLEE_SLOT);
                 dn->pn_dflags |= PND_BOUND;
-
-                funbox->tcflags |= TCF_FUN_USES_OWN_NAME;
                 foundCallee = 1;
                 continue;
             }
@@ -2049,7 +2047,7 @@ DefineGlobal(ParseNode *pn, BytecodeEmitter *bce, PropertyName *name)
                 globalObj != holder ||
                 shape->configurable() ||
                 !shape->hasSlot() ||
-                !shape->hasDefaultGetterOrIsMethod() ||
+                !shape->hasDefaultGetter() ||
                 !shape->hasDefaultSetter()) {
                 return true;
             }

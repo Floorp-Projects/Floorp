@@ -649,43 +649,15 @@ struct Shape : public js::gc::Cell
     /* Public bits stored in shape->flags. */
     enum {
         HAS_SHORTID     = 0x40,
-        METHOD          = 0x80,
-        PUBLIC_FLAGS    = HAS_SHORTID | METHOD
+        PUBLIC_FLAGS    = HAS_SHORTID
     };
 
     bool inDictionary() const   { return (flags & IN_DICTIONARY) != 0; }
     unsigned getFlags() const  { return flags & PUBLIC_FLAGS; }
     bool hasShortID() const { return (flags & HAS_SHORTID) != 0; }
 
-    /*
-     * A shape has a method barrier when some compiler-created "null closure"
-     * function objects (functions that do not use lexical bindings above their
-     * scope, only free variable names) that have a correct JSSLOT_PARENT value
-     * thanks to the COMPILE_N_GO optimization are stored in objects without
-     * cloning.
-     *
-     * The de-facto standard JS language requires each evaluation of such a
-     * closure to result in a unique (according to === and observable effects)
-     * function object. When storing a function to a property, we use method
-     * shapes to speculate that these effects will never be observed: the
-     * property will only be used in calls, and f.callee will not be used
-     * to get a handle on the object.
-     *
-     * If either a non-call use or callee access occurs, then the function is
-     * cloned and the object is reshaped with a non-method property.
-     *
-     * Note that method shapes do not imply the object has a particular
-     * uncloned function, just that the object has *some* uncloned function
-     * in the shape's slot.
-     */
-    bool isMethod() const {
-        JS_ASSERT_IF(flags & METHOD, !base()->rawGetter);
-        return (flags & METHOD) != 0;
-    }
-
     PropertyOp getter() const { return base()->rawGetter; }
-    bool hasDefaultGetterOrIsMethod() const { return !base()->rawGetter; }
-    bool hasDefaultGetter() const  { return !base()->rawGetter && !isMethod(); }
+    bool hasDefaultGetter() const  { return !base()->rawGetter; }
     PropertyOp getterOp() const { JS_ASSERT(!hasGetterValue()); return base()->rawGetter; }
     JSObject *getterObject() const { JS_ASSERT(hasGetterValue()); return base()->getterObj; }
 

@@ -384,7 +384,6 @@ struct PICInfo : public BasePolyIC {
     {
         GET,        // JSOP_GETPROP
         SET,        // JSOP_SETPROP, JSOP_SETNAME
-        SETMETHOD,  // JSOP_SETMETHOD
         NAME,       // JSOP_NAME
         BIND,       // JSOP_BINDNAME
         XNAME       // JSOP_GETXPROP
@@ -461,7 +460,7 @@ struct PICInfo : public BasePolyIC {
     types::TypeSet *rhsTypes;
     
     inline bool isSet() const {
-        return kind == SET || kind == SETMETHOD;
+        return kind == SET;
     }
     inline bool isGet() const {
         return kind == GET;

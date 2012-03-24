@@ -800,7 +800,7 @@ static inline const Shape *
 GetSingletonShape(JSContext *cx, JSObject *obj, jsid id)
 {
     const Shape *shape = obj->nativeLookup(cx, id);
-    if (shape && shape->hasDefaultGetterOrIsMethod() && shape->hasSlot())
+    if (shape && shape->hasDefaultGetter() && shape->hasSlot())
         return shape;
     return NULL;
 }
@@ -2739,7 +2739,7 @@ UpdatePropertyType(JSContext *cx, TypeSet *types, JSObject *obj, const Shape *sh
     if (shape->hasGetterValue() || shape->hasSetterValue()) {
         types->setOwnProperty(cx, true);
         types->addType(cx, Type::UnknownType());
-    } else if (shape->hasDefaultGetterOrIsMethod() && shape->hasSlot()) {
+    } else if (shape->hasDefaultGetter() && shape->hasSlot()) {
         const Value &value = obj->nativeGetSlot(shape->slot());
 
         /*
@@ -3667,8 +3667,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
             pushed[0].addType(cx, Type::LazyArgsType());
         break;
 
-      case JSOP_SETPROP:
-      case JSOP_SETMETHOD: {
+      case JSOP_SETPROP: {
         jsid id = GetAtomId(cx, script, pc, 0);
         poppedTypes(pc, 1)->addSetProperty(cx, script, pc, poppedTypes(pc, 0), id);
         poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
@@ -3875,8 +3874,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         state.hasHole = true;
         break;
 
-      case JSOP_INITPROP:
-      case JSOP_INITMETHOD: {
+      case JSOP_INITPROP: {
         const SSAValue &objv = poppedValue(pc, 1);
         jsbytecode *initpc = script->code + objv.pushedOffset();
         TypeObject *initializer = GetInitializerType(cx, script, initpc);

@@ -4515,7 +4515,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 break;
 
               case JSOP_SETPROP:
-              case JSOP_SETMETHOD:
               {
                 LOAD_ATOM(0);
                 GET_QUOTE_AND_FMT("[%s] %s= ", ".%s %s= ", xval);
@@ -5120,7 +5119,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 break;
 
               case JSOP_INITPROP:
-              case JSOP_INITMETHOD:
                 LOAD_ATOM(0);
                 xval = QuoteString(&ss->sprinter, atom, jschar(IsIdentifier(atom) ? 0 : '\''));
                 if (!xval)

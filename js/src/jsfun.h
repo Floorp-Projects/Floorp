@@ -67,10 +67,6 @@
  * move to u.i.script->flags. For now we use function flag bits to minimize
  * pointer-chasing.
  */
-#define JSFUN_JOINABLE      0x0001  /* function is null closure that does not
-                                       appear to call itself via its own name
-                                       or arguments.callee */
-
 #define JSFUN_PROTOTYPE     0x0800  /* function is Function.prototype for some
                                        global object */
 
@@ -129,14 +125,6 @@ struct JSFunction : public JSObject
 #define JS_LOCAL_NAME_TO_ATOM(nameWord)  ((JSAtom *) ((nameWord) & ~uintptr_t(1)))
 #define JS_LOCAL_NAME_IS_CONST(nameWord) ((((nameWord) & uintptr_t(1))) != 0)
 
-    bool mightEscape() const {
-        return isInterpreted() && isNullClosure();
-    }
-
-    bool joinable() const {
-        return flags & JSFUN_JOINABLE;
-    }
-
     /*
      * For an interpreted function, accessors for the initial scope object of
      * activations (stack frames) of the function.
@@ -146,8 +134,6 @@ struct JSFunction : public JSObject
     inline void initEnvironment(JSObject *obj);
 
     static inline size_t offsetOfEnvironment() { return offsetof(JSFunction, u.i.env_); }
-
-    inline void setJoinable();
 
     js::HeapPtrScript &script() const {
         JS_ASSERT(isInterpreted());
@@ -218,32 +204,9 @@ struct JSFunction : public JSObject
 
   public:
     /* Accessors for data stored in extended functions. */
-
     inline void initializeExtended();
-
     inline void setExtendedSlot(size_t which, const js::Value &val);
     inline const js::Value &getExtendedSlot(size_t which) const;
-
-    /* Slot holding associated method property, needed for foo.caller handling. */
-    static const uint32_t METHOD_PROPERTY_SLOT = 0;
-
-    /* For cloned methods, slot holding the object this was cloned as a property from. */
-    static const uint32_t METHOD_OBJECT_SLOT = 1;
-
-    /* Whether this is a function cloned from a method. */
-    inline bool isClonedMethod() const;
-
-    /* For a cloned method, pointer to the object the method was cloned for. */
-    inline JSObject *methodObj() const;
-    inline void setMethodObj(JSObject& obj);
-
-    /*
-     * Method name imputed from property uniquely assigned to or initialized,
-     * where the function does not need to be cloned to carry a scope chain.
-     * This is set on both the original and cloned function.
-     */
-    inline JSAtom *methodAtom() const;
-    inline void setMethodAtom(JSAtom *atom);
 
   private:
     /* 
