@@ -603,7 +603,6 @@ GLContext::CanUploadNonPowerOfTwo()
 bool
 GLContext::WantsSmallTiles()
 {
-#ifdef MOZ_WIDGET_ANDROID
     // We must use small tiles for good performance if we can't use
     // glTexSubImage2D() for some reason.
     if (!CanUploadSubTextures())
@@ -616,9 +615,6 @@ GLContext::WantsSmallTiles()
     // Don't use small tiles otherwise. (If we implement incremental texture upload,
     // then we will want to revisit this.)
     return false;
-#else
-    return false;
-#endif
 }
 
 // Common code for checking for both GL extensions and GLX extensions.
