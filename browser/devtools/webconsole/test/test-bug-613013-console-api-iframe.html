@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <meta charset="utf-8">
     <title>test for bug 613013</title>
     <!-- Any copyright is dedicated to the Public Domain.
          http://creativecommons.org/publicdomain/zero/1.0/ -->
@@ -10,7 +11,7 @@
     <script type="text/javascript"><!--
       (function () {
         var iframe = document.createElement('iframe');
-        iframe.src = 'data:text/html,little iframe';
+        iframe.src = 'data:text/html;charset=utf-8,little iframe';
         document.body.appendChild(iframe);
 
         console.log("foobarBug613013");

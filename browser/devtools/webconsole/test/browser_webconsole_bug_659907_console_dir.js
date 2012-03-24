@@ -7,7 +7,7 @@
 // Tests that console.dir works as intended.
 
 function test() {
-  addTab("data:text/html,Web Console test for bug 659907: Expand console " +
+  addTab("data:text/html;charset=utf-8,Web Console test for bug 659907: Expand console " +
          "object with a dir method");
   browser.addEventListener("load", onLoad, true);
 }

@@ -677,11 +677,23 @@ nsHtml5TreeBuilder::StreamEnded()
 
 void
 nsHtml5TreeBuilder::NeedsCharsetSwitchTo(const nsACString& aCharset,
-                                         PRInt32 aCharsetSource)
+                                         PRInt32 aCharsetSource,
+                                         PRInt32 aLineNumber)
 {
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpNeedsCharsetSwitchTo, aCharset, aCharsetSource);
+  treeOp->Init(eTreeOpNeedsCharsetSwitchTo,
+               aCharset,
+               aCharsetSource,
+               aLineNumber);
+}
+
+void
+nsHtml5TreeBuilder::MaybeComplainAboutCharset(const char* aMsgId,
+                                              bool aError,
+                                              PRInt32 aLineNumber)
+{
+  mOpQueue.AppendElement()->Init(aMsgId, aError, aLineNumber);
 }
 
 void

@@ -24,7 +24,7 @@ let requestCallback = null;
 
 function test()
 {
-  addTab("data:text/html,Web Console network logging tests");
+  addTab("data:text/html;charset=utf-8,Web Console network logging tests");
 
   browser.addEventListener("load", function() {
     browser.removeEventListener("load", arguments.callee, true);
