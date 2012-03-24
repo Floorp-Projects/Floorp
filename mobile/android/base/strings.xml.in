@@ -5,6 +5,7 @@
 #includesubst @STRINGSPATH@
 #includesubst @SYNCSTRINGSPATH@
 ]>
+#includesubst @BOOKMARKSPATH@
 <resources>
 #include ../sync/strings.xml.in
   <string name="splash_firstrun">&splash_firstrun;</string>
@@ -131,4 +132,18 @@
   <string name="filepicker_audio_title">&filepicker_audio_title;</string>
   <string name="filepicker_image_title">&filepicker_image_title;</string>
   <string name="filepicker_video_title">&filepicker_video_title;</string>
+
+  <!-- Default bookmarks. Use bookmarks titles shared with XUL from mobile's
+       profile/bookmarks.inc. Don't expose the URLs to L10N. -->
+  <string name="bookmarkdefaults_title_aboutfirefox">@bookmarks_aboutBrowser@</string>
+  <string name="bookmarkdefaults_url_aboutfirefox">about:firefox</string>
+
+  <string name="bookmarkdefaults_title_addons">@bookmarks_addons@</string>
+  <string name="bookmarkdefaults_url_addons">https://addons.mozilla.org/@AB_CD@/mobile/</string>
+
+  <string name="bookmarkdefaults_title_support">@bookmarks_support@</string>
+  <string name="bookmarkdefaults_url_support">http://support.mozilla.org/@AB_CD@/mobile</string>
+
+  <string name="bookmarkdefaults_title_abouthome">@bookmarks_aboutHome@</string>
+  <string name="bookmarkdefaults_url_abouthome">about:home</string>
 </resources>

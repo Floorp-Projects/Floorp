@@ -336,12 +336,7 @@ public class Favicons {
                 if (mFaviconUrl == null || mFaviconUrl.length() == 0) {
                     // Handle the case of malformed URL
                     URL pageUrl = null;
-                    try {
-                        pageUrl = new URL(mPageUrl);
-                    } catch (MalformedURLException e) {
-                        Log.d(LOGTAG, "The provided URL is not valid: " + e);
-                        return null;
-                    }
+                    pageUrl = new URL(mPageUrl);
 
                     faviconUrl = new URL(pageUrl.getProtocol(), pageUrl.getAuthority(), "/favicon.ico");
                     mFaviconUrl = faviconUrl.toString();
