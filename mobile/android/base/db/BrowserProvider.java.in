@@ -6,19 +6,26 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.db;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.lang.Class;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import org.mozilla.gecko.GeckoBackgroundThread;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Images;
@@ -44,6 +51,8 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
+import android.graphics.BitmapFactory;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
@@ -55,7 +64,7 @@ public class BrowserProvider extends ContentProvider {
 
     static final String DATABASE_NAME = "browser.db";
 
-    static final int DATABASE_VERSION = 4;
+    static final int DATABASE_VERSION = 5;
 
     // Maximum age of deleted records to be cleaned up (20 days in ms)
     static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
@@ -71,6 +80,7 @@ public class BrowserProvider extends ContentProvider {
 
     static final String VIEW_BOOKMARKS_WITH_IMAGES = "bookmarks_with_images";
     static final String VIEW_HISTORY_WITH_IMAGES = "history_with_images";
+    static final String VIEW_COMBINED_WITH_IMAGES = "combined_with_images";
 
     // Bookmark matches
     static final int BOOKMARKS = 100;
@@ -89,6 +99,9 @@ public class BrowserProvider extends ContentProvider {
 
     // Schema matches
     static final int SCHEMA = 400;
+
+    // Combined bookmarks and history matches
+    static final int COMBINED = 500;
 
     static final String DEFAULT_BOOKMARKS_SORT_ORDER = Bookmarks.TYPE
             + " ASC, " + Bookmarks.POSITION + " ASC, " + Bookmarks._ID
@@ -109,6 +122,7 @@ public class BrowserProvider extends ContentProvider {
     static final Map<String, String> BOOKMARKS_PROJECTION_MAP;
     static final Map<String, String> HISTORY_PROJECTION_MAP;
     static final Map<String, String> IMAGES_PROJECTION_MAP;
+    static final Map<String, String> COMBINED_PROJECTION_MAP;
     static final Map<String, String> SCHEMA_PROJECTION_MAP;
 
     static {
@@ -173,6 +187,21 @@ public class BrowserProvider extends ContentProvider {
         map.put(Images.GUID, Images.GUID);
         map.put(Images.IS_DELETED, Images.IS_DELETED);
         IMAGES_PROJECTION_MAP = Collections.unmodifiableMap(map);
+
+        // Combined bookmarks and history
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "combined", COMBINED);
+
+        map = new HashMap<String, String>();
+        map.put(Combined._ID, Combined._ID);
+        map.put(Combined.BOOKMARK_ID, Combined.BOOKMARK_ID);
+        map.put(Combined.HISTORY_ID, Combined.HISTORY_ID);
+        map.put(Combined.URL, Combined.URL);
+        map.put(Combined.TITLE, Combined.TITLE);
+        map.put(Combined.VISITS, Combined.VISITS);
+        map.put(Combined.DATE_LAST_VISITED, Combined.DATE_LAST_VISITED);
+        map.put(Combined.FAVICON, Combined.FAVICON);
+        map.put(Combined.THUMBNAIL, Combined.THUMBNAIL);
+        COMBINED_PROJECTION_MAP = Collections.unmodifiableMap(map);
 
         // Schema
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "schema", SCHEMA);
@@ -337,6 +366,55 @@ public class BrowserProvider extends ContentProvider {
                     TABLE_HISTORY_JOIN_IMAGES);
         }
 
+        private void createCombinedWithImagesView(SQLiteDatabase db) {
+            debug("Creating " + VIEW_COMBINED_WITH_IMAGES + " view");
+
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_COMBINED_WITH_IMAGES + " AS" +
+                    " SELECT " + Combined.BOOKMARK_ID + ", " +
+                                 Combined.HISTORY_ID + ", " +
+                                 // We need to return an _id column because CursorAdapter requires it for its
+                                 // default implementation for the getItemId() method. However, since
+                                 // we're not using this feature in the parts of the UI using this view,
+                                 // we can just use 0 for all rows.
+                                 "0 AS " + Combined._ID + ", " +
+                                 Combined.URL + ", " +
+                                 Combined.TITLE + ", " +
+                                 Combined.VISITS + ", " +
+                                 Combined.DATE_LAST_VISITED + ", " +
+                                 qualifyColumn(TABLE_IMAGES, Images.FAVICON) + " AS " + Combined.FAVICON + ", " +
+                                 qualifyColumn(TABLE_IMAGES, Images.THUMBNAIL) + " AS " + Combined.THUMBNAIL +
+                    " FROM (" +
+                        // Bookmarks without history.
+                        " SELECT " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
+                                     qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " AS " + Combined.URL + ", " +
+                                     qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TITLE) + " AS " + Combined.TITLE + ", " +
+                                     "-1 AS " + Combined.HISTORY_ID + ", " +
+                                     "-1 AS " + Combined.VISITS + ", " +
+                                     "-1 AS " + Combined.DATE_LAST_VISITED +
+                        " FROM " + TABLE_BOOKMARKS +
+                        " WHERE " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE)  + " = " + Bookmarks.TYPE_BOOKMARK + " AND " +
+                                    qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) +
+                                        " NOT IN (SELECT " + History.URL + " FROM " + TABLE_HISTORY + ")" +
+                        " UNION ALL" +                
+                        // History with and without bookmark.
+                        " SELECT " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
+                                     qualifyColumn(TABLE_HISTORY, History.URL) + " AS " + Combined.URL + ", " +
+                                     // Prioritze bookmark titles over history titles, since the user may have
+                                     // customized the title for a bookmark.
+                                     "COALESCE(" + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TITLE) + ", " +
+                                                   qualifyColumn(TABLE_HISTORY, History.TITLE) +")" + " AS " + Combined.TITLE + ", " +
+                                     qualifyColumn(TABLE_HISTORY, History._ID) + " AS " + Combined.HISTORY_ID + ", " +
+                                     qualifyColumn(TABLE_HISTORY, History.VISITS) + " AS " + Combined.VISITS + ", " +
+                                     qualifyColumn(TABLE_HISTORY, History.DATE_LAST_VISITED) + " AS " + Combined.DATE_LAST_VISITED +
+                        " FROM " + TABLE_HISTORY + " LEFT OUTER JOIN " + TABLE_BOOKMARKS +
+                            " ON " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " + qualifyColumn(TABLE_HISTORY, History.URL) +
+                        " WHERE " + qualifyColumn(TABLE_HISTORY, History.URL) + " IS NOT NULL AND (" +
+                                        qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE) + " IS NULL OR " +
+                                        qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE)  + " = " + Bookmarks.TYPE_BOOKMARK + ")" +
+                    ") LEFT OUTER JOIN " + TABLE_IMAGES +
+                        " ON " + Combined.URL + " = " + qualifyColumn(TABLE_IMAGES, Images.URL));
+        }
+
         @Override
         public void onCreate(SQLiteDatabase db) {
             debug("Creating browser.db: " + db.getPath());
@@ -347,13 +425,91 @@ public class BrowserProvider extends ContentProvider {
 
             createBookmarksWithImagesView(db);
             createHistoryWithImagesView(db);
+            createCombinedWithImagesView(db);
 
             createOrUpdateSpecialFolder(db, Bookmarks.PLACES_FOLDER_GUID,
                 R.string.bookmarks_folder_places, 0);
 
             createOrUpdateAllSpecialFolders(db);
 
-            // FIXME: Create default bookmarks here (bug 728224)
+            createDefaultBookmarks(db, "^bookmarkdefaults_title_");
+        }
+
+        private void createDefaultBookmarks(SQLiteDatabase db, String pattern) {
+            Class stringsClass = R.string.class;
+
+            Field[] fields = stringsClass.getFields();
+            Pattern p = Pattern.compile(pattern);
+
+            ContentValues bookmarksValues = new ContentValues();
+            bookmarksValues.put(Bookmarks.PARENT, guidToID(db, Bookmarks.MOBILE_FOLDER_GUID));
+            long now = System.currentTimeMillis();
+            bookmarksValues.put(Bookmarks.DATE_CREATED, now);
+            bookmarksValues.put(Bookmarks.DATE_MODIFIED, now);
+
+            ContentValues historyValues = new ContentValues();
+
+            int pos = 1;
+            for (int i = 0; i < fields.length; i++) {
+                String name = fields[i].getName();
+                Matcher m = p.matcher(name);
+                if (!m.find())
+                    continue;
+
+                try {
+                    int titleid = fields[i].getInt(null);
+                    String title = mContext.getString(titleid);
+
+                    Field urlField = stringsClass.getField(name.replace("_title_", "_url_"));
+                    int urlId = urlField.getInt(null);
+                    String url = mContext.getString(urlId);
+
+                    bookmarksValues.put(Bookmarks.TITLE, title);
+                    bookmarksValues.put(Bookmarks.URL, url);
+                    bookmarksValues.put(Bookmarks.GUID, Utils.generateGuid());
+                    bookmarksValues.put(Bookmarks.POSITION, pos);
+                    long id = db.insertOrThrow(TABLE_BOOKMARKS, Bookmarks.TITLE, bookmarksValues);
+
+                    historyValues.put(History.TITLE, title);
+                    historyValues.put(History.URL, url);
+                    id = db.insertOrThrow(TABLE_HISTORY, History.VISITS, historyValues);
+
+                    setDefaultFavicon(db, name, url);
+                    pos++;
+                } catch (java.lang.IllegalAccessException ex) {
+                    Log.e(LOGTAG, "Can't create bookmark " + name, ex);
+                } catch (java.lang.NoSuchFieldException ex) {
+                    Log.e(LOGTAG, "Can't create bookmark " + name, ex);
+                }
+            }
+        }
+
+        private void setDefaultFavicon(SQLiteDatabase db, String name, String url) {
+            Class drawablesClass = R.drawable.class;
+            ByteArrayOutputStream stream = null;
+            try {
+                // Look for a drawable with the id R.drawable.bookmarkdefaults_favicon_*
+                Field faviconField = drawablesClass.getField(name.replace("_title_", "_favicon_"));
+                if (faviconField == null)
+                  return;
+
+                int faviconId = faviconField.getInt(null);
+                Bitmap bitmap = BitmapFactory.decodeResource(mContext.getResources(), faviconId);
+                stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            } catch (java.lang.IllegalAccessException ex) {
+                Log.e(LOGTAG, "Can't create favicon " + name, ex);
+            } catch (java.lang.NoSuchFieldException ex) {
+                Log.e(LOGTAG, "Can't create favicon " + name, ex);
+            }
+
+            if (stream != null) {
+                ContentValues values = new ContentValues();
+                values.put(Images.FAVICON, stream.toByteArray());
+                values.put(Images.URL, url);
+                values.put(Images.IS_DELETED, 0);
+                db.insertOrThrow(TABLE_IMAGES, Images.URL, values);
+            }
         }
 
         private void createOrUpdateAllSpecialFolders(SQLiteDatabase db) {
@@ -558,6 +714,10 @@ public class BrowserProvider extends ContentProvider {
             migrateBookmarksTable(db, new BookmarkMigrator3to4());
         }
 
+        private void upgradeDatabaseFrom4to5(SQLiteDatabase db) {
+            createCombinedWithImagesView(db);
+        }
+
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             debug("Upgrading browser.db: " + db.getPath() + " from " +
@@ -579,6 +739,10 @@ public class BrowserProvider extends ContentProvider {
 
                     case 4:
                         upgradeDatabaseFrom3to4(db);
+                        break;
+
+                    case 5:
+                        upgradeDatabaseFrom4to5(db);
                         break;
                  }
              }
@@ -1249,6 +1413,18 @@ public class BrowserProvider extends ContentProvider {
                 schemaCursor.newRow().add(DATABASE_VERSION);
 
                 return schemaCursor;
+            }
+
+            case COMBINED: {
+                debug("Query is on combined: " + uri);
+
+                if (TextUtils.isEmpty(sortOrder))
+                    sortOrder = DEFAULT_HISTORY_SORT_ORDER;
+
+                qb.setProjectionMap(COMBINED_PROJECTION_MAP);
+                qb.setTables(VIEW_COMBINED_WITH_IMAGES);
+
+                break;
             }
 
             default:

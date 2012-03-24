@@ -61,9 +61,20 @@ public abstract class AndroidBrowserRepositoryDataAccessor {
   }
 
   protected abstract String[] getAllColumns();
+
+  /**
+   * Produce a <code>ContentValues</code> instance that represents the provided <code>Record</code>.
+   *
+   * @param record The <code>Record</code> to be converted.
+   * @return The <code>ContentValues</code> corresponding to <code>record</code>.
+   */
   protected abstract ContentValues getContentValues(Record record);
+
   protected abstract Uri getUri();
 
+  /**
+   * Dump all the records in raw format.
+   */
   public void dumpDB() {
     Cursor cur = null;
     try {
@@ -83,36 +94,34 @@ public abstract class AndroidBrowserRepositoryDataAccessor {
 
   public void wipe() {
     Uri uri = getUri();
-    Logger.info(LOG_TAG, "wiping: " + uri);
+    Logger.debug(LOG_TAG, "Wiping: " + uri);
     context.getContentResolver().delete(uri, null, null);
   }
-  
+
   public void purgeDeleted() throws NullCursorException {
     String where = BrowserContract.SyncColumns.IS_DELETED + "= 1";
-    Cursor cur = queryHelper.safeQuery(".purgeDeleted", GUID_COLUMNS, where, null, null);
-
-    try {
-      if (!cur.moveToFirst()) {
-        return;
-      }
-      while (!cur.isAfterLast()) {
-        delete(RepoUtils.getStringFromCursor(cur, BrowserContract.SyncColumns.GUID));
-        cur.moveToNext();
-      }
-    } finally {
-      cur.close();
-    }
+    Uri uri = getUri();
+    Logger.info(LOG_TAG, "Purging deleted from: " + uri);
+    context.getContentResolver().delete(uri, where, null);
   }
-  
-  protected void delete(String guid) {
+
+  /**
+   * Remove matching records from the database entirely, i.e., do not set a
+   * deleted flag, delete entirely.
+   *
+   * @param guid
+   *          The GUID of the record to be deleted.
+   * @return The number of records deleted.
+   */
+  public int purgeGuid(String guid) {
     String where  = BrowserContract.SyncColumns.GUID + " = ?";
     String[] args = new String[] { guid };
 
     int deleted = context.getContentResolver().delete(getUri(), where, args);
-    if (deleted == 1) {
-      return;
+    if (deleted != 1) {
+      Logger.warn(LOG_TAG, "Unexpectedly deleted " + deleted + " records for guid " + guid);
     }
-    Logger.warn(LOG_TAG, "Unexpectedly deleted " + deleted + " rows for guid " + guid);
+    return deleted;
   }
 
   public void update(String guid, Record newRecord) {
@@ -132,21 +141,23 @@ public abstract class AndroidBrowserRepositoryDataAccessor {
 
   /**
    * Fetch all records.
+   * <p>
    * The caller is responsible for closing the cursor.
    *
-   * @return A cursor. You *must* close this when you're done with it.
+   * @return A cursor. You </b>must</b> close this when you're done with it.
    * @throws NullCursorException
    */
   public Cursor fetchAll() throws NullCursorException {
     return queryHelper.safeQuery(".fetchAll", getAllColumns(), null, null, null);
   }
-  
+
   /**
    * Fetch GUIDs for records modified since the provided timestamp.
+   * <p>
    * The caller is responsible for closing the cursor.
    *
-   * @param timestamp
-   * @return A cursor. You *must* close this when you're done with it.
+   * @param timestamp A timestamp in milliseconds.
+   * @return A cursor. You <b>must</b> close this when you're done with it.
    * @throws NullCursorException
    */
   public Cursor getGUIDsSince(long timestamp) throws NullCursorException {
@@ -158,10 +169,11 @@ public abstract class AndroidBrowserRepositoryDataAccessor {
 
   /**
    * Fetch records modified since the provided timestamp.
+   * <p>
    * The caller is responsible for closing the cursor.
    *
-   * @param timestamp
-   * @return A cursor. You *must* close this when you're done with it.
+   * @param timestamp A timestamp in milliseconds.
+   * @return A cursor. You <b>must</b> close this when you're done with it.
    * @throws NullCursorException
    */
   public Cursor fetchSince(long timestamp) throws NullCursorException {
@@ -173,10 +185,11 @@ public abstract class AndroidBrowserRepositoryDataAccessor {
 
   /**
    * Fetch records for the provided GUIDs.
+   * <p>
    * The caller is responsible for closing the cursor.
    *
-   * @param guids
-   * @return A cursor. You *must* close this when you're done with it.
+   * @param guids The GUIDs of the records to fetch.
+   * @return A cursor. You <b>must</b> close this when you're done with it.
    * @throws NullCursorException
    */
   public Cursor fetch(String guids[]) throws NullCursorException {
@@ -196,17 +209,6 @@ public abstract class AndroidBrowserRepositoryDataAccessor {
     }
     builder.append(")");
     return builder.toString();
-  }
-
-  public void delete(Record record) {
-    String where  = BrowserContract.SyncColumns.GUID + " = ?";
-    String[] args = new String[] { record.guid };
-
-    int deleted = context.getContentResolver().delete(getUri(), where, args);
-    if (deleted == 1) {
-      return;
-    }
-    Logger.warn(LOG_TAG, "Unexpectedly deleted " + deleted + " rows for guid " + record.guid);
   }
 
   public void updateByGuid(String guid, ContentValues cv) {

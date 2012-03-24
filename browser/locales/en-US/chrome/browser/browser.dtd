@@ -280,7 +280,7 @@ can reach it easily. -->
 <!ENTITY clearRecentHistory.label               "Clear Recent History…">
 <!ENTITY clearRecentHistory.accesskey           "H">
 
-<!-- LOCALIZATION NOTE : These two strings can share an access key beause they never appear together on the menu -->
+<!-- LOCALIZATION NOTE : These two strings can share an access key because they never appear together on the menu -->
 <!ENTITY privateBrowsingCmd.start.label         "Start Private Browsing">
 <!ENTITY privateBrowsingCmd.start.accesskey     "P">
 <!ENTITY privateBrowsingCmd.stop.label          "Stop Private Browsing">

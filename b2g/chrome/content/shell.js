@@ -278,17 +278,36 @@ var shell = {
 };
 
 (function PowerManager() {
-  let idleHandler = {
-    observe: function(subject, topic, time) {
-      if (topic === "idle") {
-        // TODO: Check wakelock status. See bug 697132.
+  // This will eventually be moved to content, so use content API as
+  // much as possible here. TODO: Bug 738530
+  let power = navigator.mozPower;
+  let idleHandler = function idleHandler(subject, topic, time) {
+    if (topic === "idle") {
+      if (power.getWakeLockState("screen") != "locked-foreground") {
         screen.mozEnabled = false;
       }
-    },
+    }
+  }
+  let wakeLockHandler = function wakeLockHandler(topic, state) {
+    // Turn off the screen when no one needs the it or all of them are
+    // invisible, otherwise turn the screen on. Note that the CPU
+    // might go to sleep as soon as the screen is turned off and
+    // acquiring wake lock will not bring it back (actually the code
+    // is not executed at all).
+    if (topic == "screen") {
+      if (state != "locked-foreground") {
+        if (Services.idle.idleTime > idleTimeout*1000) {
+          screen.mozEnabled = false;
+        }
+      } else {
+        screen.mozEnabled = true;
+      }
+    }
   }
   let idleTimeout = Services.prefs.getIntPref("power.screen.timeout");
   if (idleTimeout) {
     Services.idle.addIdleObserver(idleHandler, idleTimeout);
+    power.addWakeLockListener(wakeLockHandler);
   }
 })();
 

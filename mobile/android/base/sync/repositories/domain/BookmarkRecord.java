@@ -43,7 +43,6 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonArrayJSONException;
 import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserBookmarksDataAccessor;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;
 
 import android.util.Log;
@@ -141,6 +140,61 @@ public class BookmarkRecord extends Record {
     return out;
   }
 
+  public boolean isBookmark() {
+    if (type == null) {
+      return false;
+    }
+    return type.equals("bookmark");
+  }
+
+  public boolean isFolder() {
+    if (type == null) {
+      return false;
+    }
+    return type.equals("folder");
+  }
+
+  public boolean isLivemark() {
+    if (type == null) {
+      return false;
+    }
+    return type.equals("livemark");
+  }
+
+  public boolean isSeparator() {
+    if (type == null) {
+      return false;
+    }
+    return type.equals("separator");
+  }
+
+  public boolean isMicrosummary() {
+    if (type == null) {
+      return false;
+    }
+    return type.equals("microsummary");
+  }
+
+  public boolean isQuery() {
+    if (type == null) {
+      return false;
+    }
+    return type.equals("query");
+  }
+
+  /**
+   * Return true if this record should have the Sync fields
+   * of a bookmark, microsummary, or query.
+   */
+  private boolean isBookmarkIsh() {
+    if (type == null) {
+      return false;
+    }
+    return type.equals("bookmark") ||
+           type.equals("microsummary") ||
+           type.equals("query");
+  }
+
   @Override
   protected void initFromPayload(ExtendedJSONObject payload) {
     this.type        = (String) payload.get("type");
@@ -149,19 +203,24 @@ public class BookmarkRecord extends Record {
     this.parentID    = (String) payload.get("parentid");
     this.parentName  = (String) payload.get("parentName");
 
-    // Bookmark.
-    if (isBookmark()) {
-      this.bookmarkURI = (String) payload.get("bmkUri");
-      this.keyword     = (String) payload.get("keyword");
-      try {
-        this.tags = payload.getArray("tags");
-      } catch (NonArrayJSONException e) {
-        Log.e(LOG_TAG, "Got non-array tags in bookmark record " + this.guid, e);
-        this.tags = new JSONArray();
-      }
+    // bookmark, microsummary, query.
+    if (isBookmarkIsh()) {
+      this.keyword = (String) payload.get("keyword");
+    try {
+      this.tags = payload.getArray("tags");
+    } catch (NonArrayJSONException e) {
+      Logger.warn(LOG_TAG, "Got non-array tags in bookmark record " + this.guid, e);
+      this.tags = new JSONArray();
+    }
     }
 
-    // Folder.
+    // bookmark.
+    if (isBookmark()) {
+      this.bookmarkURI = (String) payload.get("bmkUri");
+      return;
+    }
+
+    // folder.
     if (isFolder()) {
       try {
         this.children = payload.getArray("children");
@@ -170,19 +229,25 @@ public class BookmarkRecord extends Record {
         // Let's see if we can recover later by using the parentid pointers.
         this.children = new JSONArray();
       }
+      return;
     }
 
-    // TODO: predecessor ID?
-    // TODO: type-specific attributes:
-    /*
-      public String generatorURI;
-      public String staticTitle;
-      public String folderName;
-      public String queryID;
-      public String siteURI;
-      public String feedURI;
-      public String pos;
-     */
+    if (isLivemark()) {
+      // TODO: siteUri, feedUri.
+      return;
+    }
+    if (isQuery()) {
+      // TODO: queryId (optional), folderName.
+      return;
+    }
+    if (isMicrosummary()) {
+      // TODO: generatorUri, staticTitle.
+      return;
+    }
+    if (isSeparator()) {
+      this.pos = payload.getString("pos");
+      return;
+    }
   }
 
   @Override
@@ -192,22 +257,19 @@ public class BookmarkRecord extends Record {
     putPayload(payload, "description", this.description);
     putPayload(payload, "parentid", this.parentID);
     putPayload(payload, "parentName", this.parentName);
+    putPayload(payload, "keyword", this.keyword);
+
+    if (this.tags != null) {
+      payload.put("tags", this.tags);
+    }
 
     if (isBookmark()) {
       payload.put("bmkUri", bookmarkURI);
-      payload.put("keyword", keyword);
-      payload.put("tags", this.tags);
     } else if (isFolder()) {
       payload.put("children", this.children);
     }
-  }
 
-  public boolean isBookmark() {
-    return AndroidBrowserBookmarksDataAccessor.TYPE_BOOKMARK.equalsIgnoreCase(this.type);
-  }
-
-  public boolean isFolder() {
-    return AndroidBrowserBookmarksDataAccessor.TYPE_FOLDER.equalsIgnoreCase(this.type);
+    // TODO: fields for other types.
   }
 
   private void trace(String s) {
@@ -223,6 +285,10 @@ public class BookmarkRecord extends Record {
 
     BookmarkRecord other = (BookmarkRecord) o;
     if (!super.equalPayloads(other)) {
+      return false;
+    }
+
+    if (!RepoUtils.stringsEqual(this.type, other.type)) {
       return false;
     }
 
@@ -260,7 +326,6 @@ public class BookmarkRecord extends Record {
         && RepoUtils.stringsEqual(this.bookmarkURI, other.bookmarkURI)
         && RepoUtils.stringsEqual(this.parentID, other.parentID)
         && RepoUtils.stringsEqual(this.parentName, other.parentName)
-        && RepoUtils.stringsEqual(this.type, other.type)
         && RepoUtils.stringsEqual(this.description, other.description)
         && RepoUtils.stringsEqual(this.keyword, other.keyword)
         && jsonArrayStringsEqual(this.tags, other.tags);

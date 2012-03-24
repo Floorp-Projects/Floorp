@@ -8967,7 +8967,7 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
   NS_ASSERTION(GetFullScreenElement() == aElement,
                "Full-screen element should be the requested element!");
   NS_ASSERTION(IsFullScreenDoc(), "Should be full-screen doc");
-  nsCOMPtr<nsIDOMHTMLElement> fse;
+  nsCOMPtr<nsIDOMElement> fse;
   GetMozFullScreenElement(getter_AddRefs(fse));
   nsCOMPtr<nsIContent> c(do_QueryInterface(fse));
   NS_ASSERTION(c->AsElement() == aElement,
@@ -8985,7 +8985,7 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
 }
 
 NS_IMETHODIMP
-nsDocument::GetMozFullScreenElement(nsIDOMHTMLElement **aFullScreenElement)
+nsDocument::GetMozFullScreenElement(nsIDOMElement **aFullScreenElement)
 {
   NS_ENSURE_ARG_POINTER(aFullScreenElement);
   *aFullScreenElement = nsnull;

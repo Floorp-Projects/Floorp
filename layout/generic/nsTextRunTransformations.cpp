@@ -407,7 +407,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       convertedString.Append(H_SURROGATE(ch));
       convertedString.Append(L_SURROGATE(ch));
       i++;
-      charsToMergeArray.AppendElement(true);
+      charsToMergeArray.AppendElement(false);
       styleArray.AppendElement(styles[i]);
       canBreakBeforeArray.AppendElement(false);
     }

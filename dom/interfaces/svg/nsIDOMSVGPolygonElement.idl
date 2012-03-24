@@ -39,7 +39,7 @@
 
 #include "nsIDOMSVGElement.idl"
 
-[scriptable, uuid(c6f0dbd7-ad84-4566-bc57-715bc617ff27)]
+[scriptable, uuid(f734e5b0-15f2-4a38-98ef-5539fd13765c)]
 interface nsIDOMSVGPolygonElement
   : nsIDOMSVGElement
 /*
