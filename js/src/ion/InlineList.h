@@ -42,6 +42,8 @@
 #ifndef js_inline_list_h__
 #define js_inline_list_h__
 
+#include "jsutil.h"
+
 namespace js {
 
 template <typename T> class InlineForwardList;
