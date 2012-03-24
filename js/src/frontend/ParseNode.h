@@ -757,6 +757,8 @@ struct ParseNode {
     ParseNode  *maybeExpr()   { return pn_used ? NULL : expr(); }
     Definition *maybeLexDef() { return pn_used ? lexdef() : NULL; }
 
+    Definition *resolve();
+
 /* PN_FUNC and PN_NAME pn_dflags bits. */
 #define PND_LET         0x01            /* let (block-scoped) binding */
 #define PND_CONST       0x02            /* const binding (orthogonal to let) */
@@ -1433,27 +1435,6 @@ void DumpParseTree(ParseNode *pn, int indent = 0);
 
 struct Definition : public ParseNode
 {
-    /*
-     * We store definition pointers in PN_NAMESET AtomDefnMapPtrs in the AST,
-     * but due to redefinition these nodes may become uses of other
-     * definitions.  This is unusual, so we simply chase the pn_lexdef link to
-     * find the final definition node. See functions called from
-     * js::frontend::AnalyzeFunctions.
-     *
-     * FIXME: MakeAssignment mutates for want of a parent link...
-     */
-    Definition *resolve() {
-        ParseNode *pn = this;
-        while (!pn->isDefn()) {
-            if (pn->isAssignment()) {
-                pn = pn->pn_left;
-                continue;
-            }
-            pn = pn->lexdef();
-        }
-        return (Definition *) pn;
-    }
-
     bool isFreeVar() const {
         JS_ASSERT(isDefn());
         return pn_cookie.isFree() || test(PND_GVAR);
@@ -1513,6 +1494,29 @@ ParseNode::test(unsigned flag) const
     }
 #endif
     return !!(pn_dflags & flag);
+}
+
+/*
+ * We store definition pointers in PN_NAMESET AtomDefnMapPtrs in the AST,
+ * but due to redefinition these nodes may become uses of other
+ * definitions.  This is unusual, so we simply chase the pn_lexdef link to
+ * find the final definition node. See functions called from
+ * js::frontend::AnalyzeFunctions.
+ *
+ * FIXME: MakeAssignment mutates for want of a parent link...
+ */
+inline Definition *
+ParseNode::resolve()
+{
+    ParseNode *pn = this;
+    while (!pn->isDefn()) {
+        if (pn->isAssignment()) {
+            pn = pn->pn_left;
+            continue;
+        }
+        pn = pn->lexdef();
+    }
+    return (Definition *) pn;
 }
 
 inline void

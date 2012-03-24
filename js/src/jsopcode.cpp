@@ -540,6 +540,15 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         break;
       }
 
+      case JOF_SCOPECOORD: {
+        unsigned i = GET_UINT16(pc);
+        Sprint(sp, " %u", i);
+        pc += sizeof(uint16_t);
+        i = GET_UINT16(pc);
+        Sprint(sp, " %u", i);
+        pc += sizeof(uint16_t);
+        /* FALL THROUGH */
+      }
       case JOF_ATOM: {
         Value v = StringValue(script->getAtom(GET_UINT32_INDEX(pc)));
         JSAutoByteString bytes;
@@ -1848,23 +1857,32 @@ GetLocal(SprintStack *ss, int i)
 
 #undef LOCAL_ASSERT
 
-static JSBool
-IsVarSlot(JSPrinter *jp, jsbytecode *pc, int *indexp)
+/*
+ * If IsVarSlot returns true, the var's atom is returned in *varAtom.
+ * If IsVarSlot returns false (indicating that this is a get of a let binding),
+ * the stack depth of the associated slot is returned in *localSlot.
+ */
+static bool
+IsVarSlot(JSPrinter *jp, jsbytecode *pc, JSAtom **varAtom, int *localSlot)
 {
-    unsigned slot;
+    if (JOF_OPTYPE(*pc) == JOF_SCOPECOORD) {
+        *varAtom = ScopeCoordinateAtom(jp->script, pc);
+        LOCAL_ASSERT_RV(*varAtom, NULL);
+        return true;
+    }
 
-    slot = GET_SLOTNO(pc);
+    unsigned slot = GET_SLOTNO(pc);
     if (slot < jp->script->nfixed) {
-        /* The slot refers to a variable with name stored in jp->localNames. */
-        *indexp = jp->fun->nargs + slot;
-        return JS_TRUE;
+        *varAtom = GetArgOrVarAtom(jp, jp->fun->nargs + slot);
+        LOCAL_ASSERT_RV(*varAtom, NULL);
+        return true;
     }
 
     /* We have a local which index is relative to the stack base. */
     slot -= jp->script->nfixed;
     JS_ASSERT(slot < StackDepth(jp->script));
-    *indexp = slot;
-    return JS_FALSE;
+    *localSlot = slot;
+    return false;
 }
 
 #define LOAD_ATOM(PCOFF) (atom = (jp->script->getAtom(GET_UINT32_INDEX((pc) + PCOFF))))
@@ -1976,6 +1994,7 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc, JS
         break;
       }
 
+      case JSOP_SETALIASEDVAR:
       case JSOP_SETARG:
       case JSOP_SETLOCAL:
         LOCAL_ASSERT(!letNames);
@@ -1985,9 +2004,7 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc, JS
             LOCAL_ASSERT(atom);
             if (!QuoteString(&ss->sprinter, atom, 0))
                 return NULL;
-        } else if (IsVarSlot(jp, pc, &i)) {
-            atom = GetArgOrVarAtom(jp, i);
-            LOCAL_ASSERT(atom);
+        } else if (IsVarSlot(jp, pc, &atom, &i)) {
             if (!QuoteString(&ss->sprinter, atom, 0))
                 return NULL;
         } else {
@@ -2712,7 +2729,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 }
             }
             if ((matchPC || (pc == startpc && nuses != 0)) &&
-                format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_VARPROP)) {
+                format & (JOF_SET|JOF_DEL|JOF_INCDEC)) {
                 uint32_t mode = JOF_MODE(format);
                 if (mode == JOF_NAME) {
                     /*
@@ -2726,6 +2743,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                          ? JSOP_GETARG
                          : (type == JOF_LOCAL)
                          ? JSOP_GETLOCAL
+                         : (type == JOF_SCOPECOORD)
+                         ? JSOP_GETALIASEDVAR
                          : JSOP_NAME;
 
                     JS_ASSERT(js_CodeSpec[op].nuses >= 0);
@@ -3277,8 +3296,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                         js_puts(jp, lval);
                     } else {
 #endif
-                        LOCAL_ASSERT(*pc == JSOP_SETLOCAL);
-                        pc += JSOP_SETLOCAL_LENGTH;
+                        LOCAL_ASSERT(*pc == JSOP_SETLOCAL || *pc == JSOP_SETALIASEDVAR);
+                        pc += js_CodeSpec[*pc].length;
                         LOCAL_ASSERT(*pc == JSOP_POP);
                         pc += JSOP_POP_LENGTH;
                         LOCAL_ASSERT(blockObj.slotCount() >= 1);
@@ -3510,13 +3529,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 break;
               }
 
+              case JSOP_CALLALIASEDVAR:
+              case JSOP_GETALIASEDVAR:
               case JSOP_CALLLOCAL:
               case JSOP_GETLOCAL:
-                if (IsVarSlot(jp, pc, &i)) {
-                    atom = GetArgOrVarAtom(jp, i);
-                    LOCAL_ASSERT(atom);
+                if (IsVarSlot(jp, pc, &atom, &i))
                     goto do_name;
-                }
                 LOCAL_ASSERT((unsigned)i < ss->top);
                 sn = js_GetSrcNote(jp->script, pc);
 
@@ -3546,33 +3564,29 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 todo = Sprint(&ss->sprinter, ss_format, VarPrefix(sn), rval);
                 break;
 
+              case JSOP_SETALIASEDVAR:
               case JSOP_SETLOCAL:
-                if (IsVarSlot(jp, pc, &i)) {
-                    atom = GetArgOrVarAtom(jp, i);
-                    LOCAL_ASSERT(atom);
+                if (IsVarSlot(jp, pc, &atom, &i))
                     goto do_setname;
-                }
                 lval = GetLocal(ss, i);
                 rval = PopStrDupe(ss, op, &rvalpc);
                 goto do_setlval;
 
+              case JSOP_INCALIASEDVAR:
+              case JSOP_DECALIASEDVAR:
               case JSOP_INCLOCAL:
               case JSOP_DECLOCAL:
-                if (IsVarSlot(jp, pc, &i)) {
-                    atom = GetArgOrVarAtom(jp, i);
-                    LOCAL_ASSERT(atom);
+                if (IsVarSlot(jp, pc, &atom, &i))
                     goto do_incatom;
-                }
                 lval = GetLocal(ss, i);
                 goto do_inclval;
 
+              case JSOP_ALIASEDVARINC:
+              case JSOP_ALIASEDVARDEC:
               case JSOP_LOCALINC:
               case JSOP_LOCALDEC:
-                if (IsVarSlot(jp, pc, &i)) {
-                    atom = GetArgOrVarAtom(jp, i);
-                    LOCAL_ASSERT(atom);
+                if (IsVarSlot(jp, pc, &atom, &i))
                     goto do_atominc;
-                }
                 lval = GetLocal(ss, i);
                 goto do_lvalinc;
 
@@ -4786,9 +4800,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      * actual position where the function definition should
                      * syntactically appear.
                      */
-                    LOCAL_ASSERT(pc[JSOP_LAMBDA_LENGTH] == JSOP_SETLOCAL);
-                    LOCAL_ASSERT(pc[JSOP_LAMBDA_LENGTH + JSOP_SETLOCAL_LENGTH] == JSOP_POP);
-                    len = JSOP_LAMBDA_LENGTH + JSOP_SETLOCAL_LENGTH + JSOP_POP_LENGTH;
+                    jsbytecode *nextpc = pc + JSOP_LAMBDA_LENGTH;
+                    LOCAL_ASSERT(*nextpc == JSOP_SETLOCAL || *nextpc == JSOP_SETALIASEDVAR);
+                    nextpc += js_CodeSpec[*nextpc].length;
+                    LOCAL_ASSERT(*nextpc == JSOP_POP);
+                    nextpc += JSOP_POP_LENGTH;
+                    len = nextpc - pc;
                     todo = -2;
                     break;
                 }
@@ -5544,8 +5561,8 @@ js_DecompileFunction(JSPrinter *jp)
                 ptrdiff_t todo;
                 const char *lval;
 
-                LOCAL_ASSERT(*pc == JSOP_GETARG);
-                pc += JSOP_GETARG_LENGTH;
+                LOCAL_ASSERT(*pc == JSOP_GETARG || *pc == JSOP_GETALIASEDVAR);
+                pc += js_CodeSpec[*pc].length;
                 LOCAL_ASSERT(*pc == JSOP_DUP);
                 if (!ss.printer) {
                     ok = InitSprintStack(jp->sprinter.context, &ss, jp, StackDepth(script));

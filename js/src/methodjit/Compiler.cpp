@@ -2793,9 +2793,26 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_SETARG)
 
+          BEGIN_CASE(JSOP_GETALIASEDVAR)
+          BEGIN_CASE(JSOP_CALLALIASEDVAR)
+          {
+            /* This is all temporary until bug 659577. */
+            if (JSObject *singleton = pushedSingleton(0)) {
+                frame.push(ObjectValue(*singleton));
+            } else {
+                ScopeCoordinate sc = ScopeCoordinate(PC);
+                if (script->bindings.bindingIsArg(sc.binding))
+                    frame.pushArg(script->bindings.bindingToArg(sc.binding));
+                else
+                    frame.pushLocal(script->bindings.bindingToLocal(sc.binding));
+            }
+          }
+          END_CASE(JSOP_GETALIASEDVAR)
+
           BEGIN_CASE(JSOP_GETLOCAL)
           BEGIN_CASE(JSOP_CALLLOCAL)
           {
+
             /*
              * Update the var type unless we are about to pop the variable.
              * Sync is not guaranteed for types of dead locals, and GETLOCAL
@@ -2811,6 +2828,26 @@ mjit::Compiler::generateMethod()
                 frame.pushLocal(slot);
           }
           END_CASE(JSOP_GETLOCAL)
+
+          BEGIN_CASE(JSOP_SETALIASEDVAR)
+          {
+            /* This is all temporary until bug 659577. */
+            jsbytecode *next = &PC[JSOP_SETALIASEDVAR_LENGTH];
+            bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
+            ScopeCoordinate sc = ScopeCoordinate(PC);
+            if (script->bindings.bindingIsArg(sc.binding))
+                frame.storeArg(script->bindings.bindingToArg(sc.binding), pop);
+            else
+                frame.storeLocal(script->bindings.bindingToLocal(sc.binding), pop);
+            updateVarType();
+
+            if (pop) {
+                frame.pop();
+                PC += JSOP_SETALIASEDVAR_LENGTH + JSOP_POP_LENGTH;
+                break;
+            }
+          }
+          END_CASE(JSOP_SETALIASEDVAR)
 
           BEGIN_CASE(JSOP_SETLOCAL)
           {

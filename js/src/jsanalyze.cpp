@@ -123,35 +123,6 @@ ScriptAnalysis::addJump(JSContext *cx, unsigned offset,
 }
 
 void
-ScriptAnalysis::checkAliasedName(JSContext *cx, jsbytecode *pc)
-{
-    /*
-     * Check to see if an accessed name aliases a local or argument in the
-     * current script, and mark that local/arg as escaping. We don't need to
-     * worry about marking locals/arguments in scripts this is nested in, as
-     * the escaping name will be caught by the parser and the nested local/arg
-     * will be marked as closed.
-     */
-
-    JSAtom *atom;
-    if (JSOp(*pc) == JSOP_DEFFUN) {
-        JSFunction *fun = script->getFunction(GET_UINT32_INDEX(pc));
-        atom = fun->atom;
-    } else {
-        JS_ASSERT(JOF_TYPE(js_CodeSpec[*pc].format) == JOF_ATOM);
-        atom = script->getAtom(GET_UINT32_INDEX(pc));
-    }
-
-    unsigned index;
-    BindingKind kind = script->bindings.lookup(cx, atom, &index);
-
-    if (kind == ARGUMENT)
-        escapedSlots[ArgSlot(index)] = true;
-    else if (kind == VARIABLE)
-        escapedSlots[LocalSlot(script, index)] = true;
-}
-
-void
 ScriptAnalysis::analyzeBytecode(JSContext *cx)
 {
     JS_ASSERT(cx->compartment->activeAnalysis);
@@ -375,16 +346,24 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_BINDNAME:
           case JSOP_SETNAME:
           case JSOP_DELNAME:
-            checkAliasedName(cx, pc);
             usesScopeChain_ = true;
             isInlineable = false;
+            break;
+
+          case JSOP_GETALIASEDVAR:
+          case JSOP_CALLALIASEDVAR:
+          case JSOP_SETALIASEDVAR:
+            JS_ASSERT(!isInlineable);
+            usesScopeChain_ = true;
+            /* XXX: this can be removed after bug 659577. */
+            if (ScopeCoordinate(pc).binding >= script->nfixed)
+                localsAliasStack_ = true;
             break;
 
           case JSOP_DEFFUN:
           case JSOP_DEFVAR:
           case JSOP_DEFCONST:
           case JSOP_SETCONST:
-            checkAliasedName(cx, pc);
             extendsScope_ = true;
             isInlineable = canTrackVars = false;
             break;
