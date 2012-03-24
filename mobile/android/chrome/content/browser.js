@@ -2938,7 +2938,8 @@ var FormAssistant = {
       // Reset invalid submit state on each pageshow
       case "pageshow":
         let target = aEvent.originalTarget;
-        if (target == content.document || target.ownerDocument == content.document)
+        let selectedDocument = BrowserApp.selectedBrowser.contentDocument;
+        if (target == selectedDocument || target.ownerDocument == selectedDocument)
           this._invalidSubmit = false;
     }
   },
