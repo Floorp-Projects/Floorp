@@ -43,6 +43,7 @@
 #define jsion_compact_buffer_h__
 
 #include "js/Vector.h"
+#include "jsalloc.h"
 #include "IonTypes.h"
 
 namespace js {
