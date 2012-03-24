@@ -1,3 +1,44 @@
+/**
+ * Helper method to start a single XUL tree test.
+ */
+var gXULTreeLoadQueue = null;
+function addA11yXULTreeLoadEvent(aDoTestFunc, aTreeID, aTreeView)
+{
+  function loadXULTree(aTreeID, aTreeView)
+  {
+    this.treeNode = getNode(aTreeID);
+
+    this.eventSeq = [
+      new invokerChecker(EVENT_REORDER, this.treeNode)
+    ];
+
+    this.invoke = function loadXULTree_invoke()
+    {
+      this.treeNode.treeBoxObject.view = aTreeView;
+    }
+
+    this.getID = function loadXULTree_getID()
+    {
+      return "Load XUL tree " + prettyName(aTreeID);
+    }
+  }
+
+  function doXULTreeTest()
+  {
+    gXULTreeLoadQueue = new eventQueue();
+    gXULTreeLoadQueue.push(new loadXULTree(aTreeID, aTreeView));
+    gXULTreeLoadQueue.onFinish = function()
+    {
+      SimpleTest.executeSoon(aDoTestFunc);
+      return DO_NOT_FINISH_TEST;
+    }
+    gXULTreeLoadQueue.invoke();
+  }
+
+  addA11yLoadEvent(doXULTreeTest);
+}
+
+
 function nsTableTreeView(aRowCount)
 {
   this.__proto__ = new nsTreeView();
