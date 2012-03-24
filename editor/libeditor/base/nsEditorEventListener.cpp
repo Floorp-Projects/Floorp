@@ -819,12 +819,11 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   // There is a source node, so compare the source documents and this document.
   // Disallow drops on the same document.
 
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  nsresult rv = mEditor->GetDocument(getter_AddRefs(domdoc));
-  NS_ENSURE_SUCCESS(rv, false);
+  nsCOMPtr<nsIDOMDocument> domdoc = mEditor->GetDOMDocument();
+  NS_ENSURE_TRUE(domdoc, false);
 
   nsCOMPtr<nsIDOMDocument> sourceDoc;
-  rv = sourceNode->GetOwnerDocument(getter_AddRefs(sourceDoc));
+  nsresult rv = sourceNode->GetOwnerDocument(getter_AddRefs(sourceDoc));
   NS_ENSURE_SUCCESS(rv, false);
   if (domdoc == sourceDoc)      // source and dest are the same document; disallow drops within the selection
   {
