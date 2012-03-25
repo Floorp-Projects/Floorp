@@ -292,19 +292,23 @@ MOZ_ARG_WITH_STRING(gonk,
                location of gonk dir],
     gonkdir=$withval)
 
+MOZ_ARG_WITH_STRING(gonk-toolchain-prefix,
+[  --with-gonk-toolchain-prefix=DIR
+                          prefix to gonk toolchain commands],
+    gonk_toolchain_prefix=$withval)
+
 if test -n "$gonkdir" ; then
     kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
-    gonk_toolchain="$gonkdir"/prebuilt/$kernel_name-x86/toolchain/arm-eabi-4.4.3
 
     dnl set up compilers
-    AS="$gonk_toolchain"/bin/"$android_tool_prefix"-as
-    CC="$gonk_toolchain"/bin/"$android_tool_prefix"-gcc
-    CXX="$gonk_toolchain"/bin/"$android_tool_prefix"-g++
-    CPP="$gonk_toolchain"/bin/"$android_tool_prefix"-cpp
-    LD="$gonk_toolchain"/bin/"$android_tool_prefix"-ld
-    AR="$gonk_toolchain"/bin/"$android_tool_prefix"-ar
-    RANLIB="$gonk_toolchain"/bin/"$android_tool_prefix"-ranlib
-    STRIP="$gonk_toolchain"/bin/"$android_tool_prefix"-strip
+    AS="$gonk_toolchain_prefix"as
+    CC="$gonk_toolchain_prefix"gcc
+    CXX="$gonk_toolchain_prefix"g++
+    CPP="$gonk_toolchain_prefix"cpp
+    LD="$gonk_toolchain_prefix"ld
+    AR="$gonk_toolchain_prefix"ar
+    RANLIB="$gonk_toolchain_prefix"ranlib
+    STRIP="$gonk_toolchain_prefix"strip
 
     STLPORT_CPPFLAGS="-I$gonkdir/external/stlport/stlport"
     STLPORT_LIBS="-lstlport"
