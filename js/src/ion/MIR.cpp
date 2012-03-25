@@ -557,6 +557,8 @@ NeedNegativeZeroCheck(MDefinition *def)
                 MDiv *div = operand->toDiv();
                 if (!div->canBeNegativeZero())
                     return true;
+            } else if (operand->isPhi()) {
+                return true;
             }
             break;
           }
@@ -719,6 +721,10 @@ MMod::foldsTo(bool useValueNumbers)
 MDefinition *
 MMul::foldsTo(bool useValueNumbers)
 {
+    MDefinition *out = MBinaryArithInstruction::foldsTo(useValueNumbers);
+    if (out != this)
+        return out;
+
     if (specialization() != MIRType_Int32)
         return this;
 
