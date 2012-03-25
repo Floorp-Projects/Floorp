@@ -55,22 +55,12 @@ interface nsIDeviceMotionData : nsISupports
   readonly attribute double z;
 };
 
-[scriptable, uuid(D29EA788-CCB6-4875-88E0-32A34BB71CBB)]
-interface nsIDeviceMotionListener : nsISupports
-{
-  void onMotionChange(in nsIDeviceMotionData aMotionData);
-  void needsCalibration();
-};
-
-[scriptable, uuid(B6E5C463-AAA6-44E2-BD07-7A7DC6192E68)]
+[scriptable, uuid(b672bfe0-4479-4094-a9ef-1b6847720d07)]
 interface nsIDeviceMotion : nsISupports
 {
-  void addListener(in nsIDeviceMotionListener aListener);
-  void removeListener(in nsIDeviceMotionListener aListener);
-
   // Holds pointers, not AddRef objects -- it is up to the caller
   // to call RemoveWindowListener before the window is deleted.
-  [noscript] void addWindowListener(in nsIDOMWindow aWindow);
-  [noscript] void removeWindowListener(in nsIDOMWindow aWindow);
-
+  [noscript] void addWindowListener(in unsigned long aType, in nsIDOMWindow aWindow);
+  [noscript] void removeWindowListener(in unsigned long aType, in nsIDOMWindow aWindow);
+  [noscript] void removeWindowAsListener(in nsIDOMWindow aWindow);
 };

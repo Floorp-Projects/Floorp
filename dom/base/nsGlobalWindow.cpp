@@ -882,7 +882,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 #endif
     mShowFocusRingForContent(false),
     mFocusByKeyOccurred(false),
-    mHasDeviceMotion(false),
     mNotifiedIDDestroyed(false),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
@@ -1113,8 +1112,9 @@ nsGlobalWindow::~nsGlobalWindow()
     mURLProperty->ClearWindowReference();
   }
 
-  DisableDeviceMotionUpdates();
-  mHasDeviceMotion = false;
+  nsCOMPtr<nsIDeviceMotion> ac = do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+  if (ac)
+    ac->RemoveWindowAsListener(this);
 
   nsLayoutStatics::Release();
 }
@@ -7811,30 +7811,6 @@ void nsGlobalWindow::UpdateTouchState()
 }
 
 void
-nsGlobalWindow::EnableDeviceMotionUpdates()
-{
-  if (mHasDeviceMotion) {
-    nsCOMPtr<nsIDeviceMotion> ac =
-      do_GetService(NS_DEVICE_MOTION_CONTRACTID);
-    if (ac) {
-      ac->AddWindowListener(this);
-    }
-  }
-}
-
-void
-nsGlobalWindow::DisableDeviceMotionUpdates()
-{
-  if (mHasDeviceMotion) {
-    nsCOMPtr<nsIDeviceMotion> ac =
-      do_GetService(NS_DEVICE_MOTION_CONTRACTID);
-    if (ac) {
-      ac->RemoveWindowListener(this);
-    }
-  }
-}
-
-void
 nsGlobalWindow::SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler)
 {
   SetChromeEventHandlerInternal(aChromeEventHandler);
@@ -10143,7 +10119,11 @@ nsGlobalWindow::SuspendTimeouts(PRUint32 aIncrease,
   mTimeoutsSuspendDepth += aIncrease;
 
   if (!suspended) {
-    DisableDeviceMotionUpdates();
+    nsCOMPtr<nsIDeviceMotion> ac = do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+    if (ac) {
+      for (int i = 0; i < mEnabledSensors.Length(); i++)
+        ac->RemoveWindowListener(mEnabledSensors[i], this);
+    }
 
     // Suspend all of the workers for this window.
     nsIScriptContext *scx = GetContextInternal();
@@ -10219,7 +10199,11 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
   nsresult rv;
 
   if (shouldResume) {
-    EnableDeviceMotionUpdates();
+    nsCOMPtr<nsIDeviceMotion> ac = do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+    if (ac) {
+      for (int i = 0; i < mEnabledSensors.Length(); i++)
+        ac->AddWindowListener(mEnabledSensors[i], this);
+    }
 
     // Resume all of the workers for this window.
     nsIScriptContext *scx = GetContextInternal();
@@ -10322,15 +10306,45 @@ nsGlobalWindow::TimeoutSuspendCount()
 }
 
 void
-nsGlobalWindow::SetHasOrientationEventListener()
+nsGlobalWindow::EnableDeviceSensor(PRUint32 aType)
 {
-  mHasDeviceMotion = true;
-  EnableDeviceMotionUpdates();
+  bool alreadyEnabled = false;
+  for (int i = 0; i < mEnabledSensors.Length(); i++) {
+    if (mEnabledSensors[i] == aType) {
+      alreadyEnabled = true;
+      break;
+    }
+  }
+
+  if (alreadyEnabled)
+    return;
+
+  mEnabledSensors.AppendElement(aType);
+
+  nsCOMPtr<nsIDeviceMotion> ac = do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+  if (ac)
+    ac->AddWindowListener(aType, this);
 }
 
 void
-nsGlobalWindow::RemoveOrientationEventListener() {
-  DisableDeviceMotionUpdates();
+nsGlobalWindow::DisableDeviceSensor(PRUint32 aType)
+{
+  PRUint32 doomedElement = -1;
+  for (int i = 0; i < mEnabledSensors.Length(); i++) {
+    if (mEnabledSensors[i] == aType) {
+      doomedElement = -1;
+      break;
+    }
+  }
+
+  if (doomedElement == -1)
+    return;
+
+  mEnabledSensors.RemoveElementAt(doomedElement);
+
+  nsCOMPtr<nsIDeviceMotion> ac = do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+  if (ac)
+    ac->RemoveWindowListener(aType, this);
 }
 
 NS_IMETHODIMP
