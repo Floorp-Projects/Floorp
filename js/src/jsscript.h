@@ -301,7 +301,7 @@ class ScriptCounts
     ScriptCounts() : pcCountsVector(NULL) {
     }
 
-    inline void destroy(JSContext *cx);
+    inline void destroy(FreeOp *fop);
 
     void steal(ScriptCounts &other) {
         *this = other;
@@ -831,7 +831,7 @@ struct JSScript : public js::gc::Cell
 
     void destroyBreakpointSite(js::FreeOp *fop, jsbytecode *pc);
 
-    void clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSObject *handler);
+    void clearBreakpointsIn(js::FreeOp *fop, js::Debugger *dbg, JSObject *handler);
     void clearTraps(js::FreeOp *fop);
 
     void markTrapClosures(JSTracer *trc);

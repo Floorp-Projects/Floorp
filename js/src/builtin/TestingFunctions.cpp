@@ -234,7 +234,7 @@ VerifyBarriers(JSContext *cx, unsigned argc, jsval *vp)
         ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Too many arguments");
         return JS_FALSE;
     }
-    gc::VerifyBarriers(cx);
+    gc::VerifyBarriers(cx->runtime);
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -469,7 +469,6 @@ MJitCodeStats(JSContext *cx, unsigned argc, jsval *vp)
 {
 #ifdef JS_METHODJIT
     JSRuntime *rt = cx->runtime;
-    AutoLockGC lock(rt);
     size_t n = 0;
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
         n += (*c)->sizeOfMjitCode();
