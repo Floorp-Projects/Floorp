@@ -48,7 +48,7 @@
 #include "nsDOMDeviceMotionEvent.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/HalSensor.h"
-
+#include "nsDataHashtable.h"
 
 #define NS_DEVICE_MOTION_CID \
 { 0xecba5203, 0x77da, 0x465a, \
@@ -71,17 +71,12 @@ public:
   void Notify(const mozilla::hal::SensorData& aSensorData);
 
 private:
-  nsCOMArray<nsIDeviceMotionListener> mListeners;
-  nsTArray<nsIDOMWindow*> mWindowListeners;
+  // sensor -> window listener
+  nsTArray<nsTArray<nsIDOMWindow*>* > mWindowListeners;
+  
+  // window -> sensortype enabled
+  nsDataHashtable<nsUint32HashKey, nsTArray<PRUint32 > > mSensorsEnabled;
 
-  void StartDisconnectTimer();
-
-  bool mStarted;
-
-  nsCOMPtr<nsITimer> mTimeoutTimer;
-  static void TimeoutHandler(nsITimer *aTimer, void *aClosure);
-
- protected:
   void FireDOMOrientationEvent(class nsIDOMDocument *domDoc, 
                                class nsIDOMEventTarget *target,
                                double alpha,
@@ -95,10 +90,12 @@ private:
                           double y,
                           double z);
 
-  void Startup();
-  void Shutdown();
-
   bool mEnabled;
+
+  inline bool IsSensorEnabled(PRUint32 aType) {
+    return mWindowListeners[aType]->Length() > 0;
+  }
+
   mozilla::TimeStamp mLastDOMMotionEventTime;
   nsRefPtr<nsDOMDeviceAcceleration> mLastAcceleration;
   nsRefPtr<nsDOMDeviceAcceleration> mLastAccelerationIncluduingGravity;
