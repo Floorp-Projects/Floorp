@@ -308,6 +308,8 @@ MOZ_ARG_WITH_STRING(gonk-toolchain-prefix,
 
 if test -n "$gonkdir" ; then
     kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
+    android_source="$gonkdir"
+    ANDROID_SOURCE="$android_source"
 
     dnl set up compilers
     AS="$gonk_toolchain_prefix"as
