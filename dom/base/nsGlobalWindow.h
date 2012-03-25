@@ -519,7 +519,6 @@ public:
 
   virtual void EnableDeviceSensor(PRUint32 aType);
   virtual void DisableDeviceSensor(PRUint32 aType);
-  nsTArray<PRUint32> mEnabledSensors;
 
   virtual nsresult SetArguments(nsIArray *aArguments, nsIPrincipal *aOrigin);
 
@@ -989,6 +988,8 @@ protected:
   nsRefPtr<nsDOMMozURLProperty> mURLProperty;
 
   nsTHashtable<nsPtrHashKey<nsDOMEventTargetHelper> > mEventTargetObjects;
+
+  nsTArray<PRUint32> mEnabledSensors;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
