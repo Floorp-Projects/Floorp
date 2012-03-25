@@ -373,8 +373,6 @@ public:
   virtual NS_HIDDEN_(bool) CanClose();
   virtual NS_HIDDEN_(nsresult) ForceClose();
 
-  virtual NS_HIDDEN_(void) SetHasOrientationEventListener();
-  virtual NS_HIDDEN_(void) RemoveOrientationEventListener();
   virtual NS_HIDDEN_(void) MaybeUpdateTouchState();
   virtual NS_HIDDEN_(void) UpdateTouchState();
   virtual NS_HIDDEN_(bool) DispatchCustomEvent(const char *aEventName);
@@ -519,6 +517,10 @@ public:
   virtual nsresult DispatchAsyncHashchange(nsIURI *aOldURI, nsIURI *aNewURI);
   virtual nsresult DispatchSyncPopState();
 
+  virtual void EnableDeviceSensor(PRUint32 aType);
+  virtual void DisableDeviceSensor(PRUint32 aType);
+  nsTArray<PRUint32> mEnabledSensors;
+
   virtual nsresult SetArguments(nsIArray *aArguments, nsIPrincipal *aOrigin);
 
   static bool DOMWindowDumpEnabled();
@@ -573,12 +575,6 @@ public:
   void AddEventTargetObject(nsDOMEventTargetHelper* aObject);
   void RemoveEventTargetObject(nsDOMEventTargetHelper* aObject);
 private:
-  // Enable updates for the accelerometer.
-  void EnableDeviceMotionUpdates();
-
-  // Disables updates for the accelerometer.
-  void DisableDeviceMotionUpdates();
-
   // Implements Get{Real,Scriptable}Top.
   nsresult GetTopImpl(nsIDOMWindow **aWindow, bool aScriptable);
 
@@ -892,9 +888,6 @@ protected:
   // true if tab navigation has occurred for this window. Focus rings
   // should be displayed.
   bool                   mFocusByKeyOccurred : 1;
-
-  // Indicates whether this window is getting device motion change events
-  bool                   mHasDeviceMotion : 1;
 
   // whether we've sent the destroy notification for our window id
   bool                   mNotifiedIDDestroyed : 1;
