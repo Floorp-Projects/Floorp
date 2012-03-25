@@ -173,14 +173,17 @@ NS_IMETHODIMP nsDeviceSensors::RemoveWindowListener(PRUint32 aType, nsIDOMWindow
     return NS_OK;
 
   mWindowListeners[aType]->RemoveElement(aWindow);
+
+  if (mWindowListeners[aType]->Length() == 0)
+    UnregisterSensorObserver((SensorType)aType, this);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceSensors::RemoveWindowAsListener(nsIDOMWindow *aWindow)
 {
   for (int i = 0; i < NUM_SENSOR_TYPE; i++) {
-    if (IsSensorEnabled(i))
-        RemoveWindowListener((SensorType)i, aWindow);
+    RemoveWindowListener((SensorType)i, aWindow);
   }
   return NS_OK;
 }
