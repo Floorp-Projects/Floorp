@@ -34,10 +34,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsDeviceMotion_h
-#define nsDeviceMotion_h
+#ifndef nsDeviceSensors_h
+#define nsDeviceSensors_h
 
-#include "nsIDeviceMotion.h"
+#include "nsIDeviceSensors.h"
 #include "nsIDOMDeviceMotionEvent.h"
 #include "nsCOMArray.h"
 #include "nsTArray.h"
@@ -50,23 +50,23 @@
 #include "mozilla/HalSensor.h"
 #include "nsDataHashtable.h"
 
-#define NS_DEVICE_MOTION_CID \
+#define NS_DEVICE_SENSORS_CID \
 { 0xecba5203, 0x77da, 0x465a, \
 { 0x86, 0x5e, 0x78, 0xb7, 0xaf, 0x10, 0xd8, 0xf7 } }
 
-#define NS_DEVICE_MOTION_CONTRACTID "@mozilla.org/devicemotion;1"
+#define NS_DEVICE_SENSORS_CONTRACTID "@mozilla.org/devicesensors;1"
 
 class nsIDOMWindow;
 
-class nsDeviceMotion : public nsIDeviceMotion, public mozilla::hal::ISensorObserver
+class nsDeviceSensors : public nsIDeviceSensors, public mozilla::hal::ISensorObserver
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDEVICEMOTION
+  NS_DECL_NSIDEVICESENSORS
 
-  nsDeviceMotion();
+  nsDeviceSensors();
 
-  virtual ~nsDeviceMotion();
+  virtual ~nsDeviceSensors();
 
   void Notify(const mozilla::hal::SensorData& aSensorData);
 

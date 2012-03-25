@@ -111,7 +111,7 @@
 #include "nsCanvasFrame.h"
 #include "nsIWidget.h"
 #include "nsIBaseWindow.h"
-#include "nsDeviceMotion.h"
+#include "nsDeviceSensors.h"
 #include "nsIContent.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIDocShell.h"
@@ -1112,7 +1112,7 @@ nsGlobalWindow::~nsGlobalWindow()
     mURLProperty->ClearWindowReference();
   }
 
-  nsCOMPtr<nsIDeviceMotion> ac = do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+  nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
   if (ac)
     ac->RemoveWindowAsListener(this);
 
@@ -10119,7 +10119,7 @@ nsGlobalWindow::SuspendTimeouts(PRUint32 aIncrease,
   mTimeoutsSuspendDepth += aIncrease;
 
   if (!suspended) {
-    nsCOMPtr<nsIDeviceMotion> ac = do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+    nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
     if (ac) {
       for (int i = 0; i < mEnabledSensors.Length(); i++)
         ac->RemoveWindowListener(mEnabledSensors[i], this);
@@ -10199,7 +10199,7 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
   nsresult rv;
 
   if (shouldResume) {
-    nsCOMPtr<nsIDeviceMotion> ac = do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+    nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
     if (ac) {
       for (int i = 0; i < mEnabledSensors.Length(); i++)
         ac->AddWindowListener(mEnabledSensors[i], this);
@@ -10321,7 +10321,7 @@ nsGlobalWindow::EnableDeviceSensor(PRUint32 aType)
 
   mEnabledSensors.AppendElement(aType);
 
-  nsCOMPtr<nsIDeviceMotion> ac = do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+  nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
   if (ac)
     ac->AddWindowListener(aType, this);
 }
@@ -10342,7 +10342,7 @@ nsGlobalWindow::DisableDeviceSensor(PRUint32 aType)
 
   mEnabledSensors.RemoveElementAt(doomedElement);
 
-  nsCOMPtr<nsIDeviceMotion> ac = do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+  nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
   if (ac)
     ac->RemoveWindowListener(aType, this);
 }
