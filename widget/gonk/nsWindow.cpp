@@ -100,6 +100,8 @@ nsWindow::nsWindow()
             }
         }
         sVirtualBounds = gScreenBounds;
+
+        nsAppShell::NotifyScreenInitialized();
     }
 }
 
