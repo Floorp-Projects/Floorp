@@ -90,6 +90,10 @@ PowerManager::Shutdown()
 nsresult
 PowerManager::CheckPermission()
 {
+  if (nsContentUtils::IsCallerChrome()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(win);
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(win->GetExtantDocument());
