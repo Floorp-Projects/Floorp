@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Toolbar" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="startTest();">
+
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <toolbox>
+    <toolbarpalette/>
+    <toolbar id="toolbar" defaultset="node1,node2">
+      <toolbarbutton id="node1" label="node1" removable="true"/>
+      <toolbarbutton id="node2" label="node2" removable="true"/>
+    </toolbar>
+  </toolbox>
+
+  <!-- test resuls are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"
+        style="height: 300px; overflow: auto;"/>
+  
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function startTest() {
+  var toolbar = $("toolbar");
+
+  var splitter = document.createElement("splitter");
+  splitter.setAttribute("id", "dynsplitter");
+  splitter.setAttribute("skipintoolbarset", "true");
+
+  toolbar.insertBefore(splitter, $("node2"));
+
+  function checkPos() {
+    is($("dynsplitter").previousSibling, $("node1"));
+    is($("dynsplitter").nextSibling, $("node2"));
+  }
+
+  checkPos();
+  toolbar.style.MozBinding = "url(chrome://global/content/bindings/toolbar.xml#toolbar-drag)";
+  toolbar.clientTop; // style flush
+  checkPos();
+
+  SimpleTest.finish();
+}
+
+  ]]></script>
+</window>
