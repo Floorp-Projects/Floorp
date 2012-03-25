@@ -751,7 +751,7 @@ NotifyDidPaint(JSContext *cx)
     JSRuntime *rt = cx->runtime;
 
     if (rt->gcZeal() == gc::ZealFrameVerifierValue) {
-        gc::VerifyBarriers(cx);
+        gc::VerifyBarriers(rt);
         return;
     }
 

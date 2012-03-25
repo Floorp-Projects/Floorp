@@ -646,7 +646,7 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, bool frameOk)
      */
     if (fp->isEvalFrame()) {
         JSScript *script = fp->script();
-        script->clearBreakpointsIn(cx, NULL, NULL);
+        script->clearBreakpointsIn(cx->runtime->defaultFreeOp(), NULL, NULL);
     }
 
     /* Establish (status, value) as our resumption value. */
@@ -1787,7 +1787,7 @@ Debugger::clearAllBreakpoints(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "clearAllBreakpoints", args, dbg);
     for (GlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront())
-        r.front()->compartment()->clearBreakpointsIn(cx, dbg, NULL);
+        r.front()->compartment()->clearBreakpointsIn(cx->runtime->defaultFreeOp(), dbg, NULL);
     return true;
 }
 
@@ -2900,7 +2900,7 @@ DebuggerScript_clearBreakpoint(JSContext *cx, unsigned argc, Value *vp)
     if (!handler)
         return false;
 
-    script->clearBreakpointsIn(cx, dbg, handler);
+    script->clearBreakpointsIn(cx->runtime->defaultFreeOp(), dbg, handler);
     args.rval().setUndefined();
     return true;
 }
@@ -2910,7 +2910,7 @@ DebuggerScript_clearAllBreakpoints(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "clearAllBreakpoints", args, obj, script);
     Debugger *dbg = Debugger::fromChildJSObject(obj);
-    script->clearBreakpointsIn(cx, dbg, NULL);
+    script->clearBreakpointsIn(cx->runtime->defaultFreeOp(), dbg, NULL);
     args.rval().setUndefined();
     return true;
 }
