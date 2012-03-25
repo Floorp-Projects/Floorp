@@ -37,6 +37,10 @@
 
 #include "mozilla/Hal.h"
 #include "mozilla/HalSensor.h"
+
+// Microsoft's API Name hackery sucks
+#undef CreateEvent
+
 #include "nsISupports.h"
 #include "nsGUIEvent.h"
 #include "nsDOMEvent.h"
