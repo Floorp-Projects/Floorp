@@ -139,9 +139,9 @@ CurrentScriptFileLineOrigin(JSContext *cx, const char **file, unsigned *linenop,
 }
 
 inline void
-ScriptCounts::destroy(JSContext *cx)
+ScriptCounts::destroy(FreeOp *fop)
 {
-    cx->free_(pcCountsVector);
+    fop->free_(pcCountsVector);
 }
 
 } // namespace js

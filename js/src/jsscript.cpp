@@ -1796,7 +1796,7 @@ JSScript::destroyBreakpointSite(FreeOp *fop, jsbytecode *pc)
 }
 
 void
-JSScript::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSObject *handler)
+JSScript::clearBreakpointsIn(FreeOp *fop, js::Debugger *dbg, JSObject *handler)
 {
     if (!hasAnyBreakpointsOrStepMode())
         return;
@@ -1809,7 +1809,7 @@ JSScript::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSObject *handler
             for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
                 nextbp = bp->nextInSite();
                 if ((!dbg || bp->debugger == dbg) && (!handler || bp->getHandler() == handler))
-                    bp->destroy(cx->runtime->defaultFreeOp());
+                    bp->destroy(fop);
             }
         }
     }
