@@ -37,7 +37,7 @@
 #include "mozilla/Hal.h"
 #include "mozilla/HalSensor.h"
 
-#include "nsDeviceMotion.h"
+#include "nsDeviceSensors.h"
 
 #include "nsAutoPtr.h"
 #include "nsIDOMEvent.h"
@@ -59,69 +59,69 @@ using namespace hal;
 static const nsTArray<nsIDOMWindow*>::index_type NoIndex =
   nsTArray<nsIDOMWindow*>::NoIndex;
 
-class nsDeviceMotionData : public nsIDeviceMotionData
+class nsDeviceSensorData : public nsIDeviceSensorData
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDEVICEMOTIONDATA
+  NS_DECL_NSIDEVICESENSORDATA
 
-  nsDeviceMotionData(unsigned long type, double x, double y, double z);
+  nsDeviceSensorData(unsigned long type, double x, double y, double z);
 
 private:
-  ~nsDeviceMotionData();
+  ~nsDeviceSensorData();
 
 protected:
   unsigned long mType;
   double mX, mY, mZ;
 };
 
-nsDeviceMotionData::nsDeviceMotionData(unsigned long type, double x, double y, double z)
+nsDeviceSensorData::nsDeviceSensorData(unsigned long type, double x, double y, double z)
   : mType(type), mX(x), mY(y), mZ(z)
 {
 }
 
-NS_INTERFACE_MAP_BEGIN(nsDeviceMotionData)
-NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDeviceMotionData)
+NS_INTERFACE_MAP_BEGIN(nsDeviceSensorData)
+NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDeviceSensorData)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsDeviceMotionData)
-NS_IMPL_RELEASE(nsDeviceMotionData)
+NS_IMPL_ADDREF(nsDeviceSensorData)
+NS_IMPL_RELEASE(nsDeviceSensorData)
 
-nsDeviceMotionData::~nsDeviceMotionData()
+nsDeviceSensorData::~nsDeviceSensorData()
 {
 }
 
-NS_IMETHODIMP nsDeviceMotionData::GetType(PRUint32 *aType)
+NS_IMETHODIMP nsDeviceSensorData::GetType(PRUint32 *aType)
 {
   NS_ENSURE_ARG_POINTER(aType);
   *aType = mType;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceMotionData::GetX(double *aX)
+NS_IMETHODIMP nsDeviceSensorData::GetX(double *aX)
 {
   NS_ENSURE_ARG_POINTER(aX);
   *aX = mX;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceMotionData::GetY(double *aY)
+NS_IMETHODIMP nsDeviceSensorData::GetY(double *aY)
 {
   NS_ENSURE_ARG_POINTER(aY);
   *aY = mY;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceMotionData::GetZ(double *aZ)
+NS_IMETHODIMP nsDeviceSensorData::GetZ(double *aZ)
 {
   NS_ENSURE_ARG_POINTER(aZ);
   *aZ = mZ;
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsDeviceMotion, nsIDeviceMotion)
+NS_IMPL_ISUPPORTS1(nsDeviceSensors, nsIDeviceSensors)
 
-nsDeviceMotion::nsDeviceMotion()
+nsDeviceSensors::nsDeviceSensors()
 : mEnabled(true)
 {
   mLastDOMMotionEventTime = TimeStamp::Now();
@@ -142,7 +142,7 @@ nsDeviceMotion::nsDeviceMotion()
   mLastDOMMotionEventTime = TimeStamp::Now();
 }
 
-nsDeviceMotion::~nsDeviceMotion()
+nsDeviceSensors::~nsDeviceSensors()
 {
   for (int i = 0; i < NUM_SENSOR_TYPE; i++) {
     if (IsSensorEnabled(i))  
@@ -154,7 +154,7 @@ nsDeviceMotion::~nsDeviceMotion()
   }
 }
 
-NS_IMETHODIMP nsDeviceMotion::AddWindowListener(PRUint32 aType, nsIDOMWindow *aWindow)
+NS_IMETHODIMP nsDeviceSensors::AddWindowListener(PRUint32 aType, nsIDOMWindow *aWindow)
 {
   if (mWindowListeners[aType]->IndexOf(aWindow) != NoIndex)
     return NS_OK;
@@ -167,7 +167,7 @@ NS_IMETHODIMP nsDeviceMotion::AddWindowListener(PRUint32 aType, nsIDOMWindow *aW
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceMotion::RemoveWindowListener(PRUint32 aType, nsIDOMWindow *aWindow)
+NS_IMETHODIMP nsDeviceSensors::RemoveWindowListener(PRUint32 aType, nsIDOMWindow *aWindow)
 {
   if (mWindowListeners[aType]->IndexOf(aWindow) == NoIndex)
     return NS_OK;
@@ -176,7 +176,7 @@ NS_IMETHODIMP nsDeviceMotion::RemoveWindowListener(PRUint32 aType, nsIDOMWindow 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceMotion::RemoveWindowAsListener(nsIDOMWindow *aWindow)
+NS_IMETHODIMP nsDeviceSensors::RemoveWindowAsListener(nsIDOMWindow *aWindow)
 {
   for (int i = 0; i < NUM_SENSOR_TYPE; i++) {
     if (IsSensorEnabled(i))
@@ -186,7 +186,7 @@ NS_IMETHODIMP nsDeviceMotion::RemoveWindowAsListener(nsIDOMWindow *aWindow)
 }
 
 void 
-nsDeviceMotion::Notify(const mozilla::hal::SensorData& aSensorData)
+nsDeviceSensors::Notify(const mozilla::hal::SensorData& aSensorData)
 {
   if (!mEnabled)
     return;
@@ -218,18 +218,18 @@ nsDeviceMotion::Notify(const mozilla::hal::SensorData& aSensorData)
 
     if (domdoc) {
       nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(windowListeners[i]);
-      if (type == nsIDeviceMotionData::TYPE_ACCELERATION || 
-        type == nsIDeviceMotionData::TYPE_LINEAR_ACCELERATION || 
-        type == nsIDeviceMotionData::TYPE_GYROSCOPE)
+      if (type == nsIDeviceSensorData::TYPE_ACCELERATION || 
+        type == nsIDeviceSensorData::TYPE_LINEAR_ACCELERATION || 
+        type == nsIDeviceSensorData::TYPE_GYROSCOPE)
         FireDOMMotionEvent(domdoc, target, type, x, y, z);
-      else if (type == nsIDeviceMotionData::TYPE_ORIENTATION)
+      else if (type == nsIDeviceSensorData::TYPE_ORIENTATION)
         FireDOMOrientationEvent(domdoc, target, x, y, z);
     }
   }
 }
 
 void
-nsDeviceMotion::FireDOMOrientationEvent(nsIDOMDocument *domdoc,
+nsDeviceSensors::FireDOMOrientationEvent(nsIDOMDocument *domdoc,
                                         nsIDOMEventTarget *target,
                                         double alpha,
                                         double beta,
@@ -262,7 +262,7 @@ nsDeviceMotion::FireDOMOrientationEvent(nsIDOMDocument *domdoc,
 
 
 void
-nsDeviceMotion::FireDOMMotionEvent(nsIDOMDocument *domdoc,
+nsDeviceSensors::FireDOMMotionEvent(nsIDOMDocument *domdoc,
                                    nsIDOMEventTarget *target,
                                    PRUint32 type,
                                    double x,
@@ -272,13 +272,13 @@ nsDeviceMotion::FireDOMMotionEvent(nsIDOMDocument *domdoc,
   bool fireEvent = TimeStamp::Now() > mLastDOMMotionEventTime + TimeDuration::FromMilliseconds(DEFAULT_SENSOR_POLL);
 
   switch (type) {
-  case nsIDeviceMotionData::TYPE_LINEAR_ACCELERATION:
+  case nsIDeviceSensorData::TYPE_LINEAR_ACCELERATION:
     mLastAcceleration = new nsDOMDeviceAcceleration(x, y, z);
     break;
-  case nsIDeviceMotionData::TYPE_ACCELERATION:
+  case nsIDeviceSensorData::TYPE_ACCELERATION:
     mLastAccelerationIncluduingGravity = new nsDOMDeviceAcceleration(x, y, z);
     break;
-  case nsIDeviceMotionData::TYPE_GYROSCOPE:
+  case nsIDeviceSensorData::TYPE_GYROSCOPE:
     mLastRotationRate = new nsDOMDeviceRotationRate(x, y, z);
     break;
   }

@@ -62,7 +62,7 @@ DIRS += gonk
 endif
 
 CPPSRCS     = \
-  nsDeviceMotion.cpp \
+  nsDeviceSensors.cpp \
   $(NULL)
 
 # We fire the nsDOMDeviceAcceleration
@@ -80,7 +80,7 @@ EXTRA_COMPONENTS = \
 endif
 
 EXPORTS     = \
-  nsDeviceMotion.h \
+  nsDeviceSensors.h \
   $(NULL)
 
 # We fire the nsDOMDeviceAcceleration
