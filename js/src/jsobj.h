@@ -233,6 +233,7 @@ extern Class ArrayBufferClass;
 extern Class BlockClass;
 extern Class BooleanClass;
 extern Class CallableObjectClass;
+extern Class DataViewClass;
 extern Class DateClass;
 extern Class ErrorClass;
 extern Class ElementIteratorClass;
@@ -259,6 +260,7 @@ class ArrayBufferObject;
 class BlockObject;
 class BooleanObject;
 class ClonedBlockObject;
+class DataViewObject;
 class DeclEnvObject;
 class ElementIteratorObject;
 class GlobalObject;
@@ -915,6 +917,7 @@ struct JSObject : public js::ObjectImpl
     /* Direct subtypes of JSObject: */
     inline bool isArguments() const;
     inline bool isArrayBuffer() const;
+    inline bool isDataView() const;
     inline bool isDate() const;
     inline bool isElementIterator() const;
     inline bool isError() const;
@@ -967,6 +970,7 @@ struct JSObject : public js::ObjectImpl
     inline js::BooleanObject &asBoolean();
     inline js::CallObject &asCall();
     inline js::ClonedBlockObject &asClonedBlock();
+    inline js::DataViewObject &asDataView();
     inline js::DeclEnvObject &asDeclEnv();
     inline js::GlobalObject &asGlobal();
     inline js::NestedScopeObject &asNestedScope();
@@ -1426,6 +1430,9 @@ InformalValueTypeName(const Value &v);
 
 inline void
 DestroyIdArray(FreeOp *fop, JSIdArray *ida);
+
+extern bool
+GetFirstArgumentAsObject(JSContext *cx, unsigned argc, Value *vp, const char *method, JSObject **objp);
 
 /* Helpers for throwing. These always return false. */
 extern bool

@@ -1862,6 +1862,7 @@ static JSStdName standard_class_names[] = {
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float64Array), TYPED_ARRAY_CLASP(TYPE_FLOAT64)},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8ClampedArray),
                                 TYPED_ARRAY_CLASP(TYPE_UINT8_CLAMPED)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(DataView),     &DataViewClass},
 
     {js_InitWeakMapClass,       EAGER_ATOM_AND_CLASP(WeakMap)},
     {js_InitProxyClass,         EAGER_ATOM_AND_CLASP(Proxy)},
