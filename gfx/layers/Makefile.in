@@ -65,6 +65,7 @@ EXPORTS = \
         BasicImplData.h \
         ImageLayers.h \
         Layers.h \
+        LayerManagerOGLShaders.h \
         LayerManagerOGL.h \
         LayerManagerOGLProgram.h \
         ReadbackLayer.h \
@@ -169,10 +170,3 @@ include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
-
-LayerManagerOGLShaders.h: LayerManagerOGLShaders.txt genshaders.py $(GLOBAL_DEPS)
-	$(PYTHON) $(srcdir)/opengl/genshaders.py $< $@
-
-LayerManagerOGL.$(OBJ_SUFFIX): LayerManagerOGLShaders.h
-
-GARBAGE += LayerManagerOGLShaders.h

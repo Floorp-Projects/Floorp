@@ -94,7 +94,7 @@ def emitShader(fp, shadername, shaderlines):
       pvals = params[pname]
     for pval in pvals:
       name = parsedname.replace('$' + pname + '$', pval, 1);
-      fp.write("const char %s[] = \"/* %s */%s" % (name,name,eolContinue))
+      fp.write("static const char %s[] = \"/* %s */%s" % (name,name,eolContinue))
       for line in shaderlines:
           line = line.replace("\\", "\\\\")
           while line.find('$') != -1:
@@ -120,7 +120,7 @@ def genShaders(infile, outfile):
     source = open(infile, "r").readlines()
     desthdr = open(outfile, "w+")
 
-    desthdr.write("/* AUTOMATICALLY GENERATED */\n");
+    desthdr.write("/* AUTOMATICALLY GENERATED from " + infile + " */\n");
     desthdr.write("/* DO NOT EDIT! */\n\n");
 
     global defines
