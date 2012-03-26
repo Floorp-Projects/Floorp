@@ -277,6 +277,10 @@ public:
   // false here even if CanHandleMediaType would return true.
   static bool ShouldHandleMediaType(const char* aMIMEType);
 
+#ifdef MOZ_RAW
+  static bool IsRawEnabled();
+#endif
+
 #ifdef MOZ_OGG
   static bool IsOggEnabled();
   static bool IsOggType(const nsACString& aType);
