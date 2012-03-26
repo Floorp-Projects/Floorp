@@ -48,18 +48,21 @@ DOMWifiManager.prototype = {
     // Maintain this state for synchronous APIs.
     this._currentNetwork = null;
     this._enabled = true;
+    this._lastConnectionInfo = null;
 
     const messages = ["WifiManager:setEnabled:Return:OK", "WifiManager:setEnabled:Return:NO",
                       "WifiManager:getNetworks:Return:OK", "WifiManager:getNetworks:Return:NO",
                       "WifiManager:associate:Return:OK", "WifiManager:associate:Return:NO",
                       "WifiManager:onconnecting", "WifiManager:onassociate",
-                      "WifiManager:onconnect", "WifiManager:ondisconnect"];
+                      "WifiManager:onconnect", "WifiManager:ondisconnect",
+                      "WifiManager:connectionInfoUpdate"];
     this.initHelper(aWindow, messages);
     this._mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
 
-    var state = this._mm.sendSyncMessage("WifiManager:getState");
-    this._currentNetwork = state[0].network;
-    this._enabled = state[0].enabled;
+    var state = this._mm.sendSyncMessage("WifiManager:getState")[0];
+    this._currentNetwork = state.network;
+    this._lastConnectionInfo = state.connectionInfo;
+    this._enabled = state.enabled;
   },
 
   uninit: function() {
@@ -67,6 +70,7 @@ DOMWifiManager.prototype = {
     this._onAssociate = null;
     this._onConnect = null;
     this._onDisconnect = null;
+    this._onConnectionInfoUpdate = null;
   },
 
   _sendMessageForRequest: function(name, data, request) {
@@ -132,6 +136,12 @@ DOMWifiManager.prototype = {
       case "WifiManager:ondisconnect":
         this._fireOnDisconnect(this._currentNetwork);
         this._currentNetwork = null;
+        this._lastConnectionInfo = null;
+        break;
+
+      case "WifiManager:connectionInfoUpdate":
+        this._lastConnectionInfo = msg;
+        this._fireConnectionInfoUpdate(msg);
         break;
     }
   },
@@ -152,8 +162,17 @@ DOMWifiManager.prototype = {
   },
 
   _fireOnDisconnect: function onDisconnect(network) {
-    if (this._onDisconnect) {
+    if (this._onDisconnect)
       this._onDisconnect.handleEvent(new WifiStateChangeEvent(network));
+  },
+
+  _fireConnectionInfoUpdate: function connectionInfoUpdate(info) {
+    if (this._onConnectionInfoUpdate) {
+      var evt = new ConnectionInfoUpdate(this._currentNetwork,
+                                         info.signalStrength,
+                                         info.relSignalStrength,
+                                         info.linkSpeed);
+      this._onConnectionInfoUpdate(evt);
     }
   },
 
@@ -194,6 +213,12 @@ DOMWifiManager.prototype = {
     return this._currentNetwork;
   },
 
+  get connectionInfo() {
+    if (!this._hasPrivileges)
+      throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
+    return this._lastConnectionInfo;
+  },
+
   set onconnecting(callback) {
     if (!this._hasPrivileges)
       throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
@@ -216,6 +241,12 @@ DOMWifiManager.prototype = {
     if (!this._hasPrivileges)
       throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
     this._onDisconnect = callback;
+  },
+
+  set connectionInfoUpdate(callback) {
+    if (!this._hasPrivileges)
+      throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
+    this._onConnectionInfoUpdate = callback;
   }
 };
 
@@ -231,6 +262,23 @@ WifiStateChangeEvent.prototype = {
                                     interfaces: [Ci.nsIDOMWifiStateChangeEvent],
                                     flags: Ci.nsIClassInfo.DOM_OBJECT,
                                     classDescription: "Wifi State Change Event"})
+};
+
+function ConnectionInfoUpdate(network, signalStrength, relSignalStrength, linkSpeed) {
+  this.network = network;
+  this.signalStrength = signalStrength;
+  this.relSignalStrength = relSignalStrength;
+  this.linkSpeed = linkSpeed;
+}
+
+ConnectionInfoUpdate.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMWifiConnectionInfoEvent]),
+
+  classInfo: XPCOMUtils.generateCI({classID: Components.ID("{aba4c481-7ea2-464a-b14c-7254a5c99454}"),
+                                    contractID: "@mozilla.org/wifi/connectioninfo-event;1",
+                                    interfaces: [Ci.nsIDOMWifiConnectionInfoEvent],
+                                    flags: Ci.nsIClassInfo.DOM_OBJECT,
+                                    classDescription: "Wifi Connection Info Event"})
 };
 
 const NSGetFactory = XPCOMUtils.generateNSGetFactory([DOMWifiManager]);
