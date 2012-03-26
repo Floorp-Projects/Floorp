@@ -180,6 +180,9 @@
         <parameter name="aNode"/>
         <body>
         <![CDATA[
+          if (aNode.getAttribute("skipintoolbarset") == "true")
+            return "";
+
           switch (aNode.localName) {
             case "toolbarseparator":
               return "separator";
@@ -213,6 +216,9 @@
 
         <setter>
           <![CDATA[
+            if (val == this.currentSet)
+              return;
+
             var ids = (val == "__empty") ? [] : val.split(",");
 
             var nodeidx = 0;
