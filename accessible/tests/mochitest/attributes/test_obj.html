@@ -105,6 +105,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
         }
         testAttrs(getApplicationAccessible(), attrs, false);
       }
+
+      // no object attributes
+      testAbsentAttrs(getAccessible("listitem").firstChild, { "tag": "" });
+
       SimpleTest.finish();
     }
 
@@ -193,5 +197,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       <th id="th2" abbr="SS#" axis="social">Social Security Number</th>
     </tr>
   </table>
+
+  <ul>
+    <li id="listitem">item
+  </ul>
 </body>
 </html>
