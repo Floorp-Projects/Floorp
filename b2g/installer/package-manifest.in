@@ -236,6 +236,7 @@
 @BINPATH@/components/pref.xpt
 @BINPATH@/components/prefetch.xpt
 @BINPATH@/components/profile.xpt
+@BINPATH@/components/profiler.xpt
 @BINPATH@/components/proxyObject.xpt
 @BINPATH@/components/rdf.xpt
 @BINPATH@/components/satchel.xpt
@@ -627,3 +628,4 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/UpdatePrompt.js
 #endif
 @BINPATH@/components/MozKeyboard.js
+@BINPATH@/components/DirectoryProvider.js

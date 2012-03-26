@@ -23,13 +23,6 @@ CPPSRCS = \
   SystemWorkerManager.cpp \
   $(NULL)
 
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += \
-  AudioManager.cpp \
-  GonkGPSGeolocationProvider.cpp \
-  $(NULL)
-endif
-
 XPIDLSRCS = \
   nsIAudioManager.idl \
   nsIRadioInterfaceLayer.idl \
@@ -43,6 +36,15 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/wifi \
   -I$(topsrcdir)/content/events/src \
   $(NULL)
+
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += \
+  AudioManager.cpp \
+  GonkGPSGeolocationProvider.cpp \
+  $(NULL)
+# for our local copy of AudioSystem.h
+LOCAL_INCLUDES += -I$(topsrcdir)/media/libsydneyaudio/src
+endif
 
 EXTRA_COMPONENTS = \
   RadioInterfaceLayer.manifest \

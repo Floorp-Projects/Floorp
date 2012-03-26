@@ -1325,6 +1325,25 @@ RasterImage::SetFrameHasNoAlpha(PRUint32 aFrameNum)
 }
 
 nsresult
+RasterImage::SetFrameAsNonPremult(PRUint32 aFrameNum, bool aIsNonPremult)
+{
+  if (mError)
+    return NS_ERROR_FAILURE;
+
+  NS_ABORT_IF_FALSE(aFrameNum < mFrames.Length(), "Invalid frame index!");
+  if (aFrameNum >= mFrames.Length())
+    return NS_ERROR_INVALID_ARG;
+
+  imgFrame* frame = GetImgFrame(aFrameNum);
+  NS_ABORT_IF_FALSE(frame, "Calling SetFrameAsNonPremult on frame that doesn't exist!");
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+
+  frame->SetAsNonPremult(aIsNonPremult);
+
+  return NS_OK;
+}
+
+nsresult
 RasterImage::DecodingComplete()
 {
   if (mError)

@@ -64,16 +64,11 @@ self.onmessage = function(e) {
     break;
   case "dhcp_do_request":
   case "dhcp_do_request_renew":
-    var ret = libnetutils[cmd](data.ifname,
-                               ints.addressOfElement(0),
-                               ints.addressOfElement(1),
-                               ints.addressOfElement(2),
-                               ints.addressOfElement(3),
-                               ints.addressOfElement(4),
-                               ints.addressOfElement(5),
-                               ints.addressOfElement(6));
-    postMessage({ id: id, status: ret, ipaddr: ints[0], gateway: ints[1], mask: ints[2],
-                  dns1: ints[3], dns2: ints[4], server: ints[5], lease: ints[6]});
+    var out = libnetutils[cmd](data.ifname);
+    postMessage({ id: id, status: out.ret, ipaddr: out.ipaddr,
+                  gateway: out.gateway, mask: out.mask,
+                  dns1: out.dns1, dns2: out.dns2, server: out.server,
+                  lease: out.lease });
     break;
   case "property_get":
     var ret = libcutils.property_get(data.key, cbuf, data.defaultValue);

@@ -46,10 +46,6 @@
   -moz-padding-start: 0;
 }
 
-#updateDeck > hbox > label:not([class="text-link"]) {
-  font-style:italic;
-}
-
 .update-throbber {
   width: 16px;
   min-height: 16px;

@@ -1109,8 +1109,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                             rv = xpc_exception->ToString(&exn_string);
                             if (NS_SUCCEEDED(rv)) {
                                 // use toString on the exception as the message
-                                nsAutoString newMessage;
-                                newMessage.AssignWithConversion(exn_string);
+                                NS_ConvertASCIItoUTF16 newMessage(exn_string);
                                 nsMemory::Free((void *) exn_string);
 
                                 // try to get filename, lineno from the first

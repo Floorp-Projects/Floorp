@@ -1,9 +1,4 @@
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=439566
-https://bugzilla.mozilla.org/show_bug.cgi?id=460932
-https://bugzilla.mozilla.org/show_bug.cgi?id=689540
--->
 <head>
   <title>CSS-like attributes tests</title>
   <link rel="stylesheet" type="text/css"
@@ -16,8 +11,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=689540
           src="../common.js"></script>
   <script type="application/javascript"
           src="../attributes.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
 
   <script type="application/javascript">
+    var gQueue = null;
+
+    function removeElm(aID)
+    {
+      this.node = getNode(aID);
+      this.accessible = getAccessible(aID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, this.accessible)
+      ];
+
+      this.invoke = function removeElm_invoke()
+      {
+        this.node.parentNode.removeChild(this.node);
+      }
+
+      this.check = function removeElm_check()
+      {
+        testAbsentCSSAttrs(this.accessible);
+      }
+
+      this.getID = function removeElm_getID()
+      {
+        return "test CSS-based attributes on removed accessible";
+      }
+    }
+
     function doTest()
     {
       // CSS display
@@ -85,7 +109,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=689540
       // no CSS-based object attributes
       testAbsentCSSAttrs(getAccessible("listitem").firstChild);
 
-      SimpleTest.finish();
+      gQueue = new eventQueue();
+      gQueue.push(new removeElm("div"));
+      gQueue.invoke(); // SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();

@@ -6,7 +6,7 @@
  *   Mihai Șucan <mihai.sucan@gmail.com>
  */
 
-const TEST_URI = "data:text/html,Web Console test for bug 613280";
+const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 613280";
 
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.gcli.enable");

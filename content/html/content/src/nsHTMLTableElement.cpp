@@ -107,8 +107,7 @@ TableRowsCollection::TableRowsCollection(nsHTMLTableElement *aParent)
                                   nsGkAtoms::tr,
                                   false))
 {
-  // Mark ourselves as a proxy
-  SetIsProxy();
+  SetIsDOMBinding();
 }
 
 TableRowsCollection::~TableRowsCollection()

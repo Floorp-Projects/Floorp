@@ -45,16 +45,14 @@
 #ifndef nsImageLoadingContent_h__
 #define nsImageLoadingContent_h__
 
-#include "nsIImageLoadingContent.h"
-#include "nsINode.h"
-#include "imgIRequest.h"
-#include "prtypes.h"
+#include "imgIContainerObserver.h"
+#include "imgIDecoderObserver.h"
+#include "mozilla/CORSMode.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h" // NS_CONTENT_DELETE_LIST_MEMBER
-#include "nsString.h"
 #include "nsEventStates.h"
-#include "nsGenericHTMLElement.h"
-#include "mozilla/CORSMode.h"
+#include "nsIImageLoadingContent.h"
+#include "nsIRequest.h"
 
 class nsIURI;
 class nsIDocument;

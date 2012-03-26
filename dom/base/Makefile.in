@@ -64,7 +64,7 @@ EXTRA_COMPONENTS = \
 	        Webapps.manifest \
 		$(NULL)
 
-EXTRA_JS_MODULES += Webapps.jsm \
+EXTRA_PP_JS_MODULES += Webapps.jsm \
 		$(NULL)
 
 EXTRA_JS_MODULES += DOMRequestHelper.jsm \

@@ -463,7 +463,7 @@ exn_trace(JSTracer *trc, JSObject *obj)
             if (elem->funName)
                 MarkString(trc, &elem->funName, "stack trace function name");
             if (IS_GC_MARKING_TRACER(trc) && elem->filename)
-                js_MarkScriptFilename(elem->filename);
+                MarkScriptFilename(elem->filename);
             vcount += elem->argc;
         }
         vp = GetStackTraceValueBuffer(priv);

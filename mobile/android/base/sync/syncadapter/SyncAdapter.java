@@ -7,12 +7,16 @@ package org.mozilla.gecko.sync.syncadapter;
 import java.io.IOException;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.sync.AlreadySyncingException;
+import org.mozilla.gecko.sync.CommandRunner;
+import org.mozilla.gecko.sync.CommandProcessor;
 import org.mozilla.gecko.sync.GlobalConstants;
 import org.mozilla.gecko.sync.GlobalSession;
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.SyncConfigurationException;
@@ -62,6 +66,15 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
     mContext = context;
     Log.d(LOG_TAG, "AccountManager.get(" + mContext + ")");
     mAccountManager = AccountManager.get(context);
+
+    // Register the displayURI command here so our SyncService
+    // can receive notifications to open a URI.
+    CommandProcessor.getProcessor().registerCommand("displayURI", new CommandRunner() {
+      @Override
+      public void executeCommand(List<String> args) {
+        displayURI(args.get(0), args.get(1));
+      }
+    });
   }
 
   private SharedPreferences getGlobalPrefs() {
@@ -479,5 +492,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
   @Override
   public void informUnauthorizedResponse(GlobalSession session, URI oldClusterURL) {
     setClusterURLIsStale(true);
+  }
+
+  public void displayURI(String uri, String clientId) {
+    Logger.info(LOG_TAG, "Received a URI for display: " + uri + " from " + clientId);
+    // TODO: Bug 732147 - Send tab to device: receiving pushed tabs
   }
 }

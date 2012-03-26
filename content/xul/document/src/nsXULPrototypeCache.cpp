@@ -60,7 +60,7 @@
 #include "nsNetUtil.h"
 #include "nsAppDirectoryServiceDefs.h"
 
-#include "jsxdrapi.h"
+#include "jsapi.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/scache/StartupCache.h"

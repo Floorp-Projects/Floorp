@@ -28,13 +28,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
 
       function go() {
         var wrappedWin = $('ifr').contentWindow;
+        is(typeof wrappedWin.expando, 'undefined', "Shouldn't be able to see the expando");
+
         var unwrapped = wrappedWin.wrappedJSObject;
 
-        var filter = unwrapped.filter;
-        is(utils.getClassName(filter), 'Proxy', 'properly wrapped');
-        is(typeof filter.QueryInterface, 'function', 'double wrapped');
+        var expando = unwrapped.expando;
+        is(utils.getClassName(expando), 'Proxy', 'properly wrapped');
+        is(typeof expando.QueryInterface, 'function', 'double wrapped');
 
-        ok(unwrapped.testme(filter),
+        ok(unwrapped.testme(expando),
            "content didn't get a proxy, but another double wrapped object");
         SimpleTest.finish();
       }

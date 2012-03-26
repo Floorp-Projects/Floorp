@@ -39,7 +39,7 @@
 interface nsIDOMSVGAnimatedLength;
 interface nsIDOMSVGAnimatedEnumeration;
 
-[scriptable, uuid(a396f465-0333-48df-b5b7-e29d5a6b40f9)]
+[scriptable, uuid(e01999af-1ec4-4669-aa70-f2347d90264f)]
 interface nsIDOMSVGTextPathElement
   : nsIDOMSVGTextContentElement
 /*

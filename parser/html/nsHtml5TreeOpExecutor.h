@@ -140,6 +140,12 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
      */
     nsresult                      mBroken;
 
+    /**
+     * Whether this executor has already complained about matters related
+     * to character encoding declarations.
+     */
+    bool                          mAlreadyComplainedAboutCharset;
+
   public:
   
     nsHtml5TreeOpExecutor(bool aRunsToCompletion = false);
@@ -367,8 +373,16 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
 
     void Start();
 
-    void NeedsCharsetSwitchTo(const char* aEncoding, PRInt32 aSource);
-    
+    void NeedsCharsetSwitchTo(const char* aEncoding,
+                              PRInt32 aSource,
+                              PRUint32 aLineNumber);
+
+    void MaybeComplainAboutCharset(const char* aMsgId,
+                                   bool aError,
+                                   PRUint32 aLineNumber);
+
+    void ComplainAboutBogusProtocolCharset(nsIDocument* aDoc);
+
     bool IsComplete() {
       return !mParser;
     }

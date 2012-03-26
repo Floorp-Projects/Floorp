@@ -13,7 +13,6 @@
 #include "jspubtd.h"
 #include "jstypes.h"
 #include "jsval.h"
-#include "jsxdrapi.h"
 
 #include "js/HashTable.h"
 #include "js/MemoryMetrics.h"

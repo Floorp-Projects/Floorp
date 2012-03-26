@@ -34,14 +34,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Main header first:
+#include "nsSVGGeometryFrame.h"
+
+// Keep others in (case-insensitive) order:
+#include "gfxContext.h"
 #include "nsPresContext.h"
+#include "nsSVGEffects.h"
+#include "nsSVGPaintServerFrame.h"
 #include "nsSVGPathElement.h"
 #include "nsSVGUtils.h"
-#include "nsSVGGeometryFrame.h"
-#include "nsSVGPaintServerFrame.h"
-#include "nsContentUtils.h"
-#include "gfxContext.h"
-#include "nsSVGEffects.h"
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGGeometryFrame)
 

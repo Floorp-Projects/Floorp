@@ -148,10 +148,7 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
   nsCOMPtr<nsIContent> parentContent( do_QueryInterface(aParentNode) );
   NS_ENSURE_TRUE(parentContent, NS_OK);
 
-  // Get the document
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
 
   // Get the pres shell
@@ -194,10 +191,6 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
 
   nsElementDeletionObserver* observer =
     new nsElementDeletionObserver(newContent, parentContent);
-  if (!observer) {
-    newContent->UnbindFromTree();
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   NS_ADDREF(observer); // NodeWillBeDestroyed releases.
   parentContent->AddMutationObserver(observer);
   newContent->AddMutationObserver(observer);
@@ -205,8 +198,7 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
   // display the element
   ps->RecreateFramesFor(newContent);
 
-  *aReturn = newElement;
-  NS_IF_ADDREF(*aReturn);
+  newElement.forget(aReturn);
   return NS_OK;
 }
 
@@ -249,9 +241,7 @@ nsHTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
         if (docObserver) {
           // Call BeginUpdate() so that the nsCSSFrameConstructor/PresShell
           // knows we're messing with the frame tree.
-          nsCOMPtr<nsIDOMDocument> domDocument;
-          GetDocument(getter_AddRefs(domDocument));
-          nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
+          nsCOMPtr<nsIDocument> document = GetDocument();
           if (document)
             docObserver->BeginUpdate(document, UPDATE_CONTENT_MODEL);
 

@@ -172,10 +172,13 @@ CanvasLayerD3D10::UpdateSurface()
       return;
     }
 
+    const bool stridesMatch = map.RowPitch == mBounds.width * 4;
+
     PRUint8 *destination;
-    if (map.RowPitch != mBounds.width * 4) {
-      destination = new PRUint8[mBounds.width * mBounds.height * 4];
+    if (!stridesMatch) {
+      destination = GetTempBlob(mBounds.width * mBounds.height * 4);
     } else {
+      DiscardTempBlob();
       destination = (PRUint8*)map.pData;
     }
 
@@ -204,13 +207,12 @@ CanvasLayerD3D10::UpdateSurface()
     if (currentFramebuffer != mCanvasFramebuffer)
       mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, currentFramebuffer);
 
-    if (map.RowPitch != mBounds.width * 4) {
+    if (!stridesMatch) {
       for (int y = 0; y < mBounds.height; y++) {
         memcpy((PRUint8*)map.pData + map.RowPitch * y,
                destination + mBounds.width * 4 * y,
                mBounds.width * 4);
       }
-      delete [] destination;
     }
     mTexture->Unmap(0);
   } else if (mSurface) {

@@ -3,7 +3,6 @@
  */
 
 #include "tests.h"
-#include "jsxdrapi.h"
 
 /* Do the test a bunch of times, because sometimes we seem to randomly
    miss the propcache */

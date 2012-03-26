@@ -1,3 +1,5 @@
+/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+
 #include "nsAccessibleWrap.h"
 
 #include "nsCocoaUtils.h"
@@ -243,107 +245,10 @@ using namespace mozilla::a11y;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSAccessibilityPostNotification([self hasRepresentedView] ? [self representedView] : self, 
+  NSAccessibilityPostNotification(GetObjectOrRepresentedView(self),
                                   NSAccessibilityValueChangedNotification);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-@end
-
-@implementation mozComboboxAccessible
-
-- (NSArray*)accessibilityAttributeNames
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  static NSArray *supportedAttributes = nil;
-  if (!supportedAttributes) {
-    // standard attributes that are shared and supported by all generic elements.
-    supportedAttributes = [[NSArray alloc] initWithObjects:NSAccessibilityParentAttribute, // required
-                                                           NSAccessibilityRoleAttribute,   // required
-                                                           NSAccessibilityTitleAttribute,
-                                                           NSAccessibilityValueAttribute, // required
-                                                           NSAccessibilityHelpAttribute,
-                                                           NSAccessibilityRoleDescriptionAttribute,
-                                                           NSAccessibilityPositionAttribute, // required
-                                                           NSAccessibilitySizeAttribute, // required
-                                                           NSAccessibilityWindowAttribute, // required
-                                                           NSAccessibilityFocusedAttribute, // required
-                                                           NSAccessibilityEnabledAttribute, // required
-                                                           NSAccessibilityChildrenAttribute, // required
-                                                           NSAccessibilityHelpAttribute,
-                                                           // NSAccessibilityExpandedAttribute, // required
-                                                           NSAccessibilityTopLevelUIElementAttribute, // required
-                                                           NSAccessibilityDescriptionAttribute, // required
-                                                           /* text-specific attributes */
-                                                           NSAccessibilitySelectedTextAttribute, // required
-                                                           NSAccessibilitySelectedTextRangeAttribute, // required
-                                                           NSAccessibilityNumberOfCharactersAttribute, // required
-                                                           // TODO: NSAccessibilityVisibleCharacterRangeAttribute, // required
-                                                           // TODO: NSAccessibilityInsertionPointLineNumberAttribute
-#if DEBUG
-                                                           @"AXMozDescription",
-#endif
-                                                           nil];
-  }
-  return supportedAttributes;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
-- (NSArray *)accessibilityActionNames
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  if ([self isEnabled]) {
-    return [NSArray arrayWithObjects:NSAccessibilityConfirmAction,
-                                     NSAccessibilityShowMenuAction,
-                                     nil];
-  }
-  return nil;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
-- (NSString *)accessibilityActionDescription:(NSString *)action
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  if ([action isEqualToString:NSAccessibilityShowMenuAction])
-    return @"show menu";
-  if ([action isEqualToString:NSAccessibilityConfirmAction])
-    return @"confirm";
-    
-  return [super accessibilityActionDescription:action];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
-- (void)accessibilityPerformAction:(NSString *)action
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  // both the ShowMenu and Click action do the same thing.
-  if ([self isEnabled]) {
-    if ([action isEqualToString:NSAccessibilityShowMenuAction])
-      [self showMenu];
-    if ([action isEqualToString:NSAccessibilityConfirmAction])
-      [self confirm];
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (void)showMenu
-{
-  // currently unimplemented. waiting for support in bug 363697
-}
-
-- (void)confirm
-{
-  // should be the same as pressing enter/return in this textfield.
-  // not yet implemented
 }
 
 @end
