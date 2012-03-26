@@ -1352,8 +1352,8 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
 nsresult
 nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
-  // Don't calculate content based object attributes for not primary for the
-  // DOM node accessible (like list bullet or XUL tree items).
+  // If the accessible isn't primary for its node (such as list item bullet or
+  // xul tree item then don't calculate content based attributes.
   if (!IsPrimaryForNode())
     return NS_OK;
 
@@ -1423,7 +1423,7 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
   }
 
   // Don't calculate CSS-based object attributes when no frame (i.e.
-  // the accessible is unattached from the three).
+  // the accessible is unattached from the tree).
   if (!mContent->GetPrimaryFrame())
     return NS_OK;
 
