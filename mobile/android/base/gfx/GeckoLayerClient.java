@@ -175,7 +175,8 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
         viewportMetrics.setViewport(viewportMetrics.getClampedViewport());
 
-        mDisplayPort = DisplayPortCalculator.calculate(mLayerController.getViewportMetrics());
+        mDisplayPort = DisplayPortCalculator.calculate(mLayerController.getViewportMetrics(),
+                mLayerController.getPanZoomController().getVelocityVector());
         GeckoAppShell.sendEventToGecko(GeckoEvent.createViewportEvent(viewportMetrics, mDisplayPort));
         mGeckoViewport = viewportMetrics;
     }
@@ -217,7 +218,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
                 }
             });
             mLayerController.setViewportMetrics(newMetrics);
-            mDisplayPort = DisplayPortCalculator.calculate(mLayerController.getViewportMetrics());
+            mDisplayPort = DisplayPortCalculator.calculate(mLayerController.getViewportMetrics(), null);
         }
         mReturnDisplayPort = mDisplayPort;
     }
@@ -231,7 +232,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
                 handleViewportMessage(message, ViewportMessageType.PAGE_SIZE);
             } else if ("Viewport:CalculateDisplayPort".equals(event)) {
                 ImmutableViewportMetrics newMetrics = new ImmutableViewportMetrics(new ViewportMetrics(message));
-                mReturnDisplayPort = DisplayPortCalculator.calculate(newMetrics);
+                mReturnDisplayPort = DisplayPortCalculator.calculate(newMetrics, null);
             } else if ("Checkerboard:Toggle".equals(event)) {
                 try {
                     boolean showChecks = message.getBoolean("value");

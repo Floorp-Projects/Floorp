@@ -518,6 +518,10 @@ public class PanZoomController
         return FloatMath.sqrt(xvel * xvel + yvel * yvel);
     }
 
+    public PointF getVelocityVector() {
+        return new PointF(mX.getRealVelocity(), mY.getRealVelocity());
+    }
+
     private boolean stopped() {
         return getVelocity() < STOPPED_THRESHOLD;
     }

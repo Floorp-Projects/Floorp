@@ -325,7 +325,8 @@ public class LayerController implements Tabs.OnTabsChangedListener {
             return false;
         }
 
-        return DisplayPortCalculator.aboutToCheckerboard(mViewportMetrics, mLayerClient.getDisplayPort());
+        return DisplayPortCalculator.aboutToCheckerboard(mViewportMetrics,
+                mPanZoomController.getVelocityVector(), mLayerClient.getDisplayPort());
     }
 
     /**
