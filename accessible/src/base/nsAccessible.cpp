@@ -1352,17 +1352,13 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
 nsresult
 nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
+  // Don't calculate content based object attributes for not primary for the
+  // DOM node accessible (like list bullet or XUL tree items).
+  if (!IsPrimaryForNode())
+    return NS_OK;
+
   // Attributes set by this method will not be used to override attributes on a sub-document accessible
   // when there is a <frame>/<iframe> element that spawned the sub-document
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mContent));
-
-  nsAutoString tagName;
-  element->GetTagName(tagName);
-  if (!tagName.IsEmpty()) {
-    nsAutoString oldValueUnused;
-    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("tag"), tagName,
-                                   oldValueUnused);
-  }
 
   nsEventShell::GetEventAttributes(GetNode(), aAttributes);
  
@@ -1378,12 +1374,13 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
   //   The inner nodes can be used to override live region behavior on more general outer nodes
   // However, nodes in outer documents override nodes in inner documents:
   //   Outer doc author may want to override properties on a widget they used in an iframe
-  nsIContent *startContent = mContent;
-  while (true) {
-    NS_ENSURE_STATE(startContent);
-    nsIDocument *doc = startContent->GetDocument();
+  nsIContent* startContent = mContent;
+  while (startContent) {
+    nsIDocument* doc = startContent->GetDocument();
     nsIContent* rootContent = nsCoreUtils::GetRoleContent(doc);
-    NS_ENSURE_STATE(rootContent);
+    if (!rootContent)
+      return NS_OK;
+
     nsAccUtils::SetLiveContainerAttributes(aAttributes, startContent,
                                            rootContent);
 
@@ -1409,6 +1406,11 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
   if (!mContent->IsElement())
     return NS_OK;
 
+  // Expose tag.
+  nsAutoString tagName;
+  mContent->NodeInfo()->GetName(tagName);
+  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::tag, tagName);
+
   // Expose draggable object attribute?
   nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(mContent);
   if (htmlElement) {
@@ -1421,9 +1423,8 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
   }
 
   // Don't calculate CSS-based object attributes when no frame (i.e.
-  // the accessible is not unattached form three) or when the accessible is not
-  // primary for node (like list bullet or XUL tree items).
-  if (!mContent->GetPrimaryFrame() || !IsPrimaryForNode())
+  // the accessible is unattached from the three).
+  if (!mContent->GetPrimaryFrame())
     return NS_OK;
 
   // CSS style based object attributes.
