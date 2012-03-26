@@ -66,6 +66,17 @@ js_memcpy(void *dst_, const void *src_, size_t len)
 namespace js {
 
 template <class T>
+struct AlignmentTestStruct
+{
+    char c;
+    T t;
+};
+
+/* This macro determines the alignment requirements of a type. */
+#define JS_ALIGNMENT_OF(t_) \
+  (sizeof(js::AlignmentTestStruct<t_>) - sizeof(t_))
+
+template <class T>
 class AlignedPtrAndFlag
 {
     uintptr_t bits;
