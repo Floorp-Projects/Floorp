@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=678695
+-->
+<head>
+  <title>Test for Bug 678695</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=678695">Mozilla Bug 678695</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 678695 **/
+
+var e = new MozSettingsEvent("settingchanged", {settingName: "a", settingValue: 1});
+ok(e, "Should have settings event!");
+is(e.settingName, "a", "Name should be a.");
+is(e.settingValue, 1, "Value should be 1.");
+
+e = new MozSettingsEvent("settingchanged", {settingName: "test", settingValue: {test: "test"}});
+is(e.settingName, "test", "Name should be 'test'.");
+is(e.settingValue.test, "test", "Name should be 'test'.");
+
+e = new MozSettingsEvent("settingchanged", {settingName: "a", settingValue: true});
+is(e.settingName, "a", "Name should be a.");
+is(e.settingValue, true, "Value should be true.");
+
+
+</script>
+</pre>
+</body>
+</html>
