@@ -38,7 +38,7 @@
 
 #include "InputReader.h"
 
-#include <cutils/log.h>
+#include "cutils_log.h"
 #include "Keyboard.h"
 #include "VirtualKeyMap.h"
 

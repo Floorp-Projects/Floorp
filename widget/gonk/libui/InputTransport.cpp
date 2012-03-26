@@ -18,7 +18,7 @@
 
 
 #include <cutils/ashmem.h>
-#include <cutils/log.h>
+#include "cutils_log.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
