@@ -36,27 +36,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Main header first:
 #include "nsSVGGlyphFrame.h"
 
-#include "nsRenderingContext.h"
-#include "nsSVGTextFrame.h"
-#include "mozilla/LookAndFeel.h"
-#include "nsTextFragment.h"
-#include "nsBidiPresUtils.h"
-#include "nsSVGUtils.h"
-#include "SVGLengthList.h"
-#include "nsIDOMSVGLength.h"
-#include "nsIDOMSVGRect.h"
+// Keep others in (case-insensitive) order:
 #include "DOMSVGPoint.h"
-#include "nsSVGTextPathFrame.h"
-#include "nsSVGPathElement.h"
-#include "nsSVGRect.h"
-#include "nsDOMError.h"
 #include "gfxContext.h"
 #include "gfxMatrix.h"
 #include "gfxPlatform.h"
+#include "mozilla/LookAndFeel.h"
+#include "nsBidiPresUtils.h"
+#include "nsDOMError.h"
+#include "nsIDOMSVGRect.h"
+#include "nsRenderingContext.h"
 #include "nsSVGEffects.h"
 #include "nsSVGPaintServerFrame.h"
+#include "nsSVGRect.h"
+#include "nsSVGTextPathFrame.h"
+#include "nsSVGUtils.h"
+#include "nsTextFragment.h"
+#include "SVGLengthList.h"
 
 using namespace mozilla;
 
