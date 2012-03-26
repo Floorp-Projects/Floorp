@@ -161,19 +161,20 @@ interface nsIXMLHttpRequest : nsISupports
   /**
    * The status of the response to the request for HTTP requests.
    */
+  // XXX spec says unsigned short
   readonly attribute unsigned long status;
 
   /**
    * The string representing the status of the response for
    * HTTP requests.
    */
-  readonly attribute AUTF8String statusText;
+  readonly attribute DOMString statusText;
 
   /**
    * If the request has been sent already, this method will
    * abort the request.
    */
-  void   abort();
+  [binaryname(SlowAbort)] void abort();
 
   /**
    * Returns all of the response headers as a string for HTTP
@@ -312,7 +313,7 @@ interface nsIXMLHttpRequest : nsISupports
    * @param mimetype The type used to override that returned by the server
    *                 (if any).
    */
-  void   overrideMimeType(in AUTF8String mimetype);
+  [binaryname(SlowOverrideMimeType)] void overrideMimeType(in DOMString mimetype);
 
   /**
    * Set to true if the response is expected to be a stream of
