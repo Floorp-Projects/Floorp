@@ -2322,26 +2322,36 @@ void
 nsGfxScrollFrameInner::ScrollBy(nsIntPoint aDelta,
                                 nsIScrollableFrame::ScrollUnit aUnit,
                                 nsIScrollableFrame::ScrollMode aMode,
-                                nsIntPoint* aOverflow)
+                                nsIntPoint* aOverflow,
+                                nsIAtom *aOrigin)
 {
   nsSize deltaMultiplier;
-  nsCOMPtr<nsIAtom> aProfile = nsGkAtoms::other;
+  if (!aOrigin){
+    aOrigin = nsGkAtoms::other;
+  }
+  bool isGenericOrigin = (aOrigin == nsGkAtoms::other);
   switch (aUnit) {
   case nsIScrollableFrame::DEVICE_PIXELS: {
     nscoord appUnitsPerDevPixel =
       mOuter->PresContext()->AppUnitsPerDevPixel();
     deltaMultiplier = nsSize(appUnitsPerDevPixel, appUnitsPerDevPixel);
-    aProfile = nsGkAtoms::pixels;
+    if (isGenericOrigin){
+      aOrigin = nsGkAtoms::pixels;
+    }
     break;
   }
   case nsIScrollableFrame::LINES: {
     deltaMultiplier = GetLineScrollAmount();
-    aProfile = nsGkAtoms::lines;
+    if (isGenericOrigin){
+      aOrigin = nsGkAtoms::lines;
+    }
     break;
   }
   case nsIScrollableFrame::PAGES: {
     deltaMultiplier = GetPageScrollAmount();
-    aProfile = nsGkAtoms::pages;
+    if (isGenericOrigin){
+      aOrigin = nsGkAtoms::pages;
+    }
     break;
   }
   case nsIScrollableFrame::WHOLE: {
@@ -2361,7 +2371,7 @@ nsGfxScrollFrameInner::ScrollBy(nsIntPoint aDelta,
 
   nsPoint newPos = mDestination +
     nsPoint(aDelta.x*deltaMultiplier.width, aDelta.y*deltaMultiplier.height);
-  ScrollToWithSmoothnessProfile(newPos, aMode, aProfile);
+  ScrollToWithSmoothnessProfile(newPos, aMode, aOrigin);
 
   if (aOverflow) {
     nsPoint clampAmount = mDestination - newPos;
