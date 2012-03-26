@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Main header first:
 #include "nsSVGGenericContainerFrame.h"
-#include "nsSVGUtils.h"
 
 //----------------------------------------------------------------------
 // nsSVGGenericContainerFrame Implementation

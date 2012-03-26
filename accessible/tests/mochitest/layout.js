@@ -1,25 +1,28 @@
 /**
- * Tests if the given accessible at the given point is expected.
+ * Tests if the given child and grand child accessibles at the given point are
+ * expected.
  *
- * @param aIdentifier        [in] accessible identifier
- * @param aX                 [in] x coordinate of the point relative accessible
- * @param aY                 [in] y coordinate of the point relative accessible
- * @param aFindDeepestChild  [in] points whether deepest or nearest child should
- *                           be returned
- * @param aChildIdentifier   [in] expected child accessible
+ * @param aID            [in] accessible identifier
+ * @param aX             [in] x coordinate of the point relative accessible
+ * @param aY             [in] y coordinate of the point relative accessible
+ * @param aChildID       [in] expected child accessible
+ * @param aGrandChildID  [in] expected child accessible
  */
-function testChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild,
-                          aChildIdentifier)
+function testChildAtPoint(aID, aX, aY, aChildID, aGrandChildID)
 {
-  var childAcc = getAccessible(aChildIdentifier);
-  var actualChildAcc = getChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild);
+  var child = getChildAtPoint(aID, aX, aY, false);
+  var expectedChild = getAccessible(aChildID);
 
-  var msg = "Wrong " + (aFindDeepestChild ? "deepest" : "direct");
-  msg += " child accessible [" + prettyName(actualChildAcc);
-  msg += "] at the point (" + aX + ", " + aY + ") of accessible [";
-  msg += prettyName(aIdentifier) + "]";
+  var msg = "Wrong direct child accessible at the point (" + aX + ", " + aY +
+    ") of " + prettyName(aID);
+  isObject(child, expectedChild, msg);
 
-  is(childAcc, actualChildAcc, msg);
+  var grandChild = getChildAtPoint(aID, aX, aY, true);
+  var expectedGrandChild = getAccessible(aGrandChildID);
+
+  msg = "Wrong deepest child accessible at the point (" + aX + ", " + aY +
+    ") of " + prettyName(aID);
+  isObject(grandChild, expectedGrandChild, msg);
 }
 
 /**
@@ -35,14 +38,27 @@ function hitTest(aContainerID, aChildID, aGrandChildID)
   var [x, y] = getBoundsForDOMElm(child);
 
   var actualChild = container.getChildAtPoint(x + 1, y + 1);
-  is(actualChild, child,
-     "Wrong child, expected: " + prettyName(child) +
-     ", got: " + prettyName(actualChild));
+  isObject(actualChild, child,
+           "Wrong direct child of " + prettyName(aContainerID));
 
   var actualGrandChild = container.getDeepestChildAtPoint(x + 1, y + 1);
-  is(actualGrandChild, grandChild,
-     "Wrong deepest child, expected: " + prettyName(grandChild) +
-     ", got: " + prettyName(actualGrandChild));
+  isObject(actualGrandChild, grandChild,
+           "Wrong deepest child of " + prettyName(aContainerID));
+}
+
+/**
+ * Zoom the given document.
+ */
+function zoomDocument(aDocument, aZoom)
+{
+  var docShell = aDocument.defaultView.
+    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+    getInterface(Components.interfaces.nsIWebNavigation).
+    QueryInterface(Components.interfaces.nsIDocShell);
+  var docViewer = docShell.contentViewer.
+    QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+
+  docViewer.fullZoom = aZoom;
 }
 
 /**
@@ -136,13 +152,20 @@ function getBoundsForDOMElm(aID)
   }
 
   var elmWindow = elm.ownerDocument.defaultView;
-  var winUtil = elmWindow.
+  return CSSToDevicePixels(elmWindow,
+                           x + elmWindow.mozInnerScreenX,
+                           y + elmWindow.mozInnerScreenY,
+                           width,
+                           height);
+}
+
+function CSSToDevicePixels(aWindow, aX, aY, aWidth, aHeight)
+{
+  var winUtil = aWindow.
     QueryInterface(Components.interfaces.nsIInterfaceRequestor).
     getInterface(Components.interfaces.nsIDOMWindowUtils);
 
   var ratio = winUtil.screenPixelsPerCSSPixel;
-  return [ (x + elmWindow.mozInnerScreenX) * ratio,
-           (y + elmWindow.mozInnerScreenY) * ratio,
-           width * ratio,
-           height * ratio ];
+  return [aX * ratio, aY * ratio, aWidth * ratio, aHeight * ratio];
 }
+

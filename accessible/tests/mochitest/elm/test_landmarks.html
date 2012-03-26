@@ -34,12 +34,12 @@
       testAttrs("main", {"xml-roles" : "main"}, true); // ARIA override
 
       // And some AT may look for this
-      testAttrs("nav", {"tag" : "NAV"}, true);
-      testAttrs("header", {"tag" : "HEADER"}, true);
-      testAttrs("footer", {"tag" : "FOOTER"}, true);
-      testAttrs("article", {"tag" : "ARTICLE"}, true);
-      testAttrs("aside", {"tag" : "ASIDE"}, true);
-      testAttrs("main", {"tag" : "ARTICLE"}, true); // no override expected
+      testAttrs("nav", {"tag" : "nav"}, true);
+      testAttrs("header", {"tag" : "header"}, true);
+      testAttrs("footer", {"tag" : "footer"}, true);
+      testAttrs("article", {"tag" : "article"}, true);
+      testAttrs("aside", {"tag" : "aside"}, true);
+      testAttrs("main", {"tag" : "article"}, true); // no override expected
 
       SimpleTest.finish();
     }
