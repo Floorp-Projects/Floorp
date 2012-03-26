@@ -115,6 +115,21 @@ function addA11yLoadEvent(aFunc, aWindow)
   SimpleTest.waitForFocus(waitForDocLoad, aWindow);
 }
 
+/**
+ * Analogy of SimpleTest.is function used to compare objects.
+ */
+function isObject(aObj, aExpectedObj, aMsg)
+{
+  if (aObj == aExpectedObj) {
+    ok(true, aMsg);
+    return;
+  }
+
+  ok(false,
+     aMsg + " - got '" + prettyName(aObj) +
+            "', expected '" + prettyName(aExpectedObj) + "'");
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Helpers for getting DOM node/accessible
 
