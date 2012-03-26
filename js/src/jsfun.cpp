@@ -52,7 +52,7 @@
 #include "jsatom.h"
 #include "jsbool.h"
 #include "jscntxt.h"
-#include "jsversion.h"
+#include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
@@ -66,7 +66,6 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "jsexn.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
@@ -74,13 +73,10 @@
 #include "vm/Debugger.h"
 #include "vm/MethodGuard.h"
 #include "vm/ScopeObject.h"
+#include "vm/Xdr.h"
 
 #if JS_HAS_GENERATORS
 # include "jsiter.h"
-#endif
-
-#if JS_HAS_XDR
-# include "jsxdrapi.h"
 #endif
 
 #ifdef JS_METHODJIT
@@ -480,13 +476,10 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
     return true;
 }
 
-#if JS_HAS_XDR
-
-/* XXX store parent and proto, if defined */
-JSBool
-js::XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
+template<XDRMode mode>
+bool
+js::XDRInterpretedFunction(XDRState<mode> *xdr, JSObject **objp, JSScript *parentScript)
 {
-    JSContext *cx;
     JSFunction *fun;
     JSAtom *atom;
     uint32_t firstword;           /* flag telling whether fun->atom is non-null,
@@ -494,9 +487,9 @@ js::XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
                                    and 14 bits reserved for future use */
     uint32_t flagsword;           /* word for argument count and fun->flags */
 
-    cx = xdr->cx;
+    JSContext *cx = xdr->cx();
     JSScript *script;
-    if (xdr->mode == JSXDR_ENCODE) {
+    if (mode == XDR_ENCODE) {
         fun = (*objp)->toFunction();
         if (!fun->isInterpreted()) {
             JSAutoByteString funNameBytes;
@@ -523,17 +516,17 @@ js::XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         script = NULL;
     }
 
-    if (!JS_XDRUint32(xdr, &firstword))
+    if (!xdr->codeUint32(&firstword))
         return false;
-    if ((firstword & 1U) && !js_XDRAtom(xdr, &atom))
+    if ((firstword & 1U) && !XDRAtom(xdr, &atom))
         return false;
-    if (!JS_XDRUint32(xdr, &flagsword))
-        return false;
-
-    if (!XDRScript(xdr, &script))
+    if (!xdr->codeUint32(&flagsword))
         return false;
 
-    if (xdr->mode == JSXDR_DECODE) {
+    if (!XDRScript(xdr, &script, parentScript))
+        return false;
+
+    if (mode == XDR_DECODE) {
         fun->nargs = flagsword >> 16;
         JS_ASSERT((flagsword & JSFUN_KINDMASK) >= JSFUN_INTERPRETED);
         fun->flags = uint16_t(flagsword);
@@ -549,7 +542,11 @@ js::XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
     return true;
 }
 
-#endif /* JS_HAS_XDR */
+template bool
+js::XDRInterpretedFunction(XDRState<XDR_ENCODE> *xdr, JSObject **objp, JSScript *parentScript);
+
+template bool
+js::XDRInterpretedFunction(XDRState<XDR_DECODE> *xdr, JSObject **objp, JSScript *parentScript);
 
 /*
  * [[HasInstance]] internal method for Function objects: fetch the .prototype

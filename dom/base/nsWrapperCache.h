@@ -68,10 +68,10 @@ typedef PRUptrdiff PtrBits;
  *
  * The cache can store 2 types of objects:
  *
- *  If WRAPPER_IS_PROXY is not set (IsProxy() returns false):
+ *  If WRAPPER_IS_DOM_BINDING is not set (IsDOMBinding() returns false):
  *    - a slim wrapper or the JSObject of an XPCWrappedNative wrapper
  *
- *  If WRAPPER_IS_PROXY is set (IsProxy() returns true):
+ *  If WRAPPER_IS_DOM_BINDING is set (IsDOMBinding() returns true):
  *    - a DOM binding object (proxy)
  *
  * The finalizer for the wrapper clears the cache.
@@ -141,22 +141,22 @@ public:
     return (mWrapperPtrBits & WRAPPER_BIT_PRESERVED) != 0;
   }
 
-  void SetIsProxy()
+  void SetIsDOMBinding()
   {
     NS_ASSERTION(!mWrapperPtrBits,
                  "This flag should be set before creating any wrappers.");
-    mWrapperPtrBits = WRAPPER_IS_PROXY;
+    mWrapperPtrBits = WRAPPER_IS_DOM_BINDING;
   }
-  void ClearIsProxy()
+  void ClearIsDOMBinding()
   {
-    NS_ASSERTION(!mWrapperPtrBits || mWrapperPtrBits == WRAPPER_IS_PROXY,
+    NS_ASSERTION(!mWrapperPtrBits || mWrapperPtrBits == WRAPPER_IS_DOM_BINDING,
                  "This flag should be cleared before creating any wrappers.");
     mWrapperPtrBits = 0;
   }
 
-  bool IsProxy() const
+  bool IsDOMBinding() const
   {
-    return (mWrapperPtrBits & WRAPPER_IS_PROXY) != 0;
+    return (mWrapperPtrBits & WRAPPER_IS_DOM_BINDING) != 0;
   }
 
 
@@ -199,7 +199,7 @@ private:
   void SetWrapperBits(void *aWrapper)
   {
     mWrapperPtrBits = reinterpret_cast<PtrBits>(aWrapper) |
-                      (mWrapperPtrBits & WRAPPER_IS_PROXY);
+                      (mWrapperPtrBits & WRAPPER_IS_DOM_BINDING);
   }
 
   /**
@@ -216,14 +216,12 @@ private:
   enum { WRAPPER_BIT_PRESERVED = 1 << 0 };
 
   /**
-   * If this bit is set then the wrapper for the native object is a proxy. Note
-   * that that doesn't necessarily mean that the JS object stored in the cache
-   * is a JS proxy, as we sometimes store objects other than the wrapper in the
-   * cache.
+   * If this bit is set then the wrapper for the native object is a DOM binding
+   * (proxy).
    */
-  enum { WRAPPER_IS_PROXY = 1 << 1 };
+  enum { WRAPPER_IS_DOM_BINDING = 1 << 1 };
 
-  enum { kWrapperBitMask = (WRAPPER_BIT_PRESERVED | WRAPPER_IS_PROXY) };
+  enum { kWrapperBitMask = (WRAPPER_BIT_PRESERVED | WRAPPER_IS_DOM_BINDING) };
 
   PtrBits mWrapperPtrBits;
 };

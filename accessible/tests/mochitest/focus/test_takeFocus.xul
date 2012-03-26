@@ -26,23 +26,6 @@
     ////////////////////////////////////////////////////////////////////////////
     // Invokers
 
-    function setTreeView(aTreeID, aView)
-    {
-      this.DOMNode = getNode(aTreeID);
-
-      this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, this.DOMNode)
-      ];
-
-      this.invoke = function setTreeView_invoke()
-      {
-        this.DOMNode.treeBoxObject.view = aView;
-      }
-
-      this.getID = function setTreeView_getID()
-        { return "set tree view for " + prettyName(aTreeID); }
-    };
-
     function takeFocusInvoker(aID, aArgConverterFunc)
     {
       this.targetFunc = aArgConverterFunc ? aArgConverterFunc : getAccessible;
@@ -77,7 +60,6 @@
       // Test focus events.
       gQueue = new eventQueue();
 
-      gQueue.push(new setTreeView("tree", new nsTableTreeView(5)));
       gQueue.push(new takeFocusInvoker("tree", getLastChild));
       gQueue.push(new takeFocusInvoker("listitem2"));
 
@@ -85,7 +67,7 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTests);
+    addA11yXULTreeLoadEvent(doTests, "tree", new nsTableTreeView(5));
   ]]>
   </script>
 

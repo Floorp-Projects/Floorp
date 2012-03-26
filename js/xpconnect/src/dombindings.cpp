@@ -557,7 +557,7 @@ ListBase<LC>::create(JSContext *cx, JSObject *scope, ListType *aList,
         XPCWrappedNativeScope::FindInJSObjectScope(cx, parent);
     JSObject *proto = getPrototype(cx, xpcscope, triedToWrap);
     if (!proto && !*triedToWrap)
-        aWrapperCache->ClearIsProxy();
+        aWrapperCache->ClearIsDOMBinding();
     if (!proto)
         return NULL;
     JSObject *obj = NewProxyObject(cx, &ListBase<LC>::instance,

@@ -1,3 +1,54 @@
+/**
+ * Helper method to start a single XUL tree test.
+ */
+function loadXULTreeAndDoTest(aDoTestFunc, aTreeID, aTreeView)
+{
+  var doTestFunc = aDoTestFunc ? aDoTestFunc : gXULTreeLoadContext.doTestFunc;
+  var treeID = aTreeID ? aTreeID : gXULTreeLoadContext.treeID;
+  var treeView = aTreeView ? aTreeView : gXULTreeLoadContext.treeView;
+
+  function loadXULTree(aTreeID, aTreeView)
+  {
+    this.treeNode = getNode(aTreeID);
+
+    this.eventSeq = [
+      new invokerChecker(EVENT_REORDER, this.treeNode)
+    ];
+
+    this.invoke = function loadXULTree_invoke()
+    {
+      this.treeNode.treeBoxObject.view = aTreeView;
+    }
+
+    this.getID = function loadXULTree_getID()
+    {
+      return "Load XUL tree " + prettyName(aTreeID);
+    }
+  }
+
+  gXULTreeLoadContext.queue = new eventQueue();
+  gXULTreeLoadContext.queue.push(new loadXULTree(treeID, treeView));
+  gXULTreeLoadContext.queue.onFinish = function()
+  {
+    SimpleTest.executeSoon(doTestFunc);
+    return DO_NOT_FINISH_TEST;
+  }
+  gXULTreeLoadContext.queue.invoke();
+}
+
+/**
+ * Analogy of addA11yLoadEvent, nice helper to load XUL tree and start the test.
+ */
+function addA11yXULTreeLoadEvent(aDoTestFunc, aTreeID, aTreeView)
+{
+  gXULTreeLoadContext.doTestFunc = aDoTestFunc;
+  gXULTreeLoadContext.treeID = aTreeID;
+  gXULTreeLoadContext.treeView = aTreeView;
+
+  addA11yLoadEvent(loadXULTreeAndDoTest);
+}
+
+
 function nsTableTreeView(aRowCount)
 {
   this.__proto__ = new nsTreeView();
@@ -232,3 +283,14 @@ function createAtom(aName)
   return Components.classes["@mozilla.org/atom-service;1"]
     .getService(Components.interfaces.nsIAtomService).getAtom(aName);
 }
+
+/**
+ * Used in conjunction with loadXULTreeAndDoTest and addA11yXULTreeLoadEvent.
+ */
+var gXULTreeLoadContext =
+{
+  doTestFunc: null,
+  treeID: null,
+  treeView: null,
+  queue: null
+};

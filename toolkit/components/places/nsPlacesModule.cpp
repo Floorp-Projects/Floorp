@@ -6,7 +6,7 @@
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
 #include "nsFaviconService.h"
-#include "nsPlacesImportExportService.h"
+#include "nsPlacesExportService.h"
 #include "History.h"
 #include "nsDocShellCID.h"
 
@@ -24,8 +24,8 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsNavBookmarks,
                                          nsNavBookmarks::GetSingleton)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsFaviconService,
                                          nsFaviconService::GetSingleton)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPlacesImportExportService,
-                                         nsPlacesImportExportService::GetSingleton)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPlacesExportService,
+                                         nsPlacesExportService::GetSingleton)
 #ifdef MOZ_ANDROID_HISTORY
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsAndroidHistory, nsAndroidHistory::GetSingleton)
 #else
@@ -57,7 +57,7 @@ const mozilla::Module::CIDEntry kPlacesCIDs[] = {
 #else
   { &kNS_HISTORYSERVICE_CID, false, NULL, HistoryConstructor },
 #endif
-  { &kNS_PLACESIMPORTEXPORTSERVICE_CID, false, NULL, nsPlacesImportExportServiceConstructor },
+  { &kNS_PLACESIMPORTEXPORTSERVICE_CID, false, NULL, nsPlacesExportServiceConstructor },
   { NULL }
 };
 

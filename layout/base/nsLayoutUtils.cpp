@@ -4050,8 +4050,9 @@ nsLayoutUtils::SurfaceFromElement(dom::Element* aElement,
 
   bool forceCopy = (aSurfaceFlags & SFE_WANT_NEW_SURFACE) != 0;
   bool wantImageSurface = (aSurfaceFlags & SFE_WANT_IMAGE_SURFACE) != 0;
+  bool premultAlpha = (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) == 0;
 
-  if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) {
+  if (!premultAlpha) {
     forceCopy = true;
     wantImageSurface = true;
   }
@@ -4082,7 +4083,8 @@ nsLayoutUtils::SurfaceFromElement(dom::Element* aElement,
 
       nsRefPtr<gfxContext> ctx = new gfxContext(surf);
       // XXX shouldn't use the external interface, but maybe we can layerify this
-      rv = canvas->RenderContextsExternal(ctx, gfxPattern::FILTER_NEAREST);
+      PRUint32 flags = premultAlpha ? nsHTMLCanvasElement::RenderFlagPremultAlpha : 0;
+      rv = canvas->RenderContextsExternal(ctx, gfxPattern::FILTER_NEAREST, flags);
       if (NS_FAILED(rv))
         return result;
     }
@@ -4090,12 +4092,6 @@ nsLayoutUtils::SurfaceFromElement(dom::Element* aElement,
     // Ensure that any future changes to the canvas trigger proper invalidation,
     // in case this is being used by -moz-element()
     canvas->MarkContextClean();
-
-    if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) {
-      // we can modify this surface since we force a copy above when
-      // when NO_PREMULTIPLY_ALPHA is set
-      gfxUtils::UnpremultiplyImageSurface(static_cast<gfxImageSurface*>(surf.get()));
-    }
 
     result.mSurface = surf;
     result.mSize = size;

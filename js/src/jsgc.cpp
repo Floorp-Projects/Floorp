@@ -3252,7 +3252,7 @@ SweepPhase(JSContext *cx, JSGCInvocationKind gckind)
          * script's filename. See bug 323267.
          */
         for (GCCompartmentsIter c(rt); !c.done(); c.next())
-            js_SweepScriptFilenames(c);
+            SweepScriptFilenames(c);
 
         /*
          * This removes compartments from rt->compartment, so we do it last to make
@@ -3703,14 +3703,24 @@ Collect(JSContext *cx, JSCompartment *comp, int64_t budget,
     JS_ASSERT_IF(budget != SliceBudget::Unlimited, JSGC_INCREMENTAL);
 
 #ifdef JS_GC_ZEAL
+    bool restartVerify = cx->runtime->gcVerifyData &&
+                         cx->runtime->gcZeal() == ZealVerifierValue &&
+                         reason != gcreason::CC_FORCED;
+
     struct AutoVerifyBarriers {
         JSContext *cx;
-        bool inVerify;
-        AutoVerifyBarriers(JSContext *cx) : cx(cx), inVerify(cx->runtime->gcVerifyData) {
-            if (inVerify) EndVerifyBarriers(cx);
+        bool restart;
+        AutoVerifyBarriers(JSContext *cx, bool restart)
+          : cx(cx), restart(restart)
+        {
+            if (cx->runtime->gcVerifyData)
+                EndVerifyBarriers(cx);
         }
-        ~AutoVerifyBarriers() { if (inVerify) StartVerifyBarriers(cx); }
-    } av(cx);
+        ~AutoVerifyBarriers() {
+            if (restart)
+                StartVerifyBarriers(cx);
+        }
+    } av(cx, restartVerify);
 #endif
 
     RecordNativeStackTopForGC(rt);
@@ -4445,8 +4455,11 @@ VerifyBarriers(JSContext *cx)
 void
 MaybeVerifyBarriers(JSContext *cx, bool always)
 {
-    if (cx->runtime->gcZeal() != ZealVerifierValue)
+    if (cx->runtime->gcZeal() != ZealVerifierValue) {
+        if (cx->runtime->gcVerifyData)
+            EndVerifyBarriers(cx);
         return;
+    }
 
     uint32_t freq = cx->runtime->gcZealFrequency;
 

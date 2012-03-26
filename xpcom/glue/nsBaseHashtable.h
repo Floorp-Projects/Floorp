@@ -272,16 +272,17 @@ public:
    * @return    the summed size of all the entries
    */
   size_t SizeOfExcludingThis(SizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
-                             nsMallocSizeOfFun mallocSizeOf, void *userArg = nsnull)
+                             nsMallocSizeOfFun mallocSizeOf, void *userArg = nsnull) const
   {
-    if (IsInitialized()) {
-      s_SizeOfArgs args = { sizeOfEntryExcludingThis, userArg };
-      return PL_DHashTableSizeOfExcludingThis(&this->mTable,
-                                              s_SizeOfStub,
-                                              mallocSizeOf,
-                                              &args);
+    if (!IsInitialized()) {
+      return 0;
     }
-    return 0;
+    if (sizeOfEntryExcludingThis) {
+      s_SizeOfArgs args = { sizeOfEntryExcludingThis, userArg };
+      return PL_DHashTableSizeOfExcludingThis(&this->mTable, s_SizeOfStub,
+                                              mallocSizeOf, &args);
+    }
+    return PL_DHashTableSizeOfExcludingThis(&this->mTable, NULL, mallocSizeOf);
   }
 
 protected:

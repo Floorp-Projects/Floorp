@@ -98,32 +98,9 @@ private:
 
   // Wrappers for event queue methods:
   bool GetEvent(bool mayWait, nsIRunnable **event) {
-    return mEvents->GetEvent(mayWait, event);
+    return mEvents.GetEvent(mayWait, event);
   }
   nsresult PutEvent(nsIRunnable *event);
-
-  // Wrapper for nsEventQueue that supports chaining.
-  class nsChainedEventQueue {
-  public:
-    nsChainedEventQueue(nsIThreadEventFilter *filter = nsnull)
-      : mNext(nsnull), mFilter(filter) {
-    }
-
-    bool GetEvent(bool mayWait, nsIRunnable **event) {
-      return mQueue.GetEvent(mayWait, event);
-    }
-
-    bool PutEvent(nsIRunnable *event);
-    
-    bool HasPendingEvent() {
-      return mQueue.HasPendingEvent();
-    }
-
-    class nsChainedEventQueue *mNext;
-  private:
-    nsCOMPtr<nsIThreadEventFilter> mFilter;
-    nsEventQueue mQueue;
-  };
 
   // This lock protects access to mObserver, mEvents and mEventsAreDoomed.
   // All of those fields are only modified on the thread itself (never from
@@ -137,8 +114,7 @@ private:
   // Only accessed on the target thread.
   nsAutoTObserverArray<nsCOMPtr<nsIThreadObserver>, 2> mEventObservers;
 
-  nsChainedEventQueue *mEvents;   // never null
-  nsChainedEventQueue  mEventsRoot;
+  nsEventQueue  mEvents;
 
   PRInt32   mPriority;
   PRThread *mThread;

@@ -1,4 +1,3 @@
-conformance/context/premultiplyalpha-test.html
 conformance/misc/uninitialized-test.html
 conformance/programs/gl-get-active-attribute.html
 conformance/textures/texture-mips.html

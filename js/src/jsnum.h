@@ -74,7 +74,7 @@
 #define JSDOUBLE_HI32_EXPSHIFT  20
 #define JSDOUBLE_EXPBIAS        1023
 
-typedef union jsdpun {
+union jsdpun {
     struct {
 #if defined(IS_LITTLE_ENDIAN) && !defined(FPU_IS_ARM_FPA)
         uint32_t lo, hi;
@@ -84,7 +84,7 @@ typedef union jsdpun {
     } s;
     uint64_t u64;
     double d;
-} jsdpun;
+};
 
 static inline int
 JSDOUBLE_IS_NaN(double d)

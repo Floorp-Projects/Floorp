@@ -109,6 +109,7 @@ def build_gcc(stage_dir, is_stage_one):
                           "--with-mpfr=%s" % lib_inst_dir,
                           "--with-mpc=%s" % lib_inst_dir,
                           "--enable-languages=c,c++",
+                          "--disable-lto",
                           "--disable-multilib",
                           "--disable-bootstrap"]
     if is_stage_one:

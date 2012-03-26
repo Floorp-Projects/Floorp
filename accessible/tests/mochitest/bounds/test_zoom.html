@@ -7,6 +7,8 @@
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
   <script type="application/javascript"
           src="../common.js"></script>
@@ -21,24 +23,42 @@
     function doTest()
     {
       var tabDocument = currentTabDocument();
-      var p1 = tabDocument.body.firstElementChild;
-      var p2 = tabDocument.body.lastElementChild;
+      var p1 = tabDocument.getElementById("p1");
+      var p2 = tabDocument.getElementById("p2");
+
+      var imgMap = tabDocument.getElementById("imgmap");
+      ensureImageMapTree(imgMap);
+      var imgMapAcc = getAccessible(imgMap);
+      var area = imgMapAcc.firstChild;
 
       testBounds(p1);
       testBounds(p2);
+      testBounds(area);
 
       zoomDocument(tabDocument, 2.0);
 
       testBounds(p1);
       testBounds(p2);
+      testBounds(area);
 
       closeBrowserWindow();
       SimpleTest.finish();
     }
 
+    var url = "data:text/html,<html><body>";
+    url += "<p id='p1'>para 1</p><p id='p2'>para 2</p>";
+    url += "<map name='atoz_map' id='map'>";
+    url += "  <area id='area1' href='http%3A%2F%2Fmozilla.org'";
+    url += "        coords=17,0,30,14' alt='mozilla.org' shape='rect'>";
+    url += "</map>";
+    url += "<img id='imgmap' width='447' height='15'";
+    url += "     usemap='%23atoz_map'";
+    url += "     src='chrome%3A%2F%2Fmochitests%2Fcontent%2Fa11y%2Faccessible%2Fletters.gif'>";
+    url += "</body></html>";
+
     SimpleTest.waitForExplicitFinish();
     openBrowserWindow(doTest,
-                      "data:text/html,<html><body><p>para 1</p><p>para 2</p></body></html>",
+                      url,
                       { left: 0, top: 0, width: 600, height: 600 });
   </script>
 </head>

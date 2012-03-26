@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "AudioManager.h"
-#include <media/AudioSystem.h>
+#include "gonk/AudioSystem.h"
 
 using namespace mozilla::dom::gonk;
 using namespace android;
@@ -120,15 +120,21 @@ AudioManager::SetPhoneState(PRInt32 aState)
 NS_IMETHODIMP
 AudioManager::SetForceForUse(PRInt32 aUsage, PRInt32 aForce)
 {
+  /*
+   * FIXME/bug XXXXXX: why do we need to disable forceUse in ICS?
   if (AudioSystem::setForceUse((AudioSystem::force_use)aUsage,
                                (AudioSystem::forced_config)aForce)) {
     return NS_ERROR_FAILURE;
   }
+  */
   return NS_OK;
 }
 
 NS_IMETHODIMP
 AudioManager::GetForceForUse(PRInt32 aUsage, PRInt32* aForce) {
+  /*
+   * FIXME/bug XXXXXX: why do we need to disable forceUse in ICS?
   *aForce = AudioSystem::getForceUse((AudioSystem::force_use)aUsage);
+  */
   return NS_OK;
 }

@@ -67,6 +67,8 @@ public:
         role != mozilla::a11y::roles::LISTITEM &&
         role != mozilla::a11y::roles::MENUITEM &&
         role != mozilla::a11y::roles::COMBOBOX_OPTION &&
+        role != mozilla::a11y::roles::RICH_OPTION &&
+        role != mozilla::a11y::roles::CHECK_RICH_OPTION &&
         role != mozilla::a11y::roles::PARENT_MENUITEM &&
         role != mozilla::a11y::roles::CHECK_MENU_ITEM &&
         role != mozilla::a11y::roles::RADIO_MENU_ITEM &&
@@ -88,6 +90,10 @@ private:
         aRole == mozilla::a11y::roles::PARENT_MENUITEM ||
         aRole == mozilla::a11y::roles::RADIO_MENU_ITEM)
       return mozilla::a11y::roles::MENUITEM;
+
+    if (aRole == mozilla::a11y::roles::CHECK_RICH_OPTION)
+      return mozilla::a11y::roles::RICH_OPTION;
+
     return aRole;
   }
 

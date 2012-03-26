@@ -150,8 +150,8 @@ public:
   // SetDecodeFlags must be called before Init(), otherwise
   // default flags are assumed.
   enum {
-    DECODER_NO_PREMULTIPLY_ALPHA = 0x2,
-    DECODER_NO_COLORSPACE_CONVERSION = 0x4
+    DECODER_NO_PREMULTIPLY_ALPHA = 0x2,     // imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA
+    DECODER_NO_COLORSPACE_CONVERSION = 0x4  // imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION
   };
   void SetDecodeFlags(PRUint32 aFlags) { mDecodeFlags = aFlags; }
   PRUint32 GetDecodeFlags() { return mDecodeFlags; }

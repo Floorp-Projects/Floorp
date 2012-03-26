@@ -102,7 +102,6 @@
 
 // JS includes
 #include "jsapi.h"
-#include "jswrapper.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -232,26 +231,6 @@ private:
 };
 
 //*****************************************************************************
-// nsOuterWindow: Outer Window Proxy
-//*****************************************************************************
-
-class nsOuterWindowProxy : public js::Wrapper
-{
-public:
-  nsOuterWindowProxy() : js::Wrapper((unsigned)0) {}
-
-  virtual bool isOuterWindow() {
-    return true;
-  }
-  JSString *obj_toString(JSContext *cx, JSObject *wrapper);
-  void finalize(JSContext *cx, JSObject *proxy);
-
-  static nsOuterWindowProxy singleton;
-};
-
-JSObject *NS_NewOuterWindowProxy(JSContext *cx, JSObject *parent);
-
-//*****************************************************************************
 // nsGlobalWindow: Global Object for Scripting
 //*****************************************************************************
 // Beware that all scriptable interfaces implemented by
@@ -317,13 +296,13 @@ public:
     return mJSObject;
   }
 
-  virtual nsresult EnsureScriptEnvironment(PRUint32 aLangID);
+  virtual nsresult EnsureScriptEnvironment();
 
-  virtual nsIScriptContext *GetScriptContext(PRUint32 lang);
+  virtual nsIScriptContext *GetScriptContext();
 
   // Set a new script language context for this global.  The native global
   // for the context is created by the context's GetNativeGlobal() method.
-  virtual nsresult SetScriptContext(PRUint32 lang, nsIScriptContext *aContext);
+  virtual nsresult SetScriptContext(nsIScriptContext *aContext);
   
   virtual void OnFinalize(JSObject* aObject);
   virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts);
@@ -394,8 +373,6 @@ public:
   virtual NS_HIDDEN_(bool) CanClose();
   virtual NS_HIDDEN_(nsresult) ForceClose();
 
-  virtual NS_HIDDEN_(void) SetHasOrientationEventListener();
-  virtual NS_HIDDEN_(void) RemoveOrientationEventListener();
   virtual NS_HIDDEN_(void) MaybeUpdateTouchState();
   virtual NS_HIDDEN_(void) UpdateTouchState();
   virtual NS_HIDDEN_(bool) DispatchCustomEvent(const char *aEventName);
@@ -540,6 +517,9 @@ public:
   virtual nsresult DispatchAsyncHashchange(nsIURI *aOldURI, nsIURI *aNewURI);
   virtual nsresult DispatchSyncPopState();
 
+  virtual void EnableDeviceSensor(PRUint32 aType);
+  virtual void DisableDeviceSensor(PRUint32 aType);
+
   virtual nsresult SetArguments(nsIArray *aArguments, nsIPrincipal *aOrigin);
 
   static bool DOMWindowDumpEnabled();
@@ -594,12 +574,6 @@ public:
   void AddEventTargetObject(nsDOMEventTargetHelper* aObject);
   void RemoveEventTargetObject(nsDOMEventTargetHelper* aObject);
 private:
-  // Enable updates for the accelerometer.
-  void EnableDeviceMotionUpdates();
-
-  // Disables updates for the accelerometer.
-  void DisableDeviceMotionUpdates();
-
   // Implements Get{Real,Scriptable}Top.
   nsresult GetTopImpl(nsIDOMWindow **aWindow, bool aScriptable);
 
@@ -843,6 +817,9 @@ protected:
 
   inline PRInt32 DOMMinTimeoutValue() const;
 
+  nsresult CreateOuterObject(nsGlobalWindow* aNewInner);
+  nsresult SetOuterObject(JSContext* aCx, JSObject* aOuterObject);
+
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
   // could own objects that are implemented in JavaScript, then those
@@ -910,9 +887,6 @@ protected:
   // true if tab navigation has occurred for this window. Focus rings
   // should be displayed.
   bool                   mFocusByKeyOccurred : 1;
-
-  // Indicates whether this window is getting device motion change events
-  bool                   mHasDeviceMotion : 1;
 
   // whether we've sent the destroy notification for our window id
   bool                   mNotifiedIDDestroyed : 1;
@@ -1014,6 +988,8 @@ protected:
   nsRefPtr<nsDOMMozURLProperty> mURLProperty;
 
   nsTHashtable<nsPtrHashKey<nsDOMEventTargetHelper> > mEventTargetObjects;
+
+  nsTArray<PRUint32> mEnabledSensors;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;

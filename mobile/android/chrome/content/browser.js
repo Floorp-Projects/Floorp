@@ -193,6 +193,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Viewport:Change", false);
     Services.obs.addObserver(this, "Passwords:Init", false);
     Services.obs.addObserver(this, "FormHistory:Init", false);
+    Services.obs.addObserver(this, "ToggleProfiling", false);
 
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
 
@@ -952,6 +953,14 @@ var BrowserApp = {
       Services.obs.removeObserver(this, "FormHistory:Init", false);
     } else if (aTopic == "sessionstore-state-purge-complete") {
       sendMessageToJava({ gecko: { type: "Session:StatePurged" }});
+    } else if (aTopic == "ToggleProfiling") {
+      let profiler = Cc["@mozilla.org/tools/profiler;1"].
+                       getService(Ci.nsIProfiler);
+      if (profiler.IsActive()) {
+        profiler.StopProfiler();
+      } else {
+        profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
+      }
     }
   },
 
@@ -1455,10 +1464,9 @@ function Tab(aURL, aParams) {
   this.create(aURL, aParams);
   this._zoom = 1.0;
   this.userScrollPos = { x: 0, y: 0 };
+  this._pluginCount = 0;
+  this._pluginOverlayShowing = false;
   this.contentDocumentIsDisplayed = true;
-  this.clickToPlayPluginDoorhangerShown = false;
-  this.clickToPlayPluginsActivated = false;
-  this.loadEventProcessed = false;
 }
 
 Tab.prototype = {
@@ -1502,8 +1510,7 @@ Tab.prototype = {
     sendMessageToJava(message);
 
     this.overscrollController = new OverscrollController(this);
-    this.browser.contentWindow.controllers
-      .insertControllerAt(0, this.overscrollController);
+    this.browser.contentWindow.controllers.insertControllerAt(0, this.overscrollController);
 
     let flags = Ci.nsIWebProgress.NOTIFY_STATE_ALL |
                 Ci.nsIWebProgress.NOTIFY_LOCATION |
@@ -1512,7 +1519,6 @@ Tab.prototype = {
     this.browser.sessionHistory.addSHistoryListener(this);
 
     this.browser.addEventListener("DOMContentLoaded", this, true);
-    this.browser.addEventListener("load", this, true);
     this.browser.addEventListener("DOMLinkAdded", this, true);
     this.browser.addEventListener("DOMTitleChanged", this, true);
     this.browser.addEventListener("DOMWindowClose", this, true);
@@ -1520,6 +1526,8 @@ Tab.prototype = {
     this.browser.addEventListener("scroll", this, true);
     this.browser.addEventListener("MozScrolledAreaChanged", this, true);
     this.browser.addEventListener("PluginClickToPlay", this, true);
+    this.browser.addEventListener("pagehide", this, true);
+    this.browser.addEventListener("pageshow", this, true);
 
     Services.obs.addObserver(this, "before-first-paint", false);
 
@@ -1553,12 +1561,10 @@ Tab.prototype = {
     if (!this.browser)
       return;
 
-    this.browser.controllers.contentWindow
-      .removeController(this.overscrollController);
+    this.browser.contentWindow.controllers.removeController(this.overscrollController);
 
     this.browser.removeProgressListener(this);
     this.browser.removeEventListener("DOMContentLoaded", this, true);
-    this.browser.removeEventListener("load", this, true);
     this.browser.removeEventListener("DOMLinkAdded", this, true);
     this.browser.removeEventListener("DOMTitleChanged", this, true);
     this.browser.removeEventListener("DOMWindowClose", this, true);
@@ -1566,6 +1572,8 @@ Tab.prototype = {
     this.browser.removeEventListener("scroll", this, true);
     this.browser.removeEventListener("PluginClickToPlay", this, true);
     this.browser.removeEventListener("MozScrolledAreaChanged", this, true);
+    this.browser.removeEventListener("pagehide", this, true);
+    this.browser.removeEventListener("pageshow", this, true);
 
     Services.obs.removeObserver(this, "before-first-paint");
 
@@ -1762,25 +1770,13 @@ Tab.prototype = {
             this.browser.removeEventListener("pagehide", listener, true);
           }.bind(this), true);
         }
-        break;
-      }
 
-      case "load": {
-        this.loadEventProcessed = true;
-        // Show a plugin doorhanger if there are no clickable overlays showing
-        let contentWindow = this.browser.contentWindow;
-        let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIDOMWindowUtils);
-        // XXX not sure if we should enable plugins for the parent documents...
-        let plugins = cwu.plugins;
-        let isAnyPluginVisible = false;
-        for (let plugin of plugins) {
-          let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-          if (overlay && !PluginHelper.isTooSmall(plugin, overlay))
-            isAnyPluginVisible = true;
-        }
-        if (plugins && plugins.length && !isAnyPluginVisible)
+        // Show a plugin doorhanger if there are plugins on the page but no
+        // clickable overlays showing (this doesn't work on pages loaded after
+        // back/forward navigation - see bug 719875)
+        if (this._pluginCount && !this._pluginOverlayShowing)
           PluginHelper.showDoorHanger(this);
+
         break;
       }
 
@@ -1888,36 +1884,39 @@ Tab.prototype = {
       }
 
       case "PluginClickToPlay": {
-        let plugin = aEvent.target;
+        // Keep track of the number of plugins to know whether or not to show
+        // the hidden plugins doorhanger
+        this._pluginCount++;
 
-        if (this.clickToPlayPluginsActivated) {
-          PluginHelper.playPlugin(plugin);
+        let plugin = aEvent.target;
+        let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+        if (!overlay)
           return;
-        }
 
         // If the overlay is too small, hide the overlay and act like this
         // is a hidden plugin object
-        let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-        if (!overlay || PluginHelper.isTooSmall(plugin, overlay)) {
-          if (overlay)
-            overlay.style.visibility = "hidden";
-          if (this.loadEventProcessed && !this.clickToPlayPluginDoorhangerShown)
-            PluginHelper.showDoorHanger(this);
+        if (PluginHelper.isTooSmall(plugin, overlay)) {
+          overlay.style.visibility = "hidden";
           return;
         }
 
         // Add click to play listener to the overlay
-        overlay.addEventListener("click", function(e) {
-          if (e) {
-            if (!e.isTrusted)
-              return;
-            e.preventDefault();
-          }
-          let win = e.target.ownerDocument.defaultView.top;
-          let tab = BrowserApp.getTabForWindow(win);
-          tab.clickToPlayPluginsActivated = true;
-          PluginHelper.playAllPlugins(win);
-        }, true);
+        overlay.addEventListener("click", (function(event) {
+          // Play all the plugin objects when the user clicks on one
+          PluginHelper.playAllPlugins(this, event);
+        }).bind(this), true);
+
+        this._pluginOverlayShowing = true;
+        break;
+      }
+
+      case "pagehide": {
+        // Check to make sure it's top-level pagehide
+        if (aEvent.target.defaultView == this.browser.contentWindow) {
+          // Reset plugin state when we leave the page
+          this._pluginCount = 0;
+          this._pluginOverlayShowing = false;
+        }
         break;
       }
     }
@@ -1976,11 +1975,6 @@ Tab.prototype = {
       documentURI = browser.contentDocument.documentURIObject.spec;
       contentType = browser.contentDocument.contentType;
     }
-
-    // Reset state of click-to-play plugin notifications.
-    this.clickToPlayPluginDoorhangerShown = false;
-    this.clickToPlayPluginsActivated = false;
-    this.loadEventProcessed = false;
 
     let message = {
       gecko: {
@@ -2218,18 +2212,32 @@ Tab.prototype = {
         // Is it on the top level?
         let contentDocument = aSubject;
         if (contentDocument == this.browser.contentDocument) {
-          // reset CSS viewport and zoom to default on new page
+          // reset CSS viewport and zoom to default on new page, and then calculate
+          // them properly using the actual metadata from the page. note that the
+          // updateMetadata call takes into account the existing CSS viewport size
+          // and zoom when calculating the new ones, so we need to reset these
+          // things here before calling updateMetadata.
           this.setBrowserSize(kDefaultCSSViewportWidth, kDefaultCSSViewportHeight);
           this.setResolution(gScreenWidth / this.browserWidth, false);
-          // and then use the metadata to figure out how it needs to be updated
           ViewportHandler.updateMetadata(this);
 
-          // If we draw without a display-port, things can go wrong. While it's
-          // almost certain a display-port has been set via the
-          // MozScrolledAreaChanged event, make sure by sending a viewport
-          // update here. As it's the first paint, this will end up being a
-          // display-port request only.
-          this.sendViewportUpdate();
+          // Note that if we draw without a display-port, things can go wrong. By the
+          // time we execute this, it's almost certain a display-port has been set via
+          // the MozScrolledAreaChanged event. If that didn't happen, the updateMetadata
+          // call above does so at the end of the updateViewportSize function. As long
+          // as that is happening, we don't need to do it again here.
+
+          if (contentDocument instanceof ImageDocument) {
+            // for images, scale to fit width. this needs to happen *after* the call
+            // to updateMetadata above, because that call sets the CSS viewport which
+            // will affect the page size (i.e. contentDocument.body.scroll*) that we
+            // use in this calculation. also we call sendViewportUpdate after changing
+            // the resolution so that the display port gets recalculated appropriately.
+            let fitZoom = Math.min(gScreenWidth / contentDocument.body.scrollWidth,
+                                   gScreenHeight / contentDocument.body.scrollHeight);
+            this.setResolution(fitZoom, false);
+            this.sendViewportUpdate();
+          }
 
           BrowserApp.displayedDocumentChanged();
           this.contentDocumentIsDisplayed = true;
@@ -2930,7 +2938,8 @@ var FormAssistant = {
       // Reset invalid submit state on each pageshow
       case "pageshow":
         let target = aEvent.originalTarget;
-        if (target == content.document || target.ownerDocument == content.document)
+        let selectedDocument = BrowserApp.selectedBrowser.contentDocument;
+        if (target == selectedDocument || target.ownerDocument == selectedDocument)
           this._invalidSubmit = false;
     }
   },
@@ -3867,13 +3876,12 @@ var ClipboardHelper = {
 
 var PluginHelper = {
   showDoorHanger: function(aTab) {
-    aTab.clickToPlayPluginDoorhangerShown = true;
     let message = Strings.browser.GetStringFromName("clickToPlayPlugins.message");
     let buttons = [
       {
         label: Strings.browser.GetStringFromName("clickToPlayPlugins.yes"),
         callback: function() {
-          PluginHelper.playAllPlugins(aTab.browser.contentWindow);
+          PluginHelper.playAllPlugins(aTab);
         }
       },
       {
@@ -3886,21 +3894,41 @@ var PluginHelper = {
     NativeWindow.doorhanger.show(message, "ask-to-play-plugins", buttons, aTab.id);
   },
 
-  playAllPlugins: function(aContentWindow) {
-    let cwu = aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIDOMWindowUtils);
-    // XXX not sure if we should enable plugins for the parent documents...
-    let plugins = cwu.plugins;
-    if (!plugins || !plugins.length)
-      return;
+  playAllPlugins: function(aTab, aEvent) {
+    if (aEvent) {
+      if (!aEvent.isTrusted)
+        return;
+      aEvent.preventDefault();
+    }
 
-    plugins.forEach(this.playPlugin);
+    this._findAndPlayAllPlugins(aTab.browser.contentWindow);
   },
 
-  playPlugin: function(plugin) {
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    if (!objLoadingContent.activated)
-      objLoadingContent.playPlugin();
+  // Helper function that recurses through sub-frames to find all plugin objects
+  _findAndPlayAllPlugins: function _findAndPlayAllPlugins(aWindow) {
+    let embeds = aWindow.document.getElementsByTagName("embed");
+    for (let i = 0; i < embeds.length; i++) {
+      if (!embeds[i].hasAttribute("played"))
+        this._playPlugin(embeds[i]);
+    }
+
+    let objects = aWindow.document.getElementsByTagName("object");
+    for (let i = 0; i < objects.length; i++) {
+      if (!objects[i].hasAttribute("played"))
+        this._playPlugin(objects[i]);
+    }
+
+    for (let i = 0; i < aWindow.frames.length; i++) {
+      this._findAndPlayAllPlugins(aWindow.frames[i]);
+    }
+  },
+
+  _playPlugin: function _playPlugin(aPlugin) {
+    let objLoadingContent = aPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    objLoadingContent.playPlugin();
+
+    // Set an attribute on the plugin object to avoid re-loading it
+    aPlugin.setAttribute("played", true);
   },
 
   getPluginPreference: function getPluginPreference() {
