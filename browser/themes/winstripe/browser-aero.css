@@ -66,6 +66,10 @@
                       -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
   }
 
+  #navigator-toolbox:not(:-moz-lwtheme)::after {
+    background-color: #aabccf;
+  }
+
   #navigator-toolbox[tabsontop=true] #urlbar:not(:-moz-lwtheme),
   #navigator-toolbox[tabsontop=true] .searchbar-textbox:not(:-moz-lwtheme) {
     border-color: hsla(210,54%,20%,.25) hsla(210,54%,20%,.27) hsla(210,54%,20%,.3);
@@ -210,7 +214,7 @@
   #main-window[sizemode=normal] #navigator-toolbox[tabsontop=true] > #nav-bar:not(:-moz-lwtheme),
   #main-window[sizemode=normal] #navigator-toolbox[tabsontop=true] > #nav-bar[collapsed=true]:not([customizing]) + toolbar:not(:-moz-lwtheme),
   #main-window[sizemode=normal] #navigator-toolbox[tabsontop=true] > #nav-bar[collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme),
-  #main-window[sizemode=normal][tabsontop=true][disablechrome] #navigator-toolbox:not(:-moz-lwtheme)::after {
+  #main-window[sizemode=normal][disablechrome] #navigator-toolbox[tabsontop=true]:not(:-moz-lwtheme)::after {
     border-top: 1px solid @toolbarShadowColor@;
     border-top-left-radius: 2.5px;
     border-top-right-radius: 2.5px;
@@ -244,7 +248,7 @@
   }
 
   /* Rounded corners for when chrome is disabled */
-  #main-window[sizemode=normal][tabsontop=true][disablechrome] #navigator-toolbox:not(:-moz-lwtheme)::after {
+  #main-window[sizemode=normal][disablechrome] #navigator-toolbox[tabsontop=true]:not(:-moz-lwtheme)::after {
     visibility: visible;
     background-color: @customToolbarColor@;
     background-image: -moz-linear-gradient(@toolbarHighlight@, @toolbarHighlight@);
