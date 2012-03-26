@@ -76,35 +76,41 @@
   var testsleftinround = 0;
   var currentround = "";
 
-  var gPBSvc = null;
-  var gPrefSvc = null;
+  var _PBSvc = null;
+  var _PrefSvc = null;
 
-  function _getServices() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  function _getPBService() {
+    if (_PBSvc)
+      return _PBSvc;
 
     // not all apps will have the private browsing service.
     try {
-      gPBSvc = Components.classes["@mozilla.org/privatebrowsing;1"]
-                         .getService(Components.interfaces.nsIPrivateBrowsingService);
-    } catch (ex) {
-      SimpleTest.todo(false, "PB service is not available, will skip dependent tests");
-    }
-
-    // Not all apps will have the preference service.
-    try {
-      gPrefSvc = Components.classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefService)
-                           .QueryInterface(Components.interfaces.nsIPrefBranch);
-    } catch (ex) {
-      SimpleTest.todo(false, "Pref service is not available, won't be able to manage preferences");
-    }
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+      _PBSvc = Components.classes["@mozilla.org/privatebrowsing;1"]
+        .getService(Components.interfaces.nsIPrivateBrowsingService);
+      return _PBSvc;
+    } catch (e) {}
+    return null;
   }
-  _getServices();
+  function _getPrefService() {
+    if (_PrefSvc)
+      return _PrefSvc;
+
+    // not all apps will have the private browsing service.
+    try {
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+      _PrefSvc = Components.classes["@mozilla.org/preferences-service;1"]
+        .getService(Components.interfaces.nsIPrefService)
+        .QueryInterface(Components.interfaces.nsIPrefBranch);
+      return _PrefSvc;
+    } catch (e) {}
+    return null;
+  }
 
   function startRound(round) {
     currentround = round;
     testsleftinround = NUM_TEST_FRAMES;
-    SimpleTest.info("TESTS LEFT IN ROUND " + currentround + ": " + testsleftinround);
+    dump("TESTS LEFT IN ROUND: " + testsleftinround + "\n");
     var frame = document.createElement("iframe");
     frame.setAttribute('id', 'ifr_bootstrap');
     frame.setAttribute('src', "https://example.com" + STSPATH +
@@ -143,6 +149,9 @@
     // check if the result (SECURE/INSECURE) is expected for this round/test
     // combo
     dump_STSState();
+    dump( "*** in ROUND " + currentround +
+          ", test " + result[1] +
+          " is " + result[0] + "\n");
     SimpleTest.is(result[0], testframes[result[1]].expected[currentround],
                              "in ROUND " + currentround +
                              ", test " + result[1]);
@@ -150,7 +159,7 @@
 
     // if this round is complete...
     if (testsleftinround < 1) {
-      SimpleTest.info("DONE WITH ROUND " + currentround);
+      dump("DONE WITH ROUND " + currentround + "\n");
       // remove all the iframes in the document
       document.body.removeChild(document.getElementById('ifr_bootstrap'));
       for (var test in testframes)
@@ -165,37 +174,36 @@
 
   function test_sts_before_private_mode() {
     dump_STSState();
-    SimpleTest.info("Not in private browsing mode");
+    dump("*** not in private browsing mode\n");
     startRound('plain');
   }
 
   function test_sts_in_private_mode() {
     dump_STSState();
-    SimpleTest.info("Entering private browsing mode ...");
+    dump("*** Entering private browsing mode\n");
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    if (gPrefSvc)
-      gPrefSvc.setBoolPref("browser.privatebrowsing.keep_current_session", true);
-    gPBSvc.privateBrowsingEnabled = true;
-    SimpleTest.info("... done");
+    _getPrefService().setBoolPref("browser.privatebrowsing.keep_current_session",
+                               true);
+    _getPBService().privateBrowsingEnabled = true;
+    dump("*** ... done\n");
     dump_STSState();
     startRound('subdom');
   }
 
   function test_sts_after_exiting_private_mode() {
     dump_STSState();
-    SimpleTest.info("Exiting private browsing mode ...");
+    dump("*** Exiting private browsing mode\n");
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    gPBSvc.privateBrowsingEnabled = false;
-    if (gPrefSvc)
-      gPrefSvc.clearUserPref("browser.privatebrowsing.keep_current_session");
-    SimpleTest.info("... done");
+    _getPBService().privateBrowsingEnabled = false;
+    _getPrefService().clearUserPref("browser.privatebrowsing.keep_current_session");
+    dump("*** ... done\n");
     dump_STSState();
     startRound('nosts');
   }
 
   function clean_up_sts_state() {
     // erase all signs that this test ran.
-    SimpleTest.info("Cleaning up STS data");
+    dump("*** Cleaning up STS data.\n");
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     const Cc = Components.classes;
     const Ci = Components.interfaces;
@@ -213,39 +221,43 @@ function dump_STSState() {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     var stss = Components.classes["@mozilla.org/stsservice;1"]
           .getService(Components.interfaces.nsIStrictTransportSecurityService);
-    SimpleTest.info("State of example.com: " + stss.isStsHost("example.com"));
+    dump("*** State of example.com: " + stss.isStsHost("example.com") + "\n");
 }
 
   // these are executed in the order presented.
   // 0.  test that STS works before entering private browsing mode.
   //     (load sts-bootstrapped "plain" tests)
   //  ... clear any STS data ...
-  var tests = [
-    test_sts_before_private_mode,
-    clean_up_sts_state,
-  ];
   // 1.  test that STS works in private browsing mode
   //     (load sts-bootstrapped "subdomain" tests)
   // 2.  test that after exiting private browsing, STS data is forgotten
   //     (verified with non-sts-bootstrapped pages)
-  //  ... clear any STS data ...
-  // Skip these tests if there is no private mode support.
-  if (gPBSvc) {
-    tests += [
-      test_sts_in_private_mode,
-      test_sts_after_exiting_private_mode,
-      clean_up_sts_state,
-    ];
+  var tests = [];
+  { // skip these tests if there's no private mode support
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    if ("@mozilla.org/privatebrowsing;1" in Components.classes) {
+      tests = [
+        test_sts_before_private_mode,
+        clean_up_sts_state,
+        test_sts_in_private_mode,
+        test_sts_after_exiting_private_mode,
+        clean_up_sts_state,
+      ];
+    }
   }
 
   function nextTest() {
-    SimpleTest.executeSoon(tests.length ? tests.shift() : SimpleTest.finish);
+    if (tests.length)
+      SimpleTest.executeSoon(tests.shift());
+    else
+      SimpleTest.executeSoon(SimpleTest.finish);
   }
 
   // listen for calls back from the sts-setting iframe and then
   // the verification frames.
   window.addEventListener("message", onMessageReceived, false);
   window.addEventListener('load', nextTest, false);
+
   </script>
 </head>
 
