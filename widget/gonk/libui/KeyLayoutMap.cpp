@@ -17,13 +17,13 @@
 #define LOG_TAG "KeyLayoutMap"
 
 #include <stdlib.h>
-#include <android/keycodes.h>
+#include "utils_Log.h"
+#include "android_keycodes.h"
 #include "Keyboard.h"
 #include "KeyLayoutMap.h"
-#include <utils/Log.h>
 #include <utils/Errors.h>
-#include <utils/Tokenizer.h>
-#include <utils/Timers.h>
+#include "Tokenizer.h"
+#include "Timers.h"
 
 // Enables debug output for the parser.
 #define DEBUG_PARSER 0

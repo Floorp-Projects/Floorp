@@ -18,13 +18,13 @@
 
 // #define LOG_NDEBUG 0
 
+#include "utils_Log.h"
 #include "EventHub.h"
 
 #include <hardware_legacy/power.h>
 
 #include <cutils/properties.h>
-#include <utils/Log.h>
-#include <utils/Timers.h>
+#include "Timers.h"
 #include <utils/threads.h>
 #include <utils/Errors.h>
 
