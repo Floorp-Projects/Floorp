@@ -120,6 +120,7 @@ FENNEC_JAVA_FILES = \
   gfx/CairoImage.java \
   gfx/CairoUtils.java \
   gfx/CheckerboardImage.java \
+  gfx/DisplayPortCalculator.java \
   gfx/DisplayPortMetrics.java \
   gfx/FlexibleGLSurfaceView.java \
   gfx/FloatSize.java \
