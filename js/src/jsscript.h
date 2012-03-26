@@ -101,6 +101,11 @@ struct GlobalSlotArray {
     uint32_t        length;
 };
 
+struct ClosedSlotArray {
+    uint32_t        *vector;    /* array of closed slots */
+    uint32_t        length;     /* count of closed slots */
+};
+
 struct Shape;
 
 enum BindingKind { NONE, ARGUMENT, VARIABLE, CONSTANT };
@@ -348,7 +353,8 @@ struct JSScript : public js::gc::Cell
 
   public:
     jsbytecode      *code;      /* bytecodes and their immediate operands */
-    uint8_t         *data;      /* pointer to variable-length data array */
+    uint8_t         *data;      /* pointer to variable-length data array (see 
+                                   comment above NewScript() for details) */
 
     const char      *filename;  /* source filename or null */
     JSAtom          **atoms;    /* maps immediate index to literal struct */
@@ -370,8 +376,6 @@ struct JSScript : public js::gc::Cell
      *   execute scripts.
      */
     js::HeapPtr<js::GlobalObject, JSScript*> globalObject;
-
-    uint32_t        *closedSlots; /* vector of closed slots; args first, then vars. */
 
     /* Execution and profiling information for JIT code in the script. */
     js::ScriptOpcodeCounts pcCounters;
@@ -440,9 +444,6 @@ struct JSScript : public js::gc::Cell
     uint16_t        nslots;     /* vars plus maximum stack depth */
     uint16_t        staticLevel;/* static level for display maintenance */
 
-    uint16_t        nClosedArgs;/* number of args which are closed over. */
-    uint16_t        nClosedVars;/* number of vars which are closed over. */
-
     /* 8-bit fields. */
 
     /*
@@ -450,6 +451,7 @@ struct JSScript : public js::gc::Cell
      * JSScript::INVALID_OFFSET if the array has length 0.
      */
   public:
+    uint8_t         constsOffset;   /* offset to the array of constants */
     uint8_t         objectsOffset;  /* offset to the array of nested function,
                                        block, scope, xml and one-time regexps
                                        objects */
@@ -457,7 +459,8 @@ struct JSScript : public js::gc::Cell
                                        regexps  */
     uint8_t         trynotesOffset; /* offset to the array of try notes */
     uint8_t         globalsOffset;  /* offset to the array of global slots */
-    uint8_t         constOffset;    /* offset to the array of constants */
+    uint8_t         closedArgsOffset; /* offset to the array of closed args */
+    uint8_t         closedVarsOffset; /* offset to the array of closed vars */
 
     /* 1-bit fields. */
 
@@ -650,6 +653,11 @@ struct JSScript : public js::gc::Cell
     static const uint8_t INVALID_OFFSET = 0xFF;
     static bool isValidOffset(uint8_t offset) { return offset != INVALID_OFFSET; }
 
+    JSConstArray *consts() {
+        JS_ASSERT(isValidOffset(constsOffset));
+        return reinterpret_cast<JSConstArray *>(data + constsOffset);
+    }
+
     JSObjectArray *objects() {
         JS_ASSERT(isValidOffset(objectsOffset));
         return reinterpret_cast<JSObjectArray *>(data + objectsOffset);
@@ -670,9 +678,22 @@ struct JSScript : public js::gc::Cell
         return reinterpret_cast<js::GlobalSlotArray *>(data + globalsOffset);
     }
 
-    JSConstArray *consts() {
-        JS_ASSERT(isValidOffset(constOffset));
-        return reinterpret_cast<JSConstArray *>(data + constOffset);
+    js::ClosedSlotArray *closedArgs() {
+        JS_ASSERT(isValidOffset(closedArgsOffset));
+        return reinterpret_cast<js::ClosedSlotArray *>(data + closedArgsOffset);
+    }
+
+    js::ClosedSlotArray *closedVars() {
+        JS_ASSERT(isValidOffset(closedVarsOffset));
+        return reinterpret_cast<js::ClosedSlotArray *>(data + closedVarsOffset);
+    }
+
+    uint32_t nClosedArgs() {
+        return isValidOffset(closedArgsOffset) ? closedArgs()->length : 0;
+    }
+
+    uint32_t nClosedVars() {
+        return isValidOffset(closedVarsOffset) ? closedVars()->length : 0;
     }
 
     JSAtom *getAtom(size_t index) {
@@ -713,16 +734,16 @@ struct JSScript : public js::gc::Cell
     inline bool isEmpty() const;
 
     uint32_t getClosedArg(uint32_t index) {
-        JS_ASSERT(index < nClosedArgs);
-        return closedSlots[index];
+        js::ClosedSlotArray *arr = closedArgs();
+        JS_ASSERT(index < arr->length);
+        return arr->vector[index];
     }
 
     uint32_t getClosedVar(uint32_t index) {
-        JS_ASSERT(index < nClosedVars);
-        return closedSlots[nClosedArgs + index];
+        js::ClosedSlotArray *arr = closedVars();
+        JS_ASSERT(index < arr->length);
+        return arr->vector[index];
     }
-
-    void copyClosedSlotsTo(JSScript *other);
 
   private:
     /*
