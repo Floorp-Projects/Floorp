@@ -31,6 +31,23 @@ final class DisplayPortCalculator {
     }
 
     /**
+     * This class implements the variation where we basically don't bother with a a display port.
+     */
+    private static class NoMarginStrategy implements DisplayPortStrategy {
+        public DisplayPortMetrics calculate(ImmutableViewportMetrics metrics, PointF velocity) {
+            return new DisplayPortMetrics(metrics.viewportRectLeft,
+                    metrics.viewportRectTop,
+                    metrics.viewportRectRight,
+                    metrics.viewportRectBottom,
+                    metrics.zoomFactor);
+        }
+
+        public boolean aboutToCheckerboard(ImmutableViewportMetrics metrics, PointF velocity, DisplayPortMetrics displayPort) {
+            return true;
+        }
+    }
+
+    /**
      * This class implements the variation where we use a fixed-size margin on the display port.
      * The margin is always 300 pixels in all directions, except when we are (a) approaching a page
      * boundary, and/or (b) if we are limited by the page size. In these cases we try to maintain
