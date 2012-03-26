@@ -345,7 +345,7 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         if (adjustedViewport.right > pageSize.width) adjustedViewport.right = pageSize.width;
         if (adjustedViewport.bottom > pageSize.height) adjustedViewport.bottom = pageSize.height;
 
-        RectF displayPort = (mLayerClient == null ? new RectF() : mLayerClient.getDisplayPort());
+        DisplayPortMetrics displayPort = (mLayerClient == null ? new DisplayPortMetrics() : mLayerClient.getDisplayPort());
         return !displayPort.contains(adjustedViewport);
     }
 

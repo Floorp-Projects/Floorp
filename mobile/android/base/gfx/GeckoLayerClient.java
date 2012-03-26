@@ -68,8 +68,8 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
     private IntSize mScreenSize;
     private IntSize mWindowSize;
-    private RectF mDisplayPort;
-    private RectF mReturnDisplayPort;
+    private DisplayPortMetrics mDisplayPort;
+    private DisplayPortMetrics mReturnDisplayPort;
 
     private VirtualLayer mRootLayer;
 
@@ -95,7 +95,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
         // to before being read
         mScreenSize = new IntSize(0, 0);
         mWindowSize = new IntSize(0, 0);
-        mDisplayPort = new RectF();
+        mDisplayPort = new DisplayPortMetrics();
         mCurrentViewTransform = new ViewTransform(0, 0, 1);
     }
 
@@ -120,7 +120,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
         sendResizeEventIfNecessary(true);
     }
 
-    RectF getDisplayPort() {
+    DisplayPortMetrics getDisplayPort() {
         return mDisplayPort;
     }
 
@@ -171,7 +171,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
         GeckoAppShell.viewSizeChanged();
     }
 
-    private static RectF calculateDisplayPort(ImmutableViewportMetrics metrics) {
+    private static DisplayPortMetrics calculateDisplayPort(ImmutableViewportMetrics metrics) {
         float desiredXMargins = 2 * DEFAULT_DISPLAY_PORT_MARGIN;
         float desiredYMargins = 2 * DEFAULT_DISPLAY_PORT_MARGIN;
 
@@ -226,10 +226,11 @@ public class GeckoLayerClient implements GeckoEventResponder,
         // content changes or zooming), the size of the display port should remain constant. this
         // is intentional to avoid re-creating textures and all sorts of other reallocations in the
         // draw and composition code.
-        return new RectF(metrics.viewportRectLeft - leftMargin,
-                         metrics.viewportRectTop - topMargin,
-                         metrics.viewportRectRight + rightMargin,
-                         metrics.viewportRectBottom + bottomMargin);
+        return new DisplayPortMetrics(metrics.viewportRectLeft - leftMargin,
+                metrics.viewportRectTop - topMargin,
+                metrics.viewportRectRight + rightMargin,
+                metrics.viewportRectBottom + bottomMargin,
+                metrics.zoomFactor);
     }
 
     private void adjustViewport() {
@@ -320,7 +321,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
             return "";
         }
         try {
-            return RectUtils.toJSON(mReturnDisplayPort);
+            return mReturnDisplayPort.toJSON();
         } finally {
             mReturnDisplayPort = null;
         }
