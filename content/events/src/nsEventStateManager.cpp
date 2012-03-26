@@ -3223,8 +3223,11 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           break;
 
         case MOUSE_SCROLL_PIXELS:
-          DoScrollText(aTargetFrame, msEvent, nsIScrollableFrame::DEVICE_PIXELS,
-                       false);
+          {
+            bool fromLines = msEvent->scrollFlags & nsMouseScrollEvent::kFromLines;
+            DoScrollText(aTargetFrame, msEvent, nsIScrollableFrame::DEVICE_PIXELS,
+                         false, nsnull, (fromLines ? nsGkAtoms::mouseWheel : nsnull));
+          }
           break;
 
         case MOUSE_SCROLL_HISTORY:
