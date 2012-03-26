@@ -3512,6 +3512,9 @@ pref("dom.sms.whitelist", "");
 pref("dom.mozContacts.enabled", false);
 pref("dom.mozContacts.whitelist", "");
 
+// WebSettings
+pref("dom.mozSettings.enabled", false);
+
 // enable JS dump() function.
 pref("browser.dom.window.dump.enabled", false);
 
