@@ -112,12 +112,6 @@ public class LayerController implements Tabs.OnTabsChangedListener {
 
     private boolean mForceRedraw;
 
-    /* The extra area on the sides of the page that we want to buffer to help with
-     * smooth, asynchronous scrolling. Depending on a device's support for NPOT
-     * textures, this may be rounded up to the nearest power of two.
-     */
-    public static final IntSize MIN_BUFFER = new IntSize(512, 1024);
-
     /* The time limit for pages to respond with preventDefault on touchevents
      * before we begin panning the page */
     private int mTimeout = 200;
