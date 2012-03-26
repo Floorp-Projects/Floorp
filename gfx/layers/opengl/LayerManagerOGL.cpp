@@ -52,8 +52,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Preferences.h"
 
-#include "LayerManagerOGLShaders.h"
-
 #include "gfxContext.h"
 #include "gfxUtils.h"
 #include "gfxPlatform.h"
