@@ -17,6 +17,7 @@ tex-sub-image-2d.html
 texparameter-test.html
 texture-active-bind-2.html
 texture-active-bind.html
+--min-version 1.0.2 texture-clear.html
 texture-complete.html
 texture-formats-test.html
 texture-mips.html
