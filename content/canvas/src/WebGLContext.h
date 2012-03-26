@@ -765,7 +765,7 @@ protected:
         WebGL_MOZ_WEBGL_lose_context,
         WebGLExtensionID_Max
     };
-    nsTArray<nsRefPtr<WebGLExtension> > mEnabledExtensions;
+    nsAutoTArray<nsRefPtr<WebGLExtension>, WebGLExtensionID_Max> mEnabledExtensions;
     bool IsExtensionEnabled(WebGLExtensionID ext) const {
         NS_ABORT_IF_FALSE(ext >= 0 && ext < WebGLExtensionID_Max, "bogus index!");
         return mEnabledExtensions[ext] != nsnull;

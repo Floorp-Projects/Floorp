@@ -10870,9 +10870,8 @@ WebGLExtensionSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 {
   *parentObj = globalObj;
 
-  nsCOMPtr<nsIWebGLExtension> iwebglext(do_QueryInterface(nativeObj));
-  WebGLExtension *webglext = static_cast<WebGLExtension*>(iwebglext.get());
-  WebGLContext *webgl = webglext->Context();
+  WebGLExtension *ext = static_cast<WebGLExtension*>(nativeObj);
+  WebGLContext *webgl = ext->Context();
   nsHTMLCanvasElement *canvas = webgl->HTMLCanvasElement();
   nsINode *node = static_cast<nsINode*>(canvas);
 
