@@ -491,7 +491,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     // if we want EGL, try it now
     if (!gl && (preferEGL || useANGLE) && !preferOpenGL) {
         gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
-        if (gl && !InitAndValidateGL()) {
+        if (!gl || !InitAndValidateGL()) {
             LogMessage("Error during ANGLE OpenGL ES initialization");
             return NS_ERROR_FAILURE;
         }
