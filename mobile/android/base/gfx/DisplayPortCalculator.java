@@ -145,6 +145,84 @@ final class DisplayPortCalculator {
     }
 
     /**
+     * This class implements the variation with a small fixed-size margin with velocity bias.
+     * In this variation, the default margins are pretty small relative to the view size, but
+     * they are affected by the panning velocity. Specifically, if we are panning on one axis,
+     * we remove the margins on the other axis because we are likely axis-locked. Also once
+     * we are panning in one direction above a certain threshold velocity, we shift the buffer
+     * so that it is entirely in the direction of the pan.
+     */
+    private static class VelocityBiasStrategy implements DisplayPortStrategy {
+        /* The size of the margin as a fraction of view size */
+        private static final float SIZE_MULTIPLIER = 0.2f;
+        /* The velocity above which we apply the velocity bias */
+        private static final float VELOCITY_THRESHOLD = GeckoAppShell.getDpi() / 32f;
+
+        public DisplayPortMetrics calculate(ImmutableViewportMetrics metrics, PointF velocity) {
+            // by default we apply margins that are a fraction of the view size
+            float desiredXMargins = metrics.getWidth() * SIZE_MULTIPLIER;
+            float desiredYMargins = metrics.getHeight() * SIZE_MULTIPLIER;
+
+            // but if we're panning on one axis, set the margins for the other axis to zero since we are likely
+            // axis locked and won't be displaying that extra area.
+            if (Math.abs(velocity.x) > VELOCITY_THRESHOLD && FloatUtils.fuzzyEquals(velocity.y, 0)) {
+                desiredYMargins = 0;
+            } else if (Math.abs(velocity.y) > VELOCITY_THRESHOLD && FloatUtils.fuzzyEquals(velocity.x, 0)) {
+                desiredXMargins = 0;
+            }
+
+            // we need to avoid having a display port that is larger than the page, or we will end up
+            // painting things outside the page bounds (bug 729169).
+
+            // figure out how much of the desired buffer amount we can actually use on the two axes
+            float xBufferAmount = Math.min(desiredXMargins, metrics.pageSizeWidth - metrics.getWidth());
+            float yBufferAmount = Math.min(desiredYMargins, metrics.pageSizeHeight - metrics.getHeight());
+
+            // if we're panning above the VELOCITY_THRESHOLD on an axis, shift the margin so that it
+            // is entirely in the direction of panning. Otherwise, split the margin evenly on both sides of
+            // the display port.
+            float leftMargin, rightMargin;
+            if (velocity.x > VELOCITY_THRESHOLD) {
+                rightMargin = Math.min(xBufferAmount, metrics.pageSizeWidth - (metrics.viewportRectLeft + metrics.getWidth()));
+                leftMargin = xBufferAmount - rightMargin;
+            } else if (velocity.x < -VELOCITY_THRESHOLD) {
+                leftMargin = Math.min(xBufferAmount, metrics.viewportRectLeft);
+                rightMargin = xBufferAmount - leftMargin;
+            } else {
+                leftMargin = Math.min(xBufferAmount / 2.0f, metrics.viewportRectLeft);
+                rightMargin = xBufferAmount - leftMargin;
+            }
+
+            float topMargin, bottomMargin;
+            if (velocity.y > VELOCITY_THRESHOLD) {
+                bottomMargin = Math.min(yBufferAmount, metrics.pageSizeHeight - (metrics.viewportRectTop + metrics.getHeight()));
+                topMargin = yBufferAmount - bottomMargin;
+            } else if (velocity.y < -VELOCITY_THRESHOLD) {
+                topMargin = Math.min(yBufferAmount, metrics.viewportRectTop);
+                bottomMargin = yBufferAmount - topMargin;
+            } else {
+                topMargin = Math.min(yBufferAmount / 2.0f, metrics.viewportRectTop);
+                bottomMargin = yBufferAmount - topMargin;
+            }
+
+            return new DisplayPortMetrics(metrics.viewportRectLeft - leftMargin,
+                    metrics.viewportRectTop - topMargin,
+                    metrics.viewportRectRight + rightMargin,
+                    metrics.viewportRectBottom + bottomMargin,
+                    metrics.zoomFactor);
+        }
+
+        public boolean aboutToCheckerboard(ImmutableViewportMetrics metrics, PointF velocity, DisplayPortMetrics displayPort) {
+            // Since we have such a small margin, we want to be drawing more aggressively. At the start of a
+            // pan the velocity is going to be large so we're almost certainly going to go into checkerboard
+            // on every frame, so drawing all the time seems like the right thing. At the end of the pan we
+            // want to re-center the displayport and draw stuff on all sides, so again we don't want to throttle
+            // there. When we're not panning we're not drawing anyway so it doesn't make a difference there.
+            return true;
+        }
+    }
+
+    /**
      * This class implements the variation where we draw more of the page at low resolution while panning.
      * In this variation, as we pan faster, we increase the page area we are drawing, but reduce the draw
      * resolution to compensate. This results in the same device-pixel area drawn; the compositor then
