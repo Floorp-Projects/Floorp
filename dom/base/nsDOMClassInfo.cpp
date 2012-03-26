@@ -532,6 +532,9 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #include "DOMError.h"
 #include "DOMRequest.h"
 
+#undef None // something included above defines this preprocessor symbol, maybe Xlib headers
+#include "WebGLContext.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -1525,14 +1528,18 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLActiveInfo, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLExtension, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionStandardDerivatives, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionTextureFilterAnisotropic, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionLoseContext, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLExtension, WebGLExtensionSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_ADDPROPERTY)
+  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionStandardDerivatives, WebGLExtensionSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_ADDPROPERTY)
+  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionTextureFilterAnisotropic, WebGLExtensionSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_ADDPROPERTY)
+  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionLoseContext, WebGLExtensionSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_ADDPROPERTY)
 
   NS_DEFINE_CLASSINFO_DATA(PaintRequest, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -10841,4 +10848,33 @@ nsSVGStringListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
   return rv;
 }
 
+NS_IMETHODIMP
+WebGLExtensionSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                              JSObject *obj, jsid id, jsval *vp, bool *_retval)
+{
+  WebGLExtensionSH::PreserveWrapper(GetNative(wrapper, obj));
 
+  return NS_OK;
+}
+
+void
+WebGLExtensionSH::PreserveWrapper(nsISupports *aNative)
+{
+  WebGLExtension* ext = static_cast<WebGLExtension*>(aNative);
+  nsContentUtils::PreserveWrapper(aNative, ext);
+}
+
+nsresult
+WebGLExtensionSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
+                            JSObject *globalObj, JSObject **parentObj)
+{
+  *parentObj = globalObj;
+
+  nsCOMPtr<nsIWebGLExtension> iwebglext(do_QueryInterface(nativeObj));
+  WebGLExtension *webglext = static_cast<WebGLExtension*>(iwebglext.get());
+  WebGLContext *webgl = webglext->Context();
+  nsHTMLCanvasElement *canvas = webgl->HTMLCanvasElement();
+  nsINode *node = static_cast<nsINode*>(canvas);
+
+  return WrapNativeParent(cx, globalObj, node, node, parentObj);
+}
