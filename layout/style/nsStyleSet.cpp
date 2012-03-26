@@ -985,7 +985,7 @@ nsStyleSet::ResolveStyleFor(Element* aElement,
 
   return GetContext(aParentContext, ruleNode, visitedRuleNode,
                     nsCSSRuleProcessor::IsLink(aElement),
-                    nsCSSRuleProcessor::GetContentState(aElement, aTreeMatchContext).
+                    nsCSSRuleProcessor::GetContentState(aElement).
                       HasState(NS_EVENT_STATE_VISITED),
                     nsnull, nsCSSPseudoElements::ePseudo_NotPseudoElement,
                     true, aElement);
