@@ -1500,6 +1500,7 @@ WifiWorker.prototype = {
   get worker() { throw "Not implemented"; },
 
   shutdown: function() {
+    debug("shutting down ...");
     this.setWifiEnabled(false);
   }
 };
