@@ -1570,7 +1570,8 @@ abstract public class GeckoApp
                 view.setVisibility(View.VISIBLE);
             }
 
-            mPluginContainer.updateViewLayout(view, lp);
+            if (mPluginContainer.indexOfChild(view) >= 0)
+                mPluginContainer.updateViewLayout(view, lp);
         }
     }
 
@@ -1622,6 +1623,8 @@ abstract public class GeckoApp
             mLastScreen = savedInstanceState.getByteArray(SAVED_STATE_SCREEN);
             mRestoreSession = savedInstanceState.getBoolean(SAVED_STATE_SESSION);
         }
+
+        LayoutInflater.from(this).setFactory(GeckoViewsFactory.getInstance());
 
         super.onCreate(savedInstanceState);
 

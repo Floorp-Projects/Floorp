@@ -81,6 +81,12 @@ public:
                         PRUint32 aArgc,
                         jsval* aArgv);
 
+  typedef nsIDOMBlob* (*UnwrapFuncPtr)(JSContext*, JSObject*);
+  nsresult InitInternal(JSContext* aCx,
+                        PRUint32 aArgc,
+                        jsval* aArgv,
+                        UnwrapFuncPtr aUnwrapFunc);
+
   already_AddRefed<nsIDOMBlob>
   CreateSlice(PRUint64 aStart, PRUint64 aLength, const nsAString& aContentType);
 

@@ -77,8 +77,10 @@
     {
       //////////////////////////////////////////////////////////////////////////
       // xul:listbox (bug 417317)
-      testGroupAttrs("item1", 1, 2);
-      testGroupAttrs("item2", 2, 2);
+      testGroupAttrs("listitem1", 1, 4);
+      testGroupAttrs("listitem2", 2, 4);
+      testGroupAttrs("listitem3", 3, 4);
+      testGroupAttrs("listitem4", 4, 4);
 
       //////////////////////////////////////////////////////////////////////////
       // xul:tab
@@ -143,9 +145,12 @@
   </body>
 
   <vbox flex="1">
+
   <listbox>
-    <listitem label="item1" id="item1"/>
-    <listitem label="item2" id="item2"/>
+    <listitem label="listitem1" id="listitem1"/>
+    <listitem label="listitem2" id="listitem2" type="checkbox"/>
+    <listitem label="listitem3" id="listitem3" type="checkbox"/>
+    <listitem label="listitem4" id="listitem4"/>
   </listbox>
 
   <menubar>

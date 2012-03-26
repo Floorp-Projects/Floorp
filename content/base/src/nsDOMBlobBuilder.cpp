@@ -179,12 +179,28 @@ nsDOMMultipartFile::NewBlob(nsISupports* *aNewObject)
   return NS_OK;
 }
 
+static nsIDOMBlob*
+GetXPConnectNative(JSContext* aCx, JSObject* aObj) {
+  nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(
+    nsContentUtils::XPConnect()->GetNativeOfWrapper(aCx, aObj));
+  return blob;
+}
+
 NS_IMETHODIMP
 nsDOMMultipartFile::Initialize(nsISupports* aOwner,
                                JSContext* aCx,
                                JSObject* aObj,
                                PRUint32 aArgc,
                                jsval* aArgv)
+{
+  return InitInternal(aCx, aArgc, aArgv, GetXPConnectNative);
+}
+
+nsresult
+nsDOMMultipartFile::InitInternal(JSContext* aCx,
+                                 PRUint32 aArgc,
+                                 jsval* aArgv,
+                                 UnwrapFuncPtr aUnwrapFunc)
 {
   bool nativeEOL = false;
   if (aArgc > 1) {
@@ -221,8 +237,7 @@ nsDOMMultipartFile::Initialize(nsISupports* aOwner,
 
       if (element.isObject()) {
         JSObject& obj = element.toObject();
-        nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(
-          nsContentUtils::XPConnect()->GetNativeOfWrapper(aCx, &obj));
+        nsCOMPtr<nsIDOMBlob> blob = aUnwrapFunc(aCx, &obj);
         if (blob) {
           // Flatten so that multipart blobs will never nest
           nsDOMFileBase* file = static_cast<nsDOMFileBase*>(

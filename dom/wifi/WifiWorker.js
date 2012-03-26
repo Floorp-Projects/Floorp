@@ -59,6 +59,23 @@ const WIFIWORKER_WORKER     = "resource://gre/modules/network_worker.js";
 // command always succeeds and we do a string/boolean check for the
 // expected results).
 var WifiManager = (function() {
+  Cu.import("resource://gre/modules/ctypes.jsm");
+  let cutils = ctypes.open("libcutils.so");
+  let cbuf = ctypes.char.array(4096)();
+  let c_property_get = cutils.declare("property_get", ctypes.default_abi,
+                                      ctypes.int,       // return value: length
+                                      ctypes.char.ptr,  // key
+                                      ctypes.char.ptr,  // value
+                                      ctypes.char.ptr); // default
+  let property_get = function (key, defaultValue) {
+    if (defaultValue === undefined) {
+      defaultValue = null;
+    }
+    c_property_get(key, cbuf, defaultValue);
+    return cbuf.readString();
+  }
+  let sdkVersion = parseInt(property_get("ro.build.version.sdk"));
+
   var controlWorker = new ChromeWorker(WIFIWORKER_WORKER);
   var eventWorker = new ChromeWorker(WIFIWORKER_WORKER);
 
@@ -583,6 +600,8 @@ var WifiManager = (function() {
   }
 
   manager.start = function() {
+    debug("detected SDK version " + sdkVersion);
+
     // If we reconnected to an already-running supplicant, then manager.state
     // will have already been updated to the supplicant's state. Otherwise, we
     // started the supplicant ourselves and need to connect.
@@ -647,9 +666,15 @@ var WifiManager = (function() {
     });
   }
 
-  var supplicantStatesMap = ["DISCONNECTED", "INACTIVE", "SCANNING", "ASSOCIATING",
-                             "ASSOCIATED", "FOUR_WAY_HANDSHAKE", "GROUP_HANDSHAKE",
-                             "COMPLETED", "DORMANT", "UNINITIALIZED"];
+  var supplicantStatesMap = (sdkVersion >= 15) ?
+    ["DISCONNECTED", "INTERFACE_DISABLED", "INACTIVE", "SCANNING",
+     "AUTHENTICATING", "ASSOCIATING", "ASSOCIATED", "FOUR_WAY_HANDSHAKE",
+     "GROUP_HANDSHAKE", "COMPLETED"]
+    :
+    ["DISCONNECTED", "INACTIVE", "SCANNING", "ASSOCIATING",
+     "ASSOCIATED", "FOUR_WAY_HANDSHAKE", "GROUP_HANDSHAKE",
+     "COMPLETED", "DORMANT", "UNINITIALIZED"];
+
   var driverEventMap = { STOPPED: "driverstopped", STARTED: "driverstarted", HANGED: "driverhung" };
 
   // handle events sent to us by the event worker
@@ -1475,6 +1500,7 @@ WifiWorker.prototype = {
   get worker() { throw "Not implemented"; },
 
   shutdown: function() {
+    debug("shutting down ...");
     this.setWifiEnabled(false);
   }
 };

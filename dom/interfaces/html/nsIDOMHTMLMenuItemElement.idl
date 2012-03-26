@@ -43,7 +43,7 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(66a84ce5-2346-42ca-b6e4-7cc8ec9e621d)]
+[scriptable, uuid(74ffab29-3a81-4099-8f38-55b1ad3a6988)]
 interface nsIDOMHTMLMenuItemElement : nsIDOMHTMLCommandElement
 {
 };

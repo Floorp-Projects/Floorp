@@ -98,26 +98,38 @@ function captureAndCheckColor(aRed, aGreen, aBlue, aMessage) {
 
   // Capture the screenshot.
   PageThumbs.captureAndStore(browser, function () {
-    let width = 100, height = 100;
-    let thumb = PageThumbs.getThumbnailURL(browser.currentURI.spec, width, height);
+    checkThumbnailColor(browser.currentURI.spec, aRed, aGreen, aBlue, aMessage);
+  });
+}
 
-    getXULDocument(function (aDocument) {
-      let htmlns = "http://www.w3.org/1999/xhtml";
-      let img = aDocument.createElementNS(htmlns, "img");
-      img.setAttribute("src", thumb);
+/**
+ * Retrieve a thumbnail from the cache and compare its pixel color values.
+ * @param aURL The URL of the thumbnail's page.
+ * @param aRed The red component's intensity.
+ * @param aGreen The green component's intensity.
+ * @param aBlue The blue component's intensity.
+ * @param aMessage The info message to print when comparing the pixel color.
+ */
+function checkThumbnailColor(aURL, aRed, aGreen, aBlue, aMessage) {
+  let width = 100, height = 100;
+  let thumb = PageThumbs.getThumbnailURL(aURL, width, height);
 
-      whenLoaded(img, function () {
-        let canvas = aDocument.createElementNS(htmlns, "canvas");
-        canvas.setAttribute("width", width);
-        canvas.setAttribute("height", height);
+  getXULDocument(function (aDocument) {
+    let htmlns = "http://www.w3.org/1999/xhtml";
+    let img = aDocument.createElementNS(htmlns, "img");
+    img.setAttribute("src", thumb);
 
-        // Draw the image to a canvas and compare the pixel color values.
-        let ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-        checkCanvasColor(ctx, aRed, aGreen, aBlue, aMessage);
+    whenLoaded(img, function () {
+      let canvas = aDocument.createElementNS(htmlns, "canvas");
+      canvas.setAttribute("width", width);
+      canvas.setAttribute("height", height);
 
-        next();
-      });
+      // Draw the image to a canvas and compare the pixel color values.
+      let ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+      checkCanvasColor(ctx, aRed, aGreen, aBlue, aMessage);
+
+      next();
     });
   });
 }

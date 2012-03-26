@@ -13,8 +13,11 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
 	browser_thumbnails_capture.js \
+	browser_thumbnails_redirect.js \
 	browser_thumbnails_bug726727.js \
 	head.js \
+	background_red.html \
+	background_red_redirect.sjs \
 	$(NULL)
 
 libs::	$(_BROWSER_FILES)

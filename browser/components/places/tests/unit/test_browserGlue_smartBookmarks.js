@@ -364,6 +364,15 @@ function run_test() {
   }
   catch(ex) {}
 
-  // Kick-off tests.
-  next_test();
+  waitForImportAndSmartBookmarks(next_test);
+}
+
+function waitForImportAndSmartBookmarks(aCallback) {
+  Services.obs.addObserver(function waitImport() {
+    Services.obs.removeObserver(waitImport, "bookmarks-restore-success");
+    // Delay to test eventual smart bookmarks creation.
+    do_execute_soon(function () {
+      waitForAsyncUpdates(aCallback);
+    });
+  }, "bookmarks-restore-success", false);
 }

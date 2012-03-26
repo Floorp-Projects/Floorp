@@ -34,9 +34,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Keep in (case-insensitive) order:
 #include "nsFrame.h"
 #include "nsSVGEffects.h"
-#include "nsImageLoadingContent.h"
 
 class nsSVGLeafFrame : public nsFrame
 {

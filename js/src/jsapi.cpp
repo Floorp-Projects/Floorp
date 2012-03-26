@@ -82,6 +82,7 @@
 #include "jsweakmap.h"
 #include "jswrapper.h"
 #include "jstypedarray.h"
+#include "jsxml.h"
 
 #include "ds/LifoAlloc.h"
 #include "builtin/MapObject.h"
@@ -90,10 +91,10 @@
 #include "frontend/BytecodeEmitter.h"
 #include "gc/Memory.h"
 #include "js/MemoryMetrics.h"
-#include "mozilla/Util.h"
 #include "yarr/BumpPointerAllocator.h"
 #include "vm/MethodGuard.h"
 #include "vm/StringBuffer.h"
+#include "vm/Xdr.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
@@ -110,10 +111,6 @@
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
 #include "methodjit/Logging.h"
-#endif
-
-#if JS_HAS_XML_SUPPORT
-#include "jsxml.h"
 #endif
 
 using namespace js;
@@ -4104,7 +4101,7 @@ JS_SetElement(JSContext *cx, JSObject *obj, uint32_t index, jsval *vp)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, *vp);
+    assertSameCompartment(cx, obj);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
     return obj->setElement(cx, index, vp, false);
 }
@@ -6638,3 +6635,43 @@ AutoEnumStateRooter::~AutoEnumStateRooter()
 }
 
 } // namespace JS
+
+JS_PUBLIC_API(void *)
+JS_EncodeScript(JSContext *cx, JSScript *script, uint32_t *lengthp)
+{
+    XDREncoder encoder(cx);
+    if (!encoder.codeScript(&script))
+        return NULL;
+    return encoder.forgetData(lengthp);
+}
+
+JS_PUBLIC_API(void *)
+JS_EncodeInterpretedFunction(JSContext *cx, JSObject *funobj, uint32_t *lengthp)
+{
+    XDREncoder encoder(cx);
+    if (!encoder.codeFunction(&funobj))
+        return NULL;
+    return encoder.forgetData(lengthp);
+}
+
+JS_PUBLIC_API(JSScript *)
+JS_DecodeScript(JSContext *cx, const void *data, uint32_t length,
+                JSPrincipals *principals, JSPrincipals *originPrincipals)
+{
+    XDRDecoder decoder(cx, data, length, principals, originPrincipals);
+    JSScript *script;
+    if (!decoder.codeScript(&script))
+        return NULL;
+    return script;
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length,
+                             JSPrincipals *principals, JSPrincipals *originPrincipals)
+{
+    XDRDecoder decoder(cx, data, length, principals, originPrincipals);
+    JSObject *funobj;
+    if (!decoder.codeFunction(&funobj))
+        return NULL;
+    return funobj;
+}

@@ -92,6 +92,24 @@ protected:
   bool mDataIsPremultiplied;
   bool mNeedsYFlip;
   bool mHasAlpha;
+
+  nsAutoArrayPtr<PRUint8> mCachedTempBlob;
+  PRUint32 mCachedTempBlob_Size;
+
+  PRUint8* GetTempBlob(const PRUint32 aSize)
+  {
+      if (!mCachedTempBlob || aSize != mCachedTempBlob_Size) {
+          mCachedTempBlob = new PRUint8[aSize];
+          mCachedTempBlob_Size = aSize;
+      }
+
+      return mCachedTempBlob;
+  }
+
+  void DiscardTempBlob()
+  {
+      mCachedTempBlob = nsnull;
+  }
 };
 
 // NB: eventually we'll have separate shadow canvas2d and shadow

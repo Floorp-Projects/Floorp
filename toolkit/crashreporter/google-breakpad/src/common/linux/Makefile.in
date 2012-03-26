@@ -56,6 +56,10 @@ ifneq (Android,$(OS_TARGET))
 CPPSRCS += http_upload.cc
 endif
 
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+DEFINES += -DELFSIZE=32
+endif
+
 HOST_CPPSRCS = \
   dump_symbols.cc \
   file_id.cc \

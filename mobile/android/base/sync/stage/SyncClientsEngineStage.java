@@ -10,7 +10,10 @@ import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.mozilla.gecko.sync.CommandProcessor;
 import org.mozilla.gecko.sync.CryptoRecord;
+import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.HTTPFailureException;
 import org.mozilla.gecko.sync.Logger;
@@ -278,8 +281,12 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
     }
 
     commandsProcessedShouldUpload = true;
+    CommandProcessor processor = CommandProcessor.getProcessor();
 
     // TODO: Bug 715792 - Process commands here.
+    for (int i = 0; i < commands.size(); i++) {
+      processor.processCommand(new ExtendedJSONObject((JSONObject)commands.get(i)));
+    }
   }
 
   protected void checkAndUpload() {

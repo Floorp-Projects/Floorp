@@ -86,6 +86,25 @@ js::UnwrapObject(JSObject *wrapped, bool stopAtOuter, unsigned *flagsp)
     return wrapped;
 }
 
+JS_FRIEND_API(JSObject *)
+js::UnwrapObjectChecked(JSContext *cx, JSObject *obj)
+{
+    while (obj->isWrapper()) {
+        JSObject *wrapper = obj;
+        Wrapper *handler = Wrapper::wrapperHandler(obj);
+        bool rvOnFailure;
+        if (!handler->enter(cx, wrapper, JSID_VOID,
+                            Wrapper::PUNCTURE, &rvOnFailure))
+            return rvOnFailure ? obj : NULL;
+        obj = Wrapper::wrappedObject(obj);
+        JS_ASSERT(obj);
+        handler->leave(cx, wrapper);
+        if (obj->getClass()->ext.innerObject)
+            break;
+    }
+    return obj;
+}
+
 bool
 js::IsCrossCompartmentWrapper(const JSObject *wrapper)
 {

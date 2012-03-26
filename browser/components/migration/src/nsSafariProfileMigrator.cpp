@@ -974,11 +974,6 @@ nsSafariProfileMigrator::CopyBookmarksBatched(bool aReplace)
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
-    // If importing defaults fails for whatever reason, let the import process
-    // continue.
-    DebugOnly<nsresult> rv = ImportDefaultBookmarks();
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "Should be able to import default bookmarks");
-
     // In replace mode we are merging at the top level.
     folder = bookmarksMenuFolderId;
   }

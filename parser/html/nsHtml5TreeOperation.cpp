@@ -629,7 +629,8 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     case eTreeOpNeedsCharsetSwitchTo: {
       char* str = mOne.charPtr;
       PRInt32 charsetSource = mFour.integer;
-      aBuilder->NeedsCharsetSwitchTo(str, charsetSource);
+      PRInt32 lineNumber = mTwo.integer;
+      aBuilder->NeedsCharsetSwitchTo(str, charsetSource, (PRUint32)lineNumber);
       return rv;    
     }
     case eTreeOpUpdateStyleSheet: {
@@ -691,6 +692,13 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       if (NS_FAILED(NS_DispatchToMainThread(event))) {
         NS_WARNING("failed to dispatch svg load dispatcher");
       }
+      return rv;
+    }
+    case eTreeOpMaybeComplainAboutCharset: {
+      char* msgId = mOne.charPtr;
+      bool error = mTwo.integer;
+      PRInt32 lineNumber = mThree.integer;
+      aBuilder->MaybeComplainAboutCharset(msgId, error, (PRUint32)lineNumber);
       return rv;
     }
     case eTreeOpAddClass: {

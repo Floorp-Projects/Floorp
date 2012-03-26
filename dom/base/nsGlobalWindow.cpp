@@ -77,6 +77,7 @@
 #include "jsapi.h"              // for JSAutoRequest
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
 #include "jsfriendapi.h"        // for JS_GetGlobalForFrame
+#include "jswrapper.h"
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsJSEnvironment.h"
@@ -110,7 +111,7 @@
 #include "nsCanvasFrame.h"
 #include "nsIWidget.h"
 #include "nsIBaseWindow.h"
-#include "nsDeviceMotion.h"
+#include "nsDeviceSensors.h"
 #include "nsIContent.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIDocShell.h"
@@ -799,6 +800,21 @@ nsPIDOMWindow::~nsPIDOMWindow() {}
 // nsOuterWindowProxy: Outer Window Proxy
 //*****************************************************************************
 
+class nsOuterWindowProxy : public js::Wrapper
+{
+public:
+  nsOuterWindowProxy() : js::Wrapper(0) {}
+
+  virtual bool isOuterWindow() {
+    return true;
+  }
+  JSString *obj_toString(JSContext *cx, JSObject *wrapper);
+  void finalize(JSContext *cx, JSObject *proxy);
+
+  static nsOuterWindowProxy singleton;
+};
+
+
 JSString *
 nsOuterWindowProxy::obj_toString(JSContext *cx, JSObject *proxy)
 {
@@ -822,8 +838,8 @@ nsOuterWindowProxy::finalize(JSContext *cx, JSObject *proxy)
 nsOuterWindowProxy
 nsOuterWindowProxy::singleton;
 
-JSObject *
-NS_NewOuterWindowProxy(JSContext *cx, JSObject *parent)
+static JSObject*
+NewOuterWindowProxy(JSContext *cx, JSObject *parent)
 {
   JSAutoEnterCompartment ac;
   if (!ac.enter(cx, parent)) {
@@ -866,7 +882,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 #endif
     mShowFocusRingForContent(false),
     mFocusByKeyOccurred(false),
-    mHasDeviceMotion(false),
     mNotifiedIDDestroyed(false),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
@@ -920,7 +935,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     Freeze();
 
     mObserver = nsnull;
-    SetIsProxy();
+    SetIsDOMBinding();
   }
 
   // We could have failed the first time through trying
@@ -1097,8 +1112,9 @@ nsGlobalWindow::~nsGlobalWindow()
     mURLProperty->ClearWindowReference();
   }
 
-  DisableDeviceMotionUpdates();
-  mHasDeviceMotion = false;
+  nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
+  if (ac)
+    ac->RemoveWindowAsListener(this);
 
   nsLayoutStatics::Release();
 }
@@ -1572,10 +1588,8 @@ nsGlobalWindow::UnmarkGrayTimers()
 //*****************************************************************************
 
 nsresult
-nsGlobalWindow::SetScriptContext(PRUint32 lang_id, nsIScriptContext *aScriptContext)
+nsGlobalWindow::SetScriptContext(nsIScriptContext *aScriptContext)
 {
-  NS_ASSERTION(lang_id == nsIProgrammingLanguage::JAVASCRIPT,
-               "We don't support this language ID");
   NS_ASSERTION(IsOuterWindow(), "Uh, SetScriptContext() called on inner window!");
 
   NS_ASSERTION(!aScriptContext || !mContext, "Bad call to SetContext()!");
@@ -1601,11 +1615,9 @@ nsGlobalWindow::SetScriptContext(PRUint32 lang_id, nsIScriptContext *aScriptCont
 }
 
 nsresult
-nsGlobalWindow::EnsureScriptEnvironment(PRUint32 aLangID)
+nsGlobalWindow::EnsureScriptEnvironment()
 {
-  NS_ASSERTION(aLangID == nsIProgrammingLanguage::JAVASCRIPT,
-               "We don't support this language ID");
-  FORWARD_TO_OUTER(EnsureScriptEnvironment, (aLangID), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_OUTER(EnsureScriptEnvironment, (), NS_ERROR_NOT_INITIALIZED);
 
   if (mJSObject)
       return NS_OK;
@@ -1614,20 +1626,18 @@ nsGlobalWindow::EnsureScriptEnvironment(PRUint32 aLangID)
                "mJSObject is null, but we have an inner window?");
 
   nsCOMPtr<nsIScriptRuntime> scriptRuntime;
-  nsresult rv = NS_GetScriptRuntimeByID(aLangID, getter_AddRefs(scriptRuntime));
+  nsresult rv = NS_GetScriptRuntimeByID(nsIProgrammingLanguage::JAVASCRIPT,
+                                        getter_AddRefs(scriptRuntime));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIScriptContext> context = scriptRuntime->CreateContext();
-  return SetScriptContext(aLangID, context);
+  return SetScriptContext(context);
 }
 
 nsIScriptContext *
-nsGlobalWindow::GetScriptContext(PRUint32 lang)
+nsGlobalWindow::GetScriptContext()
 {
-  NS_ASSERTION(lang == nsIProgrammingLanguage::JAVASCRIPT,
-               "We don't support this language ID");
-
-  FORWARD_TO_OUTER(GetScriptContext, (lang), nsnull);
+  FORWARD_TO_OUTER(GetScriptContext, (), nsnull);
   return mContext;
 }
 
@@ -1637,7 +1647,7 @@ nsGlobalWindow::GetContext()
   FORWARD_TO_OUTER(GetContext, (), nsnull);
 
   // check GetContext is indeed identical to GetScriptContext()
-  NS_ASSERTION(mContext == GetScriptContext(nsIProgrammingLanguage::JAVASCRIPT),
+  NS_ASSERTION(mContext == GetScriptContext(),
                "GetContext confused?");
   return mContext;
 }
@@ -1883,6 +1893,46 @@ ReparentWaiverWrappers(JSDHashTable *table, JSDHashEntryHdr *hdr,
 }
 
 nsresult
+nsGlobalWindow::CreateOuterObject(nsGlobalWindow* aNewInner)
+{
+  mContext->SetGlobalObject(this);
+
+  JSContext* cx = mContext->GetNativeContext();
+
+  if (IsChromeWindow()) {
+    // Always enable E4X for XUL and other chrome content -- there is no
+    // need to preserve the <!-- script hiding hack from JS-in-HTML daze
+    // (introduced in 1995 for graceful script degradation in Netscape 1,
+    // Mosaic, and other pre-JS browsers).
+    JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_XML);
+  }
+
+  JSObject* outer = NewOuterWindowProxy(cx, aNewInner->FastGetGlobalJSObject());
+  if (!outer) {
+    return NS_ERROR_FAILURE;
+  }
+
+  js::SetProxyExtra(outer, 0,
+    js::PrivateValue(static_cast<nsIScriptGlobalObject*>(this)));
+
+  return SetOuterObject(cx, outer);
+}
+
+nsresult
+nsGlobalWindow::SetOuterObject(JSContext* aCx, JSObject* aOuterObject)
+{
+  // Force our context's global object to be the outer.
+  // NB: JS_SetGlobalObject sets aCx->compartment.
+  JS_SetGlobalObject(aCx, aOuterObject);
+
+  // Set up the prototype for the outer object.
+  JSObject* inner = JS_GetParent(aOuterObject);
+  JS_SetPrototype(aCx, aOuterObject, JS_GetPrototype(inner));
+
+  return NS_OK;
+}
+
+nsresult
 nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                                nsISupports* aState,
                                bool aForceReuseInnerWindow)
@@ -2097,14 +2147,13 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     mInnerWindow = newInnerWindow;
 
     if (!mJSObject) {
-      mContext->CreateOuterObject(this, newInnerWindow);
+      CreateOuterObject(newInnerWindow);
       mContext->DidInitializeContext();
 
       mJSObject = mContext->GetNativeGlobal();
       SetWrapper(mJSObject);
     } else {
-      JSObject *outerObject =
-        NS_NewOuterWindowProxy(cx, newInnerWindow->mJSObject);
+      JSObject *outerObject = NewOuterWindowProxy(cx, newInnerWindow->mJSObject);
       if (!outerObject) {
         NS_ERROR("out of memory");
         return NS_ERROR_FAILURE;
@@ -2133,7 +2182,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
         JS_SetParent(cx, mJSObject, newInnerWindow->mJSObject);
 
-        mContext->SetOuterObject(mJSObject);
+        SetOuterObject(cx, mJSObject);
 
         JSCompartment *compartment = js::GetObjectCompartment(mJSObject);
         xpc::CompartmentPrivate *priv =
@@ -2206,10 +2255,21 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
     // Now that both the the inner and outer windows are initialized
     // let the script context do its magic to hook them together.
-    mContext->ConnectToInner(newInnerWindow, mJSObject);
+#ifdef DEBUG
+    JSObject* newInnerJSObject = newInnerWindow->FastGetGlobalJSObject();
+#endif
+
+    // Now that we're connecting the outer global to the inner one,
+    // we must have transplanted it. The JS engine tries to maintain
+    // the global object's compartment as its default compartment,
+    // so update that now since it might have changed.
+    JS_SetGlobalObject(cx, mJSObject);
+    NS_ASSERTION(JS_GetPrototype(mJSObject) ==
+                 JS_GetPrototype(newInnerJSObject),
+                 "outer and inner globals should have the same prototype");
 
     nsCOMPtr<nsIContent> frame = do_QueryInterface(GetFrameElementInternal());
-    if (frame && frame->OwnerDoc()) {
+    if (frame) {
       nsPIDOMWindow* parentWindow = frame->OwnerDoc()->GetWindow();
       if (parentWindow && parentWindow->TimeoutSuspendCount()) {
         SuspendTimeouts(parentWindow->TimeoutSuspendCount());
@@ -7751,30 +7811,6 @@ void nsGlobalWindow::UpdateTouchState()
 }
 
 void
-nsGlobalWindow::EnableDeviceMotionUpdates()
-{
-  if (mHasDeviceMotion) {
-    nsCOMPtr<nsIDeviceMotion> ac =
-      do_GetService(NS_DEVICE_MOTION_CONTRACTID);
-    if (ac) {
-      ac->AddWindowListener(this);
-    }
-  }
-}
-
-void
-nsGlobalWindow::DisableDeviceMotionUpdates()
-{
-  if (mHasDeviceMotion) {
-    nsCOMPtr<nsIDeviceMotion> ac =
-      do_GetService(NS_DEVICE_MOTION_CONTRACTID);
-    if (ac) {
-      ac->RemoveWindowListener(this);
-    }
-  }
-}
-
-void
 nsGlobalWindow::SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler)
 {
   SetChromeEventHandlerInternal(aChromeEventHandler);
@@ -10083,7 +10119,11 @@ nsGlobalWindow::SuspendTimeouts(PRUint32 aIncrease,
   mTimeoutsSuspendDepth += aIncrease;
 
   if (!suspended) {
-    DisableDeviceMotionUpdates();
+    nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
+    if (ac) {
+      for (int i = 0; i < mEnabledSensors.Length(); i++)
+        ac->RemoveWindowListener(mEnabledSensors[i], this);
+    }
 
     // Suspend all of the workers for this window.
     nsIScriptContext *scx = GetContextInternal();
@@ -10159,7 +10199,11 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
   nsresult rv;
 
   if (shouldResume) {
-    EnableDeviceMotionUpdates();
+    nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
+    if (ac) {
+      for (int i = 0; i < mEnabledSensors.Length(); i++)
+        ac->AddWindowListener(mEnabledSensors[i], this);
+    }
 
     // Resume all of the workers for this window.
     nsIScriptContext *scx = GetContextInternal();
@@ -10262,15 +10306,45 @@ nsGlobalWindow::TimeoutSuspendCount()
 }
 
 void
-nsGlobalWindow::SetHasOrientationEventListener()
+nsGlobalWindow::EnableDeviceSensor(PRUint32 aType)
 {
-  mHasDeviceMotion = true;
-  EnableDeviceMotionUpdates();
+  bool alreadyEnabled = false;
+  for (int i = 0; i < mEnabledSensors.Length(); i++) {
+    if (mEnabledSensors[i] == aType) {
+      alreadyEnabled = true;
+      break;
+    }
+  }
+
+  if (alreadyEnabled)
+    return;
+
+  mEnabledSensors.AppendElement(aType);
+
+  nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
+  if (ac)
+    ac->AddWindowListener(aType, this);
 }
 
 void
-nsGlobalWindow::RemoveOrientationEventListener() {
-  DisableDeviceMotionUpdates();
+nsGlobalWindow::DisableDeviceSensor(PRUint32 aType)
+{
+  PRUint32 doomedElement = -1;
+  for (int i = 0; i < mEnabledSensors.Length(); i++) {
+    if (mEnabledSensors[i] == aType) {
+      doomedElement = -1;
+      break;
+    }
+  }
+
+  if (doomedElement == -1)
+    return;
+
+  mEnabledSensors.RemoveElementAt(doomedElement);
+
+  nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
+  if (ac)
+    ac->RemoveWindowListener(aType, this);
 }
 
 NS_IMETHODIMP

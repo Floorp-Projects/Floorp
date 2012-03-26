@@ -24,26 +24,11 @@
     ////////////////////////////////////////////////////////////////////////////
     // Test
 
-    var gTree = null;
-    var gTreeBox = null;
-    var gTreeView = null;
-
     // gA11yEventDumpID = "debug";
 
     function doTest()
     {
-      // Initialize the tree
-      gTree = document.getElementById("tree");
-      gTreeBox = gTree.treeBoxObject;
-      gView = new nsTableTreeView(3);
-
-      waitForEvent(EVENT_REORDER, gTree, continueTest);
-      gTreeBox.view = gView;
-    }
-
-    function continueTest()
-    {
-      var treeAcc = getAccessible(gTree, [nsIAccessibleTable]);
+      var treeAcc = getAccessible("tree", [nsIAccessibleTable]);
 
       var headerInfoMap = [
         {
@@ -84,7 +69,7 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTest);
+    addA11yXULTreeLoadEvent(doTest, "tree", new nsTableTreeView(3));
   ]]>
   </script>
 

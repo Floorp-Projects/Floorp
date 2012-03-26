@@ -1,25 +1,28 @@
 /**
- * Tests if the given accessible at the given point is expected.
+ * Tests if the given child and grand child accessibles at the given point are
+ * expected.
  *
- * @param aIdentifier        [in] accessible identifier
- * @param aX                 [in] x coordinate of the point relative accessible
- * @param aY                 [in] y coordinate of the point relative accessible
- * @param aFindDeepestChild  [in] points whether deepest or nearest child should
- *                           be returned
- * @param aChildIdentifier   [in] expected child accessible
+ * @param aID            [in] accessible identifier
+ * @param aX             [in] x coordinate of the point relative accessible
+ * @param aY             [in] y coordinate of the point relative accessible
+ * @param aChildID       [in] expected child accessible
+ * @param aGrandChildID  [in] expected child accessible
  */
-function testChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild,
-                          aChildIdentifier)
+function testChildAtPoint(aID, aX, aY, aChildID, aGrandChildID)
 {
-  var childAcc = getAccessible(aChildIdentifier);
-  var actualChildAcc = getChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild);
+  var child = getChildAtPoint(aID, aX, aY, false);
+  var expectedChild = getAccessible(aChildID);
 
-  var msg = "Wrong " + (aFindDeepestChild ? "deepest" : "direct");
-  msg += " child accessible [" + prettyName(actualChildAcc);
-  msg += "] at the point (" + aX + ", " + aY + ") of accessible [";
-  msg += prettyName(aIdentifier) + "]";
+  var msg = "Wrong direct child accessible at the point (" + aX + ", " + aY +
+    ") of " + prettyName(aID);
+  isObject(child, expectedChild, msg);
 
-  is(childAcc, actualChildAcc, msg);
+  var grandChild = getChildAtPoint(aID, aX, aY, true);
+  var expectedGrandChild = getAccessible(aGrandChildID);
+
+  msg = "Wrong deepest child accessible at the point (" + aX + ", " + aY +
+    ") of " + prettyName(aID);
+  isObject(grandChild, expectedGrandChild, msg);
 }
 
 /**
@@ -35,14 +38,27 @@ function hitTest(aContainerID, aChildID, aGrandChildID)
   var [x, y] = getBoundsForDOMElm(child);
 
   var actualChild = container.getChildAtPoint(x + 1, y + 1);
-  is(actualChild, child,
-     "Wrong child, expected: " + prettyName(child) +
-     ", got: " + prettyName(actualChild));
+  isObject(actualChild, child,
+           "Wrong direct child of " + prettyName(aContainerID));
 
   var actualGrandChild = container.getDeepestChildAtPoint(x + 1, y + 1);
-  is(actualGrandChild, grandChild,
-     "Wrong deepest child, expected: " + prettyName(grandChild) +
-     ", got: " + prettyName(actualGrandChild));
+  isObject(actualGrandChild, grandChild,
+           "Wrong deepest child of " + prettyName(aContainerID));
+}
+
+/**
+ * Zoom the given document.
+ */
+function zoomDocument(aDocument, aZoom)
+{
+  var docShell = aDocument.defaultView.
+    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+    getInterface(Components.interfaces.nsIWebNavigation).
+    QueryInterface(Components.interfaces.nsIDocShell);
+  var docViewer = docShell.contentViewer.
+    QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+
+  docViewer.fullZoom = aZoom;
 }
 
 /**
@@ -107,16 +123,49 @@ function getBounds(aID)
  */
 function getBoundsForDOMElm(aID)
 {
+  var x = 0, y = 0, width = 0, height = 0;
+
   var elm = getNode(aID);
+  if (elm.localName == "area") {
+    var mapName = elm.parentNode.getAttribute("name");
+    var selector = "[usemap='#" + mapName + "']";
+    var img = elm.ownerDocument.querySelector(selector);
+
+    var areaCoords = elm.coords.split(",");
+    var areaX = parseInt(areaCoords[0]);
+    var areaY = parseInt(areaCoords[1]);
+    var areaWidth = parseInt(areaCoords[2]) - areaX;
+    var areaHeight = parseInt(areaCoords[3]) - areaY;
+
+    var rect = img.getBoundingClientRect();
+    x = rect.left + areaX;
+    y = rect.top + areaY;
+    width = areaWidth;
+    height = areaHeight;
+  }
+  else {
+    var rect = elm.getBoundingClientRect();
+    x = rect.left;
+    y = rect.top;
+    width = rect.width;
+    height = rect.height;
+  }
+
   var elmWindow = elm.ownerDocument.defaultView;
-  var winUtil = elmWindow.
+  return CSSToDevicePixels(elmWindow,
+                           x + elmWindow.mozInnerScreenX,
+                           y + elmWindow.mozInnerScreenY,
+                           width,
+                           height);
+}
+
+function CSSToDevicePixels(aWindow, aX, aY, aWidth, aHeight)
+{
+  var winUtil = aWindow.
     QueryInterface(Components.interfaces.nsIInterfaceRequestor).
     getInterface(Components.interfaces.nsIDOMWindowUtils);
 
   var ratio = winUtil.screenPixelsPerCSSPixel;
-  var rect = elm.getBoundingClientRect();
-  return [ (rect.left + elmWindow.mozInnerScreenX) * ratio,
-           (rect.top + elmWindow.mozInnerScreenY) * ratio,
-           rect.width * ratio,
-           rect.height * ratio ];
+  return [aX * ratio, aY * ratio, aWidth * ratio, aHeight * ratio];
 }
+

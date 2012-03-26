@@ -762,3 +762,20 @@ gfxDWriteFont::MeasureGlyphWidth(PRUint16 aGlyph)
     }
     return 0;
 }
+
+void
+gfxDWriteFont::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                   FontCacheSizes*   aSizes) const
+{
+    gfxFont::SizeOfExcludingThis(aMallocSizeOf, aSizes);
+    aSizes->mFontInstances += aMallocSizeOf(mMetrics) +
+        mGlyphWidths.SizeOfExcludingThis(nsnull, aMallocSizeOf);
+}
+
+void
+gfxDWriteFont::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                   FontCacheSizes*   aSizes) const
+{
+    aSizes->mFontInstances += aMallocSizeOf(this);
+    SizeOfExcludingThis(aMallocSizeOf, aSizes);
+}

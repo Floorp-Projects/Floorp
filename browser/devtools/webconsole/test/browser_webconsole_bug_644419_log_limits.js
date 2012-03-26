@@ -18,7 +18,7 @@ registerCleanupFunction(function() {
 
 function test() {
   Services.prefs.setBoolPref("devtools.gcli.enable", false);
-  addTab("data:text/html,Web Console test for bug 644419: Console should " +
+  addTab("data:text/html;charset=utf-8,Web Console test for bug 644419: Console should " +
          "have user-settable log limits for each message category");
   browser.addEventListener("load", onLoad, true);
 }

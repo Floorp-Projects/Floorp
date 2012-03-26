@@ -53,7 +53,6 @@
 #include "jsatom.h"
 #include "jsfriendapi.h"
 #include "jsgc.h"
-#include "jsxdrapi.h"
 #include "dom_quickstubs.h"
 #include "nsNullPrincipal.h"
 #include "nsIURI.h"
@@ -2839,34 +2838,23 @@ WriteScriptOrFunction(nsIObjectOutputStream *stream, JSContext *cx,
             return rv;
     }
 
-    JSXDRState *xdr = JS_XDRNewMem(cx, JSXDR_ENCODE);
-    if (!xdr)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    JSBool ok;
+    uint32_t size;
+    void* data;
     {
         JSAutoRequest ar(cx);
         if (functionObj)
-            ok = JS_XDRFunctionObject(xdr, &functionObj);
+            data = JS_EncodeInterpretedFunction(cx, functionObj, &size);
         else
-            ok = JS_XDRScript(xdr, &script);
+            data = JS_EncodeScript(cx, script, &size);
     }
 
-    if (!ok) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    } else {
-        // Get the encoded JSXDRState data and write it.  The JSXDRState owns
-        // this buffer memory and will free it beneath JS_XDRDestroy.
-        uint32_t size;
-        const char* data = reinterpret_cast<const char*>(::JS_XDRMemGetData(xdr, &size));
-        NS_ASSERTION(data, "no decoded JSXDRState data!");
-
-        rv = stream->Write32(size);
-        if (NS_SUCCEEDED(rv))
-            rv = stream->WriteBytes(data, size);
-    }
-
-    JS_XDRDestroy(xdr);
+    if (!data)
+        return NS_ERROR_OUT_OF_MEMORY;
+    MOZ_ASSERT(size);
+    rv = stream->Write32(size);
+    if (NS_SUCCEEDED(rv))
+        rv = stream->WriteBytes(static_cast<char *>(data), size);
+    js_free(data);
 
     return rv;
 }
@@ -2911,31 +2899,26 @@ ReadScriptOrFunction(nsIObjectInputStream *stream, JSContext *cx,
     if (NS_FAILED(rv))
         return rv;
 
-    JSXDRState *xdr = JS_XDRNewMem(cx, JSXDR_DECODE);
-    if (!xdr) {
-        nsMemory::Free(data);
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    JS_XDRMemSetData(xdr, data, size);
-    JS_XDRSetPrincipals(xdr, principal, originPrincipal);
-
-    JSBool ok;
     {
         JSAutoRequest ar(cx);
-        if (scriptp)
-            ok = JS_XDRScript(xdr, scriptp);
-        else
-            ok = JS_XDRFunctionObject(xdr, functionObjp);
+        if (scriptp) {
+            JSScript *script = JS_DecodeScript(cx, data, size, principal, originPrincipal);
+            if (!script)
+                rv = NS_ERROR_OUT_OF_MEMORY;
+            else
+                *scriptp = script;
+        } else {
+            JSObject *funobj = JS_DecodeInterpretedFunction(cx, data, size,
+                                                            principal, originPrincipal);
+            if (!funobj)
+                rv = NS_ERROR_OUT_OF_MEMORY;
+            else
+                *functionObjp = funobj;
+        }
     }
 
-    // We cannot rely on XDR automatically freeing the data memory as we must
-    // use nsMemory::Free to release it.
-    JS_XDRMemSetData(xdr, NULL, 0);
-    JS_XDRDestroy(xdr);
     nsMemory::Free(data);
-
-    return ok ? NS_OK : NS_ERROR_FAILURE;
+    return rv;
 }
 
 NS_IMETHODIMP

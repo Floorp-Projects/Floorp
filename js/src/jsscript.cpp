@@ -62,9 +62,6 @@
 #include "jsopcode.h"
 #include "jsscope.h"
 #include "jsscript.h"
-#if JS_HAS_XDR
-#include "jsxdrapi.h"
-#endif
 
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
@@ -72,6 +69,7 @@
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Retcon.h"
 #include "vm/Debugger.h"
+#include "vm/Xdr.h"
 
 #include "jsinferinlines.h"
 #include "jsinterpinlines.h"
@@ -296,10 +294,11 @@ Bindings::trace(JSTracer *trc)
         MarkShape(trc, &lastBinding, "shape");
 }
 
-#if JS_HAS_XDR
+} /* namespace js */
 
+template<XDRMode mode>
 static bool
-XDRScriptConst(JSXDRState *xdr, HeapValue *vp)
+XDRScriptConst(XDRState<mode> *xdr, HeapValue *vp)
 {
     /*
      * A script constant can be an arbitrary primitive value as they are used
@@ -317,7 +316,7 @@ XDRScriptConst(JSXDRState *xdr, HeapValue *vp)
     };
 
     uint32_t tag;
-    if (xdr->mode == JSXDR_ENCODE) {
+    if (mode == XDR_ENCODE) {
         if (vp->isInt32()) {
             tag = SCRIPT_INT;
         } else if (vp->isDouble()) {
@@ -336,54 +335,54 @@ XDRScriptConst(JSXDRState *xdr, HeapValue *vp)
         }
     }
 
-    if (!JS_XDRUint32(xdr, &tag))
+    if (!xdr->codeUint32(&tag))
         return false;
 
     switch (tag) {
       case SCRIPT_INT: {
         uint32_t i;
-        if (xdr->mode == JSXDR_ENCODE)
+        if (mode == XDR_ENCODE)
             i = uint32_t(vp->toInt32());
-        if (!JS_XDRUint32(xdr, &i))
+        if (!xdr->codeUint32(&i))
             return JS_FALSE;
-        if (xdr->mode == JSXDR_DECODE)
+        if (mode == XDR_DECODE)
             vp->init(Int32Value(int32_t(i)));
         break;
       }
       case SCRIPT_DOUBLE: {
         double d;
-        if (xdr->mode == JSXDR_ENCODE)
+        if (mode == XDR_ENCODE)
             d = vp->toDouble();
-        if (!JS_XDRDouble(xdr, &d))
+        if (!xdr->codeDouble(&d))
             return false;
-        if (xdr->mode == JSXDR_DECODE)
+        if (mode == XDR_DECODE)
             vp->init(DoubleValue(d));
         break;
       }
       case SCRIPT_STRING: {
         JSString *str;
-        if (xdr->mode == JSXDR_ENCODE)
+        if (mode == XDR_ENCODE)
             str = vp->toString();
-        if (!JS_XDRString(xdr, &str))
+        if (!xdr->codeString(&str))
             return false;
-        if (xdr->mode == JSXDR_DECODE)
+        if (mode == XDR_DECODE)
             vp->init(StringValue(str));
         break;
       }
       case SCRIPT_TRUE:
-        if (xdr->mode == JSXDR_DECODE)
+        if (mode == XDR_DECODE)
             vp->init(BooleanValue(true));
         break;
       case SCRIPT_FALSE:
-        if (xdr->mode == JSXDR_DECODE)
+        if (mode == XDR_DECODE)
             vp->init(BooleanValue(false));
         break;
       case SCRIPT_NULL:
-        if (xdr->mode == JSXDR_DECODE)
+        if (mode == XDR_DECODE)
             vp->init(NullValue());
         break;
       case SCRIPT_VOID:
-        if (xdr->mode == JSXDR_DECODE)
+        if (mode == XDR_DECODE)
             vp->init(UndefinedValue());
         break;
     }
@@ -393,8 +392,9 @@ XDRScriptConst(JSXDRState *xdr, HeapValue *vp)
 static const char *
 SaveScriptFilename(JSContext *cx, const char *filename);
 
-JSBool
-XDRScript(JSXDRState *xdr, JSScript **scriptp)
+template<XDRMode mode>
+bool
+js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
 {
     enum ScriptBits {
         NoScriptRval,
@@ -404,7 +404,7 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
         MayNeedArgsObj,
         NeedsArgsObj,
         OwnFilename,
-        SharedFilename
+        ParentFilename
     };
 
     uint32_t length, lineno, nslots;
@@ -414,7 +414,7 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
     uint32_t nTypeSets = 0;
     uint32_t scriptBits = 0;
 
-    JSContext *cx = xdr->cx;
+    JSContext *cx = xdr->cx();
     JSScript *script;
     nsrcnotes = ntrynotes = natoms = nobjects = nregexps = nconsts = 0;
     jssrcnote *notes = NULL;
@@ -426,9 +426,10 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
     nargs = nvars = Bindings::BINDING_COUNT_LIMIT;
 #endif
     uint32_t argsVars;
-    if (xdr->mode == JSXDR_ENCODE) {
+    if (mode == XDR_ENCODE) {
         script = *scriptp;
-
+        JS_ASSERT_IF(parentScript, parentScript->compartment() == script->compartment());
+    
         /* Should not XDR scripts optimized for a single global object. */
         JS_ASSERT(!JSScript::isValidOffset(script->globalsOffset));
 
@@ -436,9 +437,9 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
         nvars = script->bindings.countVars();
         argsVars = (nargs << 16) | nvars;
     }
-    if (!JS_XDRUint32(xdr, &argsVars))
+    if (!xdr->codeUint32(&argsVars))
         return false;
-    if (xdr->mode == JSXDR_DECODE) {
+    if (mode == XDR_DECODE) {
         nargs = argsVars >> 16;
         nvars = argsVars & 0xFFFF;
     }
@@ -466,7 +467,7 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
         }
 
         Vector<JSAtom *> names(cx);
-        if (xdr->mode == JSXDR_ENCODE) {
+        if (mode == XDR_ENCODE) {
             if (!script->bindings.getLocalNameArray(cx, &names))
                 return false;
             PodZero(bitmap, bitmapLength);
@@ -476,7 +477,7 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
             }
         }
         for (unsigned i = 0; i < bitmapLength; ++i) {
-            if (!JS_XDRUint32(xdr, &bitmap[i]))
+            if (!xdr->codeUint32(&bitmap[i]))
                 return false;
         }
 
@@ -484,7 +485,7 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
             if (i < nargs &&
                 !(bitmap[i >> JS_BITS_PER_UINT32_LOG2] & JS_BIT(i & (JS_BITS_PER_UINT32 - 1))))
             {
-                if (xdr->mode == JSXDR_DECODE) {
+                if (mode == XDR_DECODE) {
                     uint16_t dummy;
                     if (!bindings.addDestructuring(cx, &dummy))
                         return false;
@@ -495,11 +496,11 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
             }
 
             JSAtom *name;
-            if (xdr->mode == JSXDR_ENCODE)
+            if (mode == XDR_ENCODE)
                 name = names[i];
-            if (!js_XDRAtom(xdr, &name))
+            if (!XDRAtom(xdr, &name))
                 return false;
-            if (xdr->mode == JSXDR_DECODE) {
+            if (mode == XDR_DECODE) {
                 BindingKind kind = (i < nargs)
                                    ? ARGUMENT
                                    : (bitmap[i >> JS_BITS_PER_UINT32_LOG2] &
@@ -512,18 +513,18 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
         }
     }
 
-    if (xdr->mode == JSXDR_DECODE) {
+    if (mode == XDR_DECODE) {
         if (!bindings.ensureShape(cx))
             return false;
         bindings.makeImmutable();
     }
 
-    if (xdr->mode == JSXDR_ENCODE)
+    if (mode == XDR_ENCODE)
         length = script->length;
-    if (!JS_XDRUint32(xdr, &length))
+    if (!xdr->codeUint32(&length))
         return JS_FALSE;
 
-    if (xdr->mode == JSXDR_ENCODE) {
+    if (mode == XDR_ENCODE) {
         prologLength = script->mainOffset;
         JS_ASSERT(script->getVersion() != JSVERSION_UNKNOWN);
         version = (uint32_t)script->getVersion() | (script->nfixed << 16);
@@ -569,44 +570,44 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
                 scriptBits |= (1 << NeedsArgsObj);
         }
         if (script->filename) {
-            scriptBits |= (script->filename != xdr->sharedFilename)
-                          ? (1 << OwnFilename)
-                          : (1 << SharedFilename);
+            scriptBits |= (parentScript && parentScript->filename == script->filename)
+                          ? (1 << ParentFilename)
+                          : (1 << OwnFilename);
         }
 
         JS_ASSERT(!script->compileAndGo);
         JS_ASSERT(!script->hasSingletons);
     }
 
-    if (!JS_XDRUint32(xdr, &prologLength))
+    if (!xdr->codeUint32(&prologLength))
         return JS_FALSE;
-    if (!JS_XDRUint32(xdr, &version))
+    if (!xdr->codeUint32(&version))
         return JS_FALSE;
 
     /*
      * To fuse allocations, we need srcnote, atom, objects, regexp, and trynote
      * counts early.
      */
-    if (!JS_XDRUint32(xdr, &natoms))
+    if (!xdr->codeUint32(&natoms))
         return JS_FALSE;
-    if (!JS_XDRUint32(xdr, &nsrcnotes))
+    if (!xdr->codeUint32(&nsrcnotes))
         return JS_FALSE;
-    if (!JS_XDRUint32(xdr, &ntrynotes))
+    if (!xdr->codeUint32(&ntrynotes))
         return JS_FALSE;
-    if (!JS_XDRUint32(xdr, &nobjects))
+    if (!xdr->codeUint32(&nobjects))
         return JS_FALSE;
-    if (!JS_XDRUint32(xdr, &nregexps))
+    if (!xdr->codeUint32(&nregexps))
         return JS_FALSE;
-    if (!JS_XDRUint32(xdr, &nconsts))
+    if (!xdr->codeUint32(&nconsts))
         return JS_FALSE;
-    if (!JS_XDRUint32(xdr, &encodedClosedCount))
+    if (!xdr->codeUint32(&encodedClosedCount))
         return JS_FALSE;
-    if (!JS_XDRUint32(xdr, &nTypeSets))
+    if (!xdr->codeUint32(&nTypeSets))
         return JS_FALSE;
-    if (!JS_XDRUint32(xdr, &scriptBits))
+    if (!xdr->codeUint32(&scriptBits))
         return JS_FALSE;
 
-    if (xdr->mode == JSXDR_DECODE) {
+    if (mode == XDR_DECODE) {
         nClosedArgs = encodedClosedCount >> 16;
         nClosedVars = encodedClosedCount & 0xFFFF;
 
@@ -637,7 +638,7 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
         if (scriptBits & (1 << UsesEval))
             script->usesEval = true;
         if (scriptBits & (1 << MayNeedArgsObj)) {
-            script->mayNeedArgsObj_ = true;
+            script->setMayNeedArgsObj();
             if (scriptBits & (1 << NeedsArgsObj))
                 script->setNeedsArgsObj(true);
         } else {
@@ -645,56 +646,41 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
         }
     }
 
-    if (!JS_XDRBytes(xdr, (char *)script->code, length * sizeof(jsbytecode)))
-        return false;
-
-    if (!JS_XDRBytes(xdr, (char *)notes, nsrcnotes * sizeof(jssrcnote)) ||
-        !JS_XDRUint32(xdr, &lineno) ||
-        !JS_XDRUint32(xdr, &nslots)) {
+    JS_STATIC_ASSERT(sizeof(jsbytecode) == 1);
+    JS_STATIC_ASSERT(sizeof(jssrcnote) == 1);
+    if (!xdr->codeBytes(script->code, length) ||
+        !xdr->codeBytes(notes, nsrcnotes) ||
+        !xdr->codeUint32(&lineno) ||
+        !xdr->codeUint32(&nslots)) {
         return false;
     }
 
     if (scriptBits & (1 << OwnFilename)) {
-        char *filename;
-        if (xdr->mode == JSXDR_ENCODE)
-            filename = const_cast<char *>(script->filename);
-        if (!JS_XDRCString(xdr, &filename))
+        const char *filename;
+        if (mode == XDR_ENCODE)
+            filename = script->filename;
+        if (!xdr->codeCString(&filename))
             return false;
-        if (xdr->mode == JSXDR_DECODE) {
-            script->filename = SaveScriptFilename(xdr->cx, filename);
-            Foreground::free_(filename);
+        if (mode == XDR_DECODE) {
+            script->filename = SaveScriptFilename(cx, filename);
             if (!script->filename)
                 return false;
         }
-        if (!xdr->sharedFilename)
-            xdr->sharedFilename = script->filename;
-    } else if (scriptBits & (1 << SharedFilename)) {
-        JS_ASSERT(xdr->sharedFilename);
-        if (xdr->mode == JSXDR_DECODE)
-            script->filename = xdr->sharedFilename;
+    } else if (scriptBits & (1 << ParentFilename)) {
+        JS_ASSERT(parentScript);
+        if (mode == XDR_DECODE)
+            script->filename = parentScript->filename;
     }
 
-    if (xdr->mode == JSXDR_DECODE) {
+    if (mode == XDR_DECODE) {
         script->lineno = lineno;
         script->nslots = uint16_t(nslots);
         script->staticLevel = uint16_t(nslots >> 16);
-
-        /* The origin principals must be normalized at this point. */ 
-        JS_ASSERT_IF(xdr->principals, xdr->originPrincipals);
-        JS_ASSERT(!script->principals);
-        JS_ASSERT(!script->originPrincipals);
-        if (xdr->principals) {
-            script->principals = xdr->principals;
-            JS_HoldPrincipals(xdr->principals);
-        }
-        if (xdr->originPrincipals) {
-            script->originPrincipals = xdr->originPrincipals;
-            JS_HoldPrincipals(xdr->originPrincipals);
-        }
+        xdr->initScriptPrincipals(script);
     }
 
     for (i = 0; i != natoms; ++i) {
-        if (!js_XDRAtom(xdr, &script->atoms[i]))
+        if (!XDRAtom(xdr, &script->atoms[i]))
             return false;
     }
 
@@ -707,16 +693,16 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
     for (i = 0; i != nobjects; ++i) {
         HeapPtr<JSObject> *objp = &script->objects()->vector[i];
         uint32_t isBlock;
-        if (xdr->mode == JSXDR_ENCODE) {
+        if (mode == XDR_ENCODE) {
             JSObject *obj = *objp;
             JS_ASSERT(obj->isFunction() || obj->isStaticBlock());
             isBlock = obj->isBlock() ? 1 : 0;
         }
-        if (!JS_XDRUint32(xdr, &isBlock))
+        if (!xdr->codeUint32(&isBlock))
             return false;
         if (isBlock == 0) {
             JSObject *tmp = *objp;
-            if (!XDRFunctionObject(xdr, &tmp))
+            if (!XDRInterpretedFunction(xdr, &tmp, parentScript))
                 return false;
             *objp = tmp;
         } else {
@@ -732,11 +718,11 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
             return false;
     }
     for (i = 0; i != nClosedArgs; ++i) {
-        if (!JS_XDRUint32(xdr, &script->closedSlots[i]))
+        if (!xdr->codeUint32(&script->closedSlots[i]))
             return false;
     }
     for (i = 0; i != nClosedVars; ++i) {
-        if (!JS_XDRUint32(xdr, &script->closedSlots[nClosedArgs + i]))
+        if (!xdr->codeUint32(&script->closedSlots[nClosedArgs + i]))
             return false;
     }
 
@@ -755,16 +741,16 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
         tn = tnfirst + ntrynotes;
         do {
             --tn;
-            if (xdr->mode == JSXDR_ENCODE) {
+            if (mode == XDR_ENCODE) {
                 kindAndDepth = (uint32_t(tn->kind) << 16)
                                | uint32_t(tn->stackDepth);
             }
-            if (!JS_XDRUint32(xdr, &kindAndDepth) ||
-                !JS_XDRUint32(xdr, &tn->start) ||
-                !JS_XDRUint32(xdr, &tn->length)) {
+            if (!xdr->codeUint32(&kindAndDepth) ||
+                !xdr->codeUint32(&tn->start) ||
+                !xdr->codeUint32(&tn->length)) {
                 return false;
             }
-            if (xdr->mode == JSXDR_DECODE) {
+            if (mode == XDR_DECODE) {
                 tn->kind = uint8_t(kindAndDepth >> 16);
                 tn->stackDepth = uint16_t(kindAndDepth);
             }
@@ -779,7 +765,7 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
         }
     }
 
-    if (xdr->mode == JSXDR_DECODE) {
+    if (mode == XDR_DECODE) {
         if (cx->hasRunOption(JSOPTION_PCCOUNT))
             (void) script->initCounts(cx);
         *scriptp = script;
@@ -788,9 +774,11 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
     return true;
 }
 
-#endif /* JS_HAS_XDR */
+template bool
+js::XDRScript(XDRState<XDR_ENCODE> *xdr, JSScript **scriptp, JSScript *parentScript);
 
-} /* namespace js */
+template bool
+js::XDRScript(XDRState<XDR_DECODE> *xdr, JSScript **scriptp, JSScript *parentScript);
 
 bool
 JSScript::initCounts(JSContext *cx)
@@ -844,8 +832,6 @@ JSScript::destroyCounts(JSContext *cx)
     }
 }
 
-namespace js {
-
 /*
  * Shared script filename management.
  */
@@ -886,8 +872,6 @@ SaveScriptFilename(JSContext *cx, const char *filename)
     return sfe->filename;
 }
 
-} /* namespace js */
-
 /*
  * Back up from a saved filename by its offset within its hash table entry.
  */
@@ -895,14 +879,14 @@ SaveScriptFilename(JSContext *cx, const char *filename)
     ((ScriptFilenameEntry *) ((fn) - offsetof(ScriptFilenameEntry, filename)))
 
 void
-js_MarkScriptFilename(const char *filename)
+js::MarkScriptFilename(const char *filename)
 {
     ScriptFilenameEntry *sfe = FILENAME_TO_SFE(filename);
     sfe->marked = true;
 }
 
 void
-js_SweepScriptFilenames(JSCompartment *comp)
+js::SweepScriptFilenames(JSCompartment *comp)
 {
     ScriptFilenameTable &table = comp->scriptFilenameTable;
     for (ScriptFilenameTable::Enum e(table); !e.empty(); e.popFront()) {
@@ -914,6 +898,16 @@ js_SweepScriptFilenames(JSCompartment *comp)
             e.removeFront();
         }
     }
+}
+
+void
+js::FreeScriptFilenames(JSCompartment *comp)
+{
+    ScriptFilenameTable &table = comp->scriptFilenameTable;
+    for (ScriptFilenameTable::Enum e(table); !e.empty(); e.popFront())
+        Foreground::free_(e.front());
+
+    table.clear();
 }
 
 /*
@@ -1230,7 +1224,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     if (bce->inFunction()) {
         bool needsArgsObj = bce->mayOverwriteArguments() || bce->needsEagerArguments();
         if (needsArgsObj || bce->usesArguments()) {
-            script->mayNeedArgsObj_ = true;
+            script->setMayNeedArgsObj();
             if (needsArgsObj)
                 script->setNeedsArgsObj(true);
         }
@@ -1616,73 +1610,31 @@ CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *line
     *origin = script->originPrincipals;
 }
 
-class AutoJSXDRState {
-  public:
-    AutoJSXDRState(JSXDRState *x
-                   JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : xdr(x)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-    ~AutoJSXDRState()
-    {
-        JS_XDRDestroy(xdr);
-    }
-
-    operator JSXDRState*() const
-    {
-        return xdr;
-    }
-
-    JSXDRState* operator->() const
-    {
-        return xdr;
-    }
-
-  private:
-    JSXDRState *const xdr;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
+}  /* namespace js */
 
 JSScript *
-CloneScript(JSContext *cx, JSScript *script)
+js::CloneScript(JSContext *cx, JSScript *script)
 {
     JS_ASSERT(cx->compartment != script->compartment());
 
     /* Serialize script. */
-    AutoJSXDRState w(JS_XDRNewMem(cx, JSXDR_ENCODE));
-    if (!w)
-        return NULL;
+    XDREncoder encoder(cx);
 
-    if (!XDRScript(w, &script))
+    if (!XDRScript(&encoder, &script, NULL))
         return NULL;
 
     uint32_t nbytes;
-    void *p = JS_XDRMemGetData(w, &nbytes);
-    if (!p)
-        return NULL;
+    const void *p = encoder.getData(&nbytes);
 
     /* De-serialize script. */
-    AutoJSXDRState r(JS_XDRNewMem(cx, JSXDR_DECODE));
-    if (!r)
-        return NULL;
+    XDRDecoder decoder(cx, p, nbytes, cx->compartment->principals, script->originPrincipals);
 
-    /*
-     * Hand p off from w to r.  Don't want them to share the data mem, lest
-     * they both try to free it in JS_XDRDestroy.
-     */
-    JS_XDRMemSetData(r, p, nbytes);
-    JS_XDRMemSetData(w, NULL, 0);
-
-    JS_XDRSetPrincipals(r, cx->compartment->principals, script->originPrincipals);
-    JSScript *newScript = NULL;
-    if (!XDRScript(r, &newScript))
+    JSScript *newScript;
+    if (!XDRScript(&decoder, &newScript, NULL))
         return NULL;
 
     return newScript;
 }
-
-}  /* namespace js */
 
 void
 JSScript::copyClosedSlotsTo(JSScript *other)
@@ -1888,7 +1840,7 @@ JSScript::markChildren(JSTracer *trc)
         MarkObject(trc, &globalObject, "object");
 
     if (IS_GC_MARKING_TRACER(trc) && filename)
-        js_MarkScriptFilename(filename);
+        MarkScriptFilename(filename);
 
     bindings.trace(trc);
 

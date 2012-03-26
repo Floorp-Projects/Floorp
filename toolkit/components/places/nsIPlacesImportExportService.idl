@@ -41,34 +41,15 @@ interface nsILocalFile;
 interface nsIURI;
 
 /**
- * The PlacesImportExport interface provides methods for importing
- * and exporting Places data.
+ * The PlacesImportExport interface provides methods for exporting Places data.
+ * The word "Import" is in the name for legacy reasons and was kept to avoid
+ * disrupting potential extension code using the export part. The new importer
+ * lives in BookmarkHTMLUtils.jsm.
  */
 
-[scriptable, uuid(08f4626e-af3f-4e84-bd01-cf09175c4f94)]
+[scriptable, uuid(47a4a09e-c708-4e68-b2f2-664d982ce026)]
 interface nsIPlacesImportExportService: nsISupports
 {
-  /**
-   * Loads the given bookmarks.html file and replaces it with the current
-   * bookmarks hierarchy (if aIsInitialImport is true) or appends it
-   * (if aIsInitialImport is false).
-   *
-   * Three nsIObserverService notifications are fired as a result of the
-   * import.  "bookmarks-restore-begin" is fired just before the import is
-   * started.  "bookmarks-restore-success" is fired right after the
-   * bookmarks are successfully imported.  "bookmarks-restore-failed" is
-   * fired right after a failure occurs when importing the bookmarks.
-   * Observers will be passed through their data parameters either "html"
-   * if aIsInitialImport is false or "html-initial" if aIsInitialImport is
-   * true.  The observer subject will be null.
-   */
-  void importHTMLFromFile(in nsILocalFile aFile, in boolean aIsInitialImport);
-
-  /**
-   * Same thing as importHTMLFromFile, but takes a URI instead
-   */
-  void importHTMLFromURI(in nsIURI aURI, in boolean aIsInitialImport);
-
   /**
    * Saves the current bookmarks hierarchy to a bookmarks.html file.
    */

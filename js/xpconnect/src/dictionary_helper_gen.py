@@ -429,8 +429,11 @@ def write_cpp(iface, fd):
              "  }\n"
              "  NS_ENSURE_STATE(aVal->isObject());\n\n"
              "  JSObject* obj = &aVal->toObject();\n"
-             "  nsCxPusher pusher;\n"
-             "  NS_ENSURE_STATE(pusher.Push(aCx, false));\n"
+             "  Maybe<nsCxPusher> pusher;\n"
+             "  if (NS_IsMainThread()) {\n"
+             "    pusher.construct();\n"
+             "    NS_ENSURE_STATE(pusher.ref().Push(aCx, false));\n"
+             "  }\n"
              "  JSAutoRequest ar(aCx);\n"
              "  JSAutoEnterCompartment ac;\n"
              "  NS_ENSURE_STATE(ac.enter(aCx, obj));\n")

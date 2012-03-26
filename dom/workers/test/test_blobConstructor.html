@@ -1,0 +1,59 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<!--
+Tests of DOM Worker Blob constructor
+-->
+<head>
+  <title>Test for DOM Worker Blob constructor</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+(function() {
+  onerror = function(e) {
+    ok(false, "Main Thread had an error: " + event.data);
+    SimpleTest.finish();
+  };
+  function f() {
+    onmessage = function(e) {
+      var b = new Blob([e.data, "World"],{});
+      var fr = new FileReaderSync();
+      postMessage(fr.readAsText(b));
+    };
+  }
+  var b = new Blob([f.toString(),"f();"]);
+  var u = URL.createObjectURL(b);
+  var w = new Worker(u);
+  w.onmessage = function(e) {
+    URL.revokeObjectURL(u);
+    is(e.data, fr.result);
+    SimpleTest.finish();
+  };
+  w.onerror = function(e) {
+    is(e.target, w);
+    ok(false, "Worker had an error: " + e.data);
+    SimpleTest.finish();
+  };
+
+  b = new Blob(["Hello, "]);
+  var fr = new FileReader();
+  fr.readAsText(new Blob([b, "World"],{}));
+  fr.onload = function() {
+    w.postMessage(b);
+  };
+  SimpleTest.waitForExplicitFinish();
+})();
+</script>
+</pre>
+</body>
+</html>
