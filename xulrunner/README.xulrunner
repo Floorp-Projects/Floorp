@@ -1,0 +1,13 @@
+XULRunner is a package which can be used to run applications written in HTML
+or XUL. It can also be used to embed the gecko rendering engine into
+binary applications.
+
+XULRunner is not a product; it is a tool which can be used to create products.
+It is a byproduct of Firefox development and the Mozilla community does not
+have a strong commitment to support XULRunner development apart from Firefox
+development.
+
+For more information about using XULRunner or how to use this binary package,
+see the Mozilla Developer Center article:
+
+https://developer.mozilla.org/en/XULRunner

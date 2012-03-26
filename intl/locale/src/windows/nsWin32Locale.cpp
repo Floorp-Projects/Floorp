@@ -647,7 +647,7 @@ nsWin32Locale::GetPlatformLocale(const nsAString& locale, LCID* winLCID)
   char    locale_string[9] = {'\0','\0','\0','\0','\0','\0','\0','\0','\0'};
   char*   language_code;
   char*   country_code;
-  int     i,j;
+  size_t  i, j;
 
   // parse the locale
   const PRUnichar* data;
@@ -700,7 +700,7 @@ nsWin32Locale::GetXPLocale(LCID winLCID, nsAString& locale)
   }
 
   DWORD    lang_id, sublang_id;
-  int      i,j;
+  size_t   i, j;
 
   lang_id = PRIMARYLANGID(LANGIDFROMLCID(winLCID));
   sublang_id = SUBLANGID(LANGIDFROMLCID(winLCID));
@@ -754,7 +754,7 @@ nsWin32Locale::GetXPLocale(LCID winLCID, nsAString& locale)
 void
 test_internal_tables(void)
 {
-	int	i;
+	size_t i;
 
 	for(i=1;i<LENGTH_MAPPING_LIST;i++) {
 		if (strcmp(dbg_list[i-1].iso_code,dbg_list[i].iso_code)>=0)

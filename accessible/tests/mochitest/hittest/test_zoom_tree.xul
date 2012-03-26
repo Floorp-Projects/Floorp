@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="nsIAccessible::getChildAtPoint and getDeepestChildAtPoint">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../treeview.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+  <script type="application/javascript"
+          src="../layout.js" />
+  <script type="application/javascript"
+          src="../browser.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    function doTest()
+    {
+      var tabDocument = currentTabDocument();
+      var tabWindow = currentTabWindow();
+
+      var tree = tabDocument.getElementById("tree");
+      var treecols = tabDocument.getElementById("treecols");
+      var treecol1 = tabDocument.getElementById("treecol1");
+
+      // tree columns
+      hitTest(tree, treecols, treecol1);
+
+      // tree rows and cells
+      var treeBoxObject = tree.treeBoxObject;
+      var treeBodyBoxObj = tree.treeBoxObject.treeBody.boxObject;
+      var xObj = {}, yObj = {}, widthObj = {}, heightObj = {};
+      treeBoxObject.getCoordsForCellItem(1, tree.columns[0], "cell",
+                                         xObj, yObj, widthObj, heightObj);
+
+      var treeAcc = getAccessible(tree, [nsIAccessibleTable]);
+      var cellAcc = treeAcc.getCellAt(1, 0);
+      var rowAcc = cellAcc.parent;
+
+      var cssX = xObj.value + treeBodyBoxObj.x;
+      var cssY = yObj.value + treeBodyBoxObj.y;
+      var [x, y] = CSSToDevicePixels(tabWindow, cssX, cssY);
+
+      testChildAtPoint(treeAcc, x, y, rowAcc, cellAcc);
+      testChildAtPoint(rowAcc, x, y, cellAcc, cellAcc);
+
+      // do zoom
+      zoomDocument(tabDocument, 1.5);
+
+      // tree columns
+      hitTest(tree, treecols, treecol1);
+
+      // tree rows and cells
+      var [x, y] = CSSToDevicePixels(tabWindow, cssX, cssY);
+      testChildAtPoint(treeAcc, x, y, rowAcc, cellAcc);
+      testChildAtPoint(rowAcc, x, y, cellAcc, cellAcc);
+
+      closeBrowserWindow();
+      SimpleTest.finish();
+    }
+
+    function prepareTest()
+    {
+      var tabDocument = currentTabDocument();
+      var tree = tabDocument.getElementById("tree");
+      loadXULTreeAndDoTest(doTest, tree, new nsTableTreeView(5));
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    openBrowserWindow(prepareTest,
+                      "chrome://mochitests/content/a11y/accessible/hittest/zoom_tree.xul",
+                      { left: 100, top: 100 });
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=471493"
+         title=" crash [@ nsPropertyTable::GetPropertyInternal]">
+        Mozilla Bug 471493
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+  </hbox>
+
+</window>
+

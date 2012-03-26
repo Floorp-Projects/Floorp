@@ -582,15 +582,17 @@ class DeviceManagerSUT(DeviceManager):
 
   # external function
   # returns:
-  #  success: output from testagent
-  #  failure: None
-  def killProcess(self, appname):
+  #  success: True
+  #  failure: False
+  def killProcess(self, appname, forceKill=False):
+    if forceKill:
+      print "WARNING: killProcess(): forceKill parameter unsupported on SUT"
     try:
       data = self.runCmds(['kill ' + appname])
     except AgentError:
-      return None
+      return False
 
-    return data
+    return True
 
   # external function
   # returns:

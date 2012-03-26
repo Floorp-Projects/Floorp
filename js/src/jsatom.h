@@ -478,4 +478,12 @@ js_InternNonIntElementId(JSContext *cx, JSObject *obj, const js::Value &idval,
 extern void
 js_InitAtomMap(JSContext *cx, js::AtomIndexMap *indices, JSAtom **atoms);
 
+namespace js {
+
+template<XDRMode mode>
+bool
+XDRAtom(XDRState<mode> *xdr, JSAtom **atomp);
+
+} /* namespace js */
+
 #endif /* jsatom_h___ */

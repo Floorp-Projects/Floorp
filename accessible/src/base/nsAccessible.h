@@ -650,7 +650,7 @@ protected:
    * Set accessible parent and index in parent.
    */
   virtual void BindToParent(nsAccessible* aParent, PRUint32 aIndexInParent);
-  void UnbindFromParent();
+  virtual void UnbindFromParent();
 
   /**
    * Return sibling accessible at the given offset.

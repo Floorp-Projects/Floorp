@@ -94,6 +94,30 @@ protected:
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
   GLXPixmap mPixmap;
 #endif
+
+  nsRefPtr<gfxImageSurface> mCachedTempSurface;
+  gfxIntSize mCachedSize;
+  gfxImageFormat mCachedFormat;
+
+  gfxImageSurface* GetTempSurface(const gfxIntSize& aSize, const gfxImageFormat aFormat)
+  {
+    if (!mCachedTempSurface ||
+        aSize.width != mCachedSize.width ||
+        aSize.height != mCachedSize.height ||
+        aFormat != mCachedFormat)
+    {
+      mCachedTempSurface = new gfxImageSurface(aSize, aFormat);
+      mCachedSize = aSize;
+      mCachedFormat = aFormat;
+    }
+
+    return mCachedTempSurface;
+  }
+
+  void DiscardTempSurface()
+  {
+    mCachedTempSurface = nsnull;
+  }
 };
 
 // NB: eventually we'll have separate shadow canvas2d and shadow

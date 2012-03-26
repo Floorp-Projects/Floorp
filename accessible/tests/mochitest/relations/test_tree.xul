@@ -24,7 +24,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Test
 
-    function doTestRelations()
+    function doTest()
     {
       var treeNode = getNode("tree");
 
@@ -54,15 +54,8 @@
       SimpleTest.finish();
     }
 
-    function doTest()
-    {
-      var treeNode = getNode("tree");
-      waitForEvent(EVENT_REORDER, treeNode, doTestRelations);
-      treeNode.view = new nsTreeTreeView();
-    }
-
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTest);
+    addA11yXULTreeLoadEvent(doTest, "tree", new nsTreeTreeView());
   ]]>
   </script>
 

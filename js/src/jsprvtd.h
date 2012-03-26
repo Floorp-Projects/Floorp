@@ -316,6 +316,14 @@ typedef Handle<JSAtom*>            HandleAtom;
 typedef Handle<jsid>               HandleId;
 typedef Handle<Value>              HandleValue;
 
+enum XDRMode {
+    XDR_ENCODE,
+    XDR_DECODE
+};
+
+template <XDRMode mode>
+class XDRState;
+
 } /* namespace js */
 
 namespace JSC {

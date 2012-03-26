@@ -912,7 +912,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     JSObject *flat;
     if (cache) {
         flat = cache->GetWrapper();
-        if (cache->IsProxy()) {
+        if (cache->IsDOMBinding()) {
             XPCCallContext &ccx = lccx.GetXPCCallContext();
             if (!ccx.IsValid())
                 return false;
@@ -1485,7 +1485,7 @@ XPCConvert::JSErrorToXPCException(XPCCallContext& ccx,
         if (report && report->ucmessage) {
             bestMessage = (const PRUnichar *)report->ucmessage;
         } else if (message) {
-            bestMessage.AssignWithConversion(message);
+            CopyASCIItoUTF16(message, bestMessage);
         } else {
             bestMessage.AssignLiteral("JavaScript Error");
         }

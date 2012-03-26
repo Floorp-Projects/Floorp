@@ -34,23 +34,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Main header first:
 #include "nsSVGFilterFrame.h"
 
-#include "nsRenderingContext.h"
-#include "nsIDocument.h"
-#include "nsSVGOuterSVGFrame.h"
-#include "nsGkAtoms.h"
-#include "nsSVGEffects.h"
-#include "nsSVGUtils.h"
-#include "nsSVGFilterElement.h"
-#include "nsSVGFilters.h"
+// Keep others in (case-insensitive) order:
 #include "gfxASurface.h"
-#include "gfxContext.h"
-#include "gfxImageSurface.h"
-#include "nsSVGFilterPaintCallback.h"
-#include "nsSVGRect.h"
-#include "nsSVGFilterInstance.h"
 #include "gfxUtils.h"
+#include "nsGkAtoms.h"
+#include "nsRenderingContext.h"
+#include "nsSVGEffects.h"
+#include "nsSVGFilterElement.h"
+#include "nsSVGFilterInstance.h"
+#include "nsSVGFilterPaintCallback.h"
+#include "nsSVGUtils.h"
 
 nsIFrame*
 NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)

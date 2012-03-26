@@ -100,7 +100,7 @@ insertTextCB(AtkEditableText *aText,
     if (!accText)
         return;
 
-    NS_ConvertUTF8toUTF16 strContent(aString);
+    NS_ConvertUTF8toUTF16 strContent(aString, aLength);
 
     // interface changed in nsIAccessibleEditableText.idl ???
     //

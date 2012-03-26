@@ -62,6 +62,7 @@
 #include "nsIParserService.h"
 #include "nsReadableUtils.h"
 #include "nsIHTMLContentSink.h"
+#include "nsIFrame.h"
 
 #define IF_HOLD(_ptr) \
  PR_BEGIN_MACRO       \

@@ -35,15 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Main header first:
 #include "nsSVGEffects.h"
+
+// Keep others in (case-insensitive) order:
+#include "nsCSSFrameConstructor.h"
 #include "nsISupportsImpl.h"
-#include "nsSVGOuterSVGFrame.h"
-#include "nsSVGFilterFrame.h"
 #include "nsSVGClipPathFrame.h"
+#include "nsSVGFilterFrame.h"
 #include "nsSVGMaskFrame.h"
 #include "nsSVGTextPathFrame.h"
-#include "nsCSSFrameConstructor.h"
-#include "nsFrameManager.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

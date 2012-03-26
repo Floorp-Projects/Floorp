@@ -52,7 +52,7 @@ xulrunner/stub/Makefile
 xulrunner/installer/Makefile
 "
 
-if [ "$OS_ARCH" = "WINNT" -a "$MOZ_INSTALLER" ]; then
+if [ "$OS_ARCH" = "WINNT" ]; then
   add_makefiles "
     xulrunner/installer/windows/Makefile
   "

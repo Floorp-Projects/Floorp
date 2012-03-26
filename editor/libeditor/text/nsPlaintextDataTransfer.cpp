@@ -203,9 +203,8 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   }
 
   // Current doc is destination
-  nsCOMPtr<nsIDOMDocument> destdomdoc; 
-  rv = GetDocument(getter_AddRefs(destdomdoc)); 
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMDocument> destdomdoc = GetDOMDocument();
+  NS_ENSURE_TRUE(destdomdoc, NS_ERROR_NOT_INITIALIZED);
 
   PRUint32 numItems = 0;
   rv = dataTransfer->GetMozItemCount(&numItems);
@@ -366,8 +365,7 @@ NS_IMETHODIMP nsPlaintextEditor::Paste(PRInt32 aSelectionType)
     if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) && IsModifiable())
     {
       // handle transferable hooks
-      nsCOMPtr<nsIDOMDocument> domdoc;
-      GetDocument(getter_AddRefs(domdoc));
+      nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
       if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, trans))
         return NS_OK;
 
@@ -387,8 +385,7 @@ NS_IMETHODIMP nsPlaintextEditor::PasteTransferable(nsITransferable *aTransferabl
     return NS_OK;
 
   // handle transferable hooks
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  GetDocument(getter_AddRefs(domdoc));
+  nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
   if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, aTransferable))
     return NS_OK;
 

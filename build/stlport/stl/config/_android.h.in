@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef mozilla_stl_config__android_h
+#define mozilla_stl_config__android_h
+
+#include "@STLPORT_SOURCES@/stlport/stl/config/_android.h"
+
+// No rtti support
+#undef _STLP_NO_RTTI
+#define _STLP_NO_RTTI 1
+
+// No throwing exceptions
+#undef _STLP_NO_EXCEPTIONS
+#define _STLP_NO_EXCEPTIONS 1
+
+#undef _STLP_NATIVE_CPP_C_HEADER
+#define _STLP_NATIVE_CPP_C_HEADER(header) <../../system/include/header>
+#undef _STLP_NATIVE_CPP_RUNTIME_HEADER
+#define _STLP_NATIVE_CPP_RUNTIME_HEADER(header) <../../system/include/header>
+
+#endif /* mozilla_stl_config__android_h */
