@@ -52,8 +52,7 @@ void main()
 description("Tests getActiveUniform for various types");
 
 var wtu = WebGLTestUtils;
-var canvas = document.getElementById("example");
-var gl = wtu.create3DContext(canvas);
+var gl = wtu.create3DContext("example");
 
 var tests = [
 { glType: gl.FLOAT,      size: 1, type: 'float', access: 'uniform0'},
@@ -118,11 +117,9 @@ for (var tt = 0; tt < tests.length; ++tt) {
   }
 }
 
-var p1 = wtu.setupProgram(
-    gl, [vs, wtu.loadShaderFromScript(gl, 'fshaderA', gl.FRAGMENT_SHADER)]);
+var p1 = wtu.setupProgram(gl, [vs, 'fshaderA']);
 glErrorShouldBe(gl, gl.NO_ERROR, "no errors from program A");
-var p2 = wtu.setupProgram(
-    gl, [vs, wtu.loadShaderFromScript(gl, 'fshaderB', gl.FRAGMENT_SHADER)]);
+var p2 = wtu.setupProgram(gl, [vs, 'fshaderB']);
 glErrorShouldBe(gl, gl.NO_ERROR, "no errors from program B");
 var l1 = gl.getUniformLocation(p1, 'uniform0');
 glErrorShouldBe(gl, gl.NO_ERROR, "no errors getting location of uniform0 p1");
