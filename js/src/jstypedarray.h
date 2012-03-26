@@ -42,6 +42,7 @@
 
 #include "jsapi.h"
 #include "jsclass.h"
+#include "jsobj.h"
 
 #include "gc/Barrier.h"
 
@@ -312,6 +313,59 @@ IsTypedArrayProto(JSObject *obj)
 {
     return IsTypedArrayProtoClass(obj->getClass());
 }
+
+class DataViewObject : public JSObject
+{ 
+    static const size_t BYTEOFFSET_SLOT = 0;
+    static const size_t BYTELENGTH_SLOT = 1;
+    static const size_t BUFFER_SLOT     = 2;
+
+  public:
+    static const size_t RESERVED_SLOTS  = 3;
+
+    static JSBool prop_getBuffer(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+    static JSBool prop_getByteOffset(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+    static JSBool prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+
+    static JSBool class_constructor(JSContext *cx, unsigned argc, Value *vp);
+
+    static inline DataViewObject *
+    create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength, Handle<ArrayBufferObject*> arrayBuffer);
+
+    static JSBool fun_getInt8(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool fun_getUint8(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool fun_getInt16(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool fun_getUint16(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool fun_getInt32(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool fun_getUint32(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool fun_getFloat32(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool fun_getFloat64(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool fun_setInt8(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool fun_setUint8(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool fun_setInt16(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool fun_setUint16(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool fun_setInt32(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool fun_setUint32(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool fun_setFloat32(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool fun_setFloat64(JSContext *cx, unsigned argc, Value *vp);
+    inline uint32_t byteLength();
+    inline uint32_t byteOffset();
+    inline JSObject & arrayBuffer();
+    inline void *dataPointer();
+    inline bool hasBuffer() const;
+    static JSObject *initClass(JSContext *cx, GlobalObject *global);
+    bool getDataPointer(JSContext *cx, CallArgs args, size_t typeSize, uint8_t **data);
+    template<typename NativeType>
+    bool read(JSContext *cx, CallArgs &args, NativeType *val, const char *method);
+    template<typename NativeType>
+    bool write(JSContext *cx, CallArgs &args, const char *method);
+  private:
+    static JSPropertySpec jsprops[];
+    static JSFunctionSpec jsfuncs[];
+};
+
+bool
+IsDataView(JSObject *obj);
 
 } // namespace js
 

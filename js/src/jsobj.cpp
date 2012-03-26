@@ -1663,9 +1663,7 @@ GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, Value *vp
            NewPropertyDescriptorObject(cx, &desc, vp);
 }
 
-}
-
-static bool
+bool
 GetFirstArgumentAsObject(JSContext *cx, unsigned argc, Value *vp, const char *method, JSObject **objp)
 {
     if (argc == 0) {
@@ -1688,6 +1686,8 @@ GetFirstArgumentAsObject(JSContext *cx, unsigned argc, Value *vp, const char *me
     *objp = &v.toObject();
     return true;
 }
+
+} /* namespace js */
 
 static JSBool
 obj_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
