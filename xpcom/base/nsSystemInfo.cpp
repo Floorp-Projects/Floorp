@@ -51,7 +51,13 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
+#endif
 
+#ifdef MOZ_WIDGET_GONK
+#include <sys/system_properties.h>
+#endif
+
+#ifdef ANDROID
 extern "C" {
 NS_EXPORT int android_sdk_version;
 }
@@ -204,6 +210,13 @@ nsSystemInfo::Init()
         SetPropertyAsBool(NS_LITERAL_STRING("tablet"), isTablet);
     }
 #endif
+
+#ifdef MOZ_WIDGET_GONK
+    char sdk[PROP_VALUE_MAX];
+    if (__system_property_get("ro.build.version.sdk", sdk))
+      android_sdk_version = atoi(sdk);
+#endif
+
     return NS_OK;
 }
 
