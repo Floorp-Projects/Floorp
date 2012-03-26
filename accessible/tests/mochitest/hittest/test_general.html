@@ -19,33 +19,27 @@
       var list = getAccessible("list");
       var listitem = getAccessible("listitem");
       var image = getAccessible("image");
-      testChildAtPoint(list, 1, 1, false, listitem);
-      testChildAtPoint(list, 1, 1, true, image.firstChild);
+      testChildAtPoint(list, 1, 1, listitem, image.firstChild);
 
       // ::MustPrune case (in this case childAtPoint doesn't look inside a
       // textbox), point is inside of textbox.
       var txt = getAccessible("txt");
-      testChildAtPoint(txt, 1, 1, false, txt);
-      testChildAtPoint(txt, 1, 1, true, txt);
+      testChildAtPoint(txt, 1, 1, txt, txt);
 
       // ::MustPrune case, point is outside of textbox accessible but is in
       // document.
-      testChildAtPoint(txt, -1, 1, false, null);
-      testChildAtPoint(txt, -1, 1, true, null);
+      testChildAtPoint(txt, -1, 1, null, null);
 
       // ::MustPrune case, point is outside of root accessible.
-      testChildAtPoint(txt, -10000, 10000, false, null);
-      testChildAtPoint(txt, -10000, 10000, true, null);
+      testChildAtPoint(txt, -10000, 10000, null, null);
 
       // Not specific case, point is inside of btn accessible.
       var btn = getAccessible("btn");
       var btnText = btn.firstChild;
-      testChildAtPoint(btn, 1, 1, false, btnText);
-      testChildAtPoint(btn, 1, 1, true, btnText);
+      testChildAtPoint(btn, 1, 1, btnText, btnText);
   
       // Not specific case, point is outside of btn accessible.
-      testChildAtPoint(btn, -1, 1, false, null);
-      testChildAtPoint(btn, -1, 1, true, null);
+      testChildAtPoint(btn, -1, 1, null, null);
 
       // Out of flow accessible testing, do not return out of flow accessible
       // because it's not a child of the accessible even visually it is.
@@ -54,8 +48,7 @@
       outOfFlow.style.left = rectArea.left + "px";
       outOfFlow.style.top = rectArea.top + "px";
 
-      testChildAtPoint("area", 1, 1, false, "area");
-      testChildAtPoint("area", 1, 1, true, "area");
+      testChildAtPoint("area", 1, 1, "area", "area");
 
       SimpleTest.finish();
     }
