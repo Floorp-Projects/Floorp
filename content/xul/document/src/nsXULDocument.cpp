@@ -461,6 +461,21 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                                  nsIStreamListener **aDocListener,
                                  bool aReset, nsIContentSink* aSink)
 {
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING)) {
+
+        nsCOMPtr<nsIURI> uri;
+        nsresult rv = aChannel->GetOriginalURI(getter_AddRefs(uri));
+        if (NS_SUCCEEDED(rv)) {
+            nsCAutoString urlspec;
+            rv = uri->GetSpec(urlspec);
+            if (NS_SUCCEEDED(rv)) {
+                PR_LOG(gXULLog, PR_LOG_WARNING,
+                       ("xul: load document '%s'", urlspec.get()));
+            }
+        }
+    }
+#endif
     // NOTE: If this ever starts calling nsDocument::StartDocumentLoad
     // we'll possibly need to reset our content type afterwards.
     mStillWalking = true;
@@ -633,6 +648,16 @@ nsXULDocument::EndLoad()
     }
 
     OnPrototypeLoadDone(true);
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING)) {
+        nsCAutoString urlspec;
+        rv = uri->GetSpec(urlspec);
+        if (NS_SUCCEEDED(rv)) {
+            PR_LOG(gXULLog, PR_LOG_WARNING,
+                   ("xul: Finished loading document '%s'", urlspec.get()));
+        }
+    }
+#endif
 }
 
 NS_IMETHODIMP
@@ -2663,9 +2688,16 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
     if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
         nsCAutoString urlspec;
         aURI->GetSpec(urlspec);
+        nsCAutoString parentDoc;
+        nsCOMPtr<nsIURI> uri;
+        nsresult rv = mChannel->GetOriginalURI(getter_AddRefs(uri));
+        if (NS_SUCCEEDED(rv))
+            rv = uri->GetSpec(parentDoc);
+        if (!(parentDoc.get()))
+            parentDoc = "";
 
         PR_LOG(gXULLog, PR_LOG_DEBUG,
-                ("xul: loading overlay %s", urlspec.get()));
+                ("xul: %s loading overlay %s", parentDoc.get(), urlspec.get()));
     }
 #endif
 
@@ -4113,9 +4145,19 @@ nsXULDocument::OverlayForwardReference::~OverlayForwardReference()
 
         nsCAutoString idC;
         idC.AssignWithConversion(id);
+
+        nsIURI *protoURI = mDocument->mCurrentPrototype->GetURI();
+        nsCAutoString urlspec;
+        protoURI->GetSpec(urlspec);
+
+        nsCOMPtr<nsIURI> docURI;
+        nsCAutoString parentDoc;
+        nsresult rv = mDocument->mChannel->GetOriginalURI(getter_AddRefs(docURI));
+        if (NS_SUCCEEDED(rv))
+            docURI->GetSpec(parentDoc);
         PR_LOG(gXULLog, PR_LOG_WARNING,
-               ("xul: overlay failed to resolve '%s'",
-                idC.get()));
+               ("xul: %s overlay failed to resolve '%s' in %s",
+                urlspec.get(), idC.get(), parentDoc.get()));
     }
 #endif
 }
