@@ -342,32 +342,11 @@ function runOutputTests() {
 
 }
 
-function attemptToForceGC()
-{
-    var holderArray = [];
-    var tempArray;
-    window.tempArray = holderArray;
-    for (var i = 0; i < 12; ++i) {
-        tempArray = [];
-        for (var j = 0; j < 1024 * 1024; ++j) {
-            tempArray.push(0);
-        }
-        holderArray.push(tempArray);
-    }
-    window.tempArray = null;
-}
-
 function runUniqueObjectTest()
 {
     debug("Testing that getExtension() returns the same object each time");
     gl.getExtension("OES_standard_derivatives").myProperty = 2;
-    if (window.GCController) {
-        window.GCController.collect();
-    } else if (window.opera && window.opera.collect) {
-        window.opera.collect();
-    } else {
-        attemptToForceGC();
-    }
+    gc();
     shouldBe('gl.getExtension("OES_standard_derivatives").myProperty', '2');
 }
 
