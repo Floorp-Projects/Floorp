@@ -8,14 +8,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=672453
   <title>Test for Bug 672453</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=672453">Mozilla Bug 672453</a>
-<p id="display"></p>
-<div id="content" style="display: none">
-<iframe onload="runNextTest();"></iframe>  
-</div>
-<pre id="test">
 <script type="application/javascript">
 
 /** Test for Bug 672453 **/
@@ -62,6 +54,17 @@ function runNextTest() {
   document.getElementsByTagName("iframe")[0].src = url;
 }
 
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=672453">Mozilla Bug 672453</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+runNextTest();
 </script>
 </pre>
 </body>
