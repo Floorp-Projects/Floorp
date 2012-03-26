@@ -1041,7 +1041,7 @@ insert:
 }
 
 // Update the font and rendering context if there is a family change
-static void
+static bool
 SetFontFamily(nsStyleContext*      aStyleContext,
               nsRenderingContext&  aRenderingContext,
               nsFont&              aFont,
@@ -1052,14 +1052,24 @@ SetFontFamily(nsStyleContext*      aStyleContext,
   const nsAString& family =
     aGlyphCode.font ? aGlyphTable->FontNameFor(aGlyphCode) : aDefaultFamily;
   if (! family.Equals(aFont.name)) {
-    aFont.name = family;
+    nsFont font = aFont;
+    font.name = family;
     nsRefPtr<nsFontMetrics> fm;
-    aRenderingContext.DeviceContext()->GetMetricsFor(aFont,
+    aRenderingContext.DeviceContext()->GetMetricsFor(font,
       aStyleContext->GetStyleFont()->mLanguage,
       aStyleContext->PresContext()->GetUserFontSet(),
       *getter_AddRefs(fm));
-    aRenderingContext.SetFont(fm);
+    // Set the font if it is an unicode table
+    // or if the same family name has been found
+    if (aGlyphTable == &gGlyphTableList->mUnicodeTable ||
+        fm->GetThebesFontGroup()->GetFontAt(0)->GetFontEntry()->
+        FamilyName() == family) {
+      aFont.name = family;
+      aRenderingContext.SetFont(fm);
+    } else
+        return false; // We did not set the font
   }
+  return true;
 }
 
 class nsMathMLChar::StretchEnumContext {
@@ -1089,9 +1099,6 @@ public:
   EnumCallback(const nsString& aFamily, bool aGeneric, void *aData);
 
 private:
-  static bool
-  ResolverCallback (const nsAString& aFamily, void *aData);
-
   bool TryVariants(nsGlyphTable* aGlyphTable, const nsAString& aFamily);
   bool TryParts(nsGlyphTable* aGlyphTable, const nsAString& aFamily);
 
@@ -1150,7 +1157,12 @@ nsMathMLChar::StretchEnumContext::TryVariants(nsGlyphTable*    aGlyphTable,
   nsGlyphCode ch;
   while ((ch = aGlyphTable->BigOf(mPresContext, mChar, size)).Exists()) {
 
-    SetFontFamily(sc, mRenderingContext, font, aGlyphTable, ch, aFamily);
+    if(!SetFontFamily(sc, mRenderingContext, font, aGlyphTable, ch, aFamily)) {
+      // if largeopOnly is set, break now
+      if (largeopOnly) break;
+      ++size;
+      continue;
+    }
 
     NS_ASSERTION(maxWidth || ch.code[0] != mChar->mGlyph.code[0] ||
                  ch.code[1] != mChar->mGlyph.code[1] ||
@@ -1274,8 +1286,10 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable*    aGlyphTable,
       sizedata[i] = mTargetSize;
     }
     else {
-      SetFontFamily(mChar->mStyleContext, mRenderingContext,
-                    font, aGlyphTable, ch, aFamily);
+      if (!SetFontFamily(mChar->mStyleContext, mRenderingContext,
+                         font, aGlyphTable, ch, aFamily))
+        return false;
+
       nsBoundingMetrics bm = mRenderingContext.GetBoundingMetrics(ch.code,
                                                                   ch.Length());
 
@@ -1370,38 +1384,6 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable*    aGlyphTable,
   return IsSizeOK(mPresContext, computedSize, mTargetSize, mStretchHint);
 }
 
-// This is only called for glyph table corresponding to a family that exists.
-// See if the table has a glyph that matches the container
-bool
-nsMathMLChar::StretchEnumContext::ResolverCallback (const nsAString& aFamily,
-                                                    void *aData)
-{
-  StretchEnumContext* context = static_cast<StretchEnumContext*>(aData);
-  nsGlyphTable* glyphTable = context->mGlyphTable;
-
-  // Only try this table once.
-  context->mTablesTried.AppendElement(glyphTable);
-
-  // If the unicode table is being used, then search all font families.  If a
-  // special table is being used then the font in this family should have the
-  // specified glyphs.
-  const nsAString& family = glyphTable == &gGlyphTableList->mUnicodeTable ?
-    context->mFamilies : aFamily;
-
-  if(context->mTryVariants) {
-    bool isOK = context->TryVariants(glyphTable, family);
-    if (isOK)
-      return false; // no need to continue
-  }
-
-  if(context->mTryParts) {
-    bool isOK = context->TryParts(glyphTable, family);
-    if (isOK)
-      return false; // no need to continue
-  }
-  return true;
-}
-
 // This is called for each family, whether it exists or not
 bool
 nsMathMLChar::StretchEnumContext::EnumCallback(const nsString& aFamily,
@@ -1419,14 +1401,22 @@ nsMathMLChar::StretchEnumContext::EnumCallback(const nsString& aFamily,
 
   context->mGlyphTable = glyphTable;
 
-  if (aGeneric)
-    return ResolverCallback(aFamily, aData);
+  // Now see if the table has a glyph that matches the container
 
-  bool aborted;
-  gfxPlatform *pf = gfxPlatform::GetPlatform();
-  nsresult rv =
-    pf->ResolveFontName(aFamily, ResolverCallback, aData, aborted);
-  return NS_SUCCEEDED(rv) && !aborted; // true means continue
+  // Only try this table once.
+  context->mTablesTried.AppendElement(glyphTable);
+
+  // If the unicode table is being used, then search all font families.  If a
+  // special table is being used then the font in this family should have the
+  // specified glyphs.
+  const nsAString& family = glyphTable == &gGlyphTableList->mUnicodeTable ?
+    context->mFamilies : aFamily;
+
+  if((context->mTryVariants && context->TryVariants(glyphTable, family)) ||
+     (context->mTryParts && context->TryParts(glyphTable, family)))
+    return false; // no need to continue
+
+  return true; // true means continue
 }
 
 nsresult
