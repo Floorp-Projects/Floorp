@@ -1605,7 +1605,7 @@ Tab.prototype = {
       return this.browser.docShellIsActive;
   },
 
-  setDisplayPort: function(aViewportX, aViewportY, aDisplayPortRect) {
+  setDisplayPort: function(aViewportX, aViewportY, aDisplayPort) {
     let zoom = this._zoom;
     if (zoom <= 0)
       return;
@@ -1615,10 +1615,10 @@ Tab.prototype = {
       return;
 
     let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    cwu.setDisplayPortForElement((aDisplayPortRect.left - aViewportX) / zoom,
-                                 (aDisplayPortRect.top - aViewportY) / zoom,
-                                 (aDisplayPortRect.right - aDisplayPortRect.left) / zoom,
-                                 (aDisplayPortRect.bottom - aDisplayPortRect.top) / zoom,
+    cwu.setDisplayPortForElement((aDisplayPort.left - aViewportX) / zoom,
+                                 (aDisplayPort.top - aViewportY) / zoom,
+                                 (aDisplayPort.right - aDisplayPort.left) / zoom,
+                                 (aDisplayPort.bottom - aDisplayPort.top) / zoom,
                                  element);
   },
 
