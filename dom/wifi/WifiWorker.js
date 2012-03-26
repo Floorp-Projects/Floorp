@@ -1153,6 +1153,7 @@ function WifiWorker() {
 
   this._lastConnectionInfo = null;
   this._connectionInfoTimer = null;
+  this._reconnectOnDisconnect = false;
 
   // Given a connection status network, takes a network from
   // self.configuredNetworks and prepares it for the DOM.
@@ -1224,31 +1225,10 @@ function WifiWorker() {
       debug("Got mac: " + mac);
     });
 
-    WifiManager.getConfiguredNetworks(function(networks) {
-      if (!networks) {
-        debug("Unable to get configured networks");
-        return;
-      }
-
-      this._highestPriority = -1;
-
-      // Convert between netId-based and ssid-based indexing.
-      for (let net in networks) {
-        let network = networks[net];
-        if (!network.ssid) {
-          delete networks[net]; // TODO support these?
-          continue;
-        }
-
-        if (network.priority && network.priority > self._highestPriority)
-          self._highestPriority = network.priority;
-        networks[dequote(network.ssid)] = network;
-        delete networks[net];
-      }
-
-      self.configuredNetworks = networks;
-
+    self._reloadConfiguredNetworks(function(ok) {
       // Prime this.networks.
+      if (!ok)
+        return;
       self.waitForScan(function firstScan() {});
     });
   }
@@ -1309,6 +1289,13 @@ function WifiWorker() {
     } else if (this.state === "DISCONNECTED") {
       self._fireEvent("ondisconnect", {});
       self.currentNetwork = null;
+
+      // We've disconnected from a network because of a call to forgetNetwork.
+      // Reconnect to the next available network (if any).
+      if (self._reconnectOnDisconnect) {
+        self._reconnectOnDisconnect = false;
+        WifiManager.reconnect(function(){});
+      }
     }
   };
 
@@ -1475,6 +1462,35 @@ WifiWorker.prototype = {
     this._lastConnectionInfo = null;
   },
 
+  _reloadConfiguredNetworks: function(callback) {
+    WifiManager.getConfiguredNetworks((function(networks) {
+      if (!networks) {
+        debug("Unable to get configured networks");
+        callback(false);
+        return;
+      }
+
+      this._highestPriority = -1;
+
+      // Convert between netId-based and ssid-based indexing.
+      for (let net in networks) {
+        let network = networks[net];
+        if (!network.ssid) {
+          delete networks[net]; // TODO support these?
+          continue;
+        }
+
+        if (network.priority && network.priority > this._highestPriority)
+          this._highestPriority = network.priority;
+        networks[dequote(network.ssid)] = network;
+        delete networks[net];
+      }
+
+      this.configuredNetworks = networks;
+      callback(true);
+    }).bind(this));
+  },
+
   // Important side effect: calls WifiManager.saveConfig.
   _reprioritizeNetworks: function(callback) {
     // First, sort the networks in orer of their priority.
@@ -1563,6 +1579,9 @@ WifiWorker.prototype = {
         break;
       case "WifiManager:associate":
         this.associate(msg.data, msg.rid, msg.mid);
+        break;
+      case "WifiManager:forget":
+        this.forget(msg.data, msg.rid, msg.mid);
         break;
       case "WifiManager:getState": {
         let net = this.currentNetwork ? netToDOM(this.currentNetwork) : null;
@@ -1653,6 +1672,32 @@ WifiWorker.prototype = {
         networkReady();
       }).bind(this));
     }
+  },
+
+  forget: function(network, rid, mid) {
+    const message = "WifiManager:forget:Return";
+    let ssid = network.ssid;
+    if (!(ssid in this.configuredNetworks)) {
+      this._sendMessage(message, false, "Trying to forget an unknown network", rid, mid);
+      return;
+    }
+
+    let self = this;
+    let configured = this.configuredNetworks[ssid];
+    this._reconnectOnDisconnect = (this._currentNetwork.ssid === ssid);
+    WifiManager.removeNetwork(configured.netId, function(ok) {
+      if (!ok) {
+        self._sendMessage(message, false, "Unable to remove the network", rid, mid);
+        self._reconnectOnDisconnect = false;
+        return;
+      }
+
+      WifiManager.saveConfig(function() {
+        self._reloadConfiguredNetworks(function() {
+          self._sendMessage(message, true, true, rid, mid);
+        });
+      });
+    });
   },
 
   // This is a bit ugly, but works. In particular, this depends on the fact
