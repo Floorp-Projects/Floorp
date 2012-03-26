@@ -120,8 +120,8 @@ if (!gl) {
         runHintTestEnabled();
         runShaderTests(true);
         runOutputTests();
-      // similar to bug 683216, see the discussion in bug 630672
-      // runUniqueObjectTest();
+        runUniqueObjectTest();
+        runReferenceCycleTest();
     }
 }
 
@@ -257,11 +257,7 @@ function runOutputTests() {
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.hint(ext.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
 
-    var shaders = [
-        wtu.loadShaderFromScript(gl, "outputVertexShader"),
-        wtu.loadShaderFromScript(gl, "outputFragmentShader")
-    ];
-    var program = wtu.setupProgram(gl, shaders, ['vPosition', 'texCoord0'], [0, 1]);
+    var program = wtu.setupProgram(gl, ["outputVertexShader", "outputFragmentShader"], ['vPosition', 'texCoord0'], [0, 1]);
     var quadParameters = wtu.setupUnitQuad(gl, 0, 1);
 
     function readLocation(x, y) {
@@ -375,6 +371,20 @@ function runUniqueObjectTest()
     shouldBe('gl.getExtension("OES_standard_derivatives").myProperty', '2');
 }
 
+function runReferenceCycleTest()
+{
+    // create some reference cycles. The goal is to see if they cause leaks. The point is that
+    // some browser test runners have instrumentation to detect leaked refcounted objects.
+
+    debug("Testing reference cycles between context and extension objects");
+    var ext = gl.getExtension("OES_standard_derivatives");
+
+    // create cycle between extension and context, since the context has to hold a reference to the extension
+    ext.context = gl;
+
+    // create a self-cycle on the extension object
+    ext.ext = ext;
+}
 
 debug("");
 successfullyParsed = true;
