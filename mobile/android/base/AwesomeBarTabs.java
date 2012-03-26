@@ -62,6 +62,7 @@ import android.widget.AdapterView;
 import android.widget.ExpandableListView;
 import android.widget.FilterQueryProvider;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.SimpleExpandableListAdapter;
@@ -205,7 +206,7 @@ public class AwesomeBarTabs extends TabHost {
         private Resources mResources;
         private LinkedList<Pair<Integer, String>> mParentStack;
         private RefreshBookmarkCursorTask mRefreshTask = null;
-        private TextView mBookmarksTitleView;
+        private LinearLayout mBookmarksTitleView;
 
         public BookmarksListAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {
             super(context, layout, c, from, to);
@@ -307,7 +308,11 @@ public class AwesomeBarTabs extends TabHost {
             return convertView;
         }
 
-        public void setBookmarksTitleView(TextView titleView) {
+        public LinearLayout getBookmarksTitleView() {
+            return mBookmarksTitleView;
+        }
+
+        public void setBookmarksTitleView(LinearLayout titleView) {
             mBookmarksTitleView = titleView;
         }
 
@@ -325,16 +330,23 @@ public class AwesomeBarTabs extends TabHost {
             }
 
             protected void onPostExecute(Cursor cursor) {
-                mRefreshTask = null;
-                mBookmarksAdapter.changeCursor(cursor);
+                ListView list = (ListView) findViewById(R.id.bookmarks_list);
+                list.setAdapter(null);
 
                 // Hide the header text if we're at the root folder
                 if (mFolderId == Bookmarks.FIXED_ROOT_ID) {
-                    mBookmarksTitleView.setVisibility(View.GONE);
+                    if (list.getHeaderViewsCount() == 1)
+                        list.removeHeaderView(mBookmarksTitleView);
                 } else {
-                    mBookmarksTitleView.setText(mFolderTitle);
-                    mBookmarksTitleView.setVisibility(View.VISIBLE);
+                    if (list.getHeaderViewsCount() == 0)
+                        list.addHeaderView(mBookmarksTitleView, null, true);
+
+                    ((TextView) mBookmarksTitleView.findViewById(R.id.title)).setText(mFolderTitle);
                 }
+
+                mBookmarksAdapter.changeCursor(cursor);
+                list.setAdapter(mBookmarksAdapter);
+                mRefreshTask = null;
             }
         }
     }
@@ -373,21 +385,15 @@ public class AwesomeBarTabs extends TabHost {
             ListView bookmarksList = (ListView) findViewById(R.id.bookmarks_list);
             bookmarksList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    handleBookmarkItemClick(position);
+                    handleBookmarkItemClick(parent, view, position, id);
                 }
             });
 
-            // We need to add the header before we set the adapter
-            LayoutInflater inflater =
-                    (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            View headerView = inflater.inflate(R.layout.awesomebar_folder_header_row, null);
-
-            // Hide the header title view to begin with
-            TextView titleView = (TextView) headerView.findViewById(R.id.title);
-            titleView.setVisibility(View.GONE);
-            mBookmarksAdapter.setBookmarksTitleView(titleView);
-
-            bookmarksList.addHeaderView(headerView, null, true);
+            if (mBookmarksAdapter.getBookmarksTitleView() == null) {
+                // Caching the header view
+                LinearLayout headerView = (LinearLayout) LayoutInflater.from(mContext).inflate(R.layout.awesomebar_header_row, null);
+                mBookmarksAdapter.setBookmarksTitleView(headerView);
+            }
 
             bookmarksList.setAdapter(mBookmarksAdapter);
 
@@ -863,20 +869,24 @@ public class AwesomeBarTabs extends TabHost {
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
-    private void handleBookmarkItemClick(int position) {
+    private void handleBookmarkItemClick(AdapterView<?> parent, View view, int position, long id) {
+        int headerCount = ((ListView) parent).getHeaderViewsCount();
         // If we tap on the header view, there's nothing to do
-        if (position == 0)
+        if (headerCount == 1 && position == 0)
             return;
 
         Cursor cursor = mBookmarksAdapter.getCursor();
         // The header view takes up a spot in the list
-        cursor.moveToPosition(position - 1);
+        if (headerCount == 1)
+            position--;
+
+        cursor.moveToPosition(position);
 
         int type = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.TYPE));
         if (type == Bookmarks.TYPE_FOLDER) {
             // If we're clicking on a folder, update mBookmarksAdapter to move to that folder
             int folderId = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
-            String folderTitle = mBookmarksAdapter.getFolderTitle(position - 1);
+            String folderTitle = mBookmarksAdapter.getFolderTitle(position);
 
             mBookmarksAdapter.moveToChildFolder(folderId, folderTitle);
             return;
