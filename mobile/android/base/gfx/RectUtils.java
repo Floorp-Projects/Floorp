@@ -68,24 +68,6 @@ public final class RectUtils {
         return sb.toString();
     }
 
-    public static Rect contract(Rect rect, int lessWidth, int lessHeight) {
-        float halfLessWidth = lessWidth / 2.0f;
-        float halfLessHeight = lessHeight / 2.0f;
-        return new Rect(Math.round(rect.left + halfLessWidth),
-                        Math.round(rect.top + halfLessHeight),
-                        Math.round(rect.right - halfLessWidth),
-                        Math.round(rect.bottom - halfLessHeight));
-    }
-
-    public static RectF contract(RectF rect, float lessWidth, float lessHeight) {
-        float halfLessWidth = lessWidth / 2;
-        float halfLessHeight = lessHeight / 2;
-        return new RectF(rect.left + halfLessWidth,
-                         rect.top + halfLessHeight,
-                         rect.right - halfLessWidth,
-                         rect.bottom - halfLessHeight);
-    }
-
     public static RectF expand(RectF rect, float moreWidth, float moreHeight) {
         float halfMoreWidth = moreWidth / 2;
         float halfMoreHeight = moreHeight / 2;
