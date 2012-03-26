@@ -2085,13 +2085,6 @@ pref("plugin.allow.asyncdrawing", false);
 // when a network address is unreachable.
 pref("network.autodial-helper.enabled", true);
 
-// Pref to control whether we set ddeexec subkeys for the http
-// Internet shortcut protocol if we are handling it.  These
-// subkeys will be set only while we are running (to avoid the
-// problem of Windows showing an alert when it tries to use DDE
-// and we're not already running).
-pref("advanced.system.supportDDEExec", true);
-
 // Switch the keyboard layout per window
 pref("intl.keyboard.per_window_layout", false);
 
