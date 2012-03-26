@@ -46,7 +46,7 @@ interface nsIControllers;
 interface nsIBoxObject;
 
 
-[scriptable, uuid(5e0a7c2c-fdb6-459d-a67b-549181218c31)]
+[scriptable, uuid(3a07dead-39e5-4dad-bc68-6ef369994126)]
 interface nsIDOMXULElement : nsIDOMElement
 {
   attribute DOMString                 id;

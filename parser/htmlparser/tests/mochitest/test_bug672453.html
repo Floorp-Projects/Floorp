@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=672453
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 672453</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=672453">Mozilla Bug 672453</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe onload="runNextTest();"></iframe>  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 672453 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var tests = [
+  "file_bug672453_not_declared.html",
+  "file_bug672453_late_meta.html",
+  "file_bug672453_meta_restart.html",
+  "file_bug672453_meta_unsupported.html",
+  "file_bug672453_http_unsupported.html",
+  "file_bug672453_bomless_utf16.html",
+  "file_bug672453_meta_utf16.html",
+  "file_bug672453_meta_non_superset.html"
+];
+
+var expectedErrors = [
+  '[JavaScript Warning: "The character encoding of a framed document was not declared. The document may appear different if viewed without the document framing it." {file: "http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug672453_not_declared.html" line: 0}]',
+  '[JavaScript Warning: "The character encoding declaration of the framed HTML document was not found when prescanning the first 1024 bytes of the file. When viewed without the document framing it, the page will reload automatically. The encoding declaration needs to be moved to be within the first 1024 bytes of the file." {file: "http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug672453_late_meta.html" line: 1028}]',
+  '[JavaScript Warning: "The page was reloaded, because the character encoding declaration of the HTML document was not found when prescanning the first 1024 bytes of the file. The encoding declaration needs to be moved to be within the first 1024 bytes of the file." {file: "http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug672453_meta_restart.html" line: 1028}]',
+  '[JavaScript Error: "An unsupported character encoding was declared for the HTML document using a meta tag. The declaration was ignored." {file: "http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug672453_meta_unsupported.html" line: 1}]',
+  '[JavaScript Error: "An unsupported character encoding was declared on the transfer protocol level. The declaration was ignored." {file: "http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug672453_http_unsupported.html" line: 0}]',
+  '[JavaScript Error: "Detected UTF-16-encoded Basic Latin-only text without a byte order mark and without a transfer protocol-level declaration. Encoding this content in UTF-16 is inefficient and the character encoding should have been declared in any case." {file: "http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug672453_bomless_utf16.html" line: 0}]',
+  '[JavaScript Error: "A meta tag was used to declare the character encoding as UTF-16. This was interpreted as an UTF-8 declaration instead." {file: "http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug672453_meta_utf16.html" line: 1}]',
+  '[JavaScript Error: "A meta tag was used to declare a character encoding the does not encode the Basic Latin range roughly like US-ASCII. The declaration was ignored." {file: "http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug672453_meta_non_superset.html" line: 1}]'
+];
+
+function consoleError(msg) {
+  var expected = expectedErrors.shift();
+  is(msg, expected, "Not the right error message");
+}
+
+SpecialPowers.addErrorConsoleListener(consoleError);
+
+function runNextTest() {
+  var url = tests.shift();
+  if (!url) {
+    is(expectedErrors.length, 0, "The error supply was not exhausted");
+    SpecialPowers.removeErrorConsoleListener(consoleError);
+    SimpleTest.finish();
+    return;
+  }
+  document.getElementsByTagName("iframe")[0].src = url;
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -45,7 +45,7 @@ interface nsIThreadEventFilter;
  * The XPCOM thread object implements this interface, which allows a consumer
  * to observe dispatch activity on the thread.
  */
-[scriptable, uuid(e0d35c22-53d5-4b48-8627-93e05b94cf2c)]
+[scriptable, uuid(504e9e1f-70e1-4f33-a785-5840a4680414)]
 interface nsIThreadInternal : nsIThread
 {
   /**
@@ -56,26 +56,6 @@ interface nsIThreadInternal : nsIThread
    * processed during a call to Shutdown.
    */
   attribute nsIThreadObserver observer;
-
-  /**
-   * This method causes any events currently enqueued on the thread to be
-   * suppressed until PopEventQueue is called.  Additionally, any new events
-   * dispatched to the thread will only be processed if they are accepted by
-   * the given filter.  If the filter is null, then new events are accepted.
-   * Calls to PushEventQueue may be nested and must each be paired with a call
-   * to PopEventQueue in order to restore the original state of the thread.
-   *
-   * @param filter
-   *   The thread event filter to apply to dispatched events, or null to accept
-   *   all dispatched events.
-   */
-  void pushEventQueue(in nsIThreadEventFilter filter);
-
-  /**
-   * Revert a call to PushEventQueue.  When an event queue is popped, any
-   * events remaining in the queue are appended to the elder queue.
-   */
-  void popEventQueue();
 
   /**
    * The current recursion depth, 0 when no events are running, 1 when a single
@@ -169,22 +149,4 @@ interface nsIThreadObserver : nsISupports
    */
   void afterProcessNextEvent(in nsIThreadInternal thread,
                              in unsigned long recursionDepth);
-};
-
-/**
- * Interface passed to the nsIThreadInternal::PushEventQueue method.
- */
-[scriptable, uuid(a0605c0b-17f5-4681-b8cd-a1cd75d42559)]
-interface nsIThreadEventFilter : nsISupports
-{
-  /**
-   * This method is called to determine whether or not an event may be accepted
-   * by a "nested" event queue (see nsIThreadInternal::PushEventQueue).
-   *
-   * @param event
-   *   The event being dispatched.
-   *
-   * WARNING: This method must not make any calls on the thread object.
-   */
-  [notxpcom] boolean acceptEvent(in nsIRunnable event);
 };

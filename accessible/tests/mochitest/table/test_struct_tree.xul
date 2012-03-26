@@ -26,24 +26,9 @@
     ////////////////////////////////////////////////////////////////////////////
     // Test
 
-    var gTree = null;
-    var gTreeBox = null;
-    var gTreeView = null;
-
     // gA11yEventDumpID = "debug";
 
     function doTest()
-    {
-      // Initialize the tree
-      gTree = document.getElementById("table");
-      gTreeBox = gTree.treeBoxObject;
-      gView = new nsTableTreeView(3);
-
-      waitForEvent(EVENT_REORDER, gTree, continueTest);
-      gTreeBox.view = gView;
-    }
-
-    function continueTest()
     {
       var cellsArray = [
         [kDataCell, kDataCell],
@@ -51,13 +36,13 @@
         [kDataCell, kDataCell]
       ];
 
-      testTableStruct(gTree, cellsArray, kTreeColumnHeader);
+      testTableStruct("table", cellsArray, kTreeColumnHeader);
 
       SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTest);
+    addA11yXULTreeLoadEvent(doTest, "table", new nsTableTreeView(3));
   ]]>
   </script>
 

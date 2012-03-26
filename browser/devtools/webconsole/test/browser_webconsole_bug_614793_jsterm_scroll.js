@@ -42,7 +42,7 @@ registerCleanupFunction(function() {
 
 function test() {
   Services.prefs.setBoolPref("devtools.gcli.enable", false);
-  addTab("data:text/html,Web Console test for bug 614793: jsterm result scroll");
+  addTab("data:text/html;charset=utf-8,Web Console test for bug 614793: jsterm result scroll");
   browser.addEventListener("load", tabLoad, true);
 }
 

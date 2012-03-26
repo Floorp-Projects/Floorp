@@ -108,6 +108,7 @@ public:
 protected:
   // nsAccessible
   virtual void BindToParent(nsAccessible* aParent, PRUint32 aIndexInParent);
+  virtual void UnbindFromParent();
 
   /**
    * Parent accessible that provides an action for this linkable accessible.

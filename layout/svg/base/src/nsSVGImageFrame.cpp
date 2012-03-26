@@ -34,26 +34,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGPathGeometryFrame.h"
-
-#include "nsRenderingContext.h"
-#include "imgIContainer.h"
-#include "nsStubImageDecoderObserver.h"
-#include "nsImageLoadingContent.h"
-#include "nsIDOMSVGImageElement.h"
-#include "nsLayoutUtils.h"
-#include "nsSVGEffects.h"
-#include "nsSVGImageElement.h"
-#include "nsSVGUtils.h"
+// Keep in (case-insensitive) order:
 #include "gfxContext.h"
 #include "gfxMatrix.h"
-#include "nsIInterfaceRequestorUtils.h"
 #include "gfxPlatform.h"
+#include "imgIContainer.h"
+#include "nsIDOMSVGImageElement.h"
+#include "nsLayoutUtils.h"
+#include "nsRenderingContext.h"
+#include "nsStubImageDecoderObserver.h"
+#include "nsSVGEffects.h"
+#include "nsSVGImageElement.h"
+#include "nsSVGPathGeometryFrame.h"
 #include "nsSVGSVGElement.h"
+#include "nsSVGUtils.h"
 
 using namespace mozilla;
 
-class nsRenderingContext;
 class nsSVGImageFrame;
 
 class nsSVGImageListener MOZ_FINAL : public nsStubImageDecoderObserver

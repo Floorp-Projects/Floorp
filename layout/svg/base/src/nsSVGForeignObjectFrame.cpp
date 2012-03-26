@@ -36,24 +36,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Main header first:
 #include "nsSVGForeignObjectFrame.h"
 
-#include "nsIDOMSVGForeignObjectElem.h"
-#include "nsIDOMSVGSVGElement.h"
-#include "nsSVGOuterSVGFrame.h"
-#include "nsRegion.h"
-#include "nsRenderingContext.h"
-#include "nsGkAtoms.h"
-#include "nsLayoutUtils.h"
-#include "nsSVGUtils.h"
-#include "nsIURI.h"
-#include "nsSVGRect.h"
-#include "nsINameSpaceManager.h"
-#include "nsSVGEffects.h"
-#include "nsSVGForeignObjectElement.h"
-#include "nsSVGContainerFrame.h"
+// Keep others in (case-insensitive) order:
 #include "gfxContext.h"
 #include "gfxMatrix.h"
+#include "nsGkAtoms.h"
+#include "nsIDOMSVGForeignObjectElem.h"
+#include "nsINameSpaceManager.h"
+#include "nsLayoutUtils.h"
+#include "nsRegion.h"
+#include "nsRenderingContext.h"
+#include "nsSVGContainerFrame.h"
+#include "nsSVGEffects.h"
+#include "nsSVGForeignObjectElement.h"
+#include "nsSVGOuterSVGFrame.h"
+#include "nsSVGUtils.h"
 
 //----------------------------------------------------------------------
 // Implementation

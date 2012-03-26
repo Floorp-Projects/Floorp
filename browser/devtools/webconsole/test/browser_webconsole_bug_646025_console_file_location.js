@@ -47,7 +47,7 @@ const TEST_URI = "http://example.com/browser/browser/devtools/" +
                  "test-bug-646025-console-file-location.html";
 
 function test() {
-  addTab("data:text/html,Web Console file location display test");
+  addTab("data:text/html;charset=utf-8,Web Console file location display test");
   browser.addEventListener("load", onLoad, true);
 }
 

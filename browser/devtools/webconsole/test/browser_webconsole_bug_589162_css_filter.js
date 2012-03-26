@@ -9,7 +9,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "data:text/html,<div style='font-size:3em;" +
+const TEST_URI = "data:text/html;charset=utf-8,<div style='font-size:3em;" +
   "foobarCssParser:baz'>test CSS parser filter</div>";
 
 function onContentLoaded()

@@ -379,12 +379,6 @@ TraceJSHolder(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32_t number,
     return JS_DHASH_NEXT;
 }
 
-struct ClearedGlobalObject : public JSDHashEntryHdr
-{
-    JSContext* mContext;
-    JSObject* mGlobalObject;
-};
-
 static PLDHashOperator
 TraceExpandos(XPCWrappedNative *wn, JSObject *&expando, void *aClosure)
 {

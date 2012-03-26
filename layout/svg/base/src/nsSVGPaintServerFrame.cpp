@@ -34,7 +34,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Main header first:
 #include "nsSVGPaintServerFrame.h"
+
+// Keep others in (case-insensitive) order:
 #include "nsSVGGeometryFrame.h"
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGPaintServerFrame)

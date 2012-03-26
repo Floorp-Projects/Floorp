@@ -108,6 +108,7 @@ bool
 Shape::makeOwnBaseShape(JSContext *cx)
 {
     JS_ASSERT(!base()->isOwned());
+    assertSameCompartment(cx, compartment());
 
     RootedVarShape self(cx, this);
 

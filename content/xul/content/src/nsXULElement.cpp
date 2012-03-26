@@ -771,7 +771,7 @@ nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
         nsIScriptGlobalObject* global = globalOwner->GetScriptGlobalObject();
         NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
 
-        context = global->GetScriptContext(aContext->GetScriptTypeID());
+        context = global->GetScriptContext();
         // It could be possible the language has been setup on aContext but
         // not on the global - we don't demand-create language contexts on the
         // nsGlobalWindow
@@ -2943,8 +2943,7 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
                                 nsIScriptGlobalObject* aGlobal,
                                 const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
-    nsIScriptContext *context = aGlobal->GetScriptContext(
-                                        mScriptObject.mLangID);
+    nsIScriptContext *context = aGlobal->GetScriptContext();
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull ||
                  !mScriptObject.mObject,
                  "script source still loading when serializing?!");
@@ -3022,8 +3021,7 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
     aStream->Read32(&mLineNo);
     aStream->Read32(&mLangVersion);
 
-    nsIScriptContext *context = aGlobal->GetScriptContext(
-                                            mScriptObject.mLangID);
+    nsIScriptContext *context = aGlobal->GetScriptContext();
     NS_ASSERTION(context != nsnull, "Have no context for deserialization");
     NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
     nsScriptObjectHolder<JSScript> newScriptObject(context);
@@ -3151,7 +3149,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
         if (! global)
             return NS_ERROR_UNEXPECTED;
 
-        context = global->GetScriptContext(mScriptObject.mLangID);
+        context = global->GetScriptContext();
         NS_ASSERTION(context != nsnull, "no context for script global");
         if (! context)
             return NS_ERROR_UNEXPECTED;

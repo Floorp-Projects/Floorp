@@ -98,21 +98,6 @@ function reloadButton()
   return browserWindow().document.getElementById("urlbar-reload-button");
 }
 
-/**
- * Zoom the given document.
- */
-function zoomDocument(aDocument, aZoom)
-{
-  var docShell = aDocument.defaultView.
-    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-    getInterface(Components.interfaces.nsIWebNavigation).
-    QueryInterface(Components.interfaces.nsIDocShell);
-  var docViewer = docShell.contentViewer.
-    QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
-
-  docViewer.fullZoom = aZoom;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // private section
 

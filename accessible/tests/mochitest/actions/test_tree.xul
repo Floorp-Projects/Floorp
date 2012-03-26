@@ -43,7 +43,7 @@
     // gA11yEventDumpID = "debug";
     //gA11yEventDumpToConsole = true; // debug
 
-    function doTestActions()
+    function doTest()
     {
       var treeNode = getNode("tree");
 
@@ -91,15 +91,8 @@
       testActions(actions); // Will call SimpleTest.finish();
     }
 
-    function doTest()
-    {
-      var treeNode = getNode("tree");
-      waitForEvent(EVENT_REORDER, treeNode, doTestActions);
-      treeNode.view = new nsTreeTreeView();
-    }
-
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTest);
+    addA11yXULTreeLoadEvent(doTest, "tree", new nsTreeTreeView());
   ]]>
   </script>
 

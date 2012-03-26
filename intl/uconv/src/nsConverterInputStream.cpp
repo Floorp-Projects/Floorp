@@ -255,7 +255,7 @@ nsConverterInputStream::Fill(nsresult * aErrorCode)
                  "Whoa.  The converter should have returned NS_OK_UDEC_MOREINPUT before this point!");
   } while (mReplacementChar &&
            NS_FAILED(*aErrorCode) &&
-           mUnicharData->GetBufferSize() > mUnicharDataLength);
+           PRUint32(mUnicharData->GetBufferSize()) > mUnicharDataLength);
 
   mLeftOverBytes = mByteData->GetLength() - srcConsumed;
 

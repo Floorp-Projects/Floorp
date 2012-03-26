@@ -36,10 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMSVGStopElement.h"
-#include "nsStyleContext.h"
+// Keep in (case-insensitive) order:
 #include "nsFrame.h"
 #include "nsGkAtoms.h"
+#include "nsIDOMSVGStopElement.h"
+#include "nsStyleContext.h"
 #include "nsSVGEffects.h"
 
 // This is a very simple frame whose only purpose is to capture style change

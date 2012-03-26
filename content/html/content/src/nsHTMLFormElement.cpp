@@ -2164,8 +2164,7 @@ nsFormControlList::nsFormControlList(nsHTMLFormElement* aForm) :
   // of 8 to reduce allocations on small forms.
   mElements(8)
 {
-  // Mark ourselves as a proxy
-  SetIsProxy();
+  SetIsDOMBinding();
 }
 
 nsFormControlList::~nsFormControlList()

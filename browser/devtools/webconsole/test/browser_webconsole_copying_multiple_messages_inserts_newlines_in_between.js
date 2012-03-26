@@ -10,7 +10,7 @@
 
 // Tests that copying multiple messages inserts newlines in between.
 
-const TEST_URI = "data:text/html,Web Console test for bug 586142";
+const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 586142";
 
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.gcli.enable");

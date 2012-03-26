@@ -45,7 +45,7 @@ interface nsIDOMSVGAnimatedNumberList;
 interface nsIDOMSVGAnimatedInteger;
 interface nsIDOMSVGAnimatedBoolean;
 
-[scriptable, uuid(0baad34c-3937-4a62-8098-5988ad6d3582)]
+[scriptable, uuid(f96cedb9-568c-43d0-b07f-565d5116ae34)]
 interface nsIDOMSVGFilterPrimitiveStandardAttributes : nsIDOMSVGElement
 { 
     readonly attribute nsIDOMSVGAnimatedLength      x;
@@ -55,7 +55,7 @@ interface nsIDOMSVGFilterPrimitiveStandardAttributes : nsIDOMSVGElement
     readonly attribute nsIDOMSVGAnimatedString      result;
 };
 
-[scriptable, uuid(15d091f6-ffdd-4b22-90d3-45671a3a153c)]
+[scriptable, uuid(215023bc-e4d6-473d-b0fd-db96727b9e0d)]
 interface nsIDOMSVGFEBlendElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {
     const unsigned short SVG_MODE_UNKNOWN   = 0;
@@ -70,7 +70,7 @@ interface nsIDOMSVGFEBlendElement : nsIDOMSVGFilterPrimitiveStandardAttributes
     readonly attribute nsIDOMSVGAnimatedEnumeration   mode;
 };
 
-[scriptable, uuid(9865eca2-ec73-4241-b17c-3707a84801a0)]
+[scriptable, uuid(92205955-4d55-4097-9b93-b38d7e5a72e4)]
 interface nsIDOMSVGFEColorMatrixElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {
     // Color Matrix Types
@@ -85,13 +85,13 @@ interface nsIDOMSVGFEColorMatrixElement : nsIDOMSVGFilterPrimitiveStandardAttrib
     readonly attribute nsIDOMSVGAnimatedNumberList  values;
 };
 
-[scriptable, uuid(8dd308d2-19b0-4d0a-a600-fc97cc278840)]
+[scriptable, uuid(69612612-c893-4d2c-902d-5a4887ebfe0a)]
 interface nsIDOMSVGFEComponentTransferElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {
     readonly attribute nsIDOMSVGAnimatedString in1;
 };
 
-[scriptable, uuid(8d1c623f-81d0-494d-abf4-089447d71e19)]
+[scriptable, uuid(1b758c80-c6f2-4f57-a8cf-964c98c8d0f0)]
 interface nsIDOMSVGComponentTransferFunctionElement : nsIDOMSVGElement
 {
     // Component Transfer Types
@@ -111,7 +111,7 @@ interface nsIDOMSVGComponentTransferFunctionElement : nsIDOMSVGElement
     readonly attribute nsIDOMSVGAnimatedNumber      offset;
 };
 
-[scriptable, uuid(4c817cff-3eb1-4aa3-86cc-6c1d26304d51)]
+[scriptable, uuid(71142479-68eb-44a3-9964-19faa09c4720)]
 interface nsIDOMSVGFECompositeElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {
     // Operator Types
@@ -135,27 +135,27 @@ interface nsIDOMSVGFECompositeElement : nsIDOMSVGFilterPrimitiveStandardAttribut
 
 };
 
-[scriptable, uuid(16cc0d3d-7d9d-4994-8e22-51a2ca8bc286)]
+[scriptable, uuid(4f358571-3dcb-4ac5-990b-19e3fd355d43)]
 interface nsIDOMSVGFEFuncRElement : nsIDOMSVGComponentTransferFunctionElement
 {
 };
 
-[scriptable, uuid(28140f4f-11b0-4aaa-988f-91183de9174d)]
+[scriptable, uuid(a2b6baf7-4f8a-4b3a-86e9-6e232ad25889)]
 interface nsIDOMSVGFEFuncGElement : nsIDOMSVGComponentTransferFunctionElement
 {
 };
 
-[scriptable, uuid(3d7b80be-be90-4d5f-bd7f-ad8a41e25650)]
+[scriptable, uuid(b6d6522d-6721-453b-99f9-a08349d84dd0)]
 interface nsIDOMSVGFEFuncBElement : nsIDOMSVGComponentTransferFunctionElement
 {
 };
 
-[scriptable, uuid(52cf6761-4ff7-467f-9828-0fb2f51a70cf)]
+[scriptable, uuid(70c084fc-d823-43b3-b4f1-476387b40079)]
 interface nsIDOMSVGFEFuncAElement : nsIDOMSVGComponentTransferFunctionElement
 {
 };
 
-[scriptable, uuid(aa828fdd-855c-4def-b911-0305521e6b3c)]
+[scriptable, uuid(bd19cfb2-5259-4551-abf5-3f9a9967ccf0)]
 interface nsIDOMSVGFEGaussianBlurElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 { 
     readonly attribute nsIDOMSVGAnimatedString in1;
@@ -165,35 +165,35 @@ interface nsIDOMSVGFEGaussianBlurElement : nsIDOMSVGFilterPrimitiveStandardAttri
     void setStdDeviation ( in float stdDeviationX, in float stdDeviationY );
 };
 
-[scriptable, uuid(680478f7-e018-448e-a5f8-994737a1f3cc)]
+[scriptable, uuid(ebb57b0d-e198-4f10-b5a9-4ab5b0729c85)]
 interface nsIDOMSVGFEMergeElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {
 };
 
-[scriptable, uuid(556ae82f-a713-4075-8b1a-a484c147b55e)]
+[scriptable, uuid(5b701f2f-b636-4bbb-8d2a-c74fa79b0280)]
 interface nsIDOMSVGFEMergeNodeElement : nsIDOMSVGElement { 
     readonly attribute nsIDOMSVGAnimatedString in1;
 };
 
-[scriptable, uuid(5528a83d-6dd5-48a0-917a-e67d688d76ed)]
+[scriptable, uuid(15746ca6-8b27-4cc1-bd84-3422d3aea18c)]
 interface nsIDOMSVGFEOffsetElement : nsIDOMSVGFilterPrimitiveStandardAttributes { 
     readonly attribute nsIDOMSVGAnimatedString in1;
     readonly attribute nsIDOMSVGAnimatedNumber dx;
     readonly attribute nsIDOMSVGAnimatedNumber dy;
 };
 
-[scriptable, uuid(610e2fe0-3d6a-4cf0-8df6-b65da8d29367)]
+[scriptable, uuid(436ca74a-eba8-4a50-8947-c180eb612a34)]
 interface nsIDOMSVGFEFloodElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {
 };
 
-[scriptable, uuid(4590fc6a-5dc1-45bc-9e86-0af377d6ecbd)]
+[scriptable, uuid(4cf173d3-6b67-4e2c-8050-61412e6e9d7c)]
 interface nsIDOMSVGFETileElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {
     readonly attribute nsIDOMSVGAnimatedString in1;
 };
 
-[scriptable, uuid(bec76206-825d-40c9-bded-0810daafb117)]
+[scriptable, uuid(9235e6a7-ba2c-4a41-9e80-20735159014b)]
 interface nsIDOMSVGFETurbulenceElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 { 
     // Turbulence Types
@@ -213,7 +213,7 @@ interface nsIDOMSVGFETurbulenceElement : nsIDOMSVGFilterPrimitiveStandardAttribu
     readonly attribute nsIDOMSVGAnimatedEnumeration type;
 };
 
-[scriptable, uuid(7246ba36-0dd1-43fc-8536-908e8985b77a)]
+[scriptable, uuid(b994b0e3-cff1-4550-bfb2-f5de7679acb9)]
 interface nsIDOMSVGFEMorphologyElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 { 
     // Operator Types
@@ -229,7 +229,7 @@ interface nsIDOMSVGFEMorphologyElement : nsIDOMSVGFilterPrimitiveStandardAttribu
     void setRadius ( in float rx, in float ry );
 };
 
-[scriptable, uuid(812fdfe3-93fd-4787-9909-7158d839ea69)]
+[scriptable, uuid(b64766fa-c393-4985-a775-deedb5b07ed2)]
 interface nsIDOMSVGFEConvolveMatrixElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 { 
     // Edge Mode Values
@@ -252,7 +252,7 @@ interface nsIDOMSVGFEConvolveMatrixElement : nsIDOMSVGFilterPrimitiveStandardAtt
     readonly attribute nsIDOMSVGAnimatedBoolean     preserveAlpha;
 };
 
-[scriptable, uuid(3683aa0d-9d2f-45cd-8bc8-9b8a79e519b7)]
+[scriptable, uuid(47343967-4da5-4309-a3a4-c37ffab05b1f)]
 interface nsIDOMSVGFEDiffuseLightingElement :  nsIDOMSVGFilterPrimitiveStandardAttributes
 { 
   readonly attribute nsIDOMSVGAnimatedString in1;
@@ -262,7 +262,7 @@ interface nsIDOMSVGFEDiffuseLightingElement :  nsIDOMSVGFilterPrimitiveStandardA
   readonly attribute nsIDOMSVGAnimatedNumber kernelUnitLengthY;
 };
 
-[scriptable, uuid(f3a96e7a-48db-4d75-b16a-368f7fa39482)]
+[scriptable, uuid(b647355f-1be8-40da-9c3b-05dce4c0eaa4)]
 interface nsIDOMSVGFESpecularLightingElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 { 
   readonly attribute nsIDOMSVGAnimatedString in1;
@@ -273,20 +273,20 @@ interface nsIDOMSVGFESpecularLightingElement : nsIDOMSVGFilterPrimitiveStandardA
   readonly attribute nsIDOMSVGAnimatedNumber kernelUnitLengthY;
 };
 
-[scriptable, uuid(bcd675cb-8794-4083-a6f4-1577a6c23f2b)]
+[scriptable, uuid(1073827f-77e5-4096-81c5-6ebffefe258b)]
 interface nsIDOMSVGFEDistantLightElement : nsIDOMSVGElement { 
   readonly attribute nsIDOMSVGAnimatedNumber azimuth;
   readonly attribute nsIDOMSVGAnimatedNumber elevation;
 };
 
-[scriptable, uuid(57786525-10bd-4599-9bc0-f2a76ff10178)]
+[scriptable, uuid(d75d49ad-4265-4774-aa5c-02e4cdbfa2b1)]
 interface nsIDOMSVGFEPointLightElement : nsIDOMSVGElement { 
   readonly attribute nsIDOMSVGAnimatedNumber x;
   readonly attribute nsIDOMSVGAnimatedNumber y;
   readonly attribute nsIDOMSVGAnimatedNumber z;
 };
 
-[scriptable, uuid(4bc6bd22-7faf-409e-acff-0d554ff93b2e)]
+[scriptable, uuid(8cbaa2ea-159d-4b28-a963-8e42979eae84)]
 interface nsIDOMSVGFESpotLightElement : nsIDOMSVGElement { 
   readonly attribute nsIDOMSVGAnimatedNumber x;
   readonly attribute nsIDOMSVGAnimatedNumber y;
@@ -298,7 +298,7 @@ interface nsIDOMSVGFESpotLightElement : nsIDOMSVGElement {
   readonly attribute nsIDOMSVGAnimatedNumber limitingConeAngle;
 };
 
-[scriptable, uuid(477bb1c0-4923-467f-a0ce-85cbe87c2324)]
+[scriptable, uuid(f46d36a1-5ea5-4152-9d73-2dd967c3a709)]
 interface nsIDOMSVGFEImageElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 /*
   nsIDOMSVGURIReference,
@@ -308,7 +308,7 @@ interface nsIDOMSVGFEImageElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {
 };
 
-[scriptable, uuid(7a7548ed-f578-433b-b6b3-d034f5f19f44)]
+[scriptable, uuid(84db9e0e-ea0b-4906-8929-d97b4fd637c3)]
 interface nsIDOMSVGFEDisplacementMapElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {
   // Channel Selectors

@@ -49,7 +49,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#interface-element
  */
 
-[scriptable, uuid(f561753a-1d4f-40c1-b147-ea955fc6fd94)]
+[scriptable, uuid(295e05d9-9174-48ae-bc59-d7e6a8757726)]
 interface nsIDOMElement : nsIDOMNode
 {
   readonly attribute DOMString        tagName;
@@ -219,4 +219,13 @@ interface nsIDOMElement : nsIDOMNode
    * element has captured the mouse, this method has no effect.
    */
   void releaseCapture();
+
+  // Mozilla extensions
+  /**
+   * Requests that this element be made the full-screen element, as per the DOM
+   * full-screen api.
+   *
+   * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
+   */
+  void mozRequestFullScreen();
 };

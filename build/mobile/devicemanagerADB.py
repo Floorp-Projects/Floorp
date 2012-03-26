@@ -376,16 +376,21 @@ class DeviceManagerADB(DeviceManager):
 
   # external function
   # returns:
-  #  success: output from testagent
-  #  failure: None
-  def killProcess(self, appname):
+  #  success: True
+  #  failure: False
+  def killProcess(self, appname, forceKill=False):
     procs = self.getProcessList()
+    didKillProcess = False
     for (pid, name, user) in procs:
       if name == appname:
-        p = self.runCmdAs(["shell", "kill", pid])
-        return p.stdout.read()
+         args = ["shell", "kill"]
+         if forceKill:
+           args.append("-9")
+         args.append(pid)
+         p = self.runCmdAs(args)
+         didKillProcess = True
 
-    return None
+    return didKillProcess
 
   # external function
   # returns:
@@ -769,7 +774,8 @@ class DeviceManagerADB(DeviceManager):
                                              "is unknown" in runAsOut):
         raise DMError("run-as failed sanity check")
 
-      self.checkCmd(["push", os.path.abspath(sys.argv[0]), tmpDir + "/tmpfile"])
+      tmpfile = tempfile.NamedTemporaryFile()
+      self.checkCmd(["push", tmpfile.name, tmpDir + "/tmpfile"])
       if self.useDDCopy:
         self.checkCmd(["shell", "run-as", self.packageName, "dd", "if=" + tmpDir + "/tmpfile", "of=" + devroot + "/sanity/tmpfile"])
       else:

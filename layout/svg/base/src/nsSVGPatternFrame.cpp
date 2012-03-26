@@ -36,26 +36,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Main header first:
 #include "nsSVGPatternFrame.h"
 
-#include "nsGkAtoms.h"
-#include "nsIDOMSVGAnimatedRect.h"
-#include "nsRenderingContext.h"
-#include "SVGAnimatedTransformList.h"
-#include "nsStyleContext.h"
-#include "nsINameSpaceManager.h"
-#include "nsISVGChildFrame.h"
-#include "nsSVGRect.h"
-#include "nsSVGUtils.h"
-#include "nsSVGEffects.h"
-#include "nsSVGOuterSVGFrame.h"
-#include "nsSVGPatternElement.h"
-#include "nsSVGGeometryFrame.h"
+// Keep others in (case-insensitive) order:
 #include "gfxContext.h"
-#include "gfxPlatform.h"
-#include "gfxPattern.h"
 #include "gfxMatrix.h"
+#include "gfxPattern.h"
+#include "gfxPlatform.h"
 #include "nsContentUtils.h"
+#include "nsGkAtoms.h"
+#include "nsISVGChildFrame.h"
+#include "nsRenderingContext.h"
+#include "nsStyleContext.h"
+#include "nsSVGEffects.h"
+#include "nsSVGGeometryFrame.h"
+#include "nsSVGPatternElement.h"
+#include "nsSVGUtils.h"
+#include "SVGAnimatedTransformList.h"
 
 using namespace mozilla;
 

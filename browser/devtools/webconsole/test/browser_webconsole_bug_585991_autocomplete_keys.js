@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "data:text/html,<p>bug 585991 - autocomplete popup keyboard usage test";
+const TEST_URI = "data:text/html;charset=utf-8,<p>bug 585991 - autocomplete popup keyboard usage test";
 let HUD;
 
 registerCleanupFunction(function() {
