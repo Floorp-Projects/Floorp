@@ -8,7 +8,7 @@
 #includesubst @BOOKMARKSPATH@
 <resources>
 #include ../sync/strings.xml.in
-  <string name="splash_firstrun">&splash_firstrun;</string>
+  <string name="splash_settingup">&splash_settingup;</string>
   <string name="splash_bookmarks_history">&splash_bookmarks_history;</string>
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
