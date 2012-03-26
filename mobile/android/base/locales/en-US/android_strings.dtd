@@ -1,5 +1,5 @@
 
-<!ENTITY  splash_firstrun "Setting up your &brandShortName;">
+<!ENTITY  splash_settingup "Setting up your &brandShortName;">
 <!ENTITY  splash_bookmarks_history "We are updating your bookmarks and history, which may take a minute or so.">
 
 <!ENTITY  no_space_to_start_error "There is not enough space available for &brandShortName; to start.">
