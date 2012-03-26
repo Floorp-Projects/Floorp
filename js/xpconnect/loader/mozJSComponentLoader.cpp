@@ -78,7 +78,6 @@
 #include "nsIJARURI.h"
 #include "nsNetUtil.h"
 #include "nsDOMFile.h"
-#include "jsxdrapi.h"
 #include "jsprf.h"
 #include "nsJSPrincipals.h"
 // For reporting errors with the console service
@@ -160,8 +159,7 @@ mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
          * Got an error object; prepare appropriate-width versions of
          * various arguments to it.
          */
-        nsAutoString fileUni;
-        fileUni.AssignWithConversion(rep->filename);
+        NS_ConvertASCIItoUTF16 fileUni(rep->filename);
 
         PRUint32 column = rep->uctokenptr - rep->uclinebuf;
 

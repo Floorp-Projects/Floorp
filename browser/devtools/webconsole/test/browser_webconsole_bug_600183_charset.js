@@ -36,7 +36,7 @@ function performTest()
 
 function test()
 {
-  addTab("data:text/html,Web Console - bug 600183 test");
+  addTab("data:text/html;charset=utf-8,Web Console - bug 600183 test");
 
   let initialLoad = true;
 

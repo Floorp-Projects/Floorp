@@ -529,7 +529,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 
   PRInt32 charsetSource = kCharsetFromDocTypeDefault;
   nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
-  TryChannelCharset(aChannel, charsetSource, charset);
+  TryChannelCharset(aChannel, charsetSource, charset, nsnull);
 
   nsCOMPtr<nsIURI> aUrl;
   rv = aChannel->GetURI(getter_AddRefs(aUrl));

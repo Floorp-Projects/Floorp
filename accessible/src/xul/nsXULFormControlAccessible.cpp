@@ -527,14 +527,6 @@ nsXULRadioButtonAccessible::NativeState()
   return state;
 }
 
-void
-nsXULRadioButtonAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
-                                                       PRInt32 *aSetSize)
-{
-  nsAccUtils::GetPositionAndSizeForXULSelectControlItem(mContent, aPosInSet,
-                                                        aSetSize);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULRadioButtonAccessible: Widgets
 

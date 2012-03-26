@@ -177,6 +177,7 @@
 #include "nsFrameLoader.h"
 #include "nsEscape.h"
 #include "nsObjectLoadingContent.h"
+#include "nsHtml5TreeOpExecutor.h"
 #ifdef MOZ_MEDIA
 #include "nsHTMLMediaElement.h"
 #endif // MOZ_MEDIA
@@ -1673,8 +1674,6 @@ nsDocument::~nsDocument()
   // unlocked state, and then clear the table.
   SetImageLockingState(false);
   mImageTracker.Clear();
-
-  mPlugins.Clear();
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocument)
@@ -2025,8 +2024,7 @@ nsDocument::Init()
   mScriptLoader = new nsScriptLoader(this);
   NS_ENSURE_TRUE(mScriptLoader, NS_ERROR_OUT_OF_MEMORY);
 
-  if (!mImageTracker.Init() ||
-      !mPlugins.Init()) {
+  if (!mImageTracker.Init()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -3159,7 +3157,8 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
 bool
 nsDocument::TryChannelCharset(nsIChannel *aChannel,
                               PRInt32& aCharsetSource,
-                              nsACString& aCharset)
+                              nsACString& aCharset,
+                              nsHtml5TreeOpExecutor* aExecutor)
 {
   if(kCharsetFromChannel <= aCharsetSource) {
     return true;
@@ -3173,6 +3172,8 @@ nsDocument::TryChannelCharset(nsIChannel *aChannel,
       if(NS_SUCCEEDED(rv)) {
         aCharsetSource = kCharsetFromChannel;
         return true;
+      } else if (aExecutor && !charsetVal.IsEmpty()) {
+        aExecutor->ComplainAboutBogusProtocolCharset(this);
       }
     }
   }
@@ -8357,51 +8358,6 @@ nsDocument::RemoveImage(imgIRequest* aImage)
   return rv;
 }
 
-nsresult
-nsDocument::AddPlugin(nsIObjectLoadingContent* aPlugin)
-{
-  MOZ_ASSERT(aPlugin);
-  if (!mPlugins.PutEntry(aPlugin)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
-}
-
-void
-nsDocument::RemovePlugin(nsIObjectLoadingContent* aPlugin)
-{
-  MOZ_ASSERT(aPlugin);
-  mPlugins.RemoveEntry(aPlugin);
-}
-
-static bool
-AllSubDocumentPluginEnum(nsIDocument* aDocument, void* userArg)
-{
-  nsTArray<nsIObjectLoadingContent*>* plugins =
-    reinterpret_cast< nsTArray<nsIObjectLoadingContent*>* >(userArg);
-  MOZ_ASSERT(plugins);
-  aDocument->GetPlugins(*plugins);
-  return true;
-}
-
-static PLDHashOperator
-AllPluginEnum(nsPtrHashKey<nsIObjectLoadingContent>* aPlugin, void* userArg)
-{
-  nsTArray<nsIObjectLoadingContent*>* allPlugins =
-    reinterpret_cast< nsTArray<nsIObjectLoadingContent*>* >(userArg);
-  MOZ_ASSERT(allPlugins);
-  allPlugins->AppendElement(aPlugin->GetKey());
-  return PL_DHASH_NEXT;
-}
-
-void
-nsDocument::GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins)
-{
-  aPlugins.SetCapacity(aPlugins.Length() + mPlugins.Count());
-  mPlugins.EnumerateEntries(AllPluginEnum, &aPlugins);
-  EnumerateSubDocuments(AllSubDocumentPluginEnum, &aPlugins);
-}
-
 PLDHashOperator LockEnumerator(imgIRequest* aKey,
                                PRUint32 aData,
                                void*    userArg)
@@ -9015,7 +8971,7 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
   NS_ASSERTION(GetFullScreenElement() == aElement,
                "Full-screen element should be the requested element!");
   NS_ASSERTION(IsFullScreenDoc(), "Should be full-screen doc");
-  nsCOMPtr<nsIDOMHTMLElement> fse;
+  nsCOMPtr<nsIDOMElement> fse;
   GetMozFullScreenElement(getter_AddRefs(fse));
   nsCOMPtr<nsIContent> c(do_QueryInterface(fse));
   NS_ASSERTION(c->AsElement() == aElement,
@@ -9033,7 +8989,7 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
 }
 
 NS_IMETHODIMP
-nsDocument::GetMozFullScreenElement(nsIDOMHTMLElement **aFullScreenElement)
+nsDocument::GetMozFullScreenElement(nsIDOMElement **aFullScreenElement)
 {
   NS_ENSURE_ARG_POINTER(aFullScreenElement);
   *aFullScreenElement = nsnull;

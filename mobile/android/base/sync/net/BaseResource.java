@@ -117,8 +117,6 @@ public class BaseResource implements Resource {
    * @param credentials a string, "user:pass".
    */
   private static void applyCredentials(String credentials, HttpUriRequest request, HttpContext context) {
-    addAuthCacheToContext(request, context);
-
     Credentials creds = new UsernamePasswordCredentials(credentials);
     Header header = BasicScheme.authenticate(creds, "US-ASCII", false);
     request.addHeader(header);
@@ -143,6 +141,8 @@ public class BaseResource implements Resource {
     if (credentials != null) {
       BaseResource.applyCredentials(credentials, request, context);
     }
+
+    addAuthCacheToContext(request, context);
 
     HttpParams params = client.getParams();
     HttpConnectionParams.setConnectionTimeout(params, delegate.connectionTimeout());

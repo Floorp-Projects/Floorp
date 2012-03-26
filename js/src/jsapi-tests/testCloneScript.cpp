@@ -5,9 +5,7 @@
  */
 
 #include "tests.h"
-#include "jsapi.h"
 #include "jsdbgapi.h"
-#include "jsxdrapi.h"
 
 BEGIN_TEST(test_cloneScript)
 {

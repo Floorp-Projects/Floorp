@@ -65,6 +65,9 @@ public:
     static void UnpremultiplyImageSurface(gfxImageSurface *aSurface,
                                           gfxImageSurface *aDestSurface = nsnull);
 
+    static void ConvertBGRAtoRGBA(gfxImageSurface *aSourceSurface,
+                                  gfxImageSurface *aDestSurface = nsnull);
+
     /**
      * Draw something drawable while working around limitations like bad support
      * for EXTEND_PAD, lack of source-clipping, or cairo / pixman bugs with

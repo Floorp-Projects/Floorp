@@ -35,6 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Hal.h"
+#include "mozilla/HalSensor.h"
+
+// Microsoft's API Name hackery sucks
+#undef CreateEvent
+
 #include "nsISupports.h"
 #include "nsGUIEvent.h"
 #include "nsDOMEvent.h"
@@ -85,6 +91,7 @@
 #include "sampler.h"
 
 using namespace mozilla::dom;
+using namespace mozilla::hal;
 
 #define EVENT_TYPE_EQUALS( ls, type, userType ) \
   (ls->mEventType == type && \
@@ -282,11 +289,17 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
                                    kAllMutationBits :
                                    MutationBitForEventType(aType));
     }
-  } else if (aTypeAtom == nsGkAtoms::ondeviceorientation ||
-             aTypeAtom == nsGkAtoms::ondevicemotion) {
+  } else if (aTypeAtom == nsGkAtoms::ondeviceorientation) {
+     nsPIDOMWindow* window = GetInnerWindowForTarget();
+     if (window)
+       window->EnableDeviceSensor(SENSOR_ORIENTATION);
+  } else if (aTypeAtom == nsGkAtoms::ondevicemotion) {
     nsPIDOMWindow* window = GetInnerWindowForTarget();
-    if (window)
-      window->SetHasOrientationEventListener();
+    if (window) {
+      window->EnableDeviceSensor(SENSOR_ACCELERATION);
+      window->EnableDeviceSensor(SENSOR_LINEAR_ACCELERATION);
+      window->EnableDeviceSensor(SENSOR_GYROSCOPE);
+    }
   } else if ((aType >= NS_MOZTOUCH_DOWN && aType <= NS_MOZTOUCH_UP) ||
              (aTypeAtom == nsGkAtoms::ontouchstart ||
               aTypeAtom == nsGkAtoms::ontouchend ||
@@ -340,7 +353,14 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
       if (aType == NS_DEVICE_ORIENTATION) {
         nsPIDOMWindow* window = GetInnerWindowForTarget();
         if (window)
-          window->RemoveOrientationEventListener();
+          window->DisableDeviceSensor(SENSOR_ORIENTATION);
+      } else if (aType == NS_DEVICE_MOTION) {
+        nsPIDOMWindow* window = GetInnerWindowForTarget();
+        if (window) {
+          window->DisableDeviceSensor(SENSOR_ACCELERATION);
+          window->DisableDeviceSensor(SENSOR_LINEAR_ACCELERATION);
+          window->DisableDeviceSensor(SENSOR_GYROSCOPE);
+        }
       }
       break;
     }
@@ -532,12 +552,12 @@ nsEventListenerManager::AddScriptEventListener(nsIAtom *aName,
 
   // This might be the first reference to this language in the global
   // We must init the language before we attempt to fetch its context.
-  if (NS_FAILED(global->EnsureScriptEnvironment(aLanguage))) {
+  if (NS_FAILED(global->EnsureScriptEnvironment())) {
     NS_WARNING("Failed to setup script environment for this language");
     // but fall through and let the inevitable failure below handle it.
   }
 
-  nsIScriptContext* context = global->GetScriptContext(aLanguage);
+  nsIScriptContext* context = global->GetScriptContext();
   NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
   JSObject* scope = global->GetGlobalJSObject();

@@ -2624,6 +2624,7 @@ function UpdateUrlbarSearchSplitterState()
       splitter.id = "urlbar-search-splitter";
       splitter.setAttribute("resizebefore", "flex");
       splitter.setAttribute("resizeafter", "flex");
+      splitter.setAttribute("skipintoolbarset", "true");
       splitter.className = "chromeclass-toolbar-additional";
     }
     urlbar.parentNode.insertBefore(splitter, ibefore);
@@ -2707,6 +2708,10 @@ function PageProxyClickHandler(aEvent)
  */
 function BrowserOnAboutPageLoad(document) {
   if (/^about:home$/i.test(document.documentURI)) {
+    // XXX bug 738646 - when Marketplace is launched, remove this statement and
+    // the hidden attribute set on the apps button in aboutHome.xhtml
+    if (getBoolPref("browser.aboutHome.apps", false))
+      document.getElementById("apps").removeAttribute("hidden");
     let ss = Components.classes["@mozilla.org/browser/sessionstore;1"].
              getService(Components.interfaces.nsISessionStore);
     if (!ss.canRestoreLastSession)
@@ -2849,23 +2854,26 @@ function BrowserOnClick(event) {
           ss.restoreLastSession();
         ownerDoc.getElementById("launcher").removeAttribute("session");
       }
+      else if (ot == ownerDoc.getElementById("downloads")) {
+        BrowserDownloadsUI();
+      }
       else if (ot == ownerDoc.getElementById("bookmarks")) {
         PlacesCommandHook.showPlacesOrganizer("AllBookmarks");
       }
       else if (ot == ownerDoc.getElementById("history")) {
         PlacesCommandHook.showPlacesOrganizer("History");
       }
-      else if (ot == ownerDoc.getElementById("settings")) {
-        openPreferences();
+      else if (ot == ownerDoc.getElementById("apps")) {
+        openUILinkIn("https://marketplace.mozilla.org/", "tab");
       }
       else if (ot == ownerDoc.getElementById("addons")) {
         BrowserOpenAddonsMgr();
       }
-      else if (ot == ownerDoc.getElementById("downloads")) {
-        BrowserDownloadsUI();
-      }
       else if (ot == ownerDoc.getElementById("sync")) {
         openPreferences("paneSync");
+      }
+      else if (ot == ownerDoc.getElementById("settings")) {
+        openPreferences();
       }
     }
 }

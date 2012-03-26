@@ -53,6 +53,8 @@ public class TabsTray extends Activity implements Tabs.OnTabsChangedListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        LayoutInflater.from(this).setFactory(GeckoViewsFactory.getInstance());
+
         setContentView(R.layout.tabs_tray);
 
         mWaitingForClose = false;

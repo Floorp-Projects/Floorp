@@ -374,45 +374,6 @@ nsFrameList::GetLength() const
   return count;
 }
 
-static int CompareByContentOrder(const nsIFrame* aF1, const nsIFrame* aF2)
-{
-  if (aF1->GetContent() != aF2->GetContent()) {
-    return nsLayoutUtils::CompareTreePosition(aF1->GetContent(), aF2->GetContent());
-  }
-
-  if (aF1 == aF2) {
-    return 0;
-  }
-
-  const nsIFrame* f;
-  for (f = aF2; f; f = f->GetPrevInFlow()) {
-    if (f == aF1) {
-      // f1 comes before f2 in the flow
-      return -1;
-    }
-  }
-  for (f = aF1; f; f = f->GetPrevInFlow()) {
-    if (f == aF2) {
-      // f1 comes after f2 in the flow
-      return 1;
-    }
-  }
-
-  NS_ASSERTION(false, "Frames for same content but not in relative flow order");
-  return 0;
-}
-
-class CompareByContentOrderComparator
-{
-  public:
-  bool Equals(const nsIFrame* aA, const nsIFrame* aB) const {
-    return aA == aB;
-  }
-  bool LessThan(const nsIFrame* aA, const nsIFrame* aB) const {
-    return CompareByContentOrder(aA, aB) < 0;
-  }
-};
-
 void
 nsFrameList::ApplySetParent(nsIFrame* aParent) const
 {

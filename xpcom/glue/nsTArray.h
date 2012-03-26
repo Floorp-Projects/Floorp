@@ -754,7 +754,7 @@ public:
   // A variation on the ReplaceElementsAt method defined above.
   template<class Item>
   elem_type *ReplaceElementAt(index_type index, const Item& item) {
-    return ReplaceElementsAt(index, 1, item, 1);
+    return ReplaceElementsAt(index, 1, &item, 1);
   }
 
   // A variation on the ReplaceElementsAt method defined above.

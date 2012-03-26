@@ -88,20 +88,20 @@ interface nsISessionStore : nsISupports
    * 
    * @returns A string value or an empty string if none is set.
    */
-  AString getTabValue(in nsIDOMNode aTab, in AString aKey);
+  AString getTabValue(in jsval aTab, in AString aKey);
 
   /**
    * @param aTab         is the browser tab to set the value for.
    * @param aKey         is the value's name.
    * @param aStringValue is the value itself (use JSON.stringify/parse before setting JS objects).
    */
-  void setTabValue(in nsIDOMNode aTab, in AString aKey, in AString aStringValue);
+  void setTabValue(in jsval aTab, in AString aKey, in AString aStringValue);
 
   /**
    * @param aTab is the browser tab to get the value for.
    * @param aKey is the value's name.
    */
-  void deleteTabValue(in nsIDOMNode aTab, in AString aKey);
+  void deleteTabValue(in jsval aTab, in AString aKey);
 
   /**
    * @returns A boolean indicating we should restore previous browser session

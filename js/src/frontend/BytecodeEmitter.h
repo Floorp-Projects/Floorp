@@ -822,7 +822,7 @@ EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *body);
  * arity in JSSrcNoteSpec. This is why SRC_IF and SRC_INITPROP have the same
  * value below.
  *
- * Don't forget to update JSXDR_BYTECODE_VERSION in jsxdrapi.h for all such
+ * Don't forget to update XDR_BYTECODE_VERSION in vm/Xdr.h for all such
  * incompatible source note or other bytecode changes.
  */
 enum SrcNoteType {

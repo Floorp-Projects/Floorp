@@ -2487,7 +2487,7 @@ RecoverPluginGeometry(nsDisplayListBuilder* aBuilder,
         aClosure->mAffectedPlugins.GetEntry(f);
       // Windowed plugins in transforms are always ignored, we don't
       // create configurations for them
-      if (entry && (!aInTransform || !f->GetWidget())) {
+      if (entry && (!aInTransform || f->PaintedByGecko())) {
         displayPlugin->GetWidgetConfiguration(aBuilder,
                                               aClosure->mOutputConfigurations);
         // we've dealt with this plugin now
