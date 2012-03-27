@@ -419,7 +419,7 @@ public:
   nsDOMStorageType mStorageType;
 
   friend class nsIDOMStorage2;
-  nsPIDOMStorage* mSecurityChecker;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
   nsPIDOMStorage* mEventBroadcaster;
 };
 
