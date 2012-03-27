@@ -1815,17 +1815,7 @@ void nsPluginInstanceOwner::RemovePluginView()
   if (!surface)
     return;
 
-  JNIEnv* env = GetJNIForThread();
-  if (!env)
-    return;
-
-  AndroidBridge::AutoLocalJNIFrame frame(env, 1);
-
-  jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
-  jmethodID method = env->GetStaticMethodID(cls,
-                                            "removePluginView",
-                                            "(Landroid/view/View;)V");
-  env->CallStaticVoidMethod(cls, method, surface);
+  AndroidBridge::RemovePluginView(surface);
 }
 
 void nsPluginInstanceOwner::Invalidate() {
