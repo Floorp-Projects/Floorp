@@ -454,6 +454,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_mov(imm, ScratchRegister);
         ma_push(ScratchRegister);
     }
+    void push(ImmWord imm) {
+        push(Imm32(imm.value));
+    }
     void push(ImmGCPtr imm) {
         ma_mov(imm, ScratchRegister);
         ma_push(ScratchRegister);
