@@ -386,6 +386,7 @@ TypeInferenceOracle::getCallArg(JSScript *script, uint32 argc, uint32 arg, jsbyt
 {
     JS_ASSERT(argc >= arg);
     // Bytecode order: Function, This, Arg0, Arg1, ..., ArgN, Call.
+    // |argc| does not include |this|.
     return script->analysis()->poppedTypes(pc, argc - arg);
 }
 

@@ -125,6 +125,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // operations, as it will not create new SSA names for copies.
     void initSlot(uint32 index, MDefinition *ins);
 
+    // Discard the slot at the given depth, lowering all slots above.
+    void shimmySlots(int discardDepth);
+
     // In an OSR block, set all MOsrValues to use the MResumePoint attached to
     // the MStart.
     void linkOsrValues(MStart *start);
@@ -138,6 +141,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Rewrites a slot directly, bypassing the stack transition. This should
     // not be used under most circumstances.
     void rewriteSlot(uint32 slot, MDefinition *ins);
+
+    // Rewrites a slot based on its depth (same as argument to peek()).
+    void rewriteAtDepth(int32 depth, MDefinition *ins);
 
     // Tracks an instruction as being pushed onto the operand stack.
     void push(MDefinition *ins);
