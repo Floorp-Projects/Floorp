@@ -449,7 +449,6 @@ FixObjectType(JSContext *cx, JSObject *obj)
 
 /* Interface helpers for JSScript */
 extern void TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Value &rval);
-extern void TypeMonitorResult(JSContext *cx, TypeSet *types, const js::Value &rval);
 extern void TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, js::types::Type type);
 
 inline bool
@@ -604,13 +603,6 @@ TypeScript::Monitor(JSContext *cx, JSScript *script, jsbytecode *pc, const js::V
 {
     if (cx->typeInferenceEnabled())
         TypeMonitorResult(cx, script, pc, rval);
-}
-
-/* static */ inline void
-TypeScript::Monitor(JSContext *cx, TypeSet *types, const js::Value &rval)
-{
-    if (cx->typeInferenceEnabled())
-        TypeMonitorResult(cx, types, rval);
 }
 
 /* static */ inline void
