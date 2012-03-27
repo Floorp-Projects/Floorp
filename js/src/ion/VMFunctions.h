@@ -204,6 +204,7 @@ template <> struct OutParamToDataType<int *> { static const DataType result = Ty
 #define FOR_EACH_ARGS_2(Macro, Sep, Last) FOR_EACH_ARGS_1(Macro, Sep, Sep) Macro(2) Last(2)
 #define FOR_EACH_ARGS_3(Macro, Sep, Last) FOR_EACH_ARGS_2(Macro, Sep, Sep) Macro(3) Last(3)
 #define FOR_EACH_ARGS_4(Macro, Sep, Last) FOR_EACH_ARGS_3(Macro, Sep, Sep) Macro(4) Last(4)
+#define FOR_EACH_ARGS_5(Macro, Sep, Last) FOR_EACH_ARGS_4(Macro, Sep, Sep) Macro(5) Last(5)
 
 #define COMPUTE_INDEX(NbArg) NbArg
 #define COMPUTE_OUTPARAM_RESULT(NbArg) OutParamToDataType<A ## NbArg>::result
@@ -285,8 +286,15 @@ struct FunctionInfo<R (*)(JSContext *, A1, A2, A3, A4)> : public VMFunction {
     FUNCTION_INFO_STRUCT_BODY(FOR_EACH_ARGS_4);
 };
 
+template <class R, class A1, class A2, class A3, class A4, class A5>
+    struct FunctionInfo<R (*)(JSContext *, A1, A2, A3, A4, A5)> : public VMFunction {
+    typedef R (*pf)(JSContext *, A1, A2, A3, A4, A5);
+    FUNCTION_INFO_STRUCT_BODY(FOR_EACH_ARGS_5);
+};
+
 #undef FUNCTION_INFO_STRUCT_BODY
 
+#undef FOR_EACH_ARGS_5
 #undef FOR_EACH_ARGS_4
 #undef FOR_EACH_ARGS_3
 #undef FOR_EACH_ARGS_2
@@ -298,8 +306,10 @@ struct FunctionInfo<R (*)(JSContext *, A1, A2, A3, A4)> : public VMFunction {
 #undef SEP_OR
 #undef NOTHING
 
-bool InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval);
-bool InvokeConstructorFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval);
+bool InvokeFunction(JSContext *cx, types::TypeSet *types, JSFunction *fun,
+                    uint32 argc, Value *argv, Value *rval);
+bool InvokeConstructorFunction(JSContext *cx, types::TypeSet *types, JSFunction *fun,
+                               uint32 argc, Value *argv, Value *rval);
 bool ReportOverRecursed(JSContext *cx);
 
 bool DefVarOrConst(JSContext *cx, PropertyName *dn, unsigned attrs, JSObject *scopeChain);

@@ -407,10 +407,25 @@ TypeInferenceOracle::canInlineCall(JSScript *caller, jsbytecode *pc)
 }
 
 bool
-TypeInferenceOracle::canEnterInlinedScript(JSScript *inlineScript)
+TypeInferenceOracle::canEnterInlinedFunction(JSFunction *target)
 {
-    return inlineScript->hasAnalysis() && inlineScript->analysis()->ranInference() &&
-        inlineScript->analysis()->inlineable() && !inlineScript->analysis()->usesScopeChain();
+    JSScript *script = target->script();
+    if (!script->hasAnalysis() || !script->analysis()->ranInference())
+        return false;
+
+    if (!script->analysis()->inlineable())
+        return false;
+
+    if (script->analysis()->usesScopeChain())
+        return false;
+
+    // Create a watchdog on the type compile info, such as the compiled script
+    // would be discarded when type information of the inlined function will
+    // change.
+    if (types::TypeSet::HasObjectFlags(cx, target->getType(cx), types::OBJECT_FLAG_UNINLINEABLE))
+        return false;
+
+    return true;
 }
 
 TypeSet *
