@@ -363,6 +363,25 @@ MediaDocument::LinkStylesheet(const nsAString& aStylesheet)
   return head->AppendChildTo(link, false);
 }
 
+void
+MediaDocument::InsertMediaFragmentScript()
+{
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::script, nsnull,
+                                           kNameSpaceID_XHTML,
+                                           nsIDOMNode::ELEMENT_NODE);
+  if (!nodeInfo)
+  {
+    return;
+  }
+
+  nsRefPtr<nsGenericHTMLElement> script = NS_NewHTMLScriptElement(nodeInfo.forget());
+  script->SetTextContent(NS_LITERAL_STRING("window.addEventListener('hashchange',function(e){document.querySelector('audio,video').src=e.newURL;},false);"));
+
+  Element* head = GetHeadElement();
+  head->AppendChildTo(script, false);
+}
+
 void 
 MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
                                      const char* const* aFormatNames,
@@ -439,6 +458,10 @@ MediaDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject)
         nsContentUtils::AddScriptRunner(
             new nsDocElementCreatedNotificationRunner(this));        
     }
+
+  if (aGlobalObject) {
+    InsertMediaFragmentScript();
+  }
 }
 
 } // namespace dom
