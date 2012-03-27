@@ -189,6 +189,13 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
   protected ContentValues getContentValues(Record record) {
     BookmarkRecord rec = (BookmarkRecord) record;
 
+    if (rec.deleted) {
+      ContentValues cv = new ContentValues();
+      cv.put(BrowserContract.SyncColumns.GUID,     rec.guid);
+      cv.put(BrowserContract.Bookmarks.IS_DELETED, 1);
+      return cv;
+    }
+
     final int recordType = BrowserContractHelpers.typeCodeForString(rec.type);
     if (recordType == -1) {
       throw new IllegalStateException("Unexpected record type " + rec.type);
