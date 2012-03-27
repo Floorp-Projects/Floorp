@@ -519,7 +519,7 @@ var gSyncSetup = {
       case EXISTING_ACCOUNT_LOGIN_PAGE:
         Weave.Identity.account = Weave.Utils.normalizeAccount(
           document.getElementById("existingAccountName").value);
-        Weave.Identity.basicPssword =
+        Weave.Identity.basicPassword =
           document.getElementById("existingPassword").value;
         let pp = document.getElementById("existingPassphrase").value;
         Weave.Identity.syncKey = Weave.Utils.normalizePassphrase(pp);
