@@ -129,25 +129,9 @@ JSFunction *
 IonBuilder::getSingleCallTarget(uint32 argc, jsbytecode *pc)
 {
     types::TypeSet *calleeTypes = oracle->getCallTarget(script, argc, pc);
-    if (!calleeTypes)
+    JSObject *obj = calleeTypes->getSingleton(cx, false);
+    if (!obj || !obj->isFunction())
         return NULL;
-
-    if (calleeTypes->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT)
-        return NULL;
-
-    if (calleeTypes->unknownObject())
-        return NULL;
-
-    if (calleeTypes->getObjectCount() > 1)
-        return NULL;
-
-    JSObject *obj = calleeTypes->getSingleObject(0);
-    if (!obj)
-        return NULL;
-
-    if (!obj->isFunction())
-        return NULL;
-
     return obj->toFunction();
 }
 
@@ -738,13 +722,13 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_ENDINIT:
         return true;
 
-      case JSOP_CALL:
       case JSOP_FUNCALL:
-      case JSOP_FUNAPPLY:
-        return jsop_call(GET_ARGC(pc), false);
+        return jsop_funcall(GET_ARGC(pc));
 
+      case JSOP_CALL:
       case JSOP_NEW:
-        return jsop_call(GET_ARGC(pc), true);
+      case JSOP_FUNAPPLY:
+        return jsop_call(GET_ARGC(pc), (JSOp)*pc == JSOP_NEW);
 
       case JSOP_INT8:
         return pushConstant(Int32Value(GET_INT8(pc)));
@@ -2560,6 +2544,55 @@ IonBuilder::createThis(JSFunction *target, MDefinition *callee)
 }
 
 bool
+IonBuilder::jsop_funcall(uint32 argc)
+{
+    // Stack for JSOP_FUNCALL:
+    // 1:      MPassArg(arg0)
+    // ...
+    // argc:   MPassArg(argN)
+    // argc+1: MPassArg(JSFunction *), the 'f' in |f.call()|, in |this| position.
+    // argc+2: The native 'call' function.
+
+    // If |Function.prototype.call| may be overridden, don't optimize callsite.
+    JSFunction *native = getSingleCallTarget(argc, pc);
+    if (!native || !native->isNative() || native->native() != &js_fun_call)
+        return makeCall(native, argc, false);
+
+    // Extract call target.
+    types::TypeSet *funTypes = oracle->getCallArg(script, argc, 0, pc);
+    JSObject *funobj   = (funTypes) ? funTypes->getSingleton(cx, false) : NULL;
+    JSFunction *target = (funobj && funobj->isFunction()) ? funobj->toFunction() : NULL;
+
+    // Unwrap the (JSFunction *) parameter.
+    int funcDepth = -((int)argc + 1);
+    MPassArg *passFunc = current->peek(funcDepth)->toPassArg();
+    current->rewriteAtDepth(funcDepth, passFunc->getArgument());
+
+    // Remove the MPassArg(JSFunction *).
+    passFunc->replaceAllUsesWith(passFunc->getArgument());
+    passFunc->block()->discard(passFunc);
+
+    // Shimmy the slots down to remove the native 'call' function.
+    current->shimmySlots(funcDepth - 1);
+
+    // If no |this| argument was provided, explicitly pass Undefined.
+    // Pushing is safe here, since one stack slot has been removed.
+    if (argc == 0) {
+        MConstant *undef = MConstant::New(UndefinedValue());
+        current->add(undef);
+        MPassArg *pass = MPassArg::New(undef);
+        current->add(pass);
+        current->push(pass);
+    } else {
+        // |this| becomes implicit in the call.
+        argc -= 1; 
+    }
+
+    // Call without inlining.
+    return makeCall(target, argc, false);
+}
+
+bool
 IonBuilder::jsop_call(uint32 argc, bool constructing)
 {
     // Acquire known call target if existent.
@@ -2572,6 +2605,15 @@ IonBuilder::jsop_call(uint32 argc, bool constructing)
         if (makeInliningDecision(target))
             return inlineScriptedCall(target, argc);
     }
+
+    return makeCall(target, argc, constructing);
+}
+
+bool
+IonBuilder::makeCall(JSFunction *target, uint32 argc, bool constructing)
+{
+    // This function may be called with mutated stack.
+    // Querying TI for popped types is invalid.
 
     uint32 targetArgs = argc;
 

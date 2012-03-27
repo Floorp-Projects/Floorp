@@ -280,6 +280,8 @@ class IonBuilder : public MIRGenerator
     MDefinition *createThisScriptedSingleton(JSFunction *target, JSObject *proto, MDefinition *callee);
     MDefinition *createThis(JSFunction *target, MDefinition *callee);
 
+    bool makeCall(JSFunction *target, uint32 argc, bool constructing);
+
     bool jsop_add(MDefinition *left, MDefinition *right);
     bool jsop_bitnot();
     bool jsop_bitop(JSOp op);
@@ -289,6 +291,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_neg();
     bool jsop_defvar(uint32 index);
     bool jsop_notearg();
+    bool jsop_funcall(uint32 argc);
     bool jsop_call(uint32 argc, bool constructing);
     bool jsop_ifeq(JSOp op);
     bool jsop_andor(JSOp op);
