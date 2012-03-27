@@ -96,6 +96,7 @@ function TabItem(tab, options) {
   this._reconnected = false;
   this.isDragging = false;
   this.isStacked = false;
+  this.url = "";
 
   // Read off the total vertical and horizontal padding on the tab container
   // and cache this value, as it must be the same for every TabItem.
@@ -199,14 +200,21 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // be called at browser startup with the cached data avaliable.
   //
   // Parameters:
+  //   tabData - the tab data
   //   imageData - the image data
-  showCachedData: function TabItem_showCachedData(imageData) {
+  showCachedData: function TabItem_showCachedData(tabData, imageData) {
     this._cachedImageData = imageData;
     this.$cachedThumb.attr("src", this._cachedImageData).show();
     this.$canvas.css({opacity: 0});
-
-    let {title, url} = this.getTabState();
-    this.$tabTitle.text(title).attr("title", title ? title + "\n" + url : url);
+    let label = "";
+    let title;
+    if (tabData.title) {
+      label = tabData.title;
+      title = label + "\n" + tabData.url;
+    } else {
+      title = tabData.url;
+    }
+    this.$tabTitle.text(label).attr("title", title);
 
     this._sendToSubscribers("showingCachedData");
   },
@@ -226,7 +234,9 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Get data to be used for persistent storage of this object.
   getStorageData: function TabItem_getStorageData() {
     let data = {
-      groupID: (this.parent ? this.parent.id : 0)
+      url: this.tab.linkedBrowser.currentURI.spec,
+      groupID: (this.parent ? this.parent.id : 0),
+      title: this.tab.label
     };
     if (this.parent && this.parent.getActiveTab() == this)
       data.active = true;
@@ -251,45 +261,11 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   },
 
   // ----------
-  // Function: _getCurrentTabStateEntry
-  // Returns the current tab state's active history entry.
-  _getCurrentTabStateEntry: function TabItem__getCurrentTabStateEntry() {
-    let tabState = Storage.getTabState(this.tab);
-
-    if (tabState) {
-      let index = (tabState.index || tabState.entries.length) - 1;
-      if (index in tabState.entries)
-        return tabState.entries[index];
-    }
-
-    return null;
-  },
-
-  // ----------
-  // Function: getTabState
-  // Returns the current tab state, i.e. the title and URL of the active
-  // history entry.
-  getTabState: function TabItem_getTabState() {
-    let entry = this._getCurrentTabStateEntry();
-    let title = "";
-    let url = "";
-
-    if (entry) {
-      if (entry.title)
-        title = entry.title;
-
-      url = entry.url;
-    } else {
-      url = this.tab.linkedBrowser.currentURI.spec;
-    }
-
-    return {title: title, url: url};
-  },
-
-  // ----------
   // Function: loadThumbnail
   // Loads the tabItems thumbnail.
-  loadThumbnail: function TabItem_loadThumbnail() {
+  loadThumbnail: function TabItem_loadThumbnail(tabData) {
+    Utils.assert(tabData, "invalid or missing argument <tabData>");
+
     let self = this;
 
     function TabItem_loadThumbnail_callback(error, imageData) {
@@ -309,11 +285,11 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       // what the cache is from, OR the loaded URL is blank, which means
       // that the page hasn't loaded yet.
       let currentUrl = self.tab.linkedBrowser.currentURI.spec;
-      if (self.getTabState().url == currentUrl || currentUrl == "about:blank")
-        self.showCachedData(imageData);
+      if (tabData.url == currentUrl || currentUrl == "about:blank")
+        self.showCachedData(tabData, imageData);
     }
 
-    ThumbnailStorage.loadThumbnail(this.getTabState().url, TabItem_loadThumbnail_callback);
+    ThumbnailStorage.loadThumbnail(tabData.url, TabItem_loadThumbnail_callback);
   },
 
   // ----------
@@ -394,7 +370,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     let groupItem;
 
     if (tabData && TabItems.storageSanity(tabData)) {
-      this.loadThumbnail();
+      this.loadThumbnail(tabData);
 
       if (this.parent)
         this.parent.remove(this, {immediately: true});
@@ -958,7 +934,7 @@ let TabItems = {
     return (
       tab.linkedBrowser.contentDocument.readyState == 'complete' &&
       !(tab.linkedBrowser.contentDocument.URL == 'about:blank' &&
-        tab._tabViewTabItem.getTabState().url != 'about:blank')
+        tab._tabViewTabItem.url != 'about:blank')
     );
   },
 
@@ -1037,6 +1013,10 @@ let TabItems = {
 
       // ___ URL
       let tabUrl = tab.linkedBrowser.currentURI.spec;
+      if (tabUrl != tabItem.url) {
+        tabItem.url = tabUrl;
+        tabItem.save();
+      }
       tabItem.$container.attr("title", label + "\n" + tabUrl);
 
       // ___ Make sure the tab is complete and ready for updating.
