@@ -3115,31 +3115,6 @@ mjit::Compiler::generateMethod()
             frame.syncAndForgetEverything();
           END_CASE(JSOP_TRY)
 
-          BEGIN_CASE(JSOP_DEFLOCALFUN)
-          {
-            uint32_t slot = GET_SLOTNO(PC);
-            JSFunction *fun = script->getFunction(GET_UINT32_INDEX(PC + SLOTNO_LEN));
-
-            /*
-             * The liveness analysis will report that the value in |slot| is
-             * defined at the start of this opcode. However, we don't actually
-             * fill it in until the stub returns. This will cause a problem if
-             * we GC inside the stub. So we write a safe value here so that the
-             * GC won't crash.
-             */
-            markUndefinedLocal(PC - script->code, slot);
-
-            prepareStubCall(Uses(0));
-            masm.move(ImmPtr(fun), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::DefLocalFun, REJOIN_DEFLOCALFUN);
-            frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-            frame.storeLocal(slot, true);
-            frame.pop();
-            updateVarType();
-          }
-          END_CASE(JSOP_DEFLOCALFUN)
-
           BEGIN_CASE(JSOP_RETRVAL)
             emitReturn(NULL);
             fallthrough = false;

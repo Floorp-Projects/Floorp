@@ -4786,8 +4786,22 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                     break;
                 }
 #endif /* JS_HAS_GENERATOR_EXPRS */
-                /* FALL THROUGH */
+                else if (sn && SN_TYPE(sn) == SRC_CONTINUE) {
+                    /*
+                     * Local function definitions have a lambda;setlocal;pop
+                     * triple (annotated with SRC_CONTINUE) in the function
+                     * prologue and a nop (annotated with SRC_FUNCDEF) at the
+                     * actual position where the function definition should
+                     * syntactically appear.
+                     */
+                    LOCAL_ASSERT(pc[JSOP_LAMBDA_LENGTH] == JSOP_SETLOCAL);
+                    LOCAL_ASSERT(pc[JSOP_LAMBDA_LENGTH + JSOP_SETLOCAL_LENGTH] == JSOP_POP);
+                    len = JSOP_LAMBDA_LENGTH + JSOP_SETLOCAL_LENGTH + JSOP_POP_LENGTH;
+                    todo = -2;
+                    break;
+                }
 
+                /* Otherwise, this is a lambda expression. */
                 fun = jp->script->getFunction(GET_UINT32_INDEX(pc));
                 {
                     /*
