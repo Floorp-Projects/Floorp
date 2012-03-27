@@ -49,8 +49,8 @@
 #include "nsITextControlElement.h"
 #include "nsIStatefulFrame.h"
 #include "nsContentUtils.h" // nsAutoScriptBlocker
+#include "nsIEditor.h"
 
-class nsIEditor;
 class nsISelectionController;
 class nsIDOMCharacterData;
 #ifdef ACCESSIBILITY
@@ -191,7 +191,6 @@ public:
 
 
 public: //for methods who access nsTextControlFrame directly
-  void FireOnInput(bool aTrusted);
   void SetValueChanged(bool aValueChanged);
   /** Called when the frame is focused, to remember the value for onChange. */
   nsresult InitFocusedValue();
@@ -210,45 +209,41 @@ public: //for methods who access nsTextControlFrame directly
   nsresult MaybeBeginSecureKeyboardInput();
   void MaybeEndSecureKeyboardInput();
 
-  class ValueSetter {
+  NS_STACK_CLASS class ValueSetter {
   public:
     ValueSetter(nsTextControlFrame* aFrame,
+                nsIEditor* aEditor,
                 bool aHasFocusValue)
       : mFrame(aFrame)
+      , mEditor(aEditor)
       // This method isn't used for user-generated changes, except for calls
       // from nsFileControlFrame which sets mFireChangeEventState==true and
       // restores it afterwards (ie. we want 'change' events for those changes).
       // Focused value must be updated to prevent incorrect 'change' events,
       // but only if user hasn't changed the value.
       , mFocusValueInit(!mFrame->mFireChangeEventState && aHasFocusValue)
-      , mOuterTransaction(false)
-      , mInited(false)
+      , mCanceled(false)
     {
-      NS_ASSERTION(aFrame, "Should pass a valid frame");
-    }
-    void Cancel() {
-      mInited = false;
-    }
-    void Init() {
-      // Since this code does not handle user-generated changes to the text,
-      // make sure we don't fire oninput when the editor notifies us.
-      // (mNotifyOnInput must be reset before we return).
+      MOZ_ASSERT(aFrame);
+      MOZ_ASSERT(aEditor);
 
       // To protect against a reentrant call to SetValue, we check whether
       // another SetValue is already happening for this frame.  If it is,
       // we must wait until we unwind to re-enable oninput events.
-      mOuterTransaction = mFrame->mNotifyOnInput;
-      if (mOuterTransaction)
-        mFrame->mNotifyOnInput = false;
-
-      mInited = true;
+      mEditor->GetSuppressDispatchingInputEvent(&mOuterTransaction);
+    }
+    void Cancel() {
+      mCanceled = true;
+    }
+    void Init() {
+      mEditor->SetSuppressDispatchingInputEvent(true);
     }
     ~ValueSetter() {
-      if (!mInited)
-        return;
+      mEditor->SetSuppressDispatchingInputEvent(mOuterTransaction);
 
-      if (mOuterTransaction)
-        mFrame->mNotifyOnInput = true;
+      if (mCanceled) {
+        return;
+      }
 
       if (mFocusValueInit) {
         // Reset mFocusedValue so the onchange event doesn't fire incorrectly.
@@ -258,9 +253,10 @@ public: //for methods who access nsTextControlFrame directly
 
   private:
     nsTextControlFrame* mFrame;
+    nsCOMPtr<nsIEditor> mEditor;
     bool mFocusValueInit;
     bool mOuterTransaction;
-    bool mInited;
+    bool mCanceled;
   };
   friend class ValueSetter;
 
@@ -406,10 +402,6 @@ private:
   nsresult SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd,
                                  SelectionDirection aDirection = eNone);
 
-  // accessors for the notify on input flag
-  bool GetNotifyOnInput() const { return mNotifyOnInput; }
-  void SetNotifyOnInput(bool val) { mNotifyOnInput = val; }
-
   /**
    * Return the root DOM element, and implicitly initialize the editor if needed.
    */
@@ -423,7 +415,6 @@ private:
   // these packed bools could instead use the high order bits on mState, saving 4 bytes 
   bool mUseEditor;
   bool mIsProcessing;
-  bool mNotifyOnInput;//default this to off to stop any notifications until setup is complete
   // Calls to SetValue will be treated as user values (i.e. trigger onChange
   // eventually) when mFireChangeEventState==true, this is used by nsFileControlFrame.
   bool mFireChangeEventState;
