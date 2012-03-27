@@ -69,7 +69,7 @@ DECL_EVENTTARGET_CLASS(gMainThreadClass, "WorkerEventTarget")
 
 inline
 bool
-EnsureObjectIsEventTarget(JSContext* aCx, JSObject* aObj, char* aFunctionName)
+EnsureObjectIsEventTarget(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
 {
   JSClass* classPtr = JS_GetClass(aObj);
   if (ClassIsWorker(classPtr) || ClassIsWorkerGlobalScope(classPtr) ||
