@@ -1864,34 +1864,6 @@ WindowStateHolder::~WindowStateHolder()
 
 NS_IMPL_ISUPPORTS1(WindowStateHolder, WindowStateHolder)
 
-
-struct ReparentWaiverClosure
-{
-  JSContext *mCx;
-  JSObject *mNewInner;
-};
-
-static JSDHashOperator
-ReparentWaiverWrappers(JSDHashTable *table, JSDHashEntryHdr *hdr,
-                       uint32 number, void *arg)
-{
-    ReparentWaiverClosure *closure = static_cast<ReparentWaiverClosure*>(arg);
-    JSObject *value = static_cast<JSObject2JSObjectMap::Entry *>(hdr)->value;
-
-    // We reparent wrappers that have as their parent an inner window whose
-    // outer has the new inner window as its current inner.
-    JSObject *parent = JS_GetParent(value);
-    JSObject *outer = JS_ObjectToOuterObject(closure->mCx, parent);
-    if (outer) {
-      JSObject *inner = JS_ObjectToInnerObject(closure->mCx, outer);
-      if (inner == closure->mNewInner && inner != parent)
-        JS_SetParent(closure->mCx, value, closure->mNewInner);
-    } else {
-      JS_ClearPendingException(closure->mCx);
-    }
-    return JS_DHASH_NEXT;
-}
-
 nsresult
 nsGlobalWindow::CreateOuterObject(nsGlobalWindow* aNewInner)
 {
@@ -2190,11 +2162,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         if (priv && priv->waiverWrapperMap) {
           NS_ASSERTION(!JS_IsExceptionPending(cx),
                        "We might overwrite a pending exception!");
-          ReparentWaiverClosure closure = {
-            cx,
-            newInnerWindow->mJSObject
-          };
-          priv->waiverWrapperMap->Enumerate(ReparentWaiverWrappers, &closure);
+          priv->waiverWrapperMap->Reparent(cx, newInnerWindow->mJSObject);
         }
       }
     }
