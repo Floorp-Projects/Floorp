@@ -480,6 +480,7 @@ private:
     uint32_t                mFlags;
     int                     mSessionId;
     int                     mAuxEffectId;
+    uint32_t                mPadding[8];
 };
 
 

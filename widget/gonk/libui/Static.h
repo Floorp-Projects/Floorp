@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,29 +14,22 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "InputApplication"
+// All static variables go here, to control initialization and
+// destruction order in the library.
 
-#include "InputApplication.h"
-
-#include "cutils_log.h"
+#include <utils/threads.h>
+#include <utils/KeyedVector.h>
 
 namespace android {
+// For TextStream.cpp
+//extern Vector<int32_t> gTextBuffers;
 
-// --- InputApplicationHandle ---
+// For String8.cpp
+extern void initialize_string8();
+extern void terminate_string8();
 
-InputApplicationHandle::InputApplicationHandle() :
-    mInfo(NULL) {
-}
+// For String16.cpp
+extern void initialize_string16();
+extern void terminate_string16();
 
-InputApplicationHandle::~InputApplicationHandle() {
-    delete mInfo;
-}
-
-void InputApplicationHandle::releaseInfo() {
-    if (mInfo) {
-        delete mInfo;
-        mInfo = NULL;
-    }
-}
-
-} // namespace android
+}   // namespace android
