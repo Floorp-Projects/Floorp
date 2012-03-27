@@ -803,6 +803,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         push(imm);
         adjustFrame(STACK_SLOT_SIZE);
     }
+    void Push(const ImmWord imm) {
+        push(imm);
+        adjustFrame(STACK_SLOT_SIZE);
+    }
     void Push(const ImmGCPtr ptr) {
         push(ptr);
         adjustFrame(STACK_SLOT_SIZE);
