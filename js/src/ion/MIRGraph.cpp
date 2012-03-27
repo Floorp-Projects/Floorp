@@ -240,6 +240,21 @@ MBasicBlock::initSlot(uint32 slot, MDefinition *ins)
 }
 
 void
+MBasicBlock::shimmySlots(int discardDepth)
+{
+    // Move all slots above the given depth down by one,
+    // overwriting the MDefinition at discardDepth.
+
+    JS_ASSERT(discardDepth < 0);
+    JS_ASSERT(stackPosition_ + discardDepth >= info_.firstStackSlot());
+
+    for (int i = discardDepth; i < -1; i++)
+        slots_[stackPosition_ + i] = slots_[stackPosition_ + i + 1];
+
+    --stackPosition_;
+}
+
+void
 MBasicBlock::linkOsrValues(MStart *start)
 {
     JS_ASSERT(start->startType() == MStart::StartType_Osr);
@@ -292,6 +307,14 @@ void
 MBasicBlock::rewriteSlot(uint32 slot, MDefinition *ins)
 {
     setSlot(slot, ins);
+}
+
+void
+MBasicBlock::rewriteAtDepth(int32 depth, MDefinition *ins)
+{
+    JS_ASSERT(depth < 0);
+    JS_ASSERT(stackPosition_ + depth >= info_.firstStackSlot());
+    rewriteSlot(stackPosition_ + depth, ins);
 }
 
 void
