@@ -124,6 +124,20 @@ let Storage = {
   },
 
   // ----------
+  // Function: getTabState
+  // Returns the current state of the given tab.
+  getTabState: function Storage_getTabState(tab) {
+    Utils.assert(tab, "tab");
+    let tabState;
+
+    try {
+      tabState = JSON.parse(this._sessionStore.getTabState(tab));
+    } catch (e) {}
+
+    return tabState;
+  },
+
+  // ----------
   // Function: saveGroupItem
   // Saves the data for a single groupItem, associated with a specific window.
   saveGroupItem: function Storage_saveGroupItem(win, data) {
