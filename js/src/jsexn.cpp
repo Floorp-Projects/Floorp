@@ -374,7 +374,9 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
                 frame.argc = 0;
             }
             if (fp->isScriptFrame()) {
-                frame.filename = fp->script()->filename;
+                frame.filename = SaveScriptFilename(cx, fp->script()->filename);
+                if (!frame.filename)
+                    return false;
                 frame.ulineno = PCToLineNumber(fp->script(), i.pc());
             } else {
                 frame.ulineno = 0;
