@@ -748,7 +748,7 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
 
   nsresult result;
 
-  FireTrustedInputEvent trusted(this, aAction != eNone);
+  HandlingTrustedAction trusted(this, aAction != eNone);
 
   // delete placeholder txns merge.
   nsAutoPlaceHolderBatch batch(this, nsGkAtoms::DeleteTxnName);
@@ -994,6 +994,13 @@ nsPlaintextEditor::UpdateIMEComposition(const nsAString& aCompositionString,
   return rv;
 }
 
+already_AddRefed<nsIContent>
+nsPlaintextEditor::GetInputEventTargetContent()
+{
+  nsCOMPtr<nsIContent> target = do_QueryInterface(mEventTarget);
+  return target.forget();
+}
+
 NS_IMETHODIMP
 nsPlaintextEditor::GetDocumentIsEmpty(bool *aDocumentIsEmpty)
 {
@@ -1193,7 +1200,7 @@ nsPlaintextEditor::Undo(PRUint32 aCount)
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-  FireTrustedInputEvent trusted(this);
+  HandlingTrustedAction trusted(this);
 
   nsAutoUpdateViewBatch beginViewBatching(this);
 
@@ -1223,7 +1230,7 @@ nsPlaintextEditor::Redo(PRUint32 aCount)
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-  FireTrustedInputEvent trusted(this);
+  HandlingTrustedAction trusted(this);
 
   nsAutoUpdateViewBatch beginViewBatching(this);
 
@@ -1282,7 +1289,7 @@ nsPlaintextEditor::FireClipboardEvent(PRInt32 aType)
 
 NS_IMETHODIMP nsPlaintextEditor::Cut()
 {
-  FireTrustedInputEvent trusted(this);
+  HandlingTrustedAction trusted(this);
 
   if (FireClipboardEvent(NS_CUT))
     return DeleteSelection(eNone);
