@@ -5909,6 +5909,7 @@ JS_WriteStructuredClone(JSContext *cx, jsval v, uint64_t **bufp, size_t *nbytesp
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
+    assertSameCompartment(cx, v);
 
     const JSStructuredCloneCallbacks *callbacks =
         optionalCallbacks ?
@@ -5924,6 +5925,7 @@ JS_StructuredClone(JSContext *cx, jsval v, jsval *vp,
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
+    assertSameCompartment(cx, v);
 
     const JSStructuredCloneCallbacks *callbacks =
         optionalCallbacks ?
