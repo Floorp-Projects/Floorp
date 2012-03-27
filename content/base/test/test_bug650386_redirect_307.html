@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=650386
+Test that CSP violation reports are not sent when a 307 redirect is encountered
+-->
+<head>
+  <title>Test for Bug 650386</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=650386">Mozilla Bug 650386</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id = "content_iframe"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 650386 **/
+
+// This is used to watch the redirect of the report POST get blocked
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "http-on-modify-request", false);
+}
+
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    // subject should be an nsURI
+    if(!SpecialPowers.can_QI(subject))
+       return;
+
+    if (topic === "http-on-modify-request") {
+      // this is used to fail the test - if we see the POST to the target of the redirect
+      // we know this is a fail
+      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIHttpChannel"), "URI.asciiSpec");
+
+      if (asciiSpec == "http://example.com/some/fake/path")
+        window.done(false);
+    }
+
+    if(topic === "csp-on-violate-policy") {
+      // something was blocked, but we are looking specifically for the redirect being blocked
+      if (data == "denied redirect while sending violation report")
+        window.done(true);
+    }
+  },
+
+  // must eventually call this to remove the listener,
+  // or mochitests might get borked.
+  remove: function() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "http-on-modify-request");
+  }
+}
+
+window.examiner = new examiner();
+
+// result == true if we saw the redirect blocked notify, false if we saw the post
+// to the redirect target go out
+window.done = function(result) {
+  ok(result, "a 307 redirect when posting violation report should be blocked");
+
+  // clean up observers and finish the test
+  window.examiner.remove();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// save this for last so that our listeners are registered.
+document.getElementById('content_iframe').src = 'file_bug650386_content.sjs?307';
+</script>
+</pre>
+</body>
+</html>

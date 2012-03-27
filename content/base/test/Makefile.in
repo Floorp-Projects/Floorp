@@ -572,6 +572,12 @@ _TEST_FILES2 = \
 		test_bug737612.html \
 		test_bug738108.html \
 		test_bug366944.html \
+		test_bug650386_redirect_301.html \
+		test_bug650386_redirect_302.html \
+		test_bug650386_redirect_303.html \
+		test_bug650386_redirect_307.html \
+		file_bug650386_content.sjs \
+		file_bug650386_report.sjs \
 		$(NULL)
 
 _CHROME_FILES =	\

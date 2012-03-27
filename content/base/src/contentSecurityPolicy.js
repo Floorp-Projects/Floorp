@@ -19,6 +19,7 @@
  * Contributor(s):
  *   Sid Stamm <sid@mozilla.com>
  *   Brandon Sterne <bsterne@mozilla.com>
+ *   Ian Melven <imelven@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -301,7 +302,7 @@ ContentSecurityPolicy.prototype = {
 
         var failure = function(aEvt) {  
           if (req.readyState == 4 && req.status != 200) {
-            CSPError("Failed to send report to " + reportURI);
+            CSPError("Failed to send report to " + uris[i]);
           }  
         };  
         var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]  
@@ -312,6 +313,10 @@ ContentSecurityPolicy.prototype = {
           req.setRequestHeader('Content-Type', 'application/json');
           req.upload.addEventListener("error", failure, false);
           req.upload.addEventListener("abort", failure, false);
+
+          // we need to set an nsIChannelEventSink on the XHR object
+          // so we can tell it to not follow redirects when posting the reports
+          req.channel.notificationCallbacks = new CSPReportRedirectSink();
 
           req.send(JSON.stringify(report));
           CSPdebug("Sent violation report to " + uris[i]);
@@ -492,6 +497,56 @@ ContentSecurityPolicy.prototype = {
                                  aSourceFile, aScriptSample, aLineNum);
       }, Ci.nsIThread.DISPATCH_NORMAL);
   },
+};
+
+// The POST of the violation report (if it happens) should not follow
+// redirects, per the spec. hence, we implement an nsIChannelEventSink
+// with an object so we can tell XHR to abort if a redirect happens.
+function CSPReportRedirectSink() {
+}
+
+CSPReportRedirectSink.prototype = {
+  QueryInterface: function requestor_qi(iid) {
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIInterfaceRequestor) ||
+        iid.equals(Ci.nsIChannelEventSink))
+      return this;
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsIInterfaceRequestor
+  getInterface: function requestor_gi(iid) {
+    if (iid.equals(Ci.nsIChannelEventSink))
+      return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsIChannelEventSink
+  asyncOnChannelRedirect: function channel_redirect(oldChannel, newChannel,
+                                                    flags, callback) {
+    CSPWarning("Post of violation report to " + oldChannel.URI.asciiSpec +
+               " failed, as a redirect occurred");
+
+    // cancel the old channel so XHR failure callback happens
+    oldChannel.cancel(Cr.NS_ERROR_ABORT);
+
+    // notify an observer that we have blocked the report POST due to a redirect,
+    // used in testing, do this async since we're in an async call now to begin with
+    Services.tm.mainThread.dispatch(
+      function() {
+        observerSubject = Cc["@mozilla.org/supports-cstring;1"]
+                             .createInstance(Ci.nsISupportsCString);
+        observerSubject.data = oldChannel.URI.asciiSpec;
+
+        Services.obs.notifyObservers(observerSubject,
+                                     CSP_VIOLATION_TOPIC,
+                                     "denied redirect while sending violation report");
+      }, Ci.nsIThread.DISPATCH_NORMAL);
+
+    // throw to stop the redirect happening
+    throw Cr.NS_BINDING_REDIRECTED;
+  }
 };
 
 var NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentSecurityPolicy]);
