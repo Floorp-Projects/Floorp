@@ -2253,8 +2253,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 .popup-notification-icon[popupid="addon-install-cancelled"],
 .popup-notification-icon[popupid="addon-install-blocked"],
 .popup-notification-icon[popupid="addon-install-failed"],
-.popup-notification-icon[popupid="addon-install-complete"],
-.popup-notification-icon[popupid="click-to-play-plugins"] {
+.popup-notification-icon[popupid="addon-install-complete"] {
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.png);
   width: 32px;
   height: 32px;
