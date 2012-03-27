@@ -2114,7 +2114,7 @@ gfxFont::GetShapedWord(gfxContext *aContext,
         return nsnull;
     }
 
-    bool ok = false;
+    DebugOnly<bool> ok = false;
     if (sizeof(T) == sizeof(PRUnichar)) {
         ok = ShapeWord(aContext, sw, (const PRUnichar*)aText);
     } else {
