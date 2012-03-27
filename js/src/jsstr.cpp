@@ -1560,6 +1560,8 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
     if (re.global()) {
         RegExpExecType type = (flags & TEST_GLOBAL_BIT) ? RegExpTest : RegExpExec;
         for (size_t count = 0, i = 0, length = str->length(); i <= length; ++count) {
+            if (!JS_CHECK_OPERATION_LIMIT(cx))
+                return false;
             if (!ExecuteRegExp(cx, res, re, linearStr, chars, length, &i, type, rval))
                 return false;
             if (!Matched(type, *rval))
