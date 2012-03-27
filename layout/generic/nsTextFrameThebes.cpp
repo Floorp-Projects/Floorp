@@ -779,12 +779,10 @@ IsAllWhitespace(const nsTextFragment* aFrag, bool aAllowNewline)
 class BuildTextRunsScanner {
 public:
   BuildTextRunsScanner(nsPresContext* aPresContext, gfxContext* aContext,
-      nsIFrame* aLineContainer, nsTextFrame::TextRunType aWhichTextRun,
-      float aInflation) :
+      nsIFrame* aLineContainer, nsTextFrame::TextRunType aWhichTextRun) :
     mCurrentFramesAllSameTextRun(nsnull),
     mContext(aContext),
     mLineContainer(aLineContainer),
-    mInflation(aInflation),
     mBidiEnabled(aPresContext->BidiEnabled()),
     mSkipIncompleteTextRuns(false),
     mWhichTextRun(aWhichTextRun),
@@ -840,7 +838,7 @@ public:
    */
   gfxTextRun* BuildTextRunForFrames(void* aTextBuffer);
   bool SetupLineBreakerContext(gfxTextRun *aTextRun);
-  void AssignTextRun(gfxTextRun* aTextRun);
+  void AssignTextRun(gfxTextRun* aTextRun, float aInflation);
   nsTextFrame* GetNextBreakBeforeFrame(PRUint32* aIndex);
   enum SetupBreakSinksFlags {
     SBS_DOUBLE_BYTE =      (1 << 0),
@@ -949,7 +947,6 @@ private:
   // mMaxTextLength is an upper bound on the size of the text in all mapped frames
   // The value PR_UINT32_MAX represents overflow; text will be discarded
   PRUint32                      mMaxTextLength;
-  float                         mInflation;
   bool                          mDoubleByteText;
   bool                          mBidiEnabled;
   bool                          mStartOfLine;
@@ -1151,17 +1148,21 @@ BuildTextRunsScanner::FindBoundaries(nsIFrame* aFrame, FindBoundaryState* aState
  * General routine for building text runs. This is hairy because of the need
  * to build text runs that span content nodes.
  * 
- * @param aForFrameLine the line containing aForFrame; if null, we'll figure
- * out the line (slowly)
+ * @param aContext The gfxContext we're using to construct this text run.
+ * @param aForFrame The nsTextFrame for which we're building this text run.
  * @param aLineContainer the line container containing aForFrame; if null,
- * we'll walk the ancestors to find it.  It's required to be non-null when
- * aForFrameLine is non-null.
+ *        we'll walk the ancestors to find it.  It's required to be non-null
+ *        when aForFrameLine is non-null.
+ * @param aForFrameLine the line containing aForFrame; if null, we'll figure
+ *        out the line (slowly)
+ * @param aWhichTextRun The type of text run we want to build. If font inflation
+ *        is enabled, this will be eInflated, otherwise it's eNotInflated.
  */
 static void
 BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
               nsIFrame* aLineContainer,
               const nsLineList::iterator* aForFrameLine,
-              nsTextFrame::TextRunType aWhichTextRun, float aInflation)
+              nsTextFrame::TextRunType aWhichTextRun)
 {
   NS_ASSERTION(aForFrame || aLineContainer,
                "One of aForFrame or aLineContainer must be set!");
@@ -1185,7 +1186,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
 
   nsPresContext* presContext = aLineContainer->PresContext();
   BuildTextRunsScanner scanner(presContext, aContext, aLineContainer,
-                               aWhichTextRun, aInflation);
+                               aWhichTextRun);
 
   nsBlockFrame* block = nsLayoutUtils::GetAsBlock(aLineContainer);
 
@@ -1875,7 +1876,40 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 
   // Now build the textrun
   nsTextFrame* firstFrame = mMappedFlows[0].mStartFrame;
-  gfxFontGroup* fontGroup = GetFontGroupForFrame(firstFrame, mInflation);
+  float fontInflation;
+  if (mWhichTextRun == nsTextFrame::eNotInflated) {
+    fontInflation = 1.0f;
+  } else {
+    nsPresContext* presContext = firstFrame->PresContext();
+    nsLayoutUtils::WidthDetermination widthDeter = nsLayoutUtils::eNotInReflow;
+
+    if (presContext->PresShell()->IsReflowLocked()) {
+      widthDeter = nsLayoutUtils::eInReflow;
+    }
+
+#ifdef DEBUG
+    if (widthDeter == nsLayoutUtils::eInReflow) {
+      // Make sure that the font inflation container is correct.
+      nsIFrame* inflationContainer = nsnull;
+      for (nsIFrame* f = firstFrame; f; f = f->GetParent()) {
+        if (nsLayoutUtils::IsContainerForFontSizeInflation(f)) {
+          inflationContainer = f;
+          break;
+        }
+      }
+
+      // FIXME: When we support variable width containers (e.g. for regions or
+      //        differing-width columns, we should revisit this assertion.
+      NS_ASSERTION(inflationContainer->GetFirstInFlow() ==
+                   presContext->mCurrentInflationContainer->GetFirstInFlow(),
+                   "Current inflation container for text frame is wrong");
+    }
+#endif // #ifdef DEBUG
+
+    fontInflation = nsLayoutUtils::FontSizeInflationFor(firstFrame, widthDeter);
+  }
+
+  gfxFontGroup* fontGroup = GetFontGroupForFrame(firstFrame, fontInflation);
   if (!fontGroup) {
     DestroyUserData(userDataToDestroy);
     return nsnull;
@@ -2022,7 +2056,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 
   // Actually wipe out the textruns associated with the mapped frames and associate
   // those frames with this text run.
-  AssignTextRun(textRun);
+  AssignTextRun(textRun, fontInflation);
   return textRun;
 }
 
@@ -2288,7 +2322,7 @@ FindFlowForContent(TextRunUserData* aUserData, nsIContent* aContent)
 }
 
 void
-BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
+BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun, float aInflation)
 {
   PRUint32 i;
   for (i = 0; i < mMappedFlows.Length(); ++i) {
@@ -2361,7 +2395,7 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
         }
 #endif
       }
-      f->SetTextRun(aTextRun, mWhichTextRun, mInflation);
+      f->SetTextRun(aTextRun, mWhichTextRun, aInflation);
     }
     // Set this bit now; we can't set it any earlier because
     // f->ClearTextRun() might clear it out.
@@ -2371,7 +2405,6 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
 
 gfxSkipCharsIterator
 nsTextFrame::EnsureTextRun(TextRunType aWhichTextRun,
-                           float aInflation,
                            gfxContext* aReferenceContext,
                            nsIFrame* aLineContainer,
                            const nsLineList::iterator* aLine,
@@ -2388,8 +2421,7 @@ nsTextFrame::EnsureTextRun(TextRunType aWhichTextRun,
       ctx = GetReferenceRenderingContext(this, nsnull);
     }
     if (ctx) {
-      BuildTextRuns(ctx, this, aLineContainer, aLine, aWhichTextRun,
-                    aInflation);
+      BuildTextRuns(ctx, this, aLineContainer, aLine, aWhichTextRun);
     }
     textRun = GetTextRun(aWhichTextRun);
     if (!textRun) {
@@ -6574,13 +6606,12 @@ void nsTextFrame::MarkIntrinsicWidthsDirty()
 void
 nsTextFrame::AddInlineMinWidthForFlow(nsRenderingContext *aRenderingContext,
                                       nsIFrame::InlineMinWidthData *aData,
-                                      float aInflation,
                                       TextRunType aTextRunType)
 {
   PRUint32 flowEndInTextRun;
   gfxContext* ctx = aRenderingContext->ThebesContext();
   gfxSkipCharsIterator iter =
-    EnsureTextRun(aTextRunType, aInflation, ctx, aData->lineContainer,
+    EnsureTextRun(aTextRunType, ctx, aData->lineContainer,
                   aData->line, &flowEndInTextRun);
   gfxTextRun *textRun = GetTextRun(aTextRunType);
   if (!textRun)
@@ -6728,8 +6759,7 @@ nsTextFrame::AddInlineMinWidth(nsRenderingContext *aRenderingContext,
       }
 
       // This will process all the text frames that share the same textrun as f.
-      f->AddInlineMinWidthForFlow(aRenderingContext, aData,
-                                  inflation, trtype);
+      f->AddInlineMinWidthForFlow(aRenderingContext, aData, trtype);
       lastTextRun = f->GetTextRun(trtype);
     }
   }
@@ -6740,13 +6770,12 @@ nsTextFrame::AddInlineMinWidth(nsRenderingContext *aRenderingContext,
 void
 nsTextFrame::AddInlinePrefWidthForFlow(nsRenderingContext *aRenderingContext,
                                        nsIFrame::InlinePrefWidthData *aData,
-                                       float aInflation,
                                        TextRunType aTextRunType)
 {
   PRUint32 flowEndInTextRun;
   gfxContext* ctx = aRenderingContext->ThebesContext();
   gfxSkipCharsIterator iter =
-    EnsureTextRun(aTextRunType, aInflation, ctx, aData->lineContainer,
+    EnsureTextRun(aTextRunType, ctx, aData->lineContainer,
                   aData->line, &flowEndInTextRun);
   gfxTextRun *textRun = GetTextRun(aTextRunType);
   if (!textRun)
@@ -6861,8 +6890,7 @@ nsTextFrame::AddInlinePrefWidth(nsRenderingContext *aRenderingContext,
       }
 
       // This will process all the text frames that share the same textrun as f.
-      f->AddInlinePrefWidthForFlow(aRenderingContext, aData,
-                                   inflation, trtype);
+      f->AddInlinePrefWidthForFlow(aRenderingContext, aData, trtype);
       lastTextRun = f->GetTextRun(trtype);
     }
   }
@@ -7322,7 +7350,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
       // Find the length of the first-letter. We need a textrun for this.
       // REVIEW: maybe-bogus inflation should be ok (fixed below)
       gfxSkipCharsIterator iter =
-        EnsureTextRun(nsTextFrame::eInflated, GetFontSizeInflation(),  ctx,
+        EnsureTextRun(nsTextFrame::eInflated, ctx,
                       lineContainer, aLineLayout.GetLine(),
                       &flowEndInTextRun);
 
@@ -7375,7 +7403,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   }
 
   gfxSkipCharsIterator iter =
-    EnsureTextRun(nsTextFrame::eInflated, fontSizeInflation, ctx,
+    EnsureTextRun(nsTextFrame::eInflated, ctx,
                   lineContainer, aLineLayout.GetLine(), &flowEndInTextRun);
 
   NS_ABORT_IF_FALSE(GetFontSizeInflation() == fontSizeInflation,
@@ -7387,7 +7415,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     // preformatted newline was encountered, and prev-in-flow frames have
     // consumed all the text of the textrun. We need a new textrun.
     ClearTextRuns();
-    iter = EnsureTextRun(nsTextFrame::eInflated, fontSizeInflation, ctx,
+    iter = EnsureTextRun(nsTextFrame::eInflated, ctx,
                          lineContainer, aLineLayout.GetLine(),
                          &flowEndInTextRun);
   }
@@ -7737,7 +7765,7 @@ nsTextFrame::TrimTrailingWhiteSpace(nsRenderingContext* aRC)
 
   gfxContext* ctx = aRC->ThebesContext();
   gfxSkipCharsIterator start =
-    EnsureTextRun(nsTextFrame::eInflated, GetFontSizeInflation(), ctx);
+    EnsureTextRun(nsTextFrame::eInflated, ctx);
   NS_ENSURE_TRUE(mTextRun, result);
 
   PRUint32 trimmedStart = start.GetSkippedOffset();
