@@ -6459,14 +6459,6 @@ MOZ_ARG_DISABLE_BOOL(tests,
     ENABLE_TESTS=1 )
 
 dnl ========================================================
-dnl Marionette
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(marionette,
-[  --enable-marionette     Enable Marionette for remote testing and control],
-    ENABLE_MARIONETTE=1,
-    ENABLE_MARIONETTE)
-
-dnl ========================================================
 dnl parental controls (for Windows Vista)
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(parental-controls,
