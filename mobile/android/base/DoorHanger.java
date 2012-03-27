@@ -43,11 +43,9 @@ import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.URLSpan;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -55,8 +53,6 @@ import org.json.JSONObject;
 import org.json.JSONException;
 
 public class DoorHanger extends LinearLayout implements Button.OnClickListener {
-    private static final String LOGTAG = "DoorHanger";
-
     private Context mContext;
     private LinearLayout mChoicesLayout;
     private TextView mTextView;
@@ -64,9 +60,6 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     public Tab mTab;
     // value used to identify the notification
     private String mValue;
-
-    // Optional checkbox added underneath message text
-    private CheckBox mCheckBox;
 
     static private LayoutInflater mInflater;
 
@@ -106,18 +99,7 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     }
 
     public void onClick(View v) {
-        JSONObject response = new JSONObject();
-        try {
-            response.put("callback", v.getTag().toString());
-
-            // If the checkbox is being used, pass its value
-            if (mCheckBox != null)
-                response.put("checked", mCheckBox.isChecked());
-        } catch (JSONException ex) {
-            Log.e(LOGTAG, "Error creating onClick response: " + ex);
-        }
-
-        GeckoEvent e = GeckoEvent.createBroadcastEvent("Doorhanger:Reply", response.toString());
+        GeckoEvent e = GeckoEvent.createBroadcastEvent("Doorhanger:Reply", v.getTag().toString());
         GeckoAppShell.sendEventToGecko(e);
         mTab.removeDoorHanger(mValue);
 
@@ -183,13 +165,6 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
             titleWithLink.setSpan(linkSpan, title.length() + 1, titleWithLink.length(), 0);
             mTextView.setText(titleWithLink);
             mTextView.setMovementMethod(LinkMovementMethod.getInstance());
-        } catch (JSONException e) { }
-
-        try {
-            String checkBoxText = options.getString("checkbox");
-            mCheckBox = (CheckBox) findViewById(R.id.doorhanger_checkbox);
-            mCheckBox.setText(checkBoxText);
-            mCheckBox.setVisibility(VISIBLE);
         } catch (JSONException e) { }
     }
 
