@@ -1428,7 +1428,6 @@ function prepareForStartup() {
   gBrowser.addEventListener("PluginBlocklisted",  gPluginHandler, true);
   gBrowser.addEventListener("PluginOutdated",     gPluginHandler, true);
   gBrowser.addEventListener("PluginDisabled",     gPluginHandler, true);
-  gBrowser.addEventListener("PluginClickToPlay",  gPluginHandler, true);
   gBrowser.addEventListener("NewPluginInstalled", gPluginHandler.newPluginInstalled, true);
 #ifdef XP_MACOSX
   gBrowser.addEventListener("npapi-carbon-event-model-failure", gPluginHandler, true);
@@ -5176,34 +5175,24 @@ var TabsProgressListener = {
     // document URI is not yet the about:-uri of the error page.
 
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-        Components.isSuccessCode(aStatus)) {
-      setTimeout(function() {
-        gPluginHandler.showPluginClickToPlayDoorhanger(aBrowser);
-      }, 0);
+        Components.isSuccessCode(aStatus) &&
+        /^about:/.test(aWebProgress.DOMWindow.document.documentURI)) {
+      aBrowser.addEventListener("click", BrowserOnClick, false);
+      aBrowser.addEventListener("pagehide", function () {
+        aBrowser.removeEventListener("click", BrowserOnClick, false);
+        aBrowser.removeEventListener("pagehide", arguments.callee, true);
+      }, true);
 
-      if (/^about:/.test(aWebProgress.DOMWindow.document.documentURI)) {
-        aBrowser.addEventListener("click", BrowserOnClick, false);
-        aBrowser.addEventListener("pagehide", function () {
-          aBrowser.removeEventListener("click", BrowserOnClick, false);
-          aBrowser.removeEventListener("pagehide", arguments.callee, true);
-        }, true);
-
-        // We also want to make changes to page UI for unprivileged about pages.
-        BrowserOnAboutPageLoad(aWebProgress.DOMWindow.document);
-      }
+      // We also want to make changes to page UI for unprivileged about pages.
+      BrowserOnAboutPageLoad(aWebProgress.DOMWindow.document);
     }
   },
 
   onLocationChange: function (aBrowser, aWebProgress, aRequest, aLocationURI,
                               aFlags) {
     // Filter out any sub-frame loads
-    if (aBrowser.contentWindow == aWebProgress.DOMWindow) {
-      // initialize the click-to-play state
-      aBrowser._loadEventHandled = false;
-      aBrowser._clickToPlayDoorhangerShown = false;
-
+    if (aBrowser.contentWindow == aWebProgress.DOMWindow)
       FullZoom.onLocationChange(aLocationURI, false, aBrowser);
-    }
   },
 
   onRefreshAttempted: function (aBrowser, aWebProgress, aURI, aDelay, aSameURI) {
@@ -7156,10 +7145,6 @@ var gPluginHandler = {
         self.pluginUnavailable(plugin, event.type);
         break;
 
-      case "PluginClickToPlay":
-        self.handleClickToPlayEvent(plugin);
-        break;
-
       case "PluginDisabled":
         let manageLink = doc.getAnonymousElementByAttribute(plugin, "class", "managePluginsLink");
         self.addLinkClickCallback(manageLink, "managePlugins");
@@ -7171,18 +7156,6 @@ var gPluginHandler = {
       let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
       if (self.isTooSmall(plugin, overlay))
           overlay.style.visibility = "hidden";
-    }
-  },
-
-  activatePlugins: function(aContentWindow) {
-    let cwu = aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIDOMWindowUtils);
-    let plugins = cwu.plugins;
-    for (let plugin of plugins) {
-      let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-      if (!objLoadingContent.activated)
-        objLoadingContent.playPlugin();
-      plugin.removeEventListener("click", plugin.clickHandler, true);
     }
   },
 
@@ -7237,54 +7210,6 @@ var gPluginHandler = {
   // Callback for user clicking the help icon
   openHelpPage: function () {
     openHelpLink("plugin-crashed", false);
-  },
-
-  // Event listener for click-to-play plugins.
-  handleClickToPlayEvent: function(aPlugin) {
-    let browser = gBrowser.getBrowserForDocument(aPlugin.ownerDocument.defaultView.top.document);
-    let notificationBox = gBrowser.getNotificationBox(browser);
-
-    let doc = aPlugin.ownerDocument;
-    let overlay = doc.getAnonymousElementByAttribute(aPlugin, "class", "mainBox");
-    let contentWindow = browser.contentWindow;
-    overlay.addEventListener("click", function(aEvent) {
-      if (aEvent.button == 0 && aEvent.isTrusted)
-        gPluginHandler.activatePlugins(aEvent.target.ownerDocument.defaultView.top);
-    }, true);
-
-    if (browser._loadEventHandled && !browser._clickToPlayDoorhangerShown &&
-        gPluginHandler.isTooSmall(aPlugin, overlay))
-      gPluginHandler.showPluginClickToPlayDoorhanger(browser);
-  },
-
-  showPluginClickToPlayDoorhanger: function(aBrowser) {
-    aBrowser._loadEventHandled = true;
-    // Show a plugin doorhanger if there are no clickable overlays showing
-    let contentWindow = aBrowser.contentWindow;
-    let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
-    let plugins = cwu.plugins;
-    let isAnyPluginVisible = false;
-    for (let plugin of plugins) {
-      let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-      if (overlay && !gPluginHandler.isTooSmall(plugin, overlay)) {
-        isAnyPluginVisible = true;
-        break;
-      }
-    }
-    if (plugins && plugins.length && !isAnyPluginVisible) {
-      aBrowser._clickToPlayDoorhangerShown = true;
-      let messageString = gNavigatorBundle.getString("activatePluginsMessage.message");
-      let action = {
-        label: gNavigatorBundle.getString("activatePluginsMessage.label"),
-        accessKey: gNavigatorBundle.getString("activatePluginsMessage.accesskey"),
-        callback: function() { gPluginHandler.activatePlugins(contentWindow); }
-      };
-      let options = { timeout: Date.now() + 30000 };
-      PopupNotifications.show(aBrowser, "click-to-play-plugins",
-                              messageString, "addons-notification-icon",
-                              action, null, options);
-    }
   },
 
   // event listener for missing/blocklisted/outdated/carbonFailure plugins.
