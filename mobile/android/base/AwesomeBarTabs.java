@@ -96,6 +96,7 @@ public class AwesomeBarTabs extends TabHost {
 
     private Context mContext;
     private boolean mInflated;
+    private LayoutInflater mInflater;
     private OnUrlOpenListener mUrlOpenListener;
     private View.OnTouchListener mListTouchListener;
     private JSONArray mSearchEngines;
@@ -124,16 +125,12 @@ public class AwesomeBarTabs extends TabHost {
     }
 
     private class HistoryListAdapter extends SimpleExpandableListAdapter {
-        LayoutInflater mInflater;
-
         public HistoryListAdapter(Context context, List<? extends Map<String, ?>> groupData,
                 int groupLayout, String[] groupFrom, int[] groupTo,
                 List<? extends List<? extends Map<String, ?>>> childData) {
 
             super(context, groupData, groupLayout, groupFrom, groupTo,
                   childData, -1, new String[] {}, new int[] {});
-
-            mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
         @Override
@@ -185,7 +182,6 @@ public class AwesomeBarTabs extends TabHost {
         private static final int VIEW_TYPE_FOLDER = 1;
         private static final int VIEW_TYPE_COUNT = 2;
 
-        private LayoutInflater mInflater;
         private Resources mResources;
         private LinkedList<Pair<Integer, String>> mParentStack;
         private LinearLayout mBookmarksTitleView;
@@ -193,7 +189,6 @@ public class AwesomeBarTabs extends TabHost {
         public BookmarksListAdapter(Context context, Cursor c) {
             super(context, -1, c, new String[] {}, new int[] {});
 
-            mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             mResources = mContext.getResources();
 
             // mParentStack holds folder id/title pairs that allow us to navigate
@@ -373,7 +368,7 @@ public class AwesomeBarTabs extends TabHost {
 
             LinearLayout headerView = mBookmarksAdapter.getHeaderView();
             if (headerView == null) {
-                headerView = (LinearLayout) LayoutInflater.from(mContext).inflate(R.layout.awesomebar_header_row, null);
+                headerView = (LinearLayout) mInflater.inflate(R.layout.awesomebar_header_row, null);
                 mBookmarksAdapter.setHeaderView(headerView);
             }
 
@@ -587,14 +582,11 @@ public class AwesomeBarTabs extends TabHost {
     }
 
     private class AwesomeBarCursorAdapter extends SimpleCursorAdapter {
-        private LayoutInflater mInflater;
         private String mSearchTerm;
 
         public AwesomeBarCursorAdapter(Context context) {
             super(context, -1, null, new String[] {}, new int[] {});
             mSearchTerm = "";
-
-            mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
         public void filter(String searchTerm) {
@@ -710,6 +702,7 @@ public class AwesomeBarTabs extends TabHost {
         mInflated = false;
         mSearchEngines = new JSONArray();
         mContentResolver = context.getContentResolver();
+        mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     @Override
@@ -772,10 +765,7 @@ public class AwesomeBarTabs extends TabHost {
     private TabSpec addAwesomeTab(String id, int titleId, int contentId) {
         TabSpec tab = newTabSpec(id);
 
-        LayoutInflater inflater =
-                (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-        View indicatorView = inflater.inflate(R.layout.awesomebar_tab_indicator, null);
+        View indicatorView = mInflater.inflate(R.layout.awesomebar_tab_indicator, null);
         Drawable background = indicatorView.getBackground();
         try {
             background.setColorFilter(new LightingColorFilter(Color.WHITE, GeckoApp.mBrowserToolbar.getHighlightColor()));
