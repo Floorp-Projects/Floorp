@@ -1,0 +1,180 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible XUL listbox hierarchy tests">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    function insertListitem(aListboxID)
+    {
+      this.listboxNode = getNode(aListboxID);
+
+      this.listitemNode = document.createElement("listitem");
+      this.listitemNode.setAttribute("label", "item1");
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, this.listitemNode),
+        new invokerChecker(EVENT_REORDER, this.listboxNode)
+      ];
+
+      this.invoke = function insertListitem_invoke()
+      {
+        this.listboxNode.insertBefore(this.listitemNode,
+                                      this.listboxNode.firstChild);
+      }
+
+      this.finalCheck = function insertListitem_finalCheck()
+      {
+        var tree =
+          { LISTBOX: [
+            {
+              role: ROLE_RICH_OPTION,
+              name: "item1"
+            },
+            {
+              role: ROLE_RICH_OPTION,
+              name: "item2"
+            },
+            {
+              role: ROLE_RICH_OPTION,
+              name: "item3"
+            },
+            {
+              role: ROLE_RICH_OPTION,
+              name: "item4"
+            }
+          ] };
+        testAccessibleTree(this.listboxNode, tree);
+      }
+
+      this.getID = function insertListitem_getID()
+      {
+        return "insert listitem ";
+      }
+    }
+
+    function removeListitem(aListboxID)
+    {
+      this.listboxNode = getNode(aListboxID);
+      this.listitemNode = null;
+      this.listitem;
+
+      function getListitem(aThisObj)
+      {
+        return aThisObj.listitem;
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getListitem, this),
+        new invokerChecker(EVENT_REORDER, this.listboxNode)
+      ];
+
+      this.invoke = function removeListitem_invoke()
+      {
+        this.listitemNode = this.listboxNode.firstChild;
+        this.listitem = getAccessible(this.listitemNode);
+
+        this.listboxNode.removeChild(this.listitemNode);
+      }
+
+      this.finalCheck = function removeListitem_finalCheck()
+      {
+        var tree =
+          { LISTBOX: [
+            {
+              role: ROLE_RICH_OPTION,
+              name: "item2"
+            },
+            {
+              role: ROLE_RICH_OPTION,
+              name: "item3"
+            },
+            {
+              role: ROLE_RICH_OPTION,
+              name: "item4"
+            }
+          ] };
+        testAccessibleTree(this.listboxNode, tree);
+      }
+
+      this.getID = function removeListitem_getID()
+      {
+        return "remove listitem ";
+      }
+    }
+
+    //gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
+    function doTest()
+    {
+      var tree =
+        { LISTBOX: [
+          {
+            role: ROLE_RICH_OPTION,
+            name: "item2"
+          },
+          {
+            role: ROLE_RICH_OPTION,
+            name: "item3"
+          },
+          {
+            role: ROLE_RICH_OPTION,
+            name: "item4"
+          }
+        ] };
+      testAccessibleTree("listbox", tree);
+
+      gQueue = new eventQueue();
+      gQueue.push(new insertListitem("listbox"));
+      gQueue.push(new removeListitem("listbox"));
+      gQueue.invoke(); // Will call SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=656225"
+         title="XUL listbox accessible tree doesn't get updated">
+        Mozilla Bug 656225
+      </a>
+      <br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <listbox id="listbox" rows="2">
+        <listitem label="item2"/>
+        <listitem label="item3"/>
+        <listitem label="item4"/>
+      </listbox>
+    </vbox>
+  </hbox>
+
+</window>
+
