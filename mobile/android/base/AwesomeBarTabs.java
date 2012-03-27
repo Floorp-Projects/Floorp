@@ -117,6 +117,12 @@ public class AwesomeBarTabs extends TabHost {
         public void onSearch(String engine);
     }
 
+    private class ViewHolder {
+        public TextView titleView;
+        public TextView urlView;
+        public ImageView faviconView;
+    }
+
     private class HistoryListAdapter extends SimpleExpandableListAdapter {
         public HistoryListAdapter(Context context, List<? extends Map<String, ?>> groupData,
                 int groupLayout, String[] groupFrom, int[] groupTo,
@@ -152,51 +158,6 @@ public class AwesomeBarTabs extends TabHost {
         }
     }
 
-    private class AwesomeCursorViewBinder implements SimpleCursorAdapter.ViewBinder {
-        private boolean updateFavicon(View view, Cursor cursor, int faviconIndex) {
-            byte[] b = cursor.getBlob(faviconIndex);
-            ImageView favicon = (ImageView) view;
-
-            if (b == null) {
-                favicon.setImageDrawable(null);
-            } else {
-                Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
-                favicon.setImageBitmap(bitmap);
-            }
-
-            return true;
-        }
-
-        private boolean updateTitle(View view, Cursor cursor, int titleIndex) {
-            String title = cursor.getString(titleIndex);
-            TextView titleView = (TextView)view;
-            // Use the URL instead of an empty title for consistency with the normal URL
-            // bar view - this is the equivalent of getDisplayTitle() in Tab.java
-            if (TextUtils.isEmpty(title)) {
-                int urlIndex = cursor.getColumnIndexOrThrow(URLColumns.URL);
-                title = cursor.getString(urlIndex);
-            }
-
-            titleView.setText(title);
-            return true;
-        }
-
-        public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
-            int faviconIndex = cursor.getColumnIndexOrThrow(URLColumns.FAVICON);
-            if (columnIndex == faviconIndex) {
-                return updateFavicon(view, cursor, faviconIndex);
-            }
-
-            int titleIndex = cursor.getColumnIndexOrThrow(URLColumns.TITLE);
-            if (columnIndex == titleIndex) {
-                return updateTitle(view, cursor, titleIndex);
-            }
-
-            // Other columns are handled automatically
-            return false;
-        }
-    }
-
     private class BookmarksListAdapter extends SimpleCursorAdapter {
         private static final int VIEW_TYPE_ITEM = 0;
         private static final int VIEW_TYPE_FOLDER = 1;
@@ -207,8 +168,8 @@ public class AwesomeBarTabs extends TabHost {
         private LinkedList<Pair<Integer, String>> mParentStack;
         private LinearLayout mBookmarksTitleView;
 
-        public BookmarksListAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {
-            super(context, layout, c, from, to);
+        public BookmarksListAdapter(Context context, Cursor c) {
+            super(context, -1, c, new String[] {}, new int[] {});
 
             mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             mResources = mContext.getResources();
@@ -294,15 +255,38 @@ public class AwesomeBarTabs extends TabHost {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             int viewType = getItemViewType(position);
+            ViewHolder viewHolder = null;
 
-            if (viewType == VIEW_TYPE_ITEM)
-                return super.getView(position, convertView, parent);
+            if (convertView == null) {
+                if (viewType == VIEW_TYPE_ITEM)
+                    convertView = mInflater.inflate(R.layout.awesomebar_row, null);
+                else
+                    convertView = mInflater.inflate(R.layout.awesomebar_folder_row, null);
 
-            if (convertView == null)
-                convertView = mInflater.inflate(R.layout.awesomebar_folder_row, null);
+                viewHolder = new ViewHolder();
+                viewHolder.titleView = (TextView) convertView.findViewById(R.id.title);
+                viewHolder.faviconView = (ImageView) convertView.findViewById(R.id.favicon);
 
-            TextView titleView = (TextView) convertView.findViewById(R.id.title);
-            titleView.setText(getFolderTitle(position));
+                if (viewType == VIEW_TYPE_ITEM)
+                    viewHolder.urlView = (TextView) convertView.findViewById(R.id.url);
+
+                convertView.setTag(viewHolder);
+            } else {
+                viewHolder = (ViewHolder) convertView.getTag();
+            }
+
+            Cursor cursor = getCursor();
+            if (!cursor.moveToPosition(position))
+                throw new IllegalStateException("Couldn't move cursor to position " + position);
+
+            if (viewType == VIEW_TYPE_ITEM) {
+                updateTitle(viewHolder.titleView, cursor);
+                updateUrl(viewHolder.urlView, cursor);
+            } else {
+                viewHolder.titleView.setText(getFolderTitle(position));
+            }
+
+            updateFavicon(viewHolder.faviconView, cursor);
 
             return convertView;
         }
@@ -360,18 +344,7 @@ public class AwesomeBarTabs extends TabHost {
             list.setAdapter(null);
 
             if (mBookmarksAdapter == null) {
-                // Load the list using a custom adapter so we can create the bitmaps
-                mBookmarksAdapter = new BookmarksListAdapter(
-                    mContext,
-                    R.layout.awesomebar_row,
-                    cursor,
-                    new String[] { URLColumns.TITLE,
-                                   URLColumns.URL,
-                                   URLColumns.FAVICON },
-                    new int[] { R.id.title, R.id.url, R.id.favicon }
-                );
-
-                mBookmarksAdapter.setViewBinder(new AwesomeCursorViewBinder());
+                mBookmarksAdapter = new BookmarksListAdapter(mContext, cursor);
             } else {
                 mBookmarksAdapter.changeCursor(cursor);
             }
@@ -595,11 +568,14 @@ public class AwesomeBarTabs extends TabHost {
     }
 
     private class AwesomeBarCursorAdapter extends SimpleCursorAdapter {
+        private LayoutInflater mInflater;
         private String mSearchTerm;
 
-        public AwesomeBarCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {
-            super(context, layout, c, from, to);
+        public AwesomeBarCursorAdapter(Context context) {
+            super(context, -1, null, new String[] {}, new int[] {});
             mSearchTerm = "";
+
+            mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
         public void filter(String searchTerm) {
@@ -641,18 +617,35 @@ public class AwesomeBarTabs extends TabHost {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
+            ViewHolder viewHolder = null;
+
+            if (convertView == null) {
+                convertView = mInflater.inflate(R.layout.awesomebar_row, null);
+
+                viewHolder = new ViewHolder();
+                viewHolder.titleView = (TextView) convertView.findViewById(R.id.title);
+                viewHolder.urlView = (TextView) convertView.findViewById(R.id.url);
+                viewHolder.faviconView = (ImageView) convertView.findViewById(R.id.favicon);
+
+                convertView.setTag(viewHolder);
+            } else {
+                viewHolder = (ViewHolder) convertView.getTag();
+            }
+
             final int resultCount = super.getCount();
-            if (position < resultCount)
-                return super.getView(position, convertView, parent);
+            if (position < resultCount) {
+                Cursor cursor = getCursor();
+                if (!cursor.moveToPosition(position))
+                    throw new IllegalStateException("Couldn't move cursor to position " + position);
 
-            View v;
-            if (convertView == null)
-                v = newView(mContext, null, parent);
-            else
-                v = convertView;
-            bindSearchEngineView(position - resultCount, v);
+                updateTitle(viewHolder.titleView, cursor);
+                updateUrl(viewHolder.urlView, cursor);
+                updateFavicon(viewHolder.faviconView, cursor);
+            } else {
+                bindSearchEngineView(position - resultCount, viewHolder);
+            }
 
-            return v;
+            return convertView;
         }
 
         private Drawable getDrawableFromDataURI(String dataURI) {
@@ -669,7 +662,7 @@ public class AwesomeBarTabs extends TabHost {
             return drawable;
         }
 
-        private void bindSearchEngineView(int position, View view) {
+        private void bindSearchEngineView(int position, ViewHolder viewHolder) {
             String name;
             String iconURI;
             String searchText = getResources().getString(R.string.awesomebar_search_engine, mSearchTerm);
@@ -682,14 +675,10 @@ public class AwesomeBarTabs extends TabHost {
                 return;
             }
 
-            TextView titleView = (TextView) view.findViewById(R.id.title);
-            TextView urlView = (TextView) view.findViewById(R.id.url);
-            ImageView faviconView = (ImageView) view.findViewById(R.id.favicon);
-
-            titleView.setText(name);
-            urlView.setText(searchText);
+            viewHolder.titleView.setText(name);
+            viewHolder.urlView.setText(searchText);
             Drawable drawable = getDrawableFromDataURI(iconURI);
-            faviconView.setImageDrawable(drawable);
+            viewHolder.faviconView.setImageDrawable(drawable);
         }
     };
 
@@ -793,17 +782,7 @@ public class AwesomeBarTabs extends TabHost {
                       R.id.all_pages_list);
 
         // Load the list using a custom adapter so we can create the bitmaps
-        mAllPagesCursorAdapter = new AwesomeBarCursorAdapter(
-            mContext,
-            R.layout.awesomebar_row,
-            null,
-            new String[] { URLColumns.TITLE,
-                           URLColumns.URL,
-                           URLColumns.FAVICON },
-            new int[] { R.id.title, R.id.url, R.id.favicon }
-        );
-
-        mAllPagesCursorAdapter.setViewBinder(new AwesomeCursorViewBinder());
+        mAllPagesCursorAdapter = new AwesomeBarCursorAdapter(mContext);
 
         mAllPagesCursorAdapter.setFilterQueryProvider(new FilterQueryProvider() {
             public Cursor runQuery(CharSequence constraint) {
@@ -920,6 +899,37 @@ public class AwesomeBarTabs extends TabHost {
             if (mUrlOpenListener != null)
                 mUrlOpenListener.onSearch((String)item);
         }
+    }
+
+    private void updateFavicon(ImageView faviconView, Cursor cursor) {
+        byte[] b = cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
+        if (b == null) {
+            faviconView.setImageDrawable(null);
+        } else {
+            Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
+            faviconView.setImageBitmap(bitmap);
+        }
+    }
+
+    private void updateTitle(TextView titleView, Cursor cursor) {
+        int titleIndex = cursor.getColumnIndexOrThrow(URLColumns.TITLE);
+        String title = cursor.getString(titleIndex);
+
+        // Use the URL instead of an empty title for consistency with the normal URL
+        // bar view - this is the equivalent of getDisplayTitle() in Tab.java
+        if (TextUtils.isEmpty(title)) {
+            int urlIndex = cursor.getColumnIndexOrThrow(URLColumns.URL);
+            title = cursor.getString(urlIndex);
+        }
+
+        titleView.setText(title);
+    }
+
+    private void updateUrl(TextView urlView, Cursor cursor) {
+        int urlIndex = cursor.getColumnIndexOrThrow(URLColumns.URL);
+        String url = cursor.getString(urlIndex);
+
+        urlView.setText(url);
     }
 
     public void setOnUrlOpenListener(OnUrlOpenListener listener) {
