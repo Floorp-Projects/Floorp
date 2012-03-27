@@ -486,16 +486,26 @@ IsSupportedImage(const nsCString& aMimeType)
 
 nsresult nsObjectLoadingContent::IsPluginEnabledForType(const nsCString& aMIMEType)
 {
+  nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
+  nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
+  if (!pluginHost) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = pluginHost->IsPluginEnabledForType(aMIMEType.get());
+
+  // Check to see if the plugin is disabled before deciding if it
+  // should be in the "click to play" state, since we only want to
+  // display "click to play" UI for enabled plugins.
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   if (!mShouldPlay) {
     return NS_ERROR_PLUGIN_CLICKTOPLAY;
   }
 
-  nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
-  nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
-  if (!pluginHost) {
-    return false;
-  }
-  return pluginHost->IsPluginEnabledForType(aMIMEType.get());
+  return NS_OK;
 }
 
 static void
