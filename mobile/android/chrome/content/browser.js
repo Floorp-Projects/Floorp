@@ -3912,22 +3912,50 @@ var ClipboardHelper = {
 
 var PluginHelper = {
   showDoorHanger: function(aTab) {
-    let message = Strings.browser.GetStringFromName("clickToPlayPlugins.message");
+    if (!aTab.browser)
+      return;
+
+    let uri = aTab.browser.currentURI;
+
+    // If the user has previously set a plugins permission for this website,
+    // either play or don't play the plugins instead of showing a doorhanger.
+    let permValue = Services.perms.testPermission(uri, "plugins");
+    if (permValue != Services.perms.UNKNOWN_ACTION) {
+      if (permValue == Services.perms.ALLOW_ACTION)
+        PluginHelper.playAllPlugins(aTab);
+
+      return;
+    }
+
+    let message = Strings.browser.formatStringFromName("clickToPlayPlugins.message1",
+                                                       [uri.host], 1);
     let buttons = [
       {
         label: Strings.browser.GetStringFromName("clickToPlayPlugins.yes"),
-        callback: function() {
+        callback: function(aChecked) {
+          // If the user checked "Don't ask again", make a permanent exception
+          if (aChecked)
+            Services.perms.add(uri, "plugins", Ci.nsIPermissionManager.ALLOW_ACTION);
+
           PluginHelper.playAllPlugins(aTab);
         }
       },
       {
         label: Strings.browser.GetStringFromName("clickToPlayPlugins.no"),
-        callback: function() {
-          // Do nothing
+        callback: function(aChecked) {
+          // If the user checked "Don't ask again", make a permanent exception
+          if (aChecked)
+            Services.perms.add(uri, "plugins", Ci.nsIPermissionManager.DENY_ACTION);
+
+          // Other than that, do nothing
         }
       }
-    ]
-    NativeWindow.doorhanger.show(message, "ask-to-play-plugins", buttons, aTab.id);
+    ];
+
+    // Add a checkbox with a "Don't ask again" message
+    let options = { checkbox: Strings.browser.GetStringFromName("clickToPlayPlugins.dontAskAgain") };
+
+    NativeWindow.doorhanger.show(message, "ask-to-play-plugins", buttons, aTab.id, options);
   },
 
   playAllPlugins: function(aTab, aEvent) {
@@ -4009,7 +4037,7 @@ var PluginHelper = {
 var PermissionsHelper = {
 
   _permissonTypes: ["password", "geolocation", "popup", "indexedDB",
-                    "offline-app", "desktop-notification"],
+                    "offline-app", "desktop-notification", "plugins"],
   _permissionStrings: {
     "password": {
       label: "password.rememberPassword",
@@ -4040,6 +4068,11 @@ var PermissionsHelper = {
       label: "desktopNotification.useNotifications",
       allowed: "desktopNotification.allow",
       denied: "desktopNotification.dontAllow"
+    },
+    "plugins": {
+      label: "clickToPlayPlugins.playPlugins",
+      allowed: "clickToPlayPlugins.yes",
+      denied: "clickToPlayPlugins.no"
     }
   },
 
