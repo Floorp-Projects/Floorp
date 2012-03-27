@@ -1713,6 +1713,7 @@ ADD_EMPTY_CASE(JSOP_UNUSED24)
 ADD_EMPTY_CASE(JSOP_UNUSED25)
 ADD_EMPTY_CASE(JSOP_UNUSED26)
 ADD_EMPTY_CASE(JSOP_UNUSED27)
+ADD_EMPTY_CASE(JSOP_UNUSED28)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
 #if JS_HAS_XML_SUPPORT
@@ -3146,36 +3147,6 @@ BEGIN_CASE(JSOP_DEFFUN)
     } while (false);
 }
 END_CASE(JSOP_DEFFUN)
-
-BEGIN_CASE(JSOP_DEFLOCALFUN)
-{
-    /*
-     * Define a local function (i.e., one nested at the top level of another
-     * function), parented by the current scope chain, stored in a local
-     * variable slot that the compiler allocated.  This is an optimization over
-     * JSOP_DEFFUN that avoids requiring a call object for the outer function's
-     * activation.
-     */
-    JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc + SLOTNO_LEN));
-    JS_ASSERT(fun->isInterpreted());
-
-    JSObject *parent;
-    if (fun->isNullClosure()) {
-        parent = &regs.fp()->scopeChain();
-    } else {
-        parent = GetScopeChain(cx, regs.fp());
-        if (!parent)
-            goto error;
-    }
-    JSObject *obj = CloneFunctionObjectIfNotSingleton(cx, fun, parent);
-    if (!obj)
-        goto error;
-
-    JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
-
-    regs.fp()->varSlot(GET_SLOTNO(regs.pc)) = ObjectValue(*obj);
-}
-END_CASE(JSOP_DEFLOCALFUN)
 
 BEGIN_CASE(JSOP_LAMBDA)
 {

@@ -135,8 +135,6 @@ JSBool JS_FASTCALL In(VMFrame &f);
 void JS_FASTCALL DefVarOrConst(VMFrame &f, PropertyName *name);
 void JS_FASTCALL SetConst(VMFrame &f, PropertyName *name);
 template<JSBool strict> void JS_FASTCALL DefFun(VMFrame &f, JSFunction *fun);
-JSObject * JS_FASTCALL DefLocalFun(VMFrame &f, JSFunction *fun);
-JSObject * JS_FASTCALL DefLocalFun_FC(VMFrame &f, JSFunction *fun);
 void JS_FASTCALL RegExp(VMFrame &f, JSObject *regex);
 JSObject * JS_FASTCALL Lambda(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL LambdaJoinableForInit(VMFrame &f, JSFunction *fun);

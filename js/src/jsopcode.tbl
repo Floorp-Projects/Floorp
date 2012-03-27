@@ -364,15 +364,9 @@ OPDEF(JSOP_PICK,        133, "pick",      NULL,       2,  0,  0,  0,  JOF_UINT8|
 OPDEF(JSOP_TRY,         134,"try",        NULL,       1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_FINALLY,     135,"finally",    NULL,       1,  0,  2,  0,  JOF_BYTE)
 
-OPDEF(JSOP_UNUSED26,    136,"unused20",  NULL,        1,  0,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED27,    137,"unused21",  NULL,        1,  0,  0,  0,  JOF_BYTE)
-
-/*
- * Define a local function object as a local variable.
- * The local variable's slot number is the first immediate two-byte operand.
- * The function object's atom index is the second immediate operand.
- */
-OPDEF(JSOP_DEFLOCALFUN, 138,"deflocalfun",NULL,       7,  0,  0,  0,  JOF_SLOTOBJECT|JOF_DECLARING|JOF_TMPSLOT)
+OPDEF(JSOP_UNUSED26,    136,"unused26",  NULL,        1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED27,    137,"unused27",  NULL,        1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED28,    138,"unused28",  NULL,        1,  0,  0,  0,  JOF_BYTE)
 
 /* Extended jumps. */
 OPDEF(JSOP_UNUSED4,       139,"unused4",  NULL,       1,  0,  0,  0,  JOF_BYTE)
