@@ -320,8 +320,11 @@ nsFaviconService::SetFaviconUrlForPage(nsIURI* aPageURI, nsIURI* aFaviconURI)
   // Now, link our icon entry with the page.
   PRInt64 pageId;
   nsCAutoString guid;
-  rv = history->GetOrCreateIdForPage(aPageURI, &pageId, guid);
+  rv = history->GetIdForPage(aPageURI, &pageId, guid);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!pageId) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
     "UPDATE moz_places SET favicon_id = :icon_id WHERE id = :page_id"

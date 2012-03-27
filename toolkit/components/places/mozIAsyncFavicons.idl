@@ -60,8 +60,8 @@ interface mozIAsyncFavicons : nsISupports
    * cache we won't do anything unless aForceReload is true, in which case
    * we'll try to reload the favicon.
    *
-   * This function will only save favicons for "good" URIs, as defined by what
-   * gets added to history or is a bookmark.  For "bad" URIs, this function
+   * This function will only save favicons for pages that are already stored in
+   * the database, like visited pages or bookmarks.  For any other URIs, it
    * will succeed but do nothing.  This function will also ignore the error
    * page favicon URI (see FAVICON_ERRORPAGE_URL below).
    *
