@@ -4122,15 +4122,15 @@ mjit::Compiler::inlineCallHelper(uint32_t callImmArgc, bool callingNew, FrameSiz
         frame.discardFe(origThis);
 
         /*
-         * If inference is enabled, the 'this' value of the pushed frame always
-         * needs to be coherent. If a GC gets triggered before the callee can
-         * fill in the slot (i.e. the GC happens on constructing the 'new'
-         * object or the call object for a heavyweight callee), it needs to be
-         * able to read the 'this' value to tell whether newScript constraints
-         * will need to be regenerated afterwards.
+         * We store NULL here to ensure that the slot doesn't contain
+         * garbage. Additionally, we need to store a non-object value here for
+         * TI. If a GC gets triggered before the callee can fill in the slot
+         * (i.e. the GC happens on constructing the 'new' object or the call
+         * object for a heavyweight callee), it needs to be able to read the
+         * 'this' value to tell whether newScript constraints will need to be
+         * regenerated afterwards.
          */
-        if (cx->typeInferenceEnabled())
-            masm.storeValue(NullValue(), frame.addressOf(origThis));
+        masm.storeValue(NullValue(), frame.addressOf(origThis));
     }
 
     if (!cx->typeInferenceEnabled()) {
