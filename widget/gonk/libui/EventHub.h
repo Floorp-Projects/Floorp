@@ -18,22 +18,22 @@
 #ifndef _RUNTIME_EVENT_HUB_H
 #define _RUNTIME_EVENT_HUB_H
 
+#include "utils_Log.h"
 #include "Input.h"
 #include "Keyboard.h"
 #include "KeyLayoutMap.h"
 #include "KeyCharacterMap.h"
 #include "VirtualKeyMap.h"
-#include <utils/String8.h>
+#include "String8.h"
 #include <utils/threads.h>
-#include <utils/Log.h>
 #include <utils/threads.h>
 #include <utils/List.h>
 #include <utils/Errors.h>
-#include <utils/PropertyMap.h>
+#include "PropertyMap.h"
 #include <utils/Vector.h>
 #include <utils/KeyedVector.h>
 
-#include <linux/input.h>
+#include "linux_input.h"
 #include <sys/epoll.h>
 
 /* Convenience constants. */

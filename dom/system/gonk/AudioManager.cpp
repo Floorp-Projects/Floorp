@@ -117,24 +117,47 @@ AudioManager::SetPhoneState(PRInt32 aState)
   return NS_OK;
 }
 
+//
+// Kids, don't try this at home.  We want this to link and work on
+// both GB and ICS.  Problem is, the symbol exported by audioflinger
+// is different on the two gonks.
+//
+// So what we do here is weakly link to both of them, and then call
+// whichever symbol resolves at dynamic link time (if any).
+//
 NS_IMETHODIMP
 AudioManager::SetForceForUse(PRInt32 aUsage, PRInt32 aForce)
 {
-  /*
-   * FIXME/bug XXXXXX: why do we need to disable forceUse in ICS?
-  if (AudioSystem::setForceUse((AudioSystem::force_use)aUsage,
-                               (AudioSystem::forced_config)aForce)) {
-    return NS_ERROR_FAILURE;
+  status_t status = 0;
+  if (static_cast<
+      status_t (*)(AudioSystem::force_use, AudioSystem::forced_config)
+      >(AudioSystem::setForceUse)) {
+    // Dynamically resolved the GB signature.
+    status = AudioSystem::setForceUse((AudioSystem::force_use)aUsage,
+                                      (AudioSystem::forced_config)aForce);
+  } else if (static_cast<
+             status_t (*)(audio_policy_force_use_t, audio_policy_forced_cfg_t)
+             >(AudioSystem::setForceUse)) {
+    // Dynamically resolved the ICS signature.
+    status = AudioSystem::setForceUse((audio_policy_force_use_t)aUsage,
+                                      (audio_policy_forced_cfg_t)aForce);
   }
-  */
-  return NS_OK;
+
+  return status ? NS_ERROR_FAILURE : NS_OK;
 }
 
 NS_IMETHODIMP
 AudioManager::GetForceForUse(PRInt32 aUsage, PRInt32* aForce) {
-  /*
-   * FIXME/bug XXXXXX: why do we need to disable forceUse in ICS?
-  *aForce = AudioSystem::getForceUse((AudioSystem::force_use)aUsage);
-  */
+  if (static_cast<
+      AudioSystem::forced_config (*)(AudioSystem::force_use)
+      >(AudioSystem::getForceUse)) {
+    // Dynamically resolved the GB signature.
+    *aForce = AudioSystem::getForceUse((AudioSystem::force_use)aUsage);
+  } else if (static_cast<
+             audio_policy_forced_cfg_t (*)(audio_policy_force_use_t)
+             >(AudioSystem::getForceUse)) {
+    // Dynamically resolved the ICS signature.
+    *aForce = AudioSystem::getForceUse((audio_policy_force_use_t)aUsage);
+  }
   return NS_OK;
 }

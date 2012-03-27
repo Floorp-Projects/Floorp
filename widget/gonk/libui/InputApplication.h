@@ -20,8 +20,8 @@
 #include "Input.h"
 
 #include <utils/RefBase.h>
-#include <utils/Timers.h>
-#include <utils/String8.h>
+#include "Timers.h"
+#include "String8.h"
 
 namespace android {
 

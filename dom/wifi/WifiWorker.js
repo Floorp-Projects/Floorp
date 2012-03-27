@@ -59,6 +59,23 @@ const WIFIWORKER_WORKER     = "resource://gre/modules/network_worker.js";
 // command always succeeds and we do a string/boolean check for the
 // expected results).
 var WifiManager = (function() {
+  Cu.import("resource://gre/modules/ctypes.jsm");
+  let cutils = ctypes.open("libcutils.so");
+  let cbuf = ctypes.char.array(4096)();
+  let c_property_get = cutils.declare("property_get", ctypes.default_abi,
+                                      ctypes.int,       // return value: length
+                                      ctypes.char.ptr,  // key
+                                      ctypes.char.ptr,  // value
+                                      ctypes.char.ptr); // default
+  let property_get = function (key, defaultValue) {
+    if (defaultValue === undefined) {
+      defaultValue = null;
+    }
+    c_property_get(key, cbuf, defaultValue);
+    return cbuf.readString();
+  }
+  let sdkVersion = parseInt(property_get("ro.build.version.sdk"));
+
   var controlWorker = new ChromeWorker(WIFIWORKER_WORKER);
   var eventWorker = new ChromeWorker(WIFIWORKER_WORKER);
 
@@ -283,7 +300,7 @@ var WifiManager = (function() {
         if (reply != "OK") {
           // Format is: <SSID> rssi XX". SSID can contain spaces.
           var offset = reply.lastIndexOf("rssi ");
-          if (offset != -1)
+          if (offset !== -1)
             rssi = reply.substr(offset + 5) | 0;
         }
       }
@@ -302,7 +319,7 @@ var WifiManager = (function() {
   function getLinkSpeedCommand(callback) {
     doStringCommand("DRIVER LINKSPEED", function(reply) {
       if (reply)
-        reply = reply.split()[1] | 0; // Format: LinkSpeed XX
+        reply = reply.split(" ")[1] | 0; // Format: LinkSpeed XX
       callback(reply);
     });
   }
@@ -583,6 +600,8 @@ var WifiManager = (function() {
   }
 
   manager.start = function() {
+    debug("detected SDK version " + sdkVersion);
+
     // If we reconnected to an already-running supplicant, then manager.state
     // will have already been updated to the supplicant's state. Otherwise, we
     // started the supplicant ourselves and need to connect.
@@ -647,9 +666,15 @@ var WifiManager = (function() {
     });
   }
 
-  var supplicantStatesMap = ["DISCONNECTED", "INACTIVE", "SCANNING", "ASSOCIATING",
-                             "ASSOCIATED", "FOUR_WAY_HANDSHAKE", "GROUP_HANDSHAKE",
-                             "COMPLETED", "DORMANT", "UNINITIALIZED"];
+  var supplicantStatesMap = (sdkVersion >= 15) ?
+    ["DISCONNECTED", "INTERFACE_DISABLED", "INACTIVE", "SCANNING",
+     "AUTHENTICATING", "ASSOCIATING", "ASSOCIATED", "FOUR_WAY_HANDSHAKE",
+     "GROUP_HANDSHAKE", "COMPLETED"]
+    :
+    ["DISCONNECTED", "INACTIVE", "SCANNING", "ASSOCIATING",
+     "ASSOCIATED", "FOUR_WAY_HANDSHAKE", "GROUP_HANDSHAKE",
+     "COMPLETED", "DORMANT", "UNINITIALIZED"];
+
   var driverEventMap = { STOPPED: "driverstopped", STARTED: "driverstarted", HANGED: "driverhung" };
 
   // handle events sent to us by the event worker
@@ -1010,6 +1035,8 @@ var WifiManager = (function() {
     setScanModeCommand(mode === "active", callback);
   }
   manager.scan = scanCommand;
+  manager.getRssiApprox = getRssiApproxCommand;
+  manager.getLinkSpeed = getLinkSpeedCommand;
   return manager;
 })();
 
@@ -1105,6 +1132,9 @@ function WifiWorker() {
   this.configuredNetworks = Object.create(null);
 
   this.currentNetwork = null;
+
+  this._lastConnectionInfo = null;
+  this._connectionInfoTimer = null;
 
   // Given a connection status network, takes a network from
   // self.configuredNetworks and prepares it for the DOM.
@@ -1209,6 +1239,12 @@ function WifiWorker() {
   WifiManager.onstatechange = function() {
     debug("State change: " + this.prevState + " -> " + this.state);
 
+    if (self._connectionInfoTimer &&
+        this.state !== "CONNECTED" &&
+        this.state !== "COMPLETED") {
+      self._stopConnectionInfoTimer();
+    }
+
     if (this.state === "DORMANT") {
       // The dormant state is a bad state to be in since we won't
       // automatically connect. Try to knock us out of it. We only
@@ -1248,16 +1284,17 @@ function WifiWorker() {
         WifiManager.getNetworkConfiguration(self.currentNetwork, function(){});
       }
 
-      self._fireEvent("onassociate", netToDOM(self.currentNetwork));
+      self._startConnectionInfoTimer();
+      self._fireEvent("onassociate", { network: netToDOM(self.currentNetwork) });
     } else if (this.state === "DISCONNECTED") {
-      self._fireEvent("ondisconnect");
+      self._fireEvent("ondisconnect", {});
       self.currentNetwork = null;
     }
   };
 
   WifiManager.ondhcpconnected = function() {
     if (this.info)
-      self._fireEvent("onconnect", netToDOM(self.currentNetwork));
+      self._fireEvent("onconnect", { network: netToDOM(self.currentNetwork) });
     else
       WifiManager.disconnect(function(){});
   };
@@ -1362,10 +1399,66 @@ WifiWorker.prototype = {
     }
   },
 
+  _startConnectionInfoTimer: function() {
+    if (this._connectionInfoTimer)
+      return;
+
+    var self = this;
+    function getConnectionInformation() {
+      WifiManager.getRssiApprox(function(rssi) {
+        // See comments in calculateSignal for information about this.
+        if (rssi > 0)
+          rssi -= 256;
+        if (rssi <= MIN_RSSI)
+          rssi = MIN_RSSI;
+        else if (rssi >= MAX_RSSI)
+          rssi = MAX_RSSI;
+
+        WifiManager.getLinkSpeed(function(linkspeed) {
+          let info = { signalStrength: rssi,
+                       relSignalStrength: calculateSignal(rssi),
+                       linkSpeed: linkspeed };
+          let last = self._lastConnectionInfo;
+
+          // Only fire the event if the link speed changed or the signal
+          // strength changed by more than 10%.
+          function tensPlace(percent) ((percent / 10) | 0)
+
+          if (last && last.linkSpeed === info.linkSpeed &&
+              tensPlace(last.relSignalStrength) === tensPlace(info.relSignalStrength)) {
+            return;
+          }
+
+          self._lastConnectionInfo = info;
+          self._fireEvent("connectionInfoUpdate", info);
+        });
+      });
+    }
+
+    // Prime our _lastConnectionInfo immediately and fire the event at the
+    // same time.
+    getConnectionInformation();
+
+    // Now, set up the timer for regular updates.
+    this._connectionInfoTimer =
+      Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._connectionInfoTimer.init(getConnectionInformation, 5000,
+                                   Ci.nsITimer.TYPE_REPEATING_SLACK);
+  },
+
+  _stopConnectionInfoTimer: function() {
+    if (!this._connectionInfoTimer)
+      return;
+
+    this._connectionInfoTimer.cancel();
+    this._connectionInfoTimer = null;
+    this._lastConnectionInfo = null;
+  },
+
   // nsIWifi
 
   _fireEvent: function(message, data) {
-    this._mm.sendAsyncMessage("WifiManager:" + message, { network: data });
+    this._mm.sendAsyncMessage("WifiManager:" + message, data);
   },
 
   _sendMessage: function(message, success, data, rid, mid) {
@@ -1388,6 +1481,7 @@ WifiWorker.prototype = {
       case "WifiManager:getState": {
         let net = this.currentNetwork ? netToDOM(this.currentNetwork) : null;
         return { network: net,
+                 connectionInfo: this._lastConnectionInfo,
                  enabled: WifiManager.state !== "UNINITIALIZED", };
       }
     }
@@ -1475,6 +1569,7 @@ WifiWorker.prototype = {
   get worker() { throw "Not implemented"; },
 
   shutdown: function() {
+    debug("shutting down ...");
     this.setWifiEnabled(false);
   }
 };
