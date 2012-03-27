@@ -252,7 +252,7 @@ fails-if(Android) random-if(gtk2Widget) != text-language-01.xhtml text-language-
 == text-layout-03.svg text-layout-03-ref.svg
 == text-layout-04.svg text-layout-04-ref.svg
 == text-layout-05.svg text-layout-05-ref.svg
-== text-layout-06.svg text-layout-06-ref.svg
+fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,3) == text-layout-06.svg text-layout-06-ref.svg
 == text-layout-07.svg text-layout-07-ref.svg
 == text-scale-01.svg text-scale-01-ref.svg
 == text-stroke-scaling-01.svg text-stroke-scaling-01-ref.svg

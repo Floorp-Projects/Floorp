@@ -123,7 +123,7 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-polyline-points-01.svg anim-polyline-points-01-ref.svg
 
 # animate path data:
-fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),2,1) == anim-path-d-01.svg anim-path-d-01-ref.svg # Bug 726400
+fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),2,1) fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,13) == anim-path-d-01.svg anim-path-d-01-ref.svg # Bug 726400
 
 # animate some enumeration attributes:
 == anim-feComposite-operator-01.svg lime.svg
