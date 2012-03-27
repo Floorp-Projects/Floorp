@@ -151,6 +151,7 @@ StackWalkInitCriticalAddress()
   // we force a situation where new_sem_from_pool is on the stack and
   // use dladdr to check the addresses.
 
+  // malloc_logger can be set by external tools like 'Instruments' or 'leaks'
   malloc_logger_t *old_malloc_logger = malloc_logger;
   malloc_logger = my_malloc_logger;
 
@@ -164,6 +165,8 @@ StackWalkInitCriticalAddress()
   MOZ_ASSERT(r == 0);
   struct timespec abstime = {0, 1};
   r = pthread_cond_timedwait_relative_np(&cond, &mutex, &abstime);
+
+  // restore the previous malloc logger
   malloc_logger = old_malloc_logger;
 
   // On Lion, malloc is no longer called from pthread_cond_*wait*. This prevents
