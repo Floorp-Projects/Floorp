@@ -456,7 +456,16 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
           }
 
           // TODO: pass in timestamps?
-          Logger.debug(LOG_TAG, "Replacing existing " + existingRecord.guid + " with record " + toStore.guid);
+
+          // This section of code will only run if the incoming record is not
+          // marked as deleted, so we never want to just drop ours from the database:
+          // we need to upload it later.
+          // Allowing deleted items to propagate through `replace` allows normal
+          // logging and side-effects to occur, and is no more expensive than simply
+          // bumping the modified time.
+          Logger.debug(LOG_TAG, "Replacing existing " + existingRecord.guid +
+                       (toStore.deleted ? " with deleted record " : " with record ") +
+                       toStore.guid);
           Record replaced = replace(toStore, existingRecord);
 
           // Note that we don't track records here; deciding that is the job

@@ -566,6 +566,11 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
 
   @Override
   protected Record prepareRecord(Record record) {
+    if (record.deleted) {
+      Logger.debug(LOG_TAG, "No need to prepare deleted record " + record.guid);
+      return record;
+    }
+
     BookmarkRecord bmk = (BookmarkRecord) record;
 
     if (!isSpecialRecord(record)) {
