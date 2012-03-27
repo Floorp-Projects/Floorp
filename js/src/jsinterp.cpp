@@ -1714,6 +1714,7 @@ ADD_EMPTY_CASE(JSOP_UNUSED27)
 ADD_EMPTY_CASE(JSOP_UNUSED28)
 ADD_EMPTY_CASE(JSOP_UNUSED29)
 ADD_EMPTY_CASE(JSOP_UNUSED30)
+ADD_EMPTY_CASE(JSOP_UNUSED31)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
 #if JS_HAS_XML_SUPPORT
@@ -3458,14 +3459,6 @@ BEGIN_CASE(JSOP_THROW)
     /* let the code at error try to catch the exception. */
     goto error;
 }
-BEGIN_CASE(JSOP_SETLOCALPOP)
-    /*
-     * The stack must have a block with at least one local slot below the
-     * exception object.
-     */
-    JS_ASSERT((size_t) (regs.sp - regs.fp()->base()) >= 2);
-    POP_COPY_TO(regs.fp()->localSlot(GET_UINT16(regs.pc)));
-END_CASE(JSOP_SETLOCALPOP)
 
 BEGIN_CASE(JSOP_INSTANCEOF)
 {

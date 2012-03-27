@@ -2868,15 +2868,6 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_SETLOCAL)
 
-          BEGIN_CASE(JSOP_SETLOCALPOP)
-          {
-            uint32_t slot = GET_SLOTNO(PC);
-            frame.storeLocal(slot, true);
-            frame.pop();
-            updateVarType();
-          }
-          END_CASE(JSOP_SETLOCALPOP)
-
           BEGIN_CASE(JSOP_UINT16)
             frame.push(Value(Int32Value((int32_t) GET_UINT16(PC))));
           END_CASE(JSOP_UINT16)
