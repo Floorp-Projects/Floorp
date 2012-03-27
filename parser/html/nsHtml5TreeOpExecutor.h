@@ -85,6 +85,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
 
   private:
+    static bool        sExternalViewSource;
 #ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
     static PRUint32    sAppendBatchMaxSize;
     static PRUint32    sAppendBatchSlotsExamined;
@@ -446,8 +447,12 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
 
     void SetSpeculationBase(const nsAString& aURL);
 
+    static void InitializeStatics();
+
   private:
     nsHtml5Parser* GetParser();
+
+    bool IsExternalViewSource();
 
     /**
      * Get a nsIURI for an nsString if the URL hasn't been preloaded yet.
