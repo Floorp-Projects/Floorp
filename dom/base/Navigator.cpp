@@ -1153,7 +1153,7 @@ Navigator::GetMozBluetooth(nsIDOMBluetoothAdapter** aBluetooth)
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
     NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-    mBluetooth = new bluetooth::BluetoothAdapter();
+    mBluetooth = new bluetooth::BluetoothAdapter(window);
 
     bluetooth = mBluetooth;
   }
