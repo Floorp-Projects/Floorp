@@ -9,6 +9,12 @@
               android:textColorLink="@color/doorhanger_link"
               android:padding="10dp"/>
 
+    <CheckBox android:id="@+id/doorhanger_checkbox"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:checked="true"
+              android:visibility="gone"/>
+
     <LinearLayout android:id="@+id/doorhanger_choices"
                   style="@android:style/ButtonBar"
                   android:layout_width="fill_parent"
