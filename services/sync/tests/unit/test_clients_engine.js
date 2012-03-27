@@ -479,7 +479,8 @@ add_test(function test_send_uri_to_client_for_display() {
   let initialScore = tracker.score;
 
   let uri = "http://www.mozilla.org/";
-  Clients.sendURIToClientForDisplay(uri, remoteId);
+  let title = "Title of the Page";
+  Clients.sendURIToClientForDisplay(uri, remoteId, title);
 
   let newRecord = store._remoteClients[remoteId];
 
@@ -488,8 +489,10 @@ add_test(function test_send_uri_to_client_for_display() {
 
   let command = newRecord.commands[0];
   do_check_eq(command.command, "displayURI");
-  do_check_eq(command.args.length, 2);
+  do_check_eq(command.args.length, 3);
   do_check_eq(command.args[0], uri);
+  do_check_eq(command.args[1], Clients.localID);
+  do_check_eq(command.args[2], title);
 
   do_check_true(tracker.score > initialScore);
   do_check_true(tracker.score - initialScore >= SCORE_INCREMENT_XLARGE);
