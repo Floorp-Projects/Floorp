@@ -347,6 +347,9 @@ void XPCJSRuntime::TraceBlackJS(JSTracer* trc, void* data)
         for (e = self->mObjectHolderRoots; e; e = e->GetNextRoot())
             static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
     }
+
+    dom::TraceBlackJS(trc);
+
 }
 
 // static
