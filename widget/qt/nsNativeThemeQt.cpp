@@ -153,7 +153,7 @@ nsNativeThemeQt::DrawWidgetBackground(nsRenderingContext* aContext,
                                     aFrame, aWidgetType,
                                     aRect, aClipRect);
     }
-#ifdef MOZ_X11
+#if defined(MOZ_X11) && defined(Q_WS_X11)
     else if (surface->GetType() == gfxASurface::SurfaceTypeXlib) {
         gfxXlibSurface* qSurface = (gfxXlibSurface*) (surface.get());
         QPixmap pixmap(QPixmap::fromX11Pixmap(qSurface->XDrawable()));

@@ -112,17 +112,6 @@ public class LayerController implements Tabs.OnTabsChangedListener {
 
     private boolean mForceRedraw;
 
-    /* The extra area on the sides of the page that we want to buffer to help with
-     * smooth, asynchronous scrolling. Depending on a device's support for NPOT
-     * textures, this may be rounded up to the nearest power of two.
-     */
-    public static final IntSize MIN_BUFFER = new IntSize(512, 1024);
-
-    /* If the visible rect is within the danger zone (measured in pixels from each edge of a tile),
-     * we start aggressively redrawing to minimize checkerboarding. */
-    private static final int DANGER_ZONE_X = 75;
-    private static final int DANGER_ZONE_Y = 150;
-
     /* The time limit for pages to respond with preventDefault on touchevents
      * before we begin panning the page */
     private int mTimeout = 200;
@@ -330,23 +319,8 @@ public class LayerController implements Tabs.OnTabsChangedListener {
             return false;
         }
 
-        return aboutToCheckerboard();
-    }
-
-    // Returns true if a checkerboard is about to be visible.
-    private boolean aboutToCheckerboard() {
-        // Increase the size of the viewport (and clamp to page boundaries), and
-        // intersect it with the tile's displayport to determine whether we're
-        // close to checkerboarding.
-        FloatSize pageSize = getPageSize();
-        RectF adjustedViewport = RectUtils.expand(getViewport(), DANGER_ZONE_X, DANGER_ZONE_Y);
-        if (adjustedViewport.top < 0) adjustedViewport.top = 0;
-        if (adjustedViewport.left < 0) adjustedViewport.left = 0;
-        if (adjustedViewport.right > pageSize.width) adjustedViewport.right = pageSize.width;
-        if (adjustedViewport.bottom > pageSize.height) adjustedViewport.bottom = pageSize.height;
-
-        RectF displayPort = (mLayerClient == null ? new RectF() : mLayerClient.getDisplayPort());
-        return !displayPort.contains(adjustedViewport);
+        return DisplayPortCalculator.aboutToCheckerboard(mViewportMetrics,
+                mPanZoomController.getVelocityVector(), mLayerClient.getDisplayPort());
     }
 
     /**

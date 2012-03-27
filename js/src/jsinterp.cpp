@@ -510,7 +510,7 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
     JSFunction *fun = callee.toFunction();
     JS_ASSERT_IF(construct, !fun->isNativeConstructor());
     if (fun->isNative())
-        return CallJSNative(cx, fun->u.n.native, args);
+        return CallJSNative(cx, fun->native(), args);
 
     TypeMonitorCall(cx, args, construct);
 
@@ -580,7 +580,7 @@ js::InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
 
             if (fun->isNativeConstructor()) {
                 Probes::calloutBegin(cx, fun);
-                bool ok = CallJSNativeConstructor(cx, fun->u.n.native, args);
+                bool ok = CallJSNativeConstructor(cx, fun->native(), args);
                 Probes::calloutEnd(cx, fun);
                 return ok;
             }

@@ -2707,18 +2707,26 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   // The above methods have been migrated from nsIBox and are in the process of
   // being refactored. DO NOT USE OUTSIDE OF XUL.
 
+  struct CaretPosition {
+    CaretPosition() :
+      mContentOffset(0)
+    {}
+
+    nsCOMPtr<nsIContent> mResultContent;
+    PRInt32              mContentOffset;
+  };
+
   /**
    * gets the first or last possible caret position within the frame
    *
    * @param  [in] aStart
    *         true  for getting the first possible caret position
    *         false for getting the last possible caret position
-   * @return The caret position in an nsPeekOffsetStruct (the
-   *         fields set are mResultContent and mContentOffset;
+   * @return The caret position in a CaretPosition.
    *         the returned value is a 'best effort' in case errors
    *         are encountered rummaging through the frame.
    */
-  nsPeekOffsetStruct GetExtremeCaretPosition(bool aStart);
+  CaretPosition GetExtremeCaretPosition(bool aStart);
 
   /**
    * Same thing as nsFrame::CheckInvalidateSizeChange, but more flexible.  The

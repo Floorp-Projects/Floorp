@@ -26,53 +26,69 @@ var piConstants = [
   "const float k2PI    = (kPI * 2.0);"
 ].join("\n");
 
-var sinImplementation = [
-  "",
-  "float sin_impl(float value) {",
-  "    value = mod(value + k2PI * 10.0, k2PI);",          // only positive values for now
-  "    int quad = int(floor(value / kHalfPI));",          // figure out which quad
-  "    float p = mod(value, kHalfPI);",                   // from 0.0 to PI/2
-  "    if (quad == 1 || quad == 3) { p = kHalfPI - p; }", // backward in quads 1,3
-  "    float c = p - ",
-  "              pow(p, 3.0) / (1.0 * 2.0 * 3.0) + ",
-  "              pow(p, 5.0) / (1.0 * 2.0 * 3.0 * 4.0 * 5.0) - ",
-  "              pow(p, 7.0) / (1.0 * 2.0 * 3.0 * 4.0 * 5.0 * 6.0 * 7.0);",
-  "    if (quad == 2 || quad == 3) { c = -c; }",
-  "    return c;",
-  "}"
-].join('\n');
+var kPI = Math.PI;
+var kHalfPI = Math.PI * 0.5;
+var k2PI = Math.PI * 2.0;
+var cos = Math.cos;  // shorthand
 
-GLSLGenerator.runFeatureTest({
+GLSLGenerator.runReferenceImageTest({
   feature: "cos",
   args: "$(type) value",
-  baseArgs: "value$(field)",
   testFunc: "$(func)($(type))",
-  emuFunc: [
-    sinImplementation,
-    "float $(func)_base(float value) {",
-    "  return sin_impl(value + kHalfPI);",
-    "}"
-  ].join("\n"),
   gridRes: 8,
   tolerance: 2,
   extra: piConstants,
   tests: [
-    ["$(output) = vec4(",
-     "    $(func)($(input).x * kHalfPI + kHalfPI),",
-     "    $(func)($(input).y * kHalfPI),",
-     "    0,",
-     "    1);"].join("\n"),
-    ["$(output) = vec4(",
-     "    $(func)($(input).xy * vec2(kPI, k2PI)) * 0.5 + vec2(0.5, 0.5),",
-     "    0, 1);"].join("\n"),
-    ["$(output) = vec4(",
-     "    $(func)($(input).xyz * vec3(kPI, k2PI, 4.0)) * ",
-     "    0.5 + vec3(0.5, 0.5, 0.5),",
-     "    1);"].join("\n"),
-    ["$(output) = ",
-     "    $(func)($(input) * vec4(k2PI, 4.0, kHalfPI, kPI)) *",
-     "    0.5 + vec4(0.5, 0.5, 0.5, 1);",
-    ].join("\n")
+    {
+      source: ["$(output) = vec4(",
+               "    $(func)($(input).x * kHalfPI + kHalfPI),",
+               "    $(func)($(input).y * kHalfPI),",
+               "    0,",
+               "    1);"].join("\n"),
+      generator: function(x, y, z, w) {
+	return [ cos(x * kHalfPI + kHalfPI),
+		 cos(y * kHalfPI),
+		 0,
+		 1 ];
+      },
+    },
+    {
+      source: ["$(output) = vec4(",
+	       "    $(func)($(input).xy * vec2(kPI, k2PI)) * 0.5 + vec2(0.5, 0.5),",
+	       "    0, 1);"].join("\n"),
+      generator: function(x, y, z, w) {
+	return [ cos(x * kPI) * 0.5 + 0.5,
+		 cos(y * k2PI) * 0.5 + 0.5,
+		 0,
+		 1 ];
+      },
+    },
+    {
+      // FIXME: for some reason, this test requires a higher tolerance when run in a vertex shader.
+      source: ["$(output) = vec4(",
+	       "    $(func)($(input).xyz * vec3(kPI, k2PI, 4.0)) * ",
+	       "    0.5 + vec3(0.5, 0.5, 0.5),",
+	       "    1);"].join("\n"),
+      generator: function(x, y, z, w) {
+	return [ cos(x * kPI) * 0.5 + 0.5,
+		 cos(y * k2PI) * 0.5 + 0.5,
+		 cos(z * 4.0) * 0.5 + 0.5,
+		 1 ];
+      },
+      tolerance: 7,
+    },
+    {
+      source: ["$(output) = ",
+	       "    $(func)($(input) * vec4(k2PI, 4.0, kHalfPI, kPI)) *",
+	       "    0.5 + vec4(0.5, 0.5, 0.5, 1);",
+	      ].join("\n"),
+      generator: function(x, y, z, w) {
+	return [ cos(x * k2PI) * 0.5 + 0.5,
+		 cos(y * 4.0) * 0.5 + 0.5,
+		 cos(z * kHalfPI) * 0.5 + 0.5,
+		 cos(w * kPI) * 0.5 + 1.0 ];
+      },
+    },
   ]
 });
 successfullyParsed = true;

@@ -46,6 +46,7 @@ XPCOMUtils.defineLazyServiceGetter(Services, 'fm', function() {
 function addPermissions(urls) {
   let permissions = [
     'indexedDB', 'indexedDB-unlimited', 'webapps-manage', 'offline-app',
+    'websettings-read', 'websettings-readwrite',
     'content-camera', 'webcontacts-manage', 'wifi-manage', 'desktop-notification',
     'geolocation'
   ];

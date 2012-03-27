@@ -25,8 +25,7 @@ function init()
 {
     description('Verify texImage2D and texSubImage2D code paths taking Video Elements');
 
-    var canvas = document.getElementById("example");
-    gl = wtu.create3DContext(canvas);
+    gl = wtu.create3DContext("example");
     var program = wtu.setupTexturedQuad(gl);
 
     gl.clearColor(0,0,0,1);

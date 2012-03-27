@@ -205,8 +205,8 @@ nsShmImage::Put(GdkWindow* aWindow, cairo_rectangle_list_t* aRects)
 void
 nsShmImage::Put(QWidget* aWindow, QRect& aRect)
 {
-    Display* dpy = aWindow->x11Info().display();
-    Drawable d = aWindow->handle();
+    Display* dpy = gfxQtPlatform::GetXDisplay(aWindow);
+    Drawable d = aWindow->winId();
 
     GC gc = XCreateGC(dpy, d, 0, nsnull);
     // Avoid out of bounds painting

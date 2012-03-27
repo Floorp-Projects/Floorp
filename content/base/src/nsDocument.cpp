@@ -8086,9 +8086,12 @@ nsIDocument::CreateStaticClone(nsISupports* aCloneContainer)
   nsCOMPtr<nsIDocument> clonedDoc;
   if (NS_SUCCEEDED(rv)) {
     clonedDoc = do_QueryInterface(clonedNode);
-    nsCOMPtr<nsIDOMDocument> clonedDOMDoc = do_QueryInterface(clonedDoc);
-    if (clonedDOMDoc) {
-      clonedDoc->mOriginalDocument = this;
+    if (clonedDoc) {
+      if (IsStaticDocument()) {
+        clonedDoc->mOriginalDocument = mOriginalDocument;
+      } else {
+        clonedDoc->mOriginalDocument = this;
+      }
       PRInt32 sheetsCount = GetNumberOfStyleSheets();
       for (PRInt32 i = 0; i < sheetsCount; ++i) {
         nsRefPtr<nsCSSStyleSheet> sheet = do_QueryObject(GetStyleSheetAt(i));

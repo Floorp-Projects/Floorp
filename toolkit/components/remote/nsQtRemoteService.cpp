@@ -40,10 +40,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include <QWidget>
-#include <QX11Info>
 #include "nsQtRemoteService.h"
 
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/X11Util.h"
 #include "nsIServiceManager.h"
 #include "nsIAppShellService.h"
 
@@ -137,7 +137,7 @@ void
 nsQtRemoteService::PropertyNotifyEvent(XEvent *aEvt)
 {
   HandleNewProperty(aEvt->xproperty.window,
-                    QX11Info::display(),
+                    mozilla::DefaultXDisplay(),
                     aEvt->xproperty.time,
                     aEvt->xproperty.atom,
                     0);

@@ -22,8 +22,7 @@ description("This test ensures WebGL implementations correctly implement compres
 debug("");
 
 var wtu = WebGLTestUtils;
-var canvas = document.createElement("canvas");
-var gl = wtu.create3DContext(canvas);
+var gl = wtu.create3DContext();
 
 const  COMPRESSED_RGB_S3TC_DXT1_EXT        = 0x83F0;
 const  COMPRESSED_RGBA_S3TC_DXT1_EXT       = 0x83F1;

@@ -64,34 +64,6 @@ function start() {
                             .getService(Components.interfaces.nsIPropertyBag2)
                             .getProperty("version");
     kIsWindowsVistaOrHigher = (parseFloat(version) >= 6.0);
-    // Workaround for Windows 2000 (driver?) which may crash itself.
-    if (parseFloat(version) <= 5.0) {
-      todo(false, "Test disabled on Windows 2000 and older. (To prevent possible system crash.)");
-      SimpleTest.finish();
-      return;
-    }
-  }
-
-  // we currently disable this test on version of Mac OSX older than 10.6,
-  // due to various weird failures, including one making getRenderbufferParameter tests
-  // on DEPTH_STENCIL fail
-  var kDarwinVersion = 0;
-  if (kIsMac) {
-    // code borrowed from browser/modules/test/browser_taskbar_preview.js
-    var is106orHigher = false;
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    kDarwinVersion = parseFloat(Components.classes["@mozilla.org/system-info;1"]
-                                          .getService(Components.interfaces.nsIPropertyBag2)
-                                          .getProperty("version"));
-    // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10 !
-    // Mac OS 10.5 would be Darwin version 9. the |version| string we've got here
-    // is the Darwin version.
-    is106orHigher = (kDarwinVersion >= 10.0);
-    if (!is106orHigher) {
-      todo(false, "WebGL mochitest disabled on Mac OSX versions older than 10.6.");
-      SimpleTest.finish();
-      return;
-    }
   }
 
   // we currently disable this test on version of Mac OSX older than 10.6,
@@ -417,7 +389,6 @@ function start() {
           todo(false, errmsg + " (This is expected on SeaMonkey (tinderboxes).)");
         else
           ok(false, errmsg);
-        dump("WebGL mochitest failed: " + errmsg + "\n");
         reporter.finishedTestSuite();
         return;
     }

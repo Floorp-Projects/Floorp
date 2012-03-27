@@ -550,7 +550,11 @@ public:
         mOffscreenReadFBO(0),
         mOffscreenColorRB(0),
         mOffscreenDepthRB(0),
-        mOffscreenStencilRB(0)
+        mOffscreenStencilRB(0),
+        mMaxTextureSize(0),
+        mMaxCubeMapTextureSize(0),
+        mMaxTextureImageSize(0),
+        mMaxRenderbufferSize(0)
 #ifdef DEBUG
         , mGLError(LOCAL_GL_NO_ERROR)
 #endif
@@ -1683,8 +1687,27 @@ protected:
     nsTArray<nsIntRect> mScissorStack;
 
     GLint mMaxTextureSize;
+    GLint mMaxCubeMapTextureSize;
     GLint mMaxTextureImageSize;
     GLint mMaxRenderbufferSize;
+
+    bool IsTextureSizeSafeToPassToDriver(GLenum target, GLsizei width, GLsizei height) const {
+#ifdef XP_MACOSX
+        if (mVendor == VendorIntel) {
+            // see bug 737182 for 2D textures, bug 684822 for cube map textures.
+            // some drivers handle incorrectly some large texture sizes that are below the
+            // max texture size that they report. So we check ourselves against our own values
+            // (mMax[CubeMap]TextureSize).
+            GLsizei maxSize = target == LOCAL_GL_TEXTURE_CUBE_MAP ||
+                                (target >= LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X &&
+                                target <= LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)
+                              ? mMaxCubeMapTextureSize
+                              : mMaxTextureSize;
+            return width <= maxSize && height <= maxSize;
+        }
+#endif
+        return true;
+    }
 
 public:
  
@@ -2388,7 +2411,13 @@ public:
 
     void fTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels) {
         BEFORE_GL_CALL;
-        mSymbols.fTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+        if (IsTextureSizeSafeToPassToDriver(target, width, height)) {
+          mSymbols.fTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+        } else {
+          // pass wrong values to cause the GL to generate GL_INVALID_VALUE.
+          // See bug 737182 and the comment in IsTextureSizeSafeToPassToDriver.
+          mSymbols.fTexImage2D(target, -1, internalformat, -1, -1, -1, format, type, nsnull);
+        }
         AFTER_GL_CALL;
     }
 
@@ -2586,9 +2615,19 @@ public:
 
     void raw_fCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) {
         BEFORE_GL_CALL;
-        mSymbols.fCopyTexImage2D(target, level, internalformat, 
-                                 x, FixYValue(y, height),
-                                 width, height, border);
+        if (IsTextureSizeSafeToPassToDriver(target, width, height)) {
+          mSymbols.fCopyTexImage2D(target, level, internalformat, 
+                                   x, FixYValue(y, height),
+                                   width, height, border);
+
+        } else {
+          // pass wrong values to cause the GL to generate GL_INVALID_VALUE.
+          // See bug 737182 and the comment in IsTextureSizeSafeToPassToDriver.
+          mSymbols.fCopyTexImage2D(target, -1, internalformat, 
+                                   x, FixYValue(y, height),
+                                   -1, -1, -1);
+
+        }
         AFTER_GL_CALL;
     }
 
