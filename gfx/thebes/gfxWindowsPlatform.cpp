@@ -88,6 +88,12 @@ using namespace mozilla::gfx;
 #include "nsMemory.h"
 #endif
 
+/*
+ * Required headers are not available in the current consumer preview Win8
+ * dev kit, disabling for now.
+ */
+#undef MOZ_WINSDK_TARGETVER
+
 /**
  * XXX below should be >= MOZ_NTDDI_WIN8 or such which is not defined yet
  */
