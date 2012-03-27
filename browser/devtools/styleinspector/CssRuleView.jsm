@@ -67,7 +67,8 @@ Cu.import("resource:///modules/devtools/CssLogic.jsm");
 
 var EXPORTED_SYMBOLS = ["CssRuleView",
                         "_ElementStyle",
-                        "_editableField"];
+                        "_editableField",
+                        "_getInplaceEditorForSpan"];
 
 /**
  * Our model looks like this:
@@ -1474,6 +1475,14 @@ InplaceEditor.prototype = {
     }
   }
 };
+
+/*
+ * Various API consumers (especially tests) sometimes want to grab the
+ * inplaceEditor expando off span elements. However, when each global has its
+ * own compartment, those expandos live on Xray wrappers that are only visible
+ * within this JSM. So we provide a little workaround here.
+ */
+function _getInplaceEditorForSpan(aSpan) { return aSpan.inplaceEditor; };
 
 /**
  * Store of CSSStyleDeclarations mapped to properties that have been changed by

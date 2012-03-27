@@ -26,8 +26,7 @@ description("This test verifies the functionality of the WEBGL_debug_renderer_in
 debug("");
 
 var wtu = WebGLTestUtils;
-var canvas = document.getElementById("canvas");
-var gl = create3DContext(canvas);
+var gl = wtu.create3DContext("canvas");
 var ext = null;
 var vao = null;
 

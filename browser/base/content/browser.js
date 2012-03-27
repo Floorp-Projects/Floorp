@@ -4084,7 +4084,7 @@ var FullScreen = {
       gBrowser.tabContainer.removeEventListener("TabOpen", this.exitDomFullScreen);
       gBrowser.tabContainer.removeEventListener("TabClose", this.exitDomFullScreen);
       gBrowser.tabContainer.removeEventListener("TabSelect", this.exitDomFullScreen);
-      if (this.useLionFullScreen) {
+      if (!this.useLionFullScreen) {
         window.removeEventListener("deactivate", this);
       }
     }

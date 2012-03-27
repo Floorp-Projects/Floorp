@@ -52,7 +52,7 @@ js::Class HasCustomIterClass = {
 JSBool
 IterClassConstructor(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JSObject *obj = JS_NewObjectForConstructor(cx, vp);
+    JSObject *obj = JS_NewObjectForConstructor(cx, Jsvalify(&HasCustomIterClass), vp);
     if (!obj)
         return false;
     JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));

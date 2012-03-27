@@ -76,7 +76,7 @@
 
 #define JSFUN_EXPR_CLOSURE  0x1000  /* expression closure: function(x) x*x */
 #define JSFUN_EXTENDED      0x2000  /* structure is FunctionExtended */
-#define JSFUN_INTERPRETED   0x4000  /* use u.i if kind >= this value else u.n */
+#define JSFUN_INTERPRETED   0x4000  /* use u.i if kind >= this value else u.native */
 #define JSFUN_NULL_CLOSURE  0x8000  /* null closure entrains no scope chain */
 #define JSFUN_KINDMASK      0xc000  /* encode interp vs. native and closure
                                        optimization level -- see above */
@@ -89,11 +89,7 @@ struct JSFunction : public JSObject
                                      reflected as f.length/f.arity */
     uint16_t        flags;        /* flags, see JSFUN_* below and in jsapi.h */
     union U {
-        struct Native {
-            js::Native  native;   /* native method pointer or null */
-            js::Class   *clasp;   /* class of objects constructed
-                                     by this function */
-        } n;
+        js::Native  native;       /* native method pointer or null */
         struct Scripted {
             JSScript    *script_; /* interpreted bytecode descriptor or null;
                                      use the accessor! */
@@ -167,7 +163,7 @@ struct JSFunction : public JSObject
 
     JSNative native() const {
         JS_ASSERT(isNative());
-        return u.n.native;
+        return u.native;
     }
 
     JSNative maybeNative() const {
@@ -175,19 +171,9 @@ struct JSFunction : public JSObject
     }
 
     static unsigned offsetOfNativeOrScript() {
-        JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, i.script_));
-        JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, nativeOrScript));
+        JS_STATIC_ASSERT(offsetof(U, native) == offsetof(U, i.script_));
+        JS_STATIC_ASSERT(offsetof(U, native) == offsetof(U, nativeOrScript));
         return offsetof(JSFunction, u.nativeOrScript);
-    }
-
-    js::Class *getConstructorClass() const {
-        JS_ASSERT(isNative());
-        return u.n.clasp;
-    }
-
-    void setConstructorClass(js::Class *clasp) {
-        JS_ASSERT(isNative());
-        u.n.clasp = clasp;
     }
 
 #if JS_BITS_PER_WORD == 32

@@ -116,7 +116,7 @@ CanvasLayerOGL::Initialize(const Data& aData)
     mCanvasGLContext = aData.mGLContext;
     mGLBufferIsPremultiplied = aData.mGLBufferIsPremultiplied;
 
-    mNeedsYFlip = true;
+    mNeedsYFlip = mCanvasGLContext->GetOffscreenTexture() != 0;
   } else {
     NS_WARNING("CanvasLayerOGL::Initialize called without surface or GL context!");
     return;

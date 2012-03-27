@@ -201,7 +201,7 @@ class GlobalObject : public JSObject {
      * ctor, a method which creates objects with the given class.
      */
     JSFunction *
-    createConstructor(JSContext *cx, JSNative ctor, Class *clasp, JSAtom *name, unsigned length,
+    createConstructor(JSContext *cx, JSNative ctor, JSAtom *name, unsigned length,
                       gc::AllocKind kind = JSFunction::FinalizeKind);
 
     /*

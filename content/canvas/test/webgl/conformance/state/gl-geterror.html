@@ -20,8 +20,7 @@ Use of this source code is governed by a BSD-style license that can be
 <script>
 description("Test getError.");
 var wtu = WebGLTestUtils;
-var canvas = document.getElementById("example");
-var gl = wtu.create3DContext(canvas);
+var gl = wtu.create3DContext("example");
 var tex = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, tex);
 

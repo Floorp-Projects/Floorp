@@ -790,7 +790,7 @@ public:
   // struct given by aStyleDisplay and parent's frame given by
   // aContentParentFrame.
   nsIFrame* GetGeometricParent(const nsStyleDisplay* aStyleDisplay,
-                               nsIFrame* aContentParentFrame);
+                               nsIFrame* aContentParentFrame) const;
 
   /**
    * Function to add a new frame to the right frame list.  This MUST be called
@@ -1054,7 +1054,7 @@ nsFrameConstructorState::PushFloatContainingBlock(nsIFrame* aNewFloatContainingB
 
 nsIFrame*
 nsFrameConstructorState::GetGeometricParent(const nsStyleDisplay* aStyleDisplay,
-                                            nsIFrame* aContentParentFrame)
+                                            nsIFrame* aContentParentFrame) const
 {
   NS_PRECONDITION(aStyleDisplay, "Must have display struct!");
 
