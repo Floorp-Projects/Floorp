@@ -20,12 +20,12 @@
 #include <unistd.h>
 #include <limits.h>
 
+#include "utils_Log.h"
 #include "Keyboard.h"
 #include "KeycodeLabels.h"
 #include "KeyLayoutMap.h"
 #include "KeyCharacterMap.h"
 #include <utils/Errors.h>
-#include <utils/Log.h>
 #include <cutils/properties.h>
 
 namespace android {

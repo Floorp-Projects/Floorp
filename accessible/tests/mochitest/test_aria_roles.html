@@ -35,6 +35,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
 
       // strong landmark
       testRole("application", ROLE_APPLICATION);
+      testRole("form", ROLE_FORM);
 
       // weak landmarks
       var weak_landmarks = ["banner", "complementary", "contentinfo",
@@ -93,6 +94,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469688">Mozilla Bug 520188</a>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=529289">Mozilla Bug 529289</a>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=529289">Mozilla Bug 607219</a>
+  <a target="_blank"
+     title="Map ARIA role FORM"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=735645">
+    Bug 735645
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -108,6 +113,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
 
   <!-- landmarks -->
   <div role="application" id="application">application</div>
+  <div role="form" id="form">form</div>
+
+  <!-- weak landmarks -->
   <div role="banner" id="banner">banner</div>
   <div role="complementary" id="complementary">complementary</div>
   <div role="contentinfo" id="contentinfo">contentinfo</div>

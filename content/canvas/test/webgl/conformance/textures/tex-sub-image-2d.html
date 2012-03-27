@@ -38,8 +38,7 @@ var gl = wtu.create3DContext(canvas);
 gl.disable(gl.DITHER);
 var program = wtu.setupProgram(
     gl,
-    [wtu.setupSimpleTextureVertexShader(gl),
-     wtu.loadShaderFromScript(gl, "fshader")],
+    [wtu.setupSimpleTextureVertexShader(gl), "fshader"],
     ['vPosition', 'texCoord0']);
 wtu.setupUnitQuad(gl);
 var textureWidth = 256;

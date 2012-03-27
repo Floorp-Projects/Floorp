@@ -42,14 +42,10 @@ description("Checks that various sizes of textures render")
 var canvas;
 
 var wtu = WebGLTestUtils;
-canvas = document.getElementById("example");
-gl = wtu.create3DContext(canvas);
+gl = wtu.create3DContext("example");
 var program2D = wtu.setupTexturedQuad(gl);
 var programCubeMap = wtu.setupProgram(
-    gl,
-    [wtu.loadShaderFromScript(gl, 'vshader', gl.VERTEX_SHADER),
-     wtu.loadShaderFromScript(gl, 'fshader', gl.FRAGMENT_SHADER)],
-    ['vPosition', 'texCoord0'], [0, 1]);
+    gl, ['vshader', 'fshader'], ['vPosition', 'texCoord0'], [0, 1]);
 gl.disable(gl.DEPTH_TEST);
 gl.disable(gl.BLEND);
 var tex = gl.createTexture();

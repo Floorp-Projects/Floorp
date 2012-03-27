@@ -86,55 +86,6 @@
 #include "vm/String-inl.h"
 
 inline bool
-JSObject::hasPrivate() const
-{
-    return getClass()->hasPrivate();
-}
-
-inline void *&
-JSObject::privateRef(uint32_t nfixed) const
-{
-    /*
-     * The private pointer of an object can hold any word sized value.
-     * Private pointers are stored immediately after the last fixed slot of
-     * the object.
-     */
-    JS_ASSERT(nfixed == numFixedSlots());
-    JS_ASSERT(hasPrivate());
-    js::HeapSlot *end = &fixedSlots()[nfixed];
-    return *reinterpret_cast<void**>(end);
-}
-
-inline void *
-JSObject::getPrivate() const { return privateRef(numFixedSlots()); }
-
-inline void *
-JSObject::getPrivate(size_t nfixed) const { return privateRef(nfixed); }
-
-inline void
-JSObject::setPrivate(void *data)
-{
-    void **pprivate = &privateRef(numFixedSlots());
-
-    privateWriteBarrierPre(pprivate);
-    *pprivate = data;
-    privateWriteBarrierPost(pprivate);
-}
-
-inline void
-JSObject::setPrivateUnbarriered(void *data)
-{
-    void **pprivate = &privateRef(numFixedSlots());
-    *pprivate = data;
-}
-
-inline void
-JSObject::initPrivate(void *data)
-{
-    privateRef(numFixedSlots()) = data;
-}
-
-inline bool
 JSObject::enumerate(JSContext *cx, JSIterateOp iterop, js::Value *statep, jsid *idp)
 {
     JSNewEnumerateOp op = getOps()->enumerate;

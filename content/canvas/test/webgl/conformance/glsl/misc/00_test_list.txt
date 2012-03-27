@@ -3,10 +3,11 @@ embedded-struct-definitions-forbidden.html
 # this test is intentionally disabled as it is too strict and to hard to simulate
 # glsl-2types-of-textures-on-same-unit.html
 glsl-function-nodes.html
+--min-version 1.0.2 glsl-vertex-branch.html
 glsl-long-variable-names.html
 non-ascii-comments.vert.html
 non-ascii.vert.html
-
+--min-version 1.0.2 re-compile-re-link.html
 shader-with-256-character-identifier.frag.html
 shader-with-257-character-identifier.frag.html
 shader-with-_webgl-identifier.vert.html
@@ -31,6 +32,8 @@ shader-with-frag-depth.frag.html
 shader-with-function-recursion.frag.html
 --min-version 1.0.2 shader-with-function-scoped-struct.html
 --min-version 1.0.2 shader-with-functional-scoping.html
+--min-version 1.0.2 shader-with-comma-assignment.html
+--min-version 1.0.2 shader-with-comma-conditional-assignment.html
 shader-with-glcolor.vert.html
 shader-with-gles-1.frag.html
 shader-with-gles-symbol.frag.html

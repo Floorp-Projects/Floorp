@@ -170,7 +170,9 @@ nsEditor::nsEditor()
 ,  mDocDirtyState(-1)
 ,  mDocWeak(nsnull)
 ,  mPhonetic(nsnull)
-,  mLastKeypressEventWasTrusted(eTriUnset)
+,  mHandlingActionCount(0)
+,  mHandlingTrustedAction(false)
+,  mDispatchInputEvent(true)
 {
   //initialize member variables here
 }
@@ -1766,12 +1768,67 @@ nsEditor::RemoveEditorObserver(nsIEditorObserver *aObserver)
   return NS_OK;
 }
 
+class EditorInputEventDispatcher : public nsRunnable
+{
+public:
+  EditorInputEventDispatcher(nsEditor* aEditor,
+                             bool aIsTrusted,
+                             nsIContent* aTarget) :
+    mEditor(aEditor), mTarget(aTarget), mIsTrusted(aIsTrusted)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    // Note that we don't need to check mDispatchInputEvent here.  We need
+    // to check it only when the editor requests to dispatch the input event.
+
+    if (!mTarget->IsInDoc()) {
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIPresShell> ps = mEditor->GetPresShell();
+    if (!ps) {
+      return NS_OK;
+    }
+
+    nsEvent inputEvent(mIsTrusted, NS_FORM_INPUT);
+    inputEvent.flags |= NS_EVENT_FLAG_CANT_CANCEL;
+    inputEvent.time = static_cast<PRUint64>(PR_Now() / 1000);
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsresult rv =
+      ps->HandleEventWithTarget(&inputEvent, nsnull, mTarget, &status);
+    NS_ENSURE_SUCCESS(rv, NS_OK); // print the warning if error
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsEditor> mEditor;
+  nsCOMPtr<nsIContent> mTarget;
+  bool mIsTrusted;
+};
+
 void nsEditor::NotifyEditorObservers(void)
 {
-  for (PRInt32 i = 0; i < mEditorObservers.Count(); i++)
+  for (PRInt32 i = 0; i < mEditorObservers.Count(); i++) {
     mEditorObservers[i]->EditAction();
-}
+  }
 
+  if (!mDispatchInputEvent) {
+    return;
+  }
+
+  // We don't need to dispatch multiple input events if there is a pending
+  // input event.  However, it may have different event target.  If we resolved
+  // this issue, we need to manage the pending events in an array.  But it's
+  // overwork.  We don't need to do it for the very rare case.
+
+  nsCOMPtr<nsIContent> target = GetInputEventTargetContent();
+  NS_ENSURE_TRUE(target, );
+
+  nsContentUtils::AddScriptRunner(
+     new EditorInputEventDispatcher(this, mHandlingTrustedAction, target));
+}
 
 NS_IMETHODIMP
 nsEditor::AddEditActionListener(nsIEditActionListener *aListener)
@@ -5386,31 +5443,6 @@ nsEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
   return IsActiveInDOMWindow();
 }
 
-NS_IMETHODIMP
-nsEditor::GetLastKeypressEventTrusted(bool *aWasTrusted)
-{
-  NS_ENSURE_ARG_POINTER(aWasTrusted);
-
-  if (mLastKeypressEventWasTrusted == eTriUnset) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  *aWasTrusted = (mLastKeypressEventWasTrusted == eTriTrue);
-  return NS_OK;
-}
-
-void
-nsEditor::BeginKeypressHandling(nsIDOMNSEvent* aEvent)
-{
-  NS_ASSERTION(mLastKeypressEventWasTrusted == eTriUnset, "How come our status is not clear?");
-
-  if (aEvent) {
-    bool isTrusted = false;
-    aEvent->GetIsTrusted(&isTrusted);
-    mLastKeypressEventWasTrusted = isTrusted ? eTriTrue : eTriFalse;
-  }
-}
-
 void
 nsEditor::OnFocus(nsIDOMEventTarget* aFocusEventTarget)
 {
@@ -5418,4 +5450,29 @@ nsEditor::OnFocus(nsIDOMEventTarget* aFocusEventTarget)
   if (mInlineSpellChecker) {
     mInlineSpellChecker->UpdateCurrentDictionary();
   }
+}
+
+NS_IMETHODIMP
+nsEditor::GetSuppressDispatchingInputEvent(bool *aSuppressed)
+{
+  NS_ENSURE_ARG_POINTER(aSuppressed);
+  *aSuppressed = !mDispatchInputEvent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditor::SetSuppressDispatchingInputEvent(bool aSuppress)
+{
+  mDispatchInputEvent = !aSuppress;
+  return NS_OK;
+}
+
+nsEditor::HandlingTrustedAction::HandlingTrustedAction(nsEditor* aSelf,
+                                                       nsIDOMNSEvent* aEvent)
+{
+  MOZ_ASSERT(aEvent);
+
+  bool isTrusted = false;
+  aEvent->GetIsTrusted(&isTrusted);
+  Init(aSelf, isTrusted);
 }

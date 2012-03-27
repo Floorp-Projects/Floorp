@@ -17,16 +17,17 @@
 #ifndef _UI_INPUT_DISPATCHER_H
 #define _UI_INPUT_DISPATCHER_H
 
+#include "cutils_log.h"
 #include "Input.h"
 #include "InputTransport.h"
 #include <utils/KeyedVector.h>
 #include <utils/Vector.h>
 #include <utils/threads.h>
-#include <utils/Timers.h>
+#include "Timers.h"
 #include <utils/RefBase.h>
-#include <utils/String8.h>
+#include "String8.h"
 #include <utils/Looper.h>
-#include <utils/BitSet.h>
+#include "BitSet.h"
 
 #include <stddef.h>
 #include <unistd.h>

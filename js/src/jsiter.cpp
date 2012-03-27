@@ -1750,8 +1750,7 @@ InitIteratorClass(JSContext *cx, GlobalObject *global)
 
     iteratorProto->setNativeIterator(ni);
 
-    JSFunction *ctor = global->createConstructor(cx, Iterator, &IteratorClass,
-                                                 CLASS_ATOM(cx, Iterator), 2);
+    JSFunction *ctor = global->createConstructor(cx, Iterator, CLASS_ATOM(cx, Iterator), 2);
     if (!ctor)
         return false;
 

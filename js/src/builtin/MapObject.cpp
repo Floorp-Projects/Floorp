@@ -63,7 +63,7 @@ InitClass(JSContext *cx, GlobalObject *global, Class *clasp, JSProtoKey key, Nat
     proto->setPrivate(NULL);
 
     JSAtom *atom = cx->runtime->atomState.classAtoms[key];
-    JSFunction *ctor = global->createConstructor(cx, construct, clasp, atom, 1);
+    JSFunction *ctor = global->createConstructor(cx, construct, atom, 1);
     if (!ctor ||
         !LinkConstructorAndPrototype(cx, ctor, proto) ||
         !DefinePropertiesAndBrand(cx, proto, NULL, methods) ||

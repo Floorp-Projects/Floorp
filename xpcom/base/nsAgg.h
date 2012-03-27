@@ -107,9 +107,9 @@ public:                                                                     \
   NS_IMETHOD Unlink(void *p);                                               \
   NS_IMETHOD Traverse(void *p,                                              \
                       nsCycleCollectionTraversalCallback &cb);              \
-  NS_IMETHOD_(void) UnmarkPurple(nsISupports *p)                            \
+  NS_IMETHOD_(void) UnmarkIfPurple(nsISupports *p)                          \
   {                                                                         \
-    Downcast(p)->UnmarkPurple();                                            \
+    Downcast(p)->UnmarkIfPurple();                                          \
   }                                                                         \
   static _class* Downcast(nsISupports* s)                                   \
   {                                                                         \

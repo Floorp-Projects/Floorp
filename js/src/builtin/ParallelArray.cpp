@@ -1038,8 +1038,7 @@ js_InitParallelArrayClass(JSContext *cx, JSObject *obj)
     parallelArrayProto->addProperty(cx, lengthId, ParallelArray_length_getter, NULL,
                                     SHAPE_INVALID_SLOT, JSPROP_PERMANENT | JSPROP_READONLY, 0, 0);
 
-    JSFunction *ctor = global->createConstructor(cx, ParallelArray_construct, &ParallelArrayClass,
-                                                 CLASS_ATOM(cx, ParallelArray), 0);
+    JSFunction *ctor = global->createConstructor(cx, ParallelArray_construct, CLASS_ATOM(cx, ParallelArray), 0);
     if (!ctor)
         return NULL;
 
