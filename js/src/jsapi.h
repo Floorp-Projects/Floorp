@@ -629,10 +629,11 @@ class Value
 #endif
     }
 
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(__sparc)
   /* To make jsval binary compatible when linking across C and C++ with MSVC,
    * JS::Value needs to be POD. Otherwise, jsval will be passed in memory
    * in C++ but by value in C (bug 645111).
+   * Same issue for SPARC ABI. (bug 737344).
    */
   private:
 #endif
