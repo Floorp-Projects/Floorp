@@ -19,8 +19,8 @@
 
 #include "Input.h"
 #include <utils/Errors.h>
-#include <utils/String8.h>
-#include <utils/PropertyMap.h>
+#include "String8.h"
+#include "PropertyMap.h"
 
 namespace android {
 

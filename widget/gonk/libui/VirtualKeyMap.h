@@ -22,9 +22,9 @@
 #include "Input.h"
 #include <utils/Errors.h>
 #include <utils/KeyedVector.h>
-#include <utils/Tokenizer.h>
-#include <utils/String8.h>
-#include <utils/Unicode.h>
+#include "Tokenizer.h"
+#include "String8.h"
+#include "Unicode.h"
 
 namespace android {
 
