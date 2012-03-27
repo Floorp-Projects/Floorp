@@ -11,4 +11,8 @@
   <line x1="50px" y1="100px" x2="250px" y2="100px"
         style="stroke-dasharray: 5px, 10px; stroke-dashoffset: 5px;">
   </line>
+  <line x1="50px" y1="150px" x2="250px" y2="150px"
+        style="stroke-dasharray: 5px; stroke-dashoffset: 5px;">
+  </line>
+
 </svg>
