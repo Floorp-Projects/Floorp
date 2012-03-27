@@ -160,7 +160,7 @@ IonBuilder::canInlineTarget(JSFunction *target)
         builder = builder->callerBuilder_;
     }
 
-    bool canInline = oracle->canEnterInlinedScript(inlineScript);
+    bool canInline = oracle->canEnterInlinedFunction(target);
 
     if (!canInline) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to oracle veto");
@@ -2650,7 +2650,7 @@ IonBuilder::makeCall(JSFunction *target, uint32 argc, bool constructing)
     call->initPrepareCall(start);
 
     MPassArg *thisArg = current->pop()->toPassArg();
-    
+
     // If the target is known, inline the constructor on the caller-side.
     if (constructing && target) {
         MDefinition *callee = current->peek(-1);
