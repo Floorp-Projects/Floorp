@@ -60,9 +60,15 @@ DOMWifiManager.prototype = {
     this._mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
 
     var state = this._mm.sendSyncMessage("WifiManager:getState")[0];
-    this._currentNetwork = state.network;
-    this._lastConnectionInfo = state.connectionInfo;
-    this._enabled = state.enabled;
+    if (state) {
+      this._currentNetwork = state.network;
+      this._lastConnectionInfo = state.connectionInfo;
+      this._enabled = state.enabled;
+    } else {
+      this._currentNetwork = null;
+      this._lastConnectionInfo = null;
+      this._enabled = null;
+    }
   },
 
   uninit: function() {
