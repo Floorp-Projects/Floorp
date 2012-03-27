@@ -48,18 +48,6 @@ try {
 CTYPES_TEST_LIB = ctypes.libraryName("jsctypes-test");
 CTYPES_UNICODE_LIB = ctypes.libraryName("jsctyp\u00E8s-t\u00EB\u00DFt");
 
-function getParent(obj, fun)
-{
-  if (typeof parent === "function")
-    fun(parent(obj));
-}
-
-function checkParentIsCTypes(o)
-{
-  function parentIsCTypes(p) { do_check_true(p === ctypes); }
-  getParent(o, parentIsCTypes);
-}
-
 function do_check_throws(f, type, stack)
 {
   if (!stack) {
@@ -73,7 +61,7 @@ function do_check_throws(f, type, stack)
   try {
     f();
   } catch (exc) {
-    if (exc instanceof type) {
+    if (exc.constructor.name === type.name) {
       do_check_true(true);
       return;
     }
@@ -269,20 +257,10 @@ function run_abstract_class_tests()
   do_check_class(ctypes.CType, "Function");
   do_check_class(ctypes.CType.prototype, "CType");
 
-  checkParentIsCTypes(ctypes.CType);
-  getParent(ctypes, function(p) {
-    do_check_true(Object.getPrototypeOf(ctypes.CType) === p.Function.prototype);
-    do_check_true(ctypes.CType instanceof p.Function);
-  });
-
   do_check_true(ctypes.CType.hasOwnProperty("prototype"));
   do_check_throws(function() { ctypes.CType.prototype(); }, Error);
   do_check_throws(function() { new ctypes.CType.prototype() }, Error);
-  checkParentIsCTypes(ctypes.CType.prototype);
-  getParent(ctypes, function(p) {
-    do_check_true(Object.getPrototypeOf(ctypes.CType.prototype) === p.Function.prototype);
-    do_check_true(ctypes.CType.prototype instanceof p.Function);
-  });
+  
   do_check_true(ctypes.CType.prototype.hasOwnProperty("constructor"));
   do_check_true(ctypes.CType.prototype.constructor === ctypes.CType);
 
@@ -316,15 +294,10 @@ function run_abstract_class_tests()
   do_check_class(ctypes.CData, "Function");
   do_check_class(ctypes.CData.prototype, "CData");
 
-  checkParentIsCTypes(ctypes.CData);
   do_check_true(ctypes.CData.__proto__ === ctypes.CType.prototype);
   do_check_true(ctypes.CData instanceof ctypes.CType);
 
   do_check_true(ctypes.CData.hasOwnProperty("prototype"));
-  checkParentIsCTypes(ctypes.CData.prototype);
-  getParent(ctypes, function(p) {
-    do_check_true(Object.getPrototypeOf(ctypes.CData.prototype) === p.Object.prototype);
-  });
   do_check_true(ctypes.CData.prototype.hasOwnProperty("constructor"));
   do_check_true(ctypes.CData.prototype.constructor === ctypes.CData);
 
@@ -355,14 +328,7 @@ function run_Int64_tests() {
   do_check_class(ctypes.Int64, "Function");
   do_check_class(ctypes.Int64.prototype, "Int64");
 
-  checkParentIsCTypes(ctypes.Int64);
-  getParent(ctypes, function(p) {
-    do_check_true(Object.getPrototypeOf(ctypes.Int64) === p.Function.prototype);
-    do_check_true(Object.getPrototypeOf(ctypes.Int64.prototype) === p.Object.prototype);
-  });
-
   do_check_true(ctypes.Int64.hasOwnProperty("prototype"));
-  checkParentIsCTypes(ctypes.Int64.prototype);
   do_check_true(ctypes.Int64.prototype.hasOwnProperty("constructor"));
   do_check_true(ctypes.Int64.prototype.constructor === ctypes.Int64);
 
@@ -380,7 +346,6 @@ function run_Int64_tests() {
   do_check_throws(function() { ctypes.Int64.prototype.toSource(); }, Error);
 
   let i = ctypes.Int64(0);
-  checkParentIsCTypes(i);
   do_check_true(i.__proto__ === ctypes.Int64.prototype);
   do_check_true(i instanceof ctypes.Int64);
 
@@ -534,16 +499,7 @@ function run_UInt64_tests() {
   do_check_class(ctypes.UInt64, "Function");
   do_check_class(ctypes.UInt64.prototype, "UInt64");
 
-  checkParentIsCTypes(ctypes.UInt64);
-  getParent(ctypes, function(p) {
-    do_check_true(Object.getPrototypeOf(ctypes.UInt64) === p.Function.prototype);
-  });
-
   do_check_true(ctypes.UInt64.hasOwnProperty("prototype"));
-  checkParentIsCTypes(ctypes.UInt64.prototype);
-  getParent(ctypes, function(p) {
-    do_check_true(Object.getPrototypeOf(ctypes.UInt64.prototype) === p.Object.prototype);
-  });
   do_check_true(ctypes.UInt64.prototype.hasOwnProperty("constructor"));
   do_check_true(ctypes.UInt64.prototype.constructor === ctypes.UInt64);
 
@@ -561,7 +517,6 @@ function run_UInt64_tests() {
   do_check_throws(function() { ctypes.UInt64.prototype.toSource(); }, Error);
 
   let i = ctypes.UInt64(0);
-  checkParentIsCTypes(i);
   do_check_true(i.__proto__ === ctypes.UInt64.prototype);
   do_check_true(i instanceof ctypes.UInt64);
 
@@ -798,11 +753,9 @@ function run_basic_class_tests(t)
   do_check_class(t, "CType");
   do_check_class(t.prototype, "CData");
 
-  checkParentIsCTypes(t);
   do_check_true(t.__proto__ === ctypes.CType.prototype);
   do_check_true(t instanceof ctypes.CType);
 
-  checkParentIsCTypes(t.prototype);
   do_check_true(t.prototype.__proto__ === ctypes.CData.prototype);
   do_check_true(t.prototype instanceof ctypes.CData);
   do_check_true(t.prototype.constructor === t);
@@ -821,7 +774,6 @@ function run_basic_class_tests(t)
   // Test that an instance 'd' of 't' is a CData.
   let d = t();
   do_check_class(d, "CData");
-  checkParentIsCTypes(d);
   do_check_true(d.__proto__ === t.prototype);
   do_check_true(d instanceof t);
   do_check_true(d.constructor === t);
@@ -1346,13 +1298,6 @@ function run_type_ctor_class_tests(c, t, t2, props, fns, instanceProps, instance
   do_check_class(c, "Function");
   do_check_class(c.prototype, "CType");
 
-  checkParentIsCTypes(c);
-  getParent(ctypes, function(p) {
-    do_check_true(Object.getPrototypeOf(c) === p.Function.prototype);
-    do_check_true(c instanceof p.Function);
-  });
-
-  checkParentIsCTypes(c.prototype);
   do_check_true(c.prototype.__proto__ === ctypes.CType.prototype);
   do_check_true(c.prototype instanceof ctypes.CType);
   do_check_true(c.prototype.constructor === c);
@@ -1374,18 +1319,15 @@ function run_type_ctor_class_tests(c, t, t2, props, fns, instanceProps, instance
   do_check_class(t, "CType");
   do_check_class(t.prototype, "CData");
 
-  checkParentIsCTypes(t);
   do_check_true(t.__proto__ === c.prototype);
   do_check_true(t instanceof c);
 
-  checkParentIsCTypes(t.prototype);
   do_check_class(t.prototype.__proto__, "CData");
   // 't.prototype.__proto__' is the common ancestor of all types constructed
   // from 'c'; while not available from 'c' directly, it should be identically
   // equal to 't2.prototype.__proto__' where 't2' is a different CType
   // constructed from 'c'.
   do_check_true(t.prototype.__proto__ === t2.prototype.__proto__);
-  checkParentIsCTypes(Object.getPrototypeOf(t.prototype));
   do_check_true(t.prototype.__proto__.__proto__ === ctypes.CData.prototype);
   do_check_true(t.prototype instanceof ctypes.CData);
   do_check_true(t.prototype.constructor === t);
@@ -1423,7 +1365,6 @@ function run_type_ctor_class_tests(c, t, t2, props, fns, instanceProps, instance
   if (t.__proto__ != ctypes.FunctionType.prototype) {
     let d = t();
     do_check_class(d, "CData");
-    checkParentIsCTypes(d);
     do_check_true(d.__proto__ === t.prototype);
     do_check_true(d instanceof t);
     do_check_true(d.constructor === t);
@@ -1614,7 +1555,7 @@ function run_StructType_tests() {
   g = new g_t(1, 2);
   do_check_eq(g.a, 1);
   do_check_eq(g.b, 2);
-  do_check_throws(function() { g_t(1); }, Error);
+  do_check_throws(function() { g_t(1); }, TypeError);
   do_check_throws(function() { g_t(1, 2, 3); }, Error);
 
   for (let field in g)
@@ -1656,11 +1597,11 @@ function run_StructType_tests() {
   s.value = s_init;
   do_check_eq(s.b.a, 9);
   do_check_eq(s.c, 13);
-  do_check_throws(function() { s.value = 5; }, Error);
-  do_check_throws(function() { s.value = ctypes.int32_t(); }, Error);
+  do_check_throws(function() { s.value = 5; }, TypeError);
+  do_check_throws(function() { s.value = ctypes.int32_t(); }, TypeError);
   do_check_throws(function() { s.value = {}; }, Error);
   do_check_throws(function() { s.value = { "a": 2 }; }, Error);
-  do_check_throws(function() { s.value = { "a": 2, "b": 5, "c": 10 }; }, Error);
+  do_check_throws(function() { s.value = { "a": 2, "b": 5, "c": 10 }; }, TypeError);
   do_check_throws(function() {
     s.value = { "5": 2, "b": { "a": 9, "b": 5 }, "c": 13 };
   }, Error);
@@ -1682,7 +1623,7 @@ function run_StructType_tests() {
   v = v_t(8);
   do_check_eq(v.x, 8);
   let w_t = ctypes.StructType("w_t", [{ "y": v_t }]);
-  do_check_throws(function() { w_t(9); }, Error);
+  do_check_throws(function() { w_t(9); }, TypeError);
   let w = w_t({ "x": 3 });
   do_check_eq(w.y.x, 3);
   w = w_t({ "y": { "x": 19 } });
@@ -1758,7 +1699,7 @@ function run_PointerType_tests() {
   // Test ImplicitConvert.
   p.value = null;
   do_check_eq(ptrValue(p), 0);
-  do_check_throws(function() { p.value = 5; }, Error);
+  do_check_throws(function() { p.value = 5; }, TypeError);
 
   // Test opaque pointers.
   let f_t = ctypes.StructType("FILE").ptr;
@@ -1771,9 +1712,9 @@ function run_PointerType_tests() {
   do_check_throws(function() { f.contents = 0; }, Error);
   do_check_eq(f.toSource(), 'FILE.ptr(ctypes.UInt64("0x5"))');
 
-  do_check_throws(function() { f_t(p); }, Error);
-  do_check_throws(function() { f.value = p; }, Error);
-  do_check_throws(function() { p.value = f; }, Error);
+  do_check_throws(function() { f_t(p); }, TypeError);
+  do_check_throws(function() { f.value = p; }, TypeError);
+  do_check_throws(function() { p.value = f; }, TypeError);
 
   // Test void pointers.
   let v_t = ctypes.PointerType(ctypes.void_t);
@@ -1884,15 +1825,15 @@ function run_FunctionType_tests() {
   // Test ImplicitConvert.
   f.value = null;
   do_check_eq(ptrValue(f), 0);
-  do_check_throws(function() { f.value = 5; }, Error);
+  do_check_throws(function() { f.value = 5; }, TypeError);
   do_check_eq(f.toSource(),
     'ctypes.FunctionType(ctypes.default_abi, g_t).ptr(ctypes.UInt64("0x0"))');
 
   // Test ImplicitConvert from a function pointer of different type.
   let f2_t = ctypes.FunctionType(ctypes.default_abi, g_t, [ ctypes.int32_t ]);
   let f2 = f2_t.ptr();
-  do_check_throws(function() { f.value = f2; }, Error);
-  do_check_throws(function() { f2.value = f; }, Error);
+  do_check_throws(function() { f.value = f2; }, TypeError);
+  do_check_throws(function() { f2.value = f; }, TypeError);
 
   // Test that converting to a voidptr_t works.
   let v = ctypes.voidptr_t(f2);
@@ -2060,7 +2001,7 @@ function run_ArrayType_tests() {
   do_check_throws(function() { c.value; }, Error);
   do_check_throws(function() { c.value = [1, 2, 3, 4, 5]; }, Error);
   do_check_throws(function() { c.value = [1, 2, 3, 4, 5, 6, 7]; }, Error);
-  do_check_throws(function() { c.value = [1, 2, 7.4, 4, 5, 6]; }, Error);
+  do_check_throws(function() { c.value = [1, 2, 7.4, 4, 5, 6]; }, TypeError);
   do_check_throws(function() { c.value = []; }, Error);
 }
 
@@ -2535,7 +2476,7 @@ function run_variadic_tests(library) {
                                            [ctypes.uint8_t]).ptr;
   do_check_throws(function() {
     sum_va_type().value = sum_notva_type();
-  }, Error);
+  }, TypeError);
 }
 
 function run_static_data_tests(library)
