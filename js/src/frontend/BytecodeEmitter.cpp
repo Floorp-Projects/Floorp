@@ -1315,10 +1315,6 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              * must be globals, so try to use GNAME ops.
              */
             if (caller->isGlobalFrame() && TryConvertToGname(bce, pn, &op)) {
-                jsatomid _;
-                if (!bce->makeAtomIndex(atom, &_))
-                    return JS_FALSE;
-
                 pn->setOp(op);
                 pn->pn_dflags |= PND_BOUND;
                 return JS_TRUE;
@@ -1334,10 +1330,6 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         /* Optimize accesses to undeclared globals. */
         if (!TryConvertToGname(bce, pn, &op))
             return JS_TRUE;
-
-        jsatomid _;
-        if (!bce->makeAtomIndex(atom, &_))
-            return JS_FALSE;
 
         pn->setOp(op);
         pn->pn_dflags |= PND_BOUND;
