@@ -34,26 +34,28 @@ function checkFaviconDataConversion(aFileName, aFileMimeType, aFileLength,
                                     aExpectConversion, aVaryOnWindows,
                                     aCallback) {
   let pageURI = NetUtil.newURI("http://places.test/page/" + aFileName);
-  let faviconURI = NetUtil.newURI("http://places.test/icon/" + aFileName);
-  let fileData = readFileOfLength(aFileName, aFileLength);
+  addVisits({ uri: pageURI, transition: TRANSITION_TYPED }, function () {
+    let faviconURI = NetUtil.newURI("http://places.test/icon/" + aFileName);
+    let fileData = readFileOfLength(aFileName, aFileLength);
 
-  PlacesUtils.favicons.replaceFaviconData(faviconURI, fileData, fileData.length,
-                                          aFileMimeType);
-  PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI, faviconURI, true,
-    function CFDC_verify(aURI, aDataLen, aData, aMimeType) {
-      if (!aExpectConversion) {
-        do_check_true(compareArrays(aData, fileData));
-        do_check_eq(aMimeType, aFileMimeType);
-      } else {
-        if (!aVaryOnWindows || !isWindows) {
-          let expectedFile = do_get_file("expected-" + aFileName + ".png");
-          do_check_true(compareArrays(aData, readFileData(expectedFile)));
+    PlacesUtils.favicons.replaceFaviconData(faviconURI, fileData, fileData.length,
+                                            aFileMimeType);
+    PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI, faviconURI, true,
+      function CFDC_verify(aURI, aDataLen, aData, aMimeType) {
+        if (!aExpectConversion) {
+          do_check_true(compareArrays(aData, fileData));
+          do_check_eq(aMimeType, aFileMimeType);
+        } else {
+          if (!aVaryOnWindows || !isWindows) {
+            let expectedFile = do_get_file("expected-" + aFileName + ".png");
+            do_check_true(compareArrays(aData, readFileData(expectedFile)));
+          }
+          do_check_eq(aMimeType, "image/png");
         }
-        do_check_eq(aMimeType, "image/png");
-      }
 
-      aCallback();
-    });
+        aCallback();
+      });
+  });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
