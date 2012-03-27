@@ -1061,11 +1061,11 @@ var NativeWindow = {
     },
 
     hide: function(aValue, aTabID) {
-      sendMessageToJava({
+      sendMessageToJava({ gecko: {
         type: "Doorhanger:Remove",
         value: aValue,
         tabID: aTabID
-      });
+      }});
     }
   },
 
@@ -1605,9 +1605,10 @@ Tab.prototype = {
       return this.browser.docShellIsActive;
   },
 
-  setDisplayPort: function(aViewportX, aViewportY, aDisplayPortRect) {
+  setDisplayPort: function(aViewportX, aViewportY, aDisplayPort) {
     let zoom = this._zoom;
-    if (zoom <= 0)
+    let resolution = aDisplayPort.resolution;
+    if (zoom <= 0 || resolution <= 0)
       return;
 
     let element = this.browser.contentDocument.documentElement;
@@ -1615,10 +1616,14 @@ Tab.prototype = {
       return;
 
     let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    cwu.setDisplayPortForElement((aDisplayPortRect.left - aViewportX) / zoom,
-                                 (aDisplayPortRect.top - aViewportY) / zoom,
-                                 (aDisplayPortRect.right - aDisplayPortRect.left) / zoom,
-                                 (aDisplayPortRect.bottom - aDisplayPortRect.top) / zoom,
+    if (BrowserApp.selectedTab == this)
+      cwu.setResolution(resolution, resolution);
+    else if (resolution != zoom)
+      dump("Warning: setDisplayPort resolution did not match zoom for background tab!");
+    cwu.setDisplayPortForElement((aDisplayPort.left - aViewportX) / resolution,
+                                 (aDisplayPort.top - aViewportY) / resolution,
+                                 (aDisplayPort.right - aDisplayPort.left) / resolution,
+                                 (aDisplayPort.bottom - aDisplayPort.top) / resolution,
                                  element);
   },
 
@@ -3173,23 +3178,7 @@ var XPInstallObserver = {
       needsRestart = true;
 
     if (needsRestart) {
-      let buttons = [{
-        label: Strings.browser.GetStringFromName("notificationRestart.button"),
-        callback: function() {
-          // Notify all windows that an application quit has been requested
-          let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-          Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
-
-          // If nothing aborted, quit the app
-          if (cancelQuit.data == false) {
-            let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
-            appStartup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
-          }
-        }
-      }];
-
-      let message = Strings.browser.GetStringFromName("notificationRestart.normal");
-      NativeWindow.doorhanger.show(message, "addon-app-restart", buttons, BrowserApp.selectedTab.id, { persistence: -1 });
+      this.showRestartPrompt();
     } else {
       let message = Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart");
       NativeWindow.toast.show(message, "short");
@@ -3230,6 +3219,30 @@ var XPInstallObserver = {
     msg = msg.replace("#4", Services.appinfo.version);
 
     NativeWindow.toast.show(msg, "short");
+  },
+
+  showRestartPrompt: function() {
+    let buttons = [{
+      label: Strings.browser.GetStringFromName("notificationRestart.button"),
+      callback: function() {
+        // Notify all windows that an application quit has been requested
+        let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+        Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+
+        // If nothing aborted, quit the app
+        if (cancelQuit.data == false) {
+          let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
+          appStartup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
+        }
+      }
+    }];
+
+    let message = Strings.browser.GetStringFromName("notificationRestart.normal");
+    NativeWindow.doorhanger.show(message, "addon-app-restart", buttons, BrowserApp.selectedTab.id, { persistence: -1 });
+  },
+
+  hideRestartPrompt: function() {
+    NativeWindow.doorhanger.hide("addon-app-restart", BrowserApp.selectedTab.id);
   }
 };
 

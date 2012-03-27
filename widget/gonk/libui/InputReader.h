@@ -27,10 +27,10 @@
 #include "DisplayInfo.h"
 #include <utils/KeyedVector.h>
 #include <utils/threads.h>
-#include <utils/Timers.h>
+#include "Timers.h"
 #include <utils/RefBase.h>
-#include <utils/String8.h>
-#include <utils/BitSet.h>
+#include "String8.h"
+#include "BitSet.h"
 
 #include <stddef.h>
 #include <unistd.h>

@@ -16,10 +16,9 @@
 description('Tests texSubImage2D with bad arguments');
 
 var wtu = WebGLTestUtils;
-var canvas = document.getElementById("testbed");
 var c = document.getElementById("c");
 
-var gl = wtu.create3DContext(canvas);
+var gl = wtu.create3DContext("testbed");
 var tex = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, tex);
 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);

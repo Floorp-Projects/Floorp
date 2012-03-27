@@ -18,7 +18,7 @@
 
 #include "InputApplication.h"
 
-#include <cutils/log.h>
+#include "cutils_log.h"
 
 namespace android {
 

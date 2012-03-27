@@ -694,7 +694,8 @@ public class GeckoAppShell
     }
 
     public static void returnIMEQueryResult(String result, int selectionStart, int selectionLength) {
-        mInputConnection.returnIMEQueryResult(result, selectionStart, selectionLength);
+        // This method may be called from JNI to report Gecko's current selection indexes, but
+        // Native Fennec doesn't care because the Java code already knows the selection indexes.
     }
 
     static void onXreExit() {

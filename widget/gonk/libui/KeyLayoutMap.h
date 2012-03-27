@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include <utils/Errors.h>
 #include <utils/KeyedVector.h>
-#include <utils/Tokenizer.h>
+#include "Tokenizer.h"
 
 namespace android {
 

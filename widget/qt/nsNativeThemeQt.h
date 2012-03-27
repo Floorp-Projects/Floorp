@@ -49,7 +49,6 @@
 
 class QComboBox;
 class QStyleOptionButton;
-class QStyleOptionFrameV2;
 class QStyleOptionComboBox;
 class QRect;
 class nsIFrame;

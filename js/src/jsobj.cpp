@@ -2913,17 +2913,8 @@ js::NewReshapedObject(JSContext *cx, TypeObject *type, JSObject *parent,
 }
 
 JSObject*
-js_CreateThis(JSContext *cx, JSObject *callee)
+js_CreateThis(JSContext *cx, Class *newclasp, JSObject *callee)
 {
-    Class *clasp = callee->getClass();
-
-    Class *newclasp = &ObjectClass;
-    if (clasp == &FunctionClass) {
-        JSFunction *fun = callee->toFunction();
-        if (fun->isNative() && fun->u.n.clasp)
-            newclasp = fun->u.n.clasp;
-    }
-
     Value protov;
     if (!callee->getProperty(cx, cx->runtime->atomState.classPrototypeAtom, &protov))
         return NULL;
@@ -3669,7 +3660,6 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
                              ctorKind);
         if (!fun)
             goto bad;
-        fun->setConstructorClass(clasp);
 
         /*
          * Set the class object early for standard class constructors. Type

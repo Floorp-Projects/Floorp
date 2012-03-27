@@ -85,7 +85,7 @@ nsXPCOMCycleCollectionParticipant::Traverse
 }
 
 void
-nsXPCOMCycleCollectionParticipant::UnmarkPurple(nsISupports *n)
+nsXPCOMCycleCollectionParticipant::UnmarkIfPurple(nsISupports *n)
 {
 }
 

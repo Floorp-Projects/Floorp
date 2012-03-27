@@ -1,9 +1,22 @@
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-          style="?android:attr/listSeparatorTextViewStyle"
-          android:textColor="?android:attr/textColorPrimary"
-          android:id="@+id/title"
-          android:layout_width="fill_parent"
-          android:layout_height="wrap_content"
-          android:paddingTop="2dip"
-          android:paddingBottom="2dip"
-          android:paddingLeft="5dip"/>
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:paddingBottom="2dp"
+              android:background="#E5E5E5">
+
+    <TextView android:id="@+id/title"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:background="#FFFFFF"
+              android:textColor="#222222"
+              android:textStyle="bold"
+              android:textAppearance="?android:attr/textAppearanceSmall"
+              android:paddingTop="2dip"
+              android:paddingBottom="2dip"
+              android:paddingLeft="5dip"
+              android:singleLine="true"
+              android:ellipsize="middle"/>
+
+</LinearLayout>
