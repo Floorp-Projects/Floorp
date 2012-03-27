@@ -968,22 +968,6 @@ EmitRegExp(JSContext *cx, uint32_t index, BytecodeEmitter *bce)
 }
 
 static bool
-EmitSlotObjectOp(JSContext *cx, JSOp op, unsigned slot, uint32_t index, BytecodeEmitter *bce)
-{
-    JS_ASSERT(JOF_OPTYPE(op) == JOF_SLOTOBJECT);
-
-    ptrdiff_t off = EmitN(cx, bce, op, SLOTNO_LEN + UINT32_INDEX_LEN);
-    if (off < 0)
-        return false;
-
-    jsbytecode *pc = bce->code(off);
-    SET_SLOTNO(pc, slot);
-    pc += SLOTNO_LEN;
-    SET_UINT32_INDEX(pc, index);
-    return true;
-}
-
-static bool
 EmitArguments(JSContext *cx, BytecodeEmitter *bce)
 {
     if (!bce->mayOverwriteArguments())
@@ -5054,7 +5038,14 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         {
             return false;
         }
-        return EmitSlotObjectOp(cx, JSOP_DEFLOCALFUN, slot, index, bce);
+
+        if (NewSrcNote(cx, bce, SRC_CONTINUE) < 0)
+            return false;
+        if (!EmitIndexOp(cx, JSOP_LAMBDA, index, bce))
+            return false;
+        EMIT_UINT16_IMM_OP(JSOP_SETLOCAL, slot);
+        if (Emit1(cx, bce, JSOP_POP) < 0)
+            return false;
     }
 
     return true;

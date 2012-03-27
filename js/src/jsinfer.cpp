@@ -3752,24 +3752,12 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
 
       case JSOP_LAMBDA:
-      case JSOP_DEFFUN:
-      case JSOP_DEFLOCALFUN: {
-        unsigned off = op == JSOP_DEFLOCALFUN ? SLOTNO_LEN : 0;
-        JSObject *obj = script->getObject(GET_UINT32_INDEX(pc + off));
+      case JSOP_DEFFUN: {
+        JSObject *obj = script->getObject(GET_UINT32_INDEX(pc));
 
         TypeSet *res = NULL;
-        if (op == JSOP_LAMBDA) {
+        if (op == JSOP_LAMBDA)
             res = &pushed[0];
-        } else if (op == JSOP_DEFLOCALFUN) {
-            uint32_t slot = GetBytecodeSlot(script, pc);
-            if (trackSlot(slot)) {
-                res = &pushed[0];
-            } else {
-                /* Should not see 'let' vars here. */
-                JS_ASSERT(slot < TotalSlots(script));
-                res = TypeScript::SlotTypes(script, slot);
-            }
-        }
 
         if (res) {
             if (script->hasGlobal())

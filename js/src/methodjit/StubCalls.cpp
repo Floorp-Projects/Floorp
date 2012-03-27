@@ -981,35 +981,6 @@ stubs::InitElem(VMFrame &f, uint32_t last)
     }
 }
 
-JSObject * JS_FASTCALL
-stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
-{
-    /*
-     * Define a local function (i.e., one nested at the top level of another
-     * function), parented by the current scope chain, stored in a local
-     * variable slot that the compiler allocated.  This is an optimization over
-     * JSOP_DEFFUN that avoids requiring a call object for the outer function's
-     * activation.
-     */
-    JS_ASSERT(fun->isInterpreted());
-
-    JSObject *parent;
-    if (fun->isNullClosure()) {
-        parent = &f.fp()->scopeChain();
-    } else {
-        parent = GetScopeChain(f.cx, f.fp());
-        if (!parent)
-            THROWV(NULL);
-    }
-    JSObject *obj = CloneFunctionObjectIfNotSingleton(f.cx, fun, parent);
-    if (!obj)
-        THROWV(NULL);
-
-    JS_ASSERT_IF(f.script()->compileAndGo, obj->global() == fun->global());
-
-    return obj;
-}
-
 void JS_FASTCALL
 stubs::RegExp(VMFrame &f, JSObject *regex)
 {
