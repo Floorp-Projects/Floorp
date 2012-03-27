@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+# ***** BEGIN LICENSE BLOCK *****
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# ***** END LICENSE BLOCK *****
+
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+  <!ENTITY % aboutAppsDTD SYSTEM "chrome://browser/locale/aboutApps.dtd">
+  %aboutAppsDTD;
+  <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
+  %browserDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>&aboutApps.title;</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <link rel="icon" type="image/png" href="chrome://branding/content/favicon32.png" />
+    <link rel="stylesheet" type="text/css" href="chrome://browser/skin/aboutApps.css" media="all" />
+    <script type="text/javascript;version=1.8" src="chrome://browser/content/aboutApps.js"></script>
+  </head>
+
+  <body dir="&locale.dir;" onload="onLoad(event)" onunload="onUnload(event)">
+    <div id="main-container">
+      <div>&aboutApps.title;</div>
+      <div id="noapps" class="hidden">
+        &aboutApps.noApps.pre;<a id="marketplaceURL" pref="app.marketplaceURL">&aboutApps.noApps.middle;</a>&aboutApps.noApps.post;
+      </div>
+      <div>
+        <div class="spacer" id="spacer1"> </div>
+        <div id="appgrid"/>
+        <div class="spacer" id="spacer1"> </div>
+      </div>
+    </div>
+  </body>
+</html>
