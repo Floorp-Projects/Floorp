@@ -875,14 +875,6 @@ nsTextInputListener::EditAction()
     mTxtCtrlElement->OnValueChanged(true);
   }
 
-  // Fire input event
-  bool trusted = false;
-  editor->GetLastKeypressEventTrusted(&trusted);
-  frame->FireOnInput(trusted);
-
-  // mFrame may be dead after this, but we don't need to check for it, because
-  // we are not uisng it in this function any more.
-
   return NS_OK;
 }
 
@@ -1775,7 +1767,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput)
     // this is necessary to avoid infinite recursion
     if (!currentValue.Equals(aValue))
     {
-      nsTextControlFrame::ValueSetter valueSetter(mBoundFrame,
+      nsTextControlFrame::ValueSetter valueSetter(mBoundFrame, mEditor,
                                                   mBoundFrame->mFocusedValue.Equals(currentValue));
 
       // \r is an illegal character in the dom, but people use them,
