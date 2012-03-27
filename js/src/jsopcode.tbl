@@ -348,11 +348,7 @@ OPDEF(JSOP_LAMBDA,    130, "lambda",    NULL,         5,  0,  1, 19,  JOF_OBJECT
 /* Used for named function expression self-naming, if lightweight. */
 OPDEF(JSOP_CALLEE,    131, "callee",    NULL,         1,  0,  1, 19,  JOF_BYTE)
 
-/*
- * Like JSOP_SETLOCAL, but specialized to avoid requiring JSOP_POP immediately
- * after to throw away the exception value.
- */
-OPDEF(JSOP_SETLOCALPOP, 132, "setlocalpop", NULL,     3,  1,  0,  3,  JOF_LOCAL|JOF_NAME|JOF_SET)
+OPDEF(JSOP_UNUSED31,  132, "unused31",  NULL,         1,  0,  0,  0,  JOF_BYTE)
 
 /* Pick an element from the stack. */
 OPDEF(JSOP_PICK,        133, "pick",      NULL,       2,  0,  0,  0,  JOF_UINT8|JOF_TMPSLOT2)

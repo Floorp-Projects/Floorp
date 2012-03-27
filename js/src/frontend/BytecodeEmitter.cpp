@@ -2900,7 +2900,9 @@ EmitDestructuringLHS(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
           case JSOP_SETLOCAL:
           {
             uint16_t slot = pn->pn_cookie.slot();
-            EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, slot);
+            EMIT_UINT16_IMM_OP(JSOP_SETLOCAL, slot);
+            if (Emit1(cx, bce, JSOP_POP) < 0)
+                return JS_FALSE;
             break;
           }
 
@@ -3934,7 +3936,9 @@ EmitCatch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case PNK_NAME:
         /* Inline and specialize BindNameToSlot for pn2. */
         JS_ASSERT(!pn2->pn_cookie.isFree());
-        EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, pn2->pn_cookie.slot());
+        EMIT_UINT16_IMM_OP(JSOP_SETLOCAL, pn2->pn_cookie.slot());
+        if (Emit1(cx, bce, JSOP_POP) < 0)
+            return false;
         break;
 
       default:
