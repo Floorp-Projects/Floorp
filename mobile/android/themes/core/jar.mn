@@ -5,7 +5,6 @@ chrome.jar:
   skin/aboutPage.css                        (aboutPage.css)
   skin/about.css                            (about.css)
   skin/aboutAddons.css                      (aboutAddons.css)
-  skin/aboutApps.css                        (aboutApps.css)
 * skin/browser.css                          (browser.css)
 * skin/content.css                          (content.css)
   skin/config.css                           (config.css)
