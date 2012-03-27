@@ -176,7 +176,7 @@ IonBuilder::canInlineTarget(JSFunction *target)
         builder = builder->callerBuilder_;
     }
 
-    bool canInline = oracle->canEnterInlinedScript(inlineScript);
+    bool canInline = oracle->canEnterInlinedFunction(target);
 
     if (!canInline) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to oracle veto");
@@ -2580,7 +2580,14 @@ IonBuilder::jsop_call(uint32 argc, bool constructing)
     if (target && !target->isNative())
         targetArgs = Max<uint32>(target->nargs, argc);
 
-    MCall *call = MCall::New(targetArgs + 1, constructing); // +1 for implicit this.
+    types::TypeSet *barrier;
+    types::TypeSet *types = oracle->returnTypeSet(script, pc, &barrier);
+
+    // When we insert a type barrier, we skip the Monitor function call inside
+    // the Invoke functions, such as there is no extra call to the monitor function.
+    types::TypeSet *monitorTypes = barrier ? NULL : types;
+
+    MCall *call = MCall::New(targetArgs + 1, monitorTypes, constructing); // +1 for implicit this.
     if (!call)
         return false;
 
@@ -2608,7 +2615,7 @@ IonBuilder::jsop_call(uint32 argc, bool constructing)
     call->initPrepareCall(start);
 
     MPassArg *thisArg = current->pop()->toPassArg();
-    
+
     // If the target is known, inline the constructor on the caller-side.
     if (constructing && target) {
         MDefinition *callee = current->peek(-1);
@@ -2635,8 +2642,6 @@ IonBuilder::jsop_call(uint32 argc, bool constructing)
     if (!resumeAfter(call))
         return false;
 
-    types::TypeSet *barrier;
-    types::TypeSet *types = oracle->returnTypeSet(script, pc, &barrier);
     return pushTypeBarrier(call, types, barrier);
 }
 

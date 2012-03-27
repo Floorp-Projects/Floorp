@@ -52,7 +52,8 @@ namespace js {
 namespace ion {
 
 bool
-InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval)
+InvokeFunction(JSContext *cx, types::TypeSet *types, JSFunction *fun,
+               uint32 argc, Value *argv, Value *rval)
 {
     Value fval = ObjectValue(*fun);
 
@@ -62,11 +63,15 @@ InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *
 
     // Run the function in the interpreter.
     bool ok = Invoke(cx, thisv, fval, argc, argvWithoutThis, rval);
+    if (ok && types)
+        types::TypeScript::Monitor(cx, types, *rval);
+
     return ok;
 }
 
 bool
-InvokeConstructorFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval)
+InvokeConstructorFunction(JSContext *cx, types::TypeSet *types, JSFunction *fun,
+                          uint32 argc, Value *argv, Value *rval)
 {
     Value fval = ObjectValue(*fun);
 
@@ -74,6 +79,9 @@ InvokeConstructorFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *ar
     Value *argvWithoutThis = argv + 1;
 
     bool ok = InvokeConstructor(cx, fval, argc, argvWithoutThis, rval);
+    if (ok && types)
+        types::TypeScript::Monitor(cx, types, *rval);
+
     return ok;
 }
 
