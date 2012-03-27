@@ -124,37 +124,59 @@ public class AwesomeBarTabs extends TabHost {
     }
 
     private class HistoryListAdapter extends SimpleExpandableListAdapter {
+        LayoutInflater mInflater;
+
         public HistoryListAdapter(Context context, List<? extends Map<String, ?>> groupData,
                 int groupLayout, String[] groupFrom, int[] groupTo,
-                List<? extends List<? extends Map<String, ?>>> childData,
-                int childLayout, String[] childFrom, int[] childTo) {
+                List<? extends List<? extends Map<String, ?>>> childData) {
 
             super(context, groupData, groupLayout, groupFrom, groupTo,
-                  childData, childLayout, childFrom, childTo);
+                  childData, -1, new String[] {}, new int[] {});
+
+            mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
         @Override
         public View getChildView(int groupPosition, int childPosition, boolean isLastChild,
                 View convertView, ViewGroup parent) {
+            ViewHolder viewHolder = null;
 
-            View childView =
-                    super.getChildView(groupPosition, childPosition, isLastChild, convertView, parent); 
+            if (convertView == null) {
+                convertView = mInflater.inflate(R.layout.awesomebar_row, null);
+
+                viewHolder = new ViewHolder();
+                viewHolder.titleView = (TextView) convertView.findViewById(R.id.title);
+                viewHolder.urlView = (TextView) convertView.findViewById(R.id.url);
+                viewHolder.faviconView = (ImageView) convertView.findViewById(R.id.favicon);
+
+                convertView.setTag(viewHolder);
+            } else {
+                viewHolder = (ViewHolder) convertView.getTag();
+            }
 
             @SuppressWarnings("unchecked")
             Map<String,Object> historyItem =
                     (Map<String,Object>) mHistoryAdapter.getChild(groupPosition, childPosition);
 
+            String title = (String) historyItem.get(URLColumns.TITLE);
+            String url = (String) historyItem.get(URLColumns.URL);
+
+            if (TextUtils.isEmpty(title))
+                title = url;
+
+            viewHolder.titleView.setText(title);
+            viewHolder.urlView.setText(url);
+
             byte[] b = (byte[]) historyItem.get(URLColumns.FAVICON);
-            ImageView favicon = (ImageView) childView.findViewById(R.id.favicon);
 
             if (b == null) {
-                favicon.setImageDrawable(null);
+                viewHolder.faviconView.setImageDrawable(null);
             } else {
                 Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
-                favicon.setImageBitmap(bitmap);
+                viewHolder.faviconView.setImageBitmap(bitmap);
             }
 
-            return childView;
+            return convertView;
         }
     }
 
@@ -532,10 +554,7 @@ public class AwesomeBarTabs extends TabHost {
                 R.layout.awesomebar_header_row,
                 new String[] { URLColumns.TITLE },
                 new int[] { R.id.title },
-                result.second,
-                R.layout.awesomebar_row,
-                new String[] { URLColumns.TITLE, URLColumns.URL },
-                new int[] { R.id.title, R.id.url }
+                result.second
             );
 
             final ExpandableListView historyList =
