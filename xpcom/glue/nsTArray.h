@@ -596,6 +596,26 @@ public:
     return ElementAt(i);
   }
 
+  // Shorthand for ElementAt(length - 1)
+  elem_type& LastElement() {
+    return ElementAt(Length() - 1);
+  }
+
+  // Shorthand for ElementAt(length - 1)
+  const elem_type& LastElement() const {
+    return ElementAt(Length() - 1);
+  }
+
+  // Shorthand for SafeElementAt(length - 1, def)
+  elem_type& SafeLastElement(elem_type& def) {
+    return SafeElementAt(Length() - 1, def);
+  }
+
+  // Shorthand for SafeElementAt(length - 1, def)
+  const elem_type& SafeLastElement(const elem_type& def) const {
+    return SafeElementAt(Length() - 1, def);
+  }
+
   //
   // Search methods
   //

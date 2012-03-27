@@ -34,8 +34,7 @@ void main()
 description("Tests getActiveAttrib for various types");
 
 var wtu = WebGLTestUtils;
-var canvas = document.getElementById("example");
-var gl = wtu.create3DContext(canvas);
+var gl = wtu.create3DContext("example");
 
 var tests = [
 { glType: gl.FLOAT,      size: 1, type: 'float', access: ''},

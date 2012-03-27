@@ -1,6 +1,10 @@
-This is a local copy of the WebGL conformance suite, SVN revision 16776
+This is a local copy of the WebGL conformance suite, version 1.0.1, SVN revision 17159 (on the 1.0.1 branch, not on trunk)
 
-The canonical location for this testsuite is:
+The canonical location for this 1.0.1 test suite is:
+
+  https://cvs.khronos.org/svn/repos/registry/trunk/public/webgl/conformance-suites/1.0.1
+
+The canonical location of the development tree is:
 
   https://cvs.khronos.org/svn/repos/registry/trunk/public/webgl/sdk/tests
 
@@ -12,3 +16,13 @@ patch file in this directory. The exceptions (the Mozilla-specific files) are:
  * Makefile.in
  * *.patch files, if any
 
+How to do an update:
+ 1. unapply local patches (the .patch files here)
+ 2. perform the update:
+   * method A: apply diff with new version
+   * method B: erase all files here, import copy of new version.
+ 3. edit CONFORMANCE_TEST_VERSION in test_webgl_conformance_test_suite.html. That's what
+    determines with tests to run, as some tests are only enabled in some not-yet-released
+    version.
+ 4. reapply local patches.
+ 5. update this readme and the .patch files

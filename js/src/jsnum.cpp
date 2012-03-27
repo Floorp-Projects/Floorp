@@ -1018,8 +1018,7 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
         return NULL;
     numberProto->asNumber().setPrimitiveValue(0);
 
-    JSFunction *ctor = global->createConstructor(cx, Number, &NumberClass,
-                                                 CLASS_ATOM(cx, Number), 1);
+    JSFunction *ctor = global->createConstructor(cx, Number, CLASS_ATOM(cx, Number), 1);
     if (!ctor)
         return NULL;
 

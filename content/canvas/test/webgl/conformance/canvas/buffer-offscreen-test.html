@@ -53,9 +53,8 @@ function go() {
 
     debug("");
 
-    gl1 = create3DContext(document.getElementById("c"));
-    c2 = document.createElement('canvas');
-    gl2 = create3DContext(c2);
+    gl1 = wtu.create3DContext("c");
+    gl2 = create3DContext();
     shouldBeTrue("gl1 != null");
     shouldBeTrue("gl2 != null");
 

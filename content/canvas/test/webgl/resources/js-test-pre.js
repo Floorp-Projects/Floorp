@@ -440,19 +440,32 @@ function assertMsg(assertion, msg) {
 }
 
 function gc() {
-    if (typeof GCController !== "undefined")
-        GCController.collect();
-    else {
-        function gcRec(n) {
-            if (n < 1)
-                return {};
-            var temp = {i: "ab" + i + (i / 100000)};
-            temp += "foo";
-            gcRec(n-1);
-        }
-        for (var i = 0; i < 1000; i++)
-            gcRec(10)
+    if (window.GCController) {
+        window.GCController.collect();
+        return;
     }
+
+    if (window.opera && window.opera.collect) {
+        window.opera.collect();
+        return;
+    }
+
+    try {
+        window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+              .getInterface(Components.interfaces.nsIDOMWindowUtils)
+              .garbageCollect();
+        return;
+    } catch(e) {}
+
+    function gcRec(n) {
+        if (n < 1)
+            return {};
+        var temp = {i: "ab" + i + (i / 100000)};
+        temp += "foo";
+        gcRec(n-1);
+    }
+    for (var i = 0; i < 1000; i++)
+        gcRec(10);
 }
 
 function finishTest() {

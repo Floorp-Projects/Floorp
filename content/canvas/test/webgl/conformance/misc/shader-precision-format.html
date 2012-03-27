@@ -22,7 +22,7 @@ var wtu = WebGLTestUtils;
 description(document.title);
 debug("Tests that WebGLShaderPrecisionFormat class and getShaderPrecisionFormat work.");
 debug("");
-var gl = create3DContext(document.getElementById("canvas"));
+var gl = wtu.create3DContext("canvas");
 
 function verifyShaderPrecisionFormat(shadertype, precisiontype) {
     shouldBeTrue('gl.getShaderPrecisionFormat(' + shadertype + ', ' +

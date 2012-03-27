@@ -1,0 +1,133 @@
+<html>
+<head>
+  <title>Test for input event of text editor</title>
+  <script type="text/javascript"
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript"
+          src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="display">
+  <input type="text" id="input">
+  <textarea id="textarea"></textarea>
+</div>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests, window);
+
+const kIsMac = navigator.platform.indexOf("Mac") == 0;
+
+function runTests()
+{
+  function doTests(aElement, aDescription, aIsTextarea)
+  {
+    aDescription += ": ";
+    aElement.focus();
+    aElement.value = "";
+
+    var inputEvent = null;
+
+    var handler = function (aEvent) {
+      is(aEvent.target, aElement,
+         "input event is fired on unexpected element: " + aEvent.target.tagName);
+      ok(!aEvent.cancelable, "input event must not be cancelable");
+      ok(aEvent.bubbles, "input event must be bubbles");
+      var eventTime = new Date(aEvent.timeStamp);
+      var duration = Math.abs(Date.now() - aEvent.timeStamp);
+      ok(duration < 30 * 1000,
+         "perhaps, timestamp wasn't set correctly :" + eventTime.toLocaleString());
+      inputEvent = aEvent;
+    };
+
+    aElement.addEventListener("input", handler, true);
+
+    inputEvent = null;
+    synthesizeKey("a", { });
+    is(aElement.value, "a", aDescription + "'a' key didn't change the value");
+    ok(inputEvent, aDescription + "input event wasn't fired by 'a' key");
+    ok(inputEvent.isTrusted, aDescription + "input event by 'a' key wasn't trusted event");
+
+    inputEvent = null;
+    synthesizeKey("VK_BACK_SPACE", { });
+    is(aElement.value, "", aDescription + "BackSpace key didn't remove the value");
+    ok(inputEvent, aDescription + "input event wasn't fired by BackSpace key");
+    ok(inputEvent.isTrusted, aDescription + "input event by BackSpace key wasn't trusted event");
+
+    if (aIsTextarea) {
+      inputEvent = null;
+      synthesizeKey("VK_ENTER", { });
+      is(aElement.value, "\n", aDescription + "Enter key didn't change the value");
+      ok(inputEvent, aDescription + "input event wasn't fired by Enter key");
+      ok(inputEvent.isTrusted, aDescription + "input event by Enter key wasn't trusted event");
+    }
+
+    inputEvent = null;
+    aElement.value = "foo-bar";
+    is(aElement.value, "foo-bar", aDescription + "value wasn't set");
+    ok(!inputEvent, aDescription + "input event was fired by setting value");
+
+    inputEvent = null;
+    aElement.value = "";
+    is(aElement.value, "", aDescription + "value wasn't set (empty)");
+    ok(!inputEvent, aDescription + "input event was fired by setting empty value");
+
+    inputEvent = null;
+    synthesizeKey(" ", { });
+    is(aElement.value, " ", aDescription + "Space key didn't change the value");
+    ok(inputEvent, aDescription + "input event wasn't fired by Space key");
+    ok(inputEvent.isTrusted, aDescription + "input event by Space key wasn't trusted event");
+
+    inputEvent = null;
+    synthesizeKey("VK_DELETE", { });
+    is(aElement.value, " ", aDescription + "Delete key removed the value");
+    ok(!inputEvent, aDescription + "input event was fired by Delete key at the end");
+
+    inputEvent = null;
+    synthesizeKey("VK_LEFT", { });
+    is(aElement.value, " ", aDescription + "Left key removed the value");
+    ok(!inputEvent, aDescription + "input event was fired by Left key");
+
+    inputEvent = null;
+    synthesizeKey("VK_DELETE", { });
+    is(aElement.value, "", aDescription + "Delete key didn't remove the value");
+    ok(inputEvent, aDescription + "input event wasn't fired by Delete key at the start");
+    ok(inputEvent.isTrusted, aDescription + "input event by Delete key wasn't trusted event");
+
+    inputEvent = null;
+    synthesizeKey("z", { accelKey: true });
+    is(aElement.value, (aIsTextarea ? " \n" : " "), aDescription + "Accel+Z key didn't undo the value");
+    ok(inputEvent, aDescription + "input event wasn't fired by Undo");
+    ok(inputEvent.isTrusted, aDescription + "input event by Undo wasn't trusted event");
+
+    inputEvent = null;
+    if (kIsMac) {
+      synthesizeKey("z", { accelKey: true, shiftKey: true });
+    } else {
+      synthesizeKey("y", { accelKey: true });
+    }
+    is(aElement.value, "", aDescription + "Accel+Y key didn't redo the value");
+    ok(inputEvent, aDescription + "input event wasn't fired by Redo");
+    ok(inputEvent.isTrusted, aDescription + "input event by Redo wasn't trusted event");
+
+    aElement.removeEventListener("input", handler, true);
+  }
+
+  doTests(document.getElementById("input"), "<input type=\"text\">", false);
+  doTests(document.getElementById("textarea"), "<textarea>", true);
+
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+
+</html>

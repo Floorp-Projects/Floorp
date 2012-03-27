@@ -175,8 +175,7 @@ function runTest()
 
 }
 
-var canvas = document.getElementById("example");
-gl = wtu.create3DContext(canvas);
+gl = wtu.create3DContext("example");
 var program = wtu.setupTexturedQuad(gl);
 gl.disable(gl.BLEND);
 

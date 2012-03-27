@@ -42,6 +42,7 @@
 #define __nsWindow_h__
 
 #include <QKeyEvent>
+#include <QGestureEvent>
 #include <qgraphicswidget.h>
 #include <QTime>
 

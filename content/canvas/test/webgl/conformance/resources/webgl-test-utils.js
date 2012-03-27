@@ -129,14 +129,26 @@ var setupSimpleTextureFragmentShader = function(gl) {
 /**
  * Creates a program, attaches shaders, binds attrib locations, links the
  * program and calls useProgram.
- * @param {!Array.<!WebGLShader>} shaders The shaders to attach .
+ * @param {!Array.<!WebGLShader|string>} shaders The shaders to
+ *        attach, or the source, or the id of a script to get
+ *        the source from.
  * @param {!Array.<string>} opt_attribs The attribs names.
  * @param {!Array.<number>} opt_locations The locations for the attribs.
  */
 var setupProgram = function(gl, shaders, opt_attribs, opt_locations) {
+  var realShaders = [];
   var program = gl.createProgram();
   for (var ii = 0; ii < shaders.length; ++ii) {
-    gl.attachShader(program, shaders[ii]);
+    var shader = shaders[ii];
+    if (typeof shader == 'string') {
+      var element = document.getElementById(shader);
+      if (element) {
+        shader = loadShaderFromScript(gl, shader);
+      } else {
+        shader = loadShader(gl, shader, ii ? gl.FRAGMENT_SHADER : gl.VERTEX_SHADER);
+      }
+    }
+    gl.attachShader(program, shader);
   }
   if (opt_attribs) {
     for (var ii = 0; ii < opt_attribs.length; ++ii) {
@@ -201,6 +213,25 @@ var setupSimpleTextureProgram = function(
  *      created.
  */
 var setupUnitQuad = function(gl, opt_positionLocation, opt_texcoordLocation) {
+  return setupUnitQuadWithTexCoords(gl, [ 0.0, 0.0 ], [ 1.0, 1.0 ],
+                                    opt_positionLocation, opt_texcoordLocation);
+};
+
+/**
+ * Creates buffers for a textured unit quad with specified lower left
+ * and upper right texture coordinates, and attaches them to vertex
+ * attribs.
+ * @param {!WebGLContext} gl The WebGLContext to use.
+ * @param {!Array.<number>} lowerLeftTexCoords The texture coordinates for the lower left corner.
+ * @param {!Array.<number>} upperRightTexCoords The texture coordinates for the upper right corner.
+ * @param {number} opt_positionLocation The attrib location for position.
+ * @param {number} opt_texcoordLocation The attrib location for texture coords.
+ * @return {!Array.<WebGLBuffer>} The buffer objects that were
+ *      created.
+ */
+var setupUnitQuadWithTexCoords = function(
+    gl, lowerLeftTexCoords, upperRightTexCoords,
+    opt_positionLocation, opt_texcoordLocation) {
   opt_positionLocation = opt_positionLocation || 0;
   opt_texcoordLocation = opt_texcoordLocation || 1;
   var objects = [];
@@ -218,15 +249,20 @@ var setupUnitQuad = function(gl, opt_positionLocation, opt_texcoordLocation) {
   gl.vertexAttribPointer(opt_positionLocation, 3, gl.FLOAT, false, 0, 0);
   objects.push(vertexObject);
 
+  var llx = lowerLeftTexCoords[0];
+  var lly = lowerLeftTexCoords[1];
+  var urx = upperRightTexCoords[0];
+  var ury = upperRightTexCoords[1];
+
   var vertexObject = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexObject);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-      1.0, 1.0,
-      0.0, 1.0,
-      0.0, 0.0,
-      1.0, 1.0,
-      0.0, 0.0,
-      1.0, 0.0]), gl.STATIC_DRAW);
+      urx, ury,
+      llx, ury,
+      llx, lly,
+      urx, ury,
+      llx, lly,
+      urx, lly]), gl.STATIC_DRAW);
   gl.enableVertexAttribArray(opt_texcoordLocation);
   gl.vertexAttribPointer(opt_texcoordLocation, 2, gl.FLOAT, false, 0, 0);
   objects.push(vertexObject);
@@ -249,9 +285,29 @@ var setupTexturedQuad = function(
 };
 
 /**
- * Creates a unit quad with only positions of a given rez
+ * Creates a program and buffers for rendering a textured quad with
+ * specified lower left and upper right texture coordinates.
  * @param {!WebGLContext} gl The WebGLContext to use.
- * @param {number} gridRez The resolution of the mesh grid.
+ * @param {!Array.<number>} lowerLeftTexCoords The texture coordinates for the lower left corner.
+ * @param {!Array.<number>} upperRightTexCoords The texture coordinates for the upper right corner.
+ * @param {number} opt_positionLocation The attrib location for position.
+ * @param {number} opt_texcoordLocation The attrib location for texture coords.
+ * @return {!WebGLProgram}
+ */
+var setupTexturedQuadWithTexCoords = function(
+    gl, lowerLeftTexCoords, upperRightTexCoords,
+    opt_positionLocation, opt_texcoordLocation) {
+  var program = setupSimpleTextureProgram(
+      gl, opt_positionLocation, opt_texcoordLocation);
+  setupUnitQuadWithTexCoords(gl, lowerLeftTexCoords, upperRightTexCoords,
+                             opt_positionLocation, opt_texcoordLocation);
+  return program;
+};
+
+/**
+ * Creates a unit quad with only positions of a given resolution.
+ * @param {!WebGLContext} gl The WebGLContext to use.
+ * @param {number} gridRes The resolution of the mesh grid, expressed in the number of triangles across and down.
  * @param {number} opt_positionLocation The attrib location for position.
  */
 var setupQuad = function (
@@ -455,20 +511,27 @@ var loadTexture = function(gl, url, callback) {
 
 /**
  * Creates a webgl context.
- * @param {!Canvas} opt_canvas The canvas tag to get context from. If one is not
- *     passed in one will be created.
+ * @param {!Canvas|string} opt_canvas The canvas tag to get
+ *     context from. If one is not passed in one will be
+ *     created. If it's a string it's assumed to be the id of a
+ *     canvas.
  * @return {!WebGLContext} The created context.
  */
 var create3DContext = function(opt_canvas, opt_attributes) {
   opt_canvas = opt_canvas || document.createElement("canvas");
+  if (typeof opt_canvas == 'string') {
+    opt_canvas = document.getElementById(opt_canvas);
+  }
   var context = null;
-  try {
-    context = opt_canvas.getContext("webgl", opt_attributes);
-  } catch(e) {}
-  if (!context) {
+  var names = ["webgl", "experimental-webgl"];
+  for (var i = 0; i < names.length; ++i) {
     try {
-      context = opt_canvas.getContext("experimental-webgl", opt_attributes);
-    } catch(e) {}
+      context = opt_canvas.getContext(names[i], opt_attributes);
+    } catch (e) {
+    }
+    if (context) {
+      break;
+    }
   }
   if (!context) {
     testFailed("Unable to fetch WebGL rendering context for Canvas");
@@ -1159,7 +1222,53 @@ var getUrlArguments = function() {
   return args;
 };
 
+var makeImage = function(canvas) {
+  var img = document.createElement('img');
+  img.src = canvas.toDataURL();
+  return img;
+};
+
+var insertImage = function(element, caption, img) {
+  var div = document.createElement("div");
+  div.appendChild(img);
+  var label = document.createElement("div");
+  label.appendChild(document.createTextNode(caption));
+  div.appendChild(label);
+   element.appendChild(div);
+};
+
+var addShaderSource = function(element, label, source) {
+  var div = document.createElement("div");
+  var s = document.createElement("pre");
+  s.className = "shader-source";
+  s.style.display = "none";
+  var ol = document.createElement("ol");
+  //s.appendChild(document.createTextNode(source));
+  var lines = source.split("\n");
+  for (var ii = 0; ii < lines.length; ++ii) {
+    var line = lines[ii];
+    var li = document.createElement("li");
+    li.appendChild(document.createTextNode(line));
+    ol.appendChild(li);
+  }
+  s.appendChild(ol);
+  var l = document.createElement("a");
+  l.href = "show-shader-source";
+  l.appendChild(document.createTextNode(label));
+  l.addEventListener('click', function(event) {
+      if (event.preventDefault) {
+        event.preventDefault();
+      }
+      s.style.display = (s.style.display == 'none') ? 'block' : 'none';
+      return false;
+    }, false);
+  div.appendChild(l);
+  div.appendChild(s);
+  element.appendChild(div);
+}
+
 return {
+  addShaderSource: addShaderSource,
   create3DContext: create3DContext,
   create3DContextWithWrapperThatThrowsOnGLError:
     create3DContextWithWrapperThatThrowsOnGLError,
@@ -1175,6 +1284,7 @@ return {
   glEnumToString: glEnumToString,
   glErrorShouldBe: glErrorShouldBe,
   fillTexture: fillTexture,
+  insertImage: insertImage,
   loadImageAsync: loadImageAsync,
   loadImagesAsync: loadImagesAsync,
   loadProgram: loadProgram,
@@ -1191,6 +1301,7 @@ return {
   loadTexture: loadTexture,
   log: log,
   loggingOff: loggingOff,
+  makeImage: makeImage,
   error: error,
   setupProgram: setupProgram,
   setupQuad: setupQuad,
@@ -1198,7 +1309,9 @@ return {
   setupSimpleTextureProgram: setupSimpleTextureProgram,
   setupSimpleTextureVertexShader: setupSimpleTextureVertexShader,
   setupTexturedQuad: setupTexturedQuad,
+  setupTexturedQuadWithTexCoords: setupTexturedQuadWithTexCoords,
   setupUnitQuad: setupUnitQuad,
+  setupUnitQuadWithTexCoords: setupUnitQuadWithTexCoords,
   setupWebGLWithShaders: setupWebGLWithShaders,
   startsWith: startsWith,
   shouldGenerateGLError: shouldGenerateGLError,

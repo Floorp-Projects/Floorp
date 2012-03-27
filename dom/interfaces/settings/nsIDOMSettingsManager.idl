@@ -1,0 +1,49 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsIDOMEventTarget.idl"
+#include "nsIDOMEvent.idl"
+
+interface nsIDOMDOMRequest;
+interface nsIVariant;
+
+[scriptable, uuid(ef95ddd0-6308-11e1-b86c-0800200c9a66)]
+interface nsIDOMSettingsLock : nsISupports
+{
+  // Contains a JSON object with name/value pairs to be set.
+  nsIDOMDOMRequest set(in nsIVariant settings);
+
+  // result contains the value of the setting.
+  nsIDOMDOMRequest get(in jsval name);
+
+  nsIDOMDOMRequest clear();
+};
+
+[scriptable, uuid(5609d0a0-52a9-11e1-b86c-0800200c9a66)]
+interface nsIDOMSettingsManager : nsISupports
+{
+  nsIDOMSettingsLock getLock();
+
+  attribute nsIDOMEventListener onsettingchange;
+};
+
+[scriptable, uuid(5ce02690-52a9-11e1-b86c-0800200c9a66)]
+interface nsIDOMMozSettingsEvent : nsIDOMEvent
+{
+  readonly attribute DOMString  settingName;
+  readonly attribute nsIVariant settingValue;
+
+  [noscript] void initMozSettingsEvent(in DOMString aType,
+                                       in boolean aCanBubble,
+                                       in boolean aCancelable,
+                                       in DOMString aSettingName,
+                                       in nsIVariant aSettingValue);
+};
+
+dictionary MozSettingsEventInit : EventInit
+{
+  DOMString  settingName;
+  nsIVariant settingValue;
+};

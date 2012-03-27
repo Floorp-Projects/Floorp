@@ -20,18 +20,17 @@ found in the LICENSE file.
 var wtu = WebGLTestUtils;
 description('Verify renderbuffers are initialized to 0 before being read in WebGL');
 
-var canvas = document.getElementById("testbed");
-var gl = create3DContext(canvas);
+var gl = wtu.create3DContext("testbed");
 if (!gl) {
     testFailed('canvas.getContext() failed');
 } else {
     // Set the clear color to green. It should never show up.
     gl.clearColor(0, 1, 0, 1);
 
-    runTest(gl, canvas.width, canvas.height, 0);
-    runTest(gl, canvas.width, canvas.height, 1);
-    runTest(gl, canvas.width, canvas.height, 0);
-    runTest(gl, canvas.width, canvas.height, 1);
+    runTest(gl, gl.canvas.width, gl.canvas.height, 0);
+    runTest(gl, gl.canvas.width, gl.canvas.height, 1);
+    runTest(gl, gl.canvas.width, gl.canvas.height, 0);
+    runTest(gl, gl.canvas.width, gl.canvas.height, 1);
 
     // Testing buffer clearing won't change the clear values.
     var clearColor = gl.getParameter(gl.COLOR_CLEAR_VALUE);
@@ -86,8 +85,8 @@ function runTest(gl, width, height, order)
     // this clear should not matter we are about to resize
 	gl.clear(gl.COLOR_BUFFER_BIT);
 
-    canvas.width += 1;
-    canvas.height += 1;
+    gl.canvas.width += 1;
+    gl.canvas.height += 1;
 
     debug('');
 }
