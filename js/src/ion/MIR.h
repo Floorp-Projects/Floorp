@@ -1062,20 +1062,17 @@ class MCall
     bool construct_;
     // Monomorphic cache of single target from TI, or NULL.
     JSFunction *target_;
-    // Type set expected for the returned value.
-    types::TypeSet *types_;
 
-    MCall(types::TypeSet *types, bool construct)
+    MCall(bool construct)
       : construct_(construct),
-        target_(NULL),
-        types_(types)
+        target_(NULL)
     {
         setResultType(MIRType_Value);
     }
 
   public:
     INSTRUCTION_HEADER(Call);
-    static MCall *New(size_t argc, types::TypeSet *types, bool construct);
+    static MCall *New(size_t argc, bool construct);
 
     void initPrepareCall(MDefinition *start) {
         JS_ASSERT(start->isPrepareCall());
@@ -1114,10 +1111,6 @@ class MCall
     // Includes |this|.
     uint32 argc() const {
         return numOperands() - NumNonArgumentOperands;
-    }
-
-    types::TypeSet *types() const {
-        return types_;
     }
 
     TypePolicy *typePolicy() {
