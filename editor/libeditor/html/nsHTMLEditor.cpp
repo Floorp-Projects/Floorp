@@ -5697,3 +5697,10 @@ nsHTMLEditor::GetPreferredIMEState(IMEState *aState)
   }
   return NS_OK;
 }
+
+already_AddRefed<nsIContent>
+nsHTMLEditor::GetInputEventTargetContent()
+{
+  nsCOMPtr<nsIContent> target = GetActiveEditingHost();
+  return target.forget();
+}

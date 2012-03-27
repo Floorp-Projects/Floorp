@@ -66,7 +66,7 @@ if (!gl) {
 
   var texturedShaders = [
       wtu.setupSimpleTextureVertexShader(gl),
-      wtu.loadShaderFromScript(gl, "testFragmentShader")
+      "testFragmentShader"
   ];
   var testProgram =
       wtu.setupProgram(gl,
@@ -85,8 +85,8 @@ if (!gl) {
       testPassed("Successfully enabled OES_texture_float extension");
       runTextureCreationTest(testProgram, true);
       runRenderTargetTest(testProgram);
-      // bug 683216, see the discussion in bug 630672
-      // runUniqueObjectTest();
+      runUniqueObjectTest();
+      runReferenceCycleTest();
   }
 }
 
@@ -165,13 +165,9 @@ function runRenderTargetTest(testProgram)
     if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE)
         return;
 
-    var shaders = [
-        wtu.loadShaderFromScript(gl, "positionVertexShader"),
-        wtu.loadShaderFromScript(gl, "floatingPointFragmentShader")
-    ];
     var renderProgram =
         wtu.setupProgram(gl,
-                         shaders,
+                         ["positionVertexShader", "floatingPointFragmentShader"],
                          ['vPosition'],
                          [0]);
     wtu.drawQuad(gl);
@@ -187,35 +183,28 @@ function runRenderTargetTest(testProgram)
     checkRenderingResults();
 }
 
-function attemptToForceGC()
-{
-    var holderArray = [];
-    var tempArray;
-    window.tempArray = holderArray;
-    for (var i = 0; i < 12; ++i) {
-        tempArray = [];
-        for (var j = 0; j < 1024 * 1024; ++j) {
-            tempArray.push(0);
-        }
-        holderArray.push(tempArray);
-    }
-    window.tempArray = null;
-}
-
 function runUniqueObjectTest()
 {
     debug("Testing that getExtension() returns the same object each time");
     gl.getExtension("OES_texture_float").myProperty = 2;
-    if (window.GCController) {
-        window.GCController.collect();
-    } else if (window.opera && window.opera.collect) {
-        window.opera.collect();
-    } else {
-        attemptToForceGC();
-    }
+    gc();
     shouldBe('gl.getExtension("OES_texture_float").myProperty', '2');
 }
 
+function runReferenceCycleTest()
+{
+    // create some reference cycles. The goal is to see if they cause leaks. The point is that
+    // some browser test runners have instrumentation to detect leaked refcounted objects.
+
+    debug("Testing reference cycles between context and extension objects");
+    var ext = gl.getExtension("OES_texture_float");
+
+    // create cycle between extension and context, since the context has to hold a reference to the extension
+    ext.context = gl;
+
+    // create a self-cycle on the extension object
+    ext.ext = ext;
+}
 
 debug("");
 successfullyParsed = true;

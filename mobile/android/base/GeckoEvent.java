@@ -37,8 +37,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.DisplayPortMetrics;
 import org.mozilla.gecko.gfx.IntSize;
-import org.mozilla.gecko.gfx.RectUtils;
 import org.mozilla.gecko.gfx.ViewportMetrics;
 import android.os.*;
 import android.app.*;
@@ -418,7 +418,7 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createViewportEvent(ViewportMetrics viewport, RectF displayPort) {
+    public static GeckoEvent createViewportEvent(ViewportMetrics viewport, DisplayPortMetrics displayPort) {
         GeckoEvent event = new GeckoEvent(VIEWPORT);
         event.mCharacters = "Viewport:Change";
         PointF origin = viewport.getOrigin();
@@ -426,7 +426,7 @@ public class GeckoEvent {
         sb.append("{ \"x\" : ").append(origin.x)
           .append(", \"y\" : ").append(origin.y)
           .append(", \"zoom\" : ").append(viewport.getZoomFactor())
-          .append(", \"displayPort\" :").append(RectUtils.toJSON(displayPort))
+          .append(", \"displayPort\" :").append(displayPort.toJSON())
           .append('}');
         event.mCharactersExtra = sb.toString();
         return event;

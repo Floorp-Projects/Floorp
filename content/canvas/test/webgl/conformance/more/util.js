@@ -1237,7 +1237,8 @@ initGL_CONTEXT_ID = function(){
         GL_CONTEXT_ID = contextNames[i];
         break;
       }
-    } catch (e) {}
+    } catch (e) {
+    }
   }
   if (!GL_CONTEXT_ID) {
     log("No WebGL context found. Unable to run tests.");

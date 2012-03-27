@@ -39,7 +39,7 @@ var wtu = WebGLTestUtils;
 description(document.title);
 debug("Tests that instanceof works on WebGL objects.");
 debug("");
-var gl = create3DContext(document.getElementById("canvas"));
+var gl = wtu.create3DContext("canvas");
 shouldBeTrue('gl instanceof WebGLRenderingContext');
 shouldBeTrue('gl.createBuffer() instanceof WebGLBuffer');
 shouldBeTrue('gl.createFramebuffer() instanceof WebGLFramebuffer');
@@ -48,11 +48,7 @@ shouldBeTrue('gl.createRenderbuffer() instanceof WebGLRenderbuffer');
 shouldBeTrue('gl.createShader(gl.VERTEX_SHADER) instanceof WebGLShader');
 shouldBeTrue('gl.createTexture() instanceof WebGLTexture');
 
-var program = wtu.setupProgram(
-    gl,
-    [wtu.loadShaderFromScript(gl, 'vshader', gl.VERTEX_SHADER),
-     wtu.loadShaderFromScript(gl, 'fshader', gl.FRAGMENT_SHADER)],
-    ['vPosition'], [0]);
+var program = wtu.setupProgram(gl, ['vshader', 'fshader'], ['vPosition'], [0]);
 
 shouldBeTrue('gl.getUniformLocation(program, "color") instanceof WebGLUniformLocation');
 shouldBeTrue('gl.getActiveAttrib(program, 0) instanceof WebGLActiveInfo');
@@ -72,16 +68,16 @@ function shouldThrowWithNew(objectType, objectName)
     }
 }
 
-shouldThrowWithNew(WebGLRenderingContext, 'WebGLRenderingContext');
-shouldThrowWithNew(WebGLActiveInfo, 'WebGLActiveInfo');
-shouldThrowWithNew(WebGLBuffer, 'WebGLBuffer');
-shouldThrowWithNew(WebGLFramebuffer, 'WebGLFramebuffer');
-shouldThrowWithNew(WebGLProgram, 'WebGLProgram');
-shouldThrowWithNew(WebGLRenderbuffer, 'WebGLRenderbuffer');
-shouldThrowWithNew(WebGLShader, 'WebGLShader');
-shouldThrowWithNew(WebGLTexture, 'WebGLTexture');
-shouldThrowWithNew(WebGLUniformLocation, 'WebGLUniformLocation');
-shouldThrowWithNew(WebGLShaderPrecisionFormat, 'WebGLShaderPrecisionFormat');
+shouldThrowWithNew(window.WebGLRenderingContext, 'WebGLRenderingContext');
+shouldThrowWithNew(window.WebGLActiveInfo, 'WebGLActiveInfo');
+shouldThrowWithNew(window.WebGLBuffer, 'WebGLBuffer');
+shouldThrowWithNew(window.WebGLFramebuffer, 'WebGLFramebuffer');
+shouldThrowWithNew(window.WebGLProgram, 'WebGLProgram');
+shouldThrowWithNew(window.WebGLRenderbuffer, 'WebGLRenderbuffer');
+shouldThrowWithNew(window.WebGLShader, 'WebGLShader');
+shouldThrowWithNew(window.WebGLTexture, 'WebGLTexture');
+shouldThrowWithNew(window.WebGLUniformLocation, 'WebGLUniformLocation');
+shouldThrowWithNew(window.WebGLShaderPrecisionFormat, 'WebGLShaderPrecisionFormat');
 
 successfullyParsed = true;
 </script>

@@ -420,7 +420,7 @@ mozHunspell::LoadDictionaryList()
   }
 
   // find dictionaries from restartless extensions
-  for (PRUint32 i = 0; i < mDynamicDirectories.Count(); i++) {
+  for (PRInt32 i = 0; i < mDynamicDirectories.Count(); i++) {
     LoadDictionariesFromDir(mDynamicDirectories[i]);
   }
 

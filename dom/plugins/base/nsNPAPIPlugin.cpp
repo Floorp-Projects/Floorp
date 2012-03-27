@@ -36,10 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_WIDGET_QT
-#include <QX11Info>
-#endif
-
 #include "base/basictypes.h"
 
 /* This must occur *after* layers/PLayers.h to avoid typedefs conflicts. */

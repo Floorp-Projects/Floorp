@@ -1313,9 +1313,8 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, unsigned nargs,
         fun->script().init(NULL);
         fun->initEnvironment(parent);
     } else {
-        fun->u.n.clasp = NULL;
-        fun->u.n.native = native;
-        JS_ASSERT(fun->u.n.native);
+        fun->u.native = native;
+        JS_ASSERT(fun->u.native);
     }
     if (kind == JSFunction::ExtendedFinalizeKind) {
         fun->flags |= JSFUN_EXTENDED;
@@ -1347,7 +1346,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
         clone->initScript(fun->script());
         clone->initEnvironment(parent);
     } else {
-        clone->u.n = fun->u.n;
+        clone->u.native = fun->native();
     }
     clone->atom.init(fun->atom);
 

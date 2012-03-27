@@ -1,9 +1,9 @@
 # HG changeset patch
-# Parent 0122002fbffad16de0690a21aa87d0999d0cdcb9
+# Parent 9294c812b3ebf3a2684b081886a65fa0cd0420b3
 diff --git a/content/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html b/content/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html
 --- a/content/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html
 +++ b/content/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html
-@@ -117,17 +117,18 @@ function init()
+@@ -118,17 +118,18 @@ function init()
      var bufFunction = new Uint8Array(width * height * 4);
      var bufMacro = new Uint8Array(width * height * 4);
  
@@ -26,7 +26,7 @@ diff --git a/content/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes
 diff --git a/content/canvas/test/webgl/conformance/misc/uninitialized-test.html b/content/canvas/test/webgl/conformance/misc/uninitialized-test.html
 --- a/content/canvas/test/webgl/conformance/misc/uninitialized-test.html
 +++ b/content/canvas/test/webgl/conformance/misc/uninitialized-test.html
-@@ -56,17 +56,19 @@ function checkNonZeroPixels(texture, tex
+@@ -57,17 +57,19 @@ function checkNonZeroPixels(texture, tex
      gl.readPixels(0, 0, texWidth, texHeight, gl.RGBA, gl.UNSIGNED_BYTE, data);
  
      var k = 0;
@@ -50,7 +50,7 @@ diff --git a/content/canvas/test/webgl/conformance/misc/uninitialized-test.html 
 diff --git a/content/canvas/test/webgl/conformance/resources/webgl-test-utils.js b/content/canvas/test/webgl/conformance/resources/webgl-test-utils.js
 --- a/content/canvas/test/webgl/conformance/resources/webgl-test-utils.js
 +++ b/content/canvas/test/webgl/conformance/resources/webgl-test-utils.js
-@@ -389,21 +389,29 @@ var drawQuad = function(gl, opt_color) {
+@@ -445,21 +445,29 @@ var drawQuad = function(gl, opt_color) {
  var checkCanvasRect = function(gl, x, y, width, height, color, msg, errorRange) {
    errorRange = errorRange || 0;
    var buf = new Uint8Array(width * height * 4);

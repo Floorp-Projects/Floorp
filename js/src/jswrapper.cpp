@@ -705,14 +705,14 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
     bool isKeyIter = ni->isKeyIter();
     AutoIdVector keys(cx);
     if (length > 0) {
-        if (!keys.resize(length))
+        if (!keys.reserve(length))
             return false;
         for (size_t i = 0; i < length; ++i) {
             jsid id;
             if (!ValueToId(cx, StringValue(ni->begin()[i]), &id))
                 return false;
             id = js_CheckForStringIndex(id);
-            keys[i] = id;
+            keys.infallibleAppend(id);
             if (!origin->wrapId(cx, &keys[i]))
                 return false;
         }
