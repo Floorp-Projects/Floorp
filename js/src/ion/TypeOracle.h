@@ -173,7 +173,7 @@ class TypeOracle
     virtual bool canInlineCall(JSScript *caller, jsbytecode *pc) {
         return false;
     }
-    virtual bool canEnterInlinedScript(JSScript *callee) {
+    virtual bool canEnterInlinedFunction(JSFunction *callee) {
         return false;
     }
 };
@@ -249,7 +249,7 @@ class TypeInferenceOracle : public TypeOracle
     bool arrayPrototypeHasIndexedProperty();
     bool canInlineCalls();
     bool canInlineCall(JSScript *caller, jsbytecode *pc);
-    bool canEnterInlinedScript(JSScript *inlineScript);
+    bool canEnterInlinedFunction(JSFunction *callee);
 };
 
 static inline MIRType
