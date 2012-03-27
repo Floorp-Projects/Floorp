@@ -41,11 +41,14 @@ package org.mozilla.gecko.sync;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URLDecoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TreeMap;
 
 import org.json.simple.JSONArray;
@@ -266,5 +269,39 @@ public class Utils {
       }
     }
     return true;
+  }
+
+  /**
+   * Takes a URI, extracting URI components.
+   * @param scheme the URI scheme on which to match.
+   */
+  public static Map<String, String> extractURIComponents(String scheme, String uri) {
+    if (uri.indexOf(scheme) != 0) {
+      throw new IllegalArgumentException("URI scheme does not match: " + scheme);
+    }
+
+    // Do this the hard way to avoid taking a large dependency on
+    // HttpClient or getting all regex-tastic.
+    String components = uri.substring(scheme.length());
+    HashMap<String, String> out = new HashMap<String, String>();
+    String[] parts = components.split("&");
+    for (int i = 0; i < parts.length; ++i) {
+      String part = parts[i];
+      if (part.length() == 0) {
+        continue;
+      }
+      String[] pair = part.split("=", 2);
+      switch (pair.length) {
+      case 0:
+        continue;
+      case 1:
+        out.put(URLDecoder.decode(pair[0]), null);
+        break;
+      case 2:
+        out.put(URLDecoder.decode(pair[0]), URLDecoder.decode(pair[1]));
+        break;
+      }
+    }
+    return out;
   }
 }
