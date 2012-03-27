@@ -940,6 +940,23 @@ SpecialPowersAPI.prototype = {
     }
     return obj;
   },
+  setPrivilegedProps: function(obj, props, val) {
+    var parts = props.split('.');
+
+    if (parts.length == 0) {
+      return;
+    }
+
+    for (var i = 0; i < parts.length - 1; i++) {
+      var p = parts[i];
+      if (obj[p]) {
+        obj = obj[p];
+      } else {
+        return;
+      }
+    }
+    obj[parts[i]] = val;
+  },
 
   get focusManager() {
     if (this._fm != null)
