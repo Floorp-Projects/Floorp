@@ -265,9 +265,9 @@ build_one_stage({"CC": "gcc", "CXX" : "g++"}, stage1_dir, True)
 
 stage1_tool_inst_dir = stage1_dir + '/inst'
 stage2_dir = build_dir + '/stage2'
-build_one_stage({"CC"     : stage1_tool_inst_dir + "/bin/gcc -fgnu89-inline",
-                 "CXX"    : stage1_tool_inst_dir + "/bin/g++",
-                 "AR"     : stage1_tool_inst_dir + "/bin/ar",
+build_one_stage({"PATH"   : stage1_tool_inst_dir + "/bin:/bin:/usr/bin",
+                 "CC"     : "gcc -fgnu89-inline",
+                 "CXX"    : "g++",
                  "RANLIB" : "true" },
                 stage2_dir, False)
 
