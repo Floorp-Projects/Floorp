@@ -172,7 +172,7 @@ DOMWifiManager.prototype = {
                                          info.signalStrength,
                                          info.relSignalStrength,
                                          info.linkSpeed);
-      this._onConnectionInfoUpdate(evt);
+      this._onConnectionInfoUpdate.handleEvent(evt);
     }
   },
 
