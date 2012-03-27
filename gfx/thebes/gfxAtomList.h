@@ -95,3 +95,9 @@ GFX_ATOM(x_symbol, "x-symbol")
 
 // referenced in all.js
 GFX_ATOM(x_user_def, "x-user-def")
+
+// additional languages that use Turkish-style case transformation
+GFX_ATOM(az, "az")
+GFX_ATOM(ba, "ba")
+GFX_ATOM(crh, "crh")
+GFX_ATOM(tt, "tt")
