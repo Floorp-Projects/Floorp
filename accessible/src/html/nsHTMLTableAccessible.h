@@ -41,6 +41,8 @@
 
 #include "nsHyperTextAccessibleWrap.h"
 #include "nsIAccessibleTable.h"
+#include "TableAccessible.h"
+#include "xpcAccessibleTable.h"
 
 class nsITableLayout;
 class nsITableCellLayout;
@@ -121,29 +123,34 @@ public:
 }
 
 class nsHTMLTableAccessible : public nsAccessibleWrap,
-                              public nsIAccessibleTable
+                              public xpcAccessibleTable,
+                              public nsIAccessibleTable,
+                              public mozilla::a11y::TableAccessible
 {
 public:
   nsHTMLTableAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLETABLE
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_TABLEACCESSIBLE_IMPL_CID)
 
+  // nsIAccessible Table
+  NS_DECL_OR_FORWARD_NSIACCESSIBLETABLE_WITH_XPCACCESSIBLETABLE
+
+  // TableAccessible
+  virtual nsAccessible* Caption();
+  virtual bool IsProbablyLayoutTable();
+
+  // nsAccessNode
+  virtual void Shutdown();
+
   // nsAccessible
+  virtual mozilla::a11y::TableAccessible* AsTable() { return this; }
   virtual void Description(nsString& aDescription);
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
   virtual Relation RelationByType(PRUint32 aRelationType);
-
-  // TableAccessible
-  inline nsAccessible* Caption() const
-  {
-    nsAccessible* child = mChildren.SafeElementAt(0, nsnull);
-    return child && child->Role() == mozilla::a11y::roles::CAPTION ? child : nsnull;
-  }
 
   // nsHTMLTableAccessible
 

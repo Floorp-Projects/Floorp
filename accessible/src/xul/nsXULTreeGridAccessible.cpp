@@ -58,7 +58,7 @@ using namespace mozilla::a11y;
 
 nsXULTreeGridAccessible::
   nsXULTreeGridAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsXULTreeAccessible(aContent, aDoc)
+  nsXULTreeAccessible(aContent, aDoc), xpcAccessibleTable(this)
 {
 }
 
@@ -71,15 +71,6 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeGridAccessible,
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeGridAccessible: nsIAccessibleTable implementation
-
-NS_IMETHODIMP
-nsXULTreeGridAccessible::GetCaption(nsIAccessible **aCaption)
-{
-  NS_ENSURE_ARG_POINTER(aCaption);
-  *aCaption = nsnull;
-
-  return IsDefunct() ? NS_ERROR_FAILURE : NS_OK;
-}
 
 NS_IMETHODIMP
 nsXULTreeGridAccessible::GetSummary(nsAString &aSummary)
@@ -570,13 +561,14 @@ nsXULTreeGridAccessible::UnselectColumn(PRInt32 aColumnIndex)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULTreeGridAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
-{
-  NS_ENSURE_ARG_POINTER(aIsProbablyForLayout);
-  *aIsProbablyForLayout = false;
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTreeGridAccessible: nsAccessNode implementation
 
-  return NS_OK;
+void
+nsXULTreeGridAccessible::Shutdown()
+{
+  mTable = nsnull;
+  nsXULTreeAccessible::Shutdown();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -134,6 +134,7 @@
 #include "nsMimeTypes.h"
 #include "nsIRequest.h"
 #include "nsHtml5TreeOpExecutor.h"
+#include "nsHtml5Parser.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1558,6 +1559,7 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
   // resetting the document.
   mSecurityInfo = securityInfo;
 
+  mParserAborted = false;
   bool loadAsHtml5 = nsHtml5Module::sEnabled;
   if (loadAsHtml5) {
     mParser = nsHtml5Module::NewHtml5Parser();
@@ -1644,8 +1646,8 @@ nsHTMLDocument::Close()
   }
 
   ++mWriteLevel;
-  nsresult rv = mParser->Parse(EmptyString(), nsnull,
-                               GetContentTypeInternal(), true);
+  nsresult rv = (static_cast<nsHtml5Parser*>(mParser.get()))->Parse(
+    EmptyString(), nsnull, GetContentTypeInternal(), true);
   --mWriteLevel;
 
   // XXX Make sure that all the document.written content is
@@ -1699,6 +1701,13 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
     // No calling document.write*() on XHTML!
 
     return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  if (mParserAborted) {
+    // Hixie says aborting the parser doesn't undefine the insertion point.
+    // However, since we null out mParser in that case, we track the
+    // theoretically defined insertion point using mParserAborted.
+    return NS_OK;
   }
 
   nsresult rv = NS_OK;
@@ -1764,13 +1773,11 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
   // since the concatenation of strings costs more than we like. And
   // why pay that price when we don't need to?
   if (aNewlineTerminate) {
-    rv = mParser->Parse(aText + new_line,
-                        key, GetContentTypeInternal(),
-                        false);
+    rv = (static_cast<nsHtml5Parser*>(mParser.get()))->Parse(
+      aText + new_line, key, GetContentTypeInternal(), false);
   } else {
-    rv = mParser->Parse(aText,
-                        key, GetContentTypeInternal(),
-                        false);
+    rv = (static_cast<nsHtml5Parser*>(mParser.get()))->Parse(
+      aText, key, GetContentTypeInternal(), false);
   }
 
   --mWriteLevel;

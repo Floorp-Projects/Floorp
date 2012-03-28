@@ -127,8 +127,8 @@ classes.dex: $(_JAVA_TESTS)
 	$(JAVAC) $(JAVAC_FLAGS) -d classes $(JAVAFILES) $(_JAVA_HARNESS) $(addprefix $(DEPTH)/mobile/android/base/tests/,$(_JAVA_TESTS))
 	$(DX) --dex --output=$@ classes $(ROBOTIUM_PATH)
 
-robocop.ap_: AndroidManifest.xml
-	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -I . -S res -F $@ -J ./
+robocop.ap_: AndroidManifest.xml $(TESTPATH)/assets/*
+	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -I . -S res -A $(TESTPATH)/assets -F $@ -J ./
 
 robocop.apk: robocop.ap_ classes.dex
 	cp $(TESTPATH)/robocop.ini robocop.ini

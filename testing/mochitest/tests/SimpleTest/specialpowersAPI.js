@@ -704,6 +704,18 @@ SpecialPowersAPI.prototype = {
                                                            listener,
                                                            false);
   },
+  getFormFillController: function(window) {
+    return Components.classes["@mozilla.org/satchel/form-fill-controller;1"]
+                     .getService(Components.interfaces.nsIFormFillController);
+  },
+  attachFormFillControllerTo: function(window) {
+    this.getFormFillController()
+        .attachToBrowser(this._getDocShell(window),
+                         this._getAutoCompletePopup(window));
+  },
+  detachFormFillControllerFrom: function(window) {
+    this.getFormFillController().detachFromBrowser(this._getDocShell(window));
+  },
   isBackButtonEnabled: function(window) {
     return !this._getTopChromeWindow(window).document
                                       .getElementById("Browser:Back")

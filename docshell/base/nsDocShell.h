@@ -672,11 +672,6 @@ protected:
     nsresult EnsureCommandHandler();
 
     nsIChannel* GetCurrentDocChannel();
-
-    // If our load group contains a LOAD_DOCUMENT_URI channel that's not our
-    // document's channel, cancel it.
-    void StopOutstandingOtherDocumentLoad();
-
 protected:
     // Override the parent setter from nsDocLoader
     virtual nsresult SetDocLoaderParent(nsDocLoader * aLoader);

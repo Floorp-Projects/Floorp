@@ -270,7 +270,7 @@ MacOSFontEntry::ReadCMAP()
 #ifdef PR_LOGGING
     LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %d\n",
                   NS_ConvertUTF16toUTF8(mName).get(),
-                  mCharacterMap.GetSize()));
+                  mCharacterMap.SizeOfExcludingThis(moz_malloc_size_of)));
     if (LOG_CMAPDATA_ENABLED()) {
         char prefix[256];
         sprintf(prefix, "(cmapdata) name: %.220s",
@@ -398,6 +398,14 @@ ATSFontEntry::HasFontTable(PRUint32 aTableTag)
         (::ATSFontGetTable(fontRef, aTableTag, 0, 0, 0, &size) == noErr);
 }
 
+void
+ATSFontEntry::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                  FontListSizes*    aSizes) const
+{
+    aSizes->mFontListSize += aMallocSizeOf(this);
+    SizeOfExcludingThis(aMallocSizeOf, aSizes);
+}
+
 /* CGFontEntry - used on Mac OS X 10.6+ */
 #pragma mark-
 
@@ -484,6 +492,14 @@ CGFontEntry::HasFontTable(PRUint32 aTableTag)
 
     ::CFRelease(tableData);
     return true;
+}
+
+void
+CGFontEntry::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                 FontListSizes*    aSizes) const
+{
+    aSizes->mFontListSize += aMallocSizeOf(this);
+    SizeOfExcludingThis(aMallocSizeOf, aSizes);
 }
 
 /* gfxMacFontFamily */
@@ -811,10 +827,9 @@ gfxMacPlatformFontList::InitSingleFaceList()
 #endif
 
             // add only if doesn't exist already
-            bool found;
-            gfxFontFamily *familyEntry;
-            if (!(familyEntry = mFontFamilies.GetWeak(key, &found))) {
-                familyEntry = new gfxSingleFaceMacFontFamily(familyName);
+            if (!mFontFamilies.GetWeak(key)) {
+                gfxFontFamily *familyEntry =
+                    new gfxSingleFaceMacFontFamily(familyName);
                 familyEntry->AddFontEntry(fontEntry);
                 familyEntry->SetHasStyles(true);
                 mFontFamilies.Put(key, familyEntry);

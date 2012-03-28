@@ -266,6 +266,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
      * Called whenever a new frame is about to be drawn.
      */
     public void onDrawFrame(GL10 gl) {
+	/* This code is causing crashes when the surface changes. (bug 738188)
+	 * I'm not sure if it actually works, so I'm disabling it now to avoid the crash.
         RenderContext pageContext = createPageContext(mView.getController().getViewportMetrics());
         RenderContext screenContext = createScreenContext();
         Frame frame = createFrame(pageContext, screenContext);
@@ -276,6 +278,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             frame.drawForeground();
             frame.endDrawing();
         }
+	*/
     }
 
     private void printCheckerboardStats() {
