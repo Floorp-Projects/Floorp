@@ -176,6 +176,13 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
         resetClient(null);
       }
     });
+
+    processor.registerCommand("displayURI", new CommandRunner() {
+      @Override
+      public void executeCommand(List<String> args) {
+        CommandProcessor.getProcessor().displayURI(args, getContext());
+      }
+    });
   }
 
   protected void prepareStages() {
