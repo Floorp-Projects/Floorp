@@ -808,6 +808,11 @@ BookmarksStore.prototype = {
     this.removeById(itemId, record.id);
   },
 
+  _taggableTypes: ["bookmark", "microsummary", "query"],
+  isTaggable: function isTaggable(recordType) {
+    return this._taggableTypes.indexOf(recordType) != -1;
+  },
+
   update: function BStore_update(record) {
     let itemId = this.idForGUID(record.id);
 
@@ -852,9 +857,12 @@ BookmarksStore.prototype = {
         PlacesUtils.bookmarks.changeBookmarkURI(itemId, Utils.makeURI(val));
         break;
       case "tags":
-        if (Array.isArray(val) &&
-            (remoteRecordType in ["bookmark", "microsummary", "query"])) {
-          this._tagID(itemId, val);
+        if (Array.isArray(val)) {
+          if (this.isTaggable(remoteRecordType)) {
+            this._tagID(itemId, val);
+          } else {
+            this._log.debug("Remote record type is invalid for tags: " + remoteRecordType);
+          }
         }
         break;
       case "keyword":
@@ -1230,9 +1238,12 @@ BookmarksStore.prototype = {
     }
 
     try {
-      let u = PlacesUtils.bookmarks.getBookmarkURI(itemId);
-      _tagURI(u, tags);
+      let u = PlacesUtils.bookmarks.getBookmarkURI(itemID);
+      this._tagURI(u, tags);
     } catch (e) {
+      this._log.warn("Got exception fetching URI for " + itemID + ": not tagging. " +
+                     Utils.exceptionStr(e));
+
       // I guess it doesn't have a URI. Don't try to tag it.
       return;
     }
