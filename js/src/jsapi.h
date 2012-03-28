@@ -809,7 +809,18 @@ class JS_PUBLIC_API(AutoCheckRequestDepth)
 # define CHECK_REQUEST(cx) \
     ((void) 0)
 
-#endif
+#endif /* JS_THREADSAFE && DEBUG */
+
+#ifdef DEBUG
+/* Assert that we're not doing GC on cx, that we're in a request as
+   needed, and that the compartments for cx and v are correct. */
+JS_PUBLIC_API(void)
+AssertArgumentsAreSane(JSContext *cx, const Value &v);
+#else
+inline void AssertArgumentsAreSane(JSContext *cx, const Value &v) {
+    /* Do nothing */
+}
+#endif /* DEBUG */
 
 class JS_PUBLIC_API(AutoGCRooter) {
   public:
@@ -2244,6 +2255,32 @@ JS_ValueToSource(JSContext *cx, jsval v);
 extern JS_PUBLIC_API(JSBool)
 JS_ValueToNumber(JSContext *cx, jsval v, double *dp);
 
+#ifdef __cplusplus
+namespace js {
+/*
+ * DO NOT CALL THIS.  Use JS::ToNumber
+ */
+extern JS_PUBLIC_API(bool)
+ToNumberSlow(JSContext *cx, JS::Value v, double *dp);
+} /* namespace js */
+
+namespace JS {
+
+/* ES5 9.3 ToNumber. */
+JS_ALWAYS_INLINE bool
+ToNumber(JSContext *cx, const Value &v, double *out)
+{
+    AssertArgumentsAreSane(cx, v);
+    if (v.isNumber()) {
+        *out = v.toNumber();
+        return true;
+    }
+    return js::ToNumberSlow(cx, v, out);
+}
+
+} /* namespace JS */
+#endif /* __cplusplus */
+
 extern JS_PUBLIC_API(JSBool)
 JS_DoubleIsInt32(double d, int32_t *ip);
 
@@ -2259,6 +2296,31 @@ JS_DoubleToUint32(double d);
  */
 extern JS_PUBLIC_API(JSBool)
 JS_ValueToECMAInt32(JSContext *cx, jsval v, int32_t *ip);
+
+#ifdef __cplusplus
+namespace js {
+/*
+ * DO NOT CALL THIS.  Use JS::ToInt32
+ */
+extern JS_PUBLIC_API(bool)
+ToInt32Slow(JSContext *cx, const JS::Value &v, int32_t *out);
+} /* namespace js */
+
+namespace JS {
+
+JS_ALWAYS_INLINE bool
+ToInt32(JSContext *cx, const js::Value &v, int32_t *out)
+{
+    AssertArgumentsAreSane(cx, v);
+    if (v.isInt32()) {
+        *out = v.toInt32();
+        return true;
+    }
+    return js::ToInt32Slow(cx, v, out);
+}
+
+} /* namespace JS */
+#endif /* __cplusplus */
 
 /*
  * Convert a value to a number, then to a uint32_t, according to the ECMA rules
