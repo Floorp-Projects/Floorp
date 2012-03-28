@@ -2237,9 +2237,13 @@ DataViewObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
 JSBool
 DataViewObject::prop_getBuffer(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    obj = UnwrapObject(obj);
-    JS_ASSERT(obj->isDataView());
-    DataViewObject &view = obj->asDataView();
+    if (!obj->isDataView()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_INCOMPATIBLE_PROTO, "DataView", "buffer", "Object");
+        return false;
+    }
+
+    DataViewObject &view(obj->asDataView());
     if (view.hasBuffer())
         vp->setObject(view.arrayBuffer());
     else
@@ -2250,26 +2254,34 @@ DataViewObject::prop_getBuffer(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 JSBool
 DataViewObject::prop_getByteOffset(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    obj = UnwrapObject(obj);
-    JS_ASSERT(obj->isDataView());
-    DataViewObject &view = obj->asDataView();
-    vp->setInt32(view.byteOffset());
+    if (!obj->isDataView()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_INCOMPATIBLE_PROTO, "DataView", "byteOffset", "Object");
+        return false;
+    }
+
+    vp->setInt32(obj->asDataView().byteOffset());
     return true;
 }
 
 JSBool
 DataViewObject::prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    obj = UnwrapObject(obj);
-    JS_ASSERT(obj->isDataView());
-    DataViewObject &view = obj->asDataView();
-    vp->setInt32(view.byteLength());
+    if (!obj->isDataView()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_INCOMPATIBLE_PROTO, "DataView", "byteLength", "Object");
+        return false;
+    }
+
+    vp->setInt32(obj->asDataView().byteLength());
     return true;
 }
 
 bool
 DataViewObject::getDataPointer(JSContext *cx, CallArgs args, size_t typeSize, uint8_t **data)
 {
+    JS_ASSERT(isDataView());
+
     uint32_t offset;
     JS_ASSERT(args.length() > 0);
     if (!ToUint32(cx, args[0], &offset))
@@ -2431,32 +2443,13 @@ DataViewObject::write(JSContext *cx, CallArgs &args, const char *method)
     return true;
 }
 
-inline JSObject *
-NonGenericProtoSearchingMethodGuard(JSContext *cx, CallArgs args, Native native, Class *clasp, bool *ok)
-{
-    const Value &thisv = args.thisv();
-    if (thisv.isObject()) {
-        JSObject *obj = thisv.toObjectOrNull();
-        while (obj) {
-            if (obj->getClass() == clasp) {
-                *ok = true;  /* quell gcc overwarning */
-                return obj;
-            }
-            obj = obj->getProto();
-        }
-    }
-
-    *ok = HandleNonGenericMethodClassMismatch(cx, args, native, clasp);
-    return NULL;
-}
-
 JSBool
 DataViewObject::fun_getInt8(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericProtoSearchingMethodGuard(cx, args, fun_getInt8, &DataViewClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_getInt8, &DataViewClass, &ok);
     if (!obj)
         return ok;
 
@@ -2473,7 +2466,7 @@ DataViewObject::fun_getUint8(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericProtoSearchingMethodGuard(cx, args, fun_getUint8, &DataViewClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_getUint8, &DataViewClass, &ok);
     if (!obj)
         return ok;
 
@@ -2490,7 +2483,7 @@ DataViewObject::fun_getInt16(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericProtoSearchingMethodGuard(cx, args, fun_getInt16, &DataViewClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_getInt16, &DataViewClass, &ok);
     if (!obj)
         return ok;
 
@@ -2507,7 +2500,7 @@ DataViewObject::fun_getUint16(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericProtoSearchingMethodGuard(cx, args, fun_getUint16, &DataViewClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_getUint16, &DataViewClass, &ok);
     if (!obj)
         return ok;
 
@@ -2524,7 +2517,7 @@ DataViewObject::fun_getInt32(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericProtoSearchingMethodGuard(cx, args, fun_getInt32, &DataViewClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_getInt32, &DataViewClass, &ok);
     if (!obj)
         return ok;
 
@@ -2541,7 +2534,7 @@ DataViewObject::fun_getUint32(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericProtoSearchingMethodGuard(cx, args, fun_getUint32, &DataViewClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_getUint32, &DataViewClass, &ok);
     if (!obj)
         return ok;
 
@@ -2558,7 +2551,7 @@ DataViewObject::fun_getFloat32(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericProtoSearchingMethodGuard(cx, args, fun_getFloat32, &DataViewClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_getFloat32, &DataViewClass, &ok);
     if (!obj)
         return ok;
 
@@ -2576,7 +2569,7 @@ DataViewObject::fun_getFloat64(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericProtoSearchingMethodGuard(cx, args, fun_getFloat64, &DataViewClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_getFloat64, &DataViewClass, &ok);
     if (!obj)
         return ok;
 
@@ -2594,7 +2587,7 @@ DataViewObject::fun_setInt8(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericProtoSearchingMethodGuard(cx, args, fun_setInt8, &DataViewClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_setInt8, &DataViewClass, &ok);
     if (!obj)
         return ok;
 
@@ -2610,7 +2603,7 @@ DataViewObject::fun_setUint8(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericProtoSearchingMethodGuard(cx, args, fun_setUint8, &DataViewClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_setUint8, &DataViewClass, &ok);
     if (!obj)
         return ok;
 
@@ -2626,7 +2619,7 @@ DataViewObject::fun_setInt16(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericProtoSearchingMethodGuard(cx, args, fun_setInt16, &DataViewClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_setInt16, &DataViewClass, &ok);
     if (!obj)
         return ok;
 
@@ -2642,7 +2635,7 @@ DataViewObject::fun_setUint16(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericProtoSearchingMethodGuard(cx, args, fun_setUint16, &DataViewClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_setUint16, &DataViewClass, &ok);
     if (!obj)
         return ok;
 
@@ -2658,7 +2651,7 @@ DataViewObject::fun_setInt32(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericProtoSearchingMethodGuard(cx, args, fun_setInt32, &DataViewClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_setInt32, &DataViewClass, &ok);
     if (!obj)
         return ok;
 
@@ -2674,7 +2667,7 @@ DataViewObject::fun_setUint32(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericProtoSearchingMethodGuard(cx, args, fun_setUint32, &DataViewClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_setUint32, &DataViewClass, &ok);
     if (!obj)
         return ok;
 
@@ -2690,7 +2683,7 @@ DataViewObject::fun_setFloat32(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericProtoSearchingMethodGuard(cx, args, fun_setFloat32, &DataViewClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_setFloat32, &DataViewClass, &ok);
     if (!obj)
         return ok;
 
@@ -2706,7 +2699,7 @@ DataViewObject::fun_setFloat64(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericProtoSearchingMethodGuard(cx, args, fun_setFloat64, &DataViewClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_setFloat64, &DataViewClass, &ok);
     if (!obj)
         return ok;
 
@@ -3070,6 +3063,20 @@ InitArrayBufferClass(JSContext *cx, Handle<GlobalObject*> global)
     return arrayBufferProto;
 }
 
+Class js::DataViewObject::protoClass = {
+    "DataViewPrototype",
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_RESERVED_SLOTS(DataViewObject::RESERVED_SLOTS) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
+    JS_PropertyStub,         /* addProperty */
+    JS_PropertyStub,         /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
+};
+
 Class js::DataViewClass = {
     "DataView",
     JSCLASS_HAS_PRIVATE |
@@ -3129,19 +3136,14 @@ JSFunctionSpec DataViewObject::jsfuncs[] = {
 JSObject *
 DataViewObject::initClass(JSContext *cx, GlobalObject *global)
 {
-    JSObject *proto = global->createBlankPrototype(cx, &DataViewClass);
+    JSObject *proto = global->createBlankPrototype(cx, &DataViewObject::protoClass);
     if (!proto)
         return NULL;
-
-    DataViewObject &dvobj = proto->asDataView();
-    dvobj.setFixedSlot(BYTEOFFSET_SLOT, Int32Value(0));
-    dvobj.setFixedSlot(BYTELENGTH_SLOT, Int32Value(0));
-    dvobj.setFixedSlot(BUFFER_SLOT, JSVAL_VOID);
-    dvobj.setPrivate(NULL);
 
     JSFunction *ctor =
         global->createConstructor(cx, DataViewObject::class_constructor,
                                   CLASS_NAME(cx, DataView), 3);
+
     if (!ctor)
         return NULL;
 

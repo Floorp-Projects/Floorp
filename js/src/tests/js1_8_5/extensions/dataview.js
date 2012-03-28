@@ -33,6 +33,23 @@ function test() {
         }
     }
 
+    function checkThrowTODO(fun, type) {
+        var thrown = false;
+        try {
+            fun();
+        } catch (x) {
+            thrown = x;
+        }
+
+        if (!thrown) {
+            print('(TODO) no exception thrown, expected ' + type.name);
+        } else if (!(thrown instanceof type)) {
+            print('(TODO) expected ' + type.name + ', got ' + thrown);
+        } else {
+            print('test unexpectedly passed: expected ' + type.name + ' exception');
+        }
+    }
+
     enterFunc ('test');
     printBugNumber(BUGNUMBER);
     printStatus(summary);
@@ -1540,47 +1557,65 @@ function test() {
     assertEq(view[0], 3);
     assertEq(view.getUint8(0), 1);
 
-    // Accessing DataView fields on DataView.prototype should not crash
-    var byteLength = DataView.prototype.byteLength;
-    assertEq(byteLength === undefined || byteLength === 0, true);
-    var byteOffset = DataView.prototype.byteOffset;
-    assertEq(byteOffset === undefined || byteLength === 0, true);
-    var buffer = DataView.prototype.buffer;
-    assertEq(buffer, undefined);
+    // Test WebIDL-specific class and prototype class names
+    assertEq(Object.prototype.toString.apply(Uint8Array(0)), "[object Uint8Array]");
+    assertEq(Object.prototype.toString.apply(Float32Array(0)), "[object Float32Array]");
+    assertEq(Object.prototype.toString.apply(Uint8Array.prototype), "[object Uint8ArrayPrototype]");
+    assertEq(Object.prototype.toString.apply(Float32Array.prototype), "[object Float32ArrayPrototype]");
+    assertEq(Object.prototype.toString.apply(ArrayBuffer()), "[object ArrayBuffer]");
+    assertEq(Object.prototype.toString.apply(DataView(view.buffer)), "[object DataView]");
+    assertEq(Object.prototype.toString.apply(DataView.prototype), "[object DataViewPrototype]");
+
+    // Accessing DataView fields on DataView.prototype should crash
+    checkThrow(function () DataView.prototype.byteLength, TypeError);
+    checkThrow(function () DataView.prototype.byteOffset, TypeError);
+    checkThrow(function () DataView.prototype.buffer, TypeError);
 
     // Protos and proxies, oh my!
     var alien = newGlobal('new-compartment');
-
     var alien_data = alien.eval('data = ' + data1.toSource());
     var alien_buffer = alien.eval('buffer = new Uint8Array(data).buffer');
     var alien_view = alien.eval('view = new DataView(buffer, 0, 16)');
 
-    // proto is view of buffer
-    function View () {
-    };
-    View.prototype = view1;
-    var o = new View();
-    assertEq(o.getUint8(4), 100);
+    // proto is view of buffer: should throw
+    var o = Object.create(view1);
+    checkThrow(function () o.getUint8(4), TypeError); // WebIDL 4.4.7: Operations
+    checkThrow(function () o.buffer, TypeError); // WebIDL 4.4.6: Attributes, section 2
+    checkThrow(function () o.byteOffset, TypeError);
+    checkThrow(function () o.byteLength, TypeError);
 
-    // proxy for view of buffer
-    function AlienView () {
-    };
-    AlienView.prototype = alien_view;
-    var av = new AlienView();
-    av.getUint8(4);
-    assertEq(av.getUint8(4), 100);
+    // proxy for view of buffer: should work
+    assertEq(alien_view.buffer.byteLength > 0, true);
+    assertEq(alien_view.getUint8(4), 100);
 
-    // Does not work -- we don't check for proxies on every step up the proto
-    // chain. We could, but that's getting to be a little too much deep magic
-    // for me. (Not to mention that in the current implementation, it would
-    // require trapping an exception internally.)
-    if (false) {
-        // proto is proxy for view of buffer
-        function ProtoAlienView () {
-        };
-        var o2 = new ProtoAlienView();
-        assertEq(o2.getUint8(4), 100);
+    // Bug 753996: when throwing an Error whose message contains the name of a
+    // function, the JS engine calls js_ValueToFunction to produce the function
+    // name to include in the message. js_ValueToFunction does not unwrap its
+    // argument. So if the function is actually a wrapper, then
+    // js_ValueToFunction will throw a TypeError ("X is not a function").
+    // Confusingly, this TypeError uses the decompiler, which *will* unwrap the
+    // object to get the wrapped function name out, so the final error will
+    // look something like "SomeFunction() is not a function".)
+    var weirdo = Object.create(alien.eval("new Date"));
+    var e = null;
+    try {
+        weirdo.getTime();
+    } catch (exc) {
+        e = exc;
     }
+    if (!e) {
+        print("==== TODO but PASSED? ====");
+        print("Bug 753996 unexpectedly passed");
+    }
+
+    // proto is proxy for view of buffer: should throw TypeError
+    //
+    // As of this writing, bug 753996 causes this to throw the *wrong*
+    // TypeError, and in fact it throws a (thisglobal).TypeError instead of
+    // alien.TypeError.
+    var av = Object.create(alien_view);
+    checkThrowTODO(function () av.getUint8(4), alien.TypeError);
+    checkThrow(function () av.buffer, alien.TypeError);
 
     // view of object whose proto is buffer. This should not work per dherman.
     // Note that DataView throws a TypeError while TypedArrays create a
@@ -1588,10 +1623,7 @@ function test() {
     // a constructor that takes a length argument; DataViews do not. So a
     // TypedArray will do ToUint32 and end up passing a zero as the
     // constructor's length argument.
-    function Buffer() {
-    };
-    Buffer.prototype = buffer1;
-    buffer = new Buffer();
+    buffer = Object.create(buffer1);
     checkThrow(function () new DataView(buffer), TypeError);
 
     reportCompare(0, 0, 'done.');
