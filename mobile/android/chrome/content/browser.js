@@ -936,8 +936,6 @@ var BrowserApp = {
     } else if (aTopic == "Viewport:Change") {
       if (this.isBrowserContentDocumentDisplayed())
         this.selectedTab.setViewport(JSON.parse(aData));
-    } else if (aTopic == "SearchEngines:Get") {
-      this.getSearchEngines();
     } else if (aTopic == "Passwords:Init") {
       // Force creation/upgrade of signons.sqlite
       let storage = Cc["@mozilla.org/login-manager/storage/mozStorage;1"].getService(Ci.nsILoginManagerStorage);
@@ -1611,17 +1609,35 @@ Tab.prototype = {
     if (zoom <= 0 || resolution <= 0)
       return;
 
+    // "zoom" is the user-visible zoom of the "this" tab
+    // "resolution" is the zoom at which we wish gecko to render "this" tab at
+    // these two may be different if we are, for example, trying to render a
+    // large area of the page at low resolution because the user is panning real
+    // fast.
+    // The viewport values (aViewportX and aViewportY) correspond to the
+    // gecko scroll position, and are zoom-multiplied. The display port rect
+    // values (aDisplayPort), however, is in CSS pixels multiplied by the desired
+    // rendering resolution. Therefore care must be taken when doing math with
+    // these sets of values, to ensure that they are normalized to the same coordinate
+    // space first.
+
     let element = this.browser.contentDocument.documentElement;
     if (!element)
       return;
 
+    // we should never be drawing background tabs at resolutions other than the user-
+    // visible zoom. for foreground tabs, however, if we are drawing at some other
+    // resolution, we need to set the resolution as specified.
     let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     if (BrowserApp.selectedTab == this)
       cwu.setResolution(resolution, resolution);
     else if (resolution != zoom)
       dump("Warning: setDisplayPort resolution did not match zoom for background tab!");
-    cwu.setDisplayPortForElement((aDisplayPort.left - aViewportX) / resolution,
-                                 (aDisplayPort.top - aViewportY) / resolution,
+
+    // finally, we set the display port, taking care to convert everything into the CSS-pixel
+    // coordinate space, because that is what the function accepts.
+    cwu.setDisplayPortForElement((aDisplayPort.left / resolution) - (aViewportX / zoom),
+                                 (aDisplayPort.top / resolution) - (aViewportY / zoom),
                                  (aDisplayPort.right - aDisplayPort.left) / resolution,
                                  (aDisplayPort.bottom - aDisplayPort.top) / resolution,
                                  element);

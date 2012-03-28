@@ -44,9 +44,6 @@
 #include "nsApplicationAccessibleWrap.h"
 #include "nsDocAccessible.h"
 #include "nsIAccessibleText.h"
-#ifdef MOZ_XUL
-#include "nsXULTreeAccessible.h"
-#endif
 #include "nsAccEvent.h"
 #include "States.h"
 
