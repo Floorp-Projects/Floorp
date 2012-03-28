@@ -75,7 +75,6 @@ protected:
   void GetFileName(nsAString& aResult);
 
   nsresult LinkStylesheet(const nsAString& aStylesheet);
-  void InsertMediaFragmentScript();
 
   // |aFormatNames[]| needs to have four elements in the following order: 
   // a format name with neither dimension nor file, a format name with
