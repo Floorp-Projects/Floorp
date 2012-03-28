@@ -179,13 +179,26 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             self.remoteDebuggerArgs, 
             self.xpcsCmd]
 
-    def getHeadFiles(self, test):
+    def getHeadAndTailFiles(self, test):
+        """Override parent method to find files on remote device."""
+        def sanitize_list(s, kind):
+            for f in s.strip().split(' '):
+                f = f.strip()
+                if len(f) < 1:
+                    continue
+
+                path = self.remoteJoin(self.remoteHere, f)
+                if not self.device.fileExists(path):
+                    raise Exception('%s file does not exist: %s' % ( kind,
+                        path))
+
+                yield path
+
         self.remoteHere = self.remoteForLocal(test['here'])
-        return [f.strip() for f in sorted(test['head'].split(' ')) if self.device.fileExists(self.remoteJoin(self.remoteHere, f))]
-    
-    def getTailFiles(self, test):
-        return [f.strip() for f in sorted(test['tail'].split(' ')) if self.device.fileExists(self.remoteJoin(self.remoteHere, f))]
-        
+
+        return (list(sanitize_list(test['head'], 'head')),
+                list(sanitize_list(test['tail'], 'tail')))
+
     def buildCmdTestFile(self, name):
         remoteDir = self.remoteForLocal(os.path.dirname(name))
         if remoteDir == self.remoteHere:
