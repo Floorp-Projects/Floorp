@@ -943,16 +943,17 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   nsIScriptGlobalObject *global = context->GetGlobalObject();
   // XXX should we check for sysprin instead of a chrome window, to make
   // XXX components be covered by the chrome pref instead of the content one?
+  nsCOMPtr<nsIDOMWindow> contentWindow(do_QueryInterface(global));
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(global));
 
-  bool useMethodJIT = Preferences::GetBool(chromeWindow ?
+  bool useMethodJIT = Preferences::GetBool(chromeWindow || !contentWindow ?
                                                js_methodjit_chrome_str :
                                                js_methodjit_content_str);
-  bool usePCCounts = Preferences::GetBool(chromeWindow ?
+  bool usePCCounts = Preferences::GetBool(chromeWindow || !contentWindow ?
                                             js_pccounts_chrome_str :
                                             js_pccounts_content_str);
   bool useMethodJITAlways = Preferences::GetBool(js_methodjit_always_str);
-  bool useTypeInference = !chromeWindow && Preferences::GetBool(js_typeinfer_str);
+  bool useTypeInference = !chromeWindow && contentWindow && Preferences::GetBool(js_typeinfer_str);
   bool useHardening = Preferences::GetBool(js_jit_hardening_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (xr) {
@@ -992,7 +993,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   // javascript.options.strict.debug is true
   bool strictDebug = Preferences::GetBool(js_strict_debug_option_str);
   if (strictDebug && (newDefaultJSOptions & JSOPTION_STRICT) == 0) {
-    if (chromeWindow)
+    if (chromeWindow || !contentWindow)
       newDefaultJSOptions |= JSOPTION_STRICT;
   }
 #endif
@@ -2746,7 +2747,7 @@ nsJSContext::InitClasses(JSObject* aGlobalObj)
 
   JSAutoRequest ar(mContext);
 
-  ::JS_SetOptions(mContext, mDefaultJSOptions);
+  JSOptionChangedCallback(js_options_dot_str, this);
 
   // Attempt to initialize profiling functions
   ::JS_DefineProfilingFunctions(mContext, aGlobalObj);
