@@ -1,4 +1,4 @@
-pref("startup.homepage_override_url","http://www.mozilla.org/projects/%APP%/%VERSION%/whatsnew/");
+pref("startup.homepage_override_url","http://www.mozilla.org/projects/%APP%/%VERSION%/whatsnew/?oldversion=%OLD_VERSION%");
 pref("startup.homepage_welcome_url","http://www.mozilla.org/projects/%APP%/%VERSION%/firstrun/");
 // The time interval between checks for a new version (in seconds)
 pref("app.update.interval", 3600); // 1 hour
