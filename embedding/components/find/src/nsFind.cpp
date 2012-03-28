@@ -457,17 +457,6 @@ NS_NewFindContentIterator(bool aFindBackward,
 }
 // --------------------------------------------------------------------
 
-// Sure would be nice if we could just get these from somewhere else!
-PRInt32 nsFind::sInstanceCount = 0;
-nsIAtom* nsFind::sImgAtom = nsnull;
-nsIAtom* nsFind::sHRAtom = nsnull;
-nsIAtom* nsFind::sScriptAtom = nsnull;
-nsIAtom* nsFind::sNoframesAtom = nsnull;
-nsIAtom* nsFind::sSelectAtom = nsnull;
-nsIAtom* nsFind::sTextareaAtom = nsnull;
-nsIAtom* nsFind::sThAtom = nsnull;
-nsIAtom* nsFind::sTdAtom = nsnull;
-
 NS_IMPL_ISUPPORTS1(nsFind, nsIFind)
 
 nsFind::nsFind()
@@ -475,35 +464,10 @@ nsFind::nsFind()
   , mCaseSensitive(false)
   , mIterOffset(0)
 {
-  // Initialize the atoms if they aren't already:
-  if (sInstanceCount <= 0)
-  {
-    sImgAtom = NS_NewAtom("img");
-    sHRAtom = NS_NewAtom("hr");
-    sScriptAtom = NS_NewAtom("script");
-    sNoframesAtom = NS_NewAtom("noframes");
-    sSelectAtom = NS_NewAtom("select");
-    sTextareaAtom = NS_NewAtom("textarea");
-    sThAtom = NS_NewAtom("th");
-    sTdAtom = NS_NewAtom("td");
-  }
-  ++sInstanceCount;
 }
 
 nsFind::~nsFind()
 {
-  if (sInstanceCount <= 1)
-  {
-    NS_IF_RELEASE(sImgAtom);
-    NS_IF_RELEASE(sHRAtom);
-    NS_IF_RELEASE(sScriptAtom);
-    NS_IF_RELEASE(sNoframesAtom);
-    NS_IF_RELEASE(sSelectAtom);
-    NS_IF_RELEASE(sTextareaAtom);
-    NS_IF_RELEASE(sThAtom);
-    NS_IF_RELEASE(sTdAtom);
-  }
-  --sInstanceCount;
 }
 
 #ifdef DEBUG_FIND
@@ -780,10 +744,10 @@ bool nsFind::IsBlockNode(nsIContent* aContent)
 
   nsIAtom *atom = aContent->Tag();
 
-  if (atom == sImgAtom ||
-      atom == sHRAtom ||
-      atom == sThAtom ||
-      atom == sTdAtom)
+  if (atom == nsGkAtoms::img ||
+      atom == nsGkAtoms::hr ||
+      atom == nsGkAtoms::th ||
+      atom == nsGkAtoms::td)
     return true;
 
   return nsContentUtils::IsHTMLBlock(atom);
@@ -841,9 +805,9 @@ bool nsFind::SkipNode(nsIContent* aContent)
 
     if (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
         (content->IsHTML() &&
-         (atom == sScriptAtom ||
-          atom == sNoframesAtom ||
-          atom == sSelectAtom)))
+         (atom == nsGkAtoms::script ||
+          atom == nsGkAtoms::noframes ||
+          atom == nsGkAtoms::select)))
     {
 #ifdef DEBUG_FIND
       printf("Skipping node: ");
