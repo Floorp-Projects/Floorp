@@ -1208,33 +1208,6 @@ BrowserGlue.prototype = {
     this._dataSource = this._rdf.GetDataSource("rdf:local-store");
     this._dirty = false;
 
-    if (currentUIVersion < 1) {
-      // this code should always migrate pre-FF3 profiles to the current UI state
-      let currentsetResource = this._rdf.GetResource("currentset");
-      let toolbars = ["nav-bar", "toolbar-menubar", "PersonalToolbar"];
-      for (let i = 0; i < toolbars.length; i++) {
-        let toolbar = this._rdf.GetResource(BROWSER_DOCURL + toolbars[i]);
-        let currentset = this._getPersist(toolbar, currentsetResource);
-        if (!currentset) {
-          // toolbar isn't customized
-          if (i == 0)
-            // new button is in the defaultset, nothing to migrate
-            break;
-          continue;
-        }
-        if (/(?:^|,)unified-back-forward-button(?:$|,)/.test(currentset))
-          // new button is already there, nothing to migrate
-          break;
-        if (/(?:^|,)back-button(?:$|,)/.test(currentset)) {
-          let newset = currentset.replace(/(^|,)back-button($|,)/,
-                                          "$1unified-back-forward-button,back-button$2")
-          this._setPersist(toolbar, currentsetResource, newset);
-          // done migrating
-          break;
-        }
-      }
-    }
-
     if (currentUIVersion < 2) {
       // This code adds the customizable bookmarks button.
       let currentsetResource = this._rdf.GetResource("currentset");
