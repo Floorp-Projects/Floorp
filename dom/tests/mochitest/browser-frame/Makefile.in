@@ -39,52 +39,21 @@ DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = dom/tests/mochitest/general
+relativesrcdir  = dom/tests/mochitest/browser-frame
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
-		test_outerHTML.html \
-		test_outerHTML.xhtml \
-		497633.html \
-		historyframes.html \
-		test_497898.html \
-		test_bug504220.html \
-		test_bug628069_1.html \
-		test_bug628069_2.html \
-		file_bug628069.html \
-		test_bug631440.html \
-		test_bug653364.html \
-		test_bug629535.html \
-		test_clientRects.html \
-		test_consoleAPI.html \
-		test_domWindowUtils.html \
-		test_domWindowUtils_scrollXY.html \
-		test_offsets.html \
-		test_offsets.js \
-		test_windowProperties.html \
-		test_clipboard_events.html \
-		test_frameElementWrapping.html \
-		file_frameElementWrapping.html \
-		test_framedhistoryframes.html \
-		test_windowedhistoryframes.html \
-		test_focusrings.xul \
-		file_moving_xhr.html \
-		test_vibrator.html \
-		test_for_of.html \
-		test_focus_legend_noparent.html \
-		file_clonewrapper.html \
-		$(NULL)
-
-_CHROME_FILES = \
-		test_innerScreen.xul \
-		test_offsets.xul \
-		test_offsets.js \
+		browserFrameHelpers.js \
+		test_browserFrame1.html \
+		test_browserFrame2.html \
+		test_browserFrame3.html \
+		test_browserFrame4.html \
+		test_browserFrame5.html \
+		test_browserFrame6.html \
+		test_browserFrame7.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-libs:: $(_CHROME_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
