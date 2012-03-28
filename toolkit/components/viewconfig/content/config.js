@@ -52,7 +52,7 @@ const nsPrefService_CONTRACTID = "@mozilla.org/preferences-service;1";
 const nsClipboardHelper_CONTRACTID = "@mozilla.org/widget/clipboardhelper;1";
 const nsAtomService_CONTRACTID = "@mozilla.org/atom-service;1";
 
-const gPrefBranch = Services.prefs;
+const gPrefBranch = Services.prefs.getBranch(null);
 const gClipboardHelper = Components.classes[nsClipboardHelper_CONTRACTID].getService(nsIClipboardHelper);
 const gAtomService = Components.classes[nsAtomService_CONTRACTID].getService(nsIAtomService);
 
