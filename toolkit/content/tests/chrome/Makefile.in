@@ -89,6 +89,9 @@ _TEST_FILES = 	findbar_window.xul \
 		test_autocomplete4.xul \
 		test_autocomplete5.xul \
 		test_autocomplete_delayOnPaste.xul \
+		file_autocomplete_with_composition.js \
+		test_autocomplete_with_composition_on_input.html \
+		test_autocomplete_with_composition_on_textbox.xul \
 		test_keys.xul \
 		window_keys.xul \
 		test_showcaret.xul \

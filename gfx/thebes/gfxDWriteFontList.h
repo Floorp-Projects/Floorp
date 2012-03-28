@@ -79,6 +79,11 @@ public:
 
     void SetForceGDIClassic(bool aForce) { mForceGDIClassic = aForce; }
 
+    virtual void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
+    virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
+
 protected:
     /** This font family's directwrite fontfamily object */
     nsRefPtr<IDWriteFontFamily> mDWFamily;
@@ -178,6 +183,11 @@ public:
 
     void SetForceGDIClassic(bool aForce) { mForceGDIClassic = aForce; }
     bool GetForceGDIClassic() { return mForceGDIClassic; }
+
+    virtual void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
+    virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
 
 protected:
     friend class gfxDWriteFont;
@@ -380,6 +390,11 @@ public:
 
     gfxFloat GetForceGDIClassicMaxFontSize() { return mForceGDIClassicMaxFontSize; }
 
+    virtual void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
+    virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
+
 private:
     friend class gfxDWriteFontFamily;
 
@@ -401,7 +416,7 @@ private:
      */
     nsTArray<nsString> mNonExistingFonts;
 
-    typedef nsDataHashtable<nsStringHashKey, nsRefPtr<gfxFontFamily> > FontTable;
+    typedef nsRefPtrHashtable<nsStringHashKey, gfxFontFamily> FontTable;
 
     /**
      * Table of font substitutes, we grab this from the registry to get

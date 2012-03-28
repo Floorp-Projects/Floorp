@@ -390,9 +390,6 @@ XDRScriptConst(XDRState<mode> *xdr, HeapValue *vp)
     return true;
 }
 
-static const char *
-SaveScriptFilename(JSContext *cx, const char *filename);
-
 template<XDRMode mode>
 bool
 js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
@@ -837,8 +834,8 @@ JSScript::destroyCounts(JSContext *cx)
  * Shared script filename management.
  */
 
-static const char *
-SaveScriptFilename(JSContext *cx, const char *filename)
+const char *
+js::SaveScriptFilename(JSContext *cx, const char *filename)
 {
     JSCompartment *comp = cx->compartment;
 

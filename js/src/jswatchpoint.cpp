@@ -149,26 +149,8 @@ WatchpointMap::triggerWatchpoint(JSContext *cx, JSObject *obj, jsid id, Value *v
     old.setUndefined();
     if (obj->isNative()) {
         if (const Shape *shape = obj->nativeLookup(cx, id)) {
-            if (shape->hasSlot()) {
-                if (shape->isMethod()) {
-                    /*
-                     * The existing watched property is a method. Trip
-                     * the method read barrier in order to avoid
-                     * passing an uncloned function object to the
-                     * handler.
-                     */
-                    old = UndefinedValue();
-                    Value method = ObjectValue(*obj->nativeGetMethod(shape));
-                    if (!obj->methodReadBarrier(cx, *shape, &method))
-                        return false;
-                    shape = obj->nativeLookup(cx, id);
-                    JS_ASSERT(shape->isDataDescriptor());
-                    JS_ASSERT(!shape->isMethod());
-                    old = method;
-                } else {
-                    old = obj->nativeGetSlot(shape->slot());
-                }
-            }
+            if (shape->hasSlot())
+                old = obj->nativeGetSlot(shape->slot());
         }
     }
 

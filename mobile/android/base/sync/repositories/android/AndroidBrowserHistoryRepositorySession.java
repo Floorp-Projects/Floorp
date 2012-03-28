@@ -6,9 +6,12 @@ package org.mozilla.gecko.sync.repositories.android;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
+import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.Repository;
+import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
@@ -26,6 +29,18 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
   public AndroidBrowserHistoryRepositorySession(Repository repository, Context context) {
     super(repository);
     dbHelper = new AndroidBrowserHistoryDataAccessor(context);
+  }
+
+  @Override
+  public void begin(RepositorySessionBeginDelegate delegate) throws InvalidSessionTransitionException {
+    // HACK: Fennec creates history records without a GUID. Mercilessly drop
+    // them on the floor. See Bug 739514.
+    try {
+      dbHelper.delete(BrowserContract.History.GUID + " IS NULL", null);
+    } catch (Exception e) {
+      // Ignore.
+    }
+    super.begin(delegate);
   }
 
   @Override

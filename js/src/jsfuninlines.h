@@ -85,48 +85,6 @@ JSFunction::initializeExtended()
 }
 
 inline void
-JSFunction::setJoinable()
-{
-    JS_ASSERT(isInterpreted());
-    flags |= JSFUN_JOINABLE;
-}
-
-inline bool
-JSFunction::isClonedMethod() const
-{
-    return joinable() && isExtended() && getExtendedSlot(METHOD_OBJECT_SLOT).isObject();
-}
-
-inline JSAtom *
-JSFunction::methodAtom() const
-{
-    return (joinable() && isExtended() && getExtendedSlot(METHOD_PROPERTY_SLOT).isString())
-           ? (JSAtom *) getExtendedSlot(METHOD_PROPERTY_SLOT).toString()
-           : NULL;
-}
-
-inline void
-JSFunction::setMethodAtom(JSAtom *atom)
-{
-    JS_ASSERT(joinable());
-    setExtendedSlot(METHOD_PROPERTY_SLOT, js::StringValue(atom));
-}
-
-inline JSObject *
-JSFunction::methodObj() const
-{
-    JS_ASSERT(joinable());
-    return isClonedMethod() ? &getExtendedSlot(METHOD_OBJECT_SLOT).toObject() : NULL;
-}
-
-inline void
-JSFunction::setMethodObj(JSObject& obj)
-{
-    JS_ASSERT(joinable());
-    setExtendedSlot(METHOD_OBJECT_SLOT, js::ObjectValue(obj));
-}
-
-inline void
 JSFunction::setExtendedSlot(size_t which, const js::Value &val)
 {
     JS_ASSERT(which < js::ArrayLength(toExtended()->extendedSlots));
@@ -288,10 +246,10 @@ inline JSFunction *
 CloneFunctionObjectIfNotSingleton(JSContext *cx, JSFunction *fun, JSObject *parent)
 {
     /*
-     * For attempts to clone functions at a function definition opcode or from
-     * a method barrier, don't perform the clone if the function has singleton
-     * type. This was called pessimistically, and we need to preserve the
-     * type's property that if it is singleton there is only a single object
+     * For attempts to clone functions at a function definition opcode,
+     * don't perform the clone if the function has singleton type. This
+     * was called pessimistically, and we need to preserve the type's
+     * property that if it is singleton there is only a single object
      * with its type in existence.
      */
     if (fun->hasSingletonType()) {

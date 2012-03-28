@@ -42,12 +42,14 @@
 #include "nsAccessibleWrap.h"
 #include "nsAccUtils.h"
 #include "nsIAccessibleTable.h"
+#include "TableAccessible.h"
 #include "nsMai.h"
 
 #include "nsArrayUtils.h"
 
-extern "C" {
+using namespace mozilla::a11y;
 
+extern "C" {
 static AtkObject*
 refAtCB(AtkTable *aTable, gint aRow, gint aColumn)
 {
@@ -208,23 +210,17 @@ getRowExtentAtCB(AtkTable *aTable,
 }
 
 static AtkObject*
-getCaptionCB(AtkTable *aTable)
+getCaptionCB(AtkTable* aTable)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    if (!accWrap)
-        return nsnull;
+  nsAccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
+  if (!accWrap)
+    return nsnull;
 
-    nsCOMPtr<nsIAccessibleTable> accTable;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
-                            getter_AddRefs(accTable));
-    NS_ENSURE_TRUE(accTable, nsnull);
+  TableAccessible* table = accWrap->AsTable();
+  NS_ENSURE_TRUE(table, nsnull);
 
-    nsCOMPtr<nsIAccessible> caption;
-    nsresult rv = accTable->GetCaption(getter_AddRefs(caption));
-    if (NS_FAILED(rv) || !caption)
-        return nsnull;
-
-    return nsAccessibleWrap::GetAtkObject(caption);
+  nsAccessible* caption = table->Caption();
+  return caption ? nsAccessibleWrap::GetAtkObject(caption) : nsnull;
 }
 
 static const gchar*

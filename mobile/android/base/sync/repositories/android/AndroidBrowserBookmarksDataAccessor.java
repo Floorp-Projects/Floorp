@@ -187,9 +187,23 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
 
   @Override
   protected ContentValues getContentValues(Record record) {
-    ContentValues cv = new ContentValues();
     BookmarkRecord rec = (BookmarkRecord) record;
+
+    if (rec.deleted) {
+      ContentValues cv = new ContentValues();
+      cv.put(BrowserContract.SyncColumns.GUID,     rec.guid);
+      cv.put(BrowserContract.Bookmarks.IS_DELETED, 1);
+      return cv;
+    }
+
+    final int recordType = BrowserContractHelpers.typeCodeForString(rec.type);
+    if (recordType == -1) {
+      throw new IllegalStateException("Unexpected record type " + rec.type);
+    }
+
+    ContentValues cv = new ContentValues();
     cv.put(BrowserContract.SyncColumns.GUID,      rec.guid);
+    cv.put(BrowserContract.Bookmarks.TYPE,        recordType);
     cv.put(BrowserContract.Bookmarks.TITLE,       rec.title);
     cv.put(BrowserContract.Bookmarks.URL,         rec.bookmarkURI);
     cv.put(BrowserContract.Bookmarks.DESCRIPTION, rec.description);
@@ -200,12 +214,6 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
     cv.put(BrowserContract.Bookmarks.KEYWORD,     rec.keyword);
     cv.put(BrowserContract.Bookmarks.PARENT,      rec.androidParentID);
     cv.put(BrowserContract.Bookmarks.POSITION,    rec.androidPosition);
-
-    // Only bookmark and folder types should make it this far.
-    // Other types should be filtered out and dropped.
-    cv.put(BrowserContract.Bookmarks.TYPE, rec.type.equalsIgnoreCase(TYPE_FOLDER) ?
-                                           BrowserContract.Bookmarks.TYPE_FOLDER :
-                                           BrowserContract.Bookmarks.TYPE_BOOKMARK);
 
     // Note that we don't set the modified timestamp: we allow the
     // content provider to do that for us.

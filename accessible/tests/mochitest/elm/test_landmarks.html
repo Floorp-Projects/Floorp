@@ -24,6 +24,7 @@
       testRole("footer", ROLE_FOOTER);
       testRole("article", ROLE_DOCUMENT);
       testRole("aside", ROLE_NOTE);
+      testRole("section", ROLE_SECTION); // XXX bug 739612: not a landmark
 
       testRole("main", ROLE_DOCUMENT);
       testRole("form", ROLE_FORM);
@@ -32,6 +33,7 @@
       testAttrs("nav", {"xml-roles" : "navigation"}, true);
       testAttrs("footer", {"xml-roles" : "contentinfo"}, true);
       testAttrs("aside", {"xml-roles" : "complementary"}, true);
+      testAttrs("section", {"xml-roles" : "region"}, true);
       testAttrs("main", {"xml-roles" : "main"}, true); // // ARIA override
       testAttrs("form", {"xml-roles" : "form"}, true);
 
@@ -41,6 +43,7 @@
       testAttrs("footer", {"tag" : "footer"}, true);
       testAttrs("article", {"tag" : "article"}, true);
       testAttrs("aside", {"tag" : "aside"}, true);
+      testAttrs("section", {"tag" : "section"}, true);
       testAttrs("main", {"tag" : "article"}, true);
       testAttrs("form", {"tag" : "article"}, true);
 
@@ -69,6 +72,11 @@
     Bug 610650
   </a>
   <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=614310"
+     title="Map section to pane (like role=region)">
+    Mozilla Bug 614310
+  </a>
+  <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=734982"
      title="Map ARIA role FORM">
     Bug 734982
@@ -82,6 +90,7 @@
   <header id="header">a header</header>
   <footer id="footer">a footer</footer>
   <aside id="aside">by the way I am an aside</aside>
+  <section id="section">a section</section>
 
   <article id="article">an article</article>
   <article id="main" role="main">a main area</article>

@@ -1,0 +1,4 @@
+You can place test assets in this file.
+They can be read as raw InputStreams with the getAsset() method in BaseTest.
+
+(This file is a placeholder to ensure that the assets/ directory exists, as it is referenced in the robocop Makefile.)

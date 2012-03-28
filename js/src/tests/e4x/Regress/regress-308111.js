@@ -630,7 +630,6 @@ var xml = <prefs>
 <pref><name>font.size.variable.x-guru</name></pref>
 <pref><name>font.size.variable.x-gujr</name></pref>
 <pref><name>network.protocol-handler.external.vnd.ms.radio</name></pref>
-<pref><name>advanced.system.supportDDEExec</name></pref>
 <pref><name>browser.tabs.opentabfor.urlbar</name></pref>
 <pref><name>font.name.sans-serif.x-khmr</name></pref>
 <pref><name>mousewheel.horizscroll.withshiftkey.sysnumlines</name></pref>

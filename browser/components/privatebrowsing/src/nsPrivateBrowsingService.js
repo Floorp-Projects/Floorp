@@ -193,9 +193,9 @@ PrivateBrowsingService.prototype = {
       if (!this._quitting && this._saveSession) {
         let browserWindow = this._getBrowserWindow();
 
-	// if there are open browser windows, load a dummy session to get a distinct 
+        // if there are open browser windows, load a dummy session to get a distinct 
         // separation between private and non-private sessions
-	if (browserWindow) {
+        if (browserWindow) {
           // set an empty session to transition from/to pb mode, see bug 476463
           ss.setBrowserState(blankState);
 
@@ -217,7 +217,9 @@ PrivateBrowsingService.prototype = {
                        .getInterface(Ci.nsIXULWindow)
                        .docShell.contentViewer.resetCloseWindow();
         }
+      }
 
+      if (!this._quitting) {
         var windowsEnum = Services.wm.getEnumerator("navigator:browser");
         while (windowsEnum.hasMoreElements()) {
           var window = windowsEnum.getNext();

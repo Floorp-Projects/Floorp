@@ -815,6 +815,9 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script);
 
 namespace js {
 
+extern const char *
+SaveScriptFilename(JSContext *cx, const char *filename);
+
 extern void
 MarkScriptFilename(const char *filename);
 

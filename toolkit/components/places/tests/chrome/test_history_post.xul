@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+
+<window title="Test post pages are not added to history"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    const Cc = Components.classes;
+    const Ci = Components.interfaces;
+
+    Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
+    Components.utils.import("resource://gre/modules/NetUtil.jsm");
+
+    const SJS_URI = NetUtil.newURI("http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/history_post.sjs");
+
+    function test()
+    {
+      SimpleTest.waitForExplicitFinish();
+      let submit = document.getElementById("submit");
+      submit.click();
+      let iframe = document.getElementById("post_iframe");
+      iframe.addEventListener("load", function onLoad() {
+        iframe.removeEventListener("load", onLoad);
+        let history = Cc["@mozilla.org/browser/history;1"]
+                        .getService(Ci.mozIAsyncHistory);
+        history.isURIVisited(SJS_URI, function (aURI, aIsVisited) {
+          ok(!aIsVisited, "The POST page should not be added to history");
+
+          let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
+                                  .DBConnection;
+          let stmt = db.createStatement(
+            "SELECT 1 FROM moz_places WHERE url = :page_url"
+          );
+          stmt.params.page_url = SJS_URI.spec;
+          ok(!stmt.executeStep(), "The page should not be in the database");
+          stmt.finalize();
+          SimpleTest.finish();
+        });
+      });
+    }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <iframe name="post_iframe" id="post_iframe"/>
+    <form method="post" action="http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/history_post.sjs" target="post_iframe">
+      <input type="submit" id="submit"/>
+    </form>
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+</window>

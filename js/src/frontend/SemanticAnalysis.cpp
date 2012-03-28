@@ -126,211 +126,6 @@ CleanFunctionList(ParseNodeAllocator *allocator, FunctionBox **funboxHead)
     }
 }
 
-/*
- * Mark as funargs any functions that reach up to one or more upvars across an
- * already-known funarg. The parser will flag the o_m lambda as a funarg in:
- *
- *   function f(o, p) {
- *       o.m = function o_m(a) {
- *           function g() { return p; }
- *           function h() { return a; }
- *           return g() + h();
- *       }
- *   }
- *
- * but without this extra marking phase, function g will not be marked as a
- * funarg since it is called from within its parent scope. But g reaches up to
- * f's parameter p, so if o_m escapes f's activation scope, g does too and
- * cannot assume that p's stack slot is still alive. In contast function h
- * neither escapes nor uses an upvar "above" o_m's level.
- *
- * If function g itself contained lambdas that contained non-lambdas that reach
- * up above its level, then those non-lambdas would have to be marked too. This
- * process is potentially exponential in the number of functions, but generally
- * not so complex. But it can't be done during a single recursive traversal of
- * the funbox tree, so we must use a work queue.
- *
- * Return the minimal "skipmin" for funbox and its siblings. This is the delta
- * between the static level of the bodies of funbox and its peers (which must
- * be funbox->level + 1), and the static level of the nearest upvar among all
- * the upvars contained by funbox and its peers. If there are no upvars, return
- * FREE_STATIC_LEVEL. Thus this function never returns 0.
- */
-static unsigned
-FindFunArgs(FunctionBox *funbox, int level, FunctionBoxQueue *queue)
-{
-    unsigned allskipmin = UpvarCookie::FREE_LEVEL;
-
-    do {
-        ParseNode *fn = funbox->node;
-        JS_ASSERT(fn->isArity(PN_FUNC));
-        int fnlevel = level;
-
-        /*
-         * An eval can leak funbox, functions along its ancestor line, and its
-         * immediate kids. Since FindFunArgs uses DFS and the parser propagates
-         * TCF_FUN_HEAVYWEIGHT bottom up, funbox's ancestor function nodes have
-         * already been marked as funargs by this point. Therefore we have to
-         * flag only funbox->node and funbox->kids' nodes here.
-         *
-         * Generators need to be treated in the same way. Even if the value
-         * of a generator function doesn't escape, anything defined or referred
-         * to inside the generator can escape through a call to the generator.
-         * We could imagine doing static analysis to track the calls and see
-         * if any iterators or values returned by iterators escape, but that
-         * would be hard, so instead we just assume everything might escape.
-         */
-        if (funbox->tcflags & (TCF_FUN_HEAVYWEIGHT | TCF_FUN_IS_GENERATOR)) {
-            fn->setFunArg();
-            for (FunctionBox *kid = funbox->kids; kid; kid = kid->siblings)
-                kid->node->setFunArg();
-        }
-
-        /*
-         * Compute in skipmin the least distance from fun's static level up to
-         * an upvar, whether used directly by fun, or indirectly by a function
-         * nested in fun.
-         */
-        unsigned skipmin = UpvarCookie::FREE_LEVEL;
-        ParseNode *pn = fn->pn_body;
-
-        if (pn->isKind(PNK_UPVARS)) {
-            AtomDefnMapPtr &upvars = pn->pn_names;
-            JS_ASSERT(upvars->count() != 0);
-
-            for (AtomDefnRange r = upvars->all(); !r.empty(); r.popFront()) {
-                Definition *defn = r.front().value();
-                Definition *lexdep = defn->resolve();
-
-                if (!lexdep->isFreeVar()) {
-                    unsigned upvarLevel = lexdep->frameLevel();
-
-                    if (int(upvarLevel) <= fnlevel)
-                        fn->setFunArg();
-
-                    unsigned skip = (funbox->level + 1) - upvarLevel;
-                    if (skip < skipmin)
-                        skipmin = skip;
-                }
-            }
-        }
-
-        /*
-         * If this function escapes, whether directly (the parser detects such
-         * escapes) or indirectly (because this non-escaping function uses an
-         * upvar that reaches across an outer function boundary where the outer
-         * function escapes), enqueue it for further analysis, and bump fnlevel
-         * to trap any non-escaping children.
-         */
-        if (fn->isFunArg()) {
-            queue->push(funbox);
-            fnlevel = int(funbox->level);
-        }
-
-        /*
-         * Now process the current function's children, and recalibrate their
-         * cumulative skipmin to be relative to the current static level.
-         */
-        if (funbox->kids) {
-            unsigned kidskipmin = FindFunArgs(funbox->kids, fnlevel, queue);
-
-            JS_ASSERT(kidskipmin != 0);
-            if (kidskipmin != UpvarCookie::FREE_LEVEL) {
-                --kidskipmin;
-                if (kidskipmin != 0 && kidskipmin < skipmin)
-                    skipmin = kidskipmin;
-            }
-        }
-
-        /*
-         * Finally, after we've traversed all of the current function's kids,
-         * minimize allskipmin against our accumulated skipmin. Minimize across
-         * funbox and all of its siblings, to compute our return value.
-         */
-        if (skipmin != UpvarCookie::FREE_LEVEL) {
-            if (skipmin < allskipmin)
-                allskipmin = skipmin;
-        }
-    } while ((funbox = funbox->siblings) != NULL);
-
-    return allskipmin;
-}
-
-static bool
-MarkFunArgs(JSContext *cx, FunctionBox *funbox, uint32_t functionCount)
-{
-    FunctionBoxQueue queue;
-    if (!queue.init(functionCount)) {
-        js_ReportOutOfMemory(cx);
-        return false;
-    }
-
-    FindFunArgs(funbox, -1, &queue);
-    while ((funbox = queue.pull()) != NULL) {
-        ParseNode *fn = funbox->node;
-        JS_ASSERT(fn->isFunArg());
-
-        ParseNode *pn = fn->pn_body;
-        if (pn->isKind(PNK_UPVARS)) {
-            AtomDefnMapPtr upvars = pn->pn_names;
-            JS_ASSERT(!upvars->empty());
-
-            for (AtomDefnRange r = upvars->all(); !r.empty(); r.popFront()) {
-                Definition *defn = r.front().value();
-                Definition *lexdep = defn->resolve();
-
-                if (!lexdep->isFreeVar() &&
-                    !lexdep->isFunArg() &&
-                    (lexdep->kind() == Definition::FUNCTION ||
-                     lexdep->isOp(JSOP_CALLEE))) {
-                    /*
-                     * Mark this formerly-Algol-like function as an escaping
-                     * function (i.e., as a funarg), because it is used from
-                     * another funarg.
-                     *
-                     * Progress is guaranteed because we set the funarg flag
-                     * here, which suppresses revisiting this function (thanks
-                     * to the !lexdep->isFunArg() test just above).
-                     */
-                    lexdep->setFunArg();
-
-                    FunctionBox *afunbox;
-                    if (lexdep->isOp(JSOP_CALLEE)) {
-                        /*
-                         * A named function expression will not appear to be a
-                         * funarg if it is immediately applied. However, if its
-                         * name is used in an escaping function nested within
-                         * it, then it must become flagged as a funarg again.
-                         * See bug 545980.
-                         */
-                        afunbox = funbox;
-                        unsigned calleeLevel = lexdep->pn_cookie.level();
-                        unsigned staticLevel = afunbox->level + 1U;
-                        while (staticLevel != calleeLevel) {
-                            afunbox = afunbox->parent;
-                            --staticLevel;
-                        }
-                        JS_ASSERT(afunbox->level + 1U == calleeLevel);
-                        afunbox->node->setFunArg();
-                    } else {
-                       afunbox = lexdep->pn_funbox;
-                    }
-                    queue.push(afunbox);
-
-                    /*
-                     * Walk over nested functions again, now that we have
-                     * changed the level across which it is unsafe to access
-                     * upvars using the runtime dynamic link (frame chain).
-                     */
-                    if (afunbox->kids)
-                        FindFunArgs(afunbox->kids, afunbox->level, &queue);
-                }
-            }
-        }
-    }
-    return true;
-}
-
 static void
 FlagHeavyweights(Definition *dn, FunctionBox *funbox, uint32_t *tcflags)
 {
@@ -347,7 +142,6 @@ FlagHeavyweights(Definition *dn, FunctionBox *funbox, uint32_t *tcflags)
             funbox->tcflags |= TCF_FUN_HEAVYWEIGHT;
             break;
         }
-        funbox->tcflags |= TCF_FUN_ENTRAINS_SCOPES;
     }
 
     if (!funbox && (*tcflags & TCF_IN_FUNCTION))
@@ -423,9 +217,6 @@ SetFunctionKinds(FunctionBox *funbox, uint32_t *tcflags, bool isDirectEval)
                     FlagHeavyweights(lexdep, funbox, tcflags);
             }
         }
-
-        if (funbox->joinable())
-            fun->setJoinable();
     }
 }
 
@@ -473,8 +264,6 @@ frontend::AnalyzeFunctions(TreeContext *tc)
     CleanFunctionList(&tc->parser->allocator, &tc->functionList);
     if (!tc->functionList)
         return true;
-    if (!MarkFunArgs(tc->parser->context, tc->functionList, tc->parser->functionCount))
-        return false;
     if (!MarkExtensibleScopeDescendants(tc->parser->context, tc->functionList, false))
         return false;
     bool isDirectEval = !!tc->parser->callerFrame;
