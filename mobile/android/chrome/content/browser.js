@@ -1074,15 +1074,10 @@ var NativeWindow = {
       if (this.menu._callbacks[aData])
         this.menu._callbacks[aData]();
     } else if (aTopic == "Doorhanger:Reply") {
-      let data = JSON.parse(aData);
-      let reply_id = data["callback"];
-
+      let reply_id = aData;
       if (this.doorhanger._callbacks[reply_id]) {
-        // Pass the value of the optional checkbox to the callback
-        let checked = data["checked"];
-        this.doorhanger._callbacks[reply_id].cb(checked);
-
         let prompt = this.doorhanger._callbacks[reply_id].prompt;
+        this.doorhanger._callbacks[reply_id].cb();
         for (let id in this.doorhanger._callbacks) {
           if (this.doorhanger._callbacks[id].prompt == prompt) {
             delete this.doorhanger._callbacks[id];
