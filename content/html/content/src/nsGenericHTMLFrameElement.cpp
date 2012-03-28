@@ -294,5 +294,5 @@ nsGenericHTMLFrameElement::GetReallyIsBrowser(bool *aOut)
 
   // Otherwise, succeed.
   *aOut = true;
-  return true;
+  return NS_OK;
 }
