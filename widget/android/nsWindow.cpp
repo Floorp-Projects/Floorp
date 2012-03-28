@@ -214,9 +214,9 @@ nsWindow::~nsWindow()
         mRootAccessible = nsnull;
 #endif
     ALOG("nsWindow %p destructor", (void*)this);
-
-    AndroidBridge::Bridge()->SetCompositorParent(NULL, NULL);
-
+#ifdef MOZ_JAVA_COMPOSITOR
+    SetCompositor(NULL, NULL, NULL);
+#endif
 }
 
 bool
@@ -772,21 +772,21 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
         mLayerManager = CreateBasicLayerManager();
         return mLayerManager;
     }
-
+#ifdef MOZ_JAVA_COMPOSITOR
     bool useCompositor =
         Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
 
     if (useCompositor) {
         CreateCompositor();
         if (mLayerManager) {
-            AndroidBridge::Bridge()->SetCompositorParent(mCompositorParent, mCompositorThread);
+            SetCompositor(mCompositorParent, mCompositorChild, mCompositorThread);
             return mLayerManager;
         }
 
         // If we get here, then off main thread compositing failed to initialize.
         sFailedToCreateGLContext = true;
     }
-
+#endif
     mUseAcceleratedRendering = GetShouldAccelerate();
 
     if (!mUseAcceleratedRendering ||
@@ -983,6 +983,31 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             sValidSurface = false;
             break;
 
+#ifdef MOZ_JAVA_COMPOSITOR
+        case AndroidGeckoEvent::COMPOSITOR_PAUSE:
+            // The compositor gets paused when the app is about to go into the
+            // background. While the compositor is paused, we need to ensure that
+            // no layer tree updates (from draw events) occur, since the compositor
+            // cannot make a GL context current in order to process updates.
+            if (sCompositorChild) {
+                sCompositorChild->SendPause();
+            }
+            sCompositorPaused = true;
+            break;
+
+        case AndroidGeckoEvent::COMPOSITOR_RESUME:
+            // When we receive this, the compositor has already been told to
+            // resume. (It turns out that waiting till we reach here to tell
+            // the compositor to resume takes too long, resulting in a black
+            // flash.) This means it's now safe for layer updates to occur.
+            // Since we might have prevented one or more draw events from
+            // occurring while the compositor was paused, we need to schedule
+            // a draw event now.
+            sCompositorPaused = false;
+            win->RedrawAll();
+            break;
+#endif
+
         case AndroidGeckoEvent::GECKO_EVENT_SYNC:
             AndroidBridge::Bridge()->AcknowledgeEventSync();
             break;
@@ -1135,8 +1160,8 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
     AndroidBridge::AutoLocalJNIFrame jniFrame;
 #ifdef MOZ_JAVA_COMPOSITOR
-    // We haven't been given a window-size yet, so do nothing
-    if (gAndroidBounds.width <= 0 || gAndroidBounds.height <= 0) {
+    // We're paused, or we haven't been given a window-size yet, so do nothing
+    if (sCompositorPaused || gAndroidBounds.width <= 0 || gAndroidBounds.height <= 0) {
         return;
     }
 
@@ -2275,13 +2300,17 @@ nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {
 // off-main-thread compositor fields and functions
 
 nsRefPtr<mozilla::layers::CompositorParent> nsWindow::sCompositorParent = 0;
+nsRefPtr<mozilla::layers::CompositorChild> nsWindow::sCompositorChild = 0;
 base::Thread * nsWindow::sCompositorThread = 0;
+bool nsWindow::sCompositorPaused = false;
 
 void
-nsWindow::SetCompositorParent(mozilla::layers::CompositorParent* aCompositorParent,
-                              ::base::Thread* aCompositorThread)
+nsWindow::SetCompositor(mozilla::layers::CompositorParent* aCompositorParent,
+                        mozilla::layers::CompositorChild* aCompositorChild,
+                        ::base::Thread* aCompositorThread)
 {
     sCompositorParent = aCompositorParent;
+    sCompositorChild = aCompositorChild;
     sCompositorThread = aCompositorThread;
 }
 
