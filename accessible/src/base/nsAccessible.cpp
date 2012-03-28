@@ -2519,8 +2519,10 @@ nsAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
 void
 nsAccessible::Shutdown()
 {
-  // Invalidate the child count and pointers to other accessibles, also make
-  // sure none of its children point to this parent
+  // Mark the accessible as defunct, invalidate the child count and pointers to 
+  // other accessibles, also make sure none of its children point to this parent
+  mFlags |= eIsDefunct;
+
   InvalidateChildren();
   if (mParent)
     mParent->RemoveChild(this);
