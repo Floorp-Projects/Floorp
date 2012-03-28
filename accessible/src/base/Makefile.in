@@ -104,9 +104,8 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += \
   -I$(srcdir) \
-  -I$(srcdir)/../generic \
-  -I$(srcdir)/../html \
   -I$(srcdir)/../xpcom \
+  -I$(srcdir)/../html \
   -I$(srcdir)/../xul \
   -I$(srcdir)/../../../layout/generic \
   -I$(srcdir)/../../../layout/style \

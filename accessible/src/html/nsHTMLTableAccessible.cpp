@@ -436,7 +436,7 @@ nsHTMLTableHeaderCellAccessible::NativeRole()
 
 nsHTMLTableAccessible::
   nsHTMLTableAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc), xpcAccessibleTable(this)
+  nsAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -445,16 +445,6 @@ nsHTMLTableAccessible::
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLTableAccessible, nsAccessible,
                              nsHTMLTableAccessible, nsIAccessibleTable)
-
-////////////////////////////////////////////////////////////////////////////////
-//nsAccessNode
-
-void
-nsHTMLTableAccessible::Shutdown()
-{
-  mTable = nsnull;
-  nsAccessibleWrap::Shutdown();
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -521,7 +511,9 @@ nsHTMLTableAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
   nsresult rv = nsAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (IsProbablyLayoutTable()) {
+  bool isProbablyForLayout;
+  IsProbablyForLayout(&isProbablyForLayout);
+  if (isProbablyForLayout) {
     nsAutoString oldValueUnused;
     aAttributes->SetStringProperty(NS_LITERAL_CSTRING("layout-guess"),
                                    NS_LITERAL_STRING("true"), oldValueUnused);
@@ -546,11 +538,13 @@ nsHTMLTableAccessible::RelationByType(PRUint32 aType)
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLTableAccessible: nsIAccessibleTable implementation
 
-nsAccessible*
-nsHTMLTableAccessible::Caption()
+NS_IMETHODIMP
+nsHTMLTableAccessible::GetCaption(nsIAccessible **aCaption)
 {
-  nsAccessible* child = mChildren.SafeElementAt(0, nsnull);
-  return child && child->Role() == roles::CAPTION ? child : nsnull;
+  NS_ENSURE_ARG_POINTER(aCaption);
+
+  NS_IF_ADDREF(*aCaption = Caption());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1313,7 +1307,8 @@ nsHTMLTableAccessible::Description(nsString& aDescription)
 
 #ifdef SHOW_LAYOUT_HEURISTIC
   if (aDescription.IsEmpty()) {
-    bool isProbablyForLayout = IsProbablyLayoutTable();
+    bool isProbablyForLayout;
+    IsProbablyForLayout(&isProbablyForLayout);
     aDescription = mLayoutHeuristic;
   }
 #ifdef DEBUG_A11Y
@@ -1362,8 +1357,8 @@ nsHTMLTableAccessible::HasDescendant(const nsAString& aTagName,
   return !!foundItem;
 }
 
-bool
-nsHTMLTableAccessible::IsProbablyLayoutTable()
+NS_IMETHODIMP
+nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
 {
   // Implement a heuristic to determine if table is most likely used for layout
   // XXX do we want to look for rowspan or colspan, especialy that span all but a couple cells
@@ -1375,15 +1370,17 @@ nsHTMLTableAccessible::IsProbablyLayoutTable()
   // Change to |#define SHOW_LAYOUT_HEURISTIC DEBUG| before final release
 #ifdef SHOW_LAYOUT_HEURISTIC
 #define RETURN_LAYOUT_ANSWER(isLayout, heuristic) \
-  { \
-    mLayoutHeuristic = isLayout ? \
-      NS_LITERAL_STRING("layout table: " heuristic) : \
-      NS_LITERAL_STRING("data table: " heuristic); \
-    return isLayout; \
-  }
+  { *aIsProbablyForLayout = isLayout; \
+    mLayoutHeuristic = isLayout ? NS_LITERAL_STRING("layout table: ") : NS_LITERAL_STRING("data table: "); \
+    mLayoutHeuristic += NS_LITERAL_STRING(heuristic); return NS_OK; }
 #else
-#define RETURN_LAYOUT_ANSWER(isLayout, heuristic) { return isLayout; }
+#define RETURN_LAYOUT_ANSWER(isLayout, heuristic) { *aIsProbablyForLayout = isLayout; return NS_OK; }
 #endif
+
+  *aIsProbablyForLayout = false;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   nsDocAccessible* docAccessible = Document();
   if (docAccessible) {

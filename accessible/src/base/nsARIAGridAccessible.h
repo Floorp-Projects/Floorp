@@ -42,16 +42,12 @@
 #include "nsIAccessibleTable.h"
 
 #include "nsHyperTextAccessibleWrap.h"
-#include "TableAccessible.h"
-#include "xpcAccessibleTable.h"
 
 /**
  * Accessible for ARIA grid and treegrid.
  */
 class nsARIAGridAccessible : public nsAccessibleWrap,
-                             public xpcAccessibleTable,
-                             public nsIAccessibleTable,
-                             public mozilla::a11y::TableAccessible
+                             public nsIAccessibleTable
 {
 public:
   nsARIAGridAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
@@ -60,13 +56,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessibleTable
-  NS_DECL_OR_FORWARD_NSIACCESSIBLETABLE_WITH_XPCACCESSIBLETABLE
-
-  // nsAccessible
-  virtual mozilla::a11y::TableAccessible* AsTable() { return this; }
-
-  // nsAccessNode
-  virtual void Shutdown();
+  NS_DECL_NSIACCESSIBLETABLE
 
 protected:
   /**
