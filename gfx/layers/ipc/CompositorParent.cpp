@@ -90,6 +90,20 @@ CompositorParent::RecvStop()
   return true;
 }
 
+bool
+CompositorParent::RecvPause()
+{
+  PauseComposition();
+  return true;
+}
+
+bool
+CompositorParent::RecvResume()
+{
+  ResumeComposition();
+  return true;
+}
+
 void
 CompositorParent::ScheduleRenderOnCompositorThread()
 {
