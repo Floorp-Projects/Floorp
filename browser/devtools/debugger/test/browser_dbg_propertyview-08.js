@@ -25,8 +25,9 @@ function test()
 
 function testFrameParameters()
 {
-  gDebugger.addEventListener("Debugger:FetchedParameters", function test() {
-    gDebugger.removeEventListener("Debugger:FetchedParameters", test, false);
+  // scriptsadded is fired last when switching to a paused state, so the
+  // property view will have had a chance to fetch the call parameters.
+  gPane.activeThread.addOneTimeListener("scriptsadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
       var frames = gDebugger.DebuggerView.Stackframes._frames,
@@ -85,7 +86,7 @@ function testFrameParameters()
         resumeAndFinish();
       }, 100);
     }}, 0);
-  }, false);
+  });
 
   EventUtils.synthesizeMouseAtCenter(content.document.querySelector("button"),
                                      {},

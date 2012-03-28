@@ -99,12 +99,19 @@ ThreadActor.prototype = {
       this._dbg = new Debugger();
     }
 
+    // TODO: Remove this horrible hack when bug 723563 is fixed.
+    // Make sure that a chrome window is not added as a debuggee when opening
+    // the debugger in an empty tab or during tests.
+    if (aGlobal.location &&
+        (aGlobal.location.protocol == "about:" ||
+         aGlobal.location.protocol == "chrome:")) {
+      return;
+    }
+
     this.dbg.addDebuggee(aGlobal);
     this.dbg.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
     this.dbg.onDebuggerStatement = this.onDebuggerStatement.bind(this);
     this.dbg.onNewScript = this.onNewScript.bind(this);
-    // Keep the debugger disabled until a client attaches.
-    this.dbg.enabled = false;
   },
 
   /**
@@ -496,11 +503,6 @@ ThreadActor.prototype = {
    * Handle a protocol request to return the list of loaded scripts.
    */
   onScripts: function TA_onScripts(aRequest) {
-    // Get the script list from the debugger.
-    for (let s of this.dbg.findScripts()) {
-      this._addScript(s);
-    }
-    // Build the cache.
     let scripts = [];
     for (let url in this._scripts) {
       for (let i = 0; i < this._scripts[url].length; i++) {
@@ -857,34 +859,28 @@ ThreadActor.prototype = {
   },
 
   /**
-   * A function that the engine calls when a new script has been loaded into the
-   * scope of the specified debuggee global.
+   * A function that the engine calls when a new script has been loaded into a
+   * debuggee compartment. If the new code is part of a function, aFunction is
+   * a Debugger.Object reference to the function object. (Not all code is part
+   * of a function; for example, the code appearing in a <script> tag that is
+   * outside of any functions defined in that tag would be passed to
+   * onNewScript without an accompanying function argument.)
    *
    * @param aScript Debugger.Script
    *        The source script that has been loaded into a debuggee compartment.
-   * @param aGlobal Debugger.Object
-   *        A Debugger.Object instance whose referent is the global object.
+   * @param aFunction Debugger.Object
+   *        The function object that the ew code is part of.
    */
-  onNewScript: function TA_onNewScript(aScript, aGlobal) {
-    this._addScript(aScript);
-    // Notify the client.
-    this.conn.send({ from: this.actorID, type: "newScript",
-                     url: aScript.url, startLine: aScript.startLine });
-  },
-
-  /**
-   * Add the provided script to the server cache.
-   *
-   * @param aScript Debugger.Script
-   *        The source script that will be stored.
-   */
-  _addScript: function TA__addScript(aScript) {
+  onNewScript: function TA_onNewScript(aScript, aFunction) {
     // Use a sparse array for storing the scripts for each URL in order to
     // optimize retrieval.
     if (!this._scripts[aScript.url]) {
       this._scripts[aScript.url] = [];
     }
     this._scripts[aScript.url][aScript.startLine] = aScript;
+    // Notify the client.
+    this.conn.send({ from: this.actorID, type: "newScript",
+                     url: aScript.url, startLine: aScript.startLine });
   }
 
 };
