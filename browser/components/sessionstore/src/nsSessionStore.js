@@ -2090,9 +2090,6 @@ SessionStoreService.prototype = {
   _updateTextAndScrollData: function sss_updateTextAndScrollData(aWindow) {
     var browsers = aWindow.gBrowser.browsers;
     this._windows[aWindow.__SSi].tabs.forEach(function (tabData, i) {
-      if (browsers[i].__SS_data &&
-          browsers[i].__SS_tabStillLoading)
-        return; // ignore incompletely initialized tabs
       try {
         this._updateTextAndScrollDataForTab(aWindow, browsers[i], tabData);
       }
@@ -2114,6 +2111,10 @@ SessionStoreService.prototype = {
    */
   _updateTextAndScrollDataForTab:
     function sss_updateTextAndScrollDataForTab(aWindow, aBrowser, aTabData, aFullData) {
+    // we shouldn't update data for incompletely initialized tabs
+    if (aBrowser.__SS_data && aBrowser.__SS_tabStillLoading)
+      return;
+
     var tabIndex = (aTabData.index || aTabData.entries.length) - 1;
     // entry data needn't exist for tabs just initialized with an incomplete session state
     if (!aTabData.entries[tabIndex])
