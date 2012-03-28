@@ -16,7 +16,7 @@ function runTests() {
   ok(!pb.privateBrowsingEnabled, "private browsing is disabled");
 
   yield addNewTabPageTab();
-  pinCell(cells[0]);
+  pinCell(0);
   checkGrid("0p,1,2,3,4,5,6,7,8");
 
   // enter private browsing mode
@@ -27,10 +27,10 @@ function runTests() {
   checkGrid("0p,1,2,3,4,5,6,7,8");
 
   // modify the grid while we're in pb mode
-  yield blockCell(cells[1]);
+  yield blockCell(1);
   checkGrid("0p,2,3,4,5,6,7,8");
 
-  yield unpinCell(cells[0]);
+  yield unpinCell(0);
   checkGrid("0,2,3,4,5,6,7,8");
 
   // exit private browsing mode

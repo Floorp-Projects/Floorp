@@ -264,8 +264,7 @@ IsCacheableGetProp(JSObject *obj, JSObject *holder, const Shape *shape)
     return (shape &&
             IsCacheableProtoChain(obj, holder) &&
             shape->hasSlot() &&
-            shape->hasDefaultGetter() &&
-            !shape->isMethod());
+            shape->hasDefaultGetter());
 }
 
 bool
@@ -389,7 +388,7 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const
         id = js_CheckForStringIndex(id);
 
         const Shape *shape = obj->nativeLookup(cx, id);
-        if (shape && shape->hasSlot() && shape->hasDefaultSetter() && !shape->isMethod()) {
+        if (shape && shape->hasSlot() && shape->hasDefaultSetter()) {
             if (!cache.attachNativeExisting(cx, obj, shape))
                 return false;
         }

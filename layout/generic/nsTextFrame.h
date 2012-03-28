@@ -284,10 +284,10 @@ public:
 
   void AddInlineMinWidthForFlow(nsRenderingContext *aRenderingContext,
                                 nsIFrame::InlineMinWidthData *aData,
-                                float aInflation, TextRunType aTextRunType);
+                                TextRunType aTextRunType);
   void AddInlinePrefWidthForFlow(nsRenderingContext *aRenderingContext,
                                  InlinePrefWidthData *aData,
-                                 float aInflation, TextRunType aTextRunType);
+                                 TextRunType aTextRunType);
 
   /**
    * Calculate the horizontal bounds of the grapheme clusters that fit entirely
@@ -385,7 +385,6 @@ public:
    * Acquires the text run for this content, if necessary.
    * @param aWhichTextRun indicates whether to get an inflated or non-inflated
    * text run
-   * @param aInflation the text inflation scale
    * @param aReferenceContext the rendering context to use as a reference for
    * creating the textrun, if available (if not, we'll create one which will
    * just be slower)
@@ -398,18 +397,10 @@ public:
    * content offset
    */
   gfxSkipCharsIterator EnsureTextRun(TextRunType aWhichTextRun,
-                                     float aInflation,
                                      gfxContext* aReferenceContext = nsnull,
                                      nsIFrame* aLineContainer = nsnull,
                                      const nsLineList::iterator* aLine = nsnull,
                                      PRUint32* aFlowEndInTextRun = nsnull);
-  // Since we can't reference |this| in default arguments:
-  gfxSkipCharsIterator EnsureTextRun(TextRunType aWhichTextRun) {
-    return EnsureTextRun(aWhichTextRun,
-                         (aWhichTextRun == eInflated)
-                           ? GetFontSizeInflation() : 1.0f);
-  }
-
 
   gfxTextRun* GetTextRun(TextRunType aWhichTextRun) {
     if (aWhichTextRun == eInflated || !HasFontSizeInflation())

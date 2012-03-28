@@ -1400,12 +1400,7 @@ StackIter::callee() const
       case ION:
         return *ionInlineFrames_.callee();
       case SCRIPTED:
-      {
-        Value v;
-        if (!fp()->getValidCalleeObject(cx_, &v))
-            return *(JSObject *) NULL;
-        return v.toObject();
-      }
+        return fp()->callee();
       default:
         return nativeArgs().callee();
     }
@@ -1421,12 +1416,7 @@ StackIter::calleev() const
       case ION:
         return ObjectValue(*ionInlineFrames_.callee());
       case SCRIPTED:
-      {
-        Value v;
-        if (!fp()->getValidCalleeObject(cx_, &v))
-            v.setNull();
-        return v;
-      }
+        return fp()->calleev();
       default:
         return nativeArgs().calleev();
     }

@@ -981,35 +981,6 @@ stubs::InitElem(VMFrame &f, uint32_t last)
     }
 }
 
-JSObject * JS_FASTCALL
-stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
-{
-    /*
-     * Define a local function (i.e., one nested at the top level of another
-     * function), parented by the current scope chain, stored in a local
-     * variable slot that the compiler allocated.  This is an optimization over
-     * JSOP_DEFFUN that avoids requiring a call object for the outer function's
-     * activation.
-     */
-    JS_ASSERT(fun->isInterpreted());
-
-    JSObject *parent;
-    if (fun->isNullClosure()) {
-        parent = &f.fp()->scopeChain();
-    } else {
-        parent = GetScopeChain(f.cx, f.fp());
-        if (!parent)
-            THROWV(NULL);
-    }
-    JSObject *obj = CloneFunctionObjectIfNotSingleton(f.cx, fun, parent);
-    if (!obj)
-        THROWV(NULL);
-
-    JS_ASSERT_IF(f.script()->compileAndGo, obj->global() == fun->global());
-
-    return obj;
-}
-
 void JS_FASTCALL
 stubs::RegExp(VMFrame &f, JSObject *regex)
 {
@@ -1025,69 +996,6 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
     if (!obj)
         THROW();
     f.regs.sp[0].setObject(*obj);
-}
-
-JSObject * JS_FASTCALL
-stubs::LambdaJoinableForInit(VMFrame &f, JSFunction *fun)
-{
-    JS_ASSERT(fun->joinable());
-    DebugOnly<jsbytecode*> nextpc = f.regs.pc + JSOP_LAMBDA_LENGTH;
-    JS_ASSERT(fun->methodAtom() == f.script()->getAtom(GET_UINT32_INDEX(nextpc)));
-    return fun;
-}
-
-JSObject * JS_FASTCALL
-stubs::LambdaJoinableForSet(VMFrame &f, JSFunction *fun)
-{
-    JS_ASSERT(fun->joinable());
-    const Value &lref = f.regs.sp[-1];
-    if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
-        DebugOnly<jsbytecode*> nextpc = f.regs.pc + JSOP_LAMBDA_LENGTH;
-        JS_ASSERT(fun->methodAtom() == f.script()->getAtom(GET_UINT32_INDEX(nextpc)));
-        return fun;
-    }
-    return Lambda(f, fun);
-}
-
-JSObject * JS_FASTCALL
-stubs::LambdaJoinableForCall(VMFrame &f, JSFunction *fun)
-{
-    JS_ASSERT(fun->joinable());
-
-    /*
-     * Array.prototype.sort and String.prototype.replace are optimized as if
-     * they are special form. We know that they won't leak the joined function
-     * object fun, therefore we don't need to clone that compiler-created
-     * function object for identity/mutation reasons.
-     */
-    int iargc = GET_ARGC(f.regs.pc + JSOP_LAMBDA_LENGTH);
-
-    /*
-     * Note that we have not yet pushed fun as the final argument, so
-     * regs.sp[1 - (iargc + 2)], and not regs.sp[-(iargc + 2)], is the callee
-     * for this JSOP_CALL.
-     */
-    const Value &cref = f.regs.sp[1 - (iargc + 2)];
-    JSFunction *callee;
-
-    if (IsFunctionObject(cref, &callee)) {
-        Native native = callee->maybeNative();
-
-        if (native) {
-            if (iargc == 1 && native == array_sort)
-                return fun;
-            if (iargc == 2 && native == str_replace)
-                return fun;
-        }
-    }
-    return Lambda(f, fun);
-}
-
-JSObject * JS_FASTCALL
-stubs::LambdaJoinableForNull(VMFrame &f, JSFunction *fun)
-{
-    JS_ASSERT(fun->joinable());
-    return fun;
 }
 
 JSObject * JS_FASTCALL
@@ -1170,11 +1078,10 @@ InitPropOrMethod(VMFrame &f, PropertyName *name, JSOp op)
     /* Get the immediate property name into id. */
     jsid id = ATOM_TO_JSID(name);
 
-    unsigned defineHow = (op == JSOP_INITMETHOD) ? DNP_SET_METHOD : 0;
     if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
-        ? !js_SetPropertyHelper(cx, obj, id, defineHow, &rval, false)
+        ? !js_SetPropertyHelper(cx, obj, id, 0, &rval, false)
         : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
-                                JSPROP_ENUMERATE, 0, 0, defineHow)) {
+                                JSPROP_ENUMERATE, 0, 0, 0)) {
         THROW();
     }
 }
@@ -1183,12 +1090,6 @@ void JS_FASTCALL
 stubs::InitProp(VMFrame &f, PropertyName *name)
 {
     InitPropOrMethod(f, name, JSOP_INITPROP);
-}
-
-void JS_FASTCALL
-stubs::InitMethod(VMFrame &f, PropertyName *name)
-{
-    InitPropOrMethod(f, name, JSOP_INITMETHOD);
 }
 
 void JS_FASTCALL

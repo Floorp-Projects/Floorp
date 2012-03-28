@@ -1328,48 +1328,6 @@ class LLambda : public LCallInstructionHelper<1, 1, 0>
     }
 };
 
-class LLambdaJoinableForCall : public LCallInstructionHelper<1, 2, 0>
-{
-  public:
-    LIR_HEADER(LambdaJoinableForCall);
-
-    LLambdaJoinableForCall(const LAllocation &callee, const LAllocation &scopeChain)
-    {
-        setOperand(0, callee);
-        setOperand(1, scopeChain);
-    }
-    const LAllocation *callee() {
-        return getOperand(0);
-    }
-    const LAllocation *scopeChain() {
-        return getOperand(1);
-    }
-    const MLambdaJoinableForCall *mir() const {
-        return mir_->toLambdaJoinableForCall();
-    }
-};
-
-class LLambdaJoinableForSet : public LCallInstructionHelper<1, 2, 0>
-{
-  public:
-    LIR_HEADER(LambdaJoinableForSet);
-
-    LLambdaJoinableForSet(const LAllocation &target, const LAllocation &scopeChain)
-    {
-        setOperand(0, target);
-        setOperand(1, scopeChain);
-    }
-    const LAllocation *target() {
-        return getOperand(0);
-    }
-    const LAllocation *scopeChain() {
-        return getOperand(1);
-    }
-    const MLambdaJoinableForSet *mir() const {
-        return mir_->toLambdaJoinableForSet();
-    }
-};
-
 // Determines the implicit |this| value for function calls.
 class LImplicitThis : public LInstructionHelper<BOX_PIECES, 1, 0>
 {

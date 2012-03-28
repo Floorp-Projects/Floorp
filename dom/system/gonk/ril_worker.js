@@ -77,6 +77,9 @@ const PARCEL_SIZE_SIZE = UINT32_SIZE;
 
 let RILQUIRKS_CALLSTATE_EXTRA_UINT32 = false;
 let RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = false;
+// This flag defaults to true since on RIL v6 and later, we get the
+// version number via the UNSOLICITED_RIL_CONNECTED parcel.
+let RILQUIRKS_V5_LEGACY = true;
 
 /**
  * This object contains helpers buffering incoming data & deconstructing it
@@ -554,7 +557,7 @@ let RIL = {
   /**
    * One of the RADIO_STATE_* constants.
    */
-  radioState: RADIO_STATE_UNAVAILABLE,
+  radioState: GECKO_RADIOSTATE_UNAVAILABLE,
 
   /**
    * ICC status. Keeps a reference of the data response to the
@@ -576,8 +579,8 @@ let RIL = {
   SMSC: null,
   MSISDN: null,
 
-  registrationState: {},
-  gprsRegistrationState: {},
+  voiceRegistrationState: {},
+  dataRegistrationState: {},
 
   /**
    * List of strings identifying the network operator.
@@ -649,6 +652,13 @@ let RIL = {
               "RILQUIRKS_DATACALLSTATE_DOWN_IS_UP.");
       }
       RILQUIRKS_CALLSTATE_EXTRA_UINT32 = true;
+      RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = true;
+    }
+    if (model_id == "I9023" || model_id == "I9020") {
+      if (DEBUG) {
+        debug("Detected I9020/I9023, enabling " +
+              "RILQUIRKS_DATACALLSTATE_DOWN_IS_UP");
+      }
       RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = true;
     }
 
@@ -820,12 +830,12 @@ let RIL = {
     Buf.sendParcel();
   },
 
-  getRegistrationState: function getRegistrationState() {
-    Buf.simpleRequest(REQUEST_REGISTRATION_STATE);
+  getVoiceRegistrationState: function getVoiceRegistrationState() {
+    Buf.simpleRequest(REQUEST_VOICE_REGISTRATION_STATE);
   },
 
-  getGPRSRegistrationState: function getGPRSRegistrationState() {
-    Buf.simpleRequest(REQUEST_GPRS_REGISTRATION_STATE);
+  getDataRegistrationState: function getDataRegistrationState() {
+    Buf.simpleRequest(REQUEST_DATA_REGISTRATION_STATE);
   },
 
   getOperator: function getOperator() {
@@ -836,13 +846,29 @@ let RIL = {
     Buf.simpleRequest(REQUEST_QUERY_NETWORK_SELECTION_MODE);
   },
 
+  setNetworkSelectionAutomatic: function setNetworkSelectionAutomatic() {
+    Buf.simpleRequest(REQUEST_SET_NETWORK_SELECTION_AUTOMATIC);
+  },
+
+  /**
+   * Set the preferred network type.
+   *
+   * @param network_type
+   *        The network type. One of the PREFERRED_NETWORK_TYPE_* constants.
+   */
+  setPreferredNetworkType: function setPreferredNetworkType(network_type) {
+    Buf.newParcel(REQUEST_SET_PREFERRED_NETWORK_TYPE);
+    Buf.writeUint32(network_type);
+    Buf.sendParcel();
+  },
+
   /**
    * Request various states about the network.
    */
   requestNetworkInfo: function requestNetworkInfo() {
     if (DEBUG) debug("Requesting phone state");
-    this.getRegistrationState();
-    this.getGPRSRegistrationState(); //TODO only GSM
+    this.getVoiceRegistrationState();
+    this.getDataRegistrationState(); //TODO only GSM
     this.getOperator();
     this.getNetworkSelectionMode();
   },
@@ -1168,68 +1194,50 @@ let RIL = {
       return;
     }
 
-    if ((this.radioState == RADIO_STATE_OFF) ||
-        (this.radioState == RADIO_STATE_UNAVAILABLE) ||
-        (this.radioState == RADIO_STATE_SIM_NOT_READY) ||
-        (this.radioState == RADIO_STATE_RUIM_NOT_READY) ||
-        (this.radioState == RADIO_STATE_NV_NOT_READY) ||
-        (this.radioState == RADIO_STATE_NV_READY)) {
-      if (DEBUG) debug("ICC not ready");
-      if (this.cardState == GECKO_CARDSTATE_NOT_READY) {
+    let app = iccStatus.apps[iccStatus.gsmUmtsSubscriptionAppIndex];
+    if (!app) {
+      if (DEBUG) {
+        debug("Subscription application is not present in iccStatus.");
+      }
+      if (this.cardState == GECKO_CARDSTATE_ABSENT) {
         return;
       }
-      this.cardState = GECKO_CARDSTATE_NOT_READY;
+      this.cardState = GECKO_CARDSTATE_ABSENT;
+      this.operator = null;
       this.sendDOMMessage({type: "cardstatechange",
                            cardState: this.cardState});
       return;
     }
 
-    if ((this.radioState == RADIO_STATE_SIM_LOCKED_OR_ABSENT) ||
-        (this.radioState == RADIO_STATE_SIM_READY) ||
-        (this.radioState == RADIO_STATE_RUIM_LOCKED_OR_ABSENT) ||
-        (this.radioState == RADIO_STATE_RUIM_READY)) {
-      let app = iccStatus.apps[iccStatus.gsmUmtsSubscriptionAppIndex];
-      if (!app) {
-        if (DEBUG) {
-          debug("Subscription application is not present in iccStatus.");
-        }
-        if (this.cardState == GECKO_CARDSTATE_ABSENT) {
-          return;
-        }
-        this.cardState = GECKO_CARDSTATE_ABSENT;
-        this.operator = null;
-        this.sendDOMMessage({type: "cardstatechange",
-                             cardState: this.cardState});
-        return;
-      }
-
-      let newCardState;
-      switch (app.app_state) {
-        case CARD_APP_STATE_PIN:
-          newCardState = GECKO_CARDSTATE_PIN_REQUIRED;
-          break;
-        case CARD_APP_STATE_PUK:
-          newCardState = GECKO_CARDSTATE_PUK_REQUIRED;
-          break;
-        case CARD_APP_STATE_SUBSCRIPTION_PERSO:
-          newCardState = GECKO_CARDSTATE_NETWORK_LOCKED;
-          break;
-        case CARD_APP_STATE_READY:
-          newCardState = GECKO_CARDSTATE_READY;
-          break;
-        case CARD_APP_STATE_UNKNOWN:
-        case CARD_APP_STATE_DETECTED:
-        default:
-          newCardState = GECKO_CARDSTATE_NOT_READY;
-      }
-
-      if (this.cardState == newCardState) {
-        return;
-      }
-      this.cardState = newCardState;
-      this.sendDOMMessage({type: "cardstatechange",
-                           cardState: this.cardState});
+    let newCardState;
+    switch (app.app_state) {
+      case CARD_APPSTATE_PIN:
+        newCardState = GECKO_CARDSTATE_PIN_REQUIRED;
+        break;
+      case CARD_APPSTATE_PUK:
+        newCardState = GECKO_CARDSTATE_PUK_REQUIRED;
+        break;
+      case CARD_APPSTATE_SUBSCRIPTION_PERSO:
+        newCardState = GECKO_CARDSTATE_NETWORK_LOCKED;
+        break;
+      case CARD_APPSTATE_READY:
+        this.requestNetworkInfo();
+        this.getSignalStrength();
+        this.getMSISDN();
+        newCardState = GECKO_CARDSTATE_READY;
+        break;
+      case CARD_APPSTATE_UNKNOWN:
+      case CARD_APPSTATE_DETECTED:
+      default:
+        newCardState = GECKO_CARDSTATE_NOT_READY;
     }
+
+    if (this.cardState == newCardState) {
+      return;
+    }
+    this.cardState = newCardState;
+    this.sendDOMMessage({type: "cardstatechange",
+                         cardState: this.cardState});
   },
 
   /**
@@ -1274,14 +1282,18 @@ let RIL = {
     } 
   },
 
-  _processRegistrationState: function _processRegistrationState(state) {
-    let rs = this.registrationState;
+  _processVoiceRegistrationState: function _processVoiceRegistrationState(state) {
+    let rs = this.voiceRegistrationState;
     let stateChanged = false;
 
     let regState = RIL.parseInt(state[0], NETWORK_CREG_STATE_UNKNOWN);
     if (rs.regState != regState) {
       rs.regState = regState;
       stateChanged = true;
+      if (regState == NETWORK_CREG_STATE_REGISTERED_HOME ||
+          regState == NETWORK_CREG_STATE_REGISTERED_ROAMING) {
+        RIL.getSMSCAddress();
+      }
     }
 
     let radioTech = RIL.parseInt(state[3], NETWORK_CREG_TECH_UNKNOWN);
@@ -1310,13 +1322,13 @@ let RIL = {
     }
 
     if (stateChanged) {
-      this.sendDOMMessage({type: "registrationstatechange",
-                           registrationState: rs});
+      this.sendDOMMessage({type: "voiceregistrationstatechange",
+                           voiceRegistrationState: rs});
     }
   },
 
-  _processGPRSRegistrationState: function _processGPRSRegistrationState(state) {
-    let rs = this.gprsRegistrationState;
+  _processDataRegistrationState: function _processDataRegistrationState(state) {
+    let rs = this.dataRegistrationState;
     let stateChanged = false;
 
     let regState = RIL.parseInt(state[0], NETWORK_CREG_STATE_UNKNOWN);
@@ -1332,8 +1344,8 @@ let RIL = {
     }
 
     if (stateChanged) {
-      this.sendDOMMessage({type: "gprsregistrationstatechange",
-                           gprsRegistrationState: rs});
+      this.sendDOMMessage({type: "dataregistrationstatechange",
+                           dataRegistrationState: rs});
     }
   },
 
@@ -1384,6 +1396,72 @@ let RIL = {
     // Update our mute status. If there is anything in our currentCalls map then
     // we know it's a voice call and we should leave audio on.
     this.muted = Object.getOwnPropertyNames(this.currentCalls).length == 0;
+  },
+
+  _handleChangedCallState: function _handleChangedCallState(changedCall) {
+    let message = {type: "callStateChange",
+                   call: {callIndex: changedCall.callIndex,
+                          state: changedCall.state,
+                          number: changedCall.number,
+                          name: changedCall.name}};
+    this.sendDOMMessage(message);
+  },
+
+  _handleDisconnectedCall: function _handleDisconnectedCall(disconnectedCall) {
+    let message = {type: "callDisconnected",
+                   call: {callIndex: disconnectedCall.callIndex}};
+    this.sendDOMMessage(message);
+  },
+
+  _processDataCallList: function _processDataCallList(datacalls) {
+    for each (let currentDataCall in this.currentDataCalls) {
+      let updatedDataCall;
+      if (datacalls) {
+        updatedDataCall = datacalls[currentDataCall.cid];
+        delete datacalls[currentDataCall.cid];
+      }
+
+      if (!updatedDataCall) {
+        delete this.currentDataCalls[currentDataCall.callIndex];
+        currentDataCall.state = GECKO_NETWORK_STATE_DISCONNECTED;
+        this.sendDOMMessage({type: "datacallstatechange",
+                             datacall: currentDataCall});
+        continue;
+      }
+
+      this._setDataCallGeckoState(updatedDataCall);
+      if (updatedDataCall.state != currentDataCall.state) {
+        currentDataCall.status = updatedDataCall.status;
+        currentDataCall.active = updatedDataCall.active;
+        currentDataCall.state = updatedDataCall.state;
+        this.sendDOMMessage({type: "datacallstatechange",
+                             datacall: currentDataCall});
+      }
+    }
+
+    for each (let newDataCall in datacalls) {
+      this.currentDataCalls[newDataCall.cid] = newDataCall;
+      this._setDataCallGeckoState(newDataCall);
+      this.sendDOMMessage({type: "datacallstatechange",
+                           datacall: newDataCall});
+    }
+  },
+
+  _setDataCallGeckoState: function _setDataCallGeckoState(datacall) {
+    switch (datacall.active) {
+      case DATACALL_INACTIVE:
+        datacall.state = GECKO_NETWORK_STATE_DISCONNECTED;
+        break;
+      case DATACALL_ACTIVE_DOWN:
+        datacall.state = GECKO_NETWORK_STATE_SUSPENDED;
+        if (RILQUIRKS_DATACALLSTATE_DOWN_IS_UP) {
+          datacall.state = GECKO_NETWORK_STATE_CONNECTED;
+        }
+        break;
+      case DATACALL_ACTIVE_UP:
+        datacall.state = GECKO_NETWORK_STATE_CONNECTED;
+        break;
+    }
   },
 
   /**
@@ -1437,63 +1515,6 @@ let RIL = {
     }
 
     return options;
-  },
-
-  _handleChangedCallState: function _handleChangedCallState(changedCall) {
-    let message = {type: "callStateChange",
-                   call: {callIndex: changedCall.callIndex,
-                          state: changedCall.state,
-                          number: changedCall.number,
-                          name: changedCall.name}};
-    this.sendDOMMessage(message);
-  },
-
-  _handleDisconnectedCall: function _handleDisconnectedCall(disconnectedCall) {
-    let message = {type: "callDisconnected",
-                   call: {callIndex: disconnectedCall.callIndex}};
-    this.sendDOMMessage(message);
-  },
-
-  _processDataCallList: function _processDataCallList(datacalls) {
-    for each (let currentDataCall in this.currentDataCalls) {
-      let newDataCall;
-      if (datacalls) {
-        newDataCall = datacalls[currentDataCall.cid];
-        delete datacalls[currentDataCall.cid];
-      }
-
-      if (newDataCall) {
-        switch (newDataCall.active) {
-          case DATACALL_INACTIVE:
-            newDataCall.state = GECKO_NETWORK_STATE_DISCONNECTED;
-            break;
-          case DATACALL_ACTIVE_DOWN:
-            newDataCall.state = GECKO_NETWORK_STATE_SUSPENDED;
-            if (RILQUIRKS_DATACALLSTATE_DOWN_IS_UP) {
-              newDataCall.state = GECKO_NETWORK_STATE_CONNECTED;
-            }
-            break;
-          case DATACALL_ACTIVE_UP:
-            newDataCall.state = GECKO_NETWORK_STATE_CONNECTED;
-            break;
-        }
-        if (newDataCall.state != currentDataCall.state) {
-          currentDataCall.active = newDataCall.active;
-          currentDataCall.state = newDataCall.state;
-          this.sendDOMMessage({type: "datacallstatechange",
-                               datacall: currentDataCall});
-        }
-      } else {
-        delete this.currentDataCalls[currentDataCall.callIndex];
-        currentDataCall.state = GECKO_NETWORK_STATE_DISCONNECTED;
-        this.sendDOMMessage({type: "datacallstatechange",
-                             datacall: currentDataCall});
-      }
-    }
-
-    for each (let datacall in datacalls) {
-      if (DEBUG) debug("Unexpected data call: " + JSON.stringify(datacall));
-    }
   },
 
   /**
@@ -1569,24 +1590,26 @@ let RIL = {
 };
 
 RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS() {
-  let iccStatus = {
-    cardState:                   Buf.readUint32(), // CARD_STATE_*
-    universalPINState:           Buf.readUint32(), // PINSTATE_*
-    gsmUmtsSubscriptionAppIndex: Buf.readUint32(),
-    setCdmaSubscriptionAppIndex: Buf.readUint32(),
-    apps:                        []
-  };
+  let iccStatus = {};
+  iccStatus.cardState = Buf.readUint32(); // CARD_STATE_*
+  iccStatus.universalPINState = Buf.readUint32(); // CARD_PINSTATE_*
+  iccStatus.gsmUmtsSubscriptionAppIndex = Buf.readUint32();
+  iccStatus.cdmaSubscriptionAppIndex = Buf.readUint32();
+  if (!RILQUIRKS_V5_LEGACY) {
+    iccStatus.imsSubscriptionAppIndex = Buf.readUint32();
+  }
 
   let apps_length = Buf.readUint32();
   if (apps_length > CARD_MAX_APPS) {
     apps_length = CARD_MAX_APPS;
   }
 
+  iccStatus.apps = [];
   for (let i = 0 ; i < apps_length ; i++) {
     iccStatus.apps.push({
-      app_type:       Buf.readUint32(), // APPTYPE_*
-      app_state:      Buf.readUint32(), // CARD_APP_STATE_*
-      perso_substate: Buf.readUint32(), // PERSOSUBSTATE_*
+      app_type:       Buf.readUint32(), // CARD_APPTYPE_*
+      app_state:      Buf.readUint32(), // CARD_APPSTATE_*
+      perso_substate: Buf.readUint32(), // CARD_PERSOSUBSTATE_*
       aid:            Buf.readString(),
       app_label:      Buf.readString(),
       pin1_replaced:  Buf.readUint32(),
@@ -1673,43 +1696,65 @@ RIL[REQUEST_CONFERENCE] = null;
 RIL[REQUEST_UDUB] = null;
 RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = null;
 RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH() {
-  let signalStrength = Buf.readUint32();
+  let obj = {};
+
+  // GSM
+  // Valid values are (0-31, 99) as defined in TS 27.007 8.5.
+  obj.gsmSignalStrength = Buf.readUint32();
   // The SGS2 seems to compute the number of bars for us and expose those
   // instead of the actual signal strength.
-  let bars = signalStrength >> 8;
-  signalStrength = signalStrength & 0xff;
-  let strength = {
+  obj.bars = obj.gsmSignalStrength >> 8; //TODO remove this, see bug 729173
+  obj.gsmSignalStrength = obj.gsmSignalStrength & 0xff;
+  // GSM bit error rate (0-7, 99) as defined in TS 27.007 8.5.
+  obj.gsmBitErrorRate = Buf.readUint32();
+
+  // CDMA
+  // The CDMA RSSI value.
+  obj.cdmaDBM = Buf.readUint32();
+  // The CDMA EC/IO.
+  obj.cdmaECIO = Buf.readUint32();
+  // The EVDO RSSI value.
+
+  // EVDO
+  obj.evdoDBM = Buf.readUint32();
+  // The EVDO EC/IO.
+  obj.evdoECIO = Buf.readUint32();
+  // Signal-to-noise ratio. Valid values are 0 to 8.
+  obj.evdoSNR = Buf.readUint32();
+
+  // LTE
+  if (!RILQUIRKS_V5_LEGACY) {
     // Valid values are (0-31, 99) as defined in TS 27.007 8.5.
-    gsmSignalStrength: signalStrength,
-    // Non-standard extension by the SGS2.
-    bars:              bars,
-    // GSM bit error rate (0-7, 99) as defined in TS 27.007 8.5.
-    gsmBitErrorRate:   Buf.readUint32(),
-    // The CDMA RSSI value.
-    cdmaDBM:           Buf.readUint32(),
-    // The CDMA EC/IO.
-    cdmaECIO:          Buf.readUint32(),
-    // The EVDO RSSI value.
-    evdoDBM:           Buf.readUint32(),
-    // The EVDO EC/IO.
-    evdoECIO:          Buf.readUint32(),
-    // Valid values are 0-8.  8 is the highest signal to noise ratio
-    evdoSNR:           Buf.readUint32()
-  };
-  if (DEBUG) debug("Signal strength " + JSON.stringify(strength));
+    obj.lteSignalStrength = Buf.readUint32();
+    // Reference signal receive power in dBm, multiplied by -1.
+    // Valid values are 44 to 140.
+    obj.lteRSRP = Buf.readUint32();
+    // Reference signal receive quality in dB, multiplied by -1.
+    // Valid values are 3 to 20.
+    obj.lteRSRQ = Buf.readUint32();
+    // Signal-to-noise ratio for the reference signal.
+    // Valid values are -200 (20.0 dB) to +300 (30 dB).
+    obj.lteRSSNR = Buf.readUint32();
+    // Channel Quality Indicator, valid values are 0 to 15.
+    obj.lteCQI = Buf.readUint32();
+  }
+
+  if (DEBUG) debug("Signal strength " + JSON.stringify(obj));
   this.sendDOMMessage({type: "signalstrengthchange",
-                       signalStrength: strength});
+                       signalStrength: obj});
 };
-RIL[REQUEST_REGISTRATION_STATE] = function REQUEST_REGISTRATION_STATE(length) {
+RIL[REQUEST_VOICE_REGISTRATION_STATE] = function REQUEST_VOICE_REGISTRATION_STATE(length) {
   let state = Buf.readStringList();
-  this._processRegistrationState(state);
+debug("voice registration state: " + state);
+  this._processVoiceRegistrationState(state);
 };
-RIL[REQUEST_GPRS_REGISTRATION_STATE] = function REQUEST_GPRS_REGISTRATION_STATE(length) {
+RIL[REQUEST_DATA_REGISTRATION_STATE] = function REQUEST_DATA_REGISTRATION_STATE(length) {
   let state = Buf.readStringList();
-  this._processGPRSRegistrationState(state);
+  this._processDataRegistrationState(state);
 };
 RIL[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length) {
   let operator = Buf.readStringList();
+  if (DEBUG) debug("Operator data: " + operator);
   if (operator.length < 3) {
     if (DEBUG) debug("Expected at least 3 strings for operator.");
   }
@@ -1748,7 +1793,11 @@ RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
   this.sendDOMMessage(options);
 };
 RIL[REQUEST_SEND_SMS_EXPECT_MORE] = null;
-RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options) {
+
+RIL.readSetupDataCall_v5 = function readSetupDataCall_v5(options) {
+  if (!options) {
+    options = {};
+  }
   let [cid, ifname, ipaddr, dns, gw] = Buf.readStringList();
   options.cid = cid;
   options.ifname = ifname;
@@ -1757,13 +1806,21 @@ RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options)
   options.gw = gw;
   options.active = DATACALL_ACTIVE_UNKNOWN;
   options.state = GECKO_NETWORK_STATE_CONNECTING;
-  this.currentDataCalls[options.cid] = options;
-  this.sendDOMMessage({type: "datacallstatechange",
-                       datacall: options});
+  return options;
+};
 
-  // Let's get the list of data calls to ensure we know whether it's active
-  // or not.
-  this.getDataCallList();
+RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options) {
+  if (RILQUIRKS_V5_LEGACY) {
+    this.readSetupDataCall_v5(options);
+    this.currentDataCalls[options.cid] = options;
+    this.sendDOMMessage({type: "datacallstatechange",
+                         datacall: options});
+    // Let's get the list of data calls to ensure we know whether it's active
+    // or not.
+    this.getDataCallList();
+    return;
+  }
+  this[REQUEST_DATA_CALL_LIST](length, options);
 };
 RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
   switch (options.fileid) {
@@ -1809,33 +1866,70 @@ RIL[REQUEST_DTMF_START] = null;
 RIL[REQUEST_DTMF_STOP] = null;
 RIL[REQUEST_BASEBAND_VERSION] = function REQUEST_BASEBAND_VERSION() {
   this.basebandVersion = Buf.readString();
+  if (DEBUG) debug("Baseband version: " + this.basebandVersion);
 };
 RIL[REQUEST_SEPARATE_CONNECTION] = null;
 RIL[REQUEST_SET_MUTE] = null;
 RIL[REQUEST_GET_MUTE] = null;
 RIL[REQUEST_QUERY_CLIP] = null;
 RIL[REQUEST_LAST_DATA_CALL_FAIL_CAUSE] = null;
+
+RIL.readDataCall_v5 = function readDataCall_v5() {
+  return {
+    cid: Buf.readUint32().toString(),
+    active: Buf.readUint32(), // DATACALL_ACTIVE_*
+    type: Buf.readString(),
+    apn: Buf.readString(),
+    address: Buf.readString()
+  };
+};
+
+RIL.readDataCall_v6 = function readDataCall_v6(obj) {
+  if (!obj) {
+    obj = {};
+  }
+  obj.status = Buf.readUint32();  // DATACALL_FAIL_*
+  obj.suggestedRetryTime = Buf.readUint32();
+  obj.cid = Buf.readUint32().toString();
+  obj.active = Buf.readUint32();  // DATACALL_ACTIVE_*
+  obj.type = Buf.readString();
+  obj.ifname = Buf.readString();
+  obj.ipaddr = Buf.readString();
+  obj.dns = Buf.readString();
+  obj.gw = Buf.readString();
+  if (obj.dns) {
+    obj.dns = obj.dns.split(" ");
+  }
+  //TODO for now we only support one address and gateway
+  if (obj.ipaddr) {
+    obj.ipaddr = obj.ipaddr.split(" ")[0];
+  }
+  if (obj.gw) {
+    obj.gw = obj.gw.split(" ")[0];
+  }
+  return obj;
+};
+
 RIL[REQUEST_DATA_CALL_LIST] = function REQUEST_DATA_CALL_LIST(length) {
   this.initRILQuirks();
-
-  let num = 0;
-  if (length) {
-    num = Buf.readUint32();
-  }
-  if (!num) {
+  if (!length) {
     this._processDataCallList(null);
     return;
   }
 
+  let version = 0;
+  if (!RILQUIRKS_V5_LEGACY) {
+    version = Buf.readUint32();
+  }
+  let num = num = Buf.readUint32();
   let datacalls = {};
   for (let i = 0; i < num; i++) {
-    let datacall = {
-      cid: Buf.readUint32().toString(),
-      active: Buf.readUint32(),
-      type: Buf.readString(),
-      apn: Buf.readString(),
-      address: Buf.readString()
-    };
+    let datacall;
+    if (version < 6) {
+      datacall = this.readDataCall_v5();
+    } else {
+      datacall = this.readDataCall_v6();
+    }
     datacalls[datacall.cid] = datacall;
   }
 
@@ -1860,7 +1954,7 @@ RIL[REQUEST_SET_PREFERRED_NETWORK_TYPE] = null;
 RIL[REQUEST_GET_PREFERRED_NETWORK_TYPE] = null;
 RIL[REQUEST_GET_NEIGHBORING_CELL_IDS] = null;
 RIL[REQUEST_SET_LOCATION_UPDATES] = null;
-RIL[REQUEST_CDMA_SET_SUBSCRIPTION] = null;
+RIL[REQUEST_CDMA_SET_SUBSCRIPTION_SOURCE] = null;
 RIL[REQUEST_CDMA_SET_ROAMING_PREFERENCE] = null;
 RIL[REQUEST_CDMA_QUERY_ROAMING_PREFERENCE] = null;
 RIL[REQUEST_SET_TTY_MODE] = null;
@@ -1899,97 +1993,71 @@ RIL[REQUEST_SET_SMSC_ADDRESS] = null;
 RIL[REQUEST_REPORT_SMS_MEMORY_STATUS] = null;
 RIL[REQUEST_REPORT_STK_SERVICE_IS_RUNNING] = null;
 RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED() {
-  let newState = Buf.readUint32();
+  let radioState = Buf.readUint32();
+
+  let newState;
+  if (radioState == RADIO_STATE_UNAVAILABLE) {
+    newState = GECKO_RADIOSTATE_UNAVAILABLE;
+  } else if (radioState == RADIO_STATE_OFF) {
+    newState = GECKO_RADIOSTATE_OFF;
+  } else {
+    newState = GECKO_RADIOSTATE_READY;
+  }
+
   if (DEBUG) {
-    debug("Radio state changed from " + this.radioState + " to " + newState);
+    debug("Radio state changed from '" + this.radioState +
+          "' to '" + newState + "'");
   }
   if (this.radioState == newState) {
-    // No change in state, return.
     return;
   }
 
-  let gsm = newState == RADIO_STATE_SIM_NOT_READY        ||
-            newState == RADIO_STATE_SIM_LOCKED_OR_ABSENT ||
-            newState == RADIO_STATE_SIM_READY;
-  let cdma = newState == RADIO_STATE_RUIM_NOT_READY       ||
-             newState == RADIO_STATE_RUIM_READY            ||
-             newState == RADIO_STATE_RUIM_LOCKED_OR_ABSENT ||
-             newState == RADIO_STATE_NV_NOT_READY          ||
-             newState == RADIO_STATE_NV_READY;
+  // TODO hardcoded for now (see bug 726098)
+  let cdma = false;
 
-  // Figure out state transitions and send out more RIL requests as necessary
-  // as well as events to the main thread.
-
-  if (this.radioState == RADIO_STATE_UNAVAILABLE &&
-      newState != RADIO_STATE_UNAVAILABLE) {
+  if (this.radioState == GECKO_RADIOSTATE_UNAVAILABLE &&
+      newState != GECKO_RADIOSTATE_UNAVAILABLE) {
     // The radio became available, let's get its info.
-    if (gsm) {
+    if (cdma) {
+      this.getDeviceIdentity();
+    } else {
       this.getIMEI();
       this.getIMEISV();
     }
-    if (cdma) {
-      this.getDeviceIdentity();
-    }
     this.getBasebandVersion();
-    this.setScreenState(true);
-    this.sendDOMMessage({
-      type: "radiostatechange",
-      radioState: (newState == RADIO_STATE_OFF) ?
-                   GECKO_RADIOSTATE_OFF : GECKO_RADIOSTATE_READY
-    });
 
     //XXX TODO For now, just turn the radio on if it's off. for the real
     // deal we probably want to do the opposite: start with a known state
     // when we boot up and let the UI layer control the radio power.
-    if (newState == RADIO_STATE_OFF) {
+    if (newState == GECKO_RADIOSTATE_OFF) {
       this.setRadioPower(true);
     }
   }
 
-  if (newState == RADIO_STATE_UNAVAILABLE) {
-    // The radio is no longer available, we need to deal with any
-    // remaining pending requests.
-    //TODO do that
-    this.sendDOMMessage({type: "radiostatechange",
-                         radioState: GECKO_RADIOSTATE_UNAVAILABLE});
-  }
-
-  if (newState == RADIO_STATE_SIM_READY  ||
-      newState == RADIO_STATE_RUIM_READY ||
-      newState == RADIO_STATE_NV_READY) {
-    // The ICC has become available. Get all the things.
-    this.getICCStatus();
-    this.requestNetworkInfo();
-    this.getSignalStrength();
-    this.getSMSCAddress();
-    this.getMSISDN();
-    this.sendDOMMessage({type: "cardstatechange",
-                         cardState: GECKO_CARDSTATE_READY});
-  }
-  if (newState == RADIO_STATE_SIM_LOCKED_OR_ABSENT  ||
-      newState == RADIO_STATE_RUIM_LOCKED_OR_ABSENT) {
-    this.getICCStatus();
-    this.sendDOMMessage({type: "cardstatechange",
-                         cardState: GECKO_CARDSTATE_UNAVAILABLE});
-  }
-
-  let wasOn = this.radioState != RADIO_STATE_OFF &&
-              this.radioState != RADIO_STATE_UNAVAILABLE;
-  let isOn = newState != RADIO_STATE_OFF &&
-             newState != RADIO_STATE_UNAVAILABLE;
-  if (!wasOn && isOn) {
-    //TODO
-  }
-  if (wasOn && !isOn) {
-    //TODO
-  }
-
   this.radioState = newState;
+  this.sendDOMMessage({
+    type: "radiostatechange",
+    radioState: newState
+  });
+
+  // If the radio is up and on, so let's query the card state.
+  // On older RILs only if the card is actually ready, though.
+  if (radioState == RADIO_STATE_UNAVAILABLE ||
+      radioState == RADIO_STATE_OFF) {
+    return;
+  }
+  if (RILQUIRKS_V5_LEGACY &&
+      (radioState == RADIO_STATE_SIM_NOT_READY ||
+       radioState == RADIO_STATE_RUIM_NOT_READY ||
+       radioState == RADIO_STATE_NV_NOT_READY)) {
+    return;
+  }
+  this.getICCStatus();
 };
 RIL[UNSOLICITED_RESPONSE_CALL_STATE_CHANGED] = function UNSOLICITED_RESPONSE_CALL_STATE_CHANGED() {
   this.getCurrentCalls();
 };
-RIL[UNSOLICITED_RESPONSE_NETWORK_STATE_CHANGED] = function UNSOLICITED_RESPONSE_NETWORK_STATE_CHANGED() {
+RIL[UNSOLICITED_RESPONSE_VOICE_NETWORK_STATE_CHANGED] = function UNSOLICITED_RESPONSE_VOICE_NETWORK_STATE_CHANGED() {
   if (DEBUG) debug("Network state changed, re-requesting phone state.");
   this.requestNetworkInfo();
 };
@@ -2086,8 +2154,12 @@ RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() 
 RIL[UNSOLICITED_SIGNAL_STRENGTH] = function UNSOLICITED_SIGNAL_STRENGTH() {
   this[REQUEST_SIGNAL_STRENGTH]();
 };
-RIL[UNSOLICITED_DATA_CALL_LIST_CHANGED] = function UNSOLICITED_DATA_CALL_LIST_CHANGED(length) {
-  this.getDataCallList();
+RIL[UNSOLICITED_DATA_CALL_LIST_CHANGED] = function UNSOLICITED_DATA_CALL_LIST_CHANGED(length, options) {
+  if (RILQUIRKS_V5_LEGACY) {
+    this.getDataCallList();
+    return;
+  }
+  this[REQUEST_GET_DATA_CALL_LIST](length, options);
 };
 RIL[UNSOLICITED_SUPP_SVC_NOTIFICATION] = null;
 RIL[UNSOLICITED_STK_SESSION_END] = null;
@@ -2124,6 +2196,14 @@ RIL[UNSOLICITED_CDMA_INFO_REC] = null;
 RIL[UNSOLICITED_OEM_HOOK_RAW] = null;
 RIL[UNSOLICITED_RINGBACK_TONE] = null;
 RIL[UNSOLICITED_RESEND_INCALL_MUTE] = null;
+RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length, options) {
+  let version = Buf.readUint32List()[0];
+  RILQUIRKS_V5_LEGACY = (version < 5);
+  if (DEBUG) {
+    debug("Detected RIL version " + version);
+    debug("RILQUIRKS_V5_LEGACY is " + RILQUIRKS_V5_LEGACY);
+  }
+};
 
 
 /**

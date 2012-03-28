@@ -59,8 +59,8 @@
 #include "nsParserBase.h"
 
 #define NS_IPARSER_IID \
-{ 0xd064f0d6, 0x44e3, 0x4366, \
-  { 0xa7, 0x05, 0xcf, 0x7a, 0x91, 0x26, 0x14, 0xb6 } }
+{ 0x2c4ad90a, 0x740e, 0x4212, \
+  { 0xba, 0x3f, 0xfe, 0xac, 0xda, 0x4b, 0x92, 0x9e } }
 
 // {41421C60-310A-11d4-816F-000064657374}
 #define NS_IDEBUG_DUMP_CONTENT_IID \
@@ -218,11 +218,6 @@ class nsIParser : public nsParserBase {
     NS_IMETHOD Parse(nsIURI* aURL,
                      nsIRequestObserver* aListener = nsnull,
                      void* aKey = 0,
-                     nsDTDMode aMode = eDTDMode_autodetect) = 0;
-    NS_IMETHOD Parse(const nsAString& aSourceBuffer,
-                     void* aKey,
-                     const nsACString& aMimeType,
-                     bool aLastCall,
                      nsDTDMode aMode = eDTDMode_autodetect) = 0;
 
     NS_IMETHOD Terminate(void) = 0;

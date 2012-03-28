@@ -2171,7 +2171,7 @@ DumpStack(JSContext *cx, unsigned argc, Value *vp)
     for (; !iter.done(); ++index, ++iter) {
         Value v;
         if (iter.isNonEvalFunctionFrame()) {
-            v = iter.calleev();
+            v = ObjectValue(iter.fp()->callee());
         } else if (iter.isEvalFrame()) {
             v = StringValue(evalStr);
         } else {
@@ -2781,11 +2781,7 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
             return true;
 
         const Shape *shape = (Shape *) prop;
-        if (shape->isMethod()) {
-            shape = referent->methodReadBarrier(cx, *shape, &desc.value);
-            if (!shape)
-                return false;
-        } else if (shape->hasSlot()) {
+        if (shape->hasSlot()) {
             desc.value = referent->nativeGetSlot(shape->slot());
         } else {
             desc.value.setUndefined();

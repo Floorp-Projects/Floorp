@@ -264,14 +264,18 @@ public:
         }
     }
 
-    PRUint32 GetSize() {
-        PRUint32 size = 0;
+    size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
+        size_t total = mBlocks.SizeOfExcludingThis(aMallocSizeOf);
         for (PRUint32 i = 0; i < mBlocks.Length(); i++) {
-            if (mBlocks[i])
-                size += sizeof(Block);
-            size += sizeof(nsAutoPtr<Block>);
+            if (mBlocks[i]) {
+                total += aMallocSizeOf(mBlocks[i]);
+            }
         }
-        return size;
+        return total;
+    }
+
+    size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
+        return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
     }
 
     // clear out all blocks in the array

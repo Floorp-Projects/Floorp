@@ -53,6 +53,7 @@ const ROLE_PROGRESSBAR = nsIAccessibleRole.ROLE_PROGRESSBAR;
 const ROLE_PROPERTYPAGE = nsIAccessibleRole.ROLE_PROPERTYPAGE;
 const ROLE_PUSHBUTTON = nsIAccessibleRole.ROLE_PUSHBUTTON;
 const ROLE_RADIOBUTTON = nsIAccessibleRole.ROLE_RADIOBUTTON;
+const ROLE_RICH_OPTION = nsIAccessibleRole.ROLE_RICH_OPTION;
 const ROLE_ROW = nsIAccessibleRole.ROLE_ROW;
 const ROLE_ROWHEADER = nsIAccessibleRole.ROLE_ROWHEADER;
 const ROLE_SCROLLBAR = nsIAccessibleRole.ROLE_SCROLLBAR;

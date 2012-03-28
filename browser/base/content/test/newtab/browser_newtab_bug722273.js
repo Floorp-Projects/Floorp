@@ -20,21 +20,12 @@ function runTests() {
   fillHistory();
   yield addNewTabPageTab();
 
-  is(cells[0].site.url, URL, "first site is our fake site");
+  is(getCell(0).site.url, URL, "first site is our fake site");
 
-  let page = {
-    update: function () {
-      executeSoon(TestRunner.next);
-    },
-
-    observe: function () {}
-  };
-
-  NewTabUtils.allPages.register(page);
+  whenPagesUpdated();
   yield clearHistory();
 
-  NewTabUtils.allPages.unregister(page);
-  ok(!cells[0].site, "the fake site is gone");
+  ok(!getCell(0).site, "the fake site is gone");
 }
 
 function fillHistory() {

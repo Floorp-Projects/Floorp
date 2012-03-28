@@ -161,126 +161,127 @@ struct StmtInfo {
 #define SET_STATEMENT_TOP(stmt, top)                                          \
     ((stmt)->update = (top), (stmt)->breaks = (stmt)->continues = (-1))
 
-#define TCF_COMPILING           0x01 /* TreeContext is BytecodeEmitter */
-#define TCF_IN_FUNCTION         0x02 /* parsing inside function body */
-#define TCF_RETURN_EXPR         0x04 /* function has 'return expr;' */
-#define TCF_RETURN_VOID         0x08 /* function has 'return;' */
-#define TCF_IN_FOR_INIT         0x10 /* parsing init expr of for; exclude 'in' */
-#define TCF_FUN_SETS_OUTER_NAME 0x20 /* function set outer name (lexical or free) */
-#define TCF_FUN_PARAM_ARGUMENTS 0x40 /* function has parameter named arguments */
-#define TCF_FUN_LOCAL_ARGUMENTS 0x80 /* function may contain a local named arguments */
-#define TCF_FUN_USES_ARGUMENTS 0x100 /* function uses arguments except as a
-                                        parameter name */
-#define TCF_FUN_HEAVYWEIGHT    0x200 /* function needs Call object per call */
-#define TCF_FUN_IS_GENERATOR   0x400 /* parsed yield statement in function */
-#define TCF_FUN_USES_OWN_NAME  0x800 /* named function expression that uses its
-                                        own name */
-#define TCF_HAS_FUNCTION_STMT 0x1000 /* block contains a function statement */
-#define TCF_GENEXP_LAMBDA     0x2000 /* flag lambda from generator expression */
-#define TCF_COMPILE_N_GO      0x4000 /* compile-and-go mode of script, can
-                                        optimize name references based on scope
-                                        chain */
-#define TCF_NO_SCRIPT_RVAL    0x8000 /* API caller does not want result value
-                                        from global script */
-/*
- * Set when parsing a declaration-like destructuring pattern.  This
- * flag causes PrimaryExpr to create PN_NAME parse nodes for variable
- * references which are not hooked into any definition's use chain,
- * added to any tree context's AtomList, etc. etc.  CheckDestructuring
- * will do that work later.
- *
- * The comments atop CheckDestructuring explain the distinction
- * between assignment-like and declaration-like destructuring
- * patterns, and why they need to be treated differently.
- */
-#define TCF_DECL_DESTRUCTURING  0x10000
+JS_ENUM_HEADER(TreeContextFlags, uint32_t)
+{
+    /* TreeContext is BytecodeEmitter */
+    TCF_COMPILING =                            0x1,
 
-/*
- * This function/global/eval code body contained a Use Strict Directive. Treat
- * certain strict warnings as errors, and forbid the use of 'with'. See also
- * TSF_STRICT_MODE_CODE, JSScript::strictModeCode, and JSREPORT_STRICT_ERROR.
- */
-#define TCF_STRICT_MODE_CODE    0x20000
+    /* parsing inside function body */
+    TCF_IN_FUNCTION =                          0x2,
 
-/* bits 0x40000 and 0x80000 are unused */
+    /* function has 'return expr;' */
+    TCF_RETURN_EXPR =                          0x4,
 
-/*
- * "Module pattern", i.e., a lambda that is immediately applied and the whole
- * of an expression statement.
- */
-#define TCF_FUN_MODULE_PATTERN 0x200000
+    /* function has 'return;' */
+    TCF_RETURN_VOID =                          0x8,
 
-/*
- * Flag to prevent a non-escaping function from being optimized into a null
- * closure (i.e., a closure that needs only its global object for free variable
- * resolution), because this function contains a closure that needs one or more
- * scope objects surrounding it (i.e., a Call object for an outer heavyweight
- * function). See bug 560234.
- */
-#define TCF_FUN_ENTRAINS_SCOPES 0x400000
+    /* parsing init expr of for; exclude 'in' */
+    TCF_IN_FOR_INIT =                         0x10,
 
-/* The function calls 'eval'. */
-#define TCF_FUN_CALLS_EVAL       0x800000
+    /* function has parameter named arguments */
+    TCF_FUN_PARAM_ARGUMENTS =                 0x20,
 
-/* The function mutates a positional (non-destructuring) parameter. */
-#define TCF_FUN_MUTATES_PARAMETER 0x1000000
+    /* function may contain a local named arguments */
+    TCF_FUN_LOCAL_ARGUMENTS =                 0x40,
 
-/*
- * Compiling an eval() script.
- */
-#define TCF_COMPILE_FOR_EVAL     0x2000000
+    /* function uses arguments except as a parameter name */
+    TCF_FUN_USES_ARGUMENTS =                  0x80,
 
-/*
- * The function or a function that encloses it may define new local names
- * at runtime through means other than calling eval.
- */
-#define TCF_FUN_MIGHT_ALIAS_LOCALS  0x4000000
+    /* function needs Call object per call */
+    TCF_FUN_HEAVYWEIGHT =                    0x100,
 
-/*
- * The script contains singleton initialiser JSOP_OBJECT.
- */
-#define TCF_HAS_SINGLETONS       0x8000000
+    /* parsed yield statement in function */
+    TCF_FUN_IS_GENERATOR =                   0x200,
 
-/*
- * Some enclosing scope is a with-statement or E4X filter-expression.
- */
-#define TCF_IN_WITH             0x10000000
+    /* named function expression that uses its own name */
+    TCF_FUN_USES_OWN_NAME =                  0x400,
 
-/*
- * This function does something that can extend the set of bindings in its
- * call objects --- it does a direct eval in non-strict code, or includes a
- * function statement (as opposed to a function definition).
- *
- * This flag is *not* inherited by enclosed or enclosing functions; it
- * applies only to the function in whose flags it appears.
- */
-#define TCF_FUN_EXTENSIBLE_SCOPE 0x20000000
+    /* block contains a function statement */
+    TCF_HAS_FUNCTION_STMT =                  0x800,
 
-/*
- * The caller is JS_Compile*Script*.
- */
-#define TCF_NEED_SCRIPT_GLOBAL 0x40000000
+    /* flag lambda from generator expression */
+    TCF_GENEXP_LAMBDA =                     0x1000,
 
-/*
- * Flags to check for return; vs. return expr; in a function.
- */
-#define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
+    /* script can optimize name references based on scope chain */
+    TCF_COMPILE_N_GO =                      0x2000,
+
+    /* API caller does not want result value from global script */
+    TCF_NO_SCRIPT_RVAL =                    0x4000,
+
+    /*
+     * Set when parsing a declaration-like destructuring pattern.  This flag
+     * causes PrimaryExpr to create PN_NAME parse nodes for variable references
+     * which are not hooked into any definition's use chain, added to any tree
+     * context's AtomList, etc. etc.  CheckDestructuring will do that work
+     * later.
+     *
+     * The comments atop CheckDestructuring explain the distinction between
+     * assignment-like and declaration-like destructuring patterns, and why
+     * they need to be treated differently.
+     */
+    TCF_DECL_DESTRUCTURING =                0x8000,
+
+    /*
+     * This function/global/eval code body contained a Use Strict Directive.
+     * Treat certain strict warnings as errors, and forbid the use of 'with'.
+     * See also TSF_STRICT_MODE_CODE, JSScript::strictModeCode, and
+     * JSREPORT_STRICT_ERROR.
+     */
+    TCF_STRICT_MODE_CODE =                 0x10000,
+
+    /* The function calls 'eval'. */
+    TCF_FUN_CALLS_EVAL =                   0x20000,
+
+    /* The function mutates a positional (non-destructuring) parameter. */
+    TCF_FUN_MUTATES_PARAMETER =            0x40000,
+
+    /* Compiling an eval() script. */
+    TCF_COMPILE_FOR_EVAL =                0x100000,
+
+    /*
+     * The function or a function that encloses it may define new local names
+     * at runtime through means other than calling eval.
+     */
+    TCF_FUN_MIGHT_ALIAS_LOCALS =          0x200000,
+
+    /* The script contains singleton initialiser JSOP_OBJECT. */
+    TCF_HAS_SINGLETONS =                  0x400000,
+
+    /* Some enclosing scope is a with-statement or E4X filter-expression. */
+    TCF_IN_WITH =                         0x800000,
+
+    /*
+     * This function does something that can extend the set of bindings in its
+     * call objects --- it does a direct eval in non-strict code, or includes a
+     * function statement (as opposed to a function definition).
+     *
+     * This flag is *not* inherited by enclosed or enclosing functions; it
+     * applies only to the function in whose flags it appears.
+     */
+    TCF_FUN_EXTENSIBLE_SCOPE =           0x1000000,
+
+    /* The caller is JS_Compile*Script*. */
+    TCF_NEED_SCRIPT_GLOBAL =             0x2000000
+
+} JS_ENUM_FOOTER(TreeContextFlags);
+
+/* Flags to check for return; vs. return expr; in a function. */
+static const uint32_t TCF_RETURN_FLAGS = TCF_RETURN_EXPR | TCF_RETURN_VOID;
 
 /*
  * Sticky deoptimization flags to propagate from FunctionBody.
  */
-#define TCF_FUN_FLAGS           (TCF_FUN_SETS_OUTER_NAME |                    \
-                                 TCF_FUN_USES_ARGUMENTS  |                    \
-                                 TCF_FUN_PARAM_ARGUMENTS |                    \
-                                 TCF_FUN_LOCAL_ARGUMENTS |                    \
-                                 TCF_FUN_HEAVYWEIGHT     |                    \
-                                 TCF_FUN_IS_GENERATOR    |                    \
-                                 TCF_FUN_USES_OWN_NAME   |                    \
-                                 TCF_FUN_CALLS_EVAL      |                    \
-                                 TCF_FUN_MIGHT_ALIAS_LOCALS |                 \
-                                 TCF_FUN_MUTATES_PARAMETER |                  \
-                                 TCF_STRICT_MODE_CODE    |                    \
-                                 TCF_FUN_EXTENSIBLE_SCOPE)
+static const uint32_t TCF_FUN_FLAGS = TCF_FUN_USES_ARGUMENTS |
+                                      TCF_FUN_PARAM_ARGUMENTS |
+                                      TCF_FUN_LOCAL_ARGUMENTS |
+                                      TCF_FUN_HEAVYWEIGHT |
+                                      TCF_FUN_IS_GENERATOR |
+                                      TCF_FUN_USES_OWN_NAME |
+                                      TCF_FUN_CALLS_EVAL |
+                                      TCF_FUN_MIGHT_ALIAS_LOCALS |
+                                      TCF_FUN_MUTATES_PARAMETER |
+                                      TCF_STRICT_MODE_CODE |
+                                      TCF_FUN_EXTENSIBLE_SCOPE;
 
 struct BytecodeEmitter;
 
@@ -443,14 +444,16 @@ struct TreeContext {                /* tree context for semantic checks */
                 flags & (TCF_FUN_PARAM_ARGUMENTS | TCF_FUN_LOCAL_ARGUMENTS));
     }
 
+    void noteLocalOverwritesArguments() {
+        flags |= TCF_FUN_LOCAL_ARGUMENTS;
+    }
+
     void noteArgumentsNameUse(ParseNode *node) {
         JS_ASSERT(inFunction());
         JS_ASSERT(node->isKind(PNK_NAME));
         JS_ASSERT(node->pn_atom == parser->context->runtime->atomState.argumentsAtom);
         countArgumentsUse(node);
         flags |= TCF_FUN_USES_ARGUMENTS;
-        if (funbox)
-            funbox->node->pn_dflags |= PND_FUNARG;
     }
 
     /*

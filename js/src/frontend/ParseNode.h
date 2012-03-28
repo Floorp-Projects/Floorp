@@ -765,15 +765,14 @@ struct ParseNode {
 #define PND_GVAR        0x40            /* gvar binding, can't close over
                                            because it could be deleted */
 #define PND_PLACEHOLDER 0x80            /* placeholder definition for lexdep */
-#define PND_FUNARG     0x100            /* downward or upward funarg usage */
-#define PND_BOUND      0x200            /* bound to a stack or global slot */
-#define PND_DEOPTIMIZED 0x400           /* former pn_used name node, pn_lexdef
+#define PND_BOUND      0x100            /* bound to a stack or global slot */
+#define PND_DEOPTIMIZED 0x200           /* former pn_used name node, pn_lexdef
                                            still valid, but this use no longer
                                            optimizable via an upvar opcode */
-#define PND_CLOSED      0x800           /* variable is closed over */
+#define PND_CLOSED      0x400           /* variable is closed over */
 
 /* Flags to propagate from uses to definition. */
-#define PND_USE2DEF_FLAGS (PND_ASSIGNED | PND_FUNARG | PND_CLOSED)
+#define PND_USE2DEF_FLAGS (PND_ASSIGNED | PND_CLOSED)
 
 /* PN_LIST pn_xflags bits. */
 #define PNX_STRCAT      0x01            /* PNK_ADD list has string term */
@@ -816,7 +815,6 @@ struct ParseNode {
     bool isPlaceholder() const  { return test(PND_PLACEHOLDER); }
     bool isDeoptimized() const  { return test(PND_DEOPTIMIZED); }
     bool isAssigned() const     { return test(PND_ASSIGNED); }
-    bool isFunArg() const       { return test(PND_FUNARG); }
     bool isClosed() const       { return test(PND_CLOSED); }
 
     /*
@@ -832,9 +830,6 @@ struct ParseNode {
      *     rationale for this behavior.
      */
     bool isTopLevel() const     { return test(PND_TOPLEVEL); }
-
-    /* Defined below, see after struct Definition. */
-    void setFunArg();
 
     void become(ParseNode *pn2);
     void clear();
@@ -1431,26 +1426,6 @@ void DumpParseTree(ParseNode *pn, int indent = 0);
  * When the compiler unwinds from the outermost tc, tc->lexdeps contains the
  * definition nodes with use chains for all free variables. These are either
  * global variables or reference errors.
- *
- * We analyze whether a binding is initialized, whether the bound names is ever
- * assigned apart from its initializer, and if the bound name definition or use
- * is in a direct child of a block. These PND_* flags allow a subset dominance
- * computation telling whether an initialized var dominates its uses. An inner
- * function using only such outer vars (and formal parameters) can be optimized
- * into a flat closure. See JSOP_{GET,CALL}DSLOT.
- *
- * Another important subset dominance relation: ... { var x = ...; ... x ... }
- * where x is not assigned after initialization and not used outside the block.
- * This style is common in the absence of 'let'. Even though the var x is not
- * at top level, we can tell its initialization dominates all uses cheaply,
- * because the above one-pass algorithm sees the definition before any uses,
- * and because all uses are contained in the same block as the definition.
- *
- * We also analyze function uses to flag upward/downward funargs.  If a lambda
- * post-dominates each of its upvars' sole, inevitable (i.e. not hidden behind
- * conditions or within loops or the like) initialization or assignment; then
- * we can optimize the lambda as a flat closure (after Chez Scheme's display
- * closures).
  */
 #define dn_uses         pn_link
 
@@ -1528,7 +1503,7 @@ ParseNode::test(unsigned flag) const
 {
     JS_ASSERT(pn_defn || pn_arity == PN_FUNC || pn_arity == PN_NAME);
 #ifdef DEBUG
-    if ((flag & (PND_ASSIGNED | PND_FUNARG)) && pn_defn && !(pn_dflags & flag)) {
+    if ((flag & PND_ASSIGNED) && pn_defn && !(pn_dflags & flag)) {
         for (ParseNode *pn = ((Definition *) this)->dn_uses; pn; pn = pn->pn_link) {
             JS_ASSERT(!pn->pn_defn);
             JS_ASSERT(!(pn->pn_dflags & flag));
@@ -1536,25 +1511,6 @@ ParseNode::test(unsigned flag) const
     }
 #endif
     return !!(pn_dflags & flag);
-}
-
-inline void
-ParseNode::setFunArg()
-{
-    /*
-     * pn_defn NAND pn_used must be true, per this chart:
-     *
-     *   pn_defn pn_used
-     *         0       0        anonymous function used implicitly, e.g. by
-     *                          hidden yield in a genexp
-     *         0       1        a use of a definition or placeholder
-     *         1       0        a definition or placeholder
-     *         1       1        error: this case must not be possible
-     */
-    JS_ASSERT(!(pn_defn & pn_used));
-    if (pn_used)
-        pn_lexdef->pn_dflags |= PND_FUNARG;
-    pn_dflags |= PND_FUNARG;
 }
 
 inline void
@@ -1597,8 +1553,6 @@ struct FunctionBox : public ObjectBox
     uint32_t            tcflags;
 
     JSFunction *function() const { return (JSFunction *) object; }
-
-    bool joinable() const;
 
     /*
      * True if this function is inside the scope of a with-statement, an E4X

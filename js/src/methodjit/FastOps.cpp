@@ -2659,22 +2659,6 @@ mjit::Compiler::jsop_pos()
 }
 
 void
-mjit::Compiler::jsop_initmethod()
-{
-#ifdef DEBUG
-    FrameEntry *obj = frame.peek(-2);
-#endif
-    JSAtom *atom = script->getAtom(GET_UINT32_INDEX(PC));
-
-    /* Initializers with INITMETHOD are not fast yet. */
-    JS_ASSERT(!frame.extra(obj).initObject);
-
-    prepareStubCall(Uses(2));
-    masm.move(ImmPtr(atom), Registers::ArgReg1);
-    INLINE_STUBCALL(stubs::InitMethod, REJOIN_FALLTHROUGH);
-}
-
-void
 mjit::Compiler::jsop_initprop()
 {
     FrameEntry *obj = frame.peek(-2);

@@ -8,41 +8,23 @@ function runTests() {
   yield addNewTabPageTab();
   checkGridLocked(false, "grid is unlocked");
 
-  let cell = cells[0].node;
-  let site = cells[0].site.node;
+  let cell = getCell(0).node;
+  let site = getCell(0).site.node;
   let link = site.querySelector(".newtab-link");
 
-  sendDragEvent(link, "dragstart");
+  sendDragEvent("dragstart", link);
   checkGridLocked(true, "grid is now locked");
 
-  sendDragEvent(link, "dragend");
+  sendDragEvent("dragend", link);
   checkGridLocked(false, "grid isn't locked anymore");
 
-  sendDragEvent(cell, "dragstart");
+  sendDragEvent("dragstart", cell);
   checkGridLocked(false, "grid isn't locked - dragstart was ignored");
 
-  sendDragEvent(site, "dragstart");
+  sendDragEvent("dragstart", site);
   checkGridLocked(false, "grid isn't locked - dragstart was ignored");
 }
 
 function checkGridLocked(aLocked, aMessage) {
-  is(cw.gGrid.node.hasAttribute("locked"), aLocked, aMessage);
-}
-
-function sendDragEvent(aNode, aType) {
-  let ifaceReq = cw.QueryInterface(Ci.nsIInterfaceRequestor);
-  let windowUtils = ifaceReq.getInterface(Ci.nsIDOMWindowUtils);
-
-  let dataTransfer = {
-    mozUserCancelled: false,
-    setData: function () null,
-    setDragImage: function () null,
-    getData: function () "about:blank"
-  };
-
-  let event = cw.document.createEvent("DragEvents");
-  event.initDragEvent(aType, true, true, cw, 0, 0, 0, 0, 0,
-                      false, false, false, false, 0, null, dataTransfer);
-
-  windowUtils.dispatchDOMEventViaPresShell(aNode, event, true);
+  is(getGrid().node.hasAttribute("locked"), aLocked, aMessage);
 }

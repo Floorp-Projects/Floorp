@@ -1186,7 +1186,7 @@ nsCacheService::Init()
 
     nsresult rv = NS_NewThread(getter_AddRefs(mCacheIOThread));
     if (NS_FAILED(rv)) {
-        NS_WARNING("Can't create cache IO thread");
+        NS_RUNTIMEABORT("Can't create cache IO thread");
     }
 
     rv = nsDeleteDir::Init();

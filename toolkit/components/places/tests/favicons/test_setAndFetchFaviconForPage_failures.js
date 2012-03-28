@@ -91,43 +91,62 @@ add_test(function test_privateBrowsing_nonBookmarkedURI()
     return;
   }
 
-  let pb = Cc["@mozilla.org/privatebrowsing;1"]
-           .getService(Ci.nsIPrivateBrowsingService);
-  Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session",
-                             true);
-  pb.privateBrowsingEnabled = true;
+  let pageURI = NetUtil.newURI("http://example.com/privateBrowsing");
+  addVisits({ uri: pageURI, transitionType: TRANSITION_TYPED }, function () {
+    let pb = Cc["@mozilla.org/privatebrowsing;1"]
+             .getService(Ci.nsIPrivateBrowsingService);
+    Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session",
+                               true);
+    pb.privateBrowsingEnabled = true;
 
-  PlacesUtils.favicons.setAndFetchFaviconForPage(
-                       NetUtil.newURI("http://example.com/privateBrowsing"),
-                       FAVICON_URI, true);
+    PlacesUtils.favicons.setAndFetchFaviconForPage(
+                         pageURI,
+                         FAVICON_URI, true);
 
-  // The setAndFetchFaviconForPage function calls CanAddURI synchronously,
-  // thus we can exit Private Browsing Mode immediately.
-  pb.privateBrowsingEnabled = false;
-  Services.prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
-  run_next_test();
+    // The setAndFetchFaviconForPage function calls CanAddURI synchronously,
+    // thus we can exit Private Browsing Mode immediately.
+    pb.privateBrowsingEnabled = false;
+    Services.prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
+    run_next_test();
+  });
 });
 
 add_test(function test_disabledHistory()
 {
-  Services.prefs.setBoolPref("places.history.enabled", false);
+  let pageURI = NetUtil.newURI("http://example.com/disabledHistory");
+  addVisits({ uri: pageURI, transition: TRANSITION_TYPED }, function () {
+    Services.prefs.setBoolPref("places.history.enabled", false);
 
-  PlacesUtils.favicons.setAndFetchFaviconForPage(
-                       NetUtil.newURI("http://example.com/disabledHistory"),
-                       FAVICON_URI, true);
+    PlacesUtils.favicons.setAndFetchFaviconForPage(
+                         pageURI,
+                         FAVICON_URI, true);
 
-  // The setAndFetchFaviconForPage function calls CanAddURI synchronously, thus
-  // we can set the preference back to true immediately . We don't clear the
-  // preference because not all products enable Places by default.
-  Services.prefs.setBoolPref("places.history.enabled", true);
-  run_next_test();
+    // The setAndFetchFaviconForPage function calls CanAddURI synchronously, thus
+    // we can set the preference back to true immediately . We don't clear the
+    // preference because not all products enable Places by default.
+    Services.prefs.setBoolPref("places.history.enabled", true);
+    run_next_test();
+  });
 });
 
 add_test(function test_errorIcon()
 {
+  let pageURI = NetUtil.newURI("http://example.com/errorIcon");
+  let places = [{ uri: pageURI, transition: TRANSITION_TYPED }];
+  addVisits({ uri: pageURI, transition: TRANSITION_TYPED }, function () {
+    PlacesUtils.favicons.setAndFetchFaviconForPage(
+                         pageURI,
+                         FAVICON_ERRORPAGE_URI, true);
+
+    run_next_test();
+  });
+});
+
+add_test(function test_nonexistingPage()
+{
   PlacesUtils.favicons.setAndFetchFaviconForPage(
-                       NetUtil.newURI("http://example.com/errorIcon"),
-                       FAVICON_ERRORPAGE_URI, true);
+                       NetUtil.newURI("http://example.com/nonexistingPage"),
+                       FAVICON_URI, true);
 
   run_next_test();
 });
@@ -137,7 +156,9 @@ add_test(function test_finalVerification()
   // This is the only test that should cause the waitForFaviconChanged callback
   // we set up earlier to be invoked.  In turn, the callback will invoke
   // run_next_test() causing the tests to finish.
-  PlacesUtils.favicons.setAndFetchFaviconForPage(
-                       LAST_PAGE_URI,
-                       LAST_FAVICON_URI, true);
+  addVisits({ uri: LAST_PAGE_URI, transition: TRANSITION_TYPED }, function () {
+    PlacesUtils.favicons.setAndFetchFaviconForPage(
+                         LAST_PAGE_URI,
+                         LAST_FAVICON_URI, true);
+  });
 });
