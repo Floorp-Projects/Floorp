@@ -55,13 +55,13 @@
 #include "nsTextFragment.h"
 #include "nsString.h"
 #include "nsIAtom.h"
-#include "nsParserCIID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIDOMElement.h"
 #include "nsIWordBreaker.h"
 #include "nsCRT.h"
 #include "nsRange.h"
+#include "nsContentUtils.h"
 
 // Yikes!  Casting a char to unichar can fill with ones!
 #define CHAR_TO_UNICHAR(c) ((PRUnichar)(const unsigned char)c)
@@ -786,15 +786,7 @@ bool nsFind::IsBlockNode(nsIContent* aContent)
       atom == sTdAtom)
     return true;
 
-  if (!mParserService) {
-    mParserService = do_GetService(NS_PARSERSERVICE_CONTRACTID);
-    if (!mParserService)
-      return false;
-  }
-
-  bool isBlock = false;
-  mParserService->IsBlock(mParserService->HTMLAtomTagToId(atom), isBlock);
-  return isBlock;
+  return nsContentUtils::IsHTMLBlock(atom);
 }
 
 bool nsFind::IsTextNode(nsIDOMNode* aNode)
