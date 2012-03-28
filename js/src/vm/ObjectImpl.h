@@ -570,10 +570,12 @@ ElementsHeader::asArrayBufferElements()
  * pointing to the beginning of that array (the end of this structure).
  * See below for usage of this structure.
  */
+class ArrayBufferObject;
 class ObjectElements
 {
     friend struct ::JSObject;
     friend class ObjectImpl;
+    friend struct js::ArrayBufferObject;
 
     /* Number of allocated slots. */
     uint32_t capacity;

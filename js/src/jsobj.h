@@ -255,6 +255,7 @@ extern Class WithClass;
 extern Class XMLFilterClass;
 
 class ArgumentsObject;
+class ArrayBufferObject;
 class BlockObject;
 class BooleanObject;
 class ClonedBlockObject;
@@ -628,11 +629,6 @@ struct JSObject : public js::ObjectImpl
     bool arrayGetOwnDataElement(JSContext *cx, size_t i, js::Value *vp);
 
   public:
-    bool allocateArrayBufferSlots(JSContext *cx, uint32_t size, uint8_t *contents = NULL);
-    inline uint32_t arrayBufferByteLength();
-    inline uint8_t * arrayBufferDataOffset();
-
-  public:
     /*
      * Date-specific getters and setters.
      */
@@ -965,6 +961,7 @@ struct JSObject : public js::ObjectImpl
     inline bool isCrossCompartmentWrapper() const;
 
     inline js::ArgumentsObject &asArguments();
+    inline js::ArrayBufferObject &asArrayBuffer();
     inline const js::ArgumentsObject &asArguments() const;
     inline js::BlockObject &asBlock();
     inline js::BooleanObject &asBoolean();
