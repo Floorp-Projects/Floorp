@@ -793,7 +793,7 @@ CrossCompartmentWrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *cla
     JS_ASSERT_IF(!srcArgs.calleev().isUndefined(),
                  srcArgs.callee().toFunction()->native() == native ||
                  srcArgs.callee().toFunction()->native() == js_generic_native_method_dispatcher);
-    JS_ASSERT(&srcArgs.thisv().toObject() == wrapper);
+    JS_ASSERT(srcArgs.thisv().isMagic(JS_IS_CONSTRUCTING) || &srcArgs.thisv().toObject() == wrapper);
     JS_ASSERT(!UnwrapObject(wrapper)->isCrossCompartmentWrapper());
 
     JSObject *wrapped = wrappedObject(wrapper);
