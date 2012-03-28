@@ -505,6 +505,7 @@ public:
 
     History* history = History::GetService();
     NS_ENSURE_STATE(history);
+    history->AppendToRecentlyVisitedURIs(uri);
     history->NotifyVisited(uri);
 
     return NS_OK;
@@ -1453,6 +1454,7 @@ History* History::gService = NULL;
 History::History()
   : mShuttingDown(false)
   , mShutdownMutex("History::mShutdownMutex")
+  , mRecentlyVisitedURIsNextIndex(0)
 {
   NS_ASSERTION(!gService, "Ruh-roh!  This service has already been created!");
   gService = this;
@@ -1782,6 +1784,29 @@ History::Shutdown()
   }
 }
 
+void
+History::AppendToRecentlyVisitedURIs(nsIURI* aURI) {
+  if (mRecentlyVisitedURIs.Length() < RECENTLY_VISITED_URI_SIZE) {
+    // Append a new element while the array is not full.
+    mRecentlyVisitedURIs.AppendElement(aURI);
+  } else {
+    // Otherwise, replace the oldest member.
+    mRecentlyVisitedURIsNextIndex %= RECENTLY_VISITED_URI_SIZE;
+    mRecentlyVisitedURIs.ElementAt(mRecentlyVisitedURIsNextIndex) = aURI;
+    mRecentlyVisitedURIsNextIndex++;
+  }
+}
+
+inline bool
+History::IsRecentlyVisitedURI(nsIURI* aURI) {
+  bool equals = false;
+  RecentlyVisitedArray::index_type i;
+  for (i = 0; i < mRecentlyVisitedURIs.Length() && !equals; ++i) {
+    aURI->Equals(mRecentlyVisitedURIs.ElementAt(i), &equals);
+  }
+  return equals;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// IHistory
 
@@ -1818,8 +1843,8 @@ History::VisitURI(nsIURI* aURI,
     bool same;
     rv = aURI->Equals(aLastVisitedURI, &same);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (same) {
-      // Do not save refresh-page visits.
+    if (same && IsRecentlyVisitedURI(aURI)) {
+      // Do not save refresh visits if we have visited this URI recently.
       return NS_OK;
     }
   }
