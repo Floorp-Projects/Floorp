@@ -1782,7 +1782,7 @@ static JSStdName standard_class_atoms[] = {
     {js_InitIteratorClasses,            EAGER_ATOM_AND_CLASP(StopIteration)},
 #endif
     {js_InitJSONClass,                  EAGER_ATOM_AND_CLASP(JSON)},
-    {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::slowClass},
+    {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBufferObject::protoClass},
     {js_InitWeakMapClass,               EAGER_CLASS_ATOM(WeakMap), &js::WeakMapClass},
     {js_InitMapClass,                   EAGER_CLASS_ATOM(Map), &js::MapObject::class_},
     {js_InitSetClass,                   EAGER_CLASS_ATOM(Set), &js::SetObject::class_},
