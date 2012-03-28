@@ -146,15 +146,8 @@ struct ConservativeGCData
         uintptr_t       words[JS_HOWMANY(sizeof(jmp_buf), sizeof(uintptr_t))];
     } registerSnapshot;
 
-    /*
-     * Cycle collector uses this to communicate that the native stack of the
-     * GC thread should be scanned only if the thread have more than the given
-     * threshold of requests.
-     */
-    unsigned requestThreshold;
-
     ConservativeGCData()
-      : nativeStackTop(NULL), requestThreshold(0)
+      : nativeStackTop(NULL)
     {}
 
     ~ConservativeGCData() {
@@ -1454,24 +1447,23 @@ public:
     }
 };
 
-} /* namespace js */
-
 /*
  * Create and destroy functions for JSContext, which is manually allocated
  * and exclusively owned.
  */
 extern JSContext *
-js_NewContext(JSRuntime *rt, size_t stackChunkSize);
+NewContext(JSRuntime *rt, size_t stackChunkSize);
 
-typedef enum JSDestroyContextMode {
-    JSDCM_NO_GC,
-    JSDCM_MAYBE_GC,
-    JSDCM_FORCE_GC,
-    JSDCM_NEW_FAILED
-} JSDestroyContextMode;
+enum DestroyContextMode {
+    DCM_NO_GC,
+    DCM_FORCE_GC,
+    DCM_NEW_FAILED
+};
 
 extern void
-js_DestroyContext(JSContext *cx, JSDestroyContextMode mode);
+DestroyContext(JSContext *cx, DestroyContextMode mode);
+
+} /* namespace js */
 
 #ifdef va_start
 extern JSBool

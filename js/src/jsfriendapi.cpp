@@ -145,21 +145,21 @@ js::PrepareForFullGC(JSRuntime *rt)
 }
 
 JS_FRIEND_API(void)
-js::GCForReason(JSContext *cx, gcreason::Reason reason)
+js::GCForReason(JSRuntime *rt, gcreason::Reason reason)
 {
-    GC(cx, GC_NORMAL, reason);
+    GC(rt, GC_NORMAL, reason);
 }
 
 JS_FRIEND_API(void)
-js::ShrinkingGC(JSContext *cx, gcreason::Reason reason)
+js::ShrinkingGC(JSRuntime *rt, gcreason::Reason reason)
 {
-    GC(cx, GC_SHRINK, reason);
+    GC(rt, GC_SHRINK, reason);
 }
 
 JS_FRIEND_API(void)
-js::IncrementalGC(JSContext *cx, gcreason::Reason reason)
+js::IncrementalGC(JSRuntime *rt, gcreason::Reason reason)
 {
-    GCSlice(cx, GC_NORMAL, reason);
+    GCSlice(rt, GC_NORMAL, reason);
 }
 
 JS_FRIEND_API(void)
@@ -654,26 +654,6 @@ GetContextOutstandingRequests(const JSContext *cx)
 {
     return cx->outstandingRequests;
 }
-
-AutoSkipConservativeScan::AutoSkipConservativeScan(JSContext *cx
-                                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : context(cx)
-{
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-
-    JSRuntime *rt = context->runtime;
-    JS_ASSERT(rt->requestDepth >= 1);
-    JS_ASSERT(!rt->conservativeGC.requestThreshold);
-    if (rt->requestDepth == 1)
-        rt->conservativeGC.requestThreshold = 1;
-}
-
-AutoSkipConservativeScan::~AutoSkipConservativeScan()
-{
-    JSRuntime *rt = context->runtime;
-    if (rt->requestDepth == 1)
-        rt->conservativeGC.requestThreshold = 0;
-}
 #endif
 
 JS_FRIEND_API(JSCompartment *)
@@ -733,23 +713,9 @@ GCDescription::formatJSON(JSRuntime *rt, uint64_t timestamp) const
     return rt->gcStats.formatJSON(timestamp);
 }
 
-JS_FRIEND_API(bool)
-WantGCSlice(JSRuntime *rt)
-{
-    if (rt->gcZeal() == gc::ZealFrameVerifierValue || rt->gcZeal() == gc::ZealFrameGCValue)
-        return true;
-
-    if (rt->gcIncrementalState != gc::NO_INCREMENTAL)
-        return true;
-
-    return false;
-}
-
 JS_FRIEND_API(void)
-NotifyDidPaint(JSContext *cx)
+NotifyDidPaint(JSRuntime *rt)
 {
-    JSRuntime *rt = cx->runtime;
-
     if (rt->gcZeal() == gc::ZealFrameVerifierValue) {
         gc::VerifyBarriers(rt);
         return;
@@ -757,7 +723,7 @@ NotifyDidPaint(JSContext *cx)
 
     if (rt->gcZeal() == gc::ZealFrameGCValue) {
         PrepareForFullGC(rt);
-        GCSlice(cx, GC_NORMAL, gcreason::REFRESH_FRAME);
+        GCSlice(rt, GC_NORMAL, gcreason::REFRESH_FRAME);
         return;
     }
 
@@ -766,7 +732,7 @@ NotifyDidPaint(JSContext *cx)
             if (c->needsBarrier())
                 PrepareCompartmentForGC(c);
         }
-        GCSlice(cx, GC_NORMAL, gcreason::REFRESH_FRAME);
+        GCSlice(rt, GC_NORMAL, gcreason::REFRESH_FRAME);
     }
 
     rt->gcInterFrameGC = false;
