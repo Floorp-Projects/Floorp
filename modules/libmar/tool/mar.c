@@ -174,8 +174,8 @@ int main(int argc, char **argv) {
   case 'c': {
     struct ProductInformationBlock infoBlock;
     infoBlock.MARChannelID = MARChannelID;
-    // Temporarily hardcoded - see Bug 735784
-    infoBlock.productVersion = "13.0a1";//productVersion;
+    /* Temporarily hardcoded - see Bug 735784 */
+    infoBlock.productVersion = "13.0a1";/*productVersion;*/
     return mar_create(argv[2], argc - 3, argv + 3, &infoBlock);
   }
   case 'i': {
@@ -187,8 +187,8 @@ int main(int argc, char **argv) {
   case 'T': {
     int rv;
     struct ProductInformationBlock infoBlock;
-    int hasSignatureBlock, numSignatures, 
-      hasAdditionalBlock, numAdditionalBlocks;
+    PRUint32 numSignatures, numAdditionalBlocks;
+    int hasSignatureBlock, hasAdditionalBlock;
     if (!get_mar_file_info(argv[2], 
                            &hasSignatureBlock,
                            &numSignatures,
@@ -217,7 +217,7 @@ int main(int argc, char **argv) {
       }
      }
     printf("\n");
-    // The fall through from 'T' to 't' is intentional
+    /* The fall through from 'T' to 't' is intentional */
   }
   case 't':
     return mar_test(argv[2]);
