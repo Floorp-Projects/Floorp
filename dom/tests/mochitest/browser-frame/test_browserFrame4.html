@@ -25,7 +25,7 @@ function runTest() {
   browserFrameHelpers.setEnabledPref(true);
   browserFrameHelpers.addToWhitelist();
 
-  // Load example.org into the iframe, wait for that to finish loading, then
+  // Load emptypage1 into the iframe, wait for that to finish loading, then
   // call runTest2.
   //
   // This should trigger loadstart, load, and loadend events, but not a
@@ -38,7 +38,7 @@ function runTest() {
   var iframe = document.createElement('iframe');
   iframe.mozbrowser = true;
   iframe.id = 'iframe';
-  iframe.src = 'http://example.org';
+  iframe.src = browserFrameHelpers.emptyPage1;
 
   function loadstart(e) {
     ok(e.isTrusted, 'Event should be trusted.');
@@ -114,7 +114,7 @@ function runTest2() {
     ok(seenLoadStart, 'Location change after load start.');
     ok(!seenLoad, 'Location change before load.');
     ok(!seenLoadEnd, 'Location change before load end.');
-    ok(e.detail, 'http://example.com', "event's reported location");
+    ok(e.detail, browserFrameHelpers.emptyPage2, "event's reported location");
   });
 
   iframe.addEventListener('load', function(e) {
@@ -134,7 +134,7 @@ function runTest2() {
     ok(seenLocationChange, 'Load end after location change.');
   });
 
-  iframe.src = 'http://example.com';
+  iframe.src = browserFrameHelpers.emptyPage2;
 
   function waitForAllCallbacks() {
     if (!seenLoadStart || !seenLoad || !seenLoadEnd || !seenLocationChange) {

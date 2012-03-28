@@ -39,7 +39,7 @@ function runTest() {
     SimpleTest.finish();
   });
 
-  iframe.src = 'http://example.com';
+  iframe.src = browserFrameHelpers.emptyPage1;
 }
 
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
