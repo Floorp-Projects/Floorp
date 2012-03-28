@@ -54,8 +54,6 @@
 #include "nsIStringBundle.h"
 #include "nsXPCOMCID.h"
 
-#define MIGRATION_BUNDLE "chrome://browser/locale/migration/migration.properties"
-
 void SetUnicharPref(const char* aPref, const nsAString& aValue,
                     nsIPrefBranch* aPrefs)
 {
