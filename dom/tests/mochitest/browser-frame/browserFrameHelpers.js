@@ -51,7 +51,15 @@ const browserFrameHelpers = {
   },
 
   'origEnabledPref': null,
-  'origWhitelistPref': null
+  'origWhitelistPref': null,
+
+  // Two basically-empty pages from two different domains you can load.
+  'emptyPage1': 'http://example.com' +
+                window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')) +
+                '/file_empty.html',
+  'emptyPage2': 'http://example.org' +
+                window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')) +
+                '/file_empty.html',
 };
 
 browserFrameHelpers.origEnabledPref = browserFrameHelpers.getEnabledPref();
