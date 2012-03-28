@@ -563,25 +563,25 @@ struct BytecodeEmitter : public TreeContext
         jsbytecode  *limit;         /* one byte beyond end of bytecode */
         jsbytecode  *next;          /* pointer to next free bytecode */
         jssrcnote   *notes;         /* source notes, see below */
-        unsigned       noteCount;      /* number of source notes so far */
-        unsigned       noteLimit;      /* limit number for source notes in notePool */
+        unsigned    noteCount;      /* number of source notes so far */
+        unsigned    noteLimit;      /* limit number for source notes in notePool */
         ptrdiff_t   lastNoteOffset; /* code offset for last source note */
-        unsigned       currentLine;    /* line number for tree-based srcnote gen */
+        unsigned    currentLine;    /* line number for tree-based srcnote gen */
     } prolog, main, *current;
 
     OwnedAtomIndexMapPtr atomIndices; /* literals indexed for mapping */
     AtomDefnMapPtr  roLexdeps;
-    unsigned           firstLine;      /* first line, for JSScript::NewScriptFromEmitter */
+    unsigned        firstLine;      /* first line, for JSScript::NewScriptFromEmitter */
 
-    int            stackDepth;     /* current stack depth in script frame */
-    unsigned           maxStackDepth;  /* maximum stack depth so far */
+    int             stackDepth;     /* current stack depth in script frame */
+    unsigned        maxStackDepth;  /* maximum stack depth so far */
 
-    unsigned           ntrynotes;      /* number of allocated so far try notes */
+    unsigned        ntrynotes;      /* number of allocated so far try notes */
     TryNode         *lastTryNode;   /* the last allocated try node */
 
-    unsigned           arrayCompDepth; /* stack depth of array in comprehension */
+    unsigned        arrayCompDepth; /* stack depth of array in comprehension */
 
-    unsigned           emitLevel;      /* js::frontend::EmitTree recursion level */
+    unsigned        emitLevel;      /* js::frontend::EmitTree recursion level */
 
     typedef HashMap<JSAtom *, Value> ConstMap;
     ConstMap        constMap;       /* compile time constants */
@@ -641,6 +641,8 @@ struct BytecodeEmitter : public TreeContext
     JSVersion version() const { return parser->versionWithFlags(); }
 
     bool shouldNoteClosedName(ParseNode *pn);
+    bool noteClosedVar(ParseNode *pn);
+    bool noteClosedArg(ParseNode *pn);
 
     JS_ALWAYS_INLINE
     bool makeAtomIndex(JSAtom *atom, jsatomid *indexp) {

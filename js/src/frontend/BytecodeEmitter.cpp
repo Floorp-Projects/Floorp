@@ -981,6 +981,37 @@ BytecodeEmitter::shouldNoteClosedName(ParseNode *pn)
     return !callsEval() && pn->isDefn() && pn->isClosed();
 }
 
+bool
+BytecodeEmitter::noteClosedVar(ParseNode *pn)
+{
+#ifdef DEBUG
+    JS_ASSERT(shouldNoteClosedName(pn));
+    Definition *dn = (Definition *)pn;
+    JS_ASSERT(dn->kind() == Definition::VAR || dn->kind() == Definition::CONST ||
+              dn->kind() == Definition::FUNCTION);
+    JS_ASSERT(pn->pn_cookie.slot() < bindings.countVars());
+    for (size_t i = 0; i < closedVars.length(); ++i)
+        JS_ASSERT(closedVars[i] != pn->pn_cookie.slot());
+#endif
+    flags |= TCF_FUN_HEAVYWEIGHT;
+    return closedVars.append(pn->pn_cookie.slot());
+}
+
+bool
+BytecodeEmitter::noteClosedArg(ParseNode *pn)
+{
+#ifdef DEBUG
+    JS_ASSERT(shouldNoteClosedName(pn));
+    Definition *dn = (Definition *)pn;
+    JS_ASSERT(dn->kind() == Definition::ARG);
+    JS_ASSERT(pn->pn_cookie.slot() < bindings.countArgs());
+    for (size_t i = 0; i < closedArgs.length(); ++i)
+        JS_ASSERT(closedArgs[i] != pn->pn_cookie.slot());
+#endif
+    flags |= TCF_FUN_HEAVYWEIGHT;
+    return closedArgs.append(pn->pn_cookie.slot());
+}
+
 /*
  * Adjust the slot for a block local to account for the number of variables
  * that share the same index space with locals. Due to the incremental code
@@ -2751,10 +2782,10 @@ MaybeEmitVarDecl(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseNode *
 
     if (bce->inFunction() &&
         JOF_OPTYPE(pn->getOp()) == JOF_LOCAL &&
-        pn->pn_cookie.slot() < bce->bindings.countVars() &&
+        !pn->isLet() &&
         bce->shouldNoteClosedName(pn))
     {
-        if (!bce->closedVars.append(pn->pn_cookie.slot()))
+        if (!bce->noteClosedVar(pn))
             return false;
     }
 
@@ -4985,12 +5016,8 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
         JS_ASSERT(index < JS_BIT(20));
         pn->pn_index = index;
-        if (pn->isClosed() &&
-            !bce->callsEval() &&
-            !bce->closedVars.append(pn->pn_cookie.slot()))
-        {
+        if (bce->shouldNoteClosedName(pn) && !bce->noteClosedVar(pn))
             return false;
-        }
 
         if (NewSrcNote(cx, bce, SRC_CONTINUE) < 0)
             return false;
@@ -5993,7 +6020,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (!BindNameToSlot(cx, bce, pn2))
                 return JS_FALSE;
             if (JOF_OPTYPE(pn2->getOp()) == JOF_QARG && bce->shouldNoteClosedName(pn2)) {
-                if (!bce->closedArgs.append(pn2->pn_cookie.slot()))
+                if (!bce->noteClosedArg(pn2))
                     return JS_FALSE;
             }
         }
