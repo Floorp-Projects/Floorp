@@ -571,7 +571,7 @@ JS_ValueToECMAInt32(JSContext *cx, jsval v, int32_t *ip)
     assertSameCompartment(cx, v);
 
     AutoValueRooter tvr(cx, v);
-    return ToInt32(cx, tvr.value(), (int32_t *)ip);
+    return ToInt32(cx, tvr.value(), ip);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -6624,6 +6624,16 @@ AutoEnumStateRooter::~AutoEnumStateRooter()
     if (!stateValue.isNull())
         MOZ_ALWAYS_TRUE(obj->enumerate(context, JSENUMERATE_DESTROY, &stateValue, 0));
 }
+
+#ifdef DEBUG
+JS_PUBLIC_API(void)
+AssertArgumentsAreSane(JSContext *cx, const JS::Value &v)
+{
+    AssertNoGC(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, v);
+}
+#endif /* DEBUG */
 
 } // namespace JS
 
