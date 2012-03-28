@@ -8453,15 +8453,6 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       if (NS_FAILED(rv)) {
         return NS_OK;
       }
-
-      if (!nsDOMStorageList::CanAccessDomain(NS_ConvertUTF16toUTF8(aData),
-                                             currentDomain)) {
-        // This window can't reach the global storage object for the
-        // domain for which the change happened, so don't fire any
-        // events in this window.
-
-        return NS_OK;
-      }
     }
 
     nsAutoString domain(aData);
