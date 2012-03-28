@@ -931,8 +931,9 @@ TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
         // Override a callback cancelling iteration if the texture wasn't valid.
         // We need to force the update in that situation, or we may end up
         // showing invalid/out-of-date texture data.
-    } while (NextTile() ||
-             (mTextureState != Valid && mCurrentImage < mImages.Length()));
+        if (mCurrentImage == mImages.Length() - 1)
+            break;
+    } while (NextTile() || (mTextureState != Valid));
     mCurrentImage = oldCurrentImage;
 
     mShaderType = mImages[0]->GetShaderProgramType();
@@ -1091,8 +1092,11 @@ bool TiledTextureImage::NextTile()
         continueIteration = mIterationCallback(this, mCurrentImage,
                                                mIterationCallbackData);
 
-    mCurrentImage++;
-    return continueIteration && (mCurrentImage < mImages.Length());
+    if (mCurrentImage + 1 < mImages.Length()) {
+        mCurrentImage++;
+        return continueIteration;
+    }
+    return false;
 }
 
 void TiledTextureImage::SetIterationCallback(TileIterationCallback aCallback,
@@ -1217,6 +1221,7 @@ void TiledTextureImage::Resize(const nsIntSize& aSize)
     mColumns = columns;
     mSize = aSize;
     mTextureState = Allocated;
+    mCurrentImage = 0;
 }
 
 PRUint32 TiledTextureImage::GetTileCount()
