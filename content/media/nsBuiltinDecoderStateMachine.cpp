@@ -169,21 +169,6 @@ public:
   const PRUint32 mRate;
 };
 
-// Shuts down a thread asynchronously.
-class ShutdownThreadEvent : public nsRunnable 
-{
-public:
-  ShutdownThreadEvent(nsIThread* aThread) : mThread(aThread) {}
-  ~ShutdownThreadEvent() {}
-  NS_IMETHOD Run() {
-    mThread->Shutdown();
-    mThread = nsnull;
-    return NS_OK;
-  }
-private:
-  nsCOMPtr<nsIThread> mThread;
-};
-
 // Owns the global state machine thread and counts of
 // state machine and decoder threads. There should
 // only be one instance of this class.
