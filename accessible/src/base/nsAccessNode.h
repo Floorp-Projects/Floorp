@@ -106,11 +106,6 @@ public:
   virtual void Shutdown();
 
   /**
-   * Returns true when the accessible is defunct.
-   */
-  virtual bool IsDefunct() const;
-
-  /**
    * Return frame for the given access node object.
    */
   virtual nsIFrame* GetFrame() const;
