@@ -47,7 +47,7 @@ GC(JSContext *cx, unsigned argc, jsval *vp)
         PrepareForDebugGC(cx->runtime);
     else
         PrepareForFullGC(cx->runtime);
-    GCForReason(cx, gcreason::API);
+    GCForReason(cx->runtime, gcreason::API);
 
     char buf[256] = { '\0' };
 #ifndef JS_MORE_DETERMINISTIC
@@ -257,7 +257,7 @@ GCSlice(JSContext *cx, unsigned argc, jsval *vp)
         limit = false;
     }
 
-    GCDebugSlice(cx, limit, budget);
+    GCDebugSlice(cx->runtime, limit, budget);
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -498,7 +498,7 @@ MJitChunkLimit(JSContext *cx, unsigned argc, jsval *vp)
 
     // Clear out analysis information which might refer to code compiled with
     // the previous chunk limit.
-    JS_GC(cx);
+    JS_GC(cx->runtime);
 
     vp->setUndefined();
     return true;

@@ -1113,7 +1113,7 @@ MarkConservativeStackRoots(JSTracer *trc, bool useSavedRoots)
     if (!cgcd->hasStackToScan()) {
 #ifdef JS_THREADSAFE
         JS_ASSERT(!rt->suspendCount);
-        JS_ASSERT(rt->requestDepth <= cgcd->requestThreshold);
+        JS_ASSERT(!rt->requestDepth);
 #endif
         return;
     }
@@ -1181,8 +1181,7 @@ RecordNativeStackTopForGC(JSRuntime *rt)
 
 #ifdef JS_THREADSAFE
     /* Record the stack top here only if we are called from a request. */
-    JS_ASSERT(rt->requestDepth >= cgcd->requestThreshold);
-    if (rt->requestDepth == cgcd->requestThreshold)
+    if (!rt->requestDepth)
         return;
 #endif
     cgcd->recordStackTop();
@@ -1649,7 +1648,7 @@ RunLastDitchGC(JSContext *cx, gcreason::Reason reason)
 
     /* The last ditch GC preserves all atoms. */
     AutoKeepAtoms keep(rt);
-    GC(cx, GC_NORMAL, reason);
+    GC(rt, GC_NORMAL, reason);
 }
 
 /* static */ void *
@@ -2395,28 +2394,28 @@ MaybeGC(JSContext *cx)
 
     if (rt->gcZeal() == ZealAllocValue || rt->gcZeal() == ZealPokeValue) {
         PrepareForFullGC(rt);
-        GC(cx, GC_NORMAL, gcreason::MAYBEGC);
+        GC(rt, GC_NORMAL, gcreason::MAYBEGC);
+        return;
+    }
+
+    if (rt->gcIsNeeded) {
+        GCSlice(rt, GC_NORMAL, gcreason::MAYBEGC);
         return;
     }
 
     JSCompartment *comp = cx->compartment;
-    if (rt->gcIsNeeded) {
-        GCSlice(cx, GC_NORMAL, gcreason::MAYBEGC);
-        return;
-    }
-
     if (comp->gcBytes > 8192 &&
         comp->gcBytes >= 3 * (comp->gcTriggerBytes / 4) &&
         rt->gcIncrementalState == NO_INCREMENTAL)
     {
         PrepareCompartmentForGC(comp);
-        GCSlice(cx, GC_NORMAL, gcreason::MAYBEGC);
+        GCSlice(rt, GC_NORMAL, gcreason::MAYBEGC);
         return;
     }
 
     if (comp->gcMallocAndFreeBytes > comp->gcTriggerMallocAndFreeBytes) {
         PrepareCompartmentForGC(comp);
-        GCSlice(cx, GC_NORMAL, gcreason::MAYBEGC);
+        GCSlice(rt, GC_NORMAL, gcreason::MAYBEGC);
         return;
     }
 
@@ -2431,7 +2430,7 @@ MaybeGC(JSContext *cx)
             rt->gcNumArenasFreeCommitted > FreeCommittedArenasThreshold)
         {
             PrepareForFullGC(rt);
-            GCSlice(cx, GC_SHRINK, gcreason::MAYBEGC);
+            GCSlice(rt, GC_SHRINK, gcreason::MAYBEGC);
         } else {
             rt->gcNextFullGCTime = now + GC_IDLE_FULL_SPAN;
         }
@@ -3702,23 +3701,23 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
 namespace js {
 
 void
-GC(JSContext *cx, JSGCInvocationKind gckind, gcreason::Reason reason)
+GC(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
 {
-    Collect(cx->runtime, false, SliceBudget::Unlimited, gckind, reason);
+    Collect(rt, false, SliceBudget::Unlimited, gckind, reason);
 }
 
 void
-GCSlice(JSContext *cx, JSGCInvocationKind gckind, gcreason::Reason reason)
+GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
 {
-    Collect(cx->runtime, true, cx->runtime->gcSliceBudget, gckind, reason);
+    Collect(rt, true, rt->gcSliceBudget, gckind, reason);
 }
 
 void
-GCDebugSlice(JSContext *cx, bool limit, int64_t objCount)
+GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount)
 {
     int64_t budget = limit ? SliceBudget::WorkBudget(objCount) : SliceBudget::Unlimited;
-    PrepareForDebugGC(cx->runtime);
-    Collect(cx->runtime, true, budget, GC_NORMAL, gcreason::API);
+    PrepareForDebugGC(rt);
+    Collect(rt, true, budget, GC_NORMAL, gcreason::API);
 }
 
 /* Schedule a full GC unless a compartment will already be collected. */

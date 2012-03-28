@@ -1397,13 +1397,13 @@ typedef enum JSGCInvocationKind {
 } JSGCInvocationKind;
 
 extern void
-GC(JSContext *cx, JSGCInvocationKind gckind, js::gcreason::Reason reason);
+GC(JSRuntime *rt, JSGCInvocationKind gckind, js::gcreason::Reason reason);
 
 extern void
-GCSlice(JSContext *cx, JSGCInvocationKind gckind, js::gcreason::Reason reason);
+GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, js::gcreason::Reason reason);
 
 extern void
-GCDebugSlice(JSContext *cx, bool limit, int64_t objCount);
+GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount);
 
 extern void
 PrepareForDebugGC(JSRuntime *rt);

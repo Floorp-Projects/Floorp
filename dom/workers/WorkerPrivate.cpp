@@ -2802,8 +2802,7 @@ WorkerPrivate::OperationCallback(JSContext* aCx)
     }
 
     // Clean up before suspending.
-    JS_FlushCaches(aCx);
-    JS_GC(aCx);
+    JS_GC(JS_GetRuntime(aCx));
 
     while ((mayContinue = MayContinueRunning())) {
       MutexAutoLock lock(mMutex);
@@ -3891,12 +3890,13 @@ WorkerPrivate::GarbageCollectInternal(JSContext* aCx, bool aShrinking,
 {
   AssertIsOnWorkerThread();
 
-  js::PrepareForFullGC(JS_GetRuntime(aCx));
+  JSRuntime *rt = JS_GetRuntime(aCx);
+  js::PrepareForFullGC(rt);
   if (aShrinking) {
-    js::ShrinkingGC(aCx, js::gcreason::DOM_WORKER);
+    js::ShrinkingGC(rt, js::gcreason::DOM_WORKER);
   }
   else {
-    js::GCForReason(aCx, js::gcreason::DOM_WORKER);
+    js::GCForReason(rt, js::gcreason::DOM_WORKER);
   }
 
   if (aCollectChildren) {

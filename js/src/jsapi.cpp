@@ -1137,25 +1137,19 @@ JS_SetContextCallback(JSRuntime *rt, JSContextCallback cxCallback)
 JS_PUBLIC_API(JSContext *)
 JS_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
-    return js_NewContext(rt, stackChunkSize);
+    return NewContext(rt, stackChunkSize);
 }
 
 JS_PUBLIC_API(void)
 JS_DestroyContext(JSContext *cx)
 {
-    js_DestroyContext(cx, JSDCM_FORCE_GC);
+    DestroyContext(cx, DCM_FORCE_GC);
 }
 
 JS_PUBLIC_API(void)
 JS_DestroyContextNoGC(JSContext *cx)
 {
-    js_DestroyContext(cx, JSDCM_NO_GC);
-}
-
-JS_PUBLIC_API(void)
-JS_DestroyContextMaybeGC(JSContext *cx)
-{
-    js_DestroyContext(cx, JSDCM_MAYBE_GC);
+    DestroyContext(cx, DCM_NO_GC);
 }
 
 JS_PUBLIC_API(void *)
@@ -2860,11 +2854,11 @@ JS_IsGCMarkingTracer(JSTracer *trc)
 }
 
 JS_PUBLIC_API(void)
-JS_GC(JSContext *cx)
+JS_GC(JSRuntime *rt)
 {
-    AssertNoGC(cx);
-    PrepareForFullGC(cx->runtime);
-    GC(cx, GC_NORMAL, gcreason::API);
+    AssertNoGC(rt);
+    PrepareForFullGC(rt);
+    GC(rt, GC_NORMAL, gcreason::API);
 }
 
 JS_PUBLIC_API(void)
@@ -2959,11 +2953,6 @@ JS_GetGCParameterForThread(JSContext *cx, JSGCParamKey key)
 {
     JS_ASSERT(key == JSGC_MAX_CODE_CACHE_BYTES);
     return 0;
-}
-
-JS_PUBLIC_API(void)
-JS_FlushCaches(JSContext *cx)
-{
 }
 
 JS_PUBLIC_API(JSString *)
