@@ -285,9 +285,9 @@ CodeGeneratorShared::encodeSafepoint(LSafepoint *safepoint)
 
     uint32 safepointOffset = safepoints_.startEntry();
 
-    JS_ASSERT(safepoint->osiReturnPointOffset());
+    JS_ASSERT(safepoint->osiCallPointOffset());
 
-    safepoints_.writeOsiReturnPointOffset(safepoint->osiReturnPointOffset());
+    safepoints_.writeOsiCallPointOffset(safepoint->osiCallPointOffset());
     safepoints_.writeGcRegs(safepoint->gcRegs(), safepoint->liveRegs().gprs());
     safepoints_.writeGcSlots(safepoint->gcSlots().length(), safepoint->gcSlots().begin());
 #ifdef JS_NUNBOX32
@@ -309,7 +309,7 @@ CodeGeneratorShared::encodeSafepoints()
         LSafepoint *safepoint = it->safepoint();
 
         // All safepoints must have a valid OSI displacement.
-        JS_ASSERT(safepoint->osiReturnPointOffset());
+        JS_ASSERT(safepoint->osiCallPointOffset());
         encodeSafepoint(safepoint);
         it->resolve();
     }
@@ -330,7 +330,7 @@ CodeGeneratorShared::markSafepointAt(uint32 offset, LInstruction *ins)
 }
 
 bool
-CodeGeneratorShared::markOsiPoint(LOsiPoint *ins, uint32 *returnPointOffset)
+CodeGeneratorShared::markOsiPoint(LOsiPoint *ins, uint32 *callPointOffset)
 {
     if (!encode(ins->snapshot()))
         return false;
@@ -347,10 +347,9 @@ CodeGeneratorShared::markOsiPoint(LOsiPoint *ins, uint32 *returnPointOffset)
     JS_ASSERT(masm.currentOffset() - lastOsiPointOffset_ >= Assembler::patchWrite_NearCallSize());
     lastOsiPointOffset_ = masm.currentOffset();
 
-    *returnPointOffset = masm.currentOffset() + Assembler::patchWrite_NearCallSize();
-
+    *callPointOffset = masm.currentOffset();
     SnapshotOffset so = ins->snapshot()->snapshotOffset();
-    return osiIndices_.append(OsiIndex(*returnPointOffset, so));
+    return osiIndices_.append(OsiIndex(*callPointOffset, so));
 }
 
 // Before doing any call to Cpp, you should ensure that volatile

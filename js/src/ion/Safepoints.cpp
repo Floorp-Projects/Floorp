@@ -63,9 +63,9 @@ SafepointWriter::startEntry()
 }
 
 void
-SafepointWriter::writeOsiReturnPointOffset(uint32 osiReturnPointOffset)
+SafepointWriter::writeOsiCallPointOffset(uint32 osiCallPointOffset)
 {
-    stream_.writeUnsigned(osiReturnPointOffset);
+    stream_.writeUnsigned(osiCallPointOffset);
 }
 
 static void
@@ -184,20 +184,24 @@ SafepointReader::InvalidationPatchPoint(IonScript *script, const SafepointIndex 
 {
     SafepointReader reader(script, si);
 
-    // The size of a call is subtracted off, because the return address of the call to the
-    // invalidateEpilogue must match the value that was recorded previously in markOsiPoint.
-    // The returned value should only be within the code generated for the LOsiPoint,
-    // not the preceeding call.
-    uint32 osiPointOffset = reader.getOsiReturnPointOffset() - Assembler::patchWrite_NearCallSize();
+    uint32 osiPointOffset = reader.getOsiCallPointOffset();
     return CodeLocationLabel(script->method(), osiPointOffset);
+}
+
+uint32
+SafepointReader::getOsiCallPointOffset()
+{
+    return stream_.readUnsigned();
 }
 
 uint32
 SafepointReader::getOsiReturnPointOffset()
 {
-    return stream_.readUnsigned();
+    // In general, pointer arithmetic on code is bad, but in this case,
+    // getting the return address from a call instruction, stepping over pools
+    // would be wrong.
+    return stream_.readUnsigned() + Assembler::patchWrite_NearCallSize();
 }
-
 void
 SafepointReader::getGcRegs(GeneralRegisterSet *actual, GeneralRegisterSet *spilled)
 {

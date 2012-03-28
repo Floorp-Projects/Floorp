@@ -165,17 +165,18 @@ class MacroAssembler;
 // buffer is the |returnPointDisplacement|.
 class OsiIndex
 {
-    uint32 returnPointDisplacement_;
+    uint32 callPointDisplacement_;
     uint32 snapshotOffset_;
 
   public:
-    OsiIndex(uint32 returnPointDisplacement, uint32 snapshotOffset)
-      : returnPointDisplacement_(returnPointDisplacement),
+    OsiIndex(uint32 callPointDisplacement, uint32 snapshotOffset)
+      : callPointDisplacement_(callPointDisplacement),
         snapshotOffset_(snapshotOffset)
     { }
 
-    uint32 returnPointDisplacement() const {
-        return returnPointDisplacement_;
+    uint32 returnPointDisplacement() const;
+    uint32 callPointDisplacement() const {
+        return callPointDisplacement_;
     }
     uint32 snapshotOffset() const {
         return snapshotOffset_;
