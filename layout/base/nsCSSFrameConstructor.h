@@ -1139,9 +1139,9 @@ private:
    * @param aItems the child frame construction items before pseudo creation
    * @param aParentFrame the parent frame we're creating pseudos for
    */
-  inline nsresult CreateNeededTablePseudos(nsFrameConstructorState& aState,
-                                           FrameConstructionItemList& aItems,
-                                           nsIFrame* aParentFrame);
+  inline void CreateNeededTablePseudos(nsFrameConstructorState& aState,
+                                       FrameConstructionItemList& aItems,
+                                       nsIFrame* aParentFrame);
 
   /**
    * Function to adjust aParentFrame to deal with captions.
