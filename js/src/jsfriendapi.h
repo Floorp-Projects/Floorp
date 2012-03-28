@@ -1064,6 +1064,14 @@ extern JS_FRIEND_API(uint32_t)
 JS_GetTypedArrayByteLength(JSObject *obj, JSContext *cx);
 
 /*
+ * Check whether obj supports JS_ArrayBufferView* APIs. Note that this may
+ * return false if a security wrapper is encountered that denies the
+ * unwrapping.
+ */
+extern JS_FRIEND_API(JSBool)
+JS_IsArrayBufferViewObject(JSObject *obj, JSContext *cx);
+
+/*
  * More generic name for JS_GetTypedArrayByteLength to cover DataViews as well
  */
 extern JS_FRIEND_API(uint32_t)
