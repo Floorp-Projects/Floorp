@@ -147,11 +147,13 @@ public class FennecNativeActions implements Actions {
     class GeckoEventExpecter implements EventExpecter {
         private final String mGeckoEvent;
         private final Object[] mRegistrationParams;
+        private final int mDelayInNotifying;
         private boolean mEventReceived;
 
-        GeckoEventExpecter(String geckoEvent, Object[] registrationParams) {
+        GeckoEventExpecter(String geckoEvent, Object[] registrationParams, int delayInNotifying) {
             mGeckoEvent = geckoEvent;
             mRegistrationParams = registrationParams;
+            mDelayInNotifying = delayInNotifying;
         }
 
         public synchronized void blockForEvent() {
@@ -163,6 +165,15 @@ public class FennecNativeActions implements Actions {
                     break;
                 }
             }
+
+            // Delay notification to reduce the chance of random test failures 
+            // caused by delayed processing in Fennec.
+            try {
+                Thread.sleep(mDelayInNotifying);
+            } catch (InterruptedException ie) {
+                ie.printStackTrace();
+            }
+
             FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
                 "unblocked on expecter for " + mGeckoEvent);
         }
@@ -187,8 +198,13 @@ public class FennecNativeActions implements Actions {
             }
         }
     }
-    
+
     public EventExpecter expectGeckoEvent(String geckoEvent) {
+        // Default time to wait before notifying the expecters, in milliseconds.
+        return expectGeckoEvent(geckoEvent, 1000);
+    }
+    
+    public EventExpecter expectGeckoEvent(String geckoEvent, int delayInNotifying) {
         FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
             "waiting for "+geckoEvent);
         try {
@@ -197,7 +213,7 @@ public class FennecNativeActions implements Actions {
             Object[] finalParams = new Object[2];
             finalParams[0] = geckoEvent;
          
-            GeckoEventExpecter expecter = new GeckoEventExpecter(geckoEvent, finalParams);
+            GeckoEventExpecter expecter = new GeckoEventExpecter(geckoEvent, finalParams, delayInNotifying);
             wakeInvocationHandler wIH = new wakeInvocationHandler(expecter);
             Object proxy = Proxy.newProxyInstance(mClassLoader, interfaces, wIH);
             finalParams[1] = proxy;
