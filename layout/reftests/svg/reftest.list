@@ -111,6 +111,7 @@ random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == dynamic-text-04.svg dyna
 == dynamic-use-06.svg pass.svg
 random == dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg # bug 467498
 == dynamic-use-remove-width.svg dynamic-use-remove-width-ref.svg
+== linked-filter-01.svg pass.svg
 == linked-pattern-01.svg pass.svg
 == use-01.svg pass.svg
 == use-01-extref.svg pass.svg
