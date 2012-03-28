@@ -21,34 +21,85 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=710231
 
 SimpleTest.waitForExplicitFinish();
 
-var seenLoadStart = false;
-var seenLoad = false;
-var seenLoadEnd = false;
-var seenLocationChange = false;
-
 function runTest() {
   browserFrameHelpers.setEnabledPref(true);
   browserFrameHelpers.addToWhitelist();
 
-  // Load example.org into the iframe, wait for that to load, then call
-  // runTest2.  This would *almost* work if we just had a <iframe mozbrowser>
-  // in the HTML, except that we have to set the prefs before we create the
-  // iframe!
+  // Load example.org into the iframe, wait for that to finish loading, then
+  // call runTest2.
+  //
+  // This should trigger loadstart, load, and loadend events, but not a
+  // locationchange, because this is the initial load into the iframe.
+
+  var seenLoad = false;
+  var seenLoadEnd = false;
+  var seenLoadStart = false;
 
   var iframe = document.createElement('iframe');
+  iframe.mozbrowser = true;
   iframe.id = 'iframe';
+  iframe.src = 'http://example.org';
+
+  function loadstart(e) {
+    ok(e.isTrusted, 'Event should be trusted.');
+    ok(!seenLoad, 'loadstart before load.');
+    ok(!seenLoadEnd, 'loadstart before loadend.');
+    ok(!seenLoadStart, 'Just one loadstart event.');
+    seenLoadStart = true;
+  }
+
+  function locationchange(e) {
+    ok(e.isTrusted, 'Event should be trusted.');
+    ok(false, 'Unexpected locationchange.');
+  }
+
+  function loadend(e) {
+    ok(e.isTrusted, 'Event should be trusted.');
+    ok(seenLoadStart, 'loadend after loadstart.');
+    ok(seenLoad, 'loadend after load.');
+    ok(!seenLoadEnd, 'Just one loadend event.');
+    seenLoadEnd = true;
+  }
+
+  function load(e) {
+    ok(e.isTrusted, 'Event should be trusted.');
+    ok(seenLoadStart, 'load after loadstart.');
+    ok(!seenLoad, 'Just one load event.');
+    ok(!seenLoadEnd, 'load before loadend.');
+    seenLoad = true;
+  }
+
+  iframe.addEventListener('mozbrowserloadstart', loadstart);
+  iframe.addEventListener('mozbrowserlocationchange', locationchange);
+  iframe.addEventListener('mozbrowserloadend', loadend);
+  iframe.addEventListener('load', load);
+
+  function waitForAllCallbacks() {
+    if (!seenLoadStart || !seenLoad || !seenLoadEnd) {
+      SimpleTest.executeSoon(waitForAllCallbacks);
+      return;
+    }
+
+    iframe.removeEventListener('mozbrowserloadstart', loadstart);
+    iframe.removeEventListener('mozbrowserlocationchange', locationchange);
+    iframe.removeEventListener('mozbrowserloadend', loadend);
+    iframe.removeEventListener('load', load);
+    runTest2();
+  }
+
   document.body.appendChild(iframe);
-  iframe.src = 'data:text/html,1';
-  iframe.addEventListener('load', function() {
-    iframe.removeEventListener('load', arguments.callee);
-    SimpleTest.executeSoon(runTest2);
-  });
+  waitForAllCallbacks();
 }
 
 function runTest2() {
+  var seenLoadStart = false;
+  var seenLoad = false;
+  var seenLoadEnd = false;
+  var seenLocationChange = false;
+
   var iframe = document.getElementById('iframe');
-  iframe.mozbrowser = true;
-  iframe.addEventListener('mozbrowserloadstart', function() {
+  iframe.addEventListener('mozbrowserloadstart', function(e) {
+    ok(e.isTrusted, 'Event should be trusted.');
     ok(!seenLoadStart, 'Just one loadstart event.');
     seenLoadStart = true;
     ok(!seenLoad, 'Got mozbrowserloadstart event before load.');
@@ -57,6 +108,7 @@ function runTest2() {
   });
 
   iframe.addEventListener('mozbrowserlocationchange', function(e) {
+    ok(e.isTrusted, 'Event should be trusted.');
     ok(!seenLocationChange, 'Just one locationchange event.');
     seenLocationChange = true;
     ok(seenLoadStart, 'Location change after load start.');
@@ -65,7 +117,8 @@ function runTest2() {
     ok(e.detail, 'http://example.com', "event's reported location");
   });
 
-  iframe.addEventListener('load', function() {
+  iframe.addEventListener('load', function(e) {
+    ok(e.isTrusted, 'Event should be trusted.');
     ok(!seenLoad, 'Just one load event.');
     seenLoad = true;
     ok(seenLoadStart, 'Load after loadstart.');
@@ -73,7 +126,8 @@ function runTest2() {
     ok(!seenLoadEnd, 'Load before loadend.');
   });
 
-  iframe.addEventListener('mozbrowserloadend', function() {
+  iframe.addEventListener('mozbrowserloadend', function(e) {
+    ok(e.isTrusted, 'Event should be trusted.');
     ok(!seenLoadEnd, 'Just one load end event.');
     seenLoadEnd = true;
     ok(seenLoadStart, 'Load end after load start.');
@@ -81,16 +135,17 @@ function runTest2() {
   });
 
   iframe.src = 'http://example.com';
-  waitForAllCallbacks();
-}
 
-function waitForAllCallbacks() {
-  if (!seenLoadStart || !seenLoad || !seenLoadEnd || !seenLocationChange) {
-    SimpleTest.executeSoon(waitForAllCallbacks);
-    return;
+  function waitForAllCallbacks() {
+    if (!seenLoadStart || !seenLoad || !seenLoadEnd || !seenLocationChange) {
+      SimpleTest.executeSoon(waitForAllCallbacks);
+      return;
+    }
+
+    SimpleTest.finish();
   }
 
-  SimpleTest.finish();
+  waitForAllCallbacks();
 }
 
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
