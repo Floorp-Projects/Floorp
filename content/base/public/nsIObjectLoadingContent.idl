@@ -52,7 +52,7 @@ interface nsIURI;
 /**
  * This interface represents a content node that loads objects.
  */
-[scriptable, uuid(3FF07AB3-5BAC-4D98-9549-5BD15CCEBCD3)]
+[scriptable, uuid(fd56fda8-d3c3-4368-8cf3-67dbc992aec9)]
 interface nsIObjectLoadingContent : nsISupports
 {
   const unsigned long TYPE_LOADING  = 0;
@@ -124,6 +124,12 @@ interface nsIObjectLoadingContent : nsISupports
    * click-to-play plugins feature.
    */
   void playPlugin();
+
+  /**
+   * This attribute will return true if the plugin has been activated
+   * and false if the plugin is still in the click-to-play state.
+   */
+  readonly attribute boolean activated;
 
   [noscript] void stopPluginInstance();
 
