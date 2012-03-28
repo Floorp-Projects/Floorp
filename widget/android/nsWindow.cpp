@@ -1698,6 +1698,8 @@ nsWindow::InitKeyEvent(nsKeyEvent& event, AndroidGeckoEvent& key)
     case AndroidKeyEvent::KEYCODE_ENVELOPE:
         break;
     case AndroidKeyEvent::KEYCODE_DPAD_CENTER:
+        event.keyCode = NS_VK_ENTER;
+        break;
     case AndroidKeyEvent::KEYCODE_ENTER:
         event.keyCode = NS_VK_RETURN;
         break;
