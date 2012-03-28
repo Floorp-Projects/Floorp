@@ -286,7 +286,7 @@ ClientEngine.prototype = {
             Weave.Service.logout();
             return false;
           case "displayURI":
-            this._handleDisplayURI(args[0], args[1]);
+            this._handleDisplayURI.apply(this, args);
             break;
           default:
             this._log.debug("Received an unknown command: " + command);
@@ -368,8 +368,9 @@ ClientEngine.prototype = {
    * topic. The callback will receive an object as the subject parameter with
    * the following keys:
    *
-   *   uri       URI (string) that is requested for display
-   *   clientId  ID of client that sent the command
+   *   uri       URI (string) that is requested for display.
+   *   clientId  ID of client that sent the command.
+   *   title     Title of page that loaded URI (likely) corresponds to.
    *
    * The 'data' parameter to the callback will not be defined.
    *
@@ -377,11 +378,15 @@ ClientEngine.prototype = {
    *        String URI that was received
    * @param clientId
    *        ID of client that sent URI
+   * @param title
+   *        String title of page that URI corresponds to. Older clients may not
+   *        send this.
    */
-  _handleDisplayURI: function _handleDisplayURI(uri, clientId) {
-    this._log.info("Received a URI for display: " + uri + " from " + clientId);
+  _handleDisplayURI: function _handleDisplayURI(uri, clientId, title) {
+    this._log.info("Received a URI for display: " + uri + " (" + title +
+                   ") from " + clientId);
 
-    let subject = { uri: uri, client: clientId };
+    let subject = {uri: uri, client: clientId, title: title};
     Svc.Obs.notify("weave:engine:clients:display-uri", subject);
   }
 };
