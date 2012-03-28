@@ -418,6 +418,22 @@ add_test(function test_bookmark_guidMap_fail() {
   server.stop(run_next_test);
 });
 
+add_test(function test_bookmark_is_taggable() {
+  let engine = new BookmarksEngine();
+  let store = engine._store;
+
+  do_check_true(store.isTaggable("bookmark"));
+  do_check_true(store.isTaggable("microsummary"));
+  do_check_true(store.isTaggable("query"));
+  do_check_false(store.isTaggable("folder"));
+  do_check_false(store.isTaggable("livemark"));
+  do_check_false(store.isTaggable(null));
+  do_check_false(store.isTaggable(undefined));
+  do_check_false(store.isTaggable(""));
+
+  run_next_test();
+});
+
 add_test(function test_bookmark_tag_but_no_uri() {
   _("Ensure that a bookmark record with tags, but no URI, doesn't throw an exception.");
 
