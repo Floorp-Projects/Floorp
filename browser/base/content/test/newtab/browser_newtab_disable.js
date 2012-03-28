@@ -11,14 +11,14 @@ function runTests() {
   setPinnedLinks("");
 
   yield addNewTabPageTab();
-  let gridNode = cw.gGrid.node;
+  let gridNode = getGrid().node;
 
   ok(!gridNode.hasAttribute("page-disabled"), "page is not disabled");
 
   NewTabUtils.allPages.enabled = false;
   ok(gridNode.hasAttribute("page-disabled"), "page is disabled");
 
-  let oldGridNode = cw.gGrid.node;
+  let oldGridNode = gridNode;
 
   // create a second new tage page and make sure it's disabled. enable it
   // again and check if the former page gets enabled as well.
@@ -26,7 +26,7 @@ function runTests() {
   ok(gridNode.hasAttribute("page-disabled"), "page is disabled");
 
   // check that no sites have been rendered
-  is(0, cw.document.querySelectorAll(".site").length, "no sites have been rendered");
+  is(0, getContentDocument().querySelectorAll(".site").length, "no sites have been rendered");
 
   NewTabUtils.allPages.enabled = true;
   ok(!gridNode.hasAttribute("page-disabled"), "page is not disabled");
