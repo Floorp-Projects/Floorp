@@ -151,8 +151,8 @@ SettingsLock.prototype = {
           req.onerror = function() { Services.DOMRequest.fireError(request, 0) };
           break;
         case "set":
-          for (var key in info.settings) {
-            debug("key: " + key + ", val: " + JSON.stringify(info.settings[key]) + "type: " + typeof(info.settings[key]));
+          for (let key in info.settings) {
+            debug("key: " + key + ", val: " + JSON.stringify(info.settings[key]) + ", type: " + typeof(info.settings[key]));
 
             if(typeof(info.settings[key]) != 'object') {
               req = store.put({settingName: key, settingValue: info.settings[key]});
@@ -161,14 +161,20 @@ SettingsLock.prototype = {
               let obj = JSON.parse(JSON.stringify(info.settings[key]));
               req = store.put({settingName: key, settingValue: obj});
             }
-            req.onsuccess = function() { this._open = true;
-                                         if (this._settingsManager._onsettingchange) {
-                                           let event = new this._settingsManager._window.MozSettingsEvent("settingchanged", {settingName: key, settingValue: info.settings[key]});
-                                           this._settingsManager._onsettingchange.handleEvent(event);
-                                         }
-                                         Services.obs.notifyObservers(this, "mozsettings-changed-"+key, JSON.stringify(info.settings[key]));
-                                         Services.DOMRequest.fireSuccess(request, 0);
-                                         this._open = false; }.bind(lock);
+
+            req.onsuccess = function() { 
+              lock._open = true;
+
+              Services.DOMRequest.fireSuccess(request, 0);
+
+              Services.obs.notifyObservers(lock, "mozsettings-changed", JSON.stringify({
+                key: key,
+                value: info.settings[key]
+              }));
+
+              lock._open = false;
+            };
+
             req.onerror = function() { Services.DOMRequest.fireError(request, 0) };
           }
           break;
@@ -321,6 +327,7 @@ SettingsManager.prototype = {
 
     this._window = aWindow;
     Services.obs.addObserver(this, "inner-window-destroyed", false);
+    Services.obs.addObserver(this, "mozsettings-changed", false);
     let util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     this.innerWindowID = util.currentInnerWindowID;
 
@@ -339,12 +346,29 @@ SettingsManager.prototype = {
       let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
       if (wId == this.innerWindowID) {
         Services.obs.removeObserver(this, "inner-window-destroyed");
+        Services.obs.removeObserver(this, "mozsettings-changed");
         this._requests = null;
         this._window = null;
         this._innerWindowID = null;
         this._onsettingchange = null;
         this._settingsDB.close();
       }
+    } else if (aTopic == "mozsettings-changed") {
+      dump('\r\r\r11111111111111111111111111111r\n');
+      dump(this._window + '\n');
+      if (!this._onsettingchange)
+        return;
+
+      let data = JSON.parse(aData);
+      debug(data + ':' + data.key + ':' + data.value + '\n');
+
+      let event = new this._window.MozSettingsEvent("settingchanged", {
+        settingName: data.key,
+        settingValue: data.value
+      });
+
+      this._onsettingchange.handleEvent(event);
+      dump('\r\r\r2222222222222222222222222222222222\n');
     }
   },
 
