@@ -69,19 +69,6 @@ public:
   static already_AddRefed<nsIDOMRange> CreateRange();
 
 protected:
-  static PRInt32 sInstanceCount;
-
-  // HTML tags we treat specially
-  static nsIAtom* sImgAtom;
-  static nsIAtom* sHRAtom;
-  // Nodes we skip
-  static nsIAtom* sScriptAtom;
-  static nsIAtom* sNoframesAtom;
-  static nsIAtom* sSelectAtom;
-  static nsIAtom* sTextareaAtom;
-  static nsIAtom* sThAtom;
-  static nsIAtom* sTdAtom;
-
   // Parameters set from the interface:
   //nsCOMPtr<nsIDOMRange> mRange;   // search only in this range
   bool mFindBackward;
