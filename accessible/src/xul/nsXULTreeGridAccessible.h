@@ -39,17 +39,15 @@
 #ifndef __nsXULTreeGridAccessible_h__
 #define __nsXULTreeGridAccessible_h__
 
+#include "nsIAccessibleTable.h"
+
 #include "nsXULTreeAccessible.h"
-#include "TableAccessible.h"
-#include "xpcAccessibleTable.h"
 
 /**
  * Represents accessible for XUL tree in the case when it has multiple columns.
  */
 class nsXULTreeGridAccessible : public nsXULTreeAccessible,
-                                public xpcAccessibleTable,
-                                public nsIAccessibleTable,
-                                public mozilla::a11y::TableAccessible
+                                public nsIAccessibleTable
 {
 public:
   nsXULTreeGridAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
@@ -58,13 +56,9 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessibleTable
-  NS_DECL_OR_FORWARD_NSIACCESSIBLETABLE_WITH_XPCACCESSIBLETABLE
-
-  // nsAccessNode
-  virtual void Shutdown();
+  NS_DECL_NSIACCESSIBLETABLE
 
   // nsAccessible
-  virtual mozilla::a11y::TableAccessible* AsTable() { return this; }
   virtual mozilla::a11y::role NativeRole();
 
 protected:
