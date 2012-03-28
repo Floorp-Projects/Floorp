@@ -50,9 +50,9 @@ interface nsIFaviconService : nsISupports
    *
    * Will create an entry linking the favicon URI to the page, regardless
    * of whether we have data for that icon.  You can populate it later with
-   * SetFaviconData.  However, remember that any favicons not associated with a
-   * visited web page, a bookmark, or a "place:" URI, will be removed during
-   * expiration runs.
+   * SetFaviconData.  However, remember that favicons must only be associated
+   * with a visited web page, a bookmark, or a "place:" URI.  Trying to
+   * associate the icon to any other page will throw.
    *
    * This will send out history pageChanged notification if the new favicon has
    * any data and it's different from the old associated favicon.  This means
@@ -63,6 +63,7 @@ interface nsIFaviconService : nsISupports
    *        URI of the page whose favicon is being set.
    * @param aFaviconURI
    *        URI of the favicon to associate with the page.
+   * @throws NS_ERROR_NOT_AVAILABLE if aPageURI doesn't exist in the database.
    */
   void setFaviconUrlForPage(in nsIURI aPageURI,
                             in nsIURI aFaviconURI);

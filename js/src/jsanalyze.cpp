@@ -540,7 +540,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_ARGUMENTS:
           case JSOP_THROW:
           case JSOP_EXCEPTION:
-          case JSOP_DEFLOCALFUN:
           case JSOP_LAMBDA:
           case JSOP_DEBUGGER:
           case JSOP_FUNCALL:
@@ -618,11 +617,9 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_NEWARRAY:
           case JSOP_NEWOBJECT:
           case JSOP_ENDINIT:
-          case JSOP_INITMETHOD:
           case JSOP_INITPROP:
           case JSOP_INITELEM:
           case JSOP_SETPROP:
-          case JSOP_SETMETHOD:
           case JSOP_IN:
           case JSOP_INSTANCEOF:
           case JSOP_LINENO:
@@ -829,8 +826,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 
           case JSOP_SETARG:
           case JSOP_SETLOCAL:
-          case JSOP_SETLOCALPOP:
-          case JSOP_DEFLOCALFUN: {
+          case JSOP_SETLOCALPOP: {
             uint32_t slot = GetBytecodeSlot(script, pc);
             if (!slotEscapes(slot))
                 killVariable(cx, lifetimes[slot], offset, saved, savedCount);
@@ -1524,7 +1520,6 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             break;
 
           case JSOP_INITPROP:
-          case JSOP_INITMETHOD:
             stack[stackDepth - 1].v = code->poppedValues[1];
             break;
 

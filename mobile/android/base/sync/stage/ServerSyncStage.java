@@ -23,8 +23,6 @@ import org.mozilla.gecko.sync.repositories.Server11Repository;
 import org.mozilla.gecko.sync.synchronizer.Synchronizer;
 import org.mozilla.gecko.sync.synchronizer.SynchronizerDelegate;
 
-import android.util.Log;
-
 /**
  * Fetch from a server collection into a local repository, encrypting
  * and decrypting along the way.
@@ -131,6 +129,7 @@ public abstract class ServerSyncStage implements
       session.abort(e, "Invalid persisted JSON for config.");
       return;
     }
+
     Logger.debug(LOG_TAG, "Invoking synchronizer.");
     synchronizer.synchronize(session.getContext(), this);
     Logger.debug(LOG_TAG, "Reached end of execute.");
@@ -138,15 +137,23 @@ public abstract class ServerSyncStage implements
 
   @Override
   public void onSynchronized(Synchronizer synchronizer) {
-    Log.d(LOG_TAG, "onSynchronized.");
-    synchronizer.save().persist(session.config.getBranch(bundlePrefix()));
+    Logger.debug(LOG_TAG, "onSynchronized.");
+
+    SynchronizerConfiguration synchronizerConfiguration = synchronizer.save();
+    if (synchronizerConfiguration != null) {
+      synchronizerConfiguration.persist(session.config.getBranch(bundlePrefix()));
+    } else {
+      Logger.warn(LOG_TAG, "Didn't get configuration from synchronizer after success");
+    }
+
+    Logger.info(LOG_TAG, "Advancing session.");
     session.advance();
   }
 
   @Override
   public void onSynchronizeFailed(Synchronizer synchronizer,
                                   Exception lastException, String reason) {
-    Log.i(LOG_TAG, "onSynchronizeFailed: " + reason);
+    Logger.debug(LOG_TAG, "onSynchronizeFailed: " + reason);
 
     // This failure could be due to a 503 or a 401 and it could have headers.
     if (lastException instanceof HTTPFailureException) {
@@ -158,7 +165,8 @@ public abstract class ServerSyncStage implements
 
   @Override
   public void onSynchronizeAborted(Synchronizer synchronize) {
-    Log.i(LOG_TAG, "onSynchronizeAborted.");
+    Logger.info(LOG_TAG, "onSynchronizeAborted.");
+
     session.abort(null, "Synchronization was aborted.");
   }
 }

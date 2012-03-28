@@ -509,18 +509,7 @@ struct JSObject : public js::ObjectImpl
   public:
     inline bool nativeEmpty() const;
 
-    js::Shape *methodShapeChange(JSContext *cx, const js::Shape &shape);
     bool shadowingShapeChange(JSContext *cx, const js::Shape &shape);
-
-    /*
-     * Read barrier to clone a joined function object stored as a method.
-     * Defined in jsobjinlines.h, but not declared inline per standard style in
-     * order to avoid gcc warnings.
-     */
-    js::Shape *methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp);
-
-    /* Whether method shapes can be added to this object. */
-    inline bool canHaveMethodBarrier() const;
 
     /* Whether there may be indexed properties on this object. */
     inline bool isIndexed() const;
@@ -572,8 +561,6 @@ struct JSObject : public js::ObjectImpl
     inline void prepareElementRangeForOverwrite(size_t start, size_t end);
 
     void rollbackProperties(JSContext *cx, uint32_t slotSpan);
-
-    inline JSFunction *nativeGetMethod(const js::Shape *shape) const;
 
     inline void nativeSetSlot(unsigned slot, const js::Value &value);
     inline void nativeSetSlotWithType(JSContext *cx, const js::Shape *shape, const js::Value &value);
@@ -939,6 +926,8 @@ struct JSObject : public js::ObjectImpl
     /* Change the given property into a sibling with the same id in this scope. */
     js::Shape *changeProperty(JSContext *cx, js::Shape *shape, unsigned attrs, unsigned mask,
                               JSPropertyOp getter, JSStrictPropertyOp setter);
+
+    inline bool changePropertyAttributes(JSContext *cx, js::Shape *shape, unsigned attrs);
 
     /* Remove the property named by id from this object. */
     bool removeProperty(JSContext *cx, jsid id);
@@ -1351,16 +1340,6 @@ js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
                      JSPropertyOp getter, JSStrictPropertyOp setter, uint32_t slot,
                      unsigned attrs, unsigned flags, int shortid);
 
-/*
- * Change shape to have the given attrs, getter, and setter in scope, morphing
- * it into a potentially new js::Shape.  Return a pointer to the changed
- * or identical property.
- */
-extern js::Shape *
-js_ChangeNativePropertyAttrs(JSContext *cx, JSObject *obj,
-                             js::Shape *shape, unsigned attrs, unsigned mask,
-                             JSPropertyOp getter, JSStrictPropertyOp setter);
-
 extern JSBool
 js_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id,
                      const js::Value &descriptor, JSBool *bp);
@@ -1372,13 +1351,10 @@ namespace js {
  */
 const unsigned DNP_CACHE_RESULT = 1;   /* an interpreter call from JSOP_INITPROP */
 const unsigned DNP_DONT_PURGE   = 2;   /* suppress js_PurgeScopeChain */
-const unsigned DNP_SET_METHOD   = 4;   /* DefineNativeProperty,js_SetPropertyHelper
-                                       must pass the js::Shape::METHOD
-                                       flag on to JSObject::{add,put}Property */
-const unsigned DNP_UNQUALIFIED  = 8;   /* Unqualified property set.  Only used in
+const unsigned DNP_UNQUALIFIED  = 4;   /* Unqualified property set.  Only used in
                                        the defineHow argument of
                                        js_SetPropertyHelper. */
-const unsigned DNP_SKIP_TYPE = 0x10;   /* Don't update type information */
+const unsigned DNP_SKIP_TYPE    = 8;   /* Don't update type information */
 
 /*
  * Return successfully added or changed shape or NULL on error.
@@ -1460,22 +1436,8 @@ FindIdentifierBase(JSContext *cx, JSObject *scopeChain, PropertyName *name);
 extern JSObject *
 js_FindVariableScope(JSContext *cx, JSFunction **funp);
 
-/*
- * JSGET_CACHE_RESULT is the analogue of JSDNP_CACHE_RESULT for js_GetMethod.
- *
- * JSGET_METHOD_BARRIER (the default, hence 0 but provided for documentation)
- * enables a read barrier that preserves standard function object semantics (by
- * default we assume our caller won't leak a joined callee to script, where it
- * would create hazardous mutable object sharing as well as observable identity
- * according to == and ===.
- *
- * JSGET_NO_METHOD_BARRIER avoids the performance overhead of the method read
- * barrier, which is not needed when invoking a lambda that otherwise does not
- * leak its callee reference (via arguments.callee or its name).
- */
-const unsigned JSGET_METHOD_BARRIER    = 0; // get can leak joined function object
-const unsigned JSGET_NO_METHOD_BARRIER = 1; // call to joined function can't leak
-const unsigned JSGET_CACHE_RESULT      = 2; // from a caching interpreter opcode
+/* JSGET_CACHE_RESULT is the analogue of DNP_CACHE_RESULT for js_GetMethod. */
+const unsigned JSGET_CACHE_RESULT = 1; // from a caching interpreter opcode
 
 /*
  * NB: js_NativeGet and js_NativeSet are called with the scope containing shape
@@ -1525,14 +1487,6 @@ GetMethod(JSContext *cx, JSObject *obj, PropertyName *name, unsigned getHow, Val
 }
 
 } /* namespace js */
-
-/*
- * Change attributes for the given native property. The caller must ensure
- * that obj is locked and this function always unlocks obj on return.
- */
-extern JSBool
-js_SetNativeAttributes(JSContext *cx, JSObject *obj, js::Shape *shape,
-                       unsigned attrs);
 
 namespace js {
 

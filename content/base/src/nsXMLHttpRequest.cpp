@@ -2768,10 +2768,13 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   // Create our listener
   nsCOMPtr<nsIStreamListener> listener = this;
   if (mState & XML_HTTP_REQUEST_MULTIPART) {
+    Telemetry::Accumulate(Telemetry::MULTIPART_XHR_RESPONSE, 1);
     listener = new nsMultipartProxyListener(listener);
     if (!listener) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+  } else {
+    Telemetry::Accumulate(Telemetry::MULTIPART_XHR_RESPONSE, 0);
   }
 
   // Blocking gets are common enough out of XHR that we should mark

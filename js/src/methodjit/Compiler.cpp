@@ -1715,8 +1715,7 @@ mjit::Compiler::finishThisUp()
         jitPics[i].shapeRegHasBaseShape = true;
         jitPics[i].pc = pics[i].pc;
 
-        if (pics[i].kind == ic::PICInfo::SET ||
-            pics[i].kind == ic::PICInfo::SETMETHOD) {
+        if (pics[i].kind == ic::PICInfo::SET) {
             jitPics[i].u.vr = pics[i].vr;
         } else if (pics[i].kind != ic::PICInfo::NAME) {
             if (pics[i].hasTypeCheck) {
@@ -2900,11 +2899,6 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_ENDINIT)
           END_CASE(JSOP_ENDINIT)
 
-          BEGIN_CASE(JSOP_INITMETHOD)
-            jsop_initmethod();
-            frame.pop();
-          END_CASE(JSOP_INITMETHOD)
-
           BEGIN_CASE(JSOP_INITPROP)
             jsop_initprop();
             frame.pop();
@@ -2971,7 +2965,6 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_SETPROP)
 
           BEGIN_CASE(JSOP_SETNAME)
-          BEGIN_CASE(JSOP_SETMETHOD)
           {
             jsbytecode *next = &PC[JSOP_SETNAME_LENGTH];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
@@ -3078,29 +3071,6 @@ mjit::Compiler::generateMethod()
             JSObjStubFun stub = stubs::Lambda;
             uint32_t uses = 0;
 
-            jsbytecode *pc2 = NULL;
-            if (fun->joinable()) {
-                pc2 = PC + JSOP_LAMBDA_LENGTH;
-                JSOp next = JSOp(*pc2);
-
-                if (next == JSOP_INITMETHOD) {
-                    stub = stubs::LambdaJoinableForInit;
-                } else if (next == JSOP_SETMETHOD) {
-                    stub = stubs::LambdaJoinableForSet;
-                    uses = 1;
-                } else if (next == JSOP_CALL) {
-                    int iargc = GET_ARGC(pc2);
-                    if (iargc == 1 || iargc == 2) {
-                        stub = stubs::LambdaJoinableForCall;
-                        uses = frame.frameSlots();
-                    }
-                } else if (next == JSOP_NULL) {
-                    pc2 += JSOP_NULL_LENGTH;
-                    if (JSOp(*pc2) == JSOP_CALL && GET_ARGC(pc2) == 0)
-                        stub = stubs::LambdaJoinableForNull;
-                }
-            }
-
             prepareStubCall(Uses(uses));
             masm.move(ImmPtr(fun), Registers::ArgReg1);
 
@@ -3114,31 +3084,6 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_TRY)
             frame.syncAndForgetEverything();
           END_CASE(JSOP_TRY)
-
-          BEGIN_CASE(JSOP_DEFLOCALFUN)
-          {
-            uint32_t slot = GET_SLOTNO(PC);
-            JSFunction *fun = script->getFunction(GET_UINT32_INDEX(PC + SLOTNO_LEN));
-
-            /*
-             * The liveness analysis will report that the value in |slot| is
-             * defined at the start of this opcode. However, we don't actually
-             * fill it in until the stub returns. This will cause a problem if
-             * we GC inside the stub. So we write a safe value here so that the
-             * GC won't crash.
-             */
-            markUndefinedLocal(PC - script->code, slot);
-
-            prepareStubCall(Uses(0));
-            masm.move(ImmPtr(fun), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::DefLocalFun, REJOIN_DEFLOCALFUN);
-            frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-            frame.storeLocal(slot, true);
-            frame.pop();
-            updateVarType();
-          }
-          END_CASE(JSOP_DEFLOCALFUN)
 
           BEGIN_CASE(JSOP_RETRVAL)
             emitReturn(NULL);
@@ -3274,7 +3219,7 @@ mjit::Compiler::generateMethod()
 
             /* Update information about the result type of access operations. */
             if (OpcodeCounts::accessOp(op) &&
-                op != JSOP_SETPROP && op != JSOP_SETMETHOD && op != JSOP_SETELEM) {
+                op != JSOP_SETPROP && op != JSOP_SETELEM) {
                 FrameEntry *fe = (GetDefCount(script, lastPC - script->code) == 1)
                     ? frame.peek(-1)
                     : frame.peek(-2);
@@ -4147,15 +4092,15 @@ mjit::Compiler::inlineCallHelper(uint32_t callImmArgc, bool callingNew, FrameSiz
         frame.discardFe(origThis);
 
         /*
-         * If inference is enabled, the 'this' value of the pushed frame always
-         * needs to be coherent. If a GC gets triggered before the callee can
-         * fill in the slot (i.e. the GC happens on constructing the 'new'
-         * object or the call object for a heavyweight callee), it needs to be
-         * able to read the 'this' value to tell whether newScript constraints
-         * will need to be regenerated afterwards.
+         * We store NULL here to ensure that the slot doesn't contain
+         * garbage. Additionally, we need to store a non-object value here for
+         * TI. If a GC gets triggered before the callee can fill in the slot
+         * (i.e. the GC happens on constructing the 'new' object or the call
+         * object for a heavyweight callee), it needs to be able to read the
+         * 'this' value to tell whether newScript constraints will need to be
+         * regenerated afterwards.
          */
-        if (cx->typeInferenceEnabled())
-            masm.storeValue(NullValue(), frame.addressOf(origThis));
+        masm.storeValue(NullValue(), frame.addressOf(origThis));
     }
 
     if (!cx->typeInferenceEnabled()) {
@@ -5292,7 +5237,7 @@ mjit::Compiler::testSingletonProperty(JSObject *obj, jsid id)
             return false;
         if (holder->getSlot(shape->slot()).isUndefined())
             return false;
-    } else if (!shape->isMethod()) {
+    } else {
         return false;
     }
 
@@ -5625,10 +5570,7 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
     }
 #endif
 
-    ic::PICInfo::Kind kind = (op == JSOP_SETMETHOD)
-                             ? ic::PICInfo::SETMETHOD
-                             : ic::PICInfo::SET;
-    PICGenInfo pic(kind, op);
+    PICGenInfo pic(ic::PICInfo::SET, op);
     pic.name = name;
 
     if (monitored(PC)) {
@@ -6399,7 +6341,7 @@ mjit::Compiler::jsop_getgname(uint32_t index)
          * reallocation of the global object's slots.
          */
         const js::Shape *shape = globalObj->nativeLookup(cx, ATOM_TO_JSID(name));
-        if (shape && shape->hasDefaultGetterOrIsMethod() && shape->hasSlot()) {
+        if (shape && shape->hasDefaultGetter() && shape->hasSlot()) {
             HeapSlot *value = &globalObj->getSlotRef(shape->slot());
             if (!value->isUndefined() &&
                 !propertyTypes->isOwnProperty(cx, globalObj->getType(cx), true)) {
@@ -6522,7 +6464,7 @@ mjit::Compiler::jsop_setgname(PropertyName *name, bool popGuaranteed)
         if (!types)
             return;
         const js::Shape *shape = globalObj->nativeLookup(cx, ATOM_TO_JSID(name));
-        if (shape && !shape->isMethod() && shape->hasDefaultSetter() &&
+        if (shape && shape->hasDefaultSetter() &&
             shape->writable() && shape->hasSlot() &&
             !types->isOwnProperty(cx, globalObj->getType(cx), true)) {
             watchGlobalReallocation();

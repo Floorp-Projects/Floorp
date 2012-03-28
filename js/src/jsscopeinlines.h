@@ -282,14 +282,8 @@ Shape::get(JSContext* cx, JSObject *receiver, JSObject* obj, JSObject *pobj, js:
     JS_ASSERT(!hasDefaultGetter());
 
     if (hasGetterValue()) {
-        JS_ASSERT(!isMethod());
         js::Value fval = getterValue();
         return js::InvokeGetterOrSetter(cx, receiver, fval, 0, 0, vp);
-    }
-
-    if (isMethod()) {
-        vp->setObject(*pobj->nativeGetMethod(this));
-        return pobj->methodReadBarrier(cx, *this, vp);
     }
 
     /*
