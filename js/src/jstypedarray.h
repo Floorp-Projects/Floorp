@@ -57,7 +57,9 @@ namespace js {
  * explicitly and passed to an ArrayBufferView subclass, or can be created
  * implicitly by constructing a TypedArray with a size.
  */
-struct ArrayBufferObject : public JSObject {
+class ArrayBufferObject : public JSObject
+{
+  public:
     static Class protoClass;
     static JSPropertySpec jsprops[];
     static JSFunctionSpec jsfuncs[];
