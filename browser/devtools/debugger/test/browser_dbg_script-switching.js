@@ -31,7 +31,7 @@ function test()
 }
 
 function testScriptsDisplay() {
-  gPane.activeThread.addOneTimeListener("framesadded", function() {
+  gPane.activeThread.addOneTimeListener("scriptsadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
       gScripts = gDebugger.DebuggerView.Scripts._scripts;
 
