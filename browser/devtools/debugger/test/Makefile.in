@@ -77,7 +77,6 @@ _BROWSER_TEST_FILES = \
 	browser_dbg_bug723069_editor-breakpoints.js \
 	browser_dbg_bug731394_editor-contextmenu.js \
 	browser_dbg_displayName.js \
-	browser_dbg_iframes.js \
 	head.js \
 	$(NULL)
 
@@ -93,7 +92,6 @@ _BROWSER_TEST_PAGES = \
 	browser_dbg_update-editor-mode.html \
 	test-editor-mode \
 	browser_dbg_displayName.html \
-	browser_dbg_iframes.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
