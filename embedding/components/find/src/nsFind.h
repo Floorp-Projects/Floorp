@@ -45,7 +45,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
 #include "nsIContentIterator.h"
-#include "nsIParserService.h"
 #include "nsIWordBreaker.h"
 
 class nsIAtom;
@@ -89,7 +88,6 @@ protected:
   bool mCaseSensitive;
 
   nsCOMPtr<nsIWordBreaker> mWordBreaker;
-  nsCOMPtr<nsIParserService> mParserService;
 
   PRInt32 mIterOffset;
   nsCOMPtr<nsIDOMNode> mIterNode;
