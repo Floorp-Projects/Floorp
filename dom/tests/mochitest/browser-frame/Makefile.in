@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
+		file_empty.html \
 		browserFrameHelpers.js \
 		test_browserFrame1.html \
 		test_browserFrame2.html \

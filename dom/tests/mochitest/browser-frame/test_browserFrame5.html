@@ -31,7 +31,7 @@ function runTest() {
     iframe1.removeEventListener('load', arguments.callee);
     SimpleTest.executeSoon(runTest2);
   });
-  iframe1.src = 'http://example.org';
+  iframe1.src = browserFrameHelpers.emptyPage1;
   document.body.appendChild(iframe1);
 }
 
@@ -72,7 +72,7 @@ function runTest2() {
 
   // Load something into iframe2 to check that it doesn't trigger a
   // locationchange for our iframe1 listener.
-  iframe2.src = 'http://example.com';
+  iframe2.src = browserFrameHelpers.emptyPage2;
 }
 
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
