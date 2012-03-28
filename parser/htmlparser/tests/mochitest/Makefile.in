@@ -106,6 +106,8 @@ _TEST_FILES =	parser_datreader.js \
 		test_viewsource.html \
 		test_bug715112.html \
 		test_bug715739.html \
+		test_bug717180.html \
+		file_bug717180.html \
 		$(NULL)
 
 # Test disabled on mobile. See bug 737020.
