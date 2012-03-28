@@ -85,10 +85,6 @@ let modules = {
   home: {
     uri: "chrome://browser/content/aboutHome.xhtml",
     privileged: true
-  },
-  apps: {
-    uri: "chrome://browser/content/aboutApps.xhtml",
-    privileged: true
   }
 }
 

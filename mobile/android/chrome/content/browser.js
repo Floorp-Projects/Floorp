@@ -236,7 +236,6 @@ var BrowserApp = {
     CharacterEncoding.init();
     SearchEngines.init();
     ActivityObserver.init();
-    WebappsUI.init();
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -416,7 +415,6 @@ var BrowserApp = {
     ConsoleAPI.uninit();
     CharacterEncoding.uninit();
     SearchEngines.uninit();
-    WebappsUI.uninit();
   },
 
   // This function returns false during periods where the browser displayed document is
@@ -1074,15 +1072,10 @@ var NativeWindow = {
       if (this.menu._callbacks[aData])
         this.menu._callbacks[aData]();
     } else if (aTopic == "Doorhanger:Reply") {
-      let data = JSON.parse(aData);
-      let reply_id = data["callback"];
-
+      let reply_id = aData;
       if (this.doorhanger._callbacks[reply_id]) {
-        // Pass the value of the optional checkbox to the callback
-        let checked = data["checked"];
-        this.doorhanger._callbacks[reply_id].cb(checked);
-
         let prompt = this.doorhanger._callbacks[reply_id].prompt;
+        this.doorhanger._callbacks[reply_id].cb();
         for (let id in this.doorhanger._callbacks) {
           if (this.doorhanger._callbacks[id].prompt == prompt) {
             delete this.doorhanger._callbacks[id];
@@ -1286,9 +1279,7 @@ var NativeWindow = {
 
       let popupNode = aEvent.originalTarget;
       let title = "";
-      if (popupNode.hasAttribute("title")) {
-        title = popupNode.getAttribute("title")
-      } else if ((popupNode instanceof Ci.nsIDOMHTMLAnchorElement && popupNode.href) ||
+      if ((popupNode instanceof Ci.nsIDOMHTMLAnchorElement && popupNode.href) ||
               (popupNode instanceof Ci.nsIDOMHTMLAreaElement && popupNode.href)) {
         title = this._getLinkURL(popupNode);
       } else if (popupNode instanceof Ci.nsIImageLoadingContent && popupNode.currentURI) {
@@ -3914,50 +3905,22 @@ var ClipboardHelper = {
 
 var PluginHelper = {
   showDoorHanger: function(aTab) {
-    if (!aTab.browser)
-      return;
-
-    let uri = aTab.browser.currentURI;
-
-    // If the user has previously set a plugins permission for this website,
-    // either play or don't play the plugins instead of showing a doorhanger.
-    let permValue = Services.perms.testPermission(uri, "plugins");
-    if (permValue != Services.perms.UNKNOWN_ACTION) {
-      if (permValue == Services.perms.ALLOW_ACTION)
-        PluginHelper.playAllPlugins(aTab);
-
-      return;
-    }
-
-    let message = Strings.browser.formatStringFromName("clickToPlayPlugins.message1",
-                                                       [uri.host], 1);
+    let message = Strings.browser.GetStringFromName("clickToPlayPlugins.message");
     let buttons = [
       {
         label: Strings.browser.GetStringFromName("clickToPlayPlugins.yes"),
-        callback: function(aChecked) {
-          // If the user checked "Don't ask again", make a permanent exception
-          if (aChecked)
-            Services.perms.add(uri, "plugins", Ci.nsIPermissionManager.ALLOW_ACTION);
-
+        callback: function() {
           PluginHelper.playAllPlugins(aTab);
         }
       },
       {
         label: Strings.browser.GetStringFromName("clickToPlayPlugins.no"),
-        callback: function(aChecked) {
-          // If the user checked "Don't ask again", make a permanent exception
-          if (aChecked)
-            Services.perms.add(uri, "plugins", Ci.nsIPermissionManager.DENY_ACTION);
-
-          // Other than that, do nothing
+        callback: function() {
+          // Do nothing
         }
       }
-    ];
-
-    // Add a checkbox with a "Don't ask again" message
-    let options = { checkbox: Strings.browser.GetStringFromName("clickToPlayPlugins.dontAskAgain") };
-
-    NativeWindow.doorhanger.show(message, "ask-to-play-plugins", buttons, aTab.id, options);
+    ]
+    NativeWindow.doorhanger.show(message, "ask-to-play-plugins", buttons, aTab.id);
   },
 
   playAllPlugins: function(aTab, aEvent) {
@@ -4039,7 +4002,7 @@ var PluginHelper = {
 var PermissionsHelper = {
 
   _permissonTypes: ["password", "geolocation", "popup", "indexedDB",
-                    "offline-app", "desktop-notification", "plugins"],
+                    "offline-app", "desktop-notification"],
   _permissionStrings: {
     "password": {
       label: "password.rememberPassword",
@@ -4070,11 +4033,6 @@ var PermissionsHelper = {
       label: "desktopNotification.useNotifications",
       allowed: "desktopNotification.allow",
       denied: "desktopNotification.dontAllow"
-    },
-    "plugins": {
-      label: "clickToPlayPlugins.playPlugins",
-      allowed: "clickToPlayPlugins.yes",
-      denied: "clickToPlayPlugins.no"
     }
   },
 
