@@ -132,7 +132,7 @@ nsHyperTextAccessible::NativeRole()
     return roles::FORM;
 
   if (tag == nsGkAtoms::blockquote || tag == nsGkAtoms::div ||
-      tag == nsGkAtoms::nav)
+      tag == nsGkAtoms::section || tag == nsGkAtoms::nav)
     return roles::SECTION;
 
   if (tag == nsGkAtoms::h1 || tag == nsGkAtoms::h2 ||
@@ -1239,6 +1239,9 @@ nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
   if (mContent->Tag() == nsGkAtoms::nav)
     nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("navigation"));
+  else if (mContent->Tag() == nsGkAtoms::section) 
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
+                           NS_LITERAL_STRING("region"));
   else if (mContent->Tag() == nsGkAtoms::footer) 
     nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("contentinfo"));
