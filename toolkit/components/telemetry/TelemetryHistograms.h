@@ -391,6 +391,7 @@ HISTOGRAM(HTML_FOREGROUND_REFLOW_MS, 1, 3000, 10, EXPONENTIAL, "HTML reflows in 
 HISTOGRAM(HTML_BACKGROUND_REFLOW_MS, 1, 3000, 10, EXPONENTIAL, "HTML reflows in background windows (ms)")
 HISTOGRAM(XUL_INITIAL_FRAME_CONSTRUCTION, 1, 3000, 10, EXPONENTIAL, "initial xul frame construction")
 HISTOGRAM_BOOLEAN(XMLHTTPREQUEST_ASYNC_OR_SYNC, "Type of XMLHttpRequest, async or sync")
+HISTOGRAM_BOOLEAN(MULTIPART_XHR_RESPONSE, "XMLHttpRequest response was of type multipart/x-mixed-replace.")
 
 /**
  * DOM telemetry.
