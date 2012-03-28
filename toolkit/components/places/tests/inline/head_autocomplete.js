@@ -193,26 +193,3 @@ function addBookmark(aBookmarkObj) {
     PlacesUtils.bookmarks.setKeywordForBookmark(itemId, aBookmarkObj.keyword);
   }
 }
-
-function VisitInfo(aTransitionType, aVisitTime)
-{
-  this.transitionType =
-    aTransitionType === undefined ? TRANSITION_LINK : aTransitionType;
-  this.visitDate = aVisitTime || Date.now() * 1000;
-}
-
-function addVisits(aUrls)
-{
-  let places = [];
-  aUrls.forEach(function(url) {
-    places.push({
-                  uri: url.url,
-                  title: "test for " + url.url,
-                  visits: [
-                    new VisitInfo(url.transition),
-                  ],
-    });
-  });
-
-  gHistory.updatePlaces(places);
-}

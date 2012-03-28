@@ -584,7 +584,7 @@ ParallelArray_forward_method(JSContext *cx, unsigned argc, Value *vp, Native nat
 
     Value callable;
     JSObject *buffer = GetBuffer(obj);
-    if (!js_GetMethod(cx, buffer, ATOM_TO_JSID(name), JSGET_NO_METHOD_BARRIER, &callable))
+    if (!js_GetMethod(cx, buffer, ATOM_TO_JSID(name), 0, &callable))
         return false;
 
     Value rval;

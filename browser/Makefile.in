@@ -56,13 +56,14 @@ DIRS = \
   app \
   $(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifdef MAKENSISU
 DIRS += installer/windows
 endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),WINNT)
+ifdef MAKENSISU
+
 # For Windows build the uninstaller during the application build since the
 # uninstaller is included with the application for mar file generation.
 libs::

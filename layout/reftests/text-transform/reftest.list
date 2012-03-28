@@ -13,3 +13,5 @@
 == smtp-upper.html smtp-upper-ref.html
 == smtp-lower.html smtp-lower-ref.html
 == smtp-title.html smtp-title-ref.html
+== turkish-casing-1.html turkish-casing-1-ref.html
+HTTP(..) != small-caps-turkish-1.html small-caps-turkish-1-notref.html

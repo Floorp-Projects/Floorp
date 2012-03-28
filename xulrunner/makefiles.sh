@@ -52,7 +52,7 @@ xulrunner/stub/Makefile
 xulrunner/installer/Makefile
 "
 
-if [ "$OS_ARCH" = "WINNT" ]; then
+if [ "$MAKENSISU" ]; then
   add_makefiles "
     xulrunner/installer/windows/Makefile
   "

@@ -41,15 +41,13 @@
 #include "nsCaretAccessible.h"
 #include "nsDocAccessibleWrap.h"
 
-#ifdef MOZ_XUL
-#include "nsXULTreeAccessible.h"
-#endif
 
 #include "nsHashtable.h"
 #include "nsCaretAccessible.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventListener.h"
 
+class nsXULTreeAccessible;
 class Relation;
 
 #define NS_ROOTACCESSIBLE_IMPL_CID                      \

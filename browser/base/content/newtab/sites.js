@@ -61,13 +61,12 @@ Site.prototype = {
 
   /**
    * Unpins the site and calls the given callback when done.
-   * @param aCallback The callback to be called when finished.
    */
-  unpin: function Site_unpin(aCallback) {
+  unpin: function Site_unpin() {
     if (this.isPinned()) {
       this._updateAttributes(false);
       gPinnedLinks.unpin(this._link);
-      gUpdater.updateGrid(aCallback);
+      gUpdater.updateGrid();
     }
   },
 
@@ -82,15 +81,14 @@ Site.prototype = {
   /**
    * Blocks the site (removes it from the grid) and calls the given callback
    * when done.
-   * @param aCallback The function to be called when finished.
    */
-  block: function Site_block(aCallback) {
+  block: function Site_block() {
     if (gBlockedLinks.isBlocked(this._link)) {
       if (aCallback)
         aCallback();
     } else {
       gBlockedLinks.block(this._link);
-      gUpdater.updateGrid(aCallback);
+      gUpdater.updateGrid();
     }
   },
 

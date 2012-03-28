@@ -569,7 +569,7 @@ class OpcodeCounts
          * Access ops include all name, element and property reads, as well as
          * SETELEM and SETPROP (for ElementCounts/PropertyCounts alignment).
          */
-        if (op == JSOP_SETELEM || op == JSOP_SETPROP || op == JSOP_SETMETHOD)
+        if (op == JSOP_SETELEM || op == JSOP_SETPROP)
             return true;
         int format = js_CodeSpec[op].format;
         return !!(format & (JOF_NAME | JOF_GNAME | JOF_ELEM | JOF_PROP))

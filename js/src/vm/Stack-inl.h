@@ -189,13 +189,6 @@ StackFrame::initFixupFrame(StackFrame *prev, StackFrame::Flags flags, void *ncod
     u.nactual = nactual;
 }
 
-inline void
-StackFrame::overwriteCallee(JSObject &newCallee)
-{
-    JS_ASSERT(callee().toFunction()->script() == newCallee.toFunction()->script());
-    mutableCalleev().setObject(newCallee);
-}
-
 inline Value &
 StackFrame::canonicalActualArg(unsigned i) const
 {

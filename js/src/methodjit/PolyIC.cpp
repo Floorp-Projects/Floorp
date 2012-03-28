@@ -350,23 +350,6 @@ class SetPropCompiler : public PICStubCompiler
                 lastReg = pic.shapeReg;
             }
 
-            if (pic.kind == ic::PICInfo::SETMETHOD) {
-                /*
-                 * Guard that the value is equal to the shape's method.
-                 * We already know it is a function, so test the payload.
-                 */
-                JS_ASSERT(shape->isMethod());
-                JSObject *funobj = obj->nativeGetMethod(shape);
-                if (pic.u.vr.isConstant()) {
-                    JS_ASSERT(funobj == &pic.u.vr.value().toObject());
-                } else {
-                    Jump mismatchedFunction =
-                        masm.branchPtr(Assembler::NotEqual, pic.u.vr.dataReg(), ImmPtr(funobj));
-                    if (!slowExits.append(mismatchedFunction))
-                        return error();
-                }
-            }
-
             if (obj->isFixedSlot(shape->slot())) {
                 Address address(pic.objReg,
                                 JSObject::getFixedSlotOffset(shape->slot()));
@@ -389,7 +372,6 @@ class SetPropCompiler : public PICStubCompiler
             /* Write the object's new shape. */
             masm.storePtr(ImmPtr(shape), Address(pic.objReg, JSObject::offsetOfShape()));
         } else if (shape->hasDefaultSetter()) {
-            JS_ASSERT(!shape->isMethod());
             Address address = masm.objPropAddress(obj, pic.objReg, shape->slot());
             masm.storeValue(pic.u.vr, address);
         } else {
@@ -585,17 +567,6 @@ class SetPropCompiler : public PICStubCompiler
             unsigned flags = 0;
             PropertyOp getter = clasp->getProperty;
 
-            if (pic.kind == ic::PICInfo::SETMETHOD) {
-                if (!obj->canHaveMethodBarrier())
-                    return disable("can't have method barrier");
-
-                JSObject *funobj = &f.regs.sp[-1].toObject();
-                if (funobj->toFunction()->isClonedMethod())
-                    return disable("mismatched function");
-
-                flags |= Shape::METHOD;
-            }
-
             /*
              * Define the property but do not set it yet. For setmethod,
              * populate the slot to satisfy the method invariant (in case we
@@ -606,8 +577,6 @@ class SetPropCompiler : public PICStubCompiler
                                  SHAPE_INVALID_SLOT, JSPROP_ENUMERATE, flags, 0);
             if (!shape)
                 return error();
-            if (flags & Shape::METHOD)
-                obj->nativeSetSlot(shape->slot(), f.regs.sp[-1]);
 
             if (monitor.recompiled())
                 return Lookup_Uncacheable;
@@ -647,13 +616,8 @@ class SetPropCompiler : public PICStubCompiler
         }
 
         const Shape *shape = (const Shape *) prop;
-        if (pic.kind == ic::PICInfo::SETMETHOD && !shape->isMethod())
-            return disable("set method on non-method shape");
         if (!shape->writable())
             return disable("readonly");
-        if (shape->isMethod())
-            return disable("method");
-
         if (shape->hasDefaultSetter()) {
             if (!shape->hasSlot())
                 return disable("invalid slot");
@@ -789,27 +753,22 @@ struct GetPropHelper {
 
     LookupStatus testForGet() {
         if (!shape->hasDefaultGetter()) {
-            if (shape->isMethod()) {
-                if (JSOp(*f.pc()) != JSOP_CALLPROP)
-                    return ic.disable(f, "method valued shape");
-            } else {
-                if (shape->hasGetterValue())
-                    return ic.disable(f, "getter value shape");
-                if (shape->hasSlot() && holder != obj)
-                    return ic.disable(f, "slotful getter hook through prototype");
-                if (!ic.canCallHook)
-                    return ic.disable(f, "can't call getter hook");
-                if (f.regs.inlined()) {
-                    /*
-                     * As with native stubs, getter hook stubs can't be
-                     * generated for inline frames. Mark the inner function
-                     * as uninlineable and recompile.
-                     */
-                    f.script()->uninlineable = true;
-                    MarkTypeObjectFlags(cx, f.script()->function(),
-                                        types::OBJECT_FLAG_UNINLINEABLE);
-                    return Lookup_Uncacheable;
-                }
+            if (shape->hasGetterValue())
+                return ic.disable(f, "getter value shape");
+            if (shape->hasSlot() && holder != obj)
+                return ic.disable(f, "slotful getter hook through prototype");
+            if (!ic.canCallHook)
+                return ic.disable(f, "can't call getter hook");
+            if (f.regs.inlined()) {
+                /*
+                 * As with native stubs, getter hook stubs can't be
+                 * generated for inline frames. Mark the inner function
+                 * as uninlineable and recompile.
+                 */
+                f.script()->uninlineable = true;
+                MarkTypeObjectFlags(cx, f.script()->function(),
+                                    types::OBJECT_FLAG_UNINLINEABLE);
+                return Lookup_Uncacheable;
             }
         } else if (!shape->hasSlot()) {
             return ic.disable(f, "no slot");
@@ -962,7 +921,7 @@ class GetPropCompiler : public PICStubCompiler
             return status;
         if (getprop.obj != getprop.holder)
             return disable("proto walk on String.prototype");
-        if (!getprop.shape->hasDefaultGetterOrIsMethod())
+        if (!getprop.shape->hasDefaultGetter())
             return disable("getter hook on String.prototype");
         if (hadGC())
             return Lookup_Uncacheable;
@@ -1239,7 +1198,7 @@ class GetPropCompiler : public PICStubCompiler
             pic.secondShapeGuard = 0;
         }
 
-        if (!shape->hasDefaultGetterOrIsMethod()) {
+        if (!shape->hasDefaultGetter()) {
             generateGetterStub(masm, shape, start, shapeMismatches);
             if (setStubShapeOffset)
                 pic.getPropLabels().setStubShapeJump(masm, start, stubShapeJumpLabel);
@@ -1327,7 +1286,7 @@ class GetPropCompiler : public PICStubCompiler
             return Lookup_Uncacheable;
 
         if (obj == getprop.holder &&
-            getprop.shape->hasDefaultGetterOrIsMethod() &&
+            getprop.shape->hasDefaultGetter() &&
             !pic.inlinePathPatched) {
             return patchInline(getprop.holder, getprop.shape);
         }
@@ -1675,7 +1634,7 @@ class ScopeNameCompiler : public PICStubCompiler
         JSObject *normalized = obj;
         if (obj->isWith() && !shape->hasDefaultGetter())
             normalized = &obj->asWith().object();
-        NATIVE_GET(cx, normalized, holder, shape, JSGET_METHOD_BARRIER, vp, return false);
+        NATIVE_GET(cx, normalized, holder, shape, 0, vp, return false);
         return true;
     }
 };
