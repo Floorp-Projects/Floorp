@@ -170,7 +170,7 @@ public:
   }
 
 protected:
-  ~IDBKeyRange() { }
+  ~IDBKeyRange();
 
   Key mLower;
   Key mUpper;
