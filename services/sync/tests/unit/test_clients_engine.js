@@ -520,10 +520,11 @@ add_test(function test_receive_display_uri() {
 
   let uri = "http://www.mozilla.org/";
   let remoteId = Utils.makeGUID();
+  let title = "Page Title!";
 
   let command = {
     command: "displayURI",
-    args: [uri, remoteId],
+    args: [uri, remoteId, title],
   };
 
   Clients.localCommands = [command];
@@ -537,6 +538,7 @@ add_test(function test_receive_display_uri() {
 
     do_check_eq(subject.uri, uri);
     do_check_eq(subject.client, remoteId);
+    do_check_eq(subject.title, title);
     do_check_eq(data, null);
 
     run_next_test();
