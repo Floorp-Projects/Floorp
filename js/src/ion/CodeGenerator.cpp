@@ -274,13 +274,13 @@ CodeGenerator::visitOsiPoint(LOsiPoint *lir)
 
     JS_ASSERT(masm.framePushed() == frameSize());
 
-    uint32 osiReturnPointOffset;
-    if (!markOsiPoint(lir, &osiReturnPointOffset))
+    uint32 osiCallPointOffset;
+    if (!markOsiPoint(lir, &osiCallPointOffset))
         return false;
 
     LSafepoint *safepoint = lir->associatedSafepoint();
-    JS_ASSERT(!safepoint->osiReturnPointOffset());
-    safepoint->setOsiReturnPointOffset(osiReturnPointOffset);
+    JS_ASSERT(!safepoint->osiCallPointOffset());
+    safepoint->setOsiCallPointOffset(osiCallPointOffset);
     return true;
 }
 
