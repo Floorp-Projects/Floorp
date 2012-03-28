@@ -40,12 +40,11 @@
 #ifndef __nsXULListboxAccessible_h__
 #define __nsXULListboxAccessible_h__
 
+#include "nsIAccessibleTable.h"
+
 #include "nsCOMPtr.h"
 #include "nsXULMenuAccessible.h"
 #include "nsBaseWidgetAccessible.h"
-#include "nsIAccessibleTable.h"
-#include "TableAccessible.h"
-#include "xpcAccessibleTable.h"
 #include "XULSelectControlAccessible.h"
 
 class nsIWeakReference;
@@ -91,27 +90,19 @@ public:
  * A class the represents the XUL Listbox widget.
  */
 class nsXULListboxAccessible : public XULSelectControlAccessible,
-                               public xpcAccessibleTable,
-                               public nsIAccessibleTable,
-                               public mozilla::a11y::TableAccessible
+                               public nsIAccessibleTable
 {
 public:
   nsXULListboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
   virtual ~nsXULListboxAccessible() {}
 
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIAccessibleTable
-  NS_DECL_OR_FORWARD_NSIACCESSIBLETABLE_WITH_XPCACCESSIBLETABLE
+  NS_DECL_NSIACCESSIBLETABLE
 
   // nsIAccessible
   NS_IMETHOD GetValue(nsAString& aValue);
 
-  // nsAccessNode
-  virtual void Shutdown();
-
   // nsAccessible
-  virtual mozilla::a11y::TableAccessible* AsTable() { return this; }
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 

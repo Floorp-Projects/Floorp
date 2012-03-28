@@ -134,7 +134,7 @@ nsXULColumnItemAccessible::DoAction(PRUint8 aIndex)
 
 nsXULListboxAccessible::
   nsXULListboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  XULSelectControlAccessible(aContent, aDoc), xpcAccessibleTable(this)
+  XULSelectControlAccessible(aContent, aDoc)
 {
   nsIContent* parentContent = mContent->GetParent();
   if (parentContent) {
@@ -162,16 +162,6 @@ nsXULListboxAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
 
   return NS_ERROR_NO_INTERFACE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//nsAccessNode
-
-void
-nsXULListboxAccessible::Shutdown()
-{
-  mTable = nsnull;
-  XULSelectControlAccessible::Shutdown();
 }
 
 bool
@@ -238,6 +228,15 @@ nsXULListboxAccessible::NativeRole()
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULListboxAccessible. nsIAccessibleTable
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetCaption(nsIAccessible **aCaption)
+{
+  NS_ENSURE_ARG_POINTER(aCaption);
+  *aCaption = nsnull;
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsXULListboxAccessible::GetSummary(nsAString &aSummary)
@@ -818,6 +817,15 @@ NS_IMETHODIMP
 nsXULListboxAccessible::UnselectColumn(PRInt32 aColumn)
 {
   // xul:listbox and xul:richlistbox support row selection only.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
+{
+  NS_ENSURE_ARG_POINTER(aIsProbablyForLayout);
+  *aIsProbablyForLayout = false;
+
   return NS_OK;
 }
 

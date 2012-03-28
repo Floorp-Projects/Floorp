@@ -66,11 +66,6 @@ class nsHTMLImageMapAccessible;
 class nsHTMLLIAccessible;
 struct nsRoleMapEntry;
 class Relation;
-namespace mozilla {
-namespace a11y {
-class TableAccessible;
-}
-}
 class nsTextAccessible;
 
 struct nsRect;
@@ -475,8 +470,6 @@ public:
 
   inline bool IsRoot() const { return mFlags & eRootAccessible; }
   nsRootAccessible* AsRoot();
-
-  virtual mozilla::a11y::TableAccessible* AsTable() { return nsnull; }
 
   inline bool IsTextLeaf() const { return mFlags & eTextLeafAccessible; }
   nsTextAccessible* AsTextLeaf();

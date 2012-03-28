@@ -50,7 +50,6 @@ LIBXUL_LIBRARY = 1
 CPPSRCS = \
   nsAccEvent.cpp \
   nsAccessibleRelation.cpp \
-  xpcAccessibleTable.cpp \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
@@ -60,5 +59,4 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES = \
   -I$(srcdir)/../base \
-  -I$(srcdir)/../generic \
   $(NULL)
