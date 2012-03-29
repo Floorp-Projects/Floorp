@@ -26,75 +26,68 @@ var piConstants = [
   "const float k2PI    = (kPI * 2.0);"
 ].join("\n");
 
-var atanImplementation = [
-  "const float kEpsilon = 0.0001;",
-  "",
-  "float atan_impl(float y, float x) {",
-  "  float atan_value = 0.0;",
-  "  float scale = 1.0;",
-  "  float sign = 1.0;",
-  "",
-  "  if (x > kEpsilon || abs(y) > kEpsilon) {",
-  "    if (x < 0.0 ^^ y < 0.0) {",
-  "      sign = -1.0;",
-  "    }",
-  "",
-  "    bool y_gt_x = abs(y) < abs(x);",
-  "    float value = y_gt_x ? abs(y / x) : abs(x / y);",
-  "",
-  "    // Use Taylors series expansion for atan",
-  "    for(int ii = 1; ii < 8; ii += 2) {",
-  "      atan_value += scale * pow(value, float(ii)) / float(ii);",
-  "      scale = -scale;",
-  "    }",
-  "",
-  "    atan_value = (y_gt_x) ? sign * atan_value : sign * (kHalfPI - atan_value);",
-  "  }",
-  "",
-  "  if (x < 0.0) {",
-  "    if (y < 0.0) {",
-  "      atan_value -= kHalfPI;",
-  "    } else if (y > 0.0) {",
-  "      atan_value += kHalfPI;",
-  "    }",
-  "  }",
-  "",
-  "  return atan_value;",
-  "}"
-].join("\n");
+var kPI = Math.PI;
+var kHalfPI = Math.PI * 0.5;
+var k2PI = Math.PI * 2.0;
+var atan2 = Math.atan2;  // shorthand
 
-GLSLGenerator.runFeatureTest({
+GLSLGenerator.runReferenceImageTest({
   feature: "atan",
   args: "$(type) y, $(type) x",
-  baseArgs: "y$(field), x$(field)",
   testFunc: "$(func)($(type), $(type))",
-  emuFunc: [
-    atanImplementation,
-    "float $(func)_base(float y, float x) {",
-    "  return atan_impl(y, x);",
-    "}"
-  ].join("\n"),
   gridRes: 8,
-  tolerance: 4,
+  tolerance: 5,
   extra: piConstants,
   tests: [
-    ["$(output) = vec4(",
-     "    $(func)($(input).x + 0.1, $(input).y) / k2PI + 0.5,",
-     "    0,",
-     "    0,",
-     "    1);"].join("\n"),
-    ["$(output) = vec4(",
-     "    $(func)($(input).xy + vec2(0.1, 0.1), $(input).yx) / ",
-     "            k2PI + vec2(0.5, 0.5),",
-     "    0, 1);"].join("\n"),
-    ["$(output) = vec4(",
-     "    $(func)($(input).xyz + vec3(0.1, 0.1, 0.1), $(input).yzx) / ",
-     "            k2PI + vec3(0.5, 0.5, 0.5),",
-     "    1);"].join("\n"),
-    ["$(output) = ",
-     "    $(func)($(input) + vec4(0.1, 0.1, 0.1, 0.1), $(input).wzyx) / ",
-     "            k2PI + vec4(0.5, 0.5, 0.5, 0.5);",
-    ].join("\n")
+    {
+      source: ["$(output) = vec4(",
+               "    $(func)($(input).x + 0.1, $(input).y) / k2PI + 0.5,",
+               "    0,",
+               "    0,",
+               "    1);"].join("\n"),
+      generator: function(x, y, z, w) {
+        return [ atan2(x + 0.1, y) / k2PI + 0.5,
+                 0,
+                 0,
+                 1 ];
+      },
+    },
+    {
+      source: ["$(output) = vec4(",
+               "    $(func)($(input).xy + vec2(0.1, 0.1), $(input).yx) / ",
+               "            k2PI + vec2(0.5, 0.5),",
+               "    0, 1);"].join("\n"),
+      generator: function(x, y, z, w) {
+        return [ atan2(x + 0.1, y) / k2PI + 0.5,
+                 atan2(y + 0.1, x) / k2PI + 0.5,
+                 0,
+                 1 ];
+      },
+    },
+    {
+      source: ["$(output) = vec4(",
+               "    $(func)($(input).xyz + vec3(0.1, 0.1, 0.1), $(input).yzx) / ",
+               "            k2PI + vec3(0.5, 0.5, 0.5),",
+               "    1);"].join("\n"),
+      generator: function(x, y, z, w) {
+        return [ atan2(x + 0.1, y) / k2PI + 0.5,
+                 atan2(y + 0.1, z) / k2PI + 0.5,
+                 atan2(z + 0.1, x) / k2PI + 0.5,
+                 1 ];
+      },
+    },
+    {
+      source: ["$(output) = ",
+               "    $(func)($(input) + vec4(0.1, 0.1, 0.1, 0.1), $(input).wzyx) / ",
+               "            k2PI + vec4(0.5, 0.5, 0.5, 0.5);",
+              ].join("\n"),
+      generator: function(x, y, z, w) {
+        return [ atan2(x + 0.1, w) / k2PI + 0.5,
+                 atan2(y + 0.1, z) / k2PI + 0.5,
+                 atan2(z + 0.1, y) / k2PI + 0.5,
+                 atan2(w + 0.1, x) / k2PI + 0.5 ];
+      },
+    },
   ]
 });
 successfullyParsed = true;

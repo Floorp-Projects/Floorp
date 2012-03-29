@@ -1297,19 +1297,14 @@ nsParser::Parse(nsIURI* aURL,
 }
 
 /**
- * Call this method if all you want to do is parse 1 string full of HTML text.
- * In particular, this method should be called by the DOM when it has an HTML
- * string to feed to the parser in real-time.
+ * Used by XML fragment parsing below.
  *
  * @param   aSourceBuffer contains a string-full of real content
- * @param   aMimeType tells us what type of content to expect in the given string
  */
-NS_IMETHODIMP
+nsresult
 nsParser::Parse(const nsAString& aSourceBuffer,
                 void* aKey,
-                const nsACString& aMimeType,
-                bool aLastCall,
-                nsDTDMode aMode)
+                bool aLastCall)
 {
   nsresult result = NS_OK;
 
@@ -1326,11 +1321,6 @@ nsParser::Parse(const nsAString& aSourceBuffer,
     // stuff correctly.
     return result;
   }
-
-  // Hack to pass on to the dtd the caller's desire to
-  // parse a fragment without worrying about containment rules
-  if (aMode == eDTDMode_fragment)
-    mCommand = eViewFragment;
 
   // Maintain a reference to ourselves so we don't go away
   // till we're completely done.
@@ -1354,7 +1344,8 @@ nsParser::Parse(const nsAString& aSourceBuffer,
 
       eAutoDetectResult theStatus = eUnknownDetect;
 
-      if (mParserContext && mParserContext->mMimeType == aMimeType) {
+      if (mParserContext &&
+          mParserContext->mMimeType.EqualsLiteral("application/xml")) {
         // Ref. Bug 90379
         NS_ASSERTION(mDTD, "How come the DTD is null?");
 
@@ -1390,13 +1381,8 @@ nsParser::Parse(const nsAString& aSourceBuffer,
       // end fix for 40143
 
       pc->mContextType=CParserContext::eCTString;
-      pc->SetMimeType(aMimeType);
-      if (pc->mPrevContext && aMode == eDTDMode_autodetect) {
-        // Preserve the DTD mode from the last context, bug 265814.
-        pc->mDTDMode = pc->mPrevContext->mDTDMode;
-      } else {
-        pc->mDTDMode = aMode;
-      }
+      pc->SetMimeType(NS_LITERAL_CSTRING("application/xml"));
+      pc->mDTDMode = eDTDMode_full_standards;
 
       mUnusedInput.Truncate();
 
@@ -1454,9 +1440,7 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
   // pass false for the aLastCall parameter.
   result = Parse(theContext,
                  (void*)&theContext,
-                 NS_LITERAL_CSTRING("application/xml"),
-                 false,
-                 eDTDMode_full_standards);
+                 false);
   if (NS_FAILED(result)) {
     mFlags |= NS_PARSER_FLAG_OBSERVERS_ENABLED;
     return result;
@@ -1478,18 +1462,14 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
   if (theCount == 0) {
     result = Parse(aSourceBuffer,
                    &theContext,
-                   NS_LITERAL_CSTRING("application/xml"),
-                   true,
-                   eDTDMode_full_standards);
+                   true);
     fragSink->DidBuildContent();
   } else {
     // Add an end tag chunk, so expat will read the whole source buffer,
     // and not worry about ']]' etc.
     result = Parse(aSourceBuffer + NS_LITERAL_STRING("</"),
                    &theContext,
-                   NS_LITERAL_CSTRING("application/xml"),
-                   false,
-                   eDTDMode_full_standards);
+                   false);
     fragSink->DidBuildContent();
 
     if (NS_SUCCEEDED(result)) {
@@ -1514,9 +1494,7 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
 
       result = Parse(endContext,
                      &theContext,
-                     NS_LITERAL_CSTRING("application/xml"),
-                     true,
-                     eDTDMode_full_standards);
+                     true);
     }
   }
 

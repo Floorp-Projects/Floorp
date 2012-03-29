@@ -92,7 +92,7 @@ js::ObjectImpl::checkShapeConsistency()
 #endif
 
 void
-js::ObjectImpl::initSlotRange(size_t start, const Value *vector, size_t length)
+js::ObjectImpl::initSlotRange(uint32_t start, const Value *vector, uint32_t length)
 {
     JSCompartment *comp = compartment();
     HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
@@ -104,7 +104,7 @@ js::ObjectImpl::initSlotRange(size_t start, const Value *vector, size_t length)
 }
 
 void
-js::ObjectImpl::copySlotRange(size_t start, const Value *vector, size_t length)
+js::ObjectImpl::copySlotRange(uint32_t start, const Value *vector, uint32_t length)
 {
     JSCompartment *comp = compartment();
     HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
@@ -117,9 +117,9 @@ js::ObjectImpl::copySlotRange(size_t start, const Value *vector, size_t length)
 
 #ifdef DEBUG
 bool
-js::ObjectImpl::slotInRange(unsigned slot, SentinelAllowed sentinel) const
+js::ObjectImpl::slotInRange(uint32_t slot, SentinelAllowed sentinel) const
 {
-    size_t capacity = numFixedSlots() + numDynamicSlots();
+    uint32_t capacity = numFixedSlots() + numDynamicSlots();
     if (sentinel == SENTINEL_ALLOWED)
         return slot <= capacity;
     return slot < capacity;

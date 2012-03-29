@@ -72,7 +72,7 @@ BOOKMARKSPATH = $(firstword \
   $(wildcard $(MOBILE_LOCALE_SRCDIR)/profile/bookmarks.inc) \
   $(topsrcdir)/mobile/locales/en-US/profile/bookmarks.inc ))
 else
-BOOKMARKSPATH = $(MOBILE_LOCALE_SRCDIR)/profile/bookmarks.inc
+BOOKMARKSPATH = $(call core_abspath,$(MOBILE_LOCALE_SRCDIR)/profile/bookmarks.inc)
 endif
 
 %/strings.xml: FORCE

@@ -21,6 +21,41 @@
 #include <utils/threads.h>
 #include "IAudioFlinger.h"
 
+#ifndef VANILLA_ANDROID
+/* device categories used for audio_policy->set_force_use() */
+typedef enum {
+    AUDIO_POLICY_FORCE_NONE,
+    AUDIO_POLICY_FORCE_SPEAKER,
+    AUDIO_POLICY_FORCE_HEADPHONES,
+    AUDIO_POLICY_FORCE_BT_SCO,
+    AUDIO_POLICY_FORCE_BT_A2DP,
+    AUDIO_POLICY_FORCE_WIRED_ACCESSORY,
+    AUDIO_POLICY_FORCE_BT_CAR_DOCK,
+    AUDIO_POLICY_FORCE_BT_DESK_DOCK,
+
+#ifdef VANILLA_ANDROID
+    AUDIO_POLICY_FORCE_ANALOG_DOCK,
+    AUDIO_POLICY_FORCE_DIGITAL_DOCK,
+#endif
+
+    AUDIO_POLICY_FORCE_CFG_CNT,
+    AUDIO_POLICY_FORCE_CFG_MAX = AUDIO_POLICY_FORCE_CFG_CNT - 1,
+
+    AUDIO_POLICY_FORCE_DEFAULT = AUDIO_POLICY_FORCE_NONE,
+} audio_policy_forced_cfg_t;
+
+/* usages used for audio_policy->set_force_use() */
+typedef enum {
+    AUDIO_POLICY_FORCE_FOR_COMMUNICATION,
+    AUDIO_POLICY_FORCE_FOR_MEDIA,
+    AUDIO_POLICY_FORCE_FOR_RECORD,
+    AUDIO_POLICY_FORCE_FOR_DOCK,
+
+    AUDIO_POLICY_FORCE_USE_CNT,
+    AUDIO_POLICY_FORCE_USE_MAX = AUDIO_POLICY_FORCE_USE_CNT - 1,
+} audio_policy_force_use_t;
+#endif
+
 namespace android {
 
 typedef void (*audio_error_callback)(status_t err);
@@ -359,8 +394,16 @@ public:
     static device_connection_state getDeviceConnectionState(audio_devices device, const char *device_address);
     static status_t setPhoneState(int state);
     static status_t setRingerMode(uint32_t mode, uint32_t mask);
+#ifdef VANILLA_ANDROID
     static status_t setForceUse(force_use usage, forced_config config);
     static forced_config getForceUse(force_use usage);
+#else
+    static status_t setForceUse(force_use usage, forced_config config) __attribute__((weak));
+    static forced_config getForceUse(force_use usage) __attribute__((weak));
+
+    static status_t setForceUse(audio_policy_force_use_t usage, audio_policy_forced_cfg_t config) __attribute__((weak));
+    static audio_policy_forced_cfg_t getForceUse(audio_policy_force_use_t usage) __attribute__((weak));
+#endif
     static audio_io_handle_t getOutput(stream_type stream,
                                         uint32_t samplingRate = 0,
                                         uint32_t format = FORMAT_DEFAULT,

@@ -698,12 +698,14 @@ MouseScrollHandler::HandleMouseWheelMessage(nsWindow* aWindow,
   // Grab the widget, it might be destroyed by a DOM event handler.
   nsRefPtr<nsWindow> kungFuDethGrip(aWindow);
 
+  bool fromLines = false;
   nsMouseScrollEvent scrollEvent(true, NS_MOUSE_SCROLL, aWindow);
   if (mLastEventInfo.InitMouseScrollEvent(aWindow, scrollEvent,
                                           scrollTargetInfo, modKeyState)) {
     PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
       ("MouseScroll::HandleMouseWheelMessage: dispatching "
        "NS_MOUSE_SCROLL event"));
+    fromLines = true;
     DispatchEvent(aWindow, scrollEvent);
     if (aWindow->Destroyed()) {
       PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
@@ -727,6 +729,7 @@ MouseScrollHandler::HandleMouseWheelMessage(nsWindow* aWindow,
     PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
       ("MouseScroll::HandleMouseWheelMessage: dispatching "
        "NS_MOUSE_PIXEL_SCROLL event"));
+    pixelEvent.scrollFlags |= fromLines ? nsMouseScrollEvent::kFromLines : 0;
     DispatchEvent(aWindow, pixelEvent);
     if (aWindow->Destroyed()) {
       PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,

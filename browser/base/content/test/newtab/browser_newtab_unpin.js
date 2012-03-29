@@ -14,7 +14,7 @@ function runTests() {
   yield addNewTabPageTab();
   checkGrid("0,1p,2,3,4,5,6,7,8");
 
-  yield unpinCell(cells[1]);
+  yield unpinCell(1);
   checkGrid("0,1,2,3,4,5,6,7,8");
 
   // we have a pinned link that is not anymore in the list of the most-visited
@@ -26,7 +26,7 @@ function runTests() {
   yield addNewTabPageTab();
   checkGrid("0,99p,1,2,3,4,5,6,7");
 
-  yield unpinCell(cells[1]);
+  yield unpinCell(1);
   checkGrid("0,1,2,3,4,5,6,7,8");
 
   // we have a pinned link that changed its position since it was pinned. it
@@ -37,10 +37,10 @@ function runTests() {
   yield addNewTabPageTab();
   checkGrid("2,1p,3,4,5,6,7,,0p");
 
-  yield unpinCell(cells[1]);
+  yield unpinCell(1);
   checkGrid("1,2,3,4,5,6,7,,0p");
 
-  yield unpinCell(cells[8]);
+  yield unpinCell(8);
   checkGrid("0,1,2,3,4,5,6,7,");
 
   // we have pinned link that changed its position since it was pinned. the
@@ -51,6 +51,6 @@ function runTests() {
   yield addNewTabPageTab();
   checkGrid("9p,0,1,2,3,4,5,6,7");
 
-  yield unpinCell(cells[0]);
+  yield unpinCell(0);
   checkGrid("0,1,2,3,4,5,6,7,8");
 }

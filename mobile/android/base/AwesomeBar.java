@@ -168,8 +168,13 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
                     return false;
 
                 if (keyCode == KeyEvent.KEYCODE_ENTER) {
-                    openUserEnteredAndFinish(mText.getText().toString());
-                    return true;
+                    // If the AwesomeBar has a composition string, don't submit the text yet.
+                    // ENTER is needed to commit the composition string.
+                    Editable content = mText.getText();
+                    if (!hasCompositionString(content)) {
+                        openUserEnteredAndFinish(content.toString());
+                        return true;
+                    }
                 }
 
                 // If input method is in fullscreen mode, we want to dismiss
@@ -197,17 +202,12 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
                 String text = s.toString();
                 mAwesomeTabs.filter(text);
 
-                // If awesome bar has compositing string, don't call updateGoButton().
-                // Since that method resets IME, composing state will be borken.
-                Object[] spans = s.getSpans(0, s.length(), Object.class);
-                if (spans != null) {
-                    for (Object span : spans) {
-                        if ((s.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
-                            // Found composition string.
-                            return;
-                        }
-                    }
+                // If the AwesomeBar has a composition string, don't call updateGoButton().
+                // That method resets IME and composition state will be broken.
+                if (hasCompositionString(s)) {
+                    return;
                 }
+
                 // no composition string. It is safe to update IME flags.
                 updateGoButton(text);
             }
@@ -639,6 +639,19 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
             }
         }
         return true;
+    }
+
+    private static boolean hasCompositionString(Editable content) {
+        Object[] spans = content.getSpans(0, content.length(), Object.class);
+        if (spans != null) {
+            for (Object span : spans) {
+                if ((content.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
+                    // Found composition string.
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public static class AwesomeBarEditText extends EditText {

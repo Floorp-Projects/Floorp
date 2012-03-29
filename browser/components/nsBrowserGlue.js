@@ -65,9 +65,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "BookmarkHTMLUtils",
                                   "resource://gre/modules/BookmarkHTMLUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "KeywordURLResetPrompter",
-                                  "resource:///modules/KeywordURLResetPrompter.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "webappsUI", 
                                   "resource:///modules/webappsUI.jsm");
 
@@ -273,13 +270,6 @@ BrowserGlue.prototype = {
           this._initPlaces();
         }
         break;
-      case "defaultURIFixup-using-keyword-pref":
-        if (KeywordURLResetPrompter.shouldPrompt) {
-          let keywordURI = subject.QueryInterface(Ci.nsIURI);
-          KeywordURLResetPrompter.prompt(this.getMostRecentBrowserWindow(),
-                                         keywordURI);
-        }
-        break;
       case "initial-migration":
         this._initialMigrationPerformed = true;
         break;
@@ -312,7 +302,6 @@ BrowserGlue.prototype = {
     os.addObserver(this, "distribution-customization-complete", false);
     os.addObserver(this, "places-shutdown", false);
     this._isPlacesShutdownObserver = true;
-    os.addObserver(this, "defaultURIFixup-using-keyword-pref", false);
   },
 
   // cleanup (called on application shutdown)
@@ -341,7 +330,6 @@ BrowserGlue.prototype = {
       os.removeObserver(this, "places-database-locked");
     if (this._isPlacesShutdownObserver)
       os.removeObserver(this, "places-shutdown");
-    os.removeObserver(this, "defaultURIFixup-using-keyword-pref");
     webappsUI.uninit();
   },
 
@@ -1255,13 +1243,7 @@ BrowserGlue.prototype = {
       // Need to migrate only if toolbar is customized and the element is not found.
       if (currentset &&
           currentset.indexOf("bookmarks-menu-button-container") == -1) {
-        if (currentset.indexOf("fullscreenflex") != -1) {
-          currentset = currentset.replace(/(^|,)fullscreenflex($|,)/,
-                                          "$1bookmarks-menu-button-container,fullscreenflex$2")
-        }
-        else {
-          currentset += ",bookmarks-menu-button-container";
-        }
+        currentset += ",bookmarks-menu-button-container";
         this._setPersist(toolbarResource, currentsetResource, currentset);
       }
     }

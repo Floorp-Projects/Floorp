@@ -67,6 +67,8 @@
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">fill_parent</item>
         <item name="android:layout_weight">1</item>
+        <item name="android:divider">#E5E5E5</item>
+        <item name="android:dividerHeight">1dp</item>
     </style>
 
     <!-- Lists in TabsTray -->

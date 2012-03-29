@@ -55,7 +55,7 @@ interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
 
-[scriptable, uuid(656005d2-d900-4839-81bf-6274a3c38537)]
+[scriptable, uuid(2e14b183-29d4-4282-9475-589277a70654)]
 
 interface nsIEditor  : nsISupports
 {
@@ -566,10 +566,6 @@ interface nsIEditor  : nsISupports
   /* checks if a node is read-only or not */
   [notxpcom] boolean isModifiableNode(in nsIDOMNode aNode);
 
-  /**
-   * Will be set to true if the last keypress event that the editor has handled
-   * has been trusted.  The value will only be valid when the edit action listeners
-   * are being called, and will throw upon access at all other times.
-   */
-  readonly attribute boolean lastKeypressEventTrusted;
+  /* Set true if you want to suppress dispatching input event. */
+  attribute boolean suppressDispatchingInputEvent;
 };

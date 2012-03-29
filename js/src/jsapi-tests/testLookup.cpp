@@ -28,7 +28,6 @@ BEGIN_TEST(testLookup_bug522590)
     JSObject *funobj = JSVAL_TO_OBJECT(r);
     CHECK(funobj->isFunction());
     CHECK(!js::IsInternalFunctionObject(funobj));
-    CHECK(funobj->toFunction()->isClonedMethod());
 
     return true;
 }

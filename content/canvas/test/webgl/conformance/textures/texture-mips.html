@@ -56,10 +56,7 @@ function init()
   gl = wtu.create3DContext(canvas);
   wtu.setupUnitQuad(gl, 0, 1);
   var program = wtu.setupProgram(
-      gl,
-      [wtu.loadShaderFromScript(gl, 'vshader', gl.VERTEX_SHADER),
-       wtu.loadShaderFromScript(gl, 'fshader', gl.FRAGMENT_SHADER)],
-      ['vPosition', 'texCoord0'], [0, 1]);
+      gl, ['vshader', 'fshader'], ['vPosition', 'texCoord0'], [0, 1]);
 
   gl.disable(gl.DEPTH_TEST);
   gl.disable(gl.BLEND);

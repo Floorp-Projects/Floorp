@@ -936,8 +936,6 @@ var BrowserApp = {
     } else if (aTopic == "Viewport:Change") {
       if (this.isBrowserContentDocumentDisplayed())
         this.selectedTab.setViewport(JSON.parse(aData));
-    } else if (aTopic == "SearchEngines:Get") {
-      this.getSearchEngines();
     } else if (aTopic == "Passwords:Init") {
       // Force creation/upgrade of signons.sqlite
       let storage = Cc["@mozilla.org/login-manager/storage/mozStorage;1"].getService(Ci.nsILoginManagerStorage);
@@ -1061,11 +1059,11 @@ var NativeWindow = {
     },
 
     hide: function(aValue, aTabID) {
-      sendMessageToJava({
+      sendMessageToJava({ gecko: {
         type: "Doorhanger:Remove",
         value: aValue,
         tabID: aTabID
-      });
+      }});
     }
   },
 
@@ -1605,20 +1603,43 @@ Tab.prototype = {
       return this.browser.docShellIsActive;
   },
 
-  setDisplayPort: function(aViewportX, aViewportY, aDisplayPortRect) {
+  setDisplayPort: function(aViewportX, aViewportY, aDisplayPort) {
     let zoom = this._zoom;
-    if (zoom <= 0)
+    let resolution = aDisplayPort.resolution;
+    if (zoom <= 0 || resolution <= 0)
       return;
+
+    // "zoom" is the user-visible zoom of the "this" tab
+    // "resolution" is the zoom at which we wish gecko to render "this" tab at
+    // these two may be different if we are, for example, trying to render a
+    // large area of the page at low resolution because the user is panning real
+    // fast.
+    // The viewport values (aViewportX and aViewportY) correspond to the
+    // gecko scroll position, and are zoom-multiplied. The display port rect
+    // values (aDisplayPort), however, is in CSS pixels multiplied by the desired
+    // rendering resolution. Therefore care must be taken when doing math with
+    // these sets of values, to ensure that they are normalized to the same coordinate
+    // space first.
 
     let element = this.browser.contentDocument.documentElement;
     if (!element)
       return;
 
+    // we should never be drawing background tabs at resolutions other than the user-
+    // visible zoom. for foreground tabs, however, if we are drawing at some other
+    // resolution, we need to set the resolution as specified.
     let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    cwu.setDisplayPortForElement((aDisplayPortRect.left - aViewportX) / zoom,
-                                 (aDisplayPortRect.top - aViewportY) / zoom,
-                                 (aDisplayPortRect.right - aDisplayPortRect.left) / zoom,
-                                 (aDisplayPortRect.bottom - aDisplayPortRect.top) / zoom,
+    if (BrowserApp.selectedTab == this)
+      cwu.setResolution(resolution, resolution);
+    else if (resolution != zoom)
+      dump("Warning: setDisplayPort resolution did not match zoom for background tab!");
+
+    // finally, we set the display port, taking care to convert everything into the CSS-pixel
+    // coordinate space, because that is what the function accepts.
+    cwu.setDisplayPortForElement((aDisplayPort.left / resolution) - (aViewportX / zoom),
+                                 (aDisplayPort.top / resolution) - (aViewportY / zoom),
+                                 (aDisplayPort.right - aDisplayPort.left) / resolution,
+                                 (aDisplayPort.bottom - aDisplayPort.top) / resolution,
                                  element);
   },
 
@@ -3173,23 +3194,7 @@ var XPInstallObserver = {
       needsRestart = true;
 
     if (needsRestart) {
-      let buttons = [{
-        label: Strings.browser.GetStringFromName("notificationRestart.button"),
-        callback: function() {
-          // Notify all windows that an application quit has been requested
-          let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-          Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
-
-          // If nothing aborted, quit the app
-          if (cancelQuit.data == false) {
-            let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
-            appStartup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
-          }
-        }
-      }];
-
-      let message = Strings.browser.GetStringFromName("notificationRestart.normal");
-      NativeWindow.doorhanger.show(message, "addon-app-restart", buttons, BrowserApp.selectedTab.id, { persistence: -1 });
+      this.showRestartPrompt();
     } else {
       let message = Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart");
       NativeWindow.toast.show(message, "short");
@@ -3230,6 +3235,30 @@ var XPInstallObserver = {
     msg = msg.replace("#4", Services.appinfo.version);
 
     NativeWindow.toast.show(msg, "short");
+  },
+
+  showRestartPrompt: function() {
+    let buttons = [{
+      label: Strings.browser.GetStringFromName("notificationRestart.button"),
+      callback: function() {
+        // Notify all windows that an application quit has been requested
+        let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+        Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+
+        // If nothing aborted, quit the app
+        if (cancelQuit.data == false) {
+          let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
+          appStartup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
+        }
+      }
+    }];
+
+    let message = Strings.browser.GetStringFromName("notificationRestart.normal");
+    NativeWindow.doorhanger.show(message, "addon-app-restart", buttons, BrowserApp.selectedTab.id, { persistence: -1 });
+  },
+
+  hideRestartPrompt: function() {
+    NativeWindow.doorhanger.hide("addon-app-restart", BrowserApp.selectedTab.id);
   }
 };
 

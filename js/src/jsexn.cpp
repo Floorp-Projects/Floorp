@@ -374,7 +374,9 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
                 frame.argc = 0;
             }
             if (fp->isScriptFrame()) {
-                frame.filename = fp->script()->filename;
+                frame.filename = SaveScriptFilename(cx, fp->script()->filename);
+                if (!frame.filename)
+                    return false;
                 frame.ulineno = PCToLineNumber(fp->script(), i.pc());
             } else {
                 frame.ulineno = 0;
@@ -1032,7 +1034,7 @@ InitErrorClass(JSContext *cx, GlobalObject *global, int type, JSObject &proto)
     }
 
     /* Create the corresponding constructor. */
-    JSFunction *ctor = global->createConstructor(cx, Exception, &ErrorClass, name, 1,
+    JSFunction *ctor = global->createConstructor(cx, Exception, name, 1,
                                                  JSFunction::ExtendedFinalizeKind);
     if (!ctor)
         return NULL;
