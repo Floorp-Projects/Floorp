@@ -737,6 +737,7 @@ private:
       , clipWasReset(false)
       , fillRule(mozilla::gfx::FILL_WINDING)
       , aaMode(mozilla::gfx::AA_SUBPIXEL)
+      , patternTransformChanged(false)
     {}
 
     mozilla::gfx::CompositionOp op;
@@ -759,6 +760,8 @@ private:
     mozilla::RefPtr<DrawTarget> drawTarget;
     mozilla::RefPtr<DrawTarget> parentTarget;
     mozilla::gfx::AntialiasMode aaMode;
+    bool patternTransformChanged;
+    Matrix patternTransform;
   };
 
   // This ensures mPath contains a valid path (in user space!)
@@ -768,6 +771,7 @@ private:
   void FillAzure(mozilla::gfx::Float aOpacity);
   void PushClipsToDT(mozilla::gfx::DrawTarget *aDT);
   CompositionOp GetOp();
+  void TransformWillChange();
 
   bool mPathIsRect;
   bool mTransformChanged;
