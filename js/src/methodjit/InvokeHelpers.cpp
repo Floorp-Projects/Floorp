@@ -456,7 +456,7 @@ stubs::UncachedCallHelper(VMFrame &f, uint32_t argc, bool lowered, UncachedCallR
         }
 
         if (ucr->fun->isNative()) {
-            if (!CallJSNative(cx, ucr->fun->u.n.native, args))
+            if (!CallJSNative(cx, ucr->fun->native(), args))
                 THROW();
             types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
             return;

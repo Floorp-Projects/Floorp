@@ -173,6 +173,15 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eReadonlyUntilEditable
   },
   {
+    "form",
+    roles::FORM,
+    kUseMapRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    kNoReqStates
+  },
+  {
     "grid",
     roles::TABLE,
     kUseMapRole,

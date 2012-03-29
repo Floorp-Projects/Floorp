@@ -1,0 +1,155 @@
+# HG changeset patch
+# Parent f9585cefcf568dbc2a6ce81f16a2048365af7ed2
+
+diff --git a/content/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html b/content/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html
+--- a/content/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html
++++ b/content/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html
+@@ -337,42 +337,21 @@ function runOutputTests() {
+     setupBuffers(1.0, 0.5, 0.5, 0.0);
+     wtu.drawQuad(gl);
+     expectResult([3, 3, 5, 255],
+                  "Draw 4 (variation in x & y) returned the correct data",
+                  "Draw 4 (variation in x & y) returned incorrect data");
+ 
+ }
+ 
+-function attemptToForceGC()
+-{
+-    var holderArray = [];
+-    var tempArray;
+-    window.tempArray = holderArray;
+-    for (var i = 0; i < 12; ++i) {
+-        tempArray = [];
+-        for (var j = 0; j < 1024 * 1024; ++j) {
+-            tempArray.push(0);
+-        }
+-        holderArray.push(tempArray);
+-    }
+-    window.tempArray = null;
+-}
+-
+ function runUniqueObjectTest()
+ {
+     debug("Testing that getExtension() returns the same object each time");
+     gl.getExtension("OES_standard_derivatives").myProperty = 2;
+-    if (window.GCController) {
+-        window.GCController.collect();
+-    } else if (window.opera && window.opera.collect) {
+-        window.opera.collect();
+-    } else {
+-        attemptToForceGC();
+-    }
++    gc();
+     shouldBe('gl.getExtension("OES_standard_derivatives").myProperty', '2');
+ }
+ 
+ function runReferenceCycleTest()
+ {
+     // create some reference cycles. The goal is to see if they cause leaks. The point is that
+     // some browser test runners have instrumentation to detect leaked refcounted objects.
+ 
+diff --git a/content/canvas/test/webgl/conformance/extensions/oes-texture-float.html b/content/canvas/test/webgl/conformance/extensions/oes-texture-float.html
+--- a/content/canvas/test/webgl/conformance/extensions/oes-texture-float.html
++++ b/content/canvas/test/webgl/conformance/extensions/oes-texture-float.html
+@@ -178,42 +178,21 @@ function runRenderTargetTest(testProgram
+     gl.bindTexture(gl.TEXTURE_2D, texture);
+     gl.useProgram(testProgram);
+     gl.uniform1i(gl.getUniformLocation(testProgram, "tex"), 0);
+     wtu.drawQuad(gl);
+     glErrorShouldBe(gl, gl.NO_ERROR, "rendering from floating-point texture should succeed");
+     checkRenderingResults();
+ }
+ 
+-function attemptToForceGC()
+-{
+-    var holderArray = [];
+-    var tempArray;
+-    window.tempArray = holderArray;
+-    for (var i = 0; i < 12; ++i) {
+-        tempArray = [];
+-        for (var j = 0; j < 1024 * 1024; ++j) {
+-            tempArray.push(0);
+-        }
+-        holderArray.push(tempArray);
+-    }
+-    window.tempArray = null;
+-}
+-
+ function runUniqueObjectTest()
+ {
+     debug("Testing that getExtension() returns the same object each time");
+     gl.getExtension("OES_texture_float").myProperty = 2;
+-    if (window.GCController) {
+-        window.GCController.collect();
+-    } else if (window.opera && window.opera.collect) {
+-        window.opera.collect();
+-    } else {
+-        attemptToForceGC();
+-    }
++    gc();
+     shouldBe('gl.getExtension("OES_texture_float").myProperty', '2');
+ }
+ 
+ function runReferenceCycleTest()
+ {
+     // create some reference cycles. The goal is to see if they cause leaks. The point is that
+     // some browser test runners have instrumentation to detect leaked refcounted objects.
+ 
+diff --git a/content/canvas/test/webgl/resources/js-test-pre.js b/content/canvas/test/webgl/resources/js-test-pre.js
+--- a/content/canvas/test/webgl/resources/js-test-pre.js
++++ b/content/canvas/test/webgl/resources/js-test-pre.js
+@@ -435,29 +435,42 @@ function assertMsg(assertion, msg) {
+     if (assertion) {
+         testPassed(msg);
+     } else {
+         testFailed(msg);
+     }
+ }
+ 
+ function gc() {
+-    if (typeof GCController !== "undefined")
+-        GCController.collect();
+-    else {
+-        function gcRec(n) {
+-            if (n < 1)
+-                return {};
+-            var temp = {i: "ab" + i + (i / 100000)};
+-            temp += "foo";
+-            gcRec(n-1);
+-        }
+-        for (var i = 0; i < 1000; i++)
+-            gcRec(10)
++    if (window.GCController) {
++        window.GCController.collect();
++        return;
+     }
++
++    if (window.opera && window.opera.collect) {
++        window.opera.collect();
++        return;
++    }
++
++    try {
++        window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
++              .getInterface(Components.interfaces.nsIDOMWindowUtils)
++              .garbageCollect();
++        return;
++    } catch(e) {}
++
++    function gcRec(n) {
++        if (n < 1)
++            return {};
++        var temp = {i: "ab" + i + (i / 100000)};
++        temp += "foo";
++        gcRec(n-1);
++    }
++    for (var i = 0; i < 1000; i++)
++        gcRec(10);
+ }
+ 
+ function finishTest() {
+   successfullyParsed = true;
+   var epilogue = document.createElement("script");
+   epilogue.onload = function() {
+     if (window.nonKhronosFrameworkNotifyDone) {
+       window.nonKhronosFrameworkNotifyDone();

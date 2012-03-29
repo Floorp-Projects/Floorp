@@ -1356,14 +1356,16 @@ pref("mousewheel.horizscroll.withmetakey.sysnumlines",true);
 
 // These define the smooth scroll behavior (min ms, max ms) for different triggers
 // Some triggers:
-// Pixels: Discrete mouse wheel events, Synaptics touchpads on windows (generate wheel events)
+// mouseWheel: Discrete mouse wheel events, Synaptics touchpads on windows (generate wheel events)
 // Lines:  Up/Down/Left/Right KB arrows
 // Pages:  Page up/down, Space
 // Scrollbars: Clicking scrollbars arrows, clicking scrollbars tracks
 // Note: Currently OS X trackpad and magic mouse don't use our smooth scrolling
 // Note: These are relevant only when "general.smoothScroll" is enabled
-pref("general.smoothScroll.pixels.durationMinMS", 200);
-pref("general.smoothScroll.pixels.durationMaxMS", 400);
+pref("general.smoothScroll.mouseWheel.durationMinMS", 200);
+pref("general.smoothScroll.mouseWheel.durationMaxMS", 400);
+pref("general.smoothScroll.pixels.durationMinMS", 150);
+pref("general.smoothScroll.pixels.durationMaxMS", 150);
 pref("general.smoothScroll.lines.durationMinMS", 150);
 pref("general.smoothScroll.lines.durationMaxMS", 150);
 pref("general.smoothScroll.pages.durationMinMS", 150);
@@ -1372,6 +1374,8 @@ pref("general.smoothScroll.scrollbars.durationMinMS", 150);
 pref("general.smoothScroll.scrollbars.durationMaxMS", 150);
 pref("general.smoothScroll.other.durationMinMS", 150);
 pref("general.smoothScroll.other.durationMaxMS", 150);
+// Enable disable smooth scrolling for different triggers (when "general.smoothScroll" is enabled)
+pref("general.smoothScroll.mouseWheel", true);
 pref("general.smoothScroll.pixels", true);
 pref("general.smoothScroll.lines", true);
 pref("general.smoothScroll.pages", true);
@@ -2084,13 +2088,6 @@ pref("plugin.allow.asyncdrawing", false);
 // Help Windows NT, 2000, and XP dialup a RAS connection
 // when a network address is unreachable.
 pref("network.autodial-helper.enabled", true);
-
-// Pref to control whether we set ddeexec subkeys for the http
-// Internet shortcut protocol if we are handling it.  These
-// subkeys will be set only while we are running (to avoid the
-// problem of Windows showing an alert when it tries to use DDE
-// and we're not already running).
-pref("advanced.system.supportDDEExec", true);
 
 // Switch the keyboard layout per window
 pref("intl.keyboard.per_window_layout", false);
@@ -3511,6 +3508,9 @@ pref("dom.sms.whitelist", "");
 // WebContacts
 pref("dom.mozContacts.enabled", false);
 pref("dom.mozContacts.whitelist", "");
+
+// WebSettings
+pref("dom.mozSettings.enabled", false);
 
 // enable JS dump() function.
 pref("browser.dom.window.dump.enabled", false);

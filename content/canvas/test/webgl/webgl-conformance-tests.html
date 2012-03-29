@@ -48,7 +48,7 @@ found in the LICENSE file.
 </style>
 <script type="text/javascript" src="resources/webgl-test-harness.js"></script>
 <script>
-var CONFORMANCE_TEST_VERSION = "1.0.1 (beta)";
+var CONFORMANCE_TEST_VERSION = "1.0.1";
 
 var OPTIONS = {
   version: CONFORMANCE_TEST_VERSION
@@ -68,14 +68,14 @@ function start() {
       canvas = document.createElement("canvas");
     }
     var context = null;
-    try {
-        context = canvas.getContext("webgl");
-    } catch(e) {
-    }
-    if (!context) {
+    var names = ["webgl", "experimental-webgl"];
+    for (var i = 0; i < names.length; ++i) {
       try {
-          context = canvas.getContext("experimental-webgl");
-      } catch(e) {
+        context = canvas.getContext(names[i]);
+      } catch (e) {
+      }
+      if (context) {
+        break;
       }
     }
     return context;
@@ -500,7 +500,7 @@ function start() {
 <tr style="height: 300px;">
 <td>
 <table>
-<tr><td><img src="http://www.khronos.org/img/api_logos/webgl-logo.png" /><br />WebGL Conformance Test Runner<br/>Version <span id="testVersion"></span><br/><input type="button" value="run tests" id="runTestsButton"/><br/><input type="button" style="visibility: hidden;" value="display text summary" id="showTextSummary"/>
+<tr><td><img src="resources/webgl-logo.png" /><br />WebGL Conformance Test Runner<br/>Version <span id="testVersion"></span><br/><input type="button" value="run tests" id="runTestsButton"/><br/><input type="button" style="visibility: hidden;" value="display text summary" id="showTextSummary"/>
 <div id="nowebgl" class="nowebgl" style="display: none;">This browser does not appear to support WebGL</div></td></tr>
 <tr><td><div id="loading">Loading Tests...</div>
 <div style="border: 1px">Results: <span id="fullresults"></span></div>

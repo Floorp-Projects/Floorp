@@ -1869,8 +1869,7 @@ LoopState::analyzeLoopBody(unsigned frame)
             break;
           }
 
-          case JSOP_SETPROP:
-          case JSOP_SETMETHOD: {
+          case JSOP_SETPROP: {
             JSAtom *atom = script->getAtom(GET_UINT32_INDEX(pc));
             jsid id = MakeTypeId(cx, ATOM_TO_JSID(atom));
 

@@ -101,7 +101,7 @@ SetStrokeOptions(CGContextRef cg, const StrokeOptions &aStrokeOptions)
   CGContextSetMiterLimit(cg, aStrokeOptions.mMiterLimit);
 
   // XXX: rename mDashLength to dashLength
-  if (aStrokeOptions.mDashLength > 1) {
+  if (aStrokeOptions.mDashLength > 0) {
     // we use a regular array instead of a std::vector here because we don't want to leak the <vector> include
     CGFloat *dashes = new CGFloat[aStrokeOptions.mDashLength];
     for (size_t i=0; i<aStrokeOptions.mDashLength; i++) {

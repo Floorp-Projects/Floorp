@@ -52,7 +52,6 @@ public:
   nsProbingState GetState(void) {return mState;}
   void      Reset(void);
   float     GetConfidence(void);
-  void      SetOpion() {}
 
 #ifdef DEBUG_chardet
   void  DumpStatus();

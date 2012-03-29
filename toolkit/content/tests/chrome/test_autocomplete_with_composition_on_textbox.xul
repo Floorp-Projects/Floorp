@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Testing autocomplete with composition"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js" />
+  <script type="text/javascript"
+          src="file_autocomplete_with_composition.js" />
+
+  <textbox id="textbox" type="autocomplete"
+           autocompletesearch="simpleForComposition"/>
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+const nsIAutoCompleteResult = Components.interfaces.nsIAutoCompleteResult;
+
+// This result can't be constructed in-line, because otherwise we leak memory.
+function nsAutoCompleteSimpleResult(aString)
+{
+  this.searchString = aString;
+  if (aString == "" || aString == "Mozilla".substr(0, aString.length)) {
+    this.searchResult = nsIAutoCompleteResult.RESULT_SUCCESS;
+    this.matchCount = 1;
+    this._value = "Mozilla";
+  } else {
+    this.searchResult = nsIAutoCompleteResult.RESULT_NOMATCH;
+    this.matchCount = 0;
+    this._value = "";
+  }
+}
+
+nsAutoCompleteSimpleResult.prototype = {
+ _value: "",
+ searchString: null,
+ searchResult: nsIAutoCompleteResult.RESULT_FAILURE,
+ defaultIndex: 0,
+ errorDescription: null,
+ matchCount: 0,
+ getValueAt: function(aIndex) { return aIndex == 0 ? this._value : null; },
+ getCommentAt: function() { return null; },
+ getStyleAt: function() { return null; },
+ getImageAt: function() { return null; },
+ getLabelAt: function() { return null; },
+ removeValueAt: function() {}
+};
+
+// A basic autocomplete implementation that either returns one result or none
+var autoCompleteSimpleID =
+  Components.ID("0a2afbdb-f30e-47d1-9cb1-0cd160240aca");
+var autoCompleteSimpleName =
+  "@mozilla.org/autocomplete/search;1?name=simpleForComposition"
+var autoCompleteSimple = {
+  QueryInterface: function(iid) {
+    if (iid.equals(Components.interfaces.nsISupports) ||
+        iid.equals(Components.interfaces.nsIFactory) ||
+        iid.equals(Components.interfaces.nsIAutoCompleteSearch))
+      return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  createInstance: function(outer, iid) {
+    return this.QueryInterface(iid);
+  },
+
+  startSearch: function(aString, aParam, aResult, aListener) {
+    var result = new nsAutoCompleteSimpleResult(aString);
+    aListener.onSearchResult(this, result);
+  },
+
+  stopSearch: function() {}
+};
+
+var componentManager =
+  Components.manager
+            .QueryInterface(Components.interfaces.nsIComponentRegistrar);
+componentManager.registerFactory(autoCompleteSimpleID,
+                                 "Test Simple Autocomplete for composition",
+                                 autoCompleteSimpleName, autoCompleteSimple);
+
+function runTests()
+{
+  var target = document.getElementById("textbox");
+  target.setAttribute("timeout", 1);
+  var test1 = new nsDoTestsForAutoCompleteWithComposition(
+    "Testing on XUL textbox (asynchronously search)",
+    window, target, target.controller, is,
+    function () { return target.value; },
+    function () {
+      target.setAttribute("timeout", 0);
+      var test2 = new nsDoTestsForAutoCompleteWithComposition(
+        "Testing on XUL textbox (synchronously search)",
+        window, target, target.controller, is,
+        function () { return target.value; },
+        function () {
+          // Unregister the factory so that we don't get in the way of other
+          // tests
+          componentManager.unregisterFactory(autoCompleteSimpleID,
+                                             autoCompleteSimple);
+          SimpleTest.finish();
+        });
+    });
+}
+
+SimpleTest.waitForFocus(runTests);
+]]>
+</script>
+</window>

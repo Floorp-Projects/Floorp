@@ -459,7 +459,7 @@ GetCustomIterator(JSContext *cx, JSObject *obj, unsigned flags, Value *vp)
 
     /* Check whether we have a valid __iterator__ method. */
     JSAtom *atom = cx->runtime->atomState.iteratorAtom;
-    if (!js_GetMethod(cx, obj, ATOM_TO_JSID(atom), JSGET_NO_METHOD_BARRIER, vp))
+    if (!js_GetMethod(cx, obj, ATOM_TO_JSID(atom), 0, vp))
         return false;
 
     /* If there is no custom __iterator__ method, we are done here. */
@@ -1242,7 +1242,7 @@ js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
     } else {
         /* Call the iterator object's .next method. */
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.nextAtom);
-        if (!js_GetMethod(cx, iterobj, id, JSGET_METHOD_BARRIER, rval))
+        if (!js_GetMethod(cx, iterobj, id, 0, rval))
             return false;
         if (!Invoke(cx, ObjectValue(*iterobj), *rval, 0, NULL, rval)) {
             /* Check for StopIteration. */
@@ -1741,8 +1741,7 @@ InitIteratorClass(JSContext *cx, GlobalObject *global)
 
     iteratorProto->setNativeIterator(ni);
 
-    JSFunction *ctor = global->createConstructor(cx, Iterator, &IteratorClass,
-                                                 CLASS_ATOM(cx, Iterator), 2);
+    JSFunction *ctor = global->createConstructor(cx, Iterator, CLASS_ATOM(cx, Iterator), 2);
     if (!ctor)
         return false;
 

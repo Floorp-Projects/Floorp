@@ -500,7 +500,8 @@ public class BrowserProvider extends ContentProvider {
             } catch (java.lang.IllegalAccessException ex) {
                 Log.e(LOGTAG, "Can't create favicon " + name, ex);
             } catch (java.lang.NoSuchFieldException ex) {
-                Log.e(LOGTAG, "Can't create favicon " + name, ex);
+                // if there is no such field, create the bookmark without a favicon
+                Log.d(LOGTAG, "Can't create favicon " + name);
             }
 
             if (stream != null) {

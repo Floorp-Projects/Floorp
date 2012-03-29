@@ -52,6 +52,7 @@
 #include "nsIWidget.h"
 #include "gfxASurface.h"
 
+#include "mozilla/X11Util.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/extensions/XShm.h>
@@ -59,8 +60,7 @@
 #if defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_GTK3)
 #define DISPLAY gdk_x11_get_default_xdisplay
 #elif defined(MOZ_WIDGET_QT)
-#include "QX11Info"
-#define DISPLAY QX11Info().display
+#define DISPLAY mozilla::DefaultXDisplay
 #endif
 
 class QRect;

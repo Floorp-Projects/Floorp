@@ -3321,13 +3321,13 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSO
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_NewObjectForConstructor(JSContext *cx, const jsval *vp)
+JS_NewObjectForConstructor(JSContext *cx, JSClass *clasp, const jsval *vp)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, *vp);
 
-    return js_CreateThis(cx, JSVAL_TO_OBJECT(*vp));
+    return js_CreateThis(cx, Valueify(clasp), JSVAL_TO_OBJECT(*vp));
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3454,11 +3454,6 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, jsid id,
 
     if (obj2->isNative()) {
         Shape *shape = (Shape *) prop;
-
-        if (shape->isMethod()) {
-            vp->setObject(*obj2->nativeGetMethod(shape));
-            return !!obj2->methodReadBarrier(cx, *shape, vp);
-        }
 
         /* Peek at the native property's slot value, without doing a Get. */
         if (shape->hasSlot()) {
@@ -3855,19 +3850,12 @@ GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
     if (obj2->isNative()) {
         Shape *shape = (Shape *) prop;
         desc->attrs = shape->attributes();
-
-        if (shape->isMethod()) {
-            desc->getter = JS_PropertyStub;
-            desc->setter = JS_StrictPropertyStub;
-            desc->value.setObject(*obj2->nativeGetMethod(shape));
-        } else {
-            desc->getter = shape->getter();
-            desc->setter = shape->setter();
-            if (shape->hasSlot())
-                desc->value = obj2->nativeGetSlot(shape->slot());
-            else
-                desc->value.setUndefined();
-        }
+        desc->getter = shape->getter();
+        desc->setter = shape->setter();
+        if (shape->hasSlot())
+            desc->value = obj2->nativeGetSlot(shape->slot());
+        else
+            desc->value.setUndefined();
     } else {
         if (obj2->isProxy()) {
             JSAutoResolveFlags rf(cx, flags);
@@ -3968,8 +3956,9 @@ SetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id, unsigned attrs,
         *foundp = false;
         return true;
     }
+    Shape *shape = (Shape *) prop;
     JSBool ok = obj->isNative()
-                ? js_SetNativeAttributes(cx, obj, (Shape *) prop, attrs)
+                ? obj->changePropertyAttributes(cx, shape, attrs)
                 : obj->setGenericAttributes(cx, id, &attrs);
     if (ok)
         *foundp = true;
@@ -4072,7 +4061,7 @@ JS_GetMethodById(JSContext *cx, JSObject *obj, jsid id, JSObject **objp, jsval *
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
-    if (!js_GetMethod(cx, obj, id, JSGET_METHOD_BARRIER, vp))
+    if (!js_GetMethod(cx, obj, id, 0, vp))
         return JS_FALSE;
     if (objp)
         *objp = obj;
@@ -5366,7 +5355,7 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, unsigned arg
     Value v;
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     return atom &&
-           js_GetMethod(cx, obj, ATOM_TO_JSID(atom), JSGET_NO_METHOD_BARRIER, &v) &&
+           js_GetMethod(cx, obj, ATOM_TO_JSID(atom), 0, &v) &&
            Invoke(cx, ObjectOrNullValue(obj), v, argc, argv, rval);
 }
 
@@ -5909,6 +5898,7 @@ JS_WriteStructuredClone(JSContext *cx, jsval v, uint64_t **bufp, size_t *nbytesp
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
+    assertSameCompartment(cx, v);
 
     const JSStructuredCloneCallbacks *callbacks =
         optionalCallbacks ?
@@ -5924,6 +5914,7 @@ JS_StructuredClone(JSContext *cx, jsval v, jsval *vp,
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
+    assertSameCompartment(cx, v);
 
     const JSStructuredCloneCallbacks *callbacks =
         optionalCallbacks ?

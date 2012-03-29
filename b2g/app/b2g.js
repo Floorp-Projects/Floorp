@@ -438,6 +438,9 @@ pref("dom.sms.whitelist", "file://,http://homescreen.gaiamobile.org,http://sms.g
 pref("dom.mozContacts.enabled", true);
 pref("dom.mozContacts.whitelist", "http://dialer.gaiamobile.org,http://sms.gaiamobile.org");
 
+// WebSettings
+pref("dom.mozSettings.enabled", true);
+
 // Ignore X-Frame-Options headers.
 pref("b2g.ignoreXFrameOptions", true);
 

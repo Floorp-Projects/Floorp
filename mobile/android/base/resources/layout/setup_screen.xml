@@ -1,45 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               style="@style/Screen"
-              android:background="@drawable/tabs_tray_bg_repeat"
+              android:background="@drawable/abouthome_bg_repeat"
               android:orientation="vertical"
               android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
-              android:gravity="center"
-              android:layout_gravity="center" >
+              android:layout_height="fill_parent" >
 
     <LinearLayout android:orientation="vertical"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
+                  android:layout_width="fill_parent"
+                  android:layout_height="fill_parent"
                   android:gravity="center"
                   android:layout_gravity="center" >
 
       <ImageView android:id="@+id/image"
                  android:layout_width="wrap_content"
                  android:layout_height="wrap_content"
-                 android:layout_marginBottom="24dp"
+                 android:layout_marginBottom="20dp"
                  android:src="@drawable/logo" />
 
-      <LinearLayout android:orientation="horizontal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal" >
+      <TextView android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16dp"
+                android:textColor="#000000"
+                android:typeface="sans"
+                android:text="@string/splash_settingup" />
 
-        <ImageView android:id="@+id/spinner_image"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   android:layout_marginRight="10dp"
-                   android:background="@drawable/progress_spinner" />
+      <TextView android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginLeft="32dp"
+                android:layout_marginRight="32dp"
+                android:textSize="14dp"
+                android:textColor="#7C7D7F"
+                android:typeface="sans"
+                android:text="@string/splash_bookmarks_history" />
 
-        <TextView android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:layout_marginTop="4dp"
-                  android:textSize="15dp"
-                  android:textColor="#FFFFFF"
-                  android:typeface="sans"
-                  android:text="@string/splash_firstrun" />
-
-      </LinearLayout>
+      <ImageView android:id="@+id/spinner_image"
+                 android:layout_marginTop="20dp"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:background="@drawable/progress_spinner" />
 
     </LinearLayout>
 

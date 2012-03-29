@@ -20,8 +20,7 @@ found in the LICENSE file.
 <script>
 description(document.title);
 var wtu = WebGLTestUtils;
-var canvas = document.getElementById("example");
-var gl = wtu.create3DContext(canvas);
+var gl = wtu.create3DContext("example");
 var program = wtu.setupTexturedQuad(gl);
 
 glErrorShouldBe(gl, gl.NO_ERROR, "Should be no errors from setup.");

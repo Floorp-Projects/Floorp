@@ -1560,6 +1560,8 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
     if (re.global()) {
         RegExpExecType type = (flags & TEST_GLOBAL_BIT) ? RegExpTest : RegExpExec;
         for (size_t count = 0, i = 0, length = str->length(); i <= length; ++count) {
+            if (!JS_CHECK_OPERATION_LIMIT(cx))
+                return false;
             if (!ExecuteRegExp(cx, res, re, linearStr, chars, length, &i, type, rval))
                 return false;
             if (!Matched(type, *rval))
@@ -3095,8 +3097,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Now create the String function. */
-    JSFunction *ctor = global->createConstructor(cx, js_String, &StringClass,
-                                                 CLASS_ATOM(cx, String), 1);
+    JSFunction *ctor = global->createConstructor(cx, js_String, CLASS_ATOM(cx, String), 1);
     if (!ctor)
         return NULL;
 
@@ -3311,7 +3312,7 @@ js_ValueToSource(JSContext *cx, const Value &v)
     Value rval = NullValue();
     Value fval;
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.toSourceAtom);
-    if (!js_GetMethod(cx, &v.toObject(), id, JSGET_NO_METHOD_BARRIER, &fval))
+    if (!js_GetMethod(cx, &v.toObject(), id, 0, &fval))
         return NULL;
     if (js_IsCallable(fval)) {
         if (!Invoke(cx, v, fval, 0, NULL, &rval))

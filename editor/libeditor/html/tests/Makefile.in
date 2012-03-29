@@ -96,6 +96,7 @@ _TEST_FILES = \
 		test_bug735059.html \
 		test_CF_HTML_clipboard.html \
 		test_contenteditable_focus.html \
+		test_dom_input_event_on_htmleditor.html \
 		test_htmleditor_keyevent_handling.html \
 		test_keypress_untrusted_event.html \
 		test_select_all_without_body.html \

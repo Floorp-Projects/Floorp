@@ -94,6 +94,7 @@ CPPSRCS		= \
 		nsDOMPopStateEvent.cpp \
 		nsDOMHashChangeEvent.cpp \
 		nsDOMCloseEvent.cpp \
+		nsDOMSettingsEvent.cpp \
 		nsDOMTouchEvent.cpp \
 		nsDOMCustomEvent.cpp \
 		nsDOMCompositionEvent.cpp \
@@ -113,6 +114,7 @@ LOCAL_INCLUDES	+= \
              -I$(srcdir)/../../xul/content/src \
              -I$(srcdir)/../../xml/content/src \
              -I$(srcdir)/../../../dom/base \
+             -I$(srcdir)/../../../dom/settings \
              -I$(srcdir)/../../../dom/src/storage \
              -I$(srcdir)/../../../layout/generic \
              -I$(srcdir)/../../../layout/xul/base/src \

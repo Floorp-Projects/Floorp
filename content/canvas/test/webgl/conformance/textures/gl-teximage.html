@@ -20,8 +20,7 @@ Use of this source code is governed by a BSD-style license that can be
 <script>
 description("Test texImage2D conversions.");
 var wtu = WebGLTestUtils;
-var canvas = document.getElementById("example");
-var gl = wtu.create3DContext(canvas);
+var gl = wtu.create3DContext("example");
 gl.disable(gl.DITHER);
 var program = wtu.setupTexturedQuad(gl);
 
@@ -60,8 +59,8 @@ function runTests(imgs) {
   gl.disable(gl.BLEND);
   gl.disable(gl.DEPTH_TEST);
 
-  var width = canvas.width;
-  var height = canvas.height;
+  var width = gl.canvas.width;
+  var height = gl.canvas.height;
 
   function checkPixel(buf, x, y, color) {
     var off = (y * width + x) * 4;

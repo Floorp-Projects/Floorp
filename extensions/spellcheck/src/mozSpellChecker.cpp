@@ -318,7 +318,7 @@ mozSpellChecker::GetDictionaryList(nsTArray<nsString> *aDictionaryList)
   rv = GetEngineList(&spellCheckingEngines);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRUint32 i = 0; i < spellCheckingEngines.Count(); i++) {
+  for (PRInt32 i = 0; i < spellCheckingEngines.Count(); i++) {
     nsCOMPtr<mozISpellCheckingEngine> engine = spellCheckingEngines[i];
 
     PRUint32 count = 0;
@@ -376,7 +376,7 @@ mozSpellChecker::SetCurrentDictionary(const nsAString &aDictionary)
   rv = GetEngineList(&spellCheckingEngines);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRUint32 i = 0; i < spellCheckingEngines.Count(); i++) {
+  for (PRInt32 i = 0; i < spellCheckingEngines.Count(); i++) {
     // We must set mSpellCheckingEngine before we call SetDictionary, since
     // SetDictionary calls back to this spell checker to check if the
     // dictionary was set
