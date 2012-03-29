@@ -1189,12 +1189,34 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
     return true;
 }
 
+static bool
+IsDuckTypedErrorObject(JSContext *cx, JSObject *exnObject, const char **filename_strp)
+{
+    JSBool found;
+    if (!JS_HasProperty(cx, exnObject, js_message_str, &found) || !found)
+        return false;
+
+    const char *filename_str = *filename_strp;
+    if (!JS_HasProperty(cx, exnObject, filename_str, &found) || !found) {
+        // DOMException duck quacks "filename" (all lowercase)
+        filename_str = "filename";
+        if (!JS_HasProperty(cx, exnObject, filename_str, &found) || !found)
+            return false;
+    }
+
+    if (!JS_HasProperty(cx, exnObject, js_lineNumber_str, &found) || !found)
+        return false;
+
+    *filename_strp = filename_str;
+    return true;
+}
+
 JSBool
 js_ReportUncaughtException(JSContext *cx)
 {
     jsval exn;
     JSObject *exnObject;
-    jsval roots[5];
+    jsval roots[6];
     JSErrorReport *reportp, report;
     JSString *str;
     const char *bytes;
@@ -1227,47 +1249,60 @@ js_ReportUncaughtException(JSContext *cx)
     /* XXX L10N angels cry once again. see also everywhere else */
     str = ToString(cx, exn);
     JSAutoByteString bytesStorage;
-    if (!str) {
-        bytes = "unknown (can't convert to string)";
-    } else {
+    bytes = "unknown (can't convert to string)";
+    if (str) {
         roots[1] = StringValue(str);
-        if (!bytesStorage.encode(cx, str))
-            return false;
-        bytes = bytesStorage.ptr();
+        if (bytesStorage.encode(cx, str))
+            bytes = bytesStorage.ptr();
     }
 
+    const char *filename_str = js_fileName_str;
     JSAutoByteString filename;
-    if (!reportp && exnObject && exnObject->isError()) {
-        if (!JS_GetProperty(cx, exnObject, js_message_str, &roots[2]))
-            return false;
-        if (JSVAL_IS_STRING(roots[2])) {
-            bytesStorage.clear();
-            if (!bytesStorage.encode(cx, str))
-                return false;
-            bytes = bytesStorage.ptr();
+    if (!reportp && exnObject &&
+        (exnObject->isError() ||
+         IsDuckTypedErrorObject(cx, exnObject, &filename_str)))
+    {
+        JSString *tmp = NULL;
+        if (JS_GetProperty(cx, exnObject, js_name_str, &roots[2]) &&
+            JSVAL_IS_STRING(roots[2]))
+        {
+            str = JSVAL_TO_STRING(roots[2]);
+            tmp = JS_NewStringCopyZ(cx, ": ");
+            if (tmp)
+                tmp = JS_ConcatStrings(cx, str, tmp);
         }
 
-        if (!JS_GetProperty(cx, exnObject, js_fileName_str, &roots[3]))
+        if (!JS_GetProperty(cx, exnObject, js_message_str, &roots[3]))
             return false;
-        str = ToString(cx, roots[3]);
-        if (!str || !filename.encode(cx, str))
-            return false;
+        if (JSVAL_IS_STRING(roots[3])) {
+            str = JSVAL_TO_STRING(roots[3]);
+            if (tmp)
+                str = JS_ConcatStrings(cx, tmp, str);
+            else if (bytesStorage.encode(cx, str))
+                bytes = bytesStorage.ptr();
+        }
 
-        if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, &roots[4]))
-            return false;
+        if (JS_GetProperty(cx, exnObject, filename_str, &roots[4])) {
+            tmp = ToString(cx, roots[4]);
+            if (tmp)
+                filename.encode(cx, tmp);
+        }
+
         uint32_t lineno;
-        if (!ToUint32(cx, roots[4], &lineno))
-            return false;
+        if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, &roots[5]) ||
+            !ToUint32(cx, roots[5], &lineno))
+        {
+            lineno = 0;
+        }
 
         reportp = &report;
         PodZero(&report);
         report.filename = filename.ptr();
         report.lineno = (unsigned) lineno;
-        if (JSVAL_IS_STRING(roots[2])) {
-            JSFixedString *fixed = JSVAL_TO_STRING(roots[2])->ensureFixed(cx);
-            if (!fixed)
-                return false;
-            report.ucmessage = fixed->chars();
+        if (str) {
+            JSFixedString *fixed = str->ensureFixed(cx);
+            if (fixed)
+                report.ucmessage = fixed->chars();
         }
     }
 
