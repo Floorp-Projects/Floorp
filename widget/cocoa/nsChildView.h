@@ -488,10 +488,7 @@ public:
   virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
                                               PRUint32 aNativeMessage,
                                               PRUint32 aModifierFlags);
-
-  virtual nsresult SynthesizeNativeMouseMove(nsIntPoint aPoint)
-  { return SynthesizeNativeMouseEvent(aPoint, NSMouseMoved, 0); }
-
+  
   // Mac specific methods
   
   virtual bool      DispatchWindowEvent(nsGUIEvent& event);

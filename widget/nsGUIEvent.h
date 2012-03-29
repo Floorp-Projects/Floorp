@@ -558,11 +558,6 @@ class nsHashKey;
 #define NS_TOUCH_LEAVE               (NS_TOUCH_EVENT_START+4)
 #define NS_TOUCH_CANCEL              (NS_TOUCH_EVENT_START+5)
 
-// Pointerlock DOM API
-#define NS_POINTERLOCK_START         5300
-#define NS_POINTERLOCKCHANGE         (NS_POINTERLOCK_START)
-#define NS_POINTERLOCKERROR          (NS_POINTERLOCK_START + 1)
-
 /**
  * Return status for event processors, nsEventStatus, is defined in
  * nsEvent.h.
@@ -588,7 +583,6 @@ protected:
     : eventStructType(structType),
       message(msg),
       refPoint(0, 0),
-      lastRefPoint(0, 0),
       time(0),
       flags(isTrusted ? NS_EVENT_FLAG_TRUSTED : NS_EVENT_FLAG_NONE),
       userType(0)
@@ -605,7 +599,6 @@ public:
     : eventStructType(NS_EVENT),
       message(msg),
       refPoint(0, 0),
-      lastRefPoint(0, 0),
       time(0),
       flags(isTrusted ? NS_EVENT_FLAG_TRUSTED : NS_EVENT_FLAG_NONE),
       userType(0)
@@ -625,8 +618,6 @@ public:
   // Relative to the widget of the event, or if there is no widget then it is
   // in screen coordinates. Not modified by layout code.
   nsIntPoint  refPoint;
-  // The previous refPoint, if known, used to calculate mouse movement deltas.
-  nsIntPoint  lastRefPoint;
   // Elapsed time, in milliseconds, from a platform-specific zero time
   // to the time the message was created
   PRUint64    time;

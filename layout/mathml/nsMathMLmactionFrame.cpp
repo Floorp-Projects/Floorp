@@ -122,9 +122,11 @@ nsMathMLmactionFrame::Init(nsIContent*      aContent,
     }
 
     if (NS_MATHML_ACTION_TYPE_NONE == mActionType) {
-      if (value.EqualsLiteral("statusline"))
+      // expected statusline prefix (11ch)...
+      if (11 < value.Length() && 0 == value.Find("statusline#"))
         mActionType = NS_MATHML_ACTION_TYPE_STATUSLINE;
     }
+
   }
 
   // Let the base class do the rest
@@ -366,28 +368,12 @@ nsMathMLmactionFrame::MouseOver()
 {
   // see if we should display a status message
   if (NS_MATHML_ACTION_TYPE_STATUSLINE == mActionType) {
-    // retrieve content from a second child if it exists
-    nsIFrame* childFrame = mFrames.FrameAt(1);
-    if (!childFrame) return;
-
-    nsIContent* content = childFrame->GetContent();
-    if (!content) return;
-
-    // check whether the content is mtext or not
-    if (content->GetNameSpaceID() == kNameSpaceID_MathML &&
-        content->Tag() == nsGkAtoms::mtext_) {
-      // get the text to be displayed
-      content = content->GetFirstChild();
-      if (!content) return;
-
-      const nsTextFragment* textFrg = content->GetText();
-      if (!textFrg) return;
-
-      nsAutoString text;
-      textFrg->AppendTo(text);
-      // collapse whitespaces as listed in REC, section 3.2.6.1
-      text.CompressWhitespace();
-      ShowStatus(PresContext(), text);
+    nsAutoString value;
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::actiontype_, value);
+    // expected statusline prefix (11ch)...
+    if (11 < value.Length() && 0 == value.Find("statusline#")) {
+      value.Cut(0, 11);
+      ShowStatus(PresContext(), value);
     }
   }
 }

@@ -3274,9 +3274,6 @@ nsGenericElement::UnbindFromTree(bool aDeep, bool aNullParent)
       // Fully exit full-screen.
       nsIDocument::ExitFullScreen(false);
     }
-    if (HasPointerLock()) {
-      nsIDocument::UnlockPointer();
-    }
     if (GetParent()) {
       NS_RELEASE(mParent);
     } else {
@@ -6419,15 +6416,7 @@ nsINode::Contains(nsIDOMNode* aOther, bool* aReturn)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericElement::MozRequestPointerLock()
-{
-  OwnerDoc()->RequestPointerLock(this);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericElement::MozRequestFullScreen()
+nsresult nsGenericElement::MozRequestFullScreen()
 {
   // Only grant full-screen requests if this is called from inside a trusted
   // event handler (i.e. inside an event handler for a user initiated event).
