@@ -8372,6 +8372,12 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             rv = ScrollToAnchor(curHash, newHash, aLoadType);
             NS_ENSURE_SUCCESS(rv, rv);
 
+            // Reset mLoadType to its original value once we exit this block,
+            // because this short-circuited load might have started after a
+            // normal, network load, and we don't want to clobber its load type.
+            // See bug 737307.
+            AutoRestore<PRUint32> loadTypeResetter(mLoadType);
+
             mLoadType = aLoadType;
             mURIResultedInDocument = true;
 
