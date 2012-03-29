@@ -1513,8 +1513,8 @@ protected:
    * @param aChildArray The child array to work with.
    * @param aMutationEvent whether to fire a mutation event for this removal.
    */
-  nsresult doRemoveChildAt(PRUint32 aIndex, bool aNotify, nsIContent* aKid,
-                           nsAttrAndChildArray& aChildArray);
+  void doRemoveChildAt(PRUint32 aIndex, bool aNotify, nsIContent* aKid,
+                       nsAttrAndChildArray& aChildArray);
 
   /**
    * Most of the implementation of the nsINode InsertChildAt method.

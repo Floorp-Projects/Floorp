@@ -3530,10 +3530,9 @@ nsDocument::RemoveChildAt(PRUint32 aIndex, bool aNotify)
     DestroyElementMaps();
   }
 
-  nsresult rv =
-    doRemoveChildAt(aIndex, aNotify, oldKid, mChildren);
+  doRemoveChildAt(aIndex, aNotify, oldKid, mChildren);
   mCachedRootElement = nsnull;
-  return rv;
+  return NS_OK;
 }
 
 PRInt32
