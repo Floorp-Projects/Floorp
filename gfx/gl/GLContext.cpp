@@ -279,7 +279,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             };
 
             if (!LoadSymbols(&symbols_ES2[0], trygl, prefix)) {
-                NS_RUNTIMEABORT("OpenGL ES 2.0 supported, but symbols could not be loaded.");
+                NS_ERROR("OpenGL ES 2.0 supported, but symbols could not be loaded.");
                 mInitialized = false;
             }
         } else {
@@ -293,7 +293,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             };
 
             if (!LoadSymbols(&symbols_desktop[0], trygl, prefix)) {
-                NS_RUNTIMEABORT("Desktop symbols failed to load.");
+                NS_ERROR("Desktop symbols failed to load.");
                 mInitialized = false;
             }
         }
@@ -375,7 +375,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 };
 
                 if (!LoadSymbols(&robustnessSymbols[0], trygl, prefix)) {
-                    NS_RUNTIMEABORT("GL supports ARB_robustness without supplying GetGraphicsResetStatusARB.");
+                    NS_ERROR("GL supports ARB_robustness without supplying GetGraphicsResetStatusARB.");
                     mInitialized = false;
                 } else {
                     mHasRobustness = true;
@@ -387,7 +387,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 };
 
                 if (!LoadSymbols(&robustnessSymbols[0], trygl, prefix)) {
-                    NS_RUNTIMEABORT("GL supports EGL_robustness without supplying GetGraphicsResetStatusEXT.");
+                    NS_ERROR("GL supports EGL_robustness without supplying GetGraphicsResetStatusEXT.");
                     mInitialized = false;
                 } else {
                     mHasRobustness = true;
@@ -403,7 +403,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                     { NULL, { NULL } },
             };
             if (!LoadSymbols(&auxSymbols[0], trygl, prefix)) {
-                NS_RUNTIMEABORT("GL supports framebuffer_blit without supplying glBlitFramebuffer");
+                NS_ERROR("GL supports framebuffer_blit without supplying glBlitFramebuffer");
                 mInitialized = false;
             }
         }
@@ -415,7 +415,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                     { NULL, { NULL } },
             };
             if (!LoadSymbols(&auxSymbols[0], trygl, prefix)) {
-                NS_RUNTIMEABORT("GL supports framebuffer_multisample without supplying glRenderbufferStorageMultisample");
+                NS_ERROR("GL supports framebuffer_multisample without supplying glRenderbufferStorageMultisample");
                 mInitialized = false;
             }
         }
