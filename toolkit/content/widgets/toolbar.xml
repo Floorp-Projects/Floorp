@@ -67,6 +67,8 @@
         <parameter name="aCurrentSet"/>
         <body>
           <![CDATA[            
+            if (!this.toolbarset)
+              return null;
             var toolbar = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                                   "toolbar");
             toolbar.id = "__customToolbar_" + aName.replace(" ", "_");
