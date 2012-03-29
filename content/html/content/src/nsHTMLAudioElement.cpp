@@ -69,15 +69,15 @@
 using namespace mozilla::dom;
 
 nsGenericHTMLElement*
-NS_NewHTMLAudioElement(already_AddRefed<nsNodeInfo> aNodeInfo,
+NS_NewHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                        FromParser aFromParser)
 {
   /*
-   * nsHTMLAudioElement's will be created without a nsNodeInfo passed in
+   * nsHTMLAudioElement's will be created without a nsINodeInfo passed in
    * if someone says "var audio = new Audio();" in JavaScript, in a case like
-   * that we request the nsNodeInfo from the document's nodeinfo list.
+   * that we request the nsINodeInfo from the document's nodeinfo list.
    */
-  nsRefPtr<nsNodeInfo> nodeInfo(aNodeInfo);
+  nsCOMPtr<nsINodeInfo> nodeInfo(aNodeInfo);
   if (!nodeInfo) {
     nsCOMPtr<nsIDocument> doc =
       do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
@@ -107,7 +107,7 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLAudioElement)
 NS_IMPL_ELEMENT_CLONE(nsHTMLAudioElement)
 
 
-nsHTMLAudioElement::nsHTMLAudioElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsHTMLAudioElement::nsHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsHTMLMediaElement(aNodeInfo)
 {
 }

@@ -65,7 +65,7 @@ class nsHTMLSharedElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLHtmlElement
 {
 public:
-  nsHTMLSharedElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsHTMLSharedElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLSharedElement();
 
   // nsISupports
@@ -125,7 +125,7 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo()
   {
@@ -137,7 +137,7 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Shared)
 
 
-nsHTMLSharedElement::nsHTMLSharedElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsHTMLSharedElement::nsHTMLSharedElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

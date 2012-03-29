@@ -48,6 +48,7 @@
 
 class nsIAtom;
 class nsIDocument;
+class nsINodeInfo;
 class nsNodeInfo;
 class nsIPrincipal;
 class nsIURI;
@@ -83,31 +84,31 @@ public:
   /**
    * Methods for creating nodeinfo's from atoms and/or strings.
    */
-  already_AddRefed<nsNodeInfo> GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
-                                           PRInt32 aNamespaceID,
-                                           PRUint16 aNodeType,
-                                           nsIAtom* aExtraName = nsnull);
+  already_AddRefed<nsINodeInfo> GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
+                                            PRInt32 aNamespaceID,
+                                            PRUint16 aNodeType,
+                                            nsIAtom* aExtraName = nsnull);
   nsresult GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                        PRInt32 aNamespaceID, PRUint16 aNodeType,
-                       nsNodeInfo** aNodeInfo);
+                       nsINodeInfo** aNodeInfo);
   nsresult GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                        const nsAString& aNamespaceURI, PRUint16 aNodeType,
-                       nsNodeInfo** aNodeInfo);
+                       nsINodeInfo** aNodeInfo);
 
   /**
    * Returns the nodeinfo for text nodes. Can return null if OOM.
    */
-  already_AddRefed<nsNodeInfo> GetTextNodeInfo();
+  already_AddRefed<nsINodeInfo> GetTextNodeInfo();
 
   /**
    * Returns the nodeinfo for comment nodes. Can return null if OOM.
    */
-  already_AddRefed<nsNodeInfo> GetCommentNodeInfo();
+  already_AddRefed<nsINodeInfo> GetCommentNodeInfo();
 
   /**
    * Returns the nodeinfo for the document node. Can return null if OOM.
    */
-  already_AddRefed<nsNodeInfo> GetDocumentNodeInfo();     
+  already_AddRefed<nsINodeInfo> GetDocumentNodeInfo();     
 
   /**
    * Retrieve a pointer to the document that owns this node info
@@ -161,9 +162,9 @@ private:
                             // while inlining DocumentPrincipal().  Never null
                             // after Init() succeeds.
   nsCOMPtr<nsIPrincipal> mDefaultPrincipal; // Never null after Init() succeeds
-  nsNodeInfo *mTextNodeInfo; // WEAK to avoid circular ownership
-  nsNodeInfo *mCommentNodeInfo; // WEAK to avoid circular ownership
-  nsNodeInfo *mDocumentNodeInfo; // WEAK to avoid circular ownership
+  nsINodeInfo *mTextNodeInfo; // WEAK to avoid circular ownership
+  nsINodeInfo *mCommentNodeInfo; // WEAK to avoid circular ownership
+  nsINodeInfo *mDocumentNodeInfo; // WEAK to avoid circular ownership
   nsBindingManager* mBindingManager; // STRONG, but not nsCOMPtr to avoid
                                      // include hell while inlining
                                      // GetBindingManager().

@@ -42,7 +42,7 @@
 
 class nsXMLEventsElement : public nsXMLElement {
 public:
-  nsXMLEventsElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsXMLEventsElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsXMLEventsElement();
   NS_FORWARD_NSIDOMNODE(nsXMLElement::)
 
@@ -50,10 +50,10 @@ public:
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify);
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
-nsXMLEventsElement::nsXMLEventsElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsXMLEventsElement::nsXMLEventsElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsXMLElement(aNodeInfo)
 {
 }
@@ -86,7 +86,7 @@ NS_IMPL_ELEMENT_CLONE(nsXMLEventsElement)
 
 nsresult
 NS_NewXMLEventsElement(nsIContent** aInstancePtrResult,
-                       already_AddRefed<nsNodeInfo> aNodeInfo)
+                       already_AddRefed<nsINodeInfo> aNodeInfo)
 {
   nsXMLEventsElement* it = new nsXMLEventsElement(aNodeInfo);
   if (!it) {

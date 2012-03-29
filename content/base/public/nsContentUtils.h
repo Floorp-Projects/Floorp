@@ -64,7 +64,7 @@ static fp_except_t oldmask = fpsetmask(~allmask);
 
 #include "nsAString.h"
 #include "nsIStatefulFrame.h"
-#include "nsNodeInfo.h"
+#include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentList.h"
 #include "nsDOMClassInfoID.h"
@@ -614,7 +614,7 @@ public:
                                        const nsAString& aQualifiedName,
                                        nsNodeInfoManager* aNodeInfoManager,
                                        PRUint16 aNodeType,
-                                       nsNodeInfo** aNodeInfo);
+                                       nsINodeInfo** aNodeInfo);
 
   static void SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
                              nsIAtom **aTagName, PRInt32 *aNameSpaceID);
@@ -746,8 +746,8 @@ public:
    * Convenience method to create a new nodeinfo that differs only by name
    * from aNodeInfo.
    */
-  static nsresult NameChanged(nsNodeInfo *aNodeInfo, nsIAtom *aName,
-                              nsNodeInfo** aResult)
+  static nsresult NameChanged(nsINodeInfo *aNodeInfo, nsIAtom *aName,
+                              nsINodeInfo** aResult)
   {
     nsNodeInfoManager *niMgr = aNodeInfo->NodeInfoManager();
 

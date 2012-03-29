@@ -56,7 +56,7 @@ class nsHTMLStyleElement : public nsGenericHTMLElement,
                            public nsStubMutationObserver
 {
 public:
-  nsHTMLStyleElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsHTMLStyleElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLStyleElement();
 
   // nsISupports
@@ -107,7 +107,7 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
@@ -134,7 +134,7 @@ protected:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Style)
 
 
-nsHTMLStyleElement::nsHTMLStyleElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsHTMLStyleElement::nsHTMLStyleElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
   AddMutationObserver(this);

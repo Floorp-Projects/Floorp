@@ -52,7 +52,7 @@ class nsHTMLOptionElement : public nsGenericHTMLElement,
                             public nsIJSNativeInitializer
 {
 public:
-  nsHTMLOptionElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsHTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLOptionElement();
 
   /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
@@ -99,7 +99,7 @@ public:
   // nsIContent
   virtual nsEventStates IntrinsicState() const;
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   nsresult CopyInnerTo(nsGenericElement* aDest) const;
 

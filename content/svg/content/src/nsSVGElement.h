@@ -89,7 +89,7 @@ typedef nsStyledElementNotElementCSSInlineStyle nsSVGElementBase;
 class nsSVGElement : public nsSVGElementBase    // nsIContent
 {
 protected:
-  nsSVGElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   nsresult Init();
   virtual ~nsSVGElement(){}
 
@@ -616,7 +616,7 @@ private:
 #define NS_IMPL_NS_NEW_SVG_ELEMENT(_elementName)                             \
 nsresult                                                                     \
 NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
-                                 already_AddRefed<nsNodeInfo> aNodeInfo)    \
+                                 already_AddRefed<nsINodeInfo> aNodeInfo)    \
 {                                                                            \
   nsRefPtr<nsSVG##_elementName##Element> it =                                \
     new nsSVG##_elementName##Element(aNodeInfo);                             \
@@ -637,7 +637,7 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
 #define NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(_elementName)                \
 nsresult                                                                     \
 NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
-                                 already_AddRefed<nsNodeInfo> aNodeInfo,    \
+                                 already_AddRefed<nsINodeInfo> aNodeInfo,    \
                                  FromParser aFromParser)                     \
 {                                                                            \
   nsRefPtr<nsSVG##_elementName##Element> it =                                \

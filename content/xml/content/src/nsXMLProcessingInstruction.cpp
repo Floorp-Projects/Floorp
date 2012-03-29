@@ -60,7 +60,7 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
 
   *aInstancePtrResult = nsnull;
 
-  nsRefPtr<nsNodeInfo> ni;
+  nsCOMPtr<nsINodeInfo> ni;
   ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::processingInstructionTagName,
                                      nsnull, kNameSpaceID_None,
                                      nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
@@ -78,7 +78,7 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
   return NS_OK;
 }
 
-nsXMLProcessingInstruction::nsXMLProcessingInstruction(already_AddRefed<nsNodeInfo> aNodeInfo,
+nsXMLProcessingInstruction::nsXMLProcessingInstruction(already_AddRefed<nsINodeInfo> aNodeInfo,
                                                        const nsAString& aData)
   : nsGenericDOMDataNode(aNodeInfo)
 {
@@ -139,12 +139,12 @@ nsXMLProcessingInstruction::IsNodeOfType(PRUint32 aFlags) const
 }
 
 nsGenericDOMDataNode*
-nsXMLProcessingInstruction::CloneDataNode(nsNodeInfo *aNodeInfo,
+nsXMLProcessingInstruction::CloneDataNode(nsINodeInfo *aNodeInfo,
                                           bool aCloneText) const
 {
   nsAutoString data;
   nsGenericDOMDataNode::GetData(data);
-  nsRefPtr<nsNodeInfo> ni = aNodeInfo;
+  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
   return new nsXMLProcessingInstruction(ni.forget(), data);
 }
 

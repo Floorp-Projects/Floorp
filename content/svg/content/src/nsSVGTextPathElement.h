@@ -52,7 +52,7 @@
 class nsIAtom;
 class nsIContent;
 class nsINode;
-class nsNodeInfo;
+class nsINodeInfo;
 class nsXPCClassInfo;
 
 typedef nsSVGTextContentElement nsSVGTextPathElementBase;
@@ -65,8 +65,8 @@ friend class nsSVGTextPathFrame;
 
 protected:
   friend nsresult NS_NewSVGTextPathElement(nsIContent **aResult,
-                                           already_AddRefed<nsNodeInfo> aNodeInfo);
-  nsSVGTextPathElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+                                           already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGTextPathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   
 public:
   // interfaces:
@@ -85,7 +85,7 @@ public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:

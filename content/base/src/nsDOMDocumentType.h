@@ -57,7 +57,7 @@ class nsDOMDocumentTypeForward : public nsGenericDOMDataNode,
                                  public nsIDOMDocumentType
 {
 public:
-  nsDOMDocumentTypeForward(already_AddRefed<nsNodeInfo> aNodeInfo)
+  nsDOMDocumentTypeForward(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericDOMDataNode(aNodeInfo)
   {
   }
@@ -69,7 +69,7 @@ public:
 class nsDOMDocumentType : public nsDOMDocumentTypeForward
 {
 public:
-  nsDOMDocumentType(already_AddRefed<nsNodeInfo> aNodeInfo,
+  nsDOMDocumentType(already_AddRefed<nsINodeInfo> aNodeInfo,
                     const nsAString& aPublicId,
                     const nsAString& aSystemId,
                     const nsAString& aInternalSubset);
@@ -102,7 +102,7 @@ public:
   // nsIContent overrides
   virtual const nsTextFragment* GetText();
 
-  virtual nsGenericDOMDataNode* CloneDataNode(nsNodeInfo *aNodeInfo,
+  virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
                                               bool aCloneText) const;
 
   virtual nsXPCClassInfo* GetClassInfo();

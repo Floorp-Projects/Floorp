@@ -365,7 +365,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       }
       
       nsCOMPtr<nsIContent> newContent;
-      nsRefPtr<nsNodeInfo> nodeInfo = aBuilder->GetNodeInfoManager()->
+      nsCOMPtr<nsINodeInfo> nodeInfo = aBuilder->GetNodeInfoManager()->
         GetNodeInfo(name, nsnull, ns, nsIDOMNode::ELEMENT_NODE);
       NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
       NS_NewElement(getter_AddRefs(newContent),
@@ -404,7 +404,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                             theAttribute,
                             false);
 
-        nsRefPtr<nsNodeInfo> optionNodeInfo = 
+        nsCOMPtr<nsINodeInfo> optionNodeInfo = 
           aBuilder->GetNodeInfoManager()->GetNodeInfo(nsHtml5Atoms::option, 
                                                       nsnull, 
                                                       kNameSpaceID_XHTML,
@@ -412,7 +412,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                                                       
         for (PRUint32 i = 0; i < theContent.Length(); ++i) {
           nsCOMPtr<nsIContent> optionElt;
-          nsRefPtr<nsNodeInfo> ni = optionNodeInfo;
+          nsCOMPtr<nsINodeInfo> ni = optionNodeInfo;
           NS_NewElement(getter_AddRefs(optionElt), 
                         ni.forget(),
                         (mOpCode == eTreeOpCreateElementNetwork ?

@@ -68,7 +68,7 @@ using namespace mozilla::dom;
 bool nsDOMAttribute::sInitialized;
 
 nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
-                               already_AddRefed<nsNodeInfo> aNodeInfo,
+                               already_AddRefed<nsINodeInfo> aNodeInfo,
                                const nsAString   &aValue, bool aNsAware)
   : nsIAttribute(aAttrMap, aNodeInfo, aNsAware), mValue(aValue), mChild(nsnull)
 {
@@ -183,7 +183,7 @@ nsDOMAttribute::SetOwnerDocument(nsIDocument* aDocument)
   NS_ASSERTION(doc != aDocument, "bad call to nsDOMAttribute::SetOwnerDocument");
   doc->DeleteAllPropertiesFor(this);
 
-  nsRefPtr<nsNodeInfo> newNodeInfo;
+  nsCOMPtr<nsINodeInfo> newNodeInfo;
   newNodeInfo = aDocument->NodeInfoManager()->
     GetNodeInfo(mNodeInfo->NameAtom(), mNodeInfo->GetPrefixAtom(),
                 mNodeInfo->NamespaceID(),
@@ -463,12 +463,12 @@ nsDOMAttribute::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 }
 
 nsresult
-nsDOMAttribute::Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const
+nsDOMAttribute::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   nsAutoString value;
   const_cast<nsDOMAttribute*>(this)->GetValue(value);
 
-  nsRefPtr<nsNodeInfo> ni = aNodeInfo;
+  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
   *aResult = new nsDOMAttribute(nsnull, ni.forget(), value, mNsAware);
   if (!*aResult) {
     return NS_ERROR_OUT_OF_MEMORY;

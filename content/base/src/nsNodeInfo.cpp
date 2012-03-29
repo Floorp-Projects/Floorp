@@ -176,9 +176,7 @@ nsNodeInfo::nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
 // nsISupports
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsNodeInfo)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_NATIVE_0(nsNodeInfo)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsNodeInfo, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsNodeInfo, Release)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsNodeInfo)
 
 static const char* kNSURIs[] = {
   " ([none])",
@@ -193,7 +191,7 @@ static const char* kNSURIs[] = {
   " (XUL)"
 };
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN_INTERNAL(nsNodeInfo)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsNodeInfo)
   if (NS_UNLIKELY(cb.WantDebugInfo())) {
     char name[72];
     PRUint32 nsid = tmp->NamespaceID();
@@ -216,7 +214,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN_INTERNAL(nsNodeInfo)
                                                   nsNodeInfoManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-// nsNodeInfo
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNodeInfo)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsNodeInfo, LastRelease())
+NS_INTERFACE_TABLE_HEAD(nsNodeInfo)
+  NS_INTERFACE_TABLE1(nsNodeInfo, nsINodeInfo)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsNodeInfo)
+NS_INTERFACE_MAP_END
+
+// nsINodeInfo
 
 nsresult
 nsNodeInfo::GetNamespaceURI(nsAString& aNameSpaceURI) const
@@ -240,7 +245,7 @@ nsNodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
   PRInt32 nsid =
     nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
 
-  return nsNodeInfo::NamespaceEquals(nsid);
+  return nsINodeInfo::NamespaceEquals(nsid);
 }
 
 // static

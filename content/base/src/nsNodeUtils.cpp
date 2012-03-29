@@ -456,8 +456,8 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
   nsNodeInfoManager *nodeInfoManager = aNewNodeInfoManager;
 
   // aNode.
-  nsNodeInfo *nodeInfo = aNode->mNodeInfo;
-  nsRefPtr<nsNodeInfo> newNodeInfo;
+  nsINodeInfo *nodeInfo = aNode->mNodeInfo;
+  nsCOMPtr<nsINodeInfo> newNodeInfo;
   if (nodeInfoManager) {
 
     // Don't allow importing/adopting nodes from non-privileged "scriptable"

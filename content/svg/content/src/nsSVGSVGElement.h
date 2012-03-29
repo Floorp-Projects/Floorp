@@ -130,9 +130,9 @@ class nsSVGSVGElement : public nsSVGSVGElementBase,
 
 protected:
   friend nsresult NS_NewSVGSVGElement(nsIContent **aResult,
-                                      already_AddRefed<nsNodeInfo> aNodeInfo,
+                                      already_AddRefed<nsINodeInfo> aNodeInfo,
                                       mozilla::dom::FromParser aFromParser);
-  nsSVGSVGElement(already_AddRefed<nsNodeInfo> aNodeInfo,
+  nsSVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                   mozilla::dom::FromParser aFromParser);
   
 public:
@@ -204,7 +204,7 @@ public:
   // SVG-as-an-image documents.)
   virtual void FlushImageTransformInvalidation();
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   svgFloatSize GetViewportSize() const {
     return svgFloatSize(mViewportWidth, mViewportHeight);

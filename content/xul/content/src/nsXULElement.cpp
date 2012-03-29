@@ -228,7 +228,7 @@ NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 // nsXULElement
 //
 
-nsXULElement::nsXULElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsXULElement::nsXULElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsStyledElement(aNodeInfo),
       mBindingParent(nsnull)
 {
@@ -269,10 +269,10 @@ nsXULElement::CreateSlots()
 
 /* static */
 already_AddRefed<nsXULElement>
-nsXULElement::Create(nsXULPrototypeElement* aPrototype, nsNodeInfo *aNodeInfo,
+nsXULElement::Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
                      bool aIsScriptable)
 {
-    nsRefPtr<nsNodeInfo> ni = aNodeInfo;
+    nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
     nsXULElement *element = new nsXULElement(ni.forget());
     if (element) {
         NS_ADDREF(element);
@@ -321,9 +321,9 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    nsRefPtr<nsNodeInfo> nodeInfo;
+    nsCOMPtr<nsINodeInfo> nodeInfo;
     if (aDocument) {
-        nsNodeInfo* ni = aPrototype->mNodeInfo;
+        nsINodeInfo* ni = aPrototype->mNodeInfo;
         nodeInfo = aDocument->NodeInfoManager()->
           GetNodeInfo(ni->NameAtom(), ni->GetPrefixAtom(), ni->NamespaceID(),
                       nsIDOMNode::ELEMENT_NODE);
@@ -345,13 +345,13 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
 }
 
 nsresult
-NS_NewXULElement(nsIContent** aResult, already_AddRefed<nsNodeInfo> aNodeInfo)
+NS_NewXULElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo)
 {
     NS_PRECONDITION(aNodeInfo.get(), "need nodeinfo for non-proto Create");
 
     nsIDocument* doc = aNodeInfo.get()->GetDocument();
     if (doc && !doc->AllowXULXBL()) {
-        nsRefPtr<nsNodeInfo> ni = aNodeInfo;
+        nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
         return NS_ERROR_NOT_AVAILABLE;
     }
 
@@ -361,7 +361,7 @@ NS_NewXULElement(nsIContent** aResult, already_AddRefed<nsNodeInfo> aNodeInfo)
 }
 
 void
-NS_TrustedNewXULElement(nsIContent** aResult, already_AddRefed<nsNodeInfo> aNodeInfo)
+NS_TrustedNewXULElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo)
 {
     NS_PRECONDITION(aNodeInfo.get(), "need nodeinfo for non-proto Create");
 
@@ -410,7 +410,7 @@ NS_ELEMENT_INTERFACE_MAP_END
 // nsIDOMNode interface
 
 nsresult
-nsXULElement::Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const
+nsXULElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
     *aResult = nsnull;
 
@@ -422,7 +422,7 @@ nsXULElement::Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const
                      "Didn't get the default language from proto?");
     }
     else {
-        nsRefPtr<nsNodeInfo> ni = aNodeInfo;
+        nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
         element = new nsXULElement(ni.forget());
         if (element) {
         	// If created from a prototype, we will already have the script
@@ -532,7 +532,7 @@ nsXULElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName, bool* aDefer)
 }
 
 // returns true if the element is not a list
-static bool IsNonList(nsNodeInfo* aNodeInfo)
+static bool IsNonList(nsINodeInfo* aNodeInfo)
 {
   return !aNodeInfo->Equals(nsGkAtoms::tree) &&
          !aNodeInfo->Equals(nsGkAtoms::listbox) &&
@@ -2566,15 +2566,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXULPrototypeNode)
         nsXULPrototypeElement *elem =
             static_cast<nsXULPrototypeElement*>(tmp);
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mNodeInfo");
-        cb.NoteNativeChild(elem->mNodeInfo, &NS_CYCLE_COLLECTION_NAME(nsNodeInfo));
+        cb.NoteXPCOMChild(elem->mNodeInfo);
         PRUint32 i;
         for (i = 0; i < elem->mNumAttributes; ++i) {
             const nsAttrName& name = elem->mAttributes[i].mName;
             if (!name.IsAtom()) {
                 NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
                     "mAttributes[i].mName.NodeInfo()");
-                cb.NoteNativeChild(name.NodeInfo(),
-                                   &NS_CYCLE_COLLECTION_NAME(nsNodeInfo));
+                cb.NoteXPCOMChild(name.NodeInfo());
             }
         }
         for (i = 0; i < elem->mChildren.Length(); ++i) {
@@ -2629,7 +2628,7 @@ nsXULPrototypeAttribute::~nsXULPrototypeAttribute()
 nsresult
 nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
                                  nsIScriptGlobalObject* aGlobal,
-                                 const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos)
+                                 const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     nsresult rv;
 
@@ -2641,7 +2640,7 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
 
     // Write Node Info
     PRInt32 index = aNodeInfos->IndexOf(mNodeInfo);
-    NS_ASSERTION(index >= 0, "unknown nsNodeInfo index");
+    NS_ASSERTION(index >= 0, "unknown nsINodeInfo index");
     rv |= aStream->Write32(index);
 
     // Write Attributes
@@ -2650,7 +2649,7 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
     nsAutoString attributeValue;
     PRUint32 i;
     for (i = 0; i < mNumAttributes; ++i) {
-        nsRefPtr<nsNodeInfo> ni;
+        nsCOMPtr<nsINodeInfo> ni;
         if (mAttributes[i].mName.IsAtom()) {
             ni = mNodeInfo->NodeInfoManager()->
                 GetNodeInfo(mAttributes[i].mName.Atom(), nsnull,
@@ -2663,7 +2662,7 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
         }
 
         index = aNodeInfos->IndexOf(ni);
-        NS_ASSERTION(index >= 0, "unknown nsNodeInfo index");
+        NS_ASSERTION(index >= 0, "unknown nsINodeInfo index");
         rv |= aStream->Write32(index);
 
         mAttributes[i].mValue.ToString(attributeValue);
@@ -2714,7 +2713,7 @@ nsresult
 nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                                    nsIScriptGlobalObject* aGlobal,
                                    nsIURI* aDocumentURI,
-                                   const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos)
+                                   const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     NS_PRECONDITION(aNodeInfos, "missing nodeinfo array");
     nsresult rv;
@@ -2727,10 +2726,9 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     // Read Node Info
     PRUint32 number;
     rv |= aStream->Read32(&number);
-    if (number >= aNodeInfos->Length())
+    mNodeInfo = aNodeInfos->SafeObjectAt(number);
+    if (!mNodeInfo)
         return NS_ERROR_UNEXPECTED;
-    mNodeInfo = (*aNodeInfos)[number];
-    MOZ_ASSERT(mNodeInfo);
 
     // Read Attributes
     rv |= aStream->Read32(&number);
@@ -2745,10 +2743,9 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
         nsAutoString attributeValue;
         for (i = 0; i < mNumAttributes; ++i) {
             rv |= aStream->Read32(&number);
-            if (number >= aNodeInfos->Length())
+            nsINodeInfo* ni = aNodeInfos->SafeObjectAt(number);
+            if (!ni)
                 return NS_ERROR_UNEXPECTED;
-            nsNodeInfo* ni = (*aNodeInfos)[number];
-            MOZ_ASSERT(ni);
 
             mAttributes[i].mName.SetTo(ni);
 
@@ -2944,7 +2941,7 @@ nsXULPrototypeScript::~nsXULPrototypeScript()
 nsresult
 nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
                                 nsIScriptGlobalObject* aGlobal,
-                                const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos)
+                                const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     nsIScriptContext *context = aGlobal->GetScriptContext();
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull ||
@@ -3012,7 +3009,7 @@ nsresult
 nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
                                   nsIScriptGlobalObject* aGlobal,
                                   nsIURI* aDocumentURI,
-                                  const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos)
+                                  const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     nsresult rv;
 
@@ -3221,7 +3218,7 @@ nsXULPrototypeScript::Set(JSScript* aObject)
 nsresult
 nsXULPrototypeText::Serialize(nsIObjectOutputStream* aStream,
                               nsIScriptGlobalObject* aGlobal,
-                              const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos)
+                              const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     nsresult rv;
 
@@ -3237,7 +3234,7 @@ nsresult
 nsXULPrototypeText::Deserialize(nsIObjectInputStream* aStream,
                                 nsIScriptGlobalObject* aGlobal,
                                 nsIURI* aDocumentURI,
-                                const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos)
+                                const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     nsresult rv;
 
@@ -3254,7 +3251,7 @@ nsXULPrototypeText::Deserialize(nsIObjectInputStream* aStream,
 nsresult
 nsXULPrototypePI::Serialize(nsIObjectOutputStream* aStream,
                             nsIScriptGlobalObject* aGlobal,
-                            const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos)
+                            const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     nsresult rv;
 
@@ -3271,7 +3268,7 @@ nsresult
 nsXULPrototypePI::Deserialize(nsIObjectInputStream* aStream,
                               nsIScriptGlobalObject* aGlobal,
                               nsIURI* aDocumentURI,
-                              const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos)
+                              const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     nsresult rv;
 

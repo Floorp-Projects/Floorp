@@ -122,7 +122,7 @@ protected:
     bool NotifyForDocElement() { return false; }
 
     nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
-                           nsNodeInfo* aNodeInfo, PRUint32 aLineNumber,
+                           nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
                            nsIContent** aResult, bool* aAppendContent,
                            mozilla::dom::FromParser aFromParser);
     

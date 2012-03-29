@@ -83,7 +83,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGImageElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGImageElement::nsSVGImageElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGImageElement::nsSVGImageElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGImageElementBase(aNodeInfo)
 {
   // We start out broken

@@ -62,7 +62,7 @@ class nsHTMLSharedObjectElement : public nsGenericHTMLElement
                                 , public nsIDOMGetSVGDocument
 {
 public:
-  nsHTMLSharedObjectElement(already_AddRefed<nsNodeInfo> aNodeInfo,
+  nsHTMLSharedObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                             mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
   virtual ~nsHTMLSharedObjectElement();
 
@@ -137,7 +137,7 @@ public:
   // nsObjectLoadingContent
   virtual PRUint32 GetCapabilities() const;
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   nsresult CopyInnerTo(nsGenericElement* aDest) const;
 
@@ -186,7 +186,7 @@ private:
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(SharedObject)
 
 
-nsHTMLSharedObjectElement::nsHTMLSharedObjectElement(already_AddRefed<nsNodeInfo> aNodeInfo,
+nsHTMLSharedObjectElement::nsHTMLSharedObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                                      FromParser aFromParser)
   : nsGenericHTMLElement(aNodeInfo),
     mIsDoneAddingChildren(mNodeInfo->Equals(nsGkAtoms::embed) || !aFromParser)

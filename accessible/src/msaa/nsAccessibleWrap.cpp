@@ -59,7 +59,7 @@
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsINameSpaceManager.h"
-#include "nsNodeInfo.h"
+#include "nsINodeInfo.h"
 #include "nsRootAccessible.h"
 #include "nsIServiceManager.h"
 #include "nsTextFormatter.h"
@@ -380,7 +380,7 @@ __try {
       if (!document)
         return E_FAIL;
 
-      nsNodeInfo *nodeInfo = content->NodeInfo();
+      nsINodeInfo *nodeInfo = content->NodeInfo();
       nodeInfo->GetName(roleString);
 
       // Only append name space if different from that of current document.

@@ -164,7 +164,7 @@ nsDOMAttributeMap::DropAttribute(PRInt32 aNamespaceID, nsIAtom* aLocalName)
 }
 
 nsresult
-nsDOMAttributeMap::RemoveAttribute(nsNodeInfo* aNodeInfo, nsIDOMNode** aReturn)
+nsDOMAttributeMap::RemoveAttribute(nsINodeInfo* aNodeInfo, nsIDOMNode** aReturn)
 {
   NS_ASSERTION(aNodeInfo, "RemoveAttribute() called with aNodeInfo == nsnull!");
   NS_ASSERTION(aReturn, "RemoveAttribute() called with aReturn == nsnull");
@@ -179,7 +179,7 @@ nsDOMAttributeMap::RemoveAttribute(nsNodeInfo* aNodeInfo, nsIDOMNode** aReturn)
     // As we are removing the attribute we need to set the current value in
     // the attribute node.
     mContent->GetAttr(aNodeInfo->NamespaceID(), aNodeInfo->NameAtom(), value);
-    nsRefPtr<nsNodeInfo> ni = aNodeInfo;
+    nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
     nsCOMPtr<nsIDOMNode> newAttr =
       new nsDOMAttribute(nsnull, ni.forget(), value, true);
     if (!newAttr) {
@@ -201,7 +201,7 @@ nsDOMAttributeMap::RemoveAttribute(nsNodeInfo* aNodeInfo, nsIDOMNode** aReturn)
 }
 
 nsDOMAttribute*
-nsDOMAttributeMap::GetAttribute(nsNodeInfo* aNodeInfo, bool aNsAware)
+nsDOMAttributeMap::GetAttribute(nsINodeInfo* aNodeInfo, bool aNsAware)
 {
   NS_ASSERTION(aNodeInfo, "GetAttribute() called with aNodeInfo == nsnull!");
 
@@ -209,7 +209,7 @@ nsDOMAttributeMap::GetAttribute(nsNodeInfo* aNodeInfo, bool aNsAware)
 
   nsDOMAttribute* node = mAttributeCache.GetWeak(attr);
   if (!node) {
-    nsRefPtr<nsNodeInfo> ni = aNodeInfo;
+    nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
     nsRefPtr<nsDOMAttribute> newAttr =
       new nsDOMAttribute(this, ni.forget(), EmptyString(), aNsAware);
     if (newAttr && mAttributeCache.Put(attr, newAttr)) {
@@ -226,7 +226,7 @@ nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName, nsresult *aResult)
   *aResult = NS_OK;
 
   if (mContent) {
-    nsRefPtr<nsNodeInfo> ni =
+    nsCOMPtr<nsINodeInfo> ni =
       mContent->GetExistingAttrNameFromQName(aAttrName);
     if (ni) {
       return GetAttribute(ni, false);
@@ -311,7 +311,7 @@ nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
 
     // Get nodeinfo and preexisting attribute (if it exists)
     nsAutoString name;
-    nsRefPtr<nsNodeInfo> ni;
+    nsCOMPtr<nsINodeInfo> ni;
 
     // SetNamedItemNS()
     if (aWithNS) {
@@ -378,7 +378,7 @@ nsDOMAttributeMap::RemoveNamedItem(const nsAString& aName,
   nsresult rv = NS_OK;
 
   if (mContent) {
-    nsRefPtr<nsNodeInfo> ni = mContent->GetExistingAttrNameFromQName(aName);
+    nsCOMPtr<nsINodeInfo> ni = mContent->GetExistingAttrNameFromQName(aName);
     if (!ni) {
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
@@ -404,7 +404,7 @@ nsDOMAttributeMap::GetItemAt(PRUint32 aIndex, nsresult *aResult)
   if (mContent && (name = mContent->GetAttrNameAt(aIndex))) {
     // Don't use the nodeinfo even if one exists since it can
     // have the wrong owner document.
-    nsRefPtr<nsNodeInfo> ni;
+    nsCOMPtr<nsINodeInfo> ni;
     ni = mContent->NodeInfo()->NodeInfoManager()->
       GetNodeInfo(name->LocalName(), name->GetPrefix(), name->NamespaceID(),
                   nsIDOMNode::ATTRIBUTE_NODE);
@@ -482,7 +482,7 @@ nsDOMAttributeMap::GetNamedItemNSInternal(const nsAString& aNamespaceURI,
 
     if (nameSpaceID == attrNS &&
         nameAtom->Equals(aLocalName)) {
-      nsRefPtr<nsNodeInfo> ni;
+      nsCOMPtr<nsINodeInfo> ni;
       ni = mContent->NodeInfo()->NodeInfoManager()->
         GetNodeInfo(nameAtom, name->GetPrefix(), nameSpaceID,
                     nsIDOMNode::ATTRIBUTE_NODE);
@@ -524,7 +524,7 @@ nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
                "didn't implement nsIAttribute");
   NS_ENSURE_TRUE(attr, NS_ERROR_UNEXPECTED);
 
-  nsNodeInfo *ni = attr->NodeInfo();
+  nsINodeInfo *ni = attr->NodeInfo();
   mContent->UnsetAttr(ni->NamespaceID(), ni->NameAtom(), true);
 
   return NS_OK;

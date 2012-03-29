@@ -47,8 +47,8 @@ class nsSVGUnknownElement : public nsSVGUnknownElementBase,
 {
 protected:
   friend nsresult NS_NewSVGUnknownElement(nsIContent **aResult,
-                                          already_AddRefed<nsNodeInfo> aNodeInfo);
-  nsSVGUnknownElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+                                          already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGUnknownElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -59,7 +59,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGUnknownElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGUnknownElementBase::)
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -82,7 +82,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGUnknownElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGUnknownElement::nsSVGUnknownElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGUnknownElement::nsSVGUnknownElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGUnknownElementBase(aNodeInfo)
 {
 }

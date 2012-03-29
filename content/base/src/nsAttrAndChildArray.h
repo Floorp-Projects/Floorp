@@ -106,7 +106,7 @@ public:
   const nsAttrValue* GetAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID = kNameSpaceID_None) const;
   const nsAttrValue* AttrAt(PRUint32 aPos) const;
   nsresult SetAndTakeAttr(nsIAtom* aLocalName, nsAttrValue& aValue);
-  nsresult SetAndTakeAttr(nsNodeInfo* aName, nsAttrValue& aValue);
+  nsresult SetAndTakeAttr(nsINodeInfo* aName, nsAttrValue& aValue);
 
   // Remove the attr at position aPos.  The value of the attr is placed in
   // aValue; any value that was already in aValue is destroyed.

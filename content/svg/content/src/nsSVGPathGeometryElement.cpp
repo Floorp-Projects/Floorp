@@ -49,7 +49,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGPathGeometryElement::nsSVGPathGeometryElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGPathGeometryElement::nsSVGPathGeometryElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGPathGeometryElementBase(aNodeInfo)
 {
 }

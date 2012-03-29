@@ -129,7 +129,7 @@ using namespace mozilla::dom;
 
 #include "nsThreadUtils.h"
 
-class nsNodeInfo;
+class nsINodeInfo;
 class nsIDOMNodeList;
 class nsRuleWalker;
 
@@ -144,7 +144,7 @@ class nsRuleWalker;
 
 static nsHashtable sGEUS_ElementCounts;
 
-void GEUS_ElementCreated(nsNodeInfo *aNodeInfo)
+void GEUS_ElementCreated(nsINodeInfo *aNodeInfo)
 {
   nsAutoString name;
   aNodeInfo->GetName(name);
@@ -178,7 +178,7 @@ void GEUS_DumpElementCounts()
 }
 
 nsresult
-nsGenericHTMLElement::Init(nsNodeInfo *aNodeInfo)
+nsGenericHTMLElement::Init(nsINodeInfo *aNodeInfo)
 {
   GEUS_ElementCreated(aNodeInfo);
 
@@ -846,7 +846,7 @@ nsGenericHTMLElement::SetOuterHTML(const nsAString& aOuterHTML)
   } else {
     NS_ASSERTION(parent->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE,
       "How come the parent isn't a document, a fragment or an element?");
-    nsRefPtr<nsNodeInfo> info =
+    nsCOMPtr<nsINodeInfo> info =
       OwnerDoc()->NodeInfoManager()->GetNodeInfo(nsGkAtoms::body,
                                                  nsnull,
                                                  kNameSpaceID_XHTML,
@@ -2558,7 +2558,7 @@ nsGenericHTMLElement::GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu)
 
 //----------------------------------------------------------------------
 
-nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
   , mForm(nsnull)
   , mFieldSet(nsnull)

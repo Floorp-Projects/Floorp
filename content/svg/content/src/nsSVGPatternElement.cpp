@@ -95,7 +95,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPatternElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGPatternElement::nsSVGPatternElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGPatternElement::nsSVGPatternElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGPatternElementBase(aNodeInfo)
 {
 }

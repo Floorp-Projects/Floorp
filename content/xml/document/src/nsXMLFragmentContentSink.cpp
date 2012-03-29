@@ -47,7 +47,7 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIContent.h"
 #include "nsGkAtoms.h"
-#include "nsNodeInfo.h"
+#include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
 #include "nsNullPrincipal.h"
 #include "nsContentCreatorFunctions.h"
@@ -120,7 +120,7 @@ protected:
                                nsIAtom *aTagName,
                                nsIContent *aContent);
   virtual nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
-                                 nsNodeInfo* aNodeInfo, PRUint32 aLineNumber,
+                                 nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
                                  nsIContent** aResult, bool* aAppendContent,
                                  mozilla::dom::FromParser aFromParser);
   virtual nsresult CloseElement(nsIContent* aContent);
@@ -245,7 +245,7 @@ nsXMLFragmentContentSink::SetDocElement(PRInt32 aNameSpaceID,
 
 nsresult
 nsXMLFragmentContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
-                                        nsNodeInfo* aNodeInfo, PRUint32 aLineNumber,
+                                        nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
                                         nsIContent** aResult, bool* aAppendContent,
                                         FromParser /*aFromParser*/)
 {

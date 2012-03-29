@@ -62,6 +62,7 @@
 #include "nsIPrincipal.h"
 #include "nsIParser.h"
 #include "nsBindingManager.h"
+#include "nsINodeInfo.h"
 #include "nsHashtable.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIBoxObject.h"
@@ -724,7 +725,7 @@ public:
                                  bool aNotify);
   virtual nsresult AppendChildTo(nsIContent* aKid, bool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, bool aNotify);
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   }

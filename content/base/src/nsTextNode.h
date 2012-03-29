@@ -53,7 +53,7 @@ class nsTextNode : public nsGenericDOMDataNode,
                    public nsIDOMText
 {
 public:
-  nsTextNode(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsTextNode(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsTextNode();
 
   // nsISupports
@@ -71,7 +71,7 @@ public:
   // nsINode
   virtual bool IsNodeOfType(PRUint32 aFlags) const;
 
-  virtual nsGenericDOMDataNode* CloneDataNode(nsNodeInfo *aNodeInfo,
+  virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
                                               bool aCloneText) const;
 
   void BindToAttribute(nsIAttribute* aAttr);

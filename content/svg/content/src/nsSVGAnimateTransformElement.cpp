@@ -51,8 +51,8 @@ class nsSVGAnimateTransformElement : public nsSVGAnimateTransformElementBase,
 {
 protected:
   friend nsresult NS_NewSVGAnimateTransformElement(nsIContent **aResult,
-                                                   already_AddRefed<nsNodeInfo> aNodeInfo);
-  nsSVGAnimateTransformElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+                                                   already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGAnimateTransformElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
   nsSMILAnimationFunction mAnimationFunction;
 
@@ -67,7 +67,7 @@ public:
   NS_FORWARD_NSIDOMSVGANIMATIONELEMENT(nsSVGAnimateTransformElementBase::)
 
   // nsIDOMNode specializations
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // nsGenericElement specializations
   bool ParseAttribute(PRInt32 aNamespaceID,
@@ -103,7 +103,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGAnimateTransformElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGAnimateTransformElement::nsSVGAnimateTransformElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGAnimateTransformElement::nsSVGAnimateTransformElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGAnimateTransformElementBase(aNodeInfo)
 {
 }

@@ -69,13 +69,13 @@ using namespace mozilla::dom;
 using namespace mozilla::layers;
 
 nsGenericHTMLElement*
-NS_NewHTMLCanvasElement(already_AddRefed<nsNodeInfo> aNodeInfo,
+NS_NewHTMLCanvasElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                         FromParser aFromParser)
 {
   return new nsHTMLCanvasElement(aNodeInfo);
 }
 
-nsHTMLCanvasElement::nsHTMLCanvasElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsHTMLCanvasElement::nsHTMLCanvasElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo), mWriteOnly(false)
 {
 }

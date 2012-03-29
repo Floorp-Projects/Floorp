@@ -49,7 +49,7 @@ class nsXMLProcessingInstruction : public nsGenericDOMDataNode,
                                    public nsIDOMProcessingInstruction
 {
 public:
-  nsXMLProcessingInstruction(already_AddRefed<nsNodeInfo> aNodeInfo,
+  nsXMLProcessingInstruction(already_AddRefed<nsINodeInfo> aNodeInfo,
                              const nsAString& aData);
   virtual ~nsXMLProcessingInstruction();
 
@@ -68,7 +68,7 @@ public:
   // nsINode
   virtual bool IsNodeOfType(PRUint32 aFlags) const;
 
-  virtual nsGenericDOMDataNode* CloneDataNode(nsNodeInfo *aNodeInfo,
+  virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
                                               bool aCloneText) const;
 
 #ifdef DEBUG
