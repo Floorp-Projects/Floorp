@@ -49,7 +49,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#interface-element
  */
 
-[scriptable, uuid(295e05d9-9174-48ae-bc59-d7e6a8757726)]
+[scriptable, uuid(432a86dd-c0b8-4d21-8ac6-5ae57d28ea6b)]
 interface nsIDOMElement : nsIDOMNode
 {
   readonly attribute DOMString        tagName;
@@ -228,4 +228,12 @@ interface nsIDOMElement : nsIDOMNode
    * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
    */
   void mozRequestFullScreen();
+
+  /**
+   * Requests that this element be made the pointer-locked element, as per the DOM
+   * pointer lock api.
+   *
+   * @see <http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html>
+   */
+  void mozRequestPointerLock();
 };
