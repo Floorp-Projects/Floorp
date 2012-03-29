@@ -357,8 +357,19 @@ BrowserTabActor.prototype = {
     this.conn.addActorPool(this._contextPool);
 
     this.threadActor = new ThreadActor(this);
-    this.threadActor.addDebuggee(this.browser.contentWindow.wrappedJSObject);
+    this._addDebuggees(this.browser.contentWindow.wrappedJSObject);
     this._contextPool.addActor(this.threadActor);
+  },
+
+  /**
+   * Add the provided window and all windows in its frame tree as debuggees.
+   */
+  _addDebuggees: function BTA__addDebuggees(aWindow) {
+    this.threadActor.addDebuggee(aWindow);
+    let frames = aWindow.frames;
+    for (let i = 0; i < frames.length; i++) {
+      this._addDebuggees(frames[i]);
+    }
   },
 
   /**
