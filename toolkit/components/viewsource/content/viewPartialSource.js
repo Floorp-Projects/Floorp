@@ -38,6 +38,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 var gDebug = 0;
 var gLineCount = 0;
 var gStartTargetLine = 0;
@@ -59,22 +61,13 @@ const MARK_SELECTION_END = '\u200B\u200B\u200B\u200B\u200B';
 
 function onLoadViewPartialSource()
 {
-  // check the view_source.wrap_long_lines pref and set the menuitem's checked attribute accordingly
-  if (gPrefs) {
-    try {
-      var wraplonglinesPrefValue = gPrefs.getBoolPref('view_source.wrap_long_lines');
-      if (wraplonglinesPrefValue) {
-        document.getElementById('menu_wrapLongLines').setAttribute('checked', 'true');
-        gWrapLongLines = true;
-      }
-    } catch (e) { }
-    try {
-      document.getElementById("menu_highlightSyntax").setAttribute("checked", gPrefs.getBoolPref("view_source.syntax_highlight"));
-    } catch (e) {
-    }
-  } else {
-    document.getElementById("menu_highlightSyntax").setAttribute("hidden", "true");
-  }
+  // check the view_source.wrap_long_lines pref
+  // and set the menuitem's checked attribute accordingly
+  gWrapLongLines = Services.prefs.getBoolPref("view_source.wrap_long_lines");
+  document.getElementById("menu_wrapLongLines").setAttribute("checked", gWrapLongLines);
+  document.getElementById("menu_highlightSyntax")
+          .setAttribute("checked",
+                        Services.prefs.getBoolPref("view_source.syntax_highlight"));
 
   if (window.arguments[3] == 'selection')
     viewPartialSourceForSelection(window.arguments[2]);
