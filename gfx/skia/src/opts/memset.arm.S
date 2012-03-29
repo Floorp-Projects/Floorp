@@ -32,6 +32,14 @@ arm_memset16:
         .fnstart
         push        {lr}
 
+        /* if count is equal to zero then abort */
+        teq         r2, #0
+        beq         .Lfinish
+
+        /* Multiply count by 2 - go from the number of 16-bit shorts
+         * to the number of bytes desired. */
+        mov         r2, r2, lsl #1
+
         /* expand the data to 32 bits */
         orr         r1, r1, lsl #16
 
@@ -40,10 +48,6 @@ arm_memset16:
         strneh      r1, [r0], #2
         subne       r2, r2, #2
 
-        /* Multiply count by 2 - go from the number of 16-bit shorts
-         * to the number of bytes desired. */
-        mov         r2, r2, lsl #1
-
         /* Now jump into the main loop below. */
         b           .Lwork_32
         .fnend
@@ -51,6 +55,10 @@ arm_memset16:
 arm_memset32:
         .fnstart
         push        {lr}
+
+        /* if count is equal to zero then abort */
+        teq         r2, #0
+        beq         .Lfinish
 
         /* Multiply count by 4 - go from the number of 32-bit words to
          * the number of bytes desired. */
@@ -97,5 +105,6 @@ arm_memset32:
         strcs       r1, [r0], #4
         strmih      lr, [r0], #2
 
+.Lfinish:
         pop         {pc}
         .fnend

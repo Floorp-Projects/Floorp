@@ -299,11 +299,10 @@ public class AwesomeBarTabs extends TabHost {
             if (viewType == VIEW_TYPE_ITEM) {
                 updateTitle(viewHolder.titleView, cursor);
                 updateUrl(viewHolder.urlView, cursor);
+                updateFavicon(viewHolder.faviconView, cursor);
             } else {
                 viewHolder.titleView.setText(getFolderTitle(position));
             }
-
-            updateFavicon(viewHolder.faviconView, cursor);
 
             return convertView;
         }

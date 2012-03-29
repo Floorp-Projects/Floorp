@@ -616,6 +616,16 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
                     delete event;
                 }
             }
+        } else if (ae->Type() == AndroidGeckoEvent::COMPOSITOR_PAUSE ||
+                   ae->Type() == AndroidGeckoEvent::COMPOSITOR_RESUME) {
+            // Give priority to these events, but maintain their order wrt each other.
+            int i = 0;
+            while (i < mEventQueue.Length() &&
+                   (mEventQueue[i]->Type() == AndroidGeckoEvent::COMPOSITOR_PAUSE ||
+                    mEventQueue[i]->Type() == AndroidGeckoEvent::COMPOSITOR_RESUME)) {
+                i++;
+            }
+            mEventQueue.InsertElementAt(i, ae);
         } else if (ae->Type() == AndroidGeckoEvent::SENSOR_EVENT) {
             if (!mPendingSensorEvents)
                 mEventQueue.AppendElement(ae);

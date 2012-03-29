@@ -1876,15 +1876,6 @@ AndroidBridge::IsTablet()
 }
 
 void
-AndroidBridge::SetCompositorParent(mozilla::layers::CompositorParent* aCompositorParent,
-                                   ::base::Thread* aCompositorThread)
-{
-#ifdef MOZ_JAVA_COMPOSITOR
-    nsWindow::SetCompositorParent(aCompositorParent, aCompositorThread);
-#endif
-}
-
-void
 AndroidBridge::SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight)
 {
     AndroidGeckoLayerClient *client = mLayerClient;

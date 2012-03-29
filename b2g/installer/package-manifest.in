@@ -297,6 +297,8 @@
 ; JavaScript components
 @BINPATH@/components/ConsoleAPI.manifest
 @BINPATH@/components/ConsoleAPI.js
+@BINPATH@/components/BrowserElementAPI.manifest
+@BINPATH@/components/BrowserElementAPI.js
 @BINPATH@/components/ContactManager.js
 @BINPATH@/components/ContactManager.manifest
 @BINPATH@/components/FeedProcessor.manifest

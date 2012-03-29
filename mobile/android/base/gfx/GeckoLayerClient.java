@@ -396,18 +396,28 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
     /** Implementation of FlexibleGLSurfaceView.Listener */
     public void compositionPauseRequested() {
-        GeckoAppShell.schedulePauseComposition();
+        // We need to coordinate with Gecko when pausing composition, to ensure
+        // that Gecko never executes a draw event while the compositor is paused.
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createCompositorPauseEvent());
     }
 
     /** Implementation of FlexibleGLSurfaceView.Listener */
     public void compositionResumeRequested() {
+        // Asking Gecko to resume the compositor takes too long (see
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=735230#c23), so we
+        // resume the compositor directly. We still need to inform Gecko about
+        // the compositor resuming, so that Gecko knows that it can now draw.
         GeckoAppShell.scheduleResumeComposition();
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createCompositorResumeEvent());
     }
 
     /** Implementation of FlexibleGLSurfaceView.Listener */
     public void surfaceChanged(int width, int height) {
-        compositionPauseRequested();
         mLayerController.setViewportSize(new FloatSize(width, height));
+
+        // We need to make this call even when the compositor isn't currently
+        // paused (e.g. during an orientation change), to make the compositor
+        // aware of the changed surface.
         compositionResumeRequested();
         renderRequested();
     }

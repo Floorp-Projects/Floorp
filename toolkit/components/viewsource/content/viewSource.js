@@ -38,9 +38,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-var gPrefs = null;
 
 var gLastLineFound = '';
 var gGoToLine = 0;
@@ -71,13 +72,6 @@ __defineGetter__("gPageLoader", function () {
   delete this.gPageLoader;
   return this.gPageLoader = webnav.QueryInterface(Ci.nsIWebPageDescriptor);
 });
-
-try {
-  var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                              .getService(Components.interfaces.nsIPrefService);
-  gPrefs = prefService.getBranch(null);
-} catch (ex) {
-}
 
 var gSelectionListener = {
   timeout: 0,
@@ -219,22 +213,14 @@ function viewSource(url)
 
   // Check the view_source.wrap_long_lines pref and set the menuitem's checked
   // attribute accordingly.
-  if (gPrefs) {
-    try {
-      var wraplonglinesPrefValue = gPrefs.getBoolPref("view_source.wrap_long_lines");
+  var wraplonglinesPrefValue = Services.prefs.getBoolPref("view_source.wrap_long_lines");
 
-      if (wraplonglinesPrefValue)
-        document.getElementById("menu_wrapLongLines").setAttribute("checked", "true");
-    } catch (ex) {
-    }
-    try {
-      document.getElementById("menu_highlightSyntax").setAttribute("checked",
-        gPrefs.getBoolPref("view_source.syntax_highlight"));
-    } catch (ex) {
-    }
-  } else {
-    document.getElementById("menu_highlightSyntax").setAttribute("hidden", "true");
-  }
+  if (wraplonglinesPrefValue)
+    document.getElementById("menu_wrapLongLines").setAttribute("checked", "true");
+
+  document.getElementById("menu_highlightSyntax")
+          .setAttribute("checked",
+                        Services.prefs.getBoolPref("view_source.syntax_highlight"));
 
   window.addEventListener("AppCommand", HandleAppCommandEvent, true);
   window.addEventListener("MozSwipeGesture", HandleSwipeGesture, true);
@@ -286,16 +272,13 @@ function onClickContent(event) {
 
   var target = event.originalTarget;
   var errorDoc = target.ownerDocument;
-  
-  var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
-                    .getService(Ci.nsIURLFormatter);
 
   if (/^about:blocked/.test(errorDoc.documentURI)) {
     // The event came from a button on a malware/phishing block page
     // First check whether it's malware or phishing, so that we can
     // use the right strings/links
     var isMalware = /e=malwareBlocked/.test(errorDoc.documentURI);
-    
+
     if (target == errorDoc.getElementById('getMeOutButton')) {
       // Instead of loading some safe page, just close the window
       window.close();
@@ -308,7 +291,7 @@ function onClickContent(event) {
         // Get the stop badware "why is this blocked" report url,
         // append the current url, and go there.
         try {
-          let reportURL = formatter.formatURLPref("browser.safebrowsing.malware.reportURL", true);
+          let reportURL = Services.urlFormatter.formatURLPref("browser.safebrowsing.malware.reportURL", true);
           reportURL += errorDoc.location.href.slice(12);
           openURL(reportURL);
         } catch (e) {
@@ -316,7 +299,7 @@ function onClickContent(event) {
         }
       } else { // It's a phishing site, not malware
         try {
-          var infoURL = formatter.formatURLPref("browser.safebrowsing.warning.infoURL", true);
+          var infoURL = Services.urlFormatter.formatURLPref("browser.safebrowsing.warning.infoURL", true);
           openURL(infoURL);
         } catch (e) {
           Components.utils.reportError("Couldn't get phishing info URL: " + e);
@@ -422,12 +405,9 @@ function getWebNavigation()
 
 function ViewSourceGoToLine()
 {
-  var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"]
-                        .getService(Ci.nsIPromptService);
-
   var input = {value:gLastLineFound};
   for (;;) {
-    var ok = promptService.prompt(
+    var ok = Services.prompt.prompt(
         window,
         gViewSourceBundle.getString("goToLineTitle"),
         gViewSourceBundle.getString("goToLineText"),
@@ -441,9 +421,9 @@ function ViewSourceGoToLine()
     var line = parseInt(input.value, 10);
 
     if (!(line > 0)) {
-      promptService.alert(window,
-                          gViewSourceBundle.getString("invalidInputTitle"),
-                          gViewSourceBundle.getString("invalidInputText"));
+      Services.prompt.alert(window,
+                            gViewSourceBundle.getString("invalidInputTitle"),
+                            gViewSourceBundle.getString("invalidInputText"));
 
       continue;
     }
@@ -453,9 +433,9 @@ function ViewSourceGoToLine()
     if (found)
       break;
 
-    promptService.alert(window,
-                        gViewSourceBundle.getString("outOfRangeTitle"),
-                        gViewSourceBundle.getString("outOfRangeText"));
+    Services.prompt.alert(window,
+                          gViewSourceBundle.getString("outOfRangeTitle"),
+                          gViewSourceBundle.getString("outOfRangeText"));
   }
 }
 
@@ -683,22 +663,13 @@ function wrapLongLines()
 
   if (myWrap.className == '')
     myWrap.className = 'wrap';
-  else myWrap.className = '';
+  else
+    myWrap.className = '';
 
   // Since multiple viewsource windows are possible, another window could have
   // affected the pref, so instead of determining the new pref value via the current
   // pref value, we use myWrap.className.
-  if (gPrefs) {
-    try {
-      if (myWrap.className == '') {
-        gPrefs.setBoolPref("view_source.wrap_long_lines", false);
-      }
-      else {
-        gPrefs.setBoolPref("view_source.wrap_long_lines", true);
-      }
-    } catch (ex) {
-    }
-  }
+  Services.prefs.setBoolPref("view_source.wrap_long_lines", myWrap.className != '');
 }
 
 // Toggles syntax highlighting and sets the view_source.syntax_highlight
@@ -707,7 +678,7 @@ function highlightSyntax()
 {
   var highlightSyntaxMenu = document.getElementById("menu_highlightSyntax");
   var highlightSyntax = (highlightSyntaxMenu.getAttribute("checked") == "true");
-  gPrefs.setBoolPref("view_source.syntax_highlight", highlightSyntax);
+  Services.prefs.setBoolPref("view_source.syntax_highlight", highlightSyntax);
 
   gPageLoader.loadPage(gPageLoader.currentDescriptor, gPageLoader.DISPLAY_NORMAL);
 }
