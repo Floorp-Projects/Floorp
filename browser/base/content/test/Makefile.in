@@ -226,6 +226,7 @@ _BROWSER_FILES = \
                  browser_urlbarCopying.js \
                  browser_urlbarEnter.js \
                  browser_urlbarRevert.js \
+                 browser_urlbarStop.js \
                  browser_urlbarTrimURLs.js \
                  browser_urlHighlight.js \
                  browser_visibleFindSelection.js \
