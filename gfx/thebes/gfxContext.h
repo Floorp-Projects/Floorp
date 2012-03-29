@@ -54,6 +54,7 @@
 #include "mozilla/gfx/2D.h"
 
 typedef struct _cairo cairo_t;
+struct GlyphBufferAzure;
 template <typename T> class FallibleTArray;
 
 /**
@@ -717,6 +718,7 @@ public:
 
 private:
   friend class GeneralPattern;
+  friend class GlyphBufferAzure;
 
   typedef mozilla::gfx::Matrix Matrix;
   typedef mozilla::gfx::DrawTarget DrawTarget;
