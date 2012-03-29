@@ -874,7 +874,7 @@ nsGenericDOMDataNode::GetText()
 }
 
 PRUint32
-nsGenericDOMDataNode::TextLength()
+nsGenericDOMDataNode::TextLength() const
 {
   return mText.GetLength();
 }
