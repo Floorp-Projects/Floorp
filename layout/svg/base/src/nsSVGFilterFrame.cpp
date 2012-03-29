@@ -303,9 +303,9 @@ nsSVGFilterFrame::GetLengthValue(PRUint32 aIndex, nsIContent *aDefault)
 const nsSVGFilterElement *
 nsSVGFilterFrame::GetFilterContent(nsIContent *aDefault)
 {
-  PRUint32 count = mContent->GetChildCount();
-  for (PRUint32 i = 0; i < count; ++i) {
-    nsIContent* child = mContent->GetChildAt(i);
+  for (nsIContent* child = mContent->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
     nsRefPtr<nsSVGFE> primitive;
     CallQueryInterface(child, (nsSVGFE**)getter_AddRefs(primitive));
     if (primitive) {
