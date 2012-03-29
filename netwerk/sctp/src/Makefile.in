@@ -1,0 +1,115 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = \
+  @srcdir@ \
+  @srcdir@/netinet \
+  @srcdir@/netinet6 \
+  $(NULL)
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE         = necko
+LIBRARY_NAME   = nksctp_s
+LIBXUL_LIBRARY = 1
+XPIDL_MODULE   = necko_sctp
+GRE_MODULE     = 1
+FORCE_STATIC_LIB = 1
+
+EXPORTS_NAMESPACES = mozilla/net
+
+XPIDLSRCS = \
+  $(NULL)
+
+CSRCS = \
+  user_environment.c \
+  user_mbuf.c \
+  user_recv_thread.c \
+  user_sctp_timer_iterate.c \
+  user_socket.c \
+  sctp_asconf.c \
+  sctp_auth.c \
+  sctp_bsd_addr.c \
+  sctp_callout.c \
+  sctp_cc_functions.c \
+  sctp_crc32.c \
+  sctp_hashdriver.c \
+  sctp_indata.c \
+  sctp_input.c \
+  sctp_output.c \
+  sctp_pcb.c \
+  sctp_peeloff.c \
+  sctp_sha1.c \
+  sctp_ss_functions.c \
+  sctp_sysctl.c \
+  sctp_userspace.c \
+  sctp_timer.c \
+  sctp_usrreq.c \
+  sctputil.c \
+  sctp6_usrreq.c \
+  $(NULL)
+
+EXPORTS_mozilla/net = \
+  usrsctp.h \
+  $(NULL)
+
+LOCAL_INCLUDES = \
+  -I$(srcdir)/../../base/src \
+  -I$(topsrcdir)/content/base/src \
+  -I$(topsrcdir)/content/events/src \
+  -I$(topsrcdir)/xpcom/ds \
+  $(NULL)
+
+DEFINES = \
+  -DSCTP_SIMPLE_ALLOCATOR=1 \
+  -DUSE_SCTP_SHA1=1 \
+  -DSCTP_PROCESS_LEVEL_LOCKS=1 \
+  -D__Userspace__=1 \
+  -DINET=1 \
+  -DINET6=1 \
+  -DCALLBACK_API=1 \
+  -DSCTP_DEBUG=1 \
+  $(NULL)
+
+ifeq ($(OS_TARGET),WINNT)
+DEFINES += \
+  -D__Userspace_os_Windows=1 \
+  -D_LIB=1 \
+  $(NULL)
+else
+ifeq ($(OS_TARGET),Darwin)
+DEFINES += \
+  -D__Userspace_os_Darwin=1 \
+  -D__APPLE_USE_RFC_2292=1 \
+  -U__APPLE__ \
+  $(NULL)
+else
+ifeq ($(OS_TARGET),Linux)
+DEFINES += -D__Userspace_os_Linux=1
+else
+ifeq ($(OS_TARGET),FreeBSD)
+DEFINES += \
+  -D__Userspace_os_FreeBSD=1 \
+  -U__FreeBSD__ \
+  $(NULL)
+else
+#error Unsupported platform!
+endif
+endif
+endif
+endif
+
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+include $(topsrcdir)/config/rules.mk
+
+ifdef GNU_CC
+CFLAGS += -std=gnu99
+endif
+
+DEFINES += -DIMPL_NS_NET

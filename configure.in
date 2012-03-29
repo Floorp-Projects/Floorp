@@ -2977,10 +2977,44 @@ dnl These are all the places some variant of statfs can be hiding.
 MOZ_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 
 dnl Quota support
+dnl SCTP support - needs various network include headers
 MOZ_CHECK_HEADERS(sys/quota.h sys/sysmacros.h)
-MOZ_CHECK_HEADERS(linux/quota.h)
+MOZ_CHECK_HEADERS([linux/quota.h linux/if_addr.h linux/rtnetlink.h],,,[#include <sys/socket.h>])
 
 MOZ_CHECK_HEADERS(sys/types.h netinet/in.h byteswap.h)
+
+dnl Check for sin_len and sin6_len - used by SCTP; only appears in Mac/*BSD generally
+AC_CACHE_CHECK(for sockaddr_in.sin_len,
+                   ac_cv_sockaddr_in_sin_len,
+                   [AC_TRY_COMPILE([#ifdef HAVE_SYS_TYPES_H
+                                    #include <sys/types.h>
+                                    #endif
+                                    #include <netinet/in.h>
+                                    struct sockaddr_in x;
+                                    void *foo = (void*) &x.sin_len;],
+                                   [],
+                                   [ac_cv_sockaddr_in_sin_len=true],
+                                   [ac_cv_sockaddr_in_sin_len=false])])
+if test "$ac_cv_sockaddr_in_sin_len" = true ; then
+  AC_DEFINE(HAVE_SIN_LEN)
+dnl HAVE_CONN_LEN must be the same as HAVE_SIN_LEN (and HAVE_SIN6_LEN too)
+  AC_DEFINE(HAVE_CONN_LEN)
+fi
+
+AC_CACHE_CHECK(for sockaddr_in6.sin6_len,
+               ac_cv_sockaddr_in6_sin6_len,
+               [AC_TRY_COMPILE([#ifdef HAVE_SYS_TYPES_H
+                                #include <sys/types.h>
+                                #endif
+                                #include <netinet/in.h>
+                                struct sockaddr_in6 x;
+                                void *foo = (void*) &x.sin6_len;],
+                               [],
+                               [ac_cv_sockaddr_in6_sin6_len=true],
+                               [ac_cv_sockaddr_in6_sin6_len=false])])
+if test "$ac_cv_sockaddr_in6_sin6_len" = true ; then
+  AC_DEFINE(HAVE_SIN6_LEN)
+fi
 
 dnl Check whether the compiler supports the new-style C++ standard
 dnl library headers (i.e. <new>) or needs the old "new.h"
@@ -4193,6 +4227,7 @@ MOZ_DASH=
 MOZ_WEBRTC=1
 MOZ_SRTP=
 MOZ_WEBRTC_SIGNALING=
+MOZ_SCTP=
 MOZ_MEDIA_PLUGINS=
 MOZ_MEDIA_NAVIGATOR=
 MOZ_OMX_PLUGIN=
@@ -5188,11 +5223,14 @@ if test -n "$MOZ_WEBRTC"; then
     MOZ_VP8=1
     MOZ_VP8_ENCODER=1
     MOZ_VP8_ERROR_CONCEALMENT=1
+    MOZ_SCTP=1
     MOZ_SRTP=1
+    AC_DEFINE(MOZ_SCTP)
     AC_DEFINE(MOZ_SRTP)
 fi
 
 AC_SUBST(MOZ_WEBRTC)
+AC_SUBST(MOZ_SCTP)
 AC_SUBST(MOZ_SRTP)
 
 case "$target_cpu" in
