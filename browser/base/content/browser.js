@@ -7825,13 +7825,20 @@ function undoCloseWindow(aIndex) {
  * if it's ok to close the tab.
  */
 function isTabEmpty(aTab) {
+  if (aTab.hasAttribute("busy"))
+    return false;
+
   let browser = aTab.linkedBrowser;
-  let uri = browser.currentURI.spec;
-  let body = browser.contentDocument.body;
-  return browser.sessionHistory.count < 2 &&
-         isBlankPageURL(uri) &&
-         (!body || !body.hasChildNodes()) &&
-         !aTab.hasAttribute("busy");
+  if (!isBlankPageURL(browser.currentURI.spec))
+    return false;
+
+  if (browser.contentWindow.opener)
+    return false;
+
+  if (browser.sessionHistory && browser.sessionHistory.count >= 2)
+    return false;
+
+  return true;
 }
 
 #ifdef MOZ_SERVICES_SYNC
