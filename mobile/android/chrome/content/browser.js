@@ -236,7 +236,6 @@ var BrowserApp = {
     CharacterEncoding.init();
     SearchEngines.init();
     ActivityObserver.init();
-    WebappsUI.init();
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -416,7 +415,6 @@ var BrowserApp = {
     ConsoleAPI.uninit();
     CharacterEncoding.uninit();
     SearchEngines.uninit();
-    WebappsUI.uninit();
   },
 
   // This function returns false during periods where the browser displayed document is
