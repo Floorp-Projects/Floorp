@@ -87,7 +87,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool generateEpilogue();
     bool generateOutOfLineCode();
 
-    bool emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail);
+    void emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail, bool negativeZeroCheck = true);
     void emitRoundDouble(const FloatRegister &src, const Register &dest, Label *fail);
 
     // Emits a conditional set.

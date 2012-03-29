@@ -539,9 +539,9 @@ NeedNegativeZeroCheck(MDefinition *def)
         switch (use_def->op()) {
           case MDefinition::Op_Add: {
             // x + y gives -0, when both x and y are -0
-            // - When other operand can't produce -0 (i.e. all opcodes, except MUL/DIV)
+            // - When other operand can't produce -0 (i.e. all opcodes, except Mul/Div/ToInt32)
             //   Remove negative zero check on this operand 
-            // - When both operands can produce -0 (both MUL/DIV opcode)
+            // - When both operands can produce -0 (both Mul/Div/ToInt32 opcode)
             //   We can remove the check eagerly on this operand.
             MDefinition *operand = use_def->getOperand(0);
             if (operand == def) {
@@ -563,22 +563,48 @@ NeedNegativeZeroCheck(MDefinition *def)
                 MDiv *div = operand->toDiv();
                 if (!div->canBeNegativeZero())
                     return true;
+            } else if (operand->isToInt32()) {
+                MToInt32 *int32 = operand->toToInt32();
+                if (!int32->canBeNegativeZero())
+                    return true;
             } else if (operand->isPhi()) {
                 return true;
             }
             break;
           }
+          case MDefinition::Op_StoreElement:
+          case MDefinition::Op_StoreElementHole:
+          case MDefinition::Op_LoadElement:
+          case MDefinition::Op_LoadElementHole:
+          case MDefinition::Op_LoadTypedArrayElement:
+          case MDefinition::Op_LoadTypedArrayElementHole:
+          case MDefinition::Op_CharCodeAt:
           case MDefinition::Op_Mod:
           case MDefinition::Op_Sub:
-            // If the Mul/Div is the first operand. We still need the check
+            // Only allowed to remove check when definition is the second operand
             if (use_def->getOperand(0) == def)
                 return true;
+            if (use_def->numOperands() > 2) {
+                for (size_t i = 2; i < use_def->numOperands(); i++) {
+                    if (use_def->getOperand(i) == def)
+                        return true;
+                }
+            }
             break;
+          case MDefinition::Op_BoundsCheck:
+            // Only allowed to remove check when definition is the first operand
+            if (use_def->getOperand(1) == def)
+                return true;
+            break;
+          case MDefinition::Op_ToString:
+          case MDefinition::Op_FromCharCode:
+          case MDefinition::Op_TableSwitch:
           case MDefinition::Op_Compare:
           case MDefinition::Op_BitAnd:
           case MDefinition::Op_BitOr:
           case MDefinition::Op_BitXor:
           case MDefinition::Op_Abs:
+            // Always allowed to remove check. No matter which operand.
             break;
           default:
             return true;
@@ -989,6 +1015,12 @@ MToInt32::foldsTo(bool useValueNumbers)
     if (input->type() == MIRType_Int32)
         return input;
     return this;
+}
+
+void
+MToInt32::analyzeRange()
+{
+    canBeNegativeZero_ = NeedNegativeZeroCheck(this);
 }
 
 MDefinition *

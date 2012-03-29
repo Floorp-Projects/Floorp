@@ -1163,6 +1163,9 @@ class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 1>
     const LDefinition *output() {
         return getDef(0);
     }
+    MToInt32 *mir() const {
+        return mir_->toToInt32();
+    }
 };
 
 // Convert a double to an int32.
@@ -1181,8 +1184,13 @@ class LDoubleToInt32 : public LInstructionHelper<1, 1, 0>
     const LAllocation *input() {
         return getOperand(0);
     }
+
     const LDefinition *output() {
         return getDef(0);
+    }
+
+    MToInt32 *mir() const {
+        return mir_->toToInt32();
     }
 };
 
