@@ -925,13 +925,12 @@ nsXULElement::UnbindFromTree(bool aDeep, bool aNullParent)
     nsStyledElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-nsresult
+void
 nsXULElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 {
-    nsresult rv;
     nsCOMPtr<nsIContent> oldKid = mAttrsAndChildren.GetSafeChildAt(aIndex);
     if (!oldKid) {
-      return NS_OK;
+      return;
     }
 
     // On the removal of a <treeitem>, <treechildren>, or <treecell> element,
@@ -954,7 +953,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 
       // If it's not, look at our parent
       if (!controlElement)
-        rv = GetParentTree(getter_AddRefs(controlElement));
+        GetParentTree(getter_AddRefs(controlElement));
 
       nsCOMPtr<nsIDOMElement> oldKidElem = do_QueryInterface(oldKid);
       if (controlElement && oldKidElem) {
@@ -994,7 +993,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
       }
     }
 
-    rv = nsStyledElement::RemoveChildAt(aIndex, aNotify);
+    nsStyledElement::RemoveChildAt(aIndex, aNotify);
     
     if (newCurrentIndex == -2)
         controlElement->SetCurrentItem(nsnull);
@@ -1022,8 +1021,6 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
                                            false,
                                            true);
     }
-
-    return rv;
 }
 
 void

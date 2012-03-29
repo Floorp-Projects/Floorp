@@ -680,10 +680,9 @@ nsGenericDOMDataNode::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
   return NS_OK;
 }
 
-nsresult
+void
 nsGenericDOMDataNode::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 {
-  return NS_OK;
 }
 
 nsIContent *

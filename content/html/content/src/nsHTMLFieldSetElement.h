@@ -84,7 +84,7 @@ public:
 
   virtual nsresult InsertChildAt(nsIContent* aChild, PRUint32 aIndex,
                                      bool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, bool aNotify);
+  virtual void RemoveChildAt(PRUint32 aIndex, bool aNotify);
 
   // nsIFormControl
   NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_FIELDSET; }
