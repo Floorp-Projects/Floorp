@@ -24,7 +24,9 @@ function test() {
         Services.obs.addObserver(whenNodeRemoved, NODE_REMOVED, false);
 
         presenter._onSetupMesh = function() {
-          presenter.highlightNodeAt(presenter.canvas.width / 2, 10, {
+          let p = getPickablePoint(presenter);
+
+          presenter.highlightNodeAt(p[0], p[1], {
             onpick: function()
             {
               ok(presenter._currentSelection > 0,

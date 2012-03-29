@@ -67,6 +67,8 @@ _BROWSER_TEST_FILES = \
   browser_bug_592743_specificity.js \
   browser_ruleview_bug_703643_context_menu_copy.js \
   browser_computedview_bug_703643_context_menu_copy.js \
+  browser_ruleview_734259_style_editor_link.js \
+  browser_computedview_734259_style_editor_link.js \
   head.js \
   $(NULL)
 
