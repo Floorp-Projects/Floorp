@@ -42,6 +42,12 @@ SHARED_LIBRARY_LIBS += \
   $(NULL)
 endif
 
+ifdef MOZ_SCTP
+SHARED_LIBRARY_LIBS += \
+  ../sctp/src/$(LIB_PREFIX)nksctp_s.$(LIB_SUFFIX) \
+  $(NULL)
+endif
+
 ifeq ($(OS_ARCH),WINNT)
     SHARED_LIBRARY_LIBS += \
         ../system/win32/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
