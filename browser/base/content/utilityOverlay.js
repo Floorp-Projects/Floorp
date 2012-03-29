@@ -95,9 +95,9 @@ function getTopWin(skipPopups) {
   return Services.wm.getMostRecentWindow("navigator:browser");
 }
 
-function openTopWin( url )
-{
-  openUILink(url, {})
+function openTopWin(url) {
+  /* deprecated */
+  openUILinkIn(url, "current");
 }
 
 function getBoolPref(prefname, def)
