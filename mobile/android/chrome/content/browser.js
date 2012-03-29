@@ -326,29 +326,6 @@ var BrowserApp = {
         "value": Services.prefs.getBoolPref("gfx.show_checkerboard_pattern")
       }
     });
-
-    if (this.isAppUpdated())
-      this.onAppUpdated();
-  },
-
-  isAppUpdated: function() {
-    let savedmstone = null;
-    try {
-      savedmstone = Services.prefs.getCharPref("browser.startup.homepage_override.mstone");
-    } catch (e) {
-    }
-#expand    let ourmstone = "__MOZ_APP_VERSION__";
-    if (ourmstone != savedmstone) {
-      Services.prefs.setCharPref("browser.startup.homepage_override.mstone", ourmstone);
-      return savedmstone ? "upgrade" : "new";
-    }
-    return "";
-  },
-
-  onAppUpdated: function() {
-    // initialize the form history and passwords databases on upgrades
-    Services.obs.notifyObservers(null, "FormHistory:Init", "");
-    Services.obs.notifyObservers(null, "Passwords:Init", "");
   },
 
   _showTelemetryPrompt: function _showTelemetryPrompt() {
@@ -937,14 +914,14 @@ var BrowserApp = {
       if (this.isBrowserContentDocumentDisplayed())
         this.selectedTab.setViewport(JSON.parse(aData));
     } else if (aTopic == "Passwords:Init") {
-      // Force creation/upgrade of signons.sqlite
-      let storage = Cc["@mozilla.org/login-manager/storage/mozStorage;1"].getService(Ci.nsILoginManagerStorage);
+      var storage = Components.classes["@mozilla.org/login-manager/storage/mozStorage;1"].
+        getService(Components.interfaces.nsILoginManagerStorage);
       storage.init();
 
       sendMessageToJava({gecko: { type: "Passwords:Init:Return" }});
       Services.obs.removeObserver(this, "Passwords:Init", false);
     } else if (aTopic == "FormHistory:Init") {
-      let fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
+      var fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
       // Force creation/upgrade of formhistory.sqlite
       let db = fh.DBConnection;
       sendMessageToJava({gecko: { type: "FormHistory:Init:Return" }});
