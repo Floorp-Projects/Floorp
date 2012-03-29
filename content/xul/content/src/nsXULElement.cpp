@@ -808,12 +808,11 @@ nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
         if (aHandler) {
             NS_ASSERTION(!attr->mEventHandler, "Leaking handler.");
 
-            rv = nsContentUtils::HoldScriptObject(aContext->GetScriptTypeID(),
-                                                  elem,
-                                                  &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode),
-                                                  aHandler.get(),
-                                                  elem->mHoldsScriptObject);
-            if (NS_FAILED(rv)) return rv;
+            if (!elem->mHoldsScriptObject) {
+                rv = nsContentUtils::HoldJSObjects(
+                    elem, &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
+                NS_ENSURE_SUCCESS(rv, rv);
+            }
 
             elem->mHoldsScriptObject = true;
         }
@@ -2902,8 +2901,7 @@ void
 nsXULPrototypeElement::Unlink()
 {
     if (mHoldsScriptObject) {
-        nsContentUtils::DropScriptObjects(mScriptTypeID, this,
-                                          &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
+        nsContentUtils::DropJSObjects(this);
         mHoldsScriptObject = false;
     }
     mNumAttributes = 0;
@@ -3182,8 +3180,7 @@ void
 nsXULPrototypeScript::UnlinkJSObjects()
 {
     if (mScriptObject.mObject) {
-        nsContentUtils::DropScriptObjects(mScriptObject.mLangID, this,
-                                          &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
+        nsContentUtils::DropJSObjects(this);
         mScriptObject.mObject = nsnull;
     }
 }
@@ -3194,14 +3191,11 @@ nsXULPrototypeScript::Set(JSScript* aObject)
     NS_ASSERTION(!mScriptObject.mObject, "Leaking script object.");
     if (!aObject) {
         mScriptObject.mObject = nsnull;
-
         return;
     }
 
-    nsresult rv = nsContentUtils::HoldScriptObject(mScriptObject.mLangID,
-                                                   this,
-                                                   &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode),
-                                                   aObject, false);
+    nsresult rv = nsContentUtils::HoldJSObjects(
+        this, &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
     if (NS_SUCCEEDED(rv)) {
         mScriptObject.mObject = aObject;
     }
