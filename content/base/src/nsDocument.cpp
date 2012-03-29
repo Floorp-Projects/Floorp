@@ -3517,12 +3517,12 @@ nsDocument::AppendChildTo(nsIContent* aKid, bool aNotify)
   return nsDocument::InsertChildAt(aKid, GetChildCount(), aNotify);
 }
 
-nsresult
+void
 nsDocument::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 {
   nsCOMPtr<nsIContent> oldKid = GetChildAt(aIndex);
   if (!oldKid) {
-    return NS_OK;
+    return;
   }
 
   if (oldKid->IsElement()) {
@@ -3532,7 +3532,6 @@ nsDocument::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 
   doRemoveChildAt(aIndex, aNotify, oldKid, mChildren);
   mCachedRootElement = nsnull;
-  return NS_OK;
 }
 
 PRInt32
@@ -5988,7 +5987,6 @@ BlastFunc(nsAttrHashKey::KeyType aKey, nsDOMAttribute *aData, void* aUserArg)
 static void
 BlastSubtreeToPieces(nsINode *aNode)
 {
-  PRUint32 i, count;
   if (aNode->IsElement()) {
     nsGenericElement *element = static_cast<nsGenericElement*>(aNode);
     const nsDOMAttributeMap *map = element->GetAttributeMap();
@@ -6010,16 +6008,10 @@ BlastSubtreeToPieces(nsINode *aNode)
     }
   }
 
-  count = aNode->GetChildCount();
-  for (i = 0; i < count; ++i) {
+  PRUint32 count = aNode->GetChildCount();
+  for (PRUint32 i = 0; i < count; ++i) {
     BlastSubtreeToPieces(aNode->GetFirstChild());
-#ifdef DEBUG
-    nsresult rv =
-#endif
-      aNode->RemoveChildAt(0, false);
-
-    // XXX Should we abort here?
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Uhoh, RemoveChildAt shouldn't fail!");
+    aNode->RemoveChildAt(0, false);
   }
 }
 
@@ -6123,8 +6115,7 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
       // Remove from parent.
       nsCOMPtr<nsINode> parent = adoptedNode->GetNodeParent();
       if (parent) {
-        rv = parent->RemoveChildAt(parent->IndexOf(adoptedNode), true);
-        NS_ENSURE_SUCCESS(rv, rv);
+        parent->RemoveChildAt(parent->IndexOf(adoptedNode), true);
       }
 
       break;
