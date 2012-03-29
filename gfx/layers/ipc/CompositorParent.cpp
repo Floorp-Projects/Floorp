@@ -78,14 +78,24 @@ CompositorParent::Destroy()
   NS_ABORT_IF_FALSE(ManagedPLayersParent().Length() == 0,
                     "CompositorParent destroyed before managed PLayersParent");
 
-  // Ensure that the layer manager is destroyed on the compositor thread.
+  // Ensure that the layer manager is destructed on the compositor thread.
   mLayerManager = NULL;
+}
+
+bool
+CompositorParent::RecvWillStop()
+{
+  mPaused = true;
+
+  // Ensure that the layer manager is destroyed before CompositorChild.
+  mLayerManager->Destroy();
+
+  return true;
 }
 
 bool
 CompositorParent::RecvStop()
 {
-  mPaused = true;
   Destroy();
   return true;
 }

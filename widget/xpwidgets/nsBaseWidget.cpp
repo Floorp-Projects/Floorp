@@ -153,6 +153,8 @@ nsBaseWidget::~nsBaseWidget()
   }
 
   if (mCompositorChild) {
+    mCompositorChild->SendWillStop();
+    MessageLoop::current()->RunAllPending();
     mCompositorChild->Destroy();
     delete mCompositorThread;
   }
