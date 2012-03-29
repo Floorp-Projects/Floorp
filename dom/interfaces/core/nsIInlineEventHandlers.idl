@@ -82,6 +82,8 @@ interface nsIInlineEventHandlers : nsISupports
   // [implicit_jscontext] attribute jsval onmousewheel;
   [implicit_jscontext] attribute jsval onmozfullscreenchange;
   [implicit_jscontext] attribute jsval onmozfullscreenerror;
+  [implicit_jscontext] attribute jsval onmozpointerlockchange;
+  [implicit_jscontext] attribute jsval onmozpointerlockerror;
   [implicit_jscontext] attribute jsval onpause;
   [implicit_jscontext] attribute jsval onplay;
   [implicit_jscontext] attribute jsval onplaying;
