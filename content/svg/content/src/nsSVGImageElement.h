@@ -58,8 +58,8 @@ class nsSVGImageElement : public nsSVGImageElementBase,
 
 protected:
   friend nsresult NS_NewSVGImageElement(nsIContent **aResult,
-                                        already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGImageElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                        already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGImageElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsSVGImageElement();
 
 public:
@@ -93,7 +93,7 @@ public:
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   nsresult CopyInnerTo(nsGenericElement* aDest) const;
 

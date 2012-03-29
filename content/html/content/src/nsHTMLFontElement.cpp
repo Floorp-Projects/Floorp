@@ -55,7 +55,7 @@ class nsHTMLFontElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLFontElement
 {
 public:
-  nsHTMLFontElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLFontElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLFontElement();
 
   // nsISupports
@@ -79,7 +79,7 @@ public:
                                 nsAttrValue& aResult);
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
 };
 
@@ -87,7 +87,7 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Font)
 
 
-nsHTMLFontElement::nsHTMLFontElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLFontElement::nsHTMLFontElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

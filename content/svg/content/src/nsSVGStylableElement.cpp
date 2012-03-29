@@ -53,7 +53,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGStylableElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGStylableElement::nsSVGStylableElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGStylableElement::nsSVGStylableElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGStylableElementBase(aNodeInfo)
 {
 }

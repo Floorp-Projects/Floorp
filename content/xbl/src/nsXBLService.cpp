@@ -1021,7 +1021,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
       info = bindingManager->GetXBLDocumentInfo(documentURI);
     }
 
-    nsINodeInfo *ni = nsnull;
+    nsNodeInfo *ni = nsnull;
     if (aBoundElement)
       ni = aBoundElement->NodeInfo();
 

@@ -40,7 +40,7 @@
 #include "nsContentUtils.h" // nsAutoScriptBlocker
 
 nsresult
-NS_NewXMLElement(nsIContent** aInstancePtrResult, already_AddRefed<nsINodeInfo> aNodeInfo)
+NS_NewXMLElement(nsIContent** aInstancePtrResult, already_AddRefed<nsNodeInfo> aNodeInfo)
 {
   nsXMLElement* it = new nsXMLElement(aNodeInfo);
   NS_ADDREF(*aInstancePtrResult = it);
@@ -107,7 +107,7 @@ nsXMLElement::DoGetID() const
 }
 
 void
-nsXMLElement::NodeInfoChanged(nsINodeInfo* aOldNodeInfo)
+nsXMLElement::NodeInfoChanged(nsNodeInfo* aOldNodeInfo)
 {
   NS_ASSERTION(!IsInDoc() ||
                aOldNodeInfo->GetDocument() == mNodeInfo->GetDocument(),

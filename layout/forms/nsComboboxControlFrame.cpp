@@ -69,7 +69,7 @@
 #include "nsTextFragment.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIDocument.h"
-#include "nsINodeInfo.h"
+#include "nsNodeInfo.h"
 #include "nsIScrollableFrame.h"
 #include "nsListControlFrame.h"
 #include "nsContentCID.h"
@@ -1107,7 +1107,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   if (!aElements.AppendElement(mDisplayContent))
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<nsNodeInfo> nodeInfo;
   nodeInfo = nimgr->GetNodeInfo(nsGkAtoms::button, nsnull, kNameSpaceID_XHTML,
                                 nsIDOMNode::ELEMENT_NODE);
 

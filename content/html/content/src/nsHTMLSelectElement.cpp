@@ -138,7 +138,7 @@ nsSafeOptionListMutation::~nsSafeOptionListMutation()
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Select)
 
-nsHTMLSelectElement::nsHTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+nsHTMLSelectElement::nsHTMLSelectElement(already_AddRefed<nsNodeInfo> aNodeInfo,
                                          FromParser aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mOptions(new nsHTMLOptionCollection(this)),
@@ -779,7 +779,7 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
     }
     
     // This violates the W3C DOM but we do this for backwards compatibility
-    nsCOMPtr<nsINodeInfo> nodeInfo;
+    nsRefPtr<nsNodeInfo> nodeInfo;
 
     nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::option,
                                 getter_AddRefs(nodeInfo));

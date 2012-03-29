@@ -633,7 +633,7 @@ ImageDocument::CreateSyntheticDocument()
   Element* head = GetHeadElement();
   NS_ENSURE_TRUE(head, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<nsNodeInfo> nodeInfo;
   if (nsContentUtils::IsChildOfSameType(this)) {
     nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::style, nsnull,
                                              kNameSpaceID_XHTML,

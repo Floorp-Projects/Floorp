@@ -70,7 +70,7 @@ enum SeparatorType
 NS_IMPL_NS_NEW_HTML_ELEMENT(Menu)
 
 
-nsHTMLMenuElement::nsHTMLMenuElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLMenuElement::nsHTMLMenuElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo), mType(MENU_TYPE_LIST)
 {
 }

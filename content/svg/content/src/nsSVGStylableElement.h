@@ -50,7 +50,7 @@ class nsSVGStylableElement : public nsSVGStylableElementBase,
                              public nsIDOMSVGStylable
 {
 protected:
-  nsSVGStylableElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGStylableElement(already_AddRefed<nsNodeInfo> aNodeInfo);
 
 public:
   // interfaces:

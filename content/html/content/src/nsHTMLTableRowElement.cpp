@@ -58,7 +58,7 @@ class nsHTMLTableRowElement : public nsGenericHTMLElement,
                               public nsIDOMHTMLTableRowElement
 {
 public:
-  nsHTMLTableRowElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLTableRowElement(already_AddRefed<nsNodeInfo> aNodeInfo);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -82,7 +82,7 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 
@@ -99,7 +99,7 @@ protected:
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableRow)
 
 
-nsHTMLTableRowElement::nsHTMLTableRowElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLTableRowElement::nsHTMLTableRowElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
@@ -281,7 +281,7 @@ nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
   }
 
   // create the cell
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<nsNodeInfo> nodeInfo;
   nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::td,
                               getter_AddRefs(nodeInfo));
 

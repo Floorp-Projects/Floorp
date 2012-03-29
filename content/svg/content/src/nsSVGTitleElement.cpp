@@ -47,8 +47,8 @@ class nsSVGTitleElement : public nsSVGTitleElementBase,
 {
 protected:
   friend nsresult NS_NewSVGTitleElement(nsIContent **aResult,
-                                        already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGTitleElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                        already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGTitleElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   nsresult Init();
 
 public:
@@ -68,7 +68,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,
@@ -106,7 +106,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGTitleElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGTitleElement::nsSVGTitleElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGTitleElement::nsSVGTitleElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGTitleElementBase(aNodeInfo)
 {
   AddMutationObserver(this);

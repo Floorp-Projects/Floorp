@@ -46,8 +46,8 @@ class nsSVGPolylineElement : public nsSVGPolylineElementBase,
 {
 protected:
   friend nsresult NS_NewSVGPolylineElement(nsIContent **aResult,
-                                           already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGPolylineElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                           already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGPolylineElement(already_AddRefed<nsNodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -61,7 +61,7 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGPolylineElementBase::)
 
   // nsIContent interface
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
 };
 
@@ -85,7 +85,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPolylineElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGPolylineElement::nsSVGPolylineElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGPolylineElement::nsSVGPolylineElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGPolylineElementBase(aNodeInfo)
 {
 

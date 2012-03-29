@@ -92,7 +92,7 @@ public:
   using nsGenericElement::GetText;
   using nsGenericElement::SetText;
 
-  nsHTMLBodyElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLBodyElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLBodyElement();
 
   // nsISupports
@@ -130,7 +130,7 @@ public:
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual already_AddRefed<nsIEditor> GetAssociatedEditor();
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
 private:
   nsresult GetColorHelper(nsIAtom* aAtom, nsAString& aColor);
@@ -300,7 +300,7 @@ BodyRule::List(FILE* out, PRInt32 aIndent) const
 NS_IMPL_NS_NEW_HTML_ELEMENT(Body)
 
 
-nsHTMLBodyElement::nsHTMLBodyElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLBodyElement::nsHTMLBodyElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mContentStyleRule(nsnull)
 {

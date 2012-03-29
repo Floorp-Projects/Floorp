@@ -63,7 +63,7 @@ public:
   using nsGenericElement::GetText;
   using nsGenericElement::SetText;
 
-  nsHTMLAnchorElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLAnchorElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLAnchorElement();
 
   // nsISupports
@@ -132,7 +132,7 @@ public:
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsEventStates IntrinsicState() const;
 
@@ -155,7 +155,7 @@ PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET+1 < 32);
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Anchor)
 
-nsHTMLAnchorElement::nsHTMLAnchorElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLAnchorElement::nsHTMLAnchorElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
   , Link(this)
 {

@@ -53,8 +53,8 @@ class nsSVGTSpanElement : public nsSVGTSpanElementBase, // = nsIDOMSVGTextPositi
 {
 protected:
   friend nsresult NS_NewSVGTSpanElement(nsIContent **aResult,
-                                        already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGTSpanElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                        already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGTSpanElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   
 public:
   // interfaces:
@@ -73,7 +73,7 @@ public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -106,7 +106,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGTSpanElement::nsSVGTSpanElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGTSpanElement::nsSVGTSpanElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGTSpanElementBase(aNodeInfo)
 {
 

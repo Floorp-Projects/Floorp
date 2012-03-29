@@ -61,7 +61,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGAnimateMotionElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGAnimateMotionElement::nsSVGAnimateMotionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGAnimateMotionElement::nsSVGAnimateMotionElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGAnimateMotionElementBase(aNodeInfo)
 {
 }

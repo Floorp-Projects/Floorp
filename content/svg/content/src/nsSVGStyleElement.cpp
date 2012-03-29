@@ -53,8 +53,8 @@ class nsSVGStyleElement : public nsSVGStyleElementBase,
 {
 protected:
   friend nsresult NS_NewSVGStyleElement(nsIContent **aResult,
-                                        already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGStyleElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                        already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGStyleElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -82,7 +82,7 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
@@ -138,7 +138,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGStyleElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGStyleElement::nsSVGStyleElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGStyleElement::nsSVGStyleElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGStyleElementBase(aNodeInfo)
 {
   AddMutationObserver(this);

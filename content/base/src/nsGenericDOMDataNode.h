@@ -70,7 +70,7 @@ class nsIDOMEventListener;
 class nsIDOMNodeList;
 class nsIFrame;
 class nsIDOMText;
-class nsINodeInfo;
+class nsNodeInfo;
 class nsURI;
 
 class nsGenericDOMDataNode : public nsIContent
@@ -80,7 +80,7 @@ public:
 
   NS_DECL_SIZEOF_EXCLUDING_THIS
 
-  nsGenericDOMDataNode(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsGenericDOMDataNode(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsGenericDOMDataNode();
 
   // Implementation for nsIDOMNode
@@ -194,7 +194,7 @@ public:
   virtual already_AddRefed<nsINodeList> GetChildren(PRUint32 aFilter);
 
   virtual nsIAtom *GetIDAttributeName() const;
-  virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
+  virtual already_AddRefed<nsNodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
@@ -254,7 +254,7 @@ public:
                                               PRInt32 aModType) const;
   virtual nsIAtom *GetClassAttributeName() const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const
   {
     *aResult = CloneDataNode(aNodeInfo, true);
     if (!*aResult) {
@@ -346,7 +346,7 @@ protected:
    * @param aCloneText if true the text content will be cloned too
    * @return the clone
    */
-  virtual nsGenericDOMDataNode *CloneDataNode(nsINodeInfo *aNodeInfo,
+  virtual nsGenericDOMDataNode *CloneDataNode(nsNodeInfo *aNodeInfo,
                                               bool aCloneText) const = 0;
 
   nsTextFragment mText;

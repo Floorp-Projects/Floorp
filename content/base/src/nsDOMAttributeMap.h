@@ -53,7 +53,7 @@
 class nsIAtom;
 class nsIContent;
 class nsDOMAttribute;
-class nsINodeInfo;
+class nsNodeInfo;
 class nsIDocument;
 
 namespace mozilla {
@@ -224,12 +224,12 @@ private:
                                   nsIDOMNode** aReturn,
                                   bool aRemove = false);
 
-  nsDOMAttribute* GetAttribute(nsINodeInfo* aNodeInfo, bool aNsAware);
+  nsDOMAttribute* GetAttribute(nsNodeInfo* aNodeInfo, bool aNsAware);
 
   /**
    * Remove an attribute, returns the removed node.
    */
-  nsresult RemoveAttribute(nsINodeInfo*     aNodeInfo,
+  nsresult RemoveAttribute(nsNodeInfo*      aNodeInfo,
                            nsIDOMNode**     aReturn);
 };
 

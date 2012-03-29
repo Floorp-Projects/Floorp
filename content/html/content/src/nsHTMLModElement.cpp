@@ -46,7 +46,7 @@ class nsHTMLModElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLModElement
 {
 public:
-  nsHTMLModElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLModElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLModElement();
 
   // nsISupports
@@ -64,7 +64,7 @@ public:
   // nsIDOMHTMLModElement
   NS_DECL_NSIDOMHTMLMODELEMENT
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -72,7 +72,7 @@ public:
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Mod)
 
-nsHTMLModElement::nsHTMLModElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLModElement::nsHTMLModElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

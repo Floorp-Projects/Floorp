@@ -64,7 +64,6 @@
 #include "nsGkAtoms.h"
 #include "nsIAppShell.h"
 #include "nsIDocument.h"
-#include "nsINodeInfo.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIPluginInstanceOwner.h"

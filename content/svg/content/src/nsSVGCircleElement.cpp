@@ -54,8 +54,8 @@ class nsSVGCircleElement : public nsSVGCircleElementBase,
 {
 protected:
   friend nsresult NS_NewSVGCircleElement(nsIContent **aResult,
-                                         already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGCircleElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                         already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGCircleElement(already_AddRefed<nsNodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -73,7 +73,7 @@ public:
   // nsSVGPathGeometryElement methods:
   virtual void ConstructPath(gfxContext *aCtx);
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -112,7 +112,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGCircleElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGCircleElement::nsSVGCircleElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGCircleElement::nsSVGCircleElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGCircleElementBase(aNodeInfo)
 {
 }

@@ -89,7 +89,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGMpathElementBase)
 #pragma warning(push)
 #pragma warning(disable:4355)
 #endif
-nsSVGMpathElement::nsSVGMpathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGMpathElement::nsSVGMpathElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGMpathElementBase(aNodeInfo),
     mHrefTarget(this)
 #ifdef _MSC_VER

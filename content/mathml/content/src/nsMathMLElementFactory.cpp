@@ -43,7 +43,7 @@
 
 // MathML Element Factory (declared in nsContentCreatorFunctions.h)
 nsresult
-NS_NewMathMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo)
+NS_NewMathMLElement(nsIContent** aResult, already_AddRefed<nsNodeInfo> aNodeInfo)
 {
   aNodeInfo.get()->SetIDAttributeAtom(nsGkAtoms::id);
 

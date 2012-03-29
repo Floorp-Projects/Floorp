@@ -48,7 +48,7 @@ class nsHTMLLabelElement : public nsGenericHTMLFormElement,
                            public nsIDOMHTMLLabelElement
 {
 public:
-  nsHTMLLabelElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLLabelElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLLabelElement();
 
   static nsHTMLLabelElement* FromContent(nsIContent* aPossibleLabel)
@@ -122,7 +122,7 @@ public:
                              bool aNotify);
   virtual void PerformAccesskey(bool aKeyCausesActivation,
                                 bool aIsTrustedEvent);
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 

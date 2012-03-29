@@ -70,7 +70,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGClipPathElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGClipPathElement::nsSVGClipPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGClipPathElement::nsSVGClipPathElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGClipPathElementBase(aNodeInfo)
 {
 }

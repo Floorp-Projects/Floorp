@@ -65,7 +65,7 @@ class nsHTMLCanvasElement : public nsGenericHTMLElement,
   typedef mozilla::layers::LayerManager LayerManager;
 
 public:
-  nsHTMLCanvasElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLCanvasElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLCanvasElement();
 
   static nsHTMLCanvasElement* FromContent(nsIContent* aPossibleCanvas)
@@ -162,7 +162,7 @@ public:
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify);
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
   nsresult CopyInnerTo(nsGenericElement* aDest) const;
 
   /*

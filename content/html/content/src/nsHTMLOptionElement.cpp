@@ -70,15 +70,15 @@ using namespace mozilla::dom;
  */
 
 nsGenericHTMLElement*
-NS_NewHTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+NS_NewHTMLOptionElement(already_AddRefed<nsNodeInfo> aNodeInfo,
                         FromParser aFromParser)
 {
   /*
-   * nsHTMLOptionElement's will be created without a nsINodeInfo passed in
+   * nsHTMLOptionElement's will be created without a nsNodeInfo passed in
    * if someone says "var opt = new Option();" in JavaScript, in a case like
-   * that we request the nsINodeInfo from the document's nodeinfo list.
+   * that we request the nsNodeInfo from the document's nodeinfo list.
    */
-  nsCOMPtr<nsINodeInfo> nodeInfo(aNodeInfo);
+  nsRefPtr<nsNodeInfo> nodeInfo(aNodeInfo);
   if (!nodeInfo) {
     nsCOMPtr<nsIDocument> doc =
       do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
@@ -93,7 +93,7 @@ NS_NewHTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   return new nsHTMLOptionElement(nodeInfo.forget());
 }
 
-nsHTMLOptionElement::nsHTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLOptionElement::nsHTMLOptionElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mSelectedChanged(false),
     mIsSelected(false),

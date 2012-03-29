@@ -77,8 +77,8 @@ class nsSVGTextElement : public nsSVGTextElementBase,
 {
 protected:
   friend nsresult NS_NewSVGTextElement(nsIContent **aResult,
-                                       already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGTextElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                       already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGTextElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   
 public:
   // interfaces:
@@ -97,7 +97,7 @@ public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -143,7 +143,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGTextElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGTextElement::nsSVGTextElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGTextElement::nsSVGTextElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGTextElementBase(aNodeInfo)
 {
 

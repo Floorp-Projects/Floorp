@@ -68,7 +68,7 @@ public:
   using nsGenericElement::GetText;
   using nsGenericElement::SetText;
 
-  nsHTMLScriptElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+  nsHTMLScriptElement(already_AddRefed<nsNodeInfo> aNodeInfo,
                       FromParser aFromParser);
   virtual ~nsHTMLScriptElement();
 
@@ -120,7 +120,7 @@ public:
                               const nsAString& aValue,
                               nsAttrValue& aResult);
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // nsGenericElement
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
@@ -136,7 +136,7 @@ protected:
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Script)
 
 
-nsHTMLScriptElement::nsHTMLScriptElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+nsHTMLScriptElement::nsHTMLScriptElement(already_AddRefed<nsNodeInfo> aNodeInfo,
                                          FromParser aFromParser)
   : nsGenericHTMLElement(aNodeInfo)
   , nsScriptElement(aFromParser)
@@ -201,11 +201,11 @@ nsHTMLScriptElement::ParseAttribute(PRInt32 aNamespaceID,
 }
 
 nsresult
-nsHTMLScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+nsHTMLScriptElement::Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nsnull;
 
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsRefPtr<nsNodeInfo> ni = aNodeInfo;
   nsHTMLScriptElement* it =
     new nsHTMLScriptElement(ni.forget(), NOT_FROM_PARSER);
 

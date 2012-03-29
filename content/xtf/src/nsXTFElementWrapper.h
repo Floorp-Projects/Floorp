@@ -57,7 +57,7 @@ class nsXTFElementWrapper : public nsXTFElementWrapperBase,
                             public nsXPCClassInfo
 {
 public:
-  nsXTFElementWrapper(already_AddRefed<nsINodeInfo> aNodeInfo, nsIXTFElement* aXTFElement);
+  nsXTFElementWrapper(already_AddRefed<nsNodeInfo> aNodeInfo, nsIXTFElement* aXTFElement);
   virtual ~nsXTFElementWrapper();
   nsresult Init();
 
@@ -106,7 +106,7 @@ public:
                      bool aNotify);
   const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
   PRUint32 GetAttrCount() const;
-  virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
+  virtual already_AddRefed<nsNodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
 
   virtual nsEventStates IntrinsicState() const;
 
@@ -151,11 +151,11 @@ public:
   {
     return GetXTFElement()->CloneState(aElement);
   }
-  nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo() { return this; }
 
-  virtual void NodeInfoChanged(nsINodeInfo* aOldNodeInfo)
+  virtual void NodeInfoChanged(nsNodeInfo* aOldNodeInfo)
   {
   }
 
@@ -198,7 +198,7 @@ protected:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsXTFElementWrapper, NS_XTFELEMENTWRAPPER_IID)
 
 nsresult
-NS_NewXTFElementWrapper(nsIXTFElement* aXTFElement, already_AddRefed<nsINodeInfo> aNodeInfo,
+NS_NewXTFElementWrapper(nsIXTFElement* aXTFElement, already_AddRefed<nsNodeInfo> aNodeInfo,
                         nsIContent** aResult);
 
 #endif // __NS_XTFELEMENTWRAPPER_H__

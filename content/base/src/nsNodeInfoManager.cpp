@@ -73,8 +73,8 @@ nsNodeInfoManager::GetNodeInfoInnerHashValue(const void *key)
 {
   NS_ASSERTION(key, "Null key passed to nsNodeInfo::GetHashValue!");
 
-  const nsINodeInfo::nsNodeInfoInner *node =
-    reinterpret_cast<const nsINodeInfo::nsNodeInfoInner *>(key);
+  const nsNodeInfo::nsNodeInfoInner *node =
+    reinterpret_cast<const nsNodeInfo::nsNodeInfoInner *>(key);
 
   if (node->mName) {
     // Ideally, we'd return node->mName->hash() here.  But that doesn't work at
@@ -91,10 +91,10 @@ nsNodeInfoManager::NodeInfoInnerKeyCompare(const void *key1, const void *key2)
 {
   NS_ASSERTION(key1 && key2, "Null key passed to NodeInfoInnerKeyCompare!");
 
-  const nsINodeInfo::nsNodeInfoInner *node1 =
-    reinterpret_cast<const nsINodeInfo::nsNodeInfoInner *>(key1);
-  const nsINodeInfo::nsNodeInfoInner *node2 =
-    reinterpret_cast<const nsINodeInfo::nsNodeInfoInner *>(key2);
+  const nsNodeInfo::nsNodeInfoInner *node1 =
+    reinterpret_cast<const nsNodeInfo::nsNodeInfoInner *>(key1);
+  const nsNodeInfo::nsNodeInfoInner *node2 =
+    reinterpret_cast<const nsNodeInfo::nsNodeInfoInner *>(key2);
 
   if (node1->mPrefix != node2->mPrefix ||
       node1->mNamespaceID != node2->mNamespaceID ||
@@ -213,7 +213,7 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
 PRIntn
 nsNodeInfoManager::DropNodeInfoDocument(PLHashEntry *he, PRIntn hashIndex, void *arg)
 {
-  static_cast<nsINodeInfo*>(he->value)->mDocument = nsnull;
+  static_cast<nsNodeInfo*>(he->value)->mDocument = nsnull;
   return HT_ENUMERATE_NEXT;
 }
 
@@ -232,20 +232,20 @@ nsNodeInfoManager::DropDocumentReference()
 }
 
 
-already_AddRefed<nsINodeInfo>
+already_AddRefed<nsNodeInfo>
 nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
                                PRInt32 aNamespaceID, PRUint16 aNodeType,
                                nsIAtom* aExtraName /* = nsnull */)
 {
   CHECK_VALID_NODEINFO(aNodeType, aName, aNamespaceID, aExtraName);
 
-  nsINodeInfo::nsNodeInfoInner tmpKey(aName, aPrefix, aNamespaceID, aNodeType,
-                                      aExtraName);
+  nsNodeInfo::nsNodeInfoInner tmpKey(aName, aPrefix, aNamespaceID, aNodeType,
+                                     aExtraName);
 
   void *node = PL_HashTableLookup(mNodeInfoHash, &tmpKey);
 
   if (node) {
-    nsINodeInfo* nodeInfo = static_cast<nsINodeInfo *>(node);
+    nsNodeInfo* nodeInfo = static_cast<nsNodeInfo *>(node);
 
     NS_ADDREF(nodeInfo);
 
@@ -262,7 +262,7 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
   NS_ENSURE_TRUE(he, nsnull);
 
   // Have to do the swap thing, because already_AddRefed<nsNodeInfo>
-  // doesn't cast to already_AddRefed<nsINodeInfo>
+  // doesn't cast to already_AddRefed<nsNodeInfo>
   ++mNonDocumentNodeInfos;
   if (mNonDocumentNodeInfos == 1) {
     NS_IF_ADDREF(mDocument);
@@ -278,7 +278,7 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
 nsresult
 nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                                PRInt32 aNamespaceID, PRUint16 aNodeType,
-                               nsINodeInfo** aNodeInfo)
+                               nsNodeInfo** aNodeInfo)
 {
 #ifdef DEBUG
   {
@@ -287,12 +287,12 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
   }
 #endif
 
-  nsINodeInfo::nsNodeInfoInner tmpKey(aName, aPrefix, aNamespaceID, aNodeType);
+  nsNodeInfo::nsNodeInfoInner tmpKey(aName, aPrefix, aNamespaceID, aNodeType);
 
   void *node = PL_HashTableLookup(mNodeInfoHash, &tmpKey);
 
   if (node) {
-    nsINodeInfo* nodeInfo = static_cast<nsINodeInfo *>(node);
+    nsNodeInfo* nodeInfo = static_cast<nsNodeInfo *>(node);
 
     NS_ADDREF(*aNodeInfo = nodeInfo);
 
@@ -327,7 +327,7 @@ nsresult
 nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                                const nsAString& aNamespaceURI,
                                PRUint16 aNodeType,
-                               nsINodeInfo** aNodeInfo)
+                               nsNodeInfo** aNodeInfo)
 {
   PRInt32 nsid = kNameSpaceID_None;
 
@@ -340,7 +340,7 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
   return GetNodeInfo(aName, aPrefix, nsid, aNodeType, aNodeInfo);
 }
 
-already_AddRefed<nsINodeInfo>
+already_AddRefed<nsNodeInfo>
 nsNodeInfoManager::GetTextNodeInfo()
 {
   if (!mTextNodeInfo) {
@@ -355,7 +355,7 @@ nsNodeInfoManager::GetTextNodeInfo()
   return mTextNodeInfo;
 }
 
-already_AddRefed<nsINodeInfo>
+already_AddRefed<nsNodeInfo>
 nsNodeInfoManager::GetCommentNodeInfo()
 {
   if (!mCommentNodeInfo) {
@@ -370,7 +370,7 @@ nsNodeInfoManager::GetCommentNodeInfo()
   return mCommentNodeInfo;
 }
 
-already_AddRefed<nsINodeInfo>
+already_AddRefed<nsNodeInfo>
 nsNodeInfoManager::GetDocumentNodeInfo()
 {
   if (!mDocumentNodeInfo) {
@@ -433,5 +433,5 @@ nsNodeInfoManager::RemoveNodeInfo(nsNodeInfo *aNodeInfo)
 #endif
   PL_HashTableRemove(mNodeInfoHash, &aNodeInfo->mInner);
 
-  NS_POSTCONDITION(ret, "Can't find nsINodeInfo to remove!!!");
+  NS_POSTCONDITION(ret, "Can't find nsNodeInfo to remove!!!");
 }

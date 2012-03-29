@@ -49,7 +49,7 @@ class nsHTMLMapElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLMapElement
 {
 public:
-  nsHTMLMapElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLMapElement(already_AddRefed<nsNodeInfo> aNodeInfo);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -66,7 +66,7 @@ public:
   // nsIDOMHTMLMapElement
   NS_DECL_NSIDOMHTMLMAPELEMENT
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLMapElement,
                                                      nsGenericHTMLElement)
@@ -80,7 +80,7 @@ protected:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Map)
 
 
-nsHTMLMapElement::nsHTMLMapElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLMapElement::nsHTMLMapElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

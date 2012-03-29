@@ -66,7 +66,7 @@ class nsHTMLLinkElement : public nsGenericHTMLElement,
                           public Link
 {
 public:
-  nsHTMLLinkElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLLinkElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLLinkElement();
 
   // nsISupports
@@ -115,7 +115,7 @@ public:
   virtual nsLinkState GetLinkState() const;
   virtual already_AddRefed<nsIURI> GetHrefURI() const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsEventStates IntrinsicState() const;
 
@@ -132,7 +132,7 @@ protected:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Link)
 
 
-nsHTMLLinkElement::nsHTMLLinkElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLLinkElement::nsHTMLLinkElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     Link(this)
 {

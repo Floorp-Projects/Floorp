@@ -41,7 +41,6 @@
 
 #include "nscore.h"
 #include "nsIContent.h"
-#include "nsINodeInfo.h"
 #include "nsIDOMElement.h"
 #include "nsILocalStore.h"
 #include "nsIBoxObject.h"
