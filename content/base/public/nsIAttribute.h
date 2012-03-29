@@ -61,7 +61,7 @@ public:
     return mAttrMap;
   }
 
-  nsNodeInfo *NodeInfo()
+  nsINodeInfo *NodeInfo()
   {
     return mNodeInfo;
   }
@@ -76,7 +76,7 @@ public:
 
 protected:
 #ifdef MOZILLA_INTERNAL_API
-  nsIAttribute(nsDOMAttributeMap *aAttrMap, already_AddRefed<nsNodeInfo> aNodeInfo,
+  nsIAttribute(nsDOMAttributeMap *aAttrMap, already_AddRefed<nsINodeInfo> aNodeInfo,
                bool aNsAware)
     : nsINode(aNodeInfo), mAttrMap(aAttrMap), mNsAware(aNsAware)
   {

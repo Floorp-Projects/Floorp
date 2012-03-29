@@ -79,7 +79,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGSwitchElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGSwitchElement::nsSVGSwitchElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGSwitchElement::nsSVGSwitchElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGSwitchElementBase(aNodeInfo)
 {
 }

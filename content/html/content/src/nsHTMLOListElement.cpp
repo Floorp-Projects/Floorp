@@ -55,7 +55,7 @@ class nsHTMLSharedListElement : public nsGenericHTMLElement,
                                 public nsIDOMHTMLUListElement
 {
 public:
-  nsHTMLSharedListElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsHTMLSharedListElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLSharedListElement();
 
   // nsISupports
@@ -85,7 +85,7 @@ public:
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo()
   {
     return static_cast<nsXPCClassInfo*>(GetClassInfoInternal());
@@ -97,7 +97,7 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT(SharedList)
 
 
-nsHTMLSharedListElement::nsHTMLSharedListElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsHTMLSharedListElement::nsHTMLSharedListElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

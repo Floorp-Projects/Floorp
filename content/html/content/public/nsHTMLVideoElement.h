@@ -45,7 +45,7 @@ class nsHTMLVideoElement : public nsHTMLMediaElement,
                            public nsIDOMHTMLVideoElement
 {
 public:
-  nsHTMLVideoElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsHTMLVideoElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLVideoElement();
 
   static nsHTMLVideoElement* FromContent(nsIContent* aPossibleVideo)
@@ -81,7 +81,7 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // Returns the current video frame width and height.
   // If there is no video frame, returns the given default size.

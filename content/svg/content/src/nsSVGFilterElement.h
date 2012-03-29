@@ -60,8 +60,8 @@ class nsSVGFilterElement : public nsSVGFilterElementBase,
 
 protected:
   friend nsresult NS_NewSVGFilterElement(nsIContent **aResult,
-                                         already_AddRefed<nsNodeInfo> aNodeInfo);
-  nsSVGFilterElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+                                         already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGFilterElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -76,7 +76,7 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFilterElementBase::)
 
   // nsIContent
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   // Invalidate users of this filter

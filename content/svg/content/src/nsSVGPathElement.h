@@ -57,8 +57,8 @@ friend class nsSVGPathFrame;
 
 protected:
   friend nsresult NS_NewSVGPathElement(nsIContent **aResult,
-                                       already_AddRefed<nsNodeInfo> aNodeInfo);
-  nsSVGPathElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+                                       already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGPathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   typedef mozilla::SVGAnimatedPathSegList SVGAnimatedPathSegList;
@@ -88,7 +88,7 @@ public:
   virtual already_AddRefed<gfxFlattenedPath> GetFlattenedPath(const gfxMatrix &aMatrix);
 
   // nsIContent interface
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 

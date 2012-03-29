@@ -45,6 +45,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIContent.h"
 #include "nsIPrincipal.h"
+#include "nsINodeInfo.h"
 
 /**
  * URIUtils

@@ -54,8 +54,8 @@ class nsSVGClipPathElement : public nsSVGClipPathElementBase,
 
 protected:
   friend nsresult NS_NewSVGClipPathElement(nsIContent **aResult,
-                                           already_AddRefed<nsNodeInfo> aNodeInfo);
-  nsSVGClipPathElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+                                           already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGClipPathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -68,7 +68,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGClipPathElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGClipPathElementBase::)
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:

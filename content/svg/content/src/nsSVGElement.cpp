@@ -106,7 +106,7 @@ nsSVGEnumMapping nsSVGElement::sSVGUnitTypesMap[] = {
   {nsnull, 0}
 };
 
-nsSVGElement::nsSVGElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGElement::nsSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGElementBase(aNodeInfo)
 {
 }

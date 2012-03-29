@@ -92,7 +92,7 @@ class nsHTMLInputElement : public nsGenericHTMLFormElement,
 public:
   using nsIConstraintValidation::GetValidationMessage;
 
-  nsHTMLInputElement(already_AddRefed<nsNodeInfo> aNodeInfo,
+  nsHTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                      mozilla::dom::FromParser aFromParser);
   virtual ~nsHTMLInputElement();
 
@@ -219,7 +219,7 @@ public:
    */
   already_AddRefed<nsIDOMHTMLInputElement> GetSelectedRadioButton();
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   NS_IMETHOD FireAsyncClickHandler();
 

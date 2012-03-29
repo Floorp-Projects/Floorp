@@ -46,8 +46,8 @@ class nsSVGMetadataElement : public nsSVGMetadataElementBase,
 {
 protected:
   friend nsresult NS_NewSVGMetadataElement(nsIContent **aResult,
-                                           already_AddRefed<nsNodeInfo> aNodeInfo);
-  nsSVGMetadataElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+                                           already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGMetadataElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   nsresult Init();
 
 public:
@@ -61,7 +61,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGElement::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -87,7 +87,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGMetadataElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGMetadataElement::nsSVGMetadataElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGMetadataElement::nsSVGMetadataElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGMetadataElementBase(aNodeInfo)
 {
 }

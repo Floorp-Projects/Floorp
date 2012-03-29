@@ -4458,7 +4458,7 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
                             const nsAString& aQualifiedName,
                             nsIContent** aReturn)
 {
-  nsRefPtr<nsNodeInfo> nodeInfo;
+  nsCOMPtr<nsINodeInfo> nodeInfo;
   nsresult rv = nsContentUtils::GetNodeInfoFromQName(aNamespaceURI,
                                                      aQualifiedName,
                                                      mNodeInfoManager,
@@ -4586,7 +4586,7 @@ nsDocument::CreateAttribute(const nsAString& aName,
   nsresult rv = nsContentUtils::CheckQName(aName, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<nsNodeInfo> nodeInfo;
+  nsCOMPtr<nsINodeInfo> nodeInfo;
   rv = mNodeInfoManager->GetNodeInfo(aName, nsnull, kNameSpaceID_None,
                                      nsIDOMNode::ATTRIBUTE_NODE,
                                      getter_AddRefs(nodeInfo));
@@ -4609,7 +4609,7 @@ nsDocument::CreateAttributeNS(const nsAString & aNamespaceURI,
 
   WarnOnceAbout(eCreateAttributeNS);
 
-  nsRefPtr<nsNodeInfo> nodeInfo;
+  nsCOMPtr<nsINodeInfo> nodeInfo;
   nsresult rv = nsContentUtils::GetNodeInfoFromQName(aNamespaceURI,
                                                      aQualifiedName,
                                                      mNodeInfoManager,
@@ -5277,7 +5277,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
       return NS_OK;
 
     {
-      nsRefPtr<nsNodeInfo> titleInfo;
+      nsCOMPtr<nsINodeInfo> titleInfo;
       titleInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::title, nsnull,
                                                 kNameSpaceID_XHTML,
                                                 nsIDOMNode::ELEMENT_NODE);
@@ -6821,7 +6821,7 @@ nsDocument::CreateElem(const nsAString& aName, nsIAtom *aPrefix, PRInt32 aNamesp
 
   *aResult = nsnull;
   
-  nsRefPtr<nsNodeInfo> nodeInfo;
+  nsCOMPtr<nsINodeInfo> nodeInfo;
   mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID,
                                 nsIDOMNode::ELEMENT_NODE,
                                 getter_AddRefs(nodeInfo));

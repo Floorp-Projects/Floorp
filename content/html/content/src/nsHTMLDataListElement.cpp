@@ -46,7 +46,7 @@ class nsHTMLDataListElement : public nsGenericHTMLElement,
                               public nsIDOMHTMLDataListElement
 {
 public:
-  nsHTMLDataListElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsHTMLDataListElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLDataListElement();
 
   // nsISupports
@@ -64,7 +64,7 @@ public:
   // nsIDOMHTMLDataListElement
   NS_DECL_NSIDOMHTMLDATALISTELEMENT
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // This function is used to generate the nsContentList (option elements).
   static bool MatchOptions(nsIContent* aContent, PRInt32 aNamespaceID,
@@ -85,7 +85,7 @@ protected:
 NS_IMPL_NS_NEW_HTML_ELEMENT(DataList)
 
 
-nsHTMLDataListElement::nsHTMLDataListElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsHTMLDataListElement::nsHTMLDataListElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

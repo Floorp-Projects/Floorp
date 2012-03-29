@@ -84,7 +84,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGMaskElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGMaskElement::nsSVGMaskElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGMaskElement::nsSVGMaskElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGMaskElementBase(aNodeInfo)
 {
 }

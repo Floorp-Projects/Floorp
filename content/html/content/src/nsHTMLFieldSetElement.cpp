@@ -48,7 +48,7 @@
 NS_IMPL_NS_NEW_HTML_ELEMENT(FieldSet)
 
 
-nsHTMLFieldSetElement::nsHTMLFieldSetElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsHTMLFieldSetElement::nsHTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo)
   , mElements(nsnull)
   , mFirstLegend(nsnull)

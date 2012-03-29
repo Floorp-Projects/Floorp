@@ -44,7 +44,7 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsGenericElement.h"
 #include "nsINameSpaceManager.h"
-#include "nsNodeInfo.h"
+#include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -67,7 +67,7 @@ public:
   // interface nsIDOMDocumentFragment
   // NS_DECL_NSIDOCUMENTFRAGMENT  Empty
 
-  nsDocumentFragment(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsDocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsDocumentFragment()
   {
   }
@@ -107,7 +107,7 @@ public:
   virtual nsIAtom *GetIDAttributeName() const;
 
 protected:
-  nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
 nsresult
@@ -116,7 +116,7 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
 {
   NS_ENSURE_ARG(aNodeInfoManager);
 
-  nsRefPtr<nsNodeInfo> nodeInfo;
+  nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentFragmentNodeName,
                                            nsnull, kNameSpaceID_None,
                                            nsIDOMNode::DOCUMENT_FRAGMENT_NODE);
@@ -132,7 +132,7 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
   return NS_OK;
 }
 
-nsDocumentFragment::nsDocumentFragment(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsDocumentFragment::nsDocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericElement(aNodeInfo)
 {
   ClearIsElement();

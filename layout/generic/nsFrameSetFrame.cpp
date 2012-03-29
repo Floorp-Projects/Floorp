@@ -48,7 +48,7 @@
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsIDocument.h"
-#include "nsNodeInfo.h"
+#include "nsINodeInfo.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsWidgetsCID.h"
@@ -1365,7 +1365,7 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
   for (nsIContent *child = mContent->GetFirstChild(); child;
        child = child->GetNextSibling()) {
     if (child->IsHTML()) {
-      nsNodeInfo *ni = child->NodeInfo();
+      nsINodeInfo *ni = child->NodeInfo();
 
       if (ni->Equals(nsGkAtoms::frameset)) {
         childTypes[childTypeIndex++] = FRAMESET;

@@ -54,8 +54,8 @@ class nsSVGLineElement : public nsSVGLineElementBase,
 {
 protected:
   friend nsresult NS_NewSVGLineElement(nsIContent **aResult,
-                                       already_AddRefed<nsNodeInfo> aNodeInfo);
-  nsSVGLineElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+                                       already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGLineElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -75,7 +75,7 @@ public:
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(gfxContext *aCtx);
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -115,7 +115,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGLineElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGLineElement::nsSVGLineElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGLineElement::nsSVGLineElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGLineElementBase(aNodeInfo)
 {
 }

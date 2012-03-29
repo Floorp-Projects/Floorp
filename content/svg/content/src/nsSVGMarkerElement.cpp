@@ -134,7 +134,7 @@ nsSVGOrientType::ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,
   return NS_OK;
 }
 
-nsSVGMarkerElement::nsSVGMarkerElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGMarkerElement::nsSVGMarkerElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGMarkerElementBase(aNodeInfo), mCoordCtx(nsnull)
 {
 }

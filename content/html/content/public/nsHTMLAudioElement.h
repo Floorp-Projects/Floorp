@@ -50,7 +50,7 @@ class nsHTMLAudioElement : public nsHTMLMediaElement,
                            public nsIJSNativeInitializer
 {
 public:
-  nsHTMLAudioElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLAudioElement();
 
   // nsISupports
@@ -75,7 +75,7 @@ public:
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
                         JSObject* aObj, PRUint32 argc, jsval* argv);
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel);
 
   virtual nsXPCClassInfo* GetClassInfo();

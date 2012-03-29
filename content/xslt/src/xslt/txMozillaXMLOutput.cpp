@@ -561,7 +561,7 @@ txMozillaXMLOutput::startElementInternal(nsIAtom* aPrefix,
     mOpenedElementIsHTML = false;
 
     // Create the element
-    nsRefPtr<nsNodeInfo> ni =
+    nsCOMPtr<nsINodeInfo> ni =
         mNodeInfoManager->GetNodeInfo(aLocalName, aPrefix, aNsID,
                                       nsIDOMNode::ELEMENT_NODE);
     NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
@@ -962,7 +962,7 @@ txMozillaXMLOutput::createHTMLElement(nsIAtom* aName,
 
     *aResult = nsnull;
 
-    nsRefPtr<nsNodeInfo> ni;
+    nsCOMPtr<nsINodeInfo> ni;
     ni = mNodeInfoManager->GetNodeInfo(aName, nsnull,
                                        kNameSpaceID_XHTML,
                                        nsIDOMNode::ELEMENT_NODE);

@@ -327,7 +327,7 @@ TableRowsCollection::ParentDestroyed()
 NS_IMPL_NS_NEW_HTML_ELEMENT(Table)
 
 
-nsHTMLTableElement::nsHTMLTableElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsHTMLTableElement::nsHTMLTableElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mTableInheritedAttributes(TABLE_ATTRS_DIRTY)
 {
@@ -551,7 +551,7 @@ nsHTMLTableElement::CreateTHead(nsIDOMHTMLElement** aValue)
     return NS_OK;
   }
 
-  nsRefPtr<nsNodeInfo> nodeInfo;
+  nsCOMPtr<nsINodeInfo> nodeInfo;
   nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::thead,
                               getter_AddRefs(nodeInfo));
 
@@ -601,7 +601,7 @@ nsHTMLTableElement::CreateTFoot(nsIDOMHTMLElement** aValue)
     return NS_OK;
   }
   // create a new foot rowgroup
-  nsRefPtr<nsNodeInfo> nodeInfo;
+  nsCOMPtr<nsINodeInfo> nodeInfo;
   nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tfoot,
                               getter_AddRefs(nodeInfo));
 
@@ -643,7 +643,7 @@ nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
   }
 
   // create a new head rowgroup
-  nsRefPtr<nsNodeInfo> nodeInfo;
+  nsCOMPtr<nsINodeInfo> nodeInfo;
   nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::caption,
                               getter_AddRefs(nodeInfo));
 
@@ -720,7 +720,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 
     refRow->GetParentNode(getter_AddRefs(parent));
     // create the row
-    nsRefPtr<nsNodeInfo> nodeInfo;
+    nsCOMPtr<nsINodeInfo> nodeInfo;
     nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tr,
                                 getter_AddRefs(nodeInfo));
 
@@ -756,7 +756,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     for (nsIContent* child = nsINode::GetFirstChild();
          child;
          child = child->GetNextSibling()) {
-      nsNodeInfo *childInfo = child->NodeInfo();
+      nsINodeInfo *childInfo = child->NodeInfo();
       nsIAtom *localName = childInfo->NameAtom();
       if (childInfo->NamespaceID() == kNameSpaceID_XHTML &&
           (localName == nsGkAtoms::thead ||
@@ -769,7 +769,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     }
 
     if (!rowGroup) { // need to create a TBODY
-      nsRefPtr<nsNodeInfo> nodeInfo;
+      nsCOMPtr<nsINodeInfo> nodeInfo;
       nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tbody,
                                   getter_AddRefs(nodeInfo));
 
@@ -785,7 +785,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     }
 
     if (rowGroup) {
-      nsRefPtr<nsNodeInfo> nodeInfo;
+      nsCOMPtr<nsINodeInfo> nodeInfo;
       nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tr,
                                   getter_AddRefs(nodeInfo));
 

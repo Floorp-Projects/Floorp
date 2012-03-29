@@ -65,7 +65,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsFocusManager.h"
 
-nsXTFElementWrapper::nsXTFElementWrapper(already_AddRefed<nsNodeInfo> aNodeInfo,
+nsXTFElementWrapper::nsXTFElementWrapper(already_AddRefed<nsINodeInfo> aNodeInfo,
                                          nsIXTFElement* aXTFElement)
     : nsXTFElementWrapperBase(aNodeInfo),
       mXTFElement(aXTFElement),
@@ -525,10 +525,10 @@ nsXTFElementWrapper::DoneAddingChildren(bool aHaveNotified)
     GetXTFElement()->DoneAddingChildren();
 }
 
-already_AddRefed<nsNodeInfo>
+already_AddRefed<nsINodeInfo>
 nsXTFElementWrapper::GetExistingAttrNameFromQName(const nsAString& aStr) const
 {
-  nsNodeInfo* nodeInfo = nsXTFElementWrapperBase::GetExistingAttrNameFromQName(aStr).get();
+  nsINodeInfo* nodeInfo = nsXTFElementWrapperBase::GetExistingAttrNameFromQName(aStr).get();
 
   // Maybe this attribute is handled by our inner element:
   if (!nodeInfo) {
@@ -570,7 +570,7 @@ nsXTFElementWrapper::PerformAccesskey(bool aKeyCausesActivation,
 }
 
 nsresult
-nsXTFElementWrapper::Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const
+nsXTFElementWrapper::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nsnull;
   nsCOMPtr<nsIContent> it;
@@ -993,7 +993,7 @@ nsXTFElementWrapper::RegUnregAccessKey(bool aDoReg)
 
 nsresult
 NS_NewXTFElementWrapper(nsIXTFElement* aXTFElement,
-                        already_AddRefed<nsNodeInfo> aNodeInfo,
+                        already_AddRefed<nsINodeInfo> aNodeInfo,
                         nsIContent** aResult)
 {
   *aResult = nsnull;

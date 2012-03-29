@@ -42,7 +42,7 @@
 #include "nsISupports.h"
 
 class nsIContent;
-class nsNodeInfo;
+class nsINodeInfo;
 
 // {4ac3826f-280e-4572-9ede-6c81a4797861}
 #define NS_IXTFSERVICE_IID                             \
@@ -55,7 +55,7 @@ public:
 
     // try to create an xtf element based on namespace
     virtual nsresult CreateElement(nsIContent** aResult,
-                                   already_AddRefed<nsNodeInfo> aNodeInfo) = 0;
+                                   already_AddRefed<nsINodeInfo> aNodeInfo) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXTFService, NS_IXTFSERVICE_IID)

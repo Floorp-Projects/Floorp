@@ -48,7 +48,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadGroup.h"
 #include "nsINameSpaceManager.h"
-#include "nsNodeInfo.h"
+#include "nsINodeInfo.h"
 #include "nsIParser.h"
 #include "nsCharsetSource.h"
 #include "nsIRequestObserver.h"
@@ -589,7 +589,7 @@ handleNode(nsINode* aNode, txStylesheetCompiler* aCompiler)
             }
         }
 
-        nsNodeInfo *ni = element->NodeInfo();
+        nsINodeInfo *ni = element->NodeInfo();
 
         rv = aCompiler->startElement(ni->NamespaceID(),
                                      ni->NameAtom(),

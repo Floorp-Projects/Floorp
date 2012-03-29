@@ -1864,7 +1864,7 @@ nsXULTemplateBuilder::CompileTemplate(nsIContent* aTemplate,
          rulenode;
          rulenode = rulenode->GetNextSibling()) {
 
-        nsNodeInfo *ni = rulenode->NodeInfo();
+        nsINodeInfo *ni = rulenode->NodeInfo();
 
         // don't allow more queries than can be supported
         if (*aPriority == PR_INT16_MAX)

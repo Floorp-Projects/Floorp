@@ -49,7 +49,7 @@ class nsSVGPolyElement : public nsSVGPolyElementBase,
                          public nsIDOMSVGAnimatedPoints
 {
 protected:
-  nsSVGPolyElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGPolyElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   //interfaces

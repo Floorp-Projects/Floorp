@@ -54,8 +54,8 @@ class nsSVGSymbolElement : public nsSVGSymbolElementBase,
 {
 protected:
   friend nsresult NS_NewSVGSymbolElement(nsIContent **aResult,
-                                         already_AddRefed<nsNodeInfo> aNodeInfo);
-  nsSVGSymbolElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+                                         already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGSymbolElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -72,7 +72,7 @@ public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const;
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -103,7 +103,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGSymbolElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGSymbolElement::nsSVGSymbolElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGSymbolElement::nsSVGSymbolElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGSymbolElementBase(aNodeInfo)
 {
 }

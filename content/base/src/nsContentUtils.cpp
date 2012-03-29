@@ -62,7 +62,7 @@
 #include "nsIContent.h"
 #include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
-#include "nsNodeInfo.h"
+#include "nsINodeInfo.h"
 #include "nsReadableUtils.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeList.h"
@@ -2438,7 +2438,7 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
                                      const nsAString& aQualifiedName,
                                      nsNodeInfoManager* aNodeInfoManager,
                                      PRUint16 aNodeType,
-                                     nsNodeInfo** aNodeInfo)
+                                     nsINodeInfo** aNodeInfo)
 {
   nsIParserService* parserService = GetParserService();
   NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
@@ -3929,7 +3929,7 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
     }
 
     if (!setDefaultNamespace) {
-      nsNodeInfo* info = content->NodeInfo();
+      nsINodeInfo* info = content->NodeInfo();
       if (!info->GetPrefixAtom() &&
           info->NamespaceID() != kNameSpaceID_None) {
         // We have no namespace prefix, but have a namespace ID.  Push

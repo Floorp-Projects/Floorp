@@ -56,7 +56,6 @@ EXPORTS		= \
 		nsGkAtomList.h \
 		nsGkAtoms.h \
 		nsNodeInfoManager.h \
-    nsNodeInfo.h \
 		nsNodeUtils.h \
 		nsPropertyTable.h \
 		nsRange.h \

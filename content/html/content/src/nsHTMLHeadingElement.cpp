@@ -52,7 +52,7 @@ class nsHTMLHeadingElement : public nsGenericHTMLElement,
                              public nsIDOMHTMLHeadingElement
 {
 public:
-  nsHTMLHeadingElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsHTMLHeadingElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLHeadingElement();
 
   // nsISupports
@@ -76,7 +76,7 @@ public:
                                 nsAttrValue& aResult);
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
 };
 
@@ -84,7 +84,7 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Heading)
 
 
-nsHTMLHeadingElement::nsHTMLHeadingElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsHTMLHeadingElement::nsHTMLHeadingElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
