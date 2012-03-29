@@ -144,6 +144,9 @@ parent:
     DisableScreenOrientationNotifications();
     sync GetCurrentScreenOrientation()
       returns (ScreenOrientation aScreenOrientation);
+    sync LockScreenOrientation(ScreenOrientation aOrientation)
+      returns (bool allowed);
+    UnlockScreenOrientation();
 
 child:
     NotifySensorChange(SensorData aSensorData);
