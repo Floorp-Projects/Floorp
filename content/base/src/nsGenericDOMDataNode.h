@@ -211,7 +211,7 @@ public:
   virtual const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
   virtual PRUint32 GetAttrCount() const;
   virtual const nsTextFragment *GetText();
-  virtual PRUint32 TextLength();
+  virtual PRUint32 TextLength() const;
   virtual nsresult SetText(const PRUnichar* aBuffer, PRUint32 aLength,
                            bool aNotify);
   // Need to implement this here too to avoid hiding.

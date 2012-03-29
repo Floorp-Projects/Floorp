@@ -291,8 +291,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0xfcd3b0d1, 0x75db, 0x46c4, \
-  { 0xa1, 0xf5, 0x07, 0xc2, 0x09, 0xf8, 0x1f, 0x44 } }
+{ 0xce310d6d, 0x46b5, 0x46a2, \
+  { 0x86, 0x3d, 0x59, 0x16, 0x6b, 0x81, 0x00, 0x67 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -1422,6 +1422,12 @@ protected:
 public:
   // Optimized way to get classinfo.
   virtual nsXPCClassInfo* GetClassInfo() = 0;
+
+  /**
+   * Returns the length of this node, as specified at
+   * <http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#concept-node-length>
+   */
+  PRUint32 Length() const;
 
 protected:
 
