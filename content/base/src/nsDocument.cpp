@@ -1420,12 +1420,9 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
 
   nsresult rv;
   if (!aQualifiedName.IsEmpty()) {
-    nsIParserService *parserService = nsContentUtils::GetParserService();
-    NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
-
     const nsAFlatString& qName = PromiseFlatString(aQualifiedName);
     const PRUnichar *colon;
-    rv = parserService->CheckQName(qName, true, &colon);
+    rv = nsContentUtils::CheckQName(qName, true, &colon);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (colon &&
