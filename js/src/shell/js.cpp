@@ -2171,7 +2171,7 @@ DumpStack(JSContext *cx, unsigned argc, Value *vp)
     for (; !iter.done(); ++index, ++iter) {
         Value v;
         if (iter.isNonEvalFunctionFrame()) {
-            v = ObjectValue(iter.fp()->callee());
+            v = ObjectValue(iter.callee());
         } else if (iter.isEvalFrame()) {
             v = StringValue(evalStr);
         } else {
