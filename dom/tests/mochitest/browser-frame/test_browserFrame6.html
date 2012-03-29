@@ -36,6 +36,11 @@ function runTest() {
   iframe2.mozbrowser = true;
   document.body.appendChild(iframe2);
 
+  // iframe3 is another red herring.  It's not a mozbrowser, so we shouldn't
+  // get any titlechange events on it.
+  var iframe3 = document.createElement('iframe');
+  document.body.appendChild(iframe3);
+
   var numTitleChanges = 0;
 
   iframe1.addEventListener('mozbrowsertitlechange', function(e) {
@@ -59,8 +64,13 @@ function runTest() {
     }
   });
 
+  iframe3.addEventListener('mozbrowsertitlechange', function(e) {
+    ok(false, 'Should not get a titlechange event for iframe3.');
+  });
+
   iframe1.src = 'data:text/html,<html><head><title>Title</title></head><body></body></html>';
   iframe2.src = 'data:text/html,<html><head><title>BAD TITLE</title></head><body></body></html>';
+  iframe3.src = 'data:text/html,<html><head><title>SHOULD NOT GET EVENT</title></head><body></body></html>';
 }
 
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
@@ -69,4 +79,3 @@ addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
 
 </body>
 </html>
-

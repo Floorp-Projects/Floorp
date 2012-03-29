@@ -1740,7 +1740,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 
 #ifdef MOZ_DUMP_PAINTING
-  if (gfxUtils::sDumpPainting) {
+  if (gfxUtils::sDumpPaintList || gfxUtils::sDumpPainting) {
     if (gfxUtils::sDumpPaintingToFile) {
       nsCString string("dump-");
       string.AppendInt(gPaintCount);
@@ -1804,7 +1804,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 
 #ifdef MOZ_DUMP_PAINTING
-  if (gfxUtils::sDumpPainting) {
+  if (gfxUtils::sDumpPaintList || gfxUtils::sDumpPainting) {
     fprintf(gfxUtils::sDumpPaintFile, "</script>Painting --- after optimization:\n");
     nsFrame::PrintDisplayList(&builder, list, gfxUtils::sDumpPaintFile);
 

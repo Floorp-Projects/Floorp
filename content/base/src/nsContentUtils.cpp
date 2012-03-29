@@ -485,7 +485,7 @@ nsContentUtils::InitializeModifierStrings()
   nsCOMPtr<nsIStringBundleService> bundleService =
     mozilla::services::GetStringBundleService();
   nsCOMPtr<nsIStringBundle> bundle;
-  nsresult rv = NS_OK;
+  DebugOnly<nsresult> rv = NS_OK;
   if (bundleService) {
     rv = bundleService->CreateBundle( "chrome://global-platform/locale/platformKeys.properties",
                                       getter_AddRefs(bundle));

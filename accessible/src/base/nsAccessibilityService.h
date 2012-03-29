@@ -93,50 +93,50 @@ public:
                                                   bool aCanCreate);
   already_AddRefed<nsAccessible>
     CreateHTMLButtonAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLBRAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
   already_AddRefed<nsAccessible>
     CreateHTMLCanvasAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLCaptionAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLCheckboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLComboboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
   already_AddRefed<nsAccessible>
     CreateHTMLFileInputAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLGroupboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLHRAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLImageAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
   already_AddRefed<nsAccessible>
     CreateHTMLImageMapAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLLabelAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLLIAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLListboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLMediaAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame, nsIContent* aContent,
                                     nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLRadioButtonAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLTableAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLTableCellAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLTextAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHTMLTextFieldAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateHyperTextAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  virtual already_AddRefed<nsAccessible>
+  already_AddRefed<nsAccessible>
     CreateOuterDocAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
 
   virtual nsAccessible* AddNativeRootAccessible(void* aAtkAccessible);

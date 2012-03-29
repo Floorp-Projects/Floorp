@@ -935,6 +935,16 @@ public:
   virtual NS_HIDDEN_(nsresult) RemoveImage(imgIRequest* aImage);
   virtual NS_HIDDEN_(nsresult) SetImageLockingState(bool aLocked);
 
+  // AddPlugin adds a plugin-related element to mPlugins when the element is
+  // added to the tree.
+  virtual nsresult AddPlugin(nsIObjectLoadingContent* aPlugin);
+  // RemovePlugin removes a plugin-related element to mPlugins when the
+  // element is removed from the tree.
+  virtual void RemovePlugin(nsIObjectLoadingContent* aPlugin);
+  // GetPlugins returns the plugin-related elements from
+  // the frame and any subframes.
+  virtual void GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins);
+
   virtual nsresult GetStateObject(nsIVariant** aResult);
 
   virtual nsDOMNavigationTiming* GetNavigationTiming() const;
@@ -1303,6 +1313,9 @@ private:
 
   // Tracking for images in the document.
   nsDataHashtable< nsPtrHashKey<imgIRequest>, PRUint32> mImageTracker;
+
+  // Tracking for plugins in the document.
+  nsTHashtable< nsPtrHashKey<nsIObjectLoadingContent> > mPlugins;
 
   VisibilityState mVisibilityState;
 
