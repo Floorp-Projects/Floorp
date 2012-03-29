@@ -347,13 +347,6 @@ public:
 #endif
     NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent);
 
-    virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
-                                                PRUint32 aNativeMessage,
-                                                PRUint32 aModifierFlags);
-
-    virtual nsresult SynthesizeNativeMouseMove(nsIntPoint aPoint)
-    { return SynthesizeNativeMouseEvent(aPoint, GDK_MOTION_NOTIFY, 0); }
-
 protected:
     // Helper for SetParent and ReparentNativeWidget.
     void ReparentNativeWidgetInternal(nsIWidget* aNewParent,

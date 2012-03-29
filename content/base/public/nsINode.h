@@ -1330,8 +1330,6 @@ private:
     NodeHasExplicitBaseURI,
     // Set if the element has some style states locked
     ElementHasLockedStyleStates,
-    // Set if element has pointer locked
-    ElementHasPointerLock,
     // Guard value
     BooleanFlagCount
   };
@@ -1390,9 +1388,6 @@ public:
   bool IsPurpleRoot() const { return GetBoolFlag(NodeIsPurpleRoot); }
 
   bool HasListenerManager() { return HasFlag(NODE_HAS_LISTENERMANAGER); }
-  bool HasPointerLock() const { return GetBoolFlag(ElementHasPointerLock); }
-  void SetPointerLock() { SetBoolFlag(ElementHasPointerLock); }
-  void ClearPointerLock() { ClearBoolFlag(ElementHasPointerLock); }
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
   void SetInDocument() { SetBoolFlag(IsInDocument); }
