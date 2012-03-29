@@ -3855,13 +3855,13 @@ nsGenericElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
   NS_ASSERTION(oldKid == GetChildAt(aIndex), "Unexpected child in RemoveChildAt");
 
   if (oldKid) {
-    return doRemoveChildAt(aIndex, aNotify, oldKid, mAttrsAndChildren);
+    doRemoveChildAt(aIndex, aNotify, oldKid, mAttrsAndChildren);
   }
 
   return NS_OK;
 }
 
-nsresult
+void
 nsINode::doRemoveChildAt(PRUint32 aIndex, bool aNotify,
                          nsIContent* aKid, nsAttrAndChildArray& aChildArray)
 {
@@ -3888,8 +3888,6 @@ nsINode::doRemoveChildAt(PRUint32 aIndex, bool aNotify,
   }
 
   aKid->UnbindFromTree();
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
