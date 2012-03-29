@@ -126,9 +126,12 @@ public:
   // valid until the next call to any of the methods in this class.
   // It also returns a pointer to the string buffer of the classname
   // in the nsGlobalNameStruct.
-  nsresult LookupName(const nsAString& aName,
-                      const nsGlobalNameStruct **aNameStruct,
-                      const PRUnichar **aClassName = nsnull);
+  const nsGlobalNameStruct* LookupName(const nsAString& aName,
+                                       const PRUnichar **aClassName = nsnull)
+  {
+    return LookupNameInternal(aName, aClassName);
+  }
+
   // Returns a nsGlobalNameStruct for the navigator property aName, or
   // null if one is not found. The returned nsGlobalNameStruct is only
   // guaranteed to be valid until the next call to any of the methods
@@ -190,6 +193,9 @@ protected:
   nsresult AddCategoryEntryToHash(nsICategoryManager* aCategoryManager,
                                   const char* aCategory,
                                   nsISupports* aEntry);
+
+  nsGlobalNameStruct* LookupNameInternal(const nsAString& aName,
+                                         const PRUnichar **aClassName = nsnull);
 
   PLDHashTable mGlobalNames;
   PLDHashTable mNavigatorNames;
