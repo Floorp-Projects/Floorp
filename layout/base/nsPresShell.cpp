@@ -228,7 +228,7 @@ using namespace mozilla::dom;
 using namespace mozilla::layers;
 
 CapturingContentInfo nsIPresShell::gCaptureInfo =
-  { false /* mAllowed */,     false /* mRetargetToElement */,
+  { false /* mAllowed */, false /* mPointerLock */, false /* mRetargetToElement */,
     false /* mPreventDrag */, nsnull /* mContent */ };
 nsIContent* nsIPresShell::gKeyDownTarget;
 nsInterfaceHashtable<nsUint32HashKey, nsIDOMTouch> nsIPresShell::gCaptureTouchList;
@@ -5447,16 +5447,27 @@ PresShell::Paint(nsIView*           aViewToPaint,
 void
 nsIPresShell::SetCapturingContent(nsIContent* aContent, PRUint8 aFlags)
 {
+  // If capture was set for pointer lock, don't unlock unless we are coming
+  // out of pointer lock explicitly.
+  if (!aContent && gCaptureInfo.mPointerLock &&
+      !(aFlags & CAPTURE_POINTERLOCK)) {
+    return;
+  }
+
   NS_IF_RELEASE(gCaptureInfo.mContent);
 
-  // only set capturing content if allowed or the CAPTURE_IGNOREALLOWED flag
-  // is used
-  if ((aFlags & CAPTURE_IGNOREALLOWED) || gCaptureInfo.mAllowed) {
+  // only set capturing content if allowed or the CAPTURE_IGNOREALLOWED or
+  // CAPTURE_POINTERLOCK flags are used.
+  if ((aFlags & CAPTURE_IGNOREALLOWED) || gCaptureInfo.mAllowed ||
+      (aFlags & CAPTURE_POINTERLOCK)) {
     if (aContent) {
       NS_ADDREF(gCaptureInfo.mContent = aContent);
     }
-    gCaptureInfo.mRetargetToElement = (aFlags & CAPTURE_RETARGETTOELEMENT) != 0;
+    // CAPTURE_POINTERLOCK is the same as CAPTURE_RETARGETTOELEMENT & CAPTURE_IGNOREALLOWED
+    gCaptureInfo.mRetargetToElement = ((aFlags & CAPTURE_RETARGETTOELEMENT) != 0) ||
+                                      ((aFlags & CAPTURE_POINTERLOCK) != 0);
     gCaptureInfo.mPreventDrag = (aFlags & CAPTURE_PREVENTDRAG) != 0;
+    gCaptureInfo.mPointerLock = (aFlags & CAPTURE_POINTERLOCK) != 0;
   }
 }
 
@@ -5750,7 +5761,8 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
   NS_TIME_FUNCTION_MIN(1.0);
 
   nsIContent* capturingContent =
-    NS_IS_MOUSE_EVENT(aEvent) ? GetCapturingContent() : nsnull;
+    NS_IS_MOUSE_EVENT(aEvent) || aEvent->eventStructType == NS_MOUSE_SCROLL_EVENT ?
+      GetCapturingContent() : nsnull;
 
   nsCOMPtr<nsIDocument> retargetEventDoc;
   if (!aDontRetargetEvents) {

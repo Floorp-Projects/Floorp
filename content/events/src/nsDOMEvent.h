@@ -183,6 +183,8 @@ public:
     eDOMEvents_beforeresize,
     eDOMEvents_mozfullscreenchange,
     eDOMEvents_mozfullscreenerror,
+    eDOMEvents_mozpointerlockchange,
+    eDOMEvents_mozpointerlockerror,
     eDOMEvents_MozSwipeGesture,
     eDOMEvents_MozMagnifyGestureStart,
     eDOMEvents_MozMagnifyGestureUpdate,

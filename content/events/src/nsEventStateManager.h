@@ -228,6 +228,12 @@ public:
 
   static bool IsRemoteTarget(nsIContent* aTarget);
 
+  static nsIntPoint sLastScreenPoint;
+  static nsIntPoint sLastClientPoint;
+  static bool sIsPointerLocked;
+  static nsWeakPtr sPointerLockedElement;
+  static nsWeakPtr sPointerLockedDoc;
+
 protected:
   friend class MouseEnterLeaveDispatcher;
 
@@ -480,11 +486,16 @@ private:
 
   PRInt32     mLockCursor;
 
+  // Point when mouse was locked, used to reposition after unlocking.
+  nsIntPoint  mPreLockPoint;
+
   nsWeakFrame mCurrentTarget;
   nsCOMPtr<nsIContent> mCurrentTargetContent;
   nsWeakFrame mLastMouseOverFrame;
   nsCOMPtr<nsIContent> mLastMouseOverElement;
   static nsWeakFrame sLastDragOverFrame;
+  static nsIntPoint sLastRefPoint;
+  static nsIntPoint sLastScreenOffset;
 
   // member variables for the d&d gesture state machine
   nsIntPoint mGestureDownPoint; // screen coordinates
@@ -556,6 +567,9 @@ public:
                               nsGUIEvent* inMouseDownEvent ) ;
   void KillClickHoldTimer ( ) ;
   void FireContextClick ( ) ;
+
+  void SetPointerLock(nsIWidget* aWidget, nsIContent* aElement) ;
+  nsIntPoint GetMouseCoords(nsIntRect aBounds);
   static void sClickHoldCallback ( nsITimer* aTimer, void* aESM ) ;
 };
 
