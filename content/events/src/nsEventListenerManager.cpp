@@ -1050,8 +1050,7 @@ nsEventListenerManager::UnmarkGrayJSListeners()
       xpc_UnmarkGrayObject(jsl->GetHandler());
       xpc_UnmarkGrayObject(jsl->GetEventScope());
     } else if (ls.mWrappedJS) {
-      nsCOMPtr<nsIXPConnectWrappedJS> wjs = do_QueryInterface(ls.mListener);
-      xpc_UnmarkGrayObject(wjs);
+      xpc_TryUnmarkWrappedGrayObject(ls.mListener);
     }
   }
 }
