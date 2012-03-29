@@ -270,9 +270,6 @@ protected:
                                               PRUint32 aModifierFlags)
   { return NS_ERROR_UNEXPECTED; }
 
-  virtual nsresult SynthesizeNativeMouseMove(nsIntPoint aPoint)
-  { return NS_ERROR_UNEXPECTED; }
-
   virtual nsresult SynthesizeNativeMouseScrollEvent(nsIntPoint aPoint,
                                                     PRUint32 aNativeMessage,
                                                     double aDeltaX,

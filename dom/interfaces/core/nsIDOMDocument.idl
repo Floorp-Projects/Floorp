@@ -66,7 +66,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(e8d73d0a-cbf6-4037-a565-32c8d64cc294)]
+[scriptable, uuid(ac4942fe-1679-4000-aaa7-41dee590a120)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -395,21 +395,6 @@ interface nsIDOMDocument : nsIDOMNode
    * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
    */
   readonly attribute boolean mozFullScreenEnabled;
-
-  /**
-   * The element to which the mouse pointer is locked, if any, as per the
-   * DOM pointer lock api.
-   *
-   * @see <http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html>
-   */
-  readonly attribute nsIDOMElement mozPointerLockElement;
-
-  /**
-   * Exit pointer is lock if locked, as per the DOM pointer lock api.
-   *
-   * @see <http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html>
-   */
-  void mozExitPointerLock();
 
   /**
    * Inline event handler for readystatechange events.
