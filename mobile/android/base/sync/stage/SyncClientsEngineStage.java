@@ -165,14 +165,8 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
 
     @Override
     public String ifUnmodifiedSince() {
-      Long timestampInMilliseconds = session.config.getPersistedServerClientRecordTimestamp();
-
-      // It's the first upload so we don't care about X-If-Unmodified-Since.
-      if (timestampInMilliseconds == 0) {
-        return null;
-      }
-
-      return Utils.millisecondsToDecimalSecondsString(timestampInMilliseconds);
+      // Temporary fix for bug 739519.
+      return null;
     }
 
     @Override
