@@ -1,0 +1,2 @@
+https://dvcs.w3.org/hg/webapps|webapps
+DOMCore/tests/submissions/Opera
