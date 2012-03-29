@@ -45,7 +45,7 @@ class nsHTMLProgressElement : public nsGenericHTMLFormElement,
                               public nsIDOMHTMLProgressElement
 {
 public:
-  nsHTMLProgressElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLProgressElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLProgressElement();
 
   // nsISupports
@@ -70,7 +70,7 @@ public:
 
   nsEventStates IntrinsicState() const;
 
-  nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
+  nsresult Clone(nsNodeInfo* aNodeInfo, nsINode** aResult) const;
 
   bool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
                         const nsAString& aValue, nsAttrValue& aResult);
@@ -99,7 +99,7 @@ const double nsHTMLProgressElement::kDefaultMax            =  1.0;
 NS_IMPL_NS_NEW_HTML_ELEMENT(Progress)
 
 
-nsHTMLProgressElement::nsHTMLProgressElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLProgressElement::nsHTMLProgressElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo)
 {
   // We start out indeterminate

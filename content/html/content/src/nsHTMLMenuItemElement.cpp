@@ -182,7 +182,7 @@ protected:
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(MenuItem)
 
 nsHTMLMenuItemElement::nsHTMLMenuItemElement(
-  already_AddRefed<nsINodeInfo> aNodeInfo, FromParser aFromParser)
+  already_AddRefed<nsNodeInfo> aNodeInfo, FromParser aFromParser)
   : nsGenericHTMLElement(aNodeInfo),
     mType(kMenuItemDefaultType->value),
     mParserCreating(false),
@@ -215,10 +215,10 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLMenuItemElement)
 
 //NS_IMPL_ELEMENT_CLONE(nsHTMLMenuItemElement)
 nsresult
-nsHTMLMenuItemElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+nsHTMLMenuItemElement::Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nsnull;
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsRefPtr<nsNodeInfo> ni = aNodeInfo;
   nsRefPtr<nsHTMLMenuItemElement> it =
     new nsHTMLMenuItemElement(ni.forget(), NOT_FROM_PARSER);
   nsresult rv = CopyInnerTo(it);

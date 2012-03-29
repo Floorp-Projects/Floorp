@@ -370,7 +370,7 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup,
 
     nsNodeInfoManager *nim = blankDoc->NodeInfoManager();
 
-    nsCOMPtr<nsINodeInfo> htmlNodeInfo;
+    nsRefPtr<nsNodeInfo> htmlNodeInfo;
 
     // generate an html html element
     htmlNodeInfo = nim->GetNodeInfo(nsGkAtoms::html, 0, kNameSpaceID_XHTML,

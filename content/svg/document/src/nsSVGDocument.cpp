@@ -121,7 +121,7 @@ nsSVGDocument::GetRootElement(nsIDOMSVGSVGElement** aRootElement)
 }
 
 nsresult
-nsSVGDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+nsSVGDocument::Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const
 {
   NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
                "Can't import this document into another document!");

@@ -71,7 +71,6 @@
 #include "nsIDOMNSEvent.h"
 #include "nsGUIEvent.h"
 #include "nsIServiceManager.h"
-#include "nsINodeInfo.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif

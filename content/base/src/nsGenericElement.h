@@ -76,7 +76,7 @@ class nsIDOMNamedNodeMap;
 class nsICSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
 class nsIURI;
-class nsINodeInfo;
+class nsNodeInfo;
 class nsIControllers;
 class nsEventListenerManager;
 class nsIScrollableFrame;
@@ -240,7 +240,7 @@ class nsInlineEventHandlersTearoff;
 class nsGenericElement : public mozilla::dom::Element
 {
 public:
-  nsGenericElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsGenericElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsGenericElement();
 
   friend class nsTouchEventReceiverTearoff;
@@ -277,7 +277,7 @@ public:
                               bool aNullParent = true);
   virtual already_AddRefed<nsINodeList> GetChildren(PRUint32 aFilter);
   virtual nsIAtom *GetClassAttributeName() const;
-  virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
+  virtual already_AddRefed<nsNodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
@@ -613,7 +613,7 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsGenericElement)
 
-  virtual void NodeInfoChanged(nsINodeInfo* aOldNodeInfo)
+  virtual void NodeInfoChanged(nsNodeInfo* aOldNodeInfo)
   {
   }
 
@@ -1001,10 +1001,10 @@ private:
  */
 #define NS_IMPL_ELEMENT_CLONE(_elementName)                                 \
 nsresult                                                                    \
-_elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
+_elementName::Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const         \
 {                                                                           \
   *aResult = nsnull;                                                        \
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;                                     \
+  nsRefPtr<nsNodeInfo> ni = aNodeInfo;                                      \
   _elementName *it = new _elementName(ni.forget());                         \
   if (!it) {                                                                \
     return NS_ERROR_OUT_OF_MEMORY;                                          \
@@ -1021,10 +1021,10 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
 
 #define NS_IMPL_ELEMENT_CLONE_WITH_INIT(_elementName)                       \
 nsresult                                                                    \
-_elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
+_elementName::Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const         \
 {                                                                           \
   *aResult = nsnull;                                                        \
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;                                     \
+  nsRefPtr<nsNodeInfo> ni = aNodeInfo;                                      \
   _elementName *it = new _elementName(ni.forget());                         \
   if (!it) {                                                                \
     return NS_ERROR_OUT_OF_MEMORY;                                          \

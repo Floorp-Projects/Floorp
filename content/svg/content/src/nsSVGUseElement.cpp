@@ -112,7 +112,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGUseElementBase)
 #pragma warning(push)
 #pragma warning(disable:4355)
 #endif
-nsSVGUseElement::nsSVGUseElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGUseElement::nsSVGUseElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGUseElementBase(aNodeInfo), mSource(this)
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -129,10 +129,10 @@ nsSVGUseElement::~nsSVGUseElement()
 // nsIDOMNode methods
 
 nsresult
-nsSVGUseElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+nsSVGUseElement::Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nsnull;
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsRefPtr<nsNodeInfo> ni = aNodeInfo;
   nsSVGUseElement *it = new nsSVGUseElement(ni.forget());
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -337,7 +337,7 @@ nsSVGUseElement::CreateAnonymousContent()
     if (!nodeInfoManager)
       return nsnull;
 
-    nsCOMPtr<nsINodeInfo> nodeInfo;
+    nsRefPtr<nsNodeInfo> nodeInfo;
     nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::svg, nsnull,
                                             kNameSpaceID_SVG,
                                             nsIDOMNode::ELEMENT_NODE);

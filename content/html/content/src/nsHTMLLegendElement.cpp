@@ -50,7 +50,7 @@
 NS_IMPL_NS_NEW_HTML_ELEMENT(Legend)
 
 
-nsHTMLLegendElement::nsHTMLLegendElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLLegendElement::nsHTMLLegendElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

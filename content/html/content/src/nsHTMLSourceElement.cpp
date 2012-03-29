@@ -50,7 +50,7 @@ class nsHTMLSourceElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLSourceElement
 {
 public:
-  nsHTMLSourceElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLSourceElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLSourceElement();
 
   // nsISupports
@@ -68,7 +68,7 @@ public:
   // nsIDOMHTMLSourceElement
   NS_DECL_NSIDOMHTMLSOURCEELEMENT
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // Override BindToTree() so that we can trigger a load when we add a
   // child source element.
@@ -83,7 +83,7 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Source)
 
 
-nsHTMLSourceElement::nsHTMLSourceElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLSourceElement::nsHTMLSourceElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

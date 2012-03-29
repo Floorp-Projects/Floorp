@@ -43,7 +43,7 @@ class nsHTMLMenuElement : public nsGenericHTMLElement,
                           public nsIHTMLMenu
 {
 public:
-  nsHTMLMenuElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLMenuElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLMenuElement();
 
   /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
@@ -77,7 +77,7 @@ public:
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 

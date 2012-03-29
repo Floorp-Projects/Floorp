@@ -63,9 +63,9 @@ class nsSVGScriptElement : public nsSVGScriptElementBase,
 {
 protected:
   friend nsresult NS_NewSVGScriptElement(nsIContent **aResult,
-                                         already_AddRefed<nsINodeInfo> aNodeInfo,
+                                         already_AddRefed<nsNodeInfo> aNodeInfo,
                                          FromParser aFromParser);
-  nsSVGScriptElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+  nsSVGScriptElement(already_AddRefed<nsNodeInfo> aNodeInfo,
                      FromParser aFromParser);
   
 public:
@@ -102,7 +102,7 @@ public:
                               const nsAString& aValue,
                               nsAttrValue& aResult);
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -139,7 +139,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGScriptElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGScriptElement::nsSVGScriptElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+nsSVGScriptElement::nsSVGScriptElement(already_AddRefed<nsNodeInfo> aNodeInfo,
                                        FromParser aFromParser)
   : nsSVGScriptElementBase(aNodeInfo)
   , nsScriptElement(aFromParser)
@@ -151,11 +151,11 @@ nsSVGScriptElement::nsSVGScriptElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 // nsIDOMNode methods
 
 nsresult
-nsSVGScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+nsSVGScriptElement::Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nsnull;
 
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsRefPtr<nsNodeInfo> ni = aNodeInfo;
   nsSVGScriptElement* it = new nsSVGScriptElement(ni.forget(), NOT_FROM_PARSER);
 
   nsCOMPtr<nsINode> kungFuDeathGrip = it;

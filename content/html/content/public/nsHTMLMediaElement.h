@@ -76,7 +76,7 @@ public:
     return mCORSMode;
   }
 
-  nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLMediaElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLMediaElement();
 
   /**

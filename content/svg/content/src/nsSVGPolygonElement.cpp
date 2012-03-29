@@ -48,8 +48,8 @@ class nsSVGPolygonElement : public nsSVGPolygonElementBase,
 {
 protected:
   friend nsresult NS_NewSVGPolygonElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGPolygonElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                          already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGPolygonElement(already_AddRefed<nsNodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -66,7 +66,7 @@ public:
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(gfxContext *aCtx);
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -91,7 +91,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPolygonElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGPolygonElement::nsSVGPolygonElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGPolygonElement::nsSVGPolygonElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGPolygonElementBase(aNodeInfo)
 {
 

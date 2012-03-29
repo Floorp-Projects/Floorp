@@ -55,7 +55,7 @@ class nsHTMLAreaElement : public nsGenericHTMLElement,
                           public Link
 {
 public:
-  nsHTMLAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLAreaElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLAreaElement();
 
   // nsISupports
@@ -120,7 +120,7 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsEventStates IntrinsicState() const;
 
@@ -131,7 +131,7 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Area)
 
 
-nsHTMLAreaElement::nsHTMLAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLAreaElement::nsHTMLAreaElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     Link(this)
 {

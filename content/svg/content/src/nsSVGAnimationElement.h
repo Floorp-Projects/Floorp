@@ -55,7 +55,7 @@ class nsSVGAnimationElement : public nsSVGAnimationElementBase,
                               public nsIDOMElementTimeControl
 {
 protected:
-  nsSVGAnimationElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGAnimationElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   nsresult Init();
 
 public:

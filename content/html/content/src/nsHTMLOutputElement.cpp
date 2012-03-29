@@ -54,7 +54,7 @@ class nsHTMLOutputElement : public nsGenericHTMLFormElement,
 public:
   using nsIConstraintValidation::GetValidationMessage;
 
-  nsHTMLOutputElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLOutputElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLOutputElement();
 
   // nsISupports
@@ -79,7 +79,7 @@ public:
 
   virtual bool IsDisabled() const { return false; }
 
-  nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
+  nsresult Clone(nsNodeInfo* aNodeInfo, nsINode** aResult) const;
 
   bool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
                         const nsAString& aValue, nsAttrValue& aResult);
@@ -119,7 +119,7 @@ protected:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Output)
 
 
-nsHTMLOutputElement::nsHTMLOutputElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLOutputElement::nsHTMLOutputElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo)
   , mValueModeFlag(eModeDefault)
 {

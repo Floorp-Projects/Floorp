@@ -122,7 +122,7 @@ VideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
   }
 
   // make content
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<nsNodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::video, nsnull,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);

@@ -95,7 +95,7 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
   for (ChildIterator::Init(aParent, &iter, &last); iter != last; ++iter) {
     nsCOMPtr<nsIContent> content = *iter;
 
-    nsINodeInfo *ni = content->NodeInfo();
+    nsNodeInfo *ni = content->NodeInfo();
     if (ni->Equals(nsGkAtoms::treechildren, kNameSpaceID_XUL)) {
       *aResult = content;
       NS_ADDREF(*aResult);

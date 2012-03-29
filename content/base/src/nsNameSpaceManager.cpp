@@ -43,7 +43,7 @@
 #include "nscore.h"
 #include "nsINameSpaceManager.h"
 #include "nsAutoPtr.h"
-#include "nsINodeInfo.h"
+#include "nsNodeInfo.h"
 #include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsContentCreatorFunctions.h"
@@ -226,7 +226,7 @@ NameSpaceManagerImpl::GetNameSpaceID(const nsAString& aURI)
 
 nsresult
 NS_NewElement(nsIContent** aResult,
-              already_AddRefed<nsINodeInfo> aNodeInfo, FromParser aFromParser)
+              already_AddRefed<nsNodeInfo> aNodeInfo, FromParser aFromParser)
 {
   PRInt32 ns = aNodeInfo.get()->NamespaceID();
   if (ns == kNameSpaceID_XHTML) {

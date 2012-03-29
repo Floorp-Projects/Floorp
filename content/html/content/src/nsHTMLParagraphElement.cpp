@@ -53,7 +53,7 @@ class nsHTMLParagraphElement : public nsGenericHTMLElement,
                                public nsIDOMHTMLParagraphElement
 {
 public:
-  nsHTMLParagraphElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLParagraphElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLParagraphElement();
 
   // nsISupports
@@ -78,7 +78,7 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -87,7 +87,7 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Paragraph)
 
 
-nsHTMLParagraphElement::nsHTMLParagraphElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLParagraphElement::nsHTMLParagraphElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

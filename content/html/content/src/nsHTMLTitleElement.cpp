@@ -51,7 +51,7 @@ public:
   using nsGenericElement::GetText;
   using nsGenericElement::SetText;
 
-  nsHTMLTitleElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLTitleElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLTitleElement();
 
   // nsISupports
@@ -75,7 +75,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,
@@ -95,7 +95,7 @@ private:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Title)
 
 
-nsHTMLTitleElement::nsHTMLTitleElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLTitleElement::nsHTMLTitleElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
   AddMutationObserver(this);

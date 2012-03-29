@@ -46,7 +46,6 @@
 #include "nsIURL.h"
 #include "nsIDOMEventListener.h"
 #include "nsINameSpaceManager.h"
-#include "nsINodeInfo.h"
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla::dom;

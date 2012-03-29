@@ -45,7 +45,7 @@ class nsHTMLMenuItemElement : public nsGenericHTMLElement,
 public:
   using nsGenericElement::GetText;
 
-  nsHTMLMenuItemElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+  nsHTMLMenuItemElement(already_AddRefed<nsNodeInfo> aNodeInfo,
                         mozilla::dom::FromParser aFromParser);
   virtual ~nsHTMLMenuItemElement();
 
@@ -90,7 +90,7 @@ public:
 
   virtual void DoneCreatingElement();
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 

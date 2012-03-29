@@ -108,7 +108,7 @@ public:
   };
 
 protected:
-  nsSVGFE(already_AddRefed<nsINodeInfo> aNodeInfo) : nsSVGFEBase(aNodeInfo) {}
+  nsSVGFE(already_AddRefed<nsNodeInfo> aNodeInfo) : nsSVGFEBase(aNodeInfo) {}
 
   struct ScaleInfo {
     nsRefPtr<gfxImageSurface> mRealTarget;
@@ -254,8 +254,8 @@ class nsSVGFEImageElement : public nsSVGFEImageElementBase,
 
 protected:
   friend nsresult NS_NewSVGFEImageElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGFEImageElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                          already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGFEImageElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsSVGFEImageElement();
 
 public:
@@ -288,7 +288,7 @@ public:
   // nsIContent
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify);
@@ -336,7 +336,7 @@ typedef nsSVGElement SVGFEUnstyledElementBase;
 class SVGFEUnstyledElement : public SVGFEUnstyledElementBase
 {
 protected:
-  SVGFEUnstyledElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  SVGFEUnstyledElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : SVGFEUnstyledElementBase(aNodeInfo) {}
 
 public:

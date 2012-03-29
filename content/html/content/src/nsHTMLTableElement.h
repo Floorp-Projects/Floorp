@@ -47,7 +47,7 @@ class nsHTMLTableElement :  public nsGenericHTMLElement,
                             public nsIDOMHTMLTableElement
 {
 public:
-  nsHTMLTableElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLTableElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLTableElement();
 
   // nsISupports
@@ -72,7 +72,7 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,

@@ -51,7 +51,7 @@ class nsHTMLBRElement : public nsGenericHTMLElement,
                         public nsIDOMHTMLBRElement
 {
 public:
-  nsHTMLBRElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLBRElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLBRElement();
 
   // nsISupports
@@ -75,7 +75,7 @@ public:
                                 nsAttrValue& aResult);
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
 };
 
@@ -83,7 +83,7 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT(BR)
 
 
-nsHTMLBRElement::nsHTMLBRElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLBRElement::nsHTMLBRElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

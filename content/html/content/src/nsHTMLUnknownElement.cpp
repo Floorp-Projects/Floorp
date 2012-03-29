@@ -43,7 +43,7 @@ class nsHTMLUnknownElement : public nsGenericHTMLElement
                            , public nsIDOMHTMLUnknownElement
 {
 public:
-  nsHTMLUnknownElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLUnknownElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLUnknownElement();
 
   // nsISupports
@@ -58,7 +58,7 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -67,7 +67,7 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Unknown)
 
 
-nsHTMLUnknownElement::nsHTMLUnknownElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLUnknownElement::nsHTMLUnknownElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

@@ -70,7 +70,7 @@
 
 using namespace mozilla;
 
-nsGenericDOMDataNode::nsGenericDOMDataNode(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsGenericDOMDataNode::nsGenericDOMDataNode(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsIContent(aNodeInfo)
 {
   NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::TEXT_NODE ||
@@ -600,7 +600,7 @@ nsGenericDOMDataNode::GetIDAttributeName() const
   return nsnull;
 }
 
-already_AddRefed<nsINodeInfo>
+already_AddRefed<nsNodeInfo>
 nsGenericDOMDataNode::GetExistingAttrNameFromQName(const nsAString& aStr) const
 {
   return nsnull;

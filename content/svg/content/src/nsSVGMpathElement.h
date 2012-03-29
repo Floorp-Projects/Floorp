@@ -56,8 +56,8 @@ class nsSVGMpathElement : public nsSVGMpathElementBase,
 {
 protected:
   friend nsresult NS_NewSVGMpathElement(nsIContent **aResult,
-                                        already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGMpathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                        already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGMpathElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   ~nsSVGMpathElement();
 
 
@@ -78,7 +78,7 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGMpathElementBase::)
 
   // nsIContent interface
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               bool aCompileEventHandlers);

@@ -94,7 +94,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGFilterElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGFilterElement::nsSVGFilterElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGFilterElement::nsSVGFilterElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGFilterElementBase(aNodeInfo)
 {
 }

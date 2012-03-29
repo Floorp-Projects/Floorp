@@ -61,7 +61,7 @@ class nsSVGGradientElement : public nsSVGGradientElementBase,
   friend class nsSVGGradientFrame;
 
 protected:
-  nsSVGGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGGradientElement(already_AddRefed<nsNodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -109,8 +109,8 @@ class nsSVGLinearGradientElement : public nsSVGLinearGradientElementBase,
 
 protected:
   friend nsresult NS_NewSVGLinearGradientElement(nsIContent **aResult,
-                                                 already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGLinearGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                                 already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGLinearGradientElement(already_AddRefed<nsNodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -128,7 +128,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGLinearGradientElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGLinearGradientElementBase::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -152,8 +152,8 @@ class nsSVGRadialGradientElement : public nsSVGRadialGradientElementBase,
 
 protected:
   friend nsresult NS_NewSVGRadialGradientElement(nsIContent **aResult,
-                                                 already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGRadialGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                                 already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGRadialGradientElement(already_AddRefed<nsNodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -171,7 +171,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGRadialGradientElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGRadialGradientElementBase::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
