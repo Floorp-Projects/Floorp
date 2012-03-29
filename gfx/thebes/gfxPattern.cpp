@@ -148,7 +148,7 @@ gfxPattern::GetMatrix() const
 }
 
 Pattern*
-gfxPattern::GetPattern(mozilla::gfx::DrawTarget *aTarget)
+gfxPattern::GetPattern(DrawTarget *aTarget, Matrix *aPatternTransform)
 {
   if (!mPattern) {
     mGfxPattern = new (mSurfacePattern.addr())
@@ -185,6 +185,9 @@ gfxPattern::GetPattern(mozilla::gfx::DrawTarget *aTarget)
 
       if (mSourceSurface) {
         Matrix newMat = ToMatrix(matrix);
+
+        AdjustTransformForPattern(newMat, aTarget->GetTransform(), aPatternTransform);
+
         newMat.Invert();
         double x, y;
         cairo_surface_get_device_offset(surf, &x, &y);
@@ -224,6 +227,9 @@ gfxPattern::GetPattern(mozilla::gfx::DrawTarget *aTarget)
         gfxMatrix matrix(*reinterpret_cast<gfxMatrix*>(&mat));
 
         Matrix newMat = ToMatrix(matrix);
+
+        AdjustTransformForPattern(newMat, aTarget->GetTransform(), aPatternTransform);
+
         newMat.Invert();
 
         mGfxPattern = new (mLinearGradientPattern.addr())
@@ -260,6 +266,9 @@ gfxPattern::GetPattern(mozilla::gfx::DrawTarget *aTarget)
         gfxMatrix matrix(*reinterpret_cast<gfxMatrix*>(&mat));
 
         Matrix newMat = ToMatrix(matrix);
+
+        AdjustTransformForPattern(newMat, aTarget->GetTransform(), aPatternTransform);
+
         newMat.Invert();
 
         double x1, y1, x2, y2, r1, r2;
@@ -422,4 +431,19 @@ gfxPattern::CairoStatus()
     // An Azure pattern as this point is never in error status.
     return CAIRO_STATUS_SUCCESS;
   }
+}
+
+void
+gfxPattern::AdjustTransformForPattern(Matrix &aPatternTransform,
+                                      const Matrix &aCurrentTransform,
+                                      const Matrix *aOriginalTransform)
+{
+  if (!aOriginalTransform) {
+    return;
+  }
+
+  Matrix mat = *aOriginalTransform;
+  mat.Invert();
+
+  aPatternTransform = mat * aCurrentTransform * aPatternTransform;
 }
