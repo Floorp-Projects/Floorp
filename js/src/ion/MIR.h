@@ -1540,8 +1540,11 @@ class MToDouble
 // to an int32 without loss (i.e. "5.5" or undefined) then a bailout occurs.
 class MToInt32 : public MUnaryInstruction
 {
+    bool canBeNegativeZero_;
+
     MToInt32(MDefinition *def)
-      : MUnaryInstruction(def)
+      : MUnaryInstruction(def),
+        canBeNegativeZero_(true)
     {
         setResultType(MIRType_Int32);
         setMovable();
@@ -1559,10 +1562,16 @@ class MToInt32 : public MUnaryInstruction
     }
 
     MDefinition *foldsTo(bool useValueNumbers);
+    void analyzeRange();
+
+    bool canBeNegativeZero() {
+        return canBeNegativeZero_;
+    }
 
     bool congruentTo(MDefinition *const &ins) const {
         return congruentIfOperandsEqual(ins);
     }
+
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
