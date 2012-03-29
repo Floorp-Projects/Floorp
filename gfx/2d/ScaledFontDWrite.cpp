@@ -56,6 +56,24 @@ ScaledFontDWrite::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget 
   PathBuilderD2D *pathBuilderD2D =
     static_cast<PathBuilderD2D*>(pathBuilder.get());
 
+  CopyGlyphsToSink(aBuffer, pathBuilderD2D->GetSink());
+
+  return pathBuilder->Finish();
+}
+
+void
+ScaledFontDWrite::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder)
+{
+  // XXX - Check path builder type!
+  PathBuilderD2D *pathBuilderD2D =
+    static_cast<PathBuilderD2D*>(aBuilder);
+
+  CopyGlyphsToSink(aBuffer, pathBuilderD2D->GetSink());
+}
+
+void
+ScaledFontDWrite::CopyGlyphsToSink(const GlyphBuffer &aBuffer, ID2D1GeometrySink *aSink)
+{
   std::vector<UINT16> indices;
   std::vector<FLOAT> advances;
   std::vector<DWRITE_GLYPH_OFFSET> offsets;
@@ -72,9 +90,7 @@ ScaledFontDWrite::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget 
 
   mFontFace->GetGlyphRunOutline(mSize, &indices.front(), &advances.front(),
                                 &offsets.front(), aBuffer.mNumGlyphs,
-                                FALSE, FALSE, pathBuilderD2D->GetSink());
-
-  return pathBuilder->Finish();
+                                FALSE, FALSE, aSink);
 }
 
 }
