@@ -3635,6 +3635,34 @@ DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, const Value &value,
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER))
         attrs &= ~JSPROP_READONLY;
 
+    /*
+     * When we use DefineProperty, we need full scriptable Function objects rather
+     * than JSNatives. However, we might be pulling this property descriptor off
+     * of something with JSNative property descriptors. If we are, wrap them in
+     * JS Function objects.
+     */
+    if (attrs & JSPROP_NATIVE_ACCESSORS) {
+        RootId idRoot(cx, &id);
+
+        JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
+        attrs &= ~JSPROP_NATIVE_ACCESSORS;
+        if (getter) {
+            JSObject *getobj = JS_NewFunction(cx, (Native) getter, 0, 0, &obj->global(), NULL);
+            if (!getobj)
+                return false;
+            getter = JS_DATA_TO_FUNC_PTR(PropertyOp, getobj);
+            attrs |= JSPROP_GETTER;
+        }
+        if (setter) {
+            JSObject *setobj = JS_NewFunction(cx, (Native) setter, 1, 0, &obj->global(), NULL);
+            if (!setobj)
+                return false;
+            setter = JS_DATA_TO_FUNC_PTR(StrictPropertyOp, setobj);
+            attrs |= JSPROP_SETTER;
+        }
+    }
+
+
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id, value,
@@ -3692,27 +3720,6 @@ DefineProperty(JSContext *cx, JSObject *obj, const char *name, const Value &valu
         if (!atom)
             return JS_FALSE;
         id = ATOM_TO_JSID(atom);
-    }
-
-    if (attrs & JSPROP_NATIVE_ACCESSORS) {
-        RootId idRoot(cx, &id);
-
-        JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
-        attrs &= ~JSPROP_NATIVE_ACCESSORS;
-        if (getter) {
-            JSObject *getobj = JS_NewFunction(cx, (Native) getter, 0, 0, &obj->global(), NULL);
-            if (!getobj)
-                return false;
-            getter = JS_DATA_TO_FUNC_PTR(PropertyOp, getobj);
-            attrs |= JSPROP_GETTER;
-        }
-        if (setter) {
-            JSObject *setobj = JS_NewFunction(cx, (Native) setter, 1, 0, &obj->global(), NULL);
-            if (!setobj)
-                return false;
-            setter = JS_DATA_TO_FUNC_PTR(StrictPropertyOp, setobj);
-            attrs |= JSPROP_SETTER;
-        }
     }
 
     return DefinePropertyById(cx, obj, id, value, getter, setter, attrs, flags, tinyid);
