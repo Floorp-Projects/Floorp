@@ -914,7 +914,8 @@ var WifiManager = (function() {
     for (var n = 0; n < networkConfigurationFields.length; ++n) {
       let fieldName = networkConfigurationFields[n];
       getNetworkVariableCommand(netId, fieldName, function(value) {
-        config[fieldName] = value;
+        if (value !== null)
+          config[fieldName] = value;
         if (++done == networkConfigurationFields.length)
           callback(config);
       });
