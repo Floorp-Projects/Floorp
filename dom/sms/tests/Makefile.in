@@ -53,14 +53,11 @@ _TEST_FILES = \
   test_smsfilter.html \
   $(NULL)
 
-ifdef MOZ_B2G_RIL
 _CHROME_TEST_FILES = \
-  test_smsdatabaseservice.xul \
   $(NULL)
-endif
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
-libs:: $(_CHROME_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+#libs:: $(_CHROME_TEST_FILES)
+#	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
