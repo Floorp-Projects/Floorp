@@ -46,7 +46,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULDocument.h"
-#include "nsNodeInfo.h"
+#include "nsINodeInfo.h"
 #include "nsIServiceManager.h"
 #include "nsIXULDocument.h"
 
@@ -856,7 +856,7 @@ nsXULContentBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
         nsCOMPtr<nsIAtom> tag;
         PRInt32 nameSpaceID;
 
-        nsRefPtr<nsNodeInfo> ni =
+        nsCOMPtr<nsINodeInfo> ni =
             aTemplateNode->GetExistingAttrNameFromQName(attribute);
         if (ni) {
             tag = ni->NameAtom();
@@ -1400,7 +1400,7 @@ nsXULContentBuilder::CreateElement(PRInt32 aNameSpaceID,
         return NS_ERROR_NOT_INITIALIZED;
 
     nsCOMPtr<nsIContent> result;
-    nsRefPtr<nsNodeInfo> nodeInfo =
+    nsCOMPtr<nsINodeInfo> nodeInfo =
         doc->NodeInfoManager()->GetNodeInfo(aTag, nsnull, aNameSpaceID,
                                             nsIDOMNode::ELEMENT_NODE);
 

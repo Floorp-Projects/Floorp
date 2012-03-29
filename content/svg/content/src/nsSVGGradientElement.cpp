@@ -91,7 +91,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGGradientElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGGradientElement::nsSVGGradientElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGGradientElement::nsSVGGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGGradientElementBase(aNodeInfo)
 {
 }
@@ -194,7 +194,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGLinearGradientElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGLinearGradientElement::nsSVGLinearGradientElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGLinearGradientElement::nsSVGLinearGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGLinearGradientElementBase(aNodeInfo)
 {
 }
@@ -284,7 +284,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGRadialGradientElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGRadialGradientElement::nsSVGRadialGradientElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGRadialGradientElement::nsSVGRadialGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGRadialGradientElementBase(aNodeInfo)
 {
 }

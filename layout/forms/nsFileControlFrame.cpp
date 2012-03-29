@@ -60,7 +60,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIFilePicker.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsNodeInfo.h"
+#include "nsINodeInfo.h"
 #include "nsIDOMEventTarget.h"
 #include "nsILocalFile.h"
 #include "nsHTMLInputElement.h"
@@ -165,7 +165,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   // Get the NodeInfoManager and tag necessary to create input elements
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
 
-  nsRefPtr<nsNodeInfo> nodeInfo;
+  nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::input, nsnull,
                                                  kNameSpaceID_XHTML,
                                                  nsIDOMNode::ELEMENT_NODE);

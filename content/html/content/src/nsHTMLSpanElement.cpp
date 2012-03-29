@@ -46,7 +46,7 @@ class nsHTMLSpanElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLElement
 {
 public:
-  nsHTMLSpanElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsHTMLSpanElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLSpanElement();
 
   // nsISupports
@@ -61,7 +61,7 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -70,7 +70,7 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Span)
 
 
-nsHTMLSpanElement::nsHTMLSpanElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsHTMLSpanElement::nsHTMLSpanElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

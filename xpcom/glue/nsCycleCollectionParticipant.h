@@ -440,16 +440,13 @@ public:
       return NS_SUCCESS_INTERRUPTED_TRAVERSE;                                  \
     }
 
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN_INTERNAL(_class)        \
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(_class)                 \
   NS_IMETHODIMP                                                                \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::Traverse                              \
                          (void *p,                                             \
                           nsCycleCollectionTraversalCallback &cb)              \
   {                                                                            \
-    _class *tmp = static_cast<_class*>(p);
-
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(_class)                 \
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN_INTERNAL(_class)            \
+    _class *tmp = static_cast<_class*>(p);                                     \
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class, tmp->mRefCnt.get())
 
 #define NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(_cb, _name)                         \

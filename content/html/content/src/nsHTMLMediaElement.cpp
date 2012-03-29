@@ -1420,7 +1420,7 @@ nsHTMLMediaElement::LookupMediaElementURITable(nsIURI* aURI)
   return nsnull;
 }
 
-nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mCurrentLoadID(0),
     mNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY),

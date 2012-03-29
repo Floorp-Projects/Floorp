@@ -45,7 +45,7 @@ class nsHTMLLegendElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLLegendElement
 {
 public:
-  nsHTMLLegendElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsHTMLLegendElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLLegendElement();
 
   static nsHTMLLegendElement* FromContent(nsIContent *aContent)
@@ -116,7 +116,7 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   mozilla::dom::Element *GetFormElement()
   {

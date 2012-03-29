@@ -56,7 +56,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPolyElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGPolyElement::nsSVGPolyElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGPolyElement::nsSVGPolyElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGPolyElementBase(aNodeInfo)
 {
 

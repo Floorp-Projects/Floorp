@@ -58,7 +58,7 @@ class nsMathMLElement : public nsMathMLElementBase,
                         public mozilla::dom::Link
 {
 public:
-  nsMathMLElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+  nsMathMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsMathMLElementBase(aNodeInfo), Link(this),
       mIncrementScriptLevel(false)
   {}
@@ -98,7 +98,7 @@ public:
   
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  nsresult Clone(nsNodeInfo*, nsINode**) const;
+  nsresult Clone(nsINodeInfo*, nsINode**) const;
   virtual nsEventStates IntrinsicState() const;
   virtual bool IsNodeOfType(PRUint32 aFlags) const;
 

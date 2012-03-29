@@ -108,8 +108,8 @@ class nsSVGMarkerElement : public nsSVGMarkerElementBase,
 
 protected:
   friend nsresult NS_NewSVGMarkerElement(nsIContent **aResult,
-                                         already_AddRefed<nsNodeInfo> aNodeInfo);
-  nsSVGMarkerElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+                                         already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGMarkerElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
@@ -142,7 +142,7 @@ public:
   nsSVGViewBoxRect GetViewBoxRect();
   gfxMatrix GetViewBoxTransform();
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   nsSVGOrientType* GetOrientType() { return &mOrientType; }
 

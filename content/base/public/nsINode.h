@@ -42,9 +42,8 @@
 #include "nsEvent.h"
 #include "nsPropertyTable.h"
 #include "nsTObserverArray.h"
-#include "nsNodeInfo.h"
+#include "nsINodeInfo.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsWrapperCache.h"
 #include "nsIProgrammingLanguage.h" // for ::JAVASCRIPT
 #include "nsDOMError.h"
@@ -351,7 +350,7 @@ public:
 // Disable annoying warning about 'this' in initializers.
 #pragma warning(disable:4355)
 #endif
-  nsINode(already_AddRefed<nsNodeInfo> aNodeInfo)
+  nsINode(already_AddRefed<nsINodeInfo> aNodeInfo)
   : mNodeInfo(aNodeInfo),
     mParent(nsnull),
     mFlags(0),
@@ -866,7 +865,7 @@ public:
    * @param aNodeInfo the nodeinfo to use for the clone
    * @param aResult the clone
    */
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const = 0;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const = 0;
 
   /**
    * Checks if a node has the same ownerDocument as this one. Note that this
@@ -1548,7 +1547,7 @@ protected:
   static bool Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb);
   static void Unlink(nsINode *tmp);
 
-  nsRefPtr<nsNodeInfo> mNodeInfo;
+  nsCOMPtr<nsINodeInfo> mNodeInfo;
 
   nsINode* mParent;
 

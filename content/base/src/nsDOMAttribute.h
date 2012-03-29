@@ -48,6 +48,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsINodeInfo.h"
 #include "nsDOMAttributeMap.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsStubMutationObserver.h"
@@ -60,7 +61,7 @@ class nsDOMAttribute : public nsIAttribute,
 {
 public:
   nsDOMAttribute(nsDOMAttributeMap* aAttrMap,
-                 already_AddRefed<nsNodeInfo> aNodeInfo,
+                 already_AddRefed<nsINodeInfo> aNodeInfo,
                  const nsAString& aValue,
                  bool aNsAware);
   virtual ~nsDOMAttribute();
@@ -90,7 +91,7 @@ public:
                                  bool aNotify);
   virtual nsresult AppendChildTo(nsIContent* aKid, bool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, bool aNotify);
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
 
   static void Initialize();

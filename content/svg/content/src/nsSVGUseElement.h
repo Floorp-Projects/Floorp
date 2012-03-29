@@ -49,7 +49,7 @@
 #include "nsTArray.h"
 
 class nsIContent;
-class nsNodeInfo;
+class nsINodeInfo;
 
 #define NS_SVG_USE_ELEMENT_IMPL_CID \
 { 0x55fb86fe, 0xd81f, 0x4ae4, \
@@ -57,7 +57,7 @@ class nsNodeInfo;
 
 nsresult
 NS_NewSVGSVGElement(nsIContent **aResult,
-                    already_AddRefed<nsNodeInfo> aNodeInfo,
+                    already_AddRefed<nsINodeInfo> aNodeInfo,
                     mozilla::dom::FromParser aFromParser);
 
 typedef nsSVGGraphicElement nsSVGUseElementBase;
@@ -71,8 +71,8 @@ class nsSVGUseElement : public nsSVGUseElementBase,
   friend class nsSVGUseFrame;
 protected:
   friend nsresult NS_NewSVGUseElement(nsIContent **aResult,
-                                      already_AddRefed<nsNodeInfo> aNodeInfo);
-  nsSVGUseElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+                                      already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGUseElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsSVGUseElement();
   
 public:
@@ -108,7 +108,7 @@ public:
   virtual bool HasValidDimensions() const;
 
   // nsIContent interface
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsXPCClassInfo* GetClassInfo();

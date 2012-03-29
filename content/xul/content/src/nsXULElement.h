@@ -53,7 +53,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIServiceManager.h"
 #include "nsIAtom.h"
-#include "nsNodeInfo.h"
+#include "nsINodeInfo.h"
 #include "nsIControllers.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventTarget.h"
@@ -199,11 +199,11 @@ public:
     virtual ~nsXULPrototypeNode() {}
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsIScriptGlobalObject* aGlobal,
-                               const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos) = 0;
+                               const nsCOMArray<nsINodeInfo> *aNodeInfos) = 0;
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptGlobalObject* aGlobal,
                                  nsIURI* aDocumentURI,
-                                 const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos) = 0;
+                                 const nsCOMArray<nsINodeInfo> *aNodeInfos) = 0;
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     virtual const char* ClassName() = 0;
@@ -275,11 +275,11 @@ public:
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsIScriptGlobalObject* aGlobal,
-                               const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos);
+                               const nsCOMArray<nsINodeInfo> *aNodeInfos);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptGlobalObject* aGlobal,
                                  nsIURI* aDocumentURI,
-                                 const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos);
+                                 const nsCOMArray<nsINodeInfo> *aNodeInfos);
 
     nsresult SetAttrAt(PRUint32 aPos, const nsAString& aValue, nsIURI* aDocumentURI);
 
@@ -287,7 +287,7 @@ public:
 
     nsPrototypeArray         mChildren;
 
-    nsRefPtr<nsNodeInfo>     mNodeInfo;
+    nsCOMPtr<nsINodeInfo>    mNodeInfo;           // [OWNER]
 
     PRUint32                 mNumAttributes;
     nsXULPrototypeAttribute* mAttributes;         // [OWNER]
@@ -319,13 +319,13 @@ public:
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsIScriptGlobalObject* aGlobal,
-                               const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos);
+                               const nsCOMArray<nsINodeInfo> *aNodeInfos);
     nsresult SerializeOutOfLine(nsIObjectOutputStream* aStream,
                                 nsIScriptGlobalObject* aGlobal);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptGlobalObject* aGlobal,
                                  nsIURI* aDocumentURI,
-                                 const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos);
+                                 const nsCOMArray<nsINodeInfo> *aNodeInfos);
     nsresult DeserializeOutOfLine(nsIObjectInputStream* aInput,
                                   nsIScriptGlobalObject* aGlobal);
 
@@ -383,11 +383,11 @@ public:
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsIScriptGlobalObject* aGlobal,
-                               const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos);
+                               const nsCOMArray<nsINodeInfo> *aNodeInfos);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptGlobalObject* aGlobal,
                                  nsIURI* aDocumentURI,
-                                 const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos);
+                                 const nsCOMArray<nsINodeInfo> *aNodeInfos);
 
     nsString                 mValue;
 };
@@ -411,11 +411,11 @@ public:
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsIScriptGlobalObject* aGlobal,
-                               const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos);
+                               const nsCOMArray<nsINodeInfo> *aNodeInfos);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptGlobalObject* aGlobal,
                                  nsIURI* aDocumentURI,
-                                 const nsTArray<nsRefPtr<nsNodeInfo> > *aNodeInfos);
+                                 const nsCOMArray<nsINodeInfo> *aNodeInfos);
 
     nsString                 mTarget;
     nsString                 mData;
@@ -463,7 +463,7 @@ protected:
     static nsIXBLService*       gXBLService;
 
 public:
-    nsXULElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+    nsXULElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
     static nsresult
     Create(nsXULPrototypeElement* aPrototype, nsIDocument* aDocument,
@@ -543,7 +543,7 @@ public:
     // nsIDOMXULElement
     NS_DECL_NSIDOMXULELEMENT
 
-    virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+    virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
     virtual nsEventStates IntrinsicState() const;
 
     nsresult EnsureLocalStyle();
@@ -679,12 +679,12 @@ protected:
     bool BoolAttrIsTrue(nsIAtom* aName);
 
     friend nsresult
-    NS_NewXULElement(nsIContent** aResult, nsNodeInfo *aNodeInfo);
+    NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo);
     friend void
-    NS_TrustedNewXULElement(nsIContent** aResult, nsNodeInfo *aNodeInfo);
+    NS_TrustedNewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo);
 
     static already_AddRefed<nsXULElement>
-    Create(nsXULPrototypeElement* aPrototype, nsNodeInfo *aNodeInfo,
+    Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
            bool aIsScriptable);
 
     friend class nsScriptEventHandlerOwnerTearoff;

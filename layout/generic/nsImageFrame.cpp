@@ -51,6 +51,7 @@
 #include "nsIPresShell.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
+#include "nsINodeInfo.h"
 #include "nsContentUtils.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsStyleContext.h"

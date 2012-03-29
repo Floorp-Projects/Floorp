@@ -194,7 +194,7 @@ public:
 
   virtual nsresult SetEditingState(EditingState aState);
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual NS_HIDDEN_(void) RemovedFromDocShell();
 

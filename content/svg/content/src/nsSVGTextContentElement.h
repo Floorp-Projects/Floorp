@@ -61,7 +61,7 @@ public:
 
 protected:
 
-  nsSVGTextContentElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+  nsSVGTextContentElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsSVGTextContentElementBase(aNodeInfo)
   {}
 

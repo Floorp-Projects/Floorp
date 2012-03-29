@@ -86,7 +86,7 @@ class nsHTMLButtonElement : public nsGenericHTMLFormElement,
 public:
   using nsIConstraintValidation::GetValidationMessage;
 
-  nsHTMLButtonElement(already_AddRefed<nsNodeInfo> aNodeInfo,
+  nsHTMLButtonElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                       FromParser aFromParser = NOT_FROM_PARSER);
   virtual ~nsHTMLButtonElement();
 
@@ -158,7 +158,7 @@ public:
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true);
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual void DoneCreatingElement();
   virtual nsXPCClassInfo* GetClassInfo();
 
@@ -181,7 +181,7 @@ private:
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Button)
 
 
-nsHTMLButtonElement::nsHTMLButtonElement(already_AddRefed<nsNodeInfo> aNodeInfo,
+nsHTMLButtonElement::nsHTMLButtonElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                          FromParser aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mType(kButtonDefaultType->value),

@@ -50,7 +50,7 @@ class nsHTMLDivElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLDivElement
 {
 public:
-  nsHTMLDivElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsHTMLDivElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLDivElement();
 
   // nsISupports
@@ -74,7 +74,7 @@ public:
                                 nsAttrValue& aResult);
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -83,7 +83,7 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Div)
 
 
-nsHTMLDivElement::nsHTMLDivElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsHTMLDivElement::nsHTMLDivElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

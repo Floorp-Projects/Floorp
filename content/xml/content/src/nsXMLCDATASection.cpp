@@ -45,7 +45,7 @@ class nsXMLCDATASection : public nsGenericDOMDataNode,
                           public nsIDOMCDATASection
 {
 public:
-  nsXMLCDATASection(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsXMLCDATASection(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsXMLCDATASection();
 
   // nsISupports
@@ -66,7 +66,7 @@ public:
   // nsINode
   virtual bool IsNodeOfType(PRUint32 aFlags) const;
 
-  virtual nsGenericDOMDataNode* CloneDataNode(nsNodeInfo *aNodeInfo,
+  virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
                                               bool aCloneText) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
@@ -84,7 +84,7 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
 
   *aInstancePtrResult = nsnull;
 
-  nsRefPtr<nsNodeInfo> ni;
+  nsCOMPtr<nsINodeInfo> ni;
   ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::cdataTagName,
                                      nsnull, kNameSpaceID_None,
                                      nsIDOMNode::CDATA_SECTION_NODE);
@@ -100,7 +100,7 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
   return NS_OK;
 }
 
-nsXMLCDATASection::nsXMLCDATASection(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsXMLCDATASection::nsXMLCDATASection(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericDOMDataNode(aNodeInfo)
 {
   NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::CDATA_SECTION_NODE,
@@ -132,9 +132,9 @@ nsXMLCDATASection::IsNodeOfType(PRUint32 aFlags) const
 }
 
 nsGenericDOMDataNode*
-nsXMLCDATASection::CloneDataNode(nsNodeInfo *aNodeInfo, bool aCloneText) const
+nsXMLCDATASection::CloneDataNode(nsINodeInfo *aNodeInfo, bool aCloneText) const
 {
-  nsRefPtr<nsNodeInfo> ni = aNodeInfo;
+  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
   nsXMLCDATASection *it = new nsXMLCDATASection(ni.forget());
   if (it && aCloneText) {
     it->mText = mText;

@@ -103,7 +103,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGTextPathElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGTextPathElement::nsSVGTextPathElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGTextPathElement::nsSVGTextPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGTextPathElementBase(aNodeInfo)
 {
 }

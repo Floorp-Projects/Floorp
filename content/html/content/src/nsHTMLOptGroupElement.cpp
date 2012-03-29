@@ -54,7 +54,7 @@ class nsHTMLOptGroupElement : public nsGenericHTMLElement,
                               public nsIDOMHTMLOptGroupElement
 {
 public:
-  nsHTMLOptGroupElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsHTMLOptGroupElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLOptGroupElement();
 
   // nsISupports
@@ -82,7 +82,7 @@ public:
 
   virtual nsEventStates IntrinsicState() const;
  
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 
@@ -102,7 +102,7 @@ protected:
 NS_IMPL_NS_NEW_HTML_ELEMENT(OptGroup)
 
 
-nsHTMLOptGroupElement::nsHTMLOptGroupElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsHTMLOptGroupElement::nsHTMLOptGroupElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
   // We start off enabled

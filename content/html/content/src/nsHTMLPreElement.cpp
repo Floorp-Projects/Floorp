@@ -51,7 +51,7 @@ class nsHTMLPreElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLPreElement
 {
 public:
-  nsHTMLPreElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsHTMLPreElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLPreElement();
 
   // nsISupports
@@ -77,7 +77,7 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -86,7 +86,7 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Pre)
 
 
-nsHTMLPreElement::nsHTMLPreElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsHTMLPreElement::nsHTMLPreElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

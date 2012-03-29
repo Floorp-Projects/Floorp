@@ -55,7 +55,7 @@ public:
   NS_FORWARD_NSIDOMDOCUMENT(nsXMLDocument::)
   NS_FORWARD_NSIDOMNODE(nsXMLDocument::)
   NS_DECL_ISUPPORTS_INHERITED
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
 };
 

@@ -1862,7 +1862,7 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIAtom> tagAtom = do_GetAtom(tag);
-  nsRefPtr<nsNodeInfo> nodeInfo =
+  nsCOMPtr<nsINodeInfo> nodeInfo =
     aNim->GetNodeInfo(tagAtom, prefixAtom, namespaceID, nsIDOMNode::ELEMENT_NODE);
 
   PRUint32 attrCount;
@@ -1916,7 +1916,7 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
         if (!prefix.IsEmpty())
           prefixAtom = do_GetAtom(prefix);
 
-        nsRefPtr<nsNodeInfo> ni =
+        nsCOMPtr<nsINodeInfo> ni =
           aNim->GetNodeInfo(nameAtom, prefixAtom,
                             namespaceID, nsIDOMNode::ATTRIBUTE_NODE);
         attrs[i].mName.SetTo(ni);

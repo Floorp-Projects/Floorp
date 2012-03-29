@@ -51,7 +51,7 @@ class nsHTMLFrameElement : public nsGenericHTMLFrameElement,
                            public nsIDOMHTMLFrameElement
 {
 public:
-  nsHTMLFrameElement(already_AddRefed<nsNodeInfo> aNodeInfo,
+  nsHTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                      mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
   virtual ~nsHTMLFrameElement();
 
@@ -77,7 +77,7 @@ public:
                                 nsAttrValue& aResult);
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
 };
 
@@ -85,7 +85,7 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Frame)
 
 
-nsHTMLFrameElement::nsHTMLFrameElement(already_AddRefed<nsNodeInfo> aNodeInfo,
+nsHTMLFrameElement::nsHTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                        FromParser aFromParser)
   : nsGenericHTMLFrameElement(aNodeInfo, aFromParser)
 {

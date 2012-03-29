@@ -98,7 +98,7 @@ class nsHTMLTextAreaElement : public nsGenericHTMLFormElement,
 public:
   using nsIConstraintValidation::GetValidationMessage;
 
-  nsHTMLTextAreaElement(already_AddRefed<nsNodeInfo> aNodeInfo,
+  nsHTMLTextAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                         mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
 
   // nsISupports
@@ -202,7 +202,7 @@ public:
   virtual void DoneAddingChildren(bool aHaveNotified);
   virtual bool IsDoneAddingChildren();
 
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   nsresult CopyInnerTo(nsGenericElement* aDest) const;
 
@@ -323,7 +323,7 @@ protected:
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(TextArea)
 
 
-nsHTMLTextAreaElement::nsHTMLTextAreaElement(already_AddRefed<nsNodeInfo> aNodeInfo,
+nsHTMLTextAreaElement::nsHTMLTextAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                              FromParser aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mValueChanged(false),

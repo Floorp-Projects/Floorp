@@ -50,8 +50,8 @@ class nsSVGAnimateMotionElement : public nsSVGAnimateMotionElementBase,
 {
 protected:
   friend nsresult NS_NewSVGAnimateMotionElement(nsIContent **aResult,
-                                                already_AddRefed<nsNodeInfo> aNodeInfo);
-  nsSVGAnimateMotionElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+                                                already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGAnimateMotionElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
   mozilla::SVGMotionSMILAnimationFunction mAnimationFunction;
 
@@ -66,7 +66,7 @@ public:
   NS_FORWARD_NSIDOMSVGANIMATIONELEMENT(nsSVGAnimateMotionElementBase::)
 
   // nsIDOMNode specializations
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // nsISMILAnimationElement
   virtual nsSMILAnimationFunction& AnimationFunction();

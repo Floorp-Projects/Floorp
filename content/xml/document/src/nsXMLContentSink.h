@@ -52,7 +52,7 @@
 class nsIDocument;
 class nsIURI;
 class nsIContent;
-class nsNodeInfo;
+class nsINodeInfo;
 class nsIParser;
 class nsIViewManager;
 
@@ -142,7 +142,7 @@ protected:
                                nsIContent *aContent);
   virtual bool NotifyForDocElement() { return true; }
   virtual nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
-                                 nsNodeInfo* aNodeInfo, PRUint32 aLineNumber,
+                                 nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
                                  nsIContent** aResult, bool* aAppendContent,
                                  mozilla::dom::FromParser aFromParser);
 
@@ -185,7 +185,7 @@ protected:
 
   nsresult MaybePrettyPrint();
   
-  bool IsMonolithicContainer(nsNodeInfo* aNodeInfo);
+  bool IsMonolithicContainer(nsINodeInfo* aNodeInfo);
 
   nsresult HandleStartElement(const PRUnichar *aName, const PRUnichar **aAtts, 
                               PRUint32 aAttsCount, PRInt32 aIndex, 

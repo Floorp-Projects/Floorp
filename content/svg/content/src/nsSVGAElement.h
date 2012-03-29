@@ -57,8 +57,8 @@ class nsSVGAElement : public nsSVGAElementBase,
 {
 protected:
   friend nsresult NS_NewSVGAElement(nsIContent **aResult,
-                                    already_AddRefed<nsNodeInfo> aNodeInfo);
-  nsSVGAElement(already_AddRefed<nsNodeInfo> aNodeInfo);
+                                    already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGAElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -75,7 +75,7 @@ public:
   // nsINode interface methods
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // nsILink
   NS_IMETHOD LinkAdded() { return NS_OK; }

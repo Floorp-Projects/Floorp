@@ -394,7 +394,7 @@ nsAttrAndChildArray::SetAndTakeAttr(nsIAtom* aLocalName, nsAttrValue& aValue)
 }
 
 nsresult
-nsAttrAndChildArray::SetAndTakeAttr(nsNodeInfo* aName, nsAttrValue& aValue)
+nsAttrAndChildArray::SetAndTakeAttr(nsINodeInfo* aName, nsAttrValue& aValue)
 {
   PRInt32 namespaceID = aName->NamespaceID();
   nsIAtom* localName = aName->NameAtom();

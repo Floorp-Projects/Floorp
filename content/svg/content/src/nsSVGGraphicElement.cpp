@@ -69,7 +69,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGGraphicElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGGraphicElement::nsSVGGraphicElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsSVGGraphicElement::nsSVGGraphicElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGGraphicElementBase(aNodeInfo)
 {
 }

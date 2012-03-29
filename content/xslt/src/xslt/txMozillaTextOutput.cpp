@@ -278,7 +278,7 @@ txMozillaTextOutput::createXHTMLElement(nsIAtom* aName,
 {
     *aResult = nsnull;
 
-    nsRefPtr<nsNodeInfo> ni;
+    nsCOMPtr<nsINodeInfo> ni;
     ni = mDocument->NodeInfoManager()->
         GetNodeInfo(aName, nsnull, kNameSpaceID_XHTML,
                     nsIDOMNode::ELEMENT_NODE);

@@ -103,7 +103,7 @@ NS_IMETHODIMP nsHTMLVideoElement::GetVideoHeight(PRUint32 *aVideoHeight)
   return NS_OK;
 }
 
-nsHTMLVideoElement::nsHTMLVideoElement(already_AddRefed<nsNodeInfo> aNodeInfo)
+nsHTMLVideoElement::nsHTMLVideoElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsHTMLMediaElement(aNodeInfo)
 {
 }

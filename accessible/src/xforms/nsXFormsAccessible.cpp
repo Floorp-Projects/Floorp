@@ -515,7 +515,7 @@ nsXFormsSelectableAccessible::GetItemByIndex(PRUint32* aIndex,
   for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
     nsAccessible *child = accessible->GetChildAt(childIdx);
     nsIContent* childContent = child->GetContent();
-    nsNodeInfo *nodeInfo = childContent->NodeInfo();
+    nsINodeInfo *nodeInfo = childContent->NodeInfo();
     if (nodeInfo->NamespaceEquals(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS))) {
       if (nodeInfo->Equals(nsGkAtoms::item)) {
         if (!*aIndex)
@@ -579,7 +579,7 @@ nsXFormsSelectableItemAccessible::IsSelected()
     if (!content)
       return false;
 
-    nsRefPtr<nsNodeInfo> nodeinfo = content->NodeInfo();
+    nsCOMPtr<nsINodeInfo> nodeinfo = content->NodeInfo();
     if (!nodeinfo->NamespaceEquals(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS)))
       continue;
 

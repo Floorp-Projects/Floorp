@@ -1325,7 +1325,7 @@ nsXULDocument::Persist(const nsAString& aID,
     nsCOMPtr<nsIAtom> tag;
     PRInt32 nameSpaceID;
 
-    nsRefPtr<nsNodeInfo> ni = element->GetExistingAttrNameFromQName(aAttr);
+    nsCOMPtr<nsINodeInfo> ni = element->GetExistingAttrNameFromQName(aAttr);
     if (ni) {
         tag = ni->NameAtom();
         nameSpaceID = ni->NamespaceID();
@@ -3669,14 +3669,14 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
         // what. So we need to copy everything out of the prototype
         // into the element.  Get a nodeinfo from our nodeinfo manager
         // for this node.
-        nsRefPtr<nsNodeInfo> newNodeInfo;
+        nsCOMPtr<nsINodeInfo> newNodeInfo;
         newNodeInfo = mNodeInfoManager->GetNodeInfo(aPrototype->mNodeInfo->NameAtom(),
                                                     aPrototype->mNodeInfo->GetPrefixAtom(),
                                                     aPrototype->mNodeInfo->NamespaceID(),
                                                     nsIDOMNode::ELEMENT_NODE);
         if (!newNodeInfo) return NS_ERROR_OUT_OF_MEMORY;
         nsCOMPtr<nsIContent> content;
-        nsRefPtr<nsNodeInfo> xtfNi = newNodeInfo;
+        nsCOMPtr<nsINodeInfo> xtfNi = newNodeInfo;
         rv = NS_NewElement(getter_AddRefs(content), newNodeInfo.forget(),
                            NOT_FROM_PARSER);
         if (NS_FAILED(rv))
@@ -4245,7 +4245,7 @@ nsXULDocument::FindBroadcaster(Element* aElement,
                                nsIDOMElement** aBroadcaster)
 {
     nsresult rv;
-    nsNodeInfo *ni = aElement->NodeInfo();
+    nsINodeInfo *ni = aElement->NodeInfo();
     *aListener = nsnull;
     *aBroadcaster = nsnull;
 
