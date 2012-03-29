@@ -10227,7 +10227,7 @@ nsGlobalWindow::DisableDeviceSensor(PRUint32 aType)
   PRUint32 doomedElement = -1;
   for (int i = 0; i < mEnabledSensors.Length(); i++) {
     if (mEnabledSensors[i] == aType) {
-      doomedElement = -1;
+      doomedElement = i;
       break;
     }
   }
