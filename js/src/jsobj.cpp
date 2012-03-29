@@ -4453,6 +4453,7 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value_,
 {
     JS_ASSERT((defineHow & ~(DNP_CACHE_RESULT | DNP_DONT_PURGE |
                              DNP_SKIP_TYPE)) == 0);
+    JS_ASSERT(!(attrs & JSPROP_NATIVE_ACCESSORS));
 
     RootObject objRoot(cx, &obj);
     RootId idRoot(cx, &id);
