@@ -46,8 +46,8 @@ class nsSVGDescElement : public nsSVGDescElementBase,
 {
 protected:
   friend nsresult NS_NewSVGDescElement(nsIContent **aResult,
-                                       already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGDescElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                       already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGDescElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   nsresult Init();
 
 public:
@@ -61,7 +61,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGDescElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGDescElementBase::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -87,7 +87,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGDescElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGDescElement::nsSVGDescElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGDescElement::nsSVGDescElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGDescElementBase(aNodeInfo)
 {
 }

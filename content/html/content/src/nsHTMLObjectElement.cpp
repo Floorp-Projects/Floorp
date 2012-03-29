@@ -66,7 +66,7 @@ class nsHTMLObjectElement : public nsGenericHTMLFormElement
 public:
   using nsIConstraintValidation::GetValidationMessage;
 
-  nsHTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+  nsHTMLObjectElement(already_AddRefed<nsNodeInfo> aNodeInfo,
                       mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
   virtual ~nsHTMLObjectElement();
 
@@ -145,7 +145,7 @@ public:
   // nsObjectLoadingContent
   virtual PRUint32 GetCapabilities() const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   nsresult CopyInnerTo(nsGenericElement* aDest) const;
 
@@ -174,7 +174,7 @@ private:
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Object)
 
 
-nsHTMLObjectElement::nsHTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+nsHTMLObjectElement::nsHTMLObjectElement(already_AddRefed<nsNodeInfo> aNodeInfo,
                                          FromParser aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mIsDoneAddingChildren(!aFromParser)

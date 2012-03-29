@@ -88,7 +88,7 @@ class nsHTMLImageElement : public nsGenericHTMLElement,
                            public nsIJSNativeInitializer
 {
 public:
-  nsHTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLImageElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLImageElement();
 
   // nsISupports
@@ -164,7 +164,7 @@ public:
                               bool aCompileEventHandlers);
 
   virtual nsEventStates IntrinsicState() const;
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   nsresult CopyInnerTo(nsGenericElement* aDest) const;
 
@@ -175,15 +175,15 @@ protected:
 };
 
 nsGenericHTMLElement*
-NS_NewHTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+NS_NewHTMLImageElement(already_AddRefed<nsNodeInfo> aNodeInfo,
                        FromParser aFromParser)
 {
   /*
-   * nsHTMLImageElement's will be created without a nsINodeInfo passed in
+   * nsHTMLImageElement's will be created without a nsNodeInfo passed in
    * if someone says "var img = new Image();" in JavaScript, in a case like
-   * that we request the nsINodeInfo from the document's nodeinfo list.
+   * that we request the nsNodeInfo from the document's nodeinfo list.
    */
-  nsCOMPtr<nsINodeInfo> nodeInfo(aNodeInfo);
+  nsRefPtr<nsNodeInfo> nodeInfo(aNodeInfo);
   if (!nodeInfo) {
     nsCOMPtr<nsIDocument> doc =
       do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
@@ -198,7 +198,7 @@ NS_NewHTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   return new nsHTMLImageElement(nodeInfo.forget());
 }
 
-nsHTMLImageElement::nsHTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLImageElement::nsHTMLImageElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
   // We start out broken

@@ -50,7 +50,7 @@ class nsHTMLFieldSetElement : public nsGenericHTMLFormElement,
 public:
   using nsIConstraintValidation::GetValidationMessage;
 
-  nsHTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLFieldSetElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLFieldSetElement();
 
   /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
@@ -90,7 +90,7 @@ public:
   NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_FIELDSET; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
 
   const nsIContent* GetFirstLegend() const { return mFirstLegend; }

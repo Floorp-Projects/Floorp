@@ -49,7 +49,6 @@
 #include "mozilla/css/Loader.h"
 #include "nsStyleConsts.h"
 #include "nsStyleLinkElement.h"
-#include "nsINodeInfo.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsCPrefetchService.h"

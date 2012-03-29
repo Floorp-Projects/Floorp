@@ -1191,7 +1191,7 @@ nsHTMLDocument::MatchLinks(nsIContent *aContent, PRInt32 aNamespaceID,
     }
 #endif
 
-    nsINodeInfo *ni = aContent->NodeInfo();
+    nsNodeInfo *ni = aContent->NodeInfo();
 
     nsIAtom *localName = ni->NameAtom();
     if (ni->NamespaceID() == kNameSpaceID_XHTML &&
@@ -3424,7 +3424,7 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
 }
 
 nsresult
-nsHTMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+nsHTMLDocument::Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const
 {
   NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
                "Can't import this document into another document!");

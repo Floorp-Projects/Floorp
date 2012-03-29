@@ -18,7 +18,7 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                                   public nsIMozBrowserFrame
 {
 public:
-  nsGenericHTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+  nsGenericHTMLFrameElement(already_AddRefed<nsNodeInfo> aNodeInfo,
                             mozilla::dom::FromParser aFromParser)
     : nsGenericHTMLElement(aNodeInfo)
     , mNetworkCreated(aFromParser == mozilla::dom::FROM_PARSER_NETWORK)

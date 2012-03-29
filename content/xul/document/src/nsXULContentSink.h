@@ -99,12 +99,12 @@ protected:
 
     nsresult OpenRoot(const PRUnichar** aAttributes,
                       const PRUint32 aAttrLen,
-                      nsINodeInfo *aNodeInfo);
+                      nsNodeInfo *aNodeInfo);
 
     nsresult OpenTag(const PRUnichar** aAttributes,
                      const PRUint32 aAttrLen,
                      const PRUint32 aLineNumber,
-                     nsINodeInfo *aNodeInfo);
+                     nsNodeInfo *aNodeInfo);
 
     // If OpenScript returns NS_OK and after it returns our state is eInScript,
     // that means that we created a prototype script and stuck it on
@@ -130,7 +130,7 @@ protected:
 
     nsresult NormalizeAttributeString(const PRUnichar *aExpatName,
                                       nsAttrName &aName);
-    nsresult CreateElement(nsINodeInfo *aNodeInfo,
+    nsresult CreateElement(nsNodeInfo *aNodeInfo,
                            nsXULPrototypeElement** aResult);
 
 

@@ -60,7 +60,7 @@
 #include "nsNetUtil.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
-#include "nsINodeInfo.h"
+#include "nsNodeInfo.h"
 #include "nsHTMLTokens.h"
 #include "nsIAppShell.h"
 #include "nsCRT.h"
@@ -134,11 +134,11 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 //----------------------------------------------------------------------
 
 typedef nsGenericHTMLElement*
-  (*contentCreatorCallback)(already_AddRefed<nsINodeInfo>,
+  (*contentCreatorCallback)(already_AddRefed<nsNodeInfo>,
                             FromParser aFromParser);
 
 nsGenericHTMLElement*
-NS_NewHTMLNOTUSEDElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+NS_NewHTMLNOTUSEDElement(already_AddRefed<nsNodeInfo> aNodeInfo,
                          FromParser aFromParser)
 {
   NS_NOTREACHED("The element ctor should never be called");
@@ -257,7 +257,7 @@ protected:
   PRUint8 mFramesEnabled : 1;
   PRUint8 unused : 6;  // bits available if someone needs one
 
-  nsINodeInfo* mNodeInfoCache[NS_HTML_TAG_MAX + 1];
+  nsNodeInfo* mNodeInfoCache[NS_HTML_TAG_MAX + 1];
 
   nsresult FlushTags();
 
@@ -463,7 +463,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
 {
   // Find/create atom for the tag name
 
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<nsNodeInfo> nodeInfo;
 
   if (aNodeType == eHTMLTag_userdefined) {
     nsAutoString lower;
@@ -495,12 +495,12 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
 }
 
 nsresult
-NS_NewHTMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
+NS_NewHTMLElement(nsIContent** aResult, already_AddRefed<nsNodeInfo> aNodeInfo,
                   FromParser aFromParser)
 {
   *aResult = nsnull;
 
-  nsCOMPtr<nsINodeInfo> nodeInfo = aNodeInfo;
+  nsRefPtr<nsNodeInfo> nodeInfo = aNodeInfo;
 
   nsIParserService* parserService = nsContentUtils::GetParserService();
   if (!parserService)
@@ -518,7 +518,7 @@ NS_NewHTMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
 }
 
 already_AddRefed<nsGenericHTMLElement>
-CreateHTMLElement(PRUint32 aNodeType, already_AddRefed<nsINodeInfo> aNodeInfo,
+CreateHTMLElement(PRUint32 aNodeType, already_AddRefed<nsNodeInfo> aNodeInfo,
                   FromParser aFromParser)
 {
   NS_ASSERTION(aNodeType <= NS_HTML_TAG_MAX ||
@@ -1343,7 +1343,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLContentSink,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mHead)
   for (PRUint32 i = 0; i < ArrayLength(tmp->mNodeInfoCache); ++i) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mNodeInfoCache[i]");
-    cb.NoteXPCOMChild(tmp->mNodeInfoCache[i]);
+    cb.NoteNativeChild(tmp->mNodeInfoCache[i], &NS_CYCLE_COLLECTION_NAME(nsNodeInfo));
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -1427,7 +1427,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   // large pages.  See bugzilla bug 77540.
   mMaxTextRun = Preferences::GetInt("content.maxtextrun", 8191);
 
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<nsNodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::html, nsnull,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);

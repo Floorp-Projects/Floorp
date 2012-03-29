@@ -57,7 +57,7 @@ class nsHTMLIFrameElement : public nsGenericHTMLFrameElement
                           , public nsIDOMGetSVGDocument
 {
 public:
-  nsHTMLIFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+  nsHTMLIFrameElement(already_AddRefed<nsNodeInfo> aNodeInfo,
                       mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
   virtual ~nsHTMLIFrameElement();
 
@@ -87,7 +87,7 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
 };
 
@@ -95,7 +95,7 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(IFrame)
 
 
-nsHTMLIFrameElement::nsHTMLIFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+nsHTMLIFrameElement::nsHTMLIFrameElement(already_AddRefed<nsNodeInfo> aNodeInfo,
                                          FromParser aFromParser)
   : nsGenericHTMLFrameElement(aNodeInfo, aFromParser)
 {

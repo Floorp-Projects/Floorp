@@ -63,7 +63,7 @@ class nsHTMLFormElement : public nsGenericHTMLElement,
                           public nsIRadioGroupContainer
 {
 public:
-  nsHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLFormElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLFormElement();
 
   nsresult Init();
@@ -150,7 +150,7 @@ public:
    */
   void ForgetCurrentSubmission();
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLFormElement,
                                                      nsGenericHTMLElement)

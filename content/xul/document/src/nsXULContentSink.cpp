@@ -61,7 +61,7 @@
 #include "nsIFormControl.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsINameSpaceManager.h"
-#include "nsINodeInfo.h"
+#include "nsNodeInfo.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptRuntime.h"
 #include "nsIScriptGlobalObject.h"
@@ -407,7 +407,7 @@ XULContentSinkImpl::FlushText(bool aCreateTextNode)
 
         bool stripWhitespace = false;
         if (node->mType == nsXULPrototypeNode::eType_Element) {
-            nsINodeInfo *nodeInfo =
+            nsNodeInfo *nodeInfo =
                 static_cast<nsXULPrototypeElement*>(node.get())->mNodeInfo;
 
             if (nodeInfo->NamespaceEquals(kNameSpaceID_XUL))
@@ -462,7 +462,7 @@ XULContentSinkImpl::NormalizeAttributeString(const PRUnichar *aExpatName,
         return NS_OK;
     }
 
-    nsCOMPtr<nsINodeInfo> ni;
+    nsRefPtr<nsNodeInfo> ni;
     ni = mNodeInfoManager->GetNodeInfo(localName, prefix,
                                        nameSpaceID,
                                        nsIDOMNode::ATTRIBUTE_NODE);
@@ -474,7 +474,7 @@ XULContentSinkImpl::NormalizeAttributeString(const PRUnichar *aExpatName,
 }
 
 nsresult
-XULContentSinkImpl::CreateElement(nsINodeInfo *aNodeInfo,
+XULContentSinkImpl::CreateElement(nsNodeInfo *aNodeInfo,
                                   nsXULPrototypeElement** aResult)
 {
     nsXULPrototypeElement* element = new nsXULPrototypeElement();
@@ -517,7 +517,7 @@ XULContentSinkImpl::HandleStartElement(const PRUnichar *aName,
   nsContentUtils::SplitExpatName(aName, getter_AddRefs(prefix),
                                  getter_AddRefs(localName), &nameSpaceID);
 
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<nsNodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
                                            nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
@@ -838,7 +838,7 @@ XULContentSinkImpl::SetElementScriptType(nsXULPrototypeElement* element,
 nsresult
 XULContentSinkImpl::OpenRoot(const PRUnichar** aAttributes, 
                              const PRUint32 aAttrLen, 
-                             nsINodeInfo *aNodeInfo)
+                             nsNodeInfo *aNodeInfo)
 {
     NS_ASSERTION(mState == eInProlog, "how'd we get here?");
     if (mState != eInProlog)
@@ -897,7 +897,7 @@ nsresult
 XULContentSinkImpl::OpenTag(const PRUnichar** aAttributes, 
                             const PRUint32 aAttrLen,
                             const PRUint32 aLineNumber,
-                            nsINodeInfo *aNodeInfo)
+                            nsNodeInfo *aNodeInfo)
 {
     nsresult rv;
 

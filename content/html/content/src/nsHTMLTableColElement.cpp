@@ -55,7 +55,7 @@ class nsHTMLTableColElement : public nsGenericHTMLElement,
                               public nsIDOMHTMLTableColElement
 {
 public:
-  nsHTMLTableColElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLTableColElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLTableColElement();
 
   // nsISupports
@@ -80,7 +80,7 @@ public:
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -89,7 +89,7 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableCol)
 
 
-nsHTMLTableColElement::nsHTMLTableColElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLTableColElement::nsHTMLTableColElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

@@ -59,7 +59,6 @@
 #include "nsEditProperty.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsINameSpaceManager.h"
-#include "nsINodeInfo.h"
 #include "nsFormControlFrame.h" //for registering accesskeys
 
 #include "nsIContent.h"

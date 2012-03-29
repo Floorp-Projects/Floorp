@@ -64,7 +64,7 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
   NS_ENSURE_ARG_POINTER(aDocType);
   NS_ENSURE_ARG_POINTER(aName);
 
-  nsCOMPtr<nsINodeInfo> ni =
+  nsRefPtr<nsNodeInfo> ni =
     aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentTypeNodeName, nsnull,
                                   kNameSpaceID_None,
                                   nsIDOMNode::DOCUMENT_TYPE_NODE,
@@ -78,7 +78,7 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
   return NS_OK;
 }
 
-nsDOMDocumentType::nsDOMDocumentType(already_AddRefed<nsINodeInfo> aNodeInfo,
+nsDOMDocumentType::nsDOMDocumentType(already_AddRefed<nsNodeInfo> aNodeInfo,
                                      const nsAString& aPublicId,
                                      const nsAString& aSystemId,
                                      const nsAString& aInternalSubset) :
@@ -155,9 +155,9 @@ nsDOMDocumentType::GetInternalSubset(nsAString& aInternalSubset)
 }
 
 nsGenericDOMDataNode*
-nsDOMDocumentType::CloneDataNode(nsINodeInfo *aNodeInfo, bool aCloneText) const
+nsDOMDocumentType::CloneDataNode(nsNodeInfo *aNodeInfo, bool aCloneText) const
 {
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsRefPtr<nsNodeInfo> ni = aNodeInfo;
   return new nsDOMDocumentType(ni.forget(), mPublicId, mSystemId,
                                mInternalSubset);
 }

@@ -96,7 +96,7 @@ class Element : public nsIContent
 {
 public:
 #ifdef MOZILLA_INTERNAL_API
-  Element(already_AddRefed<nsINodeInfo> aNodeInfo) :
+  Element(already_AddRefed<nsNodeInfo> aNodeInfo) :
     nsIContent(aNodeInfo),
     mState(NS_EVENT_STATE_MOZ_READONLY)
   {}

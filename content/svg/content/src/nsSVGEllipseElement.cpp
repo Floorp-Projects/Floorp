@@ -55,8 +55,8 @@ class nsSVGEllipseElement : public nsSVGEllipseElementBase,
 {
 protected:
   friend nsresult NS_NewSVGEllipseElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGEllipseElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                          already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGEllipseElement(already_AddRefed<nsNodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -74,7 +74,7 @@ public:
   // nsSVGPathGeometryElement methods:
   virtual void ConstructPath(gfxContext *aCtx);
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -114,7 +114,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGEllipseElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGEllipseElement::nsSVGEllipseElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGEllipseElement::nsSVGEllipseElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGEllipseElementBase(aNodeInfo)
 {
 }

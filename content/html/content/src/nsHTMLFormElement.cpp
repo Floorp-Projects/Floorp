@@ -232,7 +232,7 @@ ShouldBeInElements(nsIFormControl* aFormControl)
 
 // construction, destruction
 nsGenericHTMLElement*
-NS_NewHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+NS_NewHTMLFormElement(already_AddRefed<nsNodeInfo> aNodeInfo,
                       FromParser aFromParser)
 {
   nsHTMLFormElement* it = new nsHTMLFormElement(aNodeInfo);
@@ -247,7 +247,7 @@ NS_NewHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   return it;
 }
 
-nsHTMLFormElement::nsHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLFormElement::nsHTMLFormElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mGeneratingSubmit(false),
     mGeneratingReset(false),

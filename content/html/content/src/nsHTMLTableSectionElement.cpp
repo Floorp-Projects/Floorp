@@ -58,7 +58,7 @@ class nsHTMLTableSectionElement : public nsGenericHTMLElement,
                                   public nsIDOMHTMLTableSectionElement
 {
 public:
-  nsHTMLTableSectionElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLTableSectionElement(already_AddRefed<nsNodeInfo> aNodeInfo);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -82,7 +82,7 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLTableSectionElement,
                                                      nsGenericHTMLElement)
@@ -96,7 +96,7 @@ protected:
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableSection)
 
 
-nsHTMLTableSectionElement::nsHTMLTableSectionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLTableSectionElement::nsHTMLTableSectionElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
@@ -171,7 +171,7 @@ nsHTMLTableSectionElement::InsertRow(PRInt32 aIndex,
   bool doInsert = (aIndex < PRInt32(rowCount)) && (aIndex != -1);
 
   // create the row
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<nsNodeInfo> nodeInfo;
   nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tr,
                               getter_AddRefs(nodeInfo));
 

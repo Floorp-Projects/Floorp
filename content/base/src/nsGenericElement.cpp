@@ -50,7 +50,7 @@
 #include "nsDOMAttribute.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIAtom.h"
-#include "nsINodeInfo.h"
+#include "nsNodeInfo.h"
 #include "nsIDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
@@ -906,8 +906,8 @@ nsINode::IsEqualTo(nsINode* aOther)
       return false;
     }
 
-    nsINodeInfo* nodeInfo1 = node1->mNodeInfo;
-    nsINodeInfo* nodeInfo2 = node2->mNodeInfo;
+    nsNodeInfo* nodeInfo1 = node1->mNodeInfo;
+    nsNodeInfo* nodeInfo2 = node2->mNodeInfo;
     if (!nodeInfo1->Equals(nodeInfo2) ||
         nodeInfo1->GetExtraName() != nodeInfo2->GetExtraName()) {
       return false;
@@ -1250,7 +1250,7 @@ nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
     }
   }
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNodeInfo)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(tmp->mNodeInfo, nsNodeInfo, "mNodeInfo")
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(GetParent())
 
   nsSlots *slots = tmp->GetExistingSlots();
@@ -2481,7 +2481,7 @@ nsGenericElement::nsDOMSlots::Unlink(bool aIsXUL)
   }
 }
 
-nsGenericElement::nsGenericElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsGenericElement::nsGenericElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : Element(aNodeInfo)
 {
   NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::ELEMENT_NODE ||
@@ -2862,7 +2862,7 @@ nsGenericElement::SetAttributeNS(const nsAString& aNamespaceURI,
                                  const nsAString& aQualifiedName,
                                  const nsAString& aValue)
 {
-  nsCOMPtr<nsINodeInfo> ni;
+  nsRefPtr<nsNodeInfo> ni;
   nsresult rv =
     nsContentUtils::GetNodeInfoFromQName(aNamespaceURI, aQualifiedName,
                                          mNodeInfo->NodeInfoManager(),
@@ -3648,7 +3648,7 @@ nsGenericElement::FindAttributeDependence(const nsIAtom* aAttribute,
   return false;
 }
 
-already_AddRefed<nsINodeInfo>
+already_AddRefed<nsNodeInfo>
 nsGenericElement::GetExistingAttrNameFromQName(const nsAString& aStr) const
 {
   const nsAttrName* name = InternalGetExistingAttrNameFromQName(aStr);
@@ -3656,7 +3656,7 @@ nsGenericElement::GetExistingAttrNameFromQName(const nsAString& aStr) const
     return nsnull;
   }
 
-  nsINodeInfo* nodeInfo;
+  nsNodeInfo* nodeInfo;
   if (name->IsAtom()) {
     nodeInfo = mNodeInfo->NodeInfoManager()->
       GetNodeInfo(name->Atom(), nsnull, kNameSpaceID_None,
@@ -5042,7 +5042,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGenericElement)
       if (!name->IsAtom()) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
                                            "mAttrsAndChildren[i]->NodeInfo()");
-        cb.NoteXPCOMChild(name->NodeInfo());
+        cb.NoteNativeChild(name->NodeInfo(), &NS_CYCLE_COLLECTION_NAME(nsNodeInfo));
       }
     }
 
@@ -5332,7 +5332,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     }
   }
   else {
-    nsCOMPtr<nsINodeInfo> ni;
+    nsRefPtr<nsNodeInfo> ni;
     ni = mNodeInfo->NodeInfoManager()->GetNodeInfo(aName, aPrefix,
                                                    aNamespaceID,
                                                    nsIDOMNode::ATTRIBUTE_NODE);

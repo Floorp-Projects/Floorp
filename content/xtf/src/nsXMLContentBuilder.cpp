@@ -40,7 +40,6 @@
 #include "nsString.h"
 #include "nsIXMLContentBuilder.h"
 #include "nsINameSpaceManager.h"
-#include "nsINodeInfo.h"
 #include "nsIContent.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"

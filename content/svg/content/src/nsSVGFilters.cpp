@@ -334,9 +334,9 @@ class nsSVGFEGaussianBlurElement : public nsSVGFEGaussianBlurElementBase,
                                    public nsIDOMSVGFEGaussianBlurElement
 {
   friend nsresult NS_NewSVGFEGaussianBlurElement(nsIContent **aResult,
-                                                 already_AddRefed<nsINodeInfo> aNodeInfo);
+                                                 already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEGaussianBlurElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFEGaussianBlurElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFEGaussianBlurElementBase(aNodeInfo) {}
 
 public:
@@ -369,7 +369,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEGaussianBlurElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEGaussianBlurElementBase::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -816,9 +816,9 @@ class nsSVGFEBlendElement : public nsSVGFEBlendElementBase,
                             public nsIDOMSVGFEBlendElement
 {
   friend nsresult NS_NewSVGFEBlendElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
+                                          already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEBlendElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFEBlendElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFEBlendElementBase(aNodeInfo) {}
 
 public:
@@ -845,7 +845,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEBlendElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEBlendElementBase::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -1031,9 +1031,9 @@ class nsSVGFEColorMatrixElement : public nsSVGFEColorMatrixElementBase,
                                   public nsIDOMSVGFEColorMatrixElement
 {
   friend nsresult NS_NewSVGFEColorMatrixElement(nsIContent **aResult,
-                                                already_AddRefed<nsINodeInfo> aNodeInfo);
+                                                already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEColorMatrixElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFEColorMatrixElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFEColorMatrixElementBase(aNodeInfo) {}
 
 public:
@@ -1060,7 +1060,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEColorMatrixElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEColorMatrixElementBase::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -1347,9 +1347,9 @@ class nsSVGFECompositeElement : public nsSVGFECompositeElementBase,
                                 public nsIDOMSVGFECompositeElement
 {
   friend nsresult NS_NewSVGFECompositeElement(nsIContent **aResult,
-                                              already_AddRefed<nsINodeInfo> aNodeInfo);
+                                              already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFECompositeElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFECompositeElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFECompositeElementBase(aNodeInfo) {}
 
 public:
@@ -1378,7 +1378,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFECompositeElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFECompositeElementBase::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -1658,9 +1658,9 @@ class nsSVGFEComponentTransferElement : public nsSVGFEComponentTransferElementBa
                                         public nsIDOMSVGFEComponentTransferElement
 {
   friend nsresult NS_NewSVGFEComponentTransferElement(nsIContent **aResult,
-                                                      already_AddRefed<nsINodeInfo> aNodeInfo);
+                                                      already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEComponentTransferElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFEComponentTransferElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFEComponentTransferElementBase(aNodeInfo) {}
 
 public:
@@ -1688,7 +1688,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEComponentTransferElementBase::)
 
   // nsIContent
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -1761,9 +1761,9 @@ typedef SVGFEUnstyledElement nsSVGComponentTransferFunctionElementBase;
 class nsSVGComponentTransferFunctionElement : public nsSVGComponentTransferFunctionElementBase
 {
   friend nsresult NS_NewSVGComponentTransferFunctionElement(nsIContent **aResult,
-                                                            already_AddRefed<nsINodeInfo> aNodeInfo);
+                                                            already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGComponentTransferFunctionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGComponentTransferFunctionElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGComponentTransferFunctionElementBase(aNodeInfo) {}
 
 public:
@@ -2080,9 +2080,9 @@ class nsSVGFEFuncRElement : public nsSVGComponentTransferFunctionElement,
                             public nsIDOMSVGFEFuncRElement
 {
   friend nsresult NS_NewSVGFEFuncRElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
+                                          already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEFuncRElement(already_AddRefed<nsINodeInfo> aNodeInfo) 
+  nsSVGFEFuncRElement(already_AddRefed<nsNodeInfo> aNodeInfo) 
     : nsSVGComponentTransferFunctionElement(aNodeInfo) {}
 
 public:
@@ -2099,7 +2099,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGComponentTransferFunctionElement::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGComponentTransferFunctionElement::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -2125,9 +2125,9 @@ class nsSVGFEFuncGElement : public nsSVGComponentTransferFunctionElement,
                             public nsIDOMSVGFEFuncGElement
 {
   friend nsresult NS_NewSVGFEFuncGElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
+                                          already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEFuncGElement(already_AddRefed<nsINodeInfo> aNodeInfo) 
+  nsSVGFEFuncGElement(already_AddRefed<nsNodeInfo> aNodeInfo) 
     : nsSVGComponentTransferFunctionElement(aNodeInfo) {}
 
 public:
@@ -2144,7 +2144,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGComponentTransferFunctionElement::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGComponentTransferFunctionElement::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -2170,9 +2170,9 @@ class nsSVGFEFuncBElement : public nsSVGComponentTransferFunctionElement,
                             public nsIDOMSVGFEFuncBElement
 {
   friend nsresult NS_NewSVGFEFuncBElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
+                                          already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEFuncBElement(already_AddRefed<nsINodeInfo> aNodeInfo) 
+  nsSVGFEFuncBElement(already_AddRefed<nsNodeInfo> aNodeInfo) 
     : nsSVGComponentTransferFunctionElement(aNodeInfo) {}
 
 public:
@@ -2189,7 +2189,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGComponentTransferFunctionElement::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGComponentTransferFunctionElement::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -2215,9 +2215,9 @@ class nsSVGFEFuncAElement : public nsSVGComponentTransferFunctionElement,
                             public nsIDOMSVGFEFuncAElement
 {
   friend nsresult NS_NewSVGFEFuncAElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
+                                          already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEFuncAElement(already_AddRefed<nsINodeInfo> aNodeInfo) 
+  nsSVGFEFuncAElement(already_AddRefed<nsNodeInfo> aNodeInfo) 
     : nsSVGComponentTransferFunctionElement(aNodeInfo) {}
 
 public:
@@ -2234,7 +2234,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGComponentTransferFunctionElement::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGComponentTransferFunctionElement::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -2263,9 +2263,9 @@ class nsSVGFEMergeElement : public nsSVGFEMergeElementBase,
                             public nsIDOMSVGFEMergeElement
 {
   friend nsresult NS_NewSVGFEMergeElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
+                                          already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEMergeElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFEMergeElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFEMergeElementBase(aNodeInfo) {}
 
 public:
@@ -2291,7 +2291,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEMergeElementBase::)
 
   // nsIContent
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -2312,9 +2312,9 @@ class nsSVGFEMergeNodeElement : public nsSVGFEMergeNodeElementBase,
                                 public nsIDOMSVGFEMergeNodeElement
 {
   friend nsresult NS_NewSVGFEMergeNodeElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
+                                          already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEMergeNodeElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFEMergeNodeElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFEMergeNodeElementBase(aNodeInfo) {}
 
 public:
@@ -2330,7 +2330,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEMergeNodeElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEMergeNodeElementBase::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual bool AttributeAffectsRendering(
           PRInt32 aNameSpaceID, nsIAtom* aAttribute) const;
@@ -2488,9 +2488,9 @@ class nsSVGFEOffsetElement : public nsSVGFEOffsetElementBase,
                              public nsIDOMSVGFEOffsetElement
 {
   friend nsresult NS_NewSVGFEOffsetElement(nsIContent **aResult,
-                                           already_AddRefed<nsINodeInfo> aNodeInfo);
+                                           already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEOffsetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFEOffsetElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFEOffsetElementBase(aNodeInfo) {}
 
 public:
@@ -2523,7 +2523,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEOffsetElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEOffsetElementBase::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -2690,9 +2690,9 @@ class nsSVGFEFloodElement : public nsSVGFEFloodElementBase,
                             public nsIDOMSVGFEFloodElement
 {
   friend nsresult NS_NewSVGFEFloodElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
+                                          already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEFloodElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFEFloodElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFEFloodElementBase(aNodeInfo) {}
 
 public:
@@ -2723,7 +2723,7 @@ public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -2831,9 +2831,9 @@ class nsSVGFETileElement : public nsSVGFETileElementBase,
                            public nsIDOMSVGFETileElement
 {
   friend nsresult NS_NewSVGFETileElement(nsIContent **aResult,
-                                         already_AddRefed<nsINodeInfo> aNodeInfo);
+                                         already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFETileElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFETileElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFETileElementBase(aNodeInfo) {}
 
 public:
@@ -2868,7 +2868,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFETileElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFETileElementBase::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -3033,9 +3033,9 @@ class nsSVGFETurbulenceElement : public nsSVGFETurbulenceElementBase,
                                  public nsIDOMSVGFETurbulenceElement
 {
   friend nsresult NS_NewSVGFETurbulenceElement(nsIContent **aResult,
-                                               already_AddRefed<nsINodeInfo> aNodeInfo);
+                                               already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFETurbulenceElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFETurbulenceElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFETurbulenceElementBase(aNodeInfo) {}
 
 public:
@@ -3065,7 +3065,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFETurbulenceElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFETurbulenceElementBase::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -3577,9 +3577,9 @@ class nsSVGFEMorphologyElement : public nsSVGFEMorphologyElementBase,
                                  public nsIDOMSVGFEMorphologyElement
 {
   friend nsresult NS_NewSVGFEMorphologyElement(nsIContent **aResult,
-                                               already_AddRefed<nsINodeInfo> aNodeInfo);
+                                               already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEMorphologyElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFEMorphologyElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFEMorphologyElementBase(aNodeInfo) {}
 
 public:
@@ -3612,7 +3612,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEMorphologyElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEMorphologyElementBase::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -3883,9 +3883,9 @@ class nsSVGFEConvolveMatrixElement : public nsSVGFEConvolveMatrixElementBase,
                                      public nsIDOMSVGFEConvolveMatrixElement
 {
   friend nsresult NS_NewSVGFEConvolveMatrixElement(nsIContent **aResult,
-                                                   already_AddRefed<nsINodeInfo> aNodeInfo);
+                                                   already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEConvolveMatrixElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFEConvolveMatrixElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFEConvolveMatrixElementBase(aNodeInfo) {}
 
 public:
@@ -3918,7 +3918,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEConvolveMatrixElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEConvolveMatrixElementBase::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -4396,9 +4396,9 @@ class nsSVGFEDistantLightElement : public nsSVGFEDistantLightElementBase,
                                    public nsIDOMSVGFEDistantLightElement
 {
   friend nsresult NS_NewSVGFEDistantLightElement(nsIContent **aResult,
-                                                 already_AddRefed<nsINodeInfo> aNodeInfo);
+                                                 already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEDistantLightElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFEDistantLightElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFEDistantLightElementBase(aNodeInfo) {}
 
 public:
@@ -4413,7 +4413,7 @@ public:
   virtual bool AttributeAffectsRendering(
           PRInt32 aNameSpaceID, nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -4499,9 +4499,9 @@ class nsSVGFEPointLightElement : public nsSVGFEPointLightElementBase,
                                  public nsIDOMSVGFEPointLightElement
 {
   friend nsresult NS_NewSVGFEPointLightElement(nsIContent **aResult,
-                                                 already_AddRefed<nsINodeInfo> aNodeInfo);
+                                                 already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEPointLightElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFEPointLightElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFEPointLightElementBase(aNodeInfo) {}
 
 public:
@@ -4516,7 +4516,7 @@ public:
   virtual bool AttributeAffectsRendering(
           PRInt32 aNameSpaceID, nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -4608,10 +4608,10 @@ class nsSVGFESpotLightElement : public nsSVGFESpotLightElementBase,
                                 public nsIDOMSVGFESpotLightElement
 {
   friend nsresult NS_NewSVGFESpotLightElement(nsIContent **aResult,
-                                              already_AddRefed<nsINodeInfo> aNodeInfo);
+                                              already_AddRefed<nsNodeInfo> aNodeInfo);
   friend class nsSVGFELightingElement;
 protected:
-  nsSVGFESpotLightElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFESpotLightElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFESpotLightElementBase(aNodeInfo) {}
 
 public:
@@ -4626,7 +4626,7 @@ public:
   virtual bool AttributeAffectsRendering(
           PRInt32 aNameSpaceID, nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -4760,7 +4760,7 @@ typedef nsSVGFE nsSVGFELightingElementBase;
 class nsSVGFELightingElement : public nsSVGFELightingElementBase
 {
 protected:
-  nsSVGFELightingElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFELightingElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFELightingElementBase(aNodeInfo) {}
 
 public:
@@ -5152,9 +5152,9 @@ class nsSVGFEDiffuseLightingElement : public nsSVGFEDiffuseLightingElementBase,
                                       public nsIDOMSVGFEDiffuseLightingElement
 {
   friend nsresult NS_NewSVGFEDiffuseLightingElement(nsIContent **aResult,
-                                                    already_AddRefed<nsINodeInfo> aNodeInfo);
+                                                    already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFEDiffuseLightingElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFEDiffuseLightingElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFEDiffuseLightingElementBase(aNodeInfo) {}
 
 public:
@@ -5172,7 +5172,7 @@ public:
   virtual bool AttributeAffectsRendering(
           PRInt32 aNameSpaceID, nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -5281,9 +5281,9 @@ class nsSVGFESpecularLightingElement : public nsSVGFESpecularLightingElementBase
                                        public nsIDOMSVGFESpecularLightingElement
 {
   friend nsresult NS_NewSVGFESpecularLightingElement(nsIContent **aResult,
-                                               already_AddRefed<nsINodeInfo> aNodeInfo);
+                                               already_AddRefed<nsNodeInfo> aNodeInfo);
 protected:
-  nsSVGFESpecularLightingElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsSVGFESpecularLightingElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFESpecularLightingElementBase(aNodeInfo) {}
 
 public:
@@ -5298,7 +5298,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFESpecularLightingElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFESpecularLightingElementBase::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsresult Filter(nsSVGFilterInstance* aInstance,
                           const nsTArray<const Image*>& aSources,
@@ -5474,7 +5474,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGFEImageElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGFEImageElement::nsSVGFEImageElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGFEImageElement::nsSVGFEImageElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGFEImageElementBase(aNodeInfo)
 {
   // We start out broken
@@ -5768,8 +5768,8 @@ class nsSVGFEDisplacementMapElement : public nsSVGFEDisplacementMapElementBase,
 {
 protected:
   friend nsresult NS_NewSVGFEDisplacementMapElement(nsIContent **aResult,
-                                                    already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGFEDisplacementMapElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+                                                    already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGFEDisplacementMapElement(already_AddRefed<nsNodeInfo> aNodeInfo)
     : nsSVGFEDisplacementMapElementBase(aNodeInfo) {}
 
 public:
@@ -5802,7 +5802,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEDisplacementMapElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEDisplacementMapElementBase::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:

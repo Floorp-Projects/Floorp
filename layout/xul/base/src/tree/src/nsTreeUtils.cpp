@@ -45,7 +45,6 @@
 #include "nsIAtom.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
-#include "nsINodeInfo.h"
 
 nsresult
 nsTreeUtils::TokenizeProperties(const nsAString& aProperties, nsISupportsArray* aPropertiesArray)

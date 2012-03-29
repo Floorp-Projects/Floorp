@@ -93,7 +93,7 @@
 #include "imgIContainer.h"
 #include "imgIContainerObserver.h"
 #include "imgILoader.h"
-#include "nsINodeInfo.h"
+#include "nsNodeInfo.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
@@ -4238,7 +4238,7 @@ nsTreeBodyFrame::GetBaseElement()
   while (parent) {
     nsIContent* content = parent->GetContent();
     if (content) {
-      nsINodeInfo* ni = content->NodeInfo();
+      nsNodeInfo* ni = content->NodeInfo();
 
       if (ni->Equals(nsGkAtoms::tree, kNameSpaceID_XUL) ||
           (ni->Equals(nsGkAtoms::select) &&

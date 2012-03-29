@@ -480,7 +480,7 @@ nsXMLContentSink::SetParser(nsParserBase* aParser)
 
 nsresult
 nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
-                                nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
+                                nsNodeInfo* aNodeInfo, PRUint32 aLineNumber,
                                 nsIContent** aResult, bool* aAppendContent,
                                 FromParser aFromParser)
 {
@@ -490,7 +490,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
   *aAppendContent = true;
   nsresult rv = NS_OK;
 
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsRefPtr<nsNodeInfo> ni = aNodeInfo;
   nsCOMPtr<nsIContent> content;
   rv = NS_NewElement(getter_AddRefs(content), ni.forget(), aFromParser);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -550,7 +550,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
 {
   NS_ASSERTION(aContent, "missing element to close");
 
-  nsINodeInfo *nodeInfo = aContent->NodeInfo();
+  nsNodeInfo *nodeInfo = aContent->NodeInfo();
 
   // Some HTML nodes need DoneAddingChildren() called to initialize
   // properly (eg form state restoration).
@@ -1017,7 +1017,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
     return NS_OK;
   }
   
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<nsNodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
                                            nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
@@ -1668,7 +1668,7 @@ nsXMLContentSink::UpdateChildCounts()
 }
 
 bool
-nsXMLContentSink::IsMonolithicContainer(nsINodeInfo* aNodeInfo)
+nsXMLContentSink::IsMonolithicContainer(nsNodeInfo* aNodeInfo)
 {
   return ((aNodeInfo->NamespaceID() == kNameSpaceID_XHTML &&
           (aNodeInfo->NameAtom() == nsGkAtoms::tr ||

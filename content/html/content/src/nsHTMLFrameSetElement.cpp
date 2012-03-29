@@ -41,7 +41,7 @@
 NS_IMPL_NS_NEW_HTML_ELEMENT(FrameSet)
 
 
-nsHTMLFrameSetElement::nsHTMLFrameSetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLFrameSetElement::nsHTMLFrameSetElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo), mNumRows(0), mNumCols(0),
     mCurrentRowColHint(NS_STYLE_HINT_REFLOW)
 {

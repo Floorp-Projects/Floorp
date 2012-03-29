@@ -50,7 +50,7 @@ class nsCommentNode : public nsGenericDOMDataNode,
                       public nsIDOMComment
 {
 public:
-  nsCommentNode(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsCommentNode(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsCommentNode();
 
   // nsISupports
@@ -68,7 +68,7 @@ public:
   // nsINode
   virtual bool IsNodeOfType(PRUint32 aFlags) const;
 
-  virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
+  virtual nsGenericDOMDataNode* CloneDataNode(nsNodeInfo *aNodeInfo,
                                               bool aCloneText) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
@@ -90,7 +90,7 @@ NS_NewCommentNode(nsIContent** aInstancePtrResult,
 
   *aInstancePtrResult = nsnull;
 
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfoManager->GetCommentNodeInfo();
+  nsRefPtr<nsNodeInfo> ni = aNodeInfoManager->GetCommentNodeInfo();
   NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
   nsCommentNode *instance = new nsCommentNode(ni.forget());
@@ -103,7 +103,7 @@ NS_NewCommentNode(nsIContent** aInstancePtrResult,
   return NS_OK;
 }
 
-nsCommentNode::nsCommentNode(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsCommentNode::nsCommentNode(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericDOMDataNode(aNodeInfo)
 {
   NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::COMMENT_NODE,
@@ -135,9 +135,9 @@ nsCommentNode::IsNodeOfType(PRUint32 aFlags) const
 }
 
 nsGenericDOMDataNode*
-nsCommentNode::CloneDataNode(nsINodeInfo *aNodeInfo, bool aCloneText) const
+nsCommentNode::CloneDataNode(nsNodeInfo *aNodeInfo, bool aCloneText) const
 {
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsRefPtr<nsNodeInfo> ni = aNodeInfo;
   nsCommentNode *it = new nsCommentNode(ni.forget());
   if (it && aCloneText) {
     it->mText = mText;

@@ -64,7 +64,7 @@
 #include "nsHTMLStyleSheet.h"
 #include "nsILayoutDebugger.h"
 #include "nsINameSpaceManager.h"
-#include "nsINodeInfo.h"
+#include "nsNodeInfo.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
@@ -573,7 +573,7 @@ CreateHTMLImgElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
   // Note! NS_NewHTMLImageElement is special cased to handle a null nodeinfo
-  nsCOMPtr<nsINodeInfo> ni;
+  nsRefPtr<nsNodeInfo> ni;
   nsIContent* inst = NS_NewHTMLImageElement(ni.forget());
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   if (inst) {
@@ -591,7 +591,7 @@ CreateHTMLOptionElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
   // Note! NS_NewHTMLOptionElement is special cased to handle a null nodeinfo
-  nsCOMPtr<nsINodeInfo> ni;
+  nsRefPtr<nsNodeInfo> ni;
   nsIContent* inst = NS_NewHTMLOptionElement(ni.forget());
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   if (inst) {
@@ -610,7 +610,7 @@ CreateHTMLAudioElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
   // Note! NS_NewHTMLAudioElement is special cased to handle a null nodeinfo
-  nsCOMPtr<nsINodeInfo> ni;
+  nsRefPtr<nsNodeInfo> ni;
   nsCOMPtr<nsIContent> inst(NS_NewHTMLAudioElement(ni.forget()));
   return inst ? inst->QueryInterface(aIID, aResult) : NS_ERROR_OUT_OF_MEMORY;
 }

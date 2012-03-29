@@ -51,8 +51,8 @@ class nsSVGAltGlyphElement : public nsSVGAltGlyphElementBase, // = nsIDOMSVGText
 {
 protected:
   friend nsresult NS_NewSVGAltGlyphElement(nsIContent **aResult,
-                                           already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGAltGlyphElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                           already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGAltGlyphElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   
 public:
   // interfaces:
@@ -72,7 +72,7 @@ public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -115,7 +115,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGAltGlyphElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGAltGlyphElement::nsSVGAltGlyphElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGAltGlyphElement::nsSVGAltGlyphElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGAltGlyphElementBase(aNodeInfo)
 {
 }

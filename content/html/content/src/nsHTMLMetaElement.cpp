@@ -47,7 +47,7 @@ class nsHTMLMetaElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLMetaElement
 {
 public:
-  nsHTMLMetaElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLMetaElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLMetaElement();
 
   // nsISupports
@@ -72,7 +72,7 @@ public:
                               bool aNullParent = true);
   void CreateAndDispatchEvent(nsIDocument* aDoc, const nsAString& aEventName);
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -81,7 +81,7 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Meta)
 
 
-nsHTMLMetaElement::nsHTMLMetaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLMetaElement::nsHTMLMetaElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

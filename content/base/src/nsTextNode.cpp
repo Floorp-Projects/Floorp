@@ -61,7 +61,7 @@ class nsAttributeTextNode : public nsTextNode,
 public:
   NS_DECL_ISUPPORTS_INHERITED
   
-  nsAttributeTextNode(already_AddRefed<nsINodeInfo> aNodeInfo,
+  nsAttributeTextNode(already_AddRefed<nsNodeInfo> aNodeInfo,
                       PRInt32 aNameSpaceID,
                       nsIAtom* aAttrName) :
     nsTextNode(aNodeInfo),
@@ -86,10 +86,10 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
-  virtual nsGenericDOMDataNode *CloneDataNode(nsINodeInfo *aNodeInfo,
+  virtual nsGenericDOMDataNode *CloneDataNode(nsNodeInfo *aNodeInfo,
                                               bool aCloneText) const
   {
-    nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+    nsRefPtr<nsNodeInfo> ni = aNodeInfo;
     nsAttributeTextNode *it = new nsAttributeTextNode(ni.forget(),
                                                       mNameSpaceID,
                                                       mAttrName);
@@ -127,7 +127,7 @@ NS_NewTextNode(nsIContent** aInstancePtrResult,
 
   *aInstancePtrResult = nsnull;
 
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfoManager->GetTextNodeInfo();
+  nsRefPtr<nsNodeInfo> ni = aNodeInfoManager->GetTextNodeInfo();
   if (!ni) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -142,7 +142,7 @@ NS_NewTextNode(nsIContent** aInstancePtrResult,
   return NS_OK;
 }
 
-nsTextNode::nsTextNode(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsTextNode::nsTextNode(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericDOMDataNode(aNodeInfo)
 {
   NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::TEXT_NODE,
@@ -173,9 +173,9 @@ nsTextNode::IsNodeOfType(PRUint32 aFlags) const
 }
 
 nsGenericDOMDataNode*
-nsTextNode::CloneDataNode(nsINodeInfo *aNodeInfo, bool aCloneText) const
+nsTextNode::CloneDataNode(nsNodeInfo *aNodeInfo, bool aCloneText) const
 {
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsRefPtr<nsNodeInfo> ni = aNodeInfo;
   nsTextNode *it = new nsTextNode(ni.forget());
   if (it && aCloneText) {
     it->mText = mText;
@@ -271,7 +271,7 @@ NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
   
   *aResult = nsnull;
 
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfoManager->GetTextNodeInfo();
+  nsRefPtr<nsNodeInfo> ni = aNodeInfoManager->GetTextNodeInfo();
   if (!ni) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

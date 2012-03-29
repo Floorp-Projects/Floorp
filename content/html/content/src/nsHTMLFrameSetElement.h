@@ -80,7 +80,7 @@ class nsHTMLFrameSetElement : public nsGenericHTMLElement,
                               public nsIDOMHTMLFrameSetElement
 {
 public:
-  nsHTMLFrameSetElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLFrameSetElement(already_AddRefed<nsNodeInfo> aNodeInfo);
   virtual ~nsHTMLFrameSetElement();
 
   // nsISupports
@@ -144,7 +144,7 @@ public:
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
   static nsHTMLFrameSetElement* FromContent(nsIContent *aContent)
   {

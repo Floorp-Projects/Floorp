@@ -61,7 +61,7 @@ using namespace mozilla::dom;
 NS_IMPL_NS_NEW_HTML_ELEMENT(Label)
 
 
-nsHTMLLabelElement::nsHTMLLabelElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsHTMLLabelElement::nsHTMLLabelElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo)
   , mHandlingEvent(false)
 {

@@ -53,8 +53,8 @@ class nsSVGStopElement : public nsSVGStopElementBase,
 {
 protected:
   friend nsresult NS_NewSVGStopElement(nsIContent **aResult,
-                                       already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGStopElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                       already_AddRefed<nsNodeInfo> aNodeInfo);
+  nsSVGStopElement(already_AddRefed<nsNodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -71,7 +71,7 @@ public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsNodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -104,7 +104,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGStopElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGStopElement::nsSVGStopElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+nsSVGStopElement::nsSVGStopElement(already_AddRefed<nsNodeInfo> aNodeInfo)
   : nsSVGStopElementBase(aNodeInfo)
 {
 

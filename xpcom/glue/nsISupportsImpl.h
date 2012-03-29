@@ -334,7 +334,7 @@ public:
  *
  * @param _class The name of the class implementing the method
  */
-#define NS_INLINE_DECL_REFCOUNTING(_class)                                    \
+#define NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(_class, _destroy)             \
 public:                                                                       \
   NS_METHOD_(nsrefcnt) AddRef(void) {                                         \
     NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                 \
@@ -351,7 +351,7 @@ public:                                                                       \
     if (mRefCnt == 0) {                                                       \
       NS_ASSERT_OWNINGTHREAD(_class);                                         \
       mRefCnt = 1; /* stabilize */                                            \
-      delete this;                                                            \
+      _destroy;                                                               \
       return 0;                                                               \
     }                                                                         \
     return mRefCnt;                                                           \
@@ -360,6 +360,9 @@ protected:                                                                    \
   nsAutoRefCnt mRefCnt;                                                       \
   NS_DECL_OWNINGTHREAD                                                        \
 public:
+
+#define NS_INLINE_DECL_REFCOUNTING(_class)                                    \
+  NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(_class, delete this)
 
 /**
  * Use this macro to declare and implement the AddRef & Release methods for a

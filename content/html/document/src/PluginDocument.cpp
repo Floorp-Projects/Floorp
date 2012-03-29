@@ -292,7 +292,7 @@ PluginDocument::CreateSyntheticPluginDocument()
 
 
   // make plugin content
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<nsNodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::embed, nsnull,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);

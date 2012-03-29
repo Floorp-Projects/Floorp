@@ -842,7 +842,7 @@ nsContentList::Match(Element *aElement)
   if (!mXMLMatchAtom)
     return false;
 
-  nsINodeInfo *ni = aElement->NodeInfo();
+  nsNodeInfo *ni = aElement->NodeInfo();
  
   bool unknown = mMatchNameSpaceId == kNameSpaceID_Unknown;
   bool wildcard = mMatchNameSpaceId == kNameSpaceID_Wildcard;
