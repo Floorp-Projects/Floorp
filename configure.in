@@ -1623,13 +1623,15 @@ if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
        STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH"
        STLPORT_LIBS="-lstdc++"
     elif test -e "$android_ndk/sources/cxx-stl/stlport/src/iostream.cpp" ; then
+       if test -e "$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a"; then
+          STLPORT_LDFLAGS="-L$_objdir/build/stlport -L$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/"
+       elif test -e "$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a"; then
+          STLPORT_LDFLAGS="-L$_objdir/build/stlport -L$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/"
+       else
+          AC_MSG_ERROR([Couldn't find path to stlport in the android ndk])
+       fi
        STLPORT_SOURCES="$android_ndk/sources/cxx-stl/stlport"
        STLPORT_CPPFLAGS="-I$_objdir/build/stlport -I$android_ndk/sources/cxx-stl/stlport/stlport"
-       STLPORT_LDFLAGS="-L$_objdir/build/stlport -L$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/"
-       STLPORT_LIBS="-lstlport_static"
-    elif  test -e "$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
-       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
-       STLPORT_LDFLAGS="-L$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH"
        STLPORT_LIBS="-lstlport_static"
     elif test "$target" != "arm-android-eabi"; then
        dnl fail if we're not building with NDKr4
@@ -4967,6 +4969,15 @@ then
 
     if test -z "$QTDIR"; then
         PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore QtOpenGL)
+        PKG_CHECK_MODULES(MOZ_QT5, QtWidgets QtMultimedia QtPrintSupport QtQuick1,
+                      MOZ_ENABLE_QT5=1,
+                      MOZ_ENABLE_QT5=)
+        if test "$MOZ_ENABLE_QT5"; then
+            echo "Using qt5"
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $MOZ_QT5_CFLAGS"
+            MOZ_QT_LIBS="$MOZ_QT_LIBS $MOZ_QT5_LIBS"
+        fi
+
         AC_CHECK_PROGS(HOST_MOC, $MOC moc, "")
         AC_CHECK_PROGS(HOST_RCC, $RCC rcc, "")
     else
@@ -4979,8 +4990,19 @@ then
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtCore"
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtNetwork"
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtXml"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtDeclarative"
         HOST_MOC="$QTDIR/bin/moc"
         HOST_RCC="$QTDIR/bin/rcc"
+
+        # QtWidgets was introduced only in Qt5
+        if test -d $QTDIR/include/QtWidgets; then
+            echo "Using qt5"
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtWidgets"
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtMultimedia"
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtPrintSupport"
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtQuick1"
+            MOZ_QT_LIBS="$MOZ_QT_LIBS -lQtWidgets -lQtMultimedia -lQtPrintSupport -lQtQuick1"
+        fi
     fi
     if test -z "$HOST_MOC"; then
         AC_MSG_ERROR([No acceptable moc preprocessor found. Qt SDK is not installed or --with-qt is
@@ -6297,29 +6319,38 @@ dnl ========================================================
 dnl Installer
 dnl ========================================================
 dnl Abort Windows build if the required major version and
-dnl minimum minor version of Unicode NSIS isn't in the path.
+dnl minimum minor version of Unicode NSIS isn't in the path
+dnl (unless in case of cross compiling, for which Unicode
+dnl is not yet sufficient).
 if test "$OS_ARCH" = "WINNT"; then
     REQ_NSIS_MAJOR_VER=2
     MIN_NSIS_MINOR_VER=33
     MOZ_PATH_PROGS(MAKENSISU, $MAKENSISU makensisu-2.46 makensisu makensis)
-    if test -z "$MAKENSISU" -o "$MAKENSISU" = ":"; then
-        AC_MSG_ERROR([To build the installer you must have the latest MozillaBuild or Unicode NSIS with a major version of $REQ_NSIS_MAJOR_VER and a minimum minor version of $MIN_NSIS_MINOR_VER in your path.])
+    if test -n "$MAKENSISU" -a "$MAKENSISU" != ":"; then
+      AC_MSG_RESULT([yes])
+      changequote(,)
+      MAKENSISU_VER=`"$MAKENSISU" -version 2>/dev/null | sed -e '/-Unicode/!s/.*//g' -e 's/^v\([0-9]\+\.[0-9]\+\)\-Unicode$/\1/g'`
+      changequote([,])
+      if test ! "$MAKENSISU_VER" = ""; then
+          MAKENSISU_MAJOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $1 }'`
+          MAKENSISU_MINOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $2 }'`
+      fi
+      AC_MSG_CHECKING([for Unicode NSIS with major version == $REQ_NSIS_MAJOR_VER and minor version >= $MIN_NSIS_MINOR_VER])
+      if test "$MAKENSISU_VER" = "" || \
+         test ! "$MAKENSISU_MAJOR_VER" = "$REQ_NSIS_MAJOR_VER" -o \
+              ! "$MAKENSISU_MINOR_VER" -ge $MIN_NSIS_MINOR_VER; then
+          AC_MSG_RESULT([no])
+          if test -z "$CROSS_COMPILE"; then
+            AC_MSG_ERROR([To build the installer you must have the latest MozillaBuild or Unicode NSIS with a major version of $REQ_NSIS_MAJOR_VER and a minimum minor version of $MIN_NSIS_MINOR_VER in your path.])
+          else
+            MAKENSISU=
+          fi
+      fi
+    elif test -z "$CROSS_COMPILE"; then
+      AC_MSG_ERROR([To build the installer you must have the latest MozillaBuild or Unicode NSIS with a major version of $REQ_NSIS_MAJOR_VER and a minimum minor version of $MIN_NSIS_MINOR_VER in your path.])
+    else
+      MAKENSISU=
     fi
-    changequote(,)
-    MAKENSISU_VER=`"$MAKENSISU" -version 2>/dev/null | sed -e '/-Unicode/!s/.*//g' -e 's/^v\([0-9]\+\.[0-9]\+\)\-Unicode$/\1/g'`
-    changequote([,])
-    if test ! "$MAKENSISU_VER" = ""; then
-        MAKENSISU_MAJOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $1 }'`
-        MAKENSISU_MINOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $2 }'`
-    fi
-    AC_MSG_CHECKING([for Unicode NSIS with major version == $REQ_NSIS_MAJOR_VER and minor version >= $MIN_NSIS_MINOR_VER])
-    if test "$MAKENSISU_VER" = "" ||
-       test ! "$MAKENSISU_MAJOR_VER" = "$REQ_NSIS_MAJOR_VER" -o \
-            ! "$MAKENSISU_MINOR_VER" -ge $MIN_NSIS_MINOR_VER; then
-        AC_MSG_RESULT([no])
-        AC_MSG_ERROR([To build the installer you must have the latest MozillaBuild or Unicode NSIS with a major version of $REQ_NSIS_MAJOR_VER and a minimum minor version of $MIN_NSIS_MINOR_VER in your path.])
-    fi
-    AC_MSG_RESULT([yes])
 fi
 
 AC_MSG_CHECKING([for tar archiver])
@@ -6435,14 +6466,6 @@ MOZ_ARG_DISABLE_BOOL(tests,
 [  --disable-tests         Do not build test libraries & programs],
     ENABLE_TESTS=,
     ENABLE_TESTS=1 )
-
-dnl ========================================================
-dnl Marionette
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(marionette,
-[  --enable-marionette     Enable Marionette for remote testing and control],
-    ENABLE_MARIONETTE=1,
-    ENABLE_MARIONETTE)
 
 dnl ========================================================
 dnl parental controls (for Windows Vista)

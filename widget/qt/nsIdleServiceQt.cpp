@@ -37,10 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined(MOZ_PLATFORM_MAEMO) && defined(MOZ_X11)
-#include <QX11Info>
+#ifdef MOZ_X11
+#include "mozilla/X11Util.h"
 #endif
-
 #include "nsIdleServiceQt.h"
 #include "nsIServiceManager.h"
 #include "nsDebug.h"
@@ -117,7 +116,7 @@ nsIdleServiceQt::PollIdleTime(PRUint32 *aIdleTime)
     *aIdleTime = 0;
 
     // We might not have a display (cf. in xpcshell)
-    Display *dplay = QX11Info::display();
+    Display *dplay = mozilla::DefaultXDisplay();
     if (!dplay) {
         return false;
     }
@@ -136,7 +135,7 @@ nsIdleServiceQt::PollIdleTime(PRUint32 *aIdleTime)
         if (!mXssInfo)
             return false;
 
-        _XSSQueryInfo(dplay, QX11Info::appRootWindow(), mXssInfo);
+        _XSSQueryInfo(dplay, RootWindowOfScreen(DefaultScreenOfDisplay(mozilla::DefaultXDisplay())), mXssInfo);
         *aIdleTime = mXssInfo->idle;
         return true;
     }

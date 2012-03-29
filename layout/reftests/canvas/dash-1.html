@@ -17,6 +17,14 @@ window.onload = function() {
     ctx.lineTo(250, 100);
     ctx.stroke();
     ctx.beginPath();
+
+    ctx.mozDashOffset = 5;
+    ctx.mozDash = [ 5 ];  // 5 on, 5 off
+    ctx.moveTo(50, 150);
+    ctx.lineTo(250, 150);
+    ctx.stroke();
+    ctx.beginPath();
+
 }
   </script>
 </head>

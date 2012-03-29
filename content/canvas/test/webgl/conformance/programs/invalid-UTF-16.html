@@ -38,7 +38,7 @@ var string = array.join('');
 // true. The second seems to sanitize the form's input before
 // converting it to a UTF8 string.
 
-var gl = create3DContext(null);
+var gl = create3DContext();
 var program = gl.createProgram();
 gl.bindAttribLocation(program, 0, string);
 testPassed("bindAttribLocation with invalid UTF-16 did not crash");

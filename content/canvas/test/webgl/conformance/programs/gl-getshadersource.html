@@ -21,8 +21,7 @@ found in the LICENSE file.
 <script>
 description("Tests that the source that goes into a shader is what comes out.");
 var wtu = WebGLTestUtils;
-var canvas = document.getElementById("example");
-var gl = wtu.create3DContext(canvas);
+var gl = wtu.create3DContext("example");
 var original = document.getElementById("vshader").text;
 var shader = gl.createShader(gl.VERTEX_SHADER);
 gl.shaderSource(shader, original);

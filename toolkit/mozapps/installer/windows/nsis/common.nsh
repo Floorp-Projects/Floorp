@@ -1193,7 +1193,9 @@
  * @param   _VALOPEN
  *          The path and args to launch the application.
  * @param   _VALICON
- *          The path to an exe that contains an icon and the icon resource id.
+ *          The path to the binary that contains the icon group for the default icon
+ *          followed by a comma and either the icon group's resource index or the icon
+ *          group's resource id prefixed with a minus sign
  * @param   _DISPNAME
  *          The display name for the handler. If emtpy no value will be set.
  * @param   _ISPROTOCOL
@@ -1237,10 +1239,9 @@
       WriteRegStr SHCTX "$R4" "" "$R7"
       WriteRegStr SHCTX "$R4" "FriendlyTypeName" "$R7"
 
-      StrCmp "$R8" "true" +1 +8
+      StrCmp "$R8" "true" +1 +2
       WriteRegStr SHCTX "$R4" "URL Protocol" ""
       StrCpy $R3 ""
-      ClearErrors
       ReadRegDWord $R3 SHCTX "$R4" "EditFlags"
       StrCmp $R3 "" +1 +3  ; Only add EditFlags if a value doesn't exist
       DeleteRegValue SHCTX "$R4" "EditFlags"
@@ -1336,7 +1337,9 @@
  * @param   _VALOPEN
  *          The path and args to launch the application.
  * @param   _VALICON
- *          The path to an exe that contains an icon and the icon resource id.
+ *          The path to the binary that contains the icon group for the default icon
+ *          followed by a comma and either the icon group's resource index or the icon
+ *          group's resource id prefixed with a minus sign
  * @param   _DISPNAME
  *          The display name for the handler. If emtpy no value will be set.
  * @param   _ISPROTOCOL
@@ -1389,10 +1392,9 @@
       WriteRegStr SHCTX "$R0\$R2" "" "$R5"
       WriteRegStr SHCTX "$R0\$R2" "FriendlyTypeName" "$R5"
 
-      StrCmp "$R6" "true" +1 +8
+      StrCmp "$R6" "true" +1 +2
       WriteRegStr SHCTX "$R0\$R2" "URL Protocol" ""
       StrCpy $R1 ""
-      ClearErrors
       ReadRegDWord $R1 SHCTX "$R0\$R2" "EditFlags"
       StrCmp $R1 "" +1 +3  ; Only add EditFlags if a value doesn't exist
       DeleteRegValue SHCTX "$R0\$R2" "EditFlags"
@@ -1478,6 +1480,154 @@
     !define _MOZFUNC_UN "un."
 
     !insertmacro AddDDEHandlerValues
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
+ * Writes common registry values for a handler that DOES NOT use DDE using SHCTX.
+ *
+ * @param   _KEY
+ *          The key name in relation to the HKCR root. SOFTWARE\Classes is
+ *          prefixed to this value when using SHCTX.
+ * @param   _VALOPEN
+ *          The path and args to launch the application.
+ * @param   _VALICON
+ *          The path to the binary that contains the icon group for the default icon
+ *          followed by a comma and either the icon group's resource index or the icon
+ *          group's resource id prefixed with a minus sign
+ * @param   _DISPNAME
+ *          The display name for the handler. If emtpy no value will be set.
+ * @param   _ISPROTOCOL
+ *          Sets protocol handler specific registry values when "true".
+ *
+ * $R3 = storage for SOFTWARE\Classes
+ * $R4 = string value of the current registry key path.
+ * $R5 = _KEY
+ * $R6 = _VALOPEN
+ * $R7 = _VALICON
+ * $R8 = _DISPNAME
+ * $R9 = _ISPROTOCOL
+ */
+!macro AddDisabledDDEHandlerValues
+
+  !ifndef ${_MOZFUNC_UN}AddDisabledDDEHandlerValues
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}AddDisabledDDEHandlerValues "!insertmacro ${_MOZFUNC_UN}AddDisabledDDEHandlerValuesCall"
+
+    Function ${_MOZFUNC_UN}AddDisabledDDEHandlerValues
+      Exch $R9 ; true if a protocol handler
+      Exch 1
+      Exch $R8 ; FriendlyTypeName
+      Exch 2
+      Exch $R7 ; icon index
+      Exch 3
+      Exch $R6 ; shell\open\command
+      Exch 4
+      Exch $R5 ; reg key
+      Push $R4 ;
+      Push $R3 ; base reg class
+
+      StrCpy $R3 "SOFTWARE\Classes"
+      StrCmp "$R8" "" +6 +1
+      ReadRegStr $R4 SHCTX "$R5" "FriendlyTypeName"
+
+      StrCmp "$R4" "" +1 +3
+      WriteRegStr SHCTX "$R3\$R5" "" "$R8"
+      WriteRegStr SHCTX "$R3\$R5" "FriendlyTypeName" "$R8"
+
+      StrCmp "$R9" "true" +1 +2
+      WriteRegStr SHCTX "$R3\$R5" "URL Protocol" ""
+      StrCpy $R4 ""
+      ReadRegDWord $R4 SHCTX "$R3\$R5" "EditFlags"
+      StrCmp $R4 "" +1 +3  ; Only add EditFlags if a value doesn't exist
+      DeleteRegValue SHCTX "$R3\$R5" "EditFlags"
+      WriteRegDWord SHCTX "$R3\$R5" "EditFlags" 0x00000002
+
+      StrCmp "$R7" "" +2 +1
+      WriteRegStr SHCTX "$R3\$R5\DefaultIcon" "" "$R7"
+
+      ; Main command handler for the app
+      WriteRegStr SHCTX "$R3\$R5\shell\open\command" "" "$R6"
+
+      ; Drop support for DDE (bug 491947), and remove old dde entries if
+      ; they exist.
+      ;
+      ; Note, changes in SHCTX should propegate to hkey classes root when
+      ; current user or local machine entries are written. Windows will also
+      ; attempt to propegate entries when a handler is used. CR entries are a
+      ; combination of LM and CU, with CU taking priority. 
+      ;
+      ; To disable dde, an empty shell/ddeexec key must be created in current
+      ; user or local machine. Unfortunately, settings have various different
+      ; behaviors depending on the windows version. The following code attempts
+      ; to address these differences.
+      ;
+      ; On XP (no SP, SP1, SP2), Vista: An empty default string
+      ; must be set under ddeexec. Empty strings propagate to CR.
+      ;
+      ; Win7: IE does not configure ddeexec, so issues with left over ddeexec keys
+      ; in LM are reduced. We configure an empty ddeexec key with an empty default
+      ; string in CU to be sure.
+      ;
+      DeleteRegKey SHCTX "SOFTWARE\Classes\$R5\shell\open\ddeexec"
+      WriteRegStr SHCTX "SOFTWARE\Classes\$R5\shell\open\ddeexec" "" ""
+
+      ClearErrors
+
+      Pop $R3
+      Pop $R4
+      Exch $R5
+      Exch 4
+      Exch $R6
+      Exch 3
+      Exch $R7
+      Exch 2
+      Exch $R8
+      Exch 1
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro AddDisabledDDEHandlerValuesCall _KEY _VALOPEN _VALICON _DISPNAME _ISPROTOCOL
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_KEY}"
+  Push "${_VALOPEN}"
+  Push "${_VALICON}"
+  Push "${_DISPNAME}"
+  Push "${_ISPROTOCOL}"
+  Call AddDisabledDDEHandlerValues
+  !verbose pop
+!macroend
+
+!macro un.AddDisabledDDEHandlerValuesCall _KEY _VALOPEN _VALICON _DISPNAME _ISPROTOCOL
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_KEY}"
+  Push "${_VALOPEN}"
+  Push "${_VALICON}"
+  Push "${_DISPNAME}"
+  Push "${_ISPROTOCOL}"
+  Call un.AddDisabledDDEHandlerValues
+  !verbose pop
+!macroend
+
+!macro un.AddDisabledDDEHandlerValues
+  !ifndef un.AddDisabledDDEHandlerValues
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro AddDisabledDDEHandlerValues
 
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN
@@ -2804,6 +2954,7 @@
       StrCmp "$R7" "$R8" +1 end
       DeleteRegValue HKLM "Software\Classes\$R9\DefaultIcon" ""
       DeleteRegValue HKLM "Software\Classes\$R9\shell\open" ""
+      DeleteRegValue HKLM "Software\Classes\$R9\shell\open\command" ""
       DeleteRegValue HKLM "Software\Classes\$R9\shell\ddeexec" ""
       DeleteRegValue HKLM "Software\Classes\$R9\shell\ddeexec\Application" ""
       DeleteRegValue HKLM "Software\Classes\$R9\shell\ddeexec\Topic" ""

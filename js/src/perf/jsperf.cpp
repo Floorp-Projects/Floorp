@@ -49,39 +49,6 @@ using JS::PerfMeasurement;
 static PerfMeasurement* GetPM(JSContext* cx, JSObject* obj, const char* fname);
 static PerfMeasurement* GetPMFromThis(JSContext* cx, jsval* vp);
 
-// Constructor and destructor
-
-static JSBool
-pm_construct(JSContext* cx, unsigned argc, jsval* vp)
-{
-    uint32_t mask;
-    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "u", &mask))
-        return JS_FALSE;
-
-    JSObject *obj = JS_NewObjectForConstructor(cx, vp);
-    if (!obj)
-        return JS_FALSE;
-
-    if (!JS_FreezeObject(cx, obj))
-        return JS_FALSE;
-
-    PerfMeasurement* p = cx->new_<PerfMeasurement>(PerfMeasurement::EventMask(mask));
-    if (!p) {
-        JS_ReportOutOfMemory(cx);
-        return JS_FALSE;
-    }
-
-    JS_SetPrivate(obj, p);
-    *vp = OBJECT_TO_JSVAL(obj);
-    return JS_TRUE;
-}
-
-static void
-pm_finalize(JSContext* cx, JSObject* obj)
-{
-    cx->delete_((PerfMeasurement*) JS_GetPrivate(obj));
-}
-
 // Property access
 
 #define GETTER(name)                                                    \
@@ -216,11 +183,47 @@ static const struct pm_const {
 
 #undef CONSTANT
 
+static JSBool pm_construct(JSContext* cx, unsigned argc, jsval* vp);
+static void pm_finalize(JSContext* cx, JSObject* obj);
+
 static JSClass pm_class = {
     "PerfMeasurement", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, pm_finalize
 };
+
+// Constructor and destructor
+
+static JSBool
+pm_construct(JSContext* cx, unsigned argc, jsval* vp)
+{
+    uint32_t mask;
+    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "u", &mask))
+        return JS_FALSE;
+
+    JSObject *obj = JS_NewObjectForConstructor(cx, &pm_class, vp);
+    if (!obj)
+        return JS_FALSE;
+
+    if (!JS_FreezeObject(cx, obj))
+        return JS_FALSE;
+
+    PerfMeasurement* p = cx->new_<PerfMeasurement>(PerfMeasurement::EventMask(mask));
+    if (!p) {
+        JS_ReportOutOfMemory(cx);
+        return JS_FALSE;
+    }
+
+    JS_SetPrivate(obj, p);
+    *vp = OBJECT_TO_JSVAL(obj);
+    return JS_TRUE;
+}
+
+static void
+pm_finalize(JSContext* cx, JSObject* obj)
+{
+    cx->delete_((PerfMeasurement*) JS_GetPrivate(obj));
+}
 
 // Helpers (declared above)
 

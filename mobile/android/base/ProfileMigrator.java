@@ -192,15 +192,22 @@ public class ProfileMigrator {
         private ArrayList<ContentProviderOperation> mOperations;
 
         protected Uri getBookmarksUri() {
-            return Bookmarks.CONTENT_URI;
+            Uri.Builder uriBuilder = Bookmarks.CONTENT_URI.buildUpon()
+                .appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1");
+            return uriBuilder.build();
         }
 
         protected Uri getHistoryUri() {
-            return History.CONTENT_URI;
+            Uri.Builder uriBuilder = History.CONTENT_URI.buildUpon()
+                .appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1");
+            return uriBuilder.build();
+
         }
 
         protected Uri getImagesUri() {
-            return Images.CONTENT_URI;
+            Uri.Builder uriBuilder = Images.CONTENT_URI.buildUpon()
+                .appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1");
+            return uriBuilder.build();
         }
 
         private long getFolderId(String guid) {
@@ -316,6 +323,8 @@ public class ProfileMigrator {
                 ContentValues values = new ContentValues();
                 ContentProviderOperation.Builder builder = null;
                 values.put(History.DATE_LAST_VISITED, date);
+                // Restore deleted record if possible
+                values.put(History.IS_DELETED, 0);
 
                 if (cursor.moveToFirst()) {
                     int visitsCol = cursor.getColumnIndexOrThrow(History.VISITS);

@@ -54,10 +54,6 @@
 #include "nsIStringBundle.h"
 #include "nsXPCOMCID.h"
 
-#define MIGRATION_BUNDLE "chrome://browser/locale/migration/migration.properties"
-
-#define DEFAULT_BOOKMARKS NS_LITERAL_CSTRING("resource:///defaults/profile/bookmarks.html")
-
 void SetUnicharPref(const char* aPref, const nsAString& aValue,
                     nsIPrefBranch* aPrefs)
 {

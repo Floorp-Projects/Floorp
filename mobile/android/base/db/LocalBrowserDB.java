@@ -593,6 +593,8 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     public void updateFaviconForUrl(ContentResolver cr, String uri,
             BitmapDrawable favicon) {
         Bitmap bitmap = favicon.getBitmap();
+        if (bitmap == null)
+            return;
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);

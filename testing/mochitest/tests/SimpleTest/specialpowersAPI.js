@@ -704,6 +704,18 @@ SpecialPowersAPI.prototype = {
                                                            listener,
                                                            false);
   },
+  getFormFillController: function(window) {
+    return Components.classes["@mozilla.org/satchel/form-fill-controller;1"]
+                     .getService(Components.interfaces.nsIFormFillController);
+  },
+  attachFormFillControllerTo: function(window) {
+    this.getFormFillController()
+        .attachToBrowser(this._getDocShell(window),
+                         this._getAutoCompletePopup(window));
+  },
+  detachFormFillControllerFrom: function(window) {
+    this.getFormFillController().detachFromBrowser(this._getDocShell(window));
+  },
   isBackButtonEnabled: function(window) {
     return !this._getTopChromeWindow(window).document
                                       .getElementById("Browser:Back")
@@ -927,6 +939,23 @@ SpecialPowersAPI.prototype = {
       }
     }
     return obj;
+  },
+  setPrivilegedProps: function(obj, props, val) {
+    var parts = props.split('.');
+
+    if (parts.length == 0) {
+      return;
+    }
+
+    for (var i = 0; i < parts.length - 1; i++) {
+      var p = parts[i];
+      if (obj[p]) {
+        obj = obj[p];
+      } else {
+        return;
+      }
+    }
+    obj[parts[i]] = val;
   },
 
   get focusManager() {

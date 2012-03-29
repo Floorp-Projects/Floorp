@@ -501,7 +501,8 @@ nsFrameManager::InsertFrames(nsIFrame*       aParentFrame,
 
 nsresult
 nsFrameManager::RemoveFrame(ChildListID     aListID,
-                            nsIFrame*       aOldFrame)
+                            nsIFrame*       aOldFrame,
+                            bool            aInvalidate /* = true */)
 {
   bool wasDestroyingFrames = mIsDestroyingFrames;
   mIsDestroyingFrames = true;
@@ -512,7 +513,9 @@ nsFrameManager::RemoveFrame(ChildListID     aListID,
   // that doesn't change the size of the parent.)
   // This has to sure to invalidate the entire overflow rect; this
   // is important in the presence of absolute positioning
-  aOldFrame->InvalidateFrameSubtree();
+  if (aInvalidate) {
+    aOldFrame->InvalidateFrameSubtree();
+  }
 
   NS_ASSERTION(!aOldFrame->GetPrevContinuation() ||
                // exception for nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames

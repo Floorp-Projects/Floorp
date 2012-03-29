@@ -2725,15 +2725,14 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   if (aAmountBack == eSelectWord) {
     // To avoid selecting the previous word when at start of word,
     // first move one character forward.
-    nsPeekOffsetStruct pos;
-    pos.SetData(eSelectCharacter,
-                eDirNext,
-                aStartPos,
-                0,
-                aJumpLines,
-                true,  //limit on scrolled views
-                false,
-                false);
+    nsPeekOffsetStruct pos(eSelectCharacter,
+                           eDirNext,
+                           aStartPos,
+                           0,
+                           aJumpLines,
+                           true,  //limit on scrolled views
+                           false,
+                           false);
     rv = PeekOffset(&pos);
     if (NS_SUCCEEDED(rv)) {
       baseFrame = pos.mResultFrame;
@@ -2741,29 +2740,27 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
     }
   }
 
-  // Use peek offset one way then the other:  
-  nsPeekOffsetStruct startpos;
-  startpos.SetData(aAmountBack,
-                   eDirPrevious,
-                   baseOffset, 
-                   0,
-                   aJumpLines,
-                   true,  //limit on scrolled views
-                   false,
-                   false);
+  // Use peek offset one way then the other:
+  nsPeekOffsetStruct startpos(aAmountBack,
+                              eDirPrevious,
+                              baseOffset,
+                              0,
+                              aJumpLines,
+                              true,  //limit on scrolled views
+                              false,
+                              false);
   rv = baseFrame->PeekOffset(&startpos);
   if (NS_FAILED(rv))
     return rv;
 
-  nsPeekOffsetStruct endpos;
-  endpos.SetData(aAmountForward,
-                 eDirNext,
-                 aStartPos, 
-                 0,
-                 aJumpLines,
-                 true,  //limit on scrolled views
-                 false,
-                 false);
+  nsPeekOffsetStruct endpos(aAmountForward,
+                            eDirNext,
+                            aStartPos,
+                            0,
+                            aJumpLines,
+                            true,  //limit on scrolled views
+                            false,
+                            false);
   rv = PeekOffset(&endpos);
   if (NS_FAILED(rv))
     return rv;
@@ -5784,15 +5781,15 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-nsPeekOffsetStruct nsIFrame::GetExtremeCaretPosition(bool aStart)
+nsIFrame::CaretPosition
+nsIFrame::GetExtremeCaretPosition(bool aStart)
 {
-  nsPeekOffsetStruct result;
+  CaretPosition result;
 
   FrameTarget targetFrame = DrillDownToSelectionFrame(this, !aStart);
   FrameContentRange range = GetRangeForFrame(targetFrame.frame);
   result.mResultContent = range.content;
   result.mContentOffset = aStart ? range.start : range.end;
-  result.mAttachForward = (result.mContentOffset == range.start);
   return result;
 }
 

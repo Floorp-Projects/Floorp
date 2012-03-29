@@ -3701,8 +3701,7 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
     arrayProto->setArrayLength(cx, 0);
 
     RootedVarFunction ctor(cx);
-    ctor = global->createConstructor(cx, js_Array, &ArrayClass,
-                                     CLASS_ATOM(cx, Array), 1);
+    ctor = global->createConstructor(cx, js_Array, CLASS_ATOM(cx, Array), 1);
     if (!ctor)
         return NULL;
 

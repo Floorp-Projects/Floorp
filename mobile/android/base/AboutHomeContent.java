@@ -250,6 +250,9 @@ public class AboutHomeContent extends ScrollView
             mAccountManager.removeOnAccountsUpdatedListener(mAccountListener);
             mAccountListener = null;
         }
+
+        if (mCursor != null && !mCursor.isClosed())
+            mCursor.close();
     }
 
     void setLastTabsVisibility(boolean visible) {
@@ -330,9 +333,6 @@ public class AboutHomeContent extends ScrollView
     }
 
     private void loadTopSites(final Activity activity) {
-        if (mCursor != null)
-            activity.stopManagingCursor(mCursor);
-
         // Ensure we initialize GeckoApp's startup mode in
         // background thread before we use it when updating
         // the top sites section layout in main thread.
@@ -344,7 +344,6 @@ public class AboutHomeContent extends ScrollView
 
         ContentResolver resolver = GeckoApp.mAppContext.getContentResolver();
         mCursor = BrowserDB.getTopSites(resolver, NUMBER_OF_TOP_SITES_PORTRAIT);
-        activity.startManagingCursor(mCursor);
 
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
             public void run() {

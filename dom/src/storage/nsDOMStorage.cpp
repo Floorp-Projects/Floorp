@@ -1318,8 +1318,6 @@ nsDOMStorage::nsDOMStorage()
   : mStorageType(nsPIDOMStorage::Unknown)
   , mEventBroadcaster(nsnull)
 {
-  mSecurityChecker = this;
-
   if (XRE_GetProcessType() != GeckoProcessType_Default)
     mStorageImpl = new StorageChild(this);
   else
@@ -1328,10 +1326,9 @@ nsDOMStorage::nsDOMStorage()
 
 nsDOMStorage::nsDOMStorage(nsDOMStorage& aThat)
   : mStorageType(aThat.mStorageType)
+  , mPrincipal(aThat.mPrincipal)
   , mEventBroadcaster(nsnull)
 {
-  mSecurityChecker = this;
-
   if (XRE_GetProcessType() != GeckoProcessType_Default) {
     StorageChild* other = static_cast<StorageChild*>(aThat.mStorageImpl.get());
     mStorageImpl = new StorageChild(this, *other);
@@ -1382,6 +1379,7 @@ nsDOMStorage::InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDocumentURI = aDocumentURI;
+  mPrincipal = aPrincipal;
 
   mStorageType = SessionStorage;
 
@@ -1397,6 +1395,7 @@ nsDOMStorage::InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aD
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDocumentURI = aDocumentURI;
+  mPrincipal = aPrincipal;
 
   mStorageType = LocalStorage;
 
@@ -1495,8 +1494,7 @@ nsDOMStorage::CacheStoragePermissions()
   nsresult rv = ssm->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
   NS_ENSURE_SUCCESS(rv, false);
 
-  NS_ASSERTION(mSecurityChecker, "Has non-null mSecurityChecker");
-  return mSecurityChecker->CanAccess(subjectPrincipal);
+  return CanAccess(subjectPrincipal);
 }
 
 // static
@@ -1729,17 +1727,17 @@ nsDOMStorage::CanAccessSystem(nsIPrincipal *aPrincipal)
 bool
 nsDOMStorage::CanAccess(nsIPrincipal *aPrincipal)
 {
-  // Allow C++/system callers to access the storage
-  if (CanAccessSystem(aPrincipal))
+  // Allow C++ callers to access the storage
+  if (!aPrincipal)
     return true;
 
-  nsCAutoString domain;
-  nsCOMPtr<nsIURI> unused;
-  nsresult rv = GetPrincipalURIAndHost(aPrincipal,
-                                       getter_AddRefs(unused), domain);
-  NS_ENSURE_SUCCESS(rv, false);
+  // Allow more powerful principals (e.g. system) to access the storage
+  bool subsumes;
+  nsresult rv = aPrincipal->SubsumesIgnoringDomain(mPrincipal, &subsumes);
+  if (NS_FAILED(rv))
+    return false;
 
-  return domain.Equals(mStorageImpl->mDomain);
+  return subsumes;
 }
 
 nsPIDOMStorage::nsDOMStorageType
@@ -1797,7 +1795,6 @@ nsDOMStorage2::nsDOMStorage2()
 nsDOMStorage2::nsDOMStorage2(nsDOMStorage2& aThat)
 {
   mStorage = new nsDOMStorage(*aThat.mStorage.get());
-  mStorage->mSecurityChecker = mStorage;
   mPrincipal = aThat.mPrincipal;
 }
 
@@ -1808,7 +1805,6 @@ nsDOMStorage2::InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring 
   if (!mStorage)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  mStorage->mSecurityChecker = this;
   mPrincipal = aPrincipal;
   mDocumentURI = aDocumentURI;
 
@@ -1822,7 +1818,6 @@ nsDOMStorage2::InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &a
   if (!mStorage)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  mStorage->mSecurityChecker = this;
   mPrincipal = aPrincipal;
   mDocumentURI = aDocumentURI;
 
@@ -1892,20 +1887,7 @@ nsDOMStorage2::Principal()
 bool
 nsDOMStorage2::CanAccess(nsIPrincipal *aPrincipal)
 {
-  if (mStorage->mSecurityChecker != this)
-    return mStorage->mSecurityChecker->CanAccess(aPrincipal);
-
-  // Allow C++ callers to access the storage
-  if (!aPrincipal)
-    return true;
-
-  // Allow more powerful principals (e.g. system) to access the storage
-  bool subsumes;
-  nsresult rv = aPrincipal->SubsumesIgnoringDomain(mPrincipal, &subsumes);
-  if (NS_FAILED(rv))
-    return false;
-
-  return subsumes;
+  return mStorage->CanAccess(aPrincipal);
 }
 
 nsPIDOMStorage::nsDOMStorageType

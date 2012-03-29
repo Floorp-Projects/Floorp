@@ -41,6 +41,7 @@ package @ANDROID_PACKAGE_NAME@;
 
 public interface Assert {
     void dumpLog(String message);
+    void dumpLog(String message, Throwable t);
     void setLogFile(String filename);
     void setTestName(String testName);
 

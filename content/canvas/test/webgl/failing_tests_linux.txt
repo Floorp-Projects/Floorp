@@ -2,5 +2,4 @@ conformance/misc/uninitialized-test.html
 conformance/programs/gl-get-active-attribute.html
 conformance/textures/texture-mips.html
 conformance/uniforms/gl-uniform-bool.html
-conformance/more/conformance/quickCheckAPI-S_V.html
 conformance/renderbuffers/framebuffer-object-attachment.html

@@ -231,11 +231,11 @@ function dump_STSState() {
   //  ... clear any STS data ...
   // Skip these tests if there is no private mode support.
   if (gPBSvc) {
-    tests.concat([
+    tests = tests.concat(
       test_sts_in_private_mode,
       test_sts_after_exiting_private_mode,
       clean_up_sts_state
-    ]);
+    );
   }
 
   function nextTest() {
