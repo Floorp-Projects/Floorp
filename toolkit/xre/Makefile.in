@@ -67,9 +67,10 @@ CPPSRCS = \
   nsEmbedFunctions.cpp \
   $(NULL)
 
-ifeq ($(MOZ_GL_PROVIDER),GLX)
-DEFINES += -DUSE_GLX_TEST
+ifdef MOZ_X11
+ifndef MOZ_PLATFORM_MAEMO
 CPPSRCS += glxtest.cpp
+endif
 endif
 
 ifdef MOZ_INSTRUMENT_EVENT_LOOP
