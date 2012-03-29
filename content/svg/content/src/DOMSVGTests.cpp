@@ -261,8 +261,8 @@ DOMSVGTests::GetAttrName(PRUint8 aAttrEnum) const
 void
 DOMSVGTests::GetAttrValue(PRUint8 aAttrEnum, nsAttrValue& aValue) const
 {
-  NS_ABORT_IF_FALSE(aAttrEnum >= 0 && aAttrEnum < ArrayLength(sStringListNames),
-                    "aAttrEnum out of range");
+  MOZ_ASSERT(aAttrEnum < ArrayLength(sStringListNames),
+             "aAttrEnum out of range");
   aValue.SetTo(mStringListAttributes[aAttrEnum], nsnull);
 }
 
