@@ -87,6 +87,8 @@ nsScreen::Initialize()
 /* static */ already_AddRefed<nsScreen>
 nsScreen::Create(nsPIDOMWindow* aWindow)
 {
+  MOZ_ASSERT(aWindow);
+
   if (!sInitialized) {
     Initialize();
   }
@@ -95,7 +97,8 @@ nsScreen::Create(nsPIDOMWindow* aWindow)
     return nsnull;
   }
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
+  nsCOMPtr<nsIScriptGlobalObject> sgo =
+    do_QueryInterface(static_cast<nsPIDOMWindow*>(aWindow));
   NS_ENSURE_TRUE(sgo, nsnull);
 
   nsRefPtr<nsScreen> screen = new nsScreen();
@@ -454,6 +457,20 @@ nsScreen::MozLockOrientation(const nsAString& aOrientation, bool* aReturn)
   } else {
     *aReturn = false;
     return NS_OK;
+  }
+
+  if (!GetOwner()) {
+    *aReturn = false;
+    return NS_OK;
+  }
+
+  if (!IsChromeType(GetOwner()->GetDocShell())) {
+    bool fullscreen;
+    GetOwner()->GetFullScreen(&fullscreen);
+    if (!fullscreen) {
+      *aReturn = false;
+      return NS_OK;
+    }
   }
 
   *aReturn = hal::LockScreenOrientation(orientation);
