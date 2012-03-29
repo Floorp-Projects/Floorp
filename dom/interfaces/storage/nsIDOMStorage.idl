@@ -64,8 +64,7 @@ interface nsIDOMStorage : nsISupports
    * Retrieve the name of the key at a particular index.
    *
    * @param index index of the item to retrieve
-   * @returns the key at index
-   * @throws INDEX_SIZE_ERR if there is no key at that index
+   * @returns the key at index, null if there is no key at that index
    */
   DOMString key(in unsigned long index);
 
