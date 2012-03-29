@@ -535,7 +535,8 @@ nsINode::RemoveChild(nsINode *aOldChild)
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  return RemoveChildAt(index, true);
+  RemoveChildAt(index, true);
+  return NS_OK;
 }
 
 nsresult
@@ -3848,7 +3849,7 @@ nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
   return NS_OK;
 }
 
-nsresult
+void
 nsGenericElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 {
   nsCOMPtr<nsIContent> oldKid = mAttrsAndChildren.GetSafeChildAt(aIndex);
@@ -3857,8 +3858,6 @@ nsGenericElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
   if (oldKid) {
     doRemoveChildAt(aIndex, aNotify, oldKid, mAttrsAndChildren);
   }
-
-  return NS_OK;
 }
 
 void
@@ -4271,12 +4270,9 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  nsresult res;
-
   // If we're replacing
   if (aReplace) {
-    res = RemoveChildAt(insPos, true);
-    NS_ENSURE_SUCCESS(res, res);
+    RemoveChildAt(insPos, true);
   }
 
   if (newContent->IsRootOfAnonymousSubtree()) {
@@ -4296,8 +4292,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
 
-    res = oldParent->RemoveChildAt(removeIndex, true);
-    NS_ENSURE_SUCCESS(res, res);
+    oldParent->RemoveChildAt(removeIndex, true);
 
     // Adjust insert index if the node we ripped out was a sibling
     // of the node we're inserting before
@@ -4306,6 +4301,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     }
   }
 
+  nsresult res = NS_OK;
   // Move new child over to our document if needed. Do this after removing
   // it from its parent so that AdoptNode doesn't fire DOMNodeRemoved
   // DocumentType nodes are the only nodes that can have a null
