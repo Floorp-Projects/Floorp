@@ -159,6 +159,14 @@ gfxPattern::GetPattern(mozilla::gfx::DrawTarget *aTarget)
   GraphicsExtend extend = (GraphicsExtend)cairo_pattern_get_extend(mPattern);
 
   switch (cairo_pattern_get_type(mPattern)) {
+  case CAIRO_PATTERN_TYPE_SOLID:
+    {
+      double r, g, b, a;
+      cairo_pattern_get_rgba(mPattern, &r, &g, &b, &a);
+
+      new (mColorPattern.addr()) ColorPattern(Color(r, g, b, a));
+      return mColorPattern.addr();
+    }
   case CAIRO_PATTERN_TYPE_SURFACE:
     {
       GraphicsFilter filter = (GraphicsFilter)cairo_pattern_get_filter(mPattern);
