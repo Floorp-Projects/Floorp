@@ -1211,18 +1211,45 @@ SelectorView.prototype = {
    *   1. Open the link in view source (for element style attributes).
    *   2. Open the link in the style editor.
    *
+   *   Like the style editor, we only view stylesheets contained in
+   *   document.styleSheets inside the style editor.
+   *
    * @param aEvent The click event
    */
   openStyleEditor: function(aEvent)
   {
-    if (this.selectorInfo.selector._cssRule._cssSheet) {
-      let styleSheet = this.selectorInfo.selector._cssRule._cssSheet.domSheet;
-      let line = this.selectorInfo.ruleLine;
+    let rule = this.selectorInfo.selector._cssRule;
+    let doc = this.tree.win.content.document;
+    let line = this.selectorInfo.ruleLine || 0;
+    let cssSheet = rule._cssSheet;
+    let contentSheet = false;
+    let styleSheet;
+    let styleSheets;
 
+    if (cssSheet) {
+      styleSheet = cssSheet.domSheet;
+      styleSheets = doc.styleSheets;
+
+      // Array.prototype.indexOf always returns -1 here so we loop through
+      // the styleSheets array instead.
+      for each (let sheet in styleSheets) {
+        if (sheet == styleSheet) {
+          contentSheet = true;
+          break;
+        }
+      }
+    }
+
+    if (contentSheet) {
       this.tree.win.StyleEditor.openChrome(styleSheet, line);
     } else {
-      let href = this.selectorInfo.sourceElement.ownerDocument.location.href;
-      this.tree.win.openUILinkIn("view-source:" + href, "window");
+      let href = styleSheet ? styleSheet.href : "";
+      let viewSourceUtils = this.tree.win.gViewSourceUtils;
+
+      if (this.selectorInfo.sourceElement) {
+        href = this.selectorInfo.sourceElement.ownerDocument.location.href;
+      }
+      viewSourceUtils.viewSource(href, null, doc, line);
     }
   },
 };
