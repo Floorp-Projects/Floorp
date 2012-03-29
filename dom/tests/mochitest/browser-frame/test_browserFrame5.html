@@ -25,25 +25,25 @@ function runTest() {
   browserFrameHelpers.addToWhitelist();
 
   var iframe1 = document.createElement('iframe');
-  document.body.appendChild(iframe1);
+  iframe1.mozbrowser = true;
   iframe1.id = 'iframe1';
   iframe1.addEventListener('load', function() {
     iframe1.removeEventListener('load', arguments.callee);
     SimpleTest.executeSoon(runTest2);
   });
-  iframe1.src = 'http://example.org';
+  iframe1.src = browserFrameHelpers.emptyPage1;
+  document.body.appendChild(iframe1);
 }
-  
+
 function runTest2() {
   var iframe1 = document.getElementById('iframe1');
-  iframe1.mozbrowser = true;
-
   var iframe2 = document.getElementById('iframe2');
 
   var sawLoad = false;
   var sawLocationChange = false;
 
   iframe1.addEventListener('mozbrowserlocationchange', function(e) {
+    ok(e.isTrusted, 'Event should be trusted.');
     ok(!sawLocationChange, 'Just one locationchange event.');
     ok(!sawLoad, 'locationchange before load.');
     is(e.detail, 'data:text/html,1', "event's reported location");
@@ -72,7 +72,7 @@ function runTest2() {
 
   // Load something into iframe2 to check that it doesn't trigger a
   // locationchange for our iframe1 listener.
-  iframe2.src = 'http://example.com';
+  iframe2.src = browserFrameHelpers.emptyPage2;
 }
 
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });

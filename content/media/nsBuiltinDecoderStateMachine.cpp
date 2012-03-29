@@ -169,21 +169,6 @@ public:
   const PRUint32 mRate;
 };
 
-// Shuts down a thread asynchronously.
-class ShutdownThreadEvent : public nsRunnable 
-{
-public:
-  ShutdownThreadEvent(nsIThread* aThread) : mThread(aThread) {}
-  ~ShutdownThreadEvent() {}
-  NS_IMETHOD Run() {
-    mThread->Shutdown();
-    mThread = nsnull;
-    return NS_OK;
-  }
-private:
-  nsCOMPtr<nsIThread> mThread;
-};
-
 // Owns the global state machine thread and counts of
 // state machine and decoder threads. There should
 // only be one instance of this class.
@@ -2163,7 +2148,9 @@ void nsBuiltinDecoderStateMachine::StartBuffering()
   mState = DECODER_STATE_BUFFERING;
   LOG(PR_LOG_DEBUG, ("%p Changed state from DECODING to BUFFERING, decoded for %.3lfs",
                      mDecoder.get(), decodeDuration.ToSeconds()));
+#ifdef PR_LOGGING
   nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
+#endif
   LOG(PR_LOG_DEBUG, ("%p Playback rate: %.1lfKB/s%s download rate: %.1lfKB/s%s",
     mDecoder.get(),
     stats.mPlaybackRate/1024, stats.mPlaybackRateReliable ? "" : " (unreliable)",

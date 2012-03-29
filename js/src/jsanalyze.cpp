@@ -517,8 +517,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_DECLOCAL:
           case JSOP_LOCALINC:
           case JSOP_LOCALDEC:
-          case JSOP_SETLOCAL:
-          case JSOP_SETLOCALPOP: {
+          case JSOP_SETLOCAL: {
             uint32_t local = GET_SLOTNO(pc);
             if (local >= script->nfixed) {
                 localsAliasStack_ = true;
@@ -825,8 +824,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
           }
 
           case JSOP_SETARG:
-          case JSOP_SETLOCAL:
-          case JSOP_SETLOCALPOP: {
+          case JSOP_SETLOCAL: {
             uint32_t slot = GetBytecodeSlot(script, pc);
             if (!slotEscapes(slot))
                 killVariable(cx, lifetimes[slot], offset, saved, savedCount);

@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=710231
 
 <!--
   Test that an iframe with the |mozbrowser| attribute does not emit
-  mozbrowserX events when this page is not in the whitelist.
+  mozbrowserX events when they're globally pref'ed off.
 -->
 
 <script type="application/javascript;version=1.7">
@@ -23,8 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=710231
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
-  browserFrameHelpers.setEnabledPref(true);
-  browserFrameHelpers.setWhitelistPref(' http://foobar.com');
+  browserFrameHelpers.setEnabledPref(false);
 
   var iframe = document.createElement('iframe');
   iframe.mozbrowser = true;
@@ -39,7 +38,7 @@ function runTest() {
     SimpleTest.finish();
   });
 
-  iframe.src = 'http://example.com';
+  iframe.src = browserFrameHelpers.emptyPage1;
 }
 
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });

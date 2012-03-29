@@ -4582,9 +4582,7 @@ void
 nsGenericElement::MarkUserDataHandler(void* aObject, nsIAtom* aKey,
                                       void* aChild, void* aData)
 {
-  nsCOMPtr<nsIXPConnectWrappedJS> wjs =
-    do_QueryInterface(static_cast<nsISupports*>(aChild));
-  xpc_UnmarkGrayObject(wjs);
+  xpc_TryUnmarkWrappedGrayObject(static_cast<nsISupports*>(aChild));
 }
 
 void

@@ -212,6 +212,41 @@ tail =
         self.assertInLog("TEST-UNEXPECTED-FAIL")
         self.assertNotInLog("TEST-PASS")
 
+    def testMissingHeadFile(self):
+        """
+        Ensure that missing head file results in fatal error.
+        """
+        self.writeFile("test_basic.js", SIMPLE_PASSING_TEST)
+        self.writeManifest([("test_basic.js", "head = missing.js")])
+
+        raised = False
+
+        try:
+            # The actual return value is never checked because we raise.
+            self.assertTestResult(True)
+        except Exception, ex:
+            raised = True
+            self.assertEquals(ex.message[0:9], "head file")
+
+        self.assertTrue(raised)
+
+    def testMissingTailFile(self):
+        """
+        Ensure that missing tail file results in fatal error.
+        """
+        self.writeFile("test_basic.js", SIMPLE_PASSING_TEST)
+        self.writeManifest([("test_basic.js", "tail = missing.js")])
+
+        raised = False
+
+        try:
+            self.assertTestResult(True)
+        except Exception, ex:
+            raised = True
+            self.assertEquals(ex.message[0:9], "tail file")
+
+        self.assertTrue(raised)
+
     def testRandomExecution(self):
         """
         Check that random execution doesn't break.

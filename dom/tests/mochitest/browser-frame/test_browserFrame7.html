@@ -26,22 +26,31 @@ browserFrameHelpers.setEnabledPref(true);
 browserFrameHelpers.addToWhitelist();
 
 var iframe = document.createElement('iframe');
+iframe.addEventListener('load', function() {
+  outerIframeLoaded();
+});
 iframe.mozbrowser = true;
+iframe.src = 'data:text/html,Outer iframe';
 document.body.appendChild(iframe);
 
-var innerIframe = document.createElement('iframe');
-iframe.contentDocument.body.appendChild(innerIframe);
+SimpleTest.waitForExplicitFinish();
 
-var iframeCw = iframe.contentWindow;
-var innerCw = innerIframe.contentWindow;
+function outerIframeLoaded() {
+  var innerIframe = iframe.contentDocument.createElement('iframe');
+  iframe.contentDocument.body.appendChild(innerIframe);
 
-is(iframeCw.top, iframeCw, 'iframe top');
-is(iframeCw.parent, iframeCw, 'iframe parent');
-is(iframeCw.frameElement, null, 'iframe frameElement');
+  var iframeCw = iframe.contentWindow;
+  var innerCw = innerIframe.contentWindow;
 
-is(innerCw.top, iframeCw, 'inner iframe top');
-is(innerCw.parent, iframeCw, 'inner iframe parent');
-is(innerCw.frameElement, innerIframe, 'inner iframe frameElement');
+  is(iframeCw.top, iframeCw, 'iframe top');
+  is(iframeCw.parent, iframeCw, 'iframe parent');
+  is(iframeCw.frameElement, null, 'iframe frameElement');
+
+  is(innerCw.top, iframeCw, 'inner iframe top');
+  is(innerCw.parent, iframeCw, 'inner iframe parent');
+  is(innerCw.frameElement, innerIframe, 'inner iframe frameElement');
+  SimpleTest.finish();
+}
 
 </script>
 </body>

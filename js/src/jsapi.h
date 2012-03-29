@@ -809,7 +809,18 @@ class JS_PUBLIC_API(AutoCheckRequestDepth)
 # define CHECK_REQUEST(cx) \
     ((void) 0)
 
-#endif
+#endif /* JS_THREADSAFE && DEBUG */
+
+#ifdef DEBUG
+/* Assert that we're not doing GC on cx, that we're in a request as
+   needed, and that the compartments for cx and v are correct. */
+JS_PUBLIC_API(void)
+AssertArgumentsAreSane(JSContext *cx, const Value &v);
+#else
+inline void AssertArgumentsAreSane(JSContext *cx, const Value &v) {
+    /* Do nothing */
+}
+#endif /* DEBUG */
 
 class JS_PUBLIC_API(AutoGCRooter) {
   public:
@@ -2244,6 +2255,32 @@ JS_ValueToSource(JSContext *cx, jsval v);
 extern JS_PUBLIC_API(JSBool)
 JS_ValueToNumber(JSContext *cx, jsval v, double *dp);
 
+#ifdef __cplusplus
+namespace js {
+/*
+ * DO NOT CALL THIS.  Use JS::ToNumber
+ */
+extern JS_PUBLIC_API(bool)
+ToNumberSlow(JSContext *cx, JS::Value v, double *dp);
+} /* namespace js */
+
+namespace JS {
+
+/* ES5 9.3 ToNumber. */
+JS_ALWAYS_INLINE bool
+ToNumber(JSContext *cx, const Value &v, double *out)
+{
+    AssertArgumentsAreSane(cx, v);
+    if (v.isNumber()) {
+        *out = v.toNumber();
+        return true;
+    }
+    return js::ToNumberSlow(cx, v, out);
+}
+
+} /* namespace JS */
+#endif /* __cplusplus */
+
 extern JS_PUBLIC_API(JSBool)
 JS_DoubleIsInt32(double d, int32_t *ip);
 
@@ -2259,6 +2296,31 @@ JS_DoubleToUint32(double d);
  */
 extern JS_PUBLIC_API(JSBool)
 JS_ValueToECMAInt32(JSContext *cx, jsval v, int32_t *ip);
+
+#ifdef __cplusplus
+namespace js {
+/*
+ * DO NOT CALL THIS.  Use JS::ToInt32
+ */
+extern JS_PUBLIC_API(bool)
+ToInt32Slow(JSContext *cx, const JS::Value &v, int32_t *out);
+} /* namespace js */
+
+namespace JS {
+
+JS_ALWAYS_INLINE bool
+ToInt32(JSContext *cx, const js::Value &v, int32_t *out)
+{
+    AssertArgumentsAreSane(cx, v);
+    if (v.isInt32()) {
+        *out = v.toInt32();
+        return true;
+    }
+    return js::ToInt32Slow(cx, v, out);
+}
+
+} /* namespace JS */
+#endif /* __cplusplus */
 
 /*
  * Convert a value to a number, then to a uint32_t, according to the ECMA rules
@@ -3427,6 +3489,7 @@ struct JSClass {
 #define JSCLASS_IMPLEMENTS_BARRIERS     (1<<5)  /* Correctly implements GC read
                                                    and write barriers */
 #define JSCLASS_DOCUMENT_OBSERVER       (1<<6)  /* DOM document observer */
+#define JSCLASS_USERBIT1                (1<<7)  /* Reserved for embeddings. */
 
 /*
  * To reserve slots fetched and stored via JS_Get/SetReservedSlot, bitwise-or
@@ -3462,6 +3525,15 @@ struct JSClass {
 
 #define JSCLASS_XPCONNECT_GLOBAL        (1<<(JSCLASS_HIGH_FLAGS_SHIFT+7))
 
+/* Reserved for embeddings. */
+#define JSCLASS_USERBIT2                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+8))
+#define JSCLASS_USERBIT3                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+9))
+
+/*
+ * Bits 26 through 31 are reserved for the CACHED_PROTO_KEY mechanism, see
+ * below.
+ */
+
 /* Global flags. */
 #define JSGLOBAL_FLAGS_CLEARED          0x1
 
@@ -3486,8 +3558,8 @@ struct JSClass {
    && JSCLASS_RESERVED_SLOTS(clasp) >= JSCLASS_GLOBAL_SLOT_COUNT)
 
 /* Fast access to the original value of each standard class's prototype. */
-#define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 8)
-#define JSCLASS_CACHED_PROTO_WIDTH      8
+#define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 10)
+#define JSCLASS_CACHED_PROTO_WIDTH      6
 #define JSCLASS_CACHED_PROTO_MASK       JS_BITMASK(JSCLASS_CACHED_PROTO_WIDTH)
 #define JSCLASS_HAS_CACHED_PROTO(key)   ((key) << JSCLASS_CACHED_PROTO_SHIFT)
 #define JSCLASS_CACHED_PROTO_KEY(clasp) ((JSProtoKey)                         \

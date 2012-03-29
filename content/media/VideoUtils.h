@@ -43,6 +43,7 @@
 
 #include "nsRect.h"
 #include "nsIThreadManager.h"
+#include "nsThreadUtils.h"
 
 #include "CheckedInt.h"
 
@@ -100,6 +101,21 @@ private:
     static void operator delete(void*);
 
     ReentrantMonitor* mReentrantMonitor;
+};
+
+// Shuts down a thread asynchronously.
+class ShutdownThreadEvent : public nsRunnable 
+{
+public:
+  ShutdownThreadEvent(nsIThread* aThread) : mThread(aThread) {}
+  ~ShutdownThreadEvent() {}
+  NS_IMETHOD Run() {
+    mThread->Shutdown();
+    mThread = nsnull;
+    return NS_OK;
+  }
+private:
+  nsCOMPtr<nsIThread> mThread;
 };
 
 } // namespace mozilla
