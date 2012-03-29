@@ -112,6 +112,7 @@ nsScreen::Create(nsPIDOMWindow* aWindow)
 }
 
 nsScreen::nsScreen()
+  : mEventListener(nsnull)
 {
 }
 
@@ -471,6 +472,19 @@ nsScreen::MozLockOrientation(const nsAString& aOrientation, bool* aReturn)
       *aReturn = false;
       return NS_OK;
     }
+
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
+    if (!target) {
+      *aReturn = false;
+      return NS_OK;
+    }
+
+    if (!mEventListener) {
+      mEventListener = new FullScreenEventListener();
+    }
+
+    target->AddSystemEventListener(NS_LITERAL_STRING("mozfullscreenchange"),
+                                   mEventListener, true);
   }
 
   *aReturn = hal::LockScreenOrientation(orientation);
@@ -481,5 +495,28 @@ NS_IMETHODIMP
 nsScreen::MozUnlockOrientation()
 {
   hal::UnlockScreenOrientation();
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS1(nsScreen::FullScreenEventListener, nsIDOMEventListener)
+
+NS_IMETHODIMP
+nsScreen::FullScreenEventListener::HandleEvent(nsIDOMEvent* aEvent)
+{
+#ifdef DEBUG
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
+
+  MOZ_ASSERT(eventType.EqualsLiteral("mozfullscreenchange"));
+#endif
+
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetCurrentTarget(getter_AddRefs(target));
+
+  target->RemoveSystemEventListener(NS_LITERAL_STRING("mozfullscreenchange"),
+                                    this, true);
+
+  hal::UnlockScreenOrientation();
+
   return NS_OK;
 }
