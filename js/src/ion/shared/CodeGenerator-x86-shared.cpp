@@ -803,7 +803,7 @@ CodeGeneratorX86Shared::visitTableSwitch(LTableSwitch *ins)
 
         // The input is a double, so try and convert it to an integer.
         // If it does not fit in an integer, take the default case.
-        emitDoubleToInt32(ToFloatRegister(ins->index()), ToRegister(temp), defaultcase);
+        emitDoubleToInt32(ToFloatRegister(ins->index()), ToRegister(temp), defaultcase, false);
     } else {
         temp = ins->index();
     }
@@ -941,7 +941,7 @@ CodeGeneratorX86Shared::visitGuardClass(LGuardClass *guard)
 // integer is written to the output register. Otherwise, a bailout is taken to
 // the given snapshot. This function overwrites the scratch float register.
 void
-CodeGeneratorX86Shared::emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail)
+CodeGeneratorX86Shared::emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail, bool negativeZeroCheck)
 {
     // Note that we don't specify the destination width for the truncated
     // conversion to integer. x64 will use the native width (quadword) which
@@ -953,22 +953,24 @@ CodeGeneratorX86Shared::emitDoubleToInt32(const FloatRegister &src, const Regist
     masm.j(Assembler::NotEqual, fail);
 
     // Check for -0
-    Label notZero;
-    masm.testl(dest, dest);
-    masm.j(Assembler::NonZero, &notZero);
+    if (negativeZeroCheck) {
+        Label notZero;
+        masm.testl(dest, dest);
+        masm.j(Assembler::NonZero, &notZero);
 
-    if (Assembler::HasSSE41()) {
-        masm.ptest(src, src);
-        masm.j(Assembler::NonZero, fail);
-    } else {
-        // bit 0 = sign of low double
-        // bit 1 = sign of high double
-        masm.movmskpd(src, dest);
-        masm.andl(Imm32(1), dest);
-        masm.j(Assembler::NonZero, fail);
+        if (Assembler::HasSSE41()) {
+            masm.ptest(src, src);
+            masm.j(Assembler::NonZero, fail);
+        } else {
+            // bit 0 = sign of low double
+            // bit 1 = sign of high double
+            masm.movmskpd(src, dest);
+            masm.andl(Imm32(1), dest);
+            masm.j(Assembler::NonZero, fail);
+        }
+
+        masm.bind(&notZero);
     }
-    
-    masm.bind(&notZero);
 }
 
 class OutOfLineTruncate : public OutOfLineCodeBase<CodeGeneratorX86Shared>

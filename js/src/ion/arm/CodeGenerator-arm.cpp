@@ -763,7 +763,7 @@ CodeGeneratorARM::visitTableSwitch(LTableSwitch *ins)
 
         // The input is a double, so try and convert it to an integer.
         // If it does not fit in an integer, take the default case.
-        emitDoubleToInt32(ToFloatRegister(ins->index()), ToRegister(temp), defaultcase);
+        emitDoubleToInt32(ToFloatRegister(ins->index()), ToRegister(temp), defaultcase, false);
     } else {
         temp = ins->index();
     }
@@ -902,8 +902,8 @@ CodeGeneratorARM::visitRound(LRound *lir)
 // Checks whether a double is representable as a 32-bit integer. If so, the
 // integer is written to the output register. Otherwise, a bailout is taken to
 // the given snapshot. This function overwrites the scratch float register.
-bool
-CodeGeneratorARM::emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail)
+void
+CodeGeneratorARM::emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail, bool negativeZeroCheck)
 {
     // convert the floating point value to an integer, if it did not fit,
     //     then when we convert it *back* to  a float, it will have a
@@ -916,10 +916,11 @@ CodeGeneratorARM::emitDoubleToInt32(const FloatRegister &src, const Register &de
     masm.as_vmrs(pc);
     masm.ma_b(fail, Assembler::VFP_NotEqualOrUnordered);
     // If they're equal, test for 0.  It would be nicer to test for -0.0 explicitly, but that seems hard.
-    masm.ma_cmp(dest, Imm32(0));
-    masm.ma_b(fail, Assembler::Equal);
-    // guard for /= 0.
-    return true;
+    if (negativeZeroCheck) {
+        masm.ma_cmp(dest, Imm32(0));
+        masm.ma_b(fail, Assembler::Equal);
+        // guard for != 0.
+    }
 }
 
 void
