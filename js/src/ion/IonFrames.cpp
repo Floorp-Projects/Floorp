@@ -288,7 +288,8 @@ IonFrameIterator::checkInvalidation(IonScript **ionScriptOut) const
     // N.B. the current IonScript is not the same as the frame's
     // IonScript if the frame has since been invalidated.
     IonScript *currentIonScript = script->ion;
-    bool invalidated = !currentIonScript || !currentIonScript->containsReturnAddress(returnAddr);
+    bool invalidated = !script->hasIonScript() ||
+        !currentIonScript->containsReturnAddress(returnAddr);
     if (!invalidated)
         return false;
 
