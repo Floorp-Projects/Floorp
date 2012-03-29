@@ -1011,6 +1011,9 @@ InspectorUI.prototype = {
    *   1. Open the link in view source (for element style attributes)
    *   2. Open the link in the style editor
    *
+   *   Like the style editor, we only view stylesheets contained in
+   *   document.styleSheets.
+   *
    * @param aEvent The event containing the style rule to act on
    */
   ruleViewCSSLinkClicked: function(aEvent)
@@ -1021,12 +1024,29 @@ InspectorUI.prototype = {
 
     let rule = aEvent.detail.rule;
     let styleSheet = rule.sheet;
+    let doc = this.chromeWin.content.document;
+    let styleSheets = doc.styleSheets;
+    let contentSheet = false;
+    let line = rule.ruleLine || 0;
 
-    if (styleSheet) {
-      this.chromeWin.StyleEditor.openChrome(styleSheet, rule.ruleLine);
+    // Array.prototype.indexOf always returns -1 here so we loop through
+    // the styleSheets object instead.
+    for each (let sheet in styleSheets) {
+      if (sheet == styleSheet) {
+        contentSheet = true;
+        break;
+      }
+    }
+
+    if (contentSheet)  {
+      this.chromeWin.StyleEditor.openChrome(styleSheet, line);
     } else {
-      let href = rule.elementStyle.element.ownerDocument.location.href;
-      this.chromeWin.openUILinkIn("view-source:" + href, "window");
+      let href = styleSheet ? styleSheet.href : "";
+      if (rule.elementStyle.element) {
+        href = rule.elementStyle.element.ownerDocument.location.href;
+      }
+      let viewSourceUtils = this.chromeWin.gViewSourceUtils;
+      viewSourceUtils.viewSource(href, null, doc, line);
     }
   },
 

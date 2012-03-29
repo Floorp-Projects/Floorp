@@ -428,7 +428,7 @@ ThreadActor.prototype = {
         // If that first script does not contain the line specified, it's no
         // good.
         if (i + scripts[i].lineCount < location.line) {
-          break;
+          continue;
         }
         script = scripts[i];
         break;
