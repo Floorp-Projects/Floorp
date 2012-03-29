@@ -380,7 +380,7 @@ nsScreen::Notify(const ScreenOrientationWrapper& aOrientation)
   ScreenOrientation previousOrientation = mOrientation;
   mOrientation = aOrientation.orientation;
 
-  NS_ASSERTION(mOrientation != eScreenOrientation_Current &&
+  NS_ASSERTION(mOrientation != eScreenOrientation_None &&
                mOrientation != eScreenOrientation_EndGuard &&
                mOrientation != eScreenOrientation_Portrait &&
                mOrientation != eScreenOrientation_Landscape,
@@ -411,7 +411,7 @@ NS_IMETHODIMP
 nsScreen::GetMozOrientation(nsAString& aOrientation)
 {
   switch (mOrientation) {
-    case eScreenOrientation_Current:
+    case eScreenOrientation_None:
     case eScreenOrientation_EndGuard:
     case eScreenOrientation_Portrait:
     case eScreenOrientation_Landscape:
@@ -431,5 +431,38 @@ nsScreen::GetMozOrientation(nsAString& aOrientation)
       break;
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScreen::MozLockOrientation(const nsAString& aOrientation, bool* aReturn)
+{
+  ScreenOrientation orientation;
+
+  if (aOrientation.EqualsLiteral("portrait")) {
+    orientation = eScreenOrientation_Portrait;
+  } else if (aOrientation.EqualsLiteral("portrait-primary")) {
+    orientation = eScreenOrientation_PortraitPrimary;
+  } else if (aOrientation.EqualsLiteral("portrait-secondary")) {
+    orientation = eScreenOrientation_PortraitSecondary;
+  } else if (aOrientation.EqualsLiteral("landscape")) {
+    orientation = eScreenOrientation_Landscape;
+  } else if (aOrientation.EqualsLiteral("landscape-primary")) {
+    orientation = eScreenOrientation_LandscapePrimary;
+  } else if (aOrientation.EqualsLiteral("landscape-secondary")) {
+    orientation = eScreenOrientation_LandscapeSecondary;
+  } else {
+    *aReturn = false;
+    return NS_OK;
+  }
+
+  *aReturn = hal::LockScreenOrientation(orientation);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScreen::MozUnlockOrientation()
+{
+  hal::UnlockScreenOrientation();
   return NS_OK;
 }

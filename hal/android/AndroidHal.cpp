@@ -217,6 +217,17 @@ GetCurrentScreenOrientation(dom::ScreenOrientation* aScreenOrientation)
   *aScreenOrientation = orientationWrapper.orientation;
 }
 
+bool
+LockScreenOrientation(const dom::ScreenOrientation& aOrientation)
+{
+  return false;
+}
+
+void
+UnlockScreenOrientation()
+{
+}
+
 } // hal_impl
 } // mozilla
 
