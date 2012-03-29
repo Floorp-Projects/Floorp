@@ -918,7 +918,8 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
                                mDocument->NodePrincipal(),
                                aRequest->mOriginPrincipal,
                                url.get(), aRequest->mLineNo,
-                               aRequest->mJSVersion, nsnull, &isUndefined);
+                               JSVersion(aRequest->mJSVersion), nsnull,
+                               &isUndefined);
 
   // Put the old script back in case it wants to do anything else.
   mCurrentScript = oldCurrent;
