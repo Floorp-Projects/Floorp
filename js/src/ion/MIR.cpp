@@ -544,8 +544,14 @@ NeedNegativeZeroCheck(MDefinition *def)
             // - When both operands can produce -0 (both MUL/DIV opcode)
             //   We can remove the check eagerly on this operand.
             MDefinition *operand = use_def->getOperand(0);
-            if (operand == def)
+            if (operand == def) {
                 operand = use_def->getOperand(1);
+
+                // Don't remove check when both operands are same definition
+                // As removing it from one operand, will remove it from both.
+                if (operand == def)
+                    return true;
+            }
 
             // Check if check is possibly eagerly removed on other operand
             // and don't remove check eagerly on this operand in that case.
