@@ -498,6 +498,30 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             return VIEW_TYPE_COUNT;
         }
 
+        private void maybeUpdateIcon(PromptListItem item, TextView t) {
+            if (item.icon == null)
+                return;
+
+            Resources res = GeckoApp.mAppContext.getResources();
+
+            // Set padding inside the item.
+            t.setPadding(item.inGroup ? mLeftRightTextWithIconPadding + mGroupPaddingSize :
+                                        mLeftRightTextWithIconPadding,
+                         mTopBottomTextWithIconPadding,
+                         mLeftRightTextWithIconPadding,
+                         mTopBottomTextWithIconPadding);
+
+            // Set the padding between the icon and the text.
+            t.setCompoundDrawablePadding(mIconTextPadding);
+
+            // We want the icon to be of a specific size. Some do not
+            // follow this rule so we have to resize them.
+            Bitmap bitmap = ((BitmapDrawable) item.icon).getBitmap();
+            Drawable d = new BitmapDrawable(Bitmap.createScaledBitmap(bitmap, mIconSize, mIconSize, true));
+
+            t.setCompoundDrawablesWithIntrinsicBounds(d, null, null, null);
+        }
+
         public View getView(int position, View convertView, ViewGroup parent) {
             PromptListItem item = getItem(position);
             ViewHolder viewHolder = null;
@@ -543,29 +567,8 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 } catch (Exception ex) { }
             }
 
-            if (viewHolder.textView != null) {
-                final TextView t1 = viewHolder.textView;
-                t1.setText(item.label);
-
-                if (item.icon != null) {
-                    Resources res = GeckoApp.mAppContext.getResources();
-
-                    // Set padding inside the item.
-                    t1.setPadding(item. inGroup ? mLeftRightTextWithIconPadding + mGroupPaddingSize : mLeftRightTextWithIconPadding,
-                                  mTopBottomTextWithIconPadding,
-                                  mLeftRightTextWithIconPadding, mTopBottomTextWithIconPadding);
-
-                    // Set the padding between the icon and the text.
-                    t1.setCompoundDrawablePadding(mIconTextPadding);
-
-                    // We want the icon to be of a specific size. Some do not
-                    // follow this rule so we have to resize them.
-                    Bitmap bitmap = ((BitmapDrawable) item.icon).getBitmap();
-                    Drawable d = new BitmapDrawable(Bitmap.createScaledBitmap(bitmap, mIconSize, mIconSize, true));
-
-                    t1.setCompoundDrawablesWithIntrinsicBounds(d, null, null, null);
-                }
-            }
+            viewHolder.textView.setText(item.label);
+            maybeUpdateIcon(item, viewHolder.textView);
 
             return convertView;
         }
