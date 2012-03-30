@@ -49,6 +49,7 @@
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jshash.h"
+#include "jsdhash.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsarray.h"
