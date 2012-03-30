@@ -389,24 +389,23 @@ LinearScanAllocator::createDataStructures()
     if (!vregs.init(lir->mir(), graph.numVirtualRegisters()))
         return false;
 
+    if (!insData.init(lir->mir(), graph.numInstructions()))
+        return false;
+
     // Build virtual register objects
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         LBlock *block = graph.getBlock(i);
         for (LInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
-            bool foundRealDef = false;
             for (size_t j = 0; j < ins->numDefs(); j++) {
                 LDefinition *def = ins->getDef(j);
                 if (def->policy() != LDefinition::PASSTHROUGH) {
-                    foundRealDef = true;
                     uint32 reg = def->virtualRegister();
                     if (!vregs[reg].init(reg, block, *ins, def, /* isTemp */ false))
                         return false;
                 }
             }
-            if (!foundRealDef) {
-                if (!vregs[*ins].init(ins->id(), block, *ins, NULL, /* isTemp */ false))
-                    return false;
-            }
+            insData[*ins].init(*ins, block);
+
             for (size_t j = 0; j < ins->numTemps(); j++) {
                 LDefinition *def = ins->getTemp(j);
                 if (def->isBogusTemp())
@@ -420,6 +419,7 @@ LinearScanAllocator::createDataStructures()
             LDefinition *def = phi->getDef(0);
             if (!vregs[def].init(phi->id(), block, phi, def, /* isTemp */ false))
                 return false;
+            insData[phi].init(phi, block);
         }
     }
 
@@ -901,7 +901,8 @@ LinearScanAllocator::resolveControlFlow()
         // Resolve phis to moves
         for (size_t j = 0; j < successor->numPhis(); j++) {
             LPhi *phi = successor->getPhi(j);
-            LiveInterval *to = vregs[phi].intervalFor(inputOf(successor->firstId()));
+            JS_ASSERT(phi->numDefs() == 1);
+            LiveInterval *to = vregs[phi->getDef(0)].intervalFor(inputOf(successor->firstId()));
             JS_ASSERT(to);
 
             for (size_t k = 0; k < mSuccessor->numPredecessors(); k++) {
@@ -917,7 +918,7 @@ LinearScanAllocator::resolveControlFlow()
                     return false;
             }
 
-            if (vregs[phi].mustSpillAtDefinition() && !to->isSpill()) {
+            if (vregs[phi->getDef(0)].mustSpillAtDefinition() && !to->isSpill()) {
                 // Make sure this phi is spilled at the loop header.
                 LMoveGroup *moves = successor->getEntryMoveGroup();
                 if (!moves->add(to->getAllocation(), to->reg()->canonicalSpill()))
@@ -986,7 +987,7 @@ LinearScanAllocator::reifyAllocations()
                 LiveInterval *to = fixedIntervals[GetFixedRegister(reg->def(), usePos->use).code()];
 
                 *static_cast<LAllocation *>(usePos->use) = *to->getAllocation();
-                if (!moveInput(inputOf(vregs[usePos->pos].ins()), interval, to))
+                if (!moveInput(usePos->pos, interval, to))
                     return false;
             } else {
                 JS_ASSERT(UseCompatibleWith(usePos->use, *interval->getAllocation()));
@@ -1042,7 +1043,7 @@ LinearScanAllocator::reifyAllocations()
                     return false;
             }
         }
-        else if (interval->start() > inputOf(vregs[interval->start()].block()->firstId()) &&
+        else if (interval->start() > inputOf(insData[interval->start()].block()->firstId()) &&
                  (!reg->canonicalSpill() ||
                   (reg->canonicalSpill() == interval->getAllocation() &&
                    !reg->mustSpillAtDefinition()) ||
@@ -1059,21 +1060,15 @@ LinearScanAllocator::reifyAllocations()
             // register.
             LiveInterval *prevInterval = reg->getInterval(interval->index() - 1);
             CodePosition start = interval->start();
-            VirtualRegister *vreg = &vregs[start];
+            InstructionData *data = &insData[start];
 
-            if (start.subpos() == CodePosition::INPUT || start <= inputOf(vreg->ins())) {
-                if (start < inputOf(vreg->ins())) {
-                    // Note: an instruction can have multiple VirtualRegister's, but we want
-                    // to use the same movegroup. So we have to use inputOf(vreg->ins()) instead
-                    // of start.
-                    if (!moveBefore(inputOf(vreg->ins()), prevInterval, interval))
-                        return false;
-                } else {
-                    if (!moveInput(inputOf(vreg->ins()), prevInterval, interval))
-                        return false;
-                }
+            JS_ASSERT(start == inputOf(data->ins()) || start == outputOf(data->ins()));
+
+            if (start.subpos() == CodePosition::INPUT) {
+                if (!moveInput(inputOf(data->ins()), prevInterval, interval))
+                    return false;
             } else {
-                if (!moveAfter(outputOf(vreg->ins()), prevInterval, interval))
+                if (!moveAfter(outputOf(data->ins()), prevInterval, interval))
                     return false;
             }
 
@@ -1399,7 +1394,7 @@ LinearScanAllocator::assign(LAllocation allocation)
 
             // If this spill is inside a loop, and the definition is outside
             // the loop, instead move the spill to outside the loop.
-            VirtualRegister *other = &vregs[current->start()];
+            InstructionData *other = &insData[current->start()];
             uint32 loopDepthAtDef = reg->block()->mir()->loopDepth();
             uint32 loopDepthAtSpill = other->block()->mir()->loopDepth();
             if (loopDepthAtSpill > loopDepthAtDef)
@@ -1744,41 +1739,19 @@ LinearScanAllocator::canCoexist(LiveInterval *a, LiveInterval *b)
 }
 
 LMoveGroup *
-LinearScanAllocator::getMoveGroupBefore(CodePosition pos)
-{
-    VirtualRegister *vreg = &vregs[pos];
-    JS_ASSERT(vreg->ins());
-    JS_ASSERT(!vreg->ins()->isPhi());
-    JS_ASSERT(!vreg->ins()->isLabel());;
-    JS_ASSERT(pos.subpos() == CodePosition::INPUT);
-
-    if (vreg->movesBefore())
-        return vreg->movesBefore();
-
-    // Insert before the input movegroup.
-    LMoveGroup *input = getInputMoveGroup(pos);
-    LMoveGroup *moves = new LMoveGroup;
-    vreg->setMovesBefore(moves);
-    vreg->block()->insertBefore(input, moves);
-
-    return moves;
-}
-
-LMoveGroup *
 LinearScanAllocator::getInputMoveGroup(CodePosition pos)
 {
-    VirtualRegister *vreg = &vregs[pos];
-    JS_ASSERT(vreg->ins());
-    JS_ASSERT(!vreg->ins()->isPhi());
-    JS_ASSERT(!vreg->ins()->isLabel());;
-    JS_ASSERT(pos.subpos() == CodePosition::INPUT);
+    InstructionData *data = &insData[pos];
+    JS_ASSERT(!data->ins()->isPhi());
+    JS_ASSERT(!data->ins()->isLabel());;
+    JS_ASSERT(inputOf(data->ins()) == pos);
 
-    if (vreg->inputMoves())
-        return vreg->inputMoves();
+    if (data->inputMoves())
+        return data->inputMoves();
 
     LMoveGroup *moves = new LMoveGroup;
-    vreg->setInputMoves(moves);
-    vreg->block()->insertBefore(vreg->ins(), moves);
+    data->setInputMoves(moves);
+    data->block()->insertBefore(data->ins(), moves);
 
     return moves;
 }
@@ -1786,21 +1759,20 @@ LinearScanAllocator::getInputMoveGroup(CodePosition pos)
 LMoveGroup *
 LinearScanAllocator::getMoveGroupAfter(CodePosition pos)
 {
-    VirtualRegister *vreg = &vregs[pos];
-    JS_ASSERT(vreg->ins());
-    JS_ASSERT(!vreg->ins()->isPhi());
-    JS_ASSERT(pos.subpos() == CodePosition::OUTPUT);
+    InstructionData *data = &insData[pos];
+    JS_ASSERT(!data->ins()->isPhi());
+    JS_ASSERT(outputOf(data->ins()) == pos);
 
-    if (vreg->movesAfter())
-        return vreg->movesAfter();
+    if (data->movesAfter())
+        return data->movesAfter();
 
     LMoveGroup *moves = new LMoveGroup;
-    vreg->setMovesAfter(moves);
+    data->setMovesAfter(moves);
 
-    if (vreg->ins()->isLabel())
-        vreg->block()->insertAfter(vreg->block()->getEntryMoveGroup(), moves);
+    if (data->ins()->isLabel())
+        data->block()->insertAfter(data->block()->getEntryMoveGroup(), moves);
     else
-        vreg->block()->insertAfter(vreg->ins(), moves);
+        data->block()->insertAfter(data->ins(), moves);
     return moves;
 }
 
@@ -1810,13 +1782,6 @@ LinearScanAllocator::addMove(LMoveGroup *moves, LiveInterval *from, LiveInterval
     if (*from->getAllocation() == *to->getAllocation())
         return true;
     return moves->add(from->getAllocation(), to->getAllocation());
-}
-
-bool
-LinearScanAllocator::moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to)
-{
-    LMoveGroup *moves = getMoveGroupBefore(pos);
-    return addMove(moves, from, to);
 }
 
 bool

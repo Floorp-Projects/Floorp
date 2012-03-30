@@ -259,7 +259,11 @@ class MDefinition : public MNode
     ValueNumberData *valueNumber_; // The instruction's value number (see GVN for details in use)
     MIRType resultType_;           // Representation of result type.
     uint32 flags_;                 // Bit flags.
-    MDefinition *dependency_;      // Implicit dependency (store, call, etc.) of this instruction.
+    union {
+        MDefinition *dependency_;  // Implicit dependency (store, call, etc.) of this instruction.
+                                   // Used by alias analysis, GVN and LICM.
+        uint32 virtualRegister_;   // Used by lowering to map definitions to virtual registers.
+    };
 
   private:
     enum Flag {
@@ -416,14 +420,14 @@ class MDefinition : public MNode
     }
 
     void setVirtualRegister(uint32 vreg) {
-        id_ = vreg;
+        virtualRegister_ = vreg;
 #ifdef DEBUG
         setLoweredUnchecked();
 #endif
     }
     uint32 virtualRegister() const {
         JS_ASSERT(isLowered());
-        return id_;
+        return virtualRegister_;
     }
 
   public:

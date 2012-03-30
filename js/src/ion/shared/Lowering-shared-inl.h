@@ -367,18 +367,10 @@ LIRGeneratorShared::tempCopy(MDefinition *input, uint32 reusedInput)
     return t;
 }
 
-template <typename T> bool
+template <typename T> void
 LIRGeneratorShared::annotate(T *ins)
 {
-    for (size_t i = 0; i < ins->numDefs(); i++) {
-        if (ins->getDef(i)->policy() != LDefinition::PASSTHROUGH) {
-            ins->setId(ins->getDef(i)->virtualRegister());
-            return true;
-        }
-    }
-
-    ins->setId(getVirtualRegister());
-    return ins->id() < MAX_VIRTUAL_REGISTERS;
+    ins->setId(lirGraph_.getInstructionId());
 }
 
 template <typename T> bool
@@ -388,7 +380,8 @@ LIRGeneratorShared::add(T *ins, MInstruction *mir)
     current->add(ins);
     if (mir)
         ins->setMir(mir);
-    return annotate(ins);
+    annotate(ins);
+    return true;
 }
 
 #ifdef JS_NUNBOX32
@@ -402,9 +395,9 @@ VirtualRegisterOfPayload(MDefinition *mir)
     if (mir->isBox()) {
         MDefinition *inner = mir->toBox()->getOperand(0);
         if (!inner->isConstant() && inner->type() != MIRType_Double)
-            return inner->id();
+            return inner->virtualRegister();
     }
-    return mir->id() + VREG_DATA_OFFSET;
+    return mir->virtualRegister() + VREG_DATA_OFFSET;
 }
 
 // Note: always call ensureDefined before calling useType/usePayload,
@@ -444,7 +437,7 @@ LIRGeneratorShared::fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir)
 {
     if (!ensureDefined(mir))
         return false;
-    lir->getOperand(n)->toUse()->setVirtualRegister(mir->id() + VREG_TYPE_OFFSET);
+    lir->getOperand(n)->toUse()->setVirtualRegister(mir->virtualRegister() + VREG_TYPE_OFFSET);
     lir->getOperand(n + 1)->toUse()->setVirtualRegister(VirtualRegisterOfPayload(mir));
     return true;
 }

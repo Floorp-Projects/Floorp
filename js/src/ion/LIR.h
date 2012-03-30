@@ -1104,6 +1104,7 @@ class LIRGraph
     Vector<LInstruction *, 0, SystemAllocPolicy> safepoints_;
     Vector<LInstruction *, 0, SystemAllocPolicy> nonCallSafepoints_;
     uint32 numVirtualRegisters_;
+    uint32 numInstructions_;
 
     // Number of stack slots needed for local spills.
     uint32 localSlotCount_;
@@ -1141,7 +1142,13 @@ class LIRGraph
         // Virtual registers are 1-based, not 0-based, so add one as a
         // convenience for 0-based arrays.
         return numVirtualRegisters_ + 1;
-    } 
+    }
+    uint32 getInstructionId() {
+        return numInstructions_++;
+    }
+    uint32 numInstructions() const {
+        return numInstructions_;
+    }
     void setLocalSlotCount(uint32 localSlotCount) {
         localSlotCount_ = localSlotCount;
     }
