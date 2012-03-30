@@ -12,15 +12,19 @@ import org.mozilla.gecko.GeckoAppShell;
 
 final class DisplayPortCalculator {
     private static final String LOGTAG = "GeckoDisplayPortCalculator";
+    private static final PointF ZERO_VELOCITY = new PointF(0, 0);
 
     private static DisplayPortStrategy sStrategy = new FixedMarginStrategy();
 
     static DisplayPortMetrics calculate(ImmutableViewportMetrics metrics, PointF velocity) {
-        return sStrategy.calculate(metrics, velocity);
+        return sStrategy.calculate(metrics, (velocity == null ? ZERO_VELOCITY : velocity));
     }
 
     static boolean aboutToCheckerboard(ImmutableViewportMetrics metrics, PointF velocity, DisplayPortMetrics displayPort) {
-        return sStrategy.aboutToCheckerboard(metrics, velocity, displayPort);
+        if (displayPort == null) {
+            return true;
+        }
+        return sStrategy.aboutToCheckerboard(metrics, (velocity == null ? ZERO_VELOCITY : velocity), displayPort);
     }
 
     private interface DisplayPortStrategy {
@@ -126,10 +130,6 @@ final class DisplayPortCalculator {
         }
 
         public boolean aboutToCheckerboard(ImmutableViewportMetrics metrics, PointF velocity, DisplayPortMetrics displayPort) {
-            if (displayPort == null) {
-                return true;
-            }
-
             // Increase the size of the viewport (and clamp to page boundaries), and
             // intersect it with the tile's displayport to determine whether we're
             // close to checkerboarding.
@@ -288,7 +288,7 @@ final class DisplayPortCalculator {
 
             float width = baseWidth;
             float height = baseHeight;
-            if (velocity != null && velocity.length() > VELOCITY_EXPANSION_THRESHOLD) {
+            if (velocity.length() > VELOCITY_EXPANSION_THRESHOLD) {
                 // increase width and height based on the velocity, but maintaining aspect ratio.
                 float velocityFactor = Math.max(Math.abs(velocity.x) / width,
                                                 Math.abs(velocity.y) / height);
@@ -402,10 +402,6 @@ final class DisplayPortCalculator {
         }
 
         public boolean aboutToCheckerboard(ImmutableViewportMetrics metrics, PointF velocity, DisplayPortMetrics displayPort) {
-            if (displayPort == null) {
-                return true;
-            }
-
             // Expand the viewport based on our velocity (and clamp it to page boundaries).
             // Then intersect it with the last-requested displayport to determine whether we're
             // close to checkerboarding.
@@ -417,7 +413,7 @@ final class DisplayPortCalculator {
 
             // first we expand the viewport in the direction we're moving based on some
             // multiple of the current velocity.
-            if (velocity != null && velocity.length() > 0) {
+            if (velocity.length() > 0) {
                 if (velocity.x < 0) {
                     left += velocity.x * PREDICTION_VELOCITY_MULTIPLIER;
                 } else if (velocity.x > 0) {
