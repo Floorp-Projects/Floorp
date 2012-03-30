@@ -202,6 +202,16 @@ inline SurfaceFormat FormatForContent(gfxASurface::gfxContentType aContent)
   }
 }
 
+inline SurfaceFormat SurfaceFormatForImageFormat(gfxASurface::gfxImageFormat aFormat)
+{
+  return FormatForContent(gfxASurface::ContentFromFormat(aFormat));
+}
+
+inline gfxASurface::gfxImageFormat ImageFormatForSurfaceFormat(SurfaceFormat aFormat)
+{
+  return gfxASurface::FormatFromContent(mozilla::gfx::ContentForFormat(aFormat));
+}
+
 inline CompositionOp CompositionOpForOp(gfxContext::GraphicsOperator aOp)
 {
   switch (aOp) {
