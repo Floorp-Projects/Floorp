@@ -178,9 +178,9 @@ public:
   inline mozilla::a11y::role Role()
   {
     if (!mRoleMapEntry || mRoleMapEntry->roleRule != kUseMapRole)
-      return NativeRole();
+      return ARIATransformRole(NativeRole());
 
-    return ARIARoleInternal();
+    return ARIATransformRole(mRoleMapEntry->role);
   }
 
   /**
@@ -200,7 +200,7 @@ public:
     if (!mRoleMapEntry || mRoleMapEntry->roleRule != kUseMapRole)
       return mozilla::a11y::roles::NOTHING;
 
-    return ARIARoleInternal();
+    return ARIATransformRole(mRoleMapEntry->role);
   }
 
   /**
@@ -727,7 +727,7 @@ protected:
   /**
    * Return ARIA role (helper method).
    */
-  mozilla::a11y::role ARIARoleInternal();
+  mozilla::a11y::role ARIATransformRole(mozilla::a11y::role aRole);
 
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);

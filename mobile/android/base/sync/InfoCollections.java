@@ -107,9 +107,13 @@ public class InfoCollections implements SyncStorageRequestDelegate {
       ThreadPool.run(new Runnable() {
         @Override
         public void run() {
-          r.get();
+          try {
+            r.get();
+          } catch (Exception e) {
+            callback.handleError(e);
+          }
         }});
-    } catch (URISyntaxException e) {
+    } catch (Exception e) {
       callback.handleError(e);
     }
   }
