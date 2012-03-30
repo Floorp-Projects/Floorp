@@ -9,10 +9,13 @@
 
 var MOZ_STORAGE_CHANGED_COUNT = 8;
 
+function setup() {
+  sessionStorage.clear();
+  SimpleTest.executeSoon(startTest);
+}
+
 function startTest()
 {
-  sessionStorage.clear();
-  
   // Initially check the sessionStorage is empty
   is(sessionStorage.length, 0, "The storage is empty [1]");
   is(sessionStorage.key(0), null, "key() should return null for out-of-bounds access");
