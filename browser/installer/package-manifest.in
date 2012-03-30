@@ -70,20 +70,20 @@
 #endif
 #ifdef XP_WIN32
 #ifndef MOZ_DEBUG
-#if _MSC_VER == 1400
+#if MOZ_MSVC_REDIST == 1400
 @BINPATH@/Microsoft.VC80.CRT.manifest
 @BINPATH@/msvcm80.dll
 @BINPATH@/msvcp80.dll
 @BINPATH@/msvcr80.dll
-#elif _MSC_VER == 1500
+#elif MOZ_MSVC_REDIST == 1500
 @BINPATH@/Microsoft.VC90.CRT.manifest
 @BINPATH@/msvcm90.dll
 @BINPATH@/msvcp90.dll
 @BINPATH@/msvcr90.dll
-#elif _MSC_VER == 1600
+#elif MOZ_MSVC_REDIST == 1600
 @BINPATH@/msvcp100.dll
 @BINPATH@/msvcr100.dll
-#elif _MSC_VER == 1700
+#elif MOZ_MSVC_REDIST == 1700
 @BINPATH@/msvcp110.dll
 @BINPATH@/msvcr110.dll
 #endif

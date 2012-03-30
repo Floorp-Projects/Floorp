@@ -808,12 +808,11 @@ nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
         if (aHandler) {
             NS_ASSERTION(!attr->mEventHandler, "Leaking handler.");
 
-            rv = nsContentUtils::HoldScriptObject(aContext->GetScriptTypeID(),
-                                                  elem,
-                                                  &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode),
-                                                  aHandler.get(),
-                                                  elem->mHoldsScriptObject);
-            if (NS_FAILED(rv)) return rv;
+            if (!elem->mHoldsScriptObject) {
+                rv = nsContentUtils::HoldJSObjects(
+                    elem, &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
+                NS_ENSURE_SUCCESS(rv, rv);
+            }
 
             elem->mHoldsScriptObject = true;
         }
@@ -925,13 +924,12 @@ nsXULElement::UnbindFromTree(bool aDeep, bool aNullParent)
     nsStyledElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-nsresult
+void
 nsXULElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 {
-    nsresult rv;
     nsCOMPtr<nsIContent> oldKid = mAttrsAndChildren.GetSafeChildAt(aIndex);
     if (!oldKid) {
-      return NS_OK;
+      return;
     }
 
     // On the removal of a <treeitem>, <treechildren>, or <treecell> element,
@@ -954,7 +952,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 
       // If it's not, look at our parent
       if (!controlElement)
-        rv = GetParentTree(getter_AddRefs(controlElement));
+        GetParentTree(getter_AddRefs(controlElement));
 
       nsCOMPtr<nsIDOMElement> oldKidElem = do_QueryInterface(oldKid);
       if (controlElement && oldKidElem) {
@@ -994,7 +992,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
       }
     }
 
-    rv = nsStyledElement::RemoveChildAt(aIndex, aNotify);
+    nsStyledElement::RemoveChildAt(aIndex, aNotify);
     
     if (newCurrentIndex == -2)
         controlElement->SetCurrentItem(nsnull);
@@ -1022,8 +1020,6 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
                                            false,
                                            true);
     }
-
-    return rv;
 }
 
 void
@@ -2905,8 +2901,7 @@ void
 nsXULPrototypeElement::Unlink()
 {
     if (mHoldsScriptObject) {
-        nsContentUtils::DropScriptObjects(mScriptTypeID, this,
-                                          &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
+        nsContentUtils::DropJSObjects(this);
         mHoldsScriptObject = false;
     }
     mNumAttributes = 0;
@@ -3185,8 +3180,7 @@ void
 nsXULPrototypeScript::UnlinkJSObjects()
 {
     if (mScriptObject.mObject) {
-        nsContentUtils::DropScriptObjects(mScriptObject.mLangID, this,
-                                          &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
+        nsContentUtils::DropJSObjects(this);
         mScriptObject.mObject = nsnull;
     }
 }
@@ -3197,14 +3191,11 @@ nsXULPrototypeScript::Set(JSScript* aObject)
     NS_ASSERTION(!mScriptObject.mObject, "Leaking script object.");
     if (!aObject) {
         mScriptObject.mObject = nsnull;
-
         return;
     }
 
-    nsresult rv = nsContentUtils::HoldScriptObject(mScriptObject.mLangID,
-                                                   this,
-                                                   &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode),
-                                                   aObject, false);
+    nsresult rv = nsContentUtils::HoldJSObjects(
+        this, &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
     if (NS_SUCCEEDED(rv)) {
         mScriptObject.mObject = aObject;
     }
