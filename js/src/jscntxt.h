@@ -52,6 +52,7 @@
 #include "jsprvtd.h"
 #include "jsatom.h"
 #include "jsclist.h"
+#include "jsdhash.h"
 #include "jsgc.h"
 #include "jspropertycache.h"
 #include "jspropertytree.h"

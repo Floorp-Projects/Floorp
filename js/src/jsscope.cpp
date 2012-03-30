@@ -46,6 +46,7 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsclist.h"
+#include "jsdhash.h"
 #include "jsutil.h"
 #include "jsapi.h"
 #include "jsatom.h"
@@ -88,7 +89,7 @@ PropertyTable::init(JSRuntime *rt, Shape *lastProp)
     if (!entries)
         return false;
 
-    hashShift = HASH_BITS - sizeLog2;
+    hashShift = JS_DHASH_BITS - sizeLog2;
     for (Shape::Range r = lastProp->all(); !r.empty(); r.popFront()) {
         const Shape &shape = r.front();
         Shape **spp = search(shape.propid(), true);
@@ -201,7 +202,7 @@ PropertyTable::search(jsid id, bool adding)
         return spp;
 
     /* Collision: double hash. */
-    sizeLog2 = HASH_BITS - hashShift;
+    sizeLog2 = JS_DHASH_BITS - hashShift;
     hash2 = HASH2(hash0, sizeLog2, hashShift);
     sizeMask = JS_BITMASK(sizeLog2);
 
@@ -260,7 +261,7 @@ PropertyTable::change(int log2Delta, JSContext *cx)
     /*
      * Grow, shrink, or compress by changing this->entries.
      */
-    int oldlog2 = HASH_BITS - hashShift;
+    int oldlog2 = JS_DHASH_BITS - hashShift;
     int newlog2 = oldlog2 + log2Delta;
     uint32_t oldsize = JS_BIT(oldlog2);
     uint32_t newsize = JS_BIT(newlog2);
@@ -269,7 +270,7 @@ PropertyTable::change(int log2Delta, JSContext *cx)
         return false;
 
     /* Now that we have newTable allocated, update members. */
-    hashShift = HASH_BITS - newlog2;
+    hashShift = JS_DHASH_BITS - newlog2;
     removedCount = 0;
     Shape **oldTable = entries;
     entries = newTable;
@@ -1150,7 +1151,7 @@ Shape::setObjectFlag(JSContext *cx, BaseShape::Flag flag, JSObject *proto, Shape
 /* static */ inline HashNumber
 StackBaseShape::hash(const StackBaseShape *base)
 {
-    HashNumber hash = base->flags;
+    JSDHashNumber hash = base->flags;
     hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(base->clasp) >> 3);
     hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(base->parent) >> 3);
     hash = JS_ROTATE_LEFT32(hash, 4) ^ uintptr_t(base->rawGetter);
@@ -1287,7 +1288,7 @@ Bindings::setParent(JSContext *cx, JSObject *obj)
 /* static */ inline HashNumber
 InitialShapeEntry::hash(const Lookup &lookup)
 {
-    HashNumber hash = uintptr_t(lookup.clasp) >> 3;
+    JSDHashNumber hash = uintptr_t(lookup.clasp) >> 3;
     hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(lookup.proto) >> 3);
     hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(lookup.parent) >> 3);
     return hash + lookup.nfixed;
