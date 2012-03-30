@@ -684,9 +684,6 @@ public:
     XPCWrappedNativeProtoMap* GetDetachedWrappedNativeProtoMap() const
         {return mDetachedWrappedNativeProtoMap;}
 
-    XPCNativeWrapperMap* GetExplicitNativeWrapperMap() const
-        {return mExplicitNativeWrapperMap;}
-
     XPCCompartmentMap& GetCompartmentMap()
         {return mCompartmentMap;}
 
@@ -832,7 +829,6 @@ private:
     XPCNativeScriptableSharedMap* mNativeScriptableSharedMap;
     XPCWrappedNativeProtoMap* mDyingWrappedNativeProtoMap;
     XPCWrappedNativeProtoMap* mDetachedWrappedNativeProtoMap;
-    XPCNativeWrapperMap*     mExplicitNativeWrapperMap;
     XPCCompartmentMap        mCompartmentMap;
     XPCLock* mMapLock;
     PRThread* mThreadRunningGC;
