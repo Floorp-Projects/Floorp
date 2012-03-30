@@ -43,6 +43,7 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoEventResponder;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import android.content.Context;
@@ -59,6 +60,7 @@ import android.view.View;
 public class GeckoLayerClient implements GeckoEventResponder,
                                          FlexibleGLSurfaceView.Listener {
     private static final String LOGTAG = "GeckoLayerClient";
+    private static final String PREF_DISPLAYPORT_STRATEGY = "gfx.displayport.strategy";
 
     private LayerController mLayerController;
     private LayerRenderer mLayerRenderer;
@@ -110,12 +112,14 @@ public class GeckoLayerClient implements GeckoEventResponder,
         GeckoAppShell.registerGeckoEventListener("Viewport:PageSize", this);
         GeckoAppShell.registerGeckoEventListener("Viewport:CalculateDisplayPort", this);
         GeckoAppShell.registerGeckoEventListener("Checkerboard:Toggle", this);
+        GeckoAppShell.registerGeckoEventListener("Preferences:Data", this);
 
         view.setListener(this);
         view.setLayerRenderer(mLayerRenderer);
         layerController.setRoot(mRootLayer);
 
         sendResizeEventIfNecessary(true);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Preferences:Get", "[ \"" + PREF_DISPLAYPORT_STRATEGY + "\" ]"));
     }
 
     DisplayPortMetrics getDisplayPort() {
@@ -234,16 +238,21 @@ public class GeckoLayerClient implements GeckoEventResponder,
                 ImmutableViewportMetrics newMetrics = new ImmutableViewportMetrics(new ViewportMetrics(message));
                 mReturnDisplayPort = DisplayPortCalculator.calculate(newMetrics, null);
             } else if ("Checkerboard:Toggle".equals(event)) {
-                try {
-                    boolean showChecks = message.getBoolean("value");
-                    mLayerController.setCheckerboardShowChecks(showChecks);
-                    Log.i(LOGTAG, "Showing checks: " + showChecks);
-                } catch(JSONException ex) {
-                    Log.e(LOGTAG, "Error decoding JSON", ex);
+                boolean showChecks = message.getBoolean("value");
+                mLayerController.setCheckerboardShowChecks(showChecks);
+                Log.i(LOGTAG, "Showing checks: " + showChecks);
+            } else if ("Preferences:Data".equals(event)) {
+                JSONArray jsonPrefs = message.getJSONArray("preferences");
+                for (int i = jsonPrefs.length() - 1; i >= 0; i--) {
+                    JSONObject pref = jsonPrefs.getJSONObject(i);
+                    if (pref.getString("name").equals(PREF_DISPLAYPORT_STRATEGY)) {
+                        DisplayPortCalculator.setStrategy(pref.getInt("value"));
+                        GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", this);
+                    }
                 }
             }
         } catch (JSONException e) {
-            Log.e(LOGTAG, "Unable to create viewport metrics in " + event + " handler", e);
+            Log.e(LOGTAG, "Error decoding JSON in " + event + " handler", e);
         }
     }
 

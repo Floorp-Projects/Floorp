@@ -7,6 +7,7 @@ package org.mozilla.gecko.gfx;
 
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.util.Log;
 import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.GeckoAppShell;
 
@@ -25,6 +26,30 @@ final class DisplayPortCalculator {
             return true;
         }
         return sStrategy.aboutToCheckerboard(metrics, (velocity == null ? ZERO_VELOCITY : velocity), displayPort);
+    }
+
+    /**
+     * Set the active strategy to use.
+     * See the gfx.displayport.strategy pref in mobile/android/app/mobile.js to see the
+     * mapping between ints and strategies.
+     */
+    static void setStrategy(int strategy) {
+        switch (strategy) {
+            case 0:
+            default:
+                sStrategy = new FixedMarginStrategy();
+                break;
+            case 1:
+                sStrategy = new VelocityBiasStrategy();
+                break;
+            case 2:
+                sStrategy = new DynamicResolutionStrategy();
+                break;
+            case 3:
+                sStrategy = new NoMarginStrategy();
+                break;
+        }
+        Log.i(LOGTAG, "Set strategy " + sStrategy.getClass().getName());
     }
 
     private interface DisplayPortStrategy {
