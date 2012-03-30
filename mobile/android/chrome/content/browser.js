@@ -313,6 +313,9 @@ var BrowserApp = {
       this._showTelemetryPrompt();
     }
 
+    if (this.isAppUpdated())
+      this.onAppUpdated();
+
     // notify java that gecko has loaded
     sendMessageToJava({
       gecko: {
@@ -327,9 +330,6 @@ var BrowserApp = {
         "value": Services.prefs.getBoolPref("gfx.show_checkerboard_pattern")
       }
     });
-
-    if (this.isAppUpdated())
-      this.onAppUpdated();
   },
 
   isAppUpdated: function() {
