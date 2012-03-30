@@ -1,14 +1,27 @@
 /* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
-importScripts("libhardware_legacy.js", "libnetutils.js", "libcutils.js");
+importScripts("libhardware_legacy.js", "systemlibs.js");
 
 var cbuf = ctypes.char.array(4096)();
 var hwaddr = ctypes.uint8_t.array(6)();
 var len = ctypes.size_t();
 var ints = ctypes.int.array(8)();
+
+// TODO: consolidate with implementation in systemlibs.js
+let libcutils = (function () {
+  let library = ctypes.open("libcutils.so");
+
+  return {
+    property_get: library.declare("property_get", ctypes.default_abi, ctypes.int, ctypes.char.ptr, ctypes.char.ptr, ctypes.char.ptr),
+    property_set: library.declare("property_set", ctypes.default_abi, ctypes.int, ctypes.char.ptr, ctypes.char.ptr)
+  };
+})();
 
 self.onmessage = function(e) {
   var data = e.data;
@@ -65,10 +78,9 @@ self.onmessage = function(e) {
   case "dhcp_do_request":
   case "dhcp_do_request_renew":
     var out = libnetutils[cmd](data.ifname);
-    postMessage({ id: id, status: out.ret, ipaddr: out.ipaddr,
-                  gateway: out.gateway, mask: out.mask,
-                  dns1: out.dns1, dns2: out.dns2, server: out.server,
-                  lease: out.lease });
+    out.id = id;
+    out.status = out.ret;
+    postMessage(out);
     break;
   case "property_get":
     var ret = libcutils.property_get(data.key, cbuf, data.defaultValue);
