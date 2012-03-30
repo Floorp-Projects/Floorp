@@ -1263,7 +1263,9 @@ var NativeWindow = {
 
       let popupNode = aEvent.originalTarget;
       let title = "";
-      if ((popupNode instanceof Ci.nsIDOMHTMLAnchorElement && popupNode.href) ||
+      if (popupNode.hasAttribute("title")) {
+        title = popupNode.getAttribute("title")
+      } else if ((popupNode instanceof Ci.nsIDOMHTMLAnchorElement && popupNode.href) ||
               (popupNode instanceof Ci.nsIDOMHTMLAreaElement && popupNode.href)) {
         title = this._getLinkURL(popupNode);
       } else if (popupNode instanceof Ci.nsIImageLoadingContent && popupNode.currentURI) {
