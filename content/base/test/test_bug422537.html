@@ -36,7 +36,7 @@ for each (var i in body) {
   var xhr = new XMLHttpRequest();
   xhr.open("POST", url, true);
   xhr.send(i);
-  var chan = xhr.channel;
+  var chan = SpecialPowers.wrap(xhr).channel;
   if (!(chan instanceof Components.interfaces.nsIUploadChannel))
     throw "Must be an upload channel";
   var stream = chan.uploadStream;
