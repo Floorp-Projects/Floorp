@@ -17,7 +17,8 @@ var path = "http://mochi.test:8888/tests/content/base/test/";
 
 function fromCache(xhr)
 {
-  var ch = SpecialPowers.wrap(xhr).channel.QueryInterface(Components.interfaces.nsICachingChannel);
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var ch = xhr.channel.QueryInterface(Components.interfaces.nsICachingChannel);
   return ch.isFromCache();  
 }
 
