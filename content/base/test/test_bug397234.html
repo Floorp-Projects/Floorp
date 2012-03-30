@@ -24,7 +24,8 @@ req.open("POST", window.location.href);
 req.setRequestHeader("Content-Type", "text/plain; charset='uTf-8'");
 req.send("Some text");
 
-is(SpecialPowers.wrap(req).channel
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+is(req.channel
       .QueryInterface(Components.interfaces.nsIHttpChannel)
       .getRequestHeader("Content-Type"),
    "text/plain; charset='uTf-8'",
