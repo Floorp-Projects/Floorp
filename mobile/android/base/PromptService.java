@@ -522,6 +522,32 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             t.setCompoundDrawablesWithIntrinsicBounds(d, null, null, null);
         }
 
+        private void maybeUpdateCheckedState(int position, PromptListItem item, ViewHolder viewHolder) {
+            if (item.isGroup)
+                return;
+
+            CheckedTextView ct;
+            try {
+                ct = (CheckedTextView) viewHolder.textView;
+            } catch (Exception e) {
+                return;
+            }
+
+            ct.setEnabled(!item.disabled);
+            ct.setClickable(item.disabled);
+
+            // Apparently just using ct.setChecked(true) doesn't work, so this
+            // is stolen from the android source code as a way to set the checked
+            // state of these items
+            if (listView != null)
+                listView.setItemChecked(position, mSelected[position]);
+
+            ct.setPadding((item.inGroup ? mGroupPaddingSize : viewHolder.paddingLeft),
+                          viewHolder.paddingTop,
+                          viewHolder.paddingRight,
+                          viewHolder.paddingBottom);
+        }
+
         public View getView(int position, View convertView, ViewGroup parent) {
             PromptListItem item = getItem(position);
             ViewHolder viewHolder = null;
@@ -536,6 +562,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
 
                 viewHolder = new ViewHolder();
                 viewHolder.textView = (TextView) convertView.findViewById(android.R.id.text1);
+
                 viewHolder.paddingLeft = viewHolder.textView.getPaddingLeft();
                 viewHolder.paddingRight = viewHolder.textView.getPaddingRight();
                 viewHolder.paddingTop = viewHolder.textView.getPaddingTop();
@@ -546,28 +573,8 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 viewHolder = (ViewHolder) convertView.getTag();
             }
 
-            if (!item.isGroup){
-                try {
-                    CheckedTextView ct = (CheckedTextView) viewHolder.textView;
-                    if (ct != null){
-                        ct.setEnabled(!item.disabled);
-                        ct.setClickable(item.disabled);
-
-                        // Apparently just using ct.setChecked(true) doesn't work, so this
-                        // is stolen from the android source code as a way to set the checked
-                        // state of these items
-                        if (listView != null)
-                            listView.setItemChecked(position, mSelected[position]);
-
-                        ct.setPadding((item.inGroup ? mGroupPaddingSize : viewHolder.paddingLeft),
-                                      viewHolder.paddingTop,
-                                      viewHolder.paddingRight,
-                                      viewHolder.paddingBottom);
-                    }
-                } catch (Exception ex) { }
-            }
-
             viewHolder.textView.setText(item.label);
+            maybeUpdateCheckedState(position, item, viewHolder);
             maybeUpdateIcon(item, viewHolder.textView);
 
             return convertView;
