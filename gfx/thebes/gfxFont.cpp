@@ -4391,8 +4391,16 @@ gfxTextRun::ComputeLigatureData(PRUint32 aPartStart, PRUint32 aPartEnd,
         }
     }
     NS_ASSERTION(totalClusterCount > 0, "Ligature involving no clusters??");
-    result.mPartAdvance = ligatureWidth*partClusterIndex/totalClusterCount;
-    result.mPartWidth = ligatureWidth*partClusterCount/totalClusterCount;
+    result.mPartAdvance = partClusterIndex * (ligatureWidth / totalClusterCount);
+    result.mPartWidth = partClusterCount * (ligatureWidth / totalClusterCount);
+
+    // Any rounding errors are apportioned to the final part of the ligature,
+    // so that measuring all parts of a ligature and summing them is equal to
+    // the ligature width.
+    if (aPartEnd == result.mLigatureEnd) {
+        gfxFloat allParts = totalClusterCount * (ligatureWidth / totalClusterCount);
+        result.mPartWidth += ligatureWidth - allParts;
+    }
 
     if (partClusterCount == 0) {
         // nothing to draw
