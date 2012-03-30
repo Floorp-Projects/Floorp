@@ -150,6 +150,11 @@ IonBuilder::canInlineTarget(JSFunction *target)
 
     JSScript *inlineScript = target->script();
 
+    if (!inlineScript->canIonCompile()) {
+        IonSpew(IonSpew_Inlining, "Cannot inline due to disable Ion compilation");
+        return false;
+    }
+
     // Allow inlining of recursive calls, but only one level deep.
     IonBuilder *builder = callerBuilder_;
     while (builder) {
