@@ -31,8 +31,8 @@ function setUpTestFixtures() {
 
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Service.username = "johndoe";
-  Service.passphrase = "aabcdeabcdeabcdeabcdeabcde";
+
+  setBasicCredentials("johndoe", null, "aabcdeabcdeabcdeabcdeabcde");
 }
 
 
@@ -55,6 +55,7 @@ add_test(function test_wipeServer_list_success() {
 
   try {
     setUpTestFixtures();
+    new SyncTestingInfrastructure("johndoe", "irrelevant", "irrelevant");
 
     _("Confirm initial environment.");
     do_check_false(steam_coll.deleted);
@@ -88,6 +89,7 @@ add_test(function test_wipeServer_list_503() {
 
   try {
     setUpTestFixtures();
+    new SyncTestingInfrastructure("johndoe", "irrelevant", "irrelevant");
 
     _("Confirm initial environment.");
     do_check_false(steam_coll.deleted);
@@ -135,6 +137,7 @@ add_test(function test_wipeServer_all_success() {
   setUpTestFixtures();
 
   _("Try deletion.");
+  new SyncTestingInfrastructure("johndoe", "irrelevant", "irrelevant");
   let returnedTimestamp = Service.wipeServer();
   do_check_true(deleted);
   do_check_eq(returnedTimestamp, serverTimestamp);
@@ -166,6 +169,7 @@ add_test(function test_wipeServer_all_404() {
   setUpTestFixtures();
 
   _("Try deletion.");
+  new SyncTestingInfrastructure("johndoe", "irrelevant", "irrelevant");
   let returnedTimestamp = Service.wipeServer();
   do_check_true(deleted);
   do_check_eq(returnedTimestamp, serverTimestamp);
@@ -194,6 +198,7 @@ add_test(function test_wipeServer_all_503() {
   _("Try deletion.");
   let error;
   try {
+    new SyncTestingInfrastructure("johndoe", "irrelevant", "irrelevant");
     Service.wipeServer();
     do_throw("Should have thrown!");
   } catch (ex) {

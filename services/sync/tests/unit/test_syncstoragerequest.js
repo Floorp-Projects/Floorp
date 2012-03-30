@@ -57,9 +57,7 @@ add_test(function test_auth() {
   let handler = httpd_handler(200, "OK");
   let server = httpd_setup({"/resource": handler});
 
-  let id = new Identity(PWDMGR_PASSWORD_REALM, "johndoe");
-  id.password = "ilovejane";
-  ID.set("WeaveID", id);
+  setBasicCredentials("johndoe", "ilovejane", "XXXXXXXXX");
 
   let request = new SyncStorageRequest(STORAGE_REQUEST_RESOURCE_URL);
   request.get(function (error) {
@@ -67,7 +65,8 @@ add_test(function test_auth() {
     do_check_eq(this.response.status, 200);
     do_check_true(basic_auth_matches(handler.request, "johndoe", "ilovejane"));
 
-    ID.del("WeaveID");
+    Svc.Prefs.reset("");
+
     server.stop(run_next_test);
   });
 });
