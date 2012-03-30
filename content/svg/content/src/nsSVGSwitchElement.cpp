@@ -126,14 +126,11 @@ nsSVGSwitchElement::InsertChildAt(nsIContent* aKid,
   return rv;
 }
 
-nsresult
+void
 nsSVGSwitchElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 {
-  nsresult rv = nsSVGSwitchElementBase::RemoveChildAt(aIndex, aNotify);
-  if (NS_SUCCEEDED(rv)) {
-    MaybeInvalidate();
-  }
-  return rv;
+  nsSVGSwitchElementBase::RemoveChildAt(aIndex, aNotify);
+  MaybeInvalidate();
 }
  
 //----------------------------------------------------------------------

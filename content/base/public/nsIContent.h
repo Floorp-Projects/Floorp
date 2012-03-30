@@ -527,7 +527,7 @@ public:
    * Get the length of the text content.
    * NOTE: This should not be called on elements.
    */
-  virtual PRUint32 TextLength() = 0;
+  virtual PRUint32 TextLength() const = 0;
 
   /**
    * Set the text to the given value. If aNotify is true then

@@ -88,7 +88,7 @@ public:
                                   nsIPrincipal *originPrincipal,
                                   const char *aURL,
                                   PRUint32 aLineNo,
-                                  PRUint32 aVersion,
+                                  JSVersion aVersion,
                                   nsAString *aRetValue,
                                   bool* aIsUndefined);
   virtual nsresult EvaluateStringWithValue(const nsAString& aScript,

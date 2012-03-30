@@ -697,11 +697,11 @@ nsDOMAttribute::AppendChildTo(nsIContent* aKid, bool aNotify)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
+void
 nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 {
   if (aIndex != 0 || !mChild) {
-    return NS_OK;
+    return;
   }
 
   doRemoveChild(aNotify);
@@ -709,7 +709,6 @@ nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, bool aNotify)
   nsString nullString;
   SetDOMStringToNull(nullString);
   SetValue(nullString);
-  return NS_OK;
 }
 
 nsresult
