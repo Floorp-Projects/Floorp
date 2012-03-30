@@ -62,7 +62,7 @@ CPPSRCS	= \
 	AndroidJavaWrappers.cpp \
 	AndroidBridge.cpp \
 	AndroidDirectTexture.cpp \
-	AndroidFlexViewWrapper.cpp \
+	AndroidLayerViewWrapper.cpp \
 	AndroidGraphicBuffer.cpp \
 	AndroidJNI.cpp \
 	AndroidMediaLayer.cpp \
@@ -92,7 +92,7 @@ XPIDLSRCS	= \
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
-EXPORTS = AndroidBridge.h AndroidJavaWrappers.h AndroidFlexViewWrapper.h
+EXPORTS = AndroidBridge.h AndroidJavaWrappers.h AndroidLayerViewWrapper.h
 
 include $(topsrcdir)/config/rules.mk
 
