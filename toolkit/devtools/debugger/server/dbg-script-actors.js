@@ -498,7 +498,9 @@ ThreadActor.prototype = {
   onScripts: function TA_onScripts(aRequest) {
     // Get the script list from the debugger.
     for (let s of this.dbg.findScripts()) {
-      this._addScript(s);
+      if (s.url.indexOf("chrome://") != 0) {
+        this._addScript(s);
+      }
     }
     // Build the cache.
     let scripts = [];
