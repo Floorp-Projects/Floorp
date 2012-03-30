@@ -216,6 +216,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 
 extern "C" int MOZ_XMLTranslateEntity(const char* ptr, const char* end,
                                       const char** next, PRUnichar* result);
+extern "C" int MOZ_XMLCheckQName(const char* ptr, const char* end,
+                                 int ns_aware, const char** colon);
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -2384,14 +2386,31 @@ nsContentUtils::BelongsInForm(nsIContent *aForm,
 // static
 nsresult
 nsContentUtils::CheckQName(const nsAString& aQualifiedName,
-                           bool aNamespaceAware)
+                           bool aNamespaceAware,
+                           const PRUnichar** aColon)
 {
-  nsIParserService *parserService = GetParserService();
-  NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
+  const char* colon = nsnull;
+  const PRUnichar* begin = aQualifiedName.BeginReading();
+  const PRUnichar* end = aQualifiedName.EndReading();
+  
+  int result = MOZ_XMLCheckQName(reinterpret_cast<const char*>(begin),
+                                 reinterpret_cast<const char*>(end),
+                                 aNamespaceAware, &colon);
 
-  const PRUnichar *colon;
-  return parserService->CheckQName(PromiseFlatString(aQualifiedName),
-                                   aNamespaceAware, &colon);
+  if (!result) {
+    if (aColon) {
+      *aColon = reinterpret_cast<const PRUnichar*>(colon);
+    }
+
+    return NS_OK;
+  }
+
+  // MOZ_EXPAT_EMPTY_QNAME || MOZ_EXPAT_INVALID_CHARACTER
+  if (result == (1 << 0) || result == (1 << 1)) {
+    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+  }
+
+  return NS_ERROR_DOM_NAMESPACE_ERR;
 }
 
 //static
@@ -2400,11 +2419,8 @@ nsContentUtils::SplitQName(const nsIContent* aNamespaceResolver,
                            const nsAFlatString& aQName,
                            PRInt32 *aNamespace, nsIAtom **aLocalName)
 {
-  nsIParserService* parserService = GetParserService();
-  NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
-
   const PRUnichar* colon;
-  nsresult rv = parserService->CheckQName(aQName, true, &colon);
+  nsresult rv = nsContentUtils::CheckQName(aQName, true, &colon);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (colon) {
@@ -2438,12 +2454,9 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
                                      PRUint16 aNodeType,
                                      nsINodeInfo** aNodeInfo)
 {
-  nsIParserService* parserService = GetParserService();
-  NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
-
   const nsAFlatString& qName = PromiseFlatString(aQualifiedName);
   const PRUnichar* colon;
-  nsresult rv = parserService->CheckQName(qName, true, &colon);
+  nsresult rv = nsContentUtils::CheckQName(qName, true, &colon);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 nsID;

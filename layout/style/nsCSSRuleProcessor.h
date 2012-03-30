@@ -103,13 +103,15 @@ public:
    * Helper to get the content state for a content node.  This may be
    * slightly adjusted from IntrinsicState().
    */
-  static nsEventStates GetContentState(mozilla::dom::Element* aElement);
+  static nsEventStates GetContentState(mozilla::dom::Element* aElement,
+                                       const TreeMatchContext& aTreeMatchContext);
 
   /*
    * Helper to get the content state for :visited handling for an element
    */
   static nsEventStates GetContentStateForVisitedHandling(
              mozilla::dom::Element* aElement,
+             const TreeMatchContext& aTreeMatchContext,
              nsRuleWalker::VisitedHandlingType aVisitedHandling,
              bool aIsRelevantLink);
 

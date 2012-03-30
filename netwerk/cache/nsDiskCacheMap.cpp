@@ -787,12 +787,15 @@ nsDiskCacheMap::CreateDiskCacheEntry(nsDiskCacheBinding *  binding,
     if (!entry)  return nsnull;
     
     // Store security info, if it is serializable
-    nsCOMPtr<nsISerializable> serializable =
-        do_QueryInterface(entry->SecurityInfo());
+    nsCOMPtr<nsISupports> infoObj = entry->SecurityInfo();
+    nsCOMPtr<nsISerializable> serializable = do_QueryInterface(infoObj);
+    if (infoObj && !serializable) return nsnull;
     if (serializable) {
         nsCString info;
-        NS_SerializeToString(serializable, info);
-        entry->SetMetaDataElement("security-info", info.get());
+        nsresult rv = NS_SerializeToString(serializable, info);
+        if (NS_FAILED(rv)) return nsnull;
+        rv = entry->SetMetaDataElement("security-info", info.get());
+        if (NS_FAILED(rv)) return nsnull;
     }
 
     PRUint32  keySize  = entry->Key()->Length() + 1;

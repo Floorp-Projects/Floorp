@@ -327,6 +327,41 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   }
 }
 
+bool
+nsEventListenerManager::IsDeviceType(PRUint32 aType)
+{
+  switch (aType) {
+    case NS_DEVICE_ORIENTATION:
+    case NS_DEVICE_MOTION:
+      return true;
+    default:
+      break;
+  }
+  return false;
+}
+
+void
+nsEventListenerManager::DisableDevice(PRUint32 aType)
+{
+  nsPIDOMWindow* window = GetInnerWindowForTarget();
+  if (!window) {
+    return;
+  }
+  switch (aType) {
+    case NS_DEVICE_ORIENTATION:
+      window->DisableDeviceSensor(SENSOR_ORIENTATION);
+      break;
+    case NS_DEVICE_MOTION:
+      window->DisableDeviceSensor(SENSOR_ACCELERATION);
+      window->DisableDeviceSensor(SENSOR_LINEAR_ACCELERATION);
+      window->DisableDeviceSensor(SENSOR_GYROSCOPE);
+      break;
+    default:
+      NS_WARNING("Disabling an unknown device sensor.");
+      break;
+  }
+}
+
 void
 nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener, 
                                             PRUint32 aType,
@@ -341,29 +376,30 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
   aFlags &= ~NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
 
   PRUint32 count = mListeners.Length();
+  PRUint32 typeCount = 0;
+
   for (PRUint32 i = 0; i < count; ++i) {
     ls = &mListeners.ElementAt(i);
-    if (ls->mListener == aListener &&
-        ((ls->mFlags & ~NS_PRIV_EVENT_UNTRUSTED_PERMITTED) == aFlags) &&
-        EVENT_TYPE_EQUALS(ls, aType, aUserType)) {
-      nsRefPtr<nsEventListenerManager> kungFuDeathGrip = this;
-      mListeners.RemoveElementAt(i);
-      mNoListenerForEvent = NS_EVENT_TYPE_NULL;
-      mNoListenerForEventAtom = nsnull;
-      if (aType == NS_DEVICE_ORIENTATION) {
-        nsPIDOMWindow* window = GetInnerWindowForTarget();
-        if (window)
-          window->DisableDeviceSensor(SENSOR_ORIENTATION);
-      } else if (aType == NS_DEVICE_MOTION) {
-        nsPIDOMWindow* window = GetInnerWindowForTarget();
-        if (window) {
-          window->DisableDeviceSensor(SENSOR_ACCELERATION);
-          window->DisableDeviceSensor(SENSOR_LINEAR_ACCELERATION);
-          window->DisableDeviceSensor(SENSOR_GYROSCOPE);
+    if (EVENT_TYPE_EQUALS(ls, aType, aUserType)) {
+      ++typeCount;
+      if (ls->mListener == aListener &&
+          (ls->mFlags & ~NS_PRIV_EVENT_UNTRUSTED_PERMITTED) == aFlags) {
+        nsRefPtr<nsEventListenerManager> kungFuDeathGrip = this;
+        mListeners.RemoveElementAt(i);
+        --count;
+        mNoListenerForEvent = NS_EVENT_TYPE_NULL;
+        mNoListenerForEventAtom = nsnull;
+
+        if (!IsDeviceType(aType)) {
+          return;
         }
+        --typeCount;
       }
-      break;
     }
+  }
+
+  if (typeCount == 0) {
+    DisableDevice(aType);
   }
 }
 

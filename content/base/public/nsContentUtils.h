@@ -604,7 +604,8 @@ public:
                               nsIContent *aContent);
 
   static nsresult CheckQName(const nsAString& aQualifiedName,
-                             bool aNamespaceAware = true);
+                             bool aNamespaceAware = true,
+                             const PRUnichar** aColon = nsnull);
 
   static nsresult SplitQName(const nsIContent* aNamespaceResolver,
                              const nsAFlatString& aQName,
