@@ -25,7 +25,7 @@ req.mozBackgroundRequest = true;
 req.open("GET", window.location.href);
 req.send(null);
 
-ok(req.channel.loadGroup == null, "loadGroup is null");
+ok(SpecialPowers.wrap(req).channel.loadGroup == null, "loadGroup is null");
 </script>
 </pre>
 </body>

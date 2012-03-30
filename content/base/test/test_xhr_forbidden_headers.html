@@ -55,8 +55,7 @@ for (i = 0; i < headers.length; i++)
   request.setRequestHeader(headers[i], "test" + i);
 
 // Read out headers
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var channel = request.channel.QueryInterface(Components.interfaces.nsIHttpChannel);
+var channel = SpecialPowers.wrap(request).channel.QueryInterface(Components.interfaces.nsIHttpChannel);
 for (i = 0; i < headers.length; i++) {
   // Retrieving Content-Length will throw an exception
   var value = null;
@@ -69,13 +68,14 @@ for (i = 0; i < headers.length; i++) {
 }
 
 // Try setting headers in privileged context
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 request = new XMLHttpRequest();
 request.open("GET", window.location.href);
 for (i = 0; i < headers.length; i++)
   request.setRequestHeader(headers[i], "test" + i);
 
 // Read out headers
-var channel = request.channel.QueryInterface(Components.interfaces.nsIHttpChannel);
+var channel = SpecialPowers.wrap(request).channel.QueryInterface(Components.interfaces.nsIHttpChannel);
 for (i = 0; i < headers.length; i++) {
   var value = channel.getRequestHeader(headers[i]);
   is(value, "test" + i, "Setting " + headers[i] + " header in privileged context");
