@@ -4115,15 +4115,13 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
                 // The element matches. "Go Deep!"
                 rv = Merge(elementInDocument, currContent, aNotify);
                 if (NS_FAILED(rv)) return rv;
-                rv = aOverlayNode->RemoveChildAt(0, false);
-                if (NS_FAILED(rv)) return rv;
+                aOverlayNode->RemoveChildAt(0, false);
 
                 continue;
             }
         }
 
-        rv = aOverlayNode->RemoveChildAt(0, false);
-        if (NS_FAILED(rv)) return rv;
+        aOverlayNode->RemoveChildAt(0, false);
 
         rv = InsertElement(aTargetNode, currContent, aNotify);
         if (NS_FAILED(rv)) return rv;
@@ -4513,7 +4511,8 @@ nsXULDocument::RemoveElement(nsIContent* aParent, nsIContent* aChild)
 {
     PRInt32 nodeOffset = aParent->IndexOf(aChild);
 
-    return aParent->RemoveChildAt(nodeOffset, true);
+    aParent->RemoveChildAt(nodeOffset, true);
+    return NS_OK;
 }
 
 //----------------------------------------------------------------------
