@@ -220,12 +220,24 @@ GetCurrentScreenOrientation(dom::ScreenOrientation* aScreenOrientation)
 bool
 LockScreenOrientation(const dom::ScreenOrientation& aOrientation)
 {
-  return false;
+  AndroidBridge* bridge = AndroidBridge::Bridge();
+  if (!bridge) {
+    return false;
+  }
+
+  bridge->LockScreenOrientation(dom::ScreenOrientationWrapper(aOrientation));
+  return true;
 }
 
 void
 UnlockScreenOrientation()
 {
+  AndroidBridge* bridge = AndroidBridge::Bridge();
+  if (!bridge) {
+    return;
+  }
+
+  bridge->UnlockScreenOrientation();
 }
 
 } // hal_impl
