@@ -1663,6 +1663,23 @@ nsContentUtils::GetContextAndScope(nsIDocument *aOldDocument,
   return NS_OK;
 }
 
+//static
+void
+nsContentUtils::TraceSafeJSContext(JSTracer* aTrc)
+{
+  if (!sThreadJSContextStack) {
+    return;
+  }
+  JSContext* cx = nsnull;
+  sThreadJSContextStack->GetSafeJSContext(&cx);
+  if (!cx) {
+    return;
+  }
+  if (JSObject* global = JS_GetGlobalObject(cx)) {
+    JS_CALL_OBJECT_TRACER(aTrc, global, "safe context");
+  }
+}
+
 nsresult
 nsContentUtils::ReparentContentWrappersInScope(JSContext *cx,
                                                nsIScriptGlobalObject *aOldScope,
