@@ -81,7 +81,8 @@ LIRGeneratorShared::defineTypedPhi(MPhi *phi, size_t lirIndex)
 
     phi->setVirtualRegister(vreg);
     lir->setDef(0, LDefinition(vreg, LDefinition::TypeFrom(phi->type())));
-    return annotate(lir);
+    annotate(lir);
+    return true;
 }
 
 void

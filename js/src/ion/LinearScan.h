@@ -380,9 +380,6 @@ class VirtualRegister
     LInstruction *ins_;
     LDefinition *def_;
     Vector<LiveInterval *, 1, IonAllocPolicy> intervals_;
-    LMoveGroup *movesBefore_;
-    LMoveGroup *inputMoves_;
-    LMoveGroup *movesAfter_;
     LAllocation *canonicalSpill_;
     CodePosition spillPosition_ ;
 
@@ -450,24 +447,6 @@ class VirtualRegister
         if (!found)
             found = intervals_.end();
         return intervals_.insert(found, interval);
-    }
-    void setMovesBefore(LMoveGroup *moves) {
-        movesBefore_ = moves;
-    }
-    LMoveGroup *movesBefore() const {
-        return movesBefore_;
-    }
-    void setInputMoves(LMoveGroup *moves) {
-        inputMoves_ = moves;
-    }
-    LMoveGroup *inputMoves() const {
-        return inputMoves_;
-    }
-    void setMovesAfter(LMoveGroup *moves) {
-        movesAfter_ = moves;
-    }
-    LMoveGroup *movesAfter() const {
-        return movesAfter_;
     }
     void setCanonicalSpill(LAllocation *alloc) {
         canonicalSpill_ = alloc;
@@ -538,16 +517,72 @@ class VirtualRegisterMap
         JS_ASSERT(def->virtualRegister() < numVregs_);
         return vregs_[def->virtualRegister()];
     }
-    VirtualRegister &operator[](const CodePosition &pos) {
-        JS_ASSERT(pos.ins() < numVregs_);
-        return vregs_[pos.ins()];
-    }
-    VirtualRegister &operator[](const LInstruction *ins) {
-        JS_ASSERT(ins->id() < numVregs_);
-        return vregs_[ins->id()];
-    }
     uint32 numVirtualRegisters() const {
         return numVregs_;
+    }
+};
+
+class InstructionData
+{
+    LInstruction *ins_;
+    LBlock *block_;
+    LMoveGroup *inputMoves_;
+    LMoveGroup *movesAfter_;
+
+  public:
+    void init(LInstruction *ins, LBlock *block) {
+        JS_ASSERT(!ins_);
+        JS_ASSERT(!block_);
+        ins_ = ins;
+        block_ = block;
+    }
+    LInstruction *ins() const {
+        return ins_;
+    }
+    LBlock *block() const {
+        return block_;
+    }
+    void setInputMoves(LMoveGroup *moves) {
+        inputMoves_ = moves;
+    }
+    LMoveGroup *inputMoves() const {
+        return inputMoves_;
+    }
+    void setMovesAfter(LMoveGroup *moves) {
+        movesAfter_ = moves;
+    }
+    LMoveGroup *movesAfter() const {
+        return movesAfter_;
+    }
+};
+
+class InstructionDataMap
+{
+    InstructionData *insData_;
+    uint32 numIns_;
+
+  public:
+    InstructionDataMap()
+      : insData_(NULL),
+        numIns_(0)
+    { }
+
+    bool init(MIRGenerator *gen, uint32 numInstructions) {
+        insData_ = gen->allocate<InstructionData>(numInstructions);
+        numIns_ = numInstructions;
+        if (!insData_)
+            return false;
+        memset(insData_, 0, sizeof(InstructionData) * numInstructions);
+        return true;
+    }
+
+    InstructionData &operator[](const CodePosition &pos) {
+        JS_ASSERT(pos.ins() < numIns_);
+        return insData_[pos.ins()];
+    }
+    InstructionData &operator[](LInstruction *ins) {
+        JS_ASSERT(ins->id() < numIns_);
+        return insData_[ins->id()];
     }
 };
 
@@ -590,6 +625,7 @@ class LinearScanAllocator
     // Computed inforamtion
     BitSet **liveIn;
     VirtualRegisterMap vregs;
+    InstructionDataMap insData;
     FixedArityList<LiveInterval *, AnyRegister::Total> fixedIntervals;
 
     // Union of all ranges in fixedIntervals, used to quickly determine
@@ -631,11 +667,9 @@ class LinearScanAllocator
     AnyRegister::Code findBestFreeRegister(CodePosition *freeUntil);
     AnyRegister::Code findBestBlockedRegister(CodePosition *nextUsed);
     bool canCoexist(LiveInterval *a, LiveInterval *b);
-    LMoveGroup *getMoveGroupBefore(CodePosition pos);
     LMoveGroup *getInputMoveGroup(CodePosition pos);
     LMoveGroup *getMoveGroupAfter(CodePosition pos);
     bool addMove(LMoveGroup *moves, LiveInterval *from, LiveInterval *to);
-    bool moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to);
     bool moveInput(CodePosition pos, LiveInterval *from, LiveInterval *to);
     bool moveInputAlloc(CodePosition pos, LAllocation *from, LAllocation *to);
     bool moveAfter(CodePosition pos, LiveInterval *from, LiveInterval *to);

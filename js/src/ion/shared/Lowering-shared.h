@@ -173,7 +173,7 @@ class LIRGeneratorShared : public MInstructionVisitor
         return lirGraph_.getVirtualRegister();
     }
 
-    template <typename T> bool annotate(T *ins);
+    template <typename T> void annotate(T *ins);
     template <typename T> bool add(T *ins, MInstruction *mir = NULL);
 
     void lowerTypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex);
