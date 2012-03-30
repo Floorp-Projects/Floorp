@@ -6069,8 +6069,16 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
         (void)NS_GetReferrerFromChannel(aOldChannel,
                                         getter_AddRefs(referrer));
 
+        // Get the HTTP response code, if available.
+        PRUint32 responseStatus = 0;
+        nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aOldChannel);
+        if (httpChannel) {
+            (void)httpChannel->GetResponseStatus(&responseStatus);
+        }
+
         // Add visit N -1 => N
-        AddURIVisit(oldURI, referrer, previousURI, previousFlags);
+        AddURIVisit(oldURI, referrer, previousURI, previousFlags,
+                    responseStatus);
 
         // Since N + 1 could be the final destination, we will not save N => N + 1
         // here.  OnNewURI will do that, so we will cache it.
@@ -8364,6 +8372,12 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             rv = ScrollToAnchor(curHash, newHash, aLoadType);
             NS_ENSURE_SUCCESS(rv, rv);
 
+            // Reset mLoadType to its original value once we exit this block,
+            // because this short-circuited load might have started after a
+            // normal, network load, and we don't want to clobber its load type.
+            // See bug 737307.
+            AutoRestore<PRUint32> loadTypeResetter(mLoadType);
+
             mLoadType = aLoadType;
             mURIResultedInDocument = true;
 
@@ -9265,7 +9279,8 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
 
     bool equalUri = false;
 
-    // Get the post data from the channel
+    // Get the post data and the HTTP response code from the channel.
+    PRUint32 responseStatus = 0;
     nsCOMPtr<nsIInputStream> inputStream;
     if (aChannel) {
         nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
@@ -9283,7 +9298,6 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
 
             // If the response status indicates an error, unlink this session
             // history entry from any entries sharing its document.
-            PRUint32 responseStatus;
             nsresult rv = httpChannel->GetResponseStatus(&responseStatus);
             if (mLSHE && NS_SUCCEEDED(rv) && responseStatus >= 400) {
                 mLSHE->AbandonBFCacheEntry();
@@ -9447,7 +9461,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
         // Treat referrer as null if there is an error getting it.
         (void)NS_GetReferrerFromChannel(aChannel, getter_AddRefs(referrer));
 
-        AddURIVisit(aURI, referrer, previousURI, previousFlags);
+        AddURIVisit(aURI, referrer, previousURI, previousFlags, responseStatus);
     }
 
     // If this was a history load or a refresh,
@@ -10593,9 +10607,13 @@ void
 nsDocShell::AddURIVisit(nsIURI* aURI,
                         nsIURI* aReferrerURI,
                         nsIURI* aPreviousURI,
-                        PRUint32 aChannelRedirectFlags)
+                        PRUint32 aChannelRedirectFlags,
+                        PRUint32 aResponseStatus)
 {
-    NS_ASSERTION(aURI, "Visited URI is null!");
+    MOZ_ASSERT(aURI, "Visited URI is null!");
+    MOZ_ASSERT(mLoadType != LOAD_ERROR_PAGE &&
+               mLoadType != LOAD_BYPASS_HISTORY,
+               "Do not add error or bypass pages to global history");
 
     // Only content-type docshells save URI visits.  Also don't do
     // anything here if we're not supposed to use global history.
@@ -10618,6 +10636,19 @@ nsDocShell::AddURIVisit(nsIURI* aURI,
         else if (aChannelRedirectFlags &
                  nsIChannelEventSink::REDIRECT_PERMANENT) {
             visitURIFlags |= IHistory::REDIRECT_PERMANENT;
+        }
+
+        if (aResponseStatus >= 300 && aResponseStatus < 400) {
+            visitURIFlags |= IHistory::REDIRECT_SOURCE;
+        }
+        // Errors 400-501 and 505 are considered unrecoverable, in the sense a
+        // simple retry attempt by the user is unlikely to solve them.
+        // 408 is special cased, since may actually indicate a temporary
+        // connection problem.
+        else if (aResponseStatus != 408 &&
+                 (aResponseStatus >= 400 && aResponseStatus <= 501 ||
+                  aResponseStatus == 505)) {
+            visitURIFlags |= IHistory::UNRECOVERABLE_ERROR;
         }
 
         (void)history->VisitURI(aURI, aPreviousURI, visitURIFlags);

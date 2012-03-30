@@ -125,10 +125,6 @@ class nsIParserService : public nsISupports {
 
   NS_IMETHOD IsContainer(PRInt32 aId, bool& aIsContainer) const = 0;
   NS_IMETHOD IsBlock(PRInt32 aId, bool& aIsBlock) const = 0;
-
-  virtual nsresult CheckQName(const nsAString& aQName,
-                              bool aNamespaceAware,
-                              const PRUnichar** aColon) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIParserService, NS_IPARSERSERVICE_IID)

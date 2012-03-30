@@ -236,6 +236,7 @@ var BrowserApp = {
     CharacterEncoding.init();
     SearchEngines.init();
     ActivityObserver.init();
+    WebappsUI.init();
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -326,29 +327,6 @@ var BrowserApp = {
         "value": Services.prefs.getBoolPref("gfx.show_checkerboard_pattern")
       }
     });
-
-    if (this.isAppUpdated())
-      this.onAppUpdated();
-  },
-
-  isAppUpdated: function() {
-    let savedmstone = null;
-    try {
-      savedmstone = Services.prefs.getCharPref("browser.startup.homepage_override.mstone");
-    } catch (e) {
-    }
-#expand    let ourmstone = "__MOZ_APP_VERSION__";
-    if (ourmstone != savedmstone) {
-      Services.prefs.setCharPref("browser.startup.homepage_override.mstone", ourmstone);
-      return savedmstone ? "upgrade" : "new";
-    }
-    return "";
-  },
-
-  onAppUpdated: function() {
-    // initialize the form history and passwords databases on upgrades
-    Services.obs.notifyObservers(null, "FormHistory:Init", "");
-    Services.obs.notifyObservers(null, "Passwords:Init", "");
   },
 
   _showTelemetryPrompt: function _showTelemetryPrompt() {
@@ -415,6 +393,7 @@ var BrowserApp = {
     ConsoleAPI.uninit();
     CharacterEncoding.uninit();
     SearchEngines.uninit();
+    WebappsUI.uninit();
   },
 
   // This function returns false during periods where the browser displayed document is
@@ -937,14 +916,14 @@ var BrowserApp = {
       if (this.isBrowserContentDocumentDisplayed())
         this.selectedTab.setViewport(JSON.parse(aData));
     } else if (aTopic == "Passwords:Init") {
-      // Force creation/upgrade of signons.sqlite
-      let storage = Cc["@mozilla.org/login-manager/storage/mozStorage;1"].getService(Ci.nsILoginManagerStorage);
+      var storage = Components.classes["@mozilla.org/login-manager/storage/mozStorage;1"].
+        getService(Components.interfaces.nsILoginManagerStorage);
       storage.init();
 
       sendMessageToJava({gecko: { type: "Passwords:Init:Return" }});
       Services.obs.removeObserver(this, "Passwords:Init", false);
     } else if (aTopic == "FormHistory:Init") {
-      let fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
+      var fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
       // Force creation/upgrade of formhistory.sqlite
       let db = fh.DBConnection;
       sendMessageToJava({gecko: { type: "FormHistory:Init:Return" }});
@@ -1072,10 +1051,15 @@ var NativeWindow = {
       if (this.menu._callbacks[aData])
         this.menu._callbacks[aData]();
     } else if (aTopic == "Doorhanger:Reply") {
-      let reply_id = aData;
+      let data = JSON.parse(aData);
+      let reply_id = data["callback"];
+
       if (this.doorhanger._callbacks[reply_id]) {
+        // Pass the value of the optional checkbox to the callback
+        let checked = data["checked"];
+        this.doorhanger._callbacks[reply_id].cb(checked);
+
         let prompt = this.doorhanger._callbacks[reply_id].prompt;
-        this.doorhanger._callbacks[reply_id].cb();
         for (let id in this.doorhanger._callbacks) {
           if (this.doorhanger._callbacks[id].prompt == prompt) {
             delete this.doorhanger._callbacks[id];
@@ -1279,7 +1263,9 @@ var NativeWindow = {
 
       let popupNode = aEvent.originalTarget;
       let title = "";
-      if ((popupNode instanceof Ci.nsIDOMHTMLAnchorElement && popupNode.href) ||
+      if (popupNode.hasAttribute("title")) {
+        title = popupNode.getAttribute("title")
+      } else if ((popupNode instanceof Ci.nsIDOMHTMLAnchorElement && popupNode.href) ||
               (popupNode instanceof Ci.nsIDOMHTMLAreaElement && popupNode.href)) {
         title = this._getLinkURL(popupNode);
       } else if (popupNode instanceof Ci.nsIImageLoadingContent && popupNode.currentURI) {
@@ -3918,23 +3904,54 @@ var ClipboardHelper = {
 
 var PluginHelper = {
   showDoorHanger: function(aTab) {
+    if (!aTab.browser)
+      return;
+
+    // Even though we may not end up showing a doorhanger, this flag
+    // lets us know that we've tried to show a doorhanger.
     aTab.clickToPlayPluginDoorhangerShown = true;
-    let message = Strings.browser.GetStringFromName("clickToPlayPlugins.message");
+
+    let uri = aTab.browser.currentURI;
+
+    // If the user has previously set a plugins permission for this website,
+    // either play or don't play the plugins instead of showing a doorhanger.
+    let permValue = Services.perms.testPermission(uri, "plugins");
+    if (permValue != Services.perms.UNKNOWN_ACTION) {
+      if (permValue == Services.perms.ALLOW_ACTION)
+        PluginHelper.playAllPlugins(aTab.browser.contentWindow);
+
+      return;
+    }
+
+    let message = Strings.browser.formatStringFromName("clickToPlayPlugins.message1",
+                                                       [uri.host], 1);
     let buttons = [
       {
         label: Strings.browser.GetStringFromName("clickToPlayPlugins.yes"),
-        callback: function() {
+        callback: function(aChecked) {
+          // If the user checked "Don't ask again", make a permanent exception
+          if (aChecked)
+            Services.perms.add(uri, "plugins", Ci.nsIPermissionManager.ALLOW_ACTION);
+
           PluginHelper.playAllPlugins(aTab.browser.contentWindow);
         }
       },
       {
         label: Strings.browser.GetStringFromName("clickToPlayPlugins.no"),
-        callback: function() {
-          // Do nothing
+        callback: function(aChecked) {
+          // If the user checked "Don't ask again", make a permanent exception
+          if (aChecked)
+            Services.perms.add(uri, "plugins", Ci.nsIPermissionManager.DENY_ACTION);
+
+          // Other than that, do nothing
         }
       }
-    ]
-    NativeWindow.doorhanger.show(message, "ask-to-play-plugins", buttons, aTab.id);
+    ];
+
+    // Add a checkbox with a "Don't ask again" message
+    let options = { checkbox: Strings.browser.GetStringFromName("clickToPlayPlugins.dontAskAgain") };
+
+    NativeWindow.doorhanger.show(message, "ask-to-play-plugins", buttons, aTab.id, options);
   },
 
   playAllPlugins: function(aContentWindow) {
@@ -3996,7 +4013,7 @@ var PluginHelper = {
 var PermissionsHelper = {
 
   _permissonTypes: ["password", "geolocation", "popup", "indexedDB",
-                    "offline-app", "desktop-notification"],
+                    "offline-app", "desktop-notification", "plugins"],
   _permissionStrings: {
     "password": {
       label: "password.rememberPassword",
@@ -4027,6 +4044,11 @@ var PermissionsHelper = {
       label: "desktopNotification.useNotifications",
       allowed: "desktopNotification.allow",
       denied: "desktopNotification.dontAllow"
+    },
+    "plugins": {
+      label: "clickToPlayPlugins.playPlugins",
+      allowed: "clickToPlayPlugins.yes",
+      denied: "clickToPlayPlugins.no"
     }
   },
 
@@ -4493,3 +4515,60 @@ var ActivityObserver = {
     }
   }
 };
+
+var WebappsUI = {
+  init: function() {
+    Cu.import("resource://gre/modules/Webapps.jsm");
+
+    Services.obs.addObserver(this, "webapps-ask-install", false);
+    Services.obs.addObserver(this, "webapps-launch", false);
+  },
+  
+  uninit: function() {
+    Services.obs.removeObserver(this, "webapps-ask-install");
+    Services.obs.removeObserver(this, "webapps-launch");
+  },
+  
+  observe: function(aSubject, aTopic, aData) {
+    let data = JSON.parse(aData);
+    switch (aTopic) {
+      case "webapps-ask-install":
+        this.doInstall(data);
+        break;
+      case "webapps-launch":
+        DOMApplicationRegistry.getManifestFor(data.origin, (function(aManifest) {
+	   if (!aManifest)
+	     return;
+          let manifest = new DOMApplicationManifest(aManifest, data.origin);
+          this.openURL(manifest.fullLaunchPath(), data.origin);
+        }).bind(this));
+        break;
+    }
+  },
+  
+  doInstall: function(aData) {
+    let manifest = new DOMApplicationManifest(aData.app.manifest, aData.app.origin);
+    let name = manifest.name ? manifest.name : manifest.fullLaunchPath();
+    if (Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), name))
+      DOMApplicationRegistry.confirmInstall(aData);
+  },
+  
+  openURL: function(aURI, aOrigin) {
+    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+
+    let tabs = BrowserApp.tabs;
+    let tab = null;
+    for (let i = 0; i < tabs.length; i++) {
+      let appOrigin = ss.getTabValue(tabs[i], "appOrigin");
+      if (appOrigin == aOrigin)
+        tab = tabs[i];
+    }
+
+    if (tab) {
+      BrowserApp.selectTab(tab);
+    } else {
+      tab = BrowserApp.addTab(aURI);
+      ss.setTabValue(tab, "appOrigin", aOrigin);
+    }
+  }
+}

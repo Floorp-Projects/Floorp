@@ -139,6 +139,7 @@ nsCocoaWindow::nsCocoaWindow()
 , mWindowMadeHere(false)
 , mSheetNeedsShow(false)
 , mFullScreen(false)
+, mInFullScreenTransition(false)
 , mModal(false)
 , mUsesNativeFullScreen(false)
 , mIsAnimationSuppressed(false)
@@ -1186,6 +1187,7 @@ NS_IMETHODIMP nsCocoaWindow::HideWindowChrome(bool aShouldHide)
 
 void nsCocoaWindow::EnteredFullScreen(bool aFullScreen)
 {
+  mInFullScreenTransition = false;
   mFullScreen = aFullScreen;
   DispatchSizeModeEvent();
 }
@@ -1200,9 +1202,10 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen)
   if (mFullScreen == aFullScreen) {
     return NS_OK;
   }
+  mInFullScreenTransition = true;
 
   if (mUsesNativeFullScreen) {
-    // Calling toggleFullScreen will result in windowDid(Enter|Exit)FullScreen
+    // Calling toggleFullScreen will result in windowDid(FailTo)?(Enter|Exit)FullScreen
     // to be called from the OS. We will call EnteredFullScreen from those methods,
     // where mFullScreen will be set and a sizemode event will be dispatched.
     [mWindow toggleFullScreen:nil];
@@ -1472,8 +1475,13 @@ void
 nsCocoaWindow::DispatchSizeModeEvent()
 {
   nsSizeMode newMode = GetWindowSizeMode(mWindow, mFullScreen);
-  if (mSizeMode == newMode)
+
+  // Don't dispatch a sizemode event if:
+  // 1. the window is transitioning to fullscreen
+  // 2. the new sizemode is the same as the current sizemode
+  if (mInFullScreenTransition || mSizeMode == newMode) {
     return;
+  }
 
   mSizeMode = newMode;
   nsSizeModeEvent event(true, NS_SIZEMODE, this);
@@ -1950,6 +1958,24 @@ bool nsCocoaWindow::ShouldFocusPlugin()
   }
 
   mGeckoWindow->EnteredFullScreen(false);
+}
+
+- (void)windowDidFailToEnterFullScreen:(NSWindow *)window
+{
+  if (!mGeckoWindow) {
+    return;
+  }
+
+  mGeckoWindow->EnteredFullScreen(false);
+}
+
+- (void)windowDidFailToExitFullScreen:(NSWindow *)window
+{
+  if (!mGeckoWindow) {
+    return;
+  }
+
+  mGeckoWindow->EnteredFullScreen(true);
 }
 
 - (void)windowDidBecomeMain:(NSNotification *)aNotification
