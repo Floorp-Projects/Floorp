@@ -212,6 +212,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
       if (mLinkRule || mVisitedRule || mActiveRule) {
         nsEventStates state = nsCSSRuleProcessor::GetContentStateForVisitedHandling(
                                   aData->mElement,
+                                  aData->mTreeMatchContext,
                                   aData->mTreeMatchContext.VisitedHandling(),
                                   // If the node being matched is a link,
                                   // it's the relevant link.
