@@ -54,7 +54,7 @@ LIRGeneratorARM::useBox(LInstruction *lir, size_t n, MDefinition *mir,
     JS_ASSERT(mir->type() == MIRType_Value);
     if (!ensureDefined(mir))
         return false;
-    lir->setOperand(n, LUse(mir->id(), policy, useAtStart));
+    lir->setOperand(n, LUse(mir->virtualRegister(), policy, useAtStart));
     lir->setOperand(n + 1, LUse(VirtualRegisterOfPayload(mir), policy, useAtStart));
     return true;
 }
@@ -240,7 +240,7 @@ LIRGeneratorARM::lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *b
     MDefinition *operand = phi->getOperand(inputPosition);
     LPhi *type = block->getPhi(lirIndex + VREG_TYPE_OFFSET);
     LPhi *payload = block->getPhi(lirIndex + VREG_DATA_OFFSET);
-    type->setOperand(inputPosition, LUse(operand->id() + VREG_TYPE_OFFSET, LUse::ANY));
+    type->setOperand(inputPosition, LUse(operand->virtualRegister() + VREG_TYPE_OFFSET, LUse::ANY));
     payload->setOperand(inputPosition, LUse(VirtualRegisterOfPayload(operand), LUse::ANY));
 }
 
