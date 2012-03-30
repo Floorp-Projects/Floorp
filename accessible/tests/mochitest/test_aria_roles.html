@@ -68,6 +68,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
         testRole(abstract_roles[a], ROLE_SECTION);
 
       //////////////////////////////////////////////////////////////////////////
+      // roles transformed by ARIA state attributes
+      testRole("togglebutton", ROLE_TOGGLE_BUTTON);
+
+      //////////////////////////////////////////////////////////////////////////
       // misc roles
       testRole("note", ROLE_NOTE);
       testRole("scrollbar", ROLE_SCROLLBAR);
@@ -94,6 +98,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469688">Mozilla Bug 520188</a>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=529289">Mozilla Bug 529289</a>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=529289">Mozilla Bug 607219</a>
+  <a target="_blank"
+     title="HTML buttons with aria-pressed not exposing IA2 TOGGLE_BUTTON role"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=725432">
+    Bug 725432
+  </a>
   <a target="_blank"
      title="Map ARIA role FORM"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=735645">
@@ -161,6 +170,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
   <!-- test abstract structure roles -->
   <div role="section" id="section">section</div>
   <div role="sectionhead" id="sectionhead">sectionhead</div>
+
+  <!-- roles transformed by ARIA state attributes -->
+  <button aria-pressed="true" id="togglebutton">
 
   <!-- misc roles -->
   <div role="note" id="note">note</div>
