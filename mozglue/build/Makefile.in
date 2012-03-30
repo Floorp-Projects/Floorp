@@ -82,22 +82,19 @@ NO_INSTALL_IMPORT_LIBRARY = 1
 endif
 endif
 
-ifeq (android, $(MOZ_WIDGET_TOOLKIT))
-# Add Android specific code
-EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
+ifeq (Android,$(OS_TARGET))
 ifdef MOZ_MEMORY
 # To properly wrap jemalloc's pthread_atfork call.
 EXTRA_DSO_LDOPTS += -Wl,--wrap=pthread_atfork
+CPPSRCS += BionicGlue.cpp
 endif
 SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,$(DEPTH)/other-licenses/android)
-SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,../android)
 endif
 
-ifeq (gonk, $(MOZ_WIDGET_TOOLKIT))
-# To properly wrap jemalloc's pthread_atfork call.
-EXTRA_DSO_LDOPTS += -Wl,--wrap=pthread_atfork
-SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,$(DEPTH)/other-licenses/android)
-SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,gonk,../gonk)
+ifeq (android, $(MOZ_WIDGET_TOOLKIT))
+# Add Android specific code
+EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
+SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,../android)
 endif
 
 ifdef MOZ_LINKER
