@@ -573,7 +573,7 @@ SyncEngine.prototype = {
   applyIncomingBatchSize: DEFAULT_STORE_BATCH_SIZE,
 
   get storageURL() Svc.Prefs.get("clusterURL") + SYNC_API_VERSION +
-    "/" + ID.get("WeaveID").username + "/storage/",
+    "/" + Identity.username + "/storage/",
 
   get engineURL() this.storageURL + this.name,
 
