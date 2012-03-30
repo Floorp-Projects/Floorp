@@ -230,7 +230,9 @@ LIRGeneratorX86::defineUntypedPhi(MPhi *phi, size_t lirIndex)
 
     type->setDef(0, LDefinition(typeVreg, LDefinition::TYPE));
     payload->setDef(0, LDefinition(payloadVreg, LDefinition::PAYLOAD));
-    return annotate(type) && annotate(payload);
+    annotate(type);
+    annotate(payload);
+    return true;
 }
 
 void
