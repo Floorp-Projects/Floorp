@@ -966,12 +966,9 @@ JS_GetObjectTotalSize(JSContext *cx, JSObject *obj)
 static size_t
 GetAtomTotalSize(JSContext *cx, JSAtom *atom)
 {
-    size_t nbytes;
-
-    nbytes = sizeof(JSAtom *) + sizeof(JSDHashEntryStub);
-    nbytes += sizeof(JSString);
-    nbytes += (atom->length() + 1) * sizeof(jschar);
-    return nbytes;
+    return sizeof(AtomStateEntry) + sizeof(HashNumber) +
+           sizeof(JSString) +
+           (atom->length() + 1) * sizeof(jschar);
 }
 
 JS_PUBLIC_API(size_t)
