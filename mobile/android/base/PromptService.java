@@ -462,6 +462,10 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     }
 
     public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
+        private static final int VIEW_TYPE_ITEM = 0;
+        private static final int VIEW_TYPE_GROUP = 1;
+        private static final int VIEW_TYPE_COUNT = 2;
+
         public ListView listView = null;
     	private PromptListItem[] mList;
     	private int mResourceId = -1;
@@ -483,16 +487,44 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             return mList[position].id;
         }
 
+        @Override
+        public int getItemViewType(int position) {
+            PromptListItem item = getItem(position);
+            return (item.isGroup ? VIEW_TYPE_GROUP : VIEW_TYPE_ITEM);
+        }
+
+        @Override
+        public int getViewTypeCount() {
+            return VIEW_TYPE_COUNT;
+        }
+
         public View getView(int position, View convertView, ViewGroup parent) {
             PromptListItem item = getItem(position);
-            int resourceId = mResourceId;
-            if (item.isGroup) {
-                resourceId = R.layout.list_item_header;
+            ViewHolder viewHolder = null;
+
+            if (convertView == null) {
+                int resourceId = mResourceId;
+                if (item.isGroup) {
+                    resourceId = R.layout.list_item_header;
+                }
+
+                convertView = mInflater.inflate(resourceId, null);
+
+                viewHolder = new ViewHolder();
+                viewHolder.textView = (TextView) convertView.findViewById(android.R.id.text1);
+                viewHolder.paddingLeft = viewHolder.textView.getPaddingLeft();
+                viewHolder.paddingRight = viewHolder.textView.getPaddingRight();
+                viewHolder.paddingTop = viewHolder.textView.getPaddingTop();
+                viewHolder.paddingBottom = viewHolder.textView.getPaddingBottom();
+
+                convertView.setTag(viewHolder);
+            } else {
+                viewHolder = (ViewHolder) convertView.getTag();
             }
-            View row = mInflater.inflate(resourceId, null);
+
             if (!item.isGroup){
                 try {
-                    CheckedTextView ct = (CheckedTextView)row.findViewById(android.R.id.text1);
+                    CheckedTextView ct = (CheckedTextView) viewHolder.textView;
                     if (ct != null){
                         ct.setEnabled(!item.disabled);
                         ct.setClickable(item.disabled);
@@ -500,21 +532,21 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                         // Apparently just using ct.setChecked(true) doesn't work, so this
                         // is stolen from the android source code as a way to set the checked
                         // state of these items
-                        if (mSelected[position] && listView != null) {
-                            listView.setItemChecked(position, true);
-                        }
+                        if (listView != null)
+                            listView.setItemChecked(position, mSelected[position]);
 
-                        if (item.inGroup) {
-                            ct.setPadding(mGroupPaddingSize, 0, 0, 0);
-                        }
-
+                        ct.setPadding((item.inGroup ? mGroupPaddingSize : viewHolder.paddingLeft),
+                                      viewHolder.paddingTop,
+                                      viewHolder.paddingRight,
+                                      viewHolder.paddingBottom);
                     }
                 } catch (Exception ex) { }
             }
 
-            TextView t1 = (TextView) row.findViewById(android.R.id.text1);
-            if (t1 != null) {
+            if (viewHolder.textView != null) {
+                final TextView t1 = viewHolder.textView;
                 t1.setText(item.label);
+
                 if (item.icon != null) {
                     Resources res = GeckoApp.mAppContext.getResources();
 
@@ -535,7 +567,15 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 }
             }
 
-            return row;
+            return convertView;
+        }
+
+        private class ViewHolder {
+            public TextView textView;
+            public int paddingLeft;
+            public int paddingRight;
+            public int paddingTop;
+            public int paddingBottom;
         }
     }
 }
