@@ -26,7 +26,7 @@ function test()
     gPane = aPane;
     gDebugger = gPane.debuggerWindow;
 
-    gPane.activeThread.addOneTimeListener("scriptsadded", function() {
+    gPane.activeThread.addOneTimeListener("framesadded", function() {
       Services.tm.currentThread.dispatch({ run: onScriptsAdded }, 0);
     });
     gDebuggee.firstCall();
