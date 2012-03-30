@@ -49,6 +49,7 @@
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jsclist.h"
+#include "jsdhash.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsarray.h"
@@ -2607,11 +2608,9 @@ struct JSHeapDumpNode {
                                        into thing */
 };
 
-typedef HashSet<void *, PointerHasher<void *, 3>, SystemAllocPolicy> VisitedSet;
-
 typedef struct JSDumpingTracer {
     JSTracer            base;
-    VisitedSet          visited;
+    JSDHashTable        visited;
     bool                ok;
     void                *startThing;
     void                *thingToFind;
@@ -2624,10 +2623,12 @@ typedef struct JSDumpingTracer {
 static void
 DumpNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
-    JS_ASSERT(trc->callback == DumpNotify);
-
-    JSDumpingTracer *dtrc = (JSDumpingTracer *)trc;
     void *thing = *thingp;
+    JSDumpingTracer *dtrc;
+    JSDHashEntryStub *entry;
+
+    JS_ASSERT(trc->callback == DumpNotify);
+    dtrc = (JSDumpingTracer *)trc;
 
     if (!dtrc->ok || thing == dtrc->thingToIgnore)
         return;
@@ -2649,13 +2650,15 @@ DumpNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
          */
         if (thing == dtrc->startThing)
             return;
-        VisitedSet::AddPtr p = dtrc->visited.lookupForAdd(thing);
-        if (p)
-            return;
-        if (!dtrc->visited.add(p, thing)) {
+        entry = (JSDHashEntryStub *)
+            JS_DHashTableOperate(&dtrc->visited, thing, JS_DHASH_ADD);
+        if (!entry) {
             dtrc->ok = false;
             return;
         }
+        if (entry->key)
+            return;
+        entry->key = thing;
     }
 
     const char *edgeName = JS_GetTraceEdgeName(&dtrc->base, dtrc->buffer, sizeof(dtrc->buffer));
@@ -2747,20 +2750,26 @@ JS_PUBLIC_API(JSBool)
 JS_DumpHeap(JSRuntime *rt, FILE *fp, void* startThing, JSGCTraceKind startKind,
             void *thingToFind, size_t maxDepth, void *thingToIgnore)
 {
-    if (maxDepth == 0)
-        return true;
-
     JSDumpingTracer dtrc;
-    if (!dtrc.visited.init()) {
+    JSHeapDumpNode *node, *children, *next, *parent;
+    size_t depth;
+    JSBool thingToFindWasTraced;
+
+    if (maxDepth == 0)
+        return JS_TRUE;
+
+    JS_TracerInit(&dtrc.base, rt, DumpNotify);
+    if (!JS_DHashTableInit(&dtrc.visited, JS_DHashGetStubOps(),
+                           NULL, sizeof(JSDHashEntryStub),
+                           JS_DHASH_DEFAULT_CAPACITY(100))) {
         return false;
     }
-    JS_TracerInit(&dtrc.base, rt, DumpNotify);
     dtrc.ok = JS_TRUE;
     dtrc.startThing = startThing;
     dtrc.thingToFind = thingToFind;
     dtrc.thingToIgnore = thingToIgnore;
     dtrc.parentNode = NULL;
-    JSHeapDumpNode *node = NULL;
+    node = NULL;
     dtrc.lastNodep = &node;
     if (!startThing) {
         JS_ASSERT(startKind == JSTRACE_OBJECT);
@@ -2769,12 +2778,11 @@ JS_DumpHeap(JSRuntime *rt, FILE *fp, void* startThing, JSGCTraceKind startKind,
         JS_TraceChildren(&dtrc.base, startThing, startKind);
     }
 
-    size_t depth = 1;
+    depth = 1;
     if (!node)
-        return dtrc.ok;
+        goto dump_out;
 
-    JSHeapDumpNode *children, *next, *parent;
-    bool thingToFindWasTraced = thingToFind && thingToFind == startThing;
+    thingToFindWasTraced = thingToFind && thingToFind == startThing;
     for (;;) {
         /*
          * Loop must continue even when !dtrc.ok to free all nodes allocated
@@ -2811,14 +2819,16 @@ JS_DumpHeap(JSRuntime *rt, FILE *fp, void* startThing, JSGCTraceKind startKind,
             if (node)
                 break;
             if (!parent)
-                return dtrc.ok;
+                goto dump_out;
             JS_ASSERT(depth > 1);
             --depth;
             node = parent;
         }
     }
 
+  dump_out:
     JS_ASSERT(depth == 1);
+    JS_DHashTableFinish(&dtrc.visited);
     return dtrc.ok;
 }
 
