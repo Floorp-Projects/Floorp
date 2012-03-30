@@ -1110,7 +1110,6 @@ AndroidBridge::RegisterCompositor()
 EGLSurface
 AndroidBridge::ProvideEGLSurface()
 {
-    sController.WaitForValidSurface();
     return sController.ProvideEGLSurface();
 }
 
