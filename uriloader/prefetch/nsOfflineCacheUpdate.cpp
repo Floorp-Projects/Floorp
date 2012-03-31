@@ -1882,7 +1882,7 @@ nsOfflineCacheUpdate::Finish()
 static nsresult
 EvictOneOfCacheGroups(nsIApplicationCacheService *cacheService,
                       PRUint32 count, const char * const *groups,
-                      nsIApplicationCacheAsyncCallback *aCallback) {
+                      nsIApplicationCacheAsyncCallback *aCallback)
 {
     nsresult rv;
     unsigned int i;
