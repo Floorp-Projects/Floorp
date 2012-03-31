@@ -1327,6 +1327,8 @@ private:
     NodeHasExplicitBaseURI,
     // Set if the element has some style states locked
     ElementHasLockedStyleStates,
+    // Set if the node may have DOMMutationObserver attached to it.
+    NodeMayHaveDOMMutationObserver,
     // Guard value
     BooleanFlagCount
   };
@@ -1383,7 +1385,10 @@ public:
   void SetIsPurpleRoot(bool aValue)
     { SetBoolFlag(NodeIsPurpleRoot, aValue); }
   bool IsPurpleRoot() const { return GetBoolFlag(NodeIsPurpleRoot); }
-
+  bool MayHaveDOMMutationObserver()
+    { return GetBoolFlag(NodeMayHaveDOMMutationObserver); }
+  void SetMayHaveDOMMutationObserver()
+    { SetBoolFlag(NodeMayHaveDOMMutationObserver, true); }
   bool HasListenerManager() { return HasFlag(NODE_HAS_LISTENERMANAGER); }
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
@@ -1420,6 +1425,12 @@ protected:
 public:
   // Optimized way to get classinfo.
   virtual nsXPCClassInfo* GetClassInfo() = 0;
+
+  // Makes nsINode object to keep aObject alive.
+  void BindObject(nsISupports* aObject);
+  // After calling UnbindObject nsINode object doesn't keep
+  // aObject alive anymore.
+  void UnbindObject(nsISupports* aObject);
 
   /**
    * Returns the length of this node, as specified at
