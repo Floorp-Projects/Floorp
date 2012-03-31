@@ -1901,10 +1901,11 @@ GK_ATOM(x_symbol, "x-symbol")
 // referenced in all.js
 GK_ATOM(x_user_def, "x-user-def")
 
-// additional languages that use Turkish-style case transformation
+// additional languages that have special case transformations
 GK_ATOM(az, "az")
 GK_ATOM(ba, "ba")
 GK_ATOM(crh, "crh")
+GK_ATOM(nl, "nl")
 
 // Names for editor transactions
 GK_ATOM(TypingTxnName, "Typing")
