@@ -1105,9 +1105,38 @@ class Assembler
         VFP_LessThan = CC // MI is valid too.
     };
 
+    // Bit set when a DoubleCondition does not map to a single ARM condition.
+    // The macro assembler has to special-case these conditions, or else
+    // ConditionFromDoubleCondition will complain.
+    static const int DoubleConditionBitSpecial = 0x1;
+
+    enum DoubleCondition {
+        // These conditions will only evaluate to true if the comparison is ordered - i.e. neither operand is NaN.
+        DoubleOrdered = VFP_NotUnordered,
+        DoubleEqual = VFP_Equal,
+        DoubleNotEqual = VFP_NotEqualOrUnordered | DoubleConditionBitSpecial,
+        DoubleGreaterThan = VFP_GreaterThan,
+        DoubleGreaterThanOrEqual = VFP_GreaterThanOrEqual,
+        DoubleLessThan = VFP_LessThan,
+        DoubleLessThanOrEqual = VFP_LessThanOrEqual,
+        // If either operand is NaN, these conditions always evaluate to true.
+        DoubleUnordered = VFP_Unordered,
+        DoubleEqualOrUnordered = VFP_Equal | DoubleConditionBitSpecial,
+        DoubleNotEqualOrUnordered = VFP_NotEqualOrUnordered,
+        DoubleGreaterThanOrUnordered = VFP_GreaterThanOrUnordered,
+        DoubleGreaterThanOrEqualOrUnordered = VFP_GreaterThanOrEqualOrUnordered,
+        DoubleLessThanOrUnordered = VFP_LessThanOrUnordered,
+        DoubleLessThanOrEqualOrUnordered = VFP_LessThanOrEqualOrUnordered
+    };
+
     Condition getCondition(uint32 inst) {
         return (Condition) (0xf0000000 & inst);
     }
+    static inline Condition ConditionFromDoubleCondition(DoubleCondition cond) {
+        JS_ASSERT(!(cond & DoubleConditionBitSpecial));
+        return static_cast<Condition>(cond);
+    }
+
     // :( this should be protected, but since CodeGenerator
     // wants to use it, It needs to go out here :(
 
