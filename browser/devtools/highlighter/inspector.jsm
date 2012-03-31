@@ -28,6 +28,7 @@
  *   Kyle Simpson <ksimpson@mozilla.com>
  *   Johan Charlez <johan.charlez@gmail.com>
  *   Mike Ratcliffe <mratcliffe@mozilla.com>
+ *   Murali S R <murali.sr92@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1926,6 +1927,7 @@ HTMLBreadcrumbs.prototype = {
     }
     this.menu.appendChild(fragment);
     this.menu.openPopup(aButton, "before_start", 0, 0, true, false);
+    aButton.setAttribute("siblings-menu-open", "true");
   },
 
   /**
@@ -1936,7 +1938,7 @@ HTMLBreadcrumbs.prototype = {
    */
   handleEvent: function BC_handleEvent(aEvent)
   {
-    if (aEvent.type == "mousedown") {
+    if (aEvent.type == "mousedown" && aEvent.button == 0) {
       // on Click and Hold, open the Siblings menu
 
       let timer;
@@ -1948,7 +1950,6 @@ HTMLBreadcrumbs.prototype = {
         let target = aEvent.originalTarget;
         if (target.tagName == "button") {
           target.onBreadcrumbsHold();
-          target.setAttribute("siblings-menu-open", "true");
         }
       }
 
