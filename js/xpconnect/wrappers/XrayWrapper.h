@@ -66,6 +66,7 @@ GetNativePropertiesObject(JSContext *cx, JSObject *wrapper);
 
 class XPCWrappedNativeXrayTraits;
 class ProxyXrayTraits;
+class DOMXrayTraits;
 
 // NB: Base *must* derive from JSProxyHandler
 template <typename Base, typename Traits = XPCWrappedNativeXrayTraits >
@@ -109,5 +110,6 @@ class XrayWrapper : public Base {
 };
 
 typedef XrayWrapper<js::CrossCompartmentWrapper, ProxyXrayTraits > XrayProxy;
+typedef XrayWrapper<js::CrossCompartmentWrapper, DOMXrayTraits > XrayDOM;
 
 }

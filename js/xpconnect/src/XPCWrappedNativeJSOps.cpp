@@ -44,6 +44,7 @@
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
 #include "nsWrapperCacheInlines.h"
+#include "mozilla/dom/bindings/Utils.h"
 
 /***************************************************************************/
 
@@ -617,6 +618,10 @@ static PRUint32 sFinalizedSlimWrappers;
 static void
 XPC_WN_NoHelper_Finalize(JSContext *cx, JSObject *obj)
 {
+    js::Class* clazz = js::GetObjectClass(obj);
+    if (clazz->flags & JSCLASS_DOM_GLOBAL) {
+        mozilla::dom::bindings::DestroyProtoOrIfaceCache(obj);
+    }
     nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
     if (!p)
         return;
@@ -1043,6 +1048,10 @@ XPC_WN_Helper_HasInstance(JSContext *cx, JSObject *obj, const jsval *valp, JSBoo
 static void
 XPC_WN_Helper_Finalize(JSContext *cx, JSObject *obj)
 {
+    js::Class* clazz = js::GetObjectClass(obj);
+    if (clazz->flags & JSCLASS_DOM_GLOBAL) {
+        mozilla::dom::bindings::DestroyProtoOrIfaceCache(obj);
+    }
     nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
     if (IS_SLIM_WRAPPER(obj)) {
         SLIM_LOG(("----- %i finalized slim wrapper (%p, %p)\n",

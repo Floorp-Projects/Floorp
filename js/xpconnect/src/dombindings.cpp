@@ -48,11 +48,13 @@
 #include "nsDOMClassInfo.h"
 #include "nsGlobalWindow.h"
 #include "nsWrapperCacheInlines.h"
+#include "mozilla/dom/bindings/Utils.h"
 
 #include "jsapi.h"
 #include "jsatom.h"
 
 using namespace JS;
+using namespace mozilla::dom::bindings;
 
 namespace mozilla {
 namespace dom {
@@ -103,62 +105,6 @@ Throw(JSContext *cx, nsresult rv)
     return false;
 }
 
-
-// Only set allowNativeWrapper to false if you really know you need it, if in
-// doubt use true. Setting it to false disables security wrappers.
-static bool
-XPCOMObjectToJsval(JSContext *cx, JSObject *scope, xpcObjectHelper &helper,
-                   bool allowNativeWrapper, jsval *rval)
-{
-    XPCLazyCallContext lccx(JS_CALLER, cx, scope);
-
-    nsresult rv;
-    if (!XPCConvert::NativeInterface2JSObject(lccx, rval, NULL, helper, NULL, NULL,
-                                              allowNativeWrapper, &rv)) {
-        // I can't tell if NativeInterface2JSObject throws JS exceptions
-        // or not.  This is a sloppy stab at the right semantics; the
-        // method really ought to be fixed to behave consistently.
-        if (!JS_IsExceptionPending(cx))
-            Throw(cx, NS_FAILED(rv) ? rv : NS_ERROR_UNEXPECTED);
-        return false;
-    }
-
-#ifdef DEBUG
-    JSObject* jsobj = JSVAL_TO_OBJECT(*rval);
-    if (jsobj && !js::GetObjectParent(jsobj))
-        NS_ASSERTION(js::GetObjectClass(jsobj)->flags & JSCLASS_IS_GLOBAL,
-                     "Why did we recreate this wrapper?");
-#endif
-
-    return true;
-}
-
-template<class T>
-static inline JSObject*
-WrapNativeParent(JSContext *cx, JSObject *scope, T *p)
-{
-    if (!p)
-        return NULL;
-
-    nsWrapperCache *cache = GetWrapperCache(p);
-    JSObject* obj;
-    if (cache && (obj = cache->GetWrapper())) {
-#ifdef DEBUG
-        qsObjectHelper helper(p, cache);
-        jsval debugVal;
-
-        bool ok = XPCOMObjectToJsval(cx, scope, helper, false, &debugVal);
-        NS_ASSERTION(ok && JSVAL_TO_OBJECT(debugVal) == obj,
-                     "Unexpected object in nsWrapperCache");
-#endif
-        return obj;
-    }
-
-    qsObjectHelper helper(p, cache);
-    jsval v;
-    return XPCOMObjectToJsval(cx, scope, helper, false, &v) ? JSVAL_TO_OBJECT(v) : NULL;
-}
-
 template<class T>
 static bool
 Wrap(JSContext *cx, JSObject *scope, T *p, nsWrapperCache *cache, jsval *vp)
@@ -166,7 +112,7 @@ Wrap(JSContext *cx, JSObject *scope, T *p, nsWrapperCache *cache, jsval *vp)
     if (xpc_FastGetCachedWrapper(cache, scope, vp))
         return true;
     qsObjectHelper helper(p, cache);
-    return XPCOMObjectToJsval(cx, scope, helper, true, vp);
+    return XPCOMObjectToJsval(cx, scope, helper, NULL, true, vp);
 }
 
 template<class T>
@@ -262,7 +208,7 @@ bool
 DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine, nsresult *aResult)
 {
     bool enabled;
-    bool defined = !!aDefine(cx, XPCWrappedNativeScope::FindInJSObjectScope(cx, obj), &enabled);
+    bool defined = aDefine(cx, XPCWrappedNativeScope::FindInJSObjectScope(cx, obj), &enabled);
     NS_ASSERTION(!defined || enabled,
                  "We defined a constructor but the new bindings are disabled?");
     *aResult = defined ? NS_OK : NS_ERROR_FAILURE;

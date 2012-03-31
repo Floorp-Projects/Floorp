@@ -55,6 +55,7 @@ CPPSRCS		= AccessCheck.cpp \
 
 LOCAL_INCLUDES = \
                 -I$(srcdir)/../src \
+                -I$(srcdir)/../../../dom/base \
 
 DEFINES += \
   -DNO_NSPR_10_SUPPORT \
