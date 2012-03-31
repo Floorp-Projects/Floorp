@@ -1125,9 +1125,10 @@ nsOfflineManifestItem::OnStopRequest(nsIRequest *aRequest,
 // nsOfflineCacheUpdate::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS2(nsOfflineCacheUpdate,
+NS_IMPL_ISUPPORTS3(nsOfflineCacheUpdate,
                    nsIOfflineCacheUpdateObserver,
-                   nsIOfflineCacheUpdate)
+                   nsIOfflineCacheUpdate,
+                   nsIApplicationCacheAsyncCallback)
 
 //-----------------------------------------------------------------------------
 // nsOfflineCacheUpdate <public>
@@ -1447,26 +1448,15 @@ nsOfflineCacheUpdate::LoadCompleted()
             mPinnedEntryRetriesCount < kPinnedEntryRetriesLimit &&
             (item->mItemType & (nsIApplicationCache::ITEM_EXPLICIT |
                                 nsIApplicationCache::ITEM_FALLBACK))) {
-            rv = EvictOneNonPinned();
-            if (NS_FAILED(rv)) {
-                mSucceeded = false;
-                NotifyState(nsIOfflineCacheUpdateObserver::STATE_ERROR);
-                Finish();
-                return;
-            }
+        rv = item->Cancel();
 
-            rv = item->Cancel();
-            if (NS_FAILED(rv)) {
-                mSucceeded = false;
-                NotifyState(nsIOfflineCacheUpdateObserver::STATE_ERROR);
-                Finish();
-                return;
-            }
-
+        if (NS_SUCCEEDED(rv)) {
             mPinnedEntryRetriesCount++;
-            // Retry current item, so mCurrentItem is not advanced.
-            ProcessNextURI();
-            return;
+            // Do a retrying for current item, so mCurrentItem is not advanced.
+            rv = EvictOneNonPinnedAsync();
+            }
+
+        if (NS_SUCCEEDED(rv)) return;
         }
     }
 
@@ -1891,7 +1881,8 @@ nsOfflineCacheUpdate::Finish()
 
 static nsresult
 EvictOneOfCacheGroups(nsIApplicationCacheService *cacheService,
-                      PRUint32 count, const char * const *groups)
+                      PRUint32 count, const char * const *groups,
+                      nsIApplicationCacheAsyncCallback *aCallback) {
 {
     nsresult rv;
     unsigned int i;
@@ -1915,16 +1906,24 @@ EvictOneOfCacheGroups(nsIApplicationCacheService *cacheService,
         NS_ENSURE_SUCCESS(rv, rv);
 
         if (!pinned) {
-            rv = cache->Discard();
-            return NS_OK;
+            // Call HandleAsyncCompletion() when the task is completed.
+            rv = cache->DiscardAsync(aCallback);
+           return NS_OK;
         }
     }
 
     return NS_ERROR_FILE_NOT_FOUND;
 }
 
-nsresult
-nsOfflineCacheUpdate::EvictOneNonPinned()
+/**
+ * Evict one of non-pinned cache group in asynchronized.
+ *
+ * This method returns immediately.  It will start an async task to
+ * evict a selected cache group.  HandleAsyncCompletion() will be
+ * called while the eviction is completed.
+ */
+ nsresult
+nsOfflineCacheUpdate::EvictOneNonPinnedAsync()
 {
     nsresult rv;
 
@@ -1937,7 +1936,7 @@ nsOfflineCacheUpdate::EvictOneNonPinned()
     rv = cacheService->GetGroupsTimeOrdered(&count, &groups);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = EvictOneOfCacheGroups(cacheService, count, groups);
+    rv = EvictOneOfCacheGroups(cacheService, count, groups, this);
 
     NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, groups);
     return rv;
@@ -2158,4 +2157,20 @@ NS_IMETHODIMP
 nsOfflineCacheUpdate::ApplicationCacheAvailable(nsIApplicationCache *applicationCache)
 {
     return AssociateDocuments(applicationCache);
+}
+
+//-----------------------------------------------------------------------------
+// nsOfflineCacheUpdate::nsIApplicationCacheAsyncCallback
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsOfflineCacheUpdate::HandleAsyncCompletion(PRUint32 aState) {
+    if (aState != APP_CACHE_REQUEST_SUCCESS) {
+        mSucceeded = false;
+        NotifyState(nsIOfflineCacheUpdateObserver::STATE_ERROR);
+        Finish();
+        return NS_OK;
+    }
+
+    return ProcessNextURI();
 }
