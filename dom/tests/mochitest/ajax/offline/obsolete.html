@@ -32,8 +32,6 @@ function fail(evt)
 }
 
 applicationCache.oncached = function() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   // ok, we've successfully loaded from the initial cache.
   try {
     applicationCache.swapCache();
@@ -51,7 +49,7 @@ applicationCache.oncached = function() {
   // Make the obsoleting.sjs return 404 NOT FOUND code
   var req = new XMLHttpRequest();
   req.open("GET", "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/obsoletingManifest.sjs?state=");
-  var channel = req.channel
+  var channel = SpecialPowers.wrap(req).channel
     .QueryInterface(Components.interfaces.nsIApplicationCacheChannel);
   channel.chooseApplicationCache = false;
   channel.inheritApplicationCache = false;

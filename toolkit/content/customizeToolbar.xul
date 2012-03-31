@@ -79,17 +79,17 @@
   <box align="center">
     <label value="&show.label;"/>
     <menulist id="modelist" value="icons" oncommand="updateToolbarMode(this.value);">
-      <menupopup>
-        <menuitem value="full" label="&iconsAndText.label;"/>
-        <menuitem value="icons" label="&icons.label;"/>
-        <menuitem value="text" label="&text.label;"/>
+      <menupopup id="modelistpopup">
+        <menuitem id="modefull" value="full" label="&iconsAndText.label;"/>
+        <menuitem id="modeicons" value="icons" label="&icons.label;"/>
+        <menuitem id="modetext" value="text" label="&text.label;"/>
       </menupopup>
     </menulist>
 
     <checkbox id="smallicons" oncommand="updateIconSize(this.checked ? 'small' : 'large');" label="&useSmallIcons.label;"/>
 
-    <button label="&addNewToolbar.label;" oncommand="addNewToolbar();" icon="add"/>
-    <button label="&restoreDefaultSet.label;" oncommand="restoreDefaultSet();" icon="revert"/>
+    <button id="newtoolbar" label="&addNewToolbar.label;" oncommand="addNewToolbar();" icon="add"/>
+    <button id="restoreDefault" label="&restoreDefaultSet.label;" oncommand="restoreDefaultSet();" icon="revert"/>
   </box>
 
   <separator class="groove"/>

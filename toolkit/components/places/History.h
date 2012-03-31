@@ -63,6 +63,9 @@ struct VisitData;
 #define NS_HISTORYSERVICE_CID \
   {0x0937a705, 0x91a6, 0x417a, {0x82, 0x92, 0xb2, 0x2e, 0xb1, 0x0d, 0xa8, 0x6c}}
 
+// Max size of History::mRecentlyVisitedURIs
+#define RECENTLY_VISITED_URI_SIZE 8
+
 class History : public IHistory
               , public nsIDownloadHistory
               , public mozIAsyncHistory
@@ -148,6 +151,12 @@ public:
     return mShutdownMutex;
   }
 
+  /**
+   * Helper function to append a new URI to mRecentlyVisitedURIs. See
+   * mRecentlyVisitedURIs.
+   */
+  void AppendToRecentlyVisitedURIs(nsIURI* aURI);
+
 private:
   virtual ~History();
 
@@ -219,6 +228,17 @@ private:
                                          void*);
 
   nsTHashtable<KeyClass> mObservers;
+
+  /**
+   * mRecentlyVisitedURIs remembers URIs which are recently added to the DB,
+   * to avoid saving these locations repeatedly in a short period.
+   */
+  typedef nsAutoTArray<nsCOMPtr<nsIURI>, RECENTLY_VISITED_URI_SIZE>
+          RecentlyVisitedArray;
+  RecentlyVisitedArray mRecentlyVisitedURIs;
+  RecentlyVisitedArray::index_type mRecentlyVisitedURIsNextIndex;
+
+  bool IsRecentlyVisitedURI(nsIURI* aURI);
 };
 
 } // namespace places

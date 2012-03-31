@@ -136,6 +136,11 @@ var SidebarUtils = {
   },
 
   setMouseoverURL: function SU_setMouseoverURL(aURL) {
-    window.top.XULBrowserWindow.setOverLink(aURL, null);
+    // When the browser window is closed with an open sidebar, the sidebar
+    // unload event happens after the browser's one.  In this case
+    // top.XULBrowserWindow has been nullified already.
+    if (top.XULBrowserWindow) {
+      top.XULBrowserWindow.setOverLink(aURL, null);
+    }
   }
 };

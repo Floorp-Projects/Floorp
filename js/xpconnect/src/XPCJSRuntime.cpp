@@ -449,9 +449,15 @@ CheckParticipatesInCycleCollection(PRUint32 aLangID, void *aThing,
 {
     Closure *closure = static_cast<Closure*>(aClosure);
 
-    closure->cycleCollectionEnabled =
-        aLangID == nsIProgrammingLanguage::JAVASCRIPT &&
-        AddToCCKind(js_GetGCThingTraceKind(aThing));
+    if (closure->cycleCollectionEnabled)
+        return;
+
+    if (aLangID == nsIProgrammingLanguage::JAVASCRIPT &&
+        AddToCCKind(js_GetGCThingTraceKind(aThing)) &&
+        xpc_IsGrayGCThing(aThing))
+    {
+        closure->cycleCollectionEnabled = true;
+    }
 }
 
 static JSDHashOperator
@@ -461,6 +467,7 @@ NoteJSHolder(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32_t number,
     ObjectHolder* entry = reinterpret_cast<ObjectHolder*>(hdr);
     Closure *closure = static_cast<Closure*>(arg);
 
+    closure->cycleCollectionEnabled = false;
     entry->tracer->Trace(entry->holder, CheckParticipatesInCycleCollection,
                          closure);
     if (!closure->cycleCollectionEnabled)
@@ -627,18 +634,6 @@ DoDeferredRelease(nsTArray<T> &array)
     }
 }
 
-static JSDHashOperator
-SweepWaiverWrappers(JSDHashTable *table, JSDHashEntryHdr *hdr,
-                    uint32_t number, void *arg)
-{
-    JSObject *key = ((JSObject2JSObjectMap::Entry *)hdr)->key;
-    JSObject *value = ((JSObject2JSObjectMap::Entry *)hdr)->value;
-
-    if (JS_IsAboutToBeFinalized(key) || JS_IsAboutToBeFinalized(value))
-        return JS_DHASH_REMOVE;
-    return JS_DHASH_NEXT;
-}
-
 static PLDHashOperator
 SweepExpandos(XPCWrappedNative *wn, JSObject *&expando, void *arg)
 {
@@ -654,7 +649,7 @@ SweepCompartment(nsCStringHashKey& aKey, JSCompartment *compartment, void *aClos
     xpc::CompartmentPrivate *priv =
         static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
     if (priv->waiverWrapperMap)
-        priv->waiverWrapperMap->Enumerate(SweepWaiverWrappers, nsnull);
+        priv->waiverWrapperMap->Sweep();
     if (priv->expandoMap)
         priv->expandoMap->Enumerate(SweepExpandos, nsnull);
     return PL_DHASH_NEXT;

@@ -58,8 +58,7 @@ function run_test() {
 
     _("Try again with username and password set.");
     Status.resetSync();
-    Service.username = "johndoe";
-    Service.password = "ilovejane";
+    setBasicCredentials("johndoe", "ilovejane", null);
     do_check_false(Service.verifyLogin());
     do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
     do_check_eq(Status.login, LOGIN_FAILED_NO_PASSPHRASE);
@@ -69,14 +68,15 @@ function run_test() {
 
     _("Success if passphrase is set.");
     Status.resetSync();
-    Service.passphrase = "foo";
+    Identity.syncKey = "foo";
     do_check_true(Service.verifyLogin());
     do_check_eq(Status.service, STATUS_OK);
     do_check_eq(Status.login, LOGIN_SUCCEEDED);
 
     _("If verifyLogin() encounters a server error, it flips on the backoff flag and notifies observers on a 503 with Retry-After.");
     Status.resetSync();
-    Service.username = "janedoe";
+    Identity.account = "janedoe";
+    Service._updateCachedURLs();
     do_check_false(Status.enforceBackoff);
     let backoffInterval;    
     Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {

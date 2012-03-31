@@ -73,7 +73,7 @@ function testCreateCommands() {
     // Wait for the initial resume.
     aPane.debuggerWindow.gClient.addOneTimeListener("resumed", function() {
       delete aPane.onConnected;
-      aPane.debuggerWindow.gClient.activeThread.addOneTimeListener("scriptsadded", function() {
+      aPane.debuggerWindow.gClient.activeThread.addOneTimeListener("framesadded", function() {
         type("break add line " + TEST_URI + " " + content.wrappedJSObject.line0);
         is(requisition.getStatus().toString(), "VALID", "break add line is VALID");
         requisition.exec();

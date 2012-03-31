@@ -581,6 +581,15 @@ nsBrowserContentHandler.prototype = {
     var overridePage = "";
     var haveUpdateSession = false;
     try {
+      // Read the old value of homepage_override.mstone before
+      // needHomepageOverride updates it, so that we can later add it to the
+      // URL if we do end up showing an overridePage. This makes it possible
+      // to have the overridePage's content vary depending on the version we're
+      // upgrading from.
+      let old_mstone = "unknown";
+      try {
+        old_mstone = Services.prefs.getCharPref("browser.startup.homepage_override.mstone");
+      } catch (ex) {}
       let override = needHomepageOverride(prefb);
       if (override != OVERRIDE_NONE) {
         // Setup the default search engine to about:home page.
@@ -604,6 +613,8 @@ nsBrowserContentHandler.prototype = {
             overridePage = Services.urlFormatter.formatURLPref("startup.homepage_override_url");
             if (prefb.prefHasUserValue("app.update.postupdate"))
               overridePage = getPostUpdateOverridePage(overridePage);
+
+            overridePage = overridePage.replace("%OLD_VERSION%", old_mstone);
             break;
         }
       }

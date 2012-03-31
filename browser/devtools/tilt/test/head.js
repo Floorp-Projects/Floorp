@@ -24,6 +24,7 @@ const DEFAULT_HTML = "data:text/html," +
   "<DOCTYPE html>" +
   "<html>" +
     "<head>" +
+      "<meta charset='utf-8'/>" +
       "<title>Three Laws</title>" +
     "</head>" +
     "<body>" +
@@ -193,4 +194,17 @@ function createTilt(callbacks, close) {
       }
     });
   }
+}
+
+function getPickablePoint(presenter) {
+  let vertices = presenter._meshStacks[0].vertices.components;
+
+  let topLeft = vec3.create([vertices[0], vertices[1], vertices[2]]);
+  let bottomRight = vec3.create([vertices[6], vertices[7], vertices[8]]);
+  let center = vec3.lerp(topLeft, bottomRight, 0.5, []);
+
+  let renderer = presenter._renderer;
+  let viewport = [0, 0, renderer.width, renderer.height];
+
+  return vec3.project(center, viewport, renderer.mvMatrix, renderer.projMatrix);
 }

@@ -1,0 +1,28 @@
+<head>
+  <title>Do plugin stream src requests send the Referer header correctly?</title>
+  <script type="application/javascript"
+	  src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+
+<body>
+  <p id="display"></p>
+
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  function frameLoaded() {
+    var testframe = document.getElementById('pluginframe');
+    var content = testframe.contentDocument.body.innerHTML;
+    if (!content.length)
+      return;
+
+    is(content, "Referer found: " + window.location);
+    SimpleTest.finish();
+  }
+  </script>
+
+  <iframe name="pluginframe" id="pluginframe" onload="frameLoaded()"></iframe>
+
+  <embed id="plugin" type="application/x-test" src="plugin-stream-referer.sjs" width="200" height="200" frame="pluginframe"></embed>
+

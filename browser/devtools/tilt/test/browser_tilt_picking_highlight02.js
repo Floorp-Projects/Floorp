@@ -23,8 +23,8 @@ function test() {
         presenter = instance.presenter;
         Services.obs.addObserver(whenHighlighting, HIGHLIGHTING, false);
 
-        presenter._onSetupMesh = function() {
-          presenter.highlightNodeAt(presenter.canvas.width / 2, 10);
+        presenter._onInitializationFinished = function() {
+          presenter.highlightNodeAt.apply(this, getPickablePoint(presenter));
         };
       }
     });
@@ -40,7 +40,7 @@ function whenHighlighting() {
   executeSoon(function() {
     Services.obs.removeObserver(whenHighlighting, HIGHLIGHTING);
     Services.obs.addObserver(whenUnhighlighting, UNHIGHLIGHTING, false);
-    presenter.highlightNodeAt(-1, -1);
+    presenter.highlightNode(null);
   });
 }
 

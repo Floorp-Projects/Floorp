@@ -26,7 +26,7 @@ function test() {
 }
 
 function testRecurse() {
-  gPane.activeThread.addOneTimeListener("scriptsadded", function() {
+  gPane.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
       let frames = gDebugger.DebuggerView.Stackframes._frames;
       let childNodes = frames.childNodes;

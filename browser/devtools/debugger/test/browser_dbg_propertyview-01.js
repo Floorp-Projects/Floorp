@@ -85,6 +85,7 @@ function resumeAndFinish() {
   gDebugger.StackFrames.activeThread.resume(function() {
     let vs = gDebugger.DebuggerView.Scripts;
     let ss = gDebugger.SourceScripts;
+    ss.onScriptsCleared();
 
     is(ss._trimUrlQuery("a/b/c.d?test=1&random=4"), "a/b/c.d",
       "Trimming the url query isn't done properly.");

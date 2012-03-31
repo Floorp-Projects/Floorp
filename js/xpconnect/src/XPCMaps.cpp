@@ -830,18 +830,3 @@ WrappedNative2WrapperMap::AddLink(JSObject* wrappedObject, Link* oldLink)
 }
 
 /***************************************************************************/
-// implement JSObject2JSObjectMap...
-
-struct JSDHashTableOps
-JSObject2JSObjectMap::sOps = {
-    JS_DHashAllocTable,
-    JS_DHashFreeTable,
-    JS_DHashVoidPtrKeyStub,
-    JS_DHashMatchEntryStub,
-    JS_DHashMoveEntryStub,
-    JS_DHashClearEntryStub,
-    JS_DHashFinalizeStub,
-    nsnull
-};
-
-/***************************************************************************/

@@ -485,6 +485,13 @@ public:
    */
   virtual TemporaryRef<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget) = 0;
 
+  /* This copies the path describing the glyphs into a PathBuilder. We use this
+   * API rather than a generic API to append paths because it allows easier
+   * implementation in some backends, and more efficient implementation in
+   * others.
+   */
+  virtual void CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder) = 0;
+
 protected:
   ScaledFont() {}
 };

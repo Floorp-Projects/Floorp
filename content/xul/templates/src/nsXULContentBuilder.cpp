@@ -956,8 +956,7 @@ nsXULContentBuilder::RemoveMember(nsIContent* aContent)
         // Note: RemoveChildAt sets |child|'s document to null so that
         // it'll get knocked out of the XUL doc's resource-to-element
         // map.
-        nsresult rv = parent->RemoveChildAt(pos, true);
-        if (NS_FAILED(rv)) return rv;
+        parent->RemoveChildAt(pos, true);
     }
 
     // Remove from the content support map.

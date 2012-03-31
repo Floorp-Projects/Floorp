@@ -69,9 +69,6 @@ public:
                                         nsCString& aEntity) const;
   NS_IMETHOD IsContainer(PRInt32 aId, bool& aIsContainer) const;
   NS_IMETHOD IsBlock(PRInt32 aId, bool& aIsBlock) const;
-
-  nsresult CheckQName(const nsAString& aQName,
-                      bool aNamespaceAware, const PRUnichar** aColon);
 };
 
 #endif

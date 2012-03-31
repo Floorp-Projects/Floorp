@@ -405,8 +405,6 @@ public:
     void EnableNetworkNotifications();
     void DisableNetworkNotifications();
 
-    void SetCompositorParent(mozilla::layers::CompositorParent* aCompositorParent,
-                             base::Thread* aCompositorThread);
     void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight);
     void SetPageSize(float aZoom, float aPageWidth, float aPageHeight);
     void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
@@ -424,6 +422,8 @@ public:
     void GetScreenOrientation(dom::ScreenOrientationWrapper& aOrientation);
     void EnableScreenOrientationNotifications();
     void DisableScreenOrientationNotifications();
+    void LockScreenOrientation(const dom::ScreenOrientationWrapper& aOrientation);
+    void UnlockScreenOrientation();
 
 protected:
     static AndroidBridge *sBridge;
@@ -532,6 +532,8 @@ protected:
     jmethodID jGetScreenOrientation;
     jmethodID jEnableScreenOrientationNotifications;
     jmethodID jDisableScreenOrientationNotifications;
+    jmethodID jLockScreenOrientation;
+    jmethodID jUnlockScreenOrientation;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;

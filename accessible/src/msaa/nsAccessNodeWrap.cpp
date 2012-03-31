@@ -215,10 +215,11 @@ __try{
   *aNodeName = nsnull;
   *aNodeValue = nsnull;
 
-  if (IsDefunct())
+  nsINode* node = GetNode();
+  if (!node)
     return E_FAIL;
 
-  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(GetNode()));
+  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(node));
 
   PRUint16 nodeType = 0;
   DOMNode->GetNodeType(&nodeType);
@@ -244,7 +245,7 @@ __try{
   // data nodes in their internal object model.
   *aUniqueID = - NS_PTR_TO_INT32(UniqueID());
 
-  *aNumChildren = GetNode()->GetChildCount();
+  *aNumChildren = node->GetChildCount();
 
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return S_OK;
@@ -262,7 +263,7 @@ STDMETHODIMP nsAccessNodeWrap::get_attributes(
 __try{
   *aNumAttribs = 0;
 
-  if (IsDefunct() || IsDocumentNode())
+  if (!mContent || IsDocumentNode())
     return E_FAIL;
 
   PRUint32 numAttribs = mContent->GetAttrCount();
@@ -293,7 +294,7 @@ STDMETHODIMP nsAccessNodeWrap::get_attributesForNames(
     /* [length_is][size_is][retval] */ BSTR __RPC_FAR *aAttribValues)
 {
 __try {
-  if (IsDefunct() || !IsElement())
+  if (!mContent || !IsElement())
     return E_FAIL;
 
   nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mContent));
@@ -335,7 +336,7 @@ STDMETHODIMP nsAccessNodeWrap::get_computedStyle(
 __try{
   *aNumStyleProperties = 0;
 
-  if (IsDefunct() || IsDocumentNode())
+  if (!mContent || IsDocumentNode())
     return E_FAIL;
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl =
@@ -370,7 +371,7 @@ STDMETHODIMP nsAccessNodeWrap::get_computedStyleForProperties(
     /* [length_is][size_is][out] */ BSTR __RPC_FAR *aStyleValues)
 {
 __try {
-  if (IsDefunct() || IsDocumentNode())
+  if (!mContent || IsDocumentNode())
     return E_FAIL;
  
   nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl =
@@ -442,10 +443,11 @@ nsAccessNodeWrap::MakeAccessNode(nsINode *aNode)
 STDMETHODIMP nsAccessNodeWrap::get_parentNode(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
 __try {
-  if (IsDefunct())
+  nsINode* node = GetNode();
+  if (!node)
     return E_FAIL;
 
-  *aNode = MakeAccessNode(GetNode()->GetNodeParent());
+  *aNode = MakeAccessNode(node->GetNodeParent());
 
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
@@ -455,10 +457,11 @@ __try {
 STDMETHODIMP nsAccessNodeWrap::get_firstChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
 __try {
-  if (IsDefunct())
+  nsINode* node = GetNode();
+  if (!node)
     return E_FAIL;
 
-  *aNode = MakeAccessNode(GetNode()->GetFirstChild());
+  *aNode = MakeAccessNode(node->GetFirstChild());
 
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
@@ -468,10 +471,11 @@ __try {
 STDMETHODIMP nsAccessNodeWrap::get_lastChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
 __try {
-  if (IsDefunct())
+  nsINode* node = GetNode();
+  if (!node)
     return E_FAIL;
 
-  *aNode = MakeAccessNode(GetNode()->GetLastChild());
+  *aNode = MakeAccessNode(node->GetLastChild());
 
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
@@ -481,10 +485,11 @@ __try {
 STDMETHODIMP nsAccessNodeWrap::get_previousSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
 __try {
-  if (IsDefunct())
+  nsINode* node = GetNode();
+  if (!node)
     return E_FAIL;
 
-  *aNode = MakeAccessNode(GetNode()->GetPreviousSibling());
+  *aNode = MakeAccessNode(node->GetPreviousSibling());
 
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
@@ -494,10 +499,11 @@ __try {
 STDMETHODIMP nsAccessNodeWrap::get_nextSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
 __try {
-  if (IsDefunct())
+  nsINode* node = GetNode();
+  if (!node)
     return E_FAIL;
 
-  *aNode = MakeAccessNode(GetNode()->GetNextSibling());
+  *aNode = MakeAccessNode(node->GetNextSibling());
 
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
@@ -511,10 +517,11 @@ nsAccessNodeWrap::get_childAt(unsigned aChildIndex,
 __try {
   *aNode = nsnull;
 
-  if (IsDefunct())
+  nsINode* node = GetNode();
+  if (!node)
     return E_FAIL;
 
-  *aNode = MakeAccessNode(GetNode()->GetChildAt(aChildIndex));
+  *aNode = MakeAccessNode(node->GetChildAt(aChildIndex));
 
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 

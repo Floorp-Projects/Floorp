@@ -37,40 +37,40 @@
 
 #include "nsUnicodeRange.h"
 #include "nsIAtom.h"
-#include "gfxAtoms.h"
+#include "nsGkAtoms.h"
 
 // This table depends on unicode range definitions. 
 // Each item's index must correspond unicode range value
 // eg. x-cyrillic = LangGroupTable[kRangeCyrillic]
 static nsIAtom **gUnicodeRangeToLangGroupAtomTable[] =
 {
-  &gfxAtoms::x_cyrillic,
-  &gfxAtoms::el,
-  &gfxAtoms::tr,
-  &gfxAtoms::he,
-  &gfxAtoms::ar,
-  &gfxAtoms::x_baltic,
-  &gfxAtoms::th,
-  &gfxAtoms::ko,
-  &gfxAtoms::ja,
-  &gfxAtoms::zh_cn,
-  &gfxAtoms::zh_tw,
-  &gfxAtoms::x_devanagari,
-  &gfxAtoms::x_tamil,
-  &gfxAtoms::x_armn,
-  &gfxAtoms::x_beng,
-  &gfxAtoms::x_cans,
-  &gfxAtoms::x_ethi,
-  &gfxAtoms::x_geor,
-  &gfxAtoms::x_gujr,
-  &gfxAtoms::x_guru,
-  &gfxAtoms::x_khmr,
-  &gfxAtoms::x_mlym,
-  &gfxAtoms::x_orya,
-  &gfxAtoms::x_telu,
-  &gfxAtoms::x_knda,
-  &gfxAtoms::x_sinh,
-  &gfxAtoms::x_tibt
+  &nsGkAtoms::x_cyrillic,
+  &nsGkAtoms::el_,
+  &nsGkAtoms::tr,
+  &nsGkAtoms::he,
+  &nsGkAtoms::ar,
+  &nsGkAtoms::x_baltic,
+  &nsGkAtoms::th,
+  &nsGkAtoms::ko,
+  &nsGkAtoms::Japanese,
+  &nsGkAtoms::zh_cn,
+  &nsGkAtoms::zh_tw,
+  &nsGkAtoms::x_devanagari,
+  &nsGkAtoms::x_tamil,
+  &nsGkAtoms::x_armn,
+  &nsGkAtoms::x_beng,
+  &nsGkAtoms::x_cans,
+  &nsGkAtoms::x_ethi,
+  &nsGkAtoms::x_geor,
+  &nsGkAtoms::x_gujr,
+  &nsGkAtoms::x_guru,
+  &nsGkAtoms::x_khmr,
+  &nsGkAtoms::x_mlym,
+  &nsGkAtoms::x_orya,
+  &nsGkAtoms::x_telu,
+  &nsGkAtoms::x_knda,
+  &nsGkAtoms::x_sinh,
+  &nsGkAtoms::x_tibt
 };
 
 /**********************************************************************

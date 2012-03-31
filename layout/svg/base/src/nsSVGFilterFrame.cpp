@@ -74,6 +74,24 @@ MapDeviceRectToFilterSpace(const gfxMatrix& aMatrix,
   return rect;
 }
 
+class nsSVGFilterFrame::AutoFilterReferencer
+{
+public:
+  AutoFilterReferencer(nsSVGFilterFrame *aFrame)
+    : mFrame(aFrame)
+  {
+    // Reference loops should normally be detected in advance and handled, so
+    // we're not expecting to encounter them here
+    NS_ABORT_IF_FALSE(!mFrame->mLoopFlag, "Undetected reference loop!");
+    mFrame->mLoopFlag = true;
+  }
+  ~AutoFilterReferencer() {
+    mFrame->mLoopFlag = false;
+  }
+private:
+  nsSVGFilterFrame *mFrame;
+};
+
 class NS_STACK_CLASS nsAutoFilterInstance {
 public:
   nsAutoFilterInstance(nsIFrame *aTarget,
@@ -104,13 +122,12 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
 {
   mTarget = do_QueryFrame(aTarget);
 
-  nsSVGFilterElement *filter =
-    static_cast<nsSVGFilterElement*>(aFilterFrame->GetContent());
+  const nsSVGFilterElement *filter = aFilterFrame->GetFilterContent();
 
   PRUint16 filterUnits =
-    filter->mEnumAttributes[nsSVGFilterElement::FILTERUNITS].GetAnimValue();
+    aFilterFrame->GetEnumValue(nsSVGFilterElement::FILTERUNITS);
   PRUint16 primitiveUnits =
-    filter->mEnumAttributes[nsSVGFilterElement::PRIMITIVEUNITS].GetAnimValue();
+    aFilterFrame->GetEnumValue(nsSVGFilterElement::PRIMITIVEUNITS);
 
   gfxRect bbox;
   if (aOverrideSourceBBox) {
@@ -132,8 +149,16 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   // interpreted as a fraction of the bounding box and sometimes as user-space
   // units). So really only percentage values should be used in this case.
   
+  nsSVGLength2 XYWH[4];
+  NS_ABORT_IF_FALSE(sizeof(filter->mLengthAttributes) == sizeof(XYWH),
+                    "XYWH size incorrect");
+  memcpy(XYWH, filter->mLengthAttributes, sizeof(filter->mLengthAttributes));
+  XYWH[0] = *aFilterFrame->GetLengthValue(nsSVGFilterElement::X);
+  XYWH[1] = *aFilterFrame->GetLengthValue(nsSVGFilterElement::Y);
+  XYWH[2] = *aFilterFrame->GetLengthValue(nsSVGFilterElement::WIDTH);
+  XYWH[3] = *aFilterFrame->GetLengthValue(nsSVGFilterElement::HEIGHT);
   gfxRect filterRegion = nsSVGUtils::GetRelativeRect(filterUnits,
-    filter->mLengthAttributes, bbox, aTarget);
+    XYWH, bbox, aTarget);
 
   if (filterRegion.Width() <= 0 || filterRegion.Height() <= 0) {
     // 0 disables rendering, < 0 is error. dispatch error console warning
@@ -151,11 +176,11 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   // temporary offscreen surface that we'll paint into):
 
   gfxIntSize filterRes;
-  const nsSVGIntegerPair& filterResAttrs =
-    filter->mIntegerPairAttributes[nsSVGFilterElement::FILTERRES];
-  if (filterResAttrs.IsExplicitlySet()) {
-    PRInt32 filterResX = filterResAttrs.GetAnimValue(nsSVGIntegerPair::eFirst);
-    PRInt32 filterResY = filterResAttrs.GetAnimValue(nsSVGIntegerPair::eSecond);
+  const nsSVGIntegerPair* filterResAttrs =
+    aFilterFrame->GetIntegerPairValue(nsSVGFilterElement::FILTERRES);
+  if (filterResAttrs->IsExplicitlySet()) {
+    PRInt32 filterResX = filterResAttrs->GetAnimValue(nsSVGIntegerPair::eFirst);
+    PRInt32 filterResY = filterResAttrs->GetAnimValue(nsSVGIntegerPair::eSecond);
     if (filterResX <= 0 || filterResY <= 0) {
       // 0 disables rendering, < 0 is error. dispatch error console warning?
       return;
@@ -226,21 +251,153 @@ nsAutoFilterInstance::~nsAutoFilterInstance()
 {
 }
 
+PRUint16
+nsSVGFilterFrame::GetEnumValue(PRUint32 aIndex, nsIContent *aDefault)
+{
+  nsSVGEnum& thisEnum =
+    static_cast<nsSVGFilterElement *>(mContent)->mEnumAttributes[aIndex];
+
+  if (thisEnum.IsExplicitlySet())
+    return thisEnum.GetAnimValue();
+
+  AutoFilterReferencer filterRef(this);
+
+  nsSVGFilterFrame *next = GetReferencedFilterIfNotInUse();
+  return next ? next->GetEnumValue(aIndex, aDefault) :
+    static_cast<nsSVGFilterElement *>(aDefault)->
+      mEnumAttributes[aIndex].GetAnimValue();
+}
+
+const nsSVGIntegerPair *
+nsSVGFilterFrame::GetIntegerPairValue(PRUint32 aIndex, nsIContent *aDefault)
+{
+  const nsSVGIntegerPair *thisIntegerPair =
+    &static_cast<nsSVGFilterElement *>(mContent)->mIntegerPairAttributes[aIndex];
+
+  if (thisIntegerPair->IsExplicitlySet())
+    return thisIntegerPair;
+
+  AutoFilterReferencer filterRef(this);
+
+  nsSVGFilterFrame *next = GetReferencedFilterIfNotInUse();
+  return next ? next->GetIntegerPairValue(aIndex, aDefault) :
+    &static_cast<nsSVGFilterElement *>(aDefault)->mIntegerPairAttributes[aIndex];
+}
+
+const nsSVGLength2 *
+nsSVGFilterFrame::GetLengthValue(PRUint32 aIndex, nsIContent *aDefault)
+{
+  const nsSVGLength2 *thisLength =
+    &static_cast<nsSVGFilterElement *>(mContent)->mLengthAttributes[aIndex];
+
+  if (thisLength->IsExplicitlySet())
+    return thisLength;
+
+  AutoFilterReferencer filterRef(this);
+
+  nsSVGFilterFrame *next = GetReferencedFilterIfNotInUse();
+  return next ? next->GetLengthValue(aIndex, aDefault) :
+    &static_cast<nsSVGFilterElement *>(aDefault)->mLengthAttributes[aIndex];
+}
+
+const nsSVGFilterElement *
+nsSVGFilterFrame::GetFilterContent(nsIContent *aDefault)
+{
+  for (nsIContent* child = mContent->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    nsRefPtr<nsSVGFE> primitive;
+    CallQueryInterface(child, (nsSVGFE**)getter_AddRefs(primitive));
+    if (primitive) {
+      return static_cast<nsSVGFilterElement *>(mContent);
+    }
+  }
+
+  AutoFilterReferencer filterRef(this);
+
+  nsSVGFilterFrame *next = GetReferencedFilterIfNotInUse();
+  return next ? next->GetFilterContent(aDefault) :
+    static_cast<nsSVGFilterElement *>(aDefault);
+}
+
+nsSVGFilterFrame *
+nsSVGFilterFrame::GetReferencedFilter()
+{
+  if (mNoHRefURI)
+    return nsnull;
+
+  nsSVGPaintingProperty *property = static_cast<nsSVGPaintingProperty*>
+    (Properties().Get(nsSVGEffects::HrefProperty()));
+
+  if (!property) {
+    // Fetch our Filter element's xlink:href attribute
+    nsSVGFilterElement *filter = static_cast<nsSVGFilterElement *>(mContent);
+    nsAutoString href;
+    filter->mStringAttributes[nsSVGFilterElement::HREF].GetAnimValue(href, filter);
+    if (href.IsEmpty()) {
+      mNoHRefURI = true;
+      return nsnull; // no URL
+    }
+
+    // Convert href to an nsIURI
+    nsCOMPtr<nsIURI> targetURI;
+    nsCOMPtr<nsIURI> base = mContent->GetBaseURI();
+    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
+                                              mContent->GetCurrentDoc(), base);
+
+    property =
+      nsSVGEffects::GetPaintingProperty(targetURI, this, nsSVGEffects::HrefProperty());
+    if (!property)
+      return nsnull;
+  }
+
+  nsIFrame *result = property->GetReferencedFrame();
+  if (!result)
+    return nsnull;
+
+  nsIAtom* frameType = result->GetType();
+  if (frameType != nsGkAtoms::svgFilterFrame)
+    return nsnull;
+
+  return static_cast<nsSVGFilterFrame*>(result);
+}
+
+nsSVGFilterFrame *
+nsSVGFilterFrame::GetReferencedFilterIfNotInUse()
+{
+  nsSVGFilterFrame *referenced = GetReferencedFilter();
+  if (!referenced)
+    return nsnull;
+
+  if (referenced->mLoopFlag) {
+    // XXXjwatt: we should really send an error to the JavaScript Console here:
+    NS_WARNING("Filter reference loop detected while inheriting attribute!");
+    return nsnull;
+  }
+
+  return referenced;
+}
+
 NS_IMETHODIMP
 nsSVGFilterFrame::AttributeChanged(PRInt32  aNameSpaceID,
                                    nsIAtom* aAttribute,
                                    PRInt32  aModType)
 {
-  if ((aNameSpaceID == kNameSpaceID_None &&
-       (aAttribute == nsGkAtoms::x ||
-        aAttribute == nsGkAtoms::y ||
-        aAttribute == nsGkAtoms::width ||
-        aAttribute == nsGkAtoms::height ||
-        aAttribute == nsGkAtoms::filterRes ||
-        aAttribute == nsGkAtoms::filterUnits ||
-        aAttribute == nsGkAtoms::primitiveUnits)) ||
-       (aNameSpaceID == kNameSpaceID_XLink &&
-        aAttribute == nsGkAtoms::href)) {
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (aAttribute == nsGkAtoms::x ||
+       aAttribute == nsGkAtoms::y ||
+       aAttribute == nsGkAtoms::width ||
+       aAttribute == nsGkAtoms::height ||
+       aAttribute == nsGkAtoms::filterRes ||
+       aAttribute == nsGkAtoms::filterUnits ||
+       aAttribute == nsGkAtoms::primitiveUnits)) {
+    nsSVGEffects::InvalidateRenderingObservers(this);
+  } else if (aNameSpaceID == kNameSpaceID_XLink &&
+             aAttribute == nsGkAtoms::href) {
+    // Blow away our reference, if any
+    Properties().Delete(nsSVGEffects::HrefProperty());
+    mNoHRefURI = false;
+    // And update whoever references us
     nsSVGEffects::InvalidateRenderingObservers(this);
   }
   return nsSVGFilterFrameBase::AttributeChanged(aNameSpaceID,

@@ -549,12 +549,17 @@ nsDiskCacheDevice::FindEntry(nsCString * key, bool *collision)
     }
     
     nsCacheEntry * entry = diskEntry->CreateCacheEntry(this);
-    if (!entry)  return nsnull;
-    
-    binding = mBindery.CreateBinding(entry, &record);
-    if (!binding) {
-        delete entry;
-        return nsnull;
+    if (entry) {
+        binding = mBindery.CreateBinding(entry, &record);
+        if (!binding) {
+            delete entry;
+            entry = nsnull;
+        }
+    }
+
+    if (!entry) {
+      (void) mCacheMap.DeleteStorage(&record);
+      (void) mCacheMap.DeleteRecord(&record);
     }
     
     return entry;

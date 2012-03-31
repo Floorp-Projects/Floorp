@@ -546,20 +546,6 @@
               }
               else if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
                        aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
-                if (aWebProgress.DOMWindow == this.mBrowser.contentWindow) {
-                  // The document is done loading, we no longer want the
-                  // value cleared.
-                  if (this.mBrowser.userTypedClear > 1)
-                    this.mBrowser.userTypedClear -= 2;
-                  else if (this.mBrowser.userTypedClear > 0)
-                    this.mBrowser.userTypedClear--;
-
-                  if (!this.mBrowser.mIconURL)
-                    this.mTabBrowser.useDefaultIcon(this.mTab);
-                }
-
-                if (this.mBlank)
-                  this.mBlank = false;
 
                 if (this.mTab.hasAttribute("busy")) {
                   this.mTab.removeAttribute("busy");
@@ -568,6 +554,34 @@
                     this.mTab.setAttribute("unread", "true");
                 }
                 this.mTab.removeAttribute("progress");
+
+                if (aWebProgress.DOMWindow == this.mBrowser.contentWindow) {
+                  if (!Components.isSuccessCode(aStatus) &&
+                      !isTabEmpty(this.mTab)) {
+                    // Restore the current document's location in case the
+                    // request was stopped (possibly from a content script)
+                    // before the location changed.
+
+                    this.mBrowser.userTypedValue = null;
+
+                    if (this.mTab.selected && gURLBar)
+                      URLBarSetURI();
+                  } else {
+                    // The document is done loading, we no longer want the
+                    // value cleared.
+
+                    if (this.mBrowser.userTypedClear > 1)
+                      this.mBrowser.userTypedClear -= 2;
+                    else if (this.mBrowser.userTypedClear > 0)
+                      this.mBrowser.userTypedClear--;
+                  }
+
+                  if (!this.mBrowser.mIconURL)
+                    this.mTabBrowser.useDefaultIcon(this.mTab);
+                }
+
+                if (this.mBlank)
+                  this.mBlank = false;
 
                 var location = aRequest.QueryInterface(nsIChannel).URI;
 
