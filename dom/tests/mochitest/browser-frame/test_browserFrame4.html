@@ -19,6 +19,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=710231
 
 <script type="application/javascript;version=1.7">
 
+// Bug 740626: This test fails on Windows XP
+if (navigator.userAgent.indexOf("Windows NT 5.1") == -1) {
+
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
@@ -149,6 +152,8 @@ function runTest2() {
 }
 
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
+
+}
 
 </script>
 
