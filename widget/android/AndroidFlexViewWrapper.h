@@ -58,11 +58,9 @@ public:
     void Acquire(JNIEnv *aJEnv, jobject aJObj);
     void SetGLVersion(int aVersion);
     EGLSurface ProvideEGLSurface();
-    void WaitForValidSurface();
 
 private:
     static jmethodID jSetGLVersionMethod;
-    static jmethodID jWaitForValidSurfaceMethod;
     static jmethodID jProvideEGLSurfaceMethod;
 
     // the JNIEnv for the compositor thread

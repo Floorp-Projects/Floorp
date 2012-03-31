@@ -49,25 +49,6 @@ namespace mozilla {
 namespace dom {
 namespace binding {
 
-inline nsWrapperCache*
-GetWrapperCache(nsWrapperCache *cache)
-{
-    return cache;
-}
-
-// nsGlobalWindow implements nsWrapperCache, but doesn't always use it. Don't
-// try to use it without fixing that first.
-class nsGlobalWindow;
-inline nsWrapperCache*
-GetWrapperCache(nsGlobalWindow *not_allowed);
-
-inline nsWrapperCache*
-GetWrapperCache(void *p)
-{
-    return nsnull;
-}
-
-
 class ProxyHandler : public js::ProxyHandler {
 protected:
     ProxyHandler() : js::ProxyHandler(ProxyFamily())
@@ -166,7 +147,7 @@ protected:
     };
 
 private:
-    friend void Register(nsDOMClassInfoData *aData);
+    friend void Register(nsScriptNameSpaceManager* aNameSpaceManager);
 
     static ListBase<LC> instance;
 
@@ -217,6 +198,10 @@ public:
     {
         *enabled = true;
         return getPrototype(cx, scope);
+    }
+    static bool DefineDOMInterface(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled)
+    {
+        return !!getPrototype(cx, scope, enabled);
     }
 
     bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,

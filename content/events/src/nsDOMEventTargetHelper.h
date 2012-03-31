@@ -77,6 +77,27 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMEventTargetHelper)
 
   NS_DECL_NSIDOMEVENTTARGET
+  void AddEventListener(const nsAString& aType,
+                        nsIDOMEventListener* aCallback, // XXX nullable
+                        bool aCapture, Nullable<bool>& aWantsUntrusted,
+                        nsresult& aRv)
+  {
+    aRv = AddEventListener(aType, aCallback, aCapture,
+                           !aWantsUntrusted.IsNull() && aWantsUntrusted.Value(),
+                           aWantsUntrusted.IsNull() ? 1 : 2);
+  }
+  void RemoveEventListener(const nsAString& aType,
+                           nsIDOMEventListener* aCallback,
+                           bool aCapture, nsresult& aRv)
+  {
+    aRv = RemoveEventListener(aType, aCallback, aCapture);
+  }
+  bool DispatchEvent(nsIDOMEvent* aEvent, nsresult& aRv)
+  {
+    bool result = false;
+    aRv = DispatchEvent(aEvent, &result);
+    return result;
+  }
 
   void GetParentObject(nsIScriptGlobalObject **aParentObject)
   {

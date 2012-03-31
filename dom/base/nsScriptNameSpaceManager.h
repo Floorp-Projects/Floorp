@@ -97,6 +97,9 @@ struct nsGlobalNameStruct
     nsCID mCID; // All other types...
   };
 
+  // For new style DOM bindings.
+  mozilla::dom::binding::DefineInterface mDefineDOMInterface;
+
 private:
 
   // copy constructor
@@ -166,7 +169,10 @@ public:
 
   nsGlobalNameStruct* GetConstructorProto(const nsGlobalNameStruct* aStruct);
 
-protected:
+  void RegisterDefineDOMInterface(const nsAString& aName,
+    mozilla::dom::binding::DefineInterface aDefineDOMInterface);
+
+private:
   // Adds a new entry to the hash and returns the nsGlobalNameStruct
   // that aKey will be mapped to. If mType in the returned
   // nsGlobalNameStruct is != eTypeNotInitialized, an entry for aKey

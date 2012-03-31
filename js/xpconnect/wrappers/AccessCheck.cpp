@@ -233,6 +233,10 @@ static nsIPrincipal *
 GetPrincipal(JSObject *obj)
 {
     NS_ASSERTION(!IS_SLIM_WRAPPER(obj), "global object is a slim wrapper?");
+    NS_ASSERTION(js::GetObjectClass(obj)->flags & JSCLASS_IS_GLOBAL,
+                 "Not a global object?");
+    NS_ASSERTION(!(js::GetObjectClass(obj)->flags & JSCLASS_IS_DOMJSCLASS),
+                 "Not sure what we should do with these yet!");
     if (!IS_WN_WRAPPER(obj)) {
         NS_ASSERTION(!(~js::GetObjectClass(obj)->flags &
                        (JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_HAS_PRIVATE)),

@@ -1060,7 +1060,6 @@ StringToJsval(JSContext *cx, nsAString &str, JS::Value *rval)
 bool
 NonVoidStringToJsval(JSContext *cx, nsAString &str, JS::Value *rval)
 {
-    MOZ_ASSERT(!str.IsVoid());
     nsStringBuffer* sharedBuffer;
     jsval jsstr = XPCStringConvert::ReadableToJSVal(cx, str, &sharedBuffer);
     if (JSVAL_IS_NULL(jsstr))

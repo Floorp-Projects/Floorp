@@ -59,8 +59,10 @@
 #include "nsIVariant.h"
 #include "nsThreadUtils.h"
 
+#include "mozIStoragePendingStatement.h"
 #include "mozIStorageService.h"
 #include "mozIStorageStatement.h"
+#include "mozIStorageStatementCallback.h"
 #include "mozIStorageFunction.h"
 #include "mozStorageHelper.h"
 
@@ -133,6 +135,11 @@ class EvictionObserver
                    nsOfflineCacheEvictionFunction *evictionFunction)
     : mDB(db), mEvictionFunction(evictionFunction)
     {
+      if (mEvictionFunction->AddObserver() != 1) {
+	// not first observer
+	return;
+      }
+
       mDB->ExecuteSimpleSQL(
           NS_LITERAL_CSTRING("CREATE TEMP TRIGGER cache_on_delete AFTER DELETE"
                              " ON moz_cache FOR EACH ROW BEGIN SELECT"
@@ -144,6 +151,11 @@ class EvictionObserver
 
     ~EvictionObserver()
     {
+      if (mEvictionFunction->RemoveObserver() != 0) {
+	// not last observer
+	return;
+      }
+
       mDB->ExecuteSimpleSQL(
         NS_LITERAL_CSTRING("DROP TRIGGER cache_on_delete;"));
       mEvictionFunction->Reset();
@@ -172,6 +184,157 @@ DCacheHash(const char * key)
 {
   // initval 0x7416f295 was chosen randomly
   return (PRUint64(nsDiskCache::Hash(key, 0)) << 32) | nsDiskCache::Hash(key, 0x7416f295);
+}
+
+/**
+ * EvictAsyncHandler
+ */
+class EvictAsyncHandler : public mozIStorageStatementCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+
+  EvictAsyncHandler();
+  ~EvictAsyncHandler();
+
+  nsresult Init(const char *aClientID,
+		nsIApplicationCacheAsyncCallback *aCallback,
+		mozIStorageConnection *aDB,
+		nsOfflineCacheEvictionFunction *aEvictionFunction) {
+    mClientID = NS_strdup(aClientID);
+    if (mClientID == NULL)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    mCallback = aCallback;
+    mDB = aDB;
+    mEvictionFunction = aEvictionFunction;
+
+    return NS_OK;
+  }
+
+  nsresult Start() {
+    mEvictionObserver = new EvictionObserver(mDB, mEvictionFunction);
+    HandleCompletion(mozIStorageStatementCallback::REASON_FINISHED);
+
+    return NS_OK;
+  }
+
+private:
+  void ReportError() {
+    mCallback->HandleAsyncCompletion(nsIApplicationCacheAsyncCallback::APP_CACHE_REQUEST_ERROR);
+  }
+
+  void ReportSuccess() {
+    mCallback->HandleAsyncCompletion(nsIApplicationCacheAsyncCallback::APP_CACHE_REQUEST_SUCCESS);
+  }
+
+private:
+  const char *mClientID;
+  nsCOMPtr<mozIStorageConnection> mDB;
+  nsCOMPtr<nsIApplicationCacheAsyncCallback> mCallback;
+  nsRefPtr<nsOfflineCacheEvictionFunction> mEvictionFunction;
+  EvictionObserver *mEvictionObserver;
+
+  /* Current step in the receipt to complete a eviction. */
+  int mStep;
+};
+
+NS_IMPL_ISUPPORTS1(EvictAsyncHandler, mozIStorageStatementCallback)
+
+EvictAsyncHandler::EvictAsyncHandler() :
+  mClientID(NULL), mEvictionFunction(NULL), mStep(0)
+{
+}
+
+EvictAsyncHandler::~EvictAsyncHandler() {
+  if (mClientID)
+      NS_Free((void *)mClientID);
+  if (mEvictionObserver)
+    delete mEvictionObserver;
+}
+
+NS_IMETHODIMP
+EvictAsyncHandler::HandleResult(mozIStorageResultSet *aResultSet) {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+EvictAsyncHandler::HandleError(mozIStorageError *aError) {
+  return NS_OK;
+}
+
+static nsresult
+EvictEntriesSteps(mozIStorageConnection *mDB,
+		  const char *clientID,
+		  int step,
+		  mozIStorageStatement **aStatement);
+
+NS_IMETHODIMP
+EvictAsyncHandler::HandleCompletion(unsigned short aReason) {
+  if (aReason != mozIStorageStatementCallback::REASON_FINISHED) {
+    mCallback->HandleAsyncCompletion(nsIApplicationCacheAsyncCallback::APP_CACHE_REQUEST_ERROR);
+    return NS_OK;
+  }
+
+  nsresult rv;
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = EvictEntriesSteps(mDB, mClientID, mStep++, getter_AddRefs(statement));
+  if (NS_FAILED(rv)) {
+    ReportError();
+    return NS_OK;
+  }
+
+  if (statement) {
+    nsCOMPtr<mozIStoragePendingStatement> pending;
+    rv = statement->ExecuteAsync(this, getter_AddRefs(pending));
+    if (NS_FAILED(rv)) {
+      ReportError();
+    }
+  } else {
+    // Complete the eviction, no more commands.
+    mEvictionObserver->Apply();
+    ReportSuccess();
+  }
+
+  return NS_OK;
+}
+
+/**
+ * RemoveFilesAsync removes files in a separated thread.
+ */
+class RemoveFilesAsync : public nsRunnable
+{
+public:
+  /**
+   * @param aItems is an array of nsIFile to remove.
+   */
+  RemoveFilesAsync(nsCOMArray<nsIFile> &aItems) :
+    mItems(aItems) {}
+  ~RemoveFilesAsync();
+
+  NS_IMETHOD Run();
+
+private:
+  nsCOMArray<nsIFile> mItems;
+  nsCOMPtr<nsIThread> mIOThread;
+};
+
+RemoveFilesAsync::~RemoveFilesAsync() {
+}
+
+NS_IMETHODIMP
+RemoveFilesAsync::Run() {
+  for (PRInt32 i = 0; i < mItems.Count(); i++) {
+#if defined(PR_LOGGING)
+    nsCAutoString path;
+    mItems[i]->GetNativePath(path);
+    LOG(("  removing %s\n", path.get()));
+#endif
+
+    mItems[i]->Remove(false);
+  }
+  return NS_OK;
 }
 
 /******************************************************************************
@@ -241,15 +404,16 @@ nsOfflineCacheEvictionFunction::Apply()
 {
   LOG(("nsOfflineCacheEvictionFunction::Apply\n"));
 
-  for (PRInt32 i = 0; i < mItems.Count(); i++) {
-#if defined(PR_LOGGING)
-    nsCAutoString path;
-    mItems[i]->GetNativePath(path);
-    LOG(("  removing %s\n", path.get()));
-#endif
+  if (!mIOThread) {
+    nsresult rv;
 
-    mItems[i]->Remove(false);
+    rv = NS_NewThread(getter_AddRefs(mIOThread));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "fail to create a new thread");
   }
+
+  nsCOMPtr<RemoveFilesAsync> removeFiles = new RemoveFilesAsync(mItems);
+  NS_ASSERTION(removeFiles, "fail to instantiate RemoveFilesAsync");
+  mIOThread->Dispatch(removeFiles, NS_DISPATCH_NORMAL);
 
   Reset();
 }
@@ -697,6 +861,22 @@ nsApplicationCache::Discard()
   }
 
   return mDevice->EvictEntries(mClientID.get());
+}
+
+NS_IMETHODIMP
+nsApplicationCache::DiscardAsync(nsIApplicationCacheAsyncCallback *aCallback)
+{
+  NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
+
+  mValid = false;
+
+  if (mDevice->IsActiveCache(mGroup, mClientID))
+  {
+    mDevice->DeactivateGroup(mGroup);
+  }
+
+  return mDevice->EvictEntriesAsync(mClientID.get(), aCallback);
 }
 
 NS_IMETHODIMP
@@ -1172,7 +1352,8 @@ nsOfflineCacheDevice::Init()
                                                      " AND NameSpace <= ?2 AND ?2 GLOB NameSpace || '*'"
                                                      " ORDER BY NameSpace DESC;"),
     StatementSql ( mStatement_InsertNamespaceEntry,  "INSERT INTO moz_cache_namespaces (ClientID, NameSpace, Data, ItemType) VALUES(?, ?, ?, ?);"),
-    StatementSql ( mStatement_EnumerateGroups,       "SELECT GroupID, ActiveClientID FROM moz_cache_groups;")
+    StatementSql ( mStatement_EnumerateGroups,       "SELECT GroupID, ActiveClientID FROM moz_cache_groups;"),
+    StatementSql ( mStatement_EnumerateGroupsTimeOrder, "SELECT GroupID, ActiveClientID FROM moz_cache_groups ORDER BY ActivateTimeStamp;")
   };
   for (PRUint32 i = 0; NS_SUCCEEDED(rv) && i < ArrayLength(prepared); ++i)
   {
@@ -1303,6 +1484,7 @@ nsOfflineCacheDevice::Shutdown()
   mStatement_FindClient = nsnull;
   mStatement_FindClientByNamespace = nsnull;
   mStatement_EnumerateGroups = nsnull;
+  mStatement_EnumerateGroupsTimeOrder = nsnull;
   }
 
   // Close Database on the correct thread
@@ -1730,62 +1912,102 @@ nsOfflineCacheDevice::Visit(nsICacheVisitor *visitor)
   return NS_OK;
 }
 
+static const char *sEvictCmdsClientID[] = {
+  "DELETE FROM moz_cache WHERE ClientID=? AND Flags = 0;",
+  "DELETE FROM moz_cache_groups WHERE ActiveClientID=?;",
+  "DELETE FROM moz_cache_namespaces WHERE ClientID=?",
+  NULL
+};
+
+static const char *sEvictCmds[] = {
+  "DELETE FROM moz_cache WHERE Flags = 0;",
+  "DELETE FROM moz_cache_groups;",
+  "DELETE FROM moz_cache_namespaces;",
+  NULL
+};
+
+/**
+ * Create SQL statement for every step of eviction of cache entries.
+ *
+ * @param mDB is the database connection used for the eviction.
+ * @param clientID is the clientID of cache entries being evicting.
+ * @param step is the number of current step. (start from 0)
+ * @param statement is a pointer to return the stathement.
+ */
+static nsresult
+EvictEntriesSteps(mozIStorageConnection *mDB,
+		  const char *clientID,
+		  int step,
+		  mozIStorageStatement **aStatement)
+{
+  const char **cmds = clientID ? sEvictCmdsClientID : sEvictCmds;
+  const char *cmd = cmds[step];
+
+  if (cmd == NULL) {
+    *aStatement = NULL;
+    return NS_OK;
+  }
+
+  // called to evict all entries matching the given clientID.
+
+  nsresult rv;
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = mDB->CreateStatement(nsDependentCString(cmd),
+			    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (clientID) {
+    rv = statement->BindUTF8StringByIndex(0, nsDependentCString(clientID));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  *aStatement = statement.forget().get();
+
+  return NS_OK;
+}
+
 nsresult
 nsOfflineCacheDevice::EvictEntries(const char *clientID)
 {
   LOG(("nsOfflineCacheDevice::EvictEntries [cid=%s]\n",
        clientID ? clientID : ""));
 
-  // called to evict all entries matching the given clientID.
+  int step = 0;
+  nsresult rv = NS_OK;;
 
   // need trigger to fire user defined function after a row is deleted
   // so we can delete the corresponding data file.
   EvictionObserver evictionObserver(mDB, mEvictionFunction);
 
   nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv;
-  if (clientID)
-  {
-    rv = mDB->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_cache WHERE ClientID=? AND Flags = 0;"),
-                              getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
+  while (1) {
+    rv = EvictEntriesSteps(mDB, clientID, step++, getter_AddRefs(statement));
+    if (NS_FAILED(rv)) break;
 
-    rv = statement->BindUTF8StringByIndex(0, nsDependentCString(clientID));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  else
-  {
-    rv = mDB->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_cache WHERE Flags = 0;"),
-                              getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+    if (!statement) break;	// finish
 
-  rv = statement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
+    statement->Execute();
+    if (NS_FAILED(rv)) break;
+  }
 
   evictionObserver.Apply();
 
-  statement = nsnull;
-  // Also evict any namespaces associated with this clientID.
-  if (clientID)
-  {
-    rv = mDB->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_cache_namespaces WHERE ClientID=?"),
-                              getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
+  return rv;
+}
 
-    rv = statement->BindUTF8StringByIndex(0, nsDependentCString(clientID));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  else
-  {
-    rv = mDB->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_cache_namespaces;"),
-                              getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+nsresult
+nsOfflineCacheDevice::EvictEntriesAsync(const char *clientID,
+					nsIApplicationCacheAsyncCallback *aCallback)
+{
+  LOG(("nsOfflineCacheDevice::EvictEntriesAsync [cid=%s]\n",
+       clientID ? clientID : ""));
 
-  rv = statement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
+  EvictAsyncHandler *evictAsyncHandler = new EvictAsyncHandler();
+  if (evictAsyncHandler == NULL)
+    return NS_ERROR_OUT_OF_MEMORY;
 
+  evictAsyncHandler->Init(clientID, aCallback, mDB, mEvictionFunction);
+  evictAsyncHandler->Start();
   return NS_OK;
 }
 
@@ -2040,8 +2262,17 @@ nsOfflineCacheDevice::GetGroups(PRUint32 *count,
 
   LOG(("nsOfflineCacheDevice::GetGroups"));
 
-  AutoResetStatement statement(mStatement_EnumerateGroups);
   return RunSimpleQuery(mStatement_EnumerateGroups, 0, count, keys);
+}
+
+NS_IMETHODIMP
+nsOfflineCacheDevice::GetGroupsTimeOrdered(PRUint32 *count,
+					   char ***keys)
+{
+
+  LOG(("nsOfflineCacheDevice::GetGroupsTimeOrder"));
+
+  return RunSimpleQuery(mStatement_EnumerateGroupsTimeOrder, 0, count, keys);
 }
 
 nsresult

@@ -535,10 +535,11 @@ nsOfflineCacheUpdateService::OfflineAppAllowed(nsIPrincipal *aPrincipal,
     return OfflineAppAllowedForURI(codebaseURI, aPrefBranch, aAllowed);
 }
 
-NS_IMETHODIMP
-nsOfflineCacheUpdateService::OfflineAppAllowedForURI(nsIURI *aURI,
-                                                     nsIPrefBranch *aPrefBranch,
-                                                     bool *aAllowed)
+static nsresult
+OfflineAppPermForURI(nsIURI *aURI,
+                     nsIPrefBranch *aPrefBranch,
+                     bool pinned,
+                     bool *aAllowed)
 {
     *aAllowed = false;
     if (!aURI)
@@ -568,9 +569,10 @@ nsOfflineCacheUpdateService::OfflineAppAllowedForURI(nsIURI *aURI,
     }
 
     PRUint32 perm;
-    permissionManager->TestExactPermission(innerURI, "offline-app", &perm);
+    const char *permName = pinned ? "pin-app" : "offline-app";
+    permissionManager->TestExactPermission(innerURI, permName, &perm);
 
-    if (perm == nsIPermissionManager::UNKNOWN_ACTION) {
+    if (perm == nsIPermissionManager::UNKNOWN_ACTION && !pinned) {
         static const char kPrefName[] = "offline-apps.allow_by_default";
         if (aPrefBranch) {
             aPrefBranch->GetBoolPref(kPrefName, aAllowed);
@@ -581,11 +583,25 @@ nsOfflineCacheUpdateService::OfflineAppAllowedForURI(nsIURI *aURI,
         return NS_OK;
     }
 
-    if (perm == nsIPermissionManager::DENY_ACTION) {
-        return NS_OK;
+    if (perm == nsIPermissionManager::ALLOW_ACTION) {
+        *aAllowed = true;
     }
 
-    *aAllowed = true;
-
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOfflineCacheUpdateService::OfflineAppAllowedForURI(nsIURI *aURI,
+                                                     nsIPrefBranch *aPrefBranch,
+                                                     bool *aAllowed)
+{
+    return OfflineAppPermForURI(aURI, aPrefBranch, false, aAllowed);
+}
+
+nsresult
+nsOfflineCacheUpdateService::OfflineAppPinnedForURI(nsIURI *aDocumentURI,
+                                                    nsIPrefBranch *aPrefBranch,
+                                                    bool *aPinned)
+{
+    return OfflineAppPermForURI(aDocumentURI, aPrefBranch, true, aPinned);
 }

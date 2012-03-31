@@ -55,8 +55,13 @@
 class nsWaveDecoder : public nsBuiltinDecoder
 {
 public:
-   virtual nsMediaDecoder* Clone() { return new nsWaveDecoder(); }
-   virtual nsDecoderStateMachine* CreateStateMachine();
+  virtual nsMediaDecoder* Clone() {
+    if (!nsHTMLMediaElement::IsWaveEnabled()) {
+      return nsnull;
+    }
+    return new nsWaveDecoder();
+  }
+  virtual nsDecoderStateMachine* CreateStateMachine();
 };
 
 #endif

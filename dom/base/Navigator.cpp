@@ -948,7 +948,7 @@ Navigator::GetMozBattery(nsIDOMMozBatteryManager** aBattery)
     *aBattery = nsnull;
 
     nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
-    NS_ENSURE_TRUE(win->GetDocShell(), NS_OK);
+    NS_ENSURE_TRUE(win && win->GetDocShell(), NS_OK);
 
     mBatteryManager = new battery::BatteryManager();
     mBatteryManager->Init(win);

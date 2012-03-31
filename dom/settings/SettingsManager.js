@@ -164,14 +164,11 @@ SettingsLock.prototype = {
 
             req.onsuccess = function() { 
               lock._open = true;
-
               Services.DOMRequest.fireSuccess(request, 0);
-
               Services.obs.notifyObservers(lock, "mozsettings-changed", JSON.stringify({
                 key: key,
                 value: info.settings[key]
               }));
-
               lock._open = false;
             };
 
@@ -354,13 +351,11 @@ SettingsManager.prototype = {
         this._settingsDB.close();
       }
     } else if (aTopic == "mozsettings-changed") {
-      dump('\r\r\r11111111111111111111111111111r\n');
-      dump(this._window + '\n');
       if (!this._onsettingchange)
         return;
 
       let data = JSON.parse(aData);
-      debug(data + ':' + data.key + ':' + data.value + '\n');
+      debug('data:' + data.key + ':' + data.value + '\n');
 
       let event = new this._window.MozSettingsEvent("settingchanged", {
         settingName: data.key,
@@ -368,7 +363,6 @@ SettingsManager.prototype = {
       });
 
       this._onsettingchange.handleEvent(event);
-      dump('\r\r\r2222222222222222222222222222222222\n');
     }
   },
 

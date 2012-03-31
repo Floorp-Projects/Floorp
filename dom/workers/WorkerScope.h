@@ -41,8 +41,6 @@
 
 #include "Workers.h"
 
-#include "jspubtd.h"
-
 BEGIN_WORKERS_NAMESPACE
 
 JSObject*

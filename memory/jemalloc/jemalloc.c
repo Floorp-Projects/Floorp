@@ -6216,22 +6216,6 @@ malloc_shutdown()
 #define realloc(a, b)           wrap(realloc)(a, b)
 #define free(a)                 wrap(free)(a)
 #define malloc_usable_size(a)   wrap(malloc_usable_size)(a)
-
-void *malloc(size_t size);
-
-char *
-wrap(strndup)(const char *src, size_t len) {
-	char* dst = (char*) malloc(len + 1);
-	if (dst)
-		strncpy(dst, src, len + 1);
-	return dst;
-}
-
-char *
-wrap(strdup)(const char *src) {
-	size_t len = strlen(src);
-	return wrap(strndup)(src, len);
-}
 #endif
 
 /*

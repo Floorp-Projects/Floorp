@@ -1642,7 +1642,10 @@ public:
   {
     return sThreadJSContextStack;
   }
-  
+
+  // Trace the safe JS context of the ThreadJSContextStack.
+  static void TraceSafeJSContext(JSTracer* aTrc);
+
 
   /**
    * Get the Origin of the passed in nsIPrincipal or nsIURI. If the passed in
