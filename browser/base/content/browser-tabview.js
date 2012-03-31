@@ -101,9 +101,6 @@ let TabView = {
       return;
 
     if (this.firstUseExperienced) {
-      if ((gBrowser.tabs.length - gBrowser.visibleTabs.length) > 0)
-        this._setBrowserKeyHandlers();
-
       // ___ visibility
       let sessionstore =
         Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
@@ -141,6 +138,18 @@ let TabView = {
           "TabShow", this._tabShowEventListener, false);
         gBrowser.tabContainer.addEventListener(
           "TabClose", this._tabCloseEventListener, false);
+
+       if (this._tabBrowserHasHiddenTabs()) {
+         this._setBrowserKeyHandlers();
+       } else {
+         // for restoring last session and undoing recently closed window
+         this._SSWindowStateReadyListener = function (event) {
+           if (this._tabBrowserHasHiddenTabs())
+             this._setBrowserKeyHandlers();
+         }.bind(this);
+         window.addEventListener(
+           "SSWindowStateReady", this._SSWindowStateReadyListener, false);
+        }
       }
     }
 
@@ -173,6 +182,10 @@ let TabView = {
     if (this._tabCloseEventListener)
       gBrowser.tabContainer.removeEventListener(
         "TabClose", this._tabCloseEventListener, false);
+
+    if (this._SSWindowStateReadyListener)
+      window.removeEventListener(
+        "SSWindowStateReady", this._SSWindowStateReadyListener, false);
 
     this._initialized = false;
   },
@@ -230,6 +243,12 @@ let TabView = {
           "TabClose", self._tabCloseEventListener, false);
         self._tabCloseEventListener = null;
       }
+      if (self._SSWindowStateReadyListener) {
+        window.removeEventListener(
+          "SSWindowStateReady", self._SSWindowStateReadyListener, false);
+        self._SSWindowStateReadyListener = null;
+      }
+
       self._initFrameCallbacks.forEach(function (cb) cb());
       self._initFrameCallbacks = [];
     }, false);
@@ -279,6 +298,11 @@ let TabView = {
       this.hide();
     else 
       this.show();
+  },
+
+  // ----------
+  _tabBrowserHasHiddenTabs: function TabView_tabBrowserHasHiddenTabs() {
+    return (gBrowser.tabs.length - gBrowser.visibleTabs.length) > 0;
   },
 
   // ----------
@@ -343,8 +367,7 @@ let TabView = {
 
     let self = this;
     window.addEventListener("keypress", function(event) {
-      if (self.isVisible() ||
-          (gBrowser.tabs.length - gBrowser.visibleTabs.length) == 0)
+      if (self.isVisible() || !self._tabBrowserHasHiddenTabs())
         return;
 
       let charCode = event.charCode;

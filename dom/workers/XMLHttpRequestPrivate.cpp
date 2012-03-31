@@ -133,7 +133,7 @@ public:
   bool mSeenUploadLoadStart;
 
   // Only touched on the main thread.
-  nsCString mPreviousStatusText;
+  nsString mPreviousStatusText;
   PRUint32 mSyncQueueKey;
   PRUint32 mSyncEventResponseSyncQueueKey;
   bool mUploadEventListenersAttached;
@@ -543,7 +543,7 @@ class EventRunnable : public MainThreadProxyRunnable
   JSAutoStructuredCloneBuffer mResponseBuffer;
   nsTArray<nsCOMPtr<nsISupports> > mClonedObjects;
   jsval mResponse;
-  nsCString mStatusText;
+  nsString mStatusText;
   PRUint64 mLoaded;
   PRUint64 mTotal;
   PRUint32 mEventStreamId;
@@ -554,7 +554,6 @@ class EventRunnable : public MainThreadProxyRunnable
   bool mLengthComputable;
   bool mResponseTextException;
   bool mStatusException;
-  bool mStatusTextException;
   bool mReadyStateException;
   bool mResponseException;
 
@@ -566,7 +565,7 @@ public:
     mEventStreamId(aProxy->mInnerEventStreamId), mStatus(0), mReadyState(0),
     mUploadEvent(aUploadEvent), mProgressEvent(true),
     mLengthComputable(aLengthComputable), mResponseTextException(false),
-    mStatusException(false), mStatusTextException(false),
+    mStatusException(false),
     mReadyStateException(false), mResponseException(false)
   { }
 
@@ -576,7 +575,7 @@ public:
     mEventStreamId(aProxy->mInnerEventStreamId), mStatus(0), mReadyState(0),
     mUploadEvent(aUploadEvent), mProgressEvent(false), mLengthComputable(0),
     mResponseTextException(false), mStatusException(false),
-    mStatusTextException(false), mReadyStateException(false),
+    mReadyStateException(false),
     mResponseException(false)
   { }
 
@@ -623,17 +622,11 @@ public:
 
     mStatusException = NS_FAILED(xhr->GetStatus(&mStatus));
 
-    if (NS_SUCCEEDED(xhr->GetStatusText(mStatusText))) {
-      if (mStatusText == mProxy->mPreviousStatusText) {
-        mStatusText.SetIsVoid(true);
-      }
-      else {
-        mProxy->mPreviousStatusText = mStatusText;
-      }
-      mStatusTextException = false;
-    }
-    else {
-      mStatusTextException = true;
+    xhr->GetStatusText(mStatusText);
+    if (mStatusText == mProxy->mPreviousStatusText) {
+      mStatusText.SetIsVoid(true);
+    } else {
+      mProxy->mPreviousStatusText = mStatusText;
     }
 
     mReadyStateException = NS_FAILED(xhr->GetReadyState(&mReadyState));
@@ -750,16 +743,16 @@ public:
     state.mStatusException = mStatusException;
     state.mStatus = mStatusException ? JSVAL_VOID : INT_TO_JSVAL(mStatus);
 
-    state.mStatusTextException = mStatusTextException;
-    if (mStatusTextException || mStatusText.IsVoid()) {
+    state.mStatusTextException = false;
+    if (mStatusText.IsVoid()) {
       state.mStatusText = JSVAL_VOID;
     }
     else if (mStatusText.IsEmpty()) {
       state.mStatusText = JS_GetEmptyStringValue(aCx);
     }
     else {
-      JSString* statusText = JS_NewStringCopyN(aCx, mStatusText.get(),
-                                               mStatusText.Length());
+      JSString* statusText = JS_NewUCStringCopyN(aCx, mStatusText.get(),
+                                                 mStatusText.Length());
       if (!statusText) {
         return false;
       }
@@ -800,7 +793,7 @@ public:
     if (StringBeginsWith(mResponseType, NS_LITERAL_STRING("moz-chunked-"))) {
       xhr::StateData newState = {
         JSVAL_NULL, JSVAL_VOID, JSVAL_VOID, JSVAL_VOID, JSVAL_NULL,
-        false, false, false, false, false
+        false, false, false, false
       };
 
       if (!xhr::UpdateXHRState(aCx, target, mUploadEvent, newState)) {
@@ -1042,13 +1035,13 @@ public:
     WorkerPrivate* oldWorker = mProxy->mWorkerPrivate;
     mProxy->mWorkerPrivate = mWorkerPrivate;
 
-    nsresult rv = mProxy->mXHR->Abort();
+    mProxy->mXHR->Abort();
 
     mProxy->mWorkerPrivate = oldWorker;
 
     mProxy->Reset();
 
-    return GetDOMExceptionCodeFromResult(rv);
+    return 0;
   }
 };
 
@@ -1066,9 +1059,8 @@ public:
   int
   MainThreadRun()
   {
-    nsresult rv =
-      mProxy->mXHR->GetAllResponseHeaders(mResponseHeaders);
-    return GetDOMExceptionCodeFromResult(rv);
+    mProxy->mXHR->GetAllResponseHeaders(mResponseHeaders);
+    return 0;
   }
 };
 
@@ -1327,19 +1319,19 @@ public:
 
 class OverrideMimeTypeRunnable : public WorkerThreadProxySyncRunnable
 {
-  nsCString mMimeType;
+  nsString mMimeType;
 
 public:
   OverrideMimeTypeRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
-                           const nsCString& aMimeType)
+                           const nsString& aMimeType)
   : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy), mMimeType(aMimeType)
   { }
 
   int
   MainThreadRun()
   {
-    nsresult rv = mProxy->mXHR->OverrideMimeType(mMimeType);
-    return GetDOMExceptionCodeFromResult(rv);
+    mProxy->mXHR->OverrideMimeType(mMimeType);
+    return 0;
   }
 };
 
@@ -2106,8 +2098,7 @@ XMLHttpRequestPrivate::OverrideMimeType(JSContext* aCx, JSString* aMimeType)
   }
 
   nsRefPtr<OverrideMimeTypeRunnable> runnable =
-    new OverrideMimeTypeRunnable(mWorkerPrivate, mProxy, 
-                                 NS_ConvertUTF16toUTF8(mimeType));
+    new OverrideMimeTypeRunnable(mWorkerPrivate, mProxy, mimeType);
   return runnable->Dispatch(aCx);
 }
 
@@ -2119,7 +2110,7 @@ XMLHttpRequestPrivate::MaybeDispatchPrematureAbortEvents(JSContext* aCx)
 
   xhr::StateData state = {
     JSVAL_VOID, JSVAL_VOID, JSVAL_VOID, INT_TO_JSVAL(4), JSVAL_VOID,
-    false, false, false, false, false
+    false, false, false, false
   };
 
   if (mProxy->mSeenUploadLoadStart) {

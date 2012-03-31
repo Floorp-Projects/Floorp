@@ -1097,7 +1097,7 @@ nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL,
     const char *value;
     bool havedata = NS_SUCCEEDED(pti->GetAttribute("SRC", &value));
     if (havedata && !isJava && bCanHandleInternally && !aContent->SrcStreamLoading()) {
-      NewEmbeddedPluginStream(aURL, nsnull, instance.get());
+      NewEmbeddedPluginStream(aURL, aContent, instance.get());
     }
   }
 
@@ -3332,8 +3332,6 @@ nsresult nsPluginHost::NewEmbeddedPluginStream(nsIURI* aURL,
                                                nsObjectLoadingContent *aContent,
                                                nsNPAPIPluginInstance* aInstance)
 {
-  NS_ASSERTION(!aContent || !aInstance, "Don't pass both content and an instance to NewEmbeddedPluginStream!");
-
   nsCOMPtr<nsIStreamListener> listener;
   nsresult rv = NewEmbeddedPluginStreamListener(aURL, aContent, aInstance,
                                                 getter_AddRefs(listener));

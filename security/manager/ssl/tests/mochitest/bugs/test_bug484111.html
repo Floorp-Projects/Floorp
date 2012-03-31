@@ -49,8 +49,7 @@ function onWindowLoad()
   try
   {
     req.open("GET", "https://www.bank2.com/", false);
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    req.channel.notificationCallbacks = certListener;
+    SpecialPowers.wrap(req).channel.notificationCallbacks = certListener;
     req.send(null);
   }
   catch(ex)

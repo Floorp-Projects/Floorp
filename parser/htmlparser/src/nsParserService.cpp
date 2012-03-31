@@ -44,9 +44,6 @@
 #include "nsICategoryManager.h"
 #include "nsCategoryManagerUtils.h"
 
-extern "C" int MOZ_XMLCheckQName(const char* ptr, const char* end,
-                                 int ns_aware, const char** colon);
-
 nsParserService::nsParserService()
 {
 }
@@ -131,30 +128,4 @@ nsParserService::IsBlock(PRInt32 aId, bool& aIsBlock) const
   }
 
   return NS_OK;
-}
-
-nsresult
-nsParserService::CheckQName(const nsAString& aQName,
-                            bool aNamespaceAware,
-                            const PRUnichar** aColon)
-{
-  const char* colon;
-  const PRUnichar *begin, *end;
-  begin = aQName.BeginReading();
-  end = aQName.EndReading();
-  int result = MOZ_XMLCheckQName(reinterpret_cast<const char*>(begin),
-                                 reinterpret_cast<const char*>(end),
-                                 aNamespaceAware, &colon);
-  *aColon = reinterpret_cast<const PRUnichar*>(colon);
-
-  if (result == 0) {
-    return NS_OK;
-  }
-
-  // MOZ_EXPAT_EMPTY_QNAME || MOZ_EXPAT_INVALID_CHARACTER
-  if (result == (1 << 0) || result == (1 << 1)) {
-    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
-  }
-
-  return NS_ERROR_DOM_NAMESPACE_ERR;
 }

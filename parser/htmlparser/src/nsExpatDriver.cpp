@@ -708,7 +708,21 @@ nsExpatDriver::HandleExternalEntityRef(const PRUnichar *openEntityNames,
   nsAutoString absURL;
   nsresult rv = OpenInputStreamFromExternalDTD(publicId, systemId, base,
                                                getter_AddRefs(in), absURL);
-  NS_ENSURE_SUCCESS(rv, 1);
+  if (NS_FAILED(rv)) {
+#ifdef DEBUG
+    nsCString message("Failed to open external DTD: publicId \"");
+    AppendUTF16toUTF8(publicId, message);
+    message += "\" systemId \"";
+    AppendUTF16toUTF8(systemId, message);
+    message += "\" base \"";
+    AppendUTF16toUTF8(base, message);
+    message += "\" URL \"";
+    AppendUTF16toUTF8(absURL, message);
+    message += "\"";
+    NS_WARNING(message.get());
+#endif
+    return 1;
+  }
 
   nsCOMPtr<nsIUnicharInputStream> uniIn;
   rv = nsSimpleUnicharStreamFactory::GetInstance()->

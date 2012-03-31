@@ -291,8 +291,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0xfcd3b0d1, 0x75db, 0x46c4, \
-  { 0xa1, 0xf5, 0x07, 0xc2, 0x09, 0xf8, 0x1f, 0x44 } }
+{ 0x458300ed, 0xe418, 0x4577, \
+  { 0x89, 0xd7, 0xfe, 0xf1, 0x34, 0xf3, 0x52, 0x19 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -587,12 +587,10 @@ public:
    * @param aNotify whether to notify the document (current document for
    *        nsIContent, and |this| for nsIDocument) that the remove has
    *        occurred
-   * @param aMutationEvent whether to fire a mutation event
    *
    * Note: If there is no child at aIndex, this method will simply do nothing.
    */
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, 
-                                 bool aNotify) = 0;
+  virtual void RemoveChildAt(PRUint32 aIndex, bool aNotify) = 0;
 
   /**
    * Get a property associated with this node.
@@ -1423,6 +1421,12 @@ public:
   // Optimized way to get classinfo.
   virtual nsXPCClassInfo* GetClassInfo() = 0;
 
+  /**
+   * Returns the length of this node, as specified at
+   * <http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#concept-node-length>
+   */
+  PRUint32 Length() const;
+
 protected:
 
   // Override this function to create a custom slots class.
@@ -1507,8 +1511,8 @@ protected:
    * @param aChildArray The child array to work with.
    * @param aMutationEvent whether to fire a mutation event for this removal.
    */
-  nsresult doRemoveChildAt(PRUint32 aIndex, bool aNotify, nsIContent* aKid,
-                           nsAttrAndChildArray& aChildArray);
+  void doRemoveChildAt(PRUint32 aIndex, bool aNotify, nsIContent* aKid,
+                       nsAttrAndChildArray& aChildArray);
 
   /**
    * Most of the implementation of the nsINode InsertChildAt method.

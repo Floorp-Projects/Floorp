@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= chrome extensions
+DIRS		= chrome
 
 include $(topsrcdir)/config/rules.mk
 

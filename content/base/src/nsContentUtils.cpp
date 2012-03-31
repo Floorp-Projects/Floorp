@@ -216,6 +216,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 
 extern "C" int MOZ_XMLTranslateEntity(const char* ptr, const char* end,
                                       const char** next, PRUnichar* result);
+extern "C" int MOZ_XMLCheckQName(const char* ptr, const char* end,
+                                 int ns_aware, const char** colon);
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -261,8 +263,6 @@ nsIContentPolicy *nsContentUtils::sContentPolicyService;
 bool nsContentUtils::sTriedToGetContentPolicy = false;
 nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
-nsIScriptRuntime *nsContentUtils::sScriptRuntimes[NS_STID_ARRAY_UBOUND];
-PRInt32 nsContentUtils::sScriptRootCount[NS_STID_ARRAY_UBOUND];
 PRUint32 nsContentUtils::sJSGCThingRootCount;
 #ifdef IBMBIDI
 nsIBidiKeyboard *nsContentUtils::sBidiKeyboard = nsnull;
@@ -485,7 +485,7 @@ nsContentUtils::InitializeModifierStrings()
   nsCOMPtr<nsIStringBundleService> bundleService =
     mozilla::services::GetStringBundleService();
   nsCOMPtr<nsIStringBundle> bundle;
-  nsresult rv = NS_OK;
+  DebugOnly<nsresult> rv = NS_OK;
   if (bundleService) {
     rv = bundleService->CreateBundle( "chrome://global-platform/locale/platformKeys.properties",
                                       getter_AddRefs(bundle));
@@ -2386,14 +2386,31 @@ nsContentUtils::BelongsInForm(nsIContent *aForm,
 // static
 nsresult
 nsContentUtils::CheckQName(const nsAString& aQualifiedName,
-                           bool aNamespaceAware)
+                           bool aNamespaceAware,
+                           const PRUnichar** aColon)
 {
-  nsIParserService *parserService = GetParserService();
-  NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
+  const char* colon = nsnull;
+  const PRUnichar* begin = aQualifiedName.BeginReading();
+  const PRUnichar* end = aQualifiedName.EndReading();
+  
+  int result = MOZ_XMLCheckQName(reinterpret_cast<const char*>(begin),
+                                 reinterpret_cast<const char*>(end),
+                                 aNamespaceAware, &colon);
 
-  const PRUnichar *colon;
-  return parserService->CheckQName(PromiseFlatString(aQualifiedName),
-                                   aNamespaceAware, &colon);
+  if (!result) {
+    if (aColon) {
+      *aColon = reinterpret_cast<const PRUnichar*>(colon);
+    }
+
+    return NS_OK;
+  }
+
+  // MOZ_EXPAT_EMPTY_QNAME || MOZ_EXPAT_INVALID_CHARACTER
+  if (result == (1 << 0) || result == (1 << 1)) {
+    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+  }
+
+  return NS_ERROR_DOM_NAMESPACE_ERR;
 }
 
 //static
@@ -2402,11 +2419,8 @@ nsContentUtils::SplitQName(const nsIContent* aNamespaceResolver,
                            const nsAFlatString& aQName,
                            PRInt32 *aNamespace, nsIAtom **aLocalName)
 {
-  nsIParserService* parserService = GetParserService();
-  NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
-
   const PRUnichar* colon;
-  nsresult rv = parserService->CheckQName(aQName, true, &colon);
+  nsresult rv = nsContentUtils::CheckQName(aQName, true, &colon);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (colon) {
@@ -2440,12 +2454,9 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
                                      PRUint16 aNodeType,
                                      nsINodeInfo** aNodeInfo)
 {
-  nsIParserService* parserService = GetParserService();
-  NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
-
   const nsAFlatString& qName = PromiseFlatString(aQualifiedName);
   const PRUnichar* colon;
-  nsresult rv = parserService->CheckQName(qName, true, &colon);
+  nsresult rv = nsContentUtils::CheckQName(qName, true, &colon);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 nsID;
@@ -4314,69 +4325,6 @@ nsContentUtils::DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent)
 {
   if (*aContent) {
     AddScriptRunner(new AnonymousContentDestroyer(aContent));
-  }
-}
-
-/* static */
-nsIDOMScriptObjectFactory*
-nsContentUtils::GetDOMScriptObjectFactory()
-{
-  if (!sDOMScriptObjectFactory) {
-    static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
-                         NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-
-    CallGetService(kDOMScriptObjectFactoryCID, &sDOMScriptObjectFactory);
-  }
-
-  return sDOMScriptObjectFactory;
-}
-
-/* static */
-nsresult
-nsContentUtils::HoldScriptObject(PRUint32 aLangID, void *aObject)
-{
-  NS_ASSERTION(aObject, "unexpected null object");
-  NS_ASSERTION(aLangID != nsIProgrammingLanguage::JAVASCRIPT,
-               "Should use HoldJSObjects.");
-  nsresult rv;
-
-  PRUint32 langIndex = NS_STID_INDEX(aLangID);
-  nsIScriptRuntime *runtime = sScriptRuntimes[langIndex];
-  if (!runtime) {
-    nsIDOMScriptObjectFactory *factory = GetDOMScriptObjectFactory();
-    NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
-
-    rv = factory->GetScriptRuntimeByID(aLangID, &runtime);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // This makes sScriptRuntimes hold a strong ref.
-    sScriptRuntimes[langIndex] = runtime;
-  }
-
-  rv = runtime->HoldScriptObject(aObject);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  ++sScriptRootCount[langIndex];
-  NS_LOG_ADDREF(sScriptRuntimes[langIndex], sScriptRootCount[langIndex],
-                "HoldScriptObject", sizeof(void*));
-
-  return NS_OK;
-}
-
-/* static */
-void
-nsContentUtils::DropScriptObject(PRUint32 aLangID, void *aObject,
-                                 void *aClosure)
-{
-  NS_ASSERTION(aObject, "unexpected null object");
-  NS_ASSERTION(aLangID != nsIProgrammingLanguage::JAVASCRIPT,
-               "Should use DropJSObjects.");
-  PRUint32 langIndex = NS_STID_INDEX(aLangID);
-  NS_LOG_RELEASE(sScriptRuntimes[langIndex], sScriptRootCount[langIndex] - 1,
-                 "HoldScriptObject");
-  sScriptRuntimes[langIndex]->DropScriptObject(aObject);
-  if (--sScriptRootCount[langIndex] == 0) {
-    NS_RELEASE(sScriptRuntimes[langIndex]);
   }
 }
 

@@ -14,7 +14,6 @@ function test() {
     return;
   }
 
-  requestLongerTimeout(10);
   waitForExplicitFinish();
 
   createTab(function() {

@@ -101,7 +101,7 @@ let gSyncPane = {
       this.needsUpdate();
     } else {
       this.page = PAGE_HAS_ACCOUNT;
-      document.getElementById("accountName").value = Weave.Service.account;
+      document.getElementById("accountName").value = Weave.Identity.account;
       document.getElementById("syncComputerName").value = Weave.Clients.localName;
       document.getElementById("tosPP").hidden = this._usingCustomServer;
     }

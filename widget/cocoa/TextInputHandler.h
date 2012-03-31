@@ -175,18 +175,14 @@ public:
   void InitByInputSourceID(const CFStringRef aID);
   /**
    * InitByLayoutID() initializes the keyboard layout by the layout ID.
-   * The KeyboardLayoutIdentifier (SInt32), used by Apple's now-deprecated
-   * Keyboard Layout Services, is no longer used by its replacement --
-   * Apple's Text Input Services (TIS).  All the layout IDs currently
-   * supported by InitByLayoutID() are backwards-compatible with the layout
-   * IDs used by Keyboard Layout Services.  But there's no need to contine
-   * maintaining backwards compatibility as support for new IDs is added.
    *
    * @param aLayoutID             An ID of keyboard layout.
-   *                                     0: US
-   *                                -18944: Greek
-   *                                     3: German
-   *                                   224: Swedish-Pro
+   *                                0: US
+   *                                1: Greek
+   *                                2: German
+   *                                3: Swedish-Pro
+   *                                4: Dvorak-Qwerty Cmd
+   *                                5: Thai
    * @param aOverrideKeyboard     When testing set to TRUE, otherwise, set to
    *                              FALSE.  When TRUE, we use an ANSI keyboard
    *                              instead of the actual keyboard.

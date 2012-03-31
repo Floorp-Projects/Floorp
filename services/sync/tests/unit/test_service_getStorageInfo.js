@@ -11,8 +11,7 @@ let collections = {steam:  65.11328,
                    diesel: 2.25488281};
 
 function run_test() {
-  Service.username = "johndoe";
-  Service.password = "ilovejane";
+  setBasicCredentials("johndoe", "ilovejane");
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
 
@@ -32,8 +31,9 @@ add_test(function test_success() {
     do_check_true(Utils.deepEquals(info, collections));
 
     // Ensure that the request is sent off with the right bits.
-    do_check_true(basic_auth_matches(handler.request, Service.username,
-                                     Service.password));
+    do_check_true(basic_auth_matches(handler.request,
+                                     Identity.username,
+                                     Identity.basicPassword));
     let expectedUA = Services.appinfo.name + "/" + Services.appinfo.version +
                      " FxSync/" + WEAVE_VERSION + "." +
                      Services.appinfo.appBuildID + ".desktop";

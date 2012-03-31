@@ -19,11 +19,9 @@ add_test(function test_missing_crypto_collection() {
     };
   }
 
+  setBasicCredentials("johndoe", "ilovejane", "a-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa");
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Service.username = "johndoe";
-  Service.password = "ilovejane";
-  Service.passphrase = "a-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa";
 
   let handlers = {
     "/1.1/johndoe/info/collections": maybe_empty(johnHelper.handler),

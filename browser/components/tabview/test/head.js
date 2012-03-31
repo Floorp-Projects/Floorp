@@ -252,7 +252,6 @@ function whenSearchIsDisabled(callback, win) {
   }, false);
 }
 
-
 // ----------
 function hideGroupItem(groupItem, callback) {
   if (groupItem.hidden) {
@@ -384,6 +383,21 @@ function togglePrivateBrowsing(callback) {
            getService(Ci.nsIPrivateBrowsingService);
 
   pb.privateBrowsingEnabled = !pb.privateBrowsingEnabled;
+}
+
+// ----------
+function goToNextGroup(win) {
+  win = win || window;
+
+  let utils =
+    win.QueryInterface(Ci.nsIInterfaceRequestor).
+      getInterface(Ci.nsIDOMWindowUtils);
+
+  const masks = Ci.nsIDOMNSEvent;
+  let mval = 0;
+  mval |= masks.CONTROL_MASK;
+
+  utils.sendKeyEvent("keypress", 0, 96, mval);
 }
 
 // ----------

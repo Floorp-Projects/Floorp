@@ -39,7 +39,7 @@
 
 #include "nsIDOMEventTarget.idl"
 
-[scriptable, uuid(6366afc9-0072-4231-a4ec-98cd65f350ef)]
+[scriptable, uuid(8a66b30c-9a32-4b17-ab4e-ca8b7b588243)]
 interface nsIDOMScreen : nsIDOMEventTarget
 {
   readonly attribute long             top;
@@ -84,4 +84,14 @@ interface nsIDOMScreen : nsIDOMEventTarget
   readonly attribute DOMString       mozOrientation;
 
   attribute nsIDOMEventListener      onmozorientationchange;
+
+  /**
+   * Lock screen orientation to the specified type.
+   */
+  boolean mozLockOrientation(in DOMString orientation);
+
+  /**
+   * Unlock the screen orientation.
+   */
+  void mozUnlockOrientation();
 };

@@ -1053,4 +1053,10 @@ SpecialPowersAPI.prototype = {
     var el = this._getElement(aWindow, target);
     return el.dispatchEvent(event);
   },
+
+  get isDebugBuild() {
+    delete this.isDebugBuild;
+    var debug = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
+    return this.isDebugBuild = debug.isDebugBuild;
+  }
 };
