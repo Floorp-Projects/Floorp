@@ -70,7 +70,11 @@
 #include "XPCQuickStubs.h"
 #include "dombindings.h"
 
+#include "mozilla/dom/bindings/Utils.h"
+
 #include "nsWrapperCacheInlines.h"
+
+using namespace mozilla::dom;
 
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
                               nsIXPConnect,
@@ -1015,10 +1019,15 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
              clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "xpc_GetJSPrivate(obj)");
         cb.NoteXPCOMChild(static_cast<nsISupports*>(xpc_GetJSPrivate(obj)));
-    } else if (mozilla::dom::binding::instanceIsProxy(obj)) {
+    } else if (binding::instanceIsProxy(obj)) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "js::GetProxyPrivate(obj)");
         nsISupports *identity =
             static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
+        cb.NoteXPCOMChild(identity);
+    } else if ((clazz->flags & JSCLASS_IS_DOMJSCLASS) &&
+               bindings::DOMJSClass::FromJSClass(clazz)->mDOMObjectIsISupports) {
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "UnwrapDOMObject(obj)");
+        nsISupports *identity = bindings::UnwrapDOMObject<nsISupports>(obj, clazz);
         cb.NoteXPCOMChild(identity);
     }
 
@@ -1237,6 +1246,10 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
     }
 #endif
 
+    if (clasp->flags & JSCLASS_DOM_GLOBAL) {
+        mozilla::dom::bindings::AllocateProtoOrIfaceCache(*global);
+    }
+
     return NS_OK;
 }
 
@@ -1291,7 +1304,12 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         }
     }
 
-    *_retval = wrappedGlobal.forget().get();
+    // Stuff coming through this path always ends up as a DOM global.
+    // XXX Someone who knows why we can assert this should re-check
+    //     (after bug 720580).
+    MOZ_ASSERT(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL);
+
+    wrappedGlobal.forget(_retval);
     return NS_OK;
 }
 
