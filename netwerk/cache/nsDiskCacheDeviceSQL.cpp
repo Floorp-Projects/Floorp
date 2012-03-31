@@ -1172,7 +1172,8 @@ nsOfflineCacheDevice::Init()
                                                      " AND NameSpace <= ?2 AND ?2 GLOB NameSpace || '*'"
                                                      " ORDER BY NameSpace DESC;"),
     StatementSql ( mStatement_InsertNamespaceEntry,  "INSERT INTO moz_cache_namespaces (ClientID, NameSpace, Data, ItemType) VALUES(?, ?, ?, ?);"),
-    StatementSql ( mStatement_EnumerateGroups,       "SELECT GroupID, ActiveClientID FROM moz_cache_groups;")
+    StatementSql ( mStatement_EnumerateGroups,       "SELECT GroupID, ActiveClientID FROM moz_cache_groups;"),
+    StatementSql ( mStatement_EnumerateGroupsTimeOrder, "SELECT GroupID, ActiveClientID FROM moz_cache_groups ORDER BY ActivateTimeStamp;")
   };
   for (PRUint32 i = 0; NS_SUCCEEDED(rv) && i < ArrayLength(prepared); ++i)
   {
@@ -1303,6 +1304,7 @@ nsOfflineCacheDevice::Shutdown()
   mStatement_FindClient = nsnull;
   mStatement_FindClientByNamespace = nsnull;
   mStatement_EnumerateGroups = nsnull;
+  mStatement_EnumerateGroupsTimeOrder = nsnull;
   }
 
   // Close Database on the correct thread
@@ -1752,16 +1754,36 @@ nsOfflineCacheDevice::EvictEntries(const char *clientID)
 
     rv = statement->BindUTF8StringByIndex(0, nsDependentCString(clientID));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mDB->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_cache_groups WHERE ActiveClientID=?;"),
+                              getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->BindUTF8StringByIndex(0, nsDependentCString(clientID));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   else
   {
     rv = mDB->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_cache WHERE Flags = 0;"),
                               getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
-  }
 
-  rv = statement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mDB->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_cache_groups;"),
+                              getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   evictionObserver.Apply();
 
@@ -2040,8 +2062,17 @@ nsOfflineCacheDevice::GetGroups(PRUint32 *count,
 
   LOG(("nsOfflineCacheDevice::GetGroups"));
 
-  AutoResetStatement statement(mStatement_EnumerateGroups);
   return RunSimpleQuery(mStatement_EnumerateGroups, 0, count, keys);
+}
+
+NS_IMETHODIMP
+nsOfflineCacheDevice::GetGroupsTimeOrdered(PRUint32 *count,
+					   char ***keys)
+{
+
+  LOG(("nsOfflineCacheDevice::GetGroupsTimeOrder"));
+
+  return RunSimpleQuery(mStatement_EnumerateGroupsTimeOrder, 0, count, keys);
 }
 
 nsresult
