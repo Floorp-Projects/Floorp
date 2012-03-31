@@ -1128,8 +1128,9 @@ CodeGeneratorARM::visitCompareD(LCompareD *comp)
     FloatRegister lhs = ToFloatRegister(comp->left());
     FloatRegister rhs = ToFloatRegister(comp->right());
 
-    Assembler::Condition cond = masm.compareDoubles(comp->jsop(), lhs, rhs);
-    emitSet(cond, ToRegister(comp->output()));
+    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->jsop());
+    masm.compareDouble(cond, lhs, rhs);
+    emitSet(Assembler::ConditionFromDoubleCondition(cond), ToRegister(comp->output()));
     return false;
 }
 
@@ -1139,11 +1140,9 @@ CodeGeneratorARM::visitCompareDAndBranch(LCompareDAndBranch *comp)
     FloatRegister lhs = ToFloatRegister(comp->left());
     FloatRegister rhs = ToFloatRegister(comp->right());
 
-    Assembler::Condition cond = masm.compareDoubles(comp->jsop(), lhs, rhs);
-    // TODO: we don't handle anything that has an undefined in it.
-    emitBranch(cond, comp->ifTrue(), comp->ifFalse());
-    //    Assembler::Condition cond = masm.compareDoubles(comp->jsop(), lhs, rhs);
-
+    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->jsop());
+    masm.compareDouble(cond, lhs, rhs);
+    emitBranch(Assembler::ConditionFromDoubleCondition(cond), comp->ifTrue(), comp->ifFalse());
     return true;
 }
 

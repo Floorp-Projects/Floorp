@@ -120,6 +120,32 @@ OutOfLineBailout::accept(CodeGeneratorX86Shared *codegen)
     return codegen->visitOutOfLineBailout(this);
 }
 
+static inline NaNCond
+NaNCondFromDoubleCondition(Assembler::DoubleCondition cond)
+{
+    switch (cond) {
+      case Assembler::DoubleOrdered:
+      case Assembler::DoubleEqual:
+      case Assembler::DoubleNotEqual:
+      case Assembler::DoubleGreaterThan:
+      case Assembler::DoubleGreaterThanOrEqual:
+      case Assembler::DoubleLessThan:
+      case Assembler::DoubleLessThanOrEqual:
+        return NaN_IsFalse;
+      case Assembler::DoubleUnordered:
+      case Assembler::DoubleEqualOrUnordered:
+      case Assembler::DoubleNotEqualOrUnordered:
+      case Assembler::DoubleGreaterThanOrUnordered:
+      case Assembler::DoubleGreaterThanOrEqualOrUnordered:
+      case Assembler::DoubleLessThanOrUnordered:
+      case Assembler::DoubleLessThanOrEqualOrUnordered:
+        return NaN_IsTrue;
+    }
+
+    JS_NOT_REACHED("Unknown double condition");
+    return NaN_Unexpected;
+}
+
 void
 CodeGeneratorX86Shared::emitBranch(Assembler::Condition cond, MBasicBlock *mirTrue,
                                    MBasicBlock *mirFalse, NaNCond ifNaN)
@@ -247,9 +273,10 @@ CodeGeneratorX86Shared::visitCompareD(LCompareD *comp)
     FloatRegister lhs = ToFloatRegister(comp->left());
     FloatRegister rhs = ToFloatRegister(comp->right());
 
-    Assembler::Condition cond = masm.compareDoubles(comp->jsop(), lhs, rhs);
-    NaNCond ifNaN = (cond == Assembler::NotEqual) ? NaN_IsTrue : NaN_IsFalse;
-    emitSet(cond, ToRegister(comp->output()), ifNaN);
+    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->jsop());
+    masm.compareDouble(cond, lhs, rhs);
+    emitSet(Assembler::ConditionFromDoubleCondition(cond), ToRegister(comp->output()),
+            NaNCondFromDoubleCondition(cond));
     return true;
 }
 
@@ -267,7 +294,7 @@ CodeGeneratorX86Shared::visitNotD(LNotD *ins)
     FloatRegister opd = ToFloatRegister(ins->input());
 
     masm.xorpd(ScratchFloatReg, ScratchFloatReg);
-    masm.compareDoubles(JSOP_EQ, opd, ScratchFloatReg);
+    masm.compareDouble(Assembler::DoubleEqualOrUnordered, opd, ScratchFloatReg);
     emitSet(Assembler::Equal, ToRegister(ins->output()), NaN_IsTrue);
     return true;
 }
@@ -278,9 +305,10 @@ CodeGeneratorX86Shared::visitCompareDAndBranch(LCompareDAndBranch *comp)
     FloatRegister lhs = ToFloatRegister(comp->left());
     FloatRegister rhs = ToFloatRegister(comp->right());
 
-    Assembler::Condition cond = masm.compareDoubles(comp->jsop(), lhs, rhs);
-    NaNCond ifNaN = (cond == Assembler::NotEqual) ? NaN_IsTrue : NaN_IsFalse;
-    emitBranch(cond, comp->ifTrue(), comp->ifFalse(), ifNaN);
+    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->jsop());
+    masm.compareDouble(cond, lhs, rhs);
+    emitBranch(Assembler::ConditionFromDoubleCondition(cond), comp->ifTrue(), comp->ifFalse(),
+               NaNCondFromDoubleCondition(cond));
     return true;
 }
 

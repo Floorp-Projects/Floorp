@@ -1459,36 +1459,40 @@ MacroAssemblerARMCompat::addPtr(Imm32 imm, const Address &dest)
     storePtr(ScratchRegister, dest);
 }
 
-// higher level tag testing code
-Assembler::Condition
-MacroAssemblerARMCompat::compareDoubles(JSOp compare, FloatRegister lhs, FloatRegister rhs)
+void
+MacroAssemblerARMCompat::compareDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs)
 {
     if (rhs == InvalidFloatReg)
         ma_vcmpz(lhs);
     else
         ma_vcmp(lhs, rhs);
     as_vmrs(pc);
-    switch (compare) {
-      case JSOP_STRICTNE:
-      case JSOP_NE:
-        return Assembler::VFP_NotEqualOrUnordered;
-      case JSOP_STRICTEQ:
-      case JSOP_EQ:
-        return Assembler::VFP_Equal;
-      case JSOP_LT:
-        return Assembler::VFP_LessThan;
-      case JSOP_LE:
-        return Assembler::VFP_LessThanOrEqual;
-      case JSOP_GT:
-        return Assembler::VFP_GreaterThan;
-      case JSOP_GE:
-        return Assembler::VFP_GreaterThanOrEqual;
-      default:
-        JS_NOT_REACHED("Unrecognized comparison operation");
-        return Assembler::VFP_Unordered;
-    }
 }
 
+void
+MacroAssemblerARMCompat::branchDouble(DoubleCondition cond, const FloatRegister &lhs,
+                                      const FloatRegister &rhs, Label *label)
+{
+    compareDouble(cond, lhs, rhs);
+
+    if (cond == DoubleNotEqual) {
+        // Force the unordered cases not to jump.
+        Label unordered;
+        ma_b(&unordered, VFP_Unordered);
+        ma_b(label, VFP_NotEqualOrUnordered);
+        bind(&unordered);
+        return;
+    }
+    if (cond == DoubleEqualOrUnordered) {
+        ma_b(label, VFP_Unordered);
+        ma_b(label, VFP_Equal);
+        return;
+    }
+
+    ma_b(label, ConditionFromDoubleCondition(cond));
+}
+
+// higher level tag testing code
 Operand ToPayload(Operand base) {
     return Operand(Register::FromCode(base.base()),
                    base.disp());
