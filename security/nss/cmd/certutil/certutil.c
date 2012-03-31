@@ -1171,7 +1171,7 @@ static void luC(enum usage_level ul, const char *command)
               "%-20s Create netscape cert type extension. Possible keywords:\n"
               "%-20s \"sslClient\", \"sslServer\", \"smime\", \"objectSigning\",\n"
               "%-20s \"sslCA\", \"smimeCA\", \"objectSigningCA\", \"critical\".\n",
-        "   -5 | -nsCertType keyword,keyword,... ", "", "", "");
+        "   -5 | --nsCertType keyword,keyword,... ", "", "", "");
     FPS "%-20s \n"
               "%-20s Create extended key usage extension. Possible keywords:\n"
               "%-20s \"serverAuth\", \"clientAuth\",\"codeSigning\",\n"

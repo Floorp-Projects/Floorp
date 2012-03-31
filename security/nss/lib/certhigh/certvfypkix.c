@@ -1426,8 +1426,8 @@ struct fake_PKIX_PL_CertStruct {
 /* This needs to be part of the PKIX_PL_* */
 /* This definitely needs to go away, and be replaced with
    a real accessor function in PKIX */
-CERTCertificate *
-cert_NSSCertFromPKIXCert(const PKIX_PL_Cert *pkix_cert, void *plContext)
+static CERTCertificate *
+cert_NSSCertFromPKIXCert(const PKIX_PL_Cert *pkix_cert)
 {
     struct fake_PKIX_PL_CertStruct *fcert = NULL;
 
@@ -2217,10 +2217,12 @@ do {
         goto cleanup;
     }
 
-    error = PKIX_TrustAnchor_GetTrustedCert( trustAnchor, &trustAnchorCert,
-                                                plContext);
-    if (error != NULL) {
-        goto cleanup;
+    if (trustAnchor != NULL) {
+        error = PKIX_TrustAnchor_GetTrustedCert( trustAnchor, &trustAnchorCert,
+                                                 plContext);
+        if (error != NULL) {
+            goto cleanup;
+        }
     }
 
 #ifdef PKIX_OBJECT_LEAK_TEST
@@ -2231,8 +2233,12 @@ do {
 
     oparam = cert_pkix_FindOutputParam(paramsOut, cert_po_trustAnchor);
     if (oparam != NULL) {
-        oparam->value.pointer.cert = 
-                cert_NSSCertFromPKIXCert(trustAnchorCert,plContext);
+        if (trustAnchorCert != NULL) {
+            oparam->value.pointer.cert =
+                    cert_NSSCertFromPKIXCert(trustAnchorCert);
+        } else {
+            oparam->value.pointer.cert = NULL;
+        }
     }
 
     error = PKIX_BuildResult_GetCertChain( buildResult, &builtCertList,

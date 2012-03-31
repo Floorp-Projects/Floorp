@@ -39,7 +39,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.67 2011/08/10 12:31:52 kaie%kuix.de Exp $
+ * $Id: ocsp.c,v 1.69 2012/03/14 22:26:53 wtc%google.com Exp $
  */
 
 #include "prerror.h"
@@ -296,7 +296,7 @@ SECStatus
 SEC_RegisterDefaultHttpClient(const SEC_HttpClientFcn *fcnTable)
 {
     if (!OCSP_Global.monitor) {
-      PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+      PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
       return SECFailure;
     }
     
@@ -315,7 +315,7 @@ CERT_RegisterAlternateOCSPAIAInfoCallBack(
     CERT_StringFromCertFcn old;
 
     if (!OCSP_Global.monitor) {
-      PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+      PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
       return SECFailure;
     }
 
@@ -991,7 +991,7 @@ const SEC_HttpClientFcn *SEC_GetRegisteredHttpClient()
     const SEC_HttpClientFcn *retval;
 
     if (!OCSP_Global.monitor) {
-      PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+      PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
       return NULL;
     }
 
@@ -2700,10 +2700,10 @@ ocsp_GetResponseSignature(CERTOCSPResponse *response)
     if (NULL == response->responseBytes) {
         return NULL;
     }
-    PORT_Assert(response->responseBytes != NULL);
-    PORT_Assert(response->responseBytes->responseTypeTag
-		== SEC_OID_PKIX_OCSP_BASIC_RESPONSE);
-
+    if (response->responseBytes->responseTypeTag
+        != SEC_OID_PKIX_OCSP_BASIC_RESPONSE) {
+        return NULL;
+    }
     basic = response->responseBytes->decodedResponse.basic;
     PORT_Assert(basic != NULL);
 

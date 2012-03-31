@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secvfy.c,v 1.25 2011/10/22 14:35:42 wtc%google.com Exp $ */
+/* $Id: secvfy.c,v 1.28 2012/02/25 14:32:45 kaie%kuix.de Exp $ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -300,11 +300,13 @@ sec_DecodeSigAlg(const SECKEYPublicKey *key, SECOidTag sigAlg,
 	    return SECFailure;
 	}
 	rv = SEC_QuickDERDecodeItem(arena, &oid, hashParameterTemplate, param);
-	if (rv != SECSuccess) {
-	    PORT_FreeArena(arena, PR_FALSE);
+	if (rv == SECSuccess) {
+            *hashalg = SECOID_FindOIDTag(&oid);
+        }
+        PORT_FreeArena(arena, PR_FALSE);
+        if (rv != SECSuccess) {
 	    return rv;
 	}
-	*hashalg = SECOID_FindOIDTag(&oid);
 	/* only accept hash algorithms */
 	if (HASH_GetHashTypeByOidTag(*hashalg) == HASH_AlgNULL) {
 	    /* error set by HASH_GetHashTypeByOidTag */

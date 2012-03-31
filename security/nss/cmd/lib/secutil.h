@@ -168,6 +168,9 @@ SECU_GetClientAuthData(void *arg, PRFileDesc *fd,
 		       struct CERTCertificateStr **pRetCert,
 		       struct SECKEYPrivateKeyStr **pRetKey);
 
+extern PRBool SECU_GetWrapEnabled();
+extern void SECU_EnableWrap(PRBool enable);
+
 /* print out an error message */
 extern void SECU_PrintError(char *progName, char *msg, ...);
 
@@ -313,6 +316,9 @@ extern void SECU_PrintPrivKeyUsagePeriodExtension(FILE *out, SECItem *value,
 extern void SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
 				 char *msg, int level);
 
+extern void SECU_PrintNameQuotesOptional(FILE *out, CERTName *name, 
+					 const char *msg, int level, 
+					 PRBool quotes);
 extern void SECU_PrintName(FILE *out, CERTName *name, const char *msg,
                            int level);
 extern void SECU_PrintRDN(FILE *out, CERTRDN *rdn, const char *msg, int level);
