@@ -108,6 +108,7 @@
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/dom/bindings/Utils.h"
 
 #include "sampler.h"
 
@@ -2006,12 +2007,16 @@ nsJSContext::GetGlobalObject()
 
   JSClass *c = JS_GetClass(global);
 
-  if (!c || ((~c->flags) & (JSCLASS_HAS_PRIVATE |
-                            JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
+  // Whenever we end up with globals that are JSCLASS_IS_DOMJSCLASS
+  // and have an nsISupports DOM object, we will need to modify this
+  // check here.
+  MOZ_ASSERT(!(c->flags & JSCLASS_IS_DOMJSCLASS));
+  if ((~c->flags) & (JSCLASS_HAS_PRIVATE |
+                     JSCLASS_PRIVATE_IS_NSISUPPORTS)) {
     return nsnull;
   }
-
-  nsISupports *priv = (nsISupports *)js::GetObjectPrivate(global);
+  
+  nsISupports *priv = static_cast<nsISupports*>(js::GetObjectPrivate(global));
 
   nsCOMPtr<nsIXPConnectWrappedNative> wrapped_native =
     do_QueryInterface(priv);

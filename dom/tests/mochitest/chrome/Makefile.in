@@ -74,6 +74,7 @@ _TEST_FILES = \
 		test_focus_docnav.xul \
 		window_focus_docnav.xul \
 		test_clonewrapper.xul \
+		test_moving_nodeList.xul \
 		$(NULL)
 
 ifeq (WINNT,$(OS_ARCH))

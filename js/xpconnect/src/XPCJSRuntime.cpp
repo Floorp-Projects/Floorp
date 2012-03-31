@@ -59,6 +59,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "jsfriendapi.h"
 #include "js/MemoryMetrics.h"
+#include "mozilla/dom/bindings/DOMJSClass.h"
 
 #include "nsJSPrincipals.h"
 
@@ -517,6 +518,11 @@ SuspectDOMExpandos(nsPtrHashKey<JSObject> *key, void *arg)
         NS_ASSERTION(mozilla::dom::binding::instanceIsProxy(obj),
                      "Not a DOM proxy?");
         native = static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
+    }
+    else {
+        NS_ASSERTION(mozilla::dom::bindings::DOMJSClass::FromJSClass(JS_GetClass(obj))->mDOMObjectIsISupports,
+                     "Someone added a wrapper for a non-nsISupports native to DOMExpandos!");
+        native = static_cast<nsISupports*>(js::GetReservedSlot(obj, DOM_OBJECT_SLOT).toPrivate());
     }
     closure->cb->NoteXPCOMRoot(native);
     return PL_DHASH_NEXT;
@@ -1926,6 +1932,7 @@ AccumulateTelemetryCallback(int id, uint32_t sample)
 }
 
 bool XPCJSRuntime::gNewDOMBindingsEnabled;
+bool XPCJSRuntime::gParisBindingsEnabled;
 
 bool PreserveWrapper(JSContext *cx, JSObject *obj)
 {
@@ -1978,6 +1985,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
 
     DOM_InitInterfaces();
     Preferences::AddBoolVarCache(&gNewDOMBindingsEnabled, "dom.new_bindings",
+                                 false);
+    Preferences::AddBoolVarCache(&gParisBindingsEnabled, "dom.paris_bindings",
                                  false);
 
 
