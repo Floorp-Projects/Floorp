@@ -208,6 +208,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsCCUncollectableMarker.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Preferences.h"
+#include "nsDOMMutationObserver.h"
 
 #include "nsWrapperCacheInlines.h"
 #include "nsIDOMDocumentType.h"
@@ -271,6 +272,7 @@ PRUint32 nsContentUtils::sScriptBlockerCount = 0;
 #ifdef DEBUG
 PRUint32 nsContentUtils::sDOMNodeRemovedSuppressCount = 0;
 #endif
+PRUint32 nsContentUtils::sMicroTaskLevel = 0;
 nsTArray< nsCOMPtr<nsIRunnable> >* nsContentUtils::sBlockedScriptRunners = nsnull;
 PRUint32 nsContentUtils::sRunnersCountAtFirstBlocker = 0;
 nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nsnull;
@@ -4180,6 +4182,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
   // mutations.
   mozAutoDocUpdate updateBatch(aContent->GetCurrentDoc(),
     UPDATE_CONTENT_MODEL, true);
+  nsAutoMutationBatch mb;
 
   PRUint32 childCount = aContent->GetChildCount();
 
@@ -4204,10 +4207,12 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
     }
   }
   else {
+    mb.Init(aContent, true, false);
     for (PRUint32 i = 0; i < childCount; ++i) {
       aContent->RemoveChildAt(0, true);
     }
   }
+  mb.RemovalDone();
 
   if (aValue.IsEmpty()) {
     return NS_OK;
@@ -4220,7 +4225,9 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
 
   textContent->SetText(aValue, true);
 
-  return aContent->AppendChildTo(textContent, true);
+  rv = aContent->AppendChildTo(textContent, true);
+  mb.NodesAdded();
+  return rv;
 }
 
 static void AppendNodeTextContentsRecurse(nsINode* aNode, nsAString& aResult)
@@ -4771,6 +4778,14 @@ nsContentUtils::AddScriptRunner(nsIRunnable* aRunnable)
   run->Run();
 
   return true;
+}
+
+void
+nsContentUtils::LeaveMicroTask()
+{
+  if (--sMicroTaskLevel == 0) {
+    nsDOMMutationObserver::HandleMutations();
+  }
 }
 
 /* 
@@ -6590,4 +6605,47 @@ nsContentUtils::TraceWrapper(nsWrapperCache* aCache, TraceCallback aCallback,
                 "Preserved wrapper", aClosure);
     }
   }
+}
+
+nsresult
+nsContentUtils::JSArrayToAtomArray(JSContext* aCx, const JS::Value& aJSArray,
+                                   nsCOMArray<nsIAtom>& aRetVal)
+{
+  JSAutoRequest ar(aCx);
+  if (!aJSArray.isObject()) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  
+  JSObject* obj = &aJSArray.toObject();
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(aCx, obj)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  
+  PRUint32 length;
+  if (!JS_IsArrayObject(aCx, obj) || !JS_GetArrayLength(aCx, obj, &length)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  JSString* str = nsnull;
+  JS::Anchor<JSString *> deleteProtector(str);
+  for (PRUint32 i = 0; i < length; ++i) {
+    jsval v;
+    if (!JS_GetElement(aCx, obj, i, &v) ||
+        !(str = JS_ValueToString(aCx, v))) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    nsDependentJSString depStr;
+    if (!depStr.init(aCx, str)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    nsCOMPtr<nsIAtom> a = do_GetAtom(depStr);
+    if (!a) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    aRetVal.AppendObject(a);
+  }
+  return NS_OK;
 }

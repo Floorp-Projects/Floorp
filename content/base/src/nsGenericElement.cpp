@@ -148,7 +148,7 @@
 
 #include "nsCSSParser.h"
 #include "prprf.h"
-
+#include "nsDOMMutationObserver.h"
 #include "nsSVGFeatures.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsCycleCollector.h"
@@ -1261,6 +1261,13 @@ nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
 
   if (tmp->HasProperties()) {
     nsNodeUtils::TraverseUserData(tmp, cb);
+    nsCOMArray<nsISupports>* objects =
+      static_cast<nsCOMArray<nsISupports>*>(tmp->GetProperty(nsGkAtoms::keepobjectsalive));
+    if (objects) {
+      for (PRInt32 i = 0; i < objects->Count(); ++i) {
+         cb.NoteXPCOMChild(objects->ObjectAt(i));
+      }
+    }
   }
 
   if (tmp->NodeType() != nsIDOMNode::DOCUMENT_NODE &&
@@ -1290,6 +1297,7 @@ nsINode::Unlink(nsINode *tmp)
 
   if (tmp->HasProperties()) {
     nsNodeUtils::UnlinkUserData(tmp);
+    tmp->DeleteProperty(nsGkAtoms::keepobjectsalive);
   }
 }
 
@@ -4270,8 +4278,10 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
+  nsAutoMutationBatch mb;
   // If we're replacing
   if (aReplace) {
+    mb.Init(this, true, true);
     RemoveChildAt(insPos, true);
   }
 
@@ -4292,7 +4302,13 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
 
+    nsAutoMutationBatch mb(oldParent, true, true);
     oldParent->RemoveChildAt(removeIndex, true);
+    if (nsAutoMutationBatch::GetCurrentBatch() == &mb) {
+      mb.RemovalDone();
+      mb.SetPrevSibling(oldParent->GetChildAt(removeIndex - 1));
+      mb.SetNextSibling(oldParent->GetChildAt(removeIndex));
+    }
 
     // Adjust insert index if the node we ripped out was a sibling
     // of the node we're inserting before
@@ -4337,8 +4353,21 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     }
 
     // Remove the children from the fragment.
-    for (PRUint32 i = count; i > 0;) {
-      newContent->RemoveChildAt(--i, true);
+    {
+      nsAutoMutationBatch mb(newContent, false, true);
+      for (PRUint32 i = count; i > 0;) {
+        newContent->RemoveChildAt(--i, true);
+      }
+    }
+
+    if (!aReplace) {
+      mb.Init(this, true, true);
+    }
+    nsAutoMutationBatch* mutationBatch = nsAutoMutationBatch::GetCurrentBatch();
+    if (mutationBatch) {
+      mutationBatch->RemovalDone();
+      mutationBatch->SetPrevSibling(GetChildAt(insPos - 1));
+      mutationBatch->SetNextSibling(GetChildAt(insPos));
     }
 
     bool appending =
@@ -4363,10 +4392,17 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       }
     }
 
+    if (mutationBatch && !appending) {
+      mutationBatch->NodesAdded();
+    }
+
     // Notify and fire mutation events when appending
     if (appending) {
       nsNodeUtils::ContentAppended(static_cast<nsIContent*>(this),
                                    firstInsertedContent, firstInsPos);
+      if (mutationBatch) {
+        mutationBatch->NodesAdded();
+      }
       // Optimize for the case when there are no listeners
       if (nsContentUtils::
             HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
@@ -4382,6 +4418,11 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     //       wrapper is not the wrapper for their ownerDocument (XUL elements,
     //       form controls, ...). Also applies in the fragment code above.
 
+    if (nsAutoMutationBatch::GetCurrentBatch() == &mb) {
+      mb.RemovalDone();
+      mb.SetPrevSibling(GetChildAt(insPos - 1));
+      mb.SetNextSibling(GetChildAt(insPos));
+    }
     res = InsertChildAt(newContent, insPos, true);
     NS_ENSURE_SUCCESS(res, res);
   }
@@ -5193,7 +5234,7 @@ nsGenericElement::MaybeCheckSameAttrVal(PRInt32 aNamespaceID,
       }
       bool valueMatches = aValue.EqualsAsStrings(*info.mValue);
       if (valueMatches && aPrefix == info.mName->GetPrefix()) {
-        return true;
+        return !OwnerDoc()->MayHaveDOMMutationObservers();
       }
       modification = true;
     }
@@ -6053,6 +6094,37 @@ void
 nsGenericElement::GetLinkTarget(nsAString& aTarget)
 {
   aTarget.Truncate();
+}
+
+static void
+nsCOMArrayDeleter(void* aObject, nsIAtom* aPropertyName,
+                  void* aPropertyValue, void* aData)
+{
+  nsCOMArray<nsISupports>* objects =
+    static_cast<nsCOMArray<nsISupports>*>(aPropertyValue);
+  delete objects;
+}
+
+void
+nsINode::BindObject(nsISupports* aObject)
+{
+  nsCOMArray<nsISupports>* objects =
+    static_cast<nsCOMArray<nsISupports>*>(GetProperty(nsGkAtoms::keepobjectsalive));
+  if (!objects) {
+    objects = new nsCOMArray<nsISupports>();
+    SetProperty(nsGkAtoms::keepobjectsalive, objects, nsCOMArrayDeleter, true);
+  }
+  objects->AppendObject(aObject);
+}
+
+void
+nsINode::UnbindObject(nsISupports* aObject)
+{
+  nsCOMArray<nsISupports>* objects =
+    static_cast<nsCOMArray<nsISupports>*>(GetProperty(nsGkAtoms::keepobjectsalive));
+  if (objects) {
+    objects->RemoveObject(aObject);
+  }
 }
 
 // NOTE: The aPresContext pointer is NOT addrefed.
