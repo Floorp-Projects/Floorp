@@ -66,19 +66,13 @@ function sync_httpd_setup(handlers) {
 }
 
 function setUp() {
-  Service.username = "johndoe";
-  Service.password = "ilovejane";
-  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
-  // So that we can poke at meta/global.
-  new FakeCryptoService();
-
+  new SyncTestingInfrastructure("johndoe", "ilovejane",
+                                "abcdeabcdeabcdeabcdeabcdea");
   // Ensure that the server has valid keys so that logging in will work and not
   // result in a server wipe, rendering many of these tests useless.
   generateNewKeys();
   let serverKeys = CollectionKeys.asWBO("crypto", "keys");
-  serverKeys.encrypt(Service.syncKeyBundle);
+  serverKeys.encrypt(Identity.syncKeyBundle);
   return serverKeys.upload(Service.cryptoKeysURL).success;
 }
 
@@ -260,7 +254,7 @@ add_test(function test_enabledRemotely() {
   try {
     _("Upload some keys to avoid a fresh start.");
     let wbo = CollectionKeys.generateNewKeysWBO();
-    wbo.encrypt(Service.syncKeyBundle);
+    wbo.encrypt(Identity.syncKeyBundle);
     do_check_eq(200, wbo.upload(Service.cryptoKeysURL).status);
 
     _("Engine is disabled.");
