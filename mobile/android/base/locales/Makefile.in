@@ -68,9 +68,9 @@ MOBILE_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(topsrcdir)/mobile/locales
 
 ifdef LOCALE_MERGEDIR
 BOOKMARKSPATH = $(firstword \
-  $(wildcard $(LOCALE_MERGEDIR)/mobile/profile/bookmarks.inc) \
-  $(wildcard $(MOBILE_LOCALE_SRCDIR)/profile/bookmarks.inc) \
-  $(topsrcdir)/mobile/locales/en-US/profile/bookmarks.inc ))
+  $(wildcard $(LOCALE_MERGEDIR)/mobile/profile/bookmarks.inc ) \
+  $(wildcard $(MOBILE_LOCALE_SRCDIR)/profile/bookmarks.inc ) \
+  $(topsrcdir)/mobile/locales/en-US/profile/bookmarks.inc )
 else
 BOOKMARKSPATH = $(call core_abspath,$(MOBILE_LOCALE_SRCDIR)/profile/bookmarks.inc)
 endif

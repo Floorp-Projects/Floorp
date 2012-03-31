@@ -60,9 +60,13 @@
 #include "nsContentUtils.h"
 #include "jsgc.h"
 #include "jsfriendapi.h"
+#include "mozilla/dom/bindings/Utils.h"
 
 using namespace mozilla;
 using namespace js;
+
+using mozilla::dom::bindings::DestroyProtoOrIfaceCache;
+
 /***************************************************************************/
 // stuff used by all
 
@@ -2889,6 +2893,7 @@ sandbox_finalize(JSContext *cx, JSObject *obj)
     nsIScriptObjectPrincipal *sop =
         (nsIScriptObjectPrincipal *)xpc_GetJSPrivate(obj);
     NS_IF_RELEASE(sop);
+    DestroyProtoOrIfaceCache(obj);
 }
 
 static JSBool

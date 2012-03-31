@@ -183,9 +183,10 @@ public:
   
   /**
    * Let the document know that we're starting to load data into it.
-   * @param aCommand The parser command
+   * @param aCommand The parser command. Must not be null.
    *                 XXXbz It's odd to have that here.
-   * @param aChannel The channel the data will come from
+   * @param aChannel The channel the data will come from. The channel must be
+   *                 able to report its Content-Type.
    * @param aLoadGroup The loadgroup this document should use from now on.
    *                   Note that the document might not be the only thing using
    *                   this loadgroup.
@@ -204,6 +205,9 @@ public:
    * @param aSink The content sink to use for the data.  If this is null and
    *              the document needs a content sink, it will create one based
    *              on whatever it knows about the data it's going to load.
+   *              This MUST be null if the underlying document is an HTML
+   *              document. Even in the XML case, please don't add new calls
+   *              with non-null sink.
    *
    * Once this has been called, the document will return false for
    * MayStartLayout() until SetMayStartLayout(true) is called on it.  Making

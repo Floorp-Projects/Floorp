@@ -88,6 +88,7 @@ if [ ! "$LIBXUL_SDK" ]; then
   if [ "$MOZ_MEMORY" ]; then
     add_makefiles "
       memory/jemalloc/Makefile
+      memory/build/Makefile
     "
   fi
   if [ "$MOZ_WIDGET_TOOLKIT" = "android" ]; then

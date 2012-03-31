@@ -454,6 +454,7 @@ protected:
     nsCString           mCommandStr;
 
     bool                mProcessingNetworkData;
+    bool                mIsAboutBlank;
 
     static nsICharsetConverterManager* sCharsetConverterManager;
 };

@@ -319,10 +319,18 @@ public class AwesomeBarTabs extends TabHost {
     // This method checks to see if we're in a bookmark sub-folder. If we are,
     // it will go up a level and return true. Otherwise it will return false.
     public boolean onBackPressed() {
+        // If the soft keyboard is visible in the bookmarks or history tab, the user
+        // must have explictly brought it up, so we should try hiding it instead of
+        // exiting the activity or going up a bookmarks folder level.
+        if (getCurrentTabTag().equals(BOOKMARKS_TAB) || getCurrentTabTag().equals(HISTORY_TAB)) {
+            View tabView = getCurrentTabView();
+            if (hideSoftInput(tabView))
+                return true;
+        }
+
         // If we're not in the bookmarks tab, we have nothing to do. We should
         // also return false if mBookmarksAdapter hasn't been initialized yet.
-        if (!getCurrentTabTag().equals(BOOKMARKS_TAB) ||
-                mBookmarksAdapter == null)
+        if (!getCurrentTabTag().equals(BOOKMARKS_TAB) || mBookmarksAdapter == null)
             return false;
 
         return mBookmarksAdapter.moveToParentFolder();
@@ -846,11 +854,11 @@ public class AwesomeBarTabs extends TabHost {
         // See OnTabChangeListener above.
     }
 
-    private void hideSoftInput(View view) {
+    private boolean hideSoftInput(View view) {
         InputMethodManager imm =
                 (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
 
-        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        return imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
     private void handleBookmarkItemClick(AdapterView<?> parent, View view, int position, long id) {

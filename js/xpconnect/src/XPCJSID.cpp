@@ -42,6 +42,8 @@
 /* An xpcom implementation of the JavaScript nsIID and nsCID objects. */
 
 #include "xpcprivate.h"
+#include "mozilla/dom/bindings/DOMJSClass.h"
+#include "mozilla/dom/bindings/Utils.h"
 
 /***************************************************************************/
 // nsJSID
@@ -513,9 +515,22 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
                 return NS_ERROR_FAILURE;
         }
 
+        nsISupports *identity;
         if (mozilla::dom::binding::instanceIsProxy(obj)) {
-            nsISupports *identity =
+            identity =
                 static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
+        } else if (mozilla::dom::bindings::IsDOMClass(js::GetObjectJSClass(obj))) {
+            NS_ASSERTION(mozilla::dom::bindings::DOMJSClass::FromJSClass(
+                              js::GetObjectJSClass(obj))->mDOMObjectIsISupports,
+                         "This only works on nsISupports classes!");
+            identity =
+                mozilla::dom::bindings::UnwrapDOMObject<nsISupports>(obj,
+                                                                     js::GetObjectJSClass(obj));
+        } else {
+            identity = nsnull;
+        }
+
+        if (identity) {
             nsCOMPtr<nsIClassInfo> ci = do_QueryInterface(identity);
 
             XPCCallContext ccx(JS_CALLER, cx);
@@ -526,7 +541,7 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
                 return NS_ERROR_FAILURE;
             *bp = set->HasInterfaceWithAncestor(iid);
             return NS_OK;
-     }
+        }
 
         XPCWrappedNative* other_wrapper =
            XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);

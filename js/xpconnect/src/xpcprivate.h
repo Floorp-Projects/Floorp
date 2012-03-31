@@ -797,6 +797,11 @@ public:
         return gNewDOMBindingsEnabled;
     }
 
+    bool ParisBindingsEnabled()
+    {
+        return gParisBindingsEnabled;
+    }
+
     size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
 
 private:
@@ -809,6 +814,7 @@ private:
     static void WatchdogMain(void *arg);
 
     static bool gNewDOMBindingsEnabled;
+    static bool gParisBindingsEnabled;
 
     static const char* mStrings[IDX_TOTAL_COUNT];
     jsid mStrIDs[IDX_TOTAL_COUNT];
@@ -1626,6 +1632,11 @@ public:
         return mNewDOMBindingsEnabled;
     }
 
+    JSBool ParisBindingsEnabled()
+    {
+        return mParisBindingsEnabled;
+    }
+
 protected:
     XPCWrappedNativeScope(XPCCallContext& ccx, JSObject* aGlobal, nsISupports* aNative);
     virtual ~XPCWrappedNativeScope();
@@ -1667,6 +1678,7 @@ private:
     nsDataHashtable<nsDepCharHashKey, JSObject*> mCachedDOMPrototypes;
 
     JSBool mNewDOMBindingsEnabled;
+    JSBool mParisBindingsEnabled;
 };
 
 /***************************************************************************/
