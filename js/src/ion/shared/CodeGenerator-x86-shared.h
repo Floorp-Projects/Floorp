@@ -51,6 +51,12 @@ class OutOfLineBailout;
 class MulNegativeZeroCheck;
 class OutOfLineTruncate;
 
+enum NaNCond {
+    NaN_Unexpected,
+    NaN_IsTrue,
+    NaN_IsFalse
+};
+
 class CodeGeneratorX86Shared : public CodeGeneratorShared
 {
     friend class MoveResolverX86;
@@ -96,21 +102,17 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
     Operand createArrayElementOperand(Register elements, const LAllocation *index);
 
-    enum NaNCond {
-        NaN_Unexpected,
-        NaN_IsTrue,
-        NaN_IsFalse
-    };
-
     void emitCompare(MIRType type, const LAllocation *left, const LAllocation *right);
 
     // Emits a conditional set.
     void emitSet(Assembler::Condition cond, const Register &dest, NaNCond ifNaN = NaN_Unexpected);
+    void emitSet(Assembler::DoubleCondition cond, const Register &dest);
 
     // Emits a branch that directs control flow to the true block if |cond| is
     // true, and the false block if |cond| is false.
     void emitBranch(Assembler::Condition cond, MBasicBlock *ifTrue, MBasicBlock *ifFalse,
                     NaNCond ifNaN = NaN_Unexpected);
+    void emitBranch(Assembler::DoubleCondition cond, MBasicBlock *ifTrue, MBasicBlock *ifFalse);
 
   public:
     CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph);

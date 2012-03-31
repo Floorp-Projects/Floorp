@@ -100,6 +100,39 @@ class AssemblerX86Shared
         NoParity = JSC::X86Assembler::ConditionNP
     };
 
+    // If this bit is set, the ucomisd operands have to be inverted.
+    static const int DoubleConditionBitInvert = 0x10;
+
+    // Bit set when a DoubleCondition does not map to a single x86 condition.
+    // The macro assembler has to special-case these conditions.
+    static const int DoubleConditionBitSpecial = 0x20;
+    static const int DoubleConditionBits = DoubleConditionBitInvert | DoubleConditionBitSpecial;
+
+    enum DoubleCondition {
+        // These conditions will only evaluate to true if the comparison is ordered - i.e. neither operand is NaN.
+        DoubleOrdered = NoParity,
+        DoubleEqual = Equal | DoubleConditionBitSpecial,
+        DoubleNotEqual = NotEqual,
+        DoubleGreaterThan = Above,
+        DoubleGreaterThanOrEqual = AboveOrEqual,
+        DoubleLessThan = Above | DoubleConditionBitInvert,
+        DoubleLessThanOrEqual = AboveOrEqual | DoubleConditionBitInvert,
+        // If either operand is NaN, these conditions always evaluate to true.
+        DoubleUnordered = Parity,
+        DoubleEqualOrUnordered = Equal,
+        DoubleNotEqualOrUnordered = NotEqual | DoubleConditionBitSpecial,
+        DoubleGreaterThanOrUnordered = Below | DoubleConditionBitInvert,
+        DoubleGreaterThanOrEqualOrUnordered = BelowOrEqual | DoubleConditionBitInvert,
+        DoubleLessThanOrUnordered = Below,
+        DoubleLessThanOrEqualOrUnordered = BelowOrEqual
+    };
+
+    static void staticAsserts() {
+        // DoubleConditionBits should not interfere with x86 condition codes.
+        JS_STATIC_ASSERT(!((Equal | NotEqual | Above | AboveOrEqual | Below |
+                            BelowOrEqual | Parity | NoParity) & DoubleConditionBits));
+    }
+
     AssemblerX86Shared()
       : dataBytesNeeded_(0),
         enoughMemory_(true)
@@ -107,6 +140,10 @@ class AssemblerX86Shared
     }
 
     static Condition InvertCondition(Condition cond);
+
+    static inline Condition ConditionFromDoubleCondition(DoubleCondition cond) {
+        return static_cast<Condition>(cond & ~DoubleConditionBits);
+    }
 
     static void TraceDataRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
 

@@ -248,7 +248,7 @@ MacroAssembler::loadFromTypedArray(int arrayType, const T &src, AnyRegister dest
 
         // Make sure NaN gets canonicalized.
         Label notNaN;
-        branchCompareDoubles(Assembler::NoParity, dest.fpu(), dest.fpu(), &notNaN);
+        branchDouble(DoubleOrdered, dest.fpu(), dest.fpu(), &notNaN);
         {
             loadStaticDouble(&js_NaN, dest.fpu());
         }
@@ -339,7 +339,7 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 
     // <= 0 or NaN --> 0
     zeroDouble(ScratchFloatReg);
-    j(compareDoubles(JSOP_GT, input, ScratchFloatReg), &positive); //XXX
+    branchDouble(DoubleGreaterThan, input, ScratchFloatReg, &positive);
     {
         move32(Imm32(0), output);
         jump(&done);
@@ -358,7 +358,7 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
     {
         // Check if we had a tie.
         convertInt32ToDouble(output, ScratchFloatReg);
-        branchCompareDoubles(Assembler::NotEqual, input, ScratchFloatReg, &done);
+        branchDouble(DoubleNotEqual, input, ScratchFloatReg, &done);
 
         // It was a tie. Mask out the ones bit to get an even value.
         // See also js_TypedArray_uint8_clamp_double.

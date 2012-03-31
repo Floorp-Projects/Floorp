@@ -72,46 +72,33 @@ class MacroAssemblerX86Shared : public Assembler
       : framePushed_(0)
     { }
 
-    // The following functions are x86/x64-specific helpers.
-    Condition compareDoubles(JSOp compare, const FloatRegister &lhs, const FloatRegister &rhs) {
-        // ucomisd performs an unordered compare, and we can test for a
-        // successful ordered comparison with A or AE flags. The B and BE flags
-        // test for unordered comparison. Thus, we have to flip the lhs/rhs
-        // sides.
-        switch (compare) {
-          case JSOP_EQ:
-          case JSOP_STRICTEQ:
-            ucomisd(lhs, rhs);
-            return Equal;
-
-          case JSOP_NE:
-          case JSOP_STRICTNE:
-            ucomisd(lhs, rhs);
-            return NotEqual;
-
-          case JSOP_LT:
-          case JSOP_LE:
+    void compareDouble(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs) {
+        if (cond & DoubleConditionBitInvert)
             ucomisd(rhs, lhs);
-            return (compare == JSOP_LT) ? Above : AboveOrEqual;
-
-          case JSOP_GT:
-          case JSOP_GE:
+        else
             ucomisd(lhs, rhs);
-            return (compare == JSOP_GT) ? Above : AboveOrEqual;
+    }
+    void branchDouble(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs,
+                      Label *label) {
+        compareDouble(cond, lhs, rhs);
 
-          default:
-            JS_NOT_REACHED("unexpected opcode kind");
-            return Parity;
+        if (cond == DoubleEqual) {
+            Label unordered;
+            j(Parity, &unordered);
+            j(Equal, label);
+            bind(&unordered);
+            return;
         }
+        if (cond == DoubleNotEqualOrUnordered) {
+            j(Parity, label);
+            j(NotEqual, label);
+            return;
+        }
+
+        JS_ASSERT(!(cond & DoubleConditionBitSpecial));
+        j(ConditionFromDoubleCondition(cond), label);
     }
-    void compareDoubles(const FloatRegister &lhs, const FloatRegister &rhs) {
-        ucomisd(lhs, rhs);
-    }
-    void branchCompareDoubles(Condition cond, const FloatRegister &lhs, const FloatRegister &rhs,
-                              Label *label) {
-        compareDoubles(lhs, rhs);
-        j(cond, label);
-    }
+
     void move32(const Address &address, const Register &dest) {
         movl(Operand(address), dest);
     }

@@ -893,7 +893,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void breakpoint();
 
-    Condition compareDoubles(JSOp compare, FloatRegister lhs, FloatRegister rhs);
+    void compareDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs);
+    void branchDouble(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs,
+                      Label *label);
+
     void checkStackAlignment();
 
     void rshiftPtr(Imm32 imm, const Register &dest) {
