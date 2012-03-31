@@ -50,8 +50,6 @@ EXPORTS	= \
 	gfx3DMatrix.h \
 	gfxASurface.h \
 	gfxAlphaRecovery.h \
-	gfxAtomList.h \
-	gfxAtoms.h \
 	gfxBlur.h \
 	gfxCachedTempSurface.h \
 	gfxColor.h \
@@ -175,8 +173,6 @@ EXPORTS	+= \
 	gfxGDIFont.h \
 	gfxGDIFontList.h \
 	gfxPlatformFontList.h \
-	gfxAtoms.h \
-	gfxAtomList.h \
 	$(NULL)
 endif
 
@@ -193,7 +189,6 @@ CPPSRCS	= \
 	gfxFontMissingGlyphs.cpp \
 	gfxFontTest.cpp \
 	gfxFontUtils.cpp \
-	gfxAtoms.cpp \
 	gfxMatrix.cpp \
 	gfxPath.cpp \
 	gfxPattern.cpp \

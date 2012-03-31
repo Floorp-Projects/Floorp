@@ -39,7 +39,7 @@
 
 #include "nsTextFrameUtils.h"
 #include "gfxSkipChars.h"
-#include "gfxAtoms.h"
+#include "nsGkAtoms.h"
 
 #include "nsStyleConsts.h"
 #include "nsStyleContext.h"
@@ -394,11 +394,11 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
 
     if (lang != styleContext->GetStyleFont()->mLanguage) {
       lang = styleContext->GetStyleFont()->mLanguage;
-      if (lang == gfxAtoms::tr || lang == gfxAtoms::az ||
-          lang == gfxAtoms::ba || lang == gfxAtoms::crh ||
-          lang == gfxAtoms::tt) {
+      if (lang == nsGkAtoms::tr || lang == nsGkAtoms::az ||
+          lang == nsGkAtoms::ba || lang == nsGkAtoms::crh ||
+          lang == nsGkAtoms::tt) {
         languageSpecificCasing = eTurkish;
-      } else if (lang == gfxAtoms::nl) {
+      } else if (lang == nsGkAtoms::nl) {
         languageSpecificCasing = eDutch;
       } else {
         languageSpecificCasing = eNone;

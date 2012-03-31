@@ -51,7 +51,7 @@
 
 #include "gfxFont.h"
 #include "gfxPlatform.h"
-#include "gfxAtoms.h"
+#include "nsGkAtoms.h"
 
 #include "prtypes.h"
 #include "gfxTypes.h"
@@ -3114,7 +3114,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
         }
     }
     if (!groupAtom) {
-        groupAtom = gfxAtoms::x_unicode;
+        groupAtom = nsGkAtoms::Unicode;
     }
     groupAtom->ToUTF8String(groupString);
 
@@ -4005,7 +4005,7 @@ gfxFontStyle::ParseFontLanguageOverride(const nsString& aLangTag)
 }
 
 gfxFontStyle::gfxFontStyle() :
-    language(gfxAtoms::x_western),
+    language(nsGkAtoms::x_western),
     size(DEFAULT_PIXEL_FONT_SIZE), sizeAdjust(0.0f),
     languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
     weight(NS_FONT_WEIGHT_NORMAL), stretch(NS_FONT_STRETCH_NORMAL),
@@ -4044,7 +4044,7 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
 
     if (!language) {
         NS_WARNING("null language");
-        language = gfxAtoms::x_western;
+        language = nsGkAtoms::x_western;
     }
 }
 
