@@ -19,6 +19,8 @@ function test()
   let SourceEditor = tempScope.SourceEditor;
 
   let contextMenu = null;
+  let scriptShown = false;
+  let framesAdded = false;
 
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
@@ -27,12 +29,29 @@ function test()
     gDebugger = gPane.debuggerWindow;
 
     gPane.activeThread.addOneTimeListener("framesadded", function() {
-      Services.tm.currentThread.dispatch({ run: onScriptsAdded }, 0);
+      framesAdded = true;
+      runTest();
     });
     gDebuggee.firstCall();
   });
 
-  function onScriptsAdded()
+  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+    let url = aEvent.detail.url;
+    if (url.indexOf("-02.js") != -1) {
+      scriptShown = true;
+      window.removeEventListener(aEvent.type, _onEvent);
+      runTest();
+    }
+  });
+
+  function runTest()
+  {
+    if (scriptShown && framesAdded) {
+      Services.tm.currentThread.dispatch({ run: onScriptShown }, 0);
+    }
+  }
+
+  function onScriptShown()
   {
     let scripts = gDebugger.DebuggerView.Scripts._scripts;
 
