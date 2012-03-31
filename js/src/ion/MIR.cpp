@@ -44,6 +44,7 @@
 #include "MIR.h"
 #include "MIRGraph.h"
 #include "jsnum.h"
+#include "jstypedarrayinlines.h" // For ClampIntForUint8Array
 
 using namespace js;
 using namespace js::ion;
@@ -1059,6 +1060,23 @@ MToDouble::foldsTo(bool useValueNumbers)
 MDefinition *
 MToString::foldsTo(bool useValueNumbers)
 {
+    return this;
+}
+
+MDefinition *
+MClampToUint8::foldsTo(bool useValueNumbers)
+{
+    if (input()->isConstant()) {
+        const Value &v = input()->toConstant()->value();
+        if (v.isDouble()) {
+            int32_t clamped = js_TypedArray_uint8_clamp_double(v.toDouble());
+            return MConstant::New(Int32Value(clamped));
+        }
+        if (v.isInt32()) {
+            int32_t clamped = ClampIntForUint8Array(v.toInt32());
+            return MConstant::New(Int32Value(clamped));
+        }
+    }
     return this;
 }
 

@@ -1645,6 +1645,15 @@ MacroAssemblerARMCompat::testGCThing(Assembler::Condition cond, const BaseIndex 
 }
 
 Assembler::Condition
+MacroAssemblerARMCompat::testDouble(Condition cond, const Register &tag)
+{
+    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    Condition actual = (cond == Equal) ? Below : AboveOrEqual;
+    ma_cmp(tag, ImmTag(JSVAL_TAG_CLEAR));
+    return actual;
+}
+
+Assembler::Condition
 MacroAssemblerARMCompat::testNumber(Condition cond, const Register &tag)
 {
     JS_ASSERT(cond == Equal || cond == NotEqual);

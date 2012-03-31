@@ -3119,6 +3119,95 @@ class MLoadTypedArrayElementHole
     }
 };
 
+class MStoreTypedArrayElement
+  : public MTernaryInstruction,
+    public StoreTypedArrayPolicy
+{
+    int arrayType_;
+
+    MStoreTypedArrayElement(MDefinition *elements, MDefinition *index, MDefinition *value,
+                            int arrayType)
+      : MTernaryInstruction(elements, index, value), arrayType_(arrayType)
+    {
+        setResultType(MIRType_Value);
+        setMovable();
+        JS_ASSERT(elements->type() == MIRType_Elements);
+        JS_ASSERT(index->type() == MIRType_Int32);
+        JS_ASSERT(arrayType >= 0 && arrayType < TypedArray::TYPE_MAX);
+    }
+
+  public:
+    INSTRUCTION_HEADER(StoreTypedArrayElement);
+
+    static MStoreTypedArrayElement *New(MDefinition *elements, MDefinition *index, MDefinition *value,
+                                        int arrayType) {
+        return new MStoreTypedArrayElement(elements, index, value, arrayType);
+    }
+
+    int arrayType() const {
+        return arrayType_;
+    }
+    bool isByteArray() const {
+        return (arrayType_ == TypedArray::TYPE_INT8 ||
+                arrayType_ == TypedArray::TYPE_UINT8 ||
+                arrayType_ == TypedArray::TYPE_UINT8_CLAMPED);
+    }
+    bool isFloatArray() const {
+        return (arrayType_ == TypedArray::TYPE_FLOAT32 ||
+                arrayType_ == TypedArray::TYPE_FLOAT64);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *elements() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    MDefinition *value() const {
+        return getOperand(2);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::TypedArrayElement);
+    }
+};
+
+// Clamp input to range [0, 255] for Uint8ClampedArray.
+class MClampToUint8
+  : public MUnaryInstruction,
+    public ClampPolicy
+{
+    MClampToUint8(MDefinition *input)
+      : MUnaryInstruction(input)
+    {
+        setResultType(MIRType_Int32);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(ClampToUint8);
+
+    static MClampToUint8 *New(MDefinition *input) {
+        return new MClampToUint8(input);
+    }
+
+    MDefinition *foldsTo(bool useValueNumbers);
+
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    bool congruentTo(MDefinition *const &ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 class MLoadFixedSlot : public MUnaryInstruction, public SingleObjectPolicy
 {
     size_t slot_;

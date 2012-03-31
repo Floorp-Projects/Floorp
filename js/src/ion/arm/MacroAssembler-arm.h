@@ -511,9 +511,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testUndefined(Condition cond, const Register &tag);
     Condition testString(Condition cond, const Register &tag);
     Condition testObject(Condition cond, const Register &tag);
+    Condition testDouble(Condition cond, const Register &tag);
     Condition testNumber(Condition cond, const Register &tag);
     Condition testMagic(Condition cond, const Register &tag);
-
     Condition testPrimitive(Condition cond, const Register &tag);
 
     Condition testGCThing(Condition cond, const Address &address);
@@ -874,6 +874,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void store32(Imm32 src, const Address &address);
     void storePtr(Register src, const Address &address);
     void storePtr(Register src, const ImmWord &imm);
+
+    void clampIntToUint8(Register src, Register dest) {
+        JS_NOT_REACHED("NYI clampIntToUint8");
+    }
 
     void cmp32(const Register &lhs, const Imm32 &rhs);
     void cmp32(const Register &lhs, const Register &rhs);

@@ -89,6 +89,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool lowerPhi(MPhi *phi);
     bool visitGuardShape(MGuardShape *ins);
     bool visitRecompileCheck(MRecompileCheck *ins);
+    bool visitStoreTypedArrayElement(MStoreTypedArrayElement *ins);
 };
 
 typedef LIRGeneratorARM LIRGeneratorSpecific;

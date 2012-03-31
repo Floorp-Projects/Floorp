@@ -52,6 +52,7 @@
 #include "ion/IonCompartment.h"
 
 #include "jsscope.h"
+#include "jstypedarray.h"
 
 namespace js {
 namespace ion {
@@ -334,6 +335,56 @@ class MacroAssembler : public MacroAssemblerSpecific
     template<typename T>
     void loadFromTypedArray(int arrayType, const T &src, const ValueOperand &dest, bool allowDouble,
                             Label *fail);
+
+    template<typename S, typename T>
+    void storeToTypedIntArray(int arrayType, const S &value, const T &dest) {
+#ifdef JS_CPU_ARM
+    JS_NOT_REACHED("NYI typed arrays ARM");
+#else
+        switch (arrayType) {
+          case TypedArray::TYPE_INT8:
+          case TypedArray::TYPE_UINT8:
+          case TypedArray::TYPE_UINT8_CLAMPED:
+            store8(value, dest);
+            break;
+          case TypedArray::TYPE_INT16:
+          case TypedArray::TYPE_UINT16:
+            store16(value, dest);
+            break;
+          case TypedArray::TYPE_INT32:
+          case TypedArray::TYPE_UINT32:
+            store32(value, dest);
+            break;
+          default:
+            JS_NOT_REACHED("Invalid typed array type");
+            break;
+        }
+#endif
+    }
+
+    template<typename S, typename T>
+    void storeToTypedFloatArray(int arrayType, const S &value, const T &dest) {
+#ifdef JS_CPU_ARM
+    JS_NOT_REACHED("NYI typed arrays ARM");
+#else
+        switch (arrayType) {
+          case TypedArray::TYPE_FLOAT32:
+            convertDoubleToFloat(value, value);
+            storeFloat(value, dest);
+            break;
+          case TypedArray::TYPE_FLOAT64:
+            storeDouble(value, dest);
+            break;
+          default:
+            JS_NOT_REACHED("Invalid typed array type");
+            break;
+        }
+#endif
+    }
+
+    // Inline version of js_TypedArray_uint8_clamp_double.
+    // This function clobbers the input register.
+    void clampDoubleToUint8(FloatRegister input, Register output);
 };
 
 } // namespace ion

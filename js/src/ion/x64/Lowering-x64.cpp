@@ -191,3 +191,19 @@ LIRGeneratorX64::visitGuardShape(MGuardShape *ins)
     return assignSnapshot(guard) && add(guard, ins);
 }
 
+bool
+LIRGeneratorX64::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
+{
+    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
+    JS_ASSERT(ins->index()->type() == MIRType_Int32);
+
+    if (ins->isFloatArray())
+        JS_ASSERT(ins->value()->type() == MIRType_Double);
+    else
+        JS_ASSERT(ins->value()->type() == MIRType_Int32);
+
+    LUse elements = useRegister(ins->elements());
+    LAllocation index = useRegisterOrConstant(ins->index());
+    LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
+    return add(new LStoreTypedArrayElement(elements, index, value), ins);
+}
