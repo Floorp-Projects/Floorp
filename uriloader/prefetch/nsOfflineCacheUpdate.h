@@ -213,11 +213,13 @@ public:
 class nsOfflineCacheUpdate : public nsIOfflineCacheUpdate
                            , public nsIOfflineCacheUpdateObserver
                            , public nsOfflineCacheUpdateOwner
+                           , public nsIApplicationCacheAsyncCallback
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOFFLINECACHEUPDATE
     NS_DECL_NSIOFFLINECACHEUPDATEOBSERVER
+    NS_DECL_NSIAPPLICATIONCACHEASYNCCALLBACK
 
     nsOfflineCacheUpdate();
     ~nsOfflineCacheUpdate();
@@ -258,7 +260,7 @@ private:
     nsresult FinishNoNotify();
 
     // Find one non-pinned cache group and evict it.
-    nsresult EvictOneNonPinned();
+    nsresult EvictOneNonPinnedAsync();
 
     enum {
         STATE_UNINITIALIZED,

@@ -98,6 +98,23 @@ interface nsIApplicationCacheNamespace : nsISupports
 };
 
 /**
+ * Callback for asynchronized methods for nsIApplicationCache.
+ */
+[scriptable, uuid(062c8061-7c31-44a4-bd8d-302772e4a7eb)]
+interface nsIApplicationCacheAsyncCallback : nsISupports
+{
+    const long APP_CACHE_REQUEST_SUCCESS = 0;
+    const long APP_CACHE_REQUEST_ERROR = 1;
+
+    /**
+     * Callback function with result code.  It should be a nsresult.
+     *
+     * @param aState is an error code, one of APP_CACHE_REQUEST_*.
+     */
+    void handleAsyncCompletion(in PRUint32 aState);
+};
+
+/**
  * Application caches store resources for offline use.  Each
  * application cache has a unique client ID for use with
  * nsICacheService::openSession() to access the cache's entries.
@@ -186,6 +203,11 @@ interface nsIApplicationCache : nsISupports
      * group, the group will be removed.
      */
     void discard();
+
+    /**
+     * Discard this application cache in asynchronized.
+     */
+    void discardAsync([optional] in nsIApplicationCacheAsyncCallback aCallback);
 
     /**
      * Adds item types to a given entry.
