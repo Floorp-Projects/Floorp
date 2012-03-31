@@ -61,4 +61,5 @@ function testString() {
             assertEq(arr[5], 33);
     }
 }
-testString();
+//FIXME: enable this test again (bug 741114)
+//testString();
