@@ -45,6 +45,7 @@
 #include "gfxContext.h"
 #include "gfxUniscribeShaper.h"
 #include "gfxWindowsPlatform.h"
+#include "gfxAtoms.h"
 
 #include "gfxFontTest.h"
 

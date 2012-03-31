@@ -57,7 +57,7 @@
 #include "gfxAndroidPlatform.h"
 #endif
 
-#include "nsGkAtoms.h"
+#include "gfxAtoms.h"
 #include "gfxPlatformFontList.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
@@ -264,6 +264,8 @@ gfxPlatform::Init()
         NS_RUNTIMEABORT("Already started???");
     }
     gEverInitialized = true;
+
+    gfxAtoms::RegisterAtoms();
 
 #ifdef PR_LOGGING
     sFontlistLog = PR_NewLogModule("fontlist");;
@@ -784,7 +786,7 @@ gfxPlatform::GetPrefFonts(nsIAtom *aLanguage, nsString& aFonts, bool aAppendUnic
 
     AppendGenericFontFromPref(aFonts, aLanguage, nsnull);
     if (aAppendUnicode)
-        AppendGenericFontFromPref(aFonts, nsGkAtoms::Unicode, nsnull);
+        AppendGenericFontFromPref(aFonts, gfxAtoms::x_unicode, nsnull);
 }
 
 bool gfxPlatform::ForEachPrefFont(eFontPrefLang aLangArray[], PRUint32 aLangArrayLen, PrefFontCallback aCallback,

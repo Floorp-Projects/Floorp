@@ -45,7 +45,7 @@
 #include "gfxOS2Surface.h"
 #include "gfxOS2Fonts.h"
 #include "nsTArray.h"
-#include "nsGkAtoms.h"
+#include "gfxAtoms.h"
 
 #include "nsIPlatformCharset.h"
 
@@ -547,10 +547,10 @@ gfxOS2FontGroup::gfxOS2FontGroup(const nsAString& aFamilies,
     // are set up, and if the user was so clever to set up the User Defined fonts,
     // then these are probable candidates, too.
     nsString fontString;
-    gfxPlatform::GetPlatform()->GetPrefFonts(nsGkAtoms::Unicode, fontString, false);
-    ForEachFont(fontString, nsGkAtoms::Unicode, FontCallback, &familyArray);
-    gfxPlatform::GetPlatform()->GetPrefFonts(nsGkAtoms::x_user_def, fontString, false);
-    ForEachFont(fontString, nsGkAtoms::x_user_def, FontCallback, &familyArray);
+    gfxPlatform::GetPlatform()->GetPrefFonts(gfxAtoms::x_unicode, fontString, false);
+    ForEachFont(fontString, gfxAtoms::x_unicode, FontCallback, &familyArray);
+    gfxPlatform::GetPlatform()->GetPrefFonts(gfxAtoms::x_user_def, fontString, false);
+    ForEachFont(fontString, gfxAtoms::x_user_def, FontCallback, &familyArray);
 
     // Should append some default font if there are no available fonts.
     // Let's use Helv which should be available on any OS/2 system; if
