@@ -1712,14 +1712,15 @@ static const char* gRawCodecs[] = {
   nsnull
 };
 
-static bool IsRawEnabled()
+bool
+nsHTMLMediaElement::IsRawEnabled()
 {
   return Preferences::GetBool("media.raw.enabled");
 }
 
 static bool IsRawType(const nsACString& aType)
 {
-  if (!IsRawEnabled()) {
+  if (!nsHTMLMediaElement::IsRawEnabled()) {
     return false;
   }
 
