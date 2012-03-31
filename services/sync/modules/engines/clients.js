@@ -200,7 +200,7 @@ ClientEngine.prototype = {
     wipeAll:     { args: 0, desc: "Delete all client data for all engines" },
     wipeEngine:  { args: 1, desc: "Delete all client data for engine" },
     logout:      { args: 0, desc: "Log out client" },
-    displayURI:  { args: 2, desc: "Instruct a client to display a URI" }
+    displayURI:  { args: 3, desc: "Instruct a client to display a URI" },
   },
 
   /**
@@ -286,7 +286,7 @@ ClientEngine.prototype = {
             Weave.Service.logout();
             return false;
           case "displayURI":
-            this._handleDisplayURI(args[0], args[1]);
+            this._handleDisplayURI.apply(this, args);
             break;
           default:
             this._log.debug("Received an unknown command: " + command);
@@ -350,10 +350,13 @@ ClientEngine.prototype = {
    * @param clientId
    *        ID of client to send the command to. If not defined, will be sent
    *        to all remote clients.
+   * @param title
+   *        Title of the page being sent.
    */
-  sendURIToClientForDisplay: function sendURIToClientForDisplay(uri, clientId) {
-    this._log.info("Sending URI to client: " + uri + " -> " + clientId);
-    this.sendCommand("displayURI", [uri, this.syncID], clientId);
+  sendURIToClientForDisplay: function sendURIToClientForDisplay(uri, clientId, title) {
+    this._log.info("Sending URI to client: " + uri + " -> " +
+                   clientId + " (" + title + ")");
+    this.sendCommand("displayURI", [uri, this.localID, title], clientId);
 
     Clients._tracker.score += SCORE_INCREMENT_XLARGE;
   },
@@ -365,8 +368,9 @@ ClientEngine.prototype = {
    * topic. The callback will receive an object as the subject parameter with
    * the following keys:
    *
-   *   uri       URI (string) that is requested for display
-   *   clientId  ID of client that sent the command
+   *   uri       URI (string) that is requested for display.
+   *   clientId  ID of client that sent the command.
+   *   title     Title of page that loaded URI (likely) corresponds to.
    *
    * The 'data' parameter to the callback will not be defined.
    *
@@ -374,11 +378,15 @@ ClientEngine.prototype = {
    *        String URI that was received
    * @param clientId
    *        ID of client that sent URI
+   * @param title
+   *        String title of page that URI corresponds to. Older clients may not
+   *        send this.
    */
-  _handleDisplayURI: function _handleDisplayURI(uri, clientId) {
-    this._log.info("Received a URI for display: " + uri + " from " + clientId);
+  _handleDisplayURI: function _handleDisplayURI(uri, clientId, title) {
+    this._log.info("Received a URI for display: " + uri + " (" + title +
+                   ") from " + clientId);
 
-    let subject = { uri: uri, client: clientId };
+    let subject = {uri: uri, client: clientId, title: title};
     Svc.Obs.notify("weave:engine:clients:display-uri", subject);
   }
 };

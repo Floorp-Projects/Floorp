@@ -1,62 +1,11 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
-
-function test_identities() {
-  _("Account related Service properties correspond to preference settings and update other object properties upon being set.");
-
-  try {
-    _("Verify initial state");
-    do_check_eq(Svc.Prefs.get("account"), undefined);
-    do_check_eq(Svc.Prefs.get("username"), undefined);
-    do_check_eq(ID.get("WeaveID").username, "");
-    do_check_eq(ID.get("WeaveCryptoID").username, "");
-
-    _("The 'username' attribute is normalized to lower case, updates preferences and identities.");
-    Service.username = "TarZan";
-    do_check_eq(Service.username, "tarzan");
-    do_check_eq(Svc.Prefs.get("username"), "tarzan");
-    do_check_eq(ID.get("WeaveID").username, "tarzan");
-    do_check_eq(ID.get("WeaveCryptoID").username, "tarzan");
-
-    _("If not set, the 'account attribute' falls back to the username for backwards compatibility.");
-    do_check_eq(Service.account, "tarzan");
-
-    _("Setting 'username' to a non-truthy value resets the pref.");
-    Service.username = null;
-    do_check_eq(Service.username, "");
-    do_check_eq(Service.account, "");
-    const default_marker = {};
-    do_check_eq(Svc.Prefs.get("username", default_marker), default_marker);
-    do_check_eq(ID.get("WeaveID").username, null);
-    do_check_eq(ID.get("WeaveCryptoID").username, null);
-
-    _("The 'account' attribute will set the 'username' if it doesn't contain characters that aren't allowed in the username.");
-    Service.account = "johndoe";
-    do_check_eq(Service.account, "johndoe");
-    do_check_eq(Service.username, "johndoe");
-    do_check_eq(Svc.Prefs.get("username"), "johndoe");
-    do_check_eq(ID.get("WeaveID").username, "johndoe");
-    do_check_eq(ID.get("WeaveCryptoID").username, "johndoe");
-
-    _("If 'account' contains disallowed characters such as @, 'username' will the base32 encoded SHA1 hash of 'account'");
-    Service.account = "John@Doe.com";
-    do_check_eq(Service.account, "john@doe.com");
-    do_check_eq(Service.username, "7wohs32cngzuqt466q3ge7indszva4of");
-
-    _("Setting 'account' to a non-truthy value resets the pref.");
-    Service.account = null;
-    do_check_eq(Service.account, "");
-    do_check_eq(Svc.Prefs.get("account", default_marker), default_marker);
-    do_check_eq(Service.username, "");
-    do_check_eq(Svc.Prefs.get("username", default_marker), default_marker);
-
-  } finally {
-    Svc.Prefs.resetBranch("");
-  }
-}
 
 function test_urls() {
   _("URL related Service properties corresopnd to preference settings.");
@@ -69,7 +18,7 @@ function test_urls() {
     do_check_eq(Service.metaURL, undefined);
 
     _("The 'clusterURL' attribute updates preferences and cached URLs.");
-    Service.username = "johndoe";
+    Identity.username = "johndoe";
 
     // Since we don't have a cluster URL yet, these will still not be defined.
     do_check_eq(Service.infoURL, undefined);
@@ -106,10 +55,9 @@ function test_urls() {
                 "http://weave.server/weave-password-reset");
 
     _("Empty/false value for 'username' resets preference.");
-    Service.username = "";
+    Identity.username = "";
     do_check_eq(Svc.Prefs.get("username"), undefined);
-    do_check_eq(ID.get("WeaveID").username, "");
-    do_check_eq(ID.get("WeaveCryptoID").username, "");
+    do_check_eq(Identity.username, null);
 
     _("The 'serverURL' attributes updates/resets preferences.");
     // Identical value doesn't do anything
@@ -164,7 +112,6 @@ function test_locked() {
 }
 
 function run_test() {
-  test_identities();
   test_urls();
   test_syncID();
   test_locked();
