@@ -105,6 +105,7 @@
 #include "nsIFileChannel.h"
 #include "mozilla/Telemetry.h"
 #include "sampler.h"
+#include "mozilla/dom/bindings/XMLHttpRequestBinding.h"
 #include "nsIDOMFormData.h"
 
 #include "nsWrapperCacheInlines.h"
@@ -483,6 +484,8 @@ nsXMLHttpRequest::nsXMLHttpRequest()
     mResultArrayBuffer(nsnull)
 {
   nsLayoutStatics::AddRef();
+
+  SetIsDOMBinding();
 #ifdef DEBUG
   StaticAssertions();
 #endif
@@ -540,15 +543,17 @@ nsXMLHttpRequest::Init()
     NS_ENSURE_SUCCESS(rv, rv);
   }
   NS_ENSURE_STATE(subjectPrincipal);
-  mPrincipal = subjectPrincipal;
 
   nsIScriptContext* context = GetScriptContextFromJSContext(cx);
+  nsCOMPtr<nsPIDOMWindow> window;
   if (context) {
-    nsCOMPtr<nsPIDOMWindow> window =
-      do_QueryInterface(context->GetGlobalObject());
-    BindToOwner(window ? window->GetCurrentInnerWindow() : nsnull);
+    window = do_QueryInterface(context->GetGlobalObject());
+    if (window) {
+      window = window->GetCurrentInnerWindow();
+    }
   }
 
+  Construct(subjectPrincipal, window);
   return NS_OK;
 }
 /**
@@ -561,11 +566,9 @@ nsXMLHttpRequest::Init(nsIPrincipal* aPrincipal,
                        nsIURI* aBaseURI)
 {
   NS_ENSURE_ARG_POINTER(aPrincipal);
-
-  mPrincipal = aPrincipal;
-  BindToOwner(aOwnerWindow ? aOwnerWindow->GetCurrentInnerWindow() : nsnull);
-  mBaseURI = aBaseURI;
-
+  Construct(aPrincipal,
+            aOwnerWindow ? aOwnerWindow->GetCurrentInnerWindow() : nsnull,
+            aBaseURI);
   return NS_OK;
 }
 
@@ -586,9 +589,9 @@ nsXMLHttpRequest::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
   // so re-set principal and script context.
   nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal = do_QueryInterface(aOwner);
   NS_ENSURE_STATE(scriptPrincipal);
-  mPrincipal = scriptPrincipal->GetPrincipal();
-  BindToOwner(owner);
-  return NS_OK; 
+
+  Construct(scriptPrincipal->GetPrincipal(), owner);
+  return NS_OK;
 }
 
 void
@@ -1087,6 +1090,15 @@ nsXMLHttpRequest::StaticAssertions()
       == bindings::prototypes::XMLHttpRequestResponseType::value(XML_HTTP_RESPONSE_TYPE_ ## _uc), \
     #_uc " should match")
 
+  ASSERT_ENUM_EQUAL(_empty, DEFAULT);
+  ASSERT_ENUM_EQUAL(arraybuffer, ARRAYBUFFER);
+  ASSERT_ENUM_EQUAL(blob, BLOB);
+  ASSERT_ENUM_EQUAL(document, DOCUMENT);
+  ASSERT_ENUM_EQUAL(json, JSON);
+  ASSERT_ENUM_EQUAL(text, TEXT);
+  ASSERT_ENUM_EQUAL(moz_chunked_text, CHUNKED_TEXT);
+  ASSERT_ENUM_EQUAL(moz_chunked_arraybuffer, CHUNKED_ARRAYBUFFER);
+  ASSERT_ENUM_EQUAL(moz_blob, MOZ_BLOB);
 #undef ASSERT_ENUM_EQUAL
 }
 #endif
@@ -1120,6 +1132,13 @@ NS_IMETHODIMP nsXMLHttpRequest::SetResponseType(const nsAString& aResponseType)
   nsresult rv = NS_OK;
   SetResponseType(responseType, rv);
   return rv;
+}
+
+void
+nsXMLHttpRequest::SetResponseType(XMLHttpRequestResponseType aType,
+                                  nsresult& aRv)
+{
+  SetResponseType(ResponseType(aType), aRv);
 }
 
 void
@@ -2706,7 +2725,7 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
 /* static */
 nsresult
 nsXMLHttpRequest::GetRequestBody(nsIVariant* aVariant,
-                                 const RequestBody* aBody,
+                                 const Nullable<RequestBody>& aBody,
                                  nsIInputStream** aResult,
                                  nsACString& aContentType, nsACString& aCharset)
 {
@@ -2714,7 +2733,7 @@ nsXMLHttpRequest::GetRequestBody(nsIVariant* aVariant,
     return ::GetRequestBody(aVariant, aResult, aContentType, aCharset);
   }
 
-  const RequestBody& body = *aBody;
+  const RequestBody& body = aBody.Value();
   RequestBody::Value value = body.GetValue();
   switch (body.GetType()) {
     case nsXMLHttpRequest::RequestBody::ArrayBuffer:
@@ -2764,11 +2783,11 @@ nsXMLHttpRequest::GetRequestBody(nsIVariant* aVariant,
 NS_IMETHODIMP
 nsXMLHttpRequest::Send(nsIVariant *aBody)
 {
-  return Send(aBody, nsnull);
+  return Send(aBody, Nullable<RequestBody>());
 }
 
 nsresult
-nsXMLHttpRequest::Send(nsIVariant* aVariant, const RequestBody* aBody)
+nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
 {
   NS_ENSURE_TRUE(mPrincipal, NS_ERROR_NOT_INITIALIZED);
 
@@ -2885,7 +2904,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const RequestBody* aBody)
   mLoadTotal = 0;
   mUploadProgress = 0;
   mUploadProgressMax = 0;
-  if ((aVariant || aBody) && httpChannel &&
+  if ((aVariant || !aBody.IsNull()) && httpChannel &&
       !method.EqualsLiteral("GET")) {
 
     nsCAutoString charset;
@@ -3843,6 +3862,20 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
   }
 
   return QueryInterface(aIID, aResult);
+}
+
+JS::Value
+nsXMLHttpRequest::GetInterface(JSContext* aCx, nsIJSIID* aIID, nsresult& aRv)
+{
+  const nsID* iid = aIID->GetID();
+  nsCOMPtr<nsISupports> result;
+  JS::Value v = JSVAL_NULL;
+  aRv = GetInterface(*iid, getter_AddRefs(result));
+  NS_ENSURE_SUCCESS(aRv, JSVAL_NULL);
+
+  JSObject* global = JS_GetGlobalForObject(aCx, GetWrapper());
+  aRv = nsContentUtils::WrapNative(aCx, global, result, iid, &v);
+  return NS_SUCCEEDED(aRv) ? v : JSVAL_NULL;
 }
 
 nsXMLHttpRequestUpload*

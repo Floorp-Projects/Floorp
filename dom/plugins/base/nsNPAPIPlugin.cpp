@@ -541,23 +541,6 @@ nsNPAPIPlugin::PluginFuncs()
 }
 
 nsresult
-nsNPAPIPlugin::CreatePluginInstance(nsNPAPIPluginInstance **aResult)
-{
-  if (!aResult)
-    return NS_ERROR_NULL_POINTER;
-
-  *aResult = NULL;
-
-  nsRefPtr<nsNPAPIPluginInstance> inst = new nsNPAPIPluginInstance(this);
-  if (!inst)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aResult = inst;
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-
-nsresult
 nsNPAPIPlugin::Shutdown()
 {
   NPP_PLUGIN_LOG(PLUGIN_LOG_BASIC,

@@ -1,0 +1,122 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# # License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# # You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH            = ../..
+topsrcdir        = @top_srcdir@
+srcdir           = @srcdir@
+VPATH            = @srcdir@
+
+MODULE           = dom
+LIBRARY_NAME     = dombindings_s
+LIBXUL_LIBRARY   = 1
+FORCE_STATIC_LIB = 1
+EXPORT_LIBRARY   = 1
+
+include $(topsrcdir)/config/config.mk
+
+# Define USE_JSOP_ACCESSORS to a nonempty string like "yes" to use them
+USE_JSOP_ACCESSORS = 
+ifdef USE_JSOP_ACCESSORS
+DEFINES += -DUSE_JSOP_ACCESSORS
+ACCESSOR_OPT = --use-jsop-accessors
+else
+ACCESSOR_OPT =
+endif
+
+# Need this to find all our DOM source files.
+include $(topsrcdir)/dom/dom-config.mk
+
+include $(topsrcdir)/dom/webidl/WebIDL.mk
+
+binding_include_path := mozilla/dom/bindings
+binding_header_files := $(subst .webidl,Binding.h,$(webidl_files))
+binding_cpp_files := $(subst .webidl,Binding.cpp,$(webidl_files))
+
+globalgen_targets := \
+  PrototypeList.h \
+  Common.h \
+  Common.cpp \
+  $(NULL)
+
+CPPSRCS = \
+  $(binding_cpp_files) \
+  $(filter %.cpp, $(globalgen_targets)) \
+  Utils.cpp \
+  $(NULL)
+
+EXPORTS_NAMESPACES = $(binding_include_path)
+
+EXPORTS_$(binding_include_path) = \
+  DOMJSClass.h \
+  PrototypeList.h \
+  Common.h \
+  Nullable.h \
+  Utils.h \
+  $(binding_header_files) \
+  $(NULL)
+
+LOCAL_INCLUDES += -I$(topsrcdir)/js/xpconnect/src \
+  -I$(topsrcdir)/js/xpconnect/wrappers
+
+TEST_DIRS += test
+
+include $(topsrcdir)/config/rules.mk
+
+bindinggen_dependencies := \
+  BindingGen.py \
+  Bindings.conf \
+  Configuration.py \
+  Codegen.py \
+  ParserResults.pkl \
+  $(GLOBAL_DEPS) \
+  $(NULL)
+
+$(binding_header_files): %Binding.h: $(bindinggen_dependencies) \
+                                     $(webidl_base)/%.webidl \
+                                     $(NULL)
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
+    -I$(topsrcdir)/other-licenses/ply -I$(srcdir)/parser \
+    $(srcdir)/BindingGen.py $(ACCESSOR_OPT) header $(srcdir)/Bindings.conf $*Binding \
+    $(webidl_base)/$*.webidl
+
+$(binding_cpp_files): %Binding.cpp: $(bindinggen_dependencies) \
+                                    $(webidl_base)/%.webidl \
+                                    $(NULL)
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
+    -I$(topsrcdir)/other-licenses/ply -I$(srcdir)/parser \
+    $(srcdir)/BindingGen.py $(ACCESSOR_OPT) cpp $(srcdir)/Bindings.conf $*Binding \
+    $(webidl_base)/$*.webidl
+
+$(globalgen_targets): ParserResults.pkl
+
+CACHE_DIR = _cache
+
+globalgen_dependencies := \
+  GlobalGen.py \
+  Bindings.conf \
+  Configuration.py \
+  Codegen.py \
+  $(CACHE_DIR)/.done \
+  $(GLOBAL_DEPS) \
+  $(NULL)
+
+$(CACHE_DIR)/.done:
+	$(MKDIR) -p $(CACHE_DIR)
+	@$(TOUCH) $@
+
+ParserResults.pkl: $(globalgen_dependencies) \
+                   $(addprefix $(webidl_base)/, $(webidl_files))
+	$(PYTHON_PATH) -I$(topsrcdir)/other-licenses/ply -I$(srcdir)/parser \
+    $(srcdir)/GlobalGen.py $(ACCESSOR_OPT) $(srcdir)/Bindings.conf $(webidl_base) \
+    --cachedir=$(CACHE_DIR) \
+    $(webidl_files)
+
+GARBAGE += \
+  $(binding_header_files) \
+  $(binding_cpp_files) \
+  $(globalgen_targets) \
+  ParserResults.pkl \
+  webidlyacc.py \
+  parser.out \
+  $(NULL)

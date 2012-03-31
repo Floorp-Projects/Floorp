@@ -77,8 +77,6 @@
 #define INITGUID
 #include <shlobj.h>
 
-#pragma comment(lib, "shlwapi.lib") // for SHDeleteKeyW
-
 #include <mbstring.h>
 #include <shlwapi.h>
 

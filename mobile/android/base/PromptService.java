@@ -462,6 +462,10 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     }
 
     public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
+        private static final int VIEW_TYPE_ITEM = 0;
+        private static final int VIEW_TYPE_GROUP = 1;
+        private static final int VIEW_TYPE_COUNT = 2;
+
         public ListView listView = null;
     	private PromptListItem[] mList;
     	private int mResourceId = -1;
@@ -483,59 +487,105 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             return mList[position].id;
         }
 
+        @Override
+        public int getItemViewType(int position) {
+            PromptListItem item = getItem(position);
+            return (item.isGroup ? VIEW_TYPE_GROUP : VIEW_TYPE_ITEM);
+        }
+
+        @Override
+        public int getViewTypeCount() {
+            return VIEW_TYPE_COUNT;
+        }
+
+        private void maybeUpdateIcon(PromptListItem item, TextView t) {
+            if (item.icon == null)
+                return;
+
+            Resources res = GeckoApp.mAppContext.getResources();
+
+            // Set padding inside the item.
+            t.setPadding(item.inGroup ? mLeftRightTextWithIconPadding + mGroupPaddingSize :
+                                        mLeftRightTextWithIconPadding,
+                         mTopBottomTextWithIconPadding,
+                         mLeftRightTextWithIconPadding,
+                         mTopBottomTextWithIconPadding);
+
+            // Set the padding between the icon and the text.
+            t.setCompoundDrawablePadding(mIconTextPadding);
+
+            // We want the icon to be of a specific size. Some do not
+            // follow this rule so we have to resize them.
+            Bitmap bitmap = ((BitmapDrawable) item.icon).getBitmap();
+            Drawable d = new BitmapDrawable(Bitmap.createScaledBitmap(bitmap, mIconSize, mIconSize, true));
+
+            t.setCompoundDrawablesWithIntrinsicBounds(d, null, null, null);
+        }
+
+        private void maybeUpdateCheckedState(int position, PromptListItem item, ViewHolder viewHolder) {
+            if (item.isGroup)
+                return;
+
+            CheckedTextView ct;
+            try {
+                ct = (CheckedTextView) viewHolder.textView;
+            } catch (Exception e) {
+                return;
+            }
+
+            ct.setEnabled(!item.disabled);
+            ct.setClickable(item.disabled);
+
+            // Apparently just using ct.setChecked(true) doesn't work, so this
+            // is stolen from the android source code as a way to set the checked
+            // state of these items
+            if (listView != null)
+                listView.setItemChecked(position, mSelected[position]);
+
+            ct.setPadding((item.inGroup ? mGroupPaddingSize : viewHolder.paddingLeft),
+                          viewHolder.paddingTop,
+                          viewHolder.paddingRight,
+                          viewHolder.paddingBottom);
+        }
+
         public View getView(int position, View convertView, ViewGroup parent) {
             PromptListItem item = getItem(position);
-            int resourceId = mResourceId;
-            if (item.isGroup) {
-                resourceId = R.layout.list_item_header;
-            }
-            View row = mInflater.inflate(resourceId, null);
-            if (!item.isGroup){
-                try {
-                    CheckedTextView ct = (CheckedTextView)row.findViewById(android.R.id.text1);
-                    if (ct != null){
-                        ct.setEnabled(!item.disabled);
-                        ct.setClickable(item.disabled);
+            ViewHolder viewHolder = null;
 
-                        // Apparently just using ct.setChecked(true) doesn't work, so this
-                        // is stolen from the android source code as a way to set the checked
-                        // state of these items
-                        if (mSelected[position] && listView != null) {
-                            listView.setItemChecked(position, true);
-                        }
-
-                        if (item.inGroup) {
-                            ct.setPadding(mGroupPaddingSize, 0, 0, 0);
-                        }
-
-                    }
-                } catch (Exception ex) { }
-            }
-
-            TextView t1 = (TextView) row.findViewById(android.R.id.text1);
-            if (t1 != null) {
-                t1.setText(item.label);
-                if (item.icon != null) {
-                    Resources res = GeckoApp.mAppContext.getResources();
-
-                    // Set padding inside the item.
-                    t1.setPadding(item. inGroup ? mLeftRightTextWithIconPadding + mGroupPaddingSize : mLeftRightTextWithIconPadding,
-                                  mTopBottomTextWithIconPadding,
-                                  mLeftRightTextWithIconPadding, mTopBottomTextWithIconPadding);
-
-                    // Set the padding between the icon and the text.
-                    t1.setCompoundDrawablePadding(mIconTextPadding);
-
-                    // We want the icon to be of a specific size. Some do not
-                    // follow this rule so we have to resize them.
-                    Bitmap bitmap = ((BitmapDrawable) item.icon).getBitmap();
-                    Drawable d = new BitmapDrawable(Bitmap.createScaledBitmap(bitmap, mIconSize, mIconSize, true));
-
-                    t1.setCompoundDrawablesWithIntrinsicBounds(d, null, null, null);
+            if (convertView == null) {
+                int resourceId = mResourceId;
+                if (item.isGroup) {
+                    resourceId = R.layout.list_item_header;
                 }
+
+                convertView = mInflater.inflate(resourceId, null);
+
+                viewHolder = new ViewHolder();
+                viewHolder.textView = (TextView) convertView.findViewById(android.R.id.text1);
+
+                viewHolder.paddingLeft = viewHolder.textView.getPaddingLeft();
+                viewHolder.paddingRight = viewHolder.textView.getPaddingRight();
+                viewHolder.paddingTop = viewHolder.textView.getPaddingTop();
+                viewHolder.paddingBottom = viewHolder.textView.getPaddingBottom();
+
+                convertView.setTag(viewHolder);
+            } else {
+                viewHolder = (ViewHolder) convertView.getTag();
             }
 
-            return row;
+            viewHolder.textView.setText(item.label);
+            maybeUpdateCheckedState(position, item, viewHolder);
+            maybeUpdateIcon(item, viewHolder.textView);
+
+            return convertView;
+        }
+
+        private class ViewHolder {
+            public TextView textView;
+            public int paddingLeft;
+            public int paddingRight;
+            public int paddingTop;
+            public int paddingBottom;
         }
     }
 }

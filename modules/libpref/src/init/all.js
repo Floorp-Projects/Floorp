@@ -637,6 +637,7 @@ pref("dom.min_background_timeout_value", 1000);
 // Use the new DOM bindings (only affects any scopes created after the pref is
 // changed)
 pref("dom.new_bindings", true);
+pref("dom.paris_bindings", true);
 
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN

@@ -1665,6 +1665,23 @@ nsContentUtils::GetContextAndScope(nsIDocument *aOldDocument,
   return NS_OK;
 }
 
+//static
+void
+nsContentUtils::TraceSafeJSContext(JSTracer* aTrc)
+{
+  if (!sThreadJSContextStack) {
+    return;
+  }
+  JSContext* cx = nsnull;
+  sThreadJSContextStack->GetSafeJSContext(&cx);
+  if (!cx) {
+    return;
+  }
+  if (JSObject* global = JS_GetGlobalObject(cx)) {
+    JS_CALL_OBJECT_TRACER(aTrc, global, "safe context");
+  }
+}
+
 nsresult
 nsContentUtils::ReparentContentWrappersInScope(JSContext *cx,
                                                nsIScriptGlobalObject *aOldScope,
@@ -6578,16 +6595,17 @@ nsContentUtils::ReleaseWrapper(nsISupports* aScriptObjectHolder,
                                nsWrapperCache* aCache)
 {
   if (aCache->PreservingWrapper()) {
+    // PreserveWrapper puts new DOM bindings in the JS holders hash, but they
+    // can also be in the DOM expando hash, so we need to try to remove them
+    // from both here.
     JSObject* obj = aCache->GetWrapperPreserveColor();
-    if (aCache->IsDOMBinding()) {
+    if (aCache->IsDOMBinding() && obj) {
       JSCompartment *compartment = js::GetObjectCompartment(obj);
       xpc::CompartmentPrivate *priv =
         static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
       priv->RemoveDOMExpandoObject(obj);
     }
-    else {
-      DropJSObjects(aScriptObjectHolder);
-    }
+    DropJSObjects(aScriptObjectHolder);
 
     aCache->SetPreservingWrapper(false);
   }

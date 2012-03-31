@@ -844,7 +844,11 @@ XPCWrappedNative::Morph(XPCCallContext& ccx,
     AutoMarkingWrappedNativePtr wrapperMarker(ccx, wrapper);
 
     JSAutoEnterCompartment ac;
-    if (!ac.enter(ccx, existingJSObject) || !wrapper->Init(ccx, existingJSObject))
+    if (!ac.enter(ccx, existingJSObject)) {
+        wrapper->mIdentity = nsnull;
+        return NS_ERROR_FAILURE;
+    }
+    if (!wrapper->Init(ccx, existingJSObject))
         return NS_ERROR_FAILURE;
 
     nsresult rv;

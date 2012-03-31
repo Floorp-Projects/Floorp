@@ -94,8 +94,10 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/bindings/Utils.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
@@ -2445,9 +2447,17 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj
             if (result) {
                 break;
             }
-        } else if (!(~jsClass->flags & (JSCLASS_HAS_PRIVATE |
-                                        JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
-            nsISupports *priv = (nsISupports *) js::GetObjectPrivate(aObj);
+        } else {
+            nsISupports *priv;
+            if (!(~jsClass->flags & (JSCLASS_HAS_PRIVATE |
+                                     JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
+                priv = (nsISupports *) js::GetObjectPrivate(aObj);
+            } else if ((jsClass->flags & JSCLASS_IS_DOMJSCLASS) &&
+                       bindings::DOMJSClass::FromJSClass(jsClass)->mDOMObjectIsISupports) {
+                priv = bindings::UnwrapDOMObject<nsISupports>(aObj, jsClass);
+            } else {
+                priv = nsnull;
+            }
 
 #ifdef DEBUG
             if (aAllowShortCircuit) {

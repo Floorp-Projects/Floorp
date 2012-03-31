@@ -78,7 +78,6 @@ let libcutils = (function() {
   };
 })();
 
-
 /**
  * Network-related functions from libnetutils.
  */
@@ -97,7 +96,7 @@ let libnetutils = (function () {
     };
   }
 
-  return {
+  let iface = {
     ifc_enable: library.declare("ifc_enable", ctypes.default_abi,
                                 ctypes.int,
                                 ctypes.char.ptr),
@@ -138,16 +137,6 @@ let libnetutils = (function () {
                                    ctypes.int,
                                    ctypes.int,
                                    ctypes.int),
-    dhcp_do_request: library.declare("dhcp_do_request", ctypes.default_abi,
-                                     ctypes.int,
-                                     ctypes.char.ptr,
-                                     ctypes.int.ptr,
-                                     ctypes.int.ptr,
-                                     ctypes.int.ptr,
-                                     ctypes.int.ptr,
-                                     ctypes.int.ptr,
-                                     ctypes.int.ptr,
-                                     ctypes.int.ptr),
     dhcp_stop: library.declare("dhcp_stop", ctypes.default_abi,
                                ctypes.int,
                                ctypes.char.ptr),
@@ -156,16 +145,167 @@ let libnetutils = (function () {
                                         ctypes.char.ptr),
     dhcp_get_errmsg: library.declare("dhcp_get_errmsg", ctypes.default_abi,
                                      ctypes.char.ptr),
-    dhcp_do_request_renew: library.declare("dhcp_do_request_renew",
-                                           ctypes.default_abi,
-                                           ctypes.int,
-                                           ctypes.char.ptr,
-                                           ctypes.int.ptr,
-                                           ctypes.int.ptr,
-                                           ctypes.int.ptr,
-                                           ctypes.int.ptr,
-                                           ctypes.int.ptr,
-                                           ctypes.int.ptr,
-                                           ctypes.int.ptr)
   };
+
+  // dhcp_do_request's interface changed in SDK version 15. We try to hide
+  // this here by implementing the same JS API for both versions.
+
+  let sdkVersion = libcutils.property_get("ro.build.version.sdk") || "0";
+  sdkVersion = parseInt(sdkVersion, 10);
+  if (sdkVersion >= 15) {
+    let ipaddrbuf = ctypes.char.array(4096)();
+    let gatewaybuf = ctypes.char.array(4096)();
+    let prefixLen = ctypes.int();
+    let dns1buf = ctypes.char.array(4096)();
+    let dns2buf = ctypes.char.array(4096)();
+    let serverbuf = ctypes.char.array(4096)();
+    let lease = ctypes.int();
+    let c_dhcp_do_request =
+      library.declare("dhcp_do_request", ctypes.default_abi,
+                      ctypes.int,      // return value
+                      ctypes.char.ptr, // ifname
+                      ctypes.char.ptr, // ipaddr
+                      ctypes.char.ptr, // gateway
+                      ctypes.int.ptr,  // prefixlen
+                      ctypes.char.ptr, // dns1
+                      ctypes.char.ptr, // dns2
+                      ctypes.char.ptr, // server
+                      ctypes.int.ptr); // lease
+
+
+    iface.dhcp_do_request = function dhcp_do_request(ifname) {
+      let ret = c_dhcp_do_request(ifname,
+                                  ipaddrbuf,
+                                  gatewaybuf,
+                                  prefixLen.address(),
+                                  dns1buf,
+                                  dns2buf,
+                                  serverbuf,
+                                  lease.address());
+
+      let obj = {
+        ret: ret | 0,
+        ipaddr_str: ipaddrbuf.readString(),
+        mask: netHelpers.makeMask(prefixLen),
+        gateway_str: gatewaybuf.readString(),
+        dns1_str: dns1buf.readString(),
+        dns2_str: dns2buf.readString(),
+        server_str: serverbuf.readString(),
+        lease: lease | 0
+      };
+      obj.ipaddr = netHelpers.stringToIP(obj.ipaddr_str);
+      obj.gateway = netHelpers.stringToIP(obj.gateway_str);
+      obj.dns1 = netHelpers.stringToIP(obj.dns1_str);
+      obj.dns2 = netHelpers.stringToIP(obj.dns2_str);
+      obj.server = netHelpers.stringToIP(obj.server_str);
+      return obj;
+    };
+    // dhcp_do_request_renew() went away in newer libnetutils.
+    iface.dhcp_do_request_renew = iface.dhcp_do_request;
+  } else {
+    let ints = ctypes.int.array(8)();
+    let c_dhcp_do_request =
+      library.declare("dhcp_do_request", ctypes.default_abi,
+                      ctypes.int,      // return value
+                      ctypes.char.ptr, // ifname
+                      ctypes.int.ptr,  // ipaddr
+                      ctypes.int.ptr,  // gateway
+                      ctypes.int.ptr,  // mask
+                      ctypes.int.ptr,  // dns1
+                      ctypes.int.ptr,  // dns2
+                      ctypes.int.ptr,  // server
+                      ctypes.int.ptr); // lease
+    let c_dhcp_do_request_renew =
+      library.declare("dhcp_do_request_renew", ctypes.default_abi,
+                      ctypes.int,      // return value
+                      ctypes.char.ptr, // ifname
+                      ctypes.int.ptr,  // ipaddr
+                      ctypes.int.ptr,  // gateway
+                      ctypes.int.ptr,  // mask
+                      ctypes.int.ptr,  // dns1
+                      ctypes.int.ptr,  // dns2
+                      ctypes.int.ptr,  // server
+                      ctypes.int.ptr); // lease
+
+    let wrapCFunc = function wrapCFunc(c_fn) {
+      return function (ifname) {
+        let ret = c_fn(ifname,
+                       ints.addressOfElement(0),
+                       ints.addressOfElement(1),
+                       ints.addressOfElement(2),
+                       ints.addressOfElement(3),
+                       ints.addressOfElement(4),
+                       ints.addressOfElement(5),
+                       ints.addressOfElement(6));
+        return {ret: ret | 0,
+                ipaddr: ints[0] | 0,
+                gateway: ints[1] | 0,
+                mask: ints[2] | 0,
+                dns1: ints[3] | 0,
+                dns2: ints[4] | 0,
+                server: ints[5] | 0,
+                lease: ints[6] | 0};
+      };
+    };
+    iface.dhcp_do_request = wrapCFunc(c_dhcp_do_request);
+    iface.dhcp_do_request_renew = wrapCFunc(c_dhcp_do_request_renew);
+  }
+
+  return iface;
 })();
+
+/**
+ * Helpers for conversions.
+ */
+let netHelpers = {
+
+  /**
+   * Convert integer representation of an IP address to the string
+   * representation.
+   *
+   * @param ip
+   *        IP address in number format.
+   */
+  ipToString: function ipToString(ip) {
+    return ((ip >>  0) & 0xFF) + "." +
+           ((ip >>  8) & 0xFF) + "." +
+           ((ip >> 16) & 0xFF) + "." +
+           ((ip >> 24) & 0xFF);
+  },
+
+  /**
+   * Convert string representation of an IP address to the integer
+   * representation.
+   *
+   * @param string
+   *        String containing the IP address.
+   */
+  stringToIP: function stringToIP(string) {
+    let ip = 0;
+    let start, end = -1;
+    for (let i = 0; i < 4; i++) {
+      start = end + 1;
+      end = string.indexOf(".", start);
+      if (end == -1) {
+        end = string.length;
+      }
+      let num = parseInt(string.slice(start, end), 10);
+      if (isNaN(num)) {
+        return null;
+      }
+      ip |= num << (i * 8);
+    }
+    return ip;
+  },
+
+  /**
+   * Make a subnet mask.
+   */
+  makeMask: function makeMask(len) {
+    let mask = 0;
+    for (let i = 0; i < len; ++i) {
+      mask |= (1 << i);
+    }
+    return mask;
+  }
+};

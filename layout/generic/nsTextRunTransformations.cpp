@@ -362,8 +362,19 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   nsAutoTArray<PRUint8,50> canBreakBeforeArray;
   PRUint32 extraCharsCount = 0;
 
+  // Some languages have special casing conventions that differ from the
+  // default Unicode mappings.
+  // The enum values here are named for well-known exemplar languages that
+  // exhibit the behavior in question; multiple lang tags may map to the
+  // same setting here, if the behavior is shared by other languages.
+  enum {
+    eNone,    // default non-lang-specific behavior
+    eTurkish, // preserve dotted/dotless-i distinction in uppercase
+    eDutch    // treat "ij" digraph as a unit for capitalization
+  } languageSpecificCasing = eNone;
+
   const nsIAtom* lang = nsnull;
-  bool turkishCasing = false;
+  bool capitalizeDutchIJ = false;  
   PRUint32 i;
   for (i = 0; i < length; ++i) {
     PRUint32 ch = str[i];
@@ -383,16 +394,20 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
 
     if (lang != styleContext->GetStyleFont()->mLanguage) {
       lang = styleContext->GetStyleFont()->mLanguage;
-      turkishCasing = lang == nsGkAtoms::tr ||
-                      lang == nsGkAtoms::az ||
-                      lang == nsGkAtoms::ba ||
-                      lang == nsGkAtoms::crh ||
-                      lang == nsGkAtoms::tt;
+      if (lang == nsGkAtoms::tr || lang == nsGkAtoms::az ||
+          lang == nsGkAtoms::ba || lang == nsGkAtoms::crh ||
+          lang == nsGkAtoms::tt) {
+        languageSpecificCasing = eTurkish;
+      } else if (lang == nsGkAtoms::nl) {
+        languageSpecificCasing = eDutch;
+      } else {
+        languageSpecificCasing = eNone;
+      }
     }
 
     switch (style) {
     case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
-      if (turkishCasing && ch == 'I') {
+      if (languageSpecificCasing == eTurkish && ch == 'I') {
         ch = LATIN_SMALL_LETTER_DOTLESS_I;
       } else {
         ch = ToLowerCase(ch);
@@ -403,20 +418,29 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         convertedString.Append('S');
         extraChar = true;
         ch = 'S';
-      } else if (turkishCasing && ch == 'i') {
+      } else if (languageSpecificCasing == eTurkish && ch == 'i') {
         ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
       } else {
         ch = ToUpperCase(ch);
       }
       break;
     case NS_STYLE_TEXT_TRANSFORM_CAPITALIZE:
+      if (capitalizeDutchIJ && ch == 'j') {
+        ch = 'J';
+        capitalizeDutchIJ = false;
+        break;
+      }
+      capitalizeDutchIJ = false;
       if (i < aTextRun->mCapitalize.Length() && aTextRun->mCapitalize[i]) {
         if (ch == SZLIG) {
           convertedString.Append('S');
           extraChar = true;
           ch = 'S';
-        } else if (turkishCasing && ch == 'i') {
+        } else if (languageSpecificCasing == eTurkish && ch == 'i') {
           ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
+        } else if (languageSpecificCasing == eDutch && ch == 'i') {
+          ch = 'I';
+          capitalizeDutchIJ = true;
         } else {
           ch = ToTitleCase(ch);
         }

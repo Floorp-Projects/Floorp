@@ -77,14 +77,21 @@ public:
 
   nsOfflineCacheEvictionFunction(nsOfflineCacheDevice *device)
     : mDevice(device)
+    , mObserverCount(0)
   {}
 
   void Reset() { mItems.Clear(); }
   void Apply();
 
+  int AddObserver() { return ++mObserverCount; }
+  int RemoveObserver() { return --mObserverCount; }
+
 private:
   nsOfflineCacheDevice *mDevice;
   nsCOMArray<nsIFile> mItems;
+  nsCOMPtr<nsIThread> mIOThread;
+
+  int mObserverCount;
 
 };
 
@@ -130,6 +137,9 @@ public:
   virtual nsresult        Visit(nsICacheVisitor * visitor);
 
   virtual nsresult        EvictEntries(const char * clientID);
+
+  virtual nsresult EvictEntriesAsync(const char * clientID,
+				     nsIApplicationCacheAsyncCallback *aCallback);
 
   /* Entry ownership */
   nsresult                GetOwnerDomains(const char *        clientID,
@@ -263,6 +273,7 @@ private:
   nsCOMPtr<mozIStorageStatement>  mStatement_FindClient;
   nsCOMPtr<mozIStorageStatement>  mStatement_FindClientByNamespace;
   nsCOMPtr<mozIStorageStatement>  mStatement_EnumerateGroups;
+  nsCOMPtr<mozIStorageStatement>  mStatement_EnumerateGroupsTimeOrder;
 
   nsCOMPtr<nsILocalFile>          mCacheDirectory;
   PRUint32                        mCacheCapacity; // in bytes

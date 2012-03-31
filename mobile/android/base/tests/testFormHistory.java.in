@@ -55,15 +55,8 @@ public class testFormHistory extends BaseTest {
             mAsserter.is(false, true, "Error using field");
             return;
         }
-  
-        // Trying to insert should fail the first time round because there is no form history database
-        // Wait for gecko to reply and then we'll try again
-        contentEventExpecter = mActions.expectGeckoEvent("FormHistory:Init:Return");
+
         Uri uri = cr.insert(formHistoryUri, cvs[0]);
-        mAsserter.is(uri, null, "Insert returned null correctly");
-        contentEventExpecter.blockForEvent();
-  
-        uri = cr.insert(formHistoryUri, cvs[0]);
         Uri expectedUri = formHistoryUri.buildUpon().appendPath("1").build();
         mAsserter.is(expectedUri.toString(), uri.toString(), "Insert returned correct uri");
         SqliteCompare(DB_NAME, "SELECT * FROM moz_formhistory", cvs);

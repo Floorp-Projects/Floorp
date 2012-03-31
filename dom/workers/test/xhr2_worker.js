@@ -62,7 +62,7 @@ onmessage = function(event) {
       exception = e;
     }
 
-    if (!exception || exception.code != DOMException.INVALID_STATE_ERR) {
+    if (!exception) {
       throw new Error("Failed to throw when getting responseText on '" + type +
                       "' type");
     }
@@ -97,7 +97,7 @@ onmessage = function(event) {
     exception = e;
   }
 
-  if (!exception || exception.code != DOMException.INVALID_STATE_ERR) {
+  if (!exception) {
     throw new Error("Failed to throw when setting responseType before " +
                     "calling open()");
   }
@@ -148,7 +148,7 @@ onmessage = function(event) {
     exception = e;
   }
 
-  if (!exception || exception.code != DOMException.INVALID_STATE_ERR) {
+  if (!exception) {
     throw new Error("Failed to throw when setting responseType after " +
                     "calling send()");
   }
