@@ -71,6 +71,7 @@
 #include "dombindings.h"
 
 #include "nsWrapperCacheInlines.h"
+#include "nsDOMMutationObserver.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
                               nsIXPConnect,
@@ -2317,6 +2318,7 @@ nsXPConnect::AfterProcessNextEvent(nsIThreadInternal *aThread,
     // Call cycle collector occasionally.
     MOZ_ASSERT(NS_IsMainThread());
     nsJSContext::MaybePokeCC();
+    nsDOMMutationObserver::HandleMutations();
 
     return Pop(nsnull);
 }
