@@ -422,6 +422,8 @@ public:
     void GetScreenOrientation(dom::ScreenOrientationWrapper& aOrientation);
     void EnableScreenOrientationNotifications();
     void DisableScreenOrientationNotifications();
+    void LockScreenOrientation(const dom::ScreenOrientationWrapper& aOrientation);
+    void UnlockScreenOrientation();
 
 protected:
     static AndroidBridge *sBridge;
@@ -530,6 +532,8 @@ protected:
     jmethodID jGetScreenOrientation;
     jmethodID jEnableScreenOrientationNotifications;
     jmethodID jDisableScreenOrientationNotifications;
+    jmethodID jLockScreenOrientation;
+    jmethodID jUnlockScreenOrientation;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;

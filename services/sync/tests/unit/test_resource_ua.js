@@ -25,10 +25,9 @@ function test_resource_user_agent() {
     "/1.1/johndoe/storage/meta/global": uaHandler(meta_global.handler()),
   });
 
+  setBasicCredentials("johndoe", "ilovejane");
   Weave.Service.serverURL  = TEST_SERVER_URL;
   Weave.Service.clusterURL = TEST_CLUSTER_URL;
-  Weave.Service.username   = "johndoe";
-  Weave.Service.password   = "ilovejane";
 
   let expectedUA = Services.appinfo.name + "/" + Services.appinfo.version +
                    " FxSync/" + WEAVE_VERSION + "." +

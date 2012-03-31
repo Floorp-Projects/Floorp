@@ -227,13 +227,13 @@ let gSyncUtils = {
 
     if (!el2)
       valid = val1.length >= Weave.MIN_PASS_LENGTH;
-    else if (val1 && val1 == Weave.Service.username)
+    else if (val1 && val1 == Weave.Identity.username)
       error = "change.password.pwSameAsUsername";
-    else if (val1 && val1 == Weave.Service.account)
+    else if (val1 && val1 == Weave.Identity.account)
       error = "change.password.pwSameAsEmail";
-    else if (val1 && val1 == Weave.Service.password)
+    else if (val1 && val1 == Weave.Identity.basicPassword)
       error = "change.password.pwSameAsPassword";
-    else if (val1 && val1 == Weave.Service.passphrase)
+    else if (val1 && val1 == Weave.Identity.syncKey)
       error = "change.password.pwSameAsRecoveryKey";
     else if (val1 && val2) {
       if (val1 == val2 && val1.length >= Weave.MIN_PASS_LENGTH)

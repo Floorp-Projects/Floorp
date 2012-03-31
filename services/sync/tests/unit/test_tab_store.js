@@ -1,6 +1,25 @@
 Cu.import("resource://services-sync/engines/tabs.js");
 Cu.import("resource://services-sync/util.js");
 
+function test_lastUsed() {
+  let store = new TabEngine()._store;
+
+  _("Check extraction of last used times from tab objects.");
+  let expected = [
+    [0,         {}],
+    [0,         {extData: null}],
+    [0,         {extData: {}}],
+    [0,         {extData: {weaveLastUsed: null}}],
+    [123456789, {extData: {weaveLastUsed: "123456789"}}],
+    [123456789, {extData: {weaveLastUsed: 123456789}}],
+    [123456789, {extData: {weaveLastUsed: 123456789.12}}]
+  ];
+
+  for each (let [ex, input] in expected) {
+    do_check_eq(ex, store.tabLastUsed(input));
+  }
+}
+
 function test_create() {
   let store = new TabEngine()._store;
 
@@ -61,7 +80,7 @@ function fakeSessionSvc(url, numtabs) {
       if (numtabs) {
         let tabs = obj.windows[0].tabs;
         for (let i = 0; i < numtabs-1; i++)
-          tabs.push(Utils.deepCopy(tabs[0]));
+          tabs.push(deepCopy(tabs[0]));
       }
       return JSON.stringify(obj);
     }
@@ -112,6 +131,7 @@ function test_createRecord() {
 }
 
 function run_test() {
+  test_lastUsed();
   test_create();
   test_getAllTabs();
   test_createRecord();

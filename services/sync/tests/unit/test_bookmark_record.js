@@ -1,9 +1,13 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/util.js");
-  
+
 function prepareBookmarkItem(collection, id) {
   let b = new Bookmark(collection, id);
   b.cleartext.stuff = "my payload here";
@@ -11,11 +15,11 @@ function prepareBookmarkItem(collection, id) {
 }
 
 function run_test() {
-  let keyBundle = ID.set("WeaveCryptoID", new SyncKeyBundle(null, "john@example.com"));
-  keyBundle.keyStr = "abcdeabcdeabcdeabcdeabcdea";
-  
+  Identity.username = "john@example.com";
+  Identity.syncKey = "abcdeabcdeabcdeabcdeabcdea";
   generateNewKeys();
-  
+  let keyBundle = Identity.syncKeyBundle;
+
   let log = Log4Moz.repository.getLogger("Test");
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 

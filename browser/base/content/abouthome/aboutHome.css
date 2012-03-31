@@ -47,7 +47,6 @@ html {
   background-color: hsl(0,0%,90%);
   background-image: url(chrome://browser/content/abouthome/noise.png),
                     -moz-linear-gradient(hsla(0,0%,100%,.7), hsla(0,0%,100%,.4));
-  background-attachment: fixed;
   color: #000;
   height: 100%;
 }

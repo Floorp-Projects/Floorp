@@ -4984,6 +4984,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGenericElement)
       classes.AppendLiteral(" class='");
       nsAutoString classString;
       classAttrValue->ToString(classString);
+      classString.ReplaceChar(PRUnichar('\n'), PRUnichar(' '));
       classes.Append(classString);
       classes.AppendLiteral("'");
     }
