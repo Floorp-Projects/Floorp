@@ -103,10 +103,6 @@ public abstract class TileLayer extends Layer {
         mDirtyRect.set(0, 0, bufferSize.width, bufferSize.height);
     }
 
-    public boolean isDirty() {
-        return mImage.getSize().isPositive() && (mTextureIDs == null || !mDirtyRect.isEmpty());
-    }
-
     private void validateTexture() {
         /* Calculate the ideal texture size. This must be a power of two if
          * the texture is repeated or OpenGL ES 2.0 isn't supported, as
