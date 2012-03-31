@@ -43,7 +43,7 @@
 
 #include "gfxWindowsPlatform.h"
 #include "gfxPlatformFontList.h"
-#include "nsGkAtoms.h"
+#include "gfxAtoms.h"
 
 #include <windows.h>
 
@@ -218,42 +218,42 @@ public:
     }
 
     virtual bool SupportsLangGroup(nsIAtom* aLangGroup) const {
-        if (!aLangGroup || aLangGroup == nsGkAtoms::Unicode) {
+        if (!aLangGroup || aLangGroup == gfxAtoms::x_unicode) {
             return true;
         }
 
         PRInt16 bit = -1;
 
         /* map our langgroup names in to Windows charset bits */
-        if (aLangGroup == nsGkAtoms::x_western) {
+        if (aLangGroup == gfxAtoms::x_western) {
             bit = ANSI_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::Japanese) {
+        } else if (aLangGroup == gfxAtoms::ja) {
             bit = SHIFTJIS_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::ko) {
+        } else if (aLangGroup == gfxAtoms::ko) {
             bit = HANGEUL_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::ko_xxx) {
+        } else if (aLangGroup == gfxAtoms::ko_xxx) {
             bit = JOHAB_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::zh_cn) {
+        } else if (aLangGroup == gfxAtoms::zh_cn) {
             bit = GB2312_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::zh_tw) {
+        } else if (aLangGroup == gfxAtoms::zh_tw) {
             bit = CHINESEBIG5_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::el_) {
+        } else if (aLangGroup == gfxAtoms::el) {
             bit = GREEK_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::tr) {
+        } else if (aLangGroup == gfxAtoms::tr) {
             bit = TURKISH_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::he) {
+        } else if (aLangGroup == gfxAtoms::he) {
             bit = HEBREW_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::ar) {
+        } else if (aLangGroup == gfxAtoms::ar) {
             bit = ARABIC_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::x_baltic) {
+        } else if (aLangGroup == gfxAtoms::x_baltic) {
             bit = BALTIC_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::x_cyrillic) {
+        } else if (aLangGroup == gfxAtoms::x_cyrillic) {
             bit = RUSSIAN_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::th) {
+        } else if (aLangGroup == gfxAtoms::th) {
             bit = THAI_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::x_central_euro) {
+        } else if (aLangGroup == gfxAtoms::x_central_euro) {
             bit = EASTEUROPE_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::x_symbol) {
+        } else if (aLangGroup == gfxAtoms::x_symbol) {
             bit = SYMBOL_CHARSET;
         }
 

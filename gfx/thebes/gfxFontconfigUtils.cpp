@@ -41,7 +41,7 @@
 
 #include "gfxFontconfigUtils.h"
 #include "gfxFont.h"
-#include "nsGkAtoms.h"
+#include "gfxAtoms.h"
 
 #include <locale.h>
 #include <fontconfig/fontconfig.h>
@@ -405,28 +405,28 @@ struct MozLangGroupData {
 };
 
 const MozLangGroupData MozLangGroups[] = {
-    { nsGkAtoms::x_western,      "en" },
-    { nsGkAtoms::x_central_euro, "pl" },
-    { nsGkAtoms::x_cyrillic,     "ru" },
-    { nsGkAtoms::x_baltic,       "lv" },
-    { nsGkAtoms::x_devanagari,   "hi" },
-    { nsGkAtoms::x_tamil,        "ta" },
-    { nsGkAtoms::x_armn,         "hy" },
-    { nsGkAtoms::x_beng,         "bn" },
-    { nsGkAtoms::x_cans,         "iu" },
-    { nsGkAtoms::x_ethi,         "am" },
-    { nsGkAtoms::x_geor,         "ka" },
-    { nsGkAtoms::x_gujr,         "gu" },
-    { nsGkAtoms::x_guru,         "pa" },
-    { nsGkAtoms::x_khmr,         "km" },
-    { nsGkAtoms::x_knda,         "kn" },
-    { nsGkAtoms::x_mlym,         "ml" },
-    { nsGkAtoms::x_orya,         "or" },
-    { nsGkAtoms::x_sinh,         "si" },
-    { nsGkAtoms::x_telu,         "te" },
-    { nsGkAtoms::x_tibt,         "bo" },
-    { nsGkAtoms::Unicode,        0    },
-    { nsGkAtoms::x_user_def,     0    }
+    { gfxAtoms::x_western,      "en" },
+    { gfxAtoms::x_central_euro, "pl" },
+    { gfxAtoms::x_cyrillic,     "ru" },
+    { gfxAtoms::x_baltic,       "lv" },
+    { gfxAtoms::x_devanagari,   "hi" },
+    { gfxAtoms::x_tamil,        "ta" },
+    { gfxAtoms::x_armn,         "hy" },
+    { gfxAtoms::x_beng,         "bn" },
+    { gfxAtoms::x_cans,         "iu" },
+    { gfxAtoms::x_ethi,         "am" },
+    { gfxAtoms::x_geor,         "ka" },
+    { gfxAtoms::x_gujr,         "gu" },
+    { gfxAtoms::x_guru,         "pa" },
+    { gfxAtoms::x_khmr,         "km" },
+    { gfxAtoms::x_knda,         "kn" },
+    { gfxAtoms::x_mlym,         "ml" },
+    { gfxAtoms::x_orya,         "or" },
+    { gfxAtoms::x_sinh,         "si" },
+    { gfxAtoms::x_telu,         "te" },
+    { gfxAtoms::x_tibt,         "bo" },
+    { gfxAtoms::x_unicode,      0    },
+    { gfxAtoms::x_user_def,     0    }
 };
 
 static bool
