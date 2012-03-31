@@ -323,6 +323,17 @@ void GetCurrentScreenOrientation(dom::ScreenOrientation* aScreenOrientation);
  */
 void NotifyScreenOrientationChange(const dom::ScreenOrientation& aScreenOrientation);
 
+/**
+ * Lock the screen orientation to the specific orientation.
+ * @return Whether the lock has been accepted.
+ */
+bool LockScreenOrientation(const dom::ScreenOrientation& aOrientation);
+
+/**
+ * Unlock the screen orientation.
+ */
+void UnlockScreenOrientation();
+
 } // namespace MOZ_HAL_NAMESPACE
 } // namespace mozilla
 

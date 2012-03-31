@@ -1131,10 +1131,6 @@ IndexFinder(nsSessionStorageEntry* aEntry, void* userArg)
 nsresult
 DOMStorageImpl::GetKey(bool aCallerSecure, PRUint32 aIndex, nsAString& aKey)
 {
-  // XXXjst: This is as retarded as the DOM spec is, takes an unsigned
-  // int, but the spec talks about what to do if a negative value is
-  // passed in.
-
   // XXX: This does a linear search for the key at index, which would
   // suck if there's a large numer of indexes. Do we care? If so,
   // maybe we need to have a lazily populated key array here or
@@ -1148,8 +1144,9 @@ DOMStorageImpl::GetKey(bool aCallerSecure, PRUint32 aIndex, nsAString& aKey)
   mItems.EnumerateEntries(IndexFinder, &data);
 
   if (!data.mItem) {
-    // aIndex was larger than the number of accessible keys. Throw.
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    // aIndex was larger than the number of accessible keys. Return null.
+    aKey.SetIsVoid(true);
+    return NS_OK;
   }
 
   aKey = data.mItem->GetKey();

@@ -23,7 +23,7 @@ function test() {
         presenter = instance.presenter;
         Services.obs.addObserver(whenHighlighting, HIGHLIGHTING, false);
 
-        presenter._onSetupMesh = function() {
+        presenter._onInitializationFinished = function() {
           let contentDocument = presenter.contentWindow.document;
           let div = contentDocument.getElementById("first-law");
 

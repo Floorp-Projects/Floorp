@@ -149,8 +149,7 @@ public:
     static bool isValidQName(const nsAFlatString& aQName,
                                const PRUnichar** aColon)
     {
-        nsIParserService* ps = nsContentUtils::GetParserService();
-        return ps && NS_SUCCEEDED(ps->CheckQName(aQName, true, aColon));
+        return NS_SUCCEEDED(nsContentUtils::CheckQName(aQName, true, aColon));
     }
 
     /**

@@ -691,8 +691,7 @@ txMozillaXMLOutput::createTxWrapper()
             ++j;
         }
         else {
-            rv = mDocument->RemoveChildAt(j, true);
-            NS_ENSURE_SUCCESS(rv, rv);
+            mDocument->RemoveChildAt(j, true);
 
             rv = wrapper->AppendChildTo(childContent, true);
             NS_ENSURE_SUCCESS(rv, rv);

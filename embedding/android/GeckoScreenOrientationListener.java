@@ -8,9 +8,12 @@ import android.content.Context;
 import android.util.Log;
 import android.view.OrientationEventListener;
 import android.view.Surface;
+import android.content.pm.ActivityInfo;
 
 public class GeckoScreenOrientationListener
 {
+  private static final String LOGTAG = "GeckoScreenOrientationListener";
+
   static class OrientationEventListenerImpl extends OrientationEventListener {
     public OrientationEventListenerImpl(Context c) {
       super(c);
@@ -25,10 +28,13 @@ public class GeckoScreenOrientationListener
   static private GeckoScreenOrientationListener sInstance = null;
 
   // Make sure that any change in dom/base/ScreenOrientation.h happens here too.
+  static public final short eScreenOrientation_None               = 0;
   static public final short eScreenOrientation_PortraitPrimary    = 1;
   static public final short eScreenOrientation_PortraitSecondary  = 2;
+  static public final short eScreenOrientation_Portrait           = 3;
   static public final short eScreenOrientation_LandscapePrimary   = 4;
   static public final short eScreenOrientation_LandscapeSecondary = 8;
+  static public final short eScreenOrientation_Landscape          = 12;
 
   private short mOrientation;
   private OrientationEventListenerImpl mListener = null;
@@ -107,7 +113,7 @@ public class GeckoScreenOrientationListener
     } else if (rotation == Surface.ROTATION_90) {
       mOrientation = eScreenOrientation_LandscapePrimary;
     } else {
-      Log.e("GeckoScreenOrientationListener", "Unexpected value received! (" + rotation + ")");
+      Log.e(LOGTAG, "Unexpected value received! (" + rotation + ")");
       return;
     }
 
@@ -118,5 +124,40 @@ public class GeckoScreenOrientationListener
 
   public short getScreenOrientation() {
     return mOrientation;
+  }
+
+  public void lockScreenOrientation(int aOrientation) {
+    int orientation = 0;
+
+    switch (aOrientation) {
+      case eScreenOrientation_PortraitPrimary:
+        orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+        break;
+      case eScreenOrientation_PortraitSecondary:
+        orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
+        break;
+      case eScreenOrientation_Portrait:
+        orientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT;
+        break;
+      case eScreenOrientation_LandscapePrimary:
+        orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+        break;
+      case eScreenOrientation_LandscapeSecondary:
+        orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+        break;
+      case eScreenOrientation_Landscape:
+        orientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
+        break;
+      default:
+        Log.e(LOGTAG, "Unexpected value received! (" + aOrientation + ")");
+    }
+
+    GeckoApp.mAppContext.setRequestedOrientation(orientation);
+    updateScreenOrientation();
+  }
+
+  public void unlockScreenOrientation() {
+    GeckoApp.mAppContext.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+    updateScreenOrientation();
   }
 }

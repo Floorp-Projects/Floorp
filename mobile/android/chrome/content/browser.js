@@ -236,6 +236,7 @@ var BrowserApp = {
     CharacterEncoding.init();
     SearchEngines.init();
     ActivityObserver.init();
+    WebappsUI.init();
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -326,29 +327,6 @@ var BrowserApp = {
         "value": Services.prefs.getBoolPref("gfx.show_checkerboard_pattern")
       }
     });
-
-    if (this.isAppUpdated())
-      this.onAppUpdated();
-  },
-
-  isAppUpdated: function() {
-    let savedmstone = null;
-    try {
-      savedmstone = Services.prefs.getCharPref("browser.startup.homepage_override.mstone");
-    } catch (e) {
-    }
-#expand    let ourmstone = "__MOZ_APP_VERSION__";
-    if (ourmstone != savedmstone) {
-      Services.prefs.setCharPref("browser.startup.homepage_override.mstone", ourmstone);
-      return savedmstone ? "upgrade" : "new";
-    }
-    return "";
-  },
-
-  onAppUpdated: function() {
-    // initialize the form history and passwords databases on upgrades
-    Services.obs.notifyObservers(null, "FormHistory:Init", "");
-    Services.obs.notifyObservers(null, "Passwords:Init", "");
   },
 
   _showTelemetryPrompt: function _showTelemetryPrompt() {
@@ -415,6 +393,7 @@ var BrowserApp = {
     ConsoleAPI.uninit();
     CharacterEncoding.uninit();
     SearchEngines.uninit();
+    WebappsUI.uninit();
   },
 
   // This function returns false during periods where the browser displayed document is
@@ -937,14 +916,14 @@ var BrowserApp = {
       if (this.isBrowserContentDocumentDisplayed())
         this.selectedTab.setViewport(JSON.parse(aData));
     } else if (aTopic == "Passwords:Init") {
-      // Force creation/upgrade of signons.sqlite
-      let storage = Cc["@mozilla.org/login-manager/storage/mozStorage;1"].getService(Ci.nsILoginManagerStorage);
+      var storage = Components.classes["@mozilla.org/login-manager/storage/mozStorage;1"].
+        getService(Components.interfaces.nsILoginManagerStorage);
       storage.init();
 
       sendMessageToJava({gecko: { type: "Passwords:Init:Return" }});
       Services.obs.removeObserver(this, "Passwords:Init", false);
     } else if (aTopic == "FormHistory:Init") {
-      let fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
+      var fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
       // Force creation/upgrade of formhistory.sqlite
       let db = fh.DBConnection;
       sendMessageToJava({gecko: { type: "FormHistory:Init:Return" }});
@@ -1072,10 +1051,15 @@ var NativeWindow = {
       if (this.menu._callbacks[aData])
         this.menu._callbacks[aData]();
     } else if (aTopic == "Doorhanger:Reply") {
-      let reply_id = aData;
+      let data = JSON.parse(aData);
+      let reply_id = data["callback"];
+
       if (this.doorhanger._callbacks[reply_id]) {
+        // Pass the value of the optional checkbox to the callback
+        let checked = data["checked"];
+        this.doorhanger._callbacks[reply_id].cb(checked);
+
         let prompt = this.doorhanger._callbacks[reply_id].prompt;
-        this.doorhanger._callbacks[reply_id].cb();
         for (let id in this.doorhanger._callbacks) {
           if (this.doorhanger._callbacks[id].prompt == prompt) {
             delete this.doorhanger._callbacks[id];
@@ -1279,7 +1263,9 @@ var NativeWindow = {
 
       let popupNode = aEvent.originalTarget;
       let title = "";
-      if ((popupNode instanceof Ci.nsIDOMHTMLAnchorElement && popupNode.href) ||
+      if (popupNode.hasAttribute("title")) {
+        title = popupNode.getAttribute("title")
+      } else if ((popupNode instanceof Ci.nsIDOMHTMLAnchorElement && popupNode.href) ||
               (popupNode instanceof Ci.nsIDOMHTMLAreaElement && popupNode.href)) {
         title = this._getLinkURL(popupNode);
       } else if (popupNode instanceof Ci.nsIImageLoadingContent && popupNode.currentURI) {
@@ -1462,9 +1448,10 @@ function Tab(aURL, aParams) {
   this.create(aURL, aParams);
   this._zoom = 1.0;
   this.userScrollPos = { x: 0, y: 0 };
-  this._pluginCount = 0;
-  this._pluginOverlayShowing = false;
   this.contentDocumentIsDisplayed = true;
+  this.clickToPlayPluginDoorhangerShown = false;
+  this.clickToPlayPluginsActivated = false;
+  this.loadEventProcessed = false;
 }
 
 Tab.prototype = {
@@ -1517,6 +1504,7 @@ Tab.prototype = {
     this.browser.sessionHistory.addSHistoryListener(this);
 
     this.browser.addEventListener("DOMContentLoaded", this, true);
+    this.browser.addEventListener("load", this, true);
     this.browser.addEventListener("DOMLinkAdded", this, true);
     this.browser.addEventListener("DOMTitleChanged", this, true);
     this.browser.addEventListener("DOMWindowClose", this, true);
@@ -1524,8 +1512,6 @@ Tab.prototype = {
     this.browser.addEventListener("scroll", this, true);
     this.browser.addEventListener("MozScrolledAreaChanged", this, true);
     this.browser.addEventListener("PluginClickToPlay", this, true);
-    this.browser.addEventListener("pagehide", this, true);
-    this.browser.addEventListener("pageshow", this, true);
 
     Services.obs.addObserver(this, "before-first-paint", false);
 
@@ -1563,6 +1549,7 @@ Tab.prototype = {
 
     this.browser.removeProgressListener(this);
     this.browser.removeEventListener("DOMContentLoaded", this, true);
+    this.browser.removeEventListener("load", this, true);
     this.browser.removeEventListener("DOMLinkAdded", this, true);
     this.browser.removeEventListener("DOMTitleChanged", this, true);
     this.browser.removeEventListener("DOMWindowClose", this, true);
@@ -1570,8 +1557,6 @@ Tab.prototype = {
     this.browser.removeEventListener("scroll", this, true);
     this.browser.removeEventListener("PluginClickToPlay", this, true);
     this.browser.removeEventListener("MozScrolledAreaChanged", this, true);
-    this.browser.removeEventListener("pagehide", this, true);
-    this.browser.removeEventListener("pageshow", this, true);
 
     Services.obs.removeObserver(this, "before-first-paint");
 
@@ -1791,13 +1776,25 @@ Tab.prototype = {
             this.browser.removeEventListener("pagehide", listener, true);
           }.bind(this), true);
         }
+        break;
+      }
 
-        // Show a plugin doorhanger if there are plugins on the page but no
-        // clickable overlays showing (this doesn't work on pages loaded after
-        // back/forward navigation - see bug 719875)
-        if (this._pluginCount && !this._pluginOverlayShowing)
+      case "load": {
+        this.loadEventProcessed = true;
+        // Show a plugin doorhanger if there are no clickable overlays showing
+        let contentWindow = this.browser.contentWindow;
+        let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIDOMWindowUtils);
+        // XXX not sure if we should enable plugins for the parent documents...
+        let plugins = cwu.plugins;
+        let isAnyPluginVisible = false;
+        for (let plugin of plugins) {
+          let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+          if (overlay && !PluginHelper.isTooSmall(plugin, overlay))
+            isAnyPluginVisible = true;
+        }
+        if (plugins && plugins.length && !isAnyPluginVisible)
           PluginHelper.showDoorHanger(this);
-
         break;
       }
 
@@ -1905,39 +1902,36 @@ Tab.prototype = {
       }
 
       case "PluginClickToPlay": {
-        // Keep track of the number of plugins to know whether or not to show
-        // the hidden plugins doorhanger
-        this._pluginCount++;
-
         let plugin = aEvent.target;
-        let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-        if (!overlay)
+
+        if (this.clickToPlayPluginsActivated) {
+          PluginHelper.playPlugin(plugin);
           return;
+        }
 
         // If the overlay is too small, hide the overlay and act like this
         // is a hidden plugin object
-        if (PluginHelper.isTooSmall(plugin, overlay)) {
-          overlay.style.visibility = "hidden";
+        let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+        if (!overlay || PluginHelper.isTooSmall(plugin, overlay)) {
+          if (overlay)
+            overlay.style.visibility = "hidden";
+          if (this.loadEventProcessed && !this.clickToPlayPluginDoorhangerShown)
+            PluginHelper.showDoorHanger(this);
           return;
         }
 
         // Add click to play listener to the overlay
-        overlay.addEventListener("click", (function(event) {
-          // Play all the plugin objects when the user clicks on one
-          PluginHelper.playAllPlugins(this, event);
-        }).bind(this), true);
-
-        this._pluginOverlayShowing = true;
-        break;
-      }
-
-      case "pagehide": {
-        // Check to make sure it's top-level pagehide
-        if (aEvent.target.defaultView == this.browser.contentWindow) {
-          // Reset plugin state when we leave the page
-          this._pluginCount = 0;
-          this._pluginOverlayShowing = false;
-        }
+        overlay.addEventListener("click", function(e) {
+          if (e) {
+            if (!e.isTrusted)
+              return;
+            e.preventDefault();
+          }
+          let win = e.target.ownerDocument.defaultView.top;
+          let tab = BrowserApp.getTabForWindow(win);
+          tab.clickToPlayPluginsActivated = true;
+          PluginHelper.playAllPlugins(win);
+        }, true);
         break;
       }
     }
@@ -1996,6 +1990,11 @@ Tab.prototype = {
       documentURI = browser.contentDocument.documentURIObject.spec;
       contentType = browser.contentDocument.contentType;
     }
+
+    // Reset state of click-to-play plugin notifications.
+    this.clickToPlayPluginDoorhangerShown = false;
+    this.clickToPlayPluginsActivated = false;
+    this.loadEventProcessed = false;
 
     let message = {
       gecko: {
@@ -3905,59 +3904,71 @@ var ClipboardHelper = {
 
 var PluginHelper = {
   showDoorHanger: function(aTab) {
-    let message = Strings.browser.GetStringFromName("clickToPlayPlugins.message");
+    if (!aTab.browser)
+      return;
+
+    // Even though we may not end up showing a doorhanger, this flag
+    // lets us know that we've tried to show a doorhanger.
+    aTab.clickToPlayPluginDoorhangerShown = true;
+
+    let uri = aTab.browser.currentURI;
+
+    // If the user has previously set a plugins permission for this website,
+    // either play or don't play the plugins instead of showing a doorhanger.
+    let permValue = Services.perms.testPermission(uri, "plugins");
+    if (permValue != Services.perms.UNKNOWN_ACTION) {
+      if (permValue == Services.perms.ALLOW_ACTION)
+        PluginHelper.playAllPlugins(aTab.browser.contentWindow);
+
+      return;
+    }
+
+    let message = Strings.browser.formatStringFromName("clickToPlayPlugins.message1",
+                                                       [uri.host], 1);
     let buttons = [
       {
         label: Strings.browser.GetStringFromName("clickToPlayPlugins.yes"),
-        callback: function() {
-          PluginHelper.playAllPlugins(aTab);
+        callback: function(aChecked) {
+          // If the user checked "Don't ask again", make a permanent exception
+          if (aChecked)
+            Services.perms.add(uri, "plugins", Ci.nsIPermissionManager.ALLOW_ACTION);
+
+          PluginHelper.playAllPlugins(aTab.browser.contentWindow);
         }
       },
       {
         label: Strings.browser.GetStringFromName("clickToPlayPlugins.no"),
-        callback: function() {
-          // Do nothing
+        callback: function(aChecked) {
+          // If the user checked "Don't ask again", make a permanent exception
+          if (aChecked)
+            Services.perms.add(uri, "plugins", Ci.nsIPermissionManager.DENY_ACTION);
+
+          // Other than that, do nothing
         }
       }
-    ]
-    NativeWindow.doorhanger.show(message, "ask-to-play-plugins", buttons, aTab.id);
+    ];
+
+    // Add a checkbox with a "Don't ask again" message
+    let options = { checkbox: Strings.browser.GetStringFromName("clickToPlayPlugins.dontAskAgain") };
+
+    NativeWindow.doorhanger.show(message, "ask-to-play-plugins", buttons, aTab.id, options);
   },
 
-  playAllPlugins: function(aTab, aEvent) {
-    if (aEvent) {
-      if (!aEvent.isTrusted)
-        return;
-      aEvent.preventDefault();
-    }
+  playAllPlugins: function(aContentWindow) {
+    let cwu = aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindowUtils);
+    // XXX not sure if we should enable plugins for the parent documents...
+    let plugins = cwu.plugins;
+    if (!plugins || !plugins.length)
+      return;
 
-    this._findAndPlayAllPlugins(aTab.browser.contentWindow);
+    plugins.forEach(this.playPlugin);
   },
 
-  // Helper function that recurses through sub-frames to find all plugin objects
-  _findAndPlayAllPlugins: function _findAndPlayAllPlugins(aWindow) {
-    let embeds = aWindow.document.getElementsByTagName("embed");
-    for (let i = 0; i < embeds.length; i++) {
-      if (!embeds[i].hasAttribute("played"))
-        this._playPlugin(embeds[i]);
-    }
-
-    let objects = aWindow.document.getElementsByTagName("object");
-    for (let i = 0; i < objects.length; i++) {
-      if (!objects[i].hasAttribute("played"))
-        this._playPlugin(objects[i]);
-    }
-
-    for (let i = 0; i < aWindow.frames.length; i++) {
-      this._findAndPlayAllPlugins(aWindow.frames[i]);
-    }
-  },
-
-  _playPlugin: function _playPlugin(aPlugin) {
-    let objLoadingContent = aPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    objLoadingContent.playPlugin();
-
-    // Set an attribute on the plugin object to avoid re-loading it
-    aPlugin.setAttribute("played", true);
+  playPlugin: function(plugin) {
+    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    if (!objLoadingContent.activated)
+      objLoadingContent.playPlugin();
   },
 
   getPluginPreference: function getPluginPreference() {
@@ -4002,7 +4013,7 @@ var PluginHelper = {
 var PermissionsHelper = {
 
   _permissonTypes: ["password", "geolocation", "popup", "indexedDB",
-                    "offline-app", "desktop-notification"],
+                    "offline-app", "desktop-notification", "plugins"],
   _permissionStrings: {
     "password": {
       label: "password.rememberPassword",
@@ -4033,6 +4044,11 @@ var PermissionsHelper = {
       label: "desktopNotification.useNotifications",
       allowed: "desktopNotification.allow",
       denied: "desktopNotification.dontAllow"
+    },
+    "plugins": {
+      label: "clickToPlayPlugins.playPlugins",
+      allowed: "clickToPlayPlugins.yes",
+      denied: "clickToPlayPlugins.no"
     }
   },
 
@@ -4499,3 +4515,60 @@ var ActivityObserver = {
     }
   }
 };
+
+var WebappsUI = {
+  init: function() {
+    Cu.import("resource://gre/modules/Webapps.jsm");
+
+    Services.obs.addObserver(this, "webapps-ask-install", false);
+    Services.obs.addObserver(this, "webapps-launch", false);
+  },
+  
+  uninit: function() {
+    Services.obs.removeObserver(this, "webapps-ask-install");
+    Services.obs.removeObserver(this, "webapps-launch");
+  },
+  
+  observe: function(aSubject, aTopic, aData) {
+    let data = JSON.parse(aData);
+    switch (aTopic) {
+      case "webapps-ask-install":
+        this.doInstall(data);
+        break;
+      case "webapps-launch":
+        DOMApplicationRegistry.getManifestFor(data.origin, (function(aManifest) {
+	   if (!aManifest)
+	     return;
+          let manifest = new DOMApplicationManifest(aManifest, data.origin);
+          this.openURL(manifest.fullLaunchPath(), data.origin);
+        }).bind(this));
+        break;
+    }
+  },
+  
+  doInstall: function(aData) {
+    let manifest = new DOMApplicationManifest(aData.app.manifest, aData.app.origin);
+    let name = manifest.name ? manifest.name : manifest.fullLaunchPath();
+    if (Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), name))
+      DOMApplicationRegistry.confirmInstall(aData);
+  },
+  
+  openURL: function(aURI, aOrigin) {
+    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+
+    let tabs = BrowserApp.tabs;
+    let tab = null;
+    for (let i = 0; i < tabs.length; i++) {
+      let appOrigin = ss.getTabValue(tabs[i], "appOrigin");
+      if (appOrigin == aOrigin)
+        tab = tabs[i];
+    }
+
+    if (tab) {
+      BrowserApp.selectTab(tab);
+    } else {
+      tab = BrowserApp.addTab(aURI);
+      ss.setTabValue(tab, "appOrigin", aOrigin);
+    }
+  }
+}

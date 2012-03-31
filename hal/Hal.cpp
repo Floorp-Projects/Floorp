@@ -566,5 +566,19 @@ NotifyScreenOrientationChange(const dom::ScreenOrientation& aScreenOrientation)
   sScreenOrientationObservers.BroadcastCachedInformation();
 }
 
+bool
+LockScreenOrientation(const dom::ScreenOrientation& aOrientation)
+{
+  AssertMainThread();
+  RETURN_PROXY_IF_SANDBOXED(LockScreenOrientation(aOrientation));
+}
+
+void
+UnlockScreenOrientation()
+{
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(UnlockScreenOrientation());
+}
+
 } // namespace hal
 } // namespace mozilla

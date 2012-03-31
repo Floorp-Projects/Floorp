@@ -2181,9 +2181,6 @@ abstract public class GeckoApp
                 SmsManager.getInstance().shutdown();
         }
 
-        GeckoNetworkManager.getInstance().stop();
-        GeckoScreenOrientationListener.getInstance().stop();
-
         super.onDestroy();
 
         unregisterReceiver(mBatteryReceiver);

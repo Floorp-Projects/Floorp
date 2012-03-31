@@ -808,6 +808,11 @@ BookmarksStore.prototype = {
     this.removeById(itemId, record.id);
   },
 
+  _taggableTypes: ["bookmark", "microsummary", "query"],
+  isTaggable: function isTaggable(recordType) {
+    return this._taggableTypes.indexOf(recordType) != -1;
+  },
+
   update: function BStore_update(record) {
     let itemId = this.idForGUID(record.id);
 
@@ -853,7 +858,11 @@ BookmarksStore.prototype = {
         break;
       case "tags":
         if (Array.isArray(val)) {
-          this._tagURI(PlacesUtils.bookmarks.getBookmarkURI(itemId), val);
+          if (this.isTaggable(remoteRecordType)) {
+            this._tagID(itemId, val);
+          } else {
+            this._log.debug("Remote record type is invalid for tags: " + remoteRecordType);
+          }
         }
         break;
       case "keyword":
@@ -1217,15 +1226,46 @@ BookmarksStore.prototype = {
     return items;
   },
 
-  _tagURI: function BStore_tagURI(bmkURI, tags) {
+  /**
+   * Associates the URI of the item with the provided ID with the
+   * provided array of tags.
+   * If the provided ID does not identify an item with a URI,
+   * returns immediately.
+   */
+  _tagID: function _tagID(itemID, tags) {
+    if (!itemID || !tags) {
+      return;
+    }
+
+    try {
+      let u = PlacesUtils.bookmarks.getBookmarkURI(itemID);
+      this._tagURI(u, tags);
+    } catch (e) {
+      this._log.warn("Got exception fetching URI for " + itemID + ": not tagging. " +
+                     Utils.exceptionStr(e));
+
+      // I guess it doesn't have a URI. Don't try to tag it.
+      return;
+    }
+  },
+
+  /**
+   * Associate the provided URI with the provided array of tags.
+   * If the provided URI is falsy, returns immediately.
+   */
+  _tagURI: function _tagURI(bookmarkURI, tags) {
+    if (!bookmarkURI || !tags) {
+      return;
+    }
+
     // Filter out any null/undefined/empty tags.
     tags = tags.filter(function(t) t);
 
     // Temporarily tag a dummy URI to preserve tag ids when untagging.
     let dummyURI = Utils.makeURI("about:weave#BStore_tagURI");
     PlacesUtils.tagging.tagURI(dummyURI, tags);
-    PlacesUtils.tagging.untagURI(bmkURI, null);
-    PlacesUtils.tagging.tagURI(bmkURI, tags);
+    PlacesUtils.tagging.untagURI(bookmarkURI, null);
+    PlacesUtils.tagging.tagURI(bookmarkURI, tags);
     PlacesUtils.tagging.untagURI(dummyURI, null);
   },
 

@@ -73,7 +73,6 @@
 #include "nsUnicodeScriptCodes.h"
 #include "gfxFontconfigUtils.h"
 #include "gfxUserFontSet.h"
-#include "gfxAtoms.h"
 
 #include <cairo.h>
 #include <cairo-ft.h>

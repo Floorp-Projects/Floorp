@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
@@ -27,9 +30,8 @@ function run_test() {
 
 add_test(function test_resetLocalData() {
   // Set up.
-  Service.username = "foobar";
-  Service.password = "blablabla";
-  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  setBasicCredentials("foobar", "blablabla", // Law Blog
+                      "abcdeabcdeabcdeabcdeabcdea");
   Status.enforceBackoff = true;
   Status.backoffInterval = 42;
   Status.minimumNextSync = 23;
@@ -52,8 +54,8 @@ add_test(function test_resetLocalData() {
 
   // Verify the site was nuked from orbit.
   do_check_eq(Svc.Prefs.get("username"), undefined);
-  do_check_eq(Service.password, "");
-  do_check_eq(Service.passphrase, "");
+  do_check_eq(Identity.basicPassword, null);
+  do_check_eq(Identity.syncKey, null);
 
   do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
   do_check_false(Status.enforceBackoff);

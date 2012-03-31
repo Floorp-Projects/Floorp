@@ -283,6 +283,9 @@ protected:
                               bool aPermitUntrustedEvents,
                               nsListenerStruct **aListenerStruct);
 
+  bool IsDeviceType(PRUint32 aType);
+  void DisableDevice(PRUint32 aType);
+
 public:
   /**
    * Set the "inline" event listener for aEventName to |v|.  This

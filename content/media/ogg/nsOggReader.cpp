@@ -1165,7 +1165,7 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
   ogg_int64_t seekTarget = aTarget;
   PRInt64 seekLowerBound = NS_MAX(static_cast<PRInt64>(0), aTarget - aFuzz);
   int hops = 0;
-  ogg_int64_t previousGuess = -1;
+  DebugOnly<ogg_int64_t> previousGuess = -1;
   int backsteps = 0;
   const int maxBackStep = 10;
   NS_ASSERTION(static_cast<PRUint64>(PAGE_STEP) * pow(2.0, maxBackStep) < PR_INT32_MAX,

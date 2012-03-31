@@ -235,18 +235,6 @@ extern bool
 GetPrefixInteger(JSContext *cx, const jschar *start, const jschar *end, int base,
                  const jschar **endp, double *dp);
 
-/* ES5 9.3 ToNumber. */
-JS_ALWAYS_INLINE bool
-ToNumber(JSContext *cx, const Value &v, double *out)
-{
-    if (v.isNumber()) {
-        *out = v.toNumber();
-        return true;
-    }
-    extern bool ToNumberSlow(JSContext *cx, js::Value v, double *dp);
-    return ToNumberSlow(cx, v, out);
-}
-
 /* ES5 9.3 ToNumber, overwriting *vp with the appropriate number value. */
 JS_ALWAYS_INLINE bool
 ToNumber(JSContext *cx, Value *vp)
@@ -262,20 +250,10 @@ ToNumber(JSContext *cx, Value *vp)
 }
 
 /*
- * Convert a value to an int32_t or uint32_t, according to the ECMA rules for
- * ToInt32 and ToUint32. Return converted value in *out on success, !ok on
+ * Convert a value to a uint32_t, according to the ECMA rules for
+ * ToUint32. Return converted value in *out on success, !ok on
  * failure.
  */
-JS_ALWAYS_INLINE bool
-ToInt32(JSContext *cx, const js::Value &v, int32_t *out)
-{
-    if (v.isInt32()) {
-        *out = v.toInt32();
-        return true;
-    }
-    extern bool ToInt32Slow(JSContext *cx, const js::Value &v, int32_t *ip);
-    return ToInt32Slow(cx, v, out);
-}
 
 JS_ALWAYS_INLINE bool
 ToUint32(JSContext *cx, const js::Value &v, uint32_t *out)

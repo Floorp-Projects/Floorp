@@ -139,12 +139,28 @@ TabStore.prototype = {
     return id == Clients.localID;
   },
 
+  /**
+   * Return the recorded last used time of the provided tab, or
+   * 0 if none is present.
+   * The result will always be an integer value.
+   */
+  tabLastUsed: function tabLastUsed(tab) {
+    // weaveLastUsed will only be set if the tab was ever selected (or
+    // opened after Sync was running).
+    let weaveLastUsed = tab.extData && tab.extData.weaveLastUsed;
+    if (!weaveLastUsed) {
+      return 0;
+    }
+    return parseInt(weaveLastUsed, 10) || 0;
+  },
+
   getAllTabs: function getAllTabs(filter) {
     let filteredUrls = new RegExp(Svc.Prefs.get("engine.tabs.filteredUrls"), "i");
 
     let allTabs = [];
 
     let currentState = JSON.parse(Svc.Session.getBrowserState());
+    let tabLastUsed = this.tabLastUsed;
     currentState.windows.forEach(function(window) {
       window.tabs.forEach(function(tab) {
         // Make sure there are history entries to look at.
@@ -159,15 +175,13 @@ TabStore.prototype = {
         if (!entry.url || filter && filteredUrls.test(entry.url))
           return;
 
-        // weaveLastUsed will only be set if the tab was ever selected (or
-        // opened after Weave was running). So it might not ever be set.
         // I think it's also possible that attributes[.image] might not be set
         // so handle that as well.
         allTabs.push({
           title: entry.title || "",
           urlHistory: [entry.url],
           icon: tab.attributes && tab.attributes.image || "",
-          lastUsed: tab.extData && tab.extData.weaveLastUsed || 0
+          lastUsed: tabLastUsed(tab)
         });
       });
     });

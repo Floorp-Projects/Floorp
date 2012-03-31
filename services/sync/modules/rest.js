@@ -654,13 +654,11 @@ SyncStorageRequest.prototype = {
       this.setHeader("user-agent", ua);
     }
 
-    // Set the BasicAuth header.
-    let id = ID.get("WeaveID");
-    if (id) {
-      let auth_header = "Basic " + btoa(id.username + ':' + id.passwordUTF8);
-      this.setHeader("authorization", auth_header);
+    let authenticator = Identity.getRESTRequestAuthenticator();
+    if (authenticator) {
+      authenticator(this);
     } else {
-      this._log.debug("Couldn't set Authentication header: WeaveID not found.");
+      this._log.debug("No authenticator found.");
     }
 
     return RESTRequest.prototype.dispatch.apply(this, arguments);

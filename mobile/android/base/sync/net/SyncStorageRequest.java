@@ -11,8 +11,7 @@ import java.security.GeneralSecurityException;
 import java.util.HashMap;
 
 import org.mozilla.gecko.sync.GlobalConstants;
-
-import android.util.Log;
+import org.mozilla.gecko.sync.Logger;
 
 import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpResponse;
@@ -22,7 +21,6 @@ import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
 import ch.boye.httpclientandroidlib.params.CoreProtocolPNames;
 
 public class SyncStorageRequest implements Resource {
-
   public static HashMap<String, String> SERVER_ERROR_MESSAGES;
   static {
     HashMap<String, String> errors = new HashMap<String, String>();
@@ -84,7 +82,7 @@ public class SyncStorageRequest implements Resource {
    * A ResourceDelegate that mediates between Resource-level notifications and the SyncStorageRequest.
    */
   public class SyncStorageResourceDelegate extends SyncResourceDelegate {
-    private static final String LOG_TAG = "SyncStorageResourceDelegate";
+    private static final String LOG_TAG = "SSResourceDelegate";
     protected SyncStorageRequest request;
 
     SyncStorageResourceDelegate(SyncStorageRequest request) {
@@ -99,18 +97,18 @@ public class SyncStorageRequest implements Resource {
 
     @Override
     public void handleHttpResponse(HttpResponse response) {
-      Log.d(LOG_TAG, "SyncStorageResourceDelegate handling response: " + response.getStatusLine() + ".");
+      Logger.debug(LOG_TAG, "SyncStorageResourceDelegate handling response: " + response.getStatusLine() + ".");
       SyncStorageRequestDelegate d = this.request.delegate;
       SyncStorageResponse res = new SyncStorageResponse(response);
       // It is the responsibility of the delegate handlers to completely consume the response.
       if (res.wasSuccessful()) {
         d.handleRequestSuccess(res);
       } else {
-        Log.w(LOG_TAG, "HTTP request failed.");
+        Logger.warn(LOG_TAG, "HTTP request failed.");
         try {
-          Log.w(LOG_TAG, "HTTP response body: " + res.getErrorMessage());
+          Logger.warn(LOG_TAG, "HTTP response body: " + res.getErrorMessage());
         } catch (Exception e) {
-          Log.e(LOG_TAG, "Can't fetch HTTP response body.", e);
+          Logger.error(LOG_TAG, "Can't fetch HTTP response body.", e);
         }
         d.handleRequestFailure(res);
       }
@@ -138,6 +136,7 @@ public class SyncStorageRequest implements Resource {
       // Clients can use their delegate interface to specify X-If-Unmodified-Since.
       String ifUnmodifiedSince = this.request.delegate.ifUnmodifiedSince();
       if (ifUnmodifiedSince != null) {
+        Logger.debug(LOG_TAG, "Making request with X-If-Unmodified-Since = " + ifUnmodifiedSince);
         request.setHeader("x-if-unmodified-since", ifUnmodifiedSince);
       }
       if (request.getMethod().equalsIgnoreCase("DELETE")) {

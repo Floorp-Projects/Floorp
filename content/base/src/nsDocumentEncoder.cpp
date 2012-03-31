@@ -742,32 +742,6 @@ static bool IsTextNode(nsINode *aNode)
   return aNode && aNode->IsNodeOfType(nsINode::eTEXT);
 }
 
-static nsresult GetLengthOfDOMNode(nsIDOMNode *aNode, PRUint32 &aCount) 
-{
-  aCount = 0;
-  if (!aNode) { return NS_ERROR_NULL_POINTER; }
-  nsresult result=NS_OK;
-  nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
-  nodeAsChar = do_QueryInterface(aNode);
-  if (nodeAsChar) {
-    nodeAsChar->GetLength(&aCount);
-  }
-  else
-  {
-    bool hasChildNodes;
-    aNode->HasChildNodes(&hasChildNodes);
-    if (true==hasChildNodes)
-    {
-      nsCOMPtr<nsIDOMNodeList>nodeList;
-      result = aNode->GetChildNodes(getter_AddRefs(nodeList));
-      if (NS_SUCCEEDED(result) && nodeList) {
-        nodeList->GetLength(&aCount);
-      }
-    }
-  }
-  return result;
-}
-
 nsresult
 nsDocumentEncoder::SerializeRangeNodes(nsRange* aRange,
                                        nsINode* aNode,
@@ -1699,13 +1673,12 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
     if (IsTextNode(n))
     {
       // if not at end of text node, we are done
-      PRUint32 len;
-      GetLengthOfDOMNode(aNode, len);
+      PRUint32 len = n->Length();
       if (offset < (PRInt32)len)
       {
         // unless everything after us in just whitespace.  NOTE: we need a more
         // general solution that truly detects all cases of non-significant
-        // whitesace with no false alarms.
+        // whitespace with no false alarms.
         nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(aNode);
         nsAutoString text;
         nodeAsText->SubstringData(offset, len-offset, text);
@@ -1891,17 +1864,19 @@ nsHTMLCopyEncoder::IsLastNode(nsIDOMNode *aNode)
 {
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset,j;
-  PRUint32 numChildren;
   nsresult rv = GetNodeLocation(aNode, address_of(parent), &offset);
   if (NS_FAILED(rv)) 
   {
     NS_NOTREACHED("failure in IsLastNode");
     return false;
   }
-  GetLengthOfDOMNode(parent, numChildren); 
-  if (offset+1 == (PRInt32)numChildren) // easy case, we are last dom child
+  nsCOMPtr<nsINode> parentNode = do_QueryInterface(parent);
+  if (!parentNode) {
     return true;
-  if (!parent)
+  }
+
+  PRUint32 numChildren = parentNode->Length();
+  if (offset+1 == (PRInt32)numChildren) // easy case, we are last dom child
     return true;
   // need to check if any nodes after us are really visible.
   // Mike wrote something for me along these lines in nsSelectionController,

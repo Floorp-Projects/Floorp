@@ -131,9 +131,9 @@
 }
 %endif
 
-#navigator-toolbox[tabsontop="true"] > #nav-bar,
-#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar,
-#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar {
+#nav-bar[tabsontop=true],
+#nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + toolbar,
+#nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar {
   background-image: -moz-linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
 }
 
@@ -1001,10 +1001,8 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 %ifdef WINSTRIPE_AERO
-#TabsToolbar > #tabview-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
-#TabsToolbar > toolbarpaletteitem > #tabview-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
-#navigator-toolbox[tabsontop=false] > #nav-bar #tabview-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
-#toolbar-menubar #tabview-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
+:-moz-any(#TabsToolbar, #nav-bar[tabsontop=false], #toolbar-menubar) > #tabview-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
+:-moz-any(#TabsToolbar, #nav-bar[tabsontop=false], #toolbar-menubar) > toolbarpaletteitem > #tabview-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
 %endif
 #tabview-button:-moz-lwtheme-brighttext {
   list-style-image: url(chrome://browser/skin/tabview/tabview-inverted.png);
@@ -2051,10 +2049,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 %ifdef WINSTRIPE_AERO
-#TabsToolbar > #alltabs-button[type="menu"]:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
-#TabsToolbar > toolbarpaletteitem > #alltabs-button[type="menu"]:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
-#navigator-toolbox[tabsontop=false] > #nav-bar #alltabs-button[type="menu"]:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
-#toolbar-menubar #alltabs-button[type="menu"]:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
+:-moz-any(#TabsToolbar, #nav-bar[tabsontop=false], #toolbar-menubar) > #alltabs-button[type=menu]:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
+:-moz-any(#TabsToolbar, #nav-bar[tabsontop=false], #toolbar-menubar) > toolbarpaletteitem > #alltabs-button[type=menu]:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
 %endif
 #alltabs-button[type="menu"]:-moz-lwtheme-brighttext {
   list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow-inverted.png");

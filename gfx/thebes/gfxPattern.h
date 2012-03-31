@@ -73,7 +73,13 @@ public:
     void SetMatrix(const gfxMatrix& matrix);
     gfxMatrix GetMatrix() const;
 
-    mozilla::gfx::Pattern *GetPattern(mozilla::gfx::DrawTarget *aTarget);
+    /* Get an Azure Pattern for the current Cairo pattern. aPattern transform
+     * specifies the transform that was set on the DrawTarget when the pattern
+     * was set. When this is NULL it is assumed the transform is identical
+     * to the current transform.
+     */
+    mozilla::gfx::Pattern *GetPattern(mozilla::gfx::DrawTarget *aTarget,
+                                      mozilla::gfx::Matrix *aPatternTransform = nsnull);
     bool IsOpaque();
 
     enum GraphicsExtend {
@@ -127,6 +133,10 @@ public:
 
 protected:
     cairo_pattern_t *mPattern;
+
+    void AdjustTransformForPattern(mozilla::gfx::Matrix &aPatternTransform,
+                                   const mozilla::gfx::Matrix &aCurrentTransform,
+                                   const mozilla::gfx::Matrix *aOriginalTransform);
 
     union {
       mozilla::AlignedStorage2<mozilla::gfx::ColorPattern> mColorPattern;

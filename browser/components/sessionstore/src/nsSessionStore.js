@@ -2090,9 +2090,6 @@ SessionStoreService.prototype = {
   _updateTextAndScrollData: function sss_updateTextAndScrollData(aWindow) {
     var browsers = aWindow.gBrowser.browsers;
     this._windows[aWindow.__SSi].tabs.forEach(function (tabData, i) {
-      if (browsers[i].__SS_data &&
-          browsers[i].__SS_tabStillLoading)
-        return; // ignore incompletely initialized tabs
       try {
         this._updateTextAndScrollDataForTab(aWindow, browsers[i], tabData);
       }
@@ -2114,6 +2111,10 @@ SessionStoreService.prototype = {
    */
   _updateTextAndScrollDataForTab:
     function sss_updateTextAndScrollDataForTab(aWindow, aBrowser, aTabData, aFullData) {
+    // we shouldn't update data for incompletely initialized tabs
+    if (aBrowser.__SS_data && aBrowser.__SS_tabStillLoading)
+      return;
+
     var tabIndex = (aTabData.index || aTabData.entries.length) - 1;
     // entry data needn't exist for tabs just initialized with an incomplete session state
     if (!aTabData.entries[tabIndex])
@@ -2734,6 +2735,8 @@ SessionStoreService.prototype = {
     if (aOverwriteTabs && tabbrowser.selectedTab._tPos >= newTabCount)
       tabbrowser.moveTabTo(tabbrowser.selectedTab, newTabCount - 1);
 
+    let numVisibleTabs = 0;
+
     for (var t = 0; t < newTabCount; t++) {
       tabs.push(t < openTabCount ?
                 tabbrowser.tabs[t] :
@@ -2746,10 +2749,19 @@ SessionStoreService.prototype = {
       if (winData.tabs[t].pinned)
         tabbrowser.pinTab(tabs[t]);
 
-      if (winData.tabs[t].hidden)
+      if (winData.tabs[t].hidden) {
         tabbrowser.hideTab(tabs[t]);
-      else
+      }
+      else {
         tabbrowser.showTab(tabs[t]);
+        numVisibleTabs++;
+      }
+    }
+
+    // if all tabs to be restored are hidden, make the first one visible
+    if (!numVisibleTabs && winData.tabs.length) {
+      winData.tabs[0].hidden = false;
+      tabbrowser.showTab(tabs[0]);
     }
 
     // If overwriting tabs, we want to reset each tab's "restoring" state. Since
@@ -2879,10 +2891,7 @@ SessionStoreService.prototype = {
 
     let unhiddenTabs = aTabData.filter(function (aData) !aData.hidden).length;
 
-    // if all tabs to be restored are hidden, make the first one visible
-    if (unhiddenTabs == 0) {
-      aTabData[0].hidden = false;
-    } else if (aTabs.length > 1) {
+    if (unhiddenTabs && aTabs.length > 1) {
       // Load hidden tabs last, by pushing them to the end of the list
       for (let t = 0, tabsToReorder = aTabs.length - unhiddenTabs; tabsToReorder > 0; ) {
         if (aTabData[t].hidden) {

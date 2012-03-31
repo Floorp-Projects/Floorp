@@ -73,10 +73,19 @@ public:
     gfxContext::AzureState &state = mContext->CurrentState();
 
     if (state.pattern) {
-      return *state.pattern->GetPattern(mContext->mDT);
+      return *state.pattern->GetPattern(mContext->mDT, state.patternTransformChanged ? &state.patternTransform : nsnull);
     } else if (state.sourceSurface) {
+      Matrix transform = state.surfTransform;
+
+      if (state.patternTransformChanged) {
+        Matrix mat = state.patternTransform;
+        mat.Invert();
+
+        transform = mat * mContext->mDT->GetTransform() * transform;
+      }
+
       mPattern = new (mSurfacePattern.addr())
-        SurfacePattern(state.sourceSurface, EXTEND_CLAMP, state.surfTransform);
+        SurfacePattern(state.sourceSurface, EXTEND_CLAMP, transform);
       return *mPattern;
     } else {
       mPattern = new (mColorPattern.addr())
@@ -575,6 +584,7 @@ gfxContext::Translate(const gfxPoint& pt)
     MOZ_ASSERT(!mPathBuilder);
 
     Matrix newMatrix = mDT->GetTransform();
+    TransformWillChange();
     mDT->SetTransform(newMatrix.Translate(Float(pt.x), Float(pt.y)));
   }
 }
@@ -588,6 +598,7 @@ gfxContext::Scale(gfxFloat x, gfxFloat y)
     MOZ_ASSERT(!mPathBuilder);
 
     Matrix newMatrix = mDT->GetTransform();
+    TransformWillChange();
     mDT->SetTransform(newMatrix.Scale(Float(x), Float(y)));
   }
 }
@@ -600,6 +611,7 @@ gfxContext::Rotate(gfxFloat angle)
   } else {
     MOZ_ASSERT(!mPathBuilder);
 
+    TransformWillChange();
     Matrix rotation = Matrix::Rotation(Float(angle));
     mDT->SetTransform(rotation * mDT->GetTransform());
   }
@@ -614,6 +626,7 @@ gfxContext::Multiply(const gfxMatrix& matrix)
   } else {
     MOZ_ASSERT(!mPathBuilder);
 
+    TransformWillChange();
     mDT->SetTransform(ToMatrix(matrix) * mDT->GetTransform());
   }
 }
@@ -627,6 +640,7 @@ gfxContext::SetMatrix(const gfxMatrix& matrix)
   } else {
     MOZ_ASSERT(!mPathBuilder);
 
+    TransformWillChange();
     mDT->SetTransform(ToMatrix(matrix));
   }
 }
@@ -639,6 +653,7 @@ gfxContext::IdentityMatrix()
   } else {
     MOZ_ASSERT(!mPathBuilder);
 
+    TransformWillChange();
     mDT->SetTransform(Matrix());
   }
 }
@@ -1369,6 +1384,7 @@ gfxContext::SetSource(gfxASurface *surface, const gfxPoint& offset)
   } else {
     CurrentState().surfTransform = Matrix(1.0f, 0, 0, 1.0f, Float(offset.x), Float(offset.y));
     CurrentState().pattern = NULL;
+    CurrentState().patternTransformChanged = false;
     CurrentState().sourceSurface =
       gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mDT, surface);
   }
@@ -1381,6 +1397,7 @@ gfxContext::SetPattern(gfxPattern *pattern)
     cairo_set_source(mCairo, pattern->CairoPattern());
   } else {
     CurrentState().sourceSurface = NULL;
+    CurrentState().patternTransformChanged = false;
     CurrentState().pattern = pattern;
   }
 }
@@ -1582,6 +1599,7 @@ gfxContext::PopGroupToSource()
     Restore();
     CurrentState().sourceSurface = src;
     CurrentState().pattern = NULL;
+    CurrentState().patternTransformChanged = false;
 
     Matrix mat = mDT->GetTransform();
     mat.Invert();
@@ -2053,5 +2071,23 @@ gfxContext::GetOp()
     } else {
       return OP_SOURCE;
     }
+  }
+}
+
+/* SVG font code can change the transform after having set the pattern on the
+ * context. When the pattern is set it is in user space, if the transform is
+ * changed after doing so the pattern needs to be converted back into userspace.
+ * We just store the old pattern here so that we only do the work needed here
+ * if the pattern is actually used.
+ */
+void
+gfxContext::TransformWillChange()
+{
+  AzureState &state = CurrentState();
+
+  if ((state.pattern || state.sourceSurface)
+      && !state.patternTransformChanged) {
+    state.patternTransform = mDT->GetTransform();
+    state.patternTransformChanged = true;
   }
 }

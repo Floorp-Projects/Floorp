@@ -1420,12 +1420,9 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
 
   nsresult rv;
   if (!aQualifiedName.IsEmpty()) {
-    nsIParserService *parserService = nsContentUtils::GetParserService();
-    NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
-
     const nsAFlatString& qName = PromiseFlatString(aQualifiedName);
     const PRUnichar *colon;
-    rv = parserService->CheckQName(qName, true, &colon);
+    rv = nsContentUtils::CheckQName(qName, true, &colon);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (colon &&
@@ -1674,6 +1671,8 @@ nsDocument::~nsDocument()
   // unlocked state, and then clear the table.
   SetImageLockingState(false);
   mImageTracker.Clear();
+
+  mPlugins.Clear();
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocument)
@@ -2024,7 +2023,8 @@ nsDocument::Init()
   mScriptLoader = new nsScriptLoader(this);
   NS_ENSURE_TRUE(mScriptLoader, NS_ERROR_OUT_OF_MEMORY);
 
-  if (!mImageTracker.Init()) {
+  if (!mImageTracker.Init() ||
+      !mPlugins.Init()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -3514,12 +3514,12 @@ nsDocument::AppendChildTo(nsIContent* aKid, bool aNotify)
   return nsDocument::InsertChildAt(aKid, GetChildCount(), aNotify);
 }
 
-nsresult
+void
 nsDocument::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 {
   nsCOMPtr<nsIContent> oldKid = GetChildAt(aIndex);
   if (!oldKid) {
-    return NS_OK;
+    return;
   }
 
   if (oldKid->IsElement()) {
@@ -3527,10 +3527,8 @@ nsDocument::RemoveChildAt(PRUint32 aIndex, bool aNotify)
     DestroyElementMaps();
   }
 
-  nsresult rv =
-    doRemoveChildAt(aIndex, aNotify, oldKid, mChildren);
+  doRemoveChildAt(aIndex, aNotify, oldKid, mChildren);
   mCachedRootElement = nsnull;
-  return rv;
 }
 
 PRInt32
@@ -5986,7 +5984,6 @@ BlastFunc(nsAttrHashKey::KeyType aKey, nsDOMAttribute *aData, void* aUserArg)
 static void
 BlastSubtreeToPieces(nsINode *aNode)
 {
-  PRUint32 i, count;
   if (aNode->IsElement()) {
     nsGenericElement *element = static_cast<nsGenericElement*>(aNode);
     const nsDOMAttributeMap *map = element->GetAttributeMap();
@@ -6008,16 +6005,10 @@ BlastSubtreeToPieces(nsINode *aNode)
     }
   }
 
-  count = aNode->GetChildCount();
-  for (i = 0; i < count; ++i) {
+  PRUint32 count = aNode->GetChildCount();
+  for (PRUint32 i = 0; i < count; ++i) {
     BlastSubtreeToPieces(aNode->GetFirstChild());
-#ifdef DEBUG
-    nsresult rv =
-#endif
-      aNode->RemoveChildAt(0, false);
-
-    // XXX Should we abort here?
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Uhoh, RemoveChildAt shouldn't fail!");
+    aNode->RemoveChildAt(0, false);
   }
 }
 
@@ -6121,8 +6112,7 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
       // Remove from parent.
       nsCOMPtr<nsINode> parent = adoptedNode->GetNodeParent();
       if (parent) {
-        rv = parent->RemoveChildAt(parent->IndexOf(adoptedNode), true);
-        NS_ENSURE_SUCCESS(rv, rv);
+        parent->RemoveChildAt(parent->IndexOf(adoptedNode), true);
       }
 
       break;
@@ -8360,6 +8350,51 @@ nsDocument::RemoveImage(imgIRequest* aImage)
   aImage->RequestDiscard();
 
   return rv;
+}
+
+nsresult
+nsDocument::AddPlugin(nsIObjectLoadingContent* aPlugin)
+{
+  MOZ_ASSERT(aPlugin);
+  if (!mPlugins.PutEntry(aPlugin)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
+void
+nsDocument::RemovePlugin(nsIObjectLoadingContent* aPlugin)
+{
+  MOZ_ASSERT(aPlugin);
+  mPlugins.RemoveEntry(aPlugin);
+}
+
+static bool
+AllSubDocumentPluginEnum(nsIDocument* aDocument, void* userArg)
+{
+  nsTArray<nsIObjectLoadingContent*>* plugins =
+    reinterpret_cast< nsTArray<nsIObjectLoadingContent*>* >(userArg);
+  MOZ_ASSERT(plugins);
+  aDocument->GetPlugins(*plugins);
+  return true;
+}
+
+static PLDHashOperator
+AllPluginEnum(nsPtrHashKey<nsIObjectLoadingContent>* aPlugin, void* userArg)
+{
+  nsTArray<nsIObjectLoadingContent*>* allPlugins =
+    reinterpret_cast< nsTArray<nsIObjectLoadingContent*>* >(userArg);
+  MOZ_ASSERT(allPlugins);
+  allPlugins->AppendElement(aPlugin->GetKey());
+  return PL_DHASH_NEXT;
+}
+
+void
+nsDocument::GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins)
+{
+  aPlugins.SetCapacity(aPlugins.Length() + mPlugins.Count());
+  mPlugins.EnumerateEntries(AllPluginEnum, &aPlugins);
+  EnumerateSubDocuments(AllSubDocumentPluginEnum, &aPlugins);
 }
 
 PLDHashOperator LockEnumerator(imgIRequest* aKey,

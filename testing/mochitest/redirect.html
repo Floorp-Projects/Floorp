@@ -14,10 +14,13 @@
       document.dispatchEvent(element);
     }
 
-    redirect("chrome://mochikit/content/harness.xul");
+    function onLoad() {
+      redirect("chrome://mochikit/content/harness.xul");
+    }
   </script>
 </head>
-<body>
+
+<body onload="onLoad();">
 redirecting...
 </body>
 </html>

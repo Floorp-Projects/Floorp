@@ -72,7 +72,7 @@ interface nsIPrincipal;
 interface nsIWebBrowserPrint;
 interface nsIVariant;
 
-[scriptable, uuid(DBD39C21-5788-4C68-9D97-0FCEE289BCE1)]
+[scriptable, uuid(c7325422-817e-4321-957a-c0bdd764941d)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -614,4 +614,10 @@ interface nsIDocShell : nsISupports
    * See also nsIMozBrowserFrame.
    */
   attribute bool isBrowserFrame;
+
+  /*
+   * Is this docshell contained in an <iframe mozbrowser>, either directly or
+   * indirectly?
+   */
+  readonly attribute bool containedInBrowserFrame;
 };

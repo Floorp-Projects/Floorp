@@ -161,6 +161,14 @@ public class GeckoAppShell
             public void uncaughtException(Thread thread, Throwable e) {
                 Log.e(LOGTAG, ">>> REPORTING UNCAUGHT EXCEPTION FROM THREAD "
                               + thread.getId() + " (\"" + thread.getName() + "\")", e);
+
+                // If the uncaught exception was rethrown, walk the exception `cause` chain to find
+                // the original exception so Socorro can correctly collate related crash reports.
+                Throwable cause;
+                while ((cause = e.getCause()) != null) {
+                    e = cause;
+                }
+
                 reportJavaCrash(getStackTraceString(e));
             }
         });
@@ -2043,5 +2051,13 @@ public class GeckoAppShell
 
     public static void disableScreenOrientationNotifications() {
         GeckoScreenOrientationListener.getInstance().disableNotifications();
+    }
+
+    public static void lockScreenOrientation(int aOrientation) {
+        GeckoScreenOrientationListener.getInstance().lockScreenOrientation(aOrientation);
+    }
+
+    public static void unlockScreenOrientation() {
+        GeckoScreenOrientationListener.getInstance().unlockScreenOrientation();
     }
 }

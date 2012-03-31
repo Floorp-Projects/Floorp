@@ -42,6 +42,23 @@ A corollary: don't mix declaration types by declaring a T and a T* (or a T**,
 
   T* foo, bar; // BAD
 
+== Expressions ==
+
+Ternary expressions (a ? b : c) should use only one line if sufficiently short.
+Longer ternary expressions should use multiple lines.  The condition,
+consequent, and alternative should each be on separate lines (each part
+overflowing to additional lines as necessary), and the ? and : should be aligned
+with the start of the condition:
+
+  size_t
+  BinaryTree::height()
+  {
+    return isLeaf()
+           ? 0
+           : 1 + std::max(left()->height(),
+                          right()->height());
+  }
+
 == Bracing ==
 
 Don't brace single statements.
@@ -192,6 +209,12 @@ indented.
 Don't use |using| in a header unless it's confined to a class or method.
 Implementation files for out-of-line functionality may use |using|.
 
+Name data structures and methods which must be usable in C code with a Moz*
+prefix, e.g. MozCustomStructure.  If the data structure is not meant to be used
+outside of the header in which it is found (i.e. it would be in mozilla::detail
+but for its being required to work in C code), add a corresponding comment to
+highlight this.
+
 == #includes ==
 
 Headers that include mfbt headers use a fully-qualified include path, even if
@@ -267,6 +290,11 @@ But don't distinguish clang's feature support using version checks: use the
 __has_feature() and __has_extension() macros instead, because vendors may
 customize clang's version numbers.
 
+Use a MOZ_* prefix when defining macros (e.g. MOZ_OVERRIDE, MOZ_LIKELY, and so
+on) that are part of the mfbt interface.  (C++ implementation files implementing
+mfbt's interface but which are not directly part of that interface may ignore
+this rule.)
+
 Prefer inline functions to macros whenever possible.
 
 == Comments ==
@@ -336,3 +364,20 @@ interprets that argument.
   DefineProperty(JSObject* obj, const char* name, Value v, Enumerability e);
 
 Use NULL for the null pointer constant.
+
+If a consequent in an if-statement ends with a return, don't specify an else.
+The else would be redundant with the return, and not using it avoids excess
+indentation.  If you feel the if-else alternation is important as a way to
+think about the choice being made, consider a ternary expression instead.
+
+  // BAD
+  if (f())
+    return 2;
+  else
+    return 5;
+  // GOOD
+  if (f())
+    return 2;
+  return 5;
+  // GOOD
+  return f() ? 2 : 5

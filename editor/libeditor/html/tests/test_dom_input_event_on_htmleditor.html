@@ -36,16 +36,29 @@ function runTests()
     aDescription += ": ";
     aWindow.focus();
 
+    var body = aDocument.body;
+
     var eventTarget = aDocument.getElementById("eventTarget");
+    // The event target must be focusable because it's the editing host.
+    eventTarget.focus();
 
     var editTarget = aDocument.getElementById("editTarget");
     if (!editTarget) {
       editTarget = eventTarget;
     }
-    editTarget.innerHTML = "";
-    editTarget.focus();
 
-    var body = aDocument.body;
+    // Root element never can be edit target.  If the editTarget is the root
+    // element, replace with its body.
+    if (editTarget == aDocument.documentElement) {
+      editTarget = body;
+    }
+
+    editTarget.innerHTML = "";
+
+    // If the editTarget isn't its editing host, move caret to the start of it.
+    if (eventTarget != editTarget) {
+      aDocument.getSelection().collapse(editTarget, 0);
+    }
 
     var inputEvent = null;
 
@@ -65,9 +78,7 @@ function runTests()
 
     inputEvent = null;
     synthesizeKey("a", { }, aWindow);
-    if (editTarget != eventTarget) {
-      is(editTarget.innerHTML, "a", aDescription + "wrong element was edited");
-    }
+    is(editTarget.innerHTML, "a", aDescription + "wrong element was edited");
     ok(inputEvent, aDescription + "input event wasn't fired by 'a' key");
     ok(inputEvent.isTrusted, aDescription + "input event by 'a' key wasn't trusted event");
 

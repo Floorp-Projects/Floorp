@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=720157
+-->
+<head>
+  <title>Test for Bug 720157</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="browserFrameHelpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=720157">Mozilla Bug 720157</a>
+
+<!--
+  Test that data: URIs work with mozbrowserlocationchange events.
+-->
+
+<script type="application/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  browserFrameHelpers.setEnabledPref(true);
+  browserFrameHelpers.addToWhitelist();
+
+  var iframe1 = document.createElement('iframe');
+  iframe1.mozbrowser = true;
+  iframe1.id = 'iframe1';
+  iframe1.addEventListener('load', function() {
+    iframe1.removeEventListener('load', arguments.callee);
+    SimpleTest.executeSoon(runTest2);
+  });
+  iframe1.src = browserFrameHelpers.emptyPage1;
+  document.body.appendChild(iframe1);
+}
+
+function runTest2() {
+  var iframe1 = document.getElementById('iframe1');
+  var iframe2 = document.getElementById('iframe2');
+
+  var sawLoad = false;
+  var sawLocationChange = false;
+
+  iframe1.addEventListener('mozbrowserlocationchange', function(e) {
+    ok(e.isTrusted, 'Event should be trusted.');
+    ok(!sawLocationChange, 'Just one locationchange event.');
+    ok(!sawLoad, 'locationchange before load.');
+    is(e.detail, 'data:text/html,1', "event's reported location");
+    sawLocationChange = true;
+  });
+
+  iframe1.addEventListener('load', function() {
+    ok(sawLocationChange, 'Load after locationchange.');
+    ok(!sawLoad, 'Just one load event.');
+    sawLoad = true;
+  });
+
+  function iframe2Load() {
+    if (!sawLoad || !sawLocationChange) {
+      // Spin if iframe1 hasn't loaded yet.
+      SimpleTest.executeSoon(iframe2Load);
+      return;
+    }
+    ok(true, 'Got iframe2 load.');
+    SimpleTest.finish();
+  }
+  iframe2.addEventListener('load', iframe2Load);
+
+
+  iframe1.src = 'data:text/html,1';
+
+  // Load something into iframe2 to check that it doesn't trigger a
+  // locationchange for our iframe1 listener.
+  iframe2.src = browserFrameHelpers.emptyPage2;
+}
+
+addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
+
+</script>
+
+<iframe id='iframe2'></iframe>
+
+</body>
+</html>
