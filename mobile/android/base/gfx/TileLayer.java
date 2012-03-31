@@ -60,7 +60,6 @@ public abstract class TileLayer extends Layer {
     private final CairoImage mImage;
     private final boolean mRepeat;
     private IntSize mSize;
-    private boolean mSkipTextureUpdate;
     private int[] mTextureIDs;
 
     public TileLayer(boolean repeat, CairoImage image) {
@@ -69,7 +68,6 @@ public abstract class TileLayer extends Layer {
         mRepeat = repeat;
         mImage = image;
         mSize = new IntSize(0, 0);
-        mSkipTextureUpdate = false;
         mDirtyRect = new Rect();
     }
 
@@ -131,22 +129,9 @@ public abstract class TileLayer extends Layer {
         }
     }
 
-    /** Tells the tile not to update the texture on the next update. */
-    public void setSkipTextureUpdate(boolean skip) {
-        mSkipTextureUpdate = skip;
-    }
-
-    public boolean getSkipTextureUpdate() {
-        return mSkipTextureUpdate;
-    }
-
     @Override
     protected boolean performUpdates(RenderContext context) {
         super.performUpdates(context);
-
-        if (mSkipTextureUpdate) {
-            return false;
-        }
 
         // Reallocate the texture if the size has changed
         validateTexture();
