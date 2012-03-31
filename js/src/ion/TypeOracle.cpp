@@ -282,7 +282,7 @@ TypeInferenceOracle::elementReadGeneric(JSScript *script, jsbytecode *pc, bool *
 }
 
 bool
-TypeInferenceOracle::elementWriteIsDense(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::elementWriteIsDenseArray(JSScript *script, jsbytecode *pc)
 {
     // Check whether the object is a dense array and index is int32 or double.
     types::TypeSet *obj = script->analysis()->poppedTypes(pc, 2);
@@ -297,6 +297,31 @@ TypeInferenceOracle::elementWriteIsDense(JSScript *script, jsbytecode *pc)
         return false;
 
     return !obj->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY);
+}
+
+bool
+TypeInferenceOracle::elementWriteIsTypedArray(JSScript *script, jsbytecode *pc, int *arrayType)
+{
+    // Check whether the object is a dense array and index is int32 or double.
+    types::TypeSet *obj = script->analysis()->poppedTypes(pc, 2);
+    types::TypeSet *id = script->analysis()->poppedTypes(pc, 1);
+
+    JSValueType objType = obj->getKnownTypeTag(cx);
+    if (objType != JSVAL_TYPE_OBJECT)
+        return false;
+
+    JSValueType idType = id->getKnownTypeTag(cx);
+    if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
+        return false;
+
+    if (obj->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY))
+        return false;
+
+    *arrayType = obj->getTypedArrayType(cx);
+    if (*arrayType == TypedArray::TYPE_MAX)
+        return false;
+
+    return true;
 }
 
 bool

@@ -136,7 +136,10 @@ class TypeOracle
     virtual bool setElementHasWrittenHoles(JSScript *script, jsbytecode *pc) {
         return true;
     }
-    virtual bool elementWriteIsDense(JSScript *script, jsbytecode *pc) {
+    virtual bool elementWriteIsDenseArray(JSScript *script, jsbytecode *pc) {
+        return false;
+    }
+    virtual bool elementWriteIsTypedArray(JSScript *script, jsbytecode *pc, int *arrayType) {
         return false;
     }
     virtual bool elementWriteIsPacked(JSScript *script, jsbytecode *pc) {
@@ -240,7 +243,8 @@ class TypeInferenceOracle : public TypeOracle
     bool elementReadIsTypedArray(JSScript *script, jsbytecode *pc, int *atype);
     bool elementReadIsPacked(JSScript *script, jsbytecode *pc);
     void elementReadGeneric(JSScript *script, jsbytecode *pc, bool *cacheable, bool *monitorResult);
-    bool elementWriteIsDense(JSScript *script, jsbytecode *pc);
+    bool elementWriteIsDenseArray(JSScript *script, jsbytecode *pc);
+    bool elementWriteIsTypedArray(JSScript *script, jsbytecode *pc, int *arrayType);
     bool elementWriteIsPacked(JSScript *script, jsbytecode *pc);
     bool setElementHasWrittenHoles(JSScript *script, jsbytecode *pc);
     bool propertyWriteCanSpecialize(JSScript *script, jsbytecode *pc);

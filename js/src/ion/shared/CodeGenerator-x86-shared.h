@@ -85,6 +85,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
     bool bailoutIf(Assembler::Condition condition, LSnapshot *snapshot);
     bool bailoutFrom(Label *label, LSnapshot *snapshot);
+    bool bailout(LSnapshot *snapshot);
 
   protected:
     bool generatePrologue();

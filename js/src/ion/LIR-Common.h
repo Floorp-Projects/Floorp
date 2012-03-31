@@ -1786,6 +1786,86 @@ class LLoadTypedArrayElementHole : public LInstructionHelper<BOX_PIECES, 2, 0>
     }
 };
 
+class LStoreTypedArrayElement : public LInstructionHelper<0, 3, 0>
+{
+  public:
+    LIR_HEADER(StoreTypedArrayElement);
+
+    LStoreTypedArrayElement(const LAllocation &elements, const LAllocation &index,
+                            const LAllocation &value) {
+        setOperand(0, elements);
+        setOperand(1, index);
+        setOperand(2, value);
+    }
+
+    const MStoreTypedArrayElement *mir() const {
+        return mir_->toStoreTypedArrayElement();
+    }
+    const LAllocation *elements() {
+        return getOperand(0);
+    }
+    const LAllocation *index() {
+        return getOperand(1);
+    }
+    const LAllocation *value() {
+        return getOperand(2);
+    }
+};
+
+class LClampIToUint8 : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(ClampIToUint8);
+
+    LClampIToUint8(const LAllocation &in) {
+        setOperand(0, in);
+    }
+
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
+class LClampDToUint8 : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(ClampDToUint8);
+
+    LClampDToUint8(const LAllocation &in, const LDefinition &temp) {
+        setOperand(0, in);
+        setTemp(0, temp);
+    }
+
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
+class LClampVToUint8 : public LInstructionHelper<1, BOX_PIECES, 1>
+{
+  public:
+    LIR_HEADER(ClampVToUint8);
+
+    LClampVToUint8(const LDefinition &tempFloat) {
+        setTemp(0, tempFloat);
+    }
+
+    static const size_t Input = 0;
+
+    const LDefinition *tempFloat() {
+        return getTemp(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
 // Load a boxed value from an object's fixed slot.
 class LLoadFixedSlotV : public LInstructionHelper<BOX_PIECES, 1, 0>
 {

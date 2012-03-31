@@ -387,6 +387,14 @@ CodeGeneratorX86Shared::bailoutFrom(Label *label, LSnapshot *snapshot)
 }
 
 bool
+CodeGeneratorX86Shared::bailout(LSnapshot *snapshot)
+{
+    Label label;
+    masm.jump(&label);
+    return bailoutFrom(&label, snapshot);
+}
+
+bool
 CodeGeneratorX86Shared::visitOutOfLineBailout(OutOfLineBailout *ool)
 {
     if (!deoptLabel_)

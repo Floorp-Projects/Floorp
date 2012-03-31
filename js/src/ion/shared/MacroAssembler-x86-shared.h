@@ -116,7 +116,10 @@ class MacroAssemblerX86Shared : public Assembler
         movl(Operand(address), dest);
     }
     void move32(const Imm32 &imm, const Register &dest) {
-        movl(imm, dest);
+        if (imm.value == 0)
+            xorl(dest, dest);
+        else
+            movl(imm, dest);
     }
     void and32(const Imm32 &imm, const Register &dest) {
         andl(imm, dest);
@@ -233,17 +236,19 @@ class MacroAssemblerX86Shared : public Assembler
     void load8SignExtend(const BaseIndex &src, const Register &dest) {
         movxbl(Operand(src), dest);
     }
+    template <typename S, typename T>
+    void store8(const S &src, const T &dest) {
+        movb(src, Operand(dest));
+    }
     void load16(const Address &src, const Register &dest) {
         movzwl(Operand(src), dest);
     }
     void load16(const BaseIndex &src, const Register &dest) {
         movzwl(Operand(src), dest);
     }
-    void store16(const Register &src, const Address &dest) {
-        movzxh(src, Operand(dest));
-    }
-    void store16(const Register &src, const BaseIndex &dest) {
-        movzxh(src, Operand(dest));
+    template <typename S, typename T>
+    void store16(const S &src, const T &dest) {
+        movw(src, Operand(dest));
     }
     void load16_mask(const Address &src, Imm32 mask, const Register &dest) {
         load32(src, dest);
@@ -261,10 +266,8 @@ class MacroAssemblerX86Shared : public Assembler
     void load32(const BaseIndex &src, Register dest) {
         movl(Operand(src), dest);
     }
-    void store32(Imm32 src, const Address &dest) {
-        movl(src, Operand(dest));
-    }
-    void store32(const Register &src, const Address &dest) {
+    template <typename S, typename T>
+    void store32(const S &src, const T &dest) {
         movl(src, Operand(dest));
     }
     void loadDouble(const Address &src, FloatRegister dest) {
@@ -273,6 +276,21 @@ class MacroAssemblerX86Shared : public Assembler
     void loadDouble(const BaseIndex &src, FloatRegister dest) {
         movsd(Operand(src), dest);
     }
+    void storeDouble(FloatRegister src, const Address &dest) {
+        movsd(src, Operand(dest));
+    }
+    void storeDouble(FloatRegister src, const BaseIndex &dest) {
+        movsd(src, Operand(dest));
+    }
+    void zeroDouble(FloatRegister reg) {
+        xorpd(reg, reg);
+    }
+    void addDouble(FloatRegister src, FloatRegister dest) {
+        addsd(src, dest);
+    }
+    void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest) {
+        cvtsd2ss(src, dest);
+    }
     void loadFloat(const Address &src, FloatRegister dest) {
         movss(Operand(src), dest);
         cvtss2sd(dest, dest);
@@ -280,6 +298,34 @@ class MacroAssemblerX86Shared : public Assembler
     void loadFloat(const BaseIndex &src, FloatRegister dest) {
         movss(Operand(src), dest);
         cvtss2sd(dest, dest);
+    }
+    void storeFloat(FloatRegister src, const Address &dest) {
+        movss(src, Operand(dest));
+    }
+    void storeFloat(FloatRegister src, const BaseIndex &dest) {
+        movss(src, Operand(dest));
+    }
+
+    void clampIntToUint8(Register src, Register dest) {
+        Label inRange, done;
+        branchTest32(Assembler::Zero, src, Imm32(0xffffff00), &inRange);
+        {
+            Label negative;
+            branchTest32(Assembler::Signed, src, src, &negative);
+            {
+                movl(Imm32(255), dest);
+                jump(&done);
+            }
+            bind(&negative);
+            {
+                xorl(dest, dest);
+                jump(&done);
+            }
+        }
+        bind(&inRange);
+        if (src != dest)
+            movl(src, dest);
+        bind(&done);
     }
 
     template <typename T>

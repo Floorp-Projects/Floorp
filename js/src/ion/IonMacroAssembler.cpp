@@ -326,3 +326,52 @@ template void MacroAssembler::loadFromTypedArray(int arrayType, const Address &s
 template void MacroAssembler::loadFromTypedArray(int arrayType, const BaseIndex &src, const ValueOperand &dest,
                                                  bool allowDouble, Label *fail);
 
+// Note: this function clobbers the input register.
+void
+MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
+{
+#ifdef JS_CPU_ARM
+    JS_NOT_REACHED("NYI clampDoubleToUint8");
+#else
+    JS_ASSERT(input != ScratchFloatReg);
+
+    Label positive, done;
+
+    // <= 0 or NaN --> 0
+    zeroDouble(ScratchFloatReg);
+    j(compareDoubles(JSOP_GT, input, ScratchFloatReg), &positive); //XXX
+    {
+        move32(Imm32(0), output);
+        jump(&done);
+    }
+
+    bind(&positive);
+
+    // Add 0.5 and truncate.
+    static const double DoubleHalf = 0.5;
+    loadStaticDouble(&DoubleHalf, ScratchFloatReg);
+    addDouble(ScratchFloatReg, input);
+
+    Label outOfRange;
+    branchTruncateDouble(input, output, &outOfRange);
+    branch32(Assembler::Above, output, Imm32(255), &outOfRange);
+    {
+        // Check if we had a tie.
+        convertInt32ToDouble(output, ScratchFloatReg);
+        branchCompareDoubles(Assembler::NotEqual, input, ScratchFloatReg, &done);
+
+        // It was a tie. Mask out the ones bit to get an even value.
+        // See also js_TypedArray_uint8_clamp_double.
+        and32(Imm32(~1), output);
+        jump(&done);
+    }
+
+    // > 255 --> 255
+    bind(&outOfRange);
+    {
+        move32(Imm32(255), output);
+    }
+
+    bind(&done);
+#endif
+}

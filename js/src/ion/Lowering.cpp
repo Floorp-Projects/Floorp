@@ -1203,6 +1203,35 @@ LIRGenerator::visitLoadTypedArrayElement(MLoadTypedArrayElement *ins)
 }
 
 bool
+LIRGenerator::visitClampToUint8(MClampToUint8 *ins)
+{
+    MDefinition *in = ins->input();
+
+    switch (in->type()) {
+      case MIRType_Boolean:
+        return redefine(ins, in);
+
+      case MIRType_Int32:
+        return define(new LClampIToUint8(useRegisterAtStart(in)), ins);
+
+      case MIRType_Double:
+        return define(new LClampDToUint8(useRegisterAtStart(in), tempCopy(in, 0)), ins);
+
+      case MIRType_Value:
+      {
+        LClampVToUint8 *lir = new LClampVToUint8(tempFloat());
+        if (!useBox(lir, LClampVToUint8::Input, in))
+            return false;
+        return assignSnapshot(lir) && define(lir, ins);
+      }
+
+      default:
+        JS_NOT_REACHED("Unexpected type");
+        return false;
+    }
+}
+
+bool
 LIRGenerator::visitLoadTypedArrayElementHole(MLoadTypedArrayElementHole *ins)
 {
     JS_ASSERT(ins->object()->type() == MIRType_Object);

@@ -134,6 +134,10 @@
     _(StoreElementHoleT)            \
     _(LoadTypedArrayElement)        \
     _(LoadTypedArrayElementHole)    \
+    _(StoreTypedArrayElement)       \
+    _(ClampIToUint8)                \
+    _(ClampDToUint8)                \
+    _(ClampVToUint8)                \
     _(LoadFixedSlotV)               \
     _(LoadFixedSlotT)               \
     _(StoreFixedSlotV)              \

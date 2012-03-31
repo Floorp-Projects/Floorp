@@ -614,9 +614,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movsd(operand, dest);
         bind(&end);
     }
-    void storeDouble(FloatRegister src, Address dest) {
-        movsd(src, Operand(dest));
-    }
 
     void loadUnboxedValue(Address address, AnyRegister dest) {
         if (dest.isFloat())
