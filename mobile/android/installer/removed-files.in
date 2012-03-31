@@ -30,3 +30,4 @@ extensions/feedback@mobile.mozilla.org.xpi
   mozcpp19.dll
 #endif
 @DLL_PREFIX@mozutils@DLL_SUFFIX@
+jssubloader/
