@@ -380,3 +380,97 @@ CallSetElementPolicy::adjustInputs(MInstruction *ins)
     }
     return true;
 }
+
+bool
+StoreTypedArrayPolicy::adjustInputs(MInstruction *ins)
+{
+    MStoreTypedArrayElement *store = ins->toStoreTypedArrayElement();
+    JS_ASSERT(store->elements()->type() == MIRType_Elements);
+    JS_ASSERT(store->index()->type() == MIRType_Int32);
+
+    int arrayType = store->arrayType();
+    MDefinition *value = store->value();
+
+    // First, ensure the value is int32, boolean, double or Value.
+    // The conversion is based on TypedArrayTemplate::setElementTail.
+    switch (value->type()) {
+      case MIRType_Int32:
+      case MIRType_Double:
+      case MIRType_Boolean:
+      case MIRType_Value:
+        break;
+      case MIRType_Null:
+        value = MConstant::New(Int32Value(0));
+        ins->block()->insertBefore(ins, value->toInstruction());
+        break;
+      case MIRType_Object:
+      case MIRType_Undefined:
+        value = MConstant::New(DoubleValue(js_NaN));
+        ins->block()->insertBefore(ins, value->toInstruction());
+        break;
+      case MIRType_String:
+        value = boxAt(ins, value);
+        break;
+      default:
+        JS_NOT_REACHED("Unexpected type");
+        break;
+    }
+
+    if (value != store->value())
+        ins->replaceOperand(2, value);
+
+    JS_ASSERT(value->type() == MIRType_Int32 ||
+              value->type() == MIRType_Boolean ||
+              value->type() == MIRType_Double ||
+              value->type() == MIRType_Value);
+
+    switch (arrayType) {
+      case TypedArray::TYPE_INT8:
+      case TypedArray::TYPE_UINT8:
+      case TypedArray::TYPE_INT16:
+      case TypedArray::TYPE_UINT16:
+      case TypedArray::TYPE_INT32:
+      case TypedArray::TYPE_UINT32:
+        if (value->type() != MIRType_Int32) {
+            value = MTruncateToInt32::New(value);
+            ins->block()->insertBefore(ins, value->toInstruction());
+        }
+        break;
+      case TypedArray::TYPE_UINT8_CLAMPED:
+        // IonBuilder should have inserted ClampToUint8.
+        JS_ASSERT(value->type() == MIRType_Int32);
+        break;
+      case TypedArray::TYPE_FLOAT32:
+      case TypedArray::TYPE_FLOAT64:
+        if (value->type() != MIRType_Double) {
+            value = MToDouble::New(value);
+            ins->block()->insertBefore(ins, value->toInstruction());
+        }
+        break;
+      default:
+        JS_NOT_REACHED("Invalid array type");
+        break;
+    }
+
+    if (value != store->value())
+        ins->replaceOperand(2, value);
+    return true;
+}
+
+bool
+ClampPolicy::adjustInputs(MInstruction *ins)
+{
+    MDefinition *in = ins->toClampToUint8()->input();
+
+    switch (in->type()) {
+      case MIRType_Int32:
+      case MIRType_Double:
+      case MIRType_Value:
+        break;
+      default:
+        ins->replaceOperand(0, boxAt(ins, in));
+        break;
+    }
+
+    return true;
+}

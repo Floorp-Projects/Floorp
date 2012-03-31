@@ -2524,6 +2524,104 @@ CodeGenerator::visitOutOfLineLoadTypedArray(OutOfLineLoadTypedArray *ool)
     return true;
 }
 
+template <typename T>
+static inline void
+StoreToTypedArray(MacroAssembler &masm, int arrayType, const LAllocation *value, const T &dest)
+{
+    if (arrayType == TypedArray::TYPE_FLOAT32 || arrayType == TypedArray::TYPE_FLOAT64) {
+        masm.storeToTypedFloatArray(arrayType, ToFloatRegister(value), dest);
+    } else {
+        if (value->isConstant())
+            masm.storeToTypedIntArray(arrayType, Imm32(ToInt32(value)), dest);
+        else
+            masm.storeToTypedIntArray(arrayType, ToRegister(value), dest);
+    }
+}
+
+bool
+CodeGenerator::visitStoreTypedArrayElement(LStoreTypedArrayElement *lir)
+{
+    Register elements = ToRegister(lir->elements());
+    const LAllocation *value = lir->value();
+
+    int arrayType = lir->mir()->arrayType();
+    int shift = TypedArray::slotWidth(arrayType);
+
+    if (lir->index()->isConstant()) {
+        Address dest(elements, ToInt32(lir->index()) * shift);
+        StoreToTypedArray(masm, arrayType, value, dest);
+    } else {
+        BaseIndex dest(elements, ToRegister(lir->index()), ScaleFromShift(shift));
+        StoreToTypedArray(masm, arrayType, value, dest);
+    }
+
+    return true;
+}
+
+bool
+CodeGenerator::visitClampIToUint8(LClampIToUint8 *lir)
+{
+    Register input = ToRegister(lir->input());
+    Register output = ToRegister(lir->output());
+    masm.clampIntToUint8(input, output);
+    return true;
+}
+
+bool
+CodeGenerator::visitClampDToUint8(LClampDToUint8 *lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    Register output = ToRegister(lir->output());
+    masm.clampDoubleToUint8(input, output);
+    return true;
+}
+
+bool
+CodeGenerator::visitClampVToUint8(LClampVToUint8 *lir)
+{
+    ValueOperand input = ToValue(lir, LClampVToUint8::Input);
+    FloatRegister tempFloat = ToFloatRegister(lir->tempFloat());
+    Register output = ToRegister(lir->output());
+
+    Register tag = masm.splitTagForTest(input);
+
+    Label done;
+    Label isInt32, isDouble, isBoolean;
+    masm.branchTestInt32(Assembler::Equal, tag, &isInt32);
+    masm.branchTestDouble(Assembler::Equal, tag, &isDouble);
+    masm.branchTestBoolean(Assembler::Equal, tag, &isBoolean);
+
+    // Undefined, null and objects are always 0.
+    Label isZero;
+    masm.branchTestUndefined(Assembler::Equal, tag, &isZero);
+    masm.branchTestNull(Assembler::Equal, tag, &isZero);
+    masm.branchTestObject(Assembler::Equal, tag, &isZero);
+
+    // Bailout for everything else (strings).
+    if (!bailout(lir->snapshot()))
+        return false;
+
+    masm.bind(&isInt32);
+    masm.unboxInt32(input, output);
+    masm.clampIntToUint8(output, output);
+    masm.jump(&done);
+
+    masm.bind(&isDouble);
+    masm.unboxDouble(input, tempFloat);
+    masm.clampDoubleToUint8(tempFloat, output);
+    masm.jump(&done);
+
+    masm.bind(&isBoolean);
+    masm.unboxBoolean(input, output);
+    masm.jump(&done);
+
+    masm.bind(&isZero);
+    masm.move32(Imm32(0), output);
+
+    masm.bind(&done);
+    return true;
+}
+
 } // namespace ion
 } // namespace js
 

@@ -125,6 +125,8 @@ namespace ion {
     _(StoreElementHole)                                                     \
     _(LoadTypedArrayElement)                                                \
     _(LoadTypedArrayElementHole)                                            \
+    _(StoreTypedArrayElement)                                               \
+    _(ClampToUint8)                                                         \
     _(LoadFixedSlot)                                                        \
     _(StoreFixedSlot)                                                       \
     _(CallGetProperty)                                                      \

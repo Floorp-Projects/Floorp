@@ -2802,7 +2802,7 @@ bool
 IonBuilder::jsop_initelem()
 {
     if (oracle->propertyWriteCanSpecialize(script, pc)) {
-        if (oracle->elementWriteIsDense(script, pc))
+        if (oracle->elementWriteIsDenseArray(script, pc))
             return jsop_initelem_dense();
     }
 
@@ -3721,8 +3721,12 @@ bool
 IonBuilder::jsop_setelem()
 {
     if (oracle->propertyWriteCanSpecialize(script, pc)) {
-        if (oracle->elementWriteIsDense(script, pc))
+        if (oracle->elementWriteIsDenseArray(script, pc))
             return jsop_setelem_dense();
+
+        int arrayType = TypedArray::TYPE_MAX;
+        if (oracle->elementWriteIsTypedArray(script, pc, &arrayType))
+            return jsop_setelem_typed(arrayType);
     }
 
     MDefinition *value = current->pop();
@@ -3796,6 +3800,45 @@ IonBuilder::jsop_setelem_dense()
         store->setElementType(elementType);
 
     return true;
+}
+
+bool
+IonBuilder::jsop_setelem_typed(int arrayType)
+{
+    MDefinition *value = current->pop();
+    MDefinition *id = current->pop();
+    MDefinition *obj = current->pop();
+
+    // Ensure id is an integer.
+    MInstruction *idInt32 = MToInt32::New(id);
+    current->add(idInt32);
+    id = idInt32;
+
+    // Get the length.
+    MTypedArrayLength *length = MTypedArrayLength::New(obj);
+    current->add(length);
+
+    // Bounds check.
+    MBoundsCheck *check = MBoundsCheck::New(id, length);
+    current->add(check);
+
+    // Get the elements vector.
+    MTypedArrayElements *elements = MTypedArrayElements::New(obj);
+    current->add(elements);
+
+    // Clamp value to [0, 255] for Uint8ClampedArray.
+    MDefinition *unclampedValue = value;
+    if (arrayType == TypedArray::TYPE_UINT8_CLAMPED) {
+        value = MClampToUint8::New(value);
+        current->add(value->toInstruction());
+    }
+
+    // Store the value.
+    MStoreTypedArrayElement *store = MStoreTypedArrayElement::New(elements, id, value, arrayType);
+    current->add(store);
+
+    current->push(unclampedValue);
+    return resumeAfter(store);
 }
 
 bool

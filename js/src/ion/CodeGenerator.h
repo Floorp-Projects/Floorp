@@ -146,6 +146,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitStoreElementHoleV(LStoreElementHoleV *lir);
     bool visitLoadTypedArrayElement(LLoadTypedArrayElement *lir);
     bool visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole *lir);
+    bool visitStoreTypedArrayElement(LStoreTypedArrayElement *lir);
+    bool visitClampIToUint8(LClampIToUint8 *lir);
+    bool visitClampDToUint8(LClampDToUint8 *lir);
+    bool visitClampVToUint8(LClampVToUint8 *lir);
     bool visitOutOfLineLoadTypedArray(OutOfLineLoadTypedArray *ool);
     bool visitCallIteratorStart(LCallIteratorStart *lir);
     bool visitIteratorStart(LIteratorStart *lir);

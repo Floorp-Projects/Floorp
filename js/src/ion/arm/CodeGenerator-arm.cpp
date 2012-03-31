@@ -290,6 +290,14 @@ CodeGeneratorARM::bailoutFrom(Label *label, LSnapshot *snapshot)
 }
 
 bool
+CodeGeneratorARM::bailout(LSnapshot *snapshot)
+{
+    Label label;
+    masm.ma_b(&label);
+    return bailoutFrom(&label, snapshot);
+}
+
+bool
 CodeGeneratorARM::visitOutOfLineBailout(OutOfLineBailout *ool)
 {
     if (!deoptLabel_)

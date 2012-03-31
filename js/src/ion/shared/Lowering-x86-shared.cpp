@@ -93,4 +93,3 @@ LIRGeneratorX86Shared::lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs)
         return false;
     return defineReuseInput(lir, mul, 0);
 }
-

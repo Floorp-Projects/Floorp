@@ -80,6 +80,7 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     bool visitBox(MBox *box);
     bool visitUnbox(MUnbox *unbox);
     bool visitReturn(MReturn *ret);
+    bool visitStoreTypedArrayElement(MStoreTypedArrayElement *ins);
 };
 
 typedef LIRGeneratorX64 LIRGeneratorSpecific;

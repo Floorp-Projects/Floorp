@@ -222,6 +222,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmpl(tag, ImmTag(JSVAL_TAG_OBJECT));
         return cond;
     }
+    Condition testDouble(Condition cond, Register tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, Imm32(JSVAL_TAG_MAX_DOUBLE));
+        return cond == Equal ? BelowOrEqual : Above;
+    }
     Condition testNumber(Condition cond, Register tag) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, Imm32(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET));
@@ -260,10 +265,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         return testBoolean(cond, ScratchReg);
     }
     Condition testDouble(Condition cond, const ValueOperand &src) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        movq(ImmShiftedTag(JSVAL_SHIFTED_TAG_MAX_DOUBLE), ScratchReg);
-        cmpq(Operand(src.valueReg()), ScratchReg);
-        return (cond == NotEqual) ? Above : BelowOrEqual;
+        splitTag(src, ScratchReg);
+        return testDouble(cond, ScratchReg);
     }
     Condition testNull(Condition cond, const ValueOperand &src) {
         splitTag(src, ScratchReg);
@@ -450,6 +453,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void branchTestInt32(Condition cond, Register tag, Label *label) {
         cond = testInt32(cond, tag);
+        j(cond, label);
+    }
+    void branchTestDouble(Condition cond, Register tag, Label *label) {
+        cond = testDouble(cond, tag);
         j(cond, label);
     }
     void branchTestBoolean(Condition cond, Register tag, Label *label) {
@@ -649,9 +656,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void loadStaticDouble(const double *dp, const FloatRegister &dest) {
         loadConstantDouble(*dp, dest);
-    }
-    void storeDouble(FloatRegister src, Address dest) {
-        movsd(src, Operand(dest));
     }
 
     Condition testInt32Truthy(bool truthy, const ValueOperand &operand) {
