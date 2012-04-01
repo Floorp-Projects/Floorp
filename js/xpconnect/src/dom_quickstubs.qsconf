@@ -177,6 +177,7 @@ members = [
     'nsIDOMDOMTokenList.*',
     'nsIDOMDOMSettableTokenList.*',
     'nsIDOMXULDocument.getBoxObjectFor',
+    'nsIDOMMutationRecord.*',
 
     # dom/interfaces/css
     'nsIDOMElementCSSInlineStyle.*',
@@ -508,6 +509,8 @@ irregularFilenames = {
 
     'nsIDOMTouch': 'nsIDOMTouchEvent',
     'nsIDOMTouchList': 'nsIDOMTouchEvent',
+
+    'nsIDOMMutationRecord': 'nsIDOMMutationObserver',
 
     'nsITelephoneCallback': 'nsITelephone',
     }

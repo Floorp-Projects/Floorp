@@ -229,7 +229,8 @@ nsDOMGeoPositionError::NotifyCallback(nsIDOMGeoPositionErrorCallback* aCallback)
   nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
   if (!stack || NS_FAILED(stack->Push(nsnull)))
     return;
-  
+
+  nsAutoMicroTask mt;
   aCallback->HandleEvent(this);
   
   // remove the stack
@@ -459,7 +460,8 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
   nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
   if (!stack || NS_FAILED(stack->Push(nsnull)))
     return; // silently fail
-  
+
+  nsAutoMicroTask mt;
   mCallback->HandleEvent(aPosition);
 
   // remove the stack

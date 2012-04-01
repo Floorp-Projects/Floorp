@@ -1,0 +1,71 @@
+/* vim: set shiftwidth=2 tabstop=8 autoindent cindent expandtab: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+interface nsIVariant;
+
+[scriptable, uuid(2fa4716f-405a-449b-954b-ae570c170364)]
+interface nsIDOMMutationRecord : nsISupports
+{
+  /**
+   * type is on of childList, attribute, characterData.
+   */
+  readonly attribute DOMString       type;
+  
+  /**
+   * Target of the change.
+   * If an attribute is changed, target is the element,
+   * if an element is added or removed, target is the node
+   * which was added or removed.
+   * If text is changed, target is the CharacterData node which was changed.
+   */
+  readonly attribute nsIDOMNode      target;
+
+  readonly attribute nsIDOMNodeList  addedNodes;
+  readonly attribute nsIDOMNodeList  removedNodes;
+
+  readonly attribute nsIDOMNode      previousSibling;
+  readonly attribute nsIDOMNode      nextSibling;
+  
+  /**
+   * The name of the attribute which was changed, or null.
+   */
+  readonly attribute DOMString       attributeName;
+  readonly attribute DOMString       attributeNamespace;
+
+  /*
+   * The previous value of the attribute or CharacterData node, or null.
+   *
+   * If a new attribute is added, or attribute values aren't reported,
+   * prevValue is null.
+   */
+  readonly attribute DOMString       oldValue;
+};
+
+dictionary MutationObserverInit
+{
+  boolean childList;
+  boolean attributes;
+  boolean characterData;
+  boolean subtree;
+  boolean attributeOldValue;
+  boolean characterDataOldValue;
+  jsval   attributeFilter; // DOMString[]
+};
+
+//[Constructor(in nsIMutationCallback aDoneCallback)]
+[scriptable, builtinclass, uuid(daeba265-9aa7-45ab-8de2-b6b039c13ced)]
+interface nsIDOMMozMutationObserver : nsISupports
+{
+  [implicit_jscontext]
+  void observe(in nsIDOMNode aTarget, in jsval aOptions);
+  void disconnect();
+};
+
+[scriptable, function, uuid(fb539590-b088-4d07-96ff-2cefbc90a198)]
+interface nsIMutationObserverCallback : nsISupports
+{
+  void handleMutations(in nsIVariant aRecords, in nsIDOMMozMutationObserver aObserver);
+};

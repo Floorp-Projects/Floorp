@@ -1209,6 +1209,7 @@ DocumentViewerImpl::PermitUnload(bool aCallerClosesWindow, bool *aPermitUnload)
                              (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_0) |
                              (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_1));
 
+      nsAutoSyncOperation sync(mDocument);
       rv = prompt->ConfirmEx(title, message, buttonFlags,
                              leaveLabel, stayLabel, nsnull, nsnull,
                              &dummy, &buttonPressed);
