@@ -1187,6 +1187,8 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     return NS_OK;
   }
 
+  nsAutoMicroTask mt;
+
   // Safety first: get an object representing the script's principals, i.e.,
   // the entities who signed this script, or the fully-qualified-domain-name
   // or "codebase" from which it was loaded.
@@ -1381,6 +1383,8 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     return NS_OK;
   }
 
+  nsAutoMicroTask mt;
+
   if (!aScopeObject) {
     aScopeObject = JS_GetGlobalObject(mContext);
   }
@@ -1556,6 +1560,8 @@ nsJSContext::ExecuteScript(JSScript* aScriptObject,
 
     return NS_OK;
   }
+
+  nsAutoMicroTask mt;
 
   if (!aScopeObject) {
     aScopeObject = JS_GetGlobalObject(mContext);
@@ -1815,6 +1821,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
 #endif
   SAMPLE_LABEL("JS", "CallEventHandler");
 
+  nsAutoMicroTask mt;
   JSAutoRequest ar(mContext);
   JSObject* target = nsnull;
   nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);

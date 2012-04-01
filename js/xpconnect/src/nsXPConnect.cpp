@@ -73,6 +73,7 @@
 #include "mozilla/dom/bindings/Utils.h"
 
 #include "nsWrapperCacheInlines.h"
+#include "nsDOMMutationObserver.h"
 
 using namespace mozilla::dom;
 
@@ -2335,6 +2336,7 @@ nsXPConnect::AfterProcessNextEvent(nsIThreadInternal *aThread,
     // Call cycle collector occasionally.
     MOZ_ASSERT(NS_IsMainThread());
     nsJSContext::MaybePokeCC();
+    nsDOMMutationObserver::HandleMutations();
 
     return Pop(nsnull);
 }
