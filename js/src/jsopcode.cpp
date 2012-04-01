@@ -229,7 +229,7 @@ static const char * countBaseNames[] = {
     "mjit_pics"
 };
 
-JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) == OpcodeCounts::BASE_COUNT);
+JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) == PCCounts::BASE_LIMIT);
 
 static const char * countAccessNames[] = {
     "infer_mono",
@@ -247,7 +247,7 @@ static const char * countAccessNames[] = {
 };
 
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) +
-                 JS_ARRAY_LENGTH(countAccessNames) == OpcodeCounts::ACCESS_COUNT);
+                 JS_ARRAY_LENGTH(countAccessNames) == PCCounts::ACCESS_LIMIT);
 
 static const char * countElementNames[] = {
     "id_int",
@@ -262,7 +262,7 @@ static const char * countElementNames[] = {
 
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) +
                  JS_ARRAY_LENGTH(countAccessNames) +
-                 JS_ARRAY_LENGTH(countElementNames) == OpcodeCounts::ELEM_COUNT);
+                 JS_ARRAY_LENGTH(countElementNames) == PCCounts::ELEM_LIMIT);
 
 static const char * countPropertyNames[] = {
     "prop_static",
@@ -272,7 +272,7 @@ static const char * countPropertyNames[] = {
 
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) +
                  JS_ARRAY_LENGTH(countAccessNames) +
-                 JS_ARRAY_LENGTH(countPropertyNames) == OpcodeCounts::PROP_COUNT);
+                 JS_ARRAY_LENGTH(countPropertyNames) == PCCounts::PROP_LIMIT);
 
 static const char * countArithNames[] = {
     "arith_int",
@@ -282,29 +282,29 @@ static const char * countArithNames[] = {
 };
 
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) +
-                 JS_ARRAY_LENGTH(countArithNames) == OpcodeCounts::ARITH_COUNT);
+                 JS_ARRAY_LENGTH(countArithNames) == PCCounts::ARITH_LIMIT);
 
 /* static */ const char *
-OpcodeCounts::countName(JSOp op, size_t which)
+PCCounts::countName(JSOp op, size_t which)
 {
     JS_ASSERT(which < numCounts(op));
 
-    if (which < BASE_COUNT)
+    if (which < BASE_LIMIT)
         return countBaseNames[which];
 
     if (accessOp(op)) {
-        if (which < ACCESS_COUNT)
-            return countAccessNames[which - BASE_COUNT];
+        if (which < ACCESS_LIMIT)
+            return countAccessNames[which - BASE_LIMIT];
         if (elementOp(op))
-            return countElementNames[which - ACCESS_COUNT];
+            return countElementNames[which - ACCESS_LIMIT];
         if (propertyOp(op))
-            return countPropertyNames[which - ACCESS_COUNT];
+            return countPropertyNames[which - ACCESS_LIMIT];
         JS_NOT_REACHED("bad op");
         return NULL;
     }
 
     if (arithOp(op))
-        return countArithNames[which - BASE_COUNT];
+        return countArithNames[which - BASE_LIMIT];
 
     JS_NOT_REACHED("bad op");
     return NULL;
@@ -315,7 +315,7 @@ OpcodeCounts::countName(JSOp op, size_t which)
 JS_FRIEND_API(void)
 js_DumpPCCounts(JSContext *cx, JSScript *script, js::Sprinter *sp)
 {
-    JS_ASSERT(script->pcCounters);
+    JS_ASSERT(script->scriptCounts);
 
     jsbytecode *pc = script->code;
     while (pc < script->code + script->length) {
@@ -327,8 +327,8 @@ js_DumpPCCounts(JSContext *cx, JSScript *script, js::Sprinter *sp)
         if (!js_Disassemble1(cx, script, pc, pc - script->code, true, sp))
             return;
 
-        size_t total = OpcodeCounts::numCounts(op);
-        double *raw = script->getCounts(pc).rawCounts();
+        size_t total = PCCounts::numCounts(op);
+        double *raw = script->getPCCounts(pc).rawCounts();
 
         Sprint(sp, "                  {");
         bool printed = false;
@@ -337,7 +337,7 @@ js_DumpPCCounts(JSContext *cx, JSScript *script, js::Sprinter *sp)
             if (val) {
                 if (printed)
                     Sprint(sp, ", ");
-                Sprint(sp, "\"%s\": %.0f", OpcodeCounts::countName(op, i), val);
+                Sprint(sp, "\"%s\": %.0f", PCCounts::countName(op, i), val);
                 printed = true;
             }
         }
@@ -5997,10 +5997,10 @@ GetPCCountScriptCount(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
 
-    if (!rt->scriptPCCounters)
+    if (!rt->scriptAndCountsVector)
         return 0;
 
-    return rt->scriptPCCounters->length();
+    return rt->scriptAndCountsVector->length();
 }
 
 enum MaybeComma {NO_COMMA, COMMA};
@@ -6034,12 +6034,12 @@ GetPCCountScriptSummary(JSContext *cx, size_t index)
 {
     JSRuntime *rt = cx->runtime;
 
-    if (!rt->scriptPCCounters || index >= rt->scriptPCCounters->length()) {
+    if (!rt->scriptAndCountsVector || index >= rt->scriptAndCountsVector->length()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BUFFER_TOO_SMALL);
         return NULL;
     }
 
-    ScriptOpcodeCountsPair info = (*rt->scriptPCCounters)[index];
+    ScriptAndCounts info = (*rt->scriptAndCountsVector)[index];
     JSScript *script = info.script;
 
     /*
@@ -6070,35 +6070,35 @@ GetPCCountScriptSummary(JSContext *cx, size_t index)
         }
     }
 
-    double baseTotals[OpcodeCounts::BASE_COUNT] = {0.0};
-    double accessTotals[OpcodeCounts::ACCESS_COUNT - OpcodeCounts::BASE_COUNT] = {0.0};
-    double elementTotals[OpcodeCounts::ELEM_COUNT - OpcodeCounts::ACCESS_COUNT] = {0.0};
-    double propertyTotals[OpcodeCounts::PROP_COUNT - OpcodeCounts::ACCESS_COUNT] = {0.0};
-    double arithTotals[OpcodeCounts::ARITH_COUNT - OpcodeCounts::BASE_COUNT] = {0.0};
+    double baseTotals[PCCounts::BASE_LIMIT] = {0.0};
+    double accessTotals[PCCounts::ACCESS_LIMIT - PCCounts::BASE_LIMIT] = {0.0};
+    double elementTotals[PCCounts::ELEM_LIMIT - PCCounts::ACCESS_LIMIT] = {0.0};
+    double propertyTotals[PCCounts::PROP_LIMIT - PCCounts::ACCESS_LIMIT] = {0.0};
+    double arithTotals[PCCounts::ARITH_LIMIT - PCCounts::BASE_LIMIT] = {0.0};
 
     for (unsigned i = 0; i < script->length; i++) {
-        OpcodeCounts &counts = info.getCounts(script->code + i);
+        PCCounts &counts = info.getPCCounts(script->code + i);
         if (!counts)
             continue;
 
         JSOp op = (JSOp)script->code[i];
-        unsigned numCounts = OpcodeCounts::numCounts(op);
+        unsigned numCounts = PCCounts::numCounts(op);
 
         for (unsigned j = 0; j < numCounts; j++) {
             double value = counts.get(j);
-            if (j < OpcodeCounts::BASE_COUNT) {
+            if (j < PCCounts::BASE_LIMIT) {
                 baseTotals[j] += value;
-            } else if (OpcodeCounts::accessOp(op)) {
-                if (j < OpcodeCounts::ACCESS_COUNT)
-                    accessTotals[j - OpcodeCounts::BASE_COUNT] += value;
-                else if (OpcodeCounts::elementOp(op))
-                    elementTotals[j - OpcodeCounts::ACCESS_COUNT] += value;
-                else if (OpcodeCounts::propertyOp(op))
-                    propertyTotals[j - OpcodeCounts::ACCESS_COUNT] += value;
+            } else if (PCCounts::accessOp(op)) {
+                if (j < PCCounts::ACCESS_LIMIT)
+                    accessTotals[j - PCCounts::BASE_LIMIT] += value;
+                else if (PCCounts::elementOp(op))
+                    elementTotals[j - PCCounts::ACCESS_LIMIT] += value;
+                else if (PCCounts::propertyOp(op))
+                    propertyTotals[j - PCCounts::ACCESS_LIMIT] += value;
                 else
                     JS_NOT_REACHED("Bad opcode");
-            } else if (OpcodeCounts::arithOp(op)) {
-                arithTotals[j - OpcodeCounts::BASE_COUNT] += value;
+            } else if (PCCounts::arithOp(op)) {
+                arithTotals[j - PCCounts::BASE_LIMIT] += value;
             } else {
                 JS_NOT_REACHED("Bad opcode");
             }
@@ -6138,7 +6138,7 @@ struct AutoDestroyPrinter
 };
 
 static bool
-GetPCCountJSON(JSContext *cx, const ScriptOpcodeCountsPair &info, StringBuffer &buf)
+GetPCCountJSON(JSContext *cx, const ScriptAndCounts &info, StringBuffer &buf)
 {
     JSScript *script = info.script;
 
@@ -6236,8 +6236,8 @@ GetPCCountJSON(JSContext *cx, const ScriptOpcodeCountsPair &info, StringBuffer &
             buf.append(str);
         }
 
-        OpcodeCounts &counts = info.getCounts(pc);
-        unsigned numCounts = OpcodeCounts::numCounts(op);
+        PCCounts &counts = info.getPCCounts(pc);
+        unsigned numCounts = PCCounts::numCounts(op);
 
         AppendJSONProperty(buf, "counts");
         buf.append('{');
@@ -6246,7 +6246,7 @@ GetPCCountJSON(JSContext *cx, const ScriptOpcodeCountsPair &info, StringBuffer &
         for (unsigned i = 0; i < numCounts; i++) {
             double value = counts.get(i);
             if (value > 0) {
-                AppendJSONProperty(buf, OpcodeCounts::countName(op, i), comma);
+                AppendJSONProperty(buf, PCCounts::countName(op, i), comma);
                 comma = COMMA;
                 NumberValueToStringBuffer(cx, DoubleValue(value), buf);
             }
@@ -6267,12 +6267,12 @@ GetPCCountScriptContents(JSContext *cx, size_t index)
 {
     JSRuntime *rt = cx->runtime;
 
-    if (!rt->scriptPCCounters || index >= rt->scriptPCCounters->length()) {
+    if (!rt->scriptAndCountsVector || index >= rt->scriptAndCountsVector->length()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BUFFER_TOO_SMALL);
         return NULL;
     }
 
-    const ScriptOpcodeCountsPair &info = (*rt->scriptPCCounters)[index];
+    const ScriptAndCounts &info = (*rt->scriptAndCountsVector)[index];
     JSScript *script = info.script;
 
     StringBuffer buf(cx);

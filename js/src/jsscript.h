@@ -281,27 +281,32 @@ namespace js {
 
 namespace analyze { class ScriptAnalysis; }
 
-class ScriptOpcodeCounts
+class ScriptCounts
 {
     friend struct ::JSScript;
-    friend struct ScriptOpcodeCountsPair;
-    OpcodeCounts *counts;
+    friend struct ScriptAndCounts;
+    /*
+     * This points to a single block that holds an array of PCCounts followed
+     * by an array of doubles.  Each element in the PCCounts array has a
+     * pointer into the array of doubles.
+     */
+    PCCounts *pcCountsVector;
 
  public:
 
-    ScriptOpcodeCounts() : counts(NULL) {
+    ScriptCounts() : pcCountsVector(NULL) {
     }
 
     inline void destroy(JSContext *cx);
 
-    void steal(ScriptOpcodeCounts &other) {
+    void steal(ScriptCounts &other) {
         *this = other;
         js::PodZero(&other);
     }
 
-    // Boolean conversion, for 'if (counters) ...'
+    // Boolean conversion, for 'if (scriptCounts) ...'
     operator void*() const {
-        return counts;
+        return pcCountsVector;
     }
 };
 
@@ -378,7 +383,7 @@ struct JSScript : public js::gc::Cell
     js::HeapPtr<js::GlobalObject, JSScript*> globalObject;
 
     /* Execution and profiling information for JIT code in the script. */
-    js::ScriptOpcodeCounts pcCounters;
+    js::ScriptCounts scriptCounts;
 
     /* Persistent type information retained across GCs. */
     js::types::TypeScript *types;
@@ -624,14 +629,13 @@ struct JSScript : public js::gc::Cell
     size_t sizeOfJitScripts(JSMallocSizeOfFun mallocSizeOf);
 #endif
 
-    /* Counter accessors. */
-    js::OpcodeCounts getCounts(jsbytecode *pc) {
+    js::PCCounts getPCCounts(jsbytecode *pc) {
         JS_ASSERT(size_t(pc - code) < length);
-        return pcCounters.counts[pc - code];
+        return scriptCounts.pcCountsVector[pc - code];
     }
 
-    bool initCounts(JSContext *cx);
-    void destroyCounts(JSContext *cx);
+    bool initScriptCounts(JSContext *cx);
+    void destroyScriptCounts(JSContext *cx);
 
     jsbytecode *main() {
         return code + mainOffset;
@@ -849,14 +853,14 @@ SweepScriptFilenames(JSCompartment *comp);
 extern void
 FreeScriptFilenames(JSCompartment *comp);
 
-struct ScriptOpcodeCountsPair
+struct ScriptAndCounts
 {
     JSScript *script;
-    ScriptOpcodeCounts counters;
+    ScriptCounts scriptCounts;
 
-    OpcodeCounts &getCounts(jsbytecode *pc) const {
+    PCCounts &getPCCounts(jsbytecode *pc) const {
         JS_ASSERT(unsigned(pc - script->code) < script->length);
-        return counters.counts[pc - script->code];
+        return scriptCounts.pcCountsVector[pc - script->code];
     }
 };
 

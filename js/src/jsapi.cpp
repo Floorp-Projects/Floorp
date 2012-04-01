@@ -764,7 +764,7 @@ JSRuntime::JSRuntime()
     gcGrayRootsTraceOp(NULL),
     gcGrayRootsData(NULL),
     autoGCRooters(NULL),
-    scriptPCCounters(NULL),
+    scriptAndCountsVector(NULL),
     NaNValue(UndefinedValue()),
     negativeInfinityValue(UndefinedValue()),
     positiveInfinityValue(UndefinedValue()),
