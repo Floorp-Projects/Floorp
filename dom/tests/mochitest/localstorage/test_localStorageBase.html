@@ -7,6 +7,8 @@
 
 <script type="text/javascript">
 
+var MOZ_STORAGE_CHANGED_COUNT = 14;
+
 function startTest()
 {
   // Initially check the localStorage is empty
@@ -25,6 +27,17 @@ function startTest()
   is(typeof localStorage.getItem("nonexisting2"), "object", "getItem('nonexisting2') is object");
   is(typeof localStorage["nonexisting2"], "object", "['nonexisting2'] is object");
   is(typeof localStorage.nonexisting2, "object", "nonexisting2 is object");
+
+  var mozStorageChangedReceived = 0;
+  var localStorageCopy = localStorage;
+
+  function onStorageChanged(e) {
+    if (e.storageArea == localStorageCopy)
+      mozStorageChangedReceived++;
+  }
+
+  // Listen for MozStorageChanged
+  SpecialPowers.addChromeEventListener("MozStorageChanged", onStorageChanged, false);
 
   // add an empty-value key
   localStorage.setItem("empty", "");
@@ -161,8 +174,14 @@ function startTest()
   localStorage.removeItem("key1"); // Just check there is no exception
   localStorage.removeItem("key2"); // Just check there is no exception
 
-  localStorage.clear();
-  SimpleTest.finish();
+  SimpleTest.executeSoon(function () {
+    SpecialPowers.removeChromeEventListener("MozStorageChanged", onStorageChanged, false);
+    is(mozStorageChangedReceived, MOZ_STORAGE_CHANGED_COUNT,
+       "received the correct number of events");
+
+    localStorage.clear();
+    SimpleTest.finish();
+  });
 }
 
 SimpleTest.waitForExplicitFinish();

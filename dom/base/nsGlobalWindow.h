@@ -806,6 +806,8 @@ protected:
 
   nsresult CreateOuterObject(nsGlobalWindow* aNewInner);
   nsresult SetOuterObject(JSContext* aCx, JSObject* aOuterObject);
+  nsresult CloneStorageEvent(const nsAString& aType,
+                             nsCOMPtr<nsIDOMStorageEvent>& aEvent);
 
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
