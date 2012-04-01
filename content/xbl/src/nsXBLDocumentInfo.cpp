@@ -271,9 +271,6 @@ nsXBLDocGlobalObject::SetContext(nsIScriptContext *aScriptContext)
     mScriptContext = nsnull;
     return;
   }
-  NS_ASSERTION(aScriptContext->GetScriptTypeID() ==
-                                        nsIProgrammingLanguage::JAVASCRIPT,
-               "xbl is not multi-language");
   aScriptContext->WillInitializeContext();
   // NOTE: We init this context with a NULL global, so we automatically
   // hook up to the existing nsIScriptGlobalObject global setup by

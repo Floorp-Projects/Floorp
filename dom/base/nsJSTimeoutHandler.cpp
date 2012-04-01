@@ -76,10 +76,6 @@ public:
     *aLineNo = mLineNo;
   }
 
-  virtual PRUint32 GetScriptTypeID() {
-        return nsIProgrammingLanguage::JAVASCRIPT;
-  }
-
   virtual nsIArray *GetArgv() {
     return mArgv;
   }
