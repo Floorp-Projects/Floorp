@@ -117,6 +117,10 @@ public:
 protected:
   static inline JSObject* GetListenerAsJSObject(nsDOMEventListenerWrapper* aWrapper)
   {
+    if (!aWrapper) {
+      return nsnull;
+    }
+
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder =
         do_QueryInterface(aWrapper->GetInner());
     JSObject* obj;
