@@ -1188,7 +1188,6 @@ NS_IMETHODIMP
 TelemetryImpl::GetHistogramById(const nsACString &name, JSContext *cx, jsval *ret)
 {
   Histogram *h;
-  printf("GetHistogramByName(%s)\n", PromiseFlatCString(name).get());
   nsresult rv = GetHistogramByName(name, &h);
   if (NS_FAILED(rv))
     return rv;
