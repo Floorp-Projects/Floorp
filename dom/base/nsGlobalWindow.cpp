@@ -9230,8 +9230,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
     // Get the script context (a strong ref to prevent it going away)
     // for this timeout and ensure the script language is enabled.
-    nsCOMPtr<nsIScriptContext> scx = GetScriptContextInternal(
-                                timeout->mScriptHandler->GetScriptTypeID());
+    nsCOMPtr<nsIScriptContext> scx = GetContextInternal();
 
     if (!scx) {
       // No context means this window was closed or never properly
