@@ -42,7 +42,7 @@
 
 #include "AccessibleAction_i.c"
 
-#include "nsAccessible.h"
+#include "nsAccessibleWrap.h"
 
 // IUnknown
 
@@ -71,8 +71,8 @@ __try {
 
   *aActionCount = 0;
 
-  nsRefPtr<nsAccessible> acc(do_QueryObject(this));
-  if (!acc || acc->IsDefunct())
+  nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
+  if (acc->IsDefunct())
     return E_FAIL;
 
   *aActionCount = acc->ActionCount();
@@ -86,8 +86,8 @@ STDMETHODIMP
 CAccessibleAction::doAction(long aActionIndex)
 {
 __try {
-  nsCOMPtr<nsIAccessible> acc(do_QueryObject(this));
-  if (!acc)
+  nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
+  if (acc->IsDefunct())
     return E_FAIL;
 
   PRUint8 index = static_cast<PRUint8>(aActionIndex);
@@ -104,8 +104,8 @@ CAccessibleAction::get_description(long aActionIndex, BSTR *aDescription)
 __try {
   *aDescription = NULL;
 
-  nsCOMPtr<nsIAccessible> acc(do_QueryObject(this));
-  if (!acc)
+  nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
+  if (acc->IsDefunct())
     return E_FAIL;
 
   nsAutoString description;
@@ -142,8 +142,8 @@ __try {
   if (aActionIndex != 0 || aNumMaxBinding < 1)
     return E_INVALIDARG;
 
-  nsRefPtr<nsAccessible> acc(do_QueryObject(this));
-  if (!acc || acc->IsDefunct())
+  nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
+  if (acc->IsDefunct())
     return E_FAIL;
 
   // Expose keyboard shortcut if it's not exposed via MSAA keyboard shortcut.
@@ -181,8 +181,8 @@ CAccessibleAction::get_name(long aActionIndex, BSTR *aName)
 __try {
   *aName = NULL;
 
-  nsCOMPtr<nsIAccessible> acc(do_QueryObject(this));
-  if (!acc)
+  nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
+  if (acc->IsDefunct())
     return E_FAIL;
 
   nsAutoString name;
