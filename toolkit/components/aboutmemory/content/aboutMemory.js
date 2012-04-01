@@ -51,7 +51,6 @@ const Cu = Components.utils;
 const KIND_NONHEAP           = Ci.nsIMemoryReporter.KIND_NONHEAP;
 const KIND_HEAP              = Ci.nsIMemoryReporter.KIND_HEAP;
 const KIND_OTHER             = Ci.nsIMemoryReporter.KIND_OTHER;
-const KIND_SUMMARY           = Ci.nsIMemoryReporter.KIND_SUMMARY;
 const UNITS_BYTES            = Ci.nsIMemoryReporter.UNITS_BYTES;
 const UNITS_COUNT            = Ci.nsIMemoryReporter.UNITS_COUNT;
 const UNITS_COUNT_CUMULATIVE = Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE;
@@ -164,12 +163,10 @@ function minimizeMemoryUsage3x(fAfter)
              .getService(Ci.nsIObserverService);
     os.notifyObservers(null, "memory-pressure", "heap-minimize");
 
-    if (++i < 3) {
+    if (++i < 3)
       runSoon(sendHeapMinNotificationsInner);
-    } else {
-      os.notifyObservers(null, "after-minimize-memory-usage", "about:memory");
+    else
       runSoon(fAfter);
-    }
   }
 
   sendHeapMinNotificationsInner();
@@ -263,7 +260,7 @@ function processMemoryReporters(aMgr, aIgnoreSingle, aIgnoreMulti,
 // This regexp matches sentences and sentence fragments, i.e. strings that
 // start with a capital letter and ends with a '.'.  (The final sentence may be
 // in parentheses, so a ')' might appear after the '.'.)
-const gSentenceRegExp = /^[A-Z].*\.\)?$/m;
+const gSentenceRegExp = /^[A-Z].*\.\)?$/;
 
 function checkReport(aUnsafePath, aKind, aUnits, aAmount, aDescription)
 {
@@ -278,16 +275,17 @@ function checkReport(aUnsafePath, aKind, aUnits, aAmount, aDescription)
     assert(aUnits === UNITS_BYTES, "bad smaps units");
     assert(aDescription !== "", "empty smaps description");
 
-  } else if (aKind === KIND_SUMMARY) {
-    assert(!aUnsafePath.startsWith("explicit/") &&
-           !aUnsafePath.startsWith("smaps/"),
-           "bad SUMMARY path");
+  } else if (aUnsafePath.startsWith("compartments/")) {
+    assert(aKind === KIND_OTHER, "bad compartments kind");
+    assert(aUnits === UNITS_COUNT, "bad compartments units");
+    assert(aAmount === 1, "bad amount");
+    assert(aDescription === "", "bad description");
 
   } else {
     assert(aUnsafePath.indexOf("/") === -1, "'other' path contains '/'");
     assert(aKind === KIND_OTHER, "bad other kind: " + aUnsafePath);
     assert(aDescription.match(gSentenceRegExp),
-           "non-sentence other description " + aDescription);
+           "non-sentence other description");
   }
 }
 
@@ -539,22 +537,20 @@ Report.prototype = {
 function getReportsByProcess(aMgr)
 {
   // Ignore the "smaps" multi-reporter in non-verbose mode, and the
-  // "compartments" and "ghost-windows" multi-reporters all the time.  (Note
-  // that reports from these multi-reporters can reach here as single reports
-  // if they were in the child process.)
+  // "compartments" multi-reporter all the time.  (Note that reports from these
+  // multi-reporters can reach here as single reports if they were in the child
+  // process.)
 
   function ignoreSingle(aPath) 
   {
     return (aPath.startsWith("smaps/") && !gVerbose) ||
-           aPath.startsWith("compartments/") ||
-           aPath.startsWith("ghost-windows/");
+           (aPath.startsWith("compartments/"))
   }
 
   function ignoreMulti(aName)
   {
-    return (aName === "smaps" && !gVerbose) ||
-           aName === "compartments" ||
-           aName === "ghost-windows";
+    return ((aName === "smaps" && !gVerbose) ||
+            (aName === "compartments"));
   }
 
   let reportsByProcess = {};
@@ -1556,21 +1552,15 @@ function updateAboutCompartments()
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
       getService(Ci.nsIMemoryReporterManager);
 
-  let compartmentsByProcess = getCompartmentsByProcess(mgr);
-  let ghostWindowsByProcess = getGhostWindowsByProcess(mgr);
-
-  function handleProcess(aProcess) {
-    appendProcessAboutCompartmentsElements(body, aProcess,
-                                           compartmentsByProcess[aProcess],
-                                           ghostWindowsByProcess[aProcess]);
-  }
-
   // Generate output for one process at a time.  Always start with the
   // Main process.
-  handleProcess('Main');
+  let compartmentsByProcess = getCompartmentsByProcess(mgr);
+  appendProcessCompartmentsElements(body, "Main",
+                                    compartmentsByProcess["Main"]);
   for (let process in compartmentsByProcess) {
     if (process !== "Main") {
-      handleProcess(process);
+      appendProcessCompartmentsElements(body, process,
+                                        compartmentsByProcess[process]);
     }
   }
 
@@ -1666,89 +1656,30 @@ function getCompartmentsByProcess(aMgr)
   return compartmentsByProcess;
 }
 
-function GhostWindow(aUnsafeURL)
-{
-  // Call it _unsafeName rather than _unsafeURL for symmetry with the
-  // Compartment object.
-  this._unsafeName = aUnsafeURL;
-
-  // this._nMerged is only defined if > 1
-}
-
-GhostWindow.prototype = {
-  merge: function(r) {
-    this._nMerged = this._nMerged ? this._nMerged + 1 : 2;
-  }
-};
-
-function getGhostWindowsByProcess(aMgr)
-{
-  function ignoreSingle(aPath) 
-  {
-    return !aPath.startsWith('ghost-windows/')
-  }
-
-  function ignoreMulti(aName)
-  {
-    return aName !== "ghost-windows";
-  }
-
-  let ghostWindowsByProcess = {};
-
-  function handleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
-                        aDescription)
-  {
-    let unsafeSplit = aUnsafePath.split('/');
-    assert(unsafeSplit[0] == 'ghost-windows',
-           'Unexpected path in getGhostWindowsByProcess: ' + aUnsafePath);
-
-    let unsafeURL = unsafeSplit[1];
-    let ghostWindow = new GhostWindow(unsafeURL);
-
-    let process = aProcess === "" ? "Main" : aProcess;
-    if (!ghostWindowsByProcess[process]) {
-      ghostWindowsByProcess[process] = {};
-    }
-
-    if (ghostWindowsByProcess[process][unsafeURL]) {
-      ghostWindowsByProcess[process][unsafeURL].merge(ghostWindow);
-    }
-    else {
-      ghostWindowsByProcess[process][unsafeURL] = ghostWindow;
-    }
-  }
-
-  processMemoryReporters(aMgr, ignoreSingle, ignoreMulti, handleReport);
-
-  return ghostWindowsByProcess;
-}
-
 //---------------------------------------------------------------------------
 
-function appendProcessAboutCompartmentsElementsHelper(aP, aEntries, aKindString)
+function appendProcessCompartmentsElementsHelper(aP, aCompartments, aKindString)
 {
-  // aEntries might be null or undefined, e.g. if there are no ghost windows
-  // for this process.
-  aEntries = aEntries ? aEntries : {};
+  appendElementWithText(aP, "h2", "", aKindString + " Compartments\n");
 
-  appendElementWithText(aP, "h2", "", aKindString + "\n");
-
+  let compartmentTextArray = [];
   let uPre = appendElement(aP, "pre", "entries");
-
-  let lines = [];
-  for (let name in aEntries) {
-    let e = aEntries[name];
-    let line = flipBackslashes(e._unsafeName);
-    if (e._nMerged) {
-      line += ' [' + e._nMerged + ']';
+  for (let name in aCompartments) {
+    let c = aCompartments[name];
+    let isSystemKind = aKindString === "System";
+    if (c._isSystemCompartment === isSystemKind) {
+      let text = flipBackslashes(c._unsafeName);
+      if (c._nMerged) {
+        text += " [" + c._nMerged + "]";
+      }
+      text += "\n";
+      compartmentTextArray.push(text);
     }
-    line += '\n';
-    lines.push(line);
   }
-  lines.sort();
+  compartmentTextArray.sort();
 
-  for (let i = 0; i < lines.length; i++) {
-    appendElementWithText(uPre, "span", "", lines[i]);
+  for (let i = 0; i < compartmentTextArray.length; i++) {
+    appendElementWithText(uPre, "span", "", compartmentTextArray[i]);
   }
 
   appendTextNode(aP, "\n");   // gives nice spacing when we cut and paste
@@ -1763,30 +1694,14 @@ function appendProcessAboutCompartmentsElementsHelper(aP, aEntries, aKindString)
  *        The name of the process.
  * @param aCompartments
  *        Table of Compartments for this process, indexed by _unsafeName.
- * @param aGhostWindows
- *        Array of window URLs of ghost windows.
- *
  * @return The generated text.
  */
-function appendProcessAboutCompartmentsElements(aP, aProcess, aCompartments, aGhostWindows)
+function appendProcessCompartmentsElements(aP, aProcess, aCompartments)
 {
   appendElementWithText(aP, "h1", "", aProcess + " Process");
   appendTextNode(aP, "\n\n");   // gives nice spacing when we cut and paste
-
-  let userCompartments = {};
-  let systemCompartments = {};
-  for (let name in aCompartments) {
-    let c = aCompartments[name];
-    if (c._isSystemCompartment) {
-      systemCompartments[name] = c;
-    }
-    else {
-      userCompartments[name] = c;
-    }
-  }
   
-  appendProcessAboutCompartmentsElementsHelper(aP, userCompartments, "User Compartments");
-  appendProcessAboutCompartmentsElementsHelper(aP, systemCompartments, "System Compartments");
-  appendProcessAboutCompartmentsElementsHelper(aP, aGhostWindows, "Ghost Windows");
+  appendProcessCompartmentsElementsHelper(aP, aCompartments, "User");
+  appendProcessCompartmentsElementsHelper(aP, aCompartments, "System");
 }
 
