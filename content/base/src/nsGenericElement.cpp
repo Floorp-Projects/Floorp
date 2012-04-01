@@ -2500,9 +2500,6 @@ nsGenericElement::nsGenericElement(already_AddRefed<nsINodeInfo> aNodeInfo)
                                        kNameSpaceID_None)),
                     "Bad NodeType in aNodeInfo");
 
-  // Set the default scriptID to JS - but skip SetScriptTypeID as it
-  // does extra work we know isn't necessary here...
-  SetFlags((nsIProgrammingLanguage::JAVASCRIPT << NODE_SCRIPT_TYPE_OFFSET));
   SetIsElement();
 }
 
@@ -3722,30 +3719,6 @@ bool
 nsGenericElement::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~eCONTENT);
-}
-
-//----------------------------------------------------------------------
-
-PRUint32
-nsGenericElement::GetScriptTypeID() const
-{
-    PtrBits flags = GetFlags();
-
-    return (flags >> NODE_SCRIPT_TYPE_OFFSET) & NODE_SCRIPT_TYPE_MASK;
-}
-
-NS_IMETHODIMP
-nsGenericElement::SetScriptTypeID(PRUint32 aLang)
-{
-    if ((aLang & NODE_SCRIPT_TYPE_MASK) != aLang) {
-        NS_ERROR("script ID too large!");
-        return NS_ERROR_FAILURE;
-    }
-    /* SetFlags will just mask in the specific flags set, leaving existing
-       ones alone.  So we must clear all the bits first */
-    UnsetFlags(NODE_SCRIPT_TYPE_MASK << NODE_SCRIPT_TYPE_OFFSET);
-    SetFlags(aLang << NODE_SCRIPT_TYPE_OFFSET);
-    return NS_OK;
 }
 
 nsresult
@@ -5162,9 +5135,8 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aEventName,
   }
 
   defer = defer && aDefer; // only defer if everyone agrees...
-  PRUint32 lang = GetScriptTypeID();
-  manager->AddScriptEventListener(aEventName, aValue, lang, defer,
-                                  !nsContentUtils::IsChromeDoc(ownerDoc));
+  manager->AddScriptEventListener(aEventName, aValue, nsIProgrammingLanguage::JAVASCRIPT,
+                                  defer, !nsContentUtils::IsChromeDoc(ownerDoc));
   return NS_OK;
 }
 

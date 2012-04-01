@@ -178,25 +178,9 @@ enum {
   // Set if the node has had :hover selectors matched against it
   NODE_HAS_RELEVANT_HOVER_RULES = 0x00080000U,
 
-  // Two bits for the script-type ID.  Not enough to represent all
-  // nsIProgrammingLanguage values, but we don't care.  In practice,
-  // we can represent the ones we want, and we can fail the others at
-  // runtime.
-  NODE_SCRIPT_TYPE_OFFSET =               20,
-
-  NODE_SCRIPT_TYPE_SIZE =                  2,
-
-  NODE_SCRIPT_TYPE_MASK =  (1 << NODE_SCRIPT_TYPE_SIZE) - 1,
-
   // Remaining bits are node type specific.
-  NODE_TYPE_SPECIFIC_BITS_OFFSET =
-    NODE_SCRIPT_TYPE_OFFSET + NODE_SCRIPT_TYPE_SIZE
+  NODE_TYPE_SPECIFIC_BITS_OFFSET =        20
 };
-
-PR_STATIC_ASSERT(PRUint32(nsIProgrammingLanguage::JAVASCRIPT) <=
-                   PRUint32(NODE_SCRIPT_TYPE_MASK));
-PR_STATIC_ASSERT(PRUint32(nsIProgrammingLanguage::PYTHON) <=
-                   PRUint32(NODE_SCRIPT_TYPE_MASK));
 
 // Useful inline function for getting a node given an nsIContent and an
 // nsIDocument.  Returns the first argument cast to nsINode if it is non-null,
@@ -291,8 +275,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x458300ed, 0xe418, 0x4577, \
-  { 0x89, 0xd7, 0xfe, 0xf1, 0x34, 0xf3, 0x52, 0x19 } }
+{ 0x772e7e52, 0xfadf, 0x4962, \
+  { 0x8d, 0x96, 0x58, 0xfe, 0x75, 0x68, 0xaf, 0xa8 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -1042,22 +1026,6 @@ public:
    * nsIDocument* to nsINode*.
    */
   nsIDocument* GetOwnerDocument() const;
-
-  /**
-   * The default script type (language) ID for this node.
-   * All nodes must support fetching the default script language.
-   */
-  virtual PRUint32 GetScriptTypeID() const
-  { return nsIProgrammingLanguage::JAVASCRIPT; }
-
-  /**
-   * Not all nodes support setting a new default language.
-   */
-  NS_IMETHOD SetScriptTypeID(PRUint32 aLang)
-  {
-    NS_NOTREACHED("SetScriptTypeID not implemented");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
 
   nsresult Normalize();
 

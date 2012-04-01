@@ -509,8 +509,6 @@ public:
 
   NS_DECL_SIZEOF_EXCLUDING_THIS
 
-  using nsINode::GetScriptTypeID;
-
   virtual void Reset(nsIChannel *aChannel, nsILoadGroup *aLoadGroup);
   virtual void ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
                           nsIPrincipal* aPrincipal);
