@@ -284,7 +284,7 @@ var gViewSourceUtils = {
           var webNavigation = this.webShell.QueryInterface(Components.interfaces.nsIWebNavigation);
           var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
                                    .createInstance(Components.interfaces.nsIFileOutputStream);
-          foStream.init(this.file, 0x02 | 0x08 | 0x20, 0664, 0); // write | create | truncate
+          foStream.init(this.file, 0x02 | 0x08 | 0x20, -1, 0); // write | create | truncate
           var coStream = Components.classes["@mozilla.org/intl/converter-output-stream;1"]
                                    .createInstance(Components.interfaces.nsIConverterOutputStream);
           coStream.init(foStream, this.data.doc.characterSet, 0, null);
