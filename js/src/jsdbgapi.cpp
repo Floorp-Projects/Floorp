@@ -1598,7 +1598,7 @@ extern JS_PUBLIC_API(void)
 JS_DumpPCCounts(JSContext *cx, JSScript *script)
 {
 #if defined(DEBUG)
-    JS_ASSERT(script->pcCounters);
+    JS_ASSERT(script->scriptCounts);
 
     Sprinter sprinter(cx);
     if (!sprinter.init())
@@ -1641,7 +1641,7 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
 {
     for (CellIter i(cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        if (script->pcCounters)
+        if (script->scriptCounts)
             JS_DumpPCCounts(cx, script);
     }
 }
