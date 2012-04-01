@@ -2099,9 +2099,9 @@ nsRange::CloneRange(nsIDOMRange** aReturn)
 }
 
 NS_IMETHODIMP
-nsRange::InsertNode(nsIDOMNode* aN)
+nsRange::InsertNode(nsIDOMNode* aNode)
 {
-  VALIDATE_ACCESS(aN);
+  VALIDATE_ACCESS(aNode);
   
   nsresult res;
   PRInt32 tStartOffset;
@@ -2109,51 +2109,35 @@ nsRange::InsertNode(nsIDOMNode* aN)
 
   nsCOMPtr<nsIDOMNode> tStartContainer;
   res = this->GetStartContainer(getter_AddRefs(tStartContainer));
-  if(NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
+
+  // This is the node we'll be inserting before, and its parent
+  nsCOMPtr<nsIDOMNode> referenceNode;
+  nsCOMPtr<nsIDOMNode> referenceParentNode = tStartContainer;
 
   nsCOMPtr<nsIDOMText> startTextNode(do_QueryInterface(tStartContainer));
-  if (startTextNode)
-  {
-    nsCOMPtr<nsIDOMNode> tSCParentNode;
-    res = tStartContainer->GetParentNode(getter_AddRefs(tSCParentNode));
-    if(NS_FAILED(res)) return res;
-    NS_ENSURE_TRUE(tSCParentNode, NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
-
-    PRInt32 tEndOffset;
-    GetEndOffset(&tEndOffset);
-
-    nsCOMPtr<nsIDOMNode> tEndContainer;
-    res = this->GetEndContainer(getter_AddRefs(tEndContainer));
-    if(NS_FAILED(res)) return res;
+  if (startTextNode) {
+    res = tStartContainer->GetParentNode(getter_AddRefs(referenceParentNode));
+    NS_ENSURE_SUCCESS(res, res);
+    NS_ENSURE_TRUE(referenceParentNode, NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
 
     nsCOMPtr<nsIDOMText> secondPart;
     res = startTextNode->SplitText(tStartOffset, getter_AddRefs(secondPart));
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
 
-    nsCOMPtr<nsIDOMNode> tResultNode;
-    res = tSCParentNode->InsertBefore(aN, secondPart, getter_AddRefs(tResultNode));
-    if (NS_FAILED(res)) return res;
+    referenceNode = secondPart;
+  } else {
+    nsCOMPtr<nsIDOMNodeList>tChildList;
+    res = tStartContainer->GetChildNodes(getter_AddRefs(tChildList));
+    NS_ENSURE_SUCCESS(res, res);
 
-    if (tEndContainer == tStartContainer && tEndOffset != tStartOffset)
-      res = SetEnd(secondPart, tEndOffset - tStartOffset);
-
-    return res;
-  }  
-
-  nsCOMPtr<nsIDOMNodeList>tChildList;
-  res = tStartContainer->GetChildNodes(getter_AddRefs(tChildList));
-  if(NS_FAILED(res)) return res;
-  PRUint32 tChildListLength;
-  res = tChildList->GetLength(&tChildListLength);
-  if(NS_FAILED(res)) return res;
-
-  // find the insertion point in the DOM and insert the Node
-  nsCOMPtr<nsIDOMNode>tChildNode;
-  res = tChildList->Item(tStartOffset, getter_AddRefs(tChildNode));
-  if(NS_FAILED(res)) return res;
+    // find the insertion point in the DOM and insert the Node
+    res = tChildList->Item(tStartOffset, getter_AddRefs(referenceNode));
+    NS_ENSURE_SUCCESS(res, res);
+  }
   
   nsCOMPtr<nsIDOMNode> tResultNode;
-  return tStartContainer->InsertBefore(aN, tChildNode, getter_AddRefs(tResultNode));
+  return referenceParentNode->InsertBefore(aNode, referenceNode, getter_AddRefs(tResultNode));
 }
 
 NS_IMETHODIMP
