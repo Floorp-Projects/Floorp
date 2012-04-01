@@ -2116,6 +2116,7 @@ nsRange::InsertNode(nsIDOMNode* aNode)
   nsCOMPtr<nsIDOMNode> referenceParentNode = tStartContainer;
 
   nsCOMPtr<nsIDOMText> startTextNode(do_QueryInterface(tStartContainer));
+  nsCOMPtr<nsIDOMNodeList> tChildList;
   if (startTextNode) {
     res = tStartContainer->GetParentNode(getter_AddRefs(referenceParentNode));
     NS_ENSURE_SUCCESS(res, res);
@@ -2127,7 +2128,6 @@ nsRange::InsertNode(nsIDOMNode* aNode)
 
     referenceNode = secondPart;
   } else {
-    nsCOMPtr<nsIDOMNodeList>tChildList;
     res = tStartContainer->GetChildNodes(getter_AddRefs(tChildList));
     NS_ENSURE_SUCCESS(res, res);
 
@@ -2135,9 +2135,37 @@ nsRange::InsertNode(nsIDOMNode* aNode)
     res = tChildList->Item(tStartOffset, getter_AddRefs(referenceNode));
     NS_ENSURE_SUCCESS(res, res);
   }
-  
+
+  // We might need to update the end to include the new node (bug 433662)
+  PRInt32 newOffset;
+
+  if (Collapsed()) {
+    if (referenceNode) {
+      newOffset = IndexOf(referenceNode);
+    } else {
+      PRUint32 length;
+      res = tChildList->GetLength(&length);
+      NS_ENSURE_SUCCESS(res, res);
+      newOffset = length;
+    }
+
+    nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+    NS_ENSURE_STATE(node);
+    if (node->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+      newOffset += node->GetChildCount();
+    } else {
+      newOffset++;
+    }
+  }
+
   nsCOMPtr<nsIDOMNode> tResultNode;
-  return referenceParentNode->InsertBefore(aNode, referenceNode, getter_AddRefs(tResultNode));
+  res = referenceParentNode->InsertBefore(aNode, referenceNode, getter_AddRefs(tResultNode));
+  NS_ENSURE_SUCCESS(res, res);
+
+  if (Collapsed()) {
+    return SetEnd(referenceParentNode, newOffset);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

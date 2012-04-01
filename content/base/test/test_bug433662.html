@@ -1,0 +1,31 @@
+<!doctype html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=433662
+-->
+<title>Test for Bug 433662</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=433662">Mozilla Bug 433662</a>
+<script>
+
+/** Test for Bug 433662 **/
+var range = document.createRange();
+range.setStart(document.body, 0);
+range.insertNode(document.createComment("abc"));
+is(document.body.firstChild.nodeType, Node.COMMENT_NODE,
+   "Comment must be inserted (start of node)");
+is(document.body.firstChild.nodeValue, "abc",
+   "Comment must have right contents (start of node)");
+is(range.endOffset, 1,
+   "insertNode() needs to include the newly-added node (start of node)");
+
+range.setStart(document.body, document.body.childNodes.length);
+range.insertNode(document.createComment("def"));
+is(document.body.lastChild.nodeType, Node.COMMENT_NODE,
+   "Comment must be inserted (end of node)");
+is(document.body.lastChild.nodeValue, "def",
+   "Comment must have right contents (end of node)");
+is(range.endOffset, document.body.childNodes.length,
+   "insertNode() needs to include the newly-added node (end of node)");
+
+</script>
