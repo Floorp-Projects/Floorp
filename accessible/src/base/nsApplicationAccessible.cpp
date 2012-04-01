@@ -442,13 +442,6 @@ nsApplicationAccessible::GetRootDocument(nsIAccessibleDocument **aRootDocument)
 }
 
 NS_IMETHODIMP
-nsApplicationAccessible::GetInnerHTML(nsAString &aInnerHTML)
-{
-  aInnerHTML.Truncate();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsApplicationAccessible::ScrollTo(PRUint32 aScrollType)
 {
   return NS_OK;
