@@ -9269,3 +9269,42 @@ nsDocument::DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
   // is worthwhile:
   // - many!
 }
+
+bool
+MarkDocumentTreeToBeInSyncOperation(nsIDocument* aDoc, void* aData)
+{
+  nsCOMArray<nsIDocument>* documents =
+    static_cast<nsCOMArray<nsIDocument>*>(aData);
+  if (aDoc) {
+    aDoc->SetIsInSyncOperation(true);
+    documents->AppendObject(aDoc);
+    aDoc->EnumerateSubDocuments(MarkDocumentTreeToBeInSyncOperation, aData);
+  }
+  return true;
+}
+
+nsAutoSyncOperation::nsAutoSyncOperation(nsIDocument* aDoc)
+{
+  mMicroTaskLevel = nsContentUtils::MicroTaskLevel();
+  nsContentUtils::SetMicroTaskLevel(0);
+  if (aDoc) {
+    nsPIDOMWindow* win = aDoc->GetWindow();
+    if (win) {
+      nsCOMPtr<nsIDOMWindow> topWindow;
+      win->GetTop(getter_AddRefs(topWindow));
+      nsCOMPtr<nsPIDOMWindow> top = do_QueryInterface(topWindow);
+      if (top) {                               
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(top->GetExtantDocument());
+        MarkDocumentTreeToBeInSyncOperation(doc, &mDocuments);
+      }
+    }
+  }
+}
+
+nsAutoSyncOperation::~nsAutoSyncOperation()
+{
+  for (PRInt32 i = 0; i < mDocuments.Count(); ++i) {
+    mDocuments[i]->SetIsInSyncOperation(false);
+  }
+  nsContentUtils::SetMicroTaskLevel(mMicroTaskLevel);
+}

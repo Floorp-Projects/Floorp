@@ -1,0 +1,467 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=641821
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 641821</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTest()">                                                  
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=641821">Mozilla Bug 641821</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+                                
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 641821 **/
+
+var div = document.createElement("div");
+
+var M;
+if ("MozMutationObserver" in window) {
+  M = window.MozMutationObserver;
+} else if ("WebKitMutationObserver" in window) {
+  M = window.WebKitMutationObserver;
+} else {
+  M = window.MutationObserver;
+}
+
+function log(str) {
+  var d = document.createElement("div");
+  d.textContent = str;
+  if (str.indexOf("PASSED") >= 0) {
+    d.setAttribute("style", "color: green;");
+  } else {
+    d.setAttribute("style", "color: red;");
+  }
+  document.getElementById("log").appendChild(d);
+}
+
+// Some helper functions so that this test runs also outside mochitest.
+if (!("ok" in window)) {
+  window.ok = function(val, str) {
+    log(str + (val ? " PASSED\n" : " FAILED\n"));
+  }
+}
+
+if (!("is" in window)) {
+  window.is = function(val, refVal, str) {
+    log(str + (val == refVal? " PASSED " : " FAILED ") + 
+        (val != refVal ? "expected " + refVal + " got " + val + "\n" : "\n"));
+  }
+}
+
+if (!("isnot" in window)) {
+  window.isnot = function(val, refVal, str) {
+    log(str + (val != refVal? " PASSED " : " FAILED ") + 
+        (val == refVal ? "Didn't expect " + refVal + "\n" : "\n"));
+  }
+}
+
+if (!("SimpleTest" in window)) {
+  window.SimpleTest =
+  {
+    finish: function() {
+      document.getElementById("log").appendChild(document.createTextNode("DONE"));
+    },
+    waitForExplicitFinish: function() {}
+  }
+}
+
+function then(thenFn) {
+  setTimeout(function() {
+    if (thenFn) {
+      setTimeout(thenFn, 0);
+    } else {
+      SimpleTest.finish();
+    }
+  }, 0);
+}
+
+var m;
+var m2;
+var m3;
+var m4;
+
+// Checks basic parameter validation and normal 'this' handling.
+// Tests also basic attribute handling.
+function runTest() {
+  m = new M(function(){});
+  ok(m, "MutationObserver supported");
+
+  var e = null;
+  try {
+    m.observe(document, {});
+  } catch (ex) {
+    e = ex;
+  }
+  ok(e, "Should have thrown an exception");
+  is(e.code, DOMException.SYNTAX_ERR, "Should have thrown DOMException.SYNTAX_ERR");
+
+  e = null;
+  try {
+    m.observe(document, { childList: true, attributeOldValue: true });
+  } catch (ex) {
+    e = ex;
+  }
+  ok(e, "Should have thrown an exception");
+  is(e.code, DOMException.SYNTAX_ERR, "Should have thrown DOMException.SYNTAX_ERR");
+
+  e = null;
+  try {
+    m.observe(document, { childList: true, attributeFilter: ["foo"] });
+  } catch (ex) {
+    e = ex;
+  }
+  ok(e, "Should have thrown an exception");
+  is(e.code, DOMException.SYNTAX_ERR, "Should have thrown DOMException.SYNTAX_ERR");
+
+  e = null;
+  try {
+    m.observe(document, { childList: true, characterDataOldValue: true });
+  } catch (ex) {
+    e = ex;
+  }
+  ok(e, "Should have thrown an exception");
+  is(e.code, DOMException.SYNTAX_ERR, "Should have thrown DOMException.SYNTAX_ERR");
+
+  e = null;
+  try {
+    m.observe(document);
+  } catch (ex) {
+    e = ex;
+  }
+  ok(e, "Should have thrown an exception");  
+
+  m = new M(function(records, observer) {
+      is(observer, m, "2nd parameter should be the mutation observer");
+      is(observer, this, "2nd parameter should be 'this'");
+      is(records.length, 1, "Should have one record.");
+      is(records[0].type, "attributes", "Should have got attributes record");
+      is(records[0].target, div, "Should have got div as target");
+      is(records[0].attributeName, "foo", "Should have got record about foo attribute");
+      observer.disconnect();
+      then(testThisBind);
+      m = null;
+    });
+  m.observe(div, { attributes: true});
+  div.setAttribute("foo", "bar");
+}
+
+// 'this' handling when fn.bind() is used.
+function testThisBind() {
+  var child = div.appendChild(document.createElement("div"));
+  var gchild = child.appendChild(document.createElement("div"));
+  m = new M((function(records, observer) {
+      is(observer, m, "2nd parameter should be the mutation observer");
+      isnot(observer, this, "2nd parameter should be 'this'");
+      is(records.length, 3, "Should have one record.");
+      is(records[0].type, "attributes", "Should have got attributes record");
+      is(records[0].target, div, "Should have got div as target");
+      is(records[0].attributeName, "foo", "Should have got record about foo attribute");
+      is(records[0].oldValue, "bar", "oldValue should be bar");
+      is(records[1].type, "attributes", "Should have got attributes record");
+      is(records[1].target, div, "Should have got div as target");
+      is(records[1].attributeName, "foo", "Should have got record about foo attribute");
+      is(records[1].oldValue, "bar2", "oldValue should be bar2");
+      is(records[2].type, "attributes", "Should have got attributes record");
+      is(records[2].target, gchild, "Should have got div as target");
+      is(records[2].attributeName, "foo", "Should have got record about foo attribute");
+      is(records[2].oldValue, null, "oldValue should be bar2");
+      observer.disconnect();
+      then(testCharacterData);
+      m = null;
+    }).bind(window));
+  m.observe(div, { attributes: true, attributeOldValue: true, subtree: true });
+  div.setAttribute("foo", "bar2");
+  div.removeAttribute("foo");
+  div.removeChild(child);
+  child.removeChild(gchild);
+  div.appendChild(gchild);
+  div.removeChild(gchild);
+  gchild.setAttribute("foo", "bar");
+}
+
+function testCharacterData() {
+  m = new M(function(records, observer) {
+      is(records[0].type, "characterData", "Should have got characterData");
+      is(records[0].oldValue, null, "Shouldn't have got oldData");
+      observer.disconnect();
+      m = null;
+    });
+  m2 = new M(function(records, observer) {
+      is(records[0].type, "characterData", "Should have got characterData");
+      is(records[0].oldValue, "foo", "Should have got oldData");
+      observer.disconnect();
+      m2 = null;
+    });
+  m3 = new M(function(records, observer) {
+      ok(false, "This should not be called!");
+      observer.disconnect();
+      m3 = null;
+    });
+  m4 = new M(function(records, observer) {
+      is(records[0].oldValue, null, "Shouldn't have got oldData");
+      observer.disconnect();
+      m3.disconnect();
+      m3 = null;
+      then(testChildList);
+      m4 = null;
+    });
+
+  div.appendChild(document.createTextNode("foo"));
+  m.observe(div, { characterData: true, subtree: true });
+  m2.observe(div, { characterData: true, characterDataOldValue: true, subtree: true});
+  // If observing the same node twice, only the latter option should apply.
+  m3.observe(div, { characterData: true, subtree: true });
+  m3.observe(div, { characterData: true, subtree: false });
+  m4.observe(div.firstChild, { characterData: true, subtree: false });
+  div.firstChild.data = "bar";
+}
+
+function testChildList() {
+  var fc = div.firstChild;
+  m = new M(function(records, observer) {
+      is(records[0].type, "childList", "Should have got childList");
+      is(records[0].addedNodes.length, 0, "Shouldn't have got addedNodes");
+      is(records[0].removedNodes.length, 1, "Should have got removedNodes");
+      is(records[0].removedNodes[0], fc, "Should have removed a text node");
+      observer.disconnect();
+      then(testChildList2);
+      m = null;
+    });
+  m.observe(div, { childList: true});
+  div.removeChild(div.firstChild);
+}
+
+function testChildList2() {
+  div.innerHTML = "<span>1</span><span>2</span>";
+  m = new M(function(records, observer) {
+      is(records[0].type, "childList", "Should have got childList");
+      is(records[0].removedNodes.length, 2, "Should have got removedNodes");
+      is(records[0].addedNodes.length, 1, "Should have got addedNodes");
+      observer.disconnect();
+      then(testChildList3);
+      m = null;
+    });
+  m.observe(div, { childList: true });
+  div.innerHTML = "<span><span>foo</span></span>";
+}
+
+function testChildList3() {
+  m = new M(function(records, observer) {
+      is(records[0].type, "childList", "Should have got childList");
+      is(records[0].removedNodes.length, 1, "Should have got removedNodes");
+      is(records[0].addedNodes.length, 1, "Should have got addedNodes");
+      observer.disconnect();
+      then(testChildList4);
+      m = null;
+    });
+  m.observe(div, { childList: true });
+  div.textContent = "hello";
+}
+
+function testChildList4() {
+  div.textContent = null;
+  var df = document.createDocumentFragment();
+  var t1 = df.appendChild(document.createTextNode("Hello "));
+  var t2 = df.appendChild(document.createTextNode("world!"));
+  var s1 = div.appendChild(document.createElement("span"));
+  s1.textContent = "foo";
+  var s2 = div.appendChild(document.createElement("span"));
+  m = new M(function(records, observer) {
+      is(records.length, 3, "Should have got one record for removing nodes from document fragment and one record for adding them to div");
+      is(records[0].removedNodes.length, 2, "Should have got removedNodes");
+      is(records[0].removedNodes[0], t1, "Should be the 1st textnode");
+      is(records[0].removedNodes[1], t2, "Should be the 2nd textnode");
+      is(records[1].addedNodes.length, 2, "Should have got addedNodes");
+      is(records[1].addedNodes[0], t1, "Should be the 1st textnode");
+      is(records[1].addedNodes[1], t2, "Should be the 2nd textnode");
+      is(records[1].previousSibling, s1, "Should have previousSibling");
+      is(records[1].nextSibling, s2, "Should have nextSibling");
+      is(records[2].type, "characterData", "3rd record should be characterData");
+      is(records[2].target, t1, "target should be the textnode");
+      is(records[2].oldValue, "Hello ", "oldValue was 'Hello '");
+      observer.disconnect();
+      then(testChildList5);
+      m = null;
+    });
+  m.observe(df, { childList: true, characterData: true, characterDataOldValue: true, subtree: true });
+  m.observe(div, { childList: true });
+  div.insertBefore(df, s2);
+  s1.firstChild.data = "bar"; // This should *not* create a record.
+  t1.data = "Hello the whole "; // This should create a record.
+}
+
+function testChildList5() {
+  div.textContent = null;
+  var c1 = div.appendChild(document.createElement("div"));
+  var c2 = document.createElement("div");
+  var div2 = document.createElement("div");
+  var c3 = div2.appendChild(document.createElement("div"));
+  var c4 = document.createElement("div");
+  var c5 = document.createElement("div");
+  var df = document.createDocumentFragment();
+  var dfc1 = df.appendChild(document.createElement("div"));
+  var dfc2 = df.appendChild(document.createElement("div"));
+  var dfc3 = df.appendChild(document.createElement("div"));
+  m = new M(function(records, observer) {
+      is(records.length, 6 , "");
+      is(records[0].removedNodes.length, 1, "Should have got removedNodes");
+      is(records[0].removedNodes[0], c1, "");
+      is(records[0].addedNodes.length, 1, "Should have got addedNodes");
+      is(records[0].addedNodes[0], c2, "");
+      is(records[0].previousSibling, null, "");
+      is(records[0].nextSibling, null, "");
+      is(records[1].removedNodes.length, 1, "Should have got removedNodes");
+      is(records[1].removedNodes[0], c3, "");
+      is(records[1].addedNodes.length, 0, "Shouldn't have got addedNodes");
+      is(records[1].previousSibling, null, "");
+      is(records[1].nextSibling, null, "");
+      is(records[2].removedNodes.length, 1, "Should have got removedNodes");
+      is(records[2].removedNodes[0], c2, "");
+      is(records[2].addedNodes.length, 1, "Should have got addedNodes");
+      is(records[2].addedNodes[0], c3, "");
+      is(records[2].previousSibling, null, "");
+      is(records[2].nextSibling, null, "");
+      // Check document fragment handling
+      is(records[5].removedNodes.length, 1, "");
+      is(records[5].removedNodes[0], c4, "");
+      is(records[5].addedNodes.length, 3, "");
+      is(records[5].addedNodes[0], dfc1, "");
+      is(records[5].addedNodes[1], dfc2, "");
+      is(records[5].addedNodes[2], dfc3, "");
+      is(records[5].previousSibling, c3, "");
+      is(records[5].nextSibling, c5, "");
+      observer.disconnect();
+      then(testAdoptNode);
+      m = null;
+    });
+  m.observe(div, { childList: true, subtree: true });
+  m.observe(div2, { childList: true, subtree: true });
+  div.replaceChild(c2, c1);
+  div.replaceChild(c3, c2);
+  div.appendChild(c4);
+  div.appendChild(c5);
+  div.replaceChild(df, c4);
+}
+
+function testAdoptNode() {
+  var d1 = document.implementation.createHTMLDocument(null);
+  var d2 = document.implementation.createHTMLDocument(null);
+  var addedNode;
+  m = new M(function(records, observer) {
+      is(records.length, 3, "Should have 2 records");
+      is(records[0].target.ownerDocument, d1, "ownerDocument should be the initial document")
+      is(records[1].target.ownerDocument, d2, "ownerDocument should be the new document");
+      is(records[2].type, "attributes", "Should have got attribute mutation")
+      is(records[2].attributeName, "foo", "Should have got foo attribute mutation")
+      observer.disconnect();
+      then(testOuterHTML);
+      m = null;
+    });
+  m.observe(d1, { childList: true, subtree: true, attributes: true });
+  d2.body.appendChild(d1.body);
+  addedNode = d2.body.lastChild.appendChild(d2.createElement("div"));
+  addedNode.setAttribute("foo", "bar");
+}
+
+function testOuterHTML() {
+  var doc = document.implementation.createHTMLDocument(null);
+  var d1 = doc.body.appendChild(document.createElement("div"));
+  var d2 = doc.body.appendChild(document.createElement("div"));
+  var d3 = doc.body.appendChild(document.createElement("div"));
+  m = new M(function(records, observer) {
+      is(records.length, 3, "Should have 1 record");
+      is(records[0].removedNodes.length, 1, "Should have 1 removed nodes");
+      is(records[0].addedNodes.length, 2, "Should have 2 added nodes");
+      is(records[0].previousSibling, null, "");
+      is(records[0].nextSibling, d2, "");
+      is(records[1].removedNodes.length, 1, "Should have 1 removed nodes");
+      is(records[1].addedNodes.length, 2, "Should have 2 added nodes");
+      is(records[1].previousSibling, records[0].addedNodes[1], "");
+      is(records[1].nextSibling, d3, "");
+      is(records[2].removedNodes.length, 1, "Should have 1 removed nodes");
+      is(records[2].addedNodes.length, 2, "Should have 2 added nodes");
+      is(records[2].previousSibling, records[1].addedNodes[1], "");
+      is(records[2].nextSibling, null, "");
+      observer.disconnect();
+      then(testInsertAdjacentHTML);
+      m = null;
+    });
+  m.observe(doc, { childList: true, subtree: true });
+  d1.outerHTML = "<div>1</div><div>1</div>";
+  d2.outerHTML = "<div>2</div><div>2</div>";
+  d3.outerHTML = "<div>3</div><div>3</div>";
+}
+
+function testInsertAdjacentHTML() {
+  var doc = document.implementation.createHTMLDocument(null);
+  var d1 = doc.body.appendChild(document.createElement("div"));
+  var d2 = doc.body.appendChild(document.createElement("div"));
+  var d3 = doc.body.appendChild(document.createElement("div"));
+  var d4 = doc.body.appendChild(document.createElement("div"));
+  m = new M(function(records, observer) {
+      is(records.length, 4, "");
+      is(records[0].target, doc.body, "");
+      is(records[0].previousSibling, null, "");
+      is(records[0].nextSibling, d1, "");
+      is(records[1].target, d2, "");
+      is(records[1].previousSibling, null, "");
+      is(records[1].nextSibling, null, "");
+      is(records[2].target, d3, "");
+      is(records[2].previousSibling, null, "");
+      is(records[2].nextSibling, null, "");
+      is(records[3].target, doc.body, "");
+      is(records[3].previousSibling, d4, "");
+      is(records[3].nextSibling, null, "");      
+      observer.disconnect();
+      then(testSyncXHR);
+      m = null;
+    });
+  m.observe(doc, { childList: true, subtree: true });
+  d1.insertAdjacentHTML("beforebegin", "<div></div><div></div>");
+  d2.insertAdjacentHTML("afterbegin", "<div></div><div></div>");
+  d3.insertAdjacentHTML("beforeend", "<div></div><div></div>");
+  d4.insertAdjacentHTML("afterend", "<div></div><div></div>");
+}
+
+
+var callbackHandled = false;
+
+function testSyncXHR() {
+  div.textContent = null;
+  m = new M(function(records, observer) {
+      is(records.length, 1, "");
+      is(records[0].addedNodes.length, 1, "");
+      callbackHandled = true;
+      observer.disconnect();
+      m = null;
+    });
+  m.observe(div, { childList: true, subtree: true });
+  div.innerHTML = "<div>hello</div>";
+  var x = new XMLHttpRequest();
+  x.open("GET", window.location, false);
+  x.send();
+  ok(!callbackHandled, "Shouldn't have called the mutation callback!");
+  setTimeout(testSyncXHR2, 0);
+}
+
+function testSyncXHR2() {
+  ok(callbackHandled, "Should have called the mutation callback!");
+  then();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+<div id="log">
+</div>
+</body>
+</html>
