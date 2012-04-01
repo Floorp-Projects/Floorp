@@ -211,8 +211,12 @@ public class GeckoLayerClient implements GeckoEventResponder,
                 mLayerController.abortPanZoomAnimation();
                 break;
             case PAGE_SIZE:
+                // adjust the page dimensions to account for differences in zoom
+                // between the rendered content (which is what Gecko tells us)
+                // and our zoom level (which may have diverged).
+                float scaleFactor = oldMetrics.zoomFactor / messageMetrics.getZoomFactor();
                 newMetrics = new ViewportMetrics(oldMetrics);
-                newMetrics.setPageSize(messageMetrics.getPageSize());
+                newMetrics.setPageSize(messageMetrics.getPageSize().scale(scaleFactor));
                 break;
             }
 
