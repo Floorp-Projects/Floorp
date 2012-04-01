@@ -1290,39 +1290,38 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
 
   nsRefPtr<nsNPAPIPlugin> plugin;
   GetPlugin(mimetype, getter_AddRefs(plugin));
-
-  nsRefPtr<nsNPAPIPluginInstance> instance;
-
-  if (plugin) {
-#if defined(XP_WIN)
-    static BOOL firstJavaPlugin = FALSE;
-    BOOL restoreOrigDir = FALSE;
-    WCHAR origDir[_MAX_PATH];
-    if (pluginTag->mIsJavaPlugin && !firstJavaPlugin) {
-      DWORD dw = GetCurrentDirectoryW(_MAX_PATH, origDir);
-      NS_ASSERTION(dw <= _MAX_PATH, "Failed to obtain the current directory, which may lead to incorrect class loading");
-      nsCOMPtr<nsIFile> binDirectory;
-      nsresult rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
-                                           getter_AddRefs(binDirectory));
-
-      if (NS_SUCCEEDED(rv)) {
-        nsAutoString path;
-        binDirectory->GetPath(path);
-        restoreOrigDir = SetCurrentDirectoryW(path.get());
-      }
-    }
-#endif
-
-    instance = new nsNPAPIPluginInstance(plugin.get());
-
-#if defined(XP_WIN)
-    if (!firstJavaPlugin && restoreOrigDir) {
-      BOOL bCheck = SetCurrentDirectoryW(origDir);
-      NS_ASSERTION(bCheck, "Error restoring directory");
-      firstJavaPlugin = TRUE;
-    }
-#endif
+  if (!plugin) {
+    return NS_ERROR_FAILURE;
   }
+
+#if defined(XP_WIN)
+  static BOOL firstJavaPlugin = FALSE;
+  BOOL restoreOrigDir = FALSE;
+  WCHAR origDir[_MAX_PATH];
+  if (pluginTag->mIsJavaPlugin && !firstJavaPlugin) {
+    DWORD dw = GetCurrentDirectoryW(_MAX_PATH, origDir);
+    NS_ASSERTION(dw <= _MAX_PATH, "Failed to obtain the current directory, which may lead to incorrect class loading");
+    nsCOMPtr<nsIFile> binDirectory;
+    nsresult rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
+                                         getter_AddRefs(binDirectory));
+
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoString path;
+      binDirectory->GetPath(path);
+      restoreOrigDir = SetCurrentDirectoryW(path.get());
+    }
+  }
+#endif
+
+  nsRefPtr<nsNPAPIPluginInstance> instance = new nsNPAPIPluginInstance(plugin.get());
+
+#if defined(XP_WIN)
+  if (!firstJavaPlugin && restoreOrigDir) {
+    BOOL bCheck = SetCurrentDirectoryW(origDir);
+    NS_ASSERTION(bCheck, "Error restoring directory");
+    firstJavaPlugin = TRUE;
+  }
+#endif
 
   // it is adreffed here
   aOwner->SetInstance(instance.get());
