@@ -579,6 +579,7 @@ _TEST_FILES2 = \
 		test_bug650386_redirect_307.html \
 		file_bug650386_content.sjs \
 		file_bug650386_report.sjs \
+		test_bug719533.html \
 		$(NULL)
 
 _CHROME_FILES =	\
