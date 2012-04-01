@@ -761,7 +761,7 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
 
     if (mode == XDR_DECODE) {
         if (cx->hasRunOption(JSOPTION_PCCOUNT))
-            (void) script->initCounts(cx);
+            (void) script->initScriptCounts(cx);
         *scriptp = script;
     }
 
@@ -775,33 +775,33 @@ template bool
 js::XDRScript(XDRState<XDR_DECODE> *xdr, JSScript **scriptp, JSScript *parentScript);
 
 bool
-JSScript::initCounts(JSContext *cx)
+JSScript::initScriptCounts(JSContext *cx)
 {
-    JS_ASSERT(!pcCounters);
+    JS_ASSERT(!scriptCounts);
 
-    size_t count = 0;
+    size_t n = 0;
 
     jsbytecode *pc, *next;
     for (pc = code; pc < code + length; pc = next) {
-        count += OpcodeCounts::numCounts(JSOp(*pc));
+        n += PCCounts::numCounts(JSOp(*pc));
         next = pc + GetBytecodeLength(pc);
     }
 
-    size_t bytes = (length * sizeof(OpcodeCounts)) + (count * sizeof(double));
+    size_t bytes = (length * sizeof(PCCounts)) + (n * sizeof(double));
     char *cursor = (char *) cx->calloc_(bytes);
     if (!cursor)
         return false;
 
     DebugOnly<char *> base = cursor;
 
-    pcCounters.counts = (OpcodeCounts *) cursor;
-    cursor += length * sizeof(OpcodeCounts);
+    scriptCounts.pcCountsVector = (PCCounts *) cursor;
+    cursor += length * sizeof(PCCounts);
 
     for (pc = code; pc < code + length; pc = next) {
-        pcCounters.counts[pc - code].counts = (double *) cursor;
-        size_t capacity = OpcodeCounts::numCounts(JSOp(*pc));
+        scriptCounts.pcCountsVector[pc - code].counts = (double *) cursor;
+        size_t capacity = PCCounts::numCounts(JSOp(*pc));
 #ifdef DEBUG
-        pcCounters.counts[pc - code].capacity = capacity;
+        scriptCounts.pcCountsVector[pc - code].capacity = capacity;
 #endif
         cursor += capacity * sizeof(double);
         next = pc + GetBytecodeLength(pc);
@@ -818,11 +818,11 @@ JSScript::initCounts(JSContext *cx)
 }
 
 void
-JSScript::destroyCounts(JSContext *cx)
+JSScript::destroyScriptCounts(JSContext *cx)
 {
-    if (pcCounters) {
-        cx->free_(pcCounters.counts);
-        pcCounters.counts = NULL;
+    if (scriptCounts) {
+        cx->free_(scriptCounts.pcCountsVector);
+        scriptCounts.pcCountsVector = NULL;
     }
 }
 
@@ -1334,7 +1334,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     }
 
     if (cx->hasRunOption(JSOPTION_PCCOUNT))
-        (void) script->initCounts(cx);
+        (void) script->initScriptCounts(cx);
 
     return script;
 }
@@ -1409,7 +1409,7 @@ JSScript::finalize(JSContext *cx, bool background)
     mjit::ReleaseScriptCode(cx, this);
 #endif
 
-    destroyCounts(cx);
+    destroyScriptCounts(cx);
 
     if (sourceMap)
         cx->free_(sourceMap);
