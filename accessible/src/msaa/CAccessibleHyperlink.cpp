@@ -64,7 +64,7 @@ CAccessibleHyperlink::QueryInterface(REFIID iid, void** ppv)
     return S_OK;
   }
 
-  return CAccessibleAction::QueryInterface(iid, ppv);
+  return ia2AccessibleAction::QueryInterface(iid, ppv);
 }
 
 // IAccessibleHyperlink

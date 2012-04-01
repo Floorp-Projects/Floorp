@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "CAccessibleAction.h"
+#include "ia2AccessibleAction.h"
 
 #include "AccessibleAction_i.c"
 
@@ -47,7 +47,7 @@
 // IUnknown
 
 STDMETHODIMP
-CAccessibleAction::QueryInterface(REFIID iid, void** ppv)
+ia2AccessibleAction::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = NULL;
 
@@ -63,7 +63,7 @@ CAccessibleAction::QueryInterface(REFIID iid, void** ppv)
 // IAccessibleAction
 
 STDMETHODIMP
-CAccessibleAction::nActions(long* aActionCount)
+ia2AccessibleAction::nActions(long* aActionCount)
 {
 __try {
   if (!aActionCount)
@@ -83,7 +83,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleAction::doAction(long aActionIndex)
+ia2AccessibleAction::doAction(long aActionIndex)
 {
 __try {
   nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
@@ -99,7 +99,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleAction::get_description(long aActionIndex, BSTR *aDescription)
+ia2AccessibleAction::get_description(long aActionIndex, BSTR *aDescription)
 {
 __try {
   *aDescription = NULL;
@@ -126,7 +126,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleAction::get_keyBinding(long aActionIndex, long aNumMaxBinding,
+ia2AccessibleAction::get_keyBinding(long aActionIndex, long aNumMaxBinding,
                                   BSTR **aKeyBinding,
                                   long *aNumBinding)
 {
@@ -176,7 +176,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleAction::get_name(long aActionIndex, BSTR *aName)
+ia2AccessibleAction::get_name(long aActionIndex, BSTR *aName)
 {
 __try {
   *aName = NULL;
@@ -202,7 +202,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleAction::get_localizedName(long aActionIndex, BSTR *aLocalizedName)
+ia2AccessibleAction::get_localizedName(long aActionIndex, BSTR *aLocalizedName)
 {
 __try {
   *aLocalizedName = NULL;
