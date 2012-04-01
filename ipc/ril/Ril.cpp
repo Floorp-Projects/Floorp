@@ -58,6 +58,7 @@
 #include "nsXULAppAPI.h"
 #include "Ril.h"
 
+#undef LOG
 #if defined(MOZ_WIDGET_GONK)
 #include <android/log.h>
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
@@ -86,8 +87,8 @@ struct RilClient : public RefCounted<RilClient>,
     RilClient() : mSocket(-1)
                 , mMutex("RilClient.mMutex")
                 , mBlockedOnWrite(false)
-                , mCurrentRilRawData(NULL)
                 , mIOLoop(MessageLoopForIO::current())
+                , mCurrentRilRawData(NULL)
     { }
     virtual ~RilClient() { }
 
@@ -115,15 +116,57 @@ static RefPtr<RilConsumer> sConsumer;
 // This code runs on the IO thread.
 //
 
-class RilReconnectTask : public Task {
+class RilReconnectTask : public CancelableTask {
+    RilReconnectTask() : mCanceled(false) { }
+
     virtual void Run();
+    virtual void Cancel() { mCanceled = true; }
+
+    bool mCanceled;
+
+public:
+    static void Enqueue(int aDelayMs = 0) {
+        MessageLoopForIO* ioLoop = MessageLoopForIO::current();
+        MOZ_ASSERT(ioLoop && sClient->mIOLoop == ioLoop);
+        if (sTask) {
+            return;
+        }
+        sTask = new RilReconnectTask();
+        if (aDelayMs) {
+            ioLoop->PostDelayedTask(FROM_HERE, sTask, aDelayMs);
+        } else {
+            ioLoop->PostTask(FROM_HERE, sTask);
+        }
+    }
+
+    static void CancelIt() {
+        if (!sTask) {
+            return;
+        }
+        sTask->Cancel();
+        sTask = nsnull;
+    }
+
+private:
+    // Can *ONLY* be touched by the IO thread.  The event queue owns
+    // this memory when pointer is nonnull; do *NOT* free it manually.
+    static CancelableTask* sTask;
 };
+CancelableTask* RilReconnectTask::sTask;
 
 void RilReconnectTask::Run() {
+    // NB: the order of these two statements is important!  sTask must
+    // always run, whether we've been canceled or not, to avoid
+    // leading a dangling pointer in sTask.
+    sTask = nsnull;
+    if (mCanceled) {
+        return;
+    }
+
     if (sClient->OpenSocket()) {
         return;
     }
-    sClient->mIOLoop->PostDelayedTask(FROM_HERE, new RilReconnectTask(), 1000);
+    Enqueue(1000);
 }
 
 class RilWriteTask : public Task {
@@ -140,7 +183,7 @@ ConnectToRil(Monitor* aMonitor, bool* aSuccess)
     MOZ_ASSERT(!sClient);
 
     sClient = new RilClient();
-    sClient->mIOLoop->PostTask(FROM_HERE, new RilReconnectTask());
+    RilReconnectTask::Enqueue();
     *aSuccess = true;
     {
         MonitorAutoLock lock(*aMonitor);
@@ -233,7 +276,7 @@ RilClient::OnFileCanReadWithoutBlocking(int fd)
     while (true) {
         if (!mIncoming) {
             mIncoming = new RilRawData();
-            int ret = read(fd, mIncoming->mData, RilRawData::MAX_DATA_SIZE);
+            ssize_t ret = read(fd, mIncoming->mData, RilRawData::MAX_DATA_SIZE);
             if (ret <= 0) {
                 LOG("Cannot read from network, error %d\n", ret);
                 // At this point, assume that we can't actually access
@@ -242,12 +285,12 @@ RilClient::OnFileCanReadWithoutBlocking(int fd)
                 mReadWatcher.StopWatchingFileDescriptor();
                 mWriteWatcher.StopWatchingFileDescriptor();
                 close(mSocket.mFd);
-                mIOLoop->PostTask(FROM_HERE, new RilReconnectTask());
+                RilReconnectTask::Enqueue();
                 return;
             }
             mIncoming->mSize = ret;
             sConsumer->MessageReceived(mIncoming.forget());
-            if (ret < RilRawData::MAX_DATA_SIZE) {
+            if (ret < ssize_t(RilRawData::MAX_DATA_SIZE)) {
                 return;
             }
         }
@@ -306,6 +349,9 @@ RilClient::OnFileCanWriteWithoutBlocking(int fd)
 static void
 DisconnectFromRil(Monitor* aMonitor)
 {
+    // Prevent stale reconnect tasks from being run after we've shut
+    // down.
+    RilReconnectTask::CancelIt();
     // XXX This might "strand" messages in the outgoing queue.  We'll
     // assume that's OK for now.
     sClient = nsnull;
