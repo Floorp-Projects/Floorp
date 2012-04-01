@@ -7,10 +7,15 @@
 
 <script type="text/javascript">
 
+var MOZ_STORAGE_CHANGED_COUNT = 8;
+
+function setup() {
+  sessionStorage.clear();
+  SimpleTest.executeSoon(startTest);
+}
+
 function startTest()
 {
-  sessionStorage.clear();
-  
   // Initially check the sessionStorage is empty
   is(sessionStorage.length, 0, "The storage is empty [1]");
   is(sessionStorage.key(0), null, "key() should return null for out-of-bounds access");
@@ -27,6 +32,17 @@ function startTest()
   is(typeof sessionStorage.getItem("nonexisting2"), "object", "getItem('nonexisting2') is object");
   is(typeof sessionStorage["nonexisting2"], "object", "['nonexisting2'] is object");
   is(typeof sessionStorage.nonexisting2, "object", "nonexisting2 is object");
+
+  var mozStorageChangedReceived = 0;
+  var sessionStorageCopy = sessionStorage;
+
+  function onStorageChanged(e) {
+    if (e.storageArea == sessionStorageCopy)
+      mozStorageChangedReceived++;
+  }
+
+  // Listen for MozStorageChanged
+  SpecialPowers.addChromeEventListener("MozStorageChanged", onStorageChanged, false);
 
   // add an empty-value key
   sessionStorage.setItem("empty", "");
@@ -130,7 +146,14 @@ function startTest()
   sessionStorage.removeItem("key1"); // Just check there is no exception
   sessionStorage.removeItem("key2"); // Just check there is no exception
 
-  SimpleTest.finish();
+  SimpleTest.executeSoon(function () {
+    SpecialPowers.removeChromeEventListener("MozStorageChanged", onStorageChanged, false);
+    is(mozStorageChangedReceived, MOZ_STORAGE_CHANGED_COUNT,
+       "received the correct number of events");
+
+    sessionStorage.clear();
+    SimpleTest.finish();
+  });
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -139,7 +162,7 @@ SimpleTest.waitForExplicitFinish();
 
 </head>
 
-<body onload="startTest();">
+<body onload="setup();">
 
 </body>
 </html>
