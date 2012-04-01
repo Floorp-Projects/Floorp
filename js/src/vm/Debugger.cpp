@@ -2115,6 +2115,29 @@ Debugger::findScripts(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+JSBool
+Debugger::wrap(JSContext *cx, unsigned argc, Value *vp)
+{
+    REQUIRE_ARGC("Debugger.prototype.wrap", 1);
+    THIS_DEBUGGER(cx, argc, vp, "wrap", args, dbg);
+
+    /* Wrapping a non-object returns the value unchanged. */
+    if (!args[0].isObject()) {
+        args.rval() = args[0];
+        return true;
+    }
+
+    JSObject *obj = dbg->unwrapDebuggeeArgument(cx, args[0]);
+    if (!obj)
+        return false;
+
+    args.rval() = args[0];
+    if (!dbg->wrapDebuggeeValue(cx, &args.rval()))
+        return false;
+
+    return true;
+}
+
 JSPropertySpec Debugger::properties[] = {
     JS_PSGS("enabled", Debugger::getEnabled, Debugger::setEnabled, 0),
     JS_PSGS("onDebuggerStatement", Debugger::getOnDebuggerStatement,
@@ -2136,6 +2159,7 @@ JSFunctionSpec Debugger::methods[] = {
     JS_FN("getNewestFrame", Debugger::getNewestFrame, 0, 0),
     JS_FN("clearAllBreakpoints", Debugger::clearAllBreakpoints, 1, 0),
     JS_FN("findScripts", Debugger::findScripts, 1, 0),
+    JS_FN("wrap", Debugger::wrap, 1, 0),
     JS_FS_END
 };
 
