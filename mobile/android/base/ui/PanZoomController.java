@@ -472,7 +472,10 @@ public class PanZoomController
         }
 
         mState = PanZoomState.BOUNCE;
-
+        // set the animation target *after* setting state BOUNCE, so that
+        // the getRedrawHint() is returning false and we don't clobber the display
+        // port we set as a result of this animation target call.
+        mController.setAnimationTarget(metrics);
         startAnimationTimer(new BounceRunnable(bounceStartMetrics, metrics));
     }
 
