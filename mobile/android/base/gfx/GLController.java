@@ -115,6 +115,8 @@ public class GLController {
         return true;
     }
 
+    // Wait until we are allowed to use EGL functions on the Surface backing
+    // this window.
     public synchronized void waitForValidSurface() {
         while (!mSurfaceValid) {
             try {
