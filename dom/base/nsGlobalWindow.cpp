@@ -1224,6 +1224,7 @@ nsGlobalWindow::CleanUp(bool aIgnoreModalDialog)
   mLocation = nsnull;
   mHistory = nsnull;
   mFrames = nsnull;
+  mWindowUtils = nsnull;
   mApplicationCache = nsnull;
   mIndexedDB = nsnull;
   mPendingStorageEventsObsolete = nsnull;
@@ -8368,20 +8369,12 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
   else if (aIID.Equals(NS_GET_IID(nsIDOMWindowUtils))) {
     FORWARD_TO_OUTER(GetInterface, (aIID, aSink), NS_ERROR_NOT_INITIALIZED);
 
-    nsCOMPtr<nsISupports> utils(do_QueryReferent(mWindowUtils));
-    if (utils) {
-      *aSink = utils;
-      NS_ADDREF(((nsISupports *) *aSink));
-    } else {
-      nsDOMWindowUtils *utilObj = new nsDOMWindowUtils(this);
-      nsCOMPtr<nsISupports> utilsIfc =
-                              NS_ISUPPORTS_CAST(nsIDOMWindowUtils *, utilObj);
-      if (utilsIfc) {
-        mWindowUtils = do_GetWeakReference(utilsIfc);
-        *aSink = utilsIfc;
-        NS_ADDREF(((nsISupports *) *aSink));
-      }
+    if (!mWindowUtils) {
+      mWindowUtils = new nsDOMWindowUtils(this);
     }
+
+    *aSink = mWindowUtils;
+    NS_ADDREF(((nsISupports *) *aSink));
   }
   else {
     return QueryInterface(aIID, aSink);

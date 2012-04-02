@@ -36,13 +36,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 function ChromePowers(window) {
-  this.window = window;
+  this.window = Components.utils.getWeakReference(window);
 
   // In the case of browser-chrome tests, we are running as a [ChromeWindow]
   // and we have no window.QueryInterface available, content.window is what we need
   if (typeof(window) == "ChromeWindow" && typeof(content.window) == "Window") {
     this.DOMWindowUtils = bindDOMWindowUtils(content.window);
-    this.window = content.window
+    this.window = Components.utils.getWeakReference(content.window);
   } else {
     this.DOMWindowUtils = bindDOMWindowUtils(window);
   }
