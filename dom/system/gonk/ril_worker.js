@@ -2361,12 +2361,6 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
       radioState == RADIO_STATE_OFF) {
     return;
   }
-  if (RILQUIRKS_V5_LEGACY &&
-      (radioState == RADIO_STATE_SIM_NOT_READY ||
-       radioState == RADIO_STATE_RUIM_NOT_READY ||
-       radioState == RADIO_STATE_NV_NOT_READY)) {
-    return;
-  }
   this.getICCStatus();
 };
 RIL[UNSOLICITED_RESPONSE_CALL_STATE_CHANGED] = function UNSOLICITED_RESPONSE_CALL_STATE_CHANGED() {
