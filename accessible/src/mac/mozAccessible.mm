@@ -518,6 +518,11 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+- (void)selectedTextDidChange
+{
+  // Do nothing. mozTextAccessible will.
+}
+
 - (NSString*)customDescription
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
