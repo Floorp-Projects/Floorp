@@ -182,11 +182,10 @@ LIRGenerator::visitPassArg(MPassArg *arg)
 bool
 LIRGenerator::visitCreateThis(MCreateThis *ins)
 {
-    LCreateThis *lir = new LCreateThis(useFixed(ins->getCallee(), CallTempReg0),
-                                       useFixed(ins->getPrototype(), CallTempReg1));
+    LCreateThis *lir = new LCreateThis(useRegister(ins->getCallee()),
+                                       useRegister(ins->getPrototype()));
     
-    // Boxed for passing the argument.
-    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+    return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool

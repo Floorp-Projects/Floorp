@@ -1319,9 +1319,9 @@ MacroAssemblerARMCompat::load32(const Address &address, const Register &dest)
 }
 
 void
-MacroAssemblerARMCompat::load32(const ImmWord &imm, const Register &dest)
+MacroAssemblerARMCompat::load32(const AbsoluteAddress &address, const Register &dest)
 {
-    loadPtr(imm, dest);
+    loadPtr(address, dest);
 }
 
 void
@@ -1344,9 +1344,9 @@ MacroAssemblerARMCompat::loadPtr(const BaseIndex &src, const Register &dest)
     ma_ldr(DTRAddr(base, DtrRegImmShift(src.index, LSL, scale)), dest);
 }
 void
-MacroAssemblerARMCompat::loadPtr(const ImmWord &imm, const Register &dest)
+MacroAssemblerARMCompat::loadPtr(const AbsoluteAddress &address, const Register &dest)
 {
-    movePtr(imm, ScratchRegister);
+    movePtr(ImmWord(address.addr), ScratchRegister);
     loadPtr(Address(ScratchRegister, 0x0), dest);
 }
 
@@ -1370,9 +1370,9 @@ MacroAssemblerARMCompat::store16(const Register &src, const Address &address)
 }
 
 void
-MacroAssemblerARMCompat::store32(Register src, const ImmWord &imm)
+MacroAssemblerARMCompat::store32(Register src, const AbsoluteAddress &address)
 {
-    storePtr(src, imm);
+    storePtr(src, address);
 }
 
 void
@@ -1389,15 +1389,29 @@ MacroAssemblerARMCompat::store32(Imm32 src, const Address &address)
 }
 
 void
+MacroAssemblerARMCompat::storePtr(ImmWord imm, const Address &address)
+{
+    movePtr(imm, ScratchRegister);
+    storePtr(ScratchRegister, address);
+}
+    
+void
+MacroAssemblerARMCompat::storePtr(ImmGCPtr imm, const Address &address)
+{
+    movePtr(imm, ScratchRegister);
+    storePtr(ScratchRegister, address);
+}
+
+void
 MacroAssemblerARMCompat::storePtr(Register src, const Address &address)
 {
     ma_str(src, Operand(address));
 }
 
 void
-MacroAssemblerARMCompat::storePtr(Register src, const ImmWord &imm)
+MacroAssemblerARMCompat::storePtr(const Register &src, const AbsoluteAddress &dest)
 {
-    movePtr(imm, ScratchRegister);
+    movePtr(ImmWord(dest.addr), ScratchRegister);
     storePtr(src, Address(ScratchRegister, 0x0));
 }
 

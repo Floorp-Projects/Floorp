@@ -760,7 +760,7 @@ CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed *lir)
     // Since Ion frames exist on the C stack, the stack limit may be
     // dynamically set by JS_SetThreadStackLimit() and JS_SetNativeStackQuota().
     uintptr_t *limitAddr = &rt->ionStackLimit;
-    masm.loadPtr(ImmWord(limitAddr), limitReg);
+    masm.loadPtr(AbsoluteAddress(limitAddr), limitReg);
 
     CheckOverRecursedFailure *ool = new CheckOverRecursedFailure(lir);
     if (!addOutOfLineCode(ool))
@@ -854,24 +854,78 @@ CodeGenerator::visitNewObject(LNewObject *lir)
     return callVM(Info, lir);
 }
 
-bool
-CodeGenerator::visitCreateThis(LCreateThis *lir)
+// Out-of-line object allocation for |new|, calling to the VM.
+class OutOfLineCreateThis : public OutOfLineCodeBase<CodeGenerator>
 {
+    LCreateThis *lir_;
+
+  public:
+    OutOfLineCreateThis(LCreateThis *lir)
+      : lir_(lir)
+    { }
+
+    bool accept(CodeGenerator *codegen) {
+        return codegen->visitOutOfLineCreateThis(this);
+    }
+
+    LCreateThis *lir() const {
+        return lir_;
+    }
+};
+
+bool
+CodeGenerator::visitCreateThisVMCall(LCreateThis *lir)
+{
+    Register objReg    = ToRegister(lir->output());
     Register calleeReg = ToRegister(lir->getCallee());
     Register protoReg  = ToRegister(lir->getPrototype());
 
-    {
-        typedef JSObject *(*pf)(JSContext *cx, JSObject *callee, JSObject *proto);
-        static const VMFunction CreateThisInfo =
-            FunctionInfo<pf>(js_CreateThisForFunctionWithProto);
+    // Since LCreateThis is not isCall(), used registers must be saved around the call.
+    JS_ASSERT(!lir->isCall());
+    saveLive(lir);
 
-        pushArg(protoReg);
-        pushArg(calleeReg);
+    typedef JSObject *(*pf)(JSContext *cx, JSObject *callee, JSObject *proto);
+    static const VMFunction CreateThisInfo =
+        FunctionInfo<pf>(js_CreateThisForFunctionWithProto);
 
-        if (!callVM(CreateThisInfo, lir))
+    pushArg(protoReg);
+    pushArg(calleeReg);
+
+    if (!callVM(CreateThisInfo, lir))
+        return false;
+
+    if (ReturnReg != objReg)
+        masm.movePtr(ReturnReg, objReg);
+
+    restoreLive(lir);
+    return true;
+}
+
+bool
+CodeGenerator::visitCreateThis(LCreateThis *lir)
+{
+    Register objReg = ToRegister(lir->output());
+
+    // Attempt to inline allocation if possible.
+    if (lir->mir()->hasTemplateObject()) {
+        OutOfLineCreateThis *ool = new OutOfLineCreateThis(lir);
+        if (!addOutOfLineCode(ool))
             return false;
+
+        masm.getNewObject(gen->cx, objReg, lir->mir()->getTemplateObject(), ool->entry());
+        masm.bind(ool->rejoin());
+        return true;
     }
 
+    return visitCreateThisVMCall(lir);
+}
+
+bool
+CodeGenerator::visitOutOfLineCreateThis(OutOfLineCreateThis *ool)
+{
+    if (!visitCreateThisVMCall(ool->lir()))
+        return false;
+    masm.jump(ool->rejoin());
     return true;
 }
 
@@ -1505,7 +1559,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart *lir)
     JS_ASSERT(flags == JSITER_ENUMERATE);
 
     // Fetch the most recent iterator and ensure it's not NULL.
-    masm.loadPtr(ImmWord(&gen->cx->compartment->nativeIterCache.last), output);
+    masm.loadPtr(AbsoluteAddress(&gen->cx->compartment->nativeIterCache.last), output);
     masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
 
     // Load NativeIterator.

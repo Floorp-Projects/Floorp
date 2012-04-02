@@ -375,3 +375,86 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
     bind(&done);
 #endif
 }
+
+void
+MacroAssembler::getNewObject(JSContext *cx, const Register &result,
+                             JSObject *templateObject, Label *fail)
+{
+    gc::AllocKind allocKind = templateObject->getAllocKind();
+
+    JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
+    int thingSize = (int)gc::Arena::thingSize(allocKind);
+
+    JS_ASSERT(cx->typeInferenceEnabled());
+    JS_ASSERT(!templateObject->hasDynamicSlots());
+    JS_ASSERT(!templateObject->hasDynamicElements());
+
+#ifdef JS_GC_ZEAL
+    if (cx->runtime->needZealousGC()) {
+        jump(fail);
+        return;
+    }
+#endif
+
+    // Inline FreeSpan::allocate.
+    // There is always exactly one FreeSpan per allocKind per JSCompartment.
+    // If a FreeSpan is replaced, its members are updated in the freeLists table,
+    // which the code below always re-reads.
+
+    gc::FreeSpan *list = const_cast<gc::FreeSpan *>
+                         (cx->compartment->arenas.getFreeList(allocKind));
+    loadPtr(AbsoluteAddress(&list->first), result);
+    branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(&list->last), result, fail);
+
+    addPtr(Imm32(thingSize), result);
+    storePtr(result, AbsoluteAddress(&list->first));
+
+    // Fill in the blank object. Order doesn't matter here, since everything is
+    // infallible. Note that this bakes GC thing pointers into the code without
+    // explicitly pinning them. With type inference enabled, JIT code is
+    // collected on GC except when analysis or compilation is active, in which
+    // case type objects won't be collected but other things may be. The shape
+    // held by templateObject *must* be pinned against GC either by the script
+    // or by some type object.
+
+    int elementsOffset = JSObject::offsetOfFixedElements();
+
+    // Write out the elements pointer before readjusting the result register:
+    // for dense arrays we wil need to get the address of the fixed elements first.
+    if (templateObject->isDenseArray()) {
+        JS_ASSERT(!templateObject->getDenseArrayInitializedLength());
+        addPtr(Imm32(-thingSize + elementsOffset), result);
+        storePtr(result, Address(result, -elementsOffset + JSObject::offsetOfElements()));
+        addPtr(Imm32(-elementsOffset), result);
+    } else {
+        subPtr(Imm32(thingSize), result);
+        storePtr(ImmWord(emptyObjectElements), Address(result, JSObject::offsetOfElements()));
+    }
+
+    storePtr(ImmGCPtr(templateObject->lastProperty()), Address(result, JSObject::offsetOfShape()));
+    storePtr(ImmGCPtr(templateObject->type()), Address(result, JSObject::offsetOfType()));
+    storePtr(ImmWord((void *)NULL), Address(result, JSObject::offsetOfSlots()));
+
+    if (templateObject->isDenseArray()) {
+        // Fill in the elements header.
+        store32(Imm32(templateObject->getDenseArrayCapacity()),
+                Address(result, elementsOffset + ObjectElements::offsetOfCapacity()));
+        store32(Imm32(templateObject->getDenseArrayInitializedLength()),
+                Address(result, elementsOffset + ObjectElements::offsetOfInitializedLength()));
+        store32(Imm32(templateObject->getArrayLength()),
+                Address(result, elementsOffset + ObjectElements::offsetOfLength()));
+    } else {
+        // Fixed slots of non-array objects are required to be initialized.
+        // Use the values currently in the template object.
+        for (unsigned i = 0; i < templateObject->slotSpan(); i++) {
+            storeValue(templateObject->getFixedSlot(i),
+                       Address(result, JSObject::getFixedSlotOffset(i)));
+        }
+    }
+
+    if (templateObject->hasPrivate()) {
+        uint32_t nfixed = templateObject->numFixedSlots();
+        storePtr(ImmWord(templateObject->getPrivate()),
+                 Address(result, JSObject::getPrivateDataOffset(nfixed)));
+    }
+}
