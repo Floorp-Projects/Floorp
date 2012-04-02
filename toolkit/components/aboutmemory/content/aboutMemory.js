@@ -263,7 +263,7 @@ function processMemoryReporters(aMgr, aIgnoreSingle, aIgnoreMulti,
 // This regexp matches sentences and sentence fragments, i.e. strings that
 // start with a capital letter and ends with a '.'.  (The final sentence may be
 // in parentheses, so a ')' might appear after the '.'.)
-const gSentenceRegExp = /^[A-Z].*\.\)?$/;
+const gSentenceRegExp = /^[A-Z].*\.\)?$/m;
 
 function checkReport(aUnsafePath, aKind, aUnits, aAmount, aDescription)
 {
@@ -287,7 +287,7 @@ function checkReport(aUnsafePath, aKind, aUnits, aAmount, aDescription)
     assert(aUnsafePath.indexOf("/") === -1, "'other' path contains '/'");
     assert(aKind === KIND_OTHER, "bad other kind: " + aUnsafePath);
     assert(aDescription.match(gSentenceRegExp),
-           "non-sentence other description");
+           "non-sentence other description " + aDescription);
   }
 }
 
@@ -1699,7 +1699,7 @@ function getGhostWindowsByProcess(aMgr)
                         aDescription)
   {
     let unsafeSplit = aUnsafePath.split('/');
-    assert(unsafeSplit[0] == 'ghost-windows/',
+    assert(unsafeSplit[0] == 'ghost-windows',
            'Unexpected path in getGhostWindowsByProcess: ' + aUnsafePath);
 
     let unsafeURL = unsafeSplit[1];
