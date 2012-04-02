@@ -26,7 +26,9 @@ public class testBrowserProviderPerf extends ContentProviderTest {
     private final int NUMBER_OF_KNOWN_URLS = 200;
     private final int BATCH_SIZE = 500;
 
-    private final String KNOWN_PREFIX = "mymozillatest";
+    // Include spaces in prefix to test performance querying with
+    // multiple constraint words
+    private final String KNOWN_PREFIX = "my mozilla test ";
 
     private Method mFilterMethod;
     private Random mGenerator;
