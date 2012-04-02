@@ -42,6 +42,7 @@
 #include "nsIObserver.h"
 #include "nsDataHashtable.h"
 #include "nsWeakReference.h"
+#include "nsAutoPtr.h"
 #include "mozilla/TimeStamp.h"
 
 // This should be used for any nsINode sub-class that has fields of its own
@@ -139,6 +140,23 @@ public:
   static void Init();
 
 private:
+  /**
+   * nsGhostWindowMemoryReporter generates the "ghost-windows" memory report.
+   * If you're only interested in the list of ghost windows, running this
+   * report is faster than running nsWindowMemoryReporter.
+   */
+  class nsGhostWindowMemoryReporter: public nsIMemoryMultiReporter
+  {
+  public:
+    nsGhostWindowMemoryReporter(nsWindowMemoryReporter* aWindowReporter);
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIMEMORYMULTIREPORTER
+
+  private:
+    nsRefPtr<nsWindowMemoryReporter> mWindowReporter;
+  };
+
   // Protect ctor, use Init() instead.
   nsWindowMemoryReporter();
 

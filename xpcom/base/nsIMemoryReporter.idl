@@ -117,10 +117,8 @@ interface nsIMemoryReporter : nsISupports
    *   Reporters in this category must have kind NONHEAP, units BYTES, and
    *   a non-empty description.
    *
-   * - Paths starting with "compartments/" represent the names of JS
-   *   compartments.  Reporters in this category must paths of the form
-   *   "compartments/user/<name>" or "compartments/system/<name>", amount 1,
-   *   kind OTHER, units COUNT, and an empty description.
+   * - Reporters with kind SUMMARY may have any path which doesn't start with
+   *   "explicit/" or "smaps/".
    *
    * - All other paths represent cross-cutting values and may overlap with any
    *   other reporter.  Reporters in this category must have paths that do not
@@ -146,10 +144,22 @@ interface nsIMemoryReporter : nsISupports
    *  - OTHER: reporters which don't fit into either of these categories. Such
    *    reporters must have a path that does not start with "explicit/" or
    *    "smaps/" and may have any units.
+   *
+   *  - SUMMARY: reporters which report data that's available in a more
+   *    detailed form via other reporters.  These reporters are sometimes
+   *    useful for efficiency purposes -- for example, a KIND_SUMMARY reporter
+   *    might list all the JS compartments without the overhead of the full JS
+   *    memory reporter, which walks the JS heap.
+   *
+   *    Unlike other reporters, SUMMARY reporters may have empty descriptions.
+   *
+   *    SUMMARY reporters must not have a path starting with "explicit/" or
+   *    "smaps/".
    */
   const PRInt32 KIND_NONHEAP = 0;
   const PRInt32 KIND_HEAP    = 1;
   const PRInt32 KIND_OTHER   = 2;
+  const PRInt32 KIND_SUMMARY = 3;
 
   /*
    * KIND_MAPPED is a deprecated synonym for KIND_NONHEAP.  We keep it around
