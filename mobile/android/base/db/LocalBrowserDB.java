@@ -143,13 +143,19 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     private Cursor filterAllSites(ContentResolver cr, String[] projection, CharSequence constraint,
             int limit, CharSequence urlFilter) {
-        // The combined history/bookmarks selection queries for sites with a url or title
-        // containing the constraint string
-        String selection = "(" + Combined.URL + " LIKE ? OR " +
-                                 Combined.TITLE + " LIKE ?)";
+        String selection = "";
+        String[] selectionArgs = null;
 
-        final String historySelectionArg = "%" + constraint.toString() + "%";
-        String[] selectionArgs = new String[] { historySelectionArg, historySelectionArg };
+        // The combined history/bookmarks selection queries for sites with a url or title containing
+        // the constraint string(s), treating space-separated words as separate constraints
+        String[] constraintWords = constraint.toString().split(" ");
+        for (int i = 0; i < constraintWords.length; i++) {
+            selection = DBUtils.concatenateWhere(selection, "(" + Combined.URL + " LIKE ? OR " +
+                                                                  Combined.TITLE + " LIKE ?)");
+            String constraintWord =  "%" + constraintWords[i] + "%";
+            selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                new String[] { constraintWord, constraintWord });
+        }
 
         if (urlFilter != null) {
             selection = DBUtils.concatenateWhere(selection, "(" + Combined.URL + " NOT LIKE ?)");
