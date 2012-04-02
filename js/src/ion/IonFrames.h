@@ -259,6 +259,28 @@ class FrameSizeClass
     }
 };
 
+// Information needed to recover machine register state.
+class MachineState
+{
+    uintptr_t *regs_;
+    double *fpregs_;
+
+  public:
+    MachineState()
+      : regs_(NULL), fpregs_(NULL)
+    { }
+    MachineState(uintptr_t *regs, double *fpregs)
+      : regs_(regs), fpregs_(fpregs)
+    { }
+
+    double readFloatReg(FloatRegister reg) const {
+        return fpregs_[reg.code()];
+    }
+    uintptr_t readReg(Register reg) const {
+        return regs_[reg.code()];
+    }
+};
+
 class IonJSFrameLayout;
 class IonFrameIterator;
 
@@ -285,11 +307,15 @@ class FrameRecovery
 
     void unpackCalleeToken(CalleeToken token);
 
+    static int32 OffsetOfSlot(int32 slot);
+
   public:
     static FrameRecovery FromBailoutId(uint8 *fp, uint8 *sp, const MachineState &machine,
                                        BailoutId bailoutId);
     static FrameRecovery FromSnapshot(uint8 *fp, uint8 *sp, const MachineState &machine,
                                       SnapshotOffset offset);
+    static FrameRecovery FromIterator(const IonFrameIterator &it);
+    static FrameRecovery FromTop(JSContext *cx);
 
     // Override the ionScript gleaned from the JSScript.
     void setIonScript(IonScript *ionScript);
@@ -299,6 +325,12 @@ class FrameRecovery
     }
     const MachineState &machine() const {
         return machine_;
+    }
+    uintptr_t readSlot(int32 slot) const {
+        return *(uintptr_t *)((char *)fp_ + OffsetOfSlot(slot));
+    }
+    double readDoubleSlot(int32 slot) const {
+        return *(double *)((char *)fp_ + OffsetOfSlot(slot));
     }
     JSFunction *callee() const {
         return callee_;
@@ -353,29 +385,6 @@ GetTopIonJSScript(JSContext *cx);
 
 void
 GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes);
-
-// Given a slot index, returns the offset, in bytes, of that slot from an
-// IonJSFrameLayout. Slot distances are uniform across architectures, however,
-// the distance does depend on the size of the frame header.
-static inline int32
-OffsetOfFrameSlot(int32 slot)
-{
-    if (slot <= 0)
-        return sizeof(IonJSFrameLayout) + -slot;
-    return -(slot * STACK_SLOT_SIZE);
-}
-
-static inline uintptr_t
-ReadFrameSlot(IonJSFrameLayout *fp, int32 slot)
-{
-    return *(uintptr_t *)((char *)fp + OffsetOfFrameSlot(slot));
-}
-
-static inline uintptr_t
-ReadFrameDoubleSlot(IonJSFrameLayout *fp, int32 slot)
-{
-    return *(double *)((char *)fp + OffsetOfFrameSlot(slot));
-}
 
 } /* namespace ion */
 } /* namespace js */

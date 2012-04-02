@@ -93,7 +93,7 @@ class IonFrameIterator
     inline IonCommonFrameLayout *current() const;
     inline uint8 *returnAddress() const;
 
-    IonJSFrameLayout *jsFrame() const {
+    IonJSFrameLayout *jsFrame() {
         JS_ASSERT(type() == IonFrame_JS);
         return (IonJSFrameLayout *) fp();
     }
@@ -133,17 +133,6 @@ class IonFrameIterator
         return type_ != IonFrame_Entry;
     }
     IonFrameIterator &operator++();
-
-    // Returns the IonScript associated with this JS frame.
-    IonScript *ionScript() const;
-
-    // Returns the Safepoint associated with this JS frame. Incurs a lookup
-    // overhead.
-    const SafepointIndex *safepoint() const;
-
-    // Returns the OSI index associated with this JS frame. Incurs a lookup
-    // overhead.
-    const OsiIndex *osiIndex() const;
 };
 
 class InlineFrameIterator
@@ -219,24 +208,19 @@ class IonActivationIterator
 };
 
 class FrameRecovery;
-class IonJSFrameLayout;
 
 class SnapshotIterator : public SnapshotReader
 {
-    IonJSFrameLayout *fp_;
-    const MachineState &machine_;
-    IonScript *ionScript_;
-
   private:
+    const FrameRecovery &in_;
+
     uintptr_t fromLocation(const SnapshotReader::Location &loc);
     static Value FromTypedPayload(JSValueType type, uintptr_t payload);
 
     Value slotValue(const Slot &slot);
 
   public:
-    SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshotOffset,
-                     IonJSFrameLayout *fp, const MachineState &machine);
-    SnapshotIterator(const IonFrameIterator &iter, const MachineState &machine);
+    SnapshotIterator(const FrameRecovery &in);
 
     Value read() {
         return slotValue(readSlot());

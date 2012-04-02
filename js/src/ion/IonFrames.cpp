@@ -59,6 +59,7 @@ namespace ion {
 // frames.
 class InlineFrameReverseIterator
 {
+    FrameRecovery fr_;
     SnapshotIterator si_;
     JSFunction *callee_;
     JSScript *script_;
@@ -134,6 +135,14 @@ FrameRecovery::setIonScript(IonScript *ionScript)
     ionScript_ = ionScript;
 }
 
+int32
+FrameRecovery::OffsetOfSlot(int32 slot)
+{
+    if (slot <= 0)
+        return sizeof(IonJSFrameLayout) + -slot;
+    return -(slot * STACK_SLOT_SIZE);
+}
+
 void
 FrameRecovery::setBailoutId(BailoutId bailoutId)
 {
@@ -158,6 +167,41 @@ FrameRecovery::FromSnapshot(uint8 *fp, uint8 *sp, const MachineState &machine,
     return frame;
 }
 
+FrameRecovery
+FrameRecovery::FromIterator(const IonFrameIterator &it)
+{
+    JS_ASSERT(it.isScripted());
+    MachineState noRegs;
+    FrameRecovery frame(it.fp(), it.fp() - it.frameSize(), noRegs);
+
+    // If the frame has been invalidated, we have to override the given IonScript.
+    {
+        IonScript *ionScript;
+        if (it.checkInvalidation(&ionScript))
+            frame.setIonScript(ionScript);
+    }
+
+    // The frame's current displacement maps to a SafepointIndex, which has a
+    // new displacement that maps into the OSI indices.
+    IonScript *ionScript = frame.ionScript();
+    const SafepointIndex *si = ionScript->getSafepointIndex(it.returnAddressToFp());
+    SafepointReader reader(ionScript, si);
+    uint32 osiReturnDisplacement = reader.getOsiReturnPointOffset();
+    const OsiIndex *oi = ionScript->getOsiIndex(osiReturnDisplacement);
+
+    frame.setSnapshotOffset(oi->snapshotOffset());
+    return frame;
+}
+
+FrameRecovery
+FrameRecovery::FromTop(JSContext *cx)
+{
+    IonFrameIterator it(cx->runtime->ionTop);
+    ++it;
+
+    return FrameRecovery::FromIterator(it);
+}
+
 IonScript *
 FrameRecovery::ionScript() const
 {
@@ -165,9 +209,10 @@ FrameRecovery::ionScript() const
 }
 
 InlineFrameReverseIterator::InlineFrameReverseIterator(const IonFrameIterator &bottom)
-  : si_(bottom, MachineState()),
+  : fr_(FrameRecovery::FromIterator(bottom)),
+    si_(fr_),
     callee_(bottom.isFunctionFrame() ? bottom.callee() : NULL),
-    script_(bottom.script()),
+    script_(fr_.script()),
     pc_(script_->code + si_.pcOffset())
 {
 }
@@ -514,122 +559,3 @@ OsiIndex::returnPointDisplacement() const
     // would be wrong.
     return callPointDisplacement_ + Assembler::patchWrite_NearCallSize();
 }
-
-SnapshotIterator::SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshotOffset,
-                                   IonJSFrameLayout *fp, const MachineState &machine)
-  : SnapshotReader(ionScript->snapshots() + snapshotOffset,
-                   ionScript->snapshots() + ionScript->snapshotsSize()),
-    fp_(fp),
-    machine_(machine),
-    ionScript_(ionScript)
-{
-    JS_ASSERT(snapshotOffset < ionScript->snapshotsSize());
-}
-
-SnapshotIterator::SnapshotIterator(const IonFrameIterator &iter, const MachineState &machine)
-  : SnapshotReader(iter.ionScript()->snapshots() + iter.osiIndex()->snapshotOffset(),
-                   iter.ionScript()->snapshots() + iter.ionScript()->snapshotsSize()),
-    fp_(iter.jsFrame()),
-    machine_(machine),
-    ionScript_(iter.ionScript())
-{
-}
-
-uintptr_t
-SnapshotIterator::fromLocation(const SnapshotReader::Location &loc)
-{
-    if (loc.isStackSlot())
-        return ReadFrameSlot(fp_, loc.stackSlot());
-    return machine_.readReg(loc.reg());
-}
-
-Value
-SnapshotIterator::FromTypedPayload(JSValueType type, uintptr_t payload)
-{
-    switch (type) {
-      case JSVAL_TYPE_INT32:
-        return Int32Value(payload);
-      case JSVAL_TYPE_BOOLEAN:
-        return BooleanValue(!!payload);
-      case JSVAL_TYPE_STRING:
-        return StringValue(reinterpret_cast<JSString *>(payload));
-      case JSVAL_TYPE_OBJECT:
-        return ObjectValue(*reinterpret_cast<JSObject *>(payload));
-      default:
-        JS_NOT_REACHED("unexpected type - needs payload");
-        return UndefinedValue();
-    }
-}
-
-Value
-SnapshotIterator::slotValue(const Slot &slot)
-{
-    switch (slot.mode()) {
-      case SnapshotReader::DOUBLE_REG:
-        return DoubleValue(machine_.readFloatReg(slot.floatReg()));
-
-      case SnapshotReader::TYPED_REG:
-        return FromTypedPayload(slot.knownType(), machine_.readReg(slot.reg()));
-
-      case SnapshotReader::TYPED_STACK:
-      {
-        JSValueType type = slot.knownType();
-        if (type == JSVAL_TYPE_DOUBLE)
-            return DoubleValue(ReadFrameDoubleSlot(fp_, slot.stackSlot()));
-        return FromTypedPayload(type, ReadFrameSlot(fp_, slot.stackSlot()));
-      }
-
-      case SnapshotReader::UNTYPED:
-      {
-          jsval_layout layout;
-#if defined(JS_NUNBOX32)
-          layout.s.tag = (JSValueTag)fromLocation(slot.type());
-          layout.s.payload.word = fromLocation(slot.payload());
-#elif defined(JS_PUNBOX64)
-          layout.asBits = fromLocation(slot.value());
-#endif
-          return IMPL_TO_JSVAL(layout);
-      }
-
-      case SnapshotReader::JS_UNDEFINED:
-        return UndefinedValue();
-
-      case SnapshotReader::JS_NULL:
-        return NullValue();
-
-      case SnapshotReader::JS_INT32:
-        return Int32Value(slot.int32Value());
-
-      case SnapshotReader::CONSTANT:
-        return ionScript_->getConstant(slot.constantIndex());
-
-      default:
-        JS_NOT_REACHED("huh?");
-        return UndefinedValue();
-    }
-}
-
-IonScript *
-IonFrameIterator::ionScript() const
-{
-    JS_ASSERT(type() == IonFrame_JS);
-
-    IonScript *ionScript;
-    if (checkInvalidation(&ionScript))
-        return ionScript;
-    return script()->ionScript();
-}
-
-const SafepointIndex *
-IonFrameIterator::safepoint() const
-{
-    return ionScript()->getSafepointIndex(returnAddressToFp());
-}
-
-const OsiIndex *
-IonFrameIterator::osiIndex() const
-{
-    SafepointReader reader(ionScript(), safepoint());
-    return ionScript()->getOsiIndex(reader.getOsiReturnPointOffset());
-}
-
