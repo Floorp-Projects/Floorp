@@ -43,6 +43,7 @@ html|applet:not([height]), html|applet[height=""] {
 
 :-moz-type-unsupported .msgUnsupported,
 :-moz-handler-clicktoplay .msgClickToPlay,
+:-moz-handler-clicktoplay .msgTapToPlay,
 :-moz-handler-disabled .msgDisabled,
 :-moz-handler-disabled .msgManagePlugins,
 :-moz-handler-blocked .msgBlocked,
