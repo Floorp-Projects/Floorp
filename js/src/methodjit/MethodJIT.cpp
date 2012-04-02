@@ -1362,7 +1362,6 @@ JITScript::destroyChunk(JSContext *cx, unsigned chunkIndex, bool resetUses)
 
         invokeEntry = NULL;
         fastEntry = NULL;
-        arityCheckEntry = NULL;
         argsCheckEntry = NULL;
 
         if (script->jitNormal == this)

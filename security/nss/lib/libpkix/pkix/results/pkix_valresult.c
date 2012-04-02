@@ -89,6 +89,8 @@ pkix_ValidateResult_Equals(
         PKIX_Boolean cmpResult;
         PKIX_ValidateResult *firstValResult = NULL;
         PKIX_ValidateResult *secondValResult = NULL;
+        PKIX_TrustAnchor *firstAnchor = NULL;
+        PKIX_TrustAnchor *secondAnchor = NULL;
         PKIX_PolicyNode *firstTree = NULL;
         PKIX_PolicyNode *secondTree = NULL;
 
@@ -117,12 +119,19 @@ pkix_ValidateResult_Equals(
 
         if (!cmpResult) goto cleanup;
 
-        PKIX_CHECK(PKIX_PL_Object_Equals
-                ((PKIX_PL_Object *)firstValResult->anchor,
-                (PKIX_PL_Object *)secondValResult->anchor,
-                &cmpResult,
-                plContext),
-                PKIX_OBJECTEQUALSFAILED);
+        firstAnchor = firstValResult->anchor;
+        secondAnchor = secondValResult->anchor;
+
+        if ((firstAnchor != NULL) && (secondAnchor != NULL)) {
+                PKIX_CHECK(PKIX_PL_Object_Equals
+                        ((PKIX_PL_Object *)firstAnchor,
+                        (PKIX_PL_Object *)secondAnchor,
+                        &cmpResult,
+                        plContext),
+                        PKIX_OBJECTEQUALSFAILED);
+        } else {
+                cmpResult = (firstAnchor == secondAnchor);
+        }
 
         if (!cmpResult) goto cleanup;
 
@@ -137,16 +146,8 @@ pkix_ValidateResult_Equals(
                         plContext),
                         PKIX_OBJECTEQUALSFAILED);
         } else {
-                if (PKIX_EXACTLY_ONE_NULL(firstTree, secondTree)) {
-                        cmpResult = PKIX_FALSE;
-                }
+                cmpResult = (firstTree == secondTree);
         }
-
-        /*
-         * The remaining case is that both are null,
-         * which we consider equality.
-         *      cmpResult = PKIX_TRUE;
-         */
 
         *pResult = cmpResult;
 
@@ -170,7 +171,6 @@ pkix_ValidateResult_Hashcode(
         PKIX_UInt32 pubKeyHash = 0;
         PKIX_UInt32 anchorHash = 0;
         PKIX_UInt32 policyTreeHash = 0;
-        PKIX_PolicyNode *policyTree = NULL;
 
         PKIX_ENTER(VALIDATERESULT, "pkix_ValidateResult_Hashcode");
         PKIX_NULLCHECK_TWO(object, pHashcode);
@@ -184,12 +184,15 @@ pkix_ValidateResult_Hashcode(
                 ((PKIX_PL_Object *)valResult->pubKey, &pubKeyHash, plContext),
                 PKIX_OBJECTHASHCODEFAILED);
 
-        PKIX_CHECK(PKIX_PL_Object_Hashcode
-                ((PKIX_PL_Object *)valResult->anchor, &anchorHash, plContext),
-                PKIX_OBJECTHASHCODEFAILED);
+        if (valResult->anchor) {
+                PKIX_CHECK(PKIX_PL_Object_Hashcode
+                        ((PKIX_PL_Object *)valResult->anchor,
+                        &anchorHash,
+                        plContext),
+                        PKIX_OBJECTHASHCODEFAILED);
+        }
 
-        policyTree = valResult->policyTree;
-        if (policyTree) {
+        if (valResult->policyTree) {
                 PKIX_CHECK(PKIX_PL_Object_Hashcode
                         ((PKIX_PL_Object *)valResult->policyTree,
                         &policyTreeHash,
@@ -241,17 +244,27 @@ pkix_ValidateResult_ToString(
         PKIX_CHECK(pkix_CheckType(object, PKIX_VALIDATERESULT_TYPE, plContext),
                 PKIX_OBJECTNOTVALIDATERESULT);
 
-        valResult = (PKIX_ValidateResult*)object;
-
-        anchor = valResult->anchor;
-
         PKIX_CHECK(PKIX_PL_String_Create
                 (PKIX_ESCASCII, asciiFormat, 0, &formatString, plContext),
                 PKIX_STRINGCREATEFAILED);
 
-        PKIX_CHECK(PKIX_PL_Object_ToString
-                ((PKIX_PL_Object *)anchor, &anchorString, plContext),
-                PKIX_OBJECTTOSTRINGFAILED);
+        valResult = (PKIX_ValidateResult*)object;
+
+        anchor = valResult->anchor;
+
+        if (anchor) {
+                PKIX_CHECK(PKIX_PL_Object_ToString
+                        ((PKIX_PL_Object *)anchor, &anchorString, plContext),
+                        PKIX_OBJECTTOSTRINGFAILED);
+        } else {
+                PKIX_CHECK(PKIX_PL_String_Create
+                        (PKIX_ESCASCII,
+                        asciiNullString,
+                        0,
+                        &anchorString,
+                        plContext),
+                        PKIX_STRINGCREATEFAILED);
+        }
 
         pubKey = valResult->pubKey;
 
@@ -259,9 +272,7 @@ pkix_ValidateResult_ToString(
                 ((PKIX_PL_Object *)pubKey, &pubKeyString, plContext),
                 PKIX_OBJECTTOSTRINGFAILED);
 
-        PKIX_CHECK(PKIX_ValidateResult_GetPolicyTree
-                (valResult, &policyTree, plContext),
-                PKIX_VALIDATERESULTGETPOLICYTREEFAILED);
+        policyTree = valResult->policyTree;
 
         if (policyTree) {
                 PKIX_CHECK(PKIX_PL_Object_ToString
@@ -293,7 +304,6 @@ cleanup:
         PKIX_DECREF(formatString);
         PKIX_DECREF(anchorString);
         PKIX_DECREF(pubKeyString);
-        PKIX_DECREF(policyTree);
         PKIX_DECREF(treeString);
 
         PKIX_RETURN(VALIDATERESULT);
@@ -347,7 +357,7 @@ pkix_ValidateResult_RegisterSelf(void *plContext)
  *  "pubKey"
  *      PublicKey of the desired ValidateResult. Must be non-NULL.
  *  "anchor"
- *      TrustAnchor of the desired Validateresult. Must be non-NULL.
+ *      TrustAnchor of the desired Validateresult. May be NULL.
  *  "policyTree"
  *      PolicyNode of the desired ValidateResult; may be NULL
  *  "pResult"
@@ -371,7 +381,7 @@ pkix_ValidateResult_Create(
         PKIX_ValidateResult *result = NULL;
 
         PKIX_ENTER(VALIDATERESULT, "pkix_ValidateResult_Create");
-        PKIX_NULLCHECK_THREE(pubKey, anchor, pResult);
+        PKIX_NULLCHECK_TWO(pubKey, pResult);
 
         PKIX_CHECK(PKIX_PL_Object_Alloc
                     (PKIX_VALIDATERESULT_TYPE,

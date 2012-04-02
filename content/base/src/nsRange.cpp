@@ -48,6 +48,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
+#include "nsIDOMDocumentType.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMText.h"
@@ -1525,6 +1526,26 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
   PRInt32              startOffset = mStartOffset;
   nsCOMPtr<nsIDOMNode> endContainer = do_QueryInterface(mEndParent);
   PRInt32              endOffset = mEndOffset;
+
+  if (retval) {
+    // For extractContents(), abort early if there's a doctype (bug 719533).
+    // This can happen only if the common ancestor is a document, in which case
+    // we just need to find its doctype child and check if that's in the range.
+    nsCOMPtr<nsIDOMDocument> commonAncestorDocument(do_QueryInterface(commonAncestor));
+    if (commonAncestorDocument) {
+      nsCOMPtr<nsIDOMDocumentType> doctype;
+      rv = commonAncestorDocument->GetDoctype(getter_AddRefs(doctype));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (doctype &&
+          nsContentUtils::ComparePoints(startContainer, startOffset,
+                                        doctype.get(), 0) < 0 &&
+          nsContentUtils::ComparePoints(doctype.get(), 0,
+                                        endContainer, endOffset) < 0) {
+        return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+      }
+    }
+  }
 
   // Create and initialize a subtree iterator that will give
   // us all the subtrees within the range.

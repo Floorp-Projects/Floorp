@@ -759,10 +759,6 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
     nsCOMPtr<nsIContent> listener = do_QueryInterface(aListener);
     bool notify = mDocumentLoaded || mHandlingDelayedBroadcasters;
 
-    // We may be copying event handlers etc, so we must also copy
-    // the script-type to the listener.
-    listener->SetScriptTypeID(broadcaster->GetScriptTypeID());
-
     if (aAttr.EqualsLiteral("*")) {
         PRUint32 count = broadcaster->GetAttrCount();
         nsTArray<nsAttrNameInfo> attributes(count);
@@ -3635,8 +3631,6 @@ nsXULDocument::ExecuteScript(nsIScriptContext * aContext, JSScript* aScriptObjec
 
     NS_ENSURE_TRUE(mScriptGlobalObject, NS_ERROR_NOT_INITIALIZED);
 
-    NS_ABORT_IF_FALSE(aContext->GetScriptTypeID() == nsIProgrammingLanguage::JAVASCRIPT,
-                      "Should have a JavaScript nsIScriptContext.");
     // Execute the precompiled script with the given version
     JSObject* global = mScriptGlobalObject->GetGlobalJSObject();
     return aContext->ExecuteScript(aScriptObject, global, nsnull, nsnull);
@@ -3946,14 +3940,7 @@ nsXULDocument::OverlayForwardReference::Resolve()
         if (!target)
             return eResolve_Later;
 
-        // While merging, set the default script language of the element to be
-        // the language from the overlay - attributes will then be correctly
-        // hooked up with the appropriate language (while child nodes ignore
-        // the default language - they have it in their proto.
-        PRUint32 oldDefLang = target->GetScriptTypeID();
-        target->SetScriptTypeID(mOverlay->GetScriptTypeID());
         rv = Merge(target, mOverlay, notify);
-        target->SetScriptTypeID(oldDefLang);
         if (NS_FAILED(rv)) return eResolve_Error;
     }
 

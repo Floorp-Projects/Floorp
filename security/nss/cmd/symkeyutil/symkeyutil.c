@@ -750,7 +750,7 @@ main(int argc, char **argv)
 
     /*  -P certdb name prefix */
     if (symKeyUtil.options[opt_dbPrefix].activated)
-	certPrefix = strdup(symKeyUtil.options[opt_dbPrefix].arg);
+	certPrefix = symKeyUtil.options[opt_dbPrefix].arg;
 
     /*  Check number of commands entered.  */
     commandsEntered = 0;

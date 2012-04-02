@@ -74,9 +74,6 @@ public:
 
   virtual nsIScriptObjectPrincipal* GetObjectPrincipal();
 
-  virtual PRUint32 GetScriptTypeID()
-    { return nsIProgrammingLanguage::JAVASCRIPT; }
-
   virtual void SetGlobalObject(nsIScriptGlobalObject* aGlobalObject)
   {
     mGlobalObjectRef = aGlobalObject;
@@ -328,10 +325,6 @@ public:
 public:
   // nsISupports
   NS_DECL_ISUPPORTS
-
-  virtual PRUint32 GetScriptTypeID() {
-    return nsIProgrammingLanguage::JAVASCRIPT;
-  }
 
   virtual already_AddRefed<nsIScriptContext> CreateContext();
 

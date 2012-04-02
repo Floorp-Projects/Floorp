@@ -146,7 +146,7 @@ public:
   /**
    * Invalidates children created for previous tree view.
    */
-  void TreeViewChanged();
+  void TreeViewChanged(nsITreeView* aView);
 
 protected:
   /**

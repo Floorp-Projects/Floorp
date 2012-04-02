@@ -1078,7 +1078,7 @@ class GetPropCompiler : public PICStubCompiler
         }
 
         RegisterID t0 = tempRegs.takeAnyReg().reg();
-        masm.bumpStubCounter(f.script(), f.pc(), t0);
+        masm.bumpStubCount(f.script(), f.pc(), t0);
 
         /*
          * Initialize vp, which is either a slot in the object (the holder,
