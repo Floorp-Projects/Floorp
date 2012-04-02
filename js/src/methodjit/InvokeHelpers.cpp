@@ -367,7 +367,9 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
         regs.fp()->resetInlinePrev(f.fp(), f.regs.pc);
     }
 
-    bool ok = !!Interpret(cx, cx->fp());
+    JS_CHECK_RECURSION(cx, return false);
+
+    bool ok = Interpret(cx, cx->fp());
     f.cx->stack.popInlineFrame(regs);
 
     if (ok)
