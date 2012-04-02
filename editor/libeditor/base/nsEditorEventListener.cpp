@@ -37,6 +37,8 @@
 #include "nsIDOMWindow.h"
 #include "nsContentUtils.h"
 #include "nsIBidiKeyboard.h"
+#include "mozilla/dom/Element.h"
+#include "nsIFormControl.h"
 
 using namespace mozilla;
 
@@ -646,9 +648,11 @@ nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
   }
   else
   {
-    // This is needed when dropping on an input, to prevent the editor for
-    // the editable parent from receiving the event.
-    aDragEvent->StopPropagation();
+    if (!IsFileControlTextBox()) {
+      // This is needed when dropping on an input, to prevent the editor for
+      // the editable parent from receiving the event.
+      aDragEvent->StopPropagation();
+    }
 
     if (mCaret)
     {
@@ -704,8 +708,8 @@ nsEditorEventListener::Drop(nsIDOMDragEvent* aMouseEvent)
 
   if (!dropParent->IsEditable() || !CanDrop(aMouseEvent)) {
     // was it because we're read-only?
-    if (mEditor->IsReadonly() || mEditor->IsDisabled())
-    {
+    if ((mEditor->IsReadonly() || mEditor->IsDisabled()) &&
+        !IsFileControlTextBox()) {
       // it was decided to "eat" the event as this is the "least surprise"
       // since someone else handling it might be unintentional and the 
       // user could probably re-drag to be not over the disabled/readonly 
@@ -954,5 +958,20 @@ nsEditorEventListener::SpellCheckIfNeeded() {
     currentFlags ^= nsIPlaintextEditor::eEditorSkipSpellCheck;
     mEditor->SetFlags(currentFlags);
   }
+}
+
+bool
+nsEditorEventListener::IsFileControlTextBox()
+{
+  dom::Element* root = mEditor->GetRoot();
+  if (root && root->IsInNativeAnonymousSubtree()) {
+    nsIContent* parent = root->FindFirstNonNativeAnonymous();
+    if (parent && parent->IsHTML(nsGkAtoms::input)) {
+      nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(parent);
+      MOZ_ASSERT(formControl);
+      return formControl->GetType() == NS_FORM_INPUT_FILE;
+    }
+  }
+  return false;
 }
 
