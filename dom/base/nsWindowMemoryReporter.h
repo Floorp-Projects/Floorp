@@ -141,17 +141,34 @@ public:
 
 private:
   /**
-   * nsGhostWindowMemoryReporter generates the "ghost-windows" memory report.
-   * If you're only interested in the list of ghost windows, running this
-   * report is faster than running nsWindowMemoryReporter.
+   * GhostURLsReporter generates the "ghost-windows" multi-report, which
+   * includes a list of all ghost windows' URLs.  If you're only interested in
+   * this list, running this report is faster than running
+   * nsWindowMemoryReporter.
    */
-  class nsGhostWindowMemoryReporter: public nsIMemoryMultiReporter
+  class GhostURLsReporter: public nsIMemoryMultiReporter
   {
   public:
-    nsGhostWindowMemoryReporter(nsWindowMemoryReporter* aWindowReporter);
+    GhostURLsReporter(nsWindowMemoryReporter* aWindowReporter);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIMEMORYMULTIREPORTER
+
+  private:
+    nsRefPtr<nsWindowMemoryReporter> mWindowReporter;
+  };
+
+  /**
+   * nsGhostWindowReporter generates the "ghost-windows" single-report, which
+   * counts the number of ghost windows present.
+   */
+  class NumGhostsReporter: public nsIMemoryReporter
+  {
+  public:
+    NumGhostsReporter(nsWindowMemoryReporter* aWindowReporter);
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIMEMORYREPORTER
 
   private:
     nsRefPtr<nsWindowMemoryReporter> mWindowReporter;
