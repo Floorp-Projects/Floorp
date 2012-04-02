@@ -61,6 +61,11 @@
 (function f() { (function f(x) { eval('assertEq(f.length, 1)') })() })();
 (function f() { eval("(function f(x) { eval('assertEq(f.length, 1)') })()") })();
 
+(function f() { arguments = 3; function arguments() {}; assertEq(arguments, 3) })();
+(function f() { function arguments() {}; arguments = 3; assertEq(arguments, 3) })();
+(function f() { var arguments = 3; function arguments() {}; assertEq(arguments, 3) })();
+(function f() { function arguments() {}; var arguments = 3; assertEq(arguments, 3) })();
+
 function f1() { assertEq(typeof f1, "function") }; f1();
 with({}) { (function() { assertEq(typeof f1, "function") })() }
 if (Math)

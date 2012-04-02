@@ -145,7 +145,7 @@ class ArgumentsObject : public JSObject
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
 
     /* Create an arguments object for a frame that is expecting them. */
-    static bool create(JSContext *cx, StackFrame *fp);
+    static ArgumentsObject *create(JSContext *cx, StackFrame *fp);
 
     /*
      * Purposefully disconnect the returned arguments object from the frame

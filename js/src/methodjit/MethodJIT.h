@@ -116,14 +116,9 @@ struct VMFrame
             void *ptr2;
         } x;
         struct {
-            uint32_t lazyArgsObj;
             uint32_t dynamicArgc;
         } call;
     } u;
-
-    static size_t offsetOfLazyArgsObj() {
-        return offsetof(VMFrame, u.call.lazyArgsObj);
-    }
 
     static size_t offsetOfDynamicArgc() {
         return offsetof(VMFrame, u.call.dynamicArgc);
@@ -978,6 +973,17 @@ inline void * bsearch_nmap(NativeMapEntry *nmap, size_t nPairs, size_t bcOff)
         }
         return nmap[mid-1].ncode;
     }
+}
+
+static inline bool
+IsLowerableFunCallOrApply(jsbytecode *pc)
+{
+#ifdef JS_MONOIC
+    return (*pc == JSOP_FUNCALL && GET_ARGC(pc) >= 1) ||
+           (*pc == JSOP_FUNAPPLY && GET_ARGC(pc) == 2);
+#else
+    return false;
+#endif
 }
 
 } /* namespace mjit */

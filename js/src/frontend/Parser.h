@@ -294,9 +294,6 @@ Parser::reportErrorNumber(ParseNode *pn, unsigned flags, unsigned errorNumber, .
 }
 
 bool
-CheckStrictParameters(JSContext *cx, TreeContext *tc);
-
-bool
 DefineArg(ParseNode *pn, JSAtom *atom, unsigned i, TreeContext *tc);
 
 } /* namespace js */

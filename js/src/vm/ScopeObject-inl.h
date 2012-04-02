@@ -108,20 +108,6 @@ CallObject::getCalleeFunction() const
 }
 
 inline const Value &
-CallObject::arguments() const
-{
-    JS_ASSERT(!isForEval());
-    return getReservedSlot(ARGUMENTS_SLOT);
-}
-
-inline void
-CallObject::setArguments(const Value &v)
-{
-    JS_ASSERT(!isForEval());
-    setFixedSlot(ARGUMENTS_SLOT, v);
-}
-
-inline const Value &
 CallObject::arg(unsigned i) const
 {
     JS_ASSERT(i < getCalleeFunction()->nargs);
@@ -146,8 +132,8 @@ inline const Value &
 CallObject::var(unsigned i) const
 {
     JSFunction *fun = getCalleeFunction();
-    JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
-    JS_ASSERT(i < fun->script()->bindings.countVars());
+    JS_ASSERT(fun->nargs == fun->script()->bindings.numArgs());
+    JS_ASSERT(i < fun->script()->bindings.numVars());
     return getSlot(RESERVED_SLOTS + fun->nargs + i);
 }
 
@@ -155,8 +141,8 @@ inline void
 CallObject::setVar(unsigned i, const Value &v)
 {
     JSFunction *fun = getCalleeFunction();
-    JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
-    JS_ASSERT(i < fun->script()->bindings.countVars());
+    JS_ASSERT(fun->nargs == fun->script()->bindings.numArgs());
+    JS_ASSERT(i < fun->script()->bindings.numVars());
     setSlot(RESERVED_SLOTS + fun->nargs + i, v);
 }
 
@@ -164,8 +150,8 @@ inline void
 CallObject::initVarUnchecked(unsigned i, const Value &v)
 {
     JSFunction *fun = getCalleeFunction();
-    JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
-    JS_ASSERT(i < fun->script()->bindings.countVars());
+    JS_ASSERT(fun->nargs == fun->script()->bindings.numArgs());
+    JS_ASSERT(i < fun->script()->bindings.numVars());
     initSlotUnchecked(RESERVED_SLOTS + fun->nargs + i, v);
 }
 
@@ -190,7 +176,7 @@ CallObject::varArray()
 {
     JSFunction *fun = getCalleeFunction();
     JS_ASSERT(hasContiguousSlots(RESERVED_SLOTS + fun->nargs,
-                                 fun->script()->bindings.countVars()));
+                                 fun->script()->bindings.numVars()));
     return HeapSlotArray(getSlotAddress(RESERVED_SLOTS + fun->nargs));
 }
 

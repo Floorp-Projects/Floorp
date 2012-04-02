@@ -828,6 +828,8 @@ class SlotValue
     SlotValue(uint32_t slot, const SSAValue &value) : slot(slot), value(value) {}
 };
 
+struct NeedsArgsObjState;
+
 /* Analysis information about a script. */
 class ScriptAnalysis
 {
@@ -1067,7 +1069,7 @@ class ScriptAnalysis
     bool trackUseChain(const SSAValue &v) {
         JS_ASSERT_IF(v.kind() == SSAValue::VAR, trackSlot(v.varSlot()));
         return v.kind() != SSAValue::EMPTY &&
-            (v.kind() != SSAValue::VAR || !v.varInitial());
+               (v.kind() != SSAValue::VAR || !v.varInitial());
     }
 
     /*
@@ -1225,8 +1227,9 @@ class ScriptAnalysis
 
     /* Type inference helpers */
     bool analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferenceState &state);
-    bool followEscapingArguments(JSContext *cx, const SSAValue &v, Vector<SSAValue> *seen);
-    bool followEscapingArguments(JSContext *cx, SSAUseChain *use, Vector<SSAValue> *seen);
+    bool needsArgsObj(NeedsArgsObjState &state, const SSAValue &v);
+    bool needsArgsObj(NeedsArgsObjState &state, SSAUseChain *use);
+    bool needsArgsObj(JSContext *cx);
 
   public:
 #ifdef DEBUG
@@ -1352,14 +1355,6 @@ class CrossScriptSSA
 #ifdef DEBUG
 void PrintBytecode(JSContext *cx, JSScript *script, jsbytecode *pc);
 #endif
-
-static inline bool
-SpeculateApplyOptimization(jsbytecode *pc)
-{
-    JS_ASSERT(*pc == JSOP_ARGUMENTS);
-    jsbytecode *nextpc = pc + JSOP_ARGUMENTS_LENGTH;
-    return *nextpc == JSOP_FUNAPPLY && GET_ARGC(nextpc) == 2;
-}
 
 } /* namespace analyze */
 } /* namespace js */

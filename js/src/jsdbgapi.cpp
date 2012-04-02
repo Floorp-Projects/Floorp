@@ -427,7 +427,7 @@ JS_GetFunctionArgumentCount(JSContext *cx, JSFunction *fun)
 JS_PUBLIC_API(JSBool)
 JS_FunctionHasLocalNames(JSContext *cx, JSFunction *fun)
 {
-    return fun->script()->bindings.hasLocalNames();
+    return fun->script()->bindings.count() > 0;
 }
 
 extern JS_PUBLIC_API(uintptr_t *)
