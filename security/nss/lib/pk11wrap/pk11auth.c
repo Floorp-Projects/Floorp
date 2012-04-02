@@ -165,7 +165,7 @@ PK11_CheckUserPassword(PK11SlotInfo *slot, const char *pw)
     }
 
     /*
-     * If the token does't need a login, don't try to relogin beause the
+     * If the token doesn't need a login, don't try to relogin because the
      * effect is undefined. It's not clear what it means to check a non-empty
      * password with such a token, so treat that as an error.
      */

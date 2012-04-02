@@ -37,7 +37,7 @@
 /*
  * Stuff specific to S/MIME policy and interoperability.
  *
- * $Id: smimeutil.c,v 1.22 2011/08/21 01:14:18 wtc%google.com Exp $
+ * $Id: smimeutil.c,v 1.23 2012/03/01 18:33:11 kaie%kuix.de Exp $
  */
 
 #include "secmime.h"
@@ -152,7 +152,8 @@ static smime_cipher_map_entry smime_cipher_map[] = {
     { SMIME_RC2_CBC_64,		SEC_OID_RC2_CBC,	&param_int64,	PR_TRUE, PR_TRUE },
     { SMIME_RC2_CBC_128,	SEC_OID_RC2_CBC,	&param_int128,	PR_TRUE, PR_TRUE },
     { SMIME_DES_EDE3_168,	SEC_OID_DES_EDE3_CBC,	NULL,		PR_TRUE, PR_TRUE },
-    { SMIME_AES_CBC_128,	SEC_OID_AES_128_CBC,	NULL,		PR_TRUE, PR_TRUE }
+    { SMIME_AES_CBC_128,	SEC_OID_AES_128_CBC,	NULL,		PR_TRUE, PR_TRUE },
+    { SMIME_AES_CBC_256,	SEC_OID_AES_256_CBC,	NULL,		PR_TRUE, PR_TRUE }
 };
 static const int smime_cipher_map_count = sizeof(smime_cipher_map) / sizeof(smime_cipher_map_entry);
 
@@ -271,6 +272,9 @@ nss_smime_get_cipher_for_alg_and_key(SECAlgorithmID *algid, PK11SymKey *key, uns
 	break;
     case SEC_OID_AES_128_CBC:
 	c = SMIME_AES_CBC_128;
+	break;
+    case SEC_OID_AES_256_CBC:
+	c = SMIME_AES_CBC_256;
 	break;
     default:
 	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
@@ -525,6 +529,9 @@ smime_keysize_by_cipher (unsigned long which)
       case SMIME_RC2_CBC_128:
       case SMIME_AES_CBC_128:
 	keysize = 128;
+	break;
+      case SMIME_AES_CBC_256:
+	keysize = 256;
 	break;
       case SMIME_DES_CBC_56:
       case SMIME_DES_EDE3_168:

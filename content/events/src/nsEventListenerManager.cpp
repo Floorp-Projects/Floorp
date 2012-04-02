@@ -1047,11 +1047,6 @@ nsEventListenerManager::GetJSEventListener(nsIAtom *aEventName, jsval *vp)
   }
 
   nsIJSEventListener *listener = ls->GetJSListener();
-  if (listener->GetEventContext()->GetScriptTypeID() !=
-        nsIProgrammingLanguage::JAVASCRIPT) {
-    // Not JS, so no point doing anything with it.
-    return;
-  }
     
   if (ls->mHandlerIsString) {
     CompileEventHandlerInternal(ls, true, nsnull);

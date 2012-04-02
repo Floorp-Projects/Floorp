@@ -59,7 +59,7 @@ interface nsIAccessibleRelation;
  * Mozilla creates the implementations of nsIAccessible on demand.
  * See http://www.mozilla.org/projects/ui/accessibility for more information.
  */
-[scriptable, uuid(e7c44e0d-736e-4ead-afee-b51f4b574020)]
+[scriptable, uuid(46d422d1-c92f-4536-bdef-f77bc8350ec7)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -102,13 +102,6 @@ interface nsIAccessible : nsISupports
    * or -1 if this accessible does not have a parent.
    */
   readonly attribute long indexInParent;
-
-  /**
-   * The innerHTML for the HTML element associated with this accessible if applicable.
-   * This is a text string of all the markup inside the DOM
-   * node, not including the start and end tag for the node.
-   */
-  readonly attribute DOMString innerHTML;
 
   /**
    * The DOM node this nsIAccessible is associated with.

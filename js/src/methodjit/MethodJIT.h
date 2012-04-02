@@ -806,7 +806,6 @@ struct JITScript
 
     void            *invokeEntry;       /* invoke address */
     void            *fastEntry;         /* cached entry, fastest */
-    void            *arityCheckEntry;   /* arity check address */
     void            *argsCheckEntry;    /* arguments check address */
 
     /* List of inline caches jumping to the fastEntry. */
