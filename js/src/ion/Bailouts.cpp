@@ -55,131 +55,8 @@
 using namespace js;
 using namespace js::ion;
 
-class IonBailoutIterator
-{
-    IonScript *ionScript_;
-    FrameRecovery &in_;
-    SnapshotReader reader_;
-
-    static Value FromTypedPayload(JSValueType type, uintptr_t payload)
-    {
-        switch (type) {
-          case JSVAL_TYPE_INT32:
-            return Int32Value(payload);
-          case JSVAL_TYPE_BOOLEAN:
-            return BooleanValue(!!payload);
-          case JSVAL_TYPE_STRING:
-            return StringValue(reinterpret_cast<JSString *>(payload));
-          case JSVAL_TYPE_OBJECT:
-            return ObjectValue(*reinterpret_cast<JSObject *>(payload));
-          default:
-            JS_NOT_REACHED("unexpected type - needs payload");
-            return UndefinedValue();
-        }
-    }
-
-    uintptr_t fromLocation(const SnapshotReader::Location &loc) {
-        if (loc.isStackSlot())
-            return in_.readSlot(loc.stackSlot());
-        return in_.machine().readReg(loc.reg());
-    }
-
-  public:
-    IonBailoutIterator(FrameRecovery &in, const uint8 *start, const uint8 *end)
-      : in_(in),
-        reader_(start, end)
-    { }
-
-    Value readBogus() {
-        reader_.readSlot();
-        return UndefinedValue();
-    }
-
-    Value read() {
-        SnapshotReader::Slot slot = reader_.readSlot();
-        switch (slot.mode()) {
-          case SnapshotReader::DOUBLE_REG:
-            return DoubleValue(in_.machine().readFloatReg(slot.floatReg()));
-
-          case SnapshotReader::TYPED_REG: {
-            uintptr_t reg = in_.machine().readReg(slot.reg());
-            JSValueType type = slot.knownType();
-#ifdef DEBUG
-            // Temporary workaround for bug 724788.  Since reg is effectively
-            // uninitialized, it can have any value, including 0, which will
-            // throw an assert later down the line since the value is never read,
-            //  set it to 1 to avoid the assert.
-            if (type == JSVAL_TYPE_OBJECT && bailoutKind() == Bailout_ArgumentCheck &&
-                (reg == 0 || reg >> 47))
-            {
-                reg = 1;
-            }
-#endif
-            return FromTypedPayload(type, reg);
-          }
-          case SnapshotReader::TYPED_STACK:
-          {
-            JSValueType type = slot.knownType();
-            if (type == JSVAL_TYPE_DOUBLE)
-                return DoubleValue(in_.readDoubleSlot(slot.stackSlot()));
-            return FromTypedPayload(type, in_.readSlot(slot.stackSlot()));
-          }
-
-          case SnapshotReader::UNTYPED:
-          {
-              jsval_layout layout;
-#if defined(JS_NUNBOX32)
-              layout.s.tag = (JSValueTag)fromLocation(slot.type());
-              layout.s.payload.word = fromLocation(slot.payload());
-#elif defined(JS_PUNBOX64)
-              layout.asBits = fromLocation(slot.value());
-#endif
-              return IMPL_TO_JSVAL(layout);
-          }
-
-          case SnapshotReader::JS_UNDEFINED:
-            return UndefinedValue();
-
-          case SnapshotReader::JS_NULL:
-            return NullValue();
-
-          case SnapshotReader::JS_INT32:
-            return Int32Value(slot.int32Value());
-
-          case SnapshotReader::CONSTANT:
-            return in_.ionScript()->getConstant(slot.constantIndex());
-
-          default:
-            JS_NOT_REACHED("huh?");
-            return UndefinedValue();
-        }
-    }
-
-    uint32 slots() const {
-        return reader_.slots();
-    }
-    uint32 pcOffset() const {
-        return reader_.pcOffset();
-    }
-    BailoutKind bailoutKind() const {
-        return reader_.bailoutKind();
-    }
-    bool resumeAfter() const {
-        if (hasNextFrame())
-            return false;
-        return reader_.resumeAfter();
-    }
-    bool hasNextFrame() const {
-        return reader_.remainingFrameCount() > 1;
-    }
-    bool nextFrame() {
-        reader_.finishReadingFrame();
-        return reader_.remainingFrameCount() > 0;
-    }
-};
-
 static void
-RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
+RestoreOneFrame(JSContext *cx, StackFrame *fp, SnapshotIterator &iter)
 {
     uint32 exprStackSlots = iter.slots() - fp->script()->nfixed;
 
@@ -190,18 +67,23 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
     // accesses its scope chain (via a NAME opcode) or modifies the
     // scope chain via BLOCK opcodes. In such cases keep the default
     // environment-of-callee scope.
-    Value scopeChainv = iter.read();
-    if (scopeChainv.isObject()) {
-        // Temporary workaround for bug 724788 - the arguments check runs
-        // before the scope chain has been set, so in this case, we cheat and
-        // use the initial scope chain of the function object.
-        if (iter.bailoutKind() != Bailout_ArgumentCheck)
-            fp->setScopeChainNoCallObj(scopeChainv.toObject());
-        else
-            scopeChainv = ObjectValue(*fp->fun()->environment());
+    //
+    // Temporary workaround for bug 724788 - the arguments check runs
+    // before the scope chain has been set, so in this case, we cheat and
+    // use the initial scope chain of the function object.
+    //
+    Value scopeChainv;
+    if (iter.bailoutKind() == Bailout_ArgumentCheck) {
+        scopeChainv = ObjectValue(*fp->fun()->environment());
+        iter.skip();
     } else {
-        JS_ASSERT(scopeChainv.isUndefined());
+        scopeChainv = iter.read();
     }
+
+    if (scopeChainv.isObject())
+        fp->setScopeChainNoCallObj(scopeChainv.toObject());
+    else
+        JS_ASSERT(scopeChainv.isUndefined());
 
     if (fp->isFunctionFrame()) {
         Value thisv = iter.read();
@@ -235,11 +117,9 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
 
         // If coming from an invalidation bailout, and this is the topmost
         // value, and a value override has been specified, don't read from the
-        // iterator. Otherwise, we risk using a garbage value. Note if we take
-        // this path, the iterator is not advanced, so this *must* be the last
-        // value.
-        if (!iter.hasNextFrame() && i == exprStackSlots - 1 && cx->runtime->hasIonReturnOverride())
-            v = iter.readBogus();
+        // iterator. Otherwise, we risk using a garbage value.
+        if (!iter.moreFrames() && i == exprStackSlots - 1 && cx->runtime->hasIonReturnOverride())
+            v = iter.skip();
         else
             v = iter.read();
 
@@ -327,10 +207,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
     // Must be stored before the bailout frame is pushed.
     StackFrame *entryFp = cx->fp();
 
-    JS_ASSERT(in.snapshotOffset() < in.ionScript()->snapshotsSize());
-    const uint8 *start = in.ionScript()->snapshots() + in.snapshotOffset();
-    const uint8 *end = in.ionScript()->snapshots() + in.ionScript()->snapshotsSize();
-    IonBailoutIterator iter(in, start, end);
+    SnapshotIterator iter(in);
 
     // Forbid OSR in the future: bailouts are now expected.
     in.ionScript()->forbidOsr();
@@ -364,11 +241,13 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
 
     DeriveConstructing(fp, entryFp, in.fp());
 
-    for (size_t i = 0;; ++i) {
-        IonSpew(IonSpew_Bailouts, " restoring frame %u (lower is older)", i);
+    while (true) {
+        IonSpew(IonSpew_Bailouts, " restoring frame");
         RestoreOneFrame(cx, fp, iter);
-        if (!iter.nextFrame())
-            break;
+
+        if (!iter.moreFrames())
+             break;
+        iter.nextFrame();
 
         fp = PushInlinedFrame(cx, fp);
         if (!fp)

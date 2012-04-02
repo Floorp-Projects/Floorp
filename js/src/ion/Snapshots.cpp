@@ -123,11 +123,13 @@ using namespace js::ion;
 //        
 
 SnapshotReader::SnapshotReader(const uint8 *buffer, const uint8 *end)
-  : reader_(buffer, end)
+  : reader_(buffer, end),
+    slotCount_(0),
+    slotsRead_(0)
 {
     IonSpew(IonSpew_Snapshots, "Creating snapshot reader");
     readSnapshotHeader();
-    readSnapshotBody();
+    nextFrame();
 }
 
 static const uint32 BAILOUT_KIND_SHIFT = 0;
@@ -144,14 +146,18 @@ SnapshotReader::readSnapshotHeader()
     JS_ASSERT(frameCount_ > 0);
     bailoutKind_ = BailoutKind((bits >> BAILOUT_KIND_SHIFT) & BAILOUT_KIND_MASK);
     resumeAfter_ = !!(bits & (1 << BAILOUT_RESUME_SHIFT));
+    framesRead_ = 0;
 
     IonSpew(IonSpew_Snapshots, "Read snapshot header with frameCount %u, bailout kind %u (ra: %d)",
             frameCount_, bailoutKind_, resumeAfter_);
 }
 
 void
-SnapshotReader::readSnapshotBody()
+SnapshotReader::readFrameHeader()
 {
+    JS_ASSERT(moreFrames());
+    JS_ASSERT(slotsRead_ == slotCount_);
+
 #ifdef DEBUG
     union {
         JSScript *script;
@@ -160,7 +166,6 @@ SnapshotReader::readSnapshotBody()
     for (size_t i = 0; i < sizeof(JSScript *); i++)
         u.bytes[i] = reader_.readByte();
     script_ = u.script;
-    slotsRead_ = 0;
 #endif
 
     pcOffset_ = reader_.readUnsigned();
@@ -184,6 +189,9 @@ SnapshotReader::readSnapshotBody()
         fprintf(IonSpewFile, "\n");
     }
 #endif
+
+    framesRead_++;
+    slotsRead_ = 0;
 }
 
 #ifdef JS_NUNBOX32
@@ -203,10 +211,8 @@ SnapshotReader::Slot
 SnapshotReader::readSlot()
 {
     JS_ASSERT(slotsRead_ < slotCount_);
-#ifdef DEBUG
     IonSpew(IonSpew_Snapshots, "Reading slot %u", slotsRead_);
     slotsRead_++;
-#endif
 
     uint8 b = reader_.readByte();
 
@@ -279,61 +285,12 @@ SnapshotReader::readSlot()
     return Slot(JS_UNDEFINED);
 }
 
-void
-SnapshotReader::finishReadingFrame()
-{
-    JS_ASSERT(slotsRead_ == slotCount_);
-    JS_ASSERT_IF(!remainingFrameCount(), reader_.readSigned() == -1);
-
-    JS_ASSERT(frameCount_ > 0);
-    frameCount_ -= 1;
-
-    JS_ASSERT_IF(!frameCount_, reader_.readSigned() == -1);
-
-    IonSpew(IonSpew_Snapshots, "Finished reading frame, %u remaining", frameCount_);
-
-    if (frameCount_)
-        readSnapshotBody();
-}
-
-bool
-SnapshotReader::Slot::liveInReg() const
-{
-    switch (mode()) {
-      case SnapshotReader::DOUBLE_REG:
-      case SnapshotReader::TYPED_REG:
-        return true;
-
-      case SnapshotReader::TYPED_STACK:
-      case SnapshotReader::JS_UNDEFINED:
-      case SnapshotReader::JS_NULL:
-      case SnapshotReader::JS_INT32:
-      case SnapshotReader::CONSTANT:
-        return false;
-
-      case SnapshotReader::UNTYPED:
-#if defined(JS_NUNBOX32)
-        return !(type().isStackSlot() || payload().isStackSlot());
-#elif defined(JS_PUNBOX64)
-        return !value().isStackSlot();
-#endif
-
-      default:
-        JS_NOT_REACHED("huh?");
-        return false;
-    }
-}
-
 SnapshotIterator::SnapshotIterator(const FrameRecovery &in)
-  : in_(in),
-    reader_(),
-    unreadSlots_(0)
+  : SnapshotReader(in.ionScript()->snapshots() + in.snapshotOffset(),
+                   in.ionScript()->snapshots() + in.ionScript()->snapshotsSize()),
+    in_(in)
 {
     JS_ASSERT(in.snapshotOffset() < in.ionScript()->snapshotsSize());
-    const uint8 *start = in.ionScript()->snapshots() + in.snapshotOffset();
-    const uint8 *end = in.ionScript()->snapshots() + in.ionScript()->snapshotsSize();
-    reader_.construct(start, end);
-    readFrame();
 }
 
 uintptr_t
@@ -342,13 +299,6 @@ SnapshotIterator::fromLocation(const SnapshotReader::Location &loc)
     if (loc.isStackSlot())
         return in_.readSlot(loc.stackSlot());
     return in_.machine().readReg(loc.reg());
-}
-
-void
-SnapshotIterator::skipLocation(const SnapshotReader::Location &loc)
-{
-    if (loc.isStackSlot())
-        in_.readSlot(loc.stackSlot());
 }
 
 Value
@@ -367,13 +317,6 @@ SnapshotIterator::FromTypedPayload(JSValueType type, uintptr_t payload)
         JS_NOT_REACHED("unexpected type - needs payload");
         return UndefinedValue();
     }
-}
-
-SnapshotIterator::Slot
-SnapshotIterator::readSlot()
-{
-    unreadSlots_--;
-    return reader_.ref().readSlot();
 }
 
 Value
@@ -421,44 +364,6 @@ SnapshotIterator::slotValue(const Slot &slot)
       default:
         JS_NOT_REACHED("huh?");
         return UndefinedValue();
-    }
-}
-
-void
-SnapshotIterator::skip(const Slot &slot)
-{
-    switch (slot.mode()) {
-      case SnapshotReader::DOUBLE_REG:
-      case SnapshotReader::TYPED_REG:
-      case SnapshotReader::JS_UNDEFINED:
-      case SnapshotReader::JS_NULL:
-      case SnapshotReader::JS_INT32:
-      case SnapshotReader::CONSTANT:
-        return;
-
-      case SnapshotReader::TYPED_STACK:
-      {
-        JSValueType type = slot.knownType();
-        if (type == JSVAL_TYPE_DOUBLE)
-            in_.readDoubleSlot(slot.stackSlot());
-        in_.readSlot(slot.stackSlot());
-        return;
-      }
-
-      case SnapshotReader::UNTYPED:
-      {
-#if defined(JS_NUNBOX32)
-        skipLocation(slot.type());
-        skipLocation(slot.payload());
-#elif defined(JS_PUNBOX64)
-        skipLocation(slot.value());
-#endif
-        return;
-      }
-
-      default:
-        JS_NOT_REACHED("huh?");
-        return;
     }
 }
 
