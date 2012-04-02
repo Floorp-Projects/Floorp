@@ -2127,7 +2127,7 @@ mjit::Compiler::jsop_getelem()
     // we can generate code directly without using an inline cache.
     if (cx->typeInferenceEnabled() && !id->isType(JSVAL_TYPE_STRING)) {
         types::TypeSet *types = analysis->poppedTypes(PC, 1);
-        if (types->isLazyArguments(cx) && !outerScript->analysis()->modifiesArguments()) {
+        if (types->isMagicArguments(cx) && !outerScript->analysis()->modifiesArguments()) {
             // Inline arguments path.
             jsop_getelem_args();
             return true;

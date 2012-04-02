@@ -812,7 +812,7 @@ LoopState::invariantLength(const CrossSSAValue &obj)
     TypeSet *objTypes = ssa->getValueTypes(obj);
 
     /* Check for 'length' on the lazy arguments for the current frame. */
-    if (objTypes->isLazyArguments(cx)) {
+    if (objTypes->isMagicArguments(cx)) {
         JS_ASSERT(obj.frame == CrossScriptSSA::OUTER_FRAME);
 
         for (unsigned i = 0; i < invariantEntries.length(); i++) {

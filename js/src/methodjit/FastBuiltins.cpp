@@ -905,9 +905,6 @@ mjit::Compiler::inlineNativeFunction(uint32_t argc, bool callingNew)
     if (!cx->typeInferenceEnabled())
         return Compile_InlineAbort;
 
-    if (applyTricks == LazyArgsObj)
-        return Compile_InlineAbort;
-
     FrameEntry *origCallee = frame.peek(-((int)argc + 2));
     FrameEntry *thisValue = frame.peek(-((int)argc + 1));
     types::TypeSet *thisTypes = analysis->poppedTypes(PC, argc);

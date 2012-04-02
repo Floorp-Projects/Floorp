@@ -127,7 +127,6 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
     oomInVector(false),
     overflowICSpace(false),
     gcNumber(cx->runtime->gcNumber),
-    applyTricks(NoApplyTricks),
     pcLengths(NULL)
 {
     /* Once a script starts getting really hot we will inline calls in it. */
@@ -1155,12 +1154,13 @@ mjit::Compiler::generatePrologue()
             }
         }
 
-        if (script->mayNeedArgsObj()) {
-            /*
-             * Make sure that fp->u.nactual is always coherent. This may be
-             * inspected directly by JIT code, and is not guaranteed to be
-             * correct if the UNDERFLOW and OVERFLOW flags are not set.
-             */
+        /*
+         * When 'arguments' is used in the script, it may be optimized away
+         * which involves reading from the stack frame directly, including
+         * fp->u.nactual. fp->u.nactual is only set when numActual != numFormal,
+         * so store 'fp->u.nactual = numFormal' when there is no over/underflow.
+         */
+        if (script->argumentsHasLocalBinding()) {
             Jump hasArgs = masm.branchTest32(Assembler::NonZero, FrameFlagsAddress(),
                                              Imm32(StackFrame::UNDERFLOW_ARGS |
                                                    StackFrame::OVERFLOW_ARGS));
@@ -2230,48 +2230,13 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_IFNE)
 
           BEGIN_CASE(JSOP_ARGUMENTS)
-          {
-            /*
-             * For calls of the form 'f.apply(x, arguments)' we can avoid
-             * creating an args object by having ic::SplatApplyArgs pull
-             * directly from the stack. To do this, we speculate here that
-             * 'apply' actually refers to js_fun_apply. If this is not true,
-             * the slow path in JSOP_FUNAPPLY will create the args object.
-             */
-            if (!script->needsArgsObj()) {
-                if (canUseApplyTricks()) {
-                    /*
-                     * Check for interrupts at the JSOP_ARGUMENTS when using
-                     * apply tricks, see inlineCallHelper().
-                     */
-                    interruptCheckHelper();
-
-                    applyTricks = LazyArgsObj;
-                    pushSyncedEntry(0);
-                } else {
-                    /*
-                     * When analyzing whether a script needsArgsObject, the analysis in
-                     * analyzeSSA uses the simple predicate SpeculateApplyOptimization.
-                     * The actual mjit predicate for using the optimization is
-                     * canUseApplyTricks which depends on temporal compiler state.
-                     * Thus, script->needsArgsObj can be over-optimistic and needs to
-                     * be checked here and corrected.
-                     */
-                    if (SpeculateApplyOptimization(PC)) {
-                        if (!script->applySpeculationFailed(cx))
-                            return Compile_Error;
-
-                        /* All our assumptions are wrong, try again. */
-                        return Compile_Retry;
-                    }
-
-                    frame.push(MagicValue(JS_OPTIMIZED_ARGUMENTS));
-                }
-            } else {
-                jsop_arguments(REJOIN_FALLTHROUGH);
+            if (script->needsArgsObj()) {
+                prepareStubCall(Uses(0));
+                INLINE_STUBCALL(stubs::Arguments, REJOIN_FALLTHROUGH);
                 pushSyncedEntry(0);
+            } else {
+                frame.push(MagicValue(JS_OPTIMIZED_ARGUMENTS));
             }
-          }
           END_CASE(JSOP_ARGUMENTS)
 
           BEGIN_CASE(JSOP_ITERNEXT)
@@ -3937,20 +3902,8 @@ mjit::Compiler::emitUncachedCall(uint32_t argc, bool callingNew)
     finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
 }
 
-static bool
-IsLowerableFunCallOrApply(jsbytecode *pc)
-{
-#ifdef JS_MONOIC
-    return (*pc == JSOP_FUNCALL && GET_ARGC(pc) >= 1) ||
-           (*pc == JSOP_FUNAPPLY && GET_ARGC(pc) == 2);
-#else
-    return false;
-#endif
-}
-
 void
-mjit::Compiler::checkCallApplySpeculation(uint32_t callImmArgc, uint32_t speculatedArgc,
-                                          FrameEntry *origCallee, FrameEntry *origThis,
+mjit::Compiler::checkCallApplySpeculation(uint32_t argc, FrameEntry *origCallee, FrameEntry *origThis,
                                           MaybeRegisterID origCalleeType, RegisterID origCalleeData,
                                           MaybeRegisterID origThisType, RegisterID origThisData,
                                           Jump *uncachedCallSlowRejoin, CallPatchInfo *uncachedCallPatch)
@@ -3991,18 +3944,10 @@ mjit::Compiler::checkCallApplySpeculation(uint32_t callImmArgc, uint32_t specula
         stubcc.linkExitDirect(isFun, stubcc.masm.label());
         stubcc.linkExitDirect(isNative, stubcc.masm.label());
 
-        int32_t frameDepthAdjust;
-        if (applyTricks == LazyArgsObj) {
-            OOL_STUBCALL(stubs::Arguments, REJOIN_RESUME);
-            frameDepthAdjust = +1;
-        } else {
-            frameDepthAdjust = 0;
-        }
-
-        stubcc.masm.move(Imm32(callImmArgc), Registers::ArgReg1);
+        stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
         JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW CALL CODE ---- \n");
         OOL_STUBCALL_LOCAL_SLOTS(JS_FUNC_TO_DATA_PTR(void *, stubs::SlowCall),
-                                 REJOIN_FALLTHROUGH, frame.totalDepth() + frameDepthAdjust);
+                                 REJOIN_FALLTHROUGH, frame.totalDepth());
         JaegerSpew(JSpew_Insns, " ---- END SLOW CALL CODE ---- \n");
 
         /*
@@ -4018,55 +3963,22 @@ mjit::Compiler::checkCallApplySpeculation(uint32_t callImmArgc, uint32_t specula
         *uncachedCallSlowRejoin = stubcc.masm.jump();
         JaegerSpew(JSpew_Insns, " ---- END SLOW RESTORE CODE ---- \n");
     }
-
-    /*
-     * For simplicity, we don't statically specialize calls to
-     * ic::SplatApplyArgs based on applyTricks. Rather, this state is
-     * communicated dynamically through the VMFrame.
-     */
-    if (*PC == JSOP_FUNAPPLY) {
-        masm.store32(Imm32(applyTricks == LazyArgsObj),
-                     FrameAddress(VMFrame::offsetOfLazyArgsObj()));
-    }
-}
-
-/* This predicate must be called before the current op mutates the FrameState. */
-bool
-mjit::Compiler::canUseApplyTricks()
-{
-    JS_ASSERT(*PC == JSOP_ARGUMENTS);
-    JS_ASSERT(!script->needsArgsObj());
-    jsbytecode *nextpc = PC + JSOP_ARGUMENTS_LENGTH;
-    return *nextpc == JSOP_FUNAPPLY &&
-           IsLowerableFunCallOrApply(nextpc) &&
-           !analysis->jumpTarget(nextpc) &&
-           !debugMode() &&
-           !a->parent &&
-           bytecodeInChunk(nextpc);
 }
 
 /* See MonoIC.cpp, CallCompiler for more information on call ICs. */
 bool
-mjit::Compiler::inlineCallHelper(uint32_t callImmArgc, bool callingNew, FrameSize &callFrameSize)
+mjit::Compiler::inlineCallHelper(uint32_t argc, bool callingNew, FrameSize &callFrameSize)
 {
-    int32_t speculatedArgc;
-    if (applyTricks == LazyArgsObj) {
-        frame.pop();
-        speculatedArgc = 1;
-    } else {
-        /*
-         * Check for interrupts on function call. We don't do this for lazy
-         * arguments objects as the interrupt may kick this frame into the
-         * interpreter, which doesn't know about the apply tricks. Instead, we
-         * do the interrupt check at the start of the JSOP_ARGUMENTS.
-         */
-        interruptCheckHelper();
+    /*
+     * Check for interrupts on function call. We don't do this for lazy
+     * arguments objects as the interrupt may kick this frame into the
+     * interpreter, which doesn't know about the apply tricks. Instead, we
+     * do the interrupt check at the start of the JSOP_ARGUMENTS.
+     */
+    interruptCheckHelper();
 
-        speculatedArgc = callImmArgc;
-    }
-
-    FrameEntry *origCallee = frame.peek(-(speculatedArgc + 2));
-    FrameEntry *origThis = frame.peek(-(speculatedArgc + 1));
+    FrameEntry *origCallee = frame.peek(-(int(argc) + 2));
+    FrameEntry *origThis = frame.peek(-(int(argc) + 1));
 
     /*
      * 'this' does not need to be synced for constructing. :FIXME: is it
@@ -4088,12 +4000,6 @@ mjit::Compiler::inlineCallHelper(uint32_t callImmArgc, bool callingNew, FrameSiz
         masm.storeValue(NullValue(), frame.addressOf(origThis));
     }
 
-    if (!cx->typeInferenceEnabled()) {
-        CompileStatus status = callArrayBuiltin(callImmArgc, callingNew);
-        if (status != Compile_InlineAbort)
-            return (status == Compile_Okay);
-    }
-
     /*
      * From the presence of JSOP_FUN{CALL,APPLY}, we speculate that we are
      * going to call js_fun_{call,apply}. Normally, this call would go through
@@ -4113,13 +4019,7 @@ mjit::Compiler::inlineCallHelper(uint32_t callImmArgc, bool callingNew, FrameSiz
 #ifdef JS_MONOIC
     if (debugMode() || newType) {
 #endif
-        if (applyTricks == LazyArgsObj) {
-            /* frame.pop() above reset us to pre-JSOP_ARGUMENTS state */
-            jsop_arguments(REJOIN_RESUME);
-            frame.pushSynced(JSVAL_TYPE_UNKNOWN);
-        }
-        emitUncachedCall(callImmArgc, callingNew);
-        applyTricks = NoApplyTricks;
+        emitUncachedCall(argc, callingNew);
         return true;
 #ifdef JS_MONOIC
     }
@@ -4173,11 +4073,10 @@ mjit::Compiler::inlineCallHelper(uint32_t callImmArgc, bool callingNew, FrameSiz
                 PinRegAcrossSyncAndKill p3(frame, origThisData), p4(frame, origThisType);
 
                 /* Leaves pinned regs untouched. */
-                frame.syncAndKill(Uses(speculatedArgc + 2));
+                frame.syncAndKill(Uses(argc + 2));
             }
 
-            checkCallApplySpeculation(callImmArgc, speculatedArgc,
-                                      origCallee, origThis,
+            checkCallApplySpeculation(argc, origCallee, origThis,
                                       origCalleeType, origCalleeData,
                                       origThisType, origThisData,
                                       &uncachedCallSlowRejoin, &uncachedCallPatch);
@@ -4193,17 +4092,17 @@ mjit::Compiler::inlineCallHelper(uint32_t callImmArgc, bool callingNew, FrameSiz
              * length of the array passed to apply.
              */
             if (*PC == JSOP_FUNCALL)
-                callIC.frameSize.initStatic(frame.totalDepth(), speculatedArgc - 1);
+                callIC.frameSize.initStatic(frame.totalDepth(), argc - 1);
             else
                 callIC.frameSize.initDynamic();
         } else {
             /* Leaves pinned regs untouched. */
-            frame.syncAndKill(Uses(speculatedArgc + 2));
+            frame.syncAndKill(Uses(argc + 2));
 
             icCalleeType = origCalleeType;
             icCalleeData = origCalleeData;
             icRvalAddr = frame.addressOf(origCallee);
-            callIC.frameSize.initStatic(frame.totalDepth(), speculatedArgc);
+            callIC.frameSize.initStatic(frame.totalDepth(), argc);
         }
     }
 
@@ -4363,7 +4262,7 @@ mjit::Compiler::inlineCallHelper(uint32_t callImmArgc, bool callingNew, FrameSiz
 
     JSValueType type = knownPushedType(0);
 
-    frame.popn(speculatedArgc + 2);
+    frame.popn(argc + 2);
     frame.takeReg(JSReturnReg_Type);
     frame.takeReg(JSReturnReg_Data);
     frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data, type);
@@ -4397,98 +4296,8 @@ mjit::Compiler::inlineCallHelper(uint32_t callImmArgc, bool callingNew, FrameSiz
         callPatches.append(uncachedCallPatch);
 
     finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
-
-    applyTricks = NoApplyTricks;
     return true;
 #endif
-}
-
-CompileStatus
-mjit::Compiler::callArrayBuiltin(uint32_t argc, bool callingNew)
-{
-    if (!globalObj)
-        return Compile_InlineAbort;
-
-    if (applyTricks == LazyArgsObj)
-        return Compile_InlineAbort;
-
-    FrameEntry *origCallee = frame.peek(-((int)argc + 2));
-    if (origCallee->isNotType(JSVAL_TYPE_OBJECT))
-        return Compile_InlineAbort;
-
-    if (frame.extra(origCallee).name != cx->runtime->atomState.classAtoms[JSProto_Array])
-        return Compile_InlineAbort;
-
-    JSObject *arrayObj;
-    if (!js_GetClassObject(cx, globalObj, JSProto_Array, &arrayObj))
-        return Compile_Error;
-
-    JSObject *arrayProto = globalObj->global().getOrCreateArrayPrototype(cx);
-    if (!arrayProto)
-        return Compile_Error;
-
-    if (argc > 1)
-        return Compile_InlineAbort;
-    FrameEntry *origArg = (argc == 1) ? frame.peek(-1) : NULL;
-    if (origArg) {
-        if (origArg->isNotType(JSVAL_TYPE_INT32))
-            return Compile_InlineAbort;
-        if (origArg->isConstant() && origArg->getValue().toInt32() < 0)
-            return Compile_InlineAbort;
-    }
-
-    if (!origCallee->isTypeKnown()) {
-        Jump notObject = frame.testObject(Assembler::NotEqual, origCallee);
-        stubcc.linkExit(notObject, Uses(argc + 2));
-    }
-
-    RegisterID reg = frame.tempRegForData(origCallee);
-    Jump notArray = masm.branchPtr(Assembler::NotEqual, reg, ImmPtr(arrayObj));
-    stubcc.linkExit(notArray, Uses(argc + 2));
-
-    int32_t knownSize = 0;
-    MaybeRegisterID sizeReg;
-    if (origArg) {
-        if (origArg->isConstant()) {
-            knownSize = origArg->getValue().toInt32();
-        } else {
-            if (!origArg->isTypeKnown()) {
-                Jump notInt = frame.testInt32(Assembler::NotEqual, origArg);
-                stubcc.linkExit(notInt, Uses(argc + 2));
-            }
-            sizeReg = frame.tempRegForData(origArg);
-            Jump belowZero = masm.branch32(Assembler::LessThan, sizeReg.reg(), Imm32(0));
-            stubcc.linkExit(belowZero, Uses(argc + 2));
-        }
-    } else {
-        knownSize = 0;
-    }
-
-    stubcc.leave();
-    stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
-    OOL_STUBCALL(callingNew ? stubs::SlowNew : stubs::SlowCall, REJOIN_FALLTHROUGH);
-
-    {
-        PinRegAcrossSyncAndKill p1(frame, sizeReg);
-        frame.popn(argc + 2);
-        frame.syncAndKill(Uses(0));
-    }
-
-    prepareStubCall(Uses(0));
-    masm.storePtr(ImmPtr(arrayProto), FrameAddress(offsetof(VMFrame, scratch)));
-    if (sizeReg.isSet())
-        masm.move(sizeReg.reg(), Registers::ArgReg1);
-    else
-        masm.move(Imm32(knownSize), Registers::ArgReg1);
-    INLINE_STUBCALL(stubs::NewDenseUnallocatedArray, REJOIN_PUSH_OBJECT);
-
-    frame.takeReg(Registers::ReturnReg);
-    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-    frame.forgetType(frame.peek(-1));
-
-    stubcc.rejoin(Changes(1));
-
-    return Compile_Okay;
 }
 
 /* Maximum number of calls we will inline at the same site. */
@@ -4958,7 +4767,7 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
          * Check if we are accessing the 'length' of the lazy arguments for the
          * current frame.
          */
-        if (types->isLazyArguments(cx)) {
+        if (types->isMagicArguments(cx)) {
             frame.pop();
             frame.pushWord(Address(JSFrameReg, StackFrame::offsetOfNumActual()), JSVAL_TYPE_INT32);
             if (script->scriptCounts)
@@ -6682,13 +6491,6 @@ mjit::Compiler::emitEval(uint32_t argc)
     INLINE_STUBCALL(stubs::Eval, REJOIN_FALLTHROUGH);
     frame.popn(argc + 2);
     pushSyncedEntry(0);
-}
-
-void
-mjit::Compiler::jsop_arguments(RejoinState rejoin)
-{
-    prepareStubCall(Uses(0));
-    INLINE_STUBCALL(stubs::Arguments, rejoin);
 }
 
 bool

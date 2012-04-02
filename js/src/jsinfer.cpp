@@ -3255,10 +3255,8 @@ ScriptAnalysis::resolveNameAccess(JSContext *cx, jsid id, bool addDependency)
          * balancing works differently for generators and we do not maintain
          * active frame counts for such scripts.
          */
-        if (script->analysis()->addsScopeObjects() ||
-            JSOp(*script->code) == JSOP_GENERATOR) {
+        if (script->analysis()->addsScopeObjects() || script->isGenerator)
             return access;
-        }
 
         /* Check if the script definitely binds the identifier. */
         unsigned index;
@@ -3668,7 +3666,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         if (script->needsArgsObj())
             pushed[0].addType(cx, Type::UnknownType());
         else
-            pushed[0].addType(cx, Type::LazyArgsType());
+            pushed[0].addType(cx, Type::MagicArgType());
         break;
 
       case JSOP_SETPROP: {
@@ -4131,11 +4129,8 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
              * Don't track for parents which add call objects or are generators,
              * don't resolve NAME accesses into the parent.
              */
-            if (nesting->parent->analysis()->addsScopeObjects() || 
-                JSOp(*nesting->parent->code) == JSOP_GENERATOR)
-            {
+            if (nesting->parent->analysis()->addsScopeObjects() || nesting->parent->isGenerator)
                 DetachNestingParent(script);
-            }
         }
     }
 

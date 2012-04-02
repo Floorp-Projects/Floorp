@@ -2655,15 +2655,8 @@ BEGIN_CASE(JSOP_EVAL)
 END_CASE(JSOP_EVAL)
 
 BEGIN_CASE(JSOP_FUNAPPLY)
-    if (regs.sp[-1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
-        CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
-        if (!IsNativeFunction(args.calleev(), js_fun_apply)) {
-            JS_ASSERT(args.length() == 2);
-            if (!script->applySpeculationFailed(cx))
-                goto error;
-            args[1] = ObjectValue(regs.fp()->argsObj());
-        }
-    }
+    if (!GuardFunApplySpeculation(cx, regs))
+        goto error;
     /* FALL THROUGH */
 
 BEGIN_CASE(JSOP_NEW)
@@ -2983,10 +2976,14 @@ END_VARLEN_CASE
 }
 
 BEGIN_CASE(JSOP_ARGUMENTS)
-    if (script->needsArgsObj())
-        PUSH_COPY(ObjectValue(regs.fp()->argsObj()));
-    else
+    if (script->needsArgsObj()) {
+        ArgumentsObject *obj = ArgumentsObject::create(cx, regs.fp());
+        if (!obj)
+            goto error;
+        PUSH_COPY(ObjectValue(*obj));
+    } else {
         PUSH_COPY(MagicValue(JS_OPTIMIZED_ARGUMENTS));
+    }
 END_CASE(JSOP_ARGUMENTS)
 
 BEGIN_CASE(JSOP_GETARG)

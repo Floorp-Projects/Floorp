@@ -123,7 +123,7 @@ OPDEF(JSOP_IFEQ,      7,  "ifeq",       NULL,         5,  1,  0,  4,  JOF_JUMP|J
 OPDEF(JSOP_IFNE,      8,  "ifne",       NULL,         5,  1,  0,  0,  JOF_JUMP|JOF_PARENHEAD)
 
 /* Get the arguments object for the current, lightweight function activation. */
-OPDEF(JSOP_ARGUMENTS, 9, js_arguments_str, js_arguments_str, 1, 0, 1, 18, JOF_BYTE)
+OPDEF(JSOP_ARGUMENTS, 9,  "arguments",  NULL,         1,  0,  1,  0,  JOF_BYTE)
 
 OPDEF(JSOP_SWAP,      10, "swap",       NULL,         1,  2,  2,  0,  JOF_BYTE)
 OPDEF(JSOP_POPN,      11, "popn",       NULL,         3, -1,  0,  0,  JOF_UINT16)

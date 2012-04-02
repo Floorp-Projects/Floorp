@@ -217,12 +217,12 @@ bool
 Bindings::getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp)
 {
     JS_ASSERT(lastBinding);
-    JS_ASSERT(hasLocalNames());
+    JS_ASSERT(count() > 0);
 
     Vector<JSAtom *> &names = *namesp;
     JS_ASSERT(names.empty());
 
-    unsigned n = countLocalNames();
+    unsigned n = count();
     if (!names.growByUninitialized(n))
         return false;
 
@@ -398,10 +398,11 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
         SavedCallerFun,
         StrictModeCode,
         ContainsDynamicNameAccess,
-        MayNeedArgsObj,
+        ArgumentsHasLocalBinding,
         NeedsArgsObj,
         OwnFilename,
-        ParentFilename
+        ParentFilename,
+        IsGenerator
     };
 
     uint32_t length, lineno, nslots;
@@ -429,8 +430,8 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
         /* Should not XDR scripts optimized for a single global object. */
         JS_ASSERT(!JSScript::isValidOffset(script->globalsOffset));
 
-        nargs = script->bindings.countArgs();
-        nvars = script->bindings.countVars();
+        nargs = script->bindings.numArgs();
+        nvars = script->bindings.numVars();
         argsVars = (nargs << 16) | nvars;
     }
     if (!xdr->codeUint32(&argsVars))
@@ -554,21 +555,17 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
             scriptBits |= (1 << StrictModeCode);
         if (script->bindingsAccessedDynamically)
             scriptBits |= (1 << ContainsDynamicNameAccess);
-        if (script->mayNeedArgsObj()) {
-            scriptBits |= (1 << MayNeedArgsObj);
-            /*
-             * In some cases, the front-end calls setNeedsArgsObj when the
-             * script definitely needsArgsObj; preserve this information which
-             * would otherwise be lost.
-             */
-            if (script->analyzedArgsUsage() && script->needsArgsObj())
-                scriptBits |= (1 << NeedsArgsObj);
-        }
+        if (script->argumentsHasLocalBinding())
+            scriptBits |= (1 << ArgumentsHasLocalBinding);
+        if (script->analyzedArgsUsage() && script->needsArgsObj())
+            scriptBits |= (1 << NeedsArgsObj);
         if (script->filename) {
             scriptBits |= (parentScript && parentScript->filename == script->filename)
                           ? (1 << ParentFilename)
                           : (1 << OwnFilename);
         }
+        if (script->isGenerator)
+            scriptBits |= (1 << IsGenerator);
 
         JS_ASSERT(!script->compileAndGo);
         JS_ASSERT(!script->hasSingletons);
@@ -631,13 +628,17 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
             script->strictModeCode = true;
         if (scriptBits & (1 << ContainsDynamicNameAccess))
             script->bindingsAccessedDynamically = true;
-        if (scriptBits & (1 << MayNeedArgsObj)) {
-            script->setMayNeedArgsObj();
-            if (scriptBits & (1 << NeedsArgsObj))
-                script->setNeedsArgsObj(true);
-        } else {
-            JS_ASSERT(!(scriptBits & (1 << NeedsArgsObj)));
+        if (scriptBits & (1 << ArgumentsHasLocalBinding)) {
+            PropertyName *arguments = cx->runtime->atomState.argumentsAtom;
+            unsigned slot;
+            DebugOnly<BindingKind> kind = script->bindings.lookup(cx, arguments, &slot);
+            JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
+            script->setArgumentsHasLocalBinding(slot);
         }
+        if (scriptBits & (1 << NeedsArgsObj))
+            script->setNeedsArgsObj(true);
+        if (scriptBits & (1 << IsGenerator))
+            script->isGenerator = true;
     }
 
     JS_STATIC_ASSERT(sizeof(jsbytecode) == 1);
@@ -1210,7 +1211,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     script->mainOffset = prologLength;
     PodCopy<jsbytecode>(script->code, bce->prologBase(), prologLength);
     PodCopy<jsbytecode>(script->main(), bce->base(), mainLength);
-    nfixed = bce->inFunction() ? bce->bindings.countVars() : 0;
+    nfixed = bce->inFunction() ? bce->bindings.numVars() : 0;
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = uint16_t(nfixed);
     InitAtomMap(cx, bce->atomIndices.getMap(), script->atoms);
@@ -1267,19 +1268,13 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         script->bindingsAccessedDynamically = true;
     if (bce->flags & TCF_HAS_SINGLETONS)
         script->hasSingletons = true;
+    if (bce->flags & TCF_FUN_IS_GENERATOR)
+        script->isGenerator = true;
 
-    /*
-     * The arguments-usage analysis in analyzeSSA only looks at
-     * JSOP_ARGUMENTS use. Therefore, anything else that definitely requires an
-     * arguments object needs to be accounted for here.
-     */
-    if (bce->inFunction()) {
-        bool needsArgsObj = bce->mayOverwriteArguments() || bce->needsEagerArguments();
-        if (needsArgsObj || bce->usesArguments()) {
-            script->setMayNeedArgsObj();
-            if (needsArgsObj)
-                script->setNeedsArgsObj(true);
-        }
+    if (bce->argumentsHasLocalBinding()) {
+        script->setArgumentsHasLocalBinding(bce->argumentsLocalSlot());
+        if (bce->definitelyNeedsArgsObj())
+            script->setNeedsArgsObj(true);
     }
 
     if (bce->globalUses.length()) {
@@ -1878,10 +1873,19 @@ JSScript::markChildren(JSTracer *trc)
 }
 
 void
+JSScript::setArgumentsHasLocalBinding(uint16_t slot)
+{
+    argsHasLocalBinding_ = true;
+    argsSlot_ = slot;
+    needsArgsAnalysis_ = true;
+}
+
+void
 JSScript::setNeedsArgsObj(bool needsArgsObj)
 {
-    JS_ASSERT(!analyzedArgsUsage_);
-    analyzedArgsUsage_ = true;
+    JS_ASSERT(!analyzedArgsUsage());
+    JS_ASSERT_IF(needsArgsObj, argumentsHasLocalBinding());
+    needsArgsAnalysis_ = false;
     needsArgsObj_ = needsArgsObj;
 }
 
@@ -1889,8 +1893,11 @@ bool
 JSScript::applySpeculationFailed(JSContext *cx)
 {
     JS_ASSERT(analyzedArgsUsage());
+    JS_ASSERT(argumentsHasLocalBinding());
     JS_ASSERT(!needsArgsObj());
     needsArgsObj_ = true;
+
+    const unsigned slot = argumentsLocalSlot();
 
     /*
      * By design, the apply-arguments optimization is only made when there
@@ -1907,14 +1914,18 @@ JSScript::applySpeculationFailed(JSContext *cx)
     for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
         StackFrame *fp = i.fp();
         if (fp->isFunctionFrame() && fp->script() == this) {
-            if (!fp->hasArgsObj() && !ArgumentsObject::create(cx, fp)) {
-                /*
-                 * We can't leave stack frames where fp->script->needsArgsObj
-                 * and !fp->hasArgsObj. It is, however, safe to leave frames
-                 * where fp->hasArgsObj and !fp->script->needsArgsObj.
-                 */
-                needsArgsObj_ = false;
-                return false;
+            if (!fp->hasArgsObj()) {
+                ArgumentsObject *obj = ArgumentsObject::create(cx, fp);
+                if (!obj) {
+                    /*
+                     * We can't leave stack frames where script->needsArgsObj
+                     * and !fp->hasArgsObj. It is, however, safe to leave frames
+                     * where fp->hasArgsObj and !fp->script->needsArgsObj.
+                     */
+                    needsArgsObj_ = false;
+                    return false;
+                }
+                fp->localSlot(slot) = ObjectValue(*obj);
             }
         }
     }
@@ -1928,13 +1939,7 @@ JSScript::applySpeculationFailed(JSContext *cx)
 
     if (hasAnalysis() && analysis()->ranInference()) {
         types::AutoEnterTypeInference enter(cx);
-        for (unsigned off = 0; off < length; off += GetBytecodeLength(code + off)) {
-            if (code[off] == JSOP_ARGUMENTS) {
-                types::TypeSet *set = analysis()->pushedTypes(off, 0);
-                JS_ASSERT(set->isLazyArguments(cx));
-                set->addType(cx, types::Type::UnknownType());
-            }
-        }
+        types::TypeScript::MonitorUnknown(cx, this, argumentsBytecode());
     }
 
     return true;

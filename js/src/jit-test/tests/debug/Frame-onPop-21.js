@@ -16,7 +16,6 @@ function handlePop(c) {
     // Arguments must be live.
     assertEq(this.eval('a').return, 'frieze');
     assertEq(this.eval('b = "architrave"').return, 'architrave');
-    assertEq(this.eval('arguments[1]').return, 'architrave');
     assertEq(this.eval('b').return, 'architrave');
 
     // function-scope variables must be live.
