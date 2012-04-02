@@ -229,8 +229,6 @@ const char* const docEvents[] = {
   "ValueChange",
   // capture AlertActive events (fired whenever alert pops up)
   "AlertActive",
-  // add ourself as a TreeViewChanged listener (custom event fired in nsTreeBodyFrame.cpp)
-  "TreeViewChanged",
   "TreeRowCountChanged",
   "TreeInvalidated",
   // add ourself as a OpenStateChange listener (custom event fired in tree.xml)
@@ -394,11 +392,6 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
                                                   kNameSpaceID_XUL)) {
     treeAcc = do_QueryObject(accessible);
     if (treeAcc) {
-      if (eventType.EqualsLiteral("TreeViewChanged")) {
-        treeAcc->TreeViewChanged();
-        return;
-      }
-
       if (eventType.EqualsLiteral("TreeRowCountChanged")) {
         HandleTreeRowCountChangedEvent(aDOMEvent, treeAcc);
         return;

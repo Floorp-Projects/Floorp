@@ -3,13 +3,8 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
 
-<!--
-  Bug 368835 - fire TreeViewChanged/TreeRowCountChanged events.
-  Bug 308564 - no accessibility events when data in a tree row changes.
--->
-
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="DOM TreeViewChanged/TreeRowCountChanged and a11y name change events.">
+        title="DOM TreeRowCountChanged and a11y name change events.">
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -27,20 +22,6 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Invoker's checkers
-
-    /**
-     * Check TreeViewChanged event and run through accessible tree to ensure
-     * it's created.
-     */
-    function treeViewChangedChecker(aMsg)
-    {
-      this.type = "TreeViewChanged";
-      this.target = gTree;
-      this.getID = function getID()
-      {
-        return "TreeViewChanged";
-      }
-    }
 
     /**
      * Check TreeRowCountChanged event.
@@ -120,7 +101,7 @@
     // Invokers
 
     /**
-     * Set tree view and process TreeViewChanged handler.
+     * Set tree view.
      */
     function setTreeView()
     {
@@ -132,7 +113,6 @@
       this.getID = function setTreeView_getID() { return "set tree view"; }
 
       this.eventSeq = [
-        new treeViewChangedChecker(),
         new invokerChecker(EVENT_REORDER, gTree)
       ];
     };
@@ -297,6 +277,11 @@
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=308564"
          title="No accessibility events when data in a tree row changes.">
         Mozilla Bug 308564
+      </a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=739524"
+         title="replace TreeViewChanged DOM event on direct call from XUL tree.">
+        Mozilla Bug 739524
       </a>
       <p id="display"></p>
       <div id="content" style="display: none">
