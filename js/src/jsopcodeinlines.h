@@ -53,7 +53,7 @@ GetNameFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs
     if (op == JSOP_INSTANCEOF)
         return cx->runtime->atomState.classPrototypeAtom;
 
-    JSScript *script = cx->stack.currentScript();
+    JSScript *script = cx->stack.currentScriptWithDiagnostics();
     PropertyName *name;
     GET_NAME_FROM_BYTECODE(script, pc, 0, name);
     return name;
