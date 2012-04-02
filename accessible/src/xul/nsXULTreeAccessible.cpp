@@ -688,7 +688,7 @@ nsXULTreeAccessible::TreeViewInvalidated(PRInt32 aStartRow, PRInt32 aEndRow,
 }
 
 void
-nsXULTreeAccessible::TreeViewChanged()
+nsXULTreeAccessible::TreeViewChanged(nsITreeView* aView)
 {
   if (IsDefunct())
     return;
@@ -704,7 +704,7 @@ nsXULTreeAccessible::TreeViewChanged()
 
   // Clear cache.
   ClearCache(mAccessibleCache);
-  mTree->GetView(getter_AddRefs(mTreeView));
+  mTreeView = aView;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
