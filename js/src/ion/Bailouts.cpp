@@ -207,7 +207,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
     // Must be stored before the bailout frame is pushed.
     StackFrame *entryFp = cx->fp();
 
-    SnapshotIterator iter(in);
+    SnapshotIterator iter(in.ionScript(), in.snapshotOffset(), in.fp(), in.machine());
 
     // Forbid OSR in the future: bailouts are now expected.
     in.ionScript()->forbidOsr();
