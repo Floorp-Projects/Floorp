@@ -359,6 +359,13 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         subq(imm, dest);
     }
 
+    // Specialization for AbsoluteAddress.
+    void branchPtr(Condition cond, const AbsoluteAddress &addr, const Register &ptr, Label *label) {
+        JS_ASSERT(ptr != ScratchReg);
+        movq(ImmWord(addr.addr), ScratchReg);
+        branchPtr(cond, Operand(ScratchReg, 0x0), ptr, label);
+    }
+
     template <typename T, typename S>
     void branchPtr(Condition cond, T lhs, S ptr, Label *label) {
         cmpPtr(Operand(lhs), ptr);
@@ -396,8 +403,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void movePtr(const Address &address, const Register &dest) {
         movq(Operand(address), dest);
     }
-    void loadPtr(ImmWord imm, Register dest) {
-        movq(imm, ScratchReg);
+    void loadPtr(const AbsoluteAddress &address, Register dest) {
+        movq(ImmWord(address.addr), ScratchReg);
         movq(Operand(ScratchReg, 0x0), dest);
     }
     void loadPtr(const Address &address, Register dest) {
@@ -410,8 +417,20 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         loadPtr(src, dest);
         shlq(Imm32(1), dest);
     }
+    void storePtr(ImmWord imm, const Address &address) {
+        movq(imm, ScratchReg);
+        movq(ScratchReg, Operand(address));
+    }
+    void storePtr(ImmGCPtr imm, const Address &address) {
+        movq(imm, ScratchReg);
+        movq(ScratchReg, Operand(address));
+    }
     void storePtr(Register src, const Address &address) {
         movq(src, Operand(address));
+    }
+    void storePtr(const Register &src, const AbsoluteAddress &address) {
+        movq(ImmWord(address.addr), ScratchReg);
+        movq(src, Operand(ScratchReg, 0x0));
     }
     void rshiftPtr(Imm32 imm, const Register &dest) {
         shrq(imm, dest);

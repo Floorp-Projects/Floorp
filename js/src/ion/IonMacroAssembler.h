@@ -385,6 +385,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Inline version of js_TypedArray_uint8_clamp_double.
     // This function clobbers the input register.
     void clampDoubleToUint8(FloatRegister input, Register output);
+
+    void getNewObject(JSContext *cx, const Register &result, JSObject *templateObject, Label *fail);
 };
 
 } // namespace ion

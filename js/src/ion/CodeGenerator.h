@@ -55,6 +55,7 @@
 namespace js {
 namespace ion {
 
+class OutOfLineCreateThis;
 class CheckOverRecursedFailure;
 class OutOfLineUnboxDouble;
 class OutOfLineCache;
@@ -105,7 +106,9 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitDoubleToInt32(LDoubleToInt32 *lir);
     bool visitNewArray(LNewArray *lir);
     bool visitNewObject(LNewObject *lir);
+    bool visitCreateThisVMCall(LCreateThis *lir);
     bool visitCreateThis(LCreateThis *lir);
+    bool visitOutOfLineCreateThis(OutOfLineCreateThis *ool);
     bool visitArrayLength(LArrayLength *lir);
     bool visitTypedArrayLength(LTypedArrayLength *lir);
     bool visitTypedArrayElements(LTypedArrayElements *lir);

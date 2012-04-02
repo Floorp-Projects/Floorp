@@ -307,7 +307,7 @@ class LToIdV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
 };
 
 // Allocate an object for |new| on the caller-side.
-class LCreateThis : public LInstructionHelper<BOX_PIECES, 2, 0>
+class LCreateThis : public LInstructionHelper<1, 2, 0>
 {
   public:
     LIR_HEADER(CreateThis);
@@ -324,11 +324,10 @@ class LCreateThis : public LInstructionHelper<BOX_PIECES, 2, 0>
     const LAllocation *getPrototype() {
         return getOperand(1);
     }
-
-    // If inline allocation fails, calls into the VM.
-    bool isCall() const {
-        return true;
+    const LDefinition *output() {
+        return getDef(0);
     }
+
     MCreateThis *mir() const {
         return mir_->toCreateThis();
     }

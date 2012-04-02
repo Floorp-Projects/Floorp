@@ -479,8 +479,10 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
     GeneralRegisterSet actual, spilled;
     safepoint.getGcRegs(&actual, &spilled);
     
-    // No support for manual spill calls yet.
+    // No support for manual spill calls yet. Bug 732852.
+#if 0
     JS_ASSERT(actual.empty() && spilled.empty());
+#endif
 
     // Scan through slots which contain pointers (or on punboxing systems,
     // actual values).
