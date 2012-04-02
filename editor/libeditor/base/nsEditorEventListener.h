@@ -67,6 +67,7 @@ protected:
   nsresult DragGesture(nsIDOMDragEvent* aDragEvent);
   void CleanupDragDropCaret();
   already_AddRefed<nsIPresShell> GetPresShell();
+  bool IsFileControlTextBox();
 
 protected:
   nsEditor* mEditor; // weak
