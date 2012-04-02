@@ -136,6 +136,7 @@ GetObjectOrRepresentedView(id <mozAccessible> aObject)
 // notifications sent out to listening accessible providers.
 - (void)didReceiveFocus;
 - (void)valueDidChange;
+- (void)selectedTextDidChange;
 
 #pragma mark -
 
