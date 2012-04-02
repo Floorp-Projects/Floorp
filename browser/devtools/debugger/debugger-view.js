@@ -1093,6 +1093,7 @@ DebuggerView.Scripts = {
     while (this._scripts.firstChild) {
       this._scripts.removeChild(this._scripts.firstChild);
     }
+    this._scriptsEmpty = true;
   },
 
   /**
@@ -1185,7 +1186,10 @@ DebuggerView.Scripts = {
     script.setAttribute("tooltiptext", aScript.url);
     script.setUserData("sourceScript", aScript, null);
 
-    this._scripts.selectedItem = script;
+    if (this._scriptsEmpty) {
+      this._scriptsEmpty = false;
+      this._scripts.selectedIndex = 0;
+    }
     return script;
   },
 
@@ -1209,6 +1213,12 @@ DebuggerView.Scripts = {
    * The cached scripts container.
    */
   _scripts: null,
+
+  /**
+   * Flag specifying if the scripts menulist is empty.
+   * This saves us checking for the itemCount value, thus making things faster.
+   */
+  _scriptsEmpty: true,
 
   /**
    * Initialization function, called when the debugger is initialized.
