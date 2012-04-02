@@ -562,6 +562,13 @@ nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck,
 }
 
 NS_IMETHODIMP
+nsWindowsShellService::GetCanSetDesktopBackground(bool* aResult)
+{
+  *aResult = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
 {
   nsAutoString appHelperPath;
