@@ -49,6 +49,7 @@
 #include <sys/mman.h>
 #include <sys/limits.h>
 #include <errno.h>
+#include <pthread.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1082,3 +1083,10 @@ __wrap_fork(void)
   }
   return pid;
 }
+
+extern "C" NS_EXPORT int
+__wrap_raise(int sig)
+{
+  return pthread_kill(pthread_self(), sig);
+}
+
