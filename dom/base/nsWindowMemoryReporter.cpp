@@ -37,26 +37,46 @@
 
 #include "nsWindowMemoryReporter.h"
 #include "nsGlobalWindow.h"
+#include "nsIEffectiveTLDService.h"
+#include "mozilla/Services.h"
+#include "mozilla/Preferences.h"
+#include "nsNetCID.h"
+#include "nsPrintfCString.h"
 
+using namespace mozilla;
 
 nsWindowMemoryReporter::nsWindowMemoryReporter()
+  : mCheckForGhostWindowsCallbackPending(false)
 {
+  mDetachedWindows.Init();
 }
 
-NS_IMPL_ISUPPORTS1(nsWindowMemoryReporter, nsIMemoryMultiReporter)
+NS_IMPL_ISUPPORTS3(nsWindowMemoryReporter, nsIMemoryMultiReporter, nsIObserver,
+                   nsSupportsWeakReference)
 
 /* static */
 void
 nsWindowMemoryReporter::Init()
 {
   // The memory reporter manager is going to own this object.
-  NS_RegisterMemoryMultiReporter(new nsWindowMemoryReporter());
+  nsWindowMemoryReporter *reporter = new nsWindowMemoryReporter();
+  NS_RegisterMemoryMultiReporter(reporter);
+
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  if (os) {
+    // DOM_WINDOW_DESTROYED_TOPIC announces what we call window "detachment",
+    // when a window's docshell is set to NULL.
+    os->AddObserver(reporter, DOM_WINDOW_DESTROYED_TOPIC, /* weakRef = */ true);
+  }
 }
 
-static void
-AppendWindowURI(nsGlobalWindow *aWindow, nsACString& aStr)
+static already_AddRefed<nsIURI>
+GetWindowURI(nsIDOMWindow *aWindow)
 {
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aWindow->GetExtantDocument());
+  nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(aWindow);
+  NS_ENSURE_TRUE(pWindow, NULL);
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(pWindow->GetExtantDocument());
   nsCOMPtr<nsIURI> uri;
 
   if (doc) {
@@ -64,12 +84,24 @@ AppendWindowURI(nsGlobalWindow *aWindow, nsACString& aStr)
   }
 
   if (!uri) {
-    nsIPrincipal *principal = aWindow->GetPrincipal();
+    nsCOMPtr<nsIScriptObjectPrincipal> scriptObjPrincipal =
+      do_QueryInterface(aWindow);
+    NS_ENSURE_TRUE(scriptObjPrincipal, NULL);
+
+    nsIPrincipal *principal = scriptObjPrincipal->GetPrincipal();
 
     if (principal) {
       principal->GetURI(getter_AddRefs(uri));
     }
   }
+
+  return uri.forget();
+}
+
+static void
+AppendWindowURI(nsGlobalWindow *aWindow, nsACString& aStr)
+{
+  nsCOMPtr<nsIURI> uri = GetWindowURI(aWindow);
 
   if (uri) {
     nsCString spec;
@@ -82,6 +114,8 @@ AppendWindowURI(nsGlobalWindow *aWindow, nsACString& aStr)
 
     aStr += spec;
   } else {
+    // If we're unable to find a URI, we're dealing with a chrome window with
+    // no document in it (or somesuch), so we call this a "system window".
     aStr += NS_LITERAL_CSTRING("[system]");
   }
 }
@@ -91,68 +125,31 @@ NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(DOMStyleMallocSizeOf, "windows")
 static nsresult
 CollectWindowReports(nsGlobalWindow *aWindow,
                      nsWindowSizes *aWindowTotalSizes,
+                     nsTHashtable<nsUint64HashKey> *aGhostWindowIDs,
                      nsIMemoryMultiReporterCallback *aCb,
                      nsISupports *aClosure)
 {
-  // DOM window objects fall into one of three categories:
-  // - "active" windows are currently either displayed in an active
-  //   tab, or a child of such a window.
-  // - "cached" windows are in the fastback cache.
-  // - "other" windows are closed (or navigated away from w/o being
-  //   cached) yet held alive by either a website or our code. The
-  //   latter case may be a memory leak, but not necessarily.
-  //
-  // For each window we show how much memory the window and its
-  // document, etc, use, and we report those per URI, where the URI is
-  // the document URI, if available, or the codebase of the principal in
-  // the window. In the case where we're unable to find a URI we're
-  // dealing with a chrome window with no document in it (or somesuch),
-  // and for that we make the URI be the string "[system]".
-  //
-  // Outer windows are lumped in with inner windows, because the amount
-  // of memory used by outer windows is small.
-  //
-  // The path we give to the reporter callback for "active" and "cached"
-  // windows (both inner and outer) is as follows:
-  //
-  //   explicit/window-objects/top(<top-outer-uri>, id=<top-outer-id>)/<category>/window(<window-uri>)/...
-  //
-  // The path we give for "other" windows is as follows:
-  //
-  //   explicit/window-objects/top(none)/window(<window-uri>)/...
-  //
-  // Where:
-  // - <category> is "active" or "cached", as described above.
-  // - <top-outer-id> is the window id (nsPIDOMWindow::WindowID()) of
-  //   the top outer window (i.e. tab, or top level chrome window).
-  // - <top-inner-uri> is the URI of the top outer window.  Excepting
-  //   special windows (such as browser.xul or hiddenWindow.html) it's
-  //   what the address bar shows for the tab.
-  // - <window-uri> is the URI of aWindow.
-  //
-  // Exposing the top-outer-id ensures that each tab gets its own
-  // sub-tree, even if multiple tabs are showing the same URI.
-
   nsCAutoString windowPath("explicit/window-objects/");
 
+  // Our window should have a null top iff it has a null docshell.
+  MOZ_ASSERT(!!aWindow->GetTop() == !!aWindow->GetDocShell());
+
   nsGlobalWindow *top = aWindow->GetTop();
-  windowPath += NS_LITERAL_CSTRING("top(");
   if (top) {
+    windowPath += NS_LITERAL_CSTRING("top(");
     AppendWindowURI(top, windowPath);
     windowPath += NS_LITERAL_CSTRING(", id=");
     windowPath.AppendInt(top->WindowID());
-  } else {
-    windowPath += NS_LITERAL_CSTRING("none");
-  }
-  windowPath += NS_LITERAL_CSTRING(")/");
+    windowPath += NS_LITERAL_CSTRING(")/");
 
-  nsIDocShell *docShell = aWindow->GetDocShell();
-  if (docShell) {
-    MOZ_ASSERT(top, "'cached' or 'active' window lacks a top window");
     windowPath += aWindow->IsFrozen() ? NS_LITERAL_CSTRING("cached/")
                                       : NS_LITERAL_CSTRING("active/");
   } else {
-    MOZ_ASSERT(!top, "'other' window has a top window");
+    if (aGhostWindowIDs->Contains(aWindow->WindowID())) {
+      windowPath += NS_LITERAL_CSTRING("top(none)/ghost/");
+    } else {
+      windowPath += NS_LITERAL_CSTRING("top(none)/detached/");
+    }
   }
 
   windowPath += NS_LITERAL_CSTRING("window(");
@@ -233,12 +230,20 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
   WindowArray windows;
   windowsById->Enumerate(GetWindows, &windows);
 
+  // Get the IDs of all the "ghost" windows.
+  nsTHashtable<nsUint64HashKey> ghostWindows;
+  ghostWindows.Init();
+  CheckForGhostWindows(&ghostWindows);
+
+  nsCOMPtr<nsIEffectiveTLDService> tldService = do_GetService(
+    NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  NS_ENSURE_STATE(tldService);
+
   // Collect window memory usage.
-  nsRefPtr<nsGlobalWindow> *w = windows.Elements();
-  nsRefPtr<nsGlobalWindow> *end = w + windows.Length();
   nsWindowSizes windowTotalSizes(NULL);
-  for (; w != end; ++w) {
-    nsresult rv = CollectWindowReports(*w, &windowTotalSizes, aCb, aClosure);
+  for (PRUint32 i = 0; i < windows.Length(); i++) {
+    nsresult rv = CollectWindowReports(windows[i], &windowTotalSizes,
+                                       &ghostWindows, aCb, aClosure);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -286,4 +291,190 @@ nsWindowMemoryReporter::GetExplicitNonHeap(PRInt64* aAmount)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWindowMemoryReporter::Observe(nsISupports *aSubject, const char *aTopic,
+                                const PRUnichar *aData)
+{
+  // A window was detached.  Insert it into mDetachedWindows and run
+  // CheckForGhostWindows sometime soon.
 
+  MOZ_ASSERT(!strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC));
+
+void
+nsWindowMemoryReporter::ObserveDOMWindowDetached(nsISupports *aWindow)
+{
+  nsWeakPtr weakWindow = do_GetWeakReference(aWindow);
+  if (!weakWindow) {
+    NS_WARNING("Couldn't take weak reference to a window?");
+    return;
+  }
+
+  mDetachedWindows.Put(weakWindow, TimeStamp());
+
+  if (!mCheckForGhostWindowsCallbackPending) {
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this,
+                           &nsWindowMemoryReporter::CheckForGhostWindowsCallback);
+    NS_DispatchToCurrentThread(runnable);
+    mCheckForGhostWindowsCallbackPending = true;
+  }
+
+  return NS_OK;
+}
+
+void
+nsWindowMemoryReporter::CheckForGhostWindowsCallback()
+{
+  mCheckForGhostWindowsCallbackPending = false;
+  CheckForGhostWindows();
+}
+
+struct CheckForGhostWindowsEnumeratorData
+{
+  nsTHashtable<nsCStringHashKey> *nonDetachedDomains;
+  nsTHashtable<nsUint64HashKey> *ghostWindowIDs;
+  nsIEffectiveTLDService *tldService;
+  PRUint32 ghostTimeout;
+  TimeStamp now;
+};
+
+static PLDHashOperator
+CheckForGhostWindowsEnumerator(nsISupports *aKey, TimeStamp& aTimeStamp,
+                               void* aClosure)
+{
+  CheckForGhostWindowsEnumeratorData *data =
+    static_cast<CheckForGhostWindowsEnumeratorData*>(aClosure);
+
+  nsWeakPtr weakKey = do_QueryInterface(aKey);
+  nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(weakKey);
+  if (!window) {
+    // The window object has been destroyed.  Stop tracking its weak ref in our
+    // hashtable.
+    return PL_DHASH_REMOVE;
+  }
+
+  nsCOMPtr<nsIDOMWindow> top;
+  window->GetTop(getter_AddRefs(top));
+  if (top) {
+    // The window is no longer detached, so we no longer want to track it.
+    return PL_DHASH_REMOVE;
+  }
+
+  nsCOMPtr<nsIURI> uri = GetWindowURI(window);
+
+  nsCAutoString domain;
+  if (uri) {
+    // GetBaseDomain works fine if |uri| is null, but it outputs a warning
+    // which ends up overrunning the mochitest logs.
+    data->tldService->GetBaseDomain(uri, 0, domain);
+  }
+
+  if (data->nonDetachedDomains->Contains(domain)) {
+    // This window shares a domain with a non-detached window, so reset its
+    // clock.
+    aTimeStamp = TimeStamp();
+  } else {
+    // This window does not share a domain with a non-detached window, so it
+    // meets ghost criterion (2).
+    if (aTimeStamp.IsNull()) {
+      // This may become a ghost window later; start its clock.
+      aTimeStamp = data->now;
+    } else if ((data->now - aTimeStamp).ToSeconds() > data->ghostTimeout) {
+      // This definitely is a ghost window, so add it to ghostWindowIDs, if
+      // that is not null.
+      if (data->ghostWindowIDs) {
+        nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(window);
+        if (pWindow) {
+          data->ghostWindowIDs->PutEntry(pWindow->WindowID());
+        }
+      }
+    }
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+struct GetNonDetachedWindowDomainsEnumeratorData
+{
+  nsTHashtable<nsCStringHashKey> *nonDetachedDomains;
+  nsIEffectiveTLDService *tldService;
+};
+
+static PLDHashOperator
+GetNonDetachedWindowDomainsEnumerator(const PRUint64& aId, nsGlobalWindow* aWindow,
+                                      void* aClosure)
+{
+  GetNonDetachedWindowDomainsEnumeratorData *data =
+    static_cast<GetNonDetachedWindowDomainsEnumeratorData*>(aClosure);
+
+  if (!aWindow->GetTop()) {
+    // This window is detached, so we don't care about its domain.
+    return PL_DHASH_NEXT;
+  }
+
+  nsCOMPtr<nsIURI> uri = GetWindowURI(aWindow);
+
+  nsCAutoString domain;
+  if (uri) {
+    data->tldService->GetBaseDomain(uri, 0, domain);
+  }
+
+  data->nonDetachedDomains->PutEntry(domain);
+  return PL_DHASH_NEXT;
+}
+
+/**
+ * Iterate over mDetachedWindows and update it to reflect the current state of
+ * the world.  In particular:
+ *
+ *   - Remove weak refs to windows which no longer exist.
+ *
+ *   - Remove references to windows which are no longer detached.
+ *
+ *   - Reset the timestamp on detached windows which share a domain with a
+ *     non-detached window (they no longer meet ghost criterion (2)).
+ *
+ *   - If a window now meets ghost criterion (2) but didn't before, set its
+ *     timestamp to now.
+ *
+ * Additionally, if aOutGhostIDs is not null, fill it with the window IDs of
+ * all ghost windows we found.
+ */
+void
+nsWindowMemoryReporter::CheckForGhostWindows(
+  nsTHashtable<nsUint64HashKey> *aOutGhostIDs /* = NULL */)
+{
+  nsCOMPtr<nsIEffectiveTLDService> tldService = do_GetService(
+    NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  if (!tldService) {
+    NS_WARNING("Couldn't get TLDService.");
+    return;
+  }
+
+  nsGlobalWindow::WindowByIdTable *windowsById =
+    nsGlobalWindow::GetWindowsTable();
+  if (!windowsById) {
+    NS_WARNING("GetWindowsTable returned null");
+    return;
+  }
+
+  nsTHashtable<nsCStringHashKey> nonDetachedWindowDomains;
+  nonDetachedWindowDomains.Init();
+
+  // Populate nonDetachedWindowDomains.
+  GetNonDetachedWindowDomainsEnumeratorData nonDetachedEnumData =
+    { &nonDetachedWindowDomains, tldService };
+  windowsById->EnumerateRead(GetNonDetachedWindowDomainsEnumerator,
+                             &nonDetachedEnumData);
+
+  PRUint32 ghostTimeout =
+    Preferences::GetUint("memory.ghost_window_timeout_seconds", 60);
+
+  // Update mDetachedWindows and write the ghost window IDs into aOutGhostIDs,
+  // if it's not null.
+  CheckForGhostWindowsEnumeratorData ghostEnumData =
+    { &nonDetachedWindowDomains, aOutGhostIDs, tldService,
+      ghostTimeout, TimeStamp::Now() };
+  mDetachedWindows.Enumerate(CheckForGhostWindowsEnumerator,
+                             &ghostEnumData);
+}

@@ -3524,6 +3524,7 @@ pref("profiler.entries", 100000);
 // Network API
 pref("dom.network.enabled", true);
 pref("dom.network.metered", false);
+
 #ifdef XP_WIN
 // On 32-bit Windows, fire a low-memory notification if we have less than this
 // many mb of virtual address space available.
@@ -3542,3 +3543,8 @@ pref("memory.low_physical_memory_threshold_mb", 0);
 // low_memory_notification_interval_ms.
 pref("memory.low_memory_notification_interval_ms", 10000);
 #endif
+
+// How long must we wait before declaring that a window is a "ghost" (i.e., a
+// likely leak)?  This should be longer than it usually takes for an eligible
+// window to be collected via the GC/CC.
+pref("memory.ghost_window_timeout_seconds", 60);
