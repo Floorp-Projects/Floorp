@@ -172,6 +172,9 @@ InlineReturn(VMFrame &f)
 void JS_FASTCALL
 stubs::SlowCall(VMFrame &f, uint32_t argc)
 {
+    if (*f.regs.pc == JSOP_FUNAPPLY && !GuardFunApplySpeculation(f.cx, f.regs))
+        THROW();
+
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
     if (!InvokeKernel(f.cx, args))
         THROW();

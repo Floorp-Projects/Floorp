@@ -429,7 +429,7 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, JSObject **objp, JSScript *paren
         fun->initScript(script);
         if (!script->typeSetFunction(cx, fun))
             return false;
-        JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
+        JS_ASSERT(fun->nargs == fun->script()->bindings.numArgs());
         js_CallNewScriptHook(cx, fun->script(), fun);
         *objp = fun;
     }
@@ -861,7 +861,7 @@ fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
     if (fun->isInterpreted()) {
         JSScript *script = fun->script();
         JS_ASSERT(script->length != 0);
-        result = script->code[0] == JSOP_GENERATOR;
+        result = script->isGenerator;
     }
 
     JS_SET_RVAL(cx, vp, BooleanValue(result));

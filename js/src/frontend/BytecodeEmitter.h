@@ -180,35 +180,23 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     /* parsing init expr of for; exclude 'in' */
     TCF_IN_FOR_INIT =                         0x10,
 
-    /* function has parameter named arguments */
-    TCF_FUN_PARAM_ARGUMENTS =                 0x20,
-
-    /* function may contain a local named arguments */
-    TCF_FUN_LOCAL_ARGUMENTS =                 0x40,
-
-    /* function uses arguments except as a parameter name */
-    TCF_FUN_USES_ARGUMENTS =                  0x80,
-
     /* function needs Call object per call */
-    TCF_FUN_HEAVYWEIGHT =                    0x100,
+    TCF_FUN_HEAVYWEIGHT =                     0x20,
 
     /* parsed yield statement in function */
-    TCF_FUN_IS_GENERATOR =                   0x200,
-
-    /* named function expression that uses its own name */
-    TCF_FUN_USES_OWN_NAME =                  0x400,
+    TCF_FUN_IS_GENERATOR =                    0x40,
 
     /* block contains a function statement */
-    TCF_HAS_FUNCTION_STMT =                  0x800,
+    TCF_HAS_FUNCTION_STMT =                   0x80,
 
     /* flag lambda from generator expression */
-    TCF_GENEXP_LAMBDA =                     0x1000,
+    TCF_GENEXP_LAMBDA =                      0x100,
 
     /* script can optimize name references based on scope chain */
-    TCF_COMPILE_N_GO =                      0x2000,
+    TCF_COMPILE_N_GO =                       0x200,
 
     /* API caller does not want result value from global script */
-    TCF_NO_SCRIPT_RVAL =                    0x4000,
+    TCF_NO_SCRIPT_RVAL =                     0x400,
 
     /*
      * Set when parsing a declaration-like destructuring pattern.  This flag
@@ -221,7 +209,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
      * assignment-like and declaration-like destructuring patterns, and why
      * they need to be treated differently.
      */
-    TCF_DECL_DESTRUCTURING =                0x8000,
+    TCF_DECL_DESTRUCTURING =                 0x800,
 
     /*
      * This function/global/eval code body contained a Use Strict Directive.
@@ -229,7 +217,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
      * See also TSF_STRICT_MODE_CODE, JSScript::strictModeCode, and
      * JSREPORT_STRICT_ERROR.
      */
-    TCF_STRICT_MODE_CODE =                 0x10000,
+    TCF_STRICT_MODE_CODE =                  0x1000,
 
     /*
      * The (static) bindings of this script need to support dynamic name
@@ -253,25 +241,22 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
      * more general "is this argument aliased" question, script->needsArgsObj
      * should be tested (see JSScript::argIsAlised).
      */
-    TCF_BINDINGS_ACCESSED_DYNAMICALLY =    0x20000,
-
-    /* The function mutates a positional (non-destructuring) parameter. */
-    TCF_FUN_MUTATES_PARAMETER =            0x40000,
+    TCF_BINDINGS_ACCESSED_DYNAMICALLY =     0x2000,
 
     /* Compiling an eval() script. */
-    TCF_COMPILE_FOR_EVAL =                0x100000,
+    TCF_COMPILE_FOR_EVAL =                  0x4000,
 
     /*
      * The function or a function that encloses it may define new local names
      * at runtime through means other than calling eval.
      */
-    TCF_FUN_MIGHT_ALIAS_LOCALS =          0x200000,
+    TCF_FUN_MIGHT_ALIAS_LOCALS =            0x8000,
 
     /* The script contains singleton initialiser JSOP_OBJECT. */
-    TCF_HAS_SINGLETONS =                  0x400000,
+    TCF_HAS_SINGLETONS =                   0x10000,
 
     /* Some enclosing scope is a with-statement or E4X filter-expression. */
-    TCF_IN_WITH =                         0x800000,
+    TCF_IN_WITH =                          0x20000,
 
     /*
      * This function does something that can extend the set of bindings in its
@@ -281,10 +266,46 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
      * This flag is *not* inherited by enclosed or enclosing functions; it
      * applies only to the function in whose flags it appears.
      */
-    TCF_FUN_EXTENSIBLE_SCOPE =           0x1000000,
+    TCF_FUN_EXTENSIBLE_SCOPE =             0x40000,
 
     /* The caller is JS_Compile*Script*. */
-    TCF_NEED_SCRIPT_GLOBAL =             0x2000000
+    TCF_NEED_SCRIPT_GLOBAL =               0x80000,
+
+    /*
+     * Technically, every function has a binding named 'arguments'. Internally,
+     * this binding is only added when 'arguments' is mentioned by the function
+     * body. This flag indicates whether 'arguments' has been bound either
+     * through implicit use:
+     *   function f() { return arguments }
+     * or explicit redeclaration:
+     *   function f() { var arguments; return arguments }
+     *
+     * Note 1: overwritten arguments (function() { arguments = 3 }) will cause
+     * this flag to be set but otherwise require no special handling:
+     * 'arguments' is just a local variable and uses of 'arguments' will just
+     * read the local's current slot which may have been assigned. The only
+     * special semantics is that the initial value of 'arguments' is the
+     * arguments object (not undefined, like normal locals).
+     *
+     * Note 2: if 'arguments' is bound as a formal parameter, there will be an
+     * 'arguments' in Bindings, but, as the "LOCAL" in the name indicates, this
+     * flag will not be set. This is because, as a formal, 'arguments' will
+     * have no special semantics: the initial value is unconditionally the
+     * actual argument (or undefined if nactual < nformal).
+     */
+    TCF_ARGUMENTS_HAS_LOCAL_BINDING =     0x100000,
+
+    /*
+     * In many cases where 'arguments' has a local binding (as described above)
+     * we do not need to actually create an arguments object in the function
+     * prologue: instead we can analyze how 'arguments' is used (using the
+     * simple dataflow analysis in analyzeSSA) to determine that uses of
+     * 'arguments' can just read from the stack frame directly. However, the
+     * dataflow analysis only looks at how JSOP_ARGUMENTS is used, so it will
+     * be unsound in several cases. The frontend filters out such cases by
+     * setting this flag which eagerly sets script->needsArgsObj to true.
+     */
+    TCF_DEFINITELY_NEEDS_ARGS_OBJ =       0x200000
 
 } JS_ENUM_FOOTER(TreeContextFlags);
 
@@ -294,17 +315,14 @@ static const uint32_t TCF_RETURN_FLAGS = TCF_RETURN_EXPR | TCF_RETURN_VOID;
 /*
  * Sticky deoptimization flags to propagate from FunctionBody.
  */
-static const uint32_t TCF_FUN_FLAGS = TCF_FUN_USES_ARGUMENTS |
-                                      TCF_FUN_PARAM_ARGUMENTS |
-                                      TCF_FUN_LOCAL_ARGUMENTS |
-                                      TCF_FUN_HEAVYWEIGHT |
+static const uint32_t TCF_FUN_FLAGS = TCF_FUN_HEAVYWEIGHT |
                                       TCF_FUN_IS_GENERATOR |
-                                      TCF_FUN_USES_OWN_NAME |
                                       TCF_BINDINGS_ACCESSED_DYNAMICALLY |
                                       TCF_FUN_MIGHT_ALIAS_LOCALS |
-                                      TCF_FUN_MUTATES_PARAMETER |
                                       TCF_STRICT_MODE_CODE |
-                                      TCF_FUN_EXTENSIBLE_SCOPE;
+                                      TCF_FUN_EXTENSIBLE_SCOPE |
+                                      TCF_ARGUMENTS_HAS_LOCAL_BINDING |
+                                      TCF_DEFINITELY_NEEDS_ARGS_OBJ;
 
 struct BytecodeEmitter;
 
@@ -316,8 +334,6 @@ struct TreeContext {                /* tree context for semantic checks */
                                        to be generator expressions */
     uint32_t        yieldCount;     /* number of |yield| tokens encountered at
                                        non-zero depth in current paren tree */
-    uint32_t        argumentsCount; /* number of |arguments| references encountered
-                                       at non-zero depth in current paren tree */
     StmtInfo        *topStmt;       /* top of statement info stack */
     StmtInfo        *topScopeStmt;  /* top lexical scope statement */
     StaticBlockObject *blockChain;  /* compile block scope chain (NB: one
@@ -432,10 +448,6 @@ struct TreeContext {                /* tree context for semantic checks */
     bool compiling() const { return flags & TCF_COMPILING; }
     inline BytecodeEmitter *asBytecodeEmitter();
 
-    bool usesArguments() const {
-        return flags & TCF_FUN_USES_ARGUMENTS;
-    }
-
     void noteBindingsAccessedDynamically() {
         flags |= TCF_BINDINGS_ACCESSED_DYNAMICALLY;
     }
@@ -452,52 +464,29 @@ struct TreeContext {                /* tree context for semantic checks */
         return flags & TCF_FUN_MIGHT_ALIAS_LOCALS;
     }
 
-    void noteParameterMutation() {
-        JS_ASSERT(inFunction());
-        flags |= TCF_FUN_MUTATES_PARAMETER;
+    void noteArgumentsHasLocalBinding() {
+        flags |= TCF_ARGUMENTS_HAS_LOCAL_BINDING;
     }
 
-    bool mutatesParameter() const {
-        JS_ASSERT(inFunction());
-        return flags & TCF_FUN_MUTATES_PARAMETER;
+    bool argumentsHasLocalBinding() const {
+        return flags & TCF_ARGUMENTS_HAS_LOCAL_BINDING;
     }
 
-    bool mayOverwriteArguments() const {
-        JS_ASSERT(inFunction());
-        JS_ASSERT_IF(inStrictMode(),
-                     !(flags & (TCF_FUN_PARAM_ARGUMENTS | TCF_FUN_LOCAL_ARGUMENTS)));
-        return !inStrictMode() &&
-               (bindingsAccessedDynamically() ||
-                flags & (TCF_FUN_PARAM_ARGUMENTS | TCF_FUN_LOCAL_ARGUMENTS));
+    unsigned argumentsLocalSlot() const {
+        PropertyName *arguments = parser->context->runtime->atomState.argumentsAtom;
+        unsigned slot;
+        DebugOnly<BindingKind> kind = bindings.lookup(parser->context, arguments, &slot);
+        JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
+        return slot;
     }
 
-    void noteLocalOverwritesArguments() {
-        flags |= TCF_FUN_LOCAL_ARGUMENTS;
+    void noteDefinitelyNeedsArgsObj() {
+        JS_ASSERT(argumentsHasLocalBinding());
+        flags |= TCF_DEFINITELY_NEEDS_ARGS_OBJ;
     }
 
-    void noteArgumentsNameUse(ParseNode *node) {
-        JS_ASSERT(inFunction());
-        JS_ASSERT(node->isKind(PNK_NAME));
-        JS_ASSERT(node->pn_atom == parser->context->runtime->atomState.argumentsAtom);
-        countArgumentsUse(node);
-        flags |= TCF_FUN_USES_ARGUMENTS;
-    }
-
-    /*
-     * Uses of |arguments| must be noted so that such uses can be forbidden if
-     * they occur inside generator expressions (which desugar to functions and
-     * yields, in which |arguments| would have an entirely different meaning).
-     */
-    void countArgumentsUse(ParseNode *node) {
-        JS_ASSERT(node->isKind(PNK_NAME));
-        JS_ASSERT(node->pn_atom == parser->context->runtime->atomState.argumentsAtom);
-        argumentsCount++;
-        argumentsNode = node;
-    }
-
-    bool needsEagerArguments() const {
-        return inStrictMode() &&
-               (bindingsAccessedDynamically() || (usesArguments() && mutatesParameter()));
+    bool definitelyNeedsArgsObj() const {
+        return flags & TCF_DEFINITELY_NEEDS_ARGS_OBJ;
     }
 
     void noteHasExtensibleScope() {

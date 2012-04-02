@@ -734,6 +734,8 @@ struct ParseNode {
     newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
                       TreeContext *tc);
 
+    inline PropertyName *atom() const;
+
     /*
      * The pn_expr and lexdef members are arms of an unsafe union. Unless you
      * know exactly what you're doing, use only the following methods to access

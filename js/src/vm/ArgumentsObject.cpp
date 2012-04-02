@@ -144,11 +144,10 @@ ArgumentsObject::create(JSContext *cx, uint32_t argc, JSObject &callee)
     return &argsobj;
 }
 
-bool
+ArgumentsObject *
 ArgumentsObject::create(JSContext *cx, StackFrame *fp)
 {
     JS_ASSERT(fp->script()->needsArgsObj());
-    JS_ASSERT(!fp->hasCallObj());
 
     ArgumentsObject *argsobj = ArgumentsObject::create(cx, fp->numActualArgs(), fp->callee());
     if (!argsobj)

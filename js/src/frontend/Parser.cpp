@@ -522,12 +522,12 @@ ReportBadParameter(JSContext *cx, TreeContext *tc, JSAtom *name, unsigned errorN
  * must perform these checks here, and not eagerly during parsing, because a
  * function's body may turn on strict mode for the function head.
  */
-bool
-js::CheckStrictParameters(JSContext *cx, TreeContext *tc)
+static bool
+CheckStrictParameters(JSContext *cx, TreeContext *tc)
 {
     JS_ASSERT(tc->inFunction());
 
-    if (!tc->needStrictChecks() || tc->bindings.countArgs() == 0)
+    if (!tc->needStrictChecks() || tc->bindings.numArgs() == 0)
         return true;
 
     JSAtom *argumentsAtom = cx->runtime->atomState.argumentsAtom;
@@ -535,7 +535,7 @@ js::CheckStrictParameters(JSContext *cx, TreeContext *tc)
 
     /* name => whether we've warned about the name already */
     HashMap<JSAtom *, bool> parameters(cx);
-    if (!parameters.init(tc->bindings.countArgs()))
+    if (!parameters.init(tc->bindings.numArgs()))
         return false;
 
     /* Start with lastVariable(), not lastArgument(), for destructuring. */
@@ -574,6 +574,20 @@ js::CheckStrictParameters(JSContext *cx, TreeContext *tc)
         }
     }
 
+    return true;
+}
+
+static bool
+BindLocalVariable(JSContext *cx, TreeContext *tc, ParseNode *pn, BindingKind kind)
+{
+    JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
+
+    unsigned index = tc->bindings.numVars();
+    if (!tc->bindings.add(cx, pn->pn_atom, kind))
+        return false;
+
+    pn->pn_cookie.set(tc->staticLevel, index);
+    pn->pn_dflags |= PND_BOUND;
     return true;
 }
 
@@ -626,30 +640,94 @@ Parser::functionBody(FunctionBodyType type)
     }
 
     /*
-     * Check whether any parameters have been assigned within this function.
-     * In strict mode parameters do not alias arguments[i], and to make the
-     * arguments object reflect initial parameter values prior to any mutation
-     * we create it eagerly whenever parameters are (or might, in the case of
-     * calls to eval) be assigned.
+     * Check CheckStrictParameters before arguments logic below adds
+     * 'arguments' to bindings.
      */
-    if (tc->inStrictMode() && tc->fun()->nargs > 0) {
-        AtomDeclsIter iter(&tc->decls);
-        while (Definition *dn = iter.next()) {
-            if (dn->kind() == Definition::ARG && dn->isAssigned()) {
-                tc->flags |= TCF_FUN_MUTATES_PARAMETER;
-                break;
-            }
-        }
-    }
+    if (!CheckStrictParameters(context, tc))
+        return NULL;
+
+    PropertyName * const arguments = context->runtime->atomState.argumentsAtom;
 
     /*
      * Non-top-level functions use JSOP_DEFFUN which is a dynamic scope
      * operation which means it aliases any bindings with the same name.
+     * Due to the implicit declaration mechanism (below), 'arguments' will not
+     * have decls and, even if it did, they will not be noted as closed in the
+     * emitter. Thus, in the corner case of function-statement-overridding-
+     * arguments, flag the whole scope as dynamic.
      */
     if (FuncStmtSet *set = tc->funcStmts) {
         for (FuncStmtSet::Range r = set->all(); !r.empty(); r.popFront()) {
-            if (Definition *dn = tc->decls.lookupFirst(r.front()))
+            PropertyName *name = r.front()->asPropertyName();
+            if (name == arguments)
+                tc->noteBindingsAccessedDynamically();
+            else if (Definition *dn = tc->decls.lookupFirst(name))
                 dn->pn_dflags |= PND_CLOSED;
+        }
+    }
+
+    /*
+     * As explained by the TCF_ARGUMENTS_HAS_LOCAL_BINDING comment, turn uses
+     * of 'arguments' into bindings. Use of 'arguments' should never escape a
+     * nested function as an upvar.
+     */
+    for (AtomDefnRange r = tc->lexdeps->all(); !r.empty(); r.popFront()) {
+        JSAtom *atom = r.front().key();
+        Definition *dn = r.front().value();
+        JS_ASSERT(dn->isPlaceholder());
+        if (atom == arguments) {
+            /*
+             * Turn 'dn' into a proper definition so uses will be bound as
+             * GETLOCAL in the emitter.
+             */
+            if (!BindLocalVariable(context, tc, dn, VARIABLE))
+                return NULL;
+            dn->setOp(JSOP_GETLOCAL);
+            dn->pn_dflags &= ~PND_PLACEHOLDER;
+
+            /* NB: this leaves r invalid so we must break immediately. */
+            tc->lexdeps->remove(arguments);
+            break;
+        }
+    }
+
+    /*
+     * Even if 'arguments' isn't explicitly mentioned, dynamic name lookup
+     * forces an 'arguments' binding.
+     */
+    if (tc->bindingsAccessedDynamically() && !tc->bindings.hasBinding(context, arguments)) {
+        if (!tc->bindings.addVariable(context, arguments))
+            return NULL;
+    }
+
+    /*
+     * Now that all possible 'arguments' bindings have been added, note whether
+     * 'arguments' has a local binding and whether it unconditionally needs an
+     * arguments object.
+     */
+    BindingKind bindKind = tc->bindings.lookup(context, arguments, NULL);
+    if (bindKind == VARIABLE || bindKind == CONSTANT) {
+        tc->noteArgumentsHasLocalBinding();
+
+        /* Dynamic scope access destroys all hope of optimization. */
+        if (tc->bindingsAccessedDynamically())
+            tc->noteDefinitelyNeedsArgsObj();
+
+        /*
+         * Check whether any parameters have been assigned within this
+         * function. In strict mode parameters do not alias arguments[i], and
+         * to make the arguments object reflect initial parameter values prior
+         * to any mutation we create it eagerly whenever parameters are (or
+         * might, in the case of calls to eval) be assigned.
+         */
+        if (tc->inStrictMode()) {
+            AtomDeclsIter iter(&tc->decls);
+            while (Definition *dn = iter.next()) {
+                if (dn->kind() == Definition::ARG && dn->isAssigned()) {
+                    tc->noteDefinitelyNeedsArgsObj();
+                    break;
+                }
+             }
         }
     }
 
@@ -820,10 +898,6 @@ MakeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *atom, TreeContext *tc)
 bool
 js::DefineArg(ParseNode *pn, JSAtom *atom, unsigned i, TreeContext *tc)
 {
-    /* Flag tc so we don't have to lookup arguments on every use. */
-    if (atom == tc->parser->context->runtime->atomState.argumentsAtom)
-        tc->flags |= TCF_FUN_PARAM_ARGUMENTS;
-
     /*
      * Make an argument definition node, distinguished by being in tc->decls
      * but having PNK_NAME kind and JSOP_NOP op. Insert it in a PNK_ARGSBODY
@@ -903,31 +977,10 @@ struct BindData {
     }
 };
 
-static bool
-BindLocalVariable(JSContext *cx, TreeContext *tc, ParseNode *pn, BindingKind kind)
-{
-    JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
-
-    /* 'arguments' can be bound as a local only via a destructuring formal parameter. */
-    JS_ASSERT_IF(pn->pn_atom == cx->runtime->atomState.argumentsAtom, kind == VARIABLE);
-
-    unsigned index = tc->bindings.countVars();
-    if (!tc->bindings.add(cx, pn->pn_atom, kind))
-        return false;
-
-    pn->pn_cookie.set(tc->staticLevel, index);
-    pn->pn_dflags |= PND_BOUND;
-    return true;
-}
-
 #if JS_HAS_DESTRUCTURING
 static JSBool
 BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
 {
-    /* Flag tc so we don't have to lookup arguments on every use. */
-    if (atom == tc->parser->context->runtime->atomState.argumentsAtom)
-        tc->flags |= TCF_FUN_PARAM_ARGUMENTS;
-
     JS_ASSERT(tc->inFunction());
 
     /*
@@ -1457,7 +1510,7 @@ Parser::functionDef(PropertyName *funName, FunctionType type, FunctionSyntaxKind
             switch (tc->bindings.lookup(context, funName, &index)) {
               case NONE:
               case ARGUMENT:
-                index = tc->bindings.countVars();
+                index = tc->bindings.numVars();
                 if (!tc->bindings.addVariable(context, funName))
                     return NULL;
                 /* FALL THROUGH */
@@ -1490,7 +1543,7 @@ Parser::functionDef(PropertyName *funName, FunctionType type, FunctionSyntaxKind
     if (!functionArguments(funtc, funbox, &prelude))
         return NULL;
 
-    fun->setArgCount(funtc.bindings.countArgs());
+    fun->setArgCount(funtc.bindings.numArgs());
 
 #if JS_HAS_DESTRUCTURING
     /*
@@ -1541,9 +1594,6 @@ Parser::functionDef(PropertyName *funName, FunctionType type, FunctionSyntaxKind
         return NULL;
 
     if (funName && !CheckStrictBinding(context, &funtc, funName, pn))
-        return NULL;
-
-    if (!CheckStrictParameters(context, &funtc))
         return NULL;
 
 #if JS_HAS_EXPR_CLOSURES
@@ -1627,8 +1677,6 @@ Parser::functionDef(PropertyName *funName, FunctionType type, FunctionSyntaxKind
             outertc->noteMightAliasLocals();
             outertc->noteHasExtensibleScope();
             outertc->flags |= TCF_FUN_HEAVYWEIGHT;
-            if (fun->atom == context->runtime->atomState.argumentsAtom)
-                outertc->noteLocalOverwritesArguments();
 
             /*
              * Instead of noteBindingsAccessedDynamically, which would be
@@ -2170,18 +2218,6 @@ BindFunctionLocal(JSContext *cx, BindData *data, MultiDeclRange &mdl, TreeContex
     ParseNode *pn = data->pn;
     JSAtom *name = pn->pn_atom;
 
-    /*
-     * Don't create a local variable with the name 'arguments', per ECMA-262.
-     * Instead, 'var arguments' always restates that predefined binding of the
-     * lexical environment for function activations. Assignments to arguments
-     * must be handled specially -- see NoteLValue.
-     */
-    if (name == cx->runtime->atomState.argumentsAtom) {
-        pn->setOp(JSOP_ARGUMENTS);
-        pn->pn_dflags |= PND_BOUND;
-        return true;
-    }
-
     BindingKind kind = tc->bindings.lookup(cx, name, NULL);
     if (kind == NONE) {
         /*
@@ -2401,22 +2437,15 @@ NoteLValue(JSContext *cx, ParseNode *pn, TreeContext *tc, unsigned dflag = PND_A
     pn->pn_dflags |= dflag;
 
     /*
-     * Both arguments and the enclosing function's name are immutable bindings
-     * in ES5, so assignments to them must do nothing or throw a TypeError
-     * depending on code strictness.  Assignment to arguments is a syntax error
-     * in strict mode and thus cannot happen.  Outside strict mode, we optimize
-     * away assignment to the function name.  For assignment to function name
-     * to fail in strict mode, we must have a binding for it in the scope
-     * chain; we ensure this happens by making such functions heavyweight.
+     * An enclosing function's name is an immutable binding in ES5, so
+     * assignments to them must do nothing or throw a TypeError depending on
+     * code strictness. Outside strict mode, we optimize away assignment to
+     * the function name. For assignment to function name to fail in strict
+     * mode, we must have a binding for it in the scope chain; we ensure this
+     * happens by making such functions heavyweight.
      */
-    JSAtom *lname = pn->pn_atom;
-    if (lname == cx->runtime->atomState.argumentsAtom) {
+    if (tc->inFunction() && pn->pn_atom == tc->fun()->atom)
         tc->flags |= TCF_FUN_HEAVYWEIGHT;
-        tc->noteLocalOverwritesArguments();
-        tc->countArgumentsUse(pn);
-    } else if (tc->inFunction() && lname == tc->fun()->atom) {
-        tc->flags |= TCF_FUN_HEAVYWEIGHT;
-    }
 }
 
 #if JS_HAS_DESTRUCTURING
@@ -2424,22 +2453,10 @@ NoteLValue(JSContext *cx, ParseNode *pn, TreeContext *tc, unsigned dflag = PND_A
 static JSBool
 BindDestructuringVar(JSContext *cx, BindData *data, ParseNode *pn, TreeContext *tc)
 {
-    JSAtom *atom;
-
-    /*
-     * Destructuring is a form of assignment, so just as for an initialized
-     * simple variable, we must check for assignment to 'arguments' and flag
-     * the enclosing function (if any) as heavyweight.
-     */
     JS_ASSERT(pn->isKind(PNK_NAME));
-    atom = pn->pn_atom;
-    if (atom == cx->runtime->atomState.argumentsAtom) {
-        tc->flags |= TCF_FUN_HEAVYWEIGHT;
-        tc->noteLocalOverwritesArguments();
-    }
 
     data->pn = pn;
-    if (!data->binder(cx, data, atom, tc))
+    if (!data->binder(cx, data, pn->pn_atom, tc))
         return JS_FALSE;
 
     /*
@@ -2448,7 +2465,7 @@ BindDestructuringVar(JSContext *cx, BindData *data, ParseNode *pn, TreeContext *
      */
     if (pn->pn_dflags & PND_BOUND) {
         JS_ASSERT(!(pn->pn_dflags & PND_GVAR));
-        pn->setOp(pn->isOp(JSOP_ARGUMENTS) ? JSOP_SETNAME : JSOP_SETLOCAL);
+        pn->setOp(JSOP_SETLOCAL);
     } else {
         pn->setOp((data->op == JSOP_DEFCONST) ? JSOP_SETCONST : JSOP_SETNAME);
     }
@@ -2995,14 +3012,7 @@ NewBindingNode(JSAtom *atom, TreeContext *tc, StaticBlockObject *blockObj = NULL
 
     /* Make a new node for this declarator name (or destructuring pattern). */
     JS_ASSERT(tc->parser->tokenStream.currentToken().type == TOK_NAME);
-    ParseNode *pn = NameNode::create(PNK_NAME, atom, tc);
-    if (!pn)
-        return NULL;
-
-    if (atom == tc->parser->context->runtime->atomState.argumentsAtom)
-        tc->countArgumentsUse(pn);
-
-    return pn;
+    return NameNode::create(PNK_NAME, atom, tc);
 }
 
 ParseNode *
@@ -4380,9 +4390,7 @@ Parser::variables(ParseNodeKind kind, StaticBlockObject *blockObj, VarContext va
 
             JS_ASSERT_IF(pn2->pn_dflags & PND_GVAR, !(pn2->pn_dflags & PND_BOUND));
 
-            pn2->setOp(pn2->isOp(JSOP_ARGUMENTS)
-                       ? JSOP_SETNAME
-                       : (pn2->pn_dflags & PND_BOUND)
+            pn2->setOp((pn2->pn_dflags & PND_BOUND)
                        ? JSOP_SETLOCAL
                        : (data.op == JSOP_DEFCONST)
                        ? JSOP_SETCONST
@@ -4392,14 +4400,6 @@ Parser::variables(ParseNodeKind kind, StaticBlockObject *blockObj, VarContext va
 
             /* The declarator's position must include the initializer. */
             pn2->pn_pos.end = init->pn_pos.end;
-
-            if (tc->inFunction() && name == context->runtime->atomState.argumentsAtom) {
-                tc->noteArgumentsNameUse(pn2);
-                if (!blockObj) {
-                    tc->flags |= TCF_FUN_HEAVYWEIGHT;
-                    tc->noteLocalOverwritesArguments();
-                }
-            }
         }
     } while (tokenStream.matchToken(TOK_COMMA));
 
@@ -4926,10 +4926,6 @@ Parser::unaryExpr()
                 return NULL;
             }
             pn2->setOp(JSOP_DELNAME);
-            if (pn2->pn_atom == context->runtime->atomState.argumentsAtom) {
-                tc->flags |= TCF_FUN_HEAVYWEIGHT;
-                tc->countArgumentsUse(pn2);
-            }
             break;
           default:;
         }
@@ -5023,18 +5019,16 @@ class CompExprTransplanter {
 class GenexpGuard {
     TreeContext     *tc;
     uint32_t        startYieldCount;
-    uint32_t        startArgumentsCount;
 
   public:
     explicit GenexpGuard(TreeContext *tc)
       : tc(tc)
     {
         if (tc->parenDepth == 0) {
-            tc->yieldCount = tc->argumentsCount = 0;
+            tc->yieldCount = 0;
             tc->yieldNode = tc->argumentsNode = NULL;
         }
         startYieldCount = tc->yieldCount;
-        startArgumentsCount = tc->argumentsCount;
         tc->parenDepth++;
     }
 
@@ -5064,14 +5058,6 @@ GenexpGuard::checkValidBody(ParseNode *pn)
         if (!errorNode)
             errorNode = pn;
         tc->parser->reportErrorNumber(errorNode, JSREPORT_ERROR, JSMSG_BAD_GENEXP_BODY, js_yield_str);
-        return false;
-    }
-
-    if (tc->argumentsCount > startArgumentsCount) {
-        ParseNode *errorNode = tc->argumentsNode;
-        if (!errorNode)
-            errorNode = pn;
-        tc->parser->reportErrorNumber(errorNode, JSREPORT_ERROR, JSMSG_BAD_GENEXP_BODY, js_arguments_str);
         return false;
     }
 
@@ -5590,13 +5576,12 @@ Parser::generatorExpr(ParseNode *kid)
 
         /*
          * We assume conservatively that any deoptimization flag in tc->flags
-         * besides TCF_FUN_PARAM_ARGUMENTS can come from the kid. So we
-         * propagate these flags into genfn. For code simplicity we also do
-         * not detect if the flags were only set in the kid and could be
-         * removed from tc->flags.
+         * come from the kid. So we propagate these flags into genfn. For code
+         * simplicity we also do not detect if the flags were only set in the
+         * kid and could be removed from tc->flags.
          */
         gentc.flags |= TCF_FUN_IS_GENERATOR | TCF_GENEXP_LAMBDA |
-                       (outertc->flags & (TCF_FUN_FLAGS & ~TCF_FUN_PARAM_ARGUMENTS));
+                       (outertc->flags & TCF_FUN_FLAGS);
         funbox->tcflags |= gentc.flags;
         genfn->pn_funbox = funbox;
         genfn->pn_blockid = gentc.bodyid;
@@ -5608,6 +5593,15 @@ Parser::generatorExpr(ParseNode *kid)
         genfn->pn_body = body;
         genfn->pn_pos.begin = body->pn_pos.begin = kid->pn_pos.begin;
         genfn->pn_pos.end = body->pn_pos.end = tokenStream.currentToken().pos.end;
+
+        JSAtom *arguments = gentc.parser->context->runtime->atomState.argumentsAtom;
+        if (AtomDefnPtr p = gentc.lexdeps->lookup(arguments)) {
+            Definition *dn = p.value();
+            ParseNode *errorNode = dn->dn_uses ? dn->dn_uses : body;
+            gentc.parser->reportErrorNumber(errorNode, JSREPORT_ERROR, JSMSG_BAD_GENEXP_BODY,
+                                             js_arguments_str);
+            return false;
+        }
 
         if (!LeaveFunction(genfn, &gentc))
             return NULL;
@@ -6631,35 +6625,12 @@ Parser::identifierName(bool afterDoubleDot)
     JS_ASSERT(tokenStream.currentToken().t_op == JSOP_NAME);
     node->setOp(JSOP_NAME);
 
-    if ((tc->flags & (TCF_IN_FUNCTION | TCF_FUN_PARAM_ARGUMENTS)) == TCF_IN_FUNCTION &&
-        name == context->runtime->atomState.argumentsAtom)
-    {
-        /*
-         * Bind early to JSOP_ARGUMENTS to relieve later code from having
-         * to do this work (new rule for the emitter to count on).
-         */
-        if (!afterDoubleDot) {
-            /*
-             * Note use of |arguments| to ensure we can properly create the
-             * |arguments| object for this function.
-             */
-            tc->noteArgumentsNameUse(node);
-
-            if (!(tc->flags & TCF_DECL_DESTRUCTURING) && !tc->inStatement(STMT_WITH)) {
-                node->setOp(JSOP_ARGUMENTS);
-                node->pn_dflags |= PND_BOUND;
-            }
-        }
-    } else if ((!afterDoubleDot
+    if ((!afterDoubleDot
 #if JS_HAS_XML_SUPPORT
                 || (!tc->inStrictMode() && tokenStream.peekToken() == TOK_DBLCOLON)
 #endif
                ) && !(tc->flags & TCF_DECL_DESTRUCTURING))
     {
-        /* In case this is a generator expression outside of any function. */
-        if (!tc->inFunction() && name == context->runtime->atomState.argumentsAtom)
-            tc->countArgumentsUse(node);
-
         StmtInfo *stmt = LexicalLookup(tc, name, NULL);
 
         MultiDeclRange mdl = tc->decls.lookupMulti(name);

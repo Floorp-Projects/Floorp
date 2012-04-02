@@ -113,7 +113,6 @@ class ScopeObject : public JSObject
 class CallObject : public ScopeObject
 {
     static const uint32_t CALLEE_SLOT = 1;
-    static const uint32_t ARGUMENTS_SLOT = 2;
 
     static CallObject *
     create(JSContext *cx, JSScript *script, JSObject &enclosing, JSObject *callee);
@@ -135,15 +134,6 @@ class CallObject : public ScopeObject
     inline JSFunction *getCalleeFunction() const;
     inline void setCallee(JSObject *callee);
 
-    /*
-     * When a call object is created, CallObject::arguments has the value
-     * MagicValue(JS_UNASSIGNED_ARGUMENTS). This value is overwritten if:
-     *  1. js_PutCallObject is called in a frame which hasArgsObj
-     *  2. the script assigns to 'arguments'
-     */
-    inline const Value &arguments() const;
-    inline void setArguments(const Value &v);
-
     /* Returns the formal argument at the given index. */
     inline const Value &arg(unsigned i) const;
     inline void setArg(unsigned i, const Value &v);
@@ -164,8 +154,6 @@ class CallObject : public ScopeObject
 
     inline void copyValues(unsigned nargs, Value *argv, unsigned nvars, Value *slots);
 
-    static JSBool getArgumentsOp(JSContext *cx, JSObject *obj, jsid id, Value *vp);
-    static JSBool setArgumentsOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp);
     static JSBool getArgOp(JSContext *cx, JSObject *obj, jsid id, Value *vp);
     static JSBool getVarOp(JSContext *cx, JSObject *obj, jsid id, Value *vp);
     static JSBool setArgOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp);

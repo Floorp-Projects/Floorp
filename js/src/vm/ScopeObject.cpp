@@ -68,19 +68,19 @@ js_PutCallObject(StackFrame *fp)
 
     if (callobj.isForEval()) {
         JS_ASSERT(script->strictModeCode);
-        JS_ASSERT(bindings.countArgs() == 0);
+        JS_ASSERT(bindings.numArgs() == 0);
 
         /* This could be optimized as below, but keep it simple for now. */
-        callobj.copyValues(0, NULL, bindings.countVars(), fp->slots());
+        callobj.copyValues(0, NULL, bindings.numVars(), fp->slots());
     } else {
         JSFunction *fun = fp->fun();
         JS_ASSERT(script == callobj.getCalleeFunction()->script());
         JS_ASSERT(script == fun->script());
 
-        unsigned n = bindings.countLocalNames();
+        unsigned n = bindings.count();
         if (n > 0) {
-            uint32_t nvars = bindings.countVars();
-            uint32_t nargs = bindings.countArgs();
+            uint32_t nvars = bindings.numVars();
+            uint32_t nargs = bindings.numArgs();
             JS_ASSERT(fun->nargs == nargs);
             JS_ASSERT(nvars + nargs == n);
 
@@ -200,7 +200,6 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &enclosing, JSObjec
 
     JS_ASSERT_IF(callee, callee->isFunction());
     obj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
-    obj->initFixedSlot(ARGUMENTS_SLOT, MagicValue(JS_UNASSIGNED_ARGUMENTS));
 
     /*
      * If |bindings| is for a function that has extensible parents, that means
@@ -244,8 +243,6 @@ CallObject::createForFunction(JSContext *cx, StackFrame *fp)
 
     callobj->setStackFrame(fp);
     fp->setScopeChainWithOwnCallObj(*callobj);
-    if (fp->hasArgsObj())
-        callobj->setArguments(ObjectValue(fp->argsObj()));
     return callobj;
 }
 
@@ -259,39 +256,6 @@ CallObject::createForStrictEval(JSContext *cx, StackFrame *fp)
     callobj->setStackFrame(fp);
     fp->setScopeChainWithOwnCallObj(*callobj);
     return callobj;
-}
-
-JSBool
-CallObject::getArgumentsOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
-{
-    CallObject &callobj = obj->asCall();
-    *vp = callobj.arguments();
-
-    /*
-     * This can only happen through eval-in-frame. Eventually, this logic can
-     * be hoisted into debugger scope wrappers. That will allow 'arguments' to
-     * be a pure data property and allow call_resolve to be removed.
-     */
-    if (vp->isMagic(JS_UNASSIGNED_ARGUMENTS)) {
-        JS_ASSERT(callobj.compartment()->debugMode());
-        StackFrame *fp = callobj.maybeStackFrame();
-        ArgumentsObject *argsObj = ArgumentsObject::createUnexpected(cx, fp);
-        if (!argsObj)
-            return false;
-
-        *vp = ObjectValue(*argsObj);
-        callobj.setArguments(*vp);
-    }
-
-    return true;
-}
-
-JSBool
-CallObject::setArgumentsOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
-{
-    JS_ASSERT(obj->asCall().maybeStackFrame());
-    obj->asCall().setArguments(*vp);
-    return true;
 }
 
 JSBool
@@ -351,6 +315,11 @@ CallObject::getVarOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         *vp = fp->varSlot(i);
     else
         *vp = callobj.var(i);
+
+    /* This can only happen via the debugger. Bug 659577 will remove it. */
+    if (vp->isMagic(JS_OPTIMIZED_ARGUMENTS))
+        *vp = UndefinedValue();
+
     return true;
 }
 
@@ -393,45 +362,6 @@ CallObject::containsVarOrArg(PropertyName *name, Value *vp, JSContext *cx)
     return true;
 }
 
-static JSBool
-call_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags, JSObject **objp)
-{
-    JS_ASSERT(!obj->getProto());
-
-    if (!JSID_IS_ATOM(id))
-        return true;
-
-    JSObject *callee = obj->asCall().getCallee();
-#ifdef DEBUG
-    if (callee) {
-        JSScript *script = callee->toFunction()->script();
-        JS_ASSERT(!script->bindings.hasBinding(cx, JSID_TO_ATOM(id)));
-    }
-#endif
-
-    /*
-     * Resolve arguments so that we never store a particular Call object's
-     * arguments object reference in a Call prototype's |arguments| slot.
-     *
-     * Include JSPROP_ENUMERATE for consistency with all other Call object
-     * properties; see js::Bindings::add and js::Interpret's JSOP_DEFFUN
-     * rebinding-Call-property logic.
-     */
-    if (callee && id == ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom)) {
-        if (!DefineNativeProperty(cx, obj, id, UndefinedValue(),
-                                  CallObject::getArgumentsOp, CallObject::setArgumentsOp,
-                                  JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_ENUMERATE,
-                                  0, 0, DNP_DONT_PURGE)) {
-            return false;
-        }
-        *objp = obj;
-        return true;
-    }
-
-    /* Control flow reaches here only if id was not resolved. */
-    return true;
-}
-
 static void
 call_trace(JSTracer *trc, JSObject *obj)
 {
@@ -447,15 +377,14 @@ call_trace(JSTracer *trc, JSObject *obj)
 
 JS_PUBLIC_DATA(Class) js::CallClass = {
     "Call",
-    JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
-    JSCLASS_HAS_RESERVED_SLOTS(CallObject::RESERVED_SLOTS) |
-    JSCLASS_NEW_RESOLVE | JSCLASS_IS_ANONYMOUS,
+    JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_IS_ANONYMOUS |
+    JSCLASS_HAS_RESERVED_SLOTS(CallObject::RESERVED_SLOTS),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,
-    (JSResolveOp)call_resolve,
+    JS_ResolveStub,
     NULL,                    /* convert: Leave it NULL so we notice if calls ever escape */
     NULL,                    /* finalize */
     NULL,                    /* checkAccess */

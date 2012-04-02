@@ -48,7 +48,7 @@ namespace js {
 
 inline
 TreeContext::TreeContext(Parser *prs)
-  : flags(0), bodyid(0), blockidGen(0), parenDepth(0), yieldCount(0), argumentsCount(0),
+  : flags(0), bodyid(0), blockidGen(0), parenDepth(0), yieldCount(0),
     topStmt(NULL), topScopeStmt(NULL), blockChain(NULL), blockNode(NULL),
     decls(prs->context), parser(prs), yieldNode(NULL), argumentsNode(NULL), scopeChain_(NULL),
     lexdeps(prs->context), parent(prs->tc), staticLevel(0), funbox(NULL), functionList(NULL),

@@ -1106,7 +1106,7 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     jp->fun = fun;
     jp->localNames = NULL;
     jp->decompiledOpcodes = NULL;
-    if (fun && fun->isInterpreted() && fun->script()->bindings.hasLocalNames()) {
+    if (fun && fun->isInterpreted() && fun->script()->bindings.count() > 0) {
         jp->localNames = cx->new_<Vector<JSAtom *> >(cx);
         if (!jp->localNames || !fun->script()->bindings.getLocalNameArray(cx, jp->localNames)) {
             js_DestroyPrinter(jp);
@@ -1755,7 +1755,7 @@ static JSAtom *
 GetArgOrVarAtom(JSPrinter *jp, unsigned slot)
 {
     LOCAL_ASSERT_RV(jp->fun, NULL);
-    LOCAL_ASSERT_RV(slot < jp->fun->script()->bindings.countLocalNames(), NULL);
+    LOCAL_ASSERT_RV(slot < jp->fun->script()->bindings.count(), NULL);
     JSAtom *name = (*jp->localNames)[slot];
 #if !JS_HAS_DESTRUCTURING
     LOCAL_ASSERT_RV(name, NULL);
@@ -4663,7 +4663,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      * to mark before returning.
                      */
                     LifoAllocScope las(&cx->tempLifoAlloc());
-                    if (fun->script()->bindings.hasLocalNames()) {
+                    if (fun->script()->bindings.count() > 0) {
                         innerLocalNames = cx->new_<Vector<JSAtom *> >(cx);
                         if (!innerLocalNames ||
                             !fun->script()->bindings.getLocalNameArray(cx, innerLocalNames))
