@@ -104,9 +104,6 @@ class JaegerCompartment;
 class WeakMapBase;
 class InterpreterFrames;
 
-class ScriptOpcodeCounts;
-struct ScriptOpcodeCountsPair;
-
 /*
  * GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
  * given pc in a script. We use the script->code pointer to tag the cache,
@@ -135,7 +132,7 @@ struct PendingProxyOperation {
     JSObject                *object;
 };
 
-typedef Vector<ScriptOpcodeCountsPair, 0, SystemAllocPolicy> ScriptOpcodeCountsVector;
+typedef Vector<ScriptAndCounts, 0, SystemAllocPolicy> ScriptAndCountsVector;
 
 struct ConservativeGCData
 {
@@ -463,7 +460,7 @@ struct JSRuntime : js::RuntimeFriendFields
     js::AutoGCRooter   *autoGCRooters;
 
     /* Strong references on scripts held for PCCount profiling API. */
-    js::ScriptOpcodeCountsVector *scriptPCCounters;
+    js::ScriptAndCountsVector *scriptAndCountsVector;
 
     /* Well-known numbers held for use by this runtime's contexts. */
     js::Value           NaNValue;

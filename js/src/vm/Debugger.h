@@ -201,6 +201,7 @@ class Debugger {
     static JSBool getNewestFrame(JSContext *cx, unsigned argc, Value *vp);
     static JSBool clearAllBreakpoints(JSContext *cx, unsigned argc, Value *vp);
     static JSBool findScripts(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool wrap(JSContext *cx, unsigned argc, Value *vp);
     static JSBool construct(JSContext *cx, unsigned argc, Value *vp);
     static JSPropertySpec properties[];
     static JSFunctionSpec methods[];

@@ -49,6 +49,7 @@
 #include "nsIObserver.h"
 
 class nsImageFrame;
+class nsITreeView;
 
 namespace mozilla {
 namespace a11y {
@@ -151,6 +152,12 @@ public:
                               nsIContent* aChild);
 
   virtual void UpdateText(nsIPresShell* aPresShell, nsIContent* aContent);
+
+  /**
+   * Update XUL:tree accessible tree when treeview is changed.
+   */
+  void TreeViewChanged(nsIPresShell* aPresShell, nsIContent* aContent,
+                       nsITreeView* aView);
 
   /**
    * Update list bullet accessible.

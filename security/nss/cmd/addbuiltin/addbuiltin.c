@@ -37,7 +37,7 @@
 /*
  * Tool for converting builtin CA certs.
  *
- * $Id: addbuiltin.c,v 1.16 2011/04/13 00:10:21 rrelyea%redhat.com Exp $
+ * $Id: addbuiltin.c,v 1.17 2012/03/10 12:10:44 kaie%kuix.de Exp $
  */
 
 #include "nssrenam.h"
@@ -91,14 +91,115 @@ static const SEC_ASN1Template serialTemplate[] = {
     { 0 }
 };
 
+void print_crl_info(CERTName *name, SECItem *serial)
+{
+    PRBool saveWrapeState = SECU_GetWrapEnabled();
+    SECU_EnableWrap(PR_FALSE);
+
+    SECU_PrintNameQuotesOptional(stdout, name, "# Issuer", 0, PR_FALSE);
+    printf("\n");
+    
+    SECU_PrintInteger(stdout, serial, "# Serial Number", 0);
+
+    SECU_EnableWrap(saveWrapeState);
+}
+
 static SECStatus
-ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust)
+ConvertCRLEntry(SECItem *sdder, PRInt32 crlentry, char *nickname)
+{
+    int rv;
+    PRArenaPool *arena = NULL;
+    CERTSignedCrl *newCrl = NULL;
+    CERTCrlEntry *entry;
+    
+    CERTName *name = NULL;
+    SECItem *derName = NULL;
+    SECItem *serial = NULL;
+    
+    rv = SEC_ERROR_NO_MEMORY;
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (!arena)
+    	return rv;
+
+    newCrl = CERT_DecodeDERCrlWithFlags(arena, sdder, SEC_CRL_TYPE,
+					CRL_DECODE_DEFAULT_OPTIONS);
+    if (!newCrl)
+    	return SECFailure;
+    
+    name = &newCrl->crl.name;
+    derName = &newCrl->crl.derName;
+    
+    if (newCrl->crl.entries != NULL) {
+	PRInt32 iv = 0;
+	while ((entry = newCrl->crl.entries[iv++]) != NULL) {
+	    if (crlentry == iv) {
+		serial = &entry->serialNumber;
+		break;
+	    }
+	}
+    }
+    
+    if (!name || !derName || !serial)
+    	return SECFailure;
+    
+    printf("\n# Distrust \"%s\"\n",nickname);
+    print_crl_info(name, serial);
+
+    printf("CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST\n");
+    printf("CKA_TOKEN CK_BBOOL CK_TRUE\n");
+    printf("CKA_PRIVATE CK_BBOOL CK_FALSE\n");
+    printf("CKA_MODIFIABLE CK_BBOOL CK_FALSE\n");
+    printf("CKA_LABEL UTF8 \"%s\"\n",nickname);
+    
+    printf("CKA_ISSUER MULTILINE_OCTAL\n");
+    dumpbytes(derName->data,derName->len);
+    printf("END\n");
+    printf("CKA_SERIAL_NUMBER MULTILINE_OCTAL\n");
+    printf("\\002\\%03o", serial->len); /* 002: type integer; len >=3 digits */
+    dumpbytes(serial->data,serial->len);
+    printf("END\n");
+    
+    printf("CKA_TRUST_SERVER_AUTH CK_TRUST CKT_NSS_NOT_TRUSTED\n");
+    printf("CKA_TRUST_EMAIL_PROTECTION CK_TRUST CKT_NSS_NOT_TRUSTED\n");
+    printf("CKA_TRUST_CODE_SIGNING CK_TRUST CKT_NSS_NOT_TRUSTED\n");
+    printf("CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE\n");
+
+    PORT_FreeArena (arena, PR_FALSE);
+    return rv;
+}
+
+void print_info(SECItem *sdder, CERTCertificate *c)
+{
+    PRBool saveWrapeState = SECU_GetWrapEnabled();
+    SECU_EnableWrap(PR_FALSE);
+
+    SECU_PrintNameQuotesOptional(stdout, &c->issuer, "# Issuer", 0, PR_FALSE);
+    printf("\n");
+    
+    SECU_PrintInteger(stdout, &c->serialNumber, "# Serial Number", 0);
+
+    SECU_PrintNameQuotesOptional(stdout, &c->subject, "# Subject", 0, PR_FALSE);
+    printf("\n");
+
+    SECU_PrintTimeChoice(stdout, &c->validity.notBefore, "# Not Valid Before", 0);
+    SECU_PrintTimeChoice(stdout, &c->validity.notAfter,  "# Not Valid After ", 0);
+    
+    SECU_PrintFingerprints(stdout, sdder, "# Fingerprint", 0);
+
+    SECU_EnableWrap(saveWrapeState);
+}
+
+static SECStatus
+ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust,
+                   PRBool excludeCert, PRBool excludeHash)
 {
     SECStatus rv = SECSuccess;
     CERTCertificate *cert;
     unsigned char sha1_hash[SHA1_LENGTH];
     unsigned char md5_hash[MD5_LENGTH];
     SECItem *serial = NULL;
+    PRBool step_up = PR_FALSE;
+    const char *trust_info;
 
     cert = CERT_DecodeDERCertificate(sdder, PR_FALSE, nickname);
     if (!cert) {
@@ -108,42 +209,56 @@ ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust)
     if (!serial) {
 	return SECFailure;
     }
+    
+    if (!excludeCert) {
+	printf("\n#\n# Certificate \"%s\"\n#\n",nickname);
+	print_info(sdder, cert);
+	printf("CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE\n");
+	printf("CKA_TOKEN CK_BBOOL CK_TRUE\n");
+	printf("CKA_PRIVATE CK_BBOOL CK_FALSE\n");
+	printf("CKA_MODIFIABLE CK_BBOOL CK_FALSE\n");
+	printf("CKA_LABEL UTF8 \"%s\"\n",nickname);
+	printf("CKA_CERTIFICATE_TYPE CK_CERTIFICATE_TYPE CKC_X_509\n");
+	printf("CKA_SUBJECT MULTILINE_OCTAL\n");
+	dumpbytes(cert->derSubject.data,cert->derSubject.len);
+	printf("END\n");
+	printf("CKA_ID UTF8 \"0\"\n");
+	printf("CKA_ISSUER MULTILINE_OCTAL\n");
+	dumpbytes(cert->derIssuer.data,cert->derIssuer.len);
+	printf("END\n");
+	printf("CKA_SERIAL_NUMBER MULTILINE_OCTAL\n");
+	dumpbytes(serial->data,serial->len);
+	printf("END\n");
+	printf("CKA_VALUE MULTILINE_OCTAL\n");
+	dumpbytes(sdder->data,sdder->len);
+	printf("END\n");
+    }
+    
+    if ((trust->sslFlags | trust->emailFlags | trust->objectSigningFlags) 
+         == CERTDB_TERMINAL_RECORD)
+      trust_info = "Distrust";
+    else
+      trust_info = "Trust for";
+    
+    printf("\n# %s \"%s\"\n", trust_info, nickname);
+    print_info(sdder, cert);
 
-    printf("\n#\n# Certificate \"%s\"\n#\n",nickname);
-    printf("CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE\n");
-    printf("CKA_TOKEN CK_BBOOL CK_TRUE\n");
-    printf("CKA_PRIVATE CK_BBOOL CK_FALSE\n");
-    printf("CKA_MODIFIABLE CK_BBOOL CK_FALSE\n");
-    printf("CKA_LABEL UTF8 \"%s\"\n",nickname);
-    printf("CKA_CERTIFICATE_TYPE CK_CERTIFICATE_TYPE CKC_X_509\n");
-    printf("CKA_SUBJECT MULTILINE_OCTAL\n");
-    dumpbytes(cert->derSubject.data,cert->derSubject.len);
-    printf("END\n");
-    printf("CKA_ID UTF8 \"0\"\n");
-    printf("CKA_ISSUER MULTILINE_OCTAL\n");
-    dumpbytes(cert->derIssuer.data,cert->derIssuer.len);
-    printf("END\n");
-    printf("CKA_SERIAL_NUMBER MULTILINE_OCTAL\n");
-    dumpbytes(serial->data,serial->len);
-    printf("END\n");
-    printf("CKA_VALUE MULTILINE_OCTAL\n");
-    dumpbytes(sdder->data,sdder->len);
-    printf("END\n");
-
-    PK11_HashBuf(SEC_OID_SHA1, sha1_hash, sdder->data, sdder->len);
-    PK11_HashBuf(SEC_OID_MD5, md5_hash, sdder->data, sdder->len);
-    printf("\n# Trust for Certificate \"%s\"\n",nickname);
     printf("CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST\n");
     printf("CKA_TOKEN CK_BBOOL CK_TRUE\n");
     printf("CKA_PRIVATE CK_BBOOL CK_FALSE\n");
     printf("CKA_MODIFIABLE CK_BBOOL CK_FALSE\n");
     printf("CKA_LABEL UTF8 \"%s\"\n",nickname);
-    printf("CKA_CERT_SHA1_HASH MULTILINE_OCTAL\n");
-    dumpbytes(sha1_hash,SHA1_LENGTH);
-    printf("END\n");
-    printf("CKA_CERT_MD5_HASH MULTILINE_OCTAL\n");
-    dumpbytes(md5_hash,MD5_LENGTH);
-    printf("END\n");
+    
+    if (!excludeHash) {
+	PK11_HashBuf(SEC_OID_SHA1, sha1_hash, sdder->data, sdder->len);
+	printf("CKA_CERT_SHA1_HASH MULTILINE_OCTAL\n");
+	dumpbytes(sha1_hash,SHA1_LENGTH);
+	printf("END\n");
+	PK11_HashBuf(SEC_OID_MD5, md5_hash, sdder->data, sdder->len);
+	printf("CKA_CERT_MD5_HASH MULTILINE_OCTAL\n");
+	dumpbytes(md5_hash,MD5_LENGTH);
+	printf("END\n");
+    }
 
     printf("CKA_ISSUER MULTILINE_OCTAL\n");
     dumpbytes(cert->derIssuer.data,cert->derIssuer.len);
@@ -153,11 +268,11 @@ ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust)
     printf("END\n");
     
     printf("CKA_TRUST_SERVER_AUTH CK_TRUST %s\n",
-				 getTrustString(trust->sslFlags));
+				getTrustString(trust->sslFlags));
     printf("CKA_TRUST_EMAIL_PROTECTION CK_TRUST %s\n",
-				 getTrustString(trust->emailFlags));
+				getTrustString(trust->emailFlags));
     printf("CKA_TRUST_CODE_SIGNING CK_TRUST %s\n",
-				 getTrustString(trust->objectSigningFlags));
+				getTrustString(trust->objectSigningFlags));
 #ifdef notdef
     printf("CKA_TRUST_CLIENT_AUTH CK_TRUST CKT_NSS_TRUSTED\n");
     printf("CKA_TRUST_DIGITAL_SIGNATURE CK_TRUST CKT_NSS_TRUSTED_DELEGATOR\n");
@@ -167,10 +282,10 @@ ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust)
     printf("CKA_TRUST_KEY_AGREEMENT CK_TRUST CKT_NSS_TRUSTED_DELEGATOR\n");
     printf("CKA_TRUST_KEY_CERT_SIGN CK_TRUST CKT_NSS_TRUSTED_DELEGATOR\n");
 #endif
+    
+    step_up = (trust->sslFlags & CERTDB_GOVT_APPROVED_CA);
     printf("CKA_TRUST_STEP_UP_APPROVED CK_BBOOL %s\n",
-                trust->sslFlags & CERTDB_GOVT_APPROVED_CA ? 
-                "CK_TRUE" : "CK_FALSE");
-
+                step_up ? "CK_TRUE" : "CK_FALSE");
 
     PORT_Free(sdder->data);
     return(rv);
@@ -215,7 +330,7 @@ void printheader() {
 "#\n"
 "# ***** END LICENSE BLOCK *****\n"
      "#\n"
-     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.16 $ $Date: 2011/04/13 00:10:21 $\"\n"
+     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.17 $ $Date: 2012/03/10 12:10:44 $\"\n"
      "\n"
      "#\n"
      "# certdata.txt\n"
@@ -285,41 +400,71 @@ void printheader() {
 
 static void Usage(char *progName)
 {
-    fprintf(stderr, "%s -n nickname -t trust [-i certfile]\n", progName);
+    fprintf(stderr, "%s -t trust -n nickname [-i certfile] [-c] [-h]\n", progName);
     fprintf(stderr, 
             "\tRead a der-encoded cert from certfile or stdin, and output\n"
             "\tit to stdout in a format suitable for the builtin root module.\n"
-            "\tExample: %s -n MyCA -t \"C,C,C\" -i myca.der >> certdata.txt\n"
-            "\t(pipe through atob if the cert is b64-encoded)\n", progName);
-    fprintf(stderr, "%-15s nickname to assign to builtin cert.\n", 
-                    "-n nickname");
+            "\tExample: %s -n MyCA -t \"C,C,C\" -i myca.der >> certdata.txt\n",
+            progName);
+    fprintf(stderr, "%s -D -n label [-i certfile]\n", progName);
+    fprintf(stderr, 
+            "\tRead a der-encoded cert from certfile or stdin, and output\n"
+            "\ta distrust record.\n"
+	    "\t(-D is equivalent to -t p,p,p -c -h)\n");
+    fprintf(stderr, "%s -C -e crl-entry-number -n label [-i crlfile]\n", progName);
+    fprintf(stderr, 
+            "\tRead a CRL from crlfile or stdin, and output\n"
+            "\ta distrust record (issuer+serial).\n"
+	    "\t(-C implies -c -h)\n");
     fprintf(stderr, "%-15s trust flags (cCTpPuw).\n", "-t trust");
-    fprintf(stderr, "%-15s file to read (default stdin)\n", "-i certfile");
+    fprintf(stderr, "%-15s nickname to assign to builtin cert, or\n", 
+                    "-n nickname");
+    fprintf(stderr, "%-15s a label for the distrust record.\n", "");
+    fprintf(stderr, "%-15s exclude the certificate (only add a trust record)\n", "-c");
+    fprintf(stderr, "%-15s exclude hash from trust record\n", "-h");
+    fprintf(stderr, "%-15s     (useful to distrust any matching issuer/serial)\n", "");
+    fprintf(stderr, "%-15s     (not allowed when adding positive trust)\n", "");
+    fprintf(stderr, "%-15s a CRL entry number, as shown by \"crlutil -S\"\n", "-e");
+    fprintf(stderr, "%-15s input file to read (default stdin)\n", "-i file");
+    fprintf(stderr, "%-15s     (pipe through atob if the cert is b64-encoded)\n", "");
     exit(-1);
 }
 
 enum {
     opt_Input = 0,
     opt_Nickname,
-    opt_Trust
+    opt_Trust,
+    opt_Distrust,
+    opt_ExcludeCert,
+    opt_ExcludeHash,
+    opt_DistrustCRL,
+    opt_CRLEnry
 };
 
 static secuCommandFlag addbuiltin_options[] =
 {
-	{ /* opt_Input         */  'i', PR_TRUE, 0, PR_FALSE },
-	{ /* opt_Nickname      */  'n', PR_TRUE, 0, PR_FALSE },
-	{ /* opt_Trust         */  't', PR_TRUE, 0, PR_FALSE }
+	{ /* opt_Input         */  'i', PR_TRUE,  0, PR_FALSE },
+	{ /* opt_Nickname      */  'n', PR_TRUE,  0, PR_FALSE },
+	{ /* opt_Trust         */  't', PR_TRUE,  0, PR_FALSE },
+        { /* opt_Distrust      */  'D', PR_FALSE, 0, PR_FALSE },
+        { /* opt_ExcludeCert   */  'c', PR_FALSE, 0, PR_FALSE },
+        { /* opt_ExcludeHash   */  'h', PR_FALSE, 0, PR_FALSE },
+        { /* opt_DistrustCRL   */  'C', PR_FALSE, 0, PR_FALSE },
+        { /* opt_CRLEnry       */  'e', PR_TRUE,  0, PR_FALSE },
 };
 
 int main(int argc, char **argv)
 {
     SECStatus rv;
-    char *nickname;
-    char *trusts;
+    char *nickname = NULL;
+    char *trusts = NULL;
     char *progName;
     PRFileDesc *infile;
     CERTCertTrust trust = { 0 };
-    SECItem derCert = { 0 };
+    SECItem derItem = { 0 };
+    PRInt32 crlentry = 0;
+    PRInt32 mutuallyExclusiveOpts = 0;
+    PRBool decodeTrust = PR_FALSE;
 
     secuCommand addbuiltin = { 0 };
     addbuiltin.numOptions = sizeof(addbuiltin_options)/sizeof(secuCommandFlag);
@@ -332,12 +477,40 @@ int main(int argc, char **argv)
 
     if (rv != SECSuccess)
 	Usage(progName);
+    
+    if (addbuiltin.options[opt_Trust].activated)
+      ++mutuallyExclusiveOpts;
+    if (addbuiltin.options[opt_Distrust].activated)
+      ++mutuallyExclusiveOpts;
+    if (addbuiltin.options[opt_DistrustCRL].activated)
+      ++mutuallyExclusiveOpts;
 
-    if (!addbuiltin.options[opt_Nickname].activated &&
-        !addbuiltin.options[opt_Trust].activated) {
-	fprintf(stderr, "%s: you must specify both a nickname and trust.\n",
-		progName);
-	Usage(progName);
+    if (mutuallyExclusiveOpts != 1) {
+        fprintf(stderr, "%s: you must specify exactly one of -t or -D or -C\n",
+                progName);
+        Usage(progName);
+    }
+    
+    if (addbuiltin.options[opt_DistrustCRL].activated) {
+	if (!addbuiltin.options[opt_CRLEnry].activated) {
+	    fprintf(stderr, "%s: you must specify the CRL entry number.\n",
+		    progName);
+	    Usage(progName);
+	}
+	else {
+	    crlentry = atoi(addbuiltin.options[opt_CRLEnry].arg);
+	    if (crlentry < 1) {
+		fprintf(stderr, "%s: The CRL entry number must be > 0.\n",
+			progName);
+		Usage(progName);
+	    }
+	}
+    }
+
+    if (!addbuiltin.options[opt_Nickname].activated) {
+        fprintf(stderr, "%s: you must specify parameter -n (a nickname or a label).\n",
+                progName);
+        Usage(progName);
     }
 
     if (addbuiltin.options[opt_Input].activated) {
@@ -365,24 +538,56 @@ int main(int argc, char **argv)
     }
 
     nickname = strdup(addbuiltin.options[opt_Nickname].arg);
-    trusts = strdup(addbuiltin.options[opt_Trust].arg);
-
+    
     NSS_NoDB_Init(NULL);
 
-    rv = CERT_DecodeTrustString(&trust, trusts);
-    if (rv) {
-	fprintf(stderr, "%s: incorrectly formatted trust string.\n", progName);
-	Usage(progName);
+    if (addbuiltin.options[opt_Distrust].activated ||
+        addbuiltin.options[opt_DistrustCRL].activated) {
+      addbuiltin.options[opt_ExcludeCert].activated = PR_TRUE;
+      addbuiltin.options[opt_ExcludeHash].activated = PR_TRUE;
+    }
+    
+    if (addbuiltin.options[opt_Distrust].activated) {
+        trusts = strdup("p,p,p");
+	decodeTrust = PR_TRUE;
+    }
+    else if (addbuiltin.options[opt_Trust].activated) {
+        trusts = strdup(addbuiltin.options[opt_Trust].arg);
+	decodeTrust = PR_TRUE;
+    }
+    
+    if (decodeTrust) {
+	rv = CERT_DecodeTrustString(&trust, trusts);
+	if (rv) {
+	    fprintf(stderr, "%s: incorrectly formatted trust string.\n", progName);
+	    Usage(progName);
+	}
+    }
+    
+    if (addbuiltin.options[opt_Trust].activated &&
+        addbuiltin.options[opt_ExcludeHash].activated) {
+	if ((trust.sslFlags | trust.emailFlags | trust.objectSigningFlags) 
+	    != CERTDB_TERMINAL_RECORD) {
+	    fprintf(stderr, "%s: Excluding the hash only allowed with distrust.\n", progName);
+	    Usage(progName);
+	}
     }
 
-    SECU_FileToItem(&derCert, infile);
+    SECU_FileToItem(&derItem, infile);
     
     /*printheader();*/
-
-    rv = ConvertCertificate(&derCert, nickname, &trust);
-    if (rv) {
-	fprintf(stderr, "%s: failed to convert certificate.\n", progName);
-	exit(1);
+    
+    if (addbuiltin.options[opt_DistrustCRL].activated) {
+	rv = ConvertCRLEntry(&derItem, crlentry, nickname);
+    }
+    else {
+	rv = ConvertCertificate(&derItem, nickname, &trust, 
+				addbuiltin.options[opt_ExcludeCert].activated,
+				addbuiltin.options[opt_ExcludeHash].activated);
+	if (rv) {
+	    fprintf(stderr, "%s: failed to convert certificate.\n", progName);
+	    exit(1);
+	}
     }
     
     if (NSS_Shutdown() != SECSuccess) {

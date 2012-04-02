@@ -3104,22 +3104,6 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
     CopyUTF16toUTF8(aData, mContentLanguage);
   }
 
-  // Set the default script-type on the root element.
-  if (aHeaderField == nsGkAtoms::headerContentScriptType) {
-    Element *root = GetRootElement();
-    if (root) {
-      // Get the script-type ID for this value.
-      nsresult rv;
-      nsCOMPtr<nsIScriptRuntime> runtime;
-      rv = NS_GetScriptRuntime(aData, getter_AddRefs(runtime));
-      if (NS_FAILED(rv) || runtime == nsnull) {
-        NS_WARNING("The script-type is unknown");
-      } else {
-        root->SetScriptTypeID(runtime->GetScriptTypeID());
-      }
-    }
-  }
-
   if (aHeaderField == nsGkAtoms::headerDefaultStyle) {
     // Only mess with our stylesheets if we don't have a lastStyleSheetSet, per
     // spec.

@@ -38,16 +38,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "CAccessibleAction.h"
+#include "ia2AccessibleAction.h"
 
 #include "AccessibleAction_i.c"
 
-#include "nsAccessible.h"
+#include "nsAccessibleWrap.h"
 
 // IUnknown
 
 STDMETHODIMP
-CAccessibleAction::QueryInterface(REFIID iid, void** ppv)
+ia2AccessibleAction::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = NULL;
 
@@ -63,7 +63,7 @@ CAccessibleAction::QueryInterface(REFIID iid, void** ppv)
 // IAccessibleAction
 
 STDMETHODIMP
-CAccessibleAction::nActions(long* aActionCount)
+ia2AccessibleAction::nActions(long* aActionCount)
 {
 __try {
   if (!aActionCount)
@@ -71,8 +71,8 @@ __try {
 
   *aActionCount = 0;
 
-  nsRefPtr<nsAccessible> acc(do_QueryObject(this));
-  if (!acc || acc->IsDefunct())
+  nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
+  if (acc->IsDefunct())
     return E_FAIL;
 
   *aActionCount = acc->ActionCount();
@@ -83,11 +83,11 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleAction::doAction(long aActionIndex)
+ia2AccessibleAction::doAction(long aActionIndex)
 {
 __try {
-  nsCOMPtr<nsIAccessible> acc(do_QueryObject(this));
-  if (!acc)
+  nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
+  if (acc->IsDefunct())
     return E_FAIL;
 
   PRUint8 index = static_cast<PRUint8>(aActionIndex);
@@ -99,13 +99,13 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleAction::get_description(long aActionIndex, BSTR *aDescription)
+ia2AccessibleAction::get_description(long aActionIndex, BSTR *aDescription)
 {
 __try {
   *aDescription = NULL;
 
-  nsCOMPtr<nsIAccessible> acc(do_QueryObject(this));
-  if (!acc)
+  nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
+  if (acc->IsDefunct())
     return E_FAIL;
 
   nsAutoString description;
@@ -126,7 +126,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleAction::get_keyBinding(long aActionIndex, long aNumMaxBinding,
+ia2AccessibleAction::get_keyBinding(long aActionIndex, long aNumMaxBinding,
                                   BSTR **aKeyBinding,
                                   long *aNumBinding)
 {
@@ -142,8 +142,8 @@ __try {
   if (aActionIndex != 0 || aNumMaxBinding < 1)
     return E_INVALIDARG;
 
-  nsRefPtr<nsAccessible> acc(do_QueryObject(this));
-  if (!acc || acc->IsDefunct())
+  nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
+  if (acc->IsDefunct())
     return E_FAIL;
 
   // Expose keyboard shortcut if it's not exposed via MSAA keyboard shortcut.
@@ -176,13 +176,13 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleAction::get_name(long aActionIndex, BSTR *aName)
+ia2AccessibleAction::get_name(long aActionIndex, BSTR *aName)
 {
 __try {
   *aName = NULL;
 
-  nsCOMPtr<nsIAccessible> acc(do_QueryObject(this));
-  if (!acc)
+  nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
+  if (acc->IsDefunct())
     return E_FAIL;
 
   nsAutoString name;
@@ -202,7 +202,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleAction::get_localizedName(long aActionIndex, BSTR *aLocalizedName)
+ia2AccessibleAction::get_localizedName(long aActionIndex, BSTR *aLocalizedName)
 {
 __try {
   *aLocalizedName = NULL;

@@ -101,6 +101,11 @@ struct GlobalSlotArray {
     uint32_t        length;
 };
 
+struct ClosedSlotArray {
+    uint32_t        *vector;    /* array of closed slots */
+    uint32_t        length;     /* count of closed slots */
+};
+
 struct Shape;
 
 enum BindingKind { NONE, ARGUMENT, VARIABLE, CONSTANT };
@@ -276,27 +281,32 @@ namespace js {
 
 namespace analyze { class ScriptAnalysis; }
 
-class ScriptOpcodeCounts
+class ScriptCounts
 {
     friend struct ::JSScript;
-    friend struct ScriptOpcodeCountsPair;
-    OpcodeCounts *counts;
+    friend struct ScriptAndCounts;
+    /*
+     * This points to a single block that holds an array of PCCounts followed
+     * by an array of doubles.  Each element in the PCCounts array has a
+     * pointer into the array of doubles.
+     */
+    PCCounts *pcCountsVector;
 
  public:
 
-    ScriptOpcodeCounts() : counts(NULL) {
+    ScriptCounts() : pcCountsVector(NULL) {
     }
 
     inline void destroy(JSContext *cx);
 
-    void steal(ScriptOpcodeCounts &other) {
+    void steal(ScriptCounts &other) {
         *this = other;
         js::PodZero(&other);
     }
 
-    // Boolean conversion, for 'if (counters) ...'
+    // Boolean conversion, for 'if (scriptCounts) ...'
     operator void*() const {
-        return counts;
+        return pcCountsVector;
     }
 };
 
@@ -329,46 +339,124 @@ static const uint32_t JS_SCRIPT_COOKIE = 0xc00cee;
 
 struct JSScript : public js::gc::Cell
 {
-    /*
-     * Two successively less primitive ways to make a new JSScript.  The first
-     * does *not* call a non-null cx->runtime->newScriptHook -- only the second,
-     * NewScriptFromEmitter, calls this optional debugger hook.
-     *
-     * The NewScript function can't know whether the script it creates belongs
-     * to a function, or is top-level or eval code, but the debugger wants access
-     * to the newly made script's function, if any -- so callers of NewScript
-     * are responsible for notifying the debugger after successfully creating any
-     * kind (function or other) of new JSScript.
-     */
-    static JSScript *NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
-                               uint32_t nobjects, uint32_t nregexps,
-                               uint32_t ntrynotes, uint32_t nconsts, uint32_t nglobals,
-                               uint16_t nClosedArgs, uint16_t nClosedVars, uint32_t nTypeSets,
-                               JSVersion version);
+  private:
+    static const uint32_t stepFlagMask = 0x80000000U;
+    static const uint32_t stepCountMask = 0x7fffffffU;
 
-    static JSScript *NewScriptFromEmitter(JSContext *cx, js::BytecodeEmitter *bce);
+  /*
+   * We order fields according to their size in order to avoid wasting space
+   * for alignment.
+   */
 
-#ifdef JS_CRASH_DIAGNOSTICS
-    /*
-     * Make sure that the cookie size does not affect the GC alignment
-     * requirements.
-     */
-    uint32_t        cookie1[Cell::CellSize / sizeof(uint32_t)];
-#endif
+  /* Larger-than-word-sized fields. */
+
+  public:
+    js::Bindings    bindings;   /* names of top-level variables in this script
+                                   (and arguments if this is a function script) */
+
+  /* Word-sized fields. */
+
+  public:
     jsbytecode      *code;      /* bytecodes and their immediate operands */
-    uint8_t         *data;      /* pointer to variable-length data array */
+    uint8_t         *data;      /* pointer to variable-length data array (see 
+                                   comment above NewScript() for details) */
 
+    const char      *filename;  /* source filename or null */
+    JSAtom          **atoms;    /* maps immediate index to literal struct */
+
+    JSPrincipals    *principals;/* principals for this script */
+    JSPrincipals    *originPrincipals; /* see jsapi.h 'originPrincipals' comment */
+
+    jschar          *sourceMap; /* source map file or null */
+
+    /*
+     * A global object for the script.
+     * - All scripts returned by JSAPI functions (JS_CompileScript,
+     *   JS_CompileUTF8File, etc.) have a non-null globalObject.
+     * - A function script has a globalObject if the function comes from a
+     *   compile-and-go script.
+     * - Temporary scripts created by obj_eval, JS_EvaluateScript, and
+     *   similar functions never have the globalObject field set; for such
+     *   scripts the global should be extracted from the JS frame that
+     *   execute scripts.
+     */
+    js::HeapPtr<js::GlobalObject, JSScript*> globalObject;
+
+    /* Execution and profiling information for JIT code in the script. */
+    js::ScriptCounts scriptCounts;
+
+    /* Persistent type information retained across GCs. */
+    js::types::TypeScript *types;
+
+#ifdef JS_METHODJIT
+    // Fast-cached pointers to make calls faster. These are also used to
+    // quickly test whether there is JIT code; a NULL value means no
+    // compilation has been attempted. A JS_UNJITTABLE_SCRIPT value means
+    // compilation failed. Any value is the arity-check entry point.
+    void *jitArityCheckNormal;
+    void *jitArityCheckCtor;
+
+    js::mjit::JITScript *jitNormal;   /* Extra JIT info for normal scripts */
+    js::mjit::JITScript *jitCtor;     /* Extra JIT info for constructors */
+#endif
+
+  private:
+    js::DebugScript     *debug;
+    js::HeapPtrFunction function_;
+
+    size_t          useCount;   /* Number of times the script has been called
+                                 * or has had backedges taken. Reset if the
+                                 * script's JIT code is forcibly discarded. */
+#if JS_BITS_PER_WORD == 32
+    void *padding_;
+#endif
+
+    /* 32-bit fields. */
+
+  public:
     uint32_t        length;     /* length of code vector */
+
+    uint32_t        lineno;     /* base line number of script */
+
+    uint32_t        mainOffset; /* offset of main entry point from code, after
+                                   predef'ing prolog */
+
+    uint32_t        natoms;     /* length of atoms array */
+
+#ifdef DEBUG
+    /*
+     * Unique identifier within the compartment for this script, used for
+     * printing analysis information.
+     */
+    uint32_t        id_;
+  private:
+    uint32_t        idpad;
+  public:
+#endif
+
+    /* 16-bit fields. */
+
   private:
     uint16_t        version;    /* JS version under which script was compiled */
 
   public:
     uint16_t        nfixed;     /* number of slots besides stack operands in
                                    slot array */
+
+    uint16_t        nTypeSets;  /* number of type sets used in this script for
+                                   dynamic type monitoring */
+
+    uint16_t        nslots;     /* vars plus maximum stack depth */
+    uint16_t        staticLevel;/* static level for display maintenance */
+
+    /* 8-bit fields. */
+
     /*
      * Offsets to various array structures from the end of this script, or
      * JSScript::INVALID_OFFSET if the array has length 0.
      */
+  public:
+    uint8_t         constsOffset;   /* offset to the array of constants */
     uint8_t         objectsOffset;  /* offset to the array of nested function,
                                        block, scope, xml and one-time regexps
                                        objects */
@@ -376,15 +464,12 @@ struct JSScript : public js::gc::Cell
                                        regexps  */
     uint8_t         trynotesOffset; /* offset to the array of try notes */
     uint8_t         globalsOffset;  /* offset to the array of global slots */
-    uint8_t         constOffset;    /* offset to the array of constants */
+    uint8_t         closedArgsOffset; /* offset to the array of closed args */
+    uint8_t         closedVarsOffset; /* offset to the array of closed vars */
 
-    uint16_t        nTypeSets;      /* number of type sets used in this script for
-                                       dynamic type monitoring */
+    /* 1-bit fields. */
 
-    uint32_t        lineno;     /* base line number of script */
-
-    uint32_t        mainOffset; /* offset of main entry point from code, after
-                                   predef'ing prolog */
+  public:
     bool            noScriptRval:1; /* no need for result value of last
                                        expression statement */
     bool            savedCallerFun:1; /* can call getCallerFunction() */
@@ -428,7 +513,28 @@ struct JSScript : public js::gc::Cell
     bool            mayNeedArgsObj_:1;
     bool            analyzedArgsUsage_:1;
     bool            needsArgsObj_:1;
+
+    /* End of fields.  Start methods. */
+
+    /*
+     * Two successively less primitive ways to make a new JSScript.  The first
+     * does *not* call a non-null cx->runtime->newScriptHook -- only the second,
+     * NewScriptFromEmitter, calls this optional debugger hook.
+     *
+     * The NewScript function can't know whether the script it creates belongs
+     * to a function, or is top-level or eval code, but the debugger wants access
+     * to the newly made script's function, if any -- so callers of NewScript
+     * are responsible for notifying the debugger after successfully creating any
+     * kind (function or other) of new JSScript.
+     */
   public:
+    static JSScript *NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
+                               uint32_t nobjects, uint32_t nregexps,
+                               uint32_t ntrynotes, uint32_t nconsts, uint32_t nglobals,
+                               uint16_t nClosedArgs, uint16_t nClosedVars, uint32_t nTypeSets,
+                               JSVersion version);
+    static JSScript *NewScriptFromEmitter(JSContext *cx, js::BytecodeEmitter *bce);
+
     bool mayNeedArgsObj() const { return mayNeedArgsObj_; }
     bool analyzedArgsUsage() const { return analyzedArgsUsage_; }
     bool needsArgsObj() const { JS_ASSERT(analyzedArgsUsage()); return needsArgsObj_; }
@@ -439,51 +545,8 @@ struct JSScript : public js::gc::Cell
         mayNeedArgsObj_ = true;
     }
 
-    uint32_t        natoms;     /* length of atoms array */
-    uint16_t        nslots;     /* vars plus maximum stack depth */
-    uint16_t        staticLevel;/* static level for display maintenance */
-
-    uint16_t        nClosedArgs; /* number of args which are closed over. */
-    uint16_t        nClosedVars; /* number of vars which are closed over. */
-
-    const char      *filename;  /* source filename or null */
-    JSAtom          **atoms;    /* maps immediate index to literal struct */
-  private:
-    size_t          useCount;  /* Number of times the script has been called
-                                 * or has had backedges taken. Reset if the
-                                 * script's JIT code is forcibly discarded. */
-  public:
-    js::Bindings    bindings;   /* names of top-level variables in this script
-                                   (and arguments if this is a function script) */
-    JSPrincipals    *principals;/* principals for this script */
-    JSPrincipals    *originPrincipals; /* see jsapi.h 'originPrincipals' comment */
-    jschar          *sourceMap; /* source map file or null */
-
-    /*
-     * A global object for the script.
-     * - All scripts returned by JSAPI functions (JS_CompileScript,
-     *   JS_CompileUTF8File, etc.) have a non-null globalObject.
-     * - A function script has a globalObject if the function comes from a
-     *   compile-and-go script.
-     * - Temporary scripts created by obj_eval, JS_EvaluateScript, and
-     *   similar functions never have the globalObject field set; for such
-     *   scripts the global should be extracted from the JS frame that
-     *   execute scripts.
-     */
-    js::HeapPtr<js::GlobalObject, JSScript*> globalObject;
-
     /* Hash table chaining for JSCompartment::evalCache. */
-    JSScript        *&evalHashLink() { return *globalObject.unsafeGetUnioned(); }
-
-    uint32_t        *closedSlots; /* vector of closed slots; args first, then vars. */
-
-    /* Execution and profiling information for JIT code in the script. */
-    js::ScriptOpcodeCounts pcCounters;
-
-  private:
-    js::DebugScript     *debug;
-    js::HeapPtrFunction function_;
-  public:
+    JSScript *&evalHashLink() { return *globalObject.unsafeGetUnioned(); }
 
     /*
      * Original compiled function for the script, if it has a function.
@@ -492,34 +555,10 @@ struct JSScript : public js::gc::Cell
     JSFunction *function() const { return function_; }
     void setFunction(JSFunction *fun);
 
-#ifdef JS_CRASH_DIAGNOSTICS
-    /* All diagnostic fields must be multiples of Cell::CellSize. */
-    uint32_t        cookie2[Cell::CellSize / sizeof(uint32_t)];
-
-    void CheckScript(JSScript *prev);
-#else
-    void CheckScript(JSScript *prev) {}
-#endif /* !JS_CRASH_DIAGNOSTICS */
-
 #ifdef DEBUG
-    /*
-     * Unique identifier within the compartment for this script, used for
-     * printing analysis information.
-     */
-    uint32_t id_;
-    uint32_t idpad;
     unsigned id();
 #else
     unsigned id() { return 0; }
-#endif
-
-    /* Persistent type information retained across GCs. */
-    js::types::TypeScript *types;
-
-#if JS_BITS_PER_WORD == 32
-  private:
-    void *padding_;
-  public:
 #endif
 
     /* Ensure the script has a TypeScript. */
@@ -565,18 +604,6 @@ struct JSScript : public js::gc::Cell
   public:
 
 #ifdef JS_METHODJIT
-    // Fast-cached pointers to make calls faster. These are also used to
-    // quickly test whether there is JIT code; a NULL value means no
-    // compilation has been attempted. A JS_UNJITTABLE_SCRIPT value means
-    // compilation failed. Any value is the arity-check entry point.
-    void *jitArityCheckNormal;
-    void *jitArityCheckCtor;
-
-    js::mjit::JITScript *jitNormal;   /* Extra JIT info for normal scripts */
-    js::mjit::JITScript *jitCtor;     /* Extra JIT info for constructors */
-#endif
-
-#ifdef JS_METHODJIT
     bool hasJITCode() {
         return jitNormal || jitCtor;
     }
@@ -600,17 +627,15 @@ struct JSScript : public js::gc::Cell
      * MethodJIT.cpp.)
      */
     size_t sizeOfJitScripts(JSMallocSizeOfFun mallocSizeOf);
-
 #endif
 
-    /* Counter accessors. */
-    js::OpcodeCounts getCounts(jsbytecode *pc) {
+    js::PCCounts getPCCounts(jsbytecode *pc) {
         JS_ASSERT(size_t(pc - code) < length);
-        return pcCounters.counts[pc - code];
+        return scriptCounts.pcCountsVector[pc - code];
     }
 
-    bool initCounts(JSContext *cx);
-    void destroyCounts(JSContext *cx);
+    bool initScriptCounts(JSContext *cx);
+    void destroyScriptCounts(JSContext *cx);
 
     jsbytecode *main() {
         return code + mainOffset;
@@ -632,6 +657,11 @@ struct JSScript : public js::gc::Cell
     static const uint8_t INVALID_OFFSET = 0xFF;
     static bool isValidOffset(uint8_t offset) { return offset != INVALID_OFFSET; }
 
+    JSConstArray *consts() {
+        JS_ASSERT(isValidOffset(constsOffset));
+        return reinterpret_cast<JSConstArray *>(data + constsOffset);
+    }
+
     JSObjectArray *objects() {
         JS_ASSERT(isValidOffset(objectsOffset));
         return reinterpret_cast<JSObjectArray *>(data + objectsOffset);
@@ -652,9 +682,22 @@ struct JSScript : public js::gc::Cell
         return reinterpret_cast<js::GlobalSlotArray *>(data + globalsOffset);
     }
 
-    JSConstArray *consts() {
-        JS_ASSERT(isValidOffset(constOffset));
-        return reinterpret_cast<JSConstArray *>(data + constOffset);
+    js::ClosedSlotArray *closedArgs() {
+        JS_ASSERT(isValidOffset(closedArgsOffset));
+        return reinterpret_cast<js::ClosedSlotArray *>(data + closedArgsOffset);
+    }
+
+    js::ClosedSlotArray *closedVars() {
+        JS_ASSERT(isValidOffset(closedVarsOffset));
+        return reinterpret_cast<js::ClosedSlotArray *>(data + closedVarsOffset);
+    }
+
+    uint32_t nClosedArgs() {
+        return isValidOffset(closedArgsOffset) ? closedArgs()->length : 0;
+    }
+
+    uint32_t nClosedVars() {
+        return isValidOffset(closedVarsOffset) ? closedVars()->length : 0;
     }
 
     JSAtom *getAtom(size_t index) {
@@ -695,21 +738,18 @@ struct JSScript : public js::gc::Cell
     inline bool isEmpty() const;
 
     uint32_t getClosedArg(uint32_t index) {
-        JS_ASSERT(index < nClosedArgs);
-        return closedSlots[index];
+        js::ClosedSlotArray *arr = closedArgs();
+        JS_ASSERT(index < arr->length);
+        return arr->vector[index];
     }
 
     uint32_t getClosedVar(uint32_t index) {
-        JS_ASSERT(index < nClosedVars);
-        return closedSlots[nClosedArgs + index];
+        js::ClosedSlotArray *arr = closedVars();
+        JS_ASSERT(index < arr->length);
+        return arr->vector[index];
     }
 
-    void copyClosedSlotsTo(JSScript *other);
-
   private:
-    static const uint32_t stepFlagMask = 0x80000000U;
-    static const uint32_t stepCountMask = 0x7fffffffU;
-
     /*
      * Attempt to recompile with or without single-stepping support, as directed
      * by stepModeEnabled().
@@ -813,30 +853,16 @@ SweepScriptFilenames(JSCompartment *comp);
 extern void
 FreeScriptFilenames(JSCompartment *comp);
 
-struct ScriptOpcodeCountsPair
+struct ScriptAndCounts
 {
     JSScript *script;
-    ScriptOpcodeCounts counters;
+    ScriptCounts scriptCounts;
 
-    OpcodeCounts &getCounts(jsbytecode *pc) const {
+    PCCounts &getPCCounts(jsbytecode *pc) const {
         JS_ASSERT(unsigned(pc - script->code) < script->length);
-        return counters.counts[pc - script->code];
+        return scriptCounts.pcCountsVector[pc - script->code];
     }
 };
-
-#ifdef JS_CRASH_DIAGNOSTICS
-
-void
-CheckScript(JSScript *script, JSScript *prev);
-
-#else
-
-inline void
-CheckScript(JSScript *script, JSScript *prev)
-{
-}
-
-#endif /* !JS_CRASH_DIAGNOSTICS */
 
 } /* namespace js */
 

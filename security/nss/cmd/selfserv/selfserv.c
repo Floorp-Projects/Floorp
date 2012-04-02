@@ -803,6 +803,8 @@ PRBool enableSessionTickets = PR_FALSE;
 PRBool enableCompression    = PR_FALSE;
 PRBool failedToNegotiateName  = PR_FALSE;
 static char  *virtServerNameArray[MAX_VIRT_SERVER_NAME_ARRAY_INDEX];
+static int                  virtServerNameIndex = 1;
+
 
 static const char stopCmd[] = { "GET /stop " };
 static const char getCmd[]  = { "GET " };
@@ -1706,10 +1708,12 @@ server_main(
 	}
     }
 
-    rv = SSL_SNISocketConfigHook(model_sock, mySSLSNISocketConfig,
-                                 (void*)&virtServerNameArray);
-    if (rv != SECSuccess) {
-        errExit("error enabling SNI extension ");
+    if (virtServerNameIndex >1) {
+        rv = SSL_SNISocketConfigHook(model_sock, mySSLSNISocketConfig,
+                                     (void*)&virtServerNameArray);
+        if (rv != SECSuccess) {
+            errExit("error enabling SNI extension ");
+        }
     }
 
     for (kea = kt_rsa; kea < kt_kea_size; kea++) {
@@ -1935,7 +1939,6 @@ main(int argc, char **argv)
     SSL3Statistics      *ssl3stats;
     PRUint32             i;
     secuPWData  pwdata = { PW_NONE, 0 };
-    int                  virtServerNameIndex = 1;
     char                *expectedHostNameVal = NULL;
 
     tmp = strrchr(argv[0], '/');

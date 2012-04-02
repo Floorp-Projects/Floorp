@@ -534,6 +534,9 @@ public class PanZoomController
         mX.displace();
         mY.displace();
         PointF displacement = getDisplacement();
+        if (FloatUtils.fuzzyEquals(displacement.x, 0.0f) && FloatUtils.fuzzyEquals(displacement.y, 0.0f)) {
+            return;
+        }
         if (! mSubscroller.scrollBy(displacement)) {
             synchronized (mController) {
                 mController.scrollBy(displacement);
