@@ -240,7 +240,24 @@ ToNSString(id aValue)
   }
 
   if ([attribute isEqualToString:NSAccessibilitySelectedTextAttribute]) {
-    // XXX to do
+    NSString* stringValue = ToNSString(value);
+    if (!stringValue)
+      return;
+
+    PRInt32 start = 0;
+    PRInt32 end = 0;
+
+    nsresult rv = mGeckoTextAccessible->GetSelectionBounds(0, &start, &end);
+    NS_ENSURE_SUCCESS(rv,);
+    
+    rv = mGeckoTextAccessible->DeleteText(start, end - start);
+    NS_ENSURE_SUCCESS(rv,);
+
+    nsString text;
+    nsCocoaUtils::GetStringForNSString(stringValue, text);
+    rv = mGeckoTextAccessible->InsertText(text, start);
+    NS_ENSURE_SUCCESS(rv,);
+
     return;
   }
 
