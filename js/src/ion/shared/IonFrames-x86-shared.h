@@ -79,6 +79,7 @@ class IonCommonFrameLayout
 
 class IonJSFrameLayout : public IonCommonFrameLayout
 {
+  private:
     void *calleeToken_;
 
   public:
