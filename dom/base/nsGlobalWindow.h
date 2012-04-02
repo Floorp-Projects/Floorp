@@ -136,6 +136,7 @@ class nsRunnable;
 class nsDOMEventTargetHelper;
 class nsDOMOfflineResourceList;
 class nsDOMMozURLProperty;
+class nsDOMWindowUtils;
 
 #ifdef MOZ_DISABLE_DOMCRYPTO
 class nsIDOMCrypto;
@@ -896,7 +897,7 @@ protected:
   nsRefPtr<nsBarProp>           mPersonalbar;
   nsRefPtr<nsBarProp>           mStatusbar;
   nsRefPtr<nsBarProp>           mScrollbars;
-  nsCOMPtr<nsIWeakReference>    mWindowUtils;
+  nsRefPtr<nsDOMWindowUtils>    mWindowUtils;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
   // index 0->language_id 1, so index MAX-1 == language_id MAX
