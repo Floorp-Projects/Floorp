@@ -32,10 +32,16 @@ function assertEquals(descr, expected, actual) {
 }
 
   function assertSize(descr, expected, actual) {
-    var actualSize;
     ok(actual !== null, descr);
-    actualSize = actual.length;
-    is(actualSize, expected, descr);
+/*
+    // Work around too strict checks.
+    if (!actual) {
+      ok(actual, "[assertSize()] 'actual' has a value");
+      return;
+    }
+*/
+
+    is(actual.length, expected, descr);
   }
 
   function assertEqualsAutoCase(context, descr, expected, actual) {
@@ -186,7 +192,13 @@ function assertEquals(descr, expected, actual) {
   function assertURIEquals(assertID, scheme, path, host, file, name, query, fragment, isAbsolute, actual) {
     //
     //  URI must be non-null
-    ok(assertID && actual);
+    ok(assertID, "[assertURIEquals()] 'assertID' has a value");
+    ok(actual, "[assertURIEquals()] 'actual' has a value");
+/*
+    // Add missing early return.
+    if (!actual)
+      return;
+*/
 
     var uri = actual;
 
@@ -315,6 +327,11 @@ function catchInitializationError(blder, ex) {
 
 function checkInitialization(blder, testname) {
     if (blder.initializationError != null) {
+        // Fake a "warn()" function, as it was missing :-|
+        function warn(msg) {
+          info("[checkInitialization() warning] " + msg);
+        }
+
         if (blder.skipIncompatibleTests) {
         	warn(testname + " not run:" + blder.initializationError);
         	return blder.initializationError;
@@ -327,7 +344,6 @@ function checkInitialization(blder, testname) {
         	} else {
         		//
         		//   might be recoverable, warn but continue the test
-        		// XXX warn
         		warn(testname + ": " +  blder.initializationError);
         	}
         }
@@ -648,54 +664,31 @@ function getImplementation() {
     return builder.getImplementation();
 }
 
-//sayrer override the SimpleTest logger
-SimpleTest._logResult = function(test, passString, failString) {
-  var msg = test.result ? passString : failString;
-  msg += " | " + test.name;
-  if (test.result) {
-      if (test.todo)
-          parentRunner.logger.error(msg)
-      else
-          parentRunner.logger.log(msg);
-  } else {
-      msg += " | " + test.diag;
-      if (test.todo) {
-        parentRunner.logger.log(msg)
-      } else {
-        if (todoTests[docName]) {
-          parentRunner.logger.log("expected error in todo testcase | " + test.name);
-        } else {
-          parentRunner.logger.error(msg);
-        }
-      } 
+// Count of failures overridden as todos.
+var gFailuresAsTodos = 0;
+
+// Override SimpleTest result logger.
+var ST_logResult = SimpleTest._logResult;
+SimpleTest._logResult = function overrideSTlR(test, passString, failString) {
+  if (todoTests[docName] && !test.result && !test.todo) {
+    test.name = "[failure as todo] " + test.name;
+    test.todo = true;
+    failString = "TEST-KNOWN-FAIL";
+
+    ++gFailuresAsTodos;
   }
+
+  ST_logResult(test, passString, failString);
 }
 
 window.doc = window;  
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function(){ setUpPage(); });
-function testFails (test) {
-  if (!test.result) {
-    test.todo = true;
-    return true;
-  }
-  return false;
-}
 
+// Actual marking code is in overrideSTlR() now.
 function markTodos() {
   if (todoTests[docName]) {
-    // mark the failures as todos
-    var tests = SimpleTest._tests;
-    var failures = [];
-    var o;
-    for (var i = 0; i < tests.length; i++) {
-      o = tests[i];
-      if (testFails(o)) {
-        failures.push(o);
-      } 
-    }
-    // shouldn't be 0 failures
-    todo(SimpleTest._tests != 0 && failures == 0, "test marked todo should fail somewhere");
+    isnot(gFailuresAsTodos, 0, "test marked todo should have failed somewhere");
   }
 }
 
@@ -705,13 +698,13 @@ function runJSUnitTests() {
     var tests = exposeTestFunctionNames(); 
     for (var i = 0; i < tests.length; i++) {
       window[tests[i]](); 
-    }   
+    }
   } catch (ex) {
     if (todoTests[docName]) {
-      todo(false, "Text threw exception: " + ex);
+      todo(false, "[failure as todo] Test threw exception: " + ex);
+      ++gFailuresAsTodos;
     } else { 
       ok(false, "Test threw exception: " + ex);
     }
   }
 }
-
