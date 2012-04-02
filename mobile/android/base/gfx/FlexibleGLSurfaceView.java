@@ -118,10 +118,12 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
 
     /** Implementation of SurfaceHolder.Callback */
     public synchronized void surfaceCreated(SurfaceHolder holder) {
+        mController.surfaceCreated();
     }
 
     /** Implementation of SurfaceHolder.Callback */
     public synchronized void surfaceDestroyed(SurfaceHolder holder) {
+        mController.surfaceDestroyed();
         if (mListener != null) {
             mListener.compositionPauseRequested();
         }
