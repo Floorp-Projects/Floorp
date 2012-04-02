@@ -255,8 +255,8 @@ public class AwesomeBarTabs extends TabHost {
                 return c.getString(c.getColumnIndexOrThrow(Bookmarks.TITLE));
 
             // Use localized strings for special folder names.
-            if (guid.equals(Bookmarks.MOBILE_FOLDER_GUID))
-                return mResources.getString(R.string.bookmarks_folder_mobile);
+            if (guid.equals(Bookmarks.FAKE_DESKTOP_FOLDER_GUID))
+                return mResources.getString(R.string.bookmarks_folder_desktop);
             else if (guid.equals(Bookmarks.MENU_FOLDER_GUID))
                 return mResources.getString(R.string.bookmarks_folder_menu);
             else if (guid.equals(Bookmarks.TOOLBAR_FOLDER_GUID))
