@@ -78,40 +78,31 @@ FetchPageInfo(nsRefPtr<Database>& aDB,
   NS_PRECONDITION(!NS_IsMainThread(),
                   "This should not be called on the main thread");
 
-  // This query fragment finds the bookmarked uri we want to set the icon for,
-  // walking up to three redirect levels.
-  nsCString redirectedBookmarksFragment =
-    nsPrintfCString(1024,
-      "SELECT h.url "
-      "FROM moz_bookmarks b "
-      "WHERE b.fk = h.id "
+  // This query finds the bookmarked uri we want to set the icon for,
+  // walking up to two redirect levels.
+  nsCString query = nsPrintfCString(768,
+    "SELECT h.id, h.favicon_id, h.guid, ( "
+      "SELECT h.url FROM moz_bookmarks b WHERE b.fk = h.id "
       "UNION ALL " // Union not directly bookmarked pages.
-      "SELECT (SELECT url FROM moz_places WHERE id = %s) "
-      "FROM moz_historyvisits self "
-      "JOIN moz_bookmarks b ON b.fk = %s "
-      "LEFT JOIN moz_historyvisits parent ON parent.id = self.from_visit "
-      "LEFT JOIN moz_historyvisits grandparent ON parent.from_visit = grandparent.id "
-        "AND parent.visit_type IN (%d, %d) "
-      "LEFT JOIN moz_historyvisits greatgrandparent ON grandparent.from_visit = greatgrandparent.id "
-        "AND grandparent.visit_type IN (%d, %d) "
-      "WHERE self.visit_type IN (%d, %d) "
-        "AND self.place_id = h.id "
-      "LIMIT 1 ",
-      NS_LITERAL_CSTRING("COALESCE(greatgrandparent.place_id, grandparent.place_id, parent.place_id)").get(),
-      NS_LITERAL_CSTRING("COALESCE(greatgrandparent.place_id, grandparent.place_id, parent.place_id)").get(),
-      nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-      nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY,
-      nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-      nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY,
-      nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-      nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY
-    );
+      "SELECT url FROM moz_places WHERE id = ( "
+        "SELECT COALESCE(grandparent.place_id, parent.place_id) as r_place_id "
+        "FROM moz_historyvisits dest "
+        "LEFT JOIN moz_historyvisits parent ON parent.id = dest.from_visit "
+                                          "AND dest.visit_type IN (%d, %d) "
+        "LEFT JOIN moz_historyvisits grandparent ON parent.from_visit = grandparent.id "
+          "AND parent.visit_type IN (%d, %d) "
+        "WHERE dest.place_id = h.id "
+        "AND EXISTS(SELECT 1 FROM moz_bookmarks b WHERE b.fk = r_place_id) "
+        "LIMIT 1 "
+      ") "
+    ") FROM moz_places h WHERE h.url = :page_url",
+    nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
+    nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY,
+    nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
+    nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY
+  );
 
-  nsCOMPtr<mozIStorageStatement> stmt = aDB->GetStatement(NS_LITERAL_CSTRING(
-    "SELECT h.id, h.favicon_id, h.guid, "
-           "(") + redirectedBookmarksFragment + NS_LITERAL_CSTRING(") "
-    "FROM moz_places h WHERE h.url = :page_url"
-  ));
+  nsCOMPtr<mozIStorageStatement> stmt = aDB->GetStatement(query);
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
 
