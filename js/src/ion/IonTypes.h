@@ -82,6 +82,11 @@ enum BailoutKind
     Bailout_RecompileCheck
 };
 
+#ifdef DEBUG
+// Track the pipeline of opcodes which has produced a snapshot.
+#define TRACK_SNAPSHOTS 1
+#endif
+
 } // namespace ion
 } // namespace js
 

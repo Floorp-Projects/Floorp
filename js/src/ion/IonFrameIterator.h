@@ -44,6 +44,7 @@
 
 #include "jstypes.h"
 #include "IonCode.h"
+#include "SnapshotReader.h"
 
 struct JSFunction;
 struct JSScript;
@@ -204,6 +205,26 @@ class IonActivationIterator
         return top_;
     }
     bool more() const;
+};
+
+class FrameRecovery;
+
+class SnapshotIterator : public SnapshotReader
+{
+  private:
+    const FrameRecovery &in_;
+
+    uintptr_t fromLocation(const SnapshotReader::Location &loc);
+    static Value FromTypedPayload(JSValueType type, uintptr_t payload);
+
+    Value slotValue(const Slot &slot);
+
+  public:
+    SnapshotIterator(const FrameRecovery &in);
+
+    Value read() {
+        return slotValue(readSlot());
+    }
 };
 
 } // namespace ion
