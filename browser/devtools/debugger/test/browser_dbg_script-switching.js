@@ -58,6 +58,7 @@ function testScriptsDisplay() {
         label2), "Second script label is incorrect.");
 
 
+      dump("Debugger editor text:\n" + gDebugger.editor.getText() + "\n");
       ok(gDebugger.editor.getText().search(/debugger/) != -1,
         "The correct script was loaded initially.");
 
@@ -80,6 +81,7 @@ function testScriptsDisplay() {
 
 function testSwitchPaused()
 {
+  dump("Debugger editor text:\n" + gDebugger.editor.getText() + "\n");
   ok(gDebugger.editor.getText().search(/debugger/) == -1,
     "The second script is no longer displayed.");
 
