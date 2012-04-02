@@ -419,13 +419,11 @@ nsGeolocationRequest::SetTimeoutTimer()
     mTimeoutTimer = nsnull;
   }
   PRInt32 timeout;
-  if (mOptions && NS_SUCCEEDED(mOptions->GetTimeout(&timeout))) {
+  if (mOptions && NS_SUCCEEDED(mOptions->GetTimeout(&timeout)) && timeout > 0) {
     
-    if (timeout < 0) 
-      timeout = 0;
-    else if (timeout < 10)
+    if (timeout < 10)
       timeout = 10;
-    
+
     mTimeoutTimer = do_CreateInstance("@mozilla.org/timer;1");
     mTimeoutTimer->InitWithCallback(this, timeout, nsITimer::TYPE_ONE_SHOT);
   }
