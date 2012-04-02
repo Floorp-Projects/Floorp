@@ -1294,42 +1294,17 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
     return NS_ERROR_FAILURE;
   }
 
-#if defined(XP_WIN)
-  static BOOL firstJavaPlugin = FALSE;
-  BOOL restoreOrigDir = FALSE;
-  WCHAR origDir[_MAX_PATH];
-  if (pluginTag->mIsJavaPlugin && !firstJavaPlugin) {
-    DWORD dw = GetCurrentDirectoryW(_MAX_PATH, origDir);
-    NS_ASSERTION(dw <= _MAX_PATH, "Failed to obtain the current directory, which may lead to incorrect class loading");
-    nsCOMPtr<nsIFile> binDirectory;
-    nsresult rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
-                                         getter_AddRefs(binDirectory));
+  nsRefPtr<nsNPAPIPluginInstance> instance = new nsNPAPIPluginInstance();
 
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoString path;
-      binDirectory->GetPath(path);
-      restoreOrigDir = SetCurrentDirectoryW(path.get());
-    }
-  }
-#endif
-
-  nsRefPtr<nsNPAPIPluginInstance> instance = new nsNPAPIPluginInstance(plugin.get());
-
-#if defined(XP_WIN)
-  if (!firstJavaPlugin && restoreOrigDir) {
-    BOOL bCheck = SetCurrentDirectoryW(origDir);
-    NS_ASSERTION(bCheck, "Error restoring directory");
-    firstJavaPlugin = TRUE;
-  }
-#endif
-
-  // it is adreffed here
+  // This will create the owning reference. The connection must be made between the
+  // instance and the instance owner before initialization. Plugins can call into
+  // the browser during initialization.
   aOwner->SetInstance(instance.get());
 
   // this should not addref the instance or owner
   // except in some cases not Java, see bug 140931
   // our COM pointer will free the peer
-  nsresult rv = instance->Initialize(aOwner, mimetype);
+  nsresult rv = instance->Initialize(plugin.get(), aOwner, mimetype);
   if (NS_FAILED(rv)) {
     aOwner->SetInstance(nsnull);
     return rv;
