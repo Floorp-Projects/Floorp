@@ -706,6 +706,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_cmp(lr, ptr);
         ma_b(label, cond);
     }
+    void branchPtr(Condition cond, const AbsoluteAddress &addr, const Register &ptr, Label *label) {
+        loadPtr(addr, lr); // ma_cmp will use the scratch register.
+        ma_cmp(lr, ptr);
+        ma_b(label, cond);
+    }
 
     void loadUnboxedValue(Address address, AnyRegister dest) {
         if (dest.isFloat())
@@ -862,18 +867,20 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void load16_mask(const Address &address, Imm32 mask, const Register &dest);
     void load16(const BaseIndex &src, const Register &dest);
     void load32(const Address &address, const Register &dest);
-    void load32(const ImmWord &imm, const Register &dest);
+    void load32(const AbsoluteAddress &address, const Register &dest);
     void loadPtr(const Address &address, const Register &dest);
     void loadPtr(const BaseIndex &src, const Register &dest);
-    void loadPtr(const ImmWord &imm, const Register &dest);
+    void loadPtr(const AbsoluteAddress &address, const Register &dest);
     void loadPrivate(const Address &address, const Register &dest);
 
     void store16(const Register &src, const Address &address);
-    void store32(Register src, const ImmWord &imm);
+    void store32(Register src, const AbsoluteAddress &address);
     void store32(Register src, const Address &address);
     void store32(Imm32 src, const Address &address);
+    void storePtr(ImmWord imm, const Address &address);
+    void storePtr(ImmGCPtr imm, const Address &address);
     void storePtr(Register src, const Address &address);
-    void storePtr(Register src, const ImmWord &imm);
+    void storePtr(const Register &src, const AbsoluteAddress &dest);
 
     void clampIntToUint8(Register src, Register dest) {
         JS_NOT_REACHED("NYI clampIntToUint8");

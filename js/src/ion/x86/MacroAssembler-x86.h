@@ -429,13 +429,22 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void loadPtr(const BaseIndex &src, Register dest) {
         movl(Operand(src), dest);
     }
-    void loadPtr(ImmWord imm, Register dest) {
-        movl(Operand(imm.asPointer()), dest);
+    void loadPtr(const AbsoluteAddress &address, Register dest) {
+        movl(Operand(address), dest);
     }
     void loadPrivate(const Address &src, Register dest) {
         movl(payloadOf(src), dest);
     }
+    void storePtr(ImmWord imm, const Address &address) {
+        movl(Imm32(imm.value), Operand(address));
+    }
+    void storePtr(ImmGCPtr imm, const Address &address) {
+        movl(Imm32(imm.value), Operand(address));
+    }
     void storePtr(Register src, const Address &address) {
+        movl(src, Operand(address));
+    }
+    void storePtr(Register src, const AbsoluteAddress &address) {
         movl(src, Operand(address));
     }
 

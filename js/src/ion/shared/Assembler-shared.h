@@ -126,6 +126,15 @@ struct ImmGCPtr
     { }
 };
 
+// Specifies a hardcoded, absolute address.
+struct AbsoluteAddress {
+    void *addr;
+
+    explicit AbsoluteAddress(void *addr)
+      : addr(addr)
+    { }
+};
+
 // Specifies an address computed in the form of a register base and a constant,
 // 32-bit offset.
 struct Address

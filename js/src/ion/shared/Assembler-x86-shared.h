@@ -608,6 +608,11 @@ class AssemblerX86Shared
           case Operand::REG_DISP:
             masm.cmpl_rm(rhs.code(), lhs.disp(), lhs.base());
             break;
+#ifdef JS_CPU_X86
+          case Operand::ADDRESS:
+            masm.cmpl_rm(rhs.code(), lhs.address());
+            break;
+#endif
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }
@@ -620,6 +625,11 @@ class AssemblerX86Shared
           case Operand::REG_DISP:
             masm.cmpl_im(imm.value, op.disp(), op.base());
             break;
+#ifdef JS_CPU_X86
+          case Operand::ADDRESS:
+            masm.cmpl_im(imm.value, op.address());
+            break;
+#endif
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }

@@ -158,6 +158,10 @@ class Operand
         base_(reg.code()),
         disp_(disp)
     { }
+    explicit Operand(const AbsoluteAddress &address)
+      : kind_(ADDRESS),
+        base_(reinterpret_cast<int32>(address.addr))
+    { }
     explicit Operand(const void *address)
       : kind_(ADDRESS),
         base_(reinterpret_cast<int32>(address))
