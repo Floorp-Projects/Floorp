@@ -173,16 +173,21 @@ public class GeckoLayerClient implements GeckoEventResponder,
         GeckoAppShell.viewSizeChanged();
     }
 
-    private void adjustViewport() {
-        ViewportMetrics viewportMetrics =
-            new ViewportMetrics(mLayerController.getViewportMetrics());
+    void adjustViewport(DisplayPortMetrics displayPort) {
+        ImmutableViewportMetrics metrics = mLayerController.getViewportMetrics();
 
-        viewportMetrics.setViewport(viewportMetrics.getClampedViewport());
+        ViewportMetrics clampedMetrics = new ViewportMetrics(metrics);
+        clampedMetrics.setViewport(clampedMetrics.getClampedViewport());
 
-        mDisplayPort = DisplayPortCalculator.calculate(mLayerController.getViewportMetrics(),
-                mLayerController.getPanZoomController().getVelocityVector());
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createViewportEvent(viewportMetrics, mDisplayPort));
-        mGeckoViewport = viewportMetrics;
+        if (displayPort == null) {
+            displayPort = DisplayPortCalculator.calculate(metrics,
+                    mLayerController.getPanZoomController().getVelocityVector());
+        }
+
+        mDisplayPort = displayPort;
+        mGeckoViewport = clampedMetrics;
+
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createViewportEvent(clampedMetrics, displayPort));
     }
 
     /**
@@ -281,7 +286,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
         /* Let Gecko know if the screensize has changed */
         sendResizeEventIfNecessary(false);
         if (mLayerController.getRedrawHint())
-            adjustViewport();
+            adjustViewport(null);
     }
 
     /*
