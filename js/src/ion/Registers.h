@@ -118,6 +118,28 @@ struct FloatRegister {
     }
 };
 
+// Information needed to recover machine register state.
+class MachineState
+{
+    uintptr_t *regs_;
+    double *fpregs_;
+
+  public:
+    MachineState()
+      : regs_(NULL), fpregs_(NULL)
+    { }
+    MachineState(uintptr_t *regs, double *fpregs)
+      : regs_(regs), fpregs_(fpregs)
+    { }
+
+    double readFloatReg(FloatRegister reg) const {
+        return fpregs_[reg.code()];
+    }
+    uintptr_t readReg(Register reg) const {
+        return regs_[reg.code()];
+    }
+};
+
 } // namespace ion
 } // namespace js
 
