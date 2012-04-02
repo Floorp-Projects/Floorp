@@ -38,6 +38,8 @@
 #include "xpcprivate.h"
 #include "XPCJSWeakReference.h"
 
+#include "nsContentUtils.h"
+
 xpcJSWeakReference::xpcJSWeakReference()
 {
 }
@@ -55,6 +57,19 @@ nsresult xpcJSWeakReference::Init(JSContext* cx, const JS::Value& object)
 
     XPCCallContext ccx(NATIVE_CALLER, cx);
 
+    // See if the object is a wrapped native that supports weak references.
+    nsISupports* supports =
+        nsXPConnect::GetXPConnect()->GetNativeOfWrapper(cx, &obj);
+    if (supports) {
+        mReferent = do_GetWeakReference(supports);
+        if (mReferent) {
+            return NS_OK;
+        }
+    }
+    // If it's not a wrapped native, or it is a wrapped native that does not
+    // support weak references, fall back to getting a weak ref to the object.
+
+    // See if object is a wrapped JSObject.
     nsRefPtr<nsXPCWrappedJS> wrapped;
     nsresult rv = nsXPCWrappedJS::GetNewOrUsed(ccx,
                                                &obj,
@@ -66,7 +81,7 @@ nsresult xpcJSWeakReference::Init(JSContext* cx, const JS::Value& object)
         return rv;
     }
 
-    return wrapped->GetWeakReference(getter_AddRefs(mWrappedJSObject));
+    return wrapped->GetWeakReference(getter_AddRefs(mReferent));
 }
 
 NS_IMETHODIMP
@@ -74,13 +89,22 @@ xpcJSWeakReference::Get(JSContext* aCx, JS::Value* aRetval)
 {
     *aRetval = JSVAL_NULL;
 
-    if (!mWrappedJSObject) {
+    if (!mReferent) {
         return NS_OK;
     }
 
-    nsCOMPtr<nsIXPConnectWrappedJS> wrappedObj = do_QueryReferent(mWrappedJSObject);
-    if (!wrappedObj) {
+    nsCOMPtr<nsISupports> supports = do_QueryReferent(mReferent);
+    if (!supports) {
         return NS_OK;
+    }
+
+    nsCOMPtr<nsIXPConnectWrappedJS> wrappedObj = do_QueryInterface(supports);
+    if (!wrappedObj) {
+        // We have a generic XPCOM object that supports weak references here.
+        // Wrap it and pass it out.
+        return nsContentUtils::WrapNative(aCx, JS_GetGlobalForScopeChain(aCx),
+                                          supports, &NS_GET_IID(nsISupports),
+                                          aRetval);
     }
 
     JSObject *obj;
