@@ -42,7 +42,7 @@
 #ifndef jsion_snapshots_h__
 #define jsion_snapshots_h__
 
-#include "Ion.h"
+#include "IonTypes.h"
 #include "IonCode.h"
 #include "Registers.h"
 #include "CompactBuffer.h"
@@ -257,26 +257,6 @@ class SnapshotReader
 
     bool moreSlots() const {
         return slotsRead_ < slotCount_;
-    }
-};
-
-class FrameRecovery;
-
-class SnapshotIterator : public SnapshotReader
-{
-  private:
-    const FrameRecovery &in_;
-
-    uintptr_t fromLocation(const SnapshotReader::Location &loc);
-    static Value FromTypedPayload(JSValueType type, uintptr_t payload);
-
-    Value slotValue(const Slot &slot);
-
-  public:
-    SnapshotIterator(const FrameRecovery &in);
-
-    Value read() {
-        return slotValue(readSlot());
     }
 };
 
