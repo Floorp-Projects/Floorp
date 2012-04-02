@@ -281,21 +281,15 @@ nsAccessibleWrap::GetUnignoredChildren(nsTArray<nsRefPtr<nsAccessibleWrap> > &aC
   }
 }
 
-already_AddRefed<nsIAccessible>
-nsAccessibleWrap::GetUnignoredParent()
+nsAccessible*
+nsAccessibleWrap::GetUnignoredParent() const
 {
+  // Go up the chain to find a parent that is not ignored.
   nsAccessibleWrap* parentWrap = static_cast<nsAccessibleWrap*>(Parent());
-  if (!parentWrap)
-    return nsnull;
+  while (parentWrap && parentWrap->IsIgnored()) 
+    parentWrap = static_cast<nsAccessibleWrap*>(parentWrap->Parent());
     
-  // recursively return the parent, until we find one that is not ignored.
-  if (parentWrap->IsIgnored())
-    return parentWrap->GetUnignoredParent();
-  
-  nsIAccessible *outValue = nsnull;
-  NS_IF_ADDREF(outValue = parentWrap);
-  
-  return outValue;
+  return parentWrap;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

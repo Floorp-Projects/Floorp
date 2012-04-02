@@ -357,7 +357,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   if (mParent)
     return mParent;
 
-  nsCOMPtr<nsIAccessible> accessibleParent(mGeckoAccessible->GetUnignoredParent());
+  nsAccessible* accessibleParent = mGeckoAccessible->GetUnignoredParent();
   if (accessibleParent) {
     id nativeParent = GetNativeFromGeckoAccessible(accessibleParent);
     if (nativeParent)
