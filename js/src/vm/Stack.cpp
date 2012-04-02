@@ -1182,6 +1182,7 @@ StackIter::settleOnNewState()
                 if (!ionFrames_.more()) {
                     // In this case, we bailed out the last frame, so we
                     // shouldn't really transition to Ion code.
+                    ++ionActivations_;
                     popFrame();
                     continue;
                 }
