@@ -127,9 +127,7 @@ abstract public class GeckoApp
     public static boolean sIsGeckoReady = false;
     public static int mOrientation;
 
-    private IntentFilter mConnectivityFilter;
-
-    private BroadcastReceiver mConnectivityReceiver;
+    private GeckoConnectivityReceiver mConnectivityReceiver;
     private BroadcastReceiver mBatteryReceiver;
 
     public static BrowserToolbar mBrowserToolbar;
@@ -1585,8 +1583,6 @@ abstract public class GeckoApp
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (LinearLayout) findViewById(R.id.main_layout);
 
-        mConnectivityFilter = new IntentFilter();
-        mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         mConnectivityReceiver = new GeckoConnectivityReceiver();
     }
 
@@ -1986,7 +1982,7 @@ abstract public class GeckoApp
         // onPause will be followed by either onResume or onStop.
         super.onPause();
 
-        unregisterReceiver(mConnectivityReceiver);
+        mConnectivityReceiver.unregisterFor(mAppContext);
         GeckoNetworkManager.getInstance().stop();
         GeckoScreenOrientationListener.getInstance().stop();
     }
@@ -2021,11 +2017,11 @@ abstract public class GeckoApp
         }
 
         mMainHandler.post(new Runnable() {
-          public void run() {
-            registerReceiver(mConnectivityReceiver, mConnectivityFilter);
-            GeckoNetworkManager.getInstance().start();
-            GeckoScreenOrientationListener.getInstance().start();
-          }
+            public void run() {
+                mConnectivityReceiver.registerFor(mAppContext);
+                GeckoNetworkManager.getInstance().start();
+                GeckoScreenOrientationListener.getInstance().start();
+            }
         });
 
         if (mOwnActivityDepth > 0)
