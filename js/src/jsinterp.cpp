@@ -428,9 +428,12 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
     JS_ASSERT(script);
     JS_ASSERT(fp == cx->fp());
     JS_ASSERT(fp->script() == script);
+    JS_ASSERT_IF(!fp->isGeneratorFrame(), cx->regs().pc == script->code);
 #ifdef JS_METHODJIT_SPEW
     JMCheckLogging();
 #endif
+
+    JS_CHECK_RECURSION(cx, return false);
 
     /* FIXME: Once bug 470510 is fixed, make this an assert. */
     if (script->compileAndGo) {
@@ -1566,9 +1569,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JSOp op;
     int32_t len;
     len = 0;
-
-    /* Check for too deep of a native thread stack. */
-    JS_CHECK_RECURSION(cx, goto error);
 
     DO_NEXT_OP(len);
 
@@ -4027,6 +4027,9 @@ END_CASE(JSOP_ARRAYPUSH)
   error:
     JS_ASSERT(&cx->regs() == &regs);
     JS_ASSERT(uint32_t(regs.pc - script->code) < script->length);
+
+    /* When rejoining, we must not err before finishing Interpret's prologue. */
+    JS_ASSERT(interpMode != JSINTERP_REJOIN);
 
     if (cx->isExceptionPending()) {
         /* Restore atoms local in case we will resume. */

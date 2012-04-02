@@ -41,6 +41,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <sys/utsname.h>
 #include "nsCRTGlue.h"
 #include "prenv.h"
 
@@ -160,6 +161,15 @@ GfxInfo::GetData()
     if (!strcmp(textureFromPixmap.get(), "TRUE"))
         mHasTextureFromPixmap = true;
 
+    // only useful for Linux kernel version check for FGLRX driver.
+    // assumes X client == X server, which is sad.
+    utsname unameobj;
+    if (!uname(&unameobj))
+    {
+      mOS.Assign(unameobj.sysname);
+      mOSRelease.Assign(unameobj.release);
+    }
+
     const char *spoofedVendor = PR_GetEnv("MOZ_GFX_SPOOF_GL_VENDOR");
     if (spoofedVendor)
         mVendor.Assign(spoofedVendor);
@@ -169,11 +179,19 @@ GfxInfo::GetData()
     const char *spoofedVersion = PR_GetEnv("MOZ_GFX_SPOOF_GL_VERSION");
     if (spoofedVersion)
         mVersion.Assign(spoofedVersion);
+    const char *spoofedOS = PR_GetEnv("MOZ_GFX_SPOOF_OS");
+    if (spoofedOS)
+        mOS.Assign(spoofedOS);
+    const char *spoofedOSRelease = PR_GetEnv("MOZ_GFX_SPOOF_OS_RELEASE");
+    if (spoofedOSRelease)
+        mOSRelease.Assign(spoofedOSRelease);
 
     if (error ||
         mVendor.IsEmpty() ||
         mRenderer.IsEmpty() ||
-        mVersion.IsEmpty())
+        mVersion.IsEmpty() ||
+        mOS.IsEmpty() ||
+        mOSRelease.IsEmpty())
     {
         mAdapterDescription.AppendLiteral("GLXtest process failed");
         if (waiting_for_glxtest_process_failed)
@@ -351,6 +369,14 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
         // by requiring OpenGL 3, we effectively require recent drivers.
         if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(3, 0)) {
           *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+          aSuggestedDriverVersion.AssignLiteral("<Something recent>");
+        }
+        // Bug 724640: FGLRX + Linux 2.6.32 is a crashy combo
+        bool unknownOS = mOS.IsEmpty() || mOSRelease.IsEmpty();
+        bool badOS = mOS.Find("Linux", true) != -1 &&
+                     mOSRelease.Find("2.6.32") != -1;
+        if (unknownOS || badOS) {
+          *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
         }
       } else {
         // like on windows, let's block unknown vendors. Think of virtual machines.

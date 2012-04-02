@@ -179,9 +179,12 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
 
   PRUint32 eventType = aEvent->GetEventType();
 
-  // ignore everything but focus-changed and value-changed events for now.
+  // ignore everything but focus-changed, value-changed, caret and selection
+  // events for now.
   if (eventType != nsIAccessibleEvent::EVENT_FOCUS &&
-      eventType != nsIAccessibleEvent::EVENT_VALUE_CHANGE)
+      eventType != nsIAccessibleEvent::EVENT_VALUE_CHANGE &&
+      eventType != nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED &&
+      eventType != nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED)
     return NS_OK;
 
   nsAccessible *accessible = aEvent->GetAccessible();
@@ -198,6 +201,10 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
       break;
     case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
       [nativeAcc valueDidChange];
+      break;
+    case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED:
+    case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
+      [nativeAcc selectedTextDidChange];
       break;
   }
 
