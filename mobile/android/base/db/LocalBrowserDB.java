@@ -352,31 +352,28 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         cr.delete(mHistoryUriWithProfile, null, null);
     }
 
-    // This method filters out the root folder and the tags folder, since we
-    // don't want to see those in the UI
     public Cursor getBookmarksInFolder(ContentResolver cr, long folderId) {
         Cursor c = null;
+        boolean addDesktopFolder = false;
 
-        // If there are no desktop bookmarks, use the mobile bookmarks folder
-        // for the root folder view
-        if (folderId == Bookmarks.FIXED_ROOT_ID && !desktopBookmarksExist(cr))
+        // We always want to show mobile bookmarks in the root view.
+        if (folderId == Bookmarks.FIXED_ROOT_ID) {
             folderId = getMobileBookmarksFolderId(cr);
 
-        if (folderId == Bookmarks.FIXED_ROOT_ID) {
-            // Because of sync, we can end up with some additional records under
-            // the root node that we don't want to see. Since sync doesn't 
-            // want to run into problems deleting these, we can just ignore them
-            // by querying specifically for only the folders we care about.
+            // We'll add a fake "Desktop Bookmarks" folder to the root view if desktop 
+            // bookmarks exist, so that the user can still access non-mobile bookmarks.
+            addDesktopFolder = desktopBookmarksExist(cr);
+        }
+
+        if (folderId == Bookmarks.FAKE_DESKTOP_FOLDER_ID) {
+            // Since the "Desktop Bookmarks" folder doesn't actually exist, we
+            // just fake it by querying specifically certain known desktop folders.
             c = cr.query(mBookmarksUriWithProfile,
                          DEFAULT_BOOKMARK_COLUMNS,
-                         Bookmarks.PARENT + " = ? AND (" +
                          Bookmarks.GUID + " = ? OR " +
                          Bookmarks.GUID + " = ? OR " +
-                         Bookmarks.GUID + " = ? OR " +
-                         Bookmarks.GUID + " = ?)",
-                         new String[] { String.valueOf(folderId),
-                                        Bookmarks.MOBILE_FOLDER_GUID,
-                                        Bookmarks.TOOLBAR_FOLDER_GUID,
+                         Bookmarks.GUID + " = ?",
+                         new String[] { Bookmarks.TOOLBAR_FOLDER_GUID,
                                         Bookmarks.MENU_FOLDER_GUID,
                                         Bookmarks.UNFILED_FOLDER_GUID },
                          null);
@@ -391,6 +388,11 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                                         String.valueOf(Bookmarks.TYPE_BOOKMARK),
                                         String.valueOf(Bookmarks.TYPE_FOLDER) },
                          null);
+        }
+
+        if (addDesktopFolder) {
+            // Wrap cursor to add fake desktop bookmarks folder
+            c = new DesktopBookmarksCursorWrapper(c);
         }
 
         return new LocalDBCursor(c);
@@ -662,6 +664,67 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         c.close();
 
         return b;
+    }
+
+    // This wrapper adds a fake "Desktop Bookmarks" folder entry to the
+    // beginning of the cursor's data set.
+    private static class DesktopBookmarksCursorWrapper extends CursorWrapper {
+        private boolean mAtDesktopBookmarksPosition = false;
+
+        public DesktopBookmarksCursorWrapper(Cursor c) {
+            super(c);
+        }
+
+        @Override
+        public int getCount() {
+            return super.getCount() + 1;
+        }
+
+        @Override
+        public boolean moveToPosition(int position) {
+            if (position == 0) {
+                mAtDesktopBookmarksPosition = true;
+                return true;
+            }
+
+            mAtDesktopBookmarksPosition = false;
+            return super.moveToPosition(position - 1);
+        }
+
+        @Override
+        public long getLong(int columnIndex) {
+            if (!mAtDesktopBookmarksPosition)
+                return super.getLong(columnIndex);
+
+            if (columnIndex == getColumnIndex(Bookmarks._ID))
+                return Bookmarks.FAKE_DESKTOP_FOLDER_ID;
+            if (columnIndex == getColumnIndex(Bookmarks.PARENT))
+                return Bookmarks.FIXED_ROOT_ID;
+
+            return -1;
+        }
+
+        @Override
+        public int getInt(int columnIndex) {
+            if (!mAtDesktopBookmarksPosition)
+                return super.getInt(columnIndex);
+
+            if (columnIndex == getColumnIndex(Bookmarks.TYPE))
+                return Bookmarks.TYPE_FOLDER;
+
+            return -1;
+        }
+
+        @Override
+        public String getString(int columnIndex) {
+            if (!mAtDesktopBookmarksPosition)
+                return super.getString(columnIndex);
+
+            if (columnIndex == getColumnIndex(Bookmarks.GUID))
+                return Bookmarks.FAKE_DESKTOP_FOLDER_GUID;
+
+            return "";
+        }
     }
 
     private static class LocalDBCursor extends CursorWrapper {
