@@ -994,7 +994,8 @@ nsHttpConnection::ReadTimeoutTick(PRIntervalTime now)
             pipeline->CancelPipeline(NS_ERROR_NET_TIMEOUT);
     }
     
-    if (delta < gHttpHandler->GetPipelineTimeout())
+    PRIntervalTime pipelineTimeout = gHttpHandler->GetPipelineTimeout();
+    if (!pipelineTimeout || (delta < pipelineTimeout))
         return;
 
     if (pipelineDepth <= 1 && !mTransaction->PipelinePosition())
@@ -1006,7 +1007,7 @@ nsHttpConnection::ReadTimeoutTick(PRIntervalTime now)
     // depending on its state.. that will come back araound
     // without pipelining on, so this won't loop.
 
-    LOG(("canceling transaction stalled for %ums on a pipeline"
+    LOG(("canceling transaction stalled for %ums on a pipeline "
          "of depth %d and scheduled originally at pos %d\n",
          PR_IntervalToMilliseconds(delta),
          pipelineDepth, mTransaction->PipelinePosition()));
