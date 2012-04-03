@@ -54,6 +54,8 @@ function justify(textNode, pos) {
 }
 
 function runTests() {
+  document.execCommand("stylewithcss", false, "true");
+
   const test1 = document.getElementById("test1");
   const test2 = document.getElementById("test2");
   const test3 = document.getElementById("test3");
