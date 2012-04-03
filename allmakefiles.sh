@@ -35,7 +35,6 @@ config/autoconf.mk
 config/nspr/Makefile
 config/doxygen.cfg
 config/expandlibs_config.py
-config/tests/src-simple/Makefile
 mfbt/Makefile
 probes/Makefile
 extensions/Makefile
@@ -108,7 +107,9 @@ fi
 if [ "$ENABLE_TESTS" ]; then
   add_makefiles "
     build/autoconf/test/Makefile
+    config/makefiles/test/Makefile
     config/tests/makefiles/autodeps/Makefile
+    config/tests/src-simple/Makefile
   "
   if [ ! "$LIBXUL_SDK" ]; then 
     add_makefiles "
