@@ -718,7 +718,7 @@ public:
 
 private:
   friend class GeneralPattern;
-  friend class GlyphBufferAzure;
+  friend struct GlyphBufferAzure;
 
   typedef mozilla::gfx::Matrix Matrix;
   typedef mozilla::gfx::DrawTarget DrawTarget;
