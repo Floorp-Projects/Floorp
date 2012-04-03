@@ -7,7 +7,7 @@
 
 <script type="text/javascript">
 
-var MOZ_STORAGE_CHANGED_COUNT = 14;
+var MOZ_STORAGE_CHANGED_COUNT = 21;
 
 function startTest()
 {
@@ -159,6 +159,34 @@ function startTest()
   is(localStorage["testC"], "valueC2");
   is(localStorage.getItem("testC"), "valueC2");
   
+  localStorage.setItem("testC", null);
+  is("testC" in localStorage, true);
+  is(localStorage.getItem("testC"), "null");
+  is(localStorage["testC"], "null");
+  is(localStorage.testC, "null");
+
+  localStorage.removeItem("testC");
+  localStorage["testC"] = null;
+  is("testC" in localStorage, true);
+  is(localStorage.getItem("testC"), "null");
+  is(localStorage["testC"], "null");
+  is(localStorage.testC, "null");
+
+  localStorage.setItem(null, "test");
+  is("null" in localStorage, true);
+  is(localStorage.getItem("null"), "test");
+  is(localStorage.getItem(null), "test");
+  is(localStorage["null"], "test");
+  localStorage.removeItem(null, "test");
+  // bug 350023
+  todo_is("null" in localStorage, false);
+
+  localStorage.setItem(null, "test");
+  is("null" in localStorage, true);
+  localStorage.removeItem("null", "test");
+  // bug 350023
+  todo_is("null" in localStorage, false);
+
   // Clear the storage
   localStorage.clear();
   is("testB" in localStorage, false, "Keys are not in the JS scope of the storage");
