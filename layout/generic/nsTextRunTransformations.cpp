@@ -39,6 +39,7 @@
 
 #include "nsTextFrameUtils.h"
 #include "gfxSkipChars.h"
+#include "nsGkAtoms.h"
 
 #include "nsStyleConsts.h"
 #include "nsStyleContext.h"
@@ -47,6 +48,10 @@
 #include "nsUnicharUtils.h"
 
 #define SZLIG 0x00DF
+
+// Unicode characters needing special casing treatment in tr/az languages
+#define LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE  0x0130
+#define LATIN_SMALL_LETTER_DOTLESS_I           0x0131
 
 nsTransformedTextRun *
 nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
@@ -357,41 +362,85 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   nsAutoTArray<PRUint8,50> canBreakBeforeArray;
   PRUint32 extraCharsCount = 0;
 
+  // Some languages have special casing conventions that differ from the
+  // default Unicode mappings.
+  // The enum values here are named for well-known exemplar languages that
+  // exhibit the behavior in question; multiple lang tags may map to the
+  // same setting here, if the behavior is shared by other languages.
+  enum {
+    eNone,    // default non-lang-specific behavior
+    eTurkish, // preserve dotted/dotless-i distinction in uppercase
+    eDutch    // treat "ij" digraph as a unit for capitalization
+  } languageSpecificCasing = eNone;
+
+  const nsIAtom* lang = nsnull;
+  bool capitalizeDutchIJ = false;  
   PRUint32 i;
   for (i = 0; i < length; ++i) {
     PRUint32 ch = str[i];
+    nsStyleContext* styleContext = styles[i];
 
     charsToMergeArray.AppendElement(false);
-    styleArray.AppendElement(styles[i]);
+    styleArray.AppendElement(styleContext);
     canBreakBeforeArray.AppendElement(aTextRun->CanBreakLineBefore(i));
 
     PRUint8 style = mAllUppercase ? NS_STYLE_TEXT_TRANSFORM_UPPERCASE
-      : styles[i]->GetStyleText()->mTextTransform;
+      : styleContext->GetStyleText()->mTextTransform;
     bool extraChar = false;
 
     if (NS_IS_HIGH_SURROGATE(ch) && i < length - 1 && NS_IS_LOW_SURROGATE(str[i + 1])) {
       ch = SURROGATE_TO_UCS4(ch, str[i + 1]);
     }
 
+    if (lang != styleContext->GetStyleFont()->mLanguage) {
+      lang = styleContext->GetStyleFont()->mLanguage;
+      if (lang == nsGkAtoms::tr || lang == nsGkAtoms::az ||
+          lang == nsGkAtoms::ba || lang == nsGkAtoms::crh ||
+          lang == nsGkAtoms::tt) {
+        languageSpecificCasing = eTurkish;
+      } else if (lang == nsGkAtoms::nl) {
+        languageSpecificCasing = eDutch;
+      } else {
+        languageSpecificCasing = eNone;
+      }
+    }
+
     switch (style) {
     case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
-      ch = ToLowerCase(ch);
+      if (languageSpecificCasing == eTurkish && ch == 'I') {
+        ch = LATIN_SMALL_LETTER_DOTLESS_I;
+      } else {
+        ch = ToLowerCase(ch);
+      }
       break;
     case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
       if (ch == SZLIG) {
         convertedString.Append('S');
         extraChar = true;
         ch = 'S';
+      } else if (languageSpecificCasing == eTurkish && ch == 'i') {
+        ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
       } else {
         ch = ToUpperCase(ch);
       }
       break;
     case NS_STYLE_TEXT_TRANSFORM_CAPITALIZE:
+      if (capitalizeDutchIJ && ch == 'j') {
+        ch = 'J';
+        capitalizeDutchIJ = false;
+        break;
+      }
+      capitalizeDutchIJ = false;
       if (i < aTextRun->mCapitalize.Length() && aTextRun->mCapitalize[i]) {
         if (ch == SZLIG) {
           convertedString.Append('S');
           extraChar = true;
           ch = 'S';
+        } else if (languageSpecificCasing == eTurkish && ch == 'i') {
+          ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
+        } else if (languageSpecificCasing == eDutch && ch == 'i') {
+          ch = 'I';
+          capitalizeDutchIJ = true;
         } else {
           ch = ToTitleCase(ch);
         }
@@ -407,15 +456,15 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       convertedString.Append(H_SURROGATE(ch));
       convertedString.Append(L_SURROGATE(ch));
       i++;
-      charsToMergeArray.AppendElement(true);
-      styleArray.AppendElement(styles[i]);
+      charsToMergeArray.AppendElement(false);
+      styleArray.AppendElement(styleContext);
       canBreakBeforeArray.AppendElement(false);
     }
 
     if (extraChar) {
       ++extraCharsCount;
       charsToMergeArray.AppendElement(true);
-      styleArray.AppendElement(styles[i]);
+      styleArray.AppendElement(styleContext);
       canBreakBeforeArray.AppendElement(false);
     }
   }

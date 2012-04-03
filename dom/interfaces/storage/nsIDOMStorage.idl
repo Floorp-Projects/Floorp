@@ -64,8 +64,7 @@ interface nsIDOMStorage : nsISupports
    * Retrieve the name of the key at a particular index.
    *
    * @param index index of the item to retrieve
-   * @returns the key at index
-   * @throws INDEX_SIZE_ERR if there is no key at that index
+   * @returns the key at index, null if there is no key at that index
    */
   DOMString key(in unsigned long index);
 
@@ -75,7 +74,7 @@ interface nsIDOMStorage : nsISupports
    * @param key key to retrieve
    * @returns found data or empty string if the key was not found
    */
-  DOMString getItem(in DOMString key);
+  DOMString getItem([Null(Stringify)] in DOMString key);
 
   /**
    * Assign a value with a key. If the key does not exist already, a new
@@ -85,14 +84,14 @@ interface nsIDOMStorage : nsISupports
    * @param key key to set
    * @param data data to associate with the key
    */
-  void setItem(in DOMString key, in DOMString data);
+  void setItem([Null(Stringify)] in DOMString key, [Null(Stringify)] in DOMString data);
 
   /**
    * Remove a key and its corresponding value.
    *
    * @param key key to remove
    */
-  void removeItem(in DOMString key);
+  void removeItem([Null(Stringify)] in DOMString key);
 
   /**
    * Clear the content of this storage bound to a domain

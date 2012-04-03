@@ -1,8 +1,12 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/log4moz.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/util.js");
 
 let cryptoWrap;
@@ -26,8 +30,9 @@ function run_test() {
   let server;
   do_test_pending();
 
-  let keyBundle = ID.set("WeaveCryptoID", new SyncKeyBundle(PWDMGR_PASSPHRASE_REALM, "john@example.com"));
-  keyBundle.keyStr = "a-abcde-abcde-abcde-abcde-abcde";
+  Identity.username = "john@example.com";
+  Identity.syncKey = "a-abcde-abcde-abcde-abcde-abcde";
+  let keyBundle = Identity.syncKeyBundle;
 
   try {
     let log = Log4Moz.repository.getLogger("Test");
@@ -37,14 +42,11 @@ function run_test() {
 
     server = httpd_setup({"/steam/resource": crypted_resource_handler});
 
-    let auth = new BasicAuthenticator(new Identity("secret", "guest", "guest"));
-    Auth.defaultAuthenticator = auth;
-
     log.info("Creating a record");
 
     let cryptoUri = "http://localhost:8080/crypto/steam";
     cryptoWrap = prepareCryptoWrap("steam", "resource");
-    
+
     log.info("cryptoWrap: " + cryptoWrap.toString());
 
     log.info("Encrypting a record");
@@ -107,7 +109,7 @@ function run_test() {
     do_check_eq(error.substr(0, 42), "Record SHA256 HMAC mismatch: should be foo");
 
     // Checking per-collection keys and default key handling.
-    
+
     generateNewKeys();
     let bu = "http://localhost:8080/storage/bookmarks/foo";
     let bookmarkItem = prepareCryptoWrap("bookmarks", "foo");
@@ -116,22 +118,18 @@ function run_test() {
     do_check_true(bookmarkItem.ciphertext != null);
     log.info("Decrypting the record explicitly with the default key.");
     do_check_eq(bookmarkItem.decrypt(CollectionKeys._default).stuff, "my payload here");
-    
+
     // Per-collection keys.
     // Generate a key for "bookmarks".
     generateNewKeys(["bookmarks"]);
     bookmarkItem = prepareCryptoWrap("bookmarks", "foo");
     do_check_eq(bookmarkItem.collection, "bookmarks");
-    
+
     // Encrypt. This'll use the "bookmarks" encryption key, because we have a
     // special key for it. The same key will need to be used for decryption.
     bookmarkItem.encrypt();
     do_check_true(bookmarkItem.ciphertext != null);
-    
-    _("Default key is " + CollectionKeys._default.keyStr);
-    _("Bookmarks key is " + CollectionKeys.keyForCollection("bookmarks").keyStr);
-    _("Bookmarks key is " + CollectionKeys._collections["bookmarks"].keyStr);
-    
+
     // Attempt to use the default key, because this is a collision that could
     // conceivably occur in the real world. Decryption will error, because
     // it's not the bookmarks key.
@@ -142,7 +140,7 @@ function run_test() {
       err = ex;
     }
     do_check_eq("Record SHA256 HMAC mismatch", err.substr(0, 27));
-    
+
     // Explicitly check that it's using the bookmarks key.
     // This should succeed.
     do_check_eq(bookmarkItem.decrypt(CollectionKeys.keyForCollection("bookmarks")).stuff,

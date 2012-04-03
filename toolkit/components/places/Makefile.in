@@ -92,7 +92,7 @@ CPPSRCS = \
   SQLFunctions.cpp \
   Helpers.cpp \
   History.cpp \
-  nsPlacesImportExportService.cpp \
+  nsPlacesExportService.cpp \
   AsyncFaviconHelpers.cpp \
   PlaceInfo.cpp \
   VisitInfo.cpp \
@@ -123,6 +123,7 @@ endif
 
 EXTRA_JS_MODULES = \
   PlacesDBUtils.jsm \
+  BookmarkHTMLUtils.jsm \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \

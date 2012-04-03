@@ -88,41 +88,6 @@ nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer)
   return CallQueryInterface(it, aSerializer);
 }
 
-static
-bool
-IsInvisibleBreak(nsIContent *aNode, nsIAtom *aTag, PRInt32 aNamespace) {
-  // xxxehsan: we should probably figure out a way to determine
-  // if a BR node is visible without using the editor.
-  if (!(aTag == nsGkAtoms::br && aNamespace == kNameSpaceID_XHTML) ||
-      !aNode->IsEditable()) {
-    return false;
-  }
-
-  // Grab the editor associated with the document
-  nsIDocument *doc = aNode->GetCurrentDoc();
-  if (doc) {
-    nsPIDOMWindow *window = doc->GetWindow();
-    if (window) {
-      nsIDocShell *docShell = window->GetDocShell();
-      if (docShell) {
-        nsCOMPtr<nsIEditorDocShell> editorDocShell = do_QueryInterface(docShell);
-        if (editorDocShell) {
-          nsCOMPtr<nsIEditor> editor;
-          editorDocShell->GetEditor(getter_AddRefs(editor));
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
-          if (htmlEditor) {
-            bool isVisible = false;
-            nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aNode);
-            htmlEditor->BreakIsVisible(domNode, &isVisible);
-            return !isVisible;
-          }
-        }
-      }
-    }
-  }
-  return false;
-}
-
 nsHTMLContentSerializer::nsHTMLContentSerializer()
 {
     mIsHTMLSerializer = true;
@@ -262,11 +227,6 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
 
   nsIAtom *name = content->Tag();
   PRInt32 ns = content->GetNameSpaceID();
-
-  if ((mFlags & nsIDocumentEncoder::OutputPreformatted) &&
-      IsInvisibleBreak(content, name, ns)) {
-    return NS_OK;
-  }
 
   bool lineBreakBeforeOpen = LineBreakBeforeOpen(ns, name);
 

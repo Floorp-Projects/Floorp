@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "base/message_pump_qt.h"
-
 #include <qabstracteventdispatcher.h>
 #include <qevent.h>
-#include <qapplication.h>
+#include <QApplication>
 #include <qtimer.h>
+
+#include "base/message_pump_qt.h"
 
 #include <fcntl.h>
 #include <limits>

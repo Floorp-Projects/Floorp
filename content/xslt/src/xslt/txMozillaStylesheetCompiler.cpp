@@ -50,6 +50,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsIParser.h"
+#include "nsCharsetSource.h"
 #include "nsIRequestObserver.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentPolicyUtils.h"
@@ -684,6 +685,12 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
 
     // This is probably called by js, a loadGroup for the channel doesn't
     // make sense.
+    nsCOMPtr<nsINode> source;
+    if (mProcessor) {
+      source =
+        do_QueryInterface(mProcessor->GetSourceContentModel());
+    }
+    nsAutoSyncOperation sync(source ? source->OwnerDoc() : nsnull);
     nsCOMPtr<nsIDOMDocument> document;
     rv = nsSyncLoadService::LoadDocument(uri, referrerPrincipal, nsnull,
                                          false, getter_AddRefs(document));

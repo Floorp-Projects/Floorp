@@ -55,7 +55,7 @@ class nsIDOMNodeFilter;
 
 class nsNodeIterator : public nsIDOMNodeIterator,
                        public nsTraversal,
-                       public nsStubMutationObserver2
+                       public nsStubMutationObserver
 {
 public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -67,7 +67,6 @@ public:
     virtual ~nsNodeIterator();
 
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
-    NS_DECL_NSIMUTATIONOBSERVER2_ATTRIBUTECHILDREMOVED
 
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsNodeIterator, nsIDOMNodeIterator)
 

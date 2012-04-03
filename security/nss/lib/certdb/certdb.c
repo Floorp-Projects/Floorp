@@ -39,7 +39,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.120 2011/11/17 00:20:20 bsmith%mozilla.com Exp $
+ * $Id: certdb.c,v 1.121 2012/03/23 03:25:57 wtc%google.com Exp $
  */
 
 #include "nssilock.h"
@@ -588,6 +588,20 @@ cert_ComputeCertType(CERTCertificate *cert)
 	}
 	if (findOIDinOIDSeqByTagNum(extKeyUsage, 
 				    SEC_OID_EXT_KEY_USAGE_SERVER_AUTH) ==
+	    SECSuccess){
+	    if (basicConstraintPresent == PR_TRUE &&
+		(basicConstraint.isCA)) {
+		nsCertType |= NS_CERT_TYPE_SSL_CA;
+	    } else {
+		nsCertType |= NS_CERT_TYPE_SSL_SERVER;
+	    }
+	}
+	/*
+	 * Treat certs with step-up OID as also having SSL server type.
+ 	 * COMODO needs this behaviour until June 2020.  See Bug 737802.
+	 */
+	if (findOIDinOIDSeqByTagNum(extKeyUsage, 
+				    SEC_OID_NS_KEY_USAGE_GOVT_APPROVED) ==
 	    SECSuccess){
 	    if (basicConstraintPresent == PR_TRUE &&
 		(basicConstraint.isCA)) {

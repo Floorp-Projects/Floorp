@@ -38,9 +38,9 @@
 #ifndef MOZIQWIDGET_H
 #define MOZIQWIDGET_H
 
-#include <QtGui/QApplication>
-#include <QtGui/QGraphicsWidget>
-#include <QtGui/QGraphicsView>
+#include <QApplication>
+#include <QGraphicsWidget>
+#include <QGraphicsView>
 
 #include "nsCOMPtr.h"
 

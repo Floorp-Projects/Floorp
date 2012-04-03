@@ -4,13 +4,21 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
-import android.net.Uri;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
-// This will exist implicitly when we're merged into Fennec, or explicitly
-// due to our own imported copy of Fennec's BrowserContract.java.in.
 import org.mozilla.gecko.db.BrowserContract;
 
+import android.net.Uri;
+
 public class BrowserContractHelpers extends BrowserContract {
+  protected static Uri withSync(Uri u) {
+    return u.buildUpon()
+            .appendQueryParameter(PARAM_IS_SYNC, "true")
+            .build();
+  }
+
   protected static Uri withSyncAndDeleted(Uri u) {
     return u.buildUpon()
             .appendQueryParameter(PARAM_IS_SYNC, "true")
@@ -28,9 +36,9 @@ public class BrowserContractHelpers extends BrowserContract {
   public static final Uri PASSWORDS_CONTENT_URI            = null;
   /*
   public static final Uri PASSWORDS_CONTENT_URI            = withSyncAndDeleted(Passwords.CONTENT_URI);
-  public static final Uri FORM_HISTORY_CONTENT_URI         = withSyncAndDeleted(FormHistory.CONTENT_URI);
-  public static final Uri DELETED_FORM_HISTORY_CONTENT_URI = withSyncAndDeleted(DeletedFormHistory.CONTENT_URI);
    */
+  public static final Uri FORM_HISTORY_CONTENT_URI         = withSync(FormHistory.CONTENT_URI);
+  public static final Uri DELETED_FORM_HISTORY_CONTENT_URI = withSync(DeletedFormHistory.CONTENT_URI);
 
   public static final String[] PasswordColumns = new String[] {
     CommonColumns._ID,
@@ -70,11 +78,76 @@ public class BrowserContractHelpers extends BrowserContract {
     SyncColumns.IS_DELETED,
     Bookmarks.TITLE,
     Bookmarks.URL,
-    Bookmarks.IS_FOLDER,
+    Bookmarks.TYPE,
     Bookmarks.PARENT,
     Bookmarks.POSITION,
     Bookmarks.TAGS,
     Bookmarks.DESCRIPTION,
     Bookmarks.KEYWORD
   };
+
+
+  public static final String[] FormHistoryColumns = new String[] {
+    FormHistory.ID,
+    FormHistory.GUID,
+    FormHistory.FIELD_NAME,
+    FormHistory.VALUE,
+    FormHistory.TIMES_USED,
+    FormHistory.FIRST_USED,
+    FormHistory.LAST_USED
+  };
+
+  public static final String[] DeletedColumns = new String[] {
+    DeletedFormHistory.ID,
+    DeletedFormHistory.GUID,
+    DeletedFormHistory.TIME_DELETED
+  };
+
+  // Mapping from Sync types to Fennec types.
+  public static final String[] BOOKMARK_TYPE_CODE_TO_STRING = {
+    // Observe omissions: "microsummary", "item".
+    "folder", "bookmark", "separator", "livemark", "query"
+  };
+  private static final int MAX_BOOKMARK_TYPE_CODE = BOOKMARK_TYPE_CODE_TO_STRING.length - 1;
+  public static final Map<String, Integer> BOOKMARK_TYPE_STRING_TO_CODE;
+  static {
+    HashMap<String, Integer> t = new HashMap<String, Integer>();
+    t.put("folder",    Bookmarks.TYPE_FOLDER);
+    t.put("bookmark",  Bookmarks.TYPE_BOOKMARK);
+    t.put("separator", Bookmarks.TYPE_SEPARATOR);
+    t.put("livemark",  Bookmarks.TYPE_LIVEMARK);
+    t.put("query",     Bookmarks.TYPE_QUERY);
+    BOOKMARK_TYPE_STRING_TO_CODE = Collections.unmodifiableMap(t);
+  }
+
+  /**
+   * Convert a database bookmark type code into the Sync string equivalent.
+   *
+   * @param code one of the <code>Bookmarks.TYPE_*</code> enumerations.
+   * @return the string equivalent, or null if not found.
+   */
+  public static String typeStringForCode(int code) {
+    if (0 <= code && code <= MAX_BOOKMARK_TYPE_CODE) {
+      return BOOKMARK_TYPE_CODE_TO_STRING[code];
+    }
+    return null;
+  }
+
+  /**
+   * Convert a Sync type string into a Fennec type code.
+   *
+   * @param type a type string, such as "livemark".
+   * @return the type code, or -1 if not found.
+   */
+  public static int typeCodeForString(String type) {
+    Integer found = BOOKMARK_TYPE_STRING_TO_CODE.get(type);
+    if (found == null) {
+      return -1;
+    }
+    return found.intValue();
+  }
+
+  public static boolean isSupportedType(String type) {
+    return BOOKMARK_TYPE_STRING_TO_CODE.containsKey(type);
+  }
 }

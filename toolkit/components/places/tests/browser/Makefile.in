@@ -53,6 +53,7 @@ _BROWSER_FILES = \
 	browser_visituri_privatebrowsing.js \
 	browser_settitle.js \
 	browser_bug646422.js \
+	browser_bug680727.js \
 	$(NULL)
 
 # These are files that need to be loaded via the HTTP proxy server

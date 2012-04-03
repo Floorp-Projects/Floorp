@@ -236,10 +236,10 @@ Shape::Shape(UnownedBaseShape *base, uint32_t nfixed)
     kids.setNull();
 }
 
-inline JSDHashNumber
+inline HashNumber
 StackShape::hash() const
 {
-    JSDHashNumber hash = uintptr_t(base);
+    HashNumber hash = uintptr_t(base);
 
     /* Accumulate from least to most random so the low bits are most random. */
     hash = JS_ROTATE_LEFT32(hash, 4) ^ (flags & Shape::PUBLIC_FLAGS);
@@ -282,14 +282,8 @@ Shape::get(JSContext* cx, JSObject *receiver, JSObject* obj, JSObject *pobj, js:
     JS_ASSERT(!hasDefaultGetter());
 
     if (hasGetterValue()) {
-        JS_ASSERT(!isMethod());
         js::Value fval = getterValue();
         return js::InvokeGetterOrSetter(cx, receiver, fval, 0, 0, vp);
-    }
-
-    if (isMethod()) {
-        vp->setObject(*pobj->nativeGetMethod(this));
-        return pobj->methodReadBarrier(cx, *this, vp);
     }
 
     /*

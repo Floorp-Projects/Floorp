@@ -263,8 +263,12 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
 
     nsCOMPtr<nsIContent> content = do_QueryInterface(child);
     shell->ScrollContentIntoView(content,
-                                 NS_PRESSHELL_SCROLL_TOP,
-                                 NS_PRESSHELL_SCROLL_LEFT,
+                                 nsIPresShell::ScrollAxis(
+                                   nsIPresShell::SCROLL_TOP,
+                                   nsIPresShell::SCROLL_ALWAYS),
+                                 nsIPresShell::ScrollAxis(
+                                   nsIPresShell::SCROLL_LEFT,
+                                   nsIPresShell::SCROLL_ALWAYS),
                                  nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY |
                                  nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
     return NS_OK;
@@ -317,8 +321,8 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
 
     nsCOMPtr<nsIContent> content = do_QueryInterface(child);
     shell->ScrollContentIntoView(content,
-                                 NS_PRESSHELL_SCROLL_ANYWHERE,
-                                 NS_PRESSHELL_SCROLL_ANYWHERE,
+                                 nsIPresShell::ScrollAxis(),
+                                 nsIPresShell::ScrollAxis(),
                                  nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY |
                                  nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
     return NS_OK;

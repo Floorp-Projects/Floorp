@@ -187,6 +187,7 @@ function checkClipboardData(aExpectedPattern)
 
 function finishup()
 {
+  InspectorUI.hideSidebar();
   InspectorUI.closeInspectorUI();
   gBrowser.removeCurrentTab();
   doc = null;

@@ -98,7 +98,7 @@ interface nsIDOMFile : nsIDOMBlob
   [noscript] readonly attribute DOMString mozFullPathInternal;
 };
 
-[scriptable, builtinclass, uuid(006d2cde-ec18-41d4-acc3-43682dd418e2)]
+[scriptable, builtinclass, uuid(57195950-edd9-496b-9b45-e4893a9ffca9)]
 interface nsIDOMMozBlobBuilder : nsISupports
 {
   nsIDOMBlob getBlob([optional] in DOMString contentType);

@@ -101,7 +101,7 @@ SetStrokeOptions(CGContextRef cg, const StrokeOptions &aStrokeOptions)
   CGContextSetMiterLimit(cg, aStrokeOptions.mMiterLimit);
 
   // XXX: rename mDashLength to dashLength
-  if (aStrokeOptions.mDashLength > 1) {
+  if (aStrokeOptions.mDashLength > 0) {
     // we use a regular array instead of a std::vector here because we don't want to leak the <vector> include
     CGFloat *dashes = new CGFloat[aStrokeOptions.mDashLength];
     for (size_t i=0; i<aStrokeOptions.mDashLength; i++) {
@@ -147,7 +147,7 @@ public:
   virtual void StrokeLine(const Point &, const Point &, const Pattern &, const StrokeOptions &, const DrawOptions &);
   virtual void Stroke(const Path *, const Pattern &, const StrokeOptions &, const DrawOptions &);
   virtual void Fill(const Path *, const Pattern &, const DrawOptions &);
-  virtual void FillGlyphs(ScaledFont *, const GlyphBuffer&, const Pattern &, const DrawOptions &);
+  virtual void FillGlyphs(ScaledFont *, const GlyphBuffer&, const Pattern &, const DrawOptions &, const GlyphRenderingOptions *);
   virtual void Mask(const Pattern &aSource,
                     const Pattern &aMask,
                     const DrawOptions &aOptions = DrawOptions());

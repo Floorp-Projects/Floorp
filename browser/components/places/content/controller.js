@@ -1515,7 +1515,7 @@ let PlacesControllerDragHelper = {
     for (let i = 0; i < dropCount; ++i) {
       let flavor = this.getFirstValidFlavor(dt.mozTypesAt(i));
       if (!flavor)
-        return false;
+        return;
 
       let data = dt.mozGetDataAt(flavor, i);
       let unwrapped;

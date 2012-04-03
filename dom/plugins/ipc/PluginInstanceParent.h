@@ -341,7 +341,7 @@ private:
     int16_t            mDrawingModel;
     nsAutoPtr<mozilla::layers::CompositionNotifySink> mNotifySink;
 
-    nsDataHashtable<nsVoidPtrHashKey, PluginScriptableObjectParent*> mScriptableObjects;
+    nsDataHashtable<nsPtrHashKey<NPObject>, PluginScriptableObjectParent*> mScriptableObjects;
 
 #if defined(OS_WIN)
 private:

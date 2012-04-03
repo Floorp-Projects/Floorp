@@ -83,6 +83,10 @@
 #include "nsIFrame.h"
 #include "nsStringBuffer.h"
 #include "mozilla/dom/Element.h"
+#include "nsIEditorDocShell.h"
+#include "nsIEditor.h"
+#include "nsIHTMLEditor.h"
+#include "nsIDocShell.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -349,6 +353,42 @@ nsDocumentEncoder::IncludeInContext(nsINode *aNode)
   return false;
 }
 
+static
+bool
+IsInvisibleBreak(nsINode *aNode) {
+  // xxxehsan: we should probably figure out a way to determine
+  // if a BR node is visible without using the editor.
+  Element* elt = aNode->AsElement();
+  if (!elt->IsHTML(nsGkAtoms::br) ||
+      !aNode->IsEditable()) {
+    return false;
+  }
+
+  // Grab the editor associated with the document
+  nsIDocument *doc = aNode->GetCurrentDoc();
+  if (doc) {
+    nsPIDOMWindow *window = doc->GetWindow();
+    if (window) {
+      nsIDocShell *docShell = window->GetDocShell();
+      if (docShell) {
+        nsCOMPtr<nsIEditorDocShell> editorDocShell = do_QueryInterface(docShell);
+        if (editorDocShell) {
+          nsCOMPtr<nsIEditor> editor;
+          editorDocShell->GetEditor(getter_AddRefs(editor));
+          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+          if (htmlEditor) {
+            bool isVisible = false;
+            nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aNode);
+            htmlEditor->BreakIsVisible(domNode, &isVisible);
+            return !isVisible;
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
 nsresult
 nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
                                       PRInt32 aStartOffset,
@@ -381,6 +421,11 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
     node = aNode;
   
   if (node->IsElement()) {
+    if ((mFlags & (nsIDocumentEncoder::OutputPreformatted |
+                   nsIDocumentEncoder::OutputDropInvisibleBreak)) &&
+        IsInvisibleBreak(node)) {
+      return NS_OK;
+    }
     Element* originalElement =
       aOriginalNode && aOriginalNode->IsElement() ?
         aOriginalNode->AsElement() : nsnull;
@@ -740,32 +785,6 @@ static nsresult GetNextNode(nsIDOMNode* aNode, nsTArray<PRInt32>& aIndexArray,
 static bool IsTextNode(nsINode *aNode)
 {
   return aNode && aNode->IsNodeOfType(nsINode::eTEXT);
-}
-
-static nsresult GetLengthOfDOMNode(nsIDOMNode *aNode, PRUint32 &aCount) 
-{
-  aCount = 0;
-  if (!aNode) { return NS_ERROR_NULL_POINTER; }
-  nsresult result=NS_OK;
-  nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
-  nodeAsChar = do_QueryInterface(aNode);
-  if (nodeAsChar) {
-    nodeAsChar->GetLength(&aCount);
-  }
-  else
-  {
-    bool hasChildNodes;
-    aNode->HasChildNodes(&hasChildNodes);
-    if (true==hasChildNodes)
-    {
-      nsCOMPtr<nsIDOMNodeList>nodeList;
-      result = aNode->GetChildNodes(getter_AddRefs(nodeList));
-      if (NS_SUCCEEDED(result) && nodeList) {
-        nodeList->GetLength(&aCount);
-      }
-    }
-  }
-  return result;
 }
 
 nsresult
@@ -1271,7 +1290,15 @@ nsHTMLCopyEncoder::Init(nsIDOMDocument* aDocument,
   mDocument = do_QueryInterface(aDocument);
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
 
-  mMimeType.AssignLiteral("text/html");
+  // Hack, hack! Traditionally, the caller passes text/unicode, which is
+  // treated as "guess text/html or text/plain" in this context. (It has a
+  // different meaning in other contexts. Sigh.) From now on, "text/plain"
+  // means forcing text/plain instead of guessing.
+  if (aMimeType.EqualsLiteral("text/plain")) {
+    mMimeType.AssignLiteral("text/plain");
+  } else {
+    mMimeType.AssignLiteral("text/html");
+  }
 
   // Make all links absolute when copying
   // (see related bugs #57296, #41924, #58646, #32768)
@@ -1699,13 +1726,12 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
     if (IsTextNode(n))
     {
       // if not at end of text node, we are done
-      PRUint32 len;
-      GetLengthOfDOMNode(aNode, len);
+      PRUint32 len = n->Length();
       if (offset < (PRInt32)len)
       {
         // unless everything after us in just whitespace.  NOTE: we need a more
         // general solution that truly detects all cases of non-significant
-        // whitesace with no false alarms.
+        // whitespace with no false alarms.
         nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(aNode);
         nsAutoString text;
         nodeAsText->SubstringData(offset, len-offset, text);
@@ -1891,17 +1917,19 @@ nsHTMLCopyEncoder::IsLastNode(nsIDOMNode *aNode)
 {
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset,j;
-  PRUint32 numChildren;
   nsresult rv = GetNodeLocation(aNode, address_of(parent), &offset);
   if (NS_FAILED(rv)) 
   {
     NS_NOTREACHED("failure in IsLastNode");
     return false;
   }
-  GetLengthOfDOMNode(parent, numChildren); 
-  if (offset+1 == (PRInt32)numChildren) // easy case, we are last dom child
+  nsCOMPtr<nsINode> parentNode = do_QueryInterface(parent);
+  if (!parentNode) {
     return true;
-  if (!parent)
+  }
+
+  PRUint32 numChildren = parentNode->Length();
+  if (offset+1 == (PRInt32)numChildren) // easy case, we are last dom child
     return true;
   // need to check if any nodes after us are really visible.
   // Mike wrote something for me along these lines in nsSelectionController,

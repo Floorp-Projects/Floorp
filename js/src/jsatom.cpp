@@ -68,6 +68,7 @@
 #include "jsobjinlines.h"
 
 #include "vm/String-inl.h"
+#include "vm/Xdr.h"
 
 using namespace mozilla;
 using namespace js;
@@ -657,3 +658,65 @@ js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,
     return false;
 }
 #endif
+
+template<XDRMode mode>
+bool
+js::XDRAtom(XDRState<mode> *xdr, JSAtom **atomp)
+{
+    if (mode == XDR_ENCODE) {
+        JSString *str = *atomp;
+        return xdr->codeString(&str);
+    }
+
+    /*
+     * Inline XDRState::codeString when decoding to avoid JSString allocation
+     * for already existing atoms. See bug 321985.
+     */
+    uint32_t nchars;
+    if (!xdr->codeUint32(&nchars))
+        return false;
+
+    JSContext *cx = xdr->cx();
+    JSAtom *atom;
+#if IS_LITTLE_ENDIAN
+    /* Directly access the little endian chars in the XDR buffer. */
+    const jschar *chars = reinterpret_cast<const jschar *>(xdr->buf.read(nchars * sizeof(jschar)));
+    atom = js_AtomizeChars(cx, chars, nchars);
+#else
+    /*
+     * We must copy chars to a temporary buffer to convert between little and
+     * big endian data.
+     */ 
+    jschar *chars;
+    jschar stackChars[256];
+    if (nchars <= ArrayLength(stackChars)) {
+        chars = stackChars;
+    } else {
+        /*
+         * This is very uncommon. Don't use the tempLifoAlloc arena for this as
+         * most allocations here will be bigger than tempLifoAlloc's default
+         * chunk size.
+         */
+        chars = static_cast<jschar *>(cx->runtime->malloc_(nchars * sizeof(jschar)));
+        if (!chars)
+            return false;
+    }
+
+    JS_ALWAYS_TRUE(xdr->codeChars(chars, nchars));
+    atom = js_AtomizeChars(cx, chars, nchars);
+    if (chars != stackChars)
+        Foreground::free_(chars);
+#endif /* !IS_LITTLE_ENDIAN */
+
+    if (!atom)
+        return false;
+    *atomp = atom;
+    return true;
+}
+
+template bool
+js::XDRAtom(XDRState<XDR_ENCODE> *xdr, JSAtom **atomp);
+
+template bool
+js::XDRAtom(XDRState<XDR_DECODE> *xdr, JSAtom **atomp);
+

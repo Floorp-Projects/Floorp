@@ -153,6 +153,8 @@ public:
                                            nsIEditor)
 
   /* ------------ utility methods   -------------- */
+  already_AddRefed<nsIDOMDocument> GetDOMDocument();
+  already_AddRefed<nsIDocument> GetDocument();
   already_AddRefed<nsIPresShell> GetPresShell();
   void NotifyEditorObservers();
 
@@ -214,29 +216,6 @@ public:
   nsresult EndIMEComposition();
 
   void SwitchTextDirectionTo(PRUint32 aDirection);
-
-  void BeginKeypressHandling() { mLastKeypressEventWasTrusted = eTriTrue; }
-  void BeginKeypressHandling(nsIDOMNSEvent* aEvent);
-  void EndKeypressHandling() { mLastKeypressEventWasTrusted = eTriUnset; }
-
-  class FireTrustedInputEvent {
-  public:
-    explicit FireTrustedInputEvent(nsEditor* aSelf, bool aActive = true)
-      : mEditor(aSelf)
-      , mShouldAct(aActive && mEditor->mLastKeypressEventWasTrusted == eTriUnset) {
-      if (mShouldAct) {
-        mEditor->BeginKeypressHandling();
-      }
-    }
-    ~FireTrustedInputEvent() {
-      if (mShouldAct) {
-        mEditor->EndKeypressHandling();
-      }
-    }
-  private:
-    nsEditor* mEditor;
-    bool mShouldAct;
-  };
 
 protected:
   nsCString mContentMIMEType;       // MIME type of the doc we are editing.
@@ -726,6 +705,9 @@ public:
            IsInteractionAllowed();
   }
 
+  // Get the input event target. This might return null.
+  virtual already_AddRefed<nsIContent> GetInputEventTargetContent() = 0;
+
   // Get the focused content, if we're focused.  Returns null otherwise.
   virtual already_AddRefed<nsIContent> GetFocusedContent();
 
@@ -770,6 +752,45 @@ public:
   virtual nsresult InsertFromDrop(nsIDOMEvent* aDropEvent) = 0;
 
   virtual already_AddRefed<nsIDOMNode> FindUserSelectAllNode(nsIDOMNode* aNode) { return nsnull; }
+
+  NS_STACK_CLASS class HandlingTrustedAction
+  {
+  public:
+    explicit HandlingTrustedAction(nsEditor* aSelf, bool aIsTrusted = true)
+    {
+      Init(aSelf, aIsTrusted);
+    }
+
+    HandlingTrustedAction(nsEditor* aSelf, nsIDOMNSEvent* aEvent);
+
+    ~HandlingTrustedAction()
+    {
+      mEditor->mHandlingTrustedAction = mWasHandlingTrustedAction;
+      mEditor->mHandlingActionCount--;
+    }
+
+  private:
+    nsRefPtr<nsEditor> mEditor;
+    bool mWasHandlingTrustedAction;
+
+    void Init(nsEditor* aSelf, bool aIsTrusted)
+    {
+      MOZ_ASSERT(aSelf);
+
+      mEditor = aSelf;
+      mWasHandlingTrustedAction = aSelf->mHandlingTrustedAction;
+      if (aIsTrusted) {
+        // If action is nested and the outer event is not trusted,
+        // we shouldn't override it.
+        if (aSelf->mHandlingActionCount == 0) {
+          aSelf->mHandlingTrustedAction = true;
+        }
+      } else {
+        aSelf->mHandlingTrustedAction = false;
+      }
+      aSelf->mHandlingActionCount++;
+    }
+  };
 
 protected:
 
@@ -824,7 +845,9 @@ protected:
 
  nsCOMPtr<nsIDOMEventListener> mEventListener;
 
-  Tristate mLastKeypressEventWasTrusted;
+  PRUint32 mHandlingActionCount;
+  bool mHandlingTrustedAction;
+  bool mDispatchInputEvent;
 
   friend bool NSCanUnload(nsISupports* serviceMgr);
   friend class nsAutoTxnsConserveSelection;

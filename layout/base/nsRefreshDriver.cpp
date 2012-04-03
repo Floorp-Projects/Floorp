@@ -386,6 +386,7 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
 
       PRInt64 eventTime = mMostRecentRefreshEpochTime / PR_USEC_PER_MSEC;
       for (PRUint32 i = 0; i < frameRequestCallbacks.Length(); ++i) {
+        nsAutoMicroTask mt;
         frameRequestCallbacks[i]->Sample(eventTime);
       }
 

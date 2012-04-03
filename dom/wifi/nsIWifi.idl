@@ -39,11 +39,15 @@
 #include "nsIDOMDOMRequest.idl"
 #include "nsIDOMEvent.idl"
 
-[scriptable, uuid(9DCE05BF-659C-4427-A050-0EAC3BB6C1C0)]
+[scriptable, uuid(abb936bc-ba81-4c23-8dfa-3e5d96557044)]
 interface nsIWifi : nsISupports {
+    /**
+     * Shutdown the wifi system.
+     */
+    void shutdown();
 };
 
-[scriptable, uuid(1509221f-470e-4445-b476-88e74fd5c617)]
+[scriptable, uuid(7df14510-f58b-4c9a-9e35-a39a94255941)]
 interface nsIDOMWifiManager : nsISupports {
     /**
      * TODO Remove in favor of a settings API.
@@ -88,7 +92,16 @@ interface nsIDOMWifiManager : nsISupports {
     readonly attribute jsval connectedNetwork;
 
     /**
-     * These three functions serve as state notification listeners.
+     * A connectionInformation object with the same information found in an
+     * nsIDOMWifiConnectionInfoEvent (but without the network).
+     * If we are not currently connected to a network, this will be null.
+     */
+    readonly attribute jsval connectionInformation;
+
+    /**
+     * These four functions serve as state notification listeners.
+     * onconnecting: Fires when we start the process of connecting to a
+     *               network.
      * onassociate: Fires when we have connected to an access point but do not
      *              yet have an IP address.
      * onconnect: Fires once we are fully connected to an access point and can
@@ -98,9 +111,16 @@ interface nsIDOMWifiManager : nsISupports {
      *               connected to a network but have disconnected for any
      *               reason (transition: onconnect -> ondisconnect).
      */
+             attribute nsIDOMEventListener onconnecting;
              attribute nsIDOMEventListener onassociate;
              attribute nsIDOMEventListener onconnect;
              attribute nsIDOMEventListener ondisconnect;
+
+    /**
+     * An event listener that is called with information about the signal
+     * strength and link speed every 5 seconds.
+     */
+             attribute nsIDOMEventListener connectionInfoUpdate;
 };
 
 [scriptable, uuid(4674c6f1-ea64-44db-ac2f-e7bd6514dfd6)]
@@ -110,4 +130,27 @@ interface nsIDOMWifiStateChangeEvent : nsIDOMEvent {
      * this change.
      */
     readonly attribute jsval network;
+};
+
+[scriptable, uuid(5c9ee332-dd98-4227-b7fc-768418fd50e3)]
+interface nsIDOMWifiConnectionInfoEvent : nsIDOMEvent {
+    /**
+     * Network object with an SSID field.
+     */
+    readonly attribute jsval network;
+
+    /**
+     * Strength of the signal to network, in dBm between -55 and -100 dBm.
+     */
+    readonly attribute short signalStrength;
+
+    /**
+     * Relative signal strength between 0 and 100.
+     */
+    readonly attribute short relSignalStrength;
+
+    /**
+     * Link spead in Mb/s.
+     */
+    readonly attribute long linkSpeed;
 };

@@ -135,7 +135,6 @@ getParameterPname = constCheck(
   GL.MAX_VERTEX_TEXTURE_IMAGE_UNITS || "GL.MAX_VERTEX_TEXTURE_IMAGE_UNITS",
   GL.MAX_VERTEX_UNIFORM_VECTORS || "GL.MAX_VERTEX_UNIFORM_VECTORS",
   GL.MAX_VIEWPORT_DIMS || "GL.MAX_VIEWPORT_DIMS",
-  GL.NUM_COMPRESSED_TEXTURE_FORMATS || "GL.NUM_COMPRESSED_TEXTURE_FORMATS",
   GL.PACK_ALIGNMENT || "GL.PACK_ALIGNMENT",
   GL.POLYGON_OFFSET_FACTOR || "GL.POLYGON_OFFSET_FACTOR",
   GL.POLYGON_OFFSET_FILL || "GL.POLYGON_OFFSET_FILL",
@@ -338,7 +337,7 @@ randomImage = function(w,h) {
   } else if (r < 0.5) {
     img = document.createElement('video');
     img.width = w; img.height = h;
-  } else if (r < 0.75) {
+  } else if (r < 0.5) {
     img = document.createElement('img');
     img.width = w; img.height = h;
   } else {

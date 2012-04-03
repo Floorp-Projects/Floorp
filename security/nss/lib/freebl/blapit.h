@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapit.h,v 1.25 2012/01/13 16:53:15 emaldona%redhat.com Exp $ */
+/* $Id: blapit.h,v 1.26 2012/03/28 22:35:14 rrelyea%redhat.com Exp $ */
 
 #ifndef _BLAPIT_H_
 #define _BLAPIT_H_
@@ -142,7 +142,7 @@
 #define RSA_MAX_MODULUS_BITS  8192
 #define RSA_MAX_EXPONENT_BITS   64
 #define DH_MIN_P_BITS	       128
-#define DH_MAX_P_BITS         2236
+#define DH_MAX_P_BITS         3072
 
 /*
  * The FIPS 186 algorithm for generating primes P and Q allows only 9

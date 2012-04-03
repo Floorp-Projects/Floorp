@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=650776
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 650776</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=650776">Mozilla Bug 650776</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 650776 **/
+
+var u = Components.interfaces.nsIParserUtils;
+var s = Components.classes["@mozilla.org/parserutils;1"]
+        .getService(u);
+
+// Basic sanity
+is(s.sanitize("foo", 0), "<html><head></head><body>foo</body></html>", "Wrong sanitizer result 1");
+// Scripts get removed
+is(s.sanitize("<script>\u003c/script>", 0), "<html><head></head><body></body></html>", "Wrong sanitizer result 2");
+// Event handlers get removed
+is(s.sanitize("<a onclick='boom()'></a>", 0), "<html><head></head><body><a></a></body></html>", "Wrong sanitizer result 3");
+// By default, styles are removed
+is(s.sanitize("<style>p { color: red; }</style><p style='background-color: blue;'></p>", 0), "<html><head></head><body><p></p></body></html>", "Wrong sanitizer result 4");
+// Can allow styles
+is(s.sanitize("<style>p { color: red; }</style><p style='background-color: blue;'></p>", u.SanitizerAllowStyle), '<html><head><style>p { color: red; }</style></head><body><p style="background-color: blue;"></p></body></html>', "Wrong sanitizer result 5");
+// -moz-binding gets dropped when styles allowed; however, reconstructing the p { ... } part seems broken!
+todo_is(s.sanitize("<style>p { color: red; -moz-binding: url(foo); }</style><p style='background-color: blue; -moz-binding: url(foo);'></p>", u.SanitizerAllowStyle), '<html><head><style>p { color: red; }</style></head><body><p style="background-color: blue;"></p></body></html>', "Wrong sanitizer result 6");
+// Various cid: embeds only cases
+is(s.sanitize("<img src='foo.html'>", u.SanitizerCidEmbedsOnly), '<html><head></head><body><img></body></html>', "Wrong sanitizer result 7");
+is(s.sanitize("<img src='cid:foo'>", u.SanitizerCidEmbedsOnly), '<html><head></head><body><img src="cid:foo"></body></html>', "Wrong sanitizer result 8");
+is(s.sanitize("<img src='data:image/png,'>", u.SanitizerCidEmbedsOnly), '<html><head></head><body><img></body></html>', "Wrong sanitizer result 9");
+is(s.sanitize("<img src='http://mochi.test/'>", u.SanitizerCidEmbedsOnly), '<html><head></head><body><img></body></html>', "Wrong sanitizer result 10");
+is(s.sanitize("<a href='http://mochi.test/'></a>", u.SanitizerCidEmbedsOnly), '<html><head></head><body><a href="http://mochi.test/"></a></body></html>', "Wrong sanitizer result 11");
+is(s.sanitize("<body background='http://mochi.test/'>", u.SanitizerCidEmbedsOnly), '<html><head></head><body></body></html>', "Wrong sanitizer result 12");
+is(s.sanitize("<body background='cid:foo'>", u.SanitizerCidEmbedsOnly), '<html><head></head><body background="cid:foo"></body></html>', "Wrong sanitizer result 13");
+is(s.sanitize("<svg></svg>", u.SanitizerCidEmbedsOnly), '<html><head></head><body></body></html>', "Wrong sanitizer result 14");
+is(s.sanitize("<math definitionURL='cid:foo' altimg='cid:foo'></math>", u.SanitizerCidEmbedsOnly), '<html><head></head><body><math></math></body></html>', "Wrong sanitizer result 14");
+is(s.sanitize("<video><source src='http://mochi.test/'></video>", u.SanitizerCidEmbedsOnly), '<html><head></head><body><video controls="controls"><source></video></body></html>', "Wrong sanitizer result 15");
+is(s.sanitize("<style></style>", u.SanitizerAllowStyle | u.SanitizerCidEmbedsOnly), '<html><head></head><body></body></html>', "Wrong sanitizer result 16");
+// Dangerous links
+is(s.sanitize("<a href='javascript:boom()'></a>", 0), "<html><head></head><body><a></a></body></html>", "Wrong sanitizer result 17");
+is(s.sanitize("<a href='JavaScript:boom()'></a>", 0), "<html><head></head><body><a></a></body></html>", "Wrong sanitizer result 18");
+is(s.sanitize("<a href=' javascript:boom()'></a>", 0), "<html><head></head><body><a></a></body></html>", "Wrong sanitizer result 19");
+is(s.sanitize("<a href='\njavascript:boom()'></a>", 0), "<html><head></head><body><a></a></body></html>", "Wrong sanitizer result 20");
+is(s.sanitize("<a href='\fjavascript:boom()'></a>", 0), "<html><head></head><body><a></a></body></html>", "Wrong sanitizer result 21");
+is(s.sanitize("<a href='\u00A0javascript:boom()'></a>", 0), "<html><head></head><body><a></a></body></html>", "Wrong sanitizer result 22");
+is(s.sanitize("<a href='foo.html'></a>", 0), "<html><head></head><body><a></a></body></html>", "Wrong sanitizer result 23");
+// Comments
+is(s.sanitize("<!-- foo -->", 0), "<html><head></head><body></body></html>", "Wrong sanitizer result 24");
+is(s.sanitize("<!-- foo -->", u.SanitizerAllowComments), "<!-- foo -->\n<html><head></head><body></body></html>", "Wrong sanitizer result 25");
+// noscript
+is(s.sanitize("<body><noscript><p class=bar>foo</p></noscript>", 0), '<html><head></head><body><noscript><p class="bar">foo</p></noscript></body></html>', "Wrong sanitizer result 26");
+// dangerous elements
+is(s.sanitize("<iframe></iframe>", 0), "<html><head></head><body></body></html>", "Wrong sanitizer result 27");
+is(s.sanitize("<object></object>", 0), "<html><head></head><body></body></html>", "Wrong sanitizer result 28");
+is(s.sanitize("<embed>", 0), "<html><head></head><body></body></html>", "Wrong sanitizer result 29");
+// presentationalism
+is(s.sanitize("<font></font>", 0), "<html><head></head><body><font></font></body></html>", "Wrong sanitizer result 30");
+is(s.sanitize("<center></center>", 0), "<html><head></head><body><center></center></body></html>", "Wrong sanitizer result 31");
+is(s.sanitize("<div align=center></div>", 0), '<html><head></head><body><div align="center"></div></body></html>', "Wrong sanitizer result 32");
+is(s.sanitize("<table><tr><td bgcolor=#FFFFFF>", 0), '<html><head></head><body><table><tbody><tr><td bgcolor="#FFFFFF"></td></tr></tbody></table></body></html>', "Wrong sanitizer result 33");
+is(s.sanitize("<font></font>", u.SanitizerDropNonCSSPresentation), "<html><head></head><body></body></html>", "Wrong sanitizer result 34");
+is(s.sanitize("<center></center>", u.SanitizerDropNonCSSPresentation), "<html><head></head><body></body></html>", "Wrong sanitizer result 35");
+is(s.sanitize("<div align=center></div>", u.SanitizerDropNonCSSPresentation), '<html><head></head><body><div></div></body></html>', "Wrong sanitizer result 36");
+is(s.sanitize("<table><tr><td bgcolor=#FFFFFF>", u.SanitizerDropNonCSSPresentation), '<html><head></head><body><table><tbody><tr><td></td></tr></tbody></table></body></html>', "Wrong sanitizer result 37");
+// metadata
+is(s.sanitize("<meta charset=utf-7>", 0), "<html><head></head><body></body></html>", "Wrong sanitizer result 38");
+is(s.sanitize("<meta http-equiv=content-type content='text/html; charset=utf-7'>", 0), "<html><head></head><body></body></html>", "Wrong sanitizer result 39");
+is(s.sanitize("<meta itemprop=foo content=bar>", 0), '<html><head><meta itemprop="foo" content="bar"></head><body></body></html>', "Wrong sanitizer result 40");
+is(s.sanitize("<link rel=whatever href=http://mochi.test/ >", 0), '<html><head></head><body></body></html>', "Wrong sanitizer result 41");
+is(s.sanitize("<link itemprop=foo href=http://mochi.test/ >", 0), '<html><head><link itemprop="foo" href="http://mochi.test/"></head><body></body></html>', "Wrong sanitizer result 42");
+is(s.sanitize("<link rel=stylesheet itemprop=foo href=http://mochi.test/ >", 0), '<html><head><link itemprop="foo" href="http://mochi.test/"></head><body></body></html>', "Wrong sanitizer result 43");
+is(s.sanitize("<meta name=foo content=bar>", 0), '<html><head><meta name="foo" content="bar"></head><body></body></html>', "Wrong sanitizer result 44");
+// forms
+is(s.sanitize("<form></form>", 0), '<html><head></head><body><form></form></body></html>', "Wrong sanitizer result 45");
+is(s.sanitize("<fieldset><legend></legend></fieldset>", 0), '<html><head></head><body><fieldset><legend></legend></fieldset></body></html>', "Wrong sanitizer result 46");
+is(s.sanitize("<input>", 0), '<html><head></head><body><input></body></html>', "Wrong sanitizer result 47");
+is(s.sanitize("<button>foo</button>", 0), '<html><head></head><body><button>foo</button></body></html>', "Wrong sanitizer result 48");
+is(s.sanitize("<select><optgroup><option>foo</option></optgroup></select></button>", 0), '<html><head></head><body><select><optgroup><option>foo</option></optgroup></select></body></html>', "Wrong sanitizer result 49");
+is(s.sanitize("<form></form>", u.SanitizerDropForms), '<html><head></head><body></body></html>', "Wrong sanitizer result 50");
+is(s.sanitize("<fieldset><legend></legend></fieldset>", u.SanitizerDropForms), '<html><head></head><body><fieldset><legend></legend></fieldset></body></html>', "Wrong sanitizer result 51");
+is(s.sanitize("<input>", u.SanitizerDropForms), '<html><head></head><body></body></html>', "Wrong sanitizer result 52");
+is(s.sanitize("<button>foo</button>", u.SanitizerDropForms), '<html><head></head><body></body></html>', "Wrong sanitizer result 53");
+is(s.sanitize("<select><optgroup><option>foo</option></optgroup></select></button>", u.SanitizerDropForms), '<html><head></head><body></body></html>', "Wrong sanitizer result 54");
+// doctype
+is(s.sanitize("<!DOCTYPE html>", 0), '<!DOCTYPE html>\n<html><head></head><body></body></html>', "Wrong sanitizer result 55");
+// title
+is(s.sanitize("<title></title>", 0), '<html><head><title></title></head><body></body></html>', "Wrong sanitizer result 56");
+// Drop media
+is(s.sanitize("<img>", u.SanitizerDropMedia), '<html><head></head><body></body></html>', "Wrong sanitizer result 57");
+is(s.sanitize("<svg>foo</svg>", u.SanitizerDropMedia), '<html><head></head><body>foo</body></html>', "Wrong sanitizer result 58");
+is(s.sanitize("<video><source></video>", u.SanitizerDropMedia), '<html><head></head><body></body></html>', "Wrong sanitizer result 59");
+is(s.sanitize("<audio><source></audio>", u.SanitizerDropMedia), '<html><head></head><body></body></html>', "Wrong sanitizer result 60");
+
+
+</script>
+</pre>
+</body>
+</html>

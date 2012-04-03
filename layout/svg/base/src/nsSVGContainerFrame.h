@@ -37,13 +37,22 @@
 #ifndef NS_SVGCONTAINERFRAME_H
 #define NS_SVGCONTAINERFRAME_H
 
-#include "nsContainerFrame.h"
-#include "nsISVGChildFrame.h"
-#include "nsSVGSVGElement.h"
-#include "gfxRect.h"
 #include "gfxMatrix.h"
+#include "gfxRect.h"
+#include "nsContainerFrame.h"
+#include "nsFrame.h"
+#include "nsIFrame.h"
+#include "nsISVGChildFrame.h"
+#include "nsQueryFrame.h"
+#include "nsRect.h"
 
+class nsFrameList;
+class nsIContent;
+class nsIPresShell;
 class nsRenderingContext;
+class nsStyleContext;
+
+struct nsPoint;
 
 typedef nsContainerFrame nsSVGContainerFrameBase;
 
@@ -117,11 +126,8 @@ public:
                       const nsIntRect *aDirtyRect);
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
   NS_IMETHOD_(nsRect) GetCoveredRegion();
-  NS_IMETHOD UpdateCoveredRegion();
-  NS_IMETHOD InitialUpdate();
+  virtual void UpdateBounds();
   virtual void NotifySVGChanged(PRUint32 aFlags);
-  virtual void NotifyRedrawSuspended();
-  virtual void NotifyRedrawUnsuspended();
   virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                       PRUint32 aFlags);
   NS_IMETHOD_(bool) IsDisplayContainer() { return true; }

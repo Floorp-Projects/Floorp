@@ -39,7 +39,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/Util.h"
-#include "SmsFilter.h" // On top because it includes basictypes.h.
+// On top because they include basictypes.h:
+#include "SmsFilter.h"
 
 #ifdef XP_WIN
 #undef GetClassName
@@ -55,6 +56,8 @@
 
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
+
+#include "mozilla/dom/bindings/Common.h"
 
 #include "nscore.h"
 #include "nsDOMClassInfo.h"
@@ -207,6 +210,7 @@
 #include "nsWebSocket.h"
 #include "nsIDOMCloseEvent.h"
 #include "nsEventSource.h"
+#include "nsIDOMSettingsManager.h"
 
 // includes needed for the prototype chain interfaces
 #include "nsIDOMNavigator.h"
@@ -499,6 +503,7 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 
 #include "nsDOMTouchEvent.h"
 #include "nsIDOMCustomEvent.h"
+#include "nsDOMMutationObserver.h"
 
 #include "nsWrapperCacheInlines.h"
 #include "dombindings.h"
@@ -525,10 +530,14 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 
 #ifdef MOZ_B2G_BT
 #include "BluetoothAdapter.h"
+#include "BluetoothDevice.h"
 #endif
 
 #include "DOMError.h"
 #include "DOMRequest.h"
+
+#undef None // something included above defines this preprocessor symbol, maybe Xlib headers
+#include "WebGLContext.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -633,7 +642,6 @@ DOMCI_DATA(DOMConstructor, void)
     0,                                                                        \
     false,                                                                 \
     false,                                                                 \
-    NULL,                                                                     \
     NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                    \
   },
 
@@ -650,7 +658,6 @@ DOMCI_DATA(DOMConstructor, void)
     0,                                                                        \
     true,                                                                  \
     false,                                                                 \
-    NULL,                                                                     \
     NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                    \
   },
 
@@ -1523,14 +1530,18 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLActiveInfo, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLExtension, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionStandardDerivatives, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionTextureFilterAnisotropic, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionLoseContext, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLExtension, WebGLExtensionSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_ADDPROPERTY)
+  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionStandardDerivatives, WebGLExtensionSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_ADDPROPERTY)
+  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionTextureFilterAnisotropic, WebGLExtensionSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_ADDPROPERTY)
+  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionLoseContext, WebGLExtensionSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_ADDPROPERTY)
 
   NS_DEFINE_CLASSINFO_DATA(PaintRequest, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1607,6 +1618,12 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CustomEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(MozMutationObserver, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(MutationRecord, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(MozSettingsEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
 #ifdef MOZ_B2G_RIL
   NS_DEFINE_CLASSINFO_DATA(Telephony, nsEventTargetSH,
@@ -1619,6 +1636,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
 #ifdef MOZ_B2G_BT
   NS_DEFINE_CLASSINFO_DATA(BluetoothAdapter, nsEventTargetSH,
+                           EVENTTARGET_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(BluetoothDevice, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
 #endif
 
@@ -1651,6 +1670,7 @@ static const nsContractIDMapData kConstructorMap[] =
   NS_DEFINE_CONSTRUCTOR_DATA(XSLTProcessor,
                              "@mozilla.org/document-transformer;1?type=xslt")
   NS_DEFINE_CONSTRUCTOR_DATA(EventSource, NS_EVENTSOURCE_CONTRACTID)
+  NS_DEFINE_CONSTRUCTOR_DATA(MozMutationObserver, NS_DOMMUTATIONOBSERVER_CONTRACTID)
 };
 
 #define NS_DEFINE_EVENT_CTOR(_class)                        \
@@ -1669,6 +1689,7 @@ NS_DEFINE_EVENT_CTOR(PopStateEvent)
 NS_DEFINE_EVENT_CTOR(HashChangeEvent)
 NS_DEFINE_EVENT_CTOR(PageTransitionEvent)
 NS_DEFINE_EVENT_CTOR(CloseEvent)
+NS_DEFINE_EVENT_CTOR(MozSettingsEvent)
 NS_DEFINE_EVENT_CTOR(UIEvent)
 NS_DEFINE_EVENT_CTOR(MouseEvent)
 nsresult
@@ -1701,6 +1722,7 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(HashChangeEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(PageTransitionEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(CloseEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MozSettingsEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(UIEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MouseEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(StorageEvent)
@@ -2387,6 +2409,12 @@ nsDOMClassInfo::Init()
   sXPConnect->SetFunctionThisTranslator(NS_GET_IID(nsIDOMEventListener),
                                         elt, getter_AddRefs(old));
 
+  nsCOMPtr<nsIXPCFunctionThisTranslator> mctl = new nsMutationCallbackThisTranslator();
+  NS_ENSURE_TRUE(elt, NS_ERROR_OUT_OF_MEMORY);
+
+  sXPConnect->SetFunctionThisTranslator(NS_GET_IID(nsIMutationObserverCallback),
+                                        mctl, getter_AddRefs(old));
+
   nsCOMPtr<nsIScriptSecurityManager> sm =
     do_GetService("@mozilla.org/scriptsecuritymanager;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2475,6 +2503,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Screen, nsIDOMScreen)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMScreen)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(DOMPrototype, nsIDOMDOMConstructor)
@@ -4068,6 +4097,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(MozConnection, nsIDOMMozConnection)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozConnection)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CSSFontFaceRule, nsIDOMCSSFontFaceRule)
@@ -4351,6 +4381,19 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(MozMutationObserver, nsIDOMMozMutationObserver)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozMutationObserver)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MutationRecord, nsIDOMMutationRecord)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMutationRecord)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozSettingsEvent, nsIDOMMozSettingsEvent)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozSettingsEvent)
+     DOM_CLASSINFO_EVENT_MAP_ENTRIES
+   DOM_CLASSINFO_MAP_END
+
 #ifdef MOZ_B2G_RIL
   DOM_CLASSINFO_MAP_BEGIN(Telephony, nsIDOMTelephony)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTelephony)
@@ -4371,6 +4414,10 @@ nsDOMClassInfo::Init()
 #ifdef MOZ_B2G_BT
   DOM_CLASSINFO_MAP_BEGIN(BluetoothAdapter, nsIDOMBluetoothAdapter)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMBluetoothAdapter)
+  DOM_CLASSINFO_MAP_END  
+  
+  DOM_CLASSINFO_MAP_BEGIN(BluetoothDevice, nsIDOMBluetoothDevice)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMBluetoothDevice)
   DOM_CLASSINFO_MAP_END
 #endif
 
@@ -4437,7 +4484,11 @@ nsDOMClassInfo::Init()
   sDisableGlobalScopePollutionSupport =
     Preferences::GetBool("browser.dom.global_scope_pollution.disabled");
 
-  mozilla::dom::binding::Register(sClassInfoData);
+  // Proxy bindings
+  mozilla::dom::binding::Register(nameSpaceManager);
+
+  // Non-proxy bindings
+  mozilla::dom::bindings::Register(nameSpaceManager);
 
   sIsInitialized = true;
 
@@ -4859,9 +4910,8 @@ GetExternalClassInfo(nsScriptNameSpaceManager *aNameSpaceManager,
   rv = creator->RegisterDOMCI(NS_ConvertUTF16toUTF8(aName).get(), sof);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  const nsGlobalNameStruct *name_struct;
-  rv = aNameSpaceManager->LookupName(aName, &name_struct);
-  if (NS_SUCCEEDED(rv) && name_struct &&
+  const nsGlobalNameStruct *name_struct = aNameSpaceManager->LookupName(aName);
+  if (name_struct &&
       name_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
     *aResult = name_struct;
   }
@@ -5247,10 +5297,8 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSObject *obj,
 
   nsHTMLDocument *document = GetDocument(obj);
 
-  if (!document ||
-      document->GetCompatibilityMode() != eCompatibility_NavQuirks) {
-    // If we don't have a document, or if the document is not in
-    // quirks mode, return early.
+  if (!document) {
+    // If we don't have a document, return early.
 
     return JS_TRUE;
   }
@@ -5902,7 +5950,7 @@ private:
       return NS_ERROR_UNEXPECTED;
     }
 
-    nameSpaceManager->LookupName(aName, aNameStruct);
+    *aNameStruct = nameSpaceManager->LookupName(aName);
 
     // Return NS_OK here, aName just isn't a DOM class but nothing failed.
     return NS_OK;
@@ -6522,10 +6570,9 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
   nsDependentJSString name(id);
 
-  const nsGlobalNameStruct *name_struct = nsnull;
   const PRUnichar *class_name = nsnull;
-
-  nameSpaceManager->LookupName(name, &name_struct, &class_name);
+  const nsGlobalNameStruct *name_struct =
+    nameSpaceManager->LookupName(name, &class_name);
 
   if (!name_struct) {
     return NS_OK;
@@ -6546,6 +6593,15 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   if (name_struct->mType == nsGlobalNameStruct::eTypeInterface) {
     // We're resolving a name of a DOM interface for which there is no
     // direct DOM class, create a constructor object...
+
+    // Lookup new DOM bindings.
+    mozilla::dom::binding::DefineInterface define =
+      name_struct->mDefineDOMInterface;
+    if (define && mozilla::dom::binding::DefineConstructor(cx, obj, define, &rv)) {
+      *did_resolve = NS_SUCCEEDED(rv);
+
+      return rv;
+    }
 
     nsRefPtr<nsDOMConstructor> constructor;
     rv = nsDOMConstructor::Create(class_name,
@@ -6604,7 +6660,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     // Lookup new DOM bindings.
     if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
       mozilla::dom::binding::DefineInterface define =
-        sClassInfoData[name_struct->mDOMClassInfoID].mDefineDOMInterface;
+        name_struct->mDefineDOMInterface;
       if (define && mozilla::dom::binding::DefineConstructor(cx, obj, define, &rv)) {
         *did_resolve = NS_SUCCEEDED(rv);
 
@@ -6643,6 +6699,16 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   if (name_struct->mType == nsGlobalNameStruct::eTypeClassProto) {
     // We don't have a XPConnect prototype object, let ResolvePrototype create
     // one.
+
+    // Lookup new DOM bindings.
+    mozilla::dom::binding::DefineInterface define =
+      name_struct->mDefineDOMInterface;
+    if (define && mozilla::dom::binding::DefineConstructor(cx, obj, define, &rv)) {
+      *did_resolve = NS_SUCCEEDED(rv);
+
+      return rv;
+    }
+
     return ResolvePrototype(sXPConnect, aWin, cx, obj, class_name, nsnull,
                             name_struct, nameSpaceManager, nsnull, true,
                             did_resolve);
@@ -7813,10 +7879,6 @@ NS_IMETHODIMP
 nsEventTargetSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                              JSObject *obj, jsid id, jsval *vp, bool *_retval)
 {
-  if (id == sAddEventListener_id) {
-    return NS_OK;
-  }
-
   nsEventTargetSH::PreserveWrapper(GetNative(wrapper, obj));
 
   return NS_OK;
@@ -10454,15 +10516,15 @@ nsStorage2SH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   JSAutoRequest ar(cx);
 
   if (DOMStringIsNull(val)) {
-      *vp = JSVAL_NULL;
-  }
-  else {
-      JSString *str =
-        ::JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar *>(val.get()),
-                              val.Length());
-      NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
+    // No such key.
+    *vp = JSVAL_VOID;
+  } else {
+    JSString* str =
+      JS_NewUCStringCopyN(cx, static_cast<const jschar *>(val.get()),
+                          val.Length());
+    NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
-      *vp = STRING_TO_JSVAL(str);
+    *vp = STRING_TO_JSVAL(str);
   }
 
   return NS_SUCCESS_I_DID_SOMETHING;
@@ -10611,6 +10673,28 @@ nsEventListenerThisTranslator::TranslateThis(nsISupports *aInitialThis,
 
   *_retval = target.forget().get();
 
+  return NS_OK;
+}
+
+NS_INTERFACE_MAP_BEGIN(nsMutationCallbackThisTranslator)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCFunctionThisTranslator)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(nsMutationCallbackThisTranslator)
+NS_IMPL_RELEASE(nsMutationCallbackThisTranslator)
+
+NS_IMETHODIMP
+nsMutationCallbackThisTranslator::TranslateThis(nsISupports *aInitialThis,
+                                                nsIInterfaceInfo *aInterfaceInfo,
+                                                PRUint16 aMethodIndex,
+                                                bool *aHideFirstParamFromJS,
+                                                nsIID * *aIIDOfResult,
+                                                nsISupports **_retval)
+{
+  *aHideFirstParamFromJS = false;
+  *aIIDOfResult = nsnull;
+  NS_IF_ADDREF(*_retval = nsDOMMutationObserver::CurrentObserver());
   return NS_OK;
 }
 
@@ -10833,4 +10917,32 @@ nsSVGStringListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
   return rv;
 }
 
+NS_IMETHODIMP
+WebGLExtensionSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                              JSObject *obj, jsid id, jsval *vp, bool *_retval)
+{
+  WebGLExtensionSH::PreserveWrapper(GetNative(wrapper, obj));
 
+  return NS_OK;
+}
+
+void
+WebGLExtensionSH::PreserveWrapper(nsISupports *aNative)
+{
+  WebGLExtension* ext = static_cast<WebGLExtension*>(aNative);
+  nsContentUtils::PreserveWrapper(aNative, ext);
+}
+
+nsresult
+WebGLExtensionSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
+                            JSObject *globalObj, JSObject **parentObj)
+{
+  *parentObj = globalObj;
+
+  WebGLExtension *ext = static_cast<WebGLExtension*>(nativeObj);
+  WebGLContext *webgl = ext->Context();
+  nsHTMLCanvasElement *canvas = webgl->HTMLCanvasElement();
+  nsINode *node = static_cast<nsINode*>(canvas);
+
+  return WrapNativeParent(cx, globalObj, node, node, parentObj);
+}

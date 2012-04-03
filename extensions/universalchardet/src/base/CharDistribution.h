@@ -84,10 +84,6 @@ public:
     mDataThreshold = aIsPreferredLanguage ? 0 : MINIMUM_DATA_THRESHOLD;
   }
 
-  //This function is for future extension. Caller can use this function to control
-  //analyser's behavior
-  void      SetOpion(){}
-
   //It is not necessary to receive all data to draw conclusion. For charset detection,
   // certain amount of data is enough
   bool GotEnoughData() {return mTotalChars > ENOUGH_DATA_THRESHOLD;}

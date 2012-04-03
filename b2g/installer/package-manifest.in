@@ -169,6 +169,7 @@
 @BINPATH@/components/dom_json.xpt
 @BINPATH@/components/dom_power.xpt
 @BINPATH@/components/dom_range.xpt
+@BINPATH@/components/dom_settings.xpt
 @BINPATH@/components/dom_sidebar.xpt
 @BINPATH@/components/dom_sms.xpt
 @BINPATH@/components/dom_storage.xpt
@@ -236,6 +237,7 @@
 @BINPATH@/components/pref.xpt
 @BINPATH@/components/prefetch.xpt
 @BINPATH@/components/profile.xpt
+@BINPATH@/components/profiler.xpt
 @BINPATH@/components/proxyObject.xpt
 @BINPATH@/components/rdf.xpt
 @BINPATH@/components/satchel.xpt
@@ -295,6 +297,8 @@
 ; JavaScript components
 @BINPATH@/components/ConsoleAPI.manifest
 @BINPATH@/components/ConsoleAPI.js
+@BINPATH@/components/BrowserElementAPI.manifest
+@BINPATH@/components/BrowserElementAPI.js
 @BINPATH@/components/ContactManager.js
 @BINPATH@/components/ContactManager.manifest
 @BINPATH@/components/FeedProcessor.manifest
@@ -400,6 +404,8 @@
 @BINPATH@/components/contentAreaDropListener.js
 @BINPATH@/components/messageWakeupService.js
 @BINPATH@/components/messageWakeupService.manifest
+@BINPATH@/components/SettingsManager.js
+@BINPATH@/components/SettingsManager.manifest
 @BINPATH@/components/nsFilePicker.js
 @BINPATH@/components/nsFilePicker.manifest
 #ifdef MOZ_B2G_RIL
@@ -407,10 +413,10 @@
 @BINPATH@/components/RadioInterfaceLayer.js
 @BINPATH@/components/SmsDatabaseService.manifest
 @BINPATH@/components/SmsDatabaseService.js
-@BINPATH@/components/nsWifiWorker.js
-@BINPATH@/components/nsWifiWorker.manifest
-@BINPATH@/components/nsDOMWifiManager.js
-@BINPATH@/components/nsDOMWifiManager.manifest
+@BINPATH@/components/WifiWorker.js
+@BINPATH@/components/WifiWorker.manifest
+@BINPATH@/components/DOMWifiManager.js
+@BINPATH@/components/DOMWifiManager.manifest
 #endif
 #ifdef XP_MACOSX
 @BINPATH@/components/libalerts.dylib
@@ -617,5 +623,14 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/B2GComponents.manifest
 @BINPATH@/components/B2GComponents.xpt
 @BINPATH@/components/CameraContent.js
+@BINPATH@/chrome/marionette@JAREXT@
+@BINPATH@/chrome/marionette.manifest
+@BINPATH@/components/MarionetteComponents.manifest
+@BINPATH@/components/marionettecomponent.js
 @BINPATH@/components/AlertsService.js
 @BINPATH@/components/ContentPermissionPrompt.js
+#ifdef MOZ_UPDATER
+@BINPATH@/components/UpdatePrompt.js
+#endif
+@BINPATH@/components/MozKeyboard.js
+@BINPATH@/components/DirectoryProvider.js

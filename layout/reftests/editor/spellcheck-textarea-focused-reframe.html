@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+  <textarea id="testBox" onfocus="reframe(this);">blahblahblah</textarea>
+  <script type="text/javascript">
+    function reframe(textbox) {
+      textbox.style.display = "none";
+      textbox.style.display = "";
+      textbox.clientWidth;
+    }
+    //Adding focus to the textbox should trigger a spellcheck
+    document.getElementById("testBox").focus();
+  </script>
+  
+</body>
+</html>

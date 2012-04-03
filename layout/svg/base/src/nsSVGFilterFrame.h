@@ -37,20 +37,34 @@
 #ifndef __NS_SVGFILTERFRAME_H__
 #define __NS_SVGFILTERFRAME_H__
 
+#include "nsFrame.h"
+#include "nsQueryFrame.h"
 #include "nsRect.h"
 #include "nsSVGContainerFrame.h"
+#include "nsSVGUtils.h"
 
+class nsIAtom;
+class nsIContent;
+class nsIFrame;
+class nsIPresShell;
 class nsRenderingContext;
+class nsStyleContext;
 class nsSVGFilterPaintCallback;
+class nsSVGFilterElement;
+class nsSVGIntegerPair;
+class nsSVGLength2;
 
 typedef nsSVGContainerFrame nsSVGFilterFrameBase;
+
 class nsSVGFilterFrame : public nsSVGFilterFrameBase
 {
   friend nsIFrame*
   NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   nsSVGFilterFrame(nsStyleContext* aContext)
-    : nsSVGFilterFrameBase(aContext)
+    : nsSVGFilterFrameBase(aContext),
+      mLoopFlag(false),
+      mNoHRefURI(false)
   {
     AddStateBits(NS_STATE_SVG_NONDISPLAY_CHILD);
   }
@@ -101,6 +115,41 @@ public:
    * @see nsGkAtoms::svgFilterFrame
    */
   virtual nsIAtom* GetType() const;
+
+private:
+  // Parse our xlink:href and set up our nsSVGPaintingProperty if we
+  // reference another filter and we don't have a property. Return
+  // the referenced filter's frame if available, null otherwise.
+  class AutoFilterReferencer;
+  friend class nsAutoFilterInstance;
+  nsSVGFilterFrame* GetReferencedFilter();
+  nsSVGFilterFrame* GetReferencedFilterIfNotInUse();
+
+  // Accessors to lookup filter attributes
+  PRUint16 GetEnumValue(PRUint32 aIndex, nsIContent *aDefault);
+  PRUint16 GetEnumValue(PRUint32 aIndex)
+  {
+    return GetEnumValue(aIndex, mContent);
+  }
+  const nsSVGIntegerPair *GetIntegerPairValue(PRUint32 aIndex, nsIContent *aDefault);
+  const nsSVGIntegerPair *GetIntegerPairValue(PRUint32 aIndex)
+  {
+    return GetIntegerPairValue(aIndex, mContent);
+  }
+  const nsSVGLength2 *GetLengthValue(PRUint32 aIndex, nsIContent *aDefault);
+  const nsSVGLength2 *GetLengthValue(PRUint32 aIndex)
+  {
+    return GetLengthValue(aIndex, mContent);
+  }
+  const nsSVGFilterElement *GetFilterContent(nsIContent *aDefault);
+  const nsSVGFilterElement *GetFilterContent()
+  {
+    return GetFilterContent(mContent);
+  }
+
+  // This flag is used to detect loops in xlink:href processing
+  bool                              mLoopFlag;
+  bool                              mNoHRefURI;
 };
 
 #endif

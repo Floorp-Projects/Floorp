@@ -187,6 +187,15 @@ private:
   nsresult setClosedState();
 
   /**
+   * Helper for calls to sqlite3_exec. Reports long delays to Telemetry.
+   *
+   * @param aSqlString
+   *        SQL string to execute
+   * @return the result from sqlite3_exec.
+   */
+  int executeSql(const char *aSqlString);
+
+  /**
    * Describes a certain primitive type in the database.
    *
    * Possible Values Are:

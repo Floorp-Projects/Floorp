@@ -40,11 +40,10 @@
 #define NSSVGFOREIGNOBJECTFRAME_H__
 
 #include "nsContainerFrame.h"
-#include "nsISVGChildFrame.h"
-#include "nsSVGUtils.h"
-#include "nsRegion.h"
 #include "nsIPresShell.h"
-#include "mozilla/Attributes.h"
+#include "nsISVGChildFrame.h"
+#include "nsRegion.h"
+#include "nsSVGUtils.h"
 
 class nsRenderingContext;
 class nsSVGOuterSVGFrame;
@@ -67,7 +66,6 @@ public:
   NS_IMETHOD  Init(nsIContent* aContent,
                    nsIFrame*   aParent,
                    nsIFrame*   aPrevInFlow);
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
@@ -126,11 +124,8 @@ public:
                       const nsIntRect *aDirtyRect);
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
   NS_IMETHOD_(nsRect) GetCoveredRegion();
-  NS_IMETHOD UpdateCoveredRegion();
-  NS_IMETHOD InitialUpdate();
+  virtual void UpdateBounds();
   virtual void NotifySVGChanged(PRUint32 aFlags);
-  virtual void NotifyRedrawSuspended();
-  virtual void NotifyRedrawUnsuspended();
   virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                       PRUint32 aFlags);
   NS_IMETHOD_(bool) IsDisplayContainer() { return true; }
@@ -140,14 +135,10 @@ public:
 
   gfxMatrix GetCanvasTM();
 
-  // This method allows our nsSVGOuterSVGFrame to reflow us as necessary.
-  void MaybeReflowFromOuterSVGFrame();
-
 protected:
   // implementation helpers:
   void DoReflow();
   void RequestReflow(nsIPresShell::IntrinsicDirty aType);
-  void UpdateGraphic();
 
   // Returns GetCanvasTM followed by a scale from CSS px to Dev px. Used for
   // painting, because children expect to paint to device space, not userspace.

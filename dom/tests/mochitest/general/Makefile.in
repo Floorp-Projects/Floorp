@@ -72,16 +72,10 @@ _TEST_FILES = \
 		test_focusrings.xul \
 		file_moving_xhr.html \
 		test_vibrator.html \
-		browserFrameHelpers.js \
-		test_browserFrame1.html \
-		test_browserFrame2.html \
-		test_browserFrame3.html \
-		test_browserFrame4.html \
-		test_browserFrame5.html \
-		test_browserFrame6.html \
-		test_browserFrame7.html \
 		test_for_of.html \
 		test_focus_legend_noparent.html \
+		file_clonewrapper.html \
+		file_moving_nodeList.html \
 		$(NULL)
 
 _CHROME_FILES = \

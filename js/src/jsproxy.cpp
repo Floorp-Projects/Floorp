@@ -1686,10 +1686,6 @@ callable_Call(JSContext *cx, unsigned argc, Value *vp)
 JSBool
 callable_Construct(JSContext *cx, unsigned argc, Value *vp)
 {
-    JSObject *thisobj = js_CreateThis(cx, &JS_CALLEE(cx, vp).toObject());
-    if (!thisobj)
-        return false;
-
     JSObject *callable = &vp[0].toObject();
     JS_ASSERT(callable->getClass() == &CallableObjectClass);
     Value fval = callable->getSlot(JSSLOT_CALLABLE_CONSTRUCT);
@@ -1729,7 +1725,7 @@ callable_Construct(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    bool ok = Invoke(cx, ObjectValue(*thisobj), fval, argc, vp + 2, vp);
+    bool ok = Invoke(cx, UndefinedValue(), fval, argc, vp + 2, vp);
     return ok;
 }
 

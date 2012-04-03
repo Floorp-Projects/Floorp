@@ -73,7 +73,6 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetDOMNode(nsIDOMNode** aDOMNode);
   NS_SCRIPTABLE NS_IMETHOD GetDocument(nsIAccessibleDocument** aDocument);
   NS_SCRIPTABLE NS_IMETHOD GetRootDocument(nsIAccessibleDocument** aRootDocument);
-  NS_SCRIPTABLE NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
   NS_SCRIPTABLE NS_IMETHOD ScrollTo(PRUint32 aScrollType);
   NS_SCRIPTABLE NS_IMETHOD ScrollToPoint(PRUint32 aCoordinateType, PRInt32 aX, PRInt32 aY);
   NS_SCRIPTABLE NS_IMETHOD GetLanguage(nsAString& aLanguage);
@@ -98,7 +97,6 @@ public:
   NS_DECL_NSIACCESSIBLEAPPLICATION
 
   // nsAccessNode
-  virtual bool IsDefunct() const;
   virtual bool Init();
   virtual void Shutdown();
   virtual bool IsPrimaryForNode() const;

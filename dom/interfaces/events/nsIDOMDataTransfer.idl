@@ -40,7 +40,7 @@
 interface nsIVariant;
 interface nsIDOMFileList;
 
-[scriptable, uuid(E929ACB6-435C-4CB8-9AD1-AE3B9353BCC5)]
+[scriptable, uuid(7D73CFBF-EC30-4F8E-B6A4-BB31EB943580)]
 interface nsIDOMDataTransfer : nsISupports
 {
   /**
@@ -264,8 +264,11 @@ interface nsIDOMDataTransfer : nsISupports
 
   /**
    * Creates a copy of the data transfer object, for the given event type and
-   * user cancelled flag.
+   * user cancelled flag. If isCrossDomainSubFrameDrop is set, then this is a
+   * cross-domain drop from a subframe where access to the data should be
+   * prevented.
    */
   [noscript] nsIDOMDataTransfer clone(in PRUint32 aEventType,
-                                      in boolean aUserCancelled);
+                                      in boolean aUserCancelled,
+                                      in boolean isCrossDomainSubFrameDrop);
 };

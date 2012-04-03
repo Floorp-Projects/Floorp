@@ -1,5 +1,6 @@
 
-<!ENTITY  splash_firstrun "Setting up &brandShortName;\u2026">
+<!ENTITY  splash_settingup "Setting up your &brandShortName;">
+<!ENTITY  splash_bookmarks_history "We are updating your bookmarks and history, which may take a minute or so.">
 
 <!ENTITY  no_space_to_start_error "There is not enough space available for &brandShortName; to start.">
 <!ENTITY  error_loading_file "An error occurred when trying to load files required to run &brandShortName;">
@@ -119,3 +120,8 @@
 <!ENTITY abouthome_no_top_sites "You do not have any top sites yet. Tap the Title Bar to start browsing.">
 <!ENTITY abouthome_about_sync "Set up Firefox Sync to access bookmarks, history and tabs from your other devices">
 <!ENTITY abouthome_sync_bold_name "Firefox Sync">
+
+<!ENTITY filepicker_title "Choose File">
+<!ENTITY filepicker_audio_title "Choose or record a sound">
+<!ENTITY filepicker_image_title "Choose or take a picture">
+<!ENTITY filepicker_video_title "Choose or record a video">

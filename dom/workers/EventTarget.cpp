@@ -1,295 +1,99 @@
 /* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Web Workers.
- *
- * The Initial Developer of the Original Code is
- *   The Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Ben Turner <bent.mozilla@gmail.com> (Original Author)
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EventTarget.h"
 
-#include "jsapi.h"
-#include "jsfriendapi.h"
-#include "nsTraceRefcnt.h"
-
-// All the EventTarget subclasses have to be included here.
-#include "Worker.h"
-#include "WorkerScope.h"
-#include "XMLHttpRequest.h"
-
-#include "WorkerInlines.h"
-
 USING_WORKERS_NAMESPACE
 
-using mozilla::dom::workers::events::EventTarget;
-
-namespace {
-
-#define DECL_EVENTTARGET_CLASS(_varname, _name) \
-  JSClass _varname = { \
-    _name, 0, \
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, \
-    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub, \
-    JSCLASS_NO_OPTIONAL_MEMBERS \
-  };
-
-DECL_EVENTTARGET_CLASS(gClass, "EventTarget")
-DECL_EVENTTARGET_CLASS(gMainThreadClass, "WorkerEventTarget")
-
-#undef DECL_EVENTTARGET_CLASS
-
-inline
-bool
-EnsureObjectIsEventTarget(JSContext* aCx, JSObject* aObj, char* aFunctionName)
+void
+EventTarget::_Trace(JSTracer* aTrc)
 {
-  JSClass* classPtr = JS_GetClass(aObj);
-  if (ClassIsWorker(classPtr) || ClassIsWorkerGlobalScope(classPtr) ||
-      ClassIsXMLHttpRequest(classPtr)) {
-    return true;
-  }
-
-  JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                       "EventTarget", aFunctionName, classPtr->name);
-  return false;
+  mListenerManager._Trace(aTrc);
+  DOMBindingBase::_Trace(aTrc);
 }
 
-inline
-EventTarget*
-GetPrivate(JSObject* aObj)
+void
+EventTarget::_Finalize(JSContext* aCx)
 {
-  return GetJSPrivateSafeish<EventTarget>(aObj);
+  mListenerManager._Finalize(aCx);
+  DOMBindingBase::_Finalize(aCx);
 }
-
-JSBool
-Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
-{
-  JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
-                       gClass.name);
-  return false;
-}
-
-JSFunctionSpec gFunctions[] = {
-  JS_FN("addEventListener", EventTarget::AddEventListener, 3, JSPROP_ENUMERATE),
-  JS_FN("removeEventListener", EventTarget::RemoveEventListener, 3,
-        JSPROP_ENUMERATE),
-  JS_FN("dispatchEvent", EventTarget::DispatchEvent, 1, JSPROP_ENUMERATE),
-  JS_FS_END
-};
-
-} // anonymous namespace
-
-EventTarget::EventTarget()
-{
-  MOZ_COUNT_CTOR(mozilla::dom::workers::events::EventTarget);
-}
-
-EventTarget::~EventTarget()
-{
-  MOZ_COUNT_DTOR(mozilla::dom::workers::events::EventTarget);
-}
-
-bool
-EventTarget::GetEventListenerOnEventTarget(JSContext* aCx, const char* aType,
-                                           jsval* aVp)
-{
-  JSString* type = JS_InternString(aCx, aType);
-  if (!type) {
-    return false;
-  }
-
-  return mListenerManager.GetEventListener(aCx, type, aVp);
-}
-
-bool
-EventTarget::SetEventListenerOnEventTarget(JSContext* aCx, const char* aType,
-                                           jsval* aVp)
-{
-  JSString* type = JS_InternString(aCx, aType);
-  if (!type) {
-    return false;
-  }
-
-  JSObject* listenerObj;
-  if (!JS_ValueToObject(aCx, *aVp, &listenerObj)) {
-    return false;
-  }
-
-  return mListenerManager.SetEventListener(aCx, type, *aVp);
-}
-
-// static
-EventTarget*
-EventTarget::FromJSObject(JSObject* aObj)
-{
-  return GetPrivate(aObj);
-}
-
-// static
-JSBool
-EventTarget::AddEventListener(JSContext* aCx, unsigned aArgc, jsval* aVp)
-{
-  JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
-  if (!obj) {
-    return true;
-  }
-
-  if (!EnsureObjectIsEventTarget(aCx, obj, "AddEventListener")) {
-    return false;
-  }
-
-  EventTarget* self = GetPrivate(obj);
-  if (!self) {
-    return true;
-  }
-
-  JSString* type;
-  JSObject* listener;
-  JSBool capturing = false, wantsUntrusted = false;
-  if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "So/bb", &type,
-                           &listener, &capturing, &wantsUntrusted)) {
-    return false;
-  }
-
-  if (!listener) {
-    return true;
-  }
-
-  return self->mListenerManager.AddEventListener(aCx, type,
-                                                 JS_ARGV(aCx, aVp)[1],
-                                                 capturing, wantsUntrusted);
-}
-
-// static
-JSBool
-EventTarget::RemoveEventListener(JSContext* aCx, unsigned aArgc, jsval* aVp)
-{
-  JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
-  if (!obj) {
-    return true;
-  }
-
-  if (!EnsureObjectIsEventTarget(aCx, obj, "RemoveEventListener")) {
-    return false;
-  }
-
-  EventTarget* self = GetPrivate(obj);
-  if (!self) {
-    return true;
-  }
-
-  JSString* type;
-  JSObject* listener;
-  JSBool capturing = false;
-  if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "So/b", &type,
-                           &listener, &capturing)) {
-    return false;
-  }
-
-  if (!listener) {
-    return true;
-  }
-
-  return self->mListenerManager.RemoveEventListener(aCx, type,
-                                                    JS_ARGV(aCx, aVp)[1],
-                                                    capturing);
-}
-
-// static
-JSBool
-EventTarget::DispatchEvent(JSContext* aCx, unsigned aArgc, jsval* aVp)
-{
-  JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
-  if (!obj) {
-    return true;
-  }
-
-  if (!EnsureObjectIsEventTarget(aCx, obj, "DispatchEvent")) {
-    return false;
-  }
-
-  EventTarget* self = GetPrivate(obj);
-  if (!self) {
-    return true;
-  }
-
-  JSObject* event;
-  if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "o", &event)) {
-    return false;
-  }
-
-  bool preventDefaultCalled;
-  if (!self->mListenerManager.DispatchEvent(aCx, obj, event,
-                                            &preventDefaultCalled)) {
-    return false;
-  }
-
-  JS_SET_RVAL(aCx, aVp, BOOLEAN_TO_JSVAL(preventDefaultCalled));
-  return true;
-}
-
-BEGIN_WORKERS_NAMESPACE
-
-namespace events {
 
 JSObject*
-InitEventTargetClass(JSContext* aCx, JSObject* aObj, bool aMainRuntime)
+EventTarget::GetEventListener(const nsAString& aType, nsresult& aRv) const
 {
-  if (aMainRuntime) {
-    // XXX Hack to prevent instanceof checks failing on the main thread.
-    jsval windowEventTarget;
-    if (!JS_GetProperty(aCx, aObj, gClass.name, &windowEventTarget)) {
-      return NULL;
-    }
+  JSContext* cx = GetJSContext();
 
-    if (!JSVAL_IS_PRIMITIVE(windowEventTarget)) {
-      jsval protoVal;
-      if (!JS_GetProperty(aCx, JSVAL_TO_OBJECT(windowEventTarget), "prototype",
-                          &protoVal)) {
-        return NULL;
-      }
-
-      if (!JSVAL_IS_PRIMITIVE(protoVal)) {
-        return JS_InitClass(aCx, aObj, JSVAL_TO_OBJECT(protoVal),
-                            &gMainThreadClass, Construct, 0, NULL, gFunctions,
-                            NULL, NULL);
-      }
-    }
+  JSString* type =
+    JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length());
+  if (!type || !(type = JS_InternJSString(cx, type))) {
+    aRv = NS_ERROR_OUT_OF_MEMORY;
+    return NULL;
   }
 
-  return JS_InitClass(aCx, aObj, NULL, &gClass, Construct, 0, NULL,
-                      gFunctions, NULL, NULL);
+  return mListenerManager.GetEventListener(INTERNED_STRING_TO_JSID(cx, type));
 }
 
-} // namespace events
+void
+EventTarget::SetEventListener(const nsAString& aType, JSObject* aListener,
+                              nsresult& aRv)
+{
+  JSContext* cx = GetJSContext();
 
-END_WORKERS_NAMESPACE
+  JSString* type =
+    JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length());
+  if (!type || !(type = JS_InternJSString(cx, type))) {
+    aRv = NS_ERROR_OUT_OF_MEMORY;
+    return;
+  }
+
+  mListenerManager.SetEventListener(cx, INTERNED_STRING_TO_JSID(cx, type),
+                                    aListener, aRv);
+}
+
+void
+EventTarget::AddEventListener(const nsAString& aType, JSObject* aListener,
+                              bool aCapturing, Nullable<bool> aWantsUntrusted,
+                              nsresult& aRv)
+{
+  if (!aListener) {
+    return;
+  }
+
+  JSContext* cx = GetJSContext();
+
+  JSString* type =
+    JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length());
+  if (!type || !(type = JS_InternJSString(cx, type))) {
+    aRv = NS_ERROR_OUT_OF_MEMORY;
+    return;
+  }
+
+  bool wantsUntrusted = !aWantsUntrusted.IsNull() && aWantsUntrusted.Value();
+  mListenerManager.AddEventListener(cx, INTERNED_STRING_TO_JSID(cx, type),
+                                    aListener, aCapturing, wantsUntrusted,
+                                    aRv);
+}
+
+void
+EventTarget::RemoveEventListener(const nsAString& aType, JSObject* aListener,
+                                 bool aCapturing, nsresult& aRv)
+{
+  if (!aListener) {
+    return;
+  }
+
+  JSContext* cx = GetJSContext();
+
+  JSString* type =
+    JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length());
+  if (!type || !(type = JS_InternJSString(cx, type))) {
+    aRv = NS_ERROR_OUT_OF_MEMORY;
+    return;
+  }
+
+  mListenerManager.RemoveEventListener(cx, INTERNED_STRING_TO_JSID(cx, type),
+                                       aListener, aCapturing);
+}

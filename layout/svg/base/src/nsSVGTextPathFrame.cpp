@@ -34,14 +34,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Main header first:
 #include "nsSVGTextPathFrame.h"
-#include "nsIDOMSVGTextPathElement.h"
-#include "nsSVGLength2.h"
-#include "nsIDOMSVGURIReference.h"
-#include "nsSVGEffects.h"
+
+// Keep others in (case-insensitive) order:
 #include "nsContentUtils.h"
+#include "nsIDOMSVGTextPathElement.h"
+#include "nsSVGEffects.h"
+#include "nsSVGLength2.h"
 #include "nsSVGPathElement.h"
 #include "nsSVGTextPathElement.h"
+#include "SVGLengthList.h"
 
 using namespace mozilla;
 

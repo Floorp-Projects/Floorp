@@ -5,7 +5,6 @@
 #ifndef BASE_LOGGING_H_
 #define BASE_LOGGING_H_
 
-#include <assert.h>
 #include <string>
 #include <cstring>
 
@@ -113,10 +112,5 @@ const mozilla::EmptyLog& operator <<(const mozilla::EmptyLog& log, const T&)
 #define DCHECK_LT(v1, v2) DCHECK((v1) < (v2))
 #define DCHECK_GE(v1, v2) DCHECK((v1) >= (v2))
 #define DCHECK_GT(v1, v2) DCHECK((v1) > (v2))
-
-#ifdef assert
-#undef assert
-#endif
-#define assert DLOG_ASSERT
 
 #endif  // BASE_LOGGING_H_

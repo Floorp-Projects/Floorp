@@ -209,6 +209,9 @@ void nsPNGDecoder::EndImageFrame()
     if (mFrameHasNoAlpha)
       mImage.SetFrameHasNoAlpha(numFrames - 1);
 
+    // PNG is always non-premult
+    mImage.SetFrameAsNonPremult(numFrames - 1, true);
+
     PostInvalidation(mFrameRect);
   }
 #endif

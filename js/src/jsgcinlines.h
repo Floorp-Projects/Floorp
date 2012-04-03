@@ -388,6 +388,38 @@ class CellIter : public CellIterImpl
 inline void EmptyArenaOp(Arena *arena) {}
 inline void EmptyCellOp(Cell *t) {}
 
+class GCCompartmentsIter {
+  private:
+    JSCompartment **it, **end;
+
+  public:
+    GCCompartmentsIter(JSRuntime *rt) {
+        JS_ASSERT(rt->gcRunning);
+        it = rt->compartments.begin();
+        end = rt->compartments.end();
+        if (!(*it)->isCollecting())
+            next();
+        JS_ASSERT(it < end);
+    }
+
+    bool done() const { return it == end; }
+
+    void next() {
+        JS_ASSERT(!done());
+        do {
+            it++;
+        } while (it != end && !(*it)->isCollecting());
+    }
+
+    JSCompartment *get() const {
+        JS_ASSERT(!done());
+        return *it;
+    }
+
+    operator JSCompartment *() const { return get(); }
+    JSCompartment *operator->() const { return get(); }
+};
+
 /*
  * Allocates a new GC thing. After a successful allocation the caller must
  * fully initialize the thing before calling any function that can potentially

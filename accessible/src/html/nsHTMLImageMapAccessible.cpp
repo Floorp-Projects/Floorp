@@ -216,53 +216,6 @@ nsHTMLAreaAccessible::Description(nsString& aDescription)
     area->GetShape(aDescription);
 }
 
-NS_IMETHODIMP
-nsHTMLAreaAccessible::GetBounds(PRInt32 *aX, PRInt32 *aY,
-                                PRInt32 *aWidth, PRInt32 *aHeight)
-{
-  NS_ENSURE_ARG_POINTER(aX);
-  *aX = 0;
-  NS_ENSURE_ARG_POINTER(aY);
-  *aY = 0;
-  NS_ENSURE_ARG_POINTER(aWidth);
-  *aWidth = 0;
-  NS_ENSURE_ARG_POINTER(aHeight);
-  *aHeight = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  // Essentially this uses GetRect on mAreas of nsImageMap from nsImageFrame.
-  nsPresContext *presContext = GetPresContext();
-  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
-
-  nsIFrame *frame = GetFrame();
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-  nsImageFrame *imageFrame = do_QueryFrame(frame);
-
-  nsImageMap* map = imageFrame->GetImageMap();
-  NS_ENSURE_TRUE(map, NS_ERROR_FAILURE);
-
-  nsRect rect;
-  nsresult rv = map->GetBoundsForAreaContent(mContent, rect);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aX = presContext->AppUnitsToDevPixels(rect.x);
-  *aY = presContext->AppUnitsToDevPixels(rect.y);
-
-  // XXX Areas are screwy; they return their rects as a pair of points, one pair
-  // stored into the width and height.
-  *aWidth  = presContext->AppUnitsToDevPixels(rect.width - rect.x);
-  *aHeight = presContext->AppUnitsToDevPixels(rect.height - rect.y);
-
-  // Put coords in absolute screen coords
-  nsIntRect orgRectPixels = frame->GetScreenRectExternal();
-  *aX += orgRectPixels.x;
-  *aY += orgRectPixels.y;
-
-  return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLAreaAccessible: nsAccessNode public
 
@@ -325,4 +278,26 @@ void
 nsHTMLAreaAccessible::CacheChildren()
 {
   // No children for aria accessible.
+}
+
+void
+nsHTMLAreaAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return;
+
+  nsImageFrame* imageFrame = do_QueryFrame(frame);
+  nsImageMap* map = imageFrame->GetImageMap();
+
+  nsresult rv = map->GetBoundsForAreaContent(mContent, aBounds);
+  if (NS_FAILED(rv))
+    return;
+
+  // XXX Areas are screwy; they return their rects as a pair of points, one pair
+  // stored into the width and height.
+  aBounds.width -= aBounds.x;
+  aBounds.height -= aBounds.y;
+
+  *aBoundingFrame = frame;
 }

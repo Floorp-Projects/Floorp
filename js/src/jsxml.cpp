@@ -232,12 +232,12 @@ JS_FRIEND_DATA(Class) js::NamespaceClass = {
     JS_EnumerateStub,
     JS_ResolveStub,
     JS_ConvertStub,
-    JS_FinalizeStub,
+    NULL,                    /* finalize    */
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
     NULL,                    /* construct   */
     NULL,                    /* hasInstance */
-    NULL,                    /* mark        */
+    NULL,                    /* trace       */
     {
         namespace_equality,
         NULL,                /* outerObject    */
@@ -346,12 +346,12 @@ JS_FRIEND_DATA(Class) js::QNameClass = {
     JS_EnumerateStub,
     JS_ResolveStub,
     JS_ConvertStub,
-    JS_FinalizeStub,
+    NULL,                    /* finalize    */
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
     NULL,                    /* construct   */
     NULL,                    /* hasInstance */
-    NULL,                    /* mark        */
+    NULL,                    /* trace       */
     {
         qname_equality,
         NULL,                /* outerObject    */
@@ -377,8 +377,7 @@ JS_FRIEND_DATA(Class) js::AttributeNameClass = {
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,
     JS_ResolveStub,
-    JS_ConvertStub,
-    JS_FinalizeStub
+    JS_ConvertStub
 };
 
 JS_FRIEND_DATA(Class) js::AnyNameClass = {
@@ -391,8 +390,7 @@ JS_FRIEND_DATA(Class) js::AnyNameClass = {
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,
     JS_ResolveStub,
-    JS_ConvertStub,
-    JS_FinalizeStub
+    JS_ConvertStub
 };
 
 #define QNAME_ATTRS (JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED)
@@ -4721,11 +4719,6 @@ HasProperty(JSContext *cx, JSObject *obj, jsval id, JSBool *found)
     return JS_TRUE;
 }
 
-static void
-xml_finalize(JSContext *cx, JSObject *obj)
-{
-}
-
 /*
  * XML objects are native. Thus xml_lookupGeneric must return a valid
  * Shape pointer parameter via *propp to signify "property found". Since the
@@ -5376,10 +5369,10 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
     JS_EnumerateStub,
     JS_ResolveStub,
     xml_convert,
-    xml_finalize,
-    NULL,                 /* checkAccess */
-    NULL,                 /* call        */
-    NULL,                 /* construct   */
+    NULL,                    /* finalize    */
+    NULL,                    /* checkAccess */
+    NULL,                    /* call        */
+    NULL,                    /* construct   */
     xml_hasInstance,
     xml_trace,
     JS_NULL_CLASS_EXT,
@@ -7415,8 +7408,7 @@ js_InitNamespaceClass(JSContext *cx, JSObject *obj)
     namespaceProto->setNameURI(empty);
 
     const unsigned NAMESPACE_CTOR_LENGTH = 2;
-    JSFunction *ctor = global->createConstructor(cx, Namespace, &NamespaceClass,
-                                                 CLASS_ATOM(cx, Namespace),
+    JSFunction *ctor = global->createConstructor(cx, Namespace, CLASS_ATOM(cx, Namespace),
                                                  NAMESPACE_CTOR_LENGTH);
     if (!ctor)
         return NULL;
@@ -7448,8 +7440,8 @@ js_InitQNameClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     const unsigned QNAME_CTOR_LENGTH = 2;
-    JSFunction *ctor = global->createConstructor(cx, QName, &QNameClass,
-                                                 CLASS_ATOM(cx, QName), QNAME_CTOR_LENGTH);
+    JSFunction *ctor = global->createConstructor(cx, QName, CLASS_ATOM(cx, QName),
+                                                 QNAME_CTOR_LENGTH);
     if (!ctor)
         return NULL;
 
@@ -7488,8 +7480,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     }
 
     const unsigned XML_CTOR_LENGTH = 1;
-    JSFunction *ctor = global->createConstructor(cx, XML, &XMLClass, CLASS_ATOM(cx, XML),
-                                                 XML_CTOR_LENGTH);
+    JSFunction *ctor = global->createConstructor(cx, XML, CLASS_ATOM(cx, XML), XML_CTOR_LENGTH);
     if (!ctor)
         return NULL;
 

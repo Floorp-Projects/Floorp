@@ -37,25 +37,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMaiInterfaceImage.h"
+#include "InterfaceInitFuncs.h"
 
 #include "nsAccessibleWrap.h"
 #include "nsHTMLImageAccessible.h"
+#include "nsMai.h"
 
-extern "C" const gchar* getDescriptionCB(AtkObject* aAtkObj);
+extern "C" {
+const gchar* getDescriptionCB(AtkObject* aAtkObj);
 
-void
-imageInterfaceInitCB(AtkImageIface *aIface)
-{
-    g_return_if_fail(aIface != NULL);
-
-    aIface->get_image_position = getImagePositionCB;
-    aIface->get_image_description = getImageDescriptionCB;
-    aIface->get_image_size = getImageSizeCB;
-
-}
-
-void
+static void
 getImagePositionCB(AtkImage *aImage, gint *aAccX, gint *aAccY,
                    AtkCoordType aCoordType)
 {
@@ -71,13 +62,13 @@ getImagePositionCB(AtkImage *aImage, gint *aAccX, gint *aAccY,
     image->GetImagePosition(geckoCoordType, aAccX, aAccY);
 }
 
-const gchar *
+static const gchar*
 getImageDescriptionCB(AtkImage *aImage)
 {
    return getDescriptionCB(ATK_OBJECT(aImage));
 }
 
-void
+static void
 getImageSizeCB(AtkImage *aImage, gint *aAccWidth, gint *aAccHeight)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aImage));
@@ -85,4 +76,17 @@ getImageSizeCB(AtkImage *aImage, gint *aAccWidth, gint *aAccHeight)
       return;
 
     accWrap->AsImage()->GetImageSize(aAccWidth, aAccHeight);
+}
+}
+
+void
+imageInterfaceInitCB(AtkImageIface* aIface)
+{
+  NS_ASSERTION(aIface, "no interface!");
+  if (NS_UNLIKELY(!aIface))
+    return;
+
+  aIface->get_image_position = getImagePositionCB;
+  aIface->get_image_description = getImageDescriptionCB;
+  aIface->get_image_size = getImageSizeCB;
 }

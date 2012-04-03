@@ -56,6 +56,8 @@ _TEST_FILES = \
   test_atob.html \
   atob_worker.js \
   test_blobWorkers.html \
+  test_clearTimeouts.html \
+  clearTimeouts_worker.js \
   test_close.html \
   close_worker.js \
   test_closeOnGC.html \
@@ -123,6 +125,7 @@ _TEST_FILES = \
   test_xhr_implicit_cancel.html \
   xhr_implicit_cancel_worker.js \
   test_xhr_timeout.html \
+  test_blobConstructor.html \
   $(NULL)
 
 _SUBDIR_TEST_FILES = \

@@ -12,6 +12,7 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/battery/Types.h"
 #include "mozilla/dom/network/Types.h"
+#include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/Observer.h"
 #include "mozilla/unused.h"
 #include "WindowIdentifier.h"
@@ -89,6 +90,38 @@ void
 GetCurrentNetworkInformation(NetworkInformation* aNetworkInfo)
 {
   Hal()->SendGetCurrentNetworkInformation(aNetworkInfo);
+}
+
+void
+EnableScreenOrientationNotifications()
+{
+  Hal()->SendEnableScreenOrientationNotifications();
+}
+
+void
+DisableScreenOrientationNotifications()
+{
+  Hal()->SendDisableScreenOrientationNotifications();
+}
+
+void
+GetCurrentScreenOrientation(ScreenOrientation* aScreenOrientation)
+{
+  Hal()->SendGetCurrentScreenOrientation(aScreenOrientation);
+}
+
+bool
+LockScreenOrientation(const dom::ScreenOrientation& aOrientation)
+{
+  bool allowed;
+  Hal()->SendLockScreenOrientation(aOrientation, &allowed);
+  return allowed;
+}
+
+void
+UnlockScreenOrientation()
+{
+  Hal()->SendUnlockScreenOrientation();
 }
 
 bool
@@ -198,6 +231,7 @@ class HalParent : public PHalParent
                 , public NetworkObserver
                 , public ISensorObserver
                 , public WakeLockObserver
+                , public ScreenOrientationObserver
 {
 public:
   NS_OVERRIDE virtual bool
@@ -281,6 +315,42 @@ public:
 
   void Notify(const NetworkInformation& aNetworkInfo) {
     unused << SendNotifyNetworkChange(aNetworkInfo);
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvEnableScreenOrientationNotifications() {
+    hal::RegisterScreenOrientationObserver(this);
+    return true;
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvDisableScreenOrientationNotifications() {
+    hal::UnregisterScreenOrientationObserver(this);
+    return true;
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvGetCurrentScreenOrientation(ScreenOrientation* aScreenOrientation) {
+    hal::GetCurrentScreenOrientation(aScreenOrientation);
+    return true;
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvLockScreenOrientation(const dom::ScreenOrientation& aOrientation, bool* aAllowed)
+  {
+    *aAllowed = hal::LockScreenOrientation(aOrientation);
+    return true;
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvUnlockScreenOrientation()
+  {
+    hal::UnlockScreenOrientation();
+    return true;
+  }
+
+  void Notify(const ScreenOrientationWrapper& aScreenOrientation) {
+    unused << SendNotifyScreenOrientationChange(aScreenOrientation.orientation);
   }
 
   NS_OVERRIDE virtual bool
@@ -425,6 +495,12 @@ public:
   NS_OVERRIDE virtual bool
   RecvNotifyWakeLockChange(const WakeLockInformation& aWakeLockInfo) {
     hal::NotifyWakeLockChange(aWakeLockInfo);
+    return true;
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvNotifyScreenOrientationChange(const ScreenOrientation& aScreenOrientation) {
+    hal::NotifyScreenOrientationChange(aScreenOrientation);
     return true;
   }
 };

@@ -5,6 +5,10 @@
 #ifndef GLLIBRARYEGL_H_
 #define GLLIBRARYEGL_H_
 
+#if defined(MOZ_X11)
+#include "mozilla/X11Util.h"
+#endif
+
 #include "GLContext.h"
 #include "GLLibraryLoader.h"
 
@@ -22,24 +26,7 @@ typedef void *EGLCastToRelevantPtr;
 typedef void *EGLImageKHR;
 typedef void *GLeglImageOES;
 
-#ifdef ANDROID
-
-typedef void *EGLNativeDisplayType;
-typedef void *EGLNativePixmapType;
-typedef void *EGLNativeWindowType;
-
-
-// We only need to explicitly dlopen egltrace
-// on android as we can use LD_PRELOAD or other tricks
-// on other platforms. We look for it in /data/local
-// as that's writeable by all users
-//
-// This should really go in GLLibraryEGL.cpp but we currently reference
-// APITRACE_LIB in GLContextProviderEGL.cpp. Further refactoring
-// will come in subsequent patches on Bug 732865
-#define APITRACE_LIB "/data/local/egltrace.so"
-
-#elif defined(XP_WIN)
+#if defined(XP_WIN)
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
@@ -53,10 +40,26 @@ typedef HWND EGLNativeWindowType;
 
 #define GET_NATIVE_WINDOW(aWidget) ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_WINDOW))
 
+#else
+typedef void *EGLNativeDisplayType;
+typedef void *EGLNativePixmapType;
+typedef void *EGLNativeWindowType;
+
+#ifdef ANDROID
+// We only need to explicitly dlopen egltrace
+// on android as we can use LD_PRELOAD or other tricks
+// on other platforms. We look for it in /data/local
+// as that's writeable by all users
+//
+// This should really go in GLLibraryEGL.cpp but we currently reference
+// APITRACE_LIB in GLContextProviderEGL.cpp. Further refactoring
+// will come in subsequent patches on Bug 732865
+#define APITRACE_LIB "/data/local/egltrace.so"
+#endif // ANDROID
 #endif
 
-#ifdef MOZ_WIDGET_QT
-#define EGL_DEFAULT_DISPLAY  ((EGLNativeDisplayType)QX11Info::display())
+#if defined(MOZ_X11)
+#define EGL_DEFAULT_DISPLAY  ((EGLNativeDisplayType)mozilla::DefaultXDisplay())
 #else
 #define EGL_DEFAULT_DISPLAY  ((EGLNativeDisplayType)0)
 #endif
@@ -323,16 +326,6 @@ public:
         return b;
     }
 
-#ifdef MOZ_WIDGET_GONK
-    EGLBoolean fSetSwapRectangleANDROID(EGLDisplay dpy, EGLSurface surface, EGLint left, EGLint top, EGLint width, EGLint height)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fSetSwapRectangleANDROID(dpy, surface, left, top, width, height);
-        AFTER_GL_CALL;
-        return b;
-    }
-#endif
-
     // New extension which allow us to lock texture and get raw image pointer
     EGLBoolean fLockSurfaceKHR(EGLDisplay dpy, EGLSurface surface, const EGLint *attrib_list)
     {
@@ -467,10 +460,6 @@ public:
         pfnCreateImageKHR fCreateImageKHR;
         typedef EGLBoolean (GLAPIENTRY * pfnDestroyImageKHR)(EGLDisplay dpy, EGLImageKHR image);
         pfnDestroyImageKHR fDestroyImageKHR;
-#ifdef MOZ_WIDGET_GONK
-        typedef EGLBoolean (GLAPIENTRY * pfnSetSwapRectangleANDROID)(EGLDisplay dpy, EGLSurface surface, EGLint left, EGLint top, EGLint width, EGLint height);
-        pfnSetSwapRectangleANDROID fSetSwapRectangleANDROID;
-#endif
 
         // New extension which allow us to lock texture and get raw image pointer
         typedef EGLBoolean (GLAPIENTRY * pfnLockSurfaceKHR)(EGLDisplay dpy, EGLSurface surface, const EGLint *attrib_list);

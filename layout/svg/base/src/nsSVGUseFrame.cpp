@@ -34,13 +34,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGGFrame.h"
+// Keep in (case-insensitive) order:
 #include "nsIAnonymousContentCreator.h"
 #include "nsIDOMSVGUseElement.h"
-#include "nsIDOMSVGTransformable.h"
-#include "nsSVGElement.h"
+#include "nsSVGGFrame.h"
 #include "nsSVGUseElement.h"
-#include "gfxMatrix.h"
 
 typedef nsSVGGFrame nsSVGUseFrameBase;
 
@@ -163,7 +161,7 @@ nsSVGUseFrame::AttributeChanged(PRInt32         aNameSpaceID,
           static_cast<nsSVGUseElement*>(mContent)->HasValidDimensions()) {
 
         mHasValidDimensions = !mHasValidDimensions;
-        nsSVGUtils::UpdateGraphic(this);
+        nsSVGUtils::InvalidateAndScheduleBoundsUpdate(this);
       }
     }
   } else if (aNameSpaceID == kNameSpaceID_XLink &&

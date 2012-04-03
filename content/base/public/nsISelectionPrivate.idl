@@ -52,6 +52,7 @@ class nsIFrame;
 class nsIPresShell;
 struct nsTextRangeStyle;
 struct nsPoint;
+struct ScrollAxis;
 #include "nsIFrame.h"
 #include "nsTArray.h"
 %}
@@ -63,8 +64,9 @@ struct nsPoint;
 [ref] native constTextRangeStyleRef(const nsTextRangeStyle);
 [ref] native nsPointRef(nsPoint);
 native nsDirection(nsDirection);
+native ScrollAxis(nsIPresShell::ScrollAxis);
 
-[scriptable, uuid(1820a940-6203-4e27-bc94-fa81131722a4)]
+[scriptable, uuid(0ced91b9-3e77-4191-943f-95bcde5e2d14)]
 interface nsISelectionPrivate : nsISelection
  {
     const short ENDOFPRECEDINGLINE=0;
@@ -174,29 +176,31 @@ interface nsISelectionPrivate : nsISelection
      * @param aIsSynchronous - when true, scrolls the selection into view
      *                         before returning. If false, posts a request which
      *                         is processed at some point after the method returns.
-     * @param aVPercent - how to align the frame vertically. A value of 0
-     *                   means the frame's upper edge is aligned with the top edge
-     *                   of the visible area. A value of 100 means the frame's
-     *                   bottom edge is aligned with the bottom edge of
-     *                   the visible area. For values in between, the point
-     *                   "aVPercent" down the frame is placed at the point
-     *                   "aVPercent" down the visible area. A value of 50 centers
-     *                   the frame vertically. A value of -1 means move
-     *                   the frame the minimum amount necessary in order for
-     *                   the entire frame to be visible vertically (if possible).
-     * @param aHPercent - how to align the frame horizontally. A value of 0
-     *                    means the frame's left edge is aligned with the left
-     *                    edge of the visible area. A value of 100 means the
-     *                    frame's right edge is aligned with the right edge of
-     *                    the visible area. For values in between, the point
-     *                    "aHPercent" across the frame is placed at the point
-     *                    "aHPercent" across the visible area. A value of 50
-     *                    centers the frame horizontally . A value of -1 means
-     *                    move the frame the minimum amount necessary in order
-     *                    for the entire frame to be visible horizontally
-     *                    (if possible).
+     * @param aVPercent - how to align the frame vertically.
+     * @param aHPercent - how to align the frame horizontally.
      */
     void scrollIntoView(in short aRegion, in boolean aIsSynchronous,
-                        in short aVPercent, in short aHPercent);
+                        in PRInt16 aVPercent,
+                        in PRInt16 aHPercent);
+
+    /**
+     * Scrolls a region of the selection, so that it is visible in
+     * the scrolled view.
+     *
+     * @param aRegion - the region inside the selection to scroll into view
+     *                  (see selection region constants defined in
+     *                   nsISelectionController).
+     * @param aIsSynchronous - when true, scrolls the selection into view
+     *                         before returning. If false, posts a request which
+     *                         is processed at some point after the method returns.
+     * @param aVertical - how to align the frame vertically and when.
+     *                    See nsIPresShell.h:ScrollAxis for details.
+     * @param aHorizontal - how to align the frame horizontally and when.
+     *                    See nsIPresShell.h:ScrollAxis for details.
+     */
+    [noscript] void scrollIntoViewInternal(in short aRegion,
+                                           in boolean aIsSynchronous,
+                                           in ScrollAxis aVertical,
+                                           in ScrollAxis aHorizontal);
 };
 

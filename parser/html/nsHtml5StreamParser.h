@@ -541,6 +541,11 @@ class nsHtml5StreamParser : public nsIStreamListener,
     bool                          mFeedChardet;
 
     /**
+     * Whether the initial charset source was kCharsetFromParentFrame
+     */
+    bool                          mInitialEncodingWasFromParentFrame;
+
+    /**
      * Timer for flushing tree ops once in a while when not speculating.
      */
     nsCOMPtr<nsITimer>            mFlushTimer;

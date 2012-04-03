@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="nsIAccessible::getChildAtPoint and getDeepestChildAtPoint for XUL trees">
+
+  <tree id="tree" flex="1">
+    <treecols id="treecols">
+      <treecol id="treecol1" flex="1" primary="true" label="column"/>
+      <treecol id="treecol2" flex="1" label="column 2"/>
+    </treecols>
+    <treechildren id="treechildren"/>
+  </tree>
+
+</window>
+

@@ -382,6 +382,21 @@ nsGNOMEShellService::SetShouldCheckDefaultBrowser(bool aShouldCheck)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGNOMEShellService::GetCanSetDesktopBackground(bool* aResult)
+{
+  // setting desktop background is currently only supported
+  // for Gnome or desktops using the same GSettings and GConf keys
+  const char* gnomeSession = getenv("GNOME_DESKTOP_SESSION_ID");
+  if (gnomeSession) {
+    *aResult = true;
+  } else {
+    *aResult = false;
+  }
+
+  return NS_OK;
+}
+
 static nsresult
 WriteImage(const nsCString& aPath, imgIContainer* aImage)
 {

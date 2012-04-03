@@ -1270,36 +1270,34 @@ nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                const nsRect&           aDirtyRect,
                                const nsDisplayListSet& aLists)
 {
-  if (!IsVisibleInSelection(aBuilder))
-    return NS_OK;
-
   DO_GLOBAL_REFLOW_COUNT_DSP_COLOR("nsTableFrame", NS_RGB(255,128,255));
 
-  if (GetStyleVisibility()->IsVisible()) {
-    nsMargin deflate = GetDeflationForBackground(PresContext());
-    // If 'deflate' is (0,0,0,0) then we can paint the table background
-    // in its own display item, so do that to take advantage of
-    // opacity and visibility optimizations
-    if (deflate == nsMargin(0, 0, 0, 0)) {
-      nsresult rv = DisplayBackgroundUnconditional(aBuilder, aLists, false);
+  nsDisplayTableItem* item = nsnull;
+  if (IsVisibleInSelection(aBuilder)) {
+    if (GetStyleVisibility()->IsVisible()) {
+      nsMargin deflate = GetDeflationForBackground(PresContext());
+      // If 'deflate' is (0,0,0,0) then we can paint the table background
+      // in its own display item, so do that to take advantage of
+      // opacity and visibility optimizations
+      if (deflate == nsMargin(0, 0, 0, 0)) {
+        nsresult rv = DisplayBackgroundUnconditional(aBuilder, aLists, false);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+    
+    // This background is created if any of the table parts are visible,
+    // or if we're doing event handling (since DisplayGenericTablePart
+    // needs the item for the |sortEventBackgrounds|-dependent code).
+    // Specific visibility decisions are delegated to the table background
+    // painter, which handles borders and backgrounds for the table.
+    if (aBuilder->IsForEventDelivery() ||
+        AnyTablePartHasBorderOrBackground(this, GetNextSibling()) ||
+        AnyTablePartHasBorderOrBackground(mColGroups.FirstChild(), nsnull)) {
+      item = new (aBuilder) nsDisplayTableBorderBackground(aBuilder, this);
+      nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
-
-  nsDisplayTableItem* item = nsnull;
-  // This background is created if any of the table parts are visible,
-  // or if we're doing event handling (since DisplayGenericTablePart
-  // needs the item for the |sortEventBackgrounds|-dependent code).
-  // Specific visibility decisions are delegated to the table background
-  // painter, which handles borders and backgrounds for the table.
-  if (aBuilder->IsForEventDelivery() ||
-      AnyTablePartHasBorderOrBackground(this, GetNextSibling()) ||
-      AnyTablePartHasBorderOrBackground(mColGroups.FirstChild(), nsnull)) {
-    item = new (aBuilder) nsDisplayTableBorderBackground(aBuilder, this);
-    nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   return DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, item);
 }
 

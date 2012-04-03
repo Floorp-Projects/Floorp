@@ -579,14 +579,6 @@ WebGLContext::InitAndValidateGL()
         gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS, &mGLMaxTextureImageUnits);
         gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &mGLMaxVertexTextureImageUnits);
     }
-    
-#ifdef XP_MACOSX
-    if (gl->Vendor() == gl::GLContext::VendorIntel) {
-        // bug 684882, corruption in large cube maps on Intel Mac driver.
-        // Is reported to only affect Mac OS < 10.7.2 but don't want to rely on that yet.
-        mGLMaxCubeMapTextureSize = NS_MIN(mGLMaxCubeMapTextureSize, 512);
-    }
-#endif
 
     if (MinCapabilityMode()) {
         mGLMaxFragmentUniformVectors = MINVALUE_GL_MAX_FRAGMENT_UNIFORM_VECTORS;

@@ -55,6 +55,7 @@ typedef _cairo_scaled_font cairo_scaled_font_t;
 
 struct ID3D10Device1;
 struct ID3D10Texture2D;
+struct IDWriteRenderingParams;
 
 namespace mozilla {
 namespace gfx {
@@ -484,8 +485,32 @@ public:
    */
   virtual TemporaryRef<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget) = 0;
 
+  /* This copies the path describing the glyphs into a PathBuilder. We use this
+   * API rather than a generic API to append paths because it allows easier
+   * implementation in some backends, and more efficient implementation in
+   * others.
+   */
+  virtual void CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder) = 0;
+
 protected:
   ScaledFont() {}
+};
+
+/* This class is designed to allow passing additional glyph rendering
+ * parameters to the glyph drawing functions. This is an empty wrapper class
+ * merely used to allow holding on to and passing around platform specific
+ * parameters. This is because different platforms have unique rendering
+ * parameters.
+ */
+class GlyphRenderingOptions : public RefCounted<GlyphRenderingOptions>
+{
+public:
+  virtual ~GlyphRenderingOptions() {}
+
+  virtual FontType GetType() const = 0;
+
+protected:
+  GlyphRenderingOptions() {}
 };
 
 /* This is the main class used for all the drawing. It is created through the
@@ -640,7 +665,8 @@ public:
   virtual void FillGlyphs(ScaledFont *aFont,
                           const GlyphBuffer &aBuffer,
                           const Pattern &aPattern,
-                          const DrawOptions &aOptions = DrawOptions()) = 0;
+                          const DrawOptions &aOptions = DrawOptions(),
+                          const GlyphRenderingOptions *aRenderingOptions = NULL) = 0;
 
   /*
    * This takes a source pattern and a mask, and composites the source pattern
@@ -805,6 +831,9 @@ public:
   static TemporaryRef<DrawTarget> CreateDrawTargetForD3D10Texture(ID3D10Texture2D *aTexture, SurfaceFormat aFormat);
   static void SetDirect3D10Device(ID3D10Device1 *aDevice);
   static ID3D10Device1 *GetDirect3D10Device();
+
+  static TemporaryRef<GlyphRenderingOptions>
+    CreateDWriteGlyphRenderingOptions(IDWriteRenderingParams *aParams);
 
 private:
   static ID3D10Device1 *mD3D10Device;

@@ -6,12 +6,15 @@ import @ANDROID_PACKAGE_NAME@.*;
 
 import android.app.Activity;
 import android.app.Instrumentation;
-import android.database.Cursor;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.res.AssetManager;
+import android.database.Cursor;
 import android.os.SystemClock;
 import android.test.ActivityInstrumentationTestCase2;
 import java.io.File;
+import java.io.InputStream;
+import java.io.IOException;
 
 import java.util.HashMap;
 
@@ -203,5 +206,10 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             }
         }
         return true;
+    }
+
+    public InputStream getAsset(String filename) throws IOException {
+        AssetManager assets = getInstrumentation().getContext().getAssets();
+        return assets.open(filename);
     }
 }

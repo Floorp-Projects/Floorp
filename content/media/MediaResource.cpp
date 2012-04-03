@@ -530,9 +530,15 @@ already_AddRefed<nsIPrincipal> ChannelMediaResource::GetCurrentPrincipal()
   return principal.forget();
 }
 
+bool ChannelMediaResource::CanClone()
+{
+  return mCacheStream.IsAvailableForSharing();
+}
+
 MediaResource* ChannelMediaResource::CloneData(nsMediaDecoder* aDecoder)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+  NS_ASSERTION(mCacheStream.IsAvailableForSharing(), "Stream can't be cloned");
 
   ChannelMediaResource* resource = new ChannelMediaResource(aDecoder, nsnull, mURI);
   if (resource) {
@@ -910,6 +916,7 @@ public:
   virtual void     Suspend(bool aCloseImmediately) {}
   virtual void     Resume() {}
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
+  virtual bool     CanClone();
   virtual MediaResource* CloneData(nsMediaDecoder* aDecoder);
   virtual nsresult ReadFromCache(char* aBuffer, PRInt64 aOffset, PRUint32 aCount);
 
@@ -1087,6 +1094,11 @@ already_AddRefed<nsIPrincipal> FileMediaResource::GetCurrentPrincipal()
   return principal.forget();
 }
 
+bool FileMediaResource::CanClone()
+{
+  return true;
+}
+
 MediaResource* FileMediaResource::CloneData(nsMediaDecoder* aDecoder)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
@@ -1196,7 +1208,6 @@ void MediaResource::MoveLoadsToBackground() {
     return;
   }
 
-  nsresult rv;
   nsHTMLMediaElement* element = mDecoder->GetMediaElement();
   if (!element) {
     NS_WARNING("Null element in MediaResource::MoveLoadsToBackground()");
@@ -1207,7 +1218,7 @@ void MediaResource::MoveLoadsToBackground() {
   if (NS_SUCCEEDED(mChannel->IsPending(&isPending)) &&
       isPending) {
     nsLoadFlags loadFlags;
-    rv = mChannel->GetLoadFlags(&loadFlags);
+    DebugOnly<nsresult> rv = mChannel->GetLoadFlags(&loadFlags);
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetLoadFlags() failed!");
 
     loadFlags |= nsIRequest::LOAD_BACKGROUND;
@@ -1218,7 +1229,7 @@ void MediaResource::MoveLoadsToBackground() {
 void MediaResource::ModifyLoadFlags(nsLoadFlags aFlags)
 {
   nsCOMPtr<nsILoadGroup> loadGroup;
-  nsresult rv = mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+  DebugOnly<nsresult> rv = mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
   NS_ASSERTION(NS_SUCCEEDED(rv), "GetLoadGroup() failed!");
 
   nsresult status;

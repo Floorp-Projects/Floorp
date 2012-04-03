@@ -60,7 +60,7 @@
       path:        aPath,
       kind:        aKind,
       units:       aUnits,
-      description: "(description)",
+      description: "Desc.",
       amount:      aAmount 
     };
   }
@@ -83,14 +83,14 @@
     f("", "other1",             OTHER,   111 * MB),
     f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 888),
     // These compartments ones shouldn't be displayed.
-    f("", "compartments/user/foo",   OTHER, COUNT, 1),
-    f("", "compartments/system/foo", OTHER, COUNT, 1)
+    f2("", "compartments/user/foo",   OTHER, COUNT, 1),
+    f2("", "compartments/system/foo", OTHER, COUNT, 1)
   ];
   let fakeMultiReporters = [
     { name: "fake1",
       collectReports: function(aCbObj, aClosure) {
         function f(aP, aK, aU, aA) {
-          aCbObj.callback("", aP, aK, aU, aA, "(desc)", aClosure);
+          aCbObj.callback("", aP, aK, aU, aA, "Desc.", aClosure);
         }
         f("explicit/c/d",     NONHEAP, BYTES,  13 * MB),
         f("explicit/c/d",     NONHEAP, BYTES,  10 * MB), // dup
@@ -106,7 +106,7 @@
     { name: "fake2",
       collectReports: function(aCbObj, aClosure) {
         function f(aP, aK, aU, aA) {
-          aCbObj.callback("", aP, aK, aU, aA, "(desc)", aClosure);
+          aCbObj.callback("", aP, aK, aU, aA, "Desc.", aClosure);
         }
         f("other3",           OTHER,   COUNT, 777);
         f("other2",           OTHER,   BYTES, 222 * MB);
@@ -119,7 +119,7 @@
       collectReports: function(aCbObj, aClosure) {
         // The amounts are given in pages, so multiply here by 4kb.
         function f(aP, aA) {
-          aCbObj.callback("", aP, NONHEAP, BYTES, aA * 4 * KB, "(desc)", aClosure);
+          aCbObj.callback("", aP, NONHEAP, BYTES, aA * 4 * KB, "Desc.", aClosure);
         }
         f("smaps/vsize/a",     24);
         f("smaps/swap/a",       1);
@@ -166,9 +166,7 @@
                                 HEAP,    200 * MB),
     f("2nd", "explicit/compartment(compartment-url)",
                                 HEAP,    200 * MB),
-    // The escaping of compartment names must prevent this script from running.
-    f("2nd", "danger<script>window.alert(1)</script>",
-                                OTHER,   666 * MB),
+    f("2nd", "other0",          OTHER,   666 * MB),
     f("2nd", "other1",          OTHER,   111 * MB),
     // Even though the "smaps" reporter is a multi-reporter, if its in a
     // child process it'll be passed to the main process as single reports.
@@ -205,10 +203,7 @@
     f2("4th", "other3",          OTHER,   COUNT, -333),
     f2("4th", "other4",          OTHER,   COUNT_CUMULATIVE, -444),
     f2("4th", "other5",          OTHER,   PERCENTAGE, -555),
-    // Escaping should again prevent this script from running when the name
-    // is printed in the warning.
-    f2("4th", "other6-danger<script>window.alert(1)</script>",
-                                 OTHER,   PERCENTAGE, 66666),
+    f2("4th", "other6",          OTHER,   PERCENTAGE, 66666),
 
     // If a negative value is within a collapsed sub-tree in non-verbose mode,
     // we should get the warning at the top and the relevant sub-trees should
@@ -283,9 +278,9 @@ Explicit Allocations\n\
 └────101.00 MB (10.10%) ── heap-unclassified\n\
 \n\
 Other Measurements\n\
-  666.00 MB ── danger<script>window.alert(1)</script>\n\
 1,000.00 MB ── heap-allocated\n\
   100.00 MB ── heap-unallocated\n\
+  666.00 MB ── other0\n\
   111.00 MB ── other1\n\
 \n\
 3rd Process\n\
@@ -321,7 +316,7 @@ WARNING: the following values are negative or unreasonably large.\n\
  other3\n\
  other4\n\
  other5\n\
- other6-danger<script>window.alert(1)</script>\n\
+ other6\n\
 This indicates a defect in one or more memory reporters.  The invalid values are highlighted.\n\
 \n\
 Explicit Allocations\n\
@@ -341,7 +336,7 @@ Other Measurements\n\
       -333 ── other3 [?!]\n\
       -444 ── other4 [?!]\n\
     -5.55% ── other5 [?!]\n\
-   666.66% ── other6-danger<script>window.alert(1)</script> [?!]\n\
+   666.66% ── other6 [?!]\n\
 \n\
 5th Process\n\
 \n\
@@ -442,9 +437,9 @@ Virtual Size Breakdown\n\
 196,608 B (100.0%) ++ vsize\n\
 \n\
 Other Measurements\n\
-  698,351,616 B ── danger<script>window.alert(1)</script>\n\
 1,048,576,000 B ── heap-allocated\n\
   104,857,600 B ── heap-unallocated\n\
+  698,351,616 B ── other0\n\
   116,391,936 B ── other1\n\
 \n\
 3rd Process\n\
@@ -480,7 +475,7 @@ WARNING: the following values are negative or unreasonably large.\n\
  other3\n\
  other4\n\
  other5\n\
- other6-danger<script>window.alert(1)</script>\n\
+ other6\n\
 This indicates a defect in one or more memory reporters.  The invalid values are highlighted.\n\
 \n\
 Explicit Allocations\n\
@@ -499,7 +494,7 @@ Other Measurements\n\
           -333 ── other3 [?!]\n\
           -444 ── other4 [?!]\n\
         -5.55% ── other5 [?!]\n\
-       666.66% ── other6-danger<script>window.alert(1)</script> [?!]\n\
+       666.66% ── other6 [?!]\n\
 \n\
 5th Process\n\
 \n\

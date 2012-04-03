@@ -59,7 +59,7 @@
 #ifdef MOZ_GRAPHITE
 #include "gfxGraphiteShaper.h"
 #endif
-#include "gfxAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsTArray.h"
 #include "nsUnicodeRange.h"
 #include "nsCRT.h"
@@ -303,35 +303,35 @@ void gfxFT2FontGroup::GetCJKPrefFonts(nsTArray<nsRefPtr<gfxFontEntry> >& aFontEn
         // Add the system locale
 #ifdef XP_WIN
         switch (::GetACP()) {
-            case 932: GetPrefFonts(gfxAtoms::ja, aFontEntryList); break;
-            case 936: GetPrefFonts(gfxAtoms::zh_cn, aFontEntryList); break;
-            case 949: GetPrefFonts(gfxAtoms::ko, aFontEntryList); break;
-            // XXX Don't we need to append gfxAtoms::zh_hk if the codepage is 950?
-            case 950: GetPrefFonts(gfxAtoms::zh_tw, aFontEntryList); break;
+            case 932: GetPrefFonts(nsGkAtoms::Japanese, aFontEntryList); break;
+            case 936: GetPrefFonts(nsGkAtoms::zh_cn, aFontEntryList); break;
+            case 949: GetPrefFonts(nsGkAtoms::ko, aFontEntryList); break;
+            // XXX Don't we need to append nsGkAtoms::zh_hk if the codepage is 950?
+            case 950: GetPrefFonts(nsGkAtoms::zh_tw, aFontEntryList); break;
         }
 #else
         const char *ctype = setlocale(LC_CTYPE, NULL);
         if (ctype) {
             if (!PL_strncasecmp(ctype, "ja", 2)) {
-                GetPrefFonts(gfxAtoms::ja, aFontEntryList);
+                GetPrefFonts(nsGkAtoms::Japanese, aFontEntryList);
             } else if (!PL_strncasecmp(ctype, "zh_cn", 5)) {
-                GetPrefFonts(gfxAtoms::zh_cn, aFontEntryList);
+                GetPrefFonts(nsGkAtoms::zh_cn, aFontEntryList);
             } else if (!PL_strncasecmp(ctype, "zh_hk", 5)) {
-                GetPrefFonts(gfxAtoms::zh_hk, aFontEntryList);
+                GetPrefFonts(nsGkAtoms::zh_hk, aFontEntryList);
             } else if (!PL_strncasecmp(ctype, "zh_tw", 5)) {
-                GetPrefFonts(gfxAtoms::zh_tw, aFontEntryList);
+                GetPrefFonts(nsGkAtoms::zh_tw, aFontEntryList);
             } else if (!PL_strncasecmp(ctype, "ko", 2)) {
-                GetPrefFonts(gfxAtoms::ko, aFontEntryList);
+                GetPrefFonts(nsGkAtoms::ko, aFontEntryList);
             }
         }
 #endif
 
         // last resort...
-        GetPrefFonts(gfxAtoms::ja, aFontEntryList);
-        GetPrefFonts(gfxAtoms::ko, aFontEntryList);
-        GetPrefFonts(gfxAtoms::zh_cn, aFontEntryList);
-        GetPrefFonts(gfxAtoms::zh_hk, aFontEntryList);
-        GetPrefFonts(gfxAtoms::zh_tw, aFontEntryList);
+        GetPrefFonts(nsGkAtoms::Japanese, aFontEntryList);
+        GetPrefFonts(nsGkAtoms::ko, aFontEntryList);
+        GetPrefFonts(nsGkAtoms::zh_cn, aFontEntryList);
+        GetPrefFonts(nsGkAtoms::zh_hk, aFontEntryList);
+        GetPrefFonts(nsGkAtoms::zh_tw, aFontEntryList);
 
         platform->SetPrefFontEntries(key, aFontEntryList);
     }
@@ -660,4 +660,21 @@ gfxFT2Font::FillGlyphDataForChar(PRUint32 ch, CachedGlyphData *gd)
     gd->lsbDelta = face->glyph->lsb_delta;
     gd->rsbDelta = face->glyph->rsb_delta;
     gd->xAdvance = face->glyph->advance.x;
+}
+
+void
+gfxFT2Font::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                FontCacheSizes*   aSizes) const
+{
+    gfxFont::SizeOfExcludingThis(aMallocSizeOf, aSizes);
+    aSizes->mFontInstances +=
+        mCharGlyphCache.SizeOfExcludingThis(nsnull, aMallocSizeOf);
+}
+
+void
+gfxFT2Font::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                FontCacheSizes*   aSizes) const
+{
+    aSizes->mFontInstances += aMallocSizeOf(this);
+    SizeOfExcludingThis(aMallocSizeOf, aSizes);
 }

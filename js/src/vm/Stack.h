@@ -818,26 +818,12 @@ class StackFrame
         return calleev;
     }
 
-    /*
-     * Beware! Ad hoc changes can corrupt the stack layout; the callee should
-     * only be changed to something that is equivalent to the current callee in
-     * terms of numFormalArgs etc. Prefer overwriteCallee since it checks.
-     */
-    inline void overwriteCallee(JSObject &newCallee);
-
     Value &mutableCalleev() const {
         JS_ASSERT(isFunctionFrame());
         if (isEvalFrame())
             return ((Value *)this)[-2];
         return formalArgs()[-2];
     }
-
-    /*
-     * Compute the callee function for this stack frame, cloning if needed to
-     * implement the method read barrier.  If this is not a function frame,
-     * set *vp to null.
-     */
-    bool getValidCalleeObject(JSContext *cx, Value *vp);
 
     CallReceiver callReceiver() const {
         return CallReceiverFromArgv(formalArgs());
@@ -1704,6 +1690,7 @@ class ContextStack
 
     /* Get the topmost script and optional pc on the stack. */
     inline JSScript *currentScript(jsbytecode **pc = NULL) const;
+    inline JSScript *currentScriptWithDiagnostics(jsbytecode **pc = NULL) const;
 
     /* Get the scope chain for the topmost scripted call on the stack. */
     inline JSObject *currentScriptedScopeChain() const;

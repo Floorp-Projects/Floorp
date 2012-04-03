@@ -27,23 +27,28 @@ function init()
   SimpleTest.executeSoon(doTest1);
 }
 
+function getCurrentPos()
+{
+  return Number(scrollbar.getAttribute("curpos"));
+}
+
 function doTest1()
 {
   var lastPos = 0;
 
   synthesizeMouseAtCenter(downButton, { type: "mousedown" });
-  ok(scrollbar.getAttribute("curpos") > lastPos,
+  ok(getCurrentPos() > lastPos,
      "scrollbar didn't change curpos by mousedown #1");
-  lastPos = scrollbar.getAttribute("curpos");
+  lastPos = getCurrentPos();
 
   setTimeout(function () {
-    ok(scrollbar.getAttribute("curpos") > lastPos,
+    ok(getCurrentPos() > lastPos,
        "scrollbar didn't change curpos by auto repeat #1");
     synthesizeMouseAtCenter(downButton, { type: "mouseup" });
-    lastPos = scrollbar.getAttribute("curpos");
+    lastPos = getCurrentPos();
 
     setTimeout(function () {
-      is(scrollbar.getAttribute("curpos"), lastPos,
+      is(getCurrentPos(), lastPos,
          "scrollbar changed curpos after mouseup #1");
       SimpleTest.executeSoon(doTest2);
     }, 1000);
@@ -58,21 +63,21 @@ function doTest2()
   var lastPos = 0;
 
   synthesizeMouseAtCenter(downButton, { type: "mousedown" });
-  ok(scrollbar.getAttribute("curpos") > lastPos,
+  ok(getCurrentPos() > lastPos,
      "scrollbar didn't change curpos by mousedown #2");
-  lastPos = scrollbar.getAttribute("curpos");
+  lastPos = getCurrentPos();
 
   synthesizeMouse(downButton, -10, -10, { type: "mousemove" });
-  lastPos = scrollbar.getAttribute("curpos");
+  lastPos = getCurrentPos();
 
   setTimeout(function () {
-    is(scrollbar.getAttribute("curpos"), lastPos,
+    is(getCurrentPos(), lastPos,
        "scrollbar changed curpos by auto repeat when cursor is outside of scrollbar button #2");
     synthesizeMouseAtCenter(downButton, { type: "mousemove" });
-    lastPos = scrollbar.getAttribute("curpos");
+    lastPos = getCurrentPos();
 
     setTimeout(function () {
-      ok(scrollbar.getAttribute("curpos") > lastPos,
+      ok(getCurrentPos() > lastPos,
          "scrollbar didn't change curpos by mousemove after cursor is back on the scrollbar button #2");
       synthesizeMouseAtCenter(downButton, { type: "mouseup" });
       SimpleTest.executeSoon(doTest3);
@@ -88,21 +93,19 @@ function doTest3()
   var lastPos = 0;
 
   synthesizeMouseAtCenter(downButton, { type: "mousedown" });
-  ok(scrollbar.getAttribute("curpos") > lastPos,
+  ok(getCurrentPos() > lastPos,
      "scrollbar didn't change curpos by mousedown #3");
-  lastPos = scrollbar.getAttribute("curpos");
-
   synthesizeMouse(downButton, -10, -10, { type: "mousemove" });
-  lastPos = scrollbar.getAttribute("curpos");
+  lastPos = getCurrentPos();
 
   setTimeout(function () {
-    ok(scrollbar.getAttribute("curpos") > lastPos,
+    ok(getCurrentPos() > lastPos,
        "scrollbar didn't change curpos by auto repeat when cursor is outside of scrollbar button #3");
     synthesizeMouseAtCenter(downButton, { type: "mousemove" });
-    lastPos = scrollbar.getAttribute("curpos");
+    lastPos = getCurrentPos();
 
     setTimeout(function () {
-      ok(scrollbar.getAttribute("curpos") > lastPos,
+      ok(getCurrentPos() > lastPos,
          "scrollbar didn't change curpos by mousemove after cursor is back on the scrollbar button #3");
       synthesizeMouseAtCenter(downButton, { type: "mouseup" });
 

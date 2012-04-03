@@ -50,16 +50,11 @@ NO_PKG_FILES = \
 	regxpcom* \
 	$(NULL)
 
-# If we're on mac, we want to make the .pkg first, in the mac/
-# directory. Then packager.mk can put it into a DMG
+# If we're on mac, we don't want an end-user-facing DMG, we want a .tar.bz2
+# which developers then use to package their application.
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-DIRS += mac
-_APPNAME = $(PKG_BASENAME).pkg
-_BINPATH = /XUL.framework/Versions/Current
-PKG_SKIP_STRIP = 1
-MOZ_PKG_SPECIAL = pkg
-PKG_DMG_SOURCE = $(STAGEPATH)xulrunner-pkg
+MOZ_PKG_FORMAT = BZ2
 endif
 
 include $(topsrcdir)/config/rules.mk

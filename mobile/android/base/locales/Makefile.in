@@ -63,12 +63,25 @@ chrome-%:: AB_CD=$*
 chrome-%:: 
 	@$(MAKE) ../res/values-$(AB_rCD)/strings.xml AB_CD=$*
 
+# setup the path to bookmarks.inc. copied and tweaked version of MERGE_FILE from config/config.mk
+MOBILE_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(topsrcdir)/mobile/locales/en-US,$(call core_realpath,$(L10NBASEDIR))/$(AB_CD)/mobile)
+
+ifdef LOCALE_MERGEDIR
+BOOKMARKSPATH = $(firstword \
+  $(wildcard $(LOCALE_MERGEDIR)/mobile/profile/bookmarks.inc ) \
+  $(wildcard $(MOBILE_LOCALE_SRCDIR)/profile/bookmarks.inc ) \
+  $(topsrcdir)/mobile/locales/en-US/profile/bookmarks.inc )
+else
+BOOKMARKSPATH = $(call core_abspath,$(MOBILE_LOCALE_SRCDIR)/profile/bookmarks.inc)
+endif
+
 %/strings.xml: FORCE
 	$(NSINSTALL) -D $*
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) \
 	  -DBRANDPATH="$(BRANDPATH)" \
 	  -DSTRINGSPATH="$(STRINGSPATH)" \
 	  -DSYNCSTRINGSPATH="$(SYNCSTRINGSPATH)" \
+	  -DBOOKMARKSPATH="$(BOOKMARKSPATH)" \
 	  $(srcdir)/../strings.xml.in \
 	  > $@
 

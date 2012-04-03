@@ -61,8 +61,16 @@ rpc protocol PCompositor
 
 parent:  
 
-  // Clean up in preparation for destruction.
+  // The child is about to be destroyed, so perform any necessary cleanup.
+  sync WillStop();
+
+  // Clean up in preparation for own destruction.
   sync Stop();
+
+  // Pause/resume the compositor. These are intended to be used on mobile, when
+  // the compositor needs to pause/resume in lockstep with the application.
+  sync Pause();
+  sync Resume();
 
   sync PLayers(LayersBackend backend);
 };

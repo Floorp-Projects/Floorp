@@ -602,7 +602,7 @@ private:
 #endif
     nsAutoPtr<XPCCallContext> mCycleCollectionContext;
 
-    typedef nsBaseHashtable<nsVoidPtrHashKey, nsISupports*, nsISupports*> ScopeSet;
+    typedef nsBaseHashtable<nsPtrHashKey<void>, nsISupports*, nsISupports*> ScopeSet;
     ScopeSet mScopes;
     nsCOMPtr<nsIXPCScriptable> mBackstagePass;
 
@@ -683,9 +683,6 @@ public:
 
     XPCWrappedNativeProtoMap* GetDetachedWrappedNativeProtoMap() const
         {return mDetachedWrappedNativeProtoMap;}
-
-    XPCNativeWrapperMap* GetExplicitNativeWrapperMap() const
-        {return mExplicitNativeWrapperMap;}
 
     XPCCompartmentMap& GetCompartmentMap()
         {return mCompartmentMap;}
@@ -797,6 +794,11 @@ public:
         return gNewDOMBindingsEnabled;
     }
 
+    bool ParisBindingsEnabled()
+    {
+        return gParisBindingsEnabled;
+    }
+
     size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
 
 private:
@@ -809,6 +811,7 @@ private:
     static void WatchdogMain(void *arg);
 
     static bool gNewDOMBindingsEnabled;
+    static bool gParisBindingsEnabled;
 
     static const char* mStrings[IDX_TOTAL_COUNT];
     jsid mStrIDs[IDX_TOTAL_COUNT];
@@ -826,7 +829,6 @@ private:
     XPCNativeScriptableSharedMap* mNativeScriptableSharedMap;
     XPCWrappedNativeProtoMap* mDyingWrappedNativeProtoMap;
     XPCWrappedNativeProtoMap* mDetachedWrappedNativeProtoMap;
-    XPCNativeWrapperMap*     mExplicitNativeWrapperMap;
     XPCCompartmentMap        mCompartmentMap;
     XPCLock* mMapLock;
     PRThread* mThreadRunningGC;
@@ -1626,6 +1628,11 @@ public:
         return mNewDOMBindingsEnabled;
     }
 
+    JSBool ParisBindingsEnabled()
+    {
+        return mParisBindingsEnabled;
+    }
+
 protected:
     XPCWrappedNativeScope(XPCCallContext& ccx, JSObject* aGlobal, nsISupports* aNative);
     virtual ~XPCWrappedNativeScope();
@@ -1667,6 +1674,7 @@ private:
     nsDataHashtable<nsDepCharHashKey, JSObject*> mCachedDOMPrototypes;
 
     JSBool mNewDOMBindingsEnabled;
+    JSBool mParisBindingsEnabled;
 };
 
 /***************************************************************************/

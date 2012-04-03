@@ -89,6 +89,9 @@ _TEST_FILES = 	findbar_window.xul \
 		test_autocomplete4.xul \
 		test_autocomplete5.xul \
 		test_autocomplete_delayOnPaste.xul \
+		file_autocomplete_with_composition.js \
+		test_autocomplete_with_composition_on_input.html \
+		test_autocomplete_with_composition_on_textbox.xul \
 		test_keys.xul \
 		window_keys.xul \
 		test_showcaret.xul \
@@ -109,10 +112,6 @@ _TEST_FILES = 	findbar_window.xul \
 		RegisterUnregisterChrome.js \
 		test_panel.xul \
 		window_panel.xul \
-		$(NULL)
-
-
-_TEST_FILES +=  \
 		test_bug360220.xul \
 		test_bug365773.xul \
 		test_bug382990.xul \
@@ -122,6 +121,7 @@ _TEST_FILES +=  \
 		test_bug554279.xul \
 		test_bug557987.xul\
 		test_bug562554.xul \
+		test_bug585946.xul \
 		test_button.xul \
 		test_closemenu_attribute.xul \
 		test_colorpicker_popup.xul \

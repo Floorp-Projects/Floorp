@@ -52,6 +52,8 @@
 #include "prdtoa.h"
 #include "nsSVGUtils.h"
 #include "nsMathUtils.h"
+#include "nsMemory.h"
+#include "nsReadableUtils.h"
 #include <stdlib.h>
 #include <math.h>
 

@@ -369,7 +369,7 @@ js::OnUnknownMethod(JSContext *cx, JSObject *obj, Value idval, Value *vp)
 {
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
     AutoValueRooter tvr(cx);
-    if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, tvr.addr()))
+    if (!js_GetMethod(cx, obj, id, 0, tvr.addr()))
         return false;
     TypeScript::MonitorUnknown(cx, cx->fp()->script(), cx->regs().pc);
 
@@ -428,9 +428,12 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
     JS_ASSERT(script);
     JS_ASSERT(fp == cx->fp());
     JS_ASSERT(fp->script() == script);
+    JS_ASSERT_IF(!fp->isGeneratorFrame(), cx->regs().pc == script->code);
 #ifdef JS_METHODJIT_SPEW
     JMCheckLogging();
 #endif
+
+    JS_CHECK_RECURSION(cx, return false);
 
     /* FIXME: Once bug 470510 is fixed, make this an assert. */
     if (script->compileAndGo) {
@@ -510,7 +513,7 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
     JSFunction *fun = callee.toFunction();
     JS_ASSERT_IF(construct, !fun->isNativeConstructor());
     if (fun->isNative())
-        return CallJSNative(cx, fun->u.n.native, args);
+        return CallJSNative(cx, fun->native(), args);
 
     TypeMonitorCall(cx, args, construct);
 
@@ -580,7 +583,7 @@ js::InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
 
             if (fun->isNativeConstructor()) {
                 Probes::calloutBegin(cx, fun);
-                bool ok = CallJSNativeConstructor(cx, fun->u.n.native, args);
+                bool ok = CallJSNativeConstructor(cx, fun->native(), args);
                 Probes::calloutEnd(cx, fun);
                 return ok;
             }
@@ -1215,11 +1218,9 @@ JS_STATIC_ASSERT(JSOP_XMLNAME_LENGTH == JSOP_CALLXMLNAME_LENGTH);
 
 /*
  * Same for JSOP_SETNAME and JSOP_SETPROP, which differ only slightly but
- * remain distinct for the decompiler. Likewise for JSOP_INIT{PROP,METHOD}.
+ * remain distinct for the decompiler.
  */
 JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
-JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETMETHOD_LENGTH);
-JS_STATIC_ASSERT(JSOP_INITPROP_LENGTH == JSOP_INITMETHOD_LENGTH);
 
 /* See TRY_BRANCH_AFTER_COND. */
 JS_STATIC_ASSERT(JSOP_IFNE_LENGTH == JSOP_IFEQ_LENGTH);
@@ -1290,9 +1291,9 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
 #if JS_THREADED_INTERP
-#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(script->pcCounters, jumpTable == interruptJumpTable)
+#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(script->scriptCounts, jumpTable == interruptJumpTable)
 #else
-#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(script->pcCounters, switchMask == -1)
+#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(script->scriptCounts, switchMask == -1)
 #endif
 
     /*
@@ -1467,7 +1468,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         script = (s);                                                         \
         if (script->hasAnyBreakpointsOrStepMode())                            \
             ENABLE_INTERRUPTS();                                              \
-        if (script->pcCounters)                                               \
+        if (script->scriptCounts)                                             \
             ENABLE_INTERRUPTS();                                              \
         JS_ASSERT_IF(interpMode == JSINTERP_SKIP_TRAP,                        \
                      script->hasAnyBreakpointsOrStepMode());                  \
@@ -1569,9 +1570,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     int32_t len;
     len = 0;
 
-    /* Check for too deep of a native thread stack. */
-    JS_CHECK_RECURSION(cx, goto error);
-
     DO_NEXT_OP(len);
 
 #if JS_THREADED_INTERP
@@ -1611,14 +1609,14 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         bool moreInterrupts = false;
 
         if (cx->runtime->profilingScripts) {
-            if (!script->pcCounters)
-                script->initCounts(cx);
+            if (!script->scriptCounts)
+                script->initScriptCounts(cx);
             moreInterrupts = true;
         }
 
-        if (script->pcCounters) {
-            OpcodeCounts counts = script->getCounts(regs.pc);
-            counts.get(OpcodeCounts::BASE_INTERP)++;
+        if (script->scriptCounts) {
+            PCCounts counts = script->getPCCounts(regs.pc);
+            counts.get(PCCounts::BASE_INTERP)++;
             moreInterrupts = true;
         }
 
@@ -1713,6 +1711,10 @@ ADD_EMPTY_CASE(JSOP_UNUSED24)
 ADD_EMPTY_CASE(JSOP_UNUSED25)
 ADD_EMPTY_CASE(JSOP_UNUSED26)
 ADD_EMPTY_CASE(JSOP_UNUSED27)
+ADD_EMPTY_CASE(JSOP_UNUSED28)
+ADD_EMPTY_CASE(JSOP_UNUSED29)
+ADD_EMPTY_CASE(JSOP_UNUSED30)
+ADD_EMPTY_CASE(JSOP_UNUSED31)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
 #if JS_HAS_XML_SUPPORT
@@ -2584,7 +2586,6 @@ END_CASE(JSOP_GETPROP)
 BEGIN_CASE(JSOP_SETGNAME)
 BEGIN_CASE(JSOP_SETNAME)
 BEGIN_CASE(JSOP_SETPROP)
-BEGIN_CASE(JSOP_SETMETHOD)
 {
     const Value &rval = regs.sp[-1];
     const Value &lval = regs.sp[-2];
@@ -3147,36 +3148,6 @@ BEGIN_CASE(JSOP_DEFFUN)
 }
 END_CASE(JSOP_DEFFUN)
 
-BEGIN_CASE(JSOP_DEFLOCALFUN)
-{
-    /*
-     * Define a local function (i.e., one nested at the top level of another
-     * function), parented by the current scope chain, stored in a local
-     * variable slot that the compiler allocated.  This is an optimization over
-     * JSOP_DEFFUN that avoids requiring a call object for the outer function's
-     * activation.
-     */
-    JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc + SLOTNO_LEN));
-    JS_ASSERT(fun->isInterpreted());
-
-    JSObject *parent;
-    if (fun->isNullClosure()) {
-        parent = &regs.fp()->scopeChain();
-    } else {
-        parent = GetScopeChain(cx, regs.fp());
-        if (!parent)
-            goto error;
-    }
-    JSObject *obj = CloneFunctionObjectIfNotSingleton(cx, fun, parent);
-    if (!obj)
-        goto error;
-
-    JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
-
-    regs.fp()->varSlot(GET_SLOTNO(regs.pc)) = ObjectValue(*obj);
-}
-END_CASE(JSOP_DEFLOCALFUN)
-
 BEGIN_CASE(JSOP_LAMBDA)
 {
     /* Load the specified function object literal. */
@@ -3188,73 +3159,6 @@ BEGIN_CASE(JSOP_LAMBDA)
         JSObject *parent;
         if (fun->isNullClosure()) {
             parent = &regs.fp()->scopeChain();
-
-            if (fun->joinable()) {
-                jsbytecode *pc2 = regs.pc + JSOP_LAMBDA_LENGTH;
-                JSOp op2 = JSOp(*pc2);
-
-                /*
-                 * Optimize var obj = {method: function () { ... }, ...},
-                 * this.method = function () { ... }; and other significant
-                 * single-use-of-null-closure bytecode sequences.
-                 */
-                if (op2 == JSOP_INITMETHOD) {
-#ifdef DEBUG
-                    const Value &lref = regs.sp[-1];
-                    JS_ASSERT(lref.isObject());
-                    JSObject *obj2 = &lref.toObject();
-                    JS_ASSERT(obj2->isObject());
-#endif
-                    JS_ASSERT(fun->methodAtom() ==
-                              script->getAtom(GET_UINT32_INDEX(regs.pc + JSOP_LAMBDA_LENGTH)));
-                    break;
-                }
-
-                if (op2 == JSOP_SETMETHOD) {
-#ifdef DEBUG
-                    op2 = JSOp(pc2[JSOP_SETMETHOD_LENGTH]);
-                    JS_ASSERT(op2 == JSOP_POP || op2 == JSOP_POPV);
-#endif
-                    const Value &lref = regs.sp[-1];
-                    if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
-                        JS_ASSERT(fun->methodAtom() ==
-                                  script->getAtom(GET_UINT32_INDEX(regs.pc + JSOP_LAMBDA_LENGTH)));
-                        break;
-                    }
-                } else if (op2 == JSOP_CALL) {
-                    /*
-                     * Array.prototype.sort and String.prototype.replace are
-                     * optimized as if they are special form. We know that they
-                     * won't leak the joined function object in obj, therefore
-                     * we don't need to clone that compiler-created function
-                     * object for identity/mutation reasons.
-                     */
-                    int iargc = GET_ARGC(pc2);
-
-                    /*
-                     * Note that we have not yet pushed obj as the final argument,
-                     * so regs.sp[1 - (iargc + 2)], and not regs.sp[-(iargc + 2)],
-                     * is the callee for this JSOP_CALL.
-                     */
-                    const Value &cref = regs.sp[1 - (iargc + 2)];
-                    JSFunction *fun;
-
-                    if (IsFunctionObject(cref, &fun)) {
-                        if (Native native = fun->maybeNative()) {
-                            if ((iargc == 1 && native == array_sort) ||
-                                (iargc == 2 && native == str_replace)) {
-                                break;
-                            }
-                        }
-                    }
-                } else if (op2 == JSOP_NULL) {
-                    pc2 += JSOP_NULL_LENGTH;
-                    op2 = JSOp(*pc2);
-
-                    if (op2 == JSOP_CALL && GET_ARGC(pc2) == 0)
-                        break;
-                }
-            }
         } else {
             parent = GetScopeChain(cx, regs.fp());
             if (!parent)
@@ -3392,13 +3296,8 @@ BEGIN_CASE(JSOP_NEWINIT)
         gc::AllocKind kind = GuessObjectGCKind(0);
         obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
     }
-    if (!obj)
+    if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj))
         goto error;
-
-    TypeObject *type = TypeScript::InitObject(cx, script, regs.pc, (JSProtoKey) i);
-    if (!type)
-        goto error;
-    obj->setType(type);
 
     PUSH_OBJECT(*obj);
     CHECK_INTERRUPT_HANDLER();
@@ -3409,13 +3308,8 @@ BEGIN_CASE(JSOP_NEWARRAY)
 {
     unsigned count = GET_UINT24(regs.pc);
     JSObject *obj = NewDenseAllocatedArray(cx, count);
-    if (!obj)
+    if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj))
         goto error;
-
-    TypeObject *type = TypeScript::InitObject(cx, script, regs.pc, JSProto_Array);
-    if (!type)
-        goto error;
-    obj->setType(type);
 
     PUSH_OBJECT(*obj);
     CHECK_INTERRUPT_HANDLER();
@@ -3426,12 +3320,8 @@ BEGIN_CASE(JSOP_NEWOBJECT)
 {
     JSObject *baseobj = script->getObject(GET_UINT32_INDEX(regs.pc));
 
-    TypeObject *type = TypeScript::InitObject(cx, script, regs.pc, JSProto_Object);
-    if (!type)
-        goto error;
-
-    JSObject *obj = CopyInitializerObject(cx, baseobj, type);
-    if (!obj)
+    JSObject *obj = CopyInitializerObject(cx, baseobj);
+    if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj))
         goto error;
 
     PUSH_OBJECT(*obj);
@@ -3448,7 +3338,6 @@ BEGIN_CASE(JSOP_ENDINIT)
 END_CASE(JSOP_ENDINIT)
 
 BEGIN_CASE(JSOP_INITPROP)
-BEGIN_CASE(JSOP_INITMETHOD)
 {
     /* Load the property's initial value into rval. */
     JS_ASSERT(regs.sp - regs.fp()->base() >= 2);
@@ -3462,11 +3351,10 @@ BEGIN_CASE(JSOP_INITMETHOD)
     LOAD_ATOM(0, atom);
     jsid id = ATOM_TO_JSID(atom);
 
-    unsigned defineHow = (op == JSOP_INITMETHOD) ? DNP_SET_METHOD : 0;
     if (JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
-        ? !js_SetPropertyHelper(cx, obj, id, defineHow, &rval, script->strictModeCode)
+        ? !js_SetPropertyHelper(cx, obj, id, 0, &rval, script->strictModeCode)
         : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
-                                JSPROP_ENUMERATE, 0, 0, defineHow)) {
+                                JSPROP_ENUMERATE, 0, 0, 0)) {
         goto error;
     }
 
@@ -3571,14 +3459,6 @@ BEGIN_CASE(JSOP_THROW)
     /* let the code at error try to catch the exception. */
     goto error;
 }
-BEGIN_CASE(JSOP_SETLOCALPOP)
-    /*
-     * The stack must have a block with at least one local slot below the
-     * exception object.
-     */
-    JS_ASSERT((size_t) (regs.sp - regs.fp()->base()) >= 2);
-    POP_COPY_TO(regs.fp()->localSlot(GET_UINT16(regs.pc)));
-END_CASE(JSOP_SETLOCALPOP)
 
 BEGIN_CASE(JSOP_INSTANCEOF)
 {
@@ -4147,6 +4027,9 @@ END_CASE(JSOP_ARRAYPUSH)
   error:
     JS_ASSERT(&cx->regs() == &regs);
     JS_ASSERT(uint32_t(regs.pc - script->code) < script->length);
+
+    /* When rejoining, we must not err before finishing Interpret's prologue. */
+    JS_ASSERT(interpMode != JSINTERP_REJOIN);
 
     if (cx->isExceptionPending()) {
         /* Restore atoms local in case we will resume. */

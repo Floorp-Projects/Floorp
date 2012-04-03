@@ -95,7 +95,7 @@ function test_toFetch() {
     do_check_eq(engine.toFetch[0], toFetch[0]);
     do_check_eq(engine.toFetch[1], toFetch[1]);
   } finally {
-    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+    Svc.Prefs.resetBranch("");
   }
 }
 
@@ -125,7 +125,7 @@ function test_previousFailed() {
     do_check_eq(engine.previousFailed[0], previousFailed[0]);
     do_check_eq(engine.previousFailed[1], previousFailed[1]);
   } finally {
-    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+    Svc.Prefs.resetBranch("");
   }
 }
 
@@ -150,7 +150,6 @@ function test_resetClient() {
     do_check_eq(engine.toFetch.length, 0);
     do_check_eq(engine.previousFailed.length, 0);
   } finally {
-    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
     Svc.Prefs.resetBranch("");
   }
 }
@@ -182,7 +181,6 @@ function test_wipeServer() {
 
   } finally {
     server.stop(do_test_finished);
-    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
     Svc.Prefs.resetBranch("");
   }
 }

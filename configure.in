@@ -129,7 +129,7 @@ GCONF_VERSION=1.2.1
 GIO_VERSION=2.18
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.7.10
+SQLITE_VERSION=3.7.11
 LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
@@ -301,19 +301,25 @@ MOZ_ARG_WITH_STRING(gonk,
                location of gonk dir],
     gonkdir=$withval)
 
+MOZ_ARG_WITH_STRING(gonk-toolchain-prefix,
+[  --with-gonk-toolchain-prefix=DIR
+                          prefix to gonk toolchain commands],
+    gonk_toolchain_prefix=$withval)
+
 if test -n "$gonkdir" ; then
     kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
-    gonk_toolchain="$gonkdir"/prebuilt/$kernel_name-x86/toolchain/arm-eabi-4.4.3
+    android_source="$gonkdir"
+    ANDROID_SOURCE="$android_source"
 
     dnl set up compilers
-    AS="$gonk_toolchain"/bin/"$android_tool_prefix"-as
-    CC="$gonk_toolchain"/bin/"$android_tool_prefix"-gcc
-    CXX="$gonk_toolchain"/bin/"$android_tool_prefix"-g++
-    CPP="$gonk_toolchain"/bin/"$android_tool_prefix"-cpp
-    LD="$gonk_toolchain"/bin/"$android_tool_prefix"-ld
-    AR="$gonk_toolchain"/bin/"$android_tool_prefix"-ar
-    RANLIB="$gonk_toolchain"/bin/"$android_tool_prefix"-ranlib
-    STRIP="$gonk_toolchain"/bin/"$android_tool_prefix"-strip
+    AS="$gonk_toolchain_prefix"as
+    CC="$gonk_toolchain_prefix"gcc
+    CXX="$gonk_toolchain_prefix"g++
+    CPP="$gonk_toolchain_prefix"cpp
+    LD="$gonk_toolchain_prefix"ld
+    AR="$gonk_toolchain_prefix"ar
+    RANLIB="$gonk_toolchain_prefix"ranlib
+    STRIP="$gonk_toolchain_prefix"strip
 
     STLPORT_CPPFLAGS="-I$gonkdir/ndk/sources/cxx-stl/stlport/stlport/"
     STLPORT_LIBS="-lstlport"
@@ -1543,204 +1549,9 @@ case "$OS_TEST" in
       INTEL_ARCHITECTURE=1
 esac
 
-dnl ========================================================
-dnl = ARM toolchain tweaks
-dnl ========================================================
-
-dnl Defaults
-case "${CPU_ARCH}-${OS_TARGET}" in
-arm-Android)
-    MOZ_THUMB=yes
-    MOZ_ARCH=armv7-a
-    MOZ_FPU=vfp
-    MOZ_FLOAT_ABI=softfp
-    ;;
-arm-*)
-    if test -n "$MOZ_PLATFORM_MAEMO"; then
-        MOZ_THUMB=no
-        MOZ_ARCH=armv7-a
-        MOZ_FLOAT_ABI=softfp
-    fi
-    if test "$MOZ_PLATFORM_MAEMO" = 6; then
-        MOZ_THUMB=yes
-    fi
-    ;;
-esac
-
-dnl Kept for compatibility with some buildbot mozconfig
-MOZ_ARG_DISABLE_BOOL(thumb2, [], MOZ_THUMB=no, MOZ_THUMB=yes)
-
-MOZ_ARG_WITH_STRING(thumb,
-[  --with-thumb[[=yes|no|toolchain-default]]]
-[                          Use Thumb instruction set (-mthumb)],
-    if test -z "$GNU_CC"; then
-        AC_MSG_ERROR([--with-thumb is not supported on non-GNU toolchains])
-    fi
-    MOZ_THUMB=$withval)
-
-MOZ_ARG_WITH_STRING(thumb-interwork,
-[  --with-thumb-interwork[[=yes|no|toolchain-default]]
-                           Use Thumb/ARM instuctions interwork (-mthumb-interwork)],
-    if test -z "$GNU_CC"; then
-        AC_MSG_ERROR([--with-thumb-interwork is not supported on non-GNU toolchains])
-    fi
-    MOZ_THUMB_INTERWORK=$withval)
-
-MOZ_ARG_WITH_STRING(arch,
-[  --with-arch=[[type|toolchain-default]]
-                           Use specific CPU features (-march=type)],
-    if test -z "$GNU_CC"; then
-        AC_MSG_ERROR([--with-arch is not supported on non-GNU toolchains])
-    fi
-    MOZ_ARCH=$withval)
-
-MOZ_ARG_WITH_STRING(fpu,
-[  --with-fpu=[[type|toolchain-default]]
-                           Use specific FPU type (-mfpu=type)],
-    if test -z "$GNU_CC"; then
-        AC_MSG_ERROR([--with-fpu is not supported on non-GNU toolchains])
-    fi
-    MOZ_FPU=$withval)
-
-MOZ_ARG_WITH_STRING(float-abi,
-[  --with-float-abi=[[type|toolchain-default]]
-                           Use specific arm float ABI (-mfloat-abi=type)],
-    if test -z "$GNU_CC"; then
-        AC_MSG_ERROR([--with-float-abi is not supported on non-GNU toolchains])
-    fi
-    MOZ_FLOAT_ABI=$withval)
-
-MOZ_ARG_WITH_STRING(soft-float,
-[  --with-soft-float[[=yes|no|toolchain-default]]
-                           Use soft float library (-msoft-float)],
-    if test -z "$GNU_CC"; then
-        AC_MSG_ERROR([--with-soft-float is not supported on non-GNU toolchains])
-    fi
-    MOZ_SOFT_FLOAT=$withval)
-
-case "$MOZ_ARCH" in
-toolchain-default|"")
-    arch_flag=""
-    ;;
-*)
-    arch_flag="-march=$MOZ_ARCH"
-    ;;
-esac
-
-case "$MOZ_THUMB" in
-yes)
-    MOZ_THUMB2=1
-    thumb_flag="-mthumb"
-    ;;
-no)
-    MOZ_THUMB2=
-    thumb_flag="-marm"
-    ;;
-*)
-    _SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="$arch_flag"
-    AC_TRY_COMPILE([],[return sizeof(__thumb2__);],
-        MOZ_THUMB2=1,
-        MOZ_THUMB2=)
-    CFLAGS="$_SAVE_CFLAGS"
-    thumb_flag=""
-    ;;
-esac
-
-if test "$MOZ_THUMB2" = 1; then
-    AC_DEFINE(MOZ_THUMB2)
-fi
-
-case "$MOZ_THUMB_INTERWORK" in
-yes)
-    thumb_interwork_flag="-mthumb-interwork"
-    ;;
-no)
-    thumb_interwork_flag="-mno-thumb-interwork"
-    ;;
-*) # toolchain-default
-    thumb_interwork_flag=""
-    ;;
-esac
-
-case "$MOZ_FPU" in
-toolchain-default|"")
-    fpu_flag=""
-    ;;
-*)
-    fpu_flag="-mfpu=$MOZ_FPU"
-    ;;
-esac
-
-case "$MOZ_FLOAT_ABI" in
-toolchain-default|"")
-    float_abi_flag=""
-    ;;
-*)
-    float_abi_flag="-mfloat-abi=$MOZ_FLOAT_ABI"
-    ;;
-esac
-
-case "$MOZ_SOFT_FLOAT" in
-yes)
-    soft_float_flag="-msoft-float"
-    ;;
-no)
-    soft_float_flag="-mno-soft-float"
-    ;;
-*) # toolchain-default
-    soft_float_flag=""
-    ;;
-esac
-
-dnl Use echo to avoid accumulating space characters
-all_flags=`echo $arch_flag $thumb_flag $thumb_interwork_flag $fpu_flag $float_abi_flag $soft_float_flag`
-if test -n "$all_flags"; then
-    _SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="$all_flags"
-    AC_MSG_CHECKING(whether the chosen combination of compiler flags ($all_flags) works)
-    AC_TRY_COMPILE([],[return 0;],
-        AC_MSG_RESULT([yes]),
-        AC_MSG_ERROR([no]))
-
-    CFLAGS="$_SAVE_CFLAGS $all_flags"
-    CXXFLAGS="$CXXFLAGS $all_flags"
-    ASFLAGS="$ASFLAGS $all_flags"
-    if test -n "$thumb_flag"; then
-        LDFLAGS="$LDFLAGS $thumb_flag"
-    fi
-fi
-
-AC_SUBST(MOZ_THUMB2)
-
-if test "$CPU_ARCH" = "arm"; then
-  AC_MSG_CHECKING(for ARM SIMD support in compiler)
-  # We try to link so that this also fails when
-  # building with LTO.
-  AC_TRY_LINK([],
-                 [asm("uqadd8 r1, r1, r2");],
-                 result="yes", result="no")
-  AC_MSG_RESULT("$result")
-  if test "$result" = "yes"; then
-      AC_DEFINE(HAVE_ARM_SIMD)
-      HAVE_ARM_SIMD=1
-  fi
-
-  AC_MSG_CHECKING(for ARM NEON support in compiler)
-  # We try to link so that this also fails when
-  # building with LTO.
-  AC_TRY_LINK([],
-                 [asm(".fpu neon\n vadd.i8 d0, d0, d0");],
-                 result="yes", result="no")
-  AC_MSG_RESULT("$result")
-  if test "$result" = "yes"; then
-      AC_DEFINE(HAVE_ARM_NEON)
-      HAVE_ARM_NEON=1
-  fi
-fi # CPU_ARCH = arm
-
-AC_SUBST(HAVE_ARM_SIMD)
-AC_SUBST(HAVE_ARM_NEON)
+dnl Configure platform-specific CPU architecture compiler options.
+dnl ==============================================================
+MOZ_ARCH_OPTS
 
 dnl =================================================================
 dnl Set up and test static assertion macros used to avoid AC_TRY_RUN,
@@ -1811,13 +1622,16 @@ if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
        STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/gnu-libstdc++/include -I$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH/include -D_GLIBCXX_PERMIT_BACKWARD_HASH"
        STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH"
        STLPORT_LIBS="-lstdc++"
-    elif test -e "$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
-       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
-       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/"
-       STLPORT_LIBS="-lstlport_static"
-    elif  test -e "$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
-       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
-       STLPORT_LDFLAGS="-L$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH"
+    elif test -e "$android_ndk/sources/cxx-stl/stlport/src/iostream.cpp" ; then
+       if test -e "$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a"; then
+          STLPORT_LDFLAGS="-L$_objdir/build/stlport -L$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/"
+       elif test -e "$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a"; then
+          STLPORT_LDFLAGS="-L$_objdir/build/stlport -L$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/"
+       else
+          AC_MSG_ERROR([Couldn't find path to stlport in the android ndk])
+       fi
+       STLPORT_SOURCES="$android_ndk/sources/cxx-stl/stlport"
+       STLPORT_CPPFLAGS="-I$_objdir/build/stlport -I$android_ndk/sources/cxx-stl/stlport/stlport"
        STLPORT_LIBS="-lstlport_static"
     elif test "$target" != "arm-android-eabi"; then
        dnl fail if we're not building with NDKr4
@@ -1827,6 +1641,8 @@ if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
     LDFLAGS="$LDFLAGS $STLPORT_LDFLAGS"
     LIBS="$LIBS $STLPORT_LIBS"
 fi
+
+AC_SUBST([STLPORT_SOURCES])
 
 dnl ========================================================
 dnl Suppress Clang Argument Warnings
@@ -2645,7 +2461,6 @@ ia64*-hpux*)
         ZIP=zip
         UNZIP=unzip
         DOXYGEN=:
-        GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
         ASM_SUFFIX=asm
         OBJ_SUFFIX=obj
         LIB_SUFFIX=lib
@@ -4722,7 +4537,7 @@ ENABLE_SYSTEM_EXTENSION_DIRS=1
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
-MOZ_INSTALLER=1
+MOZ_FLEXBOX=
 MOZ_JSDEBUGGER=1
 MOZ_AUTH_EXTENSION=1
 MOZ_OGG=1
@@ -4805,7 +4620,6 @@ case "${target}" in
         fi
 
         NSS_DISABLE_DBM=1
-        MOZ_INSTALLER=
         NECKO_WIFI=
         MOZ_THEME_FASTSTRIPE=1
         MOZ_TREE_FREETYPE=1
@@ -4974,7 +4788,7 @@ cairo-gtk2|cairo-gtk2-x11)
     MOZ_ENABLE_GTK2=1
     MOZ_ENABLE_XREMOTE=1
     MOZ_WEBGL=1
-    MOZ_WEBGL_GLX=1
+    MOZ_GL_DEFAULT_PROVIDER=GLX
 
     AC_DEFINE(MOZ_X11)
     MOZ_X11=1
@@ -4992,7 +4806,7 @@ cairo-qt)
     MOZ_ENABLE_QT=1
     if test -z "$WITHOUT_X11"; then
       MOZ_ENABLE_XREMOTE=1
-      MOZ_WEBGL_GLX=1
+      MOZ_GL_DEFAULT_PROVIDER=GLX
       MOZ_X11=1
       AC_DEFINE(MOZ_X11)
       XT_LIBS=
@@ -5045,7 +4859,6 @@ cairo-uikit)
 
 cairo-android)
     AC_DEFINE(MOZ_WIDGET_ANDROID)
-    AC_DEFINE(MOZ_TOUCH)
     MOZ_WIDGET_TOOLKIT=android
     TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
     TK_LIBS='$(MOZ_CAIRO_LIBS)'
@@ -5055,7 +4868,6 @@ cairo-android)
     if test "$MOZ_BUILD_APP" = "mobile/xul"; then
         MOZ_OLD_LINKER=1
     fi
-    MOZ_TOUCH=1
     ;;
 
 cairo-gonk)
@@ -5157,6 +4969,15 @@ then
 
     if test -z "$QTDIR"; then
         PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore QtOpenGL)
+        PKG_CHECK_MODULES(MOZ_QT5, QtWidgets QtMultimedia QtPrintSupport QtQuick1,
+                      MOZ_ENABLE_QT5=1,
+                      MOZ_ENABLE_QT5=)
+        if test "$MOZ_ENABLE_QT5"; then
+            echo "Using qt5"
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $MOZ_QT5_CFLAGS"
+            MOZ_QT_LIBS="$MOZ_QT_LIBS $MOZ_QT5_LIBS"
+        fi
+
         AC_CHECK_PROGS(HOST_MOC, $MOC moc, "")
         AC_CHECK_PROGS(HOST_RCC, $RCC rcc, "")
     else
@@ -5169,8 +4990,19 @@ then
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtCore"
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtNetwork"
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtXml"
+        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtDeclarative"
         HOST_MOC="$QTDIR/bin/moc"
         HOST_RCC="$QTDIR/bin/rcc"
+
+        # QtWidgets was introduced only in Qt5
+        if test -d $QTDIR/include/QtWidgets; then
+            echo "Using qt5"
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtWidgets"
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtMultimedia"
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtPrintSupport"
+            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtQuick1"
+            MOZ_QT_LIBS="$MOZ_QT_LIBS -lQtWidgets -lQtMultimedia -lQtPrintSupport -lQtQuick1"
+        fi
     fi
     if test -z "$HOST_MOC"; then
         AC_MSG_ERROR([No acceptable moc preprocessor found. Qt SDK is not installed or --with-qt is
@@ -6445,6 +6277,13 @@ if test -n "$MOZ_USE_NATIVE_POPUP_WINDOWS"; then
 fi
 
 dnl ========================================================
+dnl CSS3 Flexbox Support
+dnl ========================================================
+if test -n "$MOZ_FLEXBOX"; then
+  AC_DEFINE(MOZ_FLEXBOX)
+fi
+
+dnl ========================================================
 dnl SVG Display Lists
 dnl ========================================================
 if test -n "$MOZ_SVG_DLISTS"; then
@@ -6479,38 +6318,40 @@ fi
 dnl ========================================================
 dnl Installer
 dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(installer,
-[  --disable-installer     Disable building of installer],
-    MOZ_INSTALLER=,
-    MOZ_INSTALLER=1)
-if test -n "$MOZ_INSTALLER" -a "$OS_ARCH" = "WINNT"; then
-    # Disable installer for Windows builds that use the new toolkit if the
-    # required major version and minimum minor version of Unicode NSIS isn't in
-    # the path.
+dnl Abort Windows build if the required major version and
+dnl minimum minor version of Unicode NSIS isn't in the path
+dnl (unless in case of cross compiling, for which Unicode
+dnl is not yet sufficient).
+if test "$OS_ARCH" = "WINNT"; then
     REQ_NSIS_MAJOR_VER=2
     MIN_NSIS_MINOR_VER=33
     MOZ_PATH_PROGS(MAKENSISU, $MAKENSISU makensisu-2.46 makensisu makensis)
-    if test -z "$MAKENSISU" -o "$MAKENSISU" = ":"; then
-        AC_MSG_ERROR([To build the installer you must have the latest MozillaBuild or Unicode NSIS with a major version of $REQ_NSIS_MAJOR_VER and a minimum minor version of $MIN_NSIS_MINOR_VER in your path. To build without the installer reconfigure using --disable-installer.])
+    if test -n "$MAKENSISU" -a "$MAKENSISU" != ":"; then
+      AC_MSG_RESULT([yes])
+      changequote(,)
+      MAKENSISU_VER=`"$MAKENSISU" -version 2>/dev/null | sed -e '/-Unicode/!s/.*//g' -e 's/^v\([0-9]\+\.[0-9]\+\)\-Unicode$/\1/g'`
+      changequote([,])
+      if test ! "$MAKENSISU_VER" = ""; then
+          MAKENSISU_MAJOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $1 }'`
+          MAKENSISU_MINOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $2 }'`
+      fi
+      AC_MSG_CHECKING([for Unicode NSIS with major version == $REQ_NSIS_MAJOR_VER and minor version >= $MIN_NSIS_MINOR_VER])
+      if test "$MAKENSISU_VER" = "" || \
+         test ! "$MAKENSISU_MAJOR_VER" = "$REQ_NSIS_MAJOR_VER" -o \
+              ! "$MAKENSISU_MINOR_VER" -ge $MIN_NSIS_MINOR_VER; then
+          AC_MSG_RESULT([no])
+          if test -z "$CROSS_COMPILE"; then
+            AC_MSG_ERROR([To build the installer you must have the latest MozillaBuild or Unicode NSIS with a major version of $REQ_NSIS_MAJOR_VER and a minimum minor version of $MIN_NSIS_MINOR_VER in your path.])
+          else
+            MAKENSISU=
+          fi
+      fi
+    elif test -z "$CROSS_COMPILE"; then
+      AC_MSG_ERROR([To build the installer you must have the latest MozillaBuild or Unicode NSIS with a major version of $REQ_NSIS_MAJOR_VER and a minimum minor version of $MIN_NSIS_MINOR_VER in your path.])
+    else
+      MAKENSISU=
     fi
-    changequote(,)
-    MAKENSISU_VER=`"$MAKENSISU" -version 2>/dev/null | sed -e '/-Unicode/!s/.*//g' -e 's/^v\([0-9]\+\.[0-9]\+\)\-Unicode$/\1/g'`
-    changequote([,])
-    if test ! "$MAKENSISU_VER" = ""; then
-        MAKENSISU_MAJOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $1 }'`
-        MAKENSISU_MINOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $2 }'`
-    fi
-    AC_MSG_CHECKING([for Unicode NSIS with major version == $REQ_NSIS_MAJOR_VER and minor version >= $MIN_NSIS_MINOR_VER])
-    if test "$MAKENSISU_VER" = "" ||
-       test ! "$MAKENSISU_MAJOR_VER" = "$REQ_NSIS_MAJOR_VER" -o \
-            ! "$MAKENSISU_MINOR_VER" -ge $MIN_NSIS_MINOR_VER; then
-        AC_MSG_RESULT([no])
-        AC_MSG_ERROR([To build the installer you must have the latest MozillaBuild or Unicode NSIS with a major version of $REQ_NSIS_MAJOR_VER and a minimum minor version of $MIN_NSIS_MINOR_VER in your path. To build without the installer reconfigure using --disable-installer.])
-    fi
-    AC_MSG_RESULT([yes])
 fi
-
-AC_SUBST(MOZ_INSTALLER)
 
 AC_MSG_CHECKING([for tar archiver])
 AC_CHECK_PROGS(TAR, gnutar gtar tar, "")
@@ -6923,7 +6764,7 @@ if test $MOZ_PLATFORM_MAEMO; then
    fi
 
    MOZ_GFX_OPTIMIZE_MOBILE=1
-   MOZ_WEBGL_GLX=
+   MOZ_GL_DEFAULT_PROVIDER=EGL
    MOZ_MAEMO_LIBLOCATION=
 
    if test $MOZ_PLATFORM_MAEMO = 5; then
@@ -7049,6 +6890,22 @@ if test -n "$MOZ_EGL_XRENDER_COMPOSITE"; then
 fi
 
 AC_SUBST(MOZ_EGL_XRENDER_COMPOSITE)
+
+dnl ========================================================
+dnl GL provider
+dnl ========================================================
+MOZ_GL_PROVIDER=
+MOZ_ARG_WITH_STRING(gl-provider,
+[  --with-gl-provider=ID
+                          Set GL provider backend type],
+[ val=`echo $withval`
+    MOZ_GL_PROVIDER="$val"])
+
+if test -n "$MOZ_GL_PROVIDER"; then
+MOZ_GL_DEFAULT_PROVIDER=$MOZ_GL_PROVIDER
+AC_SUBST(MOZ_GL_PROVIDER)
+AC_DEFINE_UNQUOTED(MOZ_GL_PROVIDER, GLContextProvider$MOZ_GL_PROVIDER)
+fi
 
 dnl ========================================================
 dnl = faststripe theme
@@ -7417,12 +7274,11 @@ dnl We need to wrap dlopen and related functions on Android because we use
 dnl our own linker.
 if test "$OS_TARGET" = Android; then
     WRAP_LDFLAGS="${WRAP_LDFLAGS} -L$_objdir/dist/lib -lmozglue"
-    if test "$MOZ_WIDGET_TOOLKIT" = android; then
-        if test -n "$MOZ_OLD_LINKER"; then
-            WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr"
-        fi
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=getaddrinfo,--wrap=freeaddrinfo,--wrap=gai_strerror"
+    if test -n "$MOZ_OLD_LINKER"; then
+        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr"
     fi
+    WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=getaddrinfo,--wrap=freeaddrinfo,--wrap=gai_strerror"
+    WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=fork,--wrap=pthread_atfork"
 fi
 
 dnl ========================================================
@@ -7437,7 +7293,6 @@ if test -n "$_WRAP_MALLOC"; then
     if test -n "$GNU_CC"; then
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=malloc,--wrap=calloc,--wrap=valloc,--wrap=free,--wrap=realloc,--wrap=memalign"
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=__builtin_new,--wrap=__builtin_vec_new,--wrap=__builtin_delete,--wrap=__builtin_vec_delete"
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=PR_Free,--wrap=PR_Malloc,--wrap=PR_Calloc,--wrap=PR_Realloc"
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=strdup,--wrap=strndup"
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=posix_memalign,--wrap=malloc_usable_size"
     else
@@ -8570,6 +8425,7 @@ AC_SUBST(JAR)
 AC_SUBST(MOZ_PROFILELOCKING)
 
 AC_SUBST(ENABLE_TESTS)
+AC_SUBST(ENABLE_MARIONETTE)
 AC_SUBST(IBMBIDI)
 AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
@@ -8741,6 +8597,7 @@ AC_SUBST(BZ2_LIBS)
 AC_SUBST(PNG_CFLAGS)
 AC_SUBST(PNG_LIBS)
 
+AC_SUBST(MOZ_FLEXBOX)
 AC_SUBST(MOZ_JPEG_CFLAGS)
 AC_SUBST(MOZ_JPEG_LIBS)
 AC_SUBST(MOZ_ZLIB_CFLAGS)
@@ -8903,12 +8760,12 @@ if test "$MOZ_X11"; then
 fi # MOZ_X11
 
 dnl Check for headers, etc. needed by WebGL.
-if test -n "$MOZ_WEBGL_GLX"; then
+if test "$MOZ_GL_DEFAULT_PROVIDER" = "GLX"; then
     MOZ_CHECK_HEADER(GL/glx.h)
     if test "$ac_cv_header_GL_glx_h" != "yes"; then
         AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa-devel (openSUSE))])
     fi
-fi # MOZ_WEBGL_GLX
+fi # MOZ_GL_DEFAULT_PROVIDER=GLX
 fi # COMPILE_ENVIRONMENT
 
 if test "$USE_FC_FREETYPE"; then
@@ -9124,6 +8981,42 @@ if test "$CAIRO_FEATURES_H"; then
   fi
 fi
 
+dnl Build libunwind for Android profiling builds
+if test "$OS_TARGET" = "Android" -a "$MOZ_PROFILING"; then
+  old_ac_configure_arg="$ac_configure_args"
+  ac_configure_args="--build=${build} --host=${target_alias} --disable-shared --enable-block-signals=no"
+  if test "$MOZ_DEBUG"; then
+    ac_configure_args="$ac_configure_args --enable-debug"
+  fi
+  if test "$DSO_PIC_CFLAGS"; then
+    ac_configure_args="$ac_configure_args --with-pic"
+  fi
+  ac_configure_args="$ac_configure_args \
+      CC=\"$CC\" \
+      CXX=\"$CXX\" \
+      CPP=\"$CPP\" \
+      CFLAGS=\"$CFLAGS\" \
+      CXXFLAGS=\"$CXXFLAGS\" \
+      CPPFLAGS=\"$CPPFLAGS\" \
+      LD=\"$LD\" \
+      LDFLAGS=\"$LDFLAGS\" \
+      AR=\"$AR\" \
+      RANLIB=\"$RANLIB\" \
+      STRIP=\"$STRIP\" \
+      LIBS=\"$LIBS\""
+
+  # Use a separate cache file for libunwind, since it does not use caching.
+  mkdir -p $_objdir/tools/profiler/libunwind/src
+  old_cache_file=$cache_file
+  cache_file=$_objdir/tools/profiler/libunwind/src/config.cache
+  old_config_files=$CONFIG_FILES
+  unset CONFIG_FILES
+  AC_OUTPUT_SUBDIRS(tools/profiler/libunwind/src)
+  cache_file=$old_cache_file
+  ac_configure_args="$old_ac_configure_args"
+  CONFIG_FILES=$old_config_files
+fi
+
 # Run freetype configure script
 
 if test "$MOZ_TREE_FREETYPE"; then
@@ -9184,6 +9077,7 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     if test -n "$USE_ARM_KUSER"; then
         ac_configure_args="$ac_configure_args --with-arm-kuser"
     fi
+    ac_configure_args="$ac_configure_args $NSPR_CONFIGURE_ARGS"
     if test -n "$MOZ_LINKER" -a -z "$MOZ_OLD_LINKER" -a "$ac_cv_func_dladdr" = no ; then
       # dladdr is supported by the new linker, even when the system linker doesn't
       # support it. Trick nspr into using dladdr when it's not supported.
@@ -9256,6 +9150,9 @@ if test -n "$MOZ_GLUE_PROGRAM_LDFLAGS"; then
    export MOZ_GLUE_PROGRAM_LDFLAGS
 fi
 export MOZ_APP_NAME
+export STLPORT_CPPFLAGS
+export STLPORT_LDFLAGS
+export STLPORT_LIBS
 AC_OUTPUT_SUBDIRS(js/src)
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 

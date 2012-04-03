@@ -25,18 +25,20 @@
 [@AB_CD@]
 @BINPATH@/chrome/@AB_CD@@JAREXT@
 @BINPATH@/chrome/@AB_CD@.manifest
-@BINPATH@/@PREF_DIR@/firefox-l10n.js
-@BINPATH@/searchplugins/*
 @BINPATH@/defaults/profile/bookmarks.html
+@BINPATH@/defaults/profile/chrome/*
 @BINPATH@/defaults/profile/localstore.rdf
 @BINPATH@/defaults/profile/mimeTypes.rdf
-@BINPATH@/defaults/profile/chrome/*
-@BINPATH@/update.locale
-@BINPATH@/updater.ini
 @BINPATH@/dictionaries/*
 @BINPATH@/hyphenation/*
+@BINPATH@/@PREF_DIR@/firefox-l10n.js
+@BINPATH@/searchplugins/*
 #ifdef XP_WIN32
 @BINPATH@/uninstall/helper.exe
+#endif
+#ifdef MOZ_UPDATER
+@BINPATH@/update.locale
+@BINPATH@/updater.ini
 #endif
 
 [xpcom]
@@ -68,20 +70,20 @@
 #endif
 #ifdef XP_WIN32
 #ifndef MOZ_DEBUG
-#if _MSC_VER == 1400
+#if MOZ_MSVC_REDIST == 1400
 @BINPATH@/Microsoft.VC80.CRT.manifest
 @BINPATH@/msvcm80.dll
 @BINPATH@/msvcp80.dll
 @BINPATH@/msvcr80.dll
-#elif _MSC_VER == 1500
+#elif MOZ_MSVC_REDIST == 1500
 @BINPATH@/Microsoft.VC90.CRT.manifest
 @BINPATH@/msvcm90.dll
 @BINPATH@/msvcp90.dll
 @BINPATH@/msvcr90.dll
-#elif _MSC_VER == 1600
+#elif MOZ_MSVC_REDIST == 1600
 @BINPATH@/msvcp100.dll
 @BINPATH@/msvcr100.dll
-#elif _MSC_VER == 1700
+#elif MOZ_MSVC_REDIST == 1700
 @BINPATH@/msvcp110.dll
 @BINPATH@/msvcr110.dll
 #endif
@@ -97,7 +99,9 @@
 @BINPATH@/@MOZ_APP_NAME@
 #endif
 @BINPATH@/application.ini
+#ifdef MOZ_UPDATER
 @BINPATH@/update-settings.ini
+#endif
 @BINPATH@/platform.ini
 #ifndef XP_OS2
 @BINPATH@/@DLL_PREFIX@mozsqlite3@DLL_SUFFIX@
@@ -169,6 +173,7 @@
 @BINPATH@/components/dom_json.xpt
 @BINPATH@/components/dom_power.xpt
 @BINPATH@/components/dom_range.xpt
+@BINPATH@/components/dom_settings.xpt
 @BINPATH@/components/dom_sidebar.xpt
 @BINPATH@/components/dom_sms.xpt
 @BINPATH@/components/dom_storage.xpt
@@ -199,7 +204,9 @@
 @BINPATH@/components/inspector.xpt
 @BINPATH@/components/intl.xpt
 @BINPATH@/components/jar.xpt
+#ifdef MOZ_JSDEBUGGER
 @BINPATH@/components/jsdservice.xpt
+#endif
 @BINPATH@/components/jsdebugger.xpt
 @BINPATH@/components/jsinspector.xpt
 @BINPATH@/components/layout_base.xpt
@@ -282,6 +289,8 @@
 ; JavaScript components
 @BINPATH@/components/ConsoleAPI.manifest
 @BINPATH@/components/ConsoleAPI.js
+@BINPATH@/components/BrowserElementAPI.manifest
+@BINPATH@/components/BrowserElementAPI.js
 @BINPATH@/components/FeedProcessor.manifest
 @BINPATH@/components/FeedProcessor.js
 @BINPATH@/components/BrowserFeeds.manifest
@@ -386,10 +395,10 @@
 @BINPATH@/components/RadioInterfaceLayer.js
 @BINPATH@/components/SmsDatabaseService.manifest
 @BINPATH@/components/SmsDatabaseService.js
-@BINPATH@/components/nsWifiWorker.js
-@BINPATH@/components/nsWifiWorker.manifest
-@BINPATH@/components/nsDOMWifiManager.js
-@BINPATH@/components/nsDOMWifiManager.manifest
+@BINPATH@/components/WifiWorker.js
+@BINPATH@/components/WifiWorker.manifest
+@BINPATH@/components/DOMWifiManager.js
+@BINPATH@/components/DOMWifiManager.manifest
 #endif
 @BINPATH@/components/BrowserProfileMigrators.manifest
 @BINPATH@/components/ProfileMigrator.js
@@ -413,6 +422,8 @@
 @BINPATH@/components/TelemetryPing.manifest
 @BINPATH@/components/messageWakeupService.js
 @BINPATH@/components/messageWakeupService.manifest
+@BINPATH@/components/SettingsManager.js
+@BINPATH@/components/SettingsManager.manifest
 @BINPATH@/components/Webapps.js
 @BINPATH@/components/Webapps.manifest
 
@@ -423,6 +434,7 @@
 @BINPATH@/modules/*
 
 ; Safe Browsing
+#ifdef MOZ_SAFE_BROWSING
 @BINPATH@/components/nsSafebrowsingApplication.manifest
 @BINPATH@/components/nsSafebrowsingApplication.js
 @BINPATH@/components/nsURLClassifier.manifest
@@ -430,6 +442,7 @@
 @BINPATH@/components/nsUrlClassifierListManager.js
 @BINPATH@/components/nsUrlClassifierLib.js
 @BINPATH@/components/url-classifier.xpt
+#endif
 
 ; GNOME hooks
 #ifdef MOZ_ENABLE_GNOME_COMPONENT
@@ -450,6 +463,7 @@
 @BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
 @BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/icon.png
 @BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/preview.png
+@BINPATH@/extensions/uriloader@pdf.js.xpi
 #ifdef SHIP_FEEDBACK
 @BINPATH@/distribution/extensions/testpilot@labs.mozilla.com.xpi
 #endif
@@ -556,10 +570,12 @@ bin/libfreebl_32int64_3.so
 
 ; [Updater]
 ;
+#ifdef MOZ_UPDATER
 #ifdef XP_MACOSX
 @BINPATH@/updater.app/
 #else
 @BINPATH@/updater@BIN_SUFFIX@
+#endif
 #endif
 
 ; [MaintenanceService]

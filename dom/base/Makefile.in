@@ -54,6 +54,8 @@ DIRS = \
 EXTRA_PP_COMPONENTS = \
 		ConsoleAPI.js \
 		ConsoleAPI.manifest \
+		BrowserElementAPI.js \
+		BrowserElementAPI.manifest \
 		$(NULL)
 
 EXTRA_JS_MODULES = ConsoleAPIStorage.jsm \
@@ -64,7 +66,7 @@ EXTRA_COMPONENTS = \
 	        Webapps.manifest \
 		$(NULL)
 
-EXTRA_JS_MODULES += Webapps.jsm \
+EXTRA_PP_JS_MODULES += Webapps.jsm \
 		$(NULL)
 
 EXTRA_JS_MODULES += DOMRequestHelper.jsm \
@@ -113,6 +115,7 @@ EXPORTS_mozilla/dom = \
   DOMError.h \
   DOMRequest.h \
   StructuredCloneTags.h \
+  ScreenOrientation.h \
   $(NULL)
 
 CPPSRCS =			\

@@ -62,7 +62,6 @@ LOCAL_INCLUDES = \
 CPPSRCS =         nsMathMLChar.cpp		        \
                   nsMathMLFrame.cpp		\
                   nsMathMLContainerFrame.cpp		\
-                  nsMathMLForeignFrameWrapper.cpp		\
                   nsMathMLOperators.cpp \
                   nsMathMLTokenFrame.cpp		\
                   nsMathMLmoFrame.cpp			\

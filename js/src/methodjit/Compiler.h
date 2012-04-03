@@ -262,7 +262,7 @@ class Compiler : public BaseCompiler
             return getPropLabels_;
         }
         ic::SetPropLabels &setPropLabels() {
-            JS_ASSERT(kind == ic::PICInfo::SET || kind == ic::PICInfo::SETMETHOD);
+            JS_ASSERT(kind == ic::PICInfo::SET);
             return setPropLabels_;
         }
         ic::BindNameLabels &bindNameLabels() {
@@ -564,12 +564,12 @@ private:
     CompileStatus finishThisUp();
     CompileStatus pushActiveFrame(JSScript *script, uint32_t argc);
     void popActiveFrame();
-    void updatePCCounters(jsbytecode *pc, Label *start, bool *updated);
+    void updatePCCounts(jsbytecode *pc, Label *start, bool *updated);
     void updatePCTypes(jsbytecode *pc, FrameEntry *fe);
-    void updateArithCounters(jsbytecode *pc, FrameEntry *fe,
+    void updateArithCounts(jsbytecode *pc, FrameEntry *fe,
                              JSValueType firstUseType, JSValueType secondUseType);
-    void updateElemCounters(jsbytecode *pc, FrameEntry *obj, FrameEntry *id);
-    void bumpPropCounter(jsbytecode *pc, int counter);
+    void updateElemCounts(jsbytecode *pc, FrameEntry *obj, FrameEntry *id);
+    void bumpPropCount(jsbytecode *pc, int count);
 
     /* Analysis helpers. */
     CompileStatus prepareInferenceTypes(JSScript *script, ActiveFrame *a);

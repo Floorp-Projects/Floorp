@@ -73,6 +73,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
   : rt(rt),
     principals(NULL),
     needsBarrier_(false),
+    gcState(NoGCScheduled),
     gcBytes(0),
     gcTriggerBytes(0),
     hold(false),
@@ -98,6 +99,12 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 
 JSCompartment::~JSCompartment()
 {
+    /*
+     * Even though all objects in the compartment are dead, we may have keep
+     * some filenames around because of gcKeepAtoms.
+     */
+    FreeScriptFilenames(this);
+
 #ifdef JS_METHODJIT
     Foreground::delete_(jaegerCompartment_);
 #endif
@@ -414,7 +421,7 @@ JSCompartment::wrap(JSContext *cx, AutoIdVector &props)
 void
 JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
 {
-    JS_ASSERT(trc->runtime->gcCurrentCompartment);
+    JS_ASSERT(!isCollecting());
 
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         Value tmp = e.front().key;

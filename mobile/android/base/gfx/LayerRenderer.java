@@ -266,6 +266,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
      * Called whenever a new frame is about to be drawn.
      */
     public void onDrawFrame(GL10 gl) {
+	/* This code is causing crashes when the surface changes. (bug 738188)
+	 * I'm not sure if it actually works, so I'm disabling it now to avoid the crash.
         RenderContext pageContext = createPageContext(mView.getController().getViewportMetrics());
         RenderContext screenContext = createScreenContext();
         Frame frame = createFrame(pageContext, screenContext);
@@ -276,6 +278,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             frame.drawForeground();
             frame.endDrawing();
         }
+	*/
     }
 
     private void printCheckerboardStats() {
@@ -543,24 +546,6 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
                 mUpdated &= layer.update(mPageContext); // called on compositor thread
 
             GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
-
-            // If a layer update requires further work, schedule another redraw
-            if (!mUpdated)
-                mView.requestRender();
-
-            PanningPerfAPI.recordFrameTime();
-
-            /* Used by robocop for testing purposes */
-            IntBuffer pixelBuffer = mPixelBuffer;
-            if (mUpdated && pixelBuffer != null) {
-                synchronized (pixelBuffer) {
-                    pixelBuffer.position(0);
-                    GLES20.glReadPixels(0, 0, (int)mScreenContext.viewport.width(),
-                                        (int)mScreenContext.viewport.height(), GLES20.GL_RGBA,
-                                        GLES20.GL_UNSIGNED_BYTE, pixelBuffer);
-                    pixelBuffer.notify();
-                }
-            }
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
@@ -580,7 +565,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             Rect rootMask = null;
             Layer rootLayer = mView.getController().getRoot();
             if (rootLayer != null) {
-                RectF rootBounds = rootLayer.getDisplayPortBounds(mPageContext);
+                RectF rootBounds = rootLayer.getBounds(mPageContext);
                 rootBounds.offset(-mPageContext.viewport.left, -mPageContext.viewport.top);
                 rootMask = new Rect();
                 rootBounds.roundOut(rootMask);
@@ -697,6 +682,16 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
                                         GLES20.GL_UNSIGNED_BYTE, pixelBuffer);
                     pixelBuffer.notify();
                 }
+            }
+
+            // Remove white screen once we've painted
+            if (mView.getPaintState() == LayerView.PAINT_BEFORE_FIRST) {
+                GeckoAppShell.getMainHandler().postAtFrontOfQueue(new Runnable() {
+                    public void run() {
+                        mView.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+                    }
+                });
+                mView.setPaintState(LayerView.PAINT_AFTER_FIRST);
             }
         }
     }

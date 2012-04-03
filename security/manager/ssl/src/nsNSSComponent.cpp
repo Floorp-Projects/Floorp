@@ -1324,14 +1324,41 @@ nsresult nsNSSComponent::getParamsForNextCrlToDownload(nsAutoString *url, PRTime
     PRTime tempTime;
     nsCAutoString timingPrefCString(updateTimePref);
     timingPrefCString.AppendWithConversion(tempCrlKey);
+    // No PRTime/Int64 type in prefs; stored as string; parsed here as PRInt64
     rv = pref->GetCharPref(timingPrefCString.get(), &tempTimeString);
     if (NS_FAILED(rv)){
-      continue;
-    }
-    rv = PR_ParseTimeString(tempTimeString,true, &tempTime);
-    nsMemory::Free(tempTimeString);
-    if (NS_FAILED(rv)){
-      continue;
+      // Assume corrupted. Force download. Pref should be reset after download.
+      tempTime = PR_Now();
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+             ("get %s failed: forcing download\n", timingPrefCString.get()));
+    } else {
+      tempTime = (PRTime)nsCRT::atoll(tempTimeString);
+      nsMemory::Free(tempTimeString);
+      // nsCRT::atoll parses the first token in the string; three possibilities
+      //  -1- Alpha char: returns 0; change to PR_Now() and force update.
+      //  -2- Number (between epoch and PR_Now(), e.g. 0 - 1332280017 for
+      //      Tue Mar 20, 2012, 2:46pm approx): includes formatted date 
+      //      values (previous method of storing update date, e.g year, month 
+      //      or day, 2012, 1-31, 1-12 etc). Less than PR_Now() forces 
+      //      autoupdate.
+      //  -3- Number (larger than PR_Now()): no forced autoupdate
+      // Note: corrupt values within range of -2- will have an implicit 
+      // unflagged recovery. Corrupt values in range of -3- will be unflagged
+      // and unrecovered by this code.
+      if (tempTime == 0)
+        tempTime = PR_Now();
+#ifdef PR_LOGGING
+      PRExplodedTime explodedTime;
+      PR_ExplodeTime(tempTime, PR_GMTParameters, &explodedTime);
+      // Note: tm_month starts from 0 = Jan, hence +1
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+             ("%s tempTime(%lli) "
+              "(m/d/y h:m:s = %02d/%02d/%d %02d:%02d:%02d GMT\n",
+              timingPrefCString.get(), tempTime,
+              explodedTime.tm_month+1, explodedTime.tm_mday,
+              explodedTime.tm_year, explodedTime.tm_hour,
+              explodedTime.tm_min, explodedTime.tm_sec));
+#endif
     }
 
     if(nearestUpdateTime == 0 || tempTime < nearestUpdateTime){
@@ -1625,12 +1652,11 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::InitializeNSS\n"));
 
-  // If we ever run into this assertion, we must update the values
-  // in nsINSSErrorsService.idl
-  PR_STATIC_ASSERT(nsINSSErrorsService::NSS_SEC_ERROR_BASE == SEC_ERROR_BASE
-                   && nsINSSErrorsService::NSS_SEC_ERROR_LIMIT == SEC_ERROR_LIMIT
-                   && nsINSSErrorsService::NSS_SSL_ERROR_BASE == SSL_ERROR_BASE
-                   && nsINSSErrorsService::NSS_SSL_ERROR_LIMIT == SSL_ERROR_LIMIT);
+  MOZ_STATIC_ASSERT(nsINSSErrorsService::NSS_SEC_ERROR_BASE == SEC_ERROR_BASE &&
+                    nsINSSErrorsService::NSS_SEC_ERROR_LIMIT == SEC_ERROR_LIMIT &&
+                    nsINSSErrorsService::NSS_SSL_ERROR_BASE == SSL_ERROR_BASE &&
+                    nsINSSErrorsService::NSS_SSL_ERROR_LIMIT == SSL_ERROR_LIMIT,
+                    "You must update the values in nsINSSErrorsService.idl");
 
   // variables used for flow control within this function
 

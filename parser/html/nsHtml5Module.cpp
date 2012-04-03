@@ -53,7 +53,6 @@
 using namespace mozilla;
 
 // static
-bool nsHtml5Module::sEnabled = true;
 bool nsHtml5Module::sOffMainThread = true;
 nsIThread* nsHtml5Module::sStreamParserThread = nsnull;
 nsIThread* nsHtml5Module::sMainThread = nsnull;
@@ -74,6 +73,7 @@ nsHtml5Module::InitializeStatics()
   nsHtml5TreeBuilder::initializeStatics();
   nsHtml5UTF16Buffer::initializeStatics();
   nsHtml5StreamParser::InitializeStatics();
+  nsHtml5TreeOpExecutor::InitializeStatics();
 #ifdef DEBUG
   sNsHtml5ModuleInitialized = true;
 #endif

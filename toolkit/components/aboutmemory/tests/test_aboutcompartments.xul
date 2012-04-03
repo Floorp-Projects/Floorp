@@ -80,7 +80,7 @@
     { name: "fake",
       collectReports: function(aCbObj, aClosure) {
         function f(aP, aK, aU, aA) {
-          aCbObj.callback("", aP, aK, aU, aA, "(desc)", aClosure);
+          aCbObj.callback("", aP, aK, aU, aA, "Desc.", aClosure);
         }
         f("explicit/a/d",     HEAP,    BYTES,  13 * MB);
         f("explicit/b/c",     NONHEAP, BYTES,  10 * MB);
@@ -111,7 +111,7 @@
        collectReports: function(aCbObj, aClosure) {
         // The amounts are given in pages, so multiply here by 4kb.
         function f(aP, aA) {
-          aCbObj.callback("", aP, NONHEAP, BYTES, aA * 4 * KB, "(desc)", aClosure);
+          aCbObj.callback("", aP, NONHEAP, BYTES, aA * 4 * KB, "Desc.", aClosure);
         }
         f("smaps/vsize/a",     24);
         f("smaps/swap/a",       1);

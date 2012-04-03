@@ -53,6 +53,12 @@ EXTRA_PP_COMPONENTS = \
         CameraContent.js \
         AlertsService.js \
         ContentPermissionPrompt.js \
+        MozKeyboard.js \
+        DirectoryProvider.js \
         $(NULL)
+
+ifdef MOZ_UPDATER
+EXTRA_PP_COMPONENTS += UpdatePrompt.js
+endif
 
 include $(topsrcdir)/config/rules.mk

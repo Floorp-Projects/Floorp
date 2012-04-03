@@ -117,6 +117,10 @@ function nodelistindexequalzero() {
 	assertEquals("childName","employeeId",childName);
        
 	}
+    else {
+      // Ensure at least one SimpleTest check is reported. (Bug 483992)
+      todo_isnot(childName, "#text", "Fake default check");
+    }
 	
 }
 

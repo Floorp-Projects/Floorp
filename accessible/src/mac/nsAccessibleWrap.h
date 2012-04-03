@@ -100,7 +100,7 @@ public: // construction, destruction
    * not returning their children.
    */
   void GetUnignoredChildren(nsTArray<nsRefPtr<nsAccessibleWrap> >& aChildrenArray);
-  virtual already_AddRefed<nsIAccessible> GetUnignoredParent();
+  nsAccessible* GetUnignoredParent() const;
     
 protected:
 

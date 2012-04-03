@@ -39,16 +39,19 @@
 
 include protocol PContent;
 include protocol PBrowser;
-include "nspr/prtime.h";
+include "prtime.h";
 include "mozilla/HalSensor.h";
 include "mozilla/HalTypes.h";
+include "mozilla/dom/ScreenOrientation.h";
 
 using PRTime;
 using mozilla::hal::FlashMode;
 using mozilla::hal::LightType;
 using mozilla::hal::LightMode;
 using mozilla::hal::SensorType;
+using mozilla::hal::SensorAccuracyType;
 using mozilla::hal::WakeLockControl;
+using mozilla::dom::ScreenOrientation;
 
 namespace mozilla {
 
@@ -72,10 +75,9 @@ namespace hal {
     SensorType sensor;
     PRTime timestamp;
     float[] values;
+    SensorAccuracyType accuracy;
   };
-}
 
-namespace hal {
   struct NetworkInformation {
     double bandwidth;
     bool   canBeMetered;
@@ -99,6 +101,7 @@ child:
     NotifyBatteryChange(BatteryInformation aBatteryInfo);
     NotifyNetworkChange(NetworkInformation aNetworkInfo);
     NotifyWakeLockChange(WakeLockInformation aWakeLockInfo);
+    NotifyScreenOrientationChange(ScreenOrientation aScreenOrientation);
 
 parent:
     Vibrate(uint32[] pattern, uint64[] id, PBrowser browser);
@@ -136,6 +139,14 @@ parent:
     DisableWakeLockNotifications();
     sync GetWakeLockInfo(nsString aTopic)
       returns (WakeLockInformation aWakeLockInfo);
+
+    EnableScreenOrientationNotifications();
+    DisableScreenOrientationNotifications();
+    sync GetCurrentScreenOrientation()
+      returns (ScreenOrientation aScreenOrientation);
+    sync LockScreenOrientation(ScreenOrientation aOrientation)
+      returns (bool allowed);
+    UnlockScreenOrientation();
 
 child:
     NotifySensorChange(SensorData aSensorData);

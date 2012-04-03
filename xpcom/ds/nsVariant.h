@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -38,6 +38,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* The long avoided variant support for xpcom. */
+
+#ifndef nsVariant_h
+#define nsVariant_h
 
 #include "nsIVariant.h"
 #include "nsStringFwd.h"
@@ -206,3 +209,4 @@ protected:
 
 #define NS_VARIANT_CLASSNAME "Variant"
 
+#endif // nsVariant_h

@@ -49,11 +49,8 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.IOException;
-import java.net.URLConnection;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
@@ -62,6 +59,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.mozilla.gecko.db.BrowserDB;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.entity.BufferedHttpEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 public class Favicons {
     private static final String LOGTAG = "GeckoFavicons";
@@ -256,12 +258,16 @@ public class Favicons {
 
         // Runs in background thread
         private void saveFaviconToDb(BitmapDrawable favicon) {
-            Log.d(LOGTAG, "Saving favicon on browser database for URL = " + mPageUrl);
-            ContentResolver resolver = mContext.getContentResolver();
-            BrowserDB.updateFaviconForUrl(resolver, mPageUrl, favicon);
+            // since the Async task can run this on any number of threads in the
+            // pool, we need to protect against inserting the same url twice
+            synchronized(mDbHelper) {
+                Log.d(LOGTAG, "Saving favicon on browser database for URL = " + mPageUrl);
+                ContentResolver resolver = mContext.getContentResolver();
+                BrowserDB.updateFaviconForUrl(resolver, mPageUrl, favicon);
 
-            Log.d(LOGTAG, "Saving favicon URL for URL = " + mPageUrl);
-            mDbHelper.setFaviconUrlForPageUrl(mPageUrl, mFaviconUrl);
+                Log.d(LOGTAG, "Saving favicon URL for URL = " + mPageUrl);
+                mDbHelper.setFaviconUrlForPageUrl(mPageUrl, mFaviconUrl);
+            }
         }
 
         // Runs in background thread
@@ -269,47 +275,31 @@ public class Favicons {
             Log.d(LOGTAG, "Downloading favicon for URL = " + mPageUrl +
                           " with favicon URL = " + mFaviconUrl);
 
-            // due to android bug 6066, we must download the entire image before using it
-            // http://code.google.com/p/android/issues/detail?id=6066
-            URLConnection urlConnection = null;
-            BufferedInputStream contentStream = null;
-            ByteArrayInputStream byteStream = null;
+            if (mFaviconUrl.startsWith("jar:jar:")) {
+                return GeckoJarReader.getBitmapDrawable(mFaviconUrl);
+            }
+
+            // skia decoder sometimes returns null; workaround is to use BufferedHttpEntity
+            // http://groups.google.com/group/android-developers/browse_thread/thread/171b8bf35dbbed96/c3ec5f45436ceec8?lnk=raot 
             BitmapDrawable image = null;
-
+            InputStream contentStream = null;
             try {
-                urlConnection = faviconUrl.openConnection();
-                int length = urlConnection.getContentLength();
-                contentStream = new BufferedInputStream(urlConnection.getInputStream(), length);
-                byte[] bytes = new byte[length];
-                int pos = 0;
-                int offset = 0;
-                while ((pos = contentStream.read(bytes, offset, length - offset)) > 0)
-                    offset += pos;
-                if (length == offset) {
-                    byteStream = new ByteArrayInputStream(bytes);
-                    image = (BitmapDrawable) Drawable.createFromStream(byteStream, "src");
-                }
+                HttpGet request = new HttpGet(faviconUrl.toURI());
+                HttpEntity entity = new DefaultHttpClient().execute(request).getEntity();
+                BufferedHttpEntity bufferedEntity = new BufferedHttpEntity(entity);
+                contentStream = bufferedEntity.getContent();
+                image = (BitmapDrawable) Drawable.createFromStream(contentStream, "src");
+            } catch (IOException e) {
+                // just close up and return null
             } catch (Exception e) {
-                Log.d(LOGTAG, "Error downloading favicon: " + e);
+                Log.e(LOGTAG, "Error reading favicon", e);
             } finally {
-                if (urlConnection != null && urlConnection instanceof HttpURLConnection) {
-                    HttpURLConnection httpConnection = (HttpURLConnection) urlConnection;
-                    httpConnection.disconnect();
-                }
-
                 try {
                     if (contentStream != null)
                         contentStream.close();
-                    if (byteStream != null)
-                        byteStream.close();
                 } catch (IOException e) {
                     Log.d(LOGTAG, "error closing favicon stream");
                 }
-            }
-
-            if (image != null) {
-                Log.d(LOGTAG, "Downloaded favicon successfully for URL = " + mPageUrl);
-                saveFaviconToDb(image);
             }
 
             return image;
@@ -330,12 +320,7 @@ public class Favicons {
                 if (mFaviconUrl == null || mFaviconUrl.length() == 0) {
                     // Handle the case of malformed URL
                     URL pageUrl = null;
-                    try {
-                        pageUrl = new URL(mPageUrl);
-                    } catch (MalformedURLException e) {
-                        Log.d(LOGTAG, "The provided URL is not valid: " + e);
-                        return null;
-                    }
+                    pageUrl = new URL(mPageUrl);
 
                     faviconUrl = new URL(pageUrl.getProtocol(), pageUrl.getAuthority(), "/favicon.ico");
                     mFaviconUrl = faviconUrl.toString();
@@ -355,17 +340,18 @@ public class Favicons {
             String storedFaviconUrl = mDbHelper.getFaviconUrlForPageUrl(mPageUrl);
             if (storedFaviconUrl != null && storedFaviconUrl.equals(mFaviconUrl)) {
                 image = loadFaviconFromDb();
+                if (image != null)
+                    return image;
+            }
 
-                if (isCancelled())
-                    return null;
+            if (isCancelled())
+                return null;
 
-                // If favicon URL is defined but the favicon image is not
-                // stored in the database for some reason, we force download.
-                if (image == null) {
-                    image = downloadFavicon(faviconUrl);
-                }
-            } else {
-                image = downloadFavicon(faviconUrl);
+            image = downloadFavicon(faviconUrl);
+
+            if (image != null) {
+                Log.d(LOGTAG, "Downloaded favicon successfully for URL = " + mPageUrl);
+                saveFaviconToDb(image);
             }
 
             return image;

@@ -31,6 +31,7 @@ public class testBrowserProvider extends ContentProviderTest {
     private Uri mBookmarksUri;
     private Uri mHistoryUri;
     private Uri mImagesUri;
+    private Uri mCombinedUri;
 
     private String mBookmarksIdCol;
     private String mBookmarksTitleCol;
@@ -38,7 +39,7 @@ public class testBrowserProvider extends ContentProviderTest {
     private String mBookmarksFaviconCol;
     private String mBookmarksThumbnailCol;
     private String mBookmarksParentCol;
-    private String mBookmarksIsFolderCol;
+    private String mBookmarksTypeCol;
     private String mBookmarksPositionCol;
     private String mBookmarksTagsCol;
     private String mBookmarksDescriptionCol;
@@ -47,6 +48,8 @@ public class testBrowserProvider extends ContentProviderTest {
     private String mBookmarksIsDeletedCol;
     private String mBookmarksDateCreatedCol;
     private String mBookmarksDateModifiedCol;
+    private int mBookmarksTypeFolder;
+    private int mBookmarksTypeBookmark;
     private long mMobileFolderId;
 
     private String mHistoryIdCol;
@@ -65,10 +68,21 @@ public class testBrowserProvider extends ContentProviderTest {
     private String mImagesFaviconCol;
     private String mImagesUrlCol;
 
+    private String mCombinedIdCol;
+    private String mCombinedBookmarkIdCol;
+    private String mCombinedHistoryIdCol;
+    private String mCombinedUrlCol;
+    private String mCombinedTitleCol;
+    private String mCombinedVisitsCol;
+    private String mCombinedLastVisitedCol;
+    private String mCombinedFaviconCol;
+    private String mCombinedThumbnailCol;
+
     private void loadContractInfo() throws Exception {
         mBookmarksUri = getContentUri("Bookmarks");
         mHistoryUri = getContentUri("History");
         mImagesUri = getContentUri("Images");
+        mCombinedUri = getContentUri("Combined");
 
         PLACES_FOLDER_GUID = getStringColumn("Bookmarks", "PLACES_FOLDER_GUID");
         MOBILE_FOLDER_GUID = getStringColumn("Bookmarks", "MOBILE_FOLDER_GUID");
@@ -83,7 +97,7 @@ public class testBrowserProvider extends ContentProviderTest {
         mBookmarksFaviconCol = getStringColumn("Bookmarks", "FAVICON");
         mBookmarksThumbnailCol = getStringColumn("Bookmarks", "THUMBNAIL");
         mBookmarksParentCol = getStringColumn("Bookmarks", "PARENT");
-        mBookmarksIsFolderCol = getStringColumn("Bookmarks", "IS_FOLDER");
+        mBookmarksTypeCol = getStringColumn("Bookmarks", "TYPE");
         mBookmarksPositionCol = getStringColumn("Bookmarks", "POSITION");
         mBookmarksTagsCol = getStringColumn("Bookmarks", "TAGS");
         mBookmarksDescriptionCol = getStringColumn("Bookmarks", "DESCRIPTION");
@@ -92,6 +106,9 @@ public class testBrowserProvider extends ContentProviderTest {
         mBookmarksIsDeletedCol = getStringColumn("Bookmarks", "IS_DELETED");
         mBookmarksDateCreatedCol = getStringColumn("Bookmarks", "DATE_CREATED");
         mBookmarksDateModifiedCol = getStringColumn("Bookmarks", "DATE_MODIFIED");
+
+        mBookmarksTypeFolder = getIntColumn("Bookmarks", "TYPE_FOLDER");
+        mBookmarksTypeBookmark = getIntColumn("Bookmarks", "TYPE_BOOKMARK");
 
         mHistoryIdCol = getStringColumn("History", "_ID");
         mHistoryTitleCol = getStringColumn("History", "TITLE");
@@ -108,6 +125,16 @@ public class testBrowserProvider extends ContentProviderTest {
         mImagesUrlCol = getStringColumn("Images", "URL");
         mImagesFaviconCol = getStringColumn("Images", "FAVICON");
         mImagesThumbnailCol = getStringColumn("Images", "THUMBNAIL");
+
+        mCombinedIdCol = getStringColumn("Combined", "_ID");
+        mCombinedBookmarkIdCol = getStringColumn("Combined", "BOOKMARK_ID");
+        mCombinedHistoryIdCol = getStringColumn("Combined", "HISTORY_ID");
+        mCombinedUrlCol = getStringColumn("Combined", "URL");
+        mCombinedTitleCol = getStringColumn("Combined", "TITLE");
+        mCombinedVisitsCol = getStringColumn("Combined", "VISITS");
+        mCombinedLastVisitedCol = getStringColumn("Combined", "DATE_LAST_VISITED");
+        mCombinedFaviconCol = getStringColumn("Combined", "FAVICON");
+        mCombinedThumbnailCol = getStringColumn("Combined", "THUMBNAIL");
     }
 
     private void loadMobileFolderId() throws Exception {
@@ -149,14 +176,13 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     private ContentValues createBookmark(String title, String url, long parentId,
-            int isFolder, int position, String tags, String description,
-                String keyword) throws Exception {
+            int type, int position, String tags, String description, String keyword) throws Exception {
         ContentValues bookmark = new ContentValues();
 
         bookmark.put(mBookmarksTitleCol, title);
         bookmark.put(mBookmarksUrlCol, url);
         bookmark.put(mBookmarksParentCol, parentId);
-        bookmark.put(mBookmarksIsFolderCol, isFolder);
+        bookmark.put(mBookmarksTypeCol, type);
         bookmark.put(mBookmarksPositionCol, position);
         bookmark.put(mBookmarksTagsCol, tags);
         bookmark.put(mBookmarksDescriptionCol, description);
@@ -167,7 +193,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
     private ContentValues createOneBookmark() throws Exception {
         return createBookmark("Example", "http://example.com", mMobileFolderId,
-                0, 0, "tags", "description", "keyword");
+                mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
     }
 
     private Cursor getBookmarkByGuid(String guid) throws Exception {
@@ -238,7 +264,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     public void setUp() throws Exception {
-        super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY_URI");
+        super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY");
         loadContractInfo();
 
         mTests.add(new TestSpecialFolders());
@@ -256,6 +282,8 @@ public class testBrowserProvider extends ContentProviderTest {
         mTests.add(new TestDeleteHistoryImages());
         mTests.add(new TestUpdateHistory());
         mTests.add(new TestUpdateHistoryImages());
+
+        mTests.add(new TestCombinedView());
     }
 
     public void testBrowserProvider() throws Exception {
@@ -360,8 +388,8 @@ public class testBrowserProvider extends ContentProviderTest {
                          "Inserted bookmark has correct description");
             mAsserter.is(c.getString(c.getColumnIndex(mBookmarksPositionCol)), b.getAsString(mBookmarksPositionCol),
                          "Inserted bookmark has correct position");
-            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksIsFolderCol)), b.getAsString(mBookmarksIsFolderCol),
-                         "Inserted bookmark has correct is-folder flag");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksTypeCol)), b.getAsString(mBookmarksTypeCol),
+                         "Inserted bookmark has correct type");
             mAsserter.is(c.getString(c.getColumnIndex(mBookmarksParentCol)), b.getAsString(mBookmarksParentCol),
                          "Inserted bookmark has correct parent ID");
             mAsserter.is(c.getString(c.getColumnIndex(mBookmarksIsDeletedCol)), String.valueOf(0),
@@ -371,9 +399,9 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(new Long(id), new Long(-1),
                          "Should not be able to insert bookmark with null position");
 
-            id = insertWithNullCol(mBookmarksIsFolderCol);
+            id = insertWithNullCol(mBookmarksTypeCol);
             mAsserter.is(new Long(id), new Long(-1),
-                         "Should not be able to insert bookmark with null is-folder flag");
+                         "Should not be able to insert bookmark with null type");
 
             b = createOneBookmark();
             b.put(mBookmarksParentCol, -1);
@@ -387,6 +415,16 @@ public class testBrowserProvider extends ContentProviderTest {
                 mAsserter.is(new Long(id), new Long(-1),
                              "Should not be able to insert bookmark with invalid parent");
             }
+
+            b = createOneBookmark();
+            b.remove(mBookmarksTypeCol);
+            id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+            c = getBookmarkById(id);
+
+            mAsserter.is(c.moveToFirst(), true, "Inserted bookmark found");
+
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksTypeCol)), String.valueOf(mBookmarksTypeBookmark),
+                         "Inserted bookmark has correct default type");
         }
     }
 
@@ -464,14 +502,14 @@ public class testBrowserProvider extends ContentProviderTest {
 
             if (Build.VERSION.SDK_INT >= 8) {
                 ContentValues b = createBookmark("Folder", null, mMobileFolderId,
-                        1 /* is folder */, 0, "folderTags", "folderDescription", "folderKeyword");
+                        mBookmarksTypeFolder, 0, "folderTags", "folderDescription", "folderKeyword");
 
                 long parentId = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
                 c = getBookmarkById(parentId);
                 mAsserter.is(c.moveToFirst(), true, "Inserted bookmarks folder found");
 
-                b = createBookmark("Example", "http://example.com", parentId, 0, 0, "tags",
-                        "description", "keyword");
+                b = createBookmark("Example", "http://example.com", parentId,
+                        mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
 
                 id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
                 c = getBookmarkById(id);
@@ -538,7 +576,7 @@ public class testBrowserProvider extends ContentProviderTest {
             u.put(mBookmarksTagsCol, b.getAsString(mBookmarksTagsCol) + "CHANGED");
             u.put(mBookmarksDescriptionCol, b.getAsString(mBookmarksDescriptionCol) + "CHANGED");
             u.put(mBookmarksKeywordCol, b.getAsString(mBookmarksKeywordCol) + "CHANGED");
-            u.put(mBookmarksIsFolderCol, 1);
+            u.put(mBookmarksTypeCol, mBookmarksTypeFolder);
             u.put(mBookmarksPositionCol, 10);
 
             int updated = mProvider.update(mBookmarksUri, u,
@@ -562,8 +600,8 @@ public class testBrowserProvider extends ContentProviderTest {
                          "Inserted bookmark has correct description");
             mAsserter.is(c.getString(c.getColumnIndex(mBookmarksPositionCol)), u.getAsString(mBookmarksPositionCol),
                          "Inserted bookmark has correct position");
-            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksIsFolderCol)), u.getAsString(mBookmarksIsFolderCol),
-                         "Inserted bookmark has correct is-folder flag");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksTypeCol)), u.getAsString(mBookmarksTypeCol),
+                         "Inserted bookmark has correct type");
 
             mAsserter.is(new Long(c.getLong(c.getColumnIndex(mBookmarksDateCreatedCol))),
                          new Long(dateCreated),
@@ -577,9 +615,9 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is((updated > 0), false,
                          "Should not be able to update bookmark with null position");
 
-            updated = updateWithNullCol(id, mBookmarksIsFolderCol);
+            updated = updateWithNullCol(id, mBookmarksTypeCol);
             mAsserter.is((updated > 0), false,
-                         "Should not be able to update bookmark with null is-folder flag");
+                         "Should not be able to update bookmark with null type");
 
             u = new ContentValues();
             u.put(mBookmarksUrlCol, "http://examples2.com");
@@ -860,6 +898,127 @@ public class testBrowserProvider extends ContentProviderTest {
 
             mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesFaviconCol)), "UTF8"),
                          newFavicon, "Updated image has corresponding favicon image");
+        }
+    }
+
+    class TestCombinedView extends Test {
+        public void test() throws Exception {
+            final String TITLE_1 = "Test Page 1";
+            final String TITLE_2 = "Test Page 2";
+            final String TITLE_3_HISTORY = "Test Page 3 (History Entry)";
+            final String TITLE_3_BOOKMARK = "Test Page 3 (Bookmark Entry)";
+
+            final String URL_1 = "http://example.com";
+            final String URL_2 = "http://example.org";
+            final String URL_3 = "http://examples2.com";
+
+            final String HISTORY_FAVICON = "HISTORY_FAVICON";
+            final String HISTORY_THUMBNAIL = "HISTORY_THUMBNAIL";
+            final String BOOKMARK_FAVICON = "BOOKMARK_FAVICON";
+            final String BOOKMARK_THUMBNAIL = "BOOKMARK_THUMBNAIL";
+
+            final int VISITS = 10;
+            final long LAST_VISITED = System.currentTimeMillis();
+
+            // Create a basic history entry with images
+            ContentValues basicHistory = createHistoryEntry(TITLE_1, URL_1, VISITS, LAST_VISITED);
+            basicHistory.put(mHistoryFaviconCol, HISTORY_FAVICON.getBytes("UTF8"));
+            basicHistory.put(mHistoryThumbnailCol, HISTORY_THUMBNAIL.getBytes("UTF8"));
+            long basicHistoryId = ContentUris.parseId(mProvider.insert(mHistoryUri, basicHistory));
+
+            // Create a basic bookmark entry with images
+            ContentValues basicBookmark = createBookmark(TITLE_2, URL_2, mMobileFolderId,
+                mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
+            basicBookmark.put(mBookmarksFaviconCol, BOOKMARK_FAVICON.getBytes("UTF8"));
+            basicBookmark.put(mBookmarksThumbnailCol, BOOKMARK_THUMBNAIL.getBytes("UTF8"));
+            long basicBookmarkId = ContentUris.parseId(mProvider.insert(mBookmarksUri, basicBookmark));
+
+            // Create a history entry and bookmark entry with the same URL to
+            // represent a visited bookmark
+            ContentValues combinedHistory = createHistoryEntry(TITLE_3_HISTORY, URL_3, VISITS, LAST_VISITED);
+            combinedHistory.put(mHistoryFaviconCol, HISTORY_FAVICON.getBytes("UTF8"));
+            combinedHistory.put(mHistoryThumbnailCol, HISTORY_THUMBNAIL.getBytes("UTF8"));
+            long combinedHistoryId = ContentUris.parseId(mProvider.insert(mHistoryUri, combinedHistory));
+
+            ContentValues combinedBookmark = createBookmark(TITLE_3_BOOKMARK, URL_3, mMobileFolderId,
+                mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
+            combinedBookmark.put(mBookmarksFaviconCol, BOOKMARK_FAVICON.getBytes("UTF8"));
+            combinedBookmark.put(mBookmarksThumbnailCol, BOOKMARK_THUMBNAIL.getBytes("UTF8"));
+            long combinedBookmarkId = ContentUris.parseId(mProvider.insert(mBookmarksUri, combinedBookmark));
+
+            // Create a bookmark folder to make sure it _doesn't_ show up in the results
+            ContentValues folderBookmark = createBookmark("", "", mMobileFolderId,
+                mBookmarksTypeFolder, 0, "tags", "description", "keyword");
+            mProvider.insert(mBookmarksUri, folderBookmark);
+
+            // Sort entries by url so we can check them individually
+            Cursor c = mProvider.query(mCombinedUri, null, "", null, mCombinedUrlCol);
+
+            mAsserter.is(c.getCount(), 3, "3 combined entries found");
+
+            // First combined entry is basic history entry
+            mAsserter.is(c.moveToFirst(), true, "Found basic history entry");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedIdCol))), new Long(0),
+                         "Combined _id column should always be 0");
+            // TODO: Should we change BrowserProvider to make this return -1, not 0?
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedBookmarkIdCol))), new Long(0),
+                         "Bookmark id should be 0 for basic history entry");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedHistoryIdCol))), new Long(basicHistoryId),
+                         "Basic history entry has correct history id");
+            mAsserter.is(c.getString(c.getColumnIndex(mCombinedTitleCol)), TITLE_1,
+                         "Basic history entry has correct title");
+            mAsserter.is(c.getString(c.getColumnIndex(mCombinedUrlCol)), URL_1,
+                         "Basic history entry has correct url");
+            mAsserter.is(c.getInt(c.getColumnIndex(mCombinedVisitsCol)), VISITS,
+                         "Basic history entry has correct number of visits");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedLastVisitedCol))), new Long(LAST_VISITED),
+                         "Basic history entry has correct last visit time");
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedFaviconCol)), "UTF8"),
+                          HISTORY_FAVICON, "Basic history entry has corresponding favicon image");
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedThumbnailCol)), "UTF8"),
+                          HISTORY_THUMBNAIL, "Basic history entry has corresponding thumbnail image");
+
+            // Second combined entry is basic bookmark entry
+            mAsserter.is(c.moveToNext(), true, "Found basic bookmark entry");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedIdCol))), new Long(0),
+                         "Combined _id column should always be 0");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedBookmarkIdCol))), new Long(basicBookmarkId),
+                         "Basic bookmark entry has correct bookmark id");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedHistoryIdCol))), new Long(-1),
+                         "History id should be -1 for basic bookmark entry");
+            mAsserter.is(c.getString(c.getColumnIndex(mCombinedTitleCol)), TITLE_2,
+                         "Basic bookmark entry has correct title");
+            mAsserter.is(c.getString(c.getColumnIndex(mCombinedUrlCol)), URL_2,
+                         "Basic bookmark entry has correct url");
+            mAsserter.is(c.getInt(c.getColumnIndex(mCombinedVisitsCol)), -1,
+                         "Visits should be -1 for basic bookmark entry");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedLastVisitedCol))), new Long(-1),
+                         "Last visited should be -1 for basic bookmark entry");
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedFaviconCol)), "UTF8"),
+                          BOOKMARK_FAVICON, "Basic bookmark entry has corresponding favicon image");
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedThumbnailCol)), "UTF8"),
+                          BOOKMARK_THUMBNAIL, "Basic bookmark entry has corresponding thumbnail image");
+
+            // Third combined entry is a combined history/bookmark entry
+            mAsserter.is(c.moveToNext(), true, "Found third combined entry");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedIdCol))), new Long(0),
+                         "Combined _id column should always be 0");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedBookmarkIdCol))), new Long(combinedBookmarkId),
+                         "Combined entry has correct bookmark id");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedHistoryIdCol))), new Long(combinedHistoryId),
+                         "Combined entry has correct history id");
+            mAsserter.is(c.getString(c.getColumnIndex(mCombinedTitleCol)), TITLE_3_BOOKMARK,
+                         "Combined entry has title corresponding to bookmark entry");
+            mAsserter.is(c.getString(c.getColumnIndex(mCombinedUrlCol)), URL_3,
+                         "Combined entry has correct url");
+            mAsserter.is(c.getInt(c.getColumnIndex(mCombinedVisitsCol)), VISITS,
+                         "Combined entry has correct number of visits");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedLastVisitedCol))), new Long(LAST_VISITED),
+                         "Combined entry has correct last visit time");
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedFaviconCol)), "UTF8"),
+                          BOOKMARK_FAVICON, "Combined entry has bookmark favicon image");
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedThumbnailCol)), "UTF8"),
+                          BOOKMARK_THUMBNAIL, "Combined entry has bookmark thumbnail image");
         }
     }
 }

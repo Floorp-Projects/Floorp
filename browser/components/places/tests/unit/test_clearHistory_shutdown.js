@@ -110,7 +110,9 @@ function run_test() {
   do_test_pending();
 
   print("Initialize browserglue before Places");
-  Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIBrowserGlue);
+  // Avoid default bookmarks import.
+  Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver)
+    .observe(null, "initial-migration", null);
 
   Services.prefs.setBoolPref("privacy.clearOnShutdown.cache", true);
   Services.prefs.setBoolPref("privacy.clearOnShutdown.cookies", true);

@@ -85,7 +85,7 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
 const MIN_TRANSACTIONS_FOR_BATCH = 5;
 
 // The RESTORE_*_NSIOBSERVER_TOPIC constants should match the #defines of the
-// same names in browser/components/places/src/nsPlacesImportExportService.cpp
+// same names in browser/components/places/src/nsPlacesExportService.cpp
 const RESTORE_BEGIN_NSIOBSERVER_TOPIC = "bookmarks-restore-begin";
 const RESTORE_SUCCESS_NSIOBSERVER_TOPIC = "bookmarks-restore-success";
 const RESTORE_FAILED_NSIOBSERVER_TOPIC = "bookmarks-restore-failed";
@@ -2205,6 +2205,10 @@ AsyncStatementCancelWrapper.prototype = {
 XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "history",
                                    "@mozilla.org/browser/nav-history-service;1",
                                    "nsINavHistoryService");
+
+XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "asyncHistory",
+                                   "@mozilla.org/browser/history;1",
+                                   "mozIAsyncHistory");
 
 XPCOMUtils.defineLazyGetter(PlacesUtils, "bhistory", function() {
   return PlacesUtils.history.QueryInterface(Ci.nsIBrowserHistory);

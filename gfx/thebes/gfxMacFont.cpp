@@ -509,3 +509,19 @@ gfxMacFont::GetScaledFont()
   return mAzureFont;
 }
 
+void
+gfxMacFont::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                FontCacheSizes*   aSizes) const
+{
+    gfxFont::SizeOfExcludingThis(aMallocSizeOf, aSizes);
+    // mCGFont is shared with the font entry, so not counted here;
+    // and we don't have APIs to measure the cairo mFontFace object
+}
+
+void
+gfxMacFont::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                FontCacheSizes*   aSizes) const
+{
+    aSizes->mFontInstances += aMallocSizeOf(this);
+    SizeOfExcludingThis(aMallocSizeOf, aSizes);
+}

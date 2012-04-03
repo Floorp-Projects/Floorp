@@ -44,7 +44,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIScriptElement.h"
-#include "nsIParser.h"
+#include "nsCharsetSource.h"
 #include "nsIRefreshURI.h"
 #include "nsPIDOMWindow.h"
 #include "nsIContent.h"
@@ -65,7 +65,7 @@
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/Element.h"
 #include "nsCharsetAlias.h"
-#include "nsIHTMLContentSink.h"
+#include "nsIFrame.h"
 #include "nsContentUtils.h"
 #include "txXMLUtils.h"
 #include "nsContentSink.h"
@@ -691,8 +691,7 @@ txMozillaXMLOutput::createTxWrapper()
             ++j;
         }
         else {
-            rv = mDocument->RemoveChildAt(j, true);
-            NS_ENSURE_SUCCESS(rv, rv);
+            mDocument->RemoveChildAt(j, true);
 
             rv = wrapper->AppendChildTo(childContent, true);
             NS_ENSURE_SUCCESS(rv, rv);

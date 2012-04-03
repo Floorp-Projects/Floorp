@@ -5,9 +5,7 @@
  */
 
 #include "tests.h"
-#include "jsapi.h"
 #include "jsdbgapi.h"
-#include "jsxdrapi.h"
 
 BEGIN_TEST(test_cloneScript)
 {
@@ -117,7 +115,7 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
         JSScript *script;
         CHECK(script = JS_GetFunctionScript(cx, fun));
 
-        CHECK(JS_GetScriptPrincipals(cx, script) == principalsA);
+        CHECK(JS_GetScriptPrincipals(script) == principalsA);
         CHECK(obj = JS_GetFunctionObject(fun));
     }
 
@@ -136,7 +134,7 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
         JSScript *script;
         CHECK(script = JS_GetFunctionScript(cx, fun));
 
-        CHECK(JS_GetScriptPrincipals(cx, script) == principalsB);
+        CHECK(JS_GetScriptPrincipals(script) == principalsB);
 
         JS::Value v;
         JS::Value args[] = { JS::Int32Value(1) };
@@ -147,7 +145,7 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
         CHECK(JS_ObjectIsFunction(cx, funobj));
         CHECK(fun = JS_ValueToFunction(cx, v));
         CHECK(script = JS_GetFunctionScript(cx, fun));
-        CHECK(JS_GetScriptPrincipals(cx, script) == principalsB);
+        CHECK(JS_GetScriptPrincipals(script) == principalsB);
     }
 
     return true;
