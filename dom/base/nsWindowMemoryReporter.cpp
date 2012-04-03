@@ -72,9 +72,13 @@ nsWindowMemoryReporter::Init()
                     /* weakRef = */ true);
   }
 
-  nsGhostWindowMemoryReporter *ghostReporter =
-    new nsGhostWindowMemoryReporter(windowReporter);
-  NS_RegisterMemoryMultiReporter(ghostReporter);
+  GhostURLsReporter *ghostMultiReporter =
+    new GhostURLsReporter(windowReporter);
+  NS_RegisterMemoryMultiReporter(ghostMultiReporter);
+
+  NumGhostsReporter *ghostReporter =
+    new NumGhostsReporter(windowReporter);
+  NS_RegisterMemoryReporter(ghostReporter);
 }
 
 static already_AddRefed<nsIURI>
@@ -535,11 +539,11 @@ nsWindowMemoryReporter::CheckForGhostWindows(
                              &ghostEnumData);
 }
 
-NS_IMPL_ISUPPORTS1(nsWindowMemoryReporter::nsGhostWindowMemoryReporter,
+NS_IMPL_ISUPPORTS1(nsWindowMemoryReporter::GhostURLsReporter,
                    nsIMemoryMultiReporter)
 
 nsWindowMemoryReporter::
-nsGhostWindowMemoryReporter::nsGhostWindowMemoryReporter(
+GhostURLsReporter::GhostURLsReporter(
   nsWindowMemoryReporter* aWindowReporter)
   : mWindowReporter(aWindowReporter)
 {
@@ -547,7 +551,7 @@ nsGhostWindowMemoryReporter::nsGhostWindowMemoryReporter(
 
 NS_IMETHODIMP
 nsWindowMemoryReporter::
-nsGhostWindowMemoryReporter::GetName(nsACString& aName)
+GhostURLsReporter::GetName(nsACString& aName)
 {
   aName.AssignLiteral("ghost-windows");
   return NS_OK;
@@ -555,7 +559,7 @@ nsGhostWindowMemoryReporter::GetName(nsACString& aName)
 
 NS_IMETHODIMP
 nsWindowMemoryReporter::
-nsGhostWindowMemoryReporter::GetExplicitNonHeap(PRInt64* aOut)
+GhostURLsReporter::GetExplicitNonHeap(PRInt64* aOut)
 {
   *aOut = 0;
   return NS_OK;
@@ -609,8 +613,9 @@ ReportGhostWindowsEnumerator(nsUint64HashKey* aIDHashKey, void* aClosure)
 
 NS_IMETHODIMP
 nsWindowMemoryReporter::
-nsGhostWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
-                                           nsISupports* aClosure)
+GhostURLsReporter::CollectReports(
+  nsIMemoryMultiReporterCallback* aCb,
+  nsISupports* aClosure)
 {
   // Get the IDs of all the ghost windows in existance.
   nsTHashtable<nsUint64HashKey> ghostWindows;
@@ -625,4 +630,76 @@ nsGhostWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
                                 &reportGhostWindowsEnumData);
 
   return reportGhostWindowsEnumData.rv;
+}
+
+NS_IMPL_ISUPPORTS1(nsWindowMemoryReporter::NumGhostsReporter,
+                   nsIMemoryReporter)
+
+nsWindowMemoryReporter::
+NumGhostsReporter::NumGhostsReporter(
+  nsWindowMemoryReporter *aWindowReporter)
+  : mWindowReporter(aWindowReporter)
+{}
+
+NS_IMETHODIMP
+nsWindowMemoryReporter::
+NumGhostsReporter::GetProcess(nsACString& aProcess)
+{
+  aProcess.AssignLiteral("");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowMemoryReporter::
+NumGhostsReporter::GetPath(nsACString& aPath)
+{
+  aPath.AssignLiteral("ghost-windows");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowMemoryReporter::
+NumGhostsReporter::GetKind(PRInt32* aKind)
+{
+  *aKind = KIND_OTHER;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowMemoryReporter::
+NumGhostsReporter::GetUnits(PRInt32* aUnits)
+{
+  *aUnits = nsIMemoryReporter::UNITS_COUNT;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowMemoryReporter::
+NumGhostsReporter::GetDescription(nsACString& aDesc)
+{
+  nsPrintfCString str(1024,
+"The number of ghost windows present (the number of nodes underneath \
+explicit/window-objects/top(none)/ghost, modulo race conditions).  A ghost \
+window is not shown in any tab, does not share a domain with any non-detached \
+windows, and has met these criteria for at least %ds \
+(memory.ghost_window_timeout_seconds) or has survived a round of about:memory's \
+minimize memory usage button.\n\n\
+Ghost windows can happen legitimately, but they are often indicative of leaks \
+in the browser or add-ons.",
+  mWindowReporter->GetGhostTimeout());
+
+  aDesc.Assign(str);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowMemoryReporter::
+NumGhostsReporter::GetAmount(PRInt64* aAmount)
+{
+  nsTHashtable<nsUint64HashKey> ghostWindows;
+  ghostWindows.Init();
+  mWindowReporter->CheckForGhostWindows(&ghostWindows);
+
+  *aAmount = ghostWindows.Count();
+  return NS_OK;
 }
