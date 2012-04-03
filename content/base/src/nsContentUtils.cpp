@@ -1468,7 +1468,20 @@ nsresult
 nsContentUtils::CheckSameOrigin(nsINode *aTrustedNode,
                                 nsIDOMNode *aUnTrustedNode)
 {
-  NS_PRECONDITION(aTrustedNode, "There must be a trusted node");
+  MOZ_ASSERT(aTrustedNode);
+
+  // Make sure it's a real node.
+  nsCOMPtr<nsINode> unTrustedNode = do_QueryInterface(aUnTrustedNode);
+  NS_ENSURE_TRUE(unTrustedNode, NS_ERROR_UNEXPECTED);
+  return CheckSameOrigin(aTrustedNode, unTrustedNode);
+}
+
+nsresult
+nsContentUtils::CheckSameOrigin(nsINode* aTrustedNode,
+                                nsINode* unTrustedNode)
+{
+  MOZ_ASSERT(aTrustedNode);
+  MOZ_ASSERT(unTrustedNode);
 
   bool isSystem = false;
   nsresult rv = sSecurityManager->SubjectPrincipalIsSystem(&isSystem);
@@ -1483,10 +1496,6 @@ nsContentUtils::CheckSameOrigin(nsINode *aTrustedNode,
   /*
    * Get hold of each node's principal
    */
-  nsCOMPtr<nsINode> unTrustedNode = do_QueryInterface(aUnTrustedNode);
-
-  // Make sure these are both real nodes
-  NS_ENSURE_TRUE(aTrustedNode && unTrustedNode, NS_ERROR_UNEXPECTED);
 
   nsIPrincipal* trustedPrincipal = aTrustedNode->NodePrincipal();
   nsIPrincipal* unTrustedPrincipal = unTrustedNode->NodePrincipal();
