@@ -97,6 +97,11 @@ private:
   /* Create a new texture */
   void CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode);
 
+  void SetupDualViewports(const gfxIntSize &aSize);
+  
+  // Fill textures with opaque black and white in the specified region.
+  void FillTexturesBlackWhite(const nsIntRegion& aRegion, const nsIntPoint& aOffset);
+
   /* Copy a texture region */
   void CopyRegion(ID3D10Texture2D* aSrc, const nsIntPoint &aSrcOffset,
                   ID3D10Texture2D* aDest, const nsIntPoint &aDestOffset,
