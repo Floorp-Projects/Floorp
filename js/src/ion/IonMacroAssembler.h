@@ -176,20 +176,22 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
     }
 
-    void storeTypedOrValue(TypedOrValueRegister src, Address address) {
+    template <typename T>
+    void storeTypedOrValue(TypedOrValueRegister src, const T &dest) {
         if (src.hasValue())
-            storeValue(src.valueReg(), address);
+            storeValue(src.valueReg(), dest);
         else if (src.type() == MIRType_Double)
-            storeDouble(src.typedReg().fpu(), address);
+            storeDouble(src.typedReg().fpu(), dest);
         else
-            storeValue(ValueTypeFromMIRType(src.type()), src.typedReg().gpr(), address);
+            storeValue(ValueTypeFromMIRType(src.type()), src.typedReg().gpr(), dest);
     }
 
-    void storeConstantOrRegister(ConstantOrRegister src, Address address) {
+    template <typename T>
+    void storeConstantOrRegister(ConstantOrRegister src, const T &dest) {
         if (src.constant())
-            storeValue(src.value(), address);
+            storeValue(src.value(), dest);
         else
-            storeTypedOrValue(src.reg(), address);
+            storeTypedOrValue(src.reg(), dest);
     }
 
     void storeCallResult(Register reg) {

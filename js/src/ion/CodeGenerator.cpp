@@ -1621,6 +1621,64 @@ CodeGenerator::visitArrayPopShiftT(LArrayPopShiftT *lir)
 }
 
 bool
+CodeGenerator::emitArrayPush(LInstruction *lir, const MArrayPush *mir, Register obj,
+                             ConstantOrRegister value, Register elementsTemp, Register length)
+{
+    typedef bool (*pf)(JSContext *, JSObject *, const Value &, uint32_t *);
+    static const VMFunction Info = FunctionInfo<pf>(ion::ArrayPushDense);
+    OutOfLineCode *ool = oolCallVM(Info, lir, (ArgList(), obj, value), StoreRegisterTo(length));
+    if (!ool)
+        return false;
+
+    // Load elements and length.
+    masm.loadPtr(Address(obj, JSObject::offsetOfElements()), elementsTemp);
+    masm.load32(Address(elementsTemp, ObjectElements::offsetOfLength()), length);
+
+    Int32Key key = Int32Key(length);
+    Address initLength(elementsTemp, ObjectElements::offsetOfInitializedLength());
+    Address capacity(elementsTemp, ObjectElements::offsetOfCapacity());
+
+    // Guard length == initializedLength.
+    masm.branchKey(Assembler::NotEqual, initLength, key, ool->entry());
+
+    // Guard length < capacity.
+    masm.branchKey(Assembler::BelowOrEqual, capacity, key, ool->entry());
+
+    masm.storeConstantOrRegister(value, BaseIndex(elementsTemp, length, TimesEight));
+
+    masm.bumpKey(&key, 1);
+    masm.store32(length, Address(elementsTemp, ObjectElements::offsetOfLength()));
+    masm.store32(length, Address(elementsTemp, ObjectElements::offsetOfInitializedLength()));
+
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
+CodeGenerator::visitArrayPushV(LArrayPushV *lir)
+{
+    Register obj = ToRegister(lir->object());
+    Register elementsTemp = ToRegister(lir->temp());
+    Register length = ToRegister(lir->output());
+    ConstantOrRegister value = TypedOrValueRegister(ToValue(lir, LArrayPushV::Value));
+    return emitArrayPush(lir, lir->mir(), obj, value, elementsTemp, length);
+}
+
+bool
+CodeGenerator::visitArrayPushT(LArrayPushT *lir)
+{
+    Register obj = ToRegister(lir->object());
+    Register elementsTemp = ToRegister(lir->temp());
+    Register length = ToRegister(lir->output());
+    ConstantOrRegister value;
+    if (lir->value()->isConstant())
+        value = ConstantOrRegister(*lir->value()->toConstant());
+    else
+        value = TypedOrValueRegister(lir->mir()->value()->type(), ToAnyRegister(lir->value()));
+    return emitArrayPush(lir, lir->mir(), obj, value, elementsTemp, length);
+}
+
+bool
 CodeGenerator::visitCallIteratorStart(LCallIteratorStart *lir)
 {
     typedef JSObject *(*pf)(JSContext *, JSObject *, uint32_t);
