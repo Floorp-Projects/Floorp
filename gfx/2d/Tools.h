@@ -57,6 +57,15 @@ IsOperatorBoundByMask(CompositionOp aOp) {
   }
 }
 
+template <class T>
+struct ClassStorage
+{
+  char bytes[sizeof(T)];
+
+  const T *addr() const { return (const T *)bytes; }
+  T *addr() { return (T *)(void *)bytes; }
+};
+
 }
 }
 
