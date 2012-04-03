@@ -48,6 +48,8 @@
 #include "prlog.h"
 #include "nsXREAppData.h"
 
+#include "mozilla/Assertions.h"
+
 /**
  * A directory service key which provides the platform-correct "application
  * data" directory as follows, where $name and $vendor are as defined above and
@@ -363,10 +365,12 @@ static const char* const kGeckoProcessTypeString[] = {
   "ipdlunittest"
 };
 
-PR_STATIC_ASSERT(sizeof(kGeckoProcessTypeString) /
-                 sizeof(kGeckoProcessTypeString[0]) ==
-                 GeckoProcessType_End);
-
+// Oddly, NS_ARRAY_LENGTH causes an internal compiler error with MSVC10, so
+// compute the length manually.
+MOZ_STATIC_ASSERT(sizeof(kGeckoProcessTypeString) /
+                  sizeof(kGeckoProcessTypeString[0]) ==
+                  GeckoProcessType_End,
+                  "Array length mismatch");
 
 XRE_API(const char*,
         XRE_ChildProcessTypeToString, (GeckoProcessType aProcessType))
