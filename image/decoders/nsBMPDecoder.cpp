@@ -9,13 +9,13 @@
 
 #include <stdlib.h>
 
+#include "ImageLogging.h"
 #include "EndianMacros.h"
 #include "nsBMPDecoder.h"
 
 #include "nsIInputStream.h"
 #include "RasterImage.h"
 #include "imgIContainerObserver.h"
-#include "ImageLogging.h"
 
 namespace mozilla {
 namespace image {
