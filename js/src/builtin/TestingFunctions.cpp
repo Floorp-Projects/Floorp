@@ -237,46 +237,43 @@ DeterministicGC(JSContext *cx, unsigned argc, jsval *vp)
 }
 #endif /* JS_GC_ZEAL */
 
-typedef struct JSCountHeapNode JSCountHeapNode;
-
 struct JSCountHeapNode {
     void                *thing;
     JSGCTraceKind       kind;
     JSCountHeapNode     *next;
 };
 
+typedef HashSet<void *, PointerHasher<void *, 3>, SystemAllocPolicy> VisitedSet;
+
 typedef struct JSCountHeapTracer {
     JSTracer            base;
-    JSDHashTable        visited;
-    bool                ok;
+    VisitedSet          visited;
     JSCountHeapNode     *traceList;
     JSCountHeapNode     *recycleList;
+    bool                ok;
 } JSCountHeapTracer;
 
 static void
 CountHeapNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
-    JSCountHeapTracer *countTracer;
-    JSDHashEntryStub *entry;
-    JSCountHeapNode *node;
+    JS_ASSERT(trc->callback == CountHeapNotify);
+
+    JSCountHeapTracer *countTracer = (JSCountHeapTracer *)trc;
     void *thing = *thingp;
 
-    JS_ASSERT(trc->callback == CountHeapNotify);
-    countTracer = (JSCountHeapTracer *)trc;
     if (!countTracer->ok)
         return;
 
-    entry = (JSDHashEntryStub *)
-            JS_DHashTableOperate(&countTracer->visited, thing, JS_DHASH_ADD);
-    if (!entry) {
+    VisitedSet::AddPtr p = countTracer->visited.lookupForAdd(thing);
+    if (p)
+        return;
+
+    if (!countTracer->visited.add(p, thing)) {
         countTracer->ok = false;
         return;
     }
-    if (entry->key)
-        return;
-    entry->key = thing;
 
-    node = countTracer->recycleList;
+    JSCountHeapNode *node = countTracer->recycleList;
     if (node) {
         countTracer->recycleList = node->next;
     } else {
@@ -354,9 +351,7 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     JS_TracerInit(&countTracer.base, JS_GetRuntime(cx), CountHeapNotify);
-    if (!JS_DHashTableInit(&countTracer.visited, JS_DHashGetStubOps(),
-                           NULL, sizeof(JSDHashEntryStub),
-                           JS_DHASH_DEFAULT_CAPACITY(100))) {
+    if (!countTracer.visited.init()) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
@@ -384,7 +379,6 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
         countTracer.recycleList = node->next;
         js_free(node);
     }
-    JS_DHashTableFinish(&countTracer.visited);
     if (!countTracer.ok) {
         JS_ReportOutOfMemory(cx);
         return false;

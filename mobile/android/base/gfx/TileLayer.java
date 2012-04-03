@@ -60,7 +60,6 @@ public abstract class TileLayer extends Layer {
     private final CairoImage mImage;
     private final boolean mRepeat;
     private IntSize mSize;
-    private boolean mSkipTextureUpdate;
     private int[] mTextureIDs;
 
     public TileLayer(boolean repeat, CairoImage image) {
@@ -69,7 +68,6 @@ public abstract class TileLayer extends Layer {
         mRepeat = repeat;
         mImage = image;
         mSize = new IntSize(0, 0);
-        mSkipTextureUpdate = false;
         mDirtyRect = new Rect();
     }
 
@@ -92,22 +90,15 @@ public abstract class TileLayer extends Layer {
     }
 
     /**
-     * Invalidates the given rect so that it will be uploaded again. Only valid inside a
+     * Invalidates the entire buffer so that it will be uploaded again. Only valid inside a
      * transaction.
      */
-    public void invalidate(Rect rect) {
-        if (!inTransaction())
-            throw new RuntimeException("invalidate() is only valid inside a transaction");
-        mDirtyRect.union(rect);
-    }
 
     public void invalidate() {
+        if (!inTransaction())
+            throw new RuntimeException("invalidate() is only valid inside a transaction");
         IntSize bufferSize = mImage.getSize();
-        invalidate(new Rect(0, 0, bufferSize.width, bufferSize.height));
-    }
-
-    public boolean isDirty() {
-        return mImage.getSize().isPositive() && (mTextureIDs == null || !mDirtyRect.isEmpty());
+        mDirtyRect.set(0, 0, bufferSize.width, bufferSize.height);
     }
 
     private void validateTexture() {
@@ -138,22 +129,9 @@ public abstract class TileLayer extends Layer {
         }
     }
 
-    /** Tells the tile not to update the texture on the next update. */
-    public void setSkipTextureUpdate(boolean skip) {
-        mSkipTextureUpdate = skip;
-    }
-
-    public boolean getSkipTextureUpdate() {
-        return mSkipTextureUpdate;
-    }
-
     @Override
     protected boolean performUpdates(RenderContext context) {
         super.performUpdates(context);
-
-        if (mSkipTextureUpdate) {
-            return false;
-        }
 
         // Reallocate the texture if the size has changed
         validateTexture();
@@ -189,53 +167,18 @@ public abstract class TileLayer extends Layer {
         if (imageBuffer == null)
             return;
 
-        boolean newlyCreated = false;
-
         if (mTextureIDs == null) {
             mTextureIDs = new int[1];
             GLES20.glGenTextures(mTextureIDs.length, mTextureIDs, 0);
-            newlyCreated = true;
         }
-
-        IntSize bufferSize = mImage.getSize();
-        Rect bufferRect = new Rect(0, 0, bufferSize.width, bufferSize.height);
 
         int cairoFormat = mImage.getFormat();
         CairoGLInfo glInfo = new CairoGLInfo(cairoFormat);
 
         bindAndSetGLParameters();
 
-        if (newlyCreated || dirtyRect.contains(bufferRect)) {
-            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width,
-                                mSize.height, 0, glInfo.format, glInfo.type, imageBuffer);
-            return;
-        }
-
-        // Make sure that the dirty region intersects with the buffer rect,
-        // otherwise we'll end up with an invalid buffer pointer.
-        if (!Rect.intersects(dirtyRect, bufferRect)) {
-            return;
-        }
-
-        /*
-         * Upload the changed rect. We have to widen to the full width of the texture
-         * because we can't count on the device having support for GL_EXT_unpack_subimage,
-         * and going line-by-line is too slow.
-         *
-         * XXX We should still use GL_EXT_unpack_subimage when available.
-         */
-        Buffer viewBuffer = imageBuffer.slice();
-        int bpp = CairoUtils.bitsPerPixelForCairoFormat(cairoFormat) / 8;
-        int position = dirtyRect.top * bufferSize.width * bpp;
-        if (position > viewBuffer.limit()) {
-            Log.e(LOGTAG, "### Position outside tile! " + dirtyRect.top);
-            return;
-        }
-
-        viewBuffer.position(position);
-        GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D, 0, 0, dirtyRect.top, bufferSize.width,
-                               Math.min(bufferSize.height - dirtyRect.top, dirtyRect.height()),
-                               glInfo.format, glInfo.type, viewBuffer);
+        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width,
+                            mSize.height, 0, glInfo.format, glInfo.type, imageBuffer);
     }
 
     private void bindAndSetGLParameters() {

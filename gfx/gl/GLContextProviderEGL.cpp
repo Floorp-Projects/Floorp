@@ -280,7 +280,7 @@ public:
         , mBound(false)
         , mIsPBuffer(false)
         , mIsDoubleBuffered(false)
-        , mPBufferCanBindToTexture(false)
+        , mCanBindToTexture(false)
     {
         // any EGL contexts will always be GLESv2
         SetIsGLES2(true);
@@ -434,7 +434,7 @@ public:
             // but we will be able to do things like resource releases.
             succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
                                                  EGL_NO_SURFACE, EGL_NO_SURFACE,
-                                                 mContext);
+                                                 EGL_NO_CONTEXT);
             if (!succeeded && sEGLLibrary.fGetError() == LOCAL_EGL_CONTEXT_LOST) {
                 mContextLost = true;
                 NS_WARNING("EGL context has been lost.");
@@ -444,6 +444,15 @@ public:
         }
 #endif
         if (aForce || sEGLLibrary.fGetCurrentContext() != mContext) {
+#ifdef MOZ_WIDGET_QT
+            // Shared Qt GL context need to be informed about context switch
+            if (mSharedContext) {
+                QGLContext* qglCtx = static_cast<QGLContext*>(static_cast<GLContextEGL*>(mSharedContext.get())->mPlatformContext);
+                if (qglCtx) {
+                    qglCtx->doneCurrent();
+                }
+            }
+#endif
             succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
                                                  mSurface, mSurface,
                                                  mContext);
@@ -507,7 +516,6 @@ public:
     bool SwapBuffers()
     {
         if (mSurface && !mPlatformContext) {
-            //sEGLLibrary.fSetSwapRectangleANDROID(EGL_DISPLAY(), mSurface, 0, 0, gScreenBounds.width, gScreenBounds.height);
             return sEGLLibrary.fSwapBuffers(EGL_DISPLAY(), mSurface);
         } else {
             return false;
@@ -601,7 +609,7 @@ protected:
 
     bool mIsPBuffer;
     bool mIsDoubleBuffered;
-    bool mPBufferCanBindToTexture;
+    bool mCanBindToTexture;
 
     static EGLSurface CreatePBufferSurfaceTryingPowerOfTwo(EGLConfig config,
                                                            EGLenum bindToTextureFormat,
@@ -657,7 +665,7 @@ GLContextEGL::BindTex2DOffscreen(GLContext *aOffscreen)
 
     GLContextEGL *offs = static_cast<GLContextEGL*>(aOffscreen);
 
-    if (offs->mIsPBuffer && offs->mPBufferCanBindToTexture) {
+    if (offs->mCanBindToTexture) {
         bool ok = sEGLLibrary.fBindTexImage(EGL_DISPLAY(),
                                               offs->mSurface,
                                               LOCAL_EGL_BACK_BUFFER);
@@ -687,7 +695,7 @@ GLContextEGL::UnbindTex2DOffscreen(GLContext *aOffscreen)
 
     GLContextEGL *offs = static_cast<GLContextEGL*>(aOffscreen);
 
-    if (offs->mIsPBuffer && offs->mPBufferCanBindToTexture) {
+    if (offs->mCanBindToTexture) {
         sEGLLibrary.fReleaseTexImage(EGL_DISPLAY(),
                                      offs->mSurface,
                                      LOCAL_EGL_BACK_BUFFER);
@@ -705,7 +713,7 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 
         EGLSurface surface =
             CreatePBufferSurfaceTryingPowerOfTwo(mConfig,
-                                                 mPBufferCanBindToTexture
+                                                 mCanBindToTexture
                                                  ? (mCreationFormat.minAlpha
                                                     ? LOCAL_EGL_TEXTURE_RGBA
                                                     : LOCAL_EGL_TEXTURE_RGB)
@@ -794,11 +802,8 @@ GLFormatForImage(gfxASurface::gfxImageFormat aFormat)
 {
     switch (aFormat) {
     case gfxASurface::ImageFormatARGB32:
-        return LOCAL_GL_RGBA;
     case gfxASurface::ImageFormatRGB24:
-        // this often isn't correct, because we can't guarantee that
-        // the alpha byte will be 0xff coming from the image surface
-        NS_WARNING("Using GL_RGBA for ImageFormatRGB24, are you sure you know what you're doing?");
+        // Thebes only supports RGBX, not packed RGB.
         return LOCAL_GL_RGBA;
     case gfxASurface::ImageFormatRGB16_565:
         return LOCAL_GL_RGB;
@@ -859,18 +864,14 @@ public:
             }
             Resize(aSize);
         } else {
-            // Convert RGB24 to either ARGB32 on mobile.  We can't
-            // generate GL_RGB data, so we'll always have an alpha byte
-            // for RGB24.  No easy way to upload that to GL.
-            // 
-            // Note that if we start using RGB565 here, we'll need to
-            // watch for a) setting the correct format; and b) getting
-            // the stride right.
             if (mUpdateFormat == gfxASurface::ImageFormatRGB24) {
-                mUpdateFormat = gfxASurface::ImageFormatARGB32;
+                // RGB24 means really RGBX for Thebes, which means we have to
+                // use the right shader and ignore the uninitialized alpha
+                // value.
+                mShaderType = BGRXLayerProgramType;
+            } else {
+                mShaderType = BGRALayerProgramType;
             }
-            // We currently always use BGRA type textures
-            mShaderType = BGRALayerProgramType;
         }
     }
 
@@ -1380,6 +1381,7 @@ DepthToGLFormat(int aDepth)
     return ContextFormat::BasicRGBA32;
 }
 
+static nsRefPtr<GLContext> gGlobalContext;
 
 #ifdef MOZ_WIDGET_QT
 already_AddRefed<GLContext>
@@ -1407,6 +1409,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
         glContext->SetIsDoubleBuffered(context->format().doubleBuffer());
 
         glContext->SetPlatformContext(context);
+        gGlobalContext = glContext;
 
         return glContext.forget();
     }
@@ -1740,7 +1743,7 @@ TRY_ATTRIBS_AGAIN:
         return nsnull;
     }
 
-    glContext->mPBufferCanBindToTexture = configCanBindToTexture;
+    glContext->mCanBindToTexture = configCanBindToTexture;
 
     if (!bufferUnused) {  // We *are* using the buffer
       glContext->SetOffscreenSize(aSize, pbsize);
@@ -1889,6 +1892,8 @@ GLContextEGL::CreateEGLPixmapOffscreenContext(const gfxIntSize& aSize,
 
     glContext->HoldSurface(thebesSurface);
 
+    glContext->mCanBindToTexture = true;
+
     return glContext.forget();
 }
 
@@ -1898,13 +1903,14 @@ GLContextEGL::CreateEGLPixmapOffscreenContext(const gfxIntSize& aSize,
 // often without the ability to texture from them directly.
 already_AddRefed<GLContext>
 GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
-                                      const ContextFormat& aFormat)
+                                      const ContextFormat& aFormat,
+                                      const ContextFlags aFlags)
 {
     if (!sEGLLibrary.EnsureInitialized()) {
         return nsnull;
     }
 
-#if defined(ANDROID) || defined(XP_WIN)
+#if !defined(MOZ_X11)
     bool usePBuffers = false; // Generally, prefer FBOs to PBuffers
 
     if (sEGLLibrary.IsANGLE())
@@ -1918,7 +1924,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
 
     gfxIntSize fboSize = usePBuffers ? glContext->OffscreenActualSize() : aSize;
-    if (!glContext->ResizeOffscreenFBO(fboSize, !usePBuffers))
+    if (!(aFlags & GLContext::ContextFlagsGlobal) && !glContext->ResizeOffscreenFBO(fboSize, !usePBuffers))
         return nsnull;
 
     return glContext.forget();
@@ -1929,7 +1935,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
     if (!glContext)
         return nsnull;
 
-    if (!glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), true))
+    if (!(aFlags & GLContext::ContextFlagsGlobal) && !glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), true))
         return nsnull;
 
     return glContext.forget();
@@ -1941,7 +1947,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
     }
 
-    if (!gUseBackingSurface && !glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), true)) {
+    if (!(aFlags & GLContext::ContextFlagsGlobal) && !gUseBackingSurface && !glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), true)) {
         // we weren't able to create the initial
         // offscreen FBO, so this is dead
         return nsnull;
@@ -1988,8 +1994,6 @@ GLContextProviderEGL::CreateForNativePixmapSurface(gfxASurface* aSurface)
 #endif
 }
 
-static nsRefPtr<GLContext> gGlobalContext;
-
 GLContext *
 GLContextProviderEGL::GetGlobalContext()
 {
@@ -2000,7 +2004,8 @@ GLContextProviderEGL::GetGlobalContext()
         // CreateOffscreen can call us re-entrantly.
         nsRefPtr<GLContext> ctx =
             GLContextProviderEGL::CreateOffscreen(gfxIntSize(16, 16),
-                                                  ContextFormat(ContextFormat::BasicRGB24));
+                                                  ContextFormat(ContextFormat::BasicRGB24),
+                                                  GLContext::ContextFlagsGlobal);
         gGlobalContext = ctx;
         if (gGlobalContext)
             gGlobalContext->SetIsGlobalSharedContext(true);

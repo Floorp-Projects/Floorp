@@ -37,10 +37,10 @@
 #ifndef __NS_SVGFILTERPAINTCALLBACK_H__
 #define __NS_SVGFILTERPAINTCALLBACK_H__
 
-#include "nsRect.h"
-
 class nsIFrame;
 class nsRenderingContext;
+
+struct nsIntRect;
 
 class nsSVGFilterPaintCallback {
 public:

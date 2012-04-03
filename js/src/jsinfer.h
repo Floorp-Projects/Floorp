@@ -441,7 +441,8 @@ class TypeSet
     void addSetElement(JSContext *cx, JSScript *script, jsbytecode *pc,
                        TypeSet *objectTypes, TypeSet *valueTypes);
     void addCall(JSContext *cx, TypeCallsite *site);
-    void addArith(JSContext *cx, TypeSet *target, TypeSet *other = NULL);
+    void addArith(JSContext *cx, JSScript *script, jsbytecode *pc,
+                  TypeSet *target, TypeSet *other = NULL);
     void addTransformThis(JSContext *cx, JSScript *script, TypeSet *target);
     void addPropagateThis(JSContext *cx, JSScript *script, jsbytecode *pc,
                           Type type, TypeSet *types = NULL);
@@ -908,6 +909,10 @@ typedef HashSet<ReadBarriered<TypeObject>, TypeObjectEntry, SystemAllocPolicy> T
 bool
 UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc);
 
+/* Whether to use a new type object for an initializer opcode at script/pc. */
+bool
+UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc);
+
 /*
  * Whether Array.prototype, or an object on its proto chain, has an
  * indexed property.
@@ -1079,7 +1084,7 @@ class TypeScript
     static inline TypeObject *StandardType(JSContext *cx, JSScript *script, JSProtoKey kind);
 
     /* Get a type object for an allocation site in this script. */
-    static inline TypeObject *InitObject(JSContext *cx, JSScript *script, const jsbytecode *pc, JSProtoKey kind);
+    static inline TypeObject *InitObject(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoKey kind);
 
     /*
      * Monitor a bytecode pushing a value which is not accounted for by the

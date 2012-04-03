@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gre/modules/MigrationUtils.jsm");
+
 var PlacesOrganizer = {
   _places: null,
   _content: null,
@@ -385,20 +387,7 @@ var PlacesOrganizer = {
    * cookies, history, preferences, and bookmarks.
    */
   importFromBrowser: function PO_importFromBrowser() {
-#ifdef XP_MACOSX
-    // On Mac, the window is not modal
-    let win = Services.wm.getMostRecentWindow("Browser:MigrationWizard");
-    if (win) {
-      win.focus();
-      return;
-    }
-
-    let features = "centerscreen,chrome,resizable=no";
-#else
-    let features = "modal,centerscreen,chrome,resizable=no";
-#endif
-    window.openDialog("chrome://browser/content/migration/migration.xul",
-                      "migration", features);
+    MigrationUtils.showMigrationWizard(window);
   },
 
   /**
@@ -411,10 +400,9 @@ var PlacesOrganizer = {
             Ci.nsIFilePicker.modeOpen);
     fp.appendFilters(Ci.nsIFilePicker.filterHTML);
     if (fp.show() != Ci.nsIFilePicker.returnCancel) {
-      if (fp.file) {
-        var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].
-                       getService(Ci.nsIPlacesImportExportService);
-        importer.importHTMLFromFile(fp.file, false);
+      if (fp.fileURL) {
+        Components.utils.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
+        BookmarkHTMLUtils.importFromURL(fp.fileURL.spec, false);
       }
     }
   },

@@ -40,6 +40,9 @@ package @ANDROID_PACKAGE_NAME@;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.R;
+import android.view.MenuItem;
 
 public class App extends GeckoApp {
     public String getPackageName() {
@@ -64,6 +67,17 @@ public class App extends GeckoApp {
         if ("t.co".equals(host))
             return "Redirector/@MOZ_APP_VERSION@ (Android; rv:@MOZ_APP_VERSION@)";
         return getDefaultUAString();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+#ifdef MOZ_PROFILING
+        if (item.getItemId() == R.id.toggle_profiling) {
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("ToggleProfiling", null));
+            return true;
+        }
+#endif
+        return super.onOptionsItemSelected(item);
     }
 };
 

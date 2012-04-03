@@ -55,17 +55,15 @@ XPIDLSRCS = \
   $(NULL)
 
 EXTRA_COMPONENTS = \
-  nsWifiWorker.js \
-  nsWifiWorker.manifest \
-  nsDOMWifiManager.js \
-  nsDOMWifiManager.manifest \
+  WifiWorker.js \
+  WifiWorker.manifest \
+  DOMWifiManager.js \
+  DOMWifiManager.manifest \
   $(NULL)
 
 EXTRA_JS_MODULES = \
-  libcutils.js \
   libhardware_legacy.js \
-  libnetutils.js \
-  network_worker.js \
+  wifi_worker.js \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

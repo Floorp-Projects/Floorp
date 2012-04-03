@@ -501,7 +501,7 @@ private:
     // when this happens -- this means that there was no script.  Callers MUST
     // pass in a non-null rv here.
     static nsIPrincipal*
-    GetScriptPrincipal(JSContext* cx, JSScript* script, nsresult* rv);
+    GetScriptPrincipal(JSScript* script, nsresult* rv);
 
     // Returns null if a principal cannot be found.  Note that rv can be NS_OK
     // when this happens -- this means that there was no script associated

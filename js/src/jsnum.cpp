@@ -1018,8 +1018,7 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
         return NULL;
     numberProto->asNumber().setPrimitiveValue(0);
 
-    JSFunction *ctor = global->createConstructor(cx, Number, &NumberClass,
-                                                 CLASS_ATOM(cx, Number), 1);
+    JSFunction *ctor = global->createConstructor(cx, Number, CLASS_ATOM(cx, Number), 1);
     if (!ctor)
         return NULL;
 
@@ -1226,7 +1225,7 @@ NumberValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb)
     return sb.appendInflated(cstr, cstrlen);
 }
 
-bool
+JS_PUBLIC_API(bool)
 ToNumberSlow(JSContext *cx, Value v, double *out)
 {
     JS_ASSERT(!v.isNumber());
@@ -1265,7 +1264,7 @@ ToNumberSlow(JSContext *cx, Value v, double *out)
     return true;
 }
 
-bool
+JS_PUBLIC_API(bool)
 ToInt32Slow(JSContext *cx, const Value &v, int32_t *out)
 {
     JS_ASSERT(!v.isInt32());

@@ -698,39 +698,6 @@ public:
     Mutated();
   }
 
-  /**
-   * CONSTRUCTION PHASE ONLY
-   *
-   * Define a subrect of this layer that will be used as the source
-   * image for tiling this layer's visible region.  The coordinates
-   * are in the un-transformed space of this layer (i.e. the visible
-   * region of this this layer is tiled before being transformed).
-   * The visible region is tiled "outwards" from the source rect; that
-   * is, the source rect is drawn "in place", then repeated to cover
-   * the layer's visible region.
-   *
-   * The interpretation of the source rect varies depending on
-   * underlying layer type.  For ImageLayers and CanvasLayers, it
-   * doesn't make sense to set a source rect not fully contained by
-   * the bounds of their underlying images.  For ThebesLayers, thebes
-   * content may need to be rendered to fill the source rect.  For
-   * ColorLayers, a source rect for tiling doesn't make sense at all.
-   *
-   * If aRect is null no tiling will be performed. 
-   *
-   * NB: this interface is only implemented for BasicImageLayers, and
-   * then only for source rects the same size as the layers'
-   * underlying images.
-   */
-  void SetTileSourceRect(const nsIntRect* aRect)
-  {
-    mUseTileSourceRect = aRect != nsnull;
-    if (aRect) {
-      mTileSourceRect = *aRect;
-    }
-    Mutated();
-  }
-
   void SetIsFixedPosition(bool aFixedPosition) { mIsFixedPosition = aFixedPosition; }
 
   // These getters can be used anytime.
@@ -744,7 +711,6 @@ public:
   virtual Layer* GetFirstChild() { return nsnull; }
   virtual Layer* GetLastChild() { return nsnull; }
   const gfx3DMatrix& GetTransform() { return mTransform; }
-  const nsIntRect* GetTileSourceRect() { return mUseTileSourceRect ? &mTileSourceRect : nsnull; }
   bool GetIsFixedPosition() { return mIsFixedPosition; }
 
   /**

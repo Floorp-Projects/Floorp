@@ -84,9 +84,9 @@ float4 RGBAShader(const VS_OUTPUT aVertex) : COLOR
 float4 RGBShader(const VS_OUTPUT aVertex) : COLOR
 {
   float4 result;
-  result = tex2D(s2D, aVertex.vTexCoords) * fLayerOpacity;
+  result = tex2D(s2D, aVertex.vTexCoords);
   result.a = 1.0;
-  return result;
+  return result * fLayerOpacity;
 }
 
 float4 YCbCrShader(const VS_OUTPUT aVertex) : COLOR

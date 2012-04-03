@@ -57,7 +57,6 @@ nsIDocument.h \
 nsDeprecatedOperationList.h \
 nsIDocumentObserver.h \
 nsIMutationObserver.h \
-nsIMutationObserver2.h \
 nsINameSpaceManager.h \
 nsINode.h \
 nsINodeInfo.h \
@@ -66,7 +65,6 @@ nsIScriptElement.h \
 nsIStyleSheetLinkingElement.h \
 nsIContentSerializer.h \
 nsIXPathEvaluatorInternal.h \
-mozISanitizingSerializer.h \
 nsCaseTreatment.h \
 nsContentCID.h \
 nsCopySupport.h \

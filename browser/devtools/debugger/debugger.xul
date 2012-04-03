@@ -73,6 +73,9 @@
         <xul:toolbar id="dbg-toolbar">
             <xul:button id="close">&debuggerUI.closeButton;</xul:button>
             <xul:button id="resume"/>
+            <xul:button id="step-over">&debuggerUI.stepOverButton;</xul:button>
+            <xul:button id="step-in">&debuggerUI.stepInButton;</xul:button>
+            <xul:button id="step-out">&debuggerUI.stepOutButton;</xul:button>
             <xul:menulist id="scripts"/>
         </xul:toolbar>
         <div id="dbg-content" class="hbox flex">

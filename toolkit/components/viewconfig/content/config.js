@@ -38,10 +38,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 const nsIPrefLocalizedString = Components.interfaces.nsIPrefLocalizedString;
 const nsISupportsString = Components.interfaces.nsISupportsString;
-const nsIPromptService = Components.interfaces.nsIPromptService;
-const nsIPrefService = Components.interfaces.nsIPrefService;
 const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
 const nsIClipboardHelper = Components.interfaces.nsIClipboardHelper;
 const nsIAtomService = Components.interfaces.nsIAtomService;
@@ -52,9 +52,7 @@ const nsPrefService_CONTRACTID = "@mozilla.org/preferences-service;1";
 const nsClipboardHelper_CONTRACTID = "@mozilla.org/widget/clipboardhelper;1";
 const nsAtomService_CONTRACTID = "@mozilla.org/atom-service;1";
 
-const gPromptService = Components.classes[nsPrompt_CONTRACTID].getService(nsIPromptService);
-const gPrefService = Components.classes[nsPrefService_CONTRACTID].getService(nsIPrefService);
-const gPrefBranch = gPrefService.getBranch(null);
+const gPrefBranch = Services.prefs;
 const gClipboardHelper = Components.classes[nsClipboardHelper_CONTRACTID].getService(nsIClipboardHelper);
 const gAtomService = Components.classes[nsAtomService_CONTRACTID].getService(nsIAtomService);
 
@@ -604,12 +602,13 @@ function NewPref(type)
 {
   var result = { value: "" };
   var dummy = { value: 0 };
-  if (gPromptService.prompt(window,
-                            gConfigBundle.getFormattedString("new_title", [gTypeStrs[type]]),
-                            gConfigBundle.getString("new_prompt"),
-                            result,
-                            null,
-                            dummy)) {
+  if (Services.prompt.prompt(window,
+                             gConfigBundle.getFormattedString("new_title",
+                                                              [gTypeStrs[type]]),
+                             gConfigBundle.getString("new_prompt"),
+                             result,
+                             null,
+                             dummy)) {
     result.value = result.value.trim();
     if (!result.value) {
       return;
@@ -645,13 +644,13 @@ function ModifyPref(entry)
   var title = gConfigBundle.getFormattedString("modify_title", [gTypeStrs[entry.typeCol]]);
   if (entry.typeCol == nsIPrefBranch.PREF_BOOL) {
     var check = { value: entry.valueCol == "false" };
-    if (!entry.valueCol && !gPromptService.select(window, title, entry.prefCol, 2, [false, true], check))
+    if (!entry.valueCol && !Services.prompt.select(window, title, entry.prefCol, 2, [false, true], check))
       return false;
     gPrefBranch.setBoolPref(entry.prefCol, check.value);
   } else {
     var result = { value: entry.valueCol };
     var dummy = { value: 0 };
-    if (!gPromptService.prompt(window, title, entry.prefCol, result, null, dummy))
+    if (!Services.prompt.prompt(window, title, entry.prefCol, result, null, dummy))
       return false;
     if (entry.typeCol == nsIPrefBranch.PREF_INT) {
       // | 0 converts to integer or 0; - 0 to float or NaN.
@@ -660,7 +659,7 @@ function ModifyPref(entry)
       if (val != result.value - 0) {
         var err_title = gConfigBundle.getString("nan_title");
         var err_text = gConfigBundle.getString("nan_text");
-        gPromptService.alert(window, err_title, err_text);
+        Services.prompt.alert(window, err_title, err_text);
         return false;
       }
       gPrefBranch.setIntPref(entry.prefCol, val);
@@ -671,6 +670,6 @@ function ModifyPref(entry)
     }
   }
 
-  gPrefService.savePrefFile(null);
+  Services.prefs.savePrefFile(null);
   return true;
 }

@@ -335,6 +335,12 @@ def write_getter(a, iface, fd):
         fd.write("    aDict.%s = b;\n" % a.name)
     elif realtype.count("PRInt32"):
         fd.write("    NS_ENSURE_STATE(JS_ValueToECMAInt32(aCx, v, &aDict.%s));\n" % a.name)
+    elif realtype.count("double"):
+        fd.write("    NS_ENSURE_STATE(JS_ValueToNumber(aCx, v, &aDict.%s));\n" % a.name)
+    elif realtype.count("float"):
+        fd.write("    double d;\n")
+        fd.write("    NS_ENSURE_STATE(JS_ValueToNumber(aCx, v, &d));")
+        fd.write("    aDict.%s = (float) d;\n" % a.name)
     elif realtype.count("PRUint16"):
         fd.write("    uint32_t u;\n")
         fd.write("    NS_ENSURE_STATE(JS_ValueToECMAUint32(aCx, v, &u));\n")
@@ -429,8 +435,11 @@ def write_cpp(iface, fd):
              "  }\n"
              "  NS_ENSURE_STATE(aVal->isObject());\n\n"
              "  JSObject* obj = &aVal->toObject();\n"
-             "  nsCxPusher pusher;\n"
-             "  NS_ENSURE_STATE(pusher.Push(aCx, false));\n"
+             "  Maybe<nsCxPusher> pusher;\n"
+             "  if (NS_IsMainThread()) {\n"
+             "    pusher.construct();\n"
+             "    NS_ENSURE_STATE(pusher.ref().Push(aCx, false));\n"
+             "  }\n"
              "  JSAutoRequest ar(aCx);\n"
              "  JSAutoEnterCompartment ac;\n"
              "  NS_ENSURE_STATE(ac.enter(aCx, obj));\n")

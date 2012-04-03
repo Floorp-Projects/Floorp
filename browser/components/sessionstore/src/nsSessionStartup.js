@@ -72,7 +72,7 @@ const Cr = Components.results;
 const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/TelemetryStopwatch.jsm");
+Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
 
 const STATE_RUNNING_STR = "running";
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 megabytes

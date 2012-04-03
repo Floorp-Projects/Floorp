@@ -52,6 +52,8 @@
 // Chosen this as to resemble DWrite's own oblique face style.
 #define OBLIQUE_SKEW_FACTOR 0.3
 
+using namespace mozilla::gfx;
+
 // This is also in gfxGDIFont.cpp. Would be nice to put it somewhere common,
 // but we can't declare it in the gfxFont.h or gfxFontUtils.h headers
 // because those are exported, and the cairo headers aren't.
@@ -709,6 +711,19 @@ gfxDWriteFont::GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
     return width;
 }
 
+TemporaryRef<GlyphRenderingOptions>
+gfxDWriteFont::GetGlyphRenderingOptions()
+{
+  if (UsingClearType()) {
+    return Factory::CreateDWriteGlyphRenderingOptions(
+      gfxWindowsPlatform::GetPlatform()->GetRenderingParams(GetForceGDIClassic() ?
+        gfxWindowsPlatform::TEXT_RENDERING_GDI_CLASSIC : gfxWindowsPlatform::TEXT_RENDERING_NORMAL));
+  } else {
+    return Factory::CreateDWriteGlyphRenderingOptions(gfxWindowsPlatform::GetPlatform()->
+      GetRenderingParams(gfxWindowsPlatform::TEXT_RENDERING_NO_CLEARTYPE));
+  }
+}
+
 bool
 gfxDWriteFont::GetForceGDIClassic()
 {
@@ -746,4 +761,21 @@ gfxDWriteFont::MeasureGlyphWidth(PRUint16 aGlyph)
         }
     }
     return 0;
+}
+
+void
+gfxDWriteFont::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                   FontCacheSizes*   aSizes) const
+{
+    gfxFont::SizeOfExcludingThis(aMallocSizeOf, aSizes);
+    aSizes->mFontInstances += aMallocSizeOf(mMetrics) +
+        mGlyphWidths.SizeOfExcludingThis(nsnull, aMallocSizeOf);
+}
+
+void
+gfxDWriteFont::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                   FontCacheSizes*   aSizes) const
+{
+    aSizes->mFontInstances += aMallocSizeOf(this);
+    SizeOfExcludingThis(aMallocSizeOf, aSizes);
 }

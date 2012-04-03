@@ -113,6 +113,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
 GL_PROVIDER = EGL
 endif
 
+ifdef MOZ_GL_PROVIDER
+GL_PROVIDER = $(MOZ_GL_PROVIDER)
+endif
+
 # Mac is a special snowflake
 ifeq ($(GL_PROVIDER),CGL)
 CMMSRCS += GLContextProvider$(GL_PROVIDER).mm

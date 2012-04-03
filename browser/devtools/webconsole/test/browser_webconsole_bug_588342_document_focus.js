@@ -8,7 +8,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "data:text/html,Web Console test for bug 588342";
+const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 588342";
 let fm, notificationBox, input;
 
 registerCleanupFunction(function() {

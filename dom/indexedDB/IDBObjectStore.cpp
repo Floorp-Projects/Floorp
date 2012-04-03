@@ -516,8 +516,7 @@ JSClass gDummyPropClass = {
   JS_PropertyStub,  JS_PropertyStub,
   JS_PropertyStub,  JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub,
-  JS_ConvertStub, JS_FinalizeStub,
-  JSCLASS_NO_OPTIONAL_MEMBERS
+  JS_ConvertStub
 };
 
 } // anonymous namespace
@@ -2476,7 +2475,7 @@ JSClass ThreadLocalJSRuntime::sGlobalClass = {
   "IndexedDBTransactionThreadGlobal",
   JSCLASS_GLOBAL_FLAGS,
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
 CreateIndexHelper::CreateIndexHelper(IDBTransaction* aTransaction,

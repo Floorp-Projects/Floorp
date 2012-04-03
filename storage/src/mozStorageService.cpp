@@ -169,15 +169,15 @@ public:
   StorageSQLiteMultiReporter(Service *aService) 
   : mService(aService)
   {
-    NS_NAMED_LITERAL_CSTRING(mStmtDesc,
+    mStmtDesc = NS_LITERAL_CSTRING(
       "Memory (approximate) used by all prepared statements used by "
       "connections to this database.");
 
-    NS_NAMED_LITERAL_CSTRING(mCacheDesc,
+    mCacheDesc = NS_LITERAL_CSTRING(
       "Memory (approximate) used by all pager caches used by connections "
       "to this database.");
 
-    NS_NAMED_LITERAL_CSTRING(mSchemaDesc,
+    mSchemaDesc = NS_LITERAL_CSTRING(
       "Memory (approximate) used to store the schema for all databases "
       "associated with connections to this database.");
   }

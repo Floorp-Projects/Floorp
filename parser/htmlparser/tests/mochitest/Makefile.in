@@ -94,10 +94,28 @@ _TEST_FILES =	parser_datreader.js \
 		test_bug645115.html \
 		test_bug655682.html \
 		file_bug655682.sjs \
+		file_bug672453_not_declared.html \
+		file_bug672453_late_meta.html \
+		file_bug672453_meta_restart.html \
+		file_bug672453_meta_unsupported.html \
+		file_bug672453_http_unsupported.html \
+		file_bug672453_http_unsupported.html^headers^ \
+		file_bug672453_bomless_utf16.html \
+		file_bug672453_meta_utf16.html \
+		file_bug672453_meta_non_superset.html \
 		test_viewsource.html \
 		test_bug715112.html \
 		test_bug715739.html \
+		test_bug717180.html \
+		file_bug717180.html \
 		$(NULL)
+
+# Test disabled on mobile. See bug 737020.
+ifneq ($(OS_TARGET),Android)
+ifndef MOZ_PLATFORM_MAEMO
+		_TEST_FILES += test_bug709083.html
+endif
+endif
 
 # Disabled test due to orange on Linux
 #		test_bug568470.html \
@@ -106,6 +124,9 @@ _TEST_FILES =	parser_datreader.js \
 
 # Disable test due to frequent orange on Mac
 #		test_bug534293.html \
+
+# Disabled due to frequent orange (bug 739354)
+#		test_bug672453.html \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

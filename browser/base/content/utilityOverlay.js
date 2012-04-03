@@ -95,9 +95,9 @@ function getTopWin(skipPopups) {
   return Services.wm.getMostRecentWindow("navigator:browser");
 }
 
-function openTopWin( url )
-{
-  openUILink(url, {})
+function openTopWin(url) {
+  /* deprecated */
+  openUILinkIn(url, "current");
 }
 
 function getBoolPref(prefname, def)
@@ -110,11 +110,33 @@ function getBoolPref(prefname, def)
   }
 }
 
-// openUILink handles clicks on UI elements that cause URLs to load.
-function openUILink( url, e, ignoreButton, ignoreAlt, allowKeywordFixup, postData, referrerUrl )
-{
-  var where = whereToOpenLink(e, ignoreButton, ignoreAlt);
-  openUILinkIn(url, where, allowKeywordFixup, postData, referrerUrl);
+/* openUILink handles clicks on UI elements that cause URLs to load.
+ *
+ * As the third argument, you may pass an object with the same properties as
+ * accepted by openUILinkIn, plus "ignoreButton" and "ignoreAlt".
+ */
+function openUILink(url, event, aIgnoreButton, aIgnoreAlt, aAllowThirdPartyFixup,
+                    aPostData, aReferrerURI) {
+  let params;
+
+  if (aIgnoreButton && typeof aIgnoreButton == "object") {
+    params = aIgnoreButton;
+
+    // don't forward "ignoreButton" and "ignoreAlt" to openUILinkIn
+    aIgnoreButton = params.ignoreButton;
+    aIgnoreAlt = params.ignoreAlt;
+    delete params.ignoreButton;
+    delete params.ignoreAlt;
+  } else {
+    params = {
+      allowThirdPartyFixup: aAllowThirdPartyFixup,
+      postData: aPostData,
+      referrerURI: aReferrerURI
+    };
+  }
+
+  let where = whereToOpenLink(event, aIgnoreButton, aIgnoreAlt);
+  openUILinkIn(url, where, params);
 }
 
 

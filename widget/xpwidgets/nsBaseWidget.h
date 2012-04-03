@@ -123,6 +123,7 @@ public:
   virtual void            GetWindowClipRegion(nsTArray<nsIntRect>* aRects);
   NS_IMETHOD              SetWindowShadowStyle(PRInt32 aStyle);
   virtual void            SetShowsToolbarButton(bool aShow) {}
+  virtual void            SetShowsFullScreenButton(bool aShow) {}
   virtual void            SetWindowAnimationType(WindowAnimationType aType) {}
   NS_IMETHOD              HideWindowChrome(bool aShouldHide);
   NS_IMETHOD              MakeFullScreen(bool aFullScreen);
@@ -267,6 +268,15 @@ protected:
   virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
                                               PRUint32 aNativeMessage,
                                               PRUint32 aModifierFlags)
+  { return NS_ERROR_UNEXPECTED; }
+
+  virtual nsresult SynthesizeNativeMouseScrollEvent(nsIntPoint aPoint,
+                                                    PRUint32 aNativeMessage,
+                                                    double aDeltaX,
+                                                    double aDeltaY,
+                                                    double aDeltaZ,
+                                                    PRUint32 aModifierFlags,
+                                                    PRUint32 aAdditionalFlags)
   { return NS_ERROR_UNEXPECTED; }
 
   // Stores the clip rectangles in aRects into mClipRects. Returns true

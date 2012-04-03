@@ -485,8 +485,8 @@ const BYTE ComponentPass2ShaderPS[] =
     dcl t0.xy
     dcl_2d s0
     texld r0, t0, s0
-    mul r0.xyz, r0, c0.x
     mov r0.w, c1.x
+    mul r0, r0, c0.x
     mov oC0, r0
 
 // approximately 4 instruction slots used (1 texture, 3 arithmetic)
@@ -536,11 +536,11 @@ const BYTE RGBShaderPS[] =
      15, 160,  66,   0,   0,   3, 
       0,   0,  15, 128,   0,   0, 
     228, 176,   0,   8, 228, 160, 
+      1,   0,   0,   2,   0,   0, 
+      8, 128,   1,   0,   0, 160, 
       5,   0,   0,   3,   0,   0, 
-      7, 128,   0,   0, 228, 128, 
+     15, 128,   0,   0, 228, 128, 
       0,   0,   0, 160,   1,   0, 
-      0,   2,   0,   0,   8, 128, 
-      1,   0,   0, 160,   1,   0, 
       0,   2,   0,   8,  15, 128, 
       0,   0, 228, 128, 255, 255, 
       0,   0

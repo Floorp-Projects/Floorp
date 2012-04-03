@@ -581,6 +581,15 @@ nsBrowserContentHandler.prototype = {
     var overridePage = "";
     var haveUpdateSession = false;
     try {
+      // Read the old value of homepage_override.mstone before
+      // needHomepageOverride updates it, so that we can later add it to the
+      // URL if we do end up showing an overridePage. This makes it possible
+      // to have the overridePage's content vary depending on the version we're
+      // upgrading from.
+      let old_mstone = "unknown";
+      try {
+        old_mstone = Services.prefs.getCharPref("browser.startup.homepage_override.mstone");
+      } catch (ex) {}
       let override = needHomepageOverride(prefb);
       if (override != OVERRIDE_NONE) {
         // Setup the default search engine to about:home page.
@@ -604,6 +613,8 @@ nsBrowserContentHandler.prototype = {
             overridePage = Services.urlFormatter.formatURLPref("startup.homepage_override_url");
             if (prefb.prefHasUserValue("app.update.postupdate"))
               overridePage = getPostUpdateOverridePage(overridePage);
+
+            overridePage = overridePage.replace("%OLD_VERSION%", old_mstone);
             break;
         }
       }
@@ -747,10 +758,6 @@ nsDefaultCommandLineHandler.prototype = {
     return this;
   },
 
-  // List of uri's that were passed via the command line without the app
-  // running and have already been handled. This is compared against uri's
-  // opened using DDE on Win32 so we only open one of the requests.
-  _handledURIs: [ ],
 #ifdef XP_WIN
   _haveProfile: false,
 #endif
@@ -784,25 +791,8 @@ nsDefaultCommandLineHandler.prototype = {
     try {
       var ar;
       while ((ar = cmdLine.handleFlagWithParam("url", false))) {
-        var found = false;
         var uri = resolveURIInternal(cmdLine, ar);
-        // count will never be greater than zero except on Win32.
-        var count = this._handledURIs.length;
-        for (var i = 0; i < count; ++i) {
-          if (this._handledURIs[i].spec == uri.spec) {
-            this._handledURIs.splice(i, 1);
-            found = true;
-            cmdLine.preventDefault = true;
-            break;
-          }
-        }
-        if (!found) {
-          urilist.push(uri);
-          // The requestpending command line flag is only used on Win32.
-          if (cmdLine.handleFlag("requestpending", false) &&
-              cmdLine.state == nsICommandLine.STATE_INITIAL_LAUNCH)
-            this._handledURIs.push(uri)
-        }
+        urilist.push(uri);
       }
     }
     catch (e) {

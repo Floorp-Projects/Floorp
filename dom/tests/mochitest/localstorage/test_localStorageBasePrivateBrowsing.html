@@ -8,21 +8,6 @@
 
 <script type="text/javascript">
 
-var INDEX_SIZE_ERR = 1;
-
-function checkException(func, exc)
-{
-  var exceptionThrew = false;
-  try {
-    func();
-  }
-  catch (ex) {
-    exceptionThrew = true;
-    is(ex.code, exc, "Expected "+exc+" exception");
-  }
-  ok(exceptionThrew, "Exception "+exc+" threw");
-}
-
 function startTest()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -45,20 +30,20 @@ function doTest()
 
   // Initially check the localStorage is empty
   is(localStorage.length, 0, "The storage is empty [1]");
-  checkException(function() {localStorage.key(0);}, INDEX_SIZE_ERR);
-  checkException(function() {localStorage.key(-1);}, INDEX_SIZE_ERR);
-  checkException(function() {localStorage.key(1);}, INDEX_SIZE_ERR);
+  is(localStorage.key(0), null, "key() should return null for out-of-bounds access");
+  is(localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(localStorage.key(1), null, "key() should return null for out-of-bounds access");
   is(localStorage.getItem("nonexisting"), null, "Nonexisting item is null (getItem())");
-  is(localStorage["nonexisting"], null, "Nonexisting item is null (array access)");
-  is(localStorage.nonexisting, null, "Nonexisting item is null (property access)");
+  is(localStorage["nonexisting"], undefined, "Nonexisting item is null (array access)");
+  is(localStorage.nonexisting, undefined, "Nonexisting item is null (property access)");
   localStorage.removeItem("nonexisting"); // Just check there is no exception
 
   is(typeof localStorage.getItem("nonexisting"), "object", "getItem('nonexisting') is object");
-  is(typeof localStorage["nonexisting"], "object", "['nonexisting'] is object");
-  is(typeof localStorage.nonexisting, "object", "nonexisting is object");
+  is(typeof localStorage["nonexisting"], "undefined", "['nonexisting'] is undefined");
+  is(typeof localStorage.nonexisting, "undefined", "nonexisting is undefined");
   is(typeof localStorage.getItem("nonexisting2"), "object", "getItem('nonexisting2') is object");
-  is(typeof localStorage["nonexisting2"], "object", "['nonexisting2'] is object");
-  is(typeof localStorage.nonexisting2, "object", "nonexisting2 is object");
+  is(typeof localStorage["nonexisting2"], "undefined", "['nonexisting2'] is undefined");
+  is(typeof localStorage.nonexisting2, "undefined", "nonexisting2 is undefined");
 
   // add an empty-value key
   localStorage.setItem("empty", "");
@@ -71,18 +56,18 @@ function doTest()
   localStorage.removeItem("empty");
   is(localStorage.length, 0, "The storage has no keys");
   is(localStorage.getItem("empty"), null, "empty item is null (getItem())");
-  is(localStorage["empty"], null, "empty item is null (array access)");
-  is(localStorage.empty, null, "empty item is null (property access)");
+  is(localStorage["empty"], null, "empty item is undefined (array access)");
+  is(localStorage.empty, null, "empty item is undefined (property access)");
   is(typeof localStorage.getItem("empty"), "object", "getItem('empty') is object");
-  is(typeof localStorage["empty"], "object", "['empty'] is object");
-  is(typeof localStorage.empty, "object", "empty is object");
+  is(typeof localStorage["empty"], "undefined", "['empty'] is undefined");
+  is(typeof localStorage.empty, "undefined", "empty is undefined");
 
   // add one key, check it is there
   localStorage.setItem("key1", "value1");
   is(localStorage.length, 1, "The storage has one key-value pair");
   is(localStorage.key(0), "key1");
-  checkException(function() {localStorage.key(-1);}, INDEX_SIZE_ERR);
-  checkException(function() {localStorage.key(1);}, INDEX_SIZE_ERR);
+  is(localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(localStorage.key(1), null, "key() should return null for out-of-bounds access");
 
   // check all access method give the correct result
   // and are of the correct type
@@ -97,12 +82,12 @@ function doTest()
   // remove the previously added key and check the storage is empty
   localStorage.removeItem("key1");
   is(localStorage.length, 0, "The storage is empty [2]");
-  checkException(function() {localStorage.key(0);}, INDEX_SIZE_ERR);
+  is(localStorage.key(0), null, "key() should return null for out-of-bounds access");
   is(localStorage.getItem("key1"), null, "\'key1\' removed");
 
   is(typeof localStorage.getItem("key1"), "object", "getItem('key1') is object");
-  is(typeof localStorage["key1"], "object", "['key1'] is object");
-  is(typeof localStorage.key1, "object", "key1 is object");
+  is(typeof localStorage["key1"], "undefined", "['key1'] is undefined");
+  is(typeof localStorage.key1, "undefined", "key1 is undefined");
 
   // add one key, check it is there
   localStorage.setItem("key1", "value1");
@@ -126,8 +111,8 @@ function doTest()
   is(localStorage.length, 2, "The storage has two key-value pairs");
   is(localStorage.key(0), firstKey); // After key value changes the order must be preserved
   is(localStorage.key(1), secondKey);
-  checkException(function() {localStorage.key(-1);}, INDEX_SIZE_ERR);
-  checkException(function() {localStorage.key(2);}, INDEX_SIZE_ERR);
+  is(localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(localStorage.key(2), null, "key() should return null for out-of-bounds access");
   is(localStorage.getItem("key1"), "value1");
   is(localStorage.getItem("key2"), "value2-2");
 
@@ -136,8 +121,8 @@ function doTest()
   is(localStorage.length, 2, "The storage has two key-value pairs");
   is(localStorage.key(0), firstKey); // After key value changes the order must be preserved
   is(localStorage.key(1), secondKey);
-  checkException(function() {localStorage.key(-1);}, INDEX_SIZE_ERR);
-  checkException(function() {localStorage.key(2);}, INDEX_SIZE_ERR);
+  is(localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(localStorage.key(2), null, "key() should return null for out-of-bounds access");
   is(localStorage.getItem("key1"), "value1-2");
   is(localStorage.getItem("key2"), "value2-2");
 
@@ -145,8 +130,8 @@ function doTest()
   localStorage.removeItem("key2");
   is(localStorage.length, 1, "The storage has one key-value pair");
   is(localStorage.key(0), "key1");
-  checkException(function() {localStorage.key(-1);}, INDEX_SIZE_ERR);
-  checkException(function() {localStorage.key(1);}, INDEX_SIZE_ERR);
+  is(localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(localStorage.key(1), null, "key() should return null for out-of-bounds access");
   is(localStorage.getItem("key1"), "value1-2");
 
   // JS property test
@@ -180,12 +165,40 @@ function doTest()
   is(localStorage["testC"], "valueC2");
   is(localStorage.getItem("testC"), "valueC2");
 
+  localStorage.setItem("testC", null);
+  is("testC" in localStorage, true);
+  is(localStorage.getItem("testC"), "null");
+  is(localStorage["testC"], "null");
+  is(localStorage.testC, "null");
+
+  localStorage.removeItem("testC");
+  localStorage["testC"] = null;
+  is("testC" in localStorage, true);
+  is(localStorage.getItem("testC"), "null");
+  is(localStorage["testC"], "null");
+  is(localStorage.testC, "null");
+
+  localStorage.setItem(null, "test");
+  is("null" in localStorage, true);
+  is(localStorage.getItem("null"), "test");
+  is(localStorage.getItem(null), "test");
+  is(localStorage["null"], "test");
+  localStorage.removeItem(null, "test");
+  // bug 350023
+  todo_is("null" in localStorage, false);
+
+  localStorage.setItem(null, "test");
+  is("null" in localStorage, true);
+  localStorage.removeItem("null", "test");
+  // bug 350023
+  todo_is("null" in localStorage, false);
+
   // Clear the storage
   localStorage.clear();
   is(localStorage.length, 0, "The storage is empty [3]");
-  checkException(function() {localStorage.key(0);}, INDEX_SIZE_ERR); // this is unspecified!
-  checkException(function() {localStorage.key(-1);}, INDEX_SIZE_ERR);
-  checkException(function() {localStorage.key(1);}, INDEX_SIZE_ERR);
+  is(localStorage.key(0), null, "key() should return null for out-of-bounds access");
+  is(localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(localStorage.key(1), null, "key() should return null for out-of-bounds access");
   is(localStorage.getItem("nonexisting"), null, "Nonexisting item is null");
   is(localStorage.getItem("key1"), null, "key1 removed");
   is(localStorage.getItem("key2"), null, "key2 removed");

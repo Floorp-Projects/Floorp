@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <title>HTML Test: BDI: neutral when nested</title>
+    <link rel="reference" href="https://bug712600.bugzilla.mozilla.org/bdi-neutral-nested-ref.html">
+    <link rel="author" title="Aharon Lanin" href="mailto:aharon@google.com">
+    <link rel="author" title="HTML5 bidi test WG" href="mailto:html5bidi@googlegroups.com">
+    <link rel="help" href="http://dev.w3.org/html5/spec/Overview.html#the-bdi-element">
+    <meta name="assert" content="
+      'For the purposes of applying the bidirectional algorithm to the paragraph-level
+      container that a bdi element finds itself within, the bdi element must be treated
+      like a U+FFFC OBJECT REPLACEMENT CHARACTER.'">
+    <style>
+      body{
+        font-size:2em;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Key to entities used below:
+      &#x05D0; ... &#x05D5; - The first six Hebrew letters (strongly RTL).
+      &#x202D; - The LRO (left-to-right-override) formatting character.
+      &#x202C; - The PDF (pop directional formatting) formatting character; closes LRO. -->
+
+      <div dir="ltr">א + <bdi>[a + <bdi>[ב + <bdi>[b + 4]</bdi> + 3]</bdi> + 2]</bdi> + 1</div>
+      <div dir="ltr">א + <bdi dir="rtl">[a + <bdi dir="ltr">[ב + <bdi dir="rtl">[b + 4]</bdi> + 3]</bdi> + 2]</bdi> + 1</div>
+      <div dir="ltr">א + <bdi dir="ltr">[a + <bdi dir="rtl">[ב + <bdi dir="ltr">[b + 4]</bdi> + 3]</bdi> + 2]</bdi> + 1</div>
+      <div dir="rtl">a + <bdi>[א + <bdi>[b + <bdi>[ב + 3]</bdi> + 2]</bdi> + 1]</bdi> + 0</div>
+      <div dir="rtl">a + <bdi dir="ltr">[א + <bdi dir="rtl">[b + <bdi dir="ltr">[ב + 3]</bdi> + 2]</bdi> + 1]</bdi> + 0</div>
+      <div dir="rtl">a + <bdi dir="rtl">[א + <bdi dir="ltr">[b + <bdi dir="rtl">[ב + 3]</bdi> + 2]</bdi> + 1]</bdi> + 0</div>
+</body></html>

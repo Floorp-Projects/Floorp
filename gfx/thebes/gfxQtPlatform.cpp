@@ -37,7 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <QPixmap>
-#include <QX11Info>
+#include <qglobal.h>
+#if (QT_VERSION < QT_VERSION_CHECK(5,0,0))
+#  include <QX11Info>
+#else
+#  include <QPlatformNativeInterface>
+#endif
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QPaintEngine>
@@ -45,6 +50,8 @@
 #include "gfxQtPlatform.h"
 
 #include "gfxFontconfigUtils.h"
+
+#include "mozilla/gfx/2D.h"
 
 #include "cairo.h"
 
@@ -81,8 +88,13 @@
 
 using namespace mozilla;
 using namespace mozilla::unicode;
+using namespace mozilla::gfx;
 
+#if (QT_VERSION < QT_VERSION_CHECK(5,0,0))
 #define DEFAULT_RENDER_MODE RENDER_DIRECT
+#else
+#define DEFAULT_RENDER_MODE RENDER_BUFFERED
+#endif
 
 static QPaintEngine::Type sDefaultQtPaintEngineType = QPaintEngine::Raster;
 gfxFontconfigUtils *gfxQtPlatform::sFontconfigUtils = nsnull;
@@ -194,6 +206,40 @@ gfxQtPlatform::~gfxQtPlatform()
 #endif
 }
 
+#ifdef MOZ_X11
+Display*
+gfxQtPlatform::GetXDisplay(QWidget* aWindow)
+{
+#if (QT_VERSION < QT_VERSION_CHECK(5,0,0))
+#ifdef Q_WS_X11
+  return aWindow ? aWindow->x11Info().display() : QX11Info::display();
+#else
+  return nsnull;
+#endif
+#else
+  return (Display*)(qApp->platformNativeInterface()->
+    nativeResourceForWindow("display", aWindow ? aWindow->windowHandle() : nsnull));
+#endif
+}
+
+Screen*
+gfxQtPlatform::GetXScreen(QWidget* aWindow)
+{
+#if (QT_VERSION < QT_VERSION_CHECK(5,0,0))
+#ifdef Q_WS_X11
+  return ScreenOfDisplay(GetXDisplay(aWindow), aWindow ? aWindow->x11Info().screen() : QX11Info().screen());
+#else
+  return nsnull;
+#endif
+#else
+  return ScreenOfDisplay(GetXDisplay(aWindow),
+                         (int)qApp->platformNativeInterface()->
+                           nativeResourceForWindow("screen",
+                             aWindow ? aWindow->windowHandle() : nsnull));
+#endif
+}
+#endif
+
 already_AddRefed<gfxASurface>
 gfxQtPlatform::CreateOffscreenSurface(const gfxIntSize& size,
                                       gfxASurface::gfxContentType contentType)
@@ -221,9 +267,9 @@ gfxQtPlatform::CreateOffscreenSurface(const gfxIntSize& size,
 
 #ifdef MOZ_X11
     XRenderPictFormat* xrenderFormat =
-        gfxXlibSurface::FindRenderFormat(QX11Info().display(), imageFormat);
+        gfxXlibSurface::FindRenderFormat(GetXDisplay(), imageFormat);
 
-    Screen* screen = ScreenOfDisplay(QX11Info().display(), QX11Info().screen());
+    Screen* screen = GetXScreen();
     newSurface = gfxXlibSurface::Create(screen, xrenderFormat, size);
 #endif
 
@@ -596,3 +642,11 @@ gfxQtPlatform::GetOffscreenFormat()
 {
     return sOffscreenFormat;
 }
+
+bool
+gfxQtPlatform::SupportsAzure(BackendType& aBackend)
+{
+  aBackend = BACKEND_SKIA;
+  return true;
+}
+

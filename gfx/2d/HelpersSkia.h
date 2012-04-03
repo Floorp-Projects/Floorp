@@ -41,6 +41,7 @@
 #include "2D.h"
 #include "skia/SkCanvas.h"
 #include "skia/SkDashPathEffect.h"
+#include "mozilla/Assertions.h"
 
 namespace mozilla {
 namespace gfx {
@@ -116,18 +117,30 @@ StrokeOptionsToPaint(SkPaint& aPaint, const StrokeOptions &aOptions)
   aPaint.setStrokeMiter(SkFloatToScalar(aOptions.mMiterLimit));
   aPaint.setStrokeCap(CapStyleToSkiaCap(aOptions.mLineCap));
   aPaint.setStrokeJoin(JoinStyleToSkiaJoin(aOptions.mLineJoin));
-  if (aOptions.mDashLength > 1) {
-    std::vector<SkScalar> pattern;
-    pattern.resize(aOptions.mDashLength);
-    for (uint32_t i = 0; i < aOptions.mDashLength; i++) {
-      pattern[i] = SkFloatToScalar(aOptions.mDashPattern[i]);
+
+  if (aOptions.mDashLength > 0) {
+    // Skia only supports dash arrays that are multiples of 2.
+    uint32_t dashCount;
+
+    if (aOptions.mDashLength % 2 == 0) {
+      dashCount = aOptions.mDashLength;
+    } else {
+      dashCount = aOptions.mDashLength * 2;
     }
-    
-    SkDashPathEffect* dash = new SkDashPathEffect(&pattern.front(), 
-                                                  aOptions.mDashLength, 
+
+    std::vector<SkScalar> pattern;
+    pattern.resize(dashCount);
+
+    for (uint32_t i = 0; i < dashCount; i++) {
+      pattern[i] = SkFloatToScalar(aOptions.mDashPattern[i % aOptions.mDashLength]);
+    }
+
+    SkDashPathEffect* dash = new SkDashPathEffect(&pattern.front(),
+                                                  dashCount, 
                                                   SkFloatToScalar(aOptions.mDashOffset));
     SkSafeUnref(aPaint.setPathEffect(dash));
   }
+
   aPaint.setStyle(SkPaint::kStroke_Style);
   return true;
 }

@@ -104,7 +104,7 @@ public class SetupScreen extends Dialog
         setContentView(R.layout.setup_screen);
         setCancelable(false);
 
-        setTitle(R.string.splash_firstrun);
+        setTitle(R.string.splash_settingup);
 
         ImageView spinnerImage = (ImageView)findViewById(R.id.spinner_image);
         mProgressSpinner = (AnimationDrawable)spinnerImage.getBackground();

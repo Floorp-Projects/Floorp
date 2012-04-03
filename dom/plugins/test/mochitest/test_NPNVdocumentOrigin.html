@@ -16,9 +16,17 @@
       // Test with no modifications
       is(p1.getNPNVdocumentOrigin(), realOrigin, "Checking for expected origin.");
 
-      // Mess with window.location.toString
-      window.location.toString = function() { return 'http://victim.rckc.at/'; }
-      is(p1.getNPNVdocumentOrigin(), realOrigin, "Checking for expected origin afer modifying window.location.toString.");
+      // This used to test that shadowing window.location.toString didn't confuse
+      // getNPNVdocumentOrigin. But now we explicitly throw when that happens. So
+      // just verify that we throw. There's no reason why getNPNVdocumentOrigin _would_
+      // be confused in this case anyway.
+      try {
+        window.location.toString = function() { return 'http://victim.rckc.at/'; }
+        ok(false, "Should throw when shadowing window.location.toString");
+      }
+      catch (e) {
+        ok(true, "Should throw when shadowing window.location.toString");
+      }
 
       // Create a plugin in a new window with about:blank
       var newWindow = window.open("about:blank");

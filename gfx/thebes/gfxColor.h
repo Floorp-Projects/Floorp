@@ -184,6 +184,8 @@ struct THEBES_API gfxRGBA {
      * The color value is interpreted based on colorType;
      * all values use the native platform endianness.
      *
+     * Resulting gfxRGBA stores non-premultiplied data.
+     *
      * @see gfxRGBA::Packed
      */
     gfxRGBA(PRUint32 c, PackedColorType colorType = PACKED_ABGR) {

@@ -37,23 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMaiInterfaceValue.h"
+#include "InterfaceInitFuncs.h"
 
-void
-valueInterfaceInitCB(AtkValueIface *aIface)
-{
-    NS_ASSERTION(aIface, "Invalid aIface");
-    if (!aIface)
-        return;
+#include "nsAccessibleWrap.h"
+#include "nsMai.h"
 
-    aIface->get_current_value = getCurrentValueCB;
-    aIface->get_maximum_value = getMaximumValueCB;
-    aIface->get_minimum_value = getMinimumValueCB;
-    aIface->get_minimum_increment = getMinimumIncrementCB;
-    aIface->set_current_value = setCurrentValueCB;
-}
+extern "C" {
 
-void
+static void
 getCurrentValueCB(AtkValue *obj, GValue *value)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
@@ -74,7 +65,7 @@ getCurrentValueCB(AtkValue *obj, GValue *value)
     g_value_set_double (value, accDouble);
 }
 
-void
+static void
 getMaximumValueCB(AtkValue *obj, GValue *value)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
@@ -95,7 +86,7 @@ getMaximumValueCB(AtkValue *obj, GValue *value)
     g_value_set_double (value, accDouble);
 }
 
-void
+static void
 getMinimumValueCB(AtkValue *obj, GValue *value)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
@@ -116,7 +107,7 @@ getMinimumValueCB(AtkValue *obj, GValue *value)
     g_value_set_double (value, accDouble);
 }
 
-void
+static void
 getMinimumIncrementCB(AtkValue *obj, GValue *minimumIncrement)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
@@ -137,7 +128,7 @@ getMinimumIncrementCB(AtkValue *obj, GValue *minimumIncrement)
     g_value_set_double (minimumIncrement, accDouble);
 }
 
-gboolean
+static gboolean
 setCurrentValueCB(AtkValue *obj, const GValue *value)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
@@ -151,4 +142,19 @@ setCurrentValueCB(AtkValue *obj, const GValue *value)
 
     double accDouble =g_value_get_double (value);
     return !NS_FAILED(accValue->SetCurrentValue(accDouble));
+}
+}
+
+void
+valueInterfaceInitCB(AtkValueIface* aIface)
+{
+  NS_ASSERTION(aIface, "Invalid aIface");
+  if (NS_UNLIKELY(!aIface))
+    return;
+
+  aIface->get_current_value = getCurrentValueCB;
+  aIface->get_maximum_value = getMaximumValueCB;
+  aIface->get_minimum_value = getMinimumValueCB;
+  aIface->get_minimum_increment = getMinimumIncrementCB;
+  aIface->set_current_value = setCurrentValueCB;
 }

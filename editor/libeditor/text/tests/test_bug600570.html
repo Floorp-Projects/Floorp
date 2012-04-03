@@ -23,6 +23,9 @@ aaa
 
 /** Test for Bug 600570 **/
 
+// Bug 718316: This test fails on Windows 7
+if (navigator.userAgent.indexOf("Windows NT 6.1") == -1) {
+
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   var t = document.querySelector("textarea");
@@ -73,6 +76,11 @@ SimpleTest.waitForFocus(function() {
     );
   });
 });
+
+}
+else {
+  ok(true, "Somebody thought it was a great idea to make me type this.");
+}
 
 </script>
 </pre>

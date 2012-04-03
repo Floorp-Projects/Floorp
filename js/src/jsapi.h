@@ -629,10 +629,11 @@ class Value
 #endif
     }
 
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(__sparc)
   /* To make jsval binary compatible when linking across C and C++ with MSVC,
    * JS::Value needs to be POD. Otherwise, jsval will be passed in memory
    * in C++ but by value in C (bug 645111).
+   * Same issue for SPARC ABI. (bug 737344).
    */
   private:
 #endif
@@ -808,7 +809,18 @@ class JS_PUBLIC_API(AutoCheckRequestDepth)
 # define CHECK_REQUEST(cx) \
     ((void) 0)
 
-#endif
+#endif /* JS_THREADSAFE && DEBUG */
+
+#ifdef DEBUG
+/* Assert that we're not doing GC on cx, that we're in a request as
+   needed, and that the compartments for cx and v are correct. */
+JS_PUBLIC_API(void)
+AssertArgumentsAreSane(JSContext *cx, const Value &v);
+#else
+inline void AssertArgumentsAreSane(JSContext *cx, const Value &v) {
+    /* Do nothing */
+}
+#endif /* DEBUG */
 
 class JS_PUBLIC_API(AutoGCRooter) {
   public:
@@ -1531,16 +1543,6 @@ typedef JSBool
 (* JSSubsumePrincipalsOp)(JSPrincipals *principals1, JSPrincipals *principals2);
 
 /*
- * XDR-encode or -decode a principals instance, based on whether xdr->mode is
- * JSXDR_ENCODE, in which case *principalsp should be encoded; or JSXDR_DECODE,
- * in which case implementations must return a held (via JSPRINCIPALS_HOLD),
- * non-null *principalsp out parameter.  Return true on success, false on any
- * error, which the implementation must have reported.
- */
-typedef JSBool
-(* JSPrincipalsTranscoder)(JSXDRState *xdr, JSPrincipals **principalsp);
-
-/*
  * Return a weak reference to the principals associated with obj, possibly via
  * the immutable parent chain leading from obj to a top-level container (e.g.,
  * a window object in the DOM level 0).  If there are no principals associated
@@ -2253,6 +2255,32 @@ JS_ValueToSource(JSContext *cx, jsval v);
 extern JS_PUBLIC_API(JSBool)
 JS_ValueToNumber(JSContext *cx, jsval v, double *dp);
 
+#ifdef __cplusplus
+namespace js {
+/*
+ * DO NOT CALL THIS.  Use JS::ToNumber
+ */
+extern JS_PUBLIC_API(bool)
+ToNumberSlow(JSContext *cx, JS::Value v, double *dp);
+} /* namespace js */
+
+namespace JS {
+
+/* ES5 9.3 ToNumber. */
+JS_ALWAYS_INLINE bool
+ToNumber(JSContext *cx, const Value &v, double *out)
+{
+    AssertArgumentsAreSane(cx, v);
+    if (v.isNumber()) {
+        *out = v.toNumber();
+        return true;
+    }
+    return js::ToNumberSlow(cx, v, out);
+}
+
+} /* namespace JS */
+#endif /* __cplusplus */
+
 extern JS_PUBLIC_API(JSBool)
 JS_DoubleIsInt32(double d, int32_t *ip);
 
@@ -2268,6 +2296,31 @@ JS_DoubleToUint32(double d);
  */
 extern JS_PUBLIC_API(JSBool)
 JS_ValueToECMAInt32(JSContext *cx, jsval v, int32_t *ip);
+
+#ifdef __cplusplus
+namespace js {
+/*
+ * DO NOT CALL THIS.  Use JS::ToInt32
+ */
+extern JS_PUBLIC_API(bool)
+ToInt32Slow(JSContext *cx, const JS::Value &v, int32_t *out);
+} /* namespace js */
+
+namespace JS {
+
+JS_ALWAYS_INLINE bool
+ToInt32(JSContext *cx, const js::Value &v, int32_t *out)
+{
+    AssertArgumentsAreSane(cx, v);
+    if (v.isInt32()) {
+        *out = v.toInt32();
+        return true;
+    }
+    return js::ToInt32Slow(cx, v, out);
+}
+
+} /* namespace JS */
+#endif /* __cplusplus */
 
 /*
  * Convert a value to a number, then to a uint32_t, according to the ECMA rules
@@ -3436,6 +3489,7 @@ struct JSClass {
 #define JSCLASS_IMPLEMENTS_BARRIERS     (1<<5)  /* Correctly implements GC read
                                                    and write barriers */
 #define JSCLASS_DOCUMENT_OBSERVER       (1<<6)  /* DOM document observer */
+#define JSCLASS_USERBIT1                (1<<7)  /* Reserved for embeddings. */
 
 /*
  * To reserve slots fetched and stored via JS_Get/SetReservedSlot, bitwise-or
@@ -3471,6 +3525,15 @@ struct JSClass {
 
 #define JSCLASS_XPCONNECT_GLOBAL        (1<<(JSCLASS_HIGH_FLAGS_SHIFT+7))
 
+/* Reserved for embeddings. */
+#define JSCLASS_USERBIT2                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+8))
+#define JSCLASS_USERBIT3                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+9))
+
+/*
+ * Bits 26 through 31 are reserved for the CACHED_PROTO_KEY mechanism, see
+ * below.
+ */
+
 /* Global flags. */
 #define JSGLOBAL_FLAGS_CLEARED          0x1
 
@@ -3495,8 +3558,8 @@ struct JSClass {
    && JSCLASS_RESERVED_SLOTS(clasp) >= JSCLASS_GLOBAL_SLOT_COUNT)
 
 /* Fast access to the original value of each standard class's prototype. */
-#define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 8)
-#define JSCLASS_CACHED_PROTO_WIDTH      8
+#define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 10)
+#define JSCLASS_CACHED_PROTO_WIDTH      6
 #define JSCLASS_CACHED_PROTO_MASK       JS_BITMASK(JSCLASS_CACHED_PROTO_WIDTH)
 #define JSCLASS_HAS_CACHED_PROTO(key)   ((key) << JSCLASS_CACHED_PROTO_SHIFT)
 #define JSCLASS_CACHED_PROTO_KEY(clasp) ((JSProtoKey)                         \
@@ -3608,9 +3671,6 @@ JS_ResolveStub(JSContext *cx, JSObject *obj, jsid id);
 
 extern JS_PUBLIC_API(JSBool)
 JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
-
-extern JS_PUBLIC_API(void)
-JS_FinalizeStub(JSContext *cx, JSObject *obj);
 
 struct JSConstDoubleSpec {
     double          dval;
@@ -4130,7 +4190,6 @@ JS_DropPrincipals(JSRuntime *rt, JSPrincipals *principals);
 struct JSSecurityCallbacks {
     JSCheckAccessOp            checkObjectAccess;
     JSSubsumePrincipalsOp      subsumePrincipals;
-    JSPrincipalsTranscoder     principalsTranscoder;
     JSObjectPrincipalsFinder   findObjectPrincipals;
     JSCSPEvalChecker           contentSecurityPolicyAllows;
 };
@@ -5381,12 +5440,12 @@ JS_IsConstructing(JSContext *cx, const jsval *vp)
 }
 
 /*
- * If a constructor does not have any static knowledge about the type of
- * object to create, it can request that the JS engine create a default new
- * 'this' object, as is done for non-constructor natives when called with new.
+ * A constructor can request that the JS engine create a default new 'this'
+ * object of the given class, using the callee to determine parentage and
+ * [[Prototype]].
  */
 extern JS_PUBLIC_API(JSObject *)
-JS_NewObjectForConstructor(JSContext *cx, const jsval *vp);
+JS_NewObjectForConstructor(JSContext *cx, JSClass *clasp, const jsval *vp);
 
 /************************************************************************/
 
@@ -5423,6 +5482,24 @@ JS_IsIdentifier(JSContext *cx, JSString *str, JSBool *isIdentifier);
 extern JS_PUBLIC_API(JSBool)
 JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno);
 
+
+/*
+ * Encode/Decode interpreted scripts and functions to/from memory.
+ */
+
+extern JS_PUBLIC_API(void *)
+JS_EncodeScript(JSContext *cx, JSScript *script, uint32_t *lengthp);
+
+extern JS_PUBLIC_API(void *)
+JS_EncodeInterpretedFunction(JSContext *cx, JSObject *funobj, uint32_t *lengthp);
+
+extern JS_PUBLIC_API(JSScript *)
+JS_DecodeScript(JSContext *cx, const void *data, uint32_t length,
+                JSPrincipals *principals, JSPrincipals *originPrincipals);
+
+extern JS_PUBLIC_API(JSObject *)
+JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length,
+                             JSPrincipals *principals, JSPrincipals *originPrincipals);
 
 JS_END_EXTERN_C
 

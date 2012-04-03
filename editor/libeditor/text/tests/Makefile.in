@@ -65,7 +65,7 @@ _TEST_FILES = \
 		test_bug645914.html \
 		test_bug681229.html \
 		test_bug692520.html \
-		test_bug717147.html \
+		test_dom_input_event_on_texteditor.html \
 		$(NULL)
 
 # disables the key handling test on gtk2 because gtk2 overrides some key events

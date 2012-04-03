@@ -242,6 +242,9 @@ nsDOMFileReader::GetResult(JSContext* aCx, jsval* aResult)
     } else {
       *aResult = JSVAL_NULL;
     }
+    if (!JS_WrapValue(aCx, aResult)) {
+      return NS_ERROR_FAILURE;
+    }
     return NS_OK;
   }
  

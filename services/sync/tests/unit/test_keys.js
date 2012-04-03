@@ -1,36 +1,13 @@
-var btoa;
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/constants.js");
-btoa = Cu.import("resource://services-sync/util.js").btoa;
+Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/keys.js");
 
 function sha256HMAC(message, key) {
   let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256, key);
   return Utils.digestBytes(message, h);
-}
-
-function test_time_keyFromString(iterations) {
-  let k;
-  let o;
-  let b = new BulkKeyBundle();
-  let d = Utils.decodeKeyBase32("ababcdefabcdefabcdefabcdef");
-  b.generateRandom();
-  
-  _("Running " + iterations + " iterations of hmacKeyObject + sha256HMAC.");
-  for (let i = 0; i < iterations; ++i) {
-    let k = b.hmacKeyObject;
-    o = sha256HMAC(d, k);
-  }
-  do_check_true(!!o);
-  _("Done.");
-}
-
-function test_repeated_hmac() {
-  let testKey = "ababcdefabcdefabcdefabcdef";
-  let k = Utils.makeHMACKey("foo");
-  let one = sha256HMAC(Utils.decodeKeyBase32(testKey), k);
-  let two = sha256HMAC(Utils.decodeKeyBase32(testKey), k);
-  do_check_eq(one, two);
 }
 
 function do_check_array_eq(a1, a2) {
@@ -40,31 +17,6 @@ function do_check_array_eq(a1, a2) {
   }
 }
 
-function test_keymanager() {
-  let testKey = "ababcdefabcdefabcdefabcdef";
-  
-  let username = "john@example.com";
-  
-  // Decode the key here to mirror what generateEntry will do,
-  // but pass it encoded into the KeyBundle call below.
-  
-  let sha256inputE = "" + HMAC_INPUT + username + "\x01";
-  let key = Utils.makeHMACKey(Utils.decodeKeyBase32(testKey));
-  let encryptKey = sha256HMAC(sha256inputE, key);
-  
-  let sha256inputH = encryptKey + HMAC_INPUT + username + "\x02";
-  let hmacKey = sha256HMAC(sha256inputH, key);
-  
-  // Encryption key is stored in base64 for WeaveCrypto convenience.
-  do_check_eq(btoa(encryptKey), new SyncKeyBundle(null, username, testKey).encryptionKey);
-  do_check_eq(hmacKey,          new SyncKeyBundle(null, username, testKey).hmacKey);
-  
-  // Test with the same KeyBundle for both.
-  let obj = new SyncKeyBundle(null, username, testKey);
-  do_check_eq(hmacKey, obj.hmacKey);
-  do_check_eq(btoa(encryptKey), obj.encryptionKey);
-}
-
 function do_check_keypair_eq(a, b) {
   do_check_eq(2, a.length);
   do_check_eq(2, b.length);
@@ -72,57 +24,202 @@ function do_check_keypair_eq(a, b) {
   do_check_eq(a[1], b[1]);
 }
 
-function test_collections_manager() {
+function test_time_keyFromString(iterations) {
+  let k;
+  let o;
+  let b = new BulkKeyBundle("dummy");
+  let d = Utils.decodeKeyBase32("ababcdefabcdefabcdefabcdef");
+  b.generateRandom();
+
+  _("Running " + iterations + " iterations of hmacKeyObject + sha256HMAC.");
+  for (let i = 0; i < iterations; ++i) {
+    let k = b.hmacKeyObject;
+    o = sha256HMAC(d, k);
+  }
+  do_check_true(!!o);
+  _("Done.");
+}
+
+add_test(function test_set_invalid_values() {
+  _("Ensure that setting invalid encryption and HMAC key values is caught.");
+
+  let bundle = new BulkKeyBundle("foo");
+
+  let thrown = false;
+  try {
+    bundle.encryptionKey = null;
+  } catch (ex) {
+    thrown = true;
+    do_check_eq(ex.message.indexOf("Encryption key can only be set to"), 0);
+  } finally {
+    do_check_true(thrown);
+    thrown = false;
+  }
+
+  try {
+    bundle.encryptionKey = ["trollololol"];
+  } catch (ex) {
+    thrown = true;
+    do_check_eq(ex.message.indexOf("Encryption key can only be set to"), 0);
+  } finally {
+    do_check_true(thrown);
+    thrown = false;
+  }
+
+  try {
+    bundle.hmacKey = Utils.generateRandomBytes(15);
+  } catch (ex) {
+    thrown = true;
+    do_check_eq(ex.message.indexOf("HMAC key must be at least 128"), 0);
+  } finally {
+    do_check_true(thrown);
+    thrown = false;
+  }
+
+  try {
+    bundle.hmacKey = null;
+  } catch (ex) {
+    thrown = true;
+    do_check_eq(ex.message.indexOf("HMAC key can only be set to string"), 0);
+  } finally {
+    do_check_true(thrown);
+    thrown = false;
+  }
+
+  try {
+    bundle.hmacKey = ["trollolol"];
+  } catch (ex) {
+    thrown = true;
+    do_check_eq(ex.message.indexOf("HMAC key can only be set to"), 0);
+  } finally {
+    do_check_true(thrown);
+    thrown = false;
+  }
+
+  try {
+    bundle.hmacKey = Utils.generateRandomBytes(15);
+  } catch (ex) {
+    thrown = true;
+    do_check_eq(ex.message.indexOf("HMAC key must be at least 128"), 0);
+  } finally {
+    do_check_true(thrown);
+    thrown = false;
+  }
+
+  run_next_test();
+});
+
+add_test(function test_repeated_hmac() {
+  let testKey = "ababcdefabcdefabcdefabcdef";
+  let k = Utils.makeHMACKey("foo");
+  let one = sha256HMAC(Utils.decodeKeyBase32(testKey), k);
+  let two = sha256HMAC(Utils.decodeKeyBase32(testKey), k);
+  do_check_eq(one, two);
+
+  run_next_test();
+});
+
+add_test(function test_sync_key_bundle_derivation() {
+  _("Ensure derivation from known values works.");
+
+  // The known values in this test were originally verified against Firefox
+  // Home.
+  let bundle = new SyncKeyBundle("st3fan", "q7ynpwq7vsc9m34hankbyi3s3i");
+
+  // These should be compared to the results from Home, as they once were.
+  let e = "14b8c09fa84e92729ee695160af6e0385f8f6215a25d14906e1747bdaa2de426";
+  let h = "370e3566245d79fe602a3adb5137e42439cd2a571235197e0469d7d541b07875";
+
+  let realE = Utils.bytesAsHex(bundle.encryptionKey);
+  let realH = Utils.bytesAsHex(bundle.hmacKey);
+
+  _("Real E: " + realE);
+  _("Real H: " + realH);
+  do_check_eq(realH, h);
+  do_check_eq(realE, e);
+
+  run_next_test();
+});
+
+add_test(function test_keymanager() {
+  let testKey = "ababcdefabcdefabcdefabcdef";
+  let username = "john@example.com";
+
+  // Decode the key here to mirror what generateEntry will do,
+  // but pass it encoded into the KeyBundle call below.
+
+  let sha256inputE = "" + HMAC_INPUT + username + "\x01";
+  let key = Utils.makeHMACKey(Utils.decodeKeyBase32(testKey));
+  let encryptKey = sha256HMAC(sha256inputE, key);
+
+  let sha256inputH = encryptKey + HMAC_INPUT + username + "\x02";
+  let hmacKey = sha256HMAC(sha256inputH, key);
+
+  // Encryption key is stored in base64 for WeaveCrypto convenience.
+  do_check_eq(encryptKey, new SyncKeyBundle(username, testKey).encryptionKey);
+  do_check_eq(hmacKey,    new SyncKeyBundle(username, testKey).hmacKey);
+
+  // Test with the same KeyBundle for both.
+  let obj = new SyncKeyBundle(username, testKey);
+  do_check_eq(hmacKey, obj.hmacKey);
+  do_check_eq(encryptKey, obj.encryptionKey);
+
+  run_next_test();
+});
+
+add_test(function test_collections_manager() {
   let log = Log4Moz.repository.getLogger("Test");
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
-  
-  let keyBundle = ID.set("WeaveCryptoID",
-      new SyncKeyBundle(PWDMGR_PASSPHRASE_REALM, "john@example.com", "a-bbbbb-ccccc-ddddd-eeeee-fffff"));
-  
+
+  Identity.account = "john@example.com";
+  Identity.syncKey = "a-bbbbb-ccccc-ddddd-eeeee-fffff";
+
+  let keyBundle = Identity.syncKeyBundle;
+
   /*
    * Build a test version of storage/crypto/keys.
    * Encrypt it with the sync key.
    * Pass it into the CollectionKeyManager.
    */
-  
+
   log.info("Building storage keys...");
   let storage_keys = new CryptoWrapper("crypto", "keys");
   let default_key64 = Svc.Crypto.generateRandomKey();
   let default_hmac64 = Svc.Crypto.generateRandomKey();
   let bookmarks_key64 = Svc.Crypto.generateRandomKey();
   let bookmarks_hmac64 = Svc.Crypto.generateRandomKey();
-  
+
   storage_keys.cleartext = {
     "default": [default_key64, default_hmac64],
     "collections": {"bookmarks": [bookmarks_key64, bookmarks_hmac64]},
   };
   storage_keys.modified = Date.now()/1000;
   storage_keys.id = "keys";
-  
+
   log.info("Encrypting storage keys...");
-  
+
   // Use passphrase (sync key) itself to encrypt the key bundle.
   storage_keys.encrypt(keyBundle);
-  
+
   // Sanity checking.
   do_check_true(null == storage_keys.cleartext);
   do_check_true(null != storage_keys.ciphertext);
-  
+
   log.info("Updating CollectionKeys.");
-  
+
   // updateContents decrypts the object, releasing the payload for us to use.
   // Returns true, because the default key has changed.
   do_check_true(CollectionKeys.updateContents(keyBundle, storage_keys));
   let payload = storage_keys.cleartext;
-  
+
   _("CK: " + JSON.stringify(CollectionKeys._collections));
-  
+
   // Test that the CollectionKeyManager returns a similar WBO.
   let wbo = CollectionKeys.asWBO("crypto", "keys");
-  
+
   _("WBO: " + JSON.stringify(wbo));
   _("WBO cleartext: " + JSON.stringify(wbo.cleartext));
-  
+
   // Check the individual contents.
   do_check_eq(wbo.collection, "crypto");
   do_check_eq(wbo.id, "keys");
@@ -131,36 +228,36 @@ function test_collections_manager() {
   do_check_true(!!wbo.cleartext.default);
   do_check_keypair_eq(payload.default, wbo.cleartext.default);
   do_check_keypair_eq(payload.collections.bookmarks, wbo.cleartext.collections.bookmarks);
-  
+
   do_check_true('bookmarks' in CollectionKeys._collections);
   do_check_false('tabs' in CollectionKeys._collections);
-  
+
   _("Updating contents twice with the same data doesn't proceed.");
   storage_keys.encrypt(keyBundle);
   do_check_false(CollectionKeys.updateContents(keyBundle, storage_keys));
-  
+
   /*
    * Test that we get the right keys out when we ask for
    * a collection's tokens.
    */
-  let b1 = new BulkKeyBundle(null, "bookmarks");
-  b1.keyPair = [bookmarks_key64, bookmarks_hmac64];
+  let b1 = new BulkKeyBundle("bookmarks");
+  b1.keyPairB64 = [bookmarks_key64, bookmarks_hmac64];
   let b2 = CollectionKeys.keyForCollection("bookmarks");
   do_check_keypair_eq(b1.keyPair, b2.keyPair);
-  
+
   // Check key equality.
   do_check_true(b1.equals(b2));
   do_check_true(b2.equals(b1));
-  
-  b1 = new BulkKeyBundle(null, "[default]");
-  b1.keyPair = [default_key64, default_hmac64];
-  
+
+  b1 = new BulkKeyBundle("[default]");
+  b1.keyPairB64 = [default_key64, default_hmac64];
+
   do_check_false(b1.equals(b2));
   do_check_false(b2.equals(b1));
-  
+
   b2 = CollectionKeys.keyForCollection(null);
   do_check_keypair_eq(b1.keyPair, b2.keyPair);
-  
+
   /*
    * Checking for update times.
    */
@@ -170,15 +267,15 @@ function test_collections_manager() {
   do_check_false(CollectionKeys.updateNeeded(info_collections));
   info_collections["crypto"] = 1 + (Date.now()/1000);              // Add one in case computers are fast!
   do_check_true(CollectionKeys.updateNeeded(info_collections));
-  
+
   CollectionKeys.lastModified = null;
   do_check_true(CollectionKeys.updateNeeded({}));
-  
+
   /*
    * Check _compareKeyBundleCollections.
    */
   function newBundle(name) {
-    let r = new BulkKeyBundle(null, name);
+    let r = new BulkKeyBundle(name);
     r.generateRandom();
     return r;
   }
@@ -193,7 +290,7 @@ function test_collections_manager() {
   let coll4 = {"foo": k4};
   let coll5 = {"baz": k5, "bar": k2};
   let coll6 = {};
-  
+
   let d1 = CollectionKeys._compareKeyBundleCollections(coll1, coll2); // []
   let d2 = CollectionKeys._compareKeyBundleCollections(coll1, coll3); // ["bar"]
   let d3 = CollectionKeys._compareKeyBundleCollections(coll3, coll2); // ["bar"]
@@ -202,7 +299,7 @@ function test_collections_manager() {
   let d6 = CollectionKeys._compareKeyBundleCollections(coll6, coll1); // ["bar", "foo"]
   let d7 = CollectionKeys._compareKeyBundleCollections(coll5, coll5); // []
   let d8 = CollectionKeys._compareKeyBundleCollections(coll6, coll6); // []
-  
+
   do_check_true(d1.same);
   do_check_false(d2.same);
   do_check_false(d3.same);
@@ -211,50 +308,20 @@ function test_collections_manager() {
   do_check_false(d6.same);
   do_check_true(d7.same);
   do_check_true(d8.same);
-  
+
   do_check_array_eq(d1.changed, []);
   do_check_array_eq(d2.changed, ["bar"]);
   do_check_array_eq(d3.changed, ["bar"]);
   do_check_array_eq(d4.changed, ["bar", "foo"]);
   do_check_array_eq(d5.changed, ["baz", "foo"]);
   do_check_array_eq(d6.changed, ["bar", "foo"]);
-}
 
-// Make sure that KeyBundles work when persisted through Identity.
-function test_key_persistence() {
-  _("Testing key persistence.");
-  
-  // Create our sync key bundle and persist it.
-  let k = new SyncKeyBundle(null, null, "abcdeabcdeabcdeabcdeabcdea");
-  k.username = "john@example.com";
-  ID.set("WeaveCryptoID", k);
-  let id = ID.get("WeaveCryptoID");
-  do_check_eq(k, id);
-  id.persist();
-  
-  // Now erase any memory of it.
-  ID.del("WeaveCryptoID");
-  k = id = null;
-  
-  // Now recreate via the persisted value.
-  id = new SyncKeyBundle();
-  id.username = "john@example.com";
-  
-  // The password should have been fetched from storage...
-  do_check_eq(id.password, "abcdeabcdeabcdeabcdeabcdea");
-  
-  // ... and we should be able to grab these by derivation.
-  do_check_true(!!id.hmacKeyObject);
-  do_check_true(!!id.hmacKey);
-  do_check_true(!!id.encryptionKey);
-}
+  run_next_test();
+});
 
 function run_test() {
-  test_keymanager();
-  test_collections_manager();
-  test_key_persistence();
-  test_repeated_hmac();
-  
   // Only do 1,000 to avoid a 5-second pause in test runs.
   test_time_keyFromString(1000);
+
+  run_next_test();
 }

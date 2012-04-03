@@ -37,8 +37,9 @@
 #ifndef __NS_SVGCLIPPATHFRAME_H__
 #define __NS_SVGCLIPPATHFRAME_H__
 
-#include "nsSVGContainerFrame.h"
 #include "gfxMatrix.h"
+#include "nsSVGContainerFrame.h"
+#include "nsSVGUtils.h"
 
 class nsRenderingContext;
 

@@ -62,6 +62,7 @@ SYNC_PP_RES_XML=res/xml/sync_syncadapter.xml res/xml/sync_options.xml
 
 FENNEC_JAVA_FILES = \
   AboutHomeContent.java \
+  AboutHomeSection.java \
   AlertNotification.java \
   AwesomeBar.java \
   AwesomeBarTabs.java \
@@ -89,12 +90,14 @@ FENNEC_JAVA_FILES = \
   GeckoEventResponder.java \
   GeckoHalDefines.java \
   GeckoInputConnection.java \
+  GeckoJarReader.java \
 	GeckoMessageReceiver.java \
   GeckoPreferences.java \
   GeckoProfile.java \
   GeckoStateListDrawable.java \
   GeckoThread.java \
   GlobalHistory.java \
+  GeckoViewsFactory.java \
   LinkPreference.java \
   LinkTextView.java \
 	NSSBridge.java \
@@ -117,11 +120,12 @@ FENNEC_JAVA_FILES = \
   gfx/CairoImage.java \
   gfx/CairoUtils.java \
   gfx/CheckerboardImage.java \
+  gfx/DisplayPortCalculator.java \
+  gfx/DisplayPortMetrics.java \
   gfx/FlexibleGLSurfaceView.java \
   gfx/FloatSize.java \
   gfx/GeckoLayerClient.java \
   gfx/GLController.java \
-  gfx/GLThread.java \
   gfx/ImmutableViewportMetrics.java \
   gfx/InputConnectionHandler.java \
   gfx/IntSize.java \
@@ -131,7 +135,6 @@ FENNEC_JAVA_FILES = \
   gfx/LayerView.java \
   gfx/NinePatchTileLayer.java \
   gfx/PanningPerfAPI.java \
-  gfx/PlaceholderLayerClient.java \
   gfx/PointUtils.java \
   gfx/RectUtils.java \
   gfx/ScrollbarLayer.java \
@@ -149,6 +152,7 @@ FENNEC_JAVA_FILES = \
   ui/SimpleScaleGestureDetector.java \
   ui/SubdocumentScrollHelper.java \
   GeckoNetworkManager.java \
+  GeckoScreenOrientationListener.java \
   $(NULL)
 
 ifdef MOZ_WEBSMS_BACKEND
@@ -167,6 +171,12 @@ FENNEC_PP_JAVA_FILES = \
   db/TabsProvider.java \
   db/GeckoProvider.java \
   SmsManager.java \
+  $(NULL)
+
+FENNEC_PP_XML_FILES = \
+  res/layout/abouthome_content.xml \
+  res/menu/gecko_menu.xml \
+  res/menu-v11/gecko_menu.xml \
   $(NULL)
 
 
@@ -203,6 +213,7 @@ GARBAGE += \
   gecko.ap_  \
   res/values/strings.xml \
   R.java \
+  $(FENNEC_PP_XML_FILES) \
   $(SYNC_PP_RES_XML) \
   package-name.txt \
   Manifest.java \
@@ -234,11 +245,11 @@ endif
 
 RES_LAYOUT = \
   $(SYNC_RES_LAYOUT) \
+  res/layout/autocomplete_list.xml \
   res/layout/autocomplete_list_item.xml \
   res/layout/awesomebar.xml \
   res/layout/awesomebar_actionbar.xml \
   res/layout/awesomebar_folder_row.xml \
-  res/layout/awesomebar_folder_header_row.xml \
   res/layout/awesomebar_header_row.xml \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_search.xml \
@@ -263,11 +274,12 @@ RES_LAYOUT = \
   res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \
   res/layout/select_dialog_list.xml \
-  res/layout/abouthome_content.xml \
-  res/layout/abouthome_topsite_item.xml \
   res/layout/abouthome_addon_row.xml \
   res/layout/abouthome_last_tabs_row.xml \
+  res/layout/abouthome_section.xml \
   res/layout/abouthome_remote_tab_row.xml \
+  res/layout/abouthome_topsite_item.xml \
+  res/layout/validation_message.xml \
   $(NULL)
 
 RES_LAYOUT_V11 = \
@@ -280,6 +292,7 @@ RES_LAYOUT_LAND_V14 = \
 
 RES_VALUES = \
   $(SYNC_RES_VALUES) \
+  res/values/attrs.xml \
   res/values/arrays.xml \
   res/values/colors.xml \
   res/values/styles.xml \
@@ -318,6 +331,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/abouthome_sync_logo.png \
   res/drawable/abouthome_sync_bg.9.png \
   res/drawable/abouthome_sync_pressed_bg.9.png \
+  res/drawable/abouthome_thumbnail.png \
   res/drawable/awesomebar_tab.9.png \
   res/drawable/awesomebar_tab_pressed.9.png \
   res/drawable/ic_addons_empty.png \
@@ -339,7 +353,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/tabs_pressed.png \
   res/drawable/tabs_more.png \
   res/drawable/tabs_plus.png \
-  res/drawable/address_bar_texture.png \
+  res/drawable/address_bar_texture_port.png \
   res/drawable/address_bar_url_bg.9.png \
   res/drawable/address_bar_url_outline.9.png \
   res/drawable/doorhanger_arrow.png \
@@ -349,6 +363,10 @@ RES_DRAWABLE_BASE = \
   res/drawable/site_security_identified.png \
   res/drawable/site_security_verified.png \
   res/drawable/urlbar_stop.png \
+  res/drawable/validation_arrow.png \
+  res/drawable/validation_bg.9.png \
+  res/drawable/bookmarkdefaults_favicon_support.png \
+  res/drawable/bookmarkdefaults_favicon_addons.png \
   $(addprefix res/drawable-mdpi/,$(notdir $(SYNC_RES_DRAWABLE_MDPI))) \
   $(NULL)
 
@@ -367,6 +385,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/abouthome_sync_logo.png \
   res/drawable-hdpi/abouthome_sync_bg.9.png \
   res/drawable-hdpi/abouthome_sync_pressed_bg.9.png \
+  res/drawable-hdpi/abouthome_thumbnail.png \
   res/drawable-hdpi/awesomebar_tab.9.png \
   res/drawable-hdpi/awesomebar_tab_pressed.9.png \
   res/drawable-hdpi/ic_addons_empty.png \
@@ -388,7 +407,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/tabs_pressed.png \
   res/drawable-hdpi/tabs_more.png \
   res/drawable-hdpi/tabs_plus.png \
-  res/drawable-hdpi/address_bar_texture.png \
+  res/drawable-hdpi/address_bar_texture_port.png \
   res/drawable-hdpi/address_bar_url_bg.9.png \
   res/drawable-hdpi/address_bar_url_outline.9.png \
   res/drawable-hdpi/doorhanger_arrow.png \
@@ -430,6 +449,7 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/abouthome_sync_logo.png \
   res/drawable-xhdpi-v11/abouthome_sync_bg.9.png \
   res/drawable-xhdpi-v11/abouthome_sync_pressed_bg.9.png \
+  res/drawable-xhdpi-v11/abouthome_thumbnail.png \
   res/drawable-xhdpi-v11/awesomebar_tab.9.png \
   res/drawable-xhdpi-v11/awesomebar_tab_pressed.9.png \
   res/drawable-xhdpi-v11/ic_addons_empty.png \
@@ -450,7 +470,7 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/tabs_pressed.png \
   res/drawable-xhdpi-v11/tabs_more.png \
   res/drawable-xhdpi-v11/tabs_plus.png \
-  res/drawable-xhdpi-v11/address_bar_texture.png \
+  res/drawable-xhdpi-v11/address_bar_texture_port.png \
   res/drawable-xhdpi-v11/address_bar_url_bg.9.png \
   res/drawable-xhdpi-v11/address_bar_url_outline.9.png \
   res/drawable-xhdpi-v11/urlbar_stop.png \
@@ -459,10 +479,14 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/tabs_button_tail.9.png \
   $(NULL)
 
+RES_DRAWABLE_LAND_V14 = \
+  res/drawable-land-v14/address_bar_bg.xml \
+  $(NULL)
+
 RES_DRAWABLE_LAND_MDPI_V14 = \
   res/drawable-land-mdpi-v14/ic_awesomebar_go.png \
   res/drawable-land-mdpi-v14/ic_awesomebar_search.png \
-  res/drawable-land-mdpi-v14/address_bar_texture.png \
+  res/drawable-land-mdpi-v14/address_bar_texture_land.png \
   res/drawable-land-mdpi-v14/address_bar_url_bg.9.png \
   res/drawable-land-mdpi-v14/address_bar_url_outline.9.png \
   res/drawable-land-mdpi-v14/tabs_normal.png \
@@ -477,7 +501,7 @@ RES_DRAWABLE_LAND_MDPI_V14 = \
 RES_DRAWABLE_LAND_HDPI_V14 = \
   res/drawable-land-hdpi-v14/ic_awesomebar_go.png \
   res/drawable-land-hdpi-v14/ic_awesomebar_search.png \
-  res/drawable-land-hdpi-v14/address_bar_texture.png \
+  res/drawable-land-hdpi-v14/address_bar_texture_land.png \
   res/drawable-land-hdpi-v14/address_bar_url_bg.9.png \
   res/drawable-land-hdpi-v14/address_bar_url_outline.9.png \
   res/drawable-land-hdpi-v14/tabs_normal.png \
@@ -492,7 +516,7 @@ RES_DRAWABLE_LAND_HDPI_V14 = \
 RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/ic_awesomebar_go.png \
   res/drawable-land-xhdpi-v14/ic_awesomebar_search.png \
-  res/drawable-land-xhdpi-v14/address_bar_texture.png \
+  res/drawable-land-xhdpi-v14/address_bar_texture_land.png \
   res/drawable-land-xhdpi-v14/address_bar_url_bg.9.png \
   res/drawable-land-xhdpi-v14/address_bar_url_outline.9.png \
   res/drawable-land-xhdpi-v14/tabs_normal.png \
@@ -510,11 +534,6 @@ RES_COLOR = \
 
 RES_MENU = \
   res/menu/awesomebar_contextmenu.xml \
-  res/menu/gecko_menu.xml \
-  $(NULL)
-
-RES_MENU_V11 = \
-  res/menu-v11/gecko_menu.xml \
   $(NULL)
 
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
@@ -577,7 +596,7 @@ MOZ_ANDROID_DRAWABLES += \
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_LAYOUT_LAND_V14) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) $(RES_MENU) $(RES_MENU_V11)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_LAYOUT_LAND_V14) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_V14) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout              \
@@ -597,11 +616,13 @@ RES_DIRS= \
   res/drawable-mdpi-v11   \
   res/drawable-hdpi-v11   \
   res/drawable-xhdpi-v11  \
+  res/drawable-land-v14   \
   res/drawable-land-mdpi-v14  \
   res/drawable-land-hdpi-v14  \
   res/drawable-land-xhdpi-v14 \
   res/color                   \
   res/menu                    \
+  res/menu-v11                \
   $(NULL)
 
 
@@ -621,7 +642,10 @@ classes.dex: $(FENNEC_JAVA_FILES) $(FENNEC_PP_JAVA_FILES) $(SYNC_JAVA_FILES) $(S
 	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes -classpath classes $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
 	$(DX) --dex --output=$@ classes
 
-PP_RES_XML=$(SYNC_PP_RES_XML)
+PP_RES_XML= \
+  $(SYNC_PP_RES_XML) \
+  $(FENNEC_PP_XML_FILES) \
+  $(NULL)
 
 # This is kinda awful; if any of the source files change, we remake them all.
 $(PP_RES_XML): $(patsubst res/%,$(srcdir)/resources/%.in,$(PP_RES_XML))

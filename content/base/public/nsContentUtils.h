@@ -251,20 +251,6 @@ public:
   static JSContext* GetContextFromDocument(nsIDocument *aDocument);
 
   /**
-   * Get a scope from aNewDocument. Also get a context through the scope of one
-   * of the documents, from the stack or the safe context.
-   *
-   * @param aOldDocument The document to try to get a context from. May be null.
-   * @param aNewDocument The document to get aNewScope from.
-   * @param aCx [out] Context gotten through one of the scopes, from the stack
-   *                  or the safe context.
-   * @param aNewScope [out] Scope gotten from aNewDocument.
-   */
-  static nsresult GetContextAndScope(nsIDocument *aOldDocument,
-                                     nsIDocument *aNewDocument,
-                                     JSContext **aCx, JSObject **aNewScope);
-
-  /**
    * When a document's scope changes (e.g., from document.open(), call this
    * function to move all content wrappers from the old scope to the new one.
    */
@@ -468,6 +454,8 @@ public:
    */
   static nsresult CheckSameOrigin(nsINode* aTrustedNode,
                                   nsIDOMNode* aUnTrustedNode);
+  static nsresult CheckSameOrigin(nsINode* aTrustedNode,
+                                  nsINode* unTrustedNode);
 
   // Check if the (JS) caller can access aNode.
   static bool CanCallerAccess(nsIDOMNode *aNode);
@@ -604,7 +592,8 @@ public:
                               nsIContent *aContent);
 
   static nsresult CheckQName(const nsAString& aQualifiedName,
-                             bool aNamespaceAware = true);
+                             bool aNamespaceAware = true,
+                             const PRUnichar** aColon = nsnull);
 
   static nsresult SplitQName(const nsIContent* aNamespaceResolver,
                              const nsAFlatString& aQName,
@@ -1286,66 +1275,10 @@ public:
     }
   }
 
-  static void DropScriptObject(PRUint32 aLangID, void *aObject,
-                               const char *name, void *aClosure)
-  {
-    DropScriptObject(aLangID, aObject, aClosure);
-  }
-
   /**
    * Unbinds the content from the tree and nulls it out if it's not null.
    */
   static void DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent);
-
-  /**
-   * Keep script object aNewObject, held by aScriptObjectHolder, alive.
-   *
-   * NOTE: This currently only supports objects that hold script objects of one
-   *       scripting language.
-   *
-   * @param aLangID script language ID of aNewObject
-   * @param aScriptObjectHolder the object that holds aNewObject
-   * @param aTracer the tracer for aScriptObject
-   * @param aNewObject the script object to hold
-   * @param aWasHoldingObjects whether aScriptObjectHolder was already holding
-   *                           script objects (ie. HoldScriptObject was called
-   *                           on it before, without a corresponding call to
-   *                           DropScriptObjects)
-   */
-  static nsresult HoldScriptObject(PRUint32 aLangID, void* aScriptObjectHolder,
-                                   nsScriptObjectTracer* aTracer,
-                                   void* aNewObject, bool aWasHoldingObjects)
-  {
-    if (aLangID == nsIProgrammingLanguage::JAVASCRIPT) {
-      return aWasHoldingObjects ? NS_OK :
-                                  HoldJSObjects(aScriptObjectHolder, aTracer);
-    }
-
-    return HoldScriptObject(aLangID, aNewObject);
-  }
-
-  /**
-   * Drop any script objects that aScriptObjectHolder is holding.
-   *
-   * NOTE: This currently only supports objects that hold script objects of one
-   *       scripting language.
-   *
-   * @param aLangID script language ID of the objects that 
-   * @param aScriptObjectHolder the object that holds script object that we want
-   *                            to drop
-   * @param aTracer the tracer for aScriptObject
-   */
-  static nsresult DropScriptObjects(PRUint32 aLangID, void* aScriptObjectHolder,
-                                    nsScriptObjectTracer* aTracer)
-  {
-    if (aLangID == nsIProgrammingLanguage::JAVASCRIPT) {
-      return DropJSObjects(aScriptObjectHolder);
-    }
-
-    aTracer->Trace(aScriptObjectHolder, DropScriptObject, nsnull);
-
-    return NS_OK;
-  }
 
   /**
    * Keep the JS objects held by aScriptObjectHolder alive.
@@ -1515,6 +1448,13 @@ public:
   // returns it.
   static PRUint32 FilterDropEffect(PRUint32 aAction, PRUint32 aEffectAllowed);
 
+  /*
+   * Return true if the target of a drop event is a content document that is
+   * an ancestor of the document for the source of the drag.
+   */
+  static bool CheckForSubFrameDrop(nsIDragSession* aDragSession,
+                                   nsDragEvent* aDropEvent);
+
   /**
    * Return true if aURI is a local file URI (i.e. file://).
    */
@@ -1600,6 +1540,15 @@ public:
    */
   static ViewportInfo GetViewportInfo(nsIDocument* aDocument);
 
+  // Call EnterMicroTask when you're entering JS execution.
+  // Usually the best way to do this is to use nsAutoMicroTask.
+  static void EnterMicroTask() { ++sMicroTaskLevel; }
+  static void LeaveMicroTask();
+
+  static bool IsInMicroTask() { return sMicroTaskLevel != 0; }
+  static PRUint32 MicroTaskLevel() { return sMicroTaskLevel; }
+  static void SetMicroTaskLevel(PRUint32 aLevel) { sMicroTaskLevel = aLevel; }
+
   /* Process viewport META data. This gives us information for the scale
    * and zoom of a page on mobile devices. We stick the information in
    * the document header and use it later on after rendering.
@@ -1659,15 +1608,19 @@ public:
 
   /**
    * Convert ASCII A-Z to a-z.
+   * @return NS_OK on success, or NS_ERROR_OUT_OF_MEMORY if making the string
+   * writable needs to allocate memory and that allocation fails.
    */
-  static void ASCIIToLower(nsAString& aStr);
-  static void ASCIIToLower(const nsAString& aSource, nsAString& aDest);
+  static nsresult ASCIIToLower(nsAString& aStr);
+  static nsresult ASCIIToLower(const nsAString& aSource, nsAString& aDest);
 
   /**
    * Convert ASCII a-z to A-Z.
+   * @return NS_OK on success, or NS_ERROR_OUT_OF_MEMORY if making the string
+   * writable needs to allocate memory and that allocation fails.
    */
-  static void ASCIIToUpper(nsAString& aStr);
-  static void ASCIIToUpper(const nsAString& aSource, nsAString& aDest);
+  static nsresult ASCIIToUpper(nsAString& aStr);
+  static nsresult ASCIIToUpper(const nsAString& aSource, nsAString& aDest);
 
   // Returns NS_OK for same origin, error (NS_ERROR_DOM_BAD_URI) if not.
   static nsresult CheckSameOrigin(nsIChannel *aOldChannel, nsIChannel *aNewChannel);
@@ -1677,7 +1630,10 @@ public:
   {
     return sThreadJSContextStack;
   }
-  
+
+  // Trace the safe JS context of the ThreadJSContextStack.
+  static void TraceSafeJSContext(JSTracer* aTrc);
+
 
   /**
    * Get the Origin of the passed in nsIPrincipal or nsIURI. If the passed in
@@ -1997,6 +1953,13 @@ public:
   static nsresult Atob(const nsAString& aAsciiString,
                        nsAString& aBinaryData);
 
+  /** If aJSArray is a Javascript array, this method iterates over its
+   *  elements and appends values to aRetVal as nsIAtoms.
+   *  @throw NS_ERROR_ILLEGAL_VALUE if aJSArray isn't a JS array.
+   */ 
+  static nsresult JSArrayToAtomArray(JSContext* aCx, const JS::Value& aJSArray,
+                                     nsCOMArray<nsIAtom>& aRetVal);
+
   /**
    * Returns whether the input element passed in parameter has the autocomplete
    * functionnality enabled. It is taking into account the form owner.
@@ -2050,11 +2013,6 @@ private:
   static bool InitializeEventTable();
 
   static nsresult EnsureStringBundle(PropertiesFile aFile);
-
-  static nsIDOMScriptObjectFactory *GetDOMScriptObjectFactory();
-
-  static nsresult HoldScriptObject(PRUint32 aLangID, void* aObject);
-  static void DropScriptObject(PRUint32 aLangID, void *aObject, void *aClosure);
 
   static bool CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
                                 nsIPrincipal* aPrincipal);
@@ -2117,8 +2075,6 @@ private:
   static nsILineBreaker* sLineBreaker;
   static nsIWordBreaker* sWordBreaker;
 
-  static nsIScriptRuntime* sScriptRuntimes[NS_STID_ARRAY_UBOUND];
-  static PRInt32 sScriptRootCount[NS_STID_ARRAY_UBOUND];
   static PRUint32 sJSGCThingRootCount;
 
 #ifdef IBMBIDI
@@ -2130,6 +2086,7 @@ private:
 #ifdef DEBUG
   static PRUint32 sDOMNodeRemovedSuppressCount;
 #endif
+  static PRUint32 sMicroTaskLevel;
   // Not an nsCOMArray because removing elements from those is slower
   static nsTArray< nsCOMPtr<nsIRunnable> >* sBlockedScriptRunners;
   static PRUint32 sRunnersCountAtFirstBlocker;
@@ -2229,6 +2186,19 @@ public:
 #ifdef DEBUG
     --nsContentUtils::sDOMNodeRemovedSuppressCount;
 #endif
+  }
+};
+
+class NS_STACK_CLASS nsAutoMicroTask
+{
+public:
+  nsAutoMicroTask()
+  {
+    nsContentUtils::EnterMicroTask();
+  }
+  ~nsAutoMicroTask()
+  {
+    nsContentUtils::LeaveMicroTask();
   }
 };
 

@@ -48,6 +48,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
+#include "nsIDOMDocumentType.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMText.h"
@@ -660,6 +661,14 @@ nsRange::ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset, PRInt16* aResult)
     return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
   }
   
+  if (parent->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
+  }
+
+  if (aOffset < 0 || aOffset > parent->Length()) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+  
   PRInt32 cmp;
   if ((cmp = nsContentUtils::ComparePoints(parent, aOffset,
                                            mStartParent, mStartOffset)) <= 0) {
@@ -680,16 +689,6 @@ nsRange::ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset, PRInt16* aResult)
 /******************************************************
  * Private helper routines
  ******************************************************/
-
-// Get the length of aNode
-static PRUint32 GetNodeLength(nsINode *aNode)
-{
-  if(aNode->IsNodeOfType(nsINode::eDATA_NODE)) {
-    return static_cast<nsIContent*>(aNode)->TextLength();
-  }
-
-  return aNode->GetChildCount();
-}
 
 // It's important that all setting of the range start/end points 
 // go through this function, which will do all the right voodoo
@@ -930,9 +929,9 @@ nsRange::SetStart(nsINode* aParent, PRInt32 aOffset)
   nsINode* newRoot = IsValidBoundary(aParent);
   NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
 
-  PRInt32 len = GetNodeLength(aParent);
-  if (aOffset < 0 || aOffset > len)
+  if (aOffset < 0 || aOffset > aParent->Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
 
   // Collapse if not positioned yet, if positioned in another doc or
   // if the new start is after end.
@@ -994,8 +993,7 @@ nsRange::SetEnd(nsINode* aParent, PRInt32 aOffset)
   nsINode* newRoot = IsValidBoundary(aParent);
   NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
 
-  PRInt32 len = GetNodeLength(aParent);
-  if (aOffset < 0 || aOffset > len) {
+  if (aOffset < 0 || aOffset > aParent->Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
@@ -1092,7 +1090,7 @@ nsRange::SelectNodeContents(nsIDOMNode* aN)
   NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
   
   AutoInvalidateSelection atEndOfBlock(this);
-  DoSetRange(node, 0, node, GetNodeLength(node), newRoot);
+  DoSetRange(node, 0, node, node->Length(), newRoot);
   
   return NS_OK;
 }
@@ -1528,6 +1526,26 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
   PRInt32              startOffset = mStartOffset;
   nsCOMPtr<nsIDOMNode> endContainer = do_QueryInterface(mEndParent);
   PRInt32              endOffset = mEndOffset;
+
+  if (retval) {
+    // For extractContents(), abort early if there's a doctype (bug 719533).
+    // This can happen only if the common ancestor is a document, in which case
+    // we just need to find its doctype child and check if that's in the range.
+    nsCOMPtr<nsIDOMDocument> commonAncestorDocument(do_QueryInterface(commonAncestor));
+    if (commonAncestorDocument) {
+      nsCOMPtr<nsIDOMDocumentType> doctype;
+      rv = commonAncestorDocument->GetDoctype(getter_AddRefs(doctype));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (doctype &&
+          nsContentUtils::ComparePoints(startContainer, startOffset,
+                                        doctype.get(), 0) < 0 &&
+          nsContentUtils::ComparePoints(doctype.get(), 0,
+                                        endContainer, endOffset) < 0) {
+        return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+      }
+    }
+  }
 
   // Create and initialize a subtree iterator that will give
   // us all the subtrees within the range.
@@ -2099,7 +2117,7 @@ nsRange::InsertNode(nsIDOMNode* aN)
     nsCOMPtr<nsIDOMNode> tSCParentNode;
     res = tStartContainer->GetParentNode(getter_AddRefs(tSCParentNode));
     if(NS_FAILED(res)) return res;
-    NS_ENSURE_STATE(tSCParentNode);
+    NS_ENSURE_TRUE(tSCParentNode, NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
 
     PRInt32 tEndOffset;
     GetEndOffset(&tEndOffset);
@@ -2163,11 +2181,22 @@ nsRange::SurroundContents(nsIDOMNode* aNewParent)
                    NS_ERROR_DOM_INVALID_STATE_ERR);
   }
 
+  // INVALID_NODE_TYPE_ERROR if aNewParent is something that can't be inserted
+  // (Document, DocumentType, DocumentFragment)
+  PRUint16 nodeType;
+  nsresult res = aNewParent->GetNodeType(&nodeType);
+  if (NS_FAILED(res)) return res;
+  if (nodeType == nsIDOMNode::DOCUMENT_NODE ||
+      nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE ||
+      nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
+  }
+
   // Extract the contents within the range.
 
   nsCOMPtr<nsIDOMDocumentFragment> docFrag;
 
-  nsresult res = ExtractContents(getter_AddRefs(docFrag));
+  res = ExtractContents(getter_AddRefs(docFrag));
 
   if (NS_FAILED(res)) return res;
   if (!docFrag) return NS_ERROR_FAILURE;

@@ -968,22 +968,6 @@ EmitRegExp(JSContext *cx, uint32_t index, BytecodeEmitter *bce)
 }
 
 static bool
-EmitSlotObjectOp(JSContext *cx, JSOp op, unsigned slot, uint32_t index, BytecodeEmitter *bce)
-{
-    JS_ASSERT(JOF_OPTYPE(op) == JOF_SLOTOBJECT);
-
-    ptrdiff_t off = EmitN(cx, bce, op, SLOTNO_LEN + UINT32_INDEX_LEN);
-    if (off < 0)
-        return false;
-
-    jsbytecode *pc = bce->code(off);
-    SET_SLOTNO(pc, slot);
-    pc += SLOTNO_LEN;
-    SET_UINT32_INDEX(pc, index);
-    return true;
-}
-
-static bool
 EmitArguments(JSContext *cx, BytecodeEmitter *bce)
 {
     if (!bce->mayOverwriteArguments())
@@ -1331,10 +1315,6 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              * must be globals, so try to use GNAME ops.
              */
             if (caller->isGlobalFrame() && TryConvertToGname(bce, pn, &op)) {
-                jsatomid _;
-                if (!bce->makeAtomIndex(atom, &_))
-                    return JS_FALSE;
-
                 pn->setOp(op);
                 pn->pn_dflags |= PND_BOUND;
                 return JS_TRUE;
@@ -1350,10 +1330,6 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         /* Optimize accesses to undeclared globals. */
         if (!TryConvertToGname(bce, pn, &op))
             return JS_TRUE;
-
-        jsatomid _;
-        if (!bce->makeAtomIndex(atom, &_))
-            return JS_FALSE;
 
         pn->setOp(op);
         pn->pn_dflags |= PND_BOUND;
@@ -2924,7 +2900,9 @@ EmitDestructuringLHS(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
           case JSOP_SETLOCAL:
           {
             uint16_t slot = pn->pn_cookie.slot();
-            EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, slot);
+            EMIT_UINT16_IMM_OP(JSOP_SETLOCAL, slot);
+            if (Emit1(cx, bce, JSOP_POP) < 0)
+                return JS_FALSE;
             break;
           }
 
@@ -3958,7 +3936,9 @@ EmitCatch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case PNK_NAME:
         /* Inline and specialize BindNameToSlot for pn2. */
         JS_ASSERT(!pn2->pn_cookie.isFree());
-        EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, pn2->pn_cookie.slot());
+        EMIT_UINT16_IMM_OP(JSOP_SETLOCAL, pn2->pn_cookie.slot());
+        if (Emit1(cx, bce, JSOP_POP) < 0)
+            return false;
         break;
 
       default:
@@ -4582,43 +4562,6 @@ EmitWith(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 }
 
 static bool
-SetMethodFunction(JSContext *cx, FunctionBox *funbox, JSAtom *atom)
-{
-    RootedVarObject parent(cx);
-    parent = funbox->function()->getParent();
-
-    /*
-     * Replace a boxed function with a new one with a method atom. Methods
-     * require a function with the extended size finalize kind, which normal
-     * functions don't have. We don't eagerly allocate functions with the
-     * expanded size for boxed functions, as most functions are not methods.
-     */
-    JSFunction *fun = js_NewFunction(cx, NULL, NULL,
-                                     funbox->function()->nargs,
-                                     funbox->function()->flags,
-                                     parent,
-                                     funbox->function()->atom,
-                                     JSFunction::ExtendedFinalizeKind);
-    if (!fun)
-        return false;
-
-    JSScript *script = funbox->function()->script();
-    if (script) {
-        fun->setScript(script);
-        if (!script->typeSetFunction(cx, fun))
-            return false;
-    }
-
-    JS_ASSERT(funbox->function()->joinable());
-    fun->setJoinable();
-
-    fun->setMethodAtom(atom);
-
-    funbox->object = fun;
-    return true;
-}
-
-static bool
 EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 {
     StmtInfo stmtInfo;
@@ -4946,7 +4889,7 @@ EmitFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
            : EmitNormalFor(cx, bce, pn, top);
 }
 
-static bool
+static JS_NEVER_INLINE bool
 EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
 #if JS_HAS_XML_SUPPORT
@@ -4971,35 +4914,29 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                  fun->kind() == JSFUN_INTERPRETED);
 
     {
-        /*
-         * Generate code for the function's body.  bce2 is not allocated on the
-         * stack because doing so significantly reduces the maximum depth of
-         * nested functions we can handle.  See bug 696284.
-         */
-        AutoPtr<BytecodeEmitter> bce2(cx);
-        bce2 = cx->new_<BytecodeEmitter>(bce->parser, pn->pn_pos.begin.lineno);
-        if (!bce2 || !bce2->init(cx))
+        BytecodeEmitter bce2(bce->parser, pn->pn_pos.begin.lineno);
+        if (!bce2.init(cx))
             return false;
 
-        bce2->flags = pn->pn_funbox->tcflags | TCF_COMPILING | TCF_IN_FUNCTION |
+        bce2.flags = pn->pn_funbox->tcflags | TCF_COMPILING | TCF_IN_FUNCTION |
                      (bce->flags & TCF_FUN_MIGHT_ALIAS_LOCALS);
-        bce2->bindings.transfer(cx, &pn->pn_funbox->bindings);
-        bce2->setFunction(fun);
-        bce2->funbox = pn->pn_funbox;
-        bce2->parent = bce;
-        bce2->globalScope = bce->globalScope;
+        bce2.bindings.transfer(cx, &pn->pn_funbox->bindings);
+        bce2.setFunction(fun);
+        bce2.funbox = pn->pn_funbox;
+        bce2.parent = bce;
+        bce2.globalScope = bce->globalScope;
 
         /*
          * js::frontend::SetStaticLevel limited static nesting depth to fit in
          * 16 bits and to reserve the all-ones value, thereby reserving the
-         * magic FREE_UPVAR_COOKIE value. Note the bce2->staticLevel assignment
+         * magic FREE_UPVAR_COOKIE value. Note the bce2.staticLevel assignment
          * below.
          */
         JS_ASSERT(bce->staticLevel < JS_BITMASK(16) - 1);
-        bce2->staticLevel = bce->staticLevel + 1;
+        bce2.staticLevel = bce->staticLevel + 1;
 
         /* We measured the max scope depth when we parsed the function. */
-        if (!EmitFunctionScript(cx, bce2.get(), pn->pn_body))
+        if (!EmitFunctionScript(cx, &bce2, pn->pn_body))
             return false;
     }
 
@@ -5054,7 +4991,14 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         {
             return false;
         }
-        return EmitSlotObjectOp(cx, JSOP_DEFLOCALFUN, slot, index, bce);
+
+        if (NewSrcNote(cx, bce, SRC_CONTINUE) < 0)
+            return false;
+        if (!EmitIndexOp(cx, JSOP_LAMBDA, index, bce))
+            return false;
+        EMIT_UINT16_IMM_OP(JSOP_SETLOCAL, slot);
+        if (Emit1(cx, bce, JSOP_POP) < 0)
+            return false;
     }
 
     return true;
@@ -5380,23 +5324,6 @@ EmitStatement(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         }
 #endif
         if (op != JSOP_NOP) {
-            /*
-             * Specialize JSOP_SETPROP to JSOP_SETMETHOD to defer or
-             * avoid null closure cloning. Do this only for assignment
-             * statements that are not completion values wanted by a
-             * script evaluator, to ensure that the joined function
-             * can't escape directly.
-             */
-            if (!wantval &&
-                pn2->isKind(PNK_ASSIGN) &&
-                pn2->pn_left->isOp(JSOP_SETPROP) &&
-                pn2->pn_right->isOp(JSOP_LAMBDA) &&
-                pn2->pn_right->pn_funbox->joinable())
-            {
-                if (!SetMethodFunction(cx, pn2->pn_right->pn_funbox, pn2->pn_left->pn_atom))
-                    return false;
-                pn2->pn_left->setOp(JSOP_SETMETHOD);
-            }
             if (!EmitTree(cx, bce, pn2))
                 return false;
             if (Emit1(cx, bce, op) < 0)
@@ -5870,7 +5797,6 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
     }
 
-    unsigned methodInits = 0, slowMethodInits = 0;
     for (ParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
         /* Emit an index for t[2] for later consumption by JSOP_INITELEM. */
         ParseNode *pn3 = pn2->pn_left;
@@ -5903,28 +5829,13 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (!bce->makeAtomIndex(pn3->pn_atom, &index))
                 return false;
 
-            /* Check whether we can optimize to JSOP_INITMETHOD. */
-            ParseNode *init = pn2->pn_right;
-            bool lambda = init->isOp(JSOP_LAMBDA);
-            if (lambda)
-                ++methodInits;
-            if (op == JSOP_INITPROP && lambda && init->pn_funbox->joinable()) {
+            /*
+             * Disable NEWOBJECT on initializers that set __proto__, which has
+             * a non-standard setter on objects.
+             */
+            if (pn3->pn_atom == cx->runtime->atomState.protoAtom)
                 obj = NULL;
-                op = JSOP_INITMETHOD;
-                if (!SetMethodFunction(cx, init->pn_funbox, pn3->pn_atom))
-                    return JS_FALSE;
-                pn2->setOp(op);
-            } else {
-                /*
-                 * Disable NEWOBJECT on initializers that set __proto__, which has
-                 * a non-standard setter on objects.
-                 */
-                if (pn3->pn_atom == cx->runtime->atomState.protoAtom)
-                    obj = NULL;
-                op = JSOP_INITPROP;
-                if (lambda)
-                    ++slowMethodInits;
-            }
+            op = JSOP_INITPROP;
 
             if (obj) {
                 JS_ASSERT(!obj->inDictionaryMode());

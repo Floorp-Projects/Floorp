@@ -32,7 +32,7 @@ public class FennecTabsRepository extends Repository {
    * and only store tabs from other clients.
    *
    * It will never retrieve tabs from other clients, or store tabs for Fennec,
-   * unless you use {@link fetch(String[], RepositorySessionFetchRecordsDelegate)}
+   * unless you use {@link #fetch(String[], RepositorySessionFetchRecordsDelegate)}
    * and specify an explicit GUID.
    */
   public static class FennecTabsRepositorySession extends RepositorySession {

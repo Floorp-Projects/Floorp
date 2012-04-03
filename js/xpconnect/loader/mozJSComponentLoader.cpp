@@ -78,7 +78,6 @@
 #include "nsIJARURI.h"
 #include "nsNetUtil.h"
 #include "nsDOMFile.h"
-#include "jsxdrapi.h"
 #include "jsprf.h"
 #include "nsJSPrincipals.h"
 // For reporting errors with the console service
@@ -160,8 +159,7 @@ mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
          * Got an error object; prepare appropriate-width versions of
          * various arguments to it.
          */
-        nsAutoString fileUni;
-        fileUni.AssignWithConversion(rep->filename);
+        NS_ConvertASCIItoUTF16 fileUni(rep->filename);
 
         PRUint32 column = rep->uctokenptr - rep->uclinebuf;
 
@@ -751,7 +749,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (cache) {
-        rv = ReadCachedScript(cache, cachePath, cx, &script);
+        rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
         if (NS_SUCCEEDED(rv)) {
             LOG(("Successfully loaded %s from startupcache\n", nativePath.get()));
         } else {
@@ -934,7 +932,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
 
     if (writeToCache) {
         // We successfully compiled the script, so cache it.
-        rv = WriteCachedScript(cache, cachePath, cx, script);
+        rv = WriteCachedScript(cache, cachePath, cx, mSystemPrincipal, script);
 
         // Don't treat failure to write as fatal, since we might be working
         // with a read-only cache.

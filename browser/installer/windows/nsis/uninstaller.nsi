@@ -92,7 +92,7 @@ Var MaintCertKey
 VIAddVersionKey "FileDescription" "${BrandShortName} Helper"
 VIAddVersionKey "OriginalFilename" "helper.exe"
 
-!insertmacro AddDDEHandlerValues
+!insertmacro AddDisabledDDEHandlerValues
 !insertmacro CleanVirtualStore
 !insertmacro ElevateUAC
 !insertmacro GetLongPath
@@ -214,7 +214,9 @@ Function un.UninstallServiceIfNotUsed
   Push $1
 
   ; The maintenance service always uses the 64-bit registry on x64 systems
-  SetRegView 64
+  ${If} ${RunningX64}
+    SetRegView 64
+  ${EndIf}
 
   ; Figure out the number of subkeys
   StrCpy $0 0
@@ -225,7 +227,9 @@ loop:
   goto loop
 doneCount:
   ; Restore back the registry view
-  SetRegView lastUsed
+  ${If} ${RunningX64}
+    SetRegView lastUsed
+  ${EndIf}
   ${If} $0 == 0
     ; Get the path of the maintenance service uninstaller
     ReadRegStr $1 HKLM ${MaintUninstallKey} "UninstallString"
@@ -434,10 +438,13 @@ Section "Uninstall"
   Pop $MaintCertKey
   ${If} $MaintCertKey != ""
     ; We always use the 64bit registry for certs
-    ; This call is ignored on 32-bit systems.
-    SetRegView 64
-    DeleteRegKey HKLM "$MaintCertKey\"
-    SetRegView lastused
+    ${If} ${RunningX64}
+      SetRegView 64
+    ${EndIf}
+    DeleteRegKey HKLM "$MaintCertKey"
+    ${If} ${RunningX64}
+      SetRegView lastused
+    ${EndIf}
   ${EndIf}
   Call un.UninstallServiceIfNotUsed
 !endif

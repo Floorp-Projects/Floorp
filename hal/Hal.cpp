@@ -19,6 +19,7 @@
 #include "nsIDocShell.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "WindowIdentifier.h"
+#include "mozilla/dom/ScreenOrientation.h"
 
 using namespace mozilla::services;
 
@@ -178,8 +179,22 @@ public:
   }
 
   void RemoveObserver(Observer<InfoType>* aObserver) {
+    // If mObservers is null, that means there are no observers.
+    // In addition, if RemoveObserver() returns false, that means we didn't
+    // find the observer.
+    // In both cases, that is a logical error we want to make sure the developer
+    // notices.
+
     MOZ_ASSERT(mObservers);
-    mObservers->RemoveObserver(aObserver);
+
+#ifndef DEBUG
+    if (!mObservers) {
+      return;
+    }
+#endif
+
+    DebugOnly<bool> removed = mObservers->RemoveObserver(aObserver);
+    MOZ_ASSERT(removed);
 
     if (mObservers->Length() == 0) {
       DisableNotifications();
@@ -289,6 +304,24 @@ protected:
 
 static WakeLockObserversManager sWakeLockObservers;
 
+class ScreenOrientationObserversManager : public CachingObserversManager<dom::ScreenOrientationWrapper>
+{
+protected:
+  void EnableNotifications() {
+    PROXY_IF_SANDBOXED(EnableScreenOrientationNotifications());
+  }
+
+  void DisableNotifications() {
+    PROXY_IF_SANDBOXED(DisableScreenOrientationNotifications());
+  }
+
+  void GetCurrentInformationInternal(dom::ScreenOrientationWrapper* aInfo) {
+    PROXY_IF_SANDBOXED(GetCurrentScreenOrientation(&(aInfo->orientation)));
+  }
+};
+
+static ScreenOrientationObserversManager sScreenOrientationObservers;
+
 void
 RegisterBatteryObserver(BatteryObserver* aObserver)
 {
@@ -382,7 +415,7 @@ DisableSensorNotifications(SensorType aSensor) {
 }
 
 typedef mozilla::ObserverList<SensorData> SensorObserverList;
-static SensorObserverList *gSensorObservers = NULL;
+static SensorObserverList* gSensorObservers = NULL;
 
 static SensorObserverList &
 GetSensorObservers(SensorType sensor_type) {
@@ -414,6 +447,8 @@ UnregisterSensorObserver(SensorType aSensor, ISensorObserver *aObserver) {
   observers.RemoveObserver(aObserver);
   if(observers.Length() == 0) {
     DisableSensorNotifications(aSensor);
+    delete [] gSensorObservers;
+    gSensorObservers = nsnull;
   }
 }
 
@@ -501,6 +536,48 @@ NotifyWakeLockChange(const WakeLockInformation& aInfo)
 {
   AssertMainThread();
   sWakeLockObservers.BroadcastInformation(aInfo);
+}
+
+void
+RegisterScreenOrientationObserver(hal::ScreenOrientationObserver* aObserver)
+{
+  AssertMainThread();
+  sScreenOrientationObservers.AddObserver(aObserver);
+}
+
+void
+UnregisterScreenOrientationObserver(hal::ScreenOrientationObserver* aObserver)
+{
+  AssertMainThread();
+  sScreenOrientationObservers.RemoveObserver(aObserver);
+}
+
+void
+GetCurrentScreenOrientation(dom::ScreenOrientation* aScreenOrientation)
+{
+  AssertMainThread();
+  *aScreenOrientation = sScreenOrientationObservers.GetCurrentInformation().orientation;
+}
+
+void
+NotifyScreenOrientationChange(const dom::ScreenOrientation& aScreenOrientation)
+{
+  sScreenOrientationObservers.CacheInformation(dom::ScreenOrientationWrapper(aScreenOrientation));
+  sScreenOrientationObservers.BroadcastCachedInformation();
+}
+
+bool
+LockScreenOrientation(const dom::ScreenOrientation& aOrientation)
+{
+  AssertMainThread();
+  RETURN_PROXY_IF_SANDBOXED(LockScreenOrientation(aOrientation));
+}
+
+void
+UnlockScreenOrientation()
+{
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(UnlockScreenOrientation());
 }
 
 } // namespace hal

@@ -123,7 +123,8 @@ public:
   };
 
   enum {
-    PAINT_WILL_RESAMPLE = 0x01
+    PAINT_WILL_RESAMPLE = 0x01,
+    PAINT_NO_ROTATION = 0x02
   };
   /**
    * Start a drawing operation. This returns a PaintState describing what

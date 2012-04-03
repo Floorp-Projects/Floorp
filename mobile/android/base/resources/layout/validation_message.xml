@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent">
+
+    <TextView android:id="@+id/validation_message_text"
+              android:layout_width="wrap_content"
+              android:layout_height="50dip"
+              android:layout_marginTop="8dip"
+              android:paddingLeft="20dp"
+              android:paddingRight="20dp"
+              android:textAppearance="?android:attr/textAppearanceSmall"
+              android:textColor="@color/validation_message_text"
+              android:background="@drawable/validation_bg"
+              android:gravity="center"
+              android:singleLine="true"
+              android:scrollHorizontally="true"
+              android:ellipsize="marquee"
+              android:layout_alignParentTop="true"/>
+
+    <ImageView android:layout_width="wrap_content"
+               android:layout_height="14dip"
+               android:layout_centerHorizontal="true"
+               android:layout_alignParentTop="true"
+               android:src="@drawable/validation_arrow"
+               android:scaleType="fitXY"/>
+
+</RelativeLayout>

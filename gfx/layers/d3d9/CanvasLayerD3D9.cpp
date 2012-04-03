@@ -113,10 +113,13 @@ CanvasLayerD3D9::UpdateSurface()
 
     D3DLOCKED_RECT r = textureLock.GetLockRect();
 
+    const bool stridesMatch = r.Pitch == mBounds.width * 4;
+
     PRUint8 *destination;
-    if (r.Pitch != mBounds.width * 4) {
-      destination = new PRUint8[mBounds.width * mBounds.height * 4];
+    if (!stridesMatch) {
+      destination = GetTempBlob(mBounds.width * mBounds.height * 4);
     } else {
+      DiscardTempBlob();
       destination = (PRUint8*)r.pBits;
     }
 
@@ -145,13 +148,12 @@ CanvasLayerD3D9::UpdateSurface()
     if (currentFramebuffer != mCanvasFramebuffer)
       mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, currentFramebuffer);
 
-    if (r.Pitch != mBounds.width * 4) {
+    if (!stridesMatch) {
       for (int y = 0; y < mBounds.height; y++) {
         memcpy((PRUint8*)r.pBits + r.Pitch * y,
                destination + mBounds.width * 4 * y,
                mBounds.width * 4);
       }
-      delete [] destination;
     }
   } else {
     RECT r;

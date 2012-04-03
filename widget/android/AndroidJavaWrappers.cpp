@@ -72,6 +72,7 @@ jfieldID AndroidGeckoEvent::jRangeBackColorField = 0;
 jfieldID AndroidGeckoEvent::jLocationField = 0;
 jfieldID AndroidGeckoEvent::jBandwidthField = 0;
 jfieldID AndroidGeckoEvent::jCanBeMeteredField = 0;
+jfieldID AndroidGeckoEvent::jScreenOrientationField = 0;
 
 jclass AndroidPoint::jPointClass = 0;
 jfieldID AndroidPoint::jXField = 0;
@@ -93,8 +94,6 @@ jmethodID AndroidLocation::jGetSpeedMethod = 0;
 jmethodID AndroidLocation::jGetTimeMethod = 0;
 
 jclass AndroidGeckoLayerClient::jGeckoLayerClientClass = 0;
-jmethodID AndroidGeckoLayerClient::jBeginDrawingMethod = 0;
-jmethodID AndroidGeckoLayerClient::jEndDrawingMethod = 0;
 jmethodID AndroidGeckoLayerClient::jSetFirstPaintViewport = 0;
 jmethodID AndroidGeckoLayerClient::jSetPageSize = 0;
 jmethodID AndroidGeckoLayerClient::jSyncViewportInfoMethod = 0;
@@ -166,7 +165,6 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jXField = getField("mX", "D");
     jYField = getField("mY", "D");
     jZField = getField("mZ", "D");
-    jDistanceField = getField("mDistance", "D");
     jRectField = getField("mRect", "Landroid/graphics/Rect;");
 
     jCharactersField = getField("mCharacters", "Ljava/lang/String;");
@@ -185,6 +183,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jLocationField = getField("mLocation", "Landroid/location/Location;");
     jBandwidthField = getField("mBandwidth", "D");
     jCanBeMeteredField = getField("mCanBeMetered", "Z");
+    jScreenOrientationField = getField("mScreenOrientation", "S");
 }
 
 void
@@ -270,12 +269,10 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
 
     jGeckoLayerClientClass = getClassGlobalRef("org/mozilla/gecko/gfx/GeckoLayerClient");
 
-    jBeginDrawingMethod = getMethod("beginDrawing", "(IILjava/lang/String;)Z");
-    jEndDrawingMethod = getMethod("endDrawing", "()V");
     jSetFirstPaintViewport = getMethod("setFirstPaintViewport", "(FFFFF)V");
     jSetPageSize = getMethod("setPageSize", "(FFF)V");
     jSyncViewportInfoMethod = getMethod("syncViewportInfo",
-                                        "(IIII)Lorg/mozilla/gecko/gfx/ViewTransform;");
+                                        "(IIIIFZ)Lorg/mozilla/gecko/gfx/ViewTransform;");
     jCreateFrameMethod = getMethod("createFrame", "()Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
     jActivateProgramMethod = getMethod("activateProgram", "()V");
     jDeactivateProgramMethod = getMethod("deactivateProgram", "()V");
@@ -477,6 +474,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
              mY = jenv->GetDoubleField(jobj, jYField);
              mZ = jenv->GetDoubleField(jobj, jZField);
              mFlags = jenv->GetIntField(jobj, jFlagsField);
+             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
              break;
 
         case LOCATION_EVENT: {
@@ -508,12 +506,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
-        case PROXIMITY_EVENT: {
-            mDistance = jenv->GetDoubleField(jobj, jDistanceField);
-            break;
-        }
-
-        case SENSOR_ACCURACY:
         case ACTIVITY_STOPPING:
         case ACTIVITY_START:
         case ACTIVITY_PAUSING:
@@ -527,11 +519,16 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             ReadPointArray(mPoints, jenv, jPoints, 2);
         }
 
+        case SCREENORIENTATION_CHANGED: {
+            mScreenOrientation = jenv->GetShortField(jobj, jScreenOrientationField);
+            break;
+        }
+
         default:
             break;
     }
 
-#ifndef DEBUG_ANDROID_EVENTS
+#ifdef DEBUG_ANDROID_EVENTS
     ALOG("AndroidGeckoEvent: %p : %d", (void*)jobj, mType);
 #endif
 }
@@ -656,32 +653,6 @@ AndroidGeckoSurfaceView::Draw2D(jobject buffer, int stride)
     env->CallVoidMethod(wrapped_obj, jDraw2DBufferMethod, buffer, stride);
 }
 
-bool
-AndroidGeckoLayerClient::BeginDrawing(int aWidth, int aHeight, const nsAString &aMetadata)
-{
-    NS_ASSERTION(!isNull(), "BeginDrawing() called on null layer client!");
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return false;
-
-    AndroidBridge::AutoLocalJNIFrame jniFrame(env);
-    jstring jMetadata = env->NewString(nsPromiseFlatString(aMetadata).get(), aMetadata.Length());
-
-    return env->CallBooleanMethod(wrapped_obj, jBeginDrawingMethod, aWidth, aHeight, jMetadata);
-}
-
-void
-AndroidGeckoLayerClient::EndDrawing()
-{
-    NS_ASSERTION(!isNull(), "EndDrawing() called on null layer client!");
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return;
-
-    AndroidBridge::AutoLocalJNIFrame jniFrame(env);
-    return env->CallVoidMethod(wrapped_obj, jEndDrawingMethod);
-}
-
 void
 AndroidGeckoLayerClient::SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight)
 {
@@ -707,7 +678,8 @@ AndroidGeckoLayerClient::SetPageSize(float aZoom, float aPageWidth, float aPageH
 }
 
 void
-AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
+AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
+                                          nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
 {
     NS_ASSERTION(!isNull(), "SyncViewportInfo called on null layer client!");
     JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
@@ -719,7 +691,8 @@ AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, nsIntPo
 
     jobject viewTransformJObj = env->CallObjectMethod(wrapped_obj, jSyncViewportInfoMethod,
                                                       aDisplayPort.x, aDisplayPort.y,
-                                                      aDisplayPort.width, aDisplayPort.height);
+                                                      aDisplayPort.width, aDisplayPort.height,
+                                                      aDisplayResolution, aLayersUpdated);
     NS_ABORT_IF_FALSE(viewTransformJObj, "No view transform object!");
     viewTransform.Init(viewTransformJObj);
 

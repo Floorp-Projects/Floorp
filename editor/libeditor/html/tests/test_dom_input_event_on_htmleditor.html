@@ -1,0 +1,175 @@
+<html>
+<head>
+  <title>Test for input event of text editor</title>
+  <script type="text/javascript"
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript"
+          src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="display">
+  <iframe id="editor1" src="data:text/html,<html><body contenteditable id='eventTarget'></body></html>"></iframe>
+  <iframe id="editor2" src="data:text/html,<html contenteditable id='eventTarget'><body></body></html>"></iframe>
+  <iframe id="editor3" src="data:text/html,<html><body><div contenteditable id='eventTarget'></div></body></html>"></iframe>
+  <iframe id="editor4" src="data:text/html,<html contenteditable id='eventTarget'><body><div contenteditable id='editTarget'></div></body></html>"></iframe>
+  <iframe id="editor5" src="data:text/html,<html><body id='eventTarget'></body><script>document.designMode='on';</script></html>"></iframe>
+</div>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests, window);
+
+const kIsMac = navigator.platform.indexOf("Mac") == 0;
+
+function runTests()
+{
+  function doTests(aDocument, aWindow, aDescription)
+  {
+    aDescription += ": ";
+    aWindow.focus();
+
+    var body = aDocument.body;
+
+    var eventTarget = aDocument.getElementById("eventTarget");
+    // The event target must be focusable because it's the editing host.
+    eventTarget.focus();
+
+    var editTarget = aDocument.getElementById("editTarget");
+    if (!editTarget) {
+      editTarget = eventTarget;
+    }
+
+    // Root element never can be edit target.  If the editTarget is the root
+    // element, replace with its body.
+    if (editTarget == aDocument.documentElement) {
+      editTarget = body;
+    }
+
+    editTarget.innerHTML = "";
+
+    // If the editTarget isn't its editing host, move caret to the start of it.
+    if (eventTarget != editTarget) {
+      aDocument.getSelection().collapse(editTarget, 0);
+    }
+
+    var inputEvent = null;
+
+    var handler = function (aEvent) {
+      is(aEvent.target, eventTarget,
+         "input event is fired on unexpected element: " + aEvent.target.tagName);
+      ok(!aEvent.cancelable, "input event must not be cancelable");
+      ok(aEvent.bubbles, "input event must be bubbles");
+      var eventTime = new Date(aEvent.timeStamp);
+      var duration = Math.abs(Date.now() - aEvent.timeStamp);
+      ok(duration < 30 * 1000,
+         "perhaps, timestamp wasn't set correctly :" + eventTime.toLocaleString());
+      inputEvent = aEvent;
+    };
+
+    aWindow.addEventListener("input", handler, true);
+
+    inputEvent = null;
+    synthesizeKey("a", { }, aWindow);
+    is(editTarget.innerHTML, "a", aDescription + "wrong element was edited");
+    ok(inputEvent, aDescription + "input event wasn't fired by 'a' key");
+    ok(inputEvent.isTrusted, aDescription + "input event by 'a' key wasn't trusted event");
+
+    inputEvent = null;
+    synthesizeKey("VK_BACK_SPACE", { }, aWindow);
+    ok(inputEvent, aDescription + "input event wasn't fired by BackSpace key");
+    ok(inputEvent.isTrusted, aDescription + "input event by BackSpace key wasn't trusted event");
+
+    inputEvent = null;
+    synthesizeKey("B", { shiftKey: true }, aWindow);
+    ok(inputEvent, aDescription + "input event wasn't fired by 'B' key");
+    ok(inputEvent.isTrusted, aDescription + "input event by 'B' key wasn't trusted event");
+
+    inputEvent = null;
+    synthesizeKey("VK_ENTER", { }, aWindow);
+    ok(inputEvent, aDescription + "input event wasn't fired by Enter key");
+    ok(inputEvent.isTrusted, aDescription + "input event by Enter key wasn't trusted event");
+
+    inputEvent = null;
+    synthesizeKey("C", { shiftKey: true }, aWindow);
+    ok(inputEvent, aDescription + "input event wasn't fired by 'C' key");
+    ok(inputEvent.isTrusted, aDescription + "input event by 'C' key wasn't trusted event");
+
+    inputEvent = null;
+    synthesizeKey("VK_ENTER", { }, aWindow);
+    ok(inputEvent, aDescription + "input event wasn't fired by Enter key (again)");
+    ok(inputEvent.isTrusted, aDescription + "input event by Enter key (again) wasn't trusted event");
+
+    inputEvent = null;
+    editTarget.innerHTML = "foo-bar";
+    ok(!inputEvent, aDescription + "input event was fired by setting value");
+
+    inputEvent = null;
+    editTarget.innerHTML = "";
+    ok(!inputEvent, aDescription + "input event was fired by setting empty value");
+
+    inputEvent = null;
+    synthesizeKey(" ", { }, aWindow);
+    ok(inputEvent, aDescription + "input event wasn't fired by Space key");
+    ok(inputEvent.isTrusted, aDescription + "input event by Space key wasn't trusted event");
+
+    inputEvent = null;
+    synthesizeKey("VK_DELETE", { }, aWindow);
+    ok(!inputEvent, aDescription + "input event was fired by Delete key at the end");
+
+    inputEvent = null;
+    synthesizeKey("VK_LEFT", { }, aWindow);
+    ok(!inputEvent, aDescription + "input event was fired by Left key");
+
+    inputEvent = null;
+    synthesizeKey("VK_DELETE", { }, aWindow);
+    ok(inputEvent, aDescription + "input event wasn't fired by Delete key at the start");
+    ok(inputEvent.isTrusted, aDescription + "input event by Delete key wasn't trusted event");
+
+    inputEvent = null;
+    synthesizeKey("z", { accelKey: true }, aWindow);
+    ok(inputEvent, aDescription + "input event wasn't fired by Undo");
+    ok(inputEvent.isTrusted, aDescription + "input event by Undo wasn't trusted event");
+
+    inputEvent = null;
+    if (kIsMac) {
+      synthesizeKey("z", { accelKey: true, shiftKey: true }, aWindow);
+    } else {
+      synthesizeKey("y", { accelKey: true }, aWindow);
+    }
+    ok(inputEvent, aDescription + "input event wasn't fired by Redo");
+    ok(inputEvent.isTrusted, aDescription + "input event by Redo wasn't trusted event");
+
+    aWindow.removeEventListener("input", handler, true);
+  }
+
+  doTests(document.getElementById("editor1").contentDocument,
+          document.getElementById("editor1").contentWindow,
+          "Editor1, body has contenteditable attribute");
+  doTests(document.getElementById("editor2").contentDocument,
+          document.getElementById("editor2").contentWindow,
+          "Editor2, html has contenteditable attribute");
+  doTests(document.getElementById("editor3").contentDocument,
+          document.getElementById("editor3").contentWindow,
+          "Editor3, div has contenteditable attribute");
+  doTests(document.getElementById("editor4").contentDocument,
+          document.getElementById("editor4").contentWindow,
+          "Editor4, html and div has contenteditable attribute");
+  doTests(document.getElementById("editor5").contentDocument,
+          document.getElementById("editor5").contentWindow,
+          "Editor5, html and div has contenteditable attribute");
+
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+
+</html>

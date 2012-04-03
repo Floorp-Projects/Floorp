@@ -67,6 +67,8 @@
         <parameter name="aCurrentSet"/>
         <body>
           <![CDATA[            
+            if (!this.toolbarset)
+              return null;
             var toolbar = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                                   "toolbar");
             toolbar.id = "__customToolbar_" + aName.replace(" ", "_");
@@ -108,8 +110,14 @@
           let toolboxId = this.getAttribute("toolboxid");
           if (toolboxId) {
             let toolbox = document.getElementById(toolboxId);
-            if (!toolbox)
-              throw("toolboxid attribute points to a toolbox which doesn't exist");
+            if (!toolbox) {
+              let tbName = this.toolbarName;
+              if (tbName)
+                tbName = " (" + tbName + ")";
+              else
+                tbName = "";
+              throw("toolbar ID " + this.id + tbName + ": toolboxid attribute '" + toolboxId + "' points to a toolbox that doesn't exist");
+            }
 
             if (toolbox.externalToolbars.indexOf(this) == -1)
               toolbox.externalToolbars.push(this);
@@ -180,6 +188,9 @@
         <parameter name="aNode"/>
         <body>
         <![CDATA[
+          if (aNode.getAttribute("skipintoolbarset") == "true")
+            return "";
+
           switch (aNode.localName) {
             case "toolbarseparator":
               return "separator";
@@ -213,6 +224,9 @@
 
         <setter>
           <![CDATA[
+            if (val == this.currentSet)
+              return;
+
             var ids = (val == "__empty") ? [] : val.split(",");
 
             var nodeidx = 0;

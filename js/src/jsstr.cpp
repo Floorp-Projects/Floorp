@@ -1560,6 +1560,8 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
     if (re.global()) {
         RegExpExecType type = (flags & TEST_GLOBAL_BIT) ? RegExpTest : RegExpExec;
         for (size_t count = 0, i = 0, length = str->length(); i <= length; ++count) {
+            if (!JS_CHECK_OPERATION_LIMIT(cx))
+                return false;
             if (!ExecuteRegExp(cx, res, re, linearStr, chars, length, &i, type, rval))
                 return false;
             if (!Matched(type, *rval))
@@ -2647,7 +2649,6 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-#if JS_HAS_PERL_SUBSTR
 static JSBool
 str_substr(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -2696,7 +2697,6 @@ out:
     args.rval() = StringValue(str);
     return true;
 }
-#endif /* JS_HAS_PERL_SUBSTR */
 
 /*
  * Python-esque sequence operations.
@@ -2981,9 +2981,7 @@ static JSFunctionSpec string_methods[] = {
     JS_FN("search",            str_search,            1,JSFUN_GENERIC_NATIVE),
     JS_FN("replace",           str_replace,           2,JSFUN_GENERIC_NATIVE),
     JS_FN("split",             str_split,             2,JSFUN_GENERIC_NATIVE),
-#if JS_HAS_PERL_SUBSTR
     JS_FN("substr",            str_substr,            2,JSFUN_GENERIC_NATIVE),
-#endif
 
     /* Python-esque sequence methods. */
     JS_FN("concat",            str_concat,            1,JSFUN_GENERIC_NATIVE),
@@ -3099,8 +3097,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Now create the String function. */
-    JSFunction *ctor = global->createConstructor(cx, js_String, &StringClass,
-                                                 CLASS_ATOM(cx, String), 1);
+    JSFunction *ctor = global->createConstructor(cx, js_String, CLASS_ATOM(cx, String), 1);
     if (!ctor)
         return NULL;
 
@@ -3315,7 +3312,7 @@ js_ValueToSource(JSContext *cx, const Value &v)
     Value rval = NullValue();
     Value fval;
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.toSourceAtom);
-    if (!js_GetMethod(cx, &v.toObject(), id, JSGET_NO_METHOD_BARRIER, &fval))
+    if (!js_GetMethod(cx, &v.toObject(), id, 0, &fval))
         return NULL;
     if (js_IsCallable(fval)) {
         if (!Invoke(cx, v, fval, 0, NULL, &rval))

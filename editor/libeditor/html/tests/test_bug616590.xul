@@ -61,6 +61,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=616590
           editor.insertAsCitedQuotation("<html><body><div contenteditable>foo</div></body></html>", "", true);
           document.documentElement.clientWidth;
           progress.removeProgressListener(this);
+          ok(true, "Test complete");
           SimpleTest.finish();
         }
       }

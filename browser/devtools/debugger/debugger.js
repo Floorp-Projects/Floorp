@@ -24,6 +24,7 @@
  *   Dave Camp <dcamp@mozilla.com>
  *   Panos Astithas <past@mozilla.com>
  *   Victor Porof <vporof@mozilla.com>
+ *   Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -175,6 +176,7 @@ var StackFrames = {
 
     this.activeThread = aThreadClient;
     aThreadClient.addListener("paused", this.onPaused);
+    aThreadClient.addListener("resumed", this.onResume);
     aThreadClient.addListener("framesadded", this.onFrames);
     aThreadClient.addListener("framescleared", this.onFramesCleared);
     this.onFramesCleared();
@@ -186,6 +188,7 @@ var StackFrames = {
    */
   disconnect: function TS_disconnect() {
     this.activeThread.removeListener("paused", this.onPaused);
+    this.activeThread.removeListener("resumed", this.onResume);
     this.activeThread.removeListener("framesadded", this.onFrames);
     this.activeThread.removeListener("framescleared", this.onFramesCleared);
   },
@@ -195,6 +198,13 @@ var StackFrames = {
    */
   onPaused: function SF_onPaused() {
     this.activeThread.fillFrames(this.pageSize);
+  },
+
+  /**
+   * Handler for the thread client's resumed notification.
+   */
+  onResume: function SF_onResume() {
+    window.editor.setDebugLocation(-1);
   },
 
   /**
@@ -265,11 +275,15 @@ var StackFrames = {
     // Move the editor's caret to the proper line.
     if (DebuggerView.Scripts.isSelected(frame.where.url) && frame.where.line) {
       window.editor.setCaretPosition(frame.where.line - 1);
+      window.editor.setDebugLocation(frame.where.line - 1);
     } else if (DebuggerView.Scripts.contains(frame.where.url)) {
       DebuggerView.Scripts.selectScript(frame.where.url);
       SourceScripts.onChange({ target: DebuggerView.Scripts._scripts });
       window.editor.setCaretPosition(frame.where.line - 1);
+    } else {
+      window.editor.setDebugLocation(-1);
     }
+
     // Display the local variables.
     let localScope = DebuggerView.Properties.localScope;
     localScope.empty();
@@ -297,7 +311,33 @@ var StackFrames = {
           paramVar.setGrip(paramVal);
           this._addExpander(paramVar, paramVal);
         }
+        // Signal that call parameters have been fetched.
+        let evt = document.createEvent("Event");
+        evt.initEvent("Debugger:FetchedParameters", true, false);
+        document.documentElement.dispatchEvent(evt);
       }.bind(this));
+    }
+  },
+
+  /**
+   * Update the source editor current debug location based on the selected frame
+   * and script.
+   */
+  updateEditor: function SF_updateEditor() {
+    if (this.selectedFrame === null) {
+      return;
+    }
+
+    let frame = this.activeThread.cachedFrames[this.selectedFrame];
+    if (!frame) {
+      return;
+    }
+
+    // Move the editor's caret to the proper line.
+    if (DebuggerView.Scripts.isSelected(frame.where.url) && frame.where.line) {
+      window.editor.setDebugLocation(frame.where.line - 1);
+    } else {
+      window.editor.setDebugLocation(-1);
     }
   },
 
@@ -408,6 +448,7 @@ var StackFrames = {
 };
 
 StackFrames.onPaused = StackFrames.onPaused.bind(StackFrames);
+StackFrames.onResume = StackFrames.onResume.bind(StackFrames);
 StackFrames.onFrames = StackFrames.onFrames.bind(StackFrames);
 StackFrames.onFramesCleared = StackFrames.onFramesCleared.bind(StackFrames);
 StackFrames.onClick = StackFrames.onClick.bind(StackFrames);
@@ -432,11 +473,13 @@ var SourceScripts = {
     DebuggerView.Scripts.addChangeListener(this.onChange);
 
     this.activeThread = aThreadClient;
-    aThreadClient.addListener("paused", this.onPaused);
     aThreadClient.addListener("scriptsadded", this.onScripts);
     aThreadClient.addListener("scriptscleared", this.onScriptsCleared);
     this.clearLabelsCache();
     this.onScriptsCleared();
+    // Retrieve the list of scripts known to the server from before the client
+    // was ready to handle new script notifications.
+    this.activeThread.fillScripts();
     aCallback && aCallback();
   },
 
@@ -444,19 +487,8 @@ var SourceScripts = {
    * Disconnect from the client.
    */
   disconnect: function TS_disconnect() {
-    this.activeThread.removeListener("paused", this.onPaused);
     this.activeThread.removeListener("scriptsadded", this.onScripts);
     this.activeThread.removeListener("scriptscleared", this.onScriptsCleared);
-  },
-
-  /**
-   * Handler for the thread client's paused notification. This is triggered only
-   * once, to retrieve the list of scripts known to the server from before the
-   * client was ready to handle new script notifications.
-   */
-  onPaused: function SS_onPaused() {
-    this.activeThread.removeListener("paused", this.onPaused);
-    this.activeThread.fillScripts();
   },
 
   /**
@@ -614,12 +646,12 @@ var SourceScripts = {
     } else {
       window.editor.setText(aScript.text);
       window.updateEditorBreakpoints();
+      StackFrames.updateEditor();
     }
     window.editor.resetUndo();
   }
 };
 
-SourceScripts.onPaused = SourceScripts.onPaused.bind(SourceScripts);
 SourceScripts.onScripts = SourceScripts.onScripts.bind(SourceScripts);
 SourceScripts.onNewScript = SourceScripts.onNewScript.bind(SourceScripts);
 SourceScripts.onScriptsCleared = SourceScripts.onScriptsCleared.bind(SourceScripts);

@@ -347,31 +347,6 @@ nsHTMLSelectOptionAccessible::GetLevelInternal()
   return level;
 }
 
-void
-nsHTMLSelectOptionAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
-                                                         PRInt32 *aSetSize)
-{
-  PRInt32 posInSet = 0, setSize = 0;
-  bool isContentFound = false;
-
-  nsIContent* parentContent = mContent->GetParent();
-  for (nsIContent* childContent = parentContent->GetFirstChild(); childContent;
-       childContent = childContent->GetNextSibling()) {
-    if (childContent->NodeInfo()->Equals(mContent->NodeInfo())) {
-      if (!isContentFound) {
-        if (childContent == mContent)
-          isContentFound = true;
-
-        posInSet++;
-      }
-      setSize++;
-    }
-  }
-
-  *aSetSize = setSize;
-  *aPosInSet = posInSet;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLSelectOptionAccessible: nsIAccessible
 

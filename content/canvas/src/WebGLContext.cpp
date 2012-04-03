@@ -94,6 +94,8 @@ WebGLContext::WebGLContext()
     : mCanvasElement(nsnull),
       gl(nsnull)
 {
+    mEnabledExtensions.SetLength(WebGLExtensionID_Max);
+
     mGeneration = 0;
     mInvalidated = false;
     mResetLayer = true;
@@ -489,7 +491,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     // if we want EGL, try it now
     if (!gl && (preferEGL || useANGLE) && !preferOpenGL) {
         gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
-        if (gl && !InitAndValidateGL()) {
+        if (!gl || !InitAndValidateGL()) {
             LogMessage("Error during ANGLE OpenGL ES initialization");
             return NS_ERROR_FAILURE;
         }
@@ -561,7 +563,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 }
 
 NS_IMETHODIMP
-WebGLContext::Render(gfxContext *ctx, gfxPattern::GraphicsFilter f)
+WebGLContext::Render(gfxContext *ctx, gfxPattern::GraphicsFilter f, PRUint32 aFlags)
 {
     if (!gl)
         return NS_OK;
@@ -572,7 +574,15 @@ WebGLContext::Render(gfxContext *ctx, gfxPattern::GraphicsFilter f)
         return NS_ERROR_FAILURE;
 
     gl->ReadPixelsIntoImageSurface(0, 0, mWidth, mHeight, surf);
-    gfxUtils::PremultiplyImageSurface(surf);
+
+    bool srcPremultAlpha = mOptions.premultipliedAlpha;
+    bool dstPremultAlpha = aFlags & RenderFlagPremultAlpha;
+
+    if (!srcPremultAlpha && dstPremultAlpha) {
+        gfxUtils::PremultiplyImageSurface(surf);
+    } else if (srcPremultAlpha && !dstPremultAlpha) {
+        gfxUtils::UnpremultiplyImageSurface(surf);
+    }
 
     nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
     pat->SetFilter(f);
@@ -608,7 +618,8 @@ WebGLContext::GetInputStream(const char* aMimeType,
 
     nsRefPtr<gfxContext> tmpcx = new gfxContext(surf);
     // Use Render() to make sure that appropriate y-flip gets applied
-    nsresult rv = Render(tmpcx, gfxPattern::FILTER_NEAREST);
+    PRUint32 flags = mOptions.premultipliedAlpha ? RenderFlagPremultAlpha : 0;
+    nsresult rv = Render(tmpcx, gfxPattern::FILTER_NEAREST, flags);
     if (NS_FAILED(rv))
         return rv;
 
@@ -625,11 +636,22 @@ WebGLContext::GetInputStream(const char* aMimeType,
     if (!encoder)
         return NS_ERROR_FAILURE;
 
+    int format = imgIEncoder::INPUT_FORMAT_HOSTARGB;
+    if (!mOptions.premultipliedAlpha) {
+        // We need to convert to INPUT_FORMAT_RGBA, otherwise
+        // we are automatically considered premult, and unpremult'd.
+        // Yes, it is THAT silly.
+        // Except for different lossy conversions by color,
+        // we could probably just change the label, and not change the data.
+        gfxUtils::ConvertBGRAtoRGBA(surf);
+        format = imgIEncoder::INPUT_FORMAT_RGBA;
+    }
+
     rv = encoder->InitFromData(surf->Data(),
                                mWidth * mHeight * 4,
                                mWidth, mHeight,
                                surf->Stride(),
-                               imgIEncoder::INPUT_FORMAT_HOSTARGB,
+                               format,
                                nsDependentString(aEncoderOptions));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1148,9 +1170,11 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(WebGLContext)
 NS_IMPL_CYCLE_COLLECTION_CLASS(WebGLContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WebGLContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCanvasElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(mEnabledExtensions)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WebGLContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCanvasElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_OF_NSCOMPTR(mEnabledExtensions)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 DOMCI_DATA(WebGLRenderingContext, WebGLContext)
@@ -1276,43 +1300,33 @@ NAME_NOT_SUPPORTED(WebGLShader)
 NAME_NOT_SUPPORTED(WebGLFramebuffer)
 NAME_NOT_SUPPORTED(WebGLRenderbuffer)
 
-NS_IMPL_ADDREF(WebGLExtension)
-NS_IMPL_RELEASE(WebGLExtension)
+// WebGLExtension
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(WebGLExtension)
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(WebGLExtension)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WebGLExtension)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WebGLExtension)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+  
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebGLExtension)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLExtension)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLExtension)
+NS_INTERFACE_MAP_END 
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(WebGLExtension)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(WebGLExtension)
 
 DOMCI_DATA(WebGLExtension, WebGLExtension)
-
-NS_INTERFACE_MAP_BEGIN(WebGLExtension)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLExtension)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLExtension)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(WebGLExtensionStandardDerivatives)
-NS_IMPL_RELEASE(WebGLExtensionStandardDerivatives)
-
-DOMCI_DATA(WebGLExtensionStandardDerivatives, WebGLExtensionStandardDerivatives)
-
-NS_INTERFACE_MAP_BEGIN(WebGLExtensionStandardDerivatives)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLExtensionStandardDerivatives)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, WebGLExtension)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLExtensionStandardDerivatives)
-NS_INTERFACE_MAP_END_INHERITING(WebGLExtension)
-
-NS_IMPL_ADDREF(WebGLExtensionTextureFilterAnisotropic)
-NS_IMPL_RELEASE(WebGLExtensionTextureFilterAnisotropic)
-
-DOMCI_DATA(WebGLExtensionTextureFilterAnisotropic, WebGLExtensionTextureFilterAnisotropic)
-
-NS_IMPL_ADDREF(WebGLExtensionLoseContext)
-NS_IMPL_RELEASE(WebGLExtensionLoseContext)
-
-DOMCI_DATA(WebGLExtensionLoseContext, WebGLExtensionLoseContext)
-
-NS_INTERFACE_MAP_BEGIN(WebGLExtensionLoseContext)
-  NS_INTERFACE_MAP_ENTRY(nsIWebGLExtensionLoseContext)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, WebGLExtension)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLExtensionLoseContext)
-NS_INTERFACE_MAP_END_INHERITING(WebGLExtension)
 
 /* readonly attribute WebGLsizei drawingBufferWidth; */
 NS_IMETHODIMP

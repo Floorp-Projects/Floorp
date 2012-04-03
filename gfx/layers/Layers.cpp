@@ -572,9 +572,11 @@ void WriteSnapshotToDumpFile_internal(T* aObj, gfxASurface* aSurf)
   nsCString string(aObj->Name());
   string.Append("-");
   string.AppendInt((PRUint64)aObj);
-  fprintf(gfxUtils::sDumpPaintFile, "array[\"%s\"]=\"", string.BeginReading());
+  if (gfxUtils::sDumpPaintFile)
+    fprintf(gfxUtils::sDumpPaintFile, "array[\"%s\"]=\"", string.BeginReading());
   aSurf->DumpAsDataURL(gfxUtils::sDumpPaintFile);
-  fprintf(gfxUtils::sDumpPaintFile, "\";");
+  if (gfxUtils::sDumpPaintFile)
+    fprintf(gfxUtils::sDumpPaintFile, "\";");
 }
 
 void WriteSnapshotToDumpFile(Layer* aLayer, gfxASurface* aSurf)
@@ -670,9 +672,6 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
   }
   if (1.0 != mOpacity) {
     aTo.AppendPrintf(" [opacity=%g]", mOpacity);
-  }
-  if (const nsIntRect* tileSourceRect = GetTileSourceRect()) {
-    AppendToString(aTo, *tileSourceRect, " [tileSrc=", "]");
   }
   if (GetContentFlags() & CONTENT_OPAQUE) {
     aTo += " [opaqueContent]";

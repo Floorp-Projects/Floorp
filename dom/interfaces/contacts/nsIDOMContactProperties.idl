@@ -23,6 +23,8 @@ interface nsIDOMContactFindOptions : nsISupports
   attribute DOMString filterValue;  // e.g. "Tom"
   attribute DOMString filterOp;     // e.g. "contains"
   attribute jsval filterBy;         // DOMString[], e.g. ["givenName", "nickname"]
+  attribute DOMString sortBy;       // e.g. "givenName"
+  attribute DOMString sortOrder;    // e.g. "descending"
   attribute unsigned long filterLimit;
 };
 

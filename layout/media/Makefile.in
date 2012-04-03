@@ -107,7 +107,7 @@ EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
 endif
 
 ifdef MOZ_CUBEB
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, winmm ksguid)
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, winmm)
 endif
 
 DEFFILE = symbols.def

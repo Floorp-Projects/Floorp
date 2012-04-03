@@ -285,6 +285,7 @@ _TEST_FILES1 = \
 		file_XHRDocURI.text \
 		file_XHRDocURI.text^headers^ \
 		test_DOMException.html \
+		test_mutationobservers.html \
 		$(NULL)
 
 _TEST_FILES2 = \
@@ -440,11 +441,7 @@ _TEST_FILES2 = \
 		test_bug597345.html \
 		script-1_bug597345.sjs \
 		script-2_bug597345.js \
-		test_bug598877.html \
 		test_bug599588.html \
-		test_bug600466.html \
-		test_bug600468.html \
-		test_bug600471.html \
 		test_bug601803.html \
 		file_bug601803a.html \
 		file_bug601803b.html \
@@ -462,7 +459,6 @@ _TEST_FILES2 = \
 		test_bug606729.html \
 		test_treewalker_nextsibling.xml \
 		test_bug614058.html \
-		test_bug590771.html \
 		test_bug622117.html \
 		test_base.xhtml \
 		file_base_xbl.xml \
@@ -568,6 +564,17 @@ _TEST_FILES2 = \
 		bug696301-script-1.js \
 		bug696301-script-1.js^headers^ \
 		bug696301-script-2.js \
+		test_bug737565.html \
+		test_bug737612.html \
+		test_bug738108.html \
+		test_bug366944.html \
+		test_bug650386_redirect_301.html \
+		test_bug650386_redirect_302.html \
+		test_bug650386_redirect_303.html \
+		test_bug650386_redirect_307.html \
+		file_bug650386_content.sjs \
+		file_bug650386_report.sjs \
+		test_bug719533.html \
 		$(NULL)
 
 _CHROME_FILES =	\

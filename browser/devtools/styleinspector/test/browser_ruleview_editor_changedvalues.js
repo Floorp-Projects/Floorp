@@ -7,6 +7,7 @@ Cu.import("resource:///modules/devtools/CssRuleView.jsm", tempScope);
 let CssRuleView = tempScope.CssRuleView;
 let _ElementStyle = tempScope._ElementStyle;
 let _editableField = tempScope._editableField;
+let inplaceEditor = tempScope._getInplaceEditorForSpan;
 
 let doc;
 let ruleDialog;
@@ -15,9 +16,9 @@ let ruleView;
 function waitForEditorFocus(aParent, aCallback)
 {
   aParent.addEventListener("focus", function onFocus(evt) {
-    if (evt.target.inplaceEditor) {
+    if (inplaceEditor(evt.target)) {
       aParent.removeEventListener("focus", onFocus, true);
-      let editor = evt.target.inplaceEditor;
+      let editor = inplaceEditor(evt.target);
       executeSoon(function() {
         aCallback(editor);
       });
@@ -83,7 +84,7 @@ function testCancelNew()
 
   let elementRuleEditor = ruleView.element.children[0]._ruleEditor;
   waitForEditorFocus(elementRuleEditor.element, function onNewElement(aEditor) {
-    is(elementRuleEditor.newPropSpan.inplaceEditor, aEditor, "Next focused editor should be the new property editor.");
+    is(inplaceEditor(elementRuleEditor.newPropSpan), aEditor, "Next focused editor should be the new property editor.");
     let input = aEditor.input;
     waitForEditorBlur(aEditor, function () {
       ok(!gRuleViewChanged, "Shouldn't get a change event after a cancel.");
@@ -104,7 +105,7 @@ function testCreateNew()
   // Create a new property.
   let elementRuleEditor = ruleView.element.children[0]._ruleEditor;
   waitForEditorFocus(elementRuleEditor.element, function onNewElement(aEditor) {
-    is(elementRuleEditor.newPropSpan.inplaceEditor, aEditor, "Next focused editor should be the new property editor.");
+    is(inplaceEditor(elementRuleEditor.newPropSpan), aEditor, "Next focused editor should be the new property editor.");
     let input = aEditor.input;
     input.value = "background-color";
 
@@ -113,7 +114,7 @@ function testCreateNew()
       is(elementRuleEditor.rule.textProps.length,  1, "Should have created a new text property.");
       is(elementRuleEditor.propertyList.children.length, 1, "Should have created a property editor.");
       let textProp = elementRuleEditor.rule.textProps[0];
-      is(aEditor, textProp.editor.valueSpan.inplaceEditor, "Should be editing the value span now.");
+      is(aEditor, inplaceEditor(textProp.editor.valueSpan), "Should be editing the value span now.");
 
       aEditor.input.value = "#XYZ";
       waitForEditorBlur(aEditor, function() {
@@ -137,12 +138,12 @@ function testEditProperty()
   let idRuleEditor = ruleView.element.children[1]._ruleEditor;
   let propEditor = idRuleEditor.rule.textProps[0].editor;
   waitForEditorFocus(propEditor.element, function onNewElement(aEditor) {
-    is(propEditor.nameSpan.inplaceEditor, aEditor, "Next focused editor should be the name editor.");
+    is(inplaceEditor(propEditor.nameSpan), aEditor, "Next focused editor should be the name editor.");
     let input = aEditor.input;
     waitForEditorFocus(propEditor.element, function onNewName(aEditor) {
       expectChange();
       input = aEditor.input;
-      is(propEditor.valueSpan.inplaceEditor, aEditor, "Focus should have moved to the value.");
+      is(inplaceEditor(propEditor.valueSpan), aEditor, "Focus should have moved to the value.");
 
       waitForEditorBlur(aEditor, function() {
         expectChange();

@@ -39,7 +39,7 @@
 
 #include "nsXMLDocument.h"
 #include "nsParserCIID.h"
-#include "nsIParser.h"
+#include "nsCharsetSource.h"
 #include "nsIXMLContentSink.h"
 #include "nsPresContext.h" 
 #include "nsIContent.h"
@@ -480,6 +480,7 @@ nsXMLDocument::Load(const nsAString& aUrl, bool *aReturn)
   if (!mAsync) {
     nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
 
+    nsAutoSyncOperation sync(this);
     mLoopingForSyncLoad = true;
     while (mLoopingForSyncLoad) {
       if (!NS_ProcessNextEvent(thread))
@@ -529,7 +530,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 
   PRInt32 charsetSource = kCharsetFromDocTypeDefault;
   nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
-  TryChannelCharset(aChannel, charsetSource, charset);
+  TryChannelCharset(aChannel, charsetSource, charset, nsnull);
 
   nsCOMPtr<nsIURI> aUrl;
   rv = aChannel->GetURI(getter_AddRefs(aUrl));

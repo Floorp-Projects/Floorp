@@ -18,7 +18,7 @@
 #define USE_GS2_LIBCAMERA
 #define CameraHardwareInterface CameraHardwareInterface_SGS2
 #define HAL_openCameraHardware HAL_openCameraHardware_SGS2
-#include "camera/CameraHardwareInterface.h"
+#include "gonk/CameraHardwareInterface.h"
 #undef CameraHardwareInterface
 #undef USE_GS2_LIBCAMERA
 #undef HAL_openCameraHardware
@@ -31,7 +31,7 @@
 #define USE_MAGURO_LIBCAMERA
 #define CameraHardwareInterface CameraHardwareInterface_MAGURO
 #define HAL_openCameraHardware HAL_openCameraHardware_MAGURO
-#include "camera/CameraHardwareInterface.h"
+#include "gonk/CameraHardwareInterface.h"
 #undef CameraHardwareInterface
 #undef USE_MAGURO_LIBCAMERA
 #undef HAL_openCameraHardware
@@ -42,7 +42,7 @@
 #define image_rect_type image_rect_type3
 #define image_rect_struct image_rect_struct3
 #define CameraHardwareInterface CameraHardwareInterface_DEFAULT
-#include "camera/CameraHardwareInterface.h"
+#include "gonk/CameraHardwareInterface.h"
 #undef CameraHardwareInterface
 
 using namespace android;

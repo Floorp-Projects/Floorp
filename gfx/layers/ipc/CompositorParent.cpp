@@ -62,6 +62,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget, base::Thread* aCompositor
   , mCurrentCompositeTask(NULL)
   , mPaused(false)
   , mIsFirstPaint(false)
+  , mLayersUpdated(false)
 {
   MOZ_COUNT_CTOR(CompositorParent);
 }
@@ -77,15 +78,39 @@ CompositorParent::Destroy()
   NS_ABORT_IF_FALSE(ManagedPLayersParent().Length() == 0,
                     "CompositorParent destroyed before managed PLayersParent");
 
-  // Ensure that the layer manager is destroyed on the compositor thread.
+  // Ensure that the layer manager is destructed on the compositor thread.
   mLayerManager = NULL;
+}
+
+bool
+CompositorParent::RecvWillStop()
+{
+  mPaused = true;
+
+  // Ensure that the layer manager is destroyed before CompositorChild.
+  mLayerManager->Destroy();
+
+  return true;
 }
 
 bool
 CompositorParent::RecvStop()
 {
-  mPaused = true;
   Destroy();
+  return true;
+}
+
+bool
+CompositorParent::RecvPause()
+{
+  PauseComposition();
+  return true;
+}
+
+bool
+CompositorParent::RecvResume()
+{
+  ResumeComposition();
   return true;
 }
 
@@ -206,6 +231,23 @@ CompositorParent::Composite()
 #endif
 }
 
+// Go down shadow layer tree, setting properties to match their non-shadow
+// counterparts.
+static void
+SetShadowProperties(Layer* aLayer)
+{
+  // FIXME: Bug 717688 -- Do these updates in ShadowLayersParent::RecvUpdate.
+  ShadowLayer* shadow = aLayer->AsShadowLayer();
+  shadow->SetShadowTransform(aLayer->GetTransform());
+  shadow->SetShadowVisibleRegion(aLayer->GetVisibleRegion());
+  shadow->SetShadowClipRect(aLayer->GetClipRect());
+
+  for (Layer* child = aLayer->GetFirstChild();
+      child; child = child->GetNextSibling()) {
+    SetShadowProperties(child);
+  }
+}
+
 #ifdef MOZ_WIDGET_ANDROID
 // Do a breadth-first search to find the first layer in the tree that is
 // scrollable.
@@ -213,6 +255,21 @@ Layer*
 CompositorParent::GetPrimaryScrollableLayer()
 {
   Layer* root = mLayerManager->GetRoot();
+
+  // FIXME: We're currently getting passed layers that are not part of our content, but
+  // we are drawing them anyway. This is causing severe rendering corruption to our background
+  // and checkerboarding. The real fix here is to assert that we don't have any useless layers
+  // and ensure that layout isn't giving us any. This is being tracked in bug 728284.
+  // For now just clip them to the empty rect so we don't draw them.
+  Layer* discardLayer = root->GetFirstChild();
+
+  while (discardLayer) {
+    if (!discardLayer->AsContainerLayer()) {
+      discardLayer->IntersectClipRect(nsIntRect());
+      SetShadowProperties(discardLayer);
+    }
+    discardLayer = discardLayer->GetNextSibling();
+  }
 
   nsTArray<Layer*> queue;
   queue.AppendElement(root);
@@ -238,23 +295,6 @@ CompositorParent::GetPrimaryScrollableLayer()
   return root;
 }
 #endif
-
-// Go down shadow layer tree, setting properties to match their non-shadow
-// counterparts.
-static void
-SetShadowProperties(Layer* aLayer)
-{
-  // FIXME: Bug 717688 -- Do these updates in ShadowLayersParent::RecvUpdate.
-  ShadowLayer* shadow = aLayer->AsShadowLayer();
-  shadow->SetShadowTransform(aLayer->GetTransform());
-  shadow->SetShadowVisibleRegion(aLayer->GetVisibleRegion());
-  shadow->SetShadowClipRect(aLayer->GetClipRect());
-
-  for (Layer* child = aLayer->GetFirstChild();
-      child; child = child->GetNextSibling()) {
-    SetShadowProperties(child);
-  }
-}
 
 void
 CompositorParent::TransformShadowTree()
@@ -286,7 +326,17 @@ CompositorParent::TransformShadowTree()
 
   // We synchronise the viewport information with Java after sending the above
   // notifications, so that Java can take these into account in its response.
-  SyncViewportInfo();
+  if (metrics) {
+    // Calculate the absolute display port to send to Java
+    nsIntRect displayPort = metrics->mDisplayPort;
+    nsIntPoint scrollOffset = metrics->mViewportScrollOffset;
+    displayPort.x += scrollOffset.x;
+    displayPort.y += scrollOffset.y;
+
+    mozilla::AndroidBridge::Bridge()->SyncViewportInfo(displayPort, 1/rootScaleX, mLayersUpdated,
+                                                       mScrollOffset, mXScale, mYScale);
+    mLayersUpdated = false;
+  }
 
   // Handle transformations for asynchronous panning and zooming. We determine the
   // zoom used by Gecko from the transformation set on the root layer, and we
@@ -312,29 +362,11 @@ CompositorParent::TransformShadowTree()
 #endif
 }
 
-#ifdef MOZ_WIDGET_ANDROID
-void
-CompositorParent::SyncViewportInfo()
-{
-  ContainerLayer* container = GetPrimaryScrollableLayer()->AsContainerLayer();
-  const FrameMetrics* metrics = &container->GetFrameMetrics();
-
-  if (metrics) {
-    // Calculate the absolute display port to send to Java
-    nsIntRect displayPort = container->GetFrameMetrics().mDisplayPort;
-    nsIntPoint scrollOffset = metrics->mViewportScrollOffset;
-    displayPort.x += scrollOffset.x;
-    displayPort.y += scrollOffset.y;
-
-    mozilla::AndroidBridge::Bridge()->SyncViewportInfo(displayPort, mScrollOffset, mXScale, mYScale);
-  }
-}
-#endif
-
 void
 CompositorParent::ShadowLayersUpdated(bool isFirstPaint)
 {
   mIsFirstPaint = mIsFirstPaint || isFirstPaint;
+  mLayersUpdated = true;
   const nsTArray<PLayersParent*>& shadowParents = ManagedPLayersParent();
   NS_ABORT_IF_FALSE(shadowParents.Length() <= 1,
                     "can only support at most 1 ShadowLayersParent");

@@ -215,7 +215,7 @@ public abstract class RepositorySession {
     // TODO: do something here.
     this.setStatus(SessionStatus.ABORTED);
     try {
-      storeWorkQueue.shutdown();
+      storeWorkQueue.shutdownNow();
     } catch (Exception e) {
       Logger.error(LOG_TAG, "Caught exception shutting down store work queue.", e);
     }

@@ -248,6 +248,16 @@ nsLinkableAccessible::BindToParent(nsAccessible* aParent,
   }
 }
 
+void
+nsLinkableAccessible::UnbindFromParent()
+{
+  mActionAcc = nsnull;
+  mIsLink = false;
+  mIsOnclick = false;
+
+  nsAccessibleWrap::UnbindFromParent();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsEnumRoleAccessible
 ////////////////////////////////////////////////////////////////////////////////

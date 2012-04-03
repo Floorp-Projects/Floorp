@@ -94,6 +94,7 @@
         macanimationtype="document"
         screenX="4" screenY="4"
         browsingmode="normal"
+        fullscreenbutton="true"
         persist="screenX screenY width height sizemode">
 
 # All JS files which are not content (only) dependent that browser.xul
@@ -474,7 +475,7 @@
              toolbarname="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;"
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="large"
-             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,home-button,bookmarks-menu-button-container,fullscreenflex,window-controls"
+             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,home-button,bookmarks-menu-button-container,window-controls"
              context="toolbar-context-menu">
 
       <toolbaritem id="unified-back-forward-button" class="chromeclass-toolbar-additional"
@@ -696,8 +697,7 @@
         </toolbarbutton>
       </toolbaritem>
 
-      <hbox id="fullscreenflex" flex="1" hidden="true" fullscreencontrol="true"/>
-      <hbox id="window-controls" hidden="true" fullscreencontrol="true">
+      <hbox id="window-controls" hidden="true" fullscreencontrol="true" pack="end">
         <toolbarbutton id="minimize-button"
                        tooltiptext="&fullScreenMinimize.tooltip;"
                        oncommand="window.minimize();"/>
@@ -1059,7 +1059,7 @@
     </svg:mask>
     <svg:mask id="winstripe-urlbar-back-button-mask" maskContentUnits="userSpaceOnUse">
       <svg:rect x="0" y="0" width="10000" height="50" fill="white"/>
-      <svg:circle cx="-11" cy="13" r="15"/>
+      <svg:circle cx="-11" cy="18" r="15"/>
     </svg:mask>
   </svg:svg>
 #endif

@@ -78,6 +78,7 @@
 #include <shlobj.h>
 
 #include <mbstring.h>
+#include <shlwapi.h>
 
 #ifndef MAX_BUF
 #define MAX_BUF 4096
@@ -129,23 +130,17 @@ OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName, HKEY* aKey)
 //
 //   HKCU\SOFTWARE\Classes\FirefoxHTML\
 //     DefaultIcon                      (default)         REG_SZ     <apppath>,1
-//     shell\open\command               (default)         REG_SZ     <apppath> -requestPending -osint -url "%1"
-//     shell\open\ddeexec               (default)         REG_SZ     "%1",,0,0,,,,
-//     shell\open\ddeexec               NoActivateHandler REG_SZ
-//                       \Application   (default)         REG_SZ     Firefox
-//                       \Topic         (default)         REG_SZ     WWW_OpenURL
+//     shell\open\command               (default)         REG_SZ     <apppath> -osint -url "%1"
+//     shell\open\ddeexec               (default)         REG_SZ     <empty string>
 //
-// - Windows Vista Protocol Handler
+// - Windows Vista and above Protocol Handler
 //
 //   HKCU\SOFTWARE\Classes\FirefoxURL\  (default)         REG_SZ     <appname> URL
 //                                      EditFlags         REG_DWORD  2
 //                                      FriendlyTypeName  REG_SZ     <appname> URL
 //     DefaultIcon                      (default)         REG_SZ     <apppath>,1
-//     shell\open\command               (default)         REG_SZ     <apppath> -requestPending -osint -url "%1"
-//     shell\open\ddeexec               (default)         REG_SZ     "%1",,0,0,,,,
-//     shell\open\ddeexec               NoActivateHandler REG_SZ
-//                       \Application   (default)         REG_SZ     Firefox
-//                       \Topic         (default)         REG_SZ     WWW_OpenURL
+//     shell\open\command               (default)         REG_SZ     <apppath> -osint -url "%1"
+//     shell\open\ddeexec               (default)         REG_SZ     <empty string>
 //
 // - Protocol Mappings
 //   -----------------
@@ -155,13 +150,10 @@ OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName, HKEY* aKey)
 //
 //   HKCU\SOFTWARE\Classes\<protocol>\
 //     DefaultIcon                      (default)         REG_SZ     <apppath>,1
-//     shell\open\command               (default)         REG_SZ     <apppath> -requestPending -osint -url "%1"
-//     shell\open\ddeexec               (default)         REG_SZ     "%1",,0,0,,,,
-//     shell\open\ddeexec               NoActivateHandler REG_SZ
-//                       \Application   (default)         REG_SZ     Firefox
-//                       \Topic         (default)         REG_SZ     WWW_OpenURL
+//     shell\open\command               (default)         REG_SZ     <apppath> -osint -url "%1"
+//     shell\open\ddeexec               (default)         REG_SZ     <empty string>
 //
-// - Windows Start Menu (Win2K SP2, XP SP1, and newer)
+// - Windows Start Menu (XP SP1 and newer)
 //   -------------------------------------------------
 //   The following keys are set to make Firefox appear in the Start Menu as the
 //   browser:
@@ -180,19 +172,22 @@ OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName, HKEY* aKey)
 //     shell\safemode\command           (default)         REG_SZ     <apppath> -safe-mode
 //
 
+// The values checked are all default values so the value name is not needed.
 typedef struct {
   char* keyName;
-  char* valueName;
   char* valueData;
+  char* oldValueData;
 } SETTING;
 
 #define APP_REG_NAME L"Firefox"
-#define CLS_HTML "FirefoxHTML"
-#define CLS_URL "FirefoxURL"
-#define VAL_OPEN "\"%APPPATH%\" -requestPending -osint -url \"%1\""
 #define VAL_FILE_ICON "%APPPATH%,1"
+#define VAL_OPEN "\"%APPPATH%\" -osint -url \"%1\""
+#define OLD_VAL_OPEN "\"%APPPATH%\" -requestPending -osint -url \"%1\""
 #define DI "\\DefaultIcon"
-#define SOP "\\shell\\open\\command"
+#define SOC "\\shell\\open\\command"
+#define SOD "\\shell\\open\\ddeexec"
+// Used for updating the FTP protocol handler's shell open command under HKCU.
+#define FTP_SOC L"Software\\Classes\\ftp\\shell\\open\\command"
 
 #define MAKE_KEY_NAME1(PREFIX, MID) \
   PREFIX MID
@@ -201,19 +196,37 @@ typedef struct {
 // Firefox is the default browser for file handlers since other applications
 // (e.g. MS Office) may modify the DefaultIcon registry key value to add Icon
 // Handlers. see http://msdn2.microsoft.com/en-us/library/aa969357.aspx for
-// more info.
+// more info. The FTP protocol is not checked so advanced users can set the FTP
+// handler to another application and still have Firefox check if it is the
+// default HTTP and HTTPS handler.
 static SETTING gSettings[] = {
   // File Handler Class
-  { MAKE_KEY_NAME1(CLS_HTML, SOP), "", VAL_OPEN },
+  { MAKE_KEY_NAME1("FirefoxHTML", SOC), VAL_OPEN, OLD_VAL_OPEN },
 
   // Protocol Handler Class - for Vista and above
-  { MAKE_KEY_NAME1(CLS_URL, SOP), "", VAL_OPEN },
+  { MAKE_KEY_NAME1("FirefoxURL", SOC), VAL_OPEN, OLD_VAL_OPEN },
 
   // Protocol Handlers
-  { MAKE_KEY_NAME1("HTTP", DI),    "", VAL_FILE_ICON },
-  { MAKE_KEY_NAME1("HTTP", SOP),   "", VAL_OPEN },
-  { MAKE_KEY_NAME1("HTTPS", DI),   "", VAL_FILE_ICON },
-  { MAKE_KEY_NAME1("HTTPS", SOP),  "", VAL_OPEN }
+  { MAKE_KEY_NAME1("HTTP", DI), VAL_FILE_ICON },
+  { MAKE_KEY_NAME1("HTTP", SOC), VAL_OPEN, OLD_VAL_OPEN },
+  { MAKE_KEY_NAME1("HTTPS", DI), VAL_FILE_ICON },
+  { MAKE_KEY_NAME1("HTTPS", SOC), VAL_OPEN, OLD_VAL_OPEN }
+};
+
+// The settings to disable DDE are separate from the default browser settings
+// since they are only checked when Firefox is the default browser and if they
+// are incorrect they are fixed without notifying the user.
+static SETTING gDDESettings[] = {
+  // File Handler Class
+  { MAKE_KEY_NAME1("Software\\Classes\\FirefoxHTML", SOD) },
+
+  // Protocol Handler Class - for Vista and above
+  { MAKE_KEY_NAME1("Software\\Classes\\FirefoxURL", SOD) },
+
+  // Protocol Handlers
+  { MAKE_KEY_NAME1("Software\\Classes\\FTP", SOD) },
+  { MAKE_KEY_NAME1("Software\\Classes\\HTTP", SOD) },
+  { MAKE_KEY_NAME1("Software\\Classes\\HTTPS", SOD) }
 };
 
 nsresult
@@ -245,11 +258,10 @@ LaunchHelper(nsAutoString& aPath)
   STARTUPINFOW si = {sizeof(si), 0};
   PROCESS_INFORMATION pi = {0};
 
-  BOOL ok = CreateProcessW(NULL, (LPWSTR)aPath.get(), NULL, NULL,
-                           FALSE, 0, NULL, NULL, &si, &pi);
-
-  if (!ok)
+  if (!CreateProcessW(NULL, (LPWSTR)aPath.get(), NULL, NULL, FALSE, 0, NULL,
+                      NULL, &si, &pi)) {
     return NS_ERROR_FAILURE;
+  }
 
   CloseHandle(pi.hProcess);
   CloseHandle(pi.hThread);
@@ -367,9 +379,6 @@ nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck,
   if (aStartupCheck)
     mCheckedThisSession = true;
 
-  SETTING* settings;
-  SETTING* end = gSettings + sizeof(gSettings)/sizeof(SETTING);
-
   *aIsDefaultBrowser = true;
 
   PRUnichar exePath[MAX_BUF];
@@ -383,41 +392,179 @@ nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck,
 
   nsAutoString appLongPath(exePath);
 
+  HKEY theKey;
+  DWORD res;
   nsresult rv;
   PRUnichar currValue[MAX_BUF];
-  for (settings = gSettings; settings < end; ++settings) {
-    NS_ConvertUTF8toUTF16 dataLongPath(settings->valueData);
-    NS_ConvertUTF8toUTF16 key(settings->keyName);
-    NS_ConvertUTF8toUTF16 value(settings->valueName);
-    PRInt32 offset = dataLongPath.Find("%APPPATH%");
-    dataLongPath.Replace(offset, 9, appLongPath);
 
-    ::ZeroMemory(currValue, sizeof(currValue));
-    HKEY theKey;
-    rv = OpenKeyForReading(HKEY_CLASSES_ROOT, key, &theKey);
+  SETTING* settings;
+  SETTING* end = gSettings + sizeof(gSettings) / sizeof(SETTING);
+
+  for (settings = gSettings; settings < end; ++settings) {
+    NS_ConvertUTF8toUTF16 keyName(settings->keyName);
+    NS_ConvertUTF8toUTF16 valueData(settings->valueData);
+    PRInt32 offset = valueData.Find("%APPPATH%");
+    valueData.Replace(offset, 9, appLongPath);
+
+    rv = OpenKeyForReading(HKEY_CLASSES_ROOT, keyName, &theKey);
     if (NS_FAILED(rv)) {
       *aIsDefaultBrowser = false;
       return NS_OK;
     }
 
+    ::ZeroMemory(currValue, sizeof(currValue));
     DWORD len = sizeof currValue;
-    DWORD res = ::RegQueryValueExW(theKey, PromiseFlatString(value).get(),
-                                   NULL, NULL, (LPBYTE)currValue, &len);
-    // Close the key we opened.
+    res = ::RegQueryValueExW(theKey, L"", NULL, NULL, (LPBYTE)currValue, &len);
+    // Close the key that was opened.
     ::RegCloseKey(theKey);
     if (REG_FAILED(res) ||
-        !dataLongPath.Equals(currValue, CaseInsensitiveCompare)) {
-      // Key wasn't set, or was set to something other than our registry entry
-      *aIsDefaultBrowser = false;
-      return NS_OK;
+        !valueData.Equals(currValue, CaseInsensitiveCompare)) {
+      // Key wasn't set or was set to something other than our registry entry.
+      NS_ConvertUTF8toUTF16 oldValueData(settings->oldValueData);
+      offset = oldValueData.Find("%APPPATH%");
+      oldValueData.Replace(offset, 9, appLongPath);
+      // The current registry value doesn't match the current or the old format.
+      if (!oldValueData.Equals(currValue, CaseInsensitiveCompare)) {
+        *aIsDefaultBrowser = false;
+        return NS_OK;
+      }
+
+      res = ::RegOpenKeyExW(HKEY_CLASSES_ROOT, PromiseFlatString(keyName).get(),
+                            0, KEY_SET_VALUE, &theKey);
+      if (REG_FAILED(res)) {
+        // If updating the open command fails try to update it using the helper
+        // application when setting Firefox as the default browser.
+        *aIsDefaultBrowser = false;
+        return NS_OK;
+      }
+
+      const nsString &flatValue = PromiseFlatString(valueData);
+      res = ::RegSetValueExW(theKey, L"", 0, REG_SZ,
+                             (const BYTE *) flatValue.get(),
+                             (flatValue.Length() + 1) * sizeof(PRUnichar));
+      // Close the key that was created.
+      ::RegCloseKey(theKey);
+      if (REG_FAILED(res)) {
+        // If updating the open command fails try to update it using the helper
+        // application when setting Firefox as the default browser.
+        *aIsDefaultBrowser = false;
+        return NS_OK;
+      }
     }
   }
 
-  // Only check if Firefox is the default browser on Vista if the previous
-  // checks show that Firefox is the default browser.
-  if (*aIsDefaultBrowser)
+  // Only check if Firefox is the default browser on Vista and above if the
+  // previous checks show that Firefox is the default browser.
+  if (*aIsDefaultBrowser) {
     IsDefaultBrowserVista(aIsDefaultBrowser);
+  }
 
+  // To handle the case where DDE isn't disabled due for a user because there
+  // account didn't perform a Firefox update this will check if Firefox is the
+  // default browser and if dde is disabled for each handler
+  // and if it isn't disable it. When Firefox is not the default browser the
+  // helper application will disable dde for each handler.
+  if (*aIsDefaultBrowser) {
+    // Check ftp settings
+
+    end = gDDESettings + sizeof(gDDESettings) / sizeof(SETTING);
+
+    for (settings = gDDESettings; settings < end; ++settings) {
+      NS_ConvertUTF8toUTF16 keyName(settings->keyName);
+
+      rv = OpenKeyForReading(HKEY_CURRENT_USER, keyName, &theKey);
+      if (NS_FAILED(rv)) {
+        ::RegCloseKey(theKey);
+        // If disabling DDE fails try to disable it using the helper
+        // application when setting Firefox as the default browser.
+        *aIsDefaultBrowser = false;
+        return NS_OK;
+      }
+
+      ::ZeroMemory(currValue, sizeof(currValue));
+      DWORD len = sizeof currValue;
+      res = ::RegQueryValueExW(theKey, L"", NULL, NULL, (LPBYTE)currValue,
+                               &len);
+      // Close the key that was opened.
+      ::RegCloseKey(theKey);
+      if (REG_FAILED(res) || PRUnichar('\0') != *currValue) {
+        // Key wasn't set or was set to something other than our registry entry.
+        // Delete the key along with all of its childrean and then recreate it.
+        const nsString &flatName = PromiseFlatString(keyName);
+        ::SHDeleteKeyW(HKEY_CURRENT_USER, flatName.get());
+        res = ::RegCreateKeyExW(HKEY_CURRENT_USER, flatName.get(), 0, NULL,
+                                REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL,
+                                &theKey, NULL);
+        if (REG_FAILED(res)) {
+          // If disabling DDE fails try to disable it using the helper
+          // application when setting Firefox as the default browser.
+          *aIsDefaultBrowser = false;
+          return NS_OK;
+        }
+
+        res = ::RegSetValueExW(theKey, L"", 0, REG_SZ, (const BYTE *) L"",
+                               sizeof(PRUnichar));
+        // Close the key that was created.
+        ::RegCloseKey(theKey);
+        if (REG_FAILED(res)) {
+          // If disabling DDE fails try to disable it using the helper
+          // application when setting Firefox as the default browser.
+          *aIsDefaultBrowser = false;
+          return NS_OK;
+        }
+      }
+    }
+
+    // Update the FTP protocol handler's shell open command if it is the old
+    // format.
+    res = ::RegOpenKeyExW(HKEY_CURRENT_USER, FTP_SOC, 0, KEY_ALL_ACCESS,
+                          &theKey);
+    // Don't update the FTP protocol handler's shell open command when opening
+    // its registry key fails under HKCU since it most likely doesn't exist.
+    if (NS_FAILED(rv)) {
+      return NS_OK;
+    }
+
+    NS_ConvertUTF8toUTF16 oldValueOpen(OLD_VAL_OPEN);
+    PRInt32 offset = oldValueOpen.Find("%APPPATH%");
+    oldValueOpen.Replace(offset, 9, appLongPath);
+
+    ::ZeroMemory(currValue, sizeof(currValue));
+    DWORD len = sizeof currValue;
+    res = ::RegQueryValueExW(theKey, L"", NULL, NULL, (LPBYTE)currValue,
+                             &len);
+
+    // Don't update the FTP protocol handler's shell open command when the
+    // current registry value doesn't exist or matches the old format.
+    if (REG_FAILED(res) ||
+        !oldValueOpen.Equals(currValue, CaseInsensitiveCompare)) {
+      ::RegCloseKey(theKey);
+      return NS_OK;
+    }
+
+    NS_ConvertUTF8toUTF16 valueData(VAL_OPEN);
+    valueData.Replace(offset, 9, appLongPath);
+    const nsString &flatValue = PromiseFlatString(valueData);
+    res = ::RegSetValueExW(theKey, L"", 0, REG_SZ,
+                           (const BYTE *) flatValue.get(),
+                           (flatValue.Length() + 1) * sizeof(PRUnichar));
+    // Close the key that was created.
+    ::RegCloseKey(theKey);
+    // If updating the FTP protocol handlers shell open command fails try to
+    // update it using the helper application when setting Firefox as the
+    // default browser.
+    if (REG_FAILED(res)) {
+      *aIsDefaultBrowser = false;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::GetCanSetDesktopBackground(bool* aResult)
+{
+  *aResult = true;
   return NS_OK;
 }
 

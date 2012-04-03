@@ -132,6 +132,33 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
   return NULL;
 }
 
+TemporaryRef<DrawTarget>
+Factory::CreateDrawTargetForData(BackendType aBackend, 
+                                 unsigned char *aData, 
+                                 const IntSize &aSize, 
+                                 int32_t aStride, 
+                                 SurfaceFormat aFormat)
+{
+  switch (aBackend) {
+#ifdef USE_SKIA
+  case BACKEND_SKIA:
+    {
+      RefPtr<DrawTargetSkia> newTarget;
+      newTarget = new DrawTargetSkia();
+      newTarget->Init(aData, aSize, aStride, aFormat);
+      return newTarget;
+    }
+#endif
+  default:
+    gfxDebug() << "Invalid draw target type specified.";
+    return NULL;
+  }
+
+  gfxDebug() << "Failed to create DrawTarget, Type: " << aBackend << " Size: " << aSize;
+  // Failed
+  return NULL;
+}
+
 TemporaryRef<ScaledFont>
 Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSize)
 {
@@ -215,6 +242,15 @@ ID3D10Device1*
 Factory::GetDirect3D10Device()
 {
   return mD3D10Device;
+}
+
+TemporaryRef<GlyphRenderingOptions>
+Factory::CreateDWriteGlyphRenderingOptions(IDWriteRenderingParams *aParams)
+{
+  RefPtr<GlyphRenderingOptions> options =
+    new GlyphRenderingOptionsDWrite(aParams);
+
+  return options;
 }
 
 #endif // XP_WIN

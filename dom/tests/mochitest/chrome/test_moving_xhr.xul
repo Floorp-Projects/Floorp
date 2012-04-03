@@ -3,9 +3,9 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=654370
+https://bugzilla.mozilla.org/show_bug.cgi?id=684115
 -->
-<window title="Mozilla Bug 654370"
+<window title="Mozilla Bug 684115"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=654370
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=654370"
-     target="_blank">Mozilla Bug 654370</a>
+     target="_blank">Mozilla Bug 684115</a>
   </body>
 
   <!-- test code goes here -->
@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=654370
         if (!firstWindow || !secondWindow)
           return;
         var xhr = firstWindow.wrappedJSObject.createXHR();
-        ok(!("expando" in xhr), "shouldn't be able to see expandos on the XHR");
+        ok(("expando" in xhr), "should be able to see expandos on the XHR");
         is(xhr.readyState, XMLHttpRequest.UNSENT, "can access readyState in chrome");
         secondWindow.wrappedJSObject.tryToUseXHR(xhr, ok);
         secondWindow.wrappedJSObject.tryToUseXHR(new XMLHttpRequest(), ok);

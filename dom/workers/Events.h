@@ -41,10 +41,6 @@
 
 #include "Workers.h"
 
-#include "jspubtd.h"
-#include "nsTArray.h"
-#include "nsCOMPtr.h"
-
 class JSAutoStructuredCloneBuffer;
 
 BEGIN_WORKERS_NAMESPACE
@@ -91,4 +87,4 @@ DispatchEventToTarget(JSContext* aCx, JSObject* aTarget, JSObject* aEvent,
 
 END_WORKERS_NAMESPACE
 
-#endif /* mozilla_dom_workers_events_h__ */
+#endif // mozilla_dom_workers_events_h__

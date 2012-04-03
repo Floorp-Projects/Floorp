@@ -40,7 +40,7 @@ const EXPORTED_SYMBOLS = ['Weave'];
 let Weave = {};
 Components.utils.import("resource://services-sync/constants.js", Weave);
 let lazies = {
-  "record.js":            ["CollectionKeys", "BulkKeyBundle", "SyncKeyBundle"],
+  "record.js":            ["CollectionKeys"],
   "engines.js":           ['Engines', 'Engine', 'SyncEngine', 'Store'],
   "engines/addons.js":    ["AddonsEngine"],
   "engines/bookmarks.js": ['BookmarksEngine', 'BookmarksSharingManager'],
@@ -51,13 +51,13 @@ let lazies = {
   "engines/passwords.js": ["PasswordEngine"],
   "engines/tabs.js":      ["TabEngine"],
   "engines/apps.js":      ["AppsEngine"],
-  "identity.js":          ["Identity", "ID"],
+  "identity.js":          ["Identity"],
   "jpakeclient.js":       ["JPAKEClient"],
+  "keys.js":              ["BulkKeyBundle", "SyncKeyBundle"],
   "notifications.js":     ["Notifications", "Notification", "NotificationButton"],
   "policies.js":          ["SyncScheduler", "ErrorHandler",
                            "SendCredentialsController"],
-  "resource.js":          ["Resource", "AsyncResource", "Auth",
-                           "BasicAuthenticator", "NoOpAuthenticator"],
+  "resource.js":          ["Resource", "AsyncResource"],
   "service.js":           ["Service"],
   "status.js":            ["Status"],
   "util.js":              ['Utils', 'Svc', 'Str']

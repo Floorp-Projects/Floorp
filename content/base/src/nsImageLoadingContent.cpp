@@ -61,6 +61,7 @@
 #include "nsNetUtil.h"
 #include "nsAsyncDOMEvent.h"
 #include "nsGenericElement.h"
+#include "nsImageFrame.h"
 
 #include "nsIPresShell.h"
 #include "nsEventStates.h"
@@ -300,10 +301,7 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
 
   // If the pending request is loaded, switch to it.
   if (aRequest == mPendingRequest) {
-    PrepareCurrentRequest() = mPendingRequest;
-    mPendingRequest = nsnull;
-    mCurrentRequestNeedsResetAnimation = mPendingRequestNeedsResetAnimation;
-    mPendingRequestNeedsResetAnimation = false;
+    MakePendingRequestCurrent();
   }
   NS_ABORT_IF_FALSE(aRequest == mCurrentRequest,
                     "One way or another, we should be current by now");
@@ -316,42 +314,32 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
     mCurrentRequestNeedsResetAnimation = false;
   }
 
-  // We just loaded all the data we're going to get. If we haven't done an
-  // initial paint, we want to make sure the image starts decoding for 2
-  // reasons:
+  // We just loaded all the data we're going to get. If we're visible and
+  // haven't done an initial paint (*), we want to make sure the image starts
+  // decoding immediately, for two reasons:
   //
   // 1) This image is sitting idle but might need to be decoded as soon as we
   // start painting, in which case we've wasted time.
   //
   // 2) We want to block onload until all visible images are decoded. We do this
-  // by blocking onload until all in progress decodes get at least one frame
+  // by blocking onload until all in-progress decodes get at least one frame
   // decoded. However, if all the data comes in while painting is suppressed
   // (ie, before the initial paint delay is finished), we fire onload without
   // doing a paint first. This means that decode-on-draw images don't start
   // decoding, so we can't wait for them to finish. See bug 512435.
+  //
+  // (*) IsPaintingSuppressed returns false if we haven't gotten the initial
+  // reflow yet, so we have to test !DidInitialReflow || IsPaintingSuppressed.
+  // It's possible for painting to be suppressed for reasons other than the
+  // initial paint delay (for example, being in the bfcache), but we probably
+  // aren't loading images in those situations.
 
-  // We can only do this if we have a presshell
   nsIDocument* doc = GetOurDocument();
   nsIPresShell* shell = doc ? doc->GetShell() : nsnull;
-  if (shell) {
-    // We need to figure out whether to kick off decoding
-    bool doRequestDecode = false;
+  if (shell && shell->IsVisible() &&
+      (!shell->DidInitialReflow() || shell->IsPaintingSuppressed())) {
 
-    // If we haven't got the initial reflow yet, IsPaintingSuppressed actually
-    // returns false
-    if (!shell->DidInitialReflow())
-      doRequestDecode = true;
-
-    // Figure out if painting is suppressed. Note that it's possible for painting
-    // to be suppressed for reasons other than the initial paint delay (for
-    // example - being in the bfcache), but we probably aren't loading images in
-    // those situations.
-    if (shell->IsPaintingSuppressed())
-      doRequestDecode = true;
-
-    // If we're requesting a decode, do it
-    if (doRequestDecode)
-      mCurrentRequest->RequestDecode();
+    mCurrentRequest->RequestDecode();
   }
 
   // Fire the appropriate DOM event.
@@ -792,6 +780,26 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
                                  getter_AddRefs(req));
   if (NS_SUCCEEDED(rv)) {
     TrackImage(req);
+
+    // Handle cases when we just ended up with a pending request but it's
+    // already done.  In that situation we have to synchronously switch that
+    // request to being the current request, because websites depend on that
+    // behavior.
+    if (req == mPendingRequest) {
+      PRUint32 pendingLoadStatus;
+      rv = req->GetImageStatus(&pendingLoadStatus);
+      if (NS_SUCCEEDED(rv) &&
+          (pendingLoadStatus & imgIRequest::STATUS_LOAD_COMPLETE)) {
+        MakePendingRequestCurrent();
+        MOZ_ASSERT(mCurrentRequest,
+                   "How could we not have a current request here?");
+
+        nsImageFrame *f = do_QueryFrame(GetOurPrimaryFrame());
+        if (f) {
+          f->NotifyNewCurrentRequest(mCurrentRequest, NS_OK);
+        }
+      }
+    }
   } else {
     // If we don't have a current URI, we might as well store this URI so people
     // know what we tried (and failed) to load.
@@ -1044,6 +1052,16 @@ nsImageLoadingContent::PreparePendingRequest()
 
   // Return a reference.
   return mPendingRequest;
+}
+
+void
+nsImageLoadingContent::MakePendingRequestCurrent()
+{
+  MOZ_ASSERT(mPendingRequest);
+  PrepareCurrentRequest() = mPendingRequest;
+  mPendingRequest = nsnull;
+  mCurrentRequestNeedsResetAnimation = mPendingRequestNeedsResetAnimation;
+  mPendingRequestNeedsResetAnimation = false;
 }
 
 void

@@ -235,10 +235,8 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsACString& characterSet)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Update META charset element.
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  rv = GetDocument(getter_AddRefs(domdoc));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(domdoc, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
+  NS_ENSURE_TRUE(domdoc, NS_ERROR_NOT_INITIALIZED);
 
   if (UpdateMetaCharset(domdoc, characterSet)) {
     return NS_OK;
@@ -283,6 +281,7 @@ bool
 nsPlaintextEditor::UpdateMetaCharset(nsIDOMDocument* aDocument,
                                      const nsACString& aCharacterSet)
 {
+  MOZ_ASSERT(aDocument);
   // get a list of META tags
   nsCOMPtr<nsIDOMNodeList> metaList;
   nsresult rv = aDocument->GetElementsByTagName(NS_LITERAL_STRING("meta"),
@@ -346,9 +345,8 @@ nsPlaintextEditor::GetIsDocumentEditable(bool *aIsDocumentEditable)
 {
   NS_ENSURE_ARG_POINTER(aIsDocumentEditable);
 
-  nsCOMPtr<nsIDOMDocument> doc;
-  GetDocument(getter_AddRefs(doc));
-  *aIsDocumentEditable = doc ? IsModifiable() : false;
+  nsCOMPtr<nsIDOMDocument> doc = GetDOMDocument();
+  *aIsDocumentEditable = doc && IsModifiable();
 
   return NS_OK;
 }
@@ -750,7 +748,7 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
 
   nsresult result;
 
-  FireTrustedInputEvent trusted(this, aAction != eNone);
+  HandlingTrustedAction trusted(this, aAction != eNone);
 
   // delete placeholder txns merge.
   nsAutoPlaceHolderBatch batch(this, nsGkAtoms::DeleteTxnName);
@@ -890,10 +888,8 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
       return NS_ERROR_FAILURE;
 
     // we need to get the doc
-    nsCOMPtr<nsIDOMDocument> doc;
-    res = GetDocument(getter_AddRefs(doc));
-    NS_ENSURE_SUCCESS(res, res);
-    NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
+    nsCOMPtr<nsIDOMDocument> doc = GetDOMDocument();
+    NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
 
     // don't spaz my selection in subtransactions
     nsAutoTxnsConserveSelection dontSpazMySelection(this);
@@ -996,6 +992,13 @@ nsPlaintextEditor::UpdateIMEComposition(const nsAString& aCompositionString,
   }
 
   return rv;
+}
+
+already_AddRefed<nsIContent>
+nsPlaintextEditor::GetInputEventTargetContent()
+{
+  nsCOMPtr<nsIContent> target = do_QueryInterface(mEventTarget);
+  return target.forget();
 }
 
 NS_IMETHODIMP
@@ -1197,7 +1200,7 @@ nsPlaintextEditor::Undo(PRUint32 aCount)
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-  FireTrustedInputEvent trusted(this);
+  HandlingTrustedAction trusted(this);
 
   nsAutoUpdateViewBatch beginViewBatching(this);
 
@@ -1227,7 +1230,7 @@ nsPlaintextEditor::Redo(PRUint32 aCount)
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-  FireTrustedInputEvent trusted(this);
+  HandlingTrustedAction trusted(this);
 
   nsAutoUpdateViewBatch beginViewBatching(this);
 
@@ -1286,7 +1289,7 @@ nsPlaintextEditor::FireClipboardEvent(PRInt32 aType)
 
 NS_IMETHODIMP nsPlaintextEditor::Cut()
 {
-  FireTrustedInputEvent trusted(this);
+  HandlingTrustedAction trusted(this);
 
   if (FireClipboardEvent(NS_CUT))
     return DeleteSelection(eNone);

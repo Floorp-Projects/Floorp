@@ -77,6 +77,27 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMEventTargetHelper)
 
   NS_DECL_NSIDOMEVENTTARGET
+  void AddEventListener(const nsAString& aType,
+                        nsIDOMEventListener* aCallback, // XXX nullable
+                        bool aCapture, Nullable<bool>& aWantsUntrusted,
+                        nsresult& aRv)
+  {
+    aRv = AddEventListener(aType, aCallback, aCapture,
+                           !aWantsUntrusted.IsNull() && aWantsUntrusted.Value(),
+                           aWantsUntrusted.IsNull() ? 1 : 2);
+  }
+  void RemoveEventListener(const nsAString& aType,
+                           nsIDOMEventListener* aCallback,
+                           bool aCapture, nsresult& aRv)
+  {
+    aRv = RemoveEventListener(aType, aCallback, aCapture);
+  }
+  bool DispatchEvent(nsIDOMEvent* aEvent, nsresult& aRv)
+  {
+    bool result = false;
+    aRv = DispatchEvent(aEvent, &result);
+    return result;
+  }
 
   void GetParentObject(nsIScriptGlobalObject **aParentObject)
   {
@@ -199,11 +220,9 @@ private:
 #define NS_DISCONNECT_EVENT_HANDLER(_event)                                   \
   if (mOn##_event##Listener) { mOn##_event##Listener->Disconnect(); }
 
-#define NS_UNMARK_LISTENER_WRAPPER(_event)                       \
-  if (tmp->mOn##_event##Listener) {                              \
-    nsCOMPtr<nsIXPConnectWrappedJS> wjs =                        \
-      do_QueryInterface(tmp->mOn##_event##Listener->GetInner()); \
-    xpc_UnmarkGrayObject(wjs);                                   \
+#define NS_UNMARK_LISTENER_WRAPPER(_event)                                    \
+  if (tmp->mOn##_event##Listener) {                                           \
+    xpc_TryUnmarkWrappedGrayObject(tmp->mOn##_event##Listener->GetInner());   \
   }
 
 #endif // nsDOMEventTargetHelper_h_

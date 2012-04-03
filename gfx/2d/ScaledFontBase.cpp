@@ -132,6 +132,14 @@ ScaledFontBase::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *a
   return NULL;
 }
 
+void
+ScaledFontBase::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder)
+{
+  // XXX - implement me
+  MOZ_ASSERT(false);
+  return;
+}
+
 #ifdef USE_CAIRO
 void
 ScaledFontBase::SetCairoScaledFont(cairo_scaled_font_t* font)

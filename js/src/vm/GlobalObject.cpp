@@ -176,8 +176,6 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
                                     CLASS_ATOM(cx, Object));
         if (!objectCtor)
             return NULL;
-
-        objectCtor->setConstructorClass(&ObjectClass);
     }
 
     /*
@@ -198,8 +196,6 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         if (!functionCtor)
             return NULL;
         JS_ASSERT(ctor == functionCtor);
-
-        functionCtor->setConstructorClass(&FunctionClass);
     }
 
     /*
@@ -397,22 +393,11 @@ GlobalObject::isRuntimeCodeGenEnabled(JSContext *cx)
 }
 
 JSFunction *
-GlobalObject::createConstructor(JSContext *cx, Native ctor, Class *clasp, JSAtom *name,
-                                unsigned length, gc::AllocKind kind)
+GlobalObject::createConstructor(JSContext *cx, Native ctor, JSAtom *name, unsigned length,
+                                gc::AllocKind kind)
 {
     RootedVarObject self(cx, this);
-
-    JSFunction *fun = js_NewFunction(cx, NULL, ctor, length,
-                                     JSFUN_CONSTRUCTOR, self, name, kind);
-    if (!fun)
-        return NULL;
-
-    /*
-     * Remember the class this function is a constructor for so that we know to
-     * create an object of this class when we call the constructor.
-     */
-    fun->setConstructorClass(clasp);
-    return fun;
+    return js_NewFunction(cx, NULL, ctor, length, JSFUN_CONSTRUCTOR, self, name, kind);
 }
 
 static JSObject *

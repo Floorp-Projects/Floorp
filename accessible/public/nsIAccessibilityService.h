@@ -85,50 +85,7 @@ public:
   virtual nsAccessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
                                                   bool aCanCreate) = 0;
 
-  /**
-   * Creates accessible for the given DOM node or frame.
-   */
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLBRAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLCaptionAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLCheckboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLComboboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLGroupboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLHRAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLImageAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLLabelAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLLIAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLListboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLMediaAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame, nsIContent* aContent,
-                                    nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLRadioButtonAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLTableAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLTableCellAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLTextAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLTextFieldAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHyperTextAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateOuterDocAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-
-  /**
+   /**
    * Adds/remove ATK root accessible for gtk+ native window to/from children
    * of the application accessible.
    */
@@ -161,12 +118,6 @@ public:
    * being destroyed.
    */
   virtual void PresShellDestroyed(nsIPresShell *aPresShell) = 0;
-
-  /**
-   * Recreate an accessible for the given content node in the presshell.
-   */
-  virtual void RecreateAccessible(nsIPresShell* aPresShell,
-                                  nsIContent* aContent) = 0;
 
   /**
    * Fire accessible event of the given type for the given target.

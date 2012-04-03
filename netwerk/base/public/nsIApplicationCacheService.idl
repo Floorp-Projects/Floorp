@@ -45,7 +45,7 @@ interface nsIApplicationCache;
  * The application cache service manages the set of application cache
  * groups.
  */
-[scriptable, uuid(611161c8-37d0-450f-a4fe-457c47bbaf64)]
+[scriptable, uuid(10fdea21-1224-4c29-8507-8f3205a121d5)]
 interface nsIApplicationCacheService : nsISupports
 {
     /**
@@ -93,4 +93,11 @@ interface nsIApplicationCacheService : nsISupports
      */
     void getGroups([optional] out unsigned long count,
                    [array, size_is(count), retval] out string groupIDs);
+
+    /**
+     * Get the list of application cache groups in the order of
+     * activating time.
+     */
+    void getGroupsTimeOrdered([optional] out unsigned long count,
+                              [array, size_is(count), retval] out string groupIDs);
 };

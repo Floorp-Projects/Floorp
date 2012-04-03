@@ -39,15 +39,19 @@
 
 #include <atk/atk.h>
 #include "AtkSocketAccessible.h"
-#include "nsMai.h"
-#include "nsMaiInterfaceComponent.h"
 
-void (*AtkSocketAccessible::g_atk_socket_embed) (AtkSocket*, gchar*) = NULL;
+#include "InterfaceInitFuncs.h"
+#include "nsMai.h"
+
+AtkSocketEmbedType AtkSocketAccessible::g_atk_socket_embed = NULL;
 GType AtkSocketAccessible::g_atk_socket_type = G_TYPE_INVALID;
 const char* AtkSocketAccessible::sATKSocketEmbedSymbol = "atk_socket_embed";
 const char* AtkSocketAccessible::sATKSocketGetTypeSymbol = "atk_socket_get_type";
 
 bool AtkSocketAccessible::gCanEmbed = FALSE;
+
+extern "C" void mai_atk_component_iface_init(AtkComponentIface* aIface);
+extern "C" GType mai_atk_socket_get_type(void);
 
 /* MaiAtkSocket */
 
@@ -65,39 +69,17 @@ bool AtkSocketAccessible::gCanEmbed = FALSE;
                                           MAI_TYPE_ATK_SOCKET,\
                                           MaiAtkSocketClass))
 
-typedef struct _MaiAtkSocket             MaiAtkSocket;
-typedef struct _MaiAtkSocketClass        MaiAtkSocketClass;
-
-struct _MaiAtkSocket
+typedef struct _MaiAtkSocket
 {
   AtkSocket parent;
 
   nsAccessibleWrap* accWrap;
-};
+} MaiAtkSocket;
 
-struct _MaiAtkSocketClass
+typedef struct _MaiAtkSocketClass
 {
   AtkSocketClass parent_class;
-};
-
-G_BEGIN_DECLS
-
-GType mai_atk_socket_get_type(void);
-AtkObject* mai_atk_socket_new(nsAccessibleWrap* aAccWrap);
-
-void mai_atk_component_iface_init(AtkComponentIface* aIface);
-AtkObject* mai_atk_socket_ref_accessible_at_point(AtkComponent *aComponent,
-                                                  gint aAccX,
-                                                  gint aAccY,
-                                                  AtkCoordType aCoordType);
-void mai_atk_socket_get_extents(AtkComponent* aComponent,
-                                gint* aAccX,
-                                gint* aAccY,
-                                gint* aAccWidth,
-                                gint* aAccHeight,
-                                AtkCoordType aCoordType);
-
-G_END_DECLS
+} MaiAtkSocketClass;
 
 G_DEFINE_TYPE_EXTENDED(MaiAtkSocket, mai_atk_socket,
                        AtkSocketAccessible::g_atk_socket_type, 0,
@@ -114,7 +96,7 @@ mai_atk_socket_init(MaiAtkSocket* aAcc)
 {
 }
 
-AtkObject*
+static AtkObject*
 mai_atk_socket_new(nsAccessibleWrap* aAccWrap)
 {
   NS_ENSURE_TRUE(aAccWrap, NULL);
@@ -127,19 +109,10 @@ mai_atk_socket_new(nsAccessibleWrap* aAccWrap)
   return ATK_OBJECT(acc);
 }
 
-void
-mai_atk_component_iface_init(AtkComponentIface* aIface)
-{
-  NS_ASSERTION(aIface, "Invalid Interface");
-
-  aIface->ref_accessible_at_point = mai_atk_socket_ref_accessible_at_point;
-  aIface->get_extents = mai_atk_socket_get_extents;
-}
-
-AtkObject*
-mai_atk_socket_ref_accessible_at_point(AtkComponent* aComponent,
-                                       gint aX, gint aY,
-                                       AtkCoordType aCoordType)
+extern "C" {
+static AtkObject*
+RefAccessibleAtPoint(AtkComponent* aComponent, gint aX, gint aY,
+                     AtkCoordType aCoordType)
 {
   NS_ENSURE_TRUE(MAI_IS_ATK_SOCKET(aComponent), nsnull);
 
@@ -147,10 +120,9 @@ mai_atk_socket_ref_accessible_at_point(AtkComponent* aComponent,
                                     aX, aY, aCoordType);
 }
 
-void
-mai_atk_socket_get_extents(AtkComponent* aComponent,
-                           gint* aX, gint* aY, gint* aWidth, gint* aHeight,
-                           AtkCoordType aCoordType)
+static void
+GetExtents(AtkComponent* aComponent, gint* aX, gint* aY, gint* aWidth,
+           gint* aHeight, AtkCoordType aCoordType)
 {
   *aX = *aY = *aWidth = *aHeight = 0;
 
@@ -159,6 +131,18 @@ mai_atk_socket_get_extents(AtkComponent* aComponent,
 
   getExtentsHelper(MAI_ATK_SOCKET(aComponent)->accWrap,
                    aX, aY, aWidth, aHeight, aCoordType);
+}
+}
+
+void
+mai_atk_component_iface_init(AtkComponentIface* aIface)
+{
+  NS_ASSERTION(aIface, "Invalid Interface");
+  if (NS_UNLIKELY(!aIface))
+    return;
+
+  aIface->ref_accessible_at_point = RefAccessibleAtPoint;
+  aIface->get_extents = GetExtents;
 }
 
 AtkSocketAccessible::AtkSocketAccessible(nsIContent* aContent,

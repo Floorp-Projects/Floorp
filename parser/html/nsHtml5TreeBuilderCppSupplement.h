@@ -45,8 +45,7 @@
 #include "nsEventDispatcher.h"
 #include "nsContentUtils.h"
 #include "nsNodeUtils.h"
-
-#define NS_HTML5_TREE_DEPTH_LIMIT 200
+#include "nsIFrame.h"
 
 class nsPresContext;
 
@@ -453,7 +452,7 @@ nsHtml5TreeBuilder::elementPushed(PRInt32 aNamespace, nsIAtom* aName, nsIContent
    * table elements shouldn't be used as surrogate parents for user experience
    * reasons.
    */
-  if (!deepTreeSurrogateParent && currentPtr >= NS_HTML5_TREE_DEPTH_LIMIT &&
+  if (!deepTreeSurrogateParent && currentPtr >= MAX_REFLOW_DEPTH &&
       !(aName == nsHtml5Atoms::script ||
         aName == nsHtml5Atoms::table ||
         aName == nsHtml5Atoms::thead ||
@@ -473,6 +472,23 @@ nsHtml5TreeBuilder::elementPushed(PRInt32 aNamespace, nsIAtom* aName, nsIContent
     treeOp->Init(eTreeOpStartLayout);
     return;
   }
+  if (aName == nsHtml5Atoms::input ||
+      aName == nsHtml5Atoms::button) {
+    if (!formPointer) {
+      // If form inputs don't belong to a form, their state preservation
+      // won't work right without an append notification flush at this
+      // point. See bug 497861.
+      mOpQueue.AppendElement()->Init(eTreeOpFlushPendingAppendNotifications);
+    }
+    mOpQueue.AppendElement()->Init(eTreeOpDoneCreatingElement, aElement);
+    return;
+  }
+  if (aName == nsHtml5Atoms::audio ||
+      aName == nsHtml5Atoms::video ||
+      aName == nsHtml5Atoms::menuitem) {
+    mOpQueue.AppendElement()->Init(eTreeOpDoneCreatingElement, aElement);
+    return;
+  }
 }
 
 void
@@ -481,7 +497,7 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
   NS_ASSERTION(aNamespace == kNameSpaceID_XHTML || aNamespace == kNameSpaceID_SVG || aNamespace == kNameSpaceID_MathML, "Element isn't HTML, SVG or MathML!");
   NS_ASSERTION(aName, "Element doesn't have local name!");
   NS_ASSERTION(aElement, "No element!");
-  if (deepTreeSurrogateParent && currentPtr <= NS_HTML5_TREE_DEPTH_LIMIT) {
+  if (deepTreeSurrogateParent && currentPtr <= MAX_REFLOW_DEPTH) {
     deepTreeSurrogateParent = nsnull;
   }
   if (aNamespace == kNameSpaceID_MathML) {
@@ -550,35 +566,12 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
     treeOp->Init(eTreeOpDoneAddingChildren, aElement);
     return;
   }
-  if (aName == nsHtml5Atoms::input ||
-      aName == nsHtml5Atoms::button ||
-      aName == nsHtml5Atoms::menuitem) {
-    if (!formPointer) {
-      // If form inputs don't belong to a form, their state preservation
-      // won't work right without an append notification flush at this 
-      // point. See bug 497861.
-      nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
-      NS_ASSERTION(treeOp, "Tree op allocation failed.");
-      treeOp->Init(eTreeOpFlushPendingAppendNotifications);
-    }
-    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
-    NS_ASSERTION(treeOp, "Tree op allocation failed.");
-    treeOp->Init(eTreeOpDoneCreatingElement, aElement);
-    return;
-  }
   if (aName == nsHtml5Atoms::meta && !fragment) {
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
     NS_ASSERTION(treeOp, "Tree op allocation failed.");
     treeOp->Init(eTreeOpProcessMeta, aElement);
     return;
   }
-  if (aName == nsHtml5Atoms::audio || aName == nsHtml5Atoms::video) {
-    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
-    NS_ASSERTION(treeOp, "Tree op allocation failed.");
-    treeOp->Init(eTreeOpDoneCreatingElement, aElement);
-    return;
-  }   
-
   return;
 }
 
@@ -684,11 +677,23 @@ nsHtml5TreeBuilder::StreamEnded()
 
 void
 nsHtml5TreeBuilder::NeedsCharsetSwitchTo(const nsACString& aCharset,
-                                         PRInt32 aCharsetSource)
+                                         PRInt32 aCharsetSource,
+                                         PRInt32 aLineNumber)
 {
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpNeedsCharsetSwitchTo, aCharset, aCharsetSource);
+  treeOp->Init(eTreeOpNeedsCharsetSwitchTo,
+               aCharset,
+               aCharsetSource,
+               aLineNumber);
+}
+
+void
+nsHtml5TreeBuilder::MaybeComplainAboutCharset(const char* aMsgId,
+                                              bool aError,
+                                              PRInt32 aLineNumber)
+{
+  mOpQueue.AppendElement()->Init(aMsgId, aError, aLineNumber);
 }
 
 void

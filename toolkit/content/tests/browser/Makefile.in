@@ -55,6 +55,7 @@ _BROWSER_TEST_FILES = \
   browser_bug295977_autoscroll_overflow.js \
   browser_bug594509.js \
   browser_Geometry.js \
+  browser_InlineSpellChecker.js \
   browser_save_resend_postdata.js \
   browser_browserDrop.js \
   browser_Services.js \

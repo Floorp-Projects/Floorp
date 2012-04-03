@@ -1669,13 +1669,13 @@ PKIX_PL_Cert_GetVersion(
         void *plContext)
 {
         CERTCertificate *nssCert = NULL;
-        PKIX_UInt32 myVersion = 1;
+        PKIX_UInt32 myVersion = 0;  /* v1 */
 
         PKIX_ENTER(CERT, "PKIX_PL_Cert_GetVersion");
         PKIX_NULLCHECK_THREE(cert, cert->nssCert, pVersion);
 
         nssCert = cert->nssCert;
-        if (nssCert->version.data) {
+        if (nssCert->version.len != 0) {
                 myVersion = *(nssCert->version.data);
         }
 

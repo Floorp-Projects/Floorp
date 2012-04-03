@@ -102,7 +102,6 @@
 
 // JS includes
 #include "jsapi.h"
-#include "jswrapper.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -137,6 +136,7 @@ class nsRunnable;
 class nsDOMEventTargetHelper;
 class nsDOMOfflineResourceList;
 class nsDOMMozURLProperty;
+class nsDOMWindowUtils;
 
 #ifdef MOZ_DISABLE_DOMCRYPTO
 class nsIDOMCrypto;
@@ -232,26 +232,6 @@ private:
 };
 
 //*****************************************************************************
-// nsOuterWindow: Outer Window Proxy
-//*****************************************************************************
-
-class nsOuterWindowProxy : public js::Wrapper
-{
-public:
-  nsOuterWindowProxy() : js::Wrapper((unsigned)0) {}
-
-  virtual bool isOuterWindow() {
-    return true;
-  }
-  JSString *obj_toString(JSContext *cx, JSObject *wrapper);
-  void finalize(JSContext *cx, JSObject *proxy);
-
-  static nsOuterWindowProxy singleton;
-};
-
-JSObject *NS_NewOuterWindowProxy(JSContext *cx, JSObject *parent);
-
-//*****************************************************************************
 // nsGlobalWindow: Global Object for Scripting
 //*****************************************************************************
 // Beware that all scriptable interfaces implemented by
@@ -317,13 +297,13 @@ public:
     return mJSObject;
   }
 
-  virtual nsresult EnsureScriptEnvironment(PRUint32 aLangID);
+  virtual nsresult EnsureScriptEnvironment();
 
-  virtual nsIScriptContext *GetScriptContext(PRUint32 lang);
+  virtual nsIScriptContext *GetScriptContext();
 
   // Set a new script language context for this global.  The native global
   // for the context is created by the context's GetNativeGlobal() method.
-  virtual nsresult SetScriptContext(PRUint32 lang, nsIScriptContext *aContext);
+  virtual nsresult SetScriptContext(nsIScriptContext *aContext);
   
   virtual void OnFinalize(JSObject* aObject);
   virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts);
@@ -394,8 +374,6 @@ public:
   virtual NS_HIDDEN_(bool) CanClose();
   virtual NS_HIDDEN_(nsresult) ForceClose();
 
-  virtual NS_HIDDEN_(void) SetHasOrientationEventListener();
-  virtual NS_HIDDEN_(void) RemoveOrientationEventListener();
   virtual NS_HIDDEN_(void) MaybeUpdateTouchState();
   virtual NS_HIDDEN_(void) UpdateTouchState();
   virtual NS_HIDDEN_(bool) DispatchCustomEvent(const char *aEventName);
@@ -423,16 +401,6 @@ public:
   static nsGlobalWindow *FromWrapper(nsIXPConnectWrappedNative *wrapper)
   {
     return FromSupports(wrapper->Native());
-  }
-
-  /**
-   * Wrap nsIDOMWindow::GetTop so we can overload the inline GetTop()
-   * implementation below.  (nsIDOMWindow::GetTop simply calls
-   * nsIDOMWindow::GetRealTop().)
-   */
-  nsresult GetTop(nsIDOMWindow **aWindow)
-  {
-    return nsIDOMWindow::GetTop(aWindow);
   }
 
   inline nsGlobalWindow *GetTop()
@@ -540,6 +508,9 @@ public:
   virtual nsresult DispatchAsyncHashchange(nsIURI *aOldURI, nsIURI *aNewURI);
   virtual nsresult DispatchSyncPopState();
 
+  virtual void EnableDeviceSensor(PRUint32 aType);
+  virtual void DisableDeviceSensor(PRUint32 aType);
+
   virtual nsresult SetArguments(nsIArray *aArguments, nsIPrincipal *aOrigin);
 
   static bool DOMWindowDumpEnabled();
@@ -593,15 +564,6 @@ public:
 
   void AddEventTargetObject(nsDOMEventTargetHelper* aObject);
   void RemoveEventTargetObject(nsDOMEventTargetHelper* aObject);
-private:
-  // Enable updates for the accelerometer.
-  void EnableDeviceMotionUpdates();
-
-  // Disables updates for the accelerometer.
-  void DisableDeviceMotionUpdates();
-
-  // Implements Get{Real,Scriptable}Top.
-  nsresult GetTopImpl(nsIDOMWindow **aWindow, bool aScriptable);
 
 protected:
   friend class HashchangeCallback;
@@ -843,6 +805,11 @@ protected:
 
   inline PRInt32 DOMMinTimeoutValue() const;
 
+  nsresult CreateOuterObject(nsGlobalWindow* aNewInner);
+  nsresult SetOuterObject(JSContext* aCx, JSObject* aOuterObject);
+  nsresult CloneStorageEvent(const nsAString& aType,
+                             nsCOMPtr<nsIDOMStorageEvent>& aEvent);
+
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
   // could own objects that are implemented in JavaScript, then those
@@ -911,9 +878,6 @@ protected:
   // should be displayed.
   bool                   mFocusByKeyOccurred : 1;
 
-  // Indicates whether this window is getting device motion change events
-  bool                   mHasDeviceMotion : 1;
-
   // whether we've sent the destroy notification for our window id
   bool                   mNotifiedIDDestroyed : 1;
 
@@ -933,7 +897,7 @@ protected:
   nsRefPtr<nsBarProp>           mPersonalbar;
   nsRefPtr<nsBarProp>           mStatusbar;
   nsRefPtr<nsBarProp>           mScrollbars;
-  nsCOMPtr<nsIWeakReference>    mWindowUtils;
+  nsRefPtr<nsDOMWindowUtils>    mWindowUtils;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
   // index 0->language_id 1, so index MAX-1 == language_id MAX
@@ -993,7 +957,7 @@ protected:
 
   nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
 
-  nsDataHashtable<nsVoidPtrHashKey, JSObject*> mCachedXBLPrototypeHandlers;
+  nsDataHashtable<nsPtrHashKey<nsXBLPrototypeHandler>, JSObject*> mCachedXBLPrototypeHandlers;
 
   nsCOMPtr<nsIDocument> mSuspendedDoc;
 
@@ -1014,6 +978,8 @@ protected:
   nsRefPtr<nsDOMMozURLProperty> mURLProperty;
 
   nsTHashtable<nsPtrHashKey<nsDOMEventTargetHelper> > mEventTargetObjects;
+
+  nsTArray<PRUint32> mEnabledSensors;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;

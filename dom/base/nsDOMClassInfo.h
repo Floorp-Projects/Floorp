@@ -103,8 +103,6 @@ struct nsDOMClassInfoData
   PRUint32 mInterfacesBitmap;
   bool mChromeOnly;
   bool mDisabled;
-  // For new style DOM bindings.
-  mozilla::dom::binding::DefineInterface mDefineDOMInterface;
 #ifdef NS_DEBUG
   PRUint32 mDebugID;
 #endif
@@ -492,6 +490,32 @@ public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsNavigatorSH(aData);
+  }
+};
+
+// WebGLExtension scriptable helper
+
+class WebGLExtensionSH : public nsDOMGenericSH
+{
+protected:
+  WebGLExtensionSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
+  {
+  }
+
+  virtual ~WebGLExtensionSH()
+  {
+  }
+
+public:
+  NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
+                       JSObject *globalObj, JSObject **parentObj);
+  NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+  virtual void PreserveWrapper(nsISupports *aNative);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new WebGLExtensionSH(aData);
   }
 };
 
@@ -1448,6 +1472,24 @@ public:
   }
 
   virtual ~nsEventListenerThisTranslator()
+  {
+  }
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
+  // nsIXPCFunctionThisTranslator
+  NS_DECL_NSIXPCFUNCTIONTHISTRANSLATOR
+};
+
+class nsMutationCallbackThisTranslator : public nsIXPCFunctionThisTranslator
+{
+public:
+  nsMutationCallbackThisTranslator()
+  {
+  }
+
+  virtual ~nsMutationCallbackThisTranslator()
   {
   }
 

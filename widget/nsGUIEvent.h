@@ -1284,9 +1284,14 @@ public:
     kIsMomentum =   1 << 6, // Marks scroll events that aren't controlled by the
                             // user but fire automatically as the result of a
                             // "momentum" scroll.
-    kAllowSmoothScroll = 1 << 7 // Allow smooth scroll for the pixel scroll
-                                // event.
-  };
+    kAllowSmoothScroll = 1 << 7, // Allow smooth scroll for the pixel scroll
+                                 // event.
+    kFromLines =    1 << 8  // For a pixels scroll event, indicates that it
+                            // originated from a lines scroll event.
+                            // (Only used on windows which generates "faked"
+                            // pixel scroll events even for simple mouse wheel
+                            // scroll)
+};
 
   nsMouseScrollEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsMouseEvent_base(isTrusted, msg, w, NS_MOUSE_SCROLL_EVENT),
@@ -1549,6 +1554,11 @@ public:
                  aEvent->widget,
                  NS_TOUCH_EVENT)
   {
+    isShift = aEvent->isShift;
+    isControl = aEvent->isControl;
+    isMeta = aEvent->isMeta;
+    isAlt = aEvent->isAlt;
+    time = aEvent->time;
     touches.AppendElements(aEvent->touches);
     MOZ_COUNT_CTOR(nsTouchEvent);
   }

@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * SSL3 Protocol
  *
@@ -39,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.164 2012/02/17 09:50:04 kaie%kuix.de Exp $ */
+/* $Id: ssl3con.c,v 1.167 2012/03/06 02:23:25 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -141,8 +142,8 @@ static ssl3CipherSuiteCfg cipherSuites[ssl_V3_SUITES_IMPLEMENTED] = {
 #endif /* NSS_ENABLE_ECC */
  { TLS_RSA_WITH_SEED_CBC_SHA,              SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE}, 
  { TLS_RSA_WITH_CAMELLIA_128_CBC_SHA,  	   SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE},
- { SSL_RSA_WITH_RC4_128_MD5,               SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { SSL_RSA_WITH_RC4_128_SHA,               SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE},
+ { SSL_RSA_WITH_RC4_128_MD5,               SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { TLS_RSA_WITH_AES_128_CBC_SHA,     	   SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE},
 
 #ifdef NSS_ENABLE_ECC
@@ -1432,7 +1433,7 @@ static SECStatus
 ssl3_InitPendingContextsBypass(sslSocket *ss)
 {
       ssl3CipherSpec  *  pwSpec;
-const ssl3BulkCipherDef *cipher_def;
+      const ssl3BulkCipherDef *cipher_def;
       void *             serverContext = NULL;
       void *             clientContext = NULL;
       BLapiInitContextFunc initFn = (BLapiInitContextFunc)NULL;
@@ -1621,7 +1622,7 @@ static SECStatus
 ssl3_InitPendingContextsPKCS11(sslSocket *ss)
 {
       ssl3CipherSpec  *  pwSpec;
-const ssl3BulkCipherDef *cipher_def;
+      const ssl3BulkCipherDef *cipher_def;
       PK11Context *      serverContext = NULL;
       PK11Context *      clientContext = NULL;
       SECItem *          param;
@@ -7049,7 +7050,7 @@ ssl3_SendServerHello(sslSocket *ss)
 static SECStatus
 ssl3_SendServerKeyExchange(sslSocket *ss)
 {
-const ssl3KEADef *     kea_def     = ss->ssl3.hs.kea_def;
+    const ssl3KEADef * kea_def     = ss->ssl3.hs.kea_def;
     SECStatus          rv          = SECFailure;
     int                length;
     PRBool             isTLS;
@@ -7148,7 +7149,7 @@ ssl3_SendCertificateRequest(sslSocket *ss)
 {
     SECItem *      name;
     CERTDistNames *ca_list;
-const uint8 *      certTypes;
+    const uint8 *  certTypes;
     SECItem *      names	= NULL;
     SECStatus      rv;
     int            length;
@@ -7492,7 +7493,7 @@ ssl3_HandleClientKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 {
     SECKEYPrivateKey *serverKey         = NULL;
     SECStatus         rv;
-const ssl3KEADef *    kea_def;
+    const ssl3KEADef *kea_def;
     ssl3KeyPair     *serverKeyPair      = NULL;
 #ifdef NSS_ENABLE_ECC
     SECKEYPublicKey *serverPubKey       = NULL;
@@ -8612,8 +8613,6 @@ xmit_loser:
 SECStatus
 ssl3_FinishHandshake(sslSocket * ss)
 {
-    SECStatus rv;
-
     PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss) );
     PORT_Assert( ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss) );
     PORT_Assert( ss->ssl3.hs.restartTarget == NULL );
@@ -8622,9 +8621,9 @@ ssl3_FinishHandshake(sslSocket * ss)
     ss->handshake           = NULL;
     ss->firstHsDone         = PR_TRUE;
 
-    if (ss->sec.ci.sid->cached == never_cached &&
-	!ss->opt.noCache && ss->sec.cache && ss->ssl3.hs.cacheSID) {
+    if (ss->ssl3.hs.cacheSID) {
 	(*ss->sec.cache)(ss->sec.ci.sid);
+	ss->ssl3.hs.cacheSID = PR_FALSE;
     }
 
     ss->ssl3.hs.ws = idle_handshake;
@@ -8945,7 +8944,7 @@ ssl3_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
 SECStatus
 ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *databuf)
 {
-const ssl3BulkCipherDef *cipher_def;
+    const ssl3BulkCipherDef *cipher_def;
     ssl3CipherSpec *     crSpec;
     SECStatus            rv;
     unsigned int         hashBytes		= MAX_MAC_LENGTH + 1;

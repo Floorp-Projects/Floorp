@@ -88,6 +88,8 @@ function HTMLDocument18() {
       doc = load(docRef, "doc", "document");
       doc.close();
       
+      // Ensure at least one SimpleTest check is reported. (Bug 483992)
+      ok(true, "Test complete");
 }
 
 </script>

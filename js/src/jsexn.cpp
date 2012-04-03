@@ -292,8 +292,8 @@ struct SuppressErrorsGuard
 
 struct AppendWrappedArg {
     JSContext *cx;
-    Vector<Value> &values;
-    AppendWrappedArg(JSContext *cx, Vector<Value> &values)
+    AutoValueVector &values;
+    AppendWrappedArg(JSContext *cx, AutoValueVector &values)
       : cx(cx),
         values(values)
     {}
@@ -342,7 +342,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     JSCheckAccessOp checkAccess = cx->runtime->securityCallbacks->checkObjectAccess;
 
     Vector<JSStackTraceStackElem> frames(cx);
-    Vector<Value> values(cx);
+    AutoValueVector values(cx);
     {
         SuppressErrorsGuard seg(cx);
         for (FrameRegsIter i(cx); !i.done(); ++i) {
@@ -374,7 +374,9 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
                 frame.argc = 0;
             }
             if (fp->isScriptFrame()) {
-                frame.filename = fp->script()->filename;
+                frame.filename = SaveScriptFilename(cx, fp->script()->filename);
+                if (!frame.filename)
+                    return false;
                 frame.ulineno = PCToLineNumber(fp->script(), i.pc());
             } else {
                 frame.ulineno = 0;
@@ -463,7 +465,7 @@ exn_trace(JSTracer *trc, JSObject *obj)
             if (elem->funName)
                 MarkString(trc, &elem->funName, "stack trace function name");
             if (IS_GC_MARKING_TRACER(trc) && elem->filename)
-                js_MarkScriptFilename(elem->filename);
+                MarkScriptFilename(elem->filename);
             vcount += elem->argc;
         }
         vp = GetStackTraceValueBuffer(priv);
@@ -1032,7 +1034,7 @@ InitErrorClass(JSContext *cx, GlobalObject *global, int type, JSObject &proto)
     }
 
     /* Create the corresponding constructor. */
-    JSFunction *ctor = global->createConstructor(cx, Exception, &ErrorClass, name, 1,
+    JSFunction *ctor = global->createConstructor(cx, Exception, name, 1,
                                                  JSFunction::ExtendedFinalizeKind);
     if (!ctor)
         return NULL;

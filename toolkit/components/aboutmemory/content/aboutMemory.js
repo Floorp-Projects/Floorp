@@ -82,17 +82,19 @@ function flipBackslashes(aUnsafeStr)
   return aUnsafeStr.replace(/\\/g, '/');
 }
 
+const gAssertionFailureMsgPrefix = "aboutMemory.js assertion failed: ";
+
 function assert(aCond, aMsg)
 {
   if (!aCond) {
     reportAssertionFailure(aMsg)
-    throw("aboutMemory.js assertion failed: " + aMsg);
+    throw(gAssertionFailureMsgPrefix + aMsg);
   }
 }
 
 function reportAssertionFailure(aMsg)
 {
-  var debug = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
+  let debug = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
   if (debug.isDebugBuild) {
     debug.assertion(aMsg, "false", "aboutMemory.js", 0);
   }
@@ -100,7 +102,7 @@ function reportAssertionFailure(aMsg)
 
 function debug(x)
 {
-  appendElementWithText(document.body, "div", "legend", JSON.stringify(x));
+  appendElementWithText(document.body, "div", "debug", JSON.stringify(x));
 }
 
 //---------------------------------------------------------------------------
@@ -199,18 +201,45 @@ function processMemoryReporters(aMgr, aIgnoreSingle, aIgnoreMulti,
   //
   // - After this point we never use the original memory report again.
 
+  function handleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
+                        aDescription)
+  {
+    checkReport(aUnsafePath, aKind, aUnits, aAmount, aDescription);
+    aHandleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount, aDescription);
+  }
+
+  function handleException(aReporterStr, aUnsafePathOrName, aE)
+  {
+    // There are two exception cases that must be distinguished here.
+    //
+    // - We want to halt proceedings on exceptions thrown within this file
+    //   (i.e. assertion failures in handleReport);  such exceptions contain
+    //   gAssertionFailureMsgPrefix in their string representation.
+    //
+    // - We want to continue on when faced with exceptions thrown outside this
+    //   file (i.e. in collectReports).
+
+    let str = aE.toString();
+    if (str.search(gAssertionFailureMsgPrefix) >= 0) {
+      throw(aE); 
+    } else {
+      debug("Bad memory " + aReporterStr + " '" + aUnsafePathOrName +
+            "': " + aE);
+    }
+  }
+
   let e = aMgr.enumerateReporters();
   while (e.hasMoreElements()) {
     let rOrig = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
     let unsafePath = rOrig.path;
     try {
       if (!aIgnoreSingle(unsafePath)) {
-        aHandleReport(rOrig.process, unsafePath, rOrig.kind, rOrig.units,
-                      rOrig.amount, rOrig.description);
+        handleReport(rOrig.process, unsafePath, rOrig.kind, rOrig.units,
+                     rOrig.amount, rOrig.description);
       }
     }
     catch (e) {
-      debug("Bad memory reporter " + unsafePath + ": " + e);
+      handleException("reporter", unsafePath, e);
     }
   }
   let e = aMgr.enumerateMultiReporters();
@@ -219,12 +248,44 @@ function processMemoryReporters(aMgr, aIgnoreSingle, aIgnoreMulti,
     let name = mrOrig.name;
     try {
       if (!aIgnoreMulti(name)) {
-        mrOrig.collectReports(aHandleReport, null);
+        mrOrig.collectReports(handleReport, null);
       }
     }
     catch (e) {
-      debug("Bad memory multi-reporter " + name + ": " + e);
+      handleException("multi-reporter", name, e);
     }
+  }
+}
+
+// This regexp matches sentences and sentence fragments, i.e. strings that
+// start with a capital letter and ends with a '.'.  (The final sentence may be
+// in parentheses, so a ')' might appear after the '.'.)
+const gSentenceRegExp = /^[A-Z].*\.\)?$/;
+
+function checkReport(aUnsafePath, aKind, aUnits, aAmount, aDescription)
+{
+  if (aUnsafePath.startsWith("explicit/")) {
+    assert(aKind === KIND_HEAP || aKind === KIND_NONHEAP, "bad explicit kind");
+    assert(aUnits === UNITS_BYTES, "bad explicit units");
+    assert(aDescription.match(gSentenceRegExp),
+           "non-sentence explicit description");
+
+  } else if (aUnsafePath.startsWith("smaps/")) {
+    assert(aKind === KIND_NONHEAP, "bad smaps kind");
+    assert(aUnits === UNITS_BYTES, "bad smaps units");
+    assert(aDescription !== "", "empty smaps description");
+
+  } else if (aUnsafePath.startsWith("compartments/")) {
+    assert(aKind === KIND_OTHER, "bad compartments kind");
+    assert(aUnits === UNITS_COUNT, "bad compartments units");
+    assert(aAmount === 1, "bad amount");
+    assert(aDescription === "", "bad description");
+
+  } else {
+    assert(aUnsafePath.indexOf("/") === -1, "'other' path contains '/'");
+    assert(aKind === KIND_OTHER, "bad other kind: " + aUnsafePath);
+    assert(aDescription.match(gSentenceRegExp),
+           "non-sentence other description");
   }
 }
 
@@ -597,9 +658,6 @@ function buildTree(aReports, aTreeName)
     // Add any missing nodes in the tree implied by the unsafePath.
     let r = aReports[unsafePath];
     if (r.treeNameMatches(aTreeName)) {
-      assert(r._kind === KIND_HEAP || r._kind === KIND_NONHEAP,
-             "reports in the tree must have KIND_HEAP or KIND_NONHEAP");
-      assert(r._units === UNITS_BYTES, "r._units === UNITS_BYTES");
       let unsafeNames = r._unsafePath.split('/');
       let u = t;
       for (let i = 0; i < unsafeNames.length; i++) {
@@ -1128,13 +1186,14 @@ function appendMrNameSpan(aP, aKind, aKidsState, aDescription, aUnsafeName,
   }
 }
 
-// This is used to record the (safe) IDs of which sub-trees have been toggled,
-// so the collapsed/expanded state can be replicated when the page is
-// regenerated.  It can end up holding IDs of nodes that no longer exist, e.g.
-// for compartments that have been closed.  This doesn't seem like a big deal,
-// because the number is limited by the number of entries the user has changed
-// from their original state.
-let gTogglesBySafeTreeId = {};
+// This is used to record the (safe) IDs of which sub-trees have been manually
+// expanded (marked as true) and collapsed (marked as false).  It's used to
+// replicate the collapsed/expanded state when the page is updated.  It can end
+// up holding IDs of nodes that no longer exist, e.g. for compartments that
+// have been closed.  This doesn't seem like a big deal, because the number is
+// limited by the number of entries the user has changed from their original
+// state.
+let gShowSubtreesBySafeTreeId = {};
 
 function assertClassListContains(e, className) {
   assert(e, "undefined " + className);
@@ -1158,6 +1217,7 @@ function toggle(aEvent)
   let minusSpan = outerSpan.childNodes[3];
   assertClassListContains(plusSpan,  "mrSep");
   assertClassListContains(minusSpan, "mrSep");
+  let isExpansion = !plusSpan.classList.contains("hidden");
   plusSpan .classList.toggle("hidden");
   minusSpan.classList.toggle("hidden");
 
@@ -1168,10 +1228,10 @@ function toggle(aEvent)
 
   // Record/unrecord that this sub-tree was toggled.
   let safeTreeId = outerSpan.id;
-  if (gTogglesBySafeTreeId[safeTreeId]) {
-    delete gTogglesBySafeTreeId[safeTreeId];
+  if (gShowSubtreesBySafeTreeId[safeTreeId] !== undefined) {
+    delete gShowSubtreesBySafeTreeId[safeTreeId];
   } else {
-    gTogglesBySafeTreeId[safeTreeId] = true;
+    gShowSubtreesBySafeTreeId[safeTreeId] = isExpansion;
   }
 }
 
@@ -1288,8 +1348,8 @@ function appendTreeElements(aPOuter, aT, aProcess)
       // involves reinstating any previous toggling of the sub-tree.
       let safeTreeId = flipBackslashes(aProcess + ":" + unsafePath);
       showSubtrees = !aT._hideKids;
-      if (gTogglesBySafeTreeId[safeTreeId]) {
-        showSubtrees = !showSubtrees;
+      if (gShowSubtreesBySafeTreeId[safeTreeId] !== undefined) {
+        showSubtrees = gShowSubtreesBySafeTreeId[safeTreeId];
       }
       d = appendElement(aP, "span", "hasKids");
       d.id = safeTreeId;
@@ -1427,8 +1487,6 @@ function appendOtherElements(aP, aReportsByProcess)
   for (let unsafePath in aReportsByProcess) {
     let r = aReportsByProcess[unsafePath];
     if (!r._done) {
-      assert(r._kind === KIND_OTHER,
-             "_kind !== KIND_OTHER for " + flipBackslashes(r._unsafePath));
       assert(r._nMerged === undefined, "dup'd OTHER report");
       let o = new OtherReport(r._unsafePath, r._units, r._amount,
                               r._description);
@@ -1556,14 +1614,7 @@ function getCompartmentsByProcess(aMgr)
                         aDescription)
   {
     let process = aProcess === "" ? "Main" : aProcess;
-
-    assert(aKind        === KIND_OTHER, "bad kind");
-    assert(aUnits       === UNITS_COUNT, "bad units");
-    assert(aAmount      === 1, "bad amount");
-    assert(aDescription === "", "bad description");
-
     let unsafeNames = aUnsafePath.split('/');
-
     let isSystemCompartment;
     if (unsafeNames[0] === "compartments" && unsafeNames[1] == "system" &&
         unsafeNames.length == 3)
@@ -1627,7 +1678,7 @@ function appendProcessCompartmentsElementsHelper(aP, aCompartments, aKindString)
   }
   compartmentTextArray.sort();
 
-  for (var i = 0; i < compartmentTextArray.length; i++) {
+  for (let i = 0; i < compartmentTextArray.length; i++) {
     appendElementWithText(uPre, "span", "", compartmentTextArray[i]);
   }
 

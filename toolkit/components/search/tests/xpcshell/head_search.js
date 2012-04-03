@@ -93,6 +93,7 @@ function afterCommit(callback)
 {
   let obs = function(result, topic, verb) {
     if (verb == "write-metadata-to-disk-complete") {
+      Services.obs.removeObserver(obs, topic);
       callback(result);
     } else {
       dump("TOPIC: " + topic+ "\n");

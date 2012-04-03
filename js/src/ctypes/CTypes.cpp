@@ -220,16 +220,14 @@ static JSClass sCTypesGlobalClass = {
   "ctypes",
   JSCLASS_HAS_RESERVED_SLOTS(CTYPESGLOBAL_SLOTS),
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-  JSCLASS_NO_OPTIONAL_MEMBERS
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
 static JSClass sCABIClass = {
   "CABI",
   JSCLASS_HAS_RESERVED_SLOTS(CABI_SLOTS),
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-  JSCLASS_NO_OPTIONAL_MEMBERS
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
 // Class representing ctypes.{C,Pointer,Array,Struct,Function}Type.prototype.
@@ -249,8 +247,7 @@ static JSClass sCDataProtoClass = {
   "CData",
   0,
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-  JSCLASS_NO_OPTIONAL_MEMBERS
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
 static JSClass sCTypeClass = {
@@ -393,32 +390,28 @@ static JSClass sInt64ProtoClass = {
   "Int64",
   0,
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-  JSCLASS_NO_OPTIONAL_MEMBERS
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
 static JSClass sUInt64ProtoClass = {
   "UInt64",
   0,
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-  JSCLASS_NO_OPTIONAL_MEMBERS
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
 static JSClass sInt64Class = {
   "Int64",
   JSCLASS_HAS_RESERVED_SLOTS(INT64_SLOTS),
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Int64Base::Finalize,
-  JSCLASS_NO_OPTIONAL_MEMBERS
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Int64Base::Finalize
 };
 
 static JSClass sUInt64Class = {
   "UInt64",
   JSCLASS_HAS_RESERVED_SLOTS(INT64_SLOTS),
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Int64Base::Finalize,
-  JSCLASS_NO_OPTIONAL_MEMBERS
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Int64Base::Finalize
 };
 
 static JSFunctionSpec sInt64StaticFunctions[] = {

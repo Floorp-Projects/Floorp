@@ -131,7 +131,7 @@ add_test(function test_onPageChanged() {
   onNotify(function onPageChanged(aURI, aChangedAttribute, aNewValue, aGUID) {
     do_check_eq(aChangedAttribute, Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON);
     do_check_true(aURI.equals(testuri));
-    do_check_eq(aNewValue, iconurl);
+    do_check_eq(aNewValue, SMALLPNG_DATA_URI.spec);
     do_check_guid_for_uri(aURI, aGUID);
 
     run_next_test();
@@ -139,11 +139,9 @@ add_test(function test_onPageChanged() {
 
   let [testuri] = add_visit();
 
-  let iconurl = "file:///favicon-normal32.png";
-  let data = readFileData(do_get_file("favicon-normal32.png"));
-  PlacesUtils.favicons.setFaviconData(NetUtil.newURI(iconurl),
-                                      data, data.length, "image/png",
-                                      Number.MAX_VALUE);
-
-  PlacesUtils.favicons.setFaviconUrlForPage(testuri, NetUtil.newURI(iconurl));
+  // The new favicon for the page must have data associated with it in order to
+  // receive the onPageChanged notification.  To keep this test self-contained,
+  // we use an URI representing the smallest possible PNG file.
+  PlacesUtils.favicons.setAndFetchFaviconForPage(testuri, SMALLPNG_DATA_URI,
+                                                 false, null);
 });

@@ -678,14 +678,17 @@ TypeSet::addCall(JSContext *cx, TypeCallsite *site)
 class TypeConstraintArith : public TypeConstraint
 {
 public:
+    JSScript *script;
+    jsbytecode *pc;
+
     /* Type set receiving the result of the arithmetic. */
     TypeSet *target;
 
     /* For addition operations, the other operand. */
     TypeSet *other;
 
-    TypeConstraintArith(TypeSet *target, TypeSet *other)
-        : TypeConstraint("arith"), target(target), other(other)
+    TypeConstraintArith(JSScript *script, jsbytecode *pc, TypeSet *target, TypeSet *other)
+        : TypeConstraint("arith"), script(script), pc(pc), target(target), other(other)
     {
         JS_ASSERT(target);
     }
@@ -694,9 +697,9 @@ public:
 };
 
 void
-TypeSet::addArith(JSContext *cx, TypeSet *target, TypeSet *other)
+TypeSet::addArith(JSContext *cx, JSScript *script, jsbytecode *pc, TypeSet *target, TypeSet *other)
 {
-    add(cx, cx->typeLifoAlloc().new_<TypeConstraintArith>(target, other));
+    add(cx, cx->typeLifoAlloc().new_<TypeConstraintArith>(script, pc, target, other));
 }
 
 /* Subset constraint which transforms primitive values into appropriate objects. */
@@ -797,7 +800,7 @@ static inline const Shape *
 GetSingletonShape(JSContext *cx, JSObject *obj, jsid id)
 {
     const Shape *shape = obj->nativeLookup(cx, id);
-    if (shape && shape->hasDefaultGetterOrIsMethod() && shape->hasSlot())
+    if (shape && shape->hasDefaultGetter() && shape->hasSlot())
         return shape;
     return NULL;
 }
@@ -1299,27 +1302,29 @@ TypeConstraintArith::newType(JSContext *cx, TypeSet *source, Type type)
         } else if (type.isPrimitive(JSVAL_TYPE_DOUBLE)) {
             if (other->hasAnyFlag(TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL |
                                   TYPE_FLAG_INT32 | TYPE_FLAG_DOUBLE | TYPE_FLAG_BOOLEAN |
-                                  TYPE_FLAG_ANYOBJECT) ||
-                other->getObjectCount() != 0) {
+                                  TYPE_FLAG_ANYOBJECT)) {
                 target->addType(cx, Type::DoubleType());
+            } else if (other->getObjectCount() != 0) {
+                TypeDynamicResult(cx, script, pc, Type::DoubleType());
             }
         } else if (type.isPrimitive(JSVAL_TYPE_STRING)) {
             target->addType(cx, Type::StringType());
-        } else {
-            if (other->hasAnyFlag(TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL |
-                                  TYPE_FLAG_INT32 | TYPE_FLAG_BOOLEAN |
-                                  TYPE_FLAG_ANYOBJECT) ||
-                other->getObjectCount() != 0) {
-                target->addType(cx, Type::Int32Type());
-            }
-            if (other->hasAnyFlag(TYPE_FLAG_DOUBLE))
-                target->addType(cx, Type::DoubleType());
+        } else if (other->hasAnyFlag(TYPE_FLAG_DOUBLE)) {
+            target->addType(cx, Type::DoubleType());
+        } else if (other->hasAnyFlag(TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL |
+                                     TYPE_FLAG_INT32 | TYPE_FLAG_BOOLEAN |
+                                     TYPE_FLAG_ANYOBJECT)) {
+            target->addType(cx, Type::Int32Type());
+        } else if (other->getObjectCount() != 0) {
+            TypeDynamicResult(cx, script, pc, Type::Int32Type());
         }
     } else {
         if (type.isUnknown())
             target->addType(cx, Type::UnknownType());
         else if (type.isPrimitive(JSVAL_TYPE_DOUBLE))
             target->addType(cx, Type::DoubleType());
+        else if (!type.isAnyObject() && type.isObject())
+            TypeDynamicResult(cx, script, pc, Type::Int32Type());
         else
             target->addType(cx, Type::Int32Type());
     }
@@ -2005,6 +2010,30 @@ types::UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc)
         jsid id = GetAtomId(cx, script, pc, 0);
         if (id == id_prototype(cx))
             return true;
+    }
+
+    return false;
+}
+
+bool
+types::UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc)
+{
+    /*
+     * Objects created outside loops in global and eval scripts should have
+     * singleton types. For now this is only done for plain objects, not arrays.
+     */
+
+    if (!cx->typeInferenceEnabled() || script->function())
+        return false;
+
+    JSOp op = JSOp(*pc);
+    if (op == JSOP_NEWOBJECT || (op == JSOP_NEWINIT && GET_UINT8(pc) == JSProto_Object)) {
+        AutoEnterTypeInference enter(cx);
+
+        if (!script->ensureRanAnalysis(cx, NULL))
+            return false;
+
+        return !script->analysis()->getCode(pc).inLoop;
     }
 
     return false;
@@ -2710,7 +2739,7 @@ UpdatePropertyType(JSContext *cx, TypeSet *types, JSObject *obj, const Shape *sh
     if (shape->hasGetterValue() || shape->hasSetterValue()) {
         types->setOwnProperty(cx, true);
         types->addType(cx, Type::UnknownType());
-    } else if (shape->hasDefaultGetterOrIsMethod() && shape->hasSlot()) {
+    } else if (shape->hasDefaultGetter() && shape->hasSlot()) {
         const Value &value = obj->nativeGetSlot(shape->slot());
 
         /*
@@ -3159,6 +3188,9 @@ GetInitializerType(JSContext *cx, JSScript *script, jsbytecode *pc)
     if (!script->hasGlobal())
         return NULL;
 
+    if (UseNewTypeForInitializer(cx, script, pc))
+        return NULL;
+
     JSOp op = JSOp(*pc);
     JS_ASSERT(op == JSOP_NEWARRAY || op == JSOP_NEWOBJECT || op == JSOP_NEWINIT);
 
@@ -3589,8 +3621,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       }
 
       case JSOP_SETARG:
-      case JSOP_SETLOCAL:
-      case JSOP_SETLOCALPOP: {
+      case JSOP_SETLOCAL: {
         uint32_t slot = GetBytecodeSlot(script, pc);
         if (!trackSlot(slot) && slot < TotalSlots(script)) {
             TypeSet *types = TypeScript::SlotTypes(script, slot);
@@ -3616,10 +3647,10 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_LOCALDEC: {
         uint32_t slot = GetBytecodeSlot(script, pc);
         if (trackSlot(slot)) {
-            poppedTypes(pc, 0)->addArith(cx, &pushed[0]);
+            poppedTypes(pc, 0)->addArith(cx, script, pc, &pushed[0]);
         } else if (slot < TotalSlots(script)) {
             TypeSet *types = TypeScript::SlotTypes(script, slot);
-            types->addArith(cx, types);
+            types->addArith(cx, script, pc, types);
             types->addSubset(cx, &pushed[0]);
         } else {
             pushed[0].addType(cx, Type::UnknownType());
@@ -3635,8 +3666,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
             pushed[0].addType(cx, Type::LazyArgsType());
         break;
 
-      case JSOP_SETPROP:
-      case JSOP_SETMETHOD: {
+      case JSOP_SETPROP: {
         jsid id = GetAtomId(cx, script, pc, 0);
         poppedTypes(pc, 1)->addSetProperty(cx, script, pc, poppedTypes(pc, 0), id);
         poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
@@ -3702,42 +3732,30 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
 
       case JSOP_ADD:
-        poppedTypes(pc, 0)->addArith(cx, &pushed[0], poppedTypes(pc, 1));
-        poppedTypes(pc, 1)->addArith(cx, &pushed[0], poppedTypes(pc, 0));
+        poppedTypes(pc, 0)->addArith(cx, script, pc, &pushed[0], poppedTypes(pc, 1));
+        poppedTypes(pc, 1)->addArith(cx, script, pc, &pushed[0], poppedTypes(pc, 0));
         break;
 
       case JSOP_SUB:
       case JSOP_MUL:
       case JSOP_MOD:
       case JSOP_DIV:
-        poppedTypes(pc, 0)->addArith(cx, &pushed[0]);
-        poppedTypes(pc, 1)->addArith(cx, &pushed[0]);
+        poppedTypes(pc, 0)->addArith(cx, script, pc, &pushed[0]);
+        poppedTypes(pc, 1)->addArith(cx, script, pc, &pushed[0]);
         break;
 
       case JSOP_NEG:
       case JSOP_POS:
-        poppedTypes(pc, 0)->addArith(cx, &pushed[0]);
+        poppedTypes(pc, 0)->addArith(cx, script, pc, &pushed[0]);
         break;
 
       case JSOP_LAMBDA:
-      case JSOP_DEFFUN:
-      case JSOP_DEFLOCALFUN: {
-        unsigned off = op == JSOP_DEFLOCALFUN ? SLOTNO_LEN : 0;
-        JSObject *obj = script->getObject(GET_UINT32_INDEX(pc + off));
+      case JSOP_DEFFUN: {
+        JSObject *obj = script->getObject(GET_UINT32_INDEX(pc));
 
         TypeSet *res = NULL;
-        if (op == JSOP_LAMBDA) {
+        if (op == JSOP_LAMBDA)
             res = &pushed[0];
-        } else if (op == JSOP_DEFLOCALFUN) {
-            uint32_t slot = GetBytecodeSlot(script, pc);
-            if (trackSlot(slot)) {
-                res = &pushed[0];
-            } else {
-                /* Should not see 'let' vars here. */
-                JS_ASSERT(slot < TotalSlots(script));
-                res = TypeScript::SlotTypes(script, slot);
-            }
-        }
 
         if (res) {
             if (script->hasGlobal())
@@ -3790,8 +3808,15 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_NEWINIT:
       case JSOP_NEWARRAY:
       case JSOP_NEWOBJECT: {
-        TypeObject *initializer = GetInitializerType(cx, script, pc);
         TypeSet *types = script->analysis()->bytecodeTypes(pc);
+        types->addSubset(cx, &pushed[0]);
+
+        if (UseNewTypeForInitializer(cx, script, pc)) {
+            /* Defer types pushed by this bytecode until runtime. */
+            break;
+        }
+
+        TypeObject *initializer = GetInitializerType(cx, script, pc);
         if (script->hasGlobal()) {
             if (!initializer)
                 return false;
@@ -3800,7 +3825,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
             JS_ASSERT(!initializer);
             types->addType(cx, Type::UnknownType());
         }
-        types->addSubset(cx, &pushed[0]);
         break;
       }
 
@@ -3849,8 +3873,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         state.hasHole = true;
         break;
 
-      case JSOP_INITPROP:
-      case JSOP_INITMETHOD: {
+      case JSOP_INITPROP: {
         const SSAValue &objv = poppedValue(pc, 1);
         jsbytecode *initpc = script->code + objv.pushedOffset();
         TypeObject *initializer = GetInitializerType(cx, script, initpc);

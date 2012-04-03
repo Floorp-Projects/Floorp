@@ -10,12 +10,14 @@ import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.mozilla.gecko.sync.CommandProcessor;
 import org.mozilla.gecko.sync.CryptoRecord;
+import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.HTTPFailureException;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NoCollectionKeysSetException;
-import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
@@ -162,14 +164,8 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
 
     @Override
     public String ifUnmodifiedSince() {
-      Long timestampInMilliseconds = session.config.getPersistedServerClientRecordTimestamp();
-
-      // It's the first upload so we don't care about X-If-Unmodified-Since.
-      if (timestampInMilliseconds == 0) {
-        return null;
-      }
-
-      return Utils.millisecondsToDecimalSecondsString(timestampInMilliseconds);
+      // Temporary fix for bug 739519.
+      return null;
     }
 
     @Override
@@ -278,8 +274,12 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
     }
 
     commandsProcessedShouldUpload = true;
+    CommandProcessor processor = CommandProcessor.getProcessor();
 
     // TODO: Bug 715792 - Process commands here.
+    for (int i = 0; i < commands.size(); i++) {
+      processor.processCommand(new ExtendedJSONObject((JSONObject)commands.get(i)));
+    }
   }
 
   protected void checkAndUpload() {
