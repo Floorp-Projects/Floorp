@@ -125,8 +125,11 @@ using namespace js::ion;
 SnapshotReader::SnapshotReader(const uint8 *buffer, const uint8 *end)
   : reader_(buffer, end),
     slotCount_(0),
+    frameCount_(0),
     slotsRead_(0)
 {
+    if (!buffer)
+        return;
     IonSpew(IonSpew_Snapshots, "Creating snapshot reader");
     readSnapshotHeader();
     nextFrame();

@@ -52,40 +52,6 @@
 #include "jsgcmark.h"
 #include "SnapshotReader.h"
 
-namespace js {
-namespace ion {
-
-// Recover some part of the stack to read the snapshots and iterate over inlined
-// frames.
-class InlineFrameReverseIterator
-{
-    SnapshotIterator si_;
-    JSFunction *callee_;
-    JSScript *script_;
-    jsbytecode *pc_;
-
-  public:
-    InlineFrameReverseIterator(const IonFrameIterator &bottom);
-
-    inline JSFunction *callee() const {
-        return callee_;
-    }
-    inline JSScript *script() const {
-        return script_;
-    }
-    inline jsbytecode *pc() const {
-        return pc_;
-    }
-
-    InlineFrameReverseIterator &operator++();
-    inline bool more() const {
-        return si_.moreFrames();
-    }
-};
-
-}
-}
-
 using namespace js;
 using namespace js::ion;
 
@@ -164,60 +130,6 @@ FrameRecovery::ionScript() const
     return ionScript_ ? ionScript_ : script_->ion;
 }
 
-InlineFrameReverseIterator::InlineFrameReverseIterator(const IonFrameIterator &bottom)
-  : si_(bottom, MachineState()),
-    callee_(bottom.isFunctionFrame() ? bottom.callee() : NULL),
-    script_(bottom.script()),
-    pc_(script_->code + si_.pcOffset())
-{
-}
-
-InlineFrameReverseIterator &
-InlineFrameReverseIterator::operator++()
-{
-    JS_ASSERT(more());
-    JS_ASSERT(js_CodeSpec[*pc_].format & JOF_INVOKE);
-
-    // Note: -1 for the start index, -1 for skipping |this|
-    int callerArgc = GET_ARGC(pc_);
-    uint32 funSlot = (si_.slots() - 1) - callerArgc - 1;
-
-    // Read snapshot, and read JSFunction Value from the stack.
-    while (funSlot--)
-        si_.skip();
-
-    // We do not expect failures here, because if we inlined the function, this
-    // means we can also insert a constant value in the snapshot, and avoid
-    // storing it either on the stack or in a register.
-    Value funValue = si_.read();
-    while (si_.moreSlots())
-        si_.skip();
-
-    // Update script and pc, and continue in the next inlined frame.
-    JSFunction *fun = funValue.toObject().toFunction();
-    callee_ = fun;
-    script_ = fun->script();
-    si_.nextFrame();
-    pc_ = script_->code + si_.pcOffset();
-
-    return *this;
-}
-
-size_t
-InlineFrameIterator::getInlinedFrame(size_t n)
-{
-    size_t frameCount = 0;
-    InlineFrameReverseIterator bit(*bottom_);
-    while (frameCount != n && bit.more()) {
-        ++bit;
-        ++frameCount;
-    }
-    callee_ = bit.callee();
-    script_ = bit.script();
-    pc_ = bit.pc();
-    return frameCount;
-}
-
 IonFrameIterator::IonFrameIterator(IonJSFrameLayout *fp)
   : current_((uint8 *)fp),
     type_(IonFrame_JS),
@@ -265,6 +177,14 @@ IonFrameIterator::callee() const
 {
     JS_ASSERT(isFunctionFrame());
     return CalleeTokenToFunction(calleeToken());
+}
+
+JSFunction *
+IonFrameIterator::maybeCallee() const
+{
+    if (isFunctionFrame())
+        return callee();
+    return NULL;
 }
 
 bool
@@ -492,14 +412,12 @@ ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
     // Recover the innermost inlined frame.
     IonFrameIterator it(cx->runtime->ionTop);
     ++it;
-    InlineFrameReverseIterator bit(it);
-    while (bit.more())
-        ++bit;
+    InlineFrameIterator ifi(&it, MachineState());
 
     // Set the result.
-    *scriptRes = bit.script();
+    *scriptRes = ifi.script();
     if (pcRes)
-        *pcRes = bit.pc();
+        *pcRes = ifi.pc();
 }
 
 void
@@ -534,6 +452,14 @@ SnapshotIterator::SnapshotIterator(const IonFrameIterator &iter, const MachineSt
     fp_(iter.jsFrame()),
     machine_(machine),
     ionScript_(iter.ionScript())
+{
+}
+
+SnapshotIterator::SnapshotIterator()
+  : SnapshotReader(NULL, NULL),
+    fp_(NULL),
+    machine_(MachineState()),
+    ionScript_(NULL)
 {
 }
 
@@ -633,5 +559,71 @@ IonFrameIterator::osiIndex() const
 {
     SafepointReader reader(ionScript(), safepoint());
     return ionScript()->getOsiIndex(reader.getOsiReturnPointOffset());
+}
+
+InlineFrameIterator::InlineFrameIterator(const IonFrameIterator *iter, const MachineState &machine)
+  : frame_(iter),
+    machine_(machine),
+    framesRead_(0),
+    callee_(NULL),
+    script_(NULL)
+{
+    if (frame_) {
+        start_ = SnapshotIterator(*frame_, machine_);
+        findNextFrame();
+    }
+}
+
+void
+InlineFrameIterator::findNextFrame()
+{
+    si_ = start_;
+
+    // Read the initial frame.
+    callee_ = frame_->maybeCallee();
+    script_ = frame_->script();
+    pc_ = script_->code + si_.pcOffset();
+
+    // This unfortunately is O(n*m), because we must skip over outer frames
+    // before reading inner ones.
+    unsigned remaining = start_.frameCount() - framesRead_ - 1;
+    for (unsigned i = 0; i < remaining; i++) {
+        JS_ASSERT(js_CodeSpec[*pc_].format & JOF_INVOKE);
+
+        // Skip over non-argument slots, as well as |this|.
+        unsigned skipCount = (si_.slots() - 1) - GET_ARGC(pc_) - 1;
+        for (unsigned j = 0; j < skipCount; j++)
+            si_.skip();
+
+        Value funval = si_.read();
+
+        // Skip extra slots.
+        while (si_.moreSlots())
+            si_.skip();
+
+        si_.nextFrame();
+
+        callee_ = funval.toObject().toFunction();
+        script_ = callee_->script();
+        pc_ = script_->code + si_.pcOffset();
+    }
+
+    framesRead_++;
+}
+
+InlineFrameIterator
+InlineFrameIterator::operator++()
+{
+    JS_ASSERT(more());
+
+    InlineFrameIterator iter(*this);
+    findNextFrame();
+    return iter;
+}
+
+bool
+InlineFrameIterator::isFunctionFrame() const
+{
+    return !!callee_;
 }
 
