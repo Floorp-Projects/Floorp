@@ -44,6 +44,7 @@ public class CryptoRecord extends Record {
   private static final String KEY_PAYLOAD    = "payload";
   private static final String KEY_MODIFIED   = "modified";
   private static final String KEY_SORTINDEX  = "sortindex";
+  private static final String KEY_TTL        = "ttl";
   private static final String KEY_CIPHERTEXT = "ciphertext";
   private static final String KEY_HMAC       = "hmac";
   private static final String KEY_IV         = "IV";
@@ -97,6 +98,7 @@ public class CryptoRecord extends Record {
    */
   public CryptoRecord(Record source) {
     super(source.guid, source.collection, source.lastModified, source.deleted);
+    this.ttl = source.ttl;
   }
 
   @Override
@@ -105,6 +107,7 @@ public class CryptoRecord extends Record {
     out.guid         = guid;
     out.androidID    = androidID;
     out.sortIndex    = this.sortIndex;
+    out.ttl          = this.ttl;
     out.payload      = (this.payload == null) ? null : new ExtendedJSONObject(this.payload.object);
     out.keyBundle    = this.keyBundle;    // TODO: copy me?
     return out;
@@ -147,6 +150,11 @@ public class CryptoRecord extends Record {
     }
     if (jsonRecord.containsKey(KEY_SORTINDEX)) {
       record.sortIndex = jsonRecord.getLong(KEY_SORTINDEX);
+    }
+    if (jsonRecord.containsKey(KEY_TTL)) {
+      // TTLs are never returned by the sync server, so should never be true if
+      // the record was fetched.
+      record.ttl = jsonRecord.getLong(KEY_TTL);
     }
     // TODO: deleted?
     return record;
@@ -229,6 +237,9 @@ public class CryptoRecord extends Record {
     ExtendedJSONObject o = new ExtendedJSONObject();
     o.put(KEY_PAYLOAD, payload.toJSONString());
     o.put(KEY_ID,      this.guid);
+    if (this.ttl > 0) {
+      o.put(KEY_TTL, this.ttl);
+    }
     return o.object;
   }
 

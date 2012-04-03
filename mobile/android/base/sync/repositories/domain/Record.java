@@ -1,40 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Android Sync Client.
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- * Jason Voll <jvoll@mozilla.com>
- * Richard Newman <rnewman@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync.repositories.domain;
 
@@ -104,7 +70,22 @@ public abstract class Record {
   public long lastModified;
   public boolean deleted;
   public long androidID;
+  /**
+   * An integer indicating the relative importance of this item in the collection.
+   * <p>
+   * Default is 0.
+   */
   public long sortIndex;
+  /**
+   * The number of seconds to keep this record. After that time this item will
+   * no longer be returned in response to any request, and it may be pruned from
+   * the database.
+   * <p>
+   * Negative values mean never forget this record.
+   * <p>
+   * Default is 1 year.
+   */
+  public long ttl;
 
   public Record(String guid, String collection, long lastModified, boolean deleted) {
     this.guid         = guid;
@@ -112,6 +93,7 @@ public abstract class Record {
     this.lastModified = lastModified;
     this.deleted      = deleted;
     this.sortIndex    = 0;
+    this.ttl          = 365 * 24 * 60 * 60; // Seconds.
     this.androidID    = -1;
   }
 
