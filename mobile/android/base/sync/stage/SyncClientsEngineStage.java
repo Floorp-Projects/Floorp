@@ -18,6 +18,7 @@ import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.HTTPFailureException;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NoCollectionKeysSetException;
+import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
@@ -65,6 +66,7 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
 
     // We use this on each WBO, so lift it out.
     final ClientsDataDelegate clientsDelegate = session.getClientsDelegate();
+    boolean localAccountGUIDDownloaded = false;
 
     @Override
     public String credentials() {
@@ -80,6 +82,15 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
     @Override
     public void handleRequestSuccess(SyncStorageResponse response) {
       BaseResource.consumeEntity(response); // We don't need the response at all.
+
+      // If we successfully downloaded all records but ours was not one of them
+      // then reset the timestamp.
+      if (!localAccountGUIDDownloaded) {
+        Logger.info(LOG_TAG, "Local client GUID does not exist on the server. Upload timestamp will be reset.");
+        session.config.persistServerClientRecordTimestamp(0);
+      }
+      localAccountGUIDDownloaded = false;
+
       final int clientsCount;
       try {
         clientsCount = db.clientsCount();
@@ -101,6 +112,8 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
     @Override
     public void handleRequestFailure(SyncStorageResponse response) {
       BaseResource.consumeEntity(response); // We don't need the response at all, and any exception handling shouldn't need the response body.
+      localAccountGUIDDownloaded = false;
+
       try {
         Logger.info(LOG_TAG, "Client upload failed. Aborting sync.");
         session.abort(new HTTPFailureException(response), "Client download failed.");
@@ -112,6 +125,7 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
 
     @Override
     public void handleRequestError(Exception ex) {
+      localAccountGUIDDownloaded = false;
       try {
         Logger.info(LOG_TAG, "Client upload error. Aborting sync.");
         session.abort(ex, "Failure fetching client record.");
@@ -127,6 +141,8 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
       try {
         r = (ClientRecord) factory.createRecord(record.decrypt());
         if (clientsDelegate.isLocalGUID(r.guid)) {
+          Logger.info(LOG_TAG, "Local client GUID exists on server and was downloaded");
+          localAccountGUIDDownloaded = true;
           // Oh hey! Our record is on the server. This is the authoritative
           // server timestamp, so let's hang on to it to decide whether we
           // need to upload.
@@ -164,18 +180,33 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
 
     @Override
     public String ifUnmodifiedSince() {
-      // Temporary fix for bug 739519.
-      return null;
+      Long timestampInMilliseconds = session.config.getPersistedServerClientRecordTimestamp();
+
+      // It's the first upload so we don't care about X-If-Unmodified-Since.
+      if (timestampInMilliseconds == 0) {
+        return null;
+      }
+
+      return Utils.millisecondsToDecimalSecondsString(timestampInMilliseconds);
     }
 
     @Override
     public void handleRequestSuccess(SyncStorageResponse response) {
       Logger.debug(LOG_TAG, "Upload succeeded.");
-      commandsProcessedShouldUpload = false;
-      uploadAttemptsCount.set(0);
-      session.config.persistServerClientRecordTimestamp(response.normalizedWeaveTimestamp());
+      try {
+        commandsProcessedShouldUpload = false;
+        uploadAttemptsCount.set(0);
 
-      BaseResource.consumeEntity(response);
+        long timestamp = Utils.decimalSecondsToMilliseconds(response.body());
+        session.config.persistServerClientRecordTimestamp(timestamp);
+        BaseResource.consumeEntity(response);
+
+        Logger.debug(LOG_TAG, "Timestamp from body is: " + timestamp);
+        Logger.debug(LOG_TAG, "Timestamp from header is: " + response.normalizedWeaveTimestamp());
+      } catch (Exception e) {
+        session.abort(e, "Unable to fetch timestamp.");
+        return;
+      }
       session.advance();
     }
 
