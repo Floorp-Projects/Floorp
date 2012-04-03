@@ -196,6 +196,23 @@ inline gfxASurface::gfxImageFormat SurfaceFormatToImageFormat(SurfaceFormat aFor
   }
 }
 
+inline SurfaceFormat ImageFormatToSurfaceFormat(gfxASurface::gfxImageFormat aFormat)
+{
+  switch (aFormat) {
+  case gfxASurface::ImageFormatARGB32:
+    return FORMAT_B8G8R8A8;
+  case gfxASurface::ImageFormatRGB24:
+    return FORMAT_B8G8R8X8;
+  case gfxASurface::ImageFormatRGB16_565:
+    return FORMAT_R5G6B5;
+  case gfxASurface::ImageFormatA8:
+    return FORMAT_A8;
+  default:
+  case gfxASurface::ImageFormatUnknown:
+    return FORMAT_B8G8R8A8;
+  }
+}
+
 inline gfxASurface::gfxContentType ContentForFormat(const SurfaceFormat &aFormat)
 {
   switch (aFormat) {
