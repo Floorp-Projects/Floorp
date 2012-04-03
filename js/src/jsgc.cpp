@@ -3932,16 +3932,7 @@ void
 RunDebugGC(JSContext *cx)
 {
 #ifdef JS_GC_ZEAL
-    JSRuntime *rt = cx->runtime;
-
-    /*
-     * If rt->gcDebugCompartmentGC is true, only GC the current
-     * compartment. But don't GC the atoms compartment.
-     */
-    if (rt->gcDebugCompartmentGC)
-        PrepareCompartmentForGC(cx->compartment);
-    else
-        PrepareForFullGC(cx->runtime);
+    PrepareForFullGC(cx->runtime);
     RunLastDitchGC(cx, gcreason::DEBUG_GC);
 #endif
 }

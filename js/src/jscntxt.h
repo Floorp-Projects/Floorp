@@ -445,7 +445,6 @@ struct JSRuntime : js::RuntimeFriendFields
     int                 gcZeal_;
     int                 gcZealFrequency;
     int                 gcNextScheduled;
-    bool                gcDebugCompartmentGC;
     bool                gcDeterministicOnly;
 
     int gcZeal() { return gcZeal_; }
