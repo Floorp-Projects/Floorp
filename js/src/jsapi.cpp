@@ -730,21 +730,21 @@ JSRuntime::JSRuntime()
     gcJitReleaseTime(0),
     gcMode(JSGC_MODE_GLOBAL),
     gcIsNeeded(0),
+    gcFullIsNeeded(0),
     gcWeakMapList(NULL),
     gcStats(thisFromCtor()),
     gcNumber(0),
     gcStartNumber(0),
     gcTriggerReason(gcreason::NO_REASON),
-    gcTriggerCompartment(NULL),
-    gcCurrentCompartment(NULL),
-    gcCheckCompartment(NULL),
+    gcIsFull(false),
+    gcStrictCompartmentChecking(false),
     gcIncrementalState(gc::NO_INCREMENTAL),
     gcCompartmentCreated(false),
     gcLastMarkSlice(false),
+    gcIncrementalIsFull(false),
     gcInterFrameGC(0),
     gcSliceBudget(SliceBudget::Unlimited),
     gcIncrementalEnabled(true),
-    gcIncrementalCompartment(NULL),
     gcPoke(false),
     gcRunning(false),
 #ifdef JS_GC_ZEAL
@@ -2829,7 +2829,7 @@ JS_IsGCMarkingTracer(JSTracer *trc)
     return IS_GC_MARKING_TRACER(trc);
 }
 
-JS_PUBLIC_API(void)
+extern JS_PUBLIC_API(void)
 JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
 {
     AssertNoGC(cx);
@@ -2837,7 +2837,12 @@ JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
     /* We cannot GC the atoms compartment alone; use a full GC instead. */
     JS_ASSERT(comp != cx->runtime->atomsCompartment);
 
-    GC(cx, comp, GC_NORMAL, gcreason::API);
+    if (comp) {
+        PrepareCompartmentForGC(comp);
+        GC(cx, false, GC_NORMAL, gcreason::API);
+    } else {
+        GC(cx, true, GC_NORMAL, gcreason::API);
+    }
 }
 
 JS_PUBLIC_API(void)
