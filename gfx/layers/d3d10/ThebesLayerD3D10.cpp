@@ -194,8 +194,7 @@ ThebesLayerD3D10::Validate(ReadbackProcessor *aReadback)
 
   SurfaceMode mode = GetSurfaceMode();
   if (mode == SURFACE_COMPONENT_ALPHA &&
-      (gfxPlatform::UseAzureContentDrawing() ||
-       !mParent || !mParent->SupportsComponentAlphaChildren())) {
+      (!mParent || !mParent->SupportsComponentAlphaChildren())) {
     mode = SURFACE_SINGLE_CHANNEL_ALPHA;
   }
   // If we have a transform that requires resampling of our texture, then
@@ -343,14 +342,26 @@ ThebesLayerD3D10::VerifyContentType(SurfaceMode aMode)
 
       mValidRegion.SetEmpty();
     }
-        
-    if (aMode != SURFACE_COMPONENT_ALPHA && mTextureOnWhite) {
-      // If we've transitioned away from component alpha, we can delete those resources.
-      mD2DSurfaceOnWhite = nsnull;
-      mSRViewOnWhite = nsnull;
-      mTextureOnWhite = nsnull;
-      mValidRegion.SetEmpty();
+  } else if (mDrawTarget) {
+    SurfaceFormat format = aMode != SURFACE_SINGLE_CHANNEL_ALPHA ?
+      FORMAT_B8G8R8X8 : FORMAT_B8G8R8A8;
+
+    if (format != mDrawTarget->GetFormat()) {
+      mDrawTarget = Factory::CreateDrawTargetForD3D10Texture(mTexture, format);
+
+      if (!mDrawTarget) {
+        NS_WARNING("Failed to create drawtarget for ThebesLayerD3D10.");
+        return;
+      }
     }
+  }    
+
+  if (aMode != SURFACE_COMPONENT_ALPHA && mTextureOnWhite) {
+    // If we've transitioned away from component alpha, we can delete those resources.
+    mD2DSurfaceOnWhite = nsnull;
+    mSRViewOnWhite = nsnull;
+    mTextureOnWhite = nsnull;
+    mValidRegion.SetEmpty();
   }
 }
 
@@ -452,12 +463,14 @@ ThebesLayerD3D10::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode)
   
   if (aMode == SURFACE_COMPONENT_ALPHA) {
     FillTexturesBlackWhite(aRegion, visibleRect.TopLeft());
-    gfxASurface* surfaces[2] = { mD2DSurface.get(), mD2DSurfaceOnWhite.get() };
-    destinationSurface = new gfxTeeSurface(surfaces, ArrayLength(surfaces));
-    // Using this surface as a source will likely go horribly wrong, since
-    // only the onBlack surface will really be used, so alpha information will
-    // be incorrect.
-    destinationSurface->SetAllowUseAsSource(false);
+    if (!gfxPlatform::UseAzureContentDrawing()) {
+      gfxASurface* surfaces[2] = { mD2DSurface.get(), mD2DSurfaceOnWhite.get() };
+      destinationSurface = new gfxTeeSurface(surfaces, ArrayLength(surfaces));
+      // Using this surface as a source will likely go horribly wrong, since
+      // only the onBlack surface will really be used, so alpha information will
+      // be incorrect.
+      destinationSurface->SetAllowUseAsSource(false);
+    }
   } else {
     destinationSurface = mD2DSurface;
   }
@@ -476,7 +489,7 @@ ThebesLayerD3D10::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode)
   const nsIntRect *iterRect;
   while ((iterRect = iter.Next())) {
     context->Rectangle(gfxRect(iterRect->x, iterRect->y, iterRect->width, iterRect->height));      
-    if (mDrawTarget) {
+    if (mDrawTarget && aMode == SURFACE_SINGLE_CHANNEL_ALPHA) {
       mDrawTarget->ClearRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height));
     }
   }
@@ -533,14 +546,7 @@ ThebesLayerD3D10::CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode)
         return;
       }
     } else {
-      mDrawTarget = Factory::CreateDrawTargetForD3D10Texture(mTexture, aMode != SURFACE_SINGLE_CHANNEL_ALPHA ?
-        FORMAT_B8G8R8X8 : FORMAT_B8G8R8A8);
-
-      if (!mDrawTarget) {
-        NS_WARNING("Failed to create DrawTarget for ThebesLayerD3D10.");
-        mDrawTarget = nsnull;
-        return;
-      }
+      mDrawTarget = nsnull;
     }
   }
 
@@ -558,11 +564,30 @@ ThebesLayerD3D10::CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode)
       NS_WARNING("Failed to create shader resource view for ThebesLayerD3D10.");
     }
 
-    mD2DSurfaceOnWhite = new gfxD2DSurface(mTextureOnWhite, gfxASurface::CONTENT_COLOR);
+    if (!gfxPlatform::UseAzureContentDrawing()) {
+      mD2DSurfaceOnWhite = new gfxD2DSurface(mTextureOnWhite, gfxASurface::CONTENT_COLOR);
 
-    if (!mD2DSurfaceOnWhite || mD2DSurfaceOnWhite->CairoStatus()) {
-      NS_WARNING("Failed to create surface for ThebesLayerD3D10.");
-      mD2DSurfaceOnWhite = nsnull;
+      if (!mD2DSurfaceOnWhite || mD2DSurfaceOnWhite->CairoStatus()) {
+        NS_WARNING("Failed to create surface for ThebesLayerD3D10.");
+        mD2DSurfaceOnWhite = nsnull;
+        return;
+      }
+    } else {
+      mDrawTarget = nsnull;
+    }
+  }
+
+  if (gfxPlatform::UseAzureContentDrawing() && !mDrawTarget) {
+    if (aMode == SURFACE_COMPONENT_ALPHA) {
+      mDrawTarget = Factory::CreateDualDrawTargetForD3D10Textures(mTexture, mTextureOnWhite, FORMAT_B8G8R8X8);
+    } else {
+      mDrawTarget = Factory::CreateDrawTargetForD3D10Texture(mTexture, aMode != SURFACE_SINGLE_CHANNEL_ALPHA ?
+        FORMAT_B8G8R8X8 : FORMAT_B8G8R8A8);
+    }
+
+    if (!mDrawTarget) {
+      NS_WARNING("Failed to create DrawTarget for ThebesLayerD3D10.");
+      mDrawTarget = nsnull;
       return;
     }
   }
