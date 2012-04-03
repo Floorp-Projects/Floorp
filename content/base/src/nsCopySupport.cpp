@@ -188,10 +188,6 @@ SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
     if (NS_FAILED(rv))
       return rv;
 
-    // Emulate the collateral damage from bug 564737. Remove the following
-    // line to fix bug 739537.
-    plaintextBuffer.Trim(" ", true, false);
-
     // Now create the version that shows HTML context
 
     mimeType.AssignLiteral(kHTMLMime);
