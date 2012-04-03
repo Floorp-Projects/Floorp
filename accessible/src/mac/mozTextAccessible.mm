@@ -330,12 +330,14 @@ ToNSString(id aValue)
   return (lineNumber >= 0) ? [NSNumber numberWithInt:lineNumber] : nil;
 }
 
-- (void)setText:(NSString*)newString
+- (void)setText:(NSString*)aNewString
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (mGeckoEditableTextAccessible) {
-    mGeckoEditableTextAccessible->SetTextContents(NS_ConvertUTF8toUTF16([newString UTF8String]));
+    nsString text;
+    nsCocoaUtils::GetStringForNSString(aNewString, text);
+    mGeckoEditableTextAccessible->SetTextContents(text);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -347,12 +349,11 @@ ToNSString(id aValue)
     return nil;
     
   nsAutoString text;
-  nsresult rv = 
-    mGeckoTextAccessible->GetText(0, nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT,
-				  text);
-  NS_ENSURE_SUCCESS(rv, nil);
+  nsresult rv = mGeckoTextAccessible->
+    GetText(0, nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT, text);
+  NS_ENSURE_SUCCESS(rv, @"");
 
-  return text.IsEmpty() ? nil : nsCocoaUtils::ToNSString(text);
+  return nsCocoaUtils::ToNSString(text);
 }
 
 - (long)textLength
@@ -392,7 +393,7 @@ ToNSString(id aValue)
     if (start != end) {
       nsAutoString selText;
       mGeckoTextAccessible->GetText(start, end, selText);
-      return selText.IsEmpty() ? nil : [NSString stringWithCharacters:selText.BeginReading() length:selText.Length()];
+      return nsCocoaUtils::ToNSString(selText);
     }
   }
   return nil;
