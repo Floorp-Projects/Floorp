@@ -1694,7 +1694,7 @@ class JSCompartmentsMultiReporter : public nsIMemoryMultiReporter
         for (size_t i = 0; i < paths.length(); i++)
             // These ones don't need a description, hence the "".
             REPORT(nsCString(paths[i]),
-                   nsIMemoryReporter::KIND_OTHER,
+                   nsIMemoryReporter::KIND_SUMMARY,
                    nsIMemoryReporter::UNITS_COUNT,
                    1, "");
 
