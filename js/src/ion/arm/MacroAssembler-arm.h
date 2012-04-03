@@ -740,6 +740,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_str(lr, Address(dest.base, dest.offset + 4));
         ma_str(reg, dest);
     }
+    void storeValue(JSValueType type, Register reg, BaseIndex dest) {
+        // Harder cases not handled yet.
+        JS_ASSERT(dest.offset == 0);
+        ma_alu(dest.base, lsl(dest.index, dest.scale), ScratchRegister, op_add);
+        storeValue(type, reg, Address(ScratchRegister, 0));
+    }
     void storeValue(ValueOperand val, const BaseIndex &dest) {
         // Harder cases not handled yet.
         JS_ASSERT(dest.offset == 0);
@@ -754,6 +760,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         else
             ma_mov(Imm32(jv.s.payload.i32), lr);
         ma_str(lr, dest);
+    }
+    void storeValue(const Value &val, BaseIndex dest) {
+        // Harder cases not handled yet.
+        JS_ASSERT(dest.offset == 0);
+        ma_alu(dest.base, lsl(dest.index, dest.scale), ScratchRegister, op_add);
+        storeValue(val, Address(ScratchRegister, 0));
     }
 
     void loadValue(Address src, ValueOperand val);
@@ -799,6 +811,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void storeDouble(FloatRegister src, Address addr) {
         ma_vstr(src, Operand(addr));
+    }
+    void storeDouble(FloatRegister src, BaseIndex addr) {
+        // Harder cases not handled yet.
+        JS_ASSERT(addr.offset == 0);
+        ma_vstr(src, addr.base, addr.index);
     }
 
     void linkExitFrame();

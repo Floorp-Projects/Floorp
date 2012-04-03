@@ -260,6 +260,19 @@ ArrayPopDense(JSContext *cx, JSObject *obj, Value *rval)
 }
 
 bool
+ArrayPushDense(JSContext *cx, JSObject *obj, const Value &v, uint32_t *length)
+{
+    JS_ASSERT(obj->isDenseArray());
+
+    Value argv[3] = { UndefinedValue(), ObjectValue(*obj), v };
+    if (!js::array_push(cx, 1, argv))
+        return false;
+
+    *length = argv[0].toInt32();
+    return true;
+}
+
+bool
 ArrayShiftDense(JSContext *cx, JSObject *obj, Value *rval)
 {
     AutoDetectInvalidation adi(cx, rval);

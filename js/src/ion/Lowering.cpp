@@ -1204,6 +1204,31 @@ LIRGenerator::visitArrayPopShift(MArrayPopShift *ins)
 }
 
 bool
+LIRGenerator::visitArrayPush(MArrayPush *ins)
+{
+    JS_ASSERT(ins->type() == MIRType_Int32);
+
+    LUse object = useRegister(ins->object());
+
+    switch (ins->value()->type()) {
+      case MIRType_Value:
+      {
+        LArrayPushV *lir = new LArrayPushV(object, temp());
+        if (!useBox(lir, LArrayPushV::Value, ins->value()))
+            return false;
+        return define(lir, ins) && assignSafepoint(lir, ins);
+      }
+
+      default:
+      {
+        const LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
+        LArrayPushT *lir = new LArrayPushT(object, value, temp());
+        return define(lir, ins) && assignSafepoint(lir, ins);
+      }
+    }
+}
+
+bool
 LIRGenerator::visitLoadTypedArrayElement(MLoadTypedArrayElement *ins)
 {
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);

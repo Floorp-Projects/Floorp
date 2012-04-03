@@ -199,6 +199,7 @@ template <> struct TypeToArgProperties<const Value &> {
 template <class> struct OutParamToDataType { static const DataType result = Type_Void; };
 template <> struct OutParamToDataType<Value *> { static const DataType result = Type_Value; };
 template <> struct OutParamToDataType<int *> { static const DataType result = Type_Int32; };
+template <> struct OutParamToDataType<uint32_t *> { static const DataType result = Type_Int32; };
 
 #define FOR_EACH_ARGS_1(Macro, Sep, Last) Macro(1) Last(1)
 #define FOR_EACH_ARGS_2(Macro, Sep, Last) FOR_EACH_ARGS_1(Macro, Sep, Sep) Macro(2) Last(2)
@@ -347,6 +348,7 @@ JSObject *NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type);
 JSObject *NewInitObject(JSContext *cx, JSObject *baseObj, types::TypeObject *type);
 
 bool ArrayPopDense(JSContext *cx, JSObject *obj, Value *rval);
+bool ArrayPushDense(JSContext *cx, JSObject *obj, const Value &v, uint32_t *length);
 bool ArrayShiftDense(JSContext *cx, JSObject *obj, Value *rval);
 
 } // namespace ion

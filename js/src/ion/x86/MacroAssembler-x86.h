@@ -140,11 +140,13 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void storeValue(ValueOperand val, const Address &dest) {
         storeValue(val, Operand(dest));
     }
-    void storeValue(JSValueType type, Register reg, Address dest) {
+    template <typename T>
+    void storeValue(JSValueType type, Register reg, const T &dest) {
         storeTypeTag(ImmTag(JSVAL_TYPE_TO_TAG(type)), Operand(dest));
         storePayload(reg, Operand(dest));
     }
-    void storeValue(const Value &val, Address dest) {
+    template <typename T>
+    void storeValue(const Value &val, const T &dest) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
         storeTypeTag(ImmTag(jv.s.tag), Operand(dest));
         storePayload(val, Operand(dest));
