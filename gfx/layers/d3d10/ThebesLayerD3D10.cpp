@@ -354,16 +354,88 @@ ThebesLayerD3D10::VerifyContentType(SurfaceMode aMode)
   }
 }
 
-static void
-FillSurface(gfxASurface* aSurface, const nsIntRegion& aRegion,
-            const nsIntPoint& aOffset, const gfxRGBA& aColor)
+void
+ThebesLayerD3D10::SetupDualViewports(const gfxIntSize &aSize)
 {
-  if (aSurface) {
-    nsRefPtr<gfxContext> ctx = new gfxContext(aSurface);
-    ctx->Translate(-gfxPoint(aOffset.x, aOffset.y));
-    gfxUtils::PathFromRegion(ctx, aRegion);
-    ctx->SetColor(aColor);
-    ctx->Fill();
+    D3D10_VIEWPORT viewport;
+    viewport.MaxDepth = 1.0f;
+    viewport.MinDepth = 0;
+    viewport.Width = aSize.width;
+    viewport.Height = aSize.height;
+    viewport.TopLeftX = 0;
+    viewport.TopLeftY = 0;
+
+    D3D10_VIEWPORT vps[2] = { viewport, viewport };
+    device()->RSSetViewports(2, vps);
+
+    gfx3DMatrix projection;
+    /*
+     * Matrix to transform to viewport space ( <-1.0, 1.0> topleft,
+     * <1.0, -1.0> bottomright)
+     */
+    projection._11 = 2.0f / aSize.width;
+    projection._22 = -2.0f / aSize.height;
+    projection._33 = 0.0f;
+    projection._41 = -1.0f;
+    projection._42 = 1.0f;
+    projection._44 = 1.0f;
+
+    effect()->GetVariableByName("mProjection")->
+      SetRawValue(&projection._11, 0, 64);
+}
+
+void
+ThebesLayerD3D10::FillTexturesBlackWhite(const nsIntRegion& aRegion, const nsIntPoint& aOffset)
+{
+  if (mTexture && mTextureOnWhite) {
+    // It would be more optimal to draw the actual geometry, but more code
+    // and probably not worth the win here as this will often be a single
+    // rect.
+    nsRefPtr<ID3D10RenderTargetView> oldRT;
+    device()->OMGetRenderTargets(1, getter_AddRefs(oldRT), NULL);
+
+    nsRefPtr<ID3D10RenderTargetView> viewBlack;
+    nsRefPtr<ID3D10RenderTargetView> viewWhite;
+    device()->CreateRenderTargetView(mTexture, NULL, getter_AddRefs(viewBlack));
+    device()->CreateRenderTargetView(mTextureOnWhite, NULL, getter_AddRefs(viewWhite));
+
+    D3D10_TEXTURE2D_DESC desc;
+    mTexture->GetDesc(&desc);
+
+    nsIntSize oldVP = mD3DManager->GetViewport();
+
+    SetupDualViewports(gfxIntSize(desc.Width, desc.Height));
+
+    ID3D10RenderTargetView *views[2] = { viewBlack, viewWhite };
+    device()->OMSetRenderTargets(2, views, NULL);
+
+    gfx3DMatrix transform;
+    transform.Translate(gfxPoint3D(-aOffset.x, -aOffset.y, 0));
+    void* raw = &const_cast<gfx3DMatrix&>(transform)._11;
+    effect()->GetVariableByName("mLayerTransform")->SetRawValue(raw, 0, 64);
+
+    ID3D10EffectTechnique *technique =
+      effect()->GetTechniqueByName("PrepareAlphaExtractionTextures");
+
+    nsIntRegionRectIterator iter(aRegion);
+
+    const nsIntRect *iterRect;
+    while ((iterRect = iter.Next())) {
+      effect()->GetVariableByName("vLayerQuad")->AsVector()->SetFloatVector(
+        ShaderConstantRectD3D10(
+          (float)iterRect->x,
+          (float)iterRect->y,
+          (float)iterRect->width,
+          (float)iterRect->height)
+        );
+
+      technique->GetPassByIndex(0)->Apply(0);
+      device()->Draw(4, 0);
+    }
+
+    views[0] = oldRT;
+    device()->OMSetRenderTargets(1, views, NULL);
+    mD3DManager->SetViewport(oldVP);
   }
 }
 
@@ -379,8 +451,7 @@ ThebesLayerD3D10::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode)
   nsRefPtr<gfxASurface> destinationSurface;
   
   if (aMode == SURFACE_COMPONENT_ALPHA) {
-    FillSurface(mD2DSurface, aRegion, visibleRect.TopLeft(), gfxRGBA(0.0, 0.0, 0.0, 1.0));
-    FillSurface(mD2DSurfaceOnWhite, aRegion, visibleRect.TopLeft(), gfxRGBA(1.0, 1.0, 1.0, 1.0));
+    FillTexturesBlackWhite(aRegion, visibleRect.TopLeft());
     gfxASurface* surfaces[2] = { mD2DSurface.get(), mD2DSurfaceOnWhite.get() };
     destinationSurface = new gfxTeeSurface(surfaces, ArrayLength(surfaces));
     // Using this surface as a source will likely go horribly wrong, since
