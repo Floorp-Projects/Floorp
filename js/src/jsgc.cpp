@@ -3726,8 +3726,20 @@ GCSlice(JSContext *cx, JSGCInvocationKind gckind, gcreason::Reason reason)
 void
 GCDebugSlice(JSContext *cx, int64_t objCount)
 {
-    PrepareForFullGC(cx->runtime);
+    PrepareForDebugGC(cx->runtime);
     Collect(cx, SliceBudget::WorkBudget(objCount), GC_NORMAL, gcreason::API);
+}
+
+/* Schedule a full GC unless a compartment will already be collected. */
+void
+PrepareForDebugGC(JSRuntime *rt)
+{
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        if (c->isGCScheduled())
+            return;
+    }
+
+    PrepareForFullGC(rt);
 }
 
 void
@@ -3919,7 +3931,7 @@ void
 RunDebugGC(JSContext *cx)
 {
 #ifdef JS_GC_ZEAL
-    PrepareForFullGC(cx->runtime);
+    PrepareForDebugGC(cx->runtime);
     RunLastDitchGC(cx, gcreason::DEBUG_GC);
 #endif
 }

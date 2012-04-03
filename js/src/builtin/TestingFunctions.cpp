@@ -21,19 +21,30 @@ using namespace JS;
 static JSBool
 GC(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JSCompartment *comp = NULL;
+    /*
+     * If the first argument is 'compartment', we collect any compartments
+     * previously scheduled for GC via schedulegc. If the first argument is an
+     * object, we collect the object's compartment (any any other compartments
+     * scheduled for GC). Otherwise, we collect call compartments.
+     */
+    JSBool compartment = false;
     if (argc == 1) {
         Value arg = vp[2];
-        if (arg.isObject())
-            comp = UnwrapObject(&arg.toObject())->compartment();
+        if (arg.isString()) {
+            if (!JS_StringEqualsAscii(cx, arg.toString(), "compartment", &compartment))
+                return false;
+        } else if (arg.isObject()) {
+            PrepareCompartmentForGC(UnwrapObject(&arg.toObject())->compartment());
+            compartment = true;
+        }
     }
 
 #ifndef JS_MORE_DETERMINISTIC
     size_t preBytes = cx->runtime->gcBytes;
 #endif
 
-    if (comp)
-        PrepareCompartmentForGC(comp);
+    if (compartment)
+        PrepareForDebugGC(cx->runtime);
     else
         PrepareForFullGC(cx->runtime);
     GCForReason(cx, gcreason::API);
@@ -177,16 +188,24 @@ GCZeal(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 ScheduleGC(JSContext *cx, unsigned argc, jsval *vp)
 {
-    uint32_t count;
-
     if (argc != 1) {
         ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Wrong number of arguments");
         return JS_FALSE;
     }
-    if (!JS_ValueToECMAUint32(cx, vp[2], &count))
-        return JS_FALSE;
 
-    JS_ScheduleGC(cx, count);
+    Value arg(vp[2]);
+    if (arg.isInt32()) {
+        /* Schedule a GC to happen after |arg| allocations. */
+        JS_ScheduleGC(cx, arg.toInt32());
+    } else if (arg.isObject()) {
+        /* Ensure that |comp| is collected during the next GC. */
+        JSCompartment *comp = UnwrapObject(&arg.toObject())->compartment();
+        PrepareCompartmentForGC(comp);
+    } else if (arg.isString()) {
+        /* This allows us to schedule atomsCompartment for GC. */
+        PrepareCompartmentForGC(arg.toString()->compartment());
+    }
+
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -473,8 +492,10 @@ Terminate(JSContext *cx, unsigned arg, jsval *vp)
 
 static JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
-"gc([obj])",
-"  Run the garbage collector. When obj is given, GC only its compartment."),
+"gc([obj] | 'compartment')",
+"  Run the garbage collector. When obj is given, GC only its compartment.\n"
+"  If 'compartment' is given, GC any compartments that were scheduled for\n"
+"  GC via schedulegc."),
 
     JS_FN_HELP("gcparam", GCParameter, 2, 0,
 "gcparam(name [, value])",
@@ -511,8 +532,9 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Period specifies that collection happens every n allocations.\n"),
 
     JS_FN_HELP("schedulegc", ScheduleGC, 1, 0,
-"schedulegc(num)",
-"  Schedule a GC to happen after num allocations."),
+"schedulegc(num | obj)",
+"  If num is given, schedule a GC after num allocations.\n"
+"  If obj is given, schedule a GC of obj's compartment."),
 
     JS_FN_HELP("verifybarriers", VerifyBarriers, 0, 0,
 "verifybarriers()",
