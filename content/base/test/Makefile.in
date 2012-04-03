@@ -441,11 +441,7 @@ _TEST_FILES2 = \
 		test_bug597345.html \
 		script-1_bug597345.sjs \
 		script-2_bug597345.js \
-		test_bug598877.html \
 		test_bug599588.html \
-		test_bug600466.html \
-		test_bug600468.html \
-		test_bug600471.html \
 		test_bug601803.html \
 		file_bug601803a.html \
 		file_bug601803b.html \
@@ -463,7 +459,6 @@ _TEST_FILES2 = \
 		test_bug606729.html \
 		test_treewalker_nextsibling.xml \
 		test_bug614058.html \
-		test_bug590771.html \
 		test_bug622117.html \
 		test_base.xhtml \
 		file_base_xbl.xml \
