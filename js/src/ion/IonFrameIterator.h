@@ -110,6 +110,7 @@ class IonFrameIterator
 
     void *calleeToken() const;
     JSFunction *callee() const;
+    JSFunction *maybeCallee() const;
     JSScript *script() const;
 
     // Returns the return address of the frame above this one (that is, the
@@ -146,58 +147,6 @@ class IonFrameIterator
     const OsiIndex *osiIndex() const;
 };
 
-class InlineFrameIterator
-{
-    // We cannot declare a BwdInlineFrameIterator here due to multiple circular
-    // dependencies, so we need to keep the IonFrameIterator to build a new one
-    // each time and save the pc & script.
-    const IonFrameIterator *bottom_;
-    size_t frameCount_;
-    JSFunction *callee_;
-    JSScript *script_;
-    jsbytecode *pc_;
-
-  private:
-    size_t getInlinedFrame(size_t nb);
-
-  public:
-    InlineFrameIterator(const IonFrameIterator *bottom)
-      : bottom_(bottom)
-    {
-        if (bottom_)
-            frameCount_ = getInlinedFrame(-1);
-    }
-
-    bool isFunctionFrame() const {
-        JS_ASSERT(bottom_);
-        // Inline frames always have a callee.
-        return frameCount_ != 0 || bottom_->isFunctionFrame();
-    }
-    JSFunction *callee() const {
-        JS_ASSERT(bottom_);
-        return callee_;
-    }
-    inline JSScript *script() const {
-        JS_ASSERT(bottom_);
-        return script_;
-    }
-    inline jsbytecode *pc() const {
-        JS_ASSERT(bottom_);
-        return pc_;
-    }
-
-    inline InlineFrameIterator &operator++() {
-        JS_ASSERT(bottom_);
-        JS_ASSERT(more());
-        getInlinedFrame(--frameCount_);
-        return *this;
-    }
-    inline bool more() const {
-        JS_ASSERT(bottom_);
-        return frameCount_;
-    }
-};
-
 class IonActivationIterator
 {
     uint8 *top_;
@@ -221,10 +170,12 @@ class IonActivationIterator
 class FrameRecovery;
 class IonJSFrameLayout;
 
+// Reads frame information in snapshot-encoding order (that is, outermost frame
+// to innermost frame).
 class SnapshotIterator : public SnapshotReader
 {
     IonJSFrameLayout *fp_;
-    const MachineState &machine_;
+    MachineState machine_;
     IonScript *ionScript_;
 
   private:
@@ -237,10 +188,50 @@ class SnapshotIterator : public SnapshotReader
     SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshotOffset,
                      IonJSFrameLayout *fp, const MachineState &machine);
     SnapshotIterator(const IonFrameIterator &iter, const MachineState &machine);
+    SnapshotIterator();
 
     Value read() {
         return slotValue(readSlot());
     }
+};
+
+// Reads frame information in callstack order (that is, innermost frame to
+// outermost frame).
+class InlineFrameIterator
+{
+    const IonFrameIterator *frame_;
+    MachineState machine_;
+    SnapshotIterator start_;
+    SnapshotIterator si_;
+    unsigned framesRead_;
+    HeapPtr<JSFunction> callee_;
+    HeapPtr<JSScript> script_;
+    jsbytecode *pc_;
+
+  private:
+    void findNextFrame();
+
+  public:
+    InlineFrameIterator(const IonFrameIterator *iter, const MachineState &machine);
+
+    bool more() const {
+        return frame_ && framesRead_ < start_.frameCount();
+    }
+    JSFunction *callee() const {
+        JS_ASSERT(callee_);
+        return callee_;
+    }
+    JSScript *script() const {
+        return script_;
+    }
+    jsbytecode *pc() const {
+        return pc_;
+    }
+    SnapshotIterator snapshotIterator() const {
+        return si_;
+    }
+    bool isFunctionFrame() const;
+    InlineFrameIterator operator++();
 };
 
 } // namespace ion

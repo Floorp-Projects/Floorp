@@ -258,6 +258,9 @@ class SnapshotReader
     bool moreSlots() const {
         return slotsRead_ < slotCount_;
     }
+    uint32 frameCount() const {
+        return frameCount_;
+    }
 };
 
 }
