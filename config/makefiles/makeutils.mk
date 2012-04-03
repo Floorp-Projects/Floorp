@@ -1,14 +1,9 @@
 # -*- makefile -*-
 # vim:set ts=8 sw=8 sts=8 noet:
 #
-# ***** BEGIN LICENSE BLOCK *****
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
-#
-# Contributor(s):
-#   Joey Armstrong <joey@mozilla.com>
-# ***** END LICENSE BLOCK *****
 
 # Usage: $(call banner,foo bar tans)
 banner =\
@@ -39,3 +34,17 @@ argv +=)
 ##    $(call banner,ref) ; ref=foo bar tans
 ## getarglist() would be a more accurate name but is longer to type
 getargv = $(if $(call isvar,$(1)),$($(1)),$(argv))
+
+## http://www.gnu.org/software/make/manual/make.html#Call-Function
+## Usage: o = $(call map,origin,o map $(MAKE))
+map = $(foreach val,$(2),$(call $(1),$(val)))
+
+
+# Usage: $(call checkIfEmpty,[error|warning] foo NULL bar)
+checkIfEmpty =$(foreach var,$(wordlist 2,100,$(getargv)),$(if $(strip $($(var))),$(NOP),$(call $(1),Variable $(var) does not contain a value)))
+
+# Usage: $(call errorIfEmpty,foo NULL bar)
+errorIfEmpty =$(call checkIfEmpty,error $(getargv))
+warnIfEmpty  =$(call checkIfEmpty,warning $(getargv))
+
+
