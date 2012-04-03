@@ -251,20 +251,6 @@ public:
   static JSContext* GetContextFromDocument(nsIDocument *aDocument);
 
   /**
-   * Get a scope from aNewDocument. Also get a context through the scope of one
-   * of the documents, from the stack or the safe context.
-   *
-   * @param aOldDocument The document to try to get a context from. May be null.
-   * @param aNewDocument The document to get aNewScope from.
-   * @param aCx [out] Context gotten through one of the scopes, from the stack
-   *                  or the safe context.
-   * @param aNewScope [out] Scope gotten from aNewDocument.
-   */
-  static nsresult GetContextAndScope(nsIDocument *aOldDocument,
-                                     nsIDocument *aNewDocument,
-                                     JSContext **aCx, JSObject **aNewScope);
-
-  /**
    * When a document's scope changes (e.g., from document.open(), call this
    * function to move all content wrappers from the old scope to the new one.
    */
