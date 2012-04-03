@@ -811,7 +811,8 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
       JSAutoRequest ar(mCx);
       JSObject* global = nsnull;
       mGlobal->GetJSObject(&global);
-      if (global) {
+      JSAutoEnterCompartment ac;
+      if (global && ac.enter(mCx, global)) {
         uint32 oldopts = JS_GetOptions(mCx);
         JS_SetOptions(mCx, oldopts | JSOPTION_NO_SCRIPT_RVAL);
 
