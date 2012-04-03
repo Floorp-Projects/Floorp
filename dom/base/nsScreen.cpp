@@ -42,19 +42,12 @@
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsDOMClassInfoID.h"
-#include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsLayoutUtils.h"
-#include "nsContentUtils.h"
-#include "mozilla/Preferences.h"
 #include "nsDOMEvent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
-
-/* static */ bool nsScreen::sInitialized = false;
-/* static */ bool nsScreen::sAllowScreenEnabledProperty = false;
-/* static */ bool nsScreen::sAllowScreenBrightnessProperty = false;
 
 namespace {
 
@@ -73,25 +66,10 @@ IsChromeType(nsIDocShell *aDocShell)
 
 } // anonymous namespace
 
-/* static */ void
-nsScreen::Initialize()
-{
-  MOZ_ASSERT(!sInitialized);
-  sInitialized = true;
-  Preferences::AddBoolVarCache(&sAllowScreenEnabledProperty,
-                               "dom.screenEnabledProperty.enabled");
-  Preferences::AddBoolVarCache(&sAllowScreenBrightnessProperty,
-                               "dom.screenBrightnessProperty.enabled");
-}
-
 /* static */ already_AddRefed<nsScreen>
 nsScreen::Create(nsPIDOMWindow* aWindow)
 {
   MOZ_ASSERT(aWindow);
-
-  if (!sInitialized) {
-    Initialize();
-  }
 
   if (!aWindow->GetDocShell()) {
     return nsnull;
@@ -103,7 +81,6 @@ nsScreen::Create(nsPIDOMWindow* aWindow)
 
   nsRefPtr<nsScreen> screen = new nsScreen();
   screen->BindToOwner(aWindow);
-  screen->mIsChrome = IsChromeType(aWindow->GetDocShell());
 
   hal::RegisterScreenOrientationObserver(screen);
   hal::GetCurrentScreenOrientation(&(screen->mOrientation));
@@ -147,28 +124,6 @@ NS_IMPL_ADDREF_INHERITED(nsScreen, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsScreen, nsDOMEventTargetHelper)
 
 NS_IMPL_EVENT_HANDLER(nsScreen, mozorientationchange)
-
-bool
-nsScreen::IsWhiteListed() {
-  if (mIsChrome) {
-    return true;
-  }
-
-  if (!GetOwner()) {
-    return false;
-  }
-
-  nsCOMPtr<nsIDocument> doc = do_GetInterface(GetOwner()->GetDocShell());
-  if (!doc) {
-    return false;
-  }
-
-  nsIPrincipal *principal = doc->NodePrincipal();
-  nsCOMPtr<nsIURI> principalURI;
-  principal->GetURI(getter_AddRefs(principalURI));
-  return nsContentUtils::URIIsChromeOrInPref(principalURI,
-                                             "dom.mozScreenWhitelist");
-}
 
 NS_IMETHODIMP
 nsScreen::GetTop(PRInt32* aTop)
@@ -326,55 +281,6 @@ nsScreen::GetAvailRect(nsRect& aRect)
   aRect.height = nsPresContext::AppUnitsToIntCSSPixels(aRect.height);
   aRect.width = nsPresContext::AppUnitsToIntCSSPixels(aRect.width);
 
-  return NS_OK;
-}
-
-nsresult
-nsScreen::GetMozEnabled(bool *aEnabled)
-{
-  if (!sAllowScreenEnabledProperty || !IsWhiteListed()) {
-    *aEnabled = true;
-    return NS_OK;
-  }
-
-  *aEnabled = hal::GetScreenEnabled();
-  return NS_OK;
-}
-
-nsresult
-nsScreen::SetMozEnabled(bool aEnabled)
-{
-  if (!sAllowScreenEnabledProperty || !IsWhiteListed()) {
-    return NS_OK;
-  }
-
-  // TODO bug 707589: When the screen's state changes, all visible windows
-  // should fire a visibility change event.
-  hal::SetScreenEnabled(aEnabled);
-  return NS_OK;
-}
-
-nsresult
-nsScreen::GetMozBrightness(double *aBrightness)
-{
-  if (!sAllowScreenEnabledProperty || !IsWhiteListed()) {
-    *aBrightness = 1;
-    return NS_OK;
-  }
-
-  *aBrightness = hal::GetScreenBrightness();
-  return NS_OK;
-}
-
-nsresult
-nsScreen::SetMozBrightness(double aBrightness)
-{
-  if (!sAllowScreenEnabledProperty || !IsWhiteListed()) {
-    return NS_OK;
-  }
-
-  NS_ENSURE_TRUE(0 <= aBrightness && aBrightness <= 1, NS_ERROR_INVALID_ARG);
-  hal::SetScreenBrightness(aBrightness);
   return NS_OK;
 }
 
