@@ -34,16 +34,16 @@ function doTest()
   is(localStorage.key(-1), null, "key() should return null for out-of-bounds access");
   is(localStorage.key(1), null, "key() should return null for out-of-bounds access");
   is(localStorage.getItem("nonexisting"), null, "Nonexisting item is null (getItem())");
-  is(localStorage["nonexisting"], null, "Nonexisting item is null (array access)");
-  is(localStorage.nonexisting, null, "Nonexisting item is null (property access)");
+  is(localStorage["nonexisting"], undefined, "Nonexisting item is null (array access)");
+  is(localStorage.nonexisting, undefined, "Nonexisting item is null (property access)");
   localStorage.removeItem("nonexisting"); // Just check there is no exception
 
   is(typeof localStorage.getItem("nonexisting"), "object", "getItem('nonexisting') is object");
-  is(typeof localStorage["nonexisting"], "object", "['nonexisting'] is object");
-  is(typeof localStorage.nonexisting, "object", "nonexisting is object");
+  is(typeof localStorage["nonexisting"], "undefined", "['nonexisting'] is undefined");
+  is(typeof localStorage.nonexisting, "undefined", "nonexisting is undefined");
   is(typeof localStorage.getItem("nonexisting2"), "object", "getItem('nonexisting2') is object");
-  is(typeof localStorage["nonexisting2"], "object", "['nonexisting2'] is object");
-  is(typeof localStorage.nonexisting2, "object", "nonexisting2 is object");
+  is(typeof localStorage["nonexisting2"], "undefined", "['nonexisting2'] is undefined");
+  is(typeof localStorage.nonexisting2, "undefined", "nonexisting2 is undefined");
 
   // add an empty-value key
   localStorage.setItem("empty", "");
@@ -56,11 +56,11 @@ function doTest()
   localStorage.removeItem("empty");
   is(localStorage.length, 0, "The storage has no keys");
   is(localStorage.getItem("empty"), null, "empty item is null (getItem())");
-  is(localStorage["empty"], null, "empty item is null (array access)");
-  is(localStorage.empty, null, "empty item is null (property access)");
+  is(localStorage["empty"], null, "empty item is undefined (array access)");
+  is(localStorage.empty, null, "empty item is undefined (property access)");
   is(typeof localStorage.getItem("empty"), "object", "getItem('empty') is object");
-  is(typeof localStorage["empty"], "object", "['empty'] is object");
-  is(typeof localStorage.empty, "object", "empty is object");
+  is(typeof localStorage["empty"], "undefined", "['empty'] is undefined");
+  is(typeof localStorage.empty, "undefined", "empty is undefined");
 
   // add one key, check it is there
   localStorage.setItem("key1", "value1");
@@ -86,8 +86,8 @@ function doTest()
   is(localStorage.getItem("key1"), null, "\'key1\' removed");
 
   is(typeof localStorage.getItem("key1"), "object", "getItem('key1') is object");
-  is(typeof localStorage["key1"], "object", "['key1'] is object");
-  is(typeof localStorage.key1, "object", "key1 is object");
+  is(typeof localStorage["key1"], "undefined", "['key1'] is undefined");
+  is(typeof localStorage.key1, "undefined", "key1 is undefined");
 
   // add one key, check it is there
   localStorage.setItem("key1", "value1");
