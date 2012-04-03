@@ -514,8 +514,8 @@ void nsPluginTag::TryUnloadPlugin(bool inShutdown)
     return;
   }
 
-  if (mEntryPoint) {
-    mEntryPoint->Shutdown();
-    mEntryPoint = nsnull;
+  if (mPlugin) {
+    mPlugin->Shutdown();
+    mPlugin = nsnull;
   }
 }
