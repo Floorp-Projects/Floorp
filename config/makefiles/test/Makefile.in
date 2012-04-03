@@ -1,13 +1,8 @@
 # -*- makefile -*-
 #
-# ***** BEGIN LICENSE BLOCK *****
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
-#
-# Contributor(s):
-#   Joey Armstrong <joey@mozilla.com>
-# ***** END LICENSE BLOCK *****
 
 DEPTH     = ../../..
 topsrcdir = @top_srcdir@
@@ -40,6 +35,14 @@ ifneq ($(NULL),$(findstring check,$(MAKECMDGOALS)))
 $(info ===========================================================================)
 $(info Running test: $(MAKECMDGOALS): pwd=$(CURDIR))
 $(info ===========================================================================)
+
+
+ifdef VERBOSE
+$(info )
+$(info ===========================================================================)
+$(info Running test: istype, getargv)
+$(info ===========================================================================)
+endif
 
 ## Silent errors are oh so much fun
 ifndef istype
@@ -93,6 +96,32 @@ ifneq ($(arg_list),$(call getargv,arg_list))
 endif
 ifneq (arg_list,$(call getargv,arg_ref))
   $(error getargv(arg_ref)=list, found [$(call getargv,arg_ref)])
+endif
+
+
+ifdef MANUAL_TEST
+  # For automated testing a callback is needed that can set an external status
+  # variable that can be tested.  Syntax is tricky to get correct functionality.
+  ifdef VERBOSE
+    $(info )
+    $(info ===========================================================================)
+    $(info Running test: checkIfEmpty)
+    $(info ===========================================================================)
+  endif
+
+  #status =
+  #setTRUE =status=true
+  #setFALSE =status=$(NULL)
+  #$(call checkIfEmpty,setFALSE NULL)
+  #$(if $(status),$(error checkIfEmpty(xyz) failed))
+  #$(call checkIfEmpty,setTRUE xyz)
+  #$(if $(status),$(error checkIfEmpty(xyz) failed))
+  xyz=abc
+  $(info STATUS: warnIfEmpty - two vars)
+  $(call warnIfEmpty,foo xyz bar)
+  $(info STATUS: errorIfEmpty - on first var)
+  $(call errorIfEmpty,foo xyz bar)
+  $(error TEST FAILED: processing should not reach this point)
 endif
 
 endif # check in MAKECMDGOALS
