@@ -79,7 +79,10 @@ var attributeModTests = ["hc_attrappendchild1", "hc_attrappendchild3", "hc_attra
                          "hc_attrinsertbefore2", "hc_attrinsertbefore3", "hc_attrinsertbefore4", "hc_attrinsertbefore6",
                          "hc_attrnormalize", "hc_attrreplacechild1", "hc_attrreplacechild2",
                          "hc_attrsetvalue2", "hc_elementnormalize2", "hc_elementnotfounderr", "hc_elementremoveattribute", "hc_elementnormalize2",
-                         "hc_elementnotfounderr", "hc_elementremoveattribute", ];
+                         "hc_elementnotfounderr", "hc_elementremoveattribute",
+                         "hc_attrchildnodes1", "hc_attrfirstchild",
+                         "hc_attrhaschildnodes", "hc_attrlastchild",
+                         "hc_attrremovechild1", "hc_attrsetvalue1"];
 var modTests = ["hc_elementwrongdocumenterr", "hc_namednodemapwrongdocumenterr", "hc_nodeappendchildnewchilddiffdocument", "hc_nodeinsertbeforenewchilddiffdocument",
                 "hc_nodereplacechildnewchilddiffdocument", "hc_elementwrongdocumenterr", "hc_namednodemapwrongdocumenterr", "hc_nodeappendchildnewchilddiffdocument",
                 "hc_nodeinsertbeforenewchilddiffdocument", "hc_nodereplacechildnewchilddiffdocument", "elementwrongdocumenterr", "namednodemapwrongdocumenterr",
