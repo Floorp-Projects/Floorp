@@ -558,7 +558,8 @@ nsPresContext::GetFontPrefsForLang(nsIAtom *aLanguage) const
     &prefs->mDefaultCursiveFont,
     &prefs->mDefaultFantasyFont
   };
-  PR_STATIC_ASSERT(NS_ARRAY_LENGTH(fontTypes) == eDefaultFont_COUNT);
+  MOZ_STATIC_ASSERT(NS_ARRAY_LENGTH(fontTypes) == eDefaultFont_COUNT,
+                    "FontTypes array count is not correct");
 
   // Get attributes specific to each generic font. We do not get the user's
   // generic-font-name-to-specific-family-name preferences because its the
