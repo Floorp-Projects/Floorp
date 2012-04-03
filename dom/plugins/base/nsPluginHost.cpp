@@ -428,16 +428,16 @@ nsPluginHost::GetInst()
   return sInst;
 }
 
-bool nsPluginHost::IsRunningPlugin(nsPluginTag * plugin)
+bool nsPluginHost::IsRunningPlugin(nsPluginTag * aPluginTag)
 {
-  if (!plugin || !plugin->mEntryPoint) {
+  if (!aPluginTag || !aPluginTag->mPlugin) {
     return false;
   }
 
   for (PRUint32 i = 0; i < mInstances.Length(); i++) {
     nsNPAPIPluginInstance *instance = mInstances[i].get();
     if (instance &&
-        instance->GetPlugin() == plugin->mEntryPoint &&
+        instance->GetPlugin() == aPluginTag->mPlugin &&
         instance->IsRunning()) {
       return true;
     }
@@ -1198,7 +1198,7 @@ nsPluginHost::TagForPlugin(nsNPAPIPlugin* aPlugin)
 {
   nsPluginTag* pluginTag;
   for (pluginTag = mPlugins; pluginTag; pluginTag = pluginTag->mNext) {
-    if (pluginTag->mEntryPoint == aPlugin) {
+    if (pluginTag->mPlugin == aPlugin) {
       return pluginTag;
     }
   }
@@ -1658,15 +1658,15 @@ static nsresult CreateNPAPIPlugin(nsPluginTag *aPluginTag,
   return rv;
 }
 
-nsresult nsPluginHost::EnsurePluginLoaded(nsPluginTag* plugin)
+nsresult nsPluginHost::EnsurePluginLoaded(nsPluginTag* aPluginTag)
 {
-  nsRefPtr<nsNPAPIPlugin> entrypoint = plugin->mEntryPoint;
-  if (!entrypoint) {
-    nsresult rv = CreateNPAPIPlugin(plugin, getter_AddRefs(entrypoint));
+  nsRefPtr<nsNPAPIPlugin> plugin = aPluginTag->mPlugin;
+  if (!plugin) {
+    nsresult rv = CreateNPAPIPlugin(aPluginTag, getter_AddRefs(plugin));
     if (NS_FAILED(rv)) {
       return rv;
     }
-    plugin->mEntryPoint = entrypoint;
+    aPluginTag->mPlugin = plugin;
   }
   return NS_OK;
 }
@@ -1699,7 +1699,7 @@ nsresult nsPluginHost::GetPlugin(const char *aMimeType, nsNPAPIPlugin** aPlugin)
       return rv;
     }
 
-    NS_ADDREF(*aPlugin = pluginTag->mEntryPoint);
+    NS_ADDREF(*aPlugin = pluginTag->mPlugin);
     return NS_OK;
   }
 
@@ -1823,7 +1823,7 @@ nsPluginHost::ClearSiteData(nsIPluginTag* plugin, const nsACString& domain,
   // We only ensure support for clearing Flash site data for now.
   // We will also attempt to clear data for any plugin that happens
   // to be loaded already.
-  if (!tag->mIsFlashPlugin && !tag->mEntryPoint) {
+  if (!tag->mIsFlashPlugin && !tag->mPlugin) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1833,7 +1833,7 @@ nsPluginHost::ClearSiteData(nsIPluginTag* plugin, const nsACString& domain,
     return rv;
   }
 
-  PluginLibrary* library = tag->mEntryPoint->GetLibrary();
+  PluginLibrary* library = tag->mPlugin->GetLibrary();
 
   // If 'domain' is the null string, clear everything.
   if (domain.IsVoid()) {
@@ -1874,7 +1874,7 @@ nsPluginHost::SiteHasData(nsIPluginTag* plugin, const nsACString& domain,
   // We only ensure support for clearing Flash site data for now.
   // We will also attempt to clear data for any plugin that happens
   // to be loaded already.
-  if (!tag->mIsFlashPlugin && !tag->mEntryPoint) {
+  if (!tag->mIsFlashPlugin && !tag->mPlugin) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1884,7 +1884,7 @@ nsPluginHost::SiteHasData(nsIPluginTag* plugin, const nsACString& domain,
     return rv;
   }
 
-  PluginLibrary* library = tag->mEntryPoint->GetLibrary();
+  PluginLibrary* library = tag->mPlugin->GetLibrary();
 
   // Get the list of sites from the plugin.
   InfallibleTArray<nsCString> sites;
@@ -3984,10 +3984,10 @@ nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin,
   }
 
   // Only after all instances have been invalidated is it safe to null
-  // out nsPluginTag.mEntryPoint. The next time we try to create an
+  // out nsPluginTag.mPlugin. The next time we try to create an
   // instance of this plugin we reload it (launch a new plugin process).
 
-  crashedPluginTag->mEntryPoint = nsnull;
+  crashedPluginTag->mPlugin = nsnull;
 
 #ifdef XP_WIN
   CheckForDisabledWindows();
