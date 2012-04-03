@@ -134,7 +134,8 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
 JS_FRIEND_API(void)
 js::GCForReason(JSContext *cx, gcreason::Reason reason)
 {
-    GC(cx, true, GC_NORMAL, reason);
+    PrepareForFullGC(cx->runtime);
+    GC(cx, GC_NORMAL, reason);
 }
 
 JS_FRIEND_API(void)
@@ -144,19 +145,21 @@ js::CompartmentGCForReason(JSContext *cx, JSCompartment *comp, gcreason::Reason 
     JS_ASSERT(comp != cx->runtime->atomsCompartment);
 
     PrepareCompartmentForGC(comp);
-    GC(cx, false, GC_NORMAL, reason);
+    GC(cx, GC_NORMAL, reason);
 }
 
 JS_FRIEND_API(void)
 js::ShrinkingGC(JSContext *cx, gcreason::Reason reason)
 {
-    GC(cx, true, GC_SHRINK, reason);
+    PrepareForFullGC(cx->runtime);
+    GC(cx, GC_SHRINK, reason);
 }
 
 JS_FRIEND_API(void)
 js::IncrementalGC(JSContext *cx, gcreason::Reason reason)
 {
-    GCSlice(cx, true, GC_NORMAL, reason);
+    PrepareForFullGC(cx->runtime);
+    GCSlice(cx, GC_NORMAL, reason);
 }
 
 JS_FRIEND_API(void)
@@ -753,7 +756,8 @@ NotifyDidPaint(JSContext *cx)
     }
 
     if (rt->gcZeal() == gc::ZealFrameGCValue) {
-        GCSlice(cx, true, GC_NORMAL, gcreason::REFRESH_FRAME);
+        PrepareForFullGC(rt);
+        GCSlice(cx, GC_NORMAL, gcreason::REFRESH_FRAME);
         return;
     }
 
@@ -762,7 +766,7 @@ NotifyDidPaint(JSContext *cx)
             if (c->needsBarrier())
                 PrepareCompartmentForGC(c);
         }
-        GCSlice(cx, rt->gcIncrementalIsFull, GC_NORMAL, gcreason::REFRESH_FRAME);
+        GCSlice(cx, GC_NORMAL, gcreason::REFRESH_FRAME);
     }
 
     rt->gcInterFrameGC = false;

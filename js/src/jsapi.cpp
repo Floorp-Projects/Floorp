@@ -730,18 +730,14 @@ JSRuntime::JSRuntime()
     gcJitReleaseTime(0),
     gcMode(JSGC_MODE_GLOBAL),
     gcIsNeeded(0),
-    gcFullIsNeeded(0),
     gcWeakMapList(NULL),
     gcStats(thisFromCtor()),
     gcNumber(0),
     gcStartNumber(0),
     gcTriggerReason(gcreason::NO_REASON),
-    gcIsFull(false),
     gcStrictCompartmentChecking(false),
     gcIncrementalState(gc::NO_INCREMENTAL),
-    gcCompartmentCreated(false),
     gcLastMarkSlice(false),
-    gcIncrementalIsFull(false),
     gcInterFrameGC(0),
     gcSliceBudget(SliceBudget::Unlimited),
     gcIncrementalEnabled(true),
@@ -2874,9 +2870,10 @@ JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
 
     if (comp) {
         PrepareCompartmentForGC(comp);
-        GC(cx, false, GC_NORMAL, gcreason::API);
+        GC(cx, GC_NORMAL, gcreason::API);
     } else {
-        GC(cx, true, GC_NORMAL, gcreason::API);
+        PrepareForFullGC(cx->runtime);
+        GC(cx, GC_NORMAL, gcreason::API);
     }
 }
 
