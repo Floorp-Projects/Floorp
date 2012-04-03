@@ -605,7 +605,7 @@ nsAccessibilityService::TreeViewChanged(nsIPresShell* aPresShell,
   if (document) {
     nsAccessible* accessible = document->GetAccessible(aContent);
     if (accessible) {
-      nsRefPtr<nsXULTreeAccessible> treeAcc = do_QueryObject(accessible);
+      nsXULTreeAccessible* treeAcc = accessible->AsXULTree();
       if (treeAcc) 
         treeAcc->TreeViewChanged(aView);
     }
