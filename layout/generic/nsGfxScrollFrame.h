@@ -179,7 +179,7 @@ public:
 
   nsPoint RestrictToDevPixels(const nsPoint& aPt, nsIntPoint* aPtDevPx, bool aShouldClamp) const;
   nsPoint ClampScrollPosition(const nsPoint& aPt) const;
-  static void AsyncScrollCallback(void* anInstance, mozilla::TimeStamp aTime);
+  static void AsyncScrollCallback(nsITimer *aTimer, void* anInstance);
   void ScrollTo(nsPoint aScrollPosition, nsIScrollableFrame::ScrollMode aMode) {
     ScrollToWithOrigin(aScrollPosition, aMode, nsGkAtoms::other);
   };
@@ -288,7 +288,7 @@ public:
   nsIBox* mScrollCornerBox;
   nsIBox* mResizerBox;
   nsContainerFrame* mOuter;
-  nsRefPtr<AsyncScroll> mAsyncScroll;
+  AsyncScroll* mAsyncScroll;
   nsTArray<nsIScrollPositionListener*> mListeners;
   nsRect mScrollPort;
   // Where we're currently scrolling to, if we're scrolling asynchronously.
