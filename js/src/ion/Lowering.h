@@ -171,6 +171,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitLoadElementHole(MLoadElementHole *ins);
     bool visitStoreElement(MStoreElement *ins);
     bool visitStoreElementHole(MStoreElementHole *ins);
+    bool visitArrayPopShift(MArrayPopShift *ins);
     bool visitLoadTypedArrayElement(MLoadTypedArrayElement *ins);
     bool visitLoadTypedArrayElementHole(MLoadTypedArrayElementHole *ins);
     bool visitClampToUint8(MClampToUint8 *ins);

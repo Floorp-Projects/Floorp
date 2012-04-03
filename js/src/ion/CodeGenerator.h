@@ -147,6 +147,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitStoreElementV(LStoreElementV *lir);
     bool visitStoreElementHoleT(LStoreElementHoleT *lir);
     bool visitStoreElementHoleV(LStoreElementHoleV *lir);
+    bool emitArrayPopShift(LInstruction *lir, const MArrayPopShift *mir, Register obj,
+                           Register elementsTemp, Register lengthTemp, TypedOrValueRegister out);
+    bool visitArrayPopShiftV(LArrayPopShiftV *lir);
+    bool visitArrayPopShiftT(LArrayPopShiftT *lir);
     bool visitLoadTypedArrayElement(LLoadTypedArrayElement *lir);
     bool visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole *lir);
     bool visitStoreTypedArrayElement(LStoreTypedArrayElement *lir);

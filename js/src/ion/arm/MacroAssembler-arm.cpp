@@ -1319,6 +1319,12 @@ MacroAssemblerARMCompat::load32(const Address &address, const Register &dest)
 }
 
 void
+MacroAssemblerARMCompat::load32(const BaseIndex &address, const Register &dest)
+{
+    loadPtr(address, dest);
+}
+
+void
 MacroAssemblerARMCompat::load32(const AbsoluteAddress &address, const Register &dest)
 {
     loadPtr(address, dest);
@@ -1659,6 +1665,24 @@ MacroAssemblerARMCompat::testGCThing(Assembler::Condition cond, const BaseIndex 
     JS_ASSERT(cond == Equal || cond == NotEqual);
     extractTag(address, ScratchRegister);
     ma_cmp(ScratchRegister, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+    return cond;
+}
+
+Assembler::Condition
+MacroAssemblerARMCompat::testMagic(Assembler::Condition cond, const Address &address)
+{
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    extractTag(address, ScratchRegister);
+    ma_cmp(ScratchRegister, ImmTag(JSVAL_TAG_MAGIC));
+    return cond;
+}
+
+Assembler::Condition
+MacroAssemblerARMCompat::testMagic(Assembler::Condition cond, const BaseIndex &address)
+{
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    extractTag(address, ScratchRegister);
+    ma_cmp(ScratchRegister, ImmTag(JSVAL_TAG_MAGIC));
     return cond;
 }
 

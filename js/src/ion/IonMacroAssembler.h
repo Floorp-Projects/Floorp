@@ -154,11 +154,26 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadPtr(Address(dest, offsetof(JSRuntime, ionActivation)), dest);
     }
 
-    void loadTypedOrValue(Address address, TypedOrValueRegister dest) {
+    template<typename T>
+    void loadTypedOrValue(const T &src, TypedOrValueRegister dest) {
         if (dest.hasValue())
-            loadValue(address, dest.valueReg());
+            loadValue(src, dest.valueReg());
         else
-            loadUnboxedValue(address, dest.typedReg());
+            loadUnboxedValue(src, dest.typedReg());
+    }
+
+    template<typename T>
+    void loadElementTypedOrValue(const T &src, TypedOrValueRegister dest, bool holeCheck,
+                                 Label *hole) {
+        if (dest.hasValue()) {
+            loadValue(src, dest.valueReg());
+            if (holeCheck)
+                branchTestMagic(Assembler::Equal, dest.valueReg(), hole);
+        } else {
+            if (holeCheck)
+                branchTestMagic(Assembler::Equal, src, hole);
+            loadUnboxedValue(src, dest.typedReg());
+        }
     }
 
     void storeTypedOrValue(TypedOrValueRegister src, Address address) {
@@ -227,7 +242,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         else
             storeCallResultValue(dest.typedReg());
     }
-
 
     void PushRegsInMask(RegisterSet set);
     void PushRegsInMask(GeneralRegisterSet set) {

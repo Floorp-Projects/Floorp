@@ -130,6 +130,8 @@
     _(LoadElementHole)              \
     _(StoreElementV)                \
     _(StoreElementT)                \
+    _(ArrayPopShiftV)               \
+    _(ArrayPopShiftT)               \
     _(StoreElementHoleV)            \
     _(StoreElementHoleT)            \
     _(LoadTypedArrayElement)        \
