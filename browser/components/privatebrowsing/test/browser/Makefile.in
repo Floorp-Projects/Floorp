@@ -56,6 +56,7 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_geoprompt.js \
 		browser_privatebrowsing_geoprompt_page.html \
 		browser_privatebrowsing_import.js \
+		browser_privatebrowsing_lastpbcontextexited.js \
 		browser_privatebrowsing_localStorage.js \
 		browser_privatebrowsing_localStorage_page1.html \
 		browser_privatebrowsing_localStorage_page2.html \
