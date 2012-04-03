@@ -25,6 +25,7 @@ import org.mozilla.gecko.sync.jpake.stage.ComputeKeyVerificationStage;
 import org.mozilla.gecko.sync.jpake.stage.ComputeStepOneStage;
 import org.mozilla.gecko.sync.jpake.stage.ComputeStepTwoStage;
 import org.mozilla.gecko.sync.jpake.stage.DecryptDataStage;
+import org.mozilla.gecko.sync.jpake.stage.DeleteChannel;
 import org.mozilla.gecko.sync.jpake.stage.GetChannelStage;
 import org.mozilla.gecko.sync.jpake.stage.GetRequestStage;
 import org.mozilla.gecko.sync.jpake.stage.JPakeStage;
@@ -237,6 +238,17 @@ public class JPakeClient {
    */
   public void abort(String reason) {
     finished = true;
+    if (Constants.JPAKE_ERROR_CHANNEL.equals(reason) ||
+        Constants.JPAKE_ERROR_NETWORK.equals(reason) ||
+        Constants.JPAKE_ERROR_NODATA.equals(reason)) {
+      displayAbort(reason);
+    } else {
+      // Delete channel, then call controller's displayAbort in callback.
+      new DeleteChannel().execute(this, reason);
+    }
+  }
+
+  public void displayAbort(String reason) {
     controllerActivity.displayAbort(reason);
   }
 
