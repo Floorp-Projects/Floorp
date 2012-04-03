@@ -154,9 +154,8 @@ static JSBool
 GCZeal(JSContext *cx, unsigned argc, jsval *vp)
 {
     uint32_t zeal, frequency = JS_DEFAULT_ZEAL_FREQ;
-    JSBool compartment = JS_FALSE;
 
-    if (argc > 3) {
+    if (argc > 2) {
         ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Too many arguments");
         return JS_FALSE;
     }
@@ -165,10 +164,8 @@ GCZeal(JSContext *cx, unsigned argc, jsval *vp)
     if (argc >= 2)
         if (!JS_ValueToECMAUint32(cx, vp[3], &frequency))
             return JS_FALSE;
-    if (argc >= 3)
-        compartment = js_ValueToBoolean(vp[3]);
 
-    JS_SetGCZeal(cx, (uint8_t)zeal, frequency, compartment);
+    JS_SetGCZeal(cx, (uint8_t)zeal, frequency);
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -177,18 +174,15 @@ static JSBool
 ScheduleGC(JSContext *cx, unsigned argc, jsval *vp)
 {
     uint32_t count;
-    bool compartment = false;
 
-    if (argc != 1 && argc != 2) {
+    if (argc != 1) {
         ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Wrong number of arguments");
         return JS_FALSE;
     }
     if (!JS_ValueToECMAUint32(cx, vp[2], &count))
         return JS_FALSE;
-    if (argc == 2)
-        compartment = js_ValueToBoolean(vp[3]);
 
-    JS_ScheduleGC(cx, count, compartment);
+    JS_ScheduleGC(cx, count);
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -502,7 +496,7 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 
 #ifdef JS_GC_ZEAL
     JS_FN_HELP("gczeal", GCZeal, 2, 0,
-"gczeal(level, [period], [compartmentGC?])",
+"gczeal(level, [period])",
 "  Specifies how zealous the garbage collector should be. Values for level:\n"
 "    0: Normal amount of collection\n"
 "    1: Collect when roots are added or removed\n"
@@ -510,11 +504,10 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "    3: Collect when the window paints (browser only)\n"
 "    4: Verify write barriers between instructions\n"
 "    5: Verify write barriers between paints\n"
-"  Period specifies that collection happens every n allocations.\n"
-"  If compartmentGC is true, the collections will be compartmental."),
+"  Period specifies that collection happens every n allocations.\n"),
 
     JS_FN_HELP("schedulegc", ScheduleGC, 1, 0,
-"schedulegc(num, [compartmentGC?])",
+"schedulegc(num)",
 "  Schedule a GC to happen after num allocations."),
 
     JS_FN_HELP("verifybarriers", VerifyBarriers, 0, 0,
