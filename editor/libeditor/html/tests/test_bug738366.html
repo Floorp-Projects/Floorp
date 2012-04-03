@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=738366
+-->
+<title>Test for Bug 738366</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=738366">Mozilla Bug 738366</a>
+<div id="display" contenteditable>foobarbaz</div>
+<script>
+/** Test for Bug 738366 **/
+
+getSelection().collapse(document.getElementById("display").firstChild, 3);
+getSelection().extend(document.getElementById("display").firstChild, 6);
+document.execCommand("bold");
+is(document.getElementById("display").innerHTML, "foo<b>bar</b>baz",
+   "styleWithCSS must default to false");
+document.execCommand("stylewithcss", false, "true");
+document.execCommand("bold");
+document.execCommand("bold");
+is(document.getElementById("display").innerHTML,
+   'foo<span style="font-weight: bold;">bar</span>baz',
+   "styleWithCSS must be settable to true");
+</script>
