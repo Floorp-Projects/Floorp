@@ -4813,21 +4813,19 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
                        PRUint8 aArgc,
                        nsIDOMNode** aResult)
 {
-  NS_ENSURE_ARG(aImportedNode);
   if (aArgc == 0) {
     aDeep = true;
   }
 
   *aResult = nsnull;
 
-  nsresult rv = nsContentUtils::CheckSameOrigin(this, aImportedNode);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsCOMPtr<nsINode> imported = do_QueryInterface(aImportedNode);
+  NS_ENSURE_TRUE(imported, NS_ERROR_UNEXPECTED);
 
-  PRUint16 nodeType;
-  aImportedNode->GetNodeType(&nodeType);
-  switch (nodeType) {
+  nsresult rv = nsContentUtils::CheckSameOrigin(this, imported);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  switch (imported->NodeType()) {
     case nsIDOMNode::ATTRIBUTE_NODE:
     case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
     case nsIDOMNode::ELEMENT_NODE:
@@ -4837,9 +4835,6 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
     case nsIDOMNode::COMMENT_NODE:
     case nsIDOMNode::DOCUMENT_TYPE_NODE:
     {
-      nsCOMPtr<nsINode> imported = do_QueryInterface(aImportedNode);
-      NS_ENSURE_TRUE(imported, NS_ERROR_FAILURE);
-
       nsCOMPtr<nsIDOMNode> newNode;
       nsCOMArray<nsINode> nodesWithProperties;
       rv = nsNodeUtils::Clone(imported, aDeep, mNodeInfoManager,
@@ -4855,12 +4850,6 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
       newNode.swap(*aResult);
 
       return NS_OK;
-    }
-    case nsIDOMNode::ENTITY_NODE:
-    case nsIDOMNode::ENTITY_REFERENCE_NODE:
-    case nsIDOMNode::NOTATION_NODE:
-    {
-      return NS_ERROR_NOT_IMPLEMENTED;
     }
     default:
     {
@@ -5063,24 +5052,19 @@ nsDocument::CreateNodeIterator(nsIDOMNode *aRoot,
     aWhatToShow = nsIDOMNodeFilter::SHOW_ALL;
   }
 
-  if (!aRoot)
+  if (!aRoot) {
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-
-  nsresult rv = nsContentUtils::CheckSameOrigin(this, aRoot);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ENSURE_ARG_POINTER(_retval);
+  }
 
   nsCOMPtr<nsINode> root = do_QueryInterface(aRoot);
-  NS_ENSURE_TRUE(root, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  NS_ENSURE_TRUE(root, NS_ERROR_UNEXPECTED);
 
-  nsNodeIterator *iterator = new nsNodeIterator(root,
-                                                aWhatToShow,
-                                                aFilter);
-  NS_ENSURE_TRUE(iterator, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv = nsContentUtils::CheckSameOrigin(this, root);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ADDREF(*_retval = iterator);
-
+  nsRefPtr<nsNodeIterator> iterator = new nsNodeIterator(root, aWhatToShow,
+                                                         aFilter);
+  iterator.forget(_retval);
   return NS_OK;
 }
 
@@ -6027,10 +6011,11 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
 
   *aResult = nsnull;
 
-  nsresult rv = nsContentUtils::CheckSameOrigin(this, aAdoptedNode);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsINode> adoptedNode = do_QueryInterface(aAdoptedNode);
+  NS_ENSURE_TRUE(adoptedNode, NS_ERROR_UNEXPECTED);
+
+  nsresult rv = nsContentUtils::CheckSameOrigin(this, adoptedNode);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Scope firing mutation events so that we don't carry any state that
   // might be stale
@@ -6044,9 +6029,7 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
 
   nsAutoScriptBlocker scriptBlocker;
 
-  PRUint16 nodeType;
-  aAdoptedNode->GetNodeType(&nodeType);
-  switch (nodeType) {
+  switch (adoptedNode->NodeType()) {
     case nsIDOMNode::ATTRIBUTE_NODE:
     {
       // Remove from ownerElement.
@@ -6101,13 +6084,7 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
 
       break;
     }
-    case nsIDOMNode::ENTITY_REFERENCE_NODE:
-    {
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
     case nsIDOMNode::DOCUMENT_NODE:
-    case nsIDOMNode::ENTITY_NODE:
-    case nsIDOMNode::NOTATION_NODE:
     {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
@@ -6182,7 +6159,8 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
   NS_ASSERTION(adoptedNode->OwnerDoc() == this,
                "Should still be in the document we just got adopted into");
 
-  return CallQueryInterface(adoptedNode, aResult);
+  NS_ADDREF(*aResult = aAdoptedNode);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

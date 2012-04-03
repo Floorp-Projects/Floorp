@@ -144,12 +144,13 @@ NS_IMETHODIMP nsTreeWalker::GetCurrentNode(nsIDOMNode * *aCurrentNode)
 NS_IMETHODIMP nsTreeWalker::SetCurrentNode(nsIDOMNode * aCurrentNode)
 {
     NS_ENSURE_TRUE(aCurrentNode, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-
-    nsresult rv = nsContentUtils::CheckSameOrigin(mRoot, aCurrentNode);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(mRoot, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsINode> node = do_QueryInterface(aCurrentNode);
-    NS_ENSURE_TRUE(node, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
+
+    nsresult rv = nsContentUtils::CheckSameOrigin(mRoot, node);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     mCurrentNode.swap(node);
     return NS_OK;
