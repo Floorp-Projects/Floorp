@@ -1,8 +1,9 @@
-<html> <head>
+<html>
+<head>
 <title></title>
-</head>
 
 <script type="text/javascript">
+
 var scriptItem = "untouched";
 
 function checkLoads() {
@@ -14,6 +15,7 @@ function checkLoads() {
   var style = document.defaultView.getComputedStyle(elt, "");
   window.parent.isnot(style.visibility, "hidden", "Should not load bad css");
 
+  // End (parent) test.
   window.parent.SimpleTest.finish();
 }
 
@@ -25,10 +27,13 @@ function checkLoads() {
 <!-- Try loading from a malware css URI -->
 <link rel="stylesheet" type="text/css" href="http://malware.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.css"></link>
 
+<!-- XXX How is this part of the test supposed to work (= be checked)? -->
 <!-- Try loading a marked-as-malware css through an @import from a clean URI -->
 <link rel="stylesheet" type="text/css" href="import.css"></link>
+</head>
 
 <body onload="checkLoads()">
 The following should not be hidden:
 <div id="styleCheck">STYLE TEST</div>
-</body> </html>
+</body>
+</html>
