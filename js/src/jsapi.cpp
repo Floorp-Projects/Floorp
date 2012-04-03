@@ -747,7 +747,6 @@ JSRuntime::JSRuntime()
     gcZeal_(0),
     gcZealFrequency(0),
     gcNextScheduled(0),
-    gcDebugCompartmentGC(false),
     gcDeterministicOnly(false),
 #endif
     gcCallback(NULL),
@@ -6565,14 +6564,13 @@ JS_AbortIfWrongThread(JSRuntime *rt)
 
 #ifdef JS_GC_ZEAL
 JS_PUBLIC_API(void)
-JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency, JSBool compartment)
+JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency)
 {
 #ifdef JS_GC_ZEAL
     const char *env = getenv("JS_GC_ZEAL");
     if (env) {
         zeal = atoi(env);
         frequency = 1;
-        compartment = false;
     }
 #endif
 
@@ -6580,14 +6578,12 @@ JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency, JSBool compartment
     cx->runtime->gcZeal_ = zeal;
     cx->runtime->gcZealFrequency = frequency;
     cx->runtime->gcNextScheduled = schedule ? frequency : 0;
-    cx->runtime->gcDebugCompartmentGC = !!compartment;
 }
 
 JS_PUBLIC_API(void)
-JS_ScheduleGC(JSContext *cx, uint32_t count, JSBool compartment)
+JS_ScheduleGC(JSContext *cx, uint32_t count)
 {
     cx->runtime->gcNextScheduled = count;
-    cx->runtime->gcDebugCompartmentGC = !!compartment;
 }
 #endif
 
