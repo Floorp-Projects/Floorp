@@ -1213,37 +1213,31 @@ nsresult nsPluginHost::SetUpPluginInstance(const char *aMimeType,
 {
   NS_ENSURE_ARG_POINTER(aOwner);
 
-  nsresult rv = NS_OK;
-
-  rv = TrySetUpPluginInstance(aMimeType, aURL, aOwner);
-
-  // if we fail, refresh plugin list just in case the plugin has been
-  // just added and try to instantiate plugin instance again, see bug 143178
-  if (NS_FAILED(rv)) {
-    // we should also make sure not to do this more than once per page
-    // so if there are a few embed tags with unknown plugins,
-    // we don't get unnecessary overhead
-    // let's cache document to decide whether this is the same page or not
-    nsCOMPtr<nsIDocument> document;
-    aOwner->GetDocument(getter_AddRefs(document));
-
-    nsCOMPtr<nsIDocument> currentdocument = do_QueryReferent(mCurrentDocument);
-    if (document == currentdocument)
-      return rv;
-
-    mCurrentDocument = do_GetWeakReference(document);
-
-    // ReloadPlugins will do the job smartly: nothing will be done
-    // if no changes detected, in such a case just return
-    if (NS_ERROR_PLUGINS_PLUGINSNOTCHANGED == ReloadPlugins(false))
-      return rv;
-
-    // other failure return codes may be not fatal, so we can still try
-    aOwner->SetInstance(nsnull); // avoid assert about setting it twice
-    rv = TrySetUpPluginInstance(aMimeType, aURL, aOwner);
+  nsresult rv = TrySetUpPluginInstance(aMimeType, aURL, aOwner);
+  if (NS_SUCCEEDED(rv)) {
+    return rv;
   }
 
-  return rv;
+  // If we failed to load a plugin instance we'll try again after
+  // reloading our plugin list. Only do that once per document to
+  // avoid redundant high resource usage on pages with multiple
+  // unkown instance types. We'll do that by caching the document.
+  nsCOMPtr<nsIDocument> document;
+  aOwner->GetDocument(getter_AddRefs(document));
+
+  nsCOMPtr<nsIDocument> currentdocument = do_QueryReferent(mCurrentDocument);
+  if (document == currentdocument) {
+    return rv;
+  }
+
+  mCurrentDocument = do_GetWeakReference(document);
+
+  // Don't try to set up an instance again if nothing changed.
+  if (ReloadPlugins(false) == NS_ERROR_PLUGINS_PLUGINSNOTCHANGED) {
+    return rv;
+  }
+
+  return TrySetUpPluginInstance(aMimeType, aURL, aOwner);
 }
 
 nsresult
