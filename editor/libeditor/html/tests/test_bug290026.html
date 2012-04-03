@@ -25,7 +25,7 @@ editor.innerHTML = '<p></p><ul><li>Item 1</li><li>Item 2</li></ul><p></p>';
 editor.focus();
 
 addLoadEvent(function() {
-
+  document.execCommand("stylewithcss", false, "true");
   var sel = window.getSelection();
   sel.removeAllRanges();
   var lis = document.getElementsByTagName("li");
