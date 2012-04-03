@@ -22,6 +22,9 @@ ifndef INCLUDED_VERSION_MK
 include $(topsrcdir)/config/version.mk
 endif
 
+include $(topsrcdir)/config/makefiles/makeutils.mk
+include $(topsrcdir)/config/makefiles/autotargets.mk
+
 ifdef SDK_XPIDLSRCS
 XPIDLSRCS += $(SDK_XPIDLSRCS)
 endif
@@ -477,8 +480,8 @@ endif
 # A Makefile that needs $(MDDEPDIR) created but doesn't set any of these
 # variables we know to check can just set NEED_MDDEPDIR explicitly.
 ifneq (,$(OBJS)$(XPIDLSRCS)$(SIMPLE_PROGRAMS)$(NEED_MDDEPDIR))
-MAKE_DIRS		+= $(CURDIR)/$(MDDEPDIR)
-GARBAGE_DIRS		+= $(MDDEPDIR)
+MAKE_DIRS       += $(CURDIR)/$(MDDEPDIR)
+GARBAGE_DIRS    += $(CURDIR)/$(MDDEPDIR)
 endif
 
 #
@@ -1426,12 +1429,6 @@ endif
 
 # generate .h files from into $(XPIDL_GEN_DIR), then export to $(DIST)/include;
 # warn against overriding existing .h file.
-$(XPIDL_GEN_DIR)/.done:
-	$(MKDIR) -p $(XPIDL_GEN_DIR)
-	@$(TOUCH) $@
-
-# don't depend on $(XPIDL_GEN_DIR), because the modification date changes
-# with any addition to the directory, regenerating all .h files -> everything.
 
 XPIDL_DEPS = \
   $(topsrcdir)/xpcom/idl-parser/header.py \
@@ -1439,7 +1436,12 @@ XPIDL_DEPS = \
   $(topsrcdir)/xpcom/idl-parser/xpidl.py \
   $(NULL)
 
-$(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_DEPS) $(XPIDL_GEN_DIR)/.done
+xpidl-preqs = \
+  $(call mkdir_deps,$(XPIDL_GEN_DIR)) \
+  $(call mkdir_deps,$(MDDEPDIR)) \
+  $(NULL)
+
+$(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_DEPS) $(xpidl-preqs)
 	$(REPORT_BUILD)
 	$(PYTHON_PATH) \
 	  -I$(topsrcdir)/other-licenses/ply \
@@ -1451,7 +1453,7 @@ $(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_DEPS) $(XPIDL_GEN_DIR)/.done
 ifndef NO_GEN_XPT
 # generate intermediate .xpt files into $(XPIDL_GEN_DIR), then link
 # into $(XPIDL_MODULE).xpt and export it to $(FINAL_TARGET)/components.
-$(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_DEPS) $(XPIDL_GEN_DIR)/.done
+$(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_DEPS) $(xpidl-preqs)
 	$(REPORT_BUILD)
 	$(PYTHON_PATH) \
 	  -I$(topsrcdir)/other-licenses/ply \
@@ -1993,7 +1995,7 @@ $(foreach var,$(FREEZE_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))
 CHECK_FROZEN_VARIABLES = $(foreach var,$(FREEZE_VARIABLES), \
   $(if $(subst $($(var)_FROZEN),,'$($(var))'),$(error Makefile variable '$(var)' changed value after including rules.mk. Was $($(var)_FROZEN), now $($(var)).)))
 
-libs export libs::
+libs export::
 	$(CHECK_FROZEN_VARIABLES)
 
 default all::
