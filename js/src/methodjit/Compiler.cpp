@@ -1375,8 +1375,11 @@ mjit::Compiler::finishThisUp()
     if (chunkIndex == 0) {
         jit->invokeEntry = result;
         if (script->function()) {
+            jit->arityCheckEntry = stubCode.locationOf(arityLabel).executableAddress();
             jit->argsCheckEntry = stubCode.locationOf(argsCheckLabel).executableAddress();
             jit->fastEntry = fullCode.locationOf(invokeLabel).executableAddress();
+            void *&addr = isConstructing ? script->jitArityCheckCtor : script->jitArityCheckNormal;
+            addr = jit->arityCheckEntry;
         }
     }
 
