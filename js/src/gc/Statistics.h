@@ -94,7 +94,7 @@ struct Statistics {
     void beginPhase(Phase phase);
     void endPhase(Phase phase);
 
-    void beginSlice(JSCompartment *comp, gcreason::Reason reason);
+    void beginSlice(bool full, gcreason::Reason reason);
     void endSlice();
 
     void reset(const char *reason) { slices.back().resetReason = reason; }
@@ -116,7 +116,7 @@ struct Statistics {
     FILE *fp;
     bool fullFormat;
 
-    JSCompartment *compartment;
+    bool wasFullGC;
     const char *nonincrementalReason;
 
     struct SliceData {
@@ -162,9 +162,9 @@ struct Statistics {
 };
 
 struct AutoGCSlice {
-    AutoGCSlice(Statistics &stats, JSCompartment *comp, gcreason::Reason reason
+    AutoGCSlice(Statistics &stats, bool full, gcreason::Reason reason
                 JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : stats(stats) { JS_GUARD_OBJECT_NOTIFIER_INIT; stats.beginSlice(comp, reason); }
+      : stats(stats) { JS_GUARD_OBJECT_NOTIFIER_INIT; stats.beginSlice(full, reason); }
     ~AutoGCSlice() { stats.endSlice(); }
 
     Statistics &stats;

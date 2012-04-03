@@ -47,6 +47,7 @@
 #include "jspropertytree.h"
 #include "jsscope.h"
 
+#include "jsgcinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 
@@ -354,10 +355,7 @@ js::PropertyTree::dumpShapes(JSContext *cx)
     JSRuntime *rt = cx->runtime;
     fprintf(dumpfp, "rt->gcNumber = %lu", (unsigned long)rt->gcNumber);
 
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        if (rt->gcCurrentCompartment != NULL && rt->gcCurrentCompartment != c)
-            continue;
-
+    for (gc::GCCompartmentsIter c(rt); !c.done(); c.next()) {
         fprintf(dumpfp, "*** Compartment %p ***\n", (void *)c.get());
 
         /*

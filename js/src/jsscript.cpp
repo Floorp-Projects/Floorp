@@ -1828,8 +1828,7 @@ JSScript::clearTraps(JSContext *cx)
 void
 JSScript::markChildren(JSTracer *trc)
 {
-    JS_ASSERT_IF(trc->runtime->gcCheckCompartment,
-                 compartment() == trc->runtime->gcCheckCompartment);
+    JS_ASSERT_IF(trc->runtime->gcStrictCompartmentChecking, compartment()->isCollecting());
 
     for (uint32_t i = 0; i < natoms; ++i) {
         if (atoms[i])
