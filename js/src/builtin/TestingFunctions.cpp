@@ -32,7 +32,11 @@ GC(JSContext *cx, unsigned argc, jsval *vp)
     size_t preBytes = cx->runtime->gcBytes;
 #endif
 
-    JS_CompartmentGC(cx, comp);
+    if (comp)
+        PrepareCompartmentForGC(comp);
+    else
+        PrepareForFullGC(cx->runtime);
+    GCForReason(cx, gcreason::API);
 
     char buf[256] = { '\0' };
 #ifndef JS_MORE_DETERMINISTIC

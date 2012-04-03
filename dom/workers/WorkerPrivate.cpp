@@ -3891,6 +3891,7 @@ WorkerPrivate::GarbageCollectInternal(JSContext* aCx, bool aShrinking,
 {
   AssertIsOnWorkerThread();
 
+  js::PrepareForFullGC(JS_GetRuntime(aCx));
   if (aShrinking) {
     js::ShrinkingGC(aCx, js::gcreason::DOM_WORKER);
   }

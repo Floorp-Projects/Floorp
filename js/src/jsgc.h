@@ -1386,9 +1386,6 @@ ShrinkGCBuffers(JSRuntime *rt);
 extern void
 PrepareForFullGC(JSRuntime *rt);
 
-extern void
-PrepareCompartmentForGC(JSCompartment *comp);
-
 /*
  * Kinds of js_GC invocation.
  */
