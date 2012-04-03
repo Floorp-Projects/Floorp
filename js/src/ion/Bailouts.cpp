@@ -184,7 +184,7 @@ DeriveConstructing(StackFrame *fp, StackFrame *entryFp, IonJSFrameLayout *js)
 
     if (fiter.type() == IonFrame_JS) {
         // In the case of a JS frame, look up the pc from the snapshot.
-        InlineFrameIterator ifi = InlineFrameIterator(&fiter);
+        InlineFrameIterator ifi(&fiter, MachineState());
         JS_ASSERT(js_CodeSpec[*ifi.pc()].format & JOF_INVOKE);
 
         if ((JSOp)*ifi.pc() == JSOP_NEW)
