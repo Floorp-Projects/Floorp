@@ -1468,7 +1468,20 @@ nsresult
 nsContentUtils::CheckSameOrigin(nsINode *aTrustedNode,
                                 nsIDOMNode *aUnTrustedNode)
 {
-  NS_PRECONDITION(aTrustedNode, "There must be a trusted node");
+  MOZ_ASSERT(aTrustedNode);
+
+  // Make sure it's a real node.
+  nsCOMPtr<nsINode> unTrustedNode = do_QueryInterface(aUnTrustedNode);
+  NS_ENSURE_TRUE(unTrustedNode, NS_ERROR_UNEXPECTED);
+  return CheckSameOrigin(aTrustedNode, unTrustedNode);
+}
+
+nsresult
+nsContentUtils::CheckSameOrigin(nsINode* aTrustedNode,
+                                nsINode* unTrustedNode)
+{
+  MOZ_ASSERT(aTrustedNode);
+  MOZ_ASSERT(unTrustedNode);
 
   bool isSystem = false;
   nsresult rv = sSecurityManager->SubjectPrincipalIsSystem(&isSystem);
@@ -1483,10 +1496,6 @@ nsContentUtils::CheckSameOrigin(nsINode *aTrustedNode,
   /*
    * Get hold of each node's principal
    */
-  nsCOMPtr<nsINode> unTrustedNode = do_QueryInterface(aUnTrustedNode);
-
-  // Make sure these are both real nodes
-  NS_ENSURE_TRUE(aTrustedNode && unTrustedNode, NS_ERROR_UNEXPECTED);
 
   nsIPrincipal* trustedPrincipal = aTrustedNode->NodePrincipal();
   nsIPrincipal* unTrustedPrincipal = unTrustedNode->NodePrincipal();
@@ -1605,64 +1614,6 @@ nsContentUtils::GetContextFromDocument(nsIDocument *aDocument)
   }
 
   return scx->GetNativeContext();
-}
-
-// static
-nsresult
-nsContentUtils::GetContextAndScope(nsIDocument *aOldDocument,
-                                   nsIDocument *aNewDocument, JSContext **aCx,
-                                   JSObject **aNewScope)
-{
-  *aCx = nsnull;
-  *aNewScope = nsnull;
-
-  JSObject *newScope = aNewDocument->GetWrapper();
-  JSObject *global;
-  if (!newScope) {
-    nsIScriptGlobalObject *newSGO = aNewDocument->GetScopeObject();
-    if (!newSGO || !(global = newSGO->GetGlobalJSObject())) {
-      return NS_OK;
-    }
-  }
-
-  NS_ENSURE_TRUE(sXPConnect, NS_ERROR_NOT_INITIALIZED);
-
-  JSContext *cx = aOldDocument ? GetContextFromDocument(aOldDocument) : nsnull;
-  if (!cx) {
-    cx = GetContextFromDocument(aNewDocument);
-
-    if (!cx) {
-      // No context reachable from the old or new document, use the
-      // calling context, or the safe context if no caller can be
-      // found.
-
-      sThreadJSContextStack->Peek(&cx);
-
-      if (!cx) {
-        sThreadJSContextStack->GetSafeJSContext(&cx);
-
-        if (!cx) {
-          // No safe context reachable, bail.
-          NS_WARNING("No context reachable in GetContextAndScopes()!");
-
-          return NS_ERROR_NOT_AVAILABLE;
-        }
-      }
-    }
-  }
-
-  if (!newScope && cx) {
-    jsval v;
-    nsresult rv = WrapNative(cx, global, aNewDocument, aNewDocument, &v);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    newScope = JSVAL_TO_OBJECT(v);
-  }
-
-  *aCx = cx;
-  *aNewScope = newScope;
-
-  return NS_OK;
 }
 
 //static

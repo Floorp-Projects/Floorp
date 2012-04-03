@@ -10516,15 +10516,15 @@ nsStorage2SH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   JSAutoRequest ar(cx);
 
   if (DOMStringIsNull(val)) {
-      *vp = JSVAL_NULL;
-  }
-  else {
-      JSString *str =
-        ::JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar *>(val.get()),
-                              val.Length());
-      NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
+    // No such key.
+    *vp = JSVAL_VOID;
+  } else {
+    JSString* str =
+      JS_NewUCStringCopyN(cx, static_cast<const jschar *>(val.get()),
+                          val.Length());
+    NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
-      *vp = STRING_TO_JSVAL(str);
+    *vp = STRING_TO_JSVAL(str);
   }
 
   return NS_SUCCESS_I_DID_SOMETHING;
