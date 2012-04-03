@@ -21,6 +21,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410986
 
 /** Test for Bug 410986 **/
 
+var gPasteEvents = 0;
+document.getElementById("editor").addEventListener("paste", function() {
+  ++gPasteEvents;
+}, false);
+
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   getSelection().selectAllChildren(document.getElementById("contents"));
@@ -37,6 +42,7 @@ SimpleTest.waitForFocus(function() {
         synthesizeKey("V", {accelKey: true, shiftKey: true});
       }
       is(ed.innerHTML, "green text", "Content should be pasted in plaintext format");
+      is(gPasteEvents, 1, "One paste event must be fired");
 
       ed.innerHTML = "";
       ed.blur();
@@ -51,6 +57,7 @@ SimpleTest.waitForFocus(function() {
           synthesizeKey("V", {accelKey: true});
           isnot(ed.innerHTML.indexOf("<span style=\"color: green;\">green text</span>"), -1,
                 "Content should be pasted in HTML format");
+          is(gPasteEvents, 2, "Two paste events must be fired");
 
           SimpleTest.finish();
         },
