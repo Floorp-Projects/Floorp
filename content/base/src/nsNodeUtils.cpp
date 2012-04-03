@@ -42,11 +42,9 @@
 #include "nsIContent.h"
 #include "mozilla/dom/Element.h"
 #include "nsIMutationObserver.h"
-#include "nsIMutationObserver2.h"
 #include "nsIDocument.h"
 #include "nsIDOMUserDataHandler.h"
 #include "nsEventListenerManager.h"
-#include "nsIAttribute.h"
 #include "nsIXPConnect.h"
 #include "nsGenericElement.h"
 #include "pldhash.h"
@@ -72,8 +70,6 @@ using namespace mozilla::dom;
 
 // This macro expects the ownerDocument of content_ to be in scope as
 // |nsIDocument* doc|
-// NOTE: AttributeChildRemoved doesn't use this macro but has a very similar use.
-// If you change how this macro behave please update AttributeChildRemoved.
 #define IMPL_MUTATION_NOTIFICATION(func_, content_, params_)      \
   PR_BEGIN_MACRO                                                  \
   bool needsEnterLeave = doc->MayHaveDOMMutationObservers();      \
@@ -204,32 +200,6 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
   IMPL_MUTATION_NOTIFICATION(ContentRemoved, aContainer,
                              (document, container, aChild, aIndexInContainer,
                               aPreviousSibling));
-}
-
-void
-nsNodeUtils::AttributeChildRemoved(nsINode* aAttribute,
-                                   nsIContent* aChild)
-{
-  NS_PRECONDITION(aAttribute->IsNodeOfType(nsINode::eATTRIBUTE),
-                  "container must be a nsIAttribute");
-
-  // This is a variant of IMPL_MUTATION_NOTIFICATION.
-  do {
-    nsINode::nsSlots* slots = aAttribute->GetExistingSlots();
-    if (slots && !slots->mMutationObservers.IsEmpty()) {
-      // This is a variant of NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS.
-      nsTObserverArray<nsIMutationObserver*>::ForwardIterator iter_ =
-        slots->mMutationObservers;
-      nsCOMPtr<nsIMutationObserver2> obs_;
-      while (iter_.HasMore()) {
-        obs_ = do_QueryInterface(iter_.GetNext());
-        if (obs_) {
-          obs_->AttributeChildRemoved(aAttribute, aChild);
-        }
-      }
-    }
-    aAttribute = aAttribute->GetNodeParent();
-  } while (aAttribute);
 }
 
 void
@@ -610,32 +580,11 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
   // those handlers. However we currently don't have code to do so without
   // also notifying when it's not safe so we're not doing that at this time.
 
-  // The DOM spec says to always adopt/clone/import the children of attribute
-  // nodes.
-  // XXX The following block is here because our implementation of attribute
-  //     nodes is broken when it comes to inserting children. Instead of cloning
-  //     their children we force creation of the only child by calling
-  //     GetChildAt(0). We can remove this when
-  //     https://bugzilla.mozilla.org/show_bug.cgi?id=56758 is fixed.
-  if (aClone && aNode->IsNodeOfType(nsINode::eATTRIBUTE)) {
-    nsCOMPtr<nsINode> attrChildNode = aNode->GetChildAt(0);
-    // We only need to do this if the child node has properties (because we
-    // might need to call a userdata handler).
-    if (attrChildNode && attrChildNode->HasProperties()) {
-      nsCOMPtr<nsINode> clonedAttrChildNode = clone->GetChildAt(0);
-      if (clonedAttrChildNode) {
-        bool ok = aNodesWithProperties.AppendObject(attrChildNode) &&
-                    aNodesWithProperties.AppendObject(clonedAttrChildNode);
-        NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
-      }
-    }
-  }
-  // XXX End of workaround for broken attribute nodes.
-  else if (aDeep || aNode->IsNodeOfType(nsINode::eATTRIBUTE)) {
+  if (aDeep && (!aClone || !aNode->IsNodeOfType(nsINode::eATTRIBUTE))) {
     // aNode's children.
     for (nsIContent* cloneChild = aNode->GetFirstChild();
          cloneChild;
-       cloneChild = cloneChild->GetNextSibling()) {
+         cloneChild = cloneChild->GetNextSibling()) {
       nsCOMPtr<nsINode> child;
       rv = CloneAndAdopt(cloneChild, aClone, true, nodeInfoManager,
                          aCx, aNewScope, aNodesWithProperties, clone,
