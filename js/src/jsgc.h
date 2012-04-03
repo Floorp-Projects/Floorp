@@ -1383,6 +1383,9 @@ MaybeGC(JSContext *cx);
 extern void
 ShrinkGCBuffers(JSRuntime *rt);
 
+extern void
+PrepareCompartmentForGC(JSCompartment *comp);
+
 /*
  * Kinds of js_GC invocation.
  */
@@ -1396,10 +1399,10 @@ typedef enum JSGCInvocationKind {
 
 /* Pass NULL for |comp| to get a full GC. */
 extern void
-GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind, js::gcreason::Reason reason);
+GC(JSContext *cx, bool full, JSGCInvocationKind gckind, js::gcreason::Reason reason);
 
 extern void
-GCSlice(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind, js::gcreason::Reason reason);
+GCSlice(JSContext *cx, bool full, JSGCInvocationKind gckind, js::gcreason::Reason reason);
 
 extern void
 GCDebugSlice(JSContext *cx, int64_t objCount);

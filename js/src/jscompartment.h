@@ -194,13 +194,59 @@ struct JSCompartment
 
     bool                         needsBarrier_;
 
-    bool needsBarrier() {
+    bool needsBarrier() const {
         return needsBarrier_;
     }
 
     js::GCMarker *barrierTracer() {
         JS_ASSERT(needsBarrier_);
         return &rt->gcMarker;
+    }
+
+  private:
+    enum CompartmentGCState {
+        NoGCScheduled,
+        GCScheduled,
+        GCRunning
+    };
+
+    CompartmentGCState           gcState;
+
+  public:
+    bool isCollecting() const {
+        /* Allow this if we're in the middle of an incremental GC. */
+        if (rt->gcRunning) {
+            return gcState == GCRunning;
+        } else {
+            JS_ASSERT(gcState != GCRunning);
+            return needsBarrier();
+        }
+    }
+
+    /*
+     * If this returns true, all object tracing must be done with a GC marking
+     * tracer.
+     */
+    bool requireGCTracer() const {
+        return gcState == GCRunning;
+    }
+
+    void setCollecting(bool collecting) {
+        JS_ASSERT(rt->gcRunning);
+        if (collecting)
+            gcState = GCRunning;
+        else
+            gcState = NoGCScheduled;
+    }
+
+    void scheduleGC() {
+        JS_ASSERT(!rt->gcRunning);
+        JS_ASSERT(gcState != GCRunning);
+        gcState = GCScheduled;
+    }
+
+    bool isGCScheduled() const {
+        return gcState == GCScheduled;
     }
 
     size_t                       gcBytes;
