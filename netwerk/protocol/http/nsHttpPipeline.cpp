@@ -172,7 +172,13 @@ nsHttpPipeline::PipelinePosition()
     nsAHttpTransaction *trans = Response(0);
     if (trans)
         return trans->PipelinePosition();
-    return 2;
+
+    // The response queue is empty, so return oldest request
+    if (mRequestQ.Length())
+        return Request(mRequestQ.Length() - 1)->PipelinePosition();
+    
+    // No transactions in the pipeline
+    return 0;
 }
 
 nsHttpPipeline *

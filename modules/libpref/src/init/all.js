@@ -818,7 +818,10 @@ pref("network.http.pipelining.max-optimistic-requests" , 4);
 
 pref("network.http.pipelining.aggressive", false);
 pref("network.http.pipelining.maxsize" , 300000);
-pref("network.http.pipelining.read-timeout", 10000);
+
+// The read-timeout is a ms timer that causes the transaction to be completely
+// restarted without pipelining. Set to 0 to disable.
+pref("network.http.pipelining.read-timeout", 30000);
 
 // Prompt for 307 redirects
 pref("network.http.prompt-temp-redirect", true);
