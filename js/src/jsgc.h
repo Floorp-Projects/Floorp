@@ -1406,6 +1406,9 @@ GCSlice(JSContext *cx, JSGCInvocationKind gckind, js::gcreason::Reason reason);
 extern void
 GCDebugSlice(JSContext *cx, int64_t objCount);
 
+extern void
+PrepareForDebugGC(JSRuntime *rt);
+
 } /* namespace js */
 
 namespace js {
