@@ -250,11 +250,6 @@ class Float64ElementsHeader : public TypedElementsHeader<double>
 
 class Uint8ClampedElementsHeader : public TypedElementsHeader<uint8_t>
 {
-  public:
-    bool defineElement(JSContext *cx, ObjectImpl *obj,
-                       uint32_t index, const Value &value,
-                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
-
   private:
     inline bool isUint8Clamped() const MOZ_DELETE;
     inline Uint8ClampedElementsHeader & asUint8ClampedElements() MOZ_DELETE;
