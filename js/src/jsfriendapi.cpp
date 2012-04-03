@@ -132,33 +132,33 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
 }
 
 JS_FRIEND_API(void)
-js::GCForReason(JSContext *cx, gcreason::Reason reason)
+js::PrepareCompartmentForGC(JSCompartment *comp)
 {
-    PrepareForFullGC(cx->runtime);
-    GC(cx, GC_NORMAL, reason);
+    comp->scheduleGC();
 }
 
 JS_FRIEND_API(void)
-js::CompartmentGCForReason(JSContext *cx, JSCompartment *comp, gcreason::Reason reason)
+js::PrepareForFullGC(JSRuntime *rt)
 {
-    /* We cannot GC the atoms compartment alone; use a full GC instead. */
-    JS_ASSERT(comp != cx->runtime->atomsCompartment);
+    for (CompartmentsIter c(rt); !c.done(); c.next())
+        c->scheduleGC();
+}
 
-    PrepareCompartmentForGC(comp);
+JS_FRIEND_API(void)
+js::GCForReason(JSContext *cx, gcreason::Reason reason)
+{
     GC(cx, GC_NORMAL, reason);
 }
 
 JS_FRIEND_API(void)
 js::ShrinkingGC(JSContext *cx, gcreason::Reason reason)
 {
-    PrepareForFullGC(cx->runtime);
     GC(cx, GC_SHRINK, reason);
 }
 
 JS_FRIEND_API(void)
 js::IncrementalGC(JSContext *cx, gcreason::Reason reason)
 {
-    PrepareForFullGC(cx->runtime);
     GCSlice(cx, GC_NORMAL, reason);
 }
 

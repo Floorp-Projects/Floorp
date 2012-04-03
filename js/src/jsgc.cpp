@@ -2824,19 +2824,6 @@ GCHelperThread::doSweep()
 
 #endif /* JS_THREADSAFE */
 
-void
-PrepareForFullGC(JSRuntime *rt)
-{
-    for (CompartmentsIter c(rt); !c.done(); c.next())
-        c->scheduleGC();
-}
-
-void
-PrepareCompartmentForGC(JSCompartment *comp)
-{
-    comp->scheduleGC();
-}
-
 } /* namespace js */
 
 static bool

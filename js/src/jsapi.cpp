@@ -2859,27 +2859,12 @@ JS_IsGCMarkingTracer(JSTracer *trc)
     return IS_GC_MARKING_TRACER(trc);
 }
 
-extern JS_PUBLIC_API(void)
-JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
-{
-    AssertNoGC(cx);
-
-    /* We cannot GC the atoms compartment alone; use a full GC instead. */
-    JS_ASSERT(comp != cx->runtime->atomsCompartment);
-
-    if (comp) {
-        PrepareCompartmentForGC(comp);
-        GC(cx, GC_NORMAL, gcreason::API);
-    } else {
-        PrepareForFullGC(cx->runtime);
-        GC(cx, GC_NORMAL, gcreason::API);
-    }
-}
-
 JS_PUBLIC_API(void)
 JS_GC(JSContext *cx)
 {
-    JS_CompartmentGC(cx, NULL);
+    AssertNoGC(cx);
+    PrepareForFullGC(cx->runtime);
+    GC(cx, GC_NORMAL, gcreason::API);
 }
 
 JS_PUBLIC_API(void)
