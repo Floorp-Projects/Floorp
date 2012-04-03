@@ -25,13 +25,24 @@ function test()
 
 function testFrameParameters()
 {
+  dump("Started testFrameParameters!\n");
+
   gDebugger.addEventListener("Debugger:FetchedParameters", function test() {
+    dump("Entered Debugger:FetchedParameters!\n");
+
     gDebugger.removeEventListener("Debugger:FetchedParameters", test, false);
     Services.tm.currentThread.dispatch({ run: function() {
+
+      dump("After currentThread.dispatch!\n");
 
       var frames = gDebugger.DebuggerView.Stackframes._frames,
           localScope = gDebugger.DebuggerView.Properties.localScope,
           localNodes = localScope.querySelector(".details").childNodes;
+
+      dump("Got our variables:\n");
+      dump("frames     - " + frames.constructor + "\n");
+      dump("localScope - " + localScope.constructor + "\n");
+      dump("localNodes - " + localNodes.constructor + "\n");
 
       is(gDebugger.StackFrames.activeThread.state, "paused",
         "Should only be getting stack frames while paused.");
@@ -87,9 +98,9 @@ function testFrameParameters()
     }}, 0);
   }, false);
 
-  EventUtils.synthesizeMouseAtCenter(content.document.querySelector("button"),
-                                     {},
-                                     content.window);
+  EventUtils.sendMouseEvent({ type: "click" },
+    content.document.querySelector("button"),
+    content.window);
 }
 
 function resumeAndFinish() {
