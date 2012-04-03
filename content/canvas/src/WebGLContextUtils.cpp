@@ -239,4 +239,27 @@ WebGLContext::ErrorName(GLenum error)
             NS_ABORT();
             return "[unknown WebGL error!]";
     }
-};
+}
+
+bool
+WebGLContext::IsTextureFormatCompressed(GLenum format)
+{
+    switch(format) {
+        case LOCAL_GL_RGB:
+        case LOCAL_GL_RGBA:
+        case LOCAL_GL_ALPHA:
+        case LOCAL_GL_LUMINANCE:
+        case LOCAL_GL_LUMINANCE_ALPHA:
+            return false;
+
+        case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+            return true;
+    }
+
+    NS_NOTREACHED("Invalid WebGL texture format?");
+    NS_ABORT();
+    return false;
+}
