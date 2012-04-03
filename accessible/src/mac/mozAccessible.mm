@@ -403,17 +403,15 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
     return mChildren;
 
   mChildren = [[NSMutableArray alloc] init];
-  
+
   // get the array of children.
-  nsTArray<nsRefPtr<nsAccessibleWrap> > childrenArray;
-  mGeckoAccessible->GetUnignoredChildren(childrenArray);
-  
+  nsAutoTArray<nsAccessible*, 10> childrenArray;
+  mGeckoAccessible->GetUnignoredChildren(&childrenArray);
+
   // now iterate through the children array, and get each native accessible.
-  int totalCount = childrenArray.Length();
-  int index = 0;
-   
-  for (; index < totalCount; index++) {
-    nsAccessibleWrap *curAccessible = childrenArray.ElementAt(index);
+  PRUint32 totalCount = childrenArray.Length();
+  for (PRUint32 idx = 0; idx < totalCount; idx++) {
+    nsAccessible* curAccessible = childrenArray.ElementAt(idx);
     if (curAccessible) {
       mozAccessible *curNative = GetNativeFromGeckoAccessible(curAccessible);
       if (curNative)
