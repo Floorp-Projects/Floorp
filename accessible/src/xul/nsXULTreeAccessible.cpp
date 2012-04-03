@@ -68,6 +68,8 @@ nsXULTreeAccessible::
   nsXULTreeAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
   nsAccessibleWrap(aContent, aDoc)
 {
+  mFlags |= eXULTreeAccessible;
+
   mTree = nsCoreUtils::GetTreeBoxObject(aContent);
   if (mTree)
     mTree->GetView(getter_AddRefs(mTreeView));
@@ -863,7 +865,7 @@ nsXULTreeItemAccessibleBase::RelationByType(PRUint32 aType)
   if (parentIndex == -1)
     return Relation(mParent);
 
-  nsRefPtr<nsXULTreeAccessible> treeAcc = do_QueryObject(mParent);
+  nsXULTreeAccessible* treeAcc = mParent->AsXULTree();
   return Relation(treeAcc->GetTreeItemAccessible(parentIndex));
 }
 
@@ -1283,7 +1285,7 @@ nsXULTreeColumnsAccessible::GetSiblingAtOffset(PRInt32 aOffset,
       PRInt32 rowCount = 0;
       treeView->GetRowCount(&rowCount);
       if (rowCount > 0 && aOffset <= rowCount) {
-        nsRefPtr<nsXULTreeAccessible> treeAcc = do_QueryObject(Parent());
+        nsXULTreeAccessible* treeAcc = Parent()->AsXULTree();
 
         if (treeAcc)
           return treeAcc->GetTreeItemAccessible(aOffset - 1);
