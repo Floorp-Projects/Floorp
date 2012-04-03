@@ -5,6 +5,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
+
 <body onload="doUpdate(testUpdate);">
 <p id="display"></p>
 <div id="content" style="display: none">
@@ -27,8 +28,6 @@ var testUpdate =
 var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
                 .getService(Ci.nsIUrlClassifierDBService);
 
-var numTries = 10;
-
 function doUpdate(update) {
   var listener = {
     QueryInterface: function(iid)
@@ -36,17 +35,23 @@ function doUpdate(update) {
       if (iid.equals(Ci.nsISupports) ||
           iid.equals(Ci.nsIUrlClassifierUpdateObserver))
         return this;
+
       throw Cr.NS_ERROR_NO_INTERFACE;
     },
-
     updateUrlRequested: function(url) { },
     streamFinished: function(status) { },
     updateError: function(errorCode) {
       ok(false, "Couldn't update classifier.");
+      // Abort test.
       SimpleTest.finish();
     },
     updateSuccess: function(requestedTimeout) {
-      document.getElementById("testFrame").src = "classifierFrame.html";
+      SpecialPowers.pushPrefEnv(
+        {"set" : [["browser.safebrowsing.malware.enabled", true]]},
+        function loadTestFrame() {
+          document.getElementById("testFrame").src = "classifierFrame.html";
+        }
+      );
     }
   };
 
@@ -59,9 +64,11 @@ function doUpdate(update) {
   dbService.finishUpdate();
 }
 
+// Expected finish() call is in "classifierFrame.html".
 SimpleTest.waitForExplicitFinish();
 
 </script>
+
 </pre>
 <iframe id="testFrame" onload=""></iframe>
 </body>
