@@ -292,6 +292,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         splitTag(src, ScratchReg);
         return testGCThing(cond, ScratchReg);
     }
+    Condition testMagic(Condition cond, const Address &src) {
+        splitTag(src, ScratchReg);
+        return testMagic(cond, ScratchReg);
+    }
+    Condition testMagic(Condition cond, const BaseIndex &src) {
+        splitTag(src, ScratchReg);
+        return testMagic(cond, ScratchReg);
+    }
     Condition testPrimitive(Condition cond, const ValueOperand &src) {
         splitTag(src, ScratchReg);
         return testPrimitive(cond, ScratchReg);
@@ -498,10 +506,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cond = testNumber(cond, tag);
         j(cond, label);
     }
-    void branchTestMagic(Condition cond, Register tag, Label *label) {
-        cond = testMagic(cond, tag);
-        j(cond, label);
-    }
 
     // Type-testing instructions on x64 will clobber ScratchReg, when used on
     // ValueOperands.
@@ -543,8 +547,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cond = testPrimitive(cond, t);
         j(cond, label);
     }
-    void branchTestMagic(Condition cond, const ValueOperand &src, Label *label) {
-        cond = testMagic(cond, src);
+    template <typename T>
+    void branchTestMagic(Condition cond, const T &t, Label *label) {
+        cond = testMagic(cond, t);
         j(cond, label);
     }
     Condition testMagic(Condition cond, const ValueOperand &src) {
@@ -708,11 +713,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         bind(&end);
     }
 
-    void loadUnboxedValue(Address address, AnyRegister dest) {
+    template <typename T>
+    void loadUnboxedValue(const T &src, AnyRegister dest) {
         if (dest.isFloat())
-            loadInt32OrDouble(Operand(address), dest.fpu());
+            loadInt32OrDouble(Operand(src), dest.fpu());
         else
-            unboxNonDouble(Operand(address), dest.gpr());
+            unboxNonDouble(Operand(src), dest.gpr());
     }
 
     void loadInstructionPointerAfterCall(const Register &dest) {

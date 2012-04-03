@@ -276,6 +276,9 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
     IonCacheGetProperty &cache = ion->getCache(cacheIndex).toGetProperty();
     JSAtom *atom = cache.atom();
 
+    // Override the return value if we are invalidated (bug 728188).
+    AutoDetectInvalidation adi(cx, vp, script);
+
     // For now, just stop generating new stubs once we hit the stub count
     // limit. Once we can make calls from within generated stubs, a new call
     // stub will be generated instead and the previous stubs unlinked.
@@ -306,10 +309,6 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
         cache.getScriptedLocation(&script, &pc);
         types::TypeScript::Monitor(cx, script, pc, *vp);
     }
-
-    // If we've been invalidated, override the return value (bug 728188).
-    if (script->ion != ion)
-        cx->runtime->setIonReturnOverride(*vp);
 
     return true;
 }
@@ -534,6 +533,9 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const 
 
     IonCacheGetElement &cache = ion->getCache(cacheIndex).toGetElement();
 
+    // Override the return value if we are invalidated (bug 728188).
+    AutoDetectInvalidation adi(cx, res, script);
+
     jsid id;
     if (!FetchElementId(cx, obj, idval, id, res))
         return false;
@@ -565,11 +567,6 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const 
         return false;
 
     types::TypeScript::Monitor(cx, script_, pc, *res);
-
-    // If we've been invalidated, override the return value (bug 728188).
-    if (script->ion != ion)
-        cx->runtime->setIonReturnOverride(*res);
-
     return true;
 }
 

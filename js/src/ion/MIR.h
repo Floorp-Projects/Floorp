@@ -3029,6 +3029,55 @@ class MStoreElementHole
     }
 };
 
+// Array.prototype.pop or Array.prototype.shift on a dense array.
+class MArrayPopShift
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
+{
+  public:
+    enum Mode {
+        Pop,
+        Shift
+    };
+
+  private:
+    Mode mode_;
+    bool needsHoleCheck_;
+    bool maybeUndefined_;
+
+    MArrayPopShift(MDefinition *object, Mode mode, bool needsHoleCheck, bool maybeUndefined)
+      : MUnaryInstruction(object), mode_(mode), needsHoleCheck_(needsHoleCheck),
+        maybeUndefined_(maybeUndefined)
+    { }
+
+  public:
+    INSTRUCTION_HEADER(ArrayPopShift);
+
+    static MArrayPopShift *New(MDefinition *object, Mode mode, bool needsHoleCheck,
+                               bool maybeUndefined) {
+        return new MArrayPopShift(object, mode, needsHoleCheck, maybeUndefined);
+    }
+
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    bool needsHoleCheck() const {
+        return needsHoleCheck_;
+    }
+    bool maybeUndefined() const {
+        return maybeUndefined_;
+    }
+    bool mode() const {
+        return mode_;
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::Element | AliasSet::ObjectFields);
+    }
+};
+
 class MLoadTypedArrayElement
   : public MBinaryInstruction
 {

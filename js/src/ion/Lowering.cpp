@@ -1180,6 +1180,30 @@ LIRGenerator::visitStoreElementHole(MStoreElementHole *ins)
 }
 
 bool
+LIRGenerator::visitArrayPopShift(MArrayPopShift *ins)
+{
+    LUse object = useRegister(ins->object());
+
+    switch (ins->type()) {
+      case MIRType_Value:
+      {
+        LArrayPopShiftV *lir = new LArrayPopShiftV(object, temp(), temp());
+        return defineBox(lir, ins) && assignSafepoint(lir, ins);
+      }
+      case MIRType_Undefined:
+      case MIRType_Null:
+        JS_NOT_REACHED("typed load must have a payload");
+        return false;
+
+      default:
+      {
+        LArrayPopShiftT *lir = new LArrayPopShiftT(object, temp(), temp());
+        return define(lir, ins) && assignSafepoint(lir, ins);
+      }
+    }
+}
+
+bool
 LIRGenerator::visitLoadTypedArrayElement(MLoadTypedArrayElement *ins)
 {
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);
