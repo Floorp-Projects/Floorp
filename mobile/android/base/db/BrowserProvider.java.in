@@ -70,13 +70,15 @@ public class BrowserProvider extends ContentProvider {
     static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
 
     // Number of records marked as deleted to be removed
-    static final long DELETED_RECORDS_PURGE_LIMIT = 5;
+    static final long DELETED_RECORDS_PURGE_LIMIT = 7;
 
     static final String TABLE_BOOKMARKS = "bookmarks";
     static final String TABLE_HISTORY = "history";
     static final String TABLE_IMAGES = "images";
 
     static final String TABLE_BOOKMARKS_TMP = TABLE_BOOKMARKS + "_tmp";
+    static final String TABLE_HISTORY_TMP = TABLE_HISTORY + "_tmp";
+    static final String TABLE_IMAGES_TMP = TABLE_IMAGES + "_tmp";
 
     static final String VIEW_BOOKMARKS_WITH_IMAGES = "bookmarks_with_images";
     static final String VIEW_HISTORY_WITH_IMAGES = "history_with_images";
@@ -289,7 +291,7 @@ public class BrowserProvider extends ContentProvider {
                     Bookmarks.TAGS + " TEXT," +
                     Bookmarks.DATE_CREATED + " INTEGER," +
                     Bookmarks.DATE_MODIFIED + " INTEGER," +
-                    Bookmarks.GUID + " TEXT," +
+                    Bookmarks.GUID + " TEXT NOT NULL," +
                     Bookmarks.IS_DELETED + " INTEGER NOT NULL DEFAULT 0" +
                     (foreignKeyOnParent != null ? foreignKeyOnParent : "") +
                     ");");
@@ -312,7 +314,7 @@ public class BrowserProvider extends ContentProvider {
                     History.DATE_LAST_VISITED + " INTEGER," +
                     History.DATE_CREATED + " INTEGER," +
                     History.DATE_MODIFIED + " INTEGER," +
-                    History.GUID + " TEXT," +
+                    History.GUID + " TEXT NOT NULL," +
                     History.IS_DELETED + " INTEGER NOT NULL DEFAULT 0" +
                     ");");
 
@@ -336,7 +338,7 @@ public class BrowserProvider extends ContentProvider {
                     Images.THUMBNAIL + " BLOB," +
                     Images.DATE_CREATED + " INTEGER," +
                     Images.DATE_MODIFIED + " INTEGER," +
-                    Images.GUID + " TEXT," +
+                    Images.GUID + " TEXT NOT NULL," +
                     Images.IS_DELETED + " INTEGER NOT NULL DEFAULT 0" +
                     ");");
 
@@ -449,8 +451,6 @@ public class BrowserProvider extends ContentProvider {
             bookmarksValues.put(Bookmarks.DATE_CREATED, now);
             bookmarksValues.put(Bookmarks.DATE_MODIFIED, now);
 
-            ContentValues historyValues = new ContentValues();
-
             int pos = 1;
             for (int i = 0; i < fields.length; i++) {
                 String name = fields[i].getName();
@@ -470,11 +470,7 @@ public class BrowserProvider extends ContentProvider {
                     bookmarksValues.put(Bookmarks.URL, url);
                     bookmarksValues.put(Bookmarks.GUID, Utils.generateGuid());
                     bookmarksValues.put(Bookmarks.POSITION, pos);
-                    long id = db.insertOrThrow(TABLE_BOOKMARKS, Bookmarks.TITLE, bookmarksValues);
-
-                    historyValues.put(History.TITLE, title);
-                    historyValues.put(History.URL, url);
-                    id = db.insertOrThrow(TABLE_HISTORY, History.VISITS, historyValues);
+                    db.insertOrThrow(TABLE_BOOKMARKS, Bookmarks.TITLE, bookmarksValues);
 
                     setDefaultFavicon(db, name, url);
                     pos++;
@@ -511,6 +507,7 @@ public class BrowserProvider extends ContentProvider {
                 values.put(Images.FAVICON, stream.toByteArray());
                 values.put(Images.URL, url);
                 values.put(Images.IS_DELETED, 0);
+                values.put(Images.GUID, Utils.generateGuid());
                 db.insertOrThrow(TABLE_IMAGES, Images.URL, values);
             }
         }
@@ -697,6 +694,54 @@ public class BrowserProvider extends ContentProvider {
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_BOOKMARKS_TMP);
         }
 
+
+        private void migrateHistoryTable(SQLiteDatabase db) {
+            debug("Renaming history table to " + TABLE_HISTORY_TMP);
+            db.execSQL("ALTER TABLE " + TABLE_HISTORY +
+                       " RENAME TO " + TABLE_HISTORY_TMP);
+
+            debug("Dropping views and indexes related to " + TABLE_HISTORY);
+            db.execSQL("DROP VIEW IF EXISTS " + VIEW_HISTORY_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_IMAGES);
+
+            db.execSQL("DROP INDEX IF EXISTS history_url_index");
+            db.execSQL("DROP INDEX IF EXISTS history_guid_index");
+            db.execSQL("DROP INDEX IF EXISTS history_modified_index");
+            db.execSQL("DROP INDEX IF EXISTS history_visited_index");
+
+            createHistoryTable(db);
+            createHistoryWithImagesView(db);
+            createCombinedWithImagesView(db);
+
+            db.execSQL("INSERT INTO " + TABLE_HISTORY + " SELECT * FROM " + TABLE_HISTORY_TMP);
+
+            debug("Dropping history temporary table");
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_HISTORY_TMP);
+        }
+
+        private void migrateImagesTable(SQLiteDatabase db) {
+            debug("Renaming images table to " + TABLE_IMAGES_TMP);
+            db.execSQL("ALTER TABLE " + TABLE_IMAGES +
+                       " RENAME TO " + TABLE_IMAGES_TMP);
+
+            debug("Dropping views and indexes related to " + TABLE_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + VIEW_HISTORY_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_IMAGES);
+
+            db.execSQL("DROP INDEX IF EXISTS images_url_index");
+            db.execSQL("DROP INDEX IF EXISTS images_guid_index");
+            db.execSQL("DROP INDEX IF EXISTS images_modified_index");
+
+            createImagesTable(db);
+            createHistoryWithImagesView(db);
+            createCombinedWithImagesView(db);
+
+            db.execSQL("INSERT INTO " + TABLE_IMAGES + " SELECT * FROM " + TABLE_IMAGES_TMP);
+
+            debug("Dropping images temporary table");
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_IMAGES_TMP);
+        }
+
         private void upgradeDatabaseFrom1to2(SQLiteDatabase db) {
             migrateBookmarksTable(db);
         }
@@ -728,6 +773,28 @@ public class BrowserProvider extends ContentProvider {
             createCombinedWithImagesView(db);
         }
 
+        private void upgradeDatabaseFrom6to7(SQLiteDatabase db) {
+            debug("Removing history visits with NULL GUIDs");
+            db.execSQL("DELETE FROM " + TABLE_HISTORY + " WHERE " + History.GUID + " IS NULL");
+
+            debug("Update images with NULL GUIDs");
+            String[] columns = new String[] { Images._ID };
+            Cursor cursor = db.query(TABLE_IMAGES, columns, Images.GUID + " IS NULL", null, null ,null, null, null);
+            ContentValues values = new ContentValues();
+            if (cursor.moveToFirst()) {
+                do {
+                    values.put(Images.GUID, Utils.generateGuid());
+                    db.update(TABLE_IMAGES, values, Images._ID + " = ?", new String[] {
+                      cursor.getString(cursor.getColumnIndexOrThrow(Images._ID))
+                    });
+                } while (cursor.moveToNext());
+            }
+
+            migrateBookmarksTable(db);
+            migrateHistoryTable(db);
+            migrateImagesTable(db);
+        }
+
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             debug("Upgrading browser.db: " + db.getPath() + " from " +
@@ -757,6 +824,10 @@ public class BrowserProvider extends ContentProvider {
 
                     case 6:
                         upgradeDatabaseFrom5to6(db);
+                        break;
+
+                    case 7:
+                        upgradeDatabaseFrom6to7(db);
                         break;
                  }
              }
