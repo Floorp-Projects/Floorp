@@ -26,12 +26,20 @@ function download_progress(addon, value, maxValue) {
 function finish_test(count) {
   function wait_for_online() {
     info("Checking if the browser is still offline...");
-    var request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                  createInstance(Ci.nsIXMLHttpRequest);
-    request.open("GET", TESTROOT + "empty.xpi", true);
-    request.onerror = wait_for_online;
-    request.onload = Harness.finish;
-    request.send(null);
+
+    let tab = gBrowser.selectedTab;
+    tab.linkedBrowser.addEventListener("DOMContentLoaded", function errorLoad() {
+      tab.linkedBrowser.removeEventListener("DOMContentLoaded", errorLoad, true);
+      let url = tab.linkedBrowser.contentDocument.documentURI;
+      info("loaded: " + url);
+      if (/^about:neterror\?e=netOffline/.test(url)) {
+        wait_for_online();
+      } else {
+        gBrowser.removeCurrentTab();
+        Harness.finish();
+      }
+    }, true);
+    tab.linkedBrowser.loadURI("http://example.com/");
   }
 
   is(count, 0, "No add-ons should have been installed");
@@ -42,6 +50,5 @@ function finish_test(count) {
 
   Services.perms.remove("example.com", "install");
 
-  gBrowser.removeCurrentTab();
   wait_for_online();
 }
