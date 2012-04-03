@@ -11,12 +11,14 @@
 #         *_DEPS - Make dependencies derived from a given macro.
 ###########################################################################
 
+MKDIR ?= mkdir -p
+TOUCH ?= touch
 
 ###########################################################################
 # Threadsafe directory creation
 # GENERATED_DIRS - Automated creation of these directories.
 ###########################################################################
-mkdir_deps =$(foreach dir,$($(1)),$(dir)/.mkdir.done)
+mkdir_deps =$(foreach dir,$(getargv),$(dir)/.mkdir.done)
 
 ifneq (,$(GENERATED_DIRS))
   tmpauto :=$(call mkdir_deps,GENERATED_DIRS)
@@ -33,5 +35,11 @@ endif
 #   config/rules.mk::all target is available by default
 #   Add $(AUTO_DEPS) as an explicit target dependency when needed.
 #################################################################
+
 AUTO_DEPS +=$(GENERATED_DIRS_DEPS)
 
+
+# Complain loudly if deps have not loaded so getargv != $(NULL)
+ifndef getargv
+  $(error config/makefiles/makeutil.mk has not been included)
+endif

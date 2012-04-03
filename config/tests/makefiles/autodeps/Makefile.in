@@ -17,7 +17,6 @@ srcdir    = @srcdir@
 VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-# INCLUDED_CONFIG_MK = 1
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
@@ -38,7 +37,5 @@ check:: $(tgts)
 
 # Only run unit test when autotargets.mk is modified
 $(autotgt_tests): $(topsrcdir)/config/makefiles/autotargets.mk
-	echo "MAKECMD=$(MAKE)"
 	MAKECMD=$(MAKE) $(PYTEST) $(srcdir)/check_mkdir.tpy
 	@$(TOUCH) $@
-
