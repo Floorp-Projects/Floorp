@@ -2,7 +2,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const TEST_URI = "data:text/html,<p>bug 660806 - history navigation must not show the autocomplete popup";
+const TEST_URI = "data:text/html;charset=utf-8,<p>bug 660806 - history navigation must not show the autocomplete popup";
 
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.gcli.enable");

@@ -93,8 +93,7 @@ debug("");
 var wtu = WebGLTestUtils;
 var err;
 var maxSize;
-var canvas = document.createElement("canvas");
-var gl = create3DContext(canvas);
+var gl = wtu.create3DContext();
 if (!gl) {
   testFailed("context does not exist");
 } else {
@@ -113,8 +112,8 @@ if (!gl) {
   debug("Checking drawingBufferWidth/drawingBufferHeight");
 
   // Check that a canvas with no width or height is 300x150 pixels
-  shouldBe('gl.drawingBufferWidth', 'canvas.width');
-  shouldBe('gl.drawingBufferHeight', 'canvas.height');
+  shouldBe('gl.drawingBufferWidth', 'gl.canvas.width');
+  shouldBe('gl.drawingBufferHeight', 'gl.canvas.height');
 
   // Check that changing the canvas size to something too large falls back to reasonable values.
   maxSize = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
@@ -122,8 +121,8 @@ if (!gl) {
   shouldBeTrue('maxSize[1] > 0');
 
   // debug("MAX_VIEWPORT_DIMS = " + maxSize[0] + "x" + maxSize[1]);
-  canvas.width = maxSize[0] * 4;
-  canvas.height = maxSize[1] * 4;
+  gl.canvas.width = maxSize[0] * 4;
+  gl.canvas.height = maxSize[1] * 4;
   shouldBeTrue('gl.drawingBufferWidth > 0');
   shouldBeTrue('gl.drawingBufferHeight > 0');
   shouldBeTrue('gl.drawingBufferWidth <= maxSize[0]');
@@ -132,8 +131,8 @@ if (!gl) {
 
   debug("");
   debug("Checking scaling up then back down to 50/50, drawing still works.");
-  canvas.width = 50;
-  canvas.height = 50;
+  gl.canvas.width = 50;
+  gl.canvas.height = 50;
   shouldBeTrue('gl.drawingBufferWidth == 50');
   shouldBeTrue('gl.drawingBufferHeight == 50');
   shouldBe('gl.getError()', 'gl.NO_ERROR');

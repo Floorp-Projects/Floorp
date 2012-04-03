@@ -34,62 +34,53 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// include nsSVGUtils.h first to ensure definition of M_SQRT1_2 is picked up
+// Main header first:
+// This is also necessary to ensure our definition of M_SQRT1_2 is picked up
 #include "nsSVGUtils.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMSVGElement.h"
-#include "nsIDOMSVGSVGElement.h"
-#include "nsStyleCoord.h"
-#include "nsPresContext.h"
-#include "nsSVGSVGElement.h"
+
+// Keep others in (case-insensitive) order:
+#include "gfxContext.h"
+#include "gfxImageSurface.h"
+#include "gfxMatrix.h"
+#include "gfxPlatform.h"
+#include "gfxRect.h"
+#include "gfxUtils.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/Preferences.h"
+#include "nsComputedDOMStyle.h"
+#include "nsContentUtils.h"
+#include "nsFrameList.h"
+#include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIFrame.h"
-#include "nsGkAtoms.h"
-#include "nsIURI.h"
-#include "nsStyleStruct.h"
-#include "nsIPresShell.h"
-#include "nsNetUtil.h"
-#include "nsFrameList.h"
-#include "nsISVGChildFrame.h"
-#include "nsContentDLF.h"
-#include "nsContentUtils.h"
-#include "nsSVGFilterFrame.h"
-#include "nsINameSpaceManager.h"
-#include "nsDOMError.h"
-#include "nsSVGOuterSVGFrame.h"
-#include "nsSVGInnerSVGFrame.h"
-#include "SVGAnimatedPreserveAspectRatio.h"
-#include "nsSVGClipPathFrame.h"
-#include "nsSVGMaskFrame.h"
-#include "nsSVGContainerFrame.h"
-#include "nsSVGTextContainerFrame.h"
-#include "nsSVGLength2.h"
-#include "nsGenericElement.h"
-#include "nsSVGGraphicElement.h"
-#include "nsAttrValue.h"
-#include "nsIScriptError.h"
-#include "gfxContext.h"
-#include "gfxMatrix.h"
-#include "gfxRect.h"
-#include "gfxImageSurface.h"
-#include "gfxPlatform.h"
-#include "nsSVGForeignObjectFrame.h"
+#include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGUnitTypes.h"
+#include "nsIFrame.h"
+#include "nsINameSpaceManager.h"
+#include "nsIPresShell.h"
+#include "nsIScriptError.h"
+#include "nsISVGChildFrame.h"
+#include "nsPresContext.h"
+#include "nsRenderingContext.h"
+#include "nsStyleCoord.h"
+#include "nsStyleStruct.h"
+#include "nsSVGClipPathFrame.h"
+#include "nsSVGContainerFrame.h"
 #include "nsSVGEffects.h"
-#include "nsMathUtils.h"
-#include "nsSVGIntegrationUtils.h"
+#include "nsSVGFilterFrame.h"
 #include "nsSVGFilterPaintCallback.h"
+#include "nsSVGForeignObjectFrame.h"
 #include "nsSVGGeometryFrame.h"
-#include "nsComputedDOMStyle.h"
-#include "nsSVGPathGeometryFrame.h"
+#include "nsSVGInnerSVGFrame.h"
+#include "nsSVGIntegrationUtils.h"
+#include "nsSVGLength2.h"
+#include "nsSVGMaskFrame.h"
+#include "nsSVGOuterSVGFrame.h"
 #include "nsSVGPathGeometryElement.h"
-#include "prdtoa.h"
-#include "mozilla/dom/Element.h"
-#include "gfxUtils.h"
-#include "mozilla/Preferences.h"
-
-#include "mozilla/gfx/2D.h"
+#include "nsSVGPathGeometryFrame.h"
+#include "nsSVGSVGElement.h"
+#include "nsSVGTextContainerFrame.h"
+#include "SVGAnimatedPreserveAspectRatio.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -651,18 +642,53 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect)
   return r;
 }
 
-void
-nsSVGUtils::InvalidateCoveredRegion(nsIFrame *aFrame)
+#ifdef DEBUG
+bool
+nsSVGUtils::OuterSVGIsCallingUpdateBounds(nsIFrame *aFrame)
 {
-  if (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
-    return;
+  return nsSVGUtils::GetOuterSVGFrame(aFrame)->IsCallingUpdateBounds();
+}
+#endif
 
-  if (aFrame->GetStateBits() & NS_STATE_SVG_REDRAW_SUSPENDED) {
-    aFrame->AddStateBits(NS_STATE_SVG_DIRTY);
+void
+nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate)
+{
+  NS_ABORT_IF_FALSE(aFrame->IsFrameOfType(nsIFrame::eSVG),
+                    "Passed bad frame!");
+
+  NS_ASSERTION(aDuringUpdate == OuterSVGIsCallingUpdateBounds(aFrame),
+               "aDuringUpdate lies!");
+
+  // Rendering observers must be notified about changes to the frames that they
+  // are observing _before_ UpdateBounds is called on the SVG frame tree, so we
+  // only need to notify observers if we're not under an UpdateBounds call.
+  // In fact, it would actually be wrong to notify observers while under
+  // UpdateBounds because the observers will try to mark themselves as dirty
+  // and, since UpdateBounds would be in the process of _removeing_ dirty bits
+  // from frames, that would mess things up.
+  if (!aDuringUpdate) {
+    NS_ASSERTION(!OuterSVGIsCallingUpdateBounds(aFrame),
+                 "Must not InvalidateRenderingObservers() under "
+                 "nsISVGChildFrame::UpdateBounds!");
+
+    nsSVGEffects::InvalidateRenderingObservers(aFrame);
+  }
+
+  // Must come after InvalidateRenderingObservers
+  if (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
     return;
   }
 
-  aFrame->RemoveStateBits(NS_STATE_SVG_DIRTY);
+  // XXXjwatt: can this come before InvalidateRenderingObservers?
+  if (aFrame->GetStateBits() &
+      (NS_FRAME_IS_DIRTY | NS_FRAME_FIRST_REFLOW)) {
+    // Nothing to do if we're already dirty, or if the outer-<svg>
+    // hasn't yet had its initial reflow.
+    return;
+  }
+
+  // XXXsvgreflow we want to reduce the bounds when passing through inner-<svg>
+  // and <use>, etc.
 
   nsSVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame(aFrame);
   NS_ASSERTION(outerSVGFrame, "no outer svg frame");
@@ -671,55 +697,130 @@ nsSVGUtils::InvalidateCoveredRegion(nsIFrame *aFrame)
     if (!svgFrame)
       return;
 
-    // Make sure elements styled by :hover get updated if script/animation moves
-    // them under or out from under the pointer:
-    aFrame->PresContext()->PresShell()->SynthesizeMouseMove(false);
-
+    // Note that filters can paint even if the element being filtered has empty
+    // bounds, so we don't return early for that. Specifically, filters can be
+    // given an explicit size that doesn't depend on the bbox of the element
+    // being filtered, and then feFlood can be used to fill that area with paint.
     nsRect rect = FindFilterInvalidation(aFrame, svgFrame->GetCoveredRegion());
     outerSVGFrame->Invalidate(rect);
   }
 }
 
-void
-nsSVGUtils::UpdateGraphic(nsIFrame *aFrame)
+static void
+MarkDirtyBitsOnDescendants(nsIFrame *aFrame)
 {
-  nsSVGEffects::InvalidateRenderingObservers(aFrame);
+  NS_ABORT_IF_FALSE(aFrame->IsFrameOfType(nsIFrame::eSVG),
+                    "Passed bad frame!");
 
-  if (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
-    return;
+  nsIFrame* kid = aFrame->GetFirstPrincipalChild();
+  while (kid) {
+    nsISVGChildFrame* svgkid = do_QueryFrame(kid);
+    if (svgkid &&
+        !(kid->GetStateBits() &
+          (NS_STATE_SVG_NONDISPLAY_CHILD | NS_FRAME_IS_DIRTY))) {
+      MarkDirtyBitsOnDescendants(kid);
+      kid->AddStateBits(NS_FRAME_IS_DIRTY);
+    }
+    kid = kid->GetNextSibling();
+  }
+}
 
-  if (aFrame->GetStateBits() & NS_STATE_SVG_REDRAW_SUSPENDED) {
-    aFrame->AddStateBits(NS_STATE_SVG_DIRTY);
+void
+nsSVGUtils::ScheduleBoundsUpdate(nsIFrame *aFrame)
+{
+  NS_ABORT_IF_FALSE(aFrame->IsFrameOfType(nsIFrame::eSVG),
+                    "Passed bad frame!");
+
+  // If this is triggered, the callers should be fixed to call us before
+  // UpdateBounds is called. If we try to mark dirty bits on frames while we're
+  // in the process of removing them, things will get messed up.
+  NS_ASSERTION(!OuterSVGIsCallingUpdateBounds(aFrame),
+               "Do not call under nsISVGChildFrame::UpdateBounds!");
+
+  // We don't call nsSVGEffects::InvalidateRenderingObservers here because
+  // we should only be called under InvalidateAndScheduleBoundsUpdate (which
+  // calls InvalidateBounds) or nsSVGDisplayContainerFrame::InsertFrames
+  // (at which point the frame has no observers).
+
+  if (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
     return;
   }
 
-  aFrame->RemoveStateBits(NS_STATE_SVG_DIRTY);
-
-  nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
-  if (!svgFrame)
-    return;
-
-  nsSVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame(aFrame);
-  if (!outerSVGFrame) {
-    NS_ERROR("null outerSVGFrame");
+  if (aFrame->GetStateBits() &
+      (NS_FRAME_IS_DIRTY | NS_FRAME_FIRST_REFLOW)) {
+    // Nothing to do if we're already dirty, or if the outer-<svg>
+    // hasn't yet had its initial reflow.
     return;
   }
 
-  // Make sure elements styled by :hover get updated if script/animation moves
-  // them under or out from under the pointer:
-  aFrame->PresContext()->PresShell()->SynthesizeMouseMove(false);
+  // XXXsvgreflow once we store bounds on containers, we will not need to
+  // mark our descendants dirty.
+  MarkDirtyBitsOnDescendants(aFrame);
 
-  nsRect oldRegion = svgFrame->GetCoveredRegion();
-  outerSVGFrame->Invalidate(FindFilterInvalidation(aFrame, oldRegion));
-  svgFrame->UpdateCoveredRegion();
-  nsRect newRegion = svgFrame->GetCoveredRegion();
-  if (oldRegion.IsEqualInterior(newRegion))
-    return;
+  nsSVGOuterSVGFrame *outerSVGFrame = nsnull;
 
-  outerSVGFrame->Invalidate(FindFilterInvalidation(aFrame, newRegion));
-  if (!(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG)) {
-    NotifyAncestorsOfFilterRegionChange(aFrame);
+  // We must not add dirty bits to the nsSVGOuterSVGFrame or else
+  // PresShell::FrameNeedsReflow won't work when we pass it in below.
+  if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG) {
+    outerSVGFrame = static_cast<nsSVGOuterSVGFrame*>(aFrame);
+  } else {
+    aFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+
+    nsIFrame *f = aFrame->GetParent();
+    while (f && !(f->GetStateBits() & NS_STATE_IS_OUTER_SVG)) {
+      if (f->GetStateBits() &
+          (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) {
+        return;
+      }
+      f->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+      f = f->GetParent();
+      NS_ABORT_IF_FALSE(f->IsFrameOfType(nsIFrame::eSVG),
+                        "NS_STATE_IS_OUTER_SVG check above not valid!");
+    }
+
+    outerSVGFrame = static_cast<nsSVGOuterSVGFrame*>(f);
+
+    NS_ABORT_IF_FALSE(outerSVGFrame &&
+                      outerSVGFrame->GetType() == nsGkAtoms::svgOuterSVGFrame,
+                      "Did not find nsSVGOuterSVGFrame!");
   }
+
+  if (outerSVGFrame->GetStateBits() & NS_FRAME_IN_REFLOW) {
+    // We're currently under an nsSVGOuterSVGFrame::Reflow call so there is no
+    // need to call PresShell::FrameNeedsReflow, since we have an
+    // nsSVGOuterSVGFrame::DidReflow call pending.
+    return;
+  }
+
+  nsFrameState dirtyBit =
+    (outerSVGFrame == aFrame ? NS_FRAME_IS_DIRTY : NS_FRAME_HAS_DIRTY_CHILDREN);
+
+  aFrame->PresContext()->PresShell()->FrameNeedsReflow(
+    outerSVGFrame, nsIPresShell::eResize, dirtyBit);
+}
+
+void
+nsSVGUtils::InvalidateAndScheduleBoundsUpdate(nsIFrame *aFrame)
+{
+  // If this is triggered, the callers should be fixed to call us much
+  // earlier. If we try to mark dirty bits on frames while we're in the
+  // process of removing them, things will get messed up.
+  NS_ASSERTION(!OuterSVGIsCallingUpdateBounds(aFrame),
+               "Must not call under nsISVGChildFrame::UpdateBounds!");
+
+  InvalidateBounds(aFrame, false);
+  ScheduleBoundsUpdate(aFrame);
+}
+
+bool
+nsSVGUtils::NeedsUpdatedBounds(nsIFrame *aFrame)
+{
+  NS_ABORT_IF_FALSE(aFrame->IsFrameOfType(nsIFrame::eSVG),
+                    "SVG uses bits differently!");
+
+  // The flags we test here may change, hence why we have this separate
+  // function.
+  return NS_SUBTREE_DIRTY(aFrame);
 }
 
 void
@@ -968,38 +1069,6 @@ nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, PRUint32 aFlags)
       // recurse into the children of container frames e.g. <clipPath>, <mask>
       // in case they have child frames with transformation matrices
       NotifyChildrenOfSVGChange(kid, aFlags);
-    }
-    kid = kid->GetNextSibling();
-  }
-}
-
-void
-nsSVGUtils::NotifyRedrawSuspended(nsIFrame *aFrame)
-{
-  aFrame->AddStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
-
-  nsIFrame *kid = aFrame->GetFirstPrincipalChild();
-
-  while (kid) {
-    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
-    if (SVGFrame) {
-      SVGFrame->NotifyRedrawSuspended();
-    }
-    kid = kid->GetNextSibling();
-  }
-}
-
-void
-nsSVGUtils::NotifyRedrawUnsuspended(nsIFrame *aFrame)
-{
-  aFrame->RemoveStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
-
-  nsIFrame *kid = aFrame->GetFirstPrincipalChild();
-
-  while (kid) {
-    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
-    if (SVGFrame) {
-      SVGFrame->NotifyRedrawUnsuspended();
     }
     kid = kid->GetNextSibling();
   }

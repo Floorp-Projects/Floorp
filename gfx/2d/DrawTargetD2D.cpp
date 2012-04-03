@@ -880,7 +880,8 @@ void
 DrawTargetD2D::FillGlyphs(ScaledFont *aFont,
                           const GlyphBuffer &aBuffer,
                           const Pattern &aPattern,
-                          const DrawOptions &aOptions)
+                          const DrawOptions &aOptions,
+                          const GlyphRenderingOptions* aRenderOptions)
 {
   if (aFont->GetType() != FONT_DWRITE) {
     gfxDebug() << *this << ": Ignoring drawing call for incompatible font.";
@@ -892,6 +893,19 @@ DrawTargetD2D::FillGlyphs(ScaledFont *aFont,
   ID2D1RenderTarget *rt = GetRTForOperation(aOptions.mCompositionOp, aPattern);
 
   PrepareForDrawing(rt);
+
+  IDWriteRenderingParams *params = NULL;
+  if (aRenderOptions) {
+    if (aRenderOptions->GetType() != FONT_DWRITE) {
+    gfxDebug() << *this << ": Ignoring incompatible GlyphRenderingOptions.";
+    // This should never happen.
+    MOZ_ASSERT(false);
+    } else {
+      params = static_cast<const GlyphRenderingOptionsDWrite*>(aRenderOptions)->mParams;
+    }
+  }
+
+  rt->SetTextRenderingParams(params);
 
   RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aPattern, aOptions.mAlpha);
 

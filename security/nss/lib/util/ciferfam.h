@@ -38,7 +38,7 @@
  * ciferfam.h - cipher familie IDs used for configuring ciphers for export
  *              control
  *
- * $Id: ciferfam.h,v 1.4 2007/10/12 01:44:50 julien.pierre.boogz%sun.com Exp $
+ * $Id: ciferfam.h,v 1.5 2012/03/01 18:33:11 kaie%kuix.de Exp $
  */
 
 #ifndef _CIFERFAM_H_
@@ -72,6 +72,7 @@
 #define	SMIME_DES_CBC_56		(CIPHER_FAMILYID_SMIME | 0011)
 #define	SMIME_DES_EDE3_168		(CIPHER_FAMILYID_SMIME | 0012)
 #define	SMIME_AES_CBC_128		(CIPHER_FAMILYID_SMIME | 0013)
+#define	SMIME_AES_CBC_256		(CIPHER_FAMILYID_SMIME | 0014)
 #define	SMIME_RC5PAD_64_16_40		(CIPHER_FAMILYID_SMIME | 0021)
 #define	SMIME_RC5PAD_64_16_64		(CIPHER_FAMILYID_SMIME | 0022)
 #define	SMIME_RC5PAD_64_16_128		(CIPHER_FAMILYID_SMIME | 0023)

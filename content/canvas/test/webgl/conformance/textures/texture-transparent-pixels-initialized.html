@@ -50,8 +50,7 @@ function init()
     description('Tests there is no garbage in transparent regions of images uploaded as textures');
 
     wtu = WebGLTestUtils;
-    var canvas = document.getElementById("example");
-    gl = wtu.create3DContext(canvas);
+    gl = wtu.create3DContext("example");
     var program = wtu.setupTexturedQuad(gl);
     gl.clearColor(0.5,0.5,0.5,1);
     gl.clearDepth(1);

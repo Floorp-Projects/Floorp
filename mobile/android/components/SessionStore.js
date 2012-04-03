@@ -872,13 +872,13 @@ SessionStore.prototype = {
   },
 
   getTabValue: function ss_getTabValue(aTab, aKey) {
-    let browser = aTab.linkedBrowser;
+    let browser = aTab.browser;
     let data = browser.__SS_extdata || {};
     return data[aKey] || "";
   },
 
   setTabValue: function ss_setTabValue(aTab, aKey, aStringValue) {
-    let browser = aTab.linkedBrowser;
+    let browser = aTab.browser;
 
     // Thumbnails are actually stored in the cache, so do the save and update the URI
     if (aKey == "thumbnail") {
@@ -903,7 +903,7 @@ SessionStore.prototype = {
   },
 
   deleteTabValue: function ss_deleteTabValue(aTab, aKey) {
-    let browser = aTab.linkedBrowser;
+    let browser = aTab.browser;
     if (browser.__SS_extdata && browser.__SS_extdata[aKey])
       delete browser.__SS_extdata[aKey];
     else

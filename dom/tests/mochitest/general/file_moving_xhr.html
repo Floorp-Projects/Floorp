@@ -2,7 +2,9 @@
     <head>
         <script>
             function createXHR() {
-                return new XMLHttpRequest();
+                var xhr = new XMLHttpRequest();
+                xhr.expando = "foo";
+                return xhr;
             }
 
             function tryToUseXHR(xhr, ok) {

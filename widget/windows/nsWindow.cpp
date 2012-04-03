@@ -5798,6 +5798,22 @@ nsWindow::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
   return NS_OK;
 }
 
+nsresult
+nsWindow::SynthesizeNativeMouseScrollEvent(nsIntPoint aPoint,
+                                           PRUint32 aNativeMessage,
+                                           double aDeltaX,
+                                           double aDeltaY,
+                                           double aDeltaZ,
+                                           PRUint32 aModifierFlags,
+                                           PRUint32 aAdditionalFlags)
+{
+  return MouseScrollHandler::SynthesizeNativeMouseScrollEvent(
+           this, aPoint, aNativeMessage,
+           (aNativeMessage == WM_MOUSEWHEEL || aNativeMessage == WM_VSCROLL) ?
+             static_cast<PRInt32>(aDeltaY) : static_cast<PRInt32>(aDeltaX),
+           aModifierFlags, aAdditionalFlags);
+}
+
 /**************************************************************
  *
  * SECTION: OnXXX message handlers

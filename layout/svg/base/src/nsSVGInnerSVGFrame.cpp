@@ -36,13 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Main header first:
 #include "nsSVGInnerSVGFrame.h"
+
+// Keep others in (case-insensitive) order:
+#include "gfxContext.h"
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
-#include "nsIDOMSVGAnimatedRect.h"
-#include "nsSVGSVGElement.h"
+#include "nsRenderingContext.h"
 #include "nsSVGContainerFrame.h"
-#include "gfxContext.h"
+#include "nsSVGSVGElement.h"
 
 nsIFrame*
 NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -231,24 +234,6 @@ nsSVGInnerSVGFrame::GetFrameForPoint(const nsPoint &aPoint)
 
 //----------------------------------------------------------------------
 // nsISVGSVGFrame methods:
-
-void
-nsSVGInnerSVGFrame::SuspendRedraw()
-{
-  if (GetParent()->GetStateBits() & NS_STATE_SVG_REDRAW_SUSPENDED)
-    return;
-
-  nsSVGUtils::NotifyRedrawSuspended(this);
-}
-
-void
-nsSVGInnerSVGFrame::UnsuspendRedraw()
-{
-  if (GetParent()->GetStateBits() & NS_STATE_SVG_REDRAW_SUSPENDED)
-    return;
-
-  nsSVGUtils::NotifyRedrawUnsuspended(this);
-}
 
 void
 nsSVGInnerSVGFrame::NotifyViewportChange()

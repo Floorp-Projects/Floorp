@@ -142,14 +142,15 @@ function RadioInterfaceLayer() {
   this.worker.onmessage = this.onmessage.bind(this);
   debug("Starting Worker\n");
   this.radioState = {
-    radioState:     null,
-    cardState:      null,
+    radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
+    cardState:      RIL.GECKO_CARDSTATE_UNAVAILABLE,
     connected:      null,
     roaming:        null,
     signalStrength: null,
     bars:           null,
     operator:       null,
     type:           null,
+    msisdn:         null,
   };
 }
 RadioInterfaceLayer.prototype = {
@@ -193,15 +194,15 @@ RadioInterfaceLayer.prototype = {
         // This one will handle its own notifications.
         this.handleEnumerateCalls(message.calls);
         break;
-      case "registrationstatechange":
-        this.updateDataConnection(message.registrationState);
+      case "voiceregistrationstatechange":
+        this.updateDataConnection(message.voiceRegistrationState);
         break;
-      case "gprsregistrationstatechange":
-        let state = message.gprsRegistrationState;
+      case "dataregistrationstatechange":
+        let state = message.dataRegistrationState;
         this.updateDataConnection(state);
 
         //TODO for simplicity's sake, for now we only look at
-        // gprsRegistrationState for the radio registration state.
+        // dataRegistrationState for the radio registration state.
 
         if (!state || state.regState == RIL.NETWORK_CREG_STATE_UNKNOWN) {
           this.resetRadioState();
@@ -277,6 +278,12 @@ RadioInterfaceLayer.prototype = {
                + " dst=" + message.dstFlag
                + " timestamp=" + message.localTimeStampInMS);
         }
+        break;
+      case "siminfo":
+        this.radioState.msisdn = message.msisdn;
+        break;
+      case "error":
+        debug("Received error message: " + JSON.stringify(message));
         break;
       default:
         throw new Error("Don't know about this message type: " + message.type);
@@ -1079,7 +1086,8 @@ let RILNetworkInterface = {
 
   dataCallStateChanged: function dataCallStateChanged(cid, interfaceName, callState) {
     if (this.connecting &&
-        callState == RIL.GECKO_NETWORK_STATE_CONNECTING) {
+        (callState == RIL.GECKO_NETWORK_STATE_CONNECTING ||
+         callState == RIL.GECKO_NETWORK_STATE_CONNECTED)) {
       this.connecting = false;
       this.cid = cid;
       this.name = interfaceName;

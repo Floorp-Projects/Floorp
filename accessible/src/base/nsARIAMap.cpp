@@ -173,6 +173,15 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eReadonlyUntilEditable
   },
   {
+    "form",
+    roles::FORM,
+    kUseMapRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    kNoReqStates
+  },
+  {
     "grid",
     roles::TABLE,
     kUseMapRole,
@@ -334,6 +343,15 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eNoLiveAttr,
     kNoReqStates,
     eARIACheckableBool
+  },
+  {
+    "note",
+    roles::NOTE,
+    kUseMapRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    kNoReqStates
   },
   {
     "option",

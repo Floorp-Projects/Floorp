@@ -69,8 +69,10 @@ const ots::LookupSubtableParser::TypeParser kGposTypeParsers[] = {
   {GPOS_TYPE_EXTENSION_POSITIONING, ParseExtensionPositioning}
 };
 
+// TODO(bashi): Port Chromium's arraysize macro and use it instead of sizeof().
 const ots::LookupSubtableParser kGposLookupSubtableParser = {
-  GPOS_TYPE_RESERVED, GPOS_TYPE_EXTENSION_POSITIONING, kGposTypeParsers
+  sizeof(kGposTypeParsers) / sizeof(kGposTypeParsers[0]),
+  GPOS_TYPE_EXTENSION_POSITIONING, kGposTypeParsers
 };
 
 // Shared Tables: ValueRecord, Anchor Table, and MarkArray

@@ -367,7 +367,9 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
         regs.fp()->resetInlinePrev(f.fp(), f.regs.pc);
     }
 
-    bool ok = !!Interpret(cx, cx->fp());
+    JS_CHECK_RECURSION(cx, return false);
+
+    bool ok = Interpret(cx, cx->fp());
     f.cx->stack.popInlineFrame(regs);
 
     if (ok)
@@ -456,7 +458,7 @@ stubs::UncachedCallHelper(VMFrame &f, uint32_t argc, bool lowered, UncachedCallR
         }
 
         if (ucr->fun->isNative()) {
-            if (!CallJSNative(cx, ucr->fun->u.n.native, args))
+            if (!CallJSNative(cx, ucr->fun->native(), args))
                 THROW();
             types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
             return;

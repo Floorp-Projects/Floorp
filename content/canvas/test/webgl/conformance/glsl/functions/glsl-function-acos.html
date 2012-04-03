@@ -26,44 +26,65 @@ var piConstants = [
   "const float k2PI    = (kPI * 2.0);"
 ].join("\n");
 
-var asinImplementation = [
-  "float asin_impl(float v) {",
-  "  return v + (1.0 / 2.0) * pow(v, 3.0) / 3.0 +",
-  "             ((1.0 * 3.0) / (2.0 * 4.0)) * pow(v, 5.0) / 5.0 +",
-  "             ((1.0 * 3.0 * 5.0) / (2.0 * 4.0 * 6.0)) * pow(v, 7.0) / 7.0 +",
-  "             ((1.0 * 3.0 * 5.0 * 7.0) / (2.0 * 4.0 * 6.0 * 8.0)) * pow(v, 9.0) / 9.0;",
-  "}"
-].join("\n");
+var kPI = Math.PI;
+var kHalfPI = Math.PI * 0.5;
+var k2PI = Math.PI * 2.0;
+var acos = Math.acos;  // shorthand
 
-GLSLGenerator.runFeatureTest({
+GLSLGenerator.runReferenceImageTest({
   feature: "acos",
   args: "$(type) value",
-  baseArgs: "value$(field)",
   testFunc: "$(func)($(type))",
-  emuFunc: [
-    asinImplementation,
-    "float $(func)_base(float value) {",
-    "  return kHalfPI - asin_impl(value);",
-    "}"
-  ].join("\n"),
   gridRes: 8,
-  tolerance: 8,
+  tolerance: 2,
   extra: piConstants,
   tests: [
-    ["$(output) = vec4(",
-     "    $(func)($(input).x * 0.8) / kPI,",
-     "    $(func)($(input).y * 0.8) / kPI,",
-     "    0,",
-     "    1);"].join("\n"),
-    ["$(output) = vec4(",
-     "    $(func)($(input).xy * 0.8) / kPI,",
-     "    0, 1);"].join("\n"),
-    ["$(output) = vec4(",
-     "    $(func)($(input).xyz * 0.8) / kPI,",
-     "    1);"].join("\n"),
-    ["$(output) = ",
-     "    $(func)($(input) * 0.8) / kPI;",
-    ].join("\n")
+    {
+      source: ["$(output) = vec4(",
+               "    $(func)($(input).x * 0.8) / kPI,",
+               "    $(func)($(input).y * 0.8) / kPI,",
+               "    0,",
+               "    1);"].join("\n"),
+      generator: function(x, y, z, w) {
+        return [ acos(x * 0.8) / kPI,
+                 acos(y * 0.8) / kPI,
+                 0,
+                 1 ];
+      },
+    },
+    {
+      source: ["$(output) = vec4(",
+               "    $(func)($(input).xy * 0.8) / kPI,",
+               "    0, 1);"].join("\n"),
+      generator: function(x, y, z, w) {
+        return [ acos(x * 0.8) / kPI,
+                 acos(y * 0.8) / kPI,
+                 0,
+                 1 ];
+      },
+    },
+    {
+      source: ["$(output) = vec4(",
+               "    $(func)($(input).xyz * 0.8) / kPI,",
+               "    1);"].join("\n"),
+      generator: function(x, y, z, w) {
+        return [ acos(x * 0.8) / kPI,
+                 acos(y * 0.8) / kPI,
+                 acos(z * 0.8) / kPI,
+                 1 ];
+      },
+    },
+    {
+      source: ["$(output) = ",
+               "    $(func)($(input) * 0.8) / kPI;",
+              ].join("\n"),
+      generator: function(x, y, z, w) {
+        return [ acos(x * 0.8) / kPI,
+                 acos(y * 0.8) / kPI,
+                 acos(z * 0.8) / kPI,
+                 acos(w * 0.8) / kPI ];
+      },
+    },
   ]
 });
 successfullyParsed = true;

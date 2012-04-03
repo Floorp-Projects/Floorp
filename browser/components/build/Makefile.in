@@ -24,13 +24,12 @@ CPPSRCS = nsModule.cpp \
           $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
-OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32)
+OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32 shlwapi)
 endif
 
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../shell/src \
 	-I$(srcdir)/../feeds/src \
-	-I$(srcdir)/../places/src \
 	-I$(srcdir)/../privatebrowsing/src \
 	-I$(srcdir)/../about \
 	-I$(srcdir)/../dirprovider \
@@ -53,9 +52,13 @@ endif
 
 EXTRA_DSO_LDOPTS += \
 	$(call EXPAND_LIBNAME_PATH,unicharutil_external_s,$(LIBXUL_DIST)/lib) \
-	$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+	$(XPCOM_GLUE_LDOPTS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
+
+ifdef JS_SHARED_LIBRARY
+EXTRA_DSO_LDOPTS += $(MOZ_JS_LIBS)
+endif
 
 LOCAL_INCLUDES += -I$(srcdir)/../migration/src
 SHARED_LIBRARY_LIBS += ../migration/src/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX)

@@ -7,41 +7,42 @@
 
 <script type="text/javascript">
 
-var INDEX_SIZE_ERR = 1;
+var MOZ_STORAGE_CHANGED_COUNT = 8;
 
-function checkException(func, exc)
-{
-  var exceptionThrew = false;
-  try {
-    func();
-  }
-  catch (ex) {
-    exceptionThrew = true;
-    is(ex.code, exc, "Expected "+exc+" exception");
-  }
-  ok(exceptionThrew, "Exception "+exc+" threw");
+function setup() {
+  sessionStorage.clear();
+  SimpleTest.executeSoon(startTest);
 }
 
 function startTest()
 {
-  sessionStorage.clear();
-  
   // Initially check the sessionStorage is empty
   is(sessionStorage.length, 0, "The storage is empty [1]");
-  checkException(function() {sessionStorage.key(0);}, INDEX_SIZE_ERR);
-  checkException(function() {sessionStorage.key(-1);}, INDEX_SIZE_ERR);
-  checkException(function() {sessionStorage.key(1);}, INDEX_SIZE_ERR);
+  is(sessionStorage.key(0), null, "key() should return null for out-of-bounds access");
+  is(sessionStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(sessionStorage.key(1), null, "key() should return null for out-of-bounds access");
   is(sessionStorage.getItem("nonexisting"), null, "Nonexisting item is null (getItem())");
-  is(sessionStorage["nonexisting"], null, "Nonexisting item is null (array access)");
-  is(sessionStorage.nonexisting, null, "Nonexisting item is null (property access)");
+  is(sessionStorage["nonexisting"], undefined, "Nonexisting item is undefined (array access)");
+  is(sessionStorage.nonexisting, undefined, "Nonexisting item is undefined (property access)");
   sessionStorage.removeItem("nonexisting"); // Just check there is no exception
 
   is(typeof sessionStorage.getItem("nonexisting"), "object", "getItem('nonexisting') is object");
-  is(typeof sessionStorage["nonexisting"], "object", "['nonexisting'] is object");
-  is(typeof sessionStorage.nonexisting, "object", "nonexisting is object");
+  is(typeof sessionStorage["nonexisting"], "undefined", "['nonexisting'] is undefined");
+  is(typeof sessionStorage.nonexisting, "undefined", "nonexisting is undefined");
   is(typeof sessionStorage.getItem("nonexisting2"), "object", "getItem('nonexisting2') is object");
-  is(typeof sessionStorage["nonexisting2"], "object", "['nonexisting2'] is object");
-  is(typeof sessionStorage.nonexisting2, "object", "nonexisting2 is object");
+  is(typeof sessionStorage["nonexisting2"], "undefined", "['nonexisting2'] is undefined");
+  is(typeof sessionStorage.nonexisting2, "undefined", "nonexisting2 is undefined");
+
+  var mozStorageChangedReceived = 0;
+  var sessionStorageCopy = sessionStorage;
+
+  function onStorageChanged(e) {
+    if (e.storageArea == sessionStorageCopy)
+      mozStorageChangedReceived++;
+  }
+
+  // Listen for MozStorageChanged
+  SpecialPowers.addChromeEventListener("MozStorageChanged", onStorageChanged, false);
 
   // add an empty-value key
   sessionStorage.setItem("empty", "");
@@ -54,18 +55,18 @@ function startTest()
   sessionStorage.removeItem("empty");
   is(sessionStorage.length, 0, "The storage has no keys");
   is(sessionStorage.getItem("empty"), null, "empty item is null (getItem())");
-  is(sessionStorage["empty"], null, "empty item is null (array access)");
-  is(sessionStorage.empty, null, "empty item is null (property access)");
+  is(sessionStorage["empty"], undefined, "empty item is undefined (array access)");
+  is(sessionStorage.empty, undefined, "empty item is undefined (property access)");
   is(typeof sessionStorage.getItem("empty"), "object", "getItem('empty') is object");
-  is(typeof sessionStorage["empty"], "object", "['empty'] is object");
-  is(typeof sessionStorage.empty, "object", "empty is object");
+  is(typeof sessionStorage["empty"], "undefined", "['empty'] is undefined");
+  is(typeof sessionStorage.empty, "undefined", "empty is undefined");
 
   // add one key, check it is there
   sessionStorage.setItem("key1", "value1");
   is(sessionStorage.length, 1, "The storage has one key-value pair");
   is(sessionStorage.key(0), "key1");
-  checkException(function() {sessionStorage.key(-1);}, INDEX_SIZE_ERR);
-  checkException(function() {sessionStorage.key(1);}, INDEX_SIZE_ERR);
+  is(sessionStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(sessionStorage.key(1), null, "key() should return null for out-of-bounds access");
 
   // check all access method give the correct result
   // and are of the correct type
@@ -80,12 +81,12 @@ function startTest()
   // remove the previously added key and check the storage is empty
   sessionStorage.removeItem("key1");
   is(sessionStorage.length, 0, "The storage is empty [2]");
-  checkException(function() {sessionStorage.key(0);}, INDEX_SIZE_ERR);
+  is(sessionStorage.key(0), null, "key() should return null for out-of-bounds access");
   is(sessionStorage.getItem("key1"), null, "\'key1\' removed");
 
   is(typeof sessionStorage.getItem("key1"), "object", "getItem('key1') is object");
-  is(typeof sessionStorage["key1"], "object", "['key1'] is object");
-  is(typeof sessionStorage.key1, "object", "key1 is object");
+  is(typeof sessionStorage["key1"], "undefined", "['key1'] is undefined");
+  is(typeof sessionStorage.key1, "undefined", "key1 is undefined");
 
   // add one key, check it is there
   sessionStorage.setItem("key1", "value1");
@@ -109,8 +110,8 @@ function startTest()
   is(sessionStorage.length, 2, "The storage has two key-value pairs");
   is(sessionStorage.key(0), firstKey); // After key value changes the order must be preserved
   is(sessionStorage.key(1), secondKey);
-  checkException(function() {sessionStorage.key(-1);}, INDEX_SIZE_ERR);
-  checkException(function() {sessionStorage.key(2);}, INDEX_SIZE_ERR);
+  is(sessionStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(sessionStorage.key(2), null, "key() should return null for out-of-bounds access");
   is(sessionStorage.getItem("key1"), "value1");
   is(sessionStorage.getItem("key2"), "value2-2");
 
@@ -119,8 +120,8 @@ function startTest()
   is(sessionStorage.length, 2, "The storage has two key-value pairs");
   is(sessionStorage.key(0), firstKey); // After key value changes the order must be preserved
   is(sessionStorage.key(1), secondKey);
-  checkException(function() {sessionStorage.key(-1);}, INDEX_SIZE_ERR);
-  checkException(function() {sessionStorage.key(2);}, INDEX_SIZE_ERR);
+  is(sessionStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(sessionStorage.key(2), null, "key() should return null for out-of-bounds access");
   is(sessionStorage.getItem("key1"), "value1-2");
   is(sessionStorage.getItem("key2"), "value2-2");
 
@@ -128,16 +129,16 @@ function startTest()
   sessionStorage.removeItem("key2");
   is(sessionStorage.length, 1, "The storage has one key-value pair");
   is(sessionStorage.key(0), "key1");
-  checkException(function() {sessionStorage.key(-1);}, INDEX_SIZE_ERR);
-  checkException(function() {sessionStorage.key(1);}, INDEX_SIZE_ERR);
+  is(sessionStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(sessionStorage.key(1), null, "key() should return null for out-of-bounds access");
   is(sessionStorage.getItem("key1"), "value1-2");
 
   // Clear the storage
   sessionStorage.clear();
   is(sessionStorage.length, 0, "The storage is empty [3]");
-  checkException(function() {sessionStorage.key(0);}, INDEX_SIZE_ERR); // this is unspecified!
-  checkException(function() {sessionStorage.key(-1);}, INDEX_SIZE_ERR);
-  checkException(function() {sessionStorage.key(1);}, INDEX_SIZE_ERR);
+  is(sessionStorage.key(0), null, "key() should return null for out-of-bounds access");
+  is(sessionStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(sessionStorage.key(1), null, "key() should return null for out-of-bounds access");
   is(sessionStorage.getItem("nonexisting"), null, "Nonexisting item is null");
   is(sessionStorage.getItem("key1"), null, "key1 removed");
   is(sessionStorage.getItem("key2"), null, "key2 removed");
@@ -145,7 +146,14 @@ function startTest()
   sessionStorage.removeItem("key1"); // Just check there is no exception
   sessionStorage.removeItem("key2"); // Just check there is no exception
 
-  SimpleTest.finish();
+  SimpleTest.executeSoon(function () {
+    SpecialPowers.removeChromeEventListener("MozStorageChanged", onStorageChanged, false);
+    is(mozStorageChangedReceived, MOZ_STORAGE_CHANGED_COUNT,
+       "received the correct number of events");
+
+    sessionStorage.clear();
+    SimpleTest.finish();
+  });
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -154,7 +162,7 @@ SimpleTest.waitForExplicitFinish();
 
 </head>
 
-<body onload="startTest();">
+<body onload="setup();">
 
 </body>
 </html>

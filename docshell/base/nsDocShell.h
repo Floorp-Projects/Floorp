@@ -520,11 +520,14 @@ protected:
      * @param aChannelRedirectFlags
      *        For redirects, the redirect flags from nsIChannelEventSink
      *        (0 otherwise)
+     * @param aResponseStatus
+     *        For HTTP channels, the response code (0 otherwise).
      */
     void AddURIVisit(nsIURI* aURI,
                      nsIURI* aReferrerURI,
                      nsIURI* aPreviousURI,
-                     PRUint32 aChannelRedirectFlags);
+                     PRUint32 aChannelRedirectFlags,
+                     PRUint32 aResponseStatus=0);
 
     // Helper Routines
     nsresult   ConfirmRepost(bool * aRepost);

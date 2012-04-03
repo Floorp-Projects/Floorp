@@ -288,10 +288,6 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
             element->SetMayHaveStyle();
         }
 
-        NS_ASSERTION(aPrototype->mScriptTypeID != nsIProgrammingLanguage::UNKNOWN,
-                    "Need to know the language!");
-        element->SetScriptTypeID(aPrototype->mScriptTypeID);
-
         if (aIsScriptable) {
             // Check each attribute on the prototype to see if we need to do
             // any additional processing and hookup that would otherwise be
@@ -418,17 +414,12 @@ nsXULElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
     nsRefPtr<nsXULElement> element;
     if (mPrototype) {
         element = nsXULElement::Create(mPrototype, aNodeInfo, true);
-        NS_ASSERTION(GetScriptTypeID() == mPrototype->mScriptTypeID,
+        NS_ASSERTION(nsIProgrammingLanguage::JAVASCRIPT == mPrototype->mScriptTypeID,
                      "Didn't get the default language from proto?");
     }
     else {
         nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
         element = new nsXULElement(ni.forget());
-        if (element) {
-        	// If created from a prototype, we will already have the script
-        	// language specified by the proto - otherwise copy it directly
-        	element->SetScriptTypeID(GetScriptTypeID());
-        }
     }
 
     if (!element) {
@@ -771,7 +762,7 @@ nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
         nsIScriptGlobalObject* global = globalOwner->GetScriptGlobalObject();
         NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
 
-        context = global->GetScriptContext(aContext->GetScriptTypeID());
+        context = global->GetScriptContext();
         // It could be possible the language has been setup on aContext but
         // not on the global - we don't demand-create language contexts on the
         // nsGlobalWindow
@@ -808,12 +799,11 @@ nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
         if (aHandler) {
             NS_ASSERTION(!attr->mEventHandler, "Leaking handler.");
 
-            rv = nsContentUtils::HoldScriptObject(aContext->GetScriptTypeID(),
-                                                  elem,
-                                                  &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode),
-                                                  aHandler.get(),
-                                                  elem->mHoldsScriptObject);
-            if (NS_FAILED(rv)) return rv;
+            if (!elem->mHoldsScriptObject) {
+                rv = nsContentUtils::HoldJSObjects(
+                    elem, &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
+                NS_ENSURE_SUCCESS(rv, rv);
+            }
 
             elem->mHoldsScriptObject = true;
         }
@@ -925,13 +915,12 @@ nsXULElement::UnbindFromTree(bool aDeep, bool aNullParent)
     nsStyledElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-nsresult
+void
 nsXULElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 {
-    nsresult rv;
     nsCOMPtr<nsIContent> oldKid = mAttrsAndChildren.GetSafeChildAt(aIndex);
     if (!oldKid) {
-      return NS_OK;
+      return;
     }
 
     // On the removal of a <treeitem>, <treechildren>, or <treecell> element,
@@ -954,7 +943,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 
       // If it's not, look at our parent
       if (!controlElement)
-        rv = GetParentTree(getter_AddRefs(controlElement));
+        GetParentTree(getter_AddRefs(controlElement));
 
       nsCOMPtr<nsIDOMElement> oldKidElem = do_QueryInterface(oldKid);
       if (controlElement && oldKidElem) {
@@ -994,7 +983,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
       }
     }
 
-    rv = nsStyledElement::RemoveChildAt(aIndex, aNotify);
+    nsStyledElement::RemoveChildAt(aIndex, aNotify);
     
     if (newCurrentIndex == -2)
         controlElement->SetCurrentItem(nsnull);
@@ -1022,8 +1011,6 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
                                            false,
                                            true);
     }
-
-    return rv;
 }
 
 void
@@ -1106,13 +1093,13 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
         // the attribute isn't set yet.
         MaybeAddPopupListener(aName);
         if (nsContentUtils::IsEventAttributeName(aName, EventNameType_XUL) && aValue) {
-            // If mPrototype->mScriptTypeID != GetScriptTypeID(), it means
+            // If mPrototype->mScriptTypeID != nsIProgrammingLanguage::JAVASCRIPT, it means
             // we are resolving an overlay with a different default script
             // language.  We can't defer compilation of those handlers as
             // we will have lost the script language (storing it on each
             // nsXULPrototypeAttribute is expensive!)
             bool defer = mPrototype == nsnull ||
-                           mPrototype->mScriptTypeID == GetScriptTypeID();
+                           mPrototype->mScriptTypeID == nsIProgrammingLanguage::JAVASCRIPT;
             if (aValue->Type() == nsAttrValue::eString) {
                 AddScriptEventListener(aName, aValue->GetStringValue(), defer);
             } else {
@@ -2522,7 +2509,7 @@ nsXULElement::RecompileScriptEventListeners()
         // If we have a prototype, the node we are binding to should
         // have the same script-type - otherwise we will compile the
         // event handlers incorrectly.
-        NS_ASSERTION(mPrototype->mScriptTypeID == GetScriptTypeID(),
+        NS_ASSERTION(mPrototype->mScriptTypeID == nsIProgrammingLanguage::JAVASCRIPT,
                      "Prototype and node confused about default language?");
 
         count = mPrototype->mNumAttributes;
@@ -2905,8 +2892,7 @@ void
 nsXULPrototypeElement::Unlink()
 {
     if (mHoldsScriptObject) {
-        nsContentUtils::DropScriptObjects(mScriptTypeID, this,
-                                          &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
+        nsContentUtils::DropJSObjects(this);
         mHoldsScriptObject = false;
     }
     mNumAttributes = 0;
@@ -2943,8 +2929,7 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
                                 nsIScriptGlobalObject* aGlobal,
                                 const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
-    nsIScriptContext *context = aGlobal->GetScriptContext(
-                                        mScriptObject.mLangID);
+    nsIScriptContext *context = aGlobal->GetScriptContext();
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull ||
                  !mScriptObject.mObject,
                  "script source still loading when serializing?!");
@@ -3022,8 +3007,7 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
     aStream->Read32(&mLineNo);
     aStream->Read32(&mLangVersion);
 
-    nsIScriptContext *context = aGlobal->GetScriptContext(
-                                            mScriptObject.mLangID);
+    nsIScriptContext *context = aGlobal->GetScriptContext();
     NS_ASSERTION(context != nsnull, "Have no context for deserialization");
     NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
     nsScriptObjectHolder<JSScript> newScriptObject(context);
@@ -3151,7 +3135,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
         if (! global)
             return NS_ERROR_UNEXPECTED;
 
-        context = global->GetScriptContext(mScriptObject.mLangID);
+        context = global->GetScriptContext();
         NS_ASSERTION(context != nsnull, "no context for script global");
         if (! context)
             return NS_ERROR_UNEXPECTED;
@@ -3187,8 +3171,7 @@ void
 nsXULPrototypeScript::UnlinkJSObjects()
 {
     if (mScriptObject.mObject) {
-        nsContentUtils::DropScriptObjects(mScriptObject.mLangID, this,
-                                          &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
+        nsContentUtils::DropJSObjects(this);
         mScriptObject.mObject = nsnull;
     }
 }
@@ -3199,14 +3182,11 @@ nsXULPrototypeScript::Set(JSScript* aObject)
     NS_ASSERTION(!mScriptObject.mObject, "Leaking script object.");
     if (!aObject) {
         mScriptObject.mObject = nsnull;
-
         return;
     }
 
-    nsresult rv = nsContentUtils::HoldScriptObject(mScriptObject.mLangID,
-                                                   this,
-                                                   &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode),
-                                                   aObject, false);
+    nsresult rv = nsContentUtils::HoldJSObjects(
+        this, &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
     if (NS_SUCCEEDED(rv)) {
         mScriptObject.mObject = aObject;
     }

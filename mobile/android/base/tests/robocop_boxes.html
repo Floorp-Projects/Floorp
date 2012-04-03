@@ -5,23 +5,34 @@ This file is specifically designed to create a page larger than
 any screen fennec could run on (to allow panning in both axes).
 It is filled with 100x100 pixel boxes that are of unique colour,
 so that we can identify exactly what part of the page we are
-rendering at any given time. A lot of the tests depend on this
-behaviour, so ensure that all the tests pass (on a variety of
-screen sizes) when making any changes to this file.
+rendering at any given time. The colours are specifically chosen
+so that adjacent boxes have a fairly large variation in colour,
+and so that errors due to 565/888 conversion are minimised. This
+is done by dropping the bottom few bits on each color channel,
+so that conversion from 888->565 is pretty much lossless, and any
+variation only comes in from however the drivers do 565->888.
+
+A lot of the tests depend on this behaviour, so ensure that all
+the tests pass (on a variety of screen sizes) when making any
+changes to this file.
  -->
 <html style="margin: 0; padding: 0">
 <head>
  <title>Browser Box test</title>
  <meta name="viewport" content="initial-scale=1.0"/>
+ <meta charset="utf-8">
 </head>
 <body style="margin: 0; padding: 0">
 <script type="text/javascript">
 for (var y = 0; y < 2000; y += 100) {
     document.write("<div style='width: 2000px; height: 100px; margin: 0; padding: 0; border: none'>\n");
     for (var x = 0; x < 2000; x += 100) {
-        var r = (y + x) % 255;
-        var g = 255 - (y / 10);
-        var b = 255 - (x / 10);
+        var r = (Math.floor(x / 3) % 256);
+        r = r & 0xF8;
+        var g = (x + y) % 256;
+        g = g & 0xFC;
+        var b = (Math.floor(y / 3) % 256);
+        b = b & 0xF8;
         document.write("<div style='float: left; width: 100px; height: 100px; margin: 0; padding: 0; border: none; background-color: rgb(" + r + "," + g + "," + b + ")'> </div>\n");
     }
     document.write("</div>\n");

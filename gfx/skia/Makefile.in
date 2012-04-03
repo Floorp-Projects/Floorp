@@ -282,7 +282,6 @@ CPPSRCS = \
 	SkUtils.cpp \
 	SkWriter32.cpp \
 	SkXfermode.cpp \
-	SkDebug_stdio.cpp \
 	SkGlobals_global.cpp \
 	SkOSFile_stdio.cpp \
 	SkThread_none.cpp \
@@ -309,6 +308,7 @@ endif
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \
+	SkDebug_android.cpp \
 	SkFontHost_FreeType.cpp \
 	SkFontHost_android.cpp \
 	SkFontHost_gamma.cpp \
@@ -318,6 +318,10 @@ CPPSRCS += \
 
 DEFINES += -DSK_BUILD_FOR_ANDROID_NDK
 OS_CXXFLAGS += $(CAIRO_FT_CFLAGS)
+else
+CPPSRCS += \
+	SkDebug_stdio.cpp \
+	$(NULL)
 endif
 
 ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
@@ -330,6 +334,22 @@ CPPSRCS += \
 	SkOSFile.cpp \
 	$(NULL)
 
+OS_CXXFLAGS += $(MOZ_PANGO_CFLAGS)
+endif
+
+ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += \
+	SkFontHost_FreeType.cpp \
+	SkFontHost_gamma_none.cpp \
+	SkMMapStream.cpp \
+	SkOSFile.cpp \
+	$(NULL)
+ifeq (Linux,$(OS_TARGET))
+CPPSRCS += \
+	SkFontHost_linux.cpp \
+	SkTime_Unix.cpp \
+	$(NULL)
+endif
 OS_CXXFLAGS += $(MOZ_PANGO_CFLAGS)
 endif
 

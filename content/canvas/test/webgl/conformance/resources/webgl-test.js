@@ -42,14 +42,16 @@ function create3DContext(canvas, attributes)
 {
     if (!canvas)
         canvas = document.createElement("canvas");
+    var names = ["webgl", "experimental-webgl"];
     var context = null;
-    try {
-        context = canvas.getContext("webgl", attributes);
-    } catch(e) {}
-    if (!context) {
-        try {
-            context = canvas.getContext("experimental-webgl", attributes);
-        } catch(e) {}
+    for (var i = 0; i < names.length; ++i) {
+      try {
+        context = canvas.getContext(names[i], attributes);
+      } catch (e) {
+      }
+      if (context) {
+        break;
+      }
     }
     if (!context) {
         throw "Unable to fetch WebGL rendering context for Canvas";

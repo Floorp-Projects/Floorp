@@ -38,6 +38,8 @@
 #include "nsIObserver.h"
 #include "nsCycleCollectionParticipant.h"
 
+struct JSTracer;
+
 class nsCCUncollectableMarker : public nsIObserver
 {
   NS_DECL_ISUPPORTS
@@ -56,10 +58,10 @@ class nsCCUncollectableMarker : public nsIObserver
     return aGeneration && aGeneration == sGeneration;
   }
 
-  static bool InGeneration(nsCycleCollectionTraversalCallback &cb,
+  static bool InGeneration(nsCycleCollectionTraversalCallback& aCb,
                            PRUint32 aGeneration)
   {
-    return InGeneration(aGeneration) && !cb.WantAllTraces();
+    return InGeneration(aGeneration) && !aCb.WantAllTraces();
   }
 
   static PRUint32 sGeneration;
@@ -68,3 +70,9 @@ private:
   nsCCUncollectableMarker() {}
 
 };
+
+namespace mozilla {
+namespace dom {
+void TraceBlackJS(JSTracer* aTrc);
+}
+}

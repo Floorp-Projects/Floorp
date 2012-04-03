@@ -195,7 +195,7 @@ function test() {
   Services.prefs.setBoolPref("devtools.gcli.enable", false);
   registerCleanupFunction(testEnd);
 
-  addTab("data:text/html,Web Console test for bug 595934 - message categories coverage.");
+  addTab("data:text/html;charset=utf-8,Web Console test for bug 595934 - message categories coverage.");
   browser.addEventListener("load", tabLoad, true);
 }
 

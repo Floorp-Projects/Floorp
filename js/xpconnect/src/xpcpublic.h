@@ -53,10 +53,11 @@
 #include "nsWrapperCache.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
+#include "mozilla/dom/bindings/DOMJSClass.h"
 
 class nsIPrincipal;
 class nsIXPConnectWrappedJS;
-struct nsDOMClassInfoData;
+class nsScriptNameSpaceManager;
 
 #ifndef BAD_TLS_INDEX
 #define BAD_TLS_INDEX ((PRUint32) -1)
@@ -74,9 +75,9 @@ xpc_CreateMTGlobalObject(JSContext *cx, JSClass *clasp,
                          JSCompartment **compartment);
 
 #define XPCONNECT_GLOBAL_FLAGS                                                \
-    JSCLASS_XPCONNECT_GLOBAL | JSCLASS_HAS_PRIVATE |                          \
+    JSCLASS_DOM_GLOBAL | JSCLASS_XPCONNECT_GLOBAL | JSCLASS_HAS_PRIVATE |     \
     JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_IMPLEMENTS_BARRIERS |            \
-    JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(1)
+    JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(3)
 
 void
 TraceXPCGlobal(JSTracer *trc, JSObject *obj);
@@ -138,9 +139,9 @@ xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope, jsval *vp)
     if (cache) {
         JSObject* wrapper = cache->GetWrapper();
         NS_ASSERTION(!wrapper ||
-                     !cache->IsProxy() ||
+                     !cache->IsDOMBinding() ||
                      !IS_SLIM_WRAPPER(wrapper),
-                     "Should never have a slim wrapper when IsProxy()");
+                     "Should never have a slim wrapper when IsDOMBinding()");
         if (wrapper &&
             js::GetObjectCompartment(wrapper) == js::GetObjectCompartment(scope) &&
             (IS_SLIM_WRAPPER(wrapper) ||
@@ -196,9 +197,9 @@ xpc_UnmarkGrayObject(JSObject *obj)
 extern void
 xpc_MarkInCCGeneration(nsISupports* aVariant, PRUint32 aGeneration);
 
-// Unmarks aWrappedJS's JSObject.
+// If aWrappedJS is a JS wrapper, unmark its JSObject.
 extern void
-xpc_UnmarkGrayObject(nsIXPConnectWrappedJS* aWrappedJS);
+xpc_TryUnmarkWrappedGrayObject(nsISupports* aWrappedJS);
 
 extern void
 xpc_UnmarkSkippableJSHolders();
@@ -255,13 +256,13 @@ inline bool instanceIsProxy(JSObject *obj)
            js::GetProxyHandler(obj)->family() == ProxyFamily();
 }
 
-typedef JSObject*
+typedef bool
 (*DefineInterface)(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled);
 
 extern bool
 DefineStaticJSVals(JSContext *cx);
 void
-Register(nsDOMClassInfoData *aData);
+Register(nsScriptNameSpaceManager* aNameSpaceManager);
 extern bool
 DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine,
                   nsresult *aResult);

@@ -144,7 +144,7 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
   memset((void*)&bmih, 0, sizeof(BITMAPV5HEADER));
   bmih.bV5Size        = sizeof(BITMAPV5HEADER);
   bmih.bV5Width       = bmWidth;
-  bmih.bV5Height      = -bmHeight; // flip vertical
+  bmih.bV5Height      = -(PRInt32)bmHeight; // flip vertical
   bmih.bV5Planes      = 1;
   bmih.bV5BitCount    = 32;
   bmih.bV5Compression = BI_BITFIELDS;

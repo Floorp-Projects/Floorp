@@ -100,7 +100,7 @@ public:
   nsChildContentList(nsINode* aNode)
     : mNode(aNode)
   {
-    SetIsProxy();
+    SetIsDOMBinding();
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -263,7 +263,7 @@ public:
   virtual PRInt32 IndexOf(nsINode* aPossibleChild) const;
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  bool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, bool aNotify);
+  virtual void RemoveChildAt(PRUint32 aIndex, bool aNotify);
   NS_IMETHOD GetTextContent(nsAString &aTextContent);
   NS_IMETHOD SetTextContent(const nsAString& aTextContent);
 
@@ -327,7 +327,7 @@ public:
   virtual const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
   virtual PRUint32 GetAttrCount() const;
   virtual const nsTextFragment *GetText();
-  virtual PRUint32 TextLength();
+  virtual PRUint32 TextLength() const;
   virtual nsresult SetText(const PRUnichar* aBuffer, PRUint32 aLength,
                            bool aNotify);
   // Need to implement this here too to avoid hiding.
@@ -342,9 +342,6 @@ public:
   virtual nsIContent *GetBindingParent() const;
   virtual bool IsNodeOfType(PRUint32 aFlags) const;
   virtual bool IsLink(nsIURI** aURI) const;
-
-  virtual PRUint32 GetScriptTypeID() const;
-  NS_IMETHOD SetScriptTypeID(PRUint32 aLang);
 
   virtual void DestroyContent();
   virtual void SaveSubtreeState();

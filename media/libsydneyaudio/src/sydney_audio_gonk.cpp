@@ -40,15 +40,13 @@ extern "C" {
 #include "sydney_audio.h"
 }
 
+#include "gonk/AudioTrack.h"
 #include "android/log.h"
-#include "media/AudioTrack.h"
 
-#ifndef ALOG
 #if defined(DEBUG) || defined(FORCE_ALOG)
 #define ALOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gecko - SYDNEY_AUDIO" , ## args)
 #else
 #define ALOG(args...)
-#endif
 #endif
 
 /* Gonk implementation based on sydney_audio_android.c */

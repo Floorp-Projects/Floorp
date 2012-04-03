@@ -76,8 +76,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0xdfaea249, 0xaaad, 0x48bd, \
-  { 0xb8, 0x04, 0x92, 0xad, 0x30, 0x88, 0xd0, 0xc6 } }
+{ 0xf1c8c13e, 0xc23b, 0x434e, \
+  { 0xa4, 0x77, 0xe0, 0x2f, 0xc3, 0x73, 0xf8, 0x71 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -92,8 +92,7 @@ class nsIScriptContext : public nsIScriptContextPrincipal
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTCONTEXT_IID)
 
-  /* Get the ID of this language. */
-  virtual PRUint32 GetScriptTypeID() = 0;
+  virtual void SetGlobalObject(nsIScriptGlobalObject* aGlobalObject) = 0;
 
   /**
    * Compile and execute a script.
@@ -122,7 +121,7 @@ public:
                                   nsIPrincipal *aOriginPrincipal,
                                   const char *aURL,
                                   PRUint32 aLineNo,
-                                  PRUint32 aVersion,
+                                  JSVersion aVersion,
                                   nsAString *aRetValue,
                                   bool* aIsUndefined) = 0;
 
@@ -304,31 +303,9 @@ public:
                                       nsISupports **aHolder) = 0;
 
   /**
-   * Connect this context to a new inner window, to allow "prototype"
-   * chaining from the inner to the outer.
-   * Called after both the the inner and outer windows are initialized
-   **/
-  virtual nsresult ConnectToInner(nsIScriptGlobalObject *aNewInner,
-                                  JSObject *aOuterGlobal) = 0;
-
-
-  /**
    * Initialize the context generally. Does not create a global object.
    **/
   virtual nsresult InitContext() = 0;
-
-  /**
-   * Creates the outer window for this context.
-   *
-   * @param aGlobalObject The script global object to use as our global.
-   */
-  virtual nsresult CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
-                                     nsIScriptGlobalObject *aCurrentInner) = 0;
-
-  /**
-   * Given an outer object, updates this context with that outer object.
-   */
-  virtual nsresult SetOuterObject(JSObject* aOuterObject) = 0;
 
   /**
    * Prepares this context for use with the current inner window for the

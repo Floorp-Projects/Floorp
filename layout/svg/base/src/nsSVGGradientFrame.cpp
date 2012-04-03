@@ -37,17 +37,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMSVGAnimatedNumber.h"
-#include "nsIDOMSVGAnimTransformList.h"
-#include "SVGAnimatedTransformList.h"
-#include "nsSVGEffects.h"
-#include "nsIDOMSVGStopElement.h"
-#include "nsSVGGradientElement.h"
-#include "nsSVGGeometryFrame.h"
+// Main header first:
 #include "nsSVGGradientFrame.h"
-#include "gfxContext.h"
+
+// Keep others in (case-insensitive) order:
 #include "gfxPattern.h"
 #include "nsContentUtils.h"
+#include "nsIDOMSVGAnimatedNumber.h"
+#include "nsIDOMSVGStopElement.h"
+#include "nsSVGEffects.h"
+#include "nsSVGGradientElement.h"
+#include "SVGAnimatedTransformList.h"
 
 using mozilla::SVGAnimatedTransformList;
 
@@ -170,6 +170,19 @@ nsSVGGradientFrame::GetEnumValue(PRUint32 aIndex, nsIContent *aDefault)
   return next ? next->GetEnumValue(aIndex, aDefault) :
     static_cast<nsSVGGradientElement *>(aDefault)->
       mEnumAttributes[aIndex].GetAnimValue();
+}
+
+PRUint16
+nsSVGGradientFrame::GetGradientUnits()
+{
+  // This getter is called every time the others are called - maybe cache it?
+  return GetEnumValue(nsSVGGradientElement::GRADIENTUNITS);
+}
+
+PRUint16
+nsSVGGradientFrame::GetSpreadMethod()
+{
+  return GetEnumValue(nsSVGGradientElement::SPREADMETHOD);
 }
 
 const SVGAnimatedTransformList*

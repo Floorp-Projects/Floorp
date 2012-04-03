@@ -23,6 +23,10 @@ function test() {
     Services.prefs.clearUserPref("browser.sessionstore.interval");
   });
 
+  waitForSaveState(setup);
+}
+
+function setup() {
   // We'll clear all closed windows to make sure our state is clean
   // forgetClosedWindow doesn't trigger a delayed save
   while (ss.getClosedWindowCount()) {

@@ -66,6 +66,7 @@ txParseDocumentFromURI(const nsAString& aHref, const txXPathNode& aLoader,
     // Raw pointer, we want the resulting txXPathNode to hold a reference to
     // the document.
     nsIDOMDocument* theDocument = nsnull;
+    nsAutoSyncOperation sync(loaderDocument);
     rv = nsSyncLoadService::LoadDocument(documentURI,
                                          loaderDocument->NodePrincipal(),
                                          loadGroup, true, &theDocument);

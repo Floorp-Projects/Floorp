@@ -121,6 +121,10 @@ DEFINES += \
   -DNO_NSPR_10_SUPPORT \
   $(NULL)
 
+ifdef MOZ_JSDEBUGGER
+DEFINES += -DMOZ_JSDEBUGGER
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CXX
 ifeq (,$(filter-out 1200 1300 1310,$(_MSC_VER)))

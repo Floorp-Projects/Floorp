@@ -225,7 +225,6 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       layer->SetOpacity(common.opacity());
       layer->SetClipRect(common.useClipRect() ? &common.clipRect() : NULL);
       layer->SetTransform(common.transform());
-      layer->SetTileSourceRect(common.useTileSourceRect() ? &common.tileSourceRect() : NULL);
       static bool fixedPositionLayersEnabled = getenv("MOZ_ENABLE_FIXED_POSITION_LAYERS") != 0;
       if (fixedPositionLayersEnabled) {
         layer->SetIsFixedPosition(common.isFixedPosition());
@@ -402,8 +401,10 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   mShadowLayersManager->ShadowLayersUpdated(isFirstPaint);
 
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
-  printf_stderr("Compositor: Layers update took %i ms (blocking gecko).\n",
-                (int)(mozilla::TimeStamp::Now() - updateStart).ToMilliseconds());
+  int compositeTime = (int)(mozilla::TimeStamp::Now() - updateStart).ToMilliseconds();
+  if (compositeTime > 15) {
+    printf_stderr("Compositor: Layers update took %i ms (blocking gecko).\n", compositeTime);
+  }
 #endif
 
   return true;

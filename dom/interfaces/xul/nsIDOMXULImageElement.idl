@@ -37,7 +37,7 @@
 #include "nsIDOMElement.idl"
 #include "nsIDOMXULElement.idl"
 
-[scriptable, uuid(857a58a8-af19-4301-90ff-673bd8477cb9)]
+[scriptable, uuid(320a5a86-3f38-4631-acfc-dbe9dd5316fe)]
 interface nsIDOMXULImageElement : nsIDOMXULElement {
   attribute DOMString src;
 };

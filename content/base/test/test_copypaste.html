@@ -231,6 +231,11 @@ if (false) {
   testClipboardValue("text/html", "<div id=\"div13\">__</div>");
   testPasteText("__");
 
+  // ============ converting cell boundaries to tabs in tables
+
+  copyToClipboard($("tr1"));
+  testClipboardValue("text/unicode", "foo\tbar");
+
   // ============ manipulating Selection in oncopy
 
   copyRangeToClipboard($("div11").childNodes[0],0, $("div11").childNodes[1],2);
@@ -319,6 +324,8 @@ x.appendChild(document.createTextNode('10'))
 <div id="div12" oncopy="modifySelection('X<b style=\'display:none\'>Y</b>')"><span>div</span>12</div>
 
 <div id="div13">_<noscript>FAIL</noscript>_</div>
+
+<table><tr id=tr1><td>foo</td><td>bar</td></tr></table>
 
 </div>
 </body>

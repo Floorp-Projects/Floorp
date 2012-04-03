@@ -47,10 +47,19 @@ public class testWebContentContextMenu extends BaseTest {
         mSolo.clickOnText("Bookmark");
         mAsserter.is(mSolo.waitForText("Bookmark added"), true, "Bookmark added verified");
 
+        // This waitForIdleSync improves reliability of the following loadUrl.
+        // TODO: understand why!
+        getInstrumentation().waitForIdleSync();
+
         // We know that the link test page points to robocop_blank_01.html, so lets
         // load it and see if the page is bookmarked
         url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
         loadUrl(url);
+
+        // Pause briefly, to ensure that the bookmark addition, above, updates database tables and
+        // completes before checking that the bookmark exists.
+        // TODO: Find a better way to wait for completion of bookmark operations.
+        try { Thread.sleep(2000); } catch(Exception e) {}
 
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
         mSolo.waitForText("Bookmark");
@@ -61,6 +70,10 @@ public class testWebContentContextMenu extends BaseTest {
 
         mSolo.clickOnText("Bookmark");
         mAsserter.is(mSolo.waitForText("Bookmark removed"), true, "Bookmark removal verified");
+
+        // This waitForIdleSync improves reliability of the following loadUrl.
+        // TODO: understand why!
+        getInstrumentation().waitForIdleSync();
 
         // Load the mailto test page again and test for allowed menu actions
         url = getAbsoluteUrl("/robocop/robocop_big_mailto.html");

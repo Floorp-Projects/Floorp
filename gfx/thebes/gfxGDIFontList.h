@@ -43,7 +43,7 @@
 
 #include "gfxWindowsPlatform.h"
 #include "gfxPlatformFontList.h"
-#include "gfxAtoms.h"
+#include "nsGkAtoms.h"
 
 #include <windows.h>
 
@@ -218,42 +218,42 @@ public:
     }
 
     virtual bool SupportsLangGroup(nsIAtom* aLangGroup) const {
-        if (!aLangGroup || aLangGroup == gfxAtoms::x_unicode) {
+        if (!aLangGroup || aLangGroup == nsGkAtoms::Unicode) {
             return true;
         }
 
         PRInt16 bit = -1;
 
         /* map our langgroup names in to Windows charset bits */
-        if (aLangGroup == gfxAtoms::x_western) {
+        if (aLangGroup == nsGkAtoms::x_western) {
             bit = ANSI_CHARSET;
-        } else if (aLangGroup == gfxAtoms::ja) {
+        } else if (aLangGroup == nsGkAtoms::Japanese) {
             bit = SHIFTJIS_CHARSET;
-        } else if (aLangGroup == gfxAtoms::ko) {
+        } else if (aLangGroup == nsGkAtoms::ko) {
             bit = HANGEUL_CHARSET;
-        } else if (aLangGroup == gfxAtoms::ko_xxx) {
+        } else if (aLangGroup == nsGkAtoms::ko_xxx) {
             bit = JOHAB_CHARSET;
-        } else if (aLangGroup == gfxAtoms::zh_cn) {
+        } else if (aLangGroup == nsGkAtoms::zh_cn) {
             bit = GB2312_CHARSET;
-        } else if (aLangGroup == gfxAtoms::zh_tw) {
+        } else if (aLangGroup == nsGkAtoms::zh_tw) {
             bit = CHINESEBIG5_CHARSET;
-        } else if (aLangGroup == gfxAtoms::el) {
+        } else if (aLangGroup == nsGkAtoms::el_) {
             bit = GREEK_CHARSET;
-        } else if (aLangGroup == gfxAtoms::tr) {
+        } else if (aLangGroup == nsGkAtoms::tr) {
             bit = TURKISH_CHARSET;
-        } else if (aLangGroup == gfxAtoms::he) {
+        } else if (aLangGroup == nsGkAtoms::he) {
             bit = HEBREW_CHARSET;
-        } else if (aLangGroup == gfxAtoms::ar) {
+        } else if (aLangGroup == nsGkAtoms::ar) {
             bit = ARABIC_CHARSET;
-        } else if (aLangGroup == gfxAtoms::x_baltic) {
+        } else if (aLangGroup == nsGkAtoms::x_baltic) {
             bit = BALTIC_CHARSET;
-        } else if (aLangGroup == gfxAtoms::x_cyrillic) {
+        } else if (aLangGroup == nsGkAtoms::x_cyrillic) {
             bit = RUSSIAN_CHARSET;
-        } else if (aLangGroup == gfxAtoms::th) {
+        } else if (aLangGroup == nsGkAtoms::th) {
             bit = THAI_CHARSET;
-        } else if (aLangGroup == gfxAtoms::x_central_euro) {
+        } else if (aLangGroup == nsGkAtoms::x_central_euro) {
             bit = EASTEUROPE_CHARSET;
-        } else if (aLangGroup == gfxAtoms::x_symbol) {
+        } else if (aLangGroup == nsGkAtoms::x_symbol) {
             bit = SYMBOL_CHARSET;
         }
 
@@ -273,6 +273,9 @@ public:
     }
 
     virtual bool TestCharacterMap(PRUint32 aCh);
+
+    virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
 
     // create a font entry for a font with a given name
     static GDIFontEntry* CreateFontEntry(const nsAString& aName,
@@ -347,6 +350,11 @@ public:
     virtual bool ResolveFontName(const nsAString& aFontName,
                                    nsAString& aResolvedFontName);
 
+    virtual void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
+    virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                     FontListSizes*    aSizes) const;
+
 private:
     friend class gfxWindowsPlatform;
 
@@ -361,7 +369,7 @@ private:
                                           DWORD fontType,
                                           LPARAM lParam);
 
-    typedef nsDataHashtable<nsStringHashKey, nsRefPtr<gfxFontFamily> > FontTable;
+    typedef nsRefPtrHashtable<nsStringHashKey, gfxFontFamily> FontTable;
 
     FontTable mFontSubstitutes;
     nsTArray<nsString> mNonExistingFonts;

@@ -109,7 +109,16 @@ public:
         /**
          * Indicates whether the URI was loaded as part of a temporary redirect.
          */
-        REDIRECT_TEMPORARY = 1 << 2
+        REDIRECT_TEMPORARY = 1 << 2,
+        /**
+         * Indicates the URI is redirecting  (Response code 3xx).
+         */
+        REDIRECT_SOURCE = 1 << 3,
+        /**
+         * Indicates the URI caused an error that is unlikely fixable by a
+         * retry, like a not found or unfetchable page.
+         */
+        UNRECOVERABLE_ERROR = 1 << 4
     };
 
     /**

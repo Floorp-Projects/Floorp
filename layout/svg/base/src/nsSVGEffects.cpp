@@ -35,15 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Main header first:
 #include "nsSVGEffects.h"
+
+// Keep others in (case-insensitive) order:
+#include "nsCSSFrameConstructor.h"
 #include "nsISupportsImpl.h"
-#include "nsSVGOuterSVGFrame.h"
-#include "nsSVGFilterFrame.h"
 #include "nsSVGClipPathFrame.h"
+#include "nsSVGFilterFrame.h"
 #include "nsSVGMaskFrame.h"
 #include "nsSVGTextPathFrame.h"
-#include "nsCSSFrameConstructor.h"
-#include "nsFrameManager.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -331,7 +332,7 @@ nsSVGPaintingProperty::DoUpdate()
     return;
 
   if (mFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    nsSVGUtils::InvalidateCoveredRegion(mFrame);
+    nsSVGUtils::InvalidateBounds(mFrame);
   } else {
     InvalidateAllContinuations(mFrame);
   }
@@ -526,12 +527,12 @@ nsSVGEffects::GetFilterProperty(nsIFrame *aFrame)
 }
 
 static PLDHashOperator
-GatherEnumerator(nsVoidPtrHashKey* aEntry, void* aArg)
+GatherEnumerator(nsPtrHashKey<nsSVGRenderingObserver>* aEntry, void* aArg)
 {
   nsTArray<nsSVGRenderingObserver*>* array =
     static_cast<nsTArray<nsSVGRenderingObserver*>*>(aArg);
-  array->AppendElement(static_cast<nsSVGRenderingObserver*>(
-          const_cast<void*>(aEntry->GetKey())));
+  array->AppendElement(aEntry->GetKey());
+          
   return PL_DHASH_REMOVE;
 }
 

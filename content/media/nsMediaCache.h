@@ -232,14 +232,15 @@ public:
   nsMediaCacheStream(ChannelMediaResource* aClient)
     : mClient(aClient), mResourceID(0), mInitialized(false),
       mHasHadUpdate(false),
+      mClosed(false),
+      mDidNotifyDataEnded(false),
       mIsSeekable(false), mCacheSuspended(false),
-      mChannelEnded(false), mDidNotifyDataEnded(false),
+      mChannelEnded(false),
       mUsingNullPrincipal(false),
       mChannelOffset(0), mStreamLength(-1),  
       mStreamOffset(0), mPlaybackBytesPerSecond(10000),
       mPinCount(0), mCurrentMode(MODE_PLAYBACK),
-      mMetadataInPartialBlockBuffer(false),
-      mClosed(false) {}
+      mMetadataInPartialBlockBuffer(false) {}
   ~nsMediaCacheStream();
 
   // Set up this stream with the cache. Can fail on OOM. One
@@ -266,6 +267,12 @@ public:
   void Close();
   // This returns true when the stream has been closed
   bool IsClosed() const { return mClosed; }
+  // Returns true when this stream is can be shared by a new resource load
+  bool IsAvailableForSharing() const
+  {
+    return !mClosed &&
+      (!mDidNotifyDataEnded || NS_SUCCEEDED(mNotifyDataEndedStatus));
+  }
   // Get the principal for this stream.
   nsIPrincipal* GetCurrentPrincipal() { return mPrincipal; }
   // Ensure a global media cache update has run with this stream present.
@@ -466,6 +473,11 @@ private:
   // Set to true when nsMediaCache::Update() has finished while this stream
   // was present.
   bool                   mHasHadUpdate;
+  // Set to true when the stream has been closed either explicitly or
+  // due to an internal cache error
+  bool                   mClosed;
+  // True if CacheClientNotifyDataEnded has been called for this stream.
+  bool                   mDidNotifyDataEnded;
 
   // The following fields are protected by the cache's monitor but are
   // only written on the main thread. 
@@ -478,8 +490,6 @@ private:
   bool mCacheSuspended;
   // True if the channel ended and we haven't seeked it again.
   bool mChannelEnded;
-  // True if CacheClientNotifyDataEnded has been called for this stream.
-  bool mDidNotifyDataEnded;
   // True if mPrincipal is a null principal because we saw data from
   // multiple origins
   bool mUsingNullPrincipal;
@@ -510,15 +520,13 @@ private:
   // The number of times this stream has been Pinned without a
   // corresponding Unpin
   PRUint32          mPinCount;
-  // The status used when we did CacheClientNotifyDataEnded
+  // The status used when we did CacheClientNotifyDataEnded. Only valid
+  // when mDidNotifyDataEnded is true.
   nsresult          mNotifyDataEndedStatus;
   // The last reported read mode
   ReadMode          mCurrentMode;
   // True if some data in mPartialBlockBuffer has been read as metadata
   bool              mMetadataInPartialBlockBuffer;
-  // Set to true when the stream has been closed either explicitly or
-  // due to an internal cache error
-  bool              mClosed;
 
   // The following field is protected by the cache's monitor but are
   // only written on the main thread.

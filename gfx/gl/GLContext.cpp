@@ -279,7 +279,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             };
 
             if (!LoadSymbols(&symbols_ES2[0], trygl, prefix)) {
-                NS_RUNTIMEABORT("OpenGL ES 2.0 supported, but symbols could not be loaded.");
+                NS_ERROR("OpenGL ES 2.0 supported, but symbols could not be loaded.");
                 mInitialized = false;
             }
         } else {
@@ -293,7 +293,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             };
 
             if (!LoadSymbols(&symbols_desktop[0], trygl, prefix)) {
-                NS_RUNTIMEABORT("Desktop symbols failed to load.");
+                NS_ERROR("Desktop symbols failed to load.");
                 mInitialized = false;
             }
         }
@@ -327,7 +327,9 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         const char *rendererMatchStrings[RendererOther] = {
                 "Adreno 200",
                 "Adreno 205",
-                "PowerVR SGX 540"
+                "PowerVR SGX 530",
+                "PowerVR SGX 540",
+
         };
         mRenderer = RendererOther;
         for (int i = 0; i < RendererOther; ++i) {
@@ -373,7 +375,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 };
 
                 if (!LoadSymbols(&robustnessSymbols[0], trygl, prefix)) {
-                    NS_RUNTIMEABORT("GL supports ARB_robustness without supplying GetGraphicsResetStatusARB.");
+                    NS_ERROR("GL supports ARB_robustness without supplying GetGraphicsResetStatusARB.");
                     mInitialized = false;
                 } else {
                     mHasRobustness = true;
@@ -385,7 +387,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 };
 
                 if (!LoadSymbols(&robustnessSymbols[0], trygl, prefix)) {
-                    NS_RUNTIMEABORT("GL supports EGL_robustness without supplying GetGraphicsResetStatusEXT.");
+                    NS_ERROR("GL supports EGL_robustness without supplying GetGraphicsResetStatusEXT.");
                     mInitialized = false;
                 } else {
                     mHasRobustness = true;
@@ -401,7 +403,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                     { NULL, { NULL } },
             };
             if (!LoadSymbols(&auxSymbols[0], trygl, prefix)) {
-                NS_RUNTIMEABORT("GL supports framebuffer_blit without supplying glBlitFramebuffer");
+                NS_ERROR("GL supports framebuffer_blit without supplying glBlitFramebuffer");
                 mInitialized = false;
             }
         }
@@ -413,7 +415,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                     { NULL, { NULL } },
             };
             if (!LoadSymbols(&auxSymbols[0], trygl, prefix)) {
-                NS_RUNTIMEABORT("GL supports framebuffer_multisample without supplying glRenderbufferStorageMultisample");
+                NS_ERROR("GL supports framebuffer_multisample without supplying glRenderbufferStorageMultisample");
                 mInitialized = false;
             }
         }
@@ -437,7 +439,19 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         mViewportStack.AppendElement(nsIntRect(v[0], v[1], v[2], v[3]));
 
         fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &mMaxTextureSize);
+        fGetIntegerv(LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE, &mMaxCubeMapTextureSize);
         fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
+
+#ifdef XP_MACOSX
+        if (mVendor == VendorIntel) {
+            // see bug 737182 for 2D textures, bug 684822 for cube map textures.
+            mMaxTextureSize        = NS_MIN(mMaxTextureSize,        4096);
+            mMaxCubeMapTextureSize = NS_MIN(mMaxCubeMapTextureSize, 512);
+            // for good measure, we align renderbuffers on what we do for 2D textures
+            mMaxRenderbufferSize   = NS_MIN(mMaxRenderbufferSize,   4096);
+        }
+#endif
+
         mMaxTextureImageSize = mMaxTextureSize;
 
         UpdateActualFormat();
@@ -570,8 +584,15 @@ GLContext::CanUploadSubTextures()
 {
     // There are certain GPUs that we don't want to use glTexSubImage2D on
     // because that function can be very slow and/or buggy
-    return (Renderer() != RendererAdreno200 &&
-            Renderer() != RendererAdreno205);
+    if (Renderer() == RendererAdreno200 || Renderer() == RendererAdreno205)
+        return false;
+
+    // On PowerVR glTexSubImage does a readback, so it will be slower
+    // than just doing a glTexImage2D() directly. i.e. 26ms vs 10ms
+    if (Renderer() == RendererSGX540 || Renderer() == RendererSGX530)
+        return false;
+
+    return true;
 }
 
 bool
@@ -594,7 +615,6 @@ GLContext::CanUploadNonPowerOfTwo()
 bool
 GLContext::WantsSmallTiles()
 {
-#ifdef MOZ_WIDGET_ANDROID
     // We must use small tiles for good performance if we can't use
     // glTexSubImage2D() for some reason.
     if (!CanUploadSubTextures())
@@ -607,9 +627,6 @@ GLContext::WantsSmallTiles()
     // Don't use small tiles otherwise. (If we implement incremental texture upload,
     // then we will want to revisit this.)
     return false;
-#else
-    return false;
-#endif
 }
 
 // Common code for checking for both GL extensions and GLX extensions.
@@ -857,6 +874,8 @@ TiledTextureImage::TiledTextureImage(GLContext* aGL,
     : TextureImage(aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType, aUseNearestFilter)
     , mCurrentImage(0)
     , mInUpdate(false)
+    , mRows(0)
+    , mColumns(0)
     , mGL(aGL)
     , mUseNearestFilter(aUseNearestFilter)
     , mTextureState(Created)
@@ -912,8 +931,9 @@ TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
         // Override a callback cancelling iteration if the texture wasn't valid.
         // We need to force the update in that situation, or we may end up
         // showing invalid/out-of-date texture data.
-    } while (NextTile() ||
-             (mTextureState != Valid && mCurrentImage < mImages.Length()));
+        if (mCurrentImage == mImages.Length() - 1)
+            break;
+    } while (NextTile() || (mTextureState != Valid));
     mCurrentImage = oldCurrentImage;
 
     mShaderType = mImages[0]->GetShaderProgramType();
@@ -1072,8 +1092,11 @@ bool TiledTextureImage::NextTile()
         continueIteration = mIterationCallback(this, mCurrentImage,
                                                mIterationCallbackData);
 
-    mCurrentImage++;
-    return continueIteration && (mCurrentImage < mImages.Length());
+    if (mCurrentImage + 1 < mImages.Length()) {
+        mCurrentImage++;
+        return continueIteration;
+    }
+    return false;
 }
 
 void TiledTextureImage::SetIterationCallback(TileIterationCallback aCallback,
@@ -1105,31 +1128,100 @@ TiledTextureImage::ApplyFilter()
 }
 
 /*
- * simple resize, just discards everything. we can be more clever just
- * adding or discarding tiles, but do we want this?
+ * Resize, trying to reuse tiles. The reuse strategy is to decide on reuse per
+ * column. A tile on a column is reused if it hasn't changed size, otherwise it
+ * is discarded/replaced. Extra tiles on a column are pruned after iterating
+ * each column, and extra rows are pruned after iteration over the entire image
+ * finishes.
  */
 void TiledTextureImage::Resize(const nsIntSize& aSize)
 {
     if (mSize == aSize && mTextureState != Created) {
         return;
     }
-    mSize = aSize;
-    mImages.Clear();
-    // calculate rows and columns, rounding up
-    mColumns = (aSize.width  + mTileSize - 1) / mTileSize;
-    mRows    = (aSize.height + mTileSize - 1) / mTileSize;
 
-    for (unsigned int row = 0; row < mRows; row++) {
-      for (unsigned int col = 0; col < mColumns; col++) {
-          nsIntSize size( // use tilesize first, then the remainder
-                  (col+1) * mTileSize > (unsigned int)aSize.width  ? aSize.width  % mTileSize : mTileSize,
-                  (row+1) * mTileSize > (unsigned int)aSize.height ? aSize.height % mTileSize : mTileSize);
-          nsRefPtr<TextureImage> teximg =
-                  mGL->TileGenFunc(size, mContentType, mUseNearestFilter);
-          mImages.AppendElement(teximg.forget());
-      }
+    // calculate rows and columns, rounding up
+    unsigned int columns = (aSize.width  + mTileSize - 1) / mTileSize;
+    unsigned int rows = (aSize.height + mTileSize - 1) / mTileSize;
+
+    // Iterate over old tile-store and insert/remove tiles as necessary
+    int row;
+    unsigned int i = 0;
+    for (row = 0; row < (int)rows; row++) {
+        // If we've gone beyond how many rows there were before, set mColumns to
+        // zero so that we only create new tiles.
+        if (row >= (int)mRows)
+            mColumns = 0;
+
+        // Similarly, if we're on the last row of old tiles and the height has
+        // changed, discard all tiles in that row.
+        // This will cause the pruning of columns not to work, but we don't need
+        // to worry about that, as no more tiles will be reused past this point
+        // anyway.
+        if ((row == (int)mRows - 1) && (aSize.height != mSize.height))
+            mColumns = 0;
+
+        int col;
+        for (col = 0; col < (int)columns; col++) {
+            nsIntSize size( // use tilesize first, then the remainder
+                    (col+1) * mTileSize > (unsigned int)aSize.width  ? aSize.width  % mTileSize : mTileSize,
+                    (row+1) * mTileSize > (unsigned int)aSize.height ? aSize.height % mTileSize : mTileSize);
+
+            bool replace = false;
+
+            // Check if we can re-use old tiles.
+            if (col < (int)mColumns) {
+                // Reuse an existing tile. If the tile is an end-tile and the
+                // width differs, replace it instead.
+                if (mSize.width != aSize.width) {
+                    if (col == (int)mColumns - 1) {
+                        // Tile at the end of the old column, replace it with
+                        // a new one.
+                        replace = true;
+                    } else if (col == (int)columns - 1) {
+                        // Tile at the end of the new column, create a new one.
+                    } else {
+                        // Before the last column on both the old and new sizes,
+                        // reuse existing tile.
+                        i++;
+                        continue;
+                    }
+                } else {
+                    // Width hasn't changed, reuse existing tile.
+                    i++;
+                    continue;
+                }
+            }
+
+            // Create a new tile.
+            nsRefPtr<TextureImage> teximg =
+                    mGL->TileGenFunc(size, mContentType, mUseNearestFilter);
+            if (replace)
+                mImages.ReplaceElementAt(i, teximg.forget());
+            else
+                mImages.InsertElementAt(i, teximg.forget());
+            i++;
+        }
+
+        // Prune any unused tiles on the end of the column.
+        if (row < (int)mRows) {
+            for (col = (int)mColumns - col; col > 0; col--) {
+                mImages.RemoveElementAt(i);
+            }
+        }
     }
+
+    // Prune any unused tiles at the end of the store.
+    unsigned int length = mImages.Length();
+    for (; i < length; i++)
+      mImages.RemoveElementAt(mImages.Length()-1);
+
+    // Reset tile-store properties.
+    mRows = rows;
+    mColumns = columns;
+    mSize = aSize;
     mTextureState = Allocated;
+    mCurrentImage = 0;
 }
 
 PRUint32 TiledTextureImage::GetTileCount()

@@ -61,3 +61,5 @@
   <!-- Notification strings -->
   <string name="sync_notification_oneaccount">&sync.notification.oneaccount.label;</string>
 
+  <!-- Push tab to device strings -->
+  <string name="sync_new_tab">&new_tab;</string>

@@ -23,8 +23,8 @@ function test() {
         presenter = instance.presenter;
         Services.obs.addObserver(whenHighlighting, HIGHLIGHTING, false);
 
-        presenter._onSetupMesh = function() {
-          presenter.highlightNodeAt(presenter.canvas.width / 2, 10);
+        presenter._onInitializationFinished = function() {
+          presenter.highlightNodeAt.apply(this, getPickablePoint(presenter));
         };
       }
     });
@@ -38,8 +38,9 @@ function whenHighlighting() {
     "After highlighting a node, it should be highlighted. D'oh.");
 
   executeSoon(function() {
+    Services.obs.removeObserver(whenHighlighting, HIGHLIGHTING);
     Services.obs.addObserver(whenUnhighlighting, UNHIGHLIGHTING, false);
-    presenter.highlightNodeAt(-1, -1);
+    presenter.highlightNode(null);
   });
 }
 
@@ -50,14 +51,13 @@ function whenUnhighlighting() {
     "After unhighlighting a node, it shouldn't be highlighted anymore. D'oh.");
 
   executeSoon(function() {
+    Services.obs.removeObserver(whenUnhighlighting, UNHIGHLIGHTING);
     Services.obs.addObserver(cleanup, DESTROYED, false);
     InspectorUI.closeInspectorUI();
   });
 }
 
 function cleanup() {
-  Services.obs.removeObserver(whenHighlighting, HIGHLIGHTING);
-  Services.obs.removeObserver(whenUnhighlighting, UNHIGHLIGHTING);
   Services.obs.removeObserver(cleanup, DESTROYED);
   gBrowser.removeCurrentTab();
   finish();

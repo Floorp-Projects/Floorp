@@ -2,7 +2,7 @@
 
 %filter substitution
 %define toolbarHighlight rgba(255,255,255,.5)
-%define customToolbarColor hsl(214,44%,87%)
+%define customToolbarColor hsl(210,75%,92%)
 
 #placesView {
   border-top: none;

@@ -472,7 +472,10 @@ public class PanZoomController
         }
 
         mState = PanZoomState.BOUNCE;
-
+        // set the animation target *after* setting state BOUNCE, so that
+        // the getRedrawHint() is returning false and we don't clobber the display
+        // port we set as a result of this animation target call.
+        mController.setAnimationTarget(metrics);
         startAnimationTimer(new BounceRunnable(bounceStartMetrics, metrics));
     }
 
@@ -518,6 +521,10 @@ public class PanZoomController
         return FloatMath.sqrt(xvel * xvel + yvel * yvel);
     }
 
+    public PointF getVelocityVector() {
+        return new PointF(mX.getRealVelocity(), mY.getRealVelocity());
+    }
+
     private boolean stopped() {
         return getVelocity() < STOPPED_THRESHOLD;
     }
@@ -530,6 +537,9 @@ public class PanZoomController
         mX.displace();
         mY.displace();
         PointF displacement = getDisplacement();
+        if (FloatUtils.fuzzyEquals(displacement.x, 0.0f) && FloatUtils.fuzzyEquals(displacement.y, 0.0f)) {
+            return;
+        }
         if (! mSubscroller.scrollBy(displacement)) {
             synchronized (mController) {
                 mController.scrollBy(displacement);

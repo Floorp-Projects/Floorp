@@ -45,6 +45,8 @@
 #error This header/class should only be used within Mozilla code. It should not be used by extensions.
 #endif
 
+#define MAX_REFLOW_DEPTH 200
+
 /* nsIFrame is in the process of being deCOMtaminated, i.e., this file is eventually
    going to be eliminated, and all callers will use nsFrame instead.  At the moment
    we're midway through this process, so you will see inlined functions and member
@@ -291,8 +293,9 @@ typedef PRUint64 nsFrameState;
 // A display item for this frame has been painted as part of a ThebesLayer.
 #define NS_FRAME_PAINTED_THEBES                     NS_FRAME_STATE_BIT(38)
 
-// Frame is or is a descendant of something with a fixed height, and
-// has no closer ancestor that is overflow:auto or overflow:scroll.
+// Frame is or is a descendant of something with a fixed height, unless that
+// ancestor is a body or html element, and has no closer ancestor that is
+// overflow:auto or overflow:scroll.
 #define NS_FRAME_IN_CONSTRAINED_HEIGHT              NS_FRAME_STATE_BIT(39)
 
 // This is only set during painting
@@ -2529,12 +2532,16 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY(BaseLevelProperty, nsnull)
   NS_DECLARE_FRAME_PROPERTY(EmbeddingLevelProperty, nsnull)
+  NS_DECLARE_FRAME_PROPERTY(ParagraphDepthProperty, nsnull)
 
 #define NS_GET_BASE_LEVEL(frame) \
 NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::BaseLevelProperty()))
 
 #define NS_GET_EMBEDDING_LEVEL(frame) \
 NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
+
+#define NS_GET_PARAGRAPH_DEPTH(frame) \
+NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
 
   /**
    * Return true if and only if this frame obeys visibility:hidden.
@@ -2700,18 +2707,26 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
   // The above methods have been migrated from nsIBox and are in the process of
   // being refactored. DO NOT USE OUTSIDE OF XUL.
 
+  struct CaretPosition {
+    CaretPosition() :
+      mContentOffset(0)
+    {}
+
+    nsCOMPtr<nsIContent> mResultContent;
+    PRInt32              mContentOffset;
+  };
+
   /**
    * gets the first or last possible caret position within the frame
    *
    * @param  [in] aStart
    *         true  for getting the first possible caret position
    *         false for getting the last possible caret position
-   * @return The caret position in an nsPeekOffsetStruct (the
-   *         fields set are mResultContent and mContentOffset;
+   * @return The caret position in a CaretPosition.
    *         the returned value is a 'best effort' in case errors
    *         are encountered rummaging through the frame.
    */
-  nsPeekOffsetStruct GetExtremeCaretPosition(bool aStart);
+  CaretPosition GetExtremeCaretPosition(bool aStart);
 
   /**
    * Same thing as nsFrame::CheckInvalidateSizeChange, but more flexible.  The

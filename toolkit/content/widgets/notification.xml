@@ -340,7 +340,7 @@
       <xul:hbox class="notification-inner outset" flex="1" xbl:inherits="type">
         <xul:hbox anonid="details" align="center" flex="1"
                   oncommand="this.parentNode.parentNode._doButtonCommand(event);">
-          <xul:image anonid="messageImage" class="messageImage" xbl:inherits="src=image"/>
+          <xul:image anonid="messageImage" class="messageImage" xbl:inherits="src=image,type,value"/>
           <xul:description anonid="messageText" class="messageText" flex="1" xbl:inherits="xbl:text=label"/>
           <xul:spacer flex="1"/>
           <children/>

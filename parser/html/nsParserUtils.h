@@ -41,7 +41,7 @@
 #include "nsIParserUtils.h"
 
 class nsParserUtils : public nsIScriptableUnescapeHTML,
-                               public nsIParserUtils
+                      public nsIParserUtils
 {
 public:
   NS_DECL_ISUPPORTS

@@ -57,8 +57,8 @@ fails-if(!azureQuartz) == canvas-drawImage-slice-1b.html lime100x100-ref.html # 
 random == img-and-image-1.html img-and-image-1-ref.svg # bug 645267
 
 # More complex <img> tests
-== img-blobBuilder-1.html lime100x100-ref.html
-== img-blobBuilder-2.html lime100x100-ref.html
+== img-blobURI-1.html lime100x100-ref.html
+== img-blobURI-2.html lime100x100-ref.html
 == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html
 == img-dyn-1.html img-dyn-1-ref.html
 == img-foreignObject-1.html lime100x100-ref.html

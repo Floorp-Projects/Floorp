@@ -44,7 +44,6 @@
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "jsapi.h"
-#include "jsxdrapi.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
@@ -84,70 +83,6 @@ nsJSPrincipals::Destroy(JSPrincipals *jsprin)
     nsjsprin->refcount++;
 #endif
     nsjsprin->Release();
-}
-
-/* static */ JSBool
-nsJSPrincipals::Transcode(JSXDRState *xdr, JSPrincipals **jsprinp)
-{
-    nsresult rv;
-
-    if (xdr->mode == JSXDR_ENCODE) {
-        nsIObjectOutputStream *stream =
-            reinterpret_cast<nsIObjectOutputStream*>(xdr->userdata);
-
-        // Flush xdr'ed data to the underlying object output stream.
-        uint32_t size;
-        char *data = (char*) ::JS_XDRMemGetData(xdr, &size);
-
-        rv = stream->Write32(size);
-        if (NS_SUCCEEDED(rv)) {
-            rv = stream->WriteBytes(data, size);
-            if (NS_SUCCEEDED(rv)) {
-                ::JS_XDRMemResetData(xdr);
-
-                rv = stream->WriteObject(nsJSPrincipals::get(*jsprinp), true);
-            }
-        }
-    } else {
-        NS_ASSERTION(JS_XDRMemDataLeft(xdr) == 0, "XDR out of sync?!");
-        nsIObjectInputStream *stream =
-            reinterpret_cast<nsIObjectInputStream*>(xdr->userdata);
-
-        nsCOMPtr<nsIPrincipal> prin;
-        rv = stream->ReadObject(true, getter_AddRefs(prin));
-        if (NS_SUCCEEDED(rv)) {
-            PRUint32 size;
-            rv = stream->Read32(&size);
-            if (NS_SUCCEEDED(rv)) {
-                char *data = nsnull;
-                if (size != 0)
-                    rv = stream->ReadBytes(size, &data);
-                if (NS_SUCCEEDED(rv)) {
-                    char *olddata;
-                    uint32_t oldsize;
-
-                    // Any decode-mode JSXDRState whose userdata points to an
-                    // nsIObjectInputStream instance must use nsMemory to Alloc
-                    // and Free its data buffer.  Swap the new buffer we just
-                    // read for the old, exhausted data.
-                    olddata = (char*) ::JS_XDRMemGetData(xdr, &oldsize);
-                    nsMemory::Free(olddata);
-                    ::JS_XDRMemSetData(xdr, data, size);
-
-                    *jsprinp = nsJSPrincipals::get(prin);
-                    JS_HoldPrincipals(*jsprinp);
-                }
-            }
-        }
-    }
-
-    if (NS_FAILED(rv)) {
-        ::JS_ReportError(xdr->cx, "can't %scode principals (failure code %x)",
-                         (xdr->mode == JSXDR_ENCODE) ? "en" : "de",
-                         (unsigned int) rv);
-        return JS_FALSE;
-    }
-    return JS_TRUE;
 }
 
 #ifdef DEBUG

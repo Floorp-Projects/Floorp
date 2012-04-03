@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+<title>Marionette Test</title>
+</head>
+<body>
+  <h1 id="testh1">Test Page</h1>
+  <script type="text/javascript">
+    window.ready = true;
+    setTimeout(addDelayedElement, 1000);
+    function addDelayedElement() {
+      var newDiv = document.createElement("div");
+      newDiv.id = "newDiv";
+      var newContent = document.createTextNode("I am a newly created div!");
+      newDiv.appendChild(newContent);
+      document.body.appendChild(newDiv);
+    }
+    function clicked() {
+      var link = document.getElementById("mozLink");
+      link.innerHTML = "Clicked";
+    }
+  </script>
+  <a href="#" id="mozLink" class="linkClass" onclick="clicked()">Click me!</a>
+  <a href="#" id="mozLink" class="linkClass" onclick="clicked()">Click me!</a>
+  <input name="myInput" type="text" />
+</body>
+</html> 

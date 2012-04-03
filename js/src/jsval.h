@@ -115,13 +115,9 @@ JSDOUBLE_IS_INT32(double d, int32_t* pi)
 
 #if defined(_MSC_VER)
 # define JS_ENUM_HEADER(id, type)              enum id : type
-# define JS_ENUM_MEMBER(id, type, value)       id = (type)value,
-# define JS_LAST_ENUM_MEMBER(id, type, value)  id = (type)value
 # define JS_ENUM_FOOTER(id)
 #else
 # define JS_ENUM_HEADER(id, type)              enum id
-# define JS_ENUM_MEMBER(id, type, value)       id = (type)value,
-# define JS_LAST_ENUM_MEMBER(id, type, value)  id = (type)value
 # define JS_ENUM_FOOTER(id)                    __attribute__((packed))
 #endif
 
@@ -275,7 +271,6 @@ typedef uint64_t JSValueShiftedTag;
 typedef enum JSWhyMagic
 {
     JS_ARRAY_HOLE,               /* a hole in a dense array */
-    JS_ARGS_HOLE,                /* a hole in the args object's array */
     JS_NATIVE_ENUMERATE,         /* indicates that a custom enumerate hook forwarded
                                   * to JS_EnumerateState, which really means the object can be
                                   * enumerated like a native object. */
@@ -289,6 +284,7 @@ typedef enum JSWhyMagic
     JS_UNASSIGNED_ARGUMENTS,     /* the initial value of callobj.arguments */
     JS_OPTIMIZED_ARGUMENTS,      /* optimized-away 'arguments' value */
     JS_IS_CONSTRUCTING,          /* magic value passed to natives to indicate construction */
+    JS_OVERWRITTEN_CALLEE,       /* arguments.callee has been overwritten */
     JS_GENERIC_MAGIC             /* for local use */
 } JSWhyMagic;
 

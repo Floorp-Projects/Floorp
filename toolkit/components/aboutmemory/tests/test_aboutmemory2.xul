@@ -52,18 +52,24 @@
       path:        aPath,
       kind:        aKind,
       units:       BYTES,
-      description: "(description)",
+      description: "Desc.",
       amount:      aAmount
     };
   }
 
+  let hiReport = f("explicit/h/i", HEAP,  19 * MB);
+  let jkReport = f("explicit/j/k", HEAP, 0.8 * MB);
+
   let fakeReporters = [
     f("heap-allocated",     OTHER,   250 * MB),
     f("explicit/a/b",       HEAP,     50 * MB),
-    f("explicit/a/c/d",     HEAP,     30 * MB),
-    f("explicit/a/c/e",     HEAP,     20 * MB),
-    f("explicit/a/f",       HEAP,     40 * MB),
-    f("explicit/g",         HEAP,    100 * MB)
+    f("explicit/a/c/d",     HEAP,     25 * MB),
+    f("explicit/a/c/e",     HEAP,     15 * MB),
+    f("explicit/a/f",       HEAP,     30 * MB),
+    f("explicit/g",         HEAP,    100 * MB),
+    hiReport,
+    jkReport,
+    f("explicit/a/l/m",     HEAP,    0.2 * MB),
   ];
 
   for (let i = 0; i < fakeReporters.length; i++) {
@@ -98,14 +104,21 @@
   // check that the cut text matches what we expect.
   function test(aId, aExpected, aNext) {
     let win = document.getElementById("amFrame").contentWindow;
-    let node = win.document.getElementById(aId);
+    if (aId) {
+      let node = win.document.getElementById(aId);
 
-    // Yuk:  clicking a button is easy;  but for tree entries we need to
-    // click on a child of the span identified via |id|.
-    if (node.nodeName === "button") {
-      node.click();
-    } else {
-      node.childNodes[0].click();
+      // Yuk:  clicking a button is easy;  but for tree entries we need to
+      // click on a child of the span identified via |id|.
+      // Also, we swap the paths of hiReport and jkReport just before updating,
+      // to test what happens when significant nodes become insignificant and
+      // vice versa.
+      if (node.nodeName === "button") {
+        hiReport.path = "explicit/j/k";
+        jkReport.path = "explicit/h/i";
+        node.click();
+      } else {
+        node.childNodes[0].click();
+      }
     }
 
     SimpleTest.executeSoon(function() {
@@ -144,67 +157,244 @@
     }
   }
 
-  let openExpected =
+  let startExpected =
 "\
 Main Process\n\
 \n\
 Explicit Allocations\n\
 250.00 MB (100.0%) -- explicit\n\
-├──140.00 MB (56.00%) -- a\n\
+├──120.20 MB (48.08%) -- a\n\
 │  ├───50.00 MB (20.00%) ── b\n\
-│  ├───50.00 MB (20.00%) -- c\n\
-│  │   ├──30.00 MB (12.00%) ── d\n\
-│  │   └──20.00 MB (08.00%) ── e\n\
-│  └───40.00 MB (16.00%) ── f\n\
+│  ├───40.00 MB (16.00%) -- c\n\
+│  │   ├──25.00 MB (10.00%) ── d\n\
+│  │   └──15.00 MB (06.00%) ── e\n\
+│  ├───30.00 MB (12.00%) ── f\n\
+│  └────0.20 MB (00.08%) ++ l\n\
 ├──100.00 MB (40.00%) ── g\n\
-└───10.00 MB (04.00%) ── heap-unclassified\n\
+├───19.00 MB (07.60%) -- h\n\
+│   └──19.00 MB (07.60%) ── i\n\
+├───10.00 MB (04.00%) ── heap-unclassified\n\
+└────0.80 MB (00.32%) ++ j\n\
 \n\
 Other Measurements\n\
 250.00 MB ── heap-allocated\n\
 \n\
 ";
 
-  let cClosedExpected =
+  let acCollapsedExpected =
 "\
 Main Process\n\
 \n\
 Explicit Allocations\n\
 250.00 MB (100.0%) -- explicit\n\
-├──140.00 MB (56.00%) -- a\n\
+├──120.20 MB (48.08%) -- a\n\
 │  ├───50.00 MB (20.00%) ── b\n\
-│  ├───50.00 MB (20.00%) ++ c\n\
-│  └───40.00 MB (16.00%) ── f\n\
+│  ├───40.00 MB (16.00%) ++ c\n\
+│  ├───30.00 MB (12.00%) ── f\n\
+│  └────0.20 MB (00.08%) ++ l\n\
 ├──100.00 MB (40.00%) ── g\n\
-└───10.00 MB (04.00%) ── heap-unclassified\n\
+├───19.00 MB (07.60%) -- h\n\
+│   └──19.00 MB (07.60%) ── i\n\
+├───10.00 MB (04.00%) ── heap-unclassified\n\
+└────0.80 MB (00.32%) ++ j\n\
 \n\
 Other Measurements\n\
 250.00 MB ── heap-allocated\n\
 \n\
 ";
 
-  let aClosedExpected =
+  let alExpandedExpected =
 "\
 Main Process\n\
 \n\
 Explicit Allocations\n\
 250.00 MB (100.0%) -- explicit\n\
-├──140.00 MB (56.00%) ++ a\n\
+├──120.20 MB (48.08%) -- a\n\
+│  ├───50.00 MB (20.00%) ── b\n\
+│  ├───40.00 MB (16.00%) ++ c\n\
+│  ├───30.00 MB (12.00%) ── f\n\
+│  └────0.20 MB (00.08%) -- l\n\
+│       └──0.20 MB (00.08%) ── m\n\
 ├──100.00 MB (40.00%) ── g\n\
-└───10.00 MB (04.00%) ── heap-unclassified\n\
+├───19.00 MB (07.60%) -- h\n\
+│   └──19.00 MB (07.60%) ── i\n\
+├───10.00 MB (04.00%) ── heap-unclassified\n\
+└────0.80 MB (00.32%) ++ j\n\
 \n\
 Other Measurements\n\
 250.00 MB ── heap-allocated\n\
 \n\
 ";
 
-  // We close two sub-trees, hit the "Update" button, then reopen the two
-  // sub-trees in reverse order.  After each step, we check the output.
+  let aCollapsedExpected =
+"\
+Main Process\n\
+\n\
+Explicit Allocations\n\
+250.00 MB (100.0%) -- explicit\n\
+├──120.20 MB (48.08%) ++ a\n\
+├──100.00 MB (40.00%) ── g\n\
+├───19.00 MB (07.60%) -- h\n\
+│   └──19.00 MB (07.60%) ── i\n\
+├───10.00 MB (04.00%) ── heap-unclassified\n\
+└────0.80 MB (00.32%) ++ j\n\
+\n\
+Other Measurements\n\
+250.00 MB ── heap-allocated\n\
+\n\
+";
+
+  let hCollapsedExpected =
+"\
+Main Process\n\
+\n\
+Explicit Allocations\n\
+250.00 MB (100.0%) -- explicit\n\
+├──120.20 MB (48.08%) ++ a\n\
+├──100.00 MB (40.00%) ── g\n\
+├───19.00 MB (07.60%) ++ h\n\
+├───10.00 MB (04.00%) ── heap-unclassified\n\
+└────0.80 MB (00.32%) ++ j\n\
+\n\
+Other Measurements\n\
+250.00 MB ── heap-allocated\n\
+\n\
+";
+
+  let jExpandedExpected =
+"\
+Main Process\n\
+\n\
+Explicit Allocations\n\
+250.00 MB (100.0%) -- explicit\n\
+├──120.20 MB (48.08%) ++ a\n\
+├──100.00 MB (40.00%) ── g\n\
+├───19.00 MB (07.60%) ++ h\n\
+├───10.00 MB (04.00%) ── heap-unclassified\n\
+└────0.80 MB (00.32%) -- j\n\
+     └──0.80 MB (00.32%) ── k\n\
+\n\
+Other Measurements\n\
+250.00 MB ── heap-allocated\n\
+\n\
+";
+
+  // The important thing here is that two values have been swapped.
+  // explicit/h/i should remain collapsed, and explicit/j/k should remain
+  // expanded.  See bug 724863.
+  let updatedExpected =
+"\
+Main Process\n\
+\n\
+Explicit Allocations\n\
+250.00 MB (100.0%) -- explicit\n\
+├──120.20 MB (48.08%) ++ a\n\
+├──100.00 MB (40.00%) ── g\n\
+├───19.00 MB (07.60%) -- j\n\
+│   └──19.00 MB (07.60%) ── k\n\
+├───10.00 MB (04.00%) ── heap-unclassified\n\
+└────0.80 MB (00.32%) ++ h\n\
+\n\
+Other Measurements\n\
+250.00 MB ── heap-allocated\n\
+\n\
+";
+
+  let aExpandedExpected =
+"\
+Main Process\n\
+\n\
+Explicit Allocations\n\
+250.00 MB (100.0%) -- explicit\n\
+├──120.20 MB (48.08%) -- a\n\
+│  ├───50.00 MB (20.00%) ── b\n\
+│  ├───40.00 MB (16.00%) ++ c\n\
+│  ├───30.00 MB (12.00%) ── f\n\
+│  └────0.20 MB (00.08%) -- l\n\
+│       └──0.20 MB (00.08%) ── m\n\
+├──100.00 MB (40.00%) ── g\n\
+├───19.00 MB (07.60%) -- j\n\
+│   └──19.00 MB (07.60%) ── k\n\
+├───10.00 MB (04.00%) ── heap-unclassified\n\
+└────0.80 MB (00.32%) ++ h\n\
+\n\
+Other Measurements\n\
+250.00 MB ── heap-allocated\n\
+\n\
+";
+
+  let acExpandedExpected =
+"\
+Main Process\n\
+\n\
+Explicit Allocations\n\
+250.00 MB (100.0%) -- explicit\n\
+├──120.20 MB (48.08%) -- a\n\
+│  ├───50.00 MB (20.00%) ── b\n\
+│  ├───40.00 MB (16.00%) -- c\n\
+│  │   ├──25.00 MB (10.00%) ── d\n\
+│  │   └──15.00 MB (06.00%) ── e\n\
+│  ├───30.00 MB (12.00%) ── f\n\
+│  └────0.20 MB (00.08%) -- l\n\
+│       └──0.20 MB (00.08%) ── m\n\
+├──100.00 MB (40.00%) ── g\n\
+├───19.00 MB (07.60%) -- j\n\
+│   └──19.00 MB (07.60%) ── k\n\
+├───10.00 MB (04.00%) ── heap-unclassified\n\
+└────0.80 MB (00.32%) ++ h\n\
+\n\
+Other Measurements\n\
+250.00 MB ── heap-allocated\n\
+\n\
+";
+
+  let alCollapsedExpected =
+"\
+Main Process\n\
+\n\
+Explicit Allocations\n\
+250.00 MB (100.0%) -- explicit\n\
+├──120.20 MB (48.08%) -- a\n\
+│  ├───50.00 MB (20.00%) ── b\n\
+│  ├───40.00 MB (16.00%) -- c\n\
+│  │   ├──25.00 MB (10.00%) ── d\n\
+│  │   └──15.00 MB (06.00%) ── e\n\
+│  ├───30.00 MB (12.00%) ── f\n\
+│  └────0.20 MB (00.08%) ++ l\n\
+├──100.00 MB (40.00%) ── g\n\
+├───19.00 MB (07.60%) -- j\n\
+│   └──19.00 MB (07.60%) ── k\n\
+├───10.00 MB (04.00%) ── heap-unclassified\n\
+└────0.80 MB (00.32%) ++ h\n\
+\n\
+Other Measurements\n\
+250.00 MB ── heap-allocated\n\
+\n\
+";
+
+  // Test the following cases:
+  // - explicit/a/c is significant, we collapse it, it's unchanged upon
+  //   update, we re-expand it
+  // - explicit/a/l is insignificant, we expand it, it's unchanged upon
+  //   update, we re-collapse it
+  // - explicit/a is significant, we collapse it (which hides its
+  //   sub-trees), it's unchanged upon update, we re-expand it
+  // - explicit/h is significant, we collapse it, it becomes insignificant
+  //   upon update (and should remain collapsed)
+  // - explicit/j is insignificant, we expand it, it becomes significant
+  //   upon update (and should remain expanded)
+  //
   let idsToClick = [
-    { id: "Main:explicit/a/c", expected: cClosedExpected },
-    { id: "Main:explicit/a",   expected: aClosedExpected },
-    { id: "updateButton",      expected: aClosedExpected },
-    { id: "Main:explicit/a",   expected: cClosedExpected },
-    { id: "Main:explicit/a/c", expected: openExpected }
+    { id: "",                  expected: startExpected },
+    { id: "Main:explicit/a/c", expected: acCollapsedExpected },
+    { id: "Main:explicit/a/l", expected: alExpandedExpected },
+    { id: "Main:explicit/a",   expected: aCollapsedExpected },
+    { id: "Main:explicit/h",   expected: hCollapsedExpected },
+    { id: "Main:explicit/j",   expected: jExpandedExpected },
+    { id: "updateButton",      expected: updatedExpected },
+    { id: "Main:explicit/a",   expected: aExpandedExpected },
+    { id: "Main:explicit/a/c", expected: acExpandedExpected },
+    { id: "Main:explicit/a/l", expected: alCollapsedExpected }
   ];
 
   SimpleTest.waitForFocus(chain(idsToClick));

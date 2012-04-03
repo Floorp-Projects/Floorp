@@ -39,10 +39,16 @@
 #ifndef __NS_SVGGENERICCONTAINERFRAME_H__
 #define __NS_SVGGENERICCONTAINERFRAME_H__
 
-#include "nsIDOMSVGGElement.h"
-#include "nsSVGContainerFrame.h"
-#include "nsGkAtoms.h"
 #include "gfxMatrix.h"
+#include "nsFrame.h"
+#include "nsLiteralString.h"
+#include "nsQueryFrame.h"
+#include "nsSVGContainerFrame.h"
+
+class nsIAtom;
+class nsIFrame;
+class nsIPresShell;
+class nsStyleContext;
 
 typedef nsSVGDisplayContainerFrame nsSVGGenericContainerFrameBase;
 

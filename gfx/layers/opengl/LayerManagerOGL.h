@@ -80,8 +80,8 @@ class ShadowCanvasLayer;
 class ShadowColorLayer;
 
 /**
- * This is the LayerManager used for OpenGL 2.1. For now this will render on
- * the main thread.
+ * This is the LayerManager used for OpenGL 2.1 and OpenGL ES 2.0.
+ * This can be used either on the main thread or the compositor.
  */
 class THEBES_API LayerManagerOGL :
     public ShadowLayerManager
@@ -252,16 +252,6 @@ public:
 
   void* GetThebesLayerCallbackData() const
   { return mThebesLayerCallbackData; }
-
-  // This is a GLContext that can be used for resource
-  // management (creation, destruction).  It is guaranteed
-  // to be either the same as the gl() context, or a context
-  // that is in the same share pool.
-  GLContext *glForResources() const {
-    if (mGLContext->GetSharedContext())
-      return mGLContext->GetSharedContext();
-    return mGLContext;
-  }
 
   /*
    * Helper functions for our layers

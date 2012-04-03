@@ -64,8 +64,12 @@ function basic_auth_header(user, password) {
 }
 
 function basic_auth_matches(req, user, password) {
-  return req.hasHeader("Authorization") &&
-         (req.getHeader("Authorization") == basic_auth_header(user, password));
+  if (!req.hasHeader("Authorization")) {
+    return false;
+  }
+
+  let expected = basic_auth_header(user, Utils.encodeUTF8(password));
+  return req.getHeader("Authorization") == expected;
 }
 
 function httpd_basic_auth_handler(body, metadata, response) {

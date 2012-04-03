@@ -64,6 +64,9 @@
 #define MOZ_WM_MOUSEHWHEEL                (WM_APP+0x0311)
 #define MOZ_WM_VSCROLL                    (WM_APP+0x0312)
 #define MOZ_WM_HSCROLL                    (WM_APP+0x0313)
+#define MOZ_WM_MOUSEWHEEL_FIRST           MOZ_WM_MOUSEVWHEEL
+#define MOZ_WM_MOUSEWHEEL_LAST            MOZ_WM_HSCROLL
+
 // Internal message for ensuring the file picker is visible on multi monitor
 // systems, and when the screen resolution changes.
 #define MOZ_WM_ENSUREVISIBLE              (WM_APP + 14159)
@@ -278,7 +281,7 @@ struct KeyPair {
     : mGeneral(PRUint8(aGeneral)), mSpecific(PRUint8(aSpecific)) {}
 };
 
-#ifndef TITLEBARINFOEX
+#if (WINVER < 0x0600)
 struct TITLEBARINFOEX
 {
     DWORD cbSize;

@@ -1,0 +1,149 @@
+#filter substitution
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@">
+
+    <LinearLayout android:layout_width="fill_parent"
+                  android:orientation="vertical"
+                  android:layout_height="fill_parent">
+
+        <RelativeLayout android:id="@+id/top_sites"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_alignParentLeft="true"
+                        android:isScrollContainer="false"
+                        android:background="@drawable/abouthome_topsites_bg_repeat">
+
+            <ImageView android:id="@+id/top_sites_top"
+                       android:layout_width="fill_parent"
+                       android:layout_height="50dip"
+                       android:gravity="fill"
+                       android:background="@drawable/abouthome_bg_repeat"/>
+
+            <ImageView android:layout_width="wrap_content"
+                       android:layout_height="wrap_content"
+                       android:layout_alignParentTop="true"
+                       android:layout_alignParentRight="true"
+                       android:src="@drawable/abouthome_icon"/>
+
+            <TextView android:id="@+id/top_sites_title"
+                      android:layout_width="fill_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_below="@id/top_sites_top"
+                      android:layout_marginLeft="12dip"
+                      android:layout_marginTop="5dip"
+                      android:textSize="12sp"
+                      android:textColor="#000000"
+                      android:textStyle="bold"
+                      android:text="@string/abouthome_top_sites_title"/>
+
+            <TextView android:id="@+id/no_top_sites_text"
+                      android:layout_width="fill_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_below="@id/top_sites_title"
+                      android:paddingTop="47dp"
+                      android:paddingBottom="47dp"
+                      android:paddingLeft="60dp"
+                      android:paddingRight="60dp"
+                      android:gravity="center"
+                      android:textSize="12sp"
+                      android:textColor="#666666"
+                      android:text="@string/abouthome_no_top_sites"
+                      android:visibility="gone"/>
+
+            <view class="org.mozilla.gecko.AboutHomeContent$TopSitesGridView"
+                  android:id="@+id/top_sites_grid"
+                  android:layout_width="fill_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_below="@id/top_sites_title"
+                  android:verticalSpacing="8dip"
+                  android:horizontalSpacing="0dip"
+                  android:isScrollContainer="false"
+                  android:gravity="center"/>
+
+            <org.mozilla.gecko.LinkTextView android:id="@+id/all_top_sites_text"
+                                            android:layout_width="fill_parent"
+                                            android:layout_height="30dip"
+                                            android:layout_below="@id/top_sites_grid"
+                                            android:layout_marginTop="7dip"
+                                            android:textColor="#22629e"
+                                            android:textSize="12sp"
+                                            android:gravity="top|center_horizontal"
+                                            android:text="@string/abouthome_top_sites_browse"/>
+
+            <RelativeLayout android:id="@+id/sync_box_container"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/all_top_sites_text"
+                            android:gravity="center"
+                            android:paddingLeft="12dp"
+                            android:paddingRight="12dp"
+                            android:paddingTop="17dp"
+                            android:paddingBottom="14dp"
+                            android:visibility="gone">
+
+                <RelativeLayout android:id="@+id/sync_box"
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:clickable="true"
+                                android:background="@drawable/abouthome_sync_box">
+
+                    <ImageView android:id="@+id/sync_logo"
+                               android:layout_width="wrap_content"
+                               android:layout_height="wrap_content"
+                               android:layout_centerVertical="true"
+                               android:src="@drawable/abouthome_sync_logo"/>
+
+                    <TextView android:id="@+id/sync_text"
+                              android:layout_width="fill_parent"
+                              android:layout_height="wrap_content"
+                              android:layout_centerVertical="true"
+                              android:layout_toRightOf="@id/sync_logo"
+                              android:layout_marginLeft="7dp"
+                              android:gravity="center"
+                              android:textSize="15sp"
+                              android:textColor="#FFFFFF"
+                              android:text="@string/abouthome_about_sync"/>
+
+                </RelativeLayout>
+
+            </RelativeLayout>
+
+            <ImageView android:id="@+id/logo"
+                       android:layout_width="wrap_content"
+                       android:layout_height="wrap_content"
+                       android:layout_marginTop="16dip"
+                       android:layout_marginBottom="10dip"
+                       android:layout_marginLeft="12dip"
+                       android:layout_alignParentTop="true"
+                       android:layout_alignParentLeft="true"
+                       android:src="@drawable/abouthome_logo"/>
+
+        </RelativeLayout>
+
+        <org.mozilla.gecko.AboutHomeSection android:id="@+id/last_tabs"
+                                            android:layout_width="fill_parent"
+                                            android:layout_height="wrap_content"
+                                            android:visibility="gone"
+                                            gecko:title="@string/abouthome_last_tabs_title"
+                                            gecko:more_text="@string/abouthome_last_tabs_open"/>
+
+        <org.mozilla.gecko.AboutHomeSection android:id="@+id/recommended_addons"
+                                            android:layout_width="fill_parent"
+                                            android:layout_height="wrap_content"
+                                            android:visibility="gone"
+                                            gecko:title="@string/abouthome_addons_title"
+                                            gecko:more_text="@string/abouthome_addons_browse"/>
+
+        <org.mozilla.gecko.AboutHomeSection android:id="@+id/remote_tabs"
+                                            android:layout_width="fill_parent"
+                                            android:layout_height="wrap_content"
+                                            android:visibility="gone"
+                                            gecko:title="@string/remote_tabs"
+                                            gecko:more_text="@string/remote_tabs_show_all"/>
+
+    </LinearLayout>
+
+</merge>

@@ -312,7 +312,7 @@ PreprocessValue(JSContext *cx, JSObject *holder, KeyType key, Value *vp, Stringi
     if (vp->isObject()) {
         Value toJSON;
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.toJSONAtom);
-        if (!js_GetMethod(cx, &vp->toObject(), id, JSGET_NO_METHOD_BARRIER, &toJSON))
+        if (!js_GetMethod(cx, &vp->toObject(), id, 0, &toJSON))
             return false;
 
         if (js_IsCallable(toJSON)) {

@@ -102,7 +102,9 @@ class ShadowableLayer;
 class BasicImplData {
 public:
   BasicImplData() : mHidden(false),
-    mClipToVisibleRegion(false), mOperator(gfxContext::OPERATOR_OVER)
+    mClipToVisibleRegion(false),
+    mDrawAtomically(false),
+    mOperator(gfxContext::OPERATOR_OVER)
   {
     MOZ_COUNT_CTOR(BasicImplData);
   }
@@ -170,9 +172,12 @@ public:
   bool GetClipToVisibleRegion() { return mClipToVisibleRegion; }
   void SetClipToVisibleRegion(bool aClip) { mClipToVisibleRegion = aClip; }
 
+  void SetDrawAtomically(bool aDrawAtomically) { mDrawAtomically = aDrawAtomically; }
+
 protected:
   bool mHidden;
   bool mClipToVisibleRegion;
+  bool mDrawAtomically;
   gfxContext::GraphicsOperator mOperator;
 };
 
@@ -741,6 +746,9 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
     }
 #endif
+    if (mDrawAtomically) {
+      flags |= ThebesLayerBuffer::PAINT_NO_ROTATION;
+    }
     Buffer::PaintState state =
       mBuffer.BeginPaint(this, contentType, flags);
     mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
@@ -766,9 +774,10 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       RenderTraceInvalidateEnd(this, "FFFF00");
     } else {
       // It's possible that state.mRegionToInvalidate is nonempty here,
-      // if we are shrinking the valid region to nothing.
-      NS_ASSERTION(state.mRegionToDraw.IsEmpty(),
-                   "If we need to draw, we should have a context");
+      // if we are shrinking the valid region to nothing. So use mRegionToDraw
+      // instead.
+      NS_WARN_IF_FALSE(state.mRegionToDraw.IsEmpty(),
+                       "No context when we have something to draw; resource exhaustion?");
     }
   }
 
@@ -880,7 +889,6 @@ public:
 
   static void PaintContext(gfxPattern* aPattern,
                            const nsIntRegion& aVisible,
-                           const nsIntRect* aTileSourceRect,
                            float aOpacity,
                            gfxContext* aContext);
 
@@ -940,14 +948,11 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
     size = mScaleToSize;
   }
 
-  // The visible region can extend outside the image.  If we're not
-  // tiling, we don't want to draw into that area, so just draw within
-  // the image bounds.
-  const nsIntRect* tileSrcRect = GetTileSourceRect();
+  // The visible region can extend outside the image, so just draw
+  // within the image bounds.
   AutoSetOperator setOperator(aContext, GetOperator());
   PaintContext(pat,
-               tileSrcRect ? GetVisibleRegion() : nsIntRegion(nsIntRect(0, 0, size.width, size.height)),
-               tileSrcRect,
+               nsIntRegion(nsIntRect(0, 0, size.width, size.height)),
                aOpacity, aContext);
 
   GetContainer()->NotifyPaintedImage(image);
@@ -958,7 +963,6 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
 /*static*/ void
 BasicImageLayer::PaintContext(gfxPattern* aPattern,
                               const nsIntRegion& aVisible,
-                              const nsIntRect* aTileSourceRect,
                               float aOpacity,
                               gfxContext* aContext)
 {
@@ -978,31 +982,13 @@ BasicImageLayer::PaintContext(gfxPattern* aPattern,
     }
   }
 
-  if (!aTileSourceRect) {
-    aContext->NewPath();
-    // No need to snap here; our transform has already taken care of it.
-    // XXX true for arbitrary regions?  Don't care yet though
-    gfxUtils::PathFromRegion(aContext, aVisible);
-    aPattern->SetExtend(extend);
-    aContext->SetPattern(aPattern);
-    aContext->FillWithOpacity(aOpacity);
-  } else {
-    nsRefPtr<gfxASurface> source = aPattern->GetSurface();
-    NS_ABORT_IF_FALSE(source, "Expecting a surface pattern");
-    gfxIntSize sourceSize = source->GetSize();
-    nsIntRect sourceRect(0, 0, sourceSize.width, sourceSize.height);
-    NS_ABORT_IF_FALSE(sourceRect == *aTileSourceRect,
-                      "Cowardly refusing to create a temporary surface for tiling");
-
-    gfxContextAutoSaveRestore saveRestore(aContext);
-
-    aContext->NewPath();
-    gfxUtils::PathFromRegion(aContext, aVisible);
-
-    aPattern->SetExtend(gfxPattern::EXTEND_REPEAT);
-    aContext->SetPattern(aPattern);
-    aContext->FillWithOpacity(aOpacity);
-  }
+  aContext->NewPath();
+  // No need to snap here; our transform has already taken care of it.
+  // XXX true for arbitrary regions?  Don't care yet though
+  gfxUtils::PathFromRegion(aContext, aVisible);
+  aPattern->SetExtend(extend);
+  aContext->SetPattern(aPattern);
+  aContext->FillWithOpacity(aOpacity);
 
   // Reset extend mode for callers that need to reuse the pattern
   aPattern->SetExtend(extend);
@@ -1095,6 +1081,30 @@ protected:
 
   bool mGLBufferIsPremultiplied;
   bool mNeedsYFlip;
+
+  nsRefPtr<gfxImageSurface> mCachedTempSurface;
+  gfxIntSize mCachedSize;
+  gfxImageFormat mCachedFormat;
+
+  gfxImageSurface* GetTempSurface(const gfxIntSize& aSize, const gfxImageFormat aFormat)
+  {
+    if (!mCachedTempSurface ||
+        aSize.width != mCachedSize.width ||
+        aSize.height != mCachedSize.height ||
+        aFormat != mCachedFormat)
+    {
+      mCachedTempSurface = new gfxImageSurface(aSize, aFormat);
+      mCachedSize = aSize;
+      mCachedFormat = aFormat;
+    }
+
+    return mCachedTempSurface;
+  }
+
+  void DiscardTempSurface()
+  {
+    mCachedTempSurface = nsnull;
+  }
 };
 
 void
@@ -1153,7 +1163,7 @@ BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface)
     mGLContext->MakeCurrent();
 
 #if defined (MOZ_X11) && defined (MOZ_EGL_XRENDER_COMPOSITE)
-    mGLContext->fFinish();
+    mGLContext->GuaranteeResolve();
     gfxASurface* offscreenSurface = mGLContext->GetOffscreenPixmapSurface();
 
     // XRender can only blend premuliplied alpha, so only allow xrender
@@ -1161,16 +1171,22 @@ BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface)
     if (offscreenSurface && (mGLBufferIsPremultiplied || (GetContentFlags() & CONTENT_OPAQUE))) {  
         mSurface = offscreenSurface;
         mNeedsYFlip = false;
+        return;
     }
-    else
 #endif
-    {
-    nsRefPtr<gfxImageSurface> isurf = aDestSurface ?
-        static_cast<gfxImageSurface*>(aDestSurface) :
-        new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
-                            (GetContentFlags() & CONTENT_OPAQUE)
-                              ? gfxASurface::ImageFormatRGB24
-                              : gfxASurface::ImageFormatARGB32);
+    nsRefPtr<gfxImageSurface> isurf;
+    if (aDestSurface) {
+      DiscardTempSurface();
+      isurf = static_cast<gfxImageSurface*>(aDestSurface);
+    } else {
+      nsIntSize size(mBounds.width, mBounds.height);
+      gfxImageFormat format = (GetContentFlags() & CONTENT_OPAQUE)
+                                ? gfxASurface::ImageFormatRGB24
+                                : gfxASurface::ImageFormatARGB32;
+
+      isurf = GetTempSurface(size, format);
+    }
+
 
     if (!isurf || isurf->CairoStatus() != 0) {
       return;
@@ -1207,7 +1223,6 @@ BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface)
       mSurface = isurf;
     }
   }
-}
 }
 
 void
@@ -1379,24 +1394,28 @@ already_AddRefed<gfxContext>
 BasicLayerManager::PushGroupWithCachedSurface(gfxContext *aTarget,
                                               gfxASurface::gfxContentType aContent)
 {
-  if (mCachedSurfaceInUse || !aTarget->IsCairo()) {
-    // We can't cache Azure DrawTargets at this point.
-    aTarget->PushGroup(aContent);
-    nsRefPtr<gfxContext> result = aTarget;
-    return result.forget();
+  nsRefPtr<gfxContext> ctx;
+  // We can't cache Azure DrawTargets at this point.
+  if (!mCachedSurfaceInUse && aTarget->IsCairo()) {
+    gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
+    aTarget->IdentityMatrix();
+
+    nsRefPtr<gfxASurface> currentSurf = aTarget->CurrentSurface();
+    gfxRect clip = aTarget->GetClipExtents();
+    clip.RoundOut();
+
+    ctx = mCachedSurface.Get(aContent, clip, currentSurf);
+
+    if (ctx) {
+      mCachedSurfaceInUse = true;
+      /* Align our buffer for the original surface */
+      ctx->SetMatrix(saveMatrix.Matrix());
+      return ctx.forget();
+    }
   }
-  mCachedSurfaceInUse = true;
 
-  gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
-  aTarget->IdentityMatrix();
-
-  nsRefPtr<gfxASurface> currentSurf = aTarget->CurrentSurface();
-  gfxRect clip = aTarget->GetClipExtents();
-  clip.RoundOut();
-
-  nsRefPtr<gfxContext> ctx = mCachedSurface.Get(aContent, clip, currentSurf);
-  /* Align our buffer for the original surface */
-  ctx->SetMatrix(saveMatrix.Matrix());
+  ctx = aTarget;
+  ctx->PushGroup(aContent);
   return ctx.forget();
 }
 
@@ -1445,7 +1464,8 @@ TransformIntRect(nsIntRect& aRect, const gfxMatrix& aMatrix,
  * all layers to the same coordinate system (the "root coordinate system").
  * It can't be used as is by accelerated layers because of intermediate surfaces.
  * This must set the hidden flag to true or false on *all* layers in the subtree.
- * It also sets the operator for all layers to "OVER".
+ * It also sets the operator for all layers to "OVER", and call
+ * SetDrawAtomically(false).
  * It clears mClipToVisibleRegion on all layers.
  * @param aClipRect the cliprect, in the root coordinate system. We assume
  * that any layer drawing is clipped to this rect. It is therefore not
@@ -1496,6 +1516,7 @@ MarkLayersHidden(Layer* aLayer, const nsIntRect& aClipRect,
   BasicImplData* data = ToData(aLayer);
   data->SetOperator(gfxContext::OPERATOR_OVER);
   data->SetClipToVisibleRegion(false);
+  data->SetDrawAtomically(false);
 
   if (!aLayer->AsContainerLayer()) {
     gfxMatrix transform;
@@ -1579,6 +1600,7 @@ ApplyDoubleBuffering(Layer* aLayer, const nsIntRect& aVisibleRect)
   // are cleared. This can also be faster than OPERATOR_OVER.
   if (!container) {
     data->SetOperator(gfxContext::OPERATOR_SOURCE);
+    data->SetDrawAtomically(true);
   } else {
     if (container->UseIntermediateSurface() ||
         !container->ChildrenPartitionVisibleRegion(newVisibleRect)) {
@@ -2312,13 +2334,10 @@ BasicShadowableThebesLayer::SetBackBufferAndAttrs(const OptionalThebesBuffer& aB
 {
   if (OptionalThebesBuffer::Tnull_t == aBuffer.type()) {
     mBackBuffer = SurfaceDescriptor();
-  } else if (!IsSurfaceDescriptorValid(mBackBuffer)) {
+  } else {
     mBackBuffer = aBuffer.get_ThebesBuffer().buffer();
     mBackBufferRect = aBuffer.get_ThebesBuffer().rect();
     mBackBufferRectRotation = aBuffer.get_ThebesBuffer().rotation();
-  } else {
-    SurfaceDescriptor obsoleteBuffer = aBuffer.get_ThebesBuffer().buffer();
-    BasicManager()->ShadowLayerForwarder::DestroySharedSurface(&obsoleteBuffer);
   }
   mFrontAndBackBufferDiffer = true;
   mROFrontBuffer = aReadOnlyFrontBuffer;
@@ -2393,7 +2412,7 @@ BasicShadowableThebesLayer::PaintBuffer(gfxContext* aContext,
                     aRegionToDraw, aExtendedRegionToDraw, aRegionToInvalidate,
                     aDidSelfCopy,
                     aCallback, aCallbackData);
-  if (!HasShadow()) {
+  if (!HasShadow() || BasicManager()->IsTransactionIncomplete()) {
     return;
   }
 
@@ -2421,8 +2440,6 @@ BasicShadowableThebesLayer::PaintBuffer(gfxContext* aContext,
                                       mBuffer.BufferRect(),
                                       mBuffer.BufferRotation(),
                                       mBackBuffer);
-  mROFrontBuffer = ThebesBuffer(mBackBuffer, mBuffer.BufferRect(), mBuffer.BufferRotation());
-  mBackBuffer = SurfaceDescriptor();
 }
 
 already_AddRefed<gfxASurface>
@@ -2629,7 +2646,7 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext)
   tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
   PaintContext(pat,
                nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
-               nsnull, 1.0, tmpCtx);
+               1.0, tmpCtx);
 
   BasicManager()->PaintedImage(BasicManager()->Hold(this),
                                mBackBuffer);
@@ -3075,14 +3092,11 @@ BasicShadowImageLayer::Paint(gfxContext* aContext)
   nsRefPtr<gfxPattern> pat = new gfxPattern(surface);
   pat->SetFilter(mFilter);
 
-  // The visible region can extend outside the image.  If we're not
-  // tiling, we don't want to draw into that area, so just draw within
-  // the image bounds.
-  const nsIntRect* tileSrcRect = GetTileSourceRect();
+  // The visible region can extend outside the image, so just draw
+  // within the image bounds.
   AutoSetOperator setOperator(aContext, GetOperator());
   BasicImageLayer::PaintContext(pat,
-                                tileSrcRect ? GetEffectiveVisibleRegion() : nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
-                                tileSrcRect,
+                                nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
                                 GetEffectiveOpacity(), aContext);
 }
 

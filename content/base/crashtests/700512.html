@@ -2,15 +2,10 @@
   <script type="text/javascript">
     var worker = new Worker("700512-worker.js");
 
-    var bb = new MozBlobBuilder();
-
-    bb.append("foo");
-    bb.append("bar");
-
     worker.onmessage = function() {
       document.documentElement.removeAttribute("class");
     }
 
-    worker.postMessage(bb.getBlob());
+    worker.postMessage(new Blob(["foo", "bar"]));
   </script>
 </html>

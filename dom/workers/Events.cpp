@@ -365,8 +365,7 @@ private:
     _name, \
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT), \
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, \
-    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize, \
-    JSCLASS_NO_OPTIONAL_MEMBERS \
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize \
   };
 
 DECL_EVENT_CLASS(Event::sClass, "Event")
@@ -618,8 +617,7 @@ private:
     _name, \
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT), \
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, \
-    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize, \
-    JSCLASS_NO_OPTIONAL_MEMBERS \
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize \
   };
 
 DECL_MESSAGEEVENT_CLASS(MessageEvent::sClass, "MessageEvent")
@@ -804,8 +802,7 @@ private:
     _name, \
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT), \
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, \
-    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize, \
-    JSCLASS_NO_OPTIONAL_MEMBERS \
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize \
   };
 
 DECL_ERROREVENT_CLASS(ErrorEvent::sClass, "ErrorEvent")
@@ -984,8 +981,7 @@ JSClass ProgressEvent::sClass = {
   "ProgressEvent",
   JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT),
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize,
-  JSCLASS_NO_OPTIONAL_MEMBERS
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize
 };
 
 JSPropertySpec ProgressEvent::sProperties[] = {

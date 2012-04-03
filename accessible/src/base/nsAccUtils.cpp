@@ -47,9 +47,7 @@
 #include "nsARIAMap.h"
 #include "nsDocAccessible.h"
 #include "nsHyperTextAccessible.h"
-#include "nsHTMLTableAccessible.h"
 #include "nsTextAccessible.h"
-#include "nsXULTreeGridAccessible.h"
 
 #include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
@@ -132,47 +130,6 @@ nsAccUtils::GetARIAOrDefaultLevel(nsAccessible *aAccessible)
     return level;
 
   return GetDefaultLevel(aAccessible);
-}
-
-void
-nsAccUtils::GetPositionAndSizeForXULSelectControlItem(nsIContent *aContent,
-                                                      PRInt32 *aPosInSet,
-                                                      PRInt32 *aSetSize)
-{
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> item(do_QueryInterface(aContent));
-  if (!item)
-    return;
-
-  nsCOMPtr<nsIDOMXULSelectControlElement> control;
-  item->GetControl(getter_AddRefs(control));
-  if (!control)
-    return;
-
-  PRUint32 itemsCount = 0;
-  control->GetItemCount(&itemsCount);
-
-  PRInt32 indexOf = 0;
-  control->GetIndexOfItem(item, &indexOf);
-
-  *aSetSize = itemsCount;
-  *aPosInSet = indexOf;
-
-  for (PRUint32 index = 0; index < itemsCount; index++) {
-    nsCOMPtr<nsIDOMXULSelectControlItemElement> currItem;
-    control->GetItemAtIndex(index, getter_AddRefs(currItem));
-    nsCOMPtr<nsINode> currNode(do_QueryInterface(currItem));
-
-    nsAccessible* itemAcc = currNode ?
-      GetAccService()->GetAccessible(currNode, nsnull) : nsnull;
-
-    if (!itemAcc || itemAcc->State() & states::INVISIBLE) {
-      (*aSetSize)--;
-      if (index < static_cast<PRUint32>(indexOf))
-        (*aPosInSet)--;
-    }
-  }
-
-  (*aPosInSet)++; // group position is 1-index based.
 }
 
 PRInt32

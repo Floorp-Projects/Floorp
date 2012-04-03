@@ -815,40 +815,57 @@ static SECStatus DecodeItem(void* dest,
             SECItem newtemp = temp;
             rv = GetItem(&newtemp, &temp, PR_FALSE);
             save = PR_TRUE;
-            if ((SECSuccess == rv) && SEC_ASN1_UNIVERSAL == (kind & SEC_ASN1_CLASS_MASK))
-            switch (kind & SEC_ASN1_TAGNUM_MASK)
+            if ((SECSuccess == rv) &&
+                SEC_ASN1_UNIVERSAL == (kind & SEC_ASN1_CLASS_MASK))
             {
-            /* special cases of primitive types */
-            case SEC_ASN1_INTEGER:
+                unsigned long tagnum = kind & SEC_ASN1_TAGNUM_MASK;
+                if ( temp.len == 0 && (tagnum == SEC_ASN1_BOOLEAN ||
+                                       tagnum == SEC_ASN1_INTEGER ||
+                                       tagnum == SEC_ASN1_BIT_STRING ||
+                                       tagnum == SEC_ASN1_OBJECT_ID ||
+                                       tagnum == SEC_ASN1_ENUMERATED ||
+                                       tagnum == SEC_ASN1_UTC_TIME ||
+                                       tagnum == SEC_ASN1_GENERALIZED_TIME) )
                 {
-                    /* remove leading zeroes if the caller requested siUnsignedInteger
-                       This is to allow RSA key operations to work */
-                    SECItem* destItem = (SECItem*) ((char*)dest + templateEntry->offset);
-                    if (destItem && (siUnsignedInteger == destItem->type))
+                    /* these types MUST have at least one content octet */
+                    PORT_SetError(SEC_ERROR_BAD_DER);
+                    rv = SECFailure;
+                }
+                else
+                switch (tagnum)
+                {
+                /* special cases of primitive types */
+                case SEC_ASN1_INTEGER:
                     {
-                        while (temp.len > 1 && temp.data[0] == 0)
-                        {              /* leading 0 */
-                            temp.data++;
-                            temp.len--;
+                        /* remove leading zeroes if the caller requested
+                           siUnsignedInteger
+                           This is to allow RSA key operations to work */
+                        SECItem* destItem = (SECItem*) ((char*)dest +
+                                            templateEntry->offset);
+                        if (destItem && (siUnsignedInteger == destItem->type))
+                        {
+                            while (temp.len > 1 && temp.data[0] == 0)
+                            {              /* leading 0 */
+                                temp.data++;
+                                temp.len--;
+                            }
                         }
+                        break;
                     }
-                    break;
-                }
 
-            case SEC_ASN1_BIT_STRING:
-                {
-                    /* change the length in the SECItem to be the number of bits */
-                    if (temp.len && temp.data)
+                case SEC_ASN1_BIT_STRING:
                     {
-                        temp.len = (temp.len-1)*8 - ((*(unsigned char*)temp.data) & 0x7);
-                        temp.data = (unsigned char*)(temp.data+1);
+                        /* change the length in the SECItem to be the number
+                           of bits */
+                        temp.len = (temp.len-1)*8 - (temp.data[0] & 0x7);
+                        temp.data += 1;
+                        break;
                     }
-                    break;
-                }
 
-            default:
-                {
-                    break;
+                default:
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -863,7 +880,7 @@ static SECStatus DecodeItem(void* dest,
                If part of the destination was allocated by the decoder, in
                cases of POINTER, SET OF and SEQUENCE OF, then type is set to
                siBuffer due to the use of PORT_ArenaZAlloc*/
-            destItem->data = temp.data;
+            destItem->data = temp.len ? temp.data : NULL;
             destItem->len = temp.len;
         }
         else

@@ -485,10 +485,10 @@ endif
 # Silence the unzip step so we don't print any binary data from the comment field.
 GENERATE_CACHE = \
   $(_ABS_RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$(PRECOMPILE_GRE)" -a "$$PWD" -f $(call core_abspath,$(MOZILLA_DIR)/toolkit/mozapps/installer/precompile_cache.js) -e "populate_startupcache('$(PRECOMPILE_DIR)', '$(OMNIJAR_NAME)', 'startupCache.zip');" && \
-  rm -rf jsloader && \
+  rm -rf jsloader jssubloader && \
   $(UNZIP) -q startupCache.zip && \
   rm startupCache.zip && \
-  $(ZIP) -r9m $(OMNIJAR_NAME) jsloader/resource/$(PRECOMPILE_RESOURCE)
+  $(ZIP) -r9m $(OMNIJAR_NAME) jsloader/resource/$(PRECOMPILE_RESOURCE) jssubloader/*/resource/$(PRECOMPILE_RESOURCE)
 else
 GENERATE_CACHE = true
 endif
@@ -507,6 +507,7 @@ OMNIJAR_FILES	= \
   defaults \
   greprefs.js \
   jsloader \
+  jssubloader \
   hyphenation \
   update.locale \
   $(NULL)

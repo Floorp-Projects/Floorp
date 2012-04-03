@@ -59,8 +59,6 @@ public:
   NS_IMETHOD DoAction(PRUint8 index);
 
   // nsAccessible
-  virtual void GetPositionAndSizeInternal(PRInt32 *aPosInSet,
-                                          PRInt32 *aSetSize);
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual Relation RelationByType(PRUint32 aType);

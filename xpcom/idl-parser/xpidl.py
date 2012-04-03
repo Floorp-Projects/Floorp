@@ -938,6 +938,8 @@ class Method(object):
                                self.location)
             self.iface.ops['stringifier'] = self
         for p in self.params:
+            if p.retval and p != self.params[-1]:
+                raise IDLError("'retval' parameter '%s' is not the last parameter" % p.name, self.location)
             if p.size_is:
                 found_size_param = False
                 for size_param in self.params:

@@ -134,6 +134,7 @@ browser.jar:
   skin/classic/browser/devtools/orion-container.css         (devtools/orion-container.css)
   skin/classic/browser/devtools/orion-task.png              (devtools/orion-task.png)
   skin/classic/browser/devtools/orion-breakpoint.png        (devtools/orion-breakpoint.png)
+  skin/classic/browser/devtools/orion-debug-location.png    (devtools/orion-debug-location.png)
   skin/classic/browser/devtools/toolbarbutton-close.png     (devtools/toolbarbutton-close.png)
 * skin/classic/browser/devtools/webconsole.css                  (devtools/webconsole.css)
   skin/classic/browser/devtools/webconsole_networkpanel.css     (devtools/webconsole_networkpanel.css)

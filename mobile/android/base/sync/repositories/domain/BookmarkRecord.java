@@ -38,12 +38,15 @@
 
 package org.mozilla.gecko.sync.repositories.domain;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.Map;
+
 import org.json.simple.JSONArray;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonArrayJSONException;
 import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserBookmarksDataAccessor;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;
 
 import android.util.Log;
@@ -54,6 +57,8 @@ import android.util.Log;
  *
  */
 public class BookmarkRecord extends Record {
+  public static final String PLACES_URI_PREFIX = "places:";
+
   private static final String LOG_TAG = "BookmarkRecord";
 
   public static final String COLLECTION_NAME = "bookmarks";
@@ -84,7 +89,6 @@ public class BookmarkRecord extends Record {
   public String  parentName;
   public long    androidParentID;
   public String  type;
-  public String  pos;
   public long    androidPosition;
 
   public JSONArray children;
@@ -132,7 +136,6 @@ public class BookmarkRecord extends Record {
     out.parentName      = this.parentName;
     out.androidParentID = this.androidParentID;
     out.type            = this.type;
-    out.pos             = this.pos;
     out.androidPosition = this.androidPosition;
 
     out.children        = this.copyChildren();
@@ -141,27 +144,69 @@ public class BookmarkRecord extends Record {
     return out;
   }
 
+  public boolean isBookmark() {
+    if (type == null) {
+      return false;
+    }
+    return type.equals("bookmark");
+  }
+
+  public boolean isFolder() {
+    if (type == null) {
+      return false;
+    }
+    return type.equals("folder");
+  }
+
+  public boolean isLivemark() {
+    if (type == null) {
+      return false;
+    }
+    return type.equals("livemark");
+  }
+
+  public boolean isSeparator() {
+    if (type == null) {
+      return false;
+    }
+    return type.equals("separator");
+  }
+
+  public boolean isMicrosummary() {
+    if (type == null) {
+      return false;
+    }
+    return type.equals("microsummary");
+  }
+
+  public boolean isQuery() {
+    if (type == null) {
+      return false;
+    }
+    return type.equals("query");
+  }
+
+  /**
+   * Return true if this record should have the Sync fields
+   * of a bookmark, microsummary, or query.
+   */
+  private boolean isBookmarkIsh() {
+    if (type == null) {
+      return false;
+    }
+    return type.equals("bookmark") ||
+           type.equals("microsummary") ||
+           type.equals("query");
+  }
+
   @Override
   protected void initFromPayload(ExtendedJSONObject payload) {
-    this.type        = (String) payload.get("type");
-    this.title       = (String) payload.get("title");
-    this.description = (String) payload.get("description");
-    this.parentID    = (String) payload.get("parentid");
-    this.parentName  = (String) payload.get("parentName");
+    this.type        = payload.getString("type");
+    this.title       = payload.getString("title");
+    this.description = payload.getString("description");
+    this.parentID    = payload.getString("parentid");
+    this.parentName  = payload.getString("parentName");
 
-    // Bookmark.
-    if (isBookmark()) {
-      this.bookmarkURI = (String) payload.get("bmkUri");
-      this.keyword     = (String) payload.get("keyword");
-      try {
-        this.tags = payload.getArray("tags");
-      } catch (NonArrayJSONException e) {
-        Log.e(LOG_TAG, "Got non-array tags in bookmark record " + this.guid, e);
-        this.tags = new JSONArray();
-      }
-    }
-
-    // Folder.
     if (isFolder()) {
       try {
         this.children = payload.getArray("children");
@@ -170,19 +215,69 @@ public class BookmarkRecord extends Record {
         // Let's see if we can recover later by using the parentid pointers.
         this.children = new JSONArray();
       }
+      return;
     }
 
-    // TODO: predecessor ID?
-    // TODO: type-specific attributes:
-    /*
-      public String generatorURI;
-      public String staticTitle;
-      public String folderName;
-      public String queryID;
-      public String siteURI;
-      public String feedURI;
-      public String pos;
-     */
+    final String bmkUri = payload.getString("bmkUri");
+
+    // bookmark, microsummary, query.
+    if (isBookmarkIsh()) {
+      this.keyword = payload.getString("keyword");
+      try {
+        this.tags = payload.getArray("tags");
+      } catch (NonArrayJSONException e) {
+        Logger.warn(LOG_TAG, "Got non-array tags in bookmark record " + this.guid, e);
+        this.tags = new JSONArray();
+      }
+    }
+
+    if (isBookmark()) {
+      this.bookmarkURI = bmkUri;
+      return;
+    }
+
+    if (isLivemark()) {
+      String siteUri = payload.getString("siteUri");
+      String feedUri = payload.getString("feedUri");
+      this.bookmarkURI = encodeUnsupportedTypeURI(bmkUri,
+                                                  "siteUri", siteUri,
+                                                  "feedUri", feedUri);
+      return;
+    }
+    if (isQuery()) {
+      String queryId = payload.getString("queryId");
+      String folderName = payload.getString("folderName");
+      this.bookmarkURI = encodeUnsupportedTypeURI(bmkUri,
+                                                  "queryId", queryId,
+                                                  "folderName", folderName);
+      return;
+    }
+    if (isMicrosummary()) {
+      String generatorUri = payload.getString("generatorUri");
+      String staticTitle = payload.getString("staticTitle");
+      this.bookmarkURI = encodeUnsupportedTypeURI(bmkUri,
+                                                  "generatorUri", generatorUri,
+                                                  "staticTitle", staticTitle);
+      return;
+    }
+    if (isSeparator()) {
+      Object p = payload.get("pos");
+      if (p instanceof Long) {
+        this.androidPosition = (Long) p;
+      } else if (p instanceof String) {
+        try {
+          this.androidPosition = Long.parseLong((String) p, 10);
+        } catch (NumberFormatException e) {
+          return;
+        }
+      } else {
+        Logger.warn(LOG_TAG, "Unsupported position value " + p);
+        return;
+      }
+      String pos = String.valueOf(this.androidPosition);
+      this.bookmarkURI = encodeUnsupportedTypeURI(null, "pos", pos, null, null);
+      return;
+    }
   }
 
   @Override
@@ -192,22 +287,59 @@ public class BookmarkRecord extends Record {
     putPayload(payload, "description", this.description);
     putPayload(payload, "parentid", this.parentID);
     putPayload(payload, "parentName", this.parentName);
+    putPayload(payload, "keyword", this.keyword);
 
-    if (isBookmark()) {
-      payload.put("bmkUri", bookmarkURI);
-      payload.put("keyword", keyword);
-      payload.put("tags", this.tags);
-    } else if (isFolder()) {
+    if (isFolder()) {
       payload.put("children", this.children);
+      return;
     }
-  }
 
-  public boolean isBookmark() {
-    return AndroidBrowserBookmarksDataAccessor.TYPE_BOOKMARK.equalsIgnoreCase(this.type);
-  }
+    // bookmark, microsummary, query.
+    if (isBookmarkIsh()) {
+      if (isBookmark()) {
+        payload.put("bmkUri", bookmarkURI);
+      }
 
-  public boolean isFolder() {
-    return AndroidBrowserBookmarksDataAccessor.TYPE_FOLDER.equalsIgnoreCase(this.type);
+      if (isQuery()) {
+        Map<String, String> parts = Utils.extractURIComponents(PLACES_URI_PREFIX, this.bookmarkURI);
+        putPayload(payload, "queryId", parts.get("queryId"));
+        putPayload(payload, "folderName", parts.get("folderName"));
+        return;
+      }
+
+      if (this.tags != null) {
+        payload.put("tags", this.tags);
+      }
+
+      putPayload(payload, "keyword", this.keyword);
+      return;
+    }
+
+    if (isLivemark()) {
+      Map<String, String> parts = Utils.extractURIComponents(PLACES_URI_PREFIX, this.bookmarkURI);
+      putPayload(payload, "siteUri", parts.get("siteUri"));
+      putPayload(payload, "feedUri", parts.get("feedUri"));
+      return;
+    }
+    if (isMicrosummary()) {
+      Map<String, String> parts = Utils.extractURIComponents(PLACES_URI_PREFIX, this.bookmarkURI);
+      putPayload(payload, "generatorUri", parts.get("generatorUri"));
+      putPayload(payload, "staticTitle", parts.get("staticTitle"));
+      return;
+    }
+    if (isSeparator()) {
+      Map<String, String> parts = Utils.extractURIComponents(PLACES_URI_PREFIX, this.bookmarkURI);
+      String pos = parts.get("pos");
+      if (pos == null) {
+        return;
+      }
+      try {
+        payload.put("pos", Long.parseLong(pos, 10));
+      } catch (NumberFormatException e) {
+        return;
+      }
+      return;
+    }
   }
 
   private void trace(String s) {
@@ -223,6 +355,10 @@ public class BookmarkRecord extends Record {
 
     BookmarkRecord other = (BookmarkRecord) o;
     if (!super.equalPayloads(other)) {
+      return false;
+    }
+
+    if (!RepoUtils.stringsEqual(this.type, other.type)) {
       return false;
     }
 
@@ -260,7 +396,6 @@ public class BookmarkRecord extends Record {
         && RepoUtils.stringsEqual(this.bookmarkURI, other.bookmarkURI)
         && RepoUtils.stringsEqual(this.parentID, other.parentID)
         && RepoUtils.stringsEqual(this.parentName, other.parentName)
-        && RepoUtils.stringsEqual(this.type, other.type)
         && RepoUtils.stringsEqual(this.description, other.description)
         && RepoUtils.stringsEqual(this.keyword, other.keyword)
         && jsonArrayStringsEqual(this.tags, other.tags);
@@ -282,6 +417,61 @@ public class BookmarkRecord extends Record {
     if (a == null && b != null) return false;
     if (a != null && b == null) return false;
     return RepoUtils.stringsEqual(a.toJSONString(), b.toJSONString());
+  }
+
+  /**
+   * URL-encode the provided string. If the input is null,
+   * the empty string is returned.
+   *
+   * @param in the string to encode.
+   * @return a URL-encoded version of the input.
+   */
+  protected static String encode(String in) {
+    if (in == null) {
+      return "";
+    }
+    try {
+      return URLEncoder.encode(in, "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      // Will never occur.
+      return null;
+    }
+  }
+
+  /**
+   * Take the provided URI and two parameters, constructing a URI like
+   *
+   *   places:uri=$uri&p1=$p1&p2=$p2
+   *
+   * null values in either parameter or value result in the parameter being omitted.
+   */
+  protected static String encodeUnsupportedTypeURI(String originalURI, String p1, String v1, String p2, String v2) {
+    StringBuilder b = new StringBuilder(PLACES_URI_PREFIX);
+    boolean previous = false;
+    if (originalURI != null) {
+      b.append("uri=");
+      b.append(encode(originalURI));
+      previous = true;
+    }
+    if (p1 != null) {
+      if (previous) {
+        b.append("&");
+      }
+      b.append(p1);
+      b.append("=");
+      b.append(encode(v1));
+      previous = true;
+    }
+    if (p2 != null) {
+      if (previous) {
+        b.append("&");
+      }
+      b.append(p2);
+      b.append("=");
+      b.append(encode(v2));
+      previous = true;
+    }
+    return b.toString();
   }
 }
 

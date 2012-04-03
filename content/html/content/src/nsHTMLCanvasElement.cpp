@@ -326,7 +326,10 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
   }
 
   nsAutoString type;
-  nsContentUtils::ASCIIToLower(aMimeType, type);
+  nsresult rv = nsContentUtils::ASCIIToLower(aMimeType, type);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   nsAutoString params;
 
@@ -367,8 +370,7 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
   }
 
   nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = ExtractData(type, params, getter_AddRefs(stream),
-                            fallbackToPNG);
+  rv = ExtractData(type, params, getter_AddRefs(stream), fallbackToPNG);
 
   // If there are unrecognized custom parse options, we should fall back to 
   // the default values for the encoder without any options at all.
@@ -792,12 +794,12 @@ nsHTMLCanvasElement::GetSizeExternal()
 }
 
 NS_IMETHODIMP
-nsHTMLCanvasElement::RenderContextsExternal(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter)
+nsHTMLCanvasElement::RenderContextsExternal(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter, PRUint32 aFlags)
 {
   if (!mCurrentContext)
     return NS_OK;
 
-  return mCurrentContext->Render(aContext, aFilter);
+  return mCurrentContext->Render(aContext, aFilter, aFlags);
 }
 
 nsresult NS_NewCanvasRenderingContext2DThebes(nsIDOMCanvasRenderingContext2D** aResult);

@@ -987,7 +987,7 @@ void nsIView::List(FILE* out, PRInt32 aIndent) const
   fprintf(out, "{%d,%d,%d,%d}",
           brect.x, brect.y, brect.width, brect.height);
   fprintf(out, " z=%d vis=%d frame=%p <\n",
-          mZIndex, mVis, mFrame);
+          mZIndex, mVis, static_cast<void*>(mFrame));
   for (nsView* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
     NS_ASSERTION(kid->GetParent() == this, "incorrect parent");
     kid->List(out, aIndent + 1);

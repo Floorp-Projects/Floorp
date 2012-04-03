@@ -78,7 +78,6 @@
 
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
 #include "jswrapper.h"
-#include "jsxdrapi.h"
 #include "nsIArray.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
@@ -109,6 +108,7 @@
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/dom/bindings/Utils.h"
 
 #include "sampler.h"
 
@@ -944,16 +944,17 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   nsIScriptGlobalObject *global = context->GetGlobalObject();
   // XXX should we check for sysprin instead of a chrome window, to make
   // XXX components be covered by the chrome pref instead of the content one?
+  nsCOMPtr<nsIDOMWindow> contentWindow(do_QueryInterface(global));
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(global));
 
-  bool useMethodJIT = Preferences::GetBool(chromeWindow ?
+  bool useMethodJIT = Preferences::GetBool(chromeWindow || !contentWindow ?
                                                js_methodjit_chrome_str :
                                                js_methodjit_content_str);
-  bool usePCCounts = Preferences::GetBool(chromeWindow ?
+  bool usePCCounts = Preferences::GetBool(chromeWindow || !contentWindow ?
                                             js_pccounts_chrome_str :
                                             js_pccounts_content_str);
   bool useMethodJITAlways = Preferences::GetBool(js_methodjit_always_str);
-  bool useTypeInference = !chromeWindow && Preferences::GetBool(js_typeinfer_str);
+  bool useTypeInference = !chromeWindow && contentWindow && Preferences::GetBool(js_typeinfer_str);
   bool useHardening = Preferences::GetBool(js_jit_hardening_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (xr) {
@@ -992,10 +993,8 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   // In debug builds, warnings are enabled in chrome context if
   // javascript.options.strict.debug is true
   bool strictDebug = Preferences::GetBool(js_strict_debug_option_str);
-  // Note this callback is also called from context's InitClasses thus we don't
-  // need to enable this directly from InitContext
   if (strictDebug && (newDefaultJSOptions & JSOPTION_STRICT) == 0) {
-    if (chromeWindow)
+    if (chromeWindow || !contentWindow)
       newDefaultJSOptions |= JSOPTION_STRICT;
   }
 #endif
@@ -1188,6 +1187,8 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     return NS_OK;
   }
 
+  nsAutoMicroTask mt;
+
   // Safety first: get an object representing the script's principals, i.e.,
   // the entities who signed this script, or the fully-qualified-domain-name
   // or "codebase" from which it was loaded.
@@ -1360,7 +1361,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
                             nsIPrincipal *aOriginPrincipal,
                             const char *aURL,
                             PRUint32 aLineNo,
-                            PRUint32 aVersion,
+                            JSVersion aVersion,
                             nsAString *aRetValue,
                             bool* aIsUndefined)
 {
@@ -1381,6 +1382,8 @@ nsJSContext::EvaluateString(const nsAString& aScript,
 
     return NS_OK;
   }
+
+  nsAutoMicroTask mt;
 
   if (!aScopeObject) {
     aScopeObject = JS_GetGlobalObject(mContext);
@@ -1557,6 +1560,8 @@ nsJSContext::ExecuteScript(JSScript* aScriptObject,
 
     return NS_OK;
   }
+
+  nsAutoMicroTask mt;
 
   if (!aScopeObject) {
     aScopeObject = JS_GetGlobalObject(mContext);
@@ -1816,6 +1821,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
 #endif
   SAMPLE_LABEL("JS", "CallEventHandler");
 
+  nsAutoMicroTask mt;
   JSAutoRequest ar(mContext);
   JSObject* target = nsnull;
   nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
@@ -1965,119 +1971,23 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, JSObject* aScope,
 nsresult
 nsJSContext::Serialize(nsIObjectOutputStream* aStream, JSScript* aScriptObject)
 {
-    if (!aScriptObject)
-        return NS_ERROR_FAILURE;
+  if (!aScriptObject)
+    return NS_ERROR_FAILURE;
 
-    nsresult rv;
-
-    JSContext* cx = mContext;
-    JSXDRState *xdr = ::JS_XDRNewMem(cx, JSXDR_ENCODE);
-    if (! xdr)
-        return NS_ERROR_OUT_OF_MEMORY;
-    xdr->userdata = (void*) aStream;
-
-    JSAutoRequest ar(cx);
-    if (! ::JS_XDRScript(xdr, &aScriptObject)) {
-        rv = NS_ERROR_FAILURE;  // likely to be a principals serialization error
-    } else {
-        // Get the encoded JSXDRState data and write it.  The JSXDRState owns
-        // this buffer memory and will free it beneath ::JS_XDRDestroy.
-        //
-        // If an XPCOM object needs to be written in the midst of the JS XDR
-        // encoding process, the C++ code called back from the JS engine (e.g.,
-        // nsEncodeJSPrincipals in caps/src/nsJSPrincipals.cpp) will flush data
-        // from the JSXDRState to aStream, then write the object, then return
-        // to JS XDR code with xdr reset so new JS data is encoded at the front
-        // of the xdr's data buffer.
-        //
-        // However many XPCOM objects are interleaved with JS XDR data in the
-        // stream, when control returns here from ::JS_XDRScript, we'll have
-        // one last buffer of data to write to aStream.
-
-        uint32_t size;
-        const char* data = reinterpret_cast<const char*>
-                                           (::JS_XDRMemGetData(xdr, &size));
-        NS_ASSERTION(data, "no decoded JSXDRState data!");
-
-        rv = aStream->Write32(size);
-        if (NS_SUCCEEDED(rv))
-            rv = aStream->WriteBytes(data, size);
-    }
-
-    ::JS_XDRDestroy(xdr);
-    if (NS_FAILED(rv)) return rv;
-
-    return rv;
+  return nsContentUtils::XPConnect()->WriteScript(aStream, mContext, aScriptObject);
 }
 
 nsresult
 nsJSContext::Deserialize(nsIObjectInputStream* aStream,
                          nsScriptObjectHolder<JSScript>& aResult)
 {
-    NS_TIME_FUNCTION_MIN(1.0);
-
-    PRUint32 size;
-    nsresult rv = aStream->Read32(&size);
-    if (NS_FAILED(rv)) return rv;
-
-    char* data;
-    rv = aStream->ReadBytes(size, &data);
-    if (NS_FAILED(rv)) return rv;
-
-    JSContext* cx = mContext;
-
-    JSXDRState *xdr = ::JS_XDRNewMem(cx, JSXDR_DECODE);
-    JSScript *result = nsnull;
-    if (! xdr) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    } else {
-        xdr->userdata = (void*) aStream;
-        JSAutoRequest ar(cx);
-        ::JS_XDRMemSetData(xdr, data, size);
-
-        if (! ::JS_XDRScript(xdr, &result)) {
-            rv = NS_ERROR_FAILURE;  // principals deserialization error?
-        }
-
-        // Update data in case ::JS_XDRScript called back into C++ code to
-        // read an XPCOM object.
-        //
-        // In that case, the serialization process must have flushed a run
-        // of counted bytes containing JS data at the point where the XPCOM
-        // object starts, after which an encoding C++ callback from the JS
-        // XDR code must have written the XPCOM object directly into the
-        // nsIObjectOutputStream.
-        //
-        // The deserialization process will XDR-decode counted bytes up to
-        // but not including the XPCOM object, then call back into C++ to
-        // read the object, then read more counted bytes and hand them off
-        // to the JSXDRState, so more JS data can be decoded.
-        //
-        // This interleaving of JS XDR data and XPCOM object data may occur
-        // several times beneath the call to ::JS_XDRScript, above.  At the
-        // end of the day, we need to free (via nsMemory) the data owned by
-        // the JSXDRState.  So we steal it back, nulling xdr's buffer so it
-        // doesn't get passed to ::JS_free by ::JS_XDRDestroy.
-
-        uint32_t junk;
-        data = (char*) ::JS_XDRMemGetData(xdr, &junk);
-        if (data)
-            ::JS_XDRMemSetData(xdr, NULL, 0);
-        ::JS_XDRDestroy(xdr);
-    }
-
-    // If data is null now, it must have been freed while deserializing an
-    // XPCOM object (e.g., a principal) beneath ::JS_XDRScript.
-    if (data)
-        nsMemory::Free(data);
-    NS_ASSERTION(aResult.getScriptTypeID()==JAVASCRIPT,
-                 "Expecting JS script object holder");
-
-    // Now that we've cleaned up, handle the case when rv is a failure
-    // code, which could happen for all sorts of reasons above.
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return aResult.set(result);
+  NS_TIME_FUNCTION_MIN(1.0);
+  
+  JSScript *script;
+  nsresult rv = nsContentUtils::XPConnect()->ReadScript(aStream, mContext, &script);
+  if (NS_FAILED(rv)) return rv;
+    
+  return aResult.set(script);
 }
 
 nsIScriptGlobalObject *
@@ -2104,12 +2014,16 @@ nsJSContext::GetGlobalObject()
 
   JSClass *c = JS_GetClass(global);
 
-  if (!c || ((~c->flags) & (JSCLASS_HAS_PRIVATE |
-                            JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
+  // Whenever we end up with globals that are JSCLASS_IS_DOMJSCLASS
+  // and have an nsISupports DOM object, we will need to modify this
+  // check here.
+  MOZ_ASSERT(!(c->flags & JSCLASS_IS_DOMJSCLASS));
+  if ((~c->flags) & (JSCLASS_HAS_PRIVATE |
+                     JSCLASS_PRIVATE_IS_NSISUPPORTS)) {
     return nsnull;
   }
-
-  nsISupports *priv = (nsISupports *)js::GetObjectPrivate(global);
+  
+  nsISupports *priv = static_cast<nsISupports*>(js::GetObjectPrivate(global));
 
   nsCOMPtr<nsIXPConnectWrappedNative> wrapped_native =
     do_QueryInterface(priv);
@@ -2164,26 +2078,6 @@ nsJSContext::CreateNativeGlobalForInner(
   return NS_OK;
 }
 
-nsresult
-nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, JSObject *aOuterGlobal)
-{
-  NS_ENSURE_ARG(aNewInner);
-#ifdef DEBUG
-  JSObject *newInnerJSObject = aNewInner->GetGlobalJSObject();
-#endif
-
-  // Now that we're connecting the outer global to the inner one,
-  // we must have transplanted it. The JS engine tries to maintain
-  // the global object's compartment as its default compartment,
-  // so update that now since it might have changed.
-  JS_SetGlobalObject(mContext, aOuterGlobal);
-  NS_ASSERTION(JS_GetPrototype(aOuterGlobal) ==
-               JS_GetPrototype(newInnerJSObject),
-               "outer and inner globals should have the same prototype");
-
-  return NS_OK;
-}
-
 JSContext*
 nsJSContext::GetNativeContext()
 {
@@ -2202,46 +2096,7 @@ nsJSContext::InitContext()
 
   ::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter);
 
-  return NS_OK;
-}
-
-nsresult
-nsJSContext::CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
-                               nsIScriptGlobalObject *aCurrentInner)
-{
-  mGlobalObjectRef = aGlobalObject;
-
-  nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(aGlobalObject));
-
-  if (chromeWindow) {
-    // Always enable E4X for XUL and other chrome content -- there is no
-    // need to preserve the <!-- script hiding hack from JS-in-HTML daze
-    // (introduced in 1995 for graceful script degradation in Netscape 1,
-    // Mosaic, and other pre-JS browsers).
-    JS_SetOptions(mContext, JS_GetOptions(mContext) | JSOPTION_XML);
-  }
-
-  JSObject *outer =
-    NS_NewOuterWindowProxy(mContext, aCurrentInner->GetGlobalJSObject());
-  if (!outer) {
-    return NS_ERROR_FAILURE;
-  }
-
-  js::SetProxyExtra(outer, 0, js::PrivateValue(aGlobalObject));
-
-  return SetOuterObject(outer);
-}
-
-nsresult
-nsJSContext::SetOuterObject(JSObject* aOuterObject)
-{
-  // Force our context's global object to be the outer.
-  // NB: JS_SetGlobalObject sets mContext->compartment.
-  JS_SetGlobalObject(mContext, aOuterObject);
-
-  // Set up the prototype for the outer object.
-  JSObject *inner = JS_GetParent(aOuterObject);
-  JS_SetPrototype(mContext, aOuterObject, JS_GetPrototype(inner));
+  JSOptionChangedCallback(js_options_dot_str, this);
 
   return NS_OK;
 }
@@ -2904,7 +2759,7 @@ nsJSContext::InitClasses(JSObject* aGlobalObj)
 
   JSAutoRequest ar(mContext);
 
-  ::JS_SetOptions(mContext, mDefaultJSOptions);
+  JSOptionChangedCallback(js_options_dot_str, this);
 
   // Attempt to initialize profiling functions
   ::JS_DefineProfilingFunctions(mContext, aGlobalObj);
@@ -2923,8 +2778,6 @@ nsJSContext::InitClasses(JSObject* aGlobalObj)
   // Attempt to initialize DMD functions
   ::JS_DefineFunctions(mContext, aGlobalObj, DMDFunctions);
 #endif
-
-  JSOptionChangedCallback(js_options_dot_str, this);
 
   return rv;
 }

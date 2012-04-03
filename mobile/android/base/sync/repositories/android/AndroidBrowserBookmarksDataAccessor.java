@@ -26,7 +26,8 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
   /*
    * Fragments of SQL to make our lives easier.
    */
-  private static final String BOOKMARK_IS_FOLDER = BrowserContract.Bookmarks.IS_FOLDER + " = 1";
+  private static final String BOOKMARK_IS_FOLDER = BrowserContract.Bookmarks.TYPE + " = " +
+                                                   BrowserContract.Bookmarks.TYPE_FOLDER;
   private static final String GUID_NOT_TAGS_OR_PLACES = BrowserContract.SyncColumns.GUID + " NOT IN ('" +
                                                         BrowserContract.Bookmarks.TAGS_FOLDER_GUID + "', '" +
                                                         BrowserContract.Bookmarks.PLACES_FOLDER_GUID + "')";
@@ -127,8 +128,7 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
   public void checkAndBuildSpecialGuids() throws NullCursorException {
     final String[] specialGUIDs = AndroidBrowserBookmarksRepositorySession.SPECIAL_GUIDS;
     Cursor cur = fetch(specialGUIDs);
-    long mobileRoot  = 0;
-    long desktopRoot = 0;
+    long placesRoot = 0;
 
     // Map from GUID to whether deleted. Non-presence implies just that.
     HashMap<String, Boolean> statuses = new HashMap<String, Boolean>(specialGUIDs.length);
@@ -136,11 +136,8 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
       if (cur.moveToFirst()) {
         while (!cur.isAfterLast()) {
           String guid = RepoUtils.getStringFromCursor(cur, BrowserContract.SyncColumns.GUID);
-          if (guid.equals("mobile")) {
-            mobileRoot = RepoUtils.getLongFromCursor(cur, BrowserContract.CommonColumns._ID);
-          }
-          if (guid.equals("desktop")) {
-            desktopRoot = RepoUtils.getLongFromCursor(cur, BrowserContract.CommonColumns._ID);
+          if ("places".equals(guid)) {
+            placesRoot = RepoUtils.getLongFromCursor(cur, BrowserContract.CommonColumns._ID);
           }
           // Make sure none of these folders are marked as deleted.
           boolean deleted = RepoUtils.getLongFromCursor(cur, BrowserContract.SyncColumns.IS_DELETED) == 1;
@@ -164,17 +161,17 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
         }
       } else {
         // Insert.
-        if (guid.equals("mobile")) {
-          Logger.info(LOG_TAG, "No mobile folder. Inserting one.");
-          mobileRoot = insertSpecialFolder("mobile", 0);
-        } else if (guid.equals("places")) {
+        if (guid.equals("places")) {
           // This is awkward.
-          Logger.info(LOG_TAG, "No places root. Inserting one under mobile (" + mobileRoot + ").");
-          desktopRoot = insertSpecialFolder("places", mobileRoot);
+          Logger.info(LOG_TAG, "No places root. Inserting one.");
+          placesRoot = insertSpecialFolder("places", 0);
+        } else if (guid.equals("mobile")) {
+          Logger.info(LOG_TAG, "No mobile folder. Inserting one under the places root.");
+          insertSpecialFolder("mobile", placesRoot);
         } else {
           // unfiled, menu, toolbar.
-          Logger.info(LOG_TAG, "No " + guid + " root. Inserting one under places (" + desktopRoot + ").");
-          insertSpecialFolder(guid, desktopRoot);
+          Logger.info(LOG_TAG, "No " + guid + " root. Inserting one under places (" + placesRoot + ").");
+          insertSpecialFolder(guid, placesRoot);
         }
       }
     }
@@ -190,9 +187,23 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
 
   @Override
   protected ContentValues getContentValues(Record record) {
-    ContentValues cv = new ContentValues();
     BookmarkRecord rec = (BookmarkRecord) record;
+
+    if (rec.deleted) {
+      ContentValues cv = new ContentValues();
+      cv.put(BrowserContract.SyncColumns.GUID,     rec.guid);
+      cv.put(BrowserContract.Bookmarks.IS_DELETED, 1);
+      return cv;
+    }
+
+    final int recordType = BrowserContractHelpers.typeCodeForString(rec.type);
+    if (recordType == -1) {
+      throw new IllegalStateException("Unexpected record type " + rec.type);
+    }
+
+    ContentValues cv = new ContentValues();
     cv.put(BrowserContract.SyncColumns.GUID,      rec.guid);
+    cv.put(BrowserContract.Bookmarks.TYPE,        recordType);
     cv.put(BrowserContract.Bookmarks.TITLE,       rec.title);
     cv.put(BrowserContract.Bookmarks.URL,         rec.bookmarkURI);
     cv.put(BrowserContract.Bookmarks.DESCRIPTION, rec.description);
@@ -204,15 +215,11 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
     cv.put(BrowserContract.Bookmarks.PARENT,      rec.androidParentID);
     cv.put(BrowserContract.Bookmarks.POSITION,    rec.androidPosition);
 
-    // Only bookmark and folder types should make it this far.
-    // Other types should be filtered out and dropped.
-    cv.put(BrowserContract.Bookmarks.IS_FOLDER,   rec.type.equalsIgnoreCase(TYPE_FOLDER) ? 1 : 0);
-
     // Note that we don't set the modified timestamp: we allow the
     // content provider to do that for us.
     return cv;
   }
-  
+
   /**
    * Returns a cursor over non-deleted records that list the given androidID as a parent.
    */

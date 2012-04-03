@@ -127,7 +127,7 @@ else {
     shouldBe('context.getParameter(context.UNPACK_FLIP_Y_WEBGL)', 'false');
     shouldBe('context.getParameter(context.UNPACK_PREMULTIPLY_ALPHA_WEBGL)', 'false');
     shouldBe('context.getParameter(context.VIEWPORT)', '[0, 0, 2, 2]');
-    shouldBe('context.getParameter(context.NUM_COMPRESSED_TEXTURE_FORMATS)', '0');
+    shouldBeNonNull('context.getParameter(context.COMPRESSED_TEXTURE_FORMATS)');
 
     shouldBeTrue('context.getParameter(context.MAX_COMBINED_TEXTURE_IMAGE_UNITS) >= 8');
     shouldBeTrue('context.getParameter(context.MAX_CUBE_MAP_TEXTURE_SIZE) >= 16');

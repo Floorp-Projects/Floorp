@@ -112,17 +112,6 @@ public class LayerController implements Tabs.OnTabsChangedListener {
 
     private boolean mForceRedraw;
 
-    /* The extra area on the sides of the page that we want to buffer to help with
-     * smooth, asynchronous scrolling. Depending on a device's support for NPOT
-     * textures, this may be rounded up to the nearest power of two.
-     */
-    public static final IntSize MIN_BUFFER = new IntSize(512, 1024);
-
-    /* If the visible rect is within the danger zone (measured in pixels from each edge of a tile),
-     * we start aggressively redrawing to minimize checkerboarding. */
-    private static final int DANGER_ZONE_X = 75;
-    private static final int DANGER_ZONE_Y = 150;
-
     /* The time limit for pages to respond with preventDefault on touchevents
      * before we begin panning the page */
     private int mTimeout = 200;
@@ -274,6 +263,18 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         mView.requestRender();
     }
 
+    public void setAnimationTarget(ViewportMetrics viewport) {
+        if (mLayerClient != null) {
+            // We know what the final viewport of the animation is going to be, so
+            // immediately request a draw of that area by setting the display port
+            // accordingly. This way we should have the content pre-rendered by the
+            // time the animation is done.
+            ImmutableViewportMetrics metrics = new ImmutableViewportMetrics(viewport);
+            DisplayPortMetrics displayPort = DisplayPortCalculator.calculate(metrics, null);
+            mLayerClient.adjustViewport(displayPort);
+        }
+    }
+
     /**
      * Scales the viewport, keeping the given focus point in the same place before and after the
      * scale operation. You must hold the monitor while calling this.
@@ -330,50 +331,33 @@ public class LayerController implements Tabs.OnTabsChangedListener {
             return false;
         }
 
-        return aboutToCheckerboard();
-    }
-
-    // Returns true if a checkerboard is about to be visible.
-    private boolean aboutToCheckerboard() {
-        // Increase the size of the viewport (and clamp to page boundaries), and
-        // intersect it with the tile's displayport to determine whether we're
-        // close to checkerboarding.
-        FloatSize pageSize = getPageSize();
-        RectF adjustedViewport = RectUtils.expand(getViewport(), DANGER_ZONE_X, DANGER_ZONE_Y);
-        if (adjustedViewport.top < 0) adjustedViewport.top = 0;
-        if (adjustedViewport.left < 0) adjustedViewport.left = 0;
-        if (adjustedViewport.right > pageSize.width) adjustedViewport.right = pageSize.width;
-        if (adjustedViewport.bottom > pageSize.height) adjustedViewport.bottom = pageSize.height;
-
-        RectF displayPort = (mLayerClient == null ? new RectF() : mLayerClient.getDisplayPort());
-        return !displayPort.contains(adjustedViewport);
+        return DisplayPortCalculator.aboutToCheckerboard(mViewportMetrics,
+                mPanZoomController.getVelocityVector(), mLayerClient.getDisplayPort());
     }
 
     /**
      * Converts a point from layer view coordinates to layer coordinates. In other words, given a
      * point measured in pixels from the top left corner of the layer view, returns the point in
-     * pixels measured from the top left corner of the root layer, in the coordinate system of the
-     * layer itself (CSS pixels). This method is used as part of the process of translating touch
-     * events to Gecko's coordinate system.
+     * pixels measured from the last scroll position we sent to Gecko, in CSS pixels. Assuming the
+     * events being sent to Gecko are processed in FIFO order, this calculation should always be
+     * correct.
      */
     public PointF convertViewPointToLayerPoint(PointF viewPoint) {
-        if (mRootLayer == null)
-            return null;
-
         ImmutableViewportMetrics viewportMetrics = mViewportMetrics;
         PointF origin = viewportMetrics.getOrigin();
         float zoom = viewportMetrics.zoomFactor;
-        Rect rootPosition = mRootLayer.getPosition();
-        float rootScale = mRootLayer.getResolution();
+        ViewportMetrics geckoViewport = mLayerClient.getGeckoViewportMetrics();
+        PointF geckoOrigin = geckoViewport.getOrigin();
+        float geckoZoom = geckoViewport.getZoomFactor();
 
         // viewPoint + origin gives the coordinate in device pixels from the top-left corner of the page.
         // Divided by zoom, this gives us the coordinate in CSS pixels from the top-left corner of the page.
-        // rootPosition / rootScale is where Gecko thinks it is (scrollTo position) in CSS pixels from
+        // geckoOrigin / geckoZoom is where Gecko thinks it is (scrollTo position) in CSS pixels from
         // the top-left corner of the page. Subtracting the two gives us the offset of the viewPoint from
         // the current Gecko coordinate in CSS pixels.
         PointF layerPoint = new PointF(
-                ((viewPoint.x + origin.x) / zoom) - (rootPosition.left / rootScale),
-                ((viewPoint.y + origin.y) / zoom) - (rootPosition.top / rootScale));
+                ((viewPoint.x + origin.x) / zoom) - (geckoOrigin.x / geckoZoom),
+                ((viewPoint.y + origin.y) / zoom) - (geckoOrigin.y / geckoZoom));
 
         return layerPoint;
     }

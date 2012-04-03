@@ -72,7 +72,7 @@ class nsClientRectList MOZ_FINAL : public nsIDOMClientRectList,
 public:
   nsClientRectList(nsISupports *aParent) : mParent(aParent)
   {
-    SetIsProxy();
+    SetIsDOMBinding();
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

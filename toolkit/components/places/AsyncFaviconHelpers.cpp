@@ -78,40 +78,31 @@ FetchPageInfo(nsRefPtr<Database>& aDB,
   NS_PRECONDITION(!NS_IsMainThread(),
                   "This should not be called on the main thread");
 
-  // This query fragment finds the bookmarked uri we want to set the icon for,
-  // walking up to three redirect levels.
-  nsCString redirectedBookmarksFragment =
-    nsPrintfCString(1024,
-      "SELECT h.url "
-      "FROM moz_bookmarks b "
-      "WHERE b.fk = h.id "
+  // This query finds the bookmarked uri we want to set the icon for,
+  // walking up to two redirect levels.
+  nsCString query = nsPrintfCString(768,
+    "SELECT h.id, h.favicon_id, h.guid, ( "
+      "SELECT h.url FROM moz_bookmarks b WHERE b.fk = h.id "
       "UNION ALL " // Union not directly bookmarked pages.
-      "SELECT (SELECT url FROM moz_places WHERE id = %s) "
-      "FROM moz_historyvisits self "
-      "JOIN moz_bookmarks b ON b.fk = %s "
-      "LEFT JOIN moz_historyvisits parent ON parent.id = self.from_visit "
-      "LEFT JOIN moz_historyvisits grandparent ON parent.from_visit = grandparent.id "
-        "AND parent.visit_type IN (%d, %d) "
-      "LEFT JOIN moz_historyvisits greatgrandparent ON grandparent.from_visit = greatgrandparent.id "
-        "AND grandparent.visit_type IN (%d, %d) "
-      "WHERE self.visit_type IN (%d, %d) "
-        "AND self.place_id = h.id "
-      "LIMIT 1 ",
-      NS_LITERAL_CSTRING("COALESCE(greatgrandparent.place_id, grandparent.place_id, parent.place_id)").get(),
-      NS_LITERAL_CSTRING("COALESCE(greatgrandparent.place_id, grandparent.place_id, parent.place_id)").get(),
-      nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-      nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY,
-      nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-      nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY,
-      nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-      nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY
-    );
+      "SELECT url FROM moz_places WHERE id = ( "
+        "SELECT COALESCE(grandparent.place_id, parent.place_id) as r_place_id "
+        "FROM moz_historyvisits dest "
+        "LEFT JOIN moz_historyvisits parent ON parent.id = dest.from_visit "
+                                          "AND dest.visit_type IN (%d, %d) "
+        "LEFT JOIN moz_historyvisits grandparent ON parent.from_visit = grandparent.id "
+          "AND parent.visit_type IN (%d, %d) "
+        "WHERE dest.place_id = h.id "
+        "AND EXISTS(SELECT 1 FROM moz_bookmarks b WHERE b.fk = r_place_id) "
+        "LIMIT 1 "
+      ") "
+    ") FROM moz_places h WHERE h.url = :page_url",
+    nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
+    nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY,
+    nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
+    nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY
+  );
 
-  nsCOMPtr<mozIStorageStatement> stmt = aDB->GetStatement(NS_LITERAL_CSTRING(
-    "SELECT h.id, h.favicon_id, h.guid, "
-           "(") + redirectedBookmarksFragment + NS_LITERAL_CSTRING(") "
-    "FROM moz_places h WHERE h.url = :page_url"
-  ));
+  nsCOMPtr<mozIStorageStatement> stmt = aDB->GetStatement(query);
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
 
@@ -794,37 +785,15 @@ AsyncAssociateIconToPage::Run()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // If the page does not have an id, try to insert a new one.
+  // If the page does not have an id, don't try to insert a new one, cause we
+  // don't know where the page comes from.  Not doing so we may end adding
+  // a page that otherwise we'd explicitly ignore, like a POST or an error page.
   if (mPage.id == 0) {
-    nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      "INSERT INTO moz_places (url, rev_host, hidden, favicon_id, frecency, guid) "
-      "VALUES (:page_url, :rev_host, 1, :favicon_id, 0, GENERATE_GUID()) "
-    );
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
-    rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mPage.spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-    // The rev_host can be null.
-    if (mPage.revHost.IsEmpty()) {
-      rv = stmt->BindNullByName(NS_LITERAL_CSTRING("rev_host"));
-    }
-    else {
-      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("rev_host"), mPage.revHost);
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("favicon_id"), mIcon.id);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Get the new id and GUID.
-    rv = FetchPageInfo(mDB, mPage);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mIcon.status |= ICON_STATUS_ASSOCIATED;
+    return NS_OK;
   }
+
   // Otherwise just associate the icon to the page, if needed.
-  else if (mPage.iconId != mIcon.id) {
+  if (mPage.iconId != mIcon.id) {
     nsCOMPtr<mozIStorageStatement> stmt;
     if (mPage.id) {
       stmt = mDB->GetStatement(

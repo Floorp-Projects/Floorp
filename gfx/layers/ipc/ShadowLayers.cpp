@@ -298,9 +298,6 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
     common.clipRect() = (common.useClipRect() ?
                          *mutant->GetClipRect() : nsIntRect());
     common.isFixedPosition() = mutant->GetIsFixedPosition();
-    common.useTileSourceRect() = !!mutant->GetTileSourceRect();
-    common.tileSourceRect() = (common.useTileSourceRect() ?
-                               *mutant->GetTileSourceRect() : nsIntRect());
     attrs.specific() = null_t();
     mutant->FillSpecificAttributes(attrs.specific());
 

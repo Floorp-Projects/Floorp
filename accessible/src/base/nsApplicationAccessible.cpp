@@ -310,12 +310,6 @@ nsApplicationAccessible::GetPlatformVersion(nsAString& aVersion)
 // nsAccessNode public methods
 
 bool
-nsApplicationAccessible::IsDefunct() const
-{
-  return nsAccessibilityService::IsShutdown();
-}
-
-bool
 nsApplicationAccessible::Init()
 {
   mAppInfo = do_GetService("@mozilla.org/xre/app-info;1");
@@ -444,13 +438,6 @@ nsApplicationAccessible::GetRootDocument(nsIAccessibleDocument **aRootDocument)
 {
   NS_ENSURE_ARG_POINTER(aRootDocument);
   *aRootDocument = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsApplicationAccessible::GetInnerHTML(nsAString &aInnerHTML)
-{
-  aInnerHTML.Truncate();
   return NS_OK;
 }
 

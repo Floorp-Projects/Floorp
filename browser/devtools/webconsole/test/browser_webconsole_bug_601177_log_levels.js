@@ -51,7 +51,7 @@ function findEntry(aHUD, aClass, aString, aMessage)
 
 function test()
 {
-  addTab("data:text/html,Web Console test for bug 601177: log levels");
+  addTab("data:text/html;charset=utf-8,Web Console test for bug 601177: log levels");
 
   Services.prefs.setBoolPref("javascript.options.strict", true);
 

@@ -89,12 +89,31 @@ TestRunner._currentTestStartTime = new Date().valueOf();
 TestRunner._timeoutFactor = 1;
 
 TestRunner._checkForHangs = function() {
+  function reportError(win, msg) {
+    if ("SimpleTest" in win) {
+      win.SimpleTest.ok(false, "Test timed out.");
+    } else if ("W3CTest" in win) {
+      win.W3CTest.report({
+        "message": msg,
+        "result": false,
+        "todo": false
+      });
+    }
+  }
+  function killTest(win) {
+    if ("SimpleTest" in win) {
+      win.SimpleTest.finish();
+    } else if ("W3CTest" in win) {
+      win.W3CTest.kill();
+    }
+  }
+
   if (TestRunner._currentTest < TestRunner._urls.length) {
     var runtime = new Date().valueOf() - TestRunner._currentTestStartTime;
     if (runtime >= TestRunner.timeout * TestRunner._timeoutFactor) {
       var frameWindow = $('testframe').contentWindow.wrappedJSObject ||
                           $('testframe').contentWindow;
-      frameWindow.SimpleTest.ok(false, "Test timed out.");
+      reportError(frameWindow, "Test timed out.");
 
       // If we have too many timeouts, give up. We don't want to wait hours
       // for results if some bug causes lots of tests to time out.
@@ -102,12 +121,12 @@ TestRunner._checkForHangs = function() {
         TestRunner._haltTests = true;
 
         TestRunner.currentTestURL = "(SimpleTest/TestRunner.js)";
-        frameWindow.SimpleTest.ok(false, TestRunner.maxTimeouts + " test timeouts, giving up.");
+        reportError(frameWindow, TestRunner.maxTimeouts + " test timeouts, giving up.");
         var skippedTests = TestRunner._urls.length - TestRunner._currentTest;
-        frameWindow.SimpleTest.ok(false, "Skipping " + skippedTests + " remaining tests.");
+        reportError(frameWindow, "Skipping " + skippedTests + " remaining tests.");
       }
 
-      frameWindow.SimpleTest.finish();
+      killTest(frameWindow);
 
       if (TestRunner._haltTests)
         return;

@@ -124,6 +124,7 @@ class nsHTMLStyleSheet;
 class nsHTMLCSSStyleSheet;
 class nsDOMNavigationTiming;
 class nsWindowSizes;
+class nsHtml5TreeOpExecutor;
 
 /**
  * Right now our identifier map entries contain information for 'name'
@@ -508,8 +509,6 @@ public:
 
   NS_DECL_SIZEOF_EXCLUDING_THIS
 
-  using nsINode::GetScriptTypeID;
-
   virtual void Reset(nsIChannel *aChannel, nsILoadGroup *aLoadGroup);
   virtual void ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
                           nsIPrincipal* aPrincipal);
@@ -629,14 +628,6 @@ public:
   }
 
   /**
-   * Get this document's attribute stylesheet.  May return null if
-   * there isn't one.
-   */
-  virtual nsHTMLStyleSheet* GetAttributeStyleSheet() const {
-    return mAttrStyleSheet;
-  }
-
-  /**
    * Get this document's inline style sheet.  May return null if there
    * isn't one
    */
@@ -731,7 +722,7 @@ public:
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  bool aNotify);
   virtual nsresult AppendChildTo(nsIContent* aKid, bool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, bool aNotify);
+  virtual void RemoveChildAt(PRUint32 aIndex, bool aNotify);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -942,6 +933,16 @@ public:
   virtual NS_HIDDEN_(nsresult) RemoveImage(imgIRequest* aImage);
   virtual NS_HIDDEN_(nsresult) SetImageLockingState(bool aLocked);
 
+  // AddPlugin adds a plugin-related element to mPlugins when the element is
+  // added to the tree.
+  virtual nsresult AddPlugin(nsIObjectLoadingContent* aPlugin);
+  // RemovePlugin removes a plugin-related element to mPlugins when the
+  // element is removed from the tree.
+  virtual void RemovePlugin(nsIObjectLoadingContent* aPlugin);
+  // GetPlugins returns the plugin-related elements from
+  // the frame and any subframes.
+  virtual void GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins);
+
   virtual nsresult GetStateObject(nsIVariant** aResult);
 
   virtual nsDOMNavigationTiming* GetNavigationTiming() const;
@@ -1026,9 +1027,10 @@ protected:
 
   void RetrieveRelevantHeaders(nsIChannel *aChannel);
 
-  static bool TryChannelCharset(nsIChannel *aChannel,
-                                  PRInt32& aCharsetSource,
-                                  nsACString& aCharset);
+  bool TryChannelCharset(nsIChannel *aChannel,
+                         PRInt32& aCharsetSource,
+                         nsACString& aCharset,
+                         nsHtml5TreeOpExecutor* aExecutor);
 
   // Call this before the document does something that will unbind all content.
   // That will stop us from doing a lot of work as each element is removed.
@@ -1194,13 +1196,16 @@ protected:
   // our presshell.  This is used to handle flush reentry correctly.
   bool mInFlush:1;
 
+  // Parser aborted. True if the parser of this document was forcibly
+  // terminated instead of letting it finish at its own pace.
+  bool mParserAborted:1;
+
   PRUint8 mXMLDeclarationBits;
 
-  nsInterfaceHashtable<nsVoidPtrHashKey, nsPIBoxObject> *mBoxObjectTable;
+  nsInterfaceHashtable<nsPtrHashKey<nsIContent>, nsPIBoxObject> *mBoxObjectTable;
 
   // The channel that got passed to StartDocumentLoad(), if any
   nsCOMPtr<nsIChannel> mChannel;
-  nsRefPtr<nsHTMLStyleSheet> mAttrStyleSheet;
   nsRefPtr<nsHTMLCSSStyleSheet> mStyleAttrStyleSheet;
   nsRefPtr<nsXMLEventsManager> mXMLEventsManager;
 
@@ -1306,6 +1311,9 @@ private:
 
   // Tracking for images in the document.
   nsDataHashtable< nsPtrHashKey<imgIRequest>, PRUint32> mImageTracker;
+
+  // Tracking for plugins in the document.
+  nsTHashtable< nsPtrHashKey<nsIObjectLoadingContent> > mPlugins;
 
   VisibilityState mVisibilityState;
 

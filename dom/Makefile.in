@@ -51,6 +51,7 @@ DIRS = \
   interfaces/core \
   interfaces/html \
   interfaces/events \
+  interfaces/settings \
   interfaces/stylesheets \
   interfaces/sidebar \
   interfaces/css \
@@ -75,9 +76,11 @@ DIRS += \
 
 DIRS += \
   base \
+  bindings \
   battery \
   contacts \
   power \
+  settings \
   sms \
   src \
   locales \

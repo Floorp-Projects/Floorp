@@ -86,6 +86,25 @@ js::UnwrapObject(JSObject *wrapped, bool stopAtOuter, unsigned *flagsp)
     return wrapped;
 }
 
+JS_FRIEND_API(JSObject *)
+js::UnwrapObjectChecked(JSContext *cx, JSObject *obj)
+{
+    while (obj->isWrapper()) {
+        JSObject *wrapper = obj;
+        Wrapper *handler = Wrapper::wrapperHandler(obj);
+        bool rvOnFailure;
+        if (!handler->enter(cx, wrapper, JSID_VOID,
+                            Wrapper::PUNCTURE, &rvOnFailure))
+            return rvOnFailure ? obj : NULL;
+        obj = Wrapper::wrappedObject(obj);
+        JS_ASSERT(obj);
+        handler->leave(cx, wrapper);
+        if (obj->getClass()->ext.innerObject)
+            break;
+    }
+    return obj;
+}
+
 bool
 js::IsCrossCompartmentWrapper(const JSObject *wrapper)
 {
@@ -686,14 +705,14 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
     bool isKeyIter = ni->isKeyIter();
     AutoIdVector keys(cx);
     if (length > 0) {
-        if (!keys.resize(length))
+        if (!keys.reserve(length))
             return false;
         for (size_t i = 0; i < length; ++i) {
             jsid id;
             if (!ValueToId(cx, StringValue(ni->begin()[i]), &id))
                 return false;
             id = js_CheckForStringIndex(id);
-            keys[i] = id;
+            keys.infallibleAppend(id);
             if (!origin->wrapId(cx, &keys[i]))
                 return false;
         }

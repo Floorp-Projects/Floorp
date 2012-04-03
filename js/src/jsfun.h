@@ -67,16 +67,12 @@
  * move to u.i.script->flags. For now we use function flag bits to minimize
  * pointer-chasing.
  */
-#define JSFUN_JOINABLE      0x0001  /* function is null closure that does not
-                                       appear to call itself via its own name
-                                       or arguments.callee */
-
 #define JSFUN_PROTOTYPE     0x0800  /* function is Function.prototype for some
                                        global object */
 
 #define JSFUN_EXPR_CLOSURE  0x1000  /* expression closure: function(x) x*x */
 #define JSFUN_EXTENDED      0x2000  /* structure is FunctionExtended */
-#define JSFUN_INTERPRETED   0x4000  /* use u.i if kind >= this value else u.n */
+#define JSFUN_INTERPRETED   0x4000  /* use u.i if kind >= this value else u.native */
 #define JSFUN_NULL_CLOSURE  0x8000  /* null closure entrains no scope chain */
 #define JSFUN_KINDMASK      0xc000  /* encode interp vs. native and closure
                                        optimization level -- see above */
@@ -89,11 +85,7 @@ struct JSFunction : public JSObject
                                      reflected as f.length/f.arity */
     uint16_t        flags;        /* flags, see JSFUN_* below and in jsapi.h */
     union U {
-        struct Native {
-            js::Native  native;   /* native method pointer or null */
-            js::Class   *clasp;   /* class of objects constructed
-                                     by this function */
-        } n;
+        js::Native  native;       /* native method pointer or null */
         struct Scripted {
             JSScript    *script_; /* interpreted bytecode descriptor or null;
                                      use the accessor! */
@@ -102,7 +94,7 @@ struct JSFunction : public JSObject
         } i;
         void            *nativeOrScript;
     } u;
-    JSAtom          *atom;        /* name for diagnostics and decompiling */
+    js::HeapPtrAtom  atom;        /* name for diagnostics and decompiling */
 
     bool optimizedClosure()  const { return kind() > JSFUN_INTERPRETED; }
     bool isInterpreted()     const { return kind() >= JSFUN_INTERPRETED; }
@@ -133,14 +125,6 @@ struct JSFunction : public JSObject
 #define JS_LOCAL_NAME_TO_ATOM(nameWord)  ((JSAtom *) ((nameWord) & ~uintptr_t(1)))
 #define JS_LOCAL_NAME_IS_CONST(nameWord) ((((nameWord) & uintptr_t(1))) != 0)
 
-    bool mightEscape() const {
-        return isInterpreted() && isNullClosure();
-    }
-
-    bool joinable() const {
-        return flags & JSFUN_JOINABLE;
-    }
-
     /*
      * For an interpreted function, accessors for the initial scope object of
      * activations (stack frames) of the function.
@@ -150,8 +134,6 @@ struct JSFunction : public JSObject
     inline void initEnvironment(JSObject *obj);
 
     static inline size_t offsetOfEnvironment() { return offsetof(JSFunction, u.i.env_); }
-
-    inline void setJoinable();
 
     js::HeapPtrScript &script() const {
         JS_ASSERT(isInterpreted());
@@ -167,7 +149,7 @@ struct JSFunction : public JSObject
 
     JSNative native() const {
         JS_ASSERT(isNative());
-        return u.n.native;
+        return u.native;
     }
 
     JSNative maybeNative() const {
@@ -175,19 +157,9 @@ struct JSFunction : public JSObject
     }
 
     static unsigned offsetOfNativeOrScript() {
-        JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, i.script_));
-        JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, nativeOrScript));
+        JS_STATIC_ASSERT(offsetof(U, native) == offsetof(U, i.script_));
+        JS_STATIC_ASSERT(offsetof(U, native) == offsetof(U, nativeOrScript));
         return offsetof(JSFunction, u.nativeOrScript);
-    }
-
-    js::Class *getConstructorClass() const {
-        JS_ASSERT(isNative());
-        return u.n.clasp;
-    }
-
-    void setConstructorClass(js::Class *clasp) {
-        JS_ASSERT(isNative());
-        u.n.clasp = clasp;
     }
 
 #if JS_BITS_PER_WORD == 32
@@ -232,32 +204,9 @@ struct JSFunction : public JSObject
 
   public:
     /* Accessors for data stored in extended functions. */
-
     inline void initializeExtended();
-
     inline void setExtendedSlot(size_t which, const js::Value &val);
     inline const js::Value &getExtendedSlot(size_t which) const;
-
-    /* Slot holding associated method property, needed for foo.caller handling. */
-    static const uint32_t METHOD_PROPERTY_SLOT = 0;
-
-    /* For cloned methods, slot holding the object this was cloned as a property from. */
-    static const uint32_t METHOD_OBJECT_SLOT = 1;
-
-    /* Whether this is a function cloned from a method. */
-    inline bool isClonedMethod() const;
-
-    /* For a cloned method, pointer to the object the method was cloned for. */
-    inline JSObject *methodObj() const;
-    inline void setMethodObj(JSObject& obj);
-
-    /*
-     * Method name imputed from property uniquely assigned to or initialized,
-     * where the function does not need to be cloned to carry a scope chain.
-     * This is set on both the original and cloned function.
-     */
-    inline JSAtom *methodAtom() const;
-    inline void setMethodAtom(JSAtom *atom);
 
   private:
     /* 
@@ -356,8 +305,9 @@ js_IsNamedLambda(JSFunction *fun) { return (fun->flags & JSFUN_LAMBDA) && fun->a
 
 namespace js {
 
-extern JSBool
-XDRFunctionObject(JSXDRState *xdr, JSObject **objp);
+template<XDRMode mode>
+bool
+XDRInterpretedFunction(XDRState<mode> *xdr, JSObject **objp, JSScript *parentScript);
 
 } /* namespace js */
 

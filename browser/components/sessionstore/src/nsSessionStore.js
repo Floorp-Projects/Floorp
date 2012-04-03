@@ -131,7 +131,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/debug.js");
 
 Cu.import("resource:///modules/TelemetryTimestamps.jsm");
-Cu.import("resource:///modules/TelemetryStopwatch.jsm");
+Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -141,6 +141,11 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
 XPCOMUtils.defineLazyGetter(this, "ScratchpadManager", function() {
   Cu.import("resource:///modules/devtools/scratchpad-manager.jsm");
   return ScratchpadManager;
+});
+
+XPCOMUtils.defineLazyGetter(this, "XPathGenerator", function() {
+  Cu.import("resource:///modules/sessionstore/XPathGenerator.jsm");
+  return XPathGenerator;
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "CookieSvc",
@@ -2085,9 +2090,6 @@ SessionStoreService.prototype = {
   _updateTextAndScrollData: function sss_updateTextAndScrollData(aWindow) {
     var browsers = aWindow.gBrowser.browsers;
     this._windows[aWindow.__SSi].tabs.forEach(function (tabData, i) {
-      if (browsers[i].__SS_data &&
-          browsers[i].__SS_tabStillLoading)
-        return; // ignore incompletely initialized tabs
       try {
         this._updateTextAndScrollDataForTab(aWindow, browsers[i], tabData);
       }
@@ -2109,6 +2111,10 @@ SessionStoreService.prototype = {
    */
   _updateTextAndScrollDataForTab:
     function sss_updateTextAndScrollDataForTab(aWindow, aBrowser, aTabData, aFullData) {
+    // we shouldn't update data for incompletely initialized tabs
+    if (aBrowser.__SS_data && aBrowser.__SS_tabStillLoading)
+      return;
+
     var tabIndex = (aTabData.index || aTabData.entries.length) - 1;
     // entry data needn't exist for tabs just initialized with an incomplete session state
     if (!aTabData.entries[tabIndex])
@@ -2226,8 +2232,8 @@ SessionStoreService.prototype = {
    *        document reference
    */
   _collectFormDataForFrame: function sss_collectFormDataForFrame(aDocument) {
-    let formNodes = aDocument.evaluate(XPathHelper.restorableFormNodes, aDocument,
-                                       XPathHelper.resolveNS,
+    let formNodes = aDocument.evaluate(XPathGenerator.restorableFormNodes, aDocument,
+                                       XPathGenerator.resolveNS,
                                        Ci.nsIDOMXPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
     let node = formNodes.iterateNext();
     if (!node)
@@ -2288,7 +2294,7 @@ SessionStoreService.prototype = {
         }
         else {
           generatedCount++;
-          data[XPathHelper.generate(node)] = value;
+          data[XPathGenerator.generate(node)] = value;
         }
       }
 
@@ -2729,6 +2735,8 @@ SessionStoreService.prototype = {
     if (aOverwriteTabs && tabbrowser.selectedTab._tPos >= newTabCount)
       tabbrowser.moveTabTo(tabbrowser.selectedTab, newTabCount - 1);
 
+    let numVisibleTabs = 0;
+
     for (var t = 0; t < newTabCount; t++) {
       tabs.push(t < openTabCount ?
                 tabbrowser.tabs[t] :
@@ -2741,10 +2749,19 @@ SessionStoreService.prototype = {
       if (winData.tabs[t].pinned)
         tabbrowser.pinTab(tabs[t]);
 
-      if (winData.tabs[t].hidden)
+      if (winData.tabs[t].hidden) {
         tabbrowser.hideTab(tabs[t]);
-      else
+      }
+      else {
         tabbrowser.showTab(tabs[t]);
+        numVisibleTabs++;
+      }
+    }
+
+    // if all tabs to be restored are hidden, make the first one visible
+    if (!numVisibleTabs && winData.tabs.length) {
+      winData.tabs[0].hidden = false;
+      tabbrowser.showTab(tabs[0]);
     }
 
     // If overwriting tabs, we want to reset each tab's "restoring" state. Since
@@ -2874,10 +2891,7 @@ SessionStoreService.prototype = {
 
     let unhiddenTabs = aTabData.filter(function (aData) !aData.hidden).length;
 
-    // if all tabs to be restored are hidden, make the first one visible
-    if (unhiddenTabs == 0) {
-      aTabData[0].hidden = false;
-    } else if (aTabs.length > 1) {
+    if (unhiddenTabs && aTabs.length > 1) {
       // Load hidden tabs last, by pushing them to the end of the list
       for (let t = 0, tabsToReorder = aTabs.length - unhiddenTabs; tabsToReorder > 0; ) {
         if (aTabData[t].hidden) {
@@ -3401,7 +3415,7 @@ SessionStoreService.prototype = {
           return;
 
         let node = key.charAt(0) == "#" ? aDocument.getElementById(key.slice(1)) :
-                                          XPathHelper.resolve(aDocument, key);
+                                          XPathGenerator.resolve(aDocument, key);
         if (!node)
           continue;
 
@@ -4461,98 +4475,6 @@ SessionStoreService.prototype = {
                                      "");
       }
     });
-  }
-};
-
-let XPathHelper = {
-  // these two hashes should be kept in sync
-  namespaceURIs:     { "xhtml": "http://www.w3.org/1999/xhtml" },
-  namespacePrefixes: { "http://www.w3.org/1999/xhtml": "xhtml" },
-
-  /**
-   * Generates an approximate XPath query to an (X)HTML node
-   */
-  generate: function sss_xph_generate(aNode) {
-    // have we reached the document node already?
-    if (!aNode.parentNode)
-      return "";
-    
-    // Access localName, namespaceURI just once per node since it's expensive.
-    let nNamespaceURI = aNode.namespaceURI;
-    let nLocalName = aNode.localName;
-
-    let prefix = this.namespacePrefixes[nNamespaceURI] || null;
-    let tag = (prefix ? prefix + ":" : "") + this.escapeName(nLocalName);
-    
-    // stop once we've found a tag with an ID
-    if (aNode.id)
-      return "//" + tag + "[@id=" + this.quoteArgument(aNode.id) + "]";
-    
-    // count the number of previous sibling nodes of the same tag
-    // (and possible also the same name)
-    let count = 0;
-    let nName = aNode.name || null;
-    for (let n = aNode; (n = n.previousSibling); )
-      if (n.localName == nLocalName && n.namespaceURI == nNamespaceURI &&
-          (!nName || n.name == nName))
-        count++;
-    
-    // recurse until hitting either the document node or an ID'd node
-    return this.generate(aNode.parentNode) + "/" + tag +
-           (nName ? "[@name=" + this.quoteArgument(nName) + "]" : "") +
-           (count ? "[" + (count + 1) + "]" : "");
-  },
-
-  /**
-   * Resolves an XPath query generated by XPathHelper.generate
-   */
-  resolve: function sss_xph_resolve(aDocument, aQuery) {
-    let xptype = Ci.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE;
-    return aDocument.evaluate(aQuery, aDocument, this.resolveNS, xptype, null).singleNodeValue;
-  },
-
-  /**
-   * Namespace resolver for the above XPath resolver
-   */
-  resolveNS: function sss_xph_resolveNS(aPrefix) {
-    return XPathHelper.namespaceURIs[aPrefix] || null;
-  },
-
-  /**
-   * @returns valid XPath for the given node (usually just the local name itself)
-   */
-  escapeName: function sss_xph_escapeName(aName) {
-    // we can't just use the node's local name, if it contains
-    // special characters (cf. bug 485482)
-    return /^\w+$/.test(aName) ? aName :
-           "*[local-name()=" + this.quoteArgument(aName) + "]";
-  },
-
-  /**
-   * @returns a properly quoted string to insert into an XPath query
-   */
-  quoteArgument: function sss_xph_quoteArgument(aArg) {
-    return !/'/.test(aArg) ? "'" + aArg + "'" :
-           !/"/.test(aArg) ? '"' + aArg + '"' :
-           "concat('" + aArg.replace(/'+/g, "',\"$&\",'") + "')";
-  },
-
-  /**
-   * @returns an XPath query to all savable form field nodes
-   */
-  get restorableFormNodes() {
-    // for a comprehensive list of all available <INPUT> types see
-    // http://mxr.mozilla.org/mozilla-central/search?string=kInputTypeTable
-    let ignoreTypes = ["password", "hidden", "button", "image", "submit", "reset"];
-    // XXXzeniko work-around until lower-case has been implemented (bug 398389)
-    let toLowerCase = '"ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"';
-    let ignore = "not(translate(@type, " + toLowerCase + ")='" +
-      ignoreTypes.join("' or translate(@type, " + toLowerCase + ")='") + "')";
-    let formNodesXPath = "//textarea|//select|//xhtml:textarea|//xhtml:select|" +
-      "//input[" + ignore + "]|//xhtml:input[" + ignore + "]";
-    
-    delete this.restorableFormNodes;
-    return (this.restorableFormNodes = formNodesXPath);
   }
 };
 

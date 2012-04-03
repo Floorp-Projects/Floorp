@@ -1,0 +1,27 @@
+<!doctype html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=719544
+-->
+<title>Test for Bug 719544</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=719544">Mozilla Bug 719544</a>
+<script>
+
+/** Test for Bug 719544 **/
+var threw = false;
+var origLength = document.childNodes.length;
+try {
+  var range = document.createRange();
+  range.selectNodeContents(document);
+  range.extractContents();
+} catch(e) {
+  threw = true;
+  is(Object.getPrototypeOf(e), DOMException.prototype,
+     "Must throw DOMException");
+  is(e.name, "HierarchyRequestError", "Must throw HierarchyRequestError");
+}
+ok(threw, "Must throw");
+is(document.childNodes.length, origLength, "Must preserve original children");
+
+</script>

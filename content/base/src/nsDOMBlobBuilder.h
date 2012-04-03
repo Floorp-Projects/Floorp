@@ -81,6 +81,12 @@ public:
                         PRUint32 aArgc,
                         jsval* aArgv);
 
+  typedef nsIDOMBlob* (*UnwrapFuncPtr)(JSContext*, JSObject*);
+  nsresult InitInternal(JSContext* aCx,
+                        PRUint32 aArgc,
+                        jsval* aArgv,
+                        UnwrapFuncPtr aUnwrapFunc);
+
   already_AddRefed<nsIDOMBlob>
   CreateSlice(PRUint64 aStart, PRUint64 aLength, const nsAString& aContentType);
 
@@ -159,7 +165,8 @@ protected:
   PRUint64 mDataBufferLen;
 };
 
-class nsDOMBlobBuilder : public nsIDOMMozBlobBuilder
+class nsDOMBlobBuilder : public nsIDOMMozBlobBuilder,
+                         public nsIJSNativeInitializer
 {
 public:
   nsDOMBlobBuilder()
@@ -174,6 +181,13 @@ public:
 
   nsresult GetBlobInternal(const nsAString& aContentType,
                            bool aClearBuffer, nsIDOMBlob** aBlob);
+
+  // nsIJSNativeInitializer
+  NS_IMETHOD Initialize(nsISupports* aOwner,
+                        JSContext* aCx,
+                        JSObject* aObj,
+                        PRUint32 aArgc,
+                        jsval* aArgv);
 protected:
   BlobSet mBlobSet;
 };

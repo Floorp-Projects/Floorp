@@ -36,10 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_WIDGET_QT
-#include <QX11Info>
-#endif
-
 #include "base/basictypes.h"
 
 /* This must occur *after* layers/PLayers.h to avoid typedefs conflicts. */
@@ -542,23 +538,6 @@ NPPluginFuncs*
 nsNPAPIPlugin::PluginFuncs()
 {
   return &mPluginFuncs;
-}
-
-nsresult
-nsNPAPIPlugin::CreatePluginInstance(nsNPAPIPluginInstance **aResult)
-{
-  if (!aResult)
-    return NS_ERROR_NULL_POINTER;
-
-  *aResult = NULL;
-
-  nsRefPtr<nsNPAPIPluginInstance> inst = new nsNPAPIPluginInstance(this);
-  if (!inst)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aResult = inst;
-  NS_ADDREF(*aResult);
-  return NS_OK;
 }
 
 nsresult

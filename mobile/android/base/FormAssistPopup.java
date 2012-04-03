@@ -51,6 +51,7 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
 import android.widget.RelativeLayout;
@@ -61,26 +62,29 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class FormAssistPopup extends ListView implements GeckoEventListener {
+public class FormAssistPopup extends RelativeLayout implements GeckoEventListener {
     private Context mContext;
-    private RelativeLayout.LayoutParams mLayout;
-
-    private int mWidth;
-    private int mHeight;
-
     private Animation mAnimation; 
 
+    private ListView mAutoCompleteList;
+    private RelativeLayout mValidationMessage;
+    private TextView mValidationMessageText;
+
+    private static int sAutoCompleteMinWidth = 0;
+    private static int sAutoCompleteRowHeight = 0;
+    private static int sValidationMessageHeight = 0;
+
+    // Minimum popup width for autocomplete messages
+    private static final int AUTOCOMPLETE_MIN_WIDTH_IN_DPI = 200;
+
+    // Height of the autocomplete_list_item TextView
+    private static final int AUTOCOMPLETE_ROW_HEIGHT_IN_DPI = 32;
+
+    // Height of the validation_message_text TextView, plus the top margin set to
+    // make room for the arrow
+    private static final int VALIDATION_MESSAGE_HEIGHT_IN_DPI = 58;
+
     private static final String LOGTAG = "FormAssistPopup";
-
-    private static int sMinWidth = 0;
-    private static int sRowHeight = 0;
-    private static final int POPUP_MIN_WIDTH_IN_DPI = 200;
-    private static final int POPUP_ROW_HEIGHT_IN_DPI = 32;
-
-    private static enum PopupType { NONE, AUTOCOMPLETE, VALIDATION };
-
-    // Keep track of the type of popup we're currently showing
-    private PopupType mTypeShowing = PopupType.NONE;
 
     public FormAssistPopup(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -90,19 +94,6 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
         mAnimation.setDuration(75);
 
         setFocusable(false);
-
-        setOnItemClickListener(new OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parentView, View view, int position, long id) {
-                if (mTypeShowing.equals(PopupType.AUTOCOMPLETE)) {
-                    // Use the value stored with the autocomplete view, not the label text,
-                    // since they can be different.
-                    TextView textView = (TextView) view;
-                    String value = (String) textView.getTag();
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FormAssist:AutoComplete", value));
-                    hide();
-                }
-            }
-        });
 
         GeckoAppShell.registerGeckoEventListener("FormAssist:AutoComplete", this);
         GeckoAppShell.registerGeckoEventListener("FormAssist:ValidationMessage", this);
@@ -154,26 +145,51 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
     }
 
     private void showAutoCompleteSuggestions(JSONArray suggestions, JSONArray rect, double zoom) {
+        if (mAutoCompleteList == null) {
+            LayoutInflater inflater = LayoutInflater.from(mContext);
+            mAutoCompleteList = (ListView) inflater.inflate(R.layout.autocomplete_list, null);
+
+            mAutoCompleteList.setOnItemClickListener(new OnItemClickListener() {
+                public void onItemClick(AdapterView<?> parentView, View view, int position, long id) {
+                    // Use the value stored with the autocomplete view, not the label text,
+                    // since they can be different.
+                    TextView textView = (TextView) view;
+                    String value = (String) textView.getTag();
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FormAssist:AutoComplete", value));
+                    hide();
+                }
+            });
+
+            addView(mAutoCompleteList);
+        }
+        
         AutoCompleteListAdapter adapter = new AutoCompleteListAdapter(mContext, R.layout.autocomplete_list_item);
         adapter.populateSuggestionsList(suggestions);
-        setAdapter(adapter);
+        mAutoCompleteList.setAdapter(adapter);
 
-        if (positionAndShowPopup(rect, zoom))
-            mTypeShowing = PopupType.AUTOCOMPLETE;
+        positionAndShowPopup(rect, zoom, true);
     }
 
-    // TODO: style the validation message popup differently (bug 731654)
     private void showValidationMessage(String validationMessage, JSONArray rect, double zoom) {
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext, R.layout.autocomplete_list_item);
-        adapter.add(validationMessage);
-        setAdapter(adapter);
+        if (mValidationMessage == null) {
+            LayoutInflater inflater = LayoutInflater.from(mContext);
+            mValidationMessage = (RelativeLayout) inflater.inflate(R.layout.validation_message, null);
 
-        if (positionAndShowPopup(rect, zoom))
-            mTypeShowing = PopupType.VALIDATION;
+            addView(mValidationMessage);
+            mValidationMessageText = (TextView) mValidationMessage.findViewById(R.id.validation_message_text);
+        }
+
+        validationMessage = "This is an incredibly long validation message to test the width of the popup.";
+        mValidationMessageText.setText(validationMessage);
+
+        // We need to set the text as selected for the marquee text to work.
+        mValidationMessageText.setSelected(true);
+
+        positionAndShowPopup(rect, zoom, false);
     }
 
     // Returns true if the popup is successfully shown, false otherwise
-    public boolean positionAndShowPopup(JSONArray rect, double zoom) {
+    private boolean positionAndShowPopup(JSONArray rect, double zoom, boolean isAutoComplete) {
         // Don't show the form assist popup when using fullscreen VKB
         InputMethodManager imm =
                 (InputMethodManager) GeckoApp.mAppContext.getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -181,16 +197,28 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
             return false;
 
         if (!isShown()) {
-            setVisibility(View.VISIBLE);
+            setVisibility(VISIBLE);
             startAnimation(mAnimation);
         }
 
-        if (mLayout == null) {
-            mLayout = (RelativeLayout.LayoutParams) getLayoutParams();
-            mWidth = mLayout.width;
-            mHeight = mLayout.height;
+        // Hide/show the appropriate popup contents
+        if (mAutoCompleteList != null)
+            mAutoCompleteList.setVisibility(isAutoComplete ? VISIBLE : GONE);
+        if (mValidationMessage != null)
+            mValidationMessage.setVisibility(isAutoComplete ? GONE : VISIBLE);
+
+        // Initialize static variables based on DisplayMetrics. We delay this to
+        // make sure DisplayMetrics isn't null to avoid an NPE.
+        if (sAutoCompleteMinWidth == 0) {
+            DisplayMetrics metrics = new DisplayMetrics();
+            GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+            sAutoCompleteMinWidth = (int) (AUTOCOMPLETE_MIN_WIDTH_IN_DPI * metrics.density);
+            sAutoCompleteRowHeight = (int) (AUTOCOMPLETE_ROW_HEIGHT_IN_DPI * metrics.density);
+            sValidationMessageHeight = (int) (VALIDATION_MESSAGE_HEIGHT_IN_DPI * metrics.density);
         }
 
+        // These values correspond to the input box for which we want to
+        // display the FormAssistPopup.
         int left = 0;
         int top = 0; 
         int width = 0;
@@ -203,57 +231,57 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
             height = (int) (rect.getDouble(3) * zoom);
         } catch (JSONException e) { } 
 
-        int listWidth = mWidth;
-        int listHeight = mHeight;
-        int listLeft = left < 0 ? 0 : left;
-        int listTop = top + height;
+        int popupWidth = RelativeLayout.LayoutParams.FILL_PARENT;
+        int popupLeft = left < 0 ? 0 : left;
 
         FloatSize viewport = GeckoApp.mAppContext.getLayerController().getViewportSize();
 
-        // Late initializing variable to allow DisplayMetrics not to be null and avoid NPE
-        if (sMinWidth == 0) {
-            DisplayMetrics metrics = new DisplayMetrics();
-            GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-            sMinWidth = (int) (POPUP_MIN_WIDTH_IN_DPI * metrics.density);
-            sRowHeight = (int) (POPUP_ROW_HEIGHT_IN_DPI * metrics.density);
+        // For autocomplete suggestions, if the input is smaller than the screen-width,
+        // shrink the popup's width. Otherwise, keep it as FILL_PARENT.
+        if (isAutoComplete && (left + width) < viewport.width) {
+            popupWidth = left < 0 ? left + width : width;
+
+            // Ensure the popup has a minimum width.
+            if (popupWidth < sAutoCompleteMinWidth) {
+                popupWidth = sAutoCompleteMinWidth;
+
+                // Move the popup to the left if there isn't enough room for it.
+                if ((popupLeft + popupWidth) > viewport.width)
+                    popupLeft = (int) (viewport.width - popupWidth);
+            }
         }
 
-        // If the textbox is smaller than the screen-width,
-        // shrink the list's width
-        if ((left + width) < viewport.width) 
-            listWidth = left < 0 ? left + width : width;
+        int popupHeight;
+        if (isAutoComplete)
+            popupHeight = sAutoCompleteRowHeight * mAutoCompleteList.getAdapter().getCount();
+        else
+            popupHeight = sValidationMessageHeight;
 
-        // listWidth can be negative if it is a constant - FILL_PARENT or MATCH_PARENT
-        if (listWidth >= 0 && listWidth < sMinWidth) {
-            listWidth = sMinWidth;
+        int popupTop = top + height;
 
-            if ((listLeft + listWidth) > viewport.width)
-                listLeft = (int) (viewport.width - listWidth);
-        }
-
-        listHeight = sRowHeight * getAdapter().getCount();
-
-        // The text box doesnt fit below
-        if ((listTop + listHeight) > viewport.height) {
-            // Find where the maximum space is, and fit it there
-            if ((viewport.height - listTop) > top) {
-                // Shrink the height to fit it below the text-box
-                listHeight = (int) (viewport.height - listTop);
+        // If the popup doesn't fit below the input box, shrink its height, or
+        // see if we can place it above the input instead.
+        if ((popupTop + popupHeight) > viewport.height) {
+            // Find where the maximum space is, and put the popup there.
+            if ((viewport.height - popupTop) > top) {
+                // Shrink the height to fit it below the input box.
+                popupHeight = (int) (viewport.height - popupTop);
             } else {
-                if (listHeight < top) {
-                    // No shrinking needed to fit on top
-                    listTop = (top - listHeight);
+                if (popupHeight < top) {
+                    // No shrinking needed to fit on top.
+                    popupTop = (top - popupHeight);
                 } else {
-                    // Shrink to available space on top
-                    listTop = 0;
-                    listHeight = top;
+                    // Shrink to available space on top.
+                    popupTop = 0;
+                    popupHeight = top;
                 }
            }
         }
 
-        mLayout = new RelativeLayout.LayoutParams(listWidth, listHeight);
-        mLayout.setMargins(listLeft, listTop, 0, 0);
-        setLayoutParams(mLayout);
+        RelativeLayout.LayoutParams layoutParams =
+                new RelativeLayout.LayoutParams(popupWidth, popupHeight);
+        layoutParams.setMargins(popupLeft, popupTop, 0, 0);
+        setLayoutParams(layoutParams);
         requestLayout();
 
         return true;
@@ -261,8 +289,7 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
 
     public void hide() {
         if (isShown()) {
-            setVisibility(View.GONE);
-            mTypeShowing = PopupType.NONE;
+            setVisibility(GONE);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FormAssist:Hidden", null));
         }
     }
@@ -283,7 +310,7 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
         public void populateSuggestionsList(JSONArray suggestions) {
             try {
                 for (int i = 0; i < suggestions.length(); i++) {
-                    JSONObject suggestion = (JSONObject) suggestions.get(i);
+                    JSONObject suggestion = suggestions.getJSONObject(i);
                     String label = suggestion.getString("label");
                     String value = suggestion.getString("value");
                     add(new Pair<String, String>(label, value));

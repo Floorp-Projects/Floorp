@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
 <script src="../../resources/js-test-pre.js"></script>
 <script src="../resources/webgl-test.js"></script>
+<script src="../resources/webgl-test-utils.js"></script>
 </head>
 <body>
 <div id="description"></div>
@@ -14,8 +15,8 @@
 <script>
 description("Tests to check user code cannot access uninitialized data from GL resources.");
 
-var canvas = document.getElementById("canvas");
-var gl = create3DContext(canvas);
+var wtu = WebGLTestUtils;
+var gl = wtu.create3DContext("canvas");
 if (!gl)
   testFailed("Context created.");
 else
@@ -149,7 +150,7 @@ gl.clearColor(0.0, 1.0, 0.0, 0.0);
 gl.clear(gl.COLOR_BUFFER_BIT);
 glErrorShouldBe(gl, gl.NO_ERROR);
 gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, width, height, 0);
-checkNonZeroPixels(tex, width, height, 0, 0, canvas.width, canvas.height, 0, 255, 0, 0);
+checkNonZeroPixels(tex, width, height, 0, 0, gl.canvas.width, gl.canvas.height, 0, 255, 0, 0);
 gl.deleteTexture(tex);
 gl.finish();
 glErrorShouldBe(gl, gl.NO_ERROR);

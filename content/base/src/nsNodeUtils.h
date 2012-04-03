@@ -39,6 +39,7 @@
 #define nsNodeUtils_h___
 
 #include "nsINode.h"
+#include "nsIContent.h"
 
 struct CharacterDataChangeInfo;
 struct JSContext;
@@ -129,18 +130,20 @@ public:
                              PRInt32 aIndexInContainer,
                              nsIContent* aPreviousSibling);
   /**
-   * Send AttributeChildRemoved notifications to nsIMutationObservers.
-   * @param aAttribute Attribute from which the child has been removed.
-   * @param aChild     Removed child.
-   * @see nsIMutationObserver2::AttributeChildRemoved.
-   */
-  static void AttributeChildRemoved(nsINode* aAttribute, nsIContent* aChild);
-  /**
    * Send ParentChainChanged notifications to nsIMutationObservers
    * @param aContent  The piece of content that had its parent changed.
    * @see nsIMutationObserver::ParentChainChanged
    */
-  static void ParentChainChanged(nsIContent *aContent);
+  static inline void ParentChainChanged(nsIContent *aContent)
+  {
+    nsINode::nsSlots* slots = aContent->GetExistingSlots();
+    if (slots && !slots->mMutationObservers.IsEmpty()) {
+      NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
+                                         nsIMutationObserver,
+                                         ParentChainChanged,
+                                         (aContent));
+    }
+  }
 
   /**
    * To be called when reference count of aNode drops to zero.

@@ -381,24 +381,6 @@ public:
   }
 };
 
-// This class exists because VC6 cannot handle static template functions.
-// Otherwise, the Compare method would be defined directly on nsTArray.
-template <class E, class Comparator>
-class nsQuickSortComparator
-{
-public:
-  typedef E elem_type;
-  // This function is meant to be used with the NS_QuickSort function.  It
-  // maps the callback API expected by NS_QuickSort to the Comparator API
-  // used by nsTArray.  See nsTArray::Sort.
-  static int Compare(const void* e1, const void* e2, void *data) {
-    const Comparator* c = reinterpret_cast<const Comparator*>(data);
-    const elem_type* a = static_cast<const elem_type*>(e1);
-    const elem_type* b = static_cast<const elem_type*>(e2);
-    return c->LessThan(*a, *b) ? -1 : (c->Equals(*a, *b) ? 0 : 1);
-  }
-};
-
 // The default comparator used by nsTArray
 template<class A, class B>
 class nsDefaultComparator
@@ -614,6 +596,26 @@ public:
     return ElementAt(i);
   }
 
+  // Shorthand for ElementAt(length - 1)
+  elem_type& LastElement() {
+    return ElementAt(Length() - 1);
+  }
+
+  // Shorthand for ElementAt(length - 1)
+  const elem_type& LastElement() const {
+    return ElementAt(Length() - 1);
+  }
+
+  // Shorthand for SafeElementAt(length - 1, def)
+  elem_type& SafeLastElement(elem_type& def) {
+    return SafeElementAt(Length() - 1, def);
+  }
+
+  // Shorthand for SafeElementAt(length - 1, def)
+  const elem_type& SafeLastElement(const elem_type& def) const {
+    return SafeElementAt(Length() - 1, def);
+  }
+
   //
   // Search methods
   //
@@ -772,7 +774,7 @@ public:
   // A variation on the ReplaceElementsAt method defined above.
   template<class Item>
   elem_type *ReplaceElementAt(index_type index, const Item& item) {
-    return ReplaceElementsAt(index, 1, item, 1);
+    return ReplaceElementsAt(index, 1, &item, 1);
   }
 
   // A variation on the ReplaceElementsAt method defined above.
@@ -1131,6 +1133,17 @@ public:
   //
   // Sorting
   //
+ 
+  // This function is meant to be used with the NS_QuickSort function.  It
+  // maps the callback API expected by NS_QuickSort to the Comparator API
+  // used by nsTArray.  See nsTArray::Sort.
+  template<class Comparator>
+  static int Compare(const void* e1, const void* e2, void *data) {
+    const Comparator* c = reinterpret_cast<const Comparator*>(data);
+    const elem_type* a = static_cast<const elem_type*>(e1);
+    const elem_type* b = static_cast<const elem_type*>(e2);
+    return c->LessThan(*a, *b) ? -1 : (c->Equals(*a, *b) ? 0 : 1);
+  }
 
   // This method sorts the elements of the array.  It uses the LessThan
   // method defined on the given Comparator object to collate elements.
@@ -1138,8 +1151,7 @@ public:
   template<class Comparator>
   void Sort(const Comparator& comp) {
     NS_QuickSort(Elements(), Length(), sizeof(elem_type),
-                 nsQuickSortComparator<elem_type, Comparator>::Compare,
-                 const_cast<Comparator*>(&comp));
+                 Compare<Comparator>, const_cast<Comparator*>(&comp));
   }
 
   // A variation on the Sort method defined above that assumes that

@@ -37,14 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "Exceptions.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jsprf.h"
-
+#include "mozilla/Util.h"
 #include "nsTraceRefcnt.h"
 
 #include "WorkerInlines.h"
@@ -186,8 +184,7 @@ JSClass DOMException::sClass = {
   "DOMException",
   JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT),
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize,
-  JSCLASS_NO_OPTIONAL_MEMBERS
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize
 };
 
 JSPropertySpec DOMException::sProperties[] = {
@@ -358,8 +355,7 @@ JSClass FileException::sClass = {
   "FileException",
   JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT),
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize,
-  JSCLASS_NO_OPTIONAL_MEMBERS
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize
 };
 
 JSPropertySpec FileException::sProperties[] = {

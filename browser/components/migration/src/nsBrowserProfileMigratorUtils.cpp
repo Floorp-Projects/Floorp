@@ -54,10 +54,6 @@
 #include "nsIStringBundle.h"
 #include "nsXPCOMCID.h"
 
-#define MIGRATION_BUNDLE "chrome://browser/locale/migration/migration.properties"
-
-#define DEFAULT_BOOKMARKS NS_LITERAL_CSTRING("resource:///defaults/profile/bookmarks.html")
-
 void SetUnicharPref(const char* aPref, const nsAString& aValue,
                     nsIPrefBranch* aPrefs)
 {
@@ -163,20 +159,3 @@ GetProfilePath(nsIProfileStartup* aStartup, nsCOMPtr<nsIFile>& aProfileDir)
   }
 }
 
-nsresult
-ImportDefaultBookmarks()
-{
-  nsCOMPtr<nsIPlacesImportExportService> importer =
-    do_GetService(NS_PLACESIMPORTEXPORTSERVICE_CONTRACTID);
-  NS_ENSURE_STATE(importer);
-
-  nsCOMPtr<nsIIOService> ioService = mozilla::services::GetIOService();
-  NS_ENSURE_STATE(ioService);
-  nsCOMPtr<nsIURI> bookmarksURI;
-  nsresult rv = ioService->NewURI(DEFAULT_BOOKMARKS, nsnull, nsnull,
-                                  getter_AddRefs(bookmarksURI));
-  if (NS_FAILED(rv))
-    return rv;
-
-  return importer->ImportHTMLFromURI(bookmarksURI, true);
-}

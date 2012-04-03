@@ -52,7 +52,6 @@ public:
   nsProbingState GetState(void) {return mState;}
   void      Reset(void);
   float     GetConfidence(void){return (float)0.99;}
-  void      SetOpion() {}
 
 protected:
   void      GetDistribution(PRUint32 aCharLen, const char* aStr);

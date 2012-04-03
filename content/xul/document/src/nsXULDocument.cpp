@@ -111,6 +111,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsIParser.h"
+#include "nsCharsetSource.h"
 #include "nsIParserService.h"
 #include "nsCSSStyleSheet.h"
 #include "mozilla/css/Loader.h"
@@ -460,6 +461,21 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                                  nsIStreamListener **aDocListener,
                                  bool aReset, nsIContentSink* aSink)
 {
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING)) {
+
+        nsCOMPtr<nsIURI> uri;
+        nsresult rv = aChannel->GetOriginalURI(getter_AddRefs(uri));
+        if (NS_SUCCEEDED(rv)) {
+            nsCAutoString urlspec;
+            rv = uri->GetSpec(urlspec);
+            if (NS_SUCCEEDED(rv)) {
+                PR_LOG(gXULLog, PR_LOG_WARNING,
+                       ("xul: load document '%s'", urlspec.get()));
+            }
+        }
+    }
+#endif
     // NOTE: If this ever starts calling nsDocument::StartDocumentLoad
     // we'll possibly need to reset our content type afterwards.
     mStillWalking = true;
@@ -632,6 +648,16 @@ nsXULDocument::EndLoad()
     }
 
     OnPrototypeLoadDone(true);
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING)) {
+        nsCAutoString urlspec;
+        rv = uri->GetSpec(urlspec);
+        if (NS_SUCCEEDED(rv)) {
+            PR_LOG(gXULLog, PR_LOG_WARNING,
+                   ("xul: Finished loading document '%s'", urlspec.get()));
+        }
+    }
+#endif
 }
 
 NS_IMETHODIMP
@@ -732,10 +758,6 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
     nsCOMPtr<nsIContent> broadcaster = do_QueryInterface(aBroadcaster);
     nsCOMPtr<nsIContent> listener = do_QueryInterface(aListener);
     bool notify = mDocumentLoaded || mHandlingDelayedBroadcasters;
-
-    // We may be copying event handlers etc, so we must also copy
-    // the script-type to the listener.
-    listener->SetScriptTypeID(broadcaster->GetScriptTypeID());
 
     if (aAttr.EqualsLiteral("*")) {
         PRUint32 count = broadcaster->GetAttrCount();
@@ -1331,11 +1353,9 @@ nsXULDocument::Persist(const nsAString& aID,
     }
     else {
         // Make sure that this QName is going to be valid.
-        nsIParserService *parserService = nsContentUtils::GetParserService();
-        NS_ASSERTION(parserService, "Running scripts during shutdown?");
-
         const PRUnichar *colon;
-        rv = parserService->CheckQName(PromiseFlatString(aAttr), true, &colon);
+        rv = nsContentUtils::CheckQName(PromiseFlatString(aAttr), true, &colon);
+
         if (NS_FAILED(rv)) {
             // There was an invalid character or it was malformed.
             return NS_ERROR_INVALID_ARG;
@@ -2662,9 +2682,16 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
     if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
         nsCAutoString urlspec;
         aURI->GetSpec(urlspec);
+        nsCAutoString parentDoc;
+        nsCOMPtr<nsIURI> uri;
+        nsresult rv = mChannel->GetOriginalURI(getter_AddRefs(uri));
+        if (NS_SUCCEEDED(rv))
+            rv = uri->GetSpec(parentDoc);
+        if (!(parentDoc.get()))
+            parentDoc = "";
 
         PR_LOG(gXULLog, PR_LOG_DEBUG,
-                ("xul: loading overlay %s", urlspec.get()));
+                ("xul: %s loading overlay %s", parentDoc.get(), urlspec.get()));
     }
 #endif
 
@@ -3552,9 +3579,8 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 
                 NS_ASSERTION(global != nsnull, "master prototype w/o global?!");
                 if (global) {
-                    PRUint32 stid = scriptProto->mScriptObject.mLangID;
                     nsIScriptContext *scriptContext = \
-                          global->GetScriptContext(stid);
+                          global->GetScriptContext();
                     NS_ASSERTION(scriptContext != nsnull,
                                  "Failed to get script context for language");
                     if (scriptContext)
@@ -3605,8 +3631,6 @@ nsXULDocument::ExecuteScript(nsIScriptContext * aContext, JSScript* aScriptObjec
 
     NS_ENSURE_TRUE(mScriptGlobalObject, NS_ERROR_NOT_INITIALIZED);
 
-    NS_ABORT_IF_FALSE(aContext->GetScriptTypeID() == nsIProgrammingLanguage::JAVASCRIPT,
-                      "Should have a JavaScript nsIScriptContext.");
     // Execute the precompiled script with the given version
     JSObject* global = mScriptGlobalObject->GetGlobalJSObject();
     return aContext->ExecuteScript(aScriptObject, global, nsnull, nsnull);
@@ -3618,14 +3642,13 @@ nsXULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
     NS_PRECONDITION(aScript != nsnull, "null ptr");
     NS_ENSURE_TRUE(aScript, NS_ERROR_NULL_POINTER);
     NS_ENSURE_TRUE(mScriptGlobalObject, NS_ERROR_NOT_INITIALIZED);
-    PRUint32 stid = aScript->mScriptObject.mLangID;
 
     nsresult rv;
-    rv = mScriptGlobalObject->EnsureScriptEnvironment(stid);
+    rv = mScriptGlobalObject->EnsureScriptEnvironment();
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIScriptContext> context =
-      mScriptGlobalObject->GetScriptContext(stid);
+      mScriptGlobalObject->GetScriptContext();
     // failure getting a script context is fatal.
     NS_ENSURE_TRUE(context != nsnull, NS_ERROR_UNEXPECTED);
 
@@ -3917,14 +3940,7 @@ nsXULDocument::OverlayForwardReference::Resolve()
         if (!target)
             return eResolve_Later;
 
-        // While merging, set the default script language of the element to be
-        // the language from the overlay - attributes will then be correctly
-        // hooked up with the appropriate language (while child nodes ignore
-        // the default language - they have it in their proto.
-        PRUint32 oldDefLang = target->GetScriptTypeID();
-        target->SetScriptTypeID(mOverlay->GetScriptTypeID());
         rv = Merge(target, mOverlay, notify);
-        target->SetScriptTypeID(oldDefLang);
         if (NS_FAILED(rv)) return eResolve_Error;
     }
 
@@ -4086,15 +4102,13 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
                 // The element matches. "Go Deep!"
                 rv = Merge(elementInDocument, currContent, aNotify);
                 if (NS_FAILED(rv)) return rv;
-                rv = aOverlayNode->RemoveChildAt(0, false);
-                if (NS_FAILED(rv)) return rv;
+                aOverlayNode->RemoveChildAt(0, false);
 
                 continue;
             }
         }
 
-        rv = aOverlayNode->RemoveChildAt(0, false);
-        if (NS_FAILED(rv)) return rv;
+        aOverlayNode->RemoveChildAt(0, false);
 
         rv = InsertElement(aTargetNode, currContent, aNotify);
         if (NS_FAILED(rv)) return rv;
@@ -4114,9 +4128,19 @@ nsXULDocument::OverlayForwardReference::~OverlayForwardReference()
 
         nsCAutoString idC;
         idC.AssignWithConversion(id);
+
+        nsIURI *protoURI = mDocument->mCurrentPrototype->GetURI();
+        nsCAutoString urlspec;
+        protoURI->GetSpec(urlspec);
+
+        nsCOMPtr<nsIURI> docURI;
+        nsCAutoString parentDoc;
+        nsresult rv = mDocument->mChannel->GetOriginalURI(getter_AddRefs(docURI));
+        if (NS_SUCCEEDED(rv))
+            docURI->GetSpec(parentDoc);
         PR_LOG(gXULLog, PR_LOG_WARNING,
-               ("xul: overlay failed to resolve '%s'",
-                idC.get()));
+               ("xul: %s overlay failed to resolve '%s' in %s",
+                urlspec.get(), idC.get(), parentDoc.get()));
     }
 #endif
 }
@@ -4474,7 +4498,8 @@ nsXULDocument::RemoveElement(nsIContent* aParent, nsIContent* aChild)
 {
     PRInt32 nodeOffset = aParent->IndexOf(aChild);
 
-    return aParent->RemoveChildAt(nodeOffset, true);
+    aParent->RemoveChildAt(nodeOffset, true);
+    return NS_OK;
 }
 
 //----------------------------------------------------------------------

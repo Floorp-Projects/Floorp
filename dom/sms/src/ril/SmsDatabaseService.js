@@ -318,7 +318,7 @@ SmsDatabaseService.prototype = {
   saveReceivedMessage: function saveReceivedMessage(sender, body, date) {
     let message = {delivery:  DELIVERY_RECEIVED,
                    sender:    sender,
-                   receiver:  null,  //TODO see bug 733266
+                   receiver:  this.mRIL.radioState.msisdn, 
                    body:      body,
                    timestamp: date};
     return this.saveMessage(message);
@@ -326,7 +326,7 @@ SmsDatabaseService.prototype = {
 
   saveSentMessage: function saveSentMessage(receiver, body, date) {
     let message = {delivery:  DELIVERY_SENT,
-                   sender:    null, //TODO see bug 733266
+                   sender:    this.mRIL.radioState.msisdn,
                    receiver:  receiver,
                    body:      body,
                    timestamp: date};
@@ -602,6 +602,12 @@ SmsDatabaseService.prototype = {
   }
 
 };
+
+XPCOMUtils.defineLazyGetter(SmsDatabaseService.prototype, "mRIL", function () {
+    return Cc["@mozilla.org/telephony/system-worker-manager;1"]
+              .getService(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIRadioInterfaceLayer);
+});
 
 const NSGetFactory = XPCOMUtils.generateNSGetFactory([SmsDatabaseService]);
 

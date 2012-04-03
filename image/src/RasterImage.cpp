@@ -880,23 +880,21 @@ RasterImage::GetFrame(PRUint32 aWhichFrame,
 
   nsresult rv = NS_OK;
 
-  if (mDecoded) {
-    // If we have decoded data, and it is not a perfect match for what we are
-    // looking for, we must discard to be able to generate the proper data.
-    PRUint32 desiredDecodeFlags = aFlags & DECODE_FLAGS_MASK;
-    if (desiredDecodeFlags != mFrameDecodeFlags) {
-      // if we can't discard, then we're screwed; we have no way
-      // to re-decode.  Similarly if we aren't allowed to do a sync
-      // decode.
-      if (!(aFlags & FLAG_SYNC_DECODE))
-        return NS_ERROR_NOT_AVAILABLE;
-      if (!CanForciblyDiscard() || mDecoder || mAnim)
-        return NS_ERROR_NOT_AVAILABLE;
-  
-      ForceDiscard();
-  
-      mFrameDecodeFlags = desiredDecodeFlags;
-    }
+  // If we have decoded data, and it is not a perfect match for what we are
+  // looking for, we must discard to be able to generate the proper data.
+  PRUint32 desiredDecodeFlags = aFlags & DECODE_FLAGS_MASK;
+  if (desiredDecodeFlags != mFrameDecodeFlags) {
+    // if we can't discard, then we're screwed; we have no way
+    // to re-decode.  Similarly if we aren't allowed to do a sync
+    // decode.
+    if (!(aFlags & FLAG_SYNC_DECODE))
+      return NS_ERROR_NOT_AVAILABLE;
+    if (!CanForciblyDiscard() || mDecoder || mAnim)
+      return NS_ERROR_NOT_AVAILABLE;
+
+    ForceDiscard();
+
+    mFrameDecodeFlags = desiredDecodeFlags;
   }
 
   // If the caller requested a synchronous decode, do it
@@ -1320,6 +1318,25 @@ RasterImage::SetFrameHasNoAlpha(PRUint32 aFrameNum)
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   frame->SetHasNoAlpha();
+
+  return NS_OK;
+}
+
+nsresult
+RasterImage::SetFrameAsNonPremult(PRUint32 aFrameNum, bool aIsNonPremult)
+{
+  if (mError)
+    return NS_ERROR_FAILURE;
+
+  NS_ABORT_IF_FALSE(aFrameNum < mFrames.Length(), "Invalid frame index!");
+  if (aFrameNum >= mFrames.Length())
+    return NS_ERROR_INVALID_ARG;
+
+  imgFrame* frame = GetImgFrame(aFrameNum);
+  NS_ABORT_IF_FALSE(frame, "Calling SetFrameAsNonPremult on frame that doesn't exist!");
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+
+  frame->SetAsNonPremult(aIsNonPremult);
 
   return NS_OK;
 }
@@ -2982,9 +2999,6 @@ RasterImage::DecodeWorker::DecodeSomeOfImage(
   NS_ABORT_IF_FALSE(aImg->mInitialized,
                     "Worker active for uninitialized container!");
 
-  if (aDecodeType == DECODE_TYPE_UNTIL_SIZE && aImg->mHasSize)
-    return NS_OK;
-
   // If an error is flagged, it probably happened while we were waiting
   // in the event queue.
   if (aImg->mError)
@@ -3013,8 +3027,14 @@ RasterImage::DecodeWorker::DecodeSomeOfImage(
   TimeStamp start = TimeStamp::Now();
   TimeStamp deadline = start + TimeDuration::FromMilliseconds(gMaxMSBeforeYield);
 
-  // Decode some chunks of data.
-  do {
+  // We keep decoding chunks until:
+  //  * we don't have any data left to decode,
+  //  * the decode completes,
+  //  * we're an UNTIL_SIZE decode and we get the size, or
+  //  * we run out of time.
+  while (aImg->mSourceData.Length() > aImg->mBytesDecoded &&
+         !aImg->IsDecodeFinished() &&
+         !(aDecodeType == DECODE_TYPE_UNTIL_SIZE && aImg->mHasSize)) {
     chunkCount++;
     nsresult rv = aImg->DecodeSomeData(maxBytes);
     if (NS_FAILED(rv)) {
@@ -3022,18 +3042,11 @@ RasterImage::DecodeWorker::DecodeSomeOfImage(
       return rv;
     }
 
-    // We keep decoding chunks until either:
-    //  * we're an UNTIL_SIZE decode and we get the size,
-    //  * we don't have any data left to decode,
-    //  * the decode completes, or
-    //  * we run out of time.
-
-    if (aDecodeType == DECODE_TYPE_UNTIL_SIZE && aImg->mHasSize)
+    // Yield if we've been decoding for too long. We check this _after_ decoding
+    // a chunk to ensure that we don't yield without doing any decoding.
+    if (TimeStamp::Now() >= deadline)
       break;
-
-  } while (aImg->mSourceData.Length() > aImg->mBytesDecoded &&
-           !aImg->IsDecodeFinished() &&
-           TimeStamp::Now() < deadline);
+  }
 
   aImg->mDecodeRequest.mDecodeTime += (TimeStamp::Now() - start);
 

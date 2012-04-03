@@ -94,7 +94,7 @@ private:
 public:
   NS_DECL_ISUPPORTS
 
-  nsresult Initialize(nsIPluginInstanceOwner* aOwner, const char* aMIMEType);
+  nsresult Initialize(nsNPAPIPlugin *aPlugin, nsIPluginInstanceOwner* aOwner, const char* aMIMEType);
   nsresult Start();
   nsresult Stop();
   nsresult SetWindow(NPWindow* window);
@@ -176,7 +176,7 @@ public:
   nsresult NewStreamListener(const char* aURL, void* notifyData,
                              nsIPluginStreamListener** listener);
 
-  nsNPAPIPluginInstance(nsNPAPIPlugin* plugin);
+  nsNPAPIPluginInstance();
   virtual ~nsNPAPIPluginInstance();
 
   // To be called when an instance becomes orphaned, when
@@ -233,7 +233,6 @@ public:
   void CarbonNPAPIFailure();
 
 protected:
-  nsresult InitializePlugin();
 
   nsresult GetTagType(nsPluginTagType *result);
   nsresult GetAttributes(PRUint16& n, const char*const*& names,

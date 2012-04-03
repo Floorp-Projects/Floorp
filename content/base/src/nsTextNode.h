@@ -42,10 +42,6 @@
 #include "nsGenericDOMDataNode.h"
 #include "nsIDOMText.h"
 
-#include "nsIAttribute.h"
-#include "nsIDocument.h"
-#include "nsThreadUtils.h"
-
 /**
  * Class used to implement DOM text nodes
  */
@@ -73,9 +69,6 @@ public:
 
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
                                               bool aCloneText) const;
-
-  void BindToAttribute(nsIAttribute* aAttr);
-  void UnbindFromAttribute();
 
   virtual nsXPCClassInfo* GetClassInfo();
 

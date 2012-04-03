@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsecur.c,v 1.57 2012/02/15 21:52:08 kaie%kuix.de Exp $ */
+/* $Id: sslsecur.c,v 1.58 2012/03/01 18:36:35 kaie%kuix.de Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"
@@ -1403,7 +1403,7 @@ SSL_InvalidateSession(PRFileDesc *fd)
 	ssl_Get1stHandshakeLock(ss);
 	ssl_GetSSL3HandshakeLock(ss);
 
-	if (ss->sec.ci.sid) {
+	if (ss->sec.ci.sid && ss->sec.uncache) {
 	    ss->sec.uncache(ss->sec.ci.sid);
 	    rv = SECSuccess;
 	}

@@ -210,6 +210,51 @@ gfxUtils::UnpremultiplyImageSurface(gfxImageSurface *aSourceSurface,
     }
 }
 
+void
+gfxUtils::ConvertBGRAtoRGBA(gfxImageSurface *aSourceSurface,
+                            gfxImageSurface *aDestSurface) {
+    if (!aDestSurface)
+        aDestSurface = aSourceSurface;
+
+    NS_ABORT_IF_FALSE(aSourceSurface->Format() == aDestSurface->Format() &&
+                      aSourceSurface->Width() == aDestSurface->Width() &&
+                      aSourceSurface->Height() == aDestSurface->Height() &&
+                      aSourceSurface->Stride() == aDestSurface->Stride(),
+                      "Source and destination surfaces don't have identical characteristics");
+
+    NS_ABORT_IF_FALSE(aSourceSurface->Stride() == aSourceSurface->Width() * 4,
+                      "Source surface stride isn't tightly packed");
+
+    NS_ABORT_IF_FALSE(aSourceSurface->Format() == gfxASurface::ImageFormatARGB32,
+                      "Surfaces must be ARGB32");
+
+    PRUint8 *src = aSourceSurface->Data();
+    PRUint8 *dst = aDestSurface->Data();
+
+    PRUint32 dim = aSourceSurface->Width() * aSourceSurface->Height();
+    PRUint8 *srcEnd = src + 4*dim;
+
+    if (src == dst) {
+        PRUint8 buffer[4];
+        for (; src != srcEnd; src += 4) {
+            buffer[0] = src[2];
+            buffer[1] = src[1];
+            buffer[2] = src[0];
+
+            src[0] = buffer[0];
+            src[1] = buffer[1];
+            src[2] = buffer[2];
+        }
+    } else {
+        for (; src != srcEnd; src += 4, dst += 4) {
+            dst[0] = src[2];
+            dst[1] = src[1];
+            dst[2] = src[0];
+            dst[3] = src[3];
+        }
+    }
+}
+
 static bool
 IsSafeImageTransformComponent(gfxFloat aValue)
 {
@@ -693,7 +738,8 @@ gfxUtils::CopyAsDataURL(DrawTarget* aDT)
   }
 }
 
-bool gfxUtils::sDumpPainting = getenv("MOZ_DUMP_PAINT_LIST") != 0;
+bool gfxUtils::sDumpPaintList = getenv("MOZ_DUMP_PAINT_LIST") != 0;
+bool gfxUtils::sDumpPainting = getenv("MOZ_DUMP_PAINT") != 0;
 bool gfxUtils::sDumpPaintingToFile = getenv("MOZ_DUMP_PAINT_TO_FILE") != 0;
 FILE *gfxUtils::sDumpPaintFile = NULL;
 #endif

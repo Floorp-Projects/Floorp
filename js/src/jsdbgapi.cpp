@@ -482,13 +482,13 @@ JS_GetFunctionNative(JSContext *cx, JSFunction *fun)
 }
 
 JS_PUBLIC_API(JSPrincipals *)
-JS_GetScriptPrincipals(JSContext *cx, JSScript *script)
+JS_GetScriptPrincipals(JSScript *script)
 {
     return script->principals;
 }
 
 JS_PUBLIC_API(JSPrincipals *)
-JS_GetScriptOriginPrincipals(JSContext *cx, JSScript *script)
+JS_GetScriptOriginPrincipals(JSScript *script)
 {
     return script->originPrincipals;
 }
@@ -642,17 +642,6 @@ JS_PUBLIC_API(JSObject *)
 JS_GetFrameCalleeObject(JSContext *cx, JSStackFrame *fp)
 {
     return Valueify(fp)->maybeCalleev().toObjectOrNull();
-}
-
-JS_PUBLIC_API(JSBool)
-JS_GetValidFrameCalleeObject(JSContext *cx, JSStackFrame *fp, jsval *vp)
-{
-    Value v;
-
-    if (!Valueify(fp)->getValidCalleeObject(cx, &v))
-        return false;
-    *vp = v.isObject() ? v : JSVAL_VOID;
-    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -977,12 +966,9 @@ JS_GetObjectTotalSize(JSContext *cx, JSObject *obj)
 static size_t
 GetAtomTotalSize(JSContext *cx, JSAtom *atom)
 {
-    size_t nbytes;
-
-    nbytes = sizeof(JSAtom *) + sizeof(JSDHashEntryStub);
-    nbytes += sizeof(JSString);
-    nbytes += (atom->length() + 1) * sizeof(jschar);
-    return nbytes;
+    return sizeof(AtomStateEntry) + sizeof(HashNumber) +
+           sizeof(JSString) +
+           (atom->length() + 1) * sizeof(jschar);
 }
 
 JS_PUBLIC_API(size_t)
@@ -1609,7 +1595,7 @@ extern JS_PUBLIC_API(void)
 JS_DumpPCCounts(JSContext *cx, JSScript *script)
 {
 #if defined(DEBUG)
-    JS_ASSERT(script->pcCounters);
+    JS_ASSERT(script->scriptCounts);
 
     Sprinter sprinter(cx);
     if (!sprinter.init())
@@ -1652,7 +1638,7 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
 {
     for (CellIter i(cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        if (script->pcCounters)
+        if (script->scriptCounts)
             JS_DumpPCCounts(cx, script);
     }
 }
