@@ -3078,6 +3078,38 @@ class MArrayPopShift
     }
 };
 
+// Array.prototype.push on a dense array. Returns the new array length.
+class MArrayPush
+  : public MBinaryInstruction,
+    public SingleObjectPolicy
+{
+    MArrayPush(MDefinition *object, MDefinition *value)
+      : MBinaryInstruction(object, value)
+    {
+        setResultType(MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ArrayPush);
+
+    static MArrayPush *New(MDefinition *object, MDefinition *value) {
+        return new MArrayPush(object, value);
+    }
+
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    MDefinition *value() const {
+        return getOperand(1);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::Element | AliasSet::ObjectFields);
+    }
+};
+
 class MLoadTypedArrayElement
   : public MBinaryInstruction
 {

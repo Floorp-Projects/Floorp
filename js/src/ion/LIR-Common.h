@@ -1788,6 +1788,60 @@ class LArrayPopShiftT : public LInstructionHelper<1, 1, 2>
     }
 };
 
+class LArrayPushV : public LInstructionHelper<1, 1 + BOX_PIECES, 1>
+{
+  public:
+    LIR_HEADER(ArrayPushV);
+
+    LArrayPushV(const LAllocation &object, const LDefinition &temp) {
+        setOperand(0, object);
+        setTemp(0, temp);
+    }
+
+    static const size_t Value = 1;
+
+    const MArrayPush *mir() const {
+        return mir_->toArrayPush();
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
+class LArrayPushT : public LInstructionHelper<1, 2, 1>
+{
+  public:
+    LIR_HEADER(ArrayPushT);
+
+    LArrayPushT(const LAllocation &object, const LAllocation &value, const LDefinition &temp) {
+        setOperand(0, object);
+        setOperand(1, value);
+        setTemp(0, temp);
+    }
+
+    const MArrayPush *mir() const {
+        return mir_->toArrayPush();
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    const LAllocation *value() {
+        return getOperand(1);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
 // Load a typed value from a typed array's elements vector.
 class LLoadTypedArrayElement : public LInstructionHelper<1, 2, 1>
 {
