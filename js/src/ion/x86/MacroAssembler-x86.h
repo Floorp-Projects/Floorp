@@ -292,6 +292,16 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(tagOf(address), ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
         return cond == Equal ? AboveOrEqual : Below;
     }
+    Condition testMagic(Condition cond, const Address &address) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tagOf(address), ImmTag(JSVAL_TAG_MAGIC));
+        return cond;
+    }
+    Condition testMagic(Condition cond, const BaseIndex &address) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tagOf(address), ImmTag(JSVAL_TAG_MAGIC));
+        return cond;
+    }
     Condition testMagic(Condition cond, const Register &tag) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmTag(JSVAL_TAG_MAGIC));
@@ -624,11 +634,12 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         bind(&end);
     }
 
-    void loadUnboxedValue(Address address, AnyRegister dest) {
+    template <typename T>
+    void loadUnboxedValue(const T &src, AnyRegister dest) {
         if (dest.isFloat())
-            loadInt32OrDouble(Operand(address), dest.fpu());
+            loadInt32OrDouble(Operand(src), dest.fpu());
         else
-            movl(Operand(address), dest.gpr());
+            movl(Operand(src), dest.gpr());
     }
 
     void rshiftPtr(Imm32 imm, const Register &dest) {

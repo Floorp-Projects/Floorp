@@ -1526,6 +1526,101 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
 }
 
 bool
+CodeGenerator::emitArrayPopShift(LInstruction *lir, const MArrayPopShift *mir, Register obj,
+                                 Register elementsTemp, Register lengthTemp, TypedOrValueRegister out)
+{
+    OutOfLineCode *ool;
+    typedef bool (*pf)(JSContext *, JSObject *, Value *);
+
+    if (mir->mode() == MArrayPopShift::Pop) {
+        static const VMFunction Info = FunctionInfo<pf>(ion::ArrayPopDense);
+        ool = oolCallVM(Info, lir, (ArgList(), obj), StoreValueTo(out));
+        if (!ool)
+            return false;
+    } else {
+        JS_ASSERT(mir->mode() == MArrayPopShift::Shift);
+        static const VMFunction Info = FunctionInfo<pf>(ion::ArrayShiftDense);
+        ool = oolCallVM(Info, lir, (ArgList(), obj), StoreValueTo(out));
+        if (!ool)
+            return false;
+    }
+
+    // Load elements and length.
+    masm.loadPtr(Address(obj, JSObject::offsetOfElements()), elementsTemp);
+    masm.load32(Address(elementsTemp, ObjectElements::offsetOfLength()), lengthTemp);
+
+    // VM call if length != initializedLength.
+    Int32Key key = Int32Key(lengthTemp);
+    Address initLength(elementsTemp, ObjectElements::offsetOfInitializedLength());
+    masm.branchKey(Assembler::NotEqual, initLength, key, ool->entry());
+
+    // Test for length != 0. On zero length either take a VM call or generate
+    // an undefined value, depending on whether the call is known to produce
+    // undefined.
+    Label done;
+    if (mir->maybeUndefined()) {
+        Label notEmpty;
+        masm.branchTest32(Assembler::NonZero, lengthTemp, lengthTemp, &notEmpty);
+        masm.moveValue(UndefinedValue(), out.valueReg());
+        masm.jump(&done);
+        masm.bind(&notEmpty);
+    } else {
+        masm.branchTest32(Assembler::Zero, lengthTemp, lengthTemp, ool->entry());
+    }
+
+    masm.bumpKey(&key, -1);
+
+    if (mir->mode() == MArrayPopShift::Pop) {
+        masm.loadElementTypedOrValue(BaseIndex(elementsTemp, lengthTemp, TimesEight), out,
+                                     mir->needsHoleCheck(), ool->entry());
+    } else {
+        JS_ASSERT(mir->mode() == MArrayPopShift::Shift);
+        masm.loadElementTypedOrValue(Address(elementsTemp, 0), out, mir->needsHoleCheck(),
+                                     ool->entry());
+    }
+
+    masm.store32(lengthTemp, Address(elementsTemp, ObjectElements::offsetOfLength()));
+    masm.store32(lengthTemp, Address(elementsTemp, ObjectElements::offsetOfInitializedLength()));
+
+    if (mir->mode() == MArrayPopShift::Shift) {
+        // Don't save the temp registers.
+        RegisterSet temps;
+        temps.add(elementsTemp);
+        temps.add(lengthTemp);
+
+        saveVolatile(temps);
+        masm.setupUnalignedABICall(1, lengthTemp);
+        masm.passABIArg(obj);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::ArrayShiftMoveElements));
+        restoreVolatile(temps);
+    }
+
+    masm.bind(&done);
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
+CodeGenerator::visitArrayPopShiftV(LArrayPopShiftV *lir)
+{
+    Register obj = ToRegister(lir->object());
+    Register elements = ToRegister(lir->temp0());
+    Register length = ToRegister(lir->temp1());
+    TypedOrValueRegister out(ToOutValue(lir));
+    return emitArrayPopShift(lir, lir->mir(), obj, elements, length, out);
+}
+
+bool
+CodeGenerator::visitArrayPopShiftT(LArrayPopShiftT *lir)
+{
+    Register obj = ToRegister(lir->object());
+    Register elements = ToRegister(lir->temp0());
+    Register length = ToRegister(lir->temp1());
+    TypedOrValueRegister out(lir->mir()->type(), ToAnyRegister(lir->output()));
+    return emitArrayPopShift(lir, lir->mir(), obj, elements, length, out);
+}
+
+bool
 CodeGenerator::visitCallIteratorStart(LCallIteratorStart *lir)
 {
     typedef JSObject *(*pf)(JSContext *, JSObject *, uint32_t);

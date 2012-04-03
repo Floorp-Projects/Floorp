@@ -518,6 +518,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     Condition testGCThing(Condition cond, const Address &address);
     Condition testGCThing(Condition cond, const BaseIndex &address);
+    Condition testMagic(Condition cond, const Address &address);
+    Condition testMagic(Condition cond, const BaseIndex &address);
 
     template <typename T>
     void branchTestGCThing(Condition cond, const T &t, Label *label) {
@@ -719,6 +721,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
             ma_ldr(address, dest.gpr());
     }
 
+    void loadUnboxedValue(BaseIndex address, AnyRegister dest) {
+        if (dest.isFloat())
+            loadInt32OrDouble(address.base, address.index, dest.fpu(), address.scale);
+        else
+            load32(address, dest.gpr());
+    }
+
     void moveValue(const Value &val, const ValueOperand &dest);
 
     void storeValue(ValueOperand val, Operand dst);
@@ -867,6 +876,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void load16_mask(const Address &address, Imm32 mask, const Register &dest);
     void load16(const BaseIndex &src, const Register &dest);
     void load32(const Address &address, const Register &dest);
+    void load32(const BaseIndex &address, const Register &dest);
     void load32(const AbsoluteAddress &address, const Register &dest);
     void loadPtr(const Address &address, const Register &dest);
     void loadPtr(const BaseIndex &src, const Register &dest);

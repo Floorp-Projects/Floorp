@@ -42,6 +42,7 @@
 #include "IonCompartment.h"
 #include "jsinterp.h"
 #include "ion/IonFrames.h"
+#include "ion/IonFrames-inl.h" // for GetTopIonJSScript
 
 #include "jsinterpinlines.h"
 
@@ -240,6 +241,41 @@ NewInitObject(JSContext *cx, JSObject *baseObj, types::TypeObject *type)
 
     return obj;
 }
+
+bool
+ArrayPopDense(JSContext *cx, JSObject *obj, Value *rval)
+{
+    AutoDetectInvalidation adi(cx, rval);
+
+    Value argv[3] = { UndefinedValue(), ObjectValue(*obj) };
+    if (!js::array_pop(cx, 0, argv))
+        return false;
+
+    // If the result is |undefined|, the array was probably empty and we
+    // have to monitor the return value.
+    *rval = argv[0];
+    if (rval->isUndefined())
+        types::TypeScript::Monitor(cx, *rval);
+    return true;
+}
+
+bool
+ArrayShiftDense(JSContext *cx, JSObject *obj, Value *rval)
+{
+    AutoDetectInvalidation adi(cx, rval);
+
+    Value argv[3] = { UndefinedValue(), ObjectValue(*obj) };
+    if (!js::array_shift(cx, 0, argv))
+        return false;
+
+    // If the result is |undefined|, the array was probably empty and we
+    // have to monitor the return value.
+    *rval = argv[0];
+    if (rval->isUndefined())
+        types::TypeScript::Monitor(cx, *rval);
+    return true;
+}
+
 
 } // namespace ion
 } // namespace js

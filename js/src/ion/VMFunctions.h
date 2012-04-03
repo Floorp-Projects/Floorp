@@ -298,6 +298,27 @@ struct FunctionInfo<R (*)(JSContext *, A1, A2, A3, A4)> : public VMFunction {
 #undef SEP_OR
 #undef NOTHING
 
+class AutoDetectInvalidation
+{
+    JSContext *cx_;
+    JSScript *script_;
+    IonScript *ion_;
+    Value *rval_;
+
+  public:
+    AutoDetectInvalidation(JSContext *cx, Value *rval, JSScript *script = NULL)
+      : cx_(cx),
+        script_(script ? script : GetTopIonJSScript(cx)),
+        ion_(script_->ionScript()),
+        rval_(rval)
+    { }
+
+    ~AutoDetectInvalidation() {
+        if (script_->ion != ion_)
+            cx_->runtime->setIonReturnOverride(*rval_);
+    }
+};
+
 bool InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval);
 bool InvokeConstructorFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval);
 bool ReportOverRecursed(JSContext *cx);
@@ -324,6 +345,9 @@ bool CloseIteratorFromIon(JSContext *cx, JSObject *obj);
 // Allocation functions for JSOP_NEWARRAY and JSOP_NEWOBJECT
 JSObject *NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type);
 JSObject *NewInitObject(JSContext *cx, JSObject *baseObj, types::TypeObject *type);
+
+bool ArrayPopDense(JSContext *cx, JSObject *obj, Value *rval);
+bool ArrayShiftDense(JSContext *cx, JSObject *obj, Value *rval);
 
 } // namespace ion
 } // namespace js
