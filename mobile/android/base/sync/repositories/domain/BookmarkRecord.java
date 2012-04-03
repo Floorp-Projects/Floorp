@@ -1,40 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Android Sync Client.
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- * Jason Voll <jvoll@mozilla.com>
- * Richard Newman <rnewman@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync.repositories.domain;
 
@@ -62,21 +28,23 @@ public class BookmarkRecord extends Record {
   private static final String LOG_TAG = "BookmarkRecord";
 
   public static final String COLLECTION_NAME = "bookmarks";
+  public static final long BOOKMARKS_TTL = -1; // Never ttl bookmarks.
 
   public BookmarkRecord(String guid, String collection, long lastModified, boolean deleted) {
     super(guid, collection, lastModified, deleted);
+    this.ttl = BOOKMARKS_TTL;
   }
   public BookmarkRecord(String guid, String collection, long lastModified) {
-    super(guid, collection, lastModified, false);
+    this(guid, collection, lastModified, false);
   }
   public BookmarkRecord(String guid, String collection) {
-    super(guid, collection, 0, false);
+    this(guid, collection, 0, false);
   }
   public BookmarkRecord(String guid) {
-    super(guid, COLLECTION_NAME, 0, false);
+    this(guid, COLLECTION_NAME, 0, false);
   }
   public BookmarkRecord() {
-    super(Utils.generateGuid(), COLLECTION_NAME, 0, false);
+    this(Utils.generateGuid(), COLLECTION_NAME, 0, false);
   }
 
   // Note: redundant accessors are evil. We're all grownups; let's just use
@@ -126,6 +94,7 @@ public class BookmarkRecord extends Record {
     BookmarkRecord out = new BookmarkRecord(guid, this.collection, this.lastModified, this.deleted);
     out.androidID = androidID;
     out.sortIndex = this.sortIndex;
+    out.ttl       = this.ttl;
 
     // Copy BookmarkRecord fields.
     out.title           = this.title;
