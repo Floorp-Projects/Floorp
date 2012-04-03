@@ -352,7 +352,6 @@ struct JSRuntime : js::RuntimeFriendFields
      * full GC.
      */
     volatile uintptr_t  gcIsNeeded;
-    volatile uintptr_t  gcFullIsNeeded;
 
     js::WeakMapBase     *gcWeakMapList;
     js::gcstats::Statistics gcStats;
@@ -366,9 +365,6 @@ struct JSRuntime : js::RuntimeFriendFields
     /* The reason that an interrupt-triggered GC should be called. */
     js::gcreason::Reason gcTriggerReason;
 
-    /* Is the currently running GC a full GC or a compartmental GC? */
-    bool                gcIsFull;
-
     /*
      * If this is true, all marked objects must belong to a compartment being
      * GCed. This is used to look for compartment bugs.
@@ -381,14 +377,8 @@ struct JSRuntime : js::RuntimeFriendFields
      */
     js::gc::State       gcIncrementalState;
 
-    /* Indicates that a new compartment was created during incremental GC. */
-    bool                gcCompartmentCreated;
-
     /* Indicates that the last incremental slice exhausted the mark stack. */
     bool                gcLastMarkSlice;
-
-    /* Is there a full incremental GC in progress. */
-    bool                gcIncrementalIsFull;
 
     /*
      * Indicates that a GC slice has taken place in the middle of an animation
