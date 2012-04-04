@@ -404,12 +404,12 @@ Preferences::ReadUserPrefs(nsIFile *aFile)
   nsresult rv;
 
   if (nsnull == aFile) {
-    NotifyServiceObservers(NS_PREFSERVICE_READ_TOPIC_ID);
-
     rv = UseDefaultPrefFile();
     // A user pref file is optional.
     // Ignore all errors related to it, so we retain 'rv' value :-|
     (void) UseUserPrefFile();
+
+    NotifyServiceObservers(NS_PREFSERVICE_READ_TOPIC_ID);
   } else {
     rv = ReadAndOwnUserPrefFile(aFile);
   }
