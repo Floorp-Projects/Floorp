@@ -216,12 +216,12 @@ public class ProfileMigrator {
         return isBookmarksMigrated() && isHistoryMigrated();
     }
 
-    protected SharedPreferences getPreferences() {
-        return GeckoApp.mAppContext.getSharedPreferences(PREFS_NAME, 0);
+    public boolean isBookmarksMigrated() {
+        return getPreferences().getBoolean(PREFS_MIGRATE_BOOKMARKS_DONE, false);
     }
 
-    protected boolean isBookmarksMigrated() {
-        return getPreferences().getBoolean(PREFS_MIGRATE_BOOKMARKS_DONE, false);
+    protected SharedPreferences getPreferences() {
+        return GeckoApp.mAppContext.getSharedPreferences(PREFS_NAME, 0);
     }
 
     protected boolean isHistoryMigrated() {
