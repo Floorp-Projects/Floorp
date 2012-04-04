@@ -404,12 +404,12 @@ Preferences::ReadUserPrefs(nsIFile *aFile)
   nsresult rv;
 
   if (nsnull == aFile) {
-    NotifyServiceObservers(NS_PREFSERVICE_READ_TOPIC_ID);
-
     rv = UseDefaultPrefFile();
     // A user pref file is optional.
     // Ignore all errors related to it, so we retain 'rv' value :-|
     (void) UseUserPrefFile();
+
+    NotifyServiceObservers(NS_PREFSERVICE_READ_TOPIC_ID);
   } else {
     rv = ReadAndOwnUserPrefFile(aFile);
   }
@@ -1329,6 +1329,16 @@ Preferences::HasUserValue(const char* aPref)
 }
 
 // static
+PRInt32
+Preferences::GetType(const char* aPref)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), nsIPrefBranch::PREF_INVALID);
+  PRInt32 result;
+  return NS_SUCCEEDED(sRootBranch->GetPrefType(aPref, &result)) ?
+    result : nsIPrefBranch::PREF_INVALID;
+}
+
+// static
 nsresult
 Preferences::AddStrongObserver(nsIObserver* aObserver,
                                const char* aPref)
@@ -1638,6 +1648,16 @@ Preferences::GetDefaultComplex(const char* aPref, const nsIID &aType,
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return sDefaultRootBranch->GetComplexValue(aPref, aType, aResult);
+}
+
+// static
+PRInt32
+Preferences::GetDefaultType(const char* aPref)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), nsIPrefBranch::PREF_INVALID);
+  PRInt32 result;
+  return NS_SUCCEEDED(sDefaultRootBranch->GetPrefType(aPref, &result)) ?
+    result : nsIPrefBranch::PREF_INVALID;
 }
 
 } // namespace mozilla

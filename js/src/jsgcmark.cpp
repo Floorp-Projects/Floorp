@@ -774,16 +774,13 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
     if (type->proto)
         PushMarkStack(gcmarker, type->proto);
 
+    if (type->singleton && !type->lazy())
+        PushMarkStack(gcmarker, type->singleton);
+
     if (type->newScript) {
         PushMarkStack(gcmarker, type->newScript->fun);
         PushMarkStack(gcmarker, type->newScript->shape);
     }
-
-    if (type->interpretedFunction)
-        PushMarkStack(gcmarker, type->interpretedFunction);
-
-    if (type->singleton && !type->lazy())
-        PushMarkStack(gcmarker, type->singleton);
 
     if (type->interpretedFunction)
         PushMarkStack(gcmarker, type->interpretedFunction);
