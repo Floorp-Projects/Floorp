@@ -29,28 +29,8 @@ namespace js {
  */
 class StringBuffer
 {
-    class AllocPolicy
-    {
-        JSContext *const cx;
-
-      public:
-        AllocPolicy(JSContext *cx) : cx(cx) {}
-        JSContext *context() const { return cx; }
-        void *malloc_(size_t bytes) {
-            if (!JSString::validateLength(cx, bytes / sizeof(jschar)))
-                return NULL;
-            return cx->malloc_(bytes);
-        }
-        void *realloc_(void *p, size_t oldBytes, size_t bytes) {
-            if (!JSString::validateLength(cx, bytes / sizeof(jschar)))
-                return NULL;
-            return cx->realloc_(p, oldBytes, bytes);
-        }
-        void free_(void *p) { cx->free_(p); }
-        void reportAllocOverflow() const { js_ReportAllocationOverflow(cx); }
-    };
-
-    typedef Vector<jschar, 32, AllocPolicy> CharBuffer;
+    /* cb's buffer is taken by the new string so use ContextAllocPolicy. */
+    typedef Vector<jschar, 32, ContextAllocPolicy> CharBuffer;
 
     CharBuffer cb;
 
