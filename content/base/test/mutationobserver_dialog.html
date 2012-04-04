@@ -1,0 +1,62 @@
+<html>
+  <head>
+    <title></title>
+    <script>
+
+    var div = document.createElement("div");
+
+    var M;
+    if ("MozMutationObserver" in window) {
+      M = window.MozMutationObserver;
+    } else if ("WebKitMutationObserver" in window) {
+      M = window.WebKitMutationObserver;
+    } else {
+      M = window.MutationObserver;
+    }
+
+    var didCall1 = false;
+    var didCall2 = false;
+    function testMutationObserverInDialog() {
+      div.innerHTML = "<span>1</span><span>2</span>";
+      m = new M(function(records, observer) {
+          opener.is(records[0].type, "childList", "Should have got childList");
+          opener.is(records[0].removedNodes.length, 2, "Should have got removedNodes");
+          opener.is(records[0].addedNodes.length, 1, "Should have got addedNodes");
+          observer.disconnect();
+          m = null;
+          didCall1 = true;
+        });
+      m.observe(div, { childList: true });
+      div.innerHTML = "<span><span>foo</span></span>";
+    }
+
+    function testMutationObserverInDialog2() {
+      div.innerHTML = "<span>1</span><span>2</span>";
+      m = new M(function(records, observer) {
+          opener.is(records[0].type, "childList", "Should have got childList");
+          opener.is(records[0].removedNodes.length, 2, "Should have got removedNodes");
+          opener.is(records[0].addedNodes.length, 1, "Should have got addedNodes");
+          observer.disconnect();
+          m = null;
+          didCall2 = true;
+        });
+      m.observe(div, { childList: true });
+      div.innerHTML = "<span><span>foo</span></span>";
+    }
+
+    window.addEventListener("load", testMutationObserverInDialog);
+    window.addEventListener("load", testMutationObserverInDialog2);
+    window.addEventListener("load",
+      function() {
+        opener.ok(didCall1, "Should have called 1st mutation callback");
+        opener.ok(didCall2, "Should have called 2nd mutation callback");
+        window.close();
+      });
+    </script>
+    <style>
+    </style>
+  </head>
+  <body>
+    <input type="button" onclick="window.close()" value="close">
+  </body>
+</html>
