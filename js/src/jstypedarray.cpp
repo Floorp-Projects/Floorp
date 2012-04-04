@@ -2495,6 +2495,7 @@ JS_FRIEND_API(JSBool)
 js_IsArrayBuffer(JSObject *obj)
 {
     JS_ASSERT(obj);
+    obj = UnwrapObject(obj);
     return obj->isArrayBuffer();
 }
 
@@ -2531,6 +2532,7 @@ bool IsFastOrSlowTypedArray(JSObject *obj)
 uint32_t
 JS_GetArrayBufferByteLength(JSObject *obj)
 {
+    obj = UnwrapObject(obj);
     JS_ASSERT(obj->isArrayBuffer());
     return obj->arrayBufferByteLength();
 }
@@ -2538,6 +2540,7 @@ JS_GetArrayBufferByteLength(JSObject *obj)
 uint8_t *
 JS_GetArrayBufferData(JSObject *obj)
 {
+    obj = UnwrapObject(obj);
     JS_ASSERT(obj->isArrayBuffer());
     return obj->arrayBufferDataOffset();
 }
@@ -2546,6 +2549,7 @@ JS_FRIEND_API(JSBool)
 js_IsTypedArray(JSObject *obj)
 {
     JS_ASSERT(obj);
+    obj = UnwrapObject(obj);
     Class *clasp = obj->getClass();
     return IsFastTypedArrayClass(clasp);
 }
@@ -2647,6 +2651,7 @@ js_CreateTypedArrayWithBuffer(JSContext *cx, int atype, JSObject *bufArg,
 uint32_t
 JS_GetTypedArrayLength(JSObject *obj)
 {
+    obj = UnwrapObject(obj);
     JS_ASSERT(obj->isTypedArray());
     return obj->getSlot(TypedArray::FIELD_LENGTH).toInt32();
 }
@@ -2654,6 +2659,7 @@ JS_GetTypedArrayLength(JSObject *obj)
 uint32_t
 JS_GetTypedArrayByteOffset(JSObject *obj)
 {
+    obj = UnwrapObject(obj);
     JS_ASSERT(obj->isTypedArray());
     return obj->getSlot(TypedArray::FIELD_BYTEOFFSET).toInt32();
 }
@@ -2661,6 +2667,7 @@ JS_GetTypedArrayByteOffset(JSObject *obj)
 uint32_t
 JS_GetTypedArrayByteLength(JSObject *obj)
 {
+    obj = UnwrapObject(obj);
     JS_ASSERT(obj->isTypedArray());
     return obj->getSlot(TypedArray::FIELD_BYTELENGTH).toInt32();
 }
@@ -2668,6 +2675,7 @@ JS_GetTypedArrayByteLength(JSObject *obj)
 uint32_t
 JS_GetTypedArrayType(JSObject *obj)
 {
+    obj = UnwrapObject(obj);
     JS_ASSERT(obj->isTypedArray());
     return obj->getSlot(TypedArray::FIELD_TYPE).toInt32();
 }
@@ -2675,6 +2683,7 @@ JS_GetTypedArrayType(JSObject *obj)
 void *
 JS_GetTypedArrayData(JSObject *obj)
 {
+    obj = UnwrapObject(obj);
     JS_ASSERT(obj->isTypedArray());
     return TypedArray::getDataOffset(obj);
 }
