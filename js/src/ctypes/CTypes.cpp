@@ -411,12 +411,6 @@ static JSPropertySpec sFunctionProps[] = {
   { 0, 0, 0, NULL, NULL }
 };
 
-static JSFunctionSpec sFunctionInstanceFunctions[] = {
-  JS_FN("call", js_fun_call, 1, CDATAFN_FLAGS),
-  JS_FN("apply", js_fun_apply, 2, CDATAFN_FLAGS),
-  JS_FS_END
-};
-
 static JSClass sInt64ProtoClass = {
   "Int64",
   0,
@@ -863,8 +857,8 @@ InitTypeClasses(JSContext* cx, JSObject* parent)
     return false;
   js::AutoObjectRooter sroot(cx, protos[SLOT_STRUCTDATAPROTO]);
 
-  if (!InitTypeConstructor(cx, parent, CTypeProto, protos[SLOT_POINTERDATAPROTO],
-         sFunctionFunction, NULL, sFunctionProps, sFunctionInstanceFunctions, NULL,
+  if (!InitTypeConstructor(cx, parent, CTypeProto, CDataProto,
+         sFunctionFunction, NULL, sFunctionProps, NULL, NULL,
          protos[SLOT_FUNCTIONPROTO], protos[SLOT_FUNCTIONDATAPROTO]))
     return false;
   js::AutoObjectRooter froot(cx, protos[SLOT_FUNCTIONDATAPROTO]);
@@ -3325,11 +3319,11 @@ PointerType::CreateInternal(JSContext* cx, JSObject* baseType)
     return JSVAL_TO_OBJECT(slot);
 
   // Get ctypes.PointerType.prototype and the common prototype for CData objects
-  // of this type, or ctypes.FunctionType.prototype for function pointers.
-  CTypeProtoSlot slotId = CType::GetTypeCode(cx, baseType) == TYPE_function ?
-    SLOT_FUNCTIONDATAPROTO : SLOT_POINTERDATAPROTO;
-  JSObject* dataProto = CType::GetProtoFromType(cx, baseType, slotId);
-  JSObject* typeProto = CType::GetProtoFromType(cx, baseType, SLOT_POINTERPROTO);
+  // of this type.
+  JSObject* typeProto;
+  JSObject* dataProto;
+  typeProto = CType::GetProtoFromType(baseType, SLOT_POINTERPROTO);
+  dataProto = CType::GetProtoFromType(baseType, SLOT_POINTERDATAPROTO);
 
   // Create a new CType object with the common properties and slots.
   JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_pointer,
