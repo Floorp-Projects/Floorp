@@ -147,6 +147,16 @@ function test() {
               "value": "fflb",
               "purpose": "keyword",
             },
+            {
+              "name": "channel",
+              "value": "np",
+              "purpose": "homepage",
+            },
+            {
+              "name": "source",
+              "value": "hp",
+              "purpose": "homepage",
+            },
           ],
           mozparams: {
             "client": {
