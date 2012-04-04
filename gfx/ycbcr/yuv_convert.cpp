@@ -342,6 +342,7 @@ NS_GFX_(void) ScaleYCbCrToRGB32(const uint8* y_buf,
                              dest_pixel, width, source_dx);
       }
 #else
+      (void)source_dx_uv;
       ScaleYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
                          dest_pixel, width, source_dx);
 #endif

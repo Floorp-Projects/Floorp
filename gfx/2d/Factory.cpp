@@ -67,6 +67,7 @@
 #include <d3d10_1.h>
 #endif
 
+#include "DrawTargetDual.h"
 
 #include "Logging.h"
 
@@ -230,6 +231,32 @@ Factory::CreateDrawTargetForD3D10Texture(ID3D10Texture2D *aTexture, SurfaceForma
 
   // Failed
   return NULL;
+}
+
+TemporaryRef<DrawTarget>
+Factory::CreateDualDrawTargetForD3D10Textures(ID3D10Texture2D *aTextureA,
+                                              ID3D10Texture2D *aTextureB,
+                                              SurfaceFormat aFormat)
+{
+  RefPtr<DrawTargetD2D> newTargetA;
+  RefPtr<DrawTargetD2D> newTargetB;
+
+  newTargetA = new DrawTargetD2D();
+  if (!newTargetA->Init(aTextureA, aFormat)) {
+    gfxWarning() << "Failed to create draw target for D3D10 texture.";
+    return NULL;
+  }
+
+  newTargetB = new DrawTargetD2D();
+  if (!newTargetB->Init(aTextureB, aFormat)) {
+    gfxWarning() << "Failed to create draw target for D3D10 texture.";
+    return NULL;
+  }
+
+  RefPtr<DrawTarget> newTarget =
+    new DrawTargetDual(newTargetA, newTargetB);
+
+  return newTarget;
 }
 
 void

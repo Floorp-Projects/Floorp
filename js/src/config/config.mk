@@ -46,7 +46,7 @@
 
 # Define an include-at-most-once flag
 ifdef INCLUDED_CONFIG_MK
-$(error Don't include config.mk twice!)
+$(error Do not include config.mk twice!)
 endif
 INCLUDED_CONFIG_MK = 1
 

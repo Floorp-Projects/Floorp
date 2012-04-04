@@ -1919,6 +1919,9 @@ nsXULTreeBuilder::CompareResults(nsIXULTemplateResult* aLeft, nsIXULTemplateResu
     }
 
     PRInt32 sortorder;
+    if (!mQueryProcessor)
+        return 0;
+
     mQueryProcessor->CompareResults(aLeft, aRight, mSortVariable, mSortHints, &sortorder);
 
     if (sortorder)

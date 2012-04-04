@@ -1,0 +1,41 @@
+# -*- makefile -*-
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+
+PYTHON ?= python
+PYTEST = $(PYTHON) -E
+
+# python -B not supported by older interpreters
+export PYTHONDONTWRITEBYTECODE=1
+
+DEPTH     = ../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/config/rules.mk
+
+autotgt_tests = .deps/autotargets.mk.ts
+
+tgts =\
+  .deps/.mkdir.done\
+  $(autotgt_tests)
+  $(NULL)
+
+
+##------------------_##
+##---]  TARGETS  [---##
+##------------------_##
+all::
+
+check:: $(tgts)
+
+# Only run unit test when autotargets.mk is modified
+$(autotgt_tests): $(topsrcdir)/config/makefiles/autotargets.mk
+	MAKECMD=$(MAKE) $(PYTEST) $(srcdir)/check_mkdir.tpy
+	@$(TOUCH) $@

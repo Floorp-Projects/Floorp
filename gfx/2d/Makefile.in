@@ -73,6 +73,7 @@ CPPSRCS	= \
         PathCairo.cpp \
         Blur.cpp \
         ScaledFontBase.cpp \
+        DrawTargetDual.cpp \
         $(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

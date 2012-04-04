@@ -1,3 +1,4 @@
+# -*- Makefile -*-
 #
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -117,8 +118,11 @@ else
 endif
 
 ifdef WRAP_SYSTEM_INCLUDES
-export::
-	if test ! -d system_wrappers; then mkdir system_wrappers; fi
+export-preqs = \
+  $(call mkdir_deps,system_wrappers) \
+  $(NULL)
+
+export:: $(export-preqs)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
 		-DMOZ_TREE_CAIRO=$(MOZ_TREE_CAIRO) \
 		-DMOZ_TREE_PIXMAN=$(MOZ_TREE_PIXMAN) \
@@ -190,7 +194,13 @@ PYUNITS := \
   unit-writemozinfo.py \
   $(NULL)
 
-check:: check-python-modules check-jar-mn
+check-preqs = \
+  check-python-modules \
+  check-jar-mn \
+  check-makefiles \
+  $(NULL)
+
+check:: $(check-preqs)
 
 check-python-modules::
 	@$(EXIT_ON_ERROR) \
@@ -205,3 +215,6 @@ check-jar-mn::
 ifneq (,$(filter-out WINNT OS2,$(OS_ARCH)))
 	$(MAKE) -C tests/src-simple check-symlink
 endif
+
+check-makefiles:
+	$(MAKE) -C tests/makefiles/autodeps check
