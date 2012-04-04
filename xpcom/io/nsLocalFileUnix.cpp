@@ -2440,7 +2440,7 @@ nsLocalFile::GetBundleIdentifier(nsACString& outBundleIdentifier)
   return rv;
 }
 
-NS_IMETHODIMP nsLocalFile::InitWithFile(nsILocalFile *aFile)
+NS_IMETHODIMP nsLocalFile::InitWithFile(nsIFile *aFile)
 {
   NS_ENSURE_ARG(aFile);
 
