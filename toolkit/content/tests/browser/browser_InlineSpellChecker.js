@@ -103,7 +103,7 @@ let tests = {
     is(isc.getDictionaryDisplayName("qaz-Qaaz-QZ-fonipa-fonxsamp-qxqaaaaz"), "qaz (QZ) / Qaaz (fonipa / fonxsamp / qxqaaaaz)", "'qaz-Qaaz-QZ-fonipa-fonxsamp-qxqaaaaz' should display as 'qaz (QZ) / Qaaz (fonipa / fonxsamp / qxqaaaaz)'");
 
     // Check numeric region subtag.
-    is(isc.getDictionaryDisplayName("es-419"), "Spanish (Latin America and the Caribbean)", "'es-419' should display as 'Spanish (Latin America and the Caribbean)'");
+    todo_is(isc.getDictionaryDisplayName("es-419"), "Spanish (Latin America and the Caribbean)", "'es-419' should display as 'Spanish (Latin America and the Caribbean)'");
 
     // Check that extension subtags are ignored.
     todo_is(isc.getDictionaryDisplayName("en-Cyrl-t-en-latn-m0-ungegn-2007"), "English / Cyrillic", "'en-Cyrl-t-en-latn-m0-ungegn-2007' should display as 'English / Cyrillic'");
