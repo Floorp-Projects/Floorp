@@ -238,6 +238,11 @@ public:
   static bool HasUserValue(const char* aPref);
 
   /**
+   * Gets the type of the pref.
+   */
+  static PRInt32 GetType(const char* aPref);
+
+  /**
    * Adds/Removes the observer for the root pref branch.
    * The observer is referenced strongly if AddStrongObserver is used.  On the
    * other hand, it is referenced weakly, if AddWeakObserver is used.
@@ -342,6 +347,11 @@ public:
 
   static nsresult GetDefaultComplex(const char* aPref, const nsIID &aType,
                                     void** aResult);
+
+  /**
+   * Gets the type of the pref.
+   */
+  static PRInt32 GetDefaultType(const char* aPref);
 
   // Used to synchronise preferences between chrome and content processes.
   static void MirrorPreferences(nsTArray<PrefTuple,
