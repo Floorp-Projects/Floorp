@@ -1057,6 +1057,7 @@ struct JSObject : public js::ObjectImpl
     inline bool isScope() const;
     inline bool isScript() const;
     inline bool isStopIteration() const;
+    inline bool isTypedArray() const;
     inline bool isWeakMap() const;
     inline bool isXML() const;
     inline bool isXMLId() const;
