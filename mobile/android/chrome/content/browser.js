@@ -1965,8 +1965,14 @@ Tab.prototype = {
     if (contentWin != contentWin.top)
         return;
 
+    // Filter optimization: Only really send NETWORK state changes to Java listener
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
-      // Filter optimization: Only really send NETWORK state changes to Java listener
+      if ((aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) && aWebProgress.isLoadingDocument) {
+        // We may receive a document stop event while a document is still loading
+        // (such as when doing URI fixup). Don't notify Java UI in these cases.
+        return;
+      }
+
       let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
       let uri = "";
       if (browser)
