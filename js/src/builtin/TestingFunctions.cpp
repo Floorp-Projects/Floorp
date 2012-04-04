@@ -211,6 +211,23 @@ ScheduleGC(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
+SelectForGC(JSContext *cx, unsigned argc, jsval *vp)
+{
+    JSRuntime *rt = cx->runtime;
+
+    for (unsigned i = 0; i < argc; i++) {
+        Value arg(JS_ARGV(cx, vp)[i]);
+        if (arg.isObject()) {
+            if (!rt->gcSelectedForMarking.append(&arg.toObject()))
+                return false;
+        }
+    }
+
+    *vp = JSVAL_VOID;
+    return true;
+}
+
+static JSBool
 VerifyBarriers(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (argc) {
@@ -225,17 +242,22 @@ VerifyBarriers(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 GCSlice(JSContext *cx, unsigned argc, jsval *vp)
 {
-    uint32_t budget;
+    bool limit = true;
+    uint32_t budget = 0;
 
-    if (argc != 1) {
+    if (argc > 1) {
         ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Wrong number of arguments");
         return JS_FALSE;
     }
 
-    if (!JS_ValueToECMAUint32(cx, vp[2], &budget))
-        return JS_FALSE;
+    if (argc == 1) {
+        if (!JS_ValueToECMAUint32(cx, vp[2], &budget))
+            return false;
+    } else {
+        limit = false;
+    }
 
-    GCDebugSlice(cx, budget);
+    GCDebugSlice(cx, limit, budget);
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -535,6 +557,10 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "schedulegc(num | obj)",
 "  If num is given, schedule a GC after num allocations.\n"
 "  If obj is given, schedule a GC of obj's compartment."),
+
+    JS_FN_HELP("selectforgc", SelectForGC, 0, 0,
+"selectforgc(obj1, obj2, ...)",
+"  Schedule the given objects to be marked in the next GC slice."),
 
     JS_FN_HELP("verifybarriers", VerifyBarriers, 0, 0,
 "verifybarriers()",

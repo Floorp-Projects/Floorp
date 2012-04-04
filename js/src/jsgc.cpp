@@ -1768,7 +1768,8 @@ SliceBudget::TimeBudget(int64_t millis)
 /* static */ int64_t
 SliceBudget::WorkBudget(int64_t work)
 {
-    return -work;
+    /* For work = 0 not to mean Unlimited, we subtract 1. */
+    return -work - 1;
 }
 
 SliceBudget::SliceBudget()
@@ -1787,7 +1788,7 @@ SliceBudget::SliceBudget(int64_t budget)
         counter = CounterReset;
     } else {
         deadline = 0;
-        counter = -budget;
+        counter = -budget - 1;
     }
 }
 
@@ -1956,7 +1957,8 @@ GCMarker::markDelayedChildren(SliceBudget &budget)
         markLaterArenas--;
         markDelayedChildren(aheader);
 
-        if (budget.checkOverBudget())
+        budget.step(150);
+        if (budget.isOverBudget())
             return false;
     } while (unmarkedArenaStackTop);
     JS_ASSERT(!markLaterArenas);
@@ -3073,10 +3075,6 @@ ValidateIncrementalMarking(JSContext *cx)
             uintptr_t end = arena->thingsEnd();
             while (thing < end) {
                 Cell *cell = (Cell *)thing;
-                if (bitmap->isMarked(cell, BLACK) && !incBitmap.isMarked(cell, BLACK)) {
-                    JS_DumpHeap(rt, stdout, NULL, JSGCTraceKind(0), NULL, 100000, NULL);
-                    printf("Assertion cell: %p (%d)\n", (void *)cell, cell->getAllocKind());
-                }
                 JS_ASSERT_IF(bitmap->isMarked(cell, BLACK), incBitmap.isMarked(cell, BLACK));
                 thing += Arena::thingSize(kind);
             }
@@ -3317,6 +3315,11 @@ AutoGCSession::~AutoGCSession()
 
     runtime->gcNextFullGCTime = PRMJ_Now() + GC_IDLE_FULL_SPAN;
     runtime->gcChunkAllocationSinceLastGC = false;
+
+#ifdef JS_GC_ZEAL
+    /* Keeping these around after a GC is dangerous. */
+    runtime->gcSelectedForMarking.clearAndFree();
+#endif
 }
 
 static void
@@ -3436,11 +3439,21 @@ IncrementalGCSlice(JSContext *cx, int64_t budget, JSGCInvocationKind gckind)
         if (!rt->gcMarker.hasBufferedGrayRoots())
             sliceBudget.reset();
 
+#ifdef JS_GC_ZEAL
+        if (!rt->gcSelectedForMarking.empty()) {
+            for (JSObject **obj = rt->gcSelectedForMarking.begin();
+                 obj != rt->gcSelectedForMarking.end(); obj++)
+            {
+                MarkObjectUnbarriered(&rt->gcMarker, obj, "selected obj");
+            }
+        }
+#endif
+
         bool finished = rt->gcMarker.drainMarkStack(sliceBudget);
 
         if (finished) {
             JS_ASSERT(rt->gcMarker.isDrained());
-            if (initialState == MARK && !rt->gcLastMarkSlice)
+            if (initialState == MARK && !rt->gcLastMarkSlice && budget != SliceBudget::Unlimited)
                 rt->gcLastMarkSlice = true;
             else
                 rt->gcIncrementalState = SWEEP;
@@ -3545,7 +3558,7 @@ BudgetIncrementalGC(JSRuntime *rt, int64_t *budget)
  * the marking implementation.
  */
 static JS_NEVER_INLINE void
-GCCycle(JSContext *cx, int64_t budget, JSGCInvocationKind gckind)
+GCCycle(JSContext *cx, bool incremental, int64_t budget, JSGCInvocationKind gckind)
 {
     JSRuntime *rt = cx->runtime;
 
@@ -3579,7 +3592,7 @@ GCCycle(JSContext *cx, int64_t budget, JSGCInvocationKind gckind)
     }
 #endif
 
-    if (budget == SliceBudget::Unlimited) {
+    if (!incremental) {
         /* If non-incremental GC was requested, reset incremental GC. */
         ResetIncrementalGC(rt, "requested");
         rt->gcStats.nonincremental("requested");
@@ -3626,7 +3639,8 @@ IsDeterministicGCReason(gcreason::Reason reason)
 #endif
 
 static void
-Collect(JSContext *cx, int64_t budget, JSGCInvocationKind gckind, gcreason::Reason reason)
+Collect(JSContext *cx, bool incremental, int64_t budget,
+        JSGCInvocationKind gckind, gcreason::Reason reason)
 {
     JSRuntime *rt = cx->runtime;
     JS_AbortIfWrongThread(rt);
@@ -3636,7 +3650,7 @@ Collect(JSContext *cx, int64_t budget, JSGCInvocationKind gckind, gcreason::Reas
         return;
 #endif
 
-    JS_ASSERT_IF(budget != SliceBudget::Unlimited, JSGC_INCREMENTAL);
+    JS_ASSERT_IF(!incremental || budget != SliceBudget::Unlimited, JSGC_INCREMENTAL);
 
 #ifdef JS_GC_ZEAL
     bool restartVerify = cx->runtime->gcVerifyData &&
@@ -3693,7 +3707,7 @@ Collect(JSContext *cx, int64_t budget, JSGCInvocationKind gckind, gcreason::Reas
             /* Lock out other GC allocator and collector invocations. */
             AutoLockGC lock(rt);
             rt->gcPoke = false;
-            GCCycle(cx, budget, gckind);
+            GCCycle(cx, incremental, budget, gckind);
         }
 
         if (rt->gcIncrementalState == NO_INCREMENTAL) {
@@ -3714,20 +3728,21 @@ namespace js {
 void
 GC(JSContext *cx, JSGCInvocationKind gckind, gcreason::Reason reason)
 {
-    Collect(cx, SliceBudget::Unlimited, gckind, reason);
+    Collect(cx, false, SliceBudget::Unlimited, gckind, reason);
 }
 
 void
 GCSlice(JSContext *cx, JSGCInvocationKind gckind, gcreason::Reason reason)
 {
-    Collect(cx, cx->runtime->gcSliceBudget, gckind, reason);
+    Collect(cx, true, cx->runtime->gcSliceBudget, gckind, reason);
 }
 
 void
-GCDebugSlice(JSContext *cx, int64_t objCount)
+GCDebugSlice(JSContext *cx, bool limit, int64_t objCount)
 {
+    int64_t budget = limit ? SliceBudget::WorkBudget(objCount) : SliceBudget::Unlimited;
     PrepareForDebugGC(cx->runtime);
-    Collect(cx, SliceBudget::WorkBudget(objCount), GC_NORMAL, gcreason::API);
+    Collect(cx, true, budget, GC_NORMAL, gcreason::API);
 }
 
 /* Schedule a full GC unless a compartment will already be collected. */
