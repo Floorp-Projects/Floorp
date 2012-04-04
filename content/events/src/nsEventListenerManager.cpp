@@ -290,16 +290,9 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
                                    MutationBitForEventType(aType));
     }
   } else if (aTypeAtom == nsGkAtoms::ondeviceorientation) {
-     nsPIDOMWindow* window = GetInnerWindowForTarget();
-     if (window)
-       window->EnableDeviceSensor(SENSOR_ORIENTATION);
+    EnableDevice(NS_DEVICE_ORIENTATION);
   } else if (aTypeAtom == nsGkAtoms::ondevicemotion) {
-    nsPIDOMWindow* window = GetInnerWindowForTarget();
-    if (window) {
-      window->EnableDeviceSensor(SENSOR_ACCELERATION);
-      window->EnableDeviceSensor(SENSOR_LINEAR_ACCELERATION);
-      window->EnableDeviceSensor(SENSOR_GYROSCOPE);
-    }
+    EnableDevice(NS_DEVICE_MOTION);
   } else if ((aType >= NS_MOZTOUCH_DOWN && aType <= NS_MOZTOUCH_UP) ||
              (aTypeAtom == nsGkAtoms::ontouchstart ||
               aTypeAtom == nsGkAtoms::ontouchend ||
@@ -341,12 +334,40 @@ nsEventListenerManager::IsDeviceType(PRUint32 aType)
 }
 
 void
-nsEventListenerManager::DisableDevice(PRUint32 aType)
+nsEventListenerManager::EnableDevice(PRUint32 aType)
 {
-  nsPIDOMWindow* window = GetInnerWindowForTarget();
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mTarget);
   if (!window) {
     return;
   }
+
+  NS_ASSERTION(window->IsInnerWindow(), "Target should not be an outer window");
+
+  switch (aType) {
+    case NS_DEVICE_ORIENTATION:
+      window->EnableDeviceSensor(SENSOR_ORIENTATION);
+      break;
+    case NS_DEVICE_MOTION:
+      window->EnableDeviceSensor(SENSOR_ACCELERATION);
+      window->EnableDeviceSensor(SENSOR_LINEAR_ACCELERATION);
+      window->EnableDeviceSensor(SENSOR_GYROSCOPE);
+      break;
+    default:
+      NS_WARNING("Enabling an unknown device sensor.");
+      break;
+  }
+}
+
+void
+nsEventListenerManager::DisableDevice(PRUint32 aType)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mTarget);
+  if (!window) {
+    return;
+  }
+
+  NS_ASSERTION(window->IsInnerWindow(), "Target should not be an outer window");
+
   switch (aType) {
     case NS_DEVICE_ORIENTATION:
       window->DisableDeviceSensor(SENSOR_ORIENTATION);
