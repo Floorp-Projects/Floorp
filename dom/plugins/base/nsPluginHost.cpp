@@ -80,7 +80,6 @@
 #include "nsHashtable.h"
 #include "nsIProxyInfo.h"
 #include "nsPluginLogging.h"
-#include "nsIPrefBranch.h"
 #include "nsIScriptChannel.h"
 #include "nsIBlocklistService.h"
 #include "nsVersionComparator.h"
@@ -88,6 +87,7 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsPluginStreamListenerPeer.h"
+#include "mozilla/Preferences.h"
 
 #include "nsEnumeratorUtils.h"
 #include "nsXPCOM.h"
@@ -336,17 +336,7 @@ NS_IMETHODIMP nsPluginDocReframeEvent::Run() {
 
 static bool UnloadPluginsASAP()
 {
-  nsresult rv;
-  nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    bool unloadPluginsASAP = false;
-    rv = pref->GetBoolPref("dom.ipc.plugins.unloadASAP", &unloadPluginsASAP);
-    if (NS_SUCCEEDED(rv)) {
-      return unloadPluginsASAP;
-    }
-  }
-
-  return false;
+  return Preferences::GetBool("dom.ipc.plugins.unloadASAP", false);
 }
 
 nsPluginHost::nsPluginHost()
@@ -355,20 +345,10 @@ nsPluginHost::nsPluginHost()
 {
   // check to see if pref is set at startup to let plugins take over in
   // full page mode for certain image mime types that we handle internally
-  mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (mPrefService) {
-    bool tmp;
-    nsresult rv = mPrefService->GetBoolPref("plugin.override_internal_types",
-                                            &tmp);
-    if (NS_SUCCEEDED(rv)) {
-      mOverrideInternalTypes = tmp;
-    }
+  mOverrideInternalTypes =
+    Preferences::GetBool("plugin.override_internal_types", false);
 
-    rv = mPrefService->GetBoolPref("plugin.disable", &tmp);
-    if (NS_SUCCEEDED(rv)) {
-      mPluginsDisabled = tmp;
-    }
-  }
+  mPluginsDisabled = Preferences::GetBool("plugin.disable", false);
 
   nsCOMPtr<nsIObserverService> obsService =
     mozilla::services::GetObserverService();
@@ -865,8 +845,6 @@ nsresult nsPluginHost::Destroy()
     mPrivateDirServiceProvider = nsnull;
   }
 #endif /* XP_WIN */
-
-  mPrefService = nsnull; // release prefs service to avoid leaks!
 
   return NS_OK;
 }
@@ -1454,11 +1432,7 @@ public:
 
   NS_METHOD GetFilename(nsAString& aFilename)
   {
-    bool bShowPath;
-    nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefService &&
-        NS_SUCCEEDED(prefService->GetBoolPref("plugin.expose_full_path", &bShowPath)) &&
-        bShowPath) {
+    if (Preferences::GetBool("plugin.expose_full_path", false)) {
       CopyUTF8toUTF16(mPluginTag.mFullPath, aFilename);
     } else {
       CopyUTF8toUTF16(mPluginTag.mFileName, aFilename);
@@ -2219,7 +2193,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
   }
 
   if (warnOutdated) {
-    mPrefService->SetBoolPref("plugins.update.notifyUser", true);
+    Preferences::SetBool("plugins.update.notifyUser", true);
   }
 
   return NS_OK;
@@ -2348,10 +2322,7 @@ nsresult nsPluginHost::FindPlugins(bool aCreatePluginList, bool * aPluginsChange
                             // the rest is optional
 
 #ifdef XP_WIN
-  bool bScanPLIDs = false;
-
-  if (mPrefService)
-    mPrefService->GetBoolPref("plugin.scan.plid.all", &bScanPLIDs);
+  bool bScanPLIDs = Preferences::GetBool("plugin.scan.plid.all", false);
 
     // Now lets scan any PLID directories
   if (bScanPLIDs && mPrivateDirServiceProvider) {
@@ -3233,13 +3204,9 @@ nsPluginHost::StopPluginInstance(nsNPAPIPluginInstance* aInstance)
   bool doCache = aInstance->ShouldCache();
   if (doCache) {
     // try to get the max cached instances from a pref or use default
-    PRUint32 cachedInstanceLimit;
-    nsresult rv = NS_ERROR_FAILURE;
-    if (mPrefService)
-      rv = mPrefService->GetIntPref(NS_PREF_MAX_NUM_CACHED_INSTANCES, (int*)&cachedInstanceLimit);
-    if (NS_FAILED(rv))
-      cachedInstanceLimit = DEFAULT_NUMBER_OF_STOPPED_INSTANCES;
-    
+    PRUint32 cachedInstanceLimit =
+      Preferences::GetUint(NS_PREF_MAX_NUM_CACHED_INSTANCES,
+                           DEFAULT_NUMBER_OF_STOPPED_INSTANCES);
     if (StoppedInstanceCount() >= cachedInstanceLimit) {
       nsNPAPIPluginInstance *oldestInstance = FindOldestStoppedInstance();
       if (oldestInstance) {
