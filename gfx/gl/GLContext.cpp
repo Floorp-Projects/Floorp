@@ -928,11 +928,15 @@ TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
         result &= mImages[mCurrentImage]->
           DirectUpdate(aSurf, tileRegion, aFrom + nsIntPoint(xPos, yPos));
 
+        if (mCurrentImage == mImages.Length() - 1) {
+            // We know we're done, but we still need to ensure that the callback
+            // gets called (e.g. to update the uploaded region).
+            NextTile();
+            break;
+        }
         // Override a callback cancelling iteration if the texture wasn't valid.
         // We need to force the update in that situation, or we may end up
         // showing invalid/out-of-date texture data.
-        if (mCurrentImage == mImages.Length() - 1)
-            break;
     } while (NextTile() || (mTextureState != Valid));
     mCurrentImage = oldCurrentImage;
 
