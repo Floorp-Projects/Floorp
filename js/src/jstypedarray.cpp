@@ -2653,12 +2653,6 @@ JS_GetTypedArrayType(JSObject *obj)
     return obj->getSlot(TypedArray::FIELD_TYPE).toInt32();
 }
 
-JSObject *
-JS_GetTypedArrayBuffer(JSObject *obj)
-{
-    return (JSObject *) obj->getSlot(TypedArray::FIELD_BUFFER).toPrivate();
-}
-
 void *
 JS_GetTypedArrayData(JSObject *obj)
 {
