@@ -106,15 +106,7 @@ function InspectorUI(aWindow)
   this.toolEvents = {};
   this.store = new InspectorStore();
   this.INSPECTOR_NOTIFICATIONS = INSPECTOR_NOTIFICATIONS;
-
-  // Set the tooltip of the inspect button.
-  let keysbundle = Services.strings.createBundle(
-    "chrome://global/locale/keys.properties");
-  let returnString = keysbundle.GetStringFromName("VK_RETURN");
-  let tooltip = this.strings.formatStringFromName("inspectButton.tooltiptext",
-    [returnString], 1);
-  let button = this.chromeDoc.getElementById("inspector-inspect-toolbutton");
-  button.setAttribute("tooltiptext", tooltip);
+  this.buildInspectButtonTooltip();
 }
 
 InspectorUI.prototype = {
@@ -139,6 +131,45 @@ InspectorUI.prototype = {
     } else {
       this.openInspectorUI();
     }
+  },
+
+  /**
+   * Add a tooltip to the inspect button. The tooltip includes the
+   * related keyboard shortcut.
+   */
+  buildInspectButtonTooltip: function IUI_buildInspectButtonTooltip()
+  {
+    let keysbundle = Services.strings.createBundle("chrome://global-platform/locale/platformKeys.properties");
+
+    let key = this.chromeDoc.getElementById("key_inspect");
+
+    let modifiersAttr = key.getAttribute("modifiers");
+
+    let combo = [];
+
+    if (modifiersAttr.match("accel"))
+#ifdef XP_MACOSX
+      combo.push(keysbundle.GetStringFromName("VK_META"));
+#else
+      combo.push(keysbundle.GetStringFromName("VK_CONTROL"));
+#endif
+    if (modifiersAttr.match("shift"))
+      combo.push(keysbundle.GetStringFromName("VK_SHIFT"));
+    if (modifiersAttr.match("alt"))
+      combo.push(keysbundle.GetStringFromName("VK_ALT"));
+    if (modifiersAttr.match("ctrl"))
+      combo.push(keysbundle.GetStringFromName("VK_CONTROL"));
+    if (modifiersAttr.match("meta"))
+      combo.push(keysbundle.GetStringFromName("VK_META"));
+
+    combo.push(key.getAttribute("key"));
+
+    let separator = keysbundle.GetStringFromName("MODIFIER_SEPARATOR");
+
+    let tooltip = this.strings.formatStringFromName("inspectButton.tooltiptext",
+      [combo.join(separator)], 1);
+    let button = this.chromeDoc.getElementById("inspector-inspect-toolbutton");
+    button.setAttribute("tooltiptext", tooltip);
   },
 
   /**
@@ -236,6 +267,11 @@ InspectorUI.prototype = {
    */
   toggleInspection: function IUI_toggleInspection()
   {
+    if (!this.isInspectorOpen) {
+      this.openInspectorUI();
+      return;
+    }
+
     if (this.inspecting) {
       this.stopInspecting();
     } else {
