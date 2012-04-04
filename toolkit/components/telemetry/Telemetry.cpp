@@ -228,9 +228,10 @@ struct TelemetryHistogram {
 // that if people add incorrect histogram definitions, they get compiler
 // errors.
 #define HISTOGRAM(id, min, max, bucket_count, histogram_type, b) \
-  PR_STATIC_ASSERT(nsITelemetry::HISTOGRAM_ ## histogram_type == nsITelemetry::HISTOGRAM_BOOLEAN || \
-                   nsITelemetry::HISTOGRAM_ ## histogram_type == nsITelemetry::HISTOGRAM_FLAG || \
-                   (min < max && bucket_count > 2 && min >= 1));
+  MOZ_STATIC_ASSERT(nsITelemetry::HISTOGRAM_ ## histogram_type == nsITelemetry::HISTOGRAM_BOOLEAN || \
+                    nsITelemetry::HISTOGRAM_ ## histogram_type == nsITelemetry::HISTOGRAM_FLAG || \
+                    (min < max && bucket_count > 2 && min >= 1), \
+                    "Incorrect histogram definitions were found");
 
 #include "TelemetryHistograms.h"
 

@@ -110,9 +110,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSEventListener)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSEventListener)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_MEMBER_CALLBACK(tmp->mContext->GetScriptTypeID(),
+  NS_IMPL_CYCLE_COLLECTION_TRACE_MEMBER_CALLBACK(nsIProgrammingLanguage::JAVASCRIPT,
                                                  mScopeObject)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_MEMBER_CALLBACK(tmp->mContext->GetScriptTypeID(),
+  NS_IMPL_CYCLE_COLLECTION_TRACE_MEMBER_CALLBACK(nsIProgrammingLanguage::JAVASCRIPT,
                                                  mHandler)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -140,8 +140,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsJSEventListener)
 bool
 nsJSEventListener::IsBlackForCC()
 {
-  if ((mContext && mContext->GetScriptTypeID() ==
-         nsIProgrammingLanguage::JAVASCRIPT) &&
+  if (mContext &&
       (!mScopeObject || !xpc_IsGrayGCThing(mScopeObject)) &&
       (!mHandler || !xpc_IsGrayGCThing(mHandler))) {
     nsIScriptGlobalObject* sgo =

@@ -57,7 +57,6 @@ nsIDocument.h \
 nsDeprecatedOperationList.h \
 nsIDocumentObserver.h \
 nsIMutationObserver.h \
-nsIMutationObserver2.h \
 nsINameSpaceManager.h \
 nsINode.h \
 nsINodeInfo.h \

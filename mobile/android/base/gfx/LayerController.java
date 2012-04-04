@@ -263,6 +263,18 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         mView.requestRender();
     }
 
+    public void setAnimationTarget(ViewportMetrics viewport) {
+        if (mLayerClient != null) {
+            // We know what the final viewport of the animation is going to be, so
+            // immediately request a draw of that area by setting the display port
+            // accordingly. This way we should have the content pre-rendered by the
+            // time the animation is done.
+            ImmutableViewportMetrics metrics = new ImmutableViewportMetrics(viewport);
+            DisplayPortMetrics displayPort = DisplayPortCalculator.calculate(metrics, null);
+            mLayerClient.adjustViewport(displayPort);
+        }
+    }
+
     /**
      * Scales the viewport, keeping the given focus point in the same place before and after the
      * scale operation. You must hold the monitor while calling this.

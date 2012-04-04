@@ -1774,7 +1774,7 @@ public class GeckoAppShell
                 return response;
 
         } catch (Exception e) {
-            Log.i(LOGTAG, "handleGeckoMessage throws " + e);
+            Log.e(LOGTAG, "handleGeckoMessage throws " + e, e);
         }
 
         return "";

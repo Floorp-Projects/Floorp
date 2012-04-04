@@ -108,6 +108,7 @@ STATIC_LIBS += \
   gfx2d \
   gfxipc_s \
   hal_s \
+  dombindings_s \
   $(NULL)
 
 ifdef MOZ_B2G_RIL #{

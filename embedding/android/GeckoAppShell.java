@@ -686,6 +686,10 @@ public class GeckoAppShell
             });
     }
 
+    public static void enableLocationHighAccuracy(final boolean enable) {
+        // unsupported
+    }
+
     /*
      * Keep these values consistent with |SensorType| in Hal.h
      */

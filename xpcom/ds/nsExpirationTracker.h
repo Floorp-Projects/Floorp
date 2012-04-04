@@ -113,7 +113,8 @@ template <class T, PRUint32 K> class nsExpirationTracker {
     nsExpirationTracker(PRUint32 aTimerPeriod)
       : mTimerPeriod(aTimerPeriod), mNewestGeneration(0),
         mInAgeOneGeneration(false) {
-      PR_STATIC_ASSERT(K >= 2 && K <= nsExpirationState::NOT_TRACKED);
+      MOZ_STATIC_ASSERT(K >= 2 && K <= nsExpirationState::NOT_TRACKED,
+                        "Unsupported number of generations (must be 2 <= K <= 15)");
       mObserver = new ExpirationTrackerObserver();
       mObserver->Init(this);
     }

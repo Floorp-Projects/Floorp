@@ -98,8 +98,7 @@ addLoadEvent(function() {
   var xhr = new XMLHttpRequest();
   xhr.open("POST", document.location.href);
   xhr.send(createDoc());
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  is(xhr.channel.QueryInterface(Components.interfaces.nsIHttpChannel)
+  is(SpecialPowers.wrap(xhr).channel.QueryInterface(Components.interfaces.nsIHttpChannel)
                 .getRequestHeader("Content-Type"),
      "application/xml; charset=UTF-8", "Testing correct type on the wire");
   xhr.abort();

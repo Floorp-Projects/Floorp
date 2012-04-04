@@ -647,6 +647,16 @@ gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aForm
   }
 }
 
+RefPtr<DrawTarget>
+gfxPlatform::CreateDrawTargetForData(unsigned char* aData, const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat)
+{
+  BackendType backend;
+  if (!SupportsAzure(backend)) {
+    return NULL;
+  }
+  return Factory::CreateDrawTargetForData(backend, aData, aSize, aStride, aFormat); 
+}
+
 nsresult
 gfxPlatform::GetFontList(nsIAtom *aLangGroup,
                          const nsACString& aGenericFamily,

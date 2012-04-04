@@ -19,7 +19,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 
-XPCOMUtils.defineLazyGetter(Services, "rs", function() {
+XPCOMUtils.defineLazyGetter(Services, "DOMRequest", function() {
   return Cc["@mozilla.org/dom/dom-request-service;1"].getService(Ci.nsIDOMRequestService);
 });
 
@@ -79,16 +79,7 @@ const CONTACTFINDOPTIONS_CONTRACTID = "@mozilla.org/contactFindOptions;1";
 const CONTACTFINDOPTIONS_CID        = Components.ID("{e31daea0-0cb6-11e1-be50-0800200c9a66}");
 const nsIDOMContactFindOptions      = Components.interfaces.nsIDOMContactFindOptions;
 
-function ContactFindOptions(aFilterValue, aFilterBy, aFilterOp, aFilterLimit) {
-  this.filterValue = aFilterValue || '';
-
-  this.filterBy = new Array();
-  for (let field in aFilterBy)
-    this.filterBy.push(field);
-
-  this.filterOp = aFilterOp || '';
-  this.filterLimit = aFilterLimit || 0;
-};
+function ContactFindOptions() { };
 
 ContactFindOptions.prototype = {
 
@@ -282,7 +273,7 @@ ContactManager.prototype = {
         if (req) {
           let result = this._convertContactsArray(contacts);
           debug("result: " + JSON.stringify(result));
-          Services.rs.fireSuccess(req, result);
+          Services.DOMRequest.fireSuccess(req, result);
         } else {
           debug("no request stored!" + msg.requestID);
         }
@@ -292,7 +283,7 @@ ContactManager.prototype = {
       case "Contact:Remove:Return:OK":
         req = this.getRequest(msg.requestID);
         if (req)
-          Services.rs.fireSuccess(req, null);
+          Services.DOMRequest.fireSuccess(req, null);
         break;
       case "Contacts:Find:Return:KO":
       case "Contact:Save:Return:KO":
@@ -300,7 +291,7 @@ ContactManager.prototype = {
       case "Contacts:Clear:Return:KO":
         req = this.getRequest(msg.requestID);
         if (req)
-          Services.rs.fireError(req, msg.errorMsg);
+          Services.DOMRequest.fireError(req, msg.errorMsg);
         break;
       default: 
         debug("Wrong message: " + aMessage.name);

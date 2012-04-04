@@ -6,13 +6,13 @@
     <ScrollView android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dip"
-                android:layout_alignParentTop="true">
+                android:layout_alignParentTop="true"
+                android:background="@drawable/doorhanger_popup_bg">
 
         <LinearLayout android:id="@+id/doorhanger_container"
                       android:layout_width="fill_parent"
                       android:layout_height="wrap_content"
-                      android:orientation="vertical"
-                      android:background="@drawable/doorhanger_popup_bg"/>
+                      android:orientation="vertical"/>
 
     </ScrollView>
 

@@ -157,3 +157,154 @@ js::ObjectImpl::markChildren(JSTracer *trc)
     if (shape_->isNative())
         MarkObjectSlots(trc, obj, 0, obj->slotSpan());
 }
+
+bool
+js::SparseElementsHeader::defineElement(JSContext *cx, ObjectImpl *obj,
+                                        uint32_t index, const Value &value,
+                                        PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
+{
+    MOZ_ASSERT(this == &obj->elementsHeader());
+
+    MOZ_NOT_REACHED("NYI");
+    return false;
+}
+
+bool
+js::DenseElementsHeader::defineElement(JSContext *cx, ObjectImpl *obj,
+                                       uint32_t index, const Value &value,
+                                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
+{
+    MOZ_ASSERT(this == &obj->elementsHeader());
+
+    /*
+     * If the new property doesn't have the right attributes, or an atypical
+     * getter or setter is being used, go sparse.
+     */
+    if (attrs != JSPROP_ENUMERATE ||
+        (attrs & (JSPROP_GETTER | JSPROP_SETTER)) || getter || setter)
+    {
+        if (!obj->makeElementsSparse(cx))
+            return false;
+        SparseElementsHeader &elts = obj->elementsHeader().asSparseElements();
+        return elts.defineElement(cx, obj, index, value, getter, setter, attrs);
+    }
+
+    /* If space for the dense element already exists, we only need set it. */
+    uint32_t initLen = initializedLength();
+    if (index < initLen) {
+        obj->elements[index].set(obj->asObjectPtr(), index, value);
+        return true;
+    }
+
+    /* Otherwise we ensure space for it exists and that it's initialized. */
+    ObjectImpl::DenseElementsResult res = obj->ensureDenseElementsInitialized(cx, index, 0);
+
+    /* Propagate any error. */
+    if (res == ObjectImpl::Failure)
+        return false;
+
+    /* Otherwise, if the index was too far out of range, go sparse. */
+    if (res == ObjectImpl::ConvertToSparse) {
+        if (!obj->makeElementsSparse(cx))
+            return false;
+        SparseElementsHeader &elts = obj->elementsHeader().asSparseElements();
+        return elts.defineElement(cx, obj, index, value, getter, setter, attrs);
+    }
+
+    /* But if we were able to ensure the element's existence, we're good. */
+    MOZ_ASSERT(res == ObjectImpl::Succeeded);
+    obj->elements[index].set(obj->asObjectPtr(), index, value);
+    return true;
+}
+
+static JSObject *
+ArrayBufferDelegate(JSContext *cx, ObjectImpl *obj)
+{
+    MOZ_ASSERT(obj->hasClass(&ArrayBufferClass));
+    if (obj->getPrivate())
+        return static_cast<JSObject *>(obj->getPrivate());
+    JSObject *delegate = NewObjectWithGivenProto(cx, &ObjectClass, obj->getProto(), NULL);
+    obj->setPrivate(delegate);
+    return delegate;
+}
+
+template <typename T>
+bool
+js::TypedElementsHeader<T>::defineElement(JSContext *cx, ObjectImpl *obj,
+                                       uint32_t index, const Value &value,
+                                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
+{
+    /*
+     * XXX This isn't really a good error message, if this is even how typed
+     *     arrays should behave...
+     */
+    js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_OBJECT_NOT_EXTENSIBLE,
+                             JSDVG_IGNORE_STACK, ObjectValue(*(JSObject*)obj), // XXX
+                             NULL, NULL, NULL);
+    return false;
+}
+
+bool
+js::ArrayBufferElementsHeader::defineElement(JSContext *cx, ObjectImpl *obj,
+                                             uint32_t index, const Value &value,
+                                             PropertyOp getter, StrictPropertyOp setter,
+                                             unsigned attrs)
+{
+    MOZ_ASSERT(this == &obj->elementsHeader());
+
+    JSObject *delegate = ArrayBufferDelegate(cx, obj);
+    if (!delegate)
+        return false;
+    return DefineElement(cx, delegate, index, value, getter, setter, attrs);
+}
+
+bool
+js::DefineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const Value &value,
+                  PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
+{
+    NEW_OBJECT_REPRESENTATION_ONLY();
+
+    ElementsHeader &header = obj->elementsHeader();
+
+    switch (header.kind()) {
+      case DenseElements:
+        return header.asDenseElements().defineElement(cx, obj, index, value, getter, setter,
+                                                      attrs);
+      case SparseElements:
+        return header.asSparseElements().defineElement(cx, obj, index, value, getter, setter,
+                                                       attrs);
+      case Uint8Elements:
+        return header.asUint8Elements().defineElement(cx, obj, index, value, getter, setter,
+                                                      attrs);
+      case Int8Elements:
+        return header.asInt8Elements().defineElement(cx, obj, index, value, getter, setter,
+                                                     attrs);
+      case Uint16Elements:
+        return header.asUint16Elements().defineElement(cx, obj, index, value, getter, setter,
+                                                       attrs);
+      case Int16Elements:
+        return header.asInt16Elements().defineElement(cx, obj, index, value, getter, setter,
+                                                      attrs);
+      case Uint32Elements:
+        return header.asUint32Elements().defineElement(cx, obj, index, value, getter, setter,
+                                                       attrs);
+      case Int32Elements:
+        return header.asInt32Elements().defineElement(cx, obj, index, value, getter, setter,
+                                                      attrs);
+      case Uint8ClampedElements:
+        return header.asUint8ClampedElements().defineElement(cx, obj, index, value,
+                                                             getter, setter, attrs);
+      case Float32Elements:
+        return header.asFloat32Elements().defineElement(cx, obj, index, value, getter, setter,
+                                                        attrs);
+      case Float64Elements:
+        return header.asFloat64Elements().defineElement(cx, obj, index, value, getter, setter,
+                                                        attrs);
+      case ArrayBufferElements:
+        return header.asArrayBufferElements().defineElement(cx, obj, index, value, getter, setter,
+                                                            attrs);
+    }
+
+    MOZ_NOT_REACHED("bad elements kind!");
+    return false;
+}

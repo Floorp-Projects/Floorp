@@ -324,7 +324,9 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   if (!context) {
     return NS_OK;
   }
-  
+
+  nsAutoMicroTask mt;
+
   JSContext* cx = context->GetNativeContext();
 
   JSObject* globalObject = global->GetGlobalJSObject();

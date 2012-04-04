@@ -50,7 +50,7 @@ public:
     NS_DECL_XPCIJSWEAKREFERENCE
 
 private:
-    nsCOMPtr<nsIWeakReference> mWrappedJSObject;
+    nsCOMPtr<nsIWeakReference> mReferent;
 };
 
 #endif // xpcjsweakreference_h___

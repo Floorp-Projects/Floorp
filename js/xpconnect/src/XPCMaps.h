@@ -635,42 +635,6 @@ private:
     JSDHashTable *mTable;
 };
 
-class XPCNativeWrapperMap
-{
-public:
-    static XPCNativeWrapperMap* newMap(int size);
-
-    inline JSObject* Add(JSObject* nw)
-    {
-        NS_PRECONDITION(nw,"bad param");
-        JSDHashEntryStub* entry = (JSDHashEntryStub*)
-            JS_DHashTableOperate(mTable, nw, JS_DHASH_ADD);
-        if (!entry)
-            return nsnull;
-        if (entry->key)
-            return (JSObject*) entry->key;
-        entry->key = nw;
-        return nw;
-    }
-
-    inline void Remove(JSObject* nw)
-    {
-        NS_PRECONDITION(nw,"bad param");
-        JS_DHashTableOperate(mTable, nw, JS_DHASH_REMOVE);
-    }
-
-    inline uint32_t Count() {return mTable->entryCount;}
-    inline uint32_t Enumerate(JSDHashEnumerator f, void *arg)
-        {return JS_DHashTableEnumerate(mTable, f, arg);}
-
-    ~XPCNativeWrapperMap();
-private:
-    XPCNativeWrapperMap();    // no implementation
-    XPCNativeWrapperMap(int size);
-private:
-    JSDHashTable *mTable;
-};
-
 class WrappedNative2WrapperMap
 {
     static struct JSDHashTableOps sOps;

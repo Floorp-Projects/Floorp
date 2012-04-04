@@ -101,6 +101,10 @@ nsHTMLWin32ObjectOwnerAccessible::CacheChildren()
 nsHTMLWin32ObjectAccessible::nsHTMLWin32ObjectAccessible(void* aHwnd):
 nsLeafAccessible(nsnull, nsnull)
 {
+  // XXX: Mark it as defunct to make sure no single nsAccessible method is
+  // running on it. We need to allow accessible without DOM nodes.
+  mFlags |= eIsDefunct;
+
   mHwnd = aHwnd;
   if (mHwnd) {
     // The plugin is not windowless. In this situation we use 

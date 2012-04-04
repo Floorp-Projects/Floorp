@@ -371,7 +371,10 @@ AsyncClickHandler::Run()
 
   // Open dialog
   PRInt16 mode;
-  rv = filePicker->Show(&mode);
+  {
+    nsAutoSyncOperation sync(doc);
+    rv = filePicker->Show(&mode);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
   if (mode == nsIFilePicker::returnCancel) {
     return NS_OK;

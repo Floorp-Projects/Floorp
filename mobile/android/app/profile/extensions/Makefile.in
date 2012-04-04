@@ -48,7 +48,6 @@ include $(topsrcdir)/config/rules.mk
 
 ifneq (,$(filter nightly aurora beta,$(MOZ_UPDATE_CHANNEL)))
 EXTENSIONS = \
-  feedback@mobile.mozilla.org \
   $(NULL)
 
 define _INSTALL_EXTENSION

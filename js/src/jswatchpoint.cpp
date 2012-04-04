@@ -162,13 +162,8 @@ bool
 WatchpointMap::markAllIteratively(JSTracer *trc)
 {
     JSRuntime *rt = trc->runtime;
-    if (rt->gcCurrentCompartment) {
-        WatchpointMap *wpmap = rt->gcCurrentCompartment->watchpointMap;
-        return wpmap && wpmap->markIteratively(trc);
-    }
-
     bool mutated = false;
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
         if (c->watchpointMap)
             mutated |= c->watchpointMap->markIteratively(trc);
     }
@@ -227,14 +222,9 @@ WatchpointMap::markAll(JSTracer *trc)
 void
 WatchpointMap::sweepAll(JSRuntime *rt)
 {
-    if (rt->gcCurrentCompartment) {
-        if (WatchpointMap *wpmap = rt->gcCurrentCompartment->watchpointMap)
+    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+        if (WatchpointMap *wpmap = c->watchpointMap)
             wpmap->sweep();
-    } else {
-        for (CompartmentsIter c(rt); !c.done(); c.next()) {
-            if (WatchpointMap *wpmap = c->watchpointMap)
-                wpmap->sweep();
-        }
     }
 }
 

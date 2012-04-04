@@ -267,7 +267,7 @@ nsContextMenu.prototype = {
     // Only enable Set as Desktop Background if we can get the shell service.
     var shell = getShellService();
     if (shell)
-      haveSetDesktopBackground = true;
+      haveSetDesktopBackground = shell.canSetDesktopBackground;
 #endif
     this.showItem("context-setDesktopBackground",
                   haveSetDesktopBackground && this.onLoadedImage);

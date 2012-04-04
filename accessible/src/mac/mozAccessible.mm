@@ -357,7 +357,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   if (mParent)
     return mParent;
 
-  nsCOMPtr<nsIAccessible> accessibleParent(mGeckoAccessible->GetUnignoredParent());
+  nsAccessible* accessibleParent = mGeckoAccessible->GetUnignoredParent();
   if (accessibleParent) {
     id nativeParent = GetNativeFromGeckoAccessible(accessibleParent);
     if (nativeParent)
@@ -403,17 +403,15 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
     return mChildren;
 
   mChildren = [[NSMutableArray alloc] init];
-  
+
   // get the array of children.
-  nsTArray<nsRefPtr<nsAccessibleWrap> > childrenArray;
-  mGeckoAccessible->GetUnignoredChildren(childrenArray);
-  
+  nsAutoTArray<nsAccessible*, 10> childrenArray;
+  mGeckoAccessible->GetUnignoredChildren(&childrenArray);
+
   // now iterate through the children array, and get each native accessible.
-  int totalCount = childrenArray.Length();
-  int index = 0;
-   
-  for (; index < totalCount; index++) {
-    nsAccessibleWrap *curAccessible = childrenArray.ElementAt(index);
+  PRUint32 totalCount = childrenArray.Length();
+  for (PRUint32 idx = 0; idx < totalCount; idx++) {
+    nsAccessible* curAccessible = childrenArray.ElementAt(idx);
     if (curAccessible) {
       mozAccessible *curNative = GetNativeFromGeckoAccessible(curAccessible);
       if (curNative)
@@ -516,6 +514,11 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   // like mozTextAccessible.
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (void)selectedTextDidChange
+{
+  // Do nothing. mozTextAccessible will.
 }
 
 - (NSString*)customDescription

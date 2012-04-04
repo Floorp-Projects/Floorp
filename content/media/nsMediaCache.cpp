@@ -148,8 +148,10 @@ public:
     NS_ASSERTION(mStreams.IsEmpty(), "Stream(s) still open!");
     Truncate();
     NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
-    mFileCache->Close();
-    mFileCache = nsnull;
+    if (mFileCache) {
+      mFileCache->Close();
+      mFileCache = nsnull;
+    }
     MOZ_COUNT_DTOR(nsMediaCache);
   }
 

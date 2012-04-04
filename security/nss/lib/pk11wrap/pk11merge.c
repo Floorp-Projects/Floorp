@@ -1109,7 +1109,7 @@ pk11_mergeTrust(PK11SlotInfo *targetSlot, PK11SlotInfo *sourceSlot,
 	CK_ULONG trustAttrsCount = 
 		sizeof(trustAttrs)/sizeof(trustAttrs[0]);
 
-	int i;
+	CK_ULONG i;
 	CK_ATTRIBUTE targetTemplate, sourceTemplate;
 
 	/* existing trust record, merge the two together */

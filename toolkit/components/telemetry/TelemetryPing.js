@@ -68,7 +68,8 @@ const MEM_HISTOGRAMS = {
   "page-faults-hard": "PAGE_FAULTS_HARD",
   "low-memory-events-virtual": "LOW_MEMORY_EVENTS_VIRTUAL",
   "low-memory-events-commit-space": "LOW_MEMORY_EVENTS_COMMIT_SPACE",
-  "low-memory-events-physical": "LOW_MEMORY_EVENTS_PHYSICAL"
+  "low-memory-events-physical": "LOW_MEMORY_EVENTS_PHYSICAL",
+  "ghost-windows": "GHOST_WINDOWS"
 };
 // Seconds of idle time before pinging.
 // On idle-daily a gather-telemetry notification is fired, during it probes can

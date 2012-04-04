@@ -429,8 +429,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   // (which may come from a header or http-meta tag), or if there
   // is no root element, from the script global object.
   Element* rootElement = mDocument->GetRootElement();
-  PRUint32 typeID = rootElement ? rootElement->GetScriptTypeID() :
-                                  context->GetScriptTypeID();
+  PRUint32 typeID = nsIProgrammingLanguage::JAVASCRIPT;
   PRUint32 version = 0;
   nsAutoString language, type, src;
   nsresult rv = NS_OK;
@@ -476,7 +475,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
         NS_WARNING("Failed to find a scripting language");
         typeID = nsIProgrammingLanguage::UNKNOWN;
       } else
-        typeID = runtime->GetScriptTypeID();
+        typeID = nsIProgrammingLanguage::JAVASCRIPT;
     }
     if (typeID != nsIProgrammingLanguage::UNKNOWN) {
       // Get the version string, and ensure the language supports it.
@@ -555,8 +554,6 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     NS_WARNING("Untrusted language called from non-chrome - ignored");
     return false;
   }
-
-  scriptContent->SetScriptTypeID(typeID);
 
   // Step 14. in the HTML5 spec
 
@@ -886,8 +883,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
 
   // Get the script-type to be used by this element.
   NS_ASSERTION(scriptContent, "no content - what is default script-type?");
-  PRUint32 stid = scriptContent ? scriptContent->GetScriptTypeID() :
-                                  nsIProgrammingLanguage::JAVASCRIPT;
+
   // and make sure we are setup for this type of script.
   rv = globalObject->EnsureScriptEnvironment();
   if (NS_FAILED(rv))
@@ -925,20 +921,9 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   mCurrentScript = oldCurrent;
 
   JSContext *cx = nsnull; // Initialize this to keep GCC happy.
-  if (stid == nsIProgrammingLanguage::JAVASCRIPT) {
-    cx = context->GetNativeContext();
-    ::JS_BeginRequest(cx);
-    NS_ASSERTION(!::JS_IsExceptionPending(cx),
-                 "JS_ReportPendingException wasn't called in EvaluateString");
-  }
-
+  cx = context->GetNativeContext();
+  JSAutoRequest ar(cx);
   context->SetProcessingScriptTag(oldProcessingScriptTag);
-
-  if (stid == nsIProgrammingLanguage::JAVASCRIPT) {
-    NS_ASSERTION(!::JS_IsExceptionPending(cx),
-                 "JS_ReportPendingException wasn't called");
-    ::JS_EndRequest(cx);
-  }
   return rv;
 }
 

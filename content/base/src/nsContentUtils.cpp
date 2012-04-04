@@ -208,6 +208,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsCCUncollectableMarker.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Preferences.h"
+#include "nsDOMMutationObserver.h"
 
 #include "nsWrapperCacheInlines.h"
 #include "nsIDOMDocumentType.h"
@@ -271,6 +272,7 @@ PRUint32 nsContentUtils::sScriptBlockerCount = 0;
 #ifdef DEBUG
 PRUint32 nsContentUtils::sDOMNodeRemovedSuppressCount = 0;
 #endif
+PRUint32 nsContentUtils::sMicroTaskLevel = 0;
 nsTArray< nsCOMPtr<nsIRunnable> >* nsContentUtils::sBlockedScriptRunners = nsnull;
 PRUint32 nsContentUtils::sRunnersCountAtFirstBlocker = 0;
 nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nsnull;
@@ -1466,7 +1468,20 @@ nsresult
 nsContentUtils::CheckSameOrigin(nsINode *aTrustedNode,
                                 nsIDOMNode *aUnTrustedNode)
 {
-  NS_PRECONDITION(aTrustedNode, "There must be a trusted node");
+  MOZ_ASSERT(aTrustedNode);
+
+  // Make sure it's a real node.
+  nsCOMPtr<nsINode> unTrustedNode = do_QueryInterface(aUnTrustedNode);
+  NS_ENSURE_TRUE(unTrustedNode, NS_ERROR_UNEXPECTED);
+  return CheckSameOrigin(aTrustedNode, unTrustedNode);
+}
+
+nsresult
+nsContentUtils::CheckSameOrigin(nsINode* aTrustedNode,
+                                nsINode* unTrustedNode)
+{
+  MOZ_ASSERT(aTrustedNode);
+  MOZ_ASSERT(unTrustedNode);
 
   bool isSystem = false;
   nsresult rv = sSecurityManager->SubjectPrincipalIsSystem(&isSystem);
@@ -1481,10 +1496,6 @@ nsContentUtils::CheckSameOrigin(nsINode *aTrustedNode,
   /*
    * Get hold of each node's principal
    */
-  nsCOMPtr<nsINode> unTrustedNode = do_QueryInterface(aUnTrustedNode);
-
-  // Make sure these are both real nodes
-  NS_ENSURE_TRUE(aTrustedNode && unTrustedNode, NS_ERROR_UNEXPECTED);
 
   nsIPrincipal* trustedPrincipal = aTrustedNode->NodePrincipal();
   nsIPrincipal* unTrustedPrincipal = unTrustedNode->NodePrincipal();
@@ -1605,62 +1616,21 @@ nsContentUtils::GetContextFromDocument(nsIDocument *aDocument)
   return scx->GetNativeContext();
 }
 
-// static
-nsresult
-nsContentUtils::GetContextAndScope(nsIDocument *aOldDocument,
-                                   nsIDocument *aNewDocument, JSContext **aCx,
-                                   JSObject **aNewScope)
+//static
+void
+nsContentUtils::TraceSafeJSContext(JSTracer* aTrc)
 {
-  *aCx = nsnull;
-  *aNewScope = nsnull;
-
-  JSObject *newScope = aNewDocument->GetWrapper();
-  JSObject *global;
-  if (!newScope) {
-    nsIScriptGlobalObject *newSGO = aNewDocument->GetScopeObject();
-    if (!newSGO || !(global = newSGO->GetGlobalJSObject())) {
-      return NS_OK;
-    }
+  if (!sThreadJSContextStack) {
+    return;
   }
-
-  NS_ENSURE_TRUE(sXPConnect, NS_ERROR_NOT_INITIALIZED);
-
-  JSContext *cx = aOldDocument ? GetContextFromDocument(aOldDocument) : nsnull;
+  JSContext* cx = nsnull;
+  sThreadJSContextStack->GetSafeJSContext(&cx);
   if (!cx) {
-    cx = GetContextFromDocument(aNewDocument);
-
-    if (!cx) {
-      // No context reachable from the old or new document, use the
-      // calling context, or the safe context if no caller can be
-      // found.
-
-      sThreadJSContextStack->Peek(&cx);
-
-      if (!cx) {
-        sThreadJSContextStack->GetSafeJSContext(&cx);
-
-        if (!cx) {
-          // No safe context reachable, bail.
-          NS_WARNING("No context reachable in GetContextAndScopes()!");
-
-          return NS_ERROR_NOT_AVAILABLE;
-        }
-      }
-    }
+    return;
   }
-
-  if (!newScope && cx) {
-    jsval v;
-    nsresult rv = WrapNative(cx, global, aNewDocument, aNewDocument, &v);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    newScope = JSVAL_TO_OBJECT(v);
+  if (JSObject* global = JS_GetGlobalObject(cx)) {
+    JS_CALL_OBJECT_TRACER(aTrc, global, "safe context");
   }
-
-  *aCx = cx;
-  *aNewScope = newScope;
-
-  return NS_OK;
 }
 
 nsresult
@@ -4180,6 +4150,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
   // mutations.
   mozAutoDocUpdate updateBatch(aContent->GetCurrentDoc(),
     UPDATE_CONTENT_MODEL, true);
+  nsAutoMutationBatch mb;
 
   PRUint32 childCount = aContent->GetChildCount();
 
@@ -4204,10 +4175,12 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
     }
   }
   else {
+    mb.Init(aContent, true, false);
     for (PRUint32 i = 0; i < childCount; ++i) {
       aContent->RemoveChildAt(0, true);
     }
   }
+  mb.RemovalDone();
 
   if (aValue.IsEmpty()) {
     return NS_OK;
@@ -4220,7 +4193,9 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
 
   textContent->SetText(aValue, true);
 
-  return aContent->AppendChildTo(textContent, true);
+  rv = aContent->AppendChildTo(textContent, true);
+  mb.NodesAdded();
+  return rv;
 }
 
 static void AppendNodeTextContentsRecurse(nsINode* aNode, nsAString& aResult)
@@ -4771,6 +4746,14 @@ nsContentUtils::AddScriptRunner(nsIRunnable* aRunnable)
   run->Run();
 
   return true;
+}
+
+void
+nsContentUtils::LeaveMicroTask()
+{
+  if (--sMicroTaskLevel == 0) {
+    nsDOMMutationObserver::HandleMutations();
+  }
 }
 
 /* 
@@ -6563,16 +6546,17 @@ nsContentUtils::ReleaseWrapper(nsISupports* aScriptObjectHolder,
                                nsWrapperCache* aCache)
 {
   if (aCache->PreservingWrapper()) {
+    // PreserveWrapper puts new DOM bindings in the JS holders hash, but they
+    // can also be in the DOM expando hash, so we need to try to remove them
+    // from both here.
     JSObject* obj = aCache->GetWrapperPreserveColor();
-    if (aCache->IsDOMBinding()) {
+    if (aCache->IsDOMBinding() && obj) {
       JSCompartment *compartment = js::GetObjectCompartment(obj);
       xpc::CompartmentPrivate *priv =
         static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
       priv->RemoveDOMExpandoObject(obj);
     }
-    else {
-      DropJSObjects(aScriptObjectHolder);
-    }
+    DropJSObjects(aScriptObjectHolder);
 
     aCache->SetPreservingWrapper(false);
   }
@@ -6590,4 +6574,47 @@ nsContentUtils::TraceWrapper(nsWrapperCache* aCache, TraceCallback aCallback,
                 "Preserved wrapper", aClosure);
     }
   }
+}
+
+nsresult
+nsContentUtils::JSArrayToAtomArray(JSContext* aCx, const JS::Value& aJSArray,
+                                   nsCOMArray<nsIAtom>& aRetVal)
+{
+  JSAutoRequest ar(aCx);
+  if (!aJSArray.isObject()) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  
+  JSObject* obj = &aJSArray.toObject();
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(aCx, obj)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  
+  PRUint32 length;
+  if (!JS_IsArrayObject(aCx, obj) || !JS_GetArrayLength(aCx, obj, &length)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  JSString* str = nsnull;
+  JS::Anchor<JSString *> deleteProtector(str);
+  for (PRUint32 i = 0; i < length; ++i) {
+    jsval v;
+    if (!JS_GetElement(aCx, obj, i, &v) ||
+        !(str = JS_ValueToString(aCx, v))) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    nsDependentJSString depStr;
+    if (!depStr.init(aCx, str)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    nsCOMPtr<nsIAtom> a = do_GetAtom(depStr);
+    if (!a) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    aRetVal.AppendObject(a);
+  }
+  return NS_OK;
 }

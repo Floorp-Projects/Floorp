@@ -377,6 +377,9 @@ ContactDB.prototype = {
       }
     }
 
+    // Sorting functions takes care of limit if set.
+    let limit = options.sortBy === 'undefined' ? options.filterLimit : null;
+
     let filter_keys = fields.slice();
     for (let key = filter_keys.shift(); key; key = filter_keys.shift()) {
       let request;
@@ -387,13 +390,13 @@ ContactDB.prototype = {
         debug("Getting index: " + key);
         // case sensitive
         let index = store.index(key);
-        request = index.getAll(options.filterValue, options.filterLimit);
+        request = index.getAll(options.filterValue, limit);
       } else {
         // not case sensitive
         let tmp = options.filterValue.toLowerCase();
         let range = this._global.IDBKeyRange.bound(tmp, tmp + "\uFFFF");
         let index = store.index(key + "LowerCase");
-        request = index.getAll(range, options.filterLimit);
+        request = index.getAll(range, limit);
       }
       if (!txn.result)
         txn.result = {};
@@ -410,8 +413,9 @@ ContactDB.prototype = {
     debug("ContactDB:_findAll:  " + JSON.stringify(options));
     if (!txn.result)
       txn.result = {};
-
-    store.getAll(null, options.filterLimit).onsuccess = function (event) {
+    // Sorting functions takes care of limit if set.
+    let limit = options.sortBy === 'undefined' ? options.filterLimit : null;
+    store.getAll(null, limit).onsuccess = function (event) {
       debug("Request successful. Record count:", event.target.result.length);
       for (let i in event.target.result)
         txn.result[event.target.result[i].id] = this.makeExport(event.target.result[i]);

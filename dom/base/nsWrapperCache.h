@@ -47,6 +47,16 @@ class XPCWrappedNativeScope;
 
 typedef PRUptrdiff PtrBits;
 
+namespace mozilla {
+namespace dom {
+namespace workers {
+
+class DOMBindingBase;
+
+} // namespace workers
+} // namespace dom
+} // namespace mozilla
+
 #define NS_WRAPPERCACHE_IID \
 { 0x6f3179a1, 0x36f7, 0x4a5c, \
   { 0x8c, 0xf1, 0xad, 0xc8, 0x7c, 0xde, 0x3e, 0x87 } }
@@ -72,7 +82,7 @@ typedef PRUptrdiff PtrBits;
  *    - a slim wrapper or the JSObject of an XPCWrappedNative wrapper
  *
  *  If WRAPPER_IS_DOM_BINDING is set (IsDOMBinding() returns true):
- *    - a DOM binding object (proxy)
+ *    - a DOM binding object (regular JS object or proxy)
  *
  * The finalizer for the wrapper clears the cache.
  *
@@ -82,6 +92,8 @@ typedef PRUptrdiff PtrBits;
  */
 class nsWrapperCache
 {
+  friend class mozilla::dom::workers::DOMBindingBase;
+
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_WRAPPERCACHE_IID)
 
@@ -217,7 +229,7 @@ private:
 
   /**
    * If this bit is set then the wrapper for the native object is a DOM binding
-   * (proxy).
+   * (regular JS object or proxy).
    */
   enum { WRAPPER_IS_DOM_BINDING = 1 << 1 };
 
