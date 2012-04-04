@@ -205,13 +205,13 @@ nsSaveAsCharset::DoCharsetConversion(const PRUnichar *inString, char **outString
   *outString = NULL;
 
   nsresult rv;
-  PRInt32 inStringLength = strlen(inString);   // original input string length
-  PRInt32 bufferLength;                        // allocated buffer length
+  PRInt32 inStringLength = nsCRT::strlen(inString);   // original input string length
+  PRInt32 bufferLength;                               // allocated buffer length
   PRInt32 srcLength = inStringLength;
   PRInt32 dstLength;
   char *dstPtr = NULL;
   PRInt32 pos1, pos2;
-  nsresult saveResult = NS_OK;                 // to remember NS_ERROR_UENC_NOMAPPING
+  nsresult saveResult = NS_OK;                         // to remember NS_ERROR_UENC_NOMAPPING
 
   // estimate and allocate the target buffer (reserve extra memory for fallback)
   rv = mEncoder->GetMaxLength(inString, inStringLength, &dstLength);

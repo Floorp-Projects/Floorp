@@ -288,9 +288,9 @@ nsEscapeHTML(const char * string)
 PRUnichar *
 nsEscapeHTML2(const PRUnichar *aSourceBuffer, PRInt32 aSourceBufferLen)
 {
-  // Calculate the length, if the caller didn't.
+  // if the caller didn't calculate the length
   if (aSourceBufferLen < 0) {
-    aSourceBufferLen = strlen(aSourceBuffer);
+    aSourceBufferLen = nsCRT::strlen(aSourceBuffer); // ...then I will
   }
 
   /* XXX Hardcoded max entity len. */

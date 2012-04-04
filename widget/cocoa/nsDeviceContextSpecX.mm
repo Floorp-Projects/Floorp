@@ -100,7 +100,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(PRUnichar*  aTitle,
     NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
     if (aTitle) {
-      CFStringRef cfString = ::CFStringCreateWithCharacters(NULL, aTitle, strlen(aTitle));
+      CFStringRef cfString = ::CFStringCreateWithCharacters(NULL, aTitle, nsCRT::strlen(aTitle));
       if (cfString) {
         ::PMPrintSettingsSetJobName(mPrintSettings, cfString);
         ::CFRelease(cfString);
