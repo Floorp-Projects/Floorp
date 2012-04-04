@@ -2766,6 +2766,15 @@ abstract public class GeckoApp
     private void connectGeckoLayerClient() {
         LayerController layerController = getLayerController();
         layerController.setLayerClient(mLayerClient);
+
+        layerController.setOnTouchListener(new View.OnTouchListener() {
+            public boolean onTouch(View view, MotionEvent event) {
+                if (event == null)
+                    return true;
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createMotionEvent(event));
+                return true;
+            }
+        });
     }
 
     public class GeckoAppHandler extends Handler {
