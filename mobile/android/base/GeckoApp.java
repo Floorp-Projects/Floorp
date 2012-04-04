@@ -517,8 +517,7 @@ abstract public class GeckoApp
                 loadUrlInTab("about:addons");
                 return true;
             case R.id.downloads:
-                intent = new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS);
-                startActivity(intent);
+                loadUrlInTab("about:downloads");
                 return true;
             case R.id.char_encoding:
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Get", null));
