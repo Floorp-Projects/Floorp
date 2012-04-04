@@ -293,6 +293,11 @@ function testChildList4() {
     });
   m.observe(df, { childList: true, characterData: true, characterDataOldValue: true, subtree: true });
   m.observe(div, { childList: true });
+  
+  // Make sure transient observers aren't leaked.
+  var leakTest = new MozMutationObserver(function(){});
+  leakTest.observe(div, { characterData: true, subtree: true });
+  
   div.insertBefore(df, s2);
   s1.firstChild.data = "bar"; // This should *not* create a record.
   t1.data = "Hello the whole "; // This should create a record.

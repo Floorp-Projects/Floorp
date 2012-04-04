@@ -837,8 +837,10 @@ nsAutoMutationBatch::Done()
       m->mAddedNodes = addedList;
       m->mPreviousSibling = mPrevSibling;
       m->mNextSibling = mNextSibling;
-      ob->ScheduleForRun();
     }
+    // Always schedule the observer so that transient receivers are
+    // removed correctly.
+    ob->ScheduleForRun();
   }
   nsDOMMutationObserver::LeaveMutationHandling();
 }
