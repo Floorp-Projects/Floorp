@@ -1198,6 +1198,11 @@ abstract public class GeckoApp
                 Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.STOP);
             }
         });
+        GeckoAppShell.getHandler().postDelayed(new Runnable() {
+            public void run() {
+                getAndProcessThumbnailForTab(tab);
+            }
+        }, 500);
     }
 
     void handleShowToast(final String message, final String duration) {
