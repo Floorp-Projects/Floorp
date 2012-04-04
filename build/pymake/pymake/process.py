@@ -210,7 +210,11 @@ class PythonJob(Job):
             if self.method not in m.__dict__:
                 print >>sys.stderr, "No method named '%s' in module %s" % (method, module)
                 return -127
-            m.__dict__[self.method](self.argv)
+            try:
+                m.__dict__[self.method](self.argv)
+            except TypeError:
+                print >> sys.stderr, "FAILED calling %r in %r" % (self.method, m)
+                raise
         except PythonException, e:
             print >>sys.stderr, e
             return e.exitcode
