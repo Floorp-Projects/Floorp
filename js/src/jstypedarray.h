@@ -286,6 +286,12 @@ struct JS_FRIEND_API(TypedArray) {
 extern bool
 IsFastTypedArrayClass(const Class *clasp);
 
+extern bool
+IsSlowTypedArrayClass(const Class *clasp);
+
+extern bool
+IsFastOrSlowTypedArray(JSObject *obj);
+
 } // namespace js
 
 /* Friend API methods */
