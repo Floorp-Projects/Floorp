@@ -89,8 +89,9 @@ ifdef HOST_PROGRAM
 endif
 
 ifdef WRAP_SYSTEM_INCLUDES
-export::
-	if test ! -d system_wrappers_js; then mkdir system_wrappers_js; fi
+export:: \
+  $(call mkdir_deps,system_wrappers_js) \
+  $(NULL)
 	$(PYTHON) $(srcdir)/Preprocessor.py $(DEFINES) $(ACDEFINES) \
 		$(srcdir)/system-headers | $(PERL) $(srcdir)/make-system-wrappers.pl system_wrappers_js
 	$(INSTALL) system_wrappers_js $(DIST)

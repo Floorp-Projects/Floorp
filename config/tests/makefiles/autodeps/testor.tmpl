@@ -1,0 +1,63 @@
+# -*- makefile -*-
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+
+###########################################################################
+## Intent: Standalone unit tests for makefile rules and target logic
+###########################################################################
+
+deps =$(NULL)
+tgts =$(NULL)
+
+ifdef VERBOSE
+  tgts += show
+endif
+
+# Define macros
+include $(topsrcdir)/config/makefiles/makeutils.mk
+include $(topsrcdir)/config/makefiles/autotargets.mk
+
+##########################
+## Verify threadsafe mkdir
+##########################
+ifdef deps_mkdir_bycall
+  deps += $(call mkdir_deps,deps_mkdir_bycall)
+  tgts += check_mkdir
+endif
+ifdef deps_mkdir_bydep
+  deps += $(foreach dir,$(deps_mkdir_bydep),$(dir)/.mkdir.done)
+  tgts += check_mkdir
+endif
+ifdef deps_mkdir_bygen
+  GENERATED_DIRS += $(deps_mkdir_bygen)
+  tgts += check_mkdir
+endif
+
+###########################
+## Minimal environment load
+###########################
+MKDIR ?= mkdir -p
+TOUCH ?= touch
+
+INCLUDED_CONFIG_MK = 1
+include $(topsrcdir)/config/rules.mk
+
+##-------------------##
+##---]  TARGETS  [---##
+##-------------------##
+all::
+
+# Quarks:
+#   o Use of 'all' would trigger export target processing
+checkup: $(tgts)
+
+# AUTO_DEPS - verify GENERATED_DIRS
+check_mkdir: $(deps) $(AUTO_DEPS)
+
+show:
+	@echo "tgts=[$(tgts)]"
+	@echo "deps=[$(deps)]"
+	find $(dir $(deps)) -print
