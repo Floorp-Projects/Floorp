@@ -3,6 +3,8 @@ const gTestRoot = rootDir;
 
 var gTestBrowser = null;
 var gNextTest = null;
+var gClickToPlayPluginActualEvents = 0;
+var gClickToPlayPluginExpectedEvents = 6;
 
 function get_test_plugin() {
   var ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
@@ -13,7 +15,10 @@ function get_test_plugin() {
     if (tags[i].name == "Test Plug-in")
       return tags[i];
   }
+  ok(false, "Unable to find plugin");
 }
+
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 // This listens for the next opened tab and checks it is of the right url.
 // opencallback is called when the new tab is fully loaded
@@ -63,19 +68,27 @@ TabOpenListener.prototype = {
 
 function test() {
   waitForExplicitFinish();
+  registerCleanupFunction(function() { Services.prefs.clearUserPref("plugins.click_to_play"); });
+  Services.prefs.setBoolPref("plugins.click_to_play", false);
 
   var newTab = gBrowser.addTab();
   gBrowser.selectedTab = newTab;
   gTestBrowser = gBrowser.selectedBrowser;
   gTestBrowser.addEventListener("load", pageLoad, true);
+  gTestBrowser.addEventListener("PluginClickToPlay", handlePluginClickToPlay, true);
   prepareTest(test1, gTestRoot + "plugin_unknown.html");
 }
 
 function finishTest() {
   gTestBrowser.removeEventListener("load", pageLoad, true);
+  gTestBrowser.removeEventListener("PluginClickToPlay", handlePluginClickToPlay, true);
   gBrowser.removeCurrentTab();
   window.focus();
   finish();
+}
+
+function handlePluginClickToPlay() {
+  gClickToPlayPluginActualEvents++;
 }
 
 function pageLoad() {
@@ -184,5 +197,123 @@ function test7() {
   var plugin = get_test_plugin();
   plugin.disabled = false;
   plugin.blocklisted = false;
-  finishTest();
+  Services.prefs.setBoolPref("plugins.click_to_play", true);
+
+  prepareTest(test8, gTestRoot + "plugin_test.html");
+}
+
+// Tests a page with a working plugin that is click-to-play
+function test8() {
+  var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
+  ok(!notificationBox.getNotificationWithValue("missing-plugins"), "Test 8, Should not have displayed the missing plugin notification");
+  ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 8, Should not have displayed the blocked plugin notification");
+  ok(!gTestBrowser.missingPlugins, "Test 8, Should not be a missing plugin list");
+  ok(PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser), "Test 8, Should have a click-to-play notification");
+
+  prepareTest(test9a, gTestRoot + "plugin_test2.html");
+}
+
+// Tests that activating one click-to-play plugin will activate the other plugins (part 1/1)
+function test9a() {
+  var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
+  ok(!notificationBox.getNotificationWithValue("missing-plugins"), "Test 9a, Should not have displayed the missing plugin notification");
+  ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 9a, Should not have displayed the blocked plugin notification");
+  ok(!gTestBrowser.missingPlugins, "Test 9a, Should not be a missing plugin list");
+  ok(PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser), "Test 9a, Should have a click-to-play notification");
+  var plugin1 = gTestBrowser.contentDocument.getElementById("test");
+  var doc = gTestBrowser.contentDocument;
+  var plugins = [];
+  plugins.push(doc.getElementById("test"));
+  plugins.push(doc.getElementById("test1"));
+  plugins.push(doc.getElementById("test2"));
+  plugins.forEach(function(plugin) {
+    var rect = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox").getBoundingClientRect();
+    ok(rect.width == 200, "Test 9a, Plugin with id=" + plugin.id + " overlay rect should have 200px width before being clicked");
+    ok(rect.height == 200, "Test 9a, Plugin with id=" + plugin.id + " overlay rect should have 200px height before being clicked");
+    var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    ok(!objLoadingContent.activated, "Test 9a, Plugin with id=" + plugin.id + " should not be activated");
+  });
+
+  EventUtils.synthesizeMouse(plugin1, 100, 100, { });
+  setTimeout(test9b, 0);
+}
+
+// Tests that activating one click-to-play plugin will activate the other plugins (part 2/2)
+function test9b() {
+  var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
+  ok(!notificationBox.getNotificationWithValue("missing-plugins"), "Test 9b, Should not have displayed the missing plugin notification");
+  ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 9b, Should not have displayed the blocked plugin notification");
+  ok(!gTestBrowser.missingPlugins, "Test 9b, Should not be a missing plugin list");
+  ok(!PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser), "Test 9b, Click to play notification should be removed now");
+  var doc = gTestBrowser.contentDocument;
+  var plugins = [];
+  plugins.push(doc.getElementById("test"));
+  plugins.push(doc.getElementById("test1"));
+  plugins.push(doc.getElementById("test2"));
+  plugins.forEach(function(plugin) {
+    var pluginRect = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox").getBoundingClientRect();
+    ok(pluginRect.width == 0, "Test 9b, Plugin with id=" + plugin.id + " should have click-to-play overlay with zero width");
+    ok(pluginRect.height == 0, "Test 9b, Plugin with id=" + plugin.id + " should have click-to-play overlay with zero height");
+    var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    ok(objLoadingContent.activated, "Test 9b, Plugin with id=" + plugin.id + " should be activated");
+  });
+
+  prepareTest(test10a, gTestRoot + "plugin_test3.html");
+}
+
+// Tests that activating a hidden click-to-play plugin through the notification works (part 1/2)
+function test10a() {
+  var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
+  ok(!notificationBox.getNotificationWithValue("missing-plugins"), "Test 10a, Should not have displayed the missing plugin notification");
+  ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 10a, Should not have displayed the blocked plugin notification");
+  ok(!gTestBrowser.missingPlugins, "Test 10a, Should not be a missing plugin list");
+  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(popupNotification, "Test 10a, Should have a click-to-play notification");
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 10c, Plugin should not be activated");
+
+  popupNotification.mainAction.callback();
+  setTimeout(test10b, 0);
+}
+
+// Tests that activating a hidden click-to-play plugin through the notification works (part 2/2)
+function test10b() {
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 10c, Plugin should be activated");
+
+  prepareTest(test11a, gTestRoot + "plugin_test3.html");
+}
+
+// Tests that the going back will reshow the notification for click-to-play plugins (part 1/3)
+function test11a() {
+  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(popupNotification, "Test 11a, Should have a click-to-play notification");
+
+  prepareTest(test11b, "about:blank");
+}
+
+// Tests that the going back will reshow the notification for click-to-play plugins (part 2/3)
+function test11b() {
+  gTestBrowser.removeEventListener("load", test11b, false);
+  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(!popupNotification, "Test 11b, Should not have a click-to-play notification");
+
+  gTestBrowser.addEventListener("pageshow", test11c, false);
+  gTestBrowser.contentWindow.history.back();
+}
+
+// Tests that the going back will reshow the notification for click-to-play plugins (part 3/3)
+function test11c() {
+  gTestBrowser.removeEventListener("pageshow", test11c, false);
+  // Make sure that the event handlers for pageshow can execute before checking for their effects.
+  executeSoon(function() {
+    var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+    ok(popupNotification, "Test 11c, Should have a click-to-play notification");
+    is(gClickToPlayPluginActualEvents, gClickToPlayPluginExpectedEvents,
+       "There should be a PluginClickToPlay event for each plugin that was " +
+       "blocked due to the plugins.click_to_play pref");
+    finishTest();
+  });
 }
