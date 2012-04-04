@@ -1316,7 +1316,7 @@ namespace mozilla {
                 return NS_OK;
             
             AndroidBridge::Bridge()->FireAndWaitForTracerEvent();
-            mHasRun = PR_TRUE;
+            mHasRun = true;
             mTracerCondVar->Notify();
             return NS_OK;
         }
@@ -1325,7 +1325,7 @@ namespace mozilla {
             if (!mTracerLock || !mTracerCondVar)
                 return false;
             MutexAutoLock lock(*mTracerLock);
-            mHasRun = PR_FALSE;
+            mHasRun = false;
             mMainThread->Dispatch(this, NS_DISPATCH_NORMAL);
             while (!mHasRun)
                 mTracerCondVar->Wait();
@@ -1334,13 +1334,13 @@ namespace mozilla {
 
         void Signal() {
             MutexAutoLock lock(*mTracerLock);
-            mHasRun = PR_TRUE;
+            mHasRun = true;
             mTracerCondVar->Notify();
         }
     private:
         Mutex* mTracerLock;
         CondVar* mTracerCondVar;
-        PRBool mHasRun;
+        bool mHasRun;
         nsCOMPtr<nsIThread> mMainThread;
 
     };

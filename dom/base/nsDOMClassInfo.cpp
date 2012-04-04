@@ -10740,7 +10740,7 @@ nsDOMConstructorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx
   // NewResolve hooks.
   JSBool found;
   if (!JS_HasPropertyById(cx, nativePropsObj, id, &found)) {
-    *_retval = PR_FALSE;
+    *_retval = false;
     return NS_OK;
   }
 

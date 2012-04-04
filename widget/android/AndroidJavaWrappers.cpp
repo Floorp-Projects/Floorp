@@ -390,7 +390,7 @@ AndroidGeckoEvent::ReadCharactersExtraField(JNIEnv *jenv)
 {
     jstring s = (jstring) jenv->GetObjectField(wrapped_obj, jCharactersExtraField);
     if (!s) {
-        mCharactersExtra.SetIsVoid(PR_TRUE);
+        mCharactersExtra.SetIsVoid(true);
         return;
     }
 
