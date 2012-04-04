@@ -1328,10 +1328,7 @@ function run_type_ctor_class_tests(c, t, t2, props, fns, instanceProps, instance
   // equal to 't2.prototype.__proto__' where 't2' is a different CType
   // constructed from 'c'.
   do_check_true(t.prototype.__proto__ === t2.prototype.__proto__);
-  if (t instanceof ctypes.FunctionType)
-    do_check_true(t.prototype.__proto__.__proto__ === ctypes.PointerType.prototype.prototype);
-  else
-    do_check_true(t.prototype.__proto__.__proto__ === ctypes.CData.prototype);
+  do_check_true(t.prototype.__proto__.__proto__ === ctypes.CData.prototype);
   do_check_true(t.prototype instanceof ctypes.CData);
   do_check_true(t.prototype.constructor === t);
 
@@ -1362,10 +1359,7 @@ function run_type_ctor_class_tests(c, t, t2, props, fns, instanceProps, instance
     do_check_throws(function() { t.prototype[p]; }, Error);
 
   // Make sure we can access 'prototype' on a CTypeProto.
-  if (t instanceof ctypes.FunctionType)
-    do_check_true(Object.getPrototypeOf(c.prototype.prototype) === ctypes.PointerType.prototype.prototype);
-  else
-    do_check_true(Object.getPrototypeOf(c.prototype.prototype) === ctypes.CType.prototype.prototype);
+  do_check_true(Object.getPrototypeOf(c.prototype.prototype) === ctypes.CType.prototype.prototype);
 
   // Test that an instance 'd' of 't' is a CData.
   if (t.__proto__ != ctypes.FunctionType.prototype) {
@@ -2295,19 +2289,6 @@ function run_function_tests(library)
   // Test that we can call ptr().
   do_check_eq(ptr("function pointers rule!"), 23);
 
-  // Test that we can call via call and apply
-  do_check_eq(ptr.call(null, "function pointers rule!"), 23);
-  do_check_eq(ptr.apply(null, ["function pointers rule!"]), 23);
-
-  // Test that we cannot call non-function pointers via call and apply
-  let p_t = ctypes.PointerType(ctypes.int32_t);
-  let p = p_t();
-  do_check_throws(function() { p.call(null, "woo"); }, Error);
-  do_check_throws(function() { p.apply(null, ["woo"]); }, Error);
-
-  // Test the function pointers still behave as regular pointers
-  do_check_false(ptr.isNull(), "PointerType methods should still be valid");
-  
   // Test that library.declare() returns data of type FunctionType.ptr, and that
   // it is immutable.
   do_check_true(test_ansi_len.constructor.targetType.__proto__ ===
