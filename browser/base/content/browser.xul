@@ -1011,6 +1011,7 @@
                      label="&htmlPanel.label;"
                      accesskey="&htmlPanel.accesskey;"
                      tooltiptext="&htmlPanel.tooltiptext;"
+                     tabindex="0"
                      command="Inspector:HTMLPanel"/>
       <arrowscrollbox id="inspector-breadcrumbs"
                       flex="1" orient="horizontal"
@@ -1021,11 +1022,13 @@
                        hidden="true"
                        label="&inspect3DViewButton.label;"
                        accesskey="&inspect3DViewButton.accesskey;"
+                       tabindex="0"
                        command="Inspector:Tilt"/>
         <toolbarbutton id="inspector-style-button"
                        class="devtools-toolbarbutton"
                        label="&inspectStyleButton.label;"
                        accesskey="&inspectStyleButton.accesskey;"
+                       tabindex="0"
                        command="Inspector:Sidebar"/>
         <!-- registered tools go here -->
       </hbox>

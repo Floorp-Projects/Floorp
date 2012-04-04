@@ -392,6 +392,9 @@ InspectorUI.prototype = {
 
     this.setupNavigationKeys();
     this.highlighterReady();
+
+    // Focus the first focusable element in the toolbar
+    this.chromeDoc.commandDispatcher.advanceFocusIntoSubtree(this.toolbar);
   },
 
   /**
@@ -747,7 +750,6 @@ InspectorUI.prototype = {
 
     Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.STATE_RESTORED, null);
 
-    this.win.focus();
     this.highlighter.highlight();
 
     if (this.store.getValue(this.winID, "htmlPanelOpen")) {
@@ -2105,6 +2107,12 @@ HTMLBreadcrumbs.prototype = {
     button.className = "inspector-breadcrumbs-button";
 
     button.setAttribute("tooltiptext", this.prettyPrintNodeAsText(aNode));
+
+    button.onkeypress = function onBreadcrumbsKeypress(e) {
+      if (e.charCode == Ci.nsIDOMKeyEvent.DOM_VK_SPACE ||
+          e.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_RETURN)
+        button.click();
+    }
 
     button.onBreadcrumbsClick = function onBreadcrumbsClick() {
       inspector.stopInspecting();

@@ -115,6 +115,7 @@ function inspectorUIOpen2()
   InspectorUI.toggleInspection();
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
 
+
   // Switch back to tab 1.
   executeSoon(function() {
     Services.obs.addObserver(inspectorFocusTab1,
@@ -188,10 +189,11 @@ function inspectorFocusTab2()
   is(InspectorUI.store.length, 2, "Inspector.store.length is 2");
   isnot(InspectorUI.selection, div, "selection does not match the div element");
 
-  // Make sure keybindings still sork
-  synthesizeKeyFromKeyTag("key_inspect");
 
   executeSoon(function() {
+    // Make sure keybindings still work
+    synthesizeKeyFromKeyTag("key_inspect");
+
     ok(InspectorUI.inspecting, "Inspector is highlighting");
     InspectorUI.toggleInspection();
 
