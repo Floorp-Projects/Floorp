@@ -150,27 +150,27 @@ public class GeckoEvent {
         mType = evType;
     }
 
-    public static GeckoEvent createPauseEvent(int activityDepth) {
+    public static GeckoEvent createPauseEvent(boolean isApplicationInBackground) {
         GeckoEvent event = new GeckoEvent(ACTIVITY_PAUSING);
-        event.mFlags = activityDepth > 0 ? 1 : 0;
+        event.mFlags = isApplicationInBackground ? 0 : 1;
         return event;
     }
 
-    public static GeckoEvent createResumeEvent(int activityDepth) {
+    public static GeckoEvent createResumeEvent(boolean isApplicationInBackground) {
         GeckoEvent event = new GeckoEvent(ACTIVITY_RESUMING);
-        event.mFlags = activityDepth > 0 ? 1 : 0;
+        event.mFlags = isApplicationInBackground ? 0 : 1;
         return event;
     }
 
-    public static GeckoEvent createStoppingEvent(int activityDepth) {
+    public static GeckoEvent createStoppingEvent(boolean isApplicationInBackground) {
         GeckoEvent event = new GeckoEvent(ACTIVITY_STOPPING);
-        event.mFlags = activityDepth > 0 ? 1 : 0;
+        event.mFlags = isApplicationInBackground ? 0 : 1;
         return event;
     }
 
-    public static GeckoEvent createStartEvent(int activityDepth) {
+    public static GeckoEvent createStartEvent(boolean isApplicationInBackground) {
         GeckoEvent event = new GeckoEvent(ACTIVITY_START);
-        event.mFlags = activityDepth > 0 ? 1 : 0;
+        event.mFlags = isApplicationInBackground ? 0 : 1;
         return event;
     }
 

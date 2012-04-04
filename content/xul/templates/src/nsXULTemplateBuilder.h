@@ -81,6 +81,8 @@ class nsXULTemplateBuilder : public nsIXULTemplateBuilder,
                              public nsIObserver,
                              public nsStubDocumentObserver
 {
+    void CleanUp(bool aIsFinal);
+
 public:
     nsXULTemplateBuilder();
     virtual ~nsXULTemplateBuilder();

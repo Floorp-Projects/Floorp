@@ -14,10 +14,12 @@ import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecord;
 import org.mozilla.gecko.sync.repositories.domain.PasswordRecord;
 
+import android.content.ContentProviderClient;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.RemoteException;
 
 public class RepoUtils {
 
@@ -51,6 +53,14 @@ public class RepoUtils {
 
     public Cursor safeQuery(String[] projection, String selection, String[] selectionArgs, String sortOrder) throws NullCursorException {
       return this.safeQuery(null, projection, selection, selectionArgs, sortOrder);
+    }
+
+    // For ContentProviderClient queries.
+    public Cursor safeQuery(ContentProviderClient client, String label, String[] projection,
+                            String selection, String[] selectionArgs, String sortOrder) throws NullCursorException, RemoteException {
+      long queryStart = android.os.SystemClock.uptimeMillis();
+      Cursor c = client.query(uri, projection, selection, selectionArgs, sortOrder);
+      return checkAndLogCursor(label, queryStart, c);
     }
 
     // For SQLiteOpenHelper queries.
@@ -260,5 +270,19 @@ public class RepoUtils {
     } finally {
       cur.moveToPosition(originalPosition);
     }
+  }
+
+  public static String computeSQLInClause(int items, String field) {
+    StringBuilder builder = new StringBuilder(field);
+    builder.append(" IN (");
+    int i = 0;
+    for (; i < items - 1; ++i) {
+      builder.append("?, ");
+    }
+    if (i < items) {
+      builder.append("?");
+    }
+    builder.append(")");
+    return builder.toString();
   }
 }

@@ -79,6 +79,7 @@ FENNEC_JAVA_FILES = \
   FloatUtils.java \
   FormAssistPopup.java \
   GeckoActionBar.java \
+  GeckoApplication.java \
   GeckoApp.java \
   GeckoAppShell.java \
   GeckoAsyncTask.java \
@@ -161,6 +162,7 @@ endif
 
 FENNEC_PP_JAVA_FILES = \
   App.java \
+  GeckoActivity.java \
   LauncherShortcuts.java \
   NotificationHandler.java \
   Restarter.java \

@@ -1,0 +1,95 @@
+# -*- makefile -*-
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/makefiles/makeutils.mk
+
+##------------------_##
+##---]  TARGETS  [---##
+##------------------_##
+all::
+
+###########################################################################
+## This test target should really depend on a timestamp to only perform
+## work when makeutils.mk is modified.  That answer would require using a
+## 2nd makefile imposing more shell overhead.  Separate makefiles would be
+## very handy for testing when pwd==$src/ but for now avoid the overhead.
+##
+## Test logic will be interpreted at compile time, 'fast' and 'required' so
+## the test will always be run when testing is enabled.
+###########################################################################
+check::
+	@true
+
+## Logic processed at compile time so be selective about when to test
+ifneq ($(NULL),$(findstring check,$(MAKECMDGOALS)))
+
+$(info ===========================================================================)
+$(info Running test: $(MAKECMDGOALS): pwd=$(CURDIR))
+$(info ===========================================================================)
+
+## Silent errors are oh so much fun
+ifndef istype
+  $(error makeutils.mk was not included)
+endif
+
+# arg_scalar = [scalar|literal]
+arg_list = foo bar
+arg_ref  = arg_list
+
+## Identify type of function argument(s)
+########################################
+ifneq (scalar,$(call istype,arg_scalar))
+  $(error istype(arg_scalar)=scalar, found [$(call istype,arg_scalar)])
+endif
+ifneq (list,$(call istype,arg_list))
+  $(error istype(arg_list)=list, found [$(call istype,arg_list)])
+endif
+ifneq (list,$(call istype,arg_ref))
+  $(error istype(arg_ref)=list, found [$(call istype,arg_ref)])
+endif
+
+## Type == scalar or a list of values
+#####################################
+ifneq (true,$(call isval,scalar))
+  $(error isval(scalar)=true, found [$(call isval,scalar)])
+endif
+ifneq ($(NULL),$(call isval,arg_list))
+  $(error isval(arg_list)=null, found [$(call isval,arg_list)])
+endif
+
+## type == reference: macro=>macro => $($(1))
+#############################################
+ifneq ($(NULL),$(call isvar,scalar))
+  $(error isvar(scalar)=$(NULL), found [$(call isvar,scalar)])
+endif
+ifneq (true,$(call isvar,arg_list))
+  $(error isvar(arg_list)=true, found [$(call isvar,arg_list)])
+endif
+ifneq (true,$(call isvar,arg_ref))
+  $(error isvar(arg_ref)=true, found [$(call isvar,arg_ref)])
+endif
+
+# Verify getargv expansion
+##########################
+ifneq (scalar,$(call getargv,scalar))
+  $(error getargv(scalar)=scalar, found [$(call getargv,scalar)])
+endif
+ifneq ($(arg_list),$(call getargv,arg_list))
+  $(error getargv(arg_list)=list, found [$(call getargv,arg_list)])
+endif
+ifneq (arg_list,$(call getargv,arg_ref))
+  $(error getargv(arg_ref)=list, found [$(call getargv,arg_ref)])
+endif
+
+endif # check in MAKECMDGOALS
+
+

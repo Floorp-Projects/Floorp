@@ -48,7 +48,8 @@
 #include "nsIServiceManager.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIServiceManager.h"
-#include "nsIPrefService.h"
+
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 using namespace hal;
@@ -122,17 +123,9 @@ NS_IMETHODIMP nsDeviceSensorData::GetZ(double *aZ)
 NS_IMPL_ISUPPORTS1(nsDeviceSensors, nsIDeviceSensors)
 
 nsDeviceSensors::nsDeviceSensors()
-: mEnabled(true)
 {
   mLastDOMMotionEventTime = TimeStamp::Now();
-
-  nsCOMPtr<nsIPrefBranch> prefSrv = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefSrv) {
-    bool bvalue;
-    nsresult rv = prefSrv->GetBoolPref("device.motion.enabled", &bvalue);
-    if (NS_SUCCEEDED(rv) && bvalue == false)
-      mEnabled = false;
-  }
+  mEnabled = Preferences::GetBool("device.motion.enabled", true);
 
   for (int i = 0; i < NUM_SENSOR_TYPE; i++) {
     nsTArray<nsIDOMWindow*> *windows = new nsTArray<nsIDOMWindow*>();

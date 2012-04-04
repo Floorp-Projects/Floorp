@@ -490,6 +490,8 @@ class BaseInterface(object):
         self.name = name
         self.attributes = InterfaceAttributes(attlist, location)
         self.base = base
+        if self.kind == 'dictionary':
+            members.sort(key=lambda x:x.name)
         self.members = members
         self.location = location
         self.namemap = NameMap()
