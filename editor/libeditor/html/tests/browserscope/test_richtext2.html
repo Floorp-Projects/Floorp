@@ -216,7 +216,8 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
                         // unexpected pass
                         todo_is(row.valscore, 1, testName + " used to fail, but it just started passing");
                         // debugging information
-                        is(row.output, expected.output, "HTML test result comparison");
+                        info("HTML test result comparison - got " +
+                             row.output + ", expected " + expected.output);
                       } else if (row.valscore == 0 && expected.valscore == 0) {
                         // known failure
                         todo_is(row.valscore, 1, testName + " is known to fail");
@@ -236,7 +237,8 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
                         // unexpected pass
                         todo_is(row.selscore, 1, testName + " used to fail, but it just started passing");
                         // debugging information
-                        is(row.output, expected.output, "HTML test result comparison");
+                        info("HTML test result comparison - got " +
+                             row.output + ", expected " + expected.output);
                       } else if (row.selscore == 0 && expected.selscore == 0) {
                         // known failure
                         todo_is(row.selscore, 1, testName + " is known to fail");
