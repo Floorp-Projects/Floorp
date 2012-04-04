@@ -137,8 +137,8 @@ private:
          unsigned char* mReadBuffer;
          PRUint32 mReadBufferLen;
          z_stream mZstream;
-         PRBool mStreamInitialized;
-         PRBool mStreamEnded;
+         bool mStreamInitialized;
+         bool mStreamEnded;
      public:
          NS_DECL_ISUPPORTS
 
@@ -147,8 +147,8 @@ private:
           : nsInputStreamWrapper(desc, off)
           , mReadBuffer(0)
           , mReadBufferLen(0)
-          , mStreamInitialized(PR_FALSE)
-          , mStreamEnded(PR_FALSE)
+          , mStreamInitialized(false)
+          , mStreamEnded(false)
          {
          }
          virtual ~nsDecompressInputStreamWrapper()
@@ -209,7 +209,7 @@ private:
          unsigned char* mWriteBuffer;
          PRUint32 mWriteBufferLen;
          z_stream mZstream;
-         PRBool mStreamInitialized;
+         bool mStreamInitialized;
          PRUint32 mUncompressedCount;
      public:
          NS_DECL_ISUPPORTS
@@ -219,7 +219,7 @@ private:
           : nsOutputStreamWrapper(desc, off)
           , mWriteBuffer(0)
           , mWriteBufferLen(0)
-          , mStreamInitialized(PR_FALSE)
+          , mStreamInitialized(false)
           , mUncompressedCount(0)
          {
          }

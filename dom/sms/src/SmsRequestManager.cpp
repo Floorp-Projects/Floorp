@@ -114,7 +114,7 @@ SmsRequestManager::DispatchTrustedEventToRequest(const nsAString& aEventName,
   nsresult rv = event->InitEvent(aEventName, false, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = event->SetTrusted(PR_TRUE);
+  rv = event->SetTrusted(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool dummy;
