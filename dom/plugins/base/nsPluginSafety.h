@@ -40,8 +40,6 @@
 
 #include "npapi.h"
 #include "nsPluginHost.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include <prinrval.h>
 
 #if defined(XP_WIN)
@@ -52,14 +50,15 @@ void NS_NotifyPluginCall(PRIntervalTime);
 
 #ifdef CALL_SAFETY_ON
 
+#include "mozilla/Preferences.h"
+
 extern bool gSkipPluginSafeCalls;
 
-#define NS_INIT_PLUGIN_SAFE_CALLS                               \
-PR_BEGIN_MACRO                                                  \
-  nsresult res;                                                 \
-  nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &res)); \
-  if(NS_SUCCEEDED(res) && pref)                                 \
-    res = pref->GetBoolPref("plugin.dont_try_safe_calls", &gSkipPluginSafeCalls);\
+#define NS_INIT_PLUGIN_SAFE_CALLS                                  \
+PR_BEGIN_MACRO                                                     \
+  gSkipPluginSafeCalls =                                           \
+    ::mozilla::Preferences::GetBool("plugin.dont_try_safe_calls",  \
+                                    gSkipPluginSafeCalls);         \
 PR_END_MACRO
 
 #define NS_TRY_SAFE_CALL_RETURN(ret, fun, pluginInst) \
