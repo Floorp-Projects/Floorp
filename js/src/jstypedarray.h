@@ -352,9 +352,6 @@ JS_GetTypedArrayByteLength(JSObject *obj);
 JS_FRIEND_API(uint32_t)
 JS_GetTypedArrayType(JSObject *obj);
 
-JS_FRIEND_API(JSObject *)
-JS_GetTypedArrayBuffer(JSObject *obj);
-
 JS_FRIEND_API(void *)
 JS_GetTypedArrayData(JSObject *obj);
 
