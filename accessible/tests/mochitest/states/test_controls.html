@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML control states</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+  function doTest()
+  {
+    // Undetermined progressbar (no value or aria-value attribute): mixed state
+    testStates("progress", STATE_MIXED);
+    // Determined progressbar (has value): shouldn't have mixed state
+    testStates("progress2", 0, 0, STATE_MIXED);
+    // Determined progressbar (has aria-value): shouldn't have mixed state
+    // testStates("progress3", 0, 0, STATE_MIXED);
+    todo(false, "we should respect ARIA");
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=670853"
+     title="Bug 670853 - undetermined progressmeters should expose mixed state">
+    Mozilla Bug 670853
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <progress id="progress"></progress>
+  <progress id="progress2" value="1"></progress>
+  <progress id="progress3" aria-valuenow="1"></progress>
+  
+</body>
+</html>
