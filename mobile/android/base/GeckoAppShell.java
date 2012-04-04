@@ -469,16 +469,6 @@ public class GeckoAppShell
         final LayerController layerController = GeckoApp.mAppContext.getLayerController();
         LayerView v = layerController.getView();
         mInputConnection = v.setInputConnectionHandler();
-
-        layerController.setOnTouchListener(new View.OnTouchListener() {
-            public boolean onTouch(View view, MotionEvent event) {
-                if (event == null)
-                    return true;
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createMotionEvent(event));
-                return true;
-            }
-        });
-
         layerController.notifyLayerClientOfGeometryChange();
     }
 
