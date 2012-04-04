@@ -17,6 +17,7 @@ StringBuffer::extractWellSized()
 {
     size_t capacity = cb.capacity();
     size_t length = cb.length();
+    JS_ASSERT(JSString::validateLength(context(), length));
 
     jschar *buf = cb.extractRawBuffer();
     if (!buf)
@@ -46,8 +47,7 @@ StringBuffer::finishString()
         return cx->runtime->atomState.emptyAtom;
 
     size_t length = cb.length();
-    if (!JSString::validateLength(cx, length))
-        return NULL;
+    JS_ASSERT(JSString::validateLength(cx, length));
 
     JS_STATIC_ASSERT(JSShortString::MAX_SHORT_LENGTH < CharBuffer::InlineLength);
     if (JSShortString::lengthFits(length))
@@ -72,6 +72,8 @@ StringBuffer::finishAtom()
     JSContext *cx = context();
 
     size_t length = cb.length();
+    JS_ASSERT(JSString::validateLength(cx, length));
+
     if (length == 0)
         return cx->runtime->atomState.emptyAtom;
 
