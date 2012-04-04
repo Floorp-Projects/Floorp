@@ -694,7 +694,7 @@ public:
     return (mFlags & nsIPlaintextEditor::eEditorDontEchoPassword) != 0;
   }
   
-  PRBool ShouldSkipSpellCheck() const
+  bool ShouldSkipSpellCheck() const
   {
     return (mFlags & nsIPlaintextEditor::eEditorSkipSpellCheck) != 0;
   }
