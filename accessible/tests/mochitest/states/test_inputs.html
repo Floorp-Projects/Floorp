@@ -107,6 +107,7 @@
     testStates("autocomplete-formoff", 0, 0, 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
     testStates("autocomplete-list", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
     testStates("autocomplete-list2", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+    testStates("autocomplete-tel", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
     SimpleTest.finish();
   }
 
@@ -230,6 +231,7 @@
   </datalist>
   <input id="autocomplete-list" list="cities">
   <input id="autocomplete-list2" list="cities" autocomplete="off">
+  <input id="autocomplete-tel" type="tel">
 
   </body>
 </html>
