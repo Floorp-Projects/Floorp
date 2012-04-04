@@ -1404,7 +1404,7 @@ extern void
 GCSlice(JSContext *cx, JSGCInvocationKind gckind, js::gcreason::Reason reason);
 
 extern void
-GCDebugSlice(JSContext *cx, int64_t objCount);
+GCDebugSlice(JSContext *cx, bool limit, int64_t objCount);
 
 extern void
 PrepareForDebugGC(JSRuntime *rt);
@@ -1731,14 +1731,14 @@ struct SliceBudget {
         counter = INTPTR_MAX;
     }
 
-    void step() {
-        counter--;
+    void step(intptr_t amt = 1) {
+        counter -= amt;
     }
 
     bool checkOverBudget();
 
     bool isOverBudget() {
-        if (counter > 0)
+        if (counter >= 0)
             return false;
         return checkOverBudget();
     }
