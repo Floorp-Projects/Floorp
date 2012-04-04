@@ -189,7 +189,7 @@ function inspectorFocusTab2()
   isnot(InspectorUI.selection, div, "selection does not match the div element");
 
   // Make sure keybindings still sork
-  EventUtils.synthesizeKey("VK_RETURN", { });
+  synthesizeKeyFromKeyTag("key_inspect");
 
   executeSoon(function() {
     ok(InspectorUI.inspecting, "Inspector is highlighting");
