@@ -851,20 +851,16 @@ public:
         mUpdateFormat = gfxASurface::FormatFromContent(GetContentType());
 
         if (gUseBackingSurface) {
-            if (mUpdateFormat == gfxASurface::ImageFormatRGB24) {
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-                mUpdateFormat = gfxASurface::ImageFormatRGB16_565;
+            if (mUpdateFormat != gfxASurface::ImageFormatARGB32) {
                 mShaderType = RGBXLayerProgramType;
-#else
-                mUpdateFormat = gfxASurface::ImageFormatARGB32;
-                mShaderType = RGBALayerProgramType;
-#endif
             } else {
                 mShaderType = RGBALayerProgramType;
             }
             Resize(aSize);
         } else {
-            if (mUpdateFormat == gfxASurface::ImageFormatRGB24) {
+            if (mUpdateFormat == gfxASurface::ImageFormatRGB16_565) {
+                mShaderType = RGBXLayerProgramType;
+            } else if (mUpdateFormat == gfxASurface::ImageFormatRGB24) {
                 // RGB24 means really RGBX for Thebes, which means we have to
                 // use the right shader and ignore the uninitialized alpha
                 // value.
