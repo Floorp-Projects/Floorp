@@ -2217,11 +2217,12 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
                                   GLuint& aTexture,
                                   bool aOverwrite,
                                   const nsIntPoint& aSrcPoint,
-                                  bool aPixelBuffer)
+                                  bool aPixelBuffer,
+                                  GLenum aTextureUnit)
 {
     bool textureInited = aOverwrite ? false : true;
     MakeCurrent();
-    fActiveTexture(LOCAL_GL_TEXTURE0);
+    fActiveTexture(aTextureUnit);
   
     if (!aTexture) {
         fGenTextures(1, &aTexture);
