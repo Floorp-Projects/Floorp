@@ -6627,7 +6627,9 @@ PresShell::DispatchTouchEvent(nsEvent *aEvent,
         continue;
       }
 
-      nsTouchEvent newEvent(touchEvent);
+      nsTouchEvent newEvent(NS_IS_TRUSTED_EVENT(touchEvent) ?
+                              true : false,
+                            touchEvent);
       newEvent.target = targetPtr;
 
       nsCOMPtr<nsIContent> content(do_QueryInterface(targetPtr));
