@@ -3115,7 +3115,11 @@ SweepPhase(JSContext *cx, JSGCInvocationKind gckind)
     for (GCCompartmentsIter c(rt); !c.done(); c.next())
         c->arenas.purge();
 
+#ifdef JS_THREADSAFE
     FreeOp fop(rt, !!cx->gcBackgroundFree, false);
+#else
+    FreeOp fop(rt, false, false);
+#endif
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_FINALIZE_START);
         if (rt->gcFinalizeCallback)
