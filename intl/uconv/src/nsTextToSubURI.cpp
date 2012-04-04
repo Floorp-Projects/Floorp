@@ -78,7 +78,7 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
        {
           char buf[256];
           char *pBuf = buf;
-          PRInt32 ulen = strlen(text);
+          PRInt32 ulen = nsCRT::strlen(text);
           PRInt32 outlen = 0;
           if(NS_SUCCEEDED(rv = encoder->GetMaxLength(text, ulen, &outlen))) 
           {

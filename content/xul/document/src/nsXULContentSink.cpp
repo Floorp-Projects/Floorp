@@ -764,7 +764,7 @@ XULContentSinkImpl::ReportError(const PRUnichar* aErrorText,
   rv = HandleStartElement(parsererror.get(), noAtts, 0, -1, 0);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = HandleCharacterData(aErrorText, strlen(aErrorText));
+  rv = HandleCharacterData(aErrorText, nsCRT::strlen(aErrorText));
   NS_ENSURE_SUCCESS(rv,rv);  
   
   nsAutoString sourcetext(errorNs);
@@ -774,7 +774,7 @@ XULContentSinkImpl::ReportError(const PRUnichar* aErrorText,
   rv = HandleStartElement(sourcetext.get(), noAtts, 0, -1, 0);
   NS_ENSURE_SUCCESS(rv,rv);
   
-  rv = HandleCharacterData(aSourceText, strlen(aSourceText));
+  rv = HandleCharacterData(aSourceText, nsCRT::strlen(aSourceText));
   NS_ENSURE_SUCCESS(rv,rv);
   
   rv = HandleEndElement(sourcetext.get());

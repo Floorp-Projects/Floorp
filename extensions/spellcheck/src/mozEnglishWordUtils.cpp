@@ -277,7 +277,7 @@ NS_IMETHODIMP mozEnglishWordUtils::FromRootForm(const PRUnichar *aWord, const PR
 
   mozEnglishWordUtils::myspCapitalization ct = captype(word);
   for(PRUint32 i = 0; i < icount; ++i) {
-    length = strlen(iwords[i]);
+    length = nsCRT::strlen(iwords[i]);
     tmpPtr[i] = (PRUnichar *) nsMemory::Alloc(sizeof(PRUnichar) * (length + 1));
     if (NS_UNLIKELY(!tmpPtr[i])) {
       NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, tmpPtr);
