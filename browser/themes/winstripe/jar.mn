@@ -158,6 +158,7 @@ browser.jar:
         skin/classic/browser/devtools/itemArrow-rtl.png             (devtools/itemArrow-rtl.png)
         skin/classic/browser/devtools/itemArrow-ltr.png             (devtools/itemArrow-ltr.png)
         skin/classic/browser/devtools/inspect-button.png            (devtools/inspect-button.png)
+        skin/classic/browser/devtools/dropmarker.png                (devtools/dropmarker.png)
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/browser/sync-throbber.png
         skin/classic/browser/sync-16.png
@@ -331,6 +332,7 @@ browser.jar:
         skin/classic/aero/browser/devtools/itemArrow-rtl.png         (devtools/itemArrow-rtl.png)
         skin/classic/aero/browser/devtools/itemArrow-ltr.png         (devtools/itemArrow-ltr.png)
         skin/classic/aero/browser/devtools/inspect-button.png        (devtools/inspect-button.png)
+        skin/classic/aero/browser/devtools/dropmarker.png            (devtools/dropmarker.png)
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/aero/browser/sync-throbber.png
         skin/classic/aero/browser/sync-16.png
