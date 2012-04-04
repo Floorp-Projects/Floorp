@@ -148,7 +148,6 @@
 #include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIMarkupDocumentViewer.h"
-#include "nsIPrefBranch.h"
 #include "nsIPresShell.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIProgrammingLanguage.h"

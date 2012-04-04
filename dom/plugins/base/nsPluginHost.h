@@ -53,7 +53,6 @@
 #include "nsWeakPtr.h"
 #include "nsIPrompt.h"
 #include "nsISupportsArray.h"
-#include "nsIPrefBranch.h"
 #include "nsWeakReference.h"
 #include "nsThreadUtils.h"
 #include "nsTArray.h"
@@ -322,7 +321,6 @@ private:
   nsTArray< nsRefPtr<nsNPAPIPluginInstance> > mInstances;
 
   nsCOMPtr<nsIFile> mPluginRegFile;
-  nsCOMPtr<nsIPrefBranch> mPrefService;
 #ifdef XP_WIN
   nsRefPtr<nsPluginDirServiceProvider> mPrivateDirServiceProvider;
 #endif

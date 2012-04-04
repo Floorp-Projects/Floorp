@@ -41,10 +41,11 @@
 #include "MaemoLocationProvider.h"
 #include "nsIClassInfo.h"
 #include "nsDOMClassInfoID.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 NS_IMPL_ISUPPORTS2(MaemoLocationProvider, nsIGeolocationProvider, nsITimerCallback)
 
@@ -192,31 +193,31 @@ NS_IMETHODIMP MaemoLocationProvider::Startup()
 {
   nsresult rv(NS_OK);
 
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (!prefs)
-    return NS_ERROR_FAILURE;
-
   rv = StartControl();
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = StartDevice();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  prefs->GetBoolPref("geo.herror.ignore.big", &mIgnoreBigHErr);
+  mIgnoreBigHErr =
+    Preferences::GetBool("geo.herror.ignore.big", mIgnoreBigHErr);
 
-  if (mIgnoreBigHErr)
-    prefs->GetIntPref("geo.herror.max.value", &mMaxHErr);
+  if (mIgnoreBigHErr) {
+    mMaxHErr = Preferences::GetInt("geo.herror.max.value", mMaxHErr);
+  }
 
-  prefs->GetBoolPref("geo.verror.ignore.big", &mIgnoreBigVErr);
+  mIgnoreBigVErr =
+    Preferences::GetBool("geo.verror.ignore.big", mIgnoreBigVErr);
 
-  if (mIgnoreBigVErr)
-    prefs->GetIntPref("geo.verror.max.value", &mMaxVErr);
+  if (mIgnoreBigVErr) {
+    mMaxVErr = Preferences::GetInt("geo.verror.max.value", mMaxVErr);
+  }
 
   if (mUpdateTimer)
     return NS_OK;
 
-  PRInt32 update = 0; //0 second no timer created
-  prefs->GetIntPref("geo.default.update", &update);
+  // 0 second no timer created
+  PRInt32 update = Preferences::GetInt("geo.default.update", 0);
 
   if (!update)
     return NS_OK;

@@ -49,8 +49,6 @@
 #include "nsIFilePicker.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefLocalizedString.h"
 #include "nsIObserverService.h"
 #include "nsContentUtils.h"
 #include "nsAutoPtr.h"
@@ -216,10 +214,7 @@ ContentParent::Init()
         obs->AddObserver(this, "a11y-init-or-shutdown", false);
 #endif
     }
-    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefs) {
-        prefs->AddObserver("", this, false);
-    }
+    Preferences::AddStrongObserver(this, "");
     nsCOMPtr<nsIThreadInternal>
             threadInt(do_QueryInterface(NS_GetCurrentThread()));
     if (threadInt) {
@@ -249,13 +244,8 @@ ContentParent::OnChannelConnected(int32 pid)
         SetOtherProcess(handle);
 
 #if defined(ANDROID) || defined(LINUX)
-        EnsurePrefService();
-        nsCOMPtr<nsIPrefBranch> branch;
-        branch = do_QueryInterface(mPrefService);
-
         // Check nice preference
-        PRInt32 nice = 0;
-        branch->GetIntPref("dom.ipc.content.nice", &nice);
+        PRInt32 nice = Preferences::GetInt("dom.ipc.content.nice", 0);
 
         // Environment variable overrides preference
         char* relativeNicenessStr = getenv("MOZ_CHILD_PROCESS_RELATIVE_NICENESS");
@@ -329,11 +319,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     SetChildMemoryReporters(empty);
 
     // remove the global remote preferences observers
-    nsCOMPtr<nsIPrefBranch> prefs 
-            (do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefs) { 
-        prefs->RemoveObserver("", this);
-    }
+    Preferences::RemoveObserver(this, "");
 
     RecvRemoveGeolocationListener();
 
@@ -464,7 +450,6 @@ ContentParent::IsAlive()
 bool
 ContentParent::RecvReadPrefsArray(InfallibleTArray<PrefTuple> *prefs)
 {
-    EnsurePrefService();
     Preferences::MirrorPreferences(prefs);
     return true;
 }
@@ -476,18 +461,6 @@ ContentParent::RecvReadFontList(InfallibleTArray<FontListEntry>* retValue)
     gfxAndroidPlatform::GetPlatform()->GetFontList(retValue);
 #endif
     return true;
-}
-
-
-void
-ContentParent::EnsurePrefService()
-{
-    nsresult rv;
-    if (!mPrefService) {
-        mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-        NS_ASSERTION(NS_SUCCEEDED(rv), 
-                     "We lost prefService in the Chrome process !");
-    }
 }
 
 bool

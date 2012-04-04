@@ -61,7 +61,6 @@ using mozilla::dom::StorageChild;
 #include "nsReadableUtils.h"
 #include "nsIObserverService.h"
 #include "nsNetUtil.h"
-#include "nsIPrefBranch.h"
 #include "nsICookiePermission.h"
 #include "nsIPermission.h"
 #include "nsIPermissionManager.h"
