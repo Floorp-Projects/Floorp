@@ -2934,6 +2934,10 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
   padding: 0 9px;
 }
 
+.inspector-breadcrumbs-button:-moz-focusring > label {
+  border-bottom: 1px dotted hsla(210,30%,85%,0.4);
+}
+
 .inspector-breadcrumbs-button[checked] > .inspector-breadcrumbs-tag {
   color: hsl(208,100%,60%);
 }
