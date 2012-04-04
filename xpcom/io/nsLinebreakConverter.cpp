@@ -401,7 +401,7 @@ PRUnichar* nsLinebreakConverter::ConvertUnicharLineBreaks(const PRUnichar* aSrc,
                aSrcBreaks != eLinebreakSpace, "Invalid parameter");
   if (!aSrc) return nsnull;
   
-  PRInt32 bufLen = (aSrcLen == kIgnoreLen) ? strlen(aSrc) + 1 : aSrcLen;
+  PRInt32 bufLen = (aSrcLen == kIgnoreLen) ? nsCRT::strlen(aSrc) + 1 : aSrcLen;
 
   PRUnichar* resultString;
   if (aSrcBreaks == eLinebreakAny)
@@ -427,7 +427,7 @@ nsresult nsLinebreakConverter::ConvertUnicharLineBreaksInSitu(PRUnichar **ioBuff
   NS_ASSERTION(aDestBreaks != eLinebreakAny &&
                aSrcBreaks != eLinebreakSpace, "Invalid parameter");
 
-  PRInt32 sourceLen = (aSrcLen == kIgnoreLen) ? strlen(*ioBuffer) + 1 : aSrcLen;
+  PRInt32 sourceLen = (aSrcLen == kIgnoreLen) ? nsCRT::strlen(*ioBuffer) + 1 : aSrcLen;
 
   // can we convert in-place?
   const char* srcBreaks = GetLinebreakString(aSrcBreaks);

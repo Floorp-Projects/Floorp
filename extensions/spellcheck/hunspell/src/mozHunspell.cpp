@@ -500,7 +500,7 @@ nsresult mozHunspell::ConvertCharset(const PRUnichar* aStr, char ** aDst)
   NS_ENSURE_TRUE(mEncoder, NS_ERROR_NULL_POINTER);
 
   PRInt32 outLength;
-  PRInt32 inLength = strlen(aStr);
+  PRInt32 inLength = nsCRT::strlen(aStr);
   nsresult rv = mEncoder->GetMaxLength(aStr, inLength, &outLength);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -557,7 +557,7 @@ NS_IMETHODIMP mozHunspell::Suggest(const PRUnichar *aWord, PRUnichar ***aSuggest
       PRUint32 index = 0;
       for (index = 0; index < *aSuggestionCount && NS_SUCCEEDED(rv); ++index) {
         // Convert the suggestion to utf16
-        PRInt32 inLength = strlen(wlst[index]);
+        PRInt32 inLength = nsCRT::strlen(wlst[index]);
         PRInt32 outLength;
         rv = mDecoder->GetMaxLength(wlst[index], inLength, &outLength);
         if (NS_SUCCEEDED(rv))

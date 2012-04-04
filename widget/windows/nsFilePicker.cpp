@@ -828,8 +828,8 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
   if (current[dirName.Length() - 1] != '\\')
     dirName.Append((PRUnichar)'\\');
   
-  while (current && *current && *(current + strlen(current) + 1)) {
-    current = current + strlen(current) + 1;
+  while (current && *current && *(current + nsCRT::strlen(current) + 1)) {
+    current = current + nsCRT::strlen(current) + 1;
     
     nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
     NS_ENSURE_TRUE(file, false);

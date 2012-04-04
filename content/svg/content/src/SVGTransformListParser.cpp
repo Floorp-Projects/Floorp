@@ -120,7 +120,7 @@ SVGTransformListParser::GetTransformToken(nsIAtom** aKeyAtom,
     *delimiterStart = '\0';
 
     PRUint32 len;
-    if ((len = strlen(mTokenPos)) > 0) {
+    if ((len = nsCRT::strlen(mTokenPos)) > 0) {
       *aKeyAtom = NS_NewAtom(Substring(mTokenPos, mTokenPos + len));
 
       if (aAdvancePos) {
