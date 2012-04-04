@@ -56,7 +56,7 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
   @Override
   protected String buildRecordString(Record record) {
     HistoryRecord hist = (HistoryRecord) record;
-    return hist.title + hist.histURI;
+    return hist.histURI;
   }
 
   @Override
