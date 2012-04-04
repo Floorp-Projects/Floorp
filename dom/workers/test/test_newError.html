@@ -20,7 +20,7 @@
   }
 
   worker.onerror = function(event) {
-    is(event.message, "foo!", "Got wrong error message!");
+    is(event.message, "Error: foo!", "Got wrong error message!");
     event.preventDefault();
     SimpleTest.finish();
   }
