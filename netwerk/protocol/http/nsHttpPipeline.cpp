@@ -770,10 +770,14 @@ nsHttpPipeline::WriteSegments(nsAHttpSegmentWriter *writer,
 
         if (rv == NS_BASE_STREAM_CLOSED || trans->IsDone()) {
             trans->Close(NS_OK);
-            NS_RELEASE(trans);
-            mResponseQ.RemoveElementAt(0);
-            mResponseIsPartial = false;
-            ++mHttp1xTransactionCount;
+
+            // Release the transaction if it is not IsProxyConnectInProgress()
+            if (trans == Response(0)) {
+                NS_RELEASE(trans);
+                mResponseQ.RemoveElementAt(0);
+                mResponseIsPartial = false;
+                ++mHttp1xTransactionCount;
+            }
 
             // ask the connection manager to add additional transactions
             // to our pipeline.
