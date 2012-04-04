@@ -98,7 +98,8 @@ public class HistoryRecord extends Record {
 
   /**
    * We consider two history records to be congruent if they represent the
-   * same history record regardless of visits.
+   * same history record regardless of visits. Titles are allowed to differ,
+   * but the URI must be the same.
    */
   @Override
   public boolean congruentWith(Object o) {
@@ -109,8 +110,7 @@ public class HistoryRecord extends Record {
     if (!super.congruentWith(other)) {
       return false;
     }
-    return RepoUtils.stringsEqual(this.title, other.title) &&
-           RepoUtils.stringsEqual(this.histURI, other.histURI);
+    return RepoUtils.stringsEqual(this.histURI, other.histURI);
   }
 
   @Override
