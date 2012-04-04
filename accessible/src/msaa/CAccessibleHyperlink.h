@@ -43,10 +43,10 @@
 
 #include "nsISupports.h"
 
-#include "CAccessibleAction.h"
+#include "ia2AccessibleAction.h"
 #include "AccessibleHyperlink.h"
 
-class CAccessibleHyperlink: public CAccessibleAction,
+class CAccessibleHyperlink: public ia2AccessibleAction,
                             public IAccessibleHyperlink
 {
 public:
@@ -55,7 +55,7 @@ public:
   STDMETHODIMP QueryInterface(REFIID, void**);
 
   // IAccessibleAction
-  FORWARD_IACCESSIBLEACTION(CAccessibleAction)
+  FORWARD_IACCESSIBLEACTION(ia2AccessibleAction)
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_anchor(
       /* [in] */ long index,

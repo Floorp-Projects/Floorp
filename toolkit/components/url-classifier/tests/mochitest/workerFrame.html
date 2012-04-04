@@ -1,10 +1,12 @@
-<html> <head>
+<html>
+<head>
 <title></title>
-</head>
 
 <script type="text/javascript">
+
 function startCleanWorker() {
   var worker = new Worker("cleanWorker.js");
+
   worker.onmessage = function(event) {
     if (event.data == "success") {
       window.parent.postMessage("success:blocked importScripts('evilWorker.js')", "*");
@@ -24,6 +26,7 @@ function startCleanWorker() {
 
 function startEvilWorker() {
   var worker = new Worker("evilWorker.js");
+
   worker.onmessage = function(event) {
     window.parent.postMessage("failure:failed to block evilWorker.js", "*");
     startCleanWorker();
@@ -39,5 +42,8 @@ function startEvilWorker() {
 
 </script>
 
+</head>
+
 <body onload="startEvilWorker()">
-</body> </html>
+</body>
+</html>

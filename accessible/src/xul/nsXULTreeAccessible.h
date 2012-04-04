@@ -146,7 +146,7 @@ public:
   /**
    * Invalidates children created for previous tree view.
    */
-  void TreeViewChanged();
+  void TreeViewChanged(nsITreeView* aView);
 
 protected:
   /**
@@ -319,5 +319,15 @@ protected:
   virtual nsAccessible* GetSiblingAtOffset(PRInt32 aOffset,
                                            nsresult *aError = nsnull) const;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessible downcasting method
+
+inline nsXULTreeAccessible*
+nsAccessible::AsXULTree()
+{
+  return IsXULTree() ?
+    static_cast<nsXULTreeAccessible*>(this) : nsnull;
+}
 
 #endif

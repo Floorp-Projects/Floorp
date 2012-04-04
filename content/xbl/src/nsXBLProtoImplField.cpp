@@ -125,6 +125,8 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
     return NS_OK;
   }
 
+  nsAutoMicroTask mt;
+
   // EvaluateStringWithValue and JS_DefineUCProperty can both trigger GC, so
   // protect |result| here.
   nsresult rv;

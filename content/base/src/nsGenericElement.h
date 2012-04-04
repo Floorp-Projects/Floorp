@@ -343,9 +343,6 @@ public:
   virtual bool IsNodeOfType(PRUint32 aFlags) const;
   virtual bool IsLink(nsIURI** aURI) const;
 
-  virtual PRUint32 GetScriptTypeID() const;
-  NS_IMETHOD SetScriptTypeID(PRUint32 aLang);
-
   virtual void DestroyContent();
   virtual void SaveSubtreeState();
 

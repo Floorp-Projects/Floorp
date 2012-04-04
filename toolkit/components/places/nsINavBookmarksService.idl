@@ -576,8 +576,8 @@ interface nsINavBookmarksService : nsISupports
    *
    * If there is no bookmarked page found, it will return NULL.
    *
-   * @note The function will only return bookmarks in the first 3 levels of
-   *       redirection (1 -> 2 -> 3 -> aURI).
+   * @note The function will only return bookmarks in the first 2 levels of
+   *       redirection (1 -> 2 -> aURI).
    */
   nsIURI getBookmarkedURIFor(in nsIURI aURI);
 

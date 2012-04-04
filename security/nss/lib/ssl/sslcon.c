@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslcon.c,v 1.45 2011/11/19 21:58:21 bsmith%mozilla.com Exp $ */
+/* $Id: sslcon.c,v 1.46 2012/03/01 01:58:22 wtc%google.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -1435,7 +1435,7 @@ ssl2_CreateSessionCypher(sslSocket *ss, sslSessionID *sid, PRBool isClient)
     writeKey.data = 0;
 
     PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
-    if((ss->sec.ci.sid == 0))
+    if (ss->sec.ci.sid == 0)
     	goto sec_loser;	/* don't crash if asserts are off */
 
     /* Trying to cut down on all these switch statements that should be tables.

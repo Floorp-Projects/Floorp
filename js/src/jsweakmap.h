@@ -98,14 +98,6 @@ namespace js {
 //   a policy template with the obvious definitions for some typical
 //   SpiderMonkey type combinations.
 
-// A policy template holding default marking algorithms for common type combinations. This
-// provides default types for WeakMap's MarkPolicy template parameter.
-template <class Type> class DefaultMarkPolicy;
-
-// A policy template holding default tracing algorithms for common type combinations. This
-// provides default types for WeakMap's TracePolicy template parameter.
-template <class Key, class Value> class DefaultTracePolicy;
-
 // The value for the next pointer for maps not in the map list.
 static WeakMapBase * const WeakMapNotInList = reinterpret_cast<WeakMapBase *>(1);
 
@@ -188,10 +180,7 @@ class WeakMapBase {
 };
 
 template <class Key, class Value,
-          class HashPolicy = DefaultHasher<Key>,
-          class KeyMarkPolicy = DefaultMarkPolicy<Key>,
-          class ValueMarkPolicy = DefaultMarkPolicy<Value>,
-          class TracePolicy = DefaultTracePolicy<Key, Value> >
+          class HashPolicy = DefaultHasher<Key> >
 class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, public WeakMapBase {
   private:
     typedef HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy> Base;
@@ -203,154 +192,97 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     explicit WeakMap(JSRuntime *rt, JSObject *memOf=NULL) : Base(rt), WeakMapBase(memOf) { }
     explicit WeakMap(JSContext *cx, JSObject *memOf=NULL) : Base(cx), WeakMapBase(memOf) { }
 
-    // Use with caution, as result can be affected by garbage collection.
+    /* Use with caution, as result can be affected by garbage collection. */
     Range nondeterministicAll() {
         return Base::all();
     }
 
   private:
+    bool IsMarked(const HeapValue &x) {
+        if (x.isMarkable())
+            return !IsAboutToBeFinalized(x);
+        return true;
+    }
+    bool IsMarked(const HeapPtrObject &x) {
+        return !IsAboutToBeFinalized(x);
+    }
+    bool IsMarked(const HeapPtrScript&x) {
+        return !IsAboutToBeFinalized(x);
+    }
+
+    bool Mark(JSTracer *trc, HeapValue *x) {
+        if (IsMarked(*x))
+            return false;
+        js::gc::MarkValue(trc, x, "WeakMap entry value");
+        return true;
+    }
+    bool Mark(JSTracer *trc, HeapPtrObject *x) {
+        if (IsMarked(*x))
+            return false;
+        js::gc::MarkObject(trc, x, "WeakMap entry value");
+        return true;
+    }
+    bool Mark(JSTracer *trc, HeapPtrScript *x) {
+        if (IsMarked(*x))
+            return false;
+        js::gc::MarkScript(trc, x, "WeakMap entry value");
+        return true;
+    }
+
     void nonMarkingTrace(JSTracer *trc) {
-        ValueMarkPolicy vp(trc);
         for (Range r = Base::all(); !r.empty(); r.popFront())
-            vp.mark(&r.front().value);
+            Mark(trc, &r.front().value);
     }
 
     bool markIteratively(JSTracer *trc) {
-        KeyMarkPolicy kp(trc);
-        ValueMarkPolicy vp(trc);
         bool markedAny = false;
         for (Range r = Base::all(); !r.empty(); r.popFront()) {
-            const Key &k = r.front().key;
-            Value &v = r.front().value;
             /* If the entry is live, ensure its key and value are marked. */
-            if (kp.isMarked(k)) {
-                markedAny |= vp.mark(&v);
-            }
-            JS_ASSERT_IF(kp.isMarked(k), vp.isMarked(v));
+            if (IsMarked(r.front().key) && Mark(trc, &r.front().value))
+                markedAny = true;
+            JS_ASSERT_IF(IsMarked(r.front().key), IsMarked(r.front().value));
         }
         return markedAny;
     }
 
     void sweep(JSTracer *trc) {
-        KeyMarkPolicy kp(trc);
-
         /* Remove all entries whose keys remain unmarked. */
         for (Enum e(*this); !e.empty(); e.popFront()) {
-            if (!kp.isMarked(e.front().key))
+            if (!IsMarked(e.front().key))
                 e.removeFront();
         }
 
 #if DEBUG
-        ValueMarkPolicy vp(trc);
         /*
          * Once we've swept, all remaining edges should stay within the
          * known-live part of the graph.
          */
         for (Range r = Base::all(); !r.empty(); r.popFront()) {
-            JS_ASSERT(kp.isMarked(r.front().key));
-            JS_ASSERT(vp.isMarked(r.front().value));
+            JS_ASSERT(IsMarked(r.front().key));
+            JS_ASSERT(IsMarked(r.front().value));
         }
 #endif
     }
 
-    // mapObj can be NULL, which means that the map is not part of a JSObject.
-    void traceMappings(WeakMapTracer *tracer) {
-        TracePolicy t(tracer);
-        for (Range r = Base::all(); !r.empty(); r.popFront())
-            t.traceMapping(memberOf, r.front().key, r.front().value);
-    }
-};
-
-template <>
-class DefaultMarkPolicy<HeapValue> {
-  private:
-    JSTracer *tracer;
-  public:
-    DefaultMarkPolicy(JSTracer *t) : tracer(t) { }
-    bool isMarked(const HeapValue &x) {
-        if (x.isMarkable())
-            return !IsAboutToBeFinalized(x);
-        return true;
-    }
-    bool mark(HeapValue *x) {
-        if (isMarked(*x))
-            return false;
-        js::gc::MarkValue(tracer, x, "WeakMap entry");
-        return true;
-    }
-};
-
-template <>
-class DefaultMarkPolicy<HeapPtrObject> {
-  private:
-    JSTracer *tracer;
-  public:
-    DefaultMarkPolicy(JSTracer *t) : tracer(t) { }
-    bool isMarked(const HeapPtrObject &x) {
-        return !IsAboutToBeFinalized(x);
-    }
-    bool mark(HeapPtrObject *x) {
-        if (isMarked(*x))
-            return false;
-        js::gc::MarkObject(tracer, x, "WeakMap entry");
-        return true;
-    }
-};
-
-template <>
-class DefaultMarkPolicy<HeapPtrScript> {
-  private:
-    JSTracer *tracer;
-  public:
-    DefaultMarkPolicy(JSTracer *t) : tracer(t) { }
-    bool isMarked(const HeapPtrScript &x) {
-        return !IsAboutToBeFinalized(x);
-    }
-    bool mark(HeapPtrScript *x) {
-        if (isMarked(*x))
-            return false;
-        js::gc::MarkScript(tracer, x, "WeakMap entry");
-        return true;
-    }
-};
-
-// Default trace policies
-
-template <>
-class DefaultTracePolicy<HeapPtrObject, HeapValue> {
-  private:
-    WeakMapTracer *tracer;
-  public:
-    DefaultTracePolicy(WeakMapTracer *t) : tracer(t) { }
-    void traceMapping(JSObject *m, const HeapPtr<JSObject> &k, HeapValue &v) {
+    void CallTracer(WeakMapTracer *trc, const HeapPtrObject &k, const HeapValue &v) {
         if (v.isMarkable())
-            tracer->callback(tracer, m, k.get(), JSTRACE_OBJECT, v.toGCThing(), v.gcKind());
+            trc->callback(trc, memberOf, k.get(), JSTRACE_OBJECT, v.toGCThing(), v.gcKind());
+    }
+    void CallTracer(WeakMapTracer *trc, const HeapPtrObject &k, const HeapPtrObject &v) {
+        trc->callback(trc, memberOf, k.get(), JSTRACE_OBJECT, v.get(), JSTRACE_OBJECT);
+    }
+    void CallTracer(WeakMapTracer *trc, const HeapPtrScript &k, const HeapPtrObject &v) {
+        trc->callback(trc, memberOf, k.get(), JSTRACE_SCRIPT, v.get(), JSTRACE_OBJECT);
+    }
+
+    /* mapObj can be NULL, which means that the map is not part of a JSObject. */
+    void traceMappings(WeakMapTracer *tracer) {
+        for (Range r = Base::all(); !r.empty(); r.popFront())
+            CallTracer(tracer, r.front().key, r.front().value);
     }
 };
 
-template <>
-class DefaultTracePolicy<HeapPtrObject, HeapPtrObject> {
-  private:
-    WeakMapTracer *tracer;
-  public:
-    DefaultTracePolicy(WeakMapTracer *t) : tracer(t) { }
-    void traceMapping(JSObject *m, const HeapPtrObject &k, const HeapPtrObject &v) {
-        tracer->callback(tracer, m, k.get(), JSTRACE_OBJECT, v.get(), JSTRACE_OBJECT);
-    }
-};
-
-template <>
-class DefaultTracePolicy<HeapPtrScript, HeapPtrObject> {
-  private:
-    WeakMapTracer *tracer;
-  public:
-    DefaultTracePolicy(WeakMapTracer *t) : tracer(t) { }
-    void traceMapping(JSObject *m, const HeapPtrScript &k, const HeapPtrObject &v) {
-        tracer->callback(tracer, m, k.get(), JSTRACE_SCRIPT, v.get(), JSTRACE_OBJECT);
-    }
-};
-
-}
+} /* namespace js */
 
 extern JSObject *
 js_InitWeakMapClass(JSContext *cx, JSObject *obj);

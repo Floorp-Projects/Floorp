@@ -361,6 +361,10 @@ pref("places.frecency.unvisitedTypedBonus", 200);
 
 // disable color management
 pref("gfx.color_management.mode", 0);
+#ifdef ANDROID
+// 0=fixed margin, 1=velocity bias, 2=dynamic resolution, 3=no margins
+pref("gfx.displayport.strategy", 0);
+#endif
 
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);

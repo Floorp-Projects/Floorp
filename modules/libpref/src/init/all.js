@@ -637,6 +637,7 @@ pref("dom.min_background_timeout_value", 1000);
 // Use the new DOM bindings (only affects any scopes created after the pref is
 // changed)
 pref("dom.new_bindings", true);
+pref("dom.paris_bindings", true);
 
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN
@@ -817,7 +818,10 @@ pref("network.http.pipelining.max-optimistic-requests" , 4);
 
 pref("network.http.pipelining.aggressive", false);
 pref("network.http.pipelining.maxsize" , 300000);
-pref("network.http.pipelining.read-timeout", 10000);
+
+// The read-timeout is a ms timer that causes the transaction to be completely
+// restarted without pipelining. Set to 0 to disable.
+pref("network.http.pipelining.read-timeout", 30000);
 
 // Prompt for 307 redirects
 pref("network.http.prompt-temp-redirect", true);
@@ -3523,6 +3527,7 @@ pref("profiler.entries", 100000);
 // Network API
 pref("dom.network.enabled", true);
 pref("dom.network.metered", false);
+
 #ifdef XP_WIN
 // On 32-bit Windows, fire a low-memory notification if we have less than this
 // many mb of virtual address space available.
@@ -3541,3 +3546,8 @@ pref("memory.low_physical_memory_threshold_mb", 0);
 // low_memory_notification_interval_ms.
 pref("memory.low_memory_notification_interval_ms", 10000);
 #endif
+
+// How long must we wait before declaring that a window is a "ghost" (i.e., a
+// likely leak)?  This should be longer than it usually takes for an eligible
+// window to be collected via the GC/CC.
+pref("memory.ghost_window_timeout_seconds", 60);

@@ -125,8 +125,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x283ec27d, 0x5b23, 0x49b2, \
-  { 0x94, 0xd9, 0x9, 0xb5, 0xdb, 0x45, 0x30, 0x73 } }
+{ 0x8e51e6d9, 0x914d, 0x46ba, \
+  { 0xb3, 0x11, 0x2f, 0x27, 0x3d, 0xe6, 0x0d, 0x19 } }
 
 
 // Flag for AddStyleSheet().
@@ -183,9 +183,10 @@ public:
   
   /**
    * Let the document know that we're starting to load data into it.
-   * @param aCommand The parser command
+   * @param aCommand The parser command. Must not be null.
    *                 XXXbz It's odd to have that here.
-   * @param aChannel The channel the data will come from
+   * @param aChannel The channel the data will come from. The channel must be
+   *                 able to report its Content-Type.
    * @param aLoadGroup The loadgroup this document should use from now on.
    *                   Note that the document might not be the only thing using
    *                   this loadgroup.
@@ -204,6 +205,9 @@ public:
    * @param aSink The content sink to use for the data.  If this is null and
    *              the document needs a content sink, it will create one based
    *              on whatever it knows about the data it's going to load.
+   *              This MUST be null if the underlying document is an HTML
+   *              document. Even in the XML case, please don't add new calls
+   *              with non-null sink.
    *
    * Once this has been called, the document will return false for
    * MayStartLayout() until SetMayStartLayout(true) is called on it.  Making
@@ -1638,6 +1642,30 @@ public:
   // declaration of nsINode::SizeOfIncludingThis.
   virtual void DocSizeOfIncludingThis(nsWindowSizes* aWindowSizes) const;
 
+  PRBool MayHaveDOMMutationObservers()
+  {
+    return mMayHaveDOMMutationObservers;
+  }
+
+  void SetMayHaveDOMMutationObservers()
+  {
+    mMayHaveDOMMutationObservers = true;
+  }
+
+  bool IsInSyncOperation()
+  {
+    return mInSyncOperationCount != 0;
+  }
+
+  void SetIsInSyncOperation(bool aSync)
+  {
+    if (aSync) {
+      ++mInSyncOperationCount;
+    } else {
+      --mInSyncOperationCount;
+    }
+  }
+
 private:
   PRUint64 mWarnedAbout;
 
@@ -1809,6 +1837,9 @@ protected:
   // True if a style flush might not be a no-op
   bool mNeedStyleFlush;
 
+  // True if a DOMMutationObserver is perhaps attached to a node in the document.
+  bool mMayHaveDOMMutationObservers;
+
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the
   // *inner* window object.
@@ -1904,6 +1935,8 @@ protected:
   nsCOMPtr<nsIVariant> mStateObjectCached;
 
   PRUint8 mDefaultElementType;
+
+  PRUint32 mInSyncOperationCount;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
@@ -1948,6 +1981,16 @@ public:
 private:
   nsCOMPtr<nsINode>     mTarget;
   nsCOMPtr<nsIDocument> mSubtreeOwner;
+};
+
+class NS_STACK_CLASS nsAutoSyncOperation
+{
+public:
+  nsAutoSyncOperation(nsIDocument* aDocument);
+  ~nsAutoSyncOperation();
+private:
+  nsCOMArray<nsIDocument> mDocuments;
+  PRUint32                mMicroTaskLevel;
 };
 
 // XXX These belong somewhere else

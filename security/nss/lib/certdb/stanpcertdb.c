@@ -631,7 +631,7 @@ CERT_FindCertByDERCert(CERTCertDBHandle *handle, SECItem *derCert)
 
 static CERTCertificate *
 common_FindCertByNicknameOrEmailAddrForUsage(CERTCertDBHandle *handle, 
-                                             char *name,
+                                             const char *name,
                                              PRBool anyUsage,
                                              SECCertUsage lookingForUsage)
 {

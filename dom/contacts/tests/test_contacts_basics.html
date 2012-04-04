@@ -28,6 +28,35 @@ Components.classes["@mozilla.org/permissionmanager;1"]
                "webcontacts-manage",
                Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
 
+// For Sorting
+var c1 = {
+  name: "a",
+  familyName: ["a"],
+  givenName: ["a"],
+};
+
+var c2 = {
+  name: "b",
+  familyName: ["b"],
+  givenName: ["b"],
+};
+
+var c3 = {
+  name: "c",
+  familyName: ["c","x"],
+  givenName: ["c","x"],
+};
+
+var c4 = {
+  name: "d",
+  familyName: ["d","e"],
+  givenName: ["d","e"],
+};
+
+var c5 = {
+  name: "empty"
+};
+
 var adr1 = {
   streetAddress: "street 1",
   locality: "locality 1",
@@ -641,6 +670,18 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
+    ok(true, "Retrieving all contacts with limit 10 and sorted");
+    var options = { filterLimit: 10,
+                    sortBy: 'FamilyName',
+                    sortOrder: 'descending' };
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 10, "10 Entries.");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
     ok(true, "Retrieving all contacts2");
     var options = {filterBy: ["name"],
                    filterOp: "contains",
@@ -732,6 +773,121 @@ var steps = [
       }
       req2.onerror = onFailure;
     }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear()
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test sorting");
+    createResult1 = new mozContact();
+    createResult1.init(c3);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      checkContacts(c3, createResult1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test sorting");
+    createResult1 = new mozContact();
+    createResult1.init(c2);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      checkContacts(c2, createResult1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test sorting");
+    createResult1 = new mozContact();
+    createResult1.init(c4);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      checkContacts(c4, createResult1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test sorting");
+    createResult1 = new mozContact();
+    createResult1.init(c1);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      checkContacts(c1, createResult1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test sorting");
+    var options = {sortBy: "familyName",
+                   sortOrder: "ascending"};
+    req = navigator.mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 4, "4 results");
+      checkContacts(req.result[0], c1);
+      checkContacts(req.result[1], c2);
+      checkContacts(req.result[2], c3);
+      checkContacts(req.result[3], c4);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test sorting");
+    var options = {sortBy: "familyName",
+                   sortOrder: "descending"};
+    req = navigator.mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 4, "4 results");
+      checkContacts(req.result[0], c4);
+      checkContacts(req.result[1], c3);
+      checkContacts(req.result[2], c2);
+      checkContacts(req.result[3], c1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test sorting");
+    createResult1 = new mozContact();
+    createResult1.init(c5);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      checkContacts(c5, createResult1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test sorting with empty string");
+    var options = {sortBy: "familyName",
+                   sortOrder: "ascending"};
+    req = navigator.mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 5, "5 results");
+      checkContacts(req.result[0], c5);
+      checkContacts(req.result[1], c1);
+      checkContacts(req.result[2], c2);
+      checkContacts(req.result[3], c3);
+      checkContacts(req.result[4], c4);
+      next();
+    };
     req.onerror = onFailure;
   },
   function () {

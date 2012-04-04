@@ -262,7 +262,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             rt->gcHelperThread.waitBackgroundSweepEnd();
         }
 #endif
-        
+
         /*
          * Dump remaining type inference results first. This printing
          * depends on atoms still existing.
@@ -272,16 +272,16 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 
         /* Unpin all common atoms before final GC. */
         js_FinishCommonAtoms(cx);
-        
+
         /* Clear debugging state to remove GC roots. */
         for (CompartmentsIter c(rt); !c.done(); c.next())
             c->clearTraps(cx);
         JS_ClearAllWatchPoints(cx);
-        
-        GC(cx, NULL, GC_NORMAL, gcreason::LAST_CONTEXT);
+
+        GC(cx, true, GC_NORMAL, gcreason::LAST_CONTEXT);
     } else if (mode == JSDCM_FORCE_GC) {
         JS_ASSERT(!rt->gcRunning);
-        GC(cx, NULL, GC_NORMAL, gcreason::DESTROY_CONTEXT);
+        GC(cx, true, GC_NORMAL, gcreason::DESTROY_CONTEXT);
     } else if (mode == JSDCM_MAYBE_GC) {
         JS_ASSERT(!rt->gcRunning);
         JS_MaybeGC(cx);
@@ -884,7 +884,7 @@ js_InvokeOperationCallback(JSContext *cx)
     JS_ATOMIC_SET(&rt->interrupt, 0);
 
     if (rt->gcIsNeeded)
-        GCSlice(cx, rt->gcTriggerCompartment, GC_NORMAL, rt->gcTriggerReason);
+        GCSlice(cx, rt->gcFullIsNeeded, GC_NORMAL, rt->gcTriggerReason);
 
 #ifdef JS_THREADSAFE
     /*

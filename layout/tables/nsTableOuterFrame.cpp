@@ -338,8 +338,6 @@ nsTableOuterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 {
   // No border, background or outline are painted because they all belong
   // to the inner table.
-  if (!IsVisibleInSelection(aBuilder))
-    return NS_OK;
 
   // If there's no caption, take a short cut to avoid having to create
   // the special display list set and then sort it.

@@ -77,8 +77,6 @@
 #define INITGUID
 #include <shlobj.h>
 
-#pragma comment(lib, "shlwapi.lib") // for SHDeleteKeyW
-
 #include <mbstring.h>
 #include <shlwapi.h>
 
@@ -560,6 +558,13 @@ nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck,
     }
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::GetCanSetDesktopBackground(bool* aResult)
+{
+  *aResult = true;
   return NS_OK;
 }
 

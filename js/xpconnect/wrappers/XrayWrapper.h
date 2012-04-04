@@ -46,6 +46,8 @@
 // we pull them out of the Wrapper inheritance hierarchy and create a
 // little world around them.
 
+class XPCWrappedNative;
+
 namespace xpc {
 
 namespace XrayUtils {
@@ -62,8 +64,12 @@ GetNativePropertiesObject(JSContext *cx, JSObject *wrapper);
 
 }
 
+class XPCWrappedNativeXrayTraits;
+class ProxyXrayTraits;
+class DOMXrayTraits;
+
 // NB: Base *must* derive from JSProxyHandler
-template <typename Base>
+template <typename Base, typename Traits = XPCWrappedNativeXrayTraits >
 class XrayWrapper : public Base {
   public:
     XrayWrapper(unsigned flags);
@@ -99,28 +105,11 @@ class XrayWrapper : public Base {
     static XrayWrapper singleton;
 
   private:
-    bool resolveOwnProperty(JSContext *cx, JSObject *wrapper, jsid id, bool set,
-                            js::PropertyDescriptor *desc);
+    bool enumerate(JSContext *cx, JSObject *wrapper, unsigned flags,
+                   JS::AutoIdVector &props);
 };
 
-class XrayProxy : public XrayWrapper<js::CrossCompartmentWrapper> {
-  public:
-    XrayProxy(unsigned flags);
-    virtual ~XrayProxy();
-
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                       bool set, js::PropertyDescriptor *desc);
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                          bool set, js::PropertyDescriptor *desc);
-    virtual bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
-                                js::PropertyDescriptor *desc);
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
-                                     js::AutoIdVector &props);
-    virtual bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
-    virtual bool enumerate(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
-    // XrayWrapper's fix implementation works for us.
-
-    static XrayProxy singleton;
-};
+typedef XrayWrapper<js::CrossCompartmentWrapper, ProxyXrayTraits > XrayProxy;
+typedef XrayWrapper<js::CrossCompartmentWrapper, DOMXrayTraits > XrayDOM;
 
 }

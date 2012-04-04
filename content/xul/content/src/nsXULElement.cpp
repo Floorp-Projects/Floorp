@@ -288,10 +288,6 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
             element->SetMayHaveStyle();
         }
 
-        NS_ASSERTION(aPrototype->mScriptTypeID != nsIProgrammingLanguage::UNKNOWN,
-                    "Need to know the language!");
-        element->SetScriptTypeID(aPrototype->mScriptTypeID);
-
         if (aIsScriptable) {
             // Check each attribute on the prototype to see if we need to do
             // any additional processing and hookup that would otherwise be
@@ -418,17 +414,12 @@ nsXULElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
     nsRefPtr<nsXULElement> element;
     if (mPrototype) {
         element = nsXULElement::Create(mPrototype, aNodeInfo, true);
-        NS_ASSERTION(GetScriptTypeID() == mPrototype->mScriptTypeID,
+        NS_ASSERTION(nsIProgrammingLanguage::JAVASCRIPT == mPrototype->mScriptTypeID,
                      "Didn't get the default language from proto?");
     }
     else {
         nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
         element = new nsXULElement(ni.forget());
-        if (element) {
-        	// If created from a prototype, we will already have the script
-        	// language specified by the proto - otherwise copy it directly
-        	element->SetScriptTypeID(GetScriptTypeID());
-        }
     }
 
     if (!element) {
@@ -1102,13 +1093,13 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
         // the attribute isn't set yet.
         MaybeAddPopupListener(aName);
         if (nsContentUtils::IsEventAttributeName(aName, EventNameType_XUL) && aValue) {
-            // If mPrototype->mScriptTypeID != GetScriptTypeID(), it means
+            // If mPrototype->mScriptTypeID != nsIProgrammingLanguage::JAVASCRIPT, it means
             // we are resolving an overlay with a different default script
             // language.  We can't defer compilation of those handlers as
             // we will have lost the script language (storing it on each
             // nsXULPrototypeAttribute is expensive!)
             bool defer = mPrototype == nsnull ||
-                           mPrototype->mScriptTypeID == GetScriptTypeID();
+                           mPrototype->mScriptTypeID == nsIProgrammingLanguage::JAVASCRIPT;
             if (aValue->Type() == nsAttrValue::eString) {
                 AddScriptEventListener(aName, aValue->GetStringValue(), defer);
             } else {
@@ -2518,7 +2509,7 @@ nsXULElement::RecompileScriptEventListeners()
         // If we have a prototype, the node we are binding to should
         // have the same script-type - otherwise we will compile the
         // event handlers incorrectly.
-        NS_ASSERTION(mPrototype->mScriptTypeID == GetScriptTypeID(),
+        NS_ASSERTION(mPrototype->mScriptTypeID == nsIProgrammingLanguage::JAVASCRIPT,
                      "Prototype and node confused about default language?");
 
         count = mPrototype->mNumAttributes;

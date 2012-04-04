@@ -93,6 +93,7 @@ public:
   CompositorParent(nsIWidget* aWidget, base::Thread* aCompositorThread);
   virtual ~CompositorParent();
 
+  virtual bool RecvWillStop() MOZ_OVERRIDE;
   virtual bool RecvStop() MOZ_OVERRIDE;
   virtual bool RecvPause() MOZ_OVERRIDE;
   virtual bool RecvResume() MOZ_OVERRIDE;

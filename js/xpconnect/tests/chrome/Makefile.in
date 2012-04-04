@@ -77,6 +77,7 @@ _CHROME_FILES = \
 		test_bug706301.xul \
 		test_watchpoints.xul \
 		test_exnstack.xul \
+		test_weakref.xul \
 		$(NULL)
 
 # Disabled until this test gets updated to test the new proxy based

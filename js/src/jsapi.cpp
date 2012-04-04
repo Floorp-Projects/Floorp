@@ -49,7 +49,6 @@
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jsclist.h"
-#include "jsdhash.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsarray.h"
@@ -736,21 +735,21 @@ JSRuntime::JSRuntime()
     gcJitReleaseTime(0),
     gcMode(JSGC_MODE_GLOBAL),
     gcIsNeeded(0),
+    gcFullIsNeeded(0),
     gcWeakMapList(NULL),
     gcStats(thisFromCtor()),
     gcNumber(0),
     gcStartNumber(0),
     gcTriggerReason(gcreason::NO_REASON),
-    gcTriggerCompartment(NULL),
-    gcCurrentCompartment(NULL),
-    gcCheckCompartment(NULL),
+    gcIsFull(false),
+    gcStrictCompartmentChecking(false),
     gcIncrementalState(gc::NO_INCREMENTAL),
     gcCompartmentCreated(false),
     gcLastMarkSlice(false),
+    gcIncrementalIsFull(false),
     gcInterFrameGC(0),
     gcSliceBudget(SliceBudget::Unlimited),
     gcIncrementalEnabled(true),
-    gcIncrementalCompartment(NULL),
     gcPoke(false),
     gcRunning(false),
 #ifdef JS_GC_ZEAL
@@ -769,7 +768,7 @@ JSRuntime::JSRuntime()
     gcGrayRootsTraceOp(NULL),
     gcGrayRootsData(NULL),
     autoGCRooters(NULL),
-    scriptPCCounters(NULL),
+    scriptAndCountsVector(NULL),
     NaNValue(UndefinedValue()),
     negativeInfinityValue(UndefinedValue()),
     positiveInfinityValue(UndefinedValue()),
@@ -2629,9 +2628,11 @@ struct JSHeapDumpNode {
                                        into thing */
 };
 
+typedef HashSet<void *, PointerHasher<void *, 3>, SystemAllocPolicy> VisitedSet;
+
 typedef struct JSDumpingTracer {
     JSTracer            base;
-    JSDHashTable        visited;
+    VisitedSet          visited;
     bool                ok;
     void                *startThing;
     void                *thingToFind;
@@ -2644,12 +2645,10 @@ typedef struct JSDumpingTracer {
 static void
 DumpNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
-    void *thing = *thingp;
-    JSDumpingTracer *dtrc;
-    JSDHashEntryStub *entry;
-
     JS_ASSERT(trc->callback == DumpNotify);
-    dtrc = (JSDumpingTracer *)trc;
+
+    JSDumpingTracer *dtrc = (JSDumpingTracer *)trc;
+    void *thing = *thingp;
 
     if (!dtrc->ok || thing == dtrc->thingToIgnore)
         return;
@@ -2671,15 +2670,13 @@ DumpNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
          */
         if (thing == dtrc->startThing)
             return;
-        entry = (JSDHashEntryStub *)
-            JS_DHashTableOperate(&dtrc->visited, thing, JS_DHASH_ADD);
-        if (!entry) {
+        VisitedSet::AddPtr p = dtrc->visited.lookupForAdd(thing);
+        if (p)
+            return;
+        if (!dtrc->visited.add(p, thing)) {
             dtrc->ok = false;
             return;
         }
-        if (entry->key)
-            return;
-        entry->key = thing;
     }
 
     const char *edgeName = JS_GetTraceEdgeName(&dtrc->base, dtrc->buffer, sizeof(dtrc->buffer));
@@ -2771,26 +2768,19 @@ JS_PUBLIC_API(JSBool)
 JS_DumpHeap(JSRuntime *rt, FILE *fp, void* startThing, JSGCTraceKind startKind,
             void *thingToFind, size_t maxDepth, void *thingToIgnore)
 {
-    JSDumpingTracer dtrc;
-    JSHeapDumpNode *node, *children, *next, *parent;
-    size_t depth;
-    JSBool thingToFindWasTraced;
-
     if (maxDepth == 0)
-        return JS_TRUE;
+        return true;
 
-    JS_TracerInit(&dtrc.base, rt, DumpNotify);
-    if (!JS_DHashTableInit(&dtrc.visited, JS_DHashGetStubOps(),
-                           NULL, sizeof(JSDHashEntryStub),
-                           JS_DHASH_DEFAULT_CAPACITY(100))) {
+    JSDumpingTracer dtrc;
+    if (!dtrc.visited.init())
         return false;
-    }
-    dtrc.ok = JS_TRUE;
+    JS_TracerInit(&dtrc.base, rt, DumpNotify);
+    dtrc.ok = true;
     dtrc.startThing = startThing;
     dtrc.thingToFind = thingToFind;
     dtrc.thingToIgnore = thingToIgnore;
     dtrc.parentNode = NULL;
-    node = NULL;
+    JSHeapDumpNode *node = NULL;
     dtrc.lastNodep = &node;
     if (!startThing) {
         JS_ASSERT(startKind == JSTRACE_OBJECT);
@@ -2799,11 +2789,12 @@ JS_DumpHeap(JSRuntime *rt, FILE *fp, void* startThing, JSGCTraceKind startKind,
         JS_TraceChildren(&dtrc.base, startThing, startKind);
     }
 
-    depth = 1;
     if (!node)
-        goto dump_out;
+        return dtrc.ok;
 
-    thingToFindWasTraced = thingToFind && thingToFind == startThing;
+    size_t depth = 1;
+    JSHeapDumpNode *children, *next, *parent;
+    bool thingToFindWasTraced = thingToFind && thingToFind == startThing;
     for (;;) {
         /*
          * Loop must continue even when !dtrc.ok to free all nodes allocated
@@ -2840,16 +2831,14 @@ JS_DumpHeap(JSRuntime *rt, FILE *fp, void* startThing, JSGCTraceKind startKind,
             if (node)
                 break;
             if (!parent)
-                goto dump_out;
+                return dtrc.ok;
             JS_ASSERT(depth > 1);
             --depth;
             node = parent;
         }
     }
 
-  dump_out:
     JS_ASSERT(depth == 1);
-    JS_DHashTableFinish(&dtrc.visited);
     return dtrc.ok;
 }
 
@@ -2861,7 +2850,7 @@ JS_IsGCMarkingTracer(JSTracer *trc)
     return IS_GC_MARKING_TRACER(trc);
 }
 
-JS_PUBLIC_API(void)
+extern JS_PUBLIC_API(void)
 JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
 {
     AssertNoGC(cx);
@@ -2869,7 +2858,12 @@ JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
     /* We cannot GC the atoms compartment alone; use a full GC instead. */
     JS_ASSERT(comp != cx->runtime->atomsCompartment);
 
-    GC(cx, comp, GC_NORMAL, gcreason::API);
+    if (comp) {
+        PrepareCompartmentForGC(comp);
+        GC(cx, false, GC_NORMAL, gcreason::API);
+    } else {
+        GC(cx, true, GC_NORMAL, gcreason::API);
+    }
 }
 
 JS_PUBLIC_API(void)
