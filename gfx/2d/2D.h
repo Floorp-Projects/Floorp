@@ -829,6 +829,11 @@ public:
 
 #ifdef WIN32
   static TemporaryRef<DrawTarget> CreateDrawTargetForD3D10Texture(ID3D10Texture2D *aTexture, SurfaceFormat aFormat);
+  static TemporaryRef<DrawTarget>
+    CreateDualDrawTargetForD3D10Textures(ID3D10Texture2D *aTextureA,
+                                         ID3D10Texture2D *aTextureB,
+                                         SurfaceFormat aFormat);
+
   static void SetDirect3D10Device(ID3D10Device1 *aDevice);
   static ID3D10Device1 *GetDirect3D10Device();
 

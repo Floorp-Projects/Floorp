@@ -134,7 +134,7 @@ extern SIMD_ALIGNED(int16 kCoefficientsRgbY[768][4]);
 #define EMMS() asm("emms")
 #endif
 #else
-#define EMMS()
+#define EMMS() ((void)0)
 #endif
 
 }  // extern "C"

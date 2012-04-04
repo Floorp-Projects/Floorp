@@ -49,6 +49,7 @@
  
     <application android:label="@MOZ_APP_DISPLAYNAME@"
 		 android:icon="@drawable/icon"
+                 android:name="org.mozilla.gecko.GeckoApplication"
 #if MOZILLA_OFFICIAL
 		 android:debuggable="false">
 #else
