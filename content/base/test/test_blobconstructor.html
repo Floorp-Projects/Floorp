@@ -63,6 +63,22 @@ ok(false, "NOT REACHED");
 ok(true, "an undefined options member should throw");
 }
 
+/** Test for dictionary initialization order **/
+(function() {
+  var o = {};
+  var p = {type: "text/plain", endings: "transparent"};
+  var called = [];
+  function add_to_called(n) {
+    called.push(n);
+    return p[n];
+  }
+  ["type", "endings"].forEach(function(n) {
+    Object.defineProperty(o, n, { get: add_to_called.bind(null, n) });
+  });
+  var b = new Blob([], o);
+  is(JSON.stringify(called), JSON.stringify(["endings", "type"]), "dictionary members should be get in lexicographical order");
+})();
+
 let blob1 = Blob(["squiggle"]);
 ok(blob1 instanceof Blob, "Blob constructor should produce Blobs");
 ok(!(blob1 instanceof File), "Blob constructor should not produce Files");

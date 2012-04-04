@@ -64,7 +64,7 @@ public:
   nsresult Shutdown();
 
 private:
-  nsresult CheckPermission();
+  bool CheckPermission();
 
   nsWeakPtr mWindow;
   nsTArray<nsCOMPtr<nsIDOMMozWakeLockListener> > mListeners;

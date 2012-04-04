@@ -21,6 +21,7 @@
 # Contributor(s):
 #  Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
 #  Dan Witte <dwitte@mozilla.com>
+#  David Rajchenbach-Teller <dteller@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,7 +51,9 @@ SHORT_LIBNAME = jscttest
 FORCE_SHARED_LIB = 1
 NO_DIST_INSTALL = 1
 
-CPPSRCS = jsctypes-test.cpp
+CPPSRCS = jsctypes-test.cpp \
+          jsctypes-test-errno.cpp \
+          $(NULL)
 
 LOCAL_INCLUDES = \
     -I$(topsrcdir)/js/src/ctypes \

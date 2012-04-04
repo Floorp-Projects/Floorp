@@ -2366,7 +2366,10 @@ nsFormControlList::AddElementToTable(nsGenericHTMLFormElement* aChild,
       // the list in the hash
       nsSimpleContentList *list = new nsSimpleContentList(mForm);
 
-      NS_ASSERTION(content->GetParent(), "Item in list without parent");
+      // If an element has a @form, we can assume it *might* be able to not have
+      // a parent and still be in the form.
+      NS_ASSERTION(content->HasAttr(kNameSpaceID_None, nsGkAtoms::form) ||
+                   content->GetParent(), "Item in list without parent");
 
       // Determine the ordering between the new and old element.
       bool newFirst = nsContentUtils::PositionIsBefore(aChild, content);
