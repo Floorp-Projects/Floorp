@@ -1475,3 +1475,4 @@ components/nsPlacesDBFlush.js
 maintenanceservice.exe
 maintenanceservice_installer.exe
 #endif
+jssubloader/

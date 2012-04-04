@@ -763,8 +763,9 @@ nsXULAppInfo::GetWidgetToolkit(nsACString& aResult)
 // is synchronized with the const unsigned longs defined in
 // xpcom/system/nsIXULRuntime.idl.
 #define SYNC_ENUMS(a,b) \
-  PR_STATIC_ASSERT(nsIXULRuntime::PROCESS_TYPE_ ## a == \
-                   static_cast<int>(GeckoProcessType_ ## b));
+  MOZ_STATIC_ASSERT(nsIXULRuntime::PROCESS_TYPE_ ## a == \
+                    static_cast<int>(GeckoProcessType_ ## b), \
+                    "GeckoProcessType in nsXULAppAPI.h not synchronized with nsIXULRuntime.idl");
 
 SYNC_ENUMS(DEFAULT, Default)
 SYNC_ENUMS(PLUGIN, Plugin)
@@ -772,7 +773,8 @@ SYNC_ENUMS(CONTENT, Content)
 SYNC_ENUMS(IPDLUNITTEST, IPDLUnitTest)
 
 // .. and ensure that that is all of them:
-PR_STATIC_ASSERT(GeckoProcessType_IPDLUnitTest + 1 == GeckoProcessType_End);
+MOZ_STATIC_ASSERT(GeckoProcessType_IPDLUnitTest + 1 == GeckoProcessType_End,
+                  "Did not find the final GeckoProcessType");
 
 NS_IMETHODIMP
 nsXULAppInfo::GetProcessType(PRUint32* aResult)

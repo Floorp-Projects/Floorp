@@ -348,7 +348,7 @@ MakeFrameDescriptor(uint32 frameSize, FrameType type)
 namespace js {
 namespace ion {
 
-inline JSScript *
+JSScript *
 GetTopIonJSScript(JSContext *cx);
 
 void

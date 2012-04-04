@@ -208,6 +208,10 @@ public:
     virtual mozilla::RefPtr<mozilla::gfx::DrawTarget>
       CreateOffscreenDrawTarget(const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat);
 
+    virtual mozilla::RefPtr<mozilla::gfx::DrawTarget>
+      CreateDrawTargetForData(unsigned char* aData, const mozilla::gfx::IntSize& aSize, 
+                              int32_t aStride, mozilla::gfx::SurfaceFormat aFormat);
+
     virtual bool SupportsAzure(mozilla::gfx::BackendType& aBackend) { return false; }
 
     void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj) {

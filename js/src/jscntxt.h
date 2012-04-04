@@ -52,7 +52,6 @@
 #include "jsprvtd.h"
 #include "jsatom.h"
 #include "jsclist.h"
-#include "jsdhash.h"
 #include "jsgc.h"
 #include "jspropertycache.h"
 #include "jspropertytree.h"
@@ -108,9 +107,6 @@ class IonActivation;
 class WeakMapBase;
 class InterpreterFrames;
 
-class ScriptOpcodeCounts;
-struct ScriptOpcodeCountsPair;
-
 /*
  * GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
  * given pc in a script. We use the script->code pointer to tag the cache,
@@ -139,7 +135,7 @@ struct PendingProxyOperation {
     JSObject                *object;
 };
 
-typedef Vector<ScriptOpcodeCountsPair, 0, SystemAllocPolicy> ScriptOpcodeCountsVector;
+typedef Vector<ScriptAndCounts, 0, SystemAllocPolicy> ScriptAndCountsVector;
 
 struct ConservativeGCData
 {
@@ -314,7 +310,15 @@ struct JSRuntime : js::RuntimeFriendFields
     int64_t             gcNextFullGCTime;
     int64_t             gcJitReleaseTime;
     JSGCMode            gcMode;
+
+    /*
+     * These flags must be kept separate so that a thread requesting a
+     * compartment GC doesn't cancel another thread's concurrent request for a
+     * full GC.
+     */
     volatile uintptr_t  gcIsNeeded;
+    volatile uintptr_t  gcFullIsNeeded;
+
     js::WeakMapBase     *gcWeakMapList;
     js::gcstats::Statistics gcStats;
 
@@ -327,20 +331,14 @@ struct JSRuntime : js::RuntimeFriendFields
     /* The reason that an interrupt-triggered GC should be called. */
     js::gcreason::Reason gcTriggerReason;
 
-    /*
-     * Compartment that triggered GC. If more than one Compatment need GC,
-     * gcTriggerCompartment is reset to NULL and a global GC is performed.
-     */
-    JSCompartment       *gcTriggerCompartment;
-
-    /* Compartment that is currently involved in per-compartment GC */
-    JSCompartment       *gcCurrentCompartment;
+    /* Is the currently running GC a full GC or a compartmental GC? */
+    bool                gcIsFull;
 
     /*
-     * If this is non-NULL, all marked objects must belong to this compartment.
-     * This is used to look for compartment bugs.
+     * If this is true, all marked objects must belong to a compartment being
+     * GCed. This is used to look for compartment bugs.
      */
-    JSCompartment       *gcCheckCompartment;
+    bool                gcStrictCompartmentChecking;
 
     /*
      * The current incremental GC phase. During non-incremental GC, this is
@@ -353,6 +351,9 @@ struct JSRuntime : js::RuntimeFriendFields
 
     /* Indicates that the last incremental slice exhausted the mark stack. */
     bool                gcLastMarkSlice;
+
+    /* Is there a full incremental GC in progress. */
+    bool                gcIncrementalIsFull;
 
     /*
      * Indicates that a GC slice has taken place in the middle of an animation
@@ -369,9 +370,6 @@ struct JSRuntime : js::RuntimeFriendFields
      * that does not implement write barriers.
      */
     bool                gcIncrementalEnabled;
-
-    /* Compartment that is undergoing an incremental GC. */
-    JSCompartment       *gcIncrementalCompartment;
 
     /*
      * We save all conservative scanned roots in this vector so that
@@ -467,7 +465,7 @@ struct JSRuntime : js::RuntimeFriendFields
     js::AutoGCRooter   *autoGCRooters;
 
     /* Strong references on scripts held for PCCount profiling API. */
-    js::ScriptOpcodeCountsVector *scriptPCCounters;
+    js::ScriptAndCountsVector *scriptAndCountsVector;
 
     /* Well-known numbers held for use by this runtime's contexts. */
     js::Value           NaNValue;

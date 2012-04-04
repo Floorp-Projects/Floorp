@@ -86,10 +86,6 @@
 #include "jsxml.h"
 #endif
 
-#if JS_HAS_DESTRUCTURING
-#include "jsdhash.h"
-#endif
-
 #include "jsatominlines.h"
 #include "jsscriptinlines.h"
 

@@ -159,7 +159,7 @@ nsDOMScriptObjectFactory::GetScriptRuntime(const nsAString &aLanguageName,
     return NS_ERROR_FACTORY_NOT_REGISTERED;
   }
   // And stash it away in our array for fast lookup by ID.
-  PRUint32 lang_ndx = NS_STID_INDEX(lang->GetScriptTypeID());
+  PRUint32 lang_ndx = NS_STID_INDEX(nsIProgrammingLanguage::JAVASCRIPT);
   if (mLanguageArray[lang_ndx] == nsnull) {
     mLanguageArray[lang_ndx] = lang;
   } else {
@@ -213,7 +213,7 @@ nsDOMScriptObjectFactory::GetIDForScriptType(const nsAString &aLanguageName,
   if (NS_FAILED(rv))
     return rv;
 
-  *aScriptTypeID = languageRuntime->GetScriptTypeID();
+  *aScriptTypeID = nsIProgrammingLanguage::JAVASCRIPT;
   return NS_OK;
 }
 

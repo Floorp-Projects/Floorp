@@ -251,20 +251,6 @@ public:
   static JSContext* GetContextFromDocument(nsIDocument *aDocument);
 
   /**
-   * Get a scope from aNewDocument. Also get a context through the scope of one
-   * of the documents, from the stack or the safe context.
-   *
-   * @param aOldDocument The document to try to get a context from. May be null.
-   * @param aNewDocument The document to get aNewScope from.
-   * @param aCx [out] Context gotten through one of the scopes, from the stack
-   *                  or the safe context.
-   * @param aNewScope [out] Scope gotten from aNewDocument.
-   */
-  static nsresult GetContextAndScope(nsIDocument *aOldDocument,
-                                     nsIDocument *aNewDocument,
-                                     JSContext **aCx, JSObject **aNewScope);
-
-  /**
    * When a document's scope changes (e.g., from document.open(), call this
    * function to move all content wrappers from the old scope to the new one.
    */
@@ -468,6 +454,8 @@ public:
    */
   static nsresult CheckSameOrigin(nsINode* aTrustedNode,
                                   nsIDOMNode* aUnTrustedNode);
+  static nsresult CheckSameOrigin(nsINode* aTrustedNode,
+                                  nsINode* unTrustedNode);
 
   // Check if the (JS) caller can access aNode.
   static bool CanCallerAccess(nsIDOMNode *aNode);
@@ -1552,6 +1540,15 @@ public:
    */
   static ViewportInfo GetViewportInfo(nsIDocument* aDocument);
 
+  // Call EnterMicroTask when you're entering JS execution.
+  // Usually the best way to do this is to use nsAutoMicroTask.
+  static void EnterMicroTask() { ++sMicroTaskLevel; }
+  static void LeaveMicroTask();
+
+  static bool IsInMicroTask() { return sMicroTaskLevel != 0; }
+  static PRUint32 MicroTaskLevel() { return sMicroTaskLevel; }
+  static void SetMicroTaskLevel(PRUint32 aLevel) { sMicroTaskLevel = aLevel; }
+
   /* Process viewport META data. This gives us information for the scale
    * and zoom of a page on mobile devices. We stick the information in
    * the document header and use it later on after rendering.
@@ -1633,7 +1630,10 @@ public:
   {
     return sThreadJSContextStack;
   }
-  
+
+  // Trace the safe JS context of the ThreadJSContextStack.
+  static void TraceSafeJSContext(JSTracer* aTrc);
+
 
   /**
    * Get the Origin of the passed in nsIPrincipal or nsIURI. If the passed in
@@ -1953,6 +1953,13 @@ public:
   static nsresult Atob(const nsAString& aAsciiString,
                        nsAString& aBinaryData);
 
+  /** If aJSArray is a Javascript array, this method iterates over its
+   *  elements and appends values to aRetVal as nsIAtoms.
+   *  @throw NS_ERROR_ILLEGAL_VALUE if aJSArray isn't a JS array.
+   */ 
+  static nsresult JSArrayToAtomArray(JSContext* aCx, const JS::Value& aJSArray,
+                                     nsCOMArray<nsIAtom>& aRetVal);
+
   /**
    * Returns whether the input element passed in parameter has the autocomplete
    * functionnality enabled. It is taking into account the form owner.
@@ -2079,6 +2086,7 @@ private:
 #ifdef DEBUG
   static PRUint32 sDOMNodeRemovedSuppressCount;
 #endif
+  static PRUint32 sMicroTaskLevel;
   // Not an nsCOMArray because removing elements from those is slower
   static nsTArray< nsCOMPtr<nsIRunnable> >* sBlockedScriptRunners;
   static PRUint32 sRunnersCountAtFirstBlocker;
@@ -2178,6 +2186,19 @@ public:
 #ifdef DEBUG
     --nsContentUtils::sDOMNodeRemovedSuppressCount;
 #endif
+  }
+};
+
+class NS_STACK_CLASS nsAutoMicroTask
+{
+public:
+  nsAutoMicroTask()
+  {
+    nsContentUtils::EnterMicroTask();
+  }
+  ~nsAutoMicroTask()
+  {
+    nsContentUtils::LeaveMicroTask();
   }
 };
 

@@ -2195,35 +2195,27 @@ nsNavBookmarks::GetBookmarkedURIFor(nsIURI* aURI, nsIURI** _retval)
   // As a bonus the query also checks first if place_id is already a bookmark,
   // so you don't have to check that apart.
 
-#define COALESCE_PLACEID \
-  "COALESCE(greatgrandparent.place_id, grandparent.place_id, parent.place_id) "
+  nsCString query = nsPrintfCString(512,
+    "SELECT url FROM moz_places WHERE id = ( "
+      "SELECT :page_id FROM moz_bookmarks WHERE fk = :page_id "
+      "UNION ALL "
+      "SELECT COALESCE(grandparent.place_id, parent.place_id) AS r_place_id "
+      "FROM moz_historyvisits dest "
+      "LEFT JOIN moz_historyvisits parent ON parent.id = dest.from_visit " 
+                                        "AND dest.visit_type IN (%d, %d) "
+      "LEFT JOIN moz_historyvisits grandparent ON parent.from_visit = grandparent.id "
+                                             "AND parent.visit_type IN (%d, %d) "
+      "WHERE dest.place_id = :page_id "
+      "AND EXISTS(SELECT 1 FROM moz_bookmarks WHERE fk = r_place_id) "
+      "LIMIT 1 "
+    ")",
+    nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
+    nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY,
+    nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
+    nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY
+  );
 
-  nsCString redirectsFragment =
-    nsPrintfCString(3, "%d,%d",
-                    nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-                    nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY);
-
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(NS_LITERAL_CSTRING(
-    "SELECT "
-      "(SELECT url FROM moz_places WHERE id = :page_id) "
-    "FROM moz_bookmarks b "
-    "WHERE b.fk = :page_id "
-    "UNION ALL " // Not directly bookmarked.
-    "SELECT "
-      "(SELECT url FROM moz_places WHERE id = " COALESCE_PLACEID ") "
-    "FROM moz_historyvisits self "
-    "JOIN moz_bookmarks b ON b.fk = " COALESCE_PLACEID
-    "LEFT JOIN moz_historyvisits parent ON parent.id = self.from_visit "
-    "LEFT JOIN moz_historyvisits grandparent ON parent.from_visit = grandparent.id "
-      "AND parent.visit_type IN (") + redirectsFragment + NS_LITERAL_CSTRING(") "
-    "LEFT JOIN moz_historyvisits greatgrandparent ON grandparent.from_visit = greatgrandparent.id "
-      "AND grandparent.visit_type IN (") + redirectsFragment + NS_LITERAL_CSTRING(") "
-    "WHERE self.visit_type IN (") + redirectsFragment + NS_LITERAL_CSTRING(") "
-      "AND self.place_id = :page_id "
-    "LIMIT 1 " // Stop at the first result.
-  ));
-#undef COALESCE_PLACEID
-
+  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(query);
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
 

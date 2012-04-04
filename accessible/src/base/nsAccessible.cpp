@@ -264,17 +264,6 @@ nsAccessible::GetRootDocument(nsIAccessibleDocument **aRootDocument)
 }
 
 NS_IMETHODIMP
-nsAccessible::GetInnerHTML(nsAString& aInnerHTML)
-{
-  aInnerHTML.Truncate();
-
-  nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(mContent);
-  NS_ENSURE_TRUE(htmlElement, NS_ERROR_NULL_POINTER);
-
-  return htmlElement->GetInnerHTML(aInnerHTML);
-}
-
-NS_IMETHODIMP
 nsAccessible::GetLanguage(nsAString& aLanguage)
 {
   Language(aLanguage);

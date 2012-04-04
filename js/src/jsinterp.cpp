@@ -429,9 +429,12 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
     JS_ASSERT(script);
     JS_ASSERT(fp == cx->fp());
     JS_ASSERT(fp->script() == script);
+    JS_ASSERT_IF(!fp->isGeneratorFrame(), cx->regs().pc == script->code);
 #ifdef JS_METHODJIT_SPEW
     JMCheckLogging();
 #endif
+
+    JS_CHECK_RECURSION(cx, return false);
 
     /* FIXME: Once bug 470510 is fixed, make this an assert. */
     if (script->compileAndGo) {
@@ -1299,9 +1302,9 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
 #if JS_THREADED_INTERP
-#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(script->pcCounters, jumpTable == interruptJumpTable)
+#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(script->scriptCounts, jumpTable == interruptJumpTable)
 #else
-#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(script->pcCounters, switchMask == -1)
+#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(script->scriptCounts, switchMask == -1)
 #endif
 
     /*
@@ -1476,7 +1479,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         script = (s);                                                         \
         if (script->hasAnyBreakpointsOrStepMode())                            \
             ENABLE_INTERRUPTS();                                              \
-        if (script->pcCounters)                                               \
+        if (script->scriptCounts)                                             \
             ENABLE_INTERRUPTS();                                              \
         JS_ASSERT_IF(interpMode == JSINTERP_SKIP_TRAP,                        \
                      script->hasAnyBreakpointsOrStepMode());                  \
@@ -1578,9 +1581,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     int32_t len;
     len = 0;
 
-    /* Check for too deep of a native thread stack. */
-    JS_CHECK_RECURSION(cx, goto error);
-
     DO_NEXT_OP(len);
 
 #if JS_THREADED_INTERP
@@ -1620,14 +1620,14 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         bool moreInterrupts = false;
 
         if (cx->runtime->profilingScripts) {
-            if (!script->pcCounters)
-                script->initCounts(cx);
+            if (!script->scriptCounts)
+                script->initScriptCounts(cx);
             moreInterrupts = true;
         }
 
-        if (script->pcCounters) {
-            OpcodeCounts counts = script->getCounts(regs.pc);
-            counts.get(OpcodeCounts::BASE_INTERP)++;
+        if (script->scriptCounts) {
+            PCCounts counts = script->getPCCounts(regs.pc);
+            counts.get(PCCounts::BASE_INTERP)++;
             moreInterrupts = true;
         }
 
@@ -4078,6 +4078,9 @@ END_CASE(JSOP_ARRAYPUSH)
   error:
     JS_ASSERT(&cx->regs() == &regs);
     JS_ASSERT(uint32_t(regs.pc - script->code) < script->length);
+
+    /* When rejoining, we must not err before finishing Interpret's prologue. */
+    JS_ASSERT(interpMode != JSINTERP_REJOIN);
 
     if (cx->isExceptionPending()) {
         /* Restore atoms local in case we will resume. */

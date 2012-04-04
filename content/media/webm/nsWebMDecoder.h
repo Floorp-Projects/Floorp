@@ -44,7 +44,12 @@
 class nsWebMDecoder : public nsBuiltinDecoder
 {
 public:
-  virtual nsMediaDecoder* Clone() { return new nsWebMDecoder(); }
+  virtual nsMediaDecoder* Clone() {
+    if (!nsHTMLMediaElement::IsWebMEnabled()) {
+      return nsnull;
+    }
+    return new nsWebMDecoder();
+  }
   virtual nsDecoderStateMachine* CreateStateMachine();
 };
 

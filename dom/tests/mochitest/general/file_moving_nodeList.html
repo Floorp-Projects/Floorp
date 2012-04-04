@@ -1,0 +1,30 @@
+<html>
+    <head>
+        <script>
+            document.childNodes.expando = "foo";
+
+            function getNodeList() {
+                var nodeList = document.createElement("select").options;
+                nodeList.expando = "foo";
+                return nodeList;
+            }
+
+            function tryToUseNodeList(nodeList, ok) {
+                function expectException(op, reason) {
+                    try {
+                        var result = op();
+                        ok(false, "should have thrown an exception, got: " + result);
+                    } catch (e) {
+                        ok(/Permission denied/.test(e.toString()), reason);
+                    }
+                }
+
+                expectException(function() { nodeList.length = 2; }, "should not be able to set attributes");
+                expectException(function() { nodeList.item(0); }, "should not have access to any functions");
+                expectException(function() { nodeList.foo = "foo"; }, "should not be able to add expandos");
+            }
+        </script>
+    </head>
+    <body>
+    </body>
+</html>

@@ -49,7 +49,7 @@ const DEBUG = true; // set to false to suppress debug messages
 const WIFIWORKER_CONTRACTID = "@mozilla.org/wifi/worker;1";
 const WIFIWORKER_CID        = Components.ID("{a14e8977-d259-433a-a88d-58dd44657e5b}");
 
-const WIFIWORKER_WORKER     = "resource://gre/modules/network_worker.js";
+const WIFIWORKER_WORKER     = "resource://gre/modules/wifi_worker.js";
 
 // A note about errors and error handling in this file:
 // The libraries that we use in this file are intended for C code. For
@@ -59,22 +59,33 @@ const WIFIWORKER_WORKER     = "resource://gre/modules/network_worker.js";
 // command always succeeds and we do a string/boolean check for the
 // expected results).
 var WifiManager = (function() {
-  Cu.import("resource://gre/modules/ctypes.jsm");
-  let cutils = ctypes.open("libcutils.so");
-  let cbuf = ctypes.char.array(4096)();
-  let c_property_get = cutils.declare("property_get", ctypes.default_abi,
-                                      ctypes.int,       // return value: length
-                                      ctypes.char.ptr,  // key
-                                      ctypes.char.ptr,  // value
-                                      ctypes.char.ptr); // default
-  let property_get = function (key, defaultValue) {
-    if (defaultValue === undefined) {
-      defaultValue = null;
+  function getSdkVersion() {
+    Cu.import("resource://gre/modules/ctypes.jsm");
+    try {
+      let cutils = ctypes.open("libcutils.so");
+      let cbuf = ctypes.char.array(4096)();
+      let c_property_get = cutils.declare("property_get", ctypes.default_abi,
+                                          ctypes.int,       // return value: length
+                                          ctypes.char.ptr,  // key
+                                          ctypes.char.ptr,  // value
+                                          ctypes.char.ptr); // default
+      let property_get = function (key, defaultValue) {
+        if (defaultValue === undefined) {
+          defaultValue = null;
+        }
+        c_property_get(key, cbuf, defaultValue);
+        return cbuf.readString();
+      }
+      return parseInt(property_get("ro.build.version.sdk"));
+    } catch(e) {
+      // Eat it.  Hopefully we're on a non-Gonk system ...
+      // 
+      // XXX we should check that
+      return 0;
     }
-    c_property_get(key, cbuf, defaultValue);
-    return cbuf.readString();
   }
-  let sdkVersion = parseInt(property_get("ro.build.version.sdk"));
+
+  let sdkVersion = getSdkVersion();
 
   var controlWorker = new ChromeWorker(WIFIWORKER_WORKER);
   var eventWorker = new ChromeWorker(WIFIWORKER_WORKER);
@@ -914,7 +925,8 @@ var WifiManager = (function() {
     for (var n = 0; n < networkConfigurationFields.length; ++n) {
       let fieldName = networkConfigurationFields[n];
       getNetworkVariableCommand(netId, fieldName, function(value) {
-        config[fieldName] = value;
+        if (value !== null)
+          config[fieldName] = value;
         if (++done == networkConfigurationFields.length)
           callback(config);
       });
@@ -1212,6 +1224,8 @@ function WifiWorker() {
         return;
       }
 
+      this._highestPriority = -1;
+
       // Convert between netId-based and ssid-based indexing.
       for (let net in networks) {
         let network = networks[net];
@@ -1455,6 +1469,72 @@ WifiWorker.prototype = {
     this._lastConnectionInfo = null;
   },
 
+  // Important side effect: calls WifiManager.saveConfig.
+  _reprioritizeNetworks: function(callback) {
+    // First, sort the networks in orer of their priority.
+    var ordered = Object.getOwnPropertyNames(this.configuredNetworks);
+    let self = this;
+    ordered.sort(function(a, b) {
+      var neta = self.configuredNetworks[a],
+          netb = self.configuredNetworks[b];
+
+      // Sort unsorted networks to the end of the list.
+      if (isNaN(neta.priority))
+        return isNaN(netb.priority) ? 0 : 1;
+      if (isNaN(netb.priority))
+        return -1;
+      return netb.priority - neta.priority;
+    });
+
+    // Skip unsorted networks.
+    let newPriority = 0, i;
+    for (i = ordered.length - 1; i >= 0; --i) {
+      if (!isNaN(this.configuredNetworks[ordered[i]].priority))
+        break;
+    }
+
+    // No networks we care about?
+    if (i < 0) {
+      WifiManager.saveConfig(callback);
+      return;
+    }
+
+    // Now assign priorities from 0 to length, starting with the smallest
+    // priority and heading towards the highest (note the dependency between
+    // total and i here).
+    let done = 0, errors = 0, total = i + 1;
+    for (; i >= 0; --i) {
+      let network = this.configuredNetworks[ordered[i]];
+      network.priority = newPriority++;
+
+      // Note: networkUpdated declared below since it happens logically after
+      // this loop.
+      WifiManager.updateNetwork(network, networkUpdated);
+    }
+
+    function networkUpdated(ok) {
+      if (!ok)
+        ++errors;
+      if (++done === total) {
+        if (errors > 0) {
+          callback(false);
+          return;
+        }
+
+        WifiManager.saveConfig(function(ok) {
+          if (!ok) {
+            callback(false);
+            return;
+          }
+
+          self._reloadConfiguredNetworks(function(ok) {
+            callback(ok);
+          });
+        });
+      }
+    }
+  },
+
   // nsIWifi
 
   _fireEvent: function(message, data) {
@@ -1505,12 +1585,13 @@ WifiWorker.prototype = {
   },
 
   associate: function(network, rid, mid) {
+    const MAX_PRIORITY = 9999;
     const message = "WifiManager:associate:Return";
     let privnet = network;
     let self = this;
     function networkReady() {
       // saveConfig now before we disable most of the other networks.
-      WifiManager.saveConfig(function() {
+      function selectAndConnect() {
         WifiManager.enableNetwork(privnet.netId, true, function (ok) {
           if (ok)
             self._needToEnableNetworks = true;
@@ -1523,7 +1604,12 @@ WifiWorker.prototype = {
             self._sendMessage(message, ok, ok, rid, mid);
           }
         });
-      });
+      }
+
+      if (self._highestPriority >= MAX_PRIORITY)
+        self._reprioritizeNetworks(selectAndConnect);
+      else
+        WifiManager.saveConfig(selectAndConnect);
     }
 
     let ssid = privnet.ssid;
@@ -1534,7 +1620,6 @@ WifiWorker.prototype = {
 
     netFromDOM(privnet, configured);
 
-    // XXX Do we have to worry about overflow/going too high here?
     privnet.priority = ++this._highestPriority;
     if (configured) {
       privnet.netId = configured.netId;

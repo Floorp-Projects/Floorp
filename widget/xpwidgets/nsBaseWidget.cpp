@@ -135,6 +135,17 @@ nsBaseWidget::nsBaseWidget()
 }
 
 
+static void DestroyCompositor(CompositorParent* aCompositorParent,
+                              CompositorChild* aCompositorChild,
+                              Thread* aCompositorThread)
+{
+    aCompositorChild->Destroy();
+    delete aCompositorThread;
+    aCompositorParent->Release();
+    aCompositorChild->Release();
+}
+
+
 //-------------------------------------------------------------------------
 //
 // nsBaseWidget destructor
@@ -153,8 +164,23 @@ nsBaseWidget::~nsBaseWidget()
   }
 
   if (mCompositorChild) {
-    mCompositorChild->Destroy();
-    delete mCompositorThread;
+    mCompositorChild->SendWillStop();
+
+    // The call just made to SendWillStop can result in IPC from the
+    // CompositorParent to the CompositorChild (e.g. caused by the destruction
+    // of shared memory). We need to ensure this gets processed by the
+    // CompositorChild before it gets destroyed. It suffices to ensure that
+    // events already in the MessageLoop get processed before the
+    // CompositorChild is destroyed, so we add a task to the MessageLoop to
+    // handle compositor desctruction.
+    MessageLoop::current()->
+      PostTask(FROM_HERE,
+               NewRunnableFunction(DestroyCompositor, mCompositorParent,
+                                   mCompositorChild, mCompositorThread));
+    // The DestroyCompositor task we just added to the MessageLoop will handle
+    // releasing mCompositorParent and mCompositorChild.
+    mCompositorParent.forget();
+    mCompositorChild.forget();
   }
 
 #ifdef NOISY_WIDGET_LEAKS
