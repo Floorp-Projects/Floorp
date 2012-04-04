@@ -139,8 +139,14 @@ let MigratorPrototype = {
    */
   migrate: function MP_migrate(aItems, aStartup, aProfile) {
     // Not using aStartup because it's going away soon.
-    if (MigrationUtils.isStartupMigration && !this.startupOnlyMigrator)
+    if (MigrationUtils.isStartupMigration && !this.startupOnlyMigrator) {
       MigrationUtils.profileStartup.doStartup();
+
+      // Notify glue we are about to do initial migration, otherwise it may try
+      // to restore default bookmarks overwriting the imported ones.
+      Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver)
+        .observe(null, "initial-migration", null);
+    }
 
     let resources = this._getMaybeCachedResources(aProfile);
     if (resources.length == 0)
