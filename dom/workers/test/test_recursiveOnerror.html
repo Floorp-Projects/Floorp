@@ -14,8 +14,8 @@
       const filename = "http://mochi.test:8888/tests/dom/workers/test/" +
                        "recursiveOnerror_worker.js";
       const errors = [
-        { message: "2", lineno: 6 },
-        { message: "1", lineno: 10 }
+        { message: "Error: 2", lineno: 6 },
+        { message: "Error: 1", lineno: 10 }
       ]
 
       var errorCount = 0;

@@ -67,11 +67,11 @@ public class GetChannelStage extends JPakeStage {
       makeChannelRequest(callbackDelegate, jClient.jpakeServer + "new_channel", jClient.clientId);
     } catch (URISyntaxException e) {
       Logger.error(LOG_TAG, "Incorrect URI syntax.", e);
-      jClient.abort(Constants.JPAKE_ERROR_INVALID);
+      jClient.abort(Constants.JPAKE_ERROR_CHANNEL);
       return;
     } catch (Exception e) {
       Logger.error(LOG_TAG, "Unexpected exception.", e);
-      jClient.abort(Constants.JPAKE_ERROR_INTERNAL);
+      jClient.abort(Constants.JPAKE_ERROR_CHANNEL);
       return;
     }
   }

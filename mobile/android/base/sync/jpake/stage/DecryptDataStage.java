@@ -69,6 +69,13 @@ public class DecryptDataStage extends JPakeStage {
       return;
     }
 
+    // Check that credentials were actually sent over.
+    if (!checkCredentials(jClient.jCreds)) {
+      Logger.error(LOG_TAG, "Credentials contain nulls, setup cannot be completed.");
+      jClient.abort(Constants.JPAKE_ERROR_INTERNAL);
+      return;
+    }
+
     jClient.runNextStage();
   }
 
@@ -106,7 +113,22 @@ public class DecryptDataStage extends JPakeStage {
    * @throws Exception
    */
   private JSONObject getJSONObject(String jsonString) throws IOException, ParseException{
-    Reader in = new StringReader(jsonString);
+    final Reader in = new StringReader(jsonString);
     return (JSONObject) new JSONParser().parse(in);
+  }
+
+  private boolean checkCredentials(JSONObject creds) {
+    final String accountName = (String) creds.get(Constants.JSON_KEY_ACCOUNT);
+    final String password    = (String) creds.get(Constants.JSON_KEY_PASSWORD);
+    final String syncKey     = (String) creds.get(Constants.JSON_KEY_SYNCKEY);
+    final String serverUrl   = (String) creds.get(Constants.JSON_KEY_SERVER);
+
+    if (accountName == null || accountName.equals("") ||
+        password    == null || password.equals("")    ||
+        syncKey     == null || syncKey.equals("")     ||
+        serverUrl   == null || serverUrl.equals("")) {
+      return false;
+    }
+    return true;
   }
 }

@@ -93,8 +93,9 @@ import android.content.pm.PackageManager.*;
 import dalvik.system.*;
 
 abstract public class GeckoApp
-    extends Activity implements GeckoEventListener, SensorEventListener, LocationListener
-{
+                extends GeckoActivity 
+                implements GeckoEventListener, SensorEventListener, LocationListener,
+                           GeckoApplication.ApplicationLifecycleCallbacks {
     private static final String LOGTAG = "GeckoApp";
 
     public static enum StartupMode {
@@ -141,7 +142,6 @@ abstract public class GeckoApp
     private static AbsoluteLayout mPluginContainer;
 
     public String mLastTitle;
-    private int mOwnActivityDepth = 0;
     private boolean mRestoreSession = false;
     private boolean mInitialized = false;
 
@@ -530,8 +530,6 @@ abstract public class GeckoApp
 
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (mOwnActivityDepth > 0)
-            return; // we're showing one of our own activities and likely won't get paged out
 
         if (outState == null)
             outState = new Bundle();
@@ -1198,6 +1196,11 @@ abstract public class GeckoApp
                 Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.STOP);
             }
         });
+        GeckoAppShell.getHandler().postDelayed(new Runnable() {
+            public void run() {
+                getAndProcessThumbnailForTab(tab);
+            }
+        }, 500);
     }
 
     void handleShowToast(final String message, final String duration) {
@@ -1584,6 +1587,8 @@ abstract public class GeckoApp
         mMainLayout = (LinearLayout) findViewById(R.id.main_layout);
 
         mConnectivityReceiver = new GeckoConnectivityReceiver();
+
+        ((GeckoApplication) getApplication()).addApplicationLifecycleCallbacks(this);
     }
 
     private void initialize() {
@@ -1971,7 +1976,6 @@ abstract public class GeckoApp
     {
         Log.i(LOGTAG, "pause");
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createPauseEvent(mOwnActivityDepth));
         // The user is navigating away from this activity, but nothing
         // has come to the foreground yet; for Gecko, we may want to
         // stop repainting, for example.
@@ -1991,8 +1995,6 @@ abstract public class GeckoApp
     public void onResume()
     {
         Log.i(LOGTAG, "resume");
-        if (checkLaunchState(LaunchState.GeckoRunning))
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createResumeEvent(mOwnActivityDepth));
 
         // After an onPause, the activity is back in the foreground.
         // Undo whatever we did in onPause.
@@ -2023,9 +2025,6 @@ abstract public class GeckoApp
                 GeckoScreenOrientationListener.getInstance().start();
             }
         });
-
-        if (mOwnActivityDepth > 0)
-            mOwnActivityDepth--;
     }
 
     @Override
@@ -2043,7 +2042,7 @@ abstract public class GeckoApp
         // etc., and generally mark the profile as 'clean', and then
         // dirty it again if we get an onResume.
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createStoppingEvent(mOwnActivityDepth));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createStoppingEvent(isApplicationInBackground()));
         super.onStop();
     }
 
@@ -2060,7 +2059,7 @@ abstract public class GeckoApp
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onStart");
 
         Log.i(LOGTAG, "start");
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createStartEvent(mOwnActivityDepth));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createStartEvent(isApplicationInBackground()));
         super.onStart();
     }
 
@@ -2115,6 +2114,8 @@ abstract public class GeckoApp
         if (mAboutHomeContent != null) {
             mAboutHomeContent.onDestroy();
         }
+
+        ((GeckoApplication) getApplication()).removeApplicationLifecycleCallbacks(this);
     }
 
     @Override
@@ -2146,6 +2147,19 @@ abstract public class GeckoApp
         if (checkLaunchState(LaunchState.GeckoRunning))
             GeckoAppShell.onLowMemory();
         super.onLowMemory();
+    }
+
+    @Override
+    public void onApplicationPause() {
+        Log.i(LOGTAG, "application paused");
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createPauseEvent(true));
+    }
+
+    @Override
+    public void onApplicationResume() {
+        Log.i(LOGTAG, "application resumed");
+        if (checkLaunchState(LaunchState.GeckoRunning))
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createResumeEvent(true));
     }
 
     abstract public String getPackageName();
@@ -2771,18 +2785,6 @@ abstract public class GeckoApp
             }
         }
     } 
-
-    @Override
-    public void startActivity(Intent intent) {
-        mOwnActivityDepth++;
-        super.startActivity(intent);
-    }
-
-    @Override
-    public void startActivityForResult(Intent intent, int request) {
-        mOwnActivityDepth++;
-        super.startActivityForResult(intent, request);
-    }
 }
 
 class PluginLayoutParams extends AbsoluteLayout.LayoutParams

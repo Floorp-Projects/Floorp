@@ -31,7 +31,7 @@ import android.widget.TextView;
 
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 
-public class TabsTray extends Activity implements Tabs.OnTabsChangedListener {
+public class TabsTray extends GeckoActivity implements Tabs.OnTabsChangedListener {
 
     private static int sPreferredHeight;
     private static int sMaxHeight;

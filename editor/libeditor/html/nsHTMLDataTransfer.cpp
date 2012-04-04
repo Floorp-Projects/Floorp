@@ -1624,6 +1624,9 @@ NS_IMETHODIMP nsHTMLEditor::PasteTransferable(nsITransferable *aTransferable)
 //
 NS_IMETHODIMP nsHTMLEditor::PasteNoFormatting(PRInt32 aSelectionType)
 {
+  if (!FireClipboardEvent(NS_PASTE))
+    return NS_OK;
+
   ForceCompositionEnd();
 
   // Get Clipboard Service

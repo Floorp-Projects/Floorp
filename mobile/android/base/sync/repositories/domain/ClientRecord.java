@@ -16,6 +16,7 @@ public class ClientRecord extends Record {
 
   public static final String CLIENT_TYPE         = "mobile";
   public static final String COLLECTION_NAME     = "clients";
+  public static final long CLIENTS_TTL = 21 * 24 * 60 * 60; // 21 days in seconds.
   public static final String DEFAULT_CLIENT_NAME = "Default Name";
 
   public String name = ClientRecord.DEFAULT_CLIENT_NAME;
@@ -24,6 +25,7 @@ public class ClientRecord extends Record {
 
   public ClientRecord(String guid, String collection, long lastModified, boolean deleted) {
     super(guid, collection, lastModified, deleted);
+    this.ttl = CLIENTS_TTL;
   }
 
   public ClientRecord(String guid, String collection, long lastModified) {
@@ -80,6 +82,7 @@ public class ClientRecord extends Record {
     ClientRecord out = new ClientRecord(guid, this.collection, this.lastModified, this.deleted);
     out.androidID = androidID;
     out.sortIndex = this.sortIndex;
+    out.ttl       = this.ttl;
 
     out.name = this.name;
     out.type = this.type;

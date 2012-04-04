@@ -31,6 +31,7 @@ const kIsLinux = navigator.platform.indexOf("Linux") == 0 || navigator.platform.
 
 function runTests()
 {
+  document.execCommand("stylewithcss", false, "true");
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   var fm = Components.classes["@mozilla.org/focus-manager;1"].

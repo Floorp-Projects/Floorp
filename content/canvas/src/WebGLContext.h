@@ -127,9 +127,10 @@ struct WebGLTexelPremultiplicationOp {
 
 int GetWebGLTexelFormat(GLenum format, GLenum type);
 
+// Zero is not an integer power of two.
 inline bool is_pot_assuming_nonnegative(WebGLsizei x)
 {
-    return (x & (x-1)) == 0;
+    return x && (x & (x-1)) == 0;
 }
 
 /* Each WebGL object class WebGLFoo wants to:
@@ -585,6 +586,7 @@ public:
     nsresult ErrorOutOfMemory(const char *fmt = 0, ...);
 
     const char *ErrorName(GLenum error);
+    bool IsTextureFormatCompressed(GLenum format);
 
     nsresult DummyFramebufferOperation(const char *info);
 
@@ -1247,14 +1249,26 @@ public:
 
     class ImageInfo : public WebGLRectangleObject {
     public:
-        ImageInfo() : mFormat(0), mType(0), mIsDefined(false) {}
+        ImageInfo()
+            : mFormat(0)
+            , mType(0)
+            , mIsDefined(false)
+        {}
+
         ImageInfo(WebGLsizei width, WebGLsizei height,
                   WebGLenum format, WebGLenum type)
-            : WebGLRectangleObject(width, height), mFormat(format), mType(type), mIsDefined(true) {}
+            : WebGLRectangleObject(width, height)
+            , mFormat(format)
+            , mType(type)
+            , mIsDefined(true)
+        {}
 
         bool operator==(const ImageInfo& a) const {
-            return mWidth == a.mWidth && mHeight == a.mHeight &&
-                   mFormat == a.mFormat && mType == a.mType;
+            return mIsDefined == a.mIsDefined &&
+                   mWidth     == a.mWidth &&
+                   mHeight    == a.mHeight &&
+                   mFormat    == a.mFormat &&
+                   mType      == a.mType;
         }
         bool operator!=(const ImageInfo& a) const {
             return !(*this == a);
