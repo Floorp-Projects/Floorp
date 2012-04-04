@@ -530,8 +530,6 @@ abstract public class GeckoApp
 
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (!isApplicationInBackground())
-            return; // we're showing one of our own activities and likely won't get paged out
 
         if (outState == null)
             outState = new Bundle();
