@@ -95,8 +95,7 @@ nsAppShell::nsAppShell()
       mCondLock("nsAppShell.mCondLock"),
       mQueueCond(mCondLock, "nsAppShell.mQueueCond"),
       mNumDraws(0),
-      mNumViewports(0),
-      mPendingSensorEvents(false)
+      mNumViewports(0)
 {
     gAppShell = this;
 }
@@ -333,7 +332,6 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
 
     case AndroidGeckoEvent::SENSOR_EVENT:
       {
-        mPendingSensorEvents = false;
         InfallibleTArray<float> values;
         mozilla::hal::SensorType type = (mozilla::hal::SensorType) curEvent->Flags();
 
@@ -626,10 +624,6 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
                 i++;
             }
             mEventQueue.InsertElementAt(i, ae);
-        } else if (ae->Type() == AndroidGeckoEvent::SENSOR_EVENT) {
-            if (!mPendingSensorEvents)
-                mEventQueue.AppendElement(ae);
-            mPendingSensorEvents = true;
         } else {
             mEventQueue.AppendElement(ae);
         }
