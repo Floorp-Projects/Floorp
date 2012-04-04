@@ -447,6 +447,8 @@ struct JSRuntime : js::RuntimeFriendFields
     int                 gcNextScheduled;
     bool                gcDeterministicOnly;
 
+    js::Vector<JSObject *, 0, js::SystemAllocPolicy> gcSelectedForMarking;
+
     int gcZeal() { return gcZeal_; }
 
     bool needZealousGC() {
