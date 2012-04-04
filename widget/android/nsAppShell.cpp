@@ -337,16 +337,11 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
 
         switch (type) {
           case hal::SENSOR_ORIENTATION:
-            values.AppendElement(curEvent->X());
-            values.AppendElement(-curEvent->Y()); 
-            values.AppendElement(-curEvent->Z());
-            break;
-
-          case hal::SENSOR_ACCELERATION:
           case hal::SENSOR_LINEAR_ACCELERATION:
+          case hal::SENSOR_ACCELERATION:
           case hal::SENSOR_GYROSCOPE:
-            values.AppendElement(-curEvent->X());
-            values.AppendElement(curEvent->Y());
+            values.AppendElement(curEvent->X());
+            values.AppendElement(curEvent->Y()); 
             values.AppendElement(curEvent->Z());
             break;
 
