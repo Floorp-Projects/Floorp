@@ -286,6 +286,7 @@ _TEST_FILES1 = \
 		file_XHRDocURI.text^headers^ \
 		test_DOMException.html \
 		test_mutationobservers.html \
+		mutationobserver_dialog.html \
 		$(NULL)
 
 _TEST_FILES2 = \

@@ -1736,6 +1736,7 @@ nsPresContext::MediaFeatureValuesChanged(bool aCallerWillRebuildStyleData)
 
       for (PRUint32 i = 0, i_end = notifyList.Length(); i != i_end; ++i) {
         if (pusher.RePush(et)) {
+          nsAutoMicroTask mt;
           nsDOMMediaQueryList::HandleChangeData &d = notifyList[i];
           d.listener->HandleChange(d.mql);
         }
