@@ -7,7 +7,8 @@ import tempfile
 
 class DeviceManagerADB(DeviceManager):
 
-  def __init__(self, host = None, port = 20701, retrylimit = 5, packageName = None):
+  def __init__(self, host=None, port=20701, retrylimit=5, packageName=None,
+               adbPath='adb'):
     self.host = host
     self.port = port
     self.retrylimit = retrylimit
@@ -19,6 +20,9 @@ class DeviceManagerADB(DeviceManager):
     self.useZip = False
     self.packageName = None
     self.tempDir = None
+
+    # the path to adb, or 'adb' to assume that it's on the PATH
+    self.adbPath = adbPath
 
     if packageName:
       self.packageName = packageName
@@ -96,7 +100,7 @@ class DeviceManagerADB(DeviceManager):
       cmdline = envstr + "; " + cmdline
 
     # all output should be in stdout
-    proc = subprocess.Popen(["adb", "shell", cmdline],
+    proc = subprocess.Popen([self.adbPath, "shell", cmdline],
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (stdout, stderr) = proc.communicate()
     outputfile.write(stdout.rstrip('\n'))
@@ -674,7 +678,7 @@ class DeviceManagerADB(DeviceManager):
     if (not self.haveRoot and self.useRunAs and args[0] == "shell" and args[1] != "run-as"):
       args.insert(1, "run-as")
       args.insert(2, self.packageName)
-    args.insert(0, "adb")
+    args.insert(0, self.adbPath)
     return subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
   def runCmdAs(self, args):
@@ -689,7 +693,7 @@ class DeviceManagerADB(DeviceManager):
     if (not self.haveRoot and self.useRunAs and args[0] == "shell" and args[1] != "run-as"):
       args.insert(1, "run-as")
       args.insert(2, self.packageName)
-    args.insert(0, "adb")
+    args.insert(0, self.adbPath)
     return subprocess.check_call(args)
 
   def checkCmdAs(self, args):
@@ -715,6 +719,10 @@ class DeviceManagerADB(DeviceManager):
 
   def verifyADB(self):
     # Check to see if adb itself can be executed.
+    if self.adbPath != 'adb':
+      if not os.access(self.adbPath, os.X_OK):
+        raise DMError("invalid adb path, or adb not executable: %s", self.adbPath)
+
     try:
       self.checkCmd(["version"])
     except os.error, err:
