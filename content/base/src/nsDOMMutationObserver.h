@@ -151,7 +151,8 @@ protected:
 
   nsMutationReceiverBase(nsINode* aRegisterTarget,
                          nsMutationReceiverBase* aParent)
-  : mObserver(nsnull), mParent(aParent), mRegisterTarget(aRegisterTarget)
+  : mTarget(nsnull), mObserver(nsnull), mParent(aParent),
+    mRegisterTarget(aRegisterTarget)
   {
     NS_ASSERTION(mParent->Subtree(), "Should clone a non-subtree observer!");
     mRegisterTarget->AddMutationObserver(this);
@@ -228,7 +229,7 @@ public:
     aParent->AddClone(this);
   }
 
-  virtual ~nsMutationReceiver() { Disconnect(); }
+  virtual ~nsMutationReceiver() { Disconnect(false); }
 
   nsMutationReceiver* GetParent()
   {
@@ -240,12 +241,12 @@ public:
     for (PRInt32 i = 0; i < mTransientReceivers.Count(); ++i) {
       nsMutationReceiver* r =
         static_cast<nsMutationReceiver*>(mTransientReceivers[i]);
-      r->Disconnect();
+      r->DisconnectTransientReceiver();
     }
     mTransientReceivers.Clear();
   }
 
-  void DisconnectTransientReceivers()
+  void DisconnectTransientReceiver()
   {
     if (mRegisterTarget) {
       mRegisterTarget->RemoveMutationObserver(this);
@@ -253,27 +254,11 @@ public:
     }
 
     mParent = nsnull;
+    NS_ASSERTION(!mTarget, "Should not have mTarget");
+    NS_ASSERTION(!mObserver, "Should not have mObserver");
   }
 
-  void Disconnect()
-  {
-    if (mRegisterTarget) {
-      mRegisterTarget->RemoveMutationObserver(this);
-      mRegisterTarget = nsnull;
-    }
-
-    mParent = nsnull;
-    nsINode* target = mTarget;
-    mTarget = nsnull;
-    nsIDOMMozMutationObserver* observer = mObserver;
-    mObserver = nsnull;
-    RemoveClones();
-
-    if (target && observer) {
-      // Unbind may delete 'this'!
-      target->UnbindObject(observer);
-    }
-  }
+  void Disconnect(bool aRemoveFromObserver);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMUTATION_OBSERVER_IID)
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
@@ -304,7 +289,8 @@ public:
 
   virtual void NodeWillBeDestroyed(const nsINode *aNode)
   {
-    Disconnect();
+    NS_ASSERTION(!mParent, "Shouldn't have mParent here!");
+    Disconnect(true);
   }
   
 };
@@ -351,6 +337,8 @@ protected:
   friend class nsMutationReceiver;
   friend class nsAutoMutationBatch;
   nsMutationReceiver* GetReceiverFor(nsINode* aNode, bool aMayCreate);
+  void RemoveReceiver(nsMutationReceiver* aReceiver);
+
   void GetAllSubtreeObserversFor(nsINode* aNode,
                                  nsTArray<nsMutationReceiver*>& aObservers);
   void ScheduleForRun();
