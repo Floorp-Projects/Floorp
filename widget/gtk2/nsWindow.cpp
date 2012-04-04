@@ -3446,7 +3446,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
 
     // get our drag context
     nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
-    nsCOMPtr<nsIDragSessionGTK> dragSessionGTK = do_QueryInterface(dragService);
+    nsDragService *dragServiceGTK = static_cast<nsDragService*>(dragService.get());
 
     nscoord retx = 0;
     nscoord rety = 0;
@@ -3459,7 +3459,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
         innerMostWidget = this;
 
     // set this now before any of the drag enter or leave events happen
-    dragSessionGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
+    dragServiceGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
 
     // clear any drag leave timer that might be pending so that it
     // doesn't get processed when we actually go out to get data.
@@ -3470,9 +3470,30 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
 
     CheckNeedDragLeaveEnter(innerMostWidget, dragService, aDragContext, retx, rety);
 
-    // What we do here is dispatch a new drag motion event to
-    // re-validate the drag target and then we do the drop.  The events
-    // look the same except for the type.
+    // http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#drag-and-drop-processing-model
+    // (as at 27 December 2010) indicates that a "drop" event should only be
+    // fired (at the current target element) if the current drag operation is
+    // not none.  The current drag operation will only be set to a non-none
+    // value during a "dragover" event.
+    //
+    // If the user has ended the drag before any dragover events have been
+    // sent, then the spec recommends skipping the drop (because the current
+    // drag operation is none).  However, here we assume that, by releasing
+    // the mouse button, the user has indicated that they want to drop, so we
+    // proceed with the drop where possible.
+    //
+    // In order to make the events appear to content in the same way as if the
+    // spec is being followed we make sure to dispatch a "dragover" event with
+    // appropriate coordinates and check canDrop before the "drop" event.
+    //
+    // When the Xdnd protocol is used for source/destination communication (as
+    // should be the case with GTK source applications) a dragover event
+    // should have already been sent during the drag-motion signal, which
+    // would have already been received because XdndDrop messages do not
+    // contain a position.  However, we can't assume the same when the Motif
+    // protocol is used.
+
+    dragServiceGTK->SetCanDrop(false);
 
     nsDragEvent event(true, NS_DRAGDROP_OVER, innerMostWidget);
 
@@ -3485,27 +3506,34 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     nsEventStatus status;
     innerMostWidget->DispatchEvent(&event, status);
 
+    gboolean success = FALSE;
+
     // We need to check innerMostWidget->mIsDestroyed here because the nsRefPtr
     // only protects innerMostWidget from being deleted, it does NOT protect
     // against nsView::~nsView() calling Destroy() on it, bug 378670.
     if (!innerMostWidget->mIsDestroyed) {
-        nsDragEvent event(true, NS_DRAGDROP_DROP, innerMostWidget);
+        bool canDrop;
+        dragServiceGTK->GetCanDrop(&canDrop);
+        PRUint32 msg = canDrop ? NS_DRAGDROP_DROP : NS_DRAGDROP_EXIT;
+        nsDragEvent event(true, msg, innerMostWidget);
         event.refPoint.x = retx;
         event.refPoint.y = rety;
 
         nsEventStatus status = nsEventStatus_eIgnore;
         innerMostWidget->DispatchEvent(&event, status);
+
+        success = canDrop;
     }
 
     // before we unset the context we need to do a drop_finish
 
-    gdk_drop_finish(aDragContext, TRUE, aTime);
+    gdk_drop_finish(aDragContext, success, aTime);
 
     // after a drop takes place we need to make sure that the drag
     // service doesn't think that it still has a context.  if the other
     // way ( besides the drop ) to end a drag event is during the leave
     // event and and that case is handled in that handler.
-    dragSessionGTK->TargetSetLastContext(0, 0, 0);
+    dragServiceGTK->TargetSetLastContext(0, 0, 0);
 
     // clear the sLastDragMotion window
     sLastDragMotionWindow = 0;
@@ -3517,7 +3545,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     if (display) {
       // get the current cursor position
       gdk_display_get_pointer(display, NULL, &x, &y, NULL);
-      ((nsDragService *)dragService.get())->SetDragEndPoint(nsIntPoint(x, y));
+      dragServiceGTK->SetDragEndPoint(nsIntPoint(x, y));
     }
     dragService->EndDragSession(true);
 
