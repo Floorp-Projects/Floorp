@@ -261,14 +261,18 @@ public:
       mRegisterTarget->RemoveMutationObserver(this);
       mRegisterTarget = nsnull;
     }
-    if (mTarget && mObserver) {
-      mTarget->UnbindObject(mObserver);
-    }
 
     mParent = nsnull;
+    nsINode* target = mTarget;
     mTarget = nsnull;
+    nsIDOMMozMutationObserver* observer = mObserver;
     mObserver = nsnull;
     RemoveClones();
+
+    if (target && observer) {
+      // Unbind may delete 'this'!
+      target->UnbindObject(observer);
+    }
   }
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMUTATION_OBSERVER_IID)
