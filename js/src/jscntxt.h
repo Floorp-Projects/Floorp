@@ -183,6 +183,13 @@ struct ConservativeGCData
     }
 };
 
+/*
+ * A FreeOp can do one thing: free memory. For convenience, it has delete_
+ * convenience methods that also call destructors.
+ *
+ * FreeOp is passed to finalizers and other sweep-phase hooks so that we do not
+ * need to pass a JSContext to those hooks.
+ */
 class FreeOp : public JSFreeOp {
     bool        shouldFreeLater_;
     bool        onBackgroundThread_;
@@ -215,7 +222,7 @@ class FreeOp : public JSFreeOp {
         /*
          * Check that JSFreeOp is the first base class for FreeOp and we can
          * reinterpret a pointer to JSFreeOp as a pointer to FreeOp without
-         * any offset adjustments. JSClass::freeOp <-> Class::freeOp depends
+         * any offset adjustments. JSClass::finalize <-> Class::finalize depends
          * on this.
          */
         JS_STATIC_ASSERT(offsetof(FreeOp, shouldFreeLater_) == sizeof(JSFreeOp));
