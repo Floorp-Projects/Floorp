@@ -398,6 +398,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
 
   PRUint32 count = mListeners.Length();
   PRUint32 typeCount = 0;
+  bool deviceType = IsDeviceType(aType);
 
   for (PRUint32 i = 0; i < count; ++i) {
     ls = &mListeners.ElementAt(i);
@@ -411,7 +412,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
         mNoListenerForEvent = NS_EVENT_TYPE_NULL;
         mNoListenerForEventAtom = nsnull;
 
-        if (!IsDeviceType(aType)) {
+        if (deviceType) {
           return;
         }
         --typeCount;
@@ -419,7 +420,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
     }
   }
 
-  if (typeCount == 0) {
+  if (deviceType && typeCount == 0) {
     DisableDevice(aType);
   }
 }
