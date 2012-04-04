@@ -1168,7 +1168,7 @@ public:
         event.errorMsg = aMessage.get();
         event.fileName = aFilename.get();
 
-        nsEventStatus status;
+        nsEventStatus status = nsEventStatus_eIgnore;
         if (NS_FAILED(sgo->HandleScriptError(&event, &status))) {
           NS_WARNING("Failed to dispatch main thread error event!");
           status = nsEventStatus_eIgnore;
