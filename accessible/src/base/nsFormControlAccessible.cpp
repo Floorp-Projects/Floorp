@@ -80,6 +80,22 @@ ProgressMeterAccessible<Max>::NativeRole()
   return roles::PROGRESSBAR;
 }
 
+template<int Max>
+PRUint64
+ProgressMeterAccessible<Max>::NativeState()
+{
+  PRUint64 state = nsFormControlAccessible::NativeState();
+
+  // An undetermined progressbar (i.e. without a value) has a mixed state.
+  nsAutoString attrValue;
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, attrValue);
+
+  if (attrValue.IsEmpty())
+    state |= states::MIXED;
+
+  return state;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // ProgressMeterAccessible<Max>: Widgets
 
