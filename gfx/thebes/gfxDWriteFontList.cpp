@@ -321,8 +321,8 @@ gfxDWriteFontEntry::GetFontTable(PRUint32 aTableTag,
         AutoDC dc;
         AutoSelectFont font(dc.GetDC(), &logfont);
         if (font.IsValid()) {
-            PRInt32 tableSize =
-                ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0, NULL, NULL);
+            PRUint32 tableSize =
+                ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0, NULL, 0);
             if (tableSize != GDI_ERROR) {
                 if (aBuffer.SetLength(tableSize)) {
                     ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0,
@@ -669,8 +669,6 @@ gfxDWriteFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
         return nsnull;
     }
     
-    DWORD numFonts = 0;
-
     nsRefPtr<IDWriteFontFile> fontFile;
     HRESULT hr;
 
@@ -710,7 +708,6 @@ gfxDWriteFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
     DWRITE_FONT_FILE_TYPE fileType;
     UINT32 numFaces;
 
-    PRUint16 w = (aProxyEntry->mWeight == 0 ? 400 : aProxyEntry->mWeight);
     gfxDWriteFontEntry *entry = 
         new gfxDWriteFontEntry(uniqueName, 
                                fontFile,
@@ -766,7 +763,7 @@ gfxDWriteFontList::InitFontList()
     if (LOG_FONTINIT_ENABLED()) {    
         GetTimeFormat(LOCALE_INVARIANT, TIME_FORCE24HOURFORMAT, 
                       NULL, NULL, nowTime, 256);
-        GetDateFormat(LOCALE_INVARIANT, NULL, NULL, NULL, nowDate, 256);
+        GetDateFormat(LOCALE_INVARIANT, 0, NULL, NULL, nowDate, 256);
     }
     upTime = (double) GetTickCount();
     QueryPerformanceFrequency(&frequency);
@@ -834,7 +831,7 @@ gfxDWriteFontList::DelayedInitFontList()
     if (LOG_FONTINIT_ENABLED()) {    
         GetTimeFormat(LOCALE_INVARIANT, TIME_FORCE24HOURFORMAT, 
                       NULL, NULL, nowTime, 256);
-        GetDateFormat(LOCALE_INVARIANT, NULL, NULL, NULL, nowDate, 256);
+        GetDateFormat(LOCALE_INVARIANT, 0, NULL, NULL, nowDate, 256);
     }
 
     upTime = (double) GetTickCount();
@@ -1314,13 +1311,13 @@ static nsresult GetFamilyName(IDWriteFont *aFont, nsString& aFamilyName)
 // for a given character.
 
 IFACEMETHODIMP FontFallbackRenderer::DrawGlyphRun(
-    __maybenull void* clientDrawingContext,
+    void* clientDrawingContext,
     FLOAT baselineOriginX,
     FLOAT baselineOriginY,
     DWRITE_MEASURING_MODE measuringMode,
-    __in DWRITE_GLYPH_RUN const* glyphRun,
-    __in DWRITE_GLYPH_RUN_DESCRIPTION const* glyphRunDescription,
-    __maybenull IUnknown* clientDrawingEffect
+    DWRITE_GLYPH_RUN const* glyphRun,
+    DWRITE_GLYPH_RUN_DESCRIPTION const* glyphRunDescription,
+    IUnknown* clientDrawingEffect
     )
 {
     if (!mSystemFonts) {
