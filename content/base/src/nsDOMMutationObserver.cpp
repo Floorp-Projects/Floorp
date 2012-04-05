@@ -145,12 +145,35 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsMutationReceiver)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsMutationReceiver)
-  tmp->Disconnect();
+  tmp->Disconnect(false);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsMutationReceiver)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+void
+nsMutationReceiver::Disconnect(bool aRemoveFromObserver)
+{
+  if (mRegisterTarget) {
+    mRegisterTarget->RemoveMutationObserver(this);
+    mRegisterTarget = nsnull;
+  }
+
+  mParent = nsnull;
+  nsINode* target = mTarget;
+  mTarget = nsnull;
+  nsIDOMMozMutationObserver* observer = mObserver;
+  mObserver = nsnull;
+  RemoveClones();
+
+  if (target && observer) {
+    if (aRemoveFromObserver) {
+      static_cast<nsDOMMutationObserver*>(observer)->RemoveReceiver(this);
+    }
+    // UnbindObject may delete 'this'!
+    target->UnbindObject(observer);
+  }
+}
 
 void
 nsMutationReceiver::AttributeWillChange(nsIDocument* aDocument,
@@ -382,7 +405,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMMutationObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mScriptContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOwner)
   for (PRInt32 i = 0; i < tmp->mReceivers.Count(); ++i) {
-    tmp->mReceivers[i]->Disconnect();
+    tmp->mReceivers[i]->Disconnect(false);
   }
   tmp->mReceivers.Clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mPendingMutations)
@@ -418,6 +441,12 @@ nsDOMMutationObserver::GetReceiverFor(nsINode* aNode, bool aMayCreate)
   nsMutationReceiver* r = new nsMutationReceiver(aNode, this);
   mReceivers.AppendObject(r);
   return r;
+}
+
+void
+nsDOMMutationObserver::RemoveReceiver(nsMutationReceiver* aReceiver)
+{
+  mReceivers.RemoveObject(aReceiver);
 }
 
 void
@@ -527,6 +556,14 @@ nsDOMMutationObserver::Observe(nsIDOMNode* aTarget,
   r->SetAttributeFilter(filters);
   r->SetAllAttributes(allAttrs);
   r->RemoveClones();
+
+#ifdef DEBUG
+  for (PRInt32 i = 0; i < mReceivers.Count(); ++i) {
+    NS_WARN_IF_FALSE(mReceivers[i]->Target(),
+                     "All the receivers should have a target!");
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -534,7 +571,7 @@ NS_IMETHODIMP
 nsDOMMutationObserver::Disconnect()
 {
   for (PRInt32 i = 0; i < mReceivers.Count(); ++i) {
-    mReceivers[i]->Disconnect();
+    mReceivers[i]->Disconnect(false);
   }
   mReceivers.Clear();
   mCurrentMutations.Clear();
