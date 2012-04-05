@@ -149,6 +149,10 @@ CPPSRCS =			\
 	Navigator.cpp \
 	$(NULL)
 
+ifeq ($(OS_TARGET),Android)
+CPPSRCS += NavigatorUserMediaAndroid.cpp
+endif
+
 include $(topsrcdir)/dom/dom-config.mk
 
 ifdef MOZ_JSDEBUGGER

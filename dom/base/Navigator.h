@@ -69,6 +69,10 @@ class nsIDOMTelephony;
 #include "nsIDOMNavigatorBluetooth.h"
 #endif
 
+#ifdef ANDROID
+#include "nsIDOMNavigatorUserMedia.h"
+#endif
+
 class nsIDOMAdapter;
 //*****************************************************************************
 // Navigator: Script "navigator" object
@@ -106,6 +110,9 @@ class Navigator : public nsIDOMNavigator
 #ifdef MOZ_B2G_BT
                 , public nsIDOMNavigatorBluetooth
 #endif
+#ifdef ANDROID
+                , public nsIDOMNavigatorUserMedia
+#endif
 {
 public:
   Navigator(nsPIDOMWindow *aInnerWindow);
@@ -125,6 +132,10 @@ public:
 
 #ifdef MOZ_B2G_BT
   NS_DECL_NSIDOMNAVIGATORBLUETOOTH
+#endif
+
+#ifdef ANDROID
+  NS_DECL_NSIDOMNAVIGATORUSERMEDIA
 #endif
 
   static void Init();
