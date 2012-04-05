@@ -70,6 +70,7 @@ XPIDLSRCS =					\
 	nsIDOMMimeType.idl			\
 	nsIDOMMimeTypeArray.idl			\
 	nsIDOMNavigator.idl			\
+	nsIDOMNavigatorUserMedia.idl		\
 	nsIDOMPkcs11.idl			\
 	nsIDOMPlugin.idl			\
 	nsIDOMPluginArray.idl			\

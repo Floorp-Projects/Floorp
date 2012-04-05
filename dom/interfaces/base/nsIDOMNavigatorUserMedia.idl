@@ -1,0 +1,35 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=40: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMBlob;
+
+[scriptable, uuid(8a26205e-e8f7-4372-bd15-97ff982b4c1c)]
+interface nsIMediaStreamOptions : nsISupports
+{
+  readonly attribute boolean audio;
+  readonly attribute boolean video;
+  readonly attribute boolean picture;
+};
+
+[scriptable, function, uuid(8e6cc130-d4dc-4751-a50c-ebdae4b17c02)]
+interface nsIDOMMediaCallback : nsISupports
+{
+  void callback(in nsIDOMBlob blob);
+};
+
+[scriptable, function, uuid(92d36f3e-b0db-4cfe-8a24-e5e4e6cd8465)]
+interface nsIDOMErrorCallback : nsISupports
+{
+  void callback(in AString errorStr);
+};
+
+[scriptable, uuid(381e0071-0be5-4f6b-ae21-8e3407a37faa)]
+interface nsIDOMNavigatorUserMedia : nsISupports
+{
+  void mozGetUserMedia(in nsIMediaStreamOptions params, in nsIDOMMediaCallback callback, [optional] in nsIDOMErrorCallback error);
+};
