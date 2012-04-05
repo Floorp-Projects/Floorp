@@ -198,6 +198,44 @@ GetScriptContext(JSContext *cx)
     return GetScriptContextFromJSContext(cx);
 }
 
+// Callbacks for the JS engine to use to push/pop context principals.
+static JSBool
+PushPrincipalCallback(JSContext *cx, JSPrincipals *principals)
+{
+    // We should already be in the compartment of the given principal.
+    MOZ_ASSERT(principals ==
+               JS_GetCompartmentPrincipals((js::GetContextCompartment(cx))));
+
+    // Get the security manager.
+    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
+    if (!ssm) {
+        return true;
+    }
+
+    // Push the principal.
+    JSStackFrame *fp = NULL;
+    nsresult rv = ssm->PushContextPrincipal(cx, JS_FrameIterator(cx, &fp),
+                                            nsJSPrincipals::get(principals));
+    if (NS_FAILED(rv)) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
+
+    return true;
+}
+
+static JSBool
+PopPrincipalCallback(JSContext *cx)
+{
+    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
+    if (ssm) {
+        ssm->PopContextPrincipal(cx);
+    }
+
+    return true;
+}
+
+
 inline void SetPendingException(JSContext *cx, const char *aMsg)
 {
     JSAutoRequest ar(cx);
@@ -3391,7 +3429,9 @@ nsresult nsScriptSecurityManager::Init()
         CheckObjectAccess,
         nsJSPrincipals::Subsume,
         ObjectPrincipalFinder,
-        ContentSecurityPolicyPermitsJSAction
+        ContentSecurityPolicyPermitsJSAction,
+        PushPrincipalCallback,
+        PopPrincipalCallback
     };
 
     MOZ_ASSERT(!JS_GetSecurityCallbacks(sRuntime));

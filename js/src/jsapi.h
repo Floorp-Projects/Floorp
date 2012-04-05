@@ -1581,6 +1581,16 @@ typedef JSBool
 (* JSCSPEvalChecker)(JSContext *cx);
 
 /*
+ * Security callbacks for pushing and popping context principals. These are only
+ * temporarily necessary and will hopefully be gone again in a matter of weeks.
+ */
+typedef JSBool
+(* JSPushContextPrincipalOp)(JSContext *cx, JSPrincipals *principals);
+
+typedef JSBool
+(* JSPopContextPrincipalOp)(JSContext *cx);
+
+/*
  * Callback used to ask the embedding for the cross compartment wrapper handler
  * that implements the desired prolicy for this kind of object in the
  * destination compartment.
@@ -2723,6 +2733,10 @@ js_TransplantObjectWithWrapper(JSContext *cx,
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
+namespace js {
+struct AutoCompartment;
+}
+
 class JS_PUBLIC_API(JSAutoEnterCompartment)
 {
     /*
@@ -2734,6 +2748,12 @@ class JS_PUBLIC_API(JSAutoEnterCompartment)
      * other platforms get 13-word |bytes|.
      */
     void* bytes[sizeof(void*) == 4 && MOZ_ALIGNOF(uint64_t) == 8 ? 16 : 13];
+
+  protected:
+    js::AutoCompartment *getAutoCompartment() {
+        JS_ASSERT(state == STATE_OTHER_COMPARTMENT);
+        return reinterpret_cast<js::AutoCompartment*>(bytes);
+    }
 
     /*
      * This object may be in one of three states.  If enter() or
@@ -4234,6 +4254,8 @@ struct JSSecurityCallbacks {
     JSSubsumePrincipalsOp      subsumePrincipals;
     JSObjectPrincipalsFinder   findObjectPrincipals;
     JSCSPEvalChecker           contentSecurityPolicyAllows;
+    JSPushContextPrincipalOp   pushContextPrincipal;
+    JSPopContextPrincipalOp    popContextPrincipal;
 };
 
 extern JS_PUBLIC_API(void)
