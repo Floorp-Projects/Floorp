@@ -4155,7 +4155,7 @@ nsHttpChannel::Get##name##Time(PRTime* _retval) {              \
         return NS_OK;                                          \
     }                                                          \
     *_retval = mChannelCreationTime +                          \
-        (stamp - mChannelCreationTimestamp).ToSeconds() * 1e6; \
+        (PRTime) ((stamp - mChannelCreationTimestamp).ToSeconds() * 1e6); \
     return NS_OK;                                              \
 }
 
