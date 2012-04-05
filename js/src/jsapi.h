@@ -3260,6 +3260,9 @@ struct JSTracer {
     const void          *debugPrintArg;
     size_t              debugPrintIndex;
     JSBool              eagerlyTraceWeakMaps;
+#ifdef DEBUG
+    void                *realLocation;
+#endif
 };
 
 /*
@@ -3299,6 +3302,22 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
     JS_BEGIN_MACRO                                                            \
     JS_END_MACRO
 #endif
+
+/*
+ * Sets the real location for a marked reference, when passing the address
+ * directly is not feasable.
+ */
+#ifdef DEBUG
+# define JS_SET_TRACING_LOCATION(trc, location)                               \
+    JS_BEGIN_MACRO                                                            \
+        (trc)->realLocation = (location);                                     \
+    JS_END_MACRO
+#else
+# define JS_SET_TRACING_LOCATION(trc, location)                               \
+    JS_BEGIN_MACRO                                                            \
+    JS_END_MACRO
+#endif
+
 
 /*
  * Convenience macro to describe the argument of JS_CallTracer using C string
