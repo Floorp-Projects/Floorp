@@ -4088,13 +4088,6 @@ if test "$MOZ_MEMORY"; then
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
     ;;
   esac
-
-  if test "$OS_ARCH" != "Darwin"; then
-    dnl NB: this must be kept in sync with jemalloc.h
-    AC_DEFINE(HAVE_JEMALLOC_VALLOC)
-    AC_DEFINE(HAVE_JEMALLOC_POSIX_MEMALIGN)
-    AC_DEFINE(HAVE_JEMALLOC_MEMALIGN)
-  fi
 fi
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(MOZ_GLUE_LDFLAGS)

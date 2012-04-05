@@ -32,52 +32,38 @@
 #ifndef _JEMALLOC_H_
 #define _JEMALLOC_H_
 
+#if defined(MOZ_MEMORY_DARWIN)
+#include <malloc/malloc.h>
+#endif
 #include "jemalloc_types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern const char *_malloc_options;
-
-/* Darwin and Linux already have memory allocation functions */
-#if (!defined(MOZ_MEMORY_DARWIN) && !defined(MOZ_MEMORY_LINUX))
-void	*malloc(size_t size);
-void	*valloc(size_t size);
-void	*calloc(size_t num, size_t size);
-void	*realloc(void *ptr, size_t size);
-void	free(void *ptr);
-int	posix_memalign(void **memptr, size_t alignment, size_t size);
-#endif /* MOZ_MEMORY_DARWIN, MOZ_MEMORY_LINUX */
-
-/* Android doesn't have posix_memalign */
-#ifdef MOZ_MEMORY_ANDROID
-int	posix_memalign(void **memptr, size_t alignment, size_t size);
+#if defined(MOZ_MEMORY_LINUX)
+__attribute__((weak))
 #endif
-
-#if defined(MOZ_MEMORY_DARWIN) || defined(MOZ_MEMORY_WINDOWS)
-void	*je_malloc(size_t size);
-void	*je_valloc(size_t size);
-void	*je_calloc(size_t num, size_t size);
-void	*je_realloc(void *ptr, size_t size);
-void	je_free(void *ptr);
-void *je_memalign(size_t alignment, size_t size);
-int	je_posix_memalign(void **memptr, size_t alignment, size_t size);
-char    *je_strndup(const char *src, size_t len);
-char    *je_strdup(const char *src);
-size_t	je_malloc_usable_size(const void *ptr);
-#endif
-
-/* Linux has memalign and malloc_usable_size */
-#if !defined(MOZ_MEMORY_LINUX)
-void	*memalign(size_t alignment, size_t size);
-size_t	malloc_usable_size(const void *ptr);
-#endif /* MOZ_MEMORY_LINUX */
-
 void	jemalloc_stats(jemalloc_stats_t *stats);
 
 /* Computes the usable size in advance. */
-size_t	je_malloc_usable_size_in_advance(size_t size);
+#if !defined(MOZ_MEMORY_DARWIN)
+#if defined(MOZ_MEMORY_LINUX)
+__attribute__((weak))
+#endif
+size_t je_malloc_good_size(size_t size);
+#endif
+
+static inline size_t je_malloc_usable_size_in_advance(size_t size) {
+#if defined(MOZ_MEMORY_DARWIN)
+  return malloc_good_size(size);
+#else
+  if (je_malloc_good_size)
+    return je_malloc_good_size(size);
+  else
+    return size;
+#endif
+}
 
 /*
  * On some operating systems (Mac), we use madvise(MADV_FREE) to hand pages
@@ -104,7 +90,11 @@ size_t	je_malloc_usable_size_in_advance(size_t size);
  *
  * If MALLOC_DOUBLE_PURGE is not defined, this function does nothing.
  */
+#if defined(MOZ_MEMORY_LINUX)
+static inline void jemalloc_purge_freed_pages() { }
+#else
 void    jemalloc_purge_freed_pages();
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

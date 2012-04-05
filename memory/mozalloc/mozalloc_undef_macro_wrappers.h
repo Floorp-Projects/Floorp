@@ -64,11 +64,11 @@
 #  undef strndup
 #endif
 
-#if defined(HAVE_POSIX_MEMALIGN) || defined(HAVE_JEMALLOC_POSIX_MEMALIGN)
+#if defined(HAVE_POSIX_MEMALIGN)
 #  undef posix_memalign
 #endif
 
-#if defined(HAVE_MEMALIGN) || defined(HAVE_JEMALLOC_MEMALIGN)
+#if defined(HAVE_MEMALIGN)
 #  undef memalign
 #endif
 
