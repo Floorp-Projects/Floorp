@@ -615,6 +615,11 @@ let RIL = {
   _receivedSmsSegmentsMap: {},
 
   /**
+   * Outgoing messages waiting for SMS-STATUS-REPORT.
+   */
+  _pendingSentSmsMap: {},
+
+  /**
    * Mute or unmute the radio.
    */
   _muted: true,
@@ -1545,6 +1550,25 @@ let RIL = {
       return PDU_FCS_UNSPECIFIED;
     }
 
+    let options = this._pendingSentSmsMap[message.messageRef];
+    if (!options) {
+      return PDU_FCS_OK;
+    }
+
+    delete this._pendingSentSmsMap[message.messageRef];
+
+    if ((options.segmentMaxSeq > 1)
+        && (options.segmentSeq < options.segmentMaxSeq)) {
+      // Not last segment. Send next segment here.
+      this._processSentSmsSegment(options);
+    } else {
+      // Last segment delivered with success. Report it.
+      this.sendDOMMessage({
+        type: "sms-delivered",
+        envelopeId: options.envelopeId,
+      });
+    }
+
     return PDU_FCS_OK;
   },
 
@@ -1599,6 +1623,19 @@ let RIL = {
     }
 
     return options;
+  },
+
+  /**
+   * Helper for processing sent multipart SMS.
+   */
+  _processSentSmsSegment: function _processSentSmsSegment(options) {
+    // Setup attributes for sending next segment
+    let next = options.segmentSeq;
+    options.body = options.segments[next].body;
+    options.encodedBodyLength = options.segments[next].encodedBodyLength;
+    options.segmentSeq = next + 1;
+
+    this.sendSMS(options);
   },
 
   /**
@@ -1866,20 +1903,25 @@ RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
   options.errorCode = Buf.readUint32();
 
   //TODO handle errors (bug 727319)
-  if ((options.segmentMaxSeq > 1)
-      && (options.segmentSeq < options.segmentMaxSeq)) {
-    // Setup attributes for sending next segment
-    let next = options.segmentSeq;
-    options.body = options.segments[next].body;
-    options.encodedBodyLength = options.segments[next].encodedBodyLength;
-    options.segmentSeq = next + 1;
 
-    this.sendSMS(options);
-    return;
+  if (options.requestStatusReport) {
+    this._pendingSentSmsMap[options.messageRef] = options;
   }
 
-  options.type = "sms-sent";
-  this.sendDOMMessage(options);
+  if ((options.segmentMaxSeq > 1)
+      && (options.segmentSeq < options.segmentMaxSeq)) {
+    // Not last segment
+    if (!options.requestStatusReport) {
+      // Status-Report not requested, send next segment here.
+      this._processSentSmsSegment(options);
+    }
+  } else {
+    // Last segment sent with success. Report it.
+    this.sendDOMMessage({
+      type: "sms-sent",
+      envelopeId: options.envelopeId,
+    });
+  }
 };
 RIL[REQUEST_SEND_SMS_EXPECT_MORE] = null;
 
@@ -3058,6 +3100,8 @@ let GsmPDUHelper = {
    *        Table index used for normal 7-bit encoded character lookup.
    * @param langShiftIndex
    *        Table index used for escaped 7-bit encoded character lookup.
+   * @param requestStatusReport
+   *        Request status report.
    */
   writeMessage: function writeMessage(options) {
     if (DEBUG) {
@@ -3143,6 +3187,11 @@ let GsmPDUHelper = {
 
     // PDU type. MTI is set to SMS-SUBMIT
     let firstOctet = PDU_MTI_SMS_SUBMIT;
+
+    // Status-Report-Request
+    if (options.requestStatusReport) {
+      firstOctet |= PDU_SRI_SRR;
+    }
 
     // Validity period
     if (validity) {
