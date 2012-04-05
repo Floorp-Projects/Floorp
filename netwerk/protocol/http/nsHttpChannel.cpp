@@ -135,7 +135,6 @@ nsHttpChannel::nsHttpChannel()
     , mResuming(false)
     , mInitedCacheEntry(false)
     , mCacheForOfflineUse(false)
-    , mCachingOpportunistically(false)
     , mFallbackChannel(false)
     , mCustomConditionalRequest(false)
     , mFallingBack(false)
@@ -2073,8 +2072,8 @@ nsHttpChannel::ProcessFallback(bool *waitingForRedirectCallback)
     NS_ASSERTION(fallbackEntryType & nsIApplicationCache::ITEM_FALLBACK,
                  "Fallback entry not marked correctly!");
 
-    // Kill any opportunistic cache entry, and disable opportunistic
-    // caching for the fallback.
+    // Kill any offline cache entry, and disable offline caching for the
+    // fallback.
     if (mOfflineCacheEntry) {
         mOfflineCacheEntry->Doom();
         mOfflineCacheEntry = 0;
@@ -2082,7 +2081,6 @@ nsHttpChannel::ProcessFallback(bool *waitingForRedirectCallback)
     }
 
     mCacheForOfflineUse = false;
-    mCachingOpportunistically = false;
     mOfflineCacheClientID.Truncate();
     mOfflineCacheEntry = 0;
     mOfflineCacheAccess = 0;
@@ -2335,12 +2333,10 @@ nsHttpChannel::OnOfflineCacheEntryAvailable(nsICacheEntryDescriptor *aEntry,
             NS_FAILED(namespaceEntry->GetItemType(&namespaceType)) ||
             (namespaceType &
              (nsIApplicationCacheNamespace::NAMESPACE_FALLBACK |
-              nsIApplicationCacheNamespace::NAMESPACE_OPPORTUNISTIC |
               nsIApplicationCacheNamespace::NAMESPACE_BYPASS)) == 0) {
             // When loading from an application cache, only items
             // on the whitelist or matching a
-            // fallback/opportunistic namespace should hit the
-            // network...
+            // fallback namespace should hit the network...
             mLoadFlags |= LOAD_ONLY_FROM_CACHE;
 
             // ... and if there were an application cache entry,
@@ -2352,19 +2348,6 @@ nsHttpChannel::OnOfflineCacheEntryAvailable(nsICacheEntryDescriptor *aEntry,
             nsIApplicationCacheNamespace::NAMESPACE_FALLBACK) {
             rv = namespaceEntry->GetData(mFallbackKey);
             NS_ENSURE_SUCCESS(rv, rv);
-        }
-
-        if ((namespaceType &
-             nsIApplicationCacheNamespace::NAMESPACE_OPPORTUNISTIC) &&
-            mLoadFlags & LOAD_DOCUMENT_URI) {
-            // Document loads for items in an opportunistic namespace
-            // should be placed in the offline cache.
-            nsCString clientID;
-            mApplicationCache->GetClientID(clientID);
-
-            mCacheForOfflineUse = !clientID.IsEmpty();
-            SetOfflineCacheClientID(clientID);
-            mCachingOpportunistically = true;
         }
     }
 
@@ -3105,17 +3088,6 @@ nsHttpChannel::CloseOfflineCacheEntry()
 
     mOfflineCacheEntry = 0;
     mOfflineCacheAccess = 0;
-
-    if (mCachingOpportunistically) {
-        nsCOMPtr<nsIApplicationCacheService> appCacheService =
-            do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID);
-        if (appCacheService) {
-            nsCAutoString cacheKey;
-            GenerateCacheKey(mPostID, cacheKey);
-            appCacheService->CacheOpportunistically(mApplicationCache,
-                                                    cacheKey);
-        }
-    }
 }
 
 
