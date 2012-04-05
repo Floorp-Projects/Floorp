@@ -1393,7 +1393,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
         // Create dummy GLContextEGL class
         nsRefPtr<GLContextEGL> glContext =
             new GLContextEGL(ContextFormat(DepthToGLFormat(context->device()->depth())),
-                             NULL,
+                             gGlobalContext,
                              NULL,
                              sEGLLibrary.fGetCurrentSurface(LOCAL_EGL_DRAW), // just use same surface for read and draw
                              sEGLLibrary.fGetCurrentContext(),
@@ -1405,7 +1405,9 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
         glContext->SetIsDoubleBuffered(context->format().doubleBuffer());
 
         glContext->SetPlatformContext(context);
-        gGlobalContext = glContext;
+        if (!gGlobalContext) {
+            gGlobalContext = glContext;
+        }
 
         return glContext.forget();
     }
