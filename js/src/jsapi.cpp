@@ -730,18 +730,14 @@ JSRuntime::JSRuntime()
     gcJitReleaseTime(0),
     gcMode(JSGC_MODE_GLOBAL),
     gcIsNeeded(0),
-    gcFullIsNeeded(0),
     gcWeakMapList(NULL),
     gcStats(thisFromCtor()),
     gcNumber(0),
     gcStartNumber(0),
     gcTriggerReason(gcreason::NO_REASON),
-    gcIsFull(false),
     gcStrictCompartmentChecking(false),
     gcIncrementalState(gc::NO_INCREMENTAL),
-    gcCompartmentCreated(false),
     gcLastMarkSlice(false),
-    gcIncrementalIsFull(false),
     gcInterFrameGC(0),
     gcSliceBudget(SliceBudget::Unlimited),
     gcIncrementalEnabled(true),
@@ -751,7 +747,6 @@ JSRuntime::JSRuntime()
     gcZeal_(0),
     gcZealFrequency(0),
     gcNextScheduled(0),
-    gcDebugCompartmentGC(false),
     gcDeterministicOnly(false),
 #endif
     gcCallback(NULL),
@@ -2864,26 +2859,12 @@ JS_IsGCMarkingTracer(JSTracer *trc)
     return IS_GC_MARKING_TRACER(trc);
 }
 
-extern JS_PUBLIC_API(void)
-JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
-{
-    AssertNoGC(cx);
-
-    /* We cannot GC the atoms compartment alone; use a full GC instead. */
-    JS_ASSERT(comp != cx->runtime->atomsCompartment);
-
-    if (comp) {
-        PrepareCompartmentForGC(comp);
-        GC(cx, false, GC_NORMAL, gcreason::API);
-    } else {
-        GC(cx, true, GC_NORMAL, gcreason::API);
-    }
-}
-
 JS_PUBLIC_API(void)
 JS_GC(JSContext *cx)
 {
-    JS_CompartmentGC(cx, NULL);
+    AssertNoGC(cx);
+    PrepareForFullGC(cx->runtime);
+    GC(cx, GC_NORMAL, gcreason::API);
 }
 
 JS_PUBLIC_API(void)
@@ -5248,15 +5229,33 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, unsigned indent)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
+JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *scriptArg, jsval *rval)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, script);
+    assertSameCompartment(cx, obj);
     AutoLastFrameCheck lfc(cx);
 
-    return Execute(cx, script, *obj, rval);
+    JS::Anchor<JSScript *> script;
+
+    /*
+     * Mozilla caches pre-compiled scripts (e.g., in the XUL prototype cache)
+     * and runs them against multiple globals. With a compartment per global,
+     * this requires cloning the pre-compiled script into each new global.
+     * Since each script gets run once, there is no point in trying to cache
+     * this clone. Ideally, this would be handled at some pinch point in
+     * mozilla, but there doesn't seem to be one, so we handle it here.
+     */
+    if (scriptArg->compartment() != obj->compartment()) {
+        script = CloneScript(cx, scriptArg);
+        if (!script.get())
+            return false;
+    } else {
+        script = scriptArg;
+    }
+
+    return Execute(cx, script.get(), *obj, rval);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -6550,14 +6549,13 @@ JS_AbortIfWrongThread(JSRuntime *rt)
 
 #ifdef JS_GC_ZEAL
 JS_PUBLIC_API(void)
-JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency, JSBool compartment)
+JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency)
 {
 #ifdef JS_GC_ZEAL
     const char *env = getenv("JS_GC_ZEAL");
     if (env) {
         zeal = atoi(env);
         frequency = 1;
-        compartment = false;
     }
 #endif
 
@@ -6565,14 +6563,12 @@ JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency, JSBool compartment
     cx->runtime->gcZeal_ = zeal;
     cx->runtime->gcZealFrequency = frequency;
     cx->runtime->gcNextScheduled = schedule ? frequency : 0;
-    cx->runtime->gcDebugCompartmentGC = !!compartment;
 }
 
 JS_PUBLIC_API(void)
-JS_ScheduleGC(JSContext *cx, uint32_t count, JSBool compartment)
+JS_ScheduleGC(JSContext *cx, uint32_t count)
 {
     cx->runtime->gcNextScheduled = count;
-    cx->runtime->gcDebugCompartmentGC = !!compartment;
 }
 #endif
 

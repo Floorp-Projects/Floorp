@@ -1384,7 +1384,7 @@ extern void
 ShrinkGCBuffers(JSRuntime *rt);
 
 extern void
-PrepareCompartmentForGC(JSCompartment *comp);
+PrepareForFullGC(JSRuntime *rt);
 
 /*
  * Kinds of js_GC invocation.
@@ -1397,15 +1397,17 @@ typedef enum JSGCInvocationKind {
     GC_SHRINK             = 1
 } JSGCInvocationKind;
 
-/* Pass NULL for |comp| to get a full GC. */
 extern void
-GC(JSContext *cx, bool full, JSGCInvocationKind gckind, js::gcreason::Reason reason);
+GC(JSContext *cx, JSGCInvocationKind gckind, js::gcreason::Reason reason);
 
 extern void
-GCSlice(JSContext *cx, bool full, JSGCInvocationKind gckind, js::gcreason::Reason reason);
+GCSlice(JSContext *cx, JSGCInvocationKind gckind, js::gcreason::Reason reason);
 
 extern void
-GCDebugSlice(JSContext *cx, int64_t objCount);
+GCDebugSlice(JSContext *cx, bool limit, int64_t objCount);
+
+extern void
+PrepareForDebugGC(JSRuntime *rt);
 
 } /* namespace js */
 
@@ -1729,14 +1731,14 @@ struct SliceBudget {
         counter = INTPTR_MAX;
     }
 
-    void step() {
-        counter--;
+    void step(intptr_t amt = 1) {
+        counter -= amt;
     }
 
     bool checkOverBudget();
 
     bool isOverBudget() {
-        if (counter > 0)
+        if (counter >= 0)
             return false;
         return checkOverBudget();
     }
