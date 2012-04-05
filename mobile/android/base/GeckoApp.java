@@ -129,7 +129,7 @@ abstract public class GeckoApp
     public static int mOrientation;
 
     private GeckoConnectivityReceiver mConnectivityReceiver;
-    private BroadcastReceiver mBatteryReceiver;
+    private GeckoBatteryManager mBatteryReceiver;
 
     public static BrowserToolbar mBrowserToolbar;
     public static DoorHangerPopup mDoorHangerPopup;
@@ -1731,14 +1731,12 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Session:StatePurged", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Bookmark:Insert", GeckoApp.mAppContext);
 
-        IntentFilter batteryFilter = new IntentFilter();
-        batteryFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
-        mBatteryReceiver = new GeckoBatteryManager();
-        registerReceiver(mBatteryReceiver, batteryFilter);
-
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
         }
+
+        mBatteryReceiver = new GeckoBatteryManager();
+        mBatteryReceiver.registerFor(mAppContext);
 
         mConnectivityReceiver = new GeckoConnectivityReceiver();
         mConnectivityReceiver.registerFor(mAppContext);
@@ -2088,7 +2086,7 @@ abstract public class GeckoApp
 
         super.onDestroy();
 
-        unregisterReceiver(mBatteryReceiver);
+        mBatteryReceiver.unregisterFor(mAppContext);
 
         if (mAboutHomeContent != null) {
             mAboutHomeContent.onDestroy();
