@@ -1051,6 +1051,7 @@ MarkIfGCThingWord(JSTracer *trc, uintptr_t w)
     JS_snprintf(nameBuf, sizeof(nameBuf), pattern, thing);
     JS_SET_TRACING_NAME(trc, nameBuf);
 #endif
+    JS_SET_TRACING_LOCATION(trc, (void *)w);
     void *tmp = thing;
     MarkKind(trc, &tmp, traceKind);
     JS_ASSERT(tmp == thing);
@@ -2008,6 +2009,7 @@ GCMarker::markBufferedGrayRoots()
         debugPrintArg = elem->debugPrintArg;
         debugPrintIndex = elem->debugPrintIndex;
 #endif
+        JS_SET_TRACING_LOCATION(this, (void *)&elem->thing);
         void *tmp = elem->thing;
         MarkKind(this, &tmp, elem->kind);
         JS_ASSERT(tmp == elem->thing);
@@ -2074,6 +2076,7 @@ static void
 gc_lock_traversal(const GCLocks::Entry &entry, JSTracer *trc)
 {
     JS_ASSERT(entry.value >= 1);
+    JS_SET_TRACING_LOCATION(trc, (void *)&entry.key);
     void *tmp = entry.key;
     MarkGCThingRoot(trc, &tmp, "locked object");
     JS_ASSERT(tmp == entry.key);
