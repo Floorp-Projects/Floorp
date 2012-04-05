@@ -35,27 +35,24 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
-#ifndef AndroidFlexViewWrapper_h__
-#define AndroidFlexViewWrapper_h__
+#ifndef AndroidLayerViewWrapper_h__
+#define AndroidLayerViewWrapper_h__
 
 #include <jni.h>
-#include <cassert>
-#include <cstdlib>
 #include <pthread.h>
-#include <android/log.h>
 
 class AndroidEGLObject {
 public:
     static void Init(JNIEnv* aJEnv);
 };
 
-typedef void *EGLSurface;
+typedef void* EGLSurface;
 
 class AndroidGLController {
 public:
     static void Init(JNIEnv* aJEnv);
 
-    void Acquire(JNIEnv *aJEnv, jobject aJObj);
+    void Acquire(JNIEnv* aJEnv, jobject aJObj);
     void SetGLVersion(int aVersion);
     EGLSurface ProvideEGLSurface();
     void WaitForValidSurface();
@@ -66,8 +63,8 @@ private:
     static jmethodID jProvideEGLSurfaceMethod;
 
     // the JNIEnv for the compositor thread
-    JNIEnv *mJEnv;
-    void *mThread;
+    JNIEnv* mJEnv;
+    pthread_t mThread;
     jobject mJObj;
 };
 

@@ -4321,6 +4321,14 @@ JS_ObjectIsCallable(JSContext *cx, JSObject *obj);
 extern JS_PUBLIC_API(JSBool)
 JS_IsNativeFunction(JSObject *funobj, JSNative call);
 
+/*
+ * Bind the given callable to use the given object as "this".
+ *
+ * If |callable| is not callable, will throw and return NULL.
+ */
+extern JS_PUBLIC_API(JSObject*)
+JS_BindCallable(JSContext *cx, JSObject *callable, JSObject *newThis);
+
 extern JS_PUBLIC_API(JSBool)
 JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs);
 
