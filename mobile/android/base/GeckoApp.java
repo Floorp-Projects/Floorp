@@ -1589,8 +1589,6 @@ abstract public class GeckoApp
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (LinearLayout) findViewById(R.id.main_layout);
 
-        mConnectivityReceiver = new GeckoConnectivityReceiver();
-
         ((GeckoApplication) getApplication()).addApplicationLifecycleCallbacks(this);
     }
 
@@ -1742,7 +1740,13 @@ abstract public class GeckoApp
           SmsManager.getInstance().start();
         }
 
+        mConnectivityReceiver = new GeckoConnectivityReceiver();
+        mConnectivityReceiver.registerFor(mAppContext);
+
         GeckoNetworkManager.getInstance().init();
+        GeckoNetworkManager.getInstance().start();
+
+        GeckoScreenOrientationListener.getInstance().start();
 
         final GeckoApp self = this;
 
@@ -1988,10 +1992,6 @@ abstract public class GeckoApp
 
         // onPause will be followed by either onResume or onStop.
         super.onPause();
-
-        mConnectivityReceiver.unregisterFor(mAppContext);
-        GeckoNetworkManager.getInstance().stop();
-        GeckoScreenOrientationListener.getInstance().stop();
     }
 
     @Override
@@ -2020,14 +2020,6 @@ abstract public class GeckoApp
             mOrientation = newOrientation;
             refreshActionBar();
         }
-
-        mMainHandler.post(new Runnable() {
-            public void run() {
-                mConnectivityReceiver.registerFor(mAppContext);
-                GeckoNetworkManager.getInstance().start();
-                GeckoScreenOrientationListener.getInstance().start();
-            }
-        });
     }
 
     @Override
@@ -2156,6 +2148,10 @@ abstract public class GeckoApp
     public void onApplicationPause() {
         Log.i(LOGTAG, "application paused");
         GeckoAppShell.sendEventToGecko(GeckoEvent.createPauseEvent(true));
+
+        mConnectivityReceiver.unregisterFor(mAppContext);
+        GeckoNetworkManager.getInstance().stop();
+        GeckoScreenOrientationListener.getInstance().stop();
     }
 
     @Override
@@ -2163,6 +2159,10 @@ abstract public class GeckoApp
         Log.i(LOGTAG, "application resumed");
         if (checkLaunchState(LaunchState.GeckoRunning))
             GeckoAppShell.sendEventToGecko(GeckoEvent.createResumeEvent(true));
+
+        mConnectivityReceiver.registerFor(mAppContext);
+        GeckoNetworkManager.getInstance().start();
+        GeckoScreenOrientationListener.getInstance().start();
     }
 
     abstract public String getPackageName();
