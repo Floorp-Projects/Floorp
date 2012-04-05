@@ -6,7 +6,7 @@ ac_add_options --enable-accessibility
 ac_add_options --enable-signmar
 
 # Enable parallel compiling
-mk_add_options MOZ_MAKE_FLAGS="-j4"
+mk_add_options MOZ_MAKE_FLAGS="-j12"
 
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
@@ -15,6 +15,7 @@ ac_add_options --with-macbundlename-prefix=Firefox
 
 # Treat warnings as errors in directories with FAIL_ON_WARNINGS.
 ac_add_options --enable-warnings-as-errors
+ac_add_options --with-ccache
 
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
