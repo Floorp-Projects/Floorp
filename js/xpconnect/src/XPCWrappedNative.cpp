@@ -2166,6 +2166,48 @@ XPCWrappedNative::InitTearOffJSObject(XPCCallContext& ccx,
     return true;
 }
 
+JSObject*
+XPCWrappedNative::GetSameCompartmentSecurityWrapper(JSContext *cx)
+{
+    // Grab the current state of affairs.
+    JSObject *flat = GetFlatJSObject();
+    JSObject *wrapper = GetWrapper();
+
+    // Chrome callers don't need same-compartment security wrappers.
+    JSCompartment *cxCompartment = js::GetContextCompartment(cx);
+    MOZ_ASSERT(cxCompartment == js::GetObjectCompartment(flat));
+    if (xpc::AccessCheck::isChrome(cxCompartment)) {
+        MOZ_ASSERT(wrapper == NULL);
+        return flat;
+    }
+
+    // If we already have a wrapper, it must be what we want.
+    if (wrapper)
+        return wrapper;
+
+    // Check the possibilities. Note that we need to check for null in each
+    // case in order to distinguish between the 'no need for wrapper' and
+    // 'wrapping failed' cases.
+    if (xpc::WrapperFactory::IsLocationObject(flat)) {
+        wrapper = xpc::WrapperFactory::WrapLocationObject(cx, flat);
+        if (!wrapper)
+            return NULL;
+    } else if (NeedsSOW()) {
+        wrapper = xpc::WrapperFactory::WrapSOWObject(cx, flat);
+        if (!wrapper)
+            return NULL;
+    }
+
+    // If we made a wrapper, cache it and return it.
+    if (wrapper) {
+        SetWrapper(wrapper);
+        return wrapper;
+    }
+
+    // Otherwise, just return the bare JS reflection.
+    return flat;
+}
+
 /***************************************************************************/
 
 static JSBool Throw(unsigned errNum, XPCCallContext& ccx)
