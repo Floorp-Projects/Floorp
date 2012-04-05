@@ -1532,6 +1532,23 @@ let RIL = {
   },
 
   /**
+   * Helper for processing SMS-STATUS-REPORT PDUs.
+   *
+   * @param length
+   *        Length of SMS string in the incoming parcel.
+   *
+   * @return A failure cause defined in 3GPP 23.040 clause 9.2.3.22.
+   */
+  _processSmsStatusReport: function _processSmsStatusReport(length) {
+    let message = this._processReceivedSms(length);
+    if (!message) {
+      return PDU_FCS_UNSPECIFIED;
+    }
+
+    return PDU_FCS_OK;
+  },
+
+  /**
    * Helper for processing received multipart SMS.
    *
    * @return null for handled segments, and an object containing full message
@@ -2149,8 +2166,8 @@ RIL[UNSOLICITED_RESPONSE_NEW_SMS] = function UNSOLICITED_RESPONSE_NEW_SMS(length
   this.acknowledgeSMS(result == PDU_FCS_OK, result);
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT] = function UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT(length) {
-  let info = Buf.readStringList();
-  //TODO
+  let result = this._processSmsStatusReport(length);
+  this.acknowledgeSMS(result == PDU_FCS_OK, result);
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM] = function UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM(length) {
   let info = Buf.readUint32List();
@@ -2864,6 +2881,50 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Read extra parameters if TP-PI is set.
+   *
+   * @param msg
+   *        message object for output.
+   */
+  readExtraParams: function readExtraParams(msg) {
+    // Because each PDU octet is converted to two UCS2 char2, we should always
+    // get even messageStringLength in this#_processReceivedSms(). So, we'll
+    // always need two delimitors at the end.
+    if (Buf.readAvailable <= 4) {
+      return;
+    }
+
+    // TP-Parameter-Indicator
+    let pi;
+    do {
+      // `The most significant bit in octet 1 and any other TP-PI octets which
+      // may be added later is reserved as an extension bit which when set to a
+      // 1 shall indicate that another TP-PI octet follows immediately
+      // afterwards.` ~ 3GPP TS 23.040 9.2.3.27
+      pi = this.readHexOctet();
+    } while (pi & PDU_PI_EXTENSION);
+
+    // `If the TP-UDL bit is set to "1" but the TP-DCS bit is set to "0" then
+    // the receiving entity shall for TP-DCS assume a value of 0x00, i.e. the
+    // 7bit default alphabet.` ~ 3GPP 23.040 9.2.3.27
+    msg.dcs = 0;
+
+    // TP-Protocol-Identifier
+    if (pi & PDU_PI_PROTOCOL_IDENTIFIER) {
+      msg.pid = this.readHexOctet();
+    }
+    // TP-Data-Coding-Scheme
+    if (pi & PDU_PI_DATA_CODING_SCHEME) {
+      msg.dcs = this.readHexOctet();
+    }
+    // TP-User-Data-Length
+    if (pi & PDU_PI_USER_DATA_LENGTH) {
+      let userDataLength = this.readHexOctet();
+      this.readUserData(msg, userDataLength);
+    }
+  },
+
+  /**
    * Read and decode a PDU-encoded message from the stream.
    *
    * TODO: add some basic sanity checks like:
@@ -2872,14 +2933,22 @@ let GsmPDUHelper = {
   readMessage: function readMessage() {
     // An empty message object. This gets filled below and then returned.
     let msg = {
-      SMSC:      null,
-      mti:       null,
-      udhi:      null,
-      sender:    null,
-      pid:       null,
-      dcs:       null,
-      body:      null,
-      timestamp: null
+      // D:DELIVER, DR:DELIVER-REPORT, S:SUBMIT, SR:SUBMIT-REPORT,
+      // ST:STATUS-REPORT, C:COMMAND
+      // M:Mandatory, O:Optional, X:Unavailable
+      //                  D  DR S  SR ST C
+      SMSC:      null, // M  M  M  M  M  M
+      mti:       null, // M  M  M  M  M  M
+      udhi:      null, // M  M  X  M  M  M
+      sender:    null, // M  X  X  X  X  X
+      recipient: null, // X  X  M  X  M  M
+      pid:       null, // M  O  M  O  O  M
+      dcs:       null, // M  O  M  O  O  X
+      body:      null, // M  O  M  O  O  O
+      timestamp: null, // M  X  X  X  X  X
+      status:    null, // X  X  X  X  M  X
+      scts:      null, // X  X  X  M  M  X
+      dt:        null, // X  X  X  X  M  X
     };
 
     // SMSC info
@@ -2907,6 +2976,8 @@ let GsmPDUHelper = {
         // the message exactly as received.` ~ 3GPP TS 23.040 9.2.3.1
       case PDU_MTI_SMS_DELIVER:
         return this.readDeliverMessage(msg);
+      case PDU_MTI_SMS_STATUS_REPORT:
+        return this.readStatusReportMessage(msg);
       default:
         return null;
     }
@@ -2935,6 +3006,30 @@ let GsmPDUHelper = {
     if (userDataLength > 0) {
       this.readUserData(msg, userDataLength);
     }
+
+    return msg;
+  },
+
+  /**
+   * Read and decode a SMS-STATUS-REPORT PDU.
+   *
+   * @param msg
+   *        message object for output.
+   */
+  readStatusReportMessage: function readStatusReportMessage(msg) {
+    // TP-Message-Reference
+    msg.messageRef = this.readHexOctet();
+    // TP-Recipient-Address
+    let recipientAddressLength = this.readHexOctet();
+    msg.recipient = this.readAddress(recipientAddressLength);
+    // TP-Service-Centre-Time-Stamp
+    msg.scts = this.readTimestamp();
+    // TP-Discharge-Time
+    msg.dt = this.readTimestamp();
+    // TP-Status
+    msg.status = this.readHexOctet();
+
+    this.readExtraParams(msg);
 
     return msg;
   },
