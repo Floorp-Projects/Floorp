@@ -102,6 +102,7 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyListCreated(JNIEnv* jenv, jclass, jint, jint, jstring, jstring, jstring, jlong, jint, jlong);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyGotNextMessage(JNIEnv* jenv, jclass, jint, jstring, jstring, jstring, jlong, jint, jlong);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyReadingMessageListFailed(JNIEnv* jenv, jclass, jint, jint, jlong);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyFilePickerResult(JNIEnv* jenv, jclass, jstring fileDir, jlong callback);
 
 #ifdef MOZ_JAVA_COMPOSITOR
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite(JNIEnv* jenv, jclass);
@@ -907,6 +908,31 @@ NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition(JNIEnv*, jclass)
 {
     nsWindow::ScheduleResumeComposition();
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_notifyFilePickerResult(JNIEnv* jenv, jclass, jstring filePath, jlong callback)
+{
+    class NotifyFilePickerResultRunnable : public nsRunnable {
+    public:
+        NotifyFilePickerResultRunnable(nsString& fileDir, long callback) : 
+            mFileDir(fileDir), mCallback(callback) {}
+
+        NS_IMETHODIMP Run() {
+            nsFilePickerCallback* handler = (nsFilePickerCallback*)mCallback;
+            handler->handleResult(mFileDir);
+            handler->Release();
+            return NS_OK;
+        }
+    private:
+        nsString mFileDir;
+        long mCallback;
+    };
+    nsString path = nsJNIString(filePath, jenv);
+    
+    nsCOMPtr<nsIRunnable> runnable =
+        new NotifyFilePickerResultRunnable(path, (long)callback);
+    NS_DispatchToMainThread(runnable);
 }
 
 #endif
