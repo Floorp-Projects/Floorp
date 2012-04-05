@@ -1979,22 +1979,6 @@ abstract public class GeckoApp
     }
 
     @Override
-    public void onPause()
-    {
-        Log.i(LOGTAG, "pause");
-
-        // The user is navigating away from this activity, but nothing
-        // has come to the foreground yet; for Gecko, we may want to
-        // stop repainting, for example.
-
-        // Whatever we do here should be fast, because we're blocking
-        // the next activity from showing up until we finish.
-
-        // onPause will be followed by either onResume or onStop.
-        super.onPause();
-    }
-
-    @Override
     public void onResume()
     {
         Log.i(LOGTAG, "resume");
