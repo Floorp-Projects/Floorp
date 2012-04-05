@@ -39,7 +39,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.121 2012/03/23 03:25:57 wtc%google.com Exp $
+ * $Id: certdb.c,v 1.121.2.1 2012/04/03 00:38:19 wtc%google.com Exp $
  */
 
 #include "nssilock.h"
@@ -2955,6 +2955,7 @@ cert_InitLocks(void)
         PORT_Assert(certTrustLock != NULL);
         if (!certTrustLock) {
             PZ_DestroyLock(certRefCountLock);
+            certRefCountLock = NULL;
             return SECFailure;
         }
     }    
