@@ -985,6 +985,20 @@ let RIL = {
       Buf.simpleRequest(REQUEST_UDUB);
     }
   },
+  
+  holdCall: function holdCall(options) {
+    let call = this.currentCalls[options.callIndex];
+    if (call && call.state == CALL_STATE_ACTIVE) {
+      Buf.simpleRequest(REQUEST_SWITCH_HOLDING_AND_ACTIVE);
+    }
+  },
+
+  resumeCall: function resumeCall(options) {
+    let call = this.currentCalls[options.callIndex];
+    if (call && call.state == CALL_STATE_HOLDING) {
+      Buf.simpleRequest(REQUEST_SWITCH_HOLDING_AND_ACTIVE);
+    }
+  },
 
   /**
    * Send an SMS.
@@ -1675,13 +1689,18 @@ RIL[REQUEST_DIAL] = null;
 RIL[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length) {
   this.IMSI = Buf.readString();
 };
-RIL[REQUEST_HANGUP] = function REQUEST_HANGUP (length) {
- this.getCurrentCalls();
-};
+RIL[REQUEST_HANGUP] = function REQUEST_HANGUP(length) {
+  this.getCurrentCalls();
+}; 
 RIL[REQUEST_HANGUP_WAITING_OR_BACKGROUND] = null;
 RIL[REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND] = null;
 RIL[REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE] = null;
-RIL[REQUEST_SWITCH_HOLDING_AND_ACTIVE] = null;
+RIL[REQUEST_SWITCH_HOLDING_AND_ACTIVE] = function REQUEST_SWITCH_HOLDING_AND_ACTIVE(length) {
+  // XXX Normally we should get a UNSOLICITED_RESPONSE_CALL_STATE_CHANGED parcel 
+  // notifying us of call state changes, but sometimes we don't (have no idea why).
+  // this.getCurrentCalls() helps update the call state actively.
+  this.getCurrentCalls();
+};
 RIL[REQUEST_CONFERENCE] = null;
 RIL[REQUEST_UDUB] = null;
 RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = null;
