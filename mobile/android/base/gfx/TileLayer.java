@@ -130,7 +130,7 @@ public abstract class TileLayer extends Layer {
     }
 
     @Override
-    protected boolean performUpdates(RenderContext context) {
+    protected void performUpdates(RenderContext context) {
         super.performUpdates(context);
 
         // Reallocate the texture if the size has changed
@@ -138,7 +138,7 @@ public abstract class TileLayer extends Layer {
 
         // Don't do any work if the image has an invalid size.
         if (!mImage.getSize().isPositive())
-            return true;
+            return;
 
         // If we haven't allocated a texture, assume the whole region is dirty
         if (mTextureIDs == null) {
@@ -148,8 +148,6 @@ public abstract class TileLayer extends Layer {
         }
 
         mDirtyRect.setEmpty();
-
-        return true;
     }
 
     private void uploadFullTexture() {
