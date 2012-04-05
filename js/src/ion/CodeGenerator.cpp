@@ -843,15 +843,81 @@ CodeGenerator::visitNewArray(LNewArray *lir)
     return true;
 }
 
-bool
-CodeGenerator::visitNewObject(LNewObject *lir)
+// Out-of-line object allocation for JSOP_NEWOBJECT.
+class OutOfLineNewObject : public OutOfLineCodeBase<CodeGenerator>
 {
+    LNewObject *lir_;
+
+  public:
+    OutOfLineNewObject(LNewObject *lir)
+      : lir_(lir)
+    { }
+
+    bool accept(CodeGenerator *codegen) {
+        return codegen->visitOutOfLineNewObject(this);
+    }
+
+    LNewObject *lir() const {
+        return lir_;
+    }
+};
+
+bool
+CodeGenerator::visitNewObjectVMCall(LNewObject *lir)
+{
+    Register objReg = ToRegister(lir->output());
+
     typedef JSObject *(*pf)(JSContext *, JSObject *, types::TypeObject *);
     static const VMFunction Info = FunctionInfo<pf>(NewInitObject);
 
+    JS_ASSERT(!lir->isCall());
+    saveLive(lir);
+
     pushArg(ImmGCPtr(lir->mir()->type()));
     pushArg(ImmGCPtr(lir->mir()->baseObj()));
-    return callVM(Info, lir);
+    if (!callVM(Info, lir))
+        return false;
+
+    if (ReturnReg != objReg)
+        masm.movePtr(ReturnReg, objReg);
+
+    restoreLive(lir);
+    return true;
+}
+
+bool
+CodeGenerator::visitNewObject(LNewObject *lir)
+{
+    Register objReg = ToRegister(lir->output());
+
+    JSObject *baseObj = lir->mir()->baseObj();
+    types::TypeObject *typeObj = lir->mir()->type();
+
+    if (!gen->cx->typeInferenceEnabled() || !typeObj || baseObj->hasDynamicSlots())
+        return visitNewObjectVMCall(lir);
+
+    OutOfLineNewObject *ool = new OutOfLineNewObject(lir);
+    if (!addOutOfLineCode(ool))
+        return false;
+
+    JSObject *templateObject = CopyInitializerObject(gen->cx, baseObj);
+    if (!templateObject)
+        return false;
+    templateObject->setType(typeObj);
+
+    masm.getNewObject(gen->cx, objReg, templateObject, ool->entry());
+    masm.bind(ool->rejoin());
+
+    return true;
+}
+
+bool
+CodeGenerator::visitOutOfLineNewObject(OutOfLineNewObject *ool)
+{
+    if (!visitNewObjectVMCall(ool->lir()))
+        return false;
+    masm.jump(ool->rejoin());
+    return true;
 }
 
 // Out-of-line object allocation for |new|, calling to the VM.
