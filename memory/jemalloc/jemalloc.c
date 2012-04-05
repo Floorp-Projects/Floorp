@@ -5920,7 +5920,7 @@ MALLOC_OUT:
 #endif
 	}
 
-#if !defined(MOZ_MEMORY_WINDOWS)
+#if !defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN)
 	/* Prevent potential deadlock on malloc locks after fork. */
 	pthread_atfork(_malloc_prefork, _malloc_postfork, _malloc_postfork);
 #endif
