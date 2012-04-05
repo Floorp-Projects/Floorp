@@ -406,6 +406,15 @@ ion::MarkIonActivations(JSRuntime *rt, JSTracer *trc)
 void
 ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
 {
+#ifdef DEBUG
+    // Suppress bailout spew from SnapshotReader::readFrameHeader().
+    bool enableBailoutSpew = false;
+    if (IonSpewEnabled(IonSpew_Bailouts)) {
+        enableBailoutSpew = true;
+        DisableChannel(IonSpew_Bailouts);
+    }
+#endif
+
     JS_ASSERT(cx->fp()->runningInIon());
     IonSpew(IonSpew_Snapshots, "Recover PC & Script from the last frame.");
 
@@ -418,6 +427,11 @@ ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
     *scriptRes = ifi.script();
     if (pcRes)
         *pcRes = ifi.pc();
+
+#ifdef DEBUG
+    if (enableBailoutSpew)
+        EnableChannel(IonSpew_Bailouts);
+#endif
 }
 
 void
