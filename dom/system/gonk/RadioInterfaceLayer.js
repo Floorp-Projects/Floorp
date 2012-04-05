@@ -84,9 +84,8 @@ function convertRILCallState(state) {
     case RIL.CALL_STATE_ALERTING:
       return nsIRadioInterfaceLayer.CALL_STATE_ALERTING;
     case RIL.CALL_STATE_INCOMING:
-      return nsIRadioInterfaceLayer.CALL_STATE_INCOMING;
     case RIL.CALL_STATE_WAITING:
-      return nsIRadioInterfaceLayer.CALL_STATE_HELD; // XXX This may not be right...
+      return nsIRadioInterfaceLayer.CALL_STATE_INCOMING; 
     default:
       throw new Error("Unknown rilCallState: " + state);
   }
@@ -512,6 +511,14 @@ RadioInterfaceLayer.prototype = {
 
   rejectCall: function rejectCall(callIndex) {
     this.worker.postMessage({type: "rejectCall", callIndex: callIndex});
+  },
+ 
+  holdCall: function holdCall(callIndex) {
+    this.worker.postMessage({type: "holdCall", callIndex: callIndex});
+  },
+
+  resumeCall: function resumeCall(callIndex) {
+    this.worker.postMessage({type: "resumeCall", callIndex: callIndex});
   },
 
   get microphoneMuted() {
