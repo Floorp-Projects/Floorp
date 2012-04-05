@@ -117,6 +117,9 @@ Compatibility::Init()
       ::GetModuleHandleW(L"TextExtractorImpl64"))
     sConsumers |= YOUDAO;
 
+  if (::GetModuleHandleW(L"uiautomation"))
+    sConsumers |= UIAUTOMATION;
+
   // If we have a known consumer remove the unknown bit.
   if (sConsumers != Compatibility::UNKNOWN)
     sConsumers ^= Compatibility::UNKNOWN;
