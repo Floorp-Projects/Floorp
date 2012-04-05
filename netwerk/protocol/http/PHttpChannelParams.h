@@ -104,6 +104,14 @@ struct ParamTraits<nsHttpHeaderArray::nsEntry>
   }
 };
 
+
+template<>
+struct ParamTraits<mozilla::net::InfallableCopyCString>
+  : public ParamTraits<nsCString>
+{
+};
+
+
 template<>
 struct ParamTraits<nsHttpHeaderArray>
 {
