@@ -830,16 +830,84 @@ CodeGenerator::generateBody()
     return true;
 }
 
-bool
-CodeGenerator::visitNewArray(LNewArray *lir)
+// Out-of-line object allocation for LNewArray.
+class OutOfLineNewArray : public OutOfLineCodeBase<CodeGenerator>
 {
+    LNewArray *lir_;
+
+  public:
+    OutOfLineNewArray(LNewArray *lir)
+      : lir_(lir)
+    { }
+
+    bool accept(CodeGenerator *codegen) {
+        return codegen->visitOutOfLineNewArray(this);
+    }
+
+    LNewArray *lir() const {
+        return lir_;
+    }
+};
+
+bool
+CodeGenerator::visitNewArrayCallVM(LNewArray *lir)
+{
+    Register objReg = ToRegister(lir->output());
+
     typedef JSObject *(*pf)(JSContext *, uint32, types::TypeObject *);
     static const VMFunction NewInitArrayInfo = FunctionInfo<pf>(NewInitArray);
 
+    JS_ASSERT(!lir->isCall());
+    saveLive(lir);
+
     pushArg(ImmGCPtr(lir->mir()->type()));
     pushArg(Imm32(lir->mir()->count()));
+
     if (!callVM(NewInitArrayInfo, lir))
         return false;
+
+    if (ReturnReg != objReg)
+        masm.movePtr(ReturnReg, objReg);
+
+    restoreLive(lir);
+
+    return true;
+}
+
+bool
+CodeGenerator::visitNewArray(LNewArray *lir)
+{
+    Register objReg = ToRegister(lir->output());
+    types::TypeObject *typeObj = lir->mir()->type();
+    uint32 count = lir->mir()->count();
+
+    size_t maxArraySlots =
+        gc::GetGCKindSlots(gc::FINALIZE_OBJECT_LAST) - ObjectElements::VALUES_PER_HEADER;
+
+    if (!gen->cx->typeInferenceEnabled() || !typeObj || count > maxArraySlots)
+        return visitNewArrayCallVM(lir);
+
+    OutOfLineNewArray *ool = new OutOfLineNewArray(lir);
+    if (!addOutOfLineCode(ool))
+        return false;
+
+    JSObject *templateObject = NewDenseUnallocatedArray(gen->cx, count);
+    if (!templateObject)
+        return false;
+    templateObject->setType(typeObj);
+
+    masm.getNewObject(gen->cx, objReg, templateObject, ool->entry());
+    masm.bind(ool->rejoin());
+
+    return true;
+}
+
+bool
+CodeGenerator::visitOutOfLineNewArray(OutOfLineNewArray *ool)
+{
+    if (!visitNewArrayCallVM(ool->lir()))
+        return false;
+    masm.jump(ool->rejoin());
     return true;
 }
 

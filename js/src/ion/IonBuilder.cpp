@@ -2772,9 +2772,7 @@ IonBuilder::jsop_newarray(uint32 count)
     current->add(ins);
     current->push(ins);
 
-    if (!resumeAfter(ins))
-        return false;
-    return true;
+    return resumeAfter(ins);
 }
 
 bool
