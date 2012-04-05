@@ -58,7 +58,7 @@ import android.util.Log;
 import android.view.View;
 
 public class GeckoLayerClient implements GeckoEventResponder,
-                                         LayerView.Listener {
+                                         FlexibleGLSurfaceView.Listener {
     private static final String LOGTAG = "GeckoLayerClient";
     private static final String PREF_DISPLAYPORT_STRATEGY = "gfx.displayport.strategy";
 
@@ -407,19 +407,19 @@ public class GeckoLayerClient implements GeckoEventResponder,
         mLayerRenderer.deactivateDefaultProgram();
     }
 
-    /** Implementation of LayerView.Listener */
+    /** Implementation of FlexibleGLSurfaceView.Listener */
     public void renderRequested() {
         GeckoAppShell.scheduleComposite();
     }
 
-    /** Implementation of LayerView.Listener */
+    /** Implementation of FlexibleGLSurfaceView.Listener */
     public void compositionPauseRequested() {
         // We need to coordinate with Gecko when pausing composition, to ensure
         // that Gecko never executes a draw event while the compositor is paused.
         GeckoAppShell.sendEventToGecko(GeckoEvent.createCompositorPauseEvent());
     }
 
-    /** Implementation of LayerView.Listener */
+    /** Implementation of FlexibleGLSurfaceView.Listener */
     public void compositionResumeRequested() {
         // Asking Gecko to resume the compositor takes too long (see
         // https://bugzilla.mozilla.org/show_bug.cgi?id=735230#c23), so we
@@ -429,7 +429,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
         GeckoAppShell.sendEventToGecko(GeckoEvent.createCompositorResumeEvent());
     }
 
-    /** Implementation of LayerView.Listener */
+    /** Implementation of FlexibleGLSurfaceView.Listener */
     public void surfaceChanged(int width, int height) {
         mLayerController.setViewportSize(new FloatSize(width, height));
 
