@@ -1026,6 +1026,10 @@ let RIL = {
 
     //TODO: verify values on 'options'
 
+    if (!options.retryCount) {
+      options.retryCount = 0;
+    }
+
     if (options.segmentMaxSeq > 1) {
       if (!options.segmentSeq) {
         // Fist segment to send
@@ -1572,7 +1576,8 @@ let RIL = {
     delete this._pendingSentSmsMap[message.messageRef];
 
     if ((status >>> 5) != 0x00) {
-      // TODO: bug 727319 - Notify SMS send failures
+      // It seems unlikely to get a result code for a failure to deliver.
+      // Even if, we don't want to do anything with this.
       return PDU_FCS_OK;
     }
 
@@ -1954,7 +1959,24 @@ RIL[REQUEST_RADIO_POWER] = null;
 RIL[REQUEST_DTMF] = null;
 RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
   if (options.rilRequestError) {
-    //TODO handle errors (bug 727319)
+    switch (options.rilRequestError) {
+      case ERROR_SMS_SEND_FAIL_RETRY:
+        if (options.retryCount < SMS_RETRY_MAX) {
+          options.retryCount++;
+          // TODO: bug 736702 TP-MR, retry interval, retry timeout
+          this.sendSMS(options);
+          break;
+        }
+
+        // Fallback to default error handling if it meets max retry count.
+      default:
+        this.sendDOMMessage({
+          type: "sms-send-failed",
+          envelopeId: options.envelopeId,
+          error: options.rilRequestError,
+        });
+        break;
+    }
     return;
   }
 
@@ -2211,8 +2233,13 @@ RIL[REQUEST_DEVICE_IDENTITY] = null;
 RIL[REQUEST_EXIT_EMERGENCY_CALLBACK_MODE] = null;
 RIL[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS(length, options) {
   if (options.rilRequestError) {
-    //TODO: notify main thread if we fail retrieving the SMSC, especially
-    // if there was a pending SMS (bug 727319).
+    if (options.body) {
+      this.sendDOMMessage({
+        type: "sms-send-failed",
+        envelopeId: options.envelopeId,
+        error: options.rilRequestError,
+      });
+    }
     return;
   }
 
