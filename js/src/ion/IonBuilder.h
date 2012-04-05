@@ -338,7 +338,7 @@ class IonBuilder : public MIRGenerator
     // specialized and which can enable GVN & LICM on these native calls.
     bool discardCallArgs(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb);
     bool discardCall(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb);
-    bool inlineNativeCall(JSFunction *target, uint32 argc);
+    bool inlineNativeCall(JSFunction *target, uint32 argc, bool constructing);
 
     /* Inlining. */
 
