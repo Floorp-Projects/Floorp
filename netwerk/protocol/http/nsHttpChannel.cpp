@@ -72,6 +72,7 @@
 #include "nsAlgorithm.h"
 #include "sampler.h"
 #include "nsIConsoleService.h"
+#include "base/compiler_specific.h"
 
 using namespace mozilla;
 
@@ -121,7 +122,7 @@ AutoRedirectVetoNotifier::ReportRedirectResult(bool succeeded)
 //-----------------------------------------------------------------------------
 
 nsHttpChannel::nsHttpChannel()
-    : HttpAsyncAborter<nsHttpChannel>(this)
+    : ALLOW_THIS_IN_INITIALIZER_LIST(HttpAsyncAborter<nsHttpChannel>(this))
     , mLogicalOffset(0)
     , mCacheAccess(0)
     , mPostID(0)
