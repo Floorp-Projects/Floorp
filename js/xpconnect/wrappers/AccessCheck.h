@@ -45,9 +45,6 @@ class nsIPrincipal;
 
 namespace xpc {
 
-nsIPrincipal *
-GetCompartmentPrincipal(JSCompartment *compartment);
-
 class AccessCheck {
   public:
     static bool isSameOrigin(JSCompartment *a, JSCompartment *b);
