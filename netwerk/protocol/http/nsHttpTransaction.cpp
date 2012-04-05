@@ -367,6 +367,15 @@ nsHttpTransaction::TakeResponseHead()
 
     mTakenResponseHeader = true;
 
+    // Prefer mForTakeResponseHead over mResponseHead. It is always a complete
+    // set of headers.
+    nsHttpResponseHead *head;
+    if (mForTakeResponseHead) {
+        head = mForTakeResponseHead;
+        mForTakeResponseHead = nsnull;
+        return head;
+    }
+    
     // Even in OnStartRequest() the headers won't be available if we were
     // canceled
     if (!mHaveAllHeaders) {
@@ -374,16 +383,8 @@ nsHttpTransaction::TakeResponseHead()
         return nsnull;
     }
 
-    // Prefer mForTakeResponseHead over mResponseHead
-    nsHttpResponseHead *head;
-    if (mForTakeResponseHead) {
-        head = mForTakeResponseHead;
-        mForTakeResponseHead = nsnull;
-    }
-    else {
-        head = mResponseHead;
-        mResponseHead = nsnull;
-    }
+    head = mResponseHead;
+    mResponseHead = nsnull;
     return head;
 }
 
@@ -840,12 +841,10 @@ nsHttpTransaction::RestartInProgress()
 {
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     
-    return NS_ERROR_FAILURE;
-    
     // Lock RestartInProgress() and TakeResponseHead() against main thread
     MutexAutoLock lock(*nsHttp::GetLock());
 
-    // don't try and restart 0.9
+    // don't try and restart 0.9 or non 200/Get HTTP/1
     if (mHaveAllHeaders && !mRestartInProgressVerifier.IsSetup())
         return NS_ERROR_NET_RESET;
 
@@ -1262,7 +1261,8 @@ nsHttpTransaction::HandleContentStart()
     }
 
     mDidContentStart = true;
-    mRestartInProgressVerifier.Set(mContentLength, mResponseHead);
+    if (mRequestHead->Method() == nsHttp::Get)
+        mRestartInProgressVerifier.Set(mContentLength, mResponseHead);
     return NS_OK;
 }
 
@@ -1593,6 +1593,9 @@ nsHttpTransaction::RestartVerifier::Verify(PRInt64 contentLength,
     if (mContentLength != contentLength)
         return false;
 
+    if (newHead->Status() != 200)
+        return false;
+
     if (!matchOld(newHead, mContentRange, nsHttp::Content_Range))
         return false;
 
@@ -1616,6 +1619,13 @@ nsHttpTransaction::RestartVerifier::Set(PRInt64 contentLength,
                                         nsHttpResponseHead *head)
 {
     if (mSetup)
+        return;
+
+    // If mSetup does not transition to true RestartInPogress() is later
+    // forbidden
+
+    // Only RestartInProgress with 200 response code
+    if (head->Status() != 200)
         return;
 
     mContentLength = contentLength;
