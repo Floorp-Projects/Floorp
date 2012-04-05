@@ -906,16 +906,13 @@ CompileStatus
 CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
              bool construct, CompileRequest request);
 
-void
-ReleaseScriptCode(FreeOp *fop, JSScript *script, bool construct);
-
 inline void
 ReleaseScriptCode(FreeOp *fop, JSScript *script)
 {
-    if (script->jitCtor)
-        mjit::ReleaseScriptCode(fop, script, true);
-    if (script->jitNormal)
-        mjit::ReleaseScriptCode(fop, script, false);
+    if (script->jitHandleCtor.isValid())
+        JSScript::ReleaseCode(fop, &script->jitHandleCtor);
+    if (script->jitHandleNormal.isValid())
+        JSScript::ReleaseCode(fop, &script->jitHandleNormal);
 }
 
 // Expand all stack frames inlined by the JIT within a compartment.

@@ -1362,13 +1362,8 @@ JITScript::destroyChunk(FreeOp *fop, unsigned chunkIndex, bool resetUses)
 
         invokeEntry = NULL;
         fastEntry = NULL;
-        arityCheckEntry = NULL;
         argsCheckEntry = NULL;
-
-        if (script->jitNormal == this)
-            script->jitArityCheckNormal = NULL;
-        else
-            script->jitArityCheckCtor = NULL;
+        arityCheckEntry = NULL;
 
         // Fixup any ICs still referring to this chunk.
         while (!JS_CLIST_IS_EMPTY(&callers)) {
@@ -1385,14 +1380,27 @@ JITScript::destroyChunk(FreeOp *fop, unsigned chunkIndex, bool resetUses)
     }
 }
 
+const js::mjit::JITScript *JSScript::JITScriptHandle::UNJITTABLE =
+    reinterpret_cast<js::mjit::JITScript *>(1);
+
+void
+JSScript::JITScriptHandle::staticAsserts()
+{
+    // JITScriptHandle's memory layout must match that of JITScript *.
+    JS_STATIC_ASSERT(sizeof(JSScript::JITScriptHandle) == sizeof(js::mjit::JITScript *));
+    JS_STATIC_ASSERT(JS_ALIGNMENT_OF(JSScript::JITScriptHandle) ==
+                     JS_ALIGNMENT_OF(js::mjit::JITScript *));
+    JS_STATIC_ASSERT(offsetof(JSScript::JITScriptHandle, value) == 0);
+}
+
 size_t
 JSScript::sizeOfJitScripts(JSMallocSizeOfFun mallocSizeOf)
 {
     size_t n = 0;
-    if (jitNormal)
-        n += jitNormal->sizeOfIncludingThis(mallocSizeOf); 
-    if (jitCtor)
-        n += jitCtor->sizeOfIncludingThis(mallocSizeOf); 
+    if (jitHandleNormal.isValid())
+        n += jitHandleNormal.getValid()->sizeOfIncludingThis(mallocSizeOf); 
+    if (jitHandleCtor.isValid())
+        n += jitHandleCtor.getValid()->sizeOfIncludingThis(mallocSizeOf); 
     return n;
 }
 
@@ -1438,21 +1446,16 @@ mjit::JITChunk::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf)
 }
 
 void
-mjit::ReleaseScriptCode(FreeOp *fop, JSScript *script, bool construct)
+JSScript::ReleaseCode(FreeOp *fop, JITScriptHandle *jith)
 {
     // NB: The recompiler may call ReleaseScriptCode, in which case it
     // will get called again when the script is destroyed, so we
     // must protect against calling ReleaseScriptCode twice.
 
-    JITScript **pjit = construct ? &script->jitCtor : &script->jitNormal;
-    void **parity = construct ? &script->jitArityCheckCtor : &script->jitArityCheckNormal;
-
-    if (*pjit) {
-        (*pjit)->destroy(fop);
-        fop->free_(*pjit);
-        *pjit = NULL;
-        *parity = NULL;
-    }
+    JITScript *jit = jith->getValid();
+    jit->destroy(fop);
+    fop->free_(jit);
+    jith->setEmpty();
 }
 
 #ifdef JS_METHODJIT_PROFILE_STUBS
