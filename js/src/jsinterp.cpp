@@ -1509,7 +1509,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
      * access. For less frequent object loads we have to recover the segment
      * from atoms pointer first.
      */
-    JSAtom **atoms = script->atoms;
+    HeapPtrAtom *atoms = script->atoms;
 
 #if JS_HAS_GENERATORS
     if (JS_UNLIKELY(regs.fp()->isGeneratorFrame())) {
