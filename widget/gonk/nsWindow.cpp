@@ -37,11 +37,13 @@
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+#include <fcntl.h>
 
 #include "android/log.h"
 #include "ui/FramebufferNativeWindow.h"
 
 #include "mozilla/Hal.h"
+#include "mozilla/FileUtils.h"
 #include "Framebuffer.h"
 #include "gfxContext.h"
 #include "gfxUtils.h"
@@ -74,12 +76,91 @@ static nsWindow *gWindowToRedraw = nsnull;
 static nsWindow *gFocusedWindow = nsnull;
 static android::FramebufferNativeWindow *gNativeWindow = nsnull;
 static bool sFramebufferOpen;
+static nsCOMPtr<nsIThread> sFramebufferWatchThread;
+
+namespace {
+
+class ScreenOnOffEvent : public nsRunnable {
+public:
+    ScreenOnOffEvent(bool on)
+        : mIsOn(on)
+    {}
+
+    NS_IMETHOD Run() {
+        nsSizeModeEvent event(true, NS_SIZEMODE, NULL);
+        nsEventStatus status;
+
+        event.time = PR_Now() / 1000;
+        event.mSizeMode = mIsOn ? nsSizeMode_Fullscreen : nsSizeMode_Minimized;
+
+        for (PRUint32 i = 0; i < sTopWindows.Length(); i++) {
+            nsWindow *win = sTopWindows[i];
+            event.widget = win;
+            win->DispatchEvent(&event, status);
+        }
+
+        return NS_OK;
+    }
+
+private:
+    bool mIsOn;
+};
+
+static const char* kSleepFile = "/sys/power/wait_for_fb_sleep";
+static const char* kWakeFile = "/sys/power/wait_for_fb_wake";
+
+class FramebufferWatcher : public nsRunnable {
+public:
+    FramebufferWatcher()
+        : mScreenOnEvent(new ScreenOnOffEvent(true))
+        , mScreenOffEvent(new ScreenOnOffEvent(false))
+    {}
+
+    NS_IMETHOD Run() {
+        int len = 0;
+        char buf;
+
+        // Cannot use epoll here because kSleepFile and kWakeFile are
+        // always ready to read and blocking.
+        {
+            ScopedClose fd(open(kSleepFile, O_RDONLY, 0));
+            do {
+                len = read(fd.mFd, &buf, 1);
+            } while (len < 0 && errno == EINTR);
+            NS_WARN_IF_FALSE(len >= 0, "WAIT_FOR_FB_SLEEP failed");
+            NS_DispatchToMainThread(mScreenOffEvent);
+        }
+
+        {
+            ScopedClose fd(open(kWakeFile, O_RDONLY, 0));
+            do {
+                len = read(fd.mFd, &buf, 1);
+            } while (len < 0 && errno == EINTR);
+            NS_WARN_IF_FALSE(len >= 0, "WAIT_FOR_FB_WAKE failed");
+            NS_DispatchToMainThread(mScreenOnEvent);
+        }
+
+        // Dispatch to ourself.
+        NS_DispatchToCurrentThread(this);
+
+        return NS_OK;
+    }
+
+private:
+    nsRefPtr<ScreenOnOffEvent> mScreenOnEvent;
+    nsRefPtr<ScreenOnOffEvent> mScreenOffEvent;
+};
+
+} // anonymous namespace
 
 nsWindow::nsWindow()
 {
     if (!sGLContext && !sFramebufferOpen) {
         // workaround Bug 725143
         hal::SetScreenEnabled(true);
+
+        // Watching screen on/off state
+        NS_NewThread(getter_AddRefs(sFramebufferWatchThread), new FramebufferWatcher());
 
         // We (apparently) don't have a way to tell if allocating the
         // fbs succeeded or failed.
