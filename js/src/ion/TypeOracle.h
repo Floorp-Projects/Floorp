@@ -300,6 +300,8 @@ ValueTypeFromMIRType(MIRType type)
       return JSVAL_TYPE_DOUBLE;
     case MIRType_String:
       return JSVAL_TYPE_STRING;
+    case MIRType_Magic:
+      return JSVAL_TYPE_MAGIC;
     default:
       JS_ASSERT(type == MIRType_Object);
       return JSVAL_TYPE_OBJECT;
