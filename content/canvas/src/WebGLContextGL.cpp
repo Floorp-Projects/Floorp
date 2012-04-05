@@ -3122,18 +3122,20 @@ WebGLContext::Hint(WebGLenum target, WebGLenum mode)
     bool isValid = false;
 
     switch (target) {
+        case LOCAL_GL_GENERATE_MIPMAP_HINT:
+            isValid = true;
+            break;
         case LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
             if (mEnabledExtensions[WebGL_OES_standard_derivatives]) 
                 isValid = true;
             break;
     }
 
-    if (isValid) {
-        gl->fHint(target, mode);
-        return NS_OK;
-    }
+    if (!isValid)
+        return ErrorInvalidEnum("hint: invalid hint");
 
-    return ErrorInvalidEnum("hint: invalid hint");
+    gl->fHint(target, mode);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
