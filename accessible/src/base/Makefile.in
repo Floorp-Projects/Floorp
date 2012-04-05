@@ -52,6 +52,7 @@ CPPSRCS = \
   AccEvent.cpp \
   AccGroupInfo.cpp \
   AccIterator.cpp \
+  ARIAStateMap.cpp \
   filters.cpp \
   FocusManager.cpp \
   NotificationController.cpp \
@@ -60,7 +61,6 @@ CPPSRCS = \
   nsARIAGridAccessible.cpp \
   nsARIAMap.cpp \
   nsDocAccessible.cpp \
-  nsOuterDocAccessible.cpp \
   nsCoreUtils.cpp \
   nsAccUtils.cpp \
   nsAccessibilityService.cpp \
@@ -92,6 +92,7 @@ EXPORTS = \
 EXPORTS_NAMESPACES = mozilla/a11y
 
 EXPORTS_mozilla/a11y = \
+  ARIAStateMap.h \
   FocusManager.h \
   States.h \
   Role.h \

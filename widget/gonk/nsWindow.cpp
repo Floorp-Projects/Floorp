@@ -43,6 +43,7 @@
 #include "ui/FramebufferNativeWindow.h"
 
 #include "mozilla/Hal.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/FileUtils.h"
 #include "Framebuffer.h"
 #include "gfxContext.h"
@@ -76,6 +77,8 @@ static nsWindow *gWindowToRedraw = nsnull;
 static nsWindow *gFocusedWindow = nsnull;
 static android::FramebufferNativeWindow *gNativeWindow = nsnull;
 static bool sFramebufferOpen;
+static bool sUsingOMTC;
+static nsRefPtr<gfxASurface> sOMTCSurface;
 static nsCOMPtr<nsIThread> sFramebufferWatchThread;
 
 namespace {
@@ -155,29 +158,41 @@ private:
 
 nsWindow::nsWindow()
 {
-    if (!sGLContext && !sFramebufferOpen) {
+    if (!sGLContext && !sFramebufferOpen && !sUsingOMTC) {
         // workaround Bug 725143
         hal::SetScreenEnabled(true);
 
         // Watching screen on/off state
         NS_NewThread(getter_AddRefs(sFramebufferWatchThread), new FramebufferWatcher());
 
+        sUsingOMTC = Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
+
         // We (apparently) don't have a way to tell if allocating the
         // fbs succeeded or failed.
         gNativeWindow = new android::FramebufferNativeWindow();
-        sGLContext = GLContextProvider::CreateForWindow(this);
-        // CreateForWindow sets up gScreenBounds
-        if (!sGLContext) {
-            LOG("Failed to create GL context for fb, trying /dev/graphics/fb0");
-
-            // We can't delete gNativeWindow.
-
+        if (sUsingOMTC) {
             nsIntSize screenSize;
-            sFramebufferOpen = Framebuffer::Open(&screenSize);
+            bool gotFB = Framebuffer::GetSize(&screenSize);
+            MOZ_ASSERT(gotFB);
             gScreenBounds = nsIntRect(nsIntPoint(0, 0), screenSize);
-            if (!sFramebufferOpen) {
-                LOG("Failed to mmap fb(?!?), aborting ...");
-                NS_RUNTIMEABORT("Can't open GL context and can't fall back on /dev/graphics/fb0 ...");
+
+            sOMTCSurface = new gfxImageSurface(gfxIntSize(1, 1),
+                gfxASurface::ImageFormatRGB24);
+        } else {
+            sGLContext = GLContextProvider::CreateForWindow(this);
+            // CreateForWindow sets up gScreenBounds
+            if (!sGLContext) {
+                LOG("Failed to create GL context for fb, trying /dev/graphics/fb0");
+
+                // We can't delete gNativeWindow.
+
+                nsIntSize screenSize;
+                sFramebufferOpen = Framebuffer::Open(&screenSize);
+                gScreenBounds = nsIntRect(nsIntPoint(0, 0), screenSize);
+                if (!sFramebufferOpen) {
+                    LOG("Failed to mmap fb(?!?), aborting ...");
+                    NS_RUNTIMEABORT("Can't open GL context and can't fall back on /dev/graphics/fb0 ...");
+                }
             }
         }
         sVirtualBounds = gScreenBounds;
@@ -214,11 +229,16 @@ nsWindow::DoDraw(void)
         oglm->SetWorldTransform(sRotationMatrix);
         gWindowToRedraw->mEventCallback(&event);
     } else if (LayerManager::LAYERS_BASIC == lm->GetBackendType()) {
-        MOZ_ASSERT(sFramebufferOpen);
+        MOZ_ASSERT(sFramebufferOpen || sUsingOMTC);
+        nsRefPtr<gfxASurface> targetSurface;
 
-        nsRefPtr<gfxASurface> backBuffer = Framebuffer::BackBuffer();
+        if(sUsingOMTC)
+            targetSurface = sOMTCSurface;
+        else
+            targetSurface = Framebuffer::BackBuffer();
+
         {
-            nsRefPtr<gfxContext> ctx = new gfxContext(backBuffer);
+            nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
             gfxUtils::PathFromRegion(ctx, event.region);
             ctx->Clip();
 
@@ -227,9 +247,11 @@ nsWindow::DoDraw(void)
                 gWindowToRedraw, ctx, BasicLayerManager::BUFFER_NONE);
             gWindowToRedraw->mEventCallback(&event);
         }
-        backBuffer->Flush();
 
-        Framebuffer::Present(event.region);
+        if (!sUsingOMTC) {
+            targetSurface->Flush();
+            Framebuffer::Present(event.region);
+        }
     } else {
         NS_RUNTIMEABORT("Unexpected layer manager type");
     }
@@ -490,6 +512,12 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
     if (!topWindow) {
         LOG(" -- no topwindow\n");
         return nsnull;
+    }
+
+    if (sUsingOMTC) {
+        CreateCompositor();
+        if (mLayerManager)
+            return mLayerManager;
     }
 
     if (sGLContext) {

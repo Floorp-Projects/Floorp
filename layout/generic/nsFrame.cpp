@@ -6720,6 +6720,15 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       // XXX In theory this should consider margin collapsing
       nsRect marginBounds(bounds);
       nsMargin margin = GetUsedMargin();
+
+      // Bug 724352 - vertical scrollable overflow only matters for
+      // scroll frames which are block margin roots and has already
+      // accumulated child vertical margins during reflow.  We need
+      // to revisit this when using UpdateOverflow for non-transform
+      // style changes (bug 719177).
+      margin.top = 0;
+      margin.bottom = 0;
+
       ApplySkipSides(margin);
       marginBounds.SaturatingInflate(margin);
       nsRect& so = aOverflowAreas.ScrollableOverflow();

@@ -48,6 +48,8 @@ NO_PKG_FILES = \
 	xulrunner-config \
 	regchrome* \
 	regxpcom* \
+	xpcshell* \
+	run-mozilla* \
 	$(NULL)
 
 # If we're on mac, we don't want an end-user-facing DMG, we want a .tar.bz2
@@ -55,6 +57,8 @@ NO_PKG_FILES = \
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 MOZ_PKG_FORMAT = BZ2
+_APPNAME = XUL.framework
+_BINPATH = /$(_APPNAME)/Versions/Current
 endif
 
 include $(topsrcdir)/config/rules.mk
