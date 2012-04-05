@@ -119,10 +119,6 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_MEMORY
-ifeq (Darwin,$(OS_TARGET))
-LDFLAGS += -init _jemalloc_darwin_init
-endif
-
 ifeq (WINNT,$(OS_TARGET))
 # Roll our own custom logic here for the import library
 

@@ -62,21 +62,8 @@ static PRInt64 GetExplicit()
 }
 
 #if defined(MOZ_MEMORY)
-#  if defined(XP_WIN) || defined(SOLARIS) || defined(ANDROID) || defined(XP_MACOSX)
-#    define HAVE_JEMALLOC_STATS 1
-#    include "jemalloc.h"
-#  elif defined(XP_LINUX)
-#    define HAVE_JEMALLOC_STATS 1
-#    include "jemalloc_types.h"
-// jemalloc is directly linked into firefox-bin; libxul doesn't link
-// with it.  So if we tried to use jemalloc_stats directly here, it
-// wouldn't be defined.  Instead, we don't include the jemalloc header
-// and weakly link against jemalloc_stats.
-extern "C" {
-extern void jemalloc_stats(jemalloc_stats_t* stats)
-  NS_VISIBILITY_DEFAULT __attribute__((weak));
-}
-#  endif  // XP_LINUX
+#  define HAVE_JEMALLOC_STATS 1
+#  include "jemalloc.h"
 #endif  // MOZ_MEMORY
 
 #if defined(XP_LINUX) || defined(XP_MACOSX) || defined(SOLARIS)

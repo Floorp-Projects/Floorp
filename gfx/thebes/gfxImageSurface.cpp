@@ -109,7 +109,7 @@ static void*
 TryAllocAlignedBytes(size_t aSize)
 {
     // Use fallible allocators here
-#if defined(HAVE_POSIX_MEMALIGN) || defined(HAVE_JEMALLOC_POSIX_MEMALIGN)
+#if defined(HAVE_POSIX_MEMALIGN)
     void* ptr;
     // Try to align for fast alpha recovery.  This should only help
     // cairo too, can't hurt.
