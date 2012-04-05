@@ -492,7 +492,8 @@ DebuggerUI.prototype = {
   _onLoadSource: function DebuggerUI__onLoadSource(aEvent) {
     let gBrowser = this.aWindow.gBrowser;
 
-    let url = aEvent.detail;
+    let url = aEvent.detail.url;
+    let showOptions = aEvent.detail.options;
     let scheme = Services.io.extractScheme(url);
     switch (scheme) {
       case "file":
@@ -505,7 +506,7 @@ DebuggerUI.prototype = {
             }
             let source = NetUtil.readInputStreamToString(aStream, aStream.available());
             aStream.close();
-            this._onSourceLoaded(url, source);
+            this._onSourceLoaded(url, source, showOptions);
           }.bind(this));
         } catch (ex) {
           return this.logError(url, ex.name);
@@ -529,7 +530,8 @@ DebuggerUI.prototype = {
               return this.logError(url, aStatusCode);
             }
 
-            this._onSourceLoaded(url, chunks.join(""), channel.contentType);
+            this._onSourceLoaded(url, chunks.join(""), channel.contentType,
+                                 showOptions);
           }.bind(this)
         };
 
@@ -555,20 +557,23 @@ DebuggerUI.prototype = {
   /**
    * Called when source has been loaded.
    *
+   * @private
    * @param string aSourceUrl
    *        The URL of the source script.
    * @param string aSourceText
    *        The text of the source script.
    * @param string aContentType
    *        The content type of the source script.
+   * @param object [aOptions]
+   *        Additional options for showing the script (optional). Supported
+   *        options:
+   *        - targetLine: place the editor at the given line number.
    */
   _onSourceLoaded: function DebuggerUI__onSourceLoaded(aSourceUrl,
                                                        aSourceText,
-                                                       aContentType) {
+                                                       aContentType,
+                                                       aOptions) {
     let dbg = this.getDebugger(this.aWindow.gBrowser.selectedTab);
-    dbg.debuggerWindow.SourceScripts.setEditorMode(aSourceUrl, aContentType);
-    dbg.editor.setText(aSourceText);
-    dbg.editor.resetUndo();
     let doc = dbg.frame.contentDocument;
     let scripts = doc.getElementById("scripts");
     let elt = scripts.getElementsByAttribute("value", aSourceUrl)[0];
@@ -577,8 +582,8 @@ DebuggerUI.prototype = {
     script.text = aSourceText;
     script.contentType = aContentType;
     elt.setUserData("sourceScript", script, null);
-    dbg._updateEditorBreakpoints();
-    dbg.debuggerWindow.StackFrames.updateEditor();
+
+    dbg.debuggerWindow.SourceScripts._onShowScript(script, aOptions);
   }
 };
 
