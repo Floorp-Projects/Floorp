@@ -225,10 +225,14 @@ class LGoto : public LInstructionHelper<0, 0, 0>
     }
 };
 
-class LNewArray : public LCallInstructionHelper<1, 0, 0>
+class LNewArray : public LInstructionHelper<1, 0, 0>
 {
   public:
     LIR_HEADER(NewArray);
+
+    const LDefinition *output() {
+        return getDef(0);
+    }
 
     MNewArray *mir() const {
         return mir_->toNewArray();

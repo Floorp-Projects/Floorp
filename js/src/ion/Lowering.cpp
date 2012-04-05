@@ -134,13 +134,7 @@ bool
 LIRGenerator::visitNewArray(MNewArray *ins)
 {
     LNewArray *lir = new LNewArray();
-
-    if (!defineVMReturn(lir, ins))
-        return false;
-    if (!assignSafepoint(lir, ins))
-        return false;
-
-    return true;
+    return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
