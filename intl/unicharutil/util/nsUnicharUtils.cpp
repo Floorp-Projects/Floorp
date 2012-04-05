@@ -276,7 +276,7 @@ CaseInsensitiveCompare(const PRUnichar *a,
       if (NS_IS_HIGH_SURROGATE(c1) && len > 1 && NS_IS_LOW_SURROGATE(*a)) {
         c1 = SURROGATE_TO_UCS4(c1, *a++);
         if (NS_IS_HIGH_SURROGATE(c2) && NS_IS_LOW_SURROGATE(*b)) {
-          c2 = SURROGATE_TO_UCS4(c1, *b++);
+          c2 = SURROGATE_TO_UCS4(c2, *b++);
         }
         // If c2 wasn't a surrogate, decrementing len means we'd stop
         // short of the end of string b, but that doesn't actually matter
