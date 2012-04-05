@@ -237,6 +237,7 @@ public class testBrowserProviderPerf extends ContentProviderTest {
         long end = SystemClock.uptimeMillis();
 
         mAsserter.dumpLog("__start_report" + Long.toString(end - start) + "__end_report");
+        mAsserter.dumpLog("__startTimestamp" + Long.toString(end - start) + "__endTimestamp");
 
         c.close();
     }
