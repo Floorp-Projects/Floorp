@@ -35,11 +35,11 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
-#include "AndroidFlexViewWrapper.h"
+#include "AndroidLayerViewWrapper.h"
 #include "nsDebug.h"
 
 #define ASSERT_THREAD() \
-        NS_ASSERTION((void*)pthread_self() == mThread, "Something is calling AndroidGLController from the wrong thread!")
+        NS_ASSERTION(pthread_self() == mThread, "Something is calling AndroidGLController from the wrong thread!")
 
 static jfieldID jEGLSurfacePointerField = 0;
 
@@ -55,7 +55,7 @@ jmethodID AndroidGLController::jWaitForValidSurfaceMethod = 0;
 jmethodID AndroidGLController::jProvideEGLSurfaceMethod = 0;
 
 void
-AndroidGLController::Init(JNIEnv *aJEnv)
+AndroidGLController::Init(JNIEnv* aJEnv)
 {
     jclass jClass = reinterpret_cast<jclass>(aJEnv->NewGlobalRef(aJEnv->FindClass("org/mozilla/gecko/gfx/GLController")));
 
@@ -69,7 +69,7 @@ void
 AndroidGLController::Acquire(JNIEnv* aJEnv, jobject aJObj)
 {
     mJEnv = aJEnv;
-    mThread = (void*)pthread_self();
+    mThread = pthread_self();
     mJObj = aJEnv->NewGlobalRef(aJObj);
 }
 
