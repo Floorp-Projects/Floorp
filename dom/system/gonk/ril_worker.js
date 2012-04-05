@@ -1469,6 +1469,69 @@ let RIL = {
   },
 
   /**
+   * Helper for processing received SMS parcel data.
+   *
+   * @param length
+   *        Length of SMS string in the incoming parcel.
+   *
+   * @return Message parsed or null for invalid message.
+   */
+  _processReceivedSms: function _processReceivedSms(length) {
+    if (!length) {
+      if (DEBUG) debug("Received empty SMS!");
+      return null;
+    }
+
+    // An SMS is a string, but we won't read it as such, so let's read the
+    // string length and then defer to PDU parsing helper.
+    let messageStringLength = Buf.readUint32();
+    if (DEBUG) debug("Got new SMS, length " + messageStringLength);
+    let message = GsmPDUHelper.readMessage();
+    if (DEBUG) debug(message);
+
+    // Read string delimiters. See Buf.readString().
+    let delimiter = Buf.readUint16();
+    if (!(messageStringLength & 1)) {
+      delimiter |= Buf.readUint16();
+    }
+    if (DEBUG) {
+      if (delimiter != 0) {
+        debug("Something's wrong, found string delimiter: " + delimiter);
+      }
+    }
+
+    return message;
+  },
+
+  /**
+   * Helper for processing SMS-DELIVER PDUs.
+   *
+   * @param length
+   *        Length of SMS string in the incoming parcel.
+   *
+   * @return A failure cause defined in 3GPP 23.040 clause 9.2.3.22.
+   */
+  _processSmsDeliver: function _processSmsDeliver(length) {
+    let message = this._processReceivedSms(length);
+    if (!message) {
+      return PDU_FCS_UNSPECIFIED;
+    }
+
+    if (message.header && (message.header.segmentMaxSeq > 1)) {
+      message = this._processReceivedSmsSegment(message);
+    } else {
+      message.fullBody = message.body;
+    }
+
+    if (message) {
+      message.type = "sms-received";
+      this.sendDOMMessage(message);
+    }
+
+    return PDU_FCS_OK;
+  },
+
+  /**
    * Helper for processing received multipart SMS.
    *
    * @return null for handled segments, and an object containing full message
@@ -2082,44 +2145,8 @@ RIL[UNSOLICITED_RESPONSE_VOICE_NETWORK_STATE_CHANGED] = function UNSOLICITED_RES
   this.requestNetworkInfo();
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS] = function UNSOLICITED_RESPONSE_NEW_SMS(length) {
-  if (!length) {
-    if (DEBUG) debug("Received empty SMS!");
-    //TODO: should we acknowledge the SMS here? maybe only after multiple
-    //failures.
-    return;
-  }
-  // An SMS is a string, but we won't read it as such, so let's read the
-  // string length and then defer to PDU parsing helper.
-  let messageStringLength = Buf.readUint32();
-  if (DEBUG) debug("Got new SMS, length " + messageStringLength);
-  let message = GsmPDUHelper.readMessage();
-  if (DEBUG) debug(message);
-
-  // Read string delimiters. See Buf.readString().
-  let delimiter = Buf.readUint16();
-  if (!(messageStringLength & 1)) {
-    delimiter |= Buf.readUint16();
-  }
-  if (DEBUG) {
-    if (delimiter != 0) {
-      debug("Something's wrong, found string delimiter: " + delimiter);
-    }
-  }
-
-  if (message.header && (message.header.segmentMaxSeq > 1)) {
-    message = this._processReceivedSmsSegment(message);
-  } else {
-    message.fullBody = message.body;
-  }
-
-  if (message) {
-    message.type = "sms-received";
-    this.sendDOMMessage(message);
-  }
-
-  //TODO: this might be a lie? do we want to wait for the mainthread to
-  // report back?
-  this.acknowledgeSMS(true, SMS_HANDLED);
+  let result = this._processSmsDeliver(length);
+  this.acknowledgeSMS(result == PDU_FCS_OK, result);
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT] = function UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT(length) {
   let info = Buf.readStringList();
@@ -2690,6 +2717,65 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Read SM-TL Address.
+   *
+   * @see 3GPP TS 23.040 9.1.2.5
+   */
+  readAddress: function readAddress(len) {
+    // Address Length
+    if (!len || (len < 0)) {
+      if (DEBUG) debug("PDU error: invalid sender address length: " + len);
+      return null;
+    }
+    if (len % 2 == 1) {
+      len += 1;
+    }
+    if (DEBUG) debug("PDU: Going to read address: " + len);
+
+    // Type-of-Address
+    let toa = this.readHexOctet();
+
+    // Address-Value
+    let addr = this.readSwappedNibbleBCD(len / 2).toString();
+    if (addr.length <= 0) {
+      if (DEBUG) debug("PDU error: no number provided");
+      return null;
+    }
+    if ((toa >> 4) == (PDU_TOA_INTERNATIONAL >> 4)) {
+      addr = '+' + addr;
+    }
+
+    return addr;
+  },
+
+  /**
+   * Read GSM TP-Service-Centre-Time-Stamp(TP-SCTS).
+   *
+   * @see 3GPP TS 23.040 9.2.3.11
+   */
+  readTimestamp: function readTimestamp() {
+    let year   = this.readSwappedNibbleBCD(1) + PDU_TIMESTAMP_YEAR_OFFSET;
+    let month  = this.readSwappedNibbleBCD(1) - 1;
+    let day    = this.readSwappedNibbleBCD(1);
+    let hour   = this.readSwappedNibbleBCD(1);
+    let minute = this.readSwappedNibbleBCD(1);
+    let second = this.readSwappedNibbleBCD(1);
+    let timestamp = Date.UTC(year, month, day, hour, minute, second);
+
+    // If the most significant bit of the least significant nibble is 1,
+    // the timezone offset is negative (fourth bit from the right => 0x08).
+    let tzOctet = this.readHexOctet();
+    let tzOffset = this.octetToBCD(tzOctet & ~0x08) * 15 * 60 * 1000;
+    if (tzOctet & 0x08) {
+      timestamp -= tzOffset;
+    } else {
+      timestamp += tzOffset;
+    }
+
+    return timestamp;
+  },
+
+  /**
    * User data can be 7 bit (default alphabet) data, 8 bit data, or 16 bit
    * (UCS2) data.
    *
@@ -2697,22 +2783,19 @@ let GsmPDUHelper = {
    *        message object for output.
    * @param length
    *        length of user data to read in octets.
-   * @param codingScheme
-   *        coding scheme used to decode user data.
-   * @param hasHeader
-   *        whether a header is embedded.
    */
-  readUserData: function readUserData(msg, length, codingScheme, hasHeader) {
+  readUserData: function readUserData(msg, length) {
+    let dcs = msg.dcs;
     if (DEBUG) {
       debug("Reading " + length + " bytes of user data.");
-      debug("Coding scheme: " + codingScheme);
+      debug("Coding scheme: " + dcs);
     }
     // 7 bit is the default fallback encoding.
     let encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
-    switch (codingScheme & 0xC0) {
+    switch (dcs & 0xC0) {
       case 0x0:
         // bits 7..4 = 00xx
-        switch (codingScheme & 0x0C) {
+        switch (dcs & 0x0C) {
           case 0x4:
             encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
             break;
@@ -2723,12 +2806,12 @@ let GsmPDUHelper = {
         break;
       case 0xC0:
         // bits 7..4 = 11xx
-        switch (codingScheme & 0x30) {
+        switch (dcs & 0x30) {
           case 0x20:
             encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
             break;
           case 0x30:
-            if (!codingScheme & 0x04) {
+            if (!dcs & 0x04) {
               encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
             }
             break;
@@ -2742,7 +2825,7 @@ let GsmPDUHelper = {
     if (DEBUG) debug("PDU: message encoding is " + encoding + " bit.");
 
     let paddingBits = 0;
-    if (hasHeader) {
+    if (msg.udhi) {
       msg.header = this.readUserDataHeader();
 
       if (encoding == PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
@@ -2766,8 +2849,8 @@ let GsmPDUHelper = {
           break;
         }
 
-        let langIndex = hasHeader ? msg.header.langIndex : PDU_NL_IDENTIFIER_DEFAULT;
-        let langShiftIndex = hasHeader ? msg.header.langShiftIndex : PDU_NL_IDENTIFIER_DEFAULT;
+        let langIndex = msg.udhi ? msg.header.langIndex : PDU_NL_IDENTIFIER_DEFAULT;
+        let langShiftIndex = msg.udhi ? msg.header.langShiftIndex : PDU_NL_IDENTIFIER_DEFAULT;
         msg.body = this.readSeptetsToString(length, paddingBits, langIndex,
                                             langShiftIndex);
         break;
@@ -2790,7 +2873,11 @@ let GsmPDUHelper = {
     // An empty message object. This gets filled below and then returned.
     let msg = {
       SMSC:      null,
+      mti:       null,
+      udhi:      null,
       sender:    null,
+      pid:       null,
+      dcs:       null,
       body:      null,
       timestamp: null
     };
@@ -2808,64 +2895,45 @@ let GsmPDUHelper = {
 
     // First octet of this SMS-DELIVER or SMS-SUBMIT message
     let firstOctet = this.readHexOctet();
-
+    // Message Type Indicator
+    msg.mti = firstOctet & 0x03;
     // User data header indicator
-    let hasUserDataHeader = firstOctet & PDU_UDHI;
+    msg.udhi = firstOctet & PDU_UDHI;
 
+    switch (msg.mti) {
+      case PDU_MTI_SMS_RESERVED:
+        // `If an MS receives a TPDU with a "Reserved" value in the TP-MTI it
+        // shall process the message as if it were an "SMS-DELIVER" but store
+        // the message exactly as received.` ~ 3GPP TS 23.040 9.2.3.1
+      case PDU_MTI_SMS_DELIVER:
+        return this.readDeliverMessage(msg);
+      default:
+        return null;
+    }
+  },
+
+  /**
+   * Read and decode a SMS-DELIVER PDU.
+   *
+   * @param msg
+   *        message object for output.
+   */
+  readDeliverMessage: function readDeliverMessage(msg) {
     // - Sender Address info -
-    // Address length
     let senderAddressLength = this.readHexOctet();
-    if (senderAddressLength <= 0) {
-      if (DEBUG) debug("PDU error: invalid sender address length: " + senderAddressLength);
-      return null;
-    }
-    // Type-of-Address
-    let senderTypeOfAddress = this.readHexOctet();
-    if (senderAddressLength % 2 == 1) {
-      senderAddressLength += 1;
-    }
-    if (DEBUG) debug("PDU: Going to read sender address: " + senderAddressLength);
-    msg.sender = this.readSwappedNibbleBCD(senderAddressLength / 2).toString();
-    if (msg.sender.length <= 0) {
-      if (DEBUG) debug("PDU error: no sender number provided");
-      return null;
-    }
-    if ((senderTypeOfAddress >> 4) == (PDU_TOA_INTERNATIONAL >> 4)) {
-      msg.sender = '+' + msg.sender;
-    }
-
+    msg.sender = this.readAddress(senderAddressLength);
     // - TP-Protocolo-Identifier -
-    let protocolIdentifier = this.readHexOctet();
-
+    msg.pid = this.readHexOctet();
     // - TP-Data-Coding-Scheme -
-    let dataCodingScheme = this.readHexOctet();
-
+    msg.dcs = this.readHexOctet();
     // - TP-Service-Center-Time-Stamp -
-    let year   = this.readSwappedNibbleBCD(1) + PDU_TIMESTAMP_YEAR_OFFSET;
-    let month  = this.readSwappedNibbleBCD(1) - 1;
-    let day    = this.readSwappedNibbleBCD(1);
-    let hour   = this.readSwappedNibbleBCD(1);
-    let minute = this.readSwappedNibbleBCD(1);
-    let second = this.readSwappedNibbleBCD(1);
-    msg.timestamp = Date.UTC(year, month, day, hour, minute, second);
-
-    // If the most significant bit of the least significant nibble is 1,
-    // the timezone offset is negative (fourth bit from the right => 0x08).
-    let tzOctet = this.readHexOctet();
-    let tzOffset = this.octetToBCD(tzOctet & ~0x08) * 15 * 60 * 1000;
-    if (tzOctet & 0x08) {
-      msg.timestamp -= tzOffset;
-    } else {
-      msg.timestamp += tzOffset;
-    }
-
+    msg.timestamp = this.readTimestamp();
     // - TP-User-Data-Length -
     let userDataLength = this.readHexOctet();
 
     // - TP-User-Data -
     if (userDataLength > 0) {
-      this.readUserData(msg, userDataLength, dataCodingScheme,
-                        hasUserDataHeader);
+      this.readUserData(msg, userDataLength);
     }
 
     return msg;

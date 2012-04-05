@@ -367,8 +367,6 @@ const CALL_PRESENTATION_RESTRICTED = 1;
 const CALL_PRESENTATION_UNKNOWN = 2;
 const CALL_PRESENTATION_PAYPHONE = 3;
 
-const SMS_HANDLED = 0;
-
 // ICC commands, see TS 27.007 +CRSM commands
 const ICC_COMMAND_READ_BINARY = 0xb0;
 const ICC_COMMAND_UPDATE_BINARY = 0xd6;
@@ -521,9 +519,14 @@ const PDU_MMS_RD       = 0x04;// More messages to send. (SMS-DELIVER only) or
                               // Reject duplicates (SMS-SUBMIT only)
 
 // MTI - Message Type Indicator
+const PDU_MTI_SMS_RESERVED        = 0x03;
 const PDU_MTI_SMS_STATUS_COMMAND  = 0x02;
 const PDU_MTI_SMS_SUBMIT          = 0x01;
 const PDU_MTI_SMS_DELIVER         = 0x00;
+
+// FCS - Failure Cause
+const PDU_FCS_OK          = 0x00;
+const PDU_FCS_UNSPECIFIED = 0xFF;
 
 // User Data max length in septets
 const PDU_MAX_USER_DATA_7BIT = 160;
