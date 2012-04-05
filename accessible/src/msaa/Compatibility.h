@@ -100,7 +100,8 @@ private:
     ZOOMTEXT = 1 << 7,
     KAZAGURU = 1 << 8,
     YOUDAO = 1 << 9,
-    UNKNOWN = 1 << 10
+    UNKNOWN = 1 << 10,
+    UIAUTOMATION = 1 << 11
   };
 
 private:
