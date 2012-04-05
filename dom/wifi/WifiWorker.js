@@ -164,6 +164,10 @@ var WifiManager = (function() {
     voidControlMessage("start_supplicant", callback);
   }
 
+  function terminateSupplicant(callback) {
+    doBooleanCommand("TERMINATE", "OK", callback);
+  }
+
   function stopSupplicant(callback) {
     voidControlMessage("stop_supplicant", callback);
   }
@@ -895,15 +899,17 @@ var WifiManager = (function() {
         });
       });
     } else {
-      stopSupplicant(function (status) {
-        if (status < 0) {
-          callback(-1);
-          return;
-        }
-
-        manager.state = "UNINITIALIZED";
-        disableInterface(manager.ifname, function (ok) {
-          unloadDriver(callback);
+      // Note these following calls ignore errors. If we fail to kill the
+      // supplicant gracefully, then we need to continue telling it to die
+      // until it does.
+      terminateSupplicant(function (ok) {
+        stopSupplicant(function (status) {
+          manager.state = "UNINITIALIZED";
+          closeSupplicantConnection(function () {
+            disableInterface(manager.ifname, function (ok) {
+              unloadDriver(callback);
+            });
+          });
         });
       });
     }

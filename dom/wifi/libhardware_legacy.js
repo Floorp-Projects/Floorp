@@ -23,7 +23,7 @@ let libhardware_legacy = (function () {
     connect_to_supplicant: library.declare("wifi_connect_to_supplicant", ctypes.default_abi, ctypes.int),
 
     // Close connection to connection to the supplicant, 0 on success, < 0 on failure.
-    close_supplicant_connection: library.declare("wifi_close_supplicant_connection", ctypes.default_abi, ctypes.int),
+    close_supplicant_connection: library.declare("wifi_close_supplicant_connection", ctypes.default_abi, ctypes.void_t),
 
     // Block until a wifi event is returned, buf is the buffer, len is the max length of the buffer.
     // Return value is number of bytes in buffer, or 0 if no event (no connection for instance), and < 0 on failure.
