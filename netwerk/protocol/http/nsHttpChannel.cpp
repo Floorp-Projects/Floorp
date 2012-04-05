@@ -10,6 +10,7 @@
 #include "nsIApplicationCacheService.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIAuthInformation.h"
+#include "nsICryptoHash.h"
 #include "nsIStringBundle.h"
 #include "nsIIDNService.h"
 #include "nsIStreamListenerTee.h"
@@ -49,6 +50,30 @@ const char kOfflineDeviceID[] = "offline";
                       nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE))
 
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
+
+// Computes and returns a SHA1 hash of the input buffer. The input buffer
+// must be a null-terminated string.
+nsresult
+Hash(const char *buf, nsACString &hash)
+{
+    nsresult rv;
+      
+    nsCOMPtr<nsICryptoHash> hasher
+      = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = hasher->Init(nsICryptoHash::SHA1);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = hasher->Update(reinterpret_cast<unsigned const char*>(buf),
+                         strlen(buf));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = hasher->Finish(true, hash);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+}
 
 bool IsRedirectStatus(PRUint32 status)
 {
@@ -1740,31 +1765,6 @@ nsHttpChannel::HandleAsyncAbort()
     HttpAsyncAborter<nsHttpChannel>::HandleAsyncAbort();
 }
 
-
-nsresult
-nsHttpChannel::Hash(const char *buf, nsACString &hash)
-{
-    nsresult rv;
-    if (!mHasher) {
-        mHasher = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) {
-            LOG(("nsHttpChannel: Failed to instantiate crypto-hasher"));
-            return rv;
-        }
-    }
-
-    rv = mHasher->Init(nsICryptoHash::SHA1);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-   rv = mHasher->Update(reinterpret_cast<unsigned const char*>(buf),
-                         strlen(buf));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mHasher->Finish(true, hash);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
-}
 
 nsresult
 nsHttpChannel::EnsureAssocReq()
