@@ -2601,10 +2601,10 @@ IonBuilder::jsop_call(uint32 argc, bool constructing)
     JSFunction *target = getSingleCallTarget(argc, pc);
 
     // Attempt to inline native and scripted functions.
-    if (inliningEnabled() && !constructing && target) {
-        if (target->isNative() && inlineNativeCall(target, argc))
+    if (inliningEnabled() && target) {
+        if (target->isNative() && inlineNativeCall(target, argc, constructing))
             return true;
-        if (makeInliningDecision(target))
+        if (!constructing && makeInliningDecision(target))
             return inlineScriptedCall(target, argc);
     }
 
