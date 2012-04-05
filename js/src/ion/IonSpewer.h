@@ -129,6 +129,9 @@ void IonSpewHeader(IonSpewChannel channel);
 bool IonSpewEnabled(IonSpewChannel channel);
 void IonSpewVA(IonSpewChannel channel, const char *fmt, va_list ap);
 
+void EnableChannel(IonSpewChannel channel);
+void DisableChannel(IonSpewChannel channel);
+
 #else
 
 static inline void IonSpewNewFunction(MIRGraph *graph, JSScript *function)
@@ -151,6 +154,11 @@ static inline bool IonSpewEnabled(IonSpewChannel channel)
 { return false; }
 static inline void IonSpewVA(IonSpewChannel, const char *fmt, va_list ap)
 { } 
+
+static inline void EnableChannel(IonSpewChannel)
+{ }
+static inline void DisableChannel(IonSpewChannel)
+{ }
 
 #endif /* DEBUG */
 
