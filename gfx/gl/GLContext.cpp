@@ -370,25 +370,31 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         if (SupportsRobustness()) {
             if (IsExtensionSupported(ARB_robustness)) {
                 SymLoadStruct robustnessSymbols[] = {
-                    { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusARB", NULL } },
-                    { NULL, { NULL } },
+                    { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusARB", nsnull } },
+                    { nsnull, { nsnull } },
                 };
 
                 if (!LoadSymbols(&robustnessSymbols[0], trygl, prefix)) {
                     NS_ERROR("GL supports ARB_robustness without supplying GetGraphicsResetStatusARB.");
-                    mInitialized = false;
+
+                    MarkExtensionUnsupported(ARB_robustness);
+                    mSymbols.fGetGraphicsResetStatus = nsnull;
                 } else {
                     mHasRobustness = true;
                 }
-            } else if (IsExtensionSupported(EXT_robustness)) {
+            }
+            if (!IsExtensionSupported(ARB_robustness) &&
+                IsExtensionSupported(EXT_robustness)) {
                 SymLoadStruct robustnessSymbols[] = {
-                    { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusEXT", NULL } },
-                    { NULL, { NULL } },
+                    { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusEXT", nsnull } },
+                    { nsnull, { nsnull } },
                 };
 
                 if (!LoadSymbols(&robustnessSymbols[0], trygl, prefix)) {
-                    NS_ERROR("GL supports EGL_robustness without supplying GetGraphicsResetStatusEXT.");
-                    mInitialized = false;
+                    NS_ERROR("GL supports EXT_robustness without supplying GetGraphicsResetStatusEXT.");
+
+                    MarkExtensionUnsupported(EXT_robustness);
+                    mSymbols.fGetGraphicsResetStatus = nsnull;
                 } else {
                     mHasRobustness = true;
                 }
@@ -397,34 +403,59 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
         // Check for aux symbols based on extensions
         if (IsExtensionSupported(GLContext::ANGLE_framebuffer_blit) ||
-            IsExtensionSupported(GLContext::EXT_framebuffer_blit)) {
+            IsExtensionSupported(GLContext::EXT_framebuffer_blit))
+        {
             SymLoadStruct auxSymbols[] = {
-                    { (PRFuncPtr*) &mSymbols.fBlitFramebuffer, { "BlitFramebuffer", "BlitFramebufferEXT", "BlitFramebufferANGLE", NULL } },
-                    { NULL, { NULL } },
+                {
+                    (PRFuncPtr*) &mSymbols.fBlitFramebuffer,
+                    {
+                        "BlitFramebuffer",
+                        "BlitFramebufferEXT",
+                        "BlitFramebufferANGLE",
+                        nsnull
+                    }
+                },
+                { nsnull, { nsnull } },
             };
             if (!LoadSymbols(&auxSymbols[0], trygl, prefix)) {
                 NS_ERROR("GL supports framebuffer_blit without supplying glBlitFramebuffer");
-                mInitialized = false;
+
+                MarkExtensionUnsupported(ANGLE_framebuffer_blit);
+                MarkExtensionUnsupported(EXT_framebuffer_blit);
+                mSymbols.fBlitFramebuffer = nsnull;
             }
         }
 
-        if (IsExtensionSupported(GLContext::ANGLE_framebuffer_multisample) ||
-            IsExtensionSupported(GLContext::EXT_framebuffer_multisample)) {
+        if (SupportsOffscreenSplit() &&
+            ( IsExtensionSupported(GLContext::ANGLE_framebuffer_multisample) ||
+              IsExtensionSupported(GLContext::EXT_framebuffer_multisample) ))
+        {
             SymLoadStruct auxSymbols[] = {
-                    { (PRFuncPtr*) &mSymbols.fRenderbufferStorageMultisample, { "RenderbufferStorageMultisample", "RenderbufferStorageMultisampleEXT", "RenderbufferStorageMultisampleANGLE", NULL } },
-                    { NULL, { NULL } },
+                {
+                    (PRFuncPtr*) &mSymbols.fRenderbufferStorageMultisample,
+                    {
+                        "RenderbufferStorageMultisample",
+                        "RenderbufferStorageMultisampleEXT",
+                        "RenderbufferStorageMultisampleANGLE",
+                        nsnull
+                    }
+                },
+                { nsnull, { nsnull } },
             };
             if (!LoadSymbols(&auxSymbols[0], trygl, prefix)) {
                 NS_ERROR("GL supports framebuffer_multisample without supplying glRenderbufferStorageMultisample");
-                mInitialized = false;
+
+                MarkExtensionUnsupported(ANGLE_framebuffer_multisample);
+                MarkExtensionUnsupported(EXT_framebuffer_multisample);
+                mSymbols.fRenderbufferStorageMultisample = nsnull;
             }
         }
        
         // Load developer symbols, don't fail if we can't find them.
         SymLoadStruct auxSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fGetTexImage, { "GetTexImage", NULL } },
-                { (PRFuncPtr*) &mSymbols.fGetTexLevelParameteriv, { "GetTexLevelParameteriv", NULL } },
-                { NULL, { NULL } },
+                { (PRFuncPtr*) &mSymbols.fGetTexImage, { "GetTexImage", nsnull } },
+                { (PRFuncPtr*) &mSymbols.fGetTexLevelParameteriv, { "GetTexLevelParameteriv", nsnull } },
+                { nsnull, { nsnull } },
         };
         LoadSymbols(&auxSymbols[0], trygl, prefix);
     }
@@ -565,12 +596,6 @@ CopyAndPadTextureData(const GLvoid* srcBuffer,
             rowDest += dstWidth * pixelsize;
         }
     }
-}
-
-bool
-GLContext::IsExtensionSupported(const char *extension)
-{
-    return ListHasExtension(fGetString(LOCAL_GL_EXTENSIONS), extension);
 }
 
 // In both of these cases (for the Adreno at least) it is impossible

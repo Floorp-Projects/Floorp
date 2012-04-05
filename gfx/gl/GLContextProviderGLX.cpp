@@ -776,7 +776,7 @@ TRY_AGAIN_NO_SHARING:
             return false;
         }
 
-        if (!IsExtensionSupported("GL_EXT_framebuffer_object"))
+        if (!IsExtensionSupported(EXT_framebuffer_object))
             return false;
 
         InitFramebuffers();
