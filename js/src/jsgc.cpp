@@ -4335,11 +4335,13 @@ EndVerifyBarriers(JSContext *cx)
     if (!trc)
         return;
 
+    bool compartmentCreated = false;
+
     /* We need to disable barriers before tracing, which may invoke barriers. */
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        /* Don't verify if a new compartment was created. */
         if (!c->needsBarrier_)
-            return;
+            compartmentCreated = true;
+
         c->needsBarrier_ = false;
     }
 
@@ -4360,7 +4362,7 @@ EndVerifyBarriers(JSContext *cx)
 
     AutoGCRooter::traceAll(trc);
 
-    if (IsIncrementalGCSafe(rt)) {
+    if (!compartmentCreated && IsIncrementalGCSafe(rt)) {
         /*
          * Verify that all the current roots were reachable previously, or else
          * are marked.
