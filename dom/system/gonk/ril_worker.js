@@ -2790,10 +2790,8 @@ let GsmPDUHelper = {
     // An empty message object. This gets filled below and then returned.
     let msg = {
       SMSC:      null,
-      reference: null,
       sender:    null,
       body:      null,
-      validity:  null,
       timestamp: null
     };
 
@@ -2813,12 +2811,6 @@ let GsmPDUHelper = {
 
     // User data header indicator
     let hasUserDataHeader = firstOctet & PDU_UDHI;
-
-    // if the sms is of SMS-SUBMIT type it would contain a TP-MR
-    let isSmsSubmit = firstOctet & PDU_MTI_SMS_SUBMIT;
-    if (isSmsSubmit) {
-      msg.reference = this.readHexOctet(); // TP-Message-Reference
-    }
 
     // - Sender Address info -
     // Address length
@@ -2848,42 +2840,23 @@ let GsmPDUHelper = {
     // - TP-Data-Coding-Scheme -
     let dataCodingScheme = this.readHexOctet();
 
-    // SMS of SMS-SUBMIT type contains a TP-Service-Center-Time-Stamp field
-    // SMS of SMS-DELIVER type contains a TP-Validity-Period octet
-    if (isSmsSubmit) {
-      //  - TP-Validity-Period -
-      //  The Validity Period octet is optional. Depends on the SMS-SUBMIT
-      //  first octet
-      //  Validity Period Format. Bit4 and Bit3 specify the TP-VP field
-      //  according to this table:
-      //  bit4 bit3
-      //    0   0 : TP-VP field not present
-      //    1   0 : TP-VP field present. Relative format (one octet)
-      //    0   1 : TP-VP field present. Enhanced format (7 octets)
-      //    1   1 : TP-VP field present. Absolute format (7 octets)
-      if (firstOctet & (PDU_VPF_ABSOLUTE | PDU_VPF_RELATIVE | PDU_VPF_ENHANCED)) {
-        msg.validity = this.readHexOctet();
-      }
-      //TODO: check validity period
-    } else {
-      // - TP-Service-Center-Time-Stamp -
-      let year   = this.readSwappedNibbleBCD(1) + PDU_TIMESTAMP_YEAR_OFFSET;
-      let month  = this.readSwappedNibbleBCD(1) - 1;
-      let day    = this.readSwappedNibbleBCD(1);
-      let hour   = this.readSwappedNibbleBCD(1);
-      let minute = this.readSwappedNibbleBCD(1);
-      let second = this.readSwappedNibbleBCD(1);
-      msg.timestamp = Date.UTC(year, month, day, hour, minute, second);
+    // - TP-Service-Center-Time-Stamp -
+    let year   = this.readSwappedNibbleBCD(1) + PDU_TIMESTAMP_YEAR_OFFSET;
+    let month  = this.readSwappedNibbleBCD(1) - 1;
+    let day    = this.readSwappedNibbleBCD(1);
+    let hour   = this.readSwappedNibbleBCD(1);
+    let minute = this.readSwappedNibbleBCD(1);
+    let second = this.readSwappedNibbleBCD(1);
+    msg.timestamp = Date.UTC(year, month, day, hour, minute, second);
 
-      // If the most significant bit of the least significant nibble is 1,
-      // the timezone offset is negative (fourth bit from the right => 0x08).
-      let tzOctet = this.readHexOctet();
-      let tzOffset = this.octetToBCD(tzOctet & ~0x08) * 15 * 60 * 1000;
-      if (tzOctet & 0x08) {
-        msg.timestamp -= tzOffset;
-      } else {
-        msg.timestamp += tzOffset;
-      }
+    // If the most significant bit of the least significant nibble is 1,
+    // the timezone offset is negative (fourth bit from the right => 0x08).
+    let tzOctet = this.readHexOctet();
+    let tzOffset = this.octetToBCD(tzOctet & ~0x08) * 15 * 60 * 1000;
+    if (tzOctet & 0x08) {
+      msg.timestamp -= tzOffset;
+    } else {
+      msg.timestamp += tzOffset;
     }
 
     // - TP-User-Data-Length -
