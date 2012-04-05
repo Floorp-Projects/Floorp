@@ -580,7 +580,7 @@ void doSampleStackTrace(ProfileStack *aStack, ThreadProfile &aProfile, TickSampl
   // Sample
   // 's' tag denotes the start of a sample block
   // followed by 0 or more 'c' tags.
-  for (int i = 0; i < aStack->mStackPointer; i++) {
+  for (mozilla::sig_safe_t i = 0; i < aStack->mStackPointer; i++) {
     if (i == 0) {
       Address pc = 0;
       if (sample) {
