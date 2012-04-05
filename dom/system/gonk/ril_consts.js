@@ -520,9 +520,17 @@ const PDU_MMS_RD       = 0x04;// More messages to send. (SMS-DELIVER only) or
 
 // MTI - Message Type Indicator
 const PDU_MTI_SMS_RESERVED        = 0x03;
-const PDU_MTI_SMS_STATUS_COMMAND  = 0x02;
+const PDU_MTI_SMS_STATUS_REPORT   = 0x02;
+const PDU_MTI_SMS_COMMAND         = 0x02;
 const PDU_MTI_SMS_SUBMIT          = 0x01;
 const PDU_MTI_SMS_DELIVER         = 0x00;
+
+// PI - Parameter Indicator
+const PDU_PI_EXTENSION           = 0x80;
+const PDU_PI_USER_DATA_LENGTH    = 0x04;
+const PDU_PI_DATA_CODING_SCHEME  = 0x02;
+const PDU_PI_PROTOCOL_IDENTIFIER = 0x01;
+const PDU_PI_RESERVED            = 0x78;
 
 // FCS - Failure Cause
 const PDU_FCS_OK          = 0x00;
