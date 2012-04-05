@@ -2205,15 +2205,15 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode
     RecompileInfo info;
     info.script = script;
 
-    if (script->jitNormal) {
+    if (script->jitHandleNormal.isValid()) {
         info.constructing = false;
-        info.chunkIndex = script->jitNormal->chunkIndex(pc);
+        info.chunkIndex = script->jitHandleNormal.getValid()->chunkIndex(pc);
         addPendingRecompile(cx, info);
     }
 
-    if (script->jitCtor) {
+    if (script->jitHandleCtor.isValid()) {
         info.constructing = true;
-        info.chunkIndex = script->jitCtor->chunkIndex(pc);
+        info.chunkIndex = script->jitHandleCtor.getValid()->chunkIndex(pc);
         addPendingRecompile(cx, info);
     }
 #endif

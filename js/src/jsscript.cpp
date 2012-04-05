@@ -1689,7 +1689,7 @@ void
 JSScript::recompileForStepMode(FreeOp *fop)
 {
 #ifdef JS_METHODJIT
-    if (jitNormal || jitCtor) {
+    if (hasJITCode()) {
         mjit::Recompiler::clearStackReferences(fop, this);
         mjit::ReleaseScriptCode(fop, this);
     }
