@@ -4602,10 +4602,18 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
         // already streamed some data from another source (see, for example,
         // OnDoneReadingPartialCacheEntry).
         //
+
+        // report the current stream offset to our listener... if we've
+        // streamed more than PR_UINT32_MAX, then avoid overflowing the
+        // stream offset.  it's the best we can do without a 64-bit stream
+        // listener API. (Copied from nsInputStreamPump::OnStateTransfer.)
+        PRUint32 odaOffset = mLogicalOffset > PR_UINT32_MAX
+                           ? PR_UINT32_MAX : PRUint32(mLogicalOffset);
+
         nsresult rv =  mListener->OnDataAvailable(this,
                                                   mListenerContext,
                                                   input,
-                                                  mLogicalOffset,
+                                                  odaOffset,
                                                   count);
         if (NS_SUCCEEDED(rv))
             mLogicalOffset = progress;
