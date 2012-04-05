@@ -1437,7 +1437,7 @@ JSAutoEnterCompartment::enterAndIgnoreErrors(JSContext *cx, JSObject *target)
 JSAutoEnterCompartment::~JSAutoEnterCompartment()
 {
     if (state == STATE_OTHER_COMPARTMENT) {
-        AutoCompartment* ac = reinterpret_cast<AutoCompartment*>(bytes);
+        AutoCompartment* ac = getAutoCompartment();
         CHECK_REQUEST(ac->context);
         ac->~AutoCompartment();
     }
