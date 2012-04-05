@@ -134,8 +134,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void storeValue(const Value &val, const T &dest) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
         movq(ImmWord(jv.asBits), ScratchReg);
-        if (val.isMarkable())
-            writeDataRelocation(masm.currentOffset());
+        writeDataRelocation(val);
         movq(ScratchReg, Operand(dest));
     }
     void storeValue(ValueOperand val, BaseIndex dest) {
@@ -183,8 +182,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void moveValue(const Value &val, const Register &dest) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
         movq(ImmWord(jv.asPtr), dest);
-        if (val.isMarkable())
-            writeDataRelocation(masm.currentOffset());
+        writeDataRelocation(val);
     }
     void moveValue(const Value &src, const ValueOperand &dest) {
         moveValue(src, dest.valueReg());

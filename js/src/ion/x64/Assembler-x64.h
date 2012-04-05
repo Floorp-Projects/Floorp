@@ -335,7 +335,7 @@ class Assembler : public AssemblerX86Shared
     }
     void movq(ImmGCPtr ptr, const Register &dest) {
         masm.movq_i64r(ptr.value, dest.code());
-        writeDataRelocation(masm.currentOffset());
+        writeDataRelocation(ptr);
     }
     void movq(const Operand &src, const Register &dest) {
         switch (src.kind()) {
