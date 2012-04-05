@@ -79,10 +79,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "Connection.h"
 
-#ifdef ANDROID
-#include "nsIDOMNavigatorUserMedia.h"
-#endif
-
 #ifdef MOZ_B2G_RIL
 #include "TelephonyFactory.h"
 #endif
@@ -145,9 +141,6 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorNetwork)
 #ifdef MOZ_B2G_BT
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorBluetooth)
-#endif
-#ifdef ANDROID
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorUserMedia)
 #endif
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
