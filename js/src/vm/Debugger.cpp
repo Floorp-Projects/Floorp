@@ -2053,29 +2053,6 @@ Debugger::findScripts(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JSBool
-Debugger::wrap(JSContext *cx, unsigned argc, Value *vp)
-{
-    REQUIRE_ARGC("Debugger.prototype.wrap", 1);
-    THIS_DEBUGGER(cx, argc, vp, "wrap", args, dbg);
-
-    /* Wrapping a non-object returns the value unchanged. */
-    if (!args[0].isObject()) {
-        args.rval() = args[0];
-        return true;
-    }
-
-    JSObject *obj = dbg->unwrapDebuggeeArgument(cx, args[0]);
-    if (!obj)
-        return false;
-
-    args.rval() = args[0];
-    if (!dbg->wrapDebuggeeValue(cx, &args.rval()))
-        return false;
-
-    return true;
-}
-
 JSPropertySpec Debugger::properties[] = {
     JS_PSGS("enabled", Debugger::getEnabled, Debugger::setEnabled, 0),
     JS_PSGS("onDebuggerStatement", Debugger::getOnDebuggerStatement,
@@ -2097,7 +2074,6 @@ JSFunctionSpec Debugger::methods[] = {
     JS_FN("getNewestFrame", Debugger::getNewestFrame, 0, 0),
     JS_FN("clearAllBreakpoints", Debugger::clearAllBreakpoints, 1, 0),
     JS_FN("findScripts", Debugger::findScripts, 1, 0),
-    JS_FN("wrap", Debugger::wrap, 1, 0),
     JS_FS_END
 };
 
@@ -3858,6 +3834,33 @@ DebuggerObject_call(JSContext *cx, unsigned argc, Value *vp)
     return ApplyOrCall(cx, argc, vp, CallMode);
 }
 
+static JSBool
+DebuggerObject_makeDebuggeeValue(JSContext *cx, unsigned argc, Value *vp)
+{
+    REQUIRE_ARGC("Debugger.Object.prototype.makeDebuggeeValue", 1);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "makeDebuggeeValue", args, dbg, referent);
+
+    /* Non-objects are already debuggee values. */
+    if (args[0].isObject()) {
+        // Enter this Debugger.Object's referent's compartment, and wrap the
+        // argument as appropriate for references from there.
+        {
+            AutoCompartment ac(cx, referent);
+            if (!ac.enter() ||
+                !cx->compartment->wrap(cx, &args[0]))
+                return false;
+        }
+
+        // Back in the debugger's compartment, produce a new Debugger.Object
+        // instance referring to the wrapped argument.
+        if (!dbg->wrapDebuggeeValue(cx, &args[0]))
+            return false;
+    }
+
+    args.rval() = args[0];
+    return true;
+}
+
 static JSPropertySpec DebuggerObject_properties[] = {
     JS_PSG("proto", DebuggerObject_getProto, 0),
     JS_PSG("class", DebuggerObject_getClass, 0),
@@ -3883,6 +3886,7 @@ static JSFunctionSpec DebuggerObject_methods[] = {
     JS_FN("isExtensible", DebuggerObject_isExtensible, 0, 0),
     JS_FN("apply", DebuggerObject_apply, 0, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
+    JS_FN("makeDebuggeeValue", DebuggerObject_makeDebuggeeValue, 1, 0),
     JS_FS_END
 };
 
