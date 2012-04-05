@@ -93,6 +93,7 @@ var shell = {
 
     window.addEventListener('MozApplicationManifest', this);
     window.addEventListener('mozfullscreenchange', this);
+    window.addEventListener('sizemodechange', this);
     this.contentBrowser.addEventListener('load', this, true);
 
     // Until the volume can be set from the content side, set it to a
@@ -130,6 +131,7 @@ var shell = {
   stop: function shell_stop() {
     window.removeEventListener('MozApplicationManifest', this);
     window.removeEventListener('mozfullscreenchange', this);
+    window.removeEventListener('sizemodechange', this);
   },
 
   toggleDebug: function shell_toggleDebug() {
@@ -225,6 +227,13 @@ var shell = {
         // mode
         if (document.mozFullScreen)
           Services.fm.focusedWindow = window;
+        break;
+      case 'sizemodechange':
+        if (window.windowState == window.STATE_MINIMIZED) {
+          this.contentBrowser.docShell.isActive = false;
+        } else {
+          this.contentBrowser.docShell.isActive = true;
+        }
         break;
       case 'load':
         this.contentBrowser.removeEventListener('load', this, true);
