@@ -90,7 +90,9 @@ function inspectorFocusTab1()
   is(InspectorUI.selection, div, "selection matches the div element");
   ok(InspectorUI.isSidebarOpen, "sidebar is open");
   ok(InspectorUI.isRuleViewOpen(), "rule view is open");
-  is(InspectorUI.ruleView.doc.documentElement.children.length, 1, "RuleView elements.length == 1");
+
+  // The rule view element plus its popupSet
+  is(InspectorUI.ruleView.doc.documentElement.children.length, 2, "RuleView elements.length == 2");
 
   requestLongerTimeout(4);
   executeSoon(function() {
