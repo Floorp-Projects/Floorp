@@ -681,6 +681,9 @@ IonBuilder::inspectOpcode(JSOp op)
         current->pop();
         return pushConstant(UndefinedValue());
 
+      case JSOP_HOLE:
+        return pushConstant(MagicValue(JS_ARRAY_HOLE));
+
       case JSOP_FALSE:
         return pushConstant(BooleanValue(false));
 
