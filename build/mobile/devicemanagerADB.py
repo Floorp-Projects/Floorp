@@ -7,7 +7,7 @@ import tempfile
 
 class DeviceManagerADB(DeviceManager):
 
-  def __init__(self, host=None, port=20701, retrylimit=5, packageName=None,
+  def __init__(self, host=None, port=20701, retrylimit=5, packageName='fennec',
                adbPath='adb', deviceSerial=None):
     self.host = host
     self.port = port
@@ -28,13 +28,13 @@ class DeviceManagerADB(DeviceManager):
     # where multiple devices are being managed by the same adb instance.
     self.deviceSerial = deviceSerial
 
-    if packageName:
-      self.packageName = packageName
-    else:
+    if packageName == 'fennec':
       if os.getenv('USER'):
         self.packageName = 'org.mozilla.fennec_' + os.getenv('USER')
       else:
         self.packageName = 'org.mozilla.fennec_'
+    elif packageName:
+      self.packageName = packageName
 
     # verify that we can run the adb command. can't continue otherwise
     self.verifyADB()
@@ -161,7 +161,9 @@ class DeviceManagerADB(DeviceManager):
   #  failure: None
   def mkDir(self, name):
     try:
-      self.checkCmdAs(["shell", "mkdir", name])
+      result = self.runCmdAs(["shell", "mkdir", name]).stdout.read()
+      if 'read-only file system' in result.lower():
+        return None
       self.chmodDir(name)
       return name
     except:
@@ -535,10 +537,14 @@ class DeviceManagerADB(DeviceManager):
     testRoot = "/data/local/tests"
     if (self.dirExists(testRoot)):
       return testRoot
+
     root = "/mnt/sdcard"
-    if (not self.dirExists(root)):
-      root = "/data/local"
-    testRoot = root + "/tests"
+    if self.dirExists(root):
+      testRoot = root + "/tests"
+      if self.mkDir(testRoot):
+        return testRoot
+
+    testRoot = "/data/local/tests"
     if (not self.dirExists(testRoot)):
       self.mkDir(testRoot)
     return testRoot
