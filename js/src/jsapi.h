@@ -2736,7 +2736,7 @@ js_TransplantObjectWithWrapper(JSContext *cx,
 JS_END_EXTERN_C
 
 namespace js {
-struct AutoCompartment;
+class AutoCompartment;
 }
 
 class JS_PUBLIC_API(JSAutoEnterCompartment)
