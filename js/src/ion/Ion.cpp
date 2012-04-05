@@ -904,13 +904,23 @@ ion::CanEnterAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecod
 }
 
 MethodStatus
-ion::CanEnter(JSContext *cx, JSScript *script, StackFrame *fp)
+ion::CanEnter(JSContext *cx, JSScript *script, StackFrame *fp, bool newType)
 {
     JS_ASSERT(ion::IsEnabled());
 
     // Skip if the script has been disabled.
     if (script->ion == ION_DISABLED_SCRIPT)
         return Method_Skipped;
+
+    // If constructing, allocate a new |this| object before building Ion.
+    // Creating |this| is done before building Ion because it may change the
+    // type information and invalidate compilation results.
+    if (fp->isConstructing() && fp->functionThis().isPrimitive()) {
+        JSObject *obj = js_CreateThisForFunction(cx, &fp->callee(), newType);
+        if (!obj)
+            return Method_Skipped;
+        fp->functionThis().setObject(*obj);
+    }
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
     MethodStatus status = Compile(cx, script, fp, NULL);
@@ -982,16 +992,8 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 }
 
 bool
-ion::Cannon(JSContext *cx, StackFrame *fp, bool newType)
+ion::Cannon(JSContext *cx, StackFrame *fp)
 {
-    // If constructing, allocate a new |this| object before entering Ion.
-    if (fp->isConstructing() && fp->functionThis().isPrimitive()) {
-        JSObject *obj = js_CreateThisForFunction(cx, &fp->callee(), newType);
-        if (!obj)
-            return false;
-        fp->functionThis().setObject(*obj);
-    }
-
     JSScript *script = fp->script();
     IonScript *ion = script->ion;
     IonCode *code = ion->method();

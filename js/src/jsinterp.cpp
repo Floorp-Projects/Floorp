@@ -461,11 +461,11 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 	
 #ifdef JS_ION
     if (ion::IsEnabled()) {
-        ion::MethodStatus status = ion::CanEnter(cx, script, fp);
+        ion::MethodStatus status = ion::CanEnter(cx, script, fp, false);
         if (status == ion::Method_Error)
             return false;
         if (status == ion::Method_Compiled)
-            return ion::Cannon(cx, fp, false);
+            return ion::Cannon(cx, fp);
     }
 #endif
 
@@ -2778,11 +2778,11 @@ BEGIN_CASE(JSOP_FUNCALL)
 
 #ifdef JS_ION
     if (!newType && ion::IsEnabled()) {
-        ion::MethodStatus status = ion::CanEnter(cx, script, regs.fp());
+        ion::MethodStatus status = ion::CanEnter(cx, script, regs.fp(), newType);
         if (status == ion::Method_Error)
             goto error;
         if (status == ion::Method_Compiled) {
-            interpReturnOK = ion::Cannon(cx, regs.fp(), newType);
+            interpReturnOK = ion::Cannon(cx, regs.fp());
             CHECK_INTERRUPT_HANDLER();
             goto jit_return;
         }
