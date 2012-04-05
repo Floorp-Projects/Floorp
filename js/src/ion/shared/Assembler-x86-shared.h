@@ -70,8 +70,13 @@ class AssemblerX86Shared
     size_t dataBytesNeeded_;
     bool enoughMemory_;
 
-    void writeDataRelocation(size_t offs) {
-        dataRelocations_.writeUnsigned(offs);
+    void writeDataRelocation(const Value &val) {
+        if (val.isMarkable())
+            dataRelocations_.writeUnsigned(masm.currentOffset());
+    }
+    void writeDataRelocation(const ImmGCPtr &ptr) {
+        if (ptr.value)
+            dataRelocations_.writeUnsigned(masm.currentOffset());
     }
 
   protected:
