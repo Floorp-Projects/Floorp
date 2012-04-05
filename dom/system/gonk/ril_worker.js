@@ -1555,7 +1555,34 @@ let RIL = {
       return PDU_FCS_OK;
     }
 
+    let status = message.status;
+
+    // 3GPP TS 23.040 9.2.3.15 `The MS shall interpret any reserved values as
+    // "Service Rejected"(01100011) but shall store them exactly as received.`
+    if ((status >= 0x80)
+        || ((status >= PDU_ST_0_RESERVED_BEGIN)
+            && (status < PDU_ST_0_SC_SPECIFIC_BEGIN))
+        || ((status >= PDU_ST_1_RESERVED_BEGIN)
+            && (status < PDU_ST_1_SC_SPECIFIC_BEGIN))
+        || ((status >= PDU_ST_2_RESERVED_BEGIN)
+            && (status < PDU_ST_2_SC_SPECIFIC_BEGIN))
+        || ((status >= PDU_ST_3_RESERVED_BEGIN)
+            && (status < PDU_ST_3_SC_SPECIFIC_BEGIN))
+        ) {
+      status = PDU_ST_3_SERVICE_REJECTED;
+    }
+
+    // Pending. Waiting for next status report.
+    if ((status >>> 5) == 0x01) {
+      return PDU_FCS_OK;
+    }
+
     delete this._pendingSentSmsMap[message.messageRef];
+
+    if ((status >>> 5) != 0x00) {
+      // TODO: bug 727319 - Notify SMS send failures
+      return PDU_FCS_OK;
+    }
 
     if ((options.segmentMaxSeq > 1)
         && (options.segmentSeq < options.segmentMaxSeq)) {
