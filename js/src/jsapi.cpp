@@ -5248,15 +5248,33 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, unsigned indent)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
+JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *scriptArg, jsval *rval)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, script);
+    assertSameCompartment(cx, obj);
     AutoLastFrameCheck lfc(cx);
 
-    return Execute(cx, script, *obj, rval);
+    JS::Anchor<JSScript *> script;
+
+    /*
+     * Mozilla caches pre-compiled scripts (e.g., in the XUL prototype cache)
+     * and runs them against multiple globals. With a compartment per global,
+     * this requires cloning the pre-compiled script into each new global.
+     * Since each script gets run once, there is no point in trying to cache
+     * this clone. Ideally, this would be handled at some pinch point in
+     * mozilla, but there doesn't seem to be one, so we handle it here.
+     */
+    if (scriptArg->compartment() != obj->compartment()) {
+        script = CloneScript(cx, scriptArg);
+        if (!script.get())
+            return false;
+    } else {
+        script = scriptArg;
+    }
+
+    return Execute(cx, script.get(), *obj, rval);
 }
 
 JS_PUBLIC_API(JSBool)

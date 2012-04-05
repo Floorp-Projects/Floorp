@@ -143,6 +143,8 @@ template<> class AnchorPermitted<const JSFunction *> { };
 template<> class AnchorPermitted<JSString *> { };
 template<> class AnchorPermitted<const JSString *> { };
 template<> class AnchorPermitted<Value> { };
+template<> class AnchorPermitted<const JSScript *> { };
+template<> class AnchorPermitted<JSScript *> { };
 
 template<typename T>
 class Anchor: AnchorPermitted<T>
@@ -154,12 +156,12 @@ class Anchor: AnchorPermitted<T>
     T &get() { return hold; }
     const T &get() const { return hold; }
     void set(const T &t) { hold = t; }
+    void operator=(const T &t) { hold = t; }
     void clear() { hold = 0; }
   private:
     T hold;
-    /* Anchors should not be assigned or passed to functions. */
-    Anchor(const Anchor &);
-    const Anchor &operator=(const Anchor &);
+    Anchor(const Anchor &) MOZ_DELETE;
+    const Anchor &operator=(const Anchor &) MOZ_DELETE;
 };
 
 #ifdef __GNUC__
