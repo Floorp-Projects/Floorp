@@ -1626,6 +1626,13 @@ InformalValueTypeName(const Value &v);
 inline void
 DestroyIdArray(FreeOp *fop, JSIdArray *ida);
 
+/* Helpers for throwing. These always return false. */
+extern bool
+Throw(JSContext *cx, jsid id, unsigned errorNumber);
+
+extern bool
+Throw(JSContext *cx, JSObject *obj, unsigned errorNumber);
+
 }  /* namespace js */
 
 #endif /* jsobj_h___ */
