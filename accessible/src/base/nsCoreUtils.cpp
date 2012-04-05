@@ -171,7 +171,7 @@ nsCoreUtils::GetAccessKeyFor(nsIContent *aContent)
   if (!aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::accesskey))
     return 0;
 
-  nsCOMPtr<nsIPresShell> presShell = aContent->OwnerDoc()->GetShell();
+  nsIPresShell* presShell = aContent->OwnerDoc()->GetShell();
   if (!presShell)
     return 0;
 

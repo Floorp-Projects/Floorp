@@ -187,7 +187,7 @@ nsXULTreeAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
     return nsnull;
 
   nsPresContext *presContext = frame->PresContext();
-  nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
+  nsIPresShell* presShell = presContext->PresShell();
 
   nsIFrame *rootFrame = presShell->GetRootFrame();
   NS_ENSURE_TRUE(rootFrame, nsnull);
