@@ -4631,6 +4631,14 @@ JS_IsNativeFunction(JSObject *funobj, JSNative call)
     return fun->isNative() && fun->native() == call;
 }
 
+JS_PUBLIC_API(JSObject*)
+JS_BindCallable(JSContext *cx, JSObject *callable, JSObject *newThis)
+{
+    RootedVarObject target(cx);
+    target = callable;
+    return js_fun_bind(cx, target, ObjectValue(*newThis), NULL, 0);
+}
+
 JSBool
 js_generic_native_method_dispatcher(JSContext *cx, unsigned argc, Value *vp)
 {
