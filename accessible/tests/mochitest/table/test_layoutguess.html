@@ -35,21 +35,39 @@
       // table with caption
       testAbsentAttrs("table4", attr);
 
-      // table with empty caption
+      // layout table with empty caption
       testAttrs("table4.2", attr, true);
 
-      // table with th element
+      // table with thead element
       testAbsentAttrs("table5", attr);
 
-      // table with thead element
-      testAbsentAttrs("table6", attr);
-
       // table with tfoot element
-      testAbsentAttrs("table7", attr);
+      testAbsentAttrs("table5.1", attr);
 
       // table with colgroup or col elements
-      testAbsentAttrs("table8", attr);
-      testAbsentAttrs("table8.2", attr);
+      testAbsentAttrs("table5.2", attr);
+      testAbsentAttrs("table5.3", attr);
+
+      // table with th element
+      testAbsentAttrs("table6", attr);
+
+      // table with headers attribute
+      testAbsentAttrs("table6.2", attr);
+
+      // table with scope attribute
+      testAbsentAttrs("table6.2.2", attr);
+
+      // table with abbr attribute
+      testAbsentAttrs("table6.2.3", attr);
+
+      // table with abbr element
+      testAbsentAttrs("table6.3", attr);
+
+      // table with abbr element having empty text node
+      testAbsentAttrs("table6.4", attr);
+
+      // table with abbr element and non-empty text node 
+      testAttrs("table6.5", attr, true);
 
       // layout table with nested table
       testAttrs("table9", attr, true);
@@ -124,6 +142,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=693948"
      title="Expose layout-guess: true object attribute on CSS table accessible">
     Mozilla Bug 693948
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=696975"
+     title="Extend the list of legitimate data table structures">
+    Mozilla Bug 696975
   </a>
 
   <p id="display"></p>
@@ -200,7 +223,7 @@
     </tr>
   </table>
 
-  <!-- table with empty caption -->
+  <!-- layout table with empty caption -->
   <table id="table4.2">
     <caption> </caption>
     <tr>
@@ -208,15 +231,8 @@
     </tr>
   </table>
 
-  <!-- table with th element -->
-  <table id="table5">
-    <tr>
-      <th>Cell1</th><th>cell2</th>
-    </tr>
-  </table>
-
   <!-- table with thead element -->
-  <table id="table6">
+  <table id="table5">
     <thead>
       <tr>
         <td>Cell1</td><td>cell2</td>
@@ -225,7 +241,7 @@
   </table>
 
   <!-- table with tfoot element -->
-  <table id="table7">
+  <table id="table5.1">
     <tfoot>
       <tr>
         <td>Cell1</td><td>cell2</td>
@@ -234,16 +250,70 @@
   </table>
 
   <!-- table with colgroup and col elements -->
-  <table id="table8">
+  <table id="table5.2">
     <colgroup width="20"></colgroup>
     <tr>
       <td>Cell1</td><td>cell2</td>
     </tr>
   </table>
-  <table id="table8.2">
+  <table id="table5.3">
     <col width="20">
     <tr>
       <td>Cell1</td><td>cell2</td>
+    </tr>
+  </table>
+
+  <!-- table with th element -->
+  <table id="table6">
+    <tr>
+      <th>Cell1</th><th>cell2</th>
+    </tr>
+  </table>
+
+  <!-- table with headers attribute -->
+  <table id="table6.2">
+    <tr>
+      <td headers="a">table6.2 cell</td>
+    </tr>
+  </table>
+
+  <!-- table with scope attribute -->
+  <table id="table6.2.2">
+    <tr>
+      <td scope="a">table6.2.2 cell</td>
+    </tr>
+  </table>
+
+  <!-- table with abbr attribute -->
+  <table id="table6.2.3">
+    <tr>
+      <td abbr="table6.2.3">table6.2.3 cell1</td>
+    </tr>
+  </table>
+
+  <!-- table with abbr element -->
+  <table id="table6.3">
+    <tr>
+      <td>table6.3 cell1</td>
+      <td><abbr>table6.3 cell2</abbr></td>
+    </tr>
+  </table>
+
+  <!-- table with abbr element having empty text node -->
+  <table id="table6.4">
+    <tr>
+      <td>
+        <abbr>abbr</abbr>
+      </td>
+    </tr>
+  </table>
+
+  <!-- table with abbr element and non-empty text node -->
+  <table id="table6.5">
+    <tr>
+      <td>
+        This is a really long text (<abbr>tiarlt</abbr>) inside layout table 
+      </td>
     </tr>
   </table>
 

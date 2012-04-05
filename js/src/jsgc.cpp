@@ -2357,7 +2357,7 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
     ion::MarkIonActivations(rt, trc);
 #endif
 
-    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+    for (CompartmentsIter c(rt); !c.done(); c.next())
         c->mark(trc);
 
     /* The embedding can register additional roots here. */
