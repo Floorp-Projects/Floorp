@@ -45,14 +45,13 @@ XPCOMUtils.defineLazyServiceGetter(Services, 'fm', function() {
 // XXX never grant 'content-camera' to non-gaia apps
 function addPermissions(urls) {
   let permissions = [
-    'indexedDB', 'indexedDB-unlimited', 'webapps-manage', 'offline-app',
+    'indexedDB', 'indexedDB-unlimited', 'webapps-manage', 'offline-app', 'pin-app',
     'websettings-read', 'websettings-readwrite',
     'content-camera', 'webcontacts-manage', 'wifi-manage', 'desktop-notification',
     'geolocation'
   ];
   urls.forEach(function(url) {
     url = url.trim();
-    dump("XxXxX adding permissions for " + url);
     let uri = Services.io.newURI(url, null, null);
     let allow = Ci.nsIPermissionManager.ALLOW_ACTION;
 
