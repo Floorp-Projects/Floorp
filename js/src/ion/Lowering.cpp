@@ -147,7 +147,7 @@ bool
 LIRGenerator::visitNewObject(MNewObject *ins)
 {
     LNewObject *lir = new LNewObject();
-    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+    return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool

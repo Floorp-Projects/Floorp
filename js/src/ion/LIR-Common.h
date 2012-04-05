@@ -235,10 +235,14 @@ class LNewArray : public LCallInstructionHelper<1, 0, 0>
     }
 };
 
-class LNewObject : public LCallInstructionHelper<1, 0, 0>
+class LNewObject : public LInstructionHelper<1, 0, 0>
 {
   public:
     LIR_HEADER(NewObject);
+
+    const LDefinition *output() {
+        return getDef(0);
+    }
 
     MNewObject *mir() const {
         return mir_->toNewObject();
