@@ -123,6 +123,8 @@
  * jemalloc_purge_freed_pages(), which will force the OS to release those
  * MADV_FREE'd pages, making the process's RSS reflect its true memory usage.
  *
+ * The jemalloc_purge_freed_pages definition in jemalloc.h needs to be
+ * adjusted if MALLOC_DOUBLE_PURGE is ever enabled on Linux.
  */
 #ifdef MOZ_MEMORY_DARWIN
 #define MALLOC_DOUBLE_PURGE
@@ -374,7 +376,7 @@ __FBSDID("$FreeBSD: head/lib/libc/stdlib/malloc.c 180599 2008-07-18 19:35:44Z ja
 
 #endif
 
-#include "jemalloc.h"
+#include "jemalloc_types.h"
 #include "linkedlist.h"
 
 /* Some tools, such as /dev/dsp wrappers, LD_PRELOAD libraries that
@@ -6550,8 +6552,11 @@ free(void *ptr)
  */
 
 /* This was added by Mozilla for use by SQLite. */
+#ifdef MOZ_MEMORY_DARWIN
+static
+#endif
 size_t
-je_malloc_usable_size_in_advance(size_t size)
+je_malloc_good_size(size_t size)
 {
 	/*
 	 * This duplicates the logic in imalloc(), arena_malloc() and
@@ -6581,7 +6586,7 @@ je_malloc_usable_size_in_advance(size_t size)
 		 * Huge.  We use PAGE_CEILING to get psize, instead of using
 		 * CHUNK_CEILING to get csize.  This ensures that this
 		 * malloc_usable_size(malloc(n)) always matches
-		 * je_malloc_usable_size_in_advance(n).
+		 * je_malloc_good_size(n).
 		 */
 		size = PAGE_CEILING(size);
 	}
@@ -6915,7 +6920,7 @@ zone_destroy(malloc_zone_t *zone)
 static size_t
 zone_good_size(malloc_zone_t *zone, size_t size)
 {
-	return je_malloc_usable_size_in_advance(size);
+	return je_malloc_good_size(size);
 }
 
 static size_t
