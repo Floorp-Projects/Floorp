@@ -286,9 +286,6 @@ RadioInterfaceLayer.prototype = {
       case "siminfo":
         this.radioState.msisdn = message.msisdn;
         break;
-      case "error":
-        debug("Received error message: " + JSON.stringify(message));
-        break;
       default:
         throw new Error("Don't know about this message type: " + message.type);
     }

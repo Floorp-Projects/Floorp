@@ -470,17 +470,9 @@ let Buf = {
       request_type = options.rilRequestType;
 
       options.rilRequestError = error;
-      if (error) {   	  
-        if (DEBUG) {
-          debug("Received error " + error + " for solicited parcel type " +
-                request_type);
-        }
-        RIL.handleRequestError(options);
-        return;
-      }
       if (DEBUG) {
         debug("Solicited response for request type " + request_type +
-              ", token " + token);
+              ", token " + token + ", error " + error);
       }
     } else if (response_type == RESPONSE_TYPE_UNSOLICITED) {
       request_type = this.readUint32();
@@ -1715,14 +1707,6 @@ let RIL = {
   },
 
   /**
-   * Handle the RIL request errors
-   */ 
-  handleRequestError: function handleRequestError(options) {	  
-	options.type = "error";
-	this.sendDOMMessage(options);
-  },   
-
-  /**
    * Handle incoming requests from the RIL. We find the method that
    * corresponds to the request type. Incidentally, the request type
    * _is_ the method name, so that's easy.
@@ -1737,7 +1721,11 @@ let RIL = {
   }
 };
 
-RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS() {
+RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let iccStatus = {};
   iccStatus.cardState = Buf.readUint32(); // CARD_STATE_*
   iccStatus.universalPINState = Buf.readUint32(); // CARD_PINSTATE_*
@@ -1769,11 +1757,19 @@ RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS() {
   if (DEBUG) debug("iccStatus: " + JSON.stringify(iccStatus));
   this._processICCStatus(iccStatus);
 };
-RIL[REQUEST_ENTER_SIM_PIN] = function REQUEST_ENTER_SIM_PIN() {
+RIL[REQUEST_ENTER_SIM_PIN] = function REQUEST_ENTER_SIM_PIN(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let response = Buf.readUint32List();
   if (DEBUG) debug("REQUEST_ENTER_SIM_PIN returned " + response);
 };
-RIL[REQUEST_ENTER_SIM_PUK] = function REQUEST_ENTER_SIM_PUK() {
+RIL[REQUEST_ENTER_SIM_PUK] = function REQUEST_ENTER_SIM_PUK(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let response = Buf.readUint32List();
   if (DEBUG) debug("REQUEST_ENTER_SIM_PUK returned " + response);
 };
@@ -1782,7 +1778,11 @@ RIL[REQUEST_ENTER_SIM_PUK2] = null;
 RIL[REQUEST_CHANGE_SIM_PIN] = null;
 RIL[REQUEST_CHANGE_SIM_PIN2] = null;
 RIL[REQUEST_ENTER_NETWORK_DEPERSONALIZATION] = null;
-RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length) {
+RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   this.initRILQuirks();
 
   let calls_length = 0;
@@ -1830,16 +1830,28 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length) {
   this._processCalls(calls);
 };
 RIL[REQUEST_DIAL] = null;
-RIL[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length) {
+RIL[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   this.IMSI = Buf.readString();
 };
-RIL[REQUEST_HANGUP] = function REQUEST_HANGUP(length) {
+RIL[REQUEST_HANGUP] = function REQUEST_HANGUP(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   this.getCurrentCalls();
 }; 
 RIL[REQUEST_HANGUP_WAITING_OR_BACKGROUND] = null;
 RIL[REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND] = null;
 RIL[REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE] = null;
-RIL[REQUEST_SWITCH_HOLDING_AND_ACTIVE] = function REQUEST_SWITCH_HOLDING_AND_ACTIVE(length) {
+RIL[REQUEST_SWITCH_HOLDING_AND_ACTIVE] = function REQUEST_SWITCH_HOLDING_AND_ACTIVE(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   // XXX Normally we should get a UNSOLICITED_RESPONSE_CALL_STATE_CHANGED parcel 
   // notifying us of call state changes, but sometimes we don't (have no idea why).
   // this.getCurrentCalls() helps update the call state actively.
@@ -1848,7 +1860,11 @@ RIL[REQUEST_SWITCH_HOLDING_AND_ACTIVE] = function REQUEST_SWITCH_HOLDING_AND_ACT
 RIL[REQUEST_CONFERENCE] = null;
 RIL[REQUEST_UDUB] = null;
 RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = null;
-RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH() {
+RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let obj = {};
 
   // GSM
@@ -1896,16 +1912,28 @@ RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH() {
   this.sendDOMMessage({type: "signalstrengthchange",
                        signalStrength: obj});
 };
-RIL[REQUEST_VOICE_REGISTRATION_STATE] = function REQUEST_VOICE_REGISTRATION_STATE(length) {
+RIL[REQUEST_VOICE_REGISTRATION_STATE] = function REQUEST_VOICE_REGISTRATION_STATE(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let state = Buf.readStringList();
 debug("voice registration state: " + state);
   this._processVoiceRegistrationState(state);
 };
-RIL[REQUEST_DATA_REGISTRATION_STATE] = function REQUEST_DATA_REGISTRATION_STATE(length) {
+RIL[REQUEST_DATA_REGISTRATION_STATE] = function REQUEST_DATA_REGISTRATION_STATE(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let state = Buf.readStringList();
   this._processDataRegistrationState(state);
 };
-RIL[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length) {
+RIL[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let operator = Buf.readStringList();
   if (DEBUG) debug("Operator data: " + operator);
   if (operator.length < 3) {
@@ -1925,11 +1953,14 @@ RIL[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length) {
 RIL[REQUEST_RADIO_POWER] = null;
 RIL[REQUEST_DTMF] = null;
 RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
+  if (options.rilRequestError) {
+    //TODO handle errors (bug 727319)
+    return;
+  }
+
   options.messageRef = Buf.readUint32();
   options.ackPDU = Buf.readString();
   options.errorCode = Buf.readUint32();
-
-  //TODO handle errors (bug 727319)
 
   if (options.requestStatusReport) {
     this._pendingSentSmsMap[options.messageRef] = options;
@@ -1968,6 +1999,10 @@ RIL.readSetupDataCall_v5 = function readSetupDataCall_v5(options) {
 };
 
 RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   if (RILQUIRKS_V5_LEGACY) {
     this.readSetupDataCall_v5(options);
     this.currentDataCalls[options.cid] = options;
@@ -1981,6 +2016,10 @@ RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options)
   this[REQUEST_DATA_CALL_LIST](length, options);
 };
 RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let sw1 = Buf.readUint32();
   let sw2 = Buf.readUint32();
   if (sw1 != ICC_STATUS_NORMAL_ENDING) {
@@ -2007,14 +2046,26 @@ RIL[REQUEST_SET_CALL_FORWARD] = null;
 RIL[REQUEST_QUERY_CALL_WAITING] = null;
 RIL[REQUEST_SET_CALL_WAITING] = null;
 RIL[REQUEST_SMS_ACKNOWLEDGE] = null;
-RIL[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI() {
+RIL[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   this.IMEI = Buf.readString();
 };
-RIL[REQUEST_GET_IMEISV] = function REQUEST_GET_IMEISV() {
+RIL[REQUEST_GET_IMEISV] = function REQUEST_GET_IMEISV(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   this.IMEISV = Buf.readString();
 };
 RIL[REQUEST_ANSWER] = null;
 RIL[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let datacall = this.currentDataCalls[options.cid];
   delete this.currentDataCalls[options.cid];
   datacall.state = GECKO_NETWORK_STATE_DISCONNECTED;
@@ -2024,7 +2075,11 @@ RIL[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL(length
 RIL[REQUEST_QUERY_FACILITY_LOCK] = null;
 RIL[REQUEST_SET_FACILITY_LOCK] = null;
 RIL[REQUEST_CHANGE_BARRING_PASSWORD] = null;
-RIL[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELECTION_MODE() {
+RIL[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELECTION_MODE(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let mode = Buf.readUint32List();
   this.networkSelectionMode = mode[0];
 };
@@ -2033,7 +2088,11 @@ RIL[REQUEST_SET_NETWORK_SELECTION_MANUAL] = null;
 RIL[REQUEST_QUERY_AVAILABLE_NETWORKS] = null;
 RIL[REQUEST_DTMF_START] = null;
 RIL[REQUEST_DTMF_STOP] = null;
-RIL[REQUEST_BASEBAND_VERSION] = function REQUEST_BASEBAND_VERSION() {
+RIL[REQUEST_BASEBAND_VERSION] = function REQUEST_BASEBAND_VERSION(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   this.basebandVersion = Buf.readString();
   if (DEBUG) debug("Baseband version: " + this.basebandVersion);
 };
@@ -2079,7 +2138,11 @@ RIL.readDataCall_v6 = function readDataCall_v6(obj) {
   return obj;
 };
 
-RIL[REQUEST_DATA_CALL_LIST] = function REQUEST_DATA_CALL_LIST(length) {
+RIL[REQUEST_DATA_CALL_LIST] = function REQUEST_DATA_CALL_LIST(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   this.initRILQuirks();
   if (!length) {
     this._processDataCallList(null);
@@ -2147,8 +2210,12 @@ RIL[REQUEST_CDMA_DELETE_SMS_ON_RUIM] = null;
 RIL[REQUEST_DEVICE_IDENTITY] = null;
 RIL[REQUEST_EXIT_EMERGENCY_CALLBACK_MODE] = null;
 RIL[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS(length, options) {
-  //TODO: notify main thread if we fail retrieving the SMSC, especially
-  // if there was a pending SMS (bug 727319).
+  if (options.rilRequestError) {
+    //TODO: notify main thread if we fail retrieving the SMSC, especially
+    // if there was a pending SMS (bug 727319).
+    return;
+  }
+
   this.SMSC = Buf.readString();
   // If the SMSC was not retrieved on RIL initialization, an attempt to
   // get it is triggered from this.sendSMS followed by the 'options'
@@ -2284,15 +2351,15 @@ RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() 
                        localTimeStampInMS: now});
 };
 
-RIL[UNSOLICITED_SIGNAL_STRENGTH] = function UNSOLICITED_SIGNAL_STRENGTH() {
-  this[REQUEST_SIGNAL_STRENGTH]();
+RIL[UNSOLICITED_SIGNAL_STRENGTH] = function UNSOLICITED_SIGNAL_STRENGTH(length) {
+  this[REQUEST_SIGNAL_STRENGTH](length, {rilRequestError: ERROR_SUCCESS});
 };
-RIL[UNSOLICITED_DATA_CALL_LIST_CHANGED] = function UNSOLICITED_DATA_CALL_LIST_CHANGED(length, options) {
+RIL[UNSOLICITED_DATA_CALL_LIST_CHANGED] = function UNSOLICITED_DATA_CALL_LIST_CHANGED(length) {
   if (RILQUIRKS_V5_LEGACY) {
     this.getDataCallList();
     return;
   }
-  this[REQUEST_GET_DATA_CALL_LIST](length, options);
+  this[REQUEST_GET_DATA_CALL_LIST](length, {rilRequestError: ERROR_SUCCESS});
 };
 RIL[UNSOLICITED_SUPP_SVC_NOTIFICATION] = null;
 RIL[UNSOLICITED_STK_SESSION_END] = null;
@@ -2329,7 +2396,7 @@ RIL[UNSOLICITED_CDMA_INFO_REC] = null;
 RIL[UNSOLICITED_OEM_HOOK_RAW] = null;
 RIL[UNSOLICITED_RINGBACK_TONE] = null;
 RIL[UNSOLICITED_RESEND_INCALL_MUTE] = null;
-RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length, options) {
+RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length) {
   let version = Buf.readUint32List()[0];
   RILQUIRKS_V5_LEGACY = (version < 5);
   if (DEBUG) {
