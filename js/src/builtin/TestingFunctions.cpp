@@ -21,18 +21,33 @@ using namespace JS;
 static JSBool
 GC(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JSCompartment *comp = NULL;
+    /*
+     * If the first argument is 'compartment', we collect any compartments
+     * previously scheduled for GC via schedulegc. If the first argument is an
+     * object, we collect the object's compartment (any any other compartments
+     * scheduled for GC). Otherwise, we collect call compartments.
+     */
+    JSBool compartment = false;
     if (argc == 1) {
         Value arg = vp[2];
-        if (arg.isObject())
-            comp = UnwrapObject(&arg.toObject())->compartment();
+        if (arg.isString()) {
+            if (!JS_StringEqualsAscii(cx, arg.toString(), "compartment", &compartment))
+                return false;
+        } else if (arg.isObject()) {
+            PrepareCompartmentForGC(UnwrapObject(&arg.toObject())->compartment());
+            compartment = true;
+        }
     }
 
 #ifndef JS_MORE_DETERMINISTIC
     size_t preBytes = cx->runtime->gcBytes;
 #endif
 
-    JS_CompartmentGC(cx, comp);
+    if (compartment)
+        PrepareForDebugGC(cx->runtime);
+    else
+        PrepareForFullGC(cx->runtime);
+    GCForReason(cx, gcreason::API);
 
     char buf[256] = { '\0' };
 #ifndef JS_MORE_DETERMINISTIC
@@ -154,9 +169,8 @@ static JSBool
 GCZeal(JSContext *cx, unsigned argc, jsval *vp)
 {
     uint32_t zeal, frequency = JS_DEFAULT_ZEAL_FREQ;
-    JSBool compartment = JS_FALSE;
 
-    if (argc > 3) {
+    if (argc > 2) {
         ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Too many arguments");
         return JS_FALSE;
     }
@@ -165,10 +179,8 @@ GCZeal(JSContext *cx, unsigned argc, jsval *vp)
     if (argc >= 2)
         if (!JS_ValueToECMAUint32(cx, vp[3], &frequency))
             return JS_FALSE;
-    if (argc >= 3)
-        compartment = js_ValueToBoolean(vp[3]);
 
-    JS_SetGCZeal(cx, (uint8_t)zeal, frequency, compartment);
+    JS_SetGCZeal(cx, (uint8_t)zeal, frequency);
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -176,21 +188,43 @@ GCZeal(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 ScheduleGC(JSContext *cx, unsigned argc, jsval *vp)
 {
-    uint32_t count;
-    bool compartment = false;
-
-    if (argc != 1 && argc != 2) {
+    if (argc != 1) {
         ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Wrong number of arguments");
         return JS_FALSE;
     }
-    if (!JS_ValueToECMAUint32(cx, vp[2], &count))
-        return JS_FALSE;
-    if (argc == 2)
-        compartment = js_ValueToBoolean(vp[3]);
 
-    JS_ScheduleGC(cx, count, compartment);
+    Value arg(vp[2]);
+    if (arg.isInt32()) {
+        /* Schedule a GC to happen after |arg| allocations. */
+        JS_ScheduleGC(cx, arg.toInt32());
+    } else if (arg.isObject()) {
+        /* Ensure that |comp| is collected during the next GC. */
+        JSCompartment *comp = UnwrapObject(&arg.toObject())->compartment();
+        PrepareCompartmentForGC(comp);
+    } else if (arg.isString()) {
+        /* This allows us to schedule atomsCompartment for GC. */
+        PrepareCompartmentForGC(arg.toString()->compartment());
+    }
+
     *vp = JSVAL_VOID;
     return JS_TRUE;
+}
+
+static JSBool
+SelectForGC(JSContext *cx, unsigned argc, jsval *vp)
+{
+    JSRuntime *rt = cx->runtime;
+
+    for (unsigned i = 0; i < argc; i++) {
+        Value arg(JS_ARGV(cx, vp)[i]);
+        if (arg.isObject()) {
+            if (!rt->gcSelectedForMarking.append(&arg.toObject()))
+                return false;
+        }
+    }
+
+    *vp = JSVAL_VOID;
+    return true;
 }
 
 static JSBool
@@ -208,17 +242,22 @@ VerifyBarriers(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 GCSlice(JSContext *cx, unsigned argc, jsval *vp)
 {
-    uint32_t budget;
+    bool limit = true;
+    uint32_t budget = 0;
 
-    if (argc != 1) {
+    if (argc > 1) {
         ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Wrong number of arguments");
         return JS_FALSE;
     }
 
-    if (!JS_ValueToECMAUint32(cx, vp[2], &budget))
-        return JS_FALSE;
+    if (argc == 1) {
+        if (!JS_ValueToECMAUint32(cx, vp[2], &budget))
+            return false;
+    } else {
+        limit = false;
+    }
 
-    GCDebugSlice(cx, budget);
+    GCDebugSlice(cx, limit, budget);
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -475,8 +514,10 @@ Terminate(JSContext *cx, unsigned arg, jsval *vp)
 
 static JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
-"gc([obj])",
-"  Run the garbage collector. When obj is given, GC only its compartment."),
+"gc([obj] | 'compartment')",
+"  Run the garbage collector. When obj is given, GC only its compartment.\n"
+"  If 'compartment' is given, GC any compartments that were scheduled for\n"
+"  GC via schedulegc."),
 
     JS_FN_HELP("gcparam", GCParameter, 2, 0,
 "gcparam(name [, value])",
@@ -502,7 +543,7 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 
 #ifdef JS_GC_ZEAL
     JS_FN_HELP("gczeal", GCZeal, 2, 0,
-"gczeal(level, [period], [compartmentGC?])",
+"gczeal(level, [period])",
 "  Specifies how zealous the garbage collector should be. Values for level:\n"
 "    0: Normal amount of collection\n"
 "    1: Collect when roots are added or removed\n"
@@ -510,12 +551,16 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "    3: Collect when the window paints (browser only)\n"
 "    4: Verify write barriers between instructions\n"
 "    5: Verify write barriers between paints\n"
-"  Period specifies that collection happens every n allocations.\n"
-"  If compartmentGC is true, the collections will be compartmental."),
+"  Period specifies that collection happens every n allocations.\n"),
 
     JS_FN_HELP("schedulegc", ScheduleGC, 1, 0,
-"schedulegc(num, [compartmentGC?])",
-"  Schedule a GC to happen after num allocations."),
+"schedulegc(num | obj)",
+"  If num is given, schedule a GC after num allocations.\n"
+"  If obj is given, schedule a GC of obj's compartment."),
+
+    JS_FN_HELP("selectforgc", SelectForGC, 0, 0,
+"selectforgc(obj1, obj2, ...)",
+"  Schedule the given objects to be marked in the next GC slice."),
 
     JS_FN_HELP("verifybarriers", VerifyBarriers, 0, 0,
 "verifybarriers()",
