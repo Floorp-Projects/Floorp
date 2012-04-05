@@ -221,31 +221,31 @@ ion::CheckLogging()
         /*NOTREACHED*/
     }
     if (ContainsFlag(env, "aborts"))
-        LoggingBits |= (1 << uint32(IonSpew_Abort));
+        EnableChannel(IonSpew_Abort);
     if (ContainsFlag(env, "alias"))
-        LoggingBits |= (1 << uint32(IonSpew_Alias));
+        EnableChannel(IonSpew_Alias);
     if (ContainsFlag(env, "mir"))
-        LoggingBits |= (1 << uint32(IonSpew_MIR));
+        EnableChannel(IonSpew_MIR);
     if (ContainsFlag(env, "gvn"))
-        LoggingBits |= (1 << uint32(IonSpew_GVN));
+        EnableChannel(IonSpew_GVN);
     if (ContainsFlag(env, "licm"))
-        LoggingBits |= (1 << uint32(IonSpew_LICM));
+        EnableChannel(IonSpew_LICM);
     if (ContainsFlag(env, "regalloc"))
-        LoggingBits |= (1 << uint32(IonSpew_RegAlloc));
+        EnableChannel(IonSpew_RegAlloc);
     if (ContainsFlag(env, "inline"))
-        LoggingBits |= (1 << uint32(IonSpew_Inlining));
+        EnableChannel(IonSpew_Inlining);
     if (ContainsFlag(env, "snapshots"))
-        LoggingBits |= (1 << uint32(IonSpew_Snapshots));
+        EnableChannel(IonSpew_Snapshots);
     if (ContainsFlag(env, "codegen"))
-        LoggingBits |= (1 << uint32(IonSpew_Codegen));
+        EnableChannel(IonSpew_Codegen);
     if (ContainsFlag(env, "bailouts"))
-        LoggingBits |= (1 << uint32(IonSpew_Bailouts));
+        EnableChannel(IonSpew_Bailouts);
     if (ContainsFlag(env, "osi"))
-        LoggingBits |= (1 << uint32(IonSpew_Invalidate));
+        EnableChannel(IonSpew_Invalidate);
     if (ContainsFlag(env, "caches"))
-        LoggingBits |= (1 << uint32(IonSpew_InlineCaches));
+        EnableChannel(IonSpew_InlineCaches);
     if (ContainsFlag(env, "safepoints"))
-        LoggingBits |= (1 << uint32(IonSpew_Safepoints));
+        EnableChannel(IonSpew_Safepoints);
     if (ContainsFlag(env, "all"))
         LoggingBits = uint32(-1);
 
@@ -285,8 +285,21 @@ bool
 ion::IonSpewEnabled(IonSpewChannel channel)
 {
     JS_ASSERT(LoggingChecked);
-
     return LoggingBits & (1 << uint32(channel));
+}
+
+void
+ion::EnableChannel(IonSpewChannel channel)
+{
+    JS_ASSERT(LoggingChecked);
+    LoggingBits |= (1 << uint32(channel));
+}
+
+void
+ion::DisableChannel(IonSpewChannel channel)
+{
+    JS_ASSERT(LoggingChecked);
+    LoggingBits &= ~(1 << uint32(channel));
 }
 
 #endif /* DEBUG */
