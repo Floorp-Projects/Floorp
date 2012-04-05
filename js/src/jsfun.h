@@ -317,4 +317,8 @@ js_fun_apply(JSContext *cx, unsigned argc, js::Value *vp);
 extern JSBool
 js_fun_call(JSContext *cx, unsigned argc, js::Value *vp);
 
+extern JSObject*
+js_fun_bind(JSContext *cx, js::HandleObject target, js::Value thisArg,
+            js::Value *boundArgs, unsigned argslen);
+
 #endif /* jsfun_h___ */
