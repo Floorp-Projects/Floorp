@@ -241,6 +241,11 @@ const ERROR_SS_MODIFIED_TO_USSD = 24;
 const ERROR_SS_MODIFIED_TO_SS = 25;
 const ERROR_SUBSCRIPTION_NOT_SUPPORTED = 26;
 
+// 3GPP 23.040 clause 9.2.3.6 TP-Message-Reference(TP-MR):
+// The number of times the MS automatically repeats the SMS-SUBMIT shall be in
+// the range 1 to 3 but the precise number is an implementation matter.
+const SMS_RETRY_MAX = 3;
+
 const RADIO_STATE_OFF = 0;
 const RADIO_STATE_UNAVAILABLE = 1;
 const RADIO_STATE_ON = 2;

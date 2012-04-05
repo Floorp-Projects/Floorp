@@ -262,6 +262,9 @@ RadioInterfaceLayer.prototype = {
       case "sms-delivered":
         this.handleSmsDelivered(message);
         return;
+      case "sms-send-failed":
+        this.handleSmsSendFailed(message);
+        return;
       case "datacallstatechange":
         this.handleDataCallState(message.datacall);
         break;
@@ -468,7 +471,6 @@ RadioInterfaceLayer.prototype = {
       options.sms = sms;
     }
 
-    //TODO handle errors (bug 727319)
     gSmsRequestManager.notifySmsSent(options.requestId, sms);
   },
 
@@ -482,6 +484,25 @@ RadioInterfaceLayer.prototype = {
     delete this._sentSmsEnvelopes[message.envelopeId];
 
     Services.obs.notifyObservers(options.sms, kSmsDeliveredObserverTopic, null);
+  },
+
+  handleSmsSendFailed: function handleSmsSendFailed(message) {
+    debug("handleSmsSendFailed: " + JSON.stringify(message));
+
+    let options = this._sentSmsEnvelopes[message.envelopeId];
+    if (!options) {
+      return;
+    }
+    delete this._sentSmsEnvelopes[message.envelopeId];
+
+    let error = gSmsRequestManager.UNKNOWN_ERROR;
+    switch (message.error) {
+      case RIL.ERROR_RADIO_NOT_AVAILABLE:
+        error = gSmsRequestManager.NO_SIGNAL_ERROR;
+        break;
+    }
+
+    gSmsRequestManager.notifySmsSendFailed(options.requestId, error);
   },
 
   /**
