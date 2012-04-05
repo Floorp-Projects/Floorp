@@ -41,7 +41,7 @@
 
 interface nsIDOMEventListener;
 
-[scriptable, builtinclass, uuid(f741d52a-38bd-48f8-838b-cf4cd74a6ea5)]
+[scriptable, builtinclass, uuid(2fb9502b-2054-4eda-8db7-3726c39144f7)]
 interface nsIDOMTelephonyCall : nsIDOMEventTarget
 {
   readonly attribute DOMString number;
@@ -50,6 +50,8 @@ interface nsIDOMTelephonyCall : nsIDOMEventTarget
 
   void answer();
   void hangUp();
+  void hold();
+  void resume();
 
   attribute nsIDOMEventListener onstatechange;
 
@@ -60,5 +62,7 @@ interface nsIDOMTelephonyCall : nsIDOMEventTarget
   attribute nsIDOMEventListener onconnected;
   attribute nsIDOMEventListener ondisconnecting;
   attribute nsIDOMEventListener ondisconnected;
-  attribute nsIDOMEventListener onincoming;
+  attribute nsIDOMEventListener onholding;
+  attribute nsIDOMEventListener onheld;
+  attribute nsIDOMEventListener onresuming;
 };
