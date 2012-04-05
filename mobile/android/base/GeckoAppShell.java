@@ -2050,4 +2050,24 @@ public class GeckoAppShell
     public static void unlockScreenOrientation() {
         GeckoScreenOrientationListener.getInstance().unlockScreenOrientation();
     }
+
+    static class AsyncResultHandler extends GeckoApp.FilePickerResultHandler {
+        private long mId;
+        AsyncResultHandler(long id) {
+            mId = id;
+        }
+
+        public void onActivityResult(int resultCode, Intent data) {
+            GeckoAppShell.notifyFilePickerResult(handleActivityResult(resultCode, data), mId);
+        }
+        
+    }
+
+    static native void notifyFilePickerResult(String filePath, long id);
+
+    /* Called by JNI from AndroidBridge */
+    public static void showFilePickerAsync(String aMimeType, long id) {
+        if (!GeckoApp.mAppContext.showFilePicker(aMimeType, new AsyncResultHandler(id)))
+            GeckoAppShell.notifyFilePickerResult("", id);
+    }
 }
