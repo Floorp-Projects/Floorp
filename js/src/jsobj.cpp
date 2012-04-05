@@ -1830,38 +1830,54 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     return true;
 }
 
+namespace js {
+
+bool
+Throw(JSContext *cx, jsid id, unsigned errorNumber)
+{
+    JS_ASSERT(js_ErrorFormatString[errorNumber].argCount == 1);
+
+    JSString *idstr = IdToString(cx, id);
+    if (!idstr)
+       return false;
+    JSAutoByteString bytes(cx, idstr);
+    if (!bytes)
+        return false;
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber, bytes.ptr());
+    return false;
+}
+
+bool
+Throw(JSContext *cx, JSObject *obj, unsigned errorNumber)
+{
+    if (js_ErrorFormatString[errorNumber].argCount == 1) {
+        js_ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,
+                                 JSDVG_IGNORE_STACK, ObjectValue(*obj),
+                                 NULL, NULL, NULL);
+    } else {
+        JS_ASSERT(js_ErrorFormatString[errorNumber].argCount == 0);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber);
+    }
+    return false;
+}
+
+} /* namespace js */
+
 static JSBool
 Reject(JSContext *cx, unsigned errorNumber, bool throwError, jsid id, bool *rval)
 {
-    if (throwError) {
-        jsid idstr;
-        if (!js_ValueToStringId(cx, IdToValue(id), &idstr))
-           return JS_FALSE;
-        JSAutoByteString bytes(cx, JSID_TO_STRING(idstr));
-        if (!bytes)
-            return JS_FALSE;
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber, bytes.ptr());
-        return JS_FALSE;
-    }
+    if (throwError)
+        return Throw(cx, id, errorNumber);
 
     *rval = false;
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
 Reject(JSContext *cx, JSObject *obj, unsigned errorNumber, bool throwError, bool *rval)
 {
-    if (throwError) {
-        if (js_ErrorFormatString[errorNumber].argCount == 1) {
-            js_ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,
-                                     JSDVG_IGNORE_STACK, ObjectValue(*obj),
-                                     NULL, NULL, NULL);
-        } else {
-            JS_ASSERT(js_ErrorFormatString[errorNumber].argCount == 0);
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber);
-        }
-        return JS_FALSE;
-    }
+    if (throwError)
+        return Throw(cx, obj, errorNumber);
 
     *rval = false;
     return JS_TRUE;
