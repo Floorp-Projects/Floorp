@@ -107,7 +107,8 @@ $(CACHE_DIR)/.done:
 
 ParserResults.pkl: $(globalgen_dependencies) \
                    $(addprefix $(webidl_base)/, $(webidl_files))
-	$(PYTHON_PATH) -I$(topsrcdir)/other-licenses/ply -I$(srcdir)/parser \
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
+    -I$(topsrcdir)/other-licenses/ply -I$(srcdir)/parser \
     $(srcdir)/GlobalGen.py $(ACCESSOR_OPT) $(srcdir)/Bindings.conf $(webidl_base) \
     --cachedir=$(CACHE_DIR) \
     $(webidl_files)

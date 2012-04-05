@@ -101,7 +101,6 @@ ifeq (,$(strip $(AUTOCONF)))
 AUTOCONF=$(error Could not find autoconf 2.13)
 endif
 
-MKDIR := mkdir
 SH := /bin/sh
 PERL ?= perl
 PYTHON ?= python
@@ -181,6 +180,9 @@ OBJDIR_TARGETS = install export libs clean realclean distclean alldep maybe_clob
 build::
 	$(MAKE) -f $(TOPSRCDIR)/client.mk $(if $(MOZ_PGO),profiledbuild,realbuild)
 
+# Define mkdir
+include $(TOPSRCDIR)/config/makefiles/makeutils.mk
+include $(TOPSRCDIR)/config/makefiles/autotargets.mk
 
 # Print out any options loaded from mozconfig.
 all realbuild clean depend distclean export libs install realclean::
@@ -316,11 +318,13 @@ endif
 
 configure-files: $(CONFIGURES)
 
-configure:: configure-files
-ifdef MOZ_BUILD_PROJECTS
-	@if test ! -d $(MOZ_OBJDIR); then $(MKDIR) $(MOZ_OBJDIR); else true; fi
-endif
-	@if test ! -d $(OBJDIR); then $(MKDIR) $(OBJDIR); else true; fi
+configure-preqs = \
+  configure-files \
+  $(call mkdir_deps,$(OBJDIR)) \
+  $(if $(MOZ_BUILD_PROJECTS),$(call mkdir_deps,$(MOZ_OBJDIR))) \
+  $(NULL)
+
+configure:: $(configure-preqs)
 	@echo cd $(OBJDIR);
 	@echo $(CONFIGURE) $(CONFIGURE_ARGS)
 	@cd $(OBJDIR) && $(BUILD_PROJECT_ARG) $(CONFIGURE_ENV_ARGS) $(CONFIGURE) $(CONFIGURE_ARGS) \

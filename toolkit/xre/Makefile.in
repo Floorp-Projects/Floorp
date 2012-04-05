@@ -1,3 +1,6 @@
+# -*- makefile -*-
+# vim:set ts=8 sw=8 sts=8 noet:
+
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -36,12 +39,14 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../..
+DEPTH     = ../..
 topsrcdir = @top_srcdir@
-srcdir = @srcdir@
-VPATH = @srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+
+milestone_txt = $(topsrcdir)/config/milestone.txt
 
 MODULE = xulapp
 LIBRARY_NAME = xulapp_s
@@ -216,7 +221,12 @@ DEFINES += \
   $(NULL)
 endif
 
-DEFINES += -DTOOLKIT_EM_VERSION=\"$(shell $(PERL) $(topsrcdir)/config/milestone.pl --topsrcdir=$(topsrcdir))\"
+# Should version be optional or required ?
+TOOLKIT_EM_VERSION=$(shell $(PERL) $(topsrcdir)/config/milestone.pl --topsrcdir=$(topsrcdir))
+$(call warnIfEmpty,TOOLKIT_EM_VERSION)
+
+# Valid if null: {warn,error}IfEmpty
+DEFINES += -DTOOLKIT_EM_VERSION=\"$(TOOLKIT_EM_VERSION)\"
 
 ifdef WRAP_SYSTEM_INCLUDES
 DEFINES += -DWRAP_SYSTEM_INCLUDES
@@ -229,25 +239,29 @@ endif
 endif
 
 MOZ_SOURCE_STAMP ?= $(firstword $(shell hg -R $(topsrcdir) parent --template="{node|short}\n" 2>/dev/null))
-# strip a trailing slash from the repo URL because it's not always present,
-# and we want to construct a working URL in buildconfig.html
-# make+shell+sed = awful
-_dollar=$$
-SOURCE_REPO := $(shell cd $(topsrcdir) && hg showconfig paths.default 2>/dev/null | head -n1 | sed -e "s/^ssh:/http:/" -e "s/\/$(_dollar)//" )
-
 ifdef MOZ_SOURCE_STAMP
-INIARGS = --sourcestamp=$(MOZ_SOURCE_STAMP)
-# extra sanity check for old versions of hg
-# that don't support showconfig
-ifeq (http,$(patsubst http%,http,$(SOURCE_REPO)))
-INIARGS += --sourcerepo=$(SOURCE_REPO)
-endif
-endif
 
-# Solaris /usr/bin/diff doesn't have -n option
-GRE_MILESTONE := $(shell tail -n 1 $(topsrcdir)/config/milestone.txt 2>/dev/null || tail -1 $(topsrcdir)/config/milestone.txt)
-GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
- 
+  INIARGS = --sourcestamp=$(MOZ_SOURCE_STAMP)
+
+  # strip a trailing slash from the repo URL because it's not always present,
+  # and we want to construct a working URL in buildconfig.html
+  SOURCE_REPO := $(firstword $(shell hg --repository $(topsrcdir) showconfig paths.default 2>/dev/null))
+  SOURCE_REPO := $(strip $(SOURCE_REPO))
+  SOURCE_REPO := $(patsubst ssh://%,http://%,$(SOURCE_REPO))
+  SOURCE_REPO := $(patsubst %/,%,$(SOURCE_REPO))
+  $(call errorIfEmpty,SOURCE_REPO)
+
+  # extra sanity check for old versions of hg, no showconfig support
+  ifeq (http,$(patsubst http%,http,$(SOURCE_REPO)))
+    INIARGS += --sourcerepo=$(SOURCE_REPO)
+  endif
+
+endif # MOZ_SOURCE_STAMP
+
+GRE_MILESTONE := $(strip $(lastword $(shell cat $(milestone_txt) 2>/dev/null)))
+GRE_BUILDID   := $(strip $(firstword $(shell cat $(DEPTH)/config/buildid 2>/dev/null)))
+$(call errorIfEmpty,GRE_MILESTONE GRE_BUILDID)
+
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
 
 ifdef MOZILLA_OFFICIAL
@@ -258,10 +272,10 @@ DEFINES += -DAPP_VERSION=$(MOZ_APP_VERSION)
 
 DEFINES += -DAPP_ID=$(MOZ_APP_ID)
 
-$(srcdir)/nsAppRunner.cpp: $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
+$(srcdir)/nsAppRunner.cpp: $(DEPTH)/config/buildid $(milestone_txt)
 
 platform.ini: FORCE
-	$(PYTHON) $(srcdir)/make-platformini.py --buildid=$(shell cat $(DEPTH)/config/buildid) $(INIARGS) $(topsrcdir)/config/milestone.txt > $@
+	$(PYTHON) $(srcdir)/make-platformini.py --buildid=$(GRE_BUILDID) $(INIARGS) $(milestone_txt) > $@
 
 GARBAGE += platform.ini
 

@@ -35,10 +35,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../..
+DEPTH     = ../..
 topsrcdir = @top_srcdir@
-srcdir = @srcdir@
-VPATH = @srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -102,8 +102,11 @@ REDIST_FILES = \
 endif
 
 ifdef REDIST_FILES
-libs::
-	mkdir -p $(FINAL_TARGET)
+libs-preqs = \
+  $(call mkdir_deps,$(FINAL_TARGET)) \
+  $(NULL)
+
+libs:: $(libs-preqs)
 	install --preserve-timestamps $(foreach f,$(REDIST_FILES),"$(WIN32_REDIST_DIR)"/$(f)) $(FINAL_TARGET)
 endif
 
