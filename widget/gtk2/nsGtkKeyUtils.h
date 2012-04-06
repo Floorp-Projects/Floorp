@@ -274,7 +274,7 @@ protected:
      * @return                  TRUE if aCharCode is an alphabet or a numeric
      *                          in ASCII range.  Otherwise, FALSE.
      */
-    static PRBool IsBasicLatinLetterOrNumeral(PRUint32 aCharCode);
+    static bool IsBasicLatinLetterOrNumeral(PRUint32 aCharCode);
 
     /**
      * InitKeypressEvent() intializes keyCode, charCode and

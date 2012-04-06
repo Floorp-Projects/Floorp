@@ -42,10 +42,11 @@ import java.util.Date;
 
 import android.util.Log;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-
+import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.SystemClock;
@@ -67,6 +68,24 @@ public class GeckoBatteryManager
   private static double  sLevel                      = kDefaultLevel;
   private static boolean sCharging                   = kDefaultCharging;
   private static double  sRemainingTime              = kDefaultRemainingTime;;
+
+  private static boolean isRegistered = false;
+
+  public void registerFor(Activity activity) {
+      if (!isRegistered) {
+          IntentFilter filter = new IntentFilter();
+          filter.addAction(Intent.ACTION_BATTERY_CHANGED);
+          activity.registerReceiver(this, filter);
+          isRegistered = true;
+      }
+  }
+
+  public void unregisterFor(Activity activity) {
+      if (isRegistered) {
+          activity.unregisterReceiver(this);
+          isRegistered = false;
+      }
+  }
 
   @Override
   public void onReceive(Context context, Intent intent) {

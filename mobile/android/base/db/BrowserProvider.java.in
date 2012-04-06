@@ -27,6 +27,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
+import org.mozilla.gecko.db.BrowserContract.Control;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.db.BrowserContract.Schema;
@@ -34,6 +35,7 @@ import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.DBUtils;
+import org.mozilla.gecko.ProfileMigrator;
 import org.mozilla.gecko.sync.Utils;
 
 import android.content.ContentProvider;
@@ -72,6 +74,12 @@ public class BrowserProvider extends ContentProvider {
     // Number of records marked as deleted to be removed
     static final long DELETED_RECORDS_PURGE_LIMIT = 7;
 
+    // How many records to reposition in a single query.
+    // This should be less than the SQLite maximum number of query variables
+    // (currently 999) divided by the number of variables used per positioning
+    // query (currently 3).
+    static final int MAX_POSITION_UPDATES_PER_QUERY = 100;
+
     static final String TABLE_BOOKMARKS = "bookmarks";
     static final String TABLE_HISTORY = "history";
     static final String TABLE_IMAGES = "images";
@@ -104,6 +112,9 @@ public class BrowserProvider extends ContentProvider {
 
     // Combined bookmarks and history matches
     static final int COMBINED = 500;
+
+    // Control matches
+    static final int CONTROL = 600;
 
     static final String DEFAULT_BOOKMARKS_SORT_ORDER = Bookmarks.TYPE
             + " ASC, " + Bookmarks.POSITION + " ASC, " + Bookmarks._ID
@@ -211,6 +222,10 @@ public class BrowserProvider extends ContentProvider {
         map = new HashMap<String, String>();
         map.put(Schema.VERSION, Schema.VERSION);
         SCHEMA_PROJECTION_MAP = Collections.unmodifiableMap(map);
+
+
+        // Control
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "control", CONTROL);
     }
 
     private HashMap<String, DatabaseHelper> mDatabasePerProfile;
@@ -1403,6 +1418,74 @@ public class BrowserProvider extends ContentProvider {
         return updated;
     }
 
+    private Cursor controlQuery(Uri uri,
+                                String[] projection, String selection,
+                                String[] selectionArgs, String sortOrder) {
+
+        trace("controlQuery projection = " + projection);
+
+        final String[] allFields = {
+            Control.ENSURE_BOOKMARKS_MIGRATED,
+            Control.ENSURE_HISTORY_MIGRATED
+        };
+
+        // null projection must return all fields.
+        if (projection == null) {
+            projection = allFields;
+        }
+
+        if (selection != null) {
+            throw new UnsupportedOperationException("No selection in virtual CONTROL queries");
+        }
+
+        File profileDir = GeckoProfile.get(mContext).getDir();
+
+        if (uri != null) {
+            String profile = uri.getQueryParameter(BrowserContract.PARAM_PROFILE);
+            if (!TextUtils.isEmpty(profile)) {
+                profileDir = GeckoProfile.get(mContext, profile).getDir();
+            }
+        }
+
+        MatrixCursor cursor = new MatrixCursor(projection);
+        MatrixCursor.RowBuilder row = cursor.newRow();
+        synchronized (this) {
+            for (String key : projection) {
+                ProfileMigrator migrator =
+                    new ProfileMigrator(mContext.getContentResolver(), profileDir);
+                if (key.equals(Control.ENSURE_BOOKMARKS_MIGRATED)) {
+                    if (migrator.isBookmarksMigrated()) {
+                        // generic Cursor has no boolean support, use ints.
+                        row.add(1);
+                    } else {
+                        // Start migration.
+                        migrator.launch();
+                        boolean bookmarksDone = migrator.isBookmarksMigrated();
+
+                        // We expect bookmarks to finish in one pass. Warn if
+                        // this is not the case.
+                        if (!bookmarksDone) {
+                            Log.w(LOGTAG, "Bookmarks migration did not finish.");
+                        }
+
+                        row.add(bookmarksDone ? 1 : 0);
+                    }
+                } else if (key.equals(Control.ENSURE_HISTORY_MIGRATED)) {
+                    // Are we done?
+                    if (migrator.hasMigrationFinished()) {
+                        row.add(1);
+                    } else {
+                        // Migrate some more
+                        migrator.launch();
+                        // Are we done now?
+                        row.add(migrator.hasMigrationFinished() ? 1 : 0);
+                    }
+                }
+            }
+        }
+        return cursor;
+    }
+
     @Override
     public Cursor query(Uri uri, String[] projection, String selection,
             String[] selectionArgs, String sortOrder) {
@@ -1512,6 +1595,15 @@ public class BrowserProvider extends ContentProvider {
                 break;
             }
 
+            case CONTROL: {
+                debug("Query is on control: " + uri);
+
+                Cursor controlCursor =
+                    controlQuery(uri, projection, selection, selectionArgs, sortOrder);
+
+                return controlCursor;
+            }
+
             default:
                 throw new UnsupportedOperationException("Unknown query URI " + uri);
         }
@@ -1574,11 +1666,9 @@ public class BrowserProvider extends ContentProvider {
     }
 
     /**
-     * Construct an update expression that will modify the positions of
-     * records in-place.
+     * Update the positions of bookmarks in batches.
      *
-     * The provided selectionArgs is expected to be an implicit mapping from
-     * GUID to new position.
+     * @see #updateBookmarkPositionsInTransaction(SQLiteDatabase, String[], int, int)
      */
     int updateBookmarkPositions(Uri uri, String[] guids) {
         if (guids == null)
@@ -1588,16 +1678,61 @@ public class BrowserProvider extends ContentProvider {
         if (guidsCount == 0)
             return 0;
 
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        int offset = 0;
+        int updated = 0;
+
+        db.beginTransaction();
+
+        while (offset < guidsCount) {
+            try {
+                updated += updateBookmarkPositionsInTransaction(db, guids, offset,
+                                                                MAX_POSITION_UPDATES_PER_QUERY);
+            } catch (SQLException e) {
+                Log.e(LOGTAG, "Got SQLite exception updating bookmark positions at offset " + offset, e);
+
+                // Need to restart the transaction.
+                // The only way a caller knows that anything failed is that the
+                // returned update count will be smaller than the requested
+                // number of records.
+                db.setTransactionSuccessful();
+                db.endTransaction();
+
+                db.beginTransaction();
+            }
+
+            offset += MAX_POSITION_UPDATES_PER_QUERY;
+        }
+
+        db.setTransactionSuccessful();
+        db.endTransaction();
+
+        return updated;
+    }
+
+    /**
+     * Construct and execute an update expression that will modify the positions
+     * of records in-place.
+     */
+    int updateBookmarkPositionsInTransaction(final SQLiteDatabase db, final String[] guids,
+                                             final int offset, final int max) {
+        int guidsCount = guids.length;
+        int processCount = Math.min(max, guidsCount - offset);
+
         // Each must appear twice: once in a CASE, and once in the IN clause.
-        String[] args = new String[guidsCount * 2];
-        System.arraycopy(guids, 0, args, 0, guidsCount);
-        System.arraycopy(guids, 0, args, guidsCount, guidsCount);
+        String[] args = new String[processCount * 2];
+        System.arraycopy(guids, offset, args, 0, processCount);
+        System.arraycopy(guids, offset, args, processCount, processCount);
 
         StringBuilder b = new StringBuilder("UPDATE " + TABLE_BOOKMARKS +
-                                            " SET " + Bookmarks.POSITION + " = CASE guid");
+                                            " SET " + Bookmarks.POSITION +
+                                            " = CASE guid");
 
-        int i = 0;
-        for (; i < guids.length; ++i) {
+        // Build the CASE statement body for GUID/index pairs from offset up to
+        // the computed limit.
+        final int end = offset + processCount;
+        int i = offset;
+        for (; i < end; ++i) {
             if (guids[i] == null) {
                 // We don't want to issue the query if not every GUID is specified.
                 debug("updateBookmarkPositions called with null GUID at index " + i);
@@ -1605,16 +1740,17 @@ public class BrowserProvider extends ContentProvider {
             }
             b.append(" WHEN ? THEN " + i);
         }
+
         b.append(" END WHERE " + Bookmarks.GUID + " IN (");
         i = 1;
-        while (i++ < guidsCount) {
+        while (i++ < processCount) {
             b.append("?, ");
         }
         b.append("?)");
-        getWritableDatabase(uri).execSQL(b.toString(), args);
+        db.execSQL(b.toString(), args);
 
         // We can't easily get a modified count without calling something like changes().
-        return guidsCount;
+        return processCount;
     }
 
     /**

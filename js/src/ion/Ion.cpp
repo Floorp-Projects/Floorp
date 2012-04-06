@@ -198,7 +198,7 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 }
 
 void
-IonCompartment::sweep(JSContext *cx)
+IonCompartment::sweep(FreeOp *fop)
 {
     if (enterJIT_ && IsAboutToBeFinalized(enterJIT_))
         enterJIT_ = NULL;
@@ -217,7 +217,7 @@ IonCompartment::sweep(JSContext *cx)
     }
 
     // Sweep cache of VM function implementations.
-    functionWrappers_->sweep(cx);
+    functionWrappers_->sweep(fop);
 }
 
 IonCode *
@@ -334,9 +334,9 @@ IonCode::trace(JSTracer *trc)
 }
 
 void
-IonCode::finalize(JSContext *cx, bool background)
+IonCode::finalize(FreeOp *fop)
 {
-    JS_ASSERT(!background);
+    JS_ASSERT(!fop->onBackgroundThread());
     if (pool_)
         pool_->release();
 }
@@ -626,9 +626,9 @@ IonScript::Trace(JSTracer *trc, IonScript *script)
 }
 
 void
-IonScript::Destroy(JSContext *cx, IonScript *script)
+IonScript::Destroy(FreeOp *fop, IonScript *script)
 {
-    cx->free_(script);
+    fop->free_(script);
 }
 
 static bool
@@ -1016,7 +1016,7 @@ ion::SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc)
 }
 
 static void
-InvalidateActivation(JSContext *cx, uint8 *ionTop, bool invalidateAll)
+InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
 {
     IonSpew(IonSpew_Invalidate, "BEGIN invalidating activation");
 
@@ -1119,18 +1119,18 @@ InvalidateActivation(JSContext *cx, uint8 *ionTop, bool invalidateAll)
 }
 
 void
-ion::InvalidateAll(JSContext *cx, JSCompartment *c)
+ion::InvalidateAll(FreeOp *fop, JSCompartment *c)
 {
-    for (IonActivationIterator iter(cx); iter.more(); ++iter) {
+    for (IonActivationIterator iter(fop->runtime()); iter.more(); ++iter) {
         if (iter.activation()->compartment() == c) {
             IonSpew(IonSpew_Invalidate, "Invalidating all frames for GC");
-            InvalidateActivation(cx, iter.top(), true);
+            InvalidateActivation(fop, iter.top(), true);
         }
     }
 }
 
 void
-ion::Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses)
+ion::Invalidate(FreeOp *fop, const Vector<types::RecompileInfo> &invalid, bool resetUses)
 {
     // Add an invalidation reference to all invalidated IonScripts to indicate
     // to the traversal which frames have been invalidated.
@@ -1139,15 +1139,15 @@ ion::Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool
             invalid[i].script->ion->incref();
     }
 
-    for (IonActivationIterator iter(cx); iter.more(); ++iter)
-        InvalidateActivation(cx, iter.top(), false);
+    for (IonActivationIterator iter(fop->runtime()); iter.more(); ++iter)
+        InvalidateActivation(fop, iter.top(), false);
 
     // Drop the references added above. If a script was never active, its
     // IonScript will be immediately destroyed. Otherwise, it will be held live
     // until its last invalidated frame is destroyed.
     for (size_t i = 0; i < invalid.length(); i++) {
         if (invalid[i].script->hasIonScript()) {
-            invalid[i].script->ion->decref(cx);
+            invalid[i].script->ion->decref(fop);
             invalid[i].script->ion = NULL;
         }
     }
@@ -1161,7 +1161,7 @@ ion::Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool
 }
 
 void
-ion::FinishInvalidation(JSContext *cx, JSScript *script)
+ion::FinishInvalidation(FreeOp *fop, JSScript *script)
 {
     if (!script->hasIonScript())
         return;
@@ -1171,7 +1171,7 @@ ion::FinishInvalidation(JSContext *cx, JSScript *script)
      * true. In this case we have to wait until destroying it.
      */
     if (!script->ion->invalidated())
-        ion::IonScript::Destroy(cx, script->ion);
+        ion::IonScript::Destroy(fop, script->ion);
 
     /* In all cases, NULL out script->ion to avoid re-entry. */
     script->ion = NULL;

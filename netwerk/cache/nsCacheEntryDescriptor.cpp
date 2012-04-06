@@ -736,7 +736,7 @@ nsDecompressInputStreamWrapper::InitZstream()
     if (inflateInit(&mZstream) != Z_OK) {
         return NS_ERROR_FAILURE;
     }
-    mStreamInitialized = PR_TRUE;
+    mStreamInitialized = true;
     return NS_OK;
 }
 
@@ -745,7 +745,7 @@ nsDecompressInputStreamWrapper::EndZstream()
 {
     if (mStreamInitialized && !mStreamEnded) {
         inflateEnd(&mZstream);
-        mStreamEnded = PR_TRUE;
+        mStreamEnded = true;
     }
     return NS_OK;
 }
@@ -916,7 +916,7 @@ nsCompressOutputStreamWrapper::Write(const char * buf,
         zerr = deflate(&mZstream, Z_NO_FLUSH);
         if (zerr == Z_STREAM_ERROR) {
             deflateEnd(&mZstream);
-            mStreamInitialized = PR_FALSE;
+            mStreamInitialized = false;
             return NS_ERROR_FAILURE;
         }
         // Note: Z_BUF_ERROR is non-fatal and sometimes expected here.
@@ -927,7 +927,7 @@ nsCompressOutputStreamWrapper::Write(const char * buf,
             rv = WriteBuffer();
             if (NS_FAILED(rv)) {
                 deflateEnd(&mZstream);
-                mStreamInitialized = PR_FALSE;
+                mStreamInitialized = false;
                 return rv;
             }
         }
@@ -997,7 +997,7 @@ nsCompressOutputStreamWrapper::InitZstream()
     mZstream.next_in = Z_NULL;
     mZstream.avail_in = 0;
 
-    mStreamInitialized = PR_TRUE;
+    mStreamInitialized = true;
 
     return NS_OK;
 }

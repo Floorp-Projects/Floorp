@@ -60,6 +60,15 @@ html|a {
   text-shadow: rgba(0,0,0,0.8) 0 0 3.5px;
 }
 
+:-moz-handler-clicktoplay,
+.msgClickToPlay {
+  cursor: pointer;
+}
+
+:-moz-handler-clicktoplay .msgTapToPlay {
+  display: none;
+}
+
 .submitStatus div {
   min-height: 19px; /* height of biggest line (with throbber) */
 }

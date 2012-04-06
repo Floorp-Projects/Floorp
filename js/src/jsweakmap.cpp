@@ -335,16 +335,16 @@ WeakMap_mark(JSTracer *trc, JSObject *obj)
 }
 
 static void
-WeakMap_finalize(JSContext *cx, JSObject *obj)
+WeakMap_finalize(FreeOp *fop, JSObject *obj)
 {
     if (ObjectValueMap *map = GetObjectMap(obj)) {
         map->check();
 #ifdef DEBUG
         map->~ObjectValueMap();
         memset(static_cast<void *>(map), 0xdc, sizeof(*map));
-        cx->free_(map);
+        fop->free_(map);
 #else
-        cx->delete_(map);
+        fop->delete_(map);
 #endif
     }
 }

@@ -54,13 +54,12 @@ public class GeckoActivity extends Activity {
         // If we call an activity from another package, or an open intent (leaving android to resolve)
         // component has a different package name or it is null.
         ComponentName component = intent.getComponent();
-        if (component == null)
-            isGeckoActivityOpened = false;
-
-        if (component.getPackageName().equals("@ANDROID_PACKAGE_NAME@"))
+        isGeckoActivityOpened = false;
+        if (component != null &&
+            component.getPackageName() != null &&
+            component.getPackageName().equals("@ANDROID_PACKAGE_NAME@")) {
             isGeckoActivityOpened = true;
-        else
-            isGeckoActivityOpened = false;
+        }
     }
 
     public boolean isApplicationInBackground() {

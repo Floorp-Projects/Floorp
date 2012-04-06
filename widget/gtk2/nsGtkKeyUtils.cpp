@@ -814,7 +814,7 @@ KeymapWrapper::GetKeyLevel(GdkEventKey *aGdkKeyEvent)
     return level;
 }
 
-/* static */ PRBool
+/* static */ bool
 KeymapWrapper::IsBasicLatinLetterOrNumeral(PRUint32 aCharCode)
 {
     return (aCharCode >= 'a' && aCharCode <= 'z') ||
@@ -871,7 +871,7 @@ KeymapWrapper::InitKeypressEvent(nsKeyEvent& aKeyEvent,
     // unshifted charcode of current keyboard layout.
     altCharCodes.mUnshiftedCharCode =
         GetCharCodeFor(aGdkKeyEvent, baseState, aGdkKeyEvent->group);
-    PRBool isLatin = (altCharCodes.mUnshiftedCharCode <= 0xFF);
+    bool isLatin = (altCharCodes.mUnshiftedCharCode <= 0xFF);
     // shifted charcode of current keyboard layout.
     altCharCodes.mShiftedCharCode =
         GetCharCodeFor(aGdkKeyEvent,
@@ -882,7 +882,7 @@ KeymapWrapper::InitKeypressEvent(nsKeyEvent& aKeyEvent,
         aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
     }
 
-    PRBool needLatinKeyCodes = !isLatin;
+    bool needLatinKeyCodes = !isLatin;
     if (!needLatinKeyCodes) {
         needLatinKeyCodes = 
             (IS_ASCII_ALPHABETICAL(altCharCodes.mUnshiftedCharCode) !=

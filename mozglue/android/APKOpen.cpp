@@ -349,6 +349,7 @@ SHELL_WRAPPER2(notifyNoMessageInList, jint, jlong)
 SHELL_WRAPPER8(notifyListCreated, jint, jint, jstring, jstring, jstring, jlong, jint, jlong)
 SHELL_WRAPPER7(notifyGotNextMessage, jint, jstring, jstring, jstring, jlong, jint, jlong)
 SHELL_WRAPPER3(notifyReadingMessageListFailed, jint, jint, jlong)
+SHELL_WRAPPER2(notifyFilePickerResult, jstring, jlong)
 
 static void * xul_handle = NULL;
 static void * sqlite_handle = NULL;
@@ -764,6 +765,7 @@ loadGeckoLibs(const char *apkName)
   GETFUNC(notifyListCreated);
   GETFUNC(notifyGotNextMessage);
   GETFUNC(notifyReadingMessageListFailed);
+  GETFUNC(notifyFilePickerResult);
 #undef GETFUNC
   sStartupTimeline = (uint64_t *)__wrap_dlsym(xul_handle, "_ZN7mozilla15StartupTimeline16sStartupTimelineE");
   gettimeofday(&t1, 0);

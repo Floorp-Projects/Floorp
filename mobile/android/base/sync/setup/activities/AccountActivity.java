@@ -8,6 +8,7 @@ import java.util.Locale;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.sync.setup.Constants;
+import org.mozilla.gecko.sync.setup.InvalidSyncKeyException;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 
 import android.accounts.AccountAuthenticatorActivity;
@@ -24,6 +25,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
+import android.widget.Toast;
 
 public class AccountActivity extends AccountAuthenticatorActivity {
   private final static String LOG_TAG        = "AccountActivity";
@@ -105,13 +107,22 @@ public class AccountActivity extends AccountAuthenticatorActivity {
    */
   public void connectClickHandler(View target) {
     Log.d(LOG_TAG, "connectClickHandler for view " + target);
+    enableCredEntry(false);
+    // Validate sync key format.
+    try {
+      key = ActivityUtils.validateSyncKey(synckeyInput.getText().toString());
+    } catch (InvalidSyncKeyException e) {
+      enableCredEntry(true);
+      // Toast: invalid sync key format.
+      Toast toast = Toast.makeText(mContext, R.string.sync_new_recoverykey_status_incorrect, Toast.LENGTH_LONG);
+      toast.show();
+      return;
+    }
     username = usernameInput.getText().toString().toLowerCase(Locale.US);
     password = passwordInput.getText().toString();
-    key = synckeyInput.getText().toString();
     if (serverCheckbox.isChecked()) {
       server = serverInput.getText().toString();
     }
-    enableCredEntry(false);
 
     // TODO : Authenticate with Sync Service, once implemented, with
     // onAuthSuccess as callback

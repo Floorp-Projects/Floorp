@@ -23,7 +23,6 @@
 
             <ExpandableListView android:id="@+id/history_list"
                                 style="@style/AwesomeBarList"
-                                android:childDivider="#E5E5E5"
                                 android:groupIndicator="@android:color/transparent"/>
 
         </FrameLayout>

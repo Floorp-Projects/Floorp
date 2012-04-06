@@ -88,7 +88,6 @@
 #include "mozFlushType.h"
 #include "prclist.h"
 #include "nsIDOMStorageObsolete.h"
-#include "nsIDOMStorageList.h"
 #include "nsIDOMStorageEvent.h"
 #include "nsIDOMStorageIndexedDB.h"
 #include "nsIDOMOfflineResourceList.h"
@@ -576,6 +575,7 @@ protected:
   nsresult FinalClose();
 
   void FreeInnerObjects();
+  JSObject *CallerGlobal();
   nsGlobalWindow *CallerInnerWindow();
 
   nsresult InnerSetNewDocument(nsIDocument* aDocument);

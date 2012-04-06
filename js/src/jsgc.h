@@ -596,7 +596,7 @@ struct Arena {
     }
 
     template <typename T>
-    bool finalize(JSContext *cx, AllocKind thingKind, size_t thingSize, bool background);
+    bool finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize);
 };
 
 /* The chunk header (located at the end of the chunk to preserve arena alignment). */
@@ -1256,19 +1256,19 @@ struct ArenaLists {
         JS_ASSERT(freeLists[kind].isEmpty());
     }
 
-    void finalizeObjects(JSContext *cx);
-    void finalizeStrings(JSContext *cx);
-    void finalizeShapes(JSContext *cx);
-    void finalizeScripts(JSContext *cx);
-    void finalizeIonCode(JSContext *cx);
+    void finalizeObjects(FreeOp *fop);
+    void finalizeStrings(FreeOp *fop);
+    void finalizeShapes(FreeOp *fop);
+    void finalizeScripts(FreeOp *fop);
+    void finalizeIonCode(FreeOp *fop);
 
 #ifdef JS_THREADSAFE
-    static void backgroundFinalize(JSContext *cx, ArenaHeader *listHead);
+    static void backgroundFinalize(FreeOp *fop, ArenaHeader *listHead);
 #endif
 
   private:
-    inline void finalizeNow(JSContext *cx, AllocKind thingKind);
-    inline void finalizeLater(JSContext *cx, AllocKind thingKind);
+    inline void finalizeNow(FreeOp *fop, AllocKind thingKind);
+    inline void finalizeLater(FreeOp *fop, AllocKind thingKind);
 
     inline void *allocateFromArena(JSCompartment *comp, AllocKind thingKind);
 };
@@ -1390,7 +1390,7 @@ extern void
 ShrinkGCBuffers(JSRuntime *rt);
 
 extern void
-PrepareCompartmentForGC(JSCompartment *comp);
+PrepareForFullGC(JSRuntime *rt);
 
 /*
  * Kinds of js_GC invocation.
@@ -1403,15 +1403,17 @@ typedef enum JSGCInvocationKind {
     GC_SHRINK             = 1
 } JSGCInvocationKind;
 
-/* Pass NULL for |comp| to get a full GC. */
 extern void
-GC(JSContext *cx, bool full, JSGCInvocationKind gckind, js::gcreason::Reason reason);
+GC(JSContext *cx, JSGCInvocationKind gckind, js::gcreason::Reason reason);
 
 extern void
-GCSlice(JSContext *cx, bool full, JSGCInvocationKind gckind, js::gcreason::Reason reason);
+GCSlice(JSContext *cx, JSGCInvocationKind gckind, js::gcreason::Reason reason);
 
 extern void
-GCDebugSlice(JSContext *cx, int64_t objCount);
+GCDebugSlice(JSContext *cx, bool limit, int64_t objCount);
+
+extern void
+PrepareForDebugGC(JSRuntime *rt);
 
 } /* namespace js */
 
@@ -1735,14 +1737,14 @@ struct SliceBudget {
         counter = INTPTR_MAX;
     }
 
-    void step() {
-        counter--;
+    void step(intptr_t amt = 1) {
+        counter -= amt;
     }
 
     bool checkOverBudget();
 
     bool isOverBudget() {
-        if (counter > 0)
+        if (counter >= 0)
             return false;
         return checkOverBudget();
     }
@@ -2028,10 +2030,10 @@ static inline JSCompartment *
 GetObjectCompartment(JSObject *obj) { return reinterpret_cast<js::gc::Cell *>(obj)->compartment(); }
 
 void
-ReleaseAllJITCode(JSContext *cx, JSCompartment *c, bool resetUseCounts);
+ReleaseAllJITCode(FreeOp *fop, JSCompartment *c, bool resetUseCounts);
 
 void
-ReleaseAllJITCode(JSContext *cx, bool resetUseCounts);
+ReleaseAllJITCode(FreeOp *fop, bool resetUseCounts);
 
 } /* namespace js */
 

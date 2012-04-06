@@ -114,7 +114,7 @@ class IonCode : public gc::Cell
         return bufferSize_;
     }
     void trace(JSTracer *trc);
-    void finalize(JSContext *cx, bool background);
+    void finalize(FreeOp *fop);
     void setInvalidated() {
         invalidated_ = true;
     }
@@ -263,7 +263,7 @@ struct IonScript
                           size_t constants, size_t safepointIndexEntries, size_t osiIndexEntries,
                           size_t cacheEntries, size_t safepointsSize);
     static void Trace(JSTracer *trc, IonScript *script);
-    static void Destroy(JSContext *cx, IonScript *script);
+    static void Destroy(FreeOp *fop, IonScript *script);
 
   public:
     IonCode *method() const {
@@ -379,11 +379,11 @@ struct IonScript
     void incref() {
         refcount_++;
     }
-    void decref(JSContext *cx) {
+    void decref(FreeOp *fop) {
         JS_ASSERT(refcount_);
         refcount_--;
         if (!refcount_)
-            Destroy(cx, this);
+            Destroy(fop, this);
     }
 };
 
@@ -394,7 +394,7 @@ struct VMFunction;
 namespace gc {
 
 inline bool
-IsMarked(JSContext *, const ion::VMFunction *)
+IsMarked(const ion::VMFunction *)
 {
     // VMFunction are only static objects which are used by WeakMaps as keys.
     // It is considered as a root object which is always marked.

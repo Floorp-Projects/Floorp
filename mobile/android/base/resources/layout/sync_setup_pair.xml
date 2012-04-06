@@ -42,7 +42,8 @@
 
         <EditText
           android:id="@+id/pair_row1"
-          style="@style/SyncEditPin" />
+          style="@style/SyncEditPin"
+          android:state_focused="true" />
         <EditText
           android:id="@+id/pair_row2"
           style="@style/SyncEditPin" />

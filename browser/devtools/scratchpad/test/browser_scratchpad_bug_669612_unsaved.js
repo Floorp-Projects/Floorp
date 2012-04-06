@@ -24,6 +24,7 @@ function test()
   testRestoreFromFileSaved();
   testRestoreFromFileUnsaved();
 
+  gBrowser.selectedTab = gBrowser.addTab();
   content.location = "data:text/html,<p>test star* UI for unsaved file changes";
 }
 

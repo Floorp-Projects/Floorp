@@ -1016,13 +1016,15 @@ LoginManagerPrompter.prototype = {
      */
     _showChangeLoginNotification : function (aNotifyObj, aOldLogin, aNewPassword) {
         var notificationText;
-        if (aOldLogin.username)
+        if (aOldLogin.username) {
+            var displayUser = this._sanitizeUsername(aOldLogin.username);
             notificationText  = this._getLocalizedString(
                                           "updatePasswordMsg",
-                                          [aOldLogin.username]);
-        else
+                                          [displayUser]);
+        } else {
             notificationText  = this._getLocalizedString(
                                           "updatePasswordMsgNoUser");
+        }
 
         var changeButtonText =
               this._getLocalizedString("notifyBarUpdateButtonText");

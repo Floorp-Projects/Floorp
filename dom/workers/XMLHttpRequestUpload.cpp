@@ -29,7 +29,7 @@ XMLHttpRequestUpload::_Trace(JSTracer* aTrc)
 }
 
 void
-XMLHttpRequestUpload::_Finalize(JSContext* aCx)
+XMLHttpRequestUpload::_Finalize(JSFreeOp* aFop)
 {
-  XMLHttpRequestEventTarget::_Finalize(aCx);
+  XMLHttpRequestEventTarget::_Finalize(aFop);
 }

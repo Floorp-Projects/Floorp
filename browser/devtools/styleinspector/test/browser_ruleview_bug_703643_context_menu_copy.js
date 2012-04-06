@@ -70,7 +70,7 @@ function testClip()
     InspectorUI.INSPECTOR_NOTIFICATIONS.RULEVIEWREADY, false);
 
   executeSoon(function() {
-    info("Checking that InspectorUI.ruleViewCopyRule() returns " +
+    info("Checking that _onCopyRule() returns " +
          "the correct clipboard value");
     let expectedPattern = "element {[\\r\\n]+" +
       "    margin: 10em;[\\r\\n]+" +
@@ -106,12 +106,12 @@ function checkCopyRule() {
   EventUtils.synthesizeMouse(prop, 1, 1, { type: "contextmenu", button: 2 },
     ruleView.contentWindow);
 
-  InspectorUI.ruleViewCopyRule();
+  InspectorUI.ruleView._boundCopyRule();
 }
 
 function checkCopyProperty()
 {
-  info("Checking that InspectorUI.cssRuleViewBoundCopyDeclaration() returns " +
+  info("Checking that _onCopyDeclaration() returns " +
        "the correct clipboard value");
   let expectedPattern = "font-family: helvetica,sans-serif;";
   info("Expected pattern: " + expectedPattern);
@@ -119,13 +119,13 @@ function checkCopyProperty()
   SimpleTest.waitForClipboard(function IUI_boundCopyPropCheck() {
       return checkClipboardData(expectedPattern);
     },
-    InspectorUI.cssRuleViewBoundCopyDeclaration,
+    InspectorUI.ruleView._boundCopyDeclaration,
     checkCopyPropertyName, checkCopyPropertyName);
 }
 
 function checkCopyPropertyName()
 {
-  info("Checking that InspectorUI.cssRuleViewBoundCopyProperty() returns " +
+  info("Checking that _onCopyProperty() returns " +
        "the correct clipboard value");
   let expectedPattern = "font-family";
   info("Expected pattern: " + expectedPattern);
@@ -133,13 +133,13 @@ function checkCopyPropertyName()
   SimpleTest.waitForClipboard(function IUI_boundCopyPropNameCheck() {
       return checkClipboardData(expectedPattern);
     },
-    InspectorUI.cssRuleViewBoundCopyProperty,
+    InspectorUI.ruleView._boundCopyProperty,
     checkCopyPropertyValue, checkCopyPropertyValue);
 }
 
 function checkCopyPropertyValue()
 {
-  info("Checking that InspectorUI.cssRuleViewBoundCopyPropertyValue() " +
+  info("Checking that _onCopyPropertyValue() " +
        " returns the correct clipboard value");
   let expectedPattern = "helvetica,sans-serif";
   info("Expected pattern: " + expectedPattern);
@@ -147,7 +147,7 @@ function checkCopyPropertyValue()
   SimpleTest.waitForClipboard(function IUI_boundCopyPropValueCheck() {
       return checkClipboardData(expectedPattern);
     },
-    InspectorUI.cssRuleViewBoundCopyPropertyValue,
+    InspectorUI.ruleView._boundCopyPropertyValue,
     checkCopySelection, checkCopySelection);
 }
 
@@ -162,7 +162,7 @@ function checkCopySelection()
   range.setEnd(props[4], 8);
   ruleView.contentWindow.getSelection().addRange(range);
 
-  info("Checking that InspectorUI.cssRuleViewBoundCopy()  returns the correct" +
+  info("Checking that _onCopy()  returns the correct" +
        "clipboard value");
   let expectedPattern = "    margin: 10em;[\\r\\n]+" +
                         "    font-size: 14pt;[\\r\\n]+" +
@@ -175,7 +175,7 @@ function checkCopySelection()
 
   SimpleTest.waitForClipboard(function IUI_boundCopyCheck() {
       return checkClipboardData(expectedPattern);
-    },InspectorUI.cssRuleViewBoundCopy, finishup, finishup);
+    },InspectorUI.ruleView._boundCopy, finishup, finishup);
 }
 
 function checkClipboardData(aExpectedPattern)

@@ -132,7 +132,7 @@ static int mar_concat_file(FILE *fp, const char *path) {
  * @param fp           The opened MAR file being created.
  * @param stack        A pointer to the MAR item stack being used to create 
  *                     the MAR
- * @param product_info The product info block to store in the file.
+ * @param infoBlock    The product info block to store in the file.
  * @return 0 on success.
 */
 static int
@@ -214,9 +214,9 @@ mar_concat_product_info_block(FILE *fp,
  * Refreshes the product information block with the new information.
  * The input MAR must not be signed or the function call will fail.
  * 
- * @param path             The path to the MAR file who's product info block
+ * @param path             The path to the MAR file whose product info block
  *                         should be refreshed.
- * @param infoBlock Out parameter for where to store the result to
+ * @param infoBlock        Out parameter for where to store the result to
  * @return 0 on success, -1 on failure
 */
 int
@@ -225,9 +225,9 @@ refresh_product_info_block(const char *path,
 {
   FILE *fp ;
   int rv;
-  PRUint32 hasSignatureBlock, numSignatures, additionalBlocks, 
-    additionalBlockSize, additionalBlockID, offsetAdditionalBlocks, 
-    numAdditionalBlocks, i;
+  PRUint32 numSignatures, additionalBlockSize, additionalBlockID,
+    offsetAdditionalBlocks, numAdditionalBlocks, i;
+  int additionalBlocks, hasSignatureBlock;
   PRInt64 oldPos;
 
   rv = get_mar_file_info(path, 

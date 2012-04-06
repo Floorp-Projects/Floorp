@@ -372,7 +372,7 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
         IonSpew(IonSpew_Invalidate, "   new  ra %p", (void *) frame->returnAddress());
     }
 
-    in.ionScript()->decref(cx);
+    in.ionScript()->decref(cx->runtime->defaultFreeOp());
 
     if (cx->runtime->hasIonReturnOverride())
         cx->regs().sp[-1] = cx->runtime->takeIonReturnOverride();
@@ -458,7 +458,7 @@ ion::RecompileForInlining()
     if (!scripts.append(types::RecompileInfo(script)))
         return BAILOUT_RETURN_FATAL_ERROR;
 
-    Invalidate(cx, scripts, /* resetUses */ false);
+    Invalidate(cx->runtime->defaultFreeOp(), scripts, /* resetUses */ false);
 
     // Invalidation should not reset the use count.
     JS_ASSERT(script->getUseCount() >= js_IonOptions.usesBeforeInlining);

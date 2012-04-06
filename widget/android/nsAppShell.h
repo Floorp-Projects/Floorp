@@ -110,7 +110,6 @@ protected:
     mozilla::AndroidGeckoEvent *PeekNextEvent();
 
     nsCOMPtr<nsIAndroidBrowserApp> mBrowserApp;
-    bool mPendingSensorEvents;
 };
 
 #endif // nsAppShell_h__

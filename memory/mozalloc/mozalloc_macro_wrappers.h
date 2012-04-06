@@ -63,11 +63,11 @@
 #define strndup(_, __) moz_strndup(_, __)
 #endif
 
-#if defined(HAVE_POSIX_MEMALIGN) || defined(HAVE_JEMALLOC_POSIX_MEMALIGN)
+#if defined(HAVE_POSIX_MEMALIGN)
 #define posix_memalign(_, __, ___) moz_posix_memalign(_, __, ___)
 #endif
 
-#if defined(HAVE_MEMALIGN) || defined(HAVE_JEMALLOC_MEMALIGN)
+#if defined(HAVE_MEMALIGN)
 #define memalign(_, __) moz_memalign(_, __)
 #endif
 

@@ -55,6 +55,7 @@
 #                    generate relative filenames.
 
 import sys
+import platform
 import os
 import re
 import shutil
@@ -378,11 +379,10 @@ def GetVCSFilename(file, srcdirs):
 def GetPlatformSpecificDumper(**kwargs):
     """This function simply returns a instance of a subclass of Dumper
     that is appropriate for the current platform."""
-    return {'win32': Dumper_Win32,
-            'cygwin': Dumper_Win32,
-            'linux2': Dumper_Linux,
-            'sunos5': Dumper_Solaris,
-            'darwin': Dumper_Mac}[sys.platform](**kwargs)
+    return {'Windows': Dumper_Win32,
+            'Linux': Dumper_Linux,
+            'Sunos5': Dumper_Solaris,
+            'Darwin': Dumper_Mac}[platform.system()](**kwargs)
 
 def SourceIndex(fileStream, outputPath, vcs_root):
     """Takes a list of files, writes info to a data block in a .stream file"""
