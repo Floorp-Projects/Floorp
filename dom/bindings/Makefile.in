@@ -1,6 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
-# # License, v. 2.0. If a copy of the MPL was not distributed with this file,
-# # You can obtain one at http://mozilla.org/MPL/2.0/.
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DEPTH            = ../..
 topsrcdir        = @top_srcdir@
@@ -75,18 +75,20 @@ bindinggen_dependencies := \
 $(binding_header_files): %Binding.h: $(bindinggen_dependencies) \
                                      $(webidl_base)/%.webidl \
                                      $(NULL)
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-    -I$(topsrcdir)/other-licenses/ply -I$(srcdir)/parser \
-    $(srcdir)/BindingGen.py $(ACCESSOR_OPT) header $(srcdir)/Bindings.conf $*Binding \
-    $(webidl_base)/$*.webidl
+	$(PYTHON_PATH) \
+	  $(PLY_INCLUDE) -I$(srcdir)/parser \
+    	  $(srcdir)/BindingGen.py $(ACCESSOR_OPT) header \
+	  $(srcdir)/Bindings.conf $*Binding \
+	  $(webidl_base)/$*.webidl
 
 $(binding_cpp_files): %Binding.cpp: $(bindinggen_dependencies) \
                                     $(webidl_base)/%.webidl \
                                     $(NULL)
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-    -I$(topsrcdir)/other-licenses/ply -I$(srcdir)/parser \
-    $(srcdir)/BindingGen.py $(ACCESSOR_OPT) cpp $(srcdir)/Bindings.conf $*Binding \
-    $(webidl_base)/$*.webidl
+	$(PYTHON_PATH) \
+	  $(PLY_INCLUDE) -I$(srcdir)/parser \
+	  $(srcdir)/BindingGen.py $(ACCESSOR_OPT) cpp \
+	  $(srcdir)/Bindings.conf $*Binding \
+	  $(webidl_base)/$*.webidl
 
 $(globalgen_targets): ParserResults.pkl
 
@@ -108,7 +110,7 @@ $(CACHE_DIR)/.done:
 ParserResults.pkl: $(globalgen_dependencies) \
                    $(addprefix $(webidl_base)/, $(webidl_files))
 	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-    -I$(topsrcdir)/other-licenses/ply -I$(srcdir)/parser \
+    $(PLY_INCLUDE) -I$(srcdir)/parser \
     $(srcdir)/GlobalGen.py $(ACCESSOR_OPT) $(srcdir)/Bindings.conf $(webidl_base) \
     --cachedir=$(CACHE_DIR) \
     $(webidl_files)
