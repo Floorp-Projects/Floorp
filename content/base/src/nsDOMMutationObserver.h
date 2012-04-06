@@ -265,34 +265,12 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsMutationReceiver)
 
-  virtual void AttributeWillChange(nsIDocument* aDocument,
-                                   mozilla::dom::Element* aElement,
-                                   PRInt32 aNameSpaceID,
-                                   nsIAtom* aAttribute,
-                                   PRInt32 aModType);
-  virtual void CharacterDataWillChange(nsIDocument *aDocument,
-                                       nsIContent* aContent,
-                                       CharacterDataChangeInfo* aInfo);
-  virtual void ContentAppended(nsIDocument *aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aFirstNewContent,
-                               PRInt32     aNewIndexInContainer);
-  virtual void ContentInserted(nsIDocument *aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer);
-  virtual void ContentRemoved(nsIDocument *aDocument,
-                              nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInContainer,
-                              nsIContent* aPreviousSibling);
-
-  virtual void NodeWillBeDestroyed(const nsINode *aNode)
-  {
-    NS_ASSERTION(!mParent, "Shouldn't have mParent here!");
-    Disconnect(true);
-  }
-  
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE
+  NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATAWILLCHANGE
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+  NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsMutationReceiver, NS_MUTATION_OBSERVER_IID)
