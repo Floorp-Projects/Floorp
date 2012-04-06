@@ -131,7 +131,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadBaseShape(obj, scratch);
         branchPtr(cond, Address(scratch, BaseShape::offsetOfClass()), ImmWord(clasp), label);
     }
-    void branchTestObjShape(Condition cond, Register obj, Shape *shape, Label *label) {
+    void branchTestObjShape(Condition cond, Register obj, const Shape *shape, Label *label) {
         branchPtr(Assembler::NotEqual, Address(obj, JSObject::offsetOfShape()),
                   ImmGCPtr(shape), label);
     }
