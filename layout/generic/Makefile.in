@@ -66,6 +66,7 @@ EXPORTS		= \
 		nsIStatefulFrame.h \
 		nsFrameSelection.h \
 		nsSubDocumentFrame.h \
+		nsTypedSelection.h \
 		nsObjectFrame.h \
 		$(NULL)
 

@@ -91,6 +91,7 @@
 #include "nsHTMLParts.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
+#include "nsTypedSelection.h"
 #include "nsLayoutCID.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMRange.h"
