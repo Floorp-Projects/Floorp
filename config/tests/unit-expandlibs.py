@@ -145,6 +145,9 @@ class TestExpandLibsGen(TestCaseWithTmpDir):
         self.assertEqual(desc['OBJS'], [self.tmpfile(Obj(s)) for s in ['b', 'd', 'e']])
         self.assertEqual(desc['LIBS'], [self.tmpfile(Lib(s)) for s in ['a', 'c', 'f']])
 
+        self.assertRaises(Exception, generate, files + [self.tmpfile(Obj('z'))])
+        self.assertRaises(Exception, generate, files + [self.tmpfile(Lib('y'))])
+
 class TestExpandInit(TestCaseWithTmpDir):
     def init(self):
         ''' Initializes test environment for library expansion tests'''
