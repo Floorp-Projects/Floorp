@@ -100,10 +100,18 @@ TypeInferenceOracle::binaryTypes(JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(script == this->script);
 
+    JSOp op = (JSOp)*pc;
+
     BinaryTypes res;
-    res.lhsTypes = script->analysis()->poppedTypes(pc, 1);
-    res.rhsTypes = script->analysis()->poppedTypes(pc, 0);
-    res.outTypes = script->analysis()->pushedTypes(pc, 0);
+    if ((js_CodeSpec[op].format & JOF_INCDEC) || op == JSOP_NEG) {
+        res.lhsTypes = script->analysis()->poppedTypes(pc, 0);
+        res.rhsTypes = NULL;
+        res.outTypes = script->analysis()->pushedTypes(pc, 0);
+    } else {
+        res.lhsTypes = script->analysis()->poppedTypes(pc, 1);
+        res.rhsTypes = script->analysis()->poppedTypes(pc, 0);
+        res.outTypes = script->analysis()->pushedTypes(pc, 0);
+    }
     return res;
 }
 
