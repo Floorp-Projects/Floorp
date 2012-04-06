@@ -384,7 +384,7 @@ public:
    * no query interface for selection. must use this method now.
    * @param aSelectionType enum value defined in nsISelection for the seleciton you want.
    */
-  nsISelection* GetSelection(SelectionType aType) const;
+  nsTypedSelection* GetSelection(SelectionType aType) const;
 
   /**
    * ScrollSelectionIntoView scrolls a region of the selection,

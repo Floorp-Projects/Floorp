@@ -75,6 +75,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIViewManager.h"
 #include "nsFrameSelection.h"
+#include "nsTypedSelection.h"
 #include "nsXULPopupManager.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsIScriptObjectPrincipal.h"
