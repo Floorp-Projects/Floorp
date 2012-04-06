@@ -1389,6 +1389,15 @@ urlInlineComplete.prototype = {
       return;
     }
 
+    // Don't try to autofill if the search term includes any whitespace.
+    // This may confuse completeDefaultIndex cause the AUTOCOMPLETE_MATCH
+    // tokenizer ends up trimming the search string and returning a value
+    // that doesn't match it, or is even shorter.
+    if (/\s/.test(this._currentSearchString)) {
+      this._finishSearch();
+      return;
+    }
+
     // Do a synchronous search on the table of domains.
     let query = this._syncQuery;
     query.params.search_string = this._currentSearchString.toLowerCase();
