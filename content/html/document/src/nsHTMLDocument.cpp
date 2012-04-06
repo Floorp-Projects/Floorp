@@ -135,6 +135,7 @@
 #include "nsIRequest.h"
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsHtml5Parser.h"
+#include "nsIDOMJSWindow.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1326,9 +1327,10 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
     if (!window) {
       return NS_OK;
     }
+    nsCOMPtr<nsIDOMJSWindow> win = do_QueryInterface(window);
     nsCOMPtr<nsIDOMWindow> newWindow;
-    nsresult rv = window->Open(aContentTypeOrUrl, aReplaceOrName, aFeatures,
-                               getter_AddRefs(newWindow));
+    nsresult rv = win->OpenJS(aContentTypeOrUrl, aReplaceOrName, aFeatures,
+                              getter_AddRefs(newWindow));
     *aReturn = newWindow.forget().get();
     return rv;
   }
