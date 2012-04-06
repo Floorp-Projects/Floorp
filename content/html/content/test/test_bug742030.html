@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=742030
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 742030</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=742030">Mozilla Bug 742030</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 742030 **/
+const str = "  color:   #ff0000  ";
+var span = document.createElement("span");
+span.setAttribute("style", str);
+is(span.getAttribute("style"), str, "Should have set properly");
+var span2 = span.cloneNode(false);
+is(span2.getAttribute("style"), str, "Should have cloned properly");
+</script>
+</pre>
+</body>
+</html>

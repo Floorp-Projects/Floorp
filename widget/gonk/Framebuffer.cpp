@@ -149,6 +149,26 @@ Open(nsIntSize* aScreenSize)
     return true;
 }
 
+bool
+GetSize(nsIntSize *aScreenSize) {
+    if (0 <= sFd)
+        return true;
+
+    ScopedClose fd(open("/dev/graphics/fb0", O_RDWR));
+    if (0 > fd.mFd) {
+        LOG("Error opening framebuffer device");
+        return false;
+    }
+
+    if (0 > ioctl(fd.mFd, FBIOGET_VSCREENINFO, &sVi)) {
+        LOG("Error getting variable screeninfo");
+        return false;
+    }
+
+    *aScreenSize = gfxIntSize(sVi.xres, sVi.yres);
+    return true;
+}
+
 void
 Close()
 {

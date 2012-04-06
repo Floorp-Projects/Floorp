@@ -3877,7 +3877,7 @@ WorkerPrivate::UpdateGCZealInternal(JSContext* aCx, PRUint8 aGCZeal)
   AssertIsOnWorkerThread();
 
   PRUint32 frequency = aGCZeal <= 2 ? JS_DEFAULT_ZEAL_FREQ : 1;
-  JS_SetGCZeal(aCx, aGCZeal, frequency, false);
+  JS_SetGCZeal(aCx, aGCZeal, frequency);
 
   for (PRUint32 index = 0; index < mChildWorkers.Length(); index++) {
     mChildWorkers[index]->UpdateGCZeal(aCx, aGCZeal);
@@ -3891,6 +3891,7 @@ WorkerPrivate::GarbageCollectInternal(JSContext* aCx, bool aShrinking,
 {
   AssertIsOnWorkerThread();
 
+  js::PrepareForFullGC(JS_GetRuntime(aCx));
   if (aShrinking) {
     js::ShrinkingGC(aCx, js::gcreason::DOM_WORKER);
   }

@@ -43,16 +43,34 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 /**
  * An adapter that handles data transfers between the debugger client and
  * server. It can work with both nsIPipe and nsIServerSocket transports so
- * long as the properly created input and output streams are specified. Data is
- * transferred as a JSON packet serialized into a string, with the string length
- * prepended to the packet, followed by a colon ([length]:[packet]). The
- * contents of the JSON packet are specified in the Remote Debugging Protocol
- * specification.
+ * long as the properly created input and output streams are specified.
  *
  * @param aInput nsIInputStream
  *        The input stream.
  * @param aOutput nsIOutputStream
  *        The output stream.
+ *
+ * Given a DebuggerTransport instance dt:
+ * 1) Set dt.hooks to a packet handler object (described below).
+ * 2) Call dt.ready() to begin watching for input packets.
+ * 3) Send packets as you please, and handle incoming packets passed to 
+ *    hook.onPacket.
+ * 4) Call dt.close() to close the connection, and disengage from the event
+ *    loop.
+ *
+ * A packet handler object is an object with two methods:
+ *
+ * - onPacket(packet) - called when we have received a complete packet.
+ *   |Packet| is the parsed form of the packet --- a JavaScript value, not
+ *   a JSON-syntax string.
+ *
+ * - onClosed(status) - called when the connection is closed. |Status| is
+ *   an nsresult, of the sort passed to nsIRequestObserver.
+ * 
+ * Data is transferred as a JSON packet serialized into a string, with the
+ * string length prepended to the packet, followed by a colon
+ * ([length]:[packet]). The contents of the JSON packet are specified in
+ * the Remote Debugging Protocol specification.
  */
 function DebuggerTransport(aInput, aOutput)
 {
@@ -65,15 +83,18 @@ function DebuggerTransport(aInput, aOutput)
 
   this._outgoing = "";
   this._incoming = "";
+
+  this.hooks = null;
 }
 
 DebuggerTransport.prototype = {
-  _hooks: null,
-  get hooks() { return this._hooks; },
-  set hooks(aHooks) { this._hooks = aHooks; },
-
   /**
-   * Transmit the specified packet.
+   * Transmit a packet.
+   * 
+   * This method returns immediately, without waiting for the entire
+   * packet to be transmitted, registering event handlers as needed to
+   * transmit the entire packet. Packets are transmitted in the order
+   * they are passed to this method.
    */
   send: function DT_send(aPacket) {
     // TODO (bug 709088): remove pretty printing when the protocol is done.
@@ -109,7 +130,9 @@ DebuggerTransport.prototype = {
   },
 
   /**
-   * Initialize the input stream for reading.
+   * Initialize the input stream for reading. Once this method has been
+   * called, we watch for packets on the input stream, and pass them to
+   * this.hook.onPacket.
    */
   ready: function DT_ready() {
     let pump = Cc["@mozilla.org/network/input-stream-pump;1"]
