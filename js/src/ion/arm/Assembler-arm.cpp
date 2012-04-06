@@ -402,6 +402,12 @@ Assembler::finish()
         int real_offset = offset + m_buffer.poolSizeBefore(offset);
         dataRelocations_.writeUnsigned(real_offset);
     }
+
+    for (int i = 0; i < tmpJumpRelocations_.length(); i++) {
+        int offset = tmpJumpRelocations_[i].getOffset();
+        int real_offset = offset + m_buffer.poolSizeBefore(offset);
+        jumpRelocations_.writeUnsigned(real_offset);
+    }
 }
 
 void
@@ -464,10 +470,16 @@ Assembler::getCF32Target(Instruction *jump)
         return imm.getDest(jump)->raw();
     } else if (jump->is<InstMovW>() &&
                jump->next()->is<InstMovT>() &&
-               jump->next()->next()->is<InstBranchReg>()) {
+               (jump->next()->next()->is<InstBranchReg>() ||
+                jump->next()->next()->next()->is<InstBranchReg>())) {
         // see if we have the complex case,
         // movw r_temp, #imm1
         // movt r_temp, #imm2
+        // bx r_temp
+        // OR
+        // movw r_temp, #imm1
+        // movt r_temp, #imm2
+        // str pc, [sp]
         // bx r_temp
 
         Imm16 targ_bot;
@@ -476,7 +488,10 @@ Assembler::getCF32Target(Instruction *jump)
 
         InstMovW *bottom = jump->as<InstMovW>();
         InstMovT *top = jump->next()->as<InstMovT>();
-        InstBranchReg * branch = jump->next()->next()->as<InstBranchReg>();
+        InstBranchReg * branch =
+            jump->next()->next()->is<InstBranchReg>() ?
+                jump->next()->next()->as<InstBranchReg>() :
+                jump->next()->next()->next()->as<InstBranchReg>();
         // extract both the temp register and the bottom immediate
         bottom->extractImm(&targ_bot);
         bottom->extractDest(&temp);

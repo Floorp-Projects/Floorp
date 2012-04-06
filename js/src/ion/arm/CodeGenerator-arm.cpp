@@ -214,8 +214,7 @@ CodeGeneratorARM::generateOutOfLineCode()
         IonCode *handler = ion->getGenericBailoutHandler(gen->cx);
         if (!handler)
             return false;
-
-        masm.ma_b(handler->raw(), Relocation::IONCODE);
+        masm.branch(handler);
     }
 
     return true;
