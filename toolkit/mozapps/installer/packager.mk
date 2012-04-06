@@ -562,9 +562,6 @@ endif
 # For final GPG / authenticode signing / dmg signing if required
 ifdef MOZ_EXTERNAL_SIGNING_FORMAT
 MOZ_SIGN_PACKAGE_CMD=$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_EXTERNAL_SIGNING_FORMAT),-f $(f))
-ifeq (gpg,$(findstring gpg,$(MOZ_EXTERNAL_SIGNING_FORMAT)))
-UPLOAD_EXTRA_FILES += $(PACKAGE).asc
-endif
 endif
 
 ifdef MOZ_SIGN_PREPARED_PACKAGE_CMD
@@ -975,6 +972,7 @@ CHECKSUM_FILES += $(CHECKSUM_FILE).asc
 UPLOAD_FILES += $(call QUOTED_WILDCARD,$(DIST)/$(COMPLETE_MAR).asc)
 UPLOAD_FILES += $(call QUOTED_WILDCARD,$(wildcard $(DIST)/$(PARTIAL_MAR).asc))
 UPLOAD_FILES += $(call QUOTED_WILDCARD,$(INSTALLER_PACKAGE).asc)
+UPLOAD_FILES += $(call QUOTED_WILDCARD,$(DIST)/$(PACKAGE).asc)
 endif
 endif
 
