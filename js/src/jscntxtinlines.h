@@ -98,7 +98,7 @@ class AutoNamespaceArray : protected AutoGCRooter {
     }
 
     ~AutoNamespaceArray() {
-        array.finish(context);
+        array.finish(context->runtime->defaultFreeOp());
     }
 
     uint32_t length() const { return array.length; }

@@ -328,7 +328,8 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
     if (ss.isJSON())
         ss.appendNumber("Timestamp", "%llu", "", (unsigned long long)timestamp);
     ss.appendNumber("Total Time", "%.1f", "ms", t(total));
-    ss.appendString("Type", wasFullGC ? "global" : "compartment");
+    ss.appendNumber("Compartments Collected", "%d", "", collectedCount);
+    ss.appendNumber("Total Compartments", "%d", "", compartmentCount);
     ss.appendNumber("MMU (20ms)", "%d", "%", int(mmu20 * 100));
     ss.appendNumber("MMU (50ms)", "%d", "%", int(mmu50 * 100));
     if (slices.length() > 1 || ss.isJSON())
@@ -398,7 +399,8 @@ Statistics::Statistics(JSRuntime *rt)
     startupTime(PRMJ_Now()),
     fp(NULL),
     fullFormat(false),
-    wasFullGC(false),
+    collectedCount(0),
+    compartmentCount(0),
     nonincrementalReason(NULL)
 {
     PodArrayZero(phaseTotals);
@@ -492,7 +494,7 @@ Statistics::endGC()
         phaseTotals[i] += phaseTimes[i];
 
     if (JSAccumulateTelemetryDataCallback cb = runtime->telemetryCallback) {
-        (*cb)(JS_TELEMETRY_GC_IS_COMPARTMENTAL, wasFullGC ? 0 : 1);
+        (*cb)(JS_TELEMETRY_GC_IS_COMPARTMENTAL, collectedCount == compartmentCount ? 0 : 1);
         (*cb)(JS_TELEMETRY_GC_MS, t(gcDuration()));
         (*cb)(JS_TELEMETRY_GC_MARK_MS, t(phaseTimes[PHASE_MARK]));
         (*cb)(JS_TELEMETRY_GC_SWEEP_MS, t(phaseTimes[PHASE_SWEEP]));
@@ -508,9 +510,10 @@ Statistics::endGC()
 }
 
 void
-Statistics::beginSlice(bool full, gcreason::Reason reason)
+Statistics::beginSlice(int collectedCount, int compartmentCount, gcreason::Reason reason)
 {
-    wasFullGC = full;
+    this->collectedCount = collectedCount;
+    this->compartmentCount = compartmentCount;
 
     bool first = runtime->gcIncrementalState == gc::NO_INCREMENTAL;
     if (first)
@@ -522,6 +525,7 @@ Statistics::beginSlice(bool full, gcreason::Reason reason)
     if (JSAccumulateTelemetryDataCallback cb = runtime->telemetryCallback)
         (*cb)(JS_TELEMETRY_GC_REASON, reason);
 
+    bool wasFullGC = collectedCount == compartmentCount;
     if (GCSliceCallback cb = runtime->gcSliceCallback)
         (*cb)(runtime, first ? GC_CYCLE_BEGIN : GC_SLICE_BEGIN, GCDescription(!wasFullGC));
 }
@@ -540,6 +544,7 @@ Statistics::endSlice()
     if (last)
         endGC();
 
+    bool wasFullGC = collectedCount == compartmentCount;
     if (GCSliceCallback cb = runtime->gcSliceCallback) {
         if (last)
             (*cb)(runtime, GC_CYCLE_END, GCDescription(!wasFullGC));

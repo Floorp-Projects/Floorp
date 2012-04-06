@@ -1,0 +1,120 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%filter substitution
+%include defines.inc
+
+html {
+  font-family: "Droid Sans",helvetica,arial,clean,sans-serif;
+  font-size: 18px;
+  background-image: url("chrome://browser/skin/images/about-bg-lightblue.png");
+  -moz-text-size-adjust: none;
+}
+
+body {
+  margin: 0;
+}
+
+li > a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.header {
+  color: black;
+  padding: 10px;
+  -moz-padding-start: 25px;
+  font-size: 20px;
+  font-weight: bold;
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: #ff9100 #f27900;
+}
+
+.header > div {
+  width: 100%;
+  height: 45px;
+  display: -moz-box;
+  -moz-box-align: center;
+}
+
+ul {
+  padding: 0px;
+  margin: 0px;
+  width: 100%;
+}
+
+li {
+  color: black;
+  background-image: url("chrome://browser/skin/images/row-bg-normal.png");
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: #ffffff #bac2ac;
+  position: relative;
+  list-style-type: none;
+  list-style-image: none;
+  margin: 0px;
+  padding: 0px;
+  color: black;
+  height: 86px;
+  font-size: 18px !important;
+}
+
+li:active {
+  background-color: @color_background_highlight_overlay@;
+  background-image: none;
+}
+
+li:active .details {
+  background-image: none;
+}
+
+.icon {
+  width: 32px;
+  height: 32px;
+  position: absolute;
+  top: 27px;
+  left: 27px;
+}
+
+.details {
+  margin-left: 86px;
+  padding: 10px;
+  min-height: 66px;
+  background-image: url("chrome://browser/skin/images/row-bg-light.png");
+}
+
+.row {
+  display: -moz-box;
+  width: 100%;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: bold;
+  overflow: hidden;
+  -moz-box-flex: 1;
+}
+
+.date {
+  color: gray;
+}
+
+.domain,
+.size {
+  display: inline;
+}
+
+.size:after {
+  content: " - ";
+  white-space: pre;
+}
+
+#no-downloads-indicator {
+  display: none;
+}
+
+#downloads-list:empty + #no-downloads-indicator {
+  display: block;
+  text-align: center;
+  padding-top: 70px;
+}

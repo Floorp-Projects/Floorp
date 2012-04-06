@@ -123,7 +123,6 @@ FENNEC_JAVA_FILES = \
   gfx/CheckerboardImage.java \
   gfx/DisplayPortCalculator.java \
   gfx/DisplayPortMetrics.java \
-  gfx/FlexibleGLSurfaceView.java \
   gfx/FloatSize.java \
   gfx/GeckoLayerClient.java \
   gfx/GLController.java \
@@ -178,7 +177,6 @@ FENNEC_PP_JAVA_FILES = \
 FENNEC_PP_XML_FILES = \
   res/layout/abouthome_content.xml \
   res/menu/gecko_menu.xml \
-  res/menu-v11/gecko_menu.xml \
   $(NULL)
 
 

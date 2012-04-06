@@ -106,7 +106,6 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/dom/src/geolocation/$(LIB_PREFIX)jsdomgeolocation_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/notification/$(LIB_PREFIX)jsdomnotification_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/system/$(LIB_PREFIX)domsystem_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/telephony/$(LIB_PREFIX)domtelephony_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/workers/$(LIB_PREFIX)domworkers_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/indexedDB/$(LIB_PREFIX)dom_indexeddb_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/text/$(LIB_PREFIX)texteditor_s.$(LIB_SUFFIX) \
@@ -132,13 +131,6 @@ SHARED_LIBRARY_LIBS += \
 LOCAL_INCLUDES	+= \
 	-I$(topsrcdir)/dom/system/windows \
 	$(NULL)
-else ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
-SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/dom/system/cocoa/$(LIB_PREFIX)domsystemcocoa_s.$(LIB_SUFFIX) \
-	$(NULL)
-LOCAL_INCLUDES	+= \
-	-I$(topsrcdir)/dom/system/cocoa \
-	$(NULL)
 else ifneq (,$(filter android,$(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/dom/system/android/$(LIB_PREFIX)domsystemandroid_s.$(LIB_SUFFIX) \
@@ -155,7 +147,10 @@ SHARED_LIBRARY_LIBS	+= $(DEPTH)/dom/bluetooth/$(LIB_PREFIX)dombluetooth_s.$(LIB_
 endif #}
 
 ifdef MOZ_B2G_RIL #{
-SHARED_LIBRARY_LIBS	+= $(DEPTH)/dom/system/gonk/$(LIB_PREFIX)domsystemgonk_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS	+= \
+  $(DEPTH)/dom/system/gonk/$(LIB_PREFIX)domsystemgonk_s.$(LIB_SUFFIX) \
+  $(DEPTH)/dom/telephony/$(LIB_PREFIX)domtelephony_s.$(LIB_SUFFIX) \
+  $(NULL)
 endif #}
 
 ifdef MOZ_MEDIA

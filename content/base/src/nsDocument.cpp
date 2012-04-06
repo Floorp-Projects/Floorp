@@ -3153,8 +3153,10 @@ nsDocument::TryChannelCharset(nsIChannel *aChannel,
     nsCAutoString charsetVal;
     nsresult rv = aChannel->GetContentCharset(charsetVal);
     if (NS_SUCCEEDED(rv)) {
-      rv = nsCharsetAlias::GetPreferred(charsetVal, aCharset);
+      nsCAutoString preferred;
+      rv = nsCharsetAlias::GetPreferred(charsetVal, preferred);
       if(NS_SUCCEEDED(rv)) {
+        aCharset = preferred;
         aCharsetSource = kCharsetFromChannel;
         return true;
       } else if (aExecutor && !charsetVal.IsEmpty()) {

@@ -515,7 +515,7 @@ bool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket, PRInt64 aOffset)
       if (!time.valid()) {
         NS_WARNING("Int overflow adding total_duration and tstamp_usecs");
         nestegg_free_packet(aPacket);
-        return PR_FALSE;
+        return false;
       };
 
       total_frames += frames;

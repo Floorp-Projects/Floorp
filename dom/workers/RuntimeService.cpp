@@ -320,7 +320,7 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate)
     NS_ASSERTION(zeal <= 3, "Bad zeal value!");
 
     PRUint32 frequency = zeal <= 2 ? JS_DEFAULT_ZEAL_FREQ : 1;
-    JS_SetGCZeal(workerCx, zeal, frequency, false);
+    JS_SetGCZeal(workerCx, zeal, frequency);
   }
 #endif
 

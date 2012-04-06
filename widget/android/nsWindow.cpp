@@ -1445,21 +1445,21 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
     switch (ae->Action() & AndroidMotionEvent::ACTION_MASK) {
         case AndroidMotionEvent::ACTION_DOWN:
         case AndroidMotionEvent::ACTION_POINTER_DOWN: {
-            nsTouchEvent event(PR_TRUE, NS_TOUCH_START, this);
+            nsTouchEvent event(true, NS_TOUCH_START, this);
             return DispatchMultitouchEvent(event, ae);
         }
         case AndroidMotionEvent::ACTION_MOVE: {
-            nsTouchEvent event(PR_TRUE, NS_TOUCH_MOVE, this);
+            nsTouchEvent event(true, NS_TOUCH_MOVE, this);
             return DispatchMultitouchEvent(event, ae);
         }
         case AndroidMotionEvent::ACTION_UP:
         case AndroidMotionEvent::ACTION_POINTER_UP: {
-            nsTouchEvent event(PR_TRUE, NS_TOUCH_END, this);
+            nsTouchEvent event(true, NS_TOUCH_END, this);
             return DispatchMultitouchEvent(event, ae);
         }
         case AndroidMotionEvent::ACTION_OUTSIDE:
         case AndroidMotionEvent::ACTION_CANCEL: {
-            nsTouchEvent event(PR_TRUE, NS_TOUCH_CANCEL, this);
+            nsTouchEvent event(true, NS_TOUCH_CANCEL, this);
             return DispatchMultitouchEvent(event, ae);
         }
     }
@@ -1610,10 +1610,10 @@ nsWindow::DispatchMotionEvent(nsInputEvent &event, AndroidGeckoEvent *ae,
 {
     nsIntPoint offset = WidgetToScreenOffset();
 
-    event.isShift = PR_FALSE;
-    event.isControl = PR_FALSE;
-    event.isMeta = PR_FALSE;
-    event.isAlt = PR_FALSE;
+    event.isShift = false;
+    event.isControl = false;
+    event.isMeta = false;
+    event.isAlt = false;
     event.time = ae->Time();
 
     // XXX possibly bound the range of event.refPoint here.

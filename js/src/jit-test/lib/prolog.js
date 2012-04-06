@@ -11,3 +11,11 @@ if (!("gczeal" in this)) {
 if (!("schedulegc" in this)) {
   schedulegc = function() { }
 }
+
+if (!("gcslice" in this)) {
+  gcslice = function() { }
+}
+
+if (!("selectforgc" in this)) {
+  selectforgc = function() { }
+}

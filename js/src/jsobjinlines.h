@@ -241,11 +241,11 @@ JSObject::deleteSpecial(JSContext *cx, js::SpecialId sid, js::Value *rval, bool 
 }
 
 inline void
-JSObject::finalize(JSContext *cx, bool background)
+JSObject::finalize(js::FreeOp *fop)
 {
     js::Probes::finalizeObject(this);
 
-    if (!background) {
+    if (!fop->onBackgroundThread()) {
         /*
          * Finalize obj first, in case it needs map and slots. Objects with
          * finalize hooks are not finalized in the background, as the class is
@@ -253,10 +253,10 @@ JSObject::finalize(JSContext *cx, bool background)
          */
         js::Class *clasp = getClass();
         if (clasp->finalize)
-            clasp->finalize(cx, this);
+            clasp->finalize(fop, this);
     }
 
-    finish(cx);
+    finish(fop);
 }
 
 inline JSObject *
@@ -511,6 +511,7 @@ JSObject::moveDenseArrayElements(unsigned dstStart, unsigned srcStart, unsigned 
         }
     } else {
         memmove(elements + dstStart, elements + srcStart, count * sizeof(js::HeapSlot));
+        SlotRangeWriteBarrierPost(comp, this, dstStart, count);
     }
 }
 
@@ -803,6 +804,7 @@ inline bool JSObject::isStaticBlock() const { return isBlock() && !getProto(); }
 inline bool JSObject::isStopIteration() const { return hasClass(&js::StopIterationClass); }
 inline bool JSObject::isStrictArguments() const { return hasClass(&js::StrictArgumentsObjectClass); }
 inline bool JSObject::isString() const { return hasClass(&js::StringClass); }
+inline bool JSObject::isTypedArray() const { return IsFastTypedArrayClass(getClass()); }
 inline bool JSObject::isWeakMap() const { return hasClass(&js::WeakMapClass); }
 inline bool JSObject::isWith() const { return hasClass(&js::WithClass); }
 inline bool JSObject::isXML() const { return hasClass(&js::XMLClass); }
@@ -892,12 +894,12 @@ JSObject::createDenseArray(JSContext *cx, js::gc::AllocKind kind,
 }
 
 inline void
-JSObject::finish(JSContext *cx)
+JSObject::finish(js::FreeOp *fop)
 {
     if (hasDynamicSlots())
-        cx->free_(slots);
+        fop->free_(slots);
     if (hasDynamicElements())
-        cx->free_(getElementsHeader());
+        fop->free_(getElementsHeader());
 }
 
 inline bool
@@ -1752,6 +1754,12 @@ js_PurgeScopeChain(JSContext *cx, JSObject *obj, jsid id)
     if (obj->isDelegate())
         return js_PurgeScopeChainHelper(cx, obj, id);
     return true;
+}
+
+inline void
+js::DestroyIdArray(FreeOp *fop, JSIdArray *ida)
+{
+    fop->free_(ida);
 }
 
 #endif /* jsobjinlines_h___ */

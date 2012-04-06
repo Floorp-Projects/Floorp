@@ -612,6 +612,8 @@ pref("plugins.hide_infobar_for_carbon_failure_plugin", false);
 pref("plugins.update.url", "https://www.mozilla.com/%LOCALE%/plugincheck/");
 pref("plugins.update.notifyUser", false);
 
+pref("plugins.click_to_play", false);
+
 #ifdef XP_WIN
 pref("browser.preferences.instantApply", false);
 #else

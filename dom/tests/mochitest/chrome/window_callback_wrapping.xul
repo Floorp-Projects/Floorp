@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <browser type="content"
+           src="data:text/html,&lt;script&gt;var x = new XMLHttpRequest(); x.onreadystatechange = function() {}&lt;/script&gt;"/>
+  
+  <script type="application/javascript"><![CDATA[
+    window.onload = function() {
+      var z = new XPCNativeWrapper(window.frames[0].wrappedJSObject.x).onreadystatechange;
+      var t = window.opener.SimpleTest;
+      t.ok(true, "Hey, we didn't crash");
+      window.close();
+      t.finish();
+    }
+    ]]>
+</script>
+
+</window>

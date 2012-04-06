@@ -1,0 +1,18 @@
+// -*- mode: js2 -*-
+// Line numbers in this file are checked in Debugger-findScripts-11.js.
+
+// line 3
+
+var x = "";
+function f() {
+    x += "the map";                             // line 8
+    return function g() {
+        return "to me what you have stolen";    // line 10
+    };
+}
+
+function h(x, y) {
+    if (x == 0) return y+1;                     // line 15
+    if (y == 0) return h(x-1, 1);
+    return h(x-1, h(x, y-1));
+}

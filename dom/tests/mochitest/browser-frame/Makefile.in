@@ -54,6 +54,7 @@ _TEST_FILES = \
 		test_browserFrame5.html \
 		test_browserFrame6.html \
 		test_browserFrame7.html \
+		test_browserFrame8.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

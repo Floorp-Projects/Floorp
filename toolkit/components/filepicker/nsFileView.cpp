@@ -164,7 +164,7 @@ NS_IMETHODIMP nsFileResult::GetMatchCount(PRUint32 *aMatchCount)
 NS_IMETHODIMP nsFileResult::GetTypeAheadResult(bool *aTypeAheadResult)
 {
   NS_ENSURE_ARG_POINTER(aTypeAheadResult);
-  *aTypeAheadResult = PR_FALSE;
+  *aTypeAheadResult = false;
   return NS_OK;
 }
 

@@ -131,12 +131,13 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
 class MarionetteTestRunner(object):
 
     def __init__(self, address=None, emulator=False, homedir=None,
-                 autolog=False, revision=None, es_server=None,
+                 b2gbin=None, autolog=False, revision=None, es_server=None,
                  rest_server=None, logger=None, testgroup="marionette",
                  noWindow=False):
         self.address = address
         self.emulator = emulator
         self.homedir = homedir
+        self.b2gbin = b2gbin
         self.autolog = autolog
         self.testgroup = testgroup
         self.revision = revision
@@ -183,6 +184,8 @@ class MarionetteTestRunner(object):
                                             connectToRunningEmulator=True,
                                             homedir=self.homedir,
                                             baseurl=self.baseurl)
+            if self.b2gbin:
+                self.marionette = Marionette(host=host, port=int(port), b2gbin=self.b2gbin, baseurl=self.baseurl)
             else:
                 self.marionette = Marionette(host=host, port=int(port), baseurl=self.baseurl)
         elif self.emulator:
@@ -364,6 +367,8 @@ if __name__ == "__main__":
                       "tests from .ini files.")
     parser.add_option('--homedir', dest='homedir', action='store',
                       help='home directory of emulator files')
+    parser.add_option('--b2gbin', dest='b2gbin', action='store',
+                      help='b2g executable')
 
     options, tests = parser.parse_args()
 
@@ -379,6 +384,7 @@ if __name__ == "__main__":
     runner = MarionetteTestRunner(address=options.address,
                                   emulator=options.emulator,
                                   homedir=options.homedir,
+                                  b2gbin=options.b2gbin,
                                   noWindow=options.noWindow,
                                   revision=options.revision,
                                   testgroup=options.testgroup,

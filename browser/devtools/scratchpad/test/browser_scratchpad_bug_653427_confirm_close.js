@@ -40,6 +40,7 @@ function test()
   testNew();
   testSavedFile();
 
+  gBrowser.selectedTab = gBrowser.addTab();
   content.location = "data:text/html,<p>test scratchpad save file prompt on closing";
 }
 
