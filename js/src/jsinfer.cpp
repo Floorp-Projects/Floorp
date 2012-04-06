@@ -1739,6 +1739,31 @@ TypeSet::knownNonEmpty(JSContext *cx)
 }
 
 bool
+TypeSet::knownNonStringPrimitive(JSContext *cx)
+{
+    TypeFlags flags = baseFlags();
+
+    if (baseObjectCount() > 0)
+        return false;
+        
+    if (flags >= TYPE_FLAG_STRING)
+        return false;
+
+    /*
+     * Add recompilation check only here,
+     * because in the above cases adding a type, doesn't change the return value.
+     * In the cases below, it could change when types are added.
+     */
+    add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeTypeTag>(
+                cx->compartment->types.compiledInfo), false);
+
+    if (baseFlags() == 0)
+        return false;
+
+    return true;
+}
+
+bool
 TypeSet::knownSubset(JSContext *cx, TypeSet *other)
 {
     if ((baseFlags() & other->baseFlags()) != baseFlags())
