@@ -1,14 +1,18 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-sync/rest.js");
-Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-common/rest.js");
+Cu.import("resource://services-common/utils.js");
 
 const TEST_RESOURCE_URL = TEST_SERVER_URL + "resource";
 
+//DEBUG = true;
+
 function run_test() {
-  Log4Moz.repository.getLogger("Sync.RESTRequest").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Services.Common.RESTRequest").level =
+    Log4Moz.Level.Trace;
   initTestLogging();
 
   run_next_test();
@@ -140,7 +144,7 @@ add_test(function test_get() {
     do_check_eq(handler.request.method, "GET");
 
     do_check_true(onProgress_called);
-    Utils.nextTick(function () {
+    CommonUtils.nextTick(function () {
       do_check_eq(request.onComplete, null);
       do_check_eq(request.onProgress, null);
       server.stop(run_next_test);
@@ -189,7 +193,7 @@ add_test(function test_put() {
     do_check_eq(handler.request.getHeader("Content-Type"), "text/plain");
 
     do_check_true(onProgress_called);
-    Utils.nextTick(function () {
+    CommonUtils.nextTick(function () {
       do_check_eq(request.onComplete, null);
       do_check_eq(request.onProgress, null);
       server.stop(run_next_test);
@@ -238,7 +242,7 @@ add_test(function test_post() {
     do_check_eq(handler.request.getHeader("Content-Type"), "text/plain");
 
     do_check_true(onProgress_called);
-    Utils.nextTick(function () {
+    CommonUtils.nextTick(function () {
       do_check_eq(request.onComplete, null);
       do_check_eq(request.onProgress, null);
       server.stop(run_next_test);
@@ -284,7 +288,7 @@ add_test(function test_delete() {
     do_check_eq(handler.request.method, "DELETE");
 
     do_check_true(onProgress_called);
-    Utils.nextTick(function () {
+    CommonUtils.nextTick(function () {
       do_check_eq(request.onComplete, null);
       do_check_eq(request.onProgress, null);
       server.stop(run_next_test);
@@ -467,7 +471,7 @@ add_test(function test_changing_uri() {
   let server = httpd_setup({"/resource": handler});
 
   let request = new RESTRequest("http://localhost:8080/the-wrong-resource");
-  request.uri = Utils.makeURI(TEST_RESOURCE_URL);
+  request.uri = CommonUtils.makeURI(TEST_RESOURCE_URL);
   request.get(function (error) {
     do_check_eq(error, null);
     do_check_eq(this.response.status, 200);
@@ -572,7 +576,7 @@ add_test(function test_abort() {
   });
 
   do_check_eq(request.status, request.ABORTED);
-  Utils.nextTick(function () {
+  CommonUtils.nextTick(function () {
     server.stop(run_next_test);
   });
 });

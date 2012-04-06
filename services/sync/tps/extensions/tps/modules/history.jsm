@@ -49,7 +49,7 @@ const CU = Components.utils;
 CU.import("resource://gre/modules/Services.jsm");
 CU.import("resource://gre/modules/PlacesUtils.jsm");
 CU.import("resource://tps/logger.jsm");
-CU.import("resource://services-sync/async.js");
+CU.import("resource://services-common/async.js");
 
 var DumpHistory = function TPS_History__DumpHistory() {
   let writer = {

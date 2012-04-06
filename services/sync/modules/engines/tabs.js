@@ -51,7 +51,7 @@ Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/ext/Preferences.js");
+Cu.import("resource://services-common/preferences.js");
 
 // It is safer to inspect the private browsing preferences rather than
 // the flags of nsIPrivateBrowsingService.  The user may have turned on

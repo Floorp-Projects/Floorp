@@ -1031,6 +1031,13 @@ xpicleanup@BIN_SUFFIX@
   modules/PropertyPanel.jsm
   modules/reflect.jsm
   modules/Services.jsm
+  modules/services-common/async.js
+  modules/services-common/log4moz.js
+  modules/services-common/observers.js
+  modules/services-common/preferences.js
+  modules/services-common/rest.js
+  modules/services-common/stringbundle.js
+  modules/services-common/utils.js
   modules/services-sync/auth.js
   modules/services-sync/base_records/collection.js
   modules/services-sync/base_records/crypto.js
