@@ -1289,6 +1289,13 @@ function WifiWorker() {
 
     debug("Scan results are available! Asking for them.");
     WifiManager.getScanResults(function(r) {
+      // Failure.
+      if (!r) {
+        self.wantScanResults.forEach(function(callback) { callback(null) });
+        self.wantScanResults = [];
+        return;
+      }
+
       // Now that we have scan results, there's no more need to continue
       // scanning. Ignore any errors from this command.
       WifiManager.setScanMode("inactive", function() {});
@@ -1568,9 +1575,14 @@ WifiWorker.prototype = {
   },
 
   getNetworks: function(rid, mid) {
+    const message = "WifiManager:getNetworks:Return";
+    if (WifiManager.state === "UNINITIALIZED") {
+      this._sendMessage(message, false, "Wifi is disabled", rid, mid);
+      return;
+    }
+
     this.waitForScan((function (networks) {
-      this._sendMessage("WifiManager:getNetworks:Return",
-                        networks !== null, networks, rid, mid);
+      this._sendMessage(message, networks !== null, networks, rid, mid);
     }).bind(this));
     WifiManager.scan(true, function() {});
   },
@@ -1587,6 +1599,11 @@ WifiWorker.prototype = {
   associate: function(network, rid, mid) {
     const MAX_PRIORITY = 9999;
     const message = "WifiManager:associate:Return";
+    if (WifiManager.state === "UNINITIALIZED") {
+      this._sendMessage(message, false, "Wifi is disabled", rid, mid);
+      return;
+    }
+
     let privnet = network;
     let self = this;
     function networkReady() {
@@ -1651,6 +1668,11 @@ WifiWorker.prototype = {
 
   forget: function(network, rid, mid) {
     const message = "WifiManager:forget:Return";
+    if (WifiManager.state === "UNINITIALIZED") {
+      this._sendMessage(message, false, "Wifi is disabled", rid, mid);
+      return;
+    }
+
     let ssid = network.ssid;
     if (!(ssid in this.configuredNetworks)) {
       this._sendMessage(message, false, "Trying to forget an unknown network", rid, mid);
