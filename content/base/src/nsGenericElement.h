@@ -1048,6 +1048,25 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
   }
 
 /**
+ * A macro to implement the getter and setter for a given string
+ * valued content property. The method uses the generic GetAttr and
+ * SetAttr methods.  We use the 5-argument form of SetAttr, because
+ * some consumers only implement that one, hiding superclass
+ * 4-argument forms.
+ */
+#define NS_IMPL_STRING_ATTR(_class, _method, _atom)                     \
+  NS_IMETHODIMP                                                         \
+  _class::Get##_method(nsAString& aValue)                               \
+  {                                                                     \
+    return GetAttr(kNameSpaceID_None, nsGkAtoms::_atom, aValue);        \
+  }                                                                     \
+  NS_IMETHODIMP                                                         \
+  _class::Set##_method(const nsAString& aValue)                         \
+  {                                                                     \
+    return SetAttr(kNameSpaceID_None, nsGkAtoms::_atom, nsnull, aValue, true); \
+  }
+
+/**
  * Tearoff class to implement nsITouchEventReceiver
  */
 class nsTouchEventReceiverTearoff : public nsITouchEventReceiver
