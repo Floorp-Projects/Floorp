@@ -2094,7 +2094,7 @@ CodeGenerator::generate()
         script->ion->copySafepoints(&safepoints_);
 
     linkAbsoluteLabels();
-
+    
     return true;
 }
 
