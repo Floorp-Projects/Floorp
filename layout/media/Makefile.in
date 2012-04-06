@@ -106,6 +106,10 @@ else
 EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
 endif
 
+ifdef MOZ_CUBEB
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, winmm)
+endif
+
 DEFFILE = symbols.def
 endif
 
@@ -114,9 +118,4 @@ include $(topsrcdir)/config/rules.mk
 ifeq (WINNT,$(OS_TARGET))
 symbols.def: symbols.def.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(ACDEFINES) $< > $@
-
-ifdef MOZ_CUBEB
-OS_LIBS += $(call EXPAND_LIBNAME, winmm)
-endif
-
 endif
