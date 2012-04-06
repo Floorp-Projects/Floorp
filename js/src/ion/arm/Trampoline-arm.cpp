@@ -533,7 +533,6 @@ IonCode *
 IonCompartment::generateBailoutHandler(JSContext *cx)
 {
     MacroAssembler masm;
-
     GenerateBailoutThunk(masm, NO_FRAME_SIZE_CLASS_ID);
 
     Linker linker(masm);
