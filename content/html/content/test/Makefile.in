@@ -300,6 +300,7 @@ _TEST_FILES = \
 		test_bug694503.html \
 		test_object_plugin_nav.html \
 		test_bug742030.html \
+		test_bug742549.html \
 		$(NULL)
 
 _BROWSER_TEST_FILES = \
