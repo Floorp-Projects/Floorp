@@ -45,6 +45,7 @@ do_check_eq(typeof PlacesUtils, "object");
 // main
 function run_test() {
   do_test_pending();
+
   /*
     HTML+FEATURES SUMMARY:
     - import legacy bookmarks
@@ -61,8 +62,7 @@ function run_test() {
   Cu.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
 
   // avoid creating the places smart folder during tests
-  Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch).
-  setIntPref("browser.places.smartBookmarksVersion", -1);
+  Services.prefs.setIntPref("browser.places.smartBookmarksVersion", -1);
 
   // file pointer to legacy bookmarks file
   //var bookmarksFileOld = do_get_file("bookmarks.large.html");
@@ -80,41 +80,43 @@ function run_test() {
 
   // Test importing a pre-Places canonical bookmarks file.
   // 1. import bookmarks.preplaces.html
-  // 2. run the test-suite
   // Note: we do not empty the db before this import to catch bugs like 380999
   try {
     BookmarkHTMLUtils.importFromFile(bookmarksFileOld, true, after_import);
   } catch(ex) { do_throw("couldn't import legacy bookmarks file: " + ex); }
-}
 
-function after_import(success) {
-  if (!success) {
-    do_throw("Couldn't import legacy bookmarks file.");
-  }
-  populate();
-  validate();
+  function after_import(success) {
+    if (!success) {
+      do_throw("Couldn't import legacy bookmarks file.");
+    }
 
-  waitForAsyncUpdates(function () {
-    // Test exporting a Places canonical json file.
-    // 1. export to bookmarks.exported.json
-    // 2. empty bookmarks db
-    // 3. import bookmarks.exported.json
-    // 4. run the test-suite
-    try {
-      var jsonFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-      jsonFile.append("bookmarks.exported.json");
-      PlacesUtils.backups.saveBookmarksToJSONFile(jsonFile);
-    } catch(ex) { do_throw("couldn't export to file: " + ex); }
-    LOG("exported json");
-    try {
-      PlacesUtils.restoreBookmarksFromJSONFile(jsonFile);
-    } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
-    LOG("imported json");
+    populate();
+
+    // 2. run the test-suite
     validate();
-    LOG("validated import");
+  
+    waitForAsyncUpdates(function testJsonExport() {
+      // Test exporting a Places canonical json file.
+      // 1. export to bookmarks.exported.json
+      try {
+        PlacesUtils.backups.saveBookmarksToJSONFile(jsonFile);
+      } catch(ex) { do_throw("couldn't export to file: " + ex); }
+      LOG("exported json");
 
-    waitForAsyncUpdates(do_test_finished);
-  });
+      // 2. empty bookmarks db
+      // 3. import bookmarks.exported.json
+      try {
+        PlacesUtils.restoreBookmarksFromJSONFile(jsonFile);
+      } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
+      LOG("imported json");
+
+      // 4. run the test-suite
+      validate();
+      LOG("validated import");
+  
+      waitForAsyncUpdates(do_test_finished);
+    });
+  }
 }
 
 var tagData = [
