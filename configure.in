@@ -3380,7 +3380,7 @@ else
     dnl ========================================================
     dnl = Check for freetype2 and its functionality
     dnl ========================================================
-    AC_CHECK_FT2(6.1.0, [_HAVE_FREETYPE2=1], [_HAVE_FREETYPE2=])
+    PKG_CHECK_MODULES(FT2, freetype2 >= 6.1.0, _HAVE_FREETYPE2=1, _HAVE_FREETYPE2=)
 
     if test "$_HAVE_FREETYPE2"; then
     	_SAVE_LIBS="$LIBS"
