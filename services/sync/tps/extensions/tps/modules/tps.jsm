@@ -47,7 +47,7 @@ const {classes: CC, interfaces: CI, utils: CU} = Components;
 CU.import("resource://services-sync/service.js");
 CU.import("resource://services-sync/constants.js");
 CU.import("resource://services-sync/engines.js");
-CU.import("resource://services-sync/async.js");
+CU.import("resource://services-common/async.js");
 CU.import("resource://services-sync/util.js");
 CU.import("resource://gre/modules/XPCOMUtils.jsm");
 CU.import("resource://gre/modules/Services.jsm");

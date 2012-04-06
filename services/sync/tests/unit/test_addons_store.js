@@ -4,7 +4,7 @@
 "use strict";
 
 Cu.import("resource://services-sync/engines/addons.js");
-Cu.import("resource://services-sync/ext/Preferences.js");
+Cu.import("resource://services-common/preferences.js");
 
 const HTTP_PORT = 8888;
 

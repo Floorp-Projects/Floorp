@@ -35,24 +35,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-MAKEFILES_crypto="
+add_makefiles "
+  services/Makefile
+  services/common/Makefile
   services/crypto/Makefile
   services/crypto/component/Makefile
-"
-
-MAKEFILES_sync="
   services/sync/Makefile
   services/sync/locales/Makefile
 "
 
-add_makefiles "
-  services/Makefile
-  $MAKEFILES_crypto
-  $MAKEFILES_sync
-"
-
 if [ "$ENABLE_TESTS" ]; then
   add_makefiles "
+    services/common/tests/Makefile
     services/crypto/tests/Makefile
     services/sync/tests/Makefile
   "

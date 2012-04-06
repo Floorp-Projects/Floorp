@@ -40,8 +40,8 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://services-sync/log4moz.js");
-Cu.import("resource://services-sync/rest.js");
+Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/util.js");
 
