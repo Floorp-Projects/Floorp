@@ -387,6 +387,31 @@ var gTests = [
         run_next_test();
       });
     }
+  },
+
+  {
+    desc: "Remove some visits from a zero frecency URI retains zero frecency",
+    run: function () {
+      do_log_info("Add some visits for the URI.");
+      addVisits([{ uri: TEST_URI, transition: TRANSITION_FRAMED_LINK,
+                   visitDate: (NOW - 86400000000) },
+                 { uri: TEST_URI, transition: TRANSITION_FRAMED_LINK,
+                  visitDate: NOW }],
+                this.continue_run.bind(this));
+    },
+    continue_run: function () {
+      do_log_info("Remove newer visit.");
+      histsvc.QueryInterface(Ci.nsIBrowserHistory).
+        removeVisitsByTimeframe(NOW - 10, NOW);
+
+      waitForAsyncUpdates(function() {
+        do_log_info("URI should still exist in moz_places.");
+        do_check_true(page_in_database(TEST_URL));
+        do_log_info("Frecency should be zero.")
+        do_check_eq(frecencyForUrl(TEST_URI), 0);
+        run_next_test();
+      });
+    }
   }
 ];
 

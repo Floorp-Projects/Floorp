@@ -1120,7 +1120,7 @@ private:
     }
 
     if (!aPlace.hidden) {
-      // Now, mark the page as not hidden if the frecency is now nonzero.
+      // Mark the page as not hidden if the frecency is now nonzero.
       nsCOMPtr<mozIStorageStatement> stmt;
       if (aPlace.placeId) {
         stmt = mHistory->GetStatement(
