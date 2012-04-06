@@ -64,7 +64,7 @@ SettingsDB.prototype = {
     }
 
     let self = this;
-    debug("try to open database:" + DB_NAME + " " + DB_VERSION + " " + this._indexedDB);
+    debug("try to open database:" + DB_NAME + " " + DB_VERSION + " " + this.db);
     let req = aGlobal.mozIndexedDB.open(DB_NAME, DB_VERSION);
     req.onsuccess = function (event) {
       debug("Opened database:", DB_NAME, DB_VERSION);
