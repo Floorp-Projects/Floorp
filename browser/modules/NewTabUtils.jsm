@@ -432,9 +432,6 @@ let PlacesProvider = {
     // Sort by frecency, descending.
     options.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_DESCENDING
 
-    // We don't want source redirects for this query.
-    options.redirectsMode = Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_TARGET;
-
     let links = [];
 
     let callback = {

@@ -1040,7 +1040,7 @@ interface nsINavHistoryQuery : nsISupports
 /**
  * This object represents the global options for executing a query.
  */
-[scriptable, uuid(d46a1ae7-aef8-47a2-9a5c-e6347253f9b2)]
+[scriptable, uuid(8198dfa7-8061-4766-95cb-fa86b3c00a47)]
 interface nsINavHistoryQueryOptions : nsISupports
 {
   /**
@@ -1201,36 +1201,12 @@ interface nsINavHistoryQueryOptions : nsISupports
   attribute boolean expandQueries;
 
   /**
-   * Most items in history are marked "hidden." Only toplevel pages that the
-   * user sees in the URL bar are not hidden. Hidden things include the content
-   * of iframes and all images on web pages. Normally, you don't want these
-   * things. If you do, set this flag and you'll get all items, even hidden
-   * ones. Does nothing for bookmark queries. Defaults to false.
+   * Some pages in history are marked "hidden" and thus don't appear by default
+   * in queries.  These include automatic framed visits and redirects.  Setting
+   * this attribute will return all pages, even hidden ones.  Does nothing for
+   * bookmark queries. Defaults to false.
    */
   attribute boolean includeHidden;
-
-  /**
-   * Include both redirected-from and redirected-to pages into results.
-   */
-  const unsigned short REDIRECTS_MODE_ALL = 0;
-  /**
-   * Query results will not include redirected-to pages, but will include
-   * redirected-from pages.
-   */
-  const unsigned short REDIRECTS_MODE_SOURCE = 1;
-  /**
-   * Query results will not include redirected-from pages but will include
-   * redirected-to pages.
-   */
-  const unsigned short REDIRECTS_MODE_TARGET = 2;
-
-  /**
-   * Defines how redirects should be handled, see REDIRECTS_MODE_* constants
-   * above.
-   * Defaults to REDIRECTS_MODE_ALL.
-   * Note: this option is effective only on QUERY_TYPE_HISTORY.
-   */
-  attribute unsigned short redirectsMode;
 
   /**
    * This is the maximum number of results that you want. The query is exeucted,
