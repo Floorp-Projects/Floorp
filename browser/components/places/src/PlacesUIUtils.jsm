@@ -377,12 +377,6 @@ var PlacesUIUtils = {
    */
   showBookmarkDialog:
   function PUIU_showBookmarkDialog(aInfo, aParentWindow, aResizable) {
-    // This is a compatibility shim for add-ons.  It will warn in the Error
-    // Console when used.
-    if (!aParentWindow) {
-      aParentWindow = this._getWindow(null);
-    }
-
     // Preserve size attributes differently based on the fact the dialog has
     // a folder picker or not.  If the picker is visible, the dialog should
     // be resizable since it may not show enough content for the folders
@@ -621,44 +615,9 @@ var PlacesUIUtils = {
     browserWindow.gBrowser.loadTabs(urls, loadInBackground, false);
   },
 
-  /**
-   * Helper method for methods which are forced to take a view/window
-   * parameter as an optional parameter.  It will be removed post Fx4.
-   */
-  _getWindow: function PUIU__getWindow(aView) {
-    if (aView) {
-      // Pratically, this is the case for places trees.
-      if (aView instanceof Components.interfaces.nsIDOMNode)
-        return aView.ownerDocument.defaultView;
-
-      return Cu.getGlobalForObject(aView);
-    }
-
-    let caller = arguments.callee.caller;
-
-    // If a view wasn't expected, the method should have got a window.
-    if (aView === null) {
-      Components.utils.reportError("The api has changed. A window should be " +
-                                   "passed to " + caller.name + ".  Not " +
-                                   "passing a window will throw in a future " +
-                                   "release.");
-    }
-    else {
-      Components.utils.reportError("The api has changed. A places view " +
-                                   "should be passed to " + caller.name + ". " +
-                                   "Not passing a view will throw in a future " +
-                                   "release.");
-    }
-
-    // This could certainly break in some edge cases (like bug 562998), but
-    // that's the best we should do for those extreme backwards-compatibility cases.
-    let topBrowserWin = this._getTopBrowserWin();
-    return topBrowserWin ? topBrowserWin : focusManager.focusedWindow;
-  },
-
   openContainerNodeInTabs:
   function PUIU_openContainerInTabs(aNode, aEvent, aView) {
-    let window = this._getWindow(aView);
+    let window = aView.ownerWindow;
 
     let urlsToOpen = PlacesUtils.getURLsForContainerNode(aNode);
     if (!this._confirmOpenInTabs(urlsToOpen.length, window))
@@ -668,7 +627,7 @@ var PlacesUIUtils = {
   },
 
   openURINodesInTabs: function PUIU_openURINodesInTabs(aNodes, aEvent, aView) {
-    let window = this._getWindow(aView);
+    let window = aView.ownerWindow;
 
     let urlsToOpen = [];
     for (var i=0; i < aNodes.length; i++) {
@@ -693,7 +652,7 @@ var PlacesUIUtils = {
    */
   openNodeWithEvent:
   function PUIU_openNodeWithEvent(aNode, aEvent, aView) {
-    let window = this._getWindow(aView);
+    let window = aView.ownerWindow;
     this._openNodeIn(aNode, window.whereToOpenLink(aEvent), window);
   },
 
@@ -703,7 +662,7 @@ var PlacesUIUtils = {
    * see also openUILinkIn
    */
   openNodeIn: function PUIU_openNodeIn(aNode, aWhere, aView) {
-    let window = this._getWindow(aView);
+    let window = aView.ownerWindow;
     this._openNodeIn(aNode, aWhere, window);
   },
 
