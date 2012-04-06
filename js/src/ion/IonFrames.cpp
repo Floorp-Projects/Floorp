@@ -254,7 +254,7 @@ ion::HandleException(ResumeFromException *rfe)
         if (iter.type() == IonFrame_JS) {
             IonScript *ionScript;
             if (iter.checkInvalidation(&ionScript))
-                ionScript->decref(cx);
+                ionScript->decref(cx->runtime->defaultFreeOp());
         }
 
         ++iter;

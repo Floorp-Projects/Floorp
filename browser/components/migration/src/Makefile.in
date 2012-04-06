@@ -48,10 +48,10 @@ ifndef MOZ_MEMORY
 USE_STATIC_LIBS = 1
 endif
 
-
 ifeq ($(OS_ARCH)_$(GNU_CXX),WINNT_)
 CPPSRCS += nsIEProfileMigrator.cpp \
            nsBrowserProfileMigratorUtils.cpp \
+           nsIEHistoryEnumerator.cpp \
            $(NULL)
 endif
 

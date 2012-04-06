@@ -408,19 +408,19 @@ js_FinishAtomState(JSRuntime *rt);
  * Atom tracing and garbage collection hooks.
  */
 
-extern void
-js_TraceAtomState(JSTracer *trc);
+namespace js {
 
 extern void
-js_SweepAtomState(JSRuntime *rt);
+MarkAtomState(JSTracer *trc, bool markAll);
+
+extern void
+SweepAtomState(JSRuntime *rt);
 
 extern bool
-js_InitCommonAtoms(JSContext *cx);
+InitCommonAtoms(JSContext *cx);
 
 extern void
-js_FinishCommonAtoms(JSContext *cx);
-
-namespace js {
+FinishCommonAtoms(JSRuntime *rt);
 
 /* N.B. must correspond to boolean tagging behavior. */
 enum InternBehavior

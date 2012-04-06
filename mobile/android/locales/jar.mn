@@ -8,6 +8,8 @@
   locale/@AB_CD@/browser/aboutApps.dtd            (%chrome/aboutApps.dtd)
   locale/@AB_CD@/browser/aboutApps.properties     (%chrome/aboutApps.properties)
   locale/@AB_CD@/browser/aboutCertError.dtd       (%chrome/aboutCertError.dtd)
+  locale/@AB_CD@/browser/aboutDownloads.dtd       (%chrome/aboutDownloads.dtd)
+  locale/@AB_CD@/browser/aboutDownloads.properties (%chrome/aboutDownloads.properties)
   locale/@AB_CD@/browser/browser.properties       (%chrome/browser.properties)
   locale/@AB_CD@/browser/config.dtd               (%chrome/config.dtd)
   locale/@AB_CD@/browser/config.properties        (%chrome/config.properties)

@@ -8,6 +8,8 @@ chrome.jar:
   content/aboutAddons.xhtml            (content/aboutAddons.xhtml)
   content/aboutAddons.js               (content/aboutAddons.js)
   content/aboutCertError.xhtml         (content/aboutCertError.xhtml)
+  content/aboutDownloads.xhtml         (content/aboutDownloads.xhtml)
+  content/aboutDownloads.js            (content/aboutDownloads.js)
   content/aboutHome.xhtml              (content/aboutHome.xhtml)
 * content/aboutRights.xhtml            (content/aboutRights.xhtml)
 * content/aboutApps.xhtml              (content/aboutApps.xhtml)

@@ -109,7 +109,7 @@ private:
   }
 
   static void
-  Finalize(JSContext* aCx, JSObject* aObj)
+  Finalize(JSFreeOp* aFop, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
     delete GetJSPrivateSafeish<DOMException>(aObj);
@@ -316,7 +316,7 @@ private:
   }
 
   static void
-  Finalize(JSContext* aCx, JSObject* aObj)
+  Finalize(JSFreeOp* aFop, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
     delete GetJSPrivateSafeish<FileException>(aObj);

@@ -120,7 +120,7 @@ PRUint32 nsXULPrototypeDocument::gRefCnt;
 
 
 void
-nsXULPDGlobalObject_finalize(JSContext *cx, JSObject *obj)
+nsXULPDGlobalObject_finalize(JSFreeOp *fop, JSObject *obj)
 {
     nsISupports *nativeThis = (nsISupports*)JS_GetPrivate(obj);
 

@@ -246,7 +246,7 @@ private:
   }
 
   static void
-  Finalize(JSContext* aCx, JSObject* aObj)
+  Finalize(JSFreeOp* aFop, JSObject* aObj)
   {
     JS_ASSERT(IsThisClass(JS_GetClass(aObj)));
     delete GetJSPrivateSafeish<Event>(aObj);
@@ -529,12 +529,12 @@ private:
   }
 
   static void
-  Finalize(JSContext* aCx, JSObject* aObj)
+  Finalize(JSFreeOp* aFop, JSObject* aObj)
   {
     JS_ASSERT(IsThisClass(JS_GetClass(aObj)));
     MessageEvent* priv = GetJSPrivateSafeish<MessageEvent>(aObj);
     if (priv) {
-      JS_free(aCx, priv->mData);
+      JS_freeop(aFop, priv->mData);
 #ifdef DEBUG
       priv->mData = NULL;
 #endif
@@ -744,7 +744,7 @@ private:
   }
 
   static void
-  Finalize(JSContext* aCx, JSObject* aObj)
+  Finalize(JSFreeOp* aFop, JSObject* aObj)
   {
     JS_ASSERT(IsThisClass(JS_GetClass(aObj)));
     delete GetJSPrivateSafeish<ErrorEvent>(aObj);
@@ -924,7 +924,7 @@ private:
   }
 
   static void
-  Finalize(JSContext* aCx, JSObject* aObj)
+  Finalize(JSFreeOp* aFop, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
     delete GetJSPrivateSafeish<ProgressEvent>(aObj);

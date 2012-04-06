@@ -284,6 +284,7 @@ protected:
                               nsListenerStruct **aListenerStruct);
 
   bool IsDeviceType(PRUint32 aType);
+  void EnableDevice(PRUint32 aType);
   void DisableDevice(PRUint32 aType);
 
 public:

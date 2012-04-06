@@ -143,13 +143,12 @@ mjit::Compiler::compile()
 {
     JS_ASSERT(!outerChunkRef().chunk);
 
-    void **checkAddr = isConstructing
-                       ? &outerScript->jitArityCheckCtor
-                       : &outerScript->jitArityCheckNormal;
-
     CompileStatus status = performCompilation();
     if (status != Compile_Okay && status != Compile_Retry) {
-        *checkAddr = JS_UNJITTABLE_SCRIPT;
+        JSScript::JITScriptHandle *jith = outerScript->jitHandle(isConstructing);
+        JSScript::ReleaseCode(cx->runtime->defaultFreeOp(), jith);
+        jith->setUnjittable();
+
         if (outerScript->function()) {
             outerScript->uninlineable = true;
             types::MarkTypeObjectFlags(cx, outerScript->function(),
@@ -658,14 +657,12 @@ mjit::SetChunkLimit(uint32_t limit)
 }
 
 JITScript *
-MakeJITScript(JSContext *cx, JSScript *script, bool construct)
+MakeJITScript(JSContext *cx, JSScript *script)
 {
     if (!script->ensureRanAnalysis(cx, NULL))
         return NULL;
 
     ScriptAnalysis *analysis = script->analysis();
-
-    JITScript *&location = construct ? script->jitCtor : script->jitNormal;
 
     Vector<ChunkDescriptor> chunks(cx);
     Vector<CrossChunkEdge> edges(cx);
@@ -895,10 +892,8 @@ MakeJITScript(JSContext *cx, JSScript *script, bool construct)
         }
     }
 
-    if (edges.empty()) {
-        location = jit;
+    if (edges.empty())
         return jit;
-    }
 
     jit->nedges = edges.length();
     CrossChunkEdge *jitEdges = jit->edges();
@@ -937,7 +932,6 @@ MakeJITScript(JSContext *cx, JSScript *script, bool construct)
         edge.shimLabel = shimCode + (size_t) edge.shimLabel;
     }
 
-    location = jit;
     return jit;
 }
 
@@ -949,11 +943,9 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (!cx->methodJitEnabled)
         return Compile_Abort;
 
-    void *addr = construct ? script->jitArityCheckCtor : script->jitArityCheckNormal;
-    if (addr == JS_UNJITTABLE_SCRIPT)
+    JSScript::JITScriptHandle *jith = script->jitHandle(construct);
+    if (jith->isUnjittable())
         return Compile_Abort;
-
-    JITScript *jit = script->getJIT(construct);
 
     if (request == CompileRequest_Interpreter &&
         !cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) &&
@@ -971,10 +963,14 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (construct && !script->nslots)
         script->nslots++;
 
-    if (!jit) {
-        jit = MakeJITScript(cx, script, construct);
+    JITScript *jit;
+    if (jith->isEmpty()) {
+        jit = MakeJITScript(cx, script);
         if (!jit)
             return Compile_Error;
+        jith->setValid(jit);
+    } else {
+        jit = jith->getValid();
     }
     unsigned chunkIndex = jit->chunkIndex(pc);
     ChunkDescriptor &desc = jit->chunkDescriptor(chunkIndex);
@@ -1378,8 +1374,6 @@ mjit::Compiler::finishThisUp()
             jit->arityCheckEntry = stubCode.locationOf(arityLabel).executableAddress();
             jit->argsCheckEntry = stubCode.locationOf(argsCheckLabel).executableAddress();
             jit->fastEntry = fullCode.locationOf(invokeLabel).executableAddress();
-            void *&addr = isConstructing ? script->jitArityCheckCtor : script->jitArityCheckNormal;
-            addr = jit->arityCheckEntry;
         }
     }
 

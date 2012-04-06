@@ -40,6 +40,7 @@
 #ifndef _nsARIAMap_H_
 #define _nsARIAMap_H_
 
+#include "mozilla/a11y/ARIAStateMap.h"
 #include "mozilla/a11y/Role.h"
 #include "prtypes.h"
 
@@ -153,125 +154,11 @@ struct nsAttributeCharacteristics
  */
 #define kNoReqStates 0
 
-enum eStateValueType
-{
-  kBoolType,
-  kMixedType
-};
-
 enum EDefaultStateRule
 {
   //eNoDefaultState,
   eUseFirstState
 };
-
-/**
- * ID for state map entry, used in nsRoleMapEntry.
- */
-enum eStateMapEntryID
-{
-  eARIANone,
-  eARIAAutoComplete,
-  eARIABusy,
-  eARIACheckableBool,
-  eARIACheckableMixed,
-  eARIACheckedMixed,
-  eARIADisabled,
-  eARIAExpanded,
-  eARIAHasPopup,
-  eARIAInvalid,
-  eARIAMultiline,
-  eARIAMultiSelectable,
-  eARIAOrientation,
-  eARIAPressed,
-  eARIAReadonly,
-  eARIAReadonlyOrEditable,
-  eARIARequired,
-  eARIASelectable,
-  eReadonlyUntilEditable
-};
-
-class nsStateMapEntry
-{
-public:
-  /**
-   * Used to create stub.
-   */
-  nsStateMapEntry();
-
-  /**
-   * Used to expose permanent states presented until accessible has an excluding
-   * state.
-   */
-  nsStateMapEntry(PRUint64 aDefaultState, PRUint64 aExclusingState);
-
-  /**
-   * Used for ARIA attributes having boolean or mixed values.
-   */
-  nsStateMapEntry(nsIAtom** aAttrName, eStateValueType aType,
-                  PRUint64 aPermanentState,
-                  PRUint64 aTrueState,
-                  PRUint64 aFalseState = 0,
-                  bool aDefinedIfAbsent = false);
-
-  /**
-   * Used for ARIA attributes having enumerated values.
-   */
-  nsStateMapEntry(nsIAtom** aAttrName,
-                  const char* aValue1, PRUint64 aState1,
-                  const char* aValue2, PRUint64 aState2,
-                  const char* aValue3 = 0, PRUint64 aState3 = 0);
-
-  /**
-   * Used for ARIA attributes having enumerated values, and where a default
-   * attribute state should be assumed when not supplied by the author.
-   */
-  nsStateMapEntry(nsIAtom** aAttrName, EDefaultStateRule aDefaultStateRule,
-                  const char* aValue1, PRUint64 aState1,
-                  const char* aValue2, PRUint64 aState2,
-                  const char* aValue3 = 0, PRUint64 aState3 = 0);
-
-  /**
-   * Maps ARIA state map pointed by state map entry ID to accessible states.
-   *
-   * @param  aContent         [in] node of the accessible
-   * @param  aState           [in/out] accessible states
-   * @param  aStateMapEntryID [in] state map entry ID
-   * @return                   true if state map entry ID is valid
-   */
-  static bool MapToStates(nsIContent* aContent, PRUint64* aState,
-                            eStateMapEntryID aStateMapEntryID);
-
-private:
-  // ARIA attribute name
-  nsIAtom** mAttributeName;
-
-  // Indicates if attribute is token (can be undefined)
-  bool mIsToken;
-
-  // State applied always if attribute is defined
-  PRUint64 mPermanentState;
-
-  // States applied if attribute value is matched to the stored value
-  const char* mValue1;
-  PRUint64 mState1;
-
-  const char* mValue2;
-  PRUint64 mState2;
-
-  const char* mValue3;
-  PRUint64 mState3;
-
-  // States applied if no stored values above are matched
-  PRUint64 mDefaultState;
-
-  // Permanent and false states are applied if attribute is absent
-  bool mDefinedIfAbsent;
-
-  // If this state is presented in state bits then default state is not exposed.
-  PRUint64 mExcludingState;
-};
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Role map entry
@@ -302,15 +189,15 @@ struct nsRoleMapEntry
 
   // Automatic state mapping rule: always include in nsIAccessibleStates
   PRUint64 state;   // or kNoReqStates if no nsIAccessibleStates are automatic for this role.
-  
+
   // ARIA properties supported for this role
   // (in other words, the aria-foo attribute to nsIAccessibleStates mapping rules)
   // Currently you cannot have unlimited mappings, because
   // a variable sized array would not allow the use of
   // C++'s struct initialization feature.
-  eStateMapEntryID attributeMap1;
-  eStateMapEntryID attributeMap2;
-  eStateMapEntryID attributeMap3;
+  mozilla::a11y::aria::EStateRule attributeMap1;
+  mozilla::a11y::aria::EStateRule attributeMap2;
+  mozilla::a11y::aria::EStateRule attributeMap3;
 };
 
 
@@ -344,16 +231,11 @@ struct nsARIAMap
   static nsRoleMapEntry gEmptyRoleMap;
 
   /**
-   * State map of ARIA state attributes.
-   */
-  static nsStateMapEntry gWAIStateMap[];
-
-  /**
    * State map of ARIA states applied to any accessible not depending on
    * the role.
    */
-  static eStateMapEntryID gWAIUnivStateMap[];
-  
+  static mozilla::a11y::aria::EStateRule gWAIUnivStateMap[];
+
   /**
    * Map of attribute to attribute characteristics.
    */
@@ -364,11 +246,12 @@ struct nsARIAMap
    * Return accessible state from ARIA universal states applied to the given
    * element.
    */
-  static PRUint64 UniversalStatesFor(nsIContent* aContent)
+  static PRUint64 UniversalStatesFor(mozilla::dom::Element* aElement)
   {
     PRUint64 state = 0;
     PRUint32 index = 0;
-    while (nsStateMapEntry::MapToStates(aContent, &state, gWAIUnivStateMap[index]))
+    while (mozilla::a11y::aria::MapToState(gWAIUnivStateMap[index],
+                                           aElement, &state))
       index++;
 
     return state;

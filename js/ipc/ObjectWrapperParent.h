@@ -119,7 +119,7 @@ private:
     CPOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
 
     static void
-    CPOW_Finalize(JSContext* cx, JSObject* obj);
+    CPOW_Finalize(js::FreeOp* fop, JSObject* obj);
 
     static JSBool
     CPOW_Call(JSContext* cx, unsigned argc, jsval* vp);

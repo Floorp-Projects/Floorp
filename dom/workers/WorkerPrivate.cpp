@@ -1168,7 +1168,7 @@ public:
         event.errorMsg = aMessage.get();
         event.fileName = aFilename.get();
 
-        nsEventStatus status;
+        nsEventStatus status = nsEventStatus_eIgnore;
         if (NS_FAILED(sgo->HandleScriptError(&event, &status))) {
           NS_WARNING("Failed to dispatch main thread error event!");
           status = nsEventStatus_eIgnore;
@@ -1920,10 +1920,10 @@ WorkerPrivateParent<Derived>::Start()
   return false;
 }
 
+// aCx is null when called from the finalizer
 template <class Derived>
 bool
-WorkerPrivateParent<Derived>::NotifyPrivate(JSContext* aCx, Status aStatus,
-                                            bool aFromJSObjectFinalizer)
+WorkerPrivateParent<Derived>::NotifyPrivate(JSContext* aCx, Status aStatus)
 {
   AssertIsOnParentThread();
 
@@ -1962,9 +1962,8 @@ WorkerPrivateParent<Derived>::NotifyPrivate(JSContext* aCx, Status aStatus,
   mQueuedRunnables.Clear();
 
   nsRefPtr<NotifyRunnable> runnable =
-    new NotifyRunnable(ParentAsWorkerPrivate(), aFromJSObjectFinalizer,
-                       aStatus);
-  return runnable->Dispatch(aFromJSObjectFinalizer ? nsnull : aCx);
+    new NotifyRunnable(ParentAsWorkerPrivate(), !aCx, aStatus);
+  return runnable->Dispatch(aCx);
 }
 
 template <class Derived>
@@ -2043,7 +2042,7 @@ WorkerPrivateParent<Derived>::_Trace(JSTracer* aTrc)
 
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::_Finalize(JSContext* aCx)
+WorkerPrivateParent<Derived>::_Finalize(JSFreeOp* aFop)
 {
   AssertIsOnParentThread();
 
@@ -2053,7 +2052,7 @@ WorkerPrivateParent<Derived>::_Finalize(JSContext* aCx)
   // Clear the JS object.
   mJSObject = nsnull;
 
-  if (!TerminatePrivate(aCx, true)) {
+  if (!TerminatePrivate(nsnull)) {
     NS_WARNING("Failed to terminate!");
   }
 
@@ -2069,7 +2068,7 @@ WorkerPrivateParent<Derived>::_Finalize(JSContext* aCx)
     NS_ADDREF(extraSelfRef = this);
   }
 
-  EventTarget::_Finalize(aCx);
+  EventTarget::_Finalize(aFop);
 
   if (extraSelfRef) {
     nsCOMPtr<nsIRunnable> runnable =
@@ -2147,9 +2146,8 @@ WorkerPrivateParent<Derived>::RootJSObject(JSContext* aCx, bool aRoot)
         return false;
       }
     }
-    else if (!JS_RemoveObjectRoot(aCx, &mJSObject)) {
-      NS_WARNING("JS_RemoveObjectRoot failed!");
-      return false;
+    else {
+      JS_RemoveObjectRoot(aCx, &mJSObject);
     }
 
     mJSObjectRooted = aRoot;
@@ -3879,7 +3877,7 @@ WorkerPrivate::UpdateGCZealInternal(JSContext* aCx, PRUint8 aGCZeal)
   AssertIsOnWorkerThread();
 
   PRUint32 frequency = aGCZeal <= 2 ? JS_DEFAULT_ZEAL_FREQ : 1;
-  JS_SetGCZeal(aCx, aGCZeal, frequency, false);
+  JS_SetGCZeal(aCx, aGCZeal, frequency);
 
   for (PRUint32 index = 0; index < mChildWorkers.Length(); index++) {
     mChildWorkers[index]->UpdateGCZeal(aCx, aGCZeal);
@@ -3893,6 +3891,7 @@ WorkerPrivate::GarbageCollectInternal(JSContext* aCx, bool aShrinking,
 {
   AssertIsOnWorkerThread();
 
+  js::PrepareForFullGC(JS_GetRuntime(aCx));
   if (aShrinking) {
     js::ShrinkingGC(aCx, js::gcreason::DOM_WORKER);
   }

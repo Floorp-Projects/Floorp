@@ -4,15 +4,21 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 
 public class AndroidBrowserHistoryDataAccessor extends
@@ -92,5 +98,88 @@ public class AndroidBrowserHistoryDataAccessor extends
 
   public void closeExtender() {
     dataExtender.close();
+  }
+
+  public static String[] GUID_AND_ID = new String[] { BrowserContract.History.GUID, BrowserContract.History._ID };
+
+  /**
+   * Insert records.
+   * <p>
+   * This inserts all the records (using <code>ContentProvider.bulkInsert</code>),
+   * then inserts all the visit information (using the data extender's
+   * <code>bulkInsert</code>, which internally uses a single database
+   * transaction), and then optionally updates the <code>androidID</code> of
+   * each record.
+   *
+   * @param records
+   *          The records to insert.
+   * @param fetchFreshAndroidIDs
+   *          <code>true</code> to update the <code>androidID</code> of each
+   *          record; <code>false</code> to invalidate them all.
+   * @throws NullCursorException
+   */
+  public void bulkInsert(ArrayList<HistoryRecord> records, boolean fetchFreshAndroidIDs) throws NullCursorException {
+    if (records.isEmpty()) {
+      Logger.debug(LOG_TAG, "No records to insert, returning.");
+    }
+
+    int size = records.size();
+    ContentValues[] cvs = new ContentValues[size];
+    String[] guids = new String[size];
+    Map<String, Record> guidToRecord = new HashMap<String, Record>();
+    int index = 0;
+    for (Record record : records) {
+      if (record.guid == null) {
+        throw new IllegalArgumentException("Record with null GUID passed in to bulkInsert.");
+      }
+      cvs[index] = getContentValues(record);
+      guids[index] = record.guid;
+      guidToRecord.put(record.guid, record);
+      index += 1;
+    }
+
+    // First update the history records.
+    int inserted = context.getContentResolver().bulkInsert(getUri(), cvs);
+    if (inserted == size) {
+      Logger.debug(LOG_TAG, "Inserted " + inserted + " records, as expected.");
+    } else {
+      Logger.debug(LOG_TAG, "Inserted " +
+                   inserted + " records but expected " +
+                   size     + " records; continuing to update visits.");
+    }
+    // Then update the history visits.
+    dataExtender.bulkInsert(records);
+
+    // And finally patch up the androidIDs.
+    if (!fetchFreshAndroidIDs) {
+      return;
+    }
+
+    // We do this here to save a few loops.
+    String guidIn = RepoUtils.computeSQLInClause(guids.length, BrowserContract.History.GUID);
+    Cursor cursor = queryHelper.safeQuery("", GUID_AND_ID, guidIn, guids, null);
+    int guidIndex = cursor.getColumnIndexOrThrow(BrowserContract.History.GUID);
+    int androidIDIndex = cursor.getColumnIndexOrThrow(BrowserContract.History._ID);
+
+    try {
+      cursor.moveToFirst();
+      while (!cursor.isAfterLast()) {
+        String guid = cursor.getString(guidIndex);
+        int androidID = cursor.getInt(androidIDIndex);
+        cursor.moveToNext();
+
+        Record record = guidToRecord.get(guid);
+        if (record == null) {
+          // Should never happen!
+          Logger.warn(LOG_TAG, "Failed to update androidID for record with guid " + guid + ".");
+          continue;
+        }
+        record.androidID = androidID;
+      }
+    } finally {
+      if (cursor != null) {
+        cursor.close();
+      }
+    }
   }
 }

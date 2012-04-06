@@ -87,7 +87,7 @@ class MapObject : public JSObject {
     static JSFunctionSpec methods[];
     ValueMap *getData() { return static_cast<ValueMap *>(getPrivate()); }
     static void mark(JSTracer *trc, JSObject *obj);
-    static void finalize(JSContext *cx, JSObject *obj);
+    static void finalize(FreeOp *fop, JSObject *obj);
     static JSBool construct(JSContext *cx, unsigned argc, Value *vp);
     static JSBool size(JSContext *cx, unsigned argc, Value *vp);
     static JSBool get(JSContext *cx, unsigned argc, Value *vp);
@@ -105,7 +105,7 @@ class SetObject : public JSObject {
     static JSFunctionSpec methods[];
     ValueSet *getData() { return static_cast<ValueSet *>(getPrivate()); }
     static void mark(JSTracer *trc, JSObject *obj);
-    static void finalize(JSContext *cx, JSObject *obj);
+    static void finalize(FreeOp *fop, JSObject *obj);
     static JSBool construct(JSContext *cx, unsigned argc, Value *vp);
     static JSBool size(JSContext *cx, unsigned argc, Value *vp);
     static JSBool has(JSContext *cx, unsigned argc, Value *vp);
