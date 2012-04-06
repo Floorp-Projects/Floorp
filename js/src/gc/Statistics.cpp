@@ -512,8 +512,8 @@ Statistics::endGC()
 void
 Statistics::beginSlice(int collectedCount, int compartmentCount, gcreason::Reason reason)
 {
-    collectedCount = collectedCount;
-    compartmentCount = compartmentCount;
+    this->collectedCount = collectedCount;
+    this->compartmentCount = compartmentCount;
 
     bool first = runtime->gcIncrementalState == gc::NO_INCREMENTAL;
     if (first)
