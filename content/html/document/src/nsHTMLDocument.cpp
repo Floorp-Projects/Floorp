@@ -3199,10 +3199,11 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
   if (NS_FAILED(rv))
     return rv;
 
-  // if command does not have a state_mixed value, this call fails, so we fail too,
-  // which is what is expected
-  rv = cmdParams->GetBooleanValue("state_mixed", _retval);
-  return rv;
+  // If command does not have a state_mixed value, this call fails and sets
+  // *_retval to false.  This is fine -- we want to return false in that case
+  // anyway (bug 738385), so we just return NS_OK regardless.
+  cmdParams->GetBooleanValue("state_mixed", _retval);
+  return NS_OK;
 }
 
 /* boolean queryCommandState(in DOMString commandID); */
@@ -3263,14 +3264,14 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, bool *_retval)
     }
     if (actualAlignmentType)
       nsMemory::Free(actualAlignmentType);
-  }
-  else {
-    rv = cmdParams->GetBooleanValue("state_all", _retval);
-    if (NS_FAILED(rv))
-      *_retval = false;
+    return rv;
   }
 
-  return rv;
+  // If command does not have a state_all value, this call fails and sets
+  // *_retval to false.  This is fine -- we want to return false in that case
+  // anyway (bug 738385), so we just return NS_OK regardless.
+  cmdParams->GetBooleanValue("state_all", _retval);
+  return NS_OK;
 }
 
 /* boolean queryCommandSupported(in DOMString commandID); */
@@ -3352,12 +3353,16 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
   if (NS_FAILED(rv))
     return rv;
 
+  // If command does not have a state_attribute value, this call fails, and
+  // _retval will wind up being the empty string.  This is fine -- we want to
+  // return "" in that case anyway (bug 738385), so we just return NS_OK
+  // regardless.
   nsXPIDLCString cStringResult;
-  rv = cmdParams->GetCStringValue("state_attribute",
-                                  getter_Copies(cStringResult));
+  cmdParams->GetCStringValue("state_attribute",
+                             getter_Copies(cStringResult));
   CopyUTF8toUTF16(cStringResult, _retval);
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
