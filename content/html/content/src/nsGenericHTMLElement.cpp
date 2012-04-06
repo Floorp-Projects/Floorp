@@ -2264,13 +2264,6 @@ nsGenericHTMLElement::MapScrollingAttributeInto(const nsMappedAttributes* aAttri
 //----------------------------------------------------------------------
 
 nsresult
-nsGenericHTMLElement::GetAttrHelper(nsIAtom* aAttr, nsAString& aValue)
-{
-  GetAttr(kNameSpaceID_None, aAttr, aValue);
-  return NS_OK;
-}
-
-nsresult
 nsGenericHTMLElement::SetAttrHelper(nsIAtom* aAttr, const nsAString& aValue)
 {
   return SetAttr(kNameSpaceID_None, aAttr, aValue, true);
