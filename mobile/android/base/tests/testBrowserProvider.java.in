@@ -13,6 +13,7 @@ import android.util.Log;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.Random;
 
 /*
  * This test is meant to exercise all operations exposed by Fennec's
@@ -29,6 +30,7 @@ public class testBrowserProvider extends ContentProviderTest {
     private String UNFILED_FOLDER_GUID;
 
     private Uri mBookmarksUri;
+    private Uri mBookmarksPositionUri;
     private Uri mHistoryUri;
     private Uri mImagesUri;
     private Uri mCombinedUri;
@@ -83,6 +85,8 @@ public class testBrowserProvider extends ContentProviderTest {
         mHistoryUri = getContentUri("History");
         mImagesUri = getContentUri("Images");
         mCombinedUri = getContentUri("Combined");
+
+        mBookmarksPositionUri = getUriColumn("Bookmarks", "POSITIONS_CONTENT_URI");
 
         PLACES_FOLDER_GUID = getStringColumn("Bookmarks", "PLACES_FOLDER_GUID");
         MOBILE_FOLDER_GUID = getStringColumn("Bookmarks", "MOBILE_FOLDER_GUID");
@@ -196,6 +200,14 @@ public class testBrowserProvider extends ContentProviderTest {
                 mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
     }
 
+    private Cursor getBookmarksByParent(long parent) throws Exception {
+        // Order by position.
+        return mProvider.query(mBookmarksUri, null,
+                               mBookmarksParentCol + " = ?",
+                               new String[] { String.valueOf(parent) },
+                               mBookmarksPositionCol);
+    }
+
     private Cursor getBookmarkByGuid(String guid) throws Exception {
         return mProvider.query(mBookmarksUri, null,
                                mBookmarksGuidCol + " = ?",
@@ -275,6 +287,7 @@ public class testBrowserProvider extends ContentProviderTest {
         mTests.add(new TestDeleteBookmarksImages());
         mTests.add(new TestUpdateBookmarks());
         mTests.add(new TestUpdateBookmarksImages());
+        mTests.add(new TestPositionBookmarks());
 
         mTests.add(new TestInsertHistory());
         mTests.add(new TestInsertHistoryImages());
@@ -658,6 +671,92 @@ public class testBrowserProvider extends ContentProviderTest {
 
             mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesFaviconCol)), "UTF8"),
                          newFavicon, "Updated image has corresponding favicon image");
+        }
+    }
+
+    /**
+     * Create a folder of one thousand and one bookmarks, then impose an order
+     * on them.
+     *
+     * Verify that the reordering worked by querying.
+     */
+    class TestPositionBookmarks extends Test {
+
+        public String makeGUID(final long in) {
+            String part = String.valueOf(in);
+            return "aaaaaaaaaaaa".substring(0, (12 - part.length())) + part;
+        }
+
+        public void compareCursorToItems(final Cursor c, final String[] items, final int count) {
+            mAsserter.is(c.moveToFirst(), true, "Folder has children.");
+
+            int posColumn = c.getColumnIndex(mBookmarksPositionCol);
+            int guidColumn = c.getColumnIndex(mBookmarksGuidCol);
+            int i = 0;
+
+            while (!c.isAfterLast()) {
+                String guid = c.getString(guidColumn);
+                long pos = c.getLong(posColumn);
+                mAsserter.is(pos, (long) i, "Position matches sequence.");
+                mAsserter.is(guid, items[i], "GUID matches sequence.");
+                ++i;
+                c.moveToNext();
+            }
+
+            mAsserter.is(i, count, "Folder has the right number of children.");
+        }
+
+        public static final int NUMBER_OF_CHILDREN = 1001;
+        public void test() throws Exception {
+            // Create the containing folder.
+            ContentValues folder = createBookmark("FolderFolder", "", mMobileFolderId,
+                                                  mBookmarksTypeFolder, 0, "",
+                                                  "description", "keyword");
+            folder.put(mBookmarksGuidCol, "folderfolder");
+            long folderId = ContentUris.parseId(mProvider.insert(mBookmarksUri, folder));
+
+            // Create the children.
+            String[] items = new String[NUMBER_OF_CHILDREN];
+
+            // Reuse the same ContentValues.
+            ContentValues item = createBookmark("Test Bookmark", "http://example.com", folderId,
+                                                mBookmarksTypeFolder, 0, "",
+                                                "description", "keyword");
+
+            for (int i = 0; i < NUMBER_OF_CHILDREN; ++i) {
+                String guid = makeGUID(i);
+                items[i] = guid;
+                item.put(mBookmarksGuidCol, guid);
+                item.put(mBookmarksPositionCol, i);
+                item.put(mBookmarksUrlCol, "http://example.com/" + guid);
+                item.put(mBookmarksTitleCol, "Test Bookmark " + guid);
+                mProvider.insert(mBookmarksUri, item);
+            }
+
+            Cursor c;
+
+            // Verify insertion.
+            c = getBookmarksByParent(folderId);
+            compareCursorToItems(c, items, NUMBER_OF_CHILDREN);
+            c.close();
+
+            // Now permute the items array.
+            Random rand = new Random();
+            for (int i = 0; i < NUMBER_OF_CHILDREN; ++i) {
+                final int newPosition = rand.nextInt(NUMBER_OF_CHILDREN);
+                final String switched = items[newPosition];
+                items[newPosition] = items[i];
+                items[i] = switched;
+            }
+
+            // Impose the positions.
+            long updated = mProvider.update(mBookmarksPositionUri, null, null, items);
+            mAsserter.is(updated, (long) NUMBER_OF_CHILDREN, "Updated " + NUMBER_OF_CHILDREN + " positions.");
+
+            // Verify that the database was updated.
+            c = getBookmarksByParent(folderId);
+            compareCursorToItems(c, items, NUMBER_OF_CHILDREN);
+            c.close();
         }
     }
 

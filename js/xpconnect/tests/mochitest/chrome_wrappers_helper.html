@@ -20,6 +20,9 @@
                 check_wrapper(ok, xpcnw, "Proxy", "XPCNWs are transformed correctly");
                 check_wrapper(ok, sjow, "Proxy", "SJOWs are transformed correctly");
 
+                check_wrapper(ok, window.location, "Proxy",
+                              "Content needs a same-compartment security wrappers around location");
+
                 ok(defprop1 === 1, "defprop1 exists");
                 window.defprop1 = 2;
                 ok(defprop1 === 2, "defprop1 is properly writable");

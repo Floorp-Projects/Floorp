@@ -181,7 +181,7 @@ XULContentSinkImpl::ContextStack::GetTopNodeScriptType(PRUint32 *aScriptType)
         case nsXULPrototypeNode::eType_Element: {
             nsXULPrototypeElement *parent =
                 reinterpret_cast<nsXULPrototypeElement*>(node.get());
-            *aScriptType = parent->mScriptTypeID;
+            *aScriptType = nsIProgrammingLanguage::JAVASCRIPT;
             break;
         }
         case nsXULPrototypeNode::eType_Script: {
@@ -787,55 +787,6 @@ XULContentSinkImpl::ReportError(const PRUnichar* aErrorText,
 }
 
 nsresult
-XULContentSinkImpl::SetElementScriptType(nsXULPrototypeElement* element,
-                                         const PRUnichar** aAttributes, 
-                                         const PRUint32 aAttrLen)
-{
-    // First check if the attributes specify an explicit script type.
-    nsresult rv = NS_OK;
-    PRUint32 i;
-    bool found = false;
-    for (i=0;i<aAttrLen;i++) {
-        const nsDependentString key(aAttributes[i*2]);
-        if (key.EqualsLiteral("script-type")) {
-            const nsDependentString value(aAttributes[i*2+1]);
-            if (!value.IsEmpty()) {
-                nsCOMPtr<nsIScriptRuntime> runtime;
-                rv = NS_GetScriptRuntime(value, getter_AddRefs(runtime));
-                if (NS_SUCCEEDED(rv))
-                    element->mScriptTypeID = nsIProgrammingLanguage::JAVASCRIPT;
-                else {
-                    // probably just a bad language name (typo, etc)
-                    NS_WARNING("Failed to load the node's script language!");
-                    // Leave the default language as unknown - we don't want js
-                    // trying to execute this stuff.
-                    NS_ASSERTION(element->mScriptTypeID == nsIProgrammingLanguage::UNKNOWN,
-                                 "Default script type should be unknown");
-                }
-                found = true;
-                break;
-            }
-        }
-    }
-    // If not specified, look at the context stack and use the element
-    // there.
-    if (!found) {
-        if (mContextStack.Depth() == 0) {
-            // This is the root element - default to JS
-            element->mScriptTypeID = nsIProgrammingLanguage::JAVASCRIPT;
-        } else {
-            // Ask the top-node for its script type (which has already
-            // had this function called for it - so no need to recurse
-            // until we find it)
-            PRUint32 scriptId = 0;
-            rv = mContextStack.GetTopNodeScriptType(&scriptId);
-            element->mScriptTypeID = scriptId;
-        }
-    }
-    return rv;
-}
-
-nsresult
 XULContentSinkImpl::OpenRoot(const PRUnichar** aAttributes, 
                              const PRUint32 aAttrLen, 
                              nsINodeInfo *aNodeInfo)
@@ -872,10 +823,6 @@ XULContentSinkImpl::OpenRoot(const PRUnichar** aAttributes,
 
         return rv;
     }
-
-    // Set the correct script-type for the element.
-    rv = SetElementScriptType(element, aAttributes, aAttrLen);
-    if (NS_FAILED(rv)) return rv;
 
     // Push the element onto the context stack, so that child
     // containers will hook up to us as their parent.
@@ -936,10 +883,7 @@ XULContentSinkImpl::OpenTag(const PRUnichar** aAttributes,
 
     if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML) || 
         aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XUL)) {
-        // Do scripty things now.  Set a script language for the element,
-        // even though it is ignored (the nsPrototypeScriptElement
-        // has its own script-type).
-        element->mScriptTypeID = nsIProgrammingLanguage::JAVASCRIPT;
+        // Do scripty things now
         rv = OpenScript(aAttributes, aLineNumber);
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -951,10 +895,6 @@ XULContentSinkImpl::OpenTag(const PRUnichar** aAttributes,
             return NS_OK;
         }
     }
-
-    // Set the correct script-type for the element.
-    rv = SetElementScriptType(element, aAttributes, aAttrLen);
-    if (NS_FAILED(rv)) return rv;
 
     // Push the element onto the context stack, so that child
     // containers will hook up to us as their parent.

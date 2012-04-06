@@ -368,8 +368,7 @@ endif
 ####################################
 # Build it
 
-realbuild::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
-	@$(PYTHON) $(TOPSRCDIR)/js/src/config/check-sync-dirs.py $(TOPSRCDIR)/js/src/config $(TOPSRCDIR)/config
+realbuild::  $(OBJDIR)/Makefile $(OBJDIR)/config.status check-sync-dirs-config
 	$(MOZ_MAKE)
 
 ####################################
@@ -426,6 +425,12 @@ cleansrcdir:
 	          -o \( -name '*.[ao]' -o -name '*.so' \) -type f -print`; \
 	   build/autoconf/clean-config.sh; \
 	fi;
+
+## Sanity check $X and js/src/$X are in sync
+.PHONY: check-sync-dirs
+check-sync-dirs: check-sync-dirs-build check-sync-dirs-config
+check-sync-dirs-%:
+	@$(PYTHON) $(TOPSRCDIR)/js/src/config/check-sync-dirs.py $(TOPSRCDIR)/js/src/$* $(TOPSRCDIR)/$*
 
 echo-variable-%:
 	@echo $($*)

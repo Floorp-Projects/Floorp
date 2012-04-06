@@ -143,6 +143,8 @@ template<> class AnchorPermitted<const JSFunction *> { };
 template<> class AnchorPermitted<JSString *> { };
 template<> class AnchorPermitted<const JSString *> { };
 template<> class AnchorPermitted<Value> { };
+template<> class AnchorPermitted<const JSScript *> { };
+template<> class AnchorPermitted<JSScript *> { };
 
 template<typename T>
 class Anchor: AnchorPermitted<T>
@@ -154,12 +156,12 @@ class Anchor: AnchorPermitted<T>
     T &get() { return hold; }
     const T &get() const { return hold; }
     void set(const T &t) { hold = t; }
+    void operator=(const T &t) { hold = t; }
     void clear() { hold = 0; }
   private:
     T hold;
-    /* Anchors should not be assigned or passed to functions. */
-    Anchor(const Anchor &);
-    const Anchor &operator=(const Anchor &);
+    Anchor(const Anchor &) MOZ_DELETE;
+    const Anchor &operator=(const Anchor &) MOZ_DELETE;
 };
 
 #ifdef __GNUC__
@@ -1581,6 +1583,16 @@ typedef JSBool
 (* JSCSPEvalChecker)(JSContext *cx);
 
 /*
+ * Security callbacks for pushing and popping context principals. These are only
+ * temporarily necessary and will hopefully be gone again in a matter of weeks.
+ */
+typedef JSBool
+(* JSPushContextPrincipalOp)(JSContext *cx, JSPrincipals *principals);
+
+typedef JSBool
+(* JSPopContextPrincipalOp)(JSContext *cx);
+
+/*
  * Callback used to ask the embedding for the cross compartment wrapper handler
  * that implements the desired prolicy for this kind of object in the
  * destination compartment.
@@ -2723,6 +2735,10 @@ js_TransplantObjectWithWrapper(JSContext *cx,
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
+namespace js {
+class AutoCompartment;
+}
+
 class JS_PUBLIC_API(JSAutoEnterCompartment)
 {
     /*
@@ -2734,6 +2750,12 @@ class JS_PUBLIC_API(JSAutoEnterCompartment)
      * other platforms get 13-word |bytes|.
      */
     void* bytes[sizeof(void*) == 4 && MOZ_ALIGNOF(uint64_t) == 8 ? 16 : 13];
+
+  protected:
+    js::AutoCompartment *getAutoCompartment() {
+        JS_ASSERT(state == STATE_OTHER_COMPARTMENT);
+        return reinterpret_cast<js::AutoCompartment*>(bytes);
+    }
 
     /*
      * This object may be in one of three states.  If enter() or
@@ -4234,6 +4256,8 @@ struct JSSecurityCallbacks {
     JSSubsumePrincipalsOp      subsumePrincipals;
     JSObjectPrincipalsFinder   findObjectPrincipals;
     JSCSPEvalChecker           contentSecurityPolicyAllows;
+    JSPushContextPrincipalOp   pushContextPrincipal;
+    JSPopContextPrincipalOp    popContextPrincipal;
 };
 
 extern JS_PUBLIC_API(void)
@@ -4320,6 +4344,14 @@ JS_ObjectIsCallable(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsNativeFunction(JSObject *funobj, JSNative call);
+
+/*
+ * Bind the given callable to use the given object as "this".
+ *
+ * If |callable| is not callable, will throw and return NULL.
+ */
+extern JS_PUBLIC_API(JSObject*)
+JS_BindCallable(JSContext *cx, JSObject *callable, JSObject *newThis);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs);
@@ -5499,10 +5531,10 @@ JS_NewObjectForConstructor(JSContext *cx, JSClass *clasp, const jsval *vp);
 #define JS_DEFAULT_ZEAL_FREQ 100
 
 extern JS_PUBLIC_API(void)
-JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency, JSBool compartment);
+JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency);
 
 extern JS_PUBLIC_API(void)
-JS_ScheduleGC(JSContext *cx, uint32_t count, JSBool compartment);
+JS_ScheduleGC(JSContext *cx, uint32_t count);
 #endif
 
 /*

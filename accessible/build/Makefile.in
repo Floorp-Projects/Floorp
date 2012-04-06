@@ -58,6 +58,7 @@ LOCAL_INCLUDES	= -I$(srcdir)/../src
 
 SHARED_LIBRARY_LIBS = \
   ../src/base/$(LIB_PREFIX)accessibility_base_s.$(LIB_SUFFIX) \
+  ../src/generic/$(LIB_PREFIX)accessibility_generic_s.$(LIB_SUFFIX) \
   ../src/html/$(LIB_PREFIX)accessibility_html_s.$(LIB_SUFFIX) \
   ../src/xpcom/$(LIB_PREFIX)accessibility_xpcom_s.$(LIB_SUFFIX) \
   ../src/$(LIB_PREFIX)accessibility_toolkit_s.$(LIB_SUFFIX) \

@@ -3620,6 +3620,7 @@ nsXPCComponents_Utils::GetWeakReference(const JS::Value &object, JSContext *cx,
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForceGC(JSContext *cx)
 {
+    js::PrepareForFullGC(JS_GetRuntime(cx));
     js::GCForReason(cx, js::gcreason::COMPONENT_UTILS);
     return NS_OK;
 }
@@ -3628,6 +3629,7 @@ nsXPCComponents_Utils::ForceGC(JSContext *cx)
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForceShrinkingGC(JSContext *cx)
 {
+    js::PrepareForFullGC(JS_GetRuntime(cx));
     js::ShrinkingGC(cx, js::gcreason::COMPONENT_UTILS);
     return NS_OK;
 }
@@ -3655,6 +3657,7 @@ class PreciseGCRunnable : public nsRunnable
             }
         }
 
+        js::PrepareForFullGC(JS_GetRuntime(mCx));
         if (mShrinking)
             js::ShrinkingGC(mCx, js::gcreason::COMPONENT_UTILS);
         else
@@ -3929,7 +3932,7 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::SetGCZeal(PRInt32 aValue, JSContext* cx)
 {
 #ifdef JS_GC_ZEAL
-    JS_SetGCZeal(cx, PRUint8(aValue), JS_DEFAULT_ZEAL_FREQ, false);
+    JS_SetGCZeal(cx, PRUint8(aValue), JS_DEFAULT_ZEAL_FREQ);
 #endif
     return NS_OK;
 }

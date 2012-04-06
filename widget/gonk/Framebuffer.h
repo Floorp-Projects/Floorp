@@ -69,6 +69,8 @@ bool Open(nsIntSize* aScreenSize);
 // Close().
 void Close();
 
+bool GetSize(nsIntSize *aScreenSize);
+
 // Return the buffer to be drawn into, that will be the next frame.
 gfxASurface* BackBuffer();
 

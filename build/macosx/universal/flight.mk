@@ -67,7 +67,6 @@ MOZ_PKG_APPNAME = $(MOZ_APP_NAME)
 APPNAME = $(MOZ_MACBUNDLE_NAME)
 INSTALLER_DIR = $(MOZ_BUILD_APP)/installer
 ifeq ($(MOZ_BUILD_APP),xulrunner) # {
-INSTALLER_DIR = xulrunner/installer/mac
 APPNAME = XUL.framework
 APP_CONTENTS = Versions/Current
 endif # } xulrunner
