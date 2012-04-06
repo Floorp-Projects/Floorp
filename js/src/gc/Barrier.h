@@ -395,6 +395,17 @@ class HeapSlot : public EncapsulatedValue
     inline void post(JSCompartment *comp, JSObject *owner, uint32_t slot);
 };
 
+/*
+ * NOTE: This is a placeholder for bug 619558.
+ *
+ * Run a post write barrier that encompasses multiple contiguous slots in a
+ * single step.
+ */
+static inline void
+SlotRangeWriteBarrierPost(JSCompartment *comp, JSObject *obj, uint32_t start, uint32_t count)
+{
+}
+
 static inline const Value *
 Valueify(const EncapsulatedValue *array)
 {
