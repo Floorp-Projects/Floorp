@@ -1923,7 +1923,7 @@ RIL[REQUEST_VOICE_REGISTRATION_STATE] = function REQUEST_VOICE_REGISTRATION_STAT
   }
 
   let state = Buf.readStringList();
-debug("voice registration state: " + state);
+  if (DEBUG) debug("voice registration state: " + state);
   this._processVoiceRegistrationState(state);
 };
 RIL[REQUEST_DATA_REGISTRATION_STATE] = function REQUEST_DATA_REGISTRATION_STATE(length, options) {
@@ -2047,9 +2047,11 @@ RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
   if (sw1 != ICC_STATUS_NORMAL_ENDING) {
     // See GSM11.11, TS 51.011 clause 9.4, and ISO 7816-4 for the error
     // description.
-    debug("ICC I/O Error EF id = " + options.fileid.toString(16) +
-          " command = " + options.command.toString(16) +
-          "(" + sw1.toString(16) + "/" + sw2.toString(16) + ")");
+    if (DEBUG) {
+      debug("ICC I/O Error EF id = " + options.fileid.toString(16) +
+            " command = " + options.command.toString(16) +
+            "(" + sw1.toString(16) + "/" + sw2.toString(16) + ")");
+    }
     return;
   }
 
