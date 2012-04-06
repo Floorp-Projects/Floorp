@@ -1,40 +1,6 @@
-/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et: */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Places Test Code.
- *
- * The Initial Developer of the Original Code is Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Marco Bonardo <mak77@bonardo.net> (Original Author)
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Array of visits we will add to the database, will be populated later
 // in the test.
@@ -47,19 +13,22 @@ let visits = [];
  *
  * @param  aSequence
  *         an array that contains query options in the form:
- *         [includeHidden, redirectsMode, maxResults, sortingMode]
+ *         [includeHidden, maxResults, sortingMode]
  */
 function check_results_callback(aSequence) {
   // Sanity check: we should receive 3 parameters.
-  do_check_eq(aSequence.length, 4);
+  do_check_eq(aSequence.length, 3);
   let includeHidden = aSequence[0];
-  let redirectsMode = aSequence[1];
-  let maxResults = aSequence[2];
-  let sortingMode = aSequence[3];
+  let maxResults = aSequence[1];
+  let sortingMode = aSequence[2];
   print("\nTESTING: includeHidden(" + includeHidden + ")," +
-                  " redirectsMode(" + redirectsMode + ")," +
                   " maxResults("    + maxResults    + ")," +
                   " sortingMode("   + sortingMode   + ").");
+
+  function isHidden(aVisit) {
+    return aVisit.transType == Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK ||
+           aVisit.isRedirect;
+  }
 
   // Build expectedData array.
   let expectedData = visits.filter(function (aVisit, aIndex, aArray) {
@@ -67,27 +36,12 @@ function check_results_callback(aSequence) {
     if (aVisit.transType == Ci.nsINavHistoryService.TRANSITION_EMBED)
       return false;
 
-    if (aVisit.transType == Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK &&
-      !includeHidden) {
+    if (!includeHidden && isHidden(aVisit)) {
       // If the page has any non-hidden visit, then it's visible.
       if (visits.filter(function (refVisit) {
-            return refVisit.uri == aVisit.uri &&
-                   refVisit.transType != Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK;
+        return refVisit.uri == aVisit.uri && !isHidden(refVisit);
           }).length == 0)
         return false;
-    }
-
-    if (redirectsMode == Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_SOURCE) {
-      // Filter out any redirect target.
-      return aVisit.transType != Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT &&
-             aVisit.transType != Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY;
-    }
-
-    if (redirectsMode == Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_TARGET) {
-      // Filter out any entry that is a redirect source.
-      return visits.filter(function (refVisit) {
-        return !refVisit.isRedirect && refVisit.uri == aVisit.uri;
-      }).length > 0;
     }
 
     return true;
@@ -129,7 +83,6 @@ function check_results_callback(aSequence) {
   let query = PlacesUtils.history.getNewQuery();
   let options = PlacesUtils.history.getNewQueryOptions();
   options.includeHidden = includeHidden;
-  options.redirectsMode = redirectsMode;
   options.sortingMode = sortingMode;
   if (maxResults)
     options.maxResults = maxResults;
@@ -256,6 +209,7 @@ function add_visits_to_database() {
       transType: transition,
       uri: "http://" + transition + ".example.com/",
       title: transition + "-example",
+      isRedirect: true,
       lastVisit: timeInMicroseconds--,
       visitCount: (transition == Ci.nsINavHistoryService.TRANSITION_EMBED ||
                    transition == Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK) ? 0 : visitCount++,
@@ -303,6 +257,7 @@ function add_visits_to_database() {
       uri: "http://" + transition + ".example.com/",
       title: getLastValue("http://" + transition + ".example.com/", "title"),
       lastVisit: getLastValue("http://" + transition + ".example.com/", "lastVisit"),
+      isRedirect: true,
       referrer: "http://" + transition + ".redirect.perm.example.com/",
       visitCount: getLastValue("http://" + transition + ".example.com/", "visitCount"),
       isInQuery: true }));
@@ -334,9 +289,6 @@ function run_test() {
   // This array will be used by cartProd to generate a matrix of all possible
   // combinations.
   let includeHidden_options = [true, false];
-  let redirectsMode_options =  [Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_ALL,
-                                Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_SOURCE,
-                                Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_TARGET];
   let maxResults_options = [5, 10, 20, null];
   // These sortingMode are choosen to toggle using special queries for history
   // menu and most visited smart bookmark.
@@ -344,7 +296,7 @@ function run_test() {
                          Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING,
                          Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING];
   // Will execute check_results_callback() for each generated combination.
-  cartProd([includeHidden_options, redirectsMode_options, maxResults_options, sorting_options],
+  cartProd([includeHidden_options, maxResults_options, sorting_options],
            check_results_callback);
 
   remove_all_bookmarks();
