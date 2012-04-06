@@ -65,6 +65,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIEditor.h"
 #include "nsTextEditRules.h"
+#include "nsTypedSelection.h"
 #include "nsEventListenerManager.h"
 #include "nsContentUtils.h"
 
