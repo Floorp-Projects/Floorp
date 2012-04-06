@@ -27,35 +27,12 @@ ContentPermissionPrompt.prototype = {
     return false;
   },
 
-  _id: 0,
   prompt: function(request) {
     // returns true if the request was handled
     if (this.handleExistingPermission(request))
        return;
 
-    let browser = Services.wm.getMostRecentWindow("navigator:browser");
-    let content = browser.content;
-    if (!content)
-      return;
-
-    let requestId = this._id++;
-    content.addEventListener("mozContentEvent", function contentEvent(evt) {
-      if (evt.detail.id != requestId)
-        return;
-
-      content.removeEventListener(evt.type, contentEvent);
-      if (evt.detail.type == "permission-allow") {
-        request.allow();
-        return;
-      }
-
-      request.cancel();
-    });
-
-    browser.shell.sendEvent(browser.content, "mozChromeEvent", {
-      "type": "permission-prompt", "permission": request.type,
-      "id": requestId, "url": request.uri.spec
-    });
+    // TODO : show UI to grant or deny permission
   },
 
   classID: Components.ID("{8c719f03-afe0-4aac-91ff-6c215895d467}"),

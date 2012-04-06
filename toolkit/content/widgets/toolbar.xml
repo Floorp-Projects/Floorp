@@ -225,7 +225,7 @@
         <setter>
           <![CDATA[
             if (val == this.currentSet)
-              return val;
+              return;
 
             var ids = (val == "__empty") ? [] : val.split(",");
 
