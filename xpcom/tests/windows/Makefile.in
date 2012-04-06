@@ -54,4 +54,4 @@ CPP_UNIT_TESTS	= \
 
 include $(topsrcdir)/config/rules.mk
 
-OS_LIBS	= $(call EXPAND_LIBNAME,rpcrt4 uuid advapi32)
+OS_LIBS	+= $(call EXPAND_LIBNAME,rpcrt4 uuid)
