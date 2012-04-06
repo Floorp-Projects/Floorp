@@ -1204,10 +1204,11 @@ nsNavHistory::invalidateFrecencies(const nsCString& aPlaceIdsQueryString)
       "THEN 0 "
       "ELSE -1 "
       "END) "
+    "WHERE frecency > 0 "
   );
 
   if (!aPlaceIdsQueryString.IsEmpty()) {
-    invalideFrecenciesSQLFragment.AppendLiteral("WHERE id IN(");
+    invalideFrecenciesSQLFragment.AppendLiteral("AND id IN(");
     invalideFrecenciesSQLFragment.Append(aPlaceIdsQueryString);
     invalideFrecenciesSQLFragment.AppendLiteral(")");
   }
