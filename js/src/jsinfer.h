@@ -496,6 +496,12 @@ class TypeSet
     /* Get whether this type set is known to be a subset of other. */
     bool knownSubset(JSContext *cx, TypeSet *other);
 
+    /* 
+     * Get wether this type only contains non string primitives.
+     * I.e. null/undefined/int/double or combination of those.
+     */
+    bool knownNonStringPrimitive(JSContext *cx);
+
     /*
      * Get the typed array type of all objects in this set. Returns
      * TypedArray::TYPE_MAX if the set contains different array types.

@@ -1937,7 +1937,7 @@ class MBinaryArithInstruction
 
     virtual double getIdentity() = 0;
 
-    void infer(const TypeOracle::Binary &b);
+    void infer(JSContext *cx, const TypeOracle::BinaryTypes &b);
 
     bool congruentTo(MDefinition *const &ins) const {
         return congruentIfOperandsEqual(ins);
