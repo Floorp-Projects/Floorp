@@ -57,6 +57,7 @@
 #include "prio.h"
 #include "plstr.h"
 #include "nsIOService.h"
+#include "nsCharSeparatedTokenizer.h"
 
 #include "mozilla/FunctionTimer.h"
 
@@ -69,6 +70,7 @@ static const char kPrefEnableIDN[]          = "network.enableIDN";
 static const char kPrefIPv4OnlyDomains[]    = "network.dns.ipv4OnlyDomains";
 static const char kPrefDisableIPv6[]        = "network.dns.disableIPv6";
 static const char kPrefDisablePrefetch[]    = "network.dns.disablePrefetch";
+static const char kPrefDnsLocalDomains[]    = "network.dns.localDomains";
 
 //-----------------------------------------------------------------------------
 
@@ -406,6 +408,7 @@ nsDNSService::Init()
     int      proxyType        = nsIProtocolProxyService::PROXYCONFIG_DIRECT;
     
     nsAdoptingCString ipv4OnlyDomains;
+    nsAdoptingCString localDomains;
 
     // read prefs
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -422,6 +425,7 @@ nsDNSService::Init()
         prefs->GetBoolPref(kPrefEnableIDN, &enableIDN);
         prefs->GetBoolPref(kPrefDisableIPv6, &disableIPv6);
         prefs->GetCharPref(kPrefIPv4OnlyDomains, getter_Copies(ipv4OnlyDomains));
+        prefs->GetCharPref(kPrefDnsLocalDomains, getter_Copies(localDomains));
         prefs->GetBoolPref(kPrefDisablePrefetch, &disablePrefetch);
 
         // If a manual proxy is in use, disable prefetch implicitly
@@ -431,6 +435,8 @@ nsDNSService::Init()
     if (mFirstTime) {
         mFirstTime = false;
 
+        mLocalDomains.Init();
+
         // register as prefs observer
         if (prefs) {
             prefs->AddObserver(kPrefDnsCacheEntries, this, false);
@@ -438,6 +444,7 @@ nsDNSService::Init()
             prefs->AddObserver(kPrefDnsCacheGrace, this, false);
             prefs->AddObserver(kPrefEnableIDN, this, false);
             prefs->AddObserver(kPrefIPv4OnlyDomains, this, false);
+            prefs->AddObserver(kPrefDnsLocalDomains, this, false);
             prefs->AddObserver(kPrefDisableIPv6, this, false);
             prefs->AddObserver(kPrefDisablePrefetch, this, false);
 
@@ -475,6 +482,19 @@ nsDNSService::Init()
 
         // Disable prefetching either by explicit preference or if a manual proxy is configured 
         mDisablePrefetch = disablePrefetch || (proxyType == nsIProtocolProxyService::PROXYCONFIG_MANUAL);
+
+        mLocalDomains.Clear();
+        if (localDomains) {
+            nsAdoptingString domains;
+            domains.AssignASCII(nsDependentCString(localDomains).get());
+            nsCharSeparatedTokenizer tokenizer(domains, ',',
+                                               nsCharSeparatedTokenizerTemplate<>::SEPARATOR_OPTIONAL);
+ 
+            while (tokenizer.hasMoreTokens()) {
+                const nsSubstring& domain = tokenizer.nextToken();
+                mLocalDomains.PutEntry(nsDependentCString(NS_ConvertUTF16toUTF8(domain).get()));
+            }
+        }
     }
     return rv;
 }
@@ -577,6 +597,7 @@ nsDNSService::AsyncResolve(const nsACString  &hostname,
     // simultaneous shutdown!!
     nsRefPtr<nsHostResolver> res;
     nsCOMPtr<nsIIDNService> idn;
+    bool localDomain = false;
     {
         MutexAutoLock lock(mLock);
 
@@ -585,16 +606,22 @@ nsDNSService::AsyncResolve(const nsACString  &hostname,
 
         res = mResolver;
         idn = mIDN;
+        localDomain = mLocalDomains.GetEntry(hostname);
     }
     if (!res)
         return NS_ERROR_OFFLINE;
 
     const nsACString *hostPtr = &hostname;
 
+    static const nsCString localhost((const char *) "localhost");
+    if (localDomain) {
+        hostPtr = &localhost;
+    }
+
     nsresult rv;
     nsCAutoString hostACE;
-    if (idn && !IsASCII(hostname)) {
-        if (NS_SUCCEEDED(idn->ConvertUTF8toACE(hostname, hostACE)))
+    if (idn && !IsASCII(*hostPtr)) {
+        if (NS_SUCCEEDED(idn->ConvertUTF8toACE(*hostPtr, hostACE)))
             hostPtr = &hostACE;
     }
 
@@ -665,19 +692,26 @@ nsDNSService::Resolve(const nsACString &hostname,
     // simultaneous shutdown!!
     nsRefPtr<nsHostResolver> res;
     nsCOMPtr<nsIIDNService> idn;
+    bool localDomain = false;
     {
         MutexAutoLock lock(mLock);
         res = mResolver;
         idn = mIDN;
+        localDomain = mLocalDomains.GetEntry(hostname);
     }
     NS_ENSURE_TRUE(res, NS_ERROR_OFFLINE);
 
     const nsACString *hostPtr = &hostname;
 
+    static const nsCString localhost((const char *) "localhost");
+    if (localDomain) {
+        hostPtr = &localhost;
+    }
+
     nsresult rv;
     nsCAutoString hostACE;
-    if (idn && !IsASCII(hostname)) {
-        if (NS_SUCCEEDED(idn->ConvertUTF8toACE(hostname, hostACE)))
+    if (idn && !IsASCII(*hostPtr)) {
+        if (NS_SUCCEEDED(idn->ConvertUTF8toACE(*hostPtr, hostACE)))
             hostPtr = &hostACE;
     }
 
