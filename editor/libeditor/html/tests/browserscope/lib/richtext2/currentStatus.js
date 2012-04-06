@@ -19198,25 +19198,25 @@ const TEST_RESULTS = {
     "Proposed": {
       "SELECTALL_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "UNSELECT_TEXT-1": {
@@ -19244,48 +19244,48 @@ const TEST_RESULTS = {
       },
       "UNDO_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "REDO_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "BOLD_TEXT-1": {
@@ -19428,48 +19428,48 @@ const TEST_RESULTS = {
       },
       "FORMATBLOCK_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "CREATELINK_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "UNLINK_TEXT-1": {
@@ -19497,71 +19497,71 @@ const TEST_RESULTS = {
       },
       "INSERTHTML_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "INSERTHORIZONTALRULE_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "INSERTIMAGE_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "INSERTLINEBREAK_TEXT-1": {
@@ -19681,25 +19681,25 @@ const TEST_RESULTS = {
       },
       "DELETE_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "FORWARDDELETE_TEXT-1": {
@@ -19727,48 +19727,48 @@ const TEST_RESULTS = {
       },
       "STYLEWITHCSS_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "CONTENTREADONLY_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "BACKCOLOR_TEXT-1": {
@@ -19888,117 +19888,117 @@ const TEST_RESULTS = {
       },
       "INCREASEFONTSIZE_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "DECREASEFONTSIZE_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "HEADING_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "INDENT_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "OUTDENT_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "CREATEBOOKMARK_TEXT-1": {
@@ -20141,94 +20141,94 @@ const TEST_RESULTS = {
       },
       "REMOVEFORMAT_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "COPY_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "CUT_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "PASTE_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "garbage-1_TEXT-1": {
