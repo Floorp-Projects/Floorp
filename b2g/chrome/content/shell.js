@@ -437,7 +437,7 @@ Services.obs.addObserver(function onConsoleAPILogEvent(subject, topic, data) {
   serverSocket.asyncListen(listener);
 })();
 
-CustomEventManager = {
+var CustomEventManager = {
   init: function custevt_init() {
     window.addEventListener("ContentStart", (function(evt) {
       content.addEventListener("mozContentEvent", this, false, true);
@@ -461,7 +461,7 @@ CustomEventManager = {
   }
 }
 
-AlertsHelper = {
+var AlertsHelper = {
   _listeners: {},
   _count: 0,
 
@@ -492,7 +492,7 @@ AlertsHelper = {
   }
 }
 
-WebappsHelper = {
+var WebappsHelper = {
   _installers: {},
   _count: 0,
 
