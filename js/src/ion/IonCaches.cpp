@@ -363,7 +363,120 @@ IonCacheSetProperty::attachNativeExisting(JSContext *cx, JSObject *obj, const Sh
     PatchJump(exitJump, cacheLabel());
     updateLastJump(exitJump);
 
-    IonSpew(IonSpew_InlineCaches, "Generated native SETPROP stub at %p", code->raw());
+    IonSpew(IonSpew_InlineCaches, "Generated native SETPROP setting case stub at %p", code->raw());
+
+    return true;
+}
+
+bool
+IonCacheSetProperty::attachNativeAdding(JSContext *cx, JSObject *obj, const Shape *oldShape, const Shape *newShape,
+                                        const Shape *propShape)
+{
+    MacroAssembler masm;
+
+    Label failures;
+
+    /* Guard shapes along prototype chain. */
+    masm.branchTestObjShape(Assembler::NotEqual, object(), oldShape, &failures);
+
+    Label protoFailures;
+    masm.push(object());    // save object reg because we clobber it
+
+    JSObject *proto = obj->getProto();
+    Register protoReg = object();
+    while (proto) {
+        Shape *protoShape = proto->lastProperty();
+
+        // load next prototype
+        masm.loadPtr(Address(protoReg, JSObject::offsetOfType()), protoReg);
+        masm.loadPtr(Address(protoReg, offsetof(types::TypeObject, proto)), protoReg);
+
+        // ensure that the prototype is not NULL and that its shape matches
+        masm.branchTestPtr(Assembler::Zero, protoReg, protoReg, &protoFailures);
+        masm.branchTestObjShape(Assembler::NotEqual, protoReg, protoShape, &protoFailures);
+
+        proto = proto->getProto();
+    }
+
+    masm.pop(object());     // restore object reg
+
+    /* Changing object shape.  Write the object's new shape. */
+    masm.storePtr(ImmGCPtr(newShape), Address(object(), JSObject::offsetOfShape()));
+
+    /* Set the value on the object. */
+    if (obj->isFixedSlot(propShape->slot())) {
+        Address addr(object(), JSObject::getFixedSlotOffset(propShape->slot()));
+        masm.storeConstantOrRegister(value(), addr);
+    } else {
+        Register slotsReg = object();
+
+        masm.loadPtr(Address(object(), JSObject::offsetOfSlots()), slotsReg);
+
+        Address addr(slotsReg, obj->dynamicSlotIndex(propShape->slot()) * sizeof(Value));
+        masm.storeConstantOrRegister(value(), addr);
+    }
+
+    /* Success. */
+    Label rejoin_;
+    CodeOffsetJump rejoinOffset = masm.jumpWithPatch(&rejoin_);
+    masm.bind(&rejoin_);
+
+    /* Failure. */
+    masm.bind(&protoFailures);
+    masm.pop(object());
+    masm.bind(&failures);
+
+    Label exit_;
+    CodeOffsetJump exitOffset = masm.jumpWithPatch(&exit_);
+    masm.bind(&exit_);
+
+    Linker linker(masm);
+    IonCode *code = linker.newCode(cx);
+    if (!code)
+        return false;
+
+    CodeLocationJump rejoinJump(code, rejoinOffset);
+    CodeLocationJump exitJump(code, exitOffset);
+
+    PatchJump(lastJump(), CodeLocationLabel(code));
+    PatchJump(rejoinJump, rejoinLabel());
+    PatchJump(exitJump, cacheLabel());
+    updateLastJump(exitJump);
+
+    IonSpew(IonSpew_InlineCaches, "Generated native SETPROP adding case stub at %p", code->raw());
+
+    return true;
+}
+
+static bool
+IsEligibleForInlinePropertyAdd(JSContext *cx, JSObject *obj, jsid propId, uint32_t oldSlots,
+                               const Shape **propShapeOut)
+{
+    const Shape *propShape = obj->nativeLookup(cx, propId);
+    if (!propShape || propShape->inDictionary() || !propShape->hasSlot() || !propShape->hasDefaultSetter())
+        return false;
+
+    // walk up the object prototype chain and ensure that all prototypes
+    // are native, and that all prototypes have no getter or setter
+    // defined on the property
+    for (JSObject *proto = obj->getProto(); proto; proto = proto->getProto()) {
+        // if prototype is non-native, don't optimize
+        if (!proto->isNative()) 
+            return false;
+
+        // if prototype defines this property in a non-plain way, don't optimize
+        const Shape *protoShape = proto->nativeLookup(cx, propId);
+        if (protoShape && !protoShape->hasDefaultSetter())
+            return false;
+    }
+
+    // Only add a IC entry if the dynamic slots didn't change when the shapes
+    // changed.  Need to ensure that a shape change for a subsequent object
+    // won't involve reallocating the slot array.
+    if (obj->numDynamicSlots() != oldSlots)
+        return false;
+
+    *propShapeOut = propShape;
 
     return true;
 }
@@ -390,6 +503,26 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const
         if (shape && shape->hasSlot() && shape->hasDefaultSetter()) {
             if (!cache.attachNativeExisting(cx, obj, shape))
                 return false;
+        } else if (!shape) {
+            uint32_t oldSlots = obj->numDynamicSlots();
+            const Shape *oldShape = obj->lastProperty();
+
+            // try adding slot manually and seeing if it produces a usable shape
+            // for inlining via IC.
+            if (!obj->setGeneric(cx, ATOM_TO_JSID(atom), &v, cache.strict()))
+                return false;
+
+            const Shape *propShape = NULL;
+            if (IsEligibleForInlinePropertyAdd(cx, obj, id, oldSlots, &propShape)) {
+                const Shape *newShape = obj->lastProperty();
+                if (!cache.attachNativeAdding(cx, obj, oldShape, newShape, propShape))
+                    return false;
+            }
+
+            // Return true here because we've already done the setGeneric.  Don't want
+            // to fall through and call setGeneric again (both for performance reasons,
+            // and because the double-set may be non-idempotent).
+            return true;
         }
     }
 

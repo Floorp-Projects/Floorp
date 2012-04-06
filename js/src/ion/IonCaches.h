@@ -299,6 +299,8 @@ class IonCacheSetProperty : public IonCache
     bool strict() const { return u.setprop.strict; }
 
     bool attachNativeExisting(JSContext *cx, JSObject *obj, const Shape *shape);
+    bool attachNativeAdding(JSContext *cx, JSObject *obj, const Shape *oldshape, const Shape *newshape,
+                            const Shape *propshape);
 };
 
 class IonCacheGetElement : public IonCache
