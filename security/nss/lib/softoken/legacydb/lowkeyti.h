@@ -72,6 +72,7 @@ typedef struct NSSLOWKEYDBHandleStr NSSLOWKEYDBHandle;
 */
 extern const SEC_ASN1Template lg_nsslowkey_PQGParamsTemplate[];
 extern const SEC_ASN1Template lg_nsslowkey_RSAPrivateKeyTemplate[];
+extern const SEC_ASN1Template lg_nsslowkey_RSAPrivateKeyTemplate2[];
 extern const SEC_ASN1Template lg_nsslowkey_DSAPrivateKeyTemplate[];
 extern const SEC_ASN1Template lg_nsslowkey_DHPrivateKeyTemplate[];
 extern const SEC_ASN1Template lg_nsslowkey_DHPrivateKeyExportTemplate[];

@@ -36,43 +36,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsOuterDocAccessible.h"
+#include "OuterDocAccessible.h"
 
 #include "nsAccUtils.h"
 #include "nsDocAccessible.h"
 #include "Role.h"
 #include "States.h"
 
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsOuterDocAccessible
+// OuterDocAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsOuterDocAccessible::
-  nsOuterDocAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+OuterDocAccessible::
+  OuterDocAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
   nsAccessibleWrap(aContent, aDoc)
+{
+}
+
+OuterDocAccessible::~OuterDocAccessible()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsOuterDocAccessible,
+NS_IMPL_ISUPPORTS_INHERITED0(OuterDocAccessible,
                              nsAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible public (DON'T add methods here)
 
 role
-nsOuterDocAccessible::NativeRole()
+OuterDocAccessible::NativeRole()
 {
   return roles::INTERNAL_FRAME;
 }
 
 nsAccessible*
-nsOuterDocAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                   EWhichChildAtPoint aWhichChild)
+OuterDocAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                 EWhichChildAtPoint aWhichChild)
 {
   PRInt32 docX = 0, docY = 0, docWidth = 0, docHeight = 0;
   nsresult rv = GetBounds(&docX, &docY, &docWidth, &docHeight);
@@ -92,7 +97,7 @@ nsOuterDocAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
 }
 
 nsresult
-nsOuterDocAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
+OuterDocAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
 {
   nsAutoString tag;
   aAttributes->GetStringProperty(NS_LITERAL_CSTRING("tag"), tag);
@@ -108,14 +113,14 @@ nsOuterDocAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes
 // nsIAccessible
 
 PRUint8
-nsOuterDocAccessible::ActionCount()
+OuterDocAccessible::ActionCount()
 {
   // Internal frame, which is the doc's parent, should not have a click action.
   return 0;
 }
 
 NS_IMETHODIMP
-nsOuterDocAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+OuterDocAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   aName.Truncate();
 
@@ -123,7 +128,8 @@ nsOuterDocAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 }
 
 NS_IMETHODIMP
-nsOuterDocAccessible::GetActionDescription(PRUint8 aIndex, nsAString& aDescription)
+OuterDocAccessible::GetActionDescription(PRUint8 aIndex,
+                                         nsAString& aDescription)
 {
   aDescription.Truncate();
 
@@ -131,7 +137,7 @@ nsOuterDocAccessible::GetActionDescription(PRUint8 aIndex, nsAString& aDescripti
 }
 
 NS_IMETHODIMP
-nsOuterDocAccessible::DoAction(PRUint8 aIndex)
+OuterDocAccessible::DoAction(PRUint8 aIndex)
 {
   return NS_ERROR_INVALID_ARG;
 }
@@ -140,7 +146,7 @@ nsOuterDocAccessible::DoAction(PRUint8 aIndex)
 // nsAccessNode public
 
 void
-nsOuterDocAccessible::Shutdown()
+OuterDocAccessible::Shutdown()
 {
   // XXX: sometimes outerdoc accessible is shutdown because of layout style
   // change however the presshell of underlying document isn't destroyed and
@@ -149,7 +155,7 @@ nsOuterDocAccessible::Shutdown()
   NS_LOG_ACCDOCDESTROY_MSG("A11y outerdoc shutdown")
   NS_LOG_ACCDOCDESTROY_ACCADDRESS("outerdoc", this)
 
-  nsAccessible *childAcc = mChildren.SafeElementAt(0, nsnull);
+  nsAccessible* childAcc = mChildren.SafeElementAt(0, nsnull);
   if (childAcc) {
     NS_LOG_ACCDOCDESTROY("outerdoc's child document shutdown",
                          childAcc->GetDocumentNode())
@@ -163,7 +169,7 @@ nsOuterDocAccessible::Shutdown()
 // nsAccessible public
 
 void
-nsOuterDocAccessible::InvalidateChildren()
+OuterDocAccessible::InvalidateChildren()
 {
   // Do not invalidate children because nsAccDocManager is responsible for
   // document accessible lifetime when DOM document is created or destroyed. If
@@ -178,7 +184,7 @@ nsOuterDocAccessible::InvalidateChildren()
 }
 
 bool
-nsOuterDocAccessible::AppendChild(nsAccessible *aAccessible)
+OuterDocAccessible::AppendChild(nsAccessible* aAccessible)
 {
   // We keep showing the old document for a bit after creating the new one,
   // and while building the new DOM and frame tree. That's done on purpose
@@ -199,9 +205,9 @@ nsOuterDocAccessible::AppendChild(nsAccessible *aAccessible)
 }
 
 bool
-nsOuterDocAccessible::RemoveChild(nsAccessible *aAccessible)
+OuterDocAccessible::RemoveChild(nsAccessible* aAccessible)
 {
-  nsAccessible *child = mChildren.SafeElementAt(0, nsnull);
+  nsAccessible* child = mChildren.SafeElementAt(0, nsnull);
   if (child != aAccessible) {
     NS_ERROR("Wrong child to remove!");
     return false;
@@ -224,7 +230,7 @@ nsOuterDocAccessible::RemoveChild(nsAccessible *aAccessible)
 // nsAccessible protected
 
 void
-nsOuterDocAccessible::CacheChildren()
+OuterDocAccessible::CacheChildren()
 {
   // Request document accessible for the content document to make sure it's
   // created. It will appended to outerdoc accessible children asynchronously.

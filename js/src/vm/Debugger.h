@@ -120,6 +120,7 @@ class Debugger {
     ObjectWeakMap environments;
 
     class FrameRange;
+    class ScriptQuery;
 
     bool addDebuggeeGlobal(JSContext *cx, GlobalObject *obj);
     void removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,

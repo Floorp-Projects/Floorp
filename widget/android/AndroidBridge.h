@@ -49,7 +49,7 @@
 #include "nsIObserver.h"
 #include "nsThreadUtils.h"
 
-#include "AndroidFlexViewWrapper.h"
+#include "AndroidLayerViewWrapper.h"
 #include "AndroidJavaWrappers.h"
 
 #include "nsIMutableArray.h"
@@ -554,7 +554,7 @@ protected:
     jclass jEGLContextClass;
     jclass jEGL10Class;
 
-    jclass jFlexSurfaceView;
+    jclass jLayerView;
     jmethodID jRegisterCompositorMethod;
 
     // some convinient types to have around

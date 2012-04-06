@@ -531,6 +531,7 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight,
       mUnsupportedWidth = aWidth;
       mUnsupportedHeight = aHeight;
       Destroy();
+      return NS_ERROR_FAILURE;
     }
     memset(mCGData, 0, aWidth*aHeight*4);
 

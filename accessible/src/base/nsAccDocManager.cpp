@@ -41,7 +41,6 @@
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsApplicationAccessible.h"
-#include "nsOuterDocAccessible.h"
 #include "nsRootAccessibleWrap.h"
 #include "States.h"
 

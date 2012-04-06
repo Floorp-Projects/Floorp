@@ -201,7 +201,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jStringClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("java/lang/String"));
 
 #ifdef MOZ_JAVA_COMPOSITOR
-    jFlexSurfaceView = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/gfx/FlexibleGLSurfaceView"));
+    jLayerView = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/gfx/LayerView"));
 
     AndroidGLController::Init(jEnv);
     AndroidEGLObject::Init(jEnv);
@@ -1119,9 +1119,9 @@ AndroidBridge::RegisterCompositor()
 
     AutoLocalJNIFrame jniFrame(env, 3);
 
-    jmethodID registerCompositor = env->GetStaticMethodID(jFlexSurfaceView, "registerCxxCompositor", "()Lorg/mozilla/gecko/gfx/GLController;");
+    jmethodID registerCompositor = env->GetStaticMethodID(jLayerView, "registerCxxCompositor", "()Lorg/mozilla/gecko/gfx/GLController;");
 
-    jobject glController = env->CallStaticObjectMethod(jFlexSurfaceView, registerCompositor);
+    jobject glController = env->CallStaticObjectMethod(jLayerView, registerCompositor);
 
     sController.Acquire(env, glController);
     sController.SetGLVersion(2);
