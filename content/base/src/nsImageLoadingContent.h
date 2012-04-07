@@ -47,6 +47,7 @@
 
 #include "imgIContainerObserver.h"
 #include "imgIDecoderObserver.h"
+#include "imgIOnloadBlocker.h"
 #include "mozilla/CORSMode.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h" // NS_CONTENT_DELETE_LIST_MEMBER
@@ -59,7 +60,8 @@ class nsIDocument;
 class imgILoader;
 class nsIIOService;
 
-class nsImageLoadingContent : public nsIImageLoadingContent
+class nsImageLoadingContent : public nsIImageLoadingContent,
+                              public imgIOnloadBlocker
 {
   /* METHODS */
 public:
@@ -69,6 +71,7 @@ public:
   NS_DECL_IMGICONTAINEROBSERVER
   NS_DECL_IMGIDECODEROBSERVER
   NS_DECL_NSIIMAGELOADINGCONTENT
+  NS_DECL_IMGIONLOADBLOCKER
 
 protected:
   /**
