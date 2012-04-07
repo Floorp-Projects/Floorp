@@ -17,10 +17,6 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   return NetUtil;
 });
 
-XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
-  return Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
-});
-
 #ifdef MOZ_WIDGET_GONK
   const DIRECTORY_NAME = "webappsDir";
 #else
@@ -37,7 +33,7 @@ let DOMApplicationRegistry = {
                     "Webapps:Launch", "Webapps:GetAll"];
 
     this.messages.forEach((function(msgName) {
-      ppmm.addMessageListener(msgName, this);
+      Services.ppmm.addMessageListener(msgName, this);
     }).bind(this));
 
     Services.obs.addObserver(this, "xpcom-shutdown", false);
@@ -62,10 +58,9 @@ let DOMApplicationRegistry = {
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "xpcom-shutdown") {
       this.messages.forEach((function(msgName) {
-        ppmm.removeMessageListener(msgName, this);
+        Services.ppmm.removeMessageListener(msgName, this);
       }).bind(this));
       Services.obs.removeObserver(this, "xpcom-shutdown");
-      ppmm = null;
     }
   },
 
@@ -125,7 +120,7 @@ let DOMApplicationRegistry = {
         if (msg.hasPrivileges)
           this.getAll(msg);
         else
-          ppmm.sendAsyncMessage("Webapps:GetAll:Return:KO", msg);
+          Services.ppmm.sendAsyncMessage("Webapps:GetAll:Return:KO", msg);
         break;
     }
   },
@@ -159,7 +154,7 @@ let DOMApplicationRegistry = {
   },
 
   denyInstall: function(aData) {
-    ppmm.sendAsyncMessage("Webapps:Install:Return:KO", aData);
+    Services.ppmm.sendAsyncMessage("Webapps:Install:Return:KO", aData);
   },
 
   confirmInstall: function(aData, aFromSync) {
@@ -192,7 +187,7 @@ let DOMApplicationRegistry = {
     
     if (!aFromSync)
       this._saveApps((function() {
-        ppmm.sendAsyncMessage("Webapps:Install:Return:OK", aData);
+        Services.ppmm.sendAsyncMessage("Webapps:Install:Return:OK", aData);
         Services.obs.notifyObservers(this, "webapps-sync-install", id);
       }).bind(this));
   },
@@ -246,13 +241,13 @@ let DOMApplicationRegistry = {
         } catch (e) {
         }
         this._saveApps((function() {
-          ppmm.sendAsyncMessage("Webapps:Uninstall:Return:OK", aData);
+          Services.ppmm.sendAsyncMessage("Webapps:Uninstall:Return:OK", aData);
           Services.obs.notifyObservers(this, "webapps-sync-uninstall", id);
         }).bind(this));
       }
     }
     if (!found)
-      ppmm.sendAsyncMessage("Webapps:Uninstall:Return:KO", aData);
+      Services.ppmm.sendAsyncMessage("Webapps:Uninstall:Return:KO", aData);
   },
 
   getSelf: function(aData) {
@@ -269,7 +264,7 @@ let DOMApplicationRegistry = {
     this._readManifests(tmp, (function(aResult) {
       for (let i = 0; i < aResult.length; i++)
         aData.apps[i].manifest = aResult[i].manifest;
-      ppmm.sendAsyncMessage("Webapps:GetSelf:Return:OK", aData);
+      Services.ppmm.sendAsyncMessage("Webapps:GetSelf:Return:OK", aData);
     }).bind(this));
   },
 
@@ -288,7 +283,7 @@ let DOMApplicationRegistry = {
     this._readManifests(tmp, (function(aResult) {
       for (let i = 0; i < aResult.length; i++)
         aData.apps[i].manifest = aResult[i].manifest;
-      ppmm.sendAsyncMessage("Webapps:GetInstalled:Return:OK", aData);
+      Services.ppmm.sendAsyncMessage("Webapps:GetInstalled:Return:OK", aData);
     }).bind(this));
   },
 
@@ -305,7 +300,7 @@ let DOMApplicationRegistry = {
     this._readManifests(tmp, (function(aResult) {
       for (let i = 0; i < aResult.length; i++)
         aData.apps[i].manifest = aResult[i].manifest;
-      ppmm.sendAsyncMessage("Webapps:GetAll:Return:OK", aData);
+      Services.ppmm.sendAsyncMessage("Webapps:GetAll:Return:OK", aData);
     }).bind(this));
   },
 
@@ -351,7 +346,7 @@ let DOMApplicationRegistry = {
           dir.remove(true);
         } catch (e) {
         }
-        ppmm.sendAsyncMessage("Webapps:Uninstall:Return:OK", { origin: origin });
+        Services.ppmm.sendAsyncMessage("Webapps:Uninstall:Return:OK", { origin: origin });
       } else {
         if (!!this.webapps[record.id]) {
           this.webapps[record.id] = record.value;
@@ -360,7 +355,7 @@ let DOMApplicationRegistry = {
         else {
           let data = { app: record.value };
           this.confirmInstall(data, true);
-          ppmm.sendAsyncMessage("Webapps:Install:Return:OK", data);
+          Services.ppmm.sendAsyncMessage("Webapps:Install:Return:OK", data);
         }
       }
     }

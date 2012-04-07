@@ -16,13 +16,8 @@ const Ci = Components.interfaces;
 
 let EXPORTED_SYMBOLS = ["DOMContactManager"];
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ContactDB.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
-  return Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
-});
 
 let myGlobal = this;
 
@@ -31,7 +26,7 @@ let DOMContactManager = {
     debug("Init");
     this._messages = ["Contacts:Find", "Contacts:Clear", "Contact:Save", "Contact:Remove"];
     this._messages.forEach((function(msgName) {
-      ppmm.addMessageListener(msgName, this);
+      Services.ppmm.addMessageListener(msgName, this);
     }).bind(this));
 
     var idbManager = Components.classes["@mozilla.org/dom/indexeddb/manager;1"].getService(Ci.nsIIndexedDatabaseManager);
@@ -54,10 +49,9 @@ let DOMContactManager = {
   observe: function(aSubject, aTopic, aData) {
     myGlobal = null;
     this._messages.forEach((function(msgName) {
-      ppmm.removeMessageListener(msgName, this);
+      Services.ppmm.removeMessageListener(msgName, this);
     }).bind(this));
     Services.obs.removeObserver(this, "profile-before-change");
-    ppmm = null;
     this._messages = null;
     if (this._db)
       this._db.close();
@@ -91,23 +85,23 @@ let DOMContactManager = {
             }
 
             debug("result:" + JSON.stringify(result));
-            ppmm.sendAsyncMessage("Contacts:Find:Return:OK", {requestID: msg.requestID, contacts: result});
+            Services.ppmm.sendAsyncMessage("Contacts:Find:Return:OK", {requestID: msg.requestID, contacts: result});
           }.bind(this),
-          function(aErrorMsg) { ppmm.sendAsyncMessage("Contacts:Find:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }) }.bind(this), 
+          function(aErrorMsg) { Services.ppmm.sendAsyncMessage("Contacts:Find:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }) }.bind(this), 
           msg.findOptions);
         break;
       case "Contact:Save":
-        this._db.saveContact(msg.contact, function() { ppmm.sendAsyncMessage("Contact:Save:Return:OK", { requestID: msg.requestID }); }.bind(this), 
-                             function(aErrorMsg) { ppmm.sendAsyncMessage("Contact:Save:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this));
+        this._db.saveContact(msg.contact, function() { Services.ppmm.sendAsyncMessage("Contact:Save:Return:OK", { requestID: msg.requestID }); }.bind(this), 
+                             function(aErrorMsg) { Services.ppmm.sendAsyncMessage("Contact:Save:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this));
         break;
       case "Contact:Remove":
         this._db.removeContact(msg.id, 
-                               function() { ppmm.sendAsyncMessage("Contact:Remove:Return:OK", { requestID: msg.requestID }); }.bind(this), 
-                               function(aErrorMsg) { ppmm.sendAsyncMessage("Contact:Remove:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this));
+                               function() { Services.ppmm.sendAsyncMessage("Contact:Remove:Return:OK", { requestID: msg.requestID }); }.bind(this), 
+                               function(aErrorMsg) { Services.ppmm.sendAsyncMessage("Contact:Remove:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this));
         break;
       case "Contacts:Clear":
-        this._db.clear(function() { ppmm.sendAsyncMessage("Contacts:Clear:Return:OK", { requestID: msg.requestID }); }.bind(this),
-                       function(aErrorMsg) { ppmm.sendAsyncMessage("Contacts:Clear:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this));
+        this._db.clear(function() { Services.ppmm.sendAsyncMessage("Contacts:Clear:Return:OK", { requestID: msg.requestID }); }.bind(this),
+                       function(aErrorMsg) { Services.ppmm.sendAsyncMessage("Contacts:Clear:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this));
     }
   }
 }

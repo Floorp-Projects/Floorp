@@ -93,7 +93,9 @@ let initTable = [
   ["startup", "@mozilla.org/toolkit/app-startup;1", "nsIAppStartup"],
   ["sysinfo", "@mozilla.org/system-info;1", "nsIPropertyBag2"],
   ["clipboard", "@mozilla.org/widget/clipboard;1", "nsIClipboard"],
-  ["DOMRequest", "@mozilla.org/dom/dom-request-service;1", "nsIDOMRequestService"]
+  ["DOMRequest", "@mozilla.org/dom/dom-request-service;1", "nsIDOMRequestService"],
+  ["cpmm", "@mozilla.org/childprocessmessagemanager;1", "nsIFrameMessageManager"],
+  ["ppmm", "@mozilla.org/parentprocessmessagemanager;1", "nsIFrameMessageManager"],
 ];
 
 initTable.forEach(function ([name, contract, intf])

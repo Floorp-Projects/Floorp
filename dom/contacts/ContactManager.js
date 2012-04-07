@@ -19,14 +19,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 
-XPCOMUtils.defineLazyGetter(Services, "DOMRequest", function() {
-  return Cc["@mozilla.org/dom/dom-request-service;1"].getService(Ci.nsIDOMRequestService);
-});
-
-XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
-  return Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
-});
-
 const nsIClassInfo            = Ci.nsIClassInfo;
 const CONTACTPROPERTIES_CID   = Components.ID("{53ed7c20-ceda-11e0-9572-0800200c9a66}");
 const nsIDOMContactProperties = Ci.nsIDOMContactProperties;
@@ -225,8 +217,9 @@ ContactManager.prototype = {
       this._setMetaData(newContact, aContact);
       debug("send: " + JSON.stringify(newContact));
       request = this.createRequest();
-      cpmm.sendAsyncMessage("Contact:Save", {contact: newContact,
-                                             requestID: this.getRequestId(request)});
+      Services.cpmm.sendAsyncMessage("Contact:Save",
+                                     {contact: newContact,
+                                      requestID: this.getRequestId(request)});
       return request;
     } else {
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
@@ -237,8 +230,9 @@ ContactManager.prototype = {
     let request;
     if (this.hasPrivileges) {
       request = this.createRequest();
-      cpmm.sendAsyncMessage("Contact:Remove", {id: aRecord.id,
-                                               requestID: this.getRequestId(request)});
+      Services.cpmm.sendAsyncMessage("Contact:Remove",
+                                     {id: aRecord.id,
+                                      requestID: this.getRequestId(request)});
       return request;
     } else {
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
@@ -303,8 +297,9 @@ ContactManager.prototype = {
     let request;
     if (this.hasPrivileges) {
       request = this.createRequest();
-      cpmm.sendAsyncMessage("Contacts:Find", {findOptions: aOptions, 
-                                              requestID: this.getRequestId(request)});
+      Services.cpmm.sendAsyncMessage("Contacts:Find",
+                                     {findOptions: aOptions, 
+                                      requestID: this.getRequestId(request)});
       return request;
     } else {
       debug("find not allowed");
@@ -316,7 +311,8 @@ ContactManager.prototype = {
     let request;
     if (this.hasPrivileges) {
       request = this.createRequest();
-      cpmm.sendAsyncMessage("Contacts:Clear", {requestID: this.getRequestId(request)});
+      Services.cpmm.sendAsyncMessage("Contacts:Clear",
+                                     {requestID: this.getRequestId(request)});
       return request;
     } else {
       debug("clear not allowed");
