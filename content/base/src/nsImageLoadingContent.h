@@ -378,11 +378,6 @@ private:
   bool mUserDisabled : 1;
   bool mSuppressed : 1;
 
-  /**
-   * Whether we're currently blocking document load.
-   */
-  bool mBlockingOnload : 1;
-
 protected:
   /**
    * A hack to get animations to reset, see bug 594771. On requests
