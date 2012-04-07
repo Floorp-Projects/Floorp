@@ -1439,6 +1439,11 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsGlobalWindow)
     if (tmp->mCachedXBLPrototypeHandlers.IsInitialized()) {
       tmp->mCachedXBLPrototypeHandlers.EnumerateRead(MarkXBLHandlers, nsnull);
     }
+    nsEventListenerManager* elm = tmp->GetListenerManager(false);
+    if (elm) {
+      elm->UnmarkGrayJSListeners();
+    }
+    tmp->UnmarkGrayTimers();
     return true;
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
