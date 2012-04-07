@@ -627,7 +627,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             for (LoadOffsets::Iterator iter = p->loadOffsets.begin();
                  iter != p->loadOffsets.end(); ++iter, ++idx)
             {
-                JS_ASSERT(iter->getOffset() > perforation.getOffset());
+                JS_ASSERT(iter->getOffset() >= perforation.getOffset());
                 // Everything here is known, we can safely do the necessary substitutions
                 Inst * inst = this->getInst(*iter);
                 // Manually compute the offset, including a possible bias.
