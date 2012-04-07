@@ -144,6 +144,7 @@ FENNEC_JAVA_FILES = \
   gfx/TextureGenerator.java \
   gfx/TextureReaper.java \
   gfx/TileLayer.java \
+  gfx/TouchEventHandler.java \
   gfx/ViewTransform.java \
   gfx/ViewportMetrics.java \
   gfx/VirtualLayer.java \
