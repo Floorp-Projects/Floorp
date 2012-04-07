@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1332870813000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1333739604000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -187,17 +187,15 @@
 
   <pluginItems>
       <pluginItem  blockID="p28">
-                  <match name="filename" exp="NPFFAddOn.dll" />              <versionRange >
-                  </versionRange>
-          </pluginItem>
+                  <match name="filename" exp="NPFFAddOn.dll" />                        </pluginItem>
       <pluginItem  blockID="p31">
-                  <match name="filename" exp="NPMySrch.dll" />              <versionRange >
-                  </versionRange>
-          </pluginItem>
+                  <match name="filename" exp="NPMySrch.dll" />                        </pluginItem>
       <pluginItem  blockID="p33">
-      <match name="name" exp="[0-6]\.0\.[01]\d{2}\.\d+" />            <match name="filename" exp="npdeploytk.dll" />              <versionRange  severity="1">
-                  </versionRange>
-          </pluginItem>
+      <match name="name" exp="[0-6]\.0\.[01]\d{2}\.\d+" />            <match name="filename" exp="npdeploytk.dll" />                      <versionRange  severity="1"></versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p80">
+            <match name="description" exp="[^\d\._]((0(\.\d+(\.\d+([_\.]\d+)?)?)?)|(1\.(([0-5](\.\d+([_\.]\d+)?)?)|(6(\.0([_\.](0?\d|1\d|2\d|30))?)?)|(7(\.0([_\.][0-2])?)?))))([^\d\._]|$)" />      <match name="filename" exp="(npjp2\.dll)|(libnpjp2\.so)" />                      <versionRange  severity="1"></versionRange>
+                  </pluginItem>
     </pluginItems>
 
   <gfxItems>
@@ -210,6 +208,16 @@
                   </devices>
             <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.17.12.5896</driverVersion>      <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g37">      <os>WINNT 5.1</os>      <vendor>0x10de</vendor>            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>7.0.0.0</driverVersion>      <driverVersionComparator>GREATER_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g81">      <os>WINNT 6.1</os>      <vendor>0x1002</vendor>              <devices>
+                      <device>0x9802</device>
+                      <device>0x9803</device>
+                      <device>0x9803</device>
+                      <device>0x9804</device>
+                      <device>0x9805</device>
+                      <device>0x9806</device>
+                      <device>0x9807</device>
+                  </devices>
+            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>      <driverVersion>1.0.0.0</driverVersion>      <driverVersionComparator>GREATER_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
     </gfxItems>
 
 
