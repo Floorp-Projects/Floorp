@@ -84,7 +84,7 @@ using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 
-static void iterator_finalize(JSContext *cx, JSObject *obj);
+static void iterator_finalize(FreeOp *fop, JSObject *obj);
 static void iterator_trace(JSTracer *trc, JSObject *obj);
 static JSObject *iterator_iterator(JSContext *cx, JSObject *obj, JSBool keysonly);
 
@@ -151,14 +151,14 @@ NativeIterator::mark(JSTracer *trc)
 }
 
 static void
-iterator_finalize(JSContext *cx, JSObject *obj)
+iterator_finalize(FreeOp *fop, JSObject *obj)
 {
     JS_ASSERT(obj->isIterator());
 
     NativeIterator *ni = obj->getNativeIterator();
     if (ni) {
         obj->setPrivate(NULL);
-        cx->free_(ni);
+        fop->free_(ni);
     }
 }
 
@@ -1331,7 +1331,7 @@ Class js::StopIterationClass = {
 #if JS_HAS_GENERATORS
 
 static void
-generator_finalize(JSContext *cx, JSObject *obj)
+generator_finalize(FreeOp *fop, JSObject *obj)
 {
     JSGenerator *gen = (JSGenerator *) obj->getPrivate();
     if (!gen)
@@ -1344,7 +1344,7 @@ generator_finalize(JSContext *cx, JSObject *obj)
     JS_ASSERT(gen->state == JSGEN_NEWBORN ||
               gen->state == JSGEN_CLOSED ||
               gen->state == JSGEN_OPEN);
-    cx->free_(gen);
+    fop->free_(gen);
 }
 
 static void

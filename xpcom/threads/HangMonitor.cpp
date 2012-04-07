@@ -100,7 +100,7 @@ PrefChanged(const char*, void*)
 #ifdef REPORT_CHROME_HANGS
   // Monitor chrome hangs on the profiling branch if Telemetry enabled
   if (newval == 0) {
-    PRBool telemetryEnabled = Preferences::GetBool(kTelemetryPrefName);
+    bool telemetryEnabled = Preferences::GetBool(kTelemetryPrefName);
     if (telemetryEnabled) {
       newval = DEFAULT_CHROME_HANG_INTERVAL;
     }

@@ -142,7 +142,8 @@
       testTextAttrs(ID, 11, attrs, defAttrs, 11, 18);
 
       //////////////////////////////////////////////////////////////////////////
-      // area6 (CSS vertical-align property, bug 445938)
+      // area6 (CSS vertical-align property, refer to bug 445938 for details
+      // 	and sup and sub elements, refer to bug 735645 for details)
       ID = "area6";
       defAttrs = buildDefaultTextAttrs(ID, "12pt");
       testDefaultTextAttrs(ID, defAttrs);
@@ -150,35 +151,25 @@
       attrs = {};
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 5);
 
-      tempElem = getNode(ID).firstChild.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      attrs = {"text-position": gComputedStyle.verticalAlign,
-               "font-size": "10pt"};
+      attrs = { "text-position": "super", "font-size": "10pt" };
       testTextAttrs(ID, 5, attrs, defAttrs, 5, 13);
 
       attrs = {};
       testTextAttrs(ID, 13, attrs, defAttrs, 13, 27);
 
-      tempElem = tempElem.nextSibling.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      attrs = {"text-position": gComputedStyle.verticalAlign};
+      attrs = { "text-position": "super" };
       testTextAttrs(ID, 27, attrs, defAttrs, 27, 35);
 
       attrs = {};
       testTextAttrs(ID, 35, attrs, defAttrs, 35, 39);
 
-      tempElem = tempElem.nextSibling.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      attrs = {"text-position": gComputedStyle.verticalAlign,
-               "font-size": "10pt"};
+      attrs = { "text-position": "sub", "font-size": "10pt" };
       testTextAttrs(ID, 39, attrs, defAttrs, 39, 50);
 
       attrs = {};
       testTextAttrs(ID, 50, attrs, defAttrs, 50, 55);
 
-      tempElem = tempElem.nextSibling.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      attrs = {"text-position": gComputedStyle.verticalAlign};
+      attrs = { "text-position": "sub" };
       testTextAttrs(ID, 55, attrs, defAttrs, 55, 64);
 
       attrs = {};
@@ -543,6 +534,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=523304"
      title="expose text-underline-color and text-line-through-color text attributes">
     Mozilla Bug 523304
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=735645"
+     title="expose sub and sup elements in text attributes">
+    Mozilla Bug 735645
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>

@@ -48,6 +48,7 @@ _TEST_FILES = \
 		green.png \
 		test_bug290026.html \
 		test_bug291780.html \
+		test_bug316447.html \
 		test_bug332636.html \
 		test_bug332636.html^headers^ \
 		test_bug372345.html \

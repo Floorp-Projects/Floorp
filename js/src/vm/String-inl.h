@@ -388,19 +388,19 @@ js::StaticStrings::lookup(const jschar *chars, size_t length)
 }
 
 JS_ALWAYS_INLINE void
-JSString::finalize(JSContext *cx, bool background)
+JSString::finalize(js::FreeOp *fop)
 {
     /* Shorts are in a different arena. */
     JS_ASSERT(!isShort());
 
     if (isFlat())
-        asFlat().finalize(cx->runtime);
+        asFlat().finalize(fop);
     else
         JS_ASSERT(isDependent() || isRope());
 }
 
 inline void
-JSFlatString::finalize(JSRuntime *rt)
+JSFlatString::finalize(js::FreeOp *fop)
 {
     JS_ASSERT(!isShort());
 
@@ -409,33 +409,27 @@ JSFlatString::finalize(JSRuntime *rt)
      * beginning of inlineStorage. E.g., this is not the case for short strings.
      */
     if (chars() != d.inlineStorage)
-        rt->free_(const_cast<jschar *>(chars()));
+        fop->free_(const_cast<jschar *>(chars()));
 }
 
 inline void
-JSShortString::finalize(JSContext *cx, bool background)
+JSShortString::finalize(js::FreeOp *fop)
 {
     JS_ASSERT(JSString::isShort());
 }
 
 inline void
-JSAtom::finalize(JSRuntime *rt)
+JSAtom::finalize(js::FreeOp *fop)
 {
     JS_ASSERT(JSString::isAtom());
     if (getAllocKind() == js::gc::FINALIZE_STRING)
-        JSFlatString::finalize(rt);
+        JSFlatString::finalize(fop);
     else
         JS_ASSERT(getAllocKind() == js::gc::FINALIZE_SHORT_STRING);
 }
 
 inline void
-JSExternalString::finalize(JSContext *cx, bool background)
-{
-    finalize();
-}
-
-inline void
-JSExternalString::finalize()
+JSExternalString::finalize(js::FreeOp *fop)
 {
     const JSStringFinalizer *fin = externalFinalizer();
     fin->finalize(fin, const_cast<jschar *>(chars()));

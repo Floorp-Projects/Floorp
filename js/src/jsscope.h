@@ -328,7 +328,7 @@ class BaseShape : public js::gc::Cell
     PropertyTable       *table_;
 
   public:
-    void finalize(JSContext *cx, bool background);
+    void finalize(FreeOp *fop);
 
     inline BaseShape(Class *clasp, JSObject *parent, uint32_t objectFlags);
     inline BaseShape(Class *clasp, JSObject *parent, uint32_t objectFlags,
@@ -865,7 +865,7 @@ struct Shape : public js::gc::Cell
     void dumpSubtree(JSContext *cx, int level, FILE *fp) const;
 #endif
 
-    void finalize(JSContext *cx, bool background);
+    void finalize(FreeOp *fop);
     void removeChild(js::Shape *child);
 
     static inline void writeBarrierPre(const Shape *shape);

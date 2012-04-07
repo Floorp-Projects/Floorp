@@ -85,6 +85,11 @@ public class DeleteChannel {
       }
     };
 
-    httpResource.delete();
+    JPakeClient.runOnThread(new Runnable() {
+      @Override
+      public void run() {
+        httpResource.delete();
+      }
+    });
   }
 }

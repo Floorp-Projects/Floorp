@@ -101,6 +101,7 @@ EXPORTS		= \
 EXPORTS_mozilla/css = \
 		Declaration.h \
 		GroupRule.h \
+		ImageLoader.h \
 		ImportRule.h \
 		Loader.h \
 		NameSpaceRule.h \
@@ -114,6 +115,7 @@ CPPSRCS		= \
 		nsCSSDataBlock.cpp \
 		Declaration.cpp \
 		nsCSSKeywords.cpp \
+		ImageLoader.cpp \
 		Loader.cpp \
 		nsAnimationManager.cpp \
 		nsCSSParser.cpp \

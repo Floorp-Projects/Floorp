@@ -74,8 +74,6 @@ let gTests = [
     // Set preferences.
     Services.prefs.setBoolPref(PREF_IMPORT_BOOKMARKS_HTML, true);
 
-    // Force nsBrowserGlue::_initPlaces().
-    print("Simulate Places init");
     waitForImportAndSmartBookmarks(function () {
       // Check bookmarks.html has been imported, and a smart bookmark has been
       // created.
@@ -87,6 +85,8 @@ let gTests = [
 
       run_next_test();
     });
+    // Force nsBrowserGlue::_initPlaces().
+    do_log_info("Simulate Places init");
     bg.QueryInterface(Ci.nsIObserver).observe(null,
                                               TOPIC_BROWSERGLUE_TEST,
                                               TOPICDATA_FORCE_PLACES_INIT);
@@ -107,8 +107,6 @@ let gTests = [
     Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, -1);
     Services.prefs.setBoolPref(PREF_IMPORT_BOOKMARKS_HTML, true);
 
-    // Force nsBrowserGlue::_initPlaces().
-    print("Simulate Places init");
     waitForImportAndSmartBookmarks(function () {
       // Check bookmarks.html has been imported, but smart bookmarks have not
       // been created.
@@ -120,6 +118,8 @@ let gTests = [
 
       run_next_test();
     });
+    // Force nsBrowserGlue::_initPlaces().
+    do_log_info("Simulate Places init");
     bg.QueryInterface(Ci.nsIObserver).observe(null,
                                               TOPIC_BROWSERGLUE_TEST,
                                               TOPICDATA_FORCE_PLACES_INIT);
@@ -141,8 +141,6 @@ let gTests = [
     Services.prefs.setBoolPref(PREF_AUTO_EXPORT_HTML, true);
     Services.prefs.setBoolPref(PREF_IMPORT_BOOKMARKS_HTML, true);
 
-    // Force nsBrowserGlue::_initPlaces()
-    print("Simulate Places init");
     waitForImportAndSmartBookmarks(function () {
       // Check bookmarks.html has been imported, but smart bookmarks have not
       // been created.
@@ -155,6 +153,8 @@ let gTests = [
 
       run_next_test();
     });
+    // Force nsBrowserGlue::_initPlaces()
+    do_log_info("Simulate Places init");
     bg.QueryInterface(Ci.nsIObserver).observe(null,
                                               TOPIC_BROWSERGLUE_TEST,
                                               TOPICDATA_FORCE_PLACES_INIT);
@@ -176,8 +176,6 @@ let gTests = [
     Services.prefs.setBoolPref(PREF_AUTO_EXPORT_HTML, true);
     Services.prefs.setBoolPref(PREF_IMPORT_BOOKMARKS_HTML, true);
 
-    // Force nsBrowserGlue::_initPlaces()
-    print("Simulate Places init");
     waitForImportAndSmartBookmarks(function () {
       // Check bookmarks.html has been imported, but smart bookmarks have not
       // been created.
@@ -191,6 +189,8 @@ let gTests = [
 
       run_next_test();
     });
+    // Force nsBrowserGlue::_initPlaces()
+    do_log_info("Simulate Places init");
     bg.QueryInterface(Ci.nsIObserver).observe(null,
                                               TOPIC_BROWSERGLUE_TEST,
                                               TOPICDATA_FORCE_PLACES_INIT);
@@ -210,8 +210,6 @@ let gTests = [
     // Set preferences.
     Services.prefs.setBoolPref(PREF_RESTORE_DEFAULT_BOOKMARKS, true);
 
-    // Force nsBrowserGlue::_initPlaces()
-    print("Simulate Places init");
     waitForImportAndSmartBookmarks(function () {
       // Check bookmarks.html has been restored.
       itemId =
@@ -223,6 +221,8 @@ let gTests = [
 
       run_next_test();
     });
+    // Force nsBrowserGlue::_initPlaces()
+    do_log_info("Simulate Places init");
     bg.QueryInterface(Ci.nsIObserver).observe(null,
                                               TOPIC_BROWSERGLUE_TEST,
                                               TOPICDATA_FORCE_PLACES_INIT);
@@ -244,8 +244,6 @@ let gTests = [
     Services.prefs.setBoolPref(PREF_IMPORT_BOOKMARKS_HTML, true);
     Services.prefs.setBoolPref(PREF_RESTORE_DEFAULT_BOOKMARKS, true);
 
-    // Force nsBrowserGlue::_initPlaces()
-    print("Simulate Places init");
     waitForImportAndSmartBookmarks(function () {
       // Check bookmarks.html has been restored.
       itemId =
@@ -258,6 +256,8 @@ let gTests = [
 
       run_next_test();
     });
+    // Force nsBrowserGlue::_initPlaces()
+    do_log_info("Simulate Places init");
     bg.QueryInterface(Ci.nsIObserver).observe(null,
                                               TOPIC_BROWSERGLUE_TEST,
                                               TOPICDATA_FORCE_PLACES_INIT);

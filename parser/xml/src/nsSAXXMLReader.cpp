@@ -650,9 +650,11 @@ nsSAXXMLReader::TryChannelCharset(nsIChannel *aChannel,
     nsCAutoString charsetVal;
     nsresult rv = aChannel->GetContentCharset(charsetVal);
     if (NS_SUCCEEDED(rv)) {
-      if (NS_FAILED(nsCharsetAlias::GetPreferred(charsetVal, aCharset)))
+      nsCAutoString preferred;
+      if (NS_FAILED(nsCharsetAlias::GetPreferred(charsetVal, preferred)))
         return false;
 
+      aCharset = preferred;
       aCharsetSource = kCharsetFromChannel;
       return true;
     }

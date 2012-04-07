@@ -39,7 +39,7 @@
 #define MOZILLA_GFX_SCALEDFONTWIN_H_
 
 #include "ScaledFontBase.h"
-#include "gfxGDIFont.h"
+#include <windows.h>
 
 namespace mozilla {
 namespace gfx {
@@ -47,7 +47,7 @@ namespace gfx {
 class ScaledFontWin : public ScaledFontBase
 {
 public:
-  ScaledFontWin(gfxGDIFont* aFont, Float aSize);
+  ScaledFontWin(LOGFONT* aFont, Float aSize);
 
   virtual FontType GetType() const { return FONT_GDI; }
 #ifdef USE_SKIA
@@ -57,6 +57,7 @@ private:
 #ifdef USE_SKIA
   friend class DrawTargetSkia;
 #endif
+  LOGFONT mLogFont;
 };
 
 }

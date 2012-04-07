@@ -470,17 +470,9 @@ let Buf = {
       request_type = options.rilRequestType;
 
       options.rilRequestError = error;
-      if (error) {   	  
-        if (DEBUG) {
-          debug("Received error " + error + " for solicited parcel type " +
-                request_type);
-        }
-        RIL.handleRequestError(options);
-        return;
-      }
       if (DEBUG) {
         debug("Solicited response for request type " + request_type +
-              ", token " + token);
+              ", token " + token + ", error " + error);
       }
     } else if (response_type == RESPONSE_TYPE_UNSOLICITED) {
       request_type = this.readUint32();
@@ -613,6 +605,11 @@ let RIL = {
    * attributes `segmentMaxSeq`, `receivedSegments`, `segments` are inserted.
    */
   _receivedSmsSegmentsMap: {},
+
+  /**
+   * Outgoing messages waiting for SMS-STATUS-REPORT.
+   */
+  _pendingSentSmsMap: {},
 
   /**
    * Mute or unmute the radio.
@@ -985,6 +982,20 @@ let RIL = {
       Buf.simpleRequest(REQUEST_UDUB);
     }
   },
+  
+  holdCall: function holdCall(options) {
+    let call = this.currentCalls[options.callIndex];
+    if (call && call.state == CALL_STATE_ACTIVE) {
+      Buf.simpleRequest(REQUEST_SWITCH_HOLDING_AND_ACTIVE);
+    }
+  },
+
+  resumeCall: function resumeCall(options) {
+    let call = this.currentCalls[options.callIndex];
+    if (call && call.state == CALL_STATE_HOLDING) {
+      Buf.simpleRequest(REQUEST_SWITCH_HOLDING_AND_ACTIVE);
+    }
+  },
 
   /**
    * Send an SMS.
@@ -1014,6 +1025,10 @@ let RIL = {
     options.SMSC = this.SMSC;
 
     //TODO: verify values on 'options'
+
+    if (!options.retryCount) {
+      options.retryCount = 0;
+    }
 
     if (options.segmentMaxSeq > 1) {
       if (!options.segmentSeq) {
@@ -1455,6 +1470,133 @@ let RIL = {
   },
 
   /**
+   * Helper for processing received SMS parcel data.
+   *
+   * @param length
+   *        Length of SMS string in the incoming parcel.
+   *
+   * @return Message parsed or null for invalid message.
+   */
+  _processReceivedSms: function _processReceivedSms(length) {
+    if (!length) {
+      if (DEBUG) debug("Received empty SMS!");
+      return null;
+    }
+
+    // An SMS is a string, but we won't read it as such, so let's read the
+    // string length and then defer to PDU parsing helper.
+    let messageStringLength = Buf.readUint32();
+    if (DEBUG) debug("Got new SMS, length " + messageStringLength);
+    let message = GsmPDUHelper.readMessage();
+    if (DEBUG) debug(message);
+
+    // Read string delimiters. See Buf.readString().
+    let delimiter = Buf.readUint16();
+    if (!(messageStringLength & 1)) {
+      delimiter |= Buf.readUint16();
+    }
+    if (DEBUG) {
+      if (delimiter != 0) {
+        debug("Something's wrong, found string delimiter: " + delimiter);
+      }
+    }
+
+    return message;
+  },
+
+  /**
+   * Helper for processing SMS-DELIVER PDUs.
+   *
+   * @param length
+   *        Length of SMS string in the incoming parcel.
+   *
+   * @return A failure cause defined in 3GPP 23.040 clause 9.2.3.22.
+   */
+  _processSmsDeliver: function _processSmsDeliver(length) {
+    let message = this._processReceivedSms(length);
+    if (!message) {
+      return PDU_FCS_UNSPECIFIED;
+    }
+
+    if (message.header && (message.header.segmentMaxSeq > 1)) {
+      message = this._processReceivedSmsSegment(message);
+    } else {
+      message.fullBody = message.body;
+    }
+
+    if (message) {
+      message.type = "sms-received";
+      this.sendDOMMessage(message);
+    }
+
+    return PDU_FCS_OK;
+  },
+
+  /**
+   * Helper for processing SMS-STATUS-REPORT PDUs.
+   *
+   * @param length
+   *        Length of SMS string in the incoming parcel.
+   *
+   * @return A failure cause defined in 3GPP 23.040 clause 9.2.3.22.
+   */
+  _processSmsStatusReport: function _processSmsStatusReport(length) {
+    let message = this._processReceivedSms(length);
+    if (!message) {
+      return PDU_FCS_UNSPECIFIED;
+    }
+
+    let options = this._pendingSentSmsMap[message.messageRef];
+    if (!options) {
+      return PDU_FCS_OK;
+    }
+
+    let status = message.status;
+
+    // 3GPP TS 23.040 9.2.3.15 `The MS shall interpret any reserved values as
+    // "Service Rejected"(01100011) but shall store them exactly as received.`
+    if ((status >= 0x80)
+        || ((status >= PDU_ST_0_RESERVED_BEGIN)
+            && (status < PDU_ST_0_SC_SPECIFIC_BEGIN))
+        || ((status >= PDU_ST_1_RESERVED_BEGIN)
+            && (status < PDU_ST_1_SC_SPECIFIC_BEGIN))
+        || ((status >= PDU_ST_2_RESERVED_BEGIN)
+            && (status < PDU_ST_2_SC_SPECIFIC_BEGIN))
+        || ((status >= PDU_ST_3_RESERVED_BEGIN)
+            && (status < PDU_ST_3_SC_SPECIFIC_BEGIN))
+        ) {
+      status = PDU_ST_3_SERVICE_REJECTED;
+    }
+
+    // Pending. Waiting for next status report.
+    if ((status >>> 5) == 0x01) {
+      return PDU_FCS_OK;
+    }
+
+    delete this._pendingSentSmsMap[message.messageRef];
+
+    if ((status >>> 5) != 0x00) {
+      // It seems unlikely to get a result code for a failure to deliver.
+      // Even if, we don't want to do anything with this.
+      return PDU_FCS_OK;
+    }
+
+    if ((options.segmentMaxSeq > 1)
+        && (options.segmentSeq < options.segmentMaxSeq)) {
+      // Not last segment. Send next segment here.
+      this._processSentSmsSegment(options);
+    } else {
+      // Last segment delivered with success. Report it.
+      this.sendDOMMessage({
+        type: "sms-delivered",
+        envelopeId: options.envelopeId,
+      });
+    }
+
+    return PDU_FCS_OK;
+  },
+
+  /**
    * Helper for processing received multipart SMS.
    *
    * @return null for handled segments, and an object containing full message
@@ -1508,6 +1650,19 @@ let RIL = {
   },
 
   /**
+   * Helper for processing sent multipart SMS.
+   */
+  _processSentSmsSegment: function _processSentSmsSegment(options) {
+    // Setup attributes for sending next segment
+    let next = options.segmentSeq;
+    options.body = options.segments[next].body;
+    options.encodedBodyLength = options.segments[next].encodedBodyLength;
+    options.segmentSeq = next + 1;
+
+    this.sendSMS(options);
+  },
+
+  /**
    * Handle incoming messages from the main UI thread.
    *
    * @param message
@@ -1557,14 +1712,6 @@ let RIL = {
   },
 
   /**
-   * Handle the RIL request errors
-   */ 
-  handleRequestError: function handleRequestError(options) {	  
-	options.type = "error";
-	this.sendDOMMessage(options);
-  },   
-
-  /**
    * Handle incoming requests from the RIL. We find the method that
    * corresponds to the request type. Incidentally, the request type
    * _is_ the method name, so that's easy.
@@ -1579,7 +1726,11 @@ let RIL = {
   }
 };
 
-RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS() {
+RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let iccStatus = {};
   iccStatus.cardState = Buf.readUint32(); // CARD_STATE_*
   iccStatus.universalPINState = Buf.readUint32(); // CARD_PINSTATE_*
@@ -1611,11 +1762,19 @@ RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS() {
   if (DEBUG) debug("iccStatus: " + JSON.stringify(iccStatus));
   this._processICCStatus(iccStatus);
 };
-RIL[REQUEST_ENTER_SIM_PIN] = function REQUEST_ENTER_SIM_PIN() {
+RIL[REQUEST_ENTER_SIM_PIN] = function REQUEST_ENTER_SIM_PIN(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let response = Buf.readUint32List();
   if (DEBUG) debug("REQUEST_ENTER_SIM_PIN returned " + response);
 };
-RIL[REQUEST_ENTER_SIM_PUK] = function REQUEST_ENTER_SIM_PUK() {
+RIL[REQUEST_ENTER_SIM_PUK] = function REQUEST_ENTER_SIM_PUK(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let response = Buf.readUint32List();
   if (DEBUG) debug("REQUEST_ENTER_SIM_PUK returned " + response);
 };
@@ -1624,7 +1783,11 @@ RIL[REQUEST_ENTER_SIM_PUK2] = null;
 RIL[REQUEST_CHANGE_SIM_PIN] = null;
 RIL[REQUEST_CHANGE_SIM_PIN2] = null;
 RIL[REQUEST_ENTER_NETWORK_DEPERSONALIZATION] = null;
-RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length) {
+RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   this.initRILQuirks();
 
   let calls_length = 0;
@@ -1672,20 +1835,41 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length) {
   this._processCalls(calls);
 };
 RIL[REQUEST_DIAL] = null;
-RIL[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length) {
+RIL[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   this.IMSI = Buf.readString();
 };
-RIL[REQUEST_HANGUP] = function REQUEST_HANGUP (length) {
- this.getCurrentCalls();
-};
+RIL[REQUEST_HANGUP] = function REQUEST_HANGUP(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
+  this.getCurrentCalls();
+}; 
 RIL[REQUEST_HANGUP_WAITING_OR_BACKGROUND] = null;
 RIL[REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND] = null;
 RIL[REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE] = null;
-RIL[REQUEST_SWITCH_HOLDING_AND_ACTIVE] = null;
+RIL[REQUEST_SWITCH_HOLDING_AND_ACTIVE] = function REQUEST_SWITCH_HOLDING_AND_ACTIVE(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
+  // XXX Normally we should get a UNSOLICITED_RESPONSE_CALL_STATE_CHANGED parcel 
+  // notifying us of call state changes, but sometimes we don't (have no idea why).
+  // this.getCurrentCalls() helps update the call state actively.
+  this.getCurrentCalls();
+};
 RIL[REQUEST_CONFERENCE] = null;
 RIL[REQUEST_UDUB] = null;
 RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = null;
-RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH() {
+RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let obj = {};
 
   // GSM
@@ -1733,16 +1917,28 @@ RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH() {
   this.sendDOMMessage({type: "signalstrengthchange",
                        signalStrength: obj});
 };
-RIL[REQUEST_VOICE_REGISTRATION_STATE] = function REQUEST_VOICE_REGISTRATION_STATE(length) {
+RIL[REQUEST_VOICE_REGISTRATION_STATE] = function REQUEST_VOICE_REGISTRATION_STATE(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let state = Buf.readStringList();
 debug("voice registration state: " + state);
   this._processVoiceRegistrationState(state);
 };
-RIL[REQUEST_DATA_REGISTRATION_STATE] = function REQUEST_DATA_REGISTRATION_STATE(length) {
+RIL[REQUEST_DATA_REGISTRATION_STATE] = function REQUEST_DATA_REGISTRATION_STATE(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let state = Buf.readStringList();
   this._processDataRegistrationState(state);
 };
-RIL[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length) {
+RIL[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let operator = Buf.readStringList();
   if (DEBUG) debug("Operator data: " + operator);
   if (operator.length < 3) {
@@ -1762,25 +1958,50 @@ RIL[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length) {
 RIL[REQUEST_RADIO_POWER] = null;
 RIL[REQUEST_DTMF] = null;
 RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
+  if (options.rilRequestError) {
+    switch (options.rilRequestError) {
+      case ERROR_SMS_SEND_FAIL_RETRY:
+        if (options.retryCount < SMS_RETRY_MAX) {
+          options.retryCount++;
+          // TODO: bug 736702 TP-MR, retry interval, retry timeout
+          this.sendSMS(options);
+          break;
+        }
+
+        // Fallback to default error handling if it meets max retry count.
+      default:
+        this.sendDOMMessage({
+          type: "sms-send-failed",
+          envelopeId: options.envelopeId,
+          error: options.rilRequestError,
+        });
+        break;
+    }
+    return;
+  }
+
   options.messageRef = Buf.readUint32();
   options.ackPDU = Buf.readString();
   options.errorCode = Buf.readUint32();
 
-  //TODO handle errors (bug 727319)
-  if ((options.segmentMaxSeq > 1)
-      && (options.segmentSeq < options.segmentMaxSeq)) {
-    // Setup attributes for sending next segment
-    let next = options.segmentSeq;
-    options.body = options.segments[next].body;
-    options.encodedBodyLength = options.segments[next].encodedBodyLength;
-    options.segmentSeq = next + 1;
-
-    this.sendSMS(options);
-    return;
+  if (options.requestStatusReport) {
+    this._pendingSentSmsMap[options.messageRef] = options;
   }
 
-  options.type = "sms-sent";
-  this.sendDOMMessage(options);
+  if ((options.segmentMaxSeq > 1)
+      && (options.segmentSeq < options.segmentMaxSeq)) {
+    // Not last segment
+    if (!options.requestStatusReport) {
+      // Status-Report not requested, send next segment here.
+      this._processSentSmsSegment(options);
+    }
+  } else {
+    // Last segment sent with success. Report it.
+    this.sendDOMMessage({
+      type: "sms-sent",
+      envelopeId: options.envelopeId,
+    });
+  }
 };
 RIL[REQUEST_SEND_SMS_EXPECT_MORE] = null;
 
@@ -1800,6 +2021,10 @@ RIL.readSetupDataCall_v5 = function readSetupDataCall_v5(options) {
 };
 
 RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   if (RILQUIRKS_V5_LEGACY) {
     this.readSetupDataCall_v5(options);
     this.currentDataCalls[options.cid] = options;
@@ -1813,6 +2038,10 @@ RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options)
   this[REQUEST_DATA_CALL_LIST](length, options);
 };
 RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let sw1 = Buf.readUint32();
   let sw2 = Buf.readUint32();
   if (sw1 != ICC_STATUS_NORMAL_ENDING) {
@@ -1839,14 +2068,26 @@ RIL[REQUEST_SET_CALL_FORWARD] = null;
 RIL[REQUEST_QUERY_CALL_WAITING] = null;
 RIL[REQUEST_SET_CALL_WAITING] = null;
 RIL[REQUEST_SMS_ACKNOWLEDGE] = null;
-RIL[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI() {
+RIL[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   this.IMEI = Buf.readString();
 };
-RIL[REQUEST_GET_IMEISV] = function REQUEST_GET_IMEISV() {
+RIL[REQUEST_GET_IMEISV] = function REQUEST_GET_IMEISV(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   this.IMEISV = Buf.readString();
 };
 RIL[REQUEST_ANSWER] = null;
 RIL[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let datacall = this.currentDataCalls[options.cid];
   delete this.currentDataCalls[options.cid];
   datacall.state = GECKO_NETWORK_STATE_DISCONNECTED;
@@ -1856,7 +2097,11 @@ RIL[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL(length
 RIL[REQUEST_QUERY_FACILITY_LOCK] = null;
 RIL[REQUEST_SET_FACILITY_LOCK] = null;
 RIL[REQUEST_CHANGE_BARRING_PASSWORD] = null;
-RIL[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELECTION_MODE() {
+RIL[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELECTION_MODE(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   let mode = Buf.readUint32List();
   this.networkSelectionMode = mode[0];
 };
@@ -1865,7 +2110,11 @@ RIL[REQUEST_SET_NETWORK_SELECTION_MANUAL] = null;
 RIL[REQUEST_QUERY_AVAILABLE_NETWORKS] = null;
 RIL[REQUEST_DTMF_START] = null;
 RIL[REQUEST_DTMF_STOP] = null;
-RIL[REQUEST_BASEBAND_VERSION] = function REQUEST_BASEBAND_VERSION() {
+RIL[REQUEST_BASEBAND_VERSION] = function REQUEST_BASEBAND_VERSION(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   this.basebandVersion = Buf.readString();
   if (DEBUG) debug("Baseband version: " + this.basebandVersion);
 };
@@ -1911,7 +2160,11 @@ RIL.readDataCall_v6 = function readDataCall_v6(obj) {
   return obj;
 };
 
-RIL[REQUEST_DATA_CALL_LIST] = function REQUEST_DATA_CALL_LIST(length) {
+RIL[REQUEST_DATA_CALL_LIST] = function REQUEST_DATA_CALL_LIST(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
   this.initRILQuirks();
   if (!length) {
     this._processDataCallList(null);
@@ -1979,8 +2232,17 @@ RIL[REQUEST_CDMA_DELETE_SMS_ON_RUIM] = null;
 RIL[REQUEST_DEVICE_IDENTITY] = null;
 RIL[REQUEST_EXIT_EMERGENCY_CALLBACK_MODE] = null;
 RIL[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS(length, options) {
-  //TODO: notify main thread if we fail retrieving the SMSC, especially
-  // if there was a pending SMS (bug 727319).
+  if (options.rilRequestError) {
+    if (options.body) {
+      this.sendDOMMessage({
+        type: "sms-send-failed",
+        envelopeId: options.envelopeId,
+        error: options.rilRequestError,
+      });
+    }
+    return;
+  }
+
   this.SMSC = Buf.readString();
   // If the SMSC was not retrieved on RIL initialization, an attempt to
   // get it is triggered from this.sendSMS followed by the 'options'
@@ -2063,48 +2325,12 @@ RIL[UNSOLICITED_RESPONSE_VOICE_NETWORK_STATE_CHANGED] = function UNSOLICITED_RES
   this.requestNetworkInfo();
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS] = function UNSOLICITED_RESPONSE_NEW_SMS(length) {
-  if (!length) {
-    if (DEBUG) debug("Received empty SMS!");
-    //TODO: should we acknowledge the SMS here? maybe only after multiple
-    //failures.
-    return;
-  }
-  // An SMS is a string, but we won't read it as such, so let's read the
-  // string length and then defer to PDU parsing helper.
-  let messageStringLength = Buf.readUint32();
-  if (DEBUG) debug("Got new SMS, length " + messageStringLength);
-  let message = GsmPDUHelper.readMessage();
-  if (DEBUG) debug(message);
-
-  // Read string delimiters. See Buf.readString().
-  let delimiter = Buf.readUint16();
-  if (!(messageStringLength & 1)) {
-    delimiter |= Buf.readUint16();
-  }
-  if (DEBUG) {
-    if (delimiter != 0) {
-      debug("Something's wrong, found string delimiter: " + delimiter);
-    }
-  }
-
-  if (message.header && (message.header.segmentMaxSeq > 1)) {
-    message = this._processReceivedSmsSegment(message);
-  } else {
-    message.fullBody = message.body;
-  }
-
-  if (message) {
-    message.type = "sms-received";
-    this.sendDOMMessage(message);
-  }
-
-  //TODO: this might be a lie? do we want to wait for the mainthread to
-  // report back?
-  this.acknowledgeSMS(true, SMS_HANDLED);
+  let result = this._processSmsDeliver(length);
+  this.acknowledgeSMS(result == PDU_FCS_OK, result);
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT] = function UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT(length) {
-  let info = Buf.readStringList();
-  //TODO
+  let result = this._processSmsStatusReport(length);
+  this.acknowledgeSMS(result == PDU_FCS_OK, result);
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM] = function UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM(length) {
   let info = Buf.readUint32List();
@@ -2152,15 +2378,15 @@ RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() 
                        localTimeStampInMS: now});
 };
 
-RIL[UNSOLICITED_SIGNAL_STRENGTH] = function UNSOLICITED_SIGNAL_STRENGTH() {
-  this[REQUEST_SIGNAL_STRENGTH]();
+RIL[UNSOLICITED_SIGNAL_STRENGTH] = function UNSOLICITED_SIGNAL_STRENGTH(length) {
+  this[REQUEST_SIGNAL_STRENGTH](length, {rilRequestError: ERROR_SUCCESS});
 };
-RIL[UNSOLICITED_DATA_CALL_LIST_CHANGED] = function UNSOLICITED_DATA_CALL_LIST_CHANGED(length, options) {
+RIL[UNSOLICITED_DATA_CALL_LIST_CHANGED] = function UNSOLICITED_DATA_CALL_LIST_CHANGED(length) {
   if (RILQUIRKS_V5_LEGACY) {
     this.getDataCallList();
     return;
   }
-  this[REQUEST_GET_DATA_CALL_LIST](length, options);
+  this[REQUEST_GET_DATA_CALL_LIST](length, {rilRequestError: ERROR_SUCCESS});
 };
 RIL[UNSOLICITED_SUPP_SVC_NOTIFICATION] = null;
 RIL[UNSOLICITED_STK_SESSION_END] = null;
@@ -2197,7 +2423,7 @@ RIL[UNSOLICITED_CDMA_INFO_REC] = null;
 RIL[UNSOLICITED_OEM_HOOK_RAW] = null;
 RIL[UNSOLICITED_RINGBACK_TONE] = null;
 RIL[UNSOLICITED_RESEND_INCALL_MUTE] = null;
-RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length, options) {
+RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length) {
   let version = Buf.readUint32List()[0];
   RILQUIRKS_V5_LEGACY = (version < 5);
   if (DEBUG) {
@@ -2671,6 +2897,65 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Read SM-TL Address.
+   *
+   * @see 3GPP TS 23.040 9.1.2.5
+   */
+  readAddress: function readAddress(len) {
+    // Address Length
+    if (!len || (len < 0)) {
+      if (DEBUG) debug("PDU error: invalid sender address length: " + len);
+      return null;
+    }
+    if (len % 2 == 1) {
+      len += 1;
+    }
+    if (DEBUG) debug("PDU: Going to read address: " + len);
+
+    // Type-of-Address
+    let toa = this.readHexOctet();
+
+    // Address-Value
+    let addr = this.readSwappedNibbleBCD(len / 2).toString();
+    if (addr.length <= 0) {
+      if (DEBUG) debug("PDU error: no number provided");
+      return null;
+    }
+    if ((toa >> 4) == (PDU_TOA_INTERNATIONAL >> 4)) {
+      addr = '+' + addr;
+    }
+
+    return addr;
+  },
+
+  /**
+   * Read GSM TP-Service-Centre-Time-Stamp(TP-SCTS).
+   *
+   * @see 3GPP TS 23.040 9.2.3.11
+   */
+  readTimestamp: function readTimestamp() {
+    let year   = this.readSwappedNibbleBCD(1) + PDU_TIMESTAMP_YEAR_OFFSET;
+    let month  = this.readSwappedNibbleBCD(1) - 1;
+    let day    = this.readSwappedNibbleBCD(1);
+    let hour   = this.readSwappedNibbleBCD(1);
+    let minute = this.readSwappedNibbleBCD(1);
+    let second = this.readSwappedNibbleBCD(1);
+    let timestamp = Date.UTC(year, month, day, hour, minute, second);
+
+    // If the most significant bit of the least significant nibble is 1,
+    // the timezone offset is negative (fourth bit from the right => 0x08).
+    let tzOctet = this.readHexOctet();
+    let tzOffset = this.octetToBCD(tzOctet & ~0x08) * 15 * 60 * 1000;
+    if (tzOctet & 0x08) {
+      timestamp -= tzOffset;
+    } else {
+      timestamp += tzOffset;
+    }
+
+    return timestamp;
+  },
+
+  /**
    * User data can be 7 bit (default alphabet) data, 8 bit data, or 16 bit
    * (UCS2) data.
    *
@@ -2678,22 +2963,19 @@ let GsmPDUHelper = {
    *        message object for output.
    * @param length
    *        length of user data to read in octets.
-   * @param codingScheme
-   *        coding scheme used to decode user data.
-   * @param hasHeader
-   *        whether a header is embedded.
    */
-  readUserData: function readUserData(msg, length, codingScheme, hasHeader) {
+  readUserData: function readUserData(msg, length) {
+    let dcs = msg.dcs;
     if (DEBUG) {
       debug("Reading " + length + " bytes of user data.");
-      debug("Coding scheme: " + codingScheme);
+      debug("Coding scheme: " + dcs);
     }
     // 7 bit is the default fallback encoding.
     let encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
-    switch (codingScheme & 0xC0) {
+    switch (dcs & 0xC0) {
       case 0x0:
         // bits 7..4 = 00xx
-        switch (codingScheme & 0x0C) {
+        switch (dcs & 0x0C) {
           case 0x4:
             encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
             break;
@@ -2704,12 +2986,12 @@ let GsmPDUHelper = {
         break;
       case 0xC0:
         // bits 7..4 = 11xx
-        switch (codingScheme & 0x30) {
+        switch (dcs & 0x30) {
           case 0x20:
             encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
             break;
           case 0x30:
-            if (!codingScheme & 0x04) {
+            if (!dcs & 0x04) {
               encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
             }
             break;
@@ -2723,7 +3005,7 @@ let GsmPDUHelper = {
     if (DEBUG) debug("PDU: message encoding is " + encoding + " bit.");
 
     let paddingBits = 0;
-    if (hasHeader) {
+    if (msg.udhi) {
       msg.header = this.readUserDataHeader();
 
       if (encoding == PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
@@ -2747,8 +3029,8 @@ let GsmPDUHelper = {
           break;
         }
 
-        let langIndex = hasHeader ? msg.header.langIndex : PDU_NL_IDENTIFIER_DEFAULT;
-        let langShiftIndex = hasHeader ? msg.header.langShiftIndex : PDU_NL_IDENTIFIER_DEFAULT;
+        let langIndex = msg.udhi ? msg.header.langIndex : PDU_NL_IDENTIFIER_DEFAULT;
+        let langShiftIndex = msg.udhi ? msg.header.langShiftIndex : PDU_NL_IDENTIFIER_DEFAULT;
         msg.body = this.readSeptetsToString(length, paddingBits, langIndex,
                                             langShiftIndex);
         break;
@@ -2762,6 +3044,50 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Read extra parameters if TP-PI is set.
+   *
+   * @param msg
+   *        message object for output.
+   */
+  readExtraParams: function readExtraParams(msg) {
+    // Because each PDU octet is converted to two UCS2 char2, we should always
+    // get even messageStringLength in this#_processReceivedSms(). So, we'll
+    // always need two delimitors at the end.
+    if (Buf.readAvailable <= 4) {
+      return;
+    }
+
+    // TP-Parameter-Indicator
+    let pi;
+    do {
+      // `The most significant bit in octet 1 and any other TP-PI octets which
+      // may be added later is reserved as an extension bit which when set to a
+      // 1 shall indicate that another TP-PI octet follows immediately
+      // afterwards.` ~ 3GPP TS 23.040 9.2.3.27
+      pi = this.readHexOctet();
+    } while (pi & PDU_PI_EXTENSION);
+
+    // `If the TP-UDL bit is set to "1" but the TP-DCS bit is set to "0" then
+    // the receiving entity shall for TP-DCS assume a value of 0x00, i.e. the
+    // 7bit default alphabet.` ~ 3GPP 23.040 9.2.3.27
+    msg.dcs = 0;
+
+    // TP-Protocol-Identifier
+    if (pi & PDU_PI_PROTOCOL_IDENTIFIER) {
+      msg.pid = this.readHexOctet();
+    }
+    // TP-Data-Coding-Scheme
+    if (pi & PDU_PI_DATA_CODING_SCHEME) {
+      msg.dcs = this.readHexOctet();
+    }
+    // TP-User-Data-Length
+    if (pi & PDU_PI_USER_DATA_LENGTH) {
+      let userDataLength = this.readHexOctet();
+      this.readUserData(msg, userDataLength);
+    }
+  },
+
+  /**
    * Read and decode a PDU-encoded message from the stream.
    *
    * TODO: add some basic sanity checks like:
@@ -2770,12 +3096,22 @@ let GsmPDUHelper = {
   readMessage: function readMessage() {
     // An empty message object. This gets filled below and then returned.
     let msg = {
-      SMSC:      null,
-      reference: null,
-      sender:    null,
-      body:      null,
-      validity:  null,
-      timestamp: null
+      // D:DELIVER, DR:DELIVER-REPORT, S:SUBMIT, SR:SUBMIT-REPORT,
+      // ST:STATUS-REPORT, C:COMMAND
+      // M:Mandatory, O:Optional, X:Unavailable
+      //                  D  DR S  SR ST C
+      SMSC:      null, // M  M  M  M  M  M
+      mti:       null, // M  M  M  M  M  M
+      udhi:      null, // M  M  X  M  M  M
+      sender:    null, // M  X  X  X  X  X
+      recipient: null, // X  X  M  X  M  M
+      pid:       null, // M  O  M  O  O  M
+      dcs:       null, // M  O  M  O  O  X
+      body:      null, // M  O  M  O  O  O
+      timestamp: null, // M  X  X  X  X  X
+      status:    null, // X  X  X  X  M  X
+      scts:      null, // X  X  X  M  M  X
+      dt:        null, // X  X  X  X  M  X
     };
 
     // SMSC info
@@ -2791,90 +3127,72 @@ let GsmPDUHelper = {
 
     // First octet of this SMS-DELIVER or SMS-SUBMIT message
     let firstOctet = this.readHexOctet();
-
+    // Message Type Indicator
+    msg.mti = firstOctet & 0x03;
     // User data header indicator
-    let hasUserDataHeader = firstOctet & PDU_UDHI;
+    msg.udhi = firstOctet & PDU_UDHI;
 
-    // if the sms is of SMS-SUBMIT type it would contain a TP-MR
-    let isSmsSubmit = firstOctet & PDU_MTI_SMS_SUBMIT;
-    if (isSmsSubmit) {
-      msg.reference = this.readHexOctet(); // TP-Message-Reference
+    switch (msg.mti) {
+      case PDU_MTI_SMS_RESERVED:
+        // `If an MS receives a TPDU with a "Reserved" value in the TP-MTI it
+        // shall process the message as if it were an "SMS-DELIVER" but store
+        // the message exactly as received.` ~ 3GPP TS 23.040 9.2.3.1
+      case PDU_MTI_SMS_DELIVER:
+        return this.readDeliverMessage(msg);
+      case PDU_MTI_SMS_STATUS_REPORT:
+        return this.readStatusReportMessage(msg);
+      default:
+        return null;
     }
+  },
 
+  /**
+   * Read and decode a SMS-DELIVER PDU.
+   *
+   * @param msg
+   *        message object for output.
+   */
+  readDeliverMessage: function readDeliverMessage(msg) {
     // - Sender Address info -
-    // Address length
     let senderAddressLength = this.readHexOctet();
-    if (senderAddressLength <= 0) {
-      if (DEBUG) debug("PDU error: invalid sender address length: " + senderAddressLength);
-      return null;
-    }
-    // Type-of-Address
-    let senderTypeOfAddress = this.readHexOctet();
-    if (senderAddressLength % 2 == 1) {
-      senderAddressLength += 1;
-    }
-    if (DEBUG) debug("PDU: Going to read sender address: " + senderAddressLength);
-    msg.sender = this.readSwappedNibbleBCD(senderAddressLength / 2).toString();
-    if (msg.sender.length <= 0) {
-      if (DEBUG) debug("PDU error: no sender number provided");
-      return null;
-    }
-    if ((senderTypeOfAddress >> 4) == (PDU_TOA_INTERNATIONAL >> 4)) {
-      msg.sender = '+' + msg.sender;
-    }
-
+    msg.sender = this.readAddress(senderAddressLength);
     // - TP-Protocolo-Identifier -
-    let protocolIdentifier = this.readHexOctet();
-
+    msg.pid = this.readHexOctet();
     // - TP-Data-Coding-Scheme -
-    let dataCodingScheme = this.readHexOctet();
-
-    // SMS of SMS-SUBMIT type contains a TP-Service-Center-Time-Stamp field
-    // SMS of SMS-DELIVER type contains a TP-Validity-Period octet
-    if (isSmsSubmit) {
-      //  - TP-Validity-Period -
-      //  The Validity Period octet is optional. Depends on the SMS-SUBMIT
-      //  first octet
-      //  Validity Period Format. Bit4 and Bit3 specify the TP-VP field
-      //  according to this table:
-      //  bit4 bit3
-      //    0   0 : TP-VP field not present
-      //    1   0 : TP-VP field present. Relative format (one octet)
-      //    0   1 : TP-VP field present. Enhanced format (7 octets)
-      //    1   1 : TP-VP field present. Absolute format (7 octets)
-      if (firstOctet & (PDU_VPF_ABSOLUTE | PDU_VPF_RELATIVE | PDU_VPF_ENHANCED)) {
-        msg.validity = this.readHexOctet();
-      }
-      //TODO: check validity period
-    } else {
-      // - TP-Service-Center-Time-Stamp -
-      let year   = this.readSwappedNibbleBCD(1) + PDU_TIMESTAMP_YEAR_OFFSET;
-      let month  = this.readSwappedNibbleBCD(1) - 1;
-      let day    = this.readSwappedNibbleBCD(1);
-      let hour   = this.readSwappedNibbleBCD(1);
-      let minute = this.readSwappedNibbleBCD(1);
-      let second = this.readSwappedNibbleBCD(1);
-      msg.timestamp = Date.UTC(year, month, day, hour, minute, second);
-
-      // If the most significant bit of the least significant nibble is 1,
-      // the timezone offset is negative (fourth bit from the right => 0x08).
-      let tzOctet = this.readHexOctet();
-      let tzOffset = this.octetToBCD(tzOctet & ~0x08) * 15 * 60 * 1000;
-      if (tzOctet & 0x08) {
-        msg.timestamp -= tzOffset;
-      } else {
-        msg.timestamp += tzOffset;
-      }
-    }
-
+    msg.dcs = this.readHexOctet();
+    // - TP-Service-Center-Time-Stamp -
+    msg.timestamp = this.readTimestamp();
     // - TP-User-Data-Length -
     let userDataLength = this.readHexOctet();
 
     // - TP-User-Data -
     if (userDataLength > 0) {
-      this.readUserData(msg, userDataLength, dataCodingScheme,
-                        hasUserDataHeader);
+      this.readUserData(msg, userDataLength);
     }
+
+    return msg;
+  },
+
+  /**
+   * Read and decode a SMS-STATUS-REPORT PDU.
+   *
+   * @param msg
+   *        message object for output.
+   */
+  readStatusReportMessage: function readStatusReportMessage(msg) {
+    // TP-Message-Reference
+    msg.messageRef = this.readHexOctet();
+    // TP-Recipient-Address
+    let recipientAddressLength = this.readHexOctet();
+    msg.recipient = this.readAddress(recipientAddressLength);
+    // TP-Service-Centre-Time-Stamp
+    msg.scts = this.readTimestamp();
+    // TP-Discharge-Time
+    msg.dt = this.readTimestamp();
+    // TP-Status
+    msg.status = this.readHexOctet();
+
+    this.readExtraParams(msg);
 
     return msg;
   },
@@ -2903,6 +3221,8 @@ let GsmPDUHelper = {
    *        Table index used for normal 7-bit encoded character lookup.
    * @param langShiftIndex
    *        Table index used for escaped 7-bit encoded character lookup.
+   * @param requestStatusReport
+   *        Request status report.
    */
   writeMessage: function writeMessage(options) {
     if (DEBUG) {
@@ -2988,6 +3308,11 @@ let GsmPDUHelper = {
 
     // PDU type. MTI is set to SMS-SUBMIT
     let firstOctet = PDU_MTI_SMS_SUBMIT;
+
+    // Status-Report-Request
+    if (options.requestStatusReport) {
+      firstOctet |= PDU_SRI_SRR;
+    }
 
     // Validity period
     if (validity) {

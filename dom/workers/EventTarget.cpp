@@ -15,10 +15,10 @@ EventTarget::_Trace(JSTracer* aTrc)
 }
 
 void
-EventTarget::_Finalize(JSContext* aCx)
+EventTarget::_Finalize(JSFreeOp* aFop)
 {
-  mListenerManager._Finalize(aCx);
-  DOMBindingBase::_Finalize(aCx);
+  mListenerManager._Finalize(aFop);
+  DOMBindingBase::_Finalize(aFop);
 }
 
 JSObject*

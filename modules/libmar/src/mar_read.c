@@ -49,6 +49,7 @@
 #include <netinet/in.h>
 #endif
 
+
 /* this is the same hash algorithm used by nsZipArchive.cpp */
 static PRUint32 mar_hash_name(const char *name) {
   PRUint32 val = 0;
@@ -235,6 +236,153 @@ void mar_close(MarFile *mar) {
   free(mar);
 }
 
+/**
+ * Determines the MAR file information.
+ *
+ * @param fp                     An opened MAR file in read mode.
+ * @param hasSignatureBlock      Optional out parameter specifying if the MAR
+ *                               file has a signature block or not.
+ * @param numSignatures          Optional out parameter for storing the number
+ *                               of signatures in the MAR file.
+ * @param hasAdditionalBlocks    Optional out parameter specifying if the MAR
+ *                               file has additional blocks or not.
+ * @param offsetAdditionalBlocks Optional out parameter for the offset to the 
+ *                               first additional block. Value is only valid if
+ *                               hasAdditionalBlocks is not equal to 0.
+ * @param numAdditionalBlocks    Optional out parameter for the number of
+ *                               additional blocks.  Value is only valid if
+ *                               hasAdditionalBlocks is not equal to 0.
+ * @return 0 on success and non-zero on failure.
+ */
+int get_mar_file_info_fp(FILE *fp, 
+                         int *hasSignatureBlock,
+                         int *numSignatures,
+                         int *hasAdditionalBlocks,
+                         int *offsetAdditionalBlocks,
+                         int *numAdditionalBlocks)
+{
+  PRUint32 offsetToIndex, offsetToContent, signatureCount, signatureLen, i;
+  
+  /* One of hasSignatureBlock or hasAdditionalBlocks must be non NULL */
+  if (!hasSignatureBlock && !hasAdditionalBlocks) {
+    return -1;
+  }
+
+
+  /* Skip to the start of the offset index */
+  if (fseek(fp, MAR_ID_SIZE, SEEK_SET)) {
+    return -1;
+  }
+
+  /* Read the offset to the index. */
+  if (fread(&offsetToIndex, sizeof(offsetToIndex), 1, fp) != 1) {
+    return -1;
+  }
+  offsetToIndex = ntohl(offsetToIndex);
+
+  if (numSignatures) {
+     /* Skip past the MAR file size field */
+    if (fseek(fp, sizeof(PRUint64), SEEK_CUR)) {
+      return -1;
+    }
+
+    /* Read the offset to the index. */
+    if (fread(numSignatures, sizeof(*numSignatures), 1, fp) != 1) {
+      return -1;
+    }
+    *numSignatures = ntohl(*numSignatures);
+  }
+
+  /* Skip to the first index entry past the index size field 
+     We do it in 2 calls because offsetToIndex + sizeof(PRUint32) 
+     could oerflow in theory. */
+  if (fseek(fp, offsetToIndex, SEEK_SET)) {
+    return -1;
+  }
+
+  if (fseek(fp, sizeof(PRUint32), SEEK_CUR)) {
+    return -1;
+  }
+
+  /* Read the first offset to content field. */
+  if (fread(&offsetToContent, sizeof(offsetToContent), 1, fp) != 1) {
+    return -1;
+  }
+  offsetToContent = ntohl(offsetToContent);
+
+  /* Check if we have a new or old MAR file */
+  if (hasSignatureBlock) {
+    if (offsetToContent == MAR_ID_SIZE + sizeof(PRUint32)) {
+      *hasSignatureBlock = 0;
+    } else {
+      *hasSignatureBlock = 1;
+    }
+  }
+
+  /* If the caller doesn't care about the product info block 
+     value, then just return */
+  if (!hasAdditionalBlocks) {
+    return 0;
+  }
+
+   /* Skip to the start of the signature block */
+  if (fseeko(fp, SIGNATURE_BLOCK_OFFSET, SEEK_SET)) {
+    return -1;
+  }
+
+  /* Get the number of signatures */
+  if (fread(&signatureCount, sizeof(signatureCount), 1, fp) != 1) {
+    return -1;
+  }
+  signatureCount = ntohl(signatureCount);
+
+  /* Check that we have less than the max amount of signatures so we don't
+     waste too much of either updater's or signmar's time. */
+  if (signatureCount > MAX_SIGNATURES) {
+    return -1;
+  }
+
+  /* Skip past the whole signature block */
+  for (i = 0; i < signatureCount; i++) {
+    /* Skip past the signature algorithm ID */
+    if (fseek(fp, sizeof(PRUint32), SEEK_CUR)) {
+      return -1;
+    }
+
+    /* Read the signature length and skip past the signature */
+    if (fread(&signatureLen, sizeof(PRUint32), 1, fp) != 1) {
+      return -1;
+    }
+    signatureLen = ntohl(signatureLen);
+    if (fseek(fp, signatureLen, SEEK_CUR)) {
+      return -1;
+    }
+  }
+
+  if (ftell(fp) == offsetToContent) {
+    *hasAdditionalBlocks = 0;
+  } else {
+    if (numAdditionalBlocks) {
+      /* We have an additional block, so read in the number of additional blocks
+         and set the offset. */
+      *hasAdditionalBlocks = 1;
+      if (fread(numAdditionalBlocks, sizeof(PRUint32), 1, fp) != 1) {
+        return -1;
+      }
+      *numAdditionalBlocks = ntohl(*numAdditionalBlocks);
+      if (offsetAdditionalBlocks) {
+        *offsetAdditionalBlocks = ftell(fp);
+      }
+    } else if (offsetAdditionalBlocks) {
+      /* numAdditionalBlocks is not specified but offsetAdditionalBlocks 
+         is, so fill it! */
+      *offsetAdditionalBlocks = ftell(fp) + sizeof(PRUint32);
+    }
+  }
+
+  return 0;
+}
+
 /** 
  * Reads the product info block from the MAR file's additional block section.
  * The caller is responsible for freeing the fields in infoBlock
@@ -403,24 +551,22 @@ int mar_read(MarFile *mar, const MarItem *item, int offset, char *buf,
   return fread(buf, 1, nr, mar->fp);
 }
 
-
 /**
  * Determines the MAR file information.
  *
  * @param path                   The path of the MAR file to check.
  * @param hasSignatureBlock      Optional out parameter specifying if the MAR
- *                               file is has a signature block or not.
+ *                               file has a signature block or not.
  * @param numSignatures          Optional out parameter for storing the number
  *                               of signatures in the MAR file.
  * @param hasAdditionalBlocks    Optional out parameter specifying if the MAR
  *                               file has additional blocks or not.
  * @param offsetAdditionalBlocks Optional out parameter for the offset to the 
  *                               first additional block. Value is only valid if
- *                               has_additional_blocks
- *                               is not equal to 0.
+ *                               hasAdditionalBlocks is not equal to 0.
  * @param numAdditionalBlocks    Optional out parameter for the number of
  *                               additional blocks.  Value is only valid if
- *                               has_additional_blocks is not euqal to 0.
+ *                               has_additional_blocks is not equal to 0.
  * @return 0 on success and non-zero on failure.
  */
 int get_mar_file_info(const char *path, 
@@ -442,153 +588,4 @@ int get_mar_file_info(const char *path,
 
   fclose(fp);
   return rv;
-}
-
-/**
- * Determines the MAR file information.
- *
- * @param fp                     An opened MAR file in read mode.
- * @param hasSignatureBlock      Optional out parameter specifying if the MAR
- *                               file is has a signature block or not.
- * @param numSignatures          Optional out parameter for storing the number
- *                               of signatures in the MAR file.
- * @param hasAdditionalBlocks    Optional out parameter specifying if the MAR
- *                               file has additional blocks or not.
- * @param offsetAdditionalBlocks Optional out parameter for the offset to the 
- *                               first additional block. Value is only valid if
- *                               has_additional_blocks
- *                               is not equal to 0.
- * @param numAdditionalBlocks    Optional out parameter for the number of
- *                               additional blocks.  Value is only valid if
- *                               has_additional_blocks is not euqal to 0.
- * @return 0 on success and non-zero on failure.
- */
-int get_mar_file_info_fp(FILE *fp, 
-                         int *hasSignatureBlock,
-                         int *numSignatures,
-                         int *hasAdditionalBlocks,
-                         int *offsetAdditionalBlocks,
-                         int *numAdditionalBlocks)
-{
-  PRUint32 offsetToIndex, offsetToContent, signatureCount, signatureLen;
-  int i;
-  
-  /* One of hasSignatureBlock or hasAdditionalBlocks must be non NULL */
-  if (!hasSignatureBlock && !hasAdditionalBlocks) {
-    return -1;
-  }
-
-
-  /* Skip to the start of the offset index */
-  if (fseek(fp, MAR_ID_SIZE, SEEK_SET)) {
-    return -1;
-  }
-
-  /* Read the offset to the index. */
-  if (fread(&offsetToIndex, sizeof(offsetToIndex), 1, fp) != 1) {
-    return -1;
-  }
-  offsetToIndex = ntohl(offsetToIndex);
-
-  if (numSignatures) {
-     /* Skip past the MAR file size field */
-    if (fseek(fp, sizeof(PRUint64), SEEK_CUR)) {
-      return -1;
-    }
-
-    /* Read the offset to the index. */
-    if (fread(numSignatures, sizeof(*numSignatures), 1, fp) != 1) {
-      return -1;
-    }
-    *numSignatures = ntohl(*numSignatures);
-  }
-
-  /* Skip to the first index entry past the index size field 
-     We do it in 2 calls because offsetToIndex + sizeof(PRUint32) 
-     could oerflow in theory. */
-  if (fseek(fp, offsetToIndex, SEEK_SET)) {
-    return -1;
-  }
-
-  if (fseek(fp, sizeof(PRUint32), SEEK_CUR)) {
-    return -1;
-  }
-
-  /* Read the first offset to content field. */
-  if (fread(&offsetToContent, sizeof(offsetToContent), 1, fp) != 1) {
-    return -1;
-  }
-  offsetToContent = ntohl(offsetToContent);
-
-  /* Check if we have a new or old MAR file */
-  if (hasSignatureBlock) {
-    if (offsetToContent == MAR_ID_SIZE + sizeof(PRUint32)) {
-      *hasSignatureBlock = 0;
-    } else {
-      *hasSignatureBlock = 1;
-    }
-  }
-
-  /* If the caller doesn't care about the product info block 
-     value, then just return */
-  if (!hasAdditionalBlocks) {
-    return 0;
-  }
-
-   /* Skip to the start of the signature block */
-  if (fseeko(fp, SIGNATURE_BLOCK_OFFSET, SEEK_SET)) {
-    return -1;
-  }
-
-  /* Get the number of signatures */
-  if (fread(&signatureCount, sizeof(signatureCount), 1, fp) != 1) {
-    return -1;
-  }
-  signatureCount = ntohl(signatureCount);
-
-  /* Check that we have less than the max amount of signatures so we don't
-     waste too much of either updater's or signmar's time. */
-  if (signatureCount > MAX_SIGNATURES) {
-    return -1;
-  }
-
-  /* Skip past the whole signature block */
-  for (i = 0; i < signatureCount; i++) {
-    /* Skip past the signature algorithm ID */
-    if (fseek(fp, sizeof(PRUint32), SEEK_CUR)) {
-      return -1;
-    }
-
-    /* Read the signature length and skip past the signature */
-    if (fread(&signatureLen, sizeof(PRUint32), 1, fp) != 1) {
-      return -1;
-    }
-    signatureLen = ntohl(signatureLen);
-    if (fseek(fp, signatureLen, SEEK_CUR)) {
-      return -1;
-    }
-  }
-
-  if (ftell(fp) == offsetToContent) {
-    *hasAdditionalBlocks = 0;
-  } else {
-    if (numAdditionalBlocks) {
-      /* We have an additional block, so read in the number of additional blocks
-         and set the offset. */
-      *hasAdditionalBlocks = 1;
-      if (fread(numAdditionalBlocks, sizeof(PRUint32), 1, fp) != 1) {
-        return -1;
-      }
-      *numAdditionalBlocks = ntohl(*numAdditionalBlocks);
-      if (offsetAdditionalBlocks) {
-        *offsetAdditionalBlocks = ftell(fp);
-      }
-    } else if (offsetAdditionalBlocks) {
-      /* numAdditionalBlocks is not specified but offsetAdditionalBlocks 
-         is, so fill it! */
-      *offsetAdditionalBlocks = ftell(fp) + sizeof(PRUint32);
-    }
-  }
-
-  return 0;
 }

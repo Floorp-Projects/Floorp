@@ -391,7 +391,7 @@ class JSString : public js::gc::Cell
 
     /* Only called by the GC for strings with the FINALIZE_STRING kind. */
 
-    inline void finalize(JSContext *cx, bool background);
+    inline void finalize(js::FreeOp *fop);
 
     /* Gets the number of bytes that the chars take on the heap. */
 
@@ -529,9 +529,7 @@ class JSFlatString : public JSLinearString
      */
     inline js::PropertyName *toPropertyName(JSContext *cx);
 
-    /* Only called by the GC for strings with the FINALIZE_STRING kind. */
-
-    inline void finalize(JSRuntime *rt);
+    inline void finalize(js::FreeOp *fop);
 };
 
 JS_STATIC_ASSERT(sizeof(JSFlatString) == sizeof(JSString));
@@ -626,7 +624,7 @@ class JSShortString : public JSInlineString
 
     /* Only called by the GC for strings with the FINALIZE_EXTERNAL_STRING kind. */
 
-    JS_ALWAYS_INLINE void finalize(JSContext *cx, bool background);
+    JS_ALWAYS_INLINE void finalize(js::FreeOp *fop);
 };
 
 JS_STATIC_ASSERT(sizeof(JSShortString) == 2 * sizeof(JSString));
@@ -650,8 +648,7 @@ class JSExternalString : public JSFixedString
 
     /* Only called by the GC for strings with the FINALIZE_EXTERNAL_STRING kind. */
 
-    inline void finalize(JSContext *cx, bool background);
-    inline void finalize();
+    inline void finalize(js::FreeOp *fop);
 };
 
 JS_STATIC_ASSERT(sizeof(JSExternalString) == sizeof(JSString));
@@ -666,7 +663,7 @@ class JSAtom : public JSFixedString
     /* Returns the PropertyName for this.  isIndex() must be false. */
     inline js::PropertyName *asPropertyName();
 
-    inline void finalize(JSRuntime *rt);
+    inline void finalize(js::FreeOp *fop);
 
 #ifdef DEBUG
     void dump();

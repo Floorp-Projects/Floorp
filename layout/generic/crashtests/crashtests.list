@@ -3,7 +3,7 @@ load 25888-2.html
 load 37757-1.html
 load 225868-1.html
 load 264937-1.html
-asserts(13) load 265867-1.html # Bug 575011
+asserts(11) load 265867-1.html # Bug 575011
 load 265867-2.html
 load 289864-1.html
 load 295292-1.html
@@ -217,7 +217,7 @@ load 431260-2.html
 load 435529.html
 load 436194-1.html
 load 436602-1.html
-asserts(1-2) load 436822-1.html
+load 436822-1.html
 load 436823.html
 load 436969-1.html
 load 437156-1.html
@@ -278,7 +278,7 @@ load 476241-1.html
 load 477731-1.html
 load 477928.html
 load 478131-1.html
-asserts(4) load 478170-1.html
+load 478170-1.html
 load 478185-1.html
 asserts-if(!Android,1) load 479938-1.html # Bug 575011
 load 480345-1.html
@@ -309,7 +309,7 @@ load 512749-1.html
 load 513394-1.html
 load 514098-1.xhtml
 load 514800-1.html
-asserts(1) load 515811-1.html
+load 515811-1.html
 load 517968.html
 load 519031.xhtml
 load 520340.html
@@ -386,7 +386,7 @@ load text-overflow-bug713610.html
 load 700031.xhtml
 load 718516.html
 load first-letter-638937.html
-asserts(18) load first-letter-638937-2.html
+asserts(2) load first-letter-638937-2.html
 load 737313-1.html
 load 737313-2.html
 load 737313-3.html

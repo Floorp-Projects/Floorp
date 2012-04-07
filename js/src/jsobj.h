@@ -844,8 +844,8 @@ struct JSObject : public js::ObjectImpl
      */
     inline bool isCallable();
 
-    inline void finish(JSContext *cx);
-    JS_ALWAYS_INLINE void finalize(JSContext *cx, bool background);
+    inline void finish(js::FreeOp *fop);
+    JS_ALWAYS_INLINE void finalize(js::FreeOp *fop);
 
     inline bool hasProperty(JSContext *cx, jsid id, bool *foundp, unsigned flags = 0);
 
@@ -1057,6 +1057,7 @@ struct JSObject : public js::ObjectImpl
     inline bool isScope() const;
     inline bool isScript() const;
     inline bool isStopIteration() const;
+    inline bool isTypedArray() const;
     inline bool isWeakMap() const;
     inline bool isXML() const;
     inline bool isXMLId() const;
@@ -1621,6 +1622,16 @@ NonNullObject(JSContext *cx, const Value &v);
 
 extern const char *
 InformalValueTypeName(const Value &v);
+
+inline void
+DestroyIdArray(FreeOp *fop, JSIdArray *ida);
+
+/* Helpers for throwing. These always return false. */
+extern bool
+Throw(JSContext *cx, jsid id, unsigned errorNumber);
+
+extern bool
+Throw(JSContext *cx, JSObject *obj, unsigned errorNumber);
 
 }  /* namespace js */
 

@@ -7,7 +7,6 @@ builtin(include, build/autoconf/glib.m4)dnl
 builtin(include, build/autoconf/nspr.m4)dnl
 builtin(include, build/autoconf/nss.m4)dnl
 builtin(include, build/autoconf/pkg.m4)dnl
-builtin(include, build/autoconf/freetype2.m4)dnl
 builtin(include, build/autoconf/codeset.m4)dnl
 builtin(include, build/autoconf/altoptions.m4)dnl
 builtin(include, build/autoconf/mozprog.m4)dnl

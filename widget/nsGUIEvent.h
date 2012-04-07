@@ -1548,11 +1548,11 @@ public:
 class nsTouchEvent : public nsInputEvent
 {
 public:
-  nsTouchEvent(nsTouchEvent *aEvent)
-    :nsInputEvent(aEvent->flags & NS_EVENT_FLAG_TRUSTED ? true : false,
-                 aEvent->message,
-                 aEvent->widget,
-                 NS_TOUCH_EVENT)
+  nsTouchEvent(bool isTrusted, nsTouchEvent *aEvent)
+    : nsInputEvent(isTrusted,
+                   aEvent->message,
+                   aEvent->widget,
+                   NS_TOUCH_EVENT)
   {
     isShift = aEvent->isShift;
     isControl = aEvent->isControl;
