@@ -75,7 +75,7 @@ function ImageListener(start_callback, stop_callback)
 
     // We have to cancel the request when we're done with it to break any
     // reference loops!
-    aRequest.cancel(0);
+    aRequest.cancelAndForgetObserver(0);
 
     this.state |= STOP_REQUEST;
 
