@@ -15,6 +15,14 @@ let EXPORTED_SYMBOLS = ["DOMRequestIpcHelper"];
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyGetter(Services, "rs", function() {
+  return Cc["@mozilla.org/dom/dom-request-service;1"].getService(Ci.nsIDOMRequestService);
+});
+
+XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
+  return Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
+});
+
 function DOMRequestIpcHelper() {
 }
 
@@ -54,7 +62,7 @@ DOMRequestIpcHelper.prototype = {
       this._requests = [];
       this._window = null;
       this._messages.forEach((function(msgName) {
-        Services.cpmm.removeMessageListener(msgName, this);
+        cpmm.removeMessageListener(msgName, this);
       }).bind(this));
       if(this.uninit)
         this.uninit();
@@ -70,11 +78,11 @@ DOMRequestIpcHelper.prototype = {
     this._id = this._getRandomId();
     Services.obs.addObserver(this, "inner-window-destroyed", false);
     this._messages.forEach((function(msgName) {
-      Services.cpmm.addMessageListener(msgName, this);
+      cpmm.addMessageListener(msgName, this);
     }).bind(this));
   },
 
   createRequest: function() {
-    return Services.DOMRequest.createRequest(this._window);
+    return Services.rs.createRequest(this._window);
   }
 }
