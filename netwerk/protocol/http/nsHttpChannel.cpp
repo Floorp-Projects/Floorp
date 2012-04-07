@@ -2379,11 +2379,13 @@ nsHttpChannel::OpenNormalCacheEntry()
     nsCOMPtr<nsICacheSession> session;
     rv = gHttpHandler->GetCacheSession(storagePolicy,
                                        getter_AddRefs(session));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
-    nsCacheAccessMode accessRequested;
+    nsCacheAccessMode accessRequested = 0;
     rv = DetermineCacheAccess(&accessRequested);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     mOnCacheEntryAvailableCallback =
         &nsHttpChannel::OnNormalCacheEntryAvailable;
