@@ -115,7 +115,6 @@ nsImageLoadingContent::nsImageLoadingContent()
     mBroken(true),
     mUserDisabled(false),
     mSuppressed(false),
-    mBlockingOnload(false),
     mNewRequestsWillNeedAnimationReset(false),
     mPendingRequestNeedsResetAnimation(false),
     mCurrentRequestNeedsResetAnimation(false),
