@@ -2943,14 +2943,14 @@ let GsmPDUHelper = {
     let timestamp = Date.UTC(year, month, day, hour, minute, second);
 
     // If the most significant bit of the least significant nibble is 1,
-    // the timezone offset is negative (fourth bit from the right => 0x08).
+    // the timezone offset is negative (fourth bit from the right => 0x08):
+    //   localtime = UTC + tzOffset
+    // therefore
+    //   UTC = localtime - tzOffset
     let tzOctet = this.readHexOctet();
     let tzOffset = this.octetToBCD(tzOctet & ~0x08) * 15 * 60 * 1000;
-    if (tzOctet & 0x08) {
-      timestamp -= tzOffset;
-    } else {
-      timestamp += tzOffset;
-    }
+    tzOffset = (tzOctet & 0x08) ? -tzOffset : tzOffset;
+    timestamp -= tzOffset;
 
     return timestamp;
   },
