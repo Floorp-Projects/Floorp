@@ -64,8 +64,7 @@ enum {
   stateDecodeStarted     = PR_BIT(2),
   stateDecodeStopped     = PR_BIT(3),
   stateFrameStopped      = PR_BIT(4),
-  stateRequestStopped    = PR_BIT(5),
-  stateBlockingOnload    = PR_BIT(6)
+  stateRequestStopped    = PR_BIT(5)
 };
 
 /*
@@ -174,15 +173,6 @@ public:
   void SendStartRequest(imgRequestProxy* aProxy);
   void RecordStopRequest(bool aLastPart, nsresult aStatus);
   void SendStopRequest(imgRequestProxy* aProxy, bool aLastPart, nsresult aStatus);
-
-  /* non-virtual imgIOnloadBlocker methods */
-  // NB: If UnblockOnload is sent, and then we are asked to replay the
-  // notifications, we will not send a BlockOnload/UnblockOnload pair.  This
-  // is different from all the other notifications.
-  void RecordBlockOnload();
-  void SendBlockOnload(imgRequestProxy* aProxy);
-  void RecordUnblockOnload();
-  void SendUnblockOnload(imgRequestProxy* aProxy);
 
 private:
   friend class imgStatusNotifyRunnable;

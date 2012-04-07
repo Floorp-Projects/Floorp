@@ -55,7 +55,6 @@ XPIDLSRCS	= \
 		imgIDecoderObserver.idl   \
 		imgIEncoder.idl           \
 		imgILoader.idl            \
-		imgIOnloadBlocker.idl     \
 		imgIRequest.idl           \
 		imgITools.idl             \
 		$(NULL)
