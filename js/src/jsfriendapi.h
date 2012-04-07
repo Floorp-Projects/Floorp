@@ -307,7 +307,6 @@ TraceWeakMaps(WeakMapTracer *trc);
 extern JS_FRIEND_API(bool)
 GCThingIsMarkedGray(void *thing);
 
-
 /*
  * Shadow declarations of JS internal structures, for access by inline access
  * functions below. Do not use these structures in any other way. When adding
@@ -668,10 +667,20 @@ enum Reason {
 } /* namespace gcreason */
 
 extern JS_FRIEND_API(void)
-GCForReason(JSContext *cx, gcreason::Reason reason);
+PrepareCompartmentForGC(JSCompartment *comp);
 
 extern JS_FRIEND_API(void)
-CompartmentGCForReason(JSContext *cx, JSCompartment *comp, gcreason::Reason reason);
+PrepareForFullGC(JSRuntime *rt);
+
+/*
+ * When triggering a GC using one of the functions below, it is first necessary
+ * to select the compartments to be collected. To do this, you can call
+ * PrepareCompartmentForGC on each compartment, or you can call PrepareForFullGC
+ * to select all compartments. Failing to select any compartment is an error.
+ */
+
+extern JS_FRIEND_API(void)
+GCForReason(JSContext *cx, gcreason::Reason reason);
 
 extern JS_FRIEND_API(void)
 ShrinkingGC(JSContext *cx, gcreason::Reason reason);
@@ -763,7 +772,6 @@ class ObjectPtr
             IncrementalReferenceBarrier(value);
         value = NULL;
     }
-    void finalize(JSContext *cx) { finalize(JS_GetRuntime(cx)); }
 
     void init(JSObject *obj) { value = obj; }
 
@@ -786,6 +794,17 @@ class ObjectPtr
 
 extern JS_FRIEND_API(JSObject *)
 GetTestingFunctions(JSContext *cx);
+
+/*
+ * Helper to convert FreeOp to JSFreeOp when the definition of FreeOp is not
+ * available and the compiler does not know that FreeOp inherits from
+ * JSFreeOp.
+ */
+inline JSFreeOp *
+CastToJSFreeOp(FreeOp *fop)
+{
+    return reinterpret_cast<JSFreeOp *>(fop);
+}
 
 } /* namespace js */
 

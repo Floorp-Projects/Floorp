@@ -87,7 +87,7 @@ class JS_FRIEND_API(ProxyHandler) {
     virtual bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g);
     virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
     virtual bool iteratorNext(JSContext *cx, JSObject *proxy, Value *vp);
-    virtual void finalize(JSContext *cx, JSObject *proxy);
+    virtual void finalize(JSFreeOp *fop, JSObject *proxy);
     virtual void trace(JSTracer *trc, JSObject *proxy);
     virtual bool getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver,
                                      uint32_t index, Value *vp, bool *present);

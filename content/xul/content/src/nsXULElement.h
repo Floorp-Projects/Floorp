@@ -248,8 +248,7 @@ public:
           mHasIdAttribute(false),
           mHasClassAttribute(false),
           mHasStyleAttribute(false),
-          mHoldsScriptObject(false),
-          mScriptTypeID(nsIProgrammingLanguage::UNKNOWN)
+          mHoldsScriptObject(false)
     {
     }
 
@@ -297,11 +296,6 @@ public:
     bool                     mHasStyleAttribute:1;
     bool                     mHoldsScriptObject:1;
 
-    // The language ID can not be set on a per-node basis, but is tracked
-    // so that the language ID from the originating root can be used
-    // (eg, when a node from an overlay ends up in our document, that node
-    // must use its original script language, not our document's default.
-    PRUint16                 mScriptTypeID;
 };
 
 class nsXULDocument;

@@ -68,12 +68,12 @@ public:
     // Clear all uses of compiled code for script on the stack. This must be
     // followed by destroying all JIT code for the script.
     static void
-    clearStackReferences(JSContext *cx, JSScript *script);
+    clearStackReferences(FreeOp *fop, JSScript *script);
 
     // Clear all uses of compiled code for script on the stack, along with
     // the specified compiled chunk.
     static void
-    clearStackReferencesAndChunk(JSContext *cx, JSScript *script,
+    clearStackReferencesAndChunk(FreeOp *fop, JSScript *script,
                                  JITScript *jit, size_t chunkIndex,
                                  bool resetUses = true);
 

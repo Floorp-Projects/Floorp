@@ -299,7 +299,7 @@ CreateDIBSectionHook(HDC aDC,
   // a small amount of memory.
 
   // If aSection is non-null, CreateDIBSection won't allocate any new memory.
-  PRBool doCheck = PR_FALSE;
+  bool doCheck = false;
   if (!aSection && aBitmapInfo) {
     PRUint16 bitCount = aBitmapInfo->bmiHeader.biBitCount;
     if (bitCount == 0) {
@@ -321,7 +321,7 @@ CreateDIBSectionHook(HDC aDC,
     // the allocation.
     if (size > 1024 * 1024 * 8) {
       LOG3("CreateDIBSectionHook: Large allocation (size=", size, ")");
-      doCheck = PR_TRUE;
+      doCheck = true;
     }
   }
 

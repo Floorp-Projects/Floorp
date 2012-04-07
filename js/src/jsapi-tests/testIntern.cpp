@@ -24,7 +24,7 @@ struct StringWrapper
 } sw;
 
 void
-FinalizeCallback(JSContext *cx, JSFinalizeStatus status)
+FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status)
 {
     if (status == JSFINALIZE_START)
         sw.strOk = !JS_IsAboutToBeFinalized(sw.str);

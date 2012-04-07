@@ -27,11 +27,8 @@ var knownFailures = {
     'superscript-1' : true,
   },
   'u': {
-    'bold-1' : true,
-    'italic-1' : true,
     'removeformat-1' : true,
     'removeformat-2' : true,
-    'strikethrough-1' : true,
     'strikethrough-2' : true,
     'subscript-1' : true,
     'superscript-1' : true,

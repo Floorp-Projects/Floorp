@@ -202,23 +202,26 @@ TypeIdString(jsid id)
  */
 struct AutoEnterTypeInference
 {
-    JSContext *cx;
+    FreeOp *freeOp;
+    JSCompartment *compartment;
     bool oldActiveAnalysis;
     bool oldActiveInference;
 
     AutoEnterTypeInference(JSContext *cx, bool compiling = false)
-        : cx(cx), oldActiveAnalysis(cx->compartment->activeAnalysis),
-          oldActiveInference(cx->compartment->activeInference)
     {
         JS_ASSERT_IF(!compiling, cx->compartment->types.inferenceEnabled);
-        cx->compartment->activeAnalysis = true;
-        cx->compartment->activeInference = true;
+        init(cx->runtime->defaultFreeOp(), cx->compartment);
+    }
+
+    AutoEnterTypeInference(FreeOp *fop, JSCompartment *comp)
+    {
+        init(fop, comp);
     }
 
     ~AutoEnterTypeInference()
     {
-        cx->compartment->activeAnalysis = oldActiveAnalysis;
-        cx->compartment->activeInference = oldActiveInference;
+        compartment->activeAnalysis = oldActiveAnalysis;
+        compartment->activeInference = oldActiveInference;
 
         /*
          * If there are no more type inference activations on the stack,
@@ -226,13 +229,23 @@ struct AutoEnterTypeInference
          * invoking any scripted code while type inference is running.
          * :TODO: assert this.
          */
-        if (!cx->compartment->activeInference) {
-            TypeCompartment *types = &cx->compartment->types;
+        if (!compartment->activeInference) {
+            TypeCompartment *types = &compartment->types;
             if (types->pendingNukeTypes)
-                types->nukeTypes(cx);
+                types->nukeTypes(freeOp);
             else if (types->pendingRecompiles)
-                types->processPendingRecompiles(cx);
+                types->processPendingRecompiles(freeOp);
         }
+    }
+
+  private:
+    void init(FreeOp *fop, JSCompartment *comp) {
+        freeOp = fop;
+        compartment = comp;
+        oldActiveAnalysis = compartment->activeAnalysis;
+        oldActiveInference = compartment->activeInference;
+        compartment->activeAnalysis = true;
+        compartment->activeInference = true;
     }
 };
 

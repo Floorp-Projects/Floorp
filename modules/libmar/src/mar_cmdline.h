@@ -45,31 +45,32 @@
 extern "C" {
 #endif
 
+struct ProductInformationBlock;
+
 /**
  * Determines MAR file information.
  *
  * @param path                   The path of the MAR file to check.
  * @param hasSignatureBlock      Optional out parameter specifying if the MAR
- *                               file is has a signature block or not.
+ *                               file has a signature block or not.
  * @param numSignatures          Optional out parameter for storing the number
  *                               of signatures in the MAR file.
  * @param hasAdditionalBlocks    Optional out parameter specifying if the MAR
  *                               file has additional blocks or not.
  * @param offsetAdditionalBlocks Optional out parameter for the offset to the 
  *                               first additional block. Value is only valid if
- *                               has_additional_blocks
- *                               is not equal to 0.
+ *                               hasAdditionalBlocks is not equal to 0.
  * @param numAdditionalBlocks    Optional out parameter for the number of
  *                               additional blocks.  Value is only valid if
- *                               has_additional_blocks is not euqal to 0.
+ *                               has_additional_blocks is not equal to 0.
  * @return 0 on success and non-zero on failure.
  */
 int get_mar_file_info(const char *path, 
                       int *hasSignatureBlock,
-                      int *numSignatures,
+                      PRUint32 *numSignatures,
                       int *hasAdditionalBlocks,
-                      int *offsetAdditionalBlocks,
-                      int *numAdditionalBlocks);
+                      PRUint32 *offsetAdditionalBlocks,
+                      PRUint32 *numAdditionalBlocks);
 
 /**
  * Verifies the embedded signature of the specified file path.
@@ -78,7 +79,7 @@ int get_mar_file_info(const char *path,
  * same operation by updater code. This function prints the error message if 
  * verification fails.
  * 
- * @param pathToMAR  The path of the MAR file who's signature should be checked
+ * @param pathToMAR  The path of the MAR file whose signature should be checked
  * @param certData       The certificate file data.
  * @param sizeOfCertData The size of the cert data.
  * @param certName   Used only if compiled as NSS, specifies the certName
@@ -102,6 +103,19 @@ int mar_verify_signature(const char *pathToMAR,
 int
 read_product_info_block(char *path, 
                         struct ProductInformationBlock *infoBlock);
+
+/** 
+ * Refreshes the product information block with the new information.
+ * The input MAR must not be signed or the function call will fail.
+ * 
+ * @param path             The path to the MAR file whose product info block
+ *                         should be refreshed.
+ * @param infoBlock        Out parameter for where to store the result to
+ * @return 0 on success, -1 on failure
+*/
+int
+refresh_product_info_block(const char *path,
+                           struct ProductInformationBlock *infoBlock);
 
 /**
  * Writes out a copy of the MAR at src but with the signature block stripped.

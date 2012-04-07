@@ -100,8 +100,8 @@ TimerObserverRunnable::Run()
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (observerService) {
-    observerService->AddObserver(mObserver, "sleep_notification", PR_FALSE);
-    observerService->AddObserver(mObserver, "wake_notification", PR_FALSE);
+    observerService->AddObserver(mObserver, "sleep_notification", false);
+    observerService->AddObserver(mObserver, "wake_notification", false);
   }
   return NS_OK;
 }

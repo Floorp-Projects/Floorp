@@ -50,6 +50,7 @@ _TEST_FILES =\
 		test_aria_imgmap.html \
 		test_aria_widgetitems.html \
 		test_buttons.html \
+		test_controls.html \
 		test_controls.xul \
 		test_doc.html \
 		test_docarticle.html \

@@ -951,7 +951,6 @@ LeaveWith(JSContext *cx)
 {
     WithObject &withobj = cx->fp()->scopeChain().asWith();
     JS_ASSERT(withobj.maybeStackFrame() == js_FloatingFrameIfGenerator(cx, cx->fp()));
-    JS_ASSERT(withobj.stackDepth() >= 0);
     withobj.setStackFrame(NULL);
     cx->fp()->setScopeChainNoCallObj(withobj.enclosingScope());
 }

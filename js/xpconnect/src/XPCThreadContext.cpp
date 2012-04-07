@@ -167,7 +167,7 @@ SafeGlobalResolve(JSContext *cx, JSObject *obj, jsid id)
 }
 
 static void
-SafeFinalize(JSContext* cx, JSObject* obj)
+SafeFinalize(JSFreeOp *fop, JSObject* obj)
 {
     nsIScriptObjectPrincipal* sop =
         static_cast<nsIScriptObjectPrincipal*>(xpc_GetJSPrivate(obj));

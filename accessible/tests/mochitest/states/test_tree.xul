@@ -17,6 +17,8 @@
   <script type="application/javascript"
           src="../common.js" />
   <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
           src="../states.js" />
   <script type="application/javascript"
           src="../events.js" />

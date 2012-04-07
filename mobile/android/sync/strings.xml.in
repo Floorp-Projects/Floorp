@@ -63,3 +63,6 @@
 
   <!-- Push tab to device strings -->
   <string name="sync_new_tab">&new_tab;</string>
+
+  <!-- Incorrect settings and changing credentials. -->
+  <string name="sync.new.recoverykey.status.incorrect">&sync.new.recoverykey.status.incorrect;</string>

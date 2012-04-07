@@ -19,10 +19,6 @@
 #include "base/string_tokenizer.h"
 #include "base/string_util.h"
 
-#ifdef MOZ_MEMORY_ANDROID
-#include "jemalloc.h"
-#endif
-
 namespace {
 
 enum ParsingState {

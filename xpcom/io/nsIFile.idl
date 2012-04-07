@@ -41,6 +41,16 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include "prio.h"
+#include "prlink.h"
+#include <stdio.h>
+%}
+
+[ptr] native PRFileDescStar(PRFileDesc);
+[ptr] native PRLibraryStar(PRLibrary);
+[ptr] native FILE(FILE);
+
 interface nsISimpleEnumerator;
 
 /**
@@ -56,7 +66,7 @@ interface nsISimpleEnumerator;
  * be safely passed to javascript via xpconnect.  Therefore, the "native
  * methods" are not scriptable. 
  */
-[scriptable, uuid(c8c0a080-0868-11d3-915f-d9d889d48e3c)]
+[scriptable, uuid(272a5020-64f5-485c-a8c4-44b2882ae0a2), builtinclass]
 interface nsIFile : nsISupports
 {
     /**
@@ -333,6 +343,146 @@ interface nsIFile : nsISupports
      *           not specify a directory.
      */
     readonly attribute nsISimpleEnumerator directoryEntries;
+
+    /**
+     *  initWith[Native]Path
+     *
+     *  This function will initialize the nsILocalFile object.  Any
+     *  internal state information will be reset.
+     *
+     *   @param filePath       
+     *       A string which specifies a full file path to a 
+     *       location.  Relative paths will be treated as an
+     *       error (NS_ERROR_FILE_UNRECOGNIZED_PATH).  For 
+     *       initWithNativePath, the filePath must be in the native
+     *       filesystem charset.
+     */
+    void initWithPath(in AString filePath);
+    [noscript] void initWithNativePath(in ACString filePath);
+    
+    /**
+     *  initWithFile
+     *
+     *  Initialize this object with another file
+     *
+     *   @param aFile
+     *       the file this becomes equivalent to
+     */
+    void initWithFile(in nsIFile aFile);
+    
+    /**
+     *  followLinks
+     *
+     *  This attribute will determine if the nsLocalFile will auto
+     *  resolve symbolic links.  By default, this value will be false
+     *  on all non unix systems.  On unix, this attribute is effectively
+     *  a noop.  
+     */
+    attribute boolean followLinks;  
+
+    const unsigned long OS_READAHEAD = 0x40000000;
+    const unsigned long DELETE_ON_CLOSE = 0x80000000;
+
+    /**
+     * Return the result of PR_Open on the file.  The caller is
+     * responsible for calling PR_Close on the result.
+     *
+     * @param flags the PR_Open flags from prio.h, plus optionally
+     * OS_READAHEAD or DELETE_ON_CLOSE. OS_READAHEAD is a hint to the
+     * OS that the file will be read sequentially with agressive
+     * readahead. DELETE_ON_CLOSE may be implemented by removing the
+     * file (by path name) immediately after opening it, so beware of
+     * possible races; the file should be exclusively owned by this
+     * process.
+     */
+    [noscript] PRFileDescStar openNSPRFileDesc(in long flags, in long mode);
+
+    /**
+     * Return the result of fopen on the file.  The caller is
+     * responsible for calling fclose on the result.
+     */
+    [noscript] FILE           openANSIFileDesc(in string mode);
+
+    /**
+     * Return the result of PR_LoadLibrary on the file.  The caller is
+     * responsible for calling PR_UnloadLibrary on the result.
+     */
+    [noscript] PRLibraryStar  load();
+
+    // number of bytes available on disk to non-superuser
+    readonly attribute PRInt64 diskSpaceAvailable;
+
+    /**
+     *  appendRelative[Native]Path
+     *
+     *  Append a relative path to the current path of the nsILocalFile object.
+     *
+     *   @param relativeFilePath
+     *       relativeFilePath is a native relative path. For security reasons,
+     *       this cannot contain .. or cannot start with a directory separator.
+     *       For the |appendRelativeNativePath| method, the relativeFilePath 
+     *       must be in the native filesystem charset.
+     */
+    void appendRelativePath(in AString relativeFilePath);
+    [noscript] void appendRelativeNativePath(in ACString relativeFilePath);
+    
+    /**
+     *  Accessor to a null terminated string which will specify
+     *  the file in a persistent manner for disk storage.
+     *
+     *  The character set of this attribute is undefined.  DO NOT TRY TO
+     *  INTERPRET IT AS HUMAN READABLE TEXT!
+     */
+    attribute ACString persistentDescriptor;
+
+    /** 
+     *  reveal
+     *
+     *  Ask the operating system to open the folder which contains
+     *  this file or folder. This routine only works on platforms which 
+     *  support the ability to open a folder and is run async on Windows.  
+     *  This routine must be called on the main. 
+     */
+    void reveal();
+    
+    /** 
+     *  launch
+     *
+     *  Ask the operating system to attempt to open the file. 
+     *  this really just simulates "double clicking" the file on your platform.
+     *  This routine only works on platforms which support this functionality
+     *  and is run async on Windows.  This routine must be called on the 
+     *  main thread. 
+     */
+    void launch();
+    
+    /**
+     *  getRelativeDescriptor
+     *
+     *  Returns a relative file path in an opaque, XP format. It is therefore
+     *  not a native path.
+     *
+     *  The character set of the string returned from this function is
+     *  undefined.  DO NOT TRY TO INTERPRET IT AS HUMAN READABLE TEXT!
+     *
+     *   @param fromFile
+     *       the file from which the descriptor is relative.
+     *       There is no defined result if this param is null.
+     */
+    ACString getRelativeDescriptor(in nsIFile fromFile);
+
+    /**
+     *  setRelativeDescriptor
+     *
+     *  Initializes the file to the location relative to fromFile using
+     *  a string returned by getRelativeDescriptor.
+     *
+     *   @param fromFile
+     *       the file to which the descriptor is relative
+     *   @param relative
+     *       the relative descriptor obtained from getRelativeDescriptor
+     */
+    void setRelativeDescriptor(in nsIFile fromFile, in ACString relativeDesc);    
 };
 
 %{C++

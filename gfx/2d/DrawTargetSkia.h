@@ -44,7 +44,6 @@
 #include <sstream>
 #include <vector>
 using namespace std;
-#include "gfxImageSurface.h"
 
 namespace mozilla {
 namespace gfx {
@@ -138,7 +137,6 @@ private:
   SkBitmap mBitmap;
   SkRefPtr<SkCanvas> mCanvas;
   SkRefPtr<SkDevice> mDevice;
-  nsRefPtr<gfxImageSurface> mImageSurface;
   vector<SourceSurfaceSkia*> mSnapshots;
 };
 

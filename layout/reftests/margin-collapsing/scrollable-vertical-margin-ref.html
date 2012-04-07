@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase for bug 724352</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+	
+x1,x2,x3,x4,x5,x6 { display:block; }
+x7 {display:block; height:20px;background:lime;}
+    </style>
+</head>
+<body>
+
+<x1><x2 style="overflow:auto; background:grey; height:50px;">
+  <x3><x4 style="padding:20px 0 10px 0; height:20px;"><x7></x7></x4></x3>
+</x2>
+<x6 style="padding-top:10px">x</x6></x1>
+
+
+
+<x1><x2 style="overflow:auto; background:grey; height:70px;">
+  <x3 style="padding-bottom:30px"><x4 style="padding-top:20px; height:20px;"><x7></x7></x4></x3>
+</x2>
+<x6 style="padding-top:10px">x</x6></x1>
+
+
+
+<x1><x2 style="overflow:auto; background:grey; height:60px;">
+  <x3 style="padding-bottom:10px"><x4 style="padding-top:20px; height:20px;"><x7></x7></x4></x3>
+</x2>
+<x6 style="padding-top:10px">x</x6></x1>
+
+
+
+<x1><x2 style="overflow:auto; background:grey; height:50px;">
+  <x3 style="padding-bottom:10px"><x4 style="padding-top:20px; height:20px;"><x7></x7></x4></x3>
+</x2>
+<x6 style="padding-top:10px">x</x6></x1>
+
+
+
+<x1><x2 style="overflow:auto; background:grey; height:60px;">
+  <x3><x4 style="padding:20px 0; height:20px;"><x7></x7></x4></x3>
+</x2>
+<x6 style="padding-top:10px">x</x6></x1>
+
+
+
+<x1><x2 style="overflow:auto; background:grey; height:60px;">
+  <x3><x4 style="padding:20px 0; height:20px;"><x7></x7></x4></x3>
+</x2>
+<x6 style="padding-top:10px">x</x6></x1>
+
+
+
+<x1><x2 style="overflow:auto; background:grey; height:50px;">
+  <x3><x4 style="padding:10px 0 20px 0; height:20px;"><x7></x7></x4></x3>
+</x2>
+<x6 style="padding-top:10px">x</x6></x1>
+
+
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=741666
+-->
+<head>
+  <title>Test for Bug 741666</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=741666">Mozilla Bug 741666</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.8">
+
+/** Test for Bug 306008 - Touch events with a reference held should retain their touch lists **/
+
+let tests = [], testTarget, parent;
+
+let touch = {
+  id: 0,
+  point: {x: 0, y: 0},
+  radius: {x: 0, y: 0},
+  rotation: 0,
+  force: 0.5,
+  target: null
+}
+
+function nextTest() {
+  if (tests.length)
+    SimpleTest.executeSoon(tests.shift());
+}
+
+function checkEvent(aFakeEvent, aTouches) {
+  return function(aEvent, aTrusted) {
+    is(aFakeEvent.ctrlKey, aEvent.ctrlKey, "Correct ctrlKey");
+    is(aFakeEvent.altKey, aEvent.altKey, "Correct altKey");
+    is(aFakeEvent.shiftKey, aEvent.shiftKey, "Correct shiftKey");
+    is(aFakeEvent.metaKey, aEvent.metaKey, "Correct metaKey");
+    is(aEvent.isTrusted, aTrusted, "Event is trusted");
+    checkTouches(aFakeEvent[aTouches], aEvent[aTouches]);
+  }
+}
+
+function checkTouches(aTouches1, aTouches2) {
+  is(aTouches1.length, aTouches2.length, "Correct touches length");
+  for (var i = 0; i < aTouches1.length; i++) {
+    checkTouch(aTouches1[i], aTouches2[i]);
+  }
+}
+
+function checkTouch(aFakeTouch, aTouch) {
+  is(aFakeTouch.identifier, aTouch.identifier, "Touch has correct identifier");
+  is(aFakeTouch.target, aTouch.target, "Touch has correct target");
+  is(aFakeTouch.page.x, aTouch.pageX, "Touch has correct pageX");
+  is(aFakeTouch.page.y, aTouch.pageY, "Touch has correct pageY");
+  is(aFakeTouch.page.x + Math.round(window.mozInnerScreenX), aTouch.screenX, "Touch has correct screenX");
+  is(aFakeTouch.page.y + Math.round(window.mozInnerScreenY), aTouch.screenY, "Touch has correct screenY");
+  is(aFakeTouch.page.x, aTouch.clientX, "Touch has correct clientX");
+  is(aFakeTouch.page.y, aTouch.clientY, "Touch has correct clientY");
+  is(aFakeTouch.radius.x, aTouch.radiusX, "Touch has correct radiusX");
+  is(aFakeTouch.radius.y, aTouch.radiusY, "Touch has correct radiusY");
+  is(aFakeTouch.rotationAngle, aTouch.rotationAngle, "Touch has correct rotationAngle");
+  is(aFakeTouch.force, aTouch.force, "Touch has correct force");
+}
+
+function sendTouchEvent(windowUtils, aType, aEvent, aModifiers) {
+  var ids = [], xs=[], ys=[], rxs = [], rys = [],
+      rotations = [], forces = [];
+
+  for each (var touchType in ["touches", "changedTouches", "targetTouches"]) {
+    for (var i = 0; i < aEvent[touchType].length; i++) {
+      if (ids.indexOf(aEvent[touchType][i].identifier) == -1) {
+        ids.push(aEvent[touchType][i].identifier);
+        xs.push(aEvent[touchType][i].page.x);
+        ys.push(aEvent[touchType][i].page.y);
+        rxs.push(aEvent[touchType][i].radius.x);
+        rys.push(aEvent[touchType][i].radius.y);
+        rotations.push(aEvent[touchType][i].rotationAngle);
+        forces.push(aEvent[touchType][i].force);
+      }
+    }
+  }
+  return windowUtils.sendTouchEvent(aType,
+                                    ids, xs, ys, rxs, rys,
+                                    rotations, forces,
+                                    ids.length, aModifiers, 0);
+}
+
+function touchEvent(aOptions) {
+  if (!aOptions) {
+    aOptions = {};
+  }
+  this.ctrlKey = aOptions.ctrlKey || false;
+  this.altKey = aOptions.altKey || false;
+  this.shiftKey = aOptions.shiftKey || false;
+  this.metaKey = aOptions.metaKey || false;
+  this.touches = aOptions.touches || [];
+  this.targetTouches = aOptions.targetTouches || [];
+  this.changedTouches = aOptions.changedTouches || [];
+}
+
+function testtouch(aOptions) {
+  if (!aOptions)
+    aOptions = {};
+  this.identifier = aOptions.identifier || 0;
+  this.target = aOptions.target || 0;
+  this.page = aOptions.page || {x: 0, y: 0};
+  this.radius = aOptions.radius || {x: 0, y: 0};
+  this.rotationAngle = aOptions.rotationAngle || 0;
+  this.force = aOptions.force || 1;
+}
+
+function testPreventDefault(name) {
+  let cwu = SpecialPowers.getDOMWindowUtils(window);
+  let target = document.getElementById("testTarget");
+  let bcr = target.getBoundingClientRect();
+
+  let touch1 = new testtouch({
+    page: {x: Math.round(bcr.left + bcr.width/2),
+           y: Math.round(bcr.top  + bcr.height/2)},
+    target: target
+  });
+
+  let event = new touchEvent({
+    touches: [touch1],
+    targetTouches: [touch1],
+    changedTouches: [touch1]
+  });
+
+  // test touchstart event fires correctly
+  var checkTouches = checkEvent(event, "touches");
+  var checkTargetTouches = checkEvent(event, "targetTouches");
+
+  /* This is the heart of the test. Verify that the touch event
+     looks correct both in and outside of a setTimeout */
+  window.addEventListener("touchstart", function(firedEvent) {
+    checkTouches(firedEvent, true);
+    setTimeout(function() {
+      checkTouches(firedEvent, true);
+      checkTargetTouches(firedEvent, true);
+
+      event.touches = [];
+      event.targetTouches = [];
+      sendTouchEvent(cwu, "touchend", event, 0);
+
+      nextTest();
+    }, 0);
+  }, false);
+  sendTouchEvent(cwu, "touchstart", event, 0);
+}
+
+function doTest() {
+  tests.push(testPreventDefault);
+
+  tests.push(function() {
+    SimpleTest.finish();
+  });
+
+  nextTest();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(doTest);
+
+</script>
+</pre>
+<div id="parent">
+  <span id="testTarget" style="padding: 5px; border: 1px solid black;">testTarget</span>
+</div>
+</body>
+</html>

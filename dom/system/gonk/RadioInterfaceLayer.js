@@ -58,6 +58,7 @@ const nsIAudioManager = Ci.nsIAudioManager;
 const nsIRadioInterfaceLayer = Ci.nsIRadioInterfaceLayer;
 
 const kSmsReceivedObserverTopic          = "sms-received";
+const kSmsDeliveredObserverTopic         = "sms-delivered";
 const DOM_SMS_DELIVERY_RECEIVED          = "received";
 const DOM_SMS_DELIVERY_SENT              = "sent";
 
@@ -84,9 +85,8 @@ function convertRILCallState(state) {
     case RIL.CALL_STATE_ALERTING:
       return nsIRadioInterfaceLayer.CALL_STATE_ALERTING;
     case RIL.CALL_STATE_INCOMING:
-      return nsIRadioInterfaceLayer.CALL_STATE_INCOMING;
     case RIL.CALL_STATE_WAITING:
-      return nsIRadioInterfaceLayer.CALL_STATE_HELD; // XXX This may not be right...
+      return nsIRadioInterfaceLayer.CALL_STATE_INCOMING; 
     default:
       throw new Error("Unknown rilCallState: " + state);
   }
@@ -152,6 +152,7 @@ function RadioInterfaceLayer() {
     type:           null,
     msisdn:         null,
   };
+  this._sentSmsEnvelopes = {};
 }
 RadioInterfaceLayer.prototype = {
 
@@ -258,6 +259,12 @@ RadioInterfaceLayer.prototype = {
       case "sms-sent":
         this.handleSmsSent(message);
         return;
+      case "sms-delivered":
+        this.handleSmsDelivered(message);
+        return;
+      case "sms-send-failed":
+        this.handleSmsSendFailed(message);
+        return;
       case "datacallstatechange":
         this.handleDataCallState(message.datacall);
         break;
@@ -281,9 +288,6 @@ RadioInterfaceLayer.prototype = {
         break;
       case "siminfo":
         this.radioState.msisdn = message.msisdn;
-        break;
-      case "error":
-        debug("Received error message: " + JSON.stringify(message));
         break;
       default:
         throw new Error("Don't know about this message type: " + message.type);
@@ -426,20 +430,79 @@ RadioInterfaceLayer.prototype = {
     Services.obs.notifyObservers(sms, kSmsReceivedObserverTopic, null);
   },
 
+  /**
+   * Local storage for sent SMS messages.
+   */
+  _sentSmsEnvelopes: null,
+  createSmsEnvelope: function createSmsEnvelope(options) {
+    let i;
+    for (i = 1; this._sentSmsEnvelopes[i]; i++) {
+      // Do nothing.
+    }
+
+    debug("createSmsEnvelope: assigned " + i);
+    options.envelopeId = i;
+    this._sentSmsEnvelopes[i] = options;
+  },
+
   handleSmsSent: function handleSmsSent(message) {
     debug("handleSmsSent: " + JSON.stringify(message));
+
+    let options = this._sentSmsEnvelopes[message.envelopeId];
+    if (!options) {
+      return;
+    }
+
     let timestamp = Date.now();
-    let id = gSmsDatabaseService.saveSentMessage(message.number,
-                                                 message.fullBody,
+    let id = gSmsDatabaseService.saveSentMessage(options.number,
+                                                 options.fullBody,
                                                  timestamp);
     let sms = gSmsService.createSmsMessage(id,
                                            DOM_SMS_DELIVERY_SENT,
                                            null,
-                                           message.number,
-                                           message.fullBody,
+                                           options.number,
+                                           options.fullBody,
                                            timestamp);
-    //TODO handle errors (bug 727319)
-    gSmsRequestManager.notifySmsSent(message.requestId, sms);
+
+    if (!options.requestStatusReport) {
+      // No more used if STATUS-REPORT not requested.
+      delete this._sentSmsEnvelopes[message.envelopeId];
+    } else {
+      options.sms = sms;
+    }
+
+    gSmsRequestManager.notifySmsSent(options.requestId, sms);
+  },
+
+  handleSmsDelivered: function handleSmsDelivered(message) {
+    debug("handleSmsDelivered: " + JSON.stringify(message));
+
+    let options = this._sentSmsEnvelopes[message.envelopeId];
+    if (!options) {
+      return;
+    }
+    delete this._sentSmsEnvelopes[message.envelopeId];
+
+    Services.obs.notifyObservers(options.sms, kSmsDeliveredObserverTopic, null);
+  },
+
+  handleSmsSendFailed: function handleSmsSendFailed(message) {
+    debug("handleSmsSendFailed: " + JSON.stringify(message));
+
+    let options = this._sentSmsEnvelopes[message.envelopeId];
+    if (!options) {
+      return;
+    }
+    delete this._sentSmsEnvelopes[message.envelopeId];
+
+    let error = gSmsRequestManager.UNKNOWN_ERROR;
+    switch (message.error) {
+      case RIL.ERROR_RADIO_NOT_AVAILABLE:
+        error = gSmsRequestManager.NO_SIGNAL_ERROR;
+        break;
+    }
+
+    gSmsRequestManager.notifySmsSendFailed(options.requestId, error);
   },
 
   /**
@@ -512,6 +575,14 @@ RadioInterfaceLayer.prototype = {
 
   rejectCall: function rejectCall(callIndex) {
     this.worker.postMessage({type: "rejectCall", callIndex: callIndex});
+  },
+ 
+  holdCall: function holdCall(callIndex) {
+    this.worker.postMessage({type: "holdCall", callIndex: callIndex});
+  },
+
+  resumeCall: function resumeCall(callIndex) {
+    this.worker.postMessage({type: "resumeCall", callIndex: callIndex});
   },
 
   get microphoneMuted() {
@@ -914,12 +985,16 @@ RadioInterfaceLayer.prototype = {
     options.number = number;
     options.requestId = requestId;
     options.processId = processId;
+    options.requestStatusReport = true;
 
     this._fragmentText(message, options);
     if (options.segmentMaxSeq > 1) {
       options.segmentRef16Bit = this.segmentRef16Bit;
       options.segmentRef = this.nextSegmentRef;
     }
+
+    // Keep current SMS message info for sent/delivered notifications
+    this.createSmsEnvelope(options);
 
     this.worker.postMessage(options);
   },

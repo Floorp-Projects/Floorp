@@ -78,8 +78,8 @@ namespace CType {
   static JSBool ConstructBasic(JSContext* cx, JSObject* obj, unsigned argc, jsval* vp);
 
   static void Trace(JSTracer* trc, JSObject* obj);
-  static void Finalize(JSContext* cx, JSObject* obj);
-  static void FinalizeProtoClass(JSContext* cx, JSObject* obj);
+  static void Finalize(JSFreeOp *fop, JSObject* obj);
+  static void FinalizeProtoClass(JSFreeOp *fop, JSObject* obj);
 
   static JSBool PrototypeGetter(JSContext* cx, JSObject* obj, jsid idval,
     jsval* vp);
@@ -168,7 +168,7 @@ namespace FunctionType {
 
 namespace CClosure {
   static void Trace(JSTracer* trc, JSObject* obj);
-  static void Finalize(JSContext* cx, JSObject* obj);
+  static void Finalize(JSFreeOp *fop, JSObject* obj);
 
   // libffi callback
   static void ClosureStub(ffi_cif* cif, void* result, void** args,
@@ -176,7 +176,7 @@ namespace CClosure {
 }
 
 namespace CData {
-  static void Finalize(JSContext* cx, JSObject* obj);
+  static void Finalize(JSFreeOp *fop, JSObject* obj);
 
   static JSBool ValueGetter(JSContext* cx, JSObject* obj, jsid idval,
                             jsval* vp);
@@ -208,7 +208,7 @@ namespace Int64Base {
   JSBool ToSource(JSContext* cx, JSObject* obj, unsigned argc, jsval* vp,
     bool isUnsigned);
 
-  static void Finalize(JSContext* cx, JSObject* obj);
+  static void Finalize(JSFreeOp *fop, JSObject* obj);
 }
 
 namespace Int64 {
@@ -409,6 +409,12 @@ static JSPropertySpec sFunctionProps[] = {
   { "abi", 0, CTYPESPROP_FLAGS, FunctionType::ABIGetter, NULL },
   { "isVariadic", 0, CTYPESPROP_FLAGS, FunctionType::IsVariadicGetter, NULL },
   { 0, 0, 0, NULL, NULL }
+};
+
+static JSFunctionSpec sFunctionInstanceFunctions[] = {
+  JS_FN("call", js_fun_call, 1, CDATAFN_FLAGS),
+  JS_FN("apply", js_fun_apply, 2, CDATAFN_FLAGS),
+  JS_FS_END
 };
 
 static JSClass sInt64ProtoClass = {
@@ -857,8 +863,8 @@ InitTypeClasses(JSContext* cx, JSObject* parent)
     return false;
   js::AutoObjectRooter sroot(cx, protos[SLOT_STRUCTDATAPROTO]);
 
-  if (!InitTypeConstructor(cx, parent, CTypeProto, CDataProto,
-         sFunctionFunction, NULL, sFunctionProps, NULL, NULL,
+  if (!InitTypeConstructor(cx, parent, CTypeProto, protos[SLOT_POINTERDATAPROTO],
+         sFunctionFunction, NULL, sFunctionProps, sFunctionInstanceFunctions, NULL,
          protos[SLOT_FUNCTIONPROTO], protos[SLOT_FUNCTIONDATAPROTO]))
     return false;
   js::AutoObjectRooter froot(cx, protos[SLOT_FUNCTIONDATAPROTO]);
@@ -2758,7 +2764,7 @@ CType::DefineBuiltin(JSContext* cx,
 }
 
 void
-CType::Finalize(JSContext* cx, JSObject* obj)
+CType::Finalize(JSFreeOp *fop, JSObject* obj)
 {
   // Make sure our TypeCode slot is legit. If it's not, bail.
   jsval slot = JS_GetReservedSlot(obj, SLOT_TYPECODE);
@@ -2771,7 +2777,7 @@ CType::Finalize(JSContext* cx, JSObject* obj)
     // Free the FunctionInfo.
     slot = JS_GetReservedSlot(obj, SLOT_FNINFO);
     if (!JSVAL_IS_VOID(slot))
-      cx->delete_(static_cast<FunctionInfo*>(JSVAL_TO_PRIVATE(slot)));
+      FreeOp::get(fop)->delete_(static_cast<FunctionInfo*>(JSVAL_TO_PRIVATE(slot)));
     break;
   }
 
@@ -2780,7 +2786,7 @@ CType::Finalize(JSContext* cx, JSObject* obj)
     slot = JS_GetReservedSlot(obj, SLOT_FIELDINFO);
     if (!JSVAL_IS_VOID(slot)) {
       void* info = JSVAL_TO_PRIVATE(slot);
-      cx->delete_(static_cast<FieldInfoHash*>(info));
+      FreeOp::get(fop)->delete_(static_cast<FieldInfoHash*>(info));
     }
   }
 
@@ -2790,8 +2796,8 @@ CType::Finalize(JSContext* cx, JSObject* obj)
     slot = JS_GetReservedSlot(obj, SLOT_FFITYPE);
     if (!JSVAL_IS_VOID(slot)) {
       ffi_type* ffiType = static_cast<ffi_type*>(JSVAL_TO_PRIVATE(slot));
-      cx->array_delete(ffiType->elements);
-      cx->delete_(ffiType);
+      FreeOp::get(fop)->array_delete(ffiType->elements);
+      FreeOp::get(fop)->delete_(ffiType);
     }
 
     break;
@@ -2803,7 +2809,7 @@ CType::Finalize(JSContext* cx, JSObject* obj)
 }
 
 void
-CType::FinalizeProtoClass(JSContext* cx, JSObject* obj)
+CType::FinalizeProtoClass(JSFreeOp *fop, JSObject* obj)
 {
   // Finalize the CTypeProto class. The only important bit here is our
   // SLOT_CLOSURECX -- it contains the JSContext that was (lazily) instantiated
@@ -3319,11 +3325,11 @@ PointerType::CreateInternal(JSContext* cx, JSObject* baseType)
     return JSVAL_TO_OBJECT(slot);
 
   // Get ctypes.PointerType.prototype and the common prototype for CData objects
-  // of this type.
-  JSObject* typeProto;
-  JSObject* dataProto;
-  typeProto = CType::GetProtoFromType(baseType, SLOT_POINTERPROTO);
-  dataProto = CType::GetProtoFromType(baseType, SLOT_POINTERDATAPROTO);
+  // of this type, or ctypes.FunctionType.prototype for function pointers.
+  CTypeProtoSlot slotId = CType::GetTypeCode(baseType) == TYPE_function ?
+    SLOT_FUNCTIONDATAPROTO : SLOT_POINTERDATAPROTO;
+  JSObject* dataProto = CType::GetProtoFromType(baseType, slotId);
+  JSObject* typeProto = CType::GetProtoFromType(baseType, SLOT_POINTERPROTO);
 
   // Create a new CType object with the common properties and slots.
   JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_pointer,
@@ -5494,7 +5500,7 @@ CClosure::Trace(JSTracer* trc, JSObject* obj)
 }
 
 void
-CClosure::Finalize(JSContext* cx, JSObject* obj)
+CClosure::Finalize(JSFreeOp *fop, JSObject* obj)
 {
   // Make sure our ClosureInfo slot is legit. If it's not, bail.
   jsval slot = JS_GetReservedSlot(obj, SLOT_CLOSUREINFO);
@@ -5502,7 +5508,7 @@ CClosure::Finalize(JSContext* cx, JSObject* obj)
     return;
 
   ClosureInfo* cinfo = static_cast<ClosureInfo*>(JSVAL_TO_PRIVATE(slot));
-  cx->delete_(cinfo);
+  FreeOp::get(fop)->delete_(cinfo);
 }
 
 void
@@ -5740,7 +5746,7 @@ CData::Create(JSContext* cx,
 }
 
 void
-CData::Finalize(JSContext* cx, JSObject* obj)
+CData::Finalize(JSFreeOp *fop, JSObject* obj)
 {
   // Delete our buffer, and the data it contains if we own it.
   jsval slot = JS_GetReservedSlot(obj, SLOT_OWNS);
@@ -5755,8 +5761,8 @@ CData::Finalize(JSContext* cx, JSObject* obj)
   char** buffer = static_cast<char**>(JSVAL_TO_PRIVATE(slot));
 
   if (owns)
-    cx->array_delete(*buffer);
-  cx->delete_(buffer);
+    FreeOp::get(fop)->array_delete(*buffer);
+  FreeOp::get(fop)->delete_(buffer);
 }
 
 JSObject*
@@ -6124,13 +6130,13 @@ Int64Base::Construct(JSContext* cx,
 }
 
 void
-Int64Base::Finalize(JSContext* cx, JSObject* obj)
+Int64Base::Finalize(JSFreeOp *fop, JSObject* obj)
 {
   jsval slot = JS_GetReservedSlot(obj, SLOT_INT64);
   if (JSVAL_IS_VOID(slot))
     return;
 
-  cx->delete_(static_cast<uint64_t*>(JSVAL_TO_PRIVATE(slot)));
+  FreeOp::get(fop)->delete_(static_cast<uint64_t*>(JSVAL_TO_PRIVATE(slot)));
 }
 
 uint64_t

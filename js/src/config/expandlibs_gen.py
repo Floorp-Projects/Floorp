@@ -47,10 +47,15 @@ def generate(args):
     desc = LibDescriptor()
     for arg in args:
         if isObject(arg):
-            desc['OBJS'].append(os.path.abspath(arg))
-        elif os.path.splitext(arg)[1] == conf.LIB_SUFFIX and \
-             (os.path.exists(arg) or os.path.exists(arg + conf.LIBS_DESC_SUFFIX)):
-            desc['LIBS'].append(os.path.abspath(arg))
+            if os.path.exists(arg):
+                desc['OBJS'].append(os.path.abspath(arg))
+            else:
+                raise Exception("File not found: %s" % arg)
+        elif os.path.splitext(arg)[1] == conf.LIB_SUFFIX:
+            if os.path.exists(arg) or os.path.exists(arg + conf.LIBS_DESC_SUFFIX):
+                desc['LIBS'].append(os.path.abspath(arg))
+            else:
+                raise Exception("File not found: %s" % arg)
     return desc
 
 if __name__ == '__main__':
