@@ -47,6 +47,7 @@
 #include "nsStyleUtil.h"
 #include "CSSCalc.h"
 #include "nsNetUtil.h"
+#include "mozilla/css/ImageLoader.h"
 
 namespace css = mozilla::css;
 
@@ -272,10 +273,10 @@ double nsCSSValue::GetAngleValueInRadians() const
   }
 }
 
-imgIRequest* nsCSSValue::GetImageValue() const
+imgIRequest* nsCSSValue::GetImageValue(nsIDocument* aDocument) const
 {
   NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Image, "not an Image value");
-  return mValue.mImage->mRequest;
+  return mValue.mImage->mRequests.GetWeak(aDocument);
 }
 
 nscoord nsCSSValue::GetFixedLength(nsPresContext* aPresContext) const
@@ -1679,17 +1680,43 @@ nsCSSValue::Image::Image(nsIURI* aURI, nsStringBuffer* aString,
   if (aDocument->GetOriginalDocument()) {
     aDocument = aDocument->GetOriginalDocument();
   }
-  if (aURI &&
-      nsContentUtils::CanLoadImage(aURI, aDocument, aDocument,
-                                   aOriginPrincipal)) {
-    nsContentUtils::LoadImage(aURI, aDocument, aOriginPrincipal, aReferrer,
-                              nsnull, nsIRequest::LOAD_NORMAL,
-                              getter_AddRefs(mRequest));
+
+  if (!mRequests.Init()) {
+    NS_RUNTIMEABORT("out of memory");
   }
+
+  aDocument->StyleImageLoader()->LoadImage(aURI, aOriginPrincipal, aReferrer,
+                                           this);
+}
+
+static PLDHashOperator
+ClearRequestHashtable(nsISupports* aKey, nsCOMPtr<imgIRequest>& aValue,
+                      void* aClosure)
+{
+  nsCSSValue::Image* image = static_cast<nsCSSValue::Image*>(aClosure);
+  nsIDocument* doc = static_cast<nsIDocument*>(aKey);
+
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIDocument> slowDoc = do_QueryInterface(aKey);
+    MOZ_ASSERT(slowDoc == doc);
+  }
+#endif
+
+  if (doc) {
+    doc->StyleImageLoader()->DeregisterCSSImage(image);
+  }
+
+  if (aValue) {
+    aValue->CancelAndForgetObserver(NS_BINDING_ABORTED);
+  }
+
+  return PL_DHASH_REMOVE;
 }
 
 nsCSSValue::Image::~Image()
 {
+  mRequests.Enumerate(&ClearRequestHashtable, this);
 }
 
 nsCSSValueGradientStop::nsCSSValueGradientStop()

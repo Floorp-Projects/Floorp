@@ -129,10 +129,12 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/css/ImageLoader.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
+using namespace mozilla::css;
 
 // Struct containing cached metrics for box-wrapped frames.
 struct nsBoxLayoutMetrics
@@ -707,6 +709,8 @@ EqualImages(imgIRequest *aOldImage, imgIRequest *aNewImage)
 /* virtual */ void
 nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
+  ImageLoader* imageLoader = PresContext()->Document()->StyleImageLoader();
+
   if (aOldStyleContext) {
     // If the old context had a background image image and new context
     // does not have the same image, clear the image load notifier
@@ -719,13 +723,30 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     const nsStyleBackground *oldBG = aOldStyleContext->GetStyleBackground();
     const nsStyleBackground *newBG = GetStyleBackground();
     NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, oldBG) {
+      // If there is an image in oldBG that's not in newBG, drop it.
       if (i >= newBG->mImageCount ||
           oldBG->mLayers[i].mImage != newBG->mLayers[i].mImage) {
-        // stop the image loading for the frame, the image has changed
-        PresContext()->SetImageLoaders(this,
-          nsPresContext::BACKGROUND_IMAGE, nsnull);
-        break;
-      }
+        const nsStyleImage& oldImage = oldBG->mLayers[i].mImage;
+        if (oldImage.GetType() != eStyleImageType_Image) {
+          continue;
+        }
+
+        imageLoader->DisassociateRequestFromFrame(oldImage.GetImageData(),
+                                                  this);
+      }          
+    }
+
+    NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, newBG) {
+      // If there is an image in newBG that's not in oldBG, add it.
+      if (i >= oldBG->mImageCount ||
+          newBG->mLayers[i].mImage != oldBG->mLayers[i].mImage) {
+        const nsStyleImage& newImage = newBG->mLayers[i].mImage;
+        if (newImage.GetType() != eStyleImageType_Image) {
+          continue;
+        }
+
+        imageLoader->AssociateRequestToFrame(newImage.GetImageData(), this);
+      }          
     }
 
     // If we detect a change on margin, padding or border, we store the old
@@ -766,6 +787,7 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   imgIRequest *oldBorderImage = aOldStyleContext
     ? aOldStyleContext->GetStyleBorder()->GetBorderImage()
     : nsnull;
+  imgIRequest *newBorderImage = GetStyleBorder()->GetBorderImage();
   // For border-images, we can't be as conservative (we need to set the
   // new loaders if there has been any change) since the CalcDifference
   // call depended on the result of GetActualBorder() and that result
@@ -779,9 +801,14 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   // is loaded) and paint.  We also don't really care about any callers
   // who try to paint borders with a different style context, because
   // they won't have the correct size for the border either.
-  if (!EqualImages(oldBorderImage, GetStyleBorder()->GetBorderImage())) {
+  if (!EqualImages(oldBorderImage, newBorderImage)) {
     // stop and restart the image loading/notification
-    PresContext()->SetupBorderImageLoaders(this, GetStyleBorder());
+    if (oldBorderImage) {
+      imageLoader->DisassociateRequestFromFrame(oldBorderImage, this);
+    }
+    if (newBorderImage) {
+      imageLoader->AssociateRequestToFrame(newBorderImage, this);
+    }
   }
 
   // If the page contains markup that overrides text direction, and
