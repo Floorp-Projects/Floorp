@@ -1153,7 +1153,7 @@ class HashMap
         return impl.lookup(l) != NULL;
     }
 
-    /* Overwrite existing value with v. Return NULL on oom. */
+    /* Overwrite existing value with v. Return false on oom. */
     template<typename KeyInput, typename ValueInput>
     bool put(const KeyInput &k, const ValueInput &v) {
         AddPtr p = lookupForAdd(k);

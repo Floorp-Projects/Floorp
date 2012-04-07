@@ -627,7 +627,7 @@ ObjectWrapperParent::CPOW_Convert(JSContext *cx, JSObject *obj, JSType type,
 }
 
 /*static*/ void
-ObjectWrapperParent::CPOW_Finalize(JSContext* cx, JSObject* obj)
+ObjectWrapperParent::CPOW_Finalize(js::FreeOp* fop, JSObject* obj)
 {
     CPOW_LOG(("Calling CPOW_Finalize..."));
     

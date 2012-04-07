@@ -910,9 +910,16 @@ Connection::stepStatement(sqlite3_stmt *aStatement)
   // Report very slow SQL statements to Telemetry
   TimeDuration duration = TimeStamp::Now() - startTime;
   if (duration.ToMilliseconds() >= Telemetry::kSlowStatementThreshold) {
-    nsDependentCString statementString(::sqlite3_sql(aStatement));
-    Telemetry::RecordSlowSQLStatement(statementString, getFilename(),
-                                      duration.ToMilliseconds(), false);
+    const char *sql = ::sqlite3_sql(aStatement);
+    // FIXME: Try runs have found hard to reproduce crashes where sql is NULL.
+    // It is not clear how can we get a NULL sql statement in here.
+    // sqlite3_prepare_v2 always copies the incoming argument and fails
+    // if it runs out of memory.
+    if (sql) {
+      nsDependentCString statementString(sql);
+      Telemetry::RecordSlowSQLStatement(statementString, getFilename(),
+                                        duration.ToMilliseconds(), false);
+    }
   }
 
   (void)::sqlite3_extended_result_codes(mDBConn, 0);

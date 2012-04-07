@@ -374,7 +374,6 @@ DOMCI_CLASS(XPathResult)
 // WhatWG WebApps Objects
 DOMCI_CLASS(StorageObsolete)
 DOMCI_CLASS(Storage)
-DOMCI_CLASS(StorageList)
 DOMCI_CLASS(StorageItem)
 DOMCI_CLASS(StorageEvent)
 DOMCI_CLASS(StorageEventObsolete)

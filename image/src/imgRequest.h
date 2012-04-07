@@ -262,6 +262,7 @@ private:
   bool mIsMultiPartChannel : 1;
   bool mGotData : 1;
   bool mIsInCache : 1;
+  bool mBlockingOnload : 1;
 };
 
 #endif

@@ -36,24 +36,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsOuterDocAccessible_H_
-#define _nsOuterDocAccessible_H_
+#ifndef MOZILLA_A11Y_OUTERDOCACCESSIBLE_H_
+#define MOZILLA_A11Y_OUTERDOCACCESSIBLE_H_
 
 #include "nsAccessibleWrap.h"
+
+namespace mozilla {
+namespace a11y {
 
 /**
  * Used for <browser>, <frame>, <iframe>, <page> or editor> elements.
  * 
- * In these variable names, "outer" relates to the nsOuterDocAccessible as
+ * In these variable names, "outer" relates to the OuterDocAccessible as
  * opposed to the nsDocAccessibleWrap which is "inner". The outer node is
  * a something like tags listed above, whereas the inner node corresponds to
  * the inner document root.
  */
 
-class nsOuterDocAccessible : public nsAccessibleWrap
+class OuterDocAccessible : public nsAccessibleWrap
 {
 public:
-  nsOuterDocAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  OuterDocAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  virtual ~OuterDocAccessible();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -82,5 +86,8 @@ protected:
   // nsAccessible
   virtual void CacheChildren();
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif  

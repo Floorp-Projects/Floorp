@@ -116,7 +116,7 @@ interface nsIRILDataCallback : nsISupports
                            in unsigned long length);
 };
 
-[scriptable, uuid(7a439b15-d398-4c57-9772-15aa6d3bc34f)]
+[scriptable, uuid(d2025763-fc32-436e-b207-0228ea1ccd12)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -161,6 +161,8 @@ interface nsIRadioInterfaceLayer : nsISupports
 
   void answerCall(in unsigned long callIndex);
   void rejectCall(in unsigned long callIndex);
+  void holdCall(in unsigned long callIndex);
+  void resumeCall(in unsigned long callIndex);
 
   attribute bool microphoneMuted;
   attribute bool speakerEnabled;

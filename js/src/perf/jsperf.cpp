@@ -184,7 +184,7 @@ static const struct pm_const {
 #undef CONSTANT
 
 static JSBool pm_construct(JSContext* cx, unsigned argc, jsval* vp);
-static void pm_finalize(JSContext* cx, JSObject* obj);
+static void pm_finalize(JSFreeOp* fop, JSObject* obj);
 
 static JSClass pm_class = {
     "PerfMeasurement", JSCLASS_HAS_PRIVATE,
@@ -220,9 +220,9 @@ pm_construct(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static void
-pm_finalize(JSContext* cx, JSObject* obj)
+pm_finalize(JSFreeOp* fop, JSObject* obj)
 {
-    cx->delete_((PerfMeasurement*) JS_GetPrivate(obj));
+    js::FreeOp::get(fop)->delete_(static_cast<PerfMeasurement*>(JS_GetPrivate(obj)));
 }
 
 // Helpers (declared above)

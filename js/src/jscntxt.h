@@ -183,6 +183,45 @@ struct ConservativeGCData
     }
 };
 
+class FreeOp : public JSFreeOp {
+    bool        shouldFreeLater_;
+    bool        onBackgroundThread_;
+
+  public:
+    static FreeOp *get(JSFreeOp *fop) {
+        return static_cast<FreeOp *>(fop);
+    }
+
+    FreeOp(JSRuntime *rt, bool shouldFreeLater, bool onBackgroundThread)
+      : JSFreeOp(rt),
+        shouldFreeLater_(shouldFreeLater),
+        onBackgroundThread_(onBackgroundThread)
+    {
+    }
+
+    bool shouldFreeLater() const {
+        return shouldFreeLater_;
+    }
+
+    bool onBackgroundThread() const {
+        return onBackgroundThread_;
+    }
+
+    inline void free_(void* p);
+
+    JS_DECLARE_DELETE_METHODS(free_, inline)
+
+    static void staticAsserts() {
+        /*
+         * Check that JSFreeOp is the first base class for FreeOp and we can
+         * reinterpret a pointer to JSFreeOp as a pointer to FreeOp without
+         * any offset adjustments. JSClass::freeOp <-> Class::freeOp depends
+         * on this.
+         */
+        JS_STATIC_ASSERT(offsetof(FreeOp, shouldFreeLater_) == sizeof(JSFreeOp));
+    }
+};
+
 } /* namespace js */
 
 struct JSRuntime : js::RuntimeFriendFields
@@ -249,8 +288,8 @@ struct JSRuntime : js::RuntimeFriendFields
     /* Context create/destroy callback. */
     JSContextCallback   cxCallback;
 
-    /* Compartment create/destroy callback. */
-    JSCompartmentCallback compartmentCallback;
+    /* Compartment destroy callback. */
+    JSDestroyCompartmentCallback destroyCompartmentCallback;
 
     js::ActivityCallback  activityCallback;
     void                 *activityCallbackArg;
@@ -313,7 +352,6 @@ struct JSRuntime : js::RuntimeFriendFields
      * full GC.
      */
     volatile uintptr_t  gcIsNeeded;
-    volatile uintptr_t  gcFullIsNeeded;
 
     js::WeakMapBase     *gcWeakMapList;
     js::gcstats::Statistics gcStats;
@@ -327,9 +365,6 @@ struct JSRuntime : js::RuntimeFriendFields
     /* The reason that an interrupt-triggered GC should be called. */
     js::gcreason::Reason gcTriggerReason;
 
-    /* Is the currently running GC a full GC or a compartmental GC? */
-    bool                gcIsFull;
-
     /*
      * If this is true, all marked objects must belong to a compartment being
      * GCed. This is used to look for compartment bugs.
@@ -342,14 +377,8 @@ struct JSRuntime : js::RuntimeFriendFields
      */
     js::gc::State       gcIncrementalState;
 
-    /* Indicates that a new compartment was created during incremental GC. */
-    bool                gcCompartmentCreated;
-
     /* Indicates that the last incremental slice exhausted the mark stack. */
     bool                gcLastMarkSlice;
-
-    /* Is there a full incremental GC in progress. */
-    bool                gcIncrementalIsFull;
 
     /*
      * Indicates that a GC slice has taken place in the middle of an animation
@@ -416,8 +445,9 @@ struct JSRuntime : js::RuntimeFriendFields
     int                 gcZeal_;
     int                 gcZealFrequency;
     int                 gcNextScheduled;
-    bool                gcDebugCompartmentGC;
     bool                gcDeterministicOnly;
+
+    js::Vector<JSObject *, 0, js::SystemAllocPolicy> gcSelectedForMarking;
 
     int gcZeal() { return gcZeal_; }
 
@@ -504,6 +534,14 @@ struct JSRuntime : js::RuntimeFriendFields
 
     js::GCHelperThread  gcHelperThread;
 #endif /* JS_THREADSAFE */
+
+  private:
+    js::FreeOp          defaultFreeOp_;
+
+  public:
+    js::FreeOp *defaultFreeOp() {
+        return &defaultFreeOp_;
+    }
 
     uint32_t            debuggerMutations;
 
@@ -744,7 +782,7 @@ namespace VersionFlags {
 static const unsigned MASK         = 0x0FFF; /* see JSVersion in jspubtd.h */
 static const unsigned HAS_XML      = 0x1000; /* flag induced by XML option */
 static const unsigned FULL_MASK    = 0x3FFF;
-}
+} /* namespace VersionFlags */
 
 static inline JSVersion
 VersionNumber(JSVersion version)
@@ -806,6 +844,17 @@ VersionIsKnown(JSVersion version)
 typedef HashSet<JSObject *,
                 DefaultHasher<JSObject *>,
                 SystemAllocPolicy> BusyArraysSet;
+
+inline void
+FreeOp::free_(void* p) {
+#ifdef JS_THREADSAFE
+    if (shouldFreeLater()) {
+        runtime()->gcHelperThread.freeLater(p);
+        return;
+    }
+#endif
+    runtime()->free_(p);
+}
 
 } /* namespace js */
 

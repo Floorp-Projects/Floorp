@@ -264,7 +264,7 @@ public:
                                   void *mainCodeAddress, size_t mainCodeSize,
                                   void *stubCodeAddress, size_t stubCodeSize) = 0;
 
-    virtual void discardMJITCode(JSContext *cx, mjit::JITScript *jscr, JSScript *script,
+    virtual void discardMJITCode(FreeOp *fop, mjit::JITScript *jscr, JSScript *script,
                                  void* address) = 0;
 
     virtual void registerICCode(JSContext *cx,
@@ -316,7 +316,7 @@ registerMJITCode(JSContext *cx, js::mjit::JITScript *jscr,
  * Method JIT code is about to be discarded
  */
 void
-discardMJITCode(JSContext *cx, mjit::JITScript *jscr, JSScript *script, void* address);
+discardMJITCode(FreeOp *fop, mjit::JITScript *jscr, JSScript *script, void* address);
 
 /*
  * IC code has been allocated within the given JITScript

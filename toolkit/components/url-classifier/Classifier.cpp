@@ -54,7 +54,7 @@ extern PRLogModuleInfo *gUrlClassifierDbServiceLog;
 #define LOG_ENABLED() PR_LOG_TEST(gUrlClassifierDbServiceLog, 4)
 #else
 #define LOG(args)
-#define LOG_ENABLED() (PR_FALSE)
+#define LOG_ENABLED() (false)
 #endif
 
 namespace mozilla {
@@ -210,7 +210,7 @@ Classifier::Reset()
     rv = entries->GetNext(getter_AddRefs(file));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = file->Remove(PR_FALSE);
+    rv = file->Remove(false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   NS_ENSURE_SUCCESS(rv, rv);

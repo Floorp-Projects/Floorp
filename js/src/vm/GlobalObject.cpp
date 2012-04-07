@@ -370,8 +370,8 @@ GlobalObject::clear(JSContext *cx)
     for (gc::CellIter i(cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->compileAndGo && script->hasJITCode() && script->hasClearedGlobal()) {
-            mjit::Recompiler::clearStackReferences(cx, script);
-            mjit::ReleaseScriptCode(cx, script);
+            mjit::Recompiler::clearStackReferences(cx->runtime->defaultFreeOp(), script);
+            mjit::ReleaseScriptCode(cx->runtime->defaultFreeOp(), script);
         }
     }
 #endif
@@ -453,9 +453,9 @@ DefinePropertiesAndBrand(JSContext *cx, JSObject *obj, JSPropertySpec *ps, JSFun
 }
 
 void
-GlobalDebuggees_finalize(JSContext *cx, JSObject *obj)
+GlobalDebuggees_finalize(FreeOp *fop, JSObject *obj)
 {
-    cx->delete_((GlobalObject::DebuggerVector *) obj->getPrivate());
+    fop->delete_((GlobalObject::DebuggerVector *) obj->getPrivate());
 }
 
 static Class
@@ -507,7 +507,7 @@ GlobalObject::addDebugger(JSContext *cx, Debugger *dbg)
     if (debuggers->empty() && !compartment()->addDebuggee(cx, this))
         return false;
     if (!debuggers->append(dbg)) {
-        compartment()->removeDebuggee(cx, this);
+        compartment()->removeDebuggee(cx->runtime->defaultFreeOp(), this);
         return false;
     }
     return true;

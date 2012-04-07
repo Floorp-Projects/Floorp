@@ -530,19 +530,7 @@ Service::shutdown()
 sqlite3_vfs *ConstructTelemetryVFS();
 
 #ifdef MOZ_MEMORY
-
-#  if defined(XP_WIN) || defined(SOLARIS) || defined(ANDROID) || defined(XP_MACOSX)
-#    include "jemalloc.h"
-#  elif defined(XP_LINUX)
-// jemalloc is directly linked into firefox-bin; libxul doesn't link
-// with it.  So if we tried to use je_malloc_usable_size_in_advance directly
-// here, it wouldn't be defined.  Instead, we don't include the jemalloc header
-// and weakly link against je_malloc_usable_size_in_advance.
-extern "C" {
-extern size_t je_malloc_usable_size_in_advance(size_t size)
-  NS_VISIBILITY_DEFAULT __attribute__((weak));
-}
-#  endif  // XP_LINUX
+#  include "jemalloc.h"
 
 namespace {
 

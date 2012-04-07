@@ -161,7 +161,7 @@ interface nsIXPCScriptable : nsISupports
                    in PRUint32 type, in JSValPtr vp);
 
     void   finalize(in nsIXPConnectWrappedNative wrapper,
-                    in JSContextPtr cx, in JSObjectPtr obj);
+                    in JSFreeOpPtr fop, in JSObjectPtr obj);
 
     boolean checkAccess(in nsIXPConnectWrappedNative wrapper,
                        in JSContextPtr cx, in JSObjectPtr obj, in jsid id,

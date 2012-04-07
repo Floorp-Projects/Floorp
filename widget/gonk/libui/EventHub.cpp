@@ -970,9 +970,10 @@ status_t EventHub::openDeviceLocked(const char *devicePath) {
         // Some joysticks such as the PS3 controller report axes that conflict
         // with the ABS_MT range.  Try to confirm that the device really is
         // a touch screen.
-        if (test_bit(BTN_TOUCH, device->keyBitmask) || !haveGamepadButtons) {
+        // Mozilla Bug 741038 - support GB touchscreen drivers
+        //if (test_bit(BTN_TOUCH, device->keyBitmask) || !haveGamepadButtons) {
             device->classes |= INPUT_DEVICE_CLASS_TOUCH | INPUT_DEVICE_CLASS_TOUCH_MT;
-        }
+        //}
     // Is this an old style single-touch driver?
     } else if (test_bit(BTN_TOUCH, device->keyBitmask)
             && test_bit(ABS_X, device->absBitmask)

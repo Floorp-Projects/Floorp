@@ -324,3 +324,5 @@ fails == block-clear-7g-left.html block-clear-7efgh-left-ref2.html # Bug 493380
 == block-zero-min-height-3d.html block-zero-min-height-3-ref.html
 == block-percent-1.html block-percent-1-ref.html
 == dynamic-add-text-1.html dynamic-add-text-1-ref.html # Bug 467321
+== scrollable-vertical-margin.html scrollable-vertical-margin-ref.html
+== scrollable-horizontal-margin.html scrollable-horizontal-margin-ref.html

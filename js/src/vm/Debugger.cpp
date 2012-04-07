@@ -283,58 +283,45 @@ ScriptGlobal(JSContext *cx, JSScript *script, GlobalObject *scriptGlobal)
     JS_NOT_REACHED("ScriptGlobal: live non-held script not on stack");
 }
 
-bool
-BreakpointSite::recompile(JSContext *cx, bool forTrap)
+void
+BreakpointSite::recompile(FreeOp *fop)
 {
 #ifdef JS_METHODJIT
     if (script->hasJITCode()) {
-        Maybe<AutoCompartment> ac;
-        if (!forTrap) {
-            ac.construct(cx, ScriptGlobal(cx, script, scriptGlobal));
-            if (!ac.ref().enter())
-                return false;
-        }
-        mjit::Recompiler::clearStackReferences(cx, script);
-        mjit::ReleaseScriptCode(cx, script);
+        mjit::Recompiler::clearStackReferences(fop, script);
+        mjit::ReleaseScriptCode(fop, script);
     }
 #endif
-    return true;
-}
-
-bool
-BreakpointSite::inc(JSContext *cx)
-{
-    if (enabledCount == 0 && !trapHandler) {
-        if (!recompile(cx, false))
-            return false;
-    }
-    enabledCount++;
-    return true;
 }
 
 void
-BreakpointSite::dec(JSContext *cx)
+BreakpointSite::inc(FreeOp *fop)
+{
+    if (enabledCount == 0 && !trapHandler)
+        recompile(fop);
+    enabledCount++;
+}
+
+void
+BreakpointSite::dec(FreeOp *fop)
 {
     JS_ASSERT(enabledCount > 0);
     enabledCount--;
     if (enabledCount == 0 && !trapHandler)
-        recompile(cx, false);  /* ignore failure */
-}
-
-bool
-BreakpointSite::setTrap(JSContext *cx, JSTrapHandler handler, const Value &closure)
-{
-    if (enabledCount == 0) {
-        if (!recompile(cx, true))
-            return false;
-    }
-    trapHandler = handler;
-    trapClosure = closure;
-    return true;
+        recompile(fop);
 }
 
 void
-BreakpointSite::clearTrap(JSContext *cx, JSTrapHandler *handlerp, Value *closurep)
+BreakpointSite::setTrap(FreeOp *fop, JSTrapHandler handler, const Value &closure)
+{
+    if (enabledCount == 0)
+        recompile(fop);
+    trapHandler = handler;
+    trapClosure = closure;
+}
+
+void
+BreakpointSite::clearTrap(FreeOp *fop, JSTrapHandler *handlerp, Value *closurep)
 {
     if (handlerp)
         *handlerp = trapHandler;
@@ -344,19 +331,19 @@ BreakpointSite::clearTrap(JSContext *cx, JSTrapHandler *handlerp, Value *closure
     trapHandler = NULL;
     trapClosure = UndefinedValue();
     if (enabledCount == 0) {
-        if (!cx->runtime->gcRunning) {
+        if (!fop->runtime()->gcRunning) {
             /* If the GC is running then the script is being destroyed. */
-            recompile(cx, true);  /* ignore failure */
+            recompile(fop);
         }
-        destroyIfEmpty(cx->runtime);
+        destroyIfEmpty(fop);
     }
 }
 
 void
-BreakpointSite::destroyIfEmpty(JSRuntime *rt)
+BreakpointSite::destroyIfEmpty(FreeOp *fop)
 {
     if (JS_CLIST_IS_EMPTY(&breakpoints) && !trapHandler)
-        script->destroyBreakpointSite(rt, pc);
+        script->destroyBreakpointSite(fop, pc);
 }
 
 Breakpoint *
@@ -396,15 +383,14 @@ Breakpoint::fromSiteLinks(JSCList *links)
 }
 
 void
-Breakpoint::destroy(JSContext *cx)
+Breakpoint::destroy(FreeOp *fop)
 {
     if (debugger->enabled)
-        site->dec(cx);
+        site->dec(fop);
     JS_REMOVE_LINK(&debuggerLinks);
     JS_REMOVE_LINK(&siteLinks);
-    JSRuntime *rt = cx->runtime;
-    site->destroyIfEmpty(rt);
-    rt->delete_(this);
+    site->destroyIfEmpty(fop);
+    fop->delete_(this);
 }
 
 Breakpoint *
@@ -1462,9 +1448,9 @@ Debugger::trace(JSTracer *trc)
 }
 
 void
-Debugger::sweepAll(JSContext *cx)
+Debugger::sweepAll(FreeOp *fop)
 {
-    JSRuntime *rt = cx->runtime;
+    JSRuntime *rt = fop->runtime();
 
     for (JSCList *p = &rt->debuggerList; (p = JS_NEXT_LINK(p)) != &rt->debuggerList;) {
         Debugger *dbg = Debugger::fromLinks(p);
@@ -1476,7 +1462,7 @@ Debugger::sweepAll(JSContext *cx)
              * objects, this must be done before finalize time.
              */
             for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
-                dbg->removeDebuggeeGlobal(cx, e.front(), NULL, &e);
+                dbg->removeDebuggeeGlobal(fop, e.front(), NULL, &e);
         }
 
     }
@@ -1487,29 +1473,29 @@ Debugger::sweepAll(JSContext *cx)
         for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
             GlobalObject *global = e.front();
             if (IsAboutToBeFinalized(global))
-                detachAllDebuggersFromGlobal(cx, global, &e);
+                detachAllDebuggersFromGlobal(fop, global, &e);
         }
     }
 }
 
 void
-Debugger::detachAllDebuggersFromGlobal(JSContext *cx, GlobalObject *global,
+Debugger::detachAllDebuggersFromGlobal(FreeOp *fop, GlobalObject *global,
                                        GlobalObjectSet::Enum *compartmentEnum)
 {
     const GlobalObject::DebuggerVector *debuggers = global->getDebuggers();
     JS_ASSERT(!debuggers->empty());
     while (!debuggers->empty())
-        debuggers->back()->removeDebuggeeGlobal(cx, global, compartmentEnum, NULL);
+        debuggers->back()->removeDebuggeeGlobal(fop, global, compartmentEnum, NULL);
 }
 
 void
-Debugger::finalize(JSContext *cx, JSObject *obj)
+Debugger::finalize(FreeOp *fop, JSObject *obj)
 {
     Debugger *dbg = fromJSObject(obj);
     if (!dbg)
         return;
     JS_ASSERT(dbg->debuggees.empty());
-    cx->delete_(dbg);
+    fop->delete_(dbg);
 }
 
 Class Debugger::jsclass = {
@@ -1575,23 +1561,10 @@ Debugger::setEnabled(JSContext *cx, unsigned argc, Value *vp)
 
     if (enabled != dbg->enabled) {
         for (Breakpoint *bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
-            if (enabled) {
-                if (!bp->site->inc(cx)) {
-                    /*
-                     * Roll back the changes on error to keep the
-                     * BreakpointSite::enabledCount counters correct.
-                     */
-                    for (Breakpoint *bp2 = dbg->firstBreakpoint();
-                         bp2 != bp;
-                         bp2 = bp2->nextInDebugger())
-                    {
-                        bp->site->dec(cx);
-                    }
-                    return false;
-                }
-            } else {
-                bp->site->dec(cx);
-            }
+            if (enabled)
+                bp->site->inc(cx->runtime->defaultFreeOp());
+            else
+                bp->site->dec(cx->runtime->defaultFreeOp());
         }
     }
 
@@ -1756,7 +1729,7 @@ Debugger::removeDebuggee(JSContext *cx, unsigned argc, Value *vp)
         return false;
     GlobalObject *global = &referent->global();
     if (dbg->debuggees.has(global))
-        dbg->removeDebuggeeGlobal(cx, global, NULL, NULL);
+        dbg->removeDebuggeeGlobal(cx->runtime->defaultFreeOp(), global, NULL, NULL);
     args.rval().setUndefined();
     return true;
 }
@@ -1946,7 +1919,7 @@ Debugger::addDebuggeeGlobal(JSContext *cx, GlobalObject *global)
 }
 
 void
-Debugger::removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
+Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
                                GlobalObjectSet::Enum *compartmentEnum,
                                GlobalObjectSet::Enum *debugEnum)
 {
@@ -1992,34 +1965,352 @@ Debugger::removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
      */
     v->erase(p);
     if (v->empty())
-        global->compartment()->removeDebuggee(cx, global, compartmentEnum);
+        global->compartment()->removeDebuggee(fop, global, compartmentEnum);
     if (debugEnum)
         debugEnum->removeFront();
     else
         debuggees.remove(global);
 }
 
-/* A set of JSCompartment pointers. */
-typedef HashSet<JSCompartment *, DefaultHasher<JSCompartment *>, RuntimeAllocPolicy> CompartmentSet;
+/* 
+ * A class for parsing 'findScripts' query arguments and searching for
+ * scripts that match the criteria they represent.
+ */
+class Debugger::ScriptQuery {
+  public:
+    /* Construct a ScriptQuery to use matching scripts for |dbg|. */
+    ScriptQuery(JSContext *cx, Debugger *dbg):
+        cx(cx), debugger(dbg), compartments(cx), innermostForGlobal(cx) {}
+
+    /* 
+     * Initialize this ScriptQuery. Raise an error and return false if we
+     * haven't enough memory.
+     */
+    bool init() {
+        if (!globals.init() ||
+            !compartments.init() ||
+            !innermostForGlobal.init())
+        {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+
+        return true;
+    }
+
+    /*
+     * Parse the query object |query|, and prepare to match only the scripts
+     * it specifies.
+     */
+    bool parseQuery(JSObject *query) {
+        /*
+         * Check for a 'global' property, which limits the results to those
+         * scripts scoped to a particular global object.
+         */
+        Value global;
+        if (!query->getProperty(cx, cx->runtime->atomState.globalAtom, &global))
+            return false;
+        if (global.isUndefined()) {
+            matchAllDebuggeeGlobals();
+        } else {
+            JSObject *referent = debugger->unwrapDebuggeeArgument(cx, global);
+            if (!referent)
+                return false;
+            GlobalObject *globalObject = &referent->global();
+
+            /*
+             * If the given global isn't a debuggee, just leave the set of
+             * acceptable globals empty; we'll return no scripts.
+             */
+            if (debugger->debuggees.has(globalObject)) {
+                if (!matchSingleGlobal(globalObject))
+                    return false;
+            }
+        }
+
+        /* Check for a 'url' property. */
+        if (!query->getProperty(cx, cx->runtime->atomState.urlAtom, &url))
+            return false;
+        if (!url.isUndefined() && !url.isString()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
+                                 "query object's 'url' property", "neither undefined nor a string");
+            return false;
+        }
+
+        /* Check for a 'line' property. */
+        Value lineProperty;
+        if (!query->getProperty(cx, cx->runtime->atomState.lineAtom, &lineProperty))
+            return false;
+        if (lineProperty.isUndefined()) {
+            hasLine = false;
+        } else if (lineProperty.isNumber()) {
+            if (url.isUndefined()) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_QUERY_LINE_WITHOUT_URL);
+                return false;
+            }
+            double doubleLine = lineProperty.toNumber();
+            if (doubleLine <= 0 || (unsigned int) doubleLine != doubleLine) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_BAD_LINE);
+                return false;
+            }
+            hasLine = true;
+            line = doubleLine;
+        } else {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
+                                 "query object's 'line' property",
+                                 "neither undefined nor an integer");
+            return false;
+        }
+
+        /* Check for an 'innermost' property. */
+        Value innermostProperty;
+        if (!query->getProperty(cx, cx->runtime->atomState.innermostAtom, &innermostProperty))
+            return false;
+        innermost = js_ValueToBoolean(innermostProperty);
+        if (innermost) {
+            /* Technically, we need only check hasLine, but this is clearer. */
+            if (url.isUndefined() || !hasLine) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_QUERY_INNERMOST_WITHOUT_LINE_URL);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /* Set up this ScriptQuery appropriately for a missing query argument. */
+    bool omittedQuery() {
+        url.setUndefined();
+        hasLine = false;
+        innermost = false;
+        return matchAllDebuggeeGlobals();
+    }
+
+    /*
+     * Search all relevant compartments and the stack for scripts matching 
+     * this query, and append the matching scripts to |vector|.
+     */
+    bool findScripts(AutoScriptVector *vector) {
+        if (!prepareQuery())
+            return false;
+
+        /* Search each compartment for debuggee scripts. */
+        for (CompartmentSet::Range r = compartments.all(); !r.empty(); r.popFront()) {
+            for (gc::CellIter i(r.front(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+                JSScript *script = i.get<JSScript>();
+                GlobalObject *global = script->getGlobalObjectOrNull();
+                if (global && !consider(script, global, vector))
+                    return false;
+            }
+        }
+
+        /*
+         * Since eval scripts have no global, we need to find them via the call
+         * stack, where frame's scope tells us the global in use.
+         */
+        for (FrameRegsIter fri(cx); !fri.done(); ++fri) {
+            if (fri.fp()->isEvalFrame()) {
+                JSScript *script = fri.fp()->script();
+
+                /*
+                 * If eval scripts never have global objects set, then we don't need
+                 * to check the existing script vector for duplicates, since we only
+                 * include scripts with globals above.
+                 */
+                JS_ASSERT(!script->getGlobalObjectOrNull());
+
+                GlobalObject *global = &fri.fp()->scopeChain().global();
+                if (!consider(script, global, vector))
+                    return false;
+            }
+        }
+
+        /*
+         * For most queries, we just accumulate results in 'vector' as we find
+         * them. But if this is an 'innermost' query, then we've accumulated the
+         * results in the 'innermostForGlobal' map. In that case, we now need to
+         * walk that map and populate 'vector'.
+         */
+        if (innermost) {
+            for (GlobalToScriptMap::Range r = innermostForGlobal.all(); !r.empty(); r.popFront()) {
+                if (!vector->append(r.front().value)) {
+                    js_ReportOutOfMemory(cx);
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+  private:
+    /* The context in which we should do our work. */
+    JSContext *cx;
+
+    /* The debugger for which we conduct queries. */
+    Debugger *debugger;
+
+    /* A script must run in one of these globals to match the query. */
+    GlobalObjectSet globals;
+
+    typedef HashSet<JSCompartment *, DefaultHasher<JSCompartment *>, RuntimeAllocPolicy>
+        CompartmentSet;
+
+    /* The smallest set of compartments that contains all globals in globals. */
+    CompartmentSet compartments;
+
+    /* If this is a string, matching scripts have urls equal to it. */
+    Value url;
+
+    /* url as a C string. */
+    JSAutoByteString urlCString;
+
+    /* True if the query contained a 'line' property. */
+    bool hasLine;
+
+    /* The line matching scripts must cover. */
+    unsigned int line;
+
+    /* True if the query has an 'innermost' property whose value is true. */
+    bool innermost;
+
+    typedef HashMap<GlobalObject *, JSScript *, DefaultHasher<GlobalObject *>, RuntimeAllocPolicy>
+        GlobalToScriptMap;
+
+    /*
+     * For 'innermost' queries, a map from global objects to the innermost
+     * script we've seen so far in that global. (Instantiation code size
+     * explosion ho!)
+     */
+    GlobalToScriptMap innermostForGlobal;
+
+    /* Arrange for this ScriptQuery to match only scripts that run in |global|. */
+    bool matchSingleGlobal(GlobalObject *global) {
+        JS_ASSERT(globals.count() == 0);
+        if (!globals.put(global)) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+        return true;
+    }
+
+    /* 
+     * Arrange for this ScriptQuery to match all scripts running in debuggee
+     * globals.
+     */
+    bool matchAllDebuggeeGlobals() {
+        JS_ASSERT(globals.count() == 0);
+        /* Copy the debugger's set of debuggee globals to our global set. */
+        for (GlobalObjectSet::Range r = debugger->debuggees.all(); !r.empty(); r.popFront()) {
+            if (!globals.put(r.front())) {
+                js_ReportOutOfMemory(cx);
+                return false;
+            }
+        }            
+        return true;
+    }
+
+    /* 
+     * Given that parseQuery or omittedQuery has been called, prepare to
+     * match scripts. Set urlCString as appropriate.
+     */
+    bool prepareQuery() {
+        /*
+         * Compute the proper value for |compartments|, given the present 
+         * value of |globals|.
+         */
+        for (GlobalObjectSet::Range r = globals.all(); !r.empty(); r.popFront()) {
+            if (!compartments.put(r.front()->compartment())) {
+                js_ReportOutOfMemory(cx);
+                return false;
+            }
+        }
+
+        /* Compute urlCString, if a url was given. */
+        if (url.isString()) {
+            if (!urlCString.encode(cx, url.toString()))
+                return false;
+        }
+ 
+        return true;        
+    }
+
+    /* 
+     * If |script|, a script in |global|, matches this query, append it to
+     * |vector| or place it in |innermostForGlobal|, as appropriate. Return true
+     * if no error occurs, false if an error occurs.
+     */
+    bool consider(JSScript *script, GlobalObject *global, AutoScriptVector *vector) {
+        if (!globals.has(global))
+            return true;
+        if (urlCString.ptr()) {
+            if (!script->filename || strcmp(script->filename, urlCString.ptr()) != 0)
+                return true;
+        }
+        if (hasLine) {
+            if (line < script->lineno || script->lineno + js_GetScriptLineExtent(script) < line)
+                return true;
+        }
+
+        if (innermost) {
+            /*
+             * For 'innermost' queries, we don't place scripts in |vector| right
+             * away; we may later find another script that is nested inside this
+             * one. Instead, we record the innermost script we've found so far
+             * for each global in innermostForGlobal, and only populate |vector|
+             * at the bottom of findScripts, when we've traversed all the
+             * scripts.
+             *
+             * So: check this script against the innermost one we've found so
+             * far (if any), as recorded in innermostForGlobal, and replace that
+             * if it's better.
+             */
+            GlobalToScriptMap::AddPtr p = innermostForGlobal.lookupForAdd(global);
+            if (p) {
+                /* Is our newly found script deeper than the last one we found? */
+                JSScript *incumbent = p->value;
+                if (script->staticLevel > incumbent->staticLevel)
+                    p->value = script;
+            } else {
+                /*
+                 * This is the first matching script we've encountered for this
+                 * global, so it is thus the innermost such script.
+                 */
+                if (!innermostForGlobal.add(p, global, script)) {
+                    js_ReportOutOfMemory(cx);
+                    return false;
+                }
+            }
+        } else {
+            /* Record this matching script in the results vector. */
+            if (!vector->append(script)) {
+                js_ReportOutOfMemory(cx);
+                return false;
+            }
+        }
+        
+        return true;        
+    }
+};
 
 JSBool
 Debugger::findScripts(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "findScripts", args, dbg);
 
-    CompartmentSet compartments(cx);
-    if (!compartments.init()) {
-        js_ReportOutOfMemory(cx);
+    ScriptQuery query(cx, dbg);
+    if (!query.init())
         return false;
-    }
 
-    /* Assemble the set of debuggee compartments. */
-    for (GlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront()) {
-        if (!compartments.put(r.front()->compartment())) {
-            js_ReportOutOfMemory(cx);
+    if (argc >= 1) {
+        JSObject *queryObject = NonNullObject(cx, args[0]);
+        if (!queryObject || !query.parseQuery(queryObject))
             return false;
-        }
-    }            
+    } else {
+        if (!query.omittedQuery())
+            return false;
+    }
 
     /*
      * Accumulate the scripts in an AutoScriptVector, instead of creating
@@ -2028,40 +2319,8 @@ Debugger::findScripts(JSContext *cx, unsigned argc, Value *vp)
      */
     AutoScriptVector scripts(cx);
 
-    /* Search each compartment for debuggee scripts. */
-    for (CompartmentSet::Range r = compartments.all(); !r.empty(); r.popFront()) {
-        for (gc::CellIter i(r.front(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
-            JSScript *script = i.get<JSScript>();
-            GlobalObject *global = script->getGlobalObjectOrNull();
-            if (global && dbg->debuggees.has(global)) {
-                if (!scripts.append(script)) {
-                    js_ReportOutOfMemory(cx);
-                    return false;
-                }                    
-            }
-        }
-    }
-
-    /*
-     * Since eval scripts have no global, we need to find them via the call
-     * stack, where frame's scope tells us the global in use.
-     */
-    for (FrameRegsIter fri(cx); !fri.done(); ++fri) {
-        if (fri.fp()->isEvalFrame() && dbg->debuggees.has(&fri.fp()->scopeChain().global())) {
-            JSScript *script = fri.fp()->script();
-
-            /*
-             * If eval scripts never have global objects set, then we don't need
-             * to check the existing script vector for duplicates, since we only
-             * include scripts with globals above.
-             */
-            JS_ASSERT(!script->getGlobalObjectOrNull());
-            if (!scripts.append(script)) {
-                js_ReportOutOfMemory(cx);
-                return false;
-            }
-        }
-    }
+    if (!query.findScripts(&scripts))
+        return false;
 
     JSObject *result = NewDenseAllocatedArray(cx, scripts.length(), NULL);
     if (!result)
@@ -2077,29 +2336,6 @@ Debugger::findScripts(JSContext *cx, unsigned argc, Value *vp)
     }
 
     args.rval().setObject(*result);
-    return true;
-}
-
-JSBool
-Debugger::wrap(JSContext *cx, unsigned argc, Value *vp)
-{
-    REQUIRE_ARGC("Debugger.prototype.wrap", 1);
-    THIS_DEBUGGER(cx, argc, vp, "wrap", args, dbg);
-
-    /* Wrapping a non-object returns the value unchanged. */
-    if (!args[0].isObject()) {
-        args.rval() = args[0];
-        return true;
-    }
-
-    JSObject *obj = dbg->unwrapDebuggeeArgument(cx, args[0]);
-    if (!obj)
-        return false;
-
-    args.rval() = args[0];
-    if (!dbg->wrapDebuggeeValue(cx, &args.rval()))
-        return false;
-
     return true;
 }
 
@@ -2124,7 +2360,6 @@ JSFunctionSpec Debugger::methods[] = {
     JS_FN("getNewestFrame", Debugger::getNewestFrame, 0, 0),
     JS_FN("clearAllBreakpoints", Debugger::clearAllBreakpoints, 1, 0),
     JS_FN("findScripts", Debugger::findScripts, 1, 0),
-    JS_FN("wrap", Debugger::wrap, 1, 0),
     JS_FS_END
 };
 
@@ -2608,14 +2843,13 @@ DebuggerScript_setBreakpoint(JSContext *cx, unsigned argc, Value *vp)
     BreakpointSite *site = script->getOrCreateBreakpointSite(cx, pc, scriptGlobal);
     if (!site)
         return false;
-    if (site->inc(cx)) {
-        if (cx->runtime->new_<Breakpoint>(dbg, site, handler)) {
-            args.rval().setUndefined();
-            return true;
-        }
-        site->dec(cx);
+    site->inc(cx->runtime->defaultFreeOp());
+    if (cx->runtime->new_<Breakpoint>(dbg, site, handler)) {
+        args.rval().setUndefined();
+        return true;
     }
-    site->destroyIfEmpty(cx->runtime);
+    site->dec(cx->runtime->defaultFreeOp());
+    site->destroyIfEmpty(cx->runtime->defaultFreeOp());
     return false;
 }
 
@@ -3886,6 +4120,33 @@ DebuggerObject_call(JSContext *cx, unsigned argc, Value *vp)
     return ApplyOrCall(cx, argc, vp, CallMode);
 }
 
+static JSBool
+DebuggerObject_makeDebuggeeValue(JSContext *cx, unsigned argc, Value *vp)
+{
+    REQUIRE_ARGC("Debugger.Object.prototype.makeDebuggeeValue", 1);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "makeDebuggeeValue", args, dbg, referent);
+
+    /* Non-objects are already debuggee values. */
+    if (args[0].isObject()) {
+        // Enter this Debugger.Object's referent's compartment, and wrap the
+        // argument as appropriate for references from there.
+        {
+            AutoCompartment ac(cx, referent);
+            if (!ac.enter() ||
+                !cx->compartment->wrap(cx, &args[0]))
+                return false;
+        }
+
+        // Back in the debugger's compartment, produce a new Debugger.Object
+        // instance referring to the wrapped argument.
+        if (!dbg->wrapDebuggeeValue(cx, &args[0]))
+            return false;
+    }
+
+    args.rval() = args[0];
+    return true;
+}
+
 static JSPropertySpec DebuggerObject_properties[] = {
     JS_PSG("proto", DebuggerObject_getProto, 0),
     JS_PSG("class", DebuggerObject_getClass, 0),
@@ -3911,6 +4172,7 @@ static JSFunctionSpec DebuggerObject_methods[] = {
     JS_FN("isExtensible", DebuggerObject_isExtensible, 0, 0),
     JS_FN("apply", DebuggerObject_apply, 0, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
+    JS_FN("makeDebuggeeValue", DebuggerObject_makeDebuggeeValue, 1, 0),
     JS_FS_END
 };
 

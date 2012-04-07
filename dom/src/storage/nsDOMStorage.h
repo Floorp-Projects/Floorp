@@ -45,7 +45,6 @@
 #include "nsAutoPtr.h"
 #include "nsIDOMStorageObsolete.h"
 #include "nsIDOMStorage.h"
-#include "nsIDOMStorageList.h"
 #include "nsIDOMStorageItem.h"
 #include "nsIPermissionManager.h"
 #include "nsInterfaceHashtable.h"
@@ -465,59 +464,6 @@ private:
   nsRefPtr<nsDOMStorage> mStorage;
 };
 
-class nsDOMStorageList : public nsIDOMStorageList
-{
-public:
-  nsDOMStorageList()
-  {
-    mStorages.Init();
-  }
-
-  virtual ~nsDOMStorageList() {}
-
-  // nsISupports
-  NS_DECL_ISUPPORTS
-
-  // nsIDOMStorageList
-  NS_DECL_NSIDOMSTORAGELIST
-
-  nsIDOMStorageObsolete* GetNamedItem(const nsAString& aDomain, nsresult* aResult);
-
-  /**
-   * Check whether aCurrentDomain has access to aRequestedDomain
-   */
-  static bool
-  CanAccessDomain(const nsACString& aRequestedDomain,
-                  const nsACString& aCurrentDomain);
-
-protected:
-
-  /**
-   * Return the global nsIDOMStorageObsolete for a particular domain.
-   * aNoCurrentDomainCheck may be true to skip the domain comparison;
-   * this is used for chrome code so that it may retrieve data from
-   * any domain.
-   *
-   * @param aRequestedDomain domain to return
-   * @param aCurrentDomain domain of current caller
-   * @param aNoCurrentDomainCheck true to skip domain comparison
-   */
-  nsIDOMStorageObsolete*
-  GetStorageForDomain(const nsACString& aRequestedDomain,
-                      const nsACString& aCurrentDomain,
-                      bool aNoCurrentDomainCheck,
-                      nsresult* aResult);
-
-  /**
-   * Convert the domain into an array of its component parts.
-   */
-  static bool
-  ConvertDomainToArray(const nsACString& aDomain,
-                       nsTArray<nsCString>* aArray);
-
-  nsInterfaceHashtable<nsCStringHashKey, nsIDOMStorageObsolete> mStorages;
-};
-
 class nsDOMStorageItem : public nsIDOMStorageItem,
                          public nsIDOMToString
 {
@@ -636,9 +582,6 @@ NS_NewDOMStorage(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 nsresult
 NS_NewDOMStorage2(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-
-nsresult
-NS_NewDOMStorageList(nsIDOMStorageList** aResult);
 
 PRUint32
 GetOfflinePermission(const nsACString &aDomain);
