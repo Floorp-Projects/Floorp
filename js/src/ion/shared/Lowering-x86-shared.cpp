@@ -102,10 +102,10 @@ LIRGeneratorX86Shared::lowerModI(MMod *mod)
         int32 shift;
         JS_FLOOR_LOG2(shift, rhs);
         if (1 << shift == rhs) {
-            LModPowTwoI *lir = new LModPowTwoI(useRegister(mod->lhs()), shift);
+            LModPowTwoI *lir = new LModPowTwoI(useRegisterAtStart(mod->lhs()), shift);
             return assignSnapshot(lir) && defineReuseInput(lir, mod, 0);
         }
     }
-    LModI *lir = new LModI(useFixed(mod->lhs(), eax), useRegisterAtStart(mod->rhs()));
+    LModI *lir = new LModI(useFixed(mod->lhs(), eax), useRegister(mod->rhs()));
     return assignSnapshot(lir) && defineFixed(lir, mod, LAllocation(AnyRegister(edx)));
 }
