@@ -103,7 +103,8 @@ public:
         rv = inStr->Read(buffer, len, &read);
         buffer[len] = '\0';
         if (NS_SUCCEEDED(rv)) {
-            printf("CONTEXT %p: Received %u bytes and the following data: \n %s\n\n", ctxt, read, buffer);
+            printf("CONTEXT %p: Received %u bytes and the following data: \n %s\n\n",
+                   static_cast<void*>(ctxt), read, buffer);
         }
         nsMemory::Free(buffer);
 

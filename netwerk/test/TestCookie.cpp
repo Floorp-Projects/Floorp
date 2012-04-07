@@ -525,7 +525,7 @@ main(PRInt32 argc, char *argv[])
       rv[2] = CheckResult(cookie.get(), MUST_CONTAIN, "test=same");
       rv[3] = CheckResult(cookie.get(), MUST_NOT_CONTAIN, "newtest=ciao");
       rv[4] = CheckResult(cookie.get(), MUST_NOT_CONTAIN, "newtest=foo");
-      rv[5] = CheckResult(cookie.get(), MUST_CONTAIN, "newtest=reincarnated") != nsnull;
+      rv[5] = CheckResult(cookie.get(), MUST_CONTAIN, "newtest=reincarnated");
       SetACookie(cookieService, "http://multiple.cookies/", nsnull, "test=expiry; domain=.multiple.cookies; max-age=0", nsnull);
       GetACookie(cookieService, "http://multiple.cookies/", nsnull, getter_Copies(cookie));
       rv[6] = CheckResult(cookie.get(), MUST_NOT_CONTAIN, "test=same");
