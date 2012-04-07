@@ -570,6 +570,37 @@ CodeGeneratorARM::visitModI(LModI *ins)
 }
 
 bool
+CodeGeneratorARM::visitModPowTwoI(LModPowTwoI *ins)
+{
+    Register in = ToRegister(ins->getOperand(0));
+    Register out = ToRegister(ins->getDef(0));
+    Label fin;
+    // bug 739870, jbramley has a different sequence that may help with speed here
+    masm.ma_mov(in, out, SetCond);
+    masm.ma_b(&fin, Assembler::Zero);
+    masm.ma_rsb(Imm32(0), out, NoSetCond, Assembler::Signed);
+    masm.ma_and(Imm32((1<<ins->shift())-1), out);
+    masm.ma_rsb(Imm32(0), out, SetCond, Assembler::Signed);
+    if (!bailoutIf(Assembler::Zero, ins->snapshot())) {
+        return false;
+    }
+    masm.bind(&fin);
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitModMaskI(LModMaskI *ins)
+{
+    Register src = ToRegister(ins->getOperand(0));
+    Register dest = ToRegister(ins->getDef(0));
+    Register tmp = ToRegister(ins->getTemp(0));
+    masm.ma_mod_mask(src, dest, tmp, ins->shift());
+    if (!bailoutIf(Assembler::Zero, ins->snapshot())) {
+        return false;
+    }
+    return true;
+}
+bool
 CodeGeneratorARM::visitBitNotI(LBitNotI *ins)
 {
     const LAllocation *input = ins->getOperand(0);

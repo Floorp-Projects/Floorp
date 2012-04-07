@@ -230,6 +230,9 @@ class MacroAssemblerARM : public Assembler
     Condition ma_check_mul(Register src1, Register src2, Register dest, Condition cond);
     Condition ma_check_mul(Register src1, Imm32 imm, Register dest, Condition cond);
 
+    // fast mod, uses scratch registers, and thus needs to be in the assembler
+    // implicitly assumes that we can overwrite dest at the beginning of the sequence
+    void ma_mod_mask(Register src, Register dest, Register hold, int32 shift);
 
     // memory
     // shortcut for when we know we're transferring 32 bits of data

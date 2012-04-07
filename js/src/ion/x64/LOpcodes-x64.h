@@ -47,7 +47,8 @@
     _(Unbox)                        \
     _(UnboxDouble)                  \
     _(DivI)                         \
-    _(ModI)
+    _(ModI)                         \
+    _(ModPowTwoI)
 
 #endif // jsion_lir_opcodes_x64_h__
 
