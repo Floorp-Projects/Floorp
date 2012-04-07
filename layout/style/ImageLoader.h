@@ -11,6 +11,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsCSSValue.h"
 #include "imgIRequest.h"
+#include "imgIOnloadBlocker.h"
 #include "nsStubImageDecoderObserver.h"
 
 class nsIFrame;
@@ -22,7 +23,8 @@ class nsIPrincipal;
 namespace mozilla {
 namespace css {
 
-class ImageLoader : public nsStubImageDecoderObserver {
+class ImageLoader : public nsStubImageDecoderObserver,
+                    public imgIOnloadBlocker {
 public:
   ImageLoader(nsIDocument* aDocument)
   : mDocument(aDocument),
@@ -31,6 +33,7 @@ public:
   { }
 
   NS_DECL_ISUPPORTS
+  NS_DECL_IMGIONLOADBLOCKER
 
   // imgIDecoderObserver (override nsStubImageDecoderObserver)
   NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
