@@ -116,6 +116,7 @@ class nsIObjectLoadingContent;
 namespace mozilla {
 namespace css {
 class Loader;
+class ImageLoader;
 } // namespace css
 
 namespace dom {
@@ -125,8 +126,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x8e51e6d9, 0x914d, 0x46ba, \
-  { 0xb3, 0x11, 0x2f, 0x27, 0x3d, 0xe6, 0x0d, 0x19 } }
+{ 0xdb888523, 0x541f, 0x49e3, \
+  { 0xa9, 0x71, 0xb5, 0xea, 0xd1, 0xf0, 0xc3, 0xcf } }
 
 
 // Flag for AddStyleSheet().
@@ -641,6 +642,13 @@ public:
    */
   mozilla::css::Loader* CSSLoader() const {
     return mCSSLoader;
+  }
+
+  /**
+   * Get this document's StyleImageLoader.  This is guaranteed to not return null.
+   */
+  mozilla::css::ImageLoader* StyleImageLoader() const {
+    return mStyleImageLoader;
   }
 
   /**
@@ -1739,6 +1747,7 @@ protected:
   // The cleanup is handled by the nsDocument destructor.
   nsNodeInfoManager* mNodeInfoManager; // [STRONG]
   mozilla::css::Loader* mCSSLoader; // [STRONG]
+  mozilla::css::ImageLoader* mStyleImageLoader; // [STRONG]
   nsHTMLStyleSheet* mAttrStyleSheet;
 
   // The set of all object, embed, applet, video and audio elements for
