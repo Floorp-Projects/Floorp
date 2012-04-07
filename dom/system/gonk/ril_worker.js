@@ -2233,7 +2233,7 @@ RIL[REQUEST_DEVICE_IDENTITY] = null;
 RIL[REQUEST_EXIT_EMERGENCY_CALLBACK_MODE] = null;
 RIL[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS(length, options) {
   if (options.rilRequestError) {
-    if (options.body) {
+    if (options.type == "sendSMS") {
       this.sendDOMMessage({
         type: "sms-send-failed",
         envelopeId: options.envelopeId,
