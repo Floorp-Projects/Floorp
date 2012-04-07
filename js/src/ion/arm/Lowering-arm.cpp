@@ -294,6 +294,18 @@ LIRGeneratorARM::lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs)
 bool
 LIRGeneratorARM::lowerModI(MMod *mod)
 {
+    if (mod->rhs()->isConstant()) {
+        int32 rhs = mod->rhs()->toConstant()->value().toInt32();
+        int32 shift;
+        JS_FLOOR_LOG2(shift, rhs);
+        if (1 << shift == rhs) {
+            LModPowTwoI *lir = new LModPowTwoI(useRegister(mod->lhs()), shift);
+            return (assignSnapshot(lir) && define(lir, mod));
+        } else if (shift != 32 && (1 << (shift+1)) - 1 == rhs) {
+            LModMaskI *lir = new LModMaskI(useRegister(mod->lhs()), temp(LDefinition::GENERAL), shift+1);
+            return (assignSnapshot(lir) && define(lir, mod));
+        }
+    }
     LModI *lir = new LModI(useFixed(mod->lhs(), r0), use(mod->rhs(), r1),
                            tempFixed(r2), tempFixed(r3)/*, tempFixed(lr)*/);
 
