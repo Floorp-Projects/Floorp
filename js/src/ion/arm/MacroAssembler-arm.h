@@ -59,7 +59,7 @@ class MacroAssemblerARM : public Assembler
 {
   public:
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest);
-
+    void convertUInt32ToDouble(const Register &src, const FloatRegister &dest);
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
 
     // somewhat direct wrappers for the low-level assembler funcitons
@@ -308,7 +308,7 @@ class MacroAssemblerARM : public Assembler
     void ma_vxfer(VFPRegister src, Register dest);
     void ma_vxfer(VFPRegister src, Register dest1, Register dest2);
 
-    void ma_vdtr(LoadStore ls, const Operand &addr, FloatRegister dest, Condition cc = Always);
+    void ma_vdtr(LoadStore ls, const Operand &addr, VFPRegister dest, Condition cc = Always);
 
     void ma_vldr(VFPAddr addr, FloatRegister dest);
     void ma_vldr(const Operand &addr, FloatRegister dest);
@@ -544,6 +544,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void unboxDouble(const ValueOperand &operand, const FloatRegister &dest);
     void unboxValue(const ValueOperand &src, AnyRegister dest);
 
+    // boxing code
+    void boxDouble(const FloatRegister &src, const ValueOperand &dest);
+
     // Extended unboxing API. If the payload is already in a register, returns
     // that register. Otherwise, provides a move to the given scratch register,
     // and returns that.
@@ -563,6 +566,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadInt32OrDouble(Register base, Register index,
                            const FloatRegister &dest, int32 shift = defaultShift);
     void loadStaticDouble(const double *dp, const FloatRegister &dest);
+    void loadConstantDouble(double dp, const FloatRegister &dest);
     // treat the value as a boolean, and set condition codes accordingly
     Condition testInt32Truthy(bool truthy, const ValueOperand &operand);
     Condition testBooleanTruthy(bool truthy, const ValueOperand &operand);
@@ -809,18 +813,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_orr(Imm32(type), frameSizeReg);
     }
 
-    void loadDouble(Address addr, FloatRegister dest) {
-        ma_vldr(Operand(addr), dest);
-    }
-    void storeDouble(FloatRegister src, Address addr) {
-        ma_vstr(src, Operand(addr));
-    }
-    void storeDouble(FloatRegister src, BaseIndex addr) {
-        // Harder cases not handled yet.
-        JS_ASSERT(addr.offset == 0);
-        ma_vstr(src, addr.base, addr.index);
-    }
-
     void linkExitFrame();
     void handleException();
 
@@ -892,16 +884,35 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void movePtr(const ImmGCPtr &imm, const Register &dest);
     void movePtr(const Address &src, const Register &dest);
 
-    void load16(const Address &address, const Register &dest);
-    void load16_mask(const Address &address, Imm32 mask, const Register &dest);
-    void load16(const BaseIndex &src, const Register &dest);
+    void load8SignExtend(const Address &address, const Register &dest);
+    void load8SignExtend(const BaseIndex &src, const Register &dest);
+
+    void load8ZeroExtend(const Address &address, const Register &dest);
+    void load8ZeroExtend(const BaseIndex &src, const Register &dest);
+
+    void load16SignExtend(const Address &address, const Register &dest);
+    void load16SignExtend(const BaseIndex &src, const Register &dest);
+
+    void load16ZeroExtend(const Address &address, const Register &dest);
+    void load16ZeroExtend_mask(const Address &address, Imm32 mask, const Register &dest);
+    void load16ZeroExtend(const BaseIndex &src, const Register &dest);
+
     void load32(const Address &address, const Register &dest);
     void load32(const BaseIndex &address, const Register &dest);
     void load32(const AbsoluteAddress &address, const Register &dest);
+
     void loadPtr(const Address &address, const Register &dest);
     void loadPtr(const BaseIndex &src, const Register &dest);
     void loadPtr(const AbsoluteAddress &address, const Register &dest);
+
     void loadPrivate(const Address &address, const Register &dest);
+
+    void loadDouble(const Address &addr, const FloatRegister &dest);
+    void loadDouble(const BaseIndex &src, const FloatRegister &dest);
+
+    // Load a float value into a register, then expand it to a double.
+    void loadFloatAsDouble(const Address &addr, const FloatRegister &dest);
+    void loadFloatAsDouble(const BaseIndex &src, const FloatRegister &dest);
 
     void store16(const Register &src, const Address &address);
     void store32(Register src, const AbsoluteAddress &address);
@@ -911,6 +922,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void storePtr(ImmGCPtr imm, const Address &address);
     void storePtr(Register src, const Address &address);
     void storePtr(const Register &src, const AbsoluteAddress &dest);
+    void storeDouble(FloatRegister src, Address addr) {
+        ma_vstr(src, Operand(addr));
+    }
+    void storeDouble(FloatRegister src, BaseIndex addr) {
+        // Harder cases not handled yet.
+        JS_ASSERT(addr.offset == 0);
+        ma_vstr(src, addr.base, addr.index);
+    }
 
     void clampIntToUint8(Register src, Register dest) {
         JS_NOT_REACHED("NYI clampIntToUint8");

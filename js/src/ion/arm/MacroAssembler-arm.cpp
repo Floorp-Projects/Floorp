@@ -66,6 +66,16 @@ MacroAssemblerARM::convertInt32ToDouble(const Register &src, const FloatRegister
     as_vcvt(dest, dest.sintOverlay());
 }
 
+void
+MacroAssemblerARM::convertUInt32ToDouble(const Register &src, const FloatRegister &dest_)
+{
+    // direct conversions aren't possible.
+    VFPRegister dest = VFPRegister(dest_);
+    as_vxfer(src, InvalidReg, dest.uintOverlay(),
+             CoreToFloat);
+    as_vcvt(dest, dest.uintOverlay());
+}
+
 // there are two options for implementing emitTruncateDouble.
 // 1) convert the floating point value to an integer, if it did not fit,
 //        then it was clamped to INT_MIN/INT_MAX, and we can test it.
@@ -789,21 +799,7 @@ void
 MacroAssemblerARM::ma_dtr(LoadStore ls, Register rn, Imm32 offset, Register rt,
                           Index mode, Assembler::Condition cc)
 {
-    int off = offset.value;
-    if (off < 4096 && off > -4096) {
-        // simplest offset, just use an immediate
-        as_dtr(ls, 32, mode, rt, DTRAddr(rn, DtrOffImm(off)), cc);
-        return;
-    }
-    // see if we can attempt to encode it as a standard imm8m offset
-    datastore::Imm8mData imm = Imm8::encodeImm(off & (~0xfff));
-    if (!imm.invalid) {
-        as_add(ScratchRegister, rn, imm);
-        as_dtr(ls, 32, mode, rt, DTRAddr(ScratchRegister, DtrOffImm(off & 0xfff)), cc);
-    } else {
-        ma_mov(offset, ScratchRegister);
-        as_dtr(ls, 32, mode, rt, DTRAddr(rn, DtrRegImmShift(ScratchRegister, LSL, 0)));
-    }
+    ma_dataTransferN(ls, 32, true, rn, offset, rt, mode, cc);
 }
 
 void
@@ -822,47 +818,11 @@ MacroAssemblerARM::ma_str(Register rt, DTRAddr addr, Index mode, Condition cc)
 void
 MacroAssemblerARM::ma_dtr(LoadStore ls, Register rt, const Operand &addr, Index mode, Condition cc)
 {
-    int off = addr.disp();
-    Register base = Register::FromCode(addr.base());
-    if (off > -4096 && off < 4096) {
-        as_dtr(ls, 32, mode, rt, addr.toDTRAddr(), cc);
-        return;
-    }
-    // We cannot encode this offset in a a single ldr.  Try to encode it as
-    // an add scratch, base, imm; ldr dest, [scratch, +offset].
-    int bottom = off & 0xfff;
-    int neg_bottom = 0x1000 - bottom;
-    // at this point, both off - bottom and off + neg_bottom will be reasonable-ish
-    // quantities.
-    if (off < 0) {
-        Operand2 sub_off = Imm8(-(off-bottom)); // sub_off = bottom - off
-        if (!sub_off.invalid) {
-            as_sub(ScratchRegister, base, sub_off, NoSetCond, cc); // - sub_off = off - bottom
-            as_dtr(ls, 32, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(bottom)), cc);
-            return;
-        }
-        sub_off = Imm8(-(off+neg_bottom));// sub_off = -neg_bottom - off
-        if (!sub_off.invalid) {
-            as_sub(ScratchRegister, base, sub_off, NoSetCond, cc); // - sub_off = neg_bottom + off
-            as_dtr(ls, 32, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(-neg_bottom)), cc);
-            return;
-        }
-    } else {
-        Operand2 sub_off = Imm8(off-bottom); // sub_off = off - bottom
-        if (!sub_off.invalid) {
-            as_add(ScratchRegister, base, sub_off, NoSetCond, cc); //  sub_off = off - bottom
-            as_dtr(ls, 32, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(bottom)), cc);
-            return;
-        }
-        sub_off = Imm8(off+neg_bottom);// sub_off = neg_bottom + off
-        if (!sub_off.invalid) {
-            as_add(ScratchRegister, base, sub_off, NoSetCond,  cc); // sub_off = neg_bottom + off
-            as_dtr(ls, 32, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(-neg_bottom)), cc);
-            return;
-        }
-    }
-    JS_NOT_REACHED("TODO: implement bigger offsets :(");
+    ma_dataTransferN(ls, 32, true,
+                     Register::FromCode(addr.base()), Imm32(addr.disp()),
+                     rt, mode, cc);
 }
+
 void
 MacroAssemblerARM::ma_str(Register rt, const Operand &addr, Index mode, Condition cc)
 {
@@ -928,24 +888,98 @@ MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
 
 void
 MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
-                          Register rn, Imm32 offset, Register rt,
-                          Index mode, Assembler::Condition cc)
+                                    Register rn, Imm32 offset, Register rt,
+                                    Index mode, Assembler::Condition cc)
 {
-    int x = offset.value;
+    int off = offset.value;
     // we can encode this as a standard ldr... MAKE IT SO
     if (size == 32 || (size == 8 && !IsSigned) ) {
-        if (x < 4096 && x > -4096) {
-            as_dtr(ls, size, mode, rt, DTRAddr(rn, DtrOffImm(x)), cc);
-        } else {
-            JS_NOT_REACHED("Feature NYI");
+        if (off < 4096 && off > -4096) {
+            as_dtr(ls, size, mode, rt, DTRAddr(rn, DtrOffImm(off)), cc);
+            return;
         }
+        // We cannot encode this offset in a a single ldr.  Try to encode it as
+        // an add scratch, base, imm; ldr dest, [scratch, +offset].
+        int bottom = off & 0xfff;
+        int neg_bottom = 0x1000 - bottom;
+        // at this point, both off - bottom and off + neg_bottom will be reasonable-ish
+        // quantities.
+        if (off < 0) {
+            Operand2 sub_off = Imm8(-(off-bottom)); // sub_off = bottom - off
+            if (!sub_off.invalid) {
+                as_sub(ScratchRegister, rn, sub_off, NoSetCond, cc); // - sub_off = off - bottom
+                as_dtr(ls, size, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(bottom)), cc);
+                return;
+            }
+            sub_off = Imm8(-(off+neg_bottom));// sub_off = -neg_bottom - off
+            if (!sub_off.invalid) {
+                as_sub(ScratchRegister, rn, sub_off, NoSetCond, cc); // - sub_off = neg_bottom + off
+                as_dtr(ls, size, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(-neg_bottom)), cc);
+                return;
+            }
+        } else {
+            Operand2 sub_off = Imm8(off-bottom); // sub_off = off - bottom
+            if (!sub_off.invalid) {
+                as_add(ScratchRegister, rn, sub_off, NoSetCond, cc); //  sub_off = off - bottom
+                as_dtr(ls, size, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(bottom)), cc);
+                return;
+            }
+            sub_off = Imm8(off+neg_bottom);// sub_off = neg_bottom + off
+            if (!sub_off.invalid) {
+                as_add(ScratchRegister, rn, sub_off, NoSetCond,  cc); // sub_off = neg_bottom + off
+                as_dtr(ls, size, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(-neg_bottom)), cc);
+                return;
+            }
+        }
+        JS_NOT_REACHED("TODO: implement bigger offsets :(");
+
     } else {
         // should attempt to use the extended load/store instructions
-        if (x < 256 && x > -256) {
-            as_extdtr(ls, size, IsSigned, mode, rt, EDtrAddr(rn, EDtrOffImm(x)), cc);
-        } else {
-            JS_NOT_REACHED("Feature NYI");
+        if (off < 256 && off > -256) {
+            as_extdtr(ls, size, IsSigned, mode, rt, EDtrAddr(rn, EDtrOffImm(off)), cc);
         }
+        // We cannot encode this offset in a a single extldr.  Try to encode it as
+        // an add scratch, base, imm; extldr dest, [scratch, +offset].
+        int bottom = off & 0xff;
+        int neg_bottom = 0x100 - bottom;
+        // at this point, both off - bottom and off + neg_bottom will be reasonable-ish
+        // quantities.
+        if (off < 0) {
+            Operand2 sub_off = Imm8(-(off-bottom)); // sub_off = bottom - off
+            if (!sub_off.invalid) {
+                as_sub(ScratchRegister, rn, sub_off, NoSetCond, cc); // - sub_off = off - bottom
+                as_extdtr(ls, size, IsSigned, Offset, rt,
+                          EDtrAddr(ScratchRegister, EDtrOffImm(bottom)),
+                          cc);
+                return;
+            }
+            sub_off = Imm8(-(off+neg_bottom));// sub_off = -neg_bottom - off
+            if (!sub_off.invalid) {
+                as_sub(ScratchRegister, rn, sub_off, NoSetCond, cc); // - sub_off = neg_bottom + off
+                as_extdtr(ls, size, IsSigned, Offset, rt,
+                          EDtrAddr(ScratchRegister, EDtrOffImm(-neg_bottom)),
+                          cc);
+                return;
+            }
+        } else {
+            Operand2 sub_off = Imm8(off-bottom); // sub_off = off - bottom
+            if (!sub_off.invalid) {
+                as_add(ScratchRegister, rn, sub_off, NoSetCond, cc); //  sub_off = off - bottom
+                as_extdtr(ls, size, IsSigned, Offset, rt,
+                          EDtrAddr(ScratchRegister, EDtrOffImm(bottom)),
+                          cc);
+                return;
+            }
+            sub_off = Imm8(off+neg_bottom);// sub_off = neg_bottom + off
+            if (!sub_off.invalid) {
+                as_add(ScratchRegister, rn, sub_off, NoSetCond,  cc); // sub_off = neg_bottom + off
+                as_extdtr(ls, size, IsSigned, Offset, rt,
+                          EDtrAddr(ScratchRegister, EDtrOffImm(-neg_bottom)),
+                          cc);
+                return;
+            }
+        }
+        JS_NOT_REACHED("TODO: implement bigger offsets :(");
     }
 }
 void
@@ -1139,7 +1173,7 @@ MacroAssemblerARM::ma_vxfer(VFPRegister src, Register dest1, Register dest2)
 }
 
 void
-MacroAssemblerARM::ma_vdtr(LoadStore ls, const Operand &addr, FloatRegister rt, Condition cc)
+MacroAssemblerARM::ma_vdtr(LoadStore ls, const Operand &addr, VFPRegister rt, Condition cc)
 {
     int off = addr.disp();
     JS_ASSERT((off & 3) == 0);
@@ -1339,22 +1373,94 @@ MacroAssemblerARMCompat::movePtr(const Address &src, const Register &dest)
 {
     loadPtr(src, dest);
 }
+void
+MacroAssemblerARMCompat::load8ZeroExtend(const Address &address, const Register &dest)
+{
+    ma_dataTransferN(IsLoad, 8, false, address.base, Imm32(address.offset), dest);
+}
 
 void
-MacroAssemblerARMCompat::load16(const Address &address, const Register &dest)
+MacroAssemblerARMCompat::load8ZeroExtend(const BaseIndex &src, const Register &dest)
+{
+    Register base = src.base;
+    uint32 scale = Imm32::ShiftOf(src.scale).value;
+
+    if (src.offset != 0) {
+        ma_mov(base, ScratchRegister);
+        base = ScratchRegister;
+        ma_add(base, Imm32(src.offset), base);
+    }
+    ma_ldrb(DTRAddr(base, DtrRegImmShift(src.index, LSL, scale)), dest);
+
+}
+
+void
+MacroAssemblerARMCompat::load8SignExtend(const Address &address, const Register &dest)
+{
+    ma_dataTransferN(IsLoad, 8, true, address.base, Imm32(address.offset), dest);
+}
+
+void
+MacroAssemblerARMCompat::load8SignExtend(const BaseIndex &src, const Register &dest)
+{
+    Register index = src.index;
+
+    // ARMv7 does not have LSL on an index register with an extended load.
+    if (src.scale != TimesOne) {
+        ma_lsl(Imm32::ShiftOf(src.scale), index, ScratchRegister);
+        index = ScratchRegister;
+    }
+    if (src.offset != 0) {
+        if (index != ScratchRegister) {
+            ma_mov(index, ScratchRegister);
+            index = ScratchRegister;
+        }
+        ma_add(Imm32(src.offset), index);
+    }
+    ma_ldrsb(EDtrAddr(src.base, EDtrOffReg(index)), dest);
+}
+
+void
+MacroAssemblerARMCompat::load16ZeroExtend(const Address &address, const Register &dest)
 {
     ma_dataTransferN(IsLoad, 16, false, address.base, Imm32(address.offset), dest);
 }
 
 void
-MacroAssemblerARMCompat::load16_mask(const Address &address, Imm32 mask, const Register &dest)
+MacroAssemblerARMCompat::load16ZeroExtend_mask(const Address &address, Imm32 mask, const Register &dest)
 {
-    load16(address, dest);
+    load16ZeroExtend(address, dest);
     ma_and(mask, dest, dest);
 }
 
 void
-MacroAssemblerARMCompat::load16(const BaseIndex &src, const Register &dest)
+MacroAssemblerARMCompat::load16ZeroExtend(const BaseIndex &src, const Register &dest)
+{
+    Register index = src.index;
+
+    // ARMv7 does not have LSL on an index register with an extended load.
+    if (src.scale != TimesOne) {
+        ma_lsl(Imm32::ShiftOf(src.scale), index, ScratchRegister);
+        index = ScratchRegister;
+    }
+    if (src.offset != 0) {
+        if (index != ScratchRegister) {
+            ma_mov(index, ScratchRegister);
+            index = ScratchRegister;
+        }
+        ma_add(Imm32(src.offset), index);
+    }
+    ma_ldrh(EDtrAddr(src.base, EDtrOffReg(index)), dest);
+}
+
+void
+MacroAssemblerARMCompat::load16SignExtend(const Address &address, const Register &dest)
+{
+    ma_dataTransferN(IsLoad, 16, true, address.base, Imm32(address.offset), dest);
+}
+
+void
+MacroAssemblerARMCompat::load16SignExtend(const BaseIndex &src, const Register &dest)
 {
     Register index = src.index;
 
@@ -1370,7 +1476,7 @@ MacroAssemblerARMCompat::load16(const BaseIndex &src, const Register &dest)
         }
         ma_add(Imm32(src.offset), index);
     }
-    ma_ldrh(EDtrAddr(src.base, EDtrOffReg(index)), dest);
+    ma_ldrsh(EDtrAddr(src.base, EDtrOffReg(index)), dest);
 }
 
 void
@@ -1390,7 +1496,6 @@ MacroAssemblerARMCompat::load32(const AbsoluteAddress &address, const Register &
 {
     loadPtr(address, dest);
 }
-
 void
 MacroAssemblerARMCompat::loadPtr(const Address &address, const Register &dest)
 {
@@ -1428,6 +1533,50 @@ void
 MacroAssemblerARMCompat::loadPrivate(const Address &address, const Register &dest)
 {
     ma_ldr(payloadOf(address), dest);
+}
+
+void
+MacroAssemblerARMCompat::loadDouble(const Address &address, const FloatRegister &dest)
+{
+    ma_vldr(Operand(address), dest);
+}
+
+void
+MacroAssemblerARMCompat::loadDouble(const BaseIndex &src, const FloatRegister &dest)
+{
+    // VFP instructions don't even support register Base + register Index modes, so
+    // just add the index, then handle the offset like normal
+    Register base = src.base;
+    Register index = src.index;
+    uint32 scale = Imm32::ShiftOf(src.scale).value;
+    int32 offset = src.offset;
+    as_add(ScratchRegister, base, lsl(index, scale));
+
+    ma_vldr(Operand(ScratchRegister, offset), dest);
+}
+
+void
+MacroAssemblerARMCompat::loadFloatAsDouble(const Address &address, const FloatRegister &dest)
+{
+    VFPRegister rt = dest;
+    ma_vdtr(IsLoad, address, rt.singleOverlay());
+    as_vcvt(rt, rt.singleOverlay());
+}
+
+void
+MacroAssemblerARMCompat::loadFloatAsDouble(const BaseIndex &src, const FloatRegister &dest)
+{
+    // VFP instructions don't even support register Base + register Index modes, so
+    // just add the index, then handle the offset like normal
+    Register base = src.base;
+    Register index = src.index;
+    uint32 scale = Imm32::ShiftOf(src.scale).value;
+    int32 offset = src.offset;
+    VFPRegister rt = dest;
+    as_add(ScratchRegister, base, lsl(index, scale));
+
+    ma_vdtr(IsLoad, Operand(ScratchRegister, offset), rt.singleOverlay());
+    as_vcvt(rt, rt.singleOverlay());
 }
 
 void
@@ -1829,6 +1978,14 @@ MacroAssemblerARMCompat::unboxValue(const ValueOperand &src, AnyRegister dest)
 }
 
 void
+MacroAssemblerARMCompat::boxDouble(const FloatRegister &src, const ValueOperand &dest)
+{
+    as_vxfer(dest.payloadReg(), dest.typeReg(),
+             VFPRegister(src), FloatToCore);
+}
+
+
+void
 MacroAssemblerARMCompat::boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest)
 {
     VFPRegister d = VFPRegister(dest);
@@ -1893,18 +2050,16 @@ MacroAssemblerARMCompat::loadInt32OrDouble(Register base, Register index, const 
     bind(&end);
 }
 
-// This functon almost certainly should not be called.
-// It has two uses in indep code, loading NaN, and loading 0.0
-// loading 1.0, then subtracting from itself will almost certainly be faster.
+void
+MacroAssemblerARMCompat::loadConstantDouble(double dp, const FloatRegister &dest)
+{
+    as_FImm64Pool(dest, dp);
+}
+
 void
 MacroAssemblerARMCompat::loadStaticDouble(const double *dp, const FloatRegister &dest)
 {
-    ma_mov(Imm32((uint32)dp), ScratchRegister);
-    as_vdtr(IsLoad, dest, VFPAddr(ScratchRegister, VFPOffImm(0)));
-#if 0
-    _vldr()
-        movsd(dp, dest);
-#endif
+    loadConstantDouble(*dp, dest);
 }
     // treat the value as a boolean, and set condition codes accordingly
 

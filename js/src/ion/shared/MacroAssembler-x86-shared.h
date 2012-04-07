@@ -211,10 +211,10 @@ class MacroAssemblerX86Shared : public Assembler
         cmpl(dest, Imm32(INT_MIN));
         j(Assembler::Equal, fail);
     }
-    void load8(const Address &src, const Register &dest) {
+    void load8ZeroExtend(const Address &src, const Register &dest) {
         movzbl(Operand(src), dest);
     }
-    void load8(const BaseIndex &src, const Register &dest) {
+    void load8ZeroExtend(const BaseIndex &src, const Register &dest) {
         movzbl(Operand(src), dest);
     }
     void load8SignExtend(const Address &src, const Register &dest) {
@@ -227,17 +227,17 @@ class MacroAssemblerX86Shared : public Assembler
     void store8(const S &src, const T &dest) {
         movb(src, Operand(dest));
     }
-    void load16(const Address &src, const Register &dest) {
+    void load16ZeroExtend(const Address &src, const Register &dest) {
         movzwl(Operand(src), dest);
     }
-    void load16(const BaseIndex &src, const Register &dest) {
+    void load16ZeroExtend(const BaseIndex &src, const Register &dest) {
         movzwl(Operand(src), dest);
     }
     template <typename S, typename T>
     void store16(const S &src, const T &dest) {
         movw(src, Operand(dest));
     }
-    void load16_mask(const Address &src, Imm32 mask, const Register &dest) {
+    void load16ZeroExtend_mask(const Address &src, Imm32 mask, const Register &dest) {
         load32(src, dest);
         and32(mask, dest);
     }
@@ -278,11 +278,11 @@ class MacroAssemblerX86Shared : public Assembler
     void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest) {
         cvtsd2ss(src, dest);
     }
-    void loadFloat(const Address &src, FloatRegister dest) {
+    void loadFloatAsDouble(const Address &src, FloatRegister dest) {
         movss(Operand(src), dest);
         cvtss2sd(dest, dest);
     }
-    void loadFloat(const BaseIndex &src, FloatRegister dest) {
+    void loadFloatAsDouble(const BaseIndex &src, FloatRegister dest) {
         movss(Operand(src), dest);
         cvtss2sd(dest, dest);
     }

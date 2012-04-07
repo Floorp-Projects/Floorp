@@ -208,22 +208,19 @@ void
 MacroAssembler::loadFromTypedArray(int arrayType, const T &src, AnyRegister dest, Register temp,
                                    Label *fail)
 {
-#ifdef JS_CPU_ARM
-    JS_NOT_REACHED("NYI typed arrays ARM");
-#else
     switch (arrayType) {
       case TypedArray::TYPE_INT8:
         load8SignExtend(src, dest.gpr());
         break;
       case TypedArray::TYPE_UINT8:
       case TypedArray::TYPE_UINT8_CLAMPED:
-        load8(src, dest.gpr());
+        load8ZeroExtend(src, dest.gpr());
         break;
       case TypedArray::TYPE_INT16:
         load16SignExtend(src, dest.gpr());
         break;
       case TypedArray::TYPE_UINT16:
-        load16(src, dest.gpr());
+        load16ZeroExtend(src, dest.gpr());
         break;
       case TypedArray::TYPE_INT32:
         load32(src, dest.gpr());
@@ -242,7 +239,7 @@ MacroAssembler::loadFromTypedArray(int arrayType, const T &src, AnyRegister dest
       case TypedArray::TYPE_FLOAT64:
       {
         if (arrayType == js::TypedArray::TYPE_FLOAT32)
-            loadFloat(src, dest.fpu());
+            loadFloatAsDouble(src, dest.fpu());
         else
             loadDouble(src, dest.fpu());
 
@@ -259,7 +256,6 @@ MacroAssembler::loadFromTypedArray(int arrayType, const T &src, AnyRegister dest
         JS_NOT_REACHED("Invalid typed array type");
         break;
     }
-#endif
 }
 
 template void MacroAssembler::loadFromTypedArray(int arrayType, const Address &src, AnyRegister dest,
@@ -272,9 +268,6 @@ void
 MacroAssembler::loadFromTypedArray(int arrayType, const T &src, const ValueOperand &dest,
                                    bool allowDouble, Label *fail)
 {
-#ifdef JS_CPU_ARM
-    JS_NOT_REACHED("NYI typed arrays ARM");
-#else
     switch (arrayType) {
       case TypedArray::TYPE_INT8:
       case TypedArray::TYPE_UINT8:
@@ -318,7 +311,6 @@ MacroAssembler::loadFromTypedArray(int arrayType, const T &src, const ValueOpera
         JS_NOT_REACHED("Invalid typed array type");
         break;
     }
-#endif
 }
 
 template void MacroAssembler::loadFromTypedArray(int arrayType, const Address &src, const ValueOperand &dest,

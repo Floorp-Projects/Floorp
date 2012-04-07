@@ -3524,11 +3524,9 @@ IonBuilder::jsop_getelem()
     if (oracle->elementReadIsDenseArray(script, pc))
         return jsop_getelem_dense();
 
-#ifndef JS_CPU_ARM
     int arrayType = TypedArray::TYPE_MAX;
     if (oracle->elementReadIsTypedArray(script, pc, &arrayType))
         return jsop_getelem_typed(arrayType);
-#endif
 
     MDefinition *rhs = current->pop();
     MDefinition *lhs = current->pop();

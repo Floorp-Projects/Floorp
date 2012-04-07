@@ -1377,6 +1377,8 @@ Assembler::as_extdtr(LoadStore ls, int size, bool IsSigned, Index mode,
       case 8:
         JS_ASSERT(IsSigned);
         JS_ASSERT(ls!=IsStore);
+        extra_bits1 = 0x1;
+        extra_bits2 = 0x2;
         break;
       case 16:
         //case 32:
