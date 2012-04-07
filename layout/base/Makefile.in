@@ -107,7 +107,6 @@ CPPSRCS		= \
 		nsFrameManager.cpp \
 		nsFrameTraversal.cpp \
 		nsGenConList.cpp \
-		nsImageLoader.cpp \
 		nsLayoutDebugger.cpp \
 		nsLayoutHistoryState.cpp \
 		nsLayoutUtils.cpp \

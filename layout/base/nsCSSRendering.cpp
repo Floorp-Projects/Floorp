@@ -84,8 +84,10 @@
 #include "gfxDrawable.h"
 
 #include "nsCSSRenderingBorders.h"
+#include "mozilla/css/ImageLoader.h"
 
 using namespace mozilla;
+using namespace mozilla::css;
 
 /**
  * This is a small wrapper class to encapsulate image drawing that can draw an
@@ -2419,10 +2421,20 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     return;
   }
 
-  // Ensure we get invalidated for loads of the image.  We need to do
-  // this here because this might be the only code that knows about the
+  // Ensure we get invalidated for loads of the image.  If this is not the
+  // frame's normal style context this is the only code that knows about the
   // association of the style data with the frame.
-  aPresContext->SetupBackgroundImageLoaders(aForFrame, bg);
+  if (aBackgroundSC != aForFrame->GetStyleContext()) {
+    ImageLoader* loader = aPresContext->Document()->StyleImageLoader();
+    
+    NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
+      if (bg->mLayers[i].mImage.GetType() == eStyleImageType_Image) {
+        imgIRequest *image = bg->mLayers[i].mImage.GetImageData();
+
+        loader->AssociateRequestToFrame(image, aForFrame);
+      }
+    }
+  }
 
   // We can skip painting the background color if a background image is opaque.
   if (drawBackgroundColor &&
@@ -2732,9 +2744,11 @@ DrawBorderImage(nsPresContext*       aPresContext,
   // XXX We shouldn't really... since if anybody is passing in a
   // different style, they'll potentially have the wrong size for the
   // border too.
-  aPresContext->SetupBorderImageLoaders(aForFrame, &aStyleBorder);
-
   imgIRequest *req = aStyleBorder.GetBorderImage();
+  ImageLoader* loader = aPresContext->Document()->StyleImageLoader();
+
+  // If this fails there's not much we can do ...
+  loader->AssociateRequestToFrame(req, aForFrame);
 
   // Get the actual image.
 

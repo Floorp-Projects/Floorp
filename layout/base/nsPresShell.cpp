@@ -154,6 +154,7 @@
 #include "nsHTMLMediaElement.h"
 #endif
 #include "nsSMILAnimationController.h"
+#include "mozilla/css/ImageLoader.h"
 
 #include "nsRefreshDriver.h"
 
@@ -2112,11 +2113,10 @@ PresShell::FireResizeEvent()
 void
 PresShell::SetIgnoreFrameDestruction(bool aIgnore)
 {
-  if (mPresContext) {
-    // We need to destroy the image loaders first, as they won't be
-    // notified when frames are destroyed once this setting takes effect.
-    // (See bug 673984)
-    mPresContext->DestroyImageLoaders();
+  if (mDocument) {
+    // We need to tell the ImageLoader to drop all its references to frames
+    // because they're about to go away and it won't get notifications of that.
+    mDocument->StyleImageLoader()->ClearAll();
   }
   mIgnoreFrameDestruction = aIgnore;
 }
@@ -2129,7 +2129,7 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
   mPresContext->ForgetUpdatePluginGeometryFrame(aFrame);
 
   if (!mIgnoreFrameDestruction) {
-    mPresContext->StopImagesFor(aFrame);
+    mDocument->StyleImageLoader()->DropRequestsForFrame(aFrame);
 
     mFrameConstructor->NotifyDestroyingFrame(aFrame);
 
