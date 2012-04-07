@@ -724,6 +724,64 @@ MacroAssemblerARM::ma_check_mul(Register src1, Imm32 imm, Register dest, Conditi
     return Always;
 }
 
+void
+MacroAssemblerARM::ma_mod_mask(Register src, Register dest, Register hold, int32 shift)
+{
+    // MATH:
+    // We wish to compute x % (1<<y) - 1 for a known constant, y.
+    // first, let b = (1<<y) and C = (1<<y)-1, then think of the 32 bit dividend as
+    // a number in base b, namely c_0*1 + c_1*b + c_2*b^2 ... c_n*b^n
+    // now, since both addition and multiplication commute with modulus,
+    // x % C == (c_0 + c_1*b + ... + c_n*b^n) % C ==
+    // (c_0 % C) + (c_1%C) * (b % C) + (c_2 % C) * (b^2 % C)...
+    // now, since b == C + 1, b % C == 1, and b^n % C == 1
+    // this means that the whole thing simplifies to:
+    // c_0 + c_1 + c_2 ... c_n % C
+    // each c_n can easily be computed by a shift/bitextract, and the modulus can be maintained
+    // by simply subtracting by C whenever the number gets over C.
+    int32 mask = (1 << shift) - 1;
+    Label head;
+
+    // hold holds -1 if the value was negative, 1 otherwise.
+    // ScratchRegister holds the remaining bits that have not been processed
+    // lr serves as a temporary location to store extracted bits into as well
+    //    as holding the trial subtraction as a temp value
+    // dest is the accumulator (and holds the final result)
+
+    // move the whole value into the scratch register, setting the codition codes so
+    // we can muck with them later
+    as_mov(ScratchRegister, O2Reg(src), SetCond);
+    // Zero out the dest.
+    ma_mov(Imm32(0), dest);
+    // Set the hold appropriately.
+    ma_mov(Imm32(1), hold);
+    ma_mov(Imm32(-1), hold, NoSetCond, Signed);
+    ma_rsb(Imm32(0), ScratchRegister, SetCond, Signed);
+    // Begin the main loop.
+    bind(&head);
+
+    // Extract the bottom bits into lr.
+    ma_and(Imm32(mask), ScratchRegister, lr);
+    // Add those bits to the accumulator.
+    ma_add(lr, dest, dest);
+    // Do a trial subtraction, this is the same operation as cmp, but we store the dest
+    ma_sub(dest, Imm32(mask), lr, SetCond);
+    // If (sum - C) > 0, store sum - C back into sum, thus performing a modulus.
+    ma_mov(lr, dest, NoSetCond, Unsigned);
+    // Get rid of the bits that we extracted before, and set the condition codes
+    as_mov(ScratchRegister, lsr(ScratchRegister, shift), SetCond);
+    // If the shift produced zero, finish, otherwise, continue in the loop.
+    ma_b(&head, NonZero);
+    // Check the hold to see if we need to negate the result.  Hold can only be 1 or -1,
+    // so this will never set the 0 flag.
+    ma_cmp(hold, Imm32(0));
+    // If the hold was non-zero, negate the result to be in line with what JS wants
+    // this will set the condition codes if we try to negate
+    ma_rsb(Imm32(0), dest, SetCond, Signed);
+    // Since the Zero flag is not set by the compare, we can *only* set the Zero flag
+    // in the rsb, so Zero is set iff we negated zero (e.g. the result of the computation was -0.0).
+
+}
 
 // memory
 // shortcut for when we know we're transferring 32 bits of data

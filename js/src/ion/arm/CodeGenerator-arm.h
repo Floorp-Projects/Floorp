@@ -111,6 +111,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     virtual bool visitDivI(LDivI *ins);
     virtual bool visitModI(LModI *ins);
+    virtual bool visitModPowTwoI(LModPowTwoI *ins);
+    virtual bool visitModMaskI(LModMaskI *ins);
     virtual bool visitMoveGroup(LMoveGroup *group);
     virtual bool visitShiftOp(LShiftOp *ins);
 

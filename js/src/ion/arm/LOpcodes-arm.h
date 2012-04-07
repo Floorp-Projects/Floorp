@@ -48,6 +48,8 @@
     _(Box)                      \
     _(BoxDouble)                \
     _(DivI)                     \
-    _(ModI)
+    _(ModI)                     \
+    _(ModPowTwoI)               \
+    _(ModMaskI)
 #endif // jsion_lir_opcodes_arm_h__
 

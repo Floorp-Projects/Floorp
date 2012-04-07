@@ -80,6 +80,27 @@ class LModI : public LBinaryMath<1>
     }
 };
 
+class LModPowTwoI : public LInstructionHelper<1,1,0>
+{
+    const int32 shift_;
+
+  public:
+    LIR_HEADER(ModPowTwoI);
+    int32 shift() {
+        return shift_;
+    }
+
+    LModPowTwoI(const LAllocation &lhs, int32 shift)
+      : shift_(shift)
+    {
+        setOperand(0, lhs);
+    }
+
+    const LDefinition *remainder() {
+        return getDef(0);
+    }
+};
+
 // Takes a tableswitch with an integer to decide
 class LTableSwitch : public LInstructionHelper<0, 1, 2>
 {
