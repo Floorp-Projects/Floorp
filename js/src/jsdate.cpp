@@ -1759,12 +1759,6 @@ date_makeTime(JSContext *cx, Native native, unsigned maxargs, JSBool local, unsi
 
     double result = obj->getDateUTCTime().toNumber();
 
-    /* just return NaN if the date is already NaN */
-    if (!JSDOUBLE_IS_FINITE(result)) {
-        args.rval().setNumber(result);
-        return true;
-    }
-
     /*
      * Satisfy the ECMA rule that if a function is called with
      * fewer arguments than the specified formal arguments, the
@@ -1782,14 +1776,30 @@ date_makeTime(JSContext *cx, Native native, unsigned maxargs, JSBool local, unsi
     unsigned numNums = Min(args.length(), maxargs);
     JS_ASSERT(numNums <= 4);
     double nums[4];
+    bool argIsNotFinite = false;
     for (unsigned i = 0; i < numNums; i++) {
         if (!ToNumber(cx, args[i], &nums[i]))
             return false;
         if (!JSDOUBLE_IS_FINITE(nums[i])) {
-            SetDateToNaN(cx, obj, &args.rval());
-            return true;
+            argIsNotFinite = true;
+        } else {
+            nums[i] = js_DoubleToInteger(nums[i]);
         }
-        nums[i] = js_DoubleToInteger(nums[i]);
+    }
+
+    /*
+     * Return NaN if the date is already NaN, but don't short-circuit argument
+     * evaluation.
+     */
+    if (!JSDOUBLE_IS_FINITE(result)) {
+        args.rval().setNumber(result);
+        return true;
+    }
+
+    /* set Date to NaN, after argument evaluation. */
+    if (argIsNotFinite) {
+        SetDateToNaN(cx, obj, &args.rval());
+        return true;
     }
 
     double lorutime;  /* Local or UTC version of *date */
@@ -1893,7 +1903,7 @@ date_makeDate(JSContext *cx, Native native, unsigned maxargs, JSBool local, unsi
 
     double result = obj->getDateUTCTime().toNumber();
 
-    /* see complaint about ECMA in date_MakeTime */
+    /* See complaint about ECMA in date_makeTime. */
     if (args.length() == 0) {
         SetDateToNaN(cx, obj, &args.rval());
         return true;
@@ -1902,22 +1912,29 @@ date_makeDate(JSContext *cx, Native native, unsigned maxargs, JSBool local, unsi
     unsigned numNums = Min(args.length(), maxargs);
     JS_ASSERT(1 <= numNums && numNums <= 3);
     double nums[3];
+    bool argIsNotFinite = false;
     for (unsigned i = 0; i < numNums; i++) {
         if (!ToNumber(cx, args[i], &nums[i]))
             return JS_FALSE;
         if (!JSDOUBLE_IS_FINITE(nums[i])) {
-            SetDateToNaN(cx, obj, &args.rval());
-            return true;
+            argIsNotFinite = true;
+        } else {
+            nums[i] = js_DoubleToInteger(nums[i]);
         }
-        nums[i] = js_DoubleToInteger(nums[i]);
+    }
+
+    /* If we found a non-finite argument, set the date to NaN and return. */
+    if (argIsNotFinite) {
+        SetDateToNaN(cx, obj, &args.rval());
+        return true;
     }
 
     /*
-     * return NaN if date is NaN and we're not setting the year, If we are, use
-     * 0 as the time.
+     * Return NaN if date is NaN and we're not setting the year.  If we are,
+     * use 0 as the time.
      */
     double lorutime; /* local or UTC version of *date */
-    if (!(JSDOUBLE_IS_FINITE(result))) {
+    if (!JSDOUBLE_IS_FINITE(result)) {
         if (maxargs < 3) {
             args.rval().setDouble(result);
             return true;
