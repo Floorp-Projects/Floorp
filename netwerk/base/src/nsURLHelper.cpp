@@ -858,8 +858,8 @@ net_ParseMediaType(const nsACString &aMediaTypeStr,
 
     const char* charset = "";
     const char* charsetEnd = charset;
-    PRInt32 charsetParamStart;
-    PRInt32 charsetParamEnd;
+    PRInt32 charsetParamStart = 0;
+    PRInt32 charsetParamEnd = 0;
 
     // Iterate over parameters
     bool typeHasCharset = false;
