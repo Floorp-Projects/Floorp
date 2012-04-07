@@ -41,7 +41,7 @@
 
 [ptr] native const_nsID_ptr(const nsID);
 
-[scriptable, uuid(baedc96a-9cee-4b6b-9160-90d257b3c8ef)]
+[builtinclass, scriptable, uuid(baedc96a-9cee-4b6b-9160-90d257b3c8ef)]
 interface nsIJSID : nsISupports
 {
     readonly attribute string  name;
@@ -59,12 +59,12 @@ interface nsIJSID : nsISupports
     [notxpcom] const_nsID_ptr getID();
 };
 
-[scriptable, uuid(e76ec564-a080-4705-8609-384c755ec91e)]
+[builtinclass, scriptable, uuid(e76ec564-a080-4705-8609-384c755ec91e)]
 interface nsIJSIID : nsIJSID
 {
 };
 
-[scriptable, uuid(bf5eb086-9eaa-4694-aec3-fe4aac6119bd)]
+[builtinclass, scriptable, uuid(bf5eb086-9eaa-4694-aec3-fe4aac6119bd)]
 interface nsIJSCID : nsIJSID
 {
     [implicit_jscontext,optional_argc] jsval createInstance([optional] in jsval iid);
