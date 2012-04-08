@@ -1518,6 +1518,13 @@ let RIL = {
       return PDU_FCS_UNSPECIFIED;
     }
 
+    if (message.epid == PDU_PID_SHORT_MESSAGE_TYPE_0) {
+      // `A short message type 0 indicates that the ME must acknowledge receipt
+      // of the short message but shall discard its contents.` ~ 3GPP TS 23.040
+      // 9.2.3.9
+      return PDU_FCS_OK;
+    }
+
     if (message.header && (message.header.segmentMaxSeq > 1)) {
       message = this._processReceivedSmsSegment(message);
     } else {
@@ -2940,7 +2947,17 @@ let GsmPDUHelper = {
     // `The MS shall interpret reserved, obsolete, or unsupported values as the
     // value 00000000 but shall store them exactly as received.`
     msg.pid = this.readHexOctet();
-    // Do not support any specific feature yet.
+
+    msg.epid = msg.pid;
+    switch (msg.epid & 0xC0) {
+      case 0x40:
+        // Bit 7..0 = 01xxxxxx
+        switch (msg.epid) {
+          case PDU_PID_SHORT_MESSAGE_TYPE_0:
+            return;
+        }
+        break;
+    }
     msg.epid = PDU_PID_DEFAULT;
   },
 
