@@ -2929,6 +2929,22 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Read TP-Protocol-Indicator(TP-PID).
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.040 9.2.3.9
+   */
+  readProtocolIndicator: function readProtocolIndicator(msg) {
+    // `The MS shall interpret reserved, obsolete, or unsupported values as the
+    // value 00000000 but shall store them exactly as received.`
+    msg.pid = this.readHexOctet();
+    // Do not support any specific feature yet.
+    msg.epid = PDU_PID_DEFAULT;
+  },
+
+  /**
    * Read GSM TP-Service-Centre-Time-Stamp(TP-SCTS).
    *
    * @see 3GPP TS 23.040 9.2.3.11
@@ -3074,7 +3090,7 @@ let GsmPDUHelper = {
 
     // TP-Protocol-Identifier
     if (pi & PDU_PI_PROTOCOL_IDENTIFIER) {
-      msg.pid = this.readHexOctet();
+      this.readProtocolIndicator(msg);
     }
     // TP-Data-Coding-Scheme
     if (pi & PDU_PI_DATA_CODING_SCHEME) {
@@ -3106,6 +3122,7 @@ let GsmPDUHelper = {
       sender:    null, // M  X  X  X  X  X
       recipient: null, // X  X  M  X  M  M
       pid:       null, // M  O  M  O  O  M
+      epid:      null, // M  O  M  O  O  M
       dcs:       null, // M  O  M  O  O  X
       body:      null, // M  O  M  O  O  O
       timestamp: null, // M  X  X  X  X  X
@@ -3157,7 +3174,7 @@ let GsmPDUHelper = {
     let senderAddressLength = this.readHexOctet();
     msg.sender = this.readAddress(senderAddressLength);
     // - TP-Protocolo-Identifier -
-    msg.pid = this.readHexOctet();
+    this.readProtocolIndicator(msg);
     // - TP-Data-Coding-Scheme -
     msg.dcs = this.readHexOctet();
     // - TP-Service-Center-Time-Stamp -
