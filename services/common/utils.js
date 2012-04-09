@@ -7,6 +7,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const EXPORTED_SYMBOLS = ["CommonUtils"];
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/log4moz.js");
 
 let CommonUtils = {
@@ -122,4 +123,39 @@ let CommonUtils = {
     return thisObj[name] = timer;
   },
 
+  encodeUTF8: function encodeUTF8(str) {
+    try {
+      str = this._utf8Converter.ConvertFromUnicode(str);
+      return str + this._utf8Converter.Finish();
+    } catch (ex) {
+      return null;
+    }
+  },
+
+  decodeUTF8: function decodeUTF8(str) {
+    try {
+      str = this._utf8Converter.ConvertToUnicode(str);
+      return str + this._utf8Converter.Finish();
+    } catch (ex) {
+      return null;
+    }
+  },
+
+  /**
+   * Trim excess padding from a Base64 string and atob().
+   *
+   * See bug 562431 comment 4.
+   */
+  safeAtoB: function safeAtoB(b64) {
+    let len = b64.length;
+    let over = len % 4;
+    return over ? atob(b64.substr(0, len - over)) : atob(b64);
+  },
 };
+
+XPCOMUtils.defineLazyGetter(CommonUtils, "_utf8Converter", function() {
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  converter.charset = "UTF-8";
+  return converter;
+});
