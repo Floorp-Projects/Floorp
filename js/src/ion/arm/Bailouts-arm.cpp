@@ -131,7 +131,7 @@ class BailoutStack
         return frameClass().frameSize();
     }
     MachineState machine() {
-        return MachineState(regs_, fpregs_);
+        return MachineState::FromBailout(regs_, fpregs_);
     }
     SnapshotOffset snapshotOffset() const {
         JS_ASSERT(frameClass() == FrameSizeClass::None());

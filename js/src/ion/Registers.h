@@ -51,6 +51,7 @@
 #elif defined(JS_CPU_ARM)
 # include "arm/Architecture-arm.h"
 #endif
+#include "FixedArityList.h"
 
 // ARM defines the RegisterID within Architecture-arm.h
 #ifndef JS_CPU_ARM
@@ -121,22 +122,25 @@ struct FloatRegister {
 // Information needed to recover machine register state.
 class MachineState
 {
-    uintptr_t *regs_;
-    double *fpregs_;
+    FixedArityList<uintptr_t *, Registers::Total> regs_;
+    FixedArityList<double *, FloatRegisters::Total> fpregs_;
 
   public:
-    MachineState()
-      : regs_(NULL), fpregs_(NULL)
-    { }
-    MachineState(uintptr_t *regs, double *fpregs)
-      : regs_(regs), fpregs_(fpregs)
-    { }
+    static MachineState FromBailout(uintptr_t regs[Registers::Total],
+                                    double fpregs[FloatRegisters::Total]);
 
-    double readFloatReg(FloatRegister reg) const {
-        return fpregs_[reg.code()];
+    void setRegisterLocation(Register reg, uintptr_t *up) {
+        regs_[reg.code()] = up;
     }
-    uintptr_t readReg(Register reg) const {
-        return regs_[reg.code()];
+    void setRegisterLocation(FloatRegister reg, double *dp) {
+        fpregs_[reg.code()] = dp;
+    }
+
+    uintptr_t read(Register reg) const {
+        return *regs_[reg.code()];
+    }
+    double read(FloatRegister reg) const {
+        return *fpregs_[reg.code()];
     }
 };
 
