@@ -285,9 +285,11 @@ __try {
   if (!xpAccessible || xpAccessible->IsDefunct())
     return E_FAIL;
 
+  if (xpAccessible->NativeRole() == roles::PASSWORD_TEXT)
+    return E_ACCESSDENIED;
+
   nsAutoString value;
-  if (NS_FAILED(xpAccessible->GetValue(value)))
-    return E_FAIL;
+  xpAccessible->Value(value);
 
   // See bug 438784: need to expose URL on doc's value attribute. For this,
   // reverting part of fix for bug 425693 to make this MSAA method behave

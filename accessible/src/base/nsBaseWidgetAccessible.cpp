@@ -124,16 +124,17 @@ nsLinkableAccessible::NativeState()
   return states;
 }
 
-NS_IMETHODIMP
-nsLinkableAccessible::GetValue(nsAString& aValue)
+void
+nsLinkableAccessible::Value(nsString& aValue)
 {
   aValue.Truncate();
 
-  nsAccessible::GetValue(aValue);
+  nsAccessible::Value(aValue);
   if (!aValue.IsEmpty())
-    return NS_OK;
+    return;
 
-  return mIsLink ? mActionAcc->GetValue(aValue) : NS_ERROR_NOT_IMPLEMENTED;
+  if (aValue.IsEmpty() && mIsLink)
+    mActionAcc->Value(aValue);
 }
 
 

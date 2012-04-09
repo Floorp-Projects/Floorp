@@ -89,13 +89,13 @@ public:
   // nsIAccessible
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
-  NS_IMETHOD GetValue(nsAString& _retval);
   NS_IMETHOD TakeFocus();
 
   // nsAccessNode
   virtual void Shutdown();
 
   // nsAccessible
+  virtual void Value(nsString& aValue);
   virtual PRUint64 NativeState();
 
   // ActionAccessible
