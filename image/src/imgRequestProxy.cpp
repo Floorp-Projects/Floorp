@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "imgRequestProxy.h"
-#include "imgIOnloadBlocker.h"
 
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
@@ -787,34 +786,6 @@ void imgRequestProxy::OnStopRequest(bool lastPart)
     imgIDecoderObserver* obs = mListener;
     mListenerIsStrongRef = false;
     NS_RELEASE(obs);
-  }
-}
-
-void imgRequestProxy::BlockOnload()
-{
-#ifdef PR_LOGGING
-  nsCAutoString name;
-  GetName(name);
-  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::BlockOnload", "name", name.get());
-#endif
-
-  nsCOMPtr<imgIOnloadBlocker> blocker = do_QueryInterface(mListener);
-  if (blocker) {
-    blocker->BlockOnload(this);
-  }
-}
-
-void imgRequestProxy::UnblockOnload()
-{
-#ifdef PR_LOGGING
-  nsCAutoString name;
-  GetName(name);
-  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::UnblockOnload", "name", name.get());
-#endif
-
-  nsCOMPtr<imgIOnloadBlocker> blocker = do_QueryInterface(mListener);
-  if (blocker) {
-    blocker->UnblockOnload(this);
   }
 }
 
