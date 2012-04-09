@@ -48,7 +48,7 @@ function test() {
     editor.redo();
     is(editor.getText(), "//" + text, "Redo works");
     editor.setCaretPosition(0);
-    EventUtils.synthesizeKey("/", {accelKey: true, shiftKey: true}, testWin);
+    EventUtils.synthesizeKey("/", {accelKey: true}, testWin);
     is(editor.getText(), text, "JS Single Line Uncommenting works");
 
     editor.setText(text);
@@ -61,18 +61,18 @@ function test() {
     editor.redo();
     is(editor.getText(), "/*" + text + "*/", "Redo works");
     EventUtils.synthesizeKey("VK_A", {accelKey: true}, testWin);
-    EventUtils.synthesizeKey("/", {accelKey: true, shiftKey: true}, testWin);
+    EventUtils.synthesizeKey("/", {accelKey: true}, testWin);
     is(editor.getText(), text, "JS Block Uncommenting works");
     editor.undo();
     is(editor.getText(), "/*" + text + "*/", "Undo Block Uncommenting works");
     editor.redo();
     is(editor.getText(), text, "Redo works");
 
-    let regText = "//firstline\n    //    secondline\nthird//line\nfourthline//";
-    let expText = "firstline\n        secondline\nthird//line\nfourthline//";
+    let regText = "//firstline\n    //    secondline\nthird//line\n//fourthline";
+    let expText = "firstline\n        secondline\nthird//line\nfourthline";
     editor.setText(regText);
     EventUtils.synthesizeKey("VK_A", {accelKey: true}, testWin);
-    EventUtils.synthesizeKey("/", {accelKey: true, shiftKey: true}, testWin);
+    EventUtils.synthesizeKey("/", {accelKey: true}, testWin);
     is(editor.getText(), expText, "JS Multiple Line Uncommenting works");
     editor.undo();
     is(editor.getText(), regText, "Undo Multiple Line Uncommenting works");
@@ -87,7 +87,7 @@ function test() {
     EventUtils.synthesizeKey("/", {accelKey: true}, testWin);
     is(editor.getText(), expText, "CSS Commenting without selection works");
     editor.setCaretPosition(0);
-    EventUtils.synthesizeKey("/", {accelKey: true, shiftKey: true}, testWin);
+    EventUtils.synthesizeKey("/", {accelKey: true}, testWin);
     is(editor.getText(), text, "CSS Uncommenting without selection works");
 
     editor.setText(text);
@@ -96,7 +96,7 @@ function test() {
     EventUtils.synthesizeKey("/", {accelKey: true}, testWin);
     is(editor.getText(), "/*" + text + "*/", "CSS Multiple Line Commenting works");
     EventUtils.synthesizeKey("VK_A", {accelKey: true}, testWin);
-    EventUtils.synthesizeKey("/", {accelKey: true, shiftKey: true}, testWin);
+    EventUtils.synthesizeKey("/", {accelKey: true}, testWin);
     is(editor.getText(), text, "CSS Multiple Line Uncommenting works");
 
     editor.setMode(SourceEditor.MODES.HTML);
@@ -107,7 +107,7 @@ function test() {
     EventUtils.synthesizeKey("/", {accelKey: true}, testWin);
     is(editor.getText(), expText, "HTML Commenting without selection works");
     editor.setCaretPosition(0);
-    EventUtils.synthesizeKey("/", {accelKey: true, shiftKey: true}, testWin);
+    EventUtils.synthesizeKey("/", {accelKey: true}, testWin);
     is(editor.getText(), text, "HTML Uncommenting without selection works");
 
     editor.setText(text);
@@ -116,7 +116,7 @@ function test() {
     EventUtils.synthesizeKey("/", {accelKey: true}, testWin);
     is(editor.getText(), "<!--" + text + "-->", "HTML Multiple Line Commenting works");
     EventUtils.synthesizeKey("VK_A", {accelKey: true}, testWin);
-    EventUtils.synthesizeKey("/", {accelKey: true, shiftKey: true}, testWin);
+    EventUtils.synthesizeKey("/", {accelKey: true}, testWin);
     is(editor.getText(), text, "HTML Multiple Line Uncommenting works");
 
     editor.setMode(SourceEditor.MODES.TEXT);
@@ -125,10 +125,10 @@ function test() {
     editor.setCaretPosition(0);
     EventUtils.synthesizeKey("/", {accelKey: true}, testWin);
     is(editor.getText(), text, "Commenting disabled in Text mode");
-    editor.setText("//" + text);
+    editor.setText(regText);
     EventUtils.synthesizeKey("VK_A", {accelKey: true}, testWin);
-    EventUtils.synthesizeKey("/", {accelKey: true, shiftKey: true}, testWin);
-    is(editor.getText(), "//" + text, "Uncommenting disabled in Text mode");
+    EventUtils.synthesizeKey("/", {accelKey: true}, testWin);
+    is(editor.getText(), regText, "Uncommenting disabled in Text mode");
 
     editor.setText(text);
     editor.readOnly = true;
@@ -136,10 +136,10 @@ function test() {
     editor.setCaretPosition(0);
     EventUtils.synthesizeKey("/", {accelKey: true}, testWin);
     is(editor.getText(), text, "Commenting disabled in ReadOnly mode");
-    editor.setText("//" + text);
+    editor.setText(regText);
     EventUtils.synthesizeKey("VK_A", {accelKey: true}, testWin);
-    EventUtils.synthesizeKey("/", {accelKey: true, shiftKey: true}, testWin);
-    is(editor.getText(), "//" + text, "Uncommenting disabled in ReadOnly mode");
+    EventUtils.synthesizeKey("/", {accelKey: true}, testWin);
+    is(editor.getText(), regText, "Uncommenting disabled in ReadOnly mode");
 
     editor.destroy();
 
