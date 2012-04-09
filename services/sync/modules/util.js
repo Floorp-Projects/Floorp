@@ -65,6 +65,9 @@ let Utils = {
   exceptionStr: CommonUtils.exceptionStr,
   stackTrace: CommonUtils.stackTrace,
   makeURI: CommonUtils.makeURI,
+  encodeUTF8: CommonUtils.encodeUTF8,
+  decodeUTF8: CommonUtils.decodeUTF8,
+  safeAtoB: CommonUtils.safeAtoB,
 
   /**
    * Wrap a function to catch all exceptions and log them
@@ -887,24 +890,6 @@ let Utils = {
     return Str.errors.get("error.reason.unknown");
   },
 
-  encodeUTF8: function(str) {
-    try {
-      str = this._utf8Converter.ConvertFromUnicode(str);
-      return str + this._utf8Converter.Finish();
-    } catch(ex) {
-      return null;
-    }
-  },
-
-  decodeUTF8: function(str) {
-    try {
-      str = this._utf8Converter.ConvertToUnicode(str);
-      return str + this._utf8Converter.Finish();
-    } catch(ex) {
-      return null;
-    }
-  },
-
   /**
    * Generate 26 characters.
    */
@@ -1003,15 +988,6 @@ let Utils = {
   
   normalizeAccount: function normalizeAccount(acc) {
     return acc.trim();
-  },
-
-  // WeaveCrypto returns bad base64 strings. Truncate excess padding
-  // and decode.
-  // See Bug 562431, comment 4.
-  safeAtoB: function safeAtoB(b64) {
-    let len = b64.length;
-    let over = len % 4;
-    return over ? atob(b64.substr(0, len - over)) : atob(b64);
   },
 
   /**
