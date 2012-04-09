@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsARIAGridAccessible_h_
-#define nsARIAGridAccessible_h_
+#ifndef MOZILLA_A11Y_ARIAGridAccessible_h_
+#define MOZILLA_A11Y_ARIAGridAccessible_h_
 
 #include "nsIAccessibleTable.h"
 
@@ -45,16 +45,19 @@
 #include "TableAccessible.h"
 #include "xpcAccessibleTable.h"
 
+namespace mozilla {
+namespace a11y {
+
 /**
  * Accessible for ARIA grid and treegrid.
  */
-class nsARIAGridAccessible : public nsAccessibleWrap,
-                             public xpcAccessibleTable,
-                             public nsIAccessibleTable,
-                             public mozilla::a11y::TableAccessible
+class ARIAGridAccessible : public nsAccessibleWrap,
+                           public xpcAccessibleTable,
+                           public nsIAccessibleTable,
+                           public TableAccessible
 {
 public:
-  nsARIAGridAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  ARIAGridAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -116,11 +119,11 @@ protected:
 /**
  * Accessible for ARIA gridcell and rowheader/columnheader.
  */
-class nsARIAGridCellAccessible : public nsHyperTextAccessibleWrap,
-                                 public nsIAccessibleTableCell
+class ARIAGridCellAccessible : public nsHyperTextAccessibleWrap,
+                               public nsIAccessibleTableCell
 {
 public:
-  nsARIAGridCellAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  ARIAGridCellAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -132,5 +135,8 @@ public:
   virtual void ApplyARIAState(PRUint64* aState);
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif
