@@ -38,13 +38,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NSARIAGRIDACCESSIBLEWRAP_H
-#define _NSARIAGRIDACCESSIBLEWRAP_H
+#include "ARIAGridAccessibleWrap.h"
 
-#include "nsARIAGridAccessible.h"
+using namespace mozilla;
+using namespace mozilla::a11y;
 
-typedef class nsARIAGridAccessible nsARIAGridAccessibleWrap;
-typedef class nsARIAGridCellAccessible nsARIAGridCellAccessibleWrap;
+////////////////////////////////////////////////////////////////////////////////
+// ARIAGridAccessibleWrap
+////////////////////////////////////////////////////////////////////////////////
 
-#endif
+NS_IMPL_ISUPPORTS_INHERITED0(ARIAGridAccessibleWrap,
+                             ARIAGridAccessible)
+
+IMPL_IUNKNOWN_INHERITED1(ARIAGridAccessibleWrap,
+                         nsAccessibleWrap,
+                         CAccessibleTable)
+
+
+////////////////////////////////////////////////////////////////////////////////
+// ARIAGridCellAccessibleWrap
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMPL_ISUPPORTS_INHERITED0(ARIAGridCellAccessibleWrap,
+                             ARIAGridCellAccessible)
+
+IMPL_IUNKNOWN_INHERITED1(ARIAGridCellAccessibleWrap,
+                         nsHyperTextAccessibleWrap,
+                         CAccessibleTableCell)
 
