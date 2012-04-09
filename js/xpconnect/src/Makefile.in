@@ -150,8 +150,8 @@ dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
                     $(topsrcdir)/xpcom/idl-parser/header.py \
                     $(topsrcdir)/xpcom/idl-parser/xpidl.py \
                     $(DEPTH)/js/src/js-confdefs.h
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  -I$(topsrcdir)/other-licenses/ply \
+	$(PYTHON_PATH) \
+	  $(PLY_INCLUDE) \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/qsgen.py \
 	  --idlpath=$(DEPTH)/dist/idl \
@@ -171,8 +171,8 @@ dombindings_gen.h: $(srcdir)/dombindings.conf \
                    $(topsrcdir)/xpcom/idl-parser/header.py \
                    $(topsrcdir)/xpcom/idl-parser/xpidl.py \
                    $(DEPTH)/js/src/js-confdefs.h
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  -I$(topsrcdir)/other-licenses/ply \
+	$(PYTHON_PATH) \
+	  $(PLY_INCLUDE) \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/dombindingsgen.py \
 	  --idlpath=$(DEPTH)/dist/idl \
@@ -188,8 +188,8 @@ dombindings_gen.cpp: $(srcdir)/dombindings.conf \
                      $(topsrcdir)/xpcom/idl-parser/header.py \
                      $(topsrcdir)/xpcom/idl-parser/xpidl.py \
                      $(DEPTH)/js/src/js-confdefs.h
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  -I$(topsrcdir)/other-licenses/ply \
+	$(PYTHON_PATH) \
+	  $(PLY_INCLUDE) \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/dombindingsgen.py \
 	  --idlpath=$(DEPTH)/dist/idl \
@@ -207,8 +207,8 @@ DictionaryHelpers.h: $(srcdir)/dictionary_helper_gen.conf \
                      $(topsrcdir)/xpcom/idl-parser/header.py \
                      $(topsrcdir)/xpcom/idl-parser/xpidl.py \
                      $(DEPTH)/js/src/js-confdefs.h
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  -I$(topsrcdir)/other-licenses/ply \
+	$(PYTHON_PATH) \
+	  $(PLY_INCLUDE) \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/dictionary_helper_gen.py \
 	  -I $(DEPTH)/dist/idl \
@@ -222,8 +222,8 @@ DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
                        $(topsrcdir)/xpcom/idl-parser/header.py \
                        $(topsrcdir)/xpcom/idl-parser/xpidl.py \
                        $(DEPTH)/js/src/js-confdefs.h
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  -I$(topsrcdir)/other-licenses/ply \
+	$(PYTHON_PATH) \
+	  $(PLY_INCLUDE) \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/dictionary_helper_gen.py \
 	  -I $(DEPTH)/dist/idl \

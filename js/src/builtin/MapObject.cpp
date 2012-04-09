@@ -286,7 +286,7 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
 JSBool
 MapObject::size(JSContext *cx, unsigned argc, Value *vp)
 {
-    THIS_MAP(get, cx, argc, vp, args, map);
+    THIS_MAP(size, cx, argc, vp, args, map);
     JS_STATIC_ASSERT(sizeof map.count() <= sizeof(uint32_t));
     args.rval().setNumber(map.count());
     return true;
@@ -455,7 +455,7 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
 JSBool
 SetObject::size(JSContext *cx, unsigned argc, Value *vp)
 {
-    THIS_SET(has, cx, argc, vp, args, set);
+    THIS_SET(size, cx, argc, vp, args, set);
     JS_STATIC_ASSERT(sizeof set.count() <= sizeof(uint32_t));
     args.rval().setNumber(set.count());
     return true;

@@ -1518,6 +1518,13 @@ let RIL = {
       return PDU_FCS_UNSPECIFIED;
     }
 
+    if (message.epid == PDU_PID_SHORT_MESSAGE_TYPE_0) {
+      // `A short message type 0 indicates that the ME must acknowledge receipt
+      // of the short message but shall discard its contents.` ~ 3GPP TS 23.040
+      // 9.2.3.9
+      return PDU_FCS_OK;
+    }
+
     if (message.header && (message.header.segmentMaxSeq > 1)) {
       message = this._processReceivedSmsSegment(message);
     } else {
@@ -2233,7 +2240,7 @@ RIL[REQUEST_DEVICE_IDENTITY] = null;
 RIL[REQUEST_EXIT_EMERGENCY_CALLBACK_MODE] = null;
 RIL[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS(length, options) {
   if (options.rilRequestError) {
-    if (options.body) {
+    if (options.type == "sendSMS") {
       this.sendDOMMessage({
         type: "sms-send-failed",
         envelopeId: options.envelopeId,
@@ -2929,6 +2936,32 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Read TP-Protocol-Indicator(TP-PID).
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.040 9.2.3.9
+   */
+  readProtocolIndicator: function readProtocolIndicator(msg) {
+    // `The MS shall interpret reserved, obsolete, or unsupported values as the
+    // value 00000000 but shall store them exactly as received.`
+    msg.pid = this.readHexOctet();
+
+    msg.epid = msg.pid;
+    switch (msg.epid & 0xC0) {
+      case 0x40:
+        // Bit 7..0 = 01xxxxxx
+        switch (msg.epid) {
+          case PDU_PID_SHORT_MESSAGE_TYPE_0:
+            return;
+        }
+        break;
+    }
+    msg.epid = PDU_PID_DEFAULT;
+  },
+
+  /**
    * Read GSM TP-Service-Centre-Time-Stamp(TP-SCTS).
    *
    * @see 3GPP TS 23.040 9.2.3.11
@@ -2943,14 +2976,14 @@ let GsmPDUHelper = {
     let timestamp = Date.UTC(year, month, day, hour, minute, second);
 
     // If the most significant bit of the least significant nibble is 1,
-    // the timezone offset is negative (fourth bit from the right => 0x08).
+    // the timezone offset is negative (fourth bit from the right => 0x08):
+    //   localtime = UTC + tzOffset
+    // therefore
+    //   UTC = localtime - tzOffset
     let tzOctet = this.readHexOctet();
     let tzOffset = this.octetToBCD(tzOctet & ~0x08) * 15 * 60 * 1000;
-    if (tzOctet & 0x08) {
-      timestamp -= tzOffset;
-    } else {
-      timestamp += tzOffset;
-    }
+    tzOffset = (tzOctet & 0x08) ? -tzOffset : tzOffset;
+    timestamp -= tzOffset;
 
     return timestamp;
   },
@@ -3074,7 +3107,7 @@ let GsmPDUHelper = {
 
     // TP-Protocol-Identifier
     if (pi & PDU_PI_PROTOCOL_IDENTIFIER) {
-      msg.pid = this.readHexOctet();
+      this.readProtocolIndicator(msg);
     }
     // TP-Data-Coding-Scheme
     if (pi & PDU_PI_DATA_CODING_SCHEME) {
@@ -3106,6 +3139,7 @@ let GsmPDUHelper = {
       sender:    null, // M  X  X  X  X  X
       recipient: null, // X  X  M  X  M  M
       pid:       null, // M  O  M  O  O  M
+      epid:      null, // M  O  M  O  O  M
       dcs:       null, // M  O  M  O  O  X
       body:      null, // M  O  M  O  O  O
       timestamp: null, // M  X  X  X  X  X
@@ -3157,7 +3191,7 @@ let GsmPDUHelper = {
     let senderAddressLength = this.readHexOctet();
     msg.sender = this.readAddress(senderAddressLength);
     // - TP-Protocolo-Identifier -
-    msg.pid = this.readHexOctet();
+    this.readProtocolIndicator(msg);
     // - TP-Data-Coding-Scheme -
     msg.dcs = this.readHexOctet();
     // - TP-Service-Center-Time-Stamp -
