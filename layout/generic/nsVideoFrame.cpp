@@ -195,6 +195,8 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nsnull;
 
   nsRefPtr<ImageContainer> container = element->GetImageContainer();
+  if (!container)
+    return nsnull;
   
   // Retrieve the size of the decoded video frame, before being scaled
   // by pixel aspect ratio.
