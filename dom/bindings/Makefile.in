@@ -75,7 +75,7 @@ bindinggen_dependencies := \
 $(binding_header_files): %Binding.h: $(bindinggen_dependencies) \
                                      $(webidl_base)/%.webidl \
                                      $(NULL)
-	$(PYTHON_PATH) \
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) -I$(srcdir)/parser \
     	  $(srcdir)/BindingGen.py $(ACCESSOR_OPT) header \
 	  $(srcdir)/Bindings.conf $*Binding \
@@ -84,7 +84,7 @@ $(binding_header_files): %Binding.h: $(bindinggen_dependencies) \
 $(binding_cpp_files): %Binding.cpp: $(bindinggen_dependencies) \
                                     $(webidl_base)/%.webidl \
                                     $(NULL)
-	$(PYTHON_PATH) \
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) -I$(srcdir)/parser \
 	  $(srcdir)/BindingGen.py $(ACCESSOR_OPT) cpp \
 	  $(srcdir)/Bindings.conf $*Binding \
