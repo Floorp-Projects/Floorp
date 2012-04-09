@@ -102,6 +102,9 @@ nsApplicationAccessibleWrap::get_appName(BSTR *aName)
 __try {
   *aName = NULL;
 
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
   nsAutoString name;
   nsresult rv = GetAppName(name);
   if (NS_FAILED(rv))
@@ -123,6 +126,9 @@ nsApplicationAccessibleWrap::get_appVersion(BSTR *aVersion)
 __try {
   *aVersion = NULL;
 
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
   nsAutoString version;
   nsresult rv = GetAppVersion(version);
   if (NS_FAILED(rv))
@@ -142,6 +148,9 @@ STDMETHODIMP
 nsApplicationAccessibleWrap::get_toolkitName(BSTR *aName)
 {
 __try {
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
   nsAutoString name;
   nsresult rv = GetPlatformName(name);
   if (NS_FAILED(rv))
@@ -162,6 +171,9 @@ nsApplicationAccessibleWrap::get_toolkitVersion(BSTR *aVersion)
 {
 __try {
   *aVersion = NULL;
+
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   nsAutoString version;
   nsresult rv = GetPlatformVersion(version);

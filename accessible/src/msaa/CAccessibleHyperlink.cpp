@@ -76,11 +76,14 @@ __try {
   VariantInit(aAnchor);
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsLink())
-    return E_FAIL;
+  if (thisObj->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
     return E_INVALIDARG;
+
+  if (!thisObj->IsLink())
+    return S_FALSE;
 
   nsAccessibleWrap* anchor =
     static_cast<nsAccessibleWrap*>(thisObj->AnchorAt(aIndex));
@@ -108,11 +111,14 @@ __try {
   VariantInit(aAnchorTarget);
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsLink())
-    return E_FAIL;
+  if (thisObj->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
     return E_INVALIDARG;
+
+  if (!thisObj->IsLink())
+    return S_FALSE;
 
   nsCOMPtr<nsIURI> uri = thisObj->AnchorURIAt(aIndex);
   if (!uri)
@@ -148,8 +154,11 @@ __try {
   *aIndex = 0;
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsLink())
-    return E_FAIL;
+  if (thisObj->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  if (!thisObj->IsLink())
+    return S_FALSE;
 
   *aIndex = thisObj->StartOffset();
   return S_OK;
@@ -165,8 +174,11 @@ __try {
   *aIndex = 0;
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsLink())
-    return E_FAIL;
+  if (thisObj->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  if (!thisObj->IsLink())
+    return S_FALSE;
 
   *aIndex = thisObj->EndOffset();
   return S_OK;
@@ -182,8 +194,11 @@ __try {
   *aValid = false;
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsLink())
-    return E_FAIL;
+  if (thisObj->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  if (!thisObj->IsLink())
+    return S_FALSE;
 
   *aValid = thisObj->IsLinkValid();
   return S_OK;
