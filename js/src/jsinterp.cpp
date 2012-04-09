@@ -4134,6 +4134,8 @@ END_CASE(JSOP_ARRAYPUSH)
   forced_return:
     UnwindScope(cx, 0);
     regs.sp = regs.fp()->base();
+    regs.pc = script->code + script->length - JSOP_STOP_LENGTH;
+    JS_ASSERT(*regs.pc == JSOP_STOP);
 
     if (entryFrame != regs.fp())
         goto inline_return;
