@@ -177,6 +177,21 @@ SafepointReader::SafepointReader(IonScript *script, const SafepointIndex *si)
             script->safepoints() + script->safepointsSize()),
     localSlotCount_(script->frameLocals())
 {
+    osiCallPointOffset_ = stream_.readUnsigned();
+
+    gcSpills_ = GeneralRegisterSet(stream_.readUnsigned());
+    if (gcSpills_.empty())
+        allSpills_ = gcSpills_;
+    else
+        allSpills_ = GeneralRegisterSet(stream_.readUnsigned());
+
+    advanceFromGcRegs();
+}
+
+uint32
+SafepointReader::osiReturnPointOffset() const
+{
+    return osiCallPointOffset_ + Assembler::patchWrite_NearCallSize();
 }
 
 CodeLocationLabel
@@ -184,34 +199,7 @@ SafepointReader::InvalidationPatchPoint(IonScript *script, const SafepointIndex 
 {
     SafepointReader reader(script, si);
 
-    uint32 osiPointOffset = reader.getOsiCallPointOffset();
-    return CodeLocationLabel(script->method(), osiPointOffset);
-}
-
-uint32
-SafepointReader::getOsiCallPointOffset()
-{
-    return stream_.readUnsigned();
-}
-
-uint32
-SafepointReader::getOsiReturnPointOffset()
-{
-    // In general, pointer arithmetic on code is bad, but in this case,
-    // getting the return address from a call instruction, stepping over pools
-    // would be wrong.
-    return stream_.readUnsigned() + Assembler::patchWrite_NearCallSize();
-}
-void
-SafepointReader::getGcRegs(GeneralRegisterSet *actual, GeneralRegisterSet *spilled)
-{
-    *actual = GeneralRegisterSet(stream_.readUnsigned());
-    if (actual->empty())
-        *spilled = *actual;
-    else
-        *spilled = GeneralRegisterSet(stream_.readUnsigned());
-
-    advanceFromGcRegs();
+    return CodeLocationLabel(script->method(), reader.osiCallPointOffset());
 }
 
 void

@@ -1188,7 +1188,7 @@ StackIter::settleOnNewState()
                 }
 
                 state_ = ION;
-                ionInlineFrames_ = ion::InlineFrameIterator(&ionFrames_, ion::MachineState());
+                ionInlineFrames_ = ion::InlineFrameIterator(&ionFrames_);
                 pc_ = ionInlineFrames_.pc();
                 script_ = ionInlineFrames_.script();
                 return;
@@ -1269,7 +1269,7 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
 #ifdef JS_ION
     , ionActivations_(cx),
     ionFrames_((uint8_t *)NULL),
-    ionInlineFrames_(NULL, ion::MachineState())
+    ionInlineFrames_(NULL)
 #endif
 {
 #ifdef JS_METHODJIT
@@ -1300,7 +1300,7 @@ StackIter::popIonFrame()
             ++ionFrames_;
 
         if (ionFrames_.more()) {
-            ionInlineFrames_ = ion::InlineFrameIterator(&ionFrames_, ion::MachineState());
+            ionInlineFrames_ = ion::InlineFrameIterator(&ionFrames_);
             pc_ = ionInlineFrames_.pc();
             script_ = ionInlineFrames_.script();
         } else {

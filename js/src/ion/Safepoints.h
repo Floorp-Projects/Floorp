@@ -86,6 +86,9 @@ class SafepointReader
     uint32 localSlotCount_;
     uint32 currentSlotChunk_;
     uint32 currentSlotChunkNumber_;
+    uint32 osiCallPointOffset_;
+    GeneralRegisterSet gcSpills_;
+    GeneralRegisterSet allSpills_;
 
   private:
     void advanceFromGcRegs();
@@ -98,11 +101,16 @@ class SafepointReader
 
     static CodeLocationLabel InvalidationPatchPoint(IonScript *script, const SafepointIndex *si);
 
-    uint32 getOsiReturnPointOffset();
-    uint32 getOsiCallPointOffset();
-
-    // A safepoint entry must be read in the order these functions appear.
-    void getGcRegs(GeneralRegisterSet *actual, GeneralRegisterSet *spilled);
+    uint32 osiCallPointOffset() const {
+        return osiCallPointOffset_;
+    }
+    GeneralRegisterSet gcSpills() const {
+        return gcSpills_;
+    }
+    GeneralRegisterSet allSpills() const {
+        return allSpills_;
+    }
+    uint32 osiReturnPointOffset() const;
 
     // Returns true if a slot was read, false if there are no more slots.
     bool getGcSlot(uint32 *slot);

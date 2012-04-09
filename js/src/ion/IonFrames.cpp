@@ -51,6 +51,7 @@
 #include "IonMacroAssembler.h"
 #include "jsgcmark.h"
 #include "SnapshotReader.h"
+#include "Safepoints.h"
 
 using namespace js;
 using namespace js::ion;
@@ -225,6 +226,7 @@ IonFrameIterator::operator++()
     JS_ASSERT(type_ != IonFrame_Entry);
 
     frameSize_ = prevFrameLocalSize();
+    cachedSafepointIndex_ = NULL;
 
     // If the next frame is the entry frame, just exit. Don't update current_,
     // since the entry and first frames overlap.
@@ -240,6 +242,31 @@ IonFrameIterator::operator++()
     returnAddressToFp_ = current()->returnAddress();
     current_ = prev;
     return *this;
+}
+
+MachineState
+IonFrameIterator::machineState() const
+{
+    SafepointReader reader(ionScript(), safepoint());
+
+    GeneralRegisterSet gcRegs = reader.gcSpills();
+    GeneralRegisterSet allRegs = reader.allSpills();
+
+    // Get the base address to where safepoint registers are spilled.
+    // Out-of-line calls do not unwind the extra padding space used to
+    // aggregate bailout tables, so we use frameSize instead of frameLocals,
+    // which would only account for local stack slots.
+    uintptr_t *spillBase = reinterpret_cast<uintptr_t *>(fp()) + ionScript()->frameSize();
+
+    MachineState machine;
+    for (GeneralRegisterIterator iter(allRegs); iter.more(); iter++, spillBase++) {
+        Register reg = *iter;
+        if (!gcRegs.has(reg))
+            continue;
+        machine.setRegisterLocation(reg, spillBase);
+    }
+
+    return machine;
 }
 
 static void
@@ -277,7 +304,7 @@ CloseLiveIterators(JSContext *cx, const InlineFrameIterator &frame)
     JSTryNote *tnEnd = tn + script->trynotes()->length;
 
     for (; tn != tnEnd; ++tn) {
-        if (uint32(pc - script->code) >= tn->length)
+        if (uint32(pc - script->code) - tn->start >= tn->length)
             continue;
 
         if (tn->kind != JSTRY_ITER)
@@ -302,7 +329,7 @@ ion::HandleException(ResumeFromException *rfe)
         if (iter.isScripted()) {
             // Search each inlined frame for live iterator objects, and close
             // them.
-            InlineFrameIterator frames(&iter, ion::MachineState());
+            InlineFrameIterator frames(&iter);
             for (;;) {
                 CloseLiveIterators(cx, frames);
                 if (!frames.more())
@@ -401,11 +428,6 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
 
     SafepointReader safepoint(ionScript, si);
 
-    (void) safepoint.getOsiReturnPointOffset();
-
-    GeneralRegisterSet actual, spilled;
-    safepoint.getGcRegs(&actual, &spilled);
-    
     // No support for manual spill calls yet. Bug 732852.
 #if 0
     JS_ASSERT(actual.empty() && spilled.empty());
@@ -473,7 +495,7 @@ ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
     // Recover the innermost inlined frame.
     IonFrameIterator it(cx->runtime->ionTop);
     ++it;
-    InlineFrameIterator ifi(&it, MachineState());
+    InlineFrameIterator ifi(&it);
 
     // Set the result.
     *scriptRes = ifi.script();
@@ -512,11 +534,11 @@ SnapshotIterator::SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshot
     JS_ASSERT(snapshotOffset < ionScript->snapshotsSize());
 }
 
-SnapshotIterator::SnapshotIterator(const IonFrameIterator &iter, const MachineState &machine)
+SnapshotIterator::SnapshotIterator(const IonFrameIterator &iter)
   : SnapshotReader(iter.ionScript()->snapshots() + iter.osiIndex()->snapshotOffset(),
                    iter.ionScript()->snapshots() + iter.ionScript()->snapshotsSize()),
     fp_(iter.jsFrame()),
-    machine_(machine),
+    machine_(iter.machineState()),
     ionScript_(iter.ionScript())
 {
 }
@@ -524,7 +546,6 @@ SnapshotIterator::SnapshotIterator(const IonFrameIterator &iter, const MachineSt
 SnapshotIterator::SnapshotIterator()
   : SnapshotReader(NULL, NULL),
     fp_(NULL),
-    machine_(MachineState()),
     ionScript_(NULL)
 {
 }
@@ -534,7 +555,7 @@ SnapshotIterator::fromLocation(const SnapshotReader::Location &loc)
 {
     if (loc.isStackSlot())
         return ReadFrameSlot(fp_, loc.stackSlot());
-    return machine_.readReg(loc.reg());
+    return machine_.read(loc.reg());
 }
 
 Value
@@ -560,10 +581,10 @@ SnapshotIterator::slotValue(const Slot &slot)
 {
     switch (slot.mode()) {
       case SnapshotReader::DOUBLE_REG:
-        return DoubleValue(machine_.readFloatReg(slot.floatReg()));
+        return DoubleValue(machine_.read(slot.floatReg()));
 
       case SnapshotReader::TYPED_REG:
-        return FromTypedPayload(slot.knownType(), machine_.readReg(slot.reg()));
+        return FromTypedPayload(slot.knownType(), machine_.read(slot.reg()));
 
       case SnapshotReader::TYPED_STACK:
       {
@@ -617,25 +638,26 @@ IonFrameIterator::ionScript() const
 const SafepointIndex *
 IonFrameIterator::safepoint() const
 {
-    return ionScript()->getSafepointIndex(returnAddressToFp());
+    if (!cachedSafepointIndex_)
+        cachedSafepointIndex_ = ionScript()->getSafepointIndex(returnAddressToFp());
+    return cachedSafepointIndex_;
 }
 
 const OsiIndex *
 IonFrameIterator::osiIndex() const
 {
     SafepointReader reader(ionScript(), safepoint());
-    return ionScript()->getOsiIndex(reader.getOsiReturnPointOffset());
+    return ionScript()->getOsiIndex(reader.osiReturnPointOffset());
 }
 
-InlineFrameIterator::InlineFrameIterator(const IonFrameIterator *iter, const MachineState &machine)
+InlineFrameIterator::InlineFrameIterator(const IonFrameIterator *iter)
   : frame_(iter),
-    machine_(machine),
     framesRead_(0),
     callee_(NULL),
     script_(NULL)
 {
     if (frame_) {
-        start_ = SnapshotIterator(*frame_, machine_);
+        start_ = SnapshotIterator(*frame_);
         findNextFrame();
     }
 }
@@ -691,5 +713,19 @@ bool
 InlineFrameIterator::isFunctionFrame() const
 {
     return !!callee_;
+}
+
+MachineState
+MachineState::FromBailout(uintptr_t regs[Registers::Total],
+                          double fpregs[FloatRegisters::Total])
+{
+    MachineState machine;
+
+    for (unsigned i = 0; i < Registers::Total; i++)
+        machine.setRegisterLocation(Register::FromCode(i), &regs[i]);
+    for (unsigned i = 0; i < FloatRegisters::Total; i++)
+        machine.setRegisterLocation(FloatRegister::FromCode(i), &fpregs[i]);
+
+    return machine;
 }
 
