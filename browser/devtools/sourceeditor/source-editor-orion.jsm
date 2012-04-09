@@ -153,15 +153,9 @@ const DEFAULT_KEYBINDINGS = [
     alt: true,
   },
   {
-    action: "Comment",
+    action: "Comment/Uncomment",
     code: Ci.nsIDOMKeyEvent.DOM_VK_SLASH,
     accel: true,
-  },
-  {
-    action: "Uncomment",
-    code: Ci.nsIDOMKeyEvent.DOM_VK_SLASH,
-    accel: true,
-    shift: true,
   },
 ];
 
@@ -403,8 +397,7 @@ SourceEditor.prototype = {
       "Find Previous Occurrence": [this.ui.findPrevious, this.ui],
       "Goto Line...": [this.ui.gotoLine, this.ui],
       "Move Lines Down": [this._moveLines, this],
-      "Comment": [this._doComment, this],
-      "Uncomment": [this._doUncomment, this],
+      "Comment/Uncomment": [this._doCommentUncomment, this],
     };
 
     for (let name in actions) {
@@ -1051,6 +1044,63 @@ SourceEditor.prototype = {
   },
 
   /**
+   * Decide whether to comment the selection/current line or to uncomment it.
+   *
+   * @private
+   */
+  _doCommentUncomment: function SE__doCommentUncomment()
+  {
+    if (this.readOnly) {
+      return false;
+    }
+
+    let commentObject = this._getCommentStrings();
+    if (!commentObject) {
+      return false;
+    }
+
+    let selection = this.getSelection();
+    let model = this._model;
+    let firstLine = model.getLineAtOffset(selection.start);
+    let lastLine = model.getLineAtOffset(selection.end);
+
+    // Checks for block comment.
+    let firstLineText = model.getLine(firstLine);
+    let lastLineText = model.getLine(lastLine);
+    let openIndex = firstLineText.indexOf(commentObject.blockStart);
+    let closeIndex = lastLineText.lastIndexOf(commentObject.blockEnd);
+    if (openIndex != -1 && closeIndex != -1 &&
+        (firstLine != lastLine ||
+        (closeIndex - openIndex) >= commentObject.blockStart.length)) {
+      return this._doUncomment();
+    }
+
+    if (!commentObject.line) {
+      return this._doComment();
+    }
+
+    // If the selection is not a block comment, check for the first and the last
+    // lines to be line commented.
+    let firstLastCommented = [firstLineText,
+                              lastLineText].every(function(aLineText) {
+      let openIndex = aLineText.indexOf(commentObject.line);
+      if (openIndex != -1) {
+        let textUntilComment = aLineText.slice(0, openIndex);
+        if (!textUntilComment || /^\s+$/.test(textUntilComment)) {
+          return true;
+        }
+      }
+      return false;
+    });
+    if (firstLastCommented) {
+      return this._doUncomment();
+    }
+
+    // If we reach here, then we have to comment the selection/line.
+    return this._doComment();
+  },
+
+  /**
    * Wrap the selected text in comments. If nothing is selected the current
    * caret line is commented out. Single line and block comments depend on the
    * current editor mode.
@@ -1123,7 +1173,9 @@ SourceEditor.prototype = {
     let lastLineText = this._model.getLine(lastLine);
     let openIndex = firstLineText.indexOf(commentObject.blockStart);
     let closeIndex = lastLineText.lastIndexOf(commentObject.blockEnd);
-    if (openIndex != -1 && closeIndex != -1) {
+    if (openIndex != -1 && closeIndex != -1 &&
+        (firstLine != lastLine ||
+        (closeIndex - openIndex) >= commentObject.blockStart.length)) {
       let firstLineStartOffset = this.getLineStart(firstLine);
       let lastLineStartOffset = this.getLineStart(lastLine);
       let openOffset = firstLineStartOffset + openIndex;
