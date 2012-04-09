@@ -21,13 +21,13 @@ function test() {
 }
 
 function testRecurse() {
-  gDebuggee.gRecurseLimit = (gDebugger.StackFrames.pageSize * 2) + 1;
+  gDebuggee.gRecurseLimit = (gDebugger.DebuggerController.StackFrames.pageSize * 2) + 1;
 
-  gPane.activeThread.addOneTimeListener("framesadded", function() {
+  gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
-      let frames = gDebugger.DebuggerView.Stackframes._frames;
-      let pageSize = gDebugger.StackFrames.pageSize;
+      let frames = gDebugger.DebuggerView.StackFrames._frames;
+      let pageSize = gDebugger.DebuggerController.StackFrames.pageSize;
       let recurseLimit = gDebuggee.gRecurseLimit;
       let childNodes = frames.childNodes;
 
@@ -38,16 +38,16 @@ function testRecurse() {
         "All children should be frames.");
 
 
-      gPane.activeThread.addOneTimeListener("framesadded", function() {
+      gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
 
         is(frames.querySelectorAll(".dbg-stackframe").length, pageSize * 2,
           "Should now have twice the max limit of frames.");
 
-        gPane.activeThread.addOneTimeListener("framesadded", function() {
+        gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
           is(frames.querySelectorAll(".dbg-stackframe").length, recurseLimit,
             "Should have reached the recurse limit.");
 
-          gDebugger.StackFrames.activeThread.resume(function() {
+          gDebugger.DebuggerController.activeThread.resume(function() {
             closeDebuggerAndFinish(gTab);
           });
         });
