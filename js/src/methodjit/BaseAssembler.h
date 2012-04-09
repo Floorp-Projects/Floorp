@@ -1135,7 +1135,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
         done.linkTo(label(), this);
     }
 
-    // Inline version of js_TypedArray_uint8_clamp_double.
+    // Inline version of js::ClampDoubleToUint8.
     void clampDoubleToUint8(FPRegisterID fpReg, FPRegisterID fpTemp, RegisterID reg)
     {
         JS_ASSERT(fpTemp != Registers::FPConversionTemp);
@@ -1164,7 +1164,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
         Jump done3 = branchDouble(Assembler::DoubleNotEqual, fpTemp, Registers::FPConversionTemp);
 
         // It was a tie. Mask out the ones bit to get an even value.
-        // See js_TypedArray_uint8_clamp_double for the reasoning behind this.
+        // See js::ClampDoubleToUint8 for the reasoning behind this.
         and32(Imm32(~1), reg);
 
         done1.linkTo(label(), this);
