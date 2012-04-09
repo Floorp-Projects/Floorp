@@ -294,13 +294,15 @@ $(CONFIGURES): %: %.in $(EXTRA_CONFIG_DEPS)
 	cd $(@D); $(AUTOCONF)
 
 CONFIG_STATUS_DEPS := \
-	$(wildcard $(CONFIGURES)) \
-	$(TOPSRCDIR)/allmakefiles.sh \
-	$(wildcard $(TOPSRCDIR)/nsprpub/configure) \
-	$(wildcard $(TOPSRCDIR)/config/milestone.txt) \
-	$(wildcard $(TOPSRCDIR)/js/src/config/milestone.txt) \
-	$(wildcard $(TOPSRCDIR)/browser/config/version.txt) \
-	$(wildcard $(addsuffix confvars.sh,$(wildcard $(TOPSRCDIR)/*/))) \
+	$(wildcard \
+        $(CONFIGURES) \
+        $(TOPSRCDIR)/allmakefiles.sh \
+        $(TOPSRCDIR)/nsprpub/configure \
+        $(TOPSRCDIR)/config/milestone.txt \
+        $(TOPSRCDIR)/js/src/config/milestone.txt \
+        $(TOPSRCDIR)/browser/config/version.txt \
+        $(TOPSRCDIR)/*/confvars.sh \
+	) \
 	$(NULL)
 
 CONFIGURE_ENV_ARGS += \

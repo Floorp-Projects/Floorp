@@ -49,7 +49,7 @@ check::
 	@$(PYTHON) $(srcdir)/runtests.py  \
 		$(srcdir)/ok $(srcdir)/error  \
 		$(PYTHON) $(topsrcdir)/config/pythonpath.py  \
-		-I$(topsrcdir)/other-licenses/ply  \
+		$(PLY_INCLUDE)  \
 		$(topsrcdir)/ipc/ipdl/ipdl.py  \
 		OKTESTS $(OKTESTS)  \
 		ERRORTESTS $(ERRORTESTS)

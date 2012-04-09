@@ -882,6 +882,7 @@ NavHistoryResultObserver.prototype = {
  *            transition: one of the TRANSITION_* from nsINavHistoryService,
  *            [optional] title: title of the page,
  *            [optional] visitDate: visit date in microseconds from the epoch
+ *            [optional] referrer: nsIURI of the referrer for this visit
  *          }
  * @param [optional] aCallback
  *        Function to be invoked on completion.
@@ -910,7 +911,8 @@ function addVisits(aPlaceInfo, aCallback, aStack)
     places[i].visits = [{
       transitionType: places[i].transition === undefined ? TRANSITION_LINK
                                                          : places[i].transition,
-      visitDate: places[i].visitDate || (now++) * 1000
+      visitDate: places[i].visitDate || (now++) * 1000,
+      referrerURI: places[i].referrer
     }];
   }
 
