@@ -919,6 +919,39 @@ BitAnd(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
     return true;
 }
 
+static JS_ALWAYS_INLINE bool
+BitLsh(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
+{
+    int32_t left, right;
+    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
+        return false;
+    *out = left << (right & 31);
+    return true;
+}
+
+static JS_ALWAYS_INLINE bool
+BitRsh(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
+{
+    int32_t left, right;
+    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
+        return false;
+    *out = left >> (right & 31);
+    return true;
+}
+
+static JS_ALWAYS_INLINE bool
+UrshOperation(JSContext *cx, const Value &lhs, const Value &rhs, Value *out)
+{
+    uint32_t left;
+    int32_t  right;
+    if (!ToUint32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
+        return false;
+    left >>= right & 31;
+    if (!out->setNumber(uint32_t(left)))
+        types::TypeScript::MonitorOverflow(cx);
+    return true;
+}
+
 #undef RELATIONAL_OP
 
 }  /* namespace js */

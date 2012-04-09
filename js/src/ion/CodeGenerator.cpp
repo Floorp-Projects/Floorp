@@ -1126,6 +1126,7 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
     static const VMFunction MulInfo = FunctionInfo<pf>(js::MulValues);
     static const VMFunction DivInfo = FunctionInfo<pf>(js::DivValues);
     static const VMFunction ModInfo = FunctionInfo<pf>(js::ModValues);
+    static const VMFunction UrshInfo = FunctionInfo<pf>(js::UrshValues);
 
     pushArg(ToValue(lir, LBinaryV::RhsInput));
     pushArg(ToValue(lir, LBinaryV::LhsInput));
@@ -1145,6 +1146,9 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
 
       case JSOP_MOD:
         return callVM(ModInfo, lir);
+
+      case JSOP_URSH:
+        return callVM(UrshInfo, lir);
 
       default:
         JS_NOT_REACHED("Unexpected binary op");
@@ -2588,9 +2592,11 @@ CodeGenerator::visitBitOpV(LBitOpV *lir)
     static const VMFunction BitAndInfo = FunctionInfo<pf>(BitAnd);
     static const VMFunction BitOrInfo = FunctionInfo<pf>(BitOr);
     static const VMFunction BitXorInfo = FunctionInfo<pf>(BitXor);
+    static const VMFunction BitLhsInfo = FunctionInfo<pf>(BitLsh);
+    static const VMFunction BitRhsInfo = FunctionInfo<pf>(BitRsh);
 
-    pushArg(ToValue(lir, LBitOpV::LhsInput));
     pushArg(ToValue(lir, LBitOpV::RhsInput));
+    pushArg(ToValue(lir, LBitOpV::LhsInput));
 
     switch (lir->jsop()) {
       case JSOP_BITAND:
@@ -2599,6 +2605,10 @@ CodeGenerator::visitBitOpV(LBitOpV *lir)
         return callVM(BitOrInfo, lir);
       case JSOP_BITXOR:
         return callVM(BitXorInfo, lir);
+      case JSOP_LSH:
+        return callVM(BitLhsInfo, lir);
+      case JSOP_RSH:
+        return callVM(BitRhsInfo, lir);
       default:
         break;
     }
