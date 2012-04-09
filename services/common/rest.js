@@ -4,7 +4,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-const EXPORTED_SYMBOLS = ["RESTRequest"];
+const EXPORTED_SYMBOLS = ["RESTRequest", "RESTResponse"];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
