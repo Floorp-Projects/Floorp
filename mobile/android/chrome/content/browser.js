@@ -3518,7 +3518,11 @@ var PopupBlockerObserver = {
           },
           {
             label: strings.GetStringFromName("popupButtonAlwaysAllow2"),
-            callback: function() { PopupBlockerObserver.allowPopupsForSite(true); }
+            callback: function() {
+              // Set permission before opening popup windows
+              PopupBlockerObserver.allowPopupsForSite(true);
+              PopupBlockerObserver.showPopupsForSite();
+            }
           },
           {
             label: strings.GetStringFromName("popupButtonNeverWarn2"),

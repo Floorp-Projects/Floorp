@@ -52,6 +52,7 @@ EXPORTS_mozilla += \
   MSStdInt.h \
   RangedPtr.h \
   RefPtr.h \
+  Scoped.h \
   StandardInteger.h \
   Types.h \
   Util.h \

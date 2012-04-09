@@ -29,14 +29,14 @@ BEGIN_TEST(testConservativeGC)
 
     tmp = JSVAL_NULL;
 
-    JS_GC(cx);
+    JS_GC(rt);
 
     EVAL("var a = [];\n"
          "for (var i = 0; i != 10000; ++i) {\n"
          "a.push(i + 0.1, [1, 2], String(Math.sqrt(i)), {a: i});\n"
          "}", &tmp);
 
-    JS_GC(cx);
+    JS_GC(rt);
 
     checkObjectFields((JSObject *)objCopy, JSVAL_TO_OBJECT(v2));
     CHECK(!memcmp(&strCopy, JSVAL_TO_STRING(v3), sizeof(strCopy)));
@@ -69,7 +69,7 @@ BEGIN_TEST(testDerivedValues)
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 1000; j++)
       JS_NewStringCopyZ(cx, "as I pondered weak and weary");
-    JS_GC(cx);
+    JS_GC(rt);
   }
 
   CHECK(!memcmp(ch, expected, sizeof(expected)));

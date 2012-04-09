@@ -94,8 +94,8 @@ nsAppShell::nsAppShell()
     : mQueueLock("nsAppShell.mQueueLock"),
       mCondLock("nsAppShell.mCondLock"),
       mQueueCond(mCondLock, "nsAppShell.mQueueCond"),
-      mNumDraws(0),
-      mNumViewports(0)
+      mQueuedDrawEvent(nsnull),
+      mQueuedViewportEvent(nsnull)
 {
     gAppShell = this;
 }
@@ -219,7 +219,6 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
     EVLOG("nsAppShell::ProcessNextNativeEvent %d", mayWait);
 
     nsAutoPtr<AndroidGeckoEvent> curEvent;
-    AndroidGeckoEvent *nextEvent;
     {
         MutexAutoLock lock(mCondLock);
 
@@ -245,85 +244,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
     if (!curEvent)
         return false;
 
-    // Combine subsequent events of the same type
-
-    nextEvent = PeekNextEvent();
-
-    while (nextEvent) {
-        int curType = curEvent->Type();
-        int nextType = nextEvent->Type();
-
-        while (nextType == AndroidGeckoEvent::VIEWPORT && mNumViewports > 1) {
-            // Skip this viewport change, as there's another one later and
-            // processing this one will only cause more unnecessary work
-            PopNextEvent();
-            delete nextEvent;
-            nextEvent = PeekNextEvent();
-            nextType = nextEvent->Type();
-        }
-
-        while (nextType == AndroidGeckoEvent::DRAW && mLastDrawEvent &&
-               mNumDraws > 1)
-        {
-            // skip this draw, since there's a later one already in the queue.. this will let us
-            // deal with sequences that look like:
-            //   MOVE DRAW MOVE DRAW MOVE DRAW
-            // and end up with just
-            //   MOVE DRAW
-            // when we process all the events.
-
-            // Combine the next draw event's rect with the last one in the queue
-            const nsIntRect& nextRect = nextEvent->Rect();
-            const nsIntRect& lastRect = mLastDrawEvent->Rect();
-            int combinedArea = (lastRect.width * lastRect.height) +
-                               (nextRect.width * nextRect.height);
-
-            nsIntRect combinedRect = lastRect.Union(nextRect);
-            mLastDrawEvent->Init(AndroidGeckoEvent::DRAW, combinedRect);
-
-            // XXX We may want to consider using regions instead of rectangles.
-            //     Print an error if we're upload a lot more than we would
-            //     if we handled this as two separate events.
-            int boundsArea = combinedRect.width * combinedRect.height;
-            if (boundsArea > combinedArea * 8)
-                ALOG("nsAppShell::ProcessNextNativeEvent: "
-                     "Area of bounds greatly exceeds combined area: %d > %d",
-                     boundsArea, combinedArea);
-
-            // Remove the next draw event
-            PopNextEvent();
-            delete nextEvent;
-
-#if defined(DEBUG_ANDROID_EVENTS)
-            ALOG("# Removing DRAW event (%d outstanding)", mNumDraws);
-#endif
-
-            nextEvent = PeekNextEvent();
-            nextType = nextEvent->Type();
-        }
-
-        // If the next type of event isn't the same as the current type,
-        // we don't coalesce.
-        if (nextType != curType)
-            break;
-
-        // Can only coalesce motion move events, for motion events
-        if (curType != AndroidGeckoEvent::MOTION_EVENT)
-            break;
-
-        if (!(curEvent->Action() == AndroidMotionEvent::ACTION_MOVE &&
-              nextEvent->Action() == AndroidMotionEvent::ACTION_MOVE))
-            break;
-
-#if defined(DEBUG_ANDROID_EVENTS)
-        ALOG("# Removing % 2d event", curType);
-#endif
-
-        curEvent = PopNextEvent();
-        nextEvent = PeekNextEvent();
-    }
-
-    EVLOG("nsAppShell: event %p %d [ndraws %d]", (void*)curEvent.get(), curEvent->Type(), mNumDraws);
+    EVLOG("nsAppShell: event %p %d", (void*)curEvent.get(), curEvent->Type());
 
     switch (curEvent->Type()) {
     case AndroidGeckoEvent::NATIVE_POKE:
@@ -569,11 +490,10 @@ nsAppShell::PopNextEvent()
     if (mEventQueue.Length()) {
         ae = mEventQueue[0];
         mEventQueue.RemoveElementAt(0);
-        if (ae->Type() == AndroidGeckoEvent::DRAW) {
-            if (--mNumDraws == 0)
-                mLastDrawEvent = nsnull;
-        } else if (ae->Type() == AndroidGeckoEvent::VIEWPORT) {
-            mNumViewports--;
+        if (mQueuedDrawEvent == ae) {
+            mQueuedDrawEvent = nsnull;
+        } else if (mQueuedViewportEvent == ae) {
+            mQueuedViewportEvent = nsnull;
         }
     }
 
@@ -597,37 +517,99 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
 {
     {
         MutexAutoLock lock(mQueueLock);
-        if (ae->Type() == AndroidGeckoEvent::SURFACE_DESTROYED) {
+        EVLOG("nsAppShell::PostEvent %p %d", ae, ae->Type());
+        switch (ae->Type()) {
+        case AndroidGeckoEvent::SURFACE_DESTROYED:
             // Give priority to this event, and discard any pending
             // SURFACE_CREATED events.
             mEventQueue.InsertElementAt(0, ae);
             AndroidGeckoEvent *event;
-            for (int i = mEventQueue.Length()-1; i >=1; i--) {
+            for (int i = mEventQueue.Length() - 1; i >= 1; i--) {
                 event = mEventQueue[i];
                 if (event->Type() == AndroidGeckoEvent::SURFACE_CREATED) {
+                    EVLOG("nsAppShell: Dropping old SURFACE_CREATED event at %p %d", event, i);
                     mEventQueue.RemoveElementAt(i);
                     delete event;
                 }
             }
-        } else if (ae->Type() == AndroidGeckoEvent::COMPOSITOR_PAUSE ||
-                   ae->Type() == AndroidGeckoEvent::COMPOSITOR_RESUME) {
-            // Give priority to these events, but maintain their order wrt each other.
-            int i = 0;
-            while (i < mEventQueue.Length() &&
-                   (mEventQueue[i]->Type() == AndroidGeckoEvent::COMPOSITOR_PAUSE ||
-                    mEventQueue[i]->Type() == AndroidGeckoEvent::COMPOSITOR_RESUME)) {
-                i++;
-            }
-            mEventQueue.InsertElementAt(i, ae);
-        } else {
-            mEventQueue.AppendElement(ae);
-        }
+            break;
 
-        if (ae->Type() == AndroidGeckoEvent::DRAW) {
-            mNumDraws++;
-            mLastDrawEvent = ae;
-        } else if (ae->Type() == AndroidGeckoEvent::VIEWPORT) {
-            mNumViewports++;
+        case AndroidGeckoEvent::COMPOSITOR_PAUSE:
+        case AndroidGeckoEvent::COMPOSITOR_RESUME:
+            // Give priority to these events, but maintain their order wrt each other.
+            {
+                int i = 0;
+                while (i < mEventQueue.Length() &&
+                       (mEventQueue[i]->Type() == AndroidGeckoEvent::COMPOSITOR_PAUSE ||
+                        mEventQueue[i]->Type() == AndroidGeckoEvent::COMPOSITOR_RESUME)) {
+                    i++;
+                }
+                EVLOG("nsAppShell: Inserting compositor event %d at position %d to maintain priority order", ae->Type(), i);
+                mEventQueue.InsertElementAt(i, ae);
+            }
+            break;
+
+        case AndroidGeckoEvent::DRAW:
+            if (mQueuedDrawEvent) {
+                // coalesce this new draw event with the one already in the queue
+                const nsIntRect& oldRect = mQueuedDrawEvent->Rect();
+                const nsIntRect& newRect = ae->Rect();
+                int combinedArea = (oldRect.width * oldRect.height) +
+                                   (newRect.width * newRect.height);
+
+                nsIntRect combinedRect = oldRect.Union(newRect);
+                // XXX We may want to consider using regions instead of rectangles.
+                //     Print an error if we're upload a lot more than we would
+                //     if we handled this as two separate events.
+                int boundsArea = combinedRect.width * combinedRect.height;
+                if (boundsArea > combinedArea * 8)
+                    ALOG("nsAppShell: Area of bounds greatly exceeds combined area: %d > %d",
+                         boundsArea, combinedArea);
+
+                // coalesce into the new draw event rather than the queued one because
+                // it is not always safe to move draws earlier in the queue; there may
+                // be events between the two draws that affect scroll position or something.
+                ae->Init(AndroidGeckoEvent::DRAW, combinedRect);
+
+                EVLOG("nsAppShell: Coalescing previous DRAW event at %p into new DRAW event %p", mQueuedDrawEvent, ae);
+                mEventQueue.RemoveElement(mQueuedDrawEvent);
+                delete mQueuedDrawEvent;
+            }
+
+            mQueuedDrawEvent = ae;
+            mEventQueue.AppendElement(ae);
+            break;
+
+        case AndroidGeckoEvent::VIEWPORT:
+            if (mQueuedViewportEvent) {
+                // drop the previous viewport event now that we have a new one
+                EVLOG("nsAppShell: Dropping old viewport event at %p in favour of new VIEWPORT event %p", mQueuedViewportEvent, ae);
+                mEventQueue.RemoveElement(mQueuedViewportEvent);
+                delete mQueuedViewportEvent;
+            }
+            mQueuedViewportEvent = ae;
+            mEventQueue.AppendElement(ae);
+            break;
+
+        case AndroidGeckoEvent::MOTION_EVENT:
+            if (ae->Action() == AndroidMotionEvent::ACTION_MOVE) {
+                int len = mEventQueue.Length();
+                if (len > 0) {
+                    AndroidGeckoEvent* event = mEventQueue[len - 1];
+                    if (event->Type() == AndroidGeckoEvent::MOTION_EVENT && event->Action() == AndroidMotionEvent::ACTION_MOVE) {
+                        // consecutive motion-move events; drop the last one before adding the new one
+                        EVLOG("nsAppShell: Dropping old move event at %p in favour of new move event %p", event, ae);
+                        mEventQueue.RemoveElementAt(len - 1);
+                        delete event;
+                    }
+                }
+            }
+            mEventQueue.AppendElement(ae);
+            break;
+
+        default:
+            mEventQueue.AppendElement(ae);
+            break;
         }
     }
     NotifyNativeEvent();

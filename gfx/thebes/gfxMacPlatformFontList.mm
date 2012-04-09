@@ -189,93 +189,98 @@ nsresult
 MacOSFontEntry::ReadCMAP()
 {
     // attempt this once, if errors occur leave a blank cmap
-    if (mCmapInitialized) {
+    if (mCharacterMap) {
         return NS_OK;
     }
-    mCmapInitialized = true;
+
+    nsRefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
 
     PRUint32 kCMAP = TRUETYPE_TAG('c','m','a','p');
+    nsresult rv;
 
     AutoFallibleTArray<PRUint8,16384> cmap;
-    if (GetFontTable(kCMAP, cmap) != NS_OK) {
-        return NS_ERROR_FAILURE;
+    rv = GetFontTable(kCMAP, cmap);
+
+    bool unicodeFont = false, symbolFont = false; // currently ignored
+
+    if (NS_SUCCEEDED(rv)) {
+        rv = gfxFontUtils::ReadCMAP(cmap.Elements(), cmap.Length(),
+                                    *charmap, mUVSOffset,
+                                    unicodeFont, symbolFont);
     }
 
-    bool          unicodeFont, symbolFont; // currently ignored
-    nsresult rv = gfxFontUtils::ReadCMAP(cmap.Elements(), cmap.Length(),
-                                         mCharacterMap, mUVSOffset,
-                                         unicodeFont, symbolFont);
-    if (NS_FAILED(rv)) {
-        mCharacterMap.reset();
-        return rv;
-    }
-    mHasCmapTable = true;
+    if (NS_SUCCEEDED(rv)) {
+        // for layout support, check for the presence of mort/morx and/or
+        // opentype layout tables
+        bool hasAATLayout = HasFontTable(TRUETYPE_TAG('m','o','r','x')) ||
+                              HasFontTable(TRUETYPE_TAG('m','o','r','t'));
+        bool hasGSUB = HasFontTable(TRUETYPE_TAG('G','S','U','B'));
+        bool hasGPOS = HasFontTable(TRUETYPE_TAG('G','P','O','S'));
 
-    CGFontRef fontRef = GetFontRef();
-    if (!fontRef) {
-        return NS_ERROR_FAILURE;
-    }
+        if (hasAATLayout && !(hasGSUB || hasGPOS)) {
+            mRequiresAAT = true; // prefer CoreText if font has no OTL tables
+        }
 
-    // for layout support, check for the presence of mort/morx and/or
-    // opentype layout tables
-    bool hasAATLayout = HasFontTable(TRUETYPE_TAG('m','o','r','x')) ||
-                          HasFontTable(TRUETYPE_TAG('m','o','r','t'));
-    bool hasGSUB = HasFontTable(TRUETYPE_TAG('G','S','U','B'));
-    bool hasGPOS = HasFontTable(TRUETYPE_TAG('G','P','O','S'));
+        PRUint32 numScripts =
+            sizeof(gScriptsThatRequireShaping) / sizeof(ScriptRange);
 
-    if (hasAATLayout && !(hasGSUB || hasGPOS)) {
-        mRequiresAAT = true; // prefer CoreText if font has no OTL tables
-    }
+        for (PRUint32 s = 0; s < numScripts; s++) {
+            eComplexScript  whichScript = gScriptsThatRequireShaping[s].script;
 
-    PRUint32 numScripts =
-        sizeof(gScriptsThatRequireShaping) / sizeof(ScriptRange);
+            // check to see if the cmap includes complex script codepoints
+            if (charmap->TestRange(gScriptsThatRequireShaping[s].rangeStart,
+                                   gScriptsThatRequireShaping[s].rangeEnd)) {
+                bool omitRange = true;
 
-    for (PRUint32 s = 0; s < numScripts; s++) {
-        eComplexScript  whichScript = gScriptsThatRequireShaping[s].script;
-
-        // check to see if the cmap includes complex script codepoints
-        if (mCharacterMap.TestRange(gScriptsThatRequireShaping[s].rangeStart,
-                                    gScriptsThatRequireShaping[s].rangeEnd)) {
-            bool omitRange = true;
-
-            if (hasAATLayout) {
-                omitRange = false;
-                // prefer CoreText for Apple's complex-script fonts,
-                // even if they also have some OpenType tables
-                // (e.g. Geeza Pro Bold on 10.6; see bug 614903)
-                mRequiresAAT = true;
-            } else if (whichScript == eComplexScriptArabic) {
-                // special-case for Arabic:
-                // even if there's no morph table, CoreText can shape Arabic
-                // using OpenType layout; or if it's a downloaded font,
-                // assume the site knows what it's doing (as harfbuzz will
-                // be able to shape even though the font itself lacks tables
-                // stripped during sanitization).
-                // We check for GSUB here, as GPOS alone would not be ok
-                // for Arabic shaping.
-                if (hasGSUB || (mIsUserFont && !mIsLocalUserFont)) {
-                    // TODO: to be really thorough, we could check that the
-                    // GSUB table actually supports the 'arab' script tag.
+                if (hasAATLayout) {
                     omitRange = false;
+                    // prefer CoreText for Apple's complex-script fonts,
+                    // even if they also have some OpenType tables
+                    // (e.g. Geeza Pro Bold on 10.6; see bug 614903)
+                    mRequiresAAT = true;
+                } else if (whichScript == eComplexScriptArabic) {
+                    // special-case for Arabic:
+                    // even if there's no morph table, CoreText can shape Arabic
+                    // using OpenType layout; or if it's a downloaded font,
+                    // assume the site knows what it's doing (as harfbuzz will
+                    // be able to shape even though the font itself lacks tables
+                    // stripped during sanitization).
+                    // We check for GSUB here, as GPOS alone would not be ok
+                    // for Arabic shaping.
+                    if (hasGSUB || (mIsUserFont && !mIsLocalUserFont)) {
+                        // TODO: to be really thorough, we could check that the
+                        // GSUB table actually supports the 'arab' script tag.
+                        omitRange = false;
+                    }
                 }
-            }
 
-            if (omitRange) {
-                mCharacterMap.ClearRange(gScriptsThatRequireShaping[s].rangeStart,
-                                         gScriptsThatRequireShaping[s].rangeEnd);
+                if (omitRange) {
+                    charmap->ClearRange(gScriptsThatRequireShaping[s].rangeStart,
+                                        gScriptsThatRequireShaping[s].rangeEnd);
+                }
             }
         }
     }
 
+    mHasCmapTable = NS_SUCCEEDED(rv);
+    if (mHasCmapTable) {
+        gfxPlatformFontList *pfl = gfxPlatformFontList::PlatformFontList();
+        mCharacterMap = pfl->FindCharMap(charmap);
+    } else {
+        // if error occurred, initialize to null cmap
+        mCharacterMap = new gfxCharacterMap();
+    }
+
 #ifdef PR_LOGGING
-    LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %d\n",
+    LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %d hash: %8.8x%s\n",
                   NS_ConvertUTF16toUTF8(mName).get(),
-                  mCharacterMap.SizeOfExcludingThis(moz_malloc_size_of)));
+                  charmap->SizeOfIncludingThis(moz_malloc_size_of),
+                  charmap->mHash, mCharacterMap == charmap ? " new" : ""));
     if (LOG_CMAPDATA_ENABLED()) {
         char prefix[256];
         sprintf(prefix, "(cmapdata) name: %.220s",
                 NS_ConvertUTF16toUTF8(mName).get());
-        mCharacterMap.Dump(prefix, eGfxLog_cmapdata);
+        charmap->Dump(prefix, eGfxLog_cmapdata);
     }
 #endif
 

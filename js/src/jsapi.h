@@ -2568,9 +2568,6 @@ JS_DestroyContext(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_DestroyContextNoGC(JSContext *cx);
 
-extern JS_PUBLIC_API(void)
-JS_DestroyContextMaybeGC(JSContext *cx);
-
 extern JS_PUBLIC_API(void *)
 JS_GetContextPrivate(JSContext *cx);
 
@@ -3158,12 +3155,6 @@ JS_DumpNamedRoots(JSRuntime *rt,
  * in the return value.  To keep on mapping, return JS_MAP_GCROOT_NEXT.  These
  * constants are flags; you can OR them together.
  *
- * This function acquires and releases rt's GC lock around the mapping of the
- * roots table, so the map function should run to completion in as few cycles
- * as possible.  Of course, map cannot call JS_GC, JS_MaybeGC, JS_BeginRequest,
- * or any JS API entry point that acquires locks, without double-tripping or
- * deadlocking on the GC lock.
- *
  * The JSGCRootType parameter indicates whether rp is a pointer to a Value
  * (which is obtained by '(Value *)rp') or a pointer to a GC-thing pointer
  * (which is obtained by '(void **)rp').
@@ -3260,6 +3251,9 @@ struct JSTracer {
     const void          *debugPrintArg;
     size_t              debugPrintIndex;
     JSBool              eagerlyTraceWeakMaps;
+#ifdef DEBUG
+    void                *realLocation;
+#endif
 };
 
 /*
@@ -3299,6 +3293,22 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
     JS_BEGIN_MACRO                                                            \
     JS_END_MACRO
 #endif
+
+/*
+ * Sets the real location for a marked reference, when passing the address
+ * directly is not feasable.
+ */
+#ifdef DEBUG
+# define JS_SET_TRACING_LOCATION(trc, location)                               \
+    JS_BEGIN_MACRO                                                            \
+        (trc)->realLocation = (location);                                     \
+    JS_END_MACRO
+#else
+# define JS_SET_TRACING_LOCATION(trc, location)                               \
+    JS_BEGIN_MACRO                                                            \
+    JS_END_MACRO
+#endif
+
 
 /*
  * Convenience macro to describe the argument of JS_CallTracer using C string
@@ -3395,10 +3405,10 @@ JS_DumpHeap(JSRuntime *rt, FILE *fp, void* startThing, JSGCTraceKind kind,
  * Garbage collector API.
  */
 extern JS_PUBLIC_API(void)
-JS_GC(JSContext *cx);
+JS_GC(JSRuntime *rt);
 
 extern JS_PUBLIC_API(void)
-JS_CompartmentGC(JSContext *cx, JSCompartment *comp);
+JS_CompartmentGC(JSRuntime *rt, JSCompartment *comp);
 
 extern JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext *cx);
@@ -3472,15 +3482,6 @@ JS_SetGCParameterForThread(JSContext *cx, JSGCParamKey key, uint32_t value);
 
 extern JS_PUBLIC_API(uint32_t)
 JS_GetGCParameterForThread(JSContext *cx, JSGCParamKey key);
-
-/*
- * Flush the code cache for the current thread. The operation might be
- * delayed if the cache cannot be flushed currently because native
- * code is currently executing.
- */
-
-extern JS_PUBLIC_API(void)
-JS_FlushCaches(JSContext *cx);
 
 /*
  * Create a new JSString whose chars member refers to external memory, i.e.,

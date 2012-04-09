@@ -37,10 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AddonManager.jsm");
-
 [
   ["AllPagesList", "popup_autocomplete", "cmd_openLocation"],
   ["HistoryList", "history-items", "cmd_history"],

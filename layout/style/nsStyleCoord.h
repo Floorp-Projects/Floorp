@@ -287,7 +287,7 @@ inline bool nsStyleCoord::operator!=(const nsStyleCoord& aOther) const
   return !((*this) == aOther);
 }
 
-inline PRInt32 nsStyleCoord::GetCoordValue() const
+inline nscoord nsStyleCoord::GetCoordValue() const
 {
   NS_ASSERTION((mUnit == eStyleUnit_Coord), "not a coord value");
   if (mUnit == eStyleUnit_Coord) {
