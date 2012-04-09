@@ -219,13 +219,12 @@ DOMCI_NODE_DATA(HTMLImageElement, nsHTMLImageElement)
 
 // QueryInterface implementation for nsHTMLImageElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLImageElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE6(nsHTMLImageElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLImageElement,
                                    nsIDOMHTMLImageElement,
                                    nsIJSNativeInitializer,
                                    imgIDecoderObserver,
                                    nsIImageLoadingContent,
-                                   imgIContainerObserver,
-                                   imgIOnloadBlocker)
+                                   imgIContainerObserver)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLImageElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLImageElement)

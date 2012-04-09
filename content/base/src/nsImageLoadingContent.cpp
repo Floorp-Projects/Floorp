@@ -115,6 +115,7 @@ nsImageLoadingContent::nsImageLoadingContent()
     mBroken(true),
     mUserDisabled(false),
     mSuppressed(false),
+    mBlockingOnload(false),
     mNewRequestsWillNeedAnimationReset(false),
     mPendingRequestNeedsResetAnimation(false),
     mCurrentRequestNeedsResetAnimation(false),
@@ -186,6 +187,23 @@ nsImageLoadingContent::OnStartDecode(imgIRequest* aRequest)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
+  // Onload blocking. This only applies for the current request.
+  if (aRequest == mCurrentRequest) {
+
+    // Determine whether this is a background request (this can be the case
+    // with multipart/x-mixed-replace images, for example).
+    PRUint32 loadFlags;
+    nsresult rv = aRequest->GetLoadFlags(&loadFlags);
+    bool background =
+      (NS_SUCCEEDED(rv) && (loadFlags & nsIRequest::LOAD_BACKGROUND));
+
+    // Block onload for non-background requests
+    if (!background) {
+      NS_ABORT_IF_FALSE(!mBlockingOnload, "Shouldn't already be blocking");
+      SetBlockingOnload(true);
+    }
+  }
+
   LOOP_OVER_OBSERVERS(OnStartDecode(aRequest));
   return NS_OK;
 }
@@ -231,6 +249,10 @@ nsImageLoadingContent::OnStopFrame(imgIRequest* aRequest,
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
+  // If we're blocking a load, one frame is enough
+  if (aRequest == mCurrentRequest)
+    SetBlockingOnload(false);
+
   LOOP_OVER_OBSERVERS(OnStopFrame(aRequest, aFrame));
   return NS_OK;
 }
@@ -240,6 +262,15 @@ nsImageLoadingContent::OnStopContainer(imgIRequest* aRequest,
                                        imgIContainer* aContainer)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
+  // This is really hacky. We need to handle the case where we start decoding,
+  // block onload, but then hit an error before we get to our first frame. In
+  // theory we would just hook in at OnStopDecode, but OnStopDecode is broken
+  // until we fix bug 505385. OnStopContainer is actually going away at that
+  // point. So for now we take advantage of the fact that OnStopContainer is
+  // always fired in the decoders at the same time as OnStopDecode.
+  if (aRequest == mCurrentRequest)
+    SetBlockingOnload(false);
 
   LOOP_OVER_OBSERVERS(OnStopContainer(aRequest, aContainer));
   return NS_OK;
@@ -318,7 +349,7 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
     FireEvent(NS_LITERAL_STRING("error"));
   }
 
-  nsCOMPtr<nsINode> thisNode = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  nsCOMPtr<nsINode> thisNode = do_QueryInterface(this);
   nsSVGEffects::InvalidateDirectRenderingObservers(thisNode->AsElement());
 
   return NS_OK;
@@ -606,36 +637,6 @@ NS_IMETHODIMP nsImageLoadingContent::ForceReload()
   return LoadImage(currentURI, true, true, nsnull, nsIRequest::VALIDATE_ALWAYS);
 }
 
-NS_IMETHODIMP
-nsImageLoadingContent::BlockOnload(imgIRequest* aRequest)
-{
-  if (aRequest != mCurrentRequest) {
-    return NS_OK;
-  }
-
-  nsIDocument* doc = GetOurDocument();
-  if (doc) {
-    doc->BlockOnload();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageLoadingContent::UnblockOnload(imgIRequest* aRequest)
-{
-  if (aRequest != mCurrentRequest) {
-    return NS_OK;
-  }
-
-  nsIDocument* doc = GetOurDocument();
-  if (doc) {
-    doc->UnblockOnload(false);
-  }
-
-  return NS_OK;
-}
-
 /*
  * Non-interface methods
  */
@@ -745,7 +746,7 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   // We use the principal of aDocument to avoid having to QI |this| an extra
   // time. It should always be the same as the principal of this node.
 #ifdef DEBUG
-  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
   NS_ABORT_IF_FALSE(thisContent &&
                     thisContent->NodePrincipal() == aDocument->NodePrincipal(),
                     "Principal mismatch?");
@@ -753,11 +754,8 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
 
   // Are we blocked?
   PRInt16 cpDecision = nsIContentPolicy::REJECT_REQUEST;
-  nsContentUtils::CanLoadImage(aNewURI,
-                               static_cast<nsIImageLoadingContent*>(this),
-                               aDocument,
-                               aDocument->NodePrincipal(),
-                               &cpDecision);
+  nsContentUtils::CanLoadImage(aNewURI, this, aDocument,
+                               aDocument->NodePrincipal(), &cpDecision);
   if (!NS_CP_ACCEPTED(cpDecision)) {
     FireEvent(NS_LITERAL_STRING("error"));
     SetBlockedRequest(aNewURI, cpDecision);
@@ -862,7 +860,7 @@ nsImageLoadingContent::UpdateImageState(bool aNotify)
     return;
   }
   
-  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
   if (!thisContent) {
     return;
   }
@@ -926,7 +924,7 @@ nsImageLoadingContent::UseAsPrimaryRequest(imgIRequest* aRequest,
 nsIDocument*
 nsImageLoadingContent::GetOurDocument()
 {
-  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
   NS_ENSURE_TRUE(thisContent, nsnull);
 
   return thisContent->OwnerDoc();
@@ -935,7 +933,7 @@ nsImageLoadingContent::GetOurDocument()
 nsIFrame*
 nsImageLoadingContent::GetOurPrimaryFrame()
 {
-  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
   return thisContent->GetPrimaryFrame();
 }
 
@@ -958,7 +956,7 @@ nsImageLoadingContent::StringToURI(const nsAString& aSpec,
   NS_PRECONDITION(aURI, "Null out param");
 
   // (1) Get the base URI
-  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
   NS_ASSERTION(thisContent, "An image loading content must be an nsIContent");
   nsCOMPtr<nsIURI> baseURL = thisContent->GetBaseURI();
 
@@ -980,7 +978,7 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
   // loops in cases when onLoad handlers reset the src and the new src is in
   // cache.
 
-  nsCOMPtr<nsINode> thisNode = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  nsCOMPtr<nsINode> thisNode = do_QueryInterface(this);
 
   nsRefPtr<nsAsyncDOMEvent> event =
     new nsLoadBlockingAsyncDOMEvent(thisNode, aEventType, false, false);
@@ -1088,6 +1086,10 @@ nsImageLoadingContent::ClearCurrentRequest(nsresult aReason)
   mCurrentRequest->CancelAndForgetObserver(aReason);
   mCurrentRequest = nsnull;
   mCurrentRequestNeedsResetAnimation = false;
+
+  // We only block onload during the decoding of "current" images. This one is
+  // going away, so we should unblock unconditionally here.
+  SetBlockingOnload(false);
 }
 
 void
@@ -1136,6 +1138,28 @@ nsImageLoadingContent::HaveSize(imgIRequest *aImage)
   PRUint32 status;
   nsresult rv = aImage->GetImageStatus(&status);
   return (NS_SUCCEEDED(rv) && (status & imgIRequest::STATUS_SIZE_AVAILABLE));
+}
+
+void
+nsImageLoadingContent::SetBlockingOnload(bool aBlocking)
+{
+  // If we're already in the desired state, we have nothing to do
+  if (mBlockingOnload == aBlocking)
+    return;
+
+  // Get the document
+  nsIDocument* doc = GetOurDocument();
+
+  if (doc) {
+    // Take the appropriate action
+    if (aBlocking)
+      doc->BlockOnload();
+    else
+      doc->UnblockOnload(false);
+
+    // Update our state
+    mBlockingOnload = aBlocking;
+  }
 }
 
 nsresult

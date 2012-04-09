@@ -47,7 +47,7 @@ interface nsIWifi : nsISupports {
     void shutdown();
 };
 
-[scriptable, uuid(7df14510-f58b-4c9a-9e35-a39a94255941)]
+[scriptable, uuid(36e4137b-dc8b-47e2-a90c-6adfb731fc41)]
 interface nsIDOMWifiManager : nsISupports {
     /**
      * TODO Remove in favor of a settings API.
@@ -79,6 +79,18 @@ interface nsIDOMWifiManager : nsISupports {
      *          configuration error.
      */
     nsIDOMDOMRequest associate(in jsval network);
+
+    /**
+     * Given a network, removes it from the list of networks that we'll
+     * automatically connect to. In order to re-connect to the network, it is
+     * necessary to call associate on it.
+     * @param network A network object with the SSID of the network to remove.
+     * onsuccess: We have removed this network. If we were previously
+     *            connected to it, we have started reconnecting to the next
+     *            network in the list.
+     * onerror: We were unable to remove the network.
+     */
+    nsIDOMDOMRequest forget(in jsval network);
 
     /**
      * TODO Remove in favor of a settings API.

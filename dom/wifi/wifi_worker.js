@@ -90,6 +90,10 @@ self.onmessage = function(e) {
     var ret = libcutils.property_set(data.key, data.value);
     postMessage({ id: id, status: ret });
     break;
+  case "close_supplicant_connection":
+    libhardware_legacy.close_supplicant_connection();
+    postMessage({ id: id, status: ret });
+    break;
   default:
     var f = libhardware_legacy[cmd] || libnetutils[cmd];
     var ret = f();
