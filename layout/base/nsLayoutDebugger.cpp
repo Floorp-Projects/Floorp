@@ -227,6 +227,7 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
   }
   
   fprintf(aOutput, "</ul>");
+  printf_stderr("DL: %s", aOutput);
 }
 
 void
