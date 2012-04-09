@@ -37,7 +37,7 @@
 
 package org.mozilla.gecko.sqlite;
 
-public class SQLiteBridgeException extends Exception {
+public class SQLiteBridgeException extends RuntimeException {
     static final long serialVersionUID = 1L;
 
     public SQLiteBridgeException() {}
