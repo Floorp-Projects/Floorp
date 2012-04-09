@@ -98,6 +98,13 @@ JSD_GetDefaultJSContext(JSDContext* jsdc)
     return jsdc->dumbContext;
 }
 
+JSD_PUBLIC_API(JSRuntime*)
+JSD_GetJSRuntime(JSDContext* jsdc)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsdc->jsrt;
+}
+
 JSD_PUBLIC_API(void)
 JSD_SetUserCallbacks(JSRuntime* jsrt, JSD_UserCallbacks* callbacks, void* user)
 {

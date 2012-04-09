@@ -42,15 +42,17 @@ Cu.import("resource://gre/modules/Services.jsm");
 /**
  * Delay load some JS modules
  */
-XPCOMUtils.defineLazyGetter(this, "PluralForm", function() {
-  Cu.import("resource://gre/modules/PluralForm.jsm");
-  return PluralForm;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
+                                  "resource://gre/modules/PluralForm.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
-  Cu.import("resource://gre/modules/PlacesUtils.jsm");
-  return PlacesUtils;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
 
 /* window.Rect is used by http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-Rect
  * so it is not possible to set a lazy getter for Geometry.jsm
