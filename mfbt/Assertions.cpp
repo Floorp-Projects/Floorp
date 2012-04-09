@@ -72,6 +72,13 @@ MOZ_Crash()
    */
   *((volatile int *) NULL) = 123;
   exit(3);
+#elif defined(ANDROID)
+  /*
+   * On Android, raise(SIGABRT) is handled asynchronously. Seg fault now
+   * so we crash immediately and capture the current call stack.
+   */
+  *((volatile int *) NULL) = 123;
+  abort();
 #elif defined(__APPLE__)
   /*
    * On Mac OS X, Breakpad ignores signals. Only real Mach exceptions are
