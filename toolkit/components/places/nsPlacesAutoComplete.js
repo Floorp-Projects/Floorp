@@ -1319,6 +1319,7 @@ urlInlineComplete.prototype = {
         + "SELECT host || '/' "
         + "FROM moz_hosts "
         + "WHERE host BETWEEN :search_string AND :search_string || X'FFFF' "
+        + "AND frecency <> 0 "
         + (this._autofillTyped ? "AND typed = 1 " : "")
         + "ORDER BY frecency DESC "
         + "LIMIT 1"
@@ -1385,6 +1386,15 @@ urlInlineComplete.prototype = {
     // next ones will just hit the memory hash.
     if (this._currentSearchString.length == 0 || !this._db ||
         PlacesUtils.bookmarks.getURIForKeyword(this._currentSearchString)) {
+      this._finishSearch();
+      return;
+    }
+
+    // Don't try to autofill if the search term includes any whitespace.
+    // This may confuse completeDefaultIndex cause the AUTOCOMPLETE_MATCH
+    // tokenizer ends up trimming the search string and returning a value
+    // that doesn't match it, or is even shorter.
+    if (/\s/.test(this._currentSearchString)) {
       this._finishSearch();
       return;
     }

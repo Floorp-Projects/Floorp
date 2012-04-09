@@ -382,4 +382,5 @@ MSG_DEF(JSMSG_PAR_ARRAY_SCATTER_BNDS, 295, 0, JSEXN_ERR, "scatter index out of b
 MSG_DEF(JSMSG_PAR_ARRAY_SCATTER_INVALID_VEC, 296, 0, JSEXN_ERR, "first argument to scatter is not a valid scatter vector")
 MSG_DEF(JSMSG_PAR_ARRAY_SCATTER_CONFLICT, 297, 0, JSEXN_ERR, "no function provided to resolve conflicting assignment in scatter")
 MSG_DEF(JSMSG_PAR_ARRAY_MAP_INVALID_ARG, 298, 1, JSEXN_ERR, "argument {0} to map is not an object")
+MSG_DEF(JSMSG_DEBUG_VARIABLE_NOT_FOUND, 299, 0, JSEXN_TYPEERR, "variable not found in environment")
 

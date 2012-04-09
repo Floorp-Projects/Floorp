@@ -107,6 +107,7 @@ static const char *sExtensionNames[] = {
     "GL_OES_rgb8_rgba8",
     "GL_ARB_robustness",
     "GL_EXT_robustness",
+    "GL_ARB_sync",
     NULL
 };
 
@@ -448,6 +449,32 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 MarkExtensionUnsupported(ANGLE_framebuffer_multisample);
                 MarkExtensionUnsupported(EXT_framebuffer_multisample);
                 mSymbols.fRenderbufferStorageMultisample = nsnull;
+            }
+        }
+
+        if (IsExtensionSupported(ARB_sync)) {
+            SymLoadStruct syncSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fFenceSync,      { "FenceSync",      nsnull } },
+                { (PRFuncPtr*) &mSymbols.fIsSync,         { "IsSync",         nsnull } },
+                { (PRFuncPtr*) &mSymbols.fDeleteSync,     { "DeleteSync",     nsnull } },
+                { (PRFuncPtr*) &mSymbols.fClientWaitSync, { "ClientWaitSync", nsnull } },
+                { (PRFuncPtr*) &mSymbols.fWaitSync,       { "WaitSync",       nsnull } },
+                { (PRFuncPtr*) &mSymbols.fGetInteger64v,  { "GetInteger64v",  nsnull } },
+                { (PRFuncPtr*) &mSymbols.fGetSynciv,      { "GetSynciv",      nsnull } },
+                { nsnull, { nsnull } },
+            };
+
+            if (!LoadSymbols(&syncSymbols[0], trygl, prefix)) {
+                NS_ERROR("GL supports ARB_sync without supplying its functions.");
+
+                MarkExtensionUnsupported(ARB_sync);
+                mSymbols.fFenceSync = nsnull;
+                mSymbols.fIsSync = nsnull;
+                mSymbols.fDeleteSync = nsnull;
+                mSymbols.fClientWaitSync = nsnull;
+                mSymbols.fWaitSync = nsnull;
+                mSymbols.fGetInteger64v = nsnull;
+                mSymbols.fGetSynciv = nsnull;
             }
         }
        
