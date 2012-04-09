@@ -135,6 +135,8 @@ static bool (*CGContextGetAllowsFontSmoothingPtr) (CGContextRef) = NULL;
 static CGPathRef (*CGContextCopyPathPtr) (CGContextRef) = NULL;
 static CGFloat (*CGContextGetAlphaPtr) (CGContextRef) = NULL;
 
+static SInt32 _cairo_quartz_osx_version = 0x0;
+
 static cairo_bool_t _cairo_quartz_symbol_lookup_done = FALSE;
 
 /*
@@ -169,6 +171,11 @@ static void quartz_ensure_symbols(void)
     CGContextGetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextGetAllowsFontSmoothing");
     CGContextSetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextSetAllowsFontSmoothing");
     CGContextGetAlphaPtr = dlsym(RTLD_DEFAULT, "CGContextGetAlpha");
+
+    if (Gestalt(gestaltSystemVersion, &_cairo_quartz_osx_version) != noErr) {
+        // assume 10.5
+        _cairo_quartz_osx_version = 0x1050;
+    }
 
     _cairo_quartz_symbol_lookup_done = TRUE;
 }
@@ -1147,7 +1154,7 @@ _cairo_surface_to_cgimage (cairo_surface_t *source,
     if (source_img == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    source_img->surface = _cairo_surface_snapshot(source);
+    source_img->surface = cairo_surface_reference(source);
 
     status = _cairo_surface_acquire_source_image (source_img->surface, &source_img->image_out, &source_img->image_extra);
     if (status) {
@@ -3036,8 +3043,11 @@ _cairo_quartz_surface_mask_cg (void *abstract_surface,
     /* If we have CGContextClipToMask, we can do more complex masks */
     if (CGContextClipToMaskPtr) {
 	/* For these, we can skip creating a temporary surface, since we already have one */
-	if (mask->type == CAIRO_PATTERN_TYPE_SURFACE && mask->extend == CAIRO_EXTEND_NONE)
+	/* For some reason this doesn't work reliably on OS X 10.5.  See bug 721663. */
+	if (_cairo_quartz_osx_version >= 0x1060 && mask->type == CAIRO_PATTERN_TYPE_SURFACE &&
+	    mask->extend == CAIRO_EXTEND_NONE) {
 	    return _cairo_quartz_surface_mask_with_surface (surface, op, source, (cairo_surface_pattern_t *) mask, clip);
+	}
 
 	return _cairo_quartz_surface_mask_with_generic (surface, op, source, mask, clip);
     }
