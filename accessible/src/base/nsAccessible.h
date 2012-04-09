@@ -131,9 +131,14 @@ public:
   // Public methods
 
   /**
-   * get the description of this accessible
+   * Get the description of this accessible.
    */
   virtual void Description(nsString& aDescription);
+
+  /**
+   * Get the value of this accessible.
+   */
+  virtual void Value(nsString& aValue);
 
   /**
    * Return DOM node associated with this accessible.
