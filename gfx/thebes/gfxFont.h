@@ -198,56 +198,6 @@ struct THEBES_API gfxFontStyle {
     static PRUint32 ParseFontLanguageOverride(const nsString& aLangTag);
 };
 
-class gfxCharacterMap : public gfxSparseBitSet {
-public:
-    nsrefcnt AddRef() {
-        NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
-        ++mRefCnt;
-        NS_LOG_ADDREF(this, mRefCnt, "gfxCharacterMap", sizeof(*this));
-        return mRefCnt;
-    }
-
-    nsrefcnt Release() {
-        NS_PRECONDITION(0 != mRefCnt, "dup release");
-        --mRefCnt;
-        NS_LOG_RELEASE(this, mRefCnt, "gfxCharacterMap");
-        if (mRefCnt == 0) {
-            NotifyReleased();
-            // |this| has been deleted.
-            return 0;
-        }
-        return mRefCnt;
-    }
-
-    gfxCharacterMap() :
-        mHash(0), mBuildOnTheFly(false), mShared(false)
-    { }
-
-    void CalcHash() { mHash = GetChecksum(); }
-
-    size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
-        return gfxSparseBitSet::SizeOfExcludingThis(aMallocSizeOf);
-    }
-
-    // hash of the cmap bitvector
-    PRUint32 mHash;
-
-    // if cmap is built on the fly it's never shared
-    bool mBuildOnTheFly;
-
-    // cmap is shared globally
-    bool mShared;
-
-protected:
-    void NotifyReleased();
-
-    nsAutoRefCnt mRefCnt;
-
-private:
-    gfxCharacterMap(const gfxCharacterMap&);
-    gfxCharacterMap& operator=(const gfxCharacterMap&);
-};
-
 class gfxFontEntry {
 public:
     NS_INLINE_DECL_REFCOUNTING(gfxFontEntry)
@@ -266,6 +216,7 @@ public:
         mCheckedForGraphiteTables(false),
 #endif
         mHasCmapTable(false),
+        mCmapInitialized(false),
         mUVSOffset(0), mUVSData(nsnull),
         mUserFontData(nsnull),
         mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
@@ -308,17 +259,16 @@ public:
 #endif
 
     inline bool HasCmapTable() {
-        if (!mCharacterMap) {
+        if (!mCmapInitialized) {
             ReadCMAP();
-            NS_ASSERTION(mCharacterMap, "failed to initialize character map");
         }
         return mHasCmapTable;
     }
 
     inline bool HasCharacter(PRUint32 ch) {
-        if (mCharacterMap && mCharacterMap->test(ch)) {
+        if (mCharacterMap.test(ch))
             return true;
-        }
+
         return TestCharacterMap(ch);
     }
 
@@ -394,7 +344,8 @@ public:
     bool             mCheckedForGraphiteTables;
 #endif
     bool             mHasCmapTable;
-    nsRefPtr<gfxCharacterMap> mCharacterMap;
+    bool             mCmapInitialized;
+    gfxSparseBitSet  mCharacterMap;
     PRUint32         mUVSOffset;
     nsAutoArrayPtr<PRUint8> mUVSData;
     gfxUserFontData* mUserFontData;
@@ -424,6 +375,7 @@ protected:
         mCheckedForGraphiteTables(false),
 #endif
         mHasCmapTable(false),
+        mCmapInitialized(false),
         mUVSOffset(0), mUVSData(nsnull),
         mUserFontData(nsnull),
         mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
@@ -577,7 +529,7 @@ public:
         mHasStyles(false),
         mIsSimpleFamily(false),
         mIsBadUnderlineFamily(false),
-        mFamilyCharacterMapInitialized(false)
+        mCharacterMapInitialized(false)
         { }
 
     virtual ~gfxFontFamily() {
@@ -655,27 +607,26 @@ public:
         PRUint32 i, numFonts = mAvailableFonts.Length();
         for (i = 0; i < numFonts; i++) {
             gfxFontEntry *fe = mAvailableFonts[i];
-            // don't try to load cmaps for downloadable fonts not yet loaded
-            if (!fe || fe->mIsProxy) {
+            if (!fe) {
                 continue;
             }
             fe->ReadCMAP();
-            mFamilyCharacterMap.Union(*(fe->mCharacterMap));
+            mCharacterMap.Union(fe->mCharacterMap);
         }
-        mFamilyCharacterMap.Compact();
-        mFamilyCharacterMapInitialized = true;
+        mCharacterMap.Compact();
+        mCharacterMapInitialized = true;
     }
 
     bool TestCharacterMap(PRUint32 aCh) {
-        if (!mFamilyCharacterMapInitialized) {
+        if (!mCharacterMapInitialized) {
             ReadAllCMAPs();
         }
-        return mFamilyCharacterMap.test(aCh);
+        return mCharacterMap.test(aCh);
     }
 
     void ResetCharacterMap() {
-        mFamilyCharacterMap.reset();
-        mFamilyCharacterMapInitialized = false;
+        mCharacterMap.reset();
+        mCharacterMapInitialized = false;
     }
 
     // mark this family as being in the "bad" underline offset blacklist
@@ -724,14 +675,14 @@ protected:
 
     nsString mName;
     nsTArray<nsRefPtr<gfxFontEntry> >  mAvailableFonts;
-    gfxSparseBitSet mFamilyCharacterMap;
-    bool mOtherFamilyNamesInitialized : 1;
-    bool mHasOtherFamilyNames : 1;
-    bool mFaceNamesInitialized : 1;
-    bool mHasStyles : 1;
-    bool mIsSimpleFamily : 1;
-    bool mIsBadUnderlineFamily : 1;
-    bool mFamilyCharacterMapInitialized : 1;
+    gfxSparseBitSet mCharacterMap;
+    bool mOtherFamilyNamesInitialized;
+    bool mHasOtherFamilyNames;
+    bool mFaceNamesInitialized;
+    bool mHasStyles;
+    bool mIsSimpleFamily;
+    bool mIsBadUnderlineFamily;
+    bool mCharacterMapInitialized;
 
     enum {
         // for "simple" families, the faces are stored in mAvailableFonts

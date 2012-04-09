@@ -50,53 +50,6 @@
 #include "nsIMemoryReporter.h"
 #include "mozilla/FunctionTimer.h"
 
-class CharMapHashKey : public PLDHashEntryHdr
-{
-public:
-    typedef gfxCharacterMap* KeyType;
-    typedef const gfxCharacterMap* KeyTypePointer;
-
-    CharMapHashKey(const gfxCharacterMap *aCharMap) :
-        mCharMap(const_cast<gfxCharacterMap*>(aCharMap))
-    {
-        MOZ_COUNT_CTOR(CharMapHashKey);
-    }
-    CharMapHashKey(const CharMapHashKey& toCopy) :
-        mCharMap(toCopy.mCharMap)
-    {
-        MOZ_COUNT_CTOR(CharMapHashKey);
-    }
-    ~CharMapHashKey()
-    {
-        MOZ_COUNT_DTOR(CharMapHashKey);
-    }
-
-    gfxCharacterMap* GetKey() const { return mCharMap; }
-
-    bool KeyEquals(const gfxCharacterMap *aCharMap) const {
-        NS_ASSERTION(!aCharMap->mBuildOnTheFly && !mCharMap->mBuildOnTheFly,
-                     "custom cmap used in shared cmap hashtable");
-        // cmaps built on the fly never match
-        if (aCharMap->mHash != mCharMap->mHash)
-        {
-            return false;
-        }
-        return mCharMap->Equals(aCharMap);
-    }
-
-    static const gfxCharacterMap* KeyToPointer(gfxCharacterMap *aCharMap) {
-        return aCharMap;
-    }
-    static PLDHashNumber HashKey(const gfxCharacterMap *aCharMap) {
-        return aCharMap->mHash;
-    }
-
-    enum { ALLOW_MEMMOVE = true };
-
-protected:
-    gfxCharacterMap *mCharMap;
-};
-
 // gfxPlatformFontList is an abstract class for the global font list on the system;
 // concrete subclasses for each platform implement the actual interface to the system fonts.
 // This class exists because we cannot rely on the platform font-finding APIs to behave
@@ -201,16 +154,6 @@ public:
                                      FontListSizes*    aSizes) const;
     virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
                                      FontListSizes*    aSizes) const;
-
-    // search for existing cmap that matches the input
-    // return the input if no match is found
-    gfxCharacterMap* FindCharMap(gfxCharacterMap *aCmap);
-
-    // add a cmap to the shared cmap set
-    gfxCharacterMap* AddCmap(const gfxCharacterMap *aCharMap);
-
-    // remove the cmap from the shared cmap set
-    void RemoveCmap(const gfxCharacterMap *aCharMap);
 
 protected:
     class MemoryReporter
@@ -320,10 +263,6 @@ protected:
     nsString mReplacementCharFallbackFamily;
 
     nsTHashtable<nsStringHashKey> mBadUnderlineFamilyNames;
-
-    // character map data shared across families
-    // contains weak ptrs to cmaps shared by font entry objects
-    nsTHashtable<CharMapHashKey> mSharedCmaps;
 
     // data used as part of the font cmap loading process
     nsTArray<nsRefPtr<gfxFontFamily> > mFontFamiliesToLoad;
