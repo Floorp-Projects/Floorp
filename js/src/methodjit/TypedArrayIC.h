@@ -128,7 +128,7 @@ ConstantFoldForIntArray(JSContext *cx, JSObject *tarray, ValueRemat *vr)
     int32_t i32 = 0;
     if (v.isDouble()) {
         i32 = (TypedArray::getType(tarray) == js::TypedArray::TYPE_UINT8_CLAMPED)
-              ? js_TypedArray_uint8_clamp_double(v.toDouble())
+              ? ClampDoubleToUint8(v.toDouble())
               : js_DoubleToECMAInt32(v.toDouble());
     } else if (v.isInt32()) {
         i32 = v.toInt32();

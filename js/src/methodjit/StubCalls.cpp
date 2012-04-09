@@ -1722,7 +1722,7 @@ stubs::ConvertToTypedInt(JSContext *cx, Value *vp)
 
     if (vp->isDouble()) {
         if (Clamped)
-            return js_TypedArray_uint8_clamp_double(vp->toDouble());
+            return ClampDoubleToUint8(vp->toDouble());
         return js_DoubleToECMAInt32(vp->toDouble());
     }
 
