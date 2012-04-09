@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #if !defined(LOCALGL_H_)
-
 #define LOCALGL_H_
 
 #if !defined(__gltypes_h_) && !defined(__gl_h_)
@@ -71,6 +70,14 @@ typedef ptrdiff_t GLintptr;
 #endif
 
 #endif /* #if !defined(__gltypes_h_) && !defined(__gl_h_) */
+
+#include "mozilla/StandardInteger.h"
+
+// ARB_sync
+typedef struct __GLsync *GLsync;
+typedef int64_t GLint64;
+typedef uint64_t GLuint64;
+
 
 #ifndef GLAPIENTRY
 # ifdef WIN32
@@ -3031,6 +3038,23 @@ typedef ptrdiff_t GLintptr;
 #define LOCAL_GL_WIN_specular_fog 1
 #define LOCAL_GL_FOG_SPECULAR_TEXTURE_WIN 0x80EC
 #define LOCAL_GL_WIN_swap_hint 1
+
+// ARB_sync
+#define LOCAL_GL_MAX_SERVER_WAIT_TIMEOUT          0x9111
+#define LOCAL_GL_OBJECT_TYPE                      0x9112
+#define LOCAL_GL_SYNC_CONDITION                   0x9113
+#define LOCAL_GL_SYNC_STATUS                      0x9114
+#define LOCAL_GL_SYNC_FLAGS                       0x9115
+#define LOCAL_GL_SYNC_FENCE                       0x9116
+#define LOCAL_GL_SYNC_GPU_COMMANDS_COMPLETE       0x9117
+#define LOCAL_GL_UNSIGNALED                       0x9118
+#define LOCAL_GL_SIGNALED                         0x9119
+#define LOCAL_GL_SYNC_FLUSH_COMMANDS_BIT          0x00000001
+#define LOCAL_GL_TIMEOUT_IGNORED                  0xFFFFFFFFFFFFFFFFull
+#define LOCAL_GL_ALREADY_SIGNALED                 0x911A
+#define LOCAL_GL_TIMEOUT_EXPIRED                  0x911B
+#define LOCAL_GL_CONDITION_SATISFIED              0x911C
+#define LOCAL_GL_WAIT_FAILED                      0x911D
 
 #define LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS       0x8DFB
 #define LOCAL_GL_MAX_VARYING_VECTORS              0x8DFC

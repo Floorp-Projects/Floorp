@@ -569,17 +569,6 @@ GetOwnerThread(const JSContext *cx);
 
 JS_FRIEND_API(unsigned)
 GetContextOutstandingRequests(const JSContext *cx);
-
-class JS_FRIEND_API(AutoSkipConservativeScan)
-{
-  public:
-    AutoSkipConservativeScan(JSContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~AutoSkipConservativeScan();
-
-  private:
-    JSContext *context;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
 #endif
 
 JS_FRIEND_API(JSCompartment *)
@@ -680,13 +669,13 @@ PrepareForFullGC(JSRuntime *rt);
  */
 
 extern JS_FRIEND_API(void)
-GCForReason(JSContext *cx, gcreason::Reason reason);
+GCForReason(JSRuntime *rt, gcreason::Reason reason);
 
 extern JS_FRIEND_API(void)
-ShrinkingGC(JSContext *cx, gcreason::Reason reason);
+ShrinkingGC(JSRuntime *rt, gcreason::Reason reason);
 
 extern JS_FRIEND_API(void)
-IncrementalGC(JSContext *cx, gcreason::Reason reason);
+IncrementalGC(JSRuntime *rt, gcreason::Reason reason);
 
 extern JS_FRIEND_API(void)
 SetGCSliceTimeBudget(JSContext *cx, int64_t millis);
@@ -724,15 +713,12 @@ typedef void
 extern JS_FRIEND_API(GCSliceCallback)
 SetGCSliceCallback(JSRuntime *rt, GCSliceCallback callback);
 
-extern JS_FRIEND_API(bool)
-WantGCSlice(JSRuntime *rt);
-
 /*
  * Signals a good place to do an incremental slice, because the browser is
  * drawing a frame.
  */
 extern JS_FRIEND_API(void)
-NotifyDidPaint(JSContext *cx);
+NotifyDidPaint(JSRuntime *rt);
 
 extern JS_FRIEND_API(bool)
 IsIncrementalGCEnabled(JSRuntime *rt);

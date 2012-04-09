@@ -343,12 +343,11 @@ FT2FontEntry::CairoFontFace()
 nsresult
 FT2FontEntry::ReadCMAP()
 {
-    if (mCmapInitialized) {
+    if (mCharacterMap) {
         return NS_OK;
     }
 
-    // attempt this once, if errors occur leave a blank cmap
-    mCmapInitialized = true;
+    nsRefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
 
     AutoFallibleTArray<PRUint8,16384> buffer;
     nsresult rv = GetFontTable(TTAG_cmap, buffer);
@@ -357,11 +356,18 @@ FT2FontEntry::ReadCMAP()
         bool unicodeFont;
         bool symbolFont;
         rv = gfxFontUtils::ReadCMAP(buffer.Elements(), buffer.Length(),
-                                    mCharacterMap, mUVSOffset,
+                                    *charmap, mUVSOffset,
                                     unicodeFont, symbolFont);
     }
 
     mHasCmapTable = NS_SUCCEEDED(rv);
+    if (mHasCmapTable) {
+        gfxPlatformFontList *pfl = gfxPlatformFontList::PlatformFontList();
+        mCharacterMap = pfl->FindCharMap(charmap);
+    } else {
+        // if error occurred, initialize to null cmap
+        mCharacterMap = new gfxCharacterMap();
+    }
     return rv;
 }
 

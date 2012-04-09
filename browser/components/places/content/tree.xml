@@ -699,6 +699,10 @@
           this._contextMenuShown = false;
         <body/>
       </method>
+
+      <property name="ownerWindow"
+                readonly="true"
+                onget="return window;"/>
     </implementation>
     <handlers>
       <handler event="focus"><![CDATA[

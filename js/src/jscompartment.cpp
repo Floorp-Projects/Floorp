@@ -746,22 +746,22 @@ JSCompartment::removeDebuggee(FreeOp *fop,
 }
 
 void
-JSCompartment::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSObject *handler)
+JSCompartment::clearBreakpointsIn(FreeOp *fop, js::Debugger *dbg, JSObject *handler)
 {
     for (gc::CellIter i(this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->hasAnyBreakpointsOrStepMode())
-            script->clearBreakpointsIn(cx, dbg, handler);
+            script->clearBreakpointsIn(fop, dbg, handler);
     }
 }
 
 void
-JSCompartment::clearTraps(JSContext *cx)
+JSCompartment::clearTraps(FreeOp *fop)
 {
     for (gc::CellIter i(this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->hasAnyBreakpointsOrStepMode())
-            script->clearTraps(cx->runtime->defaultFreeOp());
+            script->clearTraps(fop);
     }
 }
 

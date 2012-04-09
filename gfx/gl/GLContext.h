@@ -1500,6 +1500,7 @@ public:
         OES_rgb8_rgba8,
         ARB_robustness,
         EXT_robustness,
+        ARB_sync,
         Extensions_Max
     };
 
@@ -2896,6 +2897,51 @@ public:
          GLenum ret = mHasRobustness ? mSymbols.fGetGraphicsResetStatus() : 0;
          AFTER_GL_CALL;
          return ret;
+     }
+
+     GLsync GLAPIENTRY fFenceSync(GLenum condition, GLbitfield flags) {
+         BEFORE_GL_CALL;
+         GLsync ret = mSymbols.fFenceSync(condition, flags);
+         AFTER_GL_CALL;
+         return ret;
+     }
+
+     realGLboolean GLAPIENTRY fIsSync(GLsync sync) {
+         BEFORE_GL_CALL;
+         realGLboolean ret = mSymbols.fIsSync(sync);
+         AFTER_GL_CALL;
+         return ret;
+     }
+
+     void GLAPIENTRY fDeleteSync(GLsync sync) {
+         BEFORE_GL_CALL;
+         mSymbols.fDeleteSync(sync);
+         AFTER_GL_CALL;
+     }
+
+     GLenum GLAPIENTRY fClientWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout) {
+         BEFORE_GL_CALL;
+         GLenum ret = mSymbols.fClientWaitSync(sync, flags, timeout);
+         AFTER_GL_CALL;
+         return ret;
+     }
+
+     void GLAPIENTRY fWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout) {
+         BEFORE_GL_CALL;
+         mSymbols.fWaitSync(sync, flags, timeout);
+         AFTER_GL_CALL;
+     }
+
+     void GLAPIENTRY fGetInteger64v(GLenum pname, GLint64 *params) {
+         BEFORE_GL_CALL;
+         mSymbols.fGetInteger64v(pname, params);
+         AFTER_GL_CALL;
+     }
+
+     void GLAPIENTRY fGetSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values) {
+         BEFORE_GL_CALL;
+         mSymbols.fGetSynciv(sync, pname, bufSize, length, values);
+         AFTER_GL_CALL;
      }
 
 #ifdef DEBUG

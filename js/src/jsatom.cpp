@@ -502,8 +502,10 @@ js_DumpAtoms(JSContext *cx, FILE *fp)
 
 JS_STATIC_ASSERT(TEMP_SIZE_START >= sizeof(JSHashTable));
 
+namespace js {
+
 void
-js_InitAtomMap(JSContext *cx, AtomIndexMap *indices, JSAtom **atoms)
+InitAtomMap(JSContext *cx, AtomIndexMap *indices, HeapPtrAtom *atoms)
 {
     if (indices->isMap()) {
         typedef AtomIndexMap::WordMap WordMap;
@@ -512,7 +514,7 @@ js_InitAtomMap(JSContext *cx, AtomIndexMap *indices, JSAtom **atoms)
             JSAtom *atom = r.front().key;
             jsatomid index = r.front().value;
             JS_ASSERT(index < indices->count());
-            atoms[index] = atom;
+            atoms[index].init(atom);
         }
     } else {
         for (const AtomIndexMap::InlineElem *it = indices->asInline(), *end = indices->inlineEnd();
@@ -521,12 +523,10 @@ js_InitAtomMap(JSContext *cx, AtomIndexMap *indices, JSAtom **atoms)
             if (!atom)
                 continue;
             JS_ASSERT(it->value < indices->count());
-            atoms[it->value] = atom;
+            atoms[it->value].init(atom);
         }
     }
 }
-
-namespace js {
 
 bool
 IndexToIdSlow(JSContext *cx, uint32_t index, jsid *idp)
