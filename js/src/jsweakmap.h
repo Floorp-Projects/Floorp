@@ -198,49 +198,25 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     }
 
   private:
-    bool IsMarked(const HeapValue &x) {
-        if (x.isMarkable())
-            return !IsAboutToBeFinalized(x);
-        return true;
-    }
-    bool IsMarked(const HeapPtrObject &x) {
-        return !IsAboutToBeFinalized(x);
-    }
-    bool IsMarked(const HeapPtrScript&x) {
-        return !IsAboutToBeFinalized(x);
-    }
-
-    bool Mark(JSTracer *trc, HeapValue *x) {
-        if (IsMarked(*x))
+    bool markValue(JSTracer *trc, Value *x) {
+        if (gc::IsMarked(*x))
             return false;
-        js::gc::MarkValue(trc, x, "WeakMap entry value");
-        return true;
-    }
-    bool Mark(JSTracer *trc, HeapPtrObject *x) {
-        if (IsMarked(*x))
-            return false;
-        js::gc::MarkObject(trc, x, "WeakMap entry value");
-        return true;
-    }
-    bool Mark(JSTracer *trc, HeapPtrScript *x) {
-        if (IsMarked(*x))
-            return false;
-        js::gc::MarkScript(trc, x, "WeakMap entry value");
+        gc::Mark(trc, x, "WeakMap entry");
         return true;
     }
 
     void nonMarkingTrace(JSTracer *trc) {
         for (Range r = Base::all(); !r.empty(); r.popFront())
-            Mark(trc, &r.front().value);
+            markValue(trc, &r.front().value);
     }
 
     bool markIteratively(JSTracer *trc) {
         bool markedAny = false;
         for (Range r = Base::all(); !r.empty(); r.popFront()) {
             /* If the entry is live, ensure its key and value are marked. */
-            if (IsMarked(r.front().key) && Mark(trc, &r.front().value))
+            if (gc::IsMarked(r.front().key) && markValue(trc, &r.front().value))
                 markedAny = true;
-            JS_ASSERT_IF(IsMarked(r.front().key), IsMarked(r.front().value));
+            JS_ASSERT_IF(gc::IsMarked(r.front().key), gc::IsMarked(r.front().value));
         }
         return markedAny;
     }
@@ -248,7 +224,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     void sweep(JSTracer *trc) {
         /* Remove all entries whose keys remain unmarked. */
         for (Enum e(*this); !e.empty(); e.popFront()) {
-            if (!IsMarked(e.front().key))
+            if (!gc::IsMarked(e.front().key))
                 e.removeFront();
         }
 
@@ -258,27 +234,23 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
          * known-live part of the graph.
          */
         for (Range r = Base::all(); !r.empty(); r.popFront()) {
-            JS_ASSERT(IsMarked(r.front().key));
-            JS_ASSERT(IsMarked(r.front().value));
+            JS_ASSERT(gc::IsMarked(r.front().key));
+            JS_ASSERT(gc::IsMarked(r.front().value));
         }
 #endif
     }
 
-    void CallTracer(WeakMapTracer *trc, const HeapPtrObject &k, const HeapValue &v) {
-        if (v.isMarkable())
-            trc->callback(trc, memberOf, k.get(), JSTRACE_OBJECT, v.toGCThing(), v.gcKind());
-    }
-    void CallTracer(WeakMapTracer *trc, const HeapPtrObject &k, const HeapPtrObject &v) {
-        trc->callback(trc, memberOf, k.get(), JSTRACE_OBJECT, v.get(), JSTRACE_OBJECT);
-    }
-    void CallTracer(WeakMapTracer *trc, const HeapPtrScript &k, const HeapPtrObject &v) {
-        trc->callback(trc, memberOf, k.get(), JSTRACE_SCRIPT, v.get(), JSTRACE_OBJECT);
-    }
-
-    /* mapObj can be NULL, which means that the map is not part of a JSObject. */
+    /* memberOf can be NULL, which means that the map is not part of a JSObject. */
     void traceMappings(WeakMapTracer *tracer) {
-        for (Range r = Base::all(); !r.empty(); r.popFront())
-            CallTracer(tracer, r.front().key, r.front().value);
+        for (Range r = Base::all(); !r.empty(); r.popFront()) {
+            gc::Cell *key = gc::ToMarkable(r.front().key);
+            gc::Cell *value = gc::ToMarkable(r.front().value);
+            if (key && value) {
+                tracer->callback(tracer, memberOf,
+                                 key, gc::TraceKind(r.front().key),
+                                 value, gc::TraceKind(r.front().value));
+            }
+        }
     }
 };
 
