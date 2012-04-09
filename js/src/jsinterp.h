@@ -424,6 +424,9 @@ DivValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
 bool
 ModValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
 
+bool
+UrshValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
+
 template <bool strict>
 bool
 SetProperty(JSContext *cx, JSObject *obj, JSAtom *atom, const Value &value);

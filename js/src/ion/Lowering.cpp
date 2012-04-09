@@ -470,8 +470,22 @@ LIRGenerator::lowerShiftOp(JSOp op, MInstruction *ins)
         }
         return lowerForShift(lir, ins, lhs, rhs);
     }
-    JS_NOT_REACHED("NYI");
-    return false;
+
+    if (op == JSOP_URSH) {
+        LBinaryV *lir = new LBinaryV(op);
+        if (!useBox(lir, LBinaryV::LhsInput, lhs))
+            return false;
+        if (!useBox(lir, LBinaryV::RhsInput, rhs))
+            return false;
+        return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+    } else {
+        LBitOpV *lir = new LBitOpV(op);
+        if (!useBox(lir, LBitOpV::LhsInput, lhs))
+            return false;
+        if (!useBox(lir, LBitOpV::RhsInput, rhs))
+            return false;
+        return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+    }
 }
 
 bool

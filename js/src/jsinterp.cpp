@@ -2360,18 +2360,11 @@ END_CASE(JSOP_RSH)
 
 BEGIN_CASE(JSOP_URSH)
 {
-    uint32_t u;
-    if (!ToUint32(cx, regs.sp[-2], &u))
+    Value lval = regs.sp[-2];
+    Value rval = regs.sp[-1];
+    if (!UrshOperation(cx, lval, rval, &regs.sp[-2]))
         goto error;
-    int32_t j;
-    if (!ToInt32(cx, regs.sp[-1], &j))
-        goto error;
-
-    u >>= (j & 31);
-
     regs.sp--;
-    if (!regs.sp[-1].setNumber(uint32_t(u)))
-        TypeScript::MonitorOverflow(cx, script, regs.pc);
 }
 END_CASE(JSOP_URSH)
 
@@ -4390,4 +4383,10 @@ bool
 js::ModValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
 {
     return ModOperation(cx, lhs, rhs, res);
+}
+
+bool
+js::UrshValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+{
+    return UrshOperation(cx, lhs, rhs, res);
 }
