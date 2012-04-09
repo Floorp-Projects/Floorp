@@ -233,9 +233,9 @@ public:
                                      nsCString& hostLine);
 
     bool GetPipelineAggressive()     { return mPipelineAggressive; }
-    void GetMaxPipelineObjectSize(PRInt64 &outVal)
+    void GetMaxPipelineObjectSize(PRInt64 *outVal)
     {
-        outVal = mMaxPipelineObjectSize;
+        *outVal = mMaxPipelineObjectSize;
     }
     PRIntervalTime GetPipelineTimeout()   { return mPipelineReadTimeout; }
 
