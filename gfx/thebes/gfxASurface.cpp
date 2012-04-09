@@ -71,8 +71,6 @@
 #include <stdio.h>
 #include <limits.h>
 
-#define MOZ_DUMP_PAINTING 1
-
 #include "imgIEncoder.h"
 #include "nsComponentManagerUtils.h"
 #include "prmem.h"

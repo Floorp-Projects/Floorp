@@ -2020,11 +2020,8 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // area even if the scrollframe itself doesn't.
     if (child != aBuilder->GetIgnoreScrollFrame()) {
       nsRect childDirty;
-      nsRect overflow = child->GetVisualOverflowRect();
-
-      if (!childDirty.IntersectRect(dirty, overflow)) {
+      if (!childDirty.IntersectRect(dirty, child->GetVisualOverflowRect()))
         return NS_OK;
-      }
       // Usually we could set dirty to childDirty now but there's no
       // benefit, and it can be confusing. It can especially confuse
       // situations where we're going to ignore a scrollframe's clipping;

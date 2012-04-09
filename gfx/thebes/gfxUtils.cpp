@@ -47,8 +47,6 @@
 #include "gfxWindowsPlatform.h"
 #endif
 
-#define MOZ_DUMP_PAINTING 1
-
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
