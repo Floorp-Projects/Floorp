@@ -16,6 +16,7 @@
 #include "jsval.h"
 
 #include "gc/Barrier.h"
+#include "vm/NumericConversions.h"
 
 namespace js {
 
@@ -64,6 +65,17 @@ struct PropDesc {
     /* Or maybe this represents a property's absence, and it's undefined. */
     bool isUndefined_ : 1;
 
+    PropDesc(const Value &v)
+      : pd_(UndefinedValue()),
+        value_(v),
+        get_(UndefinedValue()), set_(UndefinedValue()),
+        attrs(0),
+        hasGet_(false), hasSet_(false),
+        hasValue_(true), hasWritable_(false), hasEnumerable_(false), hasConfigurable_(false),
+        isUndefined_(false)
+    {
+    }
+
   public:
     friend class AutoPropDescArrayRooter;
     friend void JS::AutoGCRooter::trace(JSTracer *trc);
@@ -75,6 +87,7 @@ struct PropDesc {
     PropDesc();
 
     static PropDesc undefined() { return PropDesc(); }
+    static PropDesc valueOnly(const Value &v) { return PropDesc(v); }
 
     PropDesc(const Value &v, Writability writable,
              Enumerability enumerable, Configurability configurable)
@@ -226,11 +239,16 @@ class Int32ElementsHeader;
 class Uint8ClampedElementsHeader;
 class Float32ElementsHeader;
 class Float64ElementsHeader;
+class Uint8ClampedElementsHeader;
 class ArrayBufferElementsHeader;
 
 enum ElementsKind {
     DenseElements,
     SparseElements,
+
+    ArrayBufferElements,
+
+    /* These typed element types must remain contiguous. */
     Uint8Elements,
     Int8Elements,
     Uint16Elements,
@@ -239,15 +257,14 @@ enum ElementsKind {
     Int32Elements,
     Uint8ClampedElements,
     Float32Elements,
-    Float64Elements,
-    ArrayBufferElements
+    Float64Elements
 };
 
 class ElementsHeader
 {
   protected:
     uint32_t type;
-    uint32_t length; /* Array length, byte length of ArrayBuffer */
+    uint32_t length; /* Array length, ArrayBuffer length, typed array length */
 
     union {
         class {
@@ -274,6 +291,7 @@ class ElementsHeader
 
     inline bool isDenseElements() const { return kind() == DenseElements; }
     inline bool isSparseElements() const { return kind() == SparseElements; }
+    inline bool isArrayBufferElements() const { return kind() == ArrayBufferElements; }
     inline bool isUint8Elements() const { return kind() == Uint8Elements; }
     inline bool isInt8Elements() const { return kind() == Int8Elements; }
     inline bool isUint16Elements() const { return kind() == Uint16Elements; }
@@ -283,10 +301,10 @@ class ElementsHeader
     inline bool isUint8ClampedElements() const { return kind() == Uint8ClampedElements; }
     inline bool isFloat32Elements() const { return kind() == Float32Elements; }
     inline bool isFloat64Elements() const { return kind() == Float64Elements; }
-    inline bool isArrayBufferElements() const { return kind() == ArrayBufferElements; }
 
     inline DenseElementsHeader & asDenseElements();
     inline SparseElementsHeader & asSparseElements();
+    inline ArrayBufferElementsHeader & asArrayBufferElements();
     inline Uint8ElementsHeader & asUint8Elements();
     inline Int8ElementsHeader & asInt8Elements();
     inline Uint16ElementsHeader & asUint16Elements();
@@ -296,7 +314,6 @@ class ElementsHeader
     inline Uint8ClampedElementsHeader & asUint8ClampedElements();
     inline Float32ElementsHeader & asFloat32Elements();
     inline Float64ElementsHeader & asFloat64Elements();
-    inline ArrayBufferElementsHeader & asArrayBufferElements();
 
     static ElementsHeader * fromElements(HeapSlot *elems) {
         return reinterpret_cast<ElementsHeader *>(uintptr_t(elems) - sizeof(ElementsHeader));
@@ -328,6 +345,9 @@ class DenseElementsHeader : public ElementsHeader
     bool defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
                        bool shouldThrow, bool *succeeded);
 
+    bool setElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index,
+                    const Value &v, bool *succeeded);
+
   private:
     inline bool isDenseElements() const MOZ_DELETE;
     inline DenseElementsHeader & asDenseElements() MOZ_DELETE;
@@ -353,6 +373,9 @@ class SparseElementsHeader : public ElementsHeader
 
     bool defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
                        bool shouldThrow, bool *succeeded);
+
+    bool setElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index,
+                    const Value &v, bool *succeeded);
 
   private:
     inline bool isSparseElements() const MOZ_DELETE;
@@ -459,6 +482,13 @@ class TypedElementsHeader : public ElementsHeader
         return reinterpret_cast<T *>(this + 1)[index];
     }
 
+    inline void assign(uint32_t index, double d);
+
+    void setElement(uint32_t index, T value) {
+        MOZ_ASSERT(index < length());
+        reinterpret_cast<T *>(this + 1)[index] = value;
+    }
+
   public:
     uint32_t length() const {
         MOZ_ASSERT(Uint8Elements <= kind());
@@ -471,10 +501,82 @@ class TypedElementsHeader : public ElementsHeader
     bool defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
                        bool shouldThrow, bool *succeeded);
 
+    bool setElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index,
+                    const Value &v, bool *succeeded);
+
   private:
     TypedElementsHeader(const TypedElementsHeader &other) MOZ_DELETE;
     void operator=(const TypedElementsHeader &other) MOZ_DELETE;
 };
+
+template<typename T> inline void
+TypedElementsHeader<T>::assign(uint32_t index, double d)
+{
+    MOZ_NOT_REACHED("didn't specialize for this element type");
+}
+
+template<> inline void
+TypedElementsHeader<uint8_clamped>::assign(uint32_t index, double d)
+{
+    double i = ToInteger(d);
+    uint8_t u = (i <= 0)
+                ? 0
+                : (i >= 255)
+                ? 255
+                : uint8_t(i);
+    setElement(index, uint8_clamped(u));
+}
+
+template<> inline void
+TypedElementsHeader<uint8_t>::assign(uint32_t index, double d)
+{
+    setElement(index, uint8_t(ToUint32(d)));
+}
+
+template<> inline void
+TypedElementsHeader<int8_t>::assign(uint32_t index, double d)
+{
+    /* FIXME: Casting out-of-range signed integers has undefined behavior! */
+    setElement(index, int8_t(ToInt32(d)));
+}
+
+template<> inline void
+TypedElementsHeader<uint16_t>::assign(uint32_t index, double d)
+{
+    setElement(index, uint16_t(ToUint32(d)));
+}
+
+template<> inline void
+TypedElementsHeader<int16_t>::assign(uint32_t index, double d)
+{
+    /* FIXME: Casting out-of-range signed integers has undefined behavior! */
+    setElement(index, int16_t(ToInt32(d)));
+}
+
+template<> inline void
+TypedElementsHeader<uint32_t>::assign(uint32_t index, double d)
+{
+    setElement(index, ToUint32(d));
+}
+
+template<> inline void
+TypedElementsHeader<int32_t>::assign(uint32_t index, double d)
+{
+    /* FIXME: Casting out-of-range signed integers has undefined behavior! */
+    setElement(index, int32_t(ToInt32(d)));
+}
+
+template<> inline void
+TypedElementsHeader<float>::assign(uint32_t index, double d)
+{
+    setElement(index, float(d));
+}
+
+template<> inline void
+TypedElementsHeader<double>::assign(uint32_t index, double d)
+{
+    setElement(index, d);
+}
 
 class Uint8ElementsHeader : public TypedElementsHeader<uint8_t>
 {
@@ -557,6 +659,9 @@ class ArrayBufferElementsHeader : public ElementsHeader
 
     bool defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
                        bool shouldThrow, bool *succeeded);
+
+    bool setElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index,
+                    const Value &v, bool *succeeded);
 
   private:
     inline bool isArrayBufferElements() const MOZ_DELETE;
@@ -1128,6 +1233,9 @@ ObjectValue(ObjectImpl &obj)
     return v;
 }
 
+bool
+GetOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, PropDesc *desc);
+
 /* Proposed default [[GetP]](Receiver, P) method. */
 extern bool
 GetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index, Value *vp);
@@ -1135,6 +1243,11 @@ GetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index,
 extern bool
 DefineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
               bool shouldThrow, bool *succeeded);
+
+/* Proposed default [[SetP]](Receiver, P, V) method. */
+extern bool
+SetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index, const Value &v,
+           bool *succeeded);
 
 } /* namespace js */
 
