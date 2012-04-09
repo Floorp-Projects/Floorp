@@ -190,20 +190,6 @@ IteratorMore(JSContext *cx, JSObject *obj, JSBool *res)
     return true;
 }
 
-bool
-CloseIteratorFromIon(JSContext *cx, JSObject *obj)
-{
-    bool result = CloseIterator(cx, obj);
-
-    // Note: When making changes here, update CodeGenerator::visitIteratorEnd
-    // as well.
-    IonActivation *ion = cx->runtime->ionActivation;
-    if (obj == ion->savedEnumerators())
-        ion->updateSavedEnumerators(cx->enumerators);
-
-    return result;
-}
-
 JSObject*
 NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type)
 {

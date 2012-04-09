@@ -103,8 +103,11 @@ class IonFrameIterator
     bool checkInvalidation(IonScript **ionScript) const;
     bool checkInvalidation() const;
 
-    inline bool isScripted() const {
+    bool isScripted() const {
         return type_ == IonFrame_JS;
+    }
+    bool isEntry() const {
+        return type_ == IonFrame_Entry;
     }
     bool isFunctionFrame() const;
 
@@ -219,6 +222,9 @@ class InlineFrameIterator
     }
     JSFunction *callee() const {
         JS_ASSERT(callee_);
+        return callee_;
+    }
+    JSFunction *maybeCallee() const {
         return callee_;
     }
     JSScript *script() const {

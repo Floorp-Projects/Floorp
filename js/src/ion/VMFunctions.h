@@ -341,8 +341,6 @@ bool ValueToBooleanComplement(JSContext *cx, const Value &input, JSBool *output)
 
 bool IteratorMore(JSContext *cx, JSObject *obj, JSBool *res);
 
-bool CloseIteratorFromIon(JSContext *cx, JSObject *obj);
-
 // Allocation functions for JSOP_NEWARRAY and JSOP_NEWOBJECT
 JSObject *NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type);
 JSObject *NewInitObject(JSContext *cx, JSObject *baseObj, types::TypeObject *type);
