@@ -112,6 +112,7 @@ MarkInternal(JSTracer *trc, T **thingp)
             PushMarkStack(static_cast<GCMarker *>(trc), thing);
     } else {
         trc->callback(trc, (void **)thingp, GetGCThingTraceKind(thing));
+        JS_SET_TRACING_LOCATION(trc, NULL);
     }
 
 #ifdef DEBUG
@@ -275,6 +276,7 @@ MarkGCThingRoot(JSTracer *trc, void **thingp, const char *name)
 static inline void
 MarkIdInternal(JSTracer *trc, jsid *id)
 {
+    JS_SET_TRACING_LOCATION(trc, (void *)id);
     if (JSID_IS_STRING(*id)) {
         JSString *str = JSID_TO_STRING(*id);
         MarkInternal(trc, &str);
@@ -325,6 +327,7 @@ MarkIdRootRange(JSTracer *trc, size_t len, jsid *vec, const char *name)
 static inline void
 MarkValueInternal(JSTracer *trc, Value *v)
 {
+    JS_SET_TRACING_LOCATION(trc, (void *)v);
     if (v->isMarkable()) {
         JS_ASSERT(v->toGCThing());
         void *thing = v->toGCThing();

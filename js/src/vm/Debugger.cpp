@@ -646,7 +646,7 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, bool frameOk)
      */
     if (fp->isEvalFrame()) {
         JSScript *script = fp->script();
-        script->clearBreakpointsIn(cx, NULL, NULL);
+        script->clearBreakpointsIn(cx->runtime->defaultFreeOp(), NULL, NULL);
     }
 
     /* Establish (status, value) as our resumption value. */
@@ -1787,7 +1787,7 @@ Debugger::clearAllBreakpoints(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "clearAllBreakpoints", args, dbg);
     for (GlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront())
-        r.front()->compartment()->clearBreakpointsIn(cx, dbg, NULL);
+        r.front()->compartment()->clearBreakpointsIn(cx->runtime->defaultFreeOp(), dbg, NULL);
     return true;
 }
 
@@ -2900,7 +2900,7 @@ DebuggerScript_clearBreakpoint(JSContext *cx, unsigned argc, Value *vp)
     if (!handler)
         return false;
 
-    script->clearBreakpointsIn(cx, dbg, handler);
+    script->clearBreakpointsIn(cx->runtime->defaultFreeOp(), dbg, handler);
     args.rval().setUndefined();
     return true;
 }
@@ -2910,7 +2910,7 @@ DebuggerScript_clearAllBreakpoints(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "clearAllBreakpoints", args, obj, script);
     Debugger *dbg = Debugger::fromChildJSObject(obj);
-    script->clearBreakpointsIn(cx, dbg, NULL);
+    script->clearBreakpointsIn(cx->runtime->defaultFreeOp(), dbg, NULL);
     args.rval().setUndefined();
     return true;
 }
@@ -4305,7 +4305,7 @@ DebuggerEnv_getObject(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 DebuggerEnv_names(JSContext *cx, unsigned argc, Value *vp)
 {
-    THIS_DEBUGENV_OWNER(cx, argc, vp, "get type", args, envobj, env, dbg);
+    THIS_DEBUGENV_OWNER(cx, argc, vp, "names", args, envobj, env, dbg);
 
     AutoIdVector keys(cx);
     {
@@ -4338,7 +4338,7 @@ static JSBool
 DebuggerEnv_find(JSContext *cx, unsigned argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.Environment.find", 1);
-    THIS_DEBUGENV_OWNER(cx, argc, vp, "get type", args, envobj, env, dbg);
+    THIS_DEBUGENV_OWNER(cx, argc, vp, "find", args, envobj, env, dbg);
 
     jsid id;
     if (!ValueToIdentifier(cx, args[0], &id))
@@ -4364,6 +4364,74 @@ DebuggerEnv_find(JSContext *cx, unsigned argc, Value *vp)
     return dbg->wrapEnvironment(cx, env, &args.rval());
 }
 
+static JSBool
+DebuggerEnv_getVariable(JSContext *cx, unsigned argc, Value *vp)
+{
+    REQUIRE_ARGC("Debugger.Environment.getVariable", 1);
+    THIS_DEBUGENV_OWNER(cx, argc, vp, "getVariable", args, envobj, env, dbg);
+
+    jsid id;
+    if (!ValueToIdentifier(cx, args[0], &id))
+        return false;
+
+    Value v;
+    {
+        AutoCompartment ac(cx, env);
+        if (!ac.enter() || !cx->compartment->wrapId(cx, &id))
+            return false;
+
+        /* This can trigger getters. */
+        ErrorCopier ec(ac, dbg->toJSObject());
+        if (!env->getGeneric(cx, id, &v))
+            return false;
+    }
+
+    if (!dbg->wrapDebuggeeValue(cx, &v))
+        return false;
+    args.rval() = v;
+    return true;
+}
+
+static JSBool
+DebuggerEnv_setVariable(JSContext *cx, unsigned argc, Value *vp)
+{
+    REQUIRE_ARGC("Debugger.Environment.setVariable", 2);
+    THIS_DEBUGENV_OWNER(cx, argc, vp, "setVariable", args, envobj, env, dbg);
+
+    jsid id;
+    if (!ValueToIdentifier(cx, args[0], &id))
+        return false;
+
+    Value v = args[1];
+    if (!dbg->unwrapDebuggeeValue(cx, &v))
+        return false;
+
+    {
+        AutoCompartment ac(cx, env);
+        if (!ac.enter() || !cx->compartment->wrapId(cx, &id) || !cx->compartment->wrap(cx, &v))
+            return false;
+
+        /* This can trigger setters. */
+        ErrorCopier ec(ac, dbg->toJSObject());
+
+        /* Make sure the environment actually has the specified binding. */
+        bool has;
+        if (!env->hasProperty(cx, id, &has))
+            return false;
+        if (!has) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_VARIABLE_NOT_FOUND);
+            return false;
+        }
+
+        /* Just set the property. */
+        if (!env->setGeneric(cx, id, &v, true))
+            return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
 static JSPropertySpec DebuggerEnv_properties[] = {
     JS_PSG("type", DebuggerEnv_getType, 0),
     JS_PSG("object", DebuggerEnv_getObject, 0),
@@ -4374,6 +4442,8 @@ static JSPropertySpec DebuggerEnv_properties[] = {
 static JSFunctionSpec DebuggerEnv_methods[] = {
     JS_FN("names", DebuggerEnv_names, 0, 0),
     JS_FN("find", DebuggerEnv_find, 1, 0),
+    JS_FN("getVariable", DebuggerEnv_getVariable, 1, 0),
+    JS_FN("setVariable", DebuggerEnv_setVariable, 2, 0),
     JS_FS_END
 };
 

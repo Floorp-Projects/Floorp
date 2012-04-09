@@ -802,7 +802,7 @@ struct Shape : public js::gc::Cell
      * care of making this work, but that suffices only because we require that
      * start points with the same shape have the same successor object in the
      * search path --- a cache hit means the starting shapes were equal, which
-     * means the seach path tail (everything but the first object in the path)
+     * means the search path tail (everything but the first object in the path)
      * was shared, which in turn means the effects of a purge will be seen by
      * all affected starting search points.
      *
