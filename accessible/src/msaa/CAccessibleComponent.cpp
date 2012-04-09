@@ -80,8 +80,8 @@ __try {
   *aY = 0;
 
   nsRefPtr<nsAccessible> acc(do_QueryObject(this));
-  if (!acc)
-    return E_FAIL;
+  if (acc->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   // If the object is not on any screen the returned position is (0,0).
   PRUint64 state = acc->State();
@@ -128,7 +128,7 @@ CAccessibleComponent::get_foreground(IA2Color* aForeground)
 __try {
   nsRefPtr<nsAccessible> acc(do_QueryObject(this));
   if (acc->IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
   nsIFrame* frame = acc->GetFrame();
   if (frame)
@@ -147,7 +147,7 @@ CAccessibleComponent::get_background(IA2Color* aBackground)
 __try {
   nsRefPtr<nsAccessible> acc(do_QueryObject(this));
   if (acc->IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
   nsIFrame* frame = acc->GetFrame();
   if (frame)
