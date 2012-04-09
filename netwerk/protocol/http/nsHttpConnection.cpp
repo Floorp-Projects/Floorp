@@ -56,6 +56,7 @@
 #include "SpdySession.h"
 #include "mozilla/Telemetry.h"
 #include "nsISupportsPriority.h"
+#include "nsHttpPipeline.h"
 
 #ifdef DEBUG
 // defined by the socket transport service while active
