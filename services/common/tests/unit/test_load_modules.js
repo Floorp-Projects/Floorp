@@ -7,6 +7,7 @@ const modules = [
   "preferences.js",
   "rest.js",
   "stringbundle.js",
+  "tokenserverclient.js",
   "utils.js",
 ];
 
