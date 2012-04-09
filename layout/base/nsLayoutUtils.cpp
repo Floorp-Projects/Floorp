@@ -112,8 +112,6 @@
 
 #include "mozilla/Preferences.h"
 
-#define MOZ_DUMP_PAINTING 1
-
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #endif
@@ -1349,7 +1347,7 @@ nsLayoutUtils::CombineBreakType(PRUint8 aOrigBreakType,
 #ifdef MOZ_DUMP_PAINTING
 #include <stdio.h>
 
-static bool gDumpEventList = true;
+static bool gDumpEventList = false;
 int gPaintCount = 0;
 #endif
 
@@ -1363,10 +1361,9 @@ nsLayoutUtils::GetRemoteContentIds(nsIFrame* aFrame,
                                false);
   nsDisplayList list;
 
-  nsIFrame* rootScrollFrame =
-    aFrame->PresContext()->PresShell()->GetRootScrollFrame();
-
   if (aIgnoreRootScrollFrame) {
+    nsIFrame* rootScrollFrame =
+      aFrame->PresContext()->PresShell()->GetRootScrollFrame();
     if (rootScrollFrame) {
       builder.SetIgnoreScrollFrame(rootScrollFrame);
     }
@@ -1416,22 +1413,11 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
     builder.IgnorePaintSuppression();
   }
 
-  nsIFrame* rootScrollFrame =
-    aFrame->PresContext()->PresShell()->GetRootScrollFrame();
   if (aIgnoreRootScrollFrame) {
+    nsIFrame* rootScrollFrame =
+      aFrame->PresContext()->PresShell()->GetRootScrollFrame();
     if (rootScrollFrame) {
       builder.SetIgnoreScrollFrame(rootScrollFrame);
-    }
-  }
-
-  nsRect displayport;
-  if (rootScrollFrame) {
-    nsIContent* content = rootScrollFrame->GetContent();
-    bool usingDisplayPort = GetDisplayPort(content, &displayport);
-    if (usingDisplayPort) {
-      //printf_stderr("       xxx Setting display port %i%,%i,%i,%i",
-      //              displayport.x, displayport.y, displayport.width, displayport.height);
-      builder.SetDisplayPort(displayport);
     }
   }
 
@@ -1445,11 +1431,8 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
 
 #ifdef MOZ_DUMP_PAINTING
   if (gDumpEventList) {
-    printf_stderr("Event handling --- (%d,%d):\n", aRect.x, aRect.y);
-    FILE *handle;
-    handle = fopen("/sdcard/test.txt","rw");
-    nsFrame::PrintDisplayList(&builder, list, handle);
-    fclose(handle);
+    fprintf(stdout, "Event handling --- (%d,%d):\n", aRect.x, aRect.y);
+    nsFrame::PrintDisplayList(&builder, list);
   }
 #endif
 

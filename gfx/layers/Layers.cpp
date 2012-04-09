@@ -41,9 +41,6 @@
 #include "mozilla/layers/PLayers.h"
 #include "mozilla/layers/ShadowLayers.h"
 
-#define MOZ_DUMP_PAINTING 1
-#define MOZ_LAYERS_HAVE_LOG 1
-
 #include "ImageLayers.h"
 #include "Layers.h"
 #include "gfxPlatform.h"
