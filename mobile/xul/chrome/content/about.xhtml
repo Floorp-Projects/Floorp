@@ -74,6 +74,10 @@
     <span id="update-message-found">&aboutPage.checkForUpdates.found;</span>
 #endif
 
+    <div id="aboutTelemetry" hidden="true">
+      <p id="telemetry">&aboutPage.warningVersion;&aboutPage.telemetryStart;<a href="http://www.mozilla.org/">&aboutPage.telemetryMozillaLink;</a>&aboutPage.telemetryEnd;</p>
+    </div>
+
     <ul id="aboutLinks">
       <li><a id="faqURL">&aboutPage.faq.label;</a></li>
       <li><a id="supportURL">&aboutPage.support.label;</a></li>
@@ -244,6 +248,12 @@
         }, 2000);
       }
 #endif
+      // Display warning about telemetry
+      // if this is an "a#" (Nightly or Aurora) build
+      let version = Services.appinfo.version;
+      if (/a\d+$/.test(version)) {
+        document.getElementById("aboutTelemetry").hidden = false;
+      }
     ]]></script>
   </div>
 </body>
