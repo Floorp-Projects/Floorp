@@ -44,7 +44,7 @@
 #include "AccessibleHyperlink.h"
 #include "AccessibleHyperlink_i.c"
 
-#include "nsAccessible.h"
+#include "nsAccessibleWrap.h"
 #include "nsIWinAccessNode.h"
 
 // IUnknown
@@ -82,20 +82,17 @@ __try {
   if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
     return E_INVALIDARG;
 
-  nsAccessible* anchor = thisObj->AnchorAt(aIndex);
+  nsAccessibleWrap* anchor =
+    static_cast<nsAccessibleWrap*>(thisObj->AnchorAt(aIndex));
   if (!anchor)
     return S_FALSE;
 
-  nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryObject(anchor));
-  if (!winAccessNode)
-    return E_FAIL;
+  void* instancePtr = NULL;
+  HRESULT result = anchor->QueryInterface(IID_IUnknown, &instancePtr);
+  if (FAILED(result))
+    return result;
 
-  void *instancePtr = NULL;
-  nsresult rv = winAccessNode->QueryNativeInterface(IID_IUnknown, &instancePtr);
-  if (NS_FAILED(rv))
-    return E_FAIL;
-
-  IUnknown *unknownPtr = static_cast<IUnknown*>(instancePtr);
+  IUnknown* unknownPtr = static_cast<IUnknown*>(instancePtr);
   aAnchor->ppunkVal = &unknownPtr;
   aAnchor->vt = VT_UNKNOWN;
   return S_OK;
