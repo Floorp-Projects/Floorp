@@ -406,25 +406,23 @@ nsHTMLTextFieldAccessible::GetNameInternal(nsAString& aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLTextFieldAccessible::GetValue(nsAString& _retval)
+void
+nsHTMLTextFieldAccessible::Value(nsString& aValue)
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
+  aValue.Truncate();
   if (NativeState() & states::PROTECTED)    // Don't return password text!
-    return NS_ERROR_FAILURE;
+    return;
 
   nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea(do_QueryInterface(mContent));
   if (textArea) {
-    return textArea->GetValue(_retval);
+    textArea->GetValue(aValue);
+    return;
   }
   
   nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(mContent));
   if (inputElement) {
-    return inputElement->GetValue(_retval);
+    inputElement->GetValue(aValue);
   }
-
-  return NS_ERROR_FAILURE;
 }
 
 void

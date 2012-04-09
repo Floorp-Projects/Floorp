@@ -1661,17 +1661,25 @@ nsAccessible::ApplyARIAState(PRUint64* aState)
     aria::MapToState(mRoleMapEntry->attributeMap3, element, aState);
 }
 
-/* DOMString getValue (); */
 NS_IMETHODIMP
 nsAccessible::GetValue(nsAString& aValue)
 {
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
+  nsAutoString value;
+  Value(value);
+  aValue.Assign(value);
+
+  return NS_OK;
+}
+
+void
+nsAccessible::Value(nsString& aValue)
+{
   if (mRoleMapEntry) {
-    if (mRoleMapEntry->valueRule == eNoValue) {
-      return NS_OK;
-    }
+    if (mRoleMapEntry->valueRule == eNoValue)
+      return;
 
     // aria-valuenow is a number, and aria-valuetext is the optional text equivalent
     // For the string value, we will try the optional text equivalent first
@@ -1683,18 +1691,16 @@ nsAccessible::GetValue(nsAString& aValue)
   }
 
   if (!aValue.IsEmpty())
-    return NS_OK;
+    return;
 
   // Check if it's a simple xlink.
   if (nsCoreUtils::IsXLink(mContent)) {
     nsIPresShell* presShell = mDoc->PresShell();
     if (presShell) {
       nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
-      return presShell->GetLinkLocation(DOMNode, aValue);
+      presShell->GetLinkLocation(DOMNode, aValue);
     }
   }
-
-  return NS_OK;
 }
 
 // nsIAccessibleValue

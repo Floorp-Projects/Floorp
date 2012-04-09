@@ -124,17 +124,16 @@ nsApplicationAccessible::GetName(nsAString& aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsApplicationAccessible::GetValue(nsAString &aValue)
-{
-  aValue.Truncate();
-  return NS_OK;
-}
-
 void
 nsApplicationAccessible::Description(nsString &aDescription)
 {
   aDescription.Truncate();
+}
+
+void
+nsApplicationAccessible::Value(nsString& aValue)
+{
+  aValue.Truncate();
 }
 
 PRUint64

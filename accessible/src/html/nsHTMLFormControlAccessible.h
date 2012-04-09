@@ -134,7 +134,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessible
-  NS_IMETHOD GetValue(nsAString& _retval); 
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
@@ -142,6 +141,7 @@ public:
   virtual already_AddRefed<nsIEditor> GetEditor() const;
 
   // nsAccessible
+  virtual void Value(nsString& aValue);
   virtual void ApplyARIAState(PRUint64* aState);
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
