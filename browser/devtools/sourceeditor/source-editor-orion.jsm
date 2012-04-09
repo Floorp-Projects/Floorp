@@ -157,6 +157,16 @@ const DEFAULT_KEYBINDINGS = [
     code: Ci.nsIDOMKeyEvent.DOM_VK_SLASH,
     accel: true,
   },
+  {
+    action: "Move to Bracket Opening",
+    code: Ci.nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET,
+    accel: true,
+  },
+  {
+    action: "Move to Bracket Closing",
+    code: Ci.nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET,
+    accel: true,
+  },
 ];
 
 var EXPORTED_SYMBOLS = ["SourceEditor"];
@@ -398,6 +408,8 @@ SourceEditor.prototype = {
       "Goto Line...": [this.ui.gotoLine, this.ui],
       "Move Lines Down": [this._moveLines, this],
       "Comment/Uncomment": [this._doCommentUncomment, this],
+      "Move to Bracket Opening": [this._moveToBracketOpening, this],
+      "Move to Bracket Closing": [this._moveToBracketClosing, this],
     };
 
     for (let name in actions) {
@@ -1209,6 +1221,99 @@ SourceEditor.prototype = {
       lineCaret++;
     }
     this.endCompoundChange();
+
+    return true;
+  },
+
+  /**
+   * Helper function for _moveToBracket{Opening/Closing} to find the offset of
+   * matching bracket.
+   *
+   * @param number aOffset
+   *        The offset of the bracket for which you want to find the bracket.
+   * @private
+   */
+  _getMatchingBracketIndex: function SE__getMatchingBracketIndex(aOffset)
+  {
+    return this._styler._findMatchingBracket(this._model, aOffset);
+  },
+
+  /**
+   * Move the cursor to the matching opening bracket if at corresponding closing
+   * bracket, otherwise move to the opening bracket for the current block of code.
+   *
+   * @private
+   */
+  _moveToBracketOpening: function SE__moveToBracketOpening()
+  {
+    let mode = this.getMode();
+    // Returning early if not in JavaScipt or CSS mode.
+    if (mode != SourceEditor.MODES.JAVASCRIPT &&
+        mode != SourceEditor.MODES.CSS) {
+      return false;
+    }
+
+    let caretOffset = this.getCaretOffset() - 1;
+    let matchingIndex = this._getMatchingBracketIndex(caretOffset);
+
+    // If the caret is not at the closing bracket "}", find the index of the
+    // opening bracket "{" for the current code block.
+    if (matchingIndex == -1 || matchingIndex > caretOffset) {
+      let text = this.getText();
+      let closingOffset = text.indexOf("}", caretOffset);
+      while (closingOffset > -1) {
+        let closingMatchingIndex = this._getMatchingBracketIndex(closingOffset);
+        if (closingMatchingIndex < caretOffset && closingMatchingIndex != -1) {
+          matchingIndex = closingMatchingIndex;
+          break;
+        }
+        closingOffset = text.indexOf("}", closingOffset + 1);
+      }
+    }
+
+    if (matchingIndex > -1) {
+      this.setCaretOffset(matchingIndex);
+    }
+
+    return true;
+  },
+
+  /**
+   * Moves the cursor to the matching closing bracket if at corresponding opening
+   * bracket, otherwise move to the closing bracket for the current block of code.
+   *
+   * @private
+   */
+  _moveToBracketClosing: function SE__moveToBracketClosing()
+  {
+    let mode = this.getMode();
+    // Returning early if not in JavaScipt or CSS mode.
+    if (mode != SourceEditor.MODES.JAVASCRIPT &&
+        mode != SourceEditor.MODES.CSS) {
+      return false;
+    }
+
+    let caretOffset = this.getCaretOffset();
+    let matchingIndex = this._getMatchingBracketIndex(caretOffset - 1);
+
+    // If the caret is not at the opening bracket "{", find the index of the
+    // closing bracket "}" for the current code block.
+    if (matchingIndex == -1 || matchingIndex < caretOffset) {
+      let text = this.getText();
+      let openingOffset = text.lastIndexOf("{", caretOffset);
+      while (openingOffset > -1) {
+        let openingMatchingIndex = this._getMatchingBracketIndex(openingOffset);
+        if (openingMatchingIndex > caretOffset) {
+          matchingIndex = openingMatchingIndex;
+          break;
+        }
+        openingOffset = text.lastIndexOf("{", openingOffset - 1);
+      }
+    }
+
+    if (matchingIndex > -1) {
+      this.setCaretOffset(matchingIndex);
+    }
 
     return true;
   },
