@@ -1198,7 +1198,9 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
     savedOption_(savedOption)
 {
 #ifdef JS_METHODJIT
-    mjit::ExpandInlineFrames(cx->compartment);
+    CompartmentVector &v = cx->runtime->compartments;
+    for (size_t i = 0; i < v.length(); i++)
+        mjit::ExpandInlineFrames(v[i]);
 #endif
 
     if (StackSegment *seg = cx->stack.seg_) {
