@@ -136,17 +136,23 @@ public class SQLiteBridge {
 
     public long insert(String table, String nullColumnHack, ContentValues values)
                throws SQLiteBridgeException {
-        Set<Entry<String, Object>> valueSet = values.valueSet();
-        Iterator<Entry<String, Object>> valueIterator = valueSet.iterator();
+        if (values == null)
+            return 0;
+
         ArrayList<String> valueNames = new ArrayList<String>();
         ArrayList<String> valueBinds = new ArrayList<String>();
         ArrayList<String> keyNames = new ArrayList<String>();
 
-        while(valueIterator.hasNext()) {
-            Entry<String, Object> value = valueIterator.next();
+        for (Entry<String, Object> value : values.valueSet()) {
             keyNames.add(value.getKey());
-            valueNames.add("?");
-            valueBinds.add(value.getValue().toString());
+
+            Object val = value.getValue();
+            if (val == null) {
+                valueNames.add("NULL");
+            } else {
+                valueNames.add("?");
+                valueBinds.add(val.toString());
+            }
         }
 
         StringBuilder sb = new StringBuilder("INSERT into ");
@@ -169,25 +175,35 @@ public class SQLiteBridge {
 
     public int update(String table, ContentValues values, String whereClause, String[] whereArgs)
                throws SQLiteBridgeException {
-        Set<Entry<String, Object>> valueSet = values.valueSet();
-        Iterator<Entry<String, Object>> valueIterator = valueSet.iterator();
+        if (values == null)
+            return 0;
+
         ArrayList<String> valueNames = new ArrayList<String>();
 
         StringBuilder sb = new StringBuilder("UPDATE ");
         sb.append(table);
-
         sb.append(" SET ");
-        while(valueIterator.hasNext()) {
-            Entry<String, Object> value = valueIterator.next();
-            sb.append(value.getKey() + " = ?");
-            valueNames.add(value.getValue().toString());
-            if (valueIterator.hasNext())
-                sb.append(", ");
+
+        boolean isFirst = true;
+
+        for (Entry<String, Object> value : values.valueSet()) {
+            if (isFirst)
+                isFirst = false;
             else
-                sb.append(" ");
+                sb.append(", ");
+
+            sb.append(value.getKey());
+
+            Object val = value.getValue();
+            if (val == null) {
+                sb.append(" = NULL");
+            } else {
+                sb.append(" = ?");
+                valueNames.add(val.toString());
+            }
         }
 
-        if (whereClause != null) {
+        if (!TextUtils.isEmpty(whereClause)) {
             sb.append(" WHERE ");
             sb.append(whereClause);
             for (int i = 0; i < whereArgs.length; i++) {
