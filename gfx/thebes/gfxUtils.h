@@ -44,6 +44,8 @@
 #include "ImageLayers.h"
 #include "mozilla/gfx/2D.h"
 
+#define MOZ_DUMP_PAINTING 1
+
 class gfxDrawable;
 class nsIntRegion;
 struct nsIntRect;
