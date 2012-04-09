@@ -54,6 +54,8 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/TimeStamp.h"
 
+#define MOZ_DUMP_PAINTING 1
+
 #if defined(DEBUG) || defined(PR_LOGGING)
 #  include <stdio.h>            // FILE
 #  include "prlog.h"
