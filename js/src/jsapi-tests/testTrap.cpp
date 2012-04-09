@@ -11,7 +11,7 @@ static JSTrapStatus
 EmptyTrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
                  jsval closure)
 {
-    JS_GC(cx);
+    JS_GC(JS_GetRuntime(cx));
     if (JSVAL_IS_STRING(closure))
         ++emptyTrapCallCount;
     return JSTRAP_CONTINUE;
@@ -59,7 +59,7 @@ BEGIN_TEST(testTrap_gc)
         JS_SetTrap(cx, script, line2, EmptyTrapHandler, STRING_TO_JSVAL(trapClosure));
         JS_SetTrap(cx, script, line6, EmptyTrapHandler, STRING_TO_JSVAL(trapClosure));
 
-        JS_GC(cx);
+        JS_GC(rt);
 
         CHECK(JS_FlatStringEqualsAscii(JS_ASSERT_STRING_IS_FLAT(trapClosure), trapClosureText));
     }
@@ -68,7 +68,7 @@ BEGIN_TEST(testTrap_gc)
     CHECK(JS_ExecuteScript(cx, global, script, v2.addr()));
     CHECK_EQUAL(emptyTrapCallCount, 11);
 
-    JS_GC(cx);
+    JS_GC(rt);
 
     CHECK(JS_FlatStringEqualsAscii(JS_ASSERT_STRING_IS_FLAT(trapClosure), trapClosureText));
 

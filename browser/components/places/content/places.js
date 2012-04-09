@@ -336,7 +336,7 @@ var PlacesOrganizer = {
         // The command execution function will take care of seeing if the
         // selection is a folder or a different container type, and will
         // load its contents in tabs.
-        PlacesUIUtils.openContainerNodeInTabs(selectedNode, aEvent);
+        PlacesUIUtils.openContainerNodeInTabs(selectedNode, aEvent, currentView);
       }
     }
   },
@@ -363,7 +363,7 @@ var PlacesOrganizer = {
 
   openSelectedNode: function PO_openSelectedNode(aEvent) {
     PlacesUIUtils.openNodeWithEvent(this._content.selectedNode, aEvent,
-                                    this._content.treeBoxObject.view);
+                                    this._content);
   },
 
   /**

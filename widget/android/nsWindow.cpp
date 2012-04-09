@@ -1442,28 +1442,66 @@ getDistance(const nsIntPoint &p1, const nsIntPoint &p2)
 
 bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
 {
+    // This is set to true once we have called SetPreventPanning() exactly
+    // once for a given sequence of touch events. It is reset on the start
+    // of the next sequence.
+    static bool sDefaultPreventedNotified = false;
+    static bool sLastWasDownEvent = false;
+
+    bool preventDefaultActions = false;
+    bool isDownEvent = false;
     switch (ae->Action() & AndroidMotionEvent::ACTION_MASK) {
         case AndroidMotionEvent::ACTION_DOWN:
         case AndroidMotionEvent::ACTION_POINTER_DOWN: {
             nsTouchEvent event(true, NS_TOUCH_START, this);
-            return DispatchMultitouchEvent(event, ae);
+            preventDefaultActions = DispatchMultitouchEvent(event, ae);
+            isDownEvent = true;
+            break;
         }
         case AndroidMotionEvent::ACTION_MOVE: {
             nsTouchEvent event(true, NS_TOUCH_MOVE, this);
-            return DispatchMultitouchEvent(event, ae);
+            preventDefaultActions = DispatchMultitouchEvent(event, ae);
+            break;
         }
         case AndroidMotionEvent::ACTION_UP:
         case AndroidMotionEvent::ACTION_POINTER_UP: {
             nsTouchEvent event(true, NS_TOUCH_END, this);
-            return DispatchMultitouchEvent(event, ae);
+            preventDefaultActions = DispatchMultitouchEvent(event, ae);
+            break;
         }
         case AndroidMotionEvent::ACTION_OUTSIDE:
         case AndroidMotionEvent::ACTION_CANCEL: {
             nsTouchEvent event(true, NS_TOUCH_CANCEL, this);
-            return DispatchMultitouchEvent(event, ae);
+            preventDefaultActions = DispatchMultitouchEvent(event, ae);
+            break;
         }
     }
-    return false;
+
+    // if the last event we got was a down event, then by now we know for sure whether
+    // this block has been default-prevented or not. if we haven't already sent the
+    // notification for this block, do so now.
+    if (sLastWasDownEvent && !sDefaultPreventedNotified) {
+        // if this event is a down event, that means it's the start of a new block, and the
+        // previous block should not be default-prevented
+        bool defaultPrevented = isDownEvent ? false : preventDefaultActions;
+        AndroidBridge::Bridge()->NotifyDefaultPrevented(defaultPrevented);
+        sDefaultPreventedNotified = true;
+    }
+
+    // now, if this event is a down event, then we might already know that it has been
+    // default-prevented. if so, we send the notification right away; otherwise we wait
+    // for the next event.
+    if (isDownEvent) {
+        if (preventDefaultActions) {
+            AndroidBridge::Bridge()->NotifyDefaultPrevented(true);
+            sDefaultPreventedNotified = true;
+        } else {
+            sDefaultPreventedNotified = false;
+        }
+    }
+    sLastWasDownEvent = isDownEvent;
+
+    return preventDefaultActions;
 }
 
 bool
@@ -1503,11 +1541,7 @@ nsWindow::DispatchMultitouchEvent(nsTouchEvent &event, AndroidGeckoEvent *ae)
 
     nsEventStatus status;
     DispatchEvent(&event, status);
-    bool preventPanning = (status == nsEventStatus_eConsumeNoDefault);
-    if (preventPanning || action == AndroidMotionEvent::ACTION_MOVE) {
-        AndroidBridge::Bridge()->SetPreventPanning(preventPanning);
-    }
-    return preventPanning;
+    return (status == nsEventStatus_eConsumeNoDefault);
 }
 
 void

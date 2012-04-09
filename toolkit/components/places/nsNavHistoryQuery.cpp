@@ -171,7 +171,6 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
 #define QUERYKEY_EXPAND_QUERIES "expandQueries"
 #define QUERYKEY_FORCE_ORIGINAL_TITLE "originalTitle"
 #define QUERYKEY_INCLUDE_HIDDEN "includeHidden"
-#define QUERYKEY_REDIRECTS_MODE "redirectsMode"
 #define QUERYKEY_MAX_RESULTS "maxResults"
 #define QUERYKEY_QUERY_TYPE "queryType"
 #define QUERYKEY_TAG "tag"
@@ -594,13 +593,6 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     queryString += NS_LITERAL_CSTRING(QUERYKEY_INCLUDE_HIDDEN "=1");
   }
 
-  // redirects mode
-  if (options->RedirectsMode() !=  nsINavHistoryQueryOptions::REDIRECTS_MODE_ALL) {
-    AppendAmpersandIfNonempty(queryString);
-    queryString += NS_LITERAL_CSTRING(QUERYKEY_REDIRECTS_MODE "=");
-    AppendInt16(queryString, options->RedirectsMode());
-  }
-
   // max results
   if (options->MaxResults()) {
     AppendAmpersandIfNonempty(queryString);
@@ -876,10 +868,6 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
     } else if (kvp.key.EqualsLiteral(QUERYKEY_INCLUDE_HIDDEN)) {
       SetOptionsKeyBool(kvp.value, aOptions,
                         &nsINavHistoryQueryOptions::SetIncludeHidden);
-    // query type
-    } else if (kvp.key.EqualsLiteral(QUERYKEY_REDIRECTS_MODE)) {
-      SetOptionsKeyUint16(kvp.value, aOptions,
-                          &nsINavHistoryQueryOptions::SetRedirectsMode);
     // max results
     } else if (kvp.key.EqualsLiteral(QUERYKEY_MAX_RESULTS)) {
       SetOptionsKeyUint32(kvp.value, aOptions,
@@ -1518,20 +1506,6 @@ NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetIncludeHidden(bool aIncludeHidden)
 {
   mIncludeHidden = aIncludeHidden;
-  return NS_OK;
-}
-
-// redirectsMode
-NS_IMETHODIMP
-nsNavHistoryQueryOptions::GetRedirectsMode(PRUint16* _retval)
-{
-  *_retval = mRedirectsMode;
-  return NS_OK;
-}
-NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetRedirectsMode(PRUint16 aRedirectsMode)
-{
-  mRedirectsMode = aRedirectsMode;
   return NS_OK;
 }
 

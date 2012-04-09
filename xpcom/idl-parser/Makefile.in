@@ -59,13 +59,13 @@ include $(topsrcdir)/config/rules.mk
 # Generate the PLY lexer and parser.
 export:: $(PARSER_SRCS) $(PLY_PROGS)
 	$(PYTHON_PATH) \
-	  -I$(topsrcdir)/other-licenses/ply \
+	  $(PLY_INCLUDE) \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(topsrcdir)/xpcom/idl-parser/header.py --cachedir=. --regen
 
 check::
 	$(PYTHON_PATH) \
-	  -I$(topsrcdir)/other-licenses/ply \
+	  $(PLY_INCLUDE) \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(topsrcdir)/xpcom/idl-parser/runtests.py
 

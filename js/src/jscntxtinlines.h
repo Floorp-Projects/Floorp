@@ -390,7 +390,7 @@ CallSetter(JSContext *cx, JSObject *obj, jsid id, StrictPropertyOp op, unsigned 
     return CallJSPropertyOpSetter(cx, op, obj, id, strict, vp);
 }
 
-static inline JSAtom **
+static inline HeapPtrAtom *
 FrameAtomBase(JSContext *cx, js::StackFrame *fp)
 {
     return fp->script()->atoms;
