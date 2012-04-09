@@ -528,6 +528,23 @@ MBinaryBitwiseInstruction::infer(const TypeOracle::Binary &b)
     }
 }
 
+void
+MShiftInstruction::infer(const TypeOracle::Binary &b)
+{
+    if (b.lhs == MIRType_Object || b.rhs == MIRType_Object)
+        specialization_ = MIRType_None;
+    else
+        specialization_ = MIRType_Int32;
+}
+
+void
+MUrsh::infer(const TypeOracle::Binary &b)
+{
+    this->MShiftInstruction::infer(b);
+    if (specialization_ != MIRType_Int32)
+        setResultType(MIRType_Value);
+}
+
 static inline bool
 NeedNegativeZeroCheck(MDefinition *def)
 {

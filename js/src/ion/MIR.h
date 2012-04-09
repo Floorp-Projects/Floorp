@@ -1759,7 +1759,7 @@ class MBinaryBitwiseInstruction
     MDefinition *foldsTo(bool useValueNumbers);
     virtual MDefinition *foldIfZero(size_t operand) = 0;
     virtual MDefinition *foldIfEqual()  = 0;
-    void infer(const TypeOracle::Binary &b);
+    virtual void infer(const TypeOracle::Binary &b);
 
     bool congruentTo(MDefinition *const &ins) const {
         return congruentIfOperandsEqual(ins);
@@ -1829,10 +1829,25 @@ class MBitXor : public MBinaryBitwiseInstruction
     }
 };
 
-class MLsh : public MBinaryBitwiseInstruction
+class MShiftInstruction
+  : public MBinaryBitwiseInstruction
+{
+  protected:
+    MShiftInstruction(MDefinition *left, MDefinition *right)
+      : MBinaryBitwiseInstruction(left, right)
+    { }
+
+  public:
+    MDefinition *foldIfEqual() {
+        return this;
+    }
+    virtual void infer(const TypeOracle::Binary &b);
+};
+
+class MLsh : public MShiftInstruction
 {
     MLsh(MDefinition *left, MDefinition *right)
-      : MBinaryBitwiseInstruction(left, right)
+      : MShiftInstruction(left, right)
     { }
 
   public:
@@ -1844,16 +1859,12 @@ class MLsh : public MBinaryBitwiseInstruction
         // x << 0 => x
         return getOperand(0);
     }
-
-    MDefinition *foldIfEqual() {
-        return this;
-    }
 };
 
-class MRsh : public MBinaryBitwiseInstruction
+class MRsh : public MShiftInstruction
 {
     MRsh(MDefinition *left, MDefinition *right)
-      : MBinaryBitwiseInstruction(left, right)
+      : MShiftInstruction(left, right)
     { }
 
   public:
@@ -1865,18 +1876,14 @@ class MRsh : public MBinaryBitwiseInstruction
         // x >> 0 => x
         return getOperand(0);
     }
-
-    MDefinition *foldIfEqual() {
-        return this;
-    }
 };
 
-class MUrsh : public MBinaryBitwiseInstruction
+class MUrsh : public MShiftInstruction
 {
     bool canOverflow_;
 
     MUrsh(MDefinition *left, MDefinition *right)
-      : MBinaryBitwiseInstruction(left, right),
+      : MShiftInstruction(left, right),
         canOverflow_(true)
     { }
 
@@ -1892,20 +1899,24 @@ class MUrsh : public MBinaryBitwiseInstruction
         return this;
     }
 
-    MDefinition *foldIfEqual() {
-        return this;
-    }
+    void infer(const TypeOracle::Binary &b);
 
     bool canOverflow() {
         // solution is only negative when lhs < 0 and rhs & 0x1f == 0
         MDefinition *lhs = getOperand(0);
         MDefinition *rhs = getOperand(1);
 
-        if (lhs->isConstant() && lhs->toConstant()->value().toInt32() >= 0)
-            return false;
+        if (lhs->isConstant()) {
+            Value lhsv = lhs->toConstant()->value();
+            if (lhsv.isInt32() && lhsv.toInt32() >= 0)
+                return false;
+        }
 
-        if (rhs->isConstant() && (rhs->toConstant()->value().toInt32() & 0x1F) != 0)
-            return false;
+        if (rhs->isConstant()) {
+            Value rhsv = rhs->toConstant()->value();
+            if (rhsv.isInt32() && rhsv.toInt32() % 32 != 0)
+                return false;
+        }
 
         return canOverflow_;
     }
