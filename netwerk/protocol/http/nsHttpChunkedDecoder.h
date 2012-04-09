@@ -67,6 +67,8 @@ public:
                                         mTrailers = nsnull;
                                         return h; }
 
+    PRUint32 GetChunkRemaining() { return mChunkRemaining; }
+
 private:
     nsresult ParseChunkRemaining(char *buf,
                                  PRUint32 count,
