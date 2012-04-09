@@ -66,7 +66,6 @@
 #include "nsIObserver.h"
 #include "nsIBaseWindow.h"
 #include "mozilla/css/Loader.h"
-#include "mozilla/css/ImageLoader.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIScriptRuntime.h"
@@ -1650,11 +1649,6 @@ nsDocument::~nsDocument()
     NS_RELEASE(mCSSLoader);
   }
 
-  if (mStyleImageLoader) {
-    mStyleImageLoader->DropDocumentReference();
-    NS_RELEASE(mStyleImageLoader);
-  }
-
   // XXX Ideally we'd do this cleanup in the nsIDocument destructor.
   if (mNodeInfoManager) {
     mNodeInfoManager->DropDocumentReference();
@@ -1989,7 +1983,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 nsresult
 nsDocument::Init()
 {
-  if (mCSSLoader || mStyleImageLoader || mNodeInfoManager || mScriptLoader) {
+  if (mCSSLoader || mNodeInfoManager || mScriptLoader) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
@@ -2018,16 +2012,10 @@ nsDocument::Init()
   // Assume we're not quirky, until we know otherwise
   mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
 
-  mStyleImageLoader = new mozilla::css::ImageLoader(this);
-  NS_ADDREF(mStyleImageLoader);
-
-  nsresult rv = mStyleImageLoader->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   mNodeInfoManager = new nsNodeInfoManager();
   NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_OUT_OF_MEMORY);
 
-  rv = mNodeInfoManager->Init(this);
+  nsresult  rv = mNodeInfoManager->Init(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mNodeInfo keeps NodeInfoManager alive!

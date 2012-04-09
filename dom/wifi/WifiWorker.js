@@ -1,42 +1,8 @@
 /* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Telephony.
- *
- * The Initial Developer of the Original Code is
- *   The Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Andreas Gal <gal@mozilla.com>
- *   Blake Kaplan <mrbkap@gmail.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
@@ -162,6 +128,10 @@ var WifiManager = (function() {
 
   function startSupplicant(callback) {
     voidControlMessage("start_supplicant", callback);
+  }
+
+  function terminateSupplicant(callback) {
+    doBooleanCommand("TERMINATE", "OK", callback);
   }
 
   function stopSupplicant(callback) {
@@ -895,15 +865,17 @@ var WifiManager = (function() {
         });
       });
     } else {
-      stopSupplicant(function (status) {
-        if (status < 0) {
-          callback(-1);
-          return;
-        }
-
-        manager.state = "UNINITIALIZED";
-        disableInterface(manager.ifname, function (ok) {
-          unloadDriver(callback);
+      // Note these following calls ignore errors. If we fail to kill the
+      // supplicant gracefully, then we need to continue telling it to die
+      // until it does.
+      terminateSupplicant(function (ok) {
+        stopSupplicant(function (status) {
+          manager.state = "UNINITIALIZED";
+          closeSupplicantConnection(function () {
+            disableInterface(manager.ifname, function (ok) {
+              unloadDriver(callback);
+            });
+          });
         });
       });
     }
@@ -1147,6 +1119,7 @@ function WifiWorker() {
 
   this._lastConnectionInfo = null;
   this._connectionInfoTimer = null;
+  this._reconnectOnDisconnect = false;
 
   // Given a connection status network, takes a network from
   // self.configuredNetworks and prepares it for the DOM.
@@ -1218,31 +1191,10 @@ function WifiWorker() {
       debug("Got mac: " + mac);
     });
 
-    WifiManager.getConfiguredNetworks(function(networks) {
-      if (!networks) {
-        debug("Unable to get configured networks");
-        return;
-      }
-
-      this._highestPriority = -1;
-
-      // Convert between netId-based and ssid-based indexing.
-      for (let net in networks) {
-        let network = networks[net];
-        if (!network.ssid) {
-          delete networks[net]; // TODO support these?
-          continue;
-        }
-
-        if (network.priority && network.priority > self._highestPriority)
-          self._highestPriority = network.priority;
-        networks[dequote(network.ssid)] = network;
-        delete networks[net];
-      }
-
-      self.configuredNetworks = networks;
-
+    self._reloadConfiguredNetworks(function(ok) {
       // Prime this.networks.
+      if (!ok)
+        return;
       self.waitForScan(function firstScan() {});
     });
   }
@@ -1259,50 +1211,66 @@ function WifiWorker() {
       self._stopConnectionInfoTimer();
     }
 
-    if (this.state === "DORMANT") {
-      // The dormant state is a bad state to be in since we won't
-      // automatically connect. Try to knock us out of it. We only
-      // hit this state when we've failed to run DHCP, so trying
-      // again isn't the worst thing we can do. Eventually, we'll
-      // need to detect if we're looping in this state and bail out.
-      WifiManager.reconnect(function(){});
-    } else if (this.state === "ASSOCIATING") {
-      // id has not yet been filled in, so we can only report the ssid and
-      // bssid.
-      self.currentNetwork =
-        { bssid: WifiManager.connectionInfo.bssid,
-          ssid: quote(WifiManager.connectionInfo.ssid) };
-      self._fireEvent("onconnecting", { network: netToDOM(self.currentNetwork) });
-    } else if (this.state === "ASSOCIATED") {
-      self.currentNetwork.netId = this.id;
-      WifiManager.getNetworkConfiguration(self.currentNetwork, function (){});
-    } else if (this.state === "COMPLETED") {
-      // Now that we've successfully completed the connection, re-enable the
-      // rest of our networks.
-      // XXX Need to do this eventually if the user entered an incorrect
-      // password. For now, we require user interaction to break the loop and
-      // select a better network!
-      if (self._needToEnableNetworks) {
-        self._enableAllNetworks();
-        self._needToEnableNetworks = false;
-      }
+    switch (this.state) {
+      case "DORMANT":
+        // The dormant state is a bad state to be in since we won't
+        // automatically connect. Try to knock us out of it. We only
+        // hit this state when we've failed to run DHCP, so trying
+        // again isn't the worst thing we can do. Eventually, we'll
+        // need to detect if we're looping in this state and bail out.
+        WifiManager.reconnect(function(){});
+        break;
+      case "ASSOCIATING":
+        // id has not yet been filled in, so we can only report the ssid and
+        // bssid.
+        self.currentNetwork =
+          { bssid: WifiManager.connectionInfo.bssid,
+            ssid: quote(WifiManager.connectionInfo.ssid) };
+        self._fireEvent("onconnecting", { network: netToDOM(self.currentNetwork) });
+        break;
+      case "ASSOCIATED":
+        self.currentNetwork.netId = this.id;
+        WifiManager.getNetworkConfiguration(self.currentNetwork, function (){});
+        break;
+      case "COMPLETED":
+        // Now that we've successfully completed the connection, re-enable the
+        // rest of our networks.
+        // XXX Need to do this eventually if the user entered an incorrect
+        // password. For now, we require user interaction to break the loop and
+        // select a better network!
+        if (self._needToEnableNetworks) {
+          self._enableAllNetworks();
+          self._needToEnableNetworks = false;
+        }
 
-      // We get the ASSOCIATED event when we've associated but not connected, so
-      // wait until the handshake is complete.
-      if (this.fromStatus) {
-        // In this case, we connected to an already-connected wpa_supplicant,
-        // because of that we need to gather information about the current
-        // network here.
-        self.currentNetwork = { ssid: quote(WifiManager.connectionInfo.ssid),
-                                known: true }
-        WifiManager.getNetworkConfiguration(self.currentNetwork, function(){});
-      }
+        // We get the ASSOCIATED event when we've associated but not connected, so
+        // wait until the handshake is complete.
+        if (this.fromStatus) {
+          // In this case, we connected to an already-connected wpa_supplicant,
+          // because of that we need to gather information about the current
+          // network here.
+          self.currentNetwork = { ssid: quote(WifiManager.connectionInfo.ssid),
+                                  known: true }
+          WifiManager.getNetworkConfiguration(self.currentNetwork, function(){});
+        }
 
-      self._startConnectionInfoTimer();
-      self._fireEvent("onassociate", { network: netToDOM(self.currentNetwork) });
-    } else if (this.state === "DISCONNECTED") {
-      self._fireEvent("ondisconnect", {});
-      self.currentNetwork = null;
+        self._startConnectionInfoTimer();
+        self._fireEvent("onassociate", { network: netToDOM(self.currentNetwork) });
+        break;
+      case "CONNECTED":
+        break;
+      case "DISCONNECTED":
+        self._fireEvent("ondisconnect", {});
+        self.currentNetwork = null;
+
+        // We've disconnected from a network because of a call to forgetNetwork.
+        // Reconnect to the next available network (if any).
+        if (self._reconnectOnDisconnect) {
+          self._reconnectOnDisconnect = false;
+          WifiManager.reconnect(function(){});
+        }
+
+        break;
     }
   };
 
@@ -1469,6 +1437,35 @@ WifiWorker.prototype = {
     this._lastConnectionInfo = null;
   },
 
+  _reloadConfiguredNetworks: function(callback) {
+    WifiManager.getConfiguredNetworks((function(networks) {
+      if (!networks) {
+        debug("Unable to get configured networks");
+        callback(false);
+        return;
+      }
+
+      this._highestPriority = -1;
+
+      // Convert between netId-based and ssid-based indexing.
+      for (let net in networks) {
+        let network = networks[net];
+        if (!network.ssid) {
+          delete networks[net]; // TODO support these?
+          continue;
+        }
+
+        if (network.priority && network.priority > this._highestPriority)
+          this._highestPriority = network.priority;
+        networks[dequote(network.ssid)] = network;
+        delete networks[net];
+      }
+
+      this.configuredNetworks = networks;
+      callback(true);
+    }).bind(this));
+  },
+
   // Important side effect: calls WifiManager.saveConfig.
   _reprioritizeNetworks: function(callback) {
     // First, sort the networks in orer of their priority.
@@ -1557,6 +1554,9 @@ WifiWorker.prototype = {
         break;
       case "WifiManager:associate":
         this.associate(msg.data, msg.rid, msg.mid);
+        break;
+      case "WifiManager:forget":
+        this.forget(msg.data, msg.rid, msg.mid);
         break;
       case "WifiManager:getState": {
         let net = this.currentNetwork ? netToDOM(this.currentNetwork) : null;
@@ -1647,6 +1647,32 @@ WifiWorker.prototype = {
         networkReady();
       }).bind(this));
     }
+  },
+
+  forget: function(network, rid, mid) {
+    const message = "WifiManager:forget:Return";
+    let ssid = network.ssid;
+    if (!(ssid in this.configuredNetworks)) {
+      this._sendMessage(message, false, "Trying to forget an unknown network", rid, mid);
+      return;
+    }
+
+    let self = this;
+    let configured = this.configuredNetworks[ssid];
+    this._reconnectOnDisconnect = (this._currentNetwork.ssid === ssid);
+    WifiManager.removeNetwork(configured.netId, function(ok) {
+      if (!ok) {
+        self._sendMessage(message, false, "Unable to remove the network", rid, mid);
+        self._reconnectOnDisconnect = false;
+        return;
+      }
+
+      WifiManager.saveConfig(function() {
+        self._reloadConfiguredNetworks(function() {
+          self._sendMessage(message, true, true, rid, mid);
+        });
+      });
+    });
   },
 
   // This is a bit ugly, but works. In particular, this depends on the fact
