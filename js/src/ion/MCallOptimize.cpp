@@ -90,7 +90,8 @@ IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
 
     /* Check if there is a match for the current native function */
 
-    types::TypeSet *returnTypes = oracle->getCallReturn(script, pc);
+    types::TypeSet *barrier;
+    types::TypeSet *returnTypes = oracle->returnTypeSet(script, pc, &barrier);
     MIRType returnType = MIRTypeFromValueType(returnTypes->getKnownTypeTag(cx));
 
     types::TypeSet *thisTypes = oracle->getCallArg(script, argc, 0, pc);
@@ -126,13 +127,15 @@ IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
                 bool maybeUndefined = returnTypes->hasType(types::Type::UndefinedType());
                 MArrayPopShift::Mode mode = (native == js::array_pop) ? MArrayPopShift::Pop : MArrayPopShift::Shift;
                 JSValueType knownType = returnTypes->getKnownTypeTag(cx);
+                if (knownType == JSVAL_TYPE_UNDEFINED || knownType == JSVAL_TYPE_NULL)
+                    return false;
+                MIRType resultType = MIRTypeFromValueType(knownType);
                 if (!discardCall(argc, argv, current))
                     return false;
                 MArrayPopShift *ins = MArrayPopShift::New(argv[0], mode, needsHoleCheck, maybeUndefined);
                 current->add(ins);
                 current->push(ins);
-                if (knownType != JSVAL_TYPE_UNDEFINED && knownType != JSVAL_TYPE_NULL)
-                    ins->setResultType(MIRTypeFromValueType(knownType));
+                ins->setResultType(resultType);
                 return resumeAfter(ins);
             }
         }
