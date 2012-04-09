@@ -58,8 +58,6 @@
 #include "nsAutoPtr.h"
 #include "nsIStreamBufferAccess.h"
 
-#include "zlib.h"
-
 /* Bug 341128 - w32api defines min/max which causes problems with <bitset> */
 #ifdef __MINGW32__
 #undef min
@@ -89,28 +87,6 @@ public:
                 mBlocks[i] = new Block(*block);
         }
     }
-
-    bool Equals(const gfxSparseBitSet *aOther) const {
-        if (mBlocks.Length() != aOther->mBlocks.Length()) {
-            return false;
-        }
-        size_t n = mBlocks.Length();
-        for (size_t i = 0; i < n; ++i) {
-            const Block *b1 = mBlocks[i];
-            const Block *b2 = aOther->mBlocks[i];
-            if (!b1 != !b2) {
-                return false;
-            }
-            if (!b1) {
-                continue;
-            }
-            if (memcmp(&b1->mBits, &b2->mBits, BLOCK_SIZE) != 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     bool test(PRUint32 aIndex) const {
         NS_ASSERTION(mBlocks.DebugGetHeader(), "mHdr is null, this is bad");
         PRUint32 blockIndex = aIndex/BLOCK_SIZE_BITS;
@@ -343,18 +319,6 @@ public:
 
     void Compact() {
         mBlocks.Compact();
-    }
-
-    PRUint32 GetChecksum() const {
-        PRUint32 check = adler32(0, Z_NULL, 0);
-        for (PRUint32 i = 0; i < mBlocks.Length(); i++) {
-            if (mBlocks[i]) {
-                const Block *block = mBlocks[i];
-                check = adler32(check, (PRUint8*) (&i), 4);
-                check = adler32(check, (PRUint8*) block, sizeof(Block));
-            }
-        }
-        return check;
     }
 
 private:
