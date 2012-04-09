@@ -1051,10 +1051,11 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, StringPredicate pred
                         ni->props_end = ni->end() - 1;
 
                         /*
-                         * Invoke the write barrier on this element, since it's
-                         * no longer going to be marked.
+                         * This invokes the pre barrier on this element, since
+                         * it's no longer going to be marked, and ensures that
+                         * any existing remembered set entry will be dropped.
                          */
-                        ni->props_end->HeapPtr<JSFlatString>::~HeapPtr();
+                        *ni->props_end = NULL;
                     }
 
                     /* Don't reuse modified native iterators. */
