@@ -47,6 +47,7 @@
 
 #include "IonAllocPolicy.h"
 #include "MIRGenerator.h"
+#include "FixedList.h"
 
 namespace js {
 namespace ion {

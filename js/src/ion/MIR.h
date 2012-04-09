@@ -58,6 +58,7 @@
 #include "FixedArityList.h"
 #include "IonMacroAssembler.h"
 #include "Bailouts.h"
+#include "FixedList.h"
 
 namespace js {
 namespace ion {

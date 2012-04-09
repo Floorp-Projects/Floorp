@@ -166,7 +166,7 @@ class InvalidationBailoutStack
     }
     IonJSFrameLayout *fp() const;
     MachineState machine() {
-        return MachineState(regs_, fpregs_);
+        return MachineState::FromBailout(regs_, fpregs_);
     }
 
     IonScript *ionScript() const {

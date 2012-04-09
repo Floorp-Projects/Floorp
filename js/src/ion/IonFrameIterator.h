@@ -71,13 +71,15 @@ class IonFrameIterator
     FrameType type_;
     uint8 *returnAddressToFp_;
     size_t frameSize_;
+    mutable const SafepointIndex *cachedSafepointIndex_;
 
   public:
     IonFrameIterator(uint8 *top)
       : current_(top),
         type_(IonFrame_Exit),
         returnAddressToFp_(NULL),
-        frameSize_(0)
+        frameSize_(0),
+        cachedSafepointIndex_(NULL)
     { }
 
     IonFrameIterator(IonJSFrameLayout *fp);
@@ -148,6 +150,8 @@ class IonFrameIterator
     // Returns the OSI index associated with this JS frame. Incurs a lookup
     // overhead.
     const OsiIndex *osiIndex() const;
+
+    MachineState machineState() const;
 };
 
 class IonActivationIterator
@@ -190,7 +194,7 @@ class SnapshotIterator : public SnapshotReader
   public:
     SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshotOffset,
                      IonJSFrameLayout *fp, const MachineState &machine);
-    SnapshotIterator(const IonFrameIterator &iter, const MachineState &machine);
+    SnapshotIterator(const IonFrameIterator &iter);
     SnapshotIterator();
 
     Value read() {
@@ -203,7 +207,6 @@ class SnapshotIterator : public SnapshotReader
 class InlineFrameIterator
 {
     const IonFrameIterator *frame_;
-    MachineState machine_;
     SnapshotIterator start_;
     SnapshotIterator si_;
     unsigned framesRead_;
@@ -215,7 +218,7 @@ class InlineFrameIterator
     void findNextFrame();
 
   public:
-    InlineFrameIterator(const IonFrameIterator *iter, const MachineState &machine);
+    InlineFrameIterator(const IonFrameIterator *iter);
 
     bool more() const {
         return frame_ && framesRead_ < start_.frameCount();

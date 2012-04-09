@@ -64,7 +64,7 @@ class BailoutStack
 
   public:
     MachineState machineState() {
-        return MachineState(regs_, fpregs_);
+        return MachineState::FromBailout(regs_, fpregs_);
     }
     uint32 snapshotOffset() const {
         return snapshotOffset_;
