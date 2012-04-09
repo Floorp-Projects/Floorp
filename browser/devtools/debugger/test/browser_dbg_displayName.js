@@ -22,12 +22,12 @@ function test() {
 }
 
 function testAnonCall() {
-  gPane.activeThread.addOneTimeListener("framesadded", function() {
+  gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
-      let frames = gDebugger.DebuggerView.Stackframes._frames;
+      let frames = gDebugger.DebuggerView.StackFrames._frames;
 
-      is(gDebugger.StackFrames.activeThread.state, "paused",
+      is(gDebugger.DebuggerController.activeThread.state, "paused",
         "Should only be getting stack frames while paused.");
 
       is(frames.querySelectorAll(".dbg-stackframe").length, 3,
@@ -44,7 +44,7 @@ function testAnonCall() {
 }
 
 function resumeAndFinish() {
-  gDebugger.StackFrames.activeThread.resume(function() {
+  gDebugger.DebuggerController.activeThread.resume(function() {
     removeTab(gTab);
     gPane = null;
     gDebuggee = null;

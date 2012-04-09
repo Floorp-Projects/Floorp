@@ -20,7 +20,7 @@ function test() {
 }
 
 function testSimpleCall() {
-  gPane.activeThread.addOneTimeListener("framesadded", function() {
+  gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
       let globalScope = gDebugger.DebuggerView.Properties._globalScope;
@@ -82,10 +82,10 @@ function testSimpleCall() {
 }
 
 function resumeAndFinish() {
-  gDebugger.StackFrames.activeThread.resume(function() {
+  gDebugger.DebuggerController.activeThread.resume(function() {
     let vs = gDebugger.DebuggerView.Scripts;
-    let ss = gDebugger.SourceScripts;
-    ss.onScriptsCleared();
+    let ss = gDebugger.DebuggerController.SourceScripts;
+    ss._onScriptsCleared();
 
     is(ss._trimUrlQuery("a/b/c.d?test=1&random=4"), "a/b/c.d",
       "Trimming the url query isn't done properly.");
