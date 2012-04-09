@@ -293,6 +293,7 @@ public:
 
     gfxWindowsFontType mFontType;
     bool mForceGDI    : 1;
+    bool mUnknownCMAP : 1;
 
     gfxSparseBitSet mCharset;
     gfxSparseBitSet mUnicodeRanges;
