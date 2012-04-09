@@ -38,27 +38,53 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsARIAGridAccessibleWrap.h"
+#ifndef MOZILLA_A11Y_ARIAGRIDACCESSIBLEWRAP_H
+#define MOZILLA_A11Y_ARIAGRIDACCESSIBLEWRAP_H
 
-////////////////////////////////////////////////////////////////////////////////
-// nsARIAGridAccessibleWrap
-////////////////////////////////////////////////////////////////////////////////
+#include "ARIAGridAccessible.h"
+#include "CAccessibleTable.h"
+#include "CAccessibleTableCell.h"
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsARIAGridAccessibleWrap,
-                             nsARIAGridAccessible)
+namespace mozilla {
+namespace a11y {
 
-IMPL_IUNKNOWN_INHERITED1(nsARIAGridAccessibleWrap,
-                         nsAccessibleWrap,
-                         CAccessibleTable)
+/**
+ * IA2 wrapper class for ARIAGridAccessible implementing IAccessibleTable and
+ * IAccessibleTable2 interfaces.
+ */
+class ARIAGridAccessibleWrap : public ARIAGridAccessible,
+                               public CAccessibleTable
+{
+public:
+  ARIAGridAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+    ARIAGridAccessible(aContent, aDoc) {}
 
+  // IUnknown
+  DECL_IUNKNOWN_INHERITED
 
-////////////////////////////////////////////////////////////////////////////////
-// nsARIAGridCellAccessibleWrap
-////////////////////////////////////////////////////////////////////////////////
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+};
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsARIAGridCellAccessibleWrap,
-                             nsARIAGridCellAccessible)
+/**
+ * IA2 wrapper class for ARIAGridCellAccessible implementing
+ * IAccessibleTableCell interface.
+ */
+class ARIAGridCellAccessibleWrap : public ARIAGridCellAccessible,
+                                   public CAccessibleTableCell
+{
+public:
+  ARIAGridCellAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+    ARIAGridCellAccessible(aContent, aDoc) {}
 
-IMPL_IUNKNOWN_INHERITED1(nsARIAGridCellAccessibleWrap,
-                         nsHyperTextAccessibleWrap,
-                         CAccessibleTableCell)
+  // IUnknown
+  DECL_IUNKNOWN_INHERITED
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+};
+
+} // namespace a11y
+} // namespace mozilla
+
+#endif

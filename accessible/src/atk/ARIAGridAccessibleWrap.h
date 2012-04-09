@@ -37,13 +37,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NSARIAGRIDACCESSIBLEWRAP_H
-#define _NSARIAGRIDACCESSIBLEWRAP_H
+#ifndef MOZILLA_A11Y_ARIAGRIDACCESSIBLEWRAP_H
+#define MOZILLA_A11Y_ARIAGRIDACCESSIBLEWRAP_H
 
-#include "nsARIAGridAccessible.h"
+#include "ARIAGridAccessible.h"
 
-typedef class nsARIAGridAccessible nsARIAGridAccessibleWrap;
-typedef class nsARIAGridCellAccessible nsARIAGridCellAccessibleWrap;
+namespace mozilla {
+namespace a11y {
+
+typedef class ARIAGridAccessible ARIAGridAccessibleWrap;
+typedef class ARIAGridCellAccessible ARIAGridCellAccessibleWrap;
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif
-

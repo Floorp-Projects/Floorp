@@ -53,7 +53,7 @@ CPPSRCS = \
   nsTextAccessibleWrap.cpp \
   nsDocAccessibleWrap.cpp \
   nsHTMLWin32ObjectAccessible.cpp \
-  nsARIAGridAccessibleWrap.cpp \
+  ARIAGridAccessibleWrap.cpp \
   nsRootAccessibleWrap.cpp \
   nsXULMenuAccessibleWrap.cpp \
   nsXULListboxAccessibleWrap.cpp \
@@ -78,13 +78,13 @@ CPPSRCS = \
   $(NULL)
 
 EXPORTS = \
+  ARIAGridAccessibleWrap.h \
   nsAccessNodeWrap.h \
   nsAccessibleWrap.h \
   nsTextAccessibleWrap.h \
   nsDocAccessibleWrap.h \
   nsRootAccessibleWrap.h \
   nsHTMLWin32ObjectAccessible.h \
-  nsARIAGridAccessibleWrap.h \
   nsXULMenuAccessibleWrap.h \
   nsXULListboxAccessibleWrap.h \
   nsXULTreeGridAccessibleWrap.h \
