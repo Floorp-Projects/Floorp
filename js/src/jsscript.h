@@ -747,11 +747,11 @@ struct JSScript : public js::gc::Cell
         return reinterpret_cast<js::ClosedSlotArray *>(data + closedVarsOffset);
     }
 
-    uint32_t nClosedArgs() {
+    uint32_t numClosedArgs() {
         return isValidOffset(closedArgsOffset) ? closedArgs()->length : 0;
     }
 
-    uint32_t nClosedVars() {
+    uint32_t numClosedVars() {
         return isValidOffset(closedVarsOffset) ? closedVars()->length : 0;
     }
 
