@@ -242,6 +242,54 @@ IonFrameIterator::operator++()
     return *this;
 }
 
+static void
+CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32 stackSlot)
+{
+    SnapshotIterator si = frame.snapshotIterator();
+
+    // Skip stuff that comes before locals.
+    for (unsigned i = 0; i < CountArgSlots(frame.maybeCallee()); i++)
+        si.skip();
+
+    // Skip stack slots until we reach the iterator object.
+    for (unsigned i = 0; i < stackSlot; i++)
+        si.skip();
+
+    Value v = si.read();
+    JSObject *obj = &v.toObject();
+
+    if (cx->isExceptionPending())
+        UnwindIteratorForUncatchableException(cx, obj);
+    else
+        UnwindIteratorForException(cx, obj);
+}
+
+static void
+CloseLiveIterators(JSContext *cx, const InlineFrameIterator &frame)
+{
+    JSScript *script = frame.script();
+    jsbytecode *pc = frame.pc();
+
+    if (!JSScript::isValidOffset(script->trynotesOffset))
+        return;
+
+    JSTryNote *tn = script->trynotes()->vector;
+    JSTryNote *tnEnd = tn + script->trynotes()->length;
+
+    for (; tn != tnEnd; ++tn) {
+        if (uint32(pc - script->code) >= tn->length)
+            continue;
+
+        if (tn->kind != JSTRY_ITER)
+            continue;
+
+        JS_ASSERT(JSOp(*(script->code + tn->start + tn->length)) == JSOP_ENDITER);
+        JS_ASSERT(tn->stackDepth > 0);
+
+        CloseLiveIterator(cx, frame, tn->stackDepth - 1);
+    }
+}
+
 void
 ion::HandleException(ResumeFromException *rfe)
 {
@@ -250,8 +298,18 @@ ion::HandleException(ResumeFromException *rfe)
     IonSpew(IonSpew_Invalidate, "handling exception");
 
     IonFrameIterator iter(cx->runtime->ionTop);
-    while (iter.type() != IonFrame_Entry) {
-        if (iter.type() == IonFrame_JS) {
+    while (!iter.isEntry()) {
+        if (iter.isScripted()) {
+            // Search each inlined frame for live iterator objects, and close
+            // them.
+            InlineFrameIterator frames(&iter, ion::MachineState());
+            for (;;) {
+                CloseLiveIterators(cx, frames);
+                if (!frames.more())
+                    break;
+                ++frames;
+            }
+
             IonScript *ionScript;
             if (iter.checkInvalidation(&ionScript))
                 ionScript->decref(cx->runtime->defaultFreeOp());
@@ -259,12 +317,6 @@ ion::HandleException(ResumeFromException *rfe)
 
         ++iter;
     }
-
-    // We need to close all iterators that are open on the stack. Note that we
-    // don't care about the return value; we're in an error, the error state
-    // won't change.
-    while (cx->enumerators != cx->runtime->ionActivation->savedEnumerators())
-        UnwindIteratorForException(cx, cx->enumerators);
 
     rfe->stackPointer = iter.fp();
 }
@@ -591,6 +643,8 @@ InlineFrameIterator::InlineFrameIterator(const IonFrameIterator *iter, const Mac
 void
 InlineFrameIterator::findNextFrame()
 {
+    JS_ASSERT(more());
+
     si_ = start_;
 
     // Read the initial frame.
@@ -628,8 +682,6 @@ InlineFrameIterator::findNextFrame()
 InlineFrameIterator
 InlineFrameIterator::operator++()
 {
-    JS_ASSERT(more());
-
     InlineFrameIterator iter(*this);
     findNextFrame();
     return iter;

@@ -1976,7 +1976,7 @@ CodeGenerator::visitIteratorEnd(LIteratorEnd *lir)
     const Register temp2 = ToRegister(lir->temp2());
 
     typedef bool (*pf)(JSContext *, JSObject *);
-    static const VMFunction Info = FunctionInfo<pf>(CloseIteratorFromIon);
+    static const VMFunction Info = FunctionInfo<pf>(CloseIterator);
 
     OutOfLineCode *ool = oolCallVM(Info, lir, (ArgList(), obj), StoreNothing());
     if (!ool)
@@ -1995,17 +1995,6 @@ CodeGenerator::visitIteratorEnd(LIteratorEnd *lir)
     masm.loadJSContext(temp2);
     masm.loadPtr(Address(temp1, offsetof(NativeIterator, next)), temp1);
     masm.storePtr(temp1, Address(temp2, offsetof(JSContext, enumerators)));
-
-    // Update IonActivation::savedEnumerators, see CloseIteratorFromIon.
-    Label done;
-    masm.loadIonActivation(temp2);
-
-    Address savedEnumerators(temp2, IonActivation::offsetOfSavedEnumerators());
-    masm.branchPtr(Assembler::NotEqual, savedEnumerators, obj, &done);
-    {
-        masm.storePtr(temp1, savedEnumerators);
-    }
-    masm.bind(&done);
 
     masm.bind(ool->rejoin());
     return true;

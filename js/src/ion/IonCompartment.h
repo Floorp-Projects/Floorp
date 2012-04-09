@@ -181,7 +181,6 @@ class IonActivation
     BailoutClosure *bailout_;
     uint8 *prevIonTop_;
     JSContext *prevIonJSContext_;
-    JSObject *savedEnumerators_;
 
   public:
     IonActivation(JSContext *cx, StackFrame *fp);
@@ -215,15 +214,6 @@ class IonActivation
     }
     JSCompartment *compartment() const {
         return compartment_;
-    }
-    JSObject *savedEnumerators() const {
-        return savedEnumerators_;
-    }
-    void updateSavedEnumerators(JSObject *obj) {
-        savedEnumerators_ = obj;
-    }
-    static inline size_t offsetOfSavedEnumerators() {
-        return offsetof(IonActivation, savedEnumerators_);
     }
 };
 
