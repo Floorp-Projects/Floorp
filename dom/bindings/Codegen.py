@@ -961,16 +961,12 @@ class CGNativeToSupportsMethod(CGAbstractStaticMethod):
         CGAbstractStaticMethod.__init__(self, descriptor, 'NativeToSupports', 'nsISupports*', args)
 
     def definition_body(self):
-        cast = "aNative"
-        whitespace = ""
-        addspace = ""
+        cur = CGGeneric("aNative")
         for proto in reversed(self.descriptor.prototypeChain[:-1]):
             d = self.descriptor.getDescriptor(proto)
-            cast = "static_cast<%s*>(%s)" % (d.nativeType, whitespace + cast)
-            addspace += "  "
-            whitespace = "\n  " + addspace
-        return """
-  return %s;""" % (cast)
+            cast = "static_cast<%s*>(\n" % d.nativeType;
+            cur = CGWrapper(CGIndenter(cur), pre=cast, post=")")
+        return CGIndenter(CGWrapper(cur, pre="return ", post=";")).define();
 
 class CGWrapMethod(CGAbstractMethod):
     def __init__(self, descriptor):
