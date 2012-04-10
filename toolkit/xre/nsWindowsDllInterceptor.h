@@ -158,13 +158,11 @@ public:
       return false;
     }
 
-    void *tramp = CreateTrampoline(pAddr, hookDest);
-    if (!tramp) {
+    CreateTrampoline(pAddr, hookDest, origFunc);
+    if (!*origFunc) {
       //printf ("CreateTrampoline failed\n");
       return false;
     }
-
-    *origFunc = tramp;
 
     return true;
   }
@@ -178,12 +176,15 @@ protected:
   int mMaxHooks;
   int mCurHooks;
 
-  byteptr_t CreateTrampoline(void *origFunction,
-           intptr_t dest)
+  void CreateTrampoline(void *origFunction,
+                        intptr_t dest,
+                        void **outTramp)
   {
+    *outTramp = NULL;
+
     byteptr_t tramp = FindTrampolineSpace();
     if (!tramp)
-      return 0;
+      return;
 
     byteptr_t origBytes = (byteptr_t) origFunction;
 
@@ -211,7 +212,7 @@ protected:
           nBytes += 3;
         } else {
           // complex MOV, bail
-          return 0;
+          return;
         }
       } else if (origBytes[nBytes] == 0x83) {
         // ADD|ODR|ADC|SBB|AND|SUB|XOR|CMP r/m, imm8
@@ -221,7 +222,7 @@ protected:
           nBytes += 3;
         } else {
           // bail
-          return 0;
+          return;
         }
       } else if (origBytes[nBytes] == 0x68) {
         // PUSH with 4-byte operand
@@ -238,7 +239,7 @@ protected:
         nBytes += 5;
       } else {
         //printf ("Unknown x86 instruction byte 0x%02x, aborting trampoline\n", origBytes[nBytes]);
-        return 0;
+        return;
       }
     }
 #elif defined(_M_X64)
@@ -247,7 +248,7 @@ protected:
       // if found JMP 32bit offset, next bytes must be NOP 
       if (pJmp32 >= 0) {
         if (origBytes[nBytes++] != 0x90)
-          return 0;
+          return;
 
         continue;
       } 
@@ -263,7 +264,7 @@ protected:
           // mov r32, imm32
           nBytes += 5;
         } else {
-          return 0;
+          return;
         }
       } else if (origBytes[nBytes] == 0x45) {
         // REX.R & REX.B
@@ -273,7 +274,7 @@ protected:
           // xor r32, r32
           nBytes += 2;
         } else {
-          return 0;
+          return;
         }
       } else if ((origBytes[nBytes] & 0xfb) == 0x48) {
         // REX.W | REX.WR
@@ -307,11 +308,11 @@ protected:
             nBytes += 2;
           } else {
             // complex MOV
-            return 0;
+            return;
           }
         } else {
           // not support yet!
-          return 0;
+          return;
         }
       } else if ((origBytes[nBytes] & 0xf0) == 0x50) {
         // 1-byte push/pop
@@ -329,10 +330,10 @@ protected:
           // push r64
           nBytes++;
         } else {
-          return 0;
+          return;
         }
       } else {
-        return 0;
+        return;
       }
     }
 #else
@@ -341,7 +342,7 @@ protected:
 
     if (nBytes > 100) {
       //printf ("Too big!");
-      return 0;
+      return;
     }
 
     // We keep the address of the original function in the first bytes of
@@ -391,11 +392,14 @@ protected:
     }
 #endif
 
+    // The trampoline is now valid.
+    *outTramp = tramp;
+
     // ensure we can modify the original code
     DWORD op;
     if (!VirtualProtectEx(GetCurrentProcess(), origFunction, nBytes, PAGE_EXECUTE_READWRITE, &op)) {
       //printf ("VirtualProtectEx failed! %d\n", GetLastError());
-      return 0;
+      return;
     }
 
 #if defined(_M_IX86)
@@ -417,8 +421,6 @@ protected:
 
     // restore protection; if this fails we can't really do anything about it
     VirtualProtectEx(GetCurrentProcess(), origFunction, nBytes, op, &op);
-
-    return tramp;
   }
 
   byteptr_t FindTrampolineSpace() {
