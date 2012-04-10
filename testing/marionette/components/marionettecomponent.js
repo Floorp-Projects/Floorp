@@ -9,13 +9,9 @@ const MARIONETTE_CID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/services-sync/log4moz.js");
 
 function MarionetteComponent() {
   this._loaded = false;
-  // set up the logger
-  this.logger = Log4Moz.repository.getLogger("Marionette");
 }
 
 MarionetteComponent.prototype = {
@@ -30,20 +26,24 @@ MarionetteComponent.prototype = {
     switch (aTopic) {
       case "profile-after-change":
         if (Services.prefs.getBoolPref('marionette.defaultPrefs.enabled')) {
+          // set up the logger
+          Cu.import("resource://gre/modules/FileUtils.jsm");
+          Cu.import("resource://gre/modules/services-sync/log4moz.js");
 
-          this.logger.level = Log4Moz.Level["All"];
+          let logger = Log4Moz.repository.getLogger("Marionette");
+          logger.level = Log4Moz.Level["All"];
           let logf = FileUtils.getFile('ProfD', ['marionette.log']);
           
           let formatter = new Log4Moz.BasicFormatter();
-          this.logger.addAppender(new Log4Moz.FileAppender(logf, formatter));
-          this.logger.info("MarionetteComponent loaded");
+          logger.addAppender(new Log4Moz.FileAppender(logf, formatter));
+          logger.info("MarionetteComponent loaded");
 
           //add observers
           observerService.addObserver(this, "final-ui-startup", false);
           observerService.addObserver(this, "xpcom-shutdown", false);
         }
         else {
-          this.logger.info("marionette not enabled");
+          logger.info("marionette not enabled");
         }
         break;
       case "final-ui-startup":
@@ -74,7 +74,7 @@ MarionetteComponent.prototype = {
         DebuggerServer.openListener(port, true);
       }
       catch(e) {
-        this.logger.error('exception: ' + e.name + ', ' + e.message);
+        logger.error('exception: ' + e.name + ', ' + e.message);
       }
     }
   },

@@ -5,5 +5,3 @@ marionette.jar:
   content/marionette-elements.js    (marionette-elements.js)
   content/marionette-log-obj.js     (marionette-log-obj.js)
   content/marionette-simpletest.js  (marionette-simpletest.js)
-  content/EventUtils.js  (EventUtils.js)
-  content/ChromeUtils.js  (ChromeUtils.js)
