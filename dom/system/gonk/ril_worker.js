@@ -1934,6 +1934,198 @@ let RIL = {
    },
 
   /**
+   * Handle STK CALL_SET_UP request.
+   *
+   * @param hasConfirmed
+   *        Does use have confirmed the call requested from ICC?
+   */
+  stkHandleCallSetup: function stkHandleCallSetup(options) {
+     Buf.newParcel(REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM, options);
+     Buf.writeUint32(1);
+     Buf.writeUint32(options.hasConfirmed ? 1 : 0);
+     Buf.sendParcel();
+  },
+
+  /**
+   * Send STK terminal response.
+   *
+   * @param commandNumber
+   * @param typeOfCommand
+   * @param commandQualifier
+   * @param resultCode
+   * @param [optional] itemIdentifier
+   * @param [optional] input
+   * @param [optional] isYesNo
+   * @param [optional] isUCS2
+   * @param [optional] isPacked
+   * @param [optional] hasConfirmed
+   */
+  sendStkTerminalResponse: function sendStkTerminalResponse(response) {
+    if (response.hasConfirmed !== undefined) {
+      this.stkHandleCallSetup(response);
+      return;
+    }
+
+    let token = Buf.newParcel(REQUEST_STK_SEND_TERMINAL_RESPONSE);
+    let textLen = 0;
+    if (response.resultCode != STK_RESULT_HELP_INFO_REQUIRED) {
+      if (response.isYesNo) {
+        textLen = 1;
+      } else if (response.input) {
+        if (response.isUCS2) {
+          textLen = response.input.length * 2;
+        } else if (response.isPacked) {
+          let bits = response.input.length * 7;
+          textLen = bits * 7 / 8 + (bits % 8 ? 1 : 0);
+        } else {
+          textLen = response.input.length;
+        }
+      }
+    }
+
+    // 1 octets = 2 chars.
+    let size = (5 + /* Size of Command Details TLV */
+                4 + /* Size of Device Identifier TLV */
+                3 + /* Size of Result */
+                (response.itemIdentifier ? 3 : 0) +
+                (textLen ? textLen + 3 : 0)) * 2;
+    Buf.writeUint32(size);
+
+    // Command Details
+    GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
+                               COMPREHENSIONTLV_FLAG_CR);
+    GsmPDUHelper.writeHexOctet(3);
+    GsmPDUHelper.writeHexOctet(response.commandNumber);
+    GsmPDUHelper.writeHexOctet(response.typeOfCommand);
+    GsmPDUHelper.writeHexOctet(response.commandQualifier);
+
+    // Device Identifier
+    // According to TS102.223/TS31.111 section 6.8 Structure of
+    // TERMINAL RESPONSE, "For all SIMPLE-TLV objects with Min=N,
+    // the ME should set the CR(comprehension required) flag to
+    // comprehension not required.(CR=0)"
+    // Since DEVICE_IDENTITIES and DURATION TLVs have Min=N,
+    // the CR flag is not set.
+    GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_DEVICE_ID);
+    GsmPDUHelper.writeHexOctet(2);
+    GsmPDUHelper.writeHexOctet(STK_DEVICE_ID_ME);
+    GsmPDUHelper.writeHexOctet(STK_DEVICE_ID_SIM);
+
+    // Result
+    GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_RESULT |
+                               COMPREHENSIONTLV_FLAG_CR);
+    GsmPDUHelper.writeHexOctet(1);
+    GsmPDUHelper.writeHexOctet(response.resultCode);
+
+    // Item Identifier
+    if (response.itemIdentifier) {
+      GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_ITEM_ID |
+                                 COMPREHENSIONTLV_FLAG_CR);
+      GsmPDUHelper.writeHexOctet(1);
+      GsmPDUHelper.writeHexOctet(response.itemIdentifier);
+    }
+
+    // No need to process Text data if user requests help information.
+    if (response.resultCode != STK_RESULT_HELP_INFO_REQUIRED) {
+      let text;
+      if (response.isYesNo !== undefined) {
+        // GET_INKEY
+        // When the ME issues a successful TERMINAL RESPONSE for a GET INKEY
+        // ("Yes/No") command with command qualifier set to "Yes/No", it shall
+        // supply the value '01' when the answer is "positive" and the value 
+        // '00' when the answer is "negative" in the Text string data object.
+        text = response.isYesNo ? 0x01 : 0x00;
+      } else {
+        text = response.input;
+      }
+
+      if (text) {
+        GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_TEXT_STRING |
+                                   COMPREHENSIONTLV_FLAG_CR);
+        GsmPDUHelper.writeHexOctet(textLen + 1); // +1 for coding
+        let coding = response.isUCS2 ? STK_TEXT_CODING_UCS2 :
+                       (response.isPacked ? STK_TEXT_CODING_GSM_7BIT_PACKED :
+                          STK_TEXT_CODING_GSM_8BIT);
+        GsmPDUHelper.writeHexOctet(coding);
+
+        // Write Text String.
+        switch (coding) {
+          case STK_TEXT_CODING_UCS2:
+            GsmPDUHelper.writeUCS2String(text);
+            break;
+          case STK_TEXT_CODING_GSM_7BIT_PACKED:
+            GsmPDUHelper.writeStringAsSeptets(text, 0, 0, 0);
+            break;
+          case STK_TEXT_CODING_GSM_8BIT:
+            for (let i = 0; i < textLen; i++) {
+              GsmPDUHelper.writeHexOctet(text.charCodeAt(i));
+            }
+            break;
+        }
+      }
+    }
+
+    Buf.writeUint32(0);
+    Buf.sendParcel();
+  },
+
+  /**
+   * Send STK Envelope(Menu Selection) command.
+   *
+   * @param itemIdentifier
+   * @param helpRequested
+   */
+  sendStkMenuSelection: function sendStkMenuSelection(command) {
+    this.sendICCEnvelopeCommand(command);
+  },
+
+  /**
+   * Send REQUEST_STK_SEND_ENVELOPE_COMMAND to ICC.
+   *
+   * @param [optioanl] itemIdentifier
+   * @param [optional] helpRequested
+   */
+  sendICCEnvelopeCommand: function sendICCEnvelopeCommand(options) {
+    let token = Buf.newParcel(REQUEST_STK_SEND_ENVELOPE_COMMAND);
+    let berLen = 4 + /* Size of Device Identifier TLV */
+                 (options.itemIdentifier ? 3 : 0) +
+                 (options.helpRequested ? 2 : 0);
+    let size = (2 + berLen) * 2;
+
+    Buf.writeUint32(size);
+
+    // Write a BER-TLV
+    GsmPDUHelper.writeHexOctet(BER_MENU_SELECTION_TAG);
+    GsmPDUHelper.writeHexOctet(berLen);
+
+    // Device Identifies
+    GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_DEVICE_ID |
+                               COMPREHENSIONTLV_FLAG_CR);
+    GsmPDUHelper.writeHexOctet(2);
+    GsmPDUHelper.writeHexOctet(STK_DEVICE_ID_KEYPAD);
+    GsmPDUHelper.writeHexOctet(STK_DEVICE_ID_SIM);
+
+    // Item Identifier
+    if (options.itemIdentifier) {
+      GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_ITEM_ID |
+                                 COMPREHENSIONTLV_FLAG_CR);
+      GsmPDUHelper.writeHexOctet(1);
+      GsmPDUHelper.writeHexOctet(options.itemIdentifier);
+    }
+
+    // Help Request
+    if (options.helpRequested) {
+      GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_HELP_REQUEST |
+                                 COMPREHENSIONTLV_FLAG_CR);
+      GsmPDUHelper.writeHexOctet(0);
+      // Help Request doesn't have value
+    }
+
+    Buf.writeUint32(0);
+    Buf.sendParcel();
+  },
+
+  /**
    * Check a given number against the list of emergency numbers provided by the RIL.
    *
    * @param number
@@ -2877,6 +3069,63 @@ let RIL = {
   },
 
   /**
+   * Process STK Proactive Command.
+   */
+  processStkProactiveCommand: function processStkProactiveCommand() {
+    let length = Buf.readUint32();
+    let berTlv = BerTlvHelper.decode(length / 2);
+    Buf.readStringDelimiter(length);
+
+    let ctlvs = berTlv.value;
+    let ctlv = StkProactiveCmdHelper.searchForTag(
+        COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+    if (!ctlv) {
+      RIL.sendStkTerminalResponse({
+        commandNumber: 0,
+        typeOfCommand: 0,
+        commandQualifier: 0,
+        resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
+      throw new Error("Can't find COMMAND_DETAILS ComprehensionTlv");
+    }
+
+    let cmdDetails = ctlv.value;
+    if (DEBUG) {
+      debug("commandNumber = " + cmdDetails.commandNumber +
+           " typeOfCommand = " + cmdDetails.typeOfCommand.toString(16) +
+           " commandQualifier = " + cmdDetails.commandQualifier);
+    }
+
+    let param = StkCommandParamsFactory.createParam(cmdDetails, ctlvs);
+    if (param) {
+      switch (cmdDetails.typeOfCommand) {
+        case STK_CMD_SET_UP_MENU:
+        case STK_CMD_SET_UP_IDLE_MODE_TEXT:
+          this.sendStkTerminalResponse({commandNumber: cmdDetails.commandNumber,
+                                        typeOfCommand: cmdDetails.typeOfCommand,
+                                        commandQualifier: cmdDetails.commandQualifier,
+                                        resultCode: STK_RESULT_OK});
+          break;
+        case STK_CMD_DISPLAY_TEXT:
+          if (!param.responseNeeded) {
+            this.sendStkTerminalResponse({commandNumber: cmdDetails.commandNumber,
+                                          typeOfCommand: cmdDetails.typeOfCommand,
+                                          commandQualifier: cmdDetails.commandQualifier,
+                                          resultCode: STK_RESULT_OK});
+          }
+          break;
+        default:
+          break;
+      }
+
+      RIL.sendDOMMessage({rilMessageType: "stkcommand",
+                          commandNumber: cmdDetails.commandNumber,
+                          typeOfCommand: cmdDetails.typeOfCommand,
+                          commandQualifier: cmdDetails.commandQualifier,
+                          options: param});
+    }
+  },
+
+  /**
    * Send messages to the main thread.
    */
   sendDOMMessage: function sendDOMMessage(message) {
@@ -3721,8 +3970,13 @@ RIL[UNSOLICITED_DATA_CALL_LIST_CHANGED] = function UNSOLICITED_DATA_CALL_LIST_CH
   this[REQUEST_DATA_CALL_LIST](length, {rilRequestError: ERROR_SUCCESS});
 };
 RIL[UNSOLICITED_SUPP_SVC_NOTIFICATION] = null;
-RIL[UNSOLICITED_STK_SESSION_END] = null;
-RIL[UNSOLICITED_STK_PROACTIVE_COMMAND] = null;
+
+RIL[UNSOLICITED_STK_SESSION_END] = function UNSOLICITED_STK_SESSION_END() {
+  this.sendDOMMessage({rilMessageType: "stksessionend"});
+};
+RIL[UNSOLICITED_STK_PROACTIVE_COMMAND] = function UNSOLICITED_STK_PROACTIVE_COMMAND() {
+  this.processStkProactiveCommand();
+};
 RIL[UNSOLICITED_STK_EVENT_NOTIFY] = null;
 RIL[UNSOLICITED_STK_CALL_SETUP] = null;
 RIL[UNSOLICITED_SIM_SMS_STORAGE_FULL] = null;
@@ -5133,6 +5387,736 @@ let GsmPDUHelper = {
     // we write two \0 delimiters.
     Buf.writeUint16(0);
     Buf.writeUint16(0);
+  },
+};
+
+let StkCommandParamsFactory = {
+  createParam: function createParam(cmdDetails, ctlvs) {
+    let param;
+    switch (cmdDetails.typeOfCommand) {
+      case STK_CMD_SET_UP_MENU:
+      case STK_CMD_SELECT_ITEM:
+        param = this.processSelectItem(cmdDetails, ctlvs);
+        break;
+      case STK_CMD_DISPLAY_TEXT:
+        param = this.processDisplayText(cmdDetails, ctlvs);
+        break;
+      case STK_CMD_SET_UP_IDLE_MODE_TEXT:
+        param = this.processSetUpIdleModeText(cmdDetails, ctlvs);
+        break;
+      case STK_CMD_GET_INKEY:
+        param = this.processGetInkey(cmdDetails, ctlvs);
+        break;
+      case STK_CMD_GET_INPUT:
+        param = this.processGetInput(cmdDetails, ctlvs);
+        break;
+      case STK_CMD_SEND_SS:
+      case STK_CMD_SEND_USSD:
+      case STK_CMD_SEND_SMS:
+      case STK_CMD_SEND_DTMF:
+        param = this.processEventNotify(cmdDetails, ctlvs);
+        break;
+      case STK_CMD_SET_UP_CALL:
+        param = this.processSetupCall(cmdDetails, ctlvs);
+        break;
+      case STK_LAUNCH_BROWSER:
+        param = this.processLaunchBrowser(cmdDetails, ctlvs);
+        break;
+      default:
+        debug("unknown proactive command");
+        break;
+    }
+    return param;
+  },
+
+  /**
+   * Construct a param for Select Item.
+   *
+   * @param cmdDetails
+   *        The value object of CommandDetails TLV.
+   * @param ctlvs
+   *        The all TLVs in this proactive command.
+   */
+  processSelectItem: function processSelectItem(cmdDetails, ctlvs) {
+    let menu = {};
+
+    let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
+    if (ctlv) {
+      menu.title = ctlv.value.identifier;
+    }
+
+    menu.items = [];
+    for (let i = 0; i < ctlvs.length; i++) {
+      let ctlv = ctlvs[i];
+      if (ctlv.tag == COMPREHENSIONTLV_TAG_ITEM) {
+        menu.items.push(ctlv.value);
+      }
+    }
+
+    if (menu.items.length == 0) {
+      RIL.sendStkTerminalResponse({
+          commandNumber: cmdDetails.commandNumber,
+          typeOfCommand: cmdDetails.typeOfCommand,
+          commandQualifier: cmdDetails.commandQualifier,
+          resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
+      throw new Error("Stk Menu: Required value missing : items");
+    }
+
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ITEM_ID, ctlvs);
+    if (ctlv) {
+      menu.defaultItem = ctlv.value.identifier - 1;
+    }
+
+    // The 1st bit and 2nd bit determines the presentation type.
+    menu.presentationType = cmdDetails.commandQualifier & 0x03;
+
+    // Help information available.
+    if (cmdDetails.commandQualifier & 0x80) {
+      menu.isHelpAvailable = true;
+    }
+
+    return menu;
+  },
+
+  processDisplayText: function processDisplayText(cmdDetails, ctlvs) {
+    let textMsg = {};
+
+    let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
+    if (!ctlv) {
+      RIL.sendStkTerminalResponse({
+        commandNumber: cmdDetails.commandNumber,
+        typeOfCommand: cmdDetails.typeOfCommand,
+        commandQualifier: cmdDetails.commandQualifier,
+        resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
+      throw new Error("Stk Display Text: Required value missing : Text String");
+    }
+    textMsg.text = ctlv.value.text;
+
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_IMMEDIATE_RESPONSE, ctlvs);
+    if (ctlv) {
+      textMsg.responseNeeded = true;
+    }
+
+    // High priority.
+    if (cmdDetails.commandQualifier & 0x01) {
+      textMsg.isHighPriority = true;
+    }
+
+    // User clear.
+    if (cmdDetails.commandQualifier & 0x80) {
+      textMsg.userClear = true;
+    }
+
+    return textMsg;
+  },
+
+  processSetUpIdleModeText: function processSetUpIdleModeText(cmdDetails, ctlvs) {
+    let textMsg = {};
+
+    let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
+    if (!ctlv) {
+      RIL.sendStkTerminalResponse({
+        commandNumber: cmdDetails.commandNumber,
+        typeOfCommand: cmdDetails.typeOfCommand,
+        commandQualifier: cmdDetails.commandQualifier,
+        resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
+      throw new Error("Stk Set Up Idle Text: Required value missing : Text String");
+    }
+    textMsg.text = ctlv.value.text;
+
+    return textMsg;
+  },
+
+  processGetInkey: function processGetInkey(cmdDetails, ctlvs) {
+    let input = {};
+
+    let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
+    if (!ctlv) {
+      RIL.sendStkTerminalResponse({
+        commandNumber: cmdDetails.commandNumber,
+        typeOfCommand: cmdDetails.typeOfCommand,
+        commandQualifier: cmdDetails.commandQualifier,
+        resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
+      throw new Error("Stk Get InKey: Required value missing : Text String");
+    }
+    input.text = ctlv.value.text;
+
+    input.minLength = 1;
+    input.maxLength = 1;
+
+    // isAlphabet
+    if (cmdDetails.commandQualifier & 0x01) {
+      input.isAlphabet = true;
+    }
+
+    // UCS2
+    if (cmdDetails.commandQualifier & 0x02) {
+      input.isUCS2 = true;
+    }
+
+    // Character sets defined in bit 1 and bit 2 are disable and
+    // the YES/NO reponse is required.
+    if (cmdDetails.commandQualifier & 0x04) {
+      input.isYesNoRequested = true;
+    }
+
+    // Help information available.
+    if (cmdDetails.commandQualifier & 0x80) {
+      input.isHelpAvailable = true;
+    }
+
+    return input;
+  },
+
+  processGetInput: function processGetInput(cmdDetails, ctlvs) {
+    let input = {};
+
+    let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
+    if (!ctlv) {
+      RIL.sendStkTerminalResponse({
+        commandNumber: cmdDetails.commandNumber,
+        typeOfCommand: cmdDetails.typeOfCommand,
+        commandQualifier: cmdDetails.commandQualifier,
+        resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
+      throw new Error("Stk Get Input: Required value missing : Text String");
+    }
+    input.text = ctlv.value.text;
+
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_RESPONSE_LENGTH, ctlvs);
+    if (ctlv) {
+      input.minLength = ctlv.value.minLength;
+      input.maxLength = ctlv.value.maxLength;
+    }
+
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_DEFAULT_TEXT, ctlvs);
+    if (ctlv) {
+      input.defaultText = ctlv.value.text;
+    }
+
+    // Alphabet only
+    if (cmdDetails.commandQualifier & 0x01) {
+      input.isAlphabet = true;
+    }
+
+    // UCS2
+    if (cmdDetails.commandQualifier & 0x02) {
+      input.isUCS2 = true;
+    }
+
+    // User input shall not be revealed
+    if (cmdDetails.commandQualifier & 0x04) {
+      input.hideInput = true;
+    }
+
+    // User input in SMS packed format
+    if (cmdDetails.commandQualifier & 0x08) {
+      input.isPacked = true;
+    }
+
+    // Help information available.
+    if (cmdDetails.commandQualifier & 0x80) {
+      input.isHelpAvailable = true;
+    }
+
+    return input;
+  },
+
+  processEventNotify: function processEventNotify(cmdDetails, ctlvs) {
+    let textMsg = {};
+
+    let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
+    if (!ctlv) {
+      RIL.sendStkTerminalResponse({
+        commandNumber: cmdDetails.commandNumber,
+        typeOfCommand: cmdDetails.typeOfCommand,
+        commandQualifier: cmdDetails.commandQualifier,
+        resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
+      throw new Error("Stk Event Notfiy: Required value missing : Alpha ID");
+    }
+    textMsg.text = ctlv.value.identifier;
+
+    return textMsg;
+  },
+
+  processSetupCall: function processSetupCall(cmdDetails, ctlvs) {
+    let call = {};
+
+    for (let i = 0; i < ctlvs.length; i++) {
+      let ctlv = ctlvs[i];
+      if (ctlv.tag == COMPREHENSIONTLV_TAG_ALPHA_ID) {
+        if (!call.confirmMessage) {
+          call.confirmMessage = ctlv.value.identifier;
+        } else {
+          call.callMessge = ctlv.value.identifier;
+          break;
+        }
+      }
+    }
+
+    let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ADDRESS, ctlvs);
+    if (!ctlv) {
+      RIL.sendStkTerminalResponse({
+        commandNumber: cmdDetails.commandNumber,
+        typeOfCommand: cmdDetails.typeOfCommand,
+        commandQualifier: cmdDetails.commandQualifier,
+        resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
+      throw new Error("Stk Set Up Call: Required value missing : Adress");
+    }
+    call.address = ctlv.value.number;
+
+    return call;
+  },
+
+  processLaunchBrowser: function processLaunchBrowser(cmdDetails, ctlvs) {
+    let browser = {};
+
+    let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_URL, ctlvs);
+    if (!ctlv) {
+      RIL.sendStkTerminalResponse({
+        commandNumber: cmdDetails.commandNumber,
+        typeOfCommand: cmdDetails.typeOfCommand,
+        commandQualifier: cmdDetails.commandQualifier,
+        resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
+      throw new Error("Stk Launch Browser: Required value missing : URL");
+    }
+    browser.url = ctlv.value.url;
+
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs)
+    if (ctlv) {
+      browser.confirmMessage = ctlv.value.identifier;
+    }
+
+    browser.mode = cmdDetails.commandQualifier & 0x03;
+
+    return browser;
+  }
+};
+
+let StkProactiveCmdHelper = {
+  retrieve: function retrieve(tag, length) {
+    switch (tag) {
+      case COMPREHENSIONTLV_TAG_COMMAND_DETAILS:
+        return this.retrieveCommandDetails(length);
+      case COMPREHENSIONTLV_TAG_DEVICE_ID:
+        return this.retrieveDeviceId(length);
+      case COMPREHENSIONTLV_TAG_ALPHA_ID:
+        return this.retrieveAlphaId(length);
+      case COMPREHENSIONTLV_TAG_ADDRESS:
+        return this.retrieveAddress(length);
+      case COMPREHENSIONTLV_TAG_TEXT_STRING:
+        return this.retrieveTextString(length);
+      case COMPREHENSIONTLV_TAG_ITEM:
+        return this.retrieveItem(length);
+      case COMPREHENSIONTLV_TAG_ITEM_ID:
+        return this.retrieveItemId(length);
+      case COMPREHENSIONTLV_TAG_RESPONSE_LENGTH:
+        return this.retrieveResponseLength(length);
+      case COMPREHENSIONTLV_TAG_DEFAULT_TEXT:
+        return this.retrieveDefaultText(length);
+      case COMPREHENSIONTLV_TAG_IMMEDIATE_RESPONSE:
+        return this.retrieveImmediaResponse(length);
+      case COMPREHENSIONTLV_TAG_URL:
+        return this.retrieveUrl(length);
+      default:
+        debug("StkProactiveCmdHelper: unknown tag " + tag.toString(16));
+        Buf.seekIncoming(length * PDU_HEX_OCTET_SIZE);
+        return null;
+    }
+  },
+
+  /**
+   * Command Details.
+   *
+   * | Byte | Description         | Length |
+   * |  1   | Command details Tag |   1    |
+   * |  2   | Length = 03         |   1    |
+   * |  3   | Command number      |   1    |
+   * |  4   | Type of Command     |   1    |
+   * |  5   | Command Qualifier   |   1    |
+   */
+  retrieveCommandDetails: function retrieveCommandDetails(length) {
+    let cmdDetails = {
+      commandNumber: GsmPDUHelper.readHexOctet(),
+      typeOfCommand: GsmPDUHelper.readHexOctet(),
+      commandQualifier: GsmPDUHelper.readHexOctet()
+    };
+    return cmdDetails;
+  },
+
+  /**
+   * Device Identities.
+   *
+   * | Byte | Description            | Length |
+   * |  1   | Device Identity Tag    |   1    |
+   * |  2   | Length = 02            |   1    |
+   * |  3   | Source device Identity |   1    |
+   * |  4   | Destination device Id  |   1    |
+   */
+  retrieveDeviceId: function retrieveDeviceId(length) {
+    let deviceId = {
+      sourceId: GsmPDUHelper.readHexOctet(),
+      destinationId: GsmPDUHelper.readHexOctet()
+    };
+    return deviceId;
+  },
+
+  /**
+   * Alpha Identifier.
+   *
+   * | Byte         | Description            | Length |
+   * |  1           | Alpha Identifier Tag   |   1    |
+   * | 2 ~ (Y-1)+2  | Length (X)             |   Y    |
+   * | (Y-1)+3 ~    | Alpha identfier        |   X    |
+   * | (Y-1)+X+2    |                        |        |
+   */
+  retrieveAlphaId: function retrieveAlphaId(length) {
+    let alphaId = {
+      identifier: GsmPDUHelper.readAlphaIdentifier(length)
+    };
+    return alphaId;
+  },
+
+  /**
+   * Address.
+   *
+   * | Byte         | Description            | Length |
+   * |  1           | Alpha Identifier Tag   |   1    |
+   * | 2 ~ (Y-1)+2  | Length (X)             |   Y    |
+   * | (Y-1)+3      | TON and NPI            |   1    |
+   * | (Y-1)+4 ~    | Dialling number        |   X    |
+   * | (Y-1)+X+2    |                        |        |
+   */
+  retrieveAddress: function retrieveAddress(length) {
+    let address = {
+      number : GsmPDUHelper.readDiallingNumber(length)
+    };
+    return address;
+  },
+
+  /**
+   * Text String.
+   *
+   * | Byte         | Description        | Length |
+   * |  1           | Text String Tag    |   1    |
+   * | 2 ~ (Y-1)+2  | Length (X)         |   Y    |
+   * | (Y-1)+3      | Data coding scheme |   1    |
+   * | (Y-1)+4~     | Text String        |   X    |
+   * | (Y-1)+X+2    |                    |        |
+   */
+  retrieveTextString: function retrieveTextString(length) {
+    if (!length) {
+      // null string.
+      return null;
+    }
+
+    let text = {
+      codingScheme: GsmPDUHelper.readHexOctet()
+    };
+
+    length--; // -1 for the codingScheme.
+    switch (text.codingScheme & 0x0f) {
+      case STK_TEXT_CODING_GSM_7BIT_PACKED:
+        text.textString = GsmPDUHelper.readSeptetsToString(length / 7, 0, 0, 0);
+        break;
+      case STK_TEXT_CODING_GSM_8BIT:
+        text.textString = GsmPDUHelper.read8BitUnpackedToString(length);
+        break;
+      case STK_TEXT_CODING_UCS2:
+        text.textString = GsmPDUHelper.readUCS2String(length);
+        break;
+    }
+    return text;
+  },
+
+  /**
+   * Item.
+   *
+   * | Byte         | Description            | Length |
+   * |  1           | Item Tag               |   1    |
+   * | 2 ~ (Y-1)+2  | Length (X)             |   Y    |
+   * | (Y-1)+3      | Identifier of item     |   1    |
+   * | (Y-1)+4 ~    | Text string of item    |   X    |
+   * | (Y-1)+X+2    |                        |        |
+   */
+  retrieveItem: function retrieveItem(length) {
+    let item = {
+      identifier: GsmPDUHelper.readHexOctet(),
+      text: GsmPDUHelper.readAlphaIdentifier(length - 1)
+    };
+    return item;
+  },
+
+  /**
+   * Item Identifier.
+   *
+   * | Byte | Description               | Length |
+   * |  1   | Item Identifier Tag       |   1    |
+   * |  2   | Lenth = 01                |   1    |
+   * |  3   | Identifier of Item chosen |   1    |
+   */
+  retrieveItemId: function retrieveItemId(length) {
+    let itemId = {
+      identifier: GsmPDUHelper.readHexOctet()
+    };
+    return itemId;
+  },
+
+  /**
+   * Response Length.
+   *
+   * | Byte | Description                | Length |
+   * |  1   | Response Length Tag        |   1    |
+   * |  2   | Lenth = 02                 |   1    |
+   * |  3   | Minimum length of response |   1    |
+   * |  4   | Maximum length of response |   1    |
+   */
+  retrieveResponseLength: function retrieveResponseLength(length) {
+    let rspLength = {
+      minLength : GsmPDUHelper.readHexOctet(),
+      maxLength : GsmPDUHelper.readHexOctet()
+    };
+    return rspLength;
+  },
+
+  /**
+   * Default Text.
+   *
+   * Same as Text String.
+   */
+  retrieveDefaultText: function retrieveDefaultText(length) {
+    return retrieveTextString(length);
+  },
+
+  /**
+   * Immediate Response.
+   *
+   * | Byte  | Description            | Length |
+   * |  1    | Immediate Response Tag |   1    |
+   * |  2    | Length = 00            |   1    |
+   */
+  retrieveImmediaResponse: function retrieveImmediaResponse(length) {
+    return {};
+  },
+
+  /**
+   * URL
+   *
+   * | Byte      | Description         | Length |
+   * |  1        | URL Tag             |   1    |
+   * | 2 ~ (Y+1) | Length(X)           |   Y    |
+   * | (Y+2) ~   | URL                 |   X    |
+   * | (Y+1+X)   |                     |        |
+   */
+  retrieveUrl: function retrieveUrl(length) {
+    let s = "";
+    for (let i = 0; i < length; i++) {
+      s += String.fromCharCode(GsmPDUHelper.readHexOctet());
+    }
+    return {url: s};
+  },
+
+  searchForTag: function searchForTag(tag, ctlvs) {
+    for (let i = 0; i < ctlvs.length; i++) {
+      let ctlv = ctlvs[i];
+      if ((ctlv.tag & ~COMPREHENSIONTLV_FLAG_CR) == tag) {
+        return ctlv;
+      }
+    }
+    return null;
+  },
+};
+
+let ComprehensionTlvHelper = {
+  /**
+   * Decode raw data to a Comprehension-TLV.
+   */
+  decode: function decode() {
+    let hlen = 0; // For header(tag field + length field) length.
+    let temp = GsmPDUHelper.readHexOctet();
+    hlen++;
+
+    // TS 101.220, clause 7.1.1
+    let tag, tagValue, cr;
+    switch (temp) {
+      // TS 101.220, clause 7.1.1
+      case 0x0: // Not used.
+      case 0xff: // Not used.
+      case 0x80: // Reserved for future use.
+        RIL.sendStkTerminalResponse({
+          commandNumber: 0,
+          typeOfCommand: 0,
+          commandQualifier: 0,
+          resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
+        throw new Error("Invalid octet when parsing Comprehension TLV :" + temp);
+        break;
+      case 0x7f: // Tag is three byte format.
+        // TS 101.220 clause 7.1.1.2.
+        // | Byte 1 | Byte 2                        | Byte 3 |
+        // |        | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 |        |
+        // | 0x7f   |CR | Tag Value                          |
+        tag = (GsmPDUHelper.readHexOctet() << 8) | GsmPDUHelper.readHexOctet();
+        hlen += 2;
+        cr = (tag & 0x8000) != 0;
+        tag &= ~0x8000;
+        break;
+      default: // Tag is single byte format.
+        tag = temp;
+        // TS 101.220 clause 7.1.1.1.
+        // | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 |
+        // |CR | Tag Value                 |
+        cr = (tag & 0x80) != 0;
+        tag &= ~0x80;
+    }
+
+    // TS 101.220 clause 7.1.2, Length Encoding.
+    // Length   |  Byte 1  | Byte 2 | Byte 3 | Byte 4 |
+    // 0 - 127  |  00 - 7f | N/A    | N/A    | N/A    |
+    // 128-255  |  81      | 80 - ff| N/A    | N/A    |
+    // 256-65535|  82      | 0100 - ffff     | N/A    |
+    // 65536-   |  83      |     010000 - ffffff      |
+    // 16777215
+    //
+    // Length errors: TS 11.14, clause 6.10.6
+
+    let length; // Data length.
+    temp = GsmPDUHelper.readHexOctet();
+    hlen++;
+    if (temp < 0x80) {
+      length = temp;
+    } else if (temp == 0x81) {
+      length = GsmPDUHelper.readHexOctet();
+      hlen++;
+      if (length < 0x80) {
+        RIL.sendStkTerminalResponse({
+          commandNumber: 0,
+          typeOfCommand: 0,
+          commandQualifier: 0,
+          resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
+        throw new Error("Invalid length in Comprehension TLV :" + length);
+      }
+    } else if (temp == 0x82) {
+      length = (GsmPDUHelper.readHexOctet() << 8) | GsmPDUHelper.readHexOctet();
+      hlen += 2;
+      if (lenth < 0x0100) {
+         RIL.sendStkTerminalResponse({
+          commandNumber: 0,
+          typeOfCommand: 0,
+          commandQualifier: 0,
+          resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
+        throw new Error("Invalid length in 3-byte Comprehension TLV :" + length);
+      }
+    } else if (temp == 0x83) {
+      length = (GsmPDUHelper.readHexOctet() << 16) |
+               (GsmPDUHelper.readHexOctet() << 8)  |
+                GsmPDUHelper.readHexOctet();
+      hlen += 3;
+      if (length < 0x010000) {
+        RIL.sendStkTerminalResponse({
+          commandNumber: 0,
+          typeOfCommand: 0,
+          commandQualifier: 0,
+          resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
+        throw new Error("Invalid length in 4-byte Comprehension TLV :" + length);
+      }
+    } else {
+      RIL.sendStkTerminalResponse({
+        commandNumber: 0,
+        typeOfCommand: 0,
+        commandQualifier: 0,
+        resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
+      throw new Error("Invalid octet in Comprehension TLV :" + length);
+    }
+
+    let ctlv = {
+      tag: tag,
+      length: length,
+      value: StkProactiveCmdHelper.retrieve(tag, length),
+      cr: cr,
+      hlen: hlen
+    };
+    return ctlv;
+  },
+
+  decodeChunks: function decodeChunks(length) {
+    let chunks = [];
+    let index = 0;
+    while (index < length) {
+      let tlv = this.decode();
+      chunks.push(tlv);
+      index += tlv.length;
+      index += tlv.hlen;
+    }
+    return chunks;
+  }
+};
+
+let BerTlvHelper = {
+  /**
+   * Decode Ber TLV.
+   *
+   * @param dataLen
+   *        The length of data in bytes.
+   */
+  decode: function decode(dataLen) {
+    // See TS 11.14, Annex D for BerTlv.
+    let hlen = 0;
+    let tag = GsmPDUHelper.readHexOctet();
+    hlen++;
+
+    // Length    | Byte 1                | Byte 2
+    // 0 - 127   | length ('00' to '7f') | N/A
+    // 128 - 255 | '81'                  | length ('80' to 'ff')
+    let length;
+    if (tag == BER_PROACTIVE_COMMAND_TAG) {
+      let temp = GsmPDUHelper.readHexOctet();
+      hlen++;
+      if (temp < 0x80) {
+        length = temp;
+      } else if(temp == 0x81) {
+        length = GsmPDUHelper.readHexOctet();
+        if (length < 0x80) {
+          RIL.sendStkTerminalResponse({
+            commandNumber: 0,
+            typeOfCommand: 0,
+            commandQualifier: 0,
+            resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
+          throw new Error("Invalid length " + length);
+        }
+      } else {
+        RIL.sendStkTerminalResponse({
+          commandNumber: 0,
+          typeOfCommand: 0,
+          commandQualifier: 0,
+          resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
+        throw new Error("Invalid length octet " + temp);
+      }
+    } else {
+      RIL.sendStkTerminalResponse({
+        commandNumber: 0,
+        typeOfCommand: 0,
+        commandQualifier: 0,
+        resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
+      throw new Error("Unknown BER tag");
+    }
+
+    // If the value length of the BerTlv is larger than remaining value on Parcel.
+    if (dataLen - hlen < length) {
+      RIL.sendStkTerminalResponse({
+        commandNumber: 0,
+        typeOfCommand: 0,
+        commandQualifier: 0,
+        resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
+      throw new Error("BerTlvHelper value length too long!!");
+      return;
+    }
+
+    let ctlvs = ComprehensionTlvHelper.decodeChunks(length);
+    let berTlv = {
+      tag: tag,
+      length: length,
+      value: ctlvs
+    };
+    return berTlv;
   }
 };
 
