@@ -652,25 +652,6 @@ MapContextOptionNameToFlag(JSContext* cx, const char* name)
 
 extern JSClass global_class;
 
-#ifdef JS_GC_ZEAL
-static void
-ParseZealArg(JSContext *cx, const char *arg)
-{
-    int zeal, freq = 1, compartment = 0;
-    const char *p = strchr(arg, ',');
-
-    zeal = atoi(arg);
-    if (p) {
-        freq = atoi(p + 1);
-        p = strchr(p + 1, ',');
-        if (p)
-            compartment = atoi(p + 1);
-    }
-
-    JS_SetGCZeal(cx, (uint8_t)zeal, freq, !!compartment);
-}
-#endif
-
 static JSBool
 Version(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -4673,11 +4654,6 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
         enableMethodJit = true;
         JS_ToggleOptions(cx, JSOPTION_METHODJIT);
     }
-
-#ifdef JS_GC_ZEAL
-    if (const char *zeal = op->getStringOption('Z'))
-        ParseZealArg(cx, zeal);
-#endif
 
     if (op->getBoolOption('d')) {
         JS_SetRuntimeDebugMode(JS_GetRuntime(cx), true);

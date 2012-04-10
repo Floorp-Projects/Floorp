@@ -375,3 +375,7 @@ MSG_DEF(JSMSG_CSP_BLOCKED_EVAL,       288, 0, JSEXN_ERR, "call to eval() blocked
 MSG_DEF(JSMSG_DEBUG_NO_SCOPE_OBJECT,  289, 0, JSEXN_TYPEERR, "declarative Environments don't have binding objects")
 MSG_DEF(JSMSG_EMPTY_CONSEQUENT,       290, 0, JSEXN_SYNTAXERR, "mistyped ; after conditional?")
 MSG_DEF(JSMSG_NOT_ITERABLE,           291, 1, JSEXN_TYPEERR, "{0} is not iterable")
+MSG_DEF(JSMSG_QUERY_LINE_WITHOUT_URL, 292, 0, JSEXN_TYPEERR, "findScripts query object has 'line' property, but no 'url' property")
+MSG_DEF(JSMSG_QUERY_INNERMOST_WITHOUT_LINE_URL, 293, 0, JSEXN_TYPEERR, "findScripts query object has 'innermost' property without both 'url' and 'line' properties")
+MSG_DEF(JSMSG_DEBUG_VARIABLE_NOT_FOUND, 294, 0, JSEXN_TYPEERR, "variable not found in environment")
+

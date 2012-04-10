@@ -72,8 +72,13 @@ FORCE_SHARED_LIB = 1
 
 EXTRA_DSO_LDOPTS = $(LIBS_DIR)
 
-# Must be included before DEPENDENT_LIBS_LIST starts so that apps have a chance
-# of getting their stuff in before xul.
+# Must be included before any libraries that might depend on it
+ifdef MOZ_GLUE_LDFLAGS
+DEPENDENT_LIBS_LIST += $(DLL_PREFIX)mozglue$(DLL_SUFFIX)
+endif
+
+# Must be included before the rest of the libraries in DEPENDENT_LIBS_LIST
+# so that apps have a chance of getting their stuff in before xul.
 # It is ok for this file not to exist
 -include $(topsrcdir)/$(MOZ_BUILD_APP)/extradependlibs.mk
 
@@ -99,6 +104,10 @@ DEPENDENT_LIBS_LIST += \
 	$(DLL_PREFIX)ssl3$(DLL_SUFFIX) \
 	$(DLL_PREFIX)smime3$(DLL_SUFFIX) \
 	$(NULL)
+
+ifeq (WINNT,$(OS_TARGET))
+DEPENDENT_LIBS_LIBS += $(DLL_PREFIX)gkmedias$(DLL_SUFFIX)
+endif
 
 ifdef JS_SHARED_LIBRARY
 DEPENDENT_LIBS_LIST += $(DLL_PREFIX)mozjs$(DLL_SUFFIX)

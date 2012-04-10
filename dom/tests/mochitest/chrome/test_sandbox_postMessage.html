@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Testing postMessage from sandbox</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+<script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  function doTest() {
+    var sandbox = Components.utils.Sandbox("http://mochi.test:8888/", { wantXrays: true });
+    var win = window.frames["sameDomain"];
+    sandbox.win = win;
+    sandbox.is = is;
+    sandbox.done = SimpleTest.finish;
+
+    result = Components.utils.evalInSandbox('var data = {some:"data"};'
+    +'win.addEventListener("message", receiveMessage, false);'
+    +'function receiveMessage(event)'
+    +'{'
+    +'  is(JSON.stringify(event.data), JSON.stringify(data), "Received the expected message data");'
+    +'  done();'
+    +'}'
+    +'win.postMessage(data, "*")'
+    , sandbox);
+  }
+
+  addLoadEvent(doTest);
+</script>
+</head>
+<body>
+<iframe src="http://mochi.test:8888/"
+  id="sameDomain" name="sameDomain">
+</iframe>
+</body>
+</html>
+

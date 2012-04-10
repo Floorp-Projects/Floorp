@@ -148,9 +148,6 @@ GetObjectOrRepresentedView(id <mozAccessible> aObject)
  */
 - (void)appendChild:(nsAccessible*)aAccessible;
 
-// invalidates the cached parent, used by invalidateChildren.
-- (void)invalidateParent;
-
 // makes ourselves "expired". after this point, we might be around if someone
 // has retained us (e.g., a third-party), but we really contain no information.
 - (void)expire;

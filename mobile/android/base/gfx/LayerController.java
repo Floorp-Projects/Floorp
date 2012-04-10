@@ -38,33 +38,20 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.SimpleScaleGestureDetector;
 import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.Tab;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.Matrix;
-import android.graphics.Point;
 import android.graphics.PointF;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.GestureDetector;
-import android.view.ScaleGestureDetector;
 import android.view.View.OnTouchListener;
-import android.view.ViewConfiguration;
-import java.lang.Math;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -75,7 +62,7 @@ import java.util.regex.Pattern;
  *
  * Many methods require that the monitor be held, with a synchronized (controller) { ... } block.
  */
-public class LayerController implements Tabs.OnTabsChangedListener {
+public class LayerController {
     private static final String LOGTAG = "GeckoLayerController";
 
     private Layer mRootLayer;                   /* The root layer. */
@@ -95,15 +82,12 @@ public class LayerController implements Tabs.OnTabsChangedListener {
      *    fields. */
     private volatile ImmutableViewportMetrics mViewportMetrics;   /* The current viewport metrics. */
 
-    private boolean mWaitForTouchListeners;
-
-    private PanZoomController mPanZoomController;
     /*
      * The panning and zooming controller, which interprets pan and zoom gestures for us and
      * updates our visible rect appropriately.
      */
+    private PanZoomController mPanZoomController;
 
-    private OnTouchListener mOnTouchListener;       /* The touch listener. */
     private GeckoLayerClient mLayerClient;          /* The layer client. */
 
     /* The new color for the checkerboard. */
@@ -111,14 +95,6 @@ public class LayerController implements Tabs.OnTabsChangedListener {
     private boolean mCheckerboardShouldShowChecks;
 
     private boolean mForceRedraw;
-
-    /* The time limit for pages to respond with preventDefault on touchevents
-     * before we begin panning the page */
-    private int mTimeout = 200;
-
-    private boolean allowDefaultActions = true;
-    private Timer allowDefaultTimer =  null;
-    private PointF initialTouchLocation = null;
 
     private static Pattern sColorPattern;
 
@@ -130,14 +106,6 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         mPanZoomController = new PanZoomController(this);
         mView = new LayerView(context, this);
         mCheckerboardShouldShowChecks = true;
-
-        Tabs.registerOnTabsChangedListener(this);
-
-        mTimeout = ViewConfiguration.getLongPressTimeout();
-    }
-
-    public void onDestroy() {
-        Tabs.unregisterOnTabsChangedListener(this);
     }
 
     public void setRoot(Layer layer) { mRootLayer = layer; }
@@ -293,10 +261,6 @@ public class LayerController implements Tabs.OnTabsChangedListener {
 
     public boolean post(Runnable action) { return mView.post(action); }
 
-    public void setOnTouchListener(OnTouchListener onTouchListener) {
-        mOnTouchListener = onTouchListener;
-    }
-
     /**
      * The view as well as the controller itself use this method to notify the layer client that
      * the geometry changed.
@@ -364,81 +328,6 @@ public class LayerController implements Tabs.OnTabsChangedListener {
                 ((viewPoint.y + origin.y) / zoom) - (geckoOrigin.y / geckoZoom));
 
         return layerPoint;
-    }
-
-    /*
-     * Gesture detection. This is handled only at a high level in this class; we dispatch to the
-     * pan/zoom controller to do the dirty work.
-     */
-    public boolean onTouchEvent(MotionEvent event) {
-        int action = event.getAction();
-        PointF point = new PointF(event.getX(), event.getY());
-
-        // this will only match the first touchstart in a series
-        if ((action & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN) {
-            initialTouchLocation = point;
-            allowDefaultActions = !mWaitForTouchListeners;
-
-            // if we have a timer, this may be a double tap,
-            // cancel the current timer but don't clear the event queue
-            if (allowDefaultTimer != null) {
-              allowDefaultTimer.cancel();
-            } else {
-              // if we don't have a timer, make sure we remove any old events
-              mView.clearEventQueue();
-            }
-            allowDefaultTimer = new Timer();
-            allowDefaultTimer.schedule(new TimerTask() {
-                public void run() {
-                    post(new Runnable() {
-                        public void run() {
-                            preventPanning(false);
-                        }
-                    });
-                }
-            }, mTimeout);
-        }
-
-        // After the initial touch, ignore touch moves until they exceed a minimum distance.
-        if (initialTouchLocation != null && (action & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_MOVE) {
-            if (PointUtils.subtract(point, initialTouchLocation).length() > PanZoomController.PAN_THRESHOLD) {
-                initialTouchLocation = null;
-            } else {
-                return !allowDefaultActions;
-            }
-        }
-
-        // send the event to content
-        if (mOnTouchListener != null)
-            mOnTouchListener.onTouch(mView, event);
-
-        return !allowDefaultActions;
-    }
-
-    public void preventPanning(boolean aValue) {
-        if (allowDefaultTimer != null) {
-            allowDefaultTimer.cancel();
-            allowDefaultTimer = null;
-        }
-        if (aValue == allowDefaultActions) {
-            allowDefaultActions = !aValue;
-    
-            if (aValue) {
-                mView.clearEventQueue();
-                mPanZoomController.cancelTouch();
-            } else {
-                mView.processEventQueue();
-            }
-        }
-    }
-
-    public void onTabChanged(Tab tab, Tabs.TabEvents msg) {
-        if ((Tabs.getInstance().isSelectedTab(tab) && msg == Tabs.TabEvents.STOP) || msg == Tabs.TabEvents.SELECTED) {
-            mWaitForTouchListeners = tab.getHasTouchListeners();
-        }
-    }
-    public void setWaitForTouchListeners(boolean aValue) {
-        mWaitForTouchListeners = aValue;
     }
 
     /** Retrieves whether we should show checkerboard checks or not. */

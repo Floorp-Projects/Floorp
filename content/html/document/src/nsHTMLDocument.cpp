@@ -135,6 +135,7 @@
 #include "nsIRequest.h"
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsHtml5Parser.h"
+#include "nsIDOMJSWindow.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1326,9 +1327,10 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
     if (!window) {
       return NS_OK;
     }
+    nsCOMPtr<nsIDOMJSWindow> win = do_QueryInterface(window);
     nsCOMPtr<nsIDOMWindow> newWindow;
-    nsresult rv = window->Open(aContentTypeOrUrl, aReplaceOrName, aFeatures,
-                               getter_AddRefs(newWindow));
+    nsresult rv = win->OpenJS(aContentTypeOrUrl, aReplaceOrName, aFeatures,
+                              getter_AddRefs(newWindow));
     *aReturn = newWindow.forget().get();
     return rv;
   }
@@ -3124,22 +3126,6 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
   return rv;
 }
 
-/* TODO: don't let this call do anything if the page is not done loading */
-/* boolean execCommandShowHelp(in DOMString commandID); */
-NS_IMETHODIMP
-nsHTMLDocument::ExecCommandShowHelp(const nsAString & commandID,
-                                    bool *_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = false;
-
-  // if editing is not on, bail
-  if (!IsEditingOnAfterFlush())
-    return NS_ERROR_FAILURE;
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* boolean queryCommandEnabled(in DOMString commandID); */
 NS_IMETHODIMP
 nsHTMLDocument::QueryCommandEnabled(const nsAString & commandID,
@@ -3304,20 +3290,6 @@ nsHTMLDocument::QueryCommandSupported(const nsAString & commandID,
     *_retval = true;
 
   return NS_OK;
-}
-
-/* DOMString queryCommandText(in DOMString commandID); */
-NS_IMETHODIMP
-nsHTMLDocument::QueryCommandText(const nsAString & commandID,
-                                 nsAString & _retval)
-{
-  _retval.SetLength(0);
-
-  // if editing is not on, bail
-  if (!IsEditingOnAfterFlush())
-    return NS_ERROR_FAILURE;
-
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* DOMString queryCommandValue(in DOMString commandID); */

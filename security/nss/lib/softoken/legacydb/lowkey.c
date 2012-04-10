@@ -97,6 +97,24 @@ const SEC_ASN1Template lg_nsslowkey_RSAPrivateKeyTemplate[] = {
     { 0 }                                                                     
 };                                                                            
 
+/*
+ * Allows u.rsa.modulus to be zero length for secret keys with an empty
+ * CKA_ID incorrectly generated in NSS 3.13.3 or earlier.  Only used for
+ * decoding.  See bug 715073.
+ */
+const SEC_ASN1Template lg_nsslowkey_RSAPrivateKeyTemplate2[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLOWKEYPrivateKey) },
+    { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.rsa.version) },
+    { SEC_ASN1_ANY, offsetof(NSSLOWKEYPrivateKey,u.rsa.modulus) },
+    { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.rsa.publicExponent) },
+    { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.rsa.privateExponent) },
+    { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.rsa.prime1) },
+    { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.rsa.prime2) },
+    { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.rsa.exponent1) },
+    { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.rsa.exponent2) },
+    { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.rsa.coefficient) },
+    { 0 }
+};
 
 const SEC_ASN1Template lg_nsslowkey_DSAPrivateKeyTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLOWKEYPrivateKey) },

@@ -169,7 +169,7 @@ js_GetCurrentScript(JSContext *cx)
 }
 
 JSContext *
-js_NewContext(JSRuntime *rt, size_t stackChunkSize)
+js::NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
     JS_AbortIfWrongThread(rt);
 
@@ -198,7 +198,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
      * keywords, numbers, and strings.  If one of these steps should fail, the
      * runtime will be left in a partially initialized state, with zeroes and
      * nulls stored in the default-initialized remainder of the struct.  We'll
-     * clean the runtime up under js_DestroyContext, because cx will be "last"
+     * clean the runtime up under DestroyContext, because cx will be "last"
      * as well as "first".
      */
     if (first) {
@@ -207,20 +207,20 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 #endif
         bool ok = rt->staticStrings.init(cx);
         if (ok)
-            ok = js_InitCommonAtoms(cx);
+            ok = InitCommonAtoms(cx);
 
 #ifdef JS_THREADSAFE
         JS_EndRequest(cx);
 #endif
         if (!ok) {
-            js_DestroyContext(cx, JSDCM_NEW_FAILED);
+            DestroyContext(cx, DCM_NEW_FAILED);
             return NULL;
         }
     }
 
     JSContextCallback cxCallback = rt->cxCallback;
     if (cxCallback && !cxCallback(cx, JSCONTEXT_NEW)) {
-        js_DestroyContext(cx, JSDCM_NEW_FAILED);
+        DestroyContext(cx, DCM_NEW_FAILED);
         return NULL;
     }
 
@@ -228,7 +228,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 }
 
 void
-js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
+js::DestroyContext(JSContext *cx, DestroyContextMode mode)
 {
     JSRuntime *rt = cx->runtime;
     JS_AbortIfWrongThread(rt);
@@ -239,14 +239,13 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     JS_ASSERT(cx->outstandingRequests == 0);
 #endif
 
-    if (mode != JSDCM_NEW_FAILED) {
+    if (mode != DCM_NEW_FAILED) {
         if (JSContextCallback cxCallback = rt->cxCallback) {
             /*
              * JSCONTEXT_DESTROY callback is not allowed to fail and must
              * return true.
              */
-            DebugOnly<JSBool> callbackStatus = cxCallback(cx, JSCONTEXT_DESTROY);
-            JS_ASSERT(callbackStatus);
+            JS_ALWAYS_TRUE(cxCallback(cx, JSCONTEXT_DESTROY));
         }
     }
 
@@ -254,13 +253,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     bool last = !rt->hasContexts();
     if (last) {
         JS_ASSERT(!rt->gcRunning);
-
-#ifdef JS_THREADSAFE
-        {
-            AutoLockGC lock(rt);
-            rt->gcHelperThread.waitBackgroundSweepEnd();
-        }
-#endif
 
         /*
          * Dump remaining type inference results first. This printing
@@ -270,28 +262,20 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             c->types.print(cx, false);
 
         /* Unpin all common atoms before final GC. */
-        js_FinishCommonAtoms(cx);
+        FinishCommonAtoms(rt);
 
         /* Clear debugging state to remove GC roots. */
         for (CompartmentsIter c(rt); !c.done(); c.next())
-            c->clearTraps(cx);
+            c->clearTraps(rt->defaultFreeOp());
         JS_ClearAllWatchPoints(cx);
 
-        GC(cx, true, GC_NORMAL, gcreason::LAST_CONTEXT);
-    } else if (mode == JSDCM_FORCE_GC) {
+        PrepareForFullGC(rt);
+        GC(rt, GC_NORMAL, gcreason::LAST_CONTEXT);
+    } else if (mode == DCM_FORCE_GC) {
         JS_ASSERT(!rt->gcRunning);
-        GC(cx, true, GC_NORMAL, gcreason::DESTROY_CONTEXT);
-    } else if (mode == JSDCM_MAYBE_GC) {
-        JS_ASSERT(!rt->gcRunning);
-        JS_MaybeGC(cx);
+        PrepareForFullGC(rt);
+        GC(rt, GC_NORMAL, gcreason::DESTROY_CONTEXT);
     }
-
-#ifdef JS_THREADSAFE
-    {
-        AutoLockGC lock(rt);
-        rt->gcHelperThread.waitBackgroundSweepEnd();
-    }
-#endif
     Foreground::delete_(cx);
 }
 
@@ -883,30 +867,14 @@ js_InvokeOperationCallback(JSContext *cx)
     JS_ATOMIC_SET(&rt->interrupt, 0);
 
     if (rt->gcIsNeeded)
-        GCSlice(cx, rt->gcFullIsNeeded, GC_NORMAL, rt->gcTriggerReason);
-
-#ifdef JS_THREADSAFE
-    /*
-     * We automatically yield the current context every time the operation
-     * callback is hit since we might be called as a result of an impending
-     * GC on another thread, which would deadlock if we do not yield.
-     * Operation callbacks are supposed to happen rarely (seconds, not
-     * milliseconds) so it is acceptable to yield at every callback.
-     *
-     * As the GC can be canceled before it does any request checks we yield
-     * even if rt->gcIsNeeded was true above. See bug 590533.
-     */
-    JS_YieldRequest(cx);
-#endif
-
-    JSOperationCallback cb = cx->operationCallback;
+        GCSlice(rt, GC_NORMAL, rt->gcTriggerReason);
 
     /*
      * Important: Additional callbacks can occur inside the callback handler
      * if it re-enters the JS engine. The embedding must ensure that the
      * callback is disconnected before attempting such re-entry.
      */
-
+    JSOperationCallback cb = cx->operationCallback;
     return !cb || cb(cx);
 }
 
@@ -988,9 +956,6 @@ JSContext::JSContext(JSRuntime *rt)
     functionCallback(NULL),
 #endif
     enumerators(NULL),
-#ifdef JS_THREADSAFE
-    gcBackgroundFree(NULL),
-#endif
     activeCompilations(0)
 #ifdef DEBUG
     , stackIterAssertionEnabled(true)

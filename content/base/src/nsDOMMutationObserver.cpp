@@ -385,6 +385,12 @@ nsMutationReceiver::ContentRemoved(nsIDocument* aDocument,
   Observer()->ScheduleForRun();
 }
 
+void nsMutationReceiver::NodeWillBeDestroyed(const nsINode *aNode)
+{
+  NS_ASSERTION(!mParent, "Shouldn't have mParent here!");
+  Disconnect(true);
+}
+
 // Observer
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMMutationObserver)

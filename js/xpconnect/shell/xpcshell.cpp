@@ -552,9 +552,10 @@ DumpXPC(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 GC(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JS_GC(cx);
+    JSRuntime *rt = JS_GetRuntime(cx);
+    JS_GC(rt);
 #ifdef JS_GCMETER
-    js_DumpGCStats(JS_GetRuntime(cx), stdout);
+    js_DumpGCStats(rt, stdout);
 #endif
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
@@ -568,7 +569,7 @@ GCZeal(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_ValueToECMAUint32(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID, &zeal))
         return false;
 
-    JS_SetGCZeal(cx, uint8_t(zeal), JS_DEFAULT_ZEAL_FREQ, false);
+    JS_SetGCZeal(cx, uint8_t(zeal), JS_DEFAULT_ZEAL_FREQ);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
@@ -2013,12 +2014,12 @@ main(int argc, char **argv, char **envp)
 #endif
             JS_DropPrincipals(rt, gJSPrincipals);
             JS_ClearScope(cx, glob);
-            JS_GC(cx);
+            JS_GC(rt);
             JSContext *oldcx;
             cxstack->Pop(&oldcx);
             NS_ASSERTION(oldcx == cx, "JS thread context push/pop mismatch");
             cxstack = nsnull;
-            JS_GC(cx);
+            JS_GC(rt);
         } //this scopes the JSAutoCrossCompartmentCall
         JS_EndRequest(cx);
         JS_DestroyContext(cx);

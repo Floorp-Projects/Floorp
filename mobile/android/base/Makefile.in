@@ -123,7 +123,6 @@ FENNEC_JAVA_FILES = \
   gfx/CheckerboardImage.java \
   gfx/DisplayPortCalculator.java \
   gfx/DisplayPortMetrics.java \
-  gfx/FlexibleGLSurfaceView.java \
   gfx/FloatSize.java \
   gfx/GeckoLayerClient.java \
   gfx/GLController.java \
@@ -145,6 +144,7 @@ FENNEC_JAVA_FILES = \
   gfx/TextureGenerator.java \
   gfx/TextureReaper.java \
   gfx/TileLayer.java \
+  gfx/TouchEventHandler.java \
   gfx/ViewTransform.java \
   gfx/ViewportMetrics.java \
   gfx/VirtualLayer.java \
