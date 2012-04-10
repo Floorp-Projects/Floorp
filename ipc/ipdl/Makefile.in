@@ -115,7 +115,7 @@ include $(topsrcdir)/config/rules.mk
 # NB: the IPDL compiler manages .ipdl-->.h/.cpp dependencies itself,
 # which is why we don't have explicit .h/.cpp targets here
 export:: $(ALL_IPDLSRCS)
-	$(PYTHON_PATH) \
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) \
 	  $(srcdir)/ipdl.py \
 	  --outheaders-dir=_ipdlheaders \

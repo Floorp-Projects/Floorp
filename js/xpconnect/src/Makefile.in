@@ -150,7 +150,7 @@ dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
                     $(topsrcdir)/xpcom/idl-parser/header.py \
                     $(topsrcdir)/xpcom/idl-parser/xpidl.py \
                     $(DEPTH)/js/src/js-confdefs.h
-	$(PYTHON_PATH) \
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/qsgen.py \
@@ -171,7 +171,7 @@ dombindings_gen.h: $(srcdir)/dombindings.conf \
                    $(topsrcdir)/xpcom/idl-parser/header.py \
                    $(topsrcdir)/xpcom/idl-parser/xpidl.py \
                    $(DEPTH)/js/src/js-confdefs.h
-	$(PYTHON_PATH) \
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/dombindingsgen.py \
@@ -188,7 +188,7 @@ dombindings_gen.cpp: $(srcdir)/dombindings.conf \
                      $(topsrcdir)/xpcom/idl-parser/header.py \
                      $(topsrcdir)/xpcom/idl-parser/xpidl.py \
                      $(DEPTH)/js/src/js-confdefs.h
-	$(PYTHON_PATH) \
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/dombindingsgen.py \
@@ -207,7 +207,7 @@ DictionaryHelpers.h: $(srcdir)/dictionary_helper_gen.conf \
                      $(topsrcdir)/xpcom/idl-parser/header.py \
                      $(topsrcdir)/xpcom/idl-parser/xpidl.py \
                      $(DEPTH)/js/src/js-confdefs.h
-	$(PYTHON_PATH) \
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/dictionary_helper_gen.py \
@@ -222,7 +222,7 @@ DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
                        $(topsrcdir)/xpcom/idl-parser/header.py \
                        $(topsrcdir)/xpcom/idl-parser/xpidl.py \
                        $(DEPTH)/js/src/js-confdefs.h
-	$(PYTHON_PATH) \
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/dictionary_helper_gen.py \
