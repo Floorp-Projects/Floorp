@@ -1391,7 +1391,7 @@ class CGArgumentConverter(CGThing):
             "index" : index,
             "argc" : argc,
             "argv" : argv,
-            "defaultValue" : "JSVAL_NULL",
+            "defaultValue" : "JSVAL_VOID",
             "name" : "arg%d" % index
             }
         if argument.optional:
