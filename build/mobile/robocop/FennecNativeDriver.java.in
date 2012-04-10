@@ -78,7 +78,7 @@ public class FennecNativeDriver implements Driver {
     private Solo mSolo;
 
     private static String mLogFile = null;
-    private static LogLevel mLogLevel = LogLevel.LOG_LEVEL_INFO;
+    private static LogLevel mLogLevel = LogLevel.INFO;
 
     // Objects for reflexive access of fennec classes.
     private ClassLoader mClassLoader;
@@ -95,10 +95,10 @@ public class FennecNativeDriver implements Driver {
     private Method _getPixels;
 
     public enum LogLevel {
-        LOG_LEVEL_DEBUG(1), 
-        LOG_LEVEL_INFO(2),    
-        LOG_LEVEL_WARN(3), 
-        LOG_LEVEL_ERROR(4);
+        DEBUG(1),
+        INFO(2),
+        WARN(3),
+        ERROR(4);
 
         private int mValue;
         LogLevel(int value) {
@@ -366,7 +366,7 @@ public class FennecNativeDriver implements Driver {
                 }
 
             } catch( Throwable e) {
-                FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_WARN, 
+                FennecNativeDriver.log(FennecNativeDriver.LogLevel.WARN, 
                     "WARNING: ScrollReceived, but read wrong!");
             }
             return null;
@@ -493,13 +493,13 @@ public class FennecNativeDriver implements Driver {
             }
         }
 
-        if (level == LogLevel.LOG_LEVEL_INFO) {
+        if (level == LogLevel.INFO) {
             Log.i("Robocop", message, t);
-        } else if (level == LogLevel.LOG_LEVEL_DEBUG) {
+        } else if (level == LogLevel.DEBUG) {
             Log.d("Robocop", message, t);
-        } else if (level == LogLevel.LOG_LEVEL_WARN) {
+        } else if (level == LogLevel.WARN) {
             Log.w("Robocop", message, t);
-        } else if (level == LogLevel.LOG_LEVEL_ERROR) {
+        } else if (level == LogLevel.ERROR) {
             Log.e("Robocop", message, t);
         }
     }
