@@ -252,31 +252,6 @@ nsAccessNode::IsPrimaryForNode() const
   return true;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-void
-nsAccessNode::ScrollTo(PRUint32 aScrollType)
-{
-  if (!mDoc)
-    return;
-
-  nsIPresShell* shell = mDoc->PresShell();
-  if (!shell)
-    return;
-
-  nsIFrame *frame = GetFrame();
-  if (!frame)
-    return;
-
-  nsIContent* content = frame->GetContent();
-  if (!content)
-    return;
-
-  nsIPresShell::ScrollAxis vertical, horizontal;
-  nsCoreUtils::ConvertScrollTypeToPercents(aScrollType, &vertical, &horizontal);
-  shell->ScrollContentIntoView(content, vertical, horizontal,
-                               nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
-}
-
 void
 nsAccessNode::Language(nsAString& aLanguage)
 {

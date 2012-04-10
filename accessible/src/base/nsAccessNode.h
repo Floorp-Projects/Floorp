@@ -152,7 +152,6 @@ public:
    * Interface methods on nsIAccessible shared with ISimpleDOM.
    */
   void Language(nsAString& aLocale);
-  void ScrollTo(PRUint32 aType);
 
 protected:
     nsPresContext* GetPresContext();
