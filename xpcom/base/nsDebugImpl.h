@@ -46,6 +46,14 @@ public:
     NS_DECL_NSIDEBUG2
     
     static nsresult Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+
+    /*
+     * Inform nsDebugImpl that we're in multiprocess mode.
+     *
+     * If aDesc is not NULL, the string it points to must be
+     * statically-allocated (i.e., it must be a string literal).
+     */
+    static void SetMultiprocessMode(const char *aDesc);
 };
 
 
