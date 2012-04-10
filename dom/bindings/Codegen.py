@@ -604,7 +604,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
 """ % (self.descriptor.name, self.descriptor.hasInstanceInterface)
 
 def isChromeOnly(m):
-    return m.extendedAttribute("ChromeOnly")
+    return m.getExtendedAttribute("ChromeOnly")
 
 class PropertyDefiner:
     """
