@@ -315,7 +315,7 @@ PCCounts::countName(JSOp op, size_t which)
 JS_FRIEND_API(void)
 js_DumpPCCounts(JSContext *cx, JSScript *script, js::Sprinter *sp)
 {
-    JS_ASSERT(script->scriptCounts);
+    JS_ASSERT(script->hasScriptCounts);
 
     jsbytecode *pc = script->code;
     while (pc < script->code + script->length) {
@@ -6056,8 +6056,8 @@ GetPCCountScriptSummary(JSContext *cx, size_t index)
         return NULL;
     }
 
-    ScriptAndCounts info = (*rt->scriptAndCountsVector)[index];
-    JSScript *script = info.script;
+    ScriptAndCounts sac = (*rt->scriptAndCountsVector)[index];
+    JSScript *script = sac.script;
 
     /*
      * OOM on buffer appends here will not be caught immediately, but since
@@ -6094,7 +6094,7 @@ GetPCCountScriptSummary(JSContext *cx, size_t index)
     double arithTotals[PCCounts::ARITH_LIMIT - PCCounts::BASE_LIMIT] = {0.0};
 
     for (unsigned i = 0; i < script->length; i++) {
-        PCCounts &counts = info.getPCCounts(script->code + i);
+        PCCounts &counts = sac.getPCCounts(script->code + i);
         if (!counts)
             continue;
 
@@ -6155,9 +6155,9 @@ struct AutoDestroyPrinter
 };
 
 static bool
-GetPCCountJSON(JSContext *cx, const ScriptAndCounts &info, StringBuffer &buf)
+GetPCCountJSON(JSContext *cx, const ScriptAndCounts &sac, StringBuffer &buf)
 {
-    JSScript *script = info.script;
+    JSScript *script = sac.script;
 
     buf.append('{');
     AppendJSONProperty(buf, "text", NO_COMMA);
@@ -6253,7 +6253,7 @@ GetPCCountJSON(JSContext *cx, const ScriptAndCounts &info, StringBuffer &buf)
             buf.append(str);
         }
 
-        PCCounts &counts = info.getPCCounts(pc);
+        PCCounts &counts = sac.getPCCounts(pc);
         unsigned numCounts = PCCounts::numCounts(op);
 
         AppendJSONProperty(buf, "counts");
@@ -6289,8 +6289,8 @@ GetPCCountScriptContents(JSContext *cx, size_t index)
         return NULL;
     }
 
-    const ScriptAndCounts &info = (*rt->scriptAndCountsVector)[index];
-    JSScript *script = info.script;
+    const ScriptAndCounts &sac = (*rt->scriptAndCountsVector)[index];
+    JSScript *script = sac.script;
 
     StringBuffer buf(cx);
 
@@ -6302,7 +6302,7 @@ GetPCCountScriptContents(JSContext *cx, size_t index)
         if (!ac.enter(cx, script->function() ? (JSObject *) script->function() : script->global()))
             return NULL;
 
-        if (!GetPCCountJSON(cx, info, buf))
+        if (!GetPCCountJSON(cx, sac, buf))
             return NULL;
     }
 

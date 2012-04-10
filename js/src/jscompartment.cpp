@@ -91,7 +91,8 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcMallocBytes(0),
     debugModeBits(rt->debugMode ? DebugFromC : 0),
     mathCache(NULL),
-    watchpointMap(NULL)
+    watchpointMap(NULL),
+    scriptCountsMap(NULL)
 {
     PodArrayZero(evalCache);
     setGCMaxMallocBytes(rt->gcMaxMallocBytes * 0.9);
@@ -111,6 +112,7 @@ JSCompartment::~JSCompartment()
 
     Foreground::delete_(mathCache);
     Foreground::delete_(watchpointMap);
+    Foreground::delete_(scriptCountsMap);
 
 #ifdef DEBUG
     for (size_t i = 0; i < ArrayLength(evalCache); ++i)
