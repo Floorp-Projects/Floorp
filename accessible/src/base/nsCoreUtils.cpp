@@ -726,6 +726,17 @@ nsCoreUtils::IsColumnHidden(nsITreeColumn *aColumn)
                               nsGkAtoms::_true, eCaseMatters);
 }
 
+void
+nsCoreUtils::ScrollTo(nsIPresShell* aPresShell, nsIContent* aContent,
+                      PRUint32 aScrollType)
+{
+  nsIPresShell::ScrollAxis vertical, horizontal;
+  ConvertScrollTypeToPercents(aScrollType, &vertical, &horizontal);
+  aPresShell->ScrollContentIntoView(aContent, vertical, horizontal,
+                                    nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibleDOMStringList
 ////////////////////////////////////////////////////////////////////////////////
