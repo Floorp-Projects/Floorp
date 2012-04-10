@@ -251,68 +251,76 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext, bool force)
   NS_ASSERTION(programIndex == NumProgramTypes,
                "not all programs were initialized!");
 
-  /**
-   * We'll test the ability here to bind NPOT textures to a framebuffer, if
-   * this fails we'll try ARB_texture_rectangle.
-   */
   mGLContext->fGenFramebuffers(1, &mBackBufferFBO);
 
-  GLenum textureTargets[] = {
-    LOCAL_GL_TEXTURE_2D,
-    mGLContext->IsGLES2() ? LOCAL_GL_TEXTURE_RECTANGLE_ARB : 0
-  };
+  if (mGLContext->WorkAroundDriverBugs()) {
 
-  mFBOTextureTarget = LOCAL_GL_NONE;
+    /**
+    * We'll test the ability here to bind NPOT textures to a framebuffer, if
+    * this fails we'll try ARB_texture_rectangle.
+    */
 
-  for (PRUint32 i = 0; i < ArrayLength(textureTargets); i++) {
-    GLenum target = textureTargets[i];
-    if (!target)
-        continue;
+    GLenum textureTargets[] = {
+      LOCAL_GL_TEXTURE_2D,
+      mGLContext->IsGLES2() ? LOCAL_GL_TEXTURE_RECTANGLE_ARB : 0
+    };
 
-    mGLContext->fGenTextures(1, &mBackBufferTexture);
-    mGLContext->fBindTexture(target, mBackBufferTexture);
-    mGLContext->fTexParameteri(target,
-                               LOCAL_GL_TEXTURE_MIN_FILTER,
-                               LOCAL_GL_NEAREST);
-    mGLContext->fTexParameteri(target,
-                               LOCAL_GL_TEXTURE_MAG_FILTER,
-                               LOCAL_GL_NEAREST);
-    mGLContext->fTexImage2D(target,
-                            0,
-                            LOCAL_GL_RGBA,
-                            5, 3, /* sufficiently NPOT */
-                            0,
-                            LOCAL_GL_RGBA,
-                            LOCAL_GL_UNSIGNED_BYTE,
-                            NULL);
+    mFBOTextureTarget = LOCAL_GL_NONE;
 
-    // unbind this texture, in preparation for binding it to the FBO
-    mGLContext->fBindTexture(target, 0);
+    for (PRUint32 i = 0; i < ArrayLength(textureTargets); i++) {
+      GLenum target = textureTargets[i];
+      if (!target)
+          continue;
 
-    mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mBackBufferFBO);
-    mGLContext->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
-                                      LOCAL_GL_COLOR_ATTACHMENT0,
-                                      target,
-                                      mBackBufferTexture,
-                                      0);
+      mGLContext->fGenTextures(1, &mBackBufferTexture);
+      mGLContext->fBindTexture(target, mBackBufferTexture);
+      mGLContext->fTexParameteri(target,
+                                LOCAL_GL_TEXTURE_MIN_FILTER,
+                                LOCAL_GL_NEAREST);
+      mGLContext->fTexParameteri(target,
+                                LOCAL_GL_TEXTURE_MAG_FILTER,
+                                LOCAL_GL_NEAREST);
+      mGLContext->fTexImage2D(target,
+                              0,
+                              LOCAL_GL_RGBA,
+                              5, 3, /* sufficiently NPOT */
+                              0,
+                              LOCAL_GL_RGBA,
+                              LOCAL_GL_UNSIGNED_BYTE,
+                              NULL);
 
-    if (mGLContext->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) ==
-        LOCAL_GL_FRAMEBUFFER_COMPLETE)
-    {
-      mFBOTextureTarget = target;
-      break;
+      // unbind this texture, in preparation for binding it to the FBO
+      mGLContext->fBindTexture(target, 0);
+
+      mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mBackBufferFBO);
+      mGLContext->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                                        LOCAL_GL_COLOR_ATTACHMENT0,
+                                        target,
+                                        mBackBufferTexture,
+                                        0);
+
+      if (mGLContext->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) ==
+          LOCAL_GL_FRAMEBUFFER_COMPLETE)
+      {
+        mFBOTextureTarget = target;
+        break;
+      }
+
+      // We weren't succesful with this texture, so we don't need it
+      // any more.
+      mGLContext->fDeleteTextures(1, &mBackBufferTexture);
     }
 
-    // We weren't succesful with this texture, so we don't need it
-    // any more.
-    mGLContext->fDeleteTextures(1, &mBackBufferTexture);
+    if (mFBOTextureTarget == LOCAL_GL_NONE) {
+      /* Unable to find a texture target that works with FBOs and NPOT textures */
+      return false;
+    }
+  } else {
+    // not trying to work around driver bugs, so TEXTURE_2D should just work
+    mFBOTextureTarget = LOCAL_GL_TEXTURE_2D;
   }
 
-  if (mFBOTextureTarget == LOCAL_GL_NONE) {
-    /* Unable to find a texture target that works with FBOs and NPOT textures */
-    return false;
-  }
-
+  // back to default framebuffer, to avoid confusion
   mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
 
   if (mFBOTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB) {
@@ -330,9 +338,6 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext, bool force)
     mGLContext->fDeleteFramebuffers(1, &mBackBufferFBO);
     mBackBufferFBO = 0;
   }
-
-  // back to default framebuffer, to avoid confusion
-  mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
 
   /* Create a simple quad VBO */
 
