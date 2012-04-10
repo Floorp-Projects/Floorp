@@ -163,6 +163,17 @@ public:
     bool mInTransformedSubtree;
     bool mInActiveTransformedSubtree;
     bool mDisableSubpixelAntialiasingInDescendants;
+    /**
+     * When this is false, ThebesLayer coordinates are drawn to with an integer
+     * translation and the scale in mXScale/mYScale.
+     */
+    bool AllowResidualTranslation()
+    {
+      // If we're in a transformed subtree, but no ancestor transform is actively
+      // changing, we'll use the residual translation when drawing into the
+      // ThebesLayer to ensure that snapping exactly matches the ideal transform.
+      return mInTransformedSubtree && !mInActiveTransformedSubtree;
+    }
   };
   /**
    * Build a container layer for a display item that contains a child

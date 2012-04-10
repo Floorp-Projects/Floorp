@@ -345,8 +345,9 @@ public:
   // away completely (e.g. because of a decoder error). The problem would
   // be especially acute if we have off-main-thread rendering.
 
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
   {
+    *aSnap = false;
     nsIFrame* f = GetUnderlyingFrame();
     return f->GetContentRect() - f->GetPosition() + ToReferenceFrame();
   }
