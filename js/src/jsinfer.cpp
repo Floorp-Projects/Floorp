@@ -2109,7 +2109,6 @@ TypeCompartment::processPendingRecompiles(FreeOp *fop)
 void
 TypeCompartment::setPendingNukeTypes(JSContext *cx)
 {
-    JS_ASSERT(compartment()->activeInference);
     if (!pendingNukeTypes) {
         if (cx->compartment)
             js_ReportOutOfMemory(cx);
