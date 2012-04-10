@@ -47,7 +47,7 @@
  */
 interface nsISelection;
 
-[scriptable, uuid(0d59c4f0-2272-4a72-8197-da6f86353ec1)]
+[scriptable, uuid(3dae5807-3615-4567-913f-c3956a2aa251)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
   readonly attribute DOMString            URL;
@@ -94,9 +94,6 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
                                         [optional] in boolean doShowUI,
                                         [optional] in DOMString value);
 
-  // returns true if the help is being shown for command (false if not)
-  boolean                   execCommandShowHelp(in DOMString commandID);
-
   // returns true if the command is enabled (false otherwise)
   boolean                   queryCommandEnabled(in DOMString commandID);
   
@@ -108,9 +105,6 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
 
   // returns true if the command is supported on the current range
   boolean                   queryCommandSupported(in DOMString commandID);
-
-  //
-  DOMString                 queryCommandText(in DOMString commandID);
 
   // returns the current value of the document or current selection for command
   DOMString                 queryCommandValue(in DOMString commandID);

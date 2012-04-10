@@ -294,13 +294,15 @@ $(CONFIGURES): %: %.in $(EXTRA_CONFIG_DEPS)
 	cd $(@D); $(AUTOCONF)
 
 CONFIG_STATUS_DEPS := \
-	$(wildcard $(CONFIGURES)) \
-	$(TOPSRCDIR)/allmakefiles.sh \
-	$(wildcard $(TOPSRCDIR)/nsprpub/configure) \
-	$(wildcard $(TOPSRCDIR)/config/milestone.txt) \
-	$(wildcard $(TOPSRCDIR)/js/src/config/milestone.txt) \
-	$(wildcard $(TOPSRCDIR)/browser/config/version.txt) \
-	$(wildcard $(addsuffix confvars.sh,$(wildcard $(TOPSRCDIR)/*/))) \
+	$(wildcard \
+        $(CONFIGURES) \
+        $(TOPSRCDIR)/allmakefiles.sh \
+        $(TOPSRCDIR)/nsprpub/configure \
+        $(TOPSRCDIR)/config/milestone.txt \
+        $(TOPSRCDIR)/js/src/config/milestone.txt \
+        $(TOPSRCDIR)/browser/config/version.txt \
+        $(TOPSRCDIR)/*/confvars.sh \
+	) \
 	$(NULL)
 
 CONFIGURE_ENV_ARGS += \
@@ -368,8 +370,7 @@ endif
 ####################################
 # Build it
 
-realbuild::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
-	@$(PYTHON) $(TOPSRCDIR)/js/src/config/check-sync-dirs.py $(TOPSRCDIR)/js/src/config $(TOPSRCDIR)/config
+realbuild::  $(OBJDIR)/Makefile $(OBJDIR)/config.status check-sync-dirs-config
 	$(MOZ_MAKE)
 
 ####################################
@@ -426,6 +427,12 @@ cleansrcdir:
 	          -o \( -name '*.[ao]' -o -name '*.so' \) -type f -print`; \
 	   build/autoconf/clean-config.sh; \
 	fi;
+
+## Sanity check $X and js/src/$X are in sync
+.PHONY: check-sync-dirs
+check-sync-dirs: check-sync-dirs-build check-sync-dirs-config
+check-sync-dirs-%:
+	@$(PYTHON) $(TOPSRCDIR)/js/src/config/check-sync-dirs.py $(TOPSRCDIR)/js/src/$* $(TOPSRCDIR)/$*
 
 echo-variable-%:
 	@echo $($*)

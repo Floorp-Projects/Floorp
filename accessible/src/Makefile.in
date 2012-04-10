@@ -61,6 +61,7 @@ DIRS += $(PLATFORM_DIR)
 
 DIRS += \
   base \
+  generic \
   html \
   xpcom \
   xforms \

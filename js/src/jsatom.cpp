@@ -224,7 +224,7 @@ js_FinishAtomState(JSRuntime *rt)
 }
 
 bool
-js_InitCommonAtoms(JSContext *cx)
+js::InitCommonAtoms(JSContext *cx)
 {
     JSAtomState *state = &cx->runtime->atomState;
     JSAtom **atoms = state->commonAtomsStart();
@@ -242,19 +242,19 @@ js_InitCommonAtoms(JSContext *cx)
 }
 
 void
-js_FinishCommonAtoms(JSContext *cx)
+js::FinishCommonAtoms(JSRuntime *rt)
 {
-    cx->runtime->emptyString = NULL;
-    cx->runtime->atomState.junkAtoms();
+    rt->emptyString = NULL;
+    rt->atomState.junkAtoms();
 }
 
 void
-js_TraceAtomState(JSTracer *trc)
+js::MarkAtomState(JSTracer *trc, bool markAll)
 {
     JSRuntime *rt = trc->runtime;
     JSAtomState *state = &rt->atomState;
 
-    if (rt->gcKeepAtoms) {
+    if (markAll) {
         for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
             JSAtom *tmp = r.front().asPtr();
             MarkStringRoot(trc, &tmp, "locked_atom");
@@ -274,7 +274,7 @@ js_TraceAtomState(JSTracer *trc)
 }
 
 void
-js_SweepAtomState(JSRuntime *rt)
+js::SweepAtomState(JSRuntime *rt)
 {
     JSAtomState *state = &rt->atomState;
 
@@ -502,8 +502,10 @@ js_DumpAtoms(JSContext *cx, FILE *fp)
 
 JS_STATIC_ASSERT(TEMP_SIZE_START >= sizeof(JSHashTable));
 
+namespace js {
+
 void
-js_InitAtomMap(JSContext *cx, AtomIndexMap *indices, JSAtom **atoms)
+InitAtomMap(JSContext *cx, AtomIndexMap *indices, HeapPtrAtom *atoms)
 {
     if (indices->isMap()) {
         typedef AtomIndexMap::WordMap WordMap;
@@ -512,7 +514,7 @@ js_InitAtomMap(JSContext *cx, AtomIndexMap *indices, JSAtom **atoms)
             JSAtom *atom = r.front().key;
             jsatomid index = r.front().value;
             JS_ASSERT(index < indices->count());
-            atoms[index] = atom;
+            atoms[index].init(atom);
         }
     } else {
         for (const AtomIndexMap::InlineElem *it = indices->asInline(), *end = indices->inlineEnd();
@@ -521,12 +523,10 @@ js_InitAtomMap(JSContext *cx, AtomIndexMap *indices, JSAtom **atoms)
             if (!atom)
                 continue;
             JS_ASSERT(it->value < indices->count());
-            atoms[it->value] = atom;
+            atoms[it->value].init(atom);
         }
     }
 }
-
-namespace js {
 
 bool
 IndexToIdSlow(JSContext *cx, uint32_t index, jsid *idp)

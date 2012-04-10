@@ -53,7 +53,7 @@ public class GLController {
     private static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
     private static final String LOGTAG = "GeckoGLController";
 
-    private FlexibleGLSurfaceView mView;
+    private LayerView mView;
     private int mGLVersion;
     private boolean mSurfaceValid;
     private int mWidth, mHeight;
@@ -77,7 +77,7 @@ public class GLController {
         EGL10.EGL_NONE
     };
 
-    public GLController(FlexibleGLSurfaceView view) {
+    public GLController(LayerView view) {
         mView = view;
         mGLVersion = 2;
         mSurfaceValid = false;
@@ -92,7 +92,7 @@ public class GLController {
     public EGLConfig getEGLConfig()         { return mEGLConfig;          }
     public EGLContext getEGLContext()       { return mEGLContext;         }
     public EGLSurface getEGLSurface()       { return mEGLSurface;         }
-    public FlexibleGLSurfaceView getView()  { return mView;               }
+    public LayerView getView()              { return mView;               }
 
     public boolean hasSurface() {
         return mEGLSurface != null;

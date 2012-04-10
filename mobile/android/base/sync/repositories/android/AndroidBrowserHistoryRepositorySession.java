@@ -4,12 +4,17 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
+import java.util.ArrayList;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
+import org.mozilla.gecko.sync.repositories.NoGuidForIdException;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
+import org.mozilla.gecko.sync.repositories.ParentNotFoundException;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
@@ -21,10 +26,16 @@ import android.database.Cursor;
 import android.util.Log;
 
 public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserRepositorySession {
-  
+  public static final String LOG_TAG = "ABHistoryRepoSess";
+
   public static final String KEY_DATE = "date";
   public static final String KEY_TYPE = "type";
   public static final long DEFAULT_VISIT_TYPE = 1;
+
+  /**
+   * The number of records to queue for insertion before writing to databases.
+   */
+  public static int INSERT_RECORD_THRESHOLD = 50;
 
   public AndroidBrowserHistoryRepositorySession(Repository repository, Context context) {
     super(repository);
@@ -113,7 +124,7 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
   protected Record prepareRecord(Record record) {
     return record;
   }
-  
+
   @Override
   public void abort() {
     ((AndroidBrowserHistoryDataAccessor) dbHelper).closeExtender();
@@ -124,5 +135,86 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
   public void finish(final RepositorySessionFinishDelegate delegate) throws InactiveSessionException {
     ((AndroidBrowserHistoryDataAccessor) dbHelper).closeExtender();
     super.finish(delegate);
+  }
+
+  protected Object recordsBufferMonitor = new Object();
+  protected ArrayList<HistoryRecord> recordsBuffer = new ArrayList<HistoryRecord>();
+
+  /**
+   * Queue record for insertion, possibly flushing the queue.
+   * <p>
+   * Must be called on <code>storeWorkQueue</code> thread! But this is only
+   * called from <code>store</code>, which is called on the queue thread.
+   *
+   * @param record
+   *          A <code>Record</code> with a GUID that is not present locally.
+   * @return The <code>Record</code> to be inserted. <b>Warning:</b> the
+   *         <code>androidID</code> is not valid! It will be set after the
+   *         records are flushed to the database.
+   */
+  @Override
+  protected Record insert(Record record) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
+    HistoryRecord toStore = (HistoryRecord) prepareRecord(record);
+    toStore.androidID = -111; // Hopefully this special value will make it easy to catch future errors.
+    updateBookkeeping(toStore); // Does not use androidID -- just GUID -> String map.
+    enqueueNewRecord(toStore);
+    return toStore;
+  }
+
+  /**
+   * Batch incoming records until some reasonable threshold is hit or storeDone
+   * is received.
+   * <p>
+   * Must be called on <code>storeWorkQueue</code> thread!
+   *
+   * @param record A <code>Record</code> with a GUID that is not present locally.
+   * @throws NullCursorException
+   */
+  protected void enqueueNewRecord(HistoryRecord record) throws NullCursorException {
+    synchronized (recordsBufferMonitor) {
+      if (recordsBuffer.size() >= INSERT_RECORD_THRESHOLD) {
+        flushNewRecords();
+      }
+      Logger.debug(LOG_TAG, "Enqueuing new record with GUID " + record.guid);
+      recordsBuffer.add(record);
+    }
+  }
+
+  /**
+   * Flush queue of incoming records to database.
+   * <p>
+   * Must be called on <code>storeWorkQueue</code> thread!
+   * <p>
+   * Must be locked by recordsBufferMonitor!
+   * @throws NullCursorException
+   */
+  protected void flushNewRecords() throws NullCursorException {
+    if (recordsBuffer.size() < 1) {
+      Logger.debug(LOG_TAG, "No records to flush, returning.");
+      return;
+    }
+
+    final ArrayList<HistoryRecord> outgoing = recordsBuffer;
+    recordsBuffer = new ArrayList<HistoryRecord>();
+    Logger.debug(LOG_TAG, "Flushing " + outgoing.size() + " records to database.");
+    // TODO: move bulkInsert to AndroidBrowserDataAccessor?
+    ((AndroidBrowserHistoryDataAccessor) dbHelper).bulkInsert(outgoing, false); // Don't need to update any androidIDs.
+  }
+
+  @Override
+  public void storeDone() {
+    storeWorkQueue.execute(new Runnable() {
+      @Override
+      public void run() {
+        synchronized (recordsBufferMonitor) {
+          try {
+            flushNewRecords();
+          } catch (NullCursorException e) {
+            Logger.warn(LOG_TAG, "Error flushing records to database.", e);
+          }
+        }
+        storeDone(System.currentTimeMillis());
+      }
+    });
   }
 }

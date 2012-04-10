@@ -117,10 +117,6 @@ protected:
 
     static bool IsDataInBuffer(PRUnichar* aBuffer, PRInt32 aLength);
 
-    nsresult SetElementScriptType(nsXULPrototypeElement* element,
-                                  const PRUnichar** aAttributes,
-                                  const PRUint32 aAttrLen);
-
     // Text management
     nsresult FlushText(bool aCreateTextNode = true);
     nsresult AddText(const PRUnichar* aText, PRInt32 aLength);

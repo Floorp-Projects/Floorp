@@ -307,6 +307,7 @@ pref("ui.dragThresholdY", 25);
 
 // Layers Acceleration
 pref("layers.acceleration.disabled", false);
+pref("layers.offmainthreadcomposition.enabled", false);
 
 // Web Notifications
 pref("notification.feature.enabled", true);

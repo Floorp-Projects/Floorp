@@ -775,7 +775,7 @@ Sprinter::stringAt(ptrdiff_t off) const
 char &
 Sprinter::operator[](size_t off)
 {
-    JS_ASSERT(off >= 0 && (size_t) off < size);
+    JS_ASSERT(off < size);
     return *(base + off);
 }
 

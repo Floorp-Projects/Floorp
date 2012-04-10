@@ -160,8 +160,12 @@ abstract class ContentProviderTest extends AndroidTestCase {
     }
 
     public Uri getContentUri(String className) throws Exception {
+        return getUriColumn(className, "CONTENT_URI");
+    }
+
+    public Uri getUriColumn(String className, String columnId) throws Exception {
         Class aClass = mClassLoader.loadClass("org.mozilla.gecko.db.BrowserContract$" + className);
-        return (Uri) aClass.getField("CONTENT_URI").get(null);
+        return (Uri) aClass.getField(columnId).get(null);
     }
 
     public String getStringColumn(String className, String columnId) throws Exception {

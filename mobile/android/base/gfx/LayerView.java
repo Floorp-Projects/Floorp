@@ -43,20 +43,26 @@ import org.mozilla.gecko.GeckoInputConnection;
 import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.InputConnectionHandler;
 import org.mozilla.gecko.gfx.LayerController;
-import org.mozilla.gecko.ui.SimpleScaleGestureDetector;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.view.View;
-import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
-import android.view.ScaleGestureDetector;
 import android.widget.RelativeLayout;
 import android.util.Log;
 import java.nio.IntBuffer;
-import java.util.LinkedList;
+
+import org.mozilla.gecko.GeckoApp;
+import android.content.Context;
+import android.graphics.PixelFormat;
+import android.opengl.GLSurfaceView;
+import android.util.AttributeSet;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import javax.microedition.khronos.opengles.GL10;
+
 
 /**
  * A view rendered by the layer compositor.
@@ -66,20 +72,21 @@ import java.util.LinkedList;
  *
  * Note that LayerView is accessed by Robocop via reflection.
  */
-public class LayerView extends FlexibleGLSurfaceView {
+public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
+    private static String LOGTAG = "GeckoLayerView";
+
     private Context mContext;
     private LayerController mController;
+    private TouchEventHandler mTouchEventHandler;
+    private GLController mGLController;
     private InputConnectionHandler mInputConnectionHandler;
     private LayerRenderer mRenderer;
-    private GestureDetector mGestureDetector;
-    private SimpleScaleGestureDetector mScaleGestureDetector;
     private long mRenderTime;
     private boolean mRenderTimeReset;
-    private static String LOGTAG = "GeckoLayerView";
-    /* List of events to be processed if the page does not prevent them. Should only be touched on the main thread */
-    private LinkedList<MotionEvent> mEventQueue = new LinkedList<MotionEvent>();
     /* Must be a PAINT_xxx constant */
     private int mPaintState = PAINT_NONE;
+
+    private Listener mListener;
 
     /* Flags used to determine when to show the painted surface. The integer
      * order must correspond to the order in which these states occur. */
@@ -91,57 +98,28 @@ public class LayerView extends FlexibleGLSurfaceView {
     public LayerView(Context context, LayerController controller) {
         super(context);
 
+        SurfaceHolder holder = getHolder();
+        holder.addCallback(this);
+        holder.setFormat(PixelFormat.RGB_565);
+
+        mGLController = new GLController(this);
         mContext = context;
         mController = controller;
+        mTouchEventHandler = new TouchEventHandler(context, this, mController);
         mRenderer = new LayerRenderer(this);
-        setRenderer(mRenderer);
-        mGestureDetector = new GestureDetector(context, controller.getGestureListener());
-        mScaleGestureDetector =
-            new SimpleScaleGestureDetector(controller.getScaleGestureListener());
-        mGestureDetector.setOnDoubleTapListener(controller.getDoubleTapListener());
         mInputConnectionHandler = null;
 
         setFocusable(true);
         setFocusableInTouchMode(true);
     }
 
-    private void addToEventQueue(MotionEvent event) {
-        MotionEvent copy = MotionEvent.obtain(event);
-        mEventQueue.add(copy);
-    }
-
-    public void processEventQueue() {
-        MotionEvent event = mEventQueue.poll();
-        while(event != null) {
-            processEvent(event);
-            event = mEventQueue.poll();
-        }
-    }
-
-    public void clearEventQueue() {
-        mEventQueue.clear();
-    }
-
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (mController.onTouchEvent(event)) {
-            addToEventQueue(event);
-            return true;
-        }
-        return processEvent(event);
-    }
-
-    private boolean processEvent(MotionEvent event) {
-        if (mGestureDetector.onTouchEvent(event))
-            return true;
-        mScaleGestureDetector.onTouchEvent(event);
-        if (mScaleGestureDetector.isInProgress())
-            return true;
-        mController.getPanZoomController().onTouchEvent(event);
-        return true;
+        return mTouchEventHandler.handleEvent(event);
     }
 
     public LayerController getController() { return mController; }
+    public TouchEventHandler getTouchEventHandler() { return mTouchEventHandler; }
 
     /** The LayerRenderer calls this to indicate that the window has changed size. */
     public void setViewportSize(IntSize size) {
@@ -196,15 +174,9 @@ public class LayerView extends FlexibleGLSurfaceView {
         return false;
     }
 
-    @Override
-    public void requestRender() {
-        super.requestRender();
-
-        synchronized(this) {
-            if (!mRenderTimeReset) {
-                mRenderTimeReset = true;
-                mRenderTime = System.nanoTime();
-            }
+    public synchronized void requestRender() {
+        if (mListener != null) {
+            mListener.renderRequested();
         }
     }
 
@@ -238,13 +210,12 @@ public class LayerView extends FlexibleGLSurfaceView {
 
     public void setLayerRenderer(LayerRenderer renderer) {
         mRenderer = renderer;
-        setRenderer(mRenderer);
     }
 
     public LayerRenderer getLayerRenderer() {
         return mRenderer;
     }
-    
+
     /* paintState must be a PAINT_xxx constant. The state will only be changed
      * if paintState represents a state that occurs after the current state. */
     public void setPaintState(int paintState) {
@@ -257,5 +228,61 @@ public class LayerView extends FlexibleGLSurfaceView {
     public int getPaintState() {
         return mPaintState;
     }
-}
 
+
+    public GLSurfaceView.Renderer getRenderer() {
+        return mRenderer;
+    }
+
+    public void setListener(Listener listener) {
+        mListener = listener;
+    }
+
+    public synchronized GLController getGLController() {
+        return mGLController;
+    }
+
+    /** Implementation of SurfaceHolder.Callback */
+    public synchronized void surfaceChanged(SurfaceHolder holder, int format, int width,
+                                            int height) {
+        mGLController.sizeChanged(width, height);
+
+        if (mListener != null) {
+            mListener.surfaceChanged(width, height);
+        }
+    }
+
+    /** Implementation of SurfaceHolder.Callback */
+    public synchronized void surfaceCreated(SurfaceHolder holder) {
+        mGLController.surfaceCreated();
+    }
+
+    /** Implementation of SurfaceHolder.Callback */
+    public synchronized void surfaceDestroyed(SurfaceHolder holder) {
+        mGLController.surfaceDestroyed();
+
+        if (mListener != null) {
+            mListener.compositionPauseRequested();
+        }
+    }
+
+    /** This function is invoked by Gecko (compositor thread) via JNI; be careful when modifying signature. */
+    public static GLController registerCxxCompositor() {
+        try {
+            LayerView layerView = GeckoApp.mAppContext.getLayerController().getView();
+            return layerView.getGLController();
+        } catch (Exception e) {
+            Log.e(LOGTAG, "### Exception! " + e);
+            return null;
+        }
+    }
+
+    public interface Listener {
+        void renderRequested();
+        void compositionPauseRequested();
+        void compositionResumeRequested();
+        void surfaceChanged(int width, int height);
+    }
+
+
+}

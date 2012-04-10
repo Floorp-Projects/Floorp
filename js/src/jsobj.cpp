@@ -5261,7 +5261,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, unsigned defineHow,
             prop = NULL;
         }
     } else {
-        /* We should never add properties to lexical blocks.  */
+        /* We should never add properties to lexical blocks. */
         JS_ASSERT(!obj->isBlock());
 
         if (obj->isGlobal() &&

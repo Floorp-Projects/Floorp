@@ -146,15 +146,8 @@ struct ConservativeGCData
         uintptr_t       words[JS_HOWMANY(sizeof(jmp_buf), sizeof(uintptr_t))];
     } registerSnapshot;
 
-    /*
-     * Cycle collector uses this to communicate that the native stack of the
-     * GC thread should be scanned only if the thread have more than the given
-     * threshold of requests.
-     */
-    unsigned requestThreshold;
-
     ConservativeGCData()
-      : nativeStackTop(NULL), requestThreshold(0)
+      : nativeStackTop(NULL)
     {}
 
     ~ConservativeGCData() {
@@ -183,6 +176,13 @@ struct ConservativeGCData
     }
 };
 
+/*
+ * A FreeOp can do one thing: free memory. For convenience, it has delete_
+ * convenience methods that also call destructors.
+ *
+ * FreeOp is passed to finalizers and other sweep-phase hooks so that we do not
+ * need to pass a JSContext to those hooks.
+ */
 class FreeOp : public JSFreeOp {
     bool        shouldFreeLater_;
     bool        onBackgroundThread_;
@@ -215,7 +215,7 @@ class FreeOp : public JSFreeOp {
         /*
          * Check that JSFreeOp is the first base class for FreeOp and we can
          * reinterpret a pointer to JSFreeOp as a pointer to FreeOp without
-         * any offset adjustments. JSClass::freeOp <-> Class::freeOp depends
+         * any offset adjustments. JSClass::finalize <-> Class::finalize depends
          * on this.
          */
         JS_STATIC_ASSERT(offsetof(FreeOp, shouldFreeLater_) == sizeof(JSFreeOp));
@@ -352,7 +352,6 @@ struct JSRuntime : js::RuntimeFriendFields
      * full GC.
      */
     volatile uintptr_t  gcIsNeeded;
-    volatile uintptr_t  gcFullIsNeeded;
 
     js::WeakMapBase     *gcWeakMapList;
     js::gcstats::Statistics gcStats;
@@ -366,9 +365,6 @@ struct JSRuntime : js::RuntimeFriendFields
     /* The reason that an interrupt-triggered GC should be called. */
     js::gcreason::Reason gcTriggerReason;
 
-    /* Is the currently running GC a full GC or a compartmental GC? */
-    bool                gcIsFull;
-
     /*
      * If this is true, all marked objects must belong to a compartment being
      * GCed. This is used to look for compartment bugs.
@@ -381,14 +377,8 @@ struct JSRuntime : js::RuntimeFriendFields
      */
     js::gc::State       gcIncrementalState;
 
-    /* Indicates that a new compartment was created during incremental GC. */
-    bool                gcCompartmentCreated;
-
     /* Indicates that the last incremental slice exhausted the mark stack. */
     bool                gcLastMarkSlice;
-
-    /* Is there a full incremental GC in progress. */
-    bool                gcIncrementalIsFull;
 
     /*
      * Indicates that a GC slice has taken place in the middle of an animation
@@ -455,8 +445,9 @@ struct JSRuntime : js::RuntimeFriendFields
     int                 gcZeal_;
     int                 gcZealFrequency;
     int                 gcNextScheduled;
-    bool                gcDebugCompartmentGC;
     bool                gcDeterministicOnly;
+
+    js::Vector<JSObject *, 0, js::SystemAllocPolicy> gcSelectedForMarking;
 
     int gcZeal() { return gcZeal_; }
 
@@ -1128,14 +1119,6 @@ struct JSContext : js::ContextFriendFields
         genStack.popBack();
     }
 
-#ifdef JS_THREADSAFE
-    /*
-     * When non-null JSContext::free_ delegates the job to the background
-     * thread.
-     */
-    js::GCHelperThread *gcBackgroundFree;
-#endif
-
     inline void* malloc_(size_t bytes) {
         return runtime->malloc_(bytes, this);
     }
@@ -1159,12 +1142,6 @@ struct JSContext : js::ContextFriendFields
     }
 
     inline void free_(void* p) {
-#ifdef JS_THREADSAFE
-        if (gcBackgroundFree) {
-            gcBackgroundFree->freeLater(p);
-            return;
-        }
-#endif
         runtime->free_(p);
     }
 
@@ -1470,24 +1447,23 @@ public:
     }
 };
 
-} /* namespace js */
-
 /*
  * Create and destroy functions for JSContext, which is manually allocated
  * and exclusively owned.
  */
 extern JSContext *
-js_NewContext(JSRuntime *rt, size_t stackChunkSize);
+NewContext(JSRuntime *rt, size_t stackChunkSize);
 
-typedef enum JSDestroyContextMode {
-    JSDCM_NO_GC,
-    JSDCM_MAYBE_GC,
-    JSDCM_FORCE_GC,
-    JSDCM_NEW_FAILED
-} JSDestroyContextMode;
+enum DestroyContextMode {
+    DCM_NO_GC,
+    DCM_FORCE_GC,
+    DCM_NEW_FAILED
+};
 
 extern void
-js_DestroyContext(JSContext *cx, JSDestroyContextMode mode);
+DestroyContext(JSContext *cx, DestroyContextMode mode);
+
+} /* namespace js */
 
 #ifdef va_start
 extern JSBool
