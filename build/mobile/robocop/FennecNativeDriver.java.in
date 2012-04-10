@@ -142,15 +142,15 @@ public class FennecNativeDriver implements Driver {
 
             Class layerView = mClassLoader.loadClass("org.mozilla.gecko.gfx.LayerView");
             _getPixels = layerView.getDeclaredMethod("getPixels");
-         } catch (ClassNotFoundException e) {
-             e.printStackTrace();
-         } catch (SecurityException e) {
-             e.printStackTrace();
-         } catch (NoSuchMethodException e) {
-             e.printStackTrace();
-         } catch (IllegalArgumentException e) {
-             e.printStackTrace();
-         }
+        } catch (ClassNotFoundException e) {
+            log(LogLevel.ERROR, e);
+        } catch (SecurityException e) {
+            log(LogLevel.ERROR, e);
+        } catch (NoSuchMethodException e) {
+            log(LogLevel.ERROR, e);
+        } catch (IllegalArgumentException e) {
+            log(LogLevel.ERROR, e);
+        }
     }
 
     //Information on the location of the Gecko Frame.
@@ -218,9 +218,9 @@ public class FennecNativeDriver implements Driver {
             Object [] params = null;
             _startFrameRecording.invoke(null, params);
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            log(LogLevel.ERROR, e);
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            log(LogLevel.ERROR, e);
         }
     }
 
@@ -239,9 +239,9 @@ public class FennecNativeDriver implements Driver {
             }
             return numDelays;
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            log(LogLevel.ERROR, e);
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            log(LogLevel.ERROR, e);
         }
 
         return 0;
@@ -252,9 +252,9 @@ public class FennecNativeDriver implements Driver {
             Object [] params = null;
             _startCheckerboardRecording.invoke(null, params);
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            log(LogLevel.ERROR, e);
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            log(LogLevel.ERROR, e);
         }
     }
 
@@ -271,9 +271,9 @@ public class FennecNativeDriver implements Driver {
             }
             return completeness / (float)checkerboard.size();
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            log(LogLevel.ERROR, e);
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            log(LogLevel.ERROR, e);
         }
 
         return 0.0f;
@@ -288,7 +288,7 @@ public class FennecNativeDriver implements Driver {
                 }
             }
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            log(LogLevel.ERROR, e);
         }
         return null;
     }
@@ -302,7 +302,7 @@ public class FennecNativeDriver implements Driver {
         try {
             pixelBuffer = (IntBuffer)_getPixels.invoke(view);
         } catch (Exception e) {
-            e.printStackTrace();
+            log(LogLevel.ERROR, e);
             return null;
         }
 
@@ -341,7 +341,7 @@ public class FennecNativeDriver implements Driver {
                     fos.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                log(LogLevel.ERROR, e);
                 throw new RoboCopException("exception closing pixel writer on file: " + mapFile);
             }
         }
@@ -393,9 +393,9 @@ public class FennecNativeDriver implements Driver {
             finalParams[1] = Proxy.newProxyInstance(mClassLoader, interfaces, new scrollHandler());
             mRegisterGEL.invoke(null, finalParams);
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            log(LogLevel.ERROR, e);
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            log(LogLevel.ERROR, e);
         }
 
     }
@@ -416,8 +416,8 @@ public class FennecNativeDriver implements Driver {
                 text.append(line);
                 text.append('\n');
             }
-        } catch(IOException e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            log(LogLevel.ERROR, e);
         } finally {
             try {
                 br.close();
