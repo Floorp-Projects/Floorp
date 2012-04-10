@@ -4669,3 +4669,9 @@ nsCanvasRenderingContext2DAzure::MarkContextClean()
   mInvalidateCount = 0;
 }
 
+
+bool
+nsCanvasRenderingContext2DAzure::ShouldForceInactiveLayer(LayerManager *aManager)
+{
+    return !aManager->CanUseCanvasLayerForSize(gfxIntSize(mWidth, mHeight));
+}
