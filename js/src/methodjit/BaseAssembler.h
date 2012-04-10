@@ -1384,7 +1384,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
     /* Bump the stub call count for script/pc if they are being counted. */
     void bumpStubCount(JSScript *script, jsbytecode *pc, RegisterID scratch)
     {
-        if (script->scriptCounts) {
+        if (script->hasScriptCounts) {
             PCCounts counts = script->getPCCounts(pc);
             double *count = &counts.get(PCCounts::BASE_METHODJIT_STUBS);
             bumpCount(count, scratch);

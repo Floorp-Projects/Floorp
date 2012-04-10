@@ -786,7 +786,7 @@ js::XDRScript(XDRState<XDR_DECODE> *xdr, JSScript **scriptp, JSScript *parentScr
 bool
 JSScript::initScriptCounts(JSContext *cx)
 {
-    JS_ASSERT(!scriptCounts);
+    JS_ASSERT(!hasScriptCounts);
 
     size_t n = 0;
 
@@ -801,8 +801,21 @@ JSScript::initScriptCounts(JSContext *cx)
     if (!cursor)
         return false;
 
+    /* Create compartment's scriptCountsMap if necessary. */
+    ScriptCountsMap *map = compartment()->scriptCountsMap;
+    if (!map) {
+        map = cx->new_<ScriptCountsMap>();
+        if (!map || !map->init()) {
+            cx->free_(cursor);
+            cx->delete_(map);
+            return false;
+        }
+        compartment()->scriptCountsMap = map;
+    }
+
     DebugOnly<char *> base = cursor;
 
+    ScriptCounts scriptCounts;
     scriptCounts.pcCountsVector = (PCCounts *) cursor;
     cursor += length * sizeof(PCCounts);
 
@@ -816,6 +829,13 @@ JSScript::initScriptCounts(JSContext *cx)
         next = pc + GetBytecodeLength(pc);
     }
 
+    if (!map->putNew(this, scriptCounts)) {
+        cx->free_(cursor);
+        cx->delete_(map);
+        return false;
+    }
+    hasScriptCounts = true; // safe to set this;  we can't fail after this point
+
     JS_ASSERT(size_t(cursor - base) == bytes);
 
     /* Enable interrupts in any interpreter frames running on this script. */
@@ -826,12 +846,37 @@ JSScript::initScriptCounts(JSContext *cx)
     return true;
 }
 
+js::PCCounts
+JSScript::getPCCounts(jsbytecode *pc) {
+    JS_ASSERT(hasScriptCounts);
+    JS_ASSERT(size_t(pc - code) < length);
+    ScriptCountsMap *map = compartment()->scriptCountsMap;
+    JS_ASSERT(map);
+    ScriptCountsMap::Ptr p = map->lookup(this);
+    JS_ASSERT(p);
+    return p->value.pcCountsVector[pc - code];
+}
+
+ScriptCounts
+JSScript::releaseScriptCounts()
+{
+    JS_ASSERT(hasScriptCounts);
+    ScriptCountsMap *map = compartment()->scriptCountsMap;
+    JS_ASSERT(map);
+    ScriptCountsMap::Ptr p = map->lookup(this);
+    JS_ASSERT(p);
+    ScriptCounts counts = p->value;
+    map->remove(p);
+    hasScriptCounts = false;
+    return counts;
+}
+
 void
 JSScript::destroyScriptCounts(FreeOp *fop)
 {
-    if (scriptCounts) {
+    if (hasScriptCounts) {
+        ScriptCounts scriptCounts = releaseScriptCounts();
         fop->free_(scriptCounts.pcCountsVector);
-        scriptCounts.pcCountsVector = NULL;
     }
 }
 
