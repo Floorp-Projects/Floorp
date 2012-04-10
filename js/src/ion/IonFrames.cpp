@@ -428,10 +428,9 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
 
     SafepointReader safepoint(ionScript, si);
 
-    // No support for manual spill calls yet. Bug 732852.
-#if 0
-    JS_ASSERT(actual.empty() && spilled.empty());
-#endif
+    // Not yet implemented.
+    JS_ASSERT(safepoint.gcSpills().empty());
+    JS_ASSERT(safepoint.allSpills().empty());
 
     // Scan through slots which contain pointers (or on punboxing systems,
     // actual values).
