@@ -679,7 +679,7 @@ res/values/defaults.xml: $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/res/values/defau
 	$(NSINSTALL) $^  res/values
 
 $(RES_DIRS):
-	rm -rf $@
+	$(RM) -r $@
 	$(NSINSTALL) -D $@
 
 $(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
