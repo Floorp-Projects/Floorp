@@ -38,6 +38,8 @@
 #include <stdio.h>
 #include "nsWindowsDllInterceptor.h"
 
+using namespace mozilla;
+
 struct payload {
   UINT64 a;
   UINT64 b;
