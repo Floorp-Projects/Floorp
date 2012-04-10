@@ -567,6 +567,37 @@ js::GetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t in
 }
 
 bool
+js::HasElement(JSContext *cx, ObjectImpl *obj, uint32_t index, bool *found)
+{
+    NEW_OBJECT_REPRESENTATION_ONLY();
+
+    do {
+        MOZ_ASSERT(obj);
+
+        if (static_cast<JSObject *>(obj)->isProxy()) { // XXX
+            MOZ_NOT_REACHED("NYI: proxy [[HasProperty]]");
+            return false;
+        }
+
+        PropDesc prop;
+        if (!GetOwnElement(cx, obj, index, &prop))
+            return false;
+
+        if (!prop.isUndefined()) {
+            *found = true;
+            return true;
+        }
+
+        obj = obj->getProto();
+        if (obj)
+            continue;
+
+        *found = false;
+        return true;
+    } while (false);
+}
+
+bool
 js::DefineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
                   bool shouldThrow, bool *succeeded)
 {
