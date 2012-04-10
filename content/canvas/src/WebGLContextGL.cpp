@@ -135,7 +135,7 @@ WebGLContext::ActiveTexture(WebGLenum texture)
         return NS_OK;
 
     if (texture < LOCAL_GL_TEXTURE0 ||
-        texture >= LOCAL_GL_TEXTURE0 + mGLMaxTextureUnits)
+        texture >= LOCAL_GL_TEXTURE0 + PRUint32(mGLMaxTextureUnits))
     {
         return ErrorInvalidEnum(
             "ActiveTexture: texture unit %d out of range. "
