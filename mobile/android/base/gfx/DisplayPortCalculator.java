@@ -15,7 +15,7 @@ final class DisplayPortCalculator {
     private static final String LOGTAG = "GeckoDisplayPortCalculator";
     private static final PointF ZERO_VELOCITY = new PointF(0, 0);
 
-    private static DisplayPortStrategy sStrategy = new FixedMarginStrategy();
+    private static DisplayPortStrategy sStrategy = new VelocityBiasStrategy();
 
     static DisplayPortMetrics calculate(ImmutableViewportMetrics metrics, PointF velocity) {
         return sStrategy.calculate(metrics, (velocity == null ? ZERO_VELOCITY : velocity));
