@@ -397,7 +397,7 @@ __try {
     aScrollTopLeft ? nsIAccessibleScrollType::SCROLL_TYPE_TOP_LEFT :
                      nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_RIGHT;
 
-  ScrollTo(scrollType);
+  nsCoreUtils::ScrollTo(mDoc->PresShell(), mContent, scrollType);
   return S_OK;
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
