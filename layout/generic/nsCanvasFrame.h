@@ -162,22 +162,23 @@ public:
   }
 
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion,
-                                   const nsRect& aAllowVisibleRegionExpansion)
+                                 nsRegion* aVisibleRegion,
+                                 const nsRect& aAllowVisibleRegionExpansion)
   {
     return NS_GET_A(mExtraBackgroundColor) > 0 ||
       nsDisplayBackground::ComputeVisibility(aBuilder, aVisibleRegion,
                                              aAllowVisibleRegionExpansion);
   }
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aForceTransparentSurface = nsnull)
+                                   bool* aSnap,
+                                   bool* aForceTransparentSurface)
   {
-    if (aForceTransparentSurface) {
+    if (NS_GET_A(mExtraBackgroundColor) == 255) {
       *aForceTransparentSurface = false;
+      return nsRegion(GetBounds(aBuilder, aSnap));
     }
-    if (NS_GET_A(mExtraBackgroundColor) == 255)
-      return nsRegion(GetBounds(aBuilder));
-    return nsDisplayBackground::GetOpaqueRegion(aBuilder);
+    return nsDisplayBackground::GetOpaqueRegion(aBuilder, aSnap,
+                                                aForceTransparentSurface);
   }
   virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor)
   {
@@ -190,15 +191,11 @@ public:
     *aColor = mExtraBackgroundColor;
     return true;
   }
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
   {
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-    nsRect r = frame->CanvasArea() + ToReferenceFrame();
-    if (mSnappingEnabled) {
-      nscoord appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
-      r = r.ToNearestPixels(appUnitsPerDevPixel).ToAppUnits(appUnitsPerDevPixel);
-    }
-    return r;
+    *aSnap = true;
+    return frame->CanvasArea() + ToReferenceFrame();
   }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
