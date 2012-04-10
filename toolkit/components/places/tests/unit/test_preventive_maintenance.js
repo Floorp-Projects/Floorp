@@ -1146,6 +1146,54 @@ tests.push({
 //------------------------------------------------------------------------------
 
 tests.push({
+  name: "L.3",
+  desc: "recalculate hidden for redirects.",
+
+  setup: function() {
+    addVisits([
+      { uri: NetUtil.newURI("http://l3.moz.org/"),
+        transition: TRANSITION_TYPED },
+      { uri: NetUtil.newURI("http://l3.moz.org/redirecting/"),
+        transition: TRANSITION_TYPED },
+      { uri: NetUtil.newURI("http://l3.moz.org/redirecting2/"),
+        transition: TRANSITION_REDIRECT_TEMPORARY,
+        referrer: NetUtil.newURI("http://l3.moz.org/redirecting/") },
+      { uri: NetUtil.newURI("http://l3.moz.org/target/"),
+        transition: TRANSITION_REDIRECT_PERMANENT,
+        referrer: NetUtil.newURI("http://l3.moz.org/redirecting2/") },
+    ]);
+  },
+
+  asyncCheck: function(aCallback) {
+    let stmt = mDBConn.createAsyncStatement(
+      "SELECT h.url FROM moz_places h WHERE h.hidden = 1"
+    );
+    stmt.executeAsync({
+      _count: 0,
+      handleResult: function(aResultSet) {
+        for (let row; (row = aResultSet.getNextRow());) {
+          let url = row.getResultByIndex(0);
+          do_check_true(/redirecting/.test(url));
+          this._count++;
+        }
+      },
+      handleError: function(aError) {
+      },
+      handleCompletion: function(aReason) {
+        dump_table("moz_places");
+        dump_table("moz_historyvisits");
+        do_check_eq(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
+        do_check_eq(this._count, 2);
+        aCallback();
+      }
+    });
+    stmt.finalize();
+  }
+});
+
+//------------------------------------------------------------------------------
+
+tests.push({
   name: "Z",
   desc: "Sanity: Preventive maintenance does not touch valid items",
 

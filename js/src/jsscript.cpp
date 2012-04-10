@@ -674,8 +674,16 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
     }
 
     for (i = 0; i != natoms; ++i) {
-        if (!XDRAtom(xdr, &script->atoms[i]))
-            return false;
+        if (mode == XDR_DECODE) {
+            JSAtom *tmp = NULL;
+            if (!XDRAtom(xdr, &tmp))
+                return false;
+            script->atoms[i].init(tmp);
+        } else {
+            JSAtom *tmp = script->atoms[i];
+            if (!XDRAtom(xdr, &tmp))
+                return false;
+        }
     }
 
     /*
@@ -1106,7 +1114,7 @@ JSScript::NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t
 
     if (natoms != 0) {
         script->natoms = natoms;
-        script->atoms = reinterpret_cast<JSAtom **>(cursor);
+        script->atoms = reinterpret_cast<HeapPtrAtom *>(cursor);
         cursor += natoms * sizeof(script->atoms[0]);
     }
 
@@ -1205,7 +1213,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     nfixed = bce->inFunction() ? bce->bindings.countVars() : 0;
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = uint16_t(nfixed);
-    js_InitAtomMap(cx, bce->atomIndices.getMap(), script->atoms);
+    InitAtomMap(cx, bce->atomIndices.getMap(), script->atoms);
 
     filename = bce->parser->tokenStream.getFilename();
     if (filename) {
@@ -1788,7 +1796,7 @@ JSScript::destroyBreakpointSite(FreeOp *fop, jsbytecode *pc)
 }
 
 void
-JSScript::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSObject *handler)
+JSScript::clearBreakpointsIn(FreeOp *fop, js::Debugger *dbg, JSObject *handler)
 {
     if (!hasAnyBreakpointsOrStepMode())
         return;
@@ -1801,7 +1809,7 @@ JSScript::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSObject *handler
             for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
                 nextbp = bp->nextInSite();
                 if ((!dbg || bp->debugger == dbg) && (!handler || bp->getHandler() == handler))
-                    bp->destroy(cx->runtime->defaultFreeOp());
+                    bp->destroy(fop);
             }
         }
     }
@@ -1828,7 +1836,7 @@ JSScript::markChildren(JSTracer *trc)
 
     for (uint32_t i = 0; i < natoms; ++i) {
         if (atoms[i])
-            MarkStringUnbarriered(trc, &atoms[i], "atom");
+            MarkString(trc, &atoms[i], "atom");
     }
 
     if (JSScript::isValidOffset(objectsOffset)) {

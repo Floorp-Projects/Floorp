@@ -301,7 +301,7 @@ class ScriptCounts
     ScriptCounts() : pcCountsVector(NULL) {
     }
 
-    inline void destroy(JSContext *cx);
+    inline void destroy(FreeOp *fop);
 
     void steal(ScriptCounts &other) {
         *this = other;
@@ -409,7 +409,7 @@ struct JSScript : public js::gc::Cell
                                    comment above NewScript() for details) */
 
     const char      *filename;  /* source filename or null */
-    JSAtom          **atoms;    /* maps immediate index to literal struct */
+    js::HeapPtrAtom *atoms;     /* maps immediate index to literal struct */
 
     JSPrincipals    *principals;/* principals for this script */
     JSPrincipals    *originPrincipals; /* see jsapi.h 'originPrincipals' comment */
@@ -755,7 +755,7 @@ struct JSScript : public js::gc::Cell
         return isValidOffset(closedVarsOffset) ? closedVars()->length : 0;
     }
 
-    JSAtom *getAtom(size_t index) {
+    js::HeapPtrAtom &getAtom(size_t index) const {
         JS_ASSERT(index < natoms);
         return atoms[index];
     }
@@ -831,7 +831,7 @@ struct JSScript : public js::gc::Cell
 
     void destroyBreakpointSite(js::FreeOp *fop, jsbytecode *pc);
 
-    void clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSObject *handler);
+    void clearBreakpointsIn(js::FreeOp *fop, js::Debugger *dbg, JSObject *handler);
     void clearTraps(js::FreeOp *fop);
 
     void markTrapClosures(JSTracer *trc);

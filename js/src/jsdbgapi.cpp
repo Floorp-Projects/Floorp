@@ -231,7 +231,7 @@ JS_ClearScriptTraps(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(void)
 JS_ClearAllTrapsForCompartment(JSContext *cx)
 {
-    cx->compartment->clearTraps(cx);
+    cx->compartment->clearTraps(cx->runtime->defaultFreeOp());
 }
 
 JS_PUBLIC_API(JSBool)

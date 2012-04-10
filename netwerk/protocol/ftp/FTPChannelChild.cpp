@@ -48,6 +48,7 @@
 #include "nsNetUtil.h"
 #include "nsIURIFixup.h"
 #include "nsCDefaultURIFixup.h"
+#include "base/compiler_specific.h"
 
 #undef LOG
 #define LOG(args) PR_LOG(gFTPLog, PR_LOG_DEBUG, args)
@@ -57,7 +58,7 @@ namespace net {
 
 FTPChannelChild::FTPChannelChild(nsIURI* uri)
 : mIPCOpen(false)
-, mEventQ(static_cast<nsIFTPChannel*>(this))
+, ALLOW_THIS_IN_INITIALIZER_LIST(mEventQ(static_cast<nsIFTPChannel*>(this)))
 , mCanceled(false)
 , mSuspendCount(0)
 , mIsPending(false)

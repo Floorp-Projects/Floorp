@@ -262,7 +262,7 @@ public:
 
     void ShowInputMethodPicker();
 
-    void SetPreventPanning(bool aPreventPanning);
+    void NotifyDefaultPrevented(bool aDefaultPrevented);
 
     void HideProgressDialogOnce();
 
@@ -498,7 +498,7 @@ protected:
     jmethodID jGetDpi;
     jmethodID jSetFullScreen;
     jmethodID jShowInputMethodPicker;
-    jmethodID jSetPreventPanning;
+    jmethodID jNotifyDefaultPrevented;
     jmethodID jHideProgressDialog;
     jmethodID jPerformHapticFeedback;
     jmethodID jVibrate1;

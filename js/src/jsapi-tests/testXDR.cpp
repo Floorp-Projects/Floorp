@@ -202,7 +202,7 @@ BEGIN_TEST(testXDR_bug506491)
     CHECK(JS_ExecuteScript(cx, global, script, v2.addr()));
 
     // try to break the Block object that is the parent of f
-    JS_GC(cx);
+    JS_GC(rt);
 
     // confirm
     EVAL("f() === 'ok';\n", v2.addr());
