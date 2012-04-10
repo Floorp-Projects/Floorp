@@ -1248,6 +1248,9 @@ extern bool
 SetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index, const Value &v,
            bool *succeeded);
 
+extern bool
+HasElement(JSContext *cx, ObjectImpl *obj, uint32_t index, bool *found);
+
 } /* namespace js */
 
 #endif /* ObjectImpl_h__ */
