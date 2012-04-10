@@ -961,8 +961,11 @@ CodeGenerator::visitNewObject(LNewObject *lir)
     JSObject *baseObj = lir->mir()->baseObj();
     types::TypeObject *typeObj = lir->mir()->type();
 
-    if (!gen->cx->typeInferenceEnabled() || !typeObj || baseObj->hasDynamicSlots())
+    if (!gen->cx->typeInferenceEnabled() || !typeObj ||
+        !baseObj || baseObj->hasDynamicSlots())
+    {
         return visitNewObjectVMCall(lir);
+    }
 
     OutOfLineNewObject *ool = new OutOfLineNewObject(lir);
     if (!addOutOfLineCode(ool))
@@ -986,6 +989,21 @@ CodeGenerator::visitOutOfLineNewObject(OutOfLineNewObject *ool)
         return false;
     masm.jump(ool->rejoin());
     return true;
+}
+
+bool
+CodeGenerator::visitInitProp(LInitProp *lir)
+{
+    Register objReg = ToRegister(lir->getObject());
+
+    typedef bool(*pf)(JSContext *cx, JSObject *obj, PropertyName *name, const Value &value);
+    static const VMFunction InitPropInfo = FunctionInfo<pf>(InitProp);
+
+    pushArg(objReg);
+    pushArg(ImmWord(lir->mir()->propertyName()));
+    pushArg(ToValue(lir, LInitProp::ValueIndex));
+
+    return callVM(InitPropInfo, lir);
 }
 
 // Out-of-line object allocation for |new|, calling to the VM.

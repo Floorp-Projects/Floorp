@@ -325,6 +325,7 @@ bool InvokeConstructorFunction(JSContext *cx, JSFunction *fun, uint32 argc, Valu
 bool ReportOverRecursed(JSContext *cx);
 
 bool DefVarOrConst(JSContext *cx, PropertyName *dn, unsigned attrs, JSObject *scopeChain);
+bool InitProp(JSContext *cx, JSObject *obj, PropertyName *name, const Value &value);
 
 template<bool Equal>
 bool LooselyEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);

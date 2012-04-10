@@ -94,6 +94,7 @@ namespace ion {
     _(ToString)                                                             \
     _(NewArray)                                                             \
     _(NewObject)                                                            \
+    _(InitProp)                                                             \
     _(Start)                                                                \
     _(OsrEntry)                                                             \
     _(RegExp)                                                               \

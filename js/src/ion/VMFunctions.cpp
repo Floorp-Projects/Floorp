@@ -104,6 +104,18 @@ DefVarOrConst(JSContext *cx, PropertyName *dn, unsigned attrs, JSObject *scopeCh
     return DefVarOrConstOperation(cx, *obj, dn, attrs);
 }
 
+bool
+InitProp(JSContext *cx, JSObject *obj, PropertyName *name, const Value &value)
+{
+    // Copy the incoming value. This may be overwritten; the return value is discarded.
+    Value rval = value;
+    jsid id = ATOM_TO_JSID(name);
+
+    if (name == cx->runtime->atomState.protoAtom)
+        return js_SetPropertyHelper(cx, obj, id, 0, &rval, false);
+    return !!DefineNativeProperty(cx, obj, id, rval, NULL, NULL, JSPROP_ENUMERATE, 0, 0, 0);
+}
+
 template<bool Equal>
 bool
 LooselyEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res)
