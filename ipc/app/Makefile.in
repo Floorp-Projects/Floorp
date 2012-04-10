@@ -35,10 +35,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../..
+DEPTH     = ../..
 topsrcdir = @top_srcdir@
-srcdir = @srcdir@
-VPATH = @srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -98,7 +98,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq ($(OS_ARCH),WINNT) #{
 #
 # Control the default heap size.
 # This is the heap returned by GetProcessHeap().
@@ -109,16 +109,16 @@ ifeq ($(OS_ARCH),WINNT)
 #
 # Set it to 256k.  See bug 127069.
 #
-ifndef GNU_CC
+ifndef GNU_CC #{
 LDFLAGS += /HEAP:0x40000
-ifeq ($(OS_TEST),x86_64)
+ifeq ($(OS_TEST),x86_64) #{
 # set stack to 2MB on x64 build.  See bug 582910
 LDFLAGS += -STACK:2097152
-endif
-endif
-endif
+endif #}
+endif #}
+endif #}
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT)) #{
 
 libs::
 	$(NSINSTALL) -D $(DIST)/bin/$(PROGRAM).app
@@ -128,5 +128,5 @@ libs::
 	  iconv -f UTF-8 -t UTF-16 > $(DIST)/bin/$(PROGRAM).app/Contents/Resources/English.lproj/InfoPlist.strings
 	$(NSINSTALL) -D $(DIST)/bin/$(PROGRAM).app/Contents/MacOS
 	$(NSINSTALL) $(PROGRAM) $(DIST)/bin/$(PROGRAM).app/Contents/MacOS
-	rm -f $(DIST)/bin/$(PROGRAM)
-endif
+	$(RM) $(DIST)/bin/$(PROGRAM)
+endif #}

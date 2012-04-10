@@ -52,7 +52,7 @@ must be one of the following:
 
 2. A test item
 
-   <failure-type>* <preference>* [<http>] <type> <url> <url_ref>
+   [ <failure-type> | <preference> ]* [<http>] <type> <url> <url_ref>
 
    where
 
@@ -154,20 +154,24 @@ must be one of the following:
           fails-if(winWidget) == test reference
           asserts-if(cocoaWidget,2) load crashtest
 
-   b. <pref-setting> (optional) is a string of the form
+   b. <preference> (optional) is a string of the form
 
           pref(<name>,<value>)
+          test-pref(<name>,<value>)
+          ref-pref(<name>,<value>)
 
       where <name> is the name of a preference setting, as seen in
       about:config, and <value> is the value to which this preference should
       be set. <value> may be a boolean (true/false), an integer, or a
       quoted string *without spaces*, according to the type of the preference.
 
-      The preference will be set to the specified value prior to rendering
-      the test and reference canvases, and will be restored afterwards so
-      that following tests are not affected. Note that this feature is only
-      useful for "live" preferences that take effect immediately, without
-      requiring a browser restart.
+      The preference will be set to the specified value prior to
+      rendering the test and/or reference canvases (pref() applies to
+      both, test-pref() only to the test, and ref-pref() only to the
+      reference), and will be restored afterwards so that following
+      tests are not affected. Note that this feature is only useful for
+      "live" preferences that take effect immediately, without requiring
+      a browser restart.
 
    c. <http>, if present, is one of the strings (sans quotes) "HTTP" or
       "HTTP(..)" or "HTTP(../..)" or "HTTP(../../..)", etc. , indicating that

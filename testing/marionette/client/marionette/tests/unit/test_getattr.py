@@ -36,15 +36,14 @@
 import os
 from marionette_test import MarionetteTestCase
 
-class TestClick(MarionetteTestCase):
-    def test_click(self):
+class TestGetAttribute(MarionetteTestCase):
+    def test_getAttribute(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
-        link = self.marionette.find_element("id", "mozLink")
-        link.click()
-        self.assertEqual("Clicked", self.marionette.execute_script("return document.getElementById('mozLink').innerHTML;"))
+        l = self.marionette.find_element("id", "mozLink")
+        self.assertEqual("mozLink", l.get_attribute("id"))
 
-class TestClickChrome(MarionetteTestCase):
+class TestGetAttributeChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
         self.marionette.set_context("chrome")
@@ -61,12 +60,8 @@ class TestClickChrome(MarionetteTestCase):
         self.marionette.switch_to_window(self.win)
         MarionetteTestCase.tearDown(self)
 
-    def test_click(self):
-        wins = self.marionette.get_windows()
-        wins.remove(self.win)
-        newWin = wins.pop()
-        self.marionette.switch_to_window(newWin)
-        box = self.marionette.find_element("id", "testBox")
-        self.assertFalse(self.marionette.execute_script("return arguments[0].checked;", [box]))
-        box.click()
-        self.assertTrue(self.marionette.execute_script("return arguments[0].checked;", [box]))
+    def test_getAttribute(self):
+        el = self.marionette.execute_script("return window.document.getElementById('textInput');")
+        found_el = self.marionette.find_element("id", "textInput")
+        self.assertEqual(el.get_attribute("id"), "textInput")
+
