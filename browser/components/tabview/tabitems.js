@@ -239,7 +239,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Store persistent for this object.
   save: function TabItem_save() {
     try {
-      if (!this.tab || this.tab.parentNode == null || !this._reconnected) // too soon/late to save
+      if (!this.tab || !Utils.isValidXULTab(this.tab) || !this._reconnected) // too soon/late to save
         return;
 
       let data = this.getStorageData();
@@ -571,7 +571,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     Utils.assert(Utils.isRect(this.bounds), 'TabItem.setBounds: this.bounds is not a real rectangle!');
 
-    if (!this.parent && this.tab.parentNode != null)
+    if (!this.parent && Utils.isValidXULTab(this.tab))
       this.setTrenches(rect);
 
     this.save();
