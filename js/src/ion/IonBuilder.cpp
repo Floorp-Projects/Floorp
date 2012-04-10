@@ -715,6 +715,9 @@ IonBuilder::inspectOpcode(JSOp op)
         current->pop();
         return true;
 
+      case JSOP_NEWINIT:
+        return jsop_newinit(GET_UINT8(pc) == JSProto_Array);
+
       case JSOP_NEWARRAY:
         return jsop_newarray(GET_UINT24(pc));
 
@@ -2761,9 +2764,17 @@ IonBuilder::jsop_compare(JSOp op)
 }
 
 bool
+IonBuilder::jsop_newinit(bool isArray)
+{
+    if (isArray)
+        return jsop_newarray(0);
+    return jsop_newobject(NULL);
+}
+
+bool
 IonBuilder::jsop_newarray(uint32 count)
 {
-    using namespace types;
+    JS_ASSERT(script->hasGlobal());
 
     types::TypeObject *type = NULL;
     if (!types::UseNewTypeForInitializer(cx, script, pc)) {
@@ -2848,6 +2859,13 @@ IonBuilder::jsop_initprop(JSAtom *atom)
     if (!oracle->propertyWriteCanSpecialize(script, pc)) {
         // This should only happen for a few names like __proto__.
         return abort("INITPROP Monitored initprop");
+    }
+
+    // JSOP_NEWINIT becomes an MNewObject without a known base.
+    if (!baseObj) {
+        MInitProp *init = MInitProp::New(obj, (PropertyName *)atom, value);
+        current->add(init);
+        return resumeAfter(init);
     }
 
     JSObject *holder;

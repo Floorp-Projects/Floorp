@@ -253,6 +253,34 @@ class LNewObject : public LInstructionHelper<1, 0, 0>
     }
 };
 
+// Takes in an Object and a Value.
+class LInitProp : public LInstructionHelper<0, 1 + BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(InitProp);
+
+    LInitProp(const LAllocation &object)
+    {
+        setOperand(0, object);
+    }
+
+    static const size_t ValueIndex = 1;
+
+    const LAllocation *getObject() {
+        return getOperand(0);
+    }
+    const LAllocation *getValue() {
+        return getOperand(1);
+    }
+
+    bool isCall() const {
+        return true;
+    }
+    MInitProp *mir() const {
+        return mir_->toInitProp();
+    }
+};
+
 class LCheckOverRecursed : public LInstructionHelper<0, 0, 1>
 {
   public:
