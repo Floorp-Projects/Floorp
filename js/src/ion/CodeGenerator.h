@@ -112,6 +112,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitNewObjectVMCall(LNewObject *lir);
     bool visitNewObject(LNewObject *lir);
     bool visitOutOfLineNewObject(OutOfLineNewObject *ool);
+    bool visitInitProp(LInitProp *lir);
     bool visitCreateThisVMCall(LCreateThis *lir);
     bool visitCreateThis(LCreateThis *lir);
     bool visitOutOfLineCreateThis(OutOfLineCreateThis *ool);

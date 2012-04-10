@@ -145,6 +145,16 @@ LIRGenerator::visitNewObject(MNewObject *ins)
 }
 
 bool
+LIRGenerator::visitInitProp(MInitProp *ins)
+{
+    LInitProp *lir = new LInitProp(useRegister(ins->getObject()));
+    if (!useBox(lir, LInitProp::ValueIndex, ins->getValue()))
+        return false;
+
+    return add(lir) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitPrepareCall(MPrepareCall *ins)
 {
     allocateArguments(ins->argc());
