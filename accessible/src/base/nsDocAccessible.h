@@ -143,6 +143,11 @@ public:
   nsIPresShell* PresShell() const { return mPresShell; }
 
   /**
+   * Return the presentation shell's context.
+   */
+  nsPresContext* PresContext() const { return mPresShell->GetPresContext(); }
+    
+  /**
    * Return true if associated DOM document was loaded and isn't unloading.
    */
   bool IsContentLoaded() const

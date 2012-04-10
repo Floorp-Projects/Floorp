@@ -803,7 +803,7 @@ nsXULTreeItemAccessibleBase::GetBounds(PRInt32 *aX, PRInt32 *aY,
   x = tcX;
   y += tcY;
 
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext* presContext = mDoc->PresContext();
   *aX = presContext->CSSPixelsToDevPixels(x);
   *aY = presContext->CSSPixelsToDevPixels(y);
   *aWidth = presContext->CSSPixelsToDevPixels(width);
