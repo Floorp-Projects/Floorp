@@ -134,9 +134,15 @@ WebGLContext::ActiveTexture(WebGLenum texture)
     if (!IsContextStable())
         return NS_OK;
 
-    if (texture < LOCAL_GL_TEXTURE0 || texture >= LOCAL_GL_TEXTURE0 + mBound2DTextures.Length())
-        return ErrorInvalidEnum("ActiveTexture: texture unit %d out of range (0..%d)",
-                                texture, mBound2DTextures.Length()-1);
+    if (texture < LOCAL_GL_TEXTURE0 ||
+        texture >= LOCAL_GL_TEXTURE0 + mGLMaxTextureUnits)
+    {
+        return ErrorInvalidEnum(
+            "ActiveTexture: texture unit %d out of range. "
+            "Accepted values range from TEXTURE0 to TEXTURE0 + %d. "
+            "Notice that TEXTURE0 != 0.",
+            texture, mGLMaxTextureUnits);
+    }
 
     MakeContextCurrent();
     mActiveTexture = texture - LOCAL_GL_TEXTURE0;
