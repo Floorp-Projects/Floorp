@@ -66,7 +66,7 @@ public class BrowserProvider extends ContentProvider {
 
     static final String DATABASE_NAME = "browser.db";
 
-    static final int DATABASE_VERSION = 7;
+    static final int DATABASE_VERSION = 8;
 
     // Maximum age of deleted records to be cleaned up (20 days in ms)
     static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
@@ -810,6 +810,40 @@ public class BrowserProvider extends ContentProvider {
             migrateImagesTable(db);
         }
 
+        private void upgradeDatabaseFrom7to8(SQLiteDatabase db) {
+            debug("Combining history entries with the same URL");
+
+            final String TABLE_DUPES = "duped_urls";
+            final String TOTAL = "total";
+            final String LATEST = "latest";
+            final String WINNER = "winner";
+
+            db.execSQL("CREATE TEMP TABLE " + TABLE_DUPES + " AS" +
+                      " SELECT " + History.URL + ", " +
+                                  "SUM(" + History.VISITS + ") AS " + TOTAL + ", " +
+                                  "MAX(" + History.DATE_MODIFIED + ") AS " + LATEST + ", " +
+                                  "MAX(" + History._ID + ") AS " + WINNER +
+                      " FROM " + TABLE_HISTORY +
+                      " GROUP BY " + History.URL +
+                      " HAVING count(" + History.URL + ") > 1");
+
+            db.execSQL("CREATE UNIQUE INDEX " + TABLE_DUPES + "_url_index ON " +
+                       TABLE_DUPES + " (" + History.URL + ")");
+
+            final String fromClause = " FROM " + TABLE_DUPES + " WHERE " +
+                                      qualifyColumn(TABLE_DUPES, History.URL) + " = " +
+                                      qualifyColumn(TABLE_HISTORY, History.URL);
+
+            db.execSQL("UPDATE " + TABLE_HISTORY +
+                      " SET " + History.VISITS + " = (SELECT " + TOTAL + fromClause + "), " +
+                                History.DATE_MODIFIED + " = (SELECT " + LATEST + fromClause + "), " +
+                                History.IS_DELETED + " = " +
+                                    "(" + History._ID + " <> (SELECT " + WINNER + fromClause + "))" +
+                      " WHERE " + History.URL + " IN (SELECT " + History.URL + " FROM " + TABLE_DUPES + ")");
+
+            db.execSQL("DROP TABLE " + TABLE_DUPES);
+        }
+
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             debug("Upgrading browser.db: " + db.getPath() + " from " +
@@ -844,6 +878,9 @@ public class BrowserProvider extends ContentProvider {
                     case 7:
                         upgradeDatabaseFrom6to7(db);
                         break;
+
+                    case 8:
+                        upgradeDatabaseFrom7to8(db);
                  }
              }
 
