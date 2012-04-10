@@ -880,6 +880,62 @@ JSScript::destroyScriptCounts(FreeOp *fop)
     }
 }
 
+bool
+JSScript::setSourceMap(JSContext *cx, jschar *sourceMap)
+{
+    JS_ASSERT(!hasSourceMap);
+
+    /* Create compartment's sourceMapMap if necessary. */
+    SourceMapMap *map = compartment()->sourceMapMap;
+    if (!map) {
+        map = cx->new_<SourceMapMap>();
+        if (!map || !map->init()) {
+            cx->delete_(map);
+            return false;
+        }
+        compartment()->sourceMapMap = map;
+    }
+
+    if (!map->putNew(this, sourceMap)) {
+        cx->delete_(map);
+        return false;
+    }
+    hasSourceMap = true; // safe to set this;  we can't fail after this point
+
+    return true;
+}
+
+jschar *
+JSScript::getSourceMap() {
+    JS_ASSERT(hasSourceMap);
+    SourceMapMap *map = compartment()->sourceMapMap;
+    JS_ASSERT(map);
+    SourceMapMap::Ptr p = map->lookup(this);
+    JS_ASSERT(p);
+    return p->value;
+}
+
+jschar *
+JSScript::releaseSourceMap()
+{
+    JS_ASSERT(hasSourceMap);
+    SourceMapMap *map = compartment()->sourceMapMap;
+    JS_ASSERT(map);
+    SourceMapMap::Ptr p = map->lookup(this);
+    JS_ASSERT(p);
+    jschar *sourceMap = p->value;
+    map->remove(p);
+    hasSourceMap = false;
+    return sourceMap;
+}
+
+void
+JSScript::destroySourceMap(FreeOp *fop)
+{
+    if (hasSourceMap)
+        fop->free_(releaseSourceMap());
+}
+
 /*
  * Shared script filename management.
  */
@@ -1287,7 +1343,13 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     if (script->originPrincipals)
         JS_HoldPrincipals(script->originPrincipals);
 
-    script->sourceMap = (jschar *) bce->parser->tokenStream.releaseSourceMap();
+    jschar *sourceMap = (jschar *) bce->parser->tokenStream.releaseSourceMap();
+    if (sourceMap) {
+        if (!script->setSourceMap(cx, sourceMap)) {
+            cx->free_(sourceMap);
+            return NULL;
+        }
+    }
 
     if (!FinishTakingSrcNotes(cx, bce, script->notes()))
         return NULL;
@@ -1458,9 +1520,7 @@ JSScript::finalize(FreeOp *fop)
 #endif
 
     destroyScriptCounts(fop);
-
-    if (sourceMap)
-        fop->free_(sourceMap);
+    destroySourceMap(fop);
 
     if (debug) {
         jsbytecode *end = code + length;
