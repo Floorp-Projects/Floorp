@@ -11,6 +11,8 @@
 #include "jsscope.h"
 #include "jsobjinlines.h"
 
+#include "js/TemplateLib.h"
+
 #include "Debugger.h"
 #include "ObjectImpl.h"
 
@@ -289,6 +291,63 @@ js::ObjectImpl::markChildren(JSTracer *trc)
 }
 
 bool
+DenseElementsHeader::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, PropDesc *desc)
+{
+    MOZ_ASSERT(this == &obj->elementsHeader());
+
+    uint32_t len = initializedLength();
+    if (index >= len) {
+        *desc = PropDesc::undefined();
+        return true;
+    }
+
+    HeapSlot &slot = obj->elements[index];
+    if (slot.isMagic(JS_ARRAY_HOLE)) {
+        *desc = PropDesc::undefined();
+        return true;
+    }
+
+    *desc = PropDesc(slot, PropDesc::Writable, PropDesc::Enumerable, PropDesc::Configurable);
+    return true;
+}
+
+bool
+SparseElementsHeader::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, PropDesc *desc)
+{
+    MOZ_ASSERT(this == &obj->elementsHeader());
+
+    MOZ_NOT_REACHED("NYI");
+    return false;
+}
+
+template<typename T>
+bool
+TypedElementsHeader<T>::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index,
+                                      PropDesc *desc)
+{
+    MOZ_ASSERT(this == &obj->elementsHeader());
+
+    if (index >= length()) {
+        *desc = PropDesc::undefined();
+        return true;
+    }
+
+    *desc = PropDesc(NumberValue(getElement(index)), PropDesc::Writable,
+                     PropDesc::Enumerable, PropDesc::Configurable);
+    return false;
+}
+
+bool
+ArrayBufferElementsHeader::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index,
+                                         PropDesc *desc)
+{
+    MOZ_ASSERT(this == &obj->elementsHeader());
+
+    MOZ_NOT_REACHED("NYI");
+    return false;
+}
+
+bool
 SparseElementsHeader::defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index,
                                     const PropDesc &desc, bool shouldThrow, bool *succeeded)
 {
@@ -345,7 +404,7 @@ DenseElementsHeader::defineElement(JSContext *cx, ObjectImpl *obj, uint32_t inde
             return true;
         MOZ_ALWAYS_FALSE(js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_OBJECT_NOT_EXTENSIBLE,
                                                   JSDVG_IGNORE_STACK,
-                                                  ObjectValue(*obj->asObjectPtr()),
+                                                  ObjectValue(*obj),
                                                   NULL, NULL, NULL));
         return false;
     }
@@ -393,7 +452,7 @@ TypedElementsHeader<T>::defineElement(JSContext *cx, ObjectImpl *obj,
     *succeeded = false;
     js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_OBJECT_NOT_EXTENSIBLE,
                              JSDVG_IGNORE_STACK,
-                             ObjectValue(*(JSObject*)obj), // XXX jwalden dodgy cast
+                             ObjectValue(*obj),
                              NULL, NULL, NULL);
     return false;
 }
@@ -409,6 +468,108 @@ ArrayBufferElementsHeader::defineElement(JSContext *cx, ObjectImpl *obj,
     if (!delegate)
         return false;
     return DefineElement(cx, delegate, index, desc, shouldThrow, succeeded);
+}
+
+bool
+js::GetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index,
+               Value *vp)
+{
+    NEW_OBJECT_REPRESENTATION_ONLY();
+
+    do {
+        MOZ_ASSERT(obj);
+
+        if (static_cast<JSObject *>(obj)->isProxy()) { // XXX
+            MOZ_NOT_REACHED("NYI: proxy [[GetP]]");
+            return false;
+        }
+
+        ElementsHeader &header = obj->elementsHeader();
+
+        bool res;
+        PropDesc desc;
+        switch (header.kind()) {
+          case DenseElements:
+            res = header.asDenseElements().getOwnElement(cx, obj, index, &desc);
+            break;
+          case SparseElements:
+            res = header.asSparseElements().getOwnElement(cx, obj, index, &desc);
+            break;
+          case Uint8Elements:
+            res = header.asUint8Elements().getOwnElement(cx, obj, index, &desc);
+            break;
+          case Int8Elements:
+            res = header.asInt8Elements().getOwnElement(cx, obj, index, &desc);
+            break;
+          case Uint16Elements:
+            res = header.asUint16Elements().getOwnElement(cx, obj, index, &desc);
+            break;
+          case Int16Elements:
+            res = header.asInt16Elements().getOwnElement(cx, obj, index, &desc);
+            break;
+          case Uint32Elements:
+            res = header.asUint32Elements().getOwnElement(cx, obj, index, &desc);
+            break;
+          case Int32Elements:
+            res = header.asInt32Elements().getOwnElement(cx, obj, index, &desc);
+            break;
+          case Uint8ClampedElements:
+            res = header.asUint8ClampedElements().getOwnElement(cx, obj, index, &desc);
+            break;
+          case Float32Elements:
+            res = header.asFloat32Elements().getOwnElement(cx, obj, index, &desc);
+            break;
+          case Float64Elements:
+            res = header.asFloat64Elements().getOwnElement(cx, obj, index, &desc);
+            break;
+          case ArrayBufferElements:
+            res = header.asArrayBufferElements().getOwnElement(cx, obj, index, &desc);
+            break;
+        }
+        if (!res)
+            return false;
+
+        /* No property?  Recur or bottom out. */
+        if (desc.isUndefined()) {
+            obj = obj->getProto();
+            if (obj)
+                continue;
+
+            vp->setUndefined();
+            return true;
+        }
+
+        /* If it's a data property, return the value. */
+        if (desc.isDataDescriptor()) {
+            *vp = desc.value();
+            return true;
+        }
+
+        /* If it's an accessor property, call its [[Get]] with the receiver. */
+        if (desc.isAccessorDescriptor()) {
+            Value get = desc.getterValue();
+            if (get.isUndefined()) {
+                vp->setUndefined();
+                return true;
+            }
+
+            InvokeArgsGuard args;
+            if (!cx->stack.pushInvokeArgs(cx, 0, &args))
+                return false;
+
+            /* Push fval, thisv, and the args. */
+            args.calleev() = get;
+            args.thisv() = ObjectValue(*receiver);
+
+            bool ok = Invoke(cx, args);
+            *vp = args.rval();
+            return ok;
+        }
+
+        /* Otherwise it's a PropertyOp-based property.  XXX handle this! */
+        MOZ_NOT_REACHED("NYI: handle PropertyOp'd properties here");
+        return false;
+    } while (false);
 }
 
 bool
