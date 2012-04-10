@@ -2867,7 +2867,7 @@ IonBuilder::jsop_initprop(JSAtom *atom)
     MSlots *slots = MSlots::New(obj);
     current->add(slots);
 
-    MStoreSlot *store = MStoreSlot::New(slots, shape->slot(), value);
+    MStoreSlot *store = MStoreSlot::New(slots, baseObj->dynamicSlotIndex(shape->slot()), value);
     current->add(store);
     return resumeAfter(store);
 }
