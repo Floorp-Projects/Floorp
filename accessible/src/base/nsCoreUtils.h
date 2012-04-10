@@ -336,12 +336,6 @@ public:
   static bool IsColumnHidden(nsITreeColumn *aColumn);
 
   /**
-   * Scroll content into view.
-   */
-  static void ScrollTo(nsIPresShell* aPresShell, nsIContent* aContent,
-                       PRUint32 aScrollType);
-
-  /**
    * Return true if the given node is table header element.
    */
   static bool IsHTMLTableHeader(nsIContent *aContent)

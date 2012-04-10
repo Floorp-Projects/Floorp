@@ -50,6 +50,14 @@
 class nsXULTreeAccessible;
 class Relation;
 
+#define NS_ROOTACCESSIBLE_IMPL_CID                      \
+{  /* eaba2cf0-21b1-4e2b-b711-d3a89dcd5e1a */           \
+  0xeaba2cf0,                                           \
+  0x21b1,                                               \
+  0x4e2b,                                               \
+  { 0xb7, 0x11, 0xd3, 0xa8, 0x9d, 0xcd, 0x5e, 0x1a }    \
+}
+
 const PRInt32 SCROLL_HASH_START_SIZE = 6;
 
 class nsRootAccessible : public nsDocAccessibleWrap,
@@ -77,7 +85,9 @@ public:
   virtual PRUint64 NativeState();
 
   // nsRootAccessible
-  nsCaretAccessible* GetCaretAccessible();
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ROOTACCESSIBLE_IMPL_CID)
+
+    nsCaretAccessible *GetCaretAccessible();
 
   /**
    * Notify that the sub document presshell was activated.
@@ -118,6 +128,8 @@ protected:
 
     nsRefPtr<nsCaretAccessible> mCaretAccessible;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsRootAccessible, NS_ROOTACCESSIBLE_IMPL_CID)
 
 inline nsRootAccessible*
 nsAccessible::AsRoot()

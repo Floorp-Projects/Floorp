@@ -924,7 +924,7 @@ nsXULTreeGridCellAccessible::GetBounds(PRInt32 *aX, PRInt32 *aY,
   x += tcX;
   y += tcY;
 
-  nsPresContext* presContext = mDoc->PresContext();
+  nsPresContext *presContext = GetPresContext();
   *aX = presContext->CSSPixelsToDevPixels(x);
   *aY = presContext->CSSPixelsToDevPixels(y);
   *aWidth = presContext->CSSPixelsToDevPixels(width);
