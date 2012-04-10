@@ -1950,6 +1950,7 @@ ScriptAnalysis::needsArgsObj(NeedsArgsObjState &state, SSAUseChain *use)
     if (op == JSOP_POP || op == JSOP_POPN)
         return false;
 
+#ifdef JS_METHODJIT
     /* SplatApplyArgs can read fp->canonicalActualArg(i) directly. */
     if (state.canOptimizeApply && op == JSOP_FUNAPPLY && GET_ARGC(pc) == 2 && use->u.which == 0) {
         JS_ASSERT(mjit::IsLowerableFunCallOrApply(pc));
@@ -1957,6 +1958,7 @@ ScriptAnalysis::needsArgsObj(NeedsArgsObjState &state, SSAUseChain *use)
         state.canOptimizeApply = false;
         return false;
     }
+#endif
 
     /* arguments[i] can read fp->canonicalActualArg(i) directly. */
     if (!state.haveOptimizedApply && op == JSOP_GETELEM && use->u.which == 1) {
