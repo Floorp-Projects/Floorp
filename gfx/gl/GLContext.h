@@ -68,10 +68,6 @@
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 
-#if defined(MOZ_PLATFORM_MAEMO) || defined(ANDROID) || defined(MOZ_EGL_XRENDER_COMPOSITE)
-#define USE_GLES2 1
-#endif
-
 typedef char realGLboolean;
 
 #include "GLContextSymbols.h"
@@ -531,11 +527,7 @@ public:
         mOffscreenFBOsDirty(false),
         mInitialized(false),
         mIsOffscreen(aIsOffscreen),
-#ifdef USE_GLES2
-        mIsGLES2(true),
-#else
         mIsGLES2(false),
-#endif
         mIsGlobalSharedContext(false),
         mHasRobustness(false),
         mContextLost(false),
