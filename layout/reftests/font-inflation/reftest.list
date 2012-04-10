@@ -1,0 +1,43 @@
+test-pref(font.size.inflation.emPerLine,15) == text-1.html text-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) == text-2.html text-2-ref.html
+test-pref(font.size.inflation.emPerLine,15) == text-3.html text-3-ref.html
+test-pref(font.size.inflation.emPerLine,15) == text-4.html text-4-ref.html
+test-pref(font.size.inflation.emPerLine,15) == decoration-1.html decoration-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) == bullet-1.html bullet-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) == bullet-2.html bullet-2-ref.html
+test-pref(font.size.inflation.emPerLine,15) == input-text-1.html input-text-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) == input-text-2.html input-text-2-ref.html
+test-pref(font.size.inflation.emPerLine,15) == input-text-3.html input-text-3-ref.html
+test-pref(font.size.inflation.emPerLine,15) == textarea-1.html textarea-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) == textarea-2.html textarea-2-ref.html
+test-pref(font.size.inflation.emPerLine,15) == textarea-3.html textarea-3-ref.html
+test-pref(font.size.inflation.emPerLine,15) == css-transform-1.html css-transform-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) == css-transform-2.html css-transform-2-ref.html
+test-pref(font.size.inflation.emPerLine,15) == container-with-clamping.html container-with-clamping-ref.html
+test-pref(font.size.inflation.emPerLine,15) load video-1.html
+test-pref(font.size.inflation.emPerLine,15) HTTP(..) == intrinsic-min-1.html intrinsic-min-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) HTTP(..) == intrinsic-max-1.html intrinsic-max-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) HTTP(..) == intrinsic-fit-1a.html intrinsic-fit-1a-ref.html
+test-pref(font.size.inflation.emPerLine,15) HTTP(..) == intrinsic-fit-1b.html intrinsic-fit-1b-ref.html
+test-pref(font.size.inflation.emPerLine,15) HTTP(..) == intrinsic-fit-1c.html intrinsic-fit-1c-ref.html
+test-pref(font.size.inflation.emPerLine,15) HTTP(..) == intrinsic-fit-2a.html intrinsic-fit-1a-ref.html
+test-pref(font.size.inflation.emPerLine,15) HTTP(..) == intrinsic-fit-2b.html intrinsic-fit-1b-ref.html
+test-pref(font.size.inflation.emPerLine,15) HTTP(..) == intrinsic-fit-2c.html intrinsic-fit-1c-ref.html
+test-pref(font.size.inflation.emPerLine,15) == select-listbox-1.html select-listbox-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) != select-listbox-1.html select-listbox-1.html
+test-pref(font.size.inflation.emPerLine,15) == select-combobox-1.html select-combobox-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) != select-combobox-1.html select-combobox-1.html
+test-pref(font.size.inflation.emPerLine,15) == select-listbox-2.html select-listbox-2-ref.html
+test-pref(font.size.inflation.emPerLine,15) != select-listbox-2.html select-listbox-2.html
+test-pref(font.size.inflation.emPerLine,15) == select-combobox-2.html select-combobox-2-ref.html
+test-pref(font.size.inflation.emPerLine,15) != select-combobox-2.html select-combobox-2.html
+asserts-if(gtk2Widget,1-2) test-pref(font.size.inflation.emPerLine,15) != input-checkbox.html input-checkbox.html
+asserts-if(gtk2Widget,1-2) test-pref(font.size.inflation.emPerLine,15) != input-radio.html input-radio.html
+test-pref(font.size.inflation.emPerLine,15) == disable-fontinfl-on-mobile.html disable-fontinfl-on-mobile-ref.html
+test-pref(font.size.inflation.emPerLine,15) == disable-fontinfl-on-mobile-2.html disable-fontinfl-on-mobile-ref.html
+test-pref(font.size.inflation.emPerLine,15) == disable-fontinfl-on-mobile-3.html disable-fontinfl-on-mobile-ref.html
+test-pref(font.size.inflation.emPerLine,15) == disable-fontinfl-on-mobile-4.html disable-fontinfl-on-mobile-ref.html
+test-pref(font.size.inflation.emPerLine,15) == preformatted-text.html preformatted-text-ref.html
+test-pref(font.size.inflation.emPerLine,15) == fixed-height-body.html fixed-height-body-ref.html
+test-pref(font.size.inflation.emPerLine,15) == fixed-height-body-child.html fixed-height-body-child-ref.html
+test-pref(font.size.inflation.emPerLine,15) == consecutive-inline.html consecutive-inline-ref.html
