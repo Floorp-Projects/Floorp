@@ -170,7 +170,7 @@ __try {
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsRefPtr<nsDocAccessible> doc(do_QueryObject(this));
+  nsDocAccessible* doc = AsDoc();
   if (doc) {
     // Return window system accessible object for root document and tab document
     // accessibles.
