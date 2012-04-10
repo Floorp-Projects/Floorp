@@ -560,15 +560,15 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   nsIContentSink* aSink)
 {
   if (!aCommand) {
-    MOZ_NOT_REACHED("Command is mandatory");
+    MOZ_ASSERT(false, "Command is mandatory");
     return NS_ERROR_INVALID_POINTER;
   }
   if (aSink) {
-    MOZ_NOT_REACHED("Got a sink override. Should not happen for HTML doc.");
+    MOZ_ASSERT(false, "Got a sink override. Should not happen for HTML doc.");
     return NS_ERROR_INVALID_ARG;
   }
   if (!mIsRegularHTML) {
-    MOZ_NOT_REACHED("Must not set HTML doc to XHTML mode before load start.");
+    MOZ_ASSERT(false, "Must not set HTML doc to XHTML mode before load start.");
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
@@ -580,7 +580,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   bool viewSource = !strcmp(aCommand, "view-source");
   bool asData = !strcmp(aCommand, kLoadAsData);
   if(!(view || viewSource || asData)) {
-    MOZ_NOT_REACHED("Bad parser command");
+    MOZ_ASSERT(false, "Bad parser command");
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -595,7 +595,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     contentType.EqualsLiteral(TEXT_JAVASCRIPT) ||
     contentType.EqualsLiteral(APPLICATION_JSON));
   if (!(html || xhtml || plainText || viewSource)) {
-    MOZ_NOT_REACHED("Channel with bad content type.");
+    MOZ_ASSERT(false, "Channel with bad content type.");
     return NS_ERROR_INVALID_ARG;
   }
 

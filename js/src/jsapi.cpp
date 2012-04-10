@@ -781,8 +781,6 @@ JSRuntime::JSRuntime()
     thousandsSeparator(0),
     decimalSeparator(0),
     numGrouping(0),
-    anynameObject(NULL),
-    functionNamespaceObject(NULL),
     waiveGCQuota(false),
     dtoaState(NULL),
     pendingProxyOperation(NULL),
