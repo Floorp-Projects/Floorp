@@ -114,6 +114,14 @@ public:
 // data vs. layout heuristic
 // #define SHOW_LAYOUT_HEURISTIC
 
+#define NS_TABLEACCESSIBLE_IMPL_CID                     \
+{  /* 8d6d9c40-74bd-47ac-88dc-4a23516aa23d */           \
+  0x8d6d9c40,                                           \
+  0x74bd,                                               \
+  0x47ac,                                               \
+  { 0x88, 0xdc, 0x4a, 0x23, 0x51, 0x6a, 0xa2, 0x3d }    \
+}
+
 class nsHTMLTableAccessible : public nsAccessibleWrap,
                               public xpcAccessibleTable,
                               public nsIAccessibleTable,
@@ -123,6 +131,7 @@ public:
   nsHTMLTableAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_TABLEACCESSIBLE_IMPL_CID)
 
   // nsIAccessible Table
   NS_DECL_OR_FORWARD_NSIACCESSIBLETABLE_WITH_XPCACCESSIBLETABLE
@@ -198,6 +207,10 @@ protected:
   nsString mLayoutHeuristic;
 #endif
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsHTMLTableAccessible,
+                              NS_TABLEACCESSIBLE_IMPL_CID)
+
 
 /**
  * HTML caption accessible (html:caption).

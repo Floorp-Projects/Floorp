@@ -1229,7 +1229,7 @@ __try {
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsCoreUtils::ScrollTo(mDoc->PresShell(), mContent, aScrollType);
+  nsAccessNode::ScrollTo(aScrollType);
   return S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
