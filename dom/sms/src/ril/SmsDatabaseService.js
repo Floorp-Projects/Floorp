@@ -46,10 +46,6 @@ const GLOBAL_SCOPE = this;
  * SmsDatabaseService
  */
 function SmsDatabaseService() {
-  // Prime the directory service's cache to ensure that the ProfD entry exists
-  // by the time IndexedDB queries for it off the main thread. (See bug 743635.)
-  Services.dirsvc.get("ProfD", Ci.nsIFile);
-
   gIDBManager.initWindowless(GLOBAL_SCOPE);
 
   let that = this;
