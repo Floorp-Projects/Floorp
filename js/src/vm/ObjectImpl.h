@@ -68,7 +68,26 @@ struct PropDesc {
     friend class AutoPropDescArrayRooter;
     friend void JS::AutoGCRooter::trace(JSTracer *trc);
 
+    enum Enumerability { Enumerable = true, NonEnumerable = false };
+    enum Configurability { Configurable = true, NonConfigurable = false };
+    enum Writability { Writable = true, NonWritable = false };
+
     PropDesc();
+
+    static PropDesc undefined() { return PropDesc(); }
+
+    PropDesc(const Value &v, Writability writable,
+             Enumerability enumerable, Configurability configurable)
+      : pd_(UndefinedValue()),
+        value_(v),
+        get_(UndefinedValue()), set_(UndefinedValue()),
+        attrs((writable ? 0 : JSPROP_READONLY) |
+              (enumerable ? JSPROP_ENUMERATE : 0) |
+              (configurable ? 0 : JSPROP_PERMANENT)),
+        hasGet_(false), hasSet_(false),
+        hasValue_(true), hasWritable_(true), hasEnumerable_(true), hasConfigurable_(true),
+        isUndefined_(false)
+    {}
 
     /*
      * 8.10.5 ToPropertyDescriptor(Obj)
@@ -304,6 +323,8 @@ class DenseElementsHeader : public ElementsHeader
         return ElementsHeader::length;
     }
 
+    bool getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, PropDesc *desc);
+
     bool defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
                        bool shouldThrow, bool *succeeded);
 
@@ -327,6 +348,8 @@ class SparseElementsHeader : public ElementsHeader
         MOZ_ASSERT(ElementsHeader::isSparseElements());
         return ElementsHeader::length;
     }
+
+    bool getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, PropDesc *desc);
 
     bool defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
                        bool shouldThrow, bool *succeeded);
@@ -431,10 +454,19 @@ template<> inline const bool TypeIsUint8Clamped<uint8_clamped>() { return true; 
 template <typename T>
 class TypedElementsHeader : public ElementsHeader
 {
+    T getElement(uint32_t index) {
+        MOZ_ASSERT(index < length());
+        return reinterpret_cast<T *>(this + 1)[index];
+    }
+
   public:
-    uint32_t byteLength() const {
+    uint32_t length() const {
+        MOZ_ASSERT(Uint8Elements <= kind());
+        MOZ_ASSERT(kind() <= Float64Elements);
         return ElementsHeader::length;
     }
+
+    bool getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, PropDesc *desc);
 
     bool defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
                        bool shouldThrow, bool *succeeded);
@@ -521,6 +553,8 @@ class Uint8ClampedElementsHeader : public TypedElementsHeader<uint8_clamped>
 class ArrayBufferElementsHeader : public ElementsHeader
 {
   public:
+    bool getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, PropDesc *desc);
+
     bool defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
                        bool shouldThrow, bool *succeeded);
 
@@ -685,6 +719,9 @@ struct Shape;
 
 class NewObjectCache;
 
+inline Value
+ObjectValue(ObjectImpl &obj);
+
 /*
  * ObjectImpl specifies the internal implementation of an object.  (In contrast
  * JSObject specifies an "external" interface, at the conceptual level of that
@@ -770,6 +807,8 @@ class ObjectImpl : public gc::Cell
     }
 
     JSObject * asObjectPtr() { return reinterpret_cast<JSObject *>(this); }
+
+    friend inline Value ObjectValue(ObjectImpl &obj);
 
     /* These functions are public, and they should remain public. */
 
@@ -1080,6 +1119,18 @@ class ObjectImpl : public gc::Cell
     static size_t getPrivateDataOffset(size_t nfixed) { return getFixedSlotOffset(nfixed); }
     static size_t offsetOfSlots() { return offsetof(ObjectImpl, slots); }
 };
+
+inline Value
+ObjectValue(ObjectImpl &obj)
+{
+    Value v;
+    v.setObject(*obj.asObjectPtr());
+    return v;
+}
+
+/* Proposed default [[GetP]](Receiver, P) method. */
+extern bool
+GetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index, Value *vp);
 
 extern bool
 DefineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
