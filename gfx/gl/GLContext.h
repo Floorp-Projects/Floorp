@@ -554,6 +554,7 @@ public:
 #endif
     {
         mUserData.Init();
+        mOwningThread = NS_GetCurrentThread();
     }
 
     virtual ~GLContext() {
@@ -639,6 +640,23 @@ public:
 
     bool IsGlobalSharedContext() { return mIsGlobalSharedContext; }
     void SetIsGlobalSharedContext(bool aIsOne) { mIsGlobalSharedContext = aIsOne; }
+
+    /**
+     * Returns true if the thread on which this context was created is the currently
+     * executing thread.
+     */
+    bool IsOwningThreadCurrent() { return NS_GetCurrentThread() == mOwningThread; }
+
+    void DispatchToOwningThread(nsIRunnable *event) {
+        // Before dispatching, we need to ensure we're not in the middle of
+        // shutting down. Dispatching runnables in the middle of shutdown
+        // (that is, when the main thread is no longer get-able) can cause them
+        // to leak. See Bug 741319, and Bug 744115.
+        nsCOMPtr<nsIThread> mainThread;
+        if (NS_SUCCEEDED(NS_GetMainThread(getter_AddRefs(mainThread)))) {
+            mOwningThread->Dispatch(event, NS_DISPATCH_NORMAL);
+        }
+    }
 
     const ContextFormat& CreationFormat() { return mCreationFormat; }
     const ContextFormat& ActualFormat() { return mActualFormat; }
@@ -1580,6 +1598,9 @@ protected:
 
     ContextFormat mCreationFormat;
     nsRefPtr<GLContext> mSharedContext;
+
+    // The thread on which this context was created.
+    nsCOMPtr<nsIThread> mOwningThread;
 
     GLContextSymbols mSymbols;
 

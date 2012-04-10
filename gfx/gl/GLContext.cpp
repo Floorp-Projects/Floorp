@@ -766,7 +766,7 @@ void GLContext::ApplyFilterToBoundTexture(gfxPattern::GraphicsFilter aFilter)
 BasicTextureImage::~BasicTextureImage()
 {
     GLContext *ctx = mGLContext;
-    if (ctx->IsDestroyed() || !NS_IsMainThread()) {
+    if (ctx->IsDestroyed() || !ctx->IsOwningThreadCurrent()) {
         ctx = ctx->GetSharedContext();
     }
 
