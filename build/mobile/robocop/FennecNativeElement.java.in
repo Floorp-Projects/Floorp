@@ -76,7 +76,7 @@ public class FennecNativeElement implements Element {
                     View view = (View)mActivity.findViewById(mId);
                     if(view != null) {
                         if (!view.performClick()) {
-                            FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_WARN,
+                            FennecNativeDriver.log(FennecNativeDriver.LogLevel.WARN,
                                 "Robocop called click on an element with no listener");
                         }
                     } else {

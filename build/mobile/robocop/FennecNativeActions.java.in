@@ -137,7 +137,7 @@ public class FennecNativeActions implements Actions {
             if(methodName.equals("hashCode")) {
                 return 314;
             }
-            FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG, 
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG, 
                 "Waking up on "+methodName);
             mEventExpecter.notifyOfEvent();
             return null;
@@ -163,7 +163,7 @@ public class FennecNativeActions implements Actions {
                     break;
                 }
             }
-            FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
                 "unblocked on expecter for " + mGeckoEvent);
         }
 
@@ -179,7 +179,7 @@ public class FennecNativeActions implements Actions {
             } catch (InvocationTargetException e) {
                 e.printStackTrace();
             }
-            FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
                 "received event " + mGeckoEvent);
             synchronized (this) {
                 mEventReceived = true;
@@ -189,7 +189,7 @@ public class FennecNativeActions implements Actions {
     }
     
     public EventExpecter expectGeckoEvent(String geckoEvent) {
-        FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
+        FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
             "waiting for "+geckoEvent);
         try {
             Class [] interfaces = new Class[1];
@@ -222,7 +222,7 @@ public class FennecNativeActions implements Actions {
         public Object invoke(Object proxy, Method method, Object[] args) {
             String methodName = method.getName();
             if ("drawFinished".equals(methodName)) {
-                FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
+                FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
                     "Received drawFinished notification");
                 mPaintExpecter.notifyOfEvent();
             } else if ("toString".equals(methodName)) {
