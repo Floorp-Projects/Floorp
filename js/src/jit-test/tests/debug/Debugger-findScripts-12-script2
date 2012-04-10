@@ -1,0 +1,19 @@
+// -*- mode: js2 -*-
+// Script for Debugger-findScripts-12.js to load.
+// Line numbers in this script are cited in the test, and must align with ...-script1.
+
+function h() {
+                                                        // line 6
+    function hh() {
+        return "on investment";                         // line 8
+    };
+    hh.global = this;
+    return hh;
+};
+
+function i() {
+    return "to innocence";                              // line 15
+}
+
+h.global = this;
+i.global = this;

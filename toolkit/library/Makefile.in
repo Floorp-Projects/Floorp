@@ -532,7 +532,6 @@ endif
 ifdef _MSC_VER
 OS_LIBS += $(call EXPAND_LIBNAME,delayimp)
 EXTRA_DSO_LDOPTS += \
-  -DELAYLOAD:gkmedias.dll \
   -DELAYLOAD:psapi.dll \
   -DELAYLOAD:dbghelp.dll \
   -DELAYLOAD:rasapi32.dll \

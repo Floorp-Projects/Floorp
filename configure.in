@@ -3380,7 +3380,7 @@ else
     dnl ========================================================
     dnl = Check for freetype2 and its functionality
     dnl ========================================================
-    AC_CHECK_FT2(6.1.0, [_HAVE_FREETYPE2=1], [_HAVE_FREETYPE2=])
+    PKG_CHECK_MODULES(FT2, freetype2 >= 6.1.0, _HAVE_FREETYPE2=1, _HAVE_FREETYPE2=)
 
     if test "$_HAVE_FREETYPE2"; then
     	_SAVE_LIBS="$LIBS"
@@ -8403,6 +8403,7 @@ AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
+AC_SUBST(STRIP_FLAGS)
 AC_SUBST(USE_ELF_DYNSTR_GC)
 AC_SUBST(USE_ELF_HACK)
 AC_SUBST(INCREMENTAL_LINKER)

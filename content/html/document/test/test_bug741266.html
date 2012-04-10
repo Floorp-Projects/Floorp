@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=741266
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 741266</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=741266">Mozilla Bug 741266</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 741266 **/
+var w = window.open("", "", "width=100,height=100");
+is(w.innerHeight, 100, "Popup height should be 100 when opened with window.open");
+// XXXbz On at least some platforms, the innerWidth is off by the scrollbar
+// width for some reason.  So just make sure it's the same for both popups.
+var width = w.innerWidth;
+w.close();
+w = document.open("", "", "width=100,height=100");
+is(w.innerHeight, 100, "Popup height should be 100 when opened with document.open");
+is(w.innerWidth, width, "Popup width should be the same when opened with document.open");
+w.close();
+</script>
+</pre>
+</body>
+</html>

@@ -141,7 +141,6 @@ public:
   , mExcludeReadOnlyFolders(false)
   , mExpandQueries(true)
   , mIncludeHidden(false)
-  , mRedirectsMode(nsINavHistoryQueryOptions::REDIRECTS_MODE_ALL)
   , mMaxResults(0)
   , mQueryType(nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY)
   , mAsyncEnabled(false)
@@ -159,7 +158,6 @@ public:
   bool ExcludeReadOnlyFolders() const { return mExcludeReadOnlyFolders; }
   bool ExpandQueries() const { return mExpandQueries; }
   bool IncludeHidden() const { return mIncludeHidden; }
-  PRUint16 RedirectsMode() const { return mRedirectsMode; }
   PRUint32 MaxResults() const { return mMaxResults; }
   PRUint16 QueryType() const { return mQueryType; }
   bool AsyncEnabled() const { return mAsyncEnabled; }
@@ -184,7 +182,6 @@ private:
   bool mExcludeReadOnlyFolders;
   bool mExpandQueries;
   bool mIncludeHidden;
-  PRUint16 mRedirectsMode;
   PRUint32 mMaxResults;
   PRUint16 mQueryType;
   bool mAsyncEnabled;

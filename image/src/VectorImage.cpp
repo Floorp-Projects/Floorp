@@ -405,21 +405,12 @@ VectorImage::GetFrame(PRUint32 aWhichFrame,
                       PRUint32 aFlags,
                       gfxASurface** _retval)
 {
-#if defined(DEBUG) && defined(ANDROID)
-  printf_stderr("Beginning VectorImage::GetFrame (bug 739711 diagnostic)\n");
-#endif // defined(DEBUG) && defined(ANDROID)
-
   NS_ENSURE_ARG_POINTER(_retval);
   nsRefPtr<gfxImageSurface> surface;
   nsresult rv = CopyFrame(aWhichFrame, aFlags, getter_AddRefs(surface));
   if (NS_SUCCEEDED(rv)) {
     *_retval = surface.forget().get();
   }
-
-#if defined(DEBUG) && defined(ANDROID)
-  printf_stderr("Completing VectorImage::GetFrame (bug 739711 diagnostic)\n");
-#endif // defined(DEBUG) && defined(ANDROID)
-
   return rv;
 }
 
@@ -549,10 +540,6 @@ VectorImage::Draw(gfxContext* aContext,
                   const nsIntSize& aViewportSize,
                   PRUint32 aFlags)
 {
-#if defined(DEBUG) && defined(ANDROID)
-  printf_stderr("Beginning VectorImage::Draw (bug 739711 diagnostic)\n");
-#endif // defined(DEBUG) && defined(ANDROID)
-
   NS_ENSURE_ARG_POINTER(aContext);
   if (mError || !mIsFullyLoaded)
     return NS_ERROR_FAILURE;
@@ -598,11 +585,6 @@ VectorImage::Draw(gfxContext* aContext,
                              gfxASurface::ImageFormatARGB32, aFilter);
 
   mIsDrawing = false;
-
-#if defined(DEBUG) && defined(ANDROID)
-  printf_stderr("Completing VectorImage::Draw (bug 739711 diagnostic)\n");
-#endif // defined(DEBUG) && defined(ANDROID)
-
   return NS_OK;
 }
 

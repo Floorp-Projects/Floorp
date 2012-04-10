@@ -64,7 +64,6 @@ class nsHyperTextAccessible;
 class nsHTMLImageAccessible;
 class nsHTMLImageMapAccessible;
 class nsHTMLLIAccessible;
-struct nsRoleMapEntry;
 class Relation;
 namespace mozilla {
 namespace a11y {

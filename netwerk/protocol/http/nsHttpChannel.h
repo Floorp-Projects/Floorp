@@ -337,9 +337,6 @@ private:
     PRUint32                          mResuming                 : 1;
     PRUint32                          mInitedCacheEntry         : 1;
     PRUint32                          mCacheForOfflineUse       : 1;
-    // True if mCacheForOfflineUse was set because we were caching
-    // opportunistically.
-    PRUint32                          mCachingOpportunistically : 1;
     // True if we are loading a fallback cache entry from the
     // application cache.
     PRUint32                          mFallbackChannel          : 1;

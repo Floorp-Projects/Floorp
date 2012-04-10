@@ -231,13 +231,12 @@ private:
     // mResponseComplete := transaction ran to completion
 
     // For Restart-In-Progress Functionality
-    PRInt64                         mToReadBeforeRestart;
     bool                            mReportedStart;
     bool                            mReportedResponseHeader;
 
     // protected by nsHttp::GetLock()
     nsHttpResponseHead             *mForTakeResponseHead;
-    bool                            mTakenResponseHeader;
+    bool                            mResponseHeadTaken;
 
     class RestartVerifier 
     {
@@ -254,18 +253,27 @@ private:
         RestartVerifier()
             : mContentLength(-1)
             , mAlreadyProcessed(0)
-            , mActive(false)
+            , mToReadBeforeRestart(0)
             , mSetup(false)
         {}
         ~RestartVerifier() {}
         
         void Set(PRInt64 contentLength, nsHttpResponseHead *head);
         bool Verify(PRInt64 contentLength, nsHttpResponseHead *head);
-        bool Active() { return mActive; }
-        void SetActive(bool val) { mActive = val; }
+        bool IsDiscardingContent() { return mToReadBeforeRestart != 0; }
         bool IsSetup() { return mSetup; }
         PRInt64 AlreadyProcessed() { return mAlreadyProcessed; }
-        void SetAlreadyProcessed(PRInt64 val) { mAlreadyProcessed = val; }
+        void SetAlreadyProcessed(PRInt64 val) {
+            mAlreadyProcessed = val;
+            mToReadBeforeRestart = val;
+        }
+        PRInt64 ToReadBeforeRestart() { return mToReadBeforeRestart; }
+        void HaveReadBeforeRestart(PRUint32 amt)
+        {
+            NS_ABORT_IF_FALSE(amt <= mToReadBeforeRestart,
+                              "too large of a HaveReadBeforeRestart deduction");
+            mToReadBeforeRestart -= amt;
+        }
 
     private:
         // This is the data from the first complete response header
@@ -283,8 +291,10 @@ private:
         // be skipped in the new one.
         PRInt64                         mAlreadyProcessed;
 
-        // true when iteration > 0 has started
-        bool                            mActive;
+        // The amount of data that must be discarded in the current iteration
+        // (where iteration > 0) to reach the mAlreadyProcessed high water
+        // mark.
+        PRInt64                         mToReadBeforeRestart;
 
         // true when ::Set has been called with a response header
         bool                            mSetup;

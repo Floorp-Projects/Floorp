@@ -2773,6 +2773,13 @@ public:
         mWrapperWord = newval;
     }
 
+    // Returns the relevant same-compartment security if applicable, or
+    // mFlatJSObject otherwise.
+    //
+    // This takes care of checking mWrapperWord to see if we already have such
+    // a wrapper.
+    JSObject *GetSameCompartmentSecurityWrapper(JSContext *cx);
+
     void NoteTearoffs(nsCycleCollectionTraversalCallback& cb);
 
     QITableEntry* GetOffsets()

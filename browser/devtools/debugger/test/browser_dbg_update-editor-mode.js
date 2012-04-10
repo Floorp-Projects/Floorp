@@ -20,44 +20,63 @@ var gScripts = null;
 
 function test()
 {
+  let scriptShown = false;
+  let framesAdded = false;
+
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
     gDebugger = gPane.debuggerWindow;
 
-    testScriptsDisplay();
+    gPane.activeThread.addOneTimeListener("framesadded", function() {
+      framesAdded = true;
+      runTest();
+    });
+    gDebuggee.firstCall();
   });
+
+  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+    let url = aEvent.detail.url;
+    if (url.indexOf("editor-mode") != -1) {
+      scriptShown = true;
+      window.removeEventListener(aEvent.type, _onEvent);
+      runTest();
+    }
+  });
+
+  function runTest()
+  {
+    if (scriptShown && framesAdded) {
+      Services.tm.currentThread.dispatch({ run: testScriptsDisplay }, 0);
+    }
+  }
 }
 
 function testScriptsDisplay() {
-  gPane.activeThread.addOneTimeListener("framesadded", function() {
-    Services.tm.currentThread.dispatch({ run: function() {
-      gScripts = gDebugger.DebuggerView.Scripts._scripts;
+  gScripts = gDebugger.DebuggerView.Scripts._scripts;
 
-      is(gDebugger.StackFrames.activeThread.state, "paused",
-        "Should only be getting stack frames while paused.");
+  is(gDebugger.StackFrames.activeThread.state, "paused",
+    "Should only be getting stack frames while paused.");
 
-      is(gScripts.itemCount, 2, "Found the expected number of scripts.");
+  is(gScripts.itemCount, 2, "Found the expected number of scripts.");
 
-      is(gDebugger.editor.getMode(), SourceEditor.MODES.HTML,
-         "Found the expected editor mode.");
+  is(gDebugger.editor.getMode(), SourceEditor.MODES.HTML,
+     "Found the expected editor mode.");
 
-      ok(gDebugger.editor.getText().search(/debugger/) != -1,
-        "The correct script was loaded initially.");
+  ok(gDebugger.editor.getText().search(/debugger/) != -1,
+    "The correct script was loaded initially.");
 
-      gDebugger.editor.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
-                                        function onChange() {
-        gDebugger.editor.removeEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
-                                             onChange);
-        testSwitchPaused();
-      });
-      gScripts.selectedIndex = 0;
-      gDebugger.SourceScripts.onChange({ target: gScripts });
-    }}, 0);
+  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+    let url = aEvent.detail.url;
+    if (url.indexOf("switching-01.js") != -1) {
+      window.removeEventListener(aEvent.type, _onEvent);
+      testSwitchPaused();
+    }
   });
 
-  gDebuggee.firstCall();
+  let url = gDebuggee.document.querySelector("script").src;
+  gDebugger.DebuggerView.Scripts.selectScript(url);
 }
 
 function testSwitchPaused()
