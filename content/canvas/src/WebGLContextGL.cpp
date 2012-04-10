@@ -134,9 +134,15 @@ WebGLContext::ActiveTexture(WebGLenum texture)
     if (!IsContextStable())
         return NS_OK;
 
-    if (texture < LOCAL_GL_TEXTURE0 || texture >= LOCAL_GL_TEXTURE0 + mBound2DTextures.Length())
-        return ErrorInvalidEnum("ActiveTexture: texture unit %d out of range (0..%d)",
-                                texture, mBound2DTextures.Length()-1);
+    if (texture < LOCAL_GL_TEXTURE0 ||
+        texture >= LOCAL_GL_TEXTURE0 + PRUint32(mGLMaxTextureUnits))
+    {
+        return ErrorInvalidEnum(
+            "ActiveTexture: texture unit %d out of range. "
+            "Accepted values range from TEXTURE0 to TEXTURE0 + %d. "
+            "Notice that TEXTURE0 != 0.",
+            texture, mGLMaxTextureUnits);
+    }
 
     MakeContextCurrent();
     mActiveTexture = texture - LOCAL_GL_TEXTURE0;
@@ -1375,9 +1381,12 @@ WebGLContext::WhatDoesVertexAttrib0Need()
 
     // work around Mac OSX crash, see bug 631420
 #ifdef XP_MACOSX
-    if (mAttribBuffers[0].enabled &&
+    if (gl->WorkAroundDriverBugs() &&
+        mAttribBuffers[0].enabled &&
         !mCurrentProgram->IsAttribInUse(0))
+    {
         return VertexAttrib0Status::EmulatedUninitializedArray;
+    }
 #endif
 
     return (gl->IsGLES2() || mAttribBuffers[0].enabled) ? VertexAttrib0Status::Default
@@ -2642,7 +2651,10 @@ WebGLContext::GetProgramParameter(nsIWebGLProgram *pobj, PRUint32 pname, nsIVari
             GLint i = 0;
 #ifdef XP_MACOSX
             // See comment in ValidateProgram below.
-            i = 1;
+            if (gl->WorkAroundDriverBugs())
+                i = 1;
+            else
+                gl->fGetProgramiv(progname, pname, &i);
 #else
             gl->fGetProgramiv(progname, pname, &i);
 #endif
@@ -4397,8 +4409,10 @@ WebGLContext::ValidateProgram(nsIWebGLProgram *pobj)
 
 #ifdef XP_MACOSX
     // see bug 593867 for NVIDIA and bug 657201 for ATI. The latter is confirmed with Mac OS 10.6.7
-    LogMessageIfVerbose("validateProgram: implemented as a no-operation on Mac to work around crashes");
-    return NS_OK;
+    if (gl->WorkAroundDriverBugs()) {
+        LogMessageIfVerbose("validateProgram: implemented as a no-operation on Mac to work around crashes");
+        return NS_OK;
+    }
 #endif
 
     gl->fValidateProgram(progname);
@@ -4506,9 +4520,12 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
         // 7-bit ASCII range, so we can skip the NS_IsAscii() check.
         const nsCString& sourceCString = NS_LossyConvertUTF16toASCII(flatSource);
 
-        const PRUint32 maxSourceLength = (PRUint32(1)<<18) - 1;
-        if (sourceCString.Length() > maxSourceLength)
-            return ErrorInvalidValue("compileShader: source has more than %d characters", maxSourceLength);
+        if (gl->WorkAroundDriverBugs()) {
+            const PRUint32 maxSourceLength = (PRUint32(1)<<18) - 1;
+            if (sourceCString.Length() > maxSourceLength)
+                return ErrorInvalidValue("compileShader: source has more than %d characters", 
+                                         maxSourceLength);
+        }
 
         const char *s = sourceCString.get();
 
@@ -4524,8 +4541,12 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
                             | SH_ATTRIBUTES_UNIFORMS;
 #ifdef XP_MACOSX
             // work around bug 665578
-            if (!nsCocoaFeatures::OnLionOrLater() && gl->Vendor() == gl::GLContext::VendorATI)
+            if (gl->WorkAroundDriverBugs() &&
+                !nsCocoaFeatures::OnLionOrLater() &&
+                gl->Vendor() == gl::GLContext::VendorATI)
+            {
                 compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
+            }
 #endif
         }
 

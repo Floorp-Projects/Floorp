@@ -15,7 +15,7 @@ final class DisplayPortCalculator {
     private static final String LOGTAG = "GeckoDisplayPortCalculator";
     private static final PointF ZERO_VELOCITY = new PointF(0, 0);
 
-    private static DisplayPortStrategy sStrategy = new FixedMarginStrategy();
+    private static DisplayPortStrategy sStrategy = new VelocityBiasStrategy();
 
     static DisplayPortMetrics calculate(ImmutableViewportMetrics metrics, PointF velocity) {
         return sStrategy.calculate(metrics, (velocity == null ? ZERO_VELOCITY : velocity));
@@ -216,14 +216,17 @@ final class DisplayPortCalculator {
      * they are affected by the panning velocity. Specifically, if we are panning on one axis,
      * we remove the margins on the other axis because we are likely axis-locked. Also once
      * we are panning in one direction above a certain threshold velocity, we shift the buffer
-     * so that it is entirely in the direction of the pan.
+     * so that it is almost entirely in the direction of the pan, with a little bit in the
+     * reverse direction.
      */
     private static class VelocityBiasStrategy implements DisplayPortStrategy {
         // The length of each axis of the display port will be the corresponding view length
         // multiplied by this factor.
-        private static final float SIZE_MULTIPLIER = 1.2f;
+        private static final float SIZE_MULTIPLIER = 1.5f;
         // The velocity above which we apply the velocity bias
         private static final float VELOCITY_THRESHOLD = GeckoAppShell.getDpi() / 32f;
+        // How much of the buffer to keep in the reverse direction of the velocity
+        private static final float REVERSE_BUFFER = 0.2f;
 
         public DisplayPortMetrics calculate(ImmutableViewportMetrics metrics, PointF velocity) {
             float displayPortWidth = metrics.getWidth() * SIZE_MULTIPLIER;
@@ -249,21 +252,23 @@ final class DisplayPortCalculator {
             // the display port.
             RectF margins = new RectF();
             if (velocity.x > VELOCITY_THRESHOLD) {
-                margins.right = horizontalBuffer;
+                margins.left = horizontalBuffer * REVERSE_BUFFER;
             } else if (velocity.x < -VELOCITY_THRESHOLD) {
-                margins.left = horizontalBuffer;
+                margins.left = horizontalBuffer * (1.0f - REVERSE_BUFFER);
             } else {
                 margins.left = horizontalBuffer / 2.0f;
-                margins.right = horizontalBuffer - margins.left;
             }
+            margins.right = horizontalBuffer - margins.left;
+
             if (velocity.y > VELOCITY_THRESHOLD) {
-                margins.bottom = verticalBuffer;
+                margins.top = verticalBuffer * REVERSE_BUFFER;
             } else if (velocity.y < -VELOCITY_THRESHOLD) {
-                margins.top = verticalBuffer;
+                margins.top = verticalBuffer * (1.0f - REVERSE_BUFFER);
             } else {
                 margins.top = verticalBuffer / 2.0f;
-                margins.bottom = verticalBuffer - margins.top;
             }
+            margins.bottom = verticalBuffer - margins.top;
+
             // and finally shift the margins to account for page bounds
             margins = shiftMarginsForPageBounds(margins, metrics);
 

@@ -1340,7 +1340,7 @@ class IDLInterfaceMember(IDLObjectWithIdentifier):
     def handleExtendedAttribute(self, name, list):
         pass
 
-    def extendedAttribute(self, name):
+    def getExtendedAttribute(self, name):
         return self._extendedAttrDict.get(name, None)
 
 class IDLConst(IDLInterfaceMember):
