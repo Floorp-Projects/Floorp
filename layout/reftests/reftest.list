@@ -152,6 +152,9 @@ include font-face/reftest.list
 # font features (opentype)
 include font-features/reftest.list
 
+# mobile font size inflation
+include font-inflation/reftest.list
+
 # font matching
 include font-matching/reftest.list
 
