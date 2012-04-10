@@ -8,6 +8,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsIDOMIccManager.h"
+#include "nsIMobileConnectionProvider.h"
 #include "nsIObserver.h"
 
 namespace mozilla {
@@ -34,6 +35,8 @@ public:
                                            nsDOMEventTargetHelper)
 
 private:
+  nsCOMPtr<nsIMobileConnectionProvider> mProvider;
+
   NS_DECL_EVENT_HANDLER(stkcommand)
   NS_DECL_EVENT_HANDLER(stksessionend)
 };

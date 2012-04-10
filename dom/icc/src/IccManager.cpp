@@ -6,6 +6,8 @@
 #include "IccManager.h"
 #include "SimToolKit.h"
 
+#define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
+
 DOMCI_DATA(MozIccManager, mozilla::dom::icc::IccManager)
 
 namespace mozilla {
@@ -24,6 +26,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IccManager,
                                                 nsDOMEventTargetHelper)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(stkcommand)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(stksessionend)
+  tmp->mProvider = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IccManager)
@@ -37,6 +40,13 @@ NS_IMPL_RELEASE_INHERITED(IccManager, nsDOMEventTargetHelper)
 
 IccManager::IccManager()
 {
+  mProvider = do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
+
+  // Not being able to acquire the provider isn't fatal since we check
+  // for it explicitly below.
+  if (!mProvider) {
+    NS_WARNING("Could not acquire nsIMobileConnectionProvider!");
+  }
 }
 
 void
@@ -65,13 +75,23 @@ IccManager::Observe(nsISupports* aSubject,
 NS_IMETHODIMP
 IccManager::SendStkResponse(const JS::Value& aResponse)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mProvider->SendStkResponse(GetOwner(), aResponse);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 IccManager::SendStkMenuSelection(PRUint16 aItemIdentifier, bool aHelpRequested)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mProvider->SendStkMenuSelection(GetOwner(), aItemIdentifier, aHelpRequested);
+  return NS_OK;
 }
 
 NS_IMPL_EVENT_HANDLER(IccManager, stkcommand)
