@@ -2726,13 +2726,13 @@ TypeObject::getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force
         return;
     }
 
-    TypeSet *protoTypes = proto->type()->getProperty(cx, id, false);
+    TypeSet *protoTypes = proto->getType(cx)->getProperty(cx, id, false);
     if (!protoTypes)
         return;
 
     protoTypes->addSubset(cx, types);
 
-    proto->type()->getFromPrototypes(cx, id, protoTypes);
+    proto->getType(cx)->getFromPrototypes(cx, id, protoTypes);
 }
 
 static inline void
