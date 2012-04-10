@@ -70,7 +70,7 @@ class HTMLElement(object):
         return self.marionette.find_elements(method, target, self.id)
 
     def get_attribute(self, attribute):
-        return self.marionette._send_message('getElementAttribute', 'value', element=self.id, name=attribute)
+        return self.marionette._send_message('getAttributeValue', 'value', element=self.id, name=attribute)
 
     def click(self):
         return self.marionette._send_message('clickElement', 'ok', element=self.id)

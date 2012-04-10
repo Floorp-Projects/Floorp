@@ -36,15 +36,16 @@
 import os
 from marionette_test import MarionetteTestCase
 
-class TestClick(MarionetteTestCase):
-    def test_click(self):
+class TestSelected(MarionetteTestCase):
+    def test_selected(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
-        link = self.marionette.find_element("id", "mozLink")
-        link.click()
-        self.assertEqual("Clicked", self.marionette.execute_script("return document.getElementById('mozLink').innerHTML;"))
+        box = self.marionette.find_element("name", "myCheckBox")
+        self.assertFalse(box.selected())
+        box.click()
+        self.assertTrue(box.selected())
 
-class TestClickChrome(MarionetteTestCase):
+class TestSelectedChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
         self.marionette.set_context("chrome")
@@ -61,12 +62,12 @@ class TestClickChrome(MarionetteTestCase):
         self.marionette.switch_to_window(self.win)
         MarionetteTestCase.tearDown(self)
 
-    def test_click(self):
+    def test_selected(self):
         wins = self.marionette.get_windows()
         wins.remove(self.win)
         newWin = wins.pop()
         self.marionette.switch_to_window(newWin)
         box = self.marionette.find_element("id", "testBox")
-        self.assertFalse(self.marionette.execute_script("return arguments[0].checked;", [box]))
-        box.click()
-        self.assertTrue(self.marionette.execute_script("return arguments[0].checked;", [box]))
+        self.assertFalse(box.selected())
+        self.assertFalse(self.marionette.execute_script("arguments[0].checked = true;", [box]))
+        self.assertTrue(box.selected())
