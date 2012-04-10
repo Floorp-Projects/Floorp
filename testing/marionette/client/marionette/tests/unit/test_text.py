@@ -36,15 +36,30 @@
 import os
 from marionette_test import MarionetteTestCase
 
-class TestClick(MarionetteTestCase):
-    def test_click(self):
+class TestText(MarionetteTestCase):
+    def test_getText(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
-        link = self.marionette.find_element("id", "mozLink")
-        link.click()
-        self.assertEqual("Clicked", self.marionette.execute_script("return document.getElementById('mozLink').innerHTML;"))
+        l = self.marionette.find_element("id", "mozLink")
+        self.assertEqual("Click me!", l.text())
 
-class TestClickChrome(MarionetteTestCase):
+    def test_clearText(self):
+        test_html = self.marionette.absolute_url("test.html")
+        self.marionette.navigate(test_html)
+        l = self.marionette.find_element("name", "myInput")
+        self.assertEqual("asdf", self.marionette.execute_script("return arguments[0].value;", [l]))
+        l.clear()
+        self.assertEqual("", self.marionette.execute_script("return arguments[0].value;", [l]))
+
+    def test_sendKeys(self):
+        test_html = self.marionette.absolute_url("test.html")
+        self.marionette.navigate(test_html)
+        l = self.marionette.find_element("name", "myInput")
+        self.assertEqual("asdf", self.marionette.execute_script("return arguments[0].value;", [l]))
+        l.send_keys("o")
+        self.assertEqual("asdfo", self.marionette.execute_script("return arguments[0].value;", [l]))
+
+class TestTextChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
         self.marionette.set_context("chrome")
@@ -61,12 +76,30 @@ class TestClickChrome(MarionetteTestCase):
         self.marionette.switch_to_window(self.win)
         MarionetteTestCase.tearDown(self)
 
-    def test_click(self):
+    def test_getText(self):
         wins = self.marionette.get_windows()
         wins.remove(self.win)
         newWin = wins.pop()
         self.marionette.switch_to_window(newWin)
-        box = self.marionette.find_element("id", "testBox")
-        self.assertFalse(self.marionette.execute_script("return arguments[0].checked;", [box]))
-        box.click()
-        self.assertTrue(self.marionette.execute_script("return arguments[0].checked;", [box]))
+        box = self.marionette.find_element("id", "textInput")
+        self.assertEqual("test", box.text())
+
+    def test_clearText(self):
+        wins = self.marionette.get_windows()
+        wins.remove(self.win)
+        newWin = wins.pop()
+        self.marionette.switch_to_window(newWin)
+        box = self.marionette.find_element("id", "textInput")
+        self.assertEqual("test", box.text())
+        box.clear()
+        self.assertEqual("", box.text())
+
+    def test_sendKeys(self):
+        wins = self.marionette.get_windows()
+        wins.remove(self.win)
+        newWin = wins.pop()
+        self.marionette.switch_to_window(newWin)
+        box = self.marionette.find_element("id", "textInput")
+        self.assertEqual("test", box.text())
+        box.send_keys("at")
+        self.assertEqual("attest", box.text())

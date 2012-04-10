@@ -2726,13 +2726,13 @@ TypeObject::getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force
         return;
     }
 
-    TypeSet *protoTypes = proto->type()->getProperty(cx, id, false);
+    TypeSet *protoTypes = proto->getType(cx)->getProperty(cx, id, false);
     if (!protoTypes)
         return;
 
     protoTypes->addSubset(cx, types);
 
-    proto->type()->getFromPrototypes(cx, id, protoTypes);
+    proto->getType(cx)->getFromPrototypes(cx, id, protoTypes);
 }
 
 static inline void
@@ -5310,8 +5310,10 @@ JSScript::makeTypes(JSContext *cx)
 
     if (!cx->typeInferenceEnabled()) {
         types = (TypeScript *) cx->calloc_(sizeof(TypeScript));
-        if (!types)
+        if (!types) {
+            js_ReportOutOfMemory(cx);
             return false;
+        }
         new(types) TypeScript();
         return true;
     }
@@ -5520,15 +5522,23 @@ JSObject::splicePrototype(JSContext *cx, JSObject *proto)
 void
 JSObject::makeLazyType(JSContext *cx)
 {
-    JS_ASSERT(cx->typeInferenceEnabled() && hasLazyType());
-    AutoEnterTypeInference enter(cx);
+    JS_ASSERT(hasLazyType());
 
     TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL,
                                                             JSProto_Object, getProto());
     if (!type) {
-        cx->compartment->types.setPendingNukeTypes(cx);
+        if (cx->typeInferenceEnabled())
+            cx->compartment->types.setPendingNukeTypes(cx);
         return;
     }
+
+    if (!cx->typeInferenceEnabled()) {
+        /* This can only happen if types were previously nuked. */
+        type_ = type;
+        return;
+    }
+
+    AutoEnterTypeInference enter(cx);
 
     /* Fill in the type according to the state of this object. */
 
