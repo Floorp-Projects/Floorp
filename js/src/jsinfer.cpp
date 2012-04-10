@@ -4038,16 +4038,10 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_QNAME:
       case JSOP_ANYNAME:
       case JSOP_GETFUNNS:
-        pushed[0].addType(cx, Type::UnknownType());
-        break;
-
       case JSOP_FILTER:
         /* Note: the second value pushed by filter is a hole, and not modelled. */
-        poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
-        break;
-
       case JSOP_ENDFILTER:
-        poppedTypes(pc, 1)->addSubset(cx, &pushed[0]);
+        pushed[0].addType(cx, Type::UnknownType());
         break;
 
       case JSOP_CALLEE:
