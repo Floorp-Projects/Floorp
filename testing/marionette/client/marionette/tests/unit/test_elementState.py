@@ -36,15 +36,24 @@
 import os
 from marionette_test import MarionetteTestCase
 
-class TestClick(MarionetteTestCase):
-    def test_click(self):
+class TestState(MarionetteTestCase):
+    def test_isEnabled(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
-        link = self.marionette.find_element("id", "mozLink")
-        link.click()
-        self.assertEqual("Clicked", self.marionette.execute_script("return document.getElementById('mozLink').innerHTML;"))
+        l = self.marionette.find_element("name", "myCheckBox")
+        self.assertTrue(l.enabled())
+        self.marionette.execute_script("arguments[0].disabled = true;", [l])
+        self.assertFalse(l.enabled())
 
-class TestClickChrome(MarionetteTestCase):
+    def test_isDisplayed(self):
+        test_html = self.marionette.absolute_url("test.html")
+        self.marionette.navigate(test_html)
+        l = self.marionette.find_element("name", "myCheckBox")
+        self.assertTrue(l.displayed())
+        self.marionette.execute_script("arguments[0].hidden = true;", [l])
+        self.assertFalse(l.displayed())
+
+class TestStateChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
         self.marionette.set_context("chrome")
@@ -61,12 +70,17 @@ class TestClickChrome(MarionetteTestCase):
         self.marionette.switch_to_window(self.win)
         MarionetteTestCase.tearDown(self)
 
-    def test_click(self):
-        wins = self.marionette.get_windows()
-        wins.remove(self.win)
-        newWin = wins.pop()
-        self.marionette.switch_to_window(newWin)
-        box = self.marionette.find_element("id", "testBox")
-        self.assertFalse(self.marionette.execute_script("return arguments[0].checked;", [box]))
-        box.click()
-        self.assertTrue(self.marionette.execute_script("return arguments[0].checked;", [box]))
+    def test_isEnabled(self):
+        l = self.marionette.find_element("id", "textInput")
+        self.assertTrue(l.enabled())
+        self.marionette.execute_script("arguments[0].disabled = true;", [l])
+        self.assertFalse(l.enabled())
+        self.marionette.execute_script("arguments[0].disabled = false;", [l])
+
+    def test_isDisplayed(self):
+        l = self.marionette.find_element("id", "textInput")
+        self.assertTrue(l.displayed())
+        self.marionette.execute_script("arguments[0].hidden = true;", [l])
+        self.assertFalse(l.displayed())
+        self.marionette.execute_script("arguments[0].hidden = false;", [l])
+

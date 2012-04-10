@@ -1048,13 +1048,14 @@ ScriptAnalysis::killVariable(JSContext *cx, LifetimeVariable &var, unsigned offs
 {
     if (!var.lifetime) {
         /* Make a point lifetime indicating the write. */
-        if (!var.saved)
-            saved[savedCount++] = &var;
-        var.saved = cx->typeLifoAlloc().new_<Lifetime>(offset, var.savedEnd, var.saved);
-        if (!var.saved) {
+        Lifetime *lifetime = cx->typeLifoAlloc().new_<Lifetime>(offset, var.savedEnd, var.saved);
+        if (!lifetime) {
             setOOM(cx);
             return;
         }
+        if (!var.saved)
+            saved[savedCount++] = &var;
+        var.saved = lifetime;
         var.saved->write = true;
         var.savedEnd = 0;
         return;
