@@ -283,6 +283,10 @@ class Vector : private AllocPolicy
     Vector(const Vector &) MOZ_DELETE;
     Vector &operator=(const Vector &) MOZ_DELETE;
 
+    void checkStaticInvarients() {
+        JS_STATIC_ASSERT(!tl::IsPostBarrieredType<T>::result);
+    }
+
     /* private accessors */
 
     bool usingInlineStorage() const {
@@ -505,7 +509,7 @@ class Vector : private AllocPolicy
      */
     size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const;
 
-    /* 
+    /*
      * Like sizeOfExcludingThis, but also measures the size of the Vector
      * object (which must be heap-allocated) itself.
      */
@@ -530,7 +534,9 @@ Vector<T,N,AllocPolicy>::Vector(AllocPolicy ap)
 #ifdef DEBUG
   , mReserved(0), entered(false)
 #endif
-{}
+{
+    checkStaticInvarients();
+}
 
 /* Move constructor. */
 template <class T, size_t N, class AllocPolicy>
@@ -538,6 +544,8 @@ JS_ALWAYS_INLINE
 Vector<T, N, AllocPolicy>::Vector(MoveRef<Vector> rhs)
     : AllocPolicy(rhs)
 {
+    checkStaticInvarients();
+
     mLength = rhs->mLength;
     mCapacity = rhs->mCapacity;
 #ifdef DEBUG
