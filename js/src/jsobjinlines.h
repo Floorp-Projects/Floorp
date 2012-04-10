@@ -1651,28 +1651,6 @@ DefineConstructorAndPrototype(JSContext *cx, GlobalObject *global,
     return true;
 }
 
-bool
-PropDesc::checkGetter(JSContext *cx)
-{
-    if (hasGet && !js_IsCallable(get) && !get.isUndefined()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
-                             js_getter_str);
-        return false;
-    }
-    return true;
-}
-
-bool
-PropDesc::checkSetter(JSContext *cx)
-{
-    if (hasSet && !js_IsCallable(set) && !set.isUndefined()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
-                             js_setter_str);
-        return false;
-    }
-    return true;
-}
-
 inline bool
 ObjectClassIs(JSObject &obj, ESClassValue classValue, JSContext *cx)
 {

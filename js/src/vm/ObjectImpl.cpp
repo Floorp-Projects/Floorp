@@ -11,6 +11,7 @@
 #include "jsscope.h"
 #include "jsobjinlines.h"
 
+#include "Debugger.h"
 #include "ObjectImpl.h"
 
 #include "gc/Barrier-inl.h"
@@ -18,6 +19,108 @@
 #include "ObjectImpl-inl.h"
 
 using namespace js;
+
+bool
+PropDesc::checkGetter(JSContext *cx)
+{
+    if (hasGet()) {
+        const Value &get = getterValue();
+        if (!js_IsCallable(get) && !get.isUndefined()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
+                                 js_getter_str);
+            return false;
+        }
+    }
+    return true;
+}
+
+bool
+PropDesc::checkSetter(JSContext *cx)
+{
+    if (hasSet()) {
+        const Value &set = setterValue();
+        if (!js_IsCallable(set) && !set.isUndefined()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
+                                 js_setter_str);
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool
+CheckArgCompartment(JSContext *cx, JSObject *obj, const Value &v,
+                    const char *methodname, const char *propname)
+{
+    if (v.isObject() && v.toObject().compartment() != obj->compartment()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_COMPARTMENT_MISMATCH,
+                             methodname, propname);
+        return false;
+    }
+    return true;
+}
+
+/*
+ * Convert Debugger.Objects in desc to debuggee values.
+ * Reject non-callable getters and setters.
+ */
+bool
+PropDesc::unwrapDebuggerObjectsInto(JSContext *cx, Debugger *dbg, JSObject *obj,
+                                    PropDesc *unwrapped) const
+{
+    *unwrapped = *this;
+
+    if (unwrapped->hasValue()) {
+        if (!dbg->unwrapDebuggeeValue(cx, &unwrapped->value_) ||
+            !CheckArgCompartment(cx, obj, unwrapped->value_, "defineProperty", "value"))
+        {
+            return false;
+        }
+    }
+
+    if (unwrapped->hasGet()) {
+        if (!dbg->unwrapDebuggeeValue(cx, &unwrapped->get_) ||
+            !CheckArgCompartment(cx, obj, unwrapped->get_, "defineProperty", "get"))
+        {
+            return false;
+        }
+    }
+
+    if (unwrapped->hasSet()) {
+        if (!dbg->unwrapDebuggeeValue(cx, &unwrapped->set_) ||
+            !CheckArgCompartment(cx, obj, unwrapped->set_, "defineProperty", "set"))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/*
+ * Rewrap *idp and the fields of *desc for the current compartment.  Also:
+ * defining a property on a proxy requires pd_ to contain a descriptor object,
+ * so reconstitute desc->pd_ if needed.
+ */
+bool
+PropDesc::wrapInto(JSContext *cx, JSObject *obj, const jsid &id, jsid *wrappedId,
+                   PropDesc *desc) const
+{
+    JSCompartment *comp = cx->compartment;
+
+    *wrappedId = id;
+    if (!comp->wrapId(cx, wrappedId))
+        return false;
+
+    *desc = *this;
+    if (!comp->wrap(cx, &desc->value_))
+        return false;
+    if (!comp->wrap(cx, &desc->get_))
+        return false;
+    if (!comp->wrap(cx, &desc->set_))
+        return false;
+    return !obj->isProxy() || desc->makeObject(cx);
+}
 
 static ObjectElements emptyElementsHeader(0, 0);
 
@@ -183,17 +286,17 @@ DenseElementsHeader::defineElement(JSContext *cx, ObjectImpl *obj, uint32_t inde
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
-    MOZ_ASSERT_IF(desc.hasGet || desc.hasSet, !desc.hasValue && !desc.hasWritable);
-    MOZ_ASSERT_IF(desc.hasValue || desc.hasWritable, !desc.hasGet && !desc.hasSet);
+    MOZ_ASSERT_IF(desc.hasGet() || desc.hasSet(), !desc.hasValue() && !desc.hasWritable());
+    MOZ_ASSERT_IF(desc.hasValue() || desc.hasWritable(), !desc.hasGet() && !desc.hasSet());
 
     /*
      * If desc is an accessor descriptor or a data descriptor with atypical
      * attributes, convert to sparse and retry.
      */
-    if (desc.hasGet || desc.hasSet ||
-        (desc.hasEnumerable && !desc.enumerable()) ||
-        (desc.hasConfigurable && !desc.configurable()) ||
-        (desc.hasWritable && !desc.writable()))
+    if (desc.hasGet() || desc.hasSet() ||
+        (desc.hasEnumerable() && !desc.enumerable()) ||
+        (desc.hasConfigurable() && !desc.configurable()) ||
+        (desc.hasWritable() && !desc.writable()))
     {
         if (!obj->makeElementsSparse(cx))
             return false;
@@ -246,7 +349,7 @@ DenseElementsHeader::defineElement(JSContext *cx, ObjectImpl *obj, uint32_t inde
 
     /* But if we were able to ensure the element's existence, we're good. */
     MOZ_ASSERT(res == ObjectImpl::Succeeded);
-    obj->elements[index].set(obj->asObjectPtr(), index, desc.value);
+    obj->elements[index].set(obj->asObjectPtr(), index, desc.value());
     *succeeded = true;
     return true;
 }
