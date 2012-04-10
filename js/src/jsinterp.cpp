@@ -515,7 +515,8 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
     if (fun->isNative())
         return CallJSNative(cx, fun->native(), args);
 
-    TypeMonitorCall(cx, args, construct);
+    if (!TypeMonitorCall(cx, args, construct))
+        return false;
 
     /* Get pointer to new frame/slots, prepare arguments. */
     InvokeFrameGuard ifg;
@@ -2693,7 +2694,8 @@ BEGIN_CASE(JSOP_FUNCALL)
         DO_NEXT_OP(len);
     }
 
-    TypeMonitorCall(cx, args, construct);
+    if (!TypeMonitorCall(cx, args, construct))
+        goto error;
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
 
