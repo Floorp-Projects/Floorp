@@ -126,6 +126,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         return true;
     }
 
+    mWorkAroundDriverBugs = gfxPlatform::GetPlatform()->WorkAroundDriverBugs();
+
     SymLoadStruct symbols[] = {
         { (PRFuncPtr*) &mSymbols.fActiveTexture, { "ActiveTexture", "ActiveTextureARB", NULL } },
         { (PRFuncPtr*) &mSymbols.fAttachShader, { "AttachShader", "AttachShaderARB", NULL } },
@@ -501,7 +503,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
 
 #ifdef XP_MACOSX
-        if (mVendor == VendorIntel) {
+        if (mWorkAroundDriverBugs &&
+            mVendor == VendorIntel) {
             // see bug 737182 for 2D textures, bug 684822 for cube map textures.
             mMaxTextureSize        = NS_MIN(mMaxTextureSize,        4096);
             mMaxCubeMapTextureSize = NS_MIN(mMaxCubeMapTextureSize, 512);
@@ -634,6 +637,9 @@ CopyAndPadTextureData(const GLvoid* srcBuffer,
 bool
 GLContext::CanUploadSubTextures()
 {
+    if (!mWorkAroundDriverBugs)
+        return true;
+
     // There are certain GPUs that we don't want to use glTexSubImage2D on
     // because that function can be very slow and/or buggy
     if (Renderer() == RendererAdreno200 || Renderer() == RendererAdreno205)
@@ -650,6 +656,9 @@ GLContext::CanUploadSubTextures()
 bool
 GLContext::CanUploadNonPowerOfTwo()
 {
+    if (!mWorkAroundDriverBugs)
+        return true;
+
     static bool sPowerOfTwoForced;
     static bool sPowerOfTwoPrefCached = false;
 
@@ -673,7 +682,8 @@ GLContext::WantsSmallTiles()
         return true;
 
     // We can't use small tiles on the SGX 540, because of races in texture upload.
-    if (Renderer() == RendererSGX540)
+    if (mWorkAroundDriverBugs &&
+        Renderer() == RendererSGX540)
         return false;
 
     // Don't use small tiles otherwise. (If we implement incremental texture upload,
@@ -2065,7 +2075,9 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
     // only save/restore this stuff on Qualcomm Adreno, to work
     // around an apparent bug
     int savedFb = 0;
-    if (mVendor == VendorQualcomm) {
+    if (mWorkAroundDriverBugs &&
+        mVendor == VendorQualcomm)
+    {
         fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &savedFb);
     }
 
@@ -2200,7 +2212,8 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
     // we enable scissor test while the current FBO is invalid
     // (which it will be, once we assign texture 0 to the color
     // attachment)
-    if (mVendor == VendorQualcomm) {
+    if (mWorkAroundDriverBugs &&
+        mVendor == VendorQualcomm) {
         fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, savedFb);
     }
 
