@@ -153,13 +153,6 @@ EXPORTS_mozilla/layers += ShadowLayerUtilsX11.h
 CPPSRCS += ShadowLayerUtilsX11.cpp
 endif #}
 
-# Enable GLES2.0 under maemo
-ifdef MOZ_X11
-ifdef MOZ_PLATFORM_MAEMO
-DEFINES += -DUSE_GLES2
-endif
-endif
-
 ifdef MOZ_ENABLE_D3D10_LAYER
 EXPORTS_mozilla/layers += ShadowLayerUtilsD3D10.h
 DEFINES	+= -DMOZ_ENABLE_D3D10_LAYER
