@@ -1279,6 +1279,10 @@ class AutoPropDescArrayRooter : private AutoGCRooter
         return &descriptors.back();
     }
 
+    bool reserve(size_t n) {
+        return descriptors.reserve(n);
+    }
+
     PropDesc& operator[](size_t i) {
         JS_ASSERT(i < descriptors.length());
         return descriptors[i];
@@ -1648,28 +1652,6 @@ DefineConstructorAndPrototype(JSContext *cx, GlobalObject *global,
         return false;
     }
 
-    return true;
-}
-
-bool
-PropDesc::checkGetter(JSContext *cx)
-{
-    if (hasGet && !js_IsCallable(get) && !get.isUndefined()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
-                             js_getter_str);
-        return false;
-    }
-    return true;
-}
-
-bool
-PropDesc::checkSetter(JSContext *cx)
-{
-    if (hasSet && !js_IsCallable(set) && !set.isUndefined()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
-                             js_setter_str);
-        return false;
-    }
     return true;
 }
 
