@@ -5310,8 +5310,10 @@ JSScript::makeTypes(JSContext *cx)
 
     if (!cx->typeInferenceEnabled()) {
         types = (TypeScript *) cx->calloc_(sizeof(TypeScript));
-        if (!types)
+        if (!types) {
+            js_ReportOutOfMemory(cx);
             return false;
+        }
         new(types) TypeScript();
         return true;
     }
