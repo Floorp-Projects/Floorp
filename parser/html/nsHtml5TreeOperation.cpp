@@ -272,7 +272,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       if (parent) {
         nsHtml5OtherDocUpdate update(parent->OwnerDoc(),
                                      aBuilder->GetDocument());
-        PRUint32 pos = parent->IndexOf(node);
+        PRInt32 pos = parent->IndexOf(node);
         NS_ASSERTION((pos >= 0), "Element not found as child of its parent");
         parent->RemoveChildAt(pos, true);
       }
