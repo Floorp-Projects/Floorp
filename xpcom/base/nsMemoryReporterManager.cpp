@@ -48,19 +48,6 @@
 
 using namespace mozilla;
 
-static PRInt64 GetExplicit()
-{
-    nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
-    if (mgr == nsnull)
-        return (PRInt64)-1;
-
-    PRInt64 n;
-    nsresult rv = mgr->GetExplicit(&n);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return n;
-}
-
 #if defined(MOZ_MEMORY)
 #  define HAVE_JEMALLOC_STATS 1
 #  include "jemalloc.h"
@@ -73,24 +60,22 @@ static PRInt64 GetExplicit()
 
 static PRInt64 GetHardPageFaults()
 {
-  struct rusage usage;
-  int err = getrusage(RUSAGE_SELF, &usage);
-  if (err != 0) {
-    return PRInt64(-1);
-  }
-
-  return usage.ru_majflt;
+    struct rusage usage;
+    int err = getrusage(RUSAGE_SELF, &usage);
+    if (err != 0) {
+        return PRInt64(-1);
+    }
+    return usage.ru_majflt;
 }
 
 static PRInt64 GetSoftPageFaults()
 {
-  struct rusage usage;
-  int err = getrusage(RUSAGE_SELF, &usage);
-  if (err != 0) {
-    return PRInt64(-1);
-  }
-
-  return usage.ru_minflt;
+    struct rusage usage;
+    int err = getrusage(RUSAGE_SELF, &usage);
+    if (err != 0) {
+        return PRInt64(-1);
+    }
+    return usage.ru_minflt;
 }
 
 #endif
@@ -234,14 +219,25 @@ static PRInt64 GetResident()
 
 static PRInt64 GetVsize()
 {
-  MEMORYSTATUSEX s;
-  s.dwLength = sizeof(s);
+    MEMORYSTATUSEX s;
+    s.dwLength = sizeof(s);
 
-  bool success = GlobalMemoryStatusEx(&s);
-  if (!success)
-    return -1;
+    bool success = GlobalMemoryStatusEx(&s);
+    if (!success)
+        return -1;
 
-  return s.ullTotalVirtual - s.ullAvailVirtual;
+    return s.ullTotalVirtual - s.ullAvailVirtual;
+}
+
+static PRInt64 GetResident()
+{
+    PROCESS_MEMORY_COUNTERS pmc;
+    pmc.cb = sizeof(PROCESS_MEMORY_COUNTERS);
+
+    if (!GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)))
+        return (PRInt64) -1;
+
+    return pmc.WorkingSetSize;
 }
 
 static PRInt64 GetPrivate()
@@ -265,17 +261,6 @@ NS_MEMORY_REPORTER_IMPLEMENT(Private,
     "is committed and marked MEM_PRIVATE, data that is not mapped, and "
     "executable pages that have been written to.")
 
-static PRInt64 GetResident()
-{
-  PROCESS_MEMORY_COUNTERS pmc;
-  pmc.cb = sizeof(PROCESS_MEMORY_COUNTERS);
-
-  if (!GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)))
-      return (PRInt64) -1;
-
-  return pmc.WorkingSetSize;
-}
-
 #else
 
 static PRInt64 GetResident()
@@ -298,6 +283,18 @@ NS_MEMORY_REPORTER_IMPLEMENT(Vsize,
     "limited use on Mac, where processes share huge amounts of memory with one "
     "another.  But even on other operating systems, 'resident' is a much better "
     "measure of the memory resources used by the process.")
+
+NS_MEMORY_REPORTER_IMPLEMENT(Resident,
+    "resident",
+    KIND_OTHER,
+    UNITS_BYTES,
+    GetResident,
+    "Memory mapped by the process that is present in physical memory, "
+    "also known as the resident set size (RSS).  This is the best single "
+    "figure to use when considering the memory resources used by the process, "
+    "but it depends both on other processes being run and details of the OS "
+    "kernel and so is best used for comparing the memory usage of a single "
+    "process at different points in time.")
 #endif
 
 #if defined(XP_LINUX) || defined(XP_MACOSX) || defined(SOLARIS)
@@ -332,27 +329,6 @@ NS_MEMORY_REPORTER_IMPLEMENT(PageFaultsHard,
     "the program may run very slowly when it is experiencing more than 100 or "
     "so hard page faults a second.")
 #endif
-
-NS_MEMORY_REPORTER_IMPLEMENT(Explicit,
-    "explicit",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetExplicit,
-    "This is the same measurement as the root of the 'explicit' tree.  "
-    "However, it is measured at a different time and so gives slightly "
-    "different results.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(Resident,
-    "resident",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetResident,
-    "Memory mapped by the process that is present in physical memory, "
-    "also known as the resident set size (RSS).  This is the best single "
-    "figure to use when considering the memory resources used by the process, "
-    "but it depends both on other processes being run and details of the OS "
-    "kernel and so is best used for comparing the memory usage of a single "
-    "process at different points in time.")
 
 /**
  ** memory reporter implementation for jemalloc and OSX malloc,
@@ -518,6 +494,28 @@ NS_MEMORY_REPORTER_IMPLEMENT(HeapAllocated,
     "application.  This may exceed the amount of memory requested by the "
     "application because the allocator regularly rounds up request sizes. (The "
     "exact amount requested is not recorded.)")
+
+static PRInt64 GetExplicit()
+{
+    nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
+    if (mgr == nsnull)
+        return (PRInt64)-1;
+
+    PRInt64 n;
+    nsresult rv = mgr->GetExplicit(&n);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return n;
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(Explicit,
+    "explicit",
+    KIND_OTHER,
+    UNITS_BYTES,
+    GetExplicit,
+    "This is the same measurement as the root of the 'explicit' tree.  "
+    "However, it is measured at a different time and so gives slightly "
+    "different results.")
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(AtomTableMallocSizeOf, "atom-table")
 

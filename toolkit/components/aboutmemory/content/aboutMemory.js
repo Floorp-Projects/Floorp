@@ -220,7 +220,7 @@ function processMemoryReporters(aMgr, aIgnoreSingle, aIgnoreMulti,
     //   gAssertionFailureMsgPrefix in their string representation.
     //
     // - We want to continue on when faced with exceptions thrown outside this
-    //   file (i.e. in collectReports).
+    //   file (e.g. within a multi-reporter).
 
     let str = aE.toString();
     if (str.search(gAssertionFailureMsgPrefix) >= 0) {
