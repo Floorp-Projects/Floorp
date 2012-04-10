@@ -555,7 +555,8 @@ public:
         mMaxTextureSize(0),
         mMaxCubeMapTextureSize(0),
         mMaxTextureImageSize(0),
-        mMaxRenderbufferSize(0)
+        mMaxRenderbufferSize(0),
+        mWorkAroundDriverBugs(true)
 #ifdef DEBUG
         , mGLError(LOCAL_GL_NO_ERROR)
 #endif
@@ -1654,6 +1655,8 @@ protected:
 public:
     void ClearSafely();
 
+    bool WorkAroundDriverBugs() const { return mWorkAroundDriverBugs; }
+
 protected:
 
     nsDataHashtable<nsPtrHashKey<void>, void*> mUserData;
@@ -1685,7 +1688,6 @@ protected:
         return biggerDimension <= maxAllowed;
     }
 
-protected:
     nsTArray<nsIntRect> mViewportStack;
     nsTArray<nsIntRect> mScissorStack;
 
@@ -1693,10 +1695,12 @@ protected:
     GLint mMaxCubeMapTextureSize;
     GLint mMaxTextureImageSize;
     GLint mMaxRenderbufferSize;
+    bool mWorkAroundDriverBugs;
 
     bool IsTextureSizeSafeToPassToDriver(GLenum target, GLsizei width, GLsizei height) const {
 #ifdef XP_MACOSX
-        if (mVendor == VendorIntel) {
+        if (mWorkAroundDriverBugs &&
+            mVendor == VendorIntel) {
             // see bug 737182 for 2D textures, bug 684822 for cube map textures.
             // some drivers handle incorrectly some large texture sizes that are below the
             // max texture size that they report. So we check ourselves against our own values
