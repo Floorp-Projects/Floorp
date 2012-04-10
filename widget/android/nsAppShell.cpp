@@ -95,7 +95,8 @@ nsAppShell::nsAppShell()
       mCondLock("nsAppShell.mCondLock"),
       mQueueCond(mCondLock, "nsAppShell.mQueueCond"),
       mQueuedDrawEvent(nsnull),
-      mQueuedViewportEvent(nsnull)
+      mQueuedViewportEvent(nsnull),
+      mAllowCoalescingNextDraw(false)
 {
     gAppShell = this;
 }
@@ -576,7 +577,15 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
                 delete mQueuedDrawEvent;
             }
 
-            mQueuedDrawEvent = ae;
+            if (mAllowCoalescingNextDraw) {
+                // if we're not allowing coalescing of this draw event, then
+                // don't set mQueuedDrawEvent to point to this; that way the
+                // next draw event that comes in won't kill this one.
+                mAllowCoalescingNextDraw = true;
+                mQueuedDrawEvent = nsnull;
+            } else {
+                mQueuedDrawEvent = ae;
+            }
             mEventQueue.AppendElement(ae);
             break;
 
@@ -588,6 +597,10 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
                 delete mQueuedViewportEvent;
             }
             mQueuedViewportEvent = ae;
+            // temporarily turn off draw-coalescing, so that we process a draw
+            // event as soon as possible after a viewport change
+            mAllowCoalescingNextDraw = false;
+
             mEventQueue.AppendElement(ae);
             break;
 
