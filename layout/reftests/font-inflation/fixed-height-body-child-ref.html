@@ -8,6 +8,11 @@ into 30px-45px, so 12px gets mapped to 34px.
     <style>
       body {
         height: 100%;
+        /*
+         * We need overflow:hidden because we can't show a scrollbar due
+         * to https://bugzilla.mozilla.org/show_bug.cgi?id=743805 .
+         */
+        overflow: hidden;
       }
 
       div {
@@ -16,7 +21,7 @@ into 30px-45px, so 12px gets mapped to 34px.
 
       p {
         line-height: 1.1;
-        font-size: 12px;
+        font-size: 34px;
         margin: 0;
       }
     </style>

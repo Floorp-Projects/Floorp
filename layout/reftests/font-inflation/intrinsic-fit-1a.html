@@ -1,14 +1,13 @@
 <!DOCTYPE HTML>
 <style>
-@font-face { font-family: Ahem; src: url(Ahem.ttf); }
+@font-face { font-family: Ahem; src: url(../fonts/Ahem.ttf); }
 html, body { margin: 0; padding: 0; }
 body { width: 10px }
 p {
   margin: 0;
   background: yellow;
   color: blue;
-  float: left;
-  width: auto; /* computes to 60px */
+  width: -moz-fit-content; /* computes to 60px */
   font: 12px Ahem;
 }
 </style>
