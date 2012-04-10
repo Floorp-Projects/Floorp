@@ -199,6 +199,8 @@
 @BINPATH@/components/jar.xpt
 @BINPATH@/components/jetpack.xpt
 @BINPATH@/components/jsdservice.xpt
+@BINPATH@/components/jsdebugger.xpt
+@BINPATH@/components/jsinspector.xpt
 @BINPATH@/components/layout_base.xpt
 @BINPATH@/components/layout_forms.xpt
 #ifdef NS_PRINTING
