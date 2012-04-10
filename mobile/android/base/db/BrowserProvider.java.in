@@ -66,13 +66,13 @@ public class BrowserProvider extends ContentProvider {
 
     static final String DATABASE_NAME = "browser.db";
 
-    static final int DATABASE_VERSION = 6;
+    static final int DATABASE_VERSION = 7;
 
     // Maximum age of deleted records to be cleaned up (20 days in ms)
     static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
 
     // Number of records marked as deleted to be removed
-    static final long DELETED_RECORDS_PURGE_LIMIT = 7;
+    static final long DELETED_RECORDS_PURGE_LIMIT = 5;
 
     // How many records to reposition in a single query.
     // This should be less than the SQLite maximum number of query variables
