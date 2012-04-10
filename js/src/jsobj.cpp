@@ -1522,39 +1522,39 @@ NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc, Value
     d.initFromPropertyDescriptor(*desc);
     if (!d.makeObject(cx))
         return false;
-    *vp = d.pd;
+    *vp = d.pd();
     return true;
 }
 
 void
 PropDesc::initFromPropertyDescriptor(const PropertyDescriptor &desc)
 {
-    pd.setUndefined();
+    pd_.setUndefined();
     attrs = uint8_t(desc.attrs);
     JS_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
     if (desc.attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
-        hasGet = true;
-        get = ((desc.attrs & JSPROP_GETTER) && desc.getter)
-              ? CastAsObjectJsval(desc.getter)
-              : UndefinedValue();
-        hasSet = true;
-        set = ((desc.attrs & JSPROP_SETTER) && desc.setter)
-              ? CastAsObjectJsval(desc.setter)
-              : UndefinedValue();
-        hasValue = false;
-        value.setUndefined();
-        hasWritable = false;
+        hasGet_ = true;
+        get_ = ((desc.attrs & JSPROP_GETTER) && desc.getter)
+               ? CastAsObjectJsval(desc.getter)
+               : UndefinedValue();
+        hasSet_ = true;
+        set_ = ((desc.attrs & JSPROP_SETTER) && desc.setter)
+               ? CastAsObjectJsval(desc.setter)
+               : UndefinedValue();
+        hasValue_ = false;
+        value_.setUndefined();
+        hasWritable_ = false;
     } else {
-        hasGet = false;
-        get.setUndefined();
-        hasSet = false;
-        set.setUndefined();
-        hasValue = true;
-        value = desc.value;
-        hasWritable = true;
+        hasGet_ = false;
+        get_.setUndefined();
+        hasSet_ = false;
+        set_.setUndefined();
+        hasValue_ = true;
+        value_ = desc.value;
+        hasWritable_ = true;
     }
-    hasEnumerable = true;
-    hasConfigurable = true;
+    hasEnumerable_ = true;
+    hasConfigurable_ = true;
 }
 
 bool
@@ -1565,26 +1565,26 @@ PropDesc::makeObject(JSContext *cx)
         return false;
 
     const JSAtomState &atomState = cx->runtime->atomState;
-    if ((hasConfigurable &&
+    if ((hasConfigurable() &&
          !obj->defineProperty(cx, atomState.configurableAtom,
                               BooleanValue((attrs & JSPROP_PERMANENT) == 0))) ||
-        (hasEnumerable &&
+        (hasEnumerable() &&
          !obj->defineProperty(cx, atomState.enumerableAtom,
                               BooleanValue((attrs & JSPROP_ENUMERATE) != 0))) ||
-        (hasGet &&
-         !obj->defineProperty(cx, atomState.getAtom, get)) ||
-        (hasSet &&
-         !obj->defineProperty(cx, atomState.setAtom, set)) ||
-        (hasValue &&
-         !obj->defineProperty(cx, atomState.valueAtom, value)) ||
-        (hasWritable &&
+        (hasGet() &&
+         !obj->defineProperty(cx, atomState.getAtom, getterValue())) ||
+        (hasSet() &&
+         !obj->defineProperty(cx, atomState.setAtom, setterValue())) ||
+        (hasValue() &&
+         !obj->defineProperty(cx, atomState.valueAtom, value())) ||
+        (hasWritable() &&
          !obj->defineProperty(cx, atomState.writableAtom,
                               BooleanValue((attrs & JSPROP_READONLY) == 0))))
     {
         return false;
     }
 
-    pd.setObject(*obj);
+    pd_.setObject(*obj);
     return true;
 }
 
@@ -1729,17 +1729,17 @@ HasProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, bool *foundp)
 }
 
 PropDesc::PropDesc()
-  : pd(UndefinedValue()),
-    value(UndefinedValue()),
-    get(UndefinedValue()),
-    set(UndefinedValue()),
+  : pd_(UndefinedValue()),
+    value_(UndefinedValue()),
+    get_(UndefinedValue()),
+    set_(UndefinedValue()),
     attrs(0),
-    hasGet(false),
-    hasSet(false),
-    hasValue(false),
-    hasWritable(false),
-    hasEnumerable(false),
-    hasConfigurable(false)
+    hasGet_(false),
+    hasSet_(false),
+    hasValue_(false),
+    hasWritable_(false),
+    hasEnumerable_(false),
+    hasConfigurable_(false)
 {
 }
 
@@ -1756,7 +1756,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     JSObject *desc = &v.toObject();
 
     /* Make a copy of the descriptor. We might need it later. */
-    pd = v;
+    pd_ = v;
 
     /* Start with the proper defaults. */
     attrs = JSPROP_PERMANENT | JSPROP_READONLY;
@@ -1770,7 +1770,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.enumerableAtom), &v, &found))
         return false;
     if (found) {
-        hasEnumerable = JS_TRUE;
+        hasEnumerable_ = true;
         if (js_ValueToBoolean(v))
             attrs |= JSPROP_ENUMERATE;
     }
@@ -1779,7 +1779,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.configurableAtom), &v, &found))
         return false;
     if (found) {
-        hasConfigurable = JS_TRUE;
+        hasConfigurable_ = true;
         if (js_ValueToBoolean(v))
             attrs &= ~JSPROP_PERMANENT;
     }
@@ -1788,15 +1788,15 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.valueAtom), &v, &found))
         return false;
     if (found) {
-        hasValue = true;
-        value = v;
+        hasValue_ = true;
+        value_ = v;
     }
 
     /* 8.10.6 step 6 */
     if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.writableAtom), &v, &found))
         return false;
     if (found) {
-        hasWritable = JS_TRUE;
+        hasWritable_ = true;
         if (js_ValueToBoolean(v))
             attrs &= ~JSPROP_READONLY;
     }
@@ -1805,8 +1805,8 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.getAtom), &v, &found))
         return false;
     if (found) {
-        hasGet = true;
-        get = v;
+        hasGet_ = true;
+        get_ = v;
         attrs |= JSPROP_GETTER | JSPROP_SHARED;
         attrs &= ~JSPROP_READONLY;
         if (checkAccessors && !checkGetter(cx))
@@ -1817,8 +1817,8 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.setAtom), &v, &found))
         return false;
     if (found) {
-        hasSet = true;
-        set = v;
+        hasSet_ = true;
+        set_ = v;
         attrs |= JSPROP_SETTER | JSPROP_SHARED;
         attrs &= ~JSPROP_READONLY;
         if (checkAccessors && !checkSetter(cx))
@@ -1826,7 +1826,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     }
 
     /* 8.10.7 step 9 */
-    if ((hasGet || hasSet) && (hasValue || hasWritable)) {
+    if ((hasGet() || hasSet()) && (hasValue() || hasWritable())) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INVALID_DESCRIPTOR);
         return false;
     }
@@ -1911,8 +1911,10 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
 
         if (desc.isGenericDescriptor() || desc.isDataDescriptor()) {
             JS_ASSERT(!obj->getOps()->defineProperty);
-            return js_DefineProperty(cx, obj, id, &desc.value,
-                                     JS_PropertyStub, JS_StrictPropertyStub, desc.attrs);
+            Value v = desc.hasValue() ? desc.value() : UndefinedValue();
+            return js_DefineProperty(cx, obj, id, &v,
+                                     JS_PropertyStub, JS_StrictPropertyStub,
+                                     desc.attributes());
         }
 
         JS_ASSERT(desc.isAccessorDescriptor());
@@ -1928,7 +1930,7 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
 
         Value tmp = UndefinedValue();
         return js_DefineProperty(cx, obj, id, &tmp,
-                                 desc.getter(), desc.setter(), desc.attrs);
+                                 desc.getter(), desc.setter(), desc.attributes());
     }
 
     /* 8.12.9 steps 5-6 (note 5 is merely a special case of 6). */
@@ -1942,7 +1944,7 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
             if (!shape->isAccessorDescriptor())
                 break;
 
-            if (desc.hasGet) {
+            if (desc.hasGet()) {
                 bool same;
                 if (!SameValue(cx, desc.getterValue(), shape->getterOrUndefined(), &same))
                     return false;
@@ -1950,7 +1952,7 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
                     break;
             }
 
-            if (desc.hasSet) {
+            if (desc.hasSet()) {
                 bool same;
                 if (!SameValue(cx, desc.setterValue(), shape->setterOrUndefined(), &same))
                     return false;
@@ -1979,7 +1981,7 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
                 if (!shape->configurable() &&
                     (!shape->hasDefaultGetter() || !shape->hasDefaultSetter()) &&
                     desc.isDataDescriptor() &&
-                    (desc.hasWritable ? desc.writable() : shape->writable()))
+                    (desc.hasWritable() ? desc.writable() : shape->writable()))
                 {
                     return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
                 }
@@ -1993,8 +1995,8 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
                     break;
 
                 bool same;
-                if (desc.hasValue) {
-                    if (!SameValue(cx, desc.value, v, &same))
+                if (desc.hasValue()) {
+                    if (!SameValue(cx, desc.value(), v, &same))
                         return false;
                     if (!same) {
                         /*
@@ -2021,7 +2023,7 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
                         break;
                     }
                 }
-                if (desc.hasWritable && desc.writable() != shape->writable())
+                if (desc.hasWritable() && desc.writable() != shape->writable())
                     break;
             } else {
                 /* The only fields in desc will be handled below. */
@@ -2029,28 +2031,20 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
             }
         }
 
-        if (desc.hasConfigurable && desc.configurable() != shape->configurable())
+        if (desc.hasConfigurable() && desc.configurable() != shape->configurable())
             break;
-        if (desc.hasEnumerable && desc.enumerable() != shape->enumerable())
+        if (desc.hasEnumerable() && desc.enumerable() != shape->enumerable())
             break;
 
         /* The conditions imposed by step 5 or step 6 apply. */
         *rval = true;
-        return JS_TRUE;
+        return true;
     } while (0);
 
     /* 8.12.9 step 7. */
     if (!shape->configurable()) {
-        /*
-         * Since [[Configurable]] defaults to false, we don't need to check
-         * whether it was specified.  We can't do likewise for [[Enumerable]]
-         * because its putative value is used in a comparison -- a comparison
-         * whose result must always be false per spec if the [[Enumerable]]
-         * field is not present.  Perfectly pellucid logic, eh?
-         */
-        JS_ASSERT_IF(!desc.hasConfigurable, !desc.configurable());
-        if (desc.configurable() ||
-            (desc.hasEnumerable && desc.enumerable() != shape->enumerable())) {
+        if ((desc.hasConfigurable() && desc.configurable()) ||
+            (desc.hasEnumerable() && desc.enumerable() != shape->enumerable())) {
             return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
         }
     }
@@ -2067,11 +2061,11 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
         /* 8.12.9 step 10. */
         JS_ASSERT(shape->isDataDescriptor());
         if (!shape->configurable() && !shape->writable()) {
-            if (desc.hasWritable && desc.writable())
+            if (desc.hasWritable() && desc.writable())
                 return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
-            if (desc.hasValue) {
+            if (desc.hasValue()) {
                 bool same;
-                if (!SameValue(cx, desc.value, v, &same))
+                if (!SameValue(cx, desc.value(), v, &same))
                     return false;
                 if (!same)
                     return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
@@ -2083,7 +2077,7 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
         /* 8.12.9 step 11. */
         JS_ASSERT(desc.isAccessorDescriptor() && shape->isAccessorDescriptor());
         if (!shape->configurable()) {
-            if (desc.hasSet) {
+            if (desc.hasSet()) {
                 bool same;
                 if (!SameValue(cx, desc.setterValue(), shape->setterOrUndefined(), &same))
                     return false;
@@ -2091,7 +2085,7 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
                     return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
             }
 
-            if (desc.hasGet) {
+            if (desc.hasGet()) {
                 bool same;
                 if (!SameValue(cx, desc.getterValue(), shape->getterOrUndefined(), &same))
                     return false;
@@ -2107,27 +2101,27 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
     StrictPropertyOp setter;
     if (desc.isGenericDescriptor()) {
         unsigned changed = 0;
-        if (desc.hasConfigurable)
+        if (desc.hasConfigurable())
             changed |= JSPROP_PERMANENT;
-        if (desc.hasEnumerable)
+        if (desc.hasEnumerable())
             changed |= JSPROP_ENUMERATE;
 
-        attrs = (shape->attributes() & ~changed) | (desc.attrs & changed);
+        attrs = (shape->attributes() & ~changed) | (desc.attributes() & changed);
         getter = shape->getter();
         setter = shape->setter();
     } else if (desc.isDataDescriptor()) {
         unsigned unchanged = 0;
-        if (!desc.hasConfigurable)
+        if (!desc.hasConfigurable())
             unchanged |= JSPROP_PERMANENT;
-        if (!desc.hasEnumerable)
+        if (!desc.hasEnumerable())
             unchanged |= JSPROP_ENUMERATE;
         /* Watch out for accessor -> data transformations here. */
-        if (!desc.hasWritable && shape->isDataDescriptor())
+        if (!desc.hasWritable() && shape->isDataDescriptor())
             unchanged |= JSPROP_READONLY;
 
-        if (desc.hasValue)
-            v = desc.value;
-        attrs = (desc.attrs & ~unchanged) | (shape->attributes() & unchanged);
+        if (desc.hasValue())
+            v = desc.value();
+        attrs = (desc.attributes() & ~unchanged) | (shape->attributes() & unchanged);
         getter = JS_PropertyStub;
         setter = JS_StrictPropertyStub;
     } else {
@@ -2143,24 +2137,24 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
 
         /* 8.12.9 step 12. */
         unsigned changed = 0;
-        if (desc.hasConfigurable)
+        if (desc.hasConfigurable())
             changed |= JSPROP_PERMANENT;
-        if (desc.hasEnumerable)
+        if (desc.hasEnumerable())
             changed |= JSPROP_ENUMERATE;
-        if (desc.hasGet)
+        if (desc.hasGet())
             changed |= JSPROP_GETTER | JSPROP_SHARED | JSPROP_READONLY;
-        if (desc.hasSet)
+        if (desc.hasSet())
             changed |= JSPROP_SETTER | JSPROP_SHARED | JSPROP_READONLY;
 
-        attrs = (desc.attrs & changed) | (shape->attributes() & ~changed);
-        if (desc.hasGet) {
+        attrs = (desc.attributes() & changed) | (shape->attributes() & ~changed);
+        if (desc.hasGet()) {
             getter = desc.getter();
         } else {
             getter = (shape->hasDefaultGetter() && !shape->hasGetterValue())
                      ? JS_PropertyStub
                      : shape->getter();
         }
-        if (desc.hasSet) {
+        if (desc.hasSet()) {
             setter = desc.setter();
         } else {
             setter = (shape->hasDefaultSetter() && !shape->hasSetterValue())
@@ -2252,7 +2246,7 @@ DefineProperty(JSContext *cx, HandleObject obj, HandleId id, const PropDesc &des
 
     if (obj->getOps()->lookupGeneric) {
         if (obj->isProxy())
-            return Proxy::defineProperty(cx, obj, id, desc.pd);
+            return Proxy::defineProperty(cx, obj, id, desc.pd());
         return Reject(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);
     }
 

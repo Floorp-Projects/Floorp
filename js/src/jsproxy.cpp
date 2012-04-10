@@ -466,9 +466,9 @@ ParsePropertyDescriptorObject(JSContext *cx, JSObject *obj, jsid id, const Value
     if (!d || !d->initialize(cx, v))
         return false;
     desc->obj = obj;
-    desc->value = d->value;
-    JS_ASSERT(!(d->attrs & JSPROP_SHORTID));
-    desc->attrs = d->attrs;
+    desc->value = d->hasValue() ? d->value() : UndefinedValue();
+    JS_ASSERT(!(d->attributes() & JSPROP_SHORTID));
+    desc->attrs = d->attributes();
     desc->getter = d->getter();
     desc->setter = d->setter();
     desc->shortid = 0;
