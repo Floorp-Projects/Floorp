@@ -687,7 +687,7 @@ JS_GetScriptFilename(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(const jschar *)
 JS_GetScriptSourceMap(JSContext *cx, JSScript *script)
 {
-    return script->sourceMap;
+    return script->hasSourceMap ? script->getSourceMap() : NULL;
 }
 
 JS_PUBLIC_API(unsigned)

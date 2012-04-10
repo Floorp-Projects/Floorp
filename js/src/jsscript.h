@@ -319,6 +319,11 @@ typedef HashMap<JSScript *,
                 DefaultHasher<JSScript *>,
                 SystemAllocPolicy> ScriptCountsMap;
 
+typedef HashMap<JSScript *,
+                jschar *,
+                DefaultHasher<JSScript *>,
+                SystemAllocPolicy> SourceMapMap;
+
 class DebugScript
 {
     friend struct ::JSScript;
@@ -421,8 +426,6 @@ struct JSScript : public js::gc::Cell
     JSPrincipals    *principals;/* principals for this script */
     JSPrincipals    *originPrincipals; /* see jsapi.h 'originPrincipals' comment */
 
-    jschar          *sourceMap; /* source map file or null */
-
     /*
      * A global object for the script.
      * - All scripts returned by JSAPI functions (JS_CompileScript,
@@ -469,13 +472,8 @@ struct JSScript : public js::gc::Cell
     // Unique identifier within the compartment for this script, used for
     // printing analysis information.
     uint32_t        id_;
- #if JS_BITS_PER_WORD == 64
   private:
-    uint32_t        idpad64;
- #endif
-#elif JS_BITS_PER_WORD == 32
-  private:
-    uint32_t        pad32;
+    uint32_t        idpad;
 #endif
 
     // 16-bit fields.
@@ -544,6 +542,8 @@ struct JSScript : public js::gc::Cell
     bool            isGenerator:1;    /* is a generator */
     bool            hasScriptCounts:1;/* script has an entry in
                                          JSCompartment::scriptCountsMap */
+    bool            hasSourceMap:1;   /* script has an entry in
+                                         JSCompartment::sourceMapMap */
 
   private:
     /* See comments below. */
@@ -695,11 +695,15 @@ struct JSScript : public js::gc::Cell
 #endif
 
   public:
-    js::PCCounts getPCCounts(jsbytecode *pc);
-
     bool initScriptCounts(JSContext *cx);
+    js::PCCounts getPCCounts(jsbytecode *pc);
     js::ScriptCounts releaseScriptCounts();
     void destroyScriptCounts(js::FreeOp *fop);
+
+    bool setSourceMap(JSContext *cx, jschar *sourceMap);
+    jschar *getSourceMap();
+    jschar *releaseSourceMap();
+    void destroySourceMap(js::FreeOp *fop);
 
     jsbytecode *main() {
         return code + mainOffset;
