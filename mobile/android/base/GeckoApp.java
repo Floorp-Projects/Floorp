@@ -991,7 +991,7 @@ abstract public class GeckoApp
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     mMainHandler.post(new Runnable() {
                         public void run() {
-                            mLayerController.setWaitForTouchListeners(true);
+                            mLayerController.getView().getTouchEventHandler().setWaitForTouchListeners(true);
                         }
                     });
                 }
@@ -2805,7 +2805,7 @@ abstract public class GeckoApp
         LayerController layerController = getLayerController();
         layerController.setLayerClient(mLayerClient);
 
-        layerController.setOnTouchListener(new View.OnTouchListener() {
+        layerController.getView().getTouchEventHandler().setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View view, MotionEvent event) {
                 if (event == null)
                     return true;

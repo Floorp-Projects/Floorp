@@ -2817,8 +2817,8 @@ NS_IMETHODIMP
 jsdService::GC (void)
 {
     ASSERT_VALID_CONTEXT;
-    JSContext *cx = JSD_GetDefaultJSContext (mCx);
-    JS_GC(cx);
+    JSRuntime *rt = JSD_GetJSRuntime (mCx);
+    JS_GC(rt);
     return NS_OK;
 }
     

@@ -409,29 +409,18 @@ nsXPConnect::Collect(PRUint32 reason, PRUint32 kind)
     // To improve debugging, if DEBUG_CC is defined all JS objects are
     // traversed.
 
-    XPCCallContext ccx(NATIVE_CALLER);
-    if (!ccx.IsValid())
-        return;
-
-    JSContext *cx = ccx.GetJSContext();
-    JSRuntime *rt = GetRuntime()->GetJSRuntime();
-
-    // We want to scan the current thread for GC roots only if it was in a
-    // request prior to the Collect call to avoid false positives during the
-    // cycle collection. So to compensate for JS_BeginRequest in
-    // XPCCallContext::Init we disable the conservative scanner if that call
-    // has started the request on this thread.
-    js::AutoSkipConservativeScan ascs(cx);
     MOZ_ASSERT(reason < js::gcreason::NUM_REASONS);
     js::gcreason::Reason gcreason = (js::gcreason::Reason)reason;
+
+    JSRuntime *rt = GetRuntime()->GetJSRuntime();
     js::PrepareForFullGC(rt);
     if (kind == nsGCShrinking) {
-        js::ShrinkingGC(cx, gcreason);
+        js::ShrinkingGC(rt, gcreason);
     } else if (kind == nsGCIncremental) {
-        js::IncrementalGC(cx, gcreason);
+        js::IncrementalGC(rt, gcreason);
     } else {
         MOZ_ASSERT(kind == nsGCNormal);
-        js::GCForReason(cx, gcreason);
+        js::GCForReason(rt, gcreason);
     }
 }
 
@@ -2803,17 +2792,7 @@ nsXPConnect::GetTelemetryValue(JSContext *cx, jsval *rval)
 NS_IMETHODIMP
 nsXPConnect::NotifyDidPaint()
 {
-    JSRuntime *rt = mRuntime->GetJSRuntime();
-    if (!js::WantGCSlice(rt))
-        return NS_OK;
-
-    XPCCallContext ccx(NATIVE_CALLER);
-    if (!ccx.IsValid())
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    JSContext *cx = ccx.GetJSContext();
-
-    js::NotifyDidPaint(cx);
+    js::NotifyDidPaint(GetRuntime()->GetJSRuntime());
     return NS_OK;
 }
 

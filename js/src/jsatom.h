@@ -470,15 +470,15 @@ inline bool
 js_InternNonIntElementId(JSContext *cx, JSObject *obj, const js::Value &idval,
                          jsid *idp, js::Value *vp);
 
+namespace js {
+
 /*
  * For all unmapped atoms recorded in al, add a mapping from the atom's index
  * to its address. map->length must already be set to the number of atoms in
  * the list and map->vector must point to pre-allocated memory.
  */
 extern void
-js_InitAtomMap(JSContext *cx, js::AtomIndexMap *indices, JSAtom **atoms);
-
-namespace js {
+InitAtomMap(JSContext *cx, AtomIndexMap *indices, HeapPtrAtom *atoms);
 
 template<XDRMode mode>
 bool

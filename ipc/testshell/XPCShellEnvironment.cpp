@@ -409,9 +409,9 @@ GC(JSContext *cx,
    unsigned argc,
    jsval *vp)
 {
-    JS_GC(cx);
-#ifdef JS_GCMETER
     JSRuntime *rt = JS_GetRuntime(cx);
+    JS_GC(rt);
+#ifdef JS_GCMETER
     js_DumpGCStats(rt, stdout);
 #endif
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -1054,15 +1054,14 @@ XPCShellEnvironment::~XPCShellEnvironment()
         }
         mGlobalHolder.Release();
 
-        JS_GC(mCx);
+        JSRuntime *rt = JS_GetRuntime(mCx);
+        JS_GC(rt);
 
         mCxStack = nsnull;
 
         if (mJSPrincipals) {
-            JS_DropPrincipals(JS_GetRuntime(mCx), mJSPrincipals);
+            JS_DropPrincipals(rt, mJSPrincipals);
         }
-
-        JSRuntime* rt = gOldContextCallback ? JS_GetRuntime(mCx) : NULL;
 
         JS_EndRequest(mCx);
         JS_DestroyContext(mCx);
