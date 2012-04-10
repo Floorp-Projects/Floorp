@@ -64,14 +64,6 @@ class nsAccessiblePivot;
 
 const PRUint32 kDefaultCacheSize = 256;
 
-#define NS_DOCACCESSIBLE_IMPL_CID                       \
-{  /* 5641921c-a093-4292-9dca-0b51813db57d */           \
-  0x5641921c,                                           \
-  0xa093,                                               \
-  0x4292,                                               \
-  { 0x9d, 0xca, 0x0b, 0x51, 0x81, 0x3d, 0xb5, 0x7d }    \
-}
-
 class nsDocAccessible : public nsHyperTextAccessibleWrap,
                         public nsIAccessibleDocument,
                         public nsIDocumentObserver,
@@ -85,7 +77,6 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDocAccessible, nsAccessible)
 
   NS_DECL_NSIACCESSIBLEDOCUMENT
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOCACCESSIBLE_IMPL_CID)
 
   NS_DECL_NSIOBSERVER
 
@@ -670,9 +661,6 @@ private:
 
   nsIPresShell* mPresShell;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsDocAccessible,
-                              NS_DOCACCESSIBLE_IMPL_CID)
 
 inline nsDocAccessible*
 nsAccessible::AsDoc()
