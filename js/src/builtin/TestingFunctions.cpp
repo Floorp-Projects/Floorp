@@ -47,7 +47,7 @@ GC(JSContext *cx, unsigned argc, jsval *vp)
         PrepareForDebugGC(cx->runtime);
     else
         PrepareForFullGC(cx->runtime);
-    GCForReason(cx, gcreason::API);
+    GCForReason(cx->runtime, gcreason::API);
 
     char buf[256] = { '\0' };
 #ifndef JS_MORE_DETERMINISTIC
@@ -234,7 +234,7 @@ VerifyBarriers(JSContext *cx, unsigned argc, jsval *vp)
         ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Too many arguments");
         return JS_FALSE;
     }
-    gc::VerifyBarriers(cx);
+    gc::VerifyBarriers(cx->runtime);
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -257,7 +257,7 @@ GCSlice(JSContext *cx, unsigned argc, jsval *vp)
         limit = false;
     }
 
-    GCDebugSlice(cx, limit, budget);
+    GCDebugSlice(cx->runtime, limit, budget);
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -469,7 +469,6 @@ MJitCodeStats(JSContext *cx, unsigned argc, jsval *vp)
 {
 #ifdef JS_METHODJIT
     JSRuntime *rt = cx->runtime;
-    AutoLockGC lock(rt);
     size_t n = 0;
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
         n += (*c)->sizeOfMjitCode();
@@ -499,7 +498,7 @@ MJitChunkLimit(JSContext *cx, unsigned argc, jsval *vp)
 
     // Clear out analysis information which might refer to code compiled with
     // the previous chunk limit.
-    JS_GC(cx);
+    JS_GC(cx->runtime);
 
     vp->setUndefined();
     return true;

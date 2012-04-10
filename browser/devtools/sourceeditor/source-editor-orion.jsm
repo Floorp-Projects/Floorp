@@ -153,15 +153,19 @@ const DEFAULT_KEYBINDINGS = [
     alt: true,
   },
   {
-    action: "Comment",
+    action: "Comment/Uncomment",
     code: Ci.nsIDOMKeyEvent.DOM_VK_SLASH,
     accel: true,
   },
   {
-    action: "Uncomment",
-    code: Ci.nsIDOMKeyEvent.DOM_VK_SLASH,
+    action: "Move to Bracket Opening",
+    code: Ci.nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET,
     accel: true,
-    shift: true,
+  },
+  {
+    action: "Move to Bracket Closing",
+    code: Ci.nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET,
+    accel: true,
   },
 ];
 
@@ -403,8 +407,9 @@ SourceEditor.prototype = {
       "Find Previous Occurrence": [this.ui.findPrevious, this.ui],
       "Goto Line...": [this.ui.gotoLine, this.ui],
       "Move Lines Down": [this._moveLines, this],
-      "Comment": [this._doComment, this],
-      "Uncomment": [this._doUncomment, this],
+      "Comment/Uncomment": [this._doCommentUncomment, this],
+      "Move to Bracket Opening": [this._moveToBracketOpening, this],
+      "Move to Bracket Closing": [this._moveToBracketClosing, this],
     };
 
     for (let name in actions) {
@@ -1051,6 +1056,63 @@ SourceEditor.prototype = {
   },
 
   /**
+   * Decide whether to comment the selection/current line or to uncomment it.
+   *
+   * @private
+   */
+  _doCommentUncomment: function SE__doCommentUncomment()
+  {
+    if (this.readOnly) {
+      return false;
+    }
+
+    let commentObject = this._getCommentStrings();
+    if (!commentObject) {
+      return false;
+    }
+
+    let selection = this.getSelection();
+    let model = this._model;
+    let firstLine = model.getLineAtOffset(selection.start);
+    let lastLine = model.getLineAtOffset(selection.end);
+
+    // Checks for block comment.
+    let firstLineText = model.getLine(firstLine);
+    let lastLineText = model.getLine(lastLine);
+    let openIndex = firstLineText.indexOf(commentObject.blockStart);
+    let closeIndex = lastLineText.lastIndexOf(commentObject.blockEnd);
+    if (openIndex != -1 && closeIndex != -1 &&
+        (firstLine != lastLine ||
+        (closeIndex - openIndex) >= commentObject.blockStart.length)) {
+      return this._doUncomment();
+    }
+
+    if (!commentObject.line) {
+      return this._doComment();
+    }
+
+    // If the selection is not a block comment, check for the first and the last
+    // lines to be line commented.
+    let firstLastCommented = [firstLineText,
+                              lastLineText].every(function(aLineText) {
+      let openIndex = aLineText.indexOf(commentObject.line);
+      if (openIndex != -1) {
+        let textUntilComment = aLineText.slice(0, openIndex);
+        if (!textUntilComment || /^\s+$/.test(textUntilComment)) {
+          return true;
+        }
+      }
+      return false;
+    });
+    if (firstLastCommented) {
+      return this._doUncomment();
+    }
+
+    // If we reach here, then we have to comment the selection/line.
+    return this._doComment();
+  },
+
+  /**
    * Wrap the selected text in comments. If nothing is selected the current
    * caret line is commented out. Single line and block comments depend on the
    * current editor mode.
@@ -1123,7 +1185,9 @@ SourceEditor.prototype = {
     let lastLineText = this._model.getLine(lastLine);
     let openIndex = firstLineText.indexOf(commentObject.blockStart);
     let closeIndex = lastLineText.lastIndexOf(commentObject.blockEnd);
-    if (openIndex != -1 && closeIndex != -1) {
+    if (openIndex != -1 && closeIndex != -1 &&
+        (firstLine != lastLine ||
+        (closeIndex - openIndex) >= commentObject.blockStart.length)) {
       let firstLineStartOffset = this.getLineStart(firstLine);
       let lastLineStartOffset = this.getLineStart(lastLine);
       let openOffset = firstLineStartOffset + openIndex;
@@ -1157,6 +1221,99 @@ SourceEditor.prototype = {
       lineCaret++;
     }
     this.endCompoundChange();
+
+    return true;
+  },
+
+  /**
+   * Helper function for _moveToBracket{Opening/Closing} to find the offset of
+   * matching bracket.
+   *
+   * @param number aOffset
+   *        The offset of the bracket for which you want to find the bracket.
+   * @private
+   */
+  _getMatchingBracketIndex: function SE__getMatchingBracketIndex(aOffset)
+  {
+    return this._styler._findMatchingBracket(this._model, aOffset);
+  },
+
+  /**
+   * Move the cursor to the matching opening bracket if at corresponding closing
+   * bracket, otherwise move to the opening bracket for the current block of code.
+   *
+   * @private
+   */
+  _moveToBracketOpening: function SE__moveToBracketOpening()
+  {
+    let mode = this.getMode();
+    // Returning early if not in JavaScipt or CSS mode.
+    if (mode != SourceEditor.MODES.JAVASCRIPT &&
+        mode != SourceEditor.MODES.CSS) {
+      return false;
+    }
+
+    let caretOffset = this.getCaretOffset() - 1;
+    let matchingIndex = this._getMatchingBracketIndex(caretOffset);
+
+    // If the caret is not at the closing bracket "}", find the index of the
+    // opening bracket "{" for the current code block.
+    if (matchingIndex == -1 || matchingIndex > caretOffset) {
+      let text = this.getText();
+      let closingOffset = text.indexOf("}", caretOffset);
+      while (closingOffset > -1) {
+        let closingMatchingIndex = this._getMatchingBracketIndex(closingOffset);
+        if (closingMatchingIndex < caretOffset && closingMatchingIndex != -1) {
+          matchingIndex = closingMatchingIndex;
+          break;
+        }
+        closingOffset = text.indexOf("}", closingOffset + 1);
+      }
+    }
+
+    if (matchingIndex > -1) {
+      this.setCaretOffset(matchingIndex);
+    }
+
+    return true;
+  },
+
+  /**
+   * Moves the cursor to the matching closing bracket if at corresponding opening
+   * bracket, otherwise move to the closing bracket for the current block of code.
+   *
+   * @private
+   */
+  _moveToBracketClosing: function SE__moveToBracketClosing()
+  {
+    let mode = this.getMode();
+    // Returning early if not in JavaScipt or CSS mode.
+    if (mode != SourceEditor.MODES.JAVASCRIPT &&
+        mode != SourceEditor.MODES.CSS) {
+      return false;
+    }
+
+    let caretOffset = this.getCaretOffset();
+    let matchingIndex = this._getMatchingBracketIndex(caretOffset - 1);
+
+    // If the caret is not at the opening bracket "{", find the index of the
+    // closing bracket "}" for the current code block.
+    if (matchingIndex == -1 || matchingIndex < caretOffset) {
+      let text = this.getText();
+      let openingOffset = text.lastIndexOf("{", caretOffset);
+      while (openingOffset > -1) {
+        let openingMatchingIndex = this._getMatchingBracketIndex(openingOffset);
+        if (openingMatchingIndex > caretOffset) {
+          matchingIndex = openingMatchingIndex;
+          break;
+        }
+        openingOffset = text.lastIndexOf("{", openingOffset - 1);
+      }
+    }
+
+    if (matchingIndex > -1) {
+      this.setCaretOffset(matchingIndex);
+    }
 
     return true;
   },
