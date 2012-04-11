@@ -5601,7 +5601,7 @@ Parser::generatorExpr(ParseNode *kid)
             ParseNode *errorNode = dn->dn_uses ? dn->dn_uses : body;
             gentc.parser->reportErrorNumber(errorNode, JSREPORT_ERROR, JSMSG_BAD_GENEXP_BODY,
                                              js_arguments_str);
-            return false;
+            return NULL;
         }
 
         if (!LeaveFunction(genfn, &gentc))
