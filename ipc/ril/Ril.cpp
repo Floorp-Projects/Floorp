@@ -174,7 +174,7 @@ class RilWriteTask : public Task {
 };
 
 void RilWriteTask::Run() {
-    sClient->OnFileCanWriteWithoutBlocking(sClient->mSocket.rwget());
+    sClient->OnFileCanWriteWithoutBlocking(sClient->mSocket.mFd);
 }
 
 static void
@@ -205,7 +205,7 @@ RilClient::OpenSocket()
     memset(&addr, 0, sizeof(addr));
     strcpy(addr.sun_path, RIL_SOCKET_NAME);
     addr.sun_family = AF_LOCAL;
-    mSocket.reset(socket(AF_LOCAL, SOCK_STREAM, 0));
+    mSocket.mFd = socket(AF_LOCAL, SOCK_STREAM, 0);
     alen = strlen(RIL_SOCKET_NAME) + offsetof(struct sockaddr_un, sun_path) + 1;
 #else
     struct hostent *hp;
@@ -219,39 +219,39 @@ RilClient::OpenSocket()
     addr.sin_family = hp->h_addrtype;
     addr.sin_port = htons(RIL_TEST_PORT);
     memcpy(&addr.sin_addr, hp->h_addr, hp->h_length);
-    mSocket.reset(socket(hp->h_addrtype, SOCK_STREAM, 0));
+    mSocket.mFd = socket(hp->h_addrtype, SOCK_STREAM, 0);
     alen = sizeof(addr);
 #endif
 
-    if (mSocket.get() < 0) {
+    if (mSocket.mFd < 0) {
         LOG("Cannot create socket for RIL!\n");
         return false;
     }
 
-    iif (connect(mSocket.get(), (struct sockaddr *) &addr, alen) < 0) {
+    if (connect(mSocket.mFd, (struct sockaddr *) &addr, alen) < 0) {
 #if defined(MOZ_WIDGET_GONK)
         LOG("Cannot open socket for RIL!\n");
 #endif
-        mSocket.dispose();
+        close(mSocket.mFd);
         return false;
     }
 
     // Set close-on-exec bit.
-    int flags = fcntl(mSocket.get(), F_GETFD);
+    int flags = fcntl(mSocket.mFd, F_GETFD);
     if (-1 == flags) {
         return false;
     }
 
     flags |= FD_CLOEXEC;
-    if (-1 == fcntl(mSocket.get(), F_SETFD, flags)) {
+    if (-1 == fcntl(mSocket.mFd, F_SETFD, flags)) {
         return false;
     }
 
     // Select non-blocking IO.
-    if (-1 == fcntl(mSocket.get(), F_SETFL, O_NONBLOCK)) {
+    if (-1 == fcntl(mSocket.mFd, F_SETFL, O_NONBLOCK)) {
         return false;
     }
-    if (!mIOLoop->WatchFileDescriptor(mSocket.get(),
+    if (!mIOLoop->WatchFileDescriptor(mSocket.mFd,
                                       true,
                                       MessageLoopForIO::WATCH_READ,
                                       &mReadWatcher,
@@ -274,7 +274,7 @@ RilClient::OnFileCanReadWithoutBlocking(int fd)
     //     data available on the socket
     //     If so, break;
 
-    MOZ_ASSERT(fd == mSocket.get());
+    MOZ_ASSERT(fd == mSocket.mFd);
     while (true) {
         if (!mIncoming) {
             mIncoming = new RilRawData();
@@ -295,7 +295,7 @@ RilClient::OnFileCanReadWithoutBlocking(int fd)
                 mIncoming.forget();
                 mReadWatcher.StopWatchingFileDescriptor();
                 mWriteWatcher.StopWatchingFileDescriptor();
-                close(mSocket.get());
+                close(mSocket.mFd);
                 RilReconnectTask::Enqueue();
                 return;
             }
@@ -318,7 +318,7 @@ RilClient::OnFileCanWriteWithoutBlocking(int fd)
     // system won't block.
     //
 
-    MOZ_ASSERT(fd == mSocket.get());
+    MOZ_ASSERT(fd == mSocket.mFd);
 
     while (!mOutgoingQ.empty() || mCurrentRilRawData != NULL) {
         if(!mCurrentRilRawData) {
