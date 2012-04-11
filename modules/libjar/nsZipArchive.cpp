@@ -140,7 +140,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsZipHandle)
 nsresult nsZipHandle::Init(nsILocalFile *file, nsZipHandle **ret)
 {
   mozilla::AutoFDClose fd;
-  nsresult rv = file->OpenNSPRFileDesc(PR_RDONLY, 0000, &fd.rwget());
+  nsresult rv = file->OpenNSPRFileDesc(PR_RDONLY, 0000, &fd);
   if (NS_FAILED(rv))
     return rv;
 

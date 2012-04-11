@@ -558,11 +558,9 @@ PluginModuleParent::RecvBackUpXResources(const FileDescriptor& aXSocketFd)
 #ifndef MOZ_X11
     NS_RUNTIMEABORT("This message only makes sense on X11 platforms");
 #else
-    NS_ABORT_IF_FALSE(0 > mPluginXSocketFdDup.get(),
+    NS_ABORT_IF_FALSE(0 > mPluginXSocketFdDup.mFd,
                       "Already backed up X resources??");
-    int fd = aXSocketFd.fd; // Copy to discard |const| qualifier
-    mPluginXSocketFdDup.forget();
-    mPluginXSocketFdDup.reset(fd);
+    mPluginXSocketFdDup.mFd = aXSocketFd.fd;
 #endif
     return true;
 }

@@ -498,8 +498,7 @@ nsUrlClassifierPrefixSet::LoadFromFile(nsIFile* aFile)
   NS_ENSURE_SUCCESS(rv, rv);
 
   AutoFDClose fileFd;
-  rv = file->OpenNSPRFileDesc(PR_RDONLY | nsILocalFile::OS_READAHEAD,
-                              0, &fileFd.rwget());
+  rv = file->OpenNSPRFileDesc(PR_RDONLY | nsILocalFile::OS_READAHEAD, 0, &fileFd);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return LoadFromFd(fileFd);
@@ -557,7 +556,7 @@ nsUrlClassifierPrefixSet::StoreToFile(nsIFile* aFile)
 
   AutoFDClose fileFd;
   rv = file->OpenNSPRFileDesc(PR_RDWR | PR_TRUNCATE | PR_CREATE_FILE,
-                              0644, &fileFd.rwget());
+                              0644, &fileFd);
   NS_ENSURE_SUCCESS(rv, rv);
 
   MutexAutoLock lock(mPrefixSetLock);
