@@ -6739,11 +6739,11 @@ CSSParserImpl::ParseBorderImage()
 {
   nsAutoParseCompoundProperty compound(this);
 
-  // border-image: inherit |
+  // border-image: inherit | -moz-initial |
   // <border-image-source> ||
   // <border-image-slice>
-  //   [ / <border-image-width>?
-  //     [ / <border-image-outset>]?]? ||
+  //   [ / <border-image-width> |
+  //     / <border-image-width>? / <border-image-outset> ]? ||
   // <border-image-repeat>
 
   nsCSSValue value;
@@ -6753,7 +6753,7 @@ CSSParserImpl::ParseBorderImage()
     AppendValue(eCSSProperty_border_image_width, value);
     AppendValue(eCSSProperty_border_image_outset, value);
     AppendValue(eCSSProperty_border_image_repeat, value);
-    // Keyword "inherit" can't be mixed, so we are done.
+    // Keyword "inherit" (and "-moz-initial") can't be mixed, so we are done.
     return true;
   }
 
@@ -6792,13 +6792,17 @@ CSSParserImpl::ParseBorderImage()
 
         // [ / <border-image-width>?
         if (ExpectSymbol('/', true)) {
-          ParseBorderImageWidth(false);
+          bool foundBorderImageWidth = ParseBorderImageWidth(false);
 
           // [ / <border-image-outset>
           if (ExpectSymbol('/', true)) {
             if (!ParseBorderImageOutset(false)) {
               return false;
             }
+          } else if (!foundBorderImageWidth) {
+            // If this part has an trailing slash, the whole declaration is 
+            // invalid.
+            return false;
           }
         }
 
