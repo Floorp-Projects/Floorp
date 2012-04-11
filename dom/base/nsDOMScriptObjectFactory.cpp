@@ -388,11 +388,11 @@ nsDOMExceptionProvider::GetException(nsresult result,
       return NS_NewXPathException(result, aDefaultException, _retval);
     case NS_ERROR_MODULE_XPCONNECT:
       return CreateXPConnectException(result, aDefaultException, _retval);
-    case NS_ERROR_MODULE_DOM_FILE:
-      return NS_NewFileException(result, aDefaultException, _retval);
-    case NS_ERROR_MODULE_DOM_INDEXEDDB:
-      return NS_NewIDBDatabaseException(result, aDefaultException, _retval);
     default:
+      MOZ_ASSERT(NS_ERROR_GET_MODULE(result) == NS_ERROR_MODULE_DOM ||
+          NS_ERROR_GET_MODULE(result) == NS_ERROR_MODULE_DOM_FILE ||
+          NS_ERROR_GET_MODULE(result) == NS_ERROR_MODULE_DOM_INDEXEDDB,
+          "Trying to create an exception for the wrong error module.");
       return NS_NewDOMException(result, aDefaultException, _retval);
   }
   NS_NOTREACHED("Not reached");

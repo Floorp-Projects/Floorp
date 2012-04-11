@@ -259,7 +259,7 @@ IDBCursor::ParseDirection(const nsAString& aDirection, Direction* aResult)
     *aResult = PREV_UNIQUE;
   }
   else {
-    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
+    return NS_ERROR_TYPE_ERR;
   }
   
   return NS_OK;
@@ -720,7 +720,7 @@ IDBCursor::Advance(PRInt32 aCount)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (aCount < 1) {
-    return NS_ERROR_DOM_TYPE_ERR;
+    return NS_ERROR_TYPE_ERR;
   }
 
   Key key;
