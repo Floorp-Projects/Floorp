@@ -191,7 +191,6 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jDisableScreenOrientationNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "disableScreenOrientationNotifications", "()V");
     jLockScreenOrientation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "lockScreenOrientation", "(I)V");
     jUnlockScreenOrientation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "unlockScreenOrientation", "()V");
-    jPumpMessageLoop = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "pumpMessageLoop", "()V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -2129,15 +2128,6 @@ AndroidBridge::UnlockScreenOrientation()
 {
   ALOG_BRIDGE("AndroidBridge::UnlockScreenOrientation");
   mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jUnlockScreenOrientation);
-}
-
-void
-AndroidBridge::PumpMessageLoop()
-{
-    if (!mJNIEnv)
-        return;
-
-    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jPumpMessageLoop);
 }
 
 /* attribute nsIAndroidBrowserApp browserApp; */
