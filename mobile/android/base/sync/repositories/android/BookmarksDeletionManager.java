@@ -11,6 +11,7 @@ import java.util.Set;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
+import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 
 /**
@@ -49,6 +50,8 @@ public class BookmarksDeletionManager {
   private static final String LOG_TAG = "BookmarkDelete";
 
   private final AndroidBrowserBookmarksDataAccessor dataAccessor;
+  private RepositorySessionStoreDelegate delegate;
+
   private final int flushThreshold;
 
   private final HashSet<String> folders    = new HashSet<String>();
@@ -73,6 +76,16 @@ public class BookmarksDeletionManager {
   public BookmarksDeletionManager(AndroidBrowserBookmarksDataAccessor dataAccessor, int flushThreshold) {
     this.dataAccessor = dataAccessor;
     this.flushThreshold = flushThreshold;
+  }
+
+  /**
+   * Set the delegate to use for callbacks.
+   * If not invoked, no callbacks will be submitted.
+   *
+   * @param delegate a delegate, which should already be a delayed delegate.
+   */
+  public void setDelegate(RepositorySessionStoreDelegate delegate) {
+    this.delegate = delegate;
   }
 
   public void deleteRecord(BookmarkRecord r, boolean isFolder) {
@@ -147,6 +160,7 @@ public class BookmarksDeletionManager {
       // Just delete them.
       final String folderWhere = RepoUtils.computeSQLInClause(folders.size(), BrowserContract.Bookmarks.GUID);
       dataAccessor.delete(folderWhere, folderGUIDs);
+      invokeCallbacks(delegate, folderGUIDs);
 
       folderParents.removeAll(folders);
       Logger.debug(LOG_TAG, "Bumping modified times for " + folderParents.size() +
@@ -194,10 +208,26 @@ public class BookmarksDeletionManager {
     final String nonFolderWhere = RepoUtils.computeSQLInClause(nonFolderCount, BrowserContract.Bookmarks.GUID);
     dataAccessor.delete(nonFolderWhere, nonFolderGUIDs);
 
+    invokeCallbacks(delegate, nonFolderGUIDs);
+
     // Discard these.
     // Note that we maintain folderParents and nonFolderParents; we need them later.
     nonFolders.clear();
     nonFolderCount = 0;
+  }
+
+  private void invokeCallbacks(RepositorySessionStoreDelegate delegate,
+                               String[] nonFolderGUIDs) {
+    if (delegate == null) {
+      return;
+    }
+    Logger.trace(LOG_TAG, "Invoking store callback for " + nonFolderGUIDs.length + " GUIDs.");
+    final long now = System.currentTimeMillis();
+    BookmarkRecord r = new BookmarkRecord(null, "bookmarks", now, true);
+    for (String guid : nonFolderGUIDs) {
+      r.guid = guid;
+      delegate.onRecordStoreSucceeded(r);
+    }
   }
 
   /**
