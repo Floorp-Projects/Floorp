@@ -75,7 +75,6 @@ _CHROME_FILES = \
 		test_getweakmapkeys.xul \
 		test_weakmaps.xul \
 		test_bug706301.xul \
-		test_watchpoints.xul \
 		test_exnstack.xul \
 		test_weakref.xul \
 		$(NULL)
@@ -83,6 +82,9 @@ _CHROME_FILES = \
 # Disabled until this test gets updated to test the new proxy based
 # wrappers.
 #		test_wrappers-2.xul \
+
+# Disabled due to apparent conservative stack scanner false positives on Linux64 debug.
+#		test_watchpoints.xul \
 
 libs:: $(_CHROME_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
