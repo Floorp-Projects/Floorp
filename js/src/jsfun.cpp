@@ -429,7 +429,7 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, JSObject **objp, JSScript *paren
         fun->initScript(script);
         if (!script->typeSetFunction(cx, fun))
             return false;
-        JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
+        JS_ASSERT(fun->nargs == fun->script()->bindings.numArgs());
         js_CallNewScriptHook(cx, fun->script(), fun);
         *objp = fun;
     }
@@ -861,7 +861,7 @@ fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
     if (fun->isInterpreted()) {
         JSScript *script = fun->script();
         JS_ASSERT(script->length != 0);
-        result = script->code[0] == JSOP_GENERATOR;
+        result = script->isGenerator;
     }
 
     JS_SET_RVAL(cx, vp, BooleanValue(result));
@@ -1199,7 +1199,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, unsigned nargs,
     fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK);
     if ((flags & JSFUN_KINDMASK) >= JSFUN_INTERPRETED) {
         JS_ASSERT(!native);
-        fun->script().init(NULL);
+        fun->mutableScript().init(NULL);
         fun->initEnvironment(parent);
     } else {
         fun->u.native = native;
@@ -1265,7 +1265,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             JS_ASSERT(script->compartment() == fun->compartment());
             JS_ASSERT(script->compartment() != cx->compartment);
 
-            clone->script().init(NULL);
+            clone->mutableScript().init(NULL);
             JSScript *cscript = CloneScript(cx, script);
             if (!cscript)
                 return NULL;

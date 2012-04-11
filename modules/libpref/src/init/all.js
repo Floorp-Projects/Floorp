@@ -245,6 +245,8 @@ pref("gfx.canvas.azure.enabled", true);
 pref("gfx.textures.poweroftwo.force-enabled", false);
 #endif
 
+pref("gfx.work-around-driver-bugs", true);
+
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
 

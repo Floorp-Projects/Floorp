@@ -12,6 +12,12 @@ let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
 loader.loadSubScript("chrome://marionette/content/marionette-simpletest.js");
 loader.loadSubScript("chrome://marionette/content/marionette-log-obj.js");
 Components.utils.import("chrome://marionette/content/marionette-elements.js");
+let utils = {};
+utils.window = content;
+//load Event/ChromeUtils for use with JS scripts:
+loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils)
+loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", utils);
+loader.loadSubScript("chrome://marionette/content/atoms.js", utils);
 let marionetteLogObj = new MarionetteLogObj();
 
 let isB2G = false;
@@ -55,6 +61,13 @@ function startListeners() {
   addMessageListener("Marionette:findElementContent" + listenerId, findElementContent);
   addMessageListener("Marionette:findElementsContent" + listenerId, findElementsContent);
   addMessageListener("Marionette:clickElement" + listenerId, clickElement);
+  addMessageListener("Marionette:getAttributeValue" + listenerId, getAttributeValue);
+  addMessageListener("Marionette:getElementText" + listenerId, getElementText);
+  addMessageListener("Marionette:isElementDisplayed" + listenerId, isElementDisplayed);
+  addMessageListener("Marionette:isElementEnabled" + listenerId, isElementEnabled);
+  addMessageListener("Marionette:isElementSelected" + listenerId, isElementSelected);
+  addMessageListener("Marionette:sendKeysToElement" + listenerId, sendKeysToElement);
+  addMessageListener("Marionette:clearElement" + listenerId, clearElement);
   addMessageListener("Marionette:switchToFrame" + listenerId, switchToFrame);
   addMessageListener("Marionette:deleteSession" + listenerId, deleteSession);
   addMessageListener("Marionette:sleepSession" + listenerId, sleepSession);
@@ -105,6 +118,13 @@ function deleteSession(msg) {
   removeMessageListener("Marionette:findElementContent" + listenerId, findElementContent);
   removeMessageListener("Marionette:findElementsContent" + listenerId, findElementsContent);
   removeMessageListener("Marionette:clickElement" + listenerId, clickElement);
+  removeMessageListener("Marionette:getAttributeValue" + listenerId, getAttributeValue);
+  removeMessageListener("Marionette:getElementText" + listenerId, getElementText);
+  removeMessageListener("Marionette:isElementDisplayed" + listenerId, isElementDisplayed);
+  removeMessageListener("Marionette:isElementEnabled" + listenerId, isElementEnabled);
+  removeMessageListener("Marionette:isElementSelected" + listenerId, isElementSelected);
+  removeMessageListener("Marionette:sendKeysToElement" + listenerId, sendKeysToElement);
+  removeMessageListener("Marionette:clearElement" + listenerId, clearElement);
   removeMessageListener("Marionette:switchToFrame" + listenerId, switchToFrame);
   removeMessageListener("Marionette:deleteSession" + listenerId, deleteSession);
   removeMessageListener("Marionette:sleepSession" + listenerId, sleepSession);
@@ -192,6 +212,7 @@ function createExecuteContentSandbox(aWindow, marionette, args) {
   sandbox.__namedArgs = elementManager.applyNamedArgs(args);
   sandbox.__marionetteParams = args;
   sandbox.__proto__ = sandbox.window;
+  sandbox.testUtils = utils;
 
   marionette.exports.forEach(function(fn) {
     sandbox[fn] = marionette[fn].bind(marionette);
@@ -421,7 +442,6 @@ function refresh(msg) {
  * Find an element in the document using requested search strategy 
  */
 function findElementContent(msg) {
-  //Todo: extend to support findChildElement
   let id;
   try {
     let notify = function(id) { sendResponse({value:id});};
@@ -430,7 +450,6 @@ function findElementContent(msg) {
   }
   catch (e) {
     sendError(e.message, e.num, e.stack);
-    return;
   }
 }
 
@@ -438,7 +457,6 @@ function findElementContent(msg) {
  * Find elements in the document using requested search strategy 
  */
 function findElementsContent(msg) {
-  //Todo: extend to support findChildElement
   let id;
   try {
     let notify = function(id) { sendResponse({value:id});};
@@ -447,7 +465,6 @@ function findElementsContent(msg) {
   }
   catch (e) {
     sendError(e.message, e.num, e.stack);
-    return;
   }
 }
 
@@ -457,14 +474,107 @@ function findElementsContent(msg) {
 function clickElement(msg) {
   let el;
   try {
+    //el = elementManager.click(msg.json.element, win);
     el = elementManager.getKnownElement(msg.json.element, win);
+    utils.click(el);
+    sendOk();
   }
   catch (e) {
     sendError(e.message, e.num, e.stack);
-    return;
   }
-  el.click();
-  sendOk();
+}
+
+/**
+ * Get a given attribute of an element
+ */
+function getAttributeValue(msg) {
+  try {
+    let el = elementManager.getKnownElement(msg.json.element, win);
+    sendResponse({value: utils.getAttributeValue(el, msg.json.name)});
+  }
+  catch (e) {
+    sendError(e.message, e.num, e.stack);
+  }
+}
+
+/**
+ * Get the text of this element. This includes text from child elements.
+ */
+function getElementText(msg) {
+  try {
+    let el = elementManager.getKnownElement(msg.json.element, win);
+    sendResponse({value: utils.getElementText(el)});
+  }
+  catch (e) {
+    sendError(e.message, e.num, e.stack);
+  }
+}
+
+/**
+ * Check if element is displayed
+ */
+function isElementDisplayed(msg) {
+  try {
+    let el = elementManager.getKnownElement(msg.json.element, win);
+    sendResponse({value: utils.isElementDisplayed(el)});
+  }
+  catch (e) {
+    sendError(e.message, e.num, e.stack);
+  }
+}
+
+/**
+ * Check if element is enabled
+ */
+function isElementEnabled(msg) {
+  try {
+    let el = elementManager.getKnownElement(msg.json.element, win);
+    sendResponse({value: utils.isElementEnabled(el)});
+  }
+  catch (e) {
+    sendError(e.message, e.num, e.stack);
+  }
+}
+
+/**
+ * Check if element is selected
+ */
+function isElementSelected(msg) {
+  try {
+    let el = elementManager.getKnownElement(msg.json.element, win);
+    sendResponse({value: utils.isElementSelected(el)});
+  }
+  catch (e) {
+    sendError(e.message, e.num, e.stack);
+  }
+}
+
+/**
+ * Send keys to element
+ */
+function sendKeysToElement(msg) {
+  try {
+    let el = elementManager.getKnownElement(msg.json.element, win);
+    utils.sendKeysToElement(el, msg.json.value);
+    sendOk();
+  }
+  catch (e) {
+    sendError(e.message, e.num, e.stack);
+  }
+}
+
+/**
+ * Clear the text of an element
+ */
+function clearElement(msg) {
+  try {
+    let el = elementManager.getKnownElement(msg.json.element, win);
+    utils.clearElement(el);
+    sendOk();
+  }
+  catch (e) {
+    sendError(e.message, e.num, e.stack);
+  }
 }
 
 /**

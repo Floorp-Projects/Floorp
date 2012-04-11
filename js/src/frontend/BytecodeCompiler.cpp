@@ -361,7 +361,7 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
     funbce.flags |= TCF_IN_FUNCTION;
     funbce.setFunction(fun);
     funbce.bindings.transfer(cx, bindings);
-    fun->setArgCount(funbce.bindings.countArgs());
+    fun->setArgCount(funbce.bindings.numArgs());
     if (!GenerateBlockId(&funbce, funbce.bodyid))
         return false;
 
@@ -398,9 +398,7 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
      */
     ParseNode *pn = fn ? parser.functionBody(Parser::StatementListBody) : NULL;
     if (pn) {
-        if (!CheckStrictParameters(cx, &funbce)) {
-            pn = NULL;
-        } else if (!tokenStream.matchToken(TOK_EOF)) {
+        if (!tokenStream.matchToken(TOK_EOF)) {
             parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             pn = NULL;
         } else if (!FoldConstants(cx, pn, &funbce)) {

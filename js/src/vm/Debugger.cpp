@@ -3655,7 +3655,7 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
     result->ensureDenseArrayInitializedLength(cx, 0, fun->nargs);
 
     if (fun->isInterpreted()) {
-        JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
+        JS_ASSERT(fun->nargs == fun->script()->bindings.numArgs());
 
         if (fun->nargs > 0) {
             Vector<JSAtom *> names(cx);

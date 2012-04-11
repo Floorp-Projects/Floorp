@@ -363,7 +363,7 @@ pref("places.frecency.unvisitedTypedBonus", 200);
 pref("gfx.color_management.mode", 0);
 #ifdef ANDROID
 // 0=fixed margin, 1=velocity bias, 2=dynamic resolution, 3=no margins
-pref("gfx.displayport.strategy", 0);
+pref("gfx.displayport.strategy", 1);
 #endif
 
 // don't allow JS to move and resize existing windows

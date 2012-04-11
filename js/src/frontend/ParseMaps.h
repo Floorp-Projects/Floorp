@@ -392,7 +392,7 @@ class AtomDeclsIter
   public:
     explicit AtomDeclsIter(AtomDecls *decls) : r(decls->all()), link(NULL) {}
 
-    Definition *operator()() {
+    Definition *next() {
         if (link) {
             JS_ASSERT(link != link->next);
             Definition *result = link->defn;

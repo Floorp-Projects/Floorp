@@ -50,6 +50,8 @@ toolkit.jar:
   skin/classic/global/datetimepicker.css
   skin/classic/global/toolbar.css
   skin/classic/global/toolbarbutton.css
+  skin/classic/global/TopLevelImageDocument.css
+  skin/classic/global/TopLevelVideoDocument.css
 * skin/classic/global/tree.css
 * skin/classic/global/viewbuttons.css
   skin/classic/global/wizard.css
