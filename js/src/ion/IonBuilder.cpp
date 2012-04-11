@@ -716,7 +716,9 @@ IonBuilder::inspectOpcode(JSOp op)
         return true;
 
       case JSOP_NEWINIT:
-        return jsop_newinit(GET_UINT8(pc) == JSProto_Array);
+        if (GET_UINT8(pc) == JSProto_Array)
+            return jsop_newarray(0);
+        return jsop_newobject(NULL);
 
       case JSOP_NEWARRAY:
         return jsop_newarray(GET_UINT24(pc));
@@ -2761,14 +2763,6 @@ IonBuilder::jsop_compare(JSOp op)
     if (ins->isEffectful() && !resumeAfter(ins))
         return false;
     return true;
-}
-
-bool
-IonBuilder::jsop_newinit(bool isArray)
-{
-    if (isArray)
-        return jsop_newarray(0);
-    return jsop_newobject(NULL);
 }
 
 bool
