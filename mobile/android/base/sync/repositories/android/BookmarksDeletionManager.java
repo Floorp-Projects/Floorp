@@ -88,31 +88,31 @@ public class BookmarksDeletionManager {
     this.delegate = delegate;
   }
 
-  public void deleteRecord(BookmarkRecord r, boolean isFolder) {
-    if (r.guid == null) {
+  public void deleteRecord(String guid, boolean isFolder, String parentGUID) {
+    if (guid == null) {
       Logger.warn(LOG_TAG, "Cannot queue deletion of record with no GUID.");
       return;
     }
-    Logger.debug(LOG_TAG, "Queuing deletion of " + r.guid);
+    Logger.debug(LOG_TAG, "Queuing deletion of " + guid);
 
     if (isFolder) {
-      folders.add(r.guid);
-      if (!folders.contains(r.parentID)) {
+      folders.add(guid);
+      if (!folders.contains(parentGUID)) {
         // We're not going to delete its parent; will need to bump it.
-        folderParents.add(r.parentID);
+        folderParents.add(parentGUID);
       }
 
-      nonFolderParents.remove(r.guid);
-      folderParents.remove(r.guid);
+      nonFolderParents.remove(guid);
+      folderParents.remove(guid);
       return;
     }
 
-    if (!folders.contains(r.parentID)) {
+    if (!folders.contains(parentGUID)) {
       // We're not going to delete its parent; will need to bump it.
-      nonFolderParents.add(r.parentID);
+      nonFolderParents.add(parentGUID);
     }
 
-    if (nonFolders.add(r.guid)) {
+    if (nonFolders.add(guid)) {
       if (++nonFolderCount >= flushThreshold) {
         deleteNonFolders();
       }

@@ -713,8 +713,10 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
       return;
     }
     final BookmarkRecord bookmarkRecord = (BookmarkRecord) record;
-    final boolean isFolder = ((BookmarkRecord) existingRecord).isFolder();
-    deletionManager.deleteRecord(bookmarkRecord, isFolder);
+    final BookmarkRecord existingBookmark = (BookmarkRecord) existingRecord;
+    final boolean isFolder = existingBookmark.isFolder();
+    final String parentGUID = existingBookmark.parentID;
+    deletionManager.deleteRecord(bookmarkRecord.guid, isFolder, parentGUID);
   }
 
   protected void flushDeletions() {
