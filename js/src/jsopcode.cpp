@@ -1822,7 +1822,7 @@ GetLocal(SprintStack *ss, int i)
      * not in a block. In either case, return GetStr(ss, i).
      */
     JSScript *script = ss->printer->script;
-    if (!JSScript::isValidOffset(script->objectsOffset))
+    if (!script->hasObjects())
         return GetStr(ss, i);
 
     // In case of a let variable, the stack points to a JSOP_ENTERBLOCK opcode.

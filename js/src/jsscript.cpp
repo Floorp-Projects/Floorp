@@ -428,7 +428,7 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
         JS_ASSERT_IF(parentScript, parentScript->compartment() == script->compartment());
     
         /* Should not XDR scripts optimized for a single global object. */
-        JS_ASSERT(!JSScript::isValidOffset(script->globalsOffset));
+        JS_ASSERT(!script->hasGlobals());
 
         nargs = script->bindings.numArgs();
         nvars = script->bindings.numVars();
@@ -535,13 +535,13 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
         notes = script->notes();
         nsrcnotes = script->numNotes();
 
-        if (JSScript::isValidOffset(script->constsOffset))
+        if (script->hasConsts())
             nconsts = script->consts()->length;
-        if (JSScript::isValidOffset(script->objectsOffset))
+        if (script->hasObjects())
             nobjects = script->objects()->length;
-        if (JSScript::isValidOffset(script->regexpsOffset))
+        if (script->hasRegexps())
             nregexps = script->regexps()->length;
-        if (JSScript::isValidOffset(script->trynotesOffset))
+        if (script->hasTrynotes())
             ntrynotes = script->trynotes()->length;
         /* no globals when encoding;  see assertion above */
         nClosedArgs = script->numClosedArgs();
@@ -1993,17 +1993,17 @@ JSScript::markChildren(JSTracer *trc)
             MarkString(trc, &atoms[i], "atom");
     }
 
-    if (JSScript::isValidOffset(objectsOffset)) {
+    if (hasObjects()) {
         JSObjectArray *objarray = objects();
         MarkObjectRange(trc, objarray->length, objarray->vector, "objects");
     }
 
-    if (JSScript::isValidOffset(regexpsOffset)) {
+    if (hasRegexps()) {
         JSObjectArray *objarray = regexps();
         MarkObjectRange(trc, objarray->length, objarray->vector, "objects");
     }
 
-    if (JSScript::isValidOffset(constsOffset)) {
+    if (hasConsts()) {
         JSConstArray *constarray = consts();
         MarkValueRange(trc, constarray->length, constarray->vector, "consts");
     }

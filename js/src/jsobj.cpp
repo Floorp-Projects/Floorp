@@ -817,7 +817,7 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, unsigned
                      */
                     JS_ASSERT(script->objects()->length >= 1);
                     if (script->objects()->length == 1 &&
-                        !JSScript::isValidOffset(script->regexpsOffset)) {
+                        !script->hasRegexps()) {
                         JS_ASSERT(staticLevel == script->staticLevel);
                         *scriptp = script->evalHashLink();
                         script->evalHashLink() = NULL;
