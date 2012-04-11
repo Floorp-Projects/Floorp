@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+-->
+  <head>
+    <title>Bug 633602 - file_movementXY.html</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js">
+    </script>
+    <script type="application/javascript" src="pointerlock_utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <a target="_blank"
+      href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+      Mozilla Bug 633602
+    </a>
+    <div id="div"></div>
+    <pre id="test">
+      <script type="application/javascript">
+        /*
+         * Test for Bug 633602
+         * Checks if mozMovementX and mozMovementY are present
+         * in the mouse event object.
+         * It also checks the values for mozMovementXY.
+         * They should be equal to the current screenXY minus
+         * the last screenXY
+         */
+
+        SimpleTest.waitForExplicitFinish();
+
+        function MouseMovementStats() {
+          this.screenX = false;
+          this.screenY = false;
+          this.mozMovementX = false;
+          this.mozMovementY = false;
+        }
+
+        var div = document.getElementById("div")
+          , divCenterWidth = 0
+          , divCenterHeight = 0
+          , mozMovementX = false
+          , mozMovementY = false
+          , firstMove = new MouseMovementStats()
+          , secondMove = new MouseMovementStats();
+
+        function runTests () {
+          ok(mozMovementX && mozMovementY, "mozMovementX and " +
+            "mozMovementY should exist in mouse events objects.");
+          is(secondMove.mozMovementX, secondMove.screenX - firstMove.screenX,
+           "mozMovementX should be equal to eNow.screenX-ePrevious.screenX");
+          is(secondMove.mozMovementY, secondMove.screenY - firstMove.screenY,
+           "mozMovementY should be equal to eNow.screenY-ePrevious.screenY");
+        }
+
+        var moveMouse = function(e) {
+          mozMovementX = ("mozMovementX" in e);
+          mozMovementY = ("mozMovementY" in e);
+
+          div.removeEventListener("mousemove", moveMouse, false);
+          div.addEventListener("mousemove", moveMouseAgain, false);
+
+          firstMove.screenX = e.screenX;
+          firstMove.screenY = e.screenY;
+
+          divCenterWidth = Math.round(div.getBoundingClientRect().width / 2);
+          divCenterHeight = Math.round(div.getBoundingClientRect().height / 2);
+
+          synthesizeMouse(div, (divCenterWidth + 10), (divCenterHeight + 10), {
+            type: "mousemove"
+          }, window);
+        };
+
+        var moveMouseAgain = function(e) {
+          secondMove.screenX = e.screenX;
+          secondMove.screenY = e.screenY;
+          secondMove.mozMovementX = e.mozMovementX;
+          secondMove.mozMovementY = e.mozMovementY;
+
+          div.removeEventListener("mousemove", moveMouseAgain, false);
+          document.mozCancelFullScreen();
+        };
+
+        document.addEventListener("mozfullscreenchange", function() {
+          if (document.mozFullScreenElement === div) {
+            div.addEventListener("mousemove", moveMouse, false);
+            synthesizeMouseAtCenter(div, {type: "mousemove"}, window);
+          }
+          else {
+            runTests();
+            SimpleTest.finish();
+          }
+        }, false);
+
+        function start() {
+          div.mozRequestFullScreen();
+        }
+      </script>
+    </pre>
+  </body>
+</html>

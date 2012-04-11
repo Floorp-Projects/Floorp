@@ -3280,6 +3280,9 @@ nsGenericElement::UnbindFromTree(bool aDeep, bool aNullParent)
       // Fully exit full-screen.
       nsIDocument::ExitFullScreen(false);
     }
+    if (HasPointerLock()) {
+      nsIDocument::UnlockPointer();
+    }
     if (GetParent()) {
       NS_RELEASE(mParent);
     } else {
@@ -6453,6 +6456,13 @@ nsINode::Contains(nsIDOMNode* aOther, bool* aReturn)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aOther);
   *aReturn = Contains(node);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::MozRequestPointerLock()
+{
+  OwnerDoc()->RequestPointerLock(this);
   return NS_OK;
 }
 

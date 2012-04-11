@@ -35,7 +35,7 @@
 
 #include "nsIDOMSVGTextPositionElem.idl"
 
-[scriptable, uuid(289aa3c3-9724-48a3-81cc-a0bc7c1f1fea)]
+[scriptable, uuid(D7274F91-0FC7-42F1-AD56-3C58AF2B0113)]
 interface nsIDOMSVGAltGlyphElement : nsIDOMSVGTextPositioningElement
 /*
         The SVG DOM makes use of multiple interface inheritance.

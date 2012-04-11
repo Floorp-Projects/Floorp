@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+-->
+<head>
+  <title>Bug 633602 - file_doubleLockCallBack.html</title>
+  <script type="text/javascript"
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript"
+          src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="pointerlock_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+      #test-element { background-color: #94E01B; width:100px; height:100px; }
+  </style>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+    Mozilla Bug 633602</a>
+  <div id="div"></div>
+  <pre id="test">
+    <script type="text/javascript">
+      /*
+       * Test for Bug 633602
+       * If element requests pointerlock on itself while in pointerlock state
+       * mozpointerlockchange event should be dispatched
+       */
+
+      SimpleTest.waitForExplicitFinish();
+
+      var div = document.getElementById("div")
+        , numberOfLocks = 0;
+
+      function runTests () {
+        is(numberOfLocks, 2, "Requesting pointer lock on a locked element " +
+          "should dispatch mozpointerlockchange event");
+      }
+
+      document.addEventListener("mozpointerlockchange", function (e) {
+        if (document.mozPointerLockElement === div) {
+          if (numberOfLocks === 2) {
+            document.mozCancelFullScreen();
+          }
+          else {
+            numberOfLocks++;
+            div.mozRequestPointerLock();
+          }
+        }
+      }, false);
+
+      document.addEventListener("mozfullscreenchange", function (e) {
+        if (document.mozFullScreenElement === div) {
+          div.mozRequestPointerLock();
+        }
+        else {
+          runTests();
+          SimpleTest.finish();
+        }
+      }, false);
+
+      function start() {
+        console.log('started');
+        div.mozRequestFullScreen();
+      }
+    </script>
+  </pre>
+</body>
+</html>

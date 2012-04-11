@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--https://bugzilla.mozilla.org/show_bug.cgi?id=633602-->
+<head>
+  <title>Bug 633602</title>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js">
+  </script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <script type="application/javascript" src="pointerlock_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <a target="_blank"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+    Mozilla Bug 633602
+  </a>
+  <div id="div"></div>
+  <pre id="test">
+    <script type="text/javascript">
+      /*
+       * Test for Bug 633602
+       * Make sure DOM API is correct.
+       */
+
+      SimpleTest.waitForExplicitFinish();
+
+      var div,
+        hasRequestPointerLock = false,
+        pointerLockChangeEventFired = false,
+        pointerUnlocked = false,
+        pointerLocked = false,
+        hasExitPointerLock = false,
+        pointerLockElement = false,
+        hasMovementX = false,
+        hasMovementY = false;
+
+      function runTests () {
+        ok(hasRequestPointerLock, "Element should have mozRequestPointerLock.");
+        ok(pointerLockChangeEventFired, "pointerlockchange event should fire.");
+        ok(pointerUnlocked, "Should be able to unlock pointer locked element.");
+        ok(pointerLocked, "Requested element should be able to lock.");
+        ok(hasExitPointerLock, "Document should have mozExitPointerLock");
+        ok(pointerLockElement, "Document should keep track of correct pointer locked element");
+        ok(hasMovementX, "Mouse Event should have mozMovementX.");
+        ok(hasMovementY, "Mouse Event should have mozMovementY.");
+      }
+
+      function mouseMoveHandler(e) {
+        document.removeEventListener("mousemove", mouseMoveHandler, false);
+
+        hasMovementX = "mozMovementX" in e;
+        hasMovementY = "mozMovementY" in e;
+
+        hasExitPointerLock = "mozExitPointerLock" in document;
+        document.mozExitPointerLock();
+      }
+
+      document.addEventListener("mozpointerlockchange", function (e) {
+        pointerLockChangeEventFired = true;
+
+        if (document.mozPointerLockElement) {
+          pointerLocked = true;
+          pointerLockElement = document.mozPointerLockElement === div;
+          document.addEventListener("mousemove", mouseMoveHandler, false);
+          synthesizeMouseAtCenter(div, {type: "mousemove"}, window);
+        } else {
+          pointerUnlocked = true;
+          document.mozCancelFullScreen();
+        }
+      }, false);
+
+      document.addEventListener("mozfullscreenchange", function(e) {
+        if (document.mozFullScreenElement === div) {
+          hasRequestPointerLock = "mozRequestPointerLock" in div;
+          div.mozRequestPointerLock();
+        } else {
+          runTests();
+          SimpleTest.finish();
+        }
+      }, false);
+
+      function start() {
+        div = document.getElementById("div");
+        div.mozRequestFullScreen();
+      }
+    </script>
+  </pre>
+</body>
+</html>
