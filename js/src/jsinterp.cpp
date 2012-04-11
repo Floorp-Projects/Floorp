@@ -1017,7 +1017,7 @@ TryNoteIter::TryNoteIter(const FrameRegs &regs)
     script(regs.fp()->script()),
     pcOffset(regs.pc - script->main())
 {
-    if (JSScript::isValidOffset(script->trynotesOffset)) {
+    if (script->hasTrynotes()) {
         tn = script->trynotes()->vector;
         tnEnd = tn + script->trynotes()->length;
     } else {

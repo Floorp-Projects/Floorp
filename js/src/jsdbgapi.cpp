@@ -1017,7 +1017,7 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
         continue;
     nbytes += (sn - notes + 1) * sizeof *sn;
 
-    if (JSScript::isValidOffset(script->objectsOffset)) {
+    if (script->hasObjects()) {
         objarray = script->objects();
         size_t i = objarray->length;
         nbytes += sizeof *objarray + i * sizeof objarray->vector[0];
@@ -1026,7 +1026,7 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
         } while (i != 0);
     }
 
-    if (JSScript::isValidOffset(script->regexpsOffset)) {
+    if (script->hasRegexps()) {
         objarray = script->regexps();
         size_t i = objarray->length;
         nbytes += sizeof *objarray + i * sizeof objarray->vector[0];
@@ -1035,7 +1035,7 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
         } while (i != 0);
     }
 
-    if (JSScript::isValidOffset(script->trynotesOffset)) {
+    if (script->hasTrynotes()) {
         nbytes += sizeof(JSTryNoteArray) +
             script->trynotes()->length * sizeof(JSTryNote);
     }

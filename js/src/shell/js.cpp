@@ -1661,7 +1661,7 @@ TryNotes(JSContext *cx, JSScript *script, Sprinter *sp)
 {
     JSTryNote *tn, *tnlimit;
 
-    if (!JSScript::isValidOffset(script->trynotesOffset))
+    if (!script->hasTrynotes())
         return JS_TRUE;
 
     tn = script->trynotes()->vector;
@@ -1705,7 +1705,7 @@ DisassembleScript(JSContext *cx, JSScript *script, JSFunction *fun, bool lines, 
     SrcNotes(cx, script, sp);
     TryNotes(cx, script, sp);
 
-    if (recursive && JSScript::isValidOffset(script->objectsOffset)) {
+    if (recursive && script->hasObjects()) {
         JSObjectArray *objects = script->objects();
         for (unsigned i = 0; i != objects->length; ++i) {
             JSObject *obj = objects->vector[i];
