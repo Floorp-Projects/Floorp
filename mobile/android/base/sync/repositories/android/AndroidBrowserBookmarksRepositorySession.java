@@ -24,6 +24,7 @@ import org.mozilla.gecko.sync.repositories.ParentNotFoundException;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
+import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
@@ -562,6 +563,15 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     }
     super.finish(delegate);
   };
+
+  @Override
+  public void setStoreDelegate(RepositorySessionStoreDelegate delegate) {
+    super.setStoreDelegate(delegate);
+
+    if (deletionManager != null) {
+      deletionManager.setDelegate(delegate);
+    }
+  }
 
   @Override
   protected Record reconcileRecords(Record remoteRecord, Record localRecord,
