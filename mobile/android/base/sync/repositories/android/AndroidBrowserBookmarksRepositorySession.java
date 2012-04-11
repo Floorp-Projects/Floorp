@@ -130,6 +130,10 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
    * * We can stably _store_ menu/toolbar/unfiled/mobile as special GUIDs, and set
      * their parent ID as appropriate on upload.
    *
+   * Fortunately, Fennec stores our representation of the data, not Places: that is,
+   * there's a "places" root, containing "mobile", "menu", "toolbar", etc.
+   *
+   * These are guaranteed to exist when the database is created.
    *
    * = Places folders =
    *
@@ -148,7 +152,10 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
    *
    * guid        folder_id   parent
    * ----------  ----------  ----------
-   * mobile      ?           0
+   * places      0           0
+   * mobile      1           0
+   * menu        2           0
+   * etc.
    *
   */
   public static final Map<String, String> SPECIAL_GUID_PARENTS;

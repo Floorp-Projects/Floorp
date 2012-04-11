@@ -79,10 +79,13 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
     context.getContentResolver().delete(uri, EXCLUDE_SPECIAL_GUIDS_WHERE_CLAUSE, null);
   }
 
+  private String[] GUID_AND_ID = new String[] { BrowserContract.Bookmarks.GUID,
+                                                BrowserContract.Bookmarks._ID };
+
   protected Cursor getGuidsIDsForFolders() throws NullCursorException {
     // Exclude "places" and "tags", in case they've ended up in the DB.
     String where = BOOKMARK_IS_FOLDER + " AND " + GUID_NOT_TAGS_OR_PLACES;
-    return queryHelper.safeQuery(".getGuidsIDsForFolders", null, where, null, null);
+    return queryHelper.safeQuery(".getGuidsIDsForFolders", GUID_AND_ID, where, null, null);
   }
 
   /**
@@ -94,8 +97,13 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
    *        A sequence of GUID strings.
    */
   public int updatePositions(ArrayList<String> childArray) {
-    Logger.debug(LOG_TAG, "Updating positions for " + childArray.size() + " items.");
-    String[] args = childArray.toArray(new String[childArray.size()]);
+    final int size = childArray.size();
+    if (size == 0) {
+      return 0;
+    }
+
+    Logger.debug(LOG_TAG, "Updating positions for " + size + " items.");
+    String[] args = childArray.toArray(new String[size]);
     return context.getContentResolver().update(getPositionsUri(), new ContentValues(), null, args);
   }
 
