@@ -1030,7 +1030,9 @@ mjit::Compiler::inlineNativeFunction(uint32_t argc, bool callingNew)
         if (native == js::array_concat && argType == JSVAL_TYPE_OBJECT &&
             thisType == JSVAL_TYPE_OBJECT && type == JSVAL_TYPE_OBJECT &&
             !thisTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY) &&
-            !argTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY)) {
+            !argTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY) &&
+            !types::ArrayPrototypeHasIndexedProperty(cx, outerScript))
+        {
             return compileArrayConcat(thisTypes, argTypes, thisValue, arg);
         }
     } else if (argc == 2) {
