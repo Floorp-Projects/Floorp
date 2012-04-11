@@ -1409,19 +1409,16 @@ nsIFrame::HasBorder() const
 nsresult
 nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
                                         const nsDisplayListSet& aLists,
-                                        bool                    aForceBackground,
-                                        nsDisplayBackground**   aBackground)
+                                        bool                    aForceBackground)
 {
   // Here we don't try to detect background propagation. Frames that might
   // receive a propagated background should just set aForceBackground to
   // true.
   if (aBuilder->IsForEventDelivery() || aForceBackground ||
       !GetStyleBackground()->IsTransparent() || GetStyleDisplay()->mAppearance) {
-    nsDisplayBackground* bg = new (aBuilder) nsDisplayBackground(aBuilder, this);
-    *aBackground = bg;
-    return aLists.BorderBackground()->AppendNewToTop(bg);
+    return aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayBackground(aBuilder, this));
   }
-  *aBackground = nsnull;
   return NS_OK;
 }
 
@@ -1443,9 +1440,8 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsDisplayBackground* bg;
   nsresult rv =
-    DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground, &bg);
+    DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (hasBoxShadow) {
@@ -1453,11 +1449,8 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
         nsDisplayBoxShadowInner(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  // If there's a themed background, we should not create a border item.
-  // It won't be rendered. Calling HasBorder() for themed frames is expensive
-  // too (calls into native theme code), so avoiding it is valuable.
-  if ((!bg || !bg->IsThemed()) && HasBorder()) {
+  
+  if (HasBorder()) {
     rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayBorder(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1557,12 +1550,6 @@ public:
       return new (aBuilder) nsDisplayClipRoundedRect(aBuilder, nsnull, aList,
                                                      mRect, mRadii);
     }
-    bool snap;
-    if (!aList->IsEmpty() && !aList->GetBottom()->GetAbove() &&
-        mRect.Contains(aList->GetBottom()->GetBounds(aBuilder, &snap))) {
-      // Single list element which fits in the clip rect. No need to wrap it.
-      return aList->RemoveBottom();
-    }
     return new (aBuilder) nsDisplayClip(aBuilder, nsnull, aList, mRect);
   }
   virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
@@ -1573,11 +1560,6 @@ public:
       if (mHaveRadius) {
         return new (aBuilder) nsDisplayClipRoundedRect(aBuilder, f, aItem,
                                                        mRect, mRadii);
-      }
-      bool snap;
-      if (mRect.Contains(aItem->GetBounds(aBuilder, &snap))) {
-        // Item fits in the clip rect. No need to wrap it.
-        return aItem;
       }
       return new (aBuilder) nsDisplayClip(aBuilder, f, aItem, mRect);
     }
