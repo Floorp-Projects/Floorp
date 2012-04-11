@@ -95,8 +95,9 @@ function testSteps()
         ok(false, "continue twice should throw");
       }
       catch (e) {
-        ok(e instanceof IDBDatabaseException, "got a database exception");
-        is(e.code, IDBDatabaseException.NOT_ALLOWED_ERR, "correct code");
+        ok(e instanceof DOMException, "got a database exception");
+        is(e.name, "InvalidStateError", "correct error");
+        is(e.code, DOMException.INVALID_STATE_ERR, "correct code");
       }
 
       is(cursor.key, sortedKeys[keyIndex], "Correct key");

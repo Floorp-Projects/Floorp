@@ -24,8 +24,7 @@ function test1()
 
     setFinishedCallback(function(result, exception) {
       ok(!result, "No database created");
-      is(exception, IDBDatabaseException.NOT_ALLOWED_ERR.toString(),
-         "Correct exception");
+      is(exception, "InvalidStateError", "Correct exception");
       is(getPermission(testPageURL, "indexedDB"),
          Components.interfaces.nsIPermissionManager.DENY_ACTION,
          "Correct permission set");
@@ -60,8 +59,7 @@ function test2()
 
     setFinishedCallback(function(result, exception) {
       ok(!result, "No database created");
-      is(exception, IDBDatabaseException.NOT_ALLOWED_ERR.toString(),
-         "Correct exception");
+      is(exception, "InvalidStateError", "Correct exception");
       is(getPermission(testPageURL, "indexedDB"),
          Components.interfaces.nsIPermissionManager.DENY_ACTION,
          "Correct permission set");

@@ -29,8 +29,9 @@ function testSteps()
     ok(false, "Should have thrown!");
   }
   catch (e) {
-    ok(e instanceof IDBDatabaseException, "Got database exception.");
-    is(e.code, IDBDatabaseException.NOT_ALLOWED_ERR, "Good error code.");
+    ok(e instanceof DOMException, "Got database exception.");
+    is(e.name, "InvalidStateError", "Good error.");
+    is(e.code, DOMException.INVALID_STATE_ERR, "Good error code.");
   }
 
   finishTest();

@@ -15,7 +15,7 @@ do_get_profile();
 var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
 var file = dirSvc.get("ProfD", Ci.nsIFile);
 
-const IDBDatabaseException = Ci.nsIIDBDatabaseException;
+const DOMException = Ci.nsIDOMDOMException;
 const IDBCursor = Ci.nsIIDBCursor;
 const IDBTransaction = Ci.nsIIDBTransaction;
 const IDBOpenDBRequest = Ci.nsIIDBOpenDBRequest;
@@ -97,15 +97,15 @@ function unexpectedSuccessHandler()
   finishTest();
 }
 
-function ExpectError(code)
+function ExpectError(name)
 {
-  this._code = code;
+  this._name = name;
 }
 ExpectError.prototype = {
   handleEvent: function(event)
   {
     do_check_eq(event.type, "error");
-    do_check_eq(this._code, event.target.errorCode);
+    do_check_eq(this._name, event.target.error.name);
     event.preventDefault();
     grabEventAndContinueHandler(event);
   }
