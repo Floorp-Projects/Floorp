@@ -52,8 +52,6 @@
 #  error Unknown toolkit
 #endif 
 
-#include "mozilla/Scoped.h"
-
 #include "gfxCore.h"
 #include "nsDebug.h"
 
@@ -87,14 +85,38 @@ XVisualIDToInfo(Display* aDisplay, VisualID aVisualID,
  * Invoke XFree() on a pointer to memory allocated by Xlib (if the
  * pointer is nonnull) when this class goes out of scope.
  */
-template <typename T>
-struct ScopedXFreePtrTraits
+template<typename T>
+struct ScopedXFree
 {
-  typedef T *type;
-  static T *empty() { return NULL; }
-  static void release(T *ptr) { if (ptr!=NULL) XFree(ptr); }
+  ScopedXFree() : mPtr(NULL) {}
+  ScopedXFree(T* aPtr) : mPtr(aPtr) {}
+
+  ~ScopedXFree() { Assign(NULL); }
+
+  ScopedXFree& operator=(T* aPtr) { Assign(aPtr); return *this; }
+
+  operator T*() const { return get(); }
+  T* operator->() const { return get(); }
+  T* get() const { return mPtr; }
+
+private:
+  void Assign(T* aPtr)
+  {
+    NS_ASSERTION(!mPtr || mPtr != aPtr, "double-XFree() imminent");
+
+    if (mPtr)
+      XFree(mPtr);
+    mPtr = aPtr;
+  }
+
+  T* mPtr;
+
+  // disable these
+  ScopedXFree(const ScopedXFree&);
+  ScopedXFree& operator=(const ScopedXFree&);
+  static void* operator new (size_t);
+  static void operator delete (void*);
 };
-SCOPED_TEMPLATE(ScopedXFree, ScopedXFreePtrTraits);
 
 /**
  * On construction, set a graceful X error handler that doesn't crash the application and records X errors.
