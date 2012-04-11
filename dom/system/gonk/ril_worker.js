@@ -658,7 +658,14 @@ let RIL = {
       }
       RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = true;
     }
-
+    let ril_impl = libcutils.property_get("gsm.version.ril-impl");
+    if (ril_impl == "Qualcomm RIL 1.0") {
+      if (DEBUG) {
+        debug("Detected Qualcomm RIL 1.0, " +
+              "disabling RILQUIRKS_V5_LEGACY to false");
+      }
+      RILQUIRKS_V5_LEGACY = false;
+    }
     this.rilQuirksInitialized = true;
   },
 
@@ -2472,6 +2479,7 @@ RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length) {
   // Prevent response id collision between UNSOLICITED_RIL_CONNECTED and
   // UNSOLICITED_VOICE_RADIO_TECH_CHANGED for Akami on gingerbread branch.
   if (!length) {
+    this.initRILQuirks();
     return;
   }
 
