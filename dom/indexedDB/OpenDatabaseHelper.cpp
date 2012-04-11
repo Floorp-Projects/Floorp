@@ -2201,11 +2201,11 @@ OpenDatabaseHelper::DispatchErrorEvent()
     return;
   }
 
-  PRUint16 errorCode = 0;
+  nsCOMPtr<nsIDOMDOMError> error;
   DebugOnly<nsresult> rv =
-    mOpenDBRequest->GetErrorCode(&errorCode);
+    mOpenDBRequest->GetError(getter_AddRefs(error));
   NS_ASSERTION(NS_SUCCEEDED(rv), "This shouldn't be failing at this point!");
-  if (!errorCode) {
+  if (!error) {
     mOpenDBRequest->SetError(mResultCode);
   }
 
