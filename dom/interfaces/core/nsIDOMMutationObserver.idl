@@ -56,12 +56,13 @@ dictionary MutationObserverInit
 };
 
 //[Constructor(in nsIMutationCallback aDoneCallback)]
-[scriptable, builtinclass, uuid(daeba265-9aa7-45ab-8de2-b6b039c13ced)]
+[scriptable, builtinclass, uuid(156e2ce4-e44a-45f3-92c2-e6611f391dae)]
 interface nsIDOMMozMutationObserver : nsISupports
 {
   [implicit_jscontext]
   void observe(in nsIDOMNode aTarget, in jsval aOptions);
   void disconnect();
+  nsIVariant takeRecords();
 };
 
 [scriptable, function, uuid(fb539590-b088-4d07-96ff-2cefbc90a198)]
