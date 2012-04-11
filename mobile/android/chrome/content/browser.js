@@ -249,6 +249,7 @@ var BrowserApp = {
     // Init FormHistory
     Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
+    let loadParams = {};
     let url = "about:home";
     let forceRestore = false;
     if ("arguments" in window) {
@@ -261,6 +262,9 @@ var BrowserApp = {
       if (window.arguments[3])
         gScreenHeight = window.arguments[3];
     }
+
+    if (url == "about:empty")
+      loadParams.flags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
 
     // XXX maybe we don't do this if the launch was kicked off from external
     Services.io.offline = false;
@@ -284,7 +288,7 @@ var BrowserApp = {
 
       // Open any commandline URLs, except the homepage
       if (url && url != "about:home") {
-        this.addTab(url);
+        this.addTab(url, loadParams);
       } else {
         // Let the session make a restored tab active
         restoreToFront = true;
@@ -313,7 +317,8 @@ var BrowserApp = {
       // Start the restore
       ss.restoreLastSession(restoreToFront, forceRestore);
     } else {
-      this.addTab(url, { showProgress: url != "about:home" });
+      loadParams.showProgress = (url != "about:home");
+      this.addTab(url, loadParams);
 
       // show telemetry door hanger if we aren't restoring a session
       this._showTelemetryPrompt();
