@@ -137,6 +137,8 @@ public class GeckoAppShell
 
     private static boolean mLocationHighAccuracy = false;
 
+    private static Handler sGeckoHandler;
+
     /* The Android-side API: API methods that Android calls */
 
     // Initialization methods
@@ -240,6 +242,10 @@ public class GeckoAppShell
     // Get a Handler for the main java thread
     public static Handler getMainHandler() {
         return GeckoApp.mAppContext.mMainHandler;
+    }
+
+    public static Handler getGeckoHandler() {
+        return sGeckoHandler;
     }
 
     public static Handler getHandler() {
@@ -431,6 +437,9 @@ public class GeckoAppShell
     }
 
     public static void runGecko(String apkPath, String args, String url, boolean restoreSession) {
+        Looper.prepare();
+        sGeckoHandler = new Handler();
+
         // run gecko -- it will spawn its own thread
         GeckoAppShell.nativeInit();
 
@@ -2049,6 +2058,23 @@ public class GeckoAppShell
 
     public static void unlockScreenOrientation() {
         GeckoScreenOrientationListener.getInstance().unlockScreenOrientation();
+    }
+
+    public static void pumpMessageLoop() {
+        // We're going to run the Looper below, but we need a way to break out, so
+        // we post this Runnable that causes a divide by zero error. The Runnable
+        // is added to the end of the queue, so it will be executed after anything
+        // else that has been added prior.
+        sGeckoHandler.post(new Runnable() {
+            public void run() {
+                int zero = 0;
+                int foo = 0xdeadbeef / zero;
+            }
+        });
+        
+        try {
+            Looper.loop();
+        } catch(Exception ex) {}
     }
 
     static class AsyncResultHandler extends GeckoApp.FilePickerResultHandler {
