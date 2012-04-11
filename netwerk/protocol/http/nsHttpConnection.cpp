@@ -1134,10 +1134,12 @@ nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
         mSpdySession = nsnull;
     }
 
-    mHttp1xTransactionCount += mTransaction->Http1xTransactionCount();
+    if (mTransaction) {
+        mHttp1xTransactionCount += mTransaction->Http1xTransactionCount();
 
-    mTransaction->Close(reason);
-    mTransaction = nsnull;
+        mTransaction->Close(reason);
+        mTransaction = nsnull;
+    }
 
     if (mCallbacks) {
         nsIInterfaceRequestor *cbs = nsnull;
