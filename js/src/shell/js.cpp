@@ -1706,7 +1706,7 @@ DisassembleScript(JSContext *cx, JSScript *script, JSFunction *fun, bool lines, 
     TryNotes(cx, script, sp);
 
     if (recursive && script->hasObjects()) {
-        JSObjectArray *objects = script->objects();
+        ObjectArray *objects = script->objects();
         for (unsigned i = 0; i != objects->length; ++i) {
             JSObject *obj = objects->vector[i];
             if (obj->isFunction()) {

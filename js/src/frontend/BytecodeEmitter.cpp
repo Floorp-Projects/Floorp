@@ -6982,7 +6982,7 @@ NewTryNote(JSContext *cx, BytecodeEmitter *bce, JSTryNoteKind kind, unsigned sta
 }
 
 void
-frontend::FinishTakingTryNotes(BytecodeEmitter *bce, JSTryNoteArray *array)
+frontend::FinishTakingTryNotes(BytecodeEmitter *bce, TryNoteArray *array)
 {
     TryNode *tryNode;
     JSTryNote *tn;
@@ -7048,7 +7048,7 @@ CGObjectList::index(ObjectBox *objbox)
 }
 
 void
-CGObjectList::finish(JSObjectArray *array)
+CGObjectList::finish(ObjectArray *array)
 {
     JS_ASSERT(length <= INDEX_LIMIT);
     JS_ASSERT(length == array->length);
@@ -7064,7 +7064,7 @@ CGObjectList::finish(JSObjectArray *array)
 }
 
 void
-GCConstList::finish(JSConstArray *array)
+GCConstList::finish(ConstArray *array)
 {
     JS_ASSERT(array->length == list.length());
     Value *src = list.begin(), *srcend = list.end();

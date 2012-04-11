@@ -2537,7 +2537,7 @@ DebuggerScript_getChildScripts(JSContext *cx, unsigned argc, Value *vp)
          * and the calling function is stored as script->objects()->vector[0].
          * It is not really a child script of this script, so skip it.
          */
-        JSObjectArray *objects = script->objects();
+        ObjectArray *objects = script->objects();
         for (uint32_t i = script->savedCallerFun ? 1 : 0; i < objects->length; i++) {
             JSObject *obj = objects->vector[i];
             if (obj->isFunction()) {
