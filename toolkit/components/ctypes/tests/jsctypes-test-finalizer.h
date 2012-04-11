@@ -8,7 +8,6 @@
 
 NS_EXTERN_C
 {
-
   EXPORT_CDECL(void) test_finalizer_start(size_t size);
   EXPORT_CDECL(void) test_finalizer_stop();
   EXPORT_CDECL(bool) test_finalizer_resource_is_acquired(size_t i);
@@ -16,6 +15,7 @@ NS_EXTERN_C
   EXPORT_CDECL(size_t) test_finalizer_acq_size_t(size_t i);
   EXPORT_CDECL(void) test_finalizer_rel_size_t(size_t i);
   EXPORT_CDECL(size_t) test_finalizer_rel_size_t_return_size_t(size_t i);
+  EXPORT_CDECL(RECT) test_finalizer_rel_size_t_return_struct_t(size_t i);
   EXPORT_CDECL(bool) test_finalizer_cmp_size_t(size_t a, size_t b);
 
   EXPORT_CDECL(int32_t) test_finalizer_acq_int32_t(size_t i);
