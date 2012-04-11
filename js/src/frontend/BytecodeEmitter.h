@@ -537,7 +537,7 @@ struct CGObjectList {
     CGObjectList() : length(0), lastbox(NULL) {}
 
     unsigned index(ObjectBox *objbox);
-    void finish(JSObjectArray *array);
+    void finish(ObjectArray *array);
 };
 
 class GCConstList {
@@ -546,7 +546,7 @@ class GCConstList {
     GCConstList(JSContext *cx) : list(cx) {}
     bool append(Value v) { return list.append(v); }
     size_t length() const { return list.length(); }
-    void finish(JSConstArray *array);
+    void finish(ConstArray *array);
 };
 
 struct GlobalScope {
@@ -1004,7 +1004,7 @@ JSBool
 FinishTakingSrcNotes(JSContext *cx, BytecodeEmitter *bce, jssrcnote *notes);
 
 void
-FinishTakingTryNotes(BytecodeEmitter *bce, JSTryNoteArray *array);
+FinishTakingTryNotes(BytecodeEmitter *bce, TryNoteArray *array);
 
 } /* namespace frontend */
 
