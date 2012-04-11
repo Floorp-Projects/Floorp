@@ -1,30 +1,32 @@
 <!DOCTYPE html>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=481114
-https://bugzilla.mozilla.org/show_bug.cgi?id=469688
-https://bugzilla.mozilla.org/show_bug.cgi?id=520188
-https://bugzilla.mozilla.org/show_bug.cgi?id=529289
--->
 <head>
   <title>Test weak ARIA roles</title>
+
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
-          src="common.js"></script>
+          src="../common.js"></script>
   <script type="application/javascript"
-          src="role.js"></script>
+          src="../role.js"></script>
 
   <script type="application/javascript">
+
     function doTest()
     {
       // Note:
       // The phrase "weak foo" here means that there is no good foo-to-platform
       // role mapping. Similarly "strong foo" means there is a good foo-to-
       // platform role mapping.
+
+      testRole("articlemain", ROLE_DOCUMENT);
+      testRole("articleform", ROLE_FORM);
+
+      // Test article exposed as document
+      testRole("testArticle", ROLE_DOCUMENT);
 
       // weak roles that are forms of "live regions"
       testRole("log_table", ROLE_TABLE);
@@ -36,6 +38,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
       // strong landmark
       testRole("application", ROLE_APPLICATION);
       testRole("form", ROLE_FORM);
+      testRole("application_table", ROLE_APPLICATION);
 
       // weak landmarks
       var weak_landmarks = ["banner", "complementary", "contentinfo",
@@ -84,6 +87,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
       document.body.setAttribute("role", "application");
       testRole(testDoc, ROLE_APPLICATION);
 
+      // Test equation image
+      testRole("img_eq", ROLE_FLAT_EQUATION);
+
+      // Test textual equation
+      testRole("txt_eq", ROLE_FLAT_EQUATION);
+
       SimpleTest.finish();
     }
 
@@ -93,6 +102,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
 </head>
 <body>
 
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=428479">Mozilla Bug 428479</a>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=429666">Mozilla Bug 429666</a>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=481114">Mozilla Bug 481114</a>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469688">Mozilla Bug 469688</a>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469688">Mozilla Bug 520188</a>
@@ -112,7 +123,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
-  
+
+  <article id="articlemain" role="main">a main area</article>
+  <article id="articleform" role="form">a form area</article>
+
+  <div id="testArticle" role="article" title="Test article">
+    <p>This is a paragraph inside the article.</p>
+  </div>
+
   <!-- "live" roles -->
   <table role="log" id="log_table">
     <tr><td>Table based log</td></tr>
@@ -183,5 +201,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
     <div role="listitem">B</div>
     <div role="listitem">C</div>
   </div>
+
+  <p>Image: 
+    <img id="img_eq" role="math" src="foo" alt="x^2 + y^2 + z^2">
+  </p>
+
+  <p>Text: 
+    <span id="txt_eq" role="math" title="x^2 + y^2 + z^2">x<sup>2</sup> + 
+      y<sup>2</sup> + z<sup>2</sup></span>
+
 </body>
 </html>
