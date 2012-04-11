@@ -2469,6 +2469,12 @@ RIL[UNSOLICITED_OEM_HOOK_RAW] = null;
 RIL[UNSOLICITED_RINGBACK_TONE] = null;
 RIL[UNSOLICITED_RESEND_INCALL_MUTE] = null;
 RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length) {
+  // Prevent response id collision between UNSOLICITED_RIL_CONNECTED and
+  // UNSOLICITED_VOICE_RADIO_TECH_CHANGED for Akami on gingerbread branch.
+  if (!length) {
+    return;
+  }
+
   let version = Buf.readUint32List()[0];
   RILQUIRKS_V5_LEGACY = (version < 5);
   if (DEBUG) {
@@ -2476,7 +2482,6 @@ RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length) {
     debug("RILQUIRKS_V5_LEGACY is " + RILQUIRKS_V5_LEGACY);
   }
 };
-
 
 /**
  * This object exposes the functionality to parse and serialize PDU strings
