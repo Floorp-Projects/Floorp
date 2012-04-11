@@ -1409,16 +1409,19 @@ nsIFrame::HasBorder() const
 nsresult
 nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
                                         const nsDisplayListSet& aLists,
-                                        bool                    aForceBackground)
+                                        bool                    aForceBackground,
+                                        nsDisplayBackground**   aBackground)
 {
   // Here we don't try to detect background propagation. Frames that might
   // receive a propagated background should just set aForceBackground to
   // true.
   if (aBuilder->IsForEventDelivery() || aForceBackground ||
       !GetStyleBackground()->IsTransparent() || GetStyleDisplay()->mAppearance) {
-    return aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayBackground(aBuilder, this));
+    nsDisplayBackground* bg = new (aBuilder) nsDisplayBackground(aBuilder, this);
+    *aBackground = bg;
+    return aLists.BorderBackground()->AppendNewToTop(bg);
   }
+  *aBackground = nsnull;
   return NS_OK;
 }
 
@@ -1440,8 +1443,9 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  nsDisplayBackground* bg;
   nsresult rv =
-    DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground);
+    DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground, &bg);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (hasBoxShadow) {
@@ -1449,8 +1453,11 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
         nsDisplayBoxShadowInner(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  
-  if (HasBorder()) {
+
+  // If there's a themed background, we should not create a border item.
+  // It won't be rendered. Calling HasBorder() for themed frames is expensive
+  // too (calls into native theme code), so avoiding it is valuable.
+  if ((!bg || !bg->IsThemed()) && HasBorder()) {
     rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayBorder(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
