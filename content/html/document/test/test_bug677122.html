@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: MediaDocument hashchange mediafragment.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+    SimpleTest.waitForExplicitFinish();
+
+    var iframe = document.createElement("iframe");
+    document.body.appendChild(iframe);
+
+    var url = "../../../media/test/seek.ogv";
+    var expects = 5;
+    var count = 0;
+    var test;
+    var tests = [
+        { start: 1, end: 2 },
+        { start: 3, end: 4 }
+    ];
+
+    var next = function () {
+
+        test = tests.shift();
+        if (test) {
+
+            iframe.src = url + "#t=" + test.start + "," + test.end;
+        } else {
+
+            ok(expects === ++count, "Expected number of tests run. Expected: " + expects + " Actual: " + count);
+            SimpleTest.finish();
+        }
+    };
+
+    iframe.addEventListener("load", function (e) {
+
+        var media = iframe.contentWindow.document.querySelector("audio,video");
+
+        media.addEventListener("seeked", function () {
+
+            var currentTime = Math.round(media.currentTime);
+
+            count++;
+            ok(currentTime === test.start, "Hashchange mediafragment start. Expected: " + test.start + " Actual: " + currentTime);
+        }, false);
+
+        media.addEventListener("pause", function () {
+
+            var currentTime = Math.round(media.currentTime);
+
+            if (count === 1) {
+
+                count++;
+                ok(currentTime === test.end, "Hashchange mediafragment end. Expected: " + test.end + " Actual: " + currentTime);
+            }
+
+            next();
+        }, false);
+
+        // having an ended event ensures we're more likely to fail, instead of timing out.
+        media.addEventListener("ended", function () {
+
+            var currentTime = Math.round(media.currentTime);
+
+            if (count === 3) {
+
+                count++;
+                ok(currentTime === test.end, "Hashchange mediafragment end. Expected: " + test.end + " Actual: " + currentTime);
+            }
+
+            next();
+        }, false);
+
+        next();
+    }, false);
+
+    iframe.src = url;
+</script>
+</pre>
+</body>
+</html>
