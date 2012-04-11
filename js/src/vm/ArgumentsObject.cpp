@@ -144,11 +144,10 @@ ArgumentsObject::create(JSContext *cx, uint32_t argc, JSObject &callee)
     return &argsobj;
 }
 
-bool
+ArgumentsObject *
 ArgumentsObject::create(JSContext *cx, StackFrame *fp)
 {
     JS_ASSERT(fp->script()->needsArgsObj());
-    JS_ASSERT(!fp->hasCallObj());
 
     ArgumentsObject *argsobj = ArgumentsObject::create(cx, fp->numActualArgs(), fp->callee());
     if (!argsobj)
@@ -211,10 +210,12 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
          */
         unsigned arg = unsigned(JSID_TO_INT(id));
         if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg)) {
-            if (StackFrame *fp = argsobj.maybeStackFrame())
+            if (StackFrame *fp = argsobj.maybeStackFrame()) {
+                JS_ASSERT_IF(arg < fp->numFormalArgs(), fp->script()->argIsAliased(arg));
                 *vp = fp->canonicalActualArg(arg);
-            else
+            } else {
                 *vp = argsobj.element(arg);
+            }
         }
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         if (!argsobj.hasOverriddenLength())
@@ -242,8 +243,10 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
             if (StackFrame *fp = argsobj.maybeStackFrame()) {
                 JSScript *script = fp->functionScript();
                 JS_ASSERT(script->needsArgsObj());
-                if (arg < fp->numFormalArgs())
+                if (arg < fp->numFormalArgs()) {
+                    JS_ASSERT(fp->script()->argIsAliased(arg));
                     types::TypeScript::SetArgument(cx, script, arg, *vp);
+                }
                 fp->canonicalActualArg(arg) = *vp;
                 return true;
             }

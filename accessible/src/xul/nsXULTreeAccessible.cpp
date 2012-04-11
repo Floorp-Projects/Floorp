@@ -107,7 +107,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULTreeAccessible,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXULTreeAccessible)
-NS_INTERFACE_MAP_STATIC_AMBIGUOUS(nsXULTreeAccessible)
 NS_INTERFACE_MAP_END_INHERITING(nsAccessible)
 
 NS_IMPL_ADDREF_INHERITED(nsXULTreeAccessible, nsAccessible)
@@ -803,7 +802,7 @@ nsXULTreeItemAccessibleBase::GetBounds(PRInt32 *aX, PRInt32 *aY,
   x = tcX;
   y += tcY;
 
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext* presContext = mDoc->PresContext();
   *aX = presContext->CSSPixelsToDevPixels(x);
   *aY = presContext->CSSPixelsToDevPixels(y);
   *aWidth = presContext->CSSPixelsToDevPixels(width);

@@ -946,8 +946,8 @@ TypedArray::dataOffset()
 
 /* Helper clamped uint8_t type */
 
-int32_t JS_FASTCALL
-js_TypedArray_uint8_clamp_double(const double x)
+uint32_t JS_FASTCALL
+js::ClampDoubleToUint8(const double x)
 {
     // Not < so that NaN coerces to 0
     if (!(x >= 0))
@@ -979,77 +979,6 @@ js_TypedArray_uint8_clamp_double(const double x)
     return y;
 }
 
-struct uint8_clamped {
-    uint8_t val;
-
-    uint8_clamped() { }
-    uint8_clamped(const uint8_clamped& other) : val(other.val) { }
-
-    // invoke our assignment helpers for constructor conversion
-    uint8_clamped(uint8_t x)    { *this = x; }
-    uint8_clamped(uint16_t x)   { *this = x; }
-    uint8_clamped(uint32_t x)   { *this = x; }
-    uint8_clamped(int8_t x)     { *this = x; }
-    uint8_clamped(int16_t x)    { *this = x; }
-    uint8_clamped(int32_t x)    { *this = x; }
-    uint8_clamped(double x)     { *this = x; }
-
-    inline uint8_clamped& operator= (const uint8_clamped& x) {
-        val = x.val;
-        return *this;
-    }
-
-    inline uint8_clamped& operator= (uint8_t x) {
-        val = x;
-        return *this;
-    }
-
-    inline uint8_clamped& operator= (uint16_t x) {
-        val = (x > 255) ? 255 : uint8_t(x);
-        return *this;
-    }
-
-    inline uint8_clamped& operator= (uint32_t x) {
-        val = (x > 255) ? 255 : uint8_t(x);
-        return *this;
-    }
-
-    inline uint8_clamped& operator= (int8_t x) {
-        val = (x >= 0) ? uint8_t(x) : 0;
-        return *this;
-    }
-
-    inline uint8_clamped& operator= (int16_t x) {
-        val = (x >= 0)
-              ? ((x < 255)
-                 ? uint8_t(x)
-                 : 255)
-              : 0;
-        return *this;
-    }
-
-    inline uint8_clamped& operator= (int32_t x) {
-        val = (x >= 0)
-              ? ((x < 255)
-                 ? uint8_t(x)
-                 : 255)
-              : 0;
-        return *this;
-    }
-
-    inline uint8_clamped& operator= (const double x) {
-        val = uint8_t(js_TypedArray_uint8_clamp_double(x));
-        return *this;
-    }
-
-    inline operator uint8_t() const {
-        return val;
-    }
-};
-
-/* Make sure the compiler isn't doing some funky stuff */
-JS_STATIC_ASSERT(sizeof(uint8_clamped) == 1);
-
 template<typename NativeType> static inline const int TypeIDOfType();
 template<> inline const int TypeIDOfType<int8_t>() { return TypedArray::TYPE_INT8; }
 template<> inline const int TypeIDOfType<uint8_t>() { return TypedArray::TYPE_UINT8; }
@@ -1060,15 +989,6 @@ template<> inline const int TypeIDOfType<uint32_t>() { return TypedArray::TYPE_U
 template<> inline const int TypeIDOfType<float>() { return TypedArray::TYPE_FLOAT32; }
 template<> inline const int TypeIDOfType<double>() { return TypedArray::TYPE_FLOAT64; }
 template<> inline const int TypeIDOfType<uint8_clamped>() { return TypedArray::TYPE_UINT8_CLAMPED; }
-
-template<typename NativeType> static inline const bool TypeIsUnsigned() { return false; }
-template<> inline const bool TypeIsUnsigned<uint8_t>() { return true; }
-template<> inline const bool TypeIsUnsigned<uint16_t>() { return true; }
-template<> inline const bool TypeIsUnsigned<uint32_t>() { return true; }
-
-template<typename NativeType> static inline const bool TypeIsFloatingPoint() { return false; }
-template<> inline const bool TypeIsFloatingPoint<float>() { return true; }
-template<> inline const bool TypeIsFloatingPoint<double>() { return true; }
 
 template<typename NativeType> static inline const bool ElementTypeMayBeDouble() { return false; }
 template<> inline const bool ElementTypeMayBeDouble<uint32_t>() { return true; }

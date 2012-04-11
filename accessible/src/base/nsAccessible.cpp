@@ -2240,7 +2240,7 @@ nsAccessible::DispatchClickEvent(nsIContent *aContent, PRUint32 aActionIndex)
 NS_IMETHODIMP
 nsAccessible::ScrollTo(PRUint32 aHow)
 {
-  nsAccessNode::ScrollTo(aHow);
+  nsCoreUtils::ScrollTo(mDoc->PresShell(), mContent, aHow);
   return NS_OK;
 }
 
