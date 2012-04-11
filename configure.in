@@ -6865,6 +6865,7 @@ MOZ_GL_DEFAULT_PROVIDER=$MOZ_GL_PROVIDER
 AC_SUBST(MOZ_GL_PROVIDER)
 AC_DEFINE_UNQUOTED(MOZ_GL_PROVIDER, GLContextProvider$MOZ_GL_PROVIDER)
 fi
+AC_SUBST(MOZ_GL_DEFAULT_PROVIDER)
 
 dnl ========================================================
 dnl = faststripe theme
