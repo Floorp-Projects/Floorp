@@ -5,6 +5,7 @@
 package org.mozilla.gecko.sync.repositories;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -359,7 +360,7 @@ public abstract class RepositorySession {
     // applied without changes.
     // This logic will become more complicated as reconciling becomes smarter.
     if (!localIsMoreRecent) {
-      trackRecord(out);
+      trackGUID(out.guid);
     }
     return out;
   }
@@ -370,12 +371,15 @@ public abstract class RepositorySession {
    * applied unmodified — should be tracked so as to not be uploaded
    * redundantly.
    *
-   * The default implementation does nothing.
+   * The default implementations do nothing.
    */
-  protected synchronized void trackRecord(Record record) {
+  protected void trackGUID(String guid) {
   }
 
-  protected synchronized void untrackRecord(Record record) {
+  protected synchronized void untrackGUIDs(Collection<String> guids) {
+  }
+
+  protected void untrackGUID(String guid) {
   }
 
   // Ah, Java. You wretched creature.
