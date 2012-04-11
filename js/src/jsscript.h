@@ -463,10 +463,6 @@ struct JSScript : public js::gc::Cell
   private:
     js::HeapPtrFunction function_;
 
-    size_t          useCount;   /* Number of times the script has been called
-                                 * or has had backedges taken. Reset if the
-                                 * script's JIT code is forcibly discarded. */
-
     // 32-bit fields.
 
   public:
@@ -478,6 +474,11 @@ struct JSScript : public js::gc::Cell
                                    predef'ing prolog */
 
     uint32_t        natoms;     /* length of atoms array */
+
+  private:
+    uint32_t        useCount;   /* Number of times the script has been called
+                                 * or has had backedges taken. Reset if the
+                                 * script's JIT code is forcibly discarded. */
 
 #ifdef DEBUG
     // Unique identifier within the compartment for this script, used for
@@ -701,9 +702,9 @@ struct JSScript : public js::gc::Cell
     inline void **nativeMap(bool constructing);
     inline void *nativeCodeForPC(bool constructing, jsbytecode *pc);
 
-    size_t getUseCount() const  { return useCount; }
-    size_t incUseCount() { return ++useCount; }
-    size_t *addressOfUseCount() { return &useCount; }
+    uint32_t getUseCount() const  { return useCount; }
+    uint32_t incUseCount() { return ++useCount; }
+    uint32_t *addressOfUseCount() { return &useCount; }
     void resetUseCount() { useCount = 0; }
 
     /*
