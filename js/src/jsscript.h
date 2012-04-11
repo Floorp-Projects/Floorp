@@ -305,19 +305,22 @@ class ScriptCounts
     PCCounts *pcCountsVector;
 
  public:
-    ScriptCounts() : pcCountsVector(NULL) { }
+
+    ScriptCounts() : pcCountsVector(NULL) {
+    }
 
     inline void destroy(FreeOp *fop);
 
-    void set(js::ScriptCounts counts) {
-        pcCountsVector = counts.pcCountsVector;
+    void steal(ScriptCounts &other) {
+        *this = other;
+        js::PodZero(&other);
+    }
+
+    // Boolean conversion, for 'if (scriptCounts) ...'
+    operator void*() const {
+        return pcCountsVector;
     }
 };
-
-typedef HashMap<JSScript *,
-                ScriptCounts,
-                DefaultHasher<JSScript *>,
-                SystemAllocPolicy> ScriptCountsMap;
 
 class DebugScript
 {
@@ -436,6 +439,9 @@ struct JSScript : public js::gc::Cell
      */
     js::HeapPtr<js::GlobalObject, JSScript*> globalObject;
 
+    /* Execution and profiling information for JIT code in the script. */
+    js::ScriptCounts scriptCounts;
+
     /* Persistent type information retained across GCs. */
     js::types::TypeScript *types;
 
@@ -452,7 +458,6 @@ struct JSScript : public js::gc::Cell
     size_t          useCount;   /* Number of times the script has been called
                                  * or has had backedges taken. Reset if the
                                  * script's JIT code is forcibly discarded. */
-
     // 32-bit fields.
 
   public:
@@ -469,10 +474,9 @@ struct JSScript : public js::gc::Cell
     // Unique identifier within the compartment for this script, used for
     // printing analysis information.
     uint32_t        id_;
- #if JS_BITS_PER_WORD == 64
   private:
-    uint32_t        idpad64;
- #endif
+    uint32_t        idpad;
+  public:
 #endif
 
     // 16-bit fields.
@@ -539,8 +543,6 @@ struct JSScript : public js::gc::Cell
 #endif
     bool            callDestroyHook:1;/* need to call destroy hook */
     bool            isGenerator:1;    /* is a generator */
-    bool            hasScriptCounts:1;/* script has an entry in
-                                         JSCompartment::scriptCountsMap */
 
   private:
     /* See comments below. */
@@ -692,10 +694,12 @@ struct JSScript : public js::gc::Cell
 #endif
 
   public:
-    js::PCCounts getPCCounts(jsbytecode *pc);
+    js::PCCounts getPCCounts(jsbytecode *pc) {
+        JS_ASSERT(size_t(pc - code) < length);
+        return scriptCounts.pcCountsVector[pc - code];
+    }
 
     bool initScriptCounts(JSContext *cx);
-    js::ScriptCounts releaseScriptCounts();
     void destroyScriptCounts(js::FreeOp *fop);
 
     jsbytecode *main() {
