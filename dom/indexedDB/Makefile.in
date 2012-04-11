@@ -109,7 +109,6 @@ XPIDLSRCS = \
   nsIIDBCursor.idl \
   nsIIDBCursorWithValue.idl \
   nsIIDBDatabase.idl \
-  nsIIDBDatabaseException.idl \
   nsIIDBFactory.idl \
   nsIIDBIndex.idl \
   nsIIDBKeyRange.idl \

@@ -39,7 +39,6 @@
 
 #include "IDBEvents.h"
 
-#include "nsIIDBDatabaseException.h"
 #include "nsIPrivateDOMEvent.h"
 
 #include "nsContentUtils.h"
