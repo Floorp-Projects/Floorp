@@ -77,6 +77,15 @@ test_finalizer_rel_size_t_return_size_t(size_t i)
   return i;
 }
 
+RECT
+test_finalizer_rel_size_t_return_struct_t(size_t i)
+{
+  if (-- gFinalizerTestResources[i] < 0) {
+    MOZ_NOT_REACHED("Assertion failed");
+  }
+  RECT result = { i, i, i, i };
+  return result;
+}
 
 bool
 test_finalizer_cmp_size_t(size_t a, size_t b)
