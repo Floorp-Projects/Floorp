@@ -85,7 +85,8 @@ class DeviceManagerSUT(DeviceManager):
     self.retrylimit = retrylimit
     self.retries = 0
     self._sock = None
-    self.getDeviceRoot()
+    if self.getDeviceRoot() == None:
+        raise BaseException("Failed to connect to SUT Agent and retrieve the device root.")
 
   def _cmdNeedsResponse(self, cmd):
     """ Not all commands need a response from the agent:
