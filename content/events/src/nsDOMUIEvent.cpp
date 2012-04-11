@@ -49,7 +49,6 @@
 #include "nsContentUtils.h"
 #include "nsEventStateManager.h"
 #include "nsIFrame.h"
-#include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
 #include "DictionaryHelpers.h"
 
@@ -58,6 +57,9 @@ nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
                static_cast<nsEvent *>(aEvent) :
                static_cast<nsEvent *>(new nsUIEvent(false, 0, 0)))
   , mClientPoint(0, 0), mLayerPoint(0, 0), mPagePoint(0, 0)
+  , mIsPointerLocked(nsEventStateManager::sIsPointerLocked)
+  , mLastScreenPoint(nsEventStateManager::sLastScreenPoint)
+  , mLastClientPoint(nsEventStateManager::sLastClientPoint)
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -124,9 +126,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMUIEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 nsIntPoint
-nsDOMUIEvent::GetScreenPoint()
+nsDOMUIEvent::GetMovementPoint()
 {
-  if (!mEvent || 
+  if (!mEvent ||
        (mEvent->eventStructType != NS_MOUSE_EVENT &&
         mEvent->eventStructType != NS_POPUP_EVENT &&
         mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
@@ -136,43 +138,41 @@ nsDOMUIEvent::GetScreenPoint()
     return nsIntPoint(0, 0);
   }
 
-  if (!((nsGUIEvent*)mEvent)->widget ) {
-    return mEvent->refPoint;
+  if (!((nsGUIEvent*)mEvent)->widget) {
+    return mEvent->lastRefPoint;
   }
 
-  nsIntPoint offset = mEvent->refPoint + 
+  // Calculate the delta between the previous screen point and the current one.
+  nsIntPoint currentPoint = CalculateScreenPoint(mPresContext, mEvent);
+
+  // Adjust previous event's refPoint so it compares to current screenX, screenY
+  nsIntPoint offset = mEvent->lastRefPoint +
     ((nsGUIEvent*)mEvent)->widget->WidgetToScreenOffset();
   nscoord factor = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel();
-  return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(offset.x * factor),
-                    nsPresContext::AppUnitsToIntCSSPixels(offset.y * factor));
+  nsIntPoint lastPoint = nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(offset.x * factor),
+                                    nsPresContext::AppUnitsToIntCSSPixels(offset.y * factor));
+
+  return currentPoint - lastPoint;
+}
+
+nsIntPoint
+nsDOMUIEvent::GetScreenPoint()
+{
+  if (mIsPointerLocked) {
+    return mLastScreenPoint;
+  }
+
+  return CalculateScreenPoint(mPresContext, mEvent);
 }
 
 nsIntPoint
 nsDOMUIEvent::GetClientPoint()
 {
-  if (!mEvent ||
-      (mEvent->eventStructType != NS_MOUSE_EVENT &&
-       mEvent->eventStructType != NS_POPUP_EVENT &&
-       mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-       mEvent->eventStructType != NS_MOZTOUCH_EVENT &&
-       mEvent->eventStructType != NS_DRAG_EVENT &&
-       mEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
-      !mPresContext ||
-      !((nsGUIEvent*)mEvent)->widget) {
-    return mClientPoint;
+  if (mIsPointerLocked) {
+    return mLastClientPoint;
   }
 
-  nsPoint pt(0, 0);
-  nsIPresShell* shell = mPresContext->GetPresShell();
-  if (!shell) {
-    return nsIntPoint(0, 0);
-  }
-  nsIFrame* rootFrame = shell->GetRootFrame();
-  if (rootFrame)
-    pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent, rootFrame);
-
-  return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
-                    nsPresContext::AppUnitsToIntCSSPixels(pt.y));
+  return CalculateClientPoint(mPresContext, mEvent, &mClientPoint);
 }
 
 NS_IMETHODIMP
