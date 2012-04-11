@@ -47,6 +47,10 @@
 #include "base/logging.h"
 #include "base/scoped_nsautorelease_pool.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidBridge.h"
+#endif
+
 using mozilla::ipc::DoWorkRunnable;
 using mozilla::ipc::MessagePump;
 using mozilla::ipc::MessagePumpForChildProcess;
@@ -110,6 +114,10 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
     bool did_work = NS_ProcessNextEvent(mThread, false) ? true : false;
     if (!keep_running_)
       break;
+
+#ifdef MOZ_WIDGET_ANDROID
+    AndroidBridge::Bridge()->PumpMessageLoop();
+#endif
 
     did_work |= aDelegate->DoWork();
     if (!keep_running_)
