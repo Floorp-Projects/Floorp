@@ -104,11 +104,10 @@ _TEST_FILES = 	test_bug1682.html \
 		bug499092.html \
 		test_bug512367.html \
 		test_bug571981.html \
-		test_bug677122.html \
 		test_bug677495.html \
 		test_bug677495-1.html \
-		test_bug741266.html \
 		test_bug742261.html \
+		test_bug741266.html \
 		$(NULL)
 
 ifneq (mobile,$(MOZ_BUILD_APP))
