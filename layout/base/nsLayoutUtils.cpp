@@ -4666,6 +4666,28 @@ nsLayoutUtils::FontSizeInflationInner(const nsIFrame *aFrame,
     return 1.0;
   }
 
+  // If between this current frame and its font inflation container there is a
+  // non-inline element with fixed width or height, then we should not inflate
+  // fonts for this frame.
+  for (const nsIFrame* f = aFrame;
+       f && !IsContainerForFontSizeInflation(f);
+       f = f->GetParent()) {
+    nsIContent* content = f->GetContent();
+    // Also, if there is more than one frame corresponding to a single
+    // content node, we want the outermost one.
+    if (!(f->GetParent() &&
+          f->GetParent()->GetContent() == content) &&
+        f->GetType() != nsGkAtoms::inlineFrame) {
+      nsStyleCoord stylePosWidth = f->GetStylePosition()->mWidth;
+      nsStyleCoord stylePosHeight = f->GetStylePosition()->mHeight;
+      if (stylePosWidth.GetUnit() != eStyleUnit_Auto ||
+          stylePosHeight.GetUnit() != eStyleUnit_Auto) {
+
+        return 1.0;
+      }
+    }
+  }
+
   // Scale everything from 0-1.5 times min to instead fit in the range
   // 1-1.5 times min, so that we still show some distinction rather than
   // just enforcing a minimum.
