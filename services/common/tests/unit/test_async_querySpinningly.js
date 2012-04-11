@@ -1,12 +1,23 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-common/utils.js");
+
 _("Make sure querySpinningly will synchronously fetch rows for a query asyncly");
-Cu.import("resource://services-sync/async.js");
 
 const SQLITE_CONSTRAINT_VIOLATION = 19;  // http://www.sqlite.org/c3ref/c_abort.html
+
+let Svc = {};
+XPCOMUtils.defineLazyServiceGetter(Svc, "Form",
+                                   "@mozilla.org/satchel/form-history;1",
+                                   "nsIFormHistory2");
 
 function querySpinningly(query, names) {
   let q = Svc.Form.DBConnection.createStatement(query);
   let r = Async.querySpinningly(q, names);
-  q.finalize();    
+  q.finalize();
   return r;
 }
 
@@ -15,7 +26,7 @@ function run_test() {
 
   _("Make sure the call is async and allows other events to process");
   let isAsync = false;
-  Utils.nextTick(function() { isAsync = true; });
+  CommonUtils.nextTick(function() { isAsync = true; });
   do_check_false(isAsync);
 
   _("Empty out the formhistory table");

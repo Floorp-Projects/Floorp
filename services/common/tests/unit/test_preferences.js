@@ -1,6 +1,13 @@
-Components.utils.import("resource://services-sync/ext/Preferences.js");
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test_set_get_pref() {
+Cu.import("resource://services-common/preferences.js");
+
+function run_test() {
+  run_next_test();
+}
+
+add_test(function test_set_get_pref() {
   Preferences.set("test_set_get_pref.integer", 1);
   do_check_eq(Preferences.get("test_set_get_pref.integer"), 1);
 
@@ -12,9 +19,11 @@ function test_set_get_pref() {
 
   // Clean up.
   Preferences.resetBranch("test_set_get_pref.");
-}
 
-function test_set_get_branch_pref() {
+  run_next_test();
+});
+
+add_test(function test_set_get_branch_pref() {
   let prefs = new Preferences("test_set_get_branch_pref.");
 
   prefs.set("something", 1);
@@ -23,9 +32,11 @@ function test_set_get_branch_pref() {
 
   // Clean up.
   prefs.reset("something");
-}
 
-function test_set_get_multiple_prefs() {
+  run_next_test();
+});
+
+add_test(function test_set_get_multiple_prefs() {
   Preferences.set({ "test_set_get_multiple_prefs.integer":  1,
                     "test_set_get_multiple_prefs.string":   "foo",
                     "test_set_get_multiple_prefs.boolean":  true });
@@ -40,9 +51,11 @@ function test_set_get_multiple_prefs() {
 
   // Clean up.
   Preferences.resetBranch("test_set_get_multiple_prefs.");
-}
 
-function test_get_multiple_prefs_with_default_value() {
+  run_next_test();
+});
+
+add_test(function test_get_multiple_prefs_with_default_value() {
   Preferences.set({ "test_get_multiple_prefs_with_default_value.a":  1,
                     "test_get_multiple_prefs_with_default_value.b":  2 });
 
@@ -57,47 +70,57 @@ function test_get_multiple_prefs_with_default_value() {
 
   // Clean up.
   Preferences.resetBranch("test_get_multiple_prefs_with_default_value.");
-}
 
-function test_set_get_unicode_pref() {
+  run_next_test();
+});
+
+add_test(function test_set_get_unicode_pref() {
   Preferences.set("test_set_get_unicode_pref", String.fromCharCode(960));
   do_check_eq(Preferences.get("test_set_get_unicode_pref"), String.fromCharCode(960));
 
   // Clean up.
   Preferences.reset("test_set_get_unicode_pref");
-}
 
-function test_set_null_pref() {
+  run_next_test();
+});
+
+add_test(function test_set_null_pref() {
   try {
     Preferences.set("test_set_null_pref", null);
     // We expect this to throw, so the test is designed to fail if it doesn't.
     do_check_true(false);
   }
   catch(ex) {}
-}
 
-function test_set_undefined_pref() {
+  run_next_test();
+});
+
+add_test(function test_set_undefined_pref() {
   try {
     Preferences.set("test_set_undefined_pref");
     // We expect this to throw, so the test is designed to fail if it doesn't.
     do_check_true(false);
   }
   catch(ex) {}
-}
 
-function test_set_unsupported_pref() {
+  run_next_test();
+});
+
+add_test(function test_set_unsupported_pref() {
   try {
     Preferences.set("test_set_unsupported_pref", new Array());
     // We expect this to throw, so the test is designed to fail if it doesn't.
     do_check_true(false);
   }
   catch(ex) {}
-}
+
+  run_next_test();
+});
 
 // Make sure that we can get a string pref that we didn't set ourselves
 // (i.e. that the way we get a string pref using getComplexValue doesn't
 // hork us getting a string pref that wasn't set using setComplexValue).
-function test_get_string_pref() {
+add_test(function test_get_string_pref() {
   let svc = Cc["@mozilla.org/preferences-service;1"].
             getService(Ci.nsIPrefService).
             getBranch("");
@@ -106,9 +129,11 @@ function test_get_string_pref() {
 
   // Clean up.
   Preferences.reset("test_get_string_pref");
-}
 
-function test_set_get_number_pref() {
+  run_next_test();
+});
+
+add_test(function test_set_get_number_pref() {
   Preferences.set("test_set_get_number_pref", 5);
   do_check_eq(Preferences.get("test_set_get_number_pref"), 5);
 
@@ -126,35 +151,45 @@ function test_set_get_number_pref() {
 
   // Clean up.
   Preferences.reset("test_set_get_number_pref");
-}
 
-function test_reset_pref() {
+  run_next_test();
+});
+
+add_test(function test_reset_pref() {
   Preferences.set("test_reset_pref", 1);
   Preferences.reset("test_reset_pref");
   do_check_eq(Preferences.get("test_reset_pref"), undefined);
-}
 
-function test_reset_pref_branch() {
+  run_next_test();
+});
+
+add_test(function test_reset_pref_branch() {
   Preferences.set("test_reset_pref_branch.foo", 1);
   Preferences.set("test_reset_pref_branch.bar", 2);
   Preferences.resetBranch("test_reset_pref_branch.");
   do_check_eq(Preferences.get("test_reset_pref_branch.foo"), undefined);
   do_check_eq(Preferences.get("test_reset_pref_branch.bar"), undefined);
-}
+
+  run_next_test();
+});
 
 // Make sure the module doesn't throw an exception when asked to reset
 // a nonexistent pref.
-function test_reset_nonexistent_pref() {
+add_test(function test_reset_nonexistent_pref() {
   Preferences.reset("test_reset_nonexistent_pref");
-}
+
+  run_next_test();
+});
 
 // Make sure the module doesn't throw an exception when asked to reset
 // a nonexistent pref branch.
-function test_reset_nonexistent_pref_branch() {
+add_test(function test_reset_nonexistent_pref_branch() {
   Preferences.resetBranch("test_reset_nonexistent_pref_branch.");
-}
 
-function test_observe_prefs_function() {
+  run_next_test();
+});
+
+add_test(function test_observe_prefs_function() {
   let observed = false;
   let observer = function() { observed = !observed };
 
@@ -168,9 +203,11 @@ function test_observe_prefs_function() {
 
   // Clean up.
   Preferences.reset("test_observe_prefs_function");
-}
 
-function test_observe_prefs_object() {
+  run_next_test();
+});
+
+add_test(function test_observe_prefs_object() {
   let observer = {
     observed: false,
     observe: function() {
@@ -188,9 +225,11 @@ function test_observe_prefs_object() {
 
   // Clean up.
   Preferences.reset("test_observe_prefs_object");
-}
 
-function test_observe_prefs_nsIObserver() {
+  run_next_test();
+});
+
+add_test(function test_observe_prefs_nsIObserver() {
   let observer = {
     observed: false,
     observe: function(subject, topic, data) {
@@ -211,9 +250,12 @@ function test_observe_prefs_nsIObserver() {
 
   // Clean up.
   Preferences.reset("test_observe_prefs_nsIObserver");
-}
 
-function test_observe_exact_pref() {
+  run_next_test();
+});
+
+/*
+add_test(function test_observe_exact_pref() {
   let observed = false;
   let observer = function() { observed = !observed };
 
@@ -224,9 +266,12 @@ function test_observe_exact_pref() {
   // Clean up.
   Preferences.ignore("test_observe_exact_pref", observer);
   Preferences.reset("test_observe_exact_pref.sub-pref");
-}
 
-function test_observe_value_of_set_pref() {
+  run_next_test();
+});
+*/
+
+add_test(function test_observe_value_of_set_pref() {
   let observer = function(newVal) { do_check_eq(newVal, "something") };
 
   Preferences.observe("test_observe_value_of_set_pref", observer);
@@ -235,9 +280,11 @@ function test_observe_value_of_set_pref() {
   // Clean up.
   Preferences.ignore("test_observe_value_of_set_pref", observer);
   Preferences.reset("test_observe_value_of_set_pref");
-}
 
-function test_observe_value_of_reset_pref() {
+  run_next_test();
+});
+
+add_test(function test_observe_value_of_reset_pref() {
   let observer = function(newVal) { do_check_true(typeof newVal == "undefined") };
 
   Preferences.set("test_observe_value_of_reset_pref", "something");
@@ -246,9 +293,11 @@ function test_observe_value_of_reset_pref() {
 
   // Clean up.
   Preferences.ignore("test_observe_value_of_reset_pref", observer);
-}
 
-function test_has_pref() {
+  run_next_test();
+});
+
+add_test(function test_has_pref() {
   do_check_false(Preferences.has("test_has_pref"));
   Preferences.set("test_has_pref", "foo");
   do_check_true(Preferences.has("test_has_pref"));
@@ -264,9 +313,11 @@ function test_has_pref() {
 
   // Clean up.
   Preferences.resetBranch("test_has_pref");
-}
 
-function test_isSet_pref() {
+  run_next_test();
+});
+
+add_test(function test_isSet_pref() {
   // Use a pref that we know has a default value but no user-set value.
   // This feels dangerous; perhaps we should create some other default prefs
   // that we can use for testing.
@@ -276,9 +327,12 @@ function test_isSet_pref() {
 
   // Clean up.
   Preferences.reset("toolkit.defaultChromeURI");
-}
 
-function test_lock_prefs() {
+  run_next_test();
+});
+
+/*
+add_test(function test_lock_prefs() {
   // Use a pref that we know has a default value.
   // This feels dangerous; perhaps we should create some other default prefs
   // that we can use for testing.
@@ -298,9 +352,12 @@ function test_lock_prefs() {
 
   // Clean up.
   Preferences.reset("toolkit.defaultChromeURI");
-}
 
-function test_site_prefs() {
+  run_next_test();
+});
+*/
+
+add_test(function test_site_prefs() {
   let prefs = Preferences.site("www.example.com");
 
   prefs.set("test_site_prefs.integer", 1);
@@ -323,32 +380,6 @@ function test_site_prefs() {
   do_check_false(Preferences.has("test_site_prefs.boolean"));
   prefs.reset("test_site_prefs.boolean");
   do_check_false(prefs.has("test_site_prefs.boolean"));
-}
 
-
-function run_test() {
-  test_set_get_pref();
-  test_set_get_branch_pref();
-  test_set_get_multiple_prefs();
-  test_get_multiple_prefs_with_default_value();
-  test_set_get_unicode_pref();
-  test_set_null_pref();
-  test_set_undefined_pref();
-  test_set_unsupported_pref();
-  test_get_string_pref();
-  test_set_get_number_pref();
-  test_reset_pref();
-  test_reset_pref_branch();
-  test_reset_nonexistent_pref();
-  test_reset_nonexistent_pref_branch();
-  test_observe_prefs_function();
-  test_observe_prefs_object();
-  test_observe_prefs_nsIObserver();
-  //test_observe_exact_pref();
-  test_observe_value_of_set_pref();
-  test_observe_value_of_reset_pref();
-  test_has_pref();
-  test_isSet_pref();
-  //test_lock_prefs();
-  test_site_prefs();
-}
+  run_next_test();
+});

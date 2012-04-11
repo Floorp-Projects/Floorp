@@ -7,7 +7,7 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/engines/tabs.js");
 Cu.import("resource://services-sync/engines/history.js");
-Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://services-common/log4moz.js");
   
 add_test(function test_locally_changed_keys() {
   let passphrase = "abcdeabcdeabcdeabcdeabcdea";
