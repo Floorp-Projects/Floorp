@@ -259,12 +259,7 @@ var gCSSProperties = {
 						  "url('border.png') fill repeat",
 						  "fill repeat",
 						  "url('border.png') fill / 1em",
-						  "url('border.png') / repeat",
-						  "url('border.png') 1 /",
-						  "url('border.png') 1 / /",
-						  "1 / url('border.png')",
-						  "url('border.png') / 1",
-						  "url('border.png') / / 1"]
+						  "url('border.png') / repeat" ]
 	},
 	"-moz-border-image-source": {
 		domProp: "MozBorderImageSource",
