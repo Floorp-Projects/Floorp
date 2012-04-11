@@ -12,7 +12,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 const RIL_SMSDATABASESERVICE_CONTRACTID = "@mozilla.org/sms/rilsmsdatabaseservice;1";
 const RIL_SMSDATABASESERVICE_CID = Components.ID("{a1fa610c-eb6c-4ac2-878f-b005d5e89249}");
 
-const DEBUG = true;
+const DEBUG = false;
 const DB_NAME = "sms";
 const DB_VERSION = 1;
 const STORE_NAME = "sms";
