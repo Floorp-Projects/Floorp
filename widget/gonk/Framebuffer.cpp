@@ -79,10 +79,10 @@ bool
 SetGraphicsMode()
 {
     ScopedClose fd(open("/dev/tty0", O_RDWR | O_SYNC));
-    if (0 > fd.mFd) {
+    if (0 > fd.get()) {
         // This is non-fatal; post-Cupcake kernels don't have tty0.
         LOG("No /dev/tty0?");
-    } else if (ioctl(fd.mFd, KDSETMODE, (void*) KD_GRAPHICS)) {
+    } else if (ioctl(fd.get(), KDSETMODE, (void*) KD_GRAPHICS)) {
         LOG("Error setting graphics mode on /dev/tty0");
         return false;
     }
@@ -99,32 +99,32 @@ Open(nsIntSize* aScreenSize)
         return false;
 
     ScopedClose fd(open("/dev/graphics/fb0", O_RDWR));
-    if (0 > fd.mFd) {
+    if (0 > fd.get()) {
         LOG("Error opening framebuffer device");
         return false;
     }
 
     struct fb_fix_screeninfo fi;
-    if (0 > ioctl(fd.mFd, FBIOGET_FSCREENINFO, &fi)) {
+    if (0 > ioctl(fd.get(), FBIOGET_FSCREENINFO, &fi)) {
         LOG("Error getting fixed screeninfo");
         return false;
     }
 
-    if (0 > ioctl(fd.mFd, FBIOGET_VSCREENINFO, &sVi)) {
+    if (0 > ioctl(fd.get(), FBIOGET_VSCREENINFO, &sVi)) {
         LOG("Error getting variable screeninfo");
         return false;
     }
 
     sMappedSize = fi.smem_len;
     void* mem = mmap(0, sMappedSize, PROT_READ | PROT_WRITE, MAP_SHARED,
-                     fd.mFd, 0);
+                     fd.rwget(), 0);
     if (MAP_FAILED == mem) {
         LOG("Error mmap'ing framebuffer");
         return false;
     }
 
-    sFd = fd.mFd;
-    fd.mFd = -1;
+    sFd = fd.get();
+    fd.forget();
 
     // The android porting doc requires a /dev/graphics/fb0 device
     // that's double buffered with r5g6b5 format.  Hence the
@@ -155,12 +155,12 @@ GetSize(nsIntSize *aScreenSize) {
         return true;
 
     ScopedClose fd(open("/dev/graphics/fb0", O_RDWR));
-    if (0 > fd.mFd) {
+    if (0 > fd.get()) {
         LOG("Error opening framebuffer device");
         return false;
     }
 
-    if (0 > ioctl(fd.mFd, FBIOGET_VSCREENINFO, &sVi)) {
+    if (0 > ioctl(fd.get(), FBIOGET_VSCREENINFO, &sVi)) {
         LOG("Error getting variable screeninfo");
         return false;
     }
