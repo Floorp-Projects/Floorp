@@ -151,7 +151,11 @@ public:
  *
  * Clients are responsible for animating sprites by periodically updating their properties.
  */
+#ifdef HAVE_ANDROID_OS
 class SpriteController : public MessageHandler {
+#else
+class SpriteController : public virtual RefBase {
+#endif
 protected:
     virtual ~SpriteController();
 
@@ -286,9 +290,9 @@ private:
 
     sp<Looper> mLooper;
     const int32_t mOverlayLayer;
+#ifdef HAVE_ANDROID_OS
     sp<WeakMessageHandler> mHandler;
 
-#ifdef HAVE_ANDROID_OS
     sp<SurfaceComposerClient> mSurfaceComposerClient;
 #endif
 
