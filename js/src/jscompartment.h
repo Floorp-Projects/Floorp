@@ -463,8 +463,6 @@ struct JSCompartment
 
   public:
     js::WatchpointMap *watchpointMap;
-
-    js::ScriptCountsMap *scriptCountsMap;
 };
 
 #define JS_PROPERTY_TREE(cx)    ((cx)->compartment->propertyTree)
