@@ -1096,6 +1096,27 @@ js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale,
     return errorString;
 }
 
+namespace js {
+
+JS_FRIEND_API(const jschar*)
+GetErrorTypeNameFromNumber(JSContext* cx, const unsigned errorNumber)
+{
+    const JSErrorFormatString *efs = js_GetErrorMessage(NULL, NULL, errorNumber);
+    /*
+     * JSEXN_INTERNALERR returns null to prevent that "InternalError: "
+     * is prepended before "uncaught exception: "
+     */
+    if (!efs || efs->exnType <= JSEXN_NONE || efs->exnType >= JSEXN_LIMIT ||
+        efs->exnType == JSEXN_INTERNALERR)
+    {
+        return NULL;
+    }
+    JSProtoKey key = GetExceptionProtoKey(efs->exnType);
+    return cx->runtime->atomState.classAtoms[key]->chars();
+}
+
+} /* namespace js */
+
 #if defined ( DEBUG_mccabe ) && defined ( PRINTNAMES )
 /* For use below... get character strings for error name and exception name */
 static struct exnname { char *name; char *exception; } errortoexnname[] = {
