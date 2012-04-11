@@ -1550,6 +1550,12 @@ public:
       return new (aBuilder) nsDisplayClipRoundedRect(aBuilder, nsnull, aList,
                                                      mRect, mRadii);
     }
+    bool snap;
+    if (!aList->IsEmpty() && !aList->GetBottom()->GetAbove() &&
+        mRect.Contains(aList->GetBottom()->GetBounds(aBuilder, &snap))) {
+      // Single list element which fits in the clip rect. No need to wrap it.
+      return aList->RemoveBottom();
+    }
     return new (aBuilder) nsDisplayClip(aBuilder, nsnull, aList, mRect);
   }
   virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
@@ -1560,6 +1566,11 @@ public:
       if (mHaveRadius) {
         return new (aBuilder) nsDisplayClipRoundedRect(aBuilder, f, aItem,
                                                        mRect, mRadii);
+      }
+      bool snap;
+      if (mRect.Contains(aItem->GetBounds(aBuilder, &snap))) {
+        // Item fits in the clip rect. No need to wrap it.
+        return aItem;
       }
       return new (aBuilder) nsDisplayClip(aBuilder, f, aItem, mRect);
     }
