@@ -1569,14 +1569,12 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayList* aList)
   : nsDisplayItem(aBuilder, aFrame) {
   mList.AppendToTop(aList);
-  mBounds = mList.GetBounds(aBuilder);
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayItem* aItem)
   : nsDisplayItem(aBuilder, aFrame) {
   mList.AppendToTop(aItem);
-  mBounds = mList.GetBounds(aBuilder);
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
@@ -1597,7 +1595,7 @@ nsDisplayWrapList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
 nsRect
 nsDisplayWrapList::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
   *aSnap = false;
-  return mBounds;
+  return mList.GetBounds(aBuilder);
 }
 
 bool
@@ -1617,7 +1615,6 @@ nsDisplayWrapList::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
   *aSnap = false;
   nsRegion result;
   if (mList.IsOpaque()) {
-    // Everything within GetBounds that's visible is opaque.
     result = GetBounds(aBuilder, aSnap);
   }
   return result;
@@ -1837,7 +1834,7 @@ bool nsDisplayOpacity::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* a
   // aItem->GetUnderlyingFrame() returns non-null because it's nsDisplayOpacity
   if (aItem->GetUnderlyingFrame()->GetContent() != mFrame->GetContent())
     return false;
-  MergeFrom(static_cast<nsDisplayOpacity*>(aItem));
+  mList.AppendToBottom(&static_cast<nsDisplayOpacity*>(aItem)->mList);
   return true;
 }
 
@@ -2005,7 +2002,7 @@ nsDisplayScrollLayer::TryMerge(nsDisplayListBuilder* aBuilder,
   props.Set(nsIFrame::ScrollLayerCount(),
     reinterpret_cast<void*>(GetScrollLayerCount() - 1));
 
-  MergeFrom(other);
+  mList.AppendToBottom(&other->mList);
   // XXX - This ensures that the frame associated with a scroll layer after
   // merging is the first, rather than the last. This tends to change less,
   // ensuring we're more likely to retain the associated gfx layer.
@@ -2144,13 +2141,13 @@ bool nsDisplayClip::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayClip::TryMerge(nsDisplayListBuilder* aBuilder,
-                             nsDisplayItem* aItem) {
+                               nsDisplayItem* aItem) {
   if (aItem->GetType() != TYPE_CLIP)
     return false;
   nsDisplayClip* other = static_cast<nsDisplayClip*>(aItem);
   if (!other->mClip.IsEqualInterior(mClip))
     return false;
-  MergeFrom(other);
+  mList.AppendToBottom(&other->mList);
   return true;
 }
 
@@ -2245,7 +2242,7 @@ bool nsDisplayClipRoundedRect::TryMerge(nsDisplayListBuilder* aBuilder, nsDispla
   if (!mClip.IsEqualInterior(other->mClip) ||
       memcmp(mRadii, other->mRadii, sizeof(mRadii)) != 0)
     return false;
-  MergeFrom(other);
+  mList.AppendToBottom(&other->mList);
   return true;
 }
 
@@ -2906,7 +2903,8 @@ nsDisplayTransform::TryMerge(nsDisplayListBuilder *aBuilder,
   /* Now, move everything over to this frame and signal that
    * we merged things!
    */
-  mStoredList.MergeFrom(&static_cast<nsDisplayTransform*>(aItem)->mStoredList);
+  mStoredList.GetList()->
+    AppendToBottom(&static_cast<nsDisplayTransform *>(aItem)->mStoredList);
   return true;
 }
 
@@ -2994,7 +2992,7 @@ bool nsDisplayTransform::UntransformRect(const nsRect &aUntransformedBounds,
 nsDisplaySVGEffects::nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame, nsDisplayList* aList)
     : nsDisplayWrapList(aBuilder, aFrame, aList), mEffectsFrame(aFrame),
-      mEffectsBounds(aFrame->GetVisualOverflowRectRelativeToSelf())
+      mBounds(aFrame->GetVisualOverflowRectRelativeToSelf())
 {
   MOZ_COUNT_CTOR(nsDisplaySVGEffects);
 }
@@ -3061,9 +3059,9 @@ bool nsDisplaySVGEffects::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem
   if (aItem->GetUnderlyingFrame()->GetContent() != mFrame->GetContent())
     return false;
   nsDisplaySVGEffects* other = static_cast<nsDisplaySVGEffects*>(aItem);
-  MergeFrom(other);
-  mEffectsBounds.UnionRect(mEffectsBounds,
-    other->mEffectsBounds + other->mEffectsFrame->GetOffsetTo(mEffectsFrame));
+  mList.AppendToBottom(&other->mList);
+  mBounds.UnionRect(mBounds,
+    other->mBounds + other->mEffectsFrame->GetOffsetTo(mEffectsFrame));
   return true;
 }
 
