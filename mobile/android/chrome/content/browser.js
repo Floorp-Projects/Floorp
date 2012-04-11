@@ -1945,7 +1945,10 @@ Tab.prototype = {
       case "PluginClickToPlay": {
         let plugin = aEvent.target;
 
-        if (this.clickToPlayPluginsActivated) {
+        // Check if plugins have already been activated for this page, or if the user
+        // has set a permission to always play plugins on the site
+        if (this.clickToPlayPluginsActivated ||
+            Services.perms.testPermission(this.browser.currentURI, "plugins") == Services.perms.ALLOW_ACTION) {
           PluginHelper.playPlugin(plugin);
           return;
         }
