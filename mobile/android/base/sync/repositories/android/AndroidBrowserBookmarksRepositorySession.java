@@ -24,6 +24,7 @@ import org.mozilla.gecko.sync.repositories.ParentNotFoundException;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
+import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
@@ -32,6 +33,7 @@ import android.database.Cursor;
 
 public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepositorySession {
 
+  public static final int DEFAULT_DELETION_FLUSH_THRESHOLD = 50;
   // TODO: synchronization for these.
   private HashMap<String, Long> guidToID = new HashMap<String, Long>();
   private HashMap<Long, String> idToGuid = new HashMap<Long, String>();
@@ -97,6 +99,8 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
 
   private AndroidBrowserBookmarksDataAccessor dataAccessor;
 
+  protected BookmarksDeletionManager deletionManager;
+
   /**
    * An array of known-special GUIDs.
    */
@@ -159,7 +163,6 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
    *
   */
   public static final Map<String, String> SPECIAL_GUID_PARENTS;
-
   static {
     HashMap<String, String> m = new HashMap<String, String>();
     m.put("places",  null);
@@ -538,12 +541,16 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     } finally {
       cur.close();
     }
+    deletionManager = new BookmarksDeletionManager(dataAccessor, DEFAULT_DELETION_FLUSH_THRESHOLD);
     Logger.debug(LOG_TAG, "Done with initial setup of bookmarks session.");
     super.begin(delegate);
   }
 
   @Override
   public void finish(RepositorySessionFinishDelegate delegate) throws InactiveSessionException {
+    // Allow this to be GCed.
+    deletionManager = null;
+
     // Override finish to do this check; make sure all records
     // needing re-parenting have been re-parented.
     if (needsReparenting != 0) {
@@ -696,35 +703,25 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
       return;
     }
     final BookmarkRecord bookmarkRecord = (BookmarkRecord) record;
-    if (bookmarkRecord.isFolder()) {
-      Logger.debug(LOG_TAG, "Deleting folder. Ensuring consistency of children. TODO: Bug 724470.");
-      handleFolderDeletion(bookmarkRecord);
-      return;
-    }
-    super.storeRecordDeletion(record);
+    final boolean isFolder = ((BookmarkRecord) existingRecord).isFolder();
+    deletionManager.deleteRecord(bookmarkRecord, isFolder);
   }
 
-  /**
-   * When a folder deletion is received, we must ensure -- for database
-   * consistency -- that its children are placed somewhere sane.
-   *
-   * Note that its children might also be deleted, but we'll process
-   * folders first. For that reason we might want to queue up these
-   * folder deletions and handle them in onStoreDone.
-   *
-   * See Bug 724739.
-   *
-   * @param folder
-   */
-  protected void handleFolderDeletion(final BookmarkRecord folder) {
-    // TODO: reparent children. Bug 724740.
-    // For now we'll trust that we'll process the item deletions, too.
-    super.storeRecordDeletion(folder);
+  protected void flushDeletions() {
+    Logger.debug(LOG_TAG, "Applying deletions.");
+    try {
+      long now = now();
+      untrackGUIDs(deletionManager.flushAll(getIDForGUID("unfiled"), now));
+      Logger.debug(LOG_TAG, "Done applying deletions.");
+    } catch (Exception e) {
+      Logger.error(LOG_TAG, "Unable to apply deletions.", e);
+    }
   }
 
   @SuppressWarnings("unchecked")
   private void finishUp() {
     try {
+      flushDeletions();
       Logger.debug(LOG_TAG, "Have " + parentToChildArray.size() + " folders whose children might need repositioning.");
       for (Entry<String, JSONArray> entry : parentToChildArray.entrySet()) {
         String guid = entry.getKey();
@@ -764,6 +761,32 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     } finally {
       super.storeDone();
     }
+  }
+
+  /**
+   * Hook into the deletion manager on wipe.
+   */
+  class BookmarkWipeRunnable extends WipeRunnable {
+    public BookmarkWipeRunnable(RepositorySessionWipeDelegate delegate) {
+      super(delegate);
+    }
+
+    @Override
+    public void run() {
+      try {
+        super.run();
+      } catch (Exception ex) {
+        delegate.onWipeFailed(ex);
+        return;
+      }
+      // Clear our queued deletions.
+      deletionManager.clear();
+    }
+  }
+
+  @Override
+  protected WipeRunnable getWipeRunnable(RepositorySessionWipeDelegate delegate) {
+    return new BookmarkWipeRunnable(delegate);
   }
 
   @Override

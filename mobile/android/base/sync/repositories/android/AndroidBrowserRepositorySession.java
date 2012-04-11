@@ -655,20 +655,24 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     putRecordToGuidMap(buildRecordString(record), record.guid);
   }
 
-  // Wipe method and thread.
+  protected WipeRunnable getWipeRunnable(RepositorySessionWipeDelegate delegate) {
+    return new WipeRunnable(delegate);
+  }
+
   @Override
   public void wipe(RepositorySessionWipeDelegate delegate) {
-    Runnable command = new WipeRunnable(delegate);
+    Runnable command = getWipeRunnable(delegate);
     storeWorkQueue.execute(command);
   }
 
   class WipeRunnable implements Runnable {
-    private RepositorySessionWipeDelegate delegate;
+    protected RepositorySessionWipeDelegate delegate;
 
     public WipeRunnable(RepositorySessionWipeDelegate delegate) {
       this.delegate = delegate;
     }
 
+    @Override
     public void run() {
       if (!isActive()) {
         delegate.onWipeFailed(new InactiveSessionException(null));
