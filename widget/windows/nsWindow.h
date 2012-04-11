@@ -177,6 +177,10 @@ public:
   virtual nsresult        SynthesizeNativeMouseEvent(nsIntPoint aPoint,
                                                      PRUint32 aNativeMessage,
                                                      PRUint32 aModifierFlags);
+
+  virtual nsresult        SynthesizeNativeMouseMove(nsIntPoint aPoint)
+                          { return SynthesizeNativeMouseEvent(aPoint, MOUSEEVENTF_MOVE, 0); }
+
   virtual nsresult        SynthesizeNativeMouseScrollEvent(nsIntPoint aPoint,
                                                            PRUint32 aNativeMessage,
                                                            double aDeltaX,

@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+-->
+  <head>
+    <title>Test for Bug 633602</title>
+    <script type="application/javascript"  src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript"  src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+      Mozilla Bug 633602
+    </a>
+    <div id="content">
+    </div>
+    <pre id="test">
+      <script type="application/javascript">
+        /**
+         * Pointer Lock tests for bug 633602.  These depend on the fullscreen api
+         * which doesn't work well on all platforms when run in an iframe, even
+         * when allowing fullscreen on the iframe.  To get around this, all tests
+         * are run in a child window, which can go fullscreen.  This method is
+         * borrowed from content/html/content/test/test_fullscreen-api.html.
+         **/
+
+        SimpleTest.waitForExplicitFinish();
+
+        // Ensure the full-screen api is enabled, and will be disabled on test exit.
+        SpecialPowers.setBoolPref("full-screen-api.enabled", true);
+
+        // Disable the requirement for trusted contexts only, so the tests are easier to write.
+        SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
+
+        // Run the tests which go full-screen in new window, as Mochitests
+        // normally run in an iframe, which by default will not have the
+        // mozallowfullscreen attribute set, so full-screen won't work.
+        var gTestFiles = [
+          "file_screenClientXYConst.html",
+          "file_childIframe.html",
+          "file_doubleLock.html",
+          "file_escapeKey.html",
+          "file_infiniteMovement.html",
+          "file_locksvgelement.html",
+          "file_movementXY.html",
+          "file_nestedFullScreen.html",
+          "file_pointerlock-api.html",
+          "file_pointerlockerror.html",
+          "file_pointerLockPref.html",
+          "file_removedFromDOM.html",
+          "file_retargetMouseEvents.html",
+          "file_suppressSomeMouseEvents.html",
+          "file_targetOutOfFocus.html",
+          "file_withoutDOM.html"
+        ];
+
+        var gTestWindow = null;
+        var gTestIndex = 0;
+
+        // TODO: if ever we remove these checks for XP and Lion, we should do the same
+        // in content/html/content/test/test_fullscreen-api.html, which uses the same pattern.
+        const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
+        const isOSXLion = navigator.userAgent.indexOf("Mac OS X 10.7") != -1;
+
+        function nextTest() {
+          if (isWinXP) {
+            todo(false, "Can't reliably run full-screen tests on Windows XP due to bug 704010");
+            SimpleTest.finish();
+            return;
+          }
+          if (isOSXLion) {
+            todo(false, "Can't reliably run full-screen tests on OS X Lion, see bug 744125");
+            SimpleTest.finish();
+            return;
+          }
+          if (gTestWindow) {
+            gTestWindow.close();
+          }
+          SimpleTest.waitForFocus(runNextTest);
+        }
+
+        function runNextTest() {
+          if (gTestIndex < gTestFiles.length) {
+            gTestWindow = window.open(gTestFiles[gTestIndex], "", "width=500,height=500");
+            gTestIndex++;
+          } else {
+            SpecialPowers.clearUserPref("full-screen-api.enabled");
+            SpecialPowers.clearUserPref("full-screen-api.allow-trusted-requests-only");
+            SimpleTest.finish();
+          }
+        }
+
+        addLoadEvent(nextTest);
+      </script>
+    </pre>
+  </body>
+</html>
