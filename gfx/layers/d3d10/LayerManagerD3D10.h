@@ -184,6 +184,7 @@ public:
 
   ReadbackManagerD3D10 *readbackManager();
 
+  void SetupInputAssembler();
   void SetViewport(const nsIntSize &aViewport);
   const nsIntSize &GetViewport() { return mViewport; }
 
