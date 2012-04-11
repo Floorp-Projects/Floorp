@@ -149,17 +149,21 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
   protected Map<String, Long> idsForGUIDs(String[] guids) throws NullCursorException {
     final String where = RepoUtils.computeSQLInClause(guids.length, BrowserContract.Bookmarks.GUID);
     Cursor c = queryHelper.safeQuery(".idsForGUIDs", GUID_AND_ID, where, guids, null);
-    HashMap<String, Long> out = new HashMap<String, Long>();
-    if (!c.moveToFirst()) {
+    try {
+      HashMap<String, Long> out = new HashMap<String, Long>();
+      if (!c.moveToFirst()) {
+        return out;
+      }
+      final int guidIndex = c.getColumnIndexOrThrow(BrowserContract.Bookmarks.GUID);
+      final int idIndex = c.getColumnIndexOrThrow(BrowserContract.Bookmarks._ID);
+      while (!c.isAfterLast()) {
+        out.put(c.getString(guidIndex), c.getLong(idIndex));
+        c.moveToNext();
+      }
       return out;
+    } finally {
+      c.close();
     }
-    final int guidIndex = c.getColumnIndexOrThrow(BrowserContract.Bookmarks.GUID);
-    final int idIndex = c.getColumnIndexOrThrow(BrowserContract.Bookmarks._ID);
-    while (!c.isAfterLast()) {
-      out.put(c.getString(guidIndex), c.getLong(idIndex));
-      c.moveToNext();
-    }
-    return out;
   }
 
   /**
