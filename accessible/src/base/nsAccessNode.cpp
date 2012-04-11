@@ -209,17 +209,6 @@ void nsAccessNode::ShutdownXPAccessibility()
   NotifyA11yInitOrShutdown(false);
 }
 
-// nsAccessNode protected
-nsPresContext* nsAccessNode::GetPresContext()
-{
-  if (!mDoc)
-    return nsnull;
-
-  nsIPresShell* presShell(mDoc->PresShell());
-
-  return presShell ? presShell->GetPresContext() : nsnull;
-}
-
 nsRootAccessible*
 nsAccessNode::RootAccessible() const
 {
