@@ -57,7 +57,7 @@
 #include "gfxXlibSurface.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
-#include "gfxPlatform.h"
+#include "gfxPlatformGtk.h"
 #include "GLContext.h"
 #include "gfxUtils.h"
 
@@ -251,7 +251,7 @@ GLXLibrary::EnsureInitialized()
         GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols_texturefrompixmap, 
                                          (GLLibraryLoader::PlatformLookupFunction)&xGetProcAddress))
     {
-        mHasTextureFromPixmap = true;
+        mUseTextureFromPixmap = gfxPlatformGtk::UseXRender();
     } else {
         NS_WARNING("Texture from pixmap disabled");
     }
@@ -278,7 +278,7 @@ GLXLibrary::SupportsTextureFromPixmap(gfxASurface* aSurface)
         return false;
     }
     
-    if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib || !mHasTextureFromPixmap) {
+    if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib || !mUseTextureFromPixmap) {
         return false;
     }
 
@@ -328,7 +328,7 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
 void
 GLXLibrary::DestroyPixmap(GLXPixmap aPixmap)
 {
-    if (!mHasTextureFromPixmap) {
+    if (!mUseTextureFromPixmap) {
         return;
     }
 
@@ -339,7 +339,7 @@ GLXLibrary::DestroyPixmap(GLXPixmap aPixmap)
 void
 GLXLibrary::BindTexImage(GLXPixmap aPixmap)
 {    
-    if (!mHasTextureFromPixmap) {
+    if (!mUseTextureFromPixmap) {
         return;
     }
 
@@ -352,7 +352,7 @@ GLXLibrary::BindTexImage(GLXPixmap aPixmap)
 void
 GLXLibrary::ReleaseTexImage(GLXPixmap aPixmap)
 {
-    if (!mHasTextureFromPixmap) {
+    if (!mUseTextureFromPixmap) {
         return;
     }
 
@@ -843,7 +843,7 @@ TRY_AGAIN_NO_SHARING:
 
     bool TextureImageSupportsGetBackingSurface()
     {
-        return sGLXLibrary.HasTextureFromPixmap();
+        return sGLXLibrary.UseTextureFromPixmap();
     }
 
     virtual already_AddRefed<TextureImage>
