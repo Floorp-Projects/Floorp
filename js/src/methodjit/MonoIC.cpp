@@ -959,6 +959,8 @@ class CallCompiler : public BaseCompiler
         bool lowered = ic.frameSize.lowered(f.pc());
         JS_ASSERT_IF(lowered, !callingNew);
 
+        StackFrame *initialFp = f.fp();
+
         stubs::UncachedCallResult ucr;
         if (callingNew)
             stubs::UncachedNewHelper(f, ic.frameSize.staticArgc(), &ucr);
@@ -967,8 +969,9 @@ class CallCompiler : public BaseCompiler
 
         // Watch out in case the IC was invalidated by a recompilation on the calling
         // script. This can happen either if the callee is executed or if it compiles
-        // and the compilation has a static overflow.
-        if (monitor.recompiled())
+        // and the compilation has a static overflow. Also watch for cases where
+        // an exception is thrown and the callee frame hasn't unwound yet.
+        if (monitor.recompiled() || f.fp() != initialFp)
             return ucr.codeAddr;
 
         // If the function cannot be jitted (generally unjittable or empty script),

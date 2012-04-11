@@ -290,7 +290,17 @@ include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
 ifndef UNIVERSAL_BINARY
 PKG_STAGE = $(DIST)/test-package-stage
-package-tests: stage-mochitest stage-reftest stage-xpcshell stage-jstests stage-jetpack stage-firebug stage-peptest stage-mozbase
+package-tests: \
+  stage-mochitest \
+  stage-reftest \
+  stage-xpcshell \
+  stage-jstests \
+  stage-jetpack \
+  stage-firebug \
+  stage-peptest \
+  stage-mozbase \
+  stage-tps \
+  $(NULL)
 else
 # This staging area has been built for us by universal/flight.mk
 PKG_STAGE = $(DIST)/universal/test-package-stage
@@ -350,12 +360,36 @@ stage-firebug: make-stage-dir
 stage-peptest: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/peptest stage-package
 
+stage-tps: make-stage-dir
+	$(NSINSTALL) -D $(PKG_STAGE)/tps/tests
+	@(cd $(topsrcdir)/testing/tps && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/tps && tar -xf -)
+	@(cd $(topsrcdir)/services/sync/tps && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/tps && tar -xf -)
+	@(cd $(topsrcdir)/services/sync/tests/tps && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/tps/tests && tar -xf -)
+
 stage-mozbase: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/mozbase stage-package
 .PHONY: \
-  mochitest mochitest-plain mochitest-chrome mochitest-a11y mochitest-ipcplugins \
-  reftest crashtest \
+  mochitest \
+  mochitest-plain \
+  mochitest-chrome \
+  mochitest-a11y \
+  mochitest-ipcplugins \
+  reftest \
+  crashtest \
   xpcshell-tests \
   jstestbrowser \
   peptest \
-  package-tests make-stage-dir stage-mochitest stage-reftest stage-xpcshell stage-jstests stage-android stage-jetpack stage-firebug stage-peptest stage-mozbase
+  package-tests \
+  make-stage-dir \
+  stage-mochitest \
+  stage-reftest \
+  stage-xpcshell \
+  stage-jstests \
+  stage-android \
+  stage-jetpack \
+  stage-firebug \
+  stage-peptest \
+  stage-mozbase \
+  stage-tps \
+  $(NULL)
+

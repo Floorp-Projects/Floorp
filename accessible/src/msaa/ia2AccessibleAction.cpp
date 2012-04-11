@@ -73,7 +73,7 @@ __try {
 
   nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
   if (acc->IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
   *aActionCount = acc->ActionCount();
   return S_OK;
@@ -88,7 +88,7 @@ ia2AccessibleAction::doAction(long aActionIndex)
 __try {
   nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
   if (acc->IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
   PRUint8 index = static_cast<PRUint8>(aActionIndex);
   nsresult rv = acc->DoAction(index);
@@ -106,7 +106,7 @@ __try {
 
   nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
   if (acc->IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
   nsAutoString description;
   PRUint8 index = static_cast<PRUint8>(aActionIndex);
@@ -144,7 +144,7 @@ __try {
 
   nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
   if (acc->IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
   // Expose keyboard shortcut if it's not exposed via MSAA keyboard shortcut.
   KeyBinding keyBinding = acc->AccessKey();
@@ -183,7 +183,7 @@ __try {
 
   nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
   if (acc->IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
   nsAutoString name;
   PRUint8 index = static_cast<PRUint8>(aActionIndex);
