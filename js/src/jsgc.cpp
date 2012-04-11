@@ -4414,7 +4414,7 @@ MaybeVerifyBarriers(JSContext *cx, bool always)
 static void ReleaseAllJITCode(FreeOp *fop)
 {
 #ifdef JS_METHODJIT
-    for (GCCompartmentsIter c(fop->runtime()); !c.done(); c.next()) {
+    for (CompartmentsIter c(fop->runtime()); !c.done(); c.next()) {
         mjit::ClearAllFrames(c);
         for (CellIter i(c, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
@@ -4494,7 +4494,7 @@ StopPCCountProfiling(JSContext *cx)
     if (!vec)
         return;
 
-    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
         for (CellIter i(c, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
             if (script->hasScriptCounts && script->types) {
