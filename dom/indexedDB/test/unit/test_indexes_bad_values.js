@@ -7,9 +7,6 @@ var testGenerator = testSteps();
 
 function testSteps()
 {
-  const CONSTRAINT_ERR =
-    Components.interfaces.nsIIDBDatabaseException.CONSTRAINT_ERR;
-
   const name = this.window ? window.location.pathname : "Splendid Test";
   const description = "My Test Database";
 

@@ -52,7 +52,7 @@
     objectStore = trans.objectStore(objectStoreName);
 
     request = objectStore.add(fileData.file, fileData.key);
-    request.onerror = new ExpectError(IDBDatabaseException.UNKNOWN_ERR);
+    request.onerror = new ExpectError("UnknownError");
     request.onsuccess = unexpectedSuccessHandler;
     event = yield;
 

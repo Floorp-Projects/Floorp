@@ -178,7 +178,7 @@ function testSteps()
   is(event.target.result, key1, "put gave back the same key");
 
   request = objectStore.add({id:10});
-  request.onerror = new ExpectError(IDBDatabaseException.CONSTRAINT_ERR);
+  request.onerror = new ExpectError("ConstraintError");
   request.onsuccess = unexpectedSuccessHandler;
   event = yield;
 
