@@ -792,6 +792,15 @@ CastToJSFreeOp(FreeOp *fop)
     return reinterpret_cast<JSFreeOp *>(fop);
 }
 
+/* Implemented in jsexn.cpp. */
+
+/*
+ * Get an error type name from a number.
+ * If no exception is associated, return NULL.
+ */
+extern JS_FRIEND_API(const jschar*)
+GetErrorTypeNameFromNumber(JSContext* cx, const unsigned errorNumber);
+
 } /* namespace js */
 
 #endif
