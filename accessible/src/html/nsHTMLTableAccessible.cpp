@@ -443,8 +443,8 @@ nsHTMLTableAccessible::
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLTableAccessible: nsISupports implementation
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLTableAccessible, nsAccessible,
-                             nsHTMLTableAccessible, nsIAccessibleTable)
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTableAccessible, nsAccessible,
+                             nsIAccessibleTable)
 
 ////////////////////////////////////////////////////////////////////////////////
 //nsAccessNode

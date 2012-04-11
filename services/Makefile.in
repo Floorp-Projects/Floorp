@@ -43,7 +43,7 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_SERVICES_SYNC
-PARALLEL_DIRS += crypto sync
+PARALLEL_DIRS += common crypto sync
 endif
 
 include $(topsrcdir)/config/rules.mk

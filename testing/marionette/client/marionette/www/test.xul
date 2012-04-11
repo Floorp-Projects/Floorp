@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!DOCTYPE window [
+]>
+
+<dialog id="dia"
+            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <vbox id="things">
+    <checkbox id="testBox"  label="box" />
+    <textbox id="textInput"  size="6" value="test" label="input" />
+    <textbox id="textInput2"  size="6" value="test" label="input" />
+    <textbox id="textInput3" class="asdf" size="6" value="test" label="input" />
+  </vbox>
+     
+</dialog>

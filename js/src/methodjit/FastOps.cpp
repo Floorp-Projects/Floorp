@@ -1261,7 +1261,7 @@ mjit::Compiler::convertForTypedArray(int atype, ValueRemat *vr, bool *allocated)
                     i32 = ClampIntForUint8Array(i32);
             } else {
                 i32 = (atype == TypedArray::TYPE_UINT8_CLAMPED)
-                    ? js_TypedArray_uint8_clamp_double(v.toDouble())
+                    ? ClampDoubleToUint8(v.toDouble())
                     : js_DoubleToECMAInt32(v.toDouble());
             }
             *vr = ValueRemat::FromConstant(Int32Value(i32));
@@ -2127,7 +2127,7 @@ mjit::Compiler::jsop_getelem()
     // we can generate code directly without using an inline cache.
     if (cx->typeInferenceEnabled() && !id->isType(JSVAL_TYPE_STRING)) {
         types::TypeSet *types = analysis->poppedTypes(PC, 1);
-        if (types->isLazyArguments(cx) && !outerScript->analysis()->modifiesArguments()) {
+        if (types->isMagicArguments(cx) && !outerScript->analysis()->modifiesArguments()) {
             // Inline arguments path.
             jsop_getelem_args();
             return true;

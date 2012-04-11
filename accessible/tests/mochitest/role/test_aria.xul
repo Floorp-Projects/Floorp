@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessibility Name Calculating Test.">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+
+  <script type="application/javascript">
+  <![CDATA[
+    function doTest()
+    {
+      ok(!isAccessible("presentation_label"),
+                      "Presentation label shouldn't be accessible.");
+      ok(!isAccessible("presentation_descr"),
+                      "Presentation description shouldn't be accessible.");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=494345"
+       title="Do not create accessibles for XUL label or description having a role of 'presentation'">
+      Mozilla Bug 494345
+    </a>
+  <p id="display"></p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+  <vbox flex="1">
+    <label id="presentation_label" role="presentation" value="label"/>
+    <description id="presentation_descr" role="presentation" value="description"/>
+  </vbox>
+
+  
+  </hbox>  
+</window>
+

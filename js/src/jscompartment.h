@@ -468,6 +468,8 @@ struct JSCompartment
 
   public:
     js::WatchpointMap *watchpointMap;
+
+    js::ScriptCountsMap *scriptCountsMap;
 	
 #ifdef JS_ION
   private:
@@ -479,7 +481,6 @@ struct JSCompartment
         return ionCompartment_;
     }
 #endif
-
 };
 
 #define JS_PROPERTY_TREE(cx)    ((cx)->compartment->propertyTree)

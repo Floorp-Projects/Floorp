@@ -294,9 +294,10 @@ nsHttpPipeline::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
     trans->Close(reason);
     NS_RELEASE(trans);
 
-    if (killPipeline)
+    if (killPipeline) {
         // reschedule anything from this pipeline onto a different connection
         CancelPipeline(reason);
+    }
 }
 
 void
@@ -843,7 +844,9 @@ nsHttpPipeline::CancelPipeline(nsresult originalReason)
     mRequestQ.Clear();
 
     // any pending responses can be restarted except for the first one,
-    // that we might want to finish on this pipeline or cancel individually
+    // that we might want to finish on this pipeline or cancel individually.
+    // Higher levels of callers ensure that we don't process non-idempotent
+    // tranasction with the NS_HTTP_ALLOW_PIPELINING bit set
     for (i = 1; i < respLen; ++i) {
         trans = Response(i);
         trans->Close(NS_ERROR_NET_RESET);

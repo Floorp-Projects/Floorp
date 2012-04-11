@@ -2440,6 +2440,34 @@ nsLocalFile::GetBundleIdentifier(nsACString& outBundleIdentifier)
   return rv;
 }
 
+NS_IMETHODIMP
+nsLocalFile::GetBundleContentsLastModifiedTime(PRInt64 *aLastModTime)
+{
+  CHECK_mPath();
+  NS_ENSURE_ARG_POINTER(aLastModTime);
+
+  bool isPackage = false;
+  nsresult rv = IsPackage(&isPackage);
+  if (NS_FAILED(rv) || !isPackage) {
+    return GetLastModifiedTime(aLastModTime);
+  }
+
+  nsCAutoString infoPlistPath(mPath);
+  infoPlistPath.AppendLiteral("/Contents/Info.plist");
+  PRFileInfo64 info;
+  if (PR_GetFileInfo64(infoPlistPath.get(), &info) != PR_SUCCESS) {
+    return GetLastModifiedTime(aLastModTime);
+  }
+  PRInt64 modTime = PRInt64(info.modifyTime);
+  if (modTime == 0) {
+    *aLastModTime = 0;
+  } else {
+    *aLastModTime = modTime / PRInt64(PR_USEC_PER_MSEC);
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsLocalFile::InitWithFile(nsIFile *aFile)
 {
   NS_ENSURE_ARG(aFile);

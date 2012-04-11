@@ -42,7 +42,6 @@
 #include "nsHttp.h"
 #include "nsHttpConnectionInfo.h"
 #include "nsAHttpTransaction.h"
-#include "nsHttpPipeline.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
