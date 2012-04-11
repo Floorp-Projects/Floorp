@@ -101,7 +101,6 @@ void SpriteController::disposeSurfaceLocked(const sp<SurfaceControl>& surfaceCon
         mLooper->sendMessage(mHandler, Message(MSG_DISPOSE_SURFACES));
     }
 }
-#endif
 
 void SpriteController::handleMessage(const Message& message) {
     switch (message.what) {
@@ -113,6 +112,7 @@ void SpriteController::handleMessage(const Message& message) {
         break;
     }
 }
+#endif
 
 void SpriteController::doUpdateSprites() {
     // Collect information about sprite updates.

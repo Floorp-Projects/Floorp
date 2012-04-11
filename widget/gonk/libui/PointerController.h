@@ -141,7 +141,11 @@ public:
  *
  * Handles pointer acceleration and animation.
  */
+#ifdef HAVE_ANDROID_OS
 class PointerController : public PointerControllerInterface, public MessageHandler {
+#else
+class PointerController : public PointerControllerInterface {
+#endif
 protected:
     virtual ~PointerController();
 
@@ -243,7 +247,9 @@ private:
     bool getBoundsLocked(float* outMinX, float* outMinY, float* outMaxX, float* outMaxY) const;
     void setPositionLocked(float x, float y);
 
+#ifdef HAVE_ANDROID_OS
     void handleMessage(const Message& message);
+#endif
     void doAnimate();
     void doInactivityTimeout();
 
