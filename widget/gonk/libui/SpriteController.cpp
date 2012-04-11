@@ -35,16 +35,18 @@ namespace android {
 
 SpriteController::SpriteController(const sp<Looper>& looper, int32_t overlayLayer) :
         mLooper(looper), mOverlayLayer(overlayLayer) {
+#ifdef HAVE_ANDROID_OS
     mHandler = new WeakMessageHandler(this);
+#endif
 
     mLocked.transactionNestingCount = 0;
     mLocked.deferredSpriteUpdate = false;
 }
 
 SpriteController::~SpriteController() {
+#ifdef HAVE_ANDROID_OS
     mLooper->removeMessages(mHandler);
 
-#ifdef HAVE_ANDROID_OS
     if (mSurfaceComposerClient != NULL) {
         mSurfaceComposerClient->dispose();
         mSurfaceComposerClient.clear();
@@ -71,7 +73,9 @@ void SpriteController::closeTransaction() {
     mLocked.transactionNestingCount -= 1;
     if (mLocked.transactionNestingCount == 0 && mLocked.deferredSpriteUpdate) {
         mLocked.deferredSpriteUpdate = false;
+#ifdef HAVE_ANDROID_OS
         mLooper->sendMessage(mHandler, Message(MSG_UPDATE_SPRITES));
+#endif
     }
 }
 
@@ -82,7 +86,9 @@ void SpriteController::invalidateSpriteLocked(const sp<SpriteImpl>& sprite) {
         if (mLocked.transactionNestingCount != 0) {
             mLocked.deferredSpriteUpdate = true;
         } else {
+#ifdef HAVE_ANDROID_OS
             mLooper->sendMessage(mHandler, Message(MSG_UPDATE_SPRITES));
+#endif
         }
     }
 }
