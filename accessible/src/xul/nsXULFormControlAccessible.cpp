@@ -728,25 +728,22 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsXULTextFieldAccessible, nsAccessible, nsHyperText
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTextFieldAccessible: nsIAccessible
 
-NS_IMETHODIMP nsXULTextFieldAccessible::GetValue(nsAString& aValue)
+void
+nsXULTextFieldAccessible::Value(nsString& aValue)
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  PRUint64 state = NativeState();
-
-  if (state & states::PROTECTED)    // Don't return password text!
-    return NS_ERROR_FAILURE;
+  aValue.Truncate();
+  if (NativeRole() == roles::PASSWORD_TEXT) // Don't return password text!
+    return;
 
   nsCOMPtr<nsIDOMXULTextBoxElement> textBox(do_QueryInterface(mContent));
   if (textBox) {
-    return textBox->GetValue(aValue);
+    textBox->GetValue(aValue);
+    return;
   }
+
   nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mContent));
-  if (menuList) {
-    return menuList->GetLabel(aValue);
-  }
-  return NS_ERROR_FAILURE;
+  if (menuList)
+    menuList->GetLabel(aValue);
 }
 
 void

@@ -314,7 +314,7 @@ def process_explicit_remove_files(dir_path, patch_info):
                 patch_info.append_remove_instruction(line)
 
 def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch_info, forced_updates):
-    """ Builds a partial patch by comparing the files in from_dir_path to thoes of to_dir_path"""
+    """ Builds a partial patch by comparing the files in from_dir_path to those of to_dir_path"""
     # Cannocolize the paths for safey
     from_dir_path = os.path.abspath(from_dir_path)
     to_dir_path = os.path.abspath(to_dir_path)

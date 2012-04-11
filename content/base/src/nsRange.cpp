@@ -665,7 +665,7 @@ nsRange::ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset, PRInt16* aResult)
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
 
-  if (aOffset < 0 || aOffset > parent->Length()) {
+  if (aOffset < 0 || PRUint32(aOffset) > parent->Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
   
@@ -929,7 +929,7 @@ nsRange::SetStart(nsINode* aParent, PRInt32 aOffset)
   nsINode* newRoot = IsValidBoundary(aParent);
   NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
 
-  if (aOffset < 0 || aOffset > aParent->Length()) {
+  if (aOffset < 0 || PRUint32(aOffset) > aParent->Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
@@ -993,7 +993,7 @@ nsRange::SetEnd(nsINode* aParent, PRInt32 aOffset)
   nsINode* newRoot = IsValidBoundary(aParent);
   NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
 
-  if (aOffset < 0 || aOffset > aParent->Length()) {
+  if (aOffset < 0 || PRUint32(aOffset) > aParent->Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 

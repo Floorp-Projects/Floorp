@@ -74,13 +74,11 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULTreeAccessible,
                                            nsAccessible)
 
-  // nsIAccessible
-  NS_IMETHOD GetValue(nsAString& aValue);
-
   // nsAccessNode
   virtual void Shutdown();
 
   // nsAccessible
+  virtual void Value(nsString& aValue);
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual nsAccessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,

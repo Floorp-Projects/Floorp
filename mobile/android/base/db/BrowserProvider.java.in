@@ -66,13 +66,13 @@ public class BrowserProvider extends ContentProvider {
 
     static final String DATABASE_NAME = "browser.db";
 
-    static final int DATABASE_VERSION = 6;
+    static final int DATABASE_VERSION = 8;
 
     // Maximum age of deleted records to be cleaned up (20 days in ms)
     static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
 
     // Number of records marked as deleted to be removed
-    static final long DELETED_RECORDS_PURGE_LIMIT = 7;
+    static final long DELETED_RECORDS_PURGE_LIMIT = 5;
 
     // How many records to reposition in a single query.
     // This should be less than the SQLite maximum number of query variables
@@ -810,6 +810,40 @@ public class BrowserProvider extends ContentProvider {
             migrateImagesTable(db);
         }
 
+        private void upgradeDatabaseFrom7to8(SQLiteDatabase db) {
+            debug("Combining history entries with the same URL");
+
+            final String TABLE_DUPES = "duped_urls";
+            final String TOTAL = "total";
+            final String LATEST = "latest";
+            final String WINNER = "winner";
+
+            db.execSQL("CREATE TEMP TABLE " + TABLE_DUPES + " AS" +
+                      " SELECT " + History.URL + ", " +
+                                  "SUM(" + History.VISITS + ") AS " + TOTAL + ", " +
+                                  "MAX(" + History.DATE_MODIFIED + ") AS " + LATEST + ", " +
+                                  "MAX(" + History._ID + ") AS " + WINNER +
+                      " FROM " + TABLE_HISTORY +
+                      " GROUP BY " + History.URL +
+                      " HAVING count(" + History.URL + ") > 1");
+
+            db.execSQL("CREATE UNIQUE INDEX " + TABLE_DUPES + "_url_index ON " +
+                       TABLE_DUPES + " (" + History.URL + ")");
+
+            final String fromClause = " FROM " + TABLE_DUPES + " WHERE " +
+                                      qualifyColumn(TABLE_DUPES, History.URL) + " = " +
+                                      qualifyColumn(TABLE_HISTORY, History.URL);
+
+            db.execSQL("UPDATE " + TABLE_HISTORY +
+                      " SET " + History.VISITS + " = (SELECT " + TOTAL + fromClause + "), " +
+                                History.DATE_MODIFIED + " = (SELECT " + LATEST + fromClause + "), " +
+                                History.IS_DELETED + " = " +
+                                    "(" + History._ID + " <> (SELECT " + WINNER + fromClause + "))" +
+                      " WHERE " + History.URL + " IN (SELECT " + History.URL + " FROM " + TABLE_DUPES + ")");
+
+            db.execSQL("DROP TABLE " + TABLE_DUPES);
+        }
+
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             debug("Upgrading browser.db: " + db.getPath() + " from " +
@@ -844,6 +878,9 @@ public class BrowserProvider extends ContentProvider {
                     case 7:
                         upgradeDatabaseFrom6to7(db);
                         break;
+
+                    case 8:
+                        upgradeDatabaseFrom7to8(db);
                  }
              }
 
@@ -1039,6 +1076,16 @@ public class BrowserProvider extends ContentProvider {
     private boolean shouldShowDeleted(Uri uri) {
         String showDeleted = uri.getQueryParameter(BrowserContract.PARAM_SHOW_DELETED);
         return !TextUtils.isEmpty(showDeleted);
+    }
+
+    private boolean shouldUpdateOrInsert(Uri uri) {
+        String insertIfNeeded = uri.getQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED);
+        return Boolean.parseBoolean(insertIfNeeded);
+    }
+
+    private boolean shouldIncrementVisits(Uri uri) {
+        String incrementVisits = uri.getQueryParameter(BrowserContract.PARAM_INCREMENT_VISITS);
+        return Boolean.parseBoolean(incrementVisits);
     }
 
     @Override
@@ -1256,29 +1303,7 @@ public class BrowserProvider extends ContentProvider {
 
             case HISTORY: {
                 trace("Insert on HISTORY: " + uri);
-
-                long now = System.currentTimeMillis();
-                values.put(History.DATE_CREATED, now);
-                values.put(History.DATE_MODIFIED, now);
-
-                // Generate GUID for new history entry. Don't override specified GUIDs.
-                if (!values.containsKey(History.GUID)) {
-                  values.put(History.GUID, Utils.generateGuid());
-                }
-
-                String url = values.getAsString(History.URL);
-
-                ContentValues imageValues = extractImageValues(values,
-                        values.getAsString(History.URL));
-
-                if (imageValues != null) {
-                    debug("Inserting history image for URL: " + url);
-                    updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
-                            new String[] { url });
-                }
-
-                debug("Inserting history in database with URL: " + url);
-                id = db.insertOrThrow(TABLE_HISTORY, History.VISITS, values);
+                id = insertHistory(uri, values);
                 break;
             }
 
@@ -1391,7 +1416,10 @@ public class BrowserProvider extends ContentProvider {
                 // fall through
             case HISTORY: {
                 debug("Updating history: " + uri);
-                updated = updateHistory(uri, values, selection, selectionArgs);
+                if (shouldUpdateOrInsert(uri))
+                    updated = updateOrInsertHistory(uri, values, selection, selectionArgs);
+                else
+                    updated = updateHistory(uri, values, selection, selectionArgs);
                 break;
             }
 
@@ -1825,6 +1853,49 @@ public class BrowserProvider extends ContentProvider {
         return updated;
     }
 
+    long insertHistory(Uri uri, ContentValues values) {
+        final SQLiteDatabase db = getWritableDatabase(uri);
+
+        long now = System.currentTimeMillis();
+        values.put(History.DATE_CREATED, now);
+        values.put(History.DATE_MODIFIED, now);
+
+        // Generate GUID for new history entry. Don't override specified GUIDs.
+        if (!values.containsKey(History.GUID)) {
+          values.put(History.GUID, Utils.generateGuid());
+        }
+
+        String url = values.getAsString(History.URL);
+        ContentValues imageValues = extractImageValues(values, url);
+
+        if (imageValues != null) {
+            debug("Inserting history image for URL: " + url);
+            updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
+                    new String[] { url });
+        }
+
+        debug("Inserting history in database with URL: " + url);
+        return db.insertOrThrow(TABLE_HISTORY, History.VISITS, values);
+    }
+
+    int updateOrInsertHistory(Uri uri, ContentValues values, String selection,
+            String[] selectionArgs) {
+        int updated = updateHistory(uri, values, selection, selectionArgs);
+        if (updated > 0)
+            return updated;
+
+        // Insert a new entry if necessary
+        if (!values.containsKey(History.VISITS))
+            values.put(History.VISITS, 1);
+        if (!values.containsKey(History.TITLE))
+            values.put(History.TITLE, values.getAsString(History.URL));
+
+        insertHistory(uri, values);
+
+        // Return 0 if we added a new row
+        return 0;
+    }
+
     int updateHistory(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
         trace("Updating history on URI: " + uri);
@@ -1832,8 +1903,10 @@ public class BrowserProvider extends ContentProvider {
         final SQLiteDatabase db = getWritableDatabase(uri);
         int updated = 0;
 
-        final String[] historyProjection = new String[] { History._ID, // 0
-                History.URL, // 1
+        final String[] historyProjection = new String[] {
+            History._ID,   // 0
+            History.URL,   // 1
+            History.VISITS // 2
         };
 
         Cursor cursor = db.query(TABLE_HISTORY, historyProjection, selection,
@@ -1854,6 +1927,14 @@ public class BrowserProvider extends ContentProvider {
                 long id = cursor.getLong(0);
 
                 trace("Updating history entry with ID: " + id);
+
+                if (shouldIncrementVisits(uri)) {
+                    long existing = cursor.getLong(2);
+                    Long additional = values.getAsLong(History.VISITS);
+
+                    // Increment visit count by a specified amount, or default to increment by 1
+                    values.put(History.VISITS, existing + ((additional != null) ? additional.longValue() : 1));
+                }
 
                 updated += db.update(TABLE_HISTORY, values, "_id = ?",
                         new String[] { Long.toString(id) });

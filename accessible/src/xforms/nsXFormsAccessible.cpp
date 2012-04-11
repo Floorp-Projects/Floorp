@@ -145,16 +145,6 @@ nsXFormsAccessible::CacheSelectChildren(nsIDOMNode *aContainerNode)
   }
 }
 
-// nsIAccessible
-
-NS_IMETHODIMP
-nsXFormsAccessible::GetValue(nsAString& aValue)
-{
-  NS_ENSURE_TRUE(sXFormsService, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
-  return sXFormsService->GetValue(DOMNode, aValue);
-}
-
 PRUint64
 nsXFormsAccessible::NativeState()
 {
@@ -211,6 +201,13 @@ nsXFormsAccessible::Description(nsString& aDescription)
 
   if (aDescription.IsEmpty())
     GetBoundChildElementValue(NS_LITERAL_STRING("hint"), aDescription);
+}
+
+void
+nsXFormsAccessible::Value(nsString& aValue)
+{
+  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
+  sXFormsService->GetValue(DOMNode, aValue);
 }
 
 bool
@@ -545,11 +542,11 @@ nsXFormsSelectableItemAccessible::
 {
 }
 
-NS_IMETHODIMP
-nsXFormsSelectableItemAccessible::GetValue(nsAString& aValue)
+void
+nsXFormsSelectableItemAccessible::Value(nsString& aValue)
 {
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
-  return sXFormsService->GetValue(DOMNode, aValue);
+  sXFormsService->GetValue(DOMNode, aValue);
 }
 
 PRUint8

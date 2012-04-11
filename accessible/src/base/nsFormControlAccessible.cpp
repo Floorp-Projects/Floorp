@@ -110,32 +110,29 @@ ProgressMeterAccessible<Max>::IsWidget() const
 // nsIAccessibleValue
 
 template<int Max>
-NS_IMETHODIMP
-ProgressMeterAccessible<Max>::GetValue(nsAString& aValue)
+void
+ProgressMeterAccessible<Max>::Value(nsString& aValue)
 {
-  nsresult rv = nsFormControlAccessible::GetValue(aValue);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  nsFormControlAccessible::Value(aValue);
   if (!aValue.IsEmpty())
-    return NS_OK;
+    return;
 
   double maxValue = 0;
-  rv = GetMaximumValue(&maxValue);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = GetMaximumValue(&maxValue);
+  NS_ENSURE_SUCCESS(rv, );
+  if (maxValue == 0)
+    return;
 
   double curValue = 0;
-  rv = GetCurrentValue(&curValue);
-  NS_ENSURE_SUCCESS(rv, rv);
+  GetCurrentValue(&curValue);
+  NS_ENSURE_SUCCESS(rv, );
 
   // Treat the current value bigger than maximum as 100%.
   double percentValue = (curValue < maxValue) ?
     (curValue / maxValue) * 100 : 100;
 
-  nsAutoString value;
-  value.AppendFloat(percentValue); // AppendFloat isn't available on nsAString
-  value.AppendLiteral("%");
-  aValue = value;
-  return NS_OK;
+  aValue.AppendFloat(percentValue);
+  aValue.AppendLiteral("%");
 }
 
 template<int Max>

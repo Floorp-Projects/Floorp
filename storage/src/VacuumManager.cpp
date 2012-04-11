@@ -42,7 +42,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "nsIObserverService.h"
-#include "nsPrintfCString.h"
 #include "nsIFile.h"
 #include "nsThreadUtils.h"
 #include "prlog.h"
@@ -230,9 +229,11 @@ Vacuumer::execute()
   // Execute the statements separately, since the pragma may conflict with the
   // vacuum, if they are executed in the same transaction.
   nsCOMPtr<mozIStorageAsyncStatement> pageSizeStmt;
-  rv = mDBConn->CreateAsyncStatement(nsPrintfCString(
-    MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA page_size = %ld", expectedPageSize
-  ), getter_AddRefs(pageSizeStmt));
+  nsCAutoString pageSizeQuery(MOZ_STORAGE_UNIQUIFY_QUERY_STR
+                              "PRAGMA page_size = ");
+  pageSizeQuery.AppendInt(expectedPageSize);
+  rv = mDBConn->CreateAsyncStatement(pageSizeQuery,
+                                     getter_AddRefs(pageSizeStmt));
   NS_ENSURE_SUCCESS(rv, false);
   nsCOMPtr<BaseCallback> callback = new BaseCallback();
   nsCOMPtr<mozIStoragePendingStatement> ps;
