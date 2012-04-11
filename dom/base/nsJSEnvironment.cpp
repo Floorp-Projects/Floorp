@@ -487,10 +487,15 @@ NS_ScriptErrorReporter(JSContext *cx,
         fileName.AssignWithConversion(report->filename);
       }
 
-      const PRUnichar *m = reinterpret_cast<const PRUnichar*>
-                                             (report->ucmessage);
+      const PRUnichar* m = static_cast<const PRUnichar*>(report->ucmessage);
       if (m) {
-        msg.Assign(m);
+        const PRUnichar* n = static_cast<const PRUnichar*>
+            (js::GetErrorTypeNameFromNumber(cx, report->errorNumber));
+        if (n) {
+          msg.Assign(n);
+          msg.AppendLiteral(": ");
+        }
+        msg.Append(m);
       }
 
       if (msg.IsEmpty() && message) {
