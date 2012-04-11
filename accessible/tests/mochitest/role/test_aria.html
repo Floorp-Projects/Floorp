@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test weak ARIA roles</title>
+
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+
+    function doTest()
+    {
+      // Note:
+      // The phrase "weak foo" here means that there is no good foo-to-platform
+      // role mapping. Similarly "strong foo" means there is a good foo-to-
+      // platform role mapping.
+
+      testRole("articlemain", ROLE_DOCUMENT);
+      testRole("articleform", ROLE_FORM);
+
+      // Test article exposed as document
+      testRole("testArticle", ROLE_DOCUMENT);
+
+      // weak roles that are forms of "live regions"
+      testRole("log_table", ROLE_TABLE);
+      testRole("timer_div", ROLE_SECTION);
+
+      // other roles that are forms of "live regions"
+      testRole("marquee_h1", ROLE_ANIMATION);
+
+      // strong landmark
+      testRole("application", ROLE_APPLICATION);
+      testRole("form", ROLE_FORM);
+      testRole("application_table", ROLE_APPLICATION);
+
+      // weak landmarks
+      var weak_landmarks = ["banner", "complementary", "contentinfo",
+          "main", "navigation", "search"];
+      for (l in weak_landmarks)
+        testRole(weak_landmarks[l], ROLE_SECTION);
+
+      for (l in weak_landmarks) {
+        var id = weak_landmarks[l] + "_table";
+        testRole(id, ROLE_TABLE);
+        
+        var accessibleTable = getAccessible(id, [nsIAccessibleTable], null,
+                                            DONOTFAIL_IF_NO_INTERFACE);
+        ok(accessibleTable ? true : false,
+           "landmarked table should have nsIAccessibleTable");
+        
+        if (accessibleTable)
+          is(accessibleTable.getCellAt(0,0).firstChild.name, "hi", "no cell");
+      }
+
+      //////////////////////////////////////////////////////////////////////////
+      // test gEmptyRoleMap
+      testRole("cell", ROLE_NOTHING);
+
+      // abstract roles
+      var abstract_roles = ["composite", "landmark", "structure", "widget",
+                            "window", "input", "range", "select", "section",
+                            "sectionhead"];
+      for (a in abstract_roles)
+        testRole(abstract_roles[a], ROLE_SECTION);
+
+      //////////////////////////////////////////////////////////////////////////
+      // roles transformed by ARIA state attributes
+      testRole("togglebutton", ROLE_TOGGLE_BUTTON);
+
+      //////////////////////////////////////////////////////////////////////////
+      // misc roles
+      testRole("note", ROLE_NOTE);
+      testRole("scrollbar", ROLE_SCROLLBAR);
+      testRole("dir", ROLE_LIST);
+
+      //////////////////////////////////////////////////////////////////////////
+      // test document role map update
+      var testDoc = getAccessible(document, [nsIAccessibleDocument]);
+      testRole(testDoc, ROLE_DOCUMENT);
+      document.body.setAttribute("role", "application");
+      testRole(testDoc, ROLE_APPLICATION);
+
+      // Test equation image
+      testRole("img_eq", ROLE_FLAT_EQUATION);
+
+      // Test textual equation
+      testRole("txt_eq", ROLE_FLAT_EQUATION);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=428479">Mozilla Bug 428479</a>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=429666">Mozilla Bug 429666</a>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=481114">Mozilla Bug 481114</a>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469688">Mozilla Bug 469688</a>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469688">Mozilla Bug 520188</a>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=529289">Mozilla Bug 529289</a>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=529289">Mozilla Bug 607219</a>
+  <a target="_blank"
+     title="HTML buttons with aria-pressed not exposing IA2 TOGGLE_BUTTON role"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=725432">
+    Bug 725432
+  </a>
+  <a target="_blank"
+     title="Map ARIA role FORM"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=735645">
+    Bug 735645
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <article id="articlemain" role="main">a main area</article>
+  <article id="articleform" role="form">a form area</article>
+
+  <div id="testArticle" role="article" title="Test article">
+    <p>This is a paragraph inside the article.</p>
+  </div>
+
+  <!-- "live" roles -->
+  <table role="log" id="log_table">
+    <tr><td>Table based log</td></tr>
+  </table>
+  <h1 role="marquee" id="marquee_h1">marquee</h1>
+  <div role="timer" id="timer_div">timer</div>
+
+  <!-- landmarks -->
+  <div role="application" id="application">application</div>
+  <div role="form" id="form">form</div>
+
+  <!-- weak landmarks -->
+  <div role="banner" id="banner">banner</div>
+  <div role="complementary" id="complementary">complementary</div>
+  <div role="contentinfo" id="contentinfo">contentinfo</div>
+  <div role="main" id="main">main</div>
+  <div role="navigation" id="navigation">navigation</div>
+  <div role="search" id="search">search</div>
+
+  <!-- landmarks are tables -->
+  <table role="application" id="application_table">application table
+    <tr><td>hi<td></tr></table>
+  <table role="banner" id="banner_table">banner table
+    <tr><td>hi<td></tr></table>
+  <table role="complementary" id="complementary_table">complementary table
+    <tr><td>hi<td></tr></table>
+  <table role="contentinfo" id="contentinfo_table">contentinfo table
+    <tr><td>hi<td></tr></table>
+  <table role="main" id="main_table">main table
+    <tr><td>hi<td></tr></table>
+  <table role="navigation" id="navigation_table">navigation table
+    <tr><td>hi<td></tr></table>
+  <table role="search" id="search_table">search table
+    <tr><td>hi<td></tr></table>
+
+  <!-- test gEmptyRoleMap -->
+  <table role="button">
+    <tr>
+      <td id="cell">cell</td>
+    </tr>
+  </table>
+
+  <!-- user agents must not map abstract roles to platform API -->
+  <!-- test abstract base type roles -->
+  <div role="composite" id="composite">composite</div>
+  <div role="landmark" id="landmark">landmark</div>
+  <div role="roletype" id="roletype">roletype</div>
+  <div role="structure" id="structure">structure</div>
+  <div role="widget" id="widget">widget</div>
+  <div role="window" id="window">window</div>
+  <!-- test abstract input roles -->
+  <div role="input" id="input">input</div>
+  <div role="range" id="range">range</div>
+  <div role="select" id="select">select</div>
+  <!-- test abstract structure roles -->
+  <div role="section" id="section">section</div>
+  <div role="sectionhead" id="sectionhead">sectionhead</div>
+
+  <!-- roles transformed by ARIA state attributes -->
+  <button aria-pressed="true" id="togglebutton">
+
+  <!-- misc roles -->
+  <div role="note" id="note">note</div>
+  <div role="scrollbar" id="scrollbar">scrollbar</div>
+
+  <div id="dir" role="directory">
+    <div role="listitem">A</div>
+    <div role="listitem">B</div>
+    <div role="listitem">C</div>
+  </div>
+
+  <p>Image: 
+    <img id="img_eq" role="math" src="foo" alt="x^2 + y^2 + z^2">
+  </p>
+
+  <p>Text: 
+    <span id="txt_eq" role="math" title="x^2 + y^2 + z^2">x<sup>2</sup> + 
+      y<sup>2</sup> + z<sup>2</sup></span>
+
+</body>
+</html>

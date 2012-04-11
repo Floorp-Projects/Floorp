@@ -1172,16 +1172,10 @@ stubs::Throw(VMFrame &f)
 void JS_FASTCALL
 stubs::Arguments(VMFrame &f)
 {
-    if (!f.fp()->hasArgsObj()) {
-        /*
-         * This case occurs when checkCallApplySpeculation detects that
-         * 'f.apply' is not actually js_fun_apply. In this case, we need to
-         * report the mis-speculation which will bail
-         */
-        if (!f.fp()->script()->applySpeculationFailed(f.cx))
-            THROW();
-    }
-    f.regs.sp[0] = ObjectValue(f.fp()->argsObj());
+    ArgumentsObject *obj = ArgumentsObject::create(f.cx, f.fp());
+    if (!obj)
+        THROW();
+    f.regs.sp[0] = ObjectValue(*obj);
 }
 
 JSBool JS_FASTCALL
@@ -1728,7 +1722,7 @@ stubs::ConvertToTypedInt(JSContext *cx, Value *vp)
 
     if (vp->isDouble()) {
         if (Clamped)
-            return js_TypedArray_uint8_clamp_double(vp->toDouble());
+            return ClampDoubleToUint8(vp->toDouble());
         return js_DoubleToECMAInt32(vp->toDouble());
     }
 

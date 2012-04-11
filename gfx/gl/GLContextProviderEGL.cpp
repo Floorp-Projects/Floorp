@@ -874,7 +874,7 @@ public:
     virtual ~TextureImageEGL()
     {
         GLContext *ctx = mGLContext;
-        if (ctx->IsDestroyed() || !NS_IsMainThread()) {
+        if (ctx->IsDestroyed() || !ctx->IsOwningThreadCurrent()) {
             ctx = ctx->GetSharedContext();
         }
 
@@ -1444,20 +1444,9 @@ static const EGLint kEGLConfigAttribsRGBA32[] = {
     LOCAL_EGL_NONE
 };
 
-// Return true if a suitable EGLConfig was found and pass it out
-// through aConfig.  Return false otherwise.
-//
-// NB: It's entirely legal for the returned EGLConfig to be valid yet
-// have the value null.
 static bool
-CreateConfig(EGLConfig* aConfig)
+CreateConfig(EGLConfig* aConfig, PRInt32 depth)
 {
-    nsCOMPtr<nsIScreenManager> screenMgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
-    nsCOMPtr<nsIScreen> screen;
-    screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
-    PRInt32 depth = 24;
-    screen->GetColorDepth(&depth);
-
     EGLConfig configs[64];
     gfxASurface::gfxImageFormat format;
     const EGLint* attribs = depth == 16 ? kEGLConfigAttribsRGB16 :
@@ -1490,6 +1479,34 @@ CreateConfig(EGLConfig* aConfig)
         }
     }
     return false;
+}
+
+// Return true if a suitable EGLConfig was found and pass it out
+// through aConfig.  Return false otherwise.
+//
+// NB: It's entirely legal for the returned EGLConfig to be valid yet
+// have the value null.
+static bool
+CreateConfig(EGLConfig* aConfig)
+{
+    nsCOMPtr<nsIScreenManager> screenMgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
+    nsCOMPtr<nsIScreen> screen;
+    screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
+    PRInt32 depth = 24;
+    screen->GetColorDepth(&depth);
+
+    if (!CreateConfig(aConfig, depth)) {
+#ifdef MOZ_WIDGET_ANDROID
+        // Bug 736005
+        // Android doesn't always support 16 bit so also try 24 bit
+        if (depth == 16) {
+            return CreateConfig(aConfig, 24);
+        }
+#endif
+        return false;
+    } else {
+        return true;
+    }
 }
 
 static EGLSurface

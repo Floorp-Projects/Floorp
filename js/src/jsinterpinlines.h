@@ -954,6 +954,20 @@ UrshOperation(JSContext *cx, const Value &lhs, const Value &rhs, Value *out)
 
 #undef RELATIONAL_OP
 
+static inline bool
+GuardFunApplySpeculation(JSContext *cx, FrameRegs &regs)
+{
+    if (regs.sp[-1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
+        CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
+        if (!IsNativeFunction(args.calleev(), js_fun_apply)) {
+            if (!regs.fp()->script()->applySpeculationFailed(cx))
+                return false;
+            args[1] = ObjectValue(regs.fp()->argsObj());
+        }
+    }
+    return true;
+}
+
 }  /* namespace js */
 
 #endif /* jsinterpinlines_h__ */

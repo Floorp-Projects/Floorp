@@ -641,7 +641,8 @@ WebGLContext::InitAndValidateGL()
         //    http://www.gamedev.net/community/forums/topic.asp?topic_id=525643
         // Also, if the ATI/Windows driver implements a recent GL spec version, this shouldn't be needed anyway.
 #ifdef XP_WIN
-        if (gl->Vendor() != gl::GLContext::VendorATI)
+        if (!(gl->WorkAroundDriverBugs() &&
+              gl->Vendor() == gl::GLContext::VendorATI))
 #else
         if (true)
 #endif

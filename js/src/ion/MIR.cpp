@@ -1115,7 +1115,7 @@ MClampToUint8::foldsTo(bool useValueNumbers)
     if (input()->isConstant()) {
         const Value &v = input()->toConstant()->value();
         if (v.isDouble()) {
-            int32_t clamped = js_TypedArray_uint8_clamp_double(v.toDouble());
+            int32_t clamped = ClampDoubleToUint8(v.toDouble());
             return MConstant::New(Int32Value(clamped));
         }
         if (v.isInt32()) {

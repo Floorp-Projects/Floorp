@@ -52,7 +52,9 @@ _TEST_FILES =\
 		test_obj_group.html \
 		test_obj_group.xul \
 		test_obj_group_tree.xul \
+		test_tag.html \
 		test_text.html \
+		test_xml-roles.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

@@ -76,7 +76,7 @@ public class FennecNativeElement implements Element {
                     View view = (View)mActivity.findViewById(mId);
                     if(view != null) {
                         if (!view.performClick()) {
-                            FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_WARN,
+                            FennecNativeDriver.log(FennecNativeDriver.LogLevel.WARN,
                                 "Robocop called click on an element with no listener");
                         }
                     } else {
@@ -88,7 +88,7 @@ public class FennecNativeElement implements Element {
         try {
             syncQueue.take();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, e);
         }
     }
 
@@ -129,7 +129,7 @@ public class FennecNativeElement implements Element {
             // Wait for the UiThread code to finish running
             syncQueue.take();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, e);
         }
         if (mText == null) {
             throw new RoboCopException("getText: Text is null for view "+mId);
@@ -155,7 +155,7 @@ public class FennecNativeElement implements Element {
         try {
             syncQueue.take();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, e);
         }
         return mDisplayed;
     }

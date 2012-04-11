@@ -80,7 +80,6 @@ public:
   NS_IMETHOD GetNextSibling(nsIAccessible **aNextSibling);
   NS_IMETHOD GetPreviousSibling(nsIAccessible **aPreviousSibling);
   NS_IMETHOD GetName(nsAString &aName);
-  NS_IMETHOD GetValue(nsAString &aValue);
   NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
   NS_IMETHOD GroupPosition(PRInt32 *aGroupLevel, PRInt32 *aSimilarItemsInGroup,
                            PRInt32 *aPositionInGroup);
@@ -104,6 +103,7 @@ public:
   // nsAccessible
   virtual void ApplyARIAState(PRUint64* aState);
   virtual void Description(nsString& aDescription);
+  virtual void Value(nsString& aValue);
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 State();
   virtual PRUint64 NativeState();

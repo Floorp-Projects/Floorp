@@ -287,14 +287,14 @@ inline void
 JSFunction::setScript(JSScript *script_)
 {
     JS_ASSERT(isInterpreted());
-    script() = script_;
+    mutableScript() = script_;
 }
 
 inline void
 JSFunction::initScript(JSScript *script_)
 {
     JS_ASSERT(isInterpreted());
-    script().init(script_);
+    mutableScript().init(script_);
 }
 
 #endif /* jsfuninlines_h___ */

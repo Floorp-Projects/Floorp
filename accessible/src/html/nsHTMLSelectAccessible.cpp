@@ -587,11 +587,13 @@ nsHTMLComboboxAccessible::Description(nsString& aDescription)
     option->Description(aDescription);
 }
 
-NS_IMETHODIMP nsHTMLComboboxAccessible::GetValue(nsAString& aValue)
+void
+nsHTMLComboboxAccessible::Value(nsString& aValue)
 {
   // Use accessible name of selected option.
   nsAccessible* option = SelectedOption();
-  return option ? option->GetName(aValue) : NS_OK;
+  if (option)
+    option->GetName(aValue);
 }
 
 PRUint8

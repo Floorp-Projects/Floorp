@@ -489,7 +489,6 @@ private:
     bool oomInVector;       // True if we have OOM'd appending to a vector. 
     bool overflowICSpace;   // True if we added a constant pool in a reserved space.
     uint64_t gcNumber;
-    enum { NoApplyTricks, LazyArgsObj } applyTricks;
     PCLengthEntry *pcLengths;
 
     Compiler *thisFromCtor() { return this; }
@@ -613,7 +612,6 @@ private:
     void pushSyncedEntry(uint32_t pushed);
     bool jumpInScript(Jump j, jsbytecode *pc);
     bool compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const Value &rhs);
-    bool canUseApplyTricks();
 
     /* Emitting helpers. */
     bool constantFoldBranch(jsbytecode *target, bool taken);
@@ -669,8 +667,7 @@ private:
     void interruptCheckHelper();
     void recompileCheckHelper();
     void emitUncachedCall(uint32_t argc, bool callingNew);
-    void checkCallApplySpeculation(uint32_t callImmArgc, uint32_t speculatedArgc,
-                                   FrameEntry *origCallee, FrameEntry *origThis,
+    void checkCallApplySpeculation(uint32_t argc, FrameEntry *origCallee, FrameEntry *origThis,
                                    MaybeRegisterID origCalleeType, RegisterID origCalleeData,
                                    MaybeRegisterID origThisType, RegisterID origThisData,
                                    Jump *uncachedCallSlowRejoin, CallPatchInfo *uncachedCallPatch);
@@ -694,7 +691,6 @@ private:
     void enterBlock(StaticBlockObject *block);
     void leaveBlock();
     void emitEval(uint32_t argc);
-    void jsop_arguments(RejoinState rejoin);
     bool jsop_tableswitch(jsbytecode *pc);
 
     /* Fast arithmetic. */
@@ -796,7 +792,6 @@ private:
 
     /* Fast builtins. */
     JSObject *pushedSingleton(unsigned pushed);
-    CompileStatus callArrayBuiltin(uint32_t argc, bool callingNew);
     CompileStatus inlineNativeFunction(uint32_t argc, bool callingNew);
     CompileStatus inlineScriptedFunction(uint32_t argc, bool callingNew);
     CompileStatus compileMathAbsInt(FrameEntry *arg);

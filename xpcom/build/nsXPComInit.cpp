@@ -350,6 +350,12 @@ NS_InitXPCOM2(nsIServiceManager* *result,
      // We are not shutting down
     gXPCOMShuttingDown = false;
 
+    NS_TIME_FUNCTION_MARK("Next: AvailableMemoryTracker Init()");
+
+    // Initialize the available memory tracker before other threads have had a
+    // chance to start up, because the initialization is not thread-safe.
+    mozilla::AvailableMemoryTracker::Init();
+
     NS_TIME_FUNCTION_MARK("Next: log init");
 
     NS_LogInit();
@@ -514,7 +520,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     nsDirectoryService::gService->RegisterCategoryProviders();
 
     mozilla::scache::StartupCache::GetSingleton();
-    mozilla::AvailableMemoryTracker::Init();
+    mozilla::AvailableMemoryTracker::Activate();
 
     NS_TIME_FUNCTION_MARK("Next: create services from category");
 

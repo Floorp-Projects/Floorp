@@ -1,5 +1,0 @@
-ac_add_options --with-l10n-base=../../l10n-central
-ac_add_options --enable-official-branding
-ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
-ac_add_options --enable-update-packaging
-ac_add_options --with-ccache

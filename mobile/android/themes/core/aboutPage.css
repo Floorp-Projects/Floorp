@@ -62,7 +62,7 @@ body {
 
 #banner {
   margin: 0 -10px;
-  height: 150px;
+  min-height: 150px;
   background-image: url("chrome://browser/skin/images/about-bg-darkblue.png");
 }
 
@@ -95,6 +95,19 @@ body {
 #update-message-none,
 #update-message-found {
   display: none;
+}
+
+#aboutTelemetry {
+  position: relative;
+  width: 70%;
+  margin: 40px auto 0 auto;
+  padding: 10px 0;
+  font-size: 15px;
+  text-align: center;
+}
+
+#aboutTelemetry  a {
+  text-decoration: underline;
 }
 
 #aboutLinks {
