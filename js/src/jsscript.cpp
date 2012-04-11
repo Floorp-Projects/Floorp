@@ -1031,10 +1031,10 @@ js::FreeScriptFilenames(JSCompartment *comp)
  *
  * Array type       Array elements  Offset            Accessor
  * ----------       --------------  ------            --------
- * JSConstArray     Consts          constsOffset      consts()
- * JSObjectArray    Objects         objectsOffset     objects()
- * JSObjectArray    Regexps         regexpsOffset     regexps()
- * JSTryNoteArray   Try notes       tryNotesOffset    trynotes()
+ * ConstArray       Consts          constsOffset      consts()
+ * ObjectArray      Objects         objectsOffset     objects()
+ * ObjectArray      Regexps         regexpsOffset     regexps()
+ * TryNoteArray     Try notes       tryNotesOffset    trynotes()
  * GlobalSlotArray  Globals         globalsOffset     globals()
  * ClosedSlotArray  ClosedArgs      closedArgsOffset  closedArgs()
  * ClosedSlotArray  ClosedVars      closedVarsOffset  closedVars()
@@ -1087,9 +1087,9 @@ js::FreeScriptFilenames(JSCompartment *comp)
  * jsval-aligned.  (There is an assumption that |data| itself is jsval-aligned;
  * we check this below).
  */
-JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(JSConstArray));
-JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(JSObjectArray));     /* there are two of these */
-JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(JSTryNoteArray));
+JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(ConstArray));
+JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(ObjectArray));       /* there are two of these */
+JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(TryNoteArray));
 JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(GlobalSlotArray));
 JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(ClosedSlotArray));   /* there are two of these */
 
@@ -1111,12 +1111,12 @@ JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(jsbytecode, jssrcnote));
  * closedVars array -- the last optional array -- still fits in 1 byte and does
  * not coincide with INVALID_OFFSET.
  */
-JS_STATIC_ASSERT(sizeof(JSConstArray) +
-                 sizeof(JSObjectArray) +
-                 sizeof(JSObjectArray) +
-                 sizeof(JSTryNoteArray) +
-                 sizeof(js::GlobalSlotArray) +
-                 sizeof(js::ClosedSlotArray)
+JS_STATIC_ASSERT(sizeof(ConstArray) +
+                 sizeof(ObjectArray) +
+                 sizeof(ObjectArray) +
+                 sizeof(TryNoteArray) +
+                 sizeof(GlobalSlotArray) +
+                 sizeof(ClosedSlotArray)
                  < JSScript::INVALID_OFFSET);
 JS_STATIC_ASSERT(JSScript::INVALID_OFFSET <= 255);
 
@@ -1129,14 +1129,14 @@ JSScript::NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t
     size_t size = 0;
 
     if (nconsts != 0)
-        size += sizeof(JSConstArray) + nconsts * sizeof(Value);
+        size += sizeof(ConstArray) + nconsts * sizeof(Value);
     size += sizeof(JSAtom *) * natoms;
     if (nobjects != 0)
-        size += sizeof(JSObjectArray) + nobjects * sizeof(JSObject *);
+        size += sizeof(ObjectArray) + nobjects * sizeof(JSObject *);
     if (nregexps != 0)
-        size += sizeof(JSObjectArray) + nregexps * sizeof(JSObject *);
+        size += sizeof(ObjectArray) + nregexps * sizeof(JSObject *);
     if (ntrynotes != 0)
-        size += sizeof(JSTryNoteArray) + ntrynotes * sizeof(JSTryNote);
+        size += sizeof(TryNoteArray) + ntrynotes * sizeof(JSTryNote);
     if (nglobals != 0)
         size += sizeof(GlobalSlotArray) + nglobals * sizeof(GlobalSlotArray::Entry);
     if (nClosedArgs != 0)
@@ -1171,25 +1171,25 @@ JSScript::NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t
     uint8_t *cursor = data;
     if (nconsts != 0) {
         script->constsOffset = uint8_t(cursor - data);
-        cursor += sizeof(JSConstArray);
+        cursor += sizeof(ConstArray);
     } else {
         script->constsOffset = JSScript::INVALID_OFFSET;
     }
     if (nobjects != 0) {
         script->objectsOffset = uint8_t(cursor - data);
-        cursor += sizeof(JSObjectArray);
+        cursor += sizeof(ObjectArray);
     } else {
         script->objectsOffset = JSScript::INVALID_OFFSET;
     }
     if (nregexps != 0) {
         script->regexpsOffset = uint8_t(cursor - data);
-        cursor += sizeof(JSObjectArray);
+        cursor += sizeof(ObjectArray);
     } else {
         script->regexpsOffset = JSScript::INVALID_OFFSET;
     }
     if (ntrynotes != 0) {
         script->trynotesOffset = uint8_t(cursor - data);
-        cursor += sizeof(JSTryNoteArray);
+        cursor += sizeof(TryNoteArray);
     } else {
         script->trynotesOffset = JSScript::INVALID_OFFSET;
     }
@@ -1994,17 +1994,17 @@ JSScript::markChildren(JSTracer *trc)
     }
 
     if (hasObjects()) {
-        JSObjectArray *objarray = objects();
+        ObjectArray *objarray = objects();
         MarkObjectRange(trc, objarray->length, objarray->vector, "objects");
     }
 
     if (hasRegexps()) {
-        JSObjectArray *objarray = regexps();
+        ObjectArray *objarray = regexps();
         MarkObjectRange(trc, objarray->length, objarray->vector, "objects");
     }
 
     if (hasConsts()) {
-        JSConstArray *constarray = consts();
+        ConstArray *constarray = consts();
         MarkValueRange(trc, constarray->length, constarray->vector, "consts");
     }
 

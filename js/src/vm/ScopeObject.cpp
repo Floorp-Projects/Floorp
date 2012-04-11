@@ -878,7 +878,7 @@ Class js::BlockClass = {
 #define NO_PARENT_INDEX UINT32_MAX
 
 static uint32_t
-FindObjectIndex(JSObjectArray *array, JSObject *obj)
+FindObjectIndex(ObjectArray *array, JSObject *obj)
 {
     size_t i;
 
