@@ -467,6 +467,8 @@ struct JSCompartment
     js::ScriptCountsMap *scriptCountsMap;
 
     js::SourceMapMap *sourceMapMap;
+
+    js::DebugScriptMap *debugScriptMap;
 };
 
 #define JS_PROPERTY_TREE(cx)    ((cx)->compartment->propertyTree)

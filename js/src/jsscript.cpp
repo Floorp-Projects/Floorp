@@ -1521,19 +1521,7 @@ JSScript::finalize(FreeOp *fop)
 
     destroyScriptCounts(fop);
     destroySourceMap(fop);
-
-    if (debug) {
-        jsbytecode *end = code + length;
-        for (jsbytecode *pc = code; pc < end; pc++) {
-            if (BreakpointSite *site = getBreakpointSite(pc)) {
-                /* Breakpoints are swept before finalization. */
-                JS_ASSERT(site->firstBreakpoint() == NULL);
-                site->clearTrap(fop, NULL, NULL);
-                JS_ASSERT(getBreakpointSite(pc) == NULL);
-            }
-        }
-        fop->free_(debug);
-    }
+    destroyDebugScript(fop);
 
     JS_POISON(data, 0xdb, computedSizeOfData());
     fop->free_(data);
@@ -1770,16 +1758,77 @@ js::CloneScript(JSContext *cx, JSScript *script)
     return newScript;
 }
 
-bool
-JSScript::ensureHasDebug(JSContext *cx)
+DebugScript *
+JSScript::debugScript()
 {
-    if (debug)
+    JS_ASSERT(hasDebugScript);
+    DebugScriptMap *map = compartment()->debugScriptMap;
+    JS_ASSERT(map);
+    DebugScriptMap::Ptr p = map->lookup(this);
+    JS_ASSERT(p);
+    return p->value;
+}
+
+DebugScript *
+JSScript::releaseDebugScript()
+{
+    JS_ASSERT(hasDebugScript);
+    DebugScriptMap *map = compartment()->debugScriptMap;
+    JS_ASSERT(map);
+    DebugScriptMap::Ptr p = map->lookup(this);
+    JS_ASSERT(p);
+    DebugScript *debug = p->value;
+    map->remove(p);
+    hasDebugScript = false;
+    return debug;
+}
+
+void
+JSScript::destroyDebugScript(FreeOp *fop)
+{
+    if (hasDebugScript) {
+        jsbytecode *end = code + length;
+        for (jsbytecode *pc = code; pc < end; pc++) {
+            if (BreakpointSite *site = getBreakpointSite(pc)) {
+                /* Breakpoints are swept before finalization. */
+                JS_ASSERT(site->firstBreakpoint() == NULL);
+                site->clearTrap(fop, NULL, NULL);
+                JS_ASSERT(getBreakpointSite(pc) == NULL);
+            }
+        }
+        fop->free_(releaseDebugScript());
+    }
+}
+
+bool
+JSScript::ensureHasDebugScript(JSContext *cx)
+{
+    if (hasDebugScript)
         return true;
 
     size_t nbytes = offsetof(DebugScript, breakpoints) + length * sizeof(BreakpointSite*);
-    debug = (DebugScript *) cx->calloc_(nbytes);
+    DebugScript *debug = (DebugScript *) cx->calloc_(nbytes);
     if (!debug)
         return false;
+
+    /* Create compartment's debugScriptMap if necessary. */
+    DebugScriptMap *map = compartment()->debugScriptMap;
+    if (!map) {
+        map = cx->new_<DebugScriptMap>();
+        if (!map || !map->init()) {
+            cx->free_(debug);
+            cx->delete_(map);
+            return false;
+        }
+        compartment()->debugScriptMap = map;
+    }
+
+    if (!map->putNew(this, debug)) {
+        cx->free_(debug);
+        cx->delete_(map);
+        return false;
+    }
+    hasDebugScript = true; // safe to set this;  we can't fail after this point
 
     /*
      * Ensure that any Interpret() instances running on this script have
@@ -1807,8 +1856,9 @@ JSScript::recompileForStepMode(FreeOp *fop)
 bool
 JSScript::tryNewStepMode(JSContext *cx, uint32_t newValue)
 {
-    JS_ASSERT(debug);
+    JS_ASSERT(hasDebugScript);
 
+    DebugScript *debug = debugScript();
     uint32_t prior = debug->stepMode;
     debug->stepMode = newValue;
 
@@ -1816,10 +1866,8 @@ JSScript::tryNewStepMode(JSContext *cx, uint32_t newValue)
         /* Step mode has been enabled or disabled. Alert the methodjit. */
         recompileForStepMode(cx->runtime->defaultFreeOp());
 
-        if (!stepModeEnabled() && !debug->numSites) {
-            cx->free_(debug);
-            debug = NULL;
-        }
+        if (!stepModeEnabled() && !debug->numSites)
+            cx->free_(releaseDebugScript());
     }
 
     return true;
@@ -1828,21 +1876,23 @@ JSScript::tryNewStepMode(JSContext *cx, uint32_t newValue)
 bool
 JSScript::setStepModeFlag(JSContext *cx, bool step)
 {
-    if (!ensureHasDebug(cx))
+    if (!ensureHasDebugScript(cx))
         return false;
 
-    return tryNewStepMode(cx, (debug->stepMode & stepCountMask) | (step ? stepFlagMask : 0));
+    return tryNewStepMode(cx, (debugScript()->stepMode & stepCountMask) |
+                               (step ? stepFlagMask : 0));
 }
 
 bool
 JSScript::changeStepModeCount(JSContext *cx, int delta)
 {
-    if (!ensureHasDebug(cx))
+    if (!ensureHasDebugScript(cx))
         return false;
 
     assertSameCompartment(cx, this);
     JS_ASSERT_IF(delta > 0, cx->compartment->debugMode());
 
+    DebugScript *debug = debugScript();
     uint32_t count = debug->stepMode & stepCountMask;
     JS_ASSERT(((count + delta) & stepCountMask) == count + delta);
     return tryNewStepMode(cx,
@@ -1856,9 +1906,10 @@ JSScript::getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc,
 {
     JS_ASSERT(size_t(pc - code) < length);
 
-    if (!ensureHasDebug(cx))
+    if (!ensureHasDebugScript(cx))
         return NULL;
 
+    DebugScript *debug = debugScript();
     BreakpointSite *&site = debug->breakpoints[pc - code];
 
     if (!site) {
@@ -1883,16 +1934,15 @@ JSScript::destroyBreakpointSite(FreeOp *fop, jsbytecode *pc)
 {
     JS_ASSERT(unsigned(pc - code) < length);
 
+    DebugScript *debug = debugScript();
     BreakpointSite *&site = debug->breakpoints[pc - code];
     JS_ASSERT(site);
 
     fop->delete_(site);
     site = NULL;
 
-    if (--debug->numSites == 0 && !stepModeEnabled()) {
-        fop->free_(debug);
-        debug = NULL;
-    }
+    if (--debug->numSites == 0 && !stepModeEnabled())
+        fop->free_(releaseDebugScript());
 }
 
 void
@@ -1970,7 +2020,7 @@ JSScript::markChildren(JSTracer *trc)
 
     if (hasAnyBreakpointsOrStepMode()) {
         for (unsigned i = 0; i < length; i++) {
-            BreakpointSite *site = debug->breakpoints[i];
+            BreakpointSite *site = debugScript()->breakpoints[i];
             if (site && site->trapHandler)
                 MarkValue(trc, &site->trapClosure, "trap closure");
         }
