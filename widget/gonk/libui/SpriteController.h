@@ -308,9 +308,9 @@ private:
     void invalidateSpriteLocked(const sp<SpriteImpl>& sprite);
 #ifdef HAVE_ANDROID_OS
     void disposeSurfaceLocked(const sp<SurfaceControl>& surfaceControl);
-#endif
 
     void handleMessage(const Message& message);
+#endif
     void doUpdateSprites();
     void doDisposeSurfaces();
 

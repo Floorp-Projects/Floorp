@@ -398,6 +398,7 @@ void PointerController::setPointerIcon(const SpriteIcon& icon) {
     updatePointerLocked();
 }
 
+#ifdef HAVE_ANDROID_OS
 void PointerController::handleMessage(const Message& message) {
     switch (message.what) {
     case MSG_ANIMATE:
@@ -408,6 +409,7 @@ void PointerController::handleMessage(const Message& message) {
         break;
     }
 }
+#endif
 
 void PointerController::doAnimate() {
     AutoMutex _l(mLock);
