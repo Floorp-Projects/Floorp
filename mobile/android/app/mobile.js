@@ -707,5 +707,8 @@ pref("full-screen-api.enabled", true);
 pref("direct-texture.force.enabled", false);
 pref("direct-texture.force.disabled", false);
 
+// show checkerboard pattern on android; we use background colour instead
+pref("gfx.show_checkerboard_pattern", false);
+
 pref("remote-debugger.enabled", false);
 pref("remote-debugger.port", 6000);
