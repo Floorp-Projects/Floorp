@@ -690,7 +690,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
   }
 
   @Override
-  protected void storeRecordDeletion(final Record record) {
+  protected void storeRecordDeletion(final Record record, final Record existingRecord) {
     if (SPECIAL_GUIDS_MAP.containsKey(record.guid)) {
       Logger.debug(LOG_TAG, "Told to delete record " + record.guid + ". Ignoring.");
       return;
