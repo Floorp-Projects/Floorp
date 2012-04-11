@@ -413,6 +413,7 @@ ThebesLayerD3D10::FillTexturesBlackWhite(const nsIntRegion& aRegion, const nsInt
     D3D10_TEXTURE2D_DESC desc;
     mTexture->GetDesc(&desc);
 
+    mD3DManager->SetupInputAssembler();
     nsIntSize oldVP = mD3DManager->GetViewport();
 
     SetupDualViewports(gfxIntSize(desc.Width, desc.Height));
