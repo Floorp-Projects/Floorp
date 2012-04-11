@@ -6,4 +6,5 @@ component {d28f8a0b-95da-48f4-b712-caf37097be41} Weave.js
 contract @mozilla.org/network/protocol/about;1?what=sync-log {d28f8a0b-95da-48f4-b712-caf37097be41}
 # Register resource aliases
 resource services-sync resource:///modules/services-sync/
+resource services-common resource:///modules/services-common/
 resource services-crypto resource:///modules/services-crypto/
