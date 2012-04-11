@@ -102,6 +102,7 @@ protected:
     CondVar mQueueCond;
     mozilla::AndroidGeckoEvent *mQueuedDrawEvent;
     mozilla::AndroidGeckoEvent *mQueuedViewportEvent;
+    bool mAllowCoalescingNextDraw;
     nsTArray<mozilla::AndroidGeckoEvent *> mEventQueue;
     nsInterfaceHashtable<nsStringHashKey, nsIObserver> mObserversHash;
 

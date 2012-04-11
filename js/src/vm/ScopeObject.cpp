@@ -99,7 +99,7 @@ js_PutCallObject(StackFrame *fp)
                  * caches the return value in the slot, so we can't assert that
                  * it's undefined.
                  */
-                uint32_t nclosed = script->nClosedArgs();
+                uint32_t nclosed = script->numClosedArgs();
                 for (uint32_t i = 0; i < nclosed; i++) {
                     uint32_t e = script->getClosedArg(i);
 #ifdef JS_GC_ZEAL
@@ -109,7 +109,7 @@ js_PutCallObject(StackFrame *fp)
 #endif
                 }
 
-                nclosed = script->nClosedVars();
+                nclosed = script->numClosedVars();
                 for (uint32_t i = 0; i < nclosed; i++) {
                     uint32_t e = script->getClosedVar(i);
 #ifdef JS_GC_ZEAL

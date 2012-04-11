@@ -44,7 +44,7 @@
 #include "AccessibleHyperlink.h"
 #include "AccessibleHyperlink_i.c"
 
-#include "nsAccessible.h"
+#include "nsAccessibleWrap.h"
 #include "nsIWinAccessNode.h"
 
 // IUnknown
@@ -76,26 +76,26 @@ __try {
   VariantInit(aAnchor);
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsLink())
-    return E_FAIL;
+  if (thisObj->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
     return E_INVALIDARG;
 
-  nsAccessible* anchor = thisObj->AnchorAt(aIndex);
+  if (!thisObj->IsLink())
+    return S_FALSE;
+
+  nsAccessibleWrap* anchor =
+    static_cast<nsAccessibleWrap*>(thisObj->AnchorAt(aIndex));
   if (!anchor)
     return S_FALSE;
 
-  nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryObject(anchor));
-  if (!winAccessNode)
-    return E_FAIL;
+  void* instancePtr = NULL;
+  HRESULT result = anchor->QueryInterface(IID_IUnknown, &instancePtr);
+  if (FAILED(result))
+    return result;
 
-  void *instancePtr = NULL;
-  nsresult rv = winAccessNode->QueryNativeInterface(IID_IUnknown, &instancePtr);
-  if (NS_FAILED(rv))
-    return E_FAIL;
-
-  IUnknown *unknownPtr = static_cast<IUnknown*>(instancePtr);
+  IUnknown* unknownPtr = static_cast<IUnknown*>(instancePtr);
   aAnchor->ppunkVal = &unknownPtr;
   aAnchor->vt = VT_UNKNOWN;
   return S_OK;
@@ -111,11 +111,14 @@ __try {
   VariantInit(aAnchorTarget);
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsLink())
-    return E_FAIL;
+  if (thisObj->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
     return E_INVALIDARG;
+
+  if (!thisObj->IsLink())
+    return S_FALSE;
 
   nsCOMPtr<nsIURI> uri = thisObj->AnchorURIAt(aIndex);
   if (!uri)
@@ -151,8 +154,11 @@ __try {
   *aIndex = 0;
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsLink())
-    return E_FAIL;
+  if (thisObj->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  if (!thisObj->IsLink())
+    return S_FALSE;
 
   *aIndex = thisObj->StartOffset();
   return S_OK;
@@ -168,8 +174,11 @@ __try {
   *aIndex = 0;
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsLink())
-    return E_FAIL;
+  if (thisObj->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  if (!thisObj->IsLink())
+    return S_FALSE;
 
   *aIndex = thisObj->EndOffset();
   return S_OK;
@@ -185,8 +194,11 @@ __try {
   *aValid = false;
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsLink())
-    return E_FAIL;
+  if (thisObj->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  if (!thisObj->IsLink())
+    return S_FALSE;
 
   *aValid = thisObj->IsLinkValid();
   return S_OK;

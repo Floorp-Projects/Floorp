@@ -165,6 +165,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jEnableBatteryNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableBatteryNotifications", "()V");
     jDisableBatteryNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "disableBatteryNotifications", "()V");
     jGetCurrentBatteryInformation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getCurrentBatteryInformation", "()[D");
+    jRemovePluginView = jEnv->GetStaticMethodID(jGeckoAppShellClass, "removePluginView", "(Landroid/view/View;)V");
 
     jGetAccessibilityEnabled = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getAccessibilityEnabled", "()Z");
     jHandleGeckoMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "handleGeckoMessage", "(Ljava/lang/String;)Ljava/lang/String;");
@@ -2141,6 +2142,17 @@ NS_IMETHODIMP nsAndroidBridge::SetBrowserApp(nsIAndroidBrowserApp *aBrowserApp)
     if (nsAppShell::gAppShell)
         nsAppShell::gAppShell->SetBrowserApp(aBrowserApp);
     return NS_OK;
+}
+
+void
+AndroidBridge::RemovePluginView(void* surface) {
+  JNIEnv *env = AndroidBridge::GetJNIEnv();
+  if (!env)
+    return;
+
+  AndroidBridge::AutoLocalJNIFrame frame(env, 1);
+  env->CallStaticVoidMethod(sBridge->mGeckoAppShellClass,
+                            sBridge->jRemovePluginView, surface);
 }
 
 extern "C"

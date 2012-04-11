@@ -145,6 +145,13 @@ public:
     mNextFreeRecycledThebesLayer(0), mNextFreeRecycledColorLayer(0),
     mNextFreeRecycledImageLayer(0), mInvalidateAllThebesContent(false)
   {
+    nsPresContext* presContext = aContainerFrame->PresContext();
+    mAppUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+    // When AllowResidualTranslation is false, display items will be drawn
+    // scaled with a translation by integer pixels, so we know how the snapping
+    // will work.
+    mSnappingEnabled = aManager->IsSnappingEffectiveTransforms() &&
+      !mParameters.AllowResidualTranslation();
     CollectOldLayers();
   }
 
@@ -175,6 +182,30 @@ public:
   void Finish(PRUint32 *aTextContentFlags);
 
   nsRect GetChildrenBounds() { return mBounds; }
+
+  nscoord GetAppUnitsPerDevPixel() { return mAppUnitsPerDevPixel; }
+
+  nsIntRect ScaleToNearestPixels(const nsRect& aRect)
+  {
+    return aRect.ScaleToNearestPixels(mParameters.mXScale, mParameters.mYScale,
+                                      mAppUnitsPerDevPixel);
+  }
+  nsIntRect ScaleToOutsidePixels(const nsRect& aRect, bool aSnap)
+  {
+    if (aSnap && mSnappingEnabled) {
+      return ScaleToNearestPixels(aRect);
+    }
+    return aRect.ScaleToOutsidePixels(mParameters.mXScale, mParameters.mYScale,
+                                      mAppUnitsPerDevPixel);
+  }
+  nsIntRect ScaleToInsidePixels(const nsRect& aRect, bool aSnap)
+  {
+    if (aSnap && mSnappingEnabled) {
+      return ScaleToNearestPixels(aRect);
+    }
+    return aRect.ScaleToInsidePixels(mParameters.mXScale, mParameters.mYScale,
+                                     mAppUnitsPerDevPixel);
+  }
 
 protected:
   /**
@@ -391,7 +422,9 @@ protected:
   PRUint32                         mNextFreeRecycledThebesLayer;
   PRUint32                         mNextFreeRecycledColorLayer;
   PRUint32                         mNextFreeRecycledImageLayer;
+  nscoord                          mAppUnitsPerDevPixel;
   bool                             mInvalidateAllThebesContent;
+  bool                             mSnappingEnabled;
 };
 
 class ThebesDisplayItemLayerUserData : public LayerUserData
@@ -851,11 +884,7 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
   }
   data->mXScale = mParameters.mXScale;
   data->mYScale = mParameters.mYScale;
-  // If we're in a transformed subtree, but no ancestor transform is actively
-  // changing, we'll use the residual translation when drawing into the
-  // ThebesLayer to ensure that snapping exactly matches the ideal transform.
-  layer->SetAllowResidualTranslation(
-      mParameters.mInTransformedSubtree && !mParameters.mInActiveTransformedSubtree);
+  layer->SetAllowResidualTranslation(mParameters.AllowResidualTranslation());
 
   mBuilder->LayerBuilder()->SaveLastPaintOffset(layer);
 
@@ -960,10 +989,8 @@ ContainerState::FindOpaqueBackgroundColorFor(PRInt32 aThebesLayerIndex)
 
     // The candidate intersects our target. If any layer has a solid-color
     // area behind our target, this must be it. Scan its display items.
-    nsPresContext* presContext = mContainerFrame->PresContext();
-    nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
     nsRect rect =
-      target->mVisibleRegion.GetBounds().ToAppUnits(appUnitsPerDevPixel);
+      target->mVisibleRegion.GetBounds().ToAppUnits(mAppUnitsPerDevPixel);
     rect.ScaleInverseRoundOut(mParameters.mXScale, mParameters.mYScale);
     return mBuilder->LayerBuilder()->
       FindOpaqueColorCovering(mBuilder, candidate->mLayer, rect);
@@ -1009,10 +1036,7 @@ ContainerState::PopThebesLayerData()
       NS_ASSERTION(data->mImageClip.mRoundedClipRects.IsEmpty(),
                    "How did we get rounded clip rects here?");
       if (data->mImageClip.mHaveClipRect) {
-        nsPresContext* presContext = mContainerFrame->PresContext();
-        nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
-        nsIntRect clip = data->mImageClip.mClipRect.ScaleToNearestPixels(
-            mParameters.mXScale, mParameters.mYScale, appUnitsPerDevPixel);
+        nsIntRect clip = ScaleToNearestPixels(data->mImageClip.mClipRect);
         imageLayer->IntersectClipRect(clip);
       }
       layer = imageLayer;
@@ -1178,10 +1202,17 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
   // below) but don't draw anything. They'll return true for isUniform but
   // a color with opacity 0.
   if (!isUniform || NS_GET_A(uniformColor) > 0) {
-    if (isUniform &&
-        aItem->GetBounds(aState->mBuilder).ScaleToInsidePixels(
-            aState->mParameters.mXScale, aState->mParameters.mYScale,
-            AppUnitsPerDevPixel(aItem)).Contains(aVisibleRect)) {
+    // Make sure that the visible area is covered by uniform pixels. In
+    // particular this excludes cases where the edges of the item are not
+    // pixel-aligned (thus the item will not be truly uniform).
+    if (isUniform) {
+      bool snap;
+      nsRect bounds = aItem->GetBounds(aState->mBuilder, &snap);
+      if (!aState->ScaleToInsidePixels(bounds, snap).Contains(aVisibleRect)) {
+        isUniform = false;
+      }
+    }
+    if (isUniform) {
       if (mVisibleRegion.IsEmpty()) {
         // This color is all we have
         mSolidColor = uniformColor;
@@ -1203,20 +1234,20 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
     mDrawRegion.SimplifyOutward(4);
   }
   
-  bool forceTransparentSurface = false;
-  nsRegion opaque = aItem->GetOpaqueRegion(aState->mBuilder, &forceTransparentSurface);
+  bool forceTransparentSurface;
+  bool snap;
+  nsRegion opaque = aItem->GetOpaqueRegion(aState->mBuilder, &snap,
+                                           &forceTransparentSurface);
   if (!opaque.IsEmpty()) {
     nsRegionRectIterator iter(opaque);
-    nscoord appUnitsPerDevPixel = AppUnitsPerDevPixel(aItem);
     for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
       // We don't use SimplifyInward here since it's not defined exactly
       // what it will discard. For our purposes the most important case
       // is a large opaque background at the bottom of z-order (e.g.,
       // a canvas background), so we need to make sure that the first rect
       // we see doesn't get discarded.
-      nsIntRect rect = aClip.ApproximateIntersect(*r).ScaleToInsidePixels(
-          aState->mParameters.mXScale, aState->mParameters.mYScale,
-          appUnitsPerDevPixel);
+      nsIntRect rect =
+        aState->ScaleToInsidePixels(aClip.ApproximateIntersect(*r), snap);
       nsIntRegion tmp;
       tmp.Or(mOpaqueRegion, rect);
        // Opaque display items in chrome documents whose window is partially
@@ -1237,11 +1268,10 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
     aItem->DisableComponentAlpha();
   } else {
     nsRect componentAlpha = aItem->GetComponentAlphaBounds(aState->mBuilder);
-    componentAlpha.IntersectRect(componentAlpha, aItem->GetVisibleRect());
     if (!componentAlpha.IsEmpty()) {
-      nscoord appUnitsPerDevPixel = AppUnitsPerDevPixel(aItem);
-      if (!mOpaqueRegion.Contains(componentAlpha.ScaleToOutsidePixels(
-          aState->mParameters.mXScale, aState->mParameters.mYScale, appUnitsPerDevPixel))) {
+      nsIntRect componentAlphaRect =
+        aState->ScaleToOutsidePixels(componentAlpha, false).Intersect(aVisibleRect);
+      if (!mOpaqueRegion.Contains(componentAlphaRect)) {
         if (SuppressComponentAlpha(aState->mBuilder, aItem, componentAlpha)) {
           aItem->DisableComponentAlpha();
         } else {
@@ -1398,9 +1428,6 @@ void
 ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
                                     FrameLayerBuilder::Clip& aClip)
 {
-  PRInt32 appUnitsPerDevPixel =
-    mContainerFrame->PresContext()->AppUnitsPerDevPixel();
-
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
     nsDisplayItem::Type type = item->GetType();
     if (type == nsDisplayItem::TYPE_CLIP ||
@@ -1410,19 +1437,20 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       continue;
     }
 
-    NS_ASSERTION(appUnitsPerDevPixel == AppUnitsPerDevPixel(item),
+    NS_ASSERTION(mAppUnitsPerDevPixel == AppUnitsPerDevPixel(item),
       "items in a container layer should all have the same app units per dev pixel");
 
     nsIntRect itemVisibleRect =
-      item->GetVisibleRect().ScaleToOutsidePixels(
-          mParameters.mXScale, mParameters.mYScale, appUnitsPerDevPixel);
-    nsRect itemContent = item->GetBounds(mBuilder);
+      ScaleToOutsidePixels(item->GetVisibleRect(), false);
+    bool snap;
+    nsRect itemContent = item->GetBounds(mBuilder, &snap);
     if (aClip.mHaveClipRect) {
       itemContent.IntersectRect(aClip.mClipRect, itemContent);
     }
     mBounds.UnionRect(mBounds, itemContent);
-    nsIntRect itemDrawRect = itemContent.ScaleToOutsidePixels(
-        mParameters.mXScale, mParameters.mYScale, appUnitsPerDevPixel);
+    nsIntRect itemDrawRect = ScaleToOutsidePixels(itemContent, snap);
+    itemVisibleRect.IntersectRect(itemVisibleRect, itemDrawRect);
+
     LayerState layerState = item->GetLayerState(mBuilder, mManager);
 
     nsIFrame* activeScrolledRoot =
@@ -1481,8 +1509,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       // It has its own layer. Update that layer's clip and visible rects.
       if (aClip.mHaveClipRect) {
         ownLayer->IntersectClipRect(
-            aClip.NonRoundedIntersection().ScaleToNearestPixels(
-                mParameters.mXScale, mParameters.mYScale, appUnitsPerDevPixel));
+          ScaleToNearestPixels(aClip.NonRoundedIntersection()));
       }
       ThebesLayerData* data = GetTopThebesLayerData();
       if (data) {
@@ -1542,8 +1569,8 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer)
     // The bounds might have changed, but we assume that any difference
     // in the bounds will have been invalidated for all Thebes layers
     // in the container via regular frame invalidation.
-    nsRect bounds = aItem->GetBounds(mBuilder);
-    PRInt32 appUnitsPerDevPixel = AppUnitsPerDevPixel(aItem);
+    bool snap;
+    nsRect bounds = aItem->GetBounds(mBuilder, &snap);
 
     ThebesLayer* t = oldLayer->AsThebesLayer();
     if (t) {
@@ -1553,7 +1580,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer)
       // so it doesn't matter whether we are using the old scale at last paint
       // or a new scale here
       InvalidatePostTransformRegion(t,
-          bounds.ScaleToOutsidePixels(data->mXScale, data->mYScale, appUnitsPerDevPixel),
+          bounds.ScaleToOutsidePixels(data->mXScale, data->mYScale, mAppUnitsPerDevPixel),
           mBuilder->LayerBuilder()->GetLastPaintOffset(t));
     }
     if (aNewLayer) {
@@ -1562,14 +1589,11 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer)
         ThebesDisplayItemLayerUserData* data =
             static_cast<ThebesDisplayItemLayerUserData*>(newLayer->GetUserData(&gThebesDisplayItemLayerUserData));
         InvalidatePostTransformRegion(newLayer,
-            bounds.ScaleToOutsidePixels(data->mXScale, data->mYScale, appUnitsPerDevPixel),
+            bounds.ScaleToOutsidePixels(data->mXScale, data->mYScale, mAppUnitsPerDevPixel),
             GetTranslationForThebesLayer(newLayer));
       }
     }
 
-    NS_ASSERTION(appUnitsPerDevPixel ==
-                   mContainerFrame->PresContext()->AppUnitsPerDevPixel(),
-                 "app units per dev pixel should be constant in a container");
     mContainerFrame->InvalidateWithFlags(
         bounds - mBuilder->ToReferenceFrame(mContainerFrame),
         nsIFrame::INVALIDATE_NO_THEBES_LAYERS |
@@ -1860,7 +1884,6 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
                                containerLayer);
   ContainerState state(aBuilder, aManager, aContainerFrame, containerLayer,
                        scaleParameters);
-  nscoord appUnitsPerDevPixel = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
 
   if (aManager == mRetainingManager) {
     DisplayItemDataEntry* entry = mNewDisplayItemData.PutEntry(aContainerFrame);
@@ -1880,7 +1903,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
       invalidThebesContent->MoveBy(offset);
       state.SetInvalidThebesContent(invalidThebesContent->
         ScaleToOutsidePixels(scaleParameters.mXScale, scaleParameters.mYScale,
-                             appUnitsPerDevPixel));
+                             state.GetAppUnitsPerDevPixel()));
       // We have to preserve the current contents of invalidThebesContent
       // because there might be multiple container layers for the same
       // frame and we need to invalidate the ThebesLayer children of all
@@ -1905,15 +1928,13 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
 
   nsRect bounds = state.GetChildrenBounds();
   NS_ASSERTION(bounds.IsEqualInterior(aChildren.GetBounds(aBuilder)), "Wrong bounds");
-  nsIntRect pixBounds =
-    bounds.ScaleToOutsidePixels(scaleParameters.mXScale, scaleParameters.mYScale,
-                                appUnitsPerDevPixel);
+  nsIntRect pixBounds = state.ScaleToOutsidePixels(bounds, false);
   containerLayer->SetVisibleRegion(pixBounds);
   // Make sure that rounding the visible region out didn't add any area
   // we won't paint
   if (aChildren.IsOpaque() && !aChildren.NeedsTransparentSurface()) {
     bounds.ScaleRoundIn(scaleParameters.mXScale, scaleParameters.mYScale);
-    if (bounds.Contains(pixBounds.ToAppUnits(appUnitsPerDevPixel))) {
+    if (bounds.Contains(pixBounds.ToAppUnits(state.GetAppUnitsPerDevPixel()))) {
       // Clear CONTENT_COMPONENT_ALPHA
       flags = Layer::CONTENT_OPAQUE;
     }
@@ -2046,7 +2067,8 @@ FrameLayerBuilder::GetDedicatedLayer(nsIFrame* aFrame, PRUint32 aDisplayItemKey)
 #ifdef MOZ_DUMP_PAINTING
 static void DebugPaintItem(nsRenderingContext* aDest, nsDisplayItem *aItem, nsDisplayListBuilder* aBuilder)
 {
-  nsRect appUnitBounds = aItem->GetBounds(aBuilder);
+  bool snap;
+  nsRect appUnitBounds = aItem->GetBounds(aBuilder, &snap);
   gfxRect bounds(appUnitBounds.x, appUnitBounds.y, appUnitBounds.width, appUnitBounds.height);
   bounds.ScaleInverse(aDest->AppUnitsPerDevPixel());
 

@@ -89,9 +89,6 @@ nsHttpHeaderArray::SetHeaderFromNet(nsHttpAtom header, const nsACString &value)
 
     if (!entry) {
         if (value.IsEmpty()) {
-            if (HeaderMustHaveValue(header)) {
-                return NS_ERROR_CORRUPTED_CONTENT;
-            }
             if (!TrackEmptyHeader(header)) {
                 LOG(("Ignoring Empty Header: %s\n", header.get()));
                 return NS_OK; // ignore empty headers by default
