@@ -957,14 +957,16 @@ nsHttpConnection::ReadTimeoutTick(PRIntervalTime now)
     if (!mTransaction)
         return;
 
-    // Spdy in the future actually should implement some timeout handling
-    // using the SPDY ping frame.
+    // Spdy implements some timeout handling using the SPDY ping frame.
     if (mSpdySession) {
         mSpdySession->ReadTimeoutTick(now);
         return;
     }
     
-    PRIntervalTime delta = PR_IntervalNow() - mLastReadTime;
+    if (!gHttpHandler->GetPipelineRescheduleOnTimeout())
+        return;
+
+    PRIntervalTime delta = now - mLastReadTime;
 
     // we replicate some of the checks both here and in OnSocketReadable() as
     // they will be discovered under different conditions. The ones here
@@ -975,28 +977,30 @@ nsHttpConnection::ReadTimeoutTick(PRIntervalTime now)
     // Right now we only take action if pipelining is involved, but this would
     // be the place to add general read timeout handling if it is desired.
 
-    const PRIntervalTime k1000ms = PR_MillisecondsToInterval(1000);
-
-    if (delta < k1000ms)
-        return;
-
     PRUint32 pipelineDepth = mTransaction->PipelineDepth();
 
-    // this just reschedules blocked transactions. no transaction
-    // is aborted completely.
-    LOG(("cancelling pipeline due to a %ums stall - depth %d\n",
-         PR_IntervalToMilliseconds(delta), pipelineDepth));
+    if (delta >= gHttpHandler->GetPipelineRescheduleTimeout()) {
 
-    if (pipelineDepth > 1) {
-        nsHttpPipeline *pipeline = mTransaction->QueryPipeline();
-        NS_ABORT_IF_FALSE(pipeline, "pipelinedepth > 1 without pipeline");
-        // code this defensively for the moment and check for null in opt build
-        if (pipeline)
-            pipeline->CancelPipeline(NS_ERROR_NET_TIMEOUT);
+        // this just reschedules blocked transactions. no transaction
+        // is aborted completely.
+        LOG(("cancelling pipeline due to a %ums stall - depth %d\n",
+             PR_IntervalToMilliseconds(delta), pipelineDepth));
+
+        if (pipelineDepth > 1) {
+            nsHttpPipeline *pipeline = mTransaction->QueryPipeline();
+            NS_ABORT_IF_FALSE(pipeline, "pipelinedepth > 1 without pipeline");
+            // code this defensively for the moment and check for null in opt build
+            // This will reschedule blocked members of the pipeline, but the
+            // blocking transaction (i.e. response 0) will not be changed.
+            if (pipeline) {
+                pipeline->CancelPipeline(NS_ERROR_NET_TIMEOUT);
+                LOG(("Rescheduling the head of line blocked members of a pipeline "
+                     "because reschedule-timeout idle interval exceeded"));
+            }
+        }
     }
-    
-    PRIntervalTime pipelineTimeout = gHttpHandler->GetPipelineTimeout();
-    if (!pipelineTimeout || (delta < pipelineTimeout))
+
+    if (delta < gHttpHandler->GetPipelineTimeout())
         return;
 
     if (pipelineDepth <= 1 && !mTransaction->PipelinePosition())
@@ -1338,10 +1342,9 @@ nsHttpConnection::OnSocketReadable()
     else
         delta = 0;
 
-    const PRIntervalTime k400ms  = PR_MillisecondsToInterval(400);
-    const PRIntervalTime k1200ms = PR_MillisecondsToInterval(1200);
+    static const PRIntervalTime k400ms  = PR_MillisecondsToInterval(400);
 
-    if (delta > k1200ms) {
+    if (delta >= (mRtt + gHttpHandler->GetPipelineRescheduleTimeout())) {
         LOG(("Read delta ms of %u causing slow read major "
              "event and pipeline cancellation",
              PR_IntervalToMilliseconds(delta)));
@@ -1349,12 +1352,19 @@ nsHttpConnection::OnSocketReadable()
         gHttpHandler->ConnMgr()->PipelineFeedbackInfo(
             mConnInfo, nsHttpConnectionMgr::BadSlowReadMajor, this, 0);
 
-        if (mTransaction->PipelineDepth() > 1) {
+        if (gHttpHandler->GetPipelineRescheduleOnTimeout() &&
+            mTransaction->PipelineDepth() > 1) {
             nsHttpPipeline *pipeline = mTransaction->QueryPipeline();
             NS_ABORT_IF_FALSE(pipeline, "pipelinedepth > 1 without pipeline");
             // code this defensively for the moment and check for null
-            if (pipeline)
+            // This will reschedule blocked members of the pipeline, but the
+            // blocking transaction (i.e. response 0) will not be changed.
+            if (pipeline) {
                 pipeline->CancelPipeline(NS_ERROR_NET_TIMEOUT);
+                LOG(("Rescheduling the head of line blocked members of a "
+                     "pipeline because reschedule-timeout idle interval "
+                     "exceeded"));
+            }
         }
     }
     else if (delta > k400ms) {
