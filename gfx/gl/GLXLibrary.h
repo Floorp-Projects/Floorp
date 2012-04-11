@@ -49,7 +49,7 @@ class GLXLibrary
 {
 public:
     GLXLibrary() : mInitialized(false), mTriedInitializing(false),
-                   mHasTextureFromPixmap(false), mDebug(false),
+                   mUseTextureFromPixmap(false), mDebug(false),
                    mHasRobustness(false), mOGLLibrary(nsnull) {}
 
     void xDestroyContext(Display* display, GLXContext context);
@@ -121,7 +121,7 @@ public:
     void BindTexImage(GLXPixmap aPixmap);
     void ReleaseTexImage(GLXPixmap aPixmap);
 
-    bool HasTextureFromPixmap() { return mHasTextureFromPixmap; }
+    bool UseTextureFromPixmap() { return mUseTextureFromPixmap; }
     bool HasRobustness() { return mHasRobustness; }
     bool SupportsTextureFromPixmap(gfxASurface* aSurface);
 
@@ -230,7 +230,7 @@ private:
 
     bool mInitialized;
     bool mTriedInitializing;
-    bool mHasTextureFromPixmap;
+    bool mUseTextureFromPixmap;
     bool mDebug;
     bool mHasRobustness;
     PRLibrary *mOGLLibrary;
