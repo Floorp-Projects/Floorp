@@ -232,7 +232,9 @@
 @BINPATH@/components/necko_socket.xpt
 @BINPATH@/components/necko_strconv.xpt
 @BINPATH@/components/necko_viewsource.xpt
+#ifdef NECKO_WIFI
 @BINPATH@/components/necko_wifi.xpt
+#endif
 @BINPATH@/components/necko_wyciwyg.xpt
 @BINPATH@/components/necko.xpt
 @BINPATH@/components/loginmgr.xpt
