@@ -46,12 +46,12 @@ public class FennecTalosAssert implements Assert {
      *  Write information to a logfile and logcat
      */
     public void dumpLog(String message) {
-        FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_INFO, message);
+        FennecNativeDriver.log(FennecNativeDriver.LogLevel.INFO, message);
     }
 
     /** Write information to a logfile and logcat */
     public void dumpLog(String message, Throwable t) {
-        FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_INFO, message, t);
+        FennecNativeDriver.log(FennecNativeDriver.LogLevel.INFO, message, t);
     }
 
     /**

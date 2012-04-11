@@ -6,7 +6,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/keys.js");
-Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://services-common/log4moz.js");
 
 function run_test() {
   let logger = Log4Moz.repository.rootLogger;

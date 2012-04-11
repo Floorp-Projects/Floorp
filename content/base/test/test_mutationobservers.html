@@ -477,7 +477,45 @@ function testModalDialog() {
   div.innerHTML = "<span><span>foo</span></span>";
   window.showModalDialog("mutationobserver_dialog.html");
   ok(didHandleCallback, "Should have called the callback while showing modal dialog!");
-  then();
+  then(testTakeRecords);
+}
+
+function testTakeRecords() {
+  var s = "<span>1</span><span>2</span>";
+  div.innerHTML = s;
+  var takenRecords;
+  m = new M(function(records, observer) {
+      is(records.length, 3, "Should have got 3 records");
+
+      is(records[0].type, "attributes", "Should have got attributes");
+      is(records[0].attributeName, "foo", "");
+      is(records[1].type, "childList", "Should have got childList");
+      is(records[1].removedNodes.length, 2, "Should have got removedNodes");
+      is(records[1].addedNodes.length, 2, "Should have got addedNodes");
+      is(records[2].type, "attributes", "Should have got attributes");
+      is(records[2].attributeName, "foo", "");
+      
+      is(records.length, takenRecords.length, "Should have had similar mutations");
+      is(records[0].type, takenRecords[0].type, "Should have had similar mutations");
+      is(records[1].type, takenRecords[1].type, "Should have had similar mutations");
+      is(records[2].type, takenRecords[2].type, "Should have had similar mutations");
+      
+      is(records[1].removedNodes.length, takenRecords[1].removedNodes.length, "Should have had similar mutations");
+      is(records[1].addedNodes.length, takenRecords[1].addedNodes.length, "Should have had similar mutations");
+
+      is(m.takeRecords().length, 0, "Shouldn't have any records");
+      observer.disconnect();
+      then();
+      m = null;
+    });
+  m.observe(div, { childList: true, attributes: true });
+  div.setAttribute("foo", "bar");
+  div.innerHTML = s;
+  div.removeAttribute("foo");
+  takenRecords = m.takeRecords();
+  div.setAttribute("foo", "bar");
+  div.innerHTML = s;
+  div.removeAttribute("foo");
 }
 
 SimpleTest.waitForExplicitFinish();

@@ -42,7 +42,8 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = profile/extensions
+DIRS      = profile/extensions
+dist_dest = $(DIST)/$(APP_NAME).app
 
 PREF_JS_EXPORTS = $(srcdir)/mobile.js
 DIST_FILES = recommended-addons.json
@@ -103,7 +104,7 @@ endif
 
 APP_BINARY = $(MOZ_APP_NAME)$(BIN_SUFFIX)
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT)) #{
 
 APP_NAME = $(MOZ_APP_DISPLAYNAME)
 APP_VERSION = $(MOZ_APP_VERSION)
@@ -117,7 +118,7 @@ AB_CD = $(MOZ_UI_LOCALE)
 AB := $(firstword $(subst -, ,$(AB_CD)))
 
 clean clobber repackage::
-	rm -rf $(DIST)/$(APP_NAME).app
+	$(RM) -r $(dist_dest)
 
 ifdef LIBXUL_SDK
 APPFILES = Resources
@@ -126,22 +127,22 @@ APPFILES = MacOS
 endif
 
 libs repackage::
-	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
-	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
-	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
-	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
-	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" -e "s/%APP_BINARY%/$(APP_BINARY)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
-	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj/InfoPlist.strings
-	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)
-	$(RM) $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)/mangle $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)/shlibsign
+	mkdir -p $(dist_dest)/Contents/MacOS
+	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents $(dist_dest) --exclude English.lproj
+	mkdir -p $(dist_dest)/Contents/Resources/$(AB).lproj
+	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(dist_dest)/Contents/Resources/$(AB).lproj
+	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" -e "s/%APP_BINARY%/$(APP_BINARY)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(dist_dest)/Contents/Info.plist
+	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(dist_dest)/Contents/Resources/$(AB).lproj/InfoPlist.strings
+	rsync -a $(DIST)/bin/ $(dist_dest)/Contents/$(APPFILES)
+	$(RM) $(dist_dest)/Contents/$(APPFILES)/mangle $(dist_dest)/Contents/$(APPFILES)/shlibsign
 ifdef LIBXUL_SDK
-	cp $(LIBXUL_DIST)/bin/xulrunner$(BIN_SUFFIX) $(DIST)/$(APP_NAME).app/Contents/MacOS/$(APP_BINARY)
-	rsync -a --exclude nsinstall --copy-unsafe-links $(LIBXUL_DIST)/XUL.framework $(DIST)/$(APP_NAME).app/Contents/Frameworks
+	cp $(LIBXUL_DIST)/bin/xulrunner$(BIN_SUFFIX) $(dist_dest)/Contents/MacOS/$(APP_BINARY)
+	rsync -a --exclude nsinstall --copy-unsafe-links $(LIBXUL_DIST)/XUL.framework $(dist_dest)/Contents/Frameworks
 else
-	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
-	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
+	$(RM) $(dist_dest)/Contents/MacOS/$(PROGRAM)
+	rsync -aL $(PROGRAM) $(dist_dest)/Contents/MacOS
 endif
-	printf "APPLMOZB" > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
+	printf "APPLMOZB" > $(dist_dest)/Contents/PkgInfo
 
 else # MOZ_WIDGET_TOOLKIT != cocoa
 
@@ -149,12 +150,12 @@ libs::
 ifdef LIBXUL_SDK
 	cp $(LIBXUL_DIST)/bin/xulrunner-stub$(BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY)
 endif
-ifndef SKIP_COPY_XULRUNNER
+ifndef SKIP_COPY_XULRUNNER #{
 ifdef LIBXUL_SDK
 	$(NSINSTALL) -D $(DIST)/bin/xulrunner
 	(cd $(LIBXUL_SDK)/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DIST)/bin/xulrunner && tar -xf -)
 endif
-endif # SKIP_COPY_XULRUNNER
+endif #} SKIP_COPY_XULRUNNER
 
 ifeq ($(MOZ_PLATFORM_MAEMO),6)
 	$(NSINSTALL) -D $(DIST)/bin/res/drawable
@@ -168,4 +169,4 @@ ifeq ($(OS_ARCH),WINNT)
 	$(REDIT_PATH)/redit$(HOST_BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY) $(srcdir)/$(APP_ICON).ico
 endif
 
-endif
+endif #}

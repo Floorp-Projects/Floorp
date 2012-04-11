@@ -382,7 +382,6 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
 
   // Java plugins include a number of different file names,
   // so use the mime type (mIsJavaPlugin) and a special pref.
-  bool javaIsEnabled;
   if (aPluginTag->mIsJavaPlugin &&
       !Preferences::GetBool("dom.ipc.plugins.java.enabled", true)) {
     return false;

@@ -4304,7 +4304,7 @@ nsHTMLEditor::GetNextHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPt
   NS_ENSURE_TRUE(outNode && inParent, NS_ERROR_NULL_POINTER);
   nsresult res = NS_OK;
   *outNode = nsnull;
-  nsCOMPtr<nsIDOMNode> node = nsEditor::GetChildAt(inParent,inOffset);
+  nsCOMPtr<nsIDOMNode> node = nsEditor::GetChildAt(inParent, inOffset + 1);
   if (!node) {
     // return null sibling if no sibling
     return NS_OK;
@@ -4314,7 +4314,7 @@ nsHTMLEditor::GetNextHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPt
     return res;
   }
   // else
-  return GetPriorHTMLSibling(node, outNode);
+  return GetNextHTMLSibling(node, outNode);
 }
 
 

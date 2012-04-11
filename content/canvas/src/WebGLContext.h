@@ -1167,7 +1167,7 @@ public:
         return mCachedMaxUshortElement;
       } else {
         mHasCachedMaxUshortElement = true;
-        mCachedMaxUshortElement = FindMaxElementInSubArray<GLshort>(mByteLength>>1, 0);
+        mCachedMaxUshortElement = FindMaxElementInSubArray<GLushort>(mByteLength>>1, 0);
         return mCachedMaxUshortElement;
       }
     }

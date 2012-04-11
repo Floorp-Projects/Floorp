@@ -797,7 +797,7 @@ CheckFrame(StackFrame *fp)
         return false;
     }
 
-    if (fp->hasArgsObj() || fp->script()->mayNeedArgsObj()) {
+    if (fp->hasArgsObj() || fp->script()->argumentsHasLocalBinding()) {
         // Functions with arguments objects, or scripts that use arguments, are
         // not supported yet.
         IonSpew(IonSpew_Abort, "frame has argsobj");

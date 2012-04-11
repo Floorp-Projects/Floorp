@@ -331,12 +331,15 @@ HttpChannelParent::RecvUpdateAssociatedContentSecurity(const PRInt32& high,
   return true;
 }
 
-// Bug 621446 investigation, we don't want conditional PR_Aborts bellow to be
+// Bug 621446 investigation, we don't want conditional PR_Aborts below to be
 // merged to a single address.
 #ifdef _MSC_VER
 #pragma warning(disable : 4068)
 #endif
+#ifdef ANDROID
+// Compiling this with GCC <= 4.4 fails with an internal compiler error
 #pragma GCC optimize ("O0")
+#endif
 
 bool
 HttpChannelParent::RecvRedirect2Verify(const nsresult& result, 

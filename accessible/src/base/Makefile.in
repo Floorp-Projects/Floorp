@@ -58,7 +58,6 @@ CPPSRCS = \
   NotificationController.cpp \
   nsAccDocManager.cpp \
   nsAccessNode.cpp \
-  nsARIAGridAccessible.cpp \
   nsARIAMap.cpp \
   nsDocAccessible.cpp \
   nsCoreUtils.cpp \
@@ -109,10 +108,10 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../html \
   -I$(srcdir)/../xpcom \
   -I$(srcdir)/../xul \
+  -I$(srcdir)/../xforms \
   -I$(srcdir)/../../../layout/generic \
   -I$(srcdir)/../../../layout/style \
   -I$(srcdir)/../../../layout/xul/base/src \
-  -I$(srcdir)/../xforms \
   $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)

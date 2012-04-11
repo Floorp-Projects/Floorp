@@ -6,7 +6,7 @@
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/record.js");
-Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/util.js");
 
 Cu.import("resource://gre/modules/Services.jsm");

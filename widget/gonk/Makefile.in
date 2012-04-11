@@ -74,6 +74,8 @@ CPPSRCS	= \
 	KeyLayoutMap.cpp \
 	PixelFormat.cpp \
 	VirtualKeyMap.cpp \
+	PointerController.cpp \
+	SpriteController.cpp \
 	PropertyMap.cpp \
 	Unicode.cpp \
 	Timers.cpp \

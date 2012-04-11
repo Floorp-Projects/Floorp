@@ -1,6 +1,6 @@
 Cu.import("resource://services-sync/engines/prefs.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/ext/Preferences.js");
+Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
