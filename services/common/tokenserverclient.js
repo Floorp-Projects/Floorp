@@ -216,7 +216,7 @@ TokenServerClient.prototype = {
       return;
     }
 
-    for each (let k in ["id", "secret", "api_endpoint", "uid"]) {
+    for each (let k in ["id", "key", "api_endpoint", "uid"]) {
       if (!(k in result)) {
         let error = new TokenServerClientServerError("Expected key not " +
                                                      " present in result: " +
@@ -230,7 +230,7 @@ TokenServerClient.prototype = {
     this._log.debug("Successful token response: " + result.id);
     cb(null, {
       id:       result.id,
-      key:      result.secret,
+      key:      result.key,
       endpoint: result.api_endpoint,
       uid:      result.uid,
     });

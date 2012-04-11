@@ -25,7 +25,7 @@ add_test(function test_working_bid_exchange() {
 
       let body = JSON.stringify({
         id:           "id",
-        secret:       "key",
+        key:          "key",
         api_endpoint: service,
         uid:          "uid",
       });
@@ -148,7 +148,7 @@ add_test(function test_rich_media_types() {
 
       let body = JSON.stringify({
         id:           "id",
-        secret:       "key",
+        key:          "key",
         api_endpoint: "foo",
         uid:          "uid",
       });
