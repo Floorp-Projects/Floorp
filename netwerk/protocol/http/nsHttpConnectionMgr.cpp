@@ -254,6 +254,24 @@ nsHttpConnectionMgr::ConditionallyStopPruneDeadConnectionsTimer()
     }
 }
 
+void
+nsHttpConnectionMgr::ConditionallyStopReadTimeoutTick()
+{
+    LOG(("nsHttpConnectionMgr::ConditionallyStopReadTimeoutTick "
+         "armed=%d active=%d\n", mReadTimeoutTickArmed, mNumActiveConns));
+
+    if (!mReadTimeoutTickArmed)
+        return;
+
+    if (mNumActiveConns)
+        return;
+
+    LOG(("nsHttpConnectionMgr::ConditionallyStopReadTimeoutTick stop==true\n"));
+
+    mReadTimeoutTick->Cancel();
+    mReadTimeoutTickArmed = false;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpConnectionMgr::nsIObserver
 //-----------------------------------------------------------------------------
@@ -1458,6 +1476,8 @@ nsHttpConnectionMgr::DispatchTransaction(nsConnectionEntry *ent,
         if (conn == ent->mYellowConnection)
             ent->OnYellowComplete();
         mNumActiveConns--;
+        ConditionallyStopReadTimeoutTick();
+
         // sever back references to connection, and do so without triggering
         // a call to ReclaimConnection ;-)
         pipeline->SetConnection(nsnull);
@@ -1589,6 +1609,7 @@ void
 nsHttpConnectionMgr::RecvdConnect()
 {
     mNumActiveConns--;
+    ConditionallyStopReadTimeoutTick();
 }
 
 nsresult
@@ -1868,6 +1889,7 @@ nsHttpConnectionMgr::OnMsgReclaimConnection(PRInt32, void *param)
             nsHttpConnection *temp = conn;
             NS_RELEASE(temp);
             mNumActiveConns--;
+            ConditionallyStopReadTimeoutTick();
         }
 
         if (conn->CanReuse()) {
@@ -2000,12 +2022,6 @@ nsHttpConnectionMgr::ReadTimeoutTick()
 
     LOG(("nsHttpConnectionMgr::ReadTimeoutTick active=%d\n",
          mNumActiveConns));
-
-    if (!mNumActiveConns && mReadTimeoutTickArmed) {
-        mReadTimeoutTick->Cancel();
-        mReadTimeoutTickArmed = false;
-        return;
-    }
 
     mCT.Enumerate(ReadTimeoutTickCB, this);
 }
