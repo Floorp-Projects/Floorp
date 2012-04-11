@@ -130,6 +130,7 @@
 //----------------------------------------------------------------------
 
 struct nsBoxLayoutMetrics;
+class nsDisplayBackground;
 
 /**
  * Implementation of a simple frame that's not splittable and has no
@@ -509,10 +510,13 @@ public:
    * background style appears to have no background --- this is useful
    * for frames that might receive a propagated background via
    * nsCSSRendering::FindBackground
+   * @param aBackground *aBackground is set to the new nsDisplayBackground item,
+   * if one is created, otherwise null.
    */
   nsresult DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
                                           const nsDisplayListSet& aLists,
-                                          bool aForceBackground = false);
+                                          bool aForceBackground,
+                                          nsDisplayBackground** aBackground);
   /**
    * Adds display items for standard CSS borders, background and outline for
    * for this frame, as necessary. Checks IsVisibleForPainting and won't
