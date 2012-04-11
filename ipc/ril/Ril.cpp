@@ -228,7 +228,7 @@ RilClient::OpenSocket()
         return false;
     }
 
-    if (connect(mSocket.get(), (struct sockaddr *) &addr, alen) < 0) {
+    iif (connect(mSocket.get(), (struct sockaddr *) &addr, alen) < 0) {
 #if defined(MOZ_WIDGET_GONK)
         LOG("Cannot open socket for RIL!\n");
 #endif
