@@ -38,12 +38,14 @@
 
 #include "nsCOMPtr.h"
 #include "nsCRTGlue.h"
+#include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 #include "nsDOMError.h"
 #include "nsDOMException.h"
 #include "nsIDOMDOMException.h"
 #include "nsIDOMSVGException.h"
 #include "nsIDOMXPathException.h"
+#include "nsIDocument.h"
 #include "nsString.h"
 #include "prprf.h"
 
@@ -200,6 +202,18 @@ nsDOMException::GetCode(PRUint16* aCode)
 {
   NS_ENSURE_ARG_POINTER(aCode);
   *aCode = mCode;
+
+  // Warn only when the code was changed (IndexedDB or File API)
+  // or the code is useless (zero)
+  if (NS_ERROR_GET_MODULE(mResult) == NS_ERROR_MODULE_DOM_INDEXEDDB ||
+      NS_ERROR_GET_MODULE(mResult) == NS_ERROR_MODULE_DOM_FILE ||
+      !mCode) {
+    nsCOMPtr<nsIDocument> doc =
+      do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
+    if (doc) {
+      doc->WarnOnceAbout(nsIDocument::eDOMExceptionCode);
+    }
+  }
 
   return NS_OK;
 }
