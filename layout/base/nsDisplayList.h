@@ -651,8 +651,9 @@ public:
   /**
    * @param aSnap set to true if the edges of the rectangles of the opaque
    * region would be snapped to device pixels when drawing
-   * @return a region of the item that is opaque --- every pixel painted
-   * with an opaque color. This is useful for determining when one piece
+   * @return a region of the item that is opaque --- that is, every pixel
+   * that is visible (according to ComputeVisibility) is painted with an opaque
+   * color. This is useful for determining when one piece
    * of content completely obscures another so that we can do occlusion
    * culling.
    */
