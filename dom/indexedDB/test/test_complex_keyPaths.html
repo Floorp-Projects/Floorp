@@ -107,8 +107,9 @@
           ok("key" in info, "successfully created request to insert value" + test);
         } catch (e) {
           ok(!("key" in info), "threw when attempted to insert" + test);
-          ok(e instanceof IDBDatabaseException, "Got a IDBDatabaseException" + test);
-          is(e.code, IDBDatabaseException.DATA_ERR, "expect a DATA_ERR error" + test);
+          ok(e instanceof DOMException, "Got a DOMException" + test);
+          is(e.name, "DataError", "expect a DataError" + test);
+          is(e.code, 0, "expect zero" + test);
           continue;
         }
 
@@ -205,8 +206,9 @@
           }
           catch(e) {
             ok(true, "did throw" + test);
-            ok(e instanceof IDBDatabaseException, "Got a IDBDatabaseException" + test);
-            is(e.code, IDBDatabaseException.DATA_ERR, "expect a DATA_ERR" + test);
+            ok(e instanceof DOMException, "Got a DOMException" + test);
+            is(e.name, "DataError", "expect a DataError" + test);
+            is(e.code, 0, "expect zero" + test);
   
             is(JSON.stringify(info.v), preValue, "failing put didn't modify value" + test);
   
