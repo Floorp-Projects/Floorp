@@ -38,12 +38,9 @@
 #endif
 
 #define ASSERT(assertion) MOZ_ASSERT(assertion)
-#define ASSERT_UNUSED(variable, assertion) do { \
-    (void)variable; \
-    ASSERT(assertion); \
-} while (0)
+#define ASSERT_UNUSED(variable, assertion) (((void)variable), ASSERT(assertion))
 #define ASSERT_NOT_REACHED() MOZ_NOT_REACHED("")
-#define CRASH() MOZ_CRASH()
+#define CRASH() MOZ_Crash()
 #define COMPILE_ASSERT(exp, name) MOZ_STATIC_ASSERT(exp, #name)
 
 #endif

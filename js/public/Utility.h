@@ -332,6 +332,22 @@ __BitScanReverse64(unsigned __int64 val)
     JS_END_MACRO
 #endif
 
+/*
+ * Internal function.
+ * Compute the log of the least power of 2 greater than or equal to n. This is
+ * a version of JS_CeilingLog2 that operates on unsigned integers with
+ * CPU-dependant size.
+ */
+#define JS_CEILING_LOG2W(n) ((n) <= 1 ? 0 : 1 + JS_FLOOR_LOG2W((n) - 1))
+
+/*
+ * Internal function.
+ * Compute the log of the greatest power of 2 less than or equal to n.
+ * This is a version of JS_FloorLog2 that operates on unsigned integers with
+ * CPU-dependant size and requires that n != 0.
+ */
+#define JS_FLOOR_LOG2W(n) (JS_ASSERT((n) != 0), js_FloorLog2wImpl(n))
+
 #if JS_BYTES_PER_WORD == 4
 # ifdef JS_HAS_BUILTIN_BITSCAN32
 #  define js_FloorLog2wImpl(n)                                                \
@@ -349,27 +365,6 @@ JS_PUBLIC_API(size_t) js_FloorLog2wImpl(size_t n);
 #else
 # error "NOT SUPPORTED"
 #endif
-
-/*
- * Internal function.
- * Compute the log of the least power of 2 greater than or equal to n. This is
- * a version of JS_CeilingLog2 that operates on unsigned integers with
- * CPU-dependant size.
- */
-#define JS_CEILING_LOG2W(n) ((n) <= 1 ? 0 : 1 + JS_FLOOR_LOG2W((n) - 1))
-
-/*
- * Internal function.
- * Compute the log of the greatest power of 2 less than or equal to n.
- * This is a version of JS_FloorLog2 that operates on unsigned integers with
- * CPU-dependant size and requires that n != 0.
- */
-static MOZ_ALWAYS_INLINE size_t
-JS_FLOOR_LOG2W(size_t n)
-{
-    JS_ASSERT(n != 0);
-    return js_FloorLog2wImpl(n);
-}
 
 JS_END_EXTERN_C
 
