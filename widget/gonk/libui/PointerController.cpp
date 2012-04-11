@@ -54,7 +54,9 @@ static const nsecs_t POINTER_FADE_DURATION = 500 * 1000000LL; // 500 ms
 PointerController::PointerController(const sp<PointerControllerPolicyInterface>& policy,
         const sp<Looper>& looper, const sp<SpriteController>& spriteController) :
         mPolicy(policy), mLooper(looper), mSpriteController(spriteController) {
+#ifdef HAVE_ANDROID_OS
     mHandler = new WeakMessageHandler(this);
+#endif
 
     AutoMutex _l(mLock);
 
@@ -82,7 +84,9 @@ PointerController::PointerController(const sp<PointerControllerPolicyInterface>&
 }
 
 PointerController::~PointerController() {
+#ifdef HAVE_ANDROID_OS
     mLooper->removeMessages(mHandler);
+#endif
 
     AutoMutex _l(mLock);
 
@@ -461,20 +465,28 @@ void PointerController::startAnimationLocked() {
     if (!mLocked.animationPending) {
         mLocked.animationPending = true;
         mLocked.animationTime = systemTime(SYSTEM_TIME_MONOTONIC);
+#ifdef HAVE_ANDROID_OS
         mLooper->sendMessageDelayed(ANIMATION_FRAME_INTERVAL, mHandler, Message(MSG_ANIMATE));
+#endif
     }
 }
 
 void PointerController::resetInactivityTimeoutLocked() {
+#ifdef HAVE_ANDROID_OS
     mLooper->removeMessages(mHandler, MSG_INACTIVITY_TIMEOUT);
+#endif
 
     nsecs_t timeout = mLocked.inactivityTimeout == INACTIVITY_TIMEOUT_SHORT
             ? INACTIVITY_TIMEOUT_DELAY_TIME_SHORT : INACTIVITY_TIMEOUT_DELAY_TIME_NORMAL;
+#ifdef HAVE_ANDROID_OS
     mLooper->sendMessageDelayed(timeout, mHandler, MSG_INACTIVITY_TIMEOUT);
+#endif
 }
 
 void PointerController::removeInactivityTimeoutLocked() {
+#ifdef HAVE_ANDROID_OS
     mLooper->removeMessages(mHandler, MSG_INACTIVITY_TIMEOUT);
+#endif
 }
 
 void PointerController::updatePointerLocked() {
