@@ -19,14 +19,11 @@
 #ifndef MOZ_TOUCH
   <script type="application/javascript" src="chrome://browser/content/touch.js"/>
 #endif
-#ifndef MOZ_WIDGET_GONK
-  <script type="application/javascript" src="chrome://browser/content/httpd.js"/>
-#endif
 
   <browser id="homescreen"
            type="content-primary"
            flex="1"
            style="overflow: hidden;"
-           src="data:text/html,%3C!DOCTYPE html>%3Cbody style='background:black;'>"/>
+           src="data:text/html;charset=utf-8,%3C!DOCTYPE html>%3Cbody style='background:black;'>"/>
 </window>
 
