@@ -538,6 +538,18 @@ LayerManagerD3D10::SetViewport(const nsIntSize &aViewport)
 }
 
 void
+LayerManagerD3D10::SetupInputAssembler()
+{
+  mDevice->IASetInputLayout(mInputLayout);
+
+  UINT stride = sizeof(Vertex);
+  UINT offset = 0;
+  ID3D10Buffer *buffer = mVertexBuffer;
+  mDevice->IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
+  mDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+}
+
+void
 LayerManagerD3D10::SetupPipeline()
 {
   VerifyBufferSize();
@@ -558,13 +570,8 @@ LayerManagerD3D10::SetupPipeline()
 
   ID3D10RenderTargetView *view = mRTView;
   mDevice->OMSetRenderTargets(1, &view, NULL);
-  mDevice->IASetInputLayout(mInputLayout);
 
-  UINT stride = sizeof(Vertex);
-  UINT offset = 0;
-  ID3D10Buffer *buffer = mVertexBuffer;
-  mDevice->IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
-  mDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+  SetupInputAssembler();
 
   SetViewport(nsIntSize(rect.width, rect.height));
 }
