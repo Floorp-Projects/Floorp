@@ -8,15 +8,26 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
-          src="common.js"></script>
+          src="../common.js"></script>
   <script type="application/javascript"
-          src="role.js"></script>
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../attributes.js"></script>
 
   <script type="application/javascript">
     function doTests()
     {
-      // Test html:form.
+      // landmark tests section
       testRole("frm", ROLE_FORM);
+
+      // nsHyperTextAcc tests section
+      // Test html:form.
+      testRole("nav", ROLE_SECTION);
+      testRole("header", ROLE_HEADER);
+      testRole("footer", ROLE_FOOTER);
+      testRole("article", ROLE_DOCUMENT);
+      testRole("aside", ROLE_NOTE);
+      testRole("section", ROLE_SECTION);
 
       // test html:div
       testRole("sec", ROLE_SECTION);
@@ -73,14 +84,49 @@
      title="Expose click action if mouseup and mousedown are registered">
     Mozilla Bug 423409
   </a>
+  <a target="_blank"
+     title="Provide mappings for html5 <nav> <header> <footer> <article>"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=593368">
+    Bug 593368
+  </a><br/>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=613502"
+     title="Map <article> like we do aria role article">
+    Bug 613502
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=610650"
+     title="Change implementation of HTML5 landmark elements to conform">
+    Bug 610650
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=614310"
+     title="Map section to pane (like role=region)">
+    Mozilla Bug 614310
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=734982"
+     title="Map ARIA role FORM">
+    Bug 734982
+  </a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
+
   <form id="frm" action="submit.php" method="post">
     <label for="data">File</label>:
     <input type="file" id="data" name="data" size="50"/>
   </form>
+
+  <nav id="nav">a nav</nav>
+  <header id="header">a header</header>
+  <footer id="footer">a footer</footer>
+  <article id="article">an article</article>
+  <aside id="aside">by the way I am an aside</aside>
+  <section id="section">a section</section>
+
   <p id="p">A paragraph for comparison.</p>
   <div id="sec">A normal div</div>
   <blockquote id="quote">A citation</blockquote>
