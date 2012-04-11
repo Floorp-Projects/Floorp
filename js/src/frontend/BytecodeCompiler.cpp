@@ -112,7 +112,7 @@ DefineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript* script)
         JSScript *outer = worklist.back();
         worklist.popBack();
 
-        if (JSScript::isValidOffset(outer->objectsOffset)) {
+        if (outer->hasObjects()) {
             JSObjectArray *arr = outer->objects();
 
             /*
@@ -132,16 +132,14 @@ DefineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript* script)
                     outer->isOuterFunction = true;
                     inner->isInnerFunction = true;
                 }
-                if (!JSScript::isValidOffset(inner->globalsOffset) &&
-                    !JSScript::isValidOffset(inner->objectsOffset)) {
+                if (!inner->hasGlobals() && !inner->hasObjects())
                     continue;
-                }
                 if (!worklist.append(inner))
                     return false;
             }
         }
 
-        if (!JSScript::isValidOffset(outer->globalsOffset))
+        if (!outer->hasGlobals())
             continue;
 
         GlobalSlotArray *globalUses = outer->globals();

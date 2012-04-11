@@ -736,47 +736,55 @@ struct JSScript : public js::gc::Cell
     static const uint8_t INVALID_OFFSET = 0xFF;
     static bool isValidOffset(uint8_t offset) { return offset != INVALID_OFFSET; }
 
+    bool hasConsts()        { return isValidOffset(constsOffset);     }
+    bool hasObjects()       { return isValidOffset(objectsOffset);    }
+    bool hasRegexps()       { return isValidOffset(regexpsOffset);    }
+    bool hasTrynotes()      { return isValidOffset(trynotesOffset);   }
+    bool hasGlobals()       { return isValidOffset(globalsOffset);    }
+    bool hasClosedArgs()    { return isValidOffset(closedArgsOffset); }
+    bool hasClosedVars()    { return isValidOffset(closedVarsOffset); }
+
     JSConstArray *consts() {
-        JS_ASSERT(isValidOffset(constsOffset));
+        JS_ASSERT(hasConsts());
         return reinterpret_cast<JSConstArray *>(data + constsOffset);
     }
 
     JSObjectArray *objects() {
-        JS_ASSERT(isValidOffset(objectsOffset));
+        JS_ASSERT(hasObjects());
         return reinterpret_cast<JSObjectArray *>(data + objectsOffset);
     }
 
     JSObjectArray *regexps() {
-        JS_ASSERT(isValidOffset(regexpsOffset));
+        JS_ASSERT(hasRegexps());
         return reinterpret_cast<JSObjectArray *>(data + regexpsOffset);
     }
 
     JSTryNoteArray *trynotes() {
-        JS_ASSERT(isValidOffset(trynotesOffset));
+        JS_ASSERT(hasTrynotes());
         return reinterpret_cast<JSTryNoteArray *>(data + trynotesOffset);
     }
 
     js::GlobalSlotArray *globals() {
-        JS_ASSERT(isValidOffset(globalsOffset));
+        JS_ASSERT(hasGlobals());
         return reinterpret_cast<js::GlobalSlotArray *>(data + globalsOffset);
     }
 
     js::ClosedSlotArray *closedArgs() {
-        JS_ASSERT(isValidOffset(closedArgsOffset));
+        JS_ASSERT(hasClosedArgs());
         return reinterpret_cast<js::ClosedSlotArray *>(data + closedArgsOffset);
     }
 
     js::ClosedSlotArray *closedVars() {
-        JS_ASSERT(isValidOffset(closedVarsOffset));
+        JS_ASSERT(hasClosedVars());
         return reinterpret_cast<js::ClosedSlotArray *>(data + closedVarsOffset);
     }
 
     uint32_t numClosedArgs() {
-        return isValidOffset(closedArgsOffset) ? closedArgs()->length : 0;
+        return hasClosedArgs() ? closedArgs()->length : 0;
     }
 
     uint32_t numClosedVars() {
-        return isValidOffset(closedVarsOffset) ? closedVars()->length : 0;
+        return hasClosedVars() ? closedVars()->length : 0;
     }
 
     js::HeapPtrAtom &getAtom(size_t index) const {

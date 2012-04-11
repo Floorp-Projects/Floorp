@@ -906,7 +906,7 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, JSScript *script, StaticBlockObjec
     uint32_t depthAndCount = 0;
     if (mode == XDR_ENCODE) {
         obj = *objp;
-        parentId = JSScript::isValidOffset(script->objectsOffset)
+        parentId = script->hasObjects()
                    ? FindObjectIndex(script->objects(), obj->enclosingBlock())
                    : NO_PARENT_INDEX;
         uint32_t depth = obj->stackDepth();

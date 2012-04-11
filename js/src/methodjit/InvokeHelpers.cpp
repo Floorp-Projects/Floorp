@@ -78,7 +78,7 @@ FindExceptionHandler(JSContext *cx)
     StackFrame *fp = cx->fp();
     JSScript *script = fp->script();
 
-    if (!JSScript::isValidOffset(script->trynotesOffset))
+    if (!script->hasTrynotes())
         return NULL;
 
   error:
