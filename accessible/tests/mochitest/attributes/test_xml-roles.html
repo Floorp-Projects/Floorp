@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>HTML landmark tests</title>
+  <title>XML landmark tests</title>
   <link rel="stylesheet" type="text/css"
         href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
@@ -19,16 +19,6 @@
 
     function doTest()
     {
-      testRole("nav", ROLE_SECTION);
-      testRole("header", ROLE_HEADER);
-      testRole("footer", ROLE_FOOTER);
-      testRole("article", ROLE_DOCUMENT);
-      testRole("aside", ROLE_NOTE);
-      testRole("section", ROLE_SECTION); // XXX bug 739612: not a landmark
-
-      testRole("main", ROLE_DOCUMENT);
-      testRole("form", ROLE_FORM);
-
       // Some AT may look for this
       testAttrs("nav", {"xml-roles" : "navigation"}, true);
       testAttrs("footer", {"xml-roles" : "contentinfo"}, true);
@@ -36,16 +26,6 @@
       testAttrs("section", {"xml-roles" : "region"}, true);
       testAttrs("main", {"xml-roles" : "main"}, true); // // ARIA override
       testAttrs("form", {"xml-roles" : "form"}, true);
-
-      // And some AT may look for this
-      testAttrs("nav", {"tag" : "nav"}, true);
-      testAttrs("header", {"tag" : "header"}, true);
-      testAttrs("footer", {"tag" : "footer"}, true);
-      testAttrs("article", {"tag" : "article"}, true);
-      testAttrs("aside", {"tag" : "aside"}, true);
-      testAttrs("section", {"tag" : "section"}, true);
-      testAttrs("main", {"tag" : "article"}, true);
-      testAttrs("form", {"tag" : "article"}, true);
 
       SimpleTest.finish();
     }
@@ -87,12 +67,9 @@
   </pre>
 
   <nav id="nav">a nav</nav>
-  <header id="header">a header</header>
   <footer id="footer">a footer</footer>
   <aside id="aside">by the way I am an aside</aside>
   <section id="section">a section</section>
-
-  <article id="article">an article</article>
   <article id="main" role="main">a main area</article>
   <article id="form" role="form">a form area</article>
 
