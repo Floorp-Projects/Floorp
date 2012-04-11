@@ -7,7 +7,7 @@ function f() {
         return 7;
     }
 }
-assertEq(f(), "object");
+assertEq(f(), "function");
 
 function g() {
     var arguments = 0;

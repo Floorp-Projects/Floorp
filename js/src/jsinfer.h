@@ -143,7 +143,7 @@ class Type
     static inline Type Int32Type()     { return Type(JSVAL_TYPE_INT32); }
     static inline Type DoubleType()    { return Type(JSVAL_TYPE_DOUBLE); }
     static inline Type StringType()    { return Type(JSVAL_TYPE_STRING); }
-    static inline Type LazyArgsType()  { return Type(JSVAL_TYPE_MAGIC); }
+    static inline Type MagicArgType()  { return Type(JSVAL_TYPE_MAGIC); }
     static inline Type AnyObjectType() { return Type(JSVAL_TYPE_OBJECT); }
     static inline Type UnknownType()   { return Type(JSVAL_TYPE_UNKNOWN); }
 
@@ -468,7 +468,7 @@ class TypeSet
     /* Get any type tag which all values in this set must have. */
     JSValueType getKnownTypeTag(JSContext *cx);
 
-    bool isLazyArguments(JSContext *cx) { return getKnownTypeTag(cx) == JSVAL_TYPE_MAGIC; }
+    bool isMagicArguments(JSContext *cx) { return getKnownTypeTag(cx) == JSVAL_TYPE_MAGIC; }
 
     /* Whether the type set or a particular object has any of a set of flags. */
     bool hasObjectFlags(JSContext *cx, TypeObjectFlags flags);

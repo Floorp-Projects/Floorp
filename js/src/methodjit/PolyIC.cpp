@@ -86,6 +86,7 @@ class PICLinker : public LinkerHelper
         if (!pool)
             return false;
         if (!ic.addPool(cx, pool)) {
+            markVerified();
             pool->release();
             js_ReportOutOfMemory(cx);
             return false;

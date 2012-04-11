@@ -38,6 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Chromium headers must come before Mozilla headers.
+#include "base/process_util.h"
+
 #include "nsDebugImpl.h"
 #include "nsDebug.h"
 #ifdef MOZ_CRASHREPORTER
@@ -100,6 +103,11 @@ Break(const char *aMsg);
 #include <stdlib.h>
 #endif
 
+using namespace mozilla;
+
+static bool sIsMultiprocess = false;
+static const char *sMultiprocessDescription = NULL;
+
 static PRInt32 gAssertionCount = 0;
 
 NS_IMPL_QUERY_INTERFACE2(nsDebugImpl, nsIDebug, nsIDebug2)
@@ -161,6 +169,13 @@ nsDebugImpl::GetAssertionCount(PRInt32* aResult)
 {
   *aResult = gAssertionCount;
   return NS_OK;
+}
+
+/* static */ void
+nsDebugImpl::SetMultiprocessMode(const char *aDesc)
+{
+  sIsMultiprocess = true;
+  sMultiprocessDescription = aDesc;
 }
 
 /**
@@ -288,19 +303,33 @@ NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
      aSeverity = NS_DEBUG_WARNING;
    };
 
-   PR_sxprintf(StuffFixedBuffer, &buf, "%s: ", sevString);
+#  define PrintToBuffer(...) PR_sxprintf(StuffFixedBuffer, &buf, __VA_ARGS__)
+
+   // If we're multiprocess, print "[PID]" or "[Desc PID]" at the beginning of
+   // the message.
+   if (sIsMultiprocess) {
+     PrintToBuffer("[");
+     if (sMultiprocessDescription) {
+       PrintToBuffer("%s ", sMultiprocessDescription);
+     }
+     PrintToBuffer("%d] ", base::GetCurrentProcId());
+   }
+
+   PrintToBuffer("%s: ", sevString);
 
    if (aStr)
-     PR_sxprintf(StuffFixedBuffer, &buf, "%s: ", aStr);
+     PrintToBuffer("%s: ", aStr);
 
    if (aExpr)
-     PR_sxprintf(StuffFixedBuffer, &buf, "'%s', ", aExpr);
+     PrintToBuffer("'%s', ", aExpr);
 
    if (aFile)
-     PR_sxprintf(StuffFixedBuffer, &buf, "file %s, ", aFile);
+     PrintToBuffer("file %s, ", aFile);
 
    if (aLine != -1)
-     PR_sxprintf(StuffFixedBuffer, &buf, "line %d", aLine);
+     PrintToBuffer("line %d", aLine);
+
+#  undef PrintToBuffer
 
    // Write out the message to the debug log
    PR_LOG(gDebugLog, ll, ("%s", buf.buffer));

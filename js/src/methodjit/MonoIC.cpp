@@ -222,6 +222,7 @@ class EqualityICLinker : public LinkerHelper
             return false;
         JS_ASSERT(!f.regs.inlined());
         if (!f.chunk()->execPools.append(pool)) {
+            markVerified();
             pool->release();
             js_ReportOutOfMemory(cx);
             return false;
@@ -438,6 +439,7 @@ NativeStubLinker::init(JSContext *cx)
     stub.pool = pool;
     stub.jump = locationOf(done);
     if (!chunk->nativeCallStubs.append(stub)) {
+        markVerified();
         pool->release();
         return false;
     }
@@ -1074,25 +1076,18 @@ ic::SplatApplyArgs(VMFrame &f)
 {
     JSContext *cx = f.cx;
     JS_ASSERT(!f.regs.inlined());
-    JS_ASSERT(GET_ARGC(f.regs.pc) == 2);
 
-    /*
-     * The lazyArgsObj flag indicates an optimized call |f.apply(x, arguments)|
-     * where the args obj has not been created or pushed on the stack. Thus,
-     * if lazyArgsObj is set, the stack for |f.apply(x, arguments)| is:
-     *
-     *  | Function.prototype.apply | f | x |
-     *
-     * Otherwise, if !lazyArgsObj, the stack is a normal 2-argument apply:
-     *
-     *  | Function.prototype.apply | f | x | arguments |
-     */
-    if (f.u.call.lazyArgsObj) {
+    CallArgs args = CallArgsFromSp(GET_ARGC(f.regs.pc), f.regs.sp);
+    JS_ASSERT(args.length() == 2);
+    JS_ASSERT(IsNativeFunction(args.calleev(), js_fun_apply));
+
+    if (args[1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
         /* Mirror isMagic(JS_OPTIMIZED_ARGUMENTS) case in js_fun_apply. */
         /* Steps 4-6. */
         unsigned length = f.regs.fp()->numActualArgs();
         JS_ASSERT(length <= StackSpace::ARGS_LENGTH_MAX);
 
+        f.regs.sp--;
         if (!BumpStack(f, length))
             THROWV(false);
 
@@ -1104,29 +1099,26 @@ ic::SplatApplyArgs(VMFrame &f)
         return true;
     }
 
-    Value *vp = f.regs.sp - 4;
-    JS_ASSERT(JS_CALLEE(cx, vp).toObject().toFunction()->native() == js_fun_apply);
-
     /*
      * This stub should mimic the steps taken by js_fun_apply. Step 1 and part
      * of Step 2 have already been taken care of by calling jit code.
      */
 
     /* Step 2 (part 2). */
-    if (vp[3].isNullOrUndefined()) {
+    if (args[1].isNullOrUndefined()) {
         f.regs.sp--;
         f.u.call.dynamicArgc = 0;
         return true;
     }
 
     /* Step 3. */
-    if (!vp[3].isObject()) {
+    if (!args[1].isObject()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_APPLY_ARGS, js_apply_str);
         THROWV(false);
     }
 
     /* Steps 4-5. */
-    JSObject *aobj = &vp[3].toObject();
+    JSObject *aobj = &args[1].toObject();
     uint32_t length;
     if (!js_GetLengthProperty(cx, aobj, &length))
         THROWV(false);
