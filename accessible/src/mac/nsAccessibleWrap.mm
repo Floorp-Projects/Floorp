@@ -118,7 +118,6 @@ nsAccessibleWrap::GetNativeType ()
       
     case roles::ENTRY:
     case roles::STATICTEXT:
-    case roles::LABEL:
     case roles::CAPTION:
     case roles::ACCEL_LABEL:
     case roles::TEXT_LEAF:
