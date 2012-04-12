@@ -42,9 +42,9 @@
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsDocAccessible.h"
-#include "nsXULFormControlAccessible.h"
 #include "Role.h"
 #include "States.h"
+#include "XULFormControlAccessible.h"
 
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
