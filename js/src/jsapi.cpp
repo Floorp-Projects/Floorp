@@ -734,6 +734,7 @@ JSRuntime::JSRuntime()
     gcStats(thisFromCtor()),
     gcNumber(0),
     gcStartNumber(0),
+    gcIsFull(false),
     gcTriggerReason(gcreason::NO_REASON),
     gcStrictCompartmentChecking(false),
     gcIncrementalState(gc::NO_INCREMENTAL),
