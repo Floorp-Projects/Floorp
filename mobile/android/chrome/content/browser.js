@@ -1975,6 +1975,9 @@ Tab.prototype = {
           let tab = BrowserApp.getTabForWindow(win);
           tab.clickToPlayPluginsActivated = true;
           PluginHelper.playAllPlugins(win);
+
+          if (tab.clickToPlayPluginDoorhangerShown)
+            NativeWindow.doorhanger.hide("ask-to-play-plugins", tab.id);
         }, true);
         break;
       }
