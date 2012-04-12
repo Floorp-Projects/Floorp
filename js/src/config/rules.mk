@@ -954,21 +954,6 @@ else
 endif
 endif
 
-#
-# Purify target.  Solaris/sparc only to start.
-# Purify does not recognize "egcs" or "c++" so we go with
-# "gcc" and "g++" for now.
-#
-pure:	$(PROGRAM)
-ifeq ($(CPP_PROG_LINK),1)
-	$(PURIFY) $(CCC) -o $^.pure $(CXXFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
-else
-	$(PURIFY) $(CC) -o $^.pure $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
-endif
-ifndef NO_DIST_INSTALL
-	$(INSTALL) $(IFLAGS2) $^.pure $(FINAL_TARGET)
-endif
-
 quantify: $(PROGRAM)
 ifeq ($(CPP_PROG_LINK),1)
 	$(QUANTIFY) $(CCC) -o $^.quantify $(CXXFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
