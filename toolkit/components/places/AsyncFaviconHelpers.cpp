@@ -880,13 +880,9 @@ AsyncGetFaviconURLForPage::Run()
 
   nsCAutoString iconSpec;
   nsresult rv = FetchIconURL(mDB, mPageSpec, iconSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  // No icon was found.
-  if (iconSpec.IsEmpty())
-    return NS_OK;
-
-  // Now notify our callback of the icon spec we retrieved.
+  // Now notify our callback of the icon spec we retrieved, even if empty.
   IconData iconData;
   iconData.spec.Assign(iconSpec);
 
@@ -949,11 +945,7 @@ AsyncGetFaviconDataForPage::Run()
 
   nsCAutoString iconSpec;
   nsresult rv = FetchIconURL(mDB, mPageSpec, iconSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!iconSpec.Length()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   IconData iconData;
   iconData.spec.Assign(iconSpec);
@@ -961,8 +953,13 @@ AsyncGetFaviconDataForPage::Run()
   PageData pageData;
   pageData.spec.Assign(mPageSpec);
 
-  rv = FetchIconInfo(mDB, iconData);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!iconSpec.IsEmpty()) {
+    rv = FetchIconInfo(mDB, iconData);
+    if (NS_FAILED(rv)) {
+      iconData.spec.Truncate();
+      MOZ_NOT_REACHED("Fetching favicon information failed unexpectedly.");
+    }
+  }
 
   nsCOMPtr<nsIRunnable> event =
     new NotifyIconObservers(iconData, pageData, mCallback);
@@ -1091,44 +1088,53 @@ NotifyIconObservers::Run()
                   "This should be called on the main thread");
 
   nsCOMPtr<nsIURI> iconURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(iconURI), mIcon.spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Notify observers only if something changed.
-  if (mIcon.status & ICON_STATUS_SAVED ||
-      mIcon.status & ICON_STATUS_ASSOCIATED) {
-    nsCOMPtr<nsIURI> pageURI;
-    rv = NS_NewURI(getter_AddRefs(pageURI), mPage.spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsFaviconService* favicons = nsFaviconService::GetFaviconService();
-    NS_ENSURE_STATE(favicons);
-    (void)favicons->SendFaviconNotifications(pageURI, iconURI, mPage.guid);
-
-    // If the page is bookmarked and the bookmarked url is different from the
-    // updated one, start a new task to update its icon as well.
-    if (!mPage.bookmarkedSpec.IsEmpty() &&
-        !mPage.bookmarkedSpec.Equals(mPage.spec)) {
-      // Create a new page struct to avoid polluting it with old data.
-      PageData bookmarkedPage;
-      bookmarkedPage.spec = mPage.bookmarkedSpec;
-
-      // This will be silent, so be sure to not pass in the current callback.
-      nsCOMPtr<nsIFaviconDataCallback> nullCallback;
-      nsRefPtr<AsyncAssociateIconToPage> event =
-          new AsyncAssociateIconToPage(mIcon, bookmarkedPage, nullCallback);
-      mDB->DispatchToAsyncThread(event);
+  if (!mIcon.spec.IsEmpty()) {
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(iconURI), mIcon.spec)));
+    if (iconURI)
+    {
+      // Notify observers only if something changed.
+      if (mIcon.status & ICON_STATUS_SAVED ||
+          mIcon.status & ICON_STATUS_ASSOCIATED) {
+        SendGlobalNotifications(iconURI);
+      }
     }
   }
 
   if (mCallback) {
-    (void)mCallback->OnFaviconDataAvailable(iconURI,
-                                            mIcon.data.Length(),
-                                            TO_INTBUFFER(mIcon.data),
-                                            mIcon.mimeType);
+    (void)mCallback->OnComplete(iconURI, mIcon.data.Length(),
+                                TO_INTBUFFER(mIcon.data), mIcon.mimeType);
   }
 
   return NS_OK;
+}
+
+void
+NotifyIconObservers::SendGlobalNotifications(nsIURI* aIconURI)
+{
+  nsCOMPtr<nsIURI> pageURI;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(pageURI), mPage.spec)));
+  if (pageURI) {
+    nsFaviconService* favicons = nsFaviconService::GetFaviconService();
+    MOZ_ASSERT(favicons);
+    if (favicons) {
+      (void)favicons->SendFaviconNotifications(pageURI, aIconURI, mPage.guid);
+    }
+  }
+
+  // If the page is bookmarked and the bookmarked url is different from the
+  // updated one, start a new task to update its icon as well.
+  if (!mPage.bookmarkedSpec.IsEmpty() &&
+      !mPage.bookmarkedSpec.Equals(mPage.spec)) {
+    // Create a new page struct to avoid polluting it with old data.
+    PageData bookmarkedPage;
+    bookmarkedPage.spec = mPage.bookmarkedSpec;
+
+    // This will be silent, so be sure to not pass in the current callback.
+    nsCOMPtr<nsIFaviconDataCallback> nullCallback;
+    nsRefPtr<AsyncAssociateIconToPage> event =
+        new AsyncAssociateIconToPage(mIcon, bookmarkedPage, nullCallback);
+    mDB->DispatchToAsyncThread(event);
+  }
 }
 
 } // namespace places
