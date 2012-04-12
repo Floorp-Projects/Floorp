@@ -403,7 +403,6 @@ MY_RULES	:= $(DEPTH)/config/myrules.mk
 # Default command macros; can be overridden in <arch>.mk.
 #
 CCC = $(CXX)
-PURIFY = purify $(PURIFYOPTIONS)
 QUANTIFY = quantify $(QUANTIFYOPTIONS)
 XPIDL_LINK = $(PYTHON) $(LIBXUL_DIST)/sdk/bin/xpt.py link
 
