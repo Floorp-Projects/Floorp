@@ -16,6 +16,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-common/rest.js");
+Cu.import("resource://services-common/utils.js");
 
 const Prefs = new Preferences("services.common.tokenserverclient.");
 
@@ -164,13 +165,32 @@ TokenServerClient.prototype = {
         return;
       }
 
+      let self = this;
+      function callCallback(error, result) {
+        if (!cb) {
+          self._log.warn("Callback already called! Did it throw?");
+          return;
+        }
+
+        try {
+          cb(error, result);
+        } catch (ex) {
+          self._log.warn("Exception when calling user-supplied callback: " +
+                         CommonUtils.exceptionStr(ex));
+        }
+
+        cb = null;
+      }
+
       try {
-        client._processTokenResponse(this.response, cb);
+        client._processTokenResponse(this.response, callCallback);
       } catch (ex) {
+        this._log.warn("Error processing token server response: " +
+                       CommonUtils.exceptionStr(ex));
+
         let error = new TokenServerClientError(ex);
         error.response = this.response;
-        cb(error, null);
-        return;
+        callCallback(error, null);
       }
     });
   },
