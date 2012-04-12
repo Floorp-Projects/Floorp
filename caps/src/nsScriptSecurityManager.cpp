@@ -95,6 +95,7 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/bindings/Utils.h"
+#include "mozilla/StandardInteger.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3374,9 +3375,9 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
       mIsWritingPrefs(false),
       mPolicyPrefsChanged(true)
 {
-    NS_ASSERTION(sizeof(PRWord) == sizeof(void*),
-                 "PRWord and void* have different lengths on this platform. "
-                 "This may cause a security failure with the SecurityLevel union.");
+    MOZ_STATIC_ASSERT(sizeof(intptr_t) == sizeof(void*),
+                      "intptr_t and void* have different lengths on this platform. "
+                      "This may cause a security failure with the SecurityLevel union.");
     mPrincipals.Init(31);
 }
 
