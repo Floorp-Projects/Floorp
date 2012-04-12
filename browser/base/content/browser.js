@@ -1716,6 +1716,16 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 #endif
   }
 
+  // Enable Remote Debugger?
+  let enabled = gPrefService.getBoolPref("devtools.debugger.remote-enabled");
+  if (enabled) {
+    document.getElementById("menu_remoteDebugger").hidden = false;
+    document.getElementById("Tools:RemoteDebugger").removeAttribute("disabled");
+#ifdef MENUBAR_CAN_AUTOHIDE
+    document.getElementById("appmenu_remoteDebugger").hidden = false;
+#endif
+  }
+
   // Enable Error Console?
   // XXX Temporarily always-enabled, see bug 601201
   let consoleEnabled = true || gPrefService.getBoolPref("devtools.errorconsole.enabled");
