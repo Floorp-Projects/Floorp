@@ -250,16 +250,21 @@ var gCSSProperties = {
 						"repeat 27 27 27 27 / 10 10 10 / 10 10 url('border.png')",
 						"url('border.png') 27 27 27 27 / / 10 10 1em",
 						"fill 27 27 27 27 / / 10 10 1em url('border.png')",
-						"url('border.png') 27 27 27 27 /",
 						"url('border.png') 27 27 27 27 / 1em 1em 1em 1em repeat",
 						"url('border.png') 27 27 27 27 / 1em 1em 1em 1em stretch round" ],
 		invalid_values: [ "url('border.png') 27 27 27 27 27",
 						  "url('border.png') 27 27 27 27 / 1em 1em 1em 1em 1em",
+						  "url('border.png') 27 27 27 27 /",
 						  "url('border.png') fill",
 						  "url('border.png') fill repeat",
 						  "fill repeat",
 						  "url('border.png') fill / 1em",
-						  "url('border.png') / repeat" ]
+						  "url('border.png') / repeat",
+						  "url('border.png') 1 /",
+						  "url('border.png') 1 / /",
+						  "1 / url('border.png')",
+						  "url('border.png') / 1",
+						  "url('border.png') / / 1"]
 	},
 	"-moz-border-image-source": {
 		domProp: "MozBorderImageSource",
