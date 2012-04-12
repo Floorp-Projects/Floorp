@@ -293,7 +293,8 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     ScopedCanberraFile canberraFile(tmpFile);
 
     mozilla::AutoFDClose fd;
-    rv = canberraFile->OpenNSPRFileDesc(PR_WRONLY, PR_IRUSR | PR_IWUSR, &fd);
+    rv = canberraFile->OpenNSPRFileDesc(PR_WRONLY, PR_IRUSR | PR_IWUSR,
+                                        &fd.rwget());
     if (NS_FAILED(rv)) {
         return rv;
     }
