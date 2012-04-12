@@ -834,43 +834,84 @@ EmitUnaliasedVarOp(JSContext *cx, JSOp op, uint16_t slot, BytecodeEmitter *bce)
 }
 
 static bool
-EmitAliasedVarOp(JSContext *cx, JSOp op, uint16_t binding, JSAtom *atom, BytecodeEmitter *bce)
+EmitAliasedVarOp(JSContext *cx, JSOp op, ScopeCoordinate sc, JSAtom *atom, BytecodeEmitter *bce)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_SCOPECOORD);
-
-    /*
-     * XXX This is temporary: bug 659577 will need to compute the number of
-     * cloned block objects to hop over.
-     */
-    uint16_t hops = 0;
 
     jsatomid atomIndex;
     if (!bce->makeAtomIndex(atom, &atomIndex))
         return false;
 
     bool decomposed = js_CodeSpec[op].format & JOF_DECOMPOSE;
-    unsigned n = 2 * sizeof(uint16_t) + sizeof(uint32_t) + (decomposed ? 1 : 0);
+    unsigned n = 2 * sizeof(uint16_t) + sizeof(uint32_t) + sizeof(uint16_t) + (decomposed ? 1 : 0);
+    JS_ASSERT(int(n) + 1 /* op */ == js_CodeSpec[op].length);
 
     ptrdiff_t off = EmitN(cx, bce, op, n);
     if (off < 0)
         return false;
 
     jsbytecode *pc = bce->code(off);
-    SET_UINT16(pc, hops);
+    SET_UINT16(pc, sc.hops);
     pc += sizeof(uint16_t);
-    SET_UINT16(pc, binding);
+    SET_UINT16(pc, sc.binding);
     pc += sizeof(uint16_t);
     SET_UINT32_INDEX(pc, atomIndex);
+    pc += sizeof(uint32_t);
+    SET_UINT16(pc, sc.frameBinding);
     return true;
+}
+
+static unsigned
+ClonedBlockDepth(BytecodeEmitter *bce)
+{
+    unsigned clonedBlockDepth = 0;
+    for (StaticBlockObject *b = bce->sc->blockChain; b; b = b->enclosingBlock()) {
+        if (b->needsClone())
+            ++clonedBlockDepth;
+    }
+
+    return clonedBlockDepth;
 }
 
 static bool
 EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
 {
-    uint16_t binding = JOF_OPTYPE(pn->getOp()) == JOF_QARG
-                       ? bce->sc->bindings.argToBinding(pn->pn_cookie.slot())
-                       : bce->sc->bindings.localToBinding(pn->pn_cookie.slot());
-    return EmitAliasedVarOp(cx, op, binding, pn->atom(), bce);
+    /*
+     * The contents of the dynamic scope chain (fp->scopeChain) exactly reflect
+     * the needsClone-subset of the block chain. Use this to determine the
+     * number of ClonedBlockObjects on fp->scopeChain to skip to find the scope
+     * object containing the var to which pn is bound. ALIASEDVAR ops cannot
+     * reach across with scopes so ClonedBlockObjects is the only NestedScope
+     * on the scope chain.
+     */
+    ScopeCoordinate sc;
+    if (JOF_OPTYPE(pn->getOp()) == JOF_QARG) {
+        JS_ASSERT(bce->sc->funIsHeavyweight());
+        sc.hops = ClonedBlockDepth(bce);
+        sc.binding = bce->sc->bindings.argToBinding(pn->pn_cookie.slot());
+        sc.frameBinding = sc.binding;
+    } else {
+        JS_ASSERT(JOF_OPTYPE(pn->getOp()) == JOF_LOCAL || pn->isKind(PNK_FUNCTION));
+        unsigned local = pn->pn_cookie.slot();
+        sc.frameBinding = bce->sc->bindings.localToBinding(local);
+        if (local < bce->sc->bindings.numVars()) {
+            sc.hops = ClonedBlockDepth(bce);
+            sc.binding = sc.frameBinding;
+        } else {
+            unsigned depth = local - bce->sc->bindings.numVars();
+            unsigned hops = 0;
+            StaticBlockObject *b = bce->sc->blockChain;
+            while (!b->containsVarAtDepth(depth)) {
+                if (b->needsClone())
+                    hops++;
+                b = b->enclosingBlock();
+            }
+            sc.hops = hops;
+            sc.binding = depth - b->stackDepth();
+        }
+    }
+
+    return EmitAliasedVarOp(cx, op, sc, pn->atom(), bce);
 }
 
 static bool
@@ -1033,7 +1074,6 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
 
         /* Beware the empty destructuring dummy. */
         if (!dn) {
-            JS_ASSERT(i + 1 <= blockObj->slotCount());
             blockObj->setAliased(i, bce->sc->bindingsAccessedDynamically());
             continue;
         }
@@ -2595,9 +2635,12 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         if (Emit1(cx, bce, JSOP_ARGUMENTS) < 0)
             return false;
         if (bce->sc->bindingsAccessedDynamically()) {
+            ScopeCoordinate sc;
+            sc.hops = 0;
+            sc.binding = bce->sc->bindings.localToBinding(bce->sc->argumentsLocalSlot());
+            sc.frameBinding = sc.binding;
             JSAtom *atom = cx->runtime->atomState.argumentsAtom;
-            uint16_t binding = bce->sc->bindings.localToBinding(bce->sc->argumentsLocalSlot());
-            if (!EmitAliasedVarOp(cx, JSOP_SETALIASEDVAR, binding, atom, bce))
+            if (!EmitAliasedVarOp(cx, JSOP_SETALIASEDVAR, sc, atom, bce))
                 return false;
         } else {
             if (!EmitUnaliasedVarOp(cx, JSOP_SETLOCAL, bce->sc->argumentsLocalSlot(), bce))
