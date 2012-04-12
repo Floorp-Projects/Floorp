@@ -157,6 +157,12 @@ public class ProfileMigrator {
     private static final int kPlacesTypeFolder   = 2;
 
     /*
+      For statistics keeping.
+    */
+    private final String kHistoryCountQuery =
+        "SELECT COUNT(*) FROM moz_historyvisits";
+
+    /*
       The sort criterion here corresponds to the one used for the
       Awesomebar results. It's a simplification of Frecency.
       We must divide date by 1000 due to the micro (Places)
@@ -200,7 +206,16 @@ public class ProfileMigrator {
     }
 
     public void launch() {
+        boolean timeThisRun = false;
+        Telemetry.Timer timer = null;
+        // First run, time things
+        if (!hasMigrationRun()) {
+            timeThisRun = true;
+            timer = new Telemetry.Timer("BROWSERPROVIDER_XUL_IMPORT_TIME");
+        }
         launch(DEFAULT_HISTORY_MIGRATE_COUNT);
+        if (timeThisRun)
+            timer.stop();
     }
 
     public void launch(int maxEntries) {
@@ -481,6 +496,12 @@ public class ProfileMigrator {
             int queryResultEntries = 0;
 
             try {
+                Cursor cursor = db.rawQuery(kHistoryCountQuery, null);
+                cursor.moveToFirst();
+                int historyCount = cursor.getInt(0);
+                Telemetry.HistogramAdd("BROWSERPROVIDER_XUL_IMPORT_HISTORY",
+                                       historyCount);
+
                 final String currentTime = Long.toString(System.currentTimeMillis());
                 final String[] queryParams = new String[] {
                     /* current time */
@@ -489,7 +510,7 @@ public class ProfileMigrator {
                     Integer.toString(maxEntries),
                     Integer.toString(currentEntries)
                 };
-                Cursor cursor = db.rawQuery(kHistoryQuery, queryParams);
+                cursor = db.rawQuery(kHistoryQuery, queryParams);
                 queryResultEntries = cursor.getCount();
 
                 final int urlCol = cursor.getColumnIndex(kHistoryUrl);
@@ -656,6 +677,11 @@ public class ProfileMigrator {
                 final int faviconDataCol = cursor.getColumnIndex(kFaviconData);
                 final int faviconUrlCol = cursor.getColumnIndex(kFaviconUrl);
                 final int faviconGuidCol = cursor.getColumnIndex(kFaviconGuid);
+
+                // Keep statistics
+                int bookmarkCount = cursor.getCount();
+                Telemetry.HistogramAdd("BROWSERPROVIDER_XUL_IMPORT_BOOKMARKS",
+                                       bookmarkCount);
 
                 // The keys are places IDs.
                 Set<Long> openFolders = new HashSet<Long>();
