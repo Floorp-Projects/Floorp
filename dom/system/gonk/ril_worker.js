@@ -658,7 +658,14 @@ let RIL = {
       }
       RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = true;
     }
-
+    let ril_impl = libcutils.property_get("gsm.version.ril-impl");
+    if (ril_impl == "Qualcomm RIL 1.0") {
+      if (DEBUG) {
+        debug("Detected Qualcomm RIL 1.0, " +
+              "disabling RILQUIRKS_V5_LEGACY to false");
+      }
+      RILQUIRKS_V5_LEGACY = false;
+    }
     this.rilQuirksInitialized = true;
   },
 
@@ -2354,12 +2361,6 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
       radioState == RADIO_STATE_OFF) {
     return;
   }
-  if (RILQUIRKS_V5_LEGACY &&
-      (radioState == RADIO_STATE_SIM_NOT_READY ||
-       radioState == RADIO_STATE_RUIM_NOT_READY ||
-       radioState == RADIO_STATE_NV_NOT_READY)) {
-    return;
-  }
   this.getICCStatus();
 };
 RIL[UNSOLICITED_RESPONSE_CALL_STATE_CHANGED] = function UNSOLICITED_RESPONSE_CALL_STATE_CHANGED() {
@@ -2469,6 +2470,13 @@ RIL[UNSOLICITED_OEM_HOOK_RAW] = null;
 RIL[UNSOLICITED_RINGBACK_TONE] = null;
 RIL[UNSOLICITED_RESEND_INCALL_MUTE] = null;
 RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length) {
+  // Prevent response id collision between UNSOLICITED_RIL_CONNECTED and
+  // UNSOLICITED_VOICE_RADIO_TECH_CHANGED for Akami on gingerbread branch.
+  if (!length) {
+    this.initRILQuirks();
+    return;
+  }
+
   let version = Buf.readUint32List()[0];
   RILQUIRKS_V5_LEGACY = (version < 5);
   if (DEBUG) {
@@ -2476,7 +2484,6 @@ RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length) {
     debug("RILQUIRKS_V5_LEGACY is " + RILQUIRKS_V5_LEGACY);
   }
 };
-
 
 /**
  * This object exposes the functionality to parse and serialize PDU strings

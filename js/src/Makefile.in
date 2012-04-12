@@ -256,8 +256,9 @@ EXPORTS_js = \
 ###############################################
 # BEGIN include sources for low-level code shared with mfbt
 #
-VPATH += $(srcdir)/../../mfbt
-include $(srcdir)/../../mfbt/exported_headers.mk
+MFBT_ROOT = $(srcdir)/../../mfbt
+VPATH += $(MFBT_ROOT)
+include $(MFBT_ROOT)/exported_headers.mk
 
 ifdef ENABLE_METHODJIT
 
@@ -318,25 +319,6 @@ endif
 #############################################
 
 endif
-
-###############################################
-# BEGIN include sources for V8 dtoa
-#
-VPATH += 	$(srcdir)/v8-dtoa \
-		$(NONE)
-
-CPPSRCS += 	checks.cc \
-		conversions.cc \
-		diy-fp.cc \
-		v8-dtoa.cc \
-		fast-dtoa.cc \
-		platform.cc \
-		utils.cc \
-		$(NONE)
-
-#
-# END enclude sources for V8 dtoa
-#############################################
 
 # For architectures without YARR JIT, PCRE is faster than the YARR
 # interpreter (bug 684559).
@@ -451,6 +433,8 @@ endif
 
 endif # JS_HAS_CTYPES
 
+LOCAL_INCLUDES += -I$(MFBT_ROOT)/double-conversion
+
 ifdef HAVE_DTRACE
 INSTALLED_HEADERS += \
 		$(CURDIR)/javascript-trace.h \
@@ -494,7 +478,7 @@ include $(topsrcdir)/config/config.mk
 ifeq (,$(MOZ_GLUE_PROGRAM_LDFLAGS))
 # When building standalone, we need to include mfbt sources, and to declare
 # "exported" mfbt symbols on its behalf when we use its headers.
-include $(srcdir)/../../mfbt/sources.mk
+include $(MFBT_ROOT)/sources.mk
 DEFINES += -DIMPL_MFBT
 endif
 

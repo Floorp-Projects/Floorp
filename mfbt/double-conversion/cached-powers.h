@@ -1,4 +1,4 @@
-// Copyright 2006-2008 the V8 project authors. All rights reserved.
+// Copyright 2010 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -25,27 +25,40 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-//
-// Top include for all V8 .cc files.
-//
+#ifndef DOUBLE_CONVERSION_CACHED_POWERS_H_
+#define DOUBLE_CONVERSION_CACHED_POWERS_H_
 
-#ifndef V8_V8_H_
-#define V8_V8_H_
+#include "diy-fp.h"
 
-// V8 only uses DEBUG, but included external files
-// may use NDEBUG - make sure they are consistent.
-#if defined(DEBUG) && defined(NDEBUG)
-#error both DEBUG and NDEBUG are set
-#endif
+namespace double_conversion {
 
-// Basic includes
-#include "include-v8.h"
-#include "globals.h"
-#include "checks.h"
-#include "utils.h"
+class PowersOfTenCache {
+ public:
 
-#include "platform.h"
+  // Not all powers of ten are cached. The decimal exponent of two neighboring
+  // cached numbers will differ by kDecimalExponentDistance.
+  static const int kDecimalExponentDistance;
 
-namespace i = v8::internal;
+  static const int kMinDecimalExponent;
+  static const int kMaxDecimalExponent;
 
-#endif  // V8_V8_H_
+  // Returns a cached power-of-ten with a binary exponent in the range
+  // [min_exponent; max_exponent] (boundaries included).
+  static void GetCachedPowerForBinaryExponentRange(int min_exponent,
+                                                   int max_exponent,
+                                                   DiyFp* power,
+                                                   int* decimal_exponent);
+
+  // Returns a cached power of ten x ~= 10^k such that
+  //   k <= decimal_exponent < k + kCachedPowersDecimalDistance.
+  // The given decimal_exponent must satisfy
+  //   kMinDecimalExponent <= requested_exponent, and
+  //   requested_exponent < kMaxDecimalExponent + kDecimalExponentDistance.
+  static void GetCachedPowerForDecimalExponent(int requested_exponent,
+                                               DiyFp* power,
+                                               int* found_exponent);
+};
+
+}  // namespace double_conversion
+
+#endif  // DOUBLE_CONVERSION_CACHED_POWERS_H_
