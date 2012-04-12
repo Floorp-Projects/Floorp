@@ -40,6 +40,7 @@
 #include "sqlite3.h"
 
 void setup_sqlite_functions(void *sqlite_handle);
+static jobject sqliteInternalCall(JNIEnv* jenv, sqlite3 *db, jstring jQuery, jobjectArray jParams, jlongArray jQueryRes);
 
 #define SQLITE_WRAPPER(name, return_type, args...) \
 typedef return_type (*name ## _t)(args);  \

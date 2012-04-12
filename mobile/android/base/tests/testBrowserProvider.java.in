@@ -295,6 +295,7 @@ public class testBrowserProvider extends ContentProviderTest {
         mTests.add(new TestDeleteHistoryImages());
         mTests.add(new TestUpdateHistory());
         mTests.add(new TestUpdateHistoryImages());
+        mTests.add(new TestUpdateOrInsertHistory());
 
         mTests.add(new TestCombinedView());
     }
@@ -997,6 +998,121 @@ public class testBrowserProvider extends ContentProviderTest {
 
             mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesFaviconCol)), "UTF8"),
                          newFavicon, "Updated image has corresponding favicon image");
+        }
+    }
+
+    class TestUpdateOrInsertHistory extends Test {
+        private final String TEST_URL_1 = "http://example.com";
+        private final String TEST_URL_2 = "http://example.org";
+        private final String TEST_TITLE = "Example";
+
+        private long getHistoryEntryIdByUrl(String url) {
+            Cursor c = mProvider.query(mHistoryUri,
+                                       new String[] { mHistoryIdCol },
+                                       mHistoryUrlCol + " = ?",
+                                       new String[] { url },
+                                       null);
+            c.moveToFirst();
+            long id = c.getLong(0);
+            c.close();
+
+            return id;
+        }
+
+        public void test() throws Exception {
+            Uri updateHistoryUriWithProfile = mHistoryUri.buildUpon().
+                appendQueryParameter("insert_if_needed", "true").
+                appendQueryParameter("increment_visits", "true").build();
+
+            // Update a non-existent history entry, without specifying visits or title
+            ContentValues values = new ContentValues();
+            values.put(mHistoryUrlCol, TEST_URL_1);
+
+            int updated = mProvider.update(updateHistoryUriWithProfile, values,
+                                           mHistoryUrlCol + " = ?",
+                                           new String[] { TEST_URL_1 });
+            mAsserter.is((updated == 0), true, "History entry was inserted, not updated");
+
+            long id = getHistoryEntryIdByUrl(TEST_URL_1);
+            Cursor c = getHistoryEntryById(id);
+            mAsserter.is(c.moveToFirst(), true, "History entry was inserted");
+
+            long dateCreated = c.getLong(c.getColumnIndex(mHistoryDateCreatedCol));
+            long dateModified = c.getLong(c.getColumnIndex(mHistoryDateModifiedCol));
+
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mHistoryVisitsCol))), new Long(1),
+                         "Inserted history entry has correct default number of visits");
+            mAsserter.is(c.getString(c.getColumnIndex(mHistoryTitleCol)), TEST_URL_1,
+                         "Inserted history entry has correct default title");
+
+            // Update the history entry, without specifying an additional visit count
+            values = new ContentValues();
+            values.put(mHistoryLastVisitedCol, System.currentTimeMillis());
+            values.put(mHistoryTitleCol, TEST_TITLE);
+
+            updated = mProvider.update(updateHistoryUriWithProfile, values,
+                                       mHistoryIdCol + " = ?",
+                                       new String[] { String.valueOf(id) });
+            mAsserter.is((updated == 1), true, "Inserted history entry was updated");
+
+            c = getHistoryEntryById(id);
+            mAsserter.is(c.moveToFirst(), true, "Updated history entry found");
+
+            mAsserter.is(c.getString(c.getColumnIndex(mHistoryTitleCol)), TEST_TITLE,
+                         "Updated history entry has correct title");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mHistoryVisitsCol))), new Long(2),
+                         "Updated history entry has correct number of visits");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mHistoryDateCreatedCol))), new Long(dateCreated),
+                         "Updated history entry has same creation date");
+            mAsserter.isnot(new Long(c.getLong(c.getColumnIndex(mHistoryDateModifiedCol))), new Long(dateModified),
+                            "Updated history entry has new modification date");
+
+            // Create a new history entry, specifying visits and history
+            values = new ContentValues();
+            values.put(mHistoryUrlCol, TEST_URL_2);
+            values.put(mHistoryTitleCol, TEST_TITLE);
+            values.put(mHistoryVisitsCol, 10);
+
+            updated = mProvider.update(updateHistoryUriWithProfile, values,
+                                           mHistoryUrlCol + " = ?",
+                                           new String[] { values.getAsString(mHistoryUrlCol) });
+            mAsserter.is((updated == 0), true, "History entry was inserted, not updated");
+
+            id = getHistoryEntryIdByUrl(TEST_URL_2);
+            c = getHistoryEntryById(id);
+            mAsserter.is(c.moveToFirst(), true, "History entry was inserted");
+
+            dateCreated = c.getLong(c.getColumnIndex(mHistoryDateCreatedCol));
+            dateModified = c.getLong(c.getColumnIndex(mHistoryDateModifiedCol));
+
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mHistoryVisitsCol))), new Long(10),
+                         "Inserted history entry has correct specified number of visits");
+            mAsserter.is(c.getString(c.getColumnIndex(mHistoryTitleCol)), TEST_TITLE,
+                         "Inserted history entry has correct specified title");
+
+            // Update the history entry, specifying additional visit count
+            values = new ContentValues();
+            values.put(mHistoryVisitsCol, 10);
+
+            updated = mProvider.update(updateHistoryUriWithProfile, values,
+                                       mHistoryIdCol + " = ?",
+                                       new String[] { String.valueOf(id) });
+            mAsserter.is((updated == 1), true, "Inserted history entry was updated");
+
+            c = getHistoryEntryById(id);
+            mAsserter.is(c.moveToFirst(), true, "Updated history entry found");
+
+            mAsserter.is(c.getString(c.getColumnIndex(mHistoryTitleCol)), TEST_TITLE,
+                         "Updated history entry has correct unchanged title");
+            mAsserter.is(c.getString(c.getColumnIndex(mHistoryUrlCol)), TEST_URL_2,
+                         "Updated history entry has correct unchanged URL");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mHistoryVisitsCol))), new Long(20),
+                         "Updated history entry has correct number of visits");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mHistoryDateCreatedCol))), new Long(dateCreated),
+                         "Updated history entry has same creation date");
+            mAsserter.isnot(new Long(c.getLong(c.getColumnIndex(mHistoryDateModifiedCol))), new Long(dateModified),
+                            "Updated history entry has new modification date");
+
         }
     }
 

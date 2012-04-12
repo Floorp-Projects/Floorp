@@ -8,14 +8,17 @@ import org.mozilla.gecko.sqlite.SQLiteBridgeException;
 import org.mozilla.gecko.sqlite.MatrixBlobCursor;
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
+import android.database.DatabaseErrorHandler;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.lang.String;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import android.util.Log;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -27,11 +30,16 @@ import java.util.Set;
 public class SQLiteBridge {
     private static final String LOGTAG = "SQLiteBridge";
 
-    // Path to the database. We reopen it every query.
+    // Path to the database. If this database was not opened with openDatabase, we reopen it every query.
     private String mDb;
+    // pointer to the database if it was opened with openDatabase
+    protected long mDbPointer = 0;
 
     // Values remembered after a query.
     private long[] mQueryResults;
+
+    private boolean mTransactionSuccess = false;
+    private boolean mInTransaction = false;
 
     private static final int RESULT_INSERT_ROW_ID = 0;
     private static final int RESULT_ROWS_CHANGED = 1;
@@ -41,6 +49,13 @@ public class SQLiteBridge {
                                                       String[] aParams,
                                                       long[] aUpdateResult)
         throws SQLiteBridgeException;
+    private static native MatrixBlobCursor sqliteCallWithDb(long aDb, String aQuery,
+                                                            String[] aParams,
+                                                            long[] aUpdateResult)
+        throws SQLiteBridgeException;
+    private static native long openDatabase(String aDb)
+        throws SQLiteBridgeException;
+    private static native void closeDatabase(long aDb);
 
     // Takes the path to the database we want to access.
     public SQLiteBridge(String aDb) throws SQLiteBridgeException {
@@ -121,17 +136,23 @@ public class SQLiteBridge {
 
     public long insert(String table, String nullColumnHack, ContentValues values)
                throws SQLiteBridgeException {
-        Set<Entry<String, Object>> valueSet = values.valueSet();
-        Iterator<Entry<String, Object>> valueIterator = valueSet.iterator();
+        if (values == null)
+            return 0;
+
         ArrayList<String> valueNames = new ArrayList<String>();
         ArrayList<String> valueBinds = new ArrayList<String>();
         ArrayList<String> keyNames = new ArrayList<String>();
 
-        while(valueIterator.hasNext()) {
-            Entry<String, Object> value = valueIterator.next();
+        for (Entry<String, Object> value : values.valueSet()) {
             keyNames.add(value.getKey());
-            valueNames.add("?");
-            valueBinds.add(value.getValue().toString());
+
+            Object val = value.getValue();
+            if (val == null) {
+                valueNames.add("NULL");
+            } else {
+                valueNames.add("?");
+                valueBinds.add(val.toString());
+            }
         }
 
         StringBuilder sb = new StringBuilder("INSERT into ");
@@ -154,25 +175,35 @@ public class SQLiteBridge {
 
     public int update(String table, ContentValues values, String whereClause, String[] whereArgs)
                throws SQLiteBridgeException {
-        Set<Entry<String, Object>> valueSet = values.valueSet();
-        Iterator<Entry<String, Object>> valueIterator = valueSet.iterator();
+        if (values == null)
+            return 0;
+
         ArrayList<String> valueNames = new ArrayList<String>();
 
         StringBuilder sb = new StringBuilder("UPDATE ");
         sb.append(table);
-
         sb.append(" SET ");
-        while(valueIterator.hasNext()) {
-            Entry<String, Object> value = valueIterator.next();
-            sb.append(value.getKey() + " = ?");
-            valueNames.add(value.getValue().toString());
-            if (valueIterator.hasNext())
-                sb.append(", ");
+
+        boolean isFirst = true;
+
+        for (Entry<String, Object> value : values.valueSet()) {
+            if (isFirst)
+                isFirst = false;
             else
-                sb.append(" ");
+                sb.append(", ");
+
+            sb.append(value.getKey());
+
+            Object val = value.getValue();
+            if (val == null) {
+                sb.append(" = NULL");
+            } else {
+                sb.append(" = ?");
+                valueNames.add(val.toString());
+            }
         }
 
-        if (whereClause != null) {
+        if (!TextUtils.isEmpty(whereClause)) {
             sb.append(" WHERE ");
             sb.append(whereClause);
             for (int i = 0; i < whereArgs.length; i++) {
@@ -204,10 +235,92 @@ public class SQLiteBridge {
     // are not supported.
     private Cursor internalQuery(String aQuery, String[] aParams)
         throws SQLiteBridgeException {
+
         mQueryResults = new long[2];
+        if (isOpen()) {
+            return sqliteCallWithDb(mDbPointer, aQuery, aParams, mQueryResults);
+        }
         return sqliteCall(mDb, aQuery, aParams, mQueryResults);
     }
 
-    // nop, provided for API compatibility with SQLiteDatabase.
-    public void close() { }
+    /*
+     * The second two parameters here are just provided for compatbility with SQLiteDatabase
+     * Support for them is not currently implemented
+    */
+    public static SQLiteBridge openDatabase(String path, SQLiteDatabase.CursorFactory factory, int flags)
+        throws SQLiteException {
+        SQLiteBridge bridge = null;
+        try {
+            bridge = new SQLiteBridge(path);
+            bridge.mDbPointer = bridge.openDatabase(path);
+        } catch(SQLiteBridgeException ex) {
+            // catch and rethrow as a SQLiteException to match SQLiteDatabase
+            throw new SQLiteException(ex.getMessage());
+        }
+        return bridge;
+    }
+
+    public void close() {
+        if (isOpen()) {
+          closeDatabase(mDbPointer);
+        }
+        mDbPointer = 0;
+    }
+
+    public boolean isOpen() {
+        return mDbPointer > 0;
+    }
+
+    public void beginTransaction() throws SQLiteBridgeException {
+        if (inTransaction()) {
+            throw new SQLiteBridgeException("Nested transactions are not supported");
+        }
+        execSQL("BEGIN EXCLUSIVE");
+        mTransactionSuccess = false;
+        mInTransaction = true;
+    }
+
+    public void beginTransactionNonExclusive() throws SQLiteBridgeException {
+        if (inTransaction()) {
+            throw new SQLiteBridgeException("Nested transactions are not supported");
+        }
+        execSQL("BEGIN IMMEDIATE");
+        mTransactionSuccess = false;
+        mInTransaction = true;
+    }
+
+    public void endTransaction() {
+        if (!inTransaction())
+            return;
+
+        try {
+          if (mTransactionSuccess) {
+              execSQL("COMMIT TRANSACTION");
+          } else {
+              execSQL("ROLLBACK TRANSACTION");
+          }
+        } catch(SQLiteBridgeException ex) {
+            Log.e(LOGTAG, "Error ending transaction", ex);
+        }
+        mInTransaction = false;
+        mTransactionSuccess = false;
+    }
+
+    public void setTransactionSuccessful() throws SQLiteBridgeException {
+        if (!inTransaction()) {
+            throw new SQLiteBridgeException("setTransactionSuccessful called outside a transaction");
+        }
+        mTransactionSuccess = true;
+    }
+
+    public boolean inTransaction() {
+        return mInTransaction;
+    }
+
+    public void finalize() {
+        if (isOpen()) {
+            Log.e(LOGTAG, "Bridge finalized without closing the database");
+            close();
+        }
+    }
 }

@@ -299,9 +299,10 @@ public:
   }
 #endif
 
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap);
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aForceTransparentSurface = nsnull);
+                                   bool* aSnap,
+                                   bool* aForceTransparentSurface);
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx);
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,

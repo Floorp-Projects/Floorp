@@ -122,7 +122,7 @@ public:
 
     // called to determine or set if a connection has been reused.
     virtual bool IsReused() = 0;
-    virtual void   DontReuse() = 0;
+    virtual void DontReuse() = 0;
 
     // called by a transaction when the transaction reads more from the socket
     // than it should have (eg. containing part of the next pipelined response).
