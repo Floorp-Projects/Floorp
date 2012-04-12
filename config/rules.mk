@@ -495,9 +495,6 @@ TAG_PROGRAM		= xargs etags -a
 # (moved this from config.mk so that config.mk can be included
 #  before the CPPSRCS are defined)
 #
-ifneq ($(CPPSRCS)$(CMMSRCS),)
-CPP_PROG_LINK		= 1
-endif
 ifneq ($(HOST_CPPSRCS)$(HOST_CMMSRCS),)
 HOST_CPP_PROG_LINK	= 1
 endif
