@@ -3945,25 +3945,27 @@ CheckStackRoot(JSTracer *trc, uintptr_t *w)
     VALGRIND_MAKE_MEM_DEFINED(&w, sizeof(w));
 #endif
 
-    ConservativeGCTest test = MarkIfGCThingWord(trc, *w, DONT_MARK_THING);
+    ConservativeGCTest test = MarkIfGCThingWord(trc, *w);
 
     if (test == CGCT_VALID) {
         JSContext *iter = NULL;
         bool matched = false;
         JSRuntime *rt = trc->runtime;
-        for (unsigned i = 0; i < THING_ROOT_COUNT; i++) {
-            Root<Cell*> *rooter = rt->thingGCRooters[i];
-            while (rooter) {
-                if (rooter->address() == (Cell **) w)
-                    matched = true;
-                rooter = rooter->previous();
+        for (ContextIter cx(rt); !cx.done(); cx.next()) {
+            for (unsigned i = 0; i < THING_ROOT_LIMIT; i++) {
+                Root<void*> *rooter = cx->thingGCRooters[i];
+                while (rooter) {
+                    if (rooter->address() == static_cast<void*>(w))
+                        matched = true;
+                    rooter = rooter->previous();
+                }
             }
-        }
-        CheckRoot *check = rt->checkGCRooters;
-        while (check) {
-            if (check->contains(static_cast<uint8_t*>(w), sizeof(w)))
-                matched = true;
-            check = check->previous();
+            SkipRoot *skip = cx->skipGCRooters;
+            while (skip) {
+                if (skip->contains(reinterpret_cast<uint8_t*>(w), sizeof(w)))
+                    matched = true;
+                skip = skip->previous();
+            }
         }
         if (!matched) {
             /*
@@ -4001,17 +4003,17 @@ CheckStackRoots(JSContext *cx)
     JS_ASSERT(ctd->hasStackToScan());
     uintptr_t *stackMin, *stackEnd;
 #if JS_STACK_GROWTH_DIRECTION > 0
-    stackMin = td->nativeStackBase;
-    stackEnd = ctd->nativeStackTop;
+    stackMin = rt->nativeStackBase;
+    stackEnd = cgcd->nativeStackTop;
 #else
-    stackMin = ctd->nativeStackTop + 1;
-    stackEnd = td->nativeStackBase;
+    stackMin = cgcd->nativeStackTop + 1;
+    stackEnd = reinterpret_cast<uintptr_t *>(rt->nativeStackBase);
 #endif
 
     JS_ASSERT(stackMin <= stackEnd);
     CheckStackRootsRange(&checker, stackMin, stackEnd);
-    CheckStackRootsRange(&checker, ctd->registerSnapshot.words,
-                         ArrayEnd(ctd->registerSnapshot.words));
+    CheckStackRootsRange(&checker, cgcd->registerSnapshot.words,
+                         ArrayEnd(cgcd->registerSnapshot.words));
 }
 
 #endif /* DEBUG && JSGC_ROOT_ANALYSIS && !JS_THREADSAFE */

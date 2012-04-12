@@ -742,9 +742,6 @@ struct JSArgumentFormatMap {
 
 namespace js {
 
-template <typename T> class Root;
-class CheckRoot;
-
 struct AutoResolving;
 
 static inline bool
@@ -1020,29 +1017,6 @@ struct JSContext : js::ContextFriendFields
                                                without the corresponding
                                                JS_EndRequest. */
 #endif
-
-
-#ifdef JSGC_ROOT_ANALYSIS
-
-    /*
-     * Stack allocated GC roots for stack GC heap pointers, which may be
-     * overwritten if moved during a GC.
-     */
-    js::Root<js::gc::Cell*> *thingGCRooters[js::THING_ROOT_COUNT];
-
-#ifdef DEBUG
-    /*
-     * Stack allocated list of stack locations which hold non-relocatable
-     * GC heap pointers (where the target is rooted somewhere else) or integer
-     * values which may be confused for GC heap pointers. These are used to
-     * suppress false positives which occur when a rooting analysis treats the
-     * location as holding a relocatable pointer, but have no other effect on
-     * GC behavior.
-     */
-    js::CheckRoot *checkGCRooters;
-#endif
-
-#endif /* JSGC_ROOT_ANALYSIS */
 
     /* Stored here to avoid passing it around as a parameter. */
     unsigned               resolveFlags;
