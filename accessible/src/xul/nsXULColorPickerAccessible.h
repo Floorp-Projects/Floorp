@@ -50,10 +50,8 @@ public:
   nsXULColorPickerTileAccessible(nsIContent* aContent,
                                  nsDocAccessible* aDoc);
 
-  // nsIAccessible
-  NS_IMETHOD GetValue(nsAString& _retval);
-
   // nsAccessible
+  virtual void Value(nsString& aValue);
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 

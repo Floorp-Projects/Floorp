@@ -72,14 +72,12 @@ class nsXFormsAccessible : public nsHyperTextAccessibleWrap,
 public:
   nsXFormsAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
-  // nsIAccessible
-
-  // Returns value of instance node that xforms element is bound to.
-  NS_IMETHOD GetValue(nsAString& aValue);
-
   // nsAccessible
   // Returns value of child xforms 'hint' element.
   virtual void Description(nsString& aDescription);
+
+  // Returns value of instance node that xforms element is bound to.
+  virtual void Value(nsString& aValue);
 
   // Returns value of child xforms 'label' element.
   virtual nsresult GetNameInternal(nsAString& aName);
@@ -189,8 +187,10 @@ public:
   nsXFormsSelectableItemAccessible(nsIContent* aContent,
                                    nsDocAccessible* aDoc);
 
-  NS_IMETHOD GetValue(nsAString& aValue);
   NS_IMETHOD DoAction(PRUint8 aIndex);
+
+  // nsAccessible
+  virtual void Value(nsString& aValue);
 
   // ActionAccessible
   virtual PRUint8 ActionCount();
