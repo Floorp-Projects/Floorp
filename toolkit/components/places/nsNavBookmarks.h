@@ -308,9 +308,6 @@ private:
    */
   nsRefPtr<mozilla::places::Database> mDB;
 
-  nsString mGUIDBase;
-  nsresult GetGUIDBase(nsAString& aGUIDBase);
-
   PRInt32 mItemCount;
 
   nsMaybeWeakPtrArray<nsINavBookmarkObserver> mObservers;

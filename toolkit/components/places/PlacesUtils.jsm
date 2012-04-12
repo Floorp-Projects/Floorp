@@ -131,7 +131,6 @@ var PlacesUtils = {
   TYPE_X_MOZ_PLACE_ACTION: "text/x-moz-place-action",
 
   EXCLUDE_FROM_BACKUP_ANNO: "places/excludeFromBackup",
-  GUID_ANNO: "placesInternal/GUID",
   LMANNO_FEEDURI: "livemark/feedURI",
   LMANNO_SITEURI: "livemark/siteURI",
   LMANNO_EXPIRATION: "livemark/expiration",
@@ -2302,7 +2301,6 @@ TransactionItemCache.prototype = {
     this._parentId || -1,
   keyword: null,
   title: null,
-  guid: null,
   dateAdded: null,
   lastModified: null,
   postData: null,
@@ -2486,9 +2484,6 @@ PlacesCreateFolderTransaction.prototype = {
                                                 this.childTransactions);
       txn.doTransaction();
     }
-
-    if (this.item.guid)
-      PlacesUtils.bookmarks.setItemGUID(this.item.id, this.item.guid);
   },
 
   undoTransaction: function CFTXN_undoTransaction()
@@ -2498,11 +2493,6 @@ PlacesCreateFolderTransaction.prototype = {
                                                 this.childTransactions);
       txn.undoTransaction();
     }
-
-    // If a GUID exists for this item, preserve it before removing the item.
-    if (PlacesUtils.annotations.itemHasAnnotation(this.item.id,
-                                                  PlacesUtils.GUID_ANNO))
-      this.item.guid = PlacesUtils.bookmarks.getItemGUID(this.item.id);
 
     // Remove item only after all child transactions have been reverted.
     PlacesUtils.bookmarks.removeItem(this.item.id);
@@ -2574,8 +2564,6 @@ PlacesCreateBookmarkTransaction.prototype = {
                                                 this.childTransactions);
       txn.doTransaction();
     }
-    if (this.item.guid)
-      PlacesUtils.bookmarks.setItemGUID(this.item.id, this.item.guid);
   },
 
   undoTransaction: function CITXN_undoTransaction()
@@ -2586,11 +2574,6 @@ PlacesCreateBookmarkTransaction.prototype = {
                                                 this.childTransactions);
       txn.undoTransaction();
     }
-
-    // If a GUID exists for this item, preserve it before removing the item.
-    if (PlacesUtils.annotations
-                   .itemHasAnnotation(this.item.id, PlacesUtils.GUID_ANNO))
-      this.item.guid = PlacesUtils.bookmarks.getItemGUID(this.item.id);
 
     // Remove item only after all child transactions have been reverted.
     PlacesUtils.bookmarks.removeItem(this.item.id);
@@ -2622,17 +2605,10 @@ PlacesCreateSeparatorTransaction.prototype = {
   {
     this.item.id =
       PlacesUtils.bookmarks.insertSeparator(this.item.parentId, this.item.index);
-    if (this.item.guid)
-      PlacesUtils.bookmarks.setItemGUID(this.item.id, this.item.guid);
   },
 
   undoTransaction: function CSTXN_undoTransaction()
   {
-    // If a GUID exists for this item, preserve it before removing the item.
-    if (PlacesUtils.annotations
-                   .itemHasAnnotation(this.item.id, PlacesUtils.GUID_ANNO))
-      this.item.guid = PlacesUtils.bookmarks.getItemGUID(this.item.id);
-
     PlacesUtils.bookmarks.removeItem(this.item.id);
   }
 };
@@ -2689,8 +2665,6 @@ PlacesCreateLivemarkTransaction.prototype = {
             PlacesUtils.setAnnotationsForItem(this.item.id,
                                               this.item.annotations);
           }
-          if (this.item.guid)
-            PlacesUtils.bookmarks.setItemGUID(this.item.id, this.item.guid);
         }
       }).bind(this)
     );
@@ -2703,10 +2677,6 @@ PlacesCreateLivemarkTransaction.prototype = {
     PlacesUtils.livemarks.getLivemark(
       { id: this.item.id },
       (function (aStatus, aLivemark) {
-        // If a GUID exists for this item, preserve it before removing the item.
-        if (PlacesUtils.annotations.itemHasAnnotation(this.item.id, PlacesUtils.GUID_ANNO))
-          this.item.guid = PlacesUtils.bookmarks.getItemGUID(this.item.id);
-
         PlacesUtils.bookmarks.removeItem(this.item.id);
       }).bind(this)
     );
@@ -3437,8 +3407,6 @@ PlacesTagURITransaction.prototype = {
                                    this.item.uri,
                                    PlacesUtils.bookmarks.DEFAULT_INDEX,
                                    PlacesUtils.history.getPageTitle(this.item.uri));
-      if (this.item.guid)
-        PlacesUtils.bookmarks.setItemGUID(this.item.id, this.item.guid);
     }
     PlacesUtils.tagging.tagURI(this.item.uri, this.item.tags);
   },
@@ -3446,11 +3414,6 @@ PlacesTagURITransaction.prototype = {
   undoTransaction: function TUTXN_undoTransaction()
   {
     if (this.item.id != -1) {
-      // If a GUID exists for this item, preserve it before removing the item.
-      if (PlacesUtils.annotations
-                     .itemHasAnnotation(this.item.id, PlacesUtils.GUID_ANNO)) {
-        this.item.guid = PlacesUtils.bookmarks.getItemGUID(this.item.id);
-      }
       PlacesUtils.bookmarks.removeItem(this.item.id);
       this.item.id = -1;
     }

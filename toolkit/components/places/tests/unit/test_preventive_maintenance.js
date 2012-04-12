@@ -109,6 +109,99 @@ let current_test = null;
 //------------------------------------------------------------------------------
 
 tests.push({
+  name: "A.1",
+  desc: "Remove obsolete annotations from moz_annos",
+
+  _obsoleteWeaveAttribute: "weave/test",
+  _placeId: null,
+
+  setup: function() {
+    // Add a place to ensure place_id = 1 is valid.
+    this._placeId = addPlace();
+    // Add an obsolete attribute.
+    let stmt = mDBConn.createStatement(
+      "INSERT INTO moz_anno_attributes (name) VALUES (:anno)"
+    );
+    stmt.params['anno'] = this._obsoleteWeaveAttribute;
+    stmt.execute();
+    stmt.finalize();
+    stmt = mDBConn.createStatement(
+      "INSERT INTO moz_annos (place_id, anno_attribute_id) "
+    + "VALUES (:place_id, "
+    +   "(SELECT id FROM moz_anno_attributes WHERE name = :anno)"
+    + ")"
+    );
+    stmt.params['place_id'] = this._placeId;
+    stmt.params['anno'] = this._obsoleteWeaveAttribute;
+    stmt.execute();
+    stmt.finalize();
+  },
+
+  check: function() {
+    // Check that the obsolete annotation has been removed.
+    let stmt = mDBConn.createStatement(
+      "SELECT id FROM moz_anno_attributes WHERE name = :anno"
+    );
+    stmt.params['anno'] = this._obsoleteWeaveAttribute;
+    do_check_false(stmt.executeStep());
+    stmt.finalize();
+  }
+});
+
+tests.push({
+  name: "A.2",
+  desc: "Remove obsolete annotations from moz_items_annos",
+
+  _obsoleteSyncAttribute: "sync/children",
+  _obsoleteGuidAttribute: "placesInternal/GUID",
+  _obsoleteWeaveAttribute: "weave/test",
+  _placeId: null,
+  _bookmarkId: null,
+
+  setup: function() {
+    // Add a place to ensure place_id = 1 is valid.
+    this._placeId = addPlace();
+    // Add a bookmark.
+    this._bookmarkId = addBookmark(this._placeId);
+    // Add an obsolete attribute.
+    let stmt = mDBConn.createStatement(
+      "INSERT INTO moz_anno_attributes (name) "
+    + "VALUES (:anno1), (:anno2), (:anno3)"
+    );
+    stmt.params['anno1'] = this._obsoleteSyncAttribute;
+    stmt.params['anno2'] = this._obsoleteGuidAttribute;
+    stmt.params['anno3'] = this._obsoleteWeaveAttribute;
+    stmt.execute();
+    stmt.finalize();
+    stmt = mDBConn.createStatement(
+      "INSERT INTO moz_items_annos (item_id, anno_attribute_id) "
+    + "SELECT :item_id, id "
+    + "FROM moz_anno_attributes "
+    + "WHERE name IN (:anno1, :anno2, :anno3)"
+    );
+    stmt.params['item_id'] = this._bookmarkId;
+    stmt.params['anno1'] = this._obsoleteSyncAttribute;
+    stmt.params['anno2'] = this._obsoleteGuidAttribute;
+    stmt.params['anno3'] = this._obsoleteWeaveAttribute;
+    stmt.execute();
+    stmt.finalize();
+  },
+
+  check: function() {
+    // Check that the obsolete annotations have been removed.
+    let stmt = mDBConn.createStatement(
+      "SELECT id FROM moz_anno_attributes "
+    + "WHERE name IN (:anno1, :anno2, :anno3)"
+    );
+    stmt.params['anno1'] = this._obsoleteSyncAttribute;
+    stmt.params['anno2'] = this._obsoleteGuidAttribute;
+    stmt.params['anno3'] = this._obsoleteWeaveAttribute;
+    do_check_false(stmt.executeStep());
+    stmt.finalize();
+  }
+});
+
+tests.push({
   name: "A.3",
   desc: "Remove unused attributes",
 
