@@ -201,6 +201,26 @@ function readFileOfLength(aFileName, aExpectedLength) {
 
 
 /**
+ * Returns the base64-encoded version of the given string.  This function is
+ * similar to window.btoa, but is available to xpcshell tests also.
+ *
+ * @param aString
+ *        Each character in this string corresponds to a byte, and must be a
+ *        code point in the range 0-255.
+ *
+ * @return The base64-encoded string.
+ */
+function base64EncodeString(aString) {
+  var stream = Cc["@mozilla.org/io/string-input-stream;1"]
+               .createInstance(Ci.nsIStringInputStream);
+  stream.setData(aString, aString.length);
+  var encoder = Cc["@mozilla.org/scriptablebase64encoder;1"]
+                .createInstance(Ci.nsIScriptableBase64Encoder);
+  return encoder.encodeToString(stream, aString.length);
+}
+
+
+/**
  * Compares two arrays, and returns true if they are equal.
  *
  * @param aArray1
