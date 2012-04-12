@@ -333,8 +333,8 @@ static void
 SetExnPrivate(JSContext *cx, JSObject *exnObject, JSExnPrivate *priv);
 
 static bool
-InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
-               JSString *filename, unsigned lineno, JSErrorReport *report, int exnType)
+InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
+               HandleString filename, unsigned lineno, JSErrorReport *report, int exnType)
 {
     JS_ASSERT(exnObject->isError());
     JS_ASSERT(!exnObject->getPrivate());
@@ -502,7 +502,7 @@ exn_finalize(FreeOp *fop, JSObject *obj)
 }
 
 static JSBool
-exn_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
+exn_resolve(JSContext *cx, JSObject *obj_, jsid id, unsigned flags,
             JSObject **objp)
 {
     JSExnPrivate *priv;
@@ -512,6 +512,8 @@ exn_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
     const char *prop;
     jsval v;
     unsigned attrs;
+
+    RootedVarObject obj(cx, obj_);
 
     *objp = NULL;
     priv = GetExnPrivate(obj);
@@ -779,12 +781,12 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
     }
 
     JSObject *errProto = &protov.toObject();
-    JSObject *obj = NewObjectWithGivenProto(cx, &ErrorClass, errProto, NULL);
+    RootedVarObject obj(cx, NewObjectWithGivenProto(cx, &ErrorClass, errProto, NULL));
     if (!obj)
         return false;
 
     /* Set the 'message' property. */
-    JSString *message;
+    RootedVarString message(cx);
     if (args.hasDefined(0)) {
         message = ToString(cx, args[0]);
         if (!message)
@@ -800,7 +802,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
         ++iter;
 
     /* Set the 'fileName' property. */
-    JSString *filename;
+    RootedVarString filename(cx);
     if (args.length() > 1) {
         filename = ToString(cx, args[1]);
         if (!filename)
@@ -855,7 +857,7 @@ exn_toString(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     /* Step 4. */
-    JSString *name;
+    RootedVarString name(cx);
     if (nameVal.isUndefined()) {
         name = CLASS_ATOM(cx, Error);
     } else {
@@ -1008,19 +1010,19 @@ JS_STATIC_ASSERT(JSProto_Error + JSEXN_TYPEERR      == JSProto_TypeError);
 JS_STATIC_ASSERT(JSProto_Error + JSEXN_URIERR       == JSProto_URIError);
 
 static JSObject *
-InitErrorClass(JSContext *cx, GlobalObject *global, int type, JSObject &proto)
+InitErrorClass(JSContext *cx, Handle<GlobalObject*> global, int type, HandleObject proto)
 {
     JSProtoKey key = GetExceptionProtoKey(type);
-    JSAtom *name = cx->runtime->atomState.classAtoms[key];
-    JSObject *errorProto = global->createBlankPrototypeInheriting(cx, &ErrorClass, proto);
+    RootedVarAtom name(cx, cx->runtime->atomState.classAtoms[key]);
+    RootedVarObject errorProto(cx, global->createBlankPrototypeInheriting(cx, &ErrorClass, *proto));
     if (!errorProto)
         return NULL;
 
-    Value empty = StringValue(cx->runtime->emptyString);
-    jsid nameId = ATOM_TO_JSID(cx->runtime->atomState.nameAtom);
-    jsid messageId = ATOM_TO_JSID(cx->runtime->atomState.messageAtom);
-    jsid fileNameId = ATOM_TO_JSID(cx->runtime->atomState.fileNameAtom);
-    jsid lineNumberId = ATOM_TO_JSID(cx->runtime->atomState.lineNumberAtom);
+    RootedVarValue empty(cx, StringValue(cx->runtime->emptyString));
+    RootedVarId nameId(cx, ATOM_TO_JSID(cx->runtime->atomState.nameAtom));
+    RootedVarId messageId(cx, ATOM_TO_JSID(cx->runtime->atomState.messageAtom));
+    RootedVarId fileNameId(cx, ATOM_TO_JSID(cx->runtime->atomState.fileNameAtom));
+    RootedVarId lineNumberId(cx, ATOM_TO_JSID(cx->runtime->atomState.lineNumberAtom));
     if (!DefineNativeProperty(cx, errorProto, nameId, StringValue(name),
                               JS_PropertyStub, JS_StrictPropertyStub, 0, 0, 0) ||
         !DefineNativeProperty(cx, errorProto, messageId, empty,
@@ -1034,8 +1036,9 @@ InitErrorClass(JSContext *cx, GlobalObject *global, int type, JSObject &proto)
     }
 
     /* Create the corresponding constructor. */
-    JSFunction *ctor = global->createConstructor(cx, Exception, name, 1,
-                                                 JSFunction::ExtendedFinalizeKind);
+    RootedVarFunction ctor(cx);
+    ctor = global->createConstructor(cx, Exception, name, 1,
+                                     JSFunction::ExtendedFinalizeKind);
     if (!ctor)
         return NULL;
     ctor->setExtendedSlot(0, Int32Value(int32_t(type)));
@@ -1057,14 +1060,15 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     JS_ASSERT(obj->isGlobal());
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = &obj->asGlobal();
+    RootedVar<GlobalObject*> global(cx, &obj->asGlobal());
 
-    JSObject *objectProto = global->getOrCreateObjectPrototype(cx);
+    RootedVarObject objectProto(cx, global->getOrCreateObjectPrototype(cx));
     if (!objectProto)
         return NULL;
 
     /* Initialize the base Error class first. */
-    JSObject *errorProto = InitErrorClass(cx, global, JSEXN_ERR, *objectProto);
+    RootedVarObject errorProto(cx);
+    errorProto = InitErrorClass(cx, global, JSEXN_ERR, objectProto);
     if (!errorProto)
         return NULL;
 
@@ -1074,7 +1078,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
 
     /* Define all remaining *Error constructors. */
     for (int i = JSEXN_ERR + 1; i < JSEXN_LIMIT; i++) {
-        if (!InitErrorClass(cx, global, i, *errorProto))
+        if (!InitErrorClass(cx, global, i, errorProto))
             return NULL;
     }
 
@@ -1127,6 +1131,24 @@ static struct exnname { char *name; char *exception; } errortoexnname[] = {
 };
 #endif /* DEBUG */
 
+struct AutoSetGeneratingError
+{
+    JSContext *cx;
+
+    AutoSetGeneratingError(JSContext *cx)
+        : cx(cx)
+    {
+        JS_ASSERT(!cx->generatingError);
+        cx->generatingError = true;
+    }
+
+    ~AutoSetGeneratingError()
+    {
+        JS_ASSERT(cx->generatingError);
+        cx->generatingError = false;
+    }
+};
+
 JSBool
 js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
                     JSErrorCallback callback, void *userRef)
@@ -1135,8 +1157,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
     const JSErrorFormatString *errorString;
     JSExnType exn;
     jsval tv[4];
-    JSObject *errProto, *errObject;
-    JSString *messageStr, *filenameStr;
+    JSObject *errProto;
 
     /*
      * Tell our caller to report immediately if this report is just a warning.
@@ -1186,15 +1207,18 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
         return false;
     tv[0] = OBJECT_TO_JSVAL(errProto);
 
-    if (!(errObject = NewObjectWithGivenProto(cx, &ErrorClass, errProto, NULL)))
+    RootedVarObject errObject(cx, NewObjectWithGivenProto(cx, &ErrorClass, errProto, NULL));
+    if (!errObject)
         return false;
     tv[1] = OBJECT_TO_JSVAL(errObject);
 
-    if (!(messageStr = JS_NewStringCopyZ(cx, message)))
+    RootedVarString messageStr(cx, JS_NewStringCopyZ(cx, message));
+    if (!messageStr)
         return false;
     tv[2] = STRING_TO_JSVAL(messageStr);
 
-    if (!(filenameStr = JS_NewStringCopyZ(cx, reportp->filename)))
+    RootedVarString filenameStr(cx, JS_NewStringCopyZ(cx, reportp->filename));
+    if (!filenameStr)
         return false;
     tv[3] = STRING_TO_JSVAL(filenameStr);
 
@@ -1235,7 +1259,6 @@ IsDuckTypedErrorObject(JSContext *cx, JSObject *exnObject, const char **filename
 JSBool
 js_ReportUncaughtException(JSContext *cx)
 {
-    jsval exn;
     JSObject *exnObject;
     jsval roots[6];
     JSErrorReport *reportp, report;
@@ -1244,7 +1267,8 @@ js_ReportUncaughtException(JSContext *cx)
     if (!JS_IsExceptionPending(cx))
         return true;
 
-    if (!JS_GetPendingException(cx, &exn))
+    RootedVarValue exn(cx);
+    if (!JS_GetPendingException(cx, exn.address()))
         return false;
 
     PodArrayZero(roots);

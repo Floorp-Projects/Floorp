@@ -53,9 +53,11 @@ JSObject::asString()
 namespace js {
 
 inline bool
-StringObject::init(JSContext *cx, JSString *str)
+StringObject::init(JSContext *cx, HandleString str)
 {
     JS_ASSERT(gc::GetGCKindSlots(getAllocKind()) == 2);
+
+    RootedVar<StringObject *> self(cx, this);
 
     if (nativeEmpty()) {
         if (isDelegate()) {
@@ -65,39 +67,40 @@ StringObject::init(JSContext *cx, JSString *str)
             Shape *shape = assignInitialShape(cx);
             if (!shape)
                 return false;
-            EmptyShape::insertInitialShape(cx, shape, getProto());
+            EmptyShape::insertInitialShape(cx, shape, self->getProto());
         }
     }
 
-    JS_ASSERT(!nativeEmpty());
-    JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))->slot() == LENGTH_SLOT);
+    JS_ASSERT(nativeLookupNoAllocation(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))->slot()
+              == LENGTH_SLOT);
 
-    setStringThis(str);
+    self->setStringThis(str);
+
     return true;
 }
 
 inline StringObject *
-StringObject::create(JSContext *cx, JSString *str)
+StringObject::create(JSContext *cx, HandleString str)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, &StringClass);
     if (!obj)
         return NULL;
-    StringObject &strobj = obj->asString();
-    if (!strobj.init(cx, str))
+    RootedVar<StringObject*> strobj(cx, &obj->asString());
+    if (!strobj->init(cx, str))
         return NULL;
-    return &strobj;
+    return strobj;
 }
 
 inline StringObject *
-StringObject::createWithProto(JSContext *cx, JSString *str, JSObject &proto)
+StringObject::createWithProto(JSContext *cx, HandleString str, JSObject &proto)
 {
     JSObject *obj = NewObjectWithClassProto(cx, &StringClass, &proto, NULL);
     if (!obj)
         return NULL;
-    StringObject &strobj = obj->asString();
-    if (!strobj.init(cx, str))
+    RootedVar<StringObject*> strobj(cx, &obj->asString());
+    if (!strobj->init(cx, str))
         return NULL;
-    return &strobj;
+    return strobj;
 }
 
 } // namespace js

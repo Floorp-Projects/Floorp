@@ -747,6 +747,10 @@ class ObjectImpl : public gc::Cell
 
     const Shape * nativeLookup(JSContext *cx, jsid id);
 
+#ifdef DEBUG
+    const Shape * nativeLookupNoAllocation(JSContext *cx, jsid id);
+#endif
+
     inline Class *getClass() const;
     inline JSClass *getJSClass() const;
     inline bool hasClass(const Class *c) const;

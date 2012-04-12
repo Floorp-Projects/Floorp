@@ -55,15 +55,6 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, unsigned scopeIndex, JSObject 
     JS_ASSERT(!cx->runtime->gcRunning);
 
     /*
-     * Check for fill from js_SetPropertyHelper where the setter removed shape
-     * from pobj (via unwatch or delete, e.g.).
-     */
-    if (!pobj->nativeContains(cx, *shape)) {
-        PCMETER(oddfills++);
-        return JS_NO_PROP_CACHE_FILL;
-    }
-
-    /*
      * Check for overdeep scope and prototype chain. Because resolve, getter,
      * and setter hooks can change the prototype chain using JS_SetPrototype
      * after LookupPropertyWithFlags has returned, we calculate the protoIndex
