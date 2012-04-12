@@ -4603,7 +4603,8 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
             nsRange::CompareNodeToRange(content, aRange, &before, &after);
           if (NS_SUCCEEDED(rv) && !before && !after) {
             itemToInsert = i;
-            surfaceRect.UnionRect(surfaceRect, i->GetBounds(aBuilder));
+            bool snap;
+            surfaceRect.UnionRect(surfaceRect, i->GetBounds(aBuilder, &snap));
           }
         }
       }

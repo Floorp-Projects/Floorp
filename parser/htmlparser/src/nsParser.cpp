@@ -2106,7 +2106,7 @@ nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
   nsresult rv = NS_OK;
 
   if (mIsAboutBlank) {
-    MOZ_NOT_REACHED("Must not get OnDataAvailable for about:blank");
+    MOZ_ASSERT(false, "Must not get OnDataAvailable for about:blank");
     // ... but if an extension tries to feed us data for about:blank in a
     // release build, silently ignore the data.
     PRUint32 totalRead;

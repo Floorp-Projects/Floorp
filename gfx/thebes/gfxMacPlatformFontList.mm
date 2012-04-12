@@ -168,7 +168,7 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
 enum eComplexScript {
     eComplexScriptArabic,
     eComplexScriptIndic,
-    eComplexScriptTibetan
+    eComplexScriptLaoTibetan
 };
 
 struct ScriptRange {
@@ -180,9 +180,9 @@ struct ScriptRange {
 const ScriptRange gScriptsThatRequireShaping[] = {
     { eComplexScriptArabic, 0x0600, 0x077F },   // Basic Arabic, Syriac, Arabic Supplement
     { eComplexScriptIndic, 0x0900, 0x0D7F },     // Indic scripts - Devanagari, Bengali, ..., Malayalam
-    { eComplexScriptTibetan, 0x0F00, 0x0FFF }     // Tibetan
+    { eComplexScriptLaoTibetan, 0x0E80, 0x0FFF }     // Lao, Tibetan
     // Thai seems to be "renderable" without AAT morphing tables
-    // xxx - Lao, Khmer?
+    // xxx - Khmer?
 };
 
 nsresult

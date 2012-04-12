@@ -1,4 +1,8 @@
 <!ENTITY aboutPage.title                        "About &brandShortName;">
+<!ENTITY aboutPage.warningVersion               "&brandShortName; is experimental and may be unstable.">
+<!ENTITY aboutPage.telemetryStart               " It automatically sends information about performance, hardware, usage and customizations back to ">
+<!ENTITY aboutPage.telemetryMozillaLink         "&vendorShortName;">
+<!ENTITY aboutPage.telemetryEnd                 " to help make &brandShortName; better.">
 <!ENTITY aboutPage.checkForUpdates.link         "Check for Updates »">
 <!ENTITY aboutPage.checkForUpdates.checking     "Looking for updates…">
 <!ENTITY aboutPage.checkForUpdates.none         "No updates available">

@@ -348,6 +348,7 @@ struct JSScript : public js::gc::Cell
     static const uint32_t stepCountMask = 0x7fffffffU;
 
   public:
+#ifdef JS_METHODJIT
     // This type wraps JITScript.  It has three possible states.
     // - "Empty": no compilation has been attempted and there is no JITScript.
     // - "Unjittable": compilation failed and there is no JITScript.
@@ -389,6 +390,7 @@ struct JSScript : public js::gc::Cell
 
         static void staticAsserts();
     };
+#endif  // JS_METHODJIT
 
     //
     // We order fields according to their size in order to avoid wasting space
@@ -747,11 +749,11 @@ struct JSScript : public js::gc::Cell
         return reinterpret_cast<js::ClosedSlotArray *>(data + closedVarsOffset);
     }
 
-    uint32_t nClosedArgs() {
+    uint32_t numClosedArgs() {
         return isValidOffset(closedArgsOffset) ? closedArgs()->length : 0;
     }
 
-    uint32_t nClosedVars() {
+    uint32_t numClosedVars() {
         return isValidOffset(closedVarsOffset) ? closedVars()->length : 0;
     }
 

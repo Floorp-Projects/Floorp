@@ -4,3 +4,4 @@ script defaultvalue.js
 script equality-to-boolean.js
 script toJSON-01.js
 script toISOString.js
+script setTime-argument-shortcircuiting.js

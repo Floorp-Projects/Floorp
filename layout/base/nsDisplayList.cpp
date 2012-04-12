@@ -88,7 +88,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mInTransform(false),
       mSyncDecodeImages(false),
       mIsPaintingToWindow(false),
-      mSnappingEnabled(mMode != EVENT_DELIVERY),
       mHasDisplayPort(false),
       mHasFixedItems(false)
 {
@@ -415,7 +414,8 @@ nsRect
 nsDisplayList::GetBounds(nsDisplayListBuilder* aBuilder) const {
   nsRect bounds;
   for (nsDisplayItem* i = GetBottom(); i != nsnull; i = i->GetAbove()) {
-    bounds.UnionRect(bounds, i->GetBounds(aBuilder));
+    bool snap;
+    bounds.UnionRect(bounds, i->GetBounds(aBuilder, &snap));
   }
   return bounds;
 }
@@ -432,7 +432,8 @@ static nsRegion
 TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder,
               bool* aTransparentBackground)
 {
-  nsRegion opaque = aItem->GetOpaqueRegion(aBuilder, aTransparentBackground);
+  bool snap;
+  nsRegion opaque = aItem->GetOpaqueRegion(aBuilder, &snap, aTransparentBackground);
   if (aBuilder->IsForPluginGeometry()) {
     // Treat all chrome items as opaque, unless their frames are opacity:0.
     // Since opacity:0 frames generate an nsDisplayOpacity, that item will
@@ -440,7 +441,7 @@ TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder,
     // effectively ignored, as it should be.
     nsIFrame* f = aItem->GetUnderlyingFrame();
     if (f && f->PresContext()->IsChrome() && f->GetStyleDisplay()->mOpacity != 0.0) {
-      opaque = aItem->GetBounds(aBuilder);
+      opaque = aItem->GetBounds(aBuilder, &snap);
     }
   }
   return opaque;
@@ -473,6 +474,7 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
                                            nsRegion* aVisibleRegion,
                                            const nsRect& aListVisibleBounds,
                                            const nsRect& aAllowVisibleRegionExpansion) {
+  bool snap;
 #ifdef DEBUG
   nsRegion r;
   r.And(*aVisibleRegion, GetBounds(aBuilder));
@@ -507,7 +509,7 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
       continue;
     }
 
-    nsRect bounds = item->GetBounds(aBuilder);
+    nsRect bounds = item->GetBounds(aBuilder, &snap);
 
     nsRegion itemVisible;
     if (ForceVisiblityForFixedItem(aBuilder, item)) {
@@ -742,7 +744,8 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
     item = aState->mItemBuffer[i];
     aState->mItemBuffer.SetLength(i);
 
-    if (aRect.Intersects(item->GetBounds(aBuilder))) {
+    bool snap;
+    if (aRect.Intersects(item->GetBounds(aBuilder, &snap))) {
       nsAutoTArray<nsIFrame*, 16> outFrames;
       item->HitTest(aBuilder, aRect, aState, &outFrames);
       
@@ -895,7 +898,8 @@ void nsDisplayList::Sort(nsDisplayListBuilder* aBuilder,
 
 bool nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
                                           nsRegion* aVisibleRegion) {
-  nsRect bounds = GetBounds(aBuilder);
+  bool snap;
+  nsRect bounds = GetBounds(aBuilder, &snap);
 
   nsRegion itemVisible;
   if (ForceVisiblityForFixedItem(aBuilder, this)) {
@@ -917,26 +921,11 @@ bool nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
   return true;
 }
 
-// Note that even if the rectangle we draw and snap is smaller than aRect,
-// it's OK to call this to get a bounding rect for what we'll draw, because
-// snapping a rectangle which is contained in R always gives you a
-// rectangle which is contained in the snapped R.
-static nsRect
-SnapBounds(bool aSnappingEnabled, nsPresContext* aPresContext,
-           const nsRect& aRect) {
-  nsRect r = aRect;
-  if (aSnappingEnabled) {
-    nscoord appUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
-    r = r.ToNearestPixels(appUnitsPerDevPixel).ToAppUnits(appUnitsPerDevPixel);
-  }
-  return r;
-}
-
 nsRect
-nsDisplaySolidColor::GetBounds(nsDisplayListBuilder* aBuilder)
+nsDisplaySolidColor::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
-  nsPresContext* presContext = mFrame->PresContext();
-  return SnapBounds(mSnappingEnabled, presContext, mBounds);
+  *aSnap = true;
+  return mBounds;
 }
 
 void
@@ -968,8 +957,7 @@ RegisterThemeGeometry(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
 
 nsDisplayBackground::nsDisplayBackground(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame)
-  : nsDisplayItem(aBuilder, aFrame),
-    mSnappingEnabled(aBuilder->IsSnappingEnabled() && !aBuilder->IsInTransform())
+  : nsDisplayItem(aBuilder, aFrame)
 {
   MOZ_COUNT_CTOR(nsDisplayBackground);
   const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
@@ -1126,7 +1114,8 @@ nsDisplayBackground::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
 nsRegion
 nsDisplayBackground::GetInsideClipRegion(nsPresContext* aPresContext,
-                                         PRUint8 aClip, const nsRect& aRect)
+                                         PRUint8 aClip, const nsRect& aRect,
+                                         bool* aSnap)
 {
   nsRegion result;
   if (aRect.IsEmpty())
@@ -1153,14 +1142,12 @@ nsDisplayBackground::GetInsideClipRegion(nsPresContext* aPresContext,
     return result;
   }
 
-  nsRect inputRect = SnapBounds(mSnappingEnabled, aPresContext, aRect);
-  clipRect = SnapBounds(mSnappingEnabled, aPresContext, clipRect);
-
   if (haveRadii) {
-    result = nsLayoutUtils::RoundedRectIntersectRect(clipRect, radii, inputRect);
+    *aSnap = false;
+    result = nsLayoutUtils::RoundedRectIntersectRect(clipRect, radii, aRect);
   } else {
     nsRect r;
-    r.IntersectRect(clipRect, inputRect);
+    r.IntersectRect(clipRect, aRect);
     result = r;
   }
   return result;
@@ -1168,11 +1155,11 @@ nsDisplayBackground::GetInsideClipRegion(nsPresContext* aPresContext,
 
 nsRegion
 nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                     bool* aSnap,
                                      bool* aForceTransparentSurface) {
   nsRegion result;
-  if (aForceTransparentSurface) {
-    *aForceTransparentSurface = false;
-  }
+  *aSnap = false;
+  *aForceTransparentSurface = false;
   // theme background overrides any other background
   if (mIsThemed) {
     if (aForceTransparentSurface) {
@@ -1181,7 +1168,7 @@ nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                   disp->mAppearance == NS_THEME_WIN_GLASS;
     }
     if (mThemeTransparency == nsITheme::eOpaque) {
-      result = GetBounds(aBuilder);
+      result = GetBounds(aBuilder, aSnap);
     }
     return result;
   }
@@ -1193,10 +1180,12 @@ nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
   const nsStyleBackground* bg = bgSC->GetStyleBackground();
   const nsStyleBackground::Layer& bottomLayer = bg->BottomLayer();
 
+  *aSnap = true;
+
   nsRect borderBox = nsRect(ToReferenceFrame(), mFrame->GetSize());
   if (NS_GET_A(bg->mBackgroundColor) == 255 &&
       !nsCSSRendering::IsCanvasFrame(mFrame)) {
-    result = GetInsideClipRegion(presContext, bottomLayer.mClip, borderBox);
+    result = GetInsideClipRegion(presContext, bottomLayer.mClip, borderBox, aSnap);
   }
 
   // For policies other than EACH_BOX, don't try to optimize here, since
@@ -1211,7 +1200,7 @@ nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
       if (layer.mImage.IsOpaque()) {
         nsRect r = nsCSSRendering::GetBackgroundLayerRect(presContext, mFrame,
             borderBox, *bg, layer);
-        result.Or(result, GetInsideClipRegion(presContext, layer.mClip, r));
+        result.Or(result, GetInsideClipRegion(presContext, layer.mClip, r, aSnap));
       }
     }
   }
@@ -1310,7 +1299,8 @@ nsDisplayBackground::ShouldFixToViewport(nsDisplayListBuilder* aBuilder)
   if (nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius))
     return false;
 
-  nsRect bounds = GetBounds(aBuilder);
+  bool snap;
+  nsRect bounds = GetBounds(aBuilder, &snap);
   nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
   if (!rootScrollFrame)
     return false;
@@ -1337,7 +1327,7 @@ nsDisplayBackground::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 nsRect
-nsDisplayBackground::GetBounds(nsDisplayListBuilder* aBuilder) {
+nsDisplayBackground::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
   nsRect r(nsPoint(0,0), mFrame->GetSize());
   nsPresContext* presContext = mFrame->PresContext();
 
@@ -1347,11 +1337,13 @@ nsDisplayBackground::GetBounds(nsDisplayListBuilder* aBuilder) {
                           mFrame->GetStyleDisplay()->mAppearance, &r);
   }
 
-  return SnapBounds(mSnappingEnabled, presContext, r + ToReferenceFrame());
+  *aSnap = true;
+  return r + ToReferenceFrame();
 }
 
 nsRect
-nsDisplayOutline::GetBounds(nsDisplayListBuilder* aBuilder) {
+nsDisplayOutline::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
+  *aSnap = false;
   return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
 }
 
@@ -1450,11 +1442,12 @@ nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 nsRect
-nsDisplayBorder::GetBounds(nsDisplayListBuilder* aBuilder)
+nsDisplayBorder::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
   nsRect borderBounds(ToReferenceFrame(), mFrame->GetSize());
   borderBounds.Inflate(mFrame->GetStyleBorder()->GetImageOutset());
-  return SnapBounds(mSnappingEnabled, mFrame->PresContext(), borderBounds);
+  *aSnap = true;
+  return borderBounds;
 }
 
 // Given a region, compute a conservative approximation to it as a list
@@ -1507,7 +1500,8 @@ nsDisplayBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 nsRect
-nsDisplayBoxShadowOuter::GetBounds(nsDisplayListBuilder* aBuilder) {
+nsDisplayBoxShadowOuter::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
+  *aSnap = false;
   return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
 }
 
@@ -1599,7 +1593,8 @@ nsDisplayWrapList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
 }
 
 nsRect
-nsDisplayWrapList::GetBounds(nsDisplayListBuilder* aBuilder) {
+nsDisplayWrapList::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
+  *aSnap = false;
   return mList.GetBounds(aBuilder);
 }
 
@@ -1614,13 +1609,13 @@ nsDisplayWrapList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
 nsRegion
 nsDisplayWrapList::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                   bool* aSnap,
                                    bool* aForceTransparentSurface) {
-  if (aForceTransparentSurface) {
-    *aForceTransparentSurface = false;
-  }
+  *aForceTransparentSurface = false;
+  *aSnap = false;
   nsRegion result;
   if (mList.IsOpaque()) {
-    result = GetBounds(aBuilder);
+    result = GetBounds(aBuilder, aSnap);
   }
   return result;
 }
@@ -1760,10 +1755,10 @@ nsDisplayOpacity::~nsDisplayOpacity() {
 #endif
 
 nsRegion nsDisplayOpacity::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                           bool* aSnap,
                                            bool* aForceTransparentSurface) {
-  if (aForceTransparentSurface) {
-    *aForceTransparentSurface = false;
-  }
+  *aForceTransparentSurface = false;
+  *aSnap = false;
   // We are never opaque, if our opacity was < 1 then we wouldn't have
   // been created.
   return nsRegion();
@@ -1820,7 +1815,8 @@ nsDisplayOpacity::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   // our children in the temporary compositing buffer, because if our children
   // paint our entire bounds opaquely then we don't need an alpha channel in
   // the temporary compositing buffer.
-  nsRect bounds = GetBounds(aBuilder);
+  bool snap;
+  nsRect bounds = GetBounds(aBuilder, &snap);
   nsRegion visibleUnderChildren;
   visibleUnderChildren.And(*aVisibleRegion, bounds);
   nsRect allowExpansion;
@@ -2095,23 +2091,20 @@ nsDisplayScrollInfoLayer::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
 nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame, nsDisplayItem* aItem,
                              const nsRect& aRect)
-   : nsDisplayWrapList(aBuilder, aFrame, aItem) {
+   : nsDisplayWrapList(aBuilder, aFrame, aItem), mClip(aRect) {
   MOZ_COUNT_CTOR(nsDisplayClip);
-  mClip = SnapBounds(aBuilder->IsSnappingEnabled() && !aBuilder->IsInTransform(),
-                     aBuilder->CurrentPresContext(), aRect);
 }
 
 nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame, nsDisplayList* aList,
                              const nsRect& aRect)
-   : nsDisplayWrapList(aBuilder, aFrame, aList) {
+   : nsDisplayWrapList(aBuilder, aFrame, aList), mClip(aRect) {
   MOZ_COUNT_CTOR(nsDisplayClip);
-  mClip = SnapBounds(aBuilder->IsSnappingEnabled() && !aBuilder->IsInTransform(),
-                     aBuilder->CurrentPresContext(), aRect);
 }
 
-nsRect nsDisplayClip::GetBounds(nsDisplayListBuilder* aBuilder) {
-  nsRect r = nsDisplayWrapList::GetBounds(aBuilder);
+nsRect nsDisplayClip::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
+  nsRect r = nsDisplayWrapList::GetBounds(aBuilder, aSnap);
+  *aSnap = true;
   r.IntersectRect(mClip, r);
   return r;
 }
@@ -2193,11 +2186,11 @@ nsDisplayClipRoundedRect::~nsDisplayClipRoundedRect()
 
 nsRegion
 nsDisplayClipRoundedRect::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                          bool* aSnap,
                                           bool* aForceTransparentSurface)
 {
-  if (aForceTransparentSurface) {
-    *aForceTransparentSurface = false;
-  }
+  *aSnap = false;
+  *aForceTransparentSurface = false;
   return nsRegion();
 }
 
@@ -2267,9 +2260,10 @@ nsDisplayZoom::~nsDisplayZoom() {
 }
 #endif
 
-nsRect nsDisplayZoom::GetBounds(nsDisplayListBuilder* aBuilder)
+nsRect nsDisplayZoom::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
-  nsRect bounds = nsDisplayWrapList::GetBounds(aBuilder);
+  nsRect bounds = nsDisplayWrapList::GetBounds(aBuilder, aSnap);
+  *aSnap = false;
   return bounds.ConvertAppUnitsRoundOut(mAPD, mParentAPD);
 }
 
@@ -2297,8 +2291,8 @@ void nsDisplayZoom::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayZoom::ComputeVisibility(nsDisplayListBuilder *aBuilder,
-                                        nsRegion *aVisibleRegion,
-                                        const nsRect& aAllowVisibleRegionExpansion)
+                                      nsRegion *aVisibleRegion,
+                                      const nsRect& aAllowVisibleRegionExpansion)
 {
   // Convert the passed in visible region to our appunits.
   nsRegion visibleRegion =
@@ -2800,12 +2794,13 @@ nsDisplayTransform::GetHitDepthAtPoint(const nsPoint& aPoint)
 /* The bounding rectangle for the object is the overflow rectangle translated
  * by the reference point.
  */
-nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder *aBuilder)
+nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder *aBuilder, bool* aSnap)
 {
   nsRect untransformedBounds =
     ShouldPrerenderTransformedContent(aBuilder, mFrame) ?
     mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame() :
-    mStoredList.GetBounds(aBuilder);
+    mStoredList.GetBounds(aBuilder, aSnap);
+  *aSnap = false;
   float factor = nsPresContext::AppUnitsPerCSSPixel();
   return nsLayoutUtils::MatrixTransformRect(untransformedBounds,
                                             GetTransform(factor),
@@ -2829,11 +2824,11 @@ nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder *aBuilder)
  * certainly contains the actual (non-axis-aligned) untransformed rect.
  */
 nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
+                                             bool* aSnap,
                                              bool* aForceTransparentSurface)
 {
-  if (aForceTransparentSurface) {
-    *aForceTransparentSurface = false;
-  }
+  *aForceTransparentSurface = false;
+  *aSnap = false;
   nsRect untransformedVisible;
   float factor = nsPresContext::AppUnitsPerCSSPixel();
   if (!UntransformRectMatrix(mVisibleRect, GetTransform(factor), factor, &untransformedVisible)) {
@@ -2841,12 +2836,15 @@ nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
   }
   
   const gfx3DMatrix& matrix = GetTransform(nsPresContext::AppUnitsPerCSSPixel());
-                
+
   nsRegion result;
   gfxMatrix matrix2d;
+  bool tmpSnap;
+  bool forceTransparentSurface;
   if (matrix.Is2D(&matrix2d) &&
       matrix2d.PreservesAxisAlignedRectangles() &&
-      mStoredList.GetOpaqueRegion(aBuilder).Contains(untransformedVisible)) {
+      mStoredList.GetOpaqueRegion(aBuilder, &tmpSnap, &forceTransparentSurface).
+        Contains(untransformedVisible)) {
     result = mVisibleRect;
   }
   return result;
@@ -3007,11 +3005,11 @@ nsDisplaySVGEffects::~nsDisplaySVGEffects()
 #endif
 
 nsRegion nsDisplaySVGEffects::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                              bool* aSnap,
                                               bool* aForceTransparentSurface)
 {
-  if (aForceTransparentSurface) {
-    *aForceTransparentSurface = false;
-  }
+  *aForceTransparentSurface = false;
+  *aSnap = false;
   return nsRegion();
 }
 

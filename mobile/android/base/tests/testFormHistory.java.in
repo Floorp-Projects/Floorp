@@ -32,6 +32,11 @@ public class testFormHistory extends BaseTest {
         contentEventExpecter.blockForEvent();
   
         Uri formHistoryUri;
+        Uri insertUri;
+        Uri expectedUri;
+        int numUpdated;
+        int numDeleted;
+
         try {
             ClassLoader classLoader = getActivity().getClassLoader();
             Class fh = classLoader.loadClass("org.mozilla.gecko.db.BrowserContract$FormHistory");
@@ -56,18 +61,42 @@ public class testFormHistory extends BaseTest {
             return;
         }
 
-        Uri uri = cr.insert(formHistoryUri, cvs[0]);
-        Uri expectedUri = formHistoryUri.buildUpon().appendPath("1").build();
-        mAsserter.is(expectedUri.toString(), uri.toString(), "Insert returned correct uri");
+        insertUri = cr.insert(formHistoryUri, cvs[0]);
+        expectedUri = formHistoryUri.buildUpon().appendPath("1").build();
+        mAsserter.is(expectedUri.toString(), insertUri.toString(), "Insert returned correct uri");
         SqliteCompare(DB_NAME, "SELECT * FROM moz_formhistory", cvs);
   
         cvs[0].put("fieldname", "fieldname2");
+        cvs[0].putNull("guid");
   
-        int numUpdated = cr.update(formHistoryUri, cvs[0], null, null);
+        numUpdated = cr.update(formHistoryUri, cvs[0], null, null);
         mAsserter.is(1, numUpdated, "Correct number updated");
         SqliteCompare(DB_NAME, "SELECT * FROM moz_formhistory", cvs);
   
-        int numDeleted = cr.delete(formHistoryUri, null, null);
+        numDeleted = cr.delete(formHistoryUri, null, null);
+        mAsserter.is(1, numDeleted, "Correct number deleted");
+        cvs = new ContentValues[0];
+        SqliteCompare(DB_NAME, "SELECT * FROM moz_formhistory", cvs);
+        
+        cvs = new ContentValues[1];
+        cvs[0] = new ContentValues();
+        cvs[0].put("fieldname", "fieldname");
+        cvs[0].put("value", "value");
+        cvs[0].put("timesUsed", "0");
+        cvs[0].putNull("guid");
+
+        insertUri = cr.insert(formHistoryUri, cvs[0]);
+        expectedUri = formHistoryUri.buildUpon().appendPath("1").build();
+        mAsserter.is(expectedUri.toString(), insertUri.toString(), "Insert returned correct uri");
+        SqliteCompare(DB_NAME, "SELECT * FROM moz_formhistory", cvs);
+  
+        cvs[0].put("guid", "guid");
+  
+        numUpdated = cr.update(formHistoryUri, cvs[0], null, null);
+        mAsserter.is(1, numUpdated, "Correct number updated");
+        SqliteCompare(DB_NAME, "SELECT * FROM moz_formhistory", cvs);
+  
+        numDeleted = cr.delete(formHistoryUri, null, null);
         mAsserter.is(1, numDeleted, "Correct number deleted");
         cvs = new ContentValues[0];
         SqliteCompare(DB_NAME, "SELECT * FROM moz_formhistory", cvs);
