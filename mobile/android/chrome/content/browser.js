@@ -193,6 +193,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Preferences:Set", false);
     Services.obs.addObserver(this, "ScrollTo:FocusedInput", false);
     Services.obs.addObserver(this, "Sanitize:ClearAll", false);
+    Services.obs.addObserver(this, "Telemetry:Add", false);
     Services.obs.addObserver(this, "PanZoom:PanZoom", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
     Services.obs.addObserver(this, "Viewport:Change", false);
@@ -788,6 +789,14 @@ var BrowserApp = {
     } catch (e) {}
   },
 
+  addTelemetry: function addTelemetry(aData) {
+    let json = JSON.parse(aData);
+    var telemetry = Cc["@mozilla.org/base/telemetry;1"]
+          .getService(Ci.nsITelemetry);
+    let histogram = telemetry.getHistogramById(json.name);
+    histogram.add(json.value);
+  },
+
   setPreferences: function setPreferences(aPref) {
     let json = JSON.parse(aPref);
 
@@ -973,6 +982,8 @@ var BrowserApp = {
       } else {
         profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
       }
+    } else if (aTopic == "Telemetry:Add") {
+      this.addTelemetry(aData);
     }
   },
 
