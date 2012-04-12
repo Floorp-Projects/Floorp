@@ -1695,7 +1695,7 @@ let UI = {
 
   // ----------
   // Function: getFavIconUrlForTab
-  // Gets fav icon url for the given xul:tab.
+  // Gets the "favicon link URI" for the given xul:tab, or null if unavailable.
   getFavIconUrlForTab: function UI_getFavIconUrlForTab(tab, callback) {
     this._isImageDocument(tab, function(isImageDoc) {
       if (isImageDoc) {
@@ -1709,12 +1709,20 @@ let UI = {
 
           callback(tabImage);
         } else {
-          // determine to load the default/cached icon or not and also ensure we don't show the default icon
-          // for about:-style error pages
-          let url = null;
-          if (this._shouldLoadFavIcon(tab))
-            url = gFavIconService.getFaviconImageForPage(tab.linkedBrowser.currentURI).spec;
-          callback(url);
+          // ensure we don't show the default icon for about:-style error pages
+          if (!this._shouldLoadFavIcon(tab)) {
+            callback(null);
+          } else {
+            // determine to load the default/cached icon or not
+            gFavIconService.getFaviconURLForPage(tab.linkedBrowser.currentURI,
+              function (uri) {
+                if (!uri) {
+                  callback(gFavIconService.defaultFavicon.spec);
+                } else {
+                  callback(gFavIconService.getFaviconLinkForIcon(uri).spec);
+                }
+              });
+          }
         }
       }
     }.bind(this));
