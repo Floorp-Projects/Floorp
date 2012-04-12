@@ -114,6 +114,7 @@ let DebuggerController = {
 
     this.dispatchEvent("Debugger:Unloaded");
     this._disconnect();
+    this._isRemote && this._quitApp();
   },
 
   /**
@@ -121,12 +122,10 @@ let DebuggerController = {
    * wiring event handlers as necessary.
    */
   _connect: function DC__connect() {
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-      DebuggerServer.addBrowserActors();
-    }
+    let transport =
+      this._isRemote ? debuggerSocketConnect(Prefs.remoteHost, Prefs.remotePort)
+                     : DebuggerServer.connectPipe();
 
-    let transport = DebuggerServer.connectPipe();
     let client = this.client = new DebuggerClient(transport);
 
     client.addListener("tabNavigated", this._onTabNavigated);
@@ -218,6 +217,31 @@ let DebuggerController = {
 
       }.bind(this));
     }.bind(this));
+  },
+
+  /**
+   * Returns true if this is a remote debugger instance.
+   * @return boolean
+   */
+  get _isRemote() {
+    return !window.parent.content;
+  },
+
+  /**
+   * Attempts to quit the current process if allowed.
+   */
+  _quitApp: function DC__quitApp() {
+    let canceled = Cc["@mozilla.org/supports-PRBool;1"]
+      .createInstance(Ci.nsISupportsPRBool);
+
+    Services.obs.notifyObservers(canceled, "quit-application-requested", null);
+
+    // Somebody canceled our quit request.
+    if (canceled.data) {
+      return;
+    }
+
+    Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit);
   },
 
   /**
@@ -768,6 +792,22 @@ SourceScripts.prototype = {
   },
 
   /**
+   * Gets the prePath for a script URL.
+   *
+   * @param string aUrl
+   *        The script url.
+   * @return string
+   *         The script prePath if the url is valid, null otherwise.
+   */
+  _getScriptPrePath: function SS__getScriptDomain(aUrl) {
+    try {
+      return Services.io.newURI(aUrl, null, null).prePath + "/";
+    } catch (e) {
+    }
+    return null;
+  },
+
+  /**
    * Gets a unique, simplified label from a script url.
    * ex: a). ici://some.address.com/random/subrandom/
    *     b). ni://another.address.org/random/subrandom/page.html
@@ -783,7 +823,7 @@ SourceScripts.prototype = {
    *        The script url.
    * @param string aHref
    *        The content location href to be used. If unspecified, it will
-   *        defalult to debugged panrent window location.
+   *        default to the script url prepath.
    * @return string
    *         The simplified label.
    */
@@ -794,15 +834,18 @@ SourceScripts.prototype = {
       return this._labelsCache[url];
     }
 
-    let href = aHref || window.parent.content.location.href;
+    let content = window.parent.content;
+    let domain = content ? content.location.href : this._getScriptPrePath(aUrl);
+
+    let href = aHref || domain;
     let pathElements = url.split("/");
     let label = pathElements.pop() || (pathElements.pop() + "/");
 
-    // if the label as a leaf name is alreay present in the scripts list
+    // If the label as a leaf name is already present in the scripts list.
     if (DebuggerView.Scripts.containsLabel(label)) {
       label = url.replace(href.substring(0, href.lastIndexOf("/") + 1), "");
 
-      // if the path/to/script is exactly the same, we're in different domains
+      // If the path/to/script is exactly the same, we're in different domains.
       if (DebuggerView.Scripts.containsLabel(label)) {
         label = url;
       }
@@ -897,7 +940,7 @@ SourceScripts.prototype = {
    * Handles notifications to load a source script from the cache or from a
    * local file.
    *
-   * XXX: Tt may be better to use nsITraceableChannel to get to the sources
+   * XXX: It may be better to use nsITraceableChannel to get to the sources
    * without relying on caching when we can (not for eval, etc.):
    * http://www.softwareishard.com/blog/firebug/nsitraceablechannel-intercept-http-traffic/
    */
@@ -988,7 +1031,7 @@ SourceScripts.prototype = {
    *        The failure status code.
    */
   _logError: function SS__logError(aUrl, aStatus) {
-    Components.utils.reportError(L10N.getFormatStr("loadingError", [aUrl, aStatus]));
+    Cu.reportError(L10N.getFormatStr("loadingError", [aUrl, aStatus]));
   },
 };
 
@@ -1277,6 +1320,27 @@ let L10N = {
 
 XPCOMUtils.defineLazyGetter(L10N, "stringBundle", function() {
   return Services.strings.createBundle(DBG_STRINGS_URI);
+});
+
+/**
+ * Shortcuts for accessing various debugger preferences.
+ */
+let Prefs = {};
+
+/**
+ * Gets the preferred default remote debugging host.
+ * @return string
+ */
+XPCOMUtils.defineLazyGetter(Prefs, "remoteHost", function() {
+  return Services.prefs.getCharPref("devtools.debugger.remote-host");
+});
+
+/**
+ * Gets the preferred default remote debugging port.
+ * @return number
+ */
+XPCOMUtils.defineLazyGetter(Prefs, "remotePort", function() {
+  return Services.prefs.getIntPref("devtools.debugger.remote-port");
 });
 
 /**
