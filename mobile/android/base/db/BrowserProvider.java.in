@@ -1478,39 +1478,46 @@ public class BrowserProvider extends ContentProvider {
         MatrixCursor cursor = new MatrixCursor(projection);
         MatrixCursor.RowBuilder row = cursor.newRow();
         synchronized (this) {
+            boolean wantBookmarks = false;
+            boolean wantHistory   = false;
+
             for (String key : projection) {
+                if (key.equals(Control.ENSURE_BOOKMARKS_MIGRATED)) {
+                    wantBookmarks = true;
+                } else if (key.equals(Control.ENSURE_HISTORY_MIGRATED)) {
+                    wantHistory = true;
+                }
+            }
+
+            if (wantHistory || wantBookmarks) {
                 ProfileMigrator migrator =
                     new ProfileMigrator(mContext.getContentResolver(), profileDir);
-                if (key.equals(Control.ENSURE_BOOKMARKS_MIGRATED)) {
-                    if (migrator.isBookmarksMigrated()) {
-                        // generic Cursor has no boolean support, use ints.
-                        row.add(1);
-                    } else {
-                        // Start migration.
-                        migrator.launch();
-                        boolean bookmarksDone = migrator.isBookmarksMigrated();
 
-                        // We expect bookmarks to finish in one pass. Warn if
-                        // this is not the case.
-                        if (!bookmarksDone) {
-                            Log.w(LOGTAG, "Bookmarks migration did not finish.");
-                        }
+                boolean needBookmarks = wantBookmarks && !migrator.areBookmarksMigrated();
+                boolean needHistory = wantHistory && !migrator.isHistoryMigrated();
 
-                        row.add(bookmarksDone ? 1 : 0);
+                if (needBookmarks || needHistory) {
+                    migrator.launch();
+
+                    needBookmarks = wantBookmarks && !migrator.areBookmarksMigrated();
+                    needHistory = wantHistory && !migrator.isHistoryMigrated();
+                    // Bookmarks are expected to finish at the first run.
+                    if (needBookmarks) {
+                        Log.w(LOGTAG, "Bookmarks migration did not finish.");
                     }
-                } else if (key.equals(Control.ENSURE_HISTORY_MIGRATED)) {
-                    // Are we done?
-                    if (migrator.hasMigrationFinished()) {
-                        row.add(1);
-                    } else {
-                        // Migrate some more
-                        migrator.launch();
-                        // Are we done now?
-                        row.add(migrator.hasMigrationFinished() ? 1 : 0);
+                }
+
+                // Now set the results.
+                for (String key: projection) {
+                    if (key.equals(Control.ENSURE_BOOKMARKS_MIGRATED)) {
+                        row.add(needBookmarks ? 0 : 1);
+                    } else if (key.equals(Control.ENSURE_HISTORY_MIGRATED)) {
+                        row.add(needHistory   ? 0 : 1);
                     }
                 }
             }
         }
+
         return cursor;
     }
 
