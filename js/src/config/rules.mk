@@ -954,16 +954,6 @@ else
 endif
 endif
 
-quantify: $(PROGRAM)
-ifeq ($(CPP_PROG_LINK),1)
-	$(QUANTIFY) $(CCC) -o $^.quantify $(CXXFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
-else
-	$(QUANTIFY) $(CC) -o $^.quantify $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
-endif
-ifndef NO_DIST_INSTALL
-	$(INSTALL) $(IFLAGS2) $^.quantify $(FINAL_TARGET)
-endif
-
 ifdef DTRACE_PROBE_OBJ
 EXTRA_DEPS += $(DTRACE_PROBE_OBJ)
 OBJS += $(DTRACE_PROBE_OBJ)
