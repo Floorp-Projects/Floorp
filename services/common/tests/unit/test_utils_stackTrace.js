@@ -21,9 +21,9 @@ function run_test() {
   _("Got trace:", trace);
   do_check_neq(trace, "");
 
-  let bazPos = trace.indexOf("baz(2)@test_utils_stackTrace.js:7");
-  let barPos = trace.indexOf("bar(1)@test_utils_stackTrace.js:6");
-  let fooPos = trace.indexOf("foo(0)@test_utils_stackTrace.js:5");
+  let bazPos = trace.indexOf("baz@test_utils_stackTrace.js:7");
+  let barPos = trace.indexOf("bar@test_utils_stackTrace.js:6");
+  let fooPos = trace.indexOf("foo@test_utils_stackTrace.js:5");
   _("String positions:", bazPos, barPos, fooPos);
 
   _("Make sure the desired messages show up");
