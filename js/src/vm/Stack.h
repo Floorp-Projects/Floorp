@@ -43,6 +43,8 @@ class ScriptFrameIter;
 class AllFramesIter;
 
 class ArgumentsObject;
+class ScopeCoordinate;
+class ScopeObject;
 class StaticBlockObject;
 
 #ifdef JS_METHODJIT
@@ -847,6 +849,7 @@ class StackFrame
      */
 
     inline HandleObject scopeChain() const;
+    inline ScopeObject &aliasedVarScope(ScopeCoordinate sc) const;
     inline GlobalObject &global() const;
 
     bool hasCallObj() const {

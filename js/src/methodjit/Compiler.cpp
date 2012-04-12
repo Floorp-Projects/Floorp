@@ -2835,10 +2835,10 @@ mjit::Compiler::generateMethod()
                 frame.push(ObjectValue(*singleton));
             } else {
                 ScopeCoordinate sc = ScopeCoordinate(PC);
-                if (script->bindings.bindingIsArg(sc.binding))
-                    frame.pushArg(script->bindings.bindingToArg(sc.binding));
+                if (script->bindings.bindingIsArg(sc.frameBinding))
+                    frame.pushArg(script->bindings.bindingToArg(sc.frameBinding));
                 else
-                    frame.pushLocal(script->bindings.bindingToLocal(sc.binding));
+                    frame.pushLocal(script->bindings.bindingToLocal(sc.frameBinding));
             }
           }
           END_CASE(JSOP_GETALIASEDVAR)
@@ -2869,10 +2869,10 @@ mjit::Compiler::generateMethod()
             jsbytecode *next = &PC[JSOP_SETALIASEDVAR_LENGTH];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
             ScopeCoordinate sc = ScopeCoordinate(PC);
-            if (script->bindings.bindingIsArg(sc.binding))
-                frame.storeArg(script->bindings.bindingToArg(sc.binding), pop);
+            if (script->bindings.bindingIsArg(sc.frameBinding))
+                frame.storeArg(script->bindings.bindingToArg(sc.frameBinding), pop);
             else
-                frame.storeLocal(script->bindings.bindingToLocal(sc.binding), pop);
+                frame.storeLocal(script->bindings.bindingToLocal(sc.frameBinding), pop);
             updateVarType();
 
             if (pop) {
