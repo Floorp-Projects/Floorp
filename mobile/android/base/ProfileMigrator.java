@@ -44,7 +44,6 @@ import org.mozilla.gecko.db.BrowserContract.ImageColumns;
 import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
-import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.sqlite.SQLiteBridgeException;
 
@@ -323,55 +322,6 @@ public class ProfileMigrator {
             }
         }
 
-        // Get a list of the last times an URL was accessed
-        protected Map<String, Long> gatherBrowserDBHistory() {
-            Map<String, Long> history = new HashMap<String, Long>();
-
-            Cursor cursor =
-                BrowserDB.getRecentHistory(mCr, BrowserDB.getMaxHistoryCount());
-            final int urlCol =
-                cursor.getColumnIndexOrThrow(BrowserDB.URLColumns.URL);
-            final int dateCol =
-                cursor.getColumnIndexOrThrow(BrowserDB.URLColumns.DATE_LAST_VISITED);
-
-            cursor.moveToFirst();
-            while (!cursor.isAfterLast()) {
-                String url = cursor.getString(urlCol);
-                Long date = cursor.getLong(dateCol);
-                // getRecentHistory returns newest-to-oldest, which means
-                // we remember the most recent access
-                if (!history.containsKey(url)) {
-                    history.put(url, date);
-                }
-                cursor.moveToNext();
-            }
-            cursor.close();
-
-            return history;
-        }
-
-        protected void addHistory(Map<String, Long> browserDBHistory,
-                                  String url, String title, long date, int visits) {
-            boolean allowUpdate = false;
-
-            if (!browserDBHistory.containsKey(url)) {
-                // BrowserDB doesn't know the URL, allow it to be
-                // inserted with places date.
-                allowUpdate = true;
-            } else {
-                long androidDate = browserDBHistory.get(url);
-                if (androidDate < date) {
-                    // Places URL hit is newer than BrowserDB,
-                    // allow it to be updated with places date.
-                    allowUpdate = true;
-                }
-            }
-
-            if (allowUpdate) {
-                updateBrowserHistory(url, title, date, visits);
-            }
-        }
-
         protected void updateBrowserHistory(String url, String title,
                                             long date, int visits) {
             Cursor cursor = null;
@@ -379,7 +329,8 @@ public class ProfileMigrator {
             try {
                 final String[] projection = new String[] {
                     History._ID,
-                    History.VISITS
+                    History.VISITS,
+                    History.DATE_LAST_VISITED
                 };
 
                 cursor = mCr.query(getHistoryUri(),
@@ -390,17 +341,22 @@ public class ProfileMigrator {
 
                 ContentValues values = new ContentValues();
                 ContentProviderOperation.Builder builder = null;
-                values.put(History.DATE_LAST_VISITED, date);
                 // Restore deleted record if possible
                 values.put(History.IS_DELETED, 0);
 
                 if (cursor.moveToFirst()) {
                     int visitsCol = cursor.getColumnIndexOrThrow(History.VISITS);
+                    int dateCol = cursor.getColumnIndexOrThrow(History.DATE_LAST_VISITED);
                     int oldVisits = cursor.getInt(visitsCol);
+                    long oldDate = cursor.getLong(dateCol);
 
                     values.put(History.VISITS, oldVisits + visits);
                     if (title != null) {
                         values.put(History.TITLE, title);
+                    }
+                    // Only update last visited if newer.
+                    if (date > oldDate) {
+                        values.put(History.DATE_LAST_VISITED, date);
                     }
 
                     int idCol = cursor.getColumnIndexOrThrow(History._ID);
@@ -421,6 +377,7 @@ public class ProfileMigrator {
                     } else {
                         values.put(History.TITLE, url);
                     }
+                    values.put(History.DATE_LAST_VISITED, date);
 
                     // Insert
                     builder = ContentProviderOperation.newInsert(getHistoryUri());
@@ -516,7 +473,6 @@ public class ProfileMigrator {
         }
 
         protected void doMigrateHistoryBatch(SQLiteBridge db,
-                                             Map<String, Long> browserDBHistory,
                                              int maxEntries, int currentEntries) {
             final ArrayList<String> placesHistory = new ArrayList<String>();
             mOperations = new ArrayList<ContentProviderOperation>();
@@ -558,7 +514,7 @@ public class ProfileMigrator {
                         placesHistory.add(url);
                         addFavicon(url, faviconUrl, faviconGuid,
                                    faviconMime, faviconDataBuff);
-                        addHistory(browserDBHistory, url, title, date, visits);
+                        updateBrowserHistory(url, title, date, visits);
                     } catch (Exception e) {
                         Log.e(LOGTAG, "Error adding history entry: ", e);
                     }
@@ -593,8 +549,6 @@ public class ProfileMigrator {
         }
 
         protected void migrateHistory(SQLiteBridge db) {
-            Map<String, Long> browserDBHistory = gatherBrowserDBHistory();
-
             for (int i = 0; i < mMaxEntries; i += HISTORY_MAX_BATCH) {
                 int currentEntries = getMigratedHistoryEntries();
                 int fetchEntries = Math.min(mMaxEntries, HISTORY_MAX_BATCH);
@@ -602,8 +556,7 @@ public class ProfileMigrator {
                 Log.i(LOGTAG, "Processed " + currentEntries + " history entries");
                 Log.i(LOGTAG, "Fetching " + fetchEntries + " more history entries");
 
-                doMigrateHistoryBatch(db, browserDBHistory,
-                                      fetchEntries, currentEntries);
+                doMigrateHistoryBatch(db, fetchEntries, currentEntries);
             }
         }
 
