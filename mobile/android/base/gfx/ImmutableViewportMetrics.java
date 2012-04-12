@@ -19,6 +19,8 @@ public class ImmutableViewportMetrics {
     // because Java doesn't have the concept of const classes
     public final float pageSizeWidth;
     public final float pageSizeHeight;
+    public final float cssPageSizeWidth;
+    public final float cssPageSizeHeight;
     public final float viewportRectBottom;
     public final float viewportRectLeft;
     public final float viewportRectRight;
@@ -35,6 +37,10 @@ public class ImmutableViewportMetrics {
         FloatSize pageSize = m.getPageSize();
         pageSizeWidth = pageSize.width;
         pageSizeHeight = pageSize.height;
+
+        FloatSize cssPageSize = m.getCssPageSize();
+        cssPageSizeWidth = cssPageSize.width;
+        cssPageSizeHeight = cssPageSize.height;
 
         zoomFactor = m.getZoomFactor();
     }
@@ -66,5 +72,9 @@ public class ImmutableViewportMetrics {
 
     public FloatSize getPageSize() {
         return new FloatSize(pageSizeWidth, pageSizeHeight);
+    }
+
+    public FloatSize getCssPageSize() {
+        return new FloatSize(cssPageSizeWidth, cssPageSizeHeight);
     }
 }
