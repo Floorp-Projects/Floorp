@@ -9,6 +9,7 @@
 #define ScopeObject_h___
 
 #include "jscntxt.h"
+#include "jsiter.h"
 #include "jsobj.h"
 #include "jsweakmap.h"
 
@@ -21,20 +22,17 @@ namespace js {
  * given lexically-enclosing variable. A scope coordinate has two dimensions:
  *  - hops: the number of scope objects on the scope chain to skip
  *  - binding: which binding on the scope object
- *
- * XXX: Until bug 659577 lands, this is all for show and all ScopeCoordinates
- * have hops fixed at 0 and 'binding' is just the js::Bindings binding for args
- * and vars and the stack depth for let bindings. Thus, aliased-var access
- * touches the StackFrame like it always did and 'binding' must be first
- * converted to either an arg or local slot (using Bindings::bindingToLocal or
- * bindingToArg). With bug 659577, ScopeObject will have a 'var' function that
- * takes a ScopeCoordinate.
  */
 struct ScopeCoordinate
 {
     uint16_t hops;
     uint16_t binding;
+
+    /* XXX this will be removed with the last patch of bug 659577. */
+    uint16_t frameBinding;
+
     inline ScopeCoordinate(jsbytecode *pc);
+    inline ScopeCoordinate() {}
 };
 
 inline JSAtom *
@@ -96,6 +94,15 @@ class ScopeObject : public JSObject
      */
     inline JSObject &enclosingScope() const;
     inline bool setEnclosingScope(JSContext *cx, HandleObject obj);
+
+    /*
+     * Get or set an aliased variable contained in this scope. Unaliased
+     * variables should instead access the StackFrame. Aliased variable access
+     * is primarily made through JOF_SCOPECOORD ops which is why these members
+     * take a ScopeCoordinate instead of just the slot index.
+     */
+    inline const Value &aliasedVar(ScopeCoordinate sc);
+    inline void setAliasedVar(ScopeCoordinate sc, const Value &v);
 
     /*
      * The stack frame for this scope object, if the frame is still active.
