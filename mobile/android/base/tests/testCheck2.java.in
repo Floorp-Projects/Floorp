@@ -1,7 +1,6 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
-import java.io.IOException;
 import @ANDROID_PACKAGE_NAME@.*;
 
 public class testCheck2 extends PixelTest {
@@ -29,19 +28,17 @@ public class testCheck2 extends PixelTest {
 
         MotionEventReplayer mer = new MotionEventReplayer(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
 
+        float completeness = 0.0f;
         mDriver.startCheckerboardRecording();
         // replay the events
         try {
             mer.replayEvents(getAsset("testcheck2-motionevents"));
-        } catch (IOException ioe) {
-            mAsserter.dumpLog("IOException while replaying events", ioe);
-        }
-        // give it some time to draw any final frames
-        try {
+            // give it some time to draw any final frames
             Thread.sleep(1000);
-        } catch (InterruptedException ie) {
+            completeness = mDriver.stopCheckerboardRecording();
+        } catch (Exception e) {
+            mAsserter.dumpLog("Exception while replaying events", e);
         }
-        float completeness = mDriver.stopCheckerboardRecording();
 
         mAsserter.dumpLog("__start_report" + completeness + "__end_report");
         System.out.println("Completeness score: " + completeness);
