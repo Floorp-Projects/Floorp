@@ -1242,9 +1242,8 @@ tests.push({
     do_check_eq(as.getPageAnnotation(this._uri2, "anno"), "anno");
     do_check_eq(as.getItemAnnotation(this._bookmarkId, "anno"), "anno");
 
-    fs.getFaviconURLForPage(this._uri2,
-      function AC_onFaviconDataAvailable(aURI) {
-        do_check_true(aURI.equals(SMALLPNG_DATA_URI));
+    fs.getFaviconURLForPage(this._uri2, function (aFaviconURI) {
+        do_check_true(aFaviconURI.equals(SMALLPNG_DATA_URI));
         aCallback();
       });
   }
