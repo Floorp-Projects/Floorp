@@ -96,7 +96,8 @@ function createMAR(outMAR, dataDir, files) {
   do_check_true(signmarBin.isExecutable());
 
   // Setup the command line arguments to create the MAR.
-  let args = ["-C", dataDir.path, "-c", outMAR.path];
+  let args = ["-C", dataDir.path, "-H", "\@MAR_CHANNEL_ID\@", 
+              "-V", "13.0a1", "-c", outMAR.path];
   args = args.concat(files);
 
   do_print('Running: ' + signmarBin.path);
