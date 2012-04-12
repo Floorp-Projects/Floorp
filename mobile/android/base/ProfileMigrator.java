@@ -205,26 +205,26 @@ public class ProfileMigrator {
         new PlacesRunnable(maxEntries).run();
     }
 
+    public boolean areBookmarksMigrated() {
+        return getPreferences().getBoolean(PREFS_MIGRATE_BOOKMARKS_DONE, false);
+    }
+
+    public boolean isHistoryMigrated() {
+        return getPreferences().getBoolean(PREFS_MIGRATE_HISTORY_DONE, false);
+    }
+
     // Has migration run before?
-    public boolean hasMigrationRun() {
-        return isBookmarksMigrated() && (getMigratedHistoryEntries() > 0);
+    protected boolean hasMigrationRun() {
+        return areBookmarksMigrated() && (getMigratedHistoryEntries() > 0);
     }
 
     // Has migration entirely finished?
-    public boolean hasMigrationFinished() {
-        return isBookmarksMigrated() && isHistoryMigrated();
-    }
-
-    public boolean isBookmarksMigrated() {
-        return getPreferences().getBoolean(PREFS_MIGRATE_BOOKMARKS_DONE, false);
+    protected boolean hasMigrationFinished() {
+        return areBookmarksMigrated() && isHistoryMigrated();
     }
 
     protected SharedPreferences getPreferences() {
         return GeckoApp.mAppContext.getSharedPreferences(PREFS_NAME, 0);
-    }
-
-    protected boolean isHistoryMigrated() {
-        return getPreferences().getBoolean(PREFS_MIGRATE_HISTORY_DONE, false);
     }
 
     protected int getMigratedHistoryEntries() {
@@ -812,7 +812,7 @@ public class ProfileMigrator {
                 db = new SQLiteBridge(dbPath);
                 calculateReroot(db);
 
-                if (!isBookmarksMigrated()) {
+                if (!areBookmarksMigrated()) {
                     migrateBookmarks(db);
                     setMigratedBookmarks();
                 } else {
