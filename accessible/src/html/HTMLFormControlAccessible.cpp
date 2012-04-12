@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsHTMLFormControlAccessible.h"
+#include "HTMLFormControlAccessible.h"
 
 #include "Accessible-inl.h"
 #include "nsAccUtils.h"
@@ -66,28 +66,29 @@
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLCheckboxAccessible
+// HTMLCheckboxAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTMLCheckboxAccessible::
-  nsHTMLCheckboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsFormControlAccessible(aContent, aDoc)
+HTMLCheckboxAccessible::
+  HTMLCheckboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsLeafAccessible(aContent, aDoc)
 {
 }
 
 role
-nsHTMLCheckboxAccessible::NativeRole()
+HTMLCheckboxAccessible::NativeRole()
 {
   return roles::CHECKBUTTON;
 }
 
 PRUint8
-nsHTMLCheckboxAccessible::ActionCount()
+HTMLCheckboxAccessible::ActionCount()
 {
   return 1;
 }
 
-NS_IMETHODIMP nsHTMLCheckboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+NS_IMETHODIMP
+HTMLCheckboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   if (aIndex == eAction_Click) {    // 0 is the magic value for default action
     // cycle, check or uncheck
@@ -106,7 +107,7 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::GetActionName(PRUint8 aIndex, nsAString&
 }
 
 NS_IMETHODIMP
-nsHTMLCheckboxAccessible::DoAction(PRUint8 aIndex)
+HTMLCheckboxAccessible::DoAction(PRUint8 aIndex)
 {
   if (aIndex != 0)
     return NS_ERROR_INVALID_ARG;
@@ -116,9 +117,9 @@ nsHTMLCheckboxAccessible::DoAction(PRUint8 aIndex)
 }
 
 PRUint64
-nsHTMLCheckboxAccessible::NativeState()
+HTMLCheckboxAccessible::NativeState()
 {
-  PRUint64 state = nsFormControlAccessible::NativeState();
+  PRUint64 state = nsLeafAccessible::NativeState();
 
   state |= states::CHECKABLE;
   bool checkState = false;   // Radio buttons and check boxes can be checked or mixed
@@ -142,27 +143,27 @@ nsHTMLCheckboxAccessible::NativeState()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLCheckboxAccessible: Widgets
+// HTMLCheckboxAccessible: Widgets
 
 bool
-nsHTMLCheckboxAccessible::IsWidget() const
+HTMLCheckboxAccessible::IsWidget() const
 {
   return true;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLRadioButtonAccessible
+// HTMLRadioButtonAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTMLRadioButtonAccessible::
-  nsHTMLRadioButtonAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsRadioButtonAccessible(aContent, aDoc)
+HTMLRadioButtonAccessible::
+  HTMLRadioButtonAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  RadioButtonAccessible(aContent, aDoc)
 {
 }
 
 PRUint64
-nsHTMLRadioButtonAccessible::NativeState()
+HTMLRadioButtonAccessible::NativeState()
 {
   PRUint64 state = nsAccessibleWrap::NativeState();
 
@@ -182,8 +183,8 @@ nsHTMLRadioButtonAccessible::NativeState()
 }
 
 void
-nsHTMLRadioButtonAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
-                                                        PRInt32 *aSetSize)
+HTMLRadioButtonAccessible::GetPositionAndSizeInternal(PRInt32* aPosInSet,
+                                                      PRInt32* aSetSize)
 {
   nsAutoString nsURI;
   mContent->NodeInfo()->GetNamespaceURI(nsURI);
@@ -241,22 +242,23 @@ nsHTMLRadioButtonAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLButtonAccessible
+// HTMLButtonAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTMLButtonAccessible::
-  nsHTMLButtonAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+HTMLButtonAccessible::
+  HTMLButtonAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
 PRUint8
-nsHTMLButtonAccessible::ActionCount()
+HTMLButtonAccessible::ActionCount()
 {
   return 1;
 }
 
-NS_IMETHODIMP nsHTMLButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+NS_IMETHODIMP
+HTMLButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   if (aIndex == eAction_Click) {
     aName.AssignLiteral("press"); 
@@ -266,7 +268,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& a
 }
 
 NS_IMETHODIMP
-nsHTMLButtonAccessible::DoAction(PRUint8 aIndex)
+HTMLButtonAccessible::DoAction(PRUint8 aIndex)
 {
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
@@ -276,7 +278,7 @@ nsHTMLButtonAccessible::DoAction(PRUint8 aIndex)
 }
 
 PRUint64
-nsHTMLButtonAccessible::State()
+HTMLButtonAccessible::State()
 {
   PRUint64 state = nsHyperTextAccessibleWrap::State();
   if (state == states::DEFUNCT)
@@ -295,7 +297,7 @@ nsHTMLButtonAccessible::State()
 }
 
 PRUint64
-nsHTMLButtonAccessible::NativeState()
+HTMLButtonAccessible::NativeState()
 {
   PRUint64 state = nsHyperTextAccessibleWrap::NativeState();
 
@@ -307,13 +309,13 @@ nsHTMLButtonAccessible::NativeState()
 }
 
 role
-nsHTMLButtonAccessible::NativeRole()
+HTMLButtonAccessible::NativeRole()
 {
   return roles::PUSHBUTTON;
 }
 
 nsresult
-nsHTMLButtonAccessible::GetNameInternal(nsAString& aName)
+HTMLButtonAccessible::GetNameInternal(nsAString& aName)
 {
   nsAccessible::GetNameInternal(aName);
   if (!aName.IsEmpty() || mContent->Tag() != nsGkAtoms::input)
@@ -346,29 +348,33 @@ nsHTMLButtonAccessible::GetNameInternal(nsAString& aName)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLButtonAccessible: Widgets
+// HTMLButtonAccessible: Widgets
 
 bool
-nsHTMLButtonAccessible::IsWidget() const
+HTMLButtonAccessible::IsWidget() const
 {
   return true;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLTextFieldAccessible
+// HTMLTextFieldAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTMLTextFieldAccessible::
-  nsHTMLTextFieldAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+HTMLTextFieldAccessible::
+  HTMLTextFieldAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsHTMLTextFieldAccessible, nsAccessible, nsHyperTextAccessible, nsIAccessibleText, nsIAccessibleEditableText)
+NS_IMPL_ISUPPORTS_INHERITED3(HTMLTextFieldAccessible,
+                             nsAccessible,
+                             nsHyperTextAccessible,
+                             nsIAccessibleText,
+                             nsIAccessibleEditableText)
 
 role
-nsHTMLTextFieldAccessible::NativeRole()
+HTMLTextFieldAccessible::NativeRole()
 {
   if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                             nsGkAtoms::password, eIgnoreCase)) {
@@ -379,7 +385,7 @@ nsHTMLTextFieldAccessible::NativeRole()
 }
 
 nsresult
-nsHTMLTextFieldAccessible::GetNameInternal(nsAString& aName)
+HTMLTextFieldAccessible::GetNameInternal(nsAString& aName)
 {
   nsresult rv = nsAccessible::GetNameInternal(aName);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -409,7 +415,7 @@ nsHTMLTextFieldAccessible::GetNameInternal(nsAString& aName)
 }
 
 void
-nsHTMLTextFieldAccessible::Value(nsString& aValue)
+HTMLTextFieldAccessible::Value(nsString& aValue)
 {
   aValue.Truncate();
   if (NativeState() & states::PROTECTED)    // Don't return password text!
@@ -428,7 +434,7 @@ nsHTMLTextFieldAccessible::Value(nsString& aValue)
 }
 
 void
-nsHTMLTextFieldAccessible::ApplyARIAState(PRUint64* aState)
+HTMLTextFieldAccessible::ApplyARIAState(PRUint64* aState)
 {
   nsHyperTextAccessibleWrap::ApplyARIAState(aState);
 
@@ -436,7 +442,7 @@ nsHTMLTextFieldAccessible::ApplyARIAState(PRUint64* aState)
 }
 
 PRUint64
-nsHTMLTextFieldAccessible::State()
+HTMLTextFieldAccessible::State()
 {
   PRUint64 state = nsHyperTextAccessibleWrap::State();
   if (state & states::DEFUNCT)
@@ -455,7 +461,7 @@ nsHTMLTextFieldAccessible::State()
 }
 
 PRUint64
-nsHTMLTextFieldAccessible::NativeState()
+HTMLTextFieldAccessible::NativeState()
 {
   PRUint64 state = nsHyperTextAccessibleWrap::NativeState();
 
@@ -518,12 +524,13 @@ nsHTMLTextFieldAccessible::NativeState()
 }
 
 PRUint8
-nsHTMLTextFieldAccessible::ActionCount()
+HTMLTextFieldAccessible::ActionCount()
 {
   return 1;
 }
 
-NS_IMETHODIMP nsHTMLTextFieldAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+NS_IMETHODIMP
+HTMLTextFieldAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   if (aIndex == eAction_Click) {
     aName.AssignLiteral("activate");
@@ -532,20 +539,21 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetActionName(PRUint8 aIndex, nsAString
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsHTMLTextFieldAccessible::DoAction(PRUint8 index)
+NS_IMETHODIMP
+HTMLTextFieldAccessible::DoAction(PRUint8 aIndex)
 {
-  if (index == 0) {
+  if (aIndex == 0) {
     nsCOMPtr<nsIDOMHTMLElement> element(do_QueryInterface(mContent));
-    if ( element ) {
+    if (element)
       return element->Focus();
-    }
+
     return NS_ERROR_FAILURE;
   }
   return NS_ERROR_INVALID_ARG;
 }
 
 already_AddRefed<nsIEditor>
-nsHTMLTextFieldAccessible::GetEditor() const
+HTMLTextFieldAccessible::GetEditor() const
 {
   nsCOMPtr<nsIDOMNSEditableElement> editableElt(do_QueryInterface(mContent));
   if (!editableElt)
@@ -571,34 +579,34 @@ nsHTMLTextFieldAccessible::GetEditor() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLTextFieldAccessible: Widgets
+// HTMLTextFieldAccessible: Widgets
 
 bool
-nsHTMLTextFieldAccessible::IsWidget() const
+HTMLTextFieldAccessible::IsWidget() const
 {
   return true;
 }
 
 nsAccessible*
-nsHTMLTextFieldAccessible::ContainerWidget() const
+HTMLTextFieldAccessible::ContainerWidget() const
 {
   return mParent && mParent->Role() == roles::AUTOCOMPLETE ? mParent : nsnull;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLGroupboxAccessible
+// HTMLFileInputAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTMLFileInputAccessible::
-nsHTMLFileInputAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+HTMLFileInputAccessible::
+HTMLFileInputAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
   mFlags |= eHTMLFileInputAccessible;
 }
 
 role
-nsHTMLFileInputAccessible::NativeRole()
+HTMLFileInputAccessible::NativeRole()
 {
   // JAWS wants a text container, others don't mind. No specific role in
   // AT APIs.
@@ -606,7 +614,7 @@ nsHTMLFileInputAccessible::NativeRole()
 }
 
 nsresult
-nsHTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent)
+HTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent)
 {
   nsresult rv = nsHyperTextAccessibleWrap::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -642,23 +650,23 @@ nsHTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLGroupboxAccessible
+// HTMLGroupboxAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTMLGroupboxAccessible::
-  nsHTMLGroupboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+HTMLGroupboxAccessible::
+  HTMLGroupboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
 role
-nsHTMLGroupboxAccessible::NativeRole()
+HTMLGroupboxAccessible::NativeRole()
 {
   return roles::GROUPING;
 }
 
 nsIContent*
-nsHTMLGroupboxAccessible::GetLegend()
+HTMLGroupboxAccessible::GetLegend()
 {
   for (nsIContent* legendContent = mContent->GetFirstChild(); legendContent;
        legendContent = legendContent->GetNextSibling()) {
@@ -673,7 +681,7 @@ nsHTMLGroupboxAccessible::GetLegend()
 }
 
 nsresult
-nsHTMLGroupboxAccessible::GetNameInternal(nsAString& aName)
+HTMLGroupboxAccessible::GetNameInternal(nsAString& aName)
 {
   nsresult rv = nsAccessible::GetNameInternal(aName);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -691,7 +699,7 @@ nsHTMLGroupboxAccessible::GetNameInternal(nsAString& aName)
 }
 
 Relation
-nsHTMLGroupboxAccessible::RelationByType(PRUint32 aType)
+HTMLGroupboxAccessible::RelationByType(PRUint32 aType)
 {
   Relation rel = nsHyperTextAccessibleWrap::RelationByType(aType);
     // No override for label, so use <legend> for this <fieldset>
@@ -702,17 +710,17 @@ nsHTMLGroupboxAccessible::RelationByType(PRUint32 aType)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLLegendAccessible
+// HTMLLegendAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTMLLegendAccessible::
-  nsHTMLLegendAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+HTMLLegendAccessible::
+  HTMLLegendAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
 Relation
-nsHTMLLegendAccessible::RelationByType(PRUint32 aType)
+HTMLLegendAccessible::RelationByType(PRUint32 aType)
 {
   Relation rel = nsHyperTextAccessibleWrap::RelationByType(aType);
   if (aType != nsIAccessibleRelation::RELATION_LABEL_FOR)
@@ -726,23 +734,23 @@ nsHTMLLegendAccessible::RelationByType(PRUint32 aType)
 }
 
 role
-nsHTMLLegendAccessible::NativeRole()
+HTMLLegendAccessible::NativeRole()
 {
   return roles::LABEL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLFigureAccessible
+// HTMLFigureAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTMLFigureAccessible::
-  nsHTMLFigureAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+HTMLFigureAccessible::
+  HTMLFigureAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
 nsresult
-nsHTMLFigureAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
+HTMLFigureAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
 {
   nsresult rv = nsHyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -754,13 +762,13 @@ nsHTMLFigureAccessible::GetAttributesInternal(nsIPersistentProperties* aAttribut
 }
 
 role
-nsHTMLFigureAccessible::NativeRole()
+HTMLFigureAccessible::NativeRole()
 {
   return roles::FIGURE;
 }
 
 nsresult
-nsHTMLFigureAccessible::GetNameInternal(nsAString& aName)
+HTMLFigureAccessible::GetNameInternal(nsAString& aName)
 {
   nsresult rv = nsHyperTextAccessibleWrap::GetNameInternal(aName);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -778,7 +786,7 @@ nsHTMLFigureAccessible::GetNameInternal(nsAString& aName)
 }
 
 Relation
-nsHTMLFigureAccessible::RelationByType(PRUint32 aType)
+HTMLFigureAccessible::RelationByType(PRUint32 aType)
 {
   Relation rel = nsHyperTextAccessibleWrap::RelationByType(aType);
   if (aType == nsIAccessibleRelation::RELATION_LABELLED_BY)
@@ -788,7 +796,7 @@ nsHTMLFigureAccessible::RelationByType(PRUint32 aType)
 }
 
 nsIContent*
-nsHTMLFigureAccessible::Caption() const
+HTMLFigureAccessible::Caption() const
 {
   for (nsIContent* childContent = mContent->GetFirstChild(); childContent;
        childContent = childContent->GetNextSibling()) {
@@ -802,23 +810,23 @@ nsHTMLFigureAccessible::Caption() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLFigcaptionAccessible
+// HTMLFigcaptionAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTMLFigcaptionAccessible::
-  nsHTMLFigcaptionAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+HTMLFigcaptionAccessible::
+  HTMLFigcaptionAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
 role
-nsHTMLFigcaptionAccessible::NativeRole()
+HTMLFigcaptionAccessible::NativeRole()
 {
   return roles::CAPTION;
 }
 
 Relation
-nsHTMLFigcaptionAccessible::RelationByType(PRUint32 aType)
+HTMLFigcaptionAccessible::RelationByType(PRUint32 aType)
 {
   Relation rel = nsHyperTextAccessibleWrap::RelationByType(aType);
   if (aType != nsIAccessibleRelation::RELATION_LABEL_FOR)

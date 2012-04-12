@@ -39,9 +39,9 @@
 
 // NOTE: alphabetically ordered
 
+#include "FormControlAccessible.h"
 #include "Role.h"
 
-#include "nsFormControlAccessible.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMXULElement.h"
@@ -60,14 +60,14 @@ template class ProgressMeterAccessible<100>;
 // nsISupports
 
 template<int Max>
-NS_IMPL_ADDREF_INHERITED(ProgressMeterAccessible<Max>, nsFormControlAccessible)
+NS_IMPL_ADDREF_INHERITED(ProgressMeterAccessible<Max>, nsLeafAccessible)
 
 template<int Max>
-NS_IMPL_RELEASE_INHERITED(ProgressMeterAccessible<Max>, nsFormControlAccessible)
+NS_IMPL_RELEASE_INHERITED(ProgressMeterAccessible<Max>, nsLeafAccessible)
 
 template<int Max>
 NS_IMPL_QUERY_INTERFACE_INHERITED1(ProgressMeterAccessible<Max>,
-                                   nsFormControlAccessible,
+                                   nsLeafAccessible,
                                    nsIAccessibleValue)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,7 +84,7 @@ template<int Max>
 PRUint64
 ProgressMeterAccessible<Max>::NativeState()
 {
-  PRUint64 state = nsFormControlAccessible::NativeState();
+  PRUint64 state = nsLeafAccessible::NativeState();
 
   // An undetermined progressbar (i.e. without a value) has a mixed state.
   nsAutoString attrValue;
@@ -113,7 +113,7 @@ template<int Max>
 void
 ProgressMeterAccessible<Max>::Value(nsString& aValue)
 {
-  nsFormControlAccessible::Value(aValue);
+  nsLeafAccessible::Value(aValue);
   if (!aValue.IsEmpty())
     return;
 
@@ -139,7 +139,7 @@ template<int Max>
 NS_IMETHODIMP
 ProgressMeterAccessible<Max>::GetMaximumValue(double* aMaximumValue)
 {
-  nsresult rv = nsFormControlAccessible::GetMaximumValue(aMaximumValue);
+  nsresult rv = nsLeafAccessible::GetMaximumValue(aMaximumValue);
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
@@ -158,7 +158,7 @@ template<int Max>
 NS_IMETHODIMP
 ProgressMeterAccessible<Max>::GetMinimumValue(double* aMinimumValue)
 {
-  nsresult rv = nsFormControlAccessible::GetMinimumValue(aMinimumValue);
+  nsresult rv = nsLeafAccessible::GetMinimumValue(aMinimumValue);
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
@@ -170,7 +170,7 @@ template<int Max>
 NS_IMETHODIMP
 ProgressMeterAccessible<Max>::GetMinimumIncrement(double* aMinimumIncrement)
 {
-  nsresult rv = nsFormControlAccessible::GetMinimumIncrement(aMinimumIncrement);
+  nsresult rv = nsLeafAccessible::GetMinimumIncrement(aMinimumIncrement);
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
@@ -182,7 +182,7 @@ template<int Max>
 NS_IMETHODIMP
 ProgressMeterAccessible<Max>::GetCurrentValue(double* aCurrentValue)
 {
-  nsresult rv = nsFormControlAccessible::GetCurrentValue(aCurrentValue);
+  nsresult rv = nsLeafAccessible::GetCurrentValue(aCurrentValue);
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
@@ -210,22 +210,23 @@ ProgressMeterAccessible<Max>::SetCurrentValue(double aValue)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsRadioButtonAccessible
+// RadioButtonAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsRadioButtonAccessible::
-  nsRadioButtonAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsFormControlAccessible(aContent, aDoc)
+RadioButtonAccessible::
+  RadioButtonAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsLeafAccessible(aContent, aDoc)
 {
 }
 
 PRUint8
-nsRadioButtonAccessible::ActionCount()
+RadioButtonAccessible::ActionCount()
 {
   return 1;
 }
 
-NS_IMETHODIMP nsRadioButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+NS_IMETHODIMP
+RadioButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   if (aIndex == eAction_Click) {
     aName.AssignLiteral("select"); 
@@ -235,7 +236,7 @@ NS_IMETHODIMP nsRadioButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& 
 }
 
 NS_IMETHODIMP
-nsRadioButtonAccessible::DoAction(PRUint8 aIndex)
+RadioButtonAccessible::DoAction(PRUint8 aIndex)
 {
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
@@ -245,16 +246,16 @@ nsRadioButtonAccessible::DoAction(PRUint8 aIndex)
 }
 
 role
-nsRadioButtonAccessible::NativeRole()
+RadioButtonAccessible::NativeRole()
 {
   return roles::RADIOBUTTON;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsRadioButtonAccessible: Widgets
+// RadioButtonAccessible: Widgets
 
 bool
-nsRadioButtonAccessible::IsWidget() const
+RadioButtonAccessible::IsWidget() const
 {
   return true;
 }

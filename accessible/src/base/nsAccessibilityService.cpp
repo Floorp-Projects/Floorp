@@ -96,7 +96,7 @@
 #include "nsXULAlertAccessible.h"
 #include "nsXULColorPickerAccessible.h"
 #include "nsXULComboboxAccessible.h"
-#include "nsXULFormControlAccessible.h"
+#include "XULFormControlAccessible.h"
 #include "nsXULListboxAccessibleWrap.h"
 #include "nsXULMenuAccessibleWrap.h"
 #include "nsXULSliderAccessible.h"
@@ -213,8 +213,8 @@ nsAccessibilityService::CreateHTMLButtonAccessible(nsIContent* aContent,
                                                    nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLButtonAccessible(aContent, 
-                               nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new HTMLButtonAccessible(aContent, 
+                             nsAccUtils::GetDocAccessibleFor(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -246,8 +246,8 @@ nsAccessibilityService::CreateHTMLCheckboxAccessible(nsIContent* aContent,
                                                      nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLCheckboxAccessible(aContent, 
-                                 nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new HTMLCheckboxAccessible(aContent, 
+                               nsAccUtils::GetDocAccessibleFor(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -279,8 +279,8 @@ nsAccessibilityService::CreateHTMLFileInputAccessible(nsIContent* aContent,
                                                       nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLFileInputAccessible(aContent, 
-                                  nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new HTMLFileInputAccessible(aContent, 
+                                nsAccUtils::GetDocAccessibleFor(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -312,8 +312,8 @@ nsAccessibilityService::CreateHTMLGroupboxAccessible(nsIContent* aContent,
                                                      nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLGroupboxAccessible(aContent, 
-                                 nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new HTMLGroupboxAccessible(aContent, 
+                               nsAccUtils::GetDocAccessibleFor(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -415,8 +415,8 @@ nsAccessibilityService::CreateHTMLRadioButtonAccessible(nsIContent* aContent,
                                                         nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLRadioButtonAccessible(aContent, 
-                                    nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new HTMLRadioButtonAccessible(aContent, 
+                                  nsAccUtils::GetDocAccessibleFor(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -459,8 +459,8 @@ nsAccessibilityService::CreateHTMLTextFieldAccessible(nsIContent* aContent,
                                                       nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLTextFieldAccessible(aContent, 
-                                  nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new HTMLTextFieldAccessible(aContent, 
+                                nsAccUtils::GetDocAccessibleFor(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -1365,11 +1365,11 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       break;
 
     case nsIAccessibleProvider::XULButton:
-      accessible = new nsXULButtonAccessible(aContent, aDoc);
+      accessible = new XULButtonAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULCheckbox:
-      accessible = new nsXULCheckboxAccessible(aContent, aDoc);
+      accessible = new XULCheckboxAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULColorPicker:
@@ -1385,11 +1385,11 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       break;
 
     case nsIAccessibleProvider::XULDropmarker:
-      accessible = new nsXULDropmarkerAccessible(aContent, aDoc);
+      accessible = new XULDropmarkerAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULGroupbox:
-      accessible = new nsXULGroupboxAccessible(aContent, aDoc);
+      accessible = new XULGroupboxAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULImage:
@@ -1466,7 +1466,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       break;
 
     case nsIAccessibleProvider::XULStatusBar:
-      accessible = new nsXULStatusBarAccessible(aContent, aDoc);
+      accessible = new XULStatusBarAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULScale:
@@ -1474,11 +1474,11 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       break;
 
     case nsIAccessibleProvider::XULRadioButton:
-      accessible = new nsXULRadioButtonAccessible(aContent, aDoc);
+      accessible = new XULRadioButtonAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULRadioGroup:
-      accessible = new nsXULRadioGroupAccessible(aContent, aDoc);
+      accessible = new XULRadioGroupAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULTab:
@@ -1498,7 +1498,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       break;
 
     case nsIAccessibleProvider::XULTextBox:
-      accessible = new nsXULTextFieldAccessible(aContent, aDoc);
+      accessible = new XULTextFieldAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULThumb:
@@ -1517,11 +1517,11 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       break;
 
     case nsIAccessibleProvider::XULToolbar:
-      accessible = new nsXULToolbarAccessible(aContent, aDoc);
+      accessible = new XULToolbarAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULToolbarSeparator:
-      accessible = new nsXULToolbarSeparatorAccessible(aContent, aDoc);
+      accessible = new XULToolbarSeparatorAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULTooltip:
@@ -1529,7 +1529,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       break;
 
     case nsIAccessibleProvider::XULToolbarButton:
-      accessible = new nsXULToolbarButtonAccessible(aContent, aDoc);
+      accessible = new XULToolbarButtonAccessible(aContent, aDoc);
       break;
 
 #endif // MOZ_XUL
@@ -1627,20 +1627,19 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
   // This method assumes we're in an HTML namespace.
   nsIAtom* tag = aContent->Tag();
   if (tag == nsGkAtoms::figcaption) {
-    nsAccessible* accessible =
-      new nsHTMLFigcaptionAccessible(aContent, aDoc);
+    nsAccessible* accessible = new HTMLFigcaptionAccessible(aContent, aDoc);
     NS_IF_ADDREF(accessible);
     return accessible;
   }
 
   if (tag == nsGkAtoms::figure) {
-    nsAccessible* accessible = new nsHTMLFigureAccessible(aContent, aDoc);
+    nsAccessible* accessible = new HTMLFigureAccessible(aContent, aDoc);
     NS_IF_ADDREF(accessible);
     return accessible;
   }
 
   if (tag == nsGkAtoms::legend) {
-    nsAccessible* accessible = new nsHTMLLegendAccessible(aContent, aDoc);
+    nsAccessible* accessible = new HTMLLegendAccessible(aContent, aDoc);
     NS_IF_ADDREF(accessible);
     return accessible;
   }
