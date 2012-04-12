@@ -488,11 +488,6 @@ struct JSScript : public js::gc::Cell
     uint32_t        idpad;
 #endif
 
-#if JS_BITS_PER_WORD == 32
-  private:
-    uint32_t        pad32;
-#endif
-
     // 16-bit fields.
 
   private:
@@ -513,19 +508,25 @@ struct JSScript : public js::gc::Cell
 
     // 8-bit fields.
 
+  private:
+    // The bits in this field indicate the presence/non-presence of several
+    // optional arrays in |data|.  See the comments above NewScript() for
+    // details.
+    uint8_t         hasArrayBits;
+
+    // The kinds of the optional arrays.
   public:
-    // Offsets to various array structures from the end of this script, or
-    // JSScript::INVALID_OFFSET if the array has length 0.
-    uint8_t         constsOffset;   /* offset to the array of constants */
-    uint8_t         objectsOffset;  /* offset to the array of nested function,
-                                       block, scope, xml and one-time regexps
-                                       objects */
-    uint8_t         regexpsOffset;  /* offset to the array of to-be-cloned
-                                       regexps  */
-    uint8_t         trynotesOffset; /* offset to the array of try notes */
-    uint8_t         globalsOffset;  /* offset to the array of global slots */
-    uint8_t         closedArgsOffset; /* offset to the array of closed args */
-    uint8_t         closedVarsOffset; /* offset to the array of closed vars */
+    enum ArrayKind {
+        CONSTS,
+        OBJECTS,
+        REGEXPS,
+        TRYNOTES,
+        GLOBALS,
+        CLOSED_ARGS,
+        CLOSED_VARS,
+        LIMIT
+    };
+    JS_STATIC_ASSERT(sizeof(hasArrayBits) * 8 >= LIMIT);
 
     // 1-bit fields.
 
@@ -743,50 +744,61 @@ struct JSScript : public js::gc::Cell
     /* Script notes are allocated right after the code. */
     jssrcnote *notes() { return (jssrcnote *)(code + length); }
 
-    static const uint8_t INVALID_OFFSET = 0xFF;
-    static bool isValidOffset(uint8_t offset) { return offset != INVALID_OFFSET; }
+    bool hasArray(ArrayKind kind)           { return (hasArrayBits & (1 << kind)); }
+    void setHasArray(ArrayKind kind)        { hasArrayBits |= (1 << kind); }
+    void cloneHasArray(JSScript *script)    { hasArrayBits = script->hasArrayBits; }
 
-    bool hasConsts()        { return isValidOffset(constsOffset);     }
-    bool hasObjects()       { return isValidOffset(objectsOffset);    }
-    bool hasRegexps()       { return isValidOffset(regexpsOffset);    }
-    bool hasTrynotes()      { return isValidOffset(trynotesOffset);   }
-    bool hasGlobals()       { return isValidOffset(globalsOffset);    }
-    bool hasClosedArgs()    { return isValidOffset(closedArgsOffset); }
-    bool hasClosedVars()    { return isValidOffset(closedVarsOffset); }
+    bool hasConsts()        { return hasArray(CONSTS);      }
+    bool hasObjects()       { return hasArray(OBJECTS);     }
+    bool hasRegexps()       { return hasArray(REGEXPS);     }
+    bool hasTrynotes()      { return hasArray(TRYNOTES);    }
+    bool hasGlobals()       { return hasArray(GLOBALS);     }
+    bool hasClosedArgs()    { return hasArray(CLOSED_ARGS); }
+    bool hasClosedVars()    { return hasArray(CLOSED_VARS); }
+
+    #define OFF(fooOff, hasFoo, t)   (fooOff() + (hasFoo() ? sizeof(t) : 0))
+
+    size_t constsOffset()     { return 0; }
+    size_t objectsOffset()    { return OFF(constsOffset,     hasConsts,     js::ConstArray);      }
+    size_t regexpsOffset()    { return OFF(objectsOffset,    hasObjects,    js::ObjectArray);     }
+    size_t trynotesOffset()   { return OFF(regexpsOffset,    hasRegexps,    js::ObjectArray);     }
+    size_t globalsOffset()    { return OFF(trynotesOffset,   hasTrynotes,   js::TryNoteArray);    }
+    size_t closedArgsOffset() { return OFF(globalsOffset,    hasGlobals,    js::GlobalSlotArray); }
+    size_t closedVarsOffset() { return OFF(closedArgsOffset, hasClosedArgs, js::ClosedSlotArray); }
 
     js::ConstArray *consts() {
         JS_ASSERT(hasConsts());
-        return reinterpret_cast<js::ConstArray *>(data + constsOffset);
+        return reinterpret_cast<js::ConstArray *>(data + constsOffset());
     }
 
     js::ObjectArray *objects() {
         JS_ASSERT(hasObjects());
-        return reinterpret_cast<js::ObjectArray *>(data + objectsOffset);
+        return reinterpret_cast<js::ObjectArray *>(data + objectsOffset());
     }
 
     js::ObjectArray *regexps() {
         JS_ASSERT(hasRegexps());
-        return reinterpret_cast<js::ObjectArray *>(data + regexpsOffset);
+        return reinterpret_cast<js::ObjectArray *>(data + regexpsOffset());
     }
 
     js::TryNoteArray *trynotes() {
         JS_ASSERT(hasTrynotes());
-        return reinterpret_cast<js::TryNoteArray *>(data + trynotesOffset);
+        return reinterpret_cast<js::TryNoteArray *>(data + trynotesOffset());
     }
 
     js::GlobalSlotArray *globals() {
         JS_ASSERT(hasGlobals());
-        return reinterpret_cast<js::GlobalSlotArray *>(data + globalsOffset);
+        return reinterpret_cast<js::GlobalSlotArray *>(data + globalsOffset());
     }
 
     js::ClosedSlotArray *closedArgs() {
         JS_ASSERT(hasClosedArgs());
-        return reinterpret_cast<js::ClosedSlotArray *>(data + closedArgsOffset);
+        return reinterpret_cast<js::ClosedSlotArray *>(data + closedArgsOffset());
     }
 
     js::ClosedSlotArray *closedVars() {
         JS_ASSERT(hasClosedVars());
-        return reinterpret_cast<js::ClosedSlotArray *>(data + closedVarsOffset);
+        return reinterpret_cast<js::ClosedSlotArray *>(data + closedVarsOffset());
     }
 
     uint32_t numClosedArgs() {

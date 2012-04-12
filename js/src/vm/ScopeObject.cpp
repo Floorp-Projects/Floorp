@@ -885,7 +885,7 @@ Class js::BlockClass = {
 static uint32_t
 FindObjectIndex(JSScript *script, StaticBlockObject *maybeBlock)
 {
-    if (!maybeBlock || !JSScript::isValidOffset(script->objectsOffset))
+    if (!maybeBlock || !script->hasObjects())
         return NO_PARENT_INDEX;
 
     ObjectArray *objects = script->objects();
