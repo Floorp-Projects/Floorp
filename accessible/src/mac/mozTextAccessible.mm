@@ -290,7 +290,9 @@ ToNSString(id aValue)
 
 - (NSString*)subrole
 {
-  // TODO: text accessibles have two different subroles in Cocoa: secure textfield (passwords) and search field
+  if(mRole == roles::PASSWORD_TEXT)
+    return NSAccessibilitySecureTextFieldSubrole;
+
   return nil;
 }
 
@@ -347,7 +349,11 @@ ToNSString(id aValue)
 {
   if (!mGeckoTextAccessible)
     return nil;
-    
+
+  // A password text field returns an empty value
+  if (mRole == roles::PASSWORD_TEXT)
+    return @"";
+
   nsAutoString text;
   nsresult rv = mGeckoTextAccessible->
     GetText(0, nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT, text);

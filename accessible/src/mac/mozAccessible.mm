@@ -232,7 +232,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
     if (mRole == roles::DOCUMENT)
       return utils::LocalizedString(NS_LITERAL_STRING("htmlContent"));
 
-    return NSAccessibilityRoleDescription([self role], nil);
+    return NSAccessibilityRoleDescription([self role], [self subrole]);
   }
   
   if ([attribute isEqualToString:NSAccessibilityDescriptionAttribute])
