@@ -75,8 +75,6 @@ public class BrowserDB {
 
         public Cursor getRecentHistory(ContentResolver cr, int limit);
 
-        public int getMaxHistoryCount();
-
         public void clearHistory(ContentResolver cr);
 
         public Cursor getBookmarksInFolder(ContentResolver cr, long folderId);
@@ -140,10 +138,6 @@ public class BrowserDB {
 
     public static Cursor getRecentHistory(ContentResolver cr, int limit) {
         return sDb.getRecentHistory(cr, limit);
-    }
-
-    public static int getMaxHistoryCount() {
-        return sDb.getMaxHistoryCount();
     }
 
     public static void clearHistory(ContentResolver cr) {
