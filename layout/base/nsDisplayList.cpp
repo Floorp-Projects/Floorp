@@ -67,6 +67,8 @@
 #include "nsSVGEffects.h"
 #include "nsSVGClipPathFrame.h"
 
+#include "mozilla/StandardInteger.h"
+
 using namespace mozilla;
 using namespace mozilla::layers;
 typedef FrameMetrics::ViewID ViewID;
@@ -2017,13 +2019,13 @@ nsDisplayScrollLayer::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
   return GetScrollLayerCount() > 1;
 }
 
-PRWord
+intptr_t
 nsDisplayScrollLayer::GetScrollLayerCount()
 {
   FrameProperties props = mScrolledFrame->Properties();
 #ifdef DEBUG
   bool hasCount = false;
-  PRWord result = reinterpret_cast<PRWord>(
+  intptr_t result = reinterpret_cast<intptr_t>(
     props.Get(nsIFrame::ScrollLayerCount(), &hasCount));
   // If this aborts, then the property was either not added before scroll
   // layers were created or the property was deleted to early. If the latter,
@@ -2032,14 +2034,14 @@ nsDisplayScrollLayer::GetScrollLayerCount()
   NS_ABORT_IF_FALSE(hasCount, "nsDisplayScrollLayer should always be defined");
   return result;
 #else
-  return reinterpret_cast<PRWord>(props.Get(nsIFrame::ScrollLayerCount()));
+  return reinterpret_cast<intptr_t>(props.Get(nsIFrame::ScrollLayerCount()));
 #endif
 }
 
-PRWord
+intptr_t
 nsDisplayScrollLayer::RemoveScrollLayerCount()
 {
-  PRWord result = GetScrollLayerCount();
+  intptr_t result = GetScrollLayerCount();
   FrameProperties props = mScrolledFrame->Properties();
   props.Remove(nsIFrame::ScrollLayerCount());
   return result;

@@ -41,6 +41,8 @@
 #include "xptcprivate.h"
 #include "xptiprivate.h"
 
+#include "mozilla/StandardInteger.h"
+
 /*
  * This is for MIPS O32 ABI
  * Args contains a0-3 and then the stack.
@@ -90,15 +92,15 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint32* args)
         switch(type)
         {
         case nsXPTType::T_I64   :
-            if ((PRWord)ap & 4) ap++;
+            if ((intptr_t)ap & 4) ap++;
             dp->val.i64 = *((PRInt64*) ap); ap++;
             break;
         case nsXPTType::T_U64   :
-            if ((PRWord)ap & 4) ap++;
+            if ((intptr_t)ap & 4) ap++;
             dp->val.u64 = *((PRInt64*) ap); ap++;
             break;
         case nsXPTType::T_DOUBLE:
-            if ((PRWord)ap & 4) ap++;
+            if ((intptr_t)ap & 4) ap++;
             dp->val.d   = *((double*) ap);  ap++;
             break;
 #ifdef IS_LITTLE_ENDIAN

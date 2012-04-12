@@ -48,6 +48,8 @@
 #include "nscore.h"
 #include "nsQueryFrame.h"
 
+#include "mozilla/StandardInteger.h"
+
 // Uncomment this to disable arenas, instead forwarding to
 // malloc for every allocation.
 //#define DEBUG_TRACEMALLOC_PRESARENA 1
@@ -83,7 +85,7 @@ public:
    * The caller is responsible for ensuring that a pres shell has been
    * initialized before calling this.
    */
-  static PRUword GetPoisonValue();
+  static uintptr_t GetPoisonValue();
 
 private:
   struct State;
