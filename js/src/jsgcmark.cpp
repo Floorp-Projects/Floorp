@@ -764,6 +764,7 @@ MarkCycleCollectorChildren(JSTracer *trc, Shape *shape)
 static void
 ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
 {
+    /* Don't mark properties for singletons. They'll be purged by the GC. */
     if (!type->singleton) {
         unsigned count = type->getPropertyCount();
         for (unsigned i = 0; i < count; i++) {
@@ -791,13 +792,11 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
 static void
 MarkChildren(JSTracer *trc, types::TypeObject *type)
 {
-    if (!type->singleton) {
-        unsigned count = type->getPropertyCount();
-        for (unsigned i = 0; i < count; i++) {
-            types::Property *prop = type->getProperty(i);
-            if (prop)
-                MarkId(trc, &prop->id, "type_prop");
-        }
+    unsigned count = type->getPropertyCount();
+    for (unsigned i = 0; i < count; i++) {
+        types::Property *prop = type->getProperty(i);
+        if (prop)
+            MarkId(trc, &prop->id, "type_prop");
     }
 
     if (type->proto)
