@@ -115,6 +115,7 @@ FENNEC_JAVA_FILES = \
   Tabs.java \
   TabsTray.java \
   TabsAccessor.java \
+  Telemetry.java \
   gfx/BitmapUtils.java \
   gfx/BufferedCairoImage.java \
   gfx/CairoGLInfo.java \
