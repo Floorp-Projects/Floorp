@@ -1589,6 +1589,12 @@ class nsIWidget : public nsISupports {
      * widget.
      */
     virtual PRUint32 GetGLFrameBufferFormat() { return 0; /*GL_NONE*/ }
+
+    /**
+     * Return true if widget has it's own GL context
+     */
+    virtual bool HasGLContext() { return false; }
+
 protected:
 
     // keep the list of children.  We also keep track of our siblings.
