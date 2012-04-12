@@ -4,7 +4,7 @@ const TEST_CLUSTER_URL = "http://localhost:8080/";
 const TEST_SERVER_URL  = "http://localhost:8080/";
 
 // Shared logging for all HTTP server functions.
-Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://services-common/log4moz.js");
 const SYNC_HTTP_LOGGER = "Sync.Test.Server";
 const SYNC_API_VERSION = "1.1";
 
@@ -24,39 +24,6 @@ function return_timestamp(request, response, timestamp) {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.bodyOutputStream.write(body, body.length);
   return timestamp;
-}
-
-function httpd_setup (handlers, port) {
-  let port   = port || 8080;
-  let server = new nsHttpServer();
-  for (let path in handlers) {
-    server.registerPathHandler(path, handlers[path]);
-  }
-  try {
-    server.start(port);
-  } catch (ex) {
-    _("==========================================");
-    _("Got exception starting HTTP server on port " + port);
-    _("Error: " + Utils.exceptionStr(ex));
-    _("Is there a process already listening on port " + port + "?");
-    _("==========================================");
-    do_throw(ex);
-  }
-
-  return server;
-}
-
-function httpd_handler(statusCode, status, body) {
-  return function handler(request, response) {
-    // Allow test functions to inspect the request.
-    request.body = readBytesFromInputStream(request.bodyInputStream);
-    handler.request = request;
-
-    response.setStatusLine(request.httpVersion, statusCode, status);
-    if (body) {
-      response.bodyOutputStream.write(body, body.length);
-    }
-  };
 }
 
 function basic_auth_header(user, password) {
@@ -82,21 +49,6 @@ function httpd_basic_auth_handler(body, metadata, response) {
     response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
   }
   response.bodyOutputStream.write(body, body.length);
-}
-
-/*
- * Read bytes string from an nsIInputStream.  If 'count' is omitted,
- * all available input is read.
- */
-function readBytesFromInputStream(inputStream, count) {
-  var BinaryInputStream = Components.Constructor(
-      "@mozilla.org/binaryinputstream;1",
-      "nsIBinaryInputStream",
-      "setInputStream");
-  if (!count) {
-    count = inputStream.available();
-  }
-  return new BinaryInputStream(inputStream).readBytes(count);
 }
 
 /*
@@ -1043,52 +995,4 @@ function serverForUsers(users, contents, callback) {
   }
   server.start();
   return server;
-}
-
-/**
- * Proxy auth helpers.
- */
-
-/**
- * Fake a PAC to prompt a channel replacement.
- */
-let PACSystemSettings = {
-  CID: Components.ID("{5645d2c1-d6d8-4091-b117-fe7ee4027db7}"),
-  contractID: "@mozilla.org/system-proxy-settings;1",
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory,
-                                         Ci.nsISystemProxySettings]),
-
-  createInstance: function createInstance(outer, iid) {
-    if (outer) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    }
-    return this.QueryInterface(iid);
-  },
-
-  lockFactory: function lockFactory(lock) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  },
-  
-  // Replace this URI for each test to avoid caching. We want to ensure that
-  // each test gets a completely fresh setup.
-  PACURI: null,
-  getProxyForURI: function getProxyForURI(aURI) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  }
-};
-
-function installFakePAC() {
-  _("Installing fake PAC.");
-  Cm.nsIComponentRegistrar
-    .registerFactory(PACSystemSettings.CID,
-                     "Fake system proxy-settings",
-                     PACSystemSettings.contractID,
-                     PACSystemSettings);
-}
-
-function uninstallFakePAC() {
-  _("Uninstalling fake PAC.");
-  let CID = PACSystemSettings.CID;
-  Cm.nsIComponentRegistrar.unregisterFactory(CID, PACSystemSettings);
 }

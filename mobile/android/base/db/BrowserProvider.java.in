@@ -455,7 +455,7 @@ public class BrowserProvider extends ContentProvider {
         }
 
         private void createDefaultBookmarks(SQLiteDatabase db, String pattern) {
-            Class stringsClass = R.string.class;
+            Class<?> stringsClass = R.string.class;
 
             Field[] fields = stringsClass.getFields();
             Pattern p = Pattern.compile(pattern);
@@ -498,7 +498,7 @@ public class BrowserProvider extends ContentProvider {
         }
 
         private void setDefaultFavicon(SQLiteDatabase db, String name, String url) {
-            Class drawablesClass = R.drawable.class;
+            Class<?> drawablesClass = R.drawable.class;
             ByteArrayOutputStream stream = null;
             try {
                 // Look for a drawable with the id R.drawable.bookmarkdefaults_favicon_*

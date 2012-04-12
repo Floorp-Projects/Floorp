@@ -1,8 +1,15 @@
-Components.utils.import("resource://services-sync/ext/Observers.js");
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+Components.utils.import("resource://services-common/observers.js");
 
 let gSubject = {};
 
-function test_function_observer() {
+function run_test() {
+  run_next_test();
+}
+
+add_test(function test_function_observer() {
   let foo = false;
 
   let onFoo = function(subject, data) {
@@ -22,9 +29,11 @@ function test_function_observer() {
 
   // The observer was not notified after being removed.
   do_check_true(foo);
-}
 
-function test_method_observer() {
+  run_next_test();
+});
+
+add_test(function test_method_observer() {
   let obj = {
     foo: false,
     onFoo: function(subject, data) {
@@ -43,9 +52,11 @@ function test_method_observer() {
   Observers.remove("foo", obj.onFoo, obj);
   Observers.notify("foo");
   do_check_true(obj.foo);
-}
 
-function test_object_observer() {
+  run_next_test();
+});
+
+add_test(function test_object_observer() {
   let obj = {
     foo: false,
     observe: function(subject, topic, data) {
@@ -68,10 +79,6 @@ function test_object_observer() {
 
   // The observer is not notified after being removed.
   do_check_true(obj.foo);
-}
 
-function run_test() {
-  test_function_observer();
-  test_method_observer();
-  test_object_observer();
-}
+  run_next_test();
+});
