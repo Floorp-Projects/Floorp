@@ -194,6 +194,10 @@
                     label="&debuggerMenu.label;"
                     key="key_debugger"
                     command="Tools:Debugger"/>
+          <menuitem id="appmenu_remoteDebugger"
+                    hidden="true"
+                    label="&remoteDebuggerMenu.label;"
+                    command="Tools:RemoteDebugger"/>
           <menuitem id="appmenu_scratchpad"
                     hidden="true"
                     label="&scratchpad.label;"
