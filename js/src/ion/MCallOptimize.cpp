@@ -103,7 +103,7 @@ IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
             if (!discardCall(argc, argv, current))
                 return false;
             types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
-            MNewArray *ins = new MNewArray(0, type);
+            MNewArray *ins = new MNewArray(0, type, MNewArray::NewArray_Unallocating);
             current->add(ins);
             current->push(ins);
             if (!resumeAfter(ins))
@@ -265,7 +265,7 @@ IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
                     if (!discardCall(argc, argv, current))
                         return false;
                     types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
-                    MNewArray *ins = new MNewArray(arg, type);
+                    MNewArray *ins = new MNewArray(arg, type, MNewArray::NewArray_Unallocating);
                     current->add(ins);
                     current->push(ins);
                     if (!resumeAfter(ins))
