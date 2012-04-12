@@ -8,7 +8,7 @@ interface nsIDOMEventListener;
 interface nsIDOMDOMRequest;
 interface nsIDOMMozMobileConnectionInfo;
 
-[scriptable, uuid(ba2be619-fed6-4652-865a-c61f88ffeaa8)]
+[scriptable, uuid(962298cd-3443-423e-9e47-f22e24ad850b)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   /**
@@ -54,6 +54,111 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    */
   attribute nsIDOMEventListener ondatachange;
 
+  /**
+   * Find out about the status of an ICC lock (e.g. the PIN lock).
+   *
+   * @param lockType
+   *        Identifies the lock type, e.g. "pin" for the PIN lock.
+   *
+   * @return a DOM Request.
+   *         The request's result will be an object containing 
+   *         information about the specified lock's status,
+   *         e.g. {lockType: "pin", enabled: true}.
+   */
+  nsIDOMDOMRequest getCardLock(in DOMString lockType);
+
+  /**
+   * Unlock a card lock.
+   *
+   * @param info
+   *        An object containing the information necessary to unlock
+   *        the given lock. At a minimum, this object must have a
+   *        "lockType" attribute which specifies the type of lock, e.g.
+   *        "pin" for the PIN lock. Other attributes are dependent on
+   *        the lock type.
+   *
+   * Examples:
+   *
+   * (1) Unlocking the PIN:
+   *
+   *   unlockCardLock({lockType: "pin",
+   *                   pin: "..."});
+   *
+   * (2) Unlocking the PUK and supplying a new PIN:
+   *
+   *   unlockCardLock({lockType: "puk",
+   *                   puk: "...",
+   *                   newPin: "..."});
+   *
+   * @return a nsIDOMDOMRequest.
+   *         The request's result will be an object containing 
+   *         information about the unlock operation.
+   *
+   * Examples:
+   *
+   * (1) Unlocking failed:
+   *
+   *     {
+   *       lockType:   "pin",
+   *       result:     false,
+   *       retryCount: 2
+   *     }
+   *
+   * (2) Unlocking succeeded:
+   *
+   *     {
+   *       lockType:  "pin",
+   *       result:    true
+   *     }
+   */
+  nsIDOMDOMRequest unlockCardLock(in jsval info);
+
+  /**
+   * Modify the state of a card lock.
+   *
+   * @param info
+   *        An object containing information about the lock and
+   *        how to modify its state. At a minimum, this object
+   *        must have a "lockType" attribute which specifies the
+   *        type of lock, e.g. "pin" for the PIN lock. Other
+   *        attributes are dependent on the lock type.
+   *
+   * Examples:
+   *
+   * (1) Disabling the PIN lock:
+   *
+   *   setCardLock({lockType: "pin",
+   *                pin: "...",
+   *                enabled: false});
+   *
+   * (2) Changing the PIN:
+   *
+   *   setCardLock({lockType: "pin",
+   *                pin: "...",
+   *                newPin: "..."});
+   *
+   * @return a nsIDOMDOMRequest.
+   *         The request's result will be an object containing 
+   *         information about the operation.
+   *
+   * Examples:
+   *
+   * (1) Enabling/Disabling card lock failed or change card lock failed.
+   *
+   *     {
+   *       lockType: "pin",
+   *       result: false,
+   *       retryCount: 2
+   *     }
+   *
+   * (2) Enabling/Disabling card lock succeed or change card lock succeed.
+   *
+   *     {
+   *       lockType: "pin",
+   *       result: true
+   *     }
+   */
+  nsIDOMDOMRequest setCardLock(in jsval info);
 };
 
 [scriptable, uuid(f3bb0611-5e4a-46f1-a8f5-cf592b37596e)]
