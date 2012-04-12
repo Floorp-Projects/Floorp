@@ -211,40 +211,22 @@ function processMemoryReporters(aMgr, aIgnoreSingle, aIgnoreMulti,
     aHandleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount, aDescription);
   }
 
-  function handleException(aReporterStr, aUnsafePathOrName, aE)
-  {
-    // There are two exception cases that must be distinguished here.
-    //
-    // - We want to halt proceedings on exceptions thrown within this file
-    //   (i.e. assertion failures in handleReport);  such exceptions contain
-    //   gAssertionFailureMsgPrefix in their string representation.
-    //
-    // - We want to continue on when faced with exceptions thrown outside this
-    //   file (e.g. within a multi-reporter).
-
-    let str = aE.toString();
-    if (str.search(gAssertionFailureMsgPrefix) >= 0) {
-      throw(aE); 
-    } else {
-      debug("Bad memory " + aReporterStr + " '" + aUnsafePathOrName +
-            "': " + aE);
-    }
-  }
-
   let e = aMgr.enumerateReporters();
   while (e.hasMoreElements()) {
     let rOrig = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-    let unsafePath = rOrig.path;
+    let unsafePath;
     try {
+      unsafePath = rOrig.path;
       if (!aIgnoreSingle(unsafePath)) {
-        handleReport(rOrig.process, unsafePath, rOrig.kind, rOrig.units,
+        handleReport(rOrig.process, unsafePath, rOrig.kind, rOrig.units, 
                      rOrig.amount, rOrig.description);
       }
     }
-    catch (e) {
-      handleException("reporter", unsafePath, e);
+    catch (ex) {
+      debug("Exception thrown by memory reporter: " + unsafePath + ": " + ex);
     }
   }
+
   let e = aMgr.enumerateMultiReporters();
   while (e.hasMoreElements()) {
     let mrOrig = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
@@ -254,8 +236,22 @@ function processMemoryReporters(aMgr, aIgnoreSingle, aIgnoreMulti,
         mrOrig.collectReports(handleReport, null);
       }
     }
-    catch (e) {
-      handleException("multi-reporter", name, e);
+    catch (ex) {
+      // There are two exception cases that must be distinguished here.
+      //
+      // - We want to halt proceedings on exceptions thrown within this file
+      //   (i.e. assertion failures in handleReport);  such exceptions contain
+      //   gAssertionFailureMsgPrefix in their string representation.
+      //
+      // - We want to continue on when faced with exceptions thrown outside
+      //   this file (i.e. when measuring an amount in collectReports).
+      let str = ex.toString();
+      if (str.search(gAssertionFailureMsgPrefix) >= 0) {
+        throw(ex); 
+      } else {
+        debug("Exception thrown within memory multi-reporter: " + name + ": " +
+              ex);
+      }
     }
   }
 }
@@ -329,8 +325,6 @@ function appendElementWithText(aP, aTagName, aClassName, aText)
 //---------------------------------------------------------------------------
 // Code specific to about:memory
 //---------------------------------------------------------------------------
-
-const kUnknown = -1;    // used for an unknown _amount
 
 const kTreeDescriptions = {
   'explicit' :
@@ -515,16 +509,11 @@ function Report(aUnsafePath, aKind, aUnits, aAmount, aDescription)
 }
 
 Report.prototype = {
-  // Sum the values (accounting for possible kUnknown amounts), and mark |this|
-  // as a dup.  We mark dups because it's useful to know when a report is
-  // duplicated;  it might be worth investigating and splitting up to have
-  // non-duplicated names.
+  // Sum the values and mark |this| as a dup.  We mark dups because it's useful
+  // to know when a report is duplicated;  it might be worth investigating and
+  // splitting up to have non-duplicated names.
   merge: function(r) {
-    if (this._amount !== kUnknown && r._amount !== kUnknown) {
-      this._amount += r._amount;
-    } else if (this._amount === kUnknown && r._amount !== kUnknown) {
-      this._amount = r._amount;
-    }
+    this._amount += r._amount;
     this._nMerged = this._nMerged ? this._nMerged + 1 : 2;
   },
 
@@ -595,14 +584,13 @@ function TreeNode(aUnsafeName)
   this._unsafeName = aUnsafeName;
   this._kids = [];
   // Leaf TreeNodes have these properties added immediately after construction:
-  // - _amount (which is never |kUnknown|)
+  // - _amount
   // - _description
   // - _kind
   // - _nMerged (only defined if > 1)
-  // - _isUnknown (only defined if true)
   //
   // Non-leaf TreeNodes have these properties added later:
-  // - _amount (which is never |kUnknown|)
+  // - _amount
   // - _description
   // - _hideKids (only defined if true)
 }
@@ -676,12 +664,7 @@ function buildTree(aReports, aTreeName)
         }
       }
       // Fill in extra details in the leaf node from the Report object.
-      if (r._amount !== kUnknown) {
-        u._amount = r._amount;
-      } else {
-        u._amount = 0;
-        u._isUnknown = true;
-      }
+      u._amount = r._amount;
       u._description = r._description;
       u._kind = r._kind;
       if (r._nMerged) {
@@ -696,7 +679,6 @@ function buildTree(aReports, aTreeName)
   t = t._kids[0];
 
   // Next, fill in the remaining properties bottom-up.
-  // Note that this function never returns kUnknown.
   function fillInNonLeafNodes(aT)
   {
     if (aT._kids.length === 0) {
@@ -714,7 +696,6 @@ function buildTree(aReports, aTreeName)
       aT._description = "The sum of all entries below '" +
                         flipBackslashes(aT._unsafeName) + "'.";
     }
-    assert(aT._amount !== kUnknown, "aT._amount !== kUnknown");
     return aT._amount;
   }
 
@@ -784,17 +765,12 @@ function fixUpExplicitTree(aT, aReports)
   // mark "heap-allocated" when we get its size because we want it to appear
   // in the "Other Measurements" list.
   let heapAllocatedReport = aReports["heap-allocated"];
-  assert(heapAllocatedReport, "no 'heap-allocated' report");
+  if (heapAllocatedReport === undefined)
+    return false;
+
   let heapAllocatedBytes = heapAllocatedReport._amount;
   let heapUnclassifiedT = new TreeNode("heap-unclassified");
-  let hasKnownHeapAllocated = heapAllocatedBytes !== kUnknown;
-  if (hasKnownHeapAllocated) {
-    heapUnclassifiedT._amount =
-      heapAllocatedBytes - getKnownHeapUsedBytes(aT);
-  } else {
-    heapUnclassifiedT._amount = 0;
-    heapUnclassifiedT._isUnknown = true;
-  }
+  heapUnclassifiedT._amount = heapAllocatedBytes - getKnownHeapUsedBytes(aT);
   // This kindToString() ensures the "(Heap)" prefix is set without having to
   // set the _kind property, which would mean that there is a corresponding
   // Report object for this TreeNode object (which isn't true)
@@ -802,11 +778,9 @@ function fixUpExplicitTree(aT, aReports)
       "Memory not classified by a more specific reporter. This includes " +
       "slop bytes due to internal fragmentation in the heap allocator " +
       "(caused when the allocator rounds up request sizes).";
-
   aT._kids.push(heapUnclassifiedT);
   aT._amount += heapUnclassifiedT._amount;
-
-  return hasKnownHeapAllocated;
+  return true;
 }
 
 /**
@@ -825,7 +799,6 @@ function sortTreeAndInsertAggregateNodes(aTotalBytes, aT)
   function isInsignificant(aT)
   {
     return !gVerbose &&
-           aTotalBytes !== kUnknown &&
            (100 * aT._amount / aTotalBytes) < kSignificanceThresholdPerc;
   }
 
@@ -897,15 +870,15 @@ function appendWarningElements(aP, aHasKnownHeapAllocated,
     appendElementWithText(aP, "p", "", 
       "WARNING: the 'heap-allocated' memory reporter and the " +
       "moz_malloc_usable_size() function do not work for this platform " +
-      "and/or configuration.  This means that 'heap-unclassified' is zero " +
-      "and the 'explicit' tree shows much less memory than it should.");
+      "and/or configuration.  This means that 'heap-unclassified' is not " +
+      "shown and the 'explicit' tree shows much less memory than it should.");
     appendTextNode(aP, "\n\n");
 
   } else if (!aHasKnownHeapAllocated) {
     appendElementWithText(aP, "p", "", 
       "WARNING: the 'heap-allocated' memory reporter does not work for this " +
       "platform and/or configuration. This means that 'heap-unclassified' " +
-      "is zero and the 'explicit' tree shows less memory than it should.");
+      "is not shown and the 'explicit' tree shows less memory than it should.");
     appendTextNode(aP, "\n\n");
 
   } else if (!aHasMozMallocUsableSize) {
@@ -1151,7 +1124,7 @@ const kHideKids = 1;
 const kShowKids = 2;
 
 function appendMrNameSpan(aP, aKind, aKidsState, aDescription, aUnsafeName,
-                          aIsUnknown, aIsInvalid, aNMerged)
+                          aIsInvalid, aNMerged)
 {
   let text = "";
   if (aKidsState === kNoKids) {
@@ -1170,11 +1143,6 @@ function appendMrNameSpan(aP, aKind, aKidsState, aDescription, aUnsafeName,
                                        flipBackslashes(aUnsafeName));
   nameSpan.title = kindToString(aKind) + aDescription;
 
-  if (aIsUnknown) {
-    let noteSpan = appendElementWithText(aP, "span", "mrNote", " [*]");
-    noteSpan.title =
-      "Warning: this memory reporter was unable to compute a useful value. ";
-  }
   if (aIsInvalid) {
     let noteSpan = appendElementWithText(aP, "span", "mrNote", " [?!]");
     noteSpan.title =
@@ -1372,7 +1340,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
     // the whole tree is non-heap.
     let kind = isExplicitTree ? aT._kind : undefined;
     appendMrNameSpan(d, kind, kidsState, aT._description, aT._unsafeName,
-                     aT._isUnknown, tIsInvalid, aT._nMerged);
+                     tIsInvalid, aT._nMerged);
     appendTextNode(d, "\n");
 
     // In non-verbose mode, invalid nodes can be hidden in collapsed sub-trees.
@@ -1424,12 +1392,7 @@ function OtherReport(aUnsafePath, aUnits, aAmount, aDescription, aNMerged)
   // Nb: _kind is not needed, it's always KIND_OTHER.
   this._unsafePath = aUnsafePath;
   this._units    = aUnits;
-  if (aAmount === kUnknown) {
-    this._amount     = 0;
-    this._isUnknown = true;
-  } else {
-    this._amount = aAmount;
-  }
+  this._amount = aAmount;
   this._description = aDescription;
   this._asString = this.toString();
 }
@@ -1451,9 +1414,8 @@ OtherReport.prototype = {
     switch (this._units) {
       case UNITS_BYTES:
       case UNITS_COUNT:
-      case UNITS_COUNT_CUMULATIVE: return (n !== kUnknown && n < 0);
-      case UNITS_PERCENTAGE:       return (n !== kUnknown &&
-                                           !(0 <= n && n <= 10000));
+      case UNITS_COUNT_CUMULATIVE: return n < 0;
+      case UNITS_PERCENTAGE:       return !(0 <= n && n <= 10000);
       default:
         assert(false, "bad units in OtherReport.isInvalid");
     }
@@ -1514,7 +1476,7 @@ function appendOtherElements(aP, aReportsByProcess)
     }
     appendMrValueSpan(pre, pad(o._asString, maxStringLength, ' '), oIsInvalid);
     appendMrNameSpan(pre, KIND_OTHER, kNoKids, o._description, o._unsafePath,
-                     o._isUnknown, oIsInvalid);
+                     oIsInvalid);
     appendTextNode(pre, "\n");
   }
 
