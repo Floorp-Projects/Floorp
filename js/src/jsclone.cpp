@@ -606,7 +606,7 @@ JSStructuredCloneWriter::write(const Value &v)
         return false;
 
     while (!counts.empty()) {
-        JSObject *obj = &objs.back().toObject();
+        RootedVarObject obj(context(), &objs.back().toObject());
 
         // The objects in |obj| can live in other compartments.
         AutoEnterCompartmentAndPushPrincipal ac;
@@ -615,7 +615,7 @@ JSStructuredCloneWriter::write(const Value &v)
 
         if (counts.back()) {
             counts.back()--;
-            jsid id = ids.back();
+            RootedVarId id(context(), ids.back());
             ids.popBack();
             checkStack();
             if (JSID_IS_STRING(id) || JSID_IS_INT(id)) {
