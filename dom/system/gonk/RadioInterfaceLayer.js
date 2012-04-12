@@ -44,6 +44,9 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:RejectCall",
   "RIL:HoldCall",
   "RIL:ResumeCall",
+  "RIL:GetCardLock",
+  "RIL:UnlockCardLock",
+  "RIL:SetCardLock"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
@@ -221,6 +224,15 @@ RadioInterfaceLayer.prototype = {
       case "RIL:ResumeCall":
         this.resumeCall(msg.json);
         break;
+      case "RIL:GetCardLock":
+        this.getCardLock(msg.json);
+        break;
+      case "RIL:UnlockCardLock":
+        this.unlockCardLock(msg.json);
+        break;
+      case "RIL:SetCardLock":
+        this.setCardLock(msg.json);
+        break;
     }
   },
 
@@ -308,6 +320,15 @@ RadioInterfaceLayer.prototype = {
         break;
       case "iccinfochange":
         this.radioState.icc = message;
+        break;
+      case "iccgetcardlock":
+        this.handleICCGetCardLock(message);
+        break;
+      case "iccsetcardlock":
+        this.handleICCSetCardLock(message);
+        break;
+      case "iccunlockcardlock":
+        this.handleICCUnlockCardLock(message);
         break;
       default:
         throw new Error("Don't know about this message type: " + message.type);
@@ -632,6 +653,18 @@ RadioInterfaceLayer.prototype = {
       debug("Data call settings connect data call.");
       RILNetworkInterface.connect();
     }
+  },
+
+  handleICCGetCardLock: function handleICCGetCardLock(message) {
+    ppmm.sendAsyncMessage("RIL:GetCardLock:Return:OK", message);
+  },
+
+  handleICCSetCardLock: function handleICCSetCardLock(message) {
+    ppmm.sendAsyncMessage("RIL:SetCardLock:Return:OK", message);
+  },
+
+  handleICCUnlockCardLock: function handleICCUnlockCardLock(message) {
+    ppmm.sendAsyncMessage("RIL:UnlockCardLock:Return:OK", message);
   },
 
   // nsIObserver
@@ -1196,8 +1229,71 @@ RadioInterfaceLayer.prototype = {
     this.worker.postMessage({type: "getDataCallList"});
   },
 
-};
+  getCardLock: function getCardLock(message) {
+    // Currently only support pin.
+    switch (message.lockType) {
+      case "pin" :
+        message.type = "getICCPinLock";
+        break;
+      default:
+        ppmm.sendAsyncMessage("RIL:GetCardLock:Return:KO",
+                              {errorMsg: "Unsupported Card Lock.",
+                               requestId: message.requestId});
+        return;
+    }
+    this.worker.postMessage(message);
+  },
 
+  unlockCardLock: function unlockCardLock(message) {
+    switch (message.lockType) {
+      case "pin":
+        message.type = "enterICCPIN";
+        break;
+      case "pin2":
+        message.type = "enterICCPIN2";
+        break;
+      case "puk":
+        message.type = "enterICCPUK";
+        break;
+      case "puk2":
+        message.type = "enterICCPUK2";
+        break;
+      default:
+        ppmm.sendAsyncMessage("RIL:UnlockCardLock:Return:KO",
+                              {errorMsg: "Unsupported Card Lock.",
+                               requestId: message.requestId});
+        return;
+    }
+    this.worker.postMessage(message);
+  },
+
+  setCardLock: function setCardLock(message) {
+    // Change pin.
+    if (message.newPin !== undefined) {
+      switch (message.lockType) {
+        case "pin":
+          message.type = "changeICCPIN";
+          break;
+        case "pin2":
+          message.type = "changeICCPIN2";
+          break;
+        default:
+          ppmm.sendAsyncMessage("RIL:SetCardLock:Return:KO",
+                                {errorMsg: "Unsupported Card Lock.",
+                                 requestId: message.requestId});
+          return;
+      }
+    } else { // Enable/Disable pin lock.
+      if (message.lockType != "pin") {
+          ppmm.sendAsyncMessage("RIL:SetCardLock:Return:KO",
+                                {errorMsg: "Unsupported Card Lock.",
+                                 requestId: message.requestId});
+      }
+      message.type = "setICCPinLock";
+    }
+    this.worker.postMessage(message);
+  }
+};
 
 let RILNetworkInterface = {
 

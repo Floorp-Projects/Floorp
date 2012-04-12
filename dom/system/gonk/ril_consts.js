@@ -423,6 +423,23 @@ const ICC_STATUS_ERROR_WRONG_LENGTH = 0x67;
 const ICC_STATUS_ERROR_COMMAND_NOT_ALLOWED = 0x69;
 const ICC_STATUS_ERROR_WRONG_PARAMETERS = 0x6a;
 
+// ICC call barring facility.
+// TS 27.007, clause 7.4, +CLCK
+const ICC_CB_FACILITY_SIM = "SC";
+
+// ICC service class
+// TS 27.007, clause 7.4, +CLCK
+const ICC_SERVICE_CLASS_NONE = 0; // no user input
+const ICC_SERVICE_CLASS_VOICE = (1 << 0);
+const ICC_SERVICE_CLASS_DATA = (1 << 1);
+const ICC_SERVICE_CLASS_FAX = (1 << 2);
+const ICC_SERVICE_CLASS_SMS = (1 << 3);
+const ICC_SERVICE_CLASS_DATA_SYNC = (1 << 4);
+const ICC_SERVICE_CLASS_DATA_ASYNC = (1 << 5);
+const ICC_SERVICE_CLASS_PACKET = (1 << 6);
+const ICC_SERVICE_CLASS_PAD = (1 << 7);
+const ICC_SERVICE_CLASS_MAX = (1 << 7); // Max ICC_SERVICE_CLASS value
+
 /**
  * GSM PDU constants
  */
