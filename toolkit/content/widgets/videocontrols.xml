@@ -811,10 +811,24 @@
                     this.startFade(this.volumeStack, isMouseOver);
                 },
 
+                _controlsHiddenByTimeout : false,
+                _showControlsTimeout : 0,
+                SHOW_CONTROLS_TIMEOUT_MS: 500,
+                _showControlsFn : function () {
+                    if (Utils.video.mozMatchesSelector("video:hover")) {
+                        Utils.startFadeIn(Utils.controlBar, false);
+                        Utils._showControlsTimeout = 0;
+                        Utils._controlsHiddenByTimeout = false;
+                    }
+                },
+
                 _hideControlsTimeout : 0,
                 _hideControlsFn : function () {
-                    if (!Utils.scrubber.isDragging)
+                    if (!Utils.scrubber.isDragging) {
                         Utils.startFade(Utils.controlBar, false);
+                        Utils._hideControlsTimeout = 0;
+                        Utils._controlsHiddenByTimeout = true;
+                    }
                 },
                 HIDE_CONTROLS_TIMEOUT_MS : 2000,
                 onMouseMove : function (event) {
@@ -831,10 +845,16 @@
                         !(this.video.autoplay && this.video.mozAutoplayEnabled))
                         return;
 
-                    this.startFade(this.controlBar, true);
+                    if (this._controlsHiddenByTimeout)
+                        this._showControlsTimeout = setTimeout(this._showControlsFn, this.SHOW_CONTROLS_TIMEOUT_MS);
+                    else
+                        this.startFade(this.controlBar, true);
+
                     // Hide the controls if the mouse cursor is left on top of the video
                     // but above the control bar and if the click-to-play overlay is hidden.
-                    if (event.clientY < this.controlBar.getBoundingClientRect().top && this.clickToPlay.hidden) {
+                    if ((this._controlsHiddenByTimeout ||
+                         event.clientY < this.controlBar.getBoundingClientRect().top) &&
+                        this.clickToPlay.hidden) {
                         this._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
                     }
                 },
@@ -865,14 +885,14 @@
 
                     if (!isMouseOver) {
                         this.adjustControlSize();
-                        
+
                         // Keep the controls visible if the click-to-play is visible.
                         if (!this.clickToPlay.hidden)
                             return;
 
-                        // Setting a timer here to handle the case where the mouse leaves
-                        // the video from hovering over the controls.
-                        this._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
+                        this.startFadeOut(this.controlBar, false);
+                        clearTimeout(this._showControlsTimeout);
+                        Utils._controlsHiddenByTimeout = false;
                     }
                 },
 
@@ -886,8 +906,6 @@
 
                 startFade : function (element, fadeIn, immediate) {
                     if (element.className == "controlBar" && fadeIn) {
-                        clearTimeout(this._hideControlsTimeout);
-
                         // Bug 493523, the scrubber doesn't call valueChanged while hidden,
                         // so our dependent state (eg, timestamp in the thumb) will be stale.
                         // As a workaround, update it manually when it first becomes unhidden.
