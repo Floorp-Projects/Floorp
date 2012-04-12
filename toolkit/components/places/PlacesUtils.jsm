@@ -133,9 +133,6 @@ var PlacesUtils = {
   EXCLUDE_FROM_BACKUP_ANNO: "places/excludeFromBackup",
   LMANNO_FEEDURI: "livemark/feedURI",
   LMANNO_SITEURI: "livemark/siteURI",
-  LMANNO_EXPIRATION: "livemark/expiration",
-  LMANNO_LOADFAILED: "livemark/loadfailed",
-  LMANNO_LOADING: "livemark/loading",
   POST_DATA_ANNO: "bookmarkProperties/POSTData",
   READ_ONLY_ANNO: "placesInternal/READ_ONLY",
 
@@ -1386,10 +1383,6 @@ var PlacesUtils = {
                 return false;
               case this.LMANNO_SITEURI:
                 siteURI = this._uri(aAnno.value);
-                return false;
-              case this.LMANNO_EXPIRATION:
-              case this.LMANNO_LOADING:
-              case this.LMANNO_LOADFAILED:
                 return false;
               default:
                 return true;
@@ -2703,10 +2696,7 @@ function PlacesRemoveLivemarkTransaction(aLivemarkId)
   let annos = PlacesUtils.getAnnotationsForItem(this.item.id);
   // Exclude livemark service annotations, those will be recreated automatically
   let annosToExclude = [PlacesUtils.LMANNO_FEEDURI,
-                        PlacesUtils.LMANNO_SITEURI,
-                        PlacesUtils.LMANNO_EXPIRATION,
-                        PlacesUtils.LMANNO_LOADFAILED,
-                        PlacesUtils.LMANNO_LOADING];
+                        PlacesUtils.LMANNO_SITEURI];
   this.item.annotations = annos.filter(function(aValue, aIndex, aArray) {
       return annosToExclude.indexOf(aValue.name) == -1;
     });
