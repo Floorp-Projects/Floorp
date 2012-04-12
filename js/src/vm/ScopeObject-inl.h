@@ -14,7 +14,8 @@ namespace js {
 
 inline
 ScopeCoordinate::ScopeCoordinate(jsbytecode *pc)
-  : hops(GET_UINT16(pc)), binding(GET_UINT16(pc + 2))
+  : hops(GET_UINT16(pc)), binding(GET_UINT16(pc + 2)),
+    frameBinding(GET_UINT16(pc + 8))
 {
     JS_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
 }
@@ -53,6 +54,58 @@ inline void
 ScopeObject::setStackFrame(StackFrame *frame)
 {
     return setPrivate(frame);
+}
+
+inline const Value &
+ScopeObject::aliasedVar(ScopeCoordinate sc)
+{
+    /* XXX: all this is temporary until the last patch of 659577 */
+    StackFrame *fp = maybeStackFrame();
+    Bindings &bindings = fp->script()->bindings;
+    if (isCall()) {
+        JS_ASSERT(sc.binding == sc.frameBinding);
+        if (bindings.bindingIsArg(sc.binding)) {
+            unsigned arg = bindings.bindingToArg(sc.binding);
+            JS_ASSERT(fp->script()->formalLivesInCallObject(arg));
+            return fp->formalArg(arg);
+        }
+
+        unsigned var = bindings.bindingToLocal(sc.binding);
+        JS_ASSERT(fp->script()->varIsAliased(var));
+        return fp->localSlot(var);
+    }
+
+    unsigned var = bindings.bindingToLocal(sc.frameBinding);
+    fp = js_LiveFrameIfGenerator(fp);
+    JS_ASSERT(var == sc.binding + asClonedBlock().staticBlock().stackDepth() + fp->numFixed());
+    JS_ASSERT(asClonedBlock().staticBlock().isAliased(sc.binding));
+    return fp->localSlot(var);
+}
+
+inline void
+ScopeObject::setAliasedVar(ScopeCoordinate sc, const Value &v)
+{
+    /* XXX: all this is temporary until the last patch of 659577 */
+    StackFrame *fp = maybeStackFrame();
+    Bindings &bindings = fp->script()->bindings;
+    if (isCall()) {
+        JS_ASSERT(sc.binding == sc.frameBinding);
+        if (bindings.bindingIsArg(sc.binding)) {
+            unsigned arg = bindings.bindingToArg(sc.binding);
+            JS_ASSERT(fp->script()->formalLivesInCallObject(arg));
+            fp->formalArg(arg) = v;
+        } else {
+            unsigned var = bindings.bindingToLocal(sc.binding);
+            JS_ASSERT(fp->script()->varIsAliased(var));
+            fp->localSlot(var) = v;
+        }
+    } else {
+        unsigned var = bindings.bindingToLocal(sc.frameBinding);
+        fp = js_LiveFrameIfGenerator(fp);
+        JS_ASSERT(var == sc.binding + asClonedBlock().staticBlock().stackDepth() + fp->numFixed());
+        JS_ASSERT(asClonedBlock().staticBlock().isAliased(sc.binding));
+        fp->localSlot(var) = v;
+    }
 }
 
 /*static*/ inline size_t

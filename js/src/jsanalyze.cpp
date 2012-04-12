@@ -320,13 +320,19 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
           case JSOP_GETALIASEDVAR:
           case JSOP_CALLALIASEDVAR:
-          case JSOP_SETALIASEDVAR:
+          case JSOP_SETALIASEDVAR: {
             JS_ASSERT(!isInlineable);
             usesScopeChain_ = true;
+
             /* XXX: this can be removed after bug 659577. */
-            if (ScopeCoordinate(pc).binding >= script->nfixed)
+            ScopeCoordinate sc(pc);
+            if (script->bindings.bindingIsLocal(sc.frameBinding) &&
+                script->bindings.bindingToLocal(sc.frameBinding) >= script->nfixed)
+            {
                 localsAliasStack_ = true;
+            }
             break;
+          }
 
           case JSOP_DEFFUN:
           case JSOP_DEFVAR:
