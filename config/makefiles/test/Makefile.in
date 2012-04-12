@@ -36,14 +36,6 @@ $(info =========================================================================
 $(info Running test: $(MAKECMDGOALS): pwd=$(CURDIR))
 $(info ===========================================================================)
 
-
-ifdef VERBOSE
-$(info )
-$(info ===========================================================================)
-$(info Running test: istype, getargv)
-$(info ===========================================================================)
-endif
-
 ## Silent errors are oh so much fun
 ifndef istype
   $(error makeutils.mk was not included)
@@ -96,32 +88,6 @@ ifneq ($(arg_list),$(call getargv,arg_list))
 endif
 ifneq (arg_list,$(call getargv,arg_ref))
   $(error getargv(arg_ref)=list, found [$(call getargv,arg_ref)])
-endif
-
-
-ifdef MANUAL_TEST
-  # For automated testing a callback is needed that can set an external status
-  # variable that can be tested.  Syntax is tricky to get correct functionality.
-  ifdef VERBOSE
-    $(info )
-    $(info ===========================================================================)
-    $(info Running test: checkIfEmpty)
-    $(info ===========================================================================)
-  endif
-
-  #status =
-  #setTRUE =status=true
-  #setFALSE =status=$(NULL)
-  #$(call checkIfEmpty,setFALSE NULL)
-  #$(if $(status),$(error checkIfEmpty(xyz) failed))
-  #$(call checkIfEmpty,setTRUE xyz)
-  #$(if $(status),$(error checkIfEmpty(xyz) failed))
-  xyz=abc
-  $(info STATUS: warnIfEmpty - two vars)
-  $(call warnIfEmpty,foo xyz bar)
-  $(info STATUS: errorIfEmpty - on first var)
-  $(call errorIfEmpty,foo xyz bar)
-  $(error TEST FAILED: processing should not reach this point)
 endif
 
 endif # check in MAKECMDGOALS
