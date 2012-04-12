@@ -265,7 +265,7 @@ Wrapper::iterate(JSContext *cx, JSObject *wrapper, unsigned flags, Value *vp)
 {
     vp->setUndefined(); // default result if we refuse to perform this action
     const jsid id = JSID_VOID;
-    GET(GetIterator(cx, wrappedObject(wrapper), flags, vp));
+    GET(GetIterator(cx, RootedVarObject(cx, wrappedObject(wrapper)), flags, vp));
 }
 
 bool
@@ -366,7 +366,7 @@ Wrapper::defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp)
 bool
 Wrapper::iteratorNext(JSContext *cx, JSObject *wrapper, Value *vp)
 {
-    if (!js_IteratorMore(cx, wrappedObject(wrapper), vp))
+    if (!js_IteratorMore(cx, RootedVarObject(cx, wrappedObject(wrapper)), vp))
         return false;
 
     if (vp->toBoolean()) {
@@ -692,8 +692,8 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
     AutoCloseIterator close(cx, iterObj);
 
     /* Wrap the iteratee. */
-    JSObject *obj = ni->obj;
-    if (!origin->wrap(cx, &obj))
+    RootedVarObject obj(cx, ni->obj);
+    if (!origin->wrap(cx, obj.address()))
         return false;
 
     /*

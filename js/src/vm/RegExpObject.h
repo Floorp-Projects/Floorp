@@ -44,6 +44,7 @@
 #include "mozilla/Attributes.h"
 
 #include <stddef.h>
+#include "jscntxt.h"
 #include "jsobj.h"
 
 #include "js/TemplateLib.h"
@@ -87,8 +88,8 @@ enum RegExpRunStatus
 
 class RegExpObjectBuilder
 {
-    JSContext       *cx;
-    RegExpObject    *reobj_;
+    JSContext               *cx;
+    RootedVar<RegExpObject*> reobj_;
 
     bool getOrCreate();
     bool getOrCreateClone(RegExpObject *proto);
@@ -98,11 +99,11 @@ class RegExpObjectBuilder
 
     RegExpObject *reobj() { return reobj_; }
 
-    RegExpObject *build(JSAtom *source, RegExpFlag flags);
-    RegExpObject *build(JSAtom *source, RegExpShared &shared);
+    RegExpObject *build(HandleAtom source, RegExpFlag flags);
+    RegExpObject *build(HandleAtom source, RegExpShared &shared);
 
     /* Perform a VM-internal clone. */
-    RegExpObject *clone(RegExpObject *other, RegExpObject *proto);
+    RegExpObject *clone(Handle<RegExpObject*> other, Handle<RegExpObject*> proto);
 };
 
 JSObject *
@@ -366,7 +367,7 @@ class RegExpObject : public JSObject
                     TokenStream *ts);
 
     static RegExpObject *
-    createNoStatics(JSContext *cx, JSAtom *atom, RegExpFlag flags, TokenStream *ts);
+    createNoStatics(JSContext *cx, HandleAtom atom, RegExpFlag flags, TokenStream *ts);
 
     /*
      * Run the regular expression over the input text.
@@ -433,7 +434,7 @@ class RegExpObject : public JSObject
      */
     Shape *assignInitialShape(JSContext *cx);
 
-    inline bool init(JSContext *cx, JSAtom *source, RegExpFlag flags);
+    inline bool init(JSContext *cx, HandleAtom source, RegExpFlag flags);
 
     /*
      * Precondition: the syntax for |source| has already been validated.
