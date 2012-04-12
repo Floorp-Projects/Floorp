@@ -121,7 +121,7 @@ static const NSString* AXRoles [] = {
   NSAccessibilityGroupRole,                     // roles::GLASS_PANE           76
   NSAccessibilityUnknownRole,                   // roles::HTML_CONTAINER       77
   NSAccessibilityImageRole,                     // roles::ICON                 78
-  NSAccessibilityStaticTextRole,                // roles::LABEL                79
+  NSAccessibilityGroupRole,                     // roles::LABEL                79
   NSAccessibilityGroupRole,                     // roles::LAYERED_PANE         80
   NSAccessibilityGroupRole,                     // roles::OPTION_PANE          81
   NSAccessibilityTextFieldRole,                 // roles::PASSWORD_TEXT        82
