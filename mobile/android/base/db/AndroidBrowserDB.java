@@ -183,11 +183,6 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
         return new AndroidDBCursor(c);
     }
 
-    public int getMaxHistoryCount() {
-        // Valid for Android versions up to 4.0.
-        return 250;
-    }
-
     public void clearHistory(ContentResolver cr) {
         Browser.clearHistory(cr);
     }
