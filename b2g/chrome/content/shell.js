@@ -318,6 +318,10 @@ var shell = {
         navigator.mozPower.screenEnabled = true;
       }
     }
+    if (topic == "cpu") {
+      navigator.mozPower.cpuSleepAllowed = (state != "locked-foreground" &&
+                                            state != "locked-background");
+    }
   }
 
   let idleTimeout = Services.prefs.getIntPref("power.screen.timeout");

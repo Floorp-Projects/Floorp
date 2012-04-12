@@ -69,6 +69,16 @@ void
 SetScreenBrightness(double brightness)
 {}
 
+bool
+GetCpuSleepAllowed()
+{
+  return true;
+}
+
+void
+SetCpuSleepAllowed(bool enabled)
+{}
+
 void
 EnableNetworkNotifications()
 {}

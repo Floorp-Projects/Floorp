@@ -138,6 +138,20 @@ SetScreenEnabled(bool enabled)
   Hal()->SendSetScreenEnabled(enabled);
 }
 
+bool
+GetCpuSleepAllowed()
+{
+  bool enabled = false;
+  Hal()->SendGetCpuSleepAllowed(&enabled);
+  return enabled;
+}
+
+void
+SetCpuSleepAllowed(bool enabled)
+{
+  Hal()->SendSetCpuSleepAllowed(enabled);
+}
+
 double
 GetScreenBrightness()
 {
@@ -364,6 +378,20 @@ public:
   RecvSetScreenEnabled(const bool &enabled)
   {
     hal::SetScreenEnabled(enabled);
+    return true;
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvGetCpuSleepAllowed(bool *enabled)
+  {
+    *enabled = hal::GetCpuSleepAllowed();
+    return true;
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvSetCpuSleepAllowed(const bool &enabled)
+  {
+    hal::SetCpuSleepAllowed(enabled);
     return true;
   }
 
