@@ -960,16 +960,25 @@ class MThrow
 
 class MNewArray : public MNullaryInstruction
 {
+  public:
+    enum AllocatingBehaviour {
+        NewArray_Allocating,
+        NewArray_Unallocating
+    };
+
+  private:
     // Number of space to allocate for the array.
     uint32 count_;
     // Type of the object.
     HeapPtr<types::TypeObject> type_;
+    // Allocate space at initialization or not
+    AllocatingBehaviour allocating_;
 
   public:
     INSTRUCTION_HEADER(NewArray);
 
-    MNewArray(uint32 count, types::TypeObject *type)
-        : count_(count), type_(type)
+    MNewArray(uint32 count, types::TypeObject *type, AllocatingBehaviour allocating)
+        : count_(count), type_(type), allocating_(allocating)
     {
         setResultType(MIRType_Object);
     }
@@ -980,6 +989,10 @@ class MNewArray : public MNullaryInstruction
 
     types::TypeObject *type() const {
         return type_;
+    }
+    
+    bool isAllocating() const {
+        return allocating_ == NewArray_Allocating;
     }
 };
 

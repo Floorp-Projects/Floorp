@@ -2777,7 +2777,7 @@ IonBuilder::jsop_newarray(uint32 count)
             return false;
     }
 
-    MNewArray *ins = new MNewArray(count, type);
+    MNewArray *ins = new MNewArray(count, type, MNewArray::NewArray_Allocating);
 
     current->add(ins);
     current->push(ins);
