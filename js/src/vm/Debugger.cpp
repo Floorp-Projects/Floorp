@@ -828,7 +828,7 @@ Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value, Va
     }
 
     /* Common tail for JSTRAP_RETURN and JSTRAP_THROW. */
-    JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass);
+    RootedVarObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass));
     if (!obj ||
         !wrapDebuggeeValue(cx, &value) ||
         !DefineNativeProperty(cx, obj, key, value, JS_PropertyStub, JS_StrictPropertyStub,
@@ -904,7 +904,7 @@ Debugger::parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Va
 }
 
 bool
-CallMethodIfPresent(JSContext *cx, JSObject *obj, const char *name, int argc, Value *argv,
+CallMethodIfPresent(JSContext *cx, HandleObject obj, const char *name, int argc, Value *argv,
                     Value *rval)
 {
     rval->setUndefined();
@@ -1142,7 +1142,7 @@ Debugger::onTrap(JSContext *cx, Value *vp)
             if (!dbg->getScriptFrame(cx, fp, &argv[0]))
                 return dbg->handleUncaughtException(ac, vp, false);
             Value rv;
-            bool ok = CallMethodIfPresent(cx, bp->handler, "hit", 1, argv, &rv);
+            bool ok = CallMethodIfPresent(cx, RootedVarObject(cx, bp->handler), "hit", 1, argv, &rv);
             JSTrapStatus st = dbg->parseResumptionValue(ac, ok, rv, vp, true);
             if (st != JSTRAP_CONTINUE)
                 return st;
@@ -3172,7 +3172,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    JSObject *argsobj;
+    RootedVarObject argsobj(cx);
     if (fp->hasArgs()) {
         /* Create an arguments object. */
         RootedVar<GlobalObject*> global(cx);
@@ -3437,7 +3437,7 @@ DebuggerFrameEval(JSContext *cx, unsigned argc, Value *vp, EvalBindingsMode mode
     if (!ac.enter())
         return false;
 
-    Env *env = JS_GetFrameScopeChain(cx, Jsvalify(fp));
+    RootedVar<Env*> env(cx, JS_GetFrameScopeChain(cx, Jsvalify(fp)));
     if (!env)
         return false;
 
@@ -3564,7 +3564,7 @@ DebuggerObject_checkThis(JSContext *cx, const CallArgs &args, const char *fnname
 
 #define THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, fnname, args, obj)            \
     CallArgs args = CallArgsFromVp(argc, vp);                                 \
-    JSObject *obj = DebuggerObject_checkThis(cx, args, fnname);               \
+    RootedVarObject obj(cx, DebuggerObject_checkThis(cx, args, fnname));      \
     if (!obj)                                                                 \
         return false;                                                         \
     obj = (JSObject *) obj->getPrivate();                                     \
@@ -3572,7 +3572,7 @@ DebuggerObject_checkThis(JSContext *cx, const CallArgs &args, const char *fnname
 
 #define THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, fnname, args, dbg, obj) \
     CallArgs args = CallArgsFromVp(argc, vp);                                 \
-    JSObject *obj = DebuggerObject_checkThis(cx, args, fnname);               \
+    RootedVarObject obj(cx, DebuggerObject_checkThis(cx, args, fnname));      \
     if (!obj)                                                                 \
         return false;                                                         \
     Debugger *dbg = Debugger::fromChildJSObject(obj);                         \
@@ -3720,15 +3720,15 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "getOwnPropertyDescriptor", args, dbg, obj);
 
-    jsid id;
-    if (!ValueToId(cx, argc >= 1 ? args[0] : UndefinedValue(), &id))
+    RootedVarId id(cx);
+    if (!ValueToId(cx, argc >= 1 ? args[0] : UndefinedValue(), id.address()))
         return false;
 
     /* Bug: This can cause the debuggee to run! */
     AutoPropertyDescriptorRooter desc(cx);
     {
         AutoCompartment ac(cx, obj);
-        if (!ac.enter() || !cx->compartment->wrapId(cx, &id))
+        if (!ac.enter() || !cx->compartment->wrapId(cx, id.address()))
             return false;
 
         ErrorCopier ec(ac, dbg->toJSObject());
@@ -3854,8 +3854,8 @@ DebuggerObject_defineProperty(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "defineProperty", args, dbg, obj);
     REQUIRE_ARGC("Debugger.Object.defineProperty", 2);
 
-    jsid id;
-    if (!ValueToId(cx, args[0], &id))
+    RootedVarId id(cx);
+    if (!ValueToId(cx, args[0], id.address()))
         return JS_FALSE;
 
     const Value &descval = args[1];
@@ -3870,7 +3870,7 @@ DebuggerObject_defineProperty(JSContext *cx, unsigned argc, Value *vp)
 
     {
         AutoCompartment ac(cx, obj);
-        if (!ac.enter() || !WrapIdAndPropDesc(cx, obj, &id, desc))
+        if (!ac.enter() || !WrapIdAndPropDesc(cx, obj, id.address(), desc))
             return false;
 
         ErrorCopier ec(ac, dbg->toJSObject());
@@ -3915,7 +3915,7 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
         ErrorCopier ec(ac, dbg->toJSObject());
         for (size_t i = 0; i < n; i++) {
             bool dummy;
-            if (!DefineProperty(cx, obj, ids[i], descs[i], true, &dummy))
+            if (!DefineProperty(cx, obj, RootedVarId(cx, ids[i]), descs[i], true, &dummy))
                 return false;
         }
     }
