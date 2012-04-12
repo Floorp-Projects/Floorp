@@ -236,6 +236,27 @@ PowerManager::SetScreenBrightness(double aBrightness)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PowerManager::GetCpuSleepAllowed(bool *aEnabled)
+{
+  if (!CheckPermission()) {
+    *aEnabled = true;
+    return NS_OK;
+  }
+
+  *aEnabled = hal::GetCpuSleepAllowed();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PowerManager::SetCpuSleepAllowed(bool aEnabled)
+{
+  NS_ENSURE_TRUE(CheckPermission(), NS_ERROR_DOM_SECURITY_ERR);
+
+  hal::SetCpuSleepAllowed(aEnabled);
+  return NS_OK;
+}
+
 } // power
 } // dom
 } // mozilla
