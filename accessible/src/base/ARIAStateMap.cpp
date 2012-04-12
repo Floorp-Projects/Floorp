@@ -287,6 +287,15 @@ aria::MapToState(EStateRule aRule, dom::Element* aElement, PRUint64* aState)
       return true;
     }
 
+    case eIndeterminateIfNoValue:
+    {
+      if (!aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_valuenow) &&
+          !aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_valuetext))
+        *aState |= states::MIXED;
+
+      return true;
+    }
+
     default:
       return false;
   }
