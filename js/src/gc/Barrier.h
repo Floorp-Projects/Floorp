@@ -509,6 +509,15 @@ class ReadBarrieredValue
     inline JSObject &toObject() const;
 };
 
-}
+namespace tl {
+
+template <class T> struct IsPostBarrieredType<HeapPtr<T> > {
+                                                    static const bool result = true; };
+template <> struct IsPostBarrieredType<HeapSlot>  { static const bool result = true; };
+template <> struct IsPostBarrieredType<HeapValue> { static const bool result = true; };
+template <> struct IsPostBarrieredType<HeapId>    { static const bool result = true; };
+
+} /* namespace tl */
+} /* namespace js */
 
 #endif /* jsgc_barrier_h___ */
