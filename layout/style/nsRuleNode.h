@@ -48,6 +48,8 @@
 #include "nsPresContext.h"
 #include "nsStyleStruct.h"
 
+#include "mozilla/StandardInteger.h"
+
 class nsStyleContext;
 struct PLDHashTable;
 struct nsRuleData;
@@ -352,7 +354,7 @@ private:
     return mChildren.asVoid != nsnull;
   }
   bool ChildrenAreHashed() {
-    return (PRWord(mChildren.asVoid) & kTypeMask) == kHashType;
+    return (intptr_t(mChildren.asVoid) & kTypeMask) == kHashType;
   }
   nsRuleNode* ChildrenList() {
     return mChildren.asList;
@@ -361,17 +363,17 @@ private:
     return &mChildren.asList;
   }
   PLDHashTable* ChildrenHash() {
-    return (PLDHashTable*) (PRWord(mChildren.asHash) & ~PRWord(kTypeMask));
+    return (PLDHashTable*) (intptr_t(mChildren.asHash) & ~intptr_t(kTypeMask));
   }
   void SetChildrenList(nsRuleNode *aList) {
-    NS_ASSERTION(!(PRWord(aList) & kTypeMask),
+    NS_ASSERTION(!(intptr_t(aList) & kTypeMask),
                  "pointer not 2-byte aligned");
     mChildren.asList = aList;
   }
   void SetChildrenHash(PLDHashTable *aHashtable) {
-    NS_ASSERTION(!(PRWord(aHashtable) & kTypeMask),
+    NS_ASSERTION(!(intptr_t(aHashtable) & kTypeMask),
                  "pointer not 2-byte aligned");
-    mChildren.asHash = (PLDHashTable*)(PRWord(aHashtable) | kHashType);
+    mChildren.asHash = (PLDHashTable*)(intptr_t(aHashtable) | kHashType);
   }
   void ConvertChildrenToHash();
 

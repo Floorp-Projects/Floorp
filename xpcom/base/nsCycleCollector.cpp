@@ -169,6 +169,7 @@
 
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
+#include "mozilla/StandardInteger.h"
 #include "mozilla/Telemetry.h"
 
 using namespace mozilla;
@@ -854,7 +855,7 @@ public:
         mFreeList = entries;
         for (PRUint32 i = 1; i < ArrayLength(aBlock->mEntries); ++i) {
             entries[i - 1].mNextInFreeList =
-                (nsPurpleBufferEntry*)(PRUword(entries + i) | 1);
+                (nsPurpleBufferEntry*)(uintptr_t(entries + i) | 1);
         }
         entries[ArrayLength(aBlock->mEntries) - 1].mNextInFreeList =
             (nsPurpleBufferEntry*)1;
@@ -883,7 +884,7 @@ public:
         for (nsPurpleBufferEntry *e = b->mEntries,
                               *eEnd = ArrayEnd(b->mEntries);
              e != eEnd; ++e) {
-            if (!(PRUword(e->mObject) & PRUword(1))) {
+            if (!(uintptr_t(e->mObject) & uintptr_t(1))) {
                 // This is a real entry (rather than something on the
                 // free list).
                 if (e->mObject) {
@@ -935,7 +936,7 @@ public:
 
         nsPurpleBufferEntry *e = mFreeList;
         mFreeList = (nsPurpleBufferEntry*)
-            (PRUword(mFreeList->mNextInFreeList) & ~PRUword(1));
+            (uintptr_t(mFreeList->mNextInFreeList) & ~uintptr_t(1));
         return e;
     }
 
@@ -967,7 +968,7 @@ public:
 #endif
 
         e->mNextInFreeList =
-            (nsPurpleBufferEntry*)(PRUword(mFreeList) | PRUword(1));
+            (nsPurpleBufferEntry*)(uintptr_t(mFreeList) | uintptr_t(1));
         mFreeList = e;
 
         --mCount;
@@ -1033,7 +1034,7 @@ nsPurpleBuffer::SelectPointers(GCGraphBuilder &aBuilder)
         for (nsPurpleBufferEntry *e = b->mEntries,
                               *eEnd = ArrayEnd(b->mEntries);
             e != eEnd; ++e) {
-            if (!(PRUword(e->mObject) & PRUword(1))) {
+            if (!(uintptr_t(e->mObject) & uintptr_t(1))) {
                 if (e->mObject) {
                     ++realCount;
                 }
@@ -1058,7 +1059,7 @@ nsPurpleBuffer::SelectPointers(GCGraphBuilder &aBuilder)
         for (nsPurpleBufferEntry *e = b->mEntries,
                               *eEnd = ArrayEnd(b->mEntries);
             e != eEnd; ++e) {
-            if (!(PRUword(e->mObject) & PRUword(1))) {
+            if (!(uintptr_t(e->mObject) & uintptr_t(1))) {
                 // This is a real entry (rather than something on the
                 // free list).
                 if (!e->mObject || AddPurpleRoot(aBuilder, e->mObject)) {
@@ -2163,7 +2164,7 @@ nsPurpleBuffer::RemoveSkippable(bool removeChildlessNodes)
         for (nsPurpleBufferEntry *e = b->mEntries,
                               *eEnd = ArrayEnd(b->mEntries);
             e != eEnd; ++e) {
-            if (!(PRUword(e->mObject) & PRUword(1))) {
+            if (!(uintptr_t(e->mObject) & uintptr_t(1))) {
                 // This is a real entry (rather than something on the
                 // free list).
                 if (e->mObject) {
@@ -2201,7 +2202,7 @@ nsPurpleBuffer::NoteAll(GCGraphBuilder &builder)
         for (nsPurpleBufferEntry *e = b->mEntries,
                               *eEnd = ArrayEnd(b->mEntries);
             e != eEnd; ++e) {
-            if (!(PRUword(e->mObject) & PRUword(1)) && e->mObject) {
+            if (!(uintptr_t(e->mObject) & uintptr_t(1)) && e->mObject) {
                 builder.NoteXPCOMRoot(e->mObject);
             }
         }

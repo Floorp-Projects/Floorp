@@ -57,6 +57,8 @@
 #include "FrameLayerBuilder.h"
 #include "nsThemeConstants.h"
 
+#include "mozilla/StandardInteger.h"
+
 #include <stdlib.h>
 
 class nsIPresShell;
@@ -1887,8 +1889,8 @@ public:
   // Get the number of nsDisplayScrollLayers for a scroll frame. Note that this
   // number does not include nsDisplayScrollInfoLayers. If this number is not 1
   // after merging, all the nsDisplayScrollLayers should flatten away.
-  PRWord GetScrollLayerCount();
-  PRWord RemoveScrollLayerCount();
+  intptr_t GetScrollLayerCount();
+  intptr_t RemoveScrollLayerCount();
 
 private:
   nsIFrame* mScrollFrame;
