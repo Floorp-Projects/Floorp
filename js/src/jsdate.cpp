@@ -502,7 +502,8 @@ date_convert(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
     JS_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
     JS_ASSERT(obj->isDate());
 
-    return DefaultValue(cx, obj, (hint == JSTYPE_VOID) ? JSTYPE_STRING : hint, vp);
+    return DefaultValue(cx, RootedVarObject(cx, obj),
+                        (hint == JSTYPE_VOID) ? JSTYPE_STRING : hint, vp);
 }
 
 /*
@@ -2664,14 +2665,15 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
     /* Set the static LocalTZA. */
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
 
-    GlobalObject *global = &obj->asGlobal();
+    RootedVar<GlobalObject*> global(cx, &obj->asGlobal());
 
-    JSObject *dateProto = global->createBlankPrototype(cx, &DateClass);
+    RootedVarObject dateProto(cx, global->createBlankPrototype(cx, &DateClass));
     if (!dateProto)
         return NULL;
     SetDateToNaN(cx, dateProto);
 
-    JSFunction *ctor = global->createConstructor(cx, js_Date, CLASS_ATOM(cx, Date), MAXARGS);
+    RootedVarFunction ctor(cx);
+    ctor = global->createConstructor(cx, js_Date, CLASS_ATOM(cx, Date), MAXARGS);
     if (!ctor)
         return NULL;
 

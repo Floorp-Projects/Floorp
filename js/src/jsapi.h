@@ -54,6 +54,7 @@
 #include "jsval.h"
 
 #include "js/Utility.h"
+#include "gc/Root.h"
 
 #ifdef __cplusplus
 #include "jsalloc.h"
@@ -769,6 +770,20 @@ SameType(const Value &lhs, const Value &rhs)
     return JSVAL_SAME_TYPE_IMPL(lhs.data, rhs.data);
 }
 
+template <> struct RootMethods<const Value>
+{
+    static Value initial() { return UndefinedValue(); }
+    static ThingRootKind kind() { return THING_ROOT_VALUE; }
+    static bool poisoned(const Value &v) { return IsPoisonedValue(v); }
+};
+
+template <> struct RootMethods<Value>
+{
+    static Value initial() { return UndefinedValue(); }
+    static ThingRootKind kind() { return THING_ROOT_VALUE; }
+    static bool poisoned(const Value &v) { return IsPoisonedValue(v); }
+};
+
 /************************************************************************/
 
 #ifndef __GNUC__
@@ -1052,7 +1067,7 @@ class AutoVectorRooter : protected AutoGCRooter
   public:
     explicit AutoVectorRooter(JSContext *cx, ptrdiff_t tag
                               JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoGCRooter(cx, tag), vector(cx)
+      : AutoGCRooter(cx, tag), vector(cx), vectorRoot(cx, &vector)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -1115,6 +1130,10 @@ class AutoVectorRooter : protected AutoGCRooter
 
     typedef js::Vector<T, 8> VectorImpl;
     VectorImpl vector;
+
+    /* Prevent overwriting of inline elements in vector. */
+    SkipRoot vectorRoot;
+
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
@@ -2457,6 +2476,8 @@ JS_IsInSuspendedRequest(JSRuntime *rt);
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
+namespace JS {
+
 inline bool
 IsPoisonedId(jsid iden)
 {
@@ -2466,6 +2487,22 @@ IsPoisonedId(jsid iden)
         return JS::IsPoisonedPtr(JSID_TO_OBJECT(iden));
     return false;
 }
+
+template <> struct RootMethods<const jsid>
+{
+    static jsid initial() { return JSID_VOID; }
+    static ThingRootKind kind() { return THING_ROOT_ID; }
+    static bool poisoned(jsid id) { return IsPoisonedId(id); }
+};
+
+template <> struct RootMethods<jsid>
+{
+    static jsid initial() { return JSID_VOID; }
+    static ThingRootKind kind() { return THING_ROOT_ID; }
+    static bool poisoned(jsid id) { return IsPoisonedId(id); }
+};
+
+} /* namespace JS */
 
 class JSAutoRequest {
   public:

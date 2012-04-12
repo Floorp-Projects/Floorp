@@ -468,11 +468,11 @@ ThisToStringForStringProto(JSContext *cx, CallReceiver call)
         return call.thisv().toString();
 
     if (call.thisv().isObject()) {
-        JSObject *obj = &call.thisv().toObject();
+        RootedVarObject obj(cx, &call.thisv().toObject());
         if (obj->isString() &&
             ClassMethodIsNative(cx, obj,
                                 &StringClass,
-                                ATOM_TO_JSID(cx->runtime->atomState.toStringAtom),
+                                RootedVarId(cx, ATOM_TO_JSID(cx->runtime->atomState.toStringAtom)),
                                 js_str_toString))
         {
             JSString *str = obj->asString().unbox();
@@ -1497,7 +1497,7 @@ class StringRegExpGuard
             return true;
 
         /* Build RegExp from pattern string. */
-        JSString *opt;
+        RootedVarString opt(cx);
         if (optarg < args.length()) {
             opt = ToString(cx, args[optarg]);
             if (!opt)
@@ -1550,19 +1550,20 @@ static bool
 DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
         DoMatchCallback callback, void *data, MatchControlFlags flags, Value *rval)
 {
-    JSLinearString *linearStr = str->ensureLinear(cx);
+    RootedVar<JSLinearString*> linearStr(cx, str->ensureLinear(cx));
     if (!linearStr)
         return false;
-
-    const jschar *chars = linearStr->chars();
-    size_t length = linearStr->length();
 
     if (re.global()) {
         RegExpExecType type = (flags & TEST_GLOBAL_BIT) ? RegExpTest : RegExpExec;
         for (size_t count = 0, i = 0, length = str->length(); i <= length; ++count) {
             if (!JS_CHECK_OPERATION_LIMIT(cx))
                 return false;
-            if (!ExecuteRegExp(cx, res, re, linearStr, chars, length, &i, type, rval))
+
+            const jschar *chars = linearStr->chars();
+            size_t charsLen = linearStr->length();
+
+            if (!ExecuteRegExp(cx, res, re, linearStr, chars, charsLen, &i, type, rval))
                 return false;
             if (!Matched(type, *rval))
                 break;
@@ -1572,10 +1573,13 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
                 ++i;
         }
     } else {
+        const jschar *chars = linearStr->chars();
+        size_t charsLen = linearStr->length();
+
         RegExpExecType type = (flags & TEST_SINGLE_BIT) ? RegExpTest : RegExpExec;
         bool callbackOnSingle = !!(flags & CALLBACK_ON_SINGLE_BIT);
         size_t i = 0;
-        if (!ExecuteRegExp(cx, res, re, linearStr, chars, length, &i, type, rval))
+        if (!ExecuteRegExp(cx, res, re, linearStr, chars, charsLen, &i, type, rval))
             return false;
         if (callbackOnSingle && Matched(type, *rval) && !callback(cx, res, 0, data))
             return false;
@@ -1651,8 +1655,8 @@ js::str_match(JSContext *cx, unsigned argc, Value *vp)
     if (!g.normalizeRegExp(cx, false, 1, args))
         return false;
 
-    JSObject *array = NULL;
-    MatchArgType arg = &array;
+    RootedVarObject array(cx);
+    MatchArgType arg = array.address();
     RegExpStatics *res = cx->regExpStatics();
     Value rval;
     if (!DoMatch(cx, res, str, g.regExp(), MatchCallback, arg, MATCH_ARGS, &rval))
@@ -1711,14 +1715,14 @@ js::str_search(JSContext *cx, unsigned argc, Value *vp)
 struct ReplaceData
 {
     ReplaceData(JSContext *cx)
-     : sb(cx)
+      : str(cx), lambda(cx), elembase(cx), repstr(cx), sb(cx)
     {}
 
-    JSString           *str;           /* 'this' parameter object as a string */
+    RootedVarString    str;            /* 'this' parameter object as a string */
     StringRegExpGuard  g;              /* regexp parameter object and private data */
-    JSObject           *lambda;        /* replacement function object or null */
-    JSObject           *elembase;      /* object for function(a){return b[a]} replace */
-    JSLinearString     *repstr;        /* replacement string */
+    RootedVarObject    lambda;         /* replacement function object or null */
+    RootedVarObject    elembase;       /* object for function(a){return b[a]} replace */
+    RootedVar<JSLinearString*> repstr; /* replacement string */
     const jschar       *dollar;        /* null or pointer to first $ in repstr */
     const jschar       *dollarEnd;     /* limit pointer for js_strchr_limit */
     int                leftIndex;      /* left context index in str->chars */
@@ -1795,7 +1799,8 @@ InterpretDollar(JSContext *cx, RegExpStatics *res, const jschar *dp, const jscha
 static bool
 FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t *sizep)
 {
-    if (JSObject *base = rdata.elembase) {
+    RootedVarObject base(cx, rdata.elembase);
+    if (base) {
         /*
          * The base object is used when replace was passed a lambda which looks like
          * 'function(a) { return b[a]; }' for the base object b.  b will not change
@@ -1943,9 +1948,7 @@ ReplaceRegExpCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
     ReplaceData &rdata = *static_cast<ReplaceData *>(p);
 
     rdata.calledBack = true;
-    JSLinearString &str = rdata.str->asLinear();  /* flattened for regexp */
     size_t leftoff = rdata.leftIndex;
-    const jschar *left = str.chars() + leftoff;
     size_t leftlen = res->matchStart() - leftoff;
     rdata.leftIndex = res->matchLimit();
 
@@ -1956,13 +1959,17 @@ ReplaceRegExpCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
     size_t growth = leftlen + replen;
     if (!rdata.sb.reserve(rdata.sb.length() + growth))
         return false;
+
+    JSLinearString &str = rdata.str->asLinear();  /* flattened for regexp */
+    const jschar *left = str.chars() + leftoff;
+
     rdata.sb.infallibleAppend(left, leftlen); /* skipped-over portion of the search value */
     DoReplace(cx, res, rdata);
     return true;
 }
 
 static bool
-BuildFlatReplacement(JSContext *cx, JSString *textstr, JSString *repstr,
+BuildFlatReplacement(JSContext *cx, HandleString textstr, HandleString repstr,
                      const FlatMatch &fm, CallArgs *args)
 {
     RopeBuilder builder(cx);
@@ -1994,7 +2001,8 @@ BuildFlatReplacement(JSContext *cx, JSString *textstr, JSString *repstr,
                      * the first character in the pattern, so we include the
                      * replacement string here.
                      */
-                    JSString *leftSide = js_NewDependentString(cx, str, 0, match - pos);
+                    RootedVarString leftSide(cx);
+                    leftSide = js_NewDependentString(cx, str, 0, match - pos);
                     if (!leftSide ||
                         !builder.append(leftSide) ||
                         !builder.append(repstr)) {
@@ -2007,13 +2015,14 @@ BuildFlatReplacement(JSContext *cx, JSString *textstr, JSString *repstr,
                  * last part of str.
                  */
                 if (strEnd > matchEnd) {
-                    JSString *rightSide = js_NewDependentString(cx, str, matchEnd - pos,
-                                                                strEnd - matchEnd);
+                    RootedVarString rightSide(cx);
+                    rightSide = js_NewDependentString(cx, str, matchEnd - pos,
+                                                      strEnd - matchEnd);
                     if (!rightSide || !builder.append(rightSide))
                         return false;
                 }
             } else {
-                if (!builder.append(str))
+                if (!builder.append(RootedVarString(cx, str)))
                     return false;
             }
             pos += str->length();
@@ -2021,11 +2030,13 @@ BuildFlatReplacement(JSContext *cx, JSString *textstr, JSString *repstr,
                 return false;
         }
     } else {
-        JSString *leftSide = js_NewDependentString(cx, textstr, 0, match);
+        RootedVarString leftSide(cx);
+        leftSide = js_NewDependentString(cx, textstr, 0, match);
         if (!leftSide)
             return false;
-        JSString *rightSide = js_NewDependentString(cx, textstr, match + fm.patternLength(),
-                                                    textstr->length() - match - fm.patternLength());
+        RootedVarString rightSide(cx);
+        rightSide = js_NewDependentString(cx, textstr, match + fm.patternLength(),
+                                          textstr->length() - match - fm.patternLength());
         if (!rightSide ||
             !builder.append(leftSide) ||
             !builder.append(repstr) ||
@@ -2101,15 +2112,15 @@ BuildDollarReplacement(JSContext *cx, JSString *textstrArg, JSLinearString *reps
         ++it; /* We always eat an extra char in the above switch. */
     }
 
-    JSString *leftSide = js_NewDependentString(cx, textstr, 0, matchStart);
+    RootedVarString leftSide(cx, js_NewDependentString(cx, textstr, 0, matchStart));
     ENSURE(leftSide);
 
-    JSString *newReplace = newReplaceChars.finishString();
+    RootedVarString newReplace(cx, newReplaceChars.finishString());
     ENSURE(newReplace);
 
     JS_ASSERT(textstr->length() >= matchLimit);
-    JSString *rightSide = js_NewDependentString(cx, textstr, matchLimit,
-                                                textstr->length() - matchLimit);
+    RootedVarString rightSide(cx, js_NewDependentString(cx, textstr, matchLimit,
+                                                        textstr->length() - matchLimit));
     ENSURE(rightSide);
 
     RopeBuilder builder(cx);
@@ -2183,17 +2194,17 @@ str_replace_flat_lambda(JSContext *cx, CallArgs outerArgs, ReplaceData &rdata, c
     if (!Invoke(cx, rdata.args))
         return false;
 
-    JSString *repstr = ToString(cx, args.rval());
+    RootedVarString repstr(cx, ToString(cx, args.rval()));
     if (!repstr)
         return false;
 
-    JSString *leftSide = js_NewDependentString(cx, rdata.str, 0, fm.match());
+    RootedVarString leftSide(cx, js_NewDependentString(cx, rdata.str, 0, fm.match()));
     if (!leftSide)
         return false;
 
     size_t matchLimit = fm.match() + fm.patternLength();
-    JSString *rightSide = js_NewDependentString(cx, rdata.str, matchLimit,
-                                                rdata.str->length() - matchLimit);
+    RootedVarString rightSide(cx, js_NewDependentString(cx, rdata.str, matchLimit,
+                                                        rdata.str->length() - matchLimit));
     if (!rightSide)
         return false;
 
@@ -2382,7 +2393,7 @@ class SplitMatchResult {
 
 template<class Matcher>
 static JSObject *
-SplitHelper(JSContext *cx, JSLinearString *str, uint32_t limit, Matcher splitMatch, TypeObject *type)
+SplitHelper(JSContext *cx, Handle<JSLinearString*> str, uint32_t limit, Matcher splitMatch, TypeObject *type)
 {
     size_t strLength = str->length();
     SplitMatchResult result;
@@ -2405,8 +2416,8 @@ SplitHelper(JSContext *cx, JSLinearString *str, uint32_t limit, Matcher splitMat
         if (!result.isFailure())
             return NewDenseEmptyArray(cx);
 
-        Value v = StringValue(str);
-        return NewDenseCopiedArray(cx, 1, &v);
+        RootedVarValue v(cx, StringValue(str));
+        return NewDenseCopiedArray(cx, 1, v.address());
     }
 
     /* Step 12. */
@@ -2544,14 +2555,12 @@ class SplitRegExpMatcher
 
 class SplitStringMatcher
 {
-    const jschar *sepChars;
-    size_t sepLength;
+    RootedVar<JSLinearString*> sep;
 
   public:
-    SplitStringMatcher(JSLinearString *sep) {
-        sepChars = sep->chars();
-        sepLength = sep->length();
-    }
+    SplitStringMatcher(JSContext *cx, JSLinearString *sep)
+      : sep(cx, sep)
+    {}
 
     static const bool returnsCaptures = false;
 
@@ -2559,11 +2568,12 @@ class SplitStringMatcher
     {
         JS_ASSERT(index == 0 || index < str->length());
         const jschar *chars = str->chars();
-        int match = StringMatch(chars + index, str->length() - index, sepChars, sepLength);
+        int match = StringMatch(chars + index, str->length() - index,
+                                sep->chars(), sep->length());
         if (match == -1)
             res->setFailure();
         else
-            res->setResult(sepLength, index + match + sepLength);
+            res->setResult(sep->length(), index + match + sep->length());
         return true;
     }
 };
@@ -2579,7 +2589,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    TypeObject *type = GetTypeCallerInitObject(cx, JSProto_Array);
+    RootedVarTypeObject type(cx, GetTypeCallerInitObject(cx, JSProto_Array));
     if (!type)
         return false;
     AddTypeProperty(cx, type, NULL, Type::StringType());
@@ -2630,14 +2640,14 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
         args.rval() = ObjectValue(*aobj);
         return true;
     }
-    JSLinearString *strlin = str->ensureLinear(cx);
+    RootedVar<JSLinearString*> strlin(cx, str->ensureLinear(cx));
     if (!strlin)
         return false;
 
     /* Steps 11-15. */
     JSObject *aobj;
     if (!re.initialized())
-        aobj = SplitHelper(cx, strlin, limit, SplitStringMatcher(sepstr), type);
+        aobj = SplitHelper(cx, strlin, limit, SplitStringMatcher(cx, sepstr), type);
     else
         aobj = SplitHelper(cx, strlin, limit, SplitRegExpMatcher(*re, cx->regExpStatics()), type);
     if (!aobj)
@@ -2705,12 +2715,12 @@ static JSBool
 str_concat(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSString *str = ThisToStringForStringProto(cx, args);
+    RootedVarString str(cx, ThisToStringForStringProto(cx, args));
     if (!str)
         return false;
 
     for (unsigned i = 0; i < args.length(); i++) {
-        JSString *argStr = ToString(cx, args[i]);
+        RootedVarString argStr(cx, ToString(cx, args[i]));
         if (!argStr)
             return false;
 
@@ -3012,7 +3022,7 @@ js_String(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    JSString *str;
+    RootedVarString str(cx);
     if (args.length() > 0) {
         str = ToString(cx, args[0]);
         if (!str)
@@ -3090,14 +3100,15 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = &obj->asGlobal();
+    RootedVar<GlobalObject*> global(cx, &obj->asGlobal());
 
-    JSObject *proto = global->createBlankPrototype(cx, &StringClass);
-    if (!proto || !proto->asString().init(cx, cx->runtime->emptyString))
+    RootedVarObject proto(cx, global->createBlankPrototype(cx, &StringClass));
+    if (!proto || !proto->asString().init(cx, RootedVarString(cx, cx->runtime->emptyString)))
         return NULL;
 
     /* Now create the String function. */
-    JSFunction *ctor = global->createConstructor(cx, js_String, CLASS_ATOM(cx, String), 1);
+    RootedVarFunction ctor(cx);
+    ctor = global->createConstructor(cx, js_String, CLASS_ATOM(cx, String), 1);
     if (!ctor)
         return NULL;
 
@@ -3312,7 +3323,7 @@ js_ValueToSource(JSContext *cx, const Value &v)
     Value rval = NullValue();
     Value fval;
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.toSourceAtom);
-    if (!js_GetMethod(cx, &v.toObject(), id, 0, &fval))
+    if (!js_GetMethod(cx, RootedVarObject(cx, &v.toObject()), id, 0, &fval))
         return NULL;
     if (js_IsCallable(fval)) {
         if (!Invoke(cx, v, fval, 0, NULL, &rval))
