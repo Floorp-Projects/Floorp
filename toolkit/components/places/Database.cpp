@@ -760,6 +760,13 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
       // Firefox 13 uses schema version 19.
 
+      if (currentSchemaVersion < 20) {
+        rv = MigrateV20Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 14 uses schema version 20.
+
       // Schema Upgrades must add migration code here.
 
       rv = UpdateBookmarkRootTitles();
@@ -1299,6 +1306,7 @@ Database::MigrateV7Up()
         "WHERE root_name = :parent_name "
       ")"),
     getter_AddRefs(moveUnfiledBookmarks));
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = moveUnfiledBookmarks->BindUTF8StringByName(
     NS_LITERAL_CSTRING("root_name"), NS_LITERAL_CSTRING("unfiled")
   );
@@ -1776,6 +1784,7 @@ Database::MigrateV19Up()
       "WHERE b.type = :item_type AND n.name = :anno_name "
     ")"
   ), getter_AddRefs(deleteLivemarksChildrenStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = deleteLivemarksChildrenStmt->BindUTF8StringByName(
     NS_LITERAL_CSTRING("anno_name"), NS_LITERAL_CSTRING(LMANNO_FEEDURI)
   );
@@ -1800,6 +1809,7 @@ Database::MigrateV19Up()
       "WHERE name IN (:anno_loading, :anno_loadfailed, :anno_expiration) "
     ")"
   ), getter_AddRefs(deleteLivemarksAnnosStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = deleteLivemarksAnnosStmt->BindUTF8StringByName(
     NS_LITERAL_CSTRING("anno_loading"), NS_LITERAL_CSTRING("livemark/loading")
   );
@@ -1820,6 +1830,7 @@ Database::MigrateV19Up()
     "DELETE FROM moz_anno_attributes "
       "WHERE name IN (:anno_loading, :anno_loadfailed, :anno_expiration) "
   ), getter_AddRefs(deleteLivemarksAnnosStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = deleteLivemarksAnnosStmt->BindUTF8StringByName(
     NS_LITERAL_CSTRING("anno_loading"), NS_LITERAL_CSTRING("livemark/loading")
   );
@@ -1833,6 +1844,43 @@ Database::MigrateV19Up()
   );
   NS_ENSURE_SUCCESS(rv, rv);
   rv = deleteLivemarksAnnosStmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+Database::MigrateV20Up()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Remove obsolete bookmark GUID annotations.
+  nsCOMPtr<mozIStorageStatement> deleteOldBookmarkGUIDAnnosStmt;
+  nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_items_annos WHERE anno_attribute_id = ("
+      "SELECT id FROM moz_anno_attributes "
+      "WHERE name = :anno_guid"
+    ")"
+  ), getter_AddRefs(deleteOldBookmarkGUIDAnnosStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = deleteOldBookmarkGUIDAnnosStmt->BindUTF8StringByName(
+    NS_LITERAL_CSTRING("anno_guid"), NS_LITERAL_CSTRING("placesInternal/GUID")
+  );
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = deleteOldBookmarkGUIDAnnosStmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Remove the orphan annotation name.
+  rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_anno_attributes "
+      "WHERE name = :anno_guid"
+  ), getter_AddRefs(deleteOldBookmarkGUIDAnnosStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = deleteOldBookmarkGUIDAnnosStmt->BindUTF8StringByName(
+    NS_LITERAL_CSTRING("anno_guid"), NS_LITERAL_CSTRING("placesInternal/GUID")
+  );
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = deleteOldBookmarkGUIDAnnosStmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

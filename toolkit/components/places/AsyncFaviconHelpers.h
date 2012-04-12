@@ -259,8 +259,8 @@ protected:
 };
 
 /**
- * Asynchronously tries to get the URL of a page's favicon.  If this succeeds,
- * notifies the given observer.
+ * Asynchronously tries to get the URL of a page's favicon, then notifies the
+ * given observer.
  */
 class AsyncGetFaviconURLForPage : public AsyncFaviconHelperBase
 {
@@ -273,7 +273,7 @@ public:
    * @param aPageURI
    *        URL of the page whose favicon's URL we're fetching
    * @param aCallback
-   *        function to be called once the URL is retrieved from the database
+   *        function to be called once finished
    */
   static nsresult start(nsIURI* aPageURI,
                         nsIFaviconDataCallback* aCallback);
@@ -284,7 +284,7 @@ public:
    * @param aPageSpec
    *        URL of the page whose favicon's URL we're fetching
    * @param aCallback
-   *        function to be called once the URL is retrieved from the database
+   *        function to be called once finished
    */
   AsyncGetFaviconURLForPage(const nsACString& aPageSpec,
                             nsCOMPtr<nsIFaviconDataCallback>& aCallback);
@@ -297,8 +297,8 @@ private:
 
 
 /**
- * Asynchronously tries to get the URL and data of a page's favicon.
- * If this succeeds, notifies the given observer.
+ * Asynchronously tries to get the URL and data of a page's favicon, then
+ * notifies the given observer.
  */
 class AsyncGetFaviconDataForPage : public AsyncFaviconHelperBase
 {
@@ -311,7 +311,7 @@ public:
    * @param aPageURI
    *        URL of the page whose favicon URL and data we're fetching
    * @param aCallback
-   *        function to be called once the URL and data is retrieved from the database
+   *        function to be called once finished
    */
   static nsresult start(nsIURI* aPageURI,
                         nsIFaviconDataCallback* aCallback);
@@ -322,7 +322,7 @@ public:
    * @param aPageSpec
    *        URL of the page whose favicon URL and data we're fetching
    * @param aCallback
-   *        function to be called once the URL is retrieved from the database
+   *        function to be called once finished
    */
   AsyncGetFaviconDataForPage(const nsACString& aPageSpec,
                              nsCOMPtr<nsIFaviconDataCallback>& aCallback);
@@ -370,6 +370,16 @@ class NotifyIconObservers : public AsyncFaviconHelperBase
 public:
   NS_DECL_NSIRUNNABLE
 
+  /**
+   * Constructor.
+   *
+   * @param aIcon
+   *        Icon information. Can be empty if no icon is associated to the page.
+   * @param aPage
+   *        Page to which the icon information applies.
+   * @param aCallback
+   *        Function to be notified in all cases.
+   */
   NotifyIconObservers(IconData& aIcon,
                       PageData& aPage,
                       nsCOMPtr<nsIFaviconDataCallback>& aCallback);
@@ -378,6 +388,8 @@ public:
 protected:
   IconData mIcon;
   PageData mPage;
+
+  void SendGlobalNotifications(nsIURI* aIconURI);
 };
 
 } // namespace places

@@ -557,10 +557,10 @@ AsyncFaviconDataReady::AsyncFaviconDataReady(nsIURI *aNewURI,
 }
 
 NS_IMETHODIMP
-AsyncFaviconDataReady::OnFaviconDataAvailable(nsIURI *aFaviconURI, 
-                                              PRUint32 aDataLen,
-                                              const PRUint8 *aData, 
-                                              const nsACString &aMimeType)
+AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
+                                  PRUint32 aDataLen,
+                                  const PRUint8 *aData, 
+                                  const nsACString &aMimeType)
 {
   if (!aDataLen || !aData) {
     return NS_OK;

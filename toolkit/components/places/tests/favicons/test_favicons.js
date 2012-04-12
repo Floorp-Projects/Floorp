@@ -78,7 +78,7 @@ add_test(function test_set_and_get_favicon_setup() {
 add_test(function test_set_and_get_favicon_getFaviconURLForPage() {
   let [icon0] = icons;
   PlacesUtils.favicons.getFaviconURLForPage(pages[0],
-    function GFUFP_onFaviconDataAvailable(aURI, aDataLen, aData, aMimeType) {
+    function (aURI, aDataLen, aData, aMimeType) {
       do_check_true(icon0.uri.equals(aURI));
       do_check_eq(aDataLen, 0);
       do_check_eq(aData.length, 0);

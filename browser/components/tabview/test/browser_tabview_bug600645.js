@@ -1,6 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/**
+ * This file tests that, when there is an app tab that references an invalid
+ * favicon, the default favicon appears the group app tab tray, instead of an
+ * empty image that would not be visible.
+ */
+
 const fi = Cc["@mozilla.org/browser/favicon-service;1"].
            getService(Ci.nsIFaviconService);
 
@@ -40,17 +46,19 @@ function onTabPinned() {
     // code.
     executeSoon(function() {
       let iconSrc = $icon.attr("src");
-      let hasData = true;
-      try {
-        fi.getFaviconDataAsDataURL(iconSrc);
-      } catch(e) {
-        hasData = false;
-      }
-      ok(!hasData, "The icon src doesn't return any data");
+
       // with moz-anno:favicon automatically redirects to the default favIcon 
       // if the given url is invalid
       ok(/^moz-anno:favicon:/.test(iconSrc),
          "The icon url starts with moz-anno:favicon so the default fav icon would be displayed");
+
+      // At this point, as an additional integrity check we could also verify
+      // that the iconSrc URI does not have any associated favicon data.  This
+      // kind of check, however, is not easily supported by the asynchronous
+      // favicon API.  Fortunately, the fact that we received the error event
+      // already indicates that the original favicon was not available.
+      // Morevover, since we are using a "moz-anno:favicon:" URI, we know that
+      // we'll not display an empty icon, but the default favicon.
 
       // clean up
       gBrowser.removeTab(newTab);

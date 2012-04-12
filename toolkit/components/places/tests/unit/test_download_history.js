@@ -124,36 +124,40 @@ add_test(function test_dh_addDownload_referrer()
   });
 });
 
-if ("@mozilla.org/privatebrowsing;1" in Cc) {
-  add_test(function test_dh_addDownload_privateBrowsing()
-  {
-    waitForOnVisit(function DHAD_onVisit(aURI) {
-      // We should only receive the notification for the non-private URI.  This
-      // test is based on the assumption that visit notifications are received
-      // in the same order of the addDownload calls, which is currently true
-      // because database access is serialized on the same worker thread.
-      do_check_true(aURI.equals(DOWNLOAD_URI));
+add_test(function test_dh_addDownload_privateBrowsing()
+{
+  if (!("@mozilla.org/privatebrowsing;1" in Cc)) {
+    do_log_info("Private Browsing service is not available, bail out.");
+    run_next_test();
+    return;
+  }
 
-      uri_in_db(DOWNLOAD_URI, true);
-      uri_in_db(PRIVATE_URI, false);
+  waitForOnVisit(function DHAD_onVisit(aURI) {
+    // We should only receive the notification for the non-private URI.  This
+    // test is based on the assumption that visit notifications are received
+    // in the same order of the addDownload calls, which is currently true
+    // because database access is serialized on the same worker thread.
+    do_check_true(aURI.equals(DOWNLOAD_URI));
 
-      waitForClearHistory(run_next_test);
-    });
+    uri_in_db(DOWNLOAD_URI, true);
+    uri_in_db(PRIVATE_URI, false);
 
-    let pb = Cc["@mozilla.org/privatebrowsing;1"]
-             .getService(Ci.nsIPrivateBrowsingService);
-    Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session",
-                               true);
-    pb.privateBrowsingEnabled = true;
-    gDownloadHistory.addDownload(PRIVATE_URI, REFERRER_URI, Date.now() * 1000);
-
-    // The addDownload functions calls CanAddURI synchronously, thus we can
-    // exit Private Browsing Mode immediately.
-    pb.privateBrowsingEnabled = false;
-    Services.prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
-    gDownloadHistory.addDownload(DOWNLOAD_URI, REFERRER_URI, Date.now() * 1000);
+    waitForClearHistory(run_next_test);
   });
-}
+
+  let pb = Cc["@mozilla.org/privatebrowsing;1"]
+           .getService(Ci.nsIPrivateBrowsingService);
+  Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session",
+                             true);
+  pb.privateBrowsingEnabled = true;
+  gDownloadHistory.addDownload(PRIVATE_URI, REFERRER_URI, Date.now() * 1000);
+
+  // The addDownload functions calls CanAddURI synchronously, thus we can
+  // exit Private Browsing Mode immediately.
+  pb.privateBrowsingEnabled = false;
+  Services.prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
+  gDownloadHistory.addDownload(DOWNLOAD_URI, REFERRER_URI, Date.now() * 1000);
+});
 
 add_test(function test_dh_addDownload_disabledHistory()
 {
