@@ -25,10 +25,12 @@ public interface GlobalSyncStage {
     updateEnabledEngines,
     */
     syncTabs,
+    syncPasswords,
     syncBookmarks,
     syncHistory,
     syncFormHistory,
     completed,
   }
+
   public void execute(GlobalSession session) throws NoSuchStageException;
 }
