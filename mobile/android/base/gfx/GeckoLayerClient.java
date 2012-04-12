@@ -225,7 +225,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
                 // and our zoom level (which may have diverged).
                 float scaleFactor = oldMetrics.zoomFactor / messageMetrics.getZoomFactor();
                 newMetrics = new ViewportMetrics(oldMetrics);
-                newMetrics.setPageSize(messageMetrics.getPageSize().scale(scaleFactor));
+                newMetrics.setPageSize(messageMetrics.getPageSize().scale(scaleFactor), messageMetrics.getCssPageSize());
                 break;
             }
 
@@ -322,12 +322,12 @@ public class GeckoLayerClient implements GeckoEventResponder,
       * viewport information provided. setPageSize will never be invoked on the same frame that
       * this function is invoked on; and this function will always be called prior to syncViewportInfo.
       */
-    public void setFirstPaintViewport(float offsetX, float offsetY, float zoom, float pageWidth, float pageHeight) {
+    public void setFirstPaintViewport(float offsetX, float offsetY, float zoom, float pageWidth, float pageHeight, float cssPageWidth, float cssPageHeight) {
         synchronized (mLayerController) {
             ViewportMetrics currentMetrics = new ViewportMetrics(mLayerController.getViewportMetrics());
             currentMetrics.setOrigin(new PointF(offsetX, offsetY));
             currentMetrics.setZoomFactor(zoom);
-            currentMetrics.setPageSize(new FloatSize(pageWidth, pageHeight));
+            currentMetrics.setPageSize(new FloatSize(pageWidth, pageHeight), new FloatSize(cssPageWidth, cssPageHeight));
             mLayerController.setViewportMetrics(currentMetrics);
             // At this point, we have just switched to displaying a different document than we
             // we previously displaying. This means we need to abort any panning/zooming animations
@@ -347,7 +347,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
       * is invoked on a frame, then this function will not be. For any given frame, this
       * function will be invoked before syncViewportInfo.
       */
-    public void setPageSize(float zoom, float pageWidth, float pageHeight) {
+    public void setPageSize(float zoom, float pageWidth, float pageHeight, float cssPageWidth, float cssPageHeight) {
         synchronized (mLayerController) {
             // adjust the page dimensions to account for differences in zoom
             // between the rendered content (which is what the compositor tells us)
@@ -355,7 +355,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
             float ourZoom = mLayerController.getZoomFactor();
             pageWidth = pageWidth * ourZoom / zoom;
             pageHeight = pageHeight * ourZoom /zoom;
-            mLayerController.setPageSize(new FloatSize(pageWidth, pageHeight));
+            mLayerController.setPageSize(new FloatSize(pageWidth, pageHeight), new FloatSize(cssPageWidth, cssPageHeight));
             // Here the page size of the document has changed, but the document being displayed
             // is still the same. Therefore, we don't need to send anything to browser.js; any
             // changes we need to make to the display port will get sent the next time we call
