@@ -945,7 +945,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   else
     newDefaultJSOptions &= ~JSOPTION_STRICT;
 
-  nsIScriptGlobalObject *global = context->GetGlobalObject();
+  // The vanilla GetGlobalObject returns null if a global isn't set up on
+  // the context yet. We can sometimes be call midway through context init,
+  // So ask for the member directly instead.
+  nsIScriptGlobalObject *global = context->GetGlobalObjectRef();
+
   // XXX should we check for sysprin instead of a chrome window, to make
   // XXX components be covered by the chrome pref instead of the content one?
   nsCOMPtr<nsIDOMWindow> contentWindow(do_QueryInterface(global));
