@@ -1491,7 +1491,7 @@ public class BrowserProvider extends ContentProvider {
 
             if (wantHistory || wantBookmarks) {
                 ProfileMigrator migrator =
-                    new ProfileMigrator(mContext.getContentResolver(), profileDir);
+                    new ProfileMigrator(mContext, profileDir);
 
                 boolean needBookmarks = wantBookmarks && !migrator.areBookmarksMigrated();
                 boolean needHistory = wantHistory && !migrator.isHistoryMigrated();
