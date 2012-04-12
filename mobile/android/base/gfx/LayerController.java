@@ -136,6 +136,10 @@ public class LayerController {
         return mViewportMetrics.getPageSize();
     }
 
+    public FloatSize getCssPageSize() {
+        return mViewportMetrics.getCssPageSize();
+    }
+
     public PointF getOrigin() {
         return mViewportMetrics.getOrigin();
     }
@@ -194,12 +198,12 @@ public class LayerController {
     }
 
     /** Sets the current page size. You must hold the monitor while calling this. */
-    public void setPageSize(FloatSize size) {
-        if (mViewportMetrics.getPageSize().fuzzyEquals(size))
+    public void setPageSize(FloatSize size, FloatSize cssSize) {
+        if (mViewportMetrics.getCssPageSize().equals(cssSize))
             return;
 
         ViewportMetrics viewportMetrics = new ViewportMetrics(mViewportMetrics);
-        viewportMetrics.setPageSize(size);
+        viewportMetrics.setPageSize(size, cssSize);
         mViewportMetrics = new ImmutableViewportMetrics(viewportMetrics);
 
         // Page size is owned by the layer client, so no need to notify it of

@@ -307,13 +307,18 @@ CompositorParent::TransformShadowTree()
     nsIntPoint scrollOffset = metrics->mViewportScrollOffset;
     mContentSize = metrics->mContentSize;
     mozilla::AndroidBridge::Bridge()->SetFirstPaintViewport(scrollOffset.x, scrollOffset.y,
-                                                            1/rootScaleX, mContentSize.width,
-                                                            mContentSize.height);
+                                                            1/rootScaleX,
+                                                            mContentSize.width,
+                                                            mContentSize.height,
+                                                            metrics->mCSSContentSize.width,
+                                                            metrics->mCSSContentSize.height);
     mIsFirstPaint = false;
   } else if (metrics && (metrics->mContentSize != mContentSize)) {
     mContentSize = metrics->mContentSize;
     mozilla::AndroidBridge::Bridge()->SetPageSize(1/rootScaleX, mContentSize.width,
-                                                  mContentSize.height);
+                                                  mContentSize.height,
+                                                  metrics->mCSSContentSize.width,
+                                                  metrics->mCSSContentSize.height);
   }
 
   // We synchronise the viewport information with Java after sending the above
