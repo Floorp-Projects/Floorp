@@ -5,7 +5,7 @@ textarea { font-size: 12px; width: 200px; height: 50px }
 textarea { line-height: 1.0 }
 </style>
 <!--
-Because the textarea has constrained width and height, font
-inflation should be disabled for this case.
+In a 450px container, the minimum font size at 15em per line is 30px.
+This means we map 0px-45px into 30px-45px, so 12px gets mapped to 34px.
 -->
 <div><textarea>Hello world</textarea></div>
