@@ -54,7 +54,7 @@ let testServices = [
     ["queryStringToQueries", "removePagesByTimeframe", "removePagesFromHost",
      "removeVisitsByTimeframe"]],
   ["browser/nav-bookmarks-service;1","nsINavBookmarksService",
-    ["createFolder", "getItemIdForGUID"]],
+    ["createFolder"]],
   ["browser/livemark-service;2","nsILivemarkService", []],
   ["browser/livemark-service;2","mozIAsyncLivemarks", ["reloadLivemarks"]],
   ["browser/annotation-service;1","nsIAnnotationService", []],
