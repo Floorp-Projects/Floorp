@@ -88,6 +88,7 @@ public class ProfileMigrator {
     private static final String PREFS_NAME = "ProfileMigrator";
     private File mProfileDir;
     private ContentResolver mCr;
+    private Context mContext;
 
     // Default number of history entries to migrate in one run.
     private static final int DEFAULT_HISTORY_MIGRATE_COUNT = 2000;
@@ -192,9 +193,10 @@ public class ProfileMigrator {
     private final String kHistoryDate   = "h_date";
     private final String kHistoryVisits = "h_visits";
 
-    public ProfileMigrator(ContentResolver cr, File profileDir) {
+    public ProfileMigrator(Context context, File profileDir) {
         mProfileDir = profileDir;
-        mCr = cr;
+        mContext = context;
+        mCr = mContext.getContentResolver();
     }
 
     public void launch() {
@@ -224,7 +226,7 @@ public class ProfileMigrator {
     }
 
     protected SharedPreferences getPreferences() {
-        return GeckoApp.mAppContext.getSharedPreferences(PREFS_NAME, 0);
+        return mContext.getSharedPreferences(PREFS_NAME, 0);
     }
 
     protected int getMigratedHistoryEntries() {
@@ -810,7 +812,7 @@ public class ProfileMigrator {
             File dbFileShm = new File(dbPathShm);
 
             SQLiteBridge db = null;
-            GeckoAppShell.loadSQLiteLibs(GeckoApp.mAppContext, GeckoApp.mAppContext.getApplication().getPackageResourcePath());
+            GeckoAppShell.loadSQLiteLibs(mContext, mContext.getPackageResourcePath());
             try {
                 db = new SQLiteBridge(dbPath);
                 calculateReroot(db);
@@ -851,7 +853,7 @@ public class ProfileMigrator {
         }
 
         protected void cleanupXULLibCache() {
-            File cacheFile = GeckoAppShell.getCacheDir(GeckoApp.mAppContext);
+            File cacheFile = GeckoAppShell.getCacheDir(mContext);
             File[] files = cacheFile.listFiles();
             if (files != null) {
                 Iterator<File> cacheFiles = Arrays.asList(files).iterator();
