@@ -262,7 +262,7 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext, bool force)
 
     GLenum textureTargets[] = {
       LOCAL_GL_TEXTURE_2D,
-      mGLContext->IsGLES2() ? LOCAL_GL_TEXTURE_RECTANGLE_ARB : 0
+      mGLContext->IsGLES2() ? LOCAL_GL_TEXTURE_RECTANGLE_ARB : GLenum(0)
     };
 
     mFBOTextureTarget = LOCAL_GL_NONE;
