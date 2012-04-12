@@ -380,7 +380,8 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eHasValueMinMax,
     eNoAction,
     eNoLiveAttr,
-    states::READONLY
+    states::READONLY,
+    eIndeterminateIfNoValue
   },
   {
     "radio",
