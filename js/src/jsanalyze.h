@@ -364,9 +364,9 @@ static inline uint32_t GetBytecodeSlot(JSScript *script, jsbytecode *pc)
       case JSOP_SETALIASEDVAR:
       {
           ScopeCoordinate sc = ScopeCoordinate(pc);
-          return script->bindings.bindingIsArg(sc.binding)
-                 ? ArgSlot(script->bindings.bindingToArg(sc.binding))
-                 : LocalSlot(script, script->bindings.bindingToLocal(sc.binding));
+          return script->bindings.bindingIsArg(sc.frameBinding)
+                 ? ArgSlot(script->bindings.bindingToArg(sc.frameBinding))
+                 : LocalSlot(script, script->bindings.bindingToLocal(sc.frameBinding));
       }
 
 

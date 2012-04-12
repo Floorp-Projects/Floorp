@@ -286,6 +286,28 @@ StackFrame::actualArgsEnd() const
     return formalArgs() + numActualArgs();
 }
 
+inline ScopeObject &
+StackFrame::aliasedVarScope(ScopeCoordinate sc) const
+{
+    JSObject *scope = &scopeChain()->asScope();
+    for (unsigned i = sc.hops; i; i--)
+        scope = &scope->asScope().enclosingScope();
+
+#ifdef DEBUG
+    if (scope->isCall()) {
+        JS_ASSERT(scope->asCall() == callObj());
+        JS_ASSERT(scope->asCall().maybeStackFrame() == this);
+    } else {
+        StaticBlockObject &target = scope->asClonedBlock().staticBlock();
+        StaticBlockObject *b = &blockChain();
+        while (b != &target)
+            b = b->enclosingBlock();
+    }
+#endif
+
+    return scope->asScope();
+}
+
 inline void
 StackFrame::setScopeChain(JSObject &obj)
 {
