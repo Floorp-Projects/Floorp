@@ -1871,7 +1871,7 @@ class TypedArrayTemplate
 
         // We have to make a copy of the source array here, since
         // there's overlap, and we have to convert types.
-        void *srcbuf = cx->malloc_(getLength(tarray));
+        void *srcbuf = cx->malloc_(getByteLength(tarray));
         if (!srcbuf)
             return false;
         js_memcpy(srcbuf, getDataOffset(tarray), getByteLength(tarray));
