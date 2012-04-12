@@ -141,7 +141,7 @@ nsresult
 FileLocation::GetData(Data &data)
 {
   if (!IsZip()) {
-    return mBaseFile->OpenNSPRFileDesc(PR_RDONLY, 0444, &data.mFd);
+    return mBaseFile->OpenNSPRFileDesc(PR_RDONLY, 0444, &data.mFd.rwget());
   }
   data.mZip = mBaseZip;
   if (!data.mZip) {
