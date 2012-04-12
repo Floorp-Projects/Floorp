@@ -30,7 +30,7 @@ function run_test() {
 
     // Verify the data of the MAR is what it should be.
     let outMARData = getBinaryFileData(outMAR);
-    compareBinaryData(outMARData, outMARData);
+    compareBinaryData(outMARData, refMARData);
   }
 
   // Define the unit tests to run.
