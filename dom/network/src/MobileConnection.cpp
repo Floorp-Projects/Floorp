@@ -162,6 +162,42 @@ MobileConnection::GetNetworks(nsIDOMDOMRequest** request)
   return mProvider->GetNetworks(GetOwner(), request);
 }
 
+NS_IMETHODIMP
+MobileConnection::GetCardLock(const nsAString& aLockType, nsIDOMDOMRequest** aDomRequest)
+{
+  *aDomRequest = nsnull;
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->GetCardLock(GetOwner(), aLockType, aDomRequest);
+}
+
+NS_IMETHODIMP
+MobileConnection::UnlockCardLock(const jsval& aInfo, nsIDOMDOMRequest** aDomRequest)
+{
+  *aDomRequest = nsnull;
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->UnlockCardLock(GetOwner(), aInfo, aDomRequest);
+}
+
+NS_IMETHODIMP
+MobileConnection::SetCardLock(const jsval& aInfo, nsIDOMDOMRequest** aDomRequest)
+{
+  *aDomRequest = nsnull;
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->SetCardLock(GetOwner(), aInfo, aDomRequest);
+}
+
 nsresult
 MobileConnection::InternalDispatchEvent(const nsAString& aType)
 {
