@@ -1605,6 +1605,10 @@ nsGlobalWindow::SetScriptContext(nsIScriptContext *aScriptContext)
     // should probably assert the context is clean???
     aScriptContext->WillInitializeContext();
 
+    // We need point the context to the global window before initializing it
+    // so that it can make various decisions properly.
+    aScriptContext->SetGlobalObject(this);
+
     nsresult rv = aScriptContext->InitContext();
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1874,8 +1878,6 @@ NS_IMPL_ISUPPORTS1(WindowStateHolder, WindowStateHolder)
 nsresult
 nsGlobalWindow::CreateOuterObject(nsGlobalWindow* aNewInner)
 {
-  mContext->SetGlobalObject(this);
-
   JSContext* cx = mContext->GetNativeContext();
 
   if (IsChromeWindow()) {
@@ -7172,6 +7174,9 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
                    NS_ERROR_NOT_INITIALIZED);
 
   *aRetVal = nsnull;
+
+  if (Preferences::GetBool("dom.disable_window_showModalDialog", false))
+    return NS_ERROR_NOT_AVAILABLE;
 
   // Before bringing up the window/dialog, unsuppress painting and flush
   // pending reflows.

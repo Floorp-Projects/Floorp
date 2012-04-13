@@ -1,4 +1,4 @@
-// Copyright 2006-2008 the V8 project authors. All rights reserved.
+// Copyright 2010 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -25,33 +25,21 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <stdarg.h>
-#include <signal.h>
+#ifndef DOUBLE_CONVERSION_STRTOD_H_
+#define DOUBLE_CONVERSION_STRTOD_H_
 
-#include "v8.h"
+#include "utils.h"
 
-static int fatal_error_handler_nesting_depth = 0;
+namespace double_conversion {
 
-// Contains protection against recursive calls (faults while handling faults).
-extern "C" void V8_Fatal(const char* file, int line, const char* format, ...) {
-  fflush(stdout);
-  fflush(stderr);
-  fatal_error_handler_nesting_depth++;
-  // First time we try to print an error message
-  //
-  // MOZ: lots of calls to printing functions within v8::internal::OS were
-  // replaced with simpler standard C calls, to avoid pulling in lots of
-  // platform-specific code.  As a result, in some cases the error message may
-  // not be printed as well or at all.
-  if (fatal_error_handler_nesting_depth < 2) {
-    fprintf(stderr, "\n\n#\n# Fatal error in %s, line %d\n# ", file, line);
-    va_list arguments;
-    va_start(arguments, format);
-    vfprintf(stderr, format, arguments);
-    va_end(arguments);
-    fprintf(stderr, "\n#\n\n");
-  }
+// The buffer must only contain digits in the range [0-9]. It must not
+// contain a dot or a sign. It must not start with '0', and must not be empty.
+double Strtod(Vector<const char> buffer, int exponent);
 
-  i::OS::Abort();
-}
+// The buffer must only contain digits in the range [0-9]. It must not
+// contain a dot or a sign. It must not start with '0', and must not be empty.
+float Strtof(Vector<const char> buffer, int exponent);
 
+}  // namespace double_conversion
+
+#endif  // DOUBLE_CONVERSION_STRTOD_H_

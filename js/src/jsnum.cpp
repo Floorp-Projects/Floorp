@@ -53,6 +53,9 @@
 #include <string.h>
 
 #include "mozilla/RangedPtr.h"
+#include "double-conversion.h"
+// Avoid warnings about ASSERT being defined by the assembler as well.
+#undef ASSERT
 
 #include "jstypes.h"
 #include "jsutil.h"
@@ -1053,12 +1056,6 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     return numberProto;
 }
 
-namespace v8 {
-namespace internal {
-extern char* DoubleToCString(double v, char* buffer, int buflen);
-}
-}
-
 namespace js {
 
 static char *
@@ -1079,14 +1076,12 @@ FracNumberToCString(JSContext *cx, ToCStringBuf *cbuf, double d, int base = 10)
          *
          *   Printing floating-point numbers quickly and accurately with integers.
          *   Florian Loitsch, PLDI 2010.
-         *
-         * It fails on a small number of cases, whereupon we fall back to
-         * js_dtostr() (which uses David Gay's dtoa).
          */
-        numStr = v8::internal::DoubleToCString(d, cbuf->sbuf, cbuf->sbufSize);
-        if (!numStr)
-            numStr = js_dtostr(cx->runtime->dtoaState, cbuf->sbuf, cbuf->sbufSize,
-                               DTOSTR_STANDARD, 0, d);
+        const double_conversion::DoubleToStringConverter &converter
+            = double_conversion::DoubleToStringConverter::EcmaScriptConverter();
+        double_conversion::StringBuilder builder(cbuf->sbuf, cbuf->sbufSize);
+        converter.ToShortest(d, &builder);
+        numStr = builder.Finalize();
     } else {
         numStr = cbuf->dbuf = js_dtobasestr(cx->runtime->dtoaState, base, d);
     }

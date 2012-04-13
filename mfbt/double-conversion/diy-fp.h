@@ -25,11 +25,12 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef V8_DIY_FP_H_
-#define V8_DIY_FP_H_
+#ifndef DOUBLE_CONVERSION_DIY_FP_H_
+#define DOUBLE_CONVERSION_DIY_FP_H_
 
-namespace v8 {
-namespace internal {
+#include "utils.h"
+
+namespace double_conversion {
 
 // This "Do It Yourself Floating Point" class implements a floating-point number
 // with a uint64 significand and an int exponent. Normalized DiyFp numbers will
@@ -80,7 +81,7 @@ class DiyFp {
 
     // This method is mainly called for normalizing boundaries. In general
     // boundaries need to be shifted by 10 bits. We thus optimize for this case.
-    const uint64_t k10MSBits = V8_2PART_UINT64_C(0xFFC00000, 00000000);
+    const uint64_t k10MSBits = UINT64_2PART_C(0xFFC00000, 00000000);
     while ((f & k10MSBits) == 0) {
       f <<= 10;
       e -= 10;
@@ -106,12 +107,12 @@ class DiyFp {
   void set_e(int new_value) { e_ = new_value; }
 
  private:
-  static const uint64_t kUint64MSB = V8_2PART_UINT64_C(0x80000000, 00000000);
+  static const uint64_t kUint64MSB = UINT64_2PART_C(0x80000000, 00000000);
 
   uint64_t f_;
   int e_;
 };
 
-} }  // namespace v8::internal
+}  // namespace double_conversion
 
-#endif  // V8_DIY_FP_H_
+#endif  // DOUBLE_CONVERSION_DIY_FP_H_

@@ -1,4 +1,4 @@
-// Copyright 2006-2008 the V8 project authors. All rights reserved.
+// Copyright 2010 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -25,67 +25,33 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <stdarg.h>
 
-#include "v8.h"
+#include "diy-fp.h"
+#include "utils.h"
 
-#include "platform.h"
+namespace double_conversion {
 
-#include "sys/stat.h"
-
-namespace v8 {
-namespace internal {
-
-void StringBuilder::AddString(const char* s) {
-  AddSubstring(s, StrLength(s));
+void DiyFp::Multiply(const DiyFp& other) {
+  // Simply "emulates" a 128 bit multiplication.
+  // However: the resulting number only contains 64 bits. The least
+  // significant 64 bits are only used for rounding the most significant 64
+  // bits.
+  const uint64_t kM32 = 0xFFFFFFFFU;
+  uint64_t a = f_ >> 32;
+  uint64_t b = f_ & kM32;
+  uint64_t c = other.f_ >> 32;
+  uint64_t d = other.f_ & kM32;
+  uint64_t ac = a * c;
+  uint64_t bc = b * c;
+  uint64_t ad = a * d;
+  uint64_t bd = b * d;
+  uint64_t tmp = (bd >> 32) + (ad & kM32) + (bc & kM32);
+  // By adding 1U << 31 to tmp we round the final result.
+  // Halfway cases will be round up.
+  tmp += 1U << 31;
+  uint64_t result_f = ac + (ad >> 32) + (bc >> 32) + (tmp >> 32);
+  e_ += other.e_ + 64;
+  f_ = result_f;
 }
 
-
-void StringBuilder::AddSubstring(const char* s, int n) {
-  ASSERT(!is_finalized() && position_ + n < buffer_.length());
-  ASSERT(static_cast<size_t>(n) <= strlen(s));
-  memcpy(&buffer_[position_], s, n * kCharSize);
-  position_ += n;
-}
-
-
-// MOZ: This is not from V8.  See DoubleToCString() for details.
-void StringBuilder::AddInteger(int n) {
-  ASSERT(!is_finalized() && position_ < buffer_.length());
-  // Get the number of digits. 
-  int ndigits = 0;
-  int n2 = n;
-  do {
-    ndigits++;
-    n2 /= 10; 
-  } while (n2);
-
-  // Add the integer string backwards.
-  position_ += ndigits;
-  int i = position_;
-  do {
-    buffer_[--i] = '0' + (n % 10);
-    n /= 10;
-  } while (n);
-}
-
-
-void StringBuilder::AddPadding(char c, int count) {
-  for (int i = 0; i < count; i++) {
-    AddCharacter(c);
-  }
-}
-
-
-char* StringBuilder::Finalize() {
-  ASSERT(!is_finalized() && position_ < buffer_.length());
-  buffer_[position_] = '\0';
-  // Make sure nobody managed to add a 0-character to the
-  // buffer while building the string.
-  ASSERT(strlen(buffer_.start()) == static_cast<size_t>(position_));
-  position_ = -1;
-  ASSERT(is_finalized());
-  return buffer_.start();
-}
-
-} }  // namespace v8::internal
+}  // namespace double_conversion

@@ -1138,6 +1138,7 @@ nsCacheService::nsCacheService()
     : mLock("nsCacheService.mLock"),
       mCondVar(mLock, "nsCacheService.mCondVar"),
       mInitialized(false),
+      mClearingEntries(false),
       mEnableMemoryDevice(true),
       mEnableDiskDevice(true),
       mMemoryDevice(nsnull),
@@ -1892,7 +1893,9 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
                               nsCacheEntry ** doomedEntry)
 {
     CACHE_LOG_DEBUG(("Activate entry for request %p\n", request));
-    
+    if (!mInitialized || mClearingEntries)
+        return NS_ERROR_NOT_AVAILABLE;
+
     nsresult        rv = NS_OK;
 
     NS_ASSERTION(request != nsnull, "ActivateEntry called with no request");
@@ -2174,6 +2177,7 @@ nsCacheService::OnProfileShutdown(bool cleanse)
         return;
     }
     nsCacheServiceAutoLock lock;
+    gService->mClearingEntries = true;
 
     gService->DoomActiveEntries();
     gService->ClearDoomList();
@@ -2203,6 +2207,7 @@ nsCacheService::OnProfileShutdown(bool cleanse)
         gService->mMemoryDevice->EvictEntries(nsnull);
     }
 
+    gService->mClearingEntries = false;
 }
 
 
