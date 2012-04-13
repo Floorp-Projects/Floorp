@@ -8,7 +8,7 @@
  * Keeps thumbnails of open web pages up-to-date.
  */
 let gBrowserThumbnails = {
-  _captureDelayMS: 2000,
+  _captureDelayMS: 1000,
 
   /**
    * Map of capture() timeouts assigned to their browsers.
@@ -98,6 +98,11 @@ let gBrowserThumbnails = {
   },
 
   _shouldCapture: function Thumbnails_shouldCapture(aBrowser) {
+    // Capture only if it's the currently selected tab.
+    if (aBrowser != gBrowser.selectedBrowser)
+      return false;
+
+    // Don't capture in private browsing mode.
     if (gPrivateBrowsingUI.privateBrowsingEnabled)
       return false;
 
