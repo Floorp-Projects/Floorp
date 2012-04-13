@@ -53,7 +53,6 @@ NO_DIST_INSTALL = 1
 
 CPPSRCS = jsctypes-test.cpp \
           jsctypes-test-errno.cpp \
-          jsctypes-test-finalizer.cpp \
           $(NULL)
 
 LOCAL_INCLUDES = \
