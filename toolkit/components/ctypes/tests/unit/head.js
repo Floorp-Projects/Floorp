@@ -77,18 +77,3 @@ function structural_check_eq_aux(a, b) {
     }
   );
 }
-
-function trigger_gc() {
-  dump("Triggering garbage-collection");
-  Components.utils.forceGC();
-}
-
-function must_throw(f) {
-  let has_thrown = false;
-  try {
-    f();
-  } catch (x) {
-    has_thrown = true;
-  }
-  do_check_true(has_thrown);
-}
