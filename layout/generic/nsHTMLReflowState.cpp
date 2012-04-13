@@ -1873,13 +1873,16 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
     } else {
       AutoMaybeNullInflationContainer an(frame);
 
-      bool isBlock =
-        NS_CSS_FRAME_TYPE_BLOCK == NS_FRAME_GET_TYPE(mFrameType);
-      // make sure legend frames with display:block and width:auto still
-      // shrink-wrap
+      bool isBlock = NS_CSS_FRAME_TYPE_BLOCK == NS_FRAME_GET_TYPE(mFrameType);
+      PRUint32 computeSizeFlags = isBlock ? 0 : nsIFrame::eShrinkWrap;
 
-      PRUint32 computeSizeFlags = 0;
-      if (!isBlock || aFrameType == nsGkAtoms::legendFrame) {
+      // Make sure legend frames with display:block and width:auto still
+      // shrink-wrap.
+      if (isBlock &&
+          ((aFrameType == nsGkAtoms::legendFrame &&
+            frame->GetStyleContext()->GetPseudo() != nsCSSAnonBoxes::scrolledContent) ||
+           (aFrameType == nsGkAtoms::scrollFrame &&
+            frame->GetContentInsertionFrame()->GetType() == nsGkAtoms::legendFrame))) {
         computeSizeFlags |= nsIFrame::eShrinkWrap;
       }
 
