@@ -21,7 +21,6 @@
  *
  * Contributor(s):
  *  Dan Witte <dwitte@mozilla.com>
- *  David Rajchenbach-Teller <dteller@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,9 +62,6 @@
 #include <windows.h>
 #endif
 
-#include "mozilla/StandardInteger.h"
-#include "mozilla/Scoped.h"
-
 using namespace std;
 
 namespace js {
@@ -98,7 +94,7 @@ namespace CType {
   static JSBool HasInstance(JSContext* cx, JSObject* obj, const jsval* v, JSBool* bp);
 
 
-  /*
+  /**
    * Get the global "ctypes" object.
    *
    * |obj| must be a CType object.
@@ -189,8 +185,7 @@ namespace CData {
   static JSBool Address(JSContext* cx, unsigned argc, jsval* vp);
   static JSBool ReadString(JSContext* cx, unsigned argc, jsval* vp);
   static JSBool ToSource(JSContext* cx, unsigned argc, jsval* vp);
-  static JSString *GetSourceString(JSContext *cx, JSObject *typeObj,
-                                   void *data);
+
   static JSBool ErrnoGetter(JSContext* cx, JSObject *obj, jsid idval,
                             jsval* vp);
 
@@ -199,118 +194,6 @@ namespace CData {
                                 jsval* vp);
 #endif // defined(XP_WIN)
 }
-
-namespace CDataFinalizer {
-  /*
-   * Attach a C function as a finalizer to a JS object.
-   *
-   * This function is available from JS as |ctypes.withFinalizer|.
-   *
-   * JavaScript signature:
-   * function(CData, CData):   CDataFinalizer
-   *          value  finalizer finalizable
-   *
-   * Where |finalizer| is a one-argument function taking a value
-   * with the same type as |value|.
-   */
-  static JSBool Construct(JSContext* cx, unsigned argc, jsval *vp);
-
-  /*
-   * Private data held by |CDataFinalizer|.
-   *
-   * See also |enum CDataFinalizerSlot| for the slots of
-   * |CDataFinalizer|.
-   *
-   * Note: the private data may be NULL, if |dispose|, |forget| or the
-   * finalizer has already been called.
-   */
-  struct Private {
-    /*
-     * The C data to pass to the code.
-     * Finalization/|dispose|/|forget| release this memory.
-     */
-    void *cargs;
-
-    /*
-     * The total size of the buffer pointed by |cargs|
-     */
-    size_t cargs_size;
-
-    /*
-     * Low-level signature information.
-     * Finalization/|dispose|/|forget| release this memory.
-     */
-    ffi_cif CIF;
-
-    /*
-     * The C function to invoke during finalization.
-     * Do not deallocate this.
-     */
-    uintptr_t code;
-
-    /*
-     * A buffer for holding the return value.
-     * Finalization/|dispose|/|forget| release this memory.
-     */
-    void *rvalue;
-  };
-
-  /*
-   * Methods of instances of |CDataFinalizer|
-   */
-  namespace Methods {
-    static JSBool Dispose(JSContext* cx, unsigned argc, jsval *vp);
-    static JSBool Forget(JSContext* cx, unsigned argc, jsval *vp);
-    static JSBool ToSource(JSContext* cx, unsigned argc, jsval *vp);
-    static JSBool ToString(JSContext* cx, unsigned argc, jsval *vp);
-  }
-
-  /*
-   * Utility functions
-   *
-   * @return true if |obj| is a CDataFinalizer, false otherwise.
-   */
-  static bool IsCDataFinalizer(JSObject *obj);
-
-  /*
-   * Clean up the finalization information of a CDataFinalizer.
-   *
-   * Used by |Finalize|, |Dispose| and |Forget|.
-   *
-   * @param p The private information of the CDataFinalizer. If NULL,
-   * this function does nothing.
-   * @param obj Either NULL, if the object should not be cleaned up (i.e.
-   * during finalization) or a CDataFinalizer JSObject. Always use NULL
-   * if you are calling from a finalizer.
-   */
-  static void Cleanup(Private *p, JSObject *obj);
-
-  /*
-   * Perform the actual call to the finalizer code.
-   */
-  static void CallFinalizer(CDataFinalizer::Private *p,
-                            int* errnoStatus,
-                            int32_t* lastErrorStatus);
-
-  /*
-   * Return the CType of a CDataFinalizer object, or NULL if the object
-   * has been cleaned-up already.
-   */
-  static JSObject *GetCType(JSContext *cx, JSObject *obj);
-
-  /*
-   * Perform finalization of a |CDataFinalizer|
-   */
-  static void Finalize(JSFreeOp *fop, JSObject *obj);
-
-  /*
-   * Return the jsval contained by this finalizer.
-   *
-   * Note that the jsval is actually not recorded, but converted back from C.
-   */
-  static bool GetValue(JSContext *cx, JSObject *obj, jsval *result);
- }
-
 
 // Int64Base provides functions common to Int64 and UInt64.
 namespace Int64Base {
@@ -417,30 +300,6 @@ static JSClass sCClosureClass = {
   NULL, NULL, NULL, NULL, CClosure::Trace
 };
 
-/*
- * Class representing the prototype of CDataFinalizer.
- */
-static JSClass sCDataFinalizerProtoClass = {
-  "CDataFinalizer",
-  0,
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
-};
-
-/*
- * Class representing instances of CDataFinalizer.
- *
- * Instances of CDataFinalizer have both private data (with type
- * |CDataFinalizer::Private|) and slots (see |CDataFinalizerSlots|).
- */
-static JSClass sCDataFinalizerClass = {
-  "CDataFinalizer",
-  JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(CDATAFINALIZER_SLOTS),
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CDataFinalizer::Finalize,
-};
-
-
 #define CTYPESFN_FLAGS \
   (JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)
 
@@ -451,9 +310,6 @@ static JSClass sCDataFinalizerClass = {
   (JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)
 
 #define CDATAFN_FLAGS \
-  (JSPROP_READONLY | JSPROP_PERMANENT)
-
-#define CDATAFINALIZERFN_FLAGS \
   (JSPROP_READONLY | JSPROP_PERMANENT)
 
 static JSPropertySpec sCTypeProps[] = {
@@ -482,18 +338,6 @@ static JSFunctionSpec sCDataFunctions[] = {
   JS_FN("readString", CData::ReadString, 0, CDATAFN_FLAGS),
   JS_FN("toSource", CData::ToSource, 0, CDATAFN_FLAGS),
   JS_FN("toString", CData::ToSource, 0, CDATAFN_FLAGS),
-  JS_FS_END
-};
-
-static JSPropertySpec sCDataFinalizerProps[] = {
-  { 0, 0, 0, NULL, NULL }
-};
-
-static JSFunctionSpec sCDataFinalizerFunctions[] = {
-  JS_FN("dispose",  CDataFinalizer::Methods::Dispose,  0, CDATAFINALIZERFN_FLAGS),
-  JS_FN("forget",   CDataFinalizer::Methods::Forget,   0, CDATAFINALIZERFN_FLAGS),
-  JS_FN("toString", CDataFinalizer::Methods::ToString, 0, CDATAFINALIZERFN_FLAGS),
-  JS_FN("toSource", CDataFinalizer::Methods::ToSource, 0, CDATAFINALIZERFN_FLAGS),
   JS_FS_END
 };
 
@@ -640,7 +484,6 @@ static JSPropertySpec sModuleProps[] = {
 };
 
 static JSFunctionSpec sModuleFunctions[] = {
-  JS_FN("CDataFinalizer", CDataFinalizer::Construct, 2, CTYPESFN_FLAGS),
   JS_FN("open", Library::Open, 1, CTYPESFN_FLAGS),
   JS_FN("cast", CData::Cast, 2, CTYPESFN_FLAGS),
   JS_FN("getRuntime", CData::GetRuntime, 1, CTYPESFN_FLAGS),
@@ -662,16 +505,9 @@ NewUCString(JSContext* cx, const AutoString& from)
   return JS_NewUCStringCopyN(cx, from.begin(), from.length());
 }
 
-/*
- * Return a size rounded up to a multiple of a power of two.
- *
- * Note: |align| must be a power of 2.
- */
 JS_ALWAYS_INLINE size_t
 Align(size_t val, size_t align)
 {
-  // Ensure that align is a power of two.
-  MOZ_ASSERT(align != 0 && (align & (align - 1)) == 0);
   return ((val - 1) | (align - 1)) + 1;
 }
 
@@ -1133,26 +969,6 @@ GetCallbacks(JSObject* obj)
   return static_cast<JSCTypesCallbacks*>(JSVAL_TO_PRIVATE(result));
 }
 
-// Utility function to access a property of an object as an object
-// returns false and sets the error if the property does not exist
-// or is not an object
-bool GetObjectProperty(JSContext *cx, JSObject *obj,
-                       const char *property, JSObject **result)
-{
-  jsval val;
-  if (!JS_GetProperty(cx, obj, property, &val)) {
-    return false;
-  }
-
-  if (JSVAL_IS_PRIMITIVE(val)) {
-    JS_ReportError(cx, "missing or non-object field");
-    return false;
-  }
-
-  *result = JSVAL_TO_OBJECT(val);
-  return true;
-}
-
 JS_BEGIN_EXTERN_C
 
 JS_PUBLIC_API(JSBool)
@@ -1175,30 +991,6 @@ JS_InitCTypesClass(JSContext* cx, JSObject* global)
   if (!JS_DefineFunctions(cx, ctypes, sModuleFunctions) ||
       !JS_DefineProperties(cx, ctypes, sModuleProps))
     return false;
-
-  // Set up ctypes.CDataFinalizer.prototype.
-  JSObject* ctor;
-  if (!GetObjectProperty(cx, ctypes, "CDataFinalizer", &ctor)) {
-    return NULL;
-  }
-
-  JSObject* prototype = JS_NewObject(cx, &sCDataFinalizerProtoClass,
-                                     NULL, ctypes);
-  if (!prototype)
-    return NULL;
-
-  if (!JS_DefineProperties(cx, prototype, sCDataFinalizerProps) ||
-      !JS_DefineFunctions(cx, prototype, sCDataFinalizerFunctions))
-    return NULL;
-
-  if (!JS_DefineProperty(cx, ctor, "prototype", OBJECT_TO_JSVAL(prototype),
-                         NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
-    return NULL;
-
-  if (!JS_DefineProperty(cx, prototype, "constructor", OBJECT_TO_JSVAL(ctor),
-                         NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
-    return NULL;
-
 
   // Seal the ctypes object, to prevent modification.
   return JS_FreezeObject(cx, ctypes);
@@ -1481,15 +1273,7 @@ jsvalToInteger(JSContext* cx, jsval val, IntegerType* result)
       return ConvertExact(i, result);
     }
 
-    if (CDataFinalizer::IsCDataFinalizer(obj)) {
-      jsval innerData;
-      if (!CDataFinalizer::GetValue(cx, obj, &innerData)) {
-        return false; // Nothing to convert
-      }
-      return jsvalToInteger(cx, innerData, result);
-    }
-
-    return false;
+    return false; 
   }
   if (JSVAL_IS_BOOLEAN(val)) {
     // Implicitly promote boolean values to 0 or 1, like C.
@@ -1660,15 +1444,6 @@ jsvalToBigInteger(JSContext* cx,
       int64_t i = Int64Base::GetInt(obj);
       return ConvertExact(i, result);
     }
-
-    if (CDataFinalizer::IsCDataFinalizer(obj)) {
-      jsval innerData;
-      if (!CDataFinalizer::GetValue(cx, obj, &innerData)) {
-        return false; // Nothing to convert
-      }
-      return jsvalToBigInteger(cx, innerData, allowString, result);
-    }
-
   }
   return false;
 }
@@ -2009,40 +1784,20 @@ ImplicitConvert(JSContext* cx,
 {
   JS_ASSERT(CType::IsSizeDefined(targetType));
 
-  // First, check if val is either a CData object or a CDataFinalizer
-  // of type targetType.
+  // First, check if val is a CData object of type targetType.
   JSObject* sourceData = NULL;
   JSObject* sourceType = NULL;
-  if (!JSVAL_IS_PRIMITIVE(val)) {
-    if (CData::IsCData(JSVAL_TO_OBJECT(val))) {
-      sourceData = JSVAL_TO_OBJECT(val);
-      sourceType = CData::GetCType(sourceData);
+  if (!JSVAL_IS_PRIMITIVE(val) &&
+      CData::IsCData(JSVAL_TO_OBJECT(val))) {
+    sourceData = JSVAL_TO_OBJECT(val);
+    sourceType = CData::GetCType(sourceData);
 
-      // If the types are equal, copy the buffer contained within the CData.
-      // (Note that the buffers may overlap partially or completely.)
-      if (CType::TypesEqual(sourceType, targetType)) {
-        size_t size = CType::GetSize(sourceType);
-        memmove(buffer, CData::GetData(sourceData), size);
-        return true;
-      }
-    } else if (CDataFinalizer::IsCDataFinalizer(JSVAL_TO_OBJECT(val))) {
-      sourceData = JSVAL_TO_OBJECT(val);
-      sourceType = CDataFinalizer::GetCType(cx, sourceData);
-
-      CDataFinalizer::Private *p = (CDataFinalizer::Private *)
-        JS_GetPrivate(sourceData);
-
-      if (!p) {
-        // We have called |dispose| or |forget| already.
-        JS_ReportError(cx, "Attempting to convert an empty CDataFinalizer");
-        return JS_FALSE;
-      }
-
-      // If the types are equal, copy the buffer contained within the CData.
-      if (CType::TypesEqual(sourceType, targetType)) {
-        memmove(buffer, p->cargs, p->cargs_size);
-        return true;
-      }
+    // If the types are equal, copy the buffer contained within the CData.
+    // (Note that the buffers may overlap partially or completely.)
+    if (CType::TypesEqual(sourceType, targetType)) {
+      size_t size = CType::GetSize(sourceType);
+      memmove(buffer, CData::GetData(sourceData), size);
+      return true;
     }
   }
 
@@ -6271,26 +6026,6 @@ CData::ReadString(JSContext* cx, unsigned argc, jsval* vp)
   return JS_TRUE;
 }
 
-JSString *
-CData::GetSourceString(JSContext *cx, JSObject *typeObj, void *data)
-{
-  // Walk the types, building up the toSource() string.
-  // First, we build up the type expression:
-  // 't.ptr' for pointers;
-  // 't.array([n])' for arrays;
-  // 'n' for structs, where n = t.name, the struct's name. (We assume this is
-  // bound to a variable in the current scope.)
-  AutoString source;
-  BuildTypeSource(cx, typeObj, true, source);
-  AppendString(source, "(");
-  if (!BuildDataSource(cx, typeObj, data, false, source))
-    return NULL;
-
-  AppendString(source, ")");
-
-  return NewUCString(cx, source);
-}
-
 JSBool
 CData::ToSource(JSContext* cx, unsigned argc, jsval* vp)
 {
@@ -6311,11 +6046,24 @@ CData::ToSource(JSContext* cx, unsigned argc, jsval* vp)
     JSObject* typeObj = CData::GetCType(obj);
     void* data = CData::GetData(obj);
 
-    result = CData::GetSourceString(cx, typeObj, data);
-  } else {
-    result = JS_NewStringCopyZ(cx, "[CData proto object]");
-  }
+    // Walk the types, building up the toSource() string.
+    // First, we build up the type expression:
+    // 't.ptr' for pointers;
+    // 't.array([n])' for arrays;
+    // 'n' for structs, where n = t.name, the struct's name. (We assume this is
+    // bound to a variable in the current scope.)
+    AutoString source;
+    BuildTypeSource(cx, typeObj, true, source);
+    AppendString(source, "(");
+    if (!BuildDataSource(cx, typeObj, data, false, source))
+      return JS_FALSE;
 
+    AppendString(source, ")");
+
+    result = NewUCString(cx, source);
+  }
+  else
+    result = JS_NewStringCopyZ(cx, "[CData proto object]");
   if (!result)
     return JS_FALSE;
 
@@ -6349,511 +6097,6 @@ CData::LastErrorGetter(JSContext* cx, JSObject* obj, jsid, jsval* vp)
   return JS_TRUE;
 }
 #endif // defined(XP_WIN)
-
-JSBool
-CDataFinalizer::Methods::ToSource(JSContext *cx, unsigned argc, jsval *vp)
-{
-  JSObject* objThis = JS_THIS_OBJECT(cx, vp);
-  if (!objThis || !CDataFinalizer::IsCDataFinalizer(objThis)) {
-    JS_ReportError(cx, "not a CDataFinalizer");
-    return JS_FALSE;
-  }
-
-  CDataFinalizer::Private *p = (CDataFinalizer::Private *)
-    JS_GetPrivate(objThis);
-
-  JSString *strMessage;
-  if (!p) {
-    strMessage = JS_NewStringCopyZ(cx, "ctypes.CDataFinalizer()");
-  } else {
-    JSObject *objType = CDataFinalizer::GetCType(cx, objThis);
-    if (!objType) {
-      JS_ReportError(cx, "CDataFinalizer has no type");
-      return JS_FALSE;
-    }
-
-    AutoString source;
-    AppendString(source, "ctypes.CDataFinalizer(");
-    JSString *srcValue = CData::GetSourceString(cx, objType, p->cargs);
-    if (!srcValue) {
-      return JS_FALSE;
-    }
-    AppendString(source, srcValue);
-    AppendString(source, ", ");
-    jsval valCodePtrType = JS_GetReservedSlot(objThis,
-                                              SLOT_DATAFINALIZER_CODETYPE);
-    if (JSVAL_IS_PRIMITIVE(valCodePtrType)) {
-      return JS_FALSE;
-    }
-
-    JSString *srcDispose =
-      CData::GetSourceString(cx, JSVAL_TO_OBJECT(valCodePtrType),
-                             &(p->code));
-    if (!srcDispose) {
-      return JS_FALSE;
-    }
-
-    AppendString(source, srcDispose);
-    AppendString(source, ")");
-    strMessage = NewUCString(cx, source);
-  }
-
-  if (!strMessage) {
-    // This is a memory issue, no error message
-    return JS_FALSE;
-  }
-
-  JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(strMessage));
-  return JS_TRUE;
-}
-
-JSBool
-CDataFinalizer::Methods::ToString(JSContext *cx, unsigned argc, jsval *vp)
-{
-  JSObject* objThis = JS_THIS_OBJECT(cx, vp);
-  if (!objThis || !CDataFinalizer::IsCDataFinalizer(objThis)) {
-    JS_ReportError(cx, "not a CDataFinalizer");
-    return JS_FALSE;
-  }
-
-  JSString *strMessage;
-  jsval value;
-  if (!JS_GetPrivate(objThis)) {
-    // Pre-check whether CDataFinalizer::GetValue can fail
-    // to avoid reporting an error when not appropriate.
-    strMessage = JS_NewStringCopyZ(cx, "[CDataFinalizer - empty]");
-    if (!strMessage) {
-      return JS_FALSE;
-    }
-  } else if (!CDataFinalizer::GetValue(cx, objThis, &value)) {
-    JS_NOT_REACHED("Could not convert an empty CDataFinalizer");
-  } else {
-    strMessage = JS_ValueToString(cx, value);
-    if (!strMessage) {
-      return JS_FALSE;
-    }
-  }
-  JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(strMessage));
-  return JS_TRUE;
-}
-
-bool
-CDataFinalizer::IsCDataFinalizer(JSObject *obj)
-{
-  return JS_GetClass(obj) == &sCDataFinalizerClass;
-}
-
-
-JSObject *
-CDataFinalizer::GetCType(JSContext *cx, JSObject *obj)
-{
-  MOZ_ASSERT(IsCDataFinalizer(obj));
-
-  jsval valData = JS_GetReservedSlot(obj,
-                                     SLOT_DATAFINALIZER_VALTYPE);
-  if (JSVAL_IS_VOID(valData)) {
-    return NULL;
-  }
-
-  return JSVAL_TO_OBJECT(valData);
-}
-
-bool
-CDataFinalizer::GetValue(JSContext *cx, JSObject *obj, jsval *aResult)
-{
-  MOZ_ASSERT(IsCDataFinalizer(obj));
-
-  CDataFinalizer::Private *p = (CDataFinalizer::Private *)
-    JS_GetPrivate(obj);
-
-  if (!p) {
-    JS_ReportError(cx, "Attempting to get the value of an empty CDataFinalizer");
-    return false;  // We have called |dispose| or |forget| already.
-  }
-
-  return ConvertToJS(cx, GetCType(cx, obj),
-                     /*parent*/NULL, p -> cargs, false, true, aResult);
-}
-
-/*
- * Attach a C function as a finalizer to a JS object.
- *
- * Pseudo-JS signature:
- * function(CData<T>, CData<T -> U>): CDataFinalizer<T>
- *          value,    finalizer
- *
- * This function attaches strong references to the following values:
- * - the CType of |value|
- *
- * Note: This function takes advantage of the fact that non-variadic
- * CData functions are initialized during creation.
- */
-JSBool
-CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
-{
-  JSObject* objSelf = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
-  JSObject *objProto;
-  if (!GetObjectProperty(cx, objSelf, "prototype", &objProto)) {
-    JS_ReportError(cx, "CDataFinalizer.prototype does not exist");
-    return JS_FALSE;
-  }
-
-  // Get arguments
-  if (argc == 0) { // Special case: the empty (already finalized) object
-    JSObject *objResult = JS_NewObject(cx, &sCDataFinalizerClass, objProto, NULL);
-    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(objResult));
-    return JS_TRUE;
-  }
-
-  if (argc != 2) {
-    JS_ReportError(cx, "CDataFinalizer takes 2 arguments");
-    return JS_FALSE;
-  }
-
-  jsval* argv = JS_ARGV(cx, vp);
-  jsval valCodePtr = argv[1];
-  if (!JSVAL_IS_OBJECT(valCodePtr) || JSVAL_IS_NULL(valCodePtr)) {
-    return TypeError(cx, "_a CData object_ of a function pointer type",
-                     valCodePtr);
-  }
-  JSObject *objCodePtr = JSVAL_TO_OBJECT(valCodePtr);
-
-  //Note: Using a custom argument formatter here would be awkward (requires
-  //a destructor just to uninstall the formatter).
-
-  // 2. Extract argument type of |objCodePtr|
-  if (!CData::IsCData(objCodePtr)) {
-    return TypeError(cx, "a _CData_ object of a function pointer type",
-                     valCodePtr);
-  }
-  JSObject *objCodePtrType = CData::GetCType(objCodePtr);
-  MOZ_ASSERT(objCodePtrType);
-
-  TypeCode typCodePtr = CType::GetTypeCode(objCodePtrType);
-  if (typCodePtr != TYPE_pointer) {
-    return TypeError(cx, "a CData object of a function _pointer_ type",
-                     OBJECT_TO_JSVAL(objCodePtrType));
-  }
-
-  JSObject *objCodeType = PointerType::GetBaseType(objCodePtrType);
-  MOZ_ASSERT(objCodeType);
-
-  TypeCode typCode = CType::GetTypeCode(objCodeType);
-  if (typCode != TYPE_function) {
-    return TypeError(cx, "a CData object of a _function_ pointer type",
-                     OBJECT_TO_JSVAL(objCodePtrType));
-  }
-  uintptr_t code = *reinterpret_cast<uintptr_t*>(CData::GetData(objCodePtr));
-  if (!code) {
-    return TypeError(cx, "a CData object of a _non-NULL_ function pointer type",
-                     OBJECT_TO_JSVAL(objCodePtrType));
-  }
-
-  FunctionInfo* funInfoFinalizer =
-    FunctionType::GetFunctionInfo(objCodeType);
-  MOZ_ASSERT(funInfoFinalizer);
-
-  if ((funInfoFinalizer->mArgTypes.length() != 1)
-      || (funInfoFinalizer->mIsVariadic)) {
-    return TypeError(cx, "a function accepting exactly one argument",
-                     OBJECT_TO_JSVAL(objCodeType));
-  }
-  JSObject *objArgType = funInfoFinalizer->mArgTypes[0];
-
-  // Invariant: At this stage, we know that funInfoFinalizer->mIsVariadic
-  // is |false|. Therefore, funInfoFinalizer->mCIF has already been initialized.
-
-  bool freePointer = false;
-
-  // 3. Perform dynamic cast of |argv[0]| into |objType|, store it in |cargs|
-
-  size_t sizeArg;
-  jsval valData = argv[0];
-  if (!CType::GetSafeSize(objArgType, &sizeArg)) {
-    return TypeError(cx, "(an object with known size)", valData);
-  }
-
-  ScopedFreePtr<void> cargs(malloc(sizeArg));
-
-  if (!ImplicitConvert(cx, valData, objArgType, cargs.get(),
-                       false, &freePointer)) {
-    return TypeError(cx, "(an object that can be converted to the following type)",
-                     OBJECT_TO_JSVAL(objArgType));
-  }
-  if (freePointer) {
-    // Note: We could handle that case, if necessary.
-    JS_ReportError(cx, "Internal Error during CDataFinalizer. Object cannot be represented");
-    return JS_FALSE;
-  }
-
-  // 4. Prepare buffer for holding return value
-
-  JSObject *returnType = funInfoFinalizer->mReturnType;
-  ScopedFreePtr<void> rvalue;
-  if (CType::GetTypeCode(returnType) != TYPE_void_t) {
-    rvalue = malloc(Align(CType::GetSize(returnType),
-                          sizeof(ffi_arg)));
-  } //Otherwise, simply do not allocate
-
-  // 5. Create |objResult|
-
-  JSObject *objResult = JS_NewObject(cx, &sCDataFinalizerClass, objProto, NULL);
-  if (!objResult) {
-    return JS_FALSE;
-  }
-
-  // Used by GetCType
-  JS_SetReservedSlot(objResult,
-                     SLOT_DATAFINALIZER_VALTYPE,
-                     OBJECT_TO_JSVAL(objArgType));
-
-  // Used by ToSource
-  JS_SetReservedSlot(objResult,
-                     SLOT_DATAFINALIZER_CODETYPE,
-                     OBJECT_TO_JSVAL(objCodePtrType));
-
-  ffi_abi abi;
-  if (!GetABI(cx, OBJECT_TO_JSVAL(funInfoFinalizer->mABI), &abi)) {
-    JS_ReportError(cx, "Internal Error: "
-                   "Invalid ABI specification in CDataFinalizer");
-    return false;
-  }
-
-  ffi_type* rtype = CType::GetFFIType(cx, funInfoFinalizer->mReturnType);
-  if (!rtype) {
-    JS_ReportError(cx, "Internal Error: "
-                   "Could not access ffi type of CDataFinalizer");
-    return JS_FALSE;
-  }
-
-  // 7. Store C information as private
-  ScopedFreePtr<CDataFinalizer::Private>
-    p((CDataFinalizer::Private*)malloc(sizeof(CDataFinalizer::Private)));
-
-  memmove(&p->CIF, &funInfoFinalizer->mCIF, sizeof(ffi_cif));
-
-  p->cargs = cargs.forget();
-  p->rvalue = rvalue.forget();
-  p->cargs_size = sizeArg;
-  p->code = code;
-
-
-  JS_SetPrivate(objResult, p.forget());
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(objResult));
-  return JS_TRUE;
-}
-
-
-/*
- * Actually call the finalizer. Does not perform any cleanup on the object.
- *
- * Preconditions: |this| must be a |CDataFinalizer|, |p| must be non-null.
- * The function fails if |this| has gone through |Forget|/|Dispose|
- * or |Finalize|.
- *
- * This function does not alter the value of |errno|/|GetLastError|.
- *
- * If argument |errnoStatus| is non-NULL, it receives the value of |errno|
- * immediately after the call. Under Windows, if argument |lastErrorStatus|
- * is non-NULL, it receives the value of |GetLastError| immediately after the
- * call. On other platforms, |lastErrorStatus| is ignored.
- */
-void
-CDataFinalizer::CallFinalizer(CDataFinalizer::Private *p,
-                              int* errnoStatus,
-                              int32_t* lastErrorStatus)
-{
-  int savedErrno = errno;
-  errno = 0;
-#if defined(XP_WIN)
-  int32_t savedLastError = GetLastError();
-  SetLastError(0);
-#endif // defined(XP_WIN)
-
-  ffi_call(&p->CIF, FFI_FN(p->code), p->rvalue, &p->cargs);
-
-  if (errnoStatus) {
-    *errnoStatus = errno;
-  }
-  errno = savedErrno;
-#if defined(XP_WIN)
-  if (lastErrorStatus) {
-    *lastErrorStatus = GetLastError();
-  }
-  SetLastError(savedLastError);
-#endif // defined(XP_WIN)
-}
-
-/*
- * Forget the value.
- *
- * Preconditions: |this| must be a |CDataFinalizer|.
- * The function fails if |this| has gone through |Forget|/|Dispose|
- * or |Finalize|.
- *
- * Does not call the finalizer. Cleans up the Private memory and releases all
- * strong references.
- */
-JSBool
-CDataFinalizer::Methods::Forget(JSContext* cx, unsigned argc, jsval *vp)
-{
-  if (argc != 0) {
-    JS_ReportError(cx, "CDataFinalizer.prototype.forget takes no arguments");
-    return JS_FALSE;
-  }
-
-  JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj || !CDataFinalizer::IsCDataFinalizer(obj)) {
-    return TypeError(cx, "a CDataFinalizer", OBJECT_TO_JSVAL(obj));
-  }
-
-  CDataFinalizer::Private *p = (CDataFinalizer::Private *)
-    JS_GetPrivate(obj);
-
-  if (!p) {
-    JS_ReportError(cx, "forget called on an empty CDataFinalizer");
-    return JS_FALSE;
-  }
-
-  jsval valJSData;
-  if (!ConvertToJS(cx, GetCType(cx, obj), NULL, p->cargs, false, true, &valJSData)) {
-    JS_ReportError(cx, "CDataFinalizer value cannot be represented");
-    return JS_FALSE;
-  }
-
-  CDataFinalizer::Cleanup(p, obj);
-
-  JS_SET_RVAL(cx, vp, valJSData);
-  return JS_TRUE;
-}
-
-/*
- * Clean up the value.
- *
- * Preconditions: |this| must be a |CDataFinalizer|.
- * The function fails if |this| has gone through |Forget|/|Dispose|
- * or |Finalize|.
- *
- * Calls the finalizer, cleans up the Private memory and releases all
- * strong references.
- */
-JSBool
-CDataFinalizer::Methods::Dispose(JSContext* cx, unsigned argc, jsval *vp)
-{
-  if (argc != 0) {
-    JS_ReportError(cx, "CDataFinalizer.prototype.dispose takes no arguments");
-    return JS_FALSE;
-  }
-
-  JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj || !CDataFinalizer::IsCDataFinalizer(obj)) {
-    return TypeError(cx, "a CDataFinalizer", OBJECT_TO_JSVAL(obj));
-  }
-
-  CDataFinalizer::Private *p = (CDataFinalizer::Private *)
-    JS_GetPrivate(obj);
-
-  if (!p) {
-    JS_ReportError(cx, "dispose called on an empty CDataFinalizer.");
-    return JS_FALSE;
-  }
-
-  jsval valType = JS_GetReservedSlot(obj, SLOT_DATAFINALIZER_VALTYPE);
-  JS_ASSERT(!JSVAL_IS_PRIMITIVE(valType));
-
-  JSObject *objCTypes = CType::GetGlobalCTypes(cx, JSVAL_TO_OBJECT(valType));
-
-  jsval valCodePtrType = JS_GetReservedSlot(obj, SLOT_DATAFINALIZER_CODETYPE);
-  JS_ASSERT(!JSVAL_IS_PRIMITIVE(valCodePtrType));
-  JSObject *objCodePtrType = JSVAL_TO_OBJECT(valCodePtrType);
-
-  JSObject *objCodeType = PointerType::GetBaseType(objCodePtrType);
-  JS_ASSERT(objCodeType);
-  JS_ASSERT(CType::GetTypeCode(objCodeType) == TYPE_function);
-
-  JSObject *resultType = FunctionType::GetFunctionInfo(objCodeType)->mReturnType;
-  jsval result = JSVAL_VOID;
-
-  int errnoStatus;
-#if defined(XP_WIN)
-  int32_t lastErrorStatus;
-  CDataFinalizer::CallFinalizer(p, &errnoStatus, &lastErrorStatus);
-#else
-  CDataFinalizer::CallFinalizer(p, &errnoStatus, NULL);
-#endif // defined(XP_WIN)
-
-  JS_SetReservedSlot(objCTypes, SLOT_ERRNO, INT_TO_JSVAL(errnoStatus));
-#if defined(XP_WIN)
-  JS_SetReservedSlot(objCTypes, SLOT_LASTERROR, INT_TO_JSVAL(lastErrorStatus));
-#endif // defined(XP_WIN)
-
-  if (ConvertToJS(cx, resultType, NULL, p->rvalue, false, true, &result)) {
-    CDataFinalizer::Cleanup(p, obj);
-    JS_SET_RVAL(cx, vp, result);
-    return true;
-  }
-  CDataFinalizer::Cleanup(p, obj);
-  return false;
-}
-
-/*
- * Perform finalization.
- *
- * Preconditions: |this| must be the result of |CDataFinalizer|.
- * It may have gone through |Forget|/|Dispose|.
- *
- * If |this| has not gone through |Forget|/|Dispose|, calls the
- * finalizer, cleans up the Private memory and releases all
- * strong references.
- */
-void
-CDataFinalizer::Finalize(JSFreeOp* fop, JSObject* obj)
-{
-  CDataFinalizer::Private *p = (CDataFinalizer::Private *)
-    JS_GetPrivate(obj);
-
-  if (!p) {
-    return;
-  }
-
-  CDataFinalizer::CallFinalizer(p, NULL, NULL);
-  CDataFinalizer::Cleanup(p, NULL);
-}
-
-/*
- * Perform cleanup of a CDataFinalizer
- *
- * Release strong references, cleanup |Private|.
- *
- * Argument |p| contains the private information of the CDataFinalizer. If NULL,
- * this function does nothing.
- * Argument |obj| should contain |NULL| during finalization (or in any context
- * in which the object itself should not be cleaned up), or a CDataFinalizer
- * object otherwise.
- */
-void
-CDataFinalizer::Cleanup(CDataFinalizer::Private *p, JSObject *obj)
-{
-  if (!p) {
-    return;  // We have already cleaned up
-  }
-
-  free(p->cargs);
-  free(p->rvalue);
-  free(p);
-
-  if (!obj) {
-    return;  // No slots to clean up
-  }
-
-  JS_ASSERT(CDataFinalizer::IsCDataFinalizer(obj));
-
-  JS_SetPrivate(obj, NULL);
-  for (int i = 0; i < CDATAFINALIZER_SLOTS; ++i) {
-    JS_SetReservedSlot(obj, i, JSVAL_NULL);
-  }
-}
-
 
 /*******************************************************************************
 ** Int64 and UInt64 implementation
