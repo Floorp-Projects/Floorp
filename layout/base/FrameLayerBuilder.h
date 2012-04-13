@@ -425,7 +425,7 @@ protected:
 
     nsRefPtr<Layer> mLayer;
     PRUint32        mDisplayItemKey;
-    LayerState    mLayerState;
+    LayerState      mLayerState;
   };
 
   static void RemoveFrameFromLayerManager(nsIFrame* aFrame, void* aPropertyValue);

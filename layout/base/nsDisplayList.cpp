@@ -2106,7 +2106,7 @@ nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
 
 nsRect nsDisplayClip::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
   nsRect r = nsDisplayWrapList::GetBounds(aBuilder, aSnap);
-  *aSnap = true;
+  *aSnap = false;
   r.IntersectRect(mClip, r);
   return r;
 }
