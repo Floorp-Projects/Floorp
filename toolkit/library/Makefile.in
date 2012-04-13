@@ -395,6 +395,7 @@ OS_LIBS += \
   -lhardware \
   -lutils \
   -lcutils \
+  -lsysutils \
   -lcamera_client \
   -lbinder \
   -lsensorservice \
