@@ -13,7 +13,7 @@ var hwaddr = ctypes.uint8_t.array(6)();
 var len = ctypes.size_t();
 var ints = ctypes.int.array(8)();
 
-const DEBUG = false;
+let DEBUG = false;
 
 let debug;
 if (DEBUG) {

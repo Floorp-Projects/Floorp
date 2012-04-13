@@ -10,7 +10,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const DEBUG = false; // set to false to suppress debug messages
+const DEBUG = false; // set to true to show debug messages
 
 const WIFIWORKER_CONTRACTID = "@mozilla.org/wifi/worker;1";
 const WIFIWORKER_CID        = Components.ID("{a14e8977-d259-433a-a88d-58dd44657e5b}");
