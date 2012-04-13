@@ -5242,6 +5242,9 @@ nsGlobalWindow::Print()
 #ifdef NS_PRINTING
   FORWARD_TO_OUTER(Print, (), NS_ERROR_NOT_INITIALIZED);
 
+  if (Preferences::GetBool("dom.disable_window_print", false))
+    return NS_ERROR_NOT_AVAILABLE;
+
   if (AreDialogsBlocked() || !ConfirmDialogAllowed())
     return NS_ERROR_NOT_AVAILABLE;
 
