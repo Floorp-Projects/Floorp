@@ -3178,16 +3178,16 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
   fieldsetKids.AddChild(blockFrame);
 
   for (nsFrameList::Enumerator e(childItems); !e.AtEnd(); e.Next()) {
-    nsLegendFrame* legendFrame = do_QueryFrame(e.get());
-    if (legendFrame) {
+    nsIFrame* child = e.get();
+    if (child->GetContentInsertionFrame()->GetType() == nsGkAtoms::legendFrame) {
       // We want the legend to be the first frame in the fieldset child list.
       // That way the EventStateManager will do the right thing when tabbing
       // from a selection point within the legend (bug 236071), which is
       // used for implementing legend access keys (bug 81481).
       // GetAdjustedParentFrame() below depends on this frame order.
-      childItems.RemoveFrame(legendFrame);
+      childItems.RemoveFrame(child);
       // Make sure to reparent the legend so it has the fieldset as the parent.
-      fieldsetKids.InsertFrame(newFrame, nsnull, legendFrame);
+      fieldsetKids.InsertFrame(newFrame, nsnull, child);
       break;
     }
   }
@@ -3414,7 +3414,8 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
     COMPLEX_TAG_CREATE(fieldset,
                        &nsCSSFrameConstructor::ConstructFieldSetFrame),
     { &nsGkAtoms::legend,
-      FCDATA_DECL(FCDATA_ALLOW_BLOCK_STYLES, NS_NewLegendFrame) },
+      FCDATA_DECL(FCDATA_ALLOW_BLOCK_STYLES | FCDATA_MAY_NEED_SCROLLFRAME,
+                  NS_NewLegendFrame) },
     SIMPLE_TAG_CREATE(frameset, NS_NewHTMLFramesetFrame),
     SIMPLE_TAG_CREATE(iframe, NS_NewSubDocumentFrame),
     { &nsGkAtoms::button,
@@ -5813,7 +5814,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
            (nsGkAtoms::fieldSetFrame == grandparentType &&
             nsGkAtoms::blockFrame == parentType)) {
     // Legends can be sibling of legends but not of other content in the fieldset
-    nsIAtom* sibType = aSibling->GetType();
+    nsIAtom* sibType = aSibling->GetContentInsertionFrame()->GetType();
     nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(aContent));
 
     if ((legendContent  && (nsGkAtoms::legendFrame != sibType)) ||
@@ -8900,7 +8901,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
     return true;
   }
 
-  if (aFrame->GetType() == nsGkAtoms::legendFrame &&
+  if (aFrame->GetContentInsertionFrame()->GetType() == nsGkAtoms::legendFrame &&
       aFrame->GetParent()->GetType() == nsGkAtoms::fieldSetFrame) {
     // When we remove the legend for a fieldset, we should reframe
     // the fieldset to ensure another legend is used, if there is one
