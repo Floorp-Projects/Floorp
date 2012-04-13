@@ -1697,7 +1697,7 @@ public:
 };
 
 static void
-CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, JSFunction *fun);
+CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun);
 
 bool
 TypeSet::isOwnProperty(JSContext *cx, TypeObject *object, bool configurable)
@@ -1710,8 +1710,7 @@ TypeSet::isOwnProperty(JSContext *cx, TypeObject *object, bool configurable)
      */
     if (object->flags & OBJECT_FLAG_NEW_SCRIPT_REGENERATE) {
         if (object->newScript) {
-            CheckNewScriptProperties(cx, RootedVarTypeObject(cx, object),
-                                     object->newScript->fun);
+            CheckNewScriptProperties(cx, object, object->newScript->fun);
         } else {
             JS_ASSERT(object->flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED);
             object->flags &= ~OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
@@ -4383,7 +4382,7 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
         pc = script->code + uses->offset;
         op = JSOp(*pc);
 
-        RootedVarObject obj(cx, *pbaseobj);
+        JSObject *obj = *pbaseobj;
 
         if (op == JSOP_SETPROP && uses->u.which == 1) {
             /*
@@ -4533,14 +4532,13 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
  * newScript on the type after they were cleared by a GC.
  */
 static void
-CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, JSFunction *fun)
+CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun)
 {
     if (type->unknownProperties() || fun->script()->isInnerFunction)
         return;
 
     /* Strawman object to add properties to and watch for duplicates. */
-    RootedVarObject baseobj(cx);
-    baseobj = NewBuiltinClassInstance(cx, &ObjectClass, gc::FINALIZE_OBJECT16);
+    JSObject *baseobj = NewBuiltinClassInstance(cx, &ObjectClass, gc::FINALIZE_OBJECT16);
     if (!baseobj) {
         if (type->newScript)
             type->clearNewScript(cx);
@@ -4548,7 +4546,7 @@ CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, JSFunction *fun)
     }
 
     Vector<TypeNewScript::Initializer> initializerList(cx);
-    AnalyzeNewScriptProperties(cx, type, fun, baseobj.address(), &initializerList);
+    AnalyzeNewScriptProperties(cx, type, fun, &baseobj, &initializerList);
     if (!baseobj || baseobj->slotSpan() == 0 || !!(type->flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED)) {
         if (type->newScript)
             type->clearNewScript(cx);
@@ -5367,12 +5365,10 @@ JSScript::makeAnalysis(JSContext *cx)
     if (!types->analysis)
         return false;
 
-    RootedVar<JSScript*> self(cx, this);
-
     types->analysis->analyzeBytecode(cx);
 
-    if (self->types->analysis->OOM()) {
-        self->types->analysis = NULL;
+    if (types->analysis->OOM()) {
+        types->analysis = NULL;
         return false;
     }
 
@@ -5658,12 +5654,12 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun)
 
     bool markUnknown = self->lastProperty()->hasObjectFlag(BaseShape::NEW_TYPE_UNKNOWN);
 
-    RootedVarTypeObject type(cx);
-    type = cx->compartment->types.newTypeObject(cx, NULL, JSProto_Object, self, markUnknown);
+    TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL,
+                                                            JSProto_Object, self, markUnknown);
     if (!type)
         return NULL;
 
-    if (!table.relookupOrAdd(p, self, type.raw()))
+    if (!table.relookupOrAdd(p, self, type))
         return NULL;
 
     if (!cx->typeInferenceEnabled())

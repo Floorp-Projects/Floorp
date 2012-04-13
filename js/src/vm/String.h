@@ -432,8 +432,8 @@ class JSRope : public JSString
     void init(JSString *left, JSString *right, size_t length);
 
   public:
-    static inline JSRope *new_(JSContext *cx, js::HandleString left,
-                               js::HandleString right, size_t length);
+    static inline JSRope *new_(JSContext *cx, JSString *left,
+                               JSString *right, size_t length);
 
     inline JSString *leftChild() const {
         JS_ASSERT(isRope());
@@ -498,7 +498,6 @@ class JSFlatString : public JSLinearString
 {
     friend class JSRope;
     void morphExtensibleIntoDependent(JSLinearString *base) {
-        JS_ASSERT(!js::IsPoisonedPtr(base));
         d.lengthAndFlags = buildLengthAndFlags(length(), DEPENDENT_BIT);
         d.s.u2.base = base;
     }

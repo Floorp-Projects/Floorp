@@ -312,7 +312,7 @@ PreprocessValue(JSContext *cx, JSObject *holder, KeyType key, Value *vp, Stringi
     if (vp->isObject()) {
         Value toJSON;
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.toJSONAtom);
-        if (!js_GetMethod(cx, RootedVarObject(cx, &vp->toObject()), id, 0, &toJSON))
+        if (!js_GetMethod(cx, &vp->toObject(), id, 0, &toJSON))
             return false;
 
         if (js_IsCallable(toJSON)) {
@@ -745,7 +745,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
     }
 
     /* Step 9. */
-    RootedVarObject wrapper(cx, NewBuiltinClassInstance(cx, &ObjectClass));
+    JSObject *wrapper = NewBuiltinClassInstance(cx, &ObjectClass);
     if (!wrapper)
         return false;
 
@@ -783,7 +783,7 @@ Walk(JSContext *cx, JSObject *holder, jsid name, const Value &reviver, Value *vp
 
     /* Step 2. */
     if (val.isObject()) {
-        RootedVarObject obj(cx, &val.toObject());
+        JSObject *obj = &val.toObject();
 
         /* 'val' must have been produced by the JSON parser, so not a proxy. */
         JS_ASSERT(!obj->isProxy());

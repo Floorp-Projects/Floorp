@@ -54,8 +54,6 @@
 #include "frontend/Parser.h"
 #include "frontend/ParseMaps.h"
 
-#include "vm/ScopeObject.h"
-
 namespace js {
 
 typedef HashSet<JSAtom *> FuncStmtSet;
@@ -138,12 +136,12 @@ struct StmtInfo {
     ptrdiff_t       update;         /* loop update offset (top if none) */
     ptrdiff_t       breaks;         /* offset of last break in loop */
     ptrdiff_t       continues;      /* offset of last continue in loop */
-    RootedVarAtom   label;          /* name of LABEL */
-    RootedVar<StaticBlockObject *> blockObj; /* block scope object */
+    union {
+        JSAtom      *label;         /* name of LABEL */
+        StaticBlockObject *blockObj;/* block scope object */
+    };
     StmtInfo        *down;          /* info for enclosing statement */
     StmtInfo        *downScope;     /* next enclosing lexical scope */
-
-    StmtInfo(JSContext *cx) : label(cx), blockObj(cx) {}
 };
 
 #define SIF_SCOPE        0x0001     /* statement has its own lexical scope */
@@ -338,8 +336,7 @@ struct TreeContext {                /* tree context for semantic checks */
                                        non-zero depth in current paren tree */
     StmtInfo        *topStmt;       /* top of statement info stack */
     StmtInfo        *topScopeStmt;  /* top lexical scope statement */
-    RootedVar<StaticBlockObject *> blockChain;
-                                    /* compile time block scope chain (NB: one
+    StaticBlockObject *blockChain;  /* compile block scope chain (NB: one
                                        deeper than the topScopeStmt/downScope
                                        chain when in head of let block/expr) */
     ParseNode       *blockNode;     /* parse node for a block with let declarations
@@ -354,9 +351,11 @@ struct TreeContext {                /* tree context for semantic checks */
                                        inside a generator expression */
 
   private:
-    RootedVarFunction fun_;         /* function to store argument and variable
+    union {
+        JSFunction  *fun_;          /* function to store argument and variable
                                        names when flags & TCF_IN_FUNCTION */
-    RootedVarObject   scopeChain_;  /* scope chain object for the script */
+        JSObject    *scopeChain_;   /* scope chain object for the script */
+    };
 
   public:
     JSFunction *fun() const {
@@ -545,8 +544,7 @@ class GCConstList {
 
 struct GlobalScope {
     GlobalScope(JSContext *cx, JSObject *globalObj, BytecodeEmitter *bce)
-      : globalObj(cx, globalObj), bce(bce), defs(cx), names(cx),
-        defsRoot(cx, &defs), namesRoot(cx, &names)
+      : globalObj(globalObj), bce(bce), defs(cx), names(cx)
     { }
 
     struct GlobalDef {
@@ -560,7 +558,7 @@ struct GlobalScope {
         GlobalDef(JSAtom *atom, FunctionBox *box) : atom(atom), funbox(box) { }
     };
 
-    RootedVarObject globalObj;
+    JSObject        *globalObj;
     BytecodeEmitter *bce;
 
     /*
@@ -573,13 +571,6 @@ struct GlobalScope {
      */
     Vector<GlobalDef, 16> defs;
     AtomIndexMap      names;
-
-    /*
-     * Protect the inline elements within defs/names from being clobbered by
-     * root analysis. The atoms in this structure must be separately rooted.
-     */
-    JS::SkipRoot      defsRoot;
-    JS::SkipRoot      namesRoot;
 };
 
 struct BytecodeEmitter : public TreeContext

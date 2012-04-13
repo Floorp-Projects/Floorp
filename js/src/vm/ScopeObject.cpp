@@ -149,7 +149,7 @@ js_PutCallObject(StackFrame *fp)
  * must be null.
  */
 CallObject *
-CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, HandleObject callee)
+CallObject::create(JSContext *cx, JSScript *script, JSObject &enclosing, JSObject *callee)
 {
     RootedVarShape shape(cx);
     shape = script->bindings.callObjectShape(cx);
@@ -159,6 +159,7 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
     gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots() + 1);
 
     RootedVarTypeObject type(cx);
+
     type = cx->compartment->getEmptyType(cx);
     if (!type)
         return NULL;
@@ -167,7 +168,7 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
     if (!PreallocateObjectDynamicSlots(cx, shape, &slots))
         return NULL;
 
-    RootedVarObject obj(cx, JSObject::create(cx, kind, shape, type, slots));
+    JSObject *obj = JSObject::create(cx, kind, shape, type, slots);
     if (!obj)
         return NULL;
 
@@ -176,7 +177,7 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
      * whose call objects do not have a consistent global variable and need
      * to be updated dynamically.
      */
-    JSObject &global = enclosing->global();
+    JSObject &global = enclosing.global();
     if (&global != obj->getParent()) {
         JS_ASSERT(obj->getParent() == NULL);
         if (!obj->setParent(cx, &global))
@@ -204,10 +205,8 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
      * If |bindings| is for a function that has extensible parents, that means
      * its Call should have its own shape; see BaseShape::extensibleParents.
      */
-    if (obj->lastProperty()->extensibleParents()) {
-        if (!obj->generateOwnShape(cx))
-            return NULL;
-    }
+    if (obj->lastProperty()->extensibleParents() && !obj->generateOwnShape(cx))
+        return NULL;
 
     return &obj->asCall();
 }
@@ -218,7 +217,7 @@ CallObject::createForFunction(JSContext *cx, StackFrame *fp)
     JS_ASSERT(fp->isNonEvalFunctionFrame());
     JS_ASSERT(!fp->hasCallObj());
 
-    RootedVarObject scopeChain(cx, &fp->scopeChain());
+    JSObject *scopeChain = &fp->scopeChain();
     JS_ASSERT_IF(scopeChain->isWith() || scopeChain->isBlock() || scopeChain->isCall(),
                  scopeChain->getPrivate() != fp);
 
@@ -238,7 +237,7 @@ CallObject::createForFunction(JSContext *cx, StackFrame *fp)
         }
     }
 
-    CallObject *callobj = create(cx, fp->script(), scopeChain, RootedVarObject(cx, &fp->callee()));
+    CallObject *callobj = create(cx, fp->script(), *scopeChain, &fp->callee());
     if (!callobj)
         return NULL;
 
@@ -250,9 +249,7 @@ CallObject::createForFunction(JSContext *cx, StackFrame *fp)
 CallObject *
 CallObject::createForStrictEval(JSContext *cx, StackFrame *fp)
 {
-    CallObject *callobj = create(cx, fp->script(),
-                                 RootedVarObject(cx, &fp->scopeChain()),
-                                 RootedVarObject(cx));
+    CallObject *callobj = create(cx, fp->script(), fp->scopeChain(), NULL);
     if (!callobj)
         return NULL;
 
@@ -431,24 +428,24 @@ DeclEnvObject::create(JSContext *cx, StackFrame *fp)
         return NULL;
 
     obj->setPrivate(fp);
-    if (!obj->asScope().setEnclosingScope(cx, RootedVarObject(cx, &fp->scopeChain())))
+    if (!obj->asScope().setEnclosingScope(cx, fp->scopeChain()))
         return NULL;
 
     return &obj->asDeclEnv();
 }
 
 WithObject *
-WithObject::create(JSContext *cx, StackFrame *fp, HandleObject proto, HandleObject enclosing,
+WithObject::create(JSContext *cx, StackFrame *fp, JSObject &proto, JSObject &enclosing,
                    uint32_t depth)
 {
     RootedVarTypeObject type(cx);
-    type = proto->getNewType(cx);
+    type = proto.getNewType(cx);
     if (!type)
         return NULL;
 
     RootedVarShape emptyWithShape(cx);
-    emptyWithShape = EmptyShape::getInitialShape(cx, &WithClass, proto,
-                                                 &enclosing->global(), FINALIZE_KIND);
+    emptyWithShape = EmptyShape::getInitialShape(cx, &WithClass, &proto,
+                                                 &enclosing.global(), FINALIZE_KIND);
     if (!emptyWithShape)
         return NULL;
 
@@ -462,7 +459,7 @@ WithObject::create(JSContext *cx, StackFrame *fp, HandleObject proto, HandleObje
     obj->setReservedSlot(DEPTH_SLOT, PrivateUint32Value(depth));
     obj->setPrivate(js_FloatingFrameIfGenerator(cx, fp));
 
-    JSObject *thisp = proto->thisObject(cx);
+    JSObject *thisp = proto.thisObject(cx);
     if (!thisp)
         return NULL;
 

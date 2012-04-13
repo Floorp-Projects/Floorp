@@ -174,8 +174,6 @@ Parser::setPrincipals(JSPrincipals *prin, JSPrincipals *originPrin)
 ObjectBox *
 Parser::newObjectBox(JSObject *obj)
 {
-    JS_ASSERT(obj && !IsPoisonedPtr(obj));
-
     /*
      * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
      * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
@@ -199,7 +197,7 @@ Parser::newObjectBox(JSObject *obj)
 FunctionBox *
 Parser::newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc)
 {
-    JS_ASSERT(obj && !IsPoisonedPtr(obj));
+    JS_ASSERT(obj);
     JS_ASSERT(obj->isFunction());
 
     /*
@@ -585,7 +583,7 @@ BindLocalVariable(JSContext *cx, TreeContext *tc, ParseNode *pn, BindingKind kin
     JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
 
     unsigned index = tc->bindings.numVars();
-    if (!tc->bindings.add(cx, RootedVarAtom(cx, pn->pn_atom), kind))
+    if (!tc->bindings.add(cx, pn->pn_atom, kind))
         return false;
 
     pn->pn_cookie.set(tc->staticLevel, index);
@@ -598,7 +596,7 @@ Parser::functionBody(FunctionBodyType type)
 {
     JS_ASSERT(tc->inFunction());
 
-    StmtInfo stmtInfo(context);
+    StmtInfo stmtInfo;
     PushStatement(tc, &stmtInfo, STMT_BLOCK, -1);
     stmtInfo.flags = SIF_BODY_BLOCK;
 
@@ -648,7 +646,7 @@ Parser::functionBody(FunctionBodyType type)
     if (!CheckStrictParameters(context, tc))
         return NULL;
 
-    RootedVar<PropertyName*> const arguments(context, context->runtime->atomState.argumentsAtom);
+    PropertyName * const arguments = context->runtime->atomState.argumentsAtom;
 
     /*
      * Non-top-level functions use JSOP_DEFFUN which is a dynamic scope
@@ -1356,7 +1354,7 @@ Parser::functionArguments(TreeContext &funtc, FunctionBox *funbox, ParseNode **l
 
               case TOK_NAME:
               {
-                RootedVar<PropertyName*> name(context, tokenStream.currentToken().name());
+                PropertyName *name = tokenStream.currentToken().name();
 
 #ifdef JS_HAS_DESTRUCTURING
                 /*
@@ -1416,7 +1414,7 @@ Parser::functionArguments(TreeContext &funtc, FunctionBox *funbox, ParseNode **l
 }
 
 ParseNode *
-Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSyntaxKind kind)
+Parser::functionDef(PropertyName *funName, FunctionType type, FunctionSyntaxKind kind)
 {
     JS_ASSERT_IF(kind == Statement, funName);
 
@@ -1539,7 +1537,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
     if (!funbox)
         return NULL;
 
-    RootedVarFunction fun(context, funbox->function());
+    JSFunction *fun = funbox->function();
 
     /* Now parse formal argument list and compute fun->nargs. */
     ParseNode *prelude = NULL;
@@ -1729,7 +1727,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
 ParseNode *
 Parser::functionStmt()
 {
-    RootedVarPropertyName name(context);
+    PropertyName *name = NULL;
     if (tokenStream.getToken(TSF_KEYWORD_IS_NAME) == TOK_NAME) {
         name = tokenStream.currentToken().name();
     } else {
@@ -1750,7 +1748,7 @@ Parser::functionStmt()
 ParseNode *
 Parser::functionExpr()
 {
-    RootedVarPropertyName name(context);
+    PropertyName *name = NULL;
     if (tokenStream.getToken(TSF_KEYWORD_IS_NAME) == TOK_NAME)
         name = tokenStream.currentToken().name();
     else
@@ -1970,8 +1968,8 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
     if (!CheckStrictBinding(cx, tc, atom->asPropertyName(), pn))
         return false;
 
-    RootedVar<StaticBlockObject *> blockObj(cx, data->let.blockObj);
-    unsigned blockCount = blockObj->slotCount();
+    StaticBlockObject &blockObj = *data->let.blockObj;
+    unsigned blockCount = blockObj.slotCount();
     if (blockCount == JS_BIT(16)) {
         ReportCompileErrorNumber(cx, TS(tc->parser), pn,
                                  JSREPORT_ERROR, data->let.overflow);
@@ -2008,7 +2006,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
      */
     bool redeclared;
     jsid id = ATOM_TO_JSID(atom);
-    const Shape *shape = blockObj->addVar(cx, id, blockCount, &redeclared);
+    const Shape *shape = blockObj.addVar(cx, id, blockCount, &redeclared);
     if (!shape) {
         if (redeclared)
             ReportRedeclaration(cx, tc, pn, false, atom);
@@ -2016,7 +2014,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
     }
 
     /* Store pn in the static block object. */
-    blockObj->setDefinitionParseNode(blockCount, reinterpret_cast<Definition *>(pn));
+    blockObj.setDefinitionParseNode(blockCount, reinterpret_cast<Definition *>(pn));
     return true;
 }
 
@@ -2087,12 +2085,11 @@ static bool
 DefineGlobal(ParseNode *pn, BytecodeEmitter *bce, PropertyName *name)
 {
     GlobalScope *globalScope = bce->globalScope;
-    HandleObject globalObj = globalScope->globalObj;
+    JSObject *globalObj = globalScope->globalObj;
 
     if (!bce->compileAndGo() || !globalObj || bce->compilingForEval())
         return true;
 
-    JS_ASSERT(!IsPoisonedPtr(name));
     AtomIndexAddPtr p = globalScope->names.lookupForAdd(name);
     if (!p) {
         JSContext *cx = bce->parser->context;
@@ -2129,8 +2126,6 @@ DefineGlobal(ParseNode *pn, BytecodeEmitter *bce, PropertyName *name)
 
         if (!globalScope->defs.append(def))
             return false;
-
-        JS_ASSERT(!IsPoisonedPtr(name));
 
         jsatomid index = globalScope->names.count();
         if (!globalScope->names.add(p, name, index))
@@ -2596,8 +2591,7 @@ CheckDestructuring(JSContext *cx, BindData *data, ParseNode *left, TreeContext *
         return false;
     }
 
-    RootedVar<StaticBlockObject *> blockObj(cx);
-    blockObj = data && data->binder == BindLet ? data->let.blockObj : NULL;
+    StaticBlockObject *blockObj = data && data->binder == BindLet ? data->let.blockObj : NULL;
     uint32_t blockCountBefore = blockObj ? blockObj->slotCount() : 0;
 
     if (left->isKind(PNK_RB)) {
@@ -2908,7 +2902,7 @@ Parser::letBlock(LetContext letContext)
 
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_LET);
 
-    StmtInfo stmtInfo(context);
+    StmtInfo stmtInfo;
     ParseNode *block = PushLetScope(context, tc, *blockObj, &stmtInfo);
     if (!block)
         return NULL;
@@ -3043,7 +3037,7 @@ Parser::switchStatement()
      * NB: we must push stmtInfo before calling GenerateBlockIdForStmtNode
      * because that function states tc->topStmt->blockid.
      */
-    StmtInfo stmtInfo(context);
+    StmtInfo stmtInfo;
     PushStatement(tc, &stmtInfo, STMT_SWITCH, -1);
 
     /* pn2 is a list of case nodes. The default case has pn_left == NULL */
@@ -3165,7 +3159,7 @@ Parser::forStatement()
     if (!pn)
         return NULL;
 
-    StmtInfo forStmt(context);
+    StmtInfo forStmt;
     PushStatement(tc, &forStmt, STMT_FOR_LOOP, -1);
 
     pn->setOp(JSOP_ITER);
@@ -3257,9 +3251,9 @@ Parser::forStatement()
      * as we've excluded 'in' from being parsed in RelExpr by setting
      * the TCF_IN_FOR_INIT flag in our TreeContext.
      */
-    ParseNode *forHead;        /* initialized by both branches. */
-    StmtInfo letStmt(context); /* used if blockObj != NULL. */
-    ParseNode *pn2, *pn3;      /* forHead->pn_kid1 and pn_kid2. */
+    ParseNode *forHead;     /* initialized by both branches. */
+    StmtInfo letStmt;       /* used if blockObj != NULL. */
+    ParseNode *pn2, *pn3;   /* forHead->pn_kid1 and pn_kid2. */
     bool forOf;
     if (pn1 && matchInOrOf(&forOf)) {
         /*
@@ -3558,7 +3552,7 @@ Parser::tryStatement()
     pn->setOp(JSOP_NOP);
 
     MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_TRY);
-    StmtInfo stmtInfo(context);
+    StmtInfo stmtInfo;
     if (!PushBlocklikeStatement(&stmtInfo, STMT_TRY, tc))
         return NULL;
     pn->pn_kid1 = statements();
@@ -3725,7 +3719,7 @@ Parser::withStatement()
     ParseNode *oldWith = tc->innermostWith;
     tc->innermostWith = pn;
 
-    StmtInfo stmtInfo(context);
+    StmtInfo stmtInfo;
     PushStatement(tc, &stmtInfo, STMT_WITH, -1);
     pn2 = statement();
     if (!pn2)
@@ -3896,7 +3890,7 @@ Parser::expressionStatement()
         (void) tokenStream.getToken();
 
         /* Push a label struct and parse the statement. */
-        StmtInfo stmtInfo(context);
+        StmtInfo stmtInfo;
         PushStatement(tc, &stmtInfo, STMT_LABEL, -1);
         stmtInfo.label = label;
         ParseNode *pn = statement();
@@ -3977,7 +3971,7 @@ Parser::statement()
         if (!pn1)
             return NULL;
 
-        StmtInfo stmtInfo(context);
+        StmtInfo stmtInfo;
         PushStatement(tc, &stmtInfo, STMT_IF, -1);
         ParseNode *pn2 = statement();
         if (!pn2)
@@ -4016,7 +4010,7 @@ Parser::statement()
         pn = BinaryNode::create(PNK_WHILE, tc);
         if (!pn)
             return NULL;
-        StmtInfo stmtInfo(context);
+        StmtInfo stmtInfo;
         PushStatement(tc, &stmtInfo, STMT_WHILE_LOOP, -1);
         ParseNode *pn2 = condition();
         if (!pn2)
@@ -4036,7 +4030,7 @@ Parser::statement()
         pn = BinaryNode::create(PNK_DOWHILE, tc);
         if (!pn)
             return NULL;
-        StmtInfo stmtInfo(context);
+        StmtInfo stmtInfo;
         PushStatement(tc, &stmtInfo, STMT_DO_LOOP, -1);
         ParseNode *pn2 = statement();
         if (!pn2)
@@ -4213,7 +4207,7 @@ Parser::statement()
 
         oldflags = tc->flags;
         tc->flags = oldflags & ~TCF_HAS_FUNCTION_STMT;
-        StmtInfo stmtInfo(context);
+        StmtInfo stmtInfo;
         if (!PushBlocklikeStatement(&stmtInfo, STMT_BLOCK, tc))
             return NULL;
         pn = statements();
@@ -5314,7 +5308,7 @@ Parser::comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
 {
     unsigned adjust;
     ParseNode *pn, *pn2, *pn3, **pnp;
-    StmtInfo stmtInfo(context);
+    StmtInfo stmtInfo;
     BindData data;
     TokenKind tt;
 
@@ -5763,7 +5757,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
                     tc->flags |= TCF_FUN_HEAVYWEIGHT;
                     tc->noteBindingsAccessedDynamically();
 
-                    StmtInfo stmtInfo(context);
+                    StmtInfo stmtInfo;
                     ParseNode *oldWith = tc->innermostWith;
                     tc->innermostWith = lhs;
                     PushStatement(tc, &stmtInfo, STMT_WITH, -1);
@@ -6940,8 +6934,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                     pn->pn_xflags |= PNX_NONCONST;
 
                     /* NB: Getter function in { get x(){} } is unnamed. */
-                    pn2 = functionDef(RootedVarPropertyName(context, NULL),
-                                      op == JSOP_GETTER ? Getter : Setter, Expression);
+                    pn2 = functionDef(NULL, op == JSOP_GETTER ? Getter : Setter, Expression);
                     if (!pn2)
                         return NULL;
                     TokenPos pos = {begin, pn2->pn_pos.end};
@@ -7154,7 +7147,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
         RegExpFlag flags = tokenStream.currentToken().regExpFlags();
         RegExpStatics *res = context->regExpStatics();
 
-        RootedVar<RegExpObject*> reobj(context);
+        RegExpObject *reobj;
         if (context->hasfp())
             reobj = RegExpObject::create(context, res, chars, length, flags, &tokenStream);
         else

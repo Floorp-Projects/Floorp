@@ -189,6 +189,17 @@ JS_END_EXTERN_C
 
 namespace js {
 
+struct ContextFriendFields {
+    JSRuntime *const    runtime;
+
+    ContextFriendFields(JSRuntime *rt)
+      : runtime(rt) { }
+
+    static const ContextFriendFields *get(const JSContext *cx) {
+        return reinterpret_cast<const ContextFriendFields *>(cx);
+    }
+};
+
 struct RuntimeFriendFields {
     /*
      * If non-zero, we were been asked to call the operation callback as soon

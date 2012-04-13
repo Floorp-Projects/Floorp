@@ -797,14 +797,12 @@ JS_PropertyIterator(JSObject *obj, JSScopeProperty **iteratorp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetPropertyDesc(JSContext *cx, JSObject *obj_, JSScopeProperty *sprop,
+JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
                    JSPropertyDesc *pd)
 {
-    assertSameCompartment(cx, obj_);
+    assertSameCompartment(cx, obj);
     Shape *shape = (Shape *) sprop;
     pd->id = IdToJsval(shape->propid());
-
-    RootedVarObject obj(cx, obj_);
 
     JSBool wasThrowing = cx->isExceptionPending();
     Value lastException = UndefinedValue();

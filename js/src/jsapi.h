@@ -54,7 +54,6 @@
 #include "jsval.h"
 
 #include "js/Utility.h"
-#include "gc/Root.h"
 
 #ifdef __cplusplus
 #include "jsalloc.h"
@@ -215,6 +214,36 @@ inline Anchor<T>::~Anchor()
     sink = hold;
 }
 #endif  /* defined(__GNUC__) */
+
+/*
+ * Methods for poisoning GC heap pointer words and checking for poisoned words.
+ * These are in this file for use in Value methods and so forth.
+ *
+ * If the moving GC hazard analysis is in use and detects a non-rooted stack
+ * pointer to a GC thing, one byte of that pointer is poisoned to refer to an
+ * invalid location. For both 32 bit and 64 bit systems, the fourth byte of the
+ * pointer is overwritten, to reduce the likelihood of accidentally changing
+ * a live integer value.
+ */
+
+inline void PoisonPtr(uintptr_t *v)
+{
+#if defined(JSGC_ROOT_ANALYSIS) && defined(DEBUG)
+    uint8_t *ptr = (uint8_t *) v + 3;
+    *ptr = JS_FREE_PATTERN;
+#endif
+}
+
+template <typename T>
+inline bool IsPoisonedPtr(T *v)
+{
+#if defined(JSGC_ROOT_ANALYSIS) && defined(DEBUG)
+    uint32_t mask = uintptr_t(v) & 0xff000000;
+    return mask == uint32_t(JS_FREE_PATTERN << 24);
+#else
+    return false;
+#endif
+}
 
 /*
  * JS::Value is the C++ interface for a single JavaScript Engine value.
@@ -740,20 +769,6 @@ SameType(const Value &lhs, const Value &rhs)
     return JSVAL_SAME_TYPE_IMPL(lhs.data, rhs.data);
 }
 
-template <> struct RootMethods<const Value>
-{
-    static Value initial() { return UndefinedValue(); }
-    static ThingRootKind kind() { return THING_ROOT_VALUE; }
-    static bool poisoned(const Value &v) { return IsPoisonedValue(v); }
-};
-
-template <> struct RootMethods<Value>
-{
-    static Value initial() { return UndefinedValue(); }
-    static ThingRootKind kind() { return THING_ROOT_VALUE; }
-    static bool poisoned(const Value &v) { return IsPoisonedValue(v); }
-};
-
 /************************************************************************/
 
 #ifndef __GNUC__
@@ -1037,7 +1052,7 @@ class AutoVectorRooter : protected AutoGCRooter
   public:
     explicit AutoVectorRooter(JSContext *cx, ptrdiff_t tag
                               JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, tag), vector(cx), vectorRoot(cx, &vector)
+        : AutoGCRooter(cx, tag), vector(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -1100,10 +1115,6 @@ class AutoVectorRooter : protected AutoGCRooter
 
     typedef js::Vector<T, 8> VectorImpl;
     VectorImpl vector;
-
-    /* Prevent overwriting of inline elements in vector. */
-    SkipRoot vectorRoot;
-
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
@@ -2446,8 +2457,6 @@ JS_IsInSuspendedRequest(JSRuntime *rt);
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
-namespace JS {
-
 inline bool
 IsPoisonedId(jsid iden)
 {
@@ -2457,22 +2466,6 @@ IsPoisonedId(jsid iden)
         return JS::IsPoisonedPtr(JSID_TO_OBJECT(iden));
     return false;
 }
-
-template <> struct RootMethods<const jsid>
-{
-    static jsid initial() { return JSID_VOID; }
-    static ThingRootKind kind() { return THING_ROOT_ID; }
-    static bool poisoned(jsid id) { return IsPoisonedId(id); }
-};
-
-template <> struct RootMethods<jsid>
-{
-    static jsid initial() { return JSID_VOID; }
-    static ThingRootKind kind() { return THING_ROOT_ID; }
-    static bool poisoned(jsid id) { return IsPoisonedId(id); }
-};
-
-} /* namespace JS */
 
 class JSAutoRequest {
   public:

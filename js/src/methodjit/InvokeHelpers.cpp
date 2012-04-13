@@ -641,7 +641,7 @@ stubs::CreateThis(VMFrame &f, JSObject *proto)
 {
     JSContext *cx = f.cx;
     StackFrame *fp = f.fp();
-    RootedVarObject callee(cx, &fp->callee());
+    JSObject *callee = &fp->callee();
     JSObject *obj = js_CreateThisForFunctionWithProto(cx, callee, proto);
     if (!obj)
         THROW();
@@ -903,7 +903,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         break;
 
       case REJOIN_THIS_PROTOTYPE: {
-        RootedVarObject callee(cx, &fp->callee());
+        JSObject *callee = &fp->callee();
         JSObject *proto = f.regs.sp[0].isObject() ? &f.regs.sp[0].toObject() : NULL;
         JSObject *obj = js_CreateThisForFunctionWithProto(cx, callee, proto);
         if (!obj)

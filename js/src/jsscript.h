@@ -194,23 +194,23 @@ class Bindings
      * runtime, by calling an "add" method. All ARGUMENT bindings must be added
      * before before any VARIABLE or CONSTANT bindings.
      */
-    bool add(JSContext *cx, HandleAtom name, BindingKind kind);
+    bool add(JSContext *cx, JSAtom *name, BindingKind kind);
 
     /* Convenience specializations. */
-    bool addVariable(JSContext *cx, HandleAtom name) {
+    bool addVariable(JSContext *cx, JSAtom *name) {
         return add(cx, name, VARIABLE);
     }
-    bool addConstant(JSContext *cx, HandleAtom name) {
+    bool addConstant(JSContext *cx, JSAtom *name) {
         return add(cx, name, CONSTANT);
     }
-    bool addArgument(JSContext *cx, HandleAtom name, uint16_t *slotp) {
+    bool addArgument(JSContext *cx, JSAtom *name, uint16_t *slotp) {
         JS_ASSERT(name != NULL); /* not destructuring */
         *slotp = nargs;
         return add(cx, name, ARGUMENT);
     }
     bool addDestructuring(JSContext *cx, uint16_t *slotp) {
         *slotp = nargs;
-        return add(cx, RootedVarAtom(cx), ARGUMENT);
+        return add(cx, NULL, ARGUMENT);
     }
 
     void noteDup() { hasDup_ = true; }

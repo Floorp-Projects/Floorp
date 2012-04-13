@@ -711,11 +711,9 @@ js_IsMathFunction(Native native)
 }
 
 JSObject *
-js_InitMathClass(JSContext *cx, JSObject *obj_)
+js_InitMathClass(JSContext *cx, JSObject *obj)
 {
-    RootedVarObject obj(cx, obj_);
-
-    RootedVarObject Math(cx, NewObjectWithClassProto(cx, &MathClass, NULL, obj));
+    JSObject *Math = NewObjectWithClassProto(cx, &MathClass, NULL, obj);
     if (!Math || !Math->setSingletonType(cx))
         return NULL;
 
