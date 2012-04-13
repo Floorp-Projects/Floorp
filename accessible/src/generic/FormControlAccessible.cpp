@@ -53,8 +53,8 @@ using namespace mozilla::a11y;
 // ProgressMeterAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-template class ProgressMeterAccessible<1>;
-template class ProgressMeterAccessible<100>;
+template class mozilla::a11y::ProgressMeterAccessible<1>;
+template class mozilla::a11y::ProgressMeterAccessible<100>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
