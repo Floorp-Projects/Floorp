@@ -2053,7 +2053,16 @@ JSScript::applySpeculationFailed(JSContext *cx)
 {
     JS_ASSERT(analyzedArgsUsage());
     JS_ASSERT(argumentsHasLocalBinding());
-    JS_ASSERT(!needsArgsObj());
+
+    /*
+     * It is possible that the apply speculation has already failed, everything
+     * has been fixed up, but there was an outstanding magic value on the
+     * stack that has just now flowed into an apply. In this case, there is
+     * nothing to do; GuardFunApplySpeculation will patch in the real argsobj.
+     */
+    if (needsArgsObj())
+        return true;
+
     needsArgsObj_ = true;
 
     const unsigned slot = argumentsLocalSlot();
