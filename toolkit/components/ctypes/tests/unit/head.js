@@ -45,7 +45,7 @@ function ResourceTester(start, stop) {
 }
 ResourceTester.prototype = {
   launch: function(size, test, args) {
-    Components.utils.forceGC();
+    trigger_gc();
     let cleaner = new ResourceCleaner();
     this._start(size);
     try {
@@ -55,7 +55,7 @@ ResourceTester.prototype = {
       this._stop();
       throw x;
     }
-    Components.utils.forceGC();
+    trigger_gc();
     cleaner.cleanup();
     this._stop();
   }
