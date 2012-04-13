@@ -187,6 +187,50 @@ HeapValue::post(JSCompartment *comp)
 }
 
 inline
+RelocatableValue::RelocatableValue()
+    : EncapsulatedValue(UndefinedValue())
+{
+}
+
+inline
+RelocatableValue::RelocatableValue(const Value &v)
+    : EncapsulatedValue(v)
+{
+    JS_ASSERT(!IsPoisonedValue(v));
+}
+
+inline
+RelocatableValue::RelocatableValue(const RelocatableValue &v)
+    : EncapsulatedValue(v.value)
+{
+    JS_ASSERT(!IsPoisonedValue(v.value));
+}
+
+inline
+RelocatableValue::~RelocatableValue()
+{
+    pre();
+}
+
+inline RelocatableValue &
+RelocatableValue::operator=(const Value &v)
+{
+    pre();
+    JS_ASSERT(!IsPoisonedValue(v));
+    value = v;
+    return *this;
+}
+
+inline RelocatableValue &
+RelocatableValue::operator=(const RelocatableValue &v)
+{
+    pre();
+    JS_ASSERT(!IsPoisonedValue(v.value));
+    value = v.value;
+    return *this;
+}
+
+inline
 HeapSlot::HeapSlot(JSObject *obj, uint32_t slot, const Value &v)
     : EncapsulatedValue(v)
 {
