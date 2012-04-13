@@ -3105,7 +3105,19 @@ nsContentUtils::ReportToConsole(PRUint32 aErrorFlags,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString spec;
-  if (aURI)
+  if (!aLineNumber) {
+    JSContext *cx = nsnull;
+    sThreadJSContextStack->Peek(&cx);
+    if (cx) {
+      const char* filename;
+      PRUint32 lineno;
+      if (nsJSUtils::GetCallingLocation(cx, &filename, &lineno)) {
+        spec = filename;
+        aLineNumber = lineno;
+      }
+    }
+  }
+  if (spec.IsEmpty() && aURI)
     aURI->GetSpec(spec);
 
   nsCOMPtr<nsIScriptError> errorObject =
