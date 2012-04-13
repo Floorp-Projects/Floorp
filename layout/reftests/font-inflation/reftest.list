@@ -5,9 +5,12 @@ test-pref(font.size.inflation.emPerLine,15) == text-4.html text-4-ref.html
 test-pref(font.size.inflation.emPerLine,15) == decoration-1.html decoration-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) == bullet-1.html bullet-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) == bullet-2.html bullet-2-ref.html
-test-pref(font.size.inflation.emPerLine,15) == input-text-1.html input-text-1-ref.html
-test-pref(font.size.inflation.emPerLine,15) == input-text-2.html input-text-2-ref.html
-test-pref(font.size.inflation.emPerLine,15) == input-text-3.html input-text-3-ref.html
+test-pref(font.size.inflation.emPerLine,15) == input-text-1-height.html input-text-1-height-ref.html
+test-pref(font.size.inflation.emPerLine,15) == input-text-1-noheight.html input-text-1-noheight-ref.html
+test-pref(font.size.inflation.emPerLine,15) == input-text-2-height.html input-text-2-height-ref.html
+test-pref(font.size.inflation.emPerLine,15) == input-text-2-height.html input-text-2-height-ref.html
+test-pref(font.size.inflation.emPerLine,15) == input-text-3-noheight.html input-text-3-noheight-ref.html
+test-pref(font.size.inflation.emPerLine,15) == input-text-3-noheight.html input-text-3-noheight-ref.html
 test-pref(font.size.inflation.emPerLine,15) == textarea-1.html textarea-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) == textarea-2.html textarea-2-ref.html
 test-pref(font.size.inflation.emPerLine,15) == textarea-3.html textarea-3-ref.html
@@ -31,8 +34,9 @@ test-pref(font.size.inflation.emPerLine,15) == select-listbox-2.html select-list
 test-pref(font.size.inflation.emPerLine,15) != select-listbox-2.html select-listbox-2.html
 test-pref(font.size.inflation.emPerLine,15) == select-combobox-2.html select-combobox-2-ref.html
 test-pref(font.size.inflation.emPerLine,15) != select-combobox-2.html select-combobox-2.html
-asserts-if(gtk2Widget,1-2) test-pref(font.size.inflation.emPerLine,15) != input-checkbox.html input-checkbox.html
-asserts-if(gtk2Widget,1-2) test-pref(font.size.inflation.emPerLine,15) != input-radio.html input-radio.html
+test-pref(font.size.inflation.emPerLine,15) == select-combobox-3.html select-combobox-3-ref.html
+asserts-if(gtk2Widget,0-2) test-pref(font.size.inflation.emPerLine,15) != input-checkbox.html input-checkbox.html
+asserts-if(gtk2Widget,0-2) test-pref(font.size.inflation.emPerLine,15) != input-radio.html input-radio.html
 test-pref(font.size.inflation.emPerLine,15) == disable-fontinfl-on-mobile.html disable-fontinfl-on-mobile-ref.html
 test-pref(font.size.inflation.emPerLine,15) == disable-fontinfl-on-mobile-2.html disable-fontinfl-on-mobile-ref.html
 test-pref(font.size.inflation.emPerLine,15) == disable-fontinfl-on-mobile-3.html disable-fontinfl-on-mobile-ref.html
