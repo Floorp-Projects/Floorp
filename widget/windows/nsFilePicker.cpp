@@ -60,6 +60,7 @@
 #include "nsString.h"
 #include "nsToolkit.h"
 #include "WinUtils.h"
+#include "nsPIDOMWindow.h"
 
 using namespace mozilla::widget;
 
