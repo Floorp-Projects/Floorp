@@ -1895,16 +1895,6 @@ class CGMethodCall(CGThing):
             pickFirstSignature("%s.isNullOrUndefined()" % distinguishingArg,
                                lambda s: s[1][distinguishingIndex].type.nullable())
 
-            # XXXbz Now we're supposed to check for distinguishingArg being
-            # an array or a platform object that supports indexed
-            # properties... skip that last for now.  It's a bit of a pain.
-            pickFirstSignature("%s.isObject() && IsArrayLike(cx, &%s.toObject()" %
-                               (distinguishingArg, distinguishingArg),
-                               lambda s:
-                                   (s[1][distinguishingIndex].type.isArray() or
-                                    s[1][distinguishingIndex].type.isSequence() or
-                                    s[1][distinguishingIndex].type.isObject()))
-
             # Now check for distinguishingArg being a platform object.
             # We can actually check separately for array buffers and
             # other things.
@@ -1992,6 +1982,16 @@ class CGMethodCall(CGThing):
                     caseBody.append(CGIndenter(CGGeneric("} while (0);")))
 
                 caseBody.append(CGGeneric("}"))
+
+            # XXXbz Now we're supposed to check for distinguishingArg being
+            # an array or a platform object that supports indexed
+            # properties... skip that last for now.  It's a bit of a pain.
+            pickFirstSignature("%s.isObject() && IsArrayLike(cx, &%s.toObject()" %
+                               (distinguishingArg, distinguishingArg),
+                               lambda s:
+                                   (s[1][distinguishingIndex].type.isArray() or
+                                    s[1][distinguishingIndex].type.isSequence() or
+                                    s[1][distinguishingIndex].type.isObject()))
 
             # Check for Date objects
             # XXXbz Do we need to worry about security wrappers around the Date?
