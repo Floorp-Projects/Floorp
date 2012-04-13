@@ -26,6 +26,11 @@ let gBrowserThumbnails = {
   _tabEvents: ["TabClose", "TabSelect"],
 
   init: function Thumbnails_init() {
+    try {
+      if (Services.prefs.getBoolPref("browser.pagethumbnails.capturing_disabled"))
+        return;
+    } catch (e) {}
+
     gBrowser.addTabsProgressListener(this);
 
     this._tabEvents.forEach(function (aEvent) {
@@ -93,6 +98,9 @@ let gBrowserThumbnails = {
   },
 
   _shouldCapture: function Thumbnails_shouldCapture(aBrowser) {
+    if (gPrivateBrowsingUI.privateBrowsingEnabled)
+      return false;
+
     let doc = aBrowser.contentDocument;
 
     // FIXME Bug 720575 - Don't capture thumbnails for SVG or XML documents as

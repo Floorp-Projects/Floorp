@@ -19,23 +19,23 @@ function test() {
 }
 
 function testPause() {
-  is(gDebugger.StackFrames.activeThread.paused, false,
+  is(gDebugger.DebuggerController.activeThread.paused, false,
     "Should be running after debug_tab_pane.");
 
   let button = gDebugger.document.getElementById("resume");
-  is(button.label, gDebugger.DebuggerView.getStr("pauseLabel"),
+  is(button.label, gDebugger.L10N.getStr("pauseLabel"),
     "Button label should be pause when running.");
 
-  gPane.activeThread.addOneTimeListener("paused", function() {
+  gDebugger.DebuggerController.activeThread.addOneTimeListener("paused", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
-      let frames = gDebugger.DebuggerView.Stackframes._frames;
+      let frames = gDebugger.DebuggerView.StackFrames._frames;
       let childNodes = frames.childNodes;
 
-      is(gDebugger.StackFrames.activeThread.paused, true,
+      is(gDebugger.DebuggerController.activeThread.paused, true,
         "Should be paused after an interrupt request.");
 
-      is(button.label, gDebugger.DebuggerView.getStr("resumeLabel"),
+      is(button.label, gDebugger.L10N.getStr("resumeLabel"),
         "Button label should be resume when paused.");
 
       is(frames.querySelectorAll(".dbg-stackframe").length, 0,
@@ -51,14 +51,14 @@ function testPause() {
 }
 
 function testResume() {
-  gPane.activeThread.addOneTimeListener("resumed", function() {
+  gDebugger.DebuggerController.activeThread.addOneTimeListener("resumed", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
-      is(gDebugger.StackFrames.activeThread.paused, false,
+      is(gDebugger.DebuggerController.activeThread.paused, false,
         "Should be paused after an interrupt request.");
 
       let button = gDebugger.document.getElementById("resume");
-      is(button.label, gDebugger.DebuggerView.getStr("pauseLabel"),
+      is(button.label, gDebugger.L10N.getStr("pauseLabel"),
         "Button label should be pause when running.");
 
       closeDebuggerAndFinish(gTab);
