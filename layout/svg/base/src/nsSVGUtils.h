@@ -542,7 +542,9 @@ public:
   static gfxRect GetBBox(nsIFrame *aFrame, PRUint32 aFlags = eBBoxIncludeFill);
 
   /**
-   * Compute a rectangle in userSpaceOnUse or objectBoundingBoxUnits.
+   * Convert a userSpaceOnUse/objectBoundingBoxUnits rectangle that's specified
+   * using four nsSVGLength2 values into a user unit rectangle in user space.
+   *
    * @param aXYWH pointer to 4 consecutive nsSVGLength2 objects containing
    * the x, y, width and height values in that order
    * @param aBBox the bounding box of the object the rect is relative to;
