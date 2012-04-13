@@ -42,6 +42,8 @@
 
 #include "jspubtd.h"
 
+#include "js/Utility.h"
+
 #ifdef __cplusplus
 
 namespace JS {
@@ -284,15 +286,12 @@ class RootedVar
 {
   public:
     RootedVar(JSContext *cx)
-        : ptr(RootMethods<T>::initial()), root(cx, &ptr)
+      : ptr(RootMethods<T>::initial()), root(cx, &ptr)
     {}
 
     RootedVar(JSContext *cx, T initial)
-        : ptr(initial), root(cx, &ptr)
+      : ptr(initial), root(cx, &ptr)
     {}
-
-    RootedVar() MOZ_DELETE;
-    RootedVar(const RootedVar &) MOZ_DELETE;
 
     operator T () const { return ptr; }
     T operator ->() const { return ptr; }
@@ -300,6 +299,15 @@ class RootedVar
     const T * address() const { return &ptr; }
     T & reference() { return ptr; }
     T raw() { return ptr; }
+
+    /*
+     * This method is only necessary due to an obscure C++98 requirement (that
+     * there be an accessible, usable copy constructor when passing a temporary
+     * to an implicitly-called constructor for use with a const-ref parameter).
+     * (Head spinning yet?)  We can remove this when we build the JS engine
+     * with -std=c++11.
+     */
+    operator Handle<T> () const { return Handle<T>(*this); }
 
     T & operator =(T value)
     {
@@ -317,6 +325,9 @@ class RootedVar
   private:
     T ptr;
     Root<T> root;
+
+    RootedVar() MOZ_DELETE;
+    RootedVar(const RootedVar &) MOZ_DELETE;
 };
 
 template <typename T> template <typename S>
