@@ -38,6 +38,7 @@
 
 #include "ARIAGridAccessible.h"
 
+#include "Accessible-inl.h"
 #include "AccIterator.h"
 #include "nsAccUtils.h"
 #include "Role.h"

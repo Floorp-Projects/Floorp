@@ -42,22 +42,19 @@
 #import "mozView.h"
 #import "nsRoleMap.h"
 
+#include "Accessible-inl.h"
+#include "nsIAccessibleRelation.h"
+#include "nsIAccessibleText.h"
+#include "nsIAccessibleEditableText.h"
+#include "nsRootAccessible.h"
+#include "Relation.h"
+#include "Role.h"
+
+#include "mozilla/Services.h"
 #include "nsRect.h"
 #include "nsCocoaUtils.h"
 #include "nsCoord.h"
 #include "nsObjCExceptions.h"
-
-#include "nsIAccessible.h"
-#include "nsIAccessibleRelation.h"
-#include "nsIAccessibleText.h"
-#include "nsIAccessibleEditableText.h"
-#include "Relation.h"
-#include "Role.h"
-
-#include "nsAccessNode.h"
-#include "nsRootAccessible.h"
-
-#include "mozilla/Services.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

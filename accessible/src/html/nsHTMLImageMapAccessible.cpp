@@ -40,6 +40,7 @@
 #include "nsHTMLImageMapAccessible.h"
 
 #include "nsAccUtils.h"
+#include "nsARIAMap.h"
 #include "nsDocAccessible.h"
 #include "Role.h"
 

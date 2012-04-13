@@ -40,9 +40,8 @@
 #ifndef _nsARIAMap_H_
 #define _nsARIAMap_H_
 
-#include "mozilla/a11y/ARIAStateMap.h"
+#include "ARIAStateMap.h"
 #include "mozilla/a11y/Role.h"
-#include "prtypes.h"
 
 class nsIAtom;
 class nsIContent;
