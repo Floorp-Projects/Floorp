@@ -240,6 +240,7 @@ install.rdf
 modules/JSON.jsm
 modules/SpatialNavigation.js
 modules/utils.js
+modules/services-sync/engines/apps.js
 mozilla-runtime@BIN_SUFFIX@
 old-homepage-default.properties
 README.txt
@@ -1044,6 +1045,7 @@ xpicleanup@BIN_SUFFIX@
   modules/services-sync/base_records/keys.js
   modules/services-sync/base_records/wbo.js
   modules/services-sync/constants.js
+  modules/services-sync/engines/apps.js
   modules/services-sync/engines/bookmarks.js
   modules/services-sync/engines/clients.js
   modules/services-sync/engines/forms.js
