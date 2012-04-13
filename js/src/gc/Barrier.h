@@ -292,6 +292,9 @@ class EncapsulatedValue
     ~EncapsulatedValue() {}
 
   public:
+    inline bool operator==(const EncapsulatedValue &v) const { return value == v.value; }
+    inline bool operator!=(const EncapsulatedValue &v) const { return value != v.value; }
+
     const Value &get() const { return value; }
     Value *unsafeGet() { return &value; }
     operator const Value &() const { return value; }
@@ -363,6 +366,18 @@ class HeapValue : public EncapsulatedValue
   private:
     inline void post();
     inline void post(JSCompartment *comp);
+};
+
+class RelocatableValue : public EncapsulatedValue
+{
+  public:
+    explicit inline RelocatableValue();
+    explicit inline RelocatableValue(const Value &v);
+    explicit inline RelocatableValue(const RelocatableValue &v);
+    inline ~RelocatableValue();
+
+    inline RelocatableValue &operator=(const Value &v);
+    inline RelocatableValue &operator=(const RelocatableValue &v);
 };
 
 class HeapSlot : public EncapsulatedValue
