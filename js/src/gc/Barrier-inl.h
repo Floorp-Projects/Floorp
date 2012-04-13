@@ -124,7 +124,6 @@ HeapValue::init(const Value &v)
 inline void
 HeapValue::init(JSCompartment *comp, const Value &v)
 {
-    JS_ASSERT(!IsPoisonedValue(v));
     value = v;
     post(comp);
 }

@@ -86,11 +86,11 @@ js_PutArgsObject(StackFrame *fp)
 }
 
 ArgumentsObject *
-ArgumentsObject::create(JSContext *cx, uint32_t argc, HandleObject callee)
+ArgumentsObject::create(JSContext *cx, uint32_t argc, JSObject &callee)
 {
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
 
-    RootedVarObject proto(cx, callee->global().getOrCreateObjectPrototype(cx));
+    JSObject *proto = callee.global().getOrCreateObjectPrototype(cx);
     if (!proto)
         return NULL;
 
@@ -100,7 +100,7 @@ ArgumentsObject::create(JSContext *cx, uint32_t argc, HandleObject callee)
     if (!type)
         return NULL;
 
-    bool strict = callee->toFunction()->inStrictMode();
+    bool strict = callee.toFunction()->inStrictMode();
     Class *clasp = strict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
 
     RootedVarShape emptyArgumentsShape(cx);
@@ -120,7 +120,7 @@ ArgumentsObject::create(JSContext *cx, uint32_t argc, HandleObject callee)
     if (!data)
         return NULL;
 
-    data->callee.init(ObjectValue(*callee));
+    data->callee.init(ObjectValue(callee));
     for (HeapValue *vp = data->slots; vp != data->slots + argc; vp++)
         vp->init(UndefinedValue());
     data->deletedBits = (size_t *)(data->slots + argc);
@@ -149,8 +149,7 @@ ArgumentsObject::create(JSContext *cx, StackFrame *fp)
 {
     JS_ASSERT(fp->script()->needsArgsObj());
 
-    ArgumentsObject *argsobj = ArgumentsObject::create(cx, fp->numActualArgs(),
-                                                       RootedVarObject(cx, &fp->callee()));
+    ArgumentsObject *argsobj = ArgumentsObject::create(cx, fp->numActualArgs(), fp->callee());
     if (!argsobj)
         return NULL;
 
@@ -171,7 +170,7 @@ ArgumentsObject::create(JSContext *cx, StackFrame *fp)
 ArgumentsObject *
 ArgumentsObject::createUnexpected(JSContext *cx, StackFrame *fp)
 {
-    ArgumentsObject *argsobj = create(cx, fp->numActualArgs(), RootedVarObject(cx, &fp->callee()));
+    ArgumentsObject *argsobj = create(cx, fp->numActualArgs(), fp->callee());
     if (!argsobj)
         return NULL;
 
@@ -276,31 +275,31 @@ args_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
 {
     *objp = NULL;
 
-    RootedVar<NormalArgumentsObject*> argsobj(cx, &obj->asNormalArguments());
+    NormalArgumentsObject &argsobj = obj->asNormalArguments();
 
     unsigned attrs = JSPROP_SHARED | JSPROP_SHADOWABLE;
     if (JSID_IS_INT(id)) {
         uint32_t arg = uint32_t(JSID_TO_INT(id));
-        if (arg >= argsobj->initialLength() || argsobj->isElementDeleted(arg))
+        if (arg >= argsobj.initialLength() || argsobj.isElementDeleted(arg))
             return true;
 
         attrs |= JSPROP_ENUMERATE;
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
-        if (argsobj->hasOverriddenLength())
+        if (argsobj.hasOverriddenLength())
             return true;
     } else {
         if (!JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom))
             return true;
 
-        if (argsobj->callee().isMagic(JS_OVERWRITTEN_CALLEE))
+        if (argsobj.callee().isMagic(JS_OVERWRITTEN_CALLEE))
             return true;
     }
 
     Value undef = UndefinedValue();
-    if (!js_DefineProperty(cx, argsobj, id, &undef, ArgGetter, ArgSetter, attrs))
+    if (!js_DefineProperty(cx, &argsobj, id, &undef, ArgGetter, ArgSetter, attrs))
         return JS_FALSE;
 
-    *objp = argsobj;
+    *objp = &argsobj;
     return true;
 }
 
@@ -405,13 +404,12 @@ StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     if (!obj->isStrictArguments())
         return true;
 
-    RootedVar<StrictArgumentsObject*> argsobj(cx, &obj->asStrictArguments());
-    RootId idRoot(cx, &id);
+    StrictArgumentsObject &argsobj = obj->asStrictArguments();
 
     if (JSID_IS_INT(id)) {
         unsigned arg = unsigned(JSID_TO_INT(id));
-        if (arg < argsobj->initialLength()) {
-            argsobj->setElement(arg, *vp);
+        if (arg < argsobj.initialLength()) {
+            argsobj.setElement(arg, *vp);
             return true;
         }
     } else {
@@ -425,8 +423,8 @@ StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
      * collect its value.
      */
     AutoValueRooter tvr(cx);
-    return js_DeleteGeneric(cx, argsobj, id, tvr.addr(), strict) &&
-           js_SetPropertyHelper(cx, argsobj, id, 0, vp, strict);
+    return js_DeleteGeneric(cx, &argsobj, id, tvr.addr(), strict) &&
+           js_SetPropertyHelper(cx, &argsobj, id, 0, vp, strict);
 }
 
 static JSBool

@@ -208,8 +208,7 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
      *
      * create() leaves the clone's enclosingScope unset. We set it below.
      */
-    RootedVar<ClonedBlockObject *> innermostNewChild(cx);
-    innermostNewChild = ClonedBlockObject::create(cx, *sharedBlock, fp);
+    ClonedBlockObject *innermostNewChild = ClonedBlockObject::create(cx, *sharedBlock, fp);
     if (!innermostNewChild)
         return NULL;
 
@@ -217,7 +216,7 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
      * Clone our way towards outer scopes until we reach the innermost
      * enclosing function, or the innermost block we've already cloned.
      */
-    RootedVar<ClonedBlockObject *> newChild(cx, innermostNewChild);
+    ClonedBlockObject *newChild = innermostNewChild;
     for (;;) {
         JS_ASSERT(newChild->getProto() == sharedBlock);
         sharedBlock = sharedBlock->enclosingBlock();
@@ -227,16 +226,17 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
             break;
 
         /* As in the call above, we don't know the real parent yet.  */
-        RootedVar<ClonedBlockObject *> clone(cx, ClonedBlockObject::create(cx, *sharedBlock, fp));
+        ClonedBlockObject *clone = ClonedBlockObject::create(cx, *sharedBlock, fp);
         if (!clone)
             return NULL;
 
-        if (!newChild->setEnclosingScope(cx, clone))
+        if (!newChild->setEnclosingScope(cx, *clone))
             return NULL;
         newChild = clone;
     }
-    if (!newChild->setEnclosingScope(cx, RootedVarObject(cx, &fp->scopeChain())))
+    if (!newChild->setEnclosingScope(cx, fp->scopeChain()))
         return NULL;
+
 
     /*
      * If we found a limit block belonging to this frame, then we should have
@@ -365,7 +365,7 @@ Class js_NoSuchMethodClass = {
  * parameters.
  */
 bool
-js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval, Value *vp)
+js::OnUnknownMethod(JSContext *cx, JSObject *obj, Value idval, Value *vp)
 {
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
     AutoValueRooter tvr(cx);
@@ -379,13 +379,13 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval, Value *vp)
 #if JS_HAS_XML_SUPPORT
         /* Extract the function name from function::name qname. */
         if (idval.isObject()) {
-            JSObject *obj = &idval.toObject();
+            obj = &idval.toObject();
             if (js_GetLocalNameFromFunctionQName(obj, &id, cx))
                 idval = IdToValue(id);
         }
 #endif
 
-        JSObject *obj = NewObjectWithClassProto(cx, &js_NoSuchMethodClass, NULL, NULL);
+        obj = NewObjectWithClassProto(cx, &js_NoSuchMethodClass, NULL, NULL);
         if (!obj)
             return false;
 
@@ -644,7 +644,7 @@ js::ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const V
 {
     JS_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
 
-    JS::Root<JSScript*> scriptRoot(cx, &script);
+    Root<JSScript*> scriptRoot(cx, &script);
 
     if (script->isEmpty()) {
         if (result)
@@ -924,7 +924,7 @@ EnterWith(JSContext *cx, int stackIndex)
     JS_ASSERT(stackIndex < 0);
     JS_ASSERT(fp->base() <= sp + stackIndex);
 
-    RootedVarObject obj(cx);
+    JSObject *obj;
     if (sp[-1].isObject()) {
         obj = &sp[-1].toObject();
     } else {
@@ -934,11 +934,11 @@ EnterWith(JSContext *cx, int stackIndex)
         sp[-1].setObject(*obj);
     }
 
-    RootedVarObject parent(cx, GetScopeChain(cx, fp));
+    JSObject *parent = GetScopeChain(cx, fp);
     if (!parent)
         return JS_FALSE;
 
-    JSObject *withobj = WithObject::create(cx, fp, obj, parent,
+    JSObject *withobj = WithObject::create(cx, fp, *obj, *parent,
                                            sp + stackIndex - fp->base());
     if (!withobj)
         return JS_FALSE;
@@ -1222,10 +1222,10 @@ inline InterpreterFrames::~InterpreterFrames()
     context->runtime->interpreterFrames = older;
 }
 
-#if defined(DEBUG) && !defined(JS_THREADSAFE) && !defined(JSGC_ROOT_ANALYSIS)
+#if defined(DEBUG) && !defined(JS_THREADSAFE)
 void
 js::AssertValidPropertyCacheHit(JSContext *cx,
-                                JSObject *start_, JSObject *found,
+                                JSObject *start, JSObject *found,
                                 PropertyCacheEntry *entry)
 {
     jsbytecode *pc;
@@ -1234,8 +1234,7 @@ js::AssertValidPropertyCacheHit(JSContext *cx,
     uint64_t sample = cx->runtime->gcNumber;
     PropertyCacheEntry savedEntry = *entry;
 
-    RootedVarPropertyName name(cx, GetNameFromBytecode(cx, pc, JSOp(*pc), js_CodeSpec[*pc]));
-    RootedVarObject start(cx, start_);
+    PropertyName *name = GetNameFromBytecode(cx, pc, JSOp(*pc), js_CodeSpec[*pc]);
 
     JSObject *obj, *pobj;
     JSProperty *prop;
@@ -1295,7 +1294,7 @@ IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
             return true;
         }
     }
-    if (!js_IteratorMore(cx, RootedVarObject(cx, iterobj), rval))
+    if (!js_IteratorMore(cx, iterobj, rval))
         return false;
     *cond = rval->isTrue();
     return true;
@@ -1545,24 +1544,10 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
     /* Copy in hot values that change infrequently. */
     JSRuntime *const rt = cx->runtime;
-    RootedVar<JSScript*> script(cx);
+    JSScript *script;
     SET_SCRIPT(regs.fp()->script());
     Value *argv = regs.fp()->maybeFormalArgs();
     CHECK_INTERRUPT_HANDLER();
-
-    /*
-     * Pool of rooters for use in this interpreter frame. References to these
-     * are used for local variables within interpreter cases. This avoids
-     * creating new rooters each time an interpreter case is entered, and also
-     * correctness pitfalls due to incorrect compilation of destructor calls
-     * around computed gotos.
-     */
-    RootedVarValue rootValue0(cx), rootValue1(cx);
-    RootedVarString rootString0(cx), rootString1(cx);
-    RootedVarObject rootObject0(cx), rootObject1(cx);
-    RootedVarFunction rootFunction0(cx);
-    RootedVarTypeObject rootType0(cx);
-    RootedVarPropertyName rootName0(cx);
 
     if (rt->profilingScripts)
         ENABLE_INTERRUPTS();
@@ -2496,15 +2481,11 @@ END_CASE(JSOP_POS)
 
 BEGIN_CASE(JSOP_DELNAME)
 {
-    RootedVarPropertyName &name = rootName0;
+    PropertyName *name;
     LOAD_NAME(0, name);
-
-    RootedVarObject &scopeObj = rootObject0;
-    scopeObj = cx->stack.currentScriptedScopeChain();
-
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!FindProperty(cx, name, scopeObj, &obj, &obj2, &prop))
+    if (!FindProperty(cx, name, cx->stack.currentScriptedScopeChain(), &obj, &obj2, &prop))
         goto error;
 
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
@@ -2743,10 +2724,10 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     bool construct = (*regs.pc == JSOP_NEW);
 
-    RootedVarFunction &fun = rootFunction0;
+    JSFunction *fun;
 
     /* Don't bother trying to fast-path calls to scripted non-constructors. */
-    if (!IsFunctionObject(args.calleev(), fun.address()) || !fun->isInterpretedConstructor()) {
+    if (!IsFunctionObject(args.calleev(), &fun) || !fun->isInterpretedConstructor()) {
         if (construct) {
             if (!InvokeConstructorKernel(cx, args))
                 goto error;
@@ -2840,15 +2821,12 @@ END_CASE(JSOP_SETCALL)
 
 BEGIN_CASE(JSOP_IMPLICITTHIS)
 {
-    RootedVarPropertyName &name = rootName0;
+    PropertyName *name;
     LOAD_NAME(0, name);
-
-    RootedVarObject &scopeObj = rootObject0;
-    scopeObj = cx->stack.currentScriptedScopeChain();
 
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!FindPropertyHelper(cx, name, false, scopeObj, &obj, &obj2, &prop))
+    if (!FindPropertyHelper(cx, name, false, cx->stack.currentScriptedScopeChain(), &obj, &obj2, &prop))
         goto error;
 
     Value v;
@@ -2863,9 +2841,8 @@ BEGIN_CASE(JSOP_CALLGNAME)
 BEGIN_CASE(JSOP_NAME)
 BEGIN_CASE(JSOP_CALLNAME)
 {
-    RootedVarValue &rval = rootValue0;
-
-    if (!NameOperation(cx, regs.pc, rval.address()))
+    Value rval;
+    if (!NameOperation(cx, regs.pc, &rval))
         goto error;
 
     PUSH_COPY(rval);
@@ -3138,8 +3115,7 @@ BEGIN_CASE(JSOP_DEFVAR)
         attrs |= JSPROP_READONLY;
 
     /* Step 8b. */
-    RootedVarObject &obj = rootObject0;
-    obj = &regs.fp()->varObj();
+    JSObject &obj = regs.fp()->varObj();
 
     if (!DefVarOrConstOperation(cx, obj, dn, attrs))
         goto error;
@@ -3154,11 +3130,10 @@ BEGIN_CASE(JSOP_DEFFUN)
      * a compound statement (not at the top statement level of global code, or
      * at the top level of a function body).
      */
-    RootedVarFunction &fun = rootFunction0;
-    fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
+    JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
     JSObject *obj = fun;
 
-    RootedVarObject &obj2 = rootObject0;
+    JSObject *obj2;
     if (fun->isNullClosure()) {
         /*
          * Even a null closure needs a parent for principals finding.
@@ -3263,13 +3238,12 @@ END_CASE(JSOP_DEFFUN)
 BEGIN_CASE(JSOP_LAMBDA)
 {
     /* Load the specified function object literal. */
-    RootedVarFunction &fun = rootFunction0;
-    fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
+    JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
     JSObject *obj = fun;
 
     /* do-while(0) so we can break instead of using a goto. */
     do {
-        RootedVarObject &parent = rootObject0;
+        JSObject *parent;
         if (fun->isNullClosure()) {
             parent = &regs.fp()->scopeChain();
         } else {
@@ -3431,11 +3405,9 @@ END_CASE(JSOP_NEWARRAY)
 
 BEGIN_CASE(JSOP_NEWOBJECT)
 {
-    RootedVarObject &baseobj = rootObject0;
-    baseobj = script->getObject(GET_UINT32_INDEX(regs.pc));
+    JSObject *baseobj = script->getObject(GET_UINT32_INDEX(regs.pc));
 
-    RootedVarObject &obj = rootObject1;
-    obj = CopyInitializerObject(cx, baseobj);
+    JSObject *obj = CopyInitializerObject(cx, baseobj);
     if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj))
         goto error;
 
@@ -3459,8 +3431,7 @@ BEGIN_CASE(JSOP_INITPROP)
     Value rval = regs.sp[-1];
 
     /* Load the object being initialized into lval/obj. */
-    RootedVarObject &obj = rootObject0;
-    obj = &regs.sp[-2].toObject();
+    JSObject *obj = &regs.sp[-2].toObject();
     JS_ASSERT(obj->isObject());
 
     JSAtom *atom;

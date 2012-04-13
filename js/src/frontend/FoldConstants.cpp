@@ -230,8 +230,8 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
     ParseNodeKind kind = pn->getKind();
     ParseNode **pnp = &pn->pn_head;
     ParseNode *pn1 = *pnp;
-    RootedVarString accum(cx);
-    RootedVarString str(cx);
+    JSString *accum = NULL;
+    JSString *str = NULL;
     if ((pn->pn_xflags & PNX_CANTFOLD) == 0) {
         if (kind == PNK_XMLETAGO)
             accum = cx->runtime->atomState.etagoAtom;
@@ -745,13 +745,15 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         /* Handle a binary string concatenation. */
         JS_ASSERT(pn->isArity(PN_BINARY));
         if (pn1->isKind(PNK_STRING) || pn2->isKind(PNK_STRING)) {
+            JSString *left, *right, *str;
+
             if (!FoldType(cx, !pn1->isKind(PNK_STRING) ? pn1 : pn2, PNK_STRING))
                 return false;
             if (!pn1->isKind(PNK_STRING) || !pn2->isKind(PNK_STRING))
                 return true;
-            RootedVarString left(cx, pn1->pn_atom);
-            RootedVarString right(cx, pn2->pn_atom);
-            RootedVarString str(cx, js_ConcatStrings(cx, left, right));
+            left = pn1->pn_atom;
+            right = pn2->pn_atom;
+            str = js_ConcatStrings(cx, left, right);
             if (!str)
                 return false;
             pn->pn_atom = js_AtomizeString(cx, str);

@@ -322,7 +322,7 @@ extern void
 UnwindForUncatchableException(JSContext *cx, const FrameRegs &regs);
 
 extern bool
-OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval, Value *vp);
+OnUnknownMethod(JSContext *cx, JSObject *obj, Value idval, Value *vp);
 
 extern bool
 IsActiveWithOrBlock(JSContext *cx, JSObject &obj, uint32_t stackDepth);

@@ -965,7 +965,7 @@ JSContext::JSContext(JSRuntime *rt)
 #ifdef JSGC_ROOT_ANALYSIS
     PodArrayZero(thingGCRooters);
 #ifdef DEBUG
-    skipGCRooters = NULL;
+    checkGCRooters = NULL;
 #endif
 #endif
 }

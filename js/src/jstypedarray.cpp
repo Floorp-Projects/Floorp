@@ -473,10 +473,10 @@ ArrayBuffer::obj_getGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, js
         return true;
     }
 
-    RootedVarObject delegate(cx, DelegateObject(cx, obj));
+    JSObject *delegate = DelegateObject(cx, obj);
     if (!delegate)
         return false;
-    return js_GetProperty(cx, delegate, RootedVarObject(cx, receiver), id, vp);
+    return js_GetProperty(cx, delegate, receiver, id, vp);
 }
 
 JSBool
@@ -489,19 +489,19 @@ ArrayBuffer::obj_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, P
         return true;
     }
 
-    RootedVarObject delegate(cx, DelegateObject(cx, obj));
+    JSObject *delegate = DelegateObject(cx, obj);
     if (!delegate)
         return false;
-    return js_GetProperty(cx, delegate, RootedVarObject(cx, receiver), ATOM_TO_JSID(name), vp);
+    return js_GetProperty(cx, delegate, receiver, ATOM_TO_JSID(name), vp);
 }
 
 JSBool
 ArrayBuffer::obj_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index, Value *vp)
 {
-    RootedVarObject delegate(cx, DelegateObject(cx, getArrayBuffer(obj)));
+    JSObject *delegate = DelegateObject(cx, getArrayBuffer(obj));
     if (!delegate)
         return false;
-    return js_GetElement(cx, delegate, RootedVarObject(cx, receiver), index, vp);
+    return js_GetElement(cx, delegate, receiver, index, vp);
 }
 
 JSBool
@@ -526,10 +526,6 @@ ArrayBuffer::obj_setGeneric(JSContext *cx, JSObject *obj, jsid id, Value *vp, JS
     if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom))
         return true;
 
-    RootedVarObject delegate(cx, DelegateObject(cx, obj));
-    if (!delegate)
-        return false;
-
     if (JSID_IS_ATOM(id, cx->runtime->atomState.protoAtom)) {
         // setting __proto__ = null
         // effectively removes the prototype chain.
@@ -549,6 +545,9 @@ ArrayBuffer::obj_setGeneric(JSContext *cx, JSObject *obj, jsid id, Value *vp, JS
         // and we don't modify our prototype chain
         // since obj_getProperty will fetch it as a plain
         // property from the delegate.
+        JSObject *delegate = DelegateObject(cx, obj);
+        if (!delegate)
+            return false;
 
         JSObject *oldDelegateProto = delegate->getProto();
 
@@ -572,6 +571,10 @@ ArrayBuffer::obj_setGeneric(JSContext *cx, JSObject *obj, jsid id, Value *vp, JS
         return true;
     }
 
+    JSObject *delegate = DelegateObject(cx, obj);
+    if (!delegate)
+        return false;
+
     return js_SetPropertyHelper(cx, delegate, id, 0, vp, strict);
 }
 
@@ -584,7 +587,7 @@ ArrayBuffer::obj_setProperty(JSContext *cx, JSObject *obj, PropertyName *name, V
 JSBool
 ArrayBuffer::obj_setElement(JSContext *cx, JSObject *obj, uint32_t index, Value *vp, JSBool strict)
 {
-    RootedVarObject delegate(cx, DelegateObject(cx, obj));
+    JSObject *delegate = DelegateObject(cx, obj);
     if (!delegate)
         return false;
 

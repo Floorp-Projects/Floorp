@@ -1014,15 +1014,14 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     /* XXX must do at least once per new thread, so do it per JSContext... */
     FIX_FPU();
 
-    RootedVar<GlobalObject*> global(cx, &obj->asGlobal());
+    GlobalObject *global = &obj->asGlobal();
 
-    RootedVarObject numberProto(cx, global->createBlankPrototype(cx, &NumberClass));
+    JSObject *numberProto = global->createBlankPrototype(cx, &NumberClass);
     if (!numberProto)
         return NULL;
     numberProto->asNumber().setPrimitiveValue(0);
 
-    RootedVarFunction ctor(cx);
-    ctor = global->createConstructor(cx, Number, CLASS_ATOM(cx, Number), 1);
+    JSFunction *ctor = global->createConstructor(cx, Number, CLASS_ATOM(cx, Number), 1);
     if (!ctor)
         return NULL;
 

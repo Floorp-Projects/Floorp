@@ -244,7 +244,7 @@ fun_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSObject *
-ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
+ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
 {
 #ifdef DEBUG
     JSFunction *fun = obj->toFunction();
@@ -267,7 +267,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
     JSObject *objProto = obj->global().getOrCreateObjectPrototype(cx);
     if (!objProto)
         return NULL;
-    RootedVarObject proto(cx, NewObjectWithGivenProto(cx, &ObjectClass, objProto, NULL));
+    JSObject *proto = NewObjectWithGivenProto(cx, &ObjectClass, objProto, NULL);
     if (!proto || !proto->setSingletonType(cx))
         return NULL;
 
@@ -1078,7 +1078,7 @@ Function(JSContext *cx, unsigned argc, Value *vp)
                     return OnBadFormal(cx, tt);
 
                 /* Check for a duplicate parameter name. */
-                RootedVar<PropertyName*> name(cx, ts.currentToken().name());
+                PropertyName *name = ts.currentToken().name();
                 if (bindings.hasBinding(cx, name)) {
                     JSAutoByteString bytes;
                     if (!js_AtomToPrintableString(cx, name, &bytes))
@@ -1150,7 +1150,7 @@ IsBuiltinFunctionConstructor(JSFunction *fun)
 }
 
 const Shape *
-LookupInterpretedFunctionPrototype(JSContext *cx, RootedVarObject funobj)
+LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj)
 {
 #ifdef DEBUG
     JSFunction *fun = funobj->toFunction();
@@ -1160,11 +1160,10 @@ LookupInterpretedFunctionPrototype(JSContext *cx, RootedVarObject funobj)
 #endif
 
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
-    RootedVar<const Shape*> shape(cx, funobj->nativeLookup(cx, id));
+    const Shape *shape = funobj->nativeLookup(cx, id);
     if (!shape) {
         if (!ResolveInterpretedFunctionPrototype(cx, funobj))
             return NULL;
-        id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
         shape = funobj->nativeLookup(cx, id);
     }
     JS_ASSERT(!shape->configurable());
@@ -1177,13 +1176,11 @@ LookupInterpretedFunctionPrototype(JSContext *cx, RootedVarObject funobj)
 
 JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, Native native, unsigned nargs,
-               unsigned flags, HandleObject parent, JSAtom *atom_, js::gc::AllocKind kind)
+               unsigned flags, HandleObject parent, JSAtom *atom, js::gc::AllocKind kind)
 {
     JS_ASSERT(kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
     JS_ASSERT(sizeof(JSFunction) <= gc::Arena::thingSize(JSFunction::FinalizeKind));
     JS_ASSERT(sizeof(FunctionExtended) <= gc::Arena::thingSize(JSFunction::ExtendedFinalizeKind));
-
-    RootedVarAtom atom(cx, atom_);
 
     JSFunction *fun;
 
@@ -1221,8 +1218,8 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, unsigned nargs,
 }
 
 JSFunction * JS_FASTCALL
-js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
-                       HandleObject proto, gc::AllocKind kind)
+js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
+                       JSObject *proto, gc::AllocKind kind)
 {
     JS_ASSERT(parent);
     JS_ASSERT(proto);

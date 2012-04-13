@@ -53,11 +53,9 @@ using namespace js;
 using namespace js::frontend;
 
 bool
-DefineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript* script)
+DefineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script)
 {
-    Root<JSScript*> root(cx, &script);
-
-    HandleObject globalObj = globalScope.globalObj;
+    JSObject *globalObj = globalScope.globalObj;
 
     /* Define and update global properties. */
     for (size_t i = 0; i < globalScope.defs.length(); i++) {
@@ -167,6 +165,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 {
     TokenKind tt;
     ParseNode *pn;
+    JSScript *script;
     bool inDirectivePrologue;
 
     JS_ASSERT(!(tcflags & ~(TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL | TCF_COMPILE_FOR_EVAL
@@ -200,7 +199,8 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JS_ASSERT_IF(globalObj, globalObj->isNative());
     JS_ASSERT_IF(globalObj, JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(globalObj->getClass()));
 
-    RootedVar<JSScript*> script(cx);
+    /* Null script early in case of error, to reduce our code footprint. */
+    script = NULL;
 
     GlobalScope globalScope(cx, globalObj, &bce);
     bce.flags |= tcflags;
