@@ -859,10 +859,7 @@ class IDLSequenceType(IDLType):
     def isDistinguishableFrom(self, other):
         return (other.isPrimitive() or other.isString() or other.isEnum() or
                 other.isDictionary() or other.isDate() or
-                # XXXbz we should also be checking for indexed
-                # properties on interfaces
-                (other.isInterface() and not other.isCallback() and
-                 not other.isArrayBuffer()))
+                (other.isInterface() and not other.isCallback()))
 
 class IDLArrayType(IDLType):
     def __init__(self, location, parameterType):
@@ -935,10 +932,7 @@ class IDLArrayType(IDLType):
     def isDistinguishableFrom(self, other):
         return (other.isPrimitive() or other.isString() or other.isEnum() or
                 other.isDictionary() or other.isDate() or
-                # XXXbz we should also be checking for indexed
-                # properties on interfaces
-                (other.isInterface() and not other.isCallback() and
-                 not other.isArrayBuffer()))
+                (other.isInterface() and not other.isCallback()))
 
 class IDLTypedefType(IDLType, IDLObjectWithIdentifier):
     def __init__(self, location, innerType, name):
@@ -1068,8 +1062,6 @@ class IDLWrapperType(IDLType):
         if other.isDictionary() or other.isCallback():
             return not self.isCallback()
         if other.isSequence() or other.isArray():
-            # XXXbz should also check self for enumerated properties
-            # and the like
             return not self.isCallback()
 
 class IDLBuiltinType(IDLType):
@@ -1168,12 +1160,10 @@ class IDLBuiltinType(IDLType):
             return not other.isVoid()
         # Not much else we could be!
         assert self.isArrayBuffer()
-        # Like interfaces, but we know we're not a callback and we
-        # know that we have indexed properties.
-        # XXXbz this should be checking for indexed properties on
-        # other when other.isInterface()
+        # Like interfaces, but we know we're not a callback
         return (other.isPrimitive() or other.isString() or other.isEnum() or
-                other.isCallback() or other.isDictionary() or other.isDate() or
+                other.isCallback() or other.isDictionary() or
+                other.isSequence() or other.isArray() or other.isDate() or
                 (other.isInterface() and not other.isArrayBuffer()))
 
 BuiltinTypes = {
