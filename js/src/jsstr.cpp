@@ -2648,10 +2648,13 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
 
     /* Steps 11-15. */
     JSObject *aobj;
-    if (!re.initialized())
-        aobj = SplitHelper(cx, strlin, limit, SplitStringMatcher(cx, sepstr), type);
-    else
-        aobj = SplitHelper(cx, strlin, limit, SplitRegExpMatcher(*re, cx->regExpStatics()), type);
+    if (!re.initialized()) {
+        SplitStringMatcher matcher(cx, sepstr);
+        aobj = SplitHelper(cx, strlin, limit, matcher, type);
+    } else {
+        SplitRegExpMatcher matcher(*re, cx->regExpStatics());
+        aobj = SplitHelper(cx, strlin, limit, matcher, type);
+    }
     if (!aobj)
         return false;
 
