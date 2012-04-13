@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "Accessible-inl.h"
 #include "AccIterator.h"
 #include "nsAccCache.h"
 #include "nsAccessibilityService.h"

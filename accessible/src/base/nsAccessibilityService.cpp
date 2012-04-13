@@ -39,6 +39,7 @@
 #include "nsAccessibilityService.h"
 
 // NOTE: alphabetically ordered
+#include "Accessible-inl.h"
 #include "ARIAGridAccessibleWrap.h"
 #ifdef MOZ_ACCESSIBILITY_ATK
 #include "AtkSocketAccessible.h"

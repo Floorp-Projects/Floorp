@@ -38,7 +38,7 @@
 #ifndef AccGroupInfo_h_
 #define AccGroupInfo_h_
 
-#include "nsAccessible.h"
+#include "Accessible-inl.h"
 #include "nsAccUtils.h"
 
 /**

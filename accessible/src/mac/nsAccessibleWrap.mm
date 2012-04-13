@@ -41,6 +41,7 @@
 
 #import "nsRoleMap.h"
 
+#include "Accessible-inl.h"
 #include "Role.h"
 
 #import "mozAccessible.h"

@@ -36,18 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCoreUtils.h"
 #include "nsAccUtils.h"
 
-#include "nsIAccessibleTypes.h"
-#include "Role.h"
-#include "States.h"
-
+#include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsARIAMap.h"
+#include "nsCoreUtils.h"
 #include "nsDocAccessible.h"
 #include "nsHyperTextAccessible.h"
+#include "nsIAccessibleTypes.h"
 #include "nsTextAccessible.h"
+#include "Role.h"
+#include "States.h"
 
 #include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
