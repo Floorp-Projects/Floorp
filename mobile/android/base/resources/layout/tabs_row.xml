@@ -41,7 +41,7 @@
               android:textAppearance="?android:attr/textAppearanceSmall"
               android:textColor="#E5F2FF"
               android:singleLine="false"
-              android:maxLines="3"
+              android:maxLines="4"
               android:ellipsize="middle"
               android:shadowColor="#000000"
               android:shadowRadius="1"
