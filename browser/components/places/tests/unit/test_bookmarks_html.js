@@ -183,11 +183,14 @@ add_test(function test_emptytitle_export()
 {
   // Test exporting and importing with an empty-titled bookmark.
   // 1. import bookmarks
-  // 1. create an empty-titled bookmark.
-  // 2. export to bookmarks.exported.html
-  // 3. empty bookmarks db
-  // 4. import bookmarks.exported.html
-  // 5. run the test-suite
+  // 2. create an empty-titled bookmark.
+  // 3. export to bookmarks.exported.html
+  // 4. empty bookmarks db
+  // 5. import bookmarks.exported.html
+  // 6. run the test-suite
+  // 7. remove the empty-titled bookmark
+  // 8. export to bookmarks.exported.html
+  // 9. empty bookmarks db and continue
 
   try {
     BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true, function(success) {
@@ -232,6 +235,83 @@ add_test(function test_emptytitle_export()
       } else {
         do_throw("couldn't import the exported file.");
       }
+    });
+  } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
+});
+
+add_test(function test_import_chromefavicon()
+{
+  // Test exporting and importing with a bookmark pointing to a chrome favicon.
+  // 1. import bookmarks
+  // 2. create a bookmark pointing to a chrome favicon.
+  // 3. export to bookmarks.exported.html
+  // 4. empty bookmarks db
+  // 5. import bookmarks.exported.html
+  // 6. run the test-suite
+  // 7. remove the bookmark pointing to a chrome favicon.
+  // 8. export to bookmarks.exported.html
+  // 9. empty bookmarks db and continue
+
+  const PAGE_URI = NetUtil.newURI("http://example.com/chromefavicon_page");
+  const CHROME_FAVICON_URI = NetUtil.newURI("chrome://global/skin/icons/information-16.png");
+  const CHROME_FAVICON_URI_2 = NetUtil.newURI("chrome://global/skin/icons/error-16.png");
+
+  try {
+    BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true, function(success) {
+      if (!success) {
+        do_throw("couldn't import the exported file.");
+      }
+      let id = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
+                                                    PAGE_URI,
+                                                    PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                                    "Test");
+
+      PlacesUtils.favicons.setAndFetchFaviconForPage(
+        PAGE_URI, CHROME_FAVICON_URI, true, function () {
+          PlacesUtils.favicons.getFaviconDataForPage(
+            PAGE_URI, function (aURI, aDataLen, aData, aMimeType) {
+              let base64Icon = "data:image/png;base64," +
+                  base64EncodeString(String.fromCharCode.apply(String, aData));
+
+              test_bookmarks.unfiled.push(
+                { title: "Test", url: PAGE_URI.spec, icon: base64Icon });
+
+              try {
+                exporter.exportHTMLToFile(gBookmarksFileNew);
+              } catch(ex) { do_throw("couldn't export to file: " + ex); }
+
+              // Change the favicon to check it's really imported again later.
+              PlacesUtils.favicons.setAndFetchFaviconForPage(
+                PAGE_URI, CHROME_FAVICON_URI_2, true, function () {
+
+                  remove_all_bookmarks();
+
+                  try {
+                    BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true, function(success) {
+                     if (!success) {
+                        do_throw("couldn't import the exported file.");
+                      }
+                      waitForAsyncUpdates(function () {
+                        testImportedBookmarks();
+
+                        // Cleanup.
+                        test_bookmarks.unfiled.pop();
+                        PlacesUtils.bookmarks.removeItem(id);
+
+                        try {
+                          exporter.exportHTMLToFile(gBookmarksFileNew);
+                        } catch(ex) { do_throw("couldn't export to file: " + ex); }
+
+                        waitForAsyncUpdates(function () {
+                          remove_all_bookmarks();
+                          run_next_test();
+                        });
+                      });
+                    });
+                  } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
+                });
+            });
+        });
     });
   } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
 });

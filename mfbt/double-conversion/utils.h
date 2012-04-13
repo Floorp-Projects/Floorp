@@ -1,4 +1,4 @@
-// Copyright 2006-2008 the V8 project authors. All rights reserved.
+// Copyright 2010 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -25,17 +25,104 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef V8_UTILS_H_
-#define V8_UTILS_H_
+#ifndef DOUBLE_CONVERSION_UTILS_H_
+#define DOUBLE_CONVERSION_UTILS_H_
 
 #include <stdlib.h>
 #include <string.h>
 
-namespace v8 {
-namespace internal {
+#include <assert.h>
+#ifndef ASSERT
+#define ASSERT(condition)      (assert(condition))
+#endif
+#ifndef UNIMPLEMENTED
+#define UNIMPLEMENTED() (abort())
+#endif
+#ifndef UNREACHABLE
+#define UNREACHABLE()   (abort())
+#endif
 
-// ----------------------------------------------------------------------------
-// General helper functions
+// Double operations detection based on target architecture.
+// Linux uses a 80bit wide floating point stack on x86. This induces double
+// rounding, which in turn leads to wrong results.
+// An easy way to test if the floating-point operations are correct is to
+// evaluate: 89255.0/1e22. If the floating-point stack is 64 bits wide then
+// the result is equal to 89255e-22.
+// The best way to test this, is to create a division-function and to compare
+// the output of the division with the expected result. (Inlining must be
+// disabled.)
+// On Linux,x86 89255e-22 != Div_double(89255.0/1e22)
+#if defined(_M_X64) || defined(__x86_64__) || \
+    defined(__ARMEL__) || \
+    defined(_MIPS_ARCH_MIPS32R2)
+#define DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS 1
+#elif defined(_M_IX86) || defined(__i386__)
+#if defined(_WIN32)
+// Windows uses a 64bit wide floating point stack.
+#define DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS 1
+#else
+#undef DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS
+#endif  // _WIN32
+#else
+#error Target architecture was not detected as supported by Double-Conversion.
+#endif
+
+
+#include "mozilla/StandardInteger.h"
+
+// The following macro works on both 32 and 64-bit platforms.
+// Usage: instead of writing 0x1234567890123456
+//      write UINT64_2PART_C(0x12345678,90123456);
+#define UINT64_2PART_C(a, b) (((static_cast<uint64_t>(a) << 32) + 0x##b##u))
+
+
+// The expression ARRAY_SIZE(a) is a compile-time constant of type
+// size_t which represents the number of elements of the given
+// array. You should only use ARRAY_SIZE on statically allocated
+// arrays.
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(a)                                   \
+  ((sizeof(a) / sizeof(*(a))) /                         \
+  static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
+#endif
+
+// A macro to disallow the evil copy constructor and operator= functions
+// This should be used in the private: declarations for a class
+#ifndef DISALLOW_COPY_AND_ASSIGN
+#define DISALLOW_COPY_AND_ASSIGN(TypeName)      \
+  TypeName(const TypeName&);                    \
+  void operator=(const TypeName&)
+#endif
+
+// A macro to disallow all the implicit constructors, namely the
+// default constructor, copy constructor and operator= functions.
+//
+// This should be used in the private: declarations for a class
+// that wants to prevent anyone from instantiating it. This is
+// especially useful for classes containing only static methods.
+#ifndef DISALLOW_IMPLICIT_CONSTRUCTORS
+#define DISALLOW_IMPLICIT_CONSTRUCTORS(TypeName) \
+  TypeName();                                    \
+  DISALLOW_COPY_AND_ASSIGN(TypeName)
+#endif
+
+namespace double_conversion {
+
+static const int kCharSize = sizeof(char);
+
+// Returns the maximum of the two parameters.
+template <typename T>
+static T Max(T a, T b) {
+  return a < b ? b : a;
+}
+
+
+// Returns the minimum of the two parameters.
+template <typename T>
+static T Min(T a, T b) {
+  return a < b ? a : b;
+}
+
 
 inline int StrLength(const char* string) {
   size_t length = strlen(string);
@@ -43,9 +130,7 @@ inline int StrLength(const char* string) {
   return static_cast<int>(length);
 }
 
-// ----------------------------------------------------------------------------
-// Miscellaneous
-
+// This is a simplified version of V8's Vector class.
 template <typename T>
 class Vector {
  public:
@@ -54,8 +139,20 @@ class Vector {
     ASSERT(length == 0 || (length > 0 && data != NULL));
   }
 
+  // Returns a vector using the same backing storage as this one,
+  // spanning from and including 'from', to but not including 'to'.
+  Vector<T> SubVector(int from, int to) {
+    ASSERT(to <= length_);
+    ASSERT(from < to);
+    ASSERT(0 <= from);
+    return Vector<T>(start() + from, to - from);
+  }
+
   // Returns the length of the vector.
   int length() const { return length_; }
+
+  // Returns whether or not the vector is empty.
+  bool is_empty() const { return length_ == 0; }
 
   // Returns the pointer to the start of the data in the vector.
   T* start() const { return start_; }
@@ -66,10 +163,9 @@ class Vector {
     return start_[index];
   }
 
-  inline Vector<T> operator+(int offset) {
-    ASSERT(offset < length_);
-    return Vector<T>(start_ + offset, length_ - offset);
-  }
+  T& first() { return start_[0]; }
+
+  T& last() { return start_[length_ - 1]; }
 
  private:
   T* start_;
@@ -82,11 +178,21 @@ class Vector {
 // buffer bounds on all operations in debug mode.
 class StringBuilder {
  public:
-
   StringBuilder(char* buffer, int size)
       : buffer_(buffer, size), position_(0) { }
 
   ~StringBuilder() { if (!is_finalized()) Finalize(); }
+
+  int size() const { return buffer_.length(); }
+
+  // Get the current position in the builder.
+  int position() const {
+    ASSERT(!is_finalized());
+    return position_;
+  }
+
+  // Reset the position.
+  void Reset() { position_ = 0; }
 
   // Add a single character to the builder. It is not allowed to add
   // 0-characters; use the Finalize() method to terminate the string
@@ -99,21 +205,39 @@ class StringBuilder {
 
   // Add an entire string to the builder. Uses strlen() internally to
   // compute the length of the input string.
-  void AddString(const char* s);
+  void AddString(const char* s) {
+    AddSubstring(s, StrLength(s));
+  }
 
   // Add the first 'n' characters of the given string 's' to the
   // builder. The input string must have enough characters.
-  void AddSubstring(const char* s, int n);
+  void AddSubstring(const char* s, int n) {
+    ASSERT(!is_finalized() && position_ + n < buffer_.length());
+    ASSERT(static_cast<size_t>(n) <= strlen(s));
+    memmove(&buffer_[position_], s, n * kCharSize);
+    position_ += n;
+  }
 
-  // Add an integer to the builder.
-  void AddInteger(int n);
 
   // Add character padding to the builder. If count is non-positive,
   // nothing is added to the builder.
-  void AddPadding(char c, int count);
+  void AddPadding(char c, int count) {
+    for (int i = 0; i < count; i++) {
+      AddCharacter(c);
+    }
+  }
 
   // Finalize the string by 0-terminating it and returning the buffer.
-  char* Finalize();
+  char* Finalize() {
+    ASSERT(!is_finalized() && position_ < buffer_.length());
+    buffer_[position_] = '\0';
+    // Make sure nobody managed to add a 0-character to the
+    // buffer while building the string.
+    ASSERT(strlen(buffer_.start()) == static_cast<size_t>(position_));
+    position_ = -1;
+    ASSERT(is_finalized());
+    return buffer_.start();
+  }
 
  private:
   Vector<char> buffer_;
@@ -123,7 +247,6 @@ class StringBuilder {
 
   DISALLOW_IMPLICIT_CONSTRUCTORS(StringBuilder);
 };
-
 
 // The type-based aliasing rule allows the compiler to assume that pointers of
 // different types (for some definition of different) never alias each other.
@@ -156,10 +279,15 @@ inline Dest BitCast(const Source& source) {
   typedef char VerifySizesAreEqual[sizeof(Dest) == sizeof(Source) ? 1 : -1];
 
   Dest dest;
-  memcpy(&dest, &source, sizeof(dest));
+  memmove(&dest, &source, sizeof(dest));
   return dest;
 }
 
-} }  // namespace v8::internal
+template <class Dest, class Source>
+inline Dest BitCast(Source* source) {
+  return BitCast<Dest>(reinterpret_cast<uintptr_t>(source));
+}
 
-#endif  // V8_UTILS_H_
+}  // namespace double_conversion
+
+#endif  // DOUBLE_CONVERSION_UTILS_H_

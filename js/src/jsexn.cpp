@@ -112,9 +112,9 @@ Class js::ErrorClass = {
 };
 
 template <typename T>
-struct JSStackTraceElemImpl {
+struct JSStackTraceElemImpl
+{
     T                   funName;
-    size_t              argc;
     const char          *filename;
     unsigned            ulineno;
 };
@@ -122,7 +122,8 @@ struct JSStackTraceElemImpl {
 typedef JSStackTraceElemImpl<HeapPtrString> JSStackTraceElem;
 typedef JSStackTraceElemImpl<JSString *>    JSStackTraceStackElem;
 
-typedef struct JSExnPrivate {
+struct JSExnPrivate
+{
     /* A copy of the JSErrorReport originally generated. */
     JSErrorReport       *errorReport;
     js::HeapPtrString   message;
@@ -131,7 +132,7 @@ typedef struct JSExnPrivate {
     size_t              stackDepth;
     int                 exnType;
     JSStackTraceElem    stackElems[1];
-} JSExnPrivate;
+};
 
 static JSString *
 StackTraceToString(JSContext *cx, JSExnPrivate *priv);
@@ -257,20 +258,6 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
     return copy;
 }
 
-static HeapValue *
-GetStackTraceValueBuffer(JSExnPrivate *priv)
-{
-    /*
-     * We use extra memory after JSExnPrivateInfo.stackElems to store jsvals
-     * that helps to produce more informative stack traces. The following
-     * assert allows us to assume that no gap after stackElems is necessary to
-     * align the buffer properly.
-     */
-    JS_STATIC_ASSERT(sizeof(JSStackTraceElem) % sizeof(jsval) == 0);
-
-    return reinterpret_cast<HeapValue *>(priv->stackElems + priv->stackDepth);
-}
-
 struct SuppressErrorsGuard
 {
     JSContext *cx;
@@ -290,45 +277,6 @@ struct SuppressErrorsGuard
     }
 };
 
-struct AppendWrappedArg {
-    JSContext *cx;
-    AutoValueVector &values;
-    AppendWrappedArg(JSContext *cx, AutoValueVector &values)
-      : cx(cx),
-        values(values)
-    {}
-
-    bool operator()(unsigned, Value *vp) {
-        Value v = *vp;
-
-        /*
-         * Try to wrap.
-         *
-         * If wrap() fails, there's a good chance that it's because we're
-         * already in the process of throwing a native stack limit exception.
-         *
-         * This causes wrap() to throw, but it can't actually create an exception
-         * because we're already making one here, and cx->generatingError is true.
-         * So it returns false without an exception set on the stack. If we propagate
-         * that, it constitutes an uncatchable exception.
-         *
-         * So we just ignore exceptions. If wrap actually does set a pending
-         * exception, or if the caller sloppily left an exception on cx (which the
-         * e4x parser does), it doesn't matter - it will be overwritten shortly.
-         *
-         * NB: In the sloppy e4x case, one might thing we should clear the
-         * exception before calling wrap(). But wrap() has to be ok with pending
-         * exceptions, since it wraps exception objects during cross-compartment
-         * unwinding.
-         */
-        if (!cx->compartment->wrap(cx, &v))
-            v = JSVAL_VOID;
-
-        /* Append the value. */
-        return values.append(v);
-    }
-};
-
 static void
 SetExnPrivate(JSContext *cx, JSObject *exnObject, JSExnPrivate *priv);
 
@@ -342,17 +290,14 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     JSCheckAccessOp checkAccess = cx->runtime->securityCallbacks->checkObjectAccess;
 
     Vector<JSStackTraceStackElem> frames(cx);
-    AutoValueVector values(cx);
     {
         SuppressErrorsGuard seg(cx);
         for (FrameRegsIter i(cx); !i.done(); ++i) {
             StackFrame *fp = i.fp();
 
             /*
-             * Ask the crystal CAPS ball whether we can see values across
-             * compartment boundaries.
-             *
-             * NB: 'fp' may point to cross-compartment values that require wrapping.
+             * Ask the crystal CAPS ball whether we can see across compartments.
+             * NB: this means 'fp' may point to cross-compartment frames.
              */
             if (checkAccess && fp->isNonEvalFunctionFrame()) {
                 Value v = NullValue();
@@ -364,15 +309,10 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
             if (!frames.growBy(1))
                 return false;
             JSStackTraceStackElem &frame = frames.back();
-            if (fp->isNonEvalFunctionFrame()) {
+            if (fp->isNonEvalFunctionFrame())
                 frame.funName = fp->fun()->atom ? fp->fun()->atom : cx->runtime->emptyString;
-                frame.argc = fp->numActualArgs();
-                if (!fp->forEachCanonicalActualArg(AppendWrappedArg(cx, values)))
-                    return false;
-            } else {
+            else
                 frame.funName = NULL;
-                frame.argc = 0;
-            }
             if (fp->isScriptFrame()) {
                 frame.filename = SaveScriptFilename(cx, fp->script()->filename);
                 if (!frame.filename)
@@ -389,8 +329,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     JS_STATIC_ASSERT(sizeof(JSStackTraceElem) <= sizeof(StackFrame));
 
     size_t nbytes = offsetof(JSExnPrivate, stackElems) +
-                    frames.length() * sizeof(JSStackTraceElem) +
-                    values.length() * sizeof(HeapValue);
+                    frames.length() * sizeof(JSStackTraceElem);
 
     JSExnPrivate *priv = (JSExnPrivate *)cx->malloc_(nbytes);
     if (!priv)
@@ -420,19 +359,11 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     priv->lineno = lineno;
     priv->stackDepth = frames.length();
     priv->exnType = exnType;
-
-    JSStackTraceElem *framesDest = priv->stackElems;
-    HeapValue *valuesDest = reinterpret_cast<HeapValue *>(framesDest + frames.length());
-    JS_ASSERT(valuesDest == GetStackTraceValueBuffer(priv));
-
     for (size_t i = 0; i < frames.length(); ++i) {
-        framesDest[i].funName.init(frames[i].funName);
-        framesDest[i].argc = frames[i].argc;
-        framesDest[i].filename = frames[i].filename;
-        framesDest[i].ulineno = frames[i].ulineno;
+        priv->stackElems[i].funName.init(frames[i].funName);
+        priv->stackElems[i].filename = frames[i].filename;
+        priv->stackElems[i].ulineno = frames[i].ulineno;
     }
-    for (size_t i = 0; i < values.length(); ++i)
-        valuesDest[i].init(cx->compartment, values[i]);
 
     SetExnPrivate(cx, exnObject, priv);
     return true;
@@ -448,29 +379,19 @@ GetExnPrivate(JSObject *obj)
 static void
 exn_trace(JSTracer *trc, JSObject *obj)
 {
-    JSExnPrivate *priv;
-    JSStackTraceElem *elem;
-    size_t vcount, i;
-    HeapValue *vp;
-
-    priv = GetExnPrivate(obj);
-    if (priv) {
+    if (JSExnPrivate *priv = GetExnPrivate(obj)) {
         if (priv->message)
             MarkString(trc, &priv->message, "exception message");
         if (priv->filename)
             MarkString(trc, &priv->filename, "exception filename");
 
-        elem = priv->stackElems;
-        for (vcount = i = 0; i != priv->stackDepth; ++i, ++elem) {
-            if (elem->funName)
-                MarkString(trc, &elem->funName, "stack trace function name");
-            if (IS_GC_MARKING_TRACER(trc) && elem->filename)
-                MarkScriptFilename(elem->filename);
-            vcount += elem->argc;
+        for (size_t i = 0; i != priv->stackDepth; ++i) {
+            JSStackTraceElem &elem = priv->stackElems[i];
+            if (elem.funName)
+                MarkString(trc, &elem.funName, "stack trace function name");
+            if (IS_GC_MARKING_TRACER(trc) && elem.filename)
+                MarkScriptFilename(elem.filename);
         }
-        vp = GetStackTraceValueBuffer(priv);
-        for (i = 0; i != vcount; ++i, ++vp)
-            MarkValue(trc, vp, "stack trace argument");
     }
 }
 
@@ -590,57 +511,11 @@ js_ErrorFromException(JSContext *cx, jsval exn)
 }
 
 static JSString *
-ValueToShortSource(JSContext *cx, const Value &v)
-{
-    JSString *str;
-
-    /* Avoid toSource bloat and fallibility for object types. */
-    if (!v.isObject())
-        return js_ValueToSource(cx, v);
-
-    JSObject *obj = &v.toObject();
-    AutoCompartment ac(cx, obj);
-    if (!ac.enter())
-        return NULL;
-
-    if (obj->isFunction()) {
-        /*
-         * XXX Avoid function decompilation bloat for now.
-         */
-        str = JS_GetFunctionId(obj->toFunction());
-        if (!str && !(str = js_ValueToSource(cx, v))) {
-            /*
-             * Continue to soldier on if the function couldn't be
-             * converted into a string.
-             */
-            JS_ClearPendingException(cx);
-            str = JS_NewStringCopyZ(cx, "[unknown function]");
-        }
-    } else {
-        /*
-         * XXX Avoid toString on objects, it takes too long and uses too much
-         * memory, for too many classes (see Mozilla bug 166743).
-         */
-        char buf[100];
-        JS_snprintf(buf, sizeof buf, "[object %s]", js::UnwrapObject(obj, false)->getClass()->name);
-        str = JS_NewStringCopyZ(cx, buf);
-    }
-
-    ac.leave();
-
-    if (!str || !cx->compartment->wrap(cx, &str))
-        return NULL;
-    return str;
-}
-
-static JSString *
 StackTraceToString(JSContext *cx, JSExnPrivate *priv)
 {
     jschar *stackbuf;
     size_t stacklen, stackmax;
     JSStackTraceElem *elem, *endElem;
-    HeapValue *values;
-    size_t i;
     JSString *str;
     const char *cp;
     char ulnbuf[11];
@@ -691,22 +566,10 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
         stacklen += length_;                                                  \
     JS_END_MACRO
 
-    values = GetStackTraceValueBuffer(priv);
     elem = priv->stackElems;
     for (endElem = elem + priv->stackDepth; elem != endElem; elem++) {
-        if (elem->funName) {
+        if (elem->funName)
             APPEND_STRING_TO_STACK(elem->funName);
-            APPEND_CHAR_TO_STACK('(');
-            for (i = 0; i != elem->argc; i++, values++) {
-                if (i > 0)
-                    APPEND_CHAR_TO_STACK(',');
-                str = ValueToShortSource(cx, *values);
-                if (!str)
-                    goto bad;
-                APPEND_STRING_TO_STACK(str);
-            }
-            APPEND_CHAR_TO_STACK(')');
-        }
         APPEND_CHAR_TO_STACK('@');
         if (elem->filename) {
             for (cp = elem->filename; *cp; cp++)
@@ -1359,14 +1222,8 @@ js_CopyErrorObject(JSContext *cx, JSObject *errobj, JSObject *scope)
     assertSameCompartment(cx, scope);
     JSExnPrivate *priv = GetExnPrivate(errobj);
 
-    uint32_t stackDepth = priv->stackDepth;
-    size_t valueCount = 0;
-    for (uint32_t i = 0; i < stackDepth; i++)
-        valueCount += priv->stackElems[i].argc;
-
     size_t size = offsetof(JSExnPrivate, stackElems) +
-                  stackDepth * sizeof(JSStackTraceElem) +
-                  valueCount * sizeof(jsval);
+                  priv->stackDepth * sizeof(JSStackTraceElem);
 
     JSExnPrivate *copy = (JSExnPrivate *)cx->malloc_(size);
     if (!copy)

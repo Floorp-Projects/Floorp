@@ -126,8 +126,8 @@ let webappsUI = {
     let message = bundle.getFormattedString("webapps.requestInstall",
                                             [manifest.name, host], 2);
 
-    aWindow.PopupNotifications.show(aBrowser, "webapps-install", message, "webapps-notification-icon",
-                                                       mainAction, null, { popupIconURL: manifest.iconURLForSize(64) });
+    aWindow.PopupNotifications.show(aBrowser, "webapps-install", message,
+                                    "webapps-notification-icon", mainAction);
 
   }
 }

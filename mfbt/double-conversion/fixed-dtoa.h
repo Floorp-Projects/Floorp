@@ -25,34 +25,32 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef V8_FAST_DTOA_H_
-#define V8_FAST_DTOA_H_
+#ifndef DOUBLE_CONVERSION_FIXED_DTOA_H_
+#define DOUBLE_CONVERSION_FIXED_DTOA_H_
 
-namespace v8 {
-namespace internal {
+#include "utils.h"
 
-// FastDtoa will produce at most kFastDtoaMaximalLength digits. This does not
-// include the terminating '\0' character.
-static const int kFastDtoaMaximalLength = 17;
+namespace double_conversion {
 
-// Provides a decimal representation of v.
-// v must be a strictly positive finite double.
-// Returns true if it succeeds, otherwise the result can not be trusted.
-// There will be *length digits inside the buffer followed by a null terminator.
-// If the function returns true then
-//   v == (double) (buffer * 10^(point - length)).
-// The digits in the buffer are the shortest representation possible: no
-// 0.099999999999 instead of 0.1.
-// The last digit will be closest to the actual v. That is, even if several
-// digits might correctly yield 'v' when read again, the buffer will contain the
-// one closest to v.
-// The variable 'sign' will be '0' if the given number is positive, and '1'
-//   otherwise.
-bool FastDtoa(double d,
-              Vector<char> buffer,
-              int* length,
-              int* point);
+// Produces digits necessary to print a given number with
+// 'fractional_count' digits after the decimal point.
+// The buffer must be big enough to hold the result plus one terminating null
+// character.
+//
+// The produced digits might be too short in which case the caller has to fill
+// the gaps with '0's.
+// Example: FastFixedDtoa(0.001, 5, ...) is allowed to return buffer = "1", and
+// decimal_point = -2.
+// Halfway cases are rounded towards +/-Infinity (away from 0). The call
+// FastFixedDtoa(0.15, 2, ...) thus returns buffer = "2", decimal_point = 0.
+// The returned buffer may contain digits that would be truncated from the
+// shortest representation of the input.
+//
+// This method only works for some parameters. If it can't handle the input it
+// returns false. The output is null-terminated when the function succeeds.
+bool FastFixedDtoa(double v, int fractional_count,
+                   Vector<char> buffer, int* length, int* decimal_point);
 
-} }  // namespace v8::internal
+}  // namespace double_conversion
 
-#endif  // V8_FAST_DTOA_H_
+#endif  // DOUBLE_CONVERSION_FIXED_DTOA_H_
