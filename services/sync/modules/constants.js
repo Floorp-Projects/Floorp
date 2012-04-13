@@ -109,7 +109,6 @@ HISTORY_STORE_BATCH_SIZE:              50,      // same as MOBILE_BATCH_SIZE
 FORMS_STORE_BATCH_SIZE:                50,      // same as MOBILE_BATCH_SIZE
 PASSWORDS_STORE_BATCH_SIZE:            50,      // same as MOBILE_BATCH_SIZE
 ADDONS_STORE_BATCH_SIZE:               1000000, // process all addons at once
-APPS_STORE_BATCH_SIZE:                 50,      // same as MOBILE_BATCH_SIZE
 
 // score thresholds for early syncs
 SINGLE_USER_THRESHOLD:                 1000,
