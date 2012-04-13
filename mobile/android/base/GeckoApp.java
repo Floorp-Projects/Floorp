@@ -123,7 +123,7 @@ abstract public class GeckoApp
     public static boolean mDOMFullScreen = false;
     public static Menu sMenu;
     private static GeckoThread sGeckoThread = null;
-    public GeckoAppHandler mMainHandler;
+    public Handler mMainHandler;
     private GeckoProfile mProfile;
     public static boolean sIsGeckoReady = false;
     public static int mOrientation;
@@ -144,9 +144,6 @@ abstract public class GeckoApp
     public String mLastTitle;
     private boolean mRestoreSession = false;
     private boolean mInitialized = false;
-
-    private static final String HANDLER_MSG_TYPE = "type";
-    private static final int HANDLER_MSG_TYPE_INITIALIZE = 1;
 
     static class ExtraMenuItem implements MenuItem.OnMenuItemClickListener {
         String label;
@@ -1580,7 +1577,7 @@ abstract public class GeckoApp
         }
 
         GeckoAppShell.loadMozGlue();
-        mMainHandler = new GeckoAppHandler();
+        mMainHandler = new Handler();
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onCreate");
         if (savedInstanceState != null) {
             mLastTitle = savedInstanceState.getString(SAVED_STATE_TITLE);
@@ -2006,23 +2003,20 @@ abstract public class GeckoApp
         // Undo whatever we did in onPause.
         super.onResume();
 
-        /* We load the initial UI and wait until it is shown to the user
-           to continue other initializations and loading about:home (if needed) */
-        if (!mInitialized) {
-            Bundle bundle = new Bundle();
-            bundle.putInt(HANDLER_MSG_TYPE, HANDLER_MSG_TYPE_INITIALIZE);
-            
-            Message message = mMainHandler.obtainMessage();
-            message.setData(bundle);
-            mMainHandler.sendMessage(message);
-        }
-
         int newOrientation = getResources().getConfiguration().orientation;
 
         if (mOrientation != newOrientation) {
             mOrientation = newOrientation;
             refreshActionBar();
         }
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+
+        if (!mInitialized && hasFocus)
+            initialize();
     }
 
     @Override
@@ -2834,24 +2828,6 @@ abstract public class GeckoApp
             }
         });
     }
-
-    public class GeckoAppHandler extends Handler {
-        @Override
-        public void handleMessage(Message message) {
-            Bundle bundle = message.getData();
-            if (bundle == null)
-                return;
-
-            int type = bundle.getInt(HANDLER_MSG_TYPE);
-
-            switch (type) {
-                case HANDLER_MSG_TYPE_INITIALIZE:
-                    initialize();
-                    break;
-
-            }
-        }
-    } 
 }
 
 class PluginLayoutParams extends AbsoluteLayout.LayoutParams
