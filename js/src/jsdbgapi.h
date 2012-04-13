@@ -91,6 +91,7 @@ JS_FRIEND_API(void) js_DumpValue(const js::Value &val);
 JS_FRIEND_API(void) js_DumpId(jsid id);
 JS_FRIEND_API(void) js_DumpStackFrame(JSContext *cx, js::StackFrame *start = NULL);
 #endif
+JS_FRIEND_API(void) js_DumpBacktrace(JSContext *cx);
 
 JS_BEGIN_EXTERN_C
 #endif
