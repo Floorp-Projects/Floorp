@@ -2249,9 +2249,14 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 .popup-notification-icon[popupid="addon-install-cancelled"],
 .popup-notification-icon[popupid="addon-install-blocked"],
 .popup-notification-icon[popupid="addon-install-failed"],
-.popup-notification-icon[popupid="addon-install-complete"],
-.popup-notification-icon[popupid="click-to-play-plugins"] {
+.popup-notification-icon[popupid="addon-install-complete"] {
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.png);
+  width: 32px;
+  height: 32px;
+}
+
+.popup-notification-icon[popupid="click-to-play-plugins"] {
+  list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric.png);
   width: 32px;
   height: 32px;
 }
@@ -2355,6 +2360,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #webapps-notification-icon {
   list-style-image: url(chrome://browser/skin/webapps-16.png);
+}
+
+#plugins-notification-icon {
+  list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric-16.png);
 }
 
 #identity-popup-container {

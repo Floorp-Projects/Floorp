@@ -441,7 +441,8 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 #notification-popup-box[anchorid="indexedDB-notification-icon"] > #indexedDB-notification-icon,
 #notification-popup-box[anchorid="addons-notification-icon"] > #addons-notification-icon,
 #notification-popup-box[anchorid="password-notification-icon"] > #password-notification-icon,
-#notification-popup-box[anchorid="webapps-notification-icon"] > #webapps-notification-icon {
+#notification-popup-box[anchorid="webapps-notification-icon"] > #webapps-notification-icon,
+#notification-popup-box[anchorid="plugins-notification-icon"] > #plugins-notification-icon {
   display: -moz-box;
 }
 
