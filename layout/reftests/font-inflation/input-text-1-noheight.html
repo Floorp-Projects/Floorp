@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<style>
+div { font-size: 12px; line-height: 1.0; width: 450px }
+input { font-size: 12px; width: 200px }
+</style>
+<!--
+Because the width of the input element is constrained, font inflation
+should be disabled for the input element, but not the div containing
+it.
+-->
+<div>test<input type="text" value="Hello world"></div>
