@@ -28,6 +28,7 @@ public class AndroidBrowserHistoryDataExtender extends CachedSQLiteOpenHelper {
   // History Table.
   public static final String   TBL_HISTORY_EXT = "HistoryExtension";
   public static final String   COL_GUID = "guid";
+  public static final String   GUID_IS = COL_GUID + " = ?";
   public static final String   COL_VISITS = "visits";
   public static final String[] TBL_COLUMNS = { COL_GUID, COL_VISITS };
 
@@ -64,12 +65,11 @@ public class AndroidBrowserHistoryDataExtender extends CachedSQLiteOpenHelper {
    * If a row with GUID `guid` does not exist, insert a new row.
    * If a row with GUID `guid` does exist, replace the visits column.
    *
-   * @param guid The GUID to store to.
+   * @param db The database to write to; must not be null.
+   * @param guid The GUID to store to; must not be null.
    * @param visits New visits data.
    */
-  public void store(String guid, JSONArray visits) {
-    SQLiteDatabase db = this.getCachedWritableDatabase();
-
+  protected void store(SQLiteDatabase db, String guid, JSONArray visits) {
     ContentValues cv = new ContentValues();
     cv.put(COL_GUID, guid);
     if (visits == null) {
@@ -78,9 +78,8 @@ public class AndroidBrowserHistoryDataExtender extends CachedSQLiteOpenHelper {
       cv.put(COL_VISITS, visits.toJSONString());
     }
 
-    String where = COL_GUID + " = ?";
     String[] args = new String[] { guid };
-    int rowsUpdated = db.update(TBL_HISTORY_EXT, cv, where, args);
+    int rowsUpdated = db.update(TBL_HISTORY_EXT, cv, GUID_IS, args);
     if (rowsUpdated >= 1) {
       Logger.debug(LOG_TAG, "Replaced history extension record for row with GUID " + guid);
     } else {
@@ -89,20 +88,30 @@ public class AndroidBrowserHistoryDataExtender extends CachedSQLiteOpenHelper {
     }
   }
 
+  /**
+   * Store visit data.
+   *
+   * If a row with GUID `guid` does not exist, insert a new row.
+   * If a row with GUID `guid` does exist, replace the visits column.
+   *
+   * @param guid the GUID to store; must not be null.
+   * @param visits new visits data.
+   */
+  public void store(String guid, JSONArray visits) {
+    SQLiteDatabase db = this.getCachedWritableDatabase();
+    store(db, guid, visits);
+  }
+
+  /**
+   * Store (update or insert) visit data in a single database transaction.
+   */
   public void bulkInsert(ArrayList<HistoryRecord> records) {
     SQLiteDatabase db = this.getCachedWritableDatabase();
     try {
       db.beginTransaction();
 
       for (HistoryRecord record : records) {
-        ContentValues cv = new ContentValues();
-        cv.put(COL_GUID, record.guid);
-        if (record.visits == null) {
-          cv.put(COL_VISITS, "[]");
-        } else {
-          cv.put(COL_VISITS, record.visits.toJSONString());
-        }
-        db.insert(TBL_HISTORY_EXT, null, cv);
+        store(db, record.guid, record.visits);
       }
 
       db.setTransactionSuccessful();
@@ -121,13 +130,11 @@ public class AndroidBrowserHistoryDataExtender extends CachedSQLiteOpenHelper {
    * @throws NullCursorException
    */
   public Cursor fetch(String guid) throws NullCursorException {
-    String where = COL_GUID + " = ?";
     String[] args = new String[] { guid };
 
     SQLiteDatabase db = this.getCachedReadableDatabase();
-    Cursor cur = queryHelper.safeQuery(db, ".fetch", TBL_HISTORY_EXT,
-        TBL_COLUMNS,
-        where, args);
+    Cursor cur = queryHelper.safeQuery(db, ".fetch",
+        TBL_HISTORY_EXT, TBL_COLUMNS, GUID_IS, args);
     return cur;
   }
 
@@ -154,21 +161,20 @@ public class AndroidBrowserHistoryDataExtender extends CachedSQLiteOpenHelper {
   /**
    * Delete a row.
    *
-   * @param guid The GUID of the row to delete.
+   * @param guid the GUID of the row to delete.
    * @return The number of rows deleted, either 0 (if a row with this GUID does not exist) or 1.
    */
   public int delete(String guid) {
-    String where = COL_GUID + " = ?";
     String[] args = new String[] { guid };
 
     SQLiteDatabase db = this.getCachedWritableDatabase();
-    return db.delete(TBL_HISTORY_EXT, where, args);
+    return db.delete(TBL_HISTORY_EXT, GUID_IS, args);
   }
 
   /**
    * Fetch all rows.
    *
-   * @return A Cursor.
+   * @return a <code>Cursor</code>.
    * @throws NullCursorException
    */
   public Cursor fetchAll() throws NullCursorException {
