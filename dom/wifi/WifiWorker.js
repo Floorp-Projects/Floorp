@@ -1093,7 +1093,8 @@ function WifiWorker() {
 
   this._mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
   const messages = ["WifiManager:setEnabled", "WifiManager:getNetworks",
-                    "WifiManager:associate", "WifiManager:getState"];
+                    "WifiManager:associate", "WifiManager:forget",
+                    "WifiManager:getState"];
 
   messages.forEach((function(msgName) {
     this._mm.addMessageListener(msgName, this);
@@ -1681,7 +1682,8 @@ WifiWorker.prototype = {
 
     let self = this;
     let configured = this.configuredNetworks[ssid];
-    this._reconnectOnDisconnect = (this._currentNetwork.ssid === ssid);
+    this._reconnectOnDisconnect = (this.currentNetwork &&
+                                  (this.currentNetwork.ssid === ssid));
     WifiManager.removeNetwork(configured.netId, function(ok) {
       if (!ok) {
         self._sendMessage(message, false, "Unable to remove the network", rid, mid);
