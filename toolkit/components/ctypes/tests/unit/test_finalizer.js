@@ -13,6 +13,9 @@ function run_test()
                            ctypes.default_abi,
                            ctypes.bool,
                            ctypes.size_t);
+  let released = function released(value, witness) {
+    return witness == undefined;
+  };
 
   let samples = [];
   samples.push(
@@ -31,7 +34,8 @@ function run_test()
                                ctypes.bool,
                                ctypes.size_t,
                                ctypes.size_t),
-      status: status
+      status: status,
+      released: released
   });
   samples.push(
     {
@@ -49,7 +53,8 @@ function run_test()
                                ctypes.bool,
                                ctypes.size_t,
                                ctypes.size_t),
-      status: status
+      status: status,
+      released: released
   });
   samples.push(
     {
@@ -67,7 +72,8 @@ function run_test()
                                ctypes.bool,
                                ctypes.int32_t,
                                ctypes.int32_t),
-      status: status
+      status: status,
+      released: released
     }
   );
   samples.push(
@@ -86,7 +92,8 @@ function run_test()
                                ctypes.bool,
                                ctypes.int64_t,
                                ctypes.int64_t),
-      status: status
+      status: status,
+      released: released
     }
   );
   samples.push(
@@ -105,7 +112,8 @@ function run_test()
                                ctypes.bool,
                                ctypes.void_t.ptr,
                                ctypes.void_t.ptr),
-      status: status
+      status: status,
+      released: released
     }
   );
   samples.push(
@@ -124,7 +132,8 @@ function run_test()
                                ctypes.bool,
                                ctypes.char.ptr,
                                ctypes.char.ptr),
-      status: status
+      status: status,
+      released: released
     }
   );
   const rect_t = new ctypes.StructType("RECT",
@@ -148,7 +157,8 @@ function run_test()
                                ctypes.bool,
                                rect_t,
                                rect_t),
-      status: status
+      status: status,
+      released: released
     }
   );
   samples.push(
@@ -167,12 +177,40 @@ function run_test()
                                ctypes.bool,
                                ctypes.size_t,
                                ctypes.size_t),
-      status: status
+      status: status,
+      released: function released_eq(i, witness) {
+        return i == witness;
+      }
     }
   );
   samples.push(
     {
-      name: "null",
+      name: "size_t, release returns RECT",
+      acquire: library.declare("test_finalizer_acq_size_t",
+                           ctypes.default_abi,
+                           ctypes.size_t,
+                           ctypes.size_t),
+      release: library.declare("test_finalizer_rel_size_t_return_struct_t",
+                               ctypes.default_abi,
+                               rect_t,
+                               ctypes.size_t),
+      compare: library.declare("test_finalizer_cmp_size_t",
+                               ctypes.default_abi,
+                               ctypes.bool,
+                               ctypes.size_t,
+                               ctypes.size_t),
+      status: status,
+      released: function released_rect_eq(i, witness) {
+        return witness.top == i
+          && witness.bottom == i
+          && witness.left == i
+          && witness.right == i;
+      }
+    }
+  );
+  samples.push(
+    {
+      name: "using null",
       acquire: library.declare("test_finalizer_acq_null_t",
                            ctypes.default_abi,
                            ctypes.PointerType(ctypes.void_t),
@@ -189,18 +227,21 @@ function run_test()
                                ctypes.default_abi,
                                ctypes.bool,
                                ctypes.void_t.ptr,
-                               ctypes.void_t.ptr)
+                               ctypes.void_t.ptr),
+      released: released
     }
   );
 
   let tester = new ResourceTester(start, stop);
   samples.forEach(
-    function(sample) {
-      dump("Executing finalization test for data "+sample.name+"\n");
+    function run_sample(sample) {
+      dump("Executing finalization test for data " + sample.name + "\n");
       tester.launch(TEST_SIZE, test_executing_finalizers, sample);
       tester.launch(TEST_SIZE, test_do_not_execute_finalizers_on_referenced_stuff, sample);
       tester.launch(TEST_SIZE, test_executing_dispose, sample);
       tester.launch(TEST_SIZE, test_executing_forget, sample);
+      tester.launch(TEST_SIZE, test_result_dispose, sample);
+      dump("Successfully completed finalization test for data " + sample.name + "\n");
     }
   );
 
@@ -209,6 +250,7 @@ function run_test()
    * (see bug 727371)
   tester.launch(TEST_SIZE, test_cycles, samples[0]);
    */
+  dump("Successfully completed all finalization tests\n");
   library.close();
 }
 
@@ -229,7 +271,7 @@ function test_cycles(size, tc) {
   do_test_pending();
 
   Components.utils.schedulePreciseGC(
-    function() {
+    function after_gc() {
       // Check that _something_ has been finalized
       do_check_true(count_finalized(size, tc) > 0);
       do_test_finished();
@@ -257,7 +299,7 @@ function count_finalized(size, tc) {
  */
 function test_executing_finalizers(size, tc, cleanup)
 {
-  dump("test_executing_finalizers\n");
+  dump("test_executing_finalizers " + tc.name + "\n");
   // Allocate |size| items without references
   for (let i = 0; i < size; ++i) {
     cleanup.add(ctypes.CDataFinalizer(tc.acquire(i), tc.release));
@@ -266,6 +308,33 @@ function test_executing_finalizers(size, tc, cleanup)
 
   // Check that _something_ has been finalized
   do_check_true(count_finalized(size, tc) > 0);
+}
+
+/**
+ * Check that
+ * - |dispose| returns the proper result
+ */
+function test_result_dispose(size, tc, cleanup) {
+  dump("test_result_dispose " + tc.name + "\n");
+  let ref = [];
+  // Allocate |size| items with references
+  for (let i = 0; i < size; ++i) {
+    let value = ctypes.CDataFinalizer(tc.acquire(i), tc.release);
+    cleanup.add(value);
+    ref.push(value);
+  }
+  do_check_eq(count_finalized(size, tc), 0);
+
+  for (i = 0; i < size; ++i) {
+    let witness = ref[i].dispose();
+    ref[i] = null;
+    if (!tc.released(i, witness)) {
+      do_print("test_result_dispose failure at index "+i);
+      do_check_true(false);
+    }
+  }
+
+  do_check_eq(count_finalized(size, tc), size);
 }
 
 
