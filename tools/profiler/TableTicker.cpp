@@ -119,33 +119,27 @@ class ProfileEntry
 public:
   ProfileEntry()
     : mTagData(NULL)
-    , mLeafAddress(0)
     , mTagName(0)
   { }
 
   // aTagData must not need release (i.e. be a string from the text segment)
   ProfileEntry(char aTagName, const char *aTagData)
     : mTagData(aTagData)
-    , mLeafAddress(0)
-    , mTagName(aTagName)
-  { }
-
-  // aTagData must not need release (i.e. be a string from the text segment)
-  ProfileEntry(char aTagName, const char *aTagData, Address aLeafAddress)
-    : mTagData(aTagData)
-    , mLeafAddress(aLeafAddress)
     , mTagName(aTagName)
   { }
 
   ProfileEntry(char aTagName, double aTagFloat)
     : mTagFloat(aTagFloat)
-    , mLeafAddress(0)
     , mTagName(aTagName)
   { }
 
   ProfileEntry(char aTagName, uintptr_t aTagOffset)
     : mTagOffset(aTagOffset)
-    , mLeafAddress(0)
+    , mTagName(aTagName)
+  { }
+
+  ProfileEntry(char aTagName, Address aTagAddress)
+    : mTagAddress(aTagAddress)
     , mTagName(aTagName)
   { }
 
@@ -159,7 +153,6 @@ private:
     Address mTagAddress;
     uintptr_t mTagOffset;
   };
-  Address mLeafAddress;
   char mTagName;
 };
 
@@ -567,7 +560,7 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
     pc_array[count++] = reinterpret_cast<void*> (ip);
   }
 
-  aProfile.addTag(ProfileEntry('s', "(root)", 0));
+  aProfile.addTag(ProfileEntry('s', "(root)"));
   for (size_t i = count; i > 0; --i) {
     aProfile.addTag(ProfileEntry('l', reinterpret_cast<const char*>(pc_array[i - 1])));
   }
@@ -582,15 +575,17 @@ void doSampleStackTrace(ProfileStack *aStack, ThreadProfile &aProfile, TickSampl
   // followed by 0 or more 'c' tags.
   for (mozilla::sig_safe_t i = 0; i < aStack->mStackPointer; i++) {
     if (i == 0) {
-      Address pc = 0;
-      if (sample) {
-        pc = sample->pc;
-      }
-      aProfile.addTag(ProfileEntry('s', aStack->mStack[i], pc));
+      aProfile.addTag(ProfileEntry('s', aStack->mStack[i]));
     } else {
       aProfile.addTag(ProfileEntry('c', aStack->mStack[i]));
     }
   }
+#ifdef ENABLE_SPS_LEAF_DATA
+  if (sample) {
+    Address pc = sample->pc;
+    aProfile.addTag(ProfileEntry('l', sample->pc));
+  }
+#endif
 }
 
 /* used to keep track of the last event that we sampled during */
@@ -679,12 +674,6 @@ std::ostream& operator<<(std::ostream& stream, const ProfileEntry& entry)
   } else {
     stream << entry.mTagName << "-" << entry.mTagData << "\n";
   }
-
-#ifdef ENABLE_SPS_LEAF_DATA
-  if (entry.mLeafAddress) {
-    stream << entry.mTagName << "-" << entry.mLeafAddress << "\n";
-  }
-#endif
   return stream;
 }
 
