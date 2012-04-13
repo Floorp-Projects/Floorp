@@ -791,7 +791,7 @@ let UI = {
         if (gBrowser.tabs.length > 1) {
           // Don't return to TabView if there are any app tabs
           for (let a = 0; a < gBrowser._numPinnedTabs; a++) {
-            if (!gBrowser.tabs[a].closing)
+            if (Utils.isValidXULTab(gBrowser.tabs[a]))
               return;
           }
 

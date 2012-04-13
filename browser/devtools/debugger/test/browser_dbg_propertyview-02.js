@@ -20,7 +20,7 @@ function test() {
 }
 
 function testSimpleCall() {
-  gPane.activeThread.addOneTimeListener("framesadded", function() {
+  gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
       let testScope = gDebugger.DebuggerView.Properties._addScope("test");
@@ -116,7 +116,7 @@ function testSimpleCall() {
       ok(!testScope.expanded,
         "Clicking again the testScope tilte should collapse it.");
 
-      gDebugger.StackFrames.activeThread.resume(function() {
+      gDebugger.DebuggerController.activeThread.resume(function() {
         closeDebuggerAndFinish(gTab);
       });
     }}, 0);

@@ -20,7 +20,7 @@ function test() {
 }
 
 function testSimpleCall() {
-  gPane.activeThread.addOneTimeListener("framesadded", function() {
+  gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
       let testScope = gDebugger.DebuggerView.Properties._addScope("test");
@@ -118,7 +118,7 @@ function testSimpleCall() {
       is(gDebugger.DebuggerView.Properties._vars.childNodes.length, 4,
         "The scope should have been removed from the parent container tree.");
 
-      gDebugger.StackFrames.activeThread.resume(function() {
+      gDebugger.DebuggerController.activeThread.resume(function() {
         closeDebuggerAndFinish(gTab);
       });
     }}, 0);

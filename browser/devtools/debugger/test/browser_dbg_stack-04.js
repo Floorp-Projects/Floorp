@@ -21,13 +21,13 @@ function test() {
 }
 
 function testEvalCallResume() {
-  gPane.activeThread.addOneTimeListener("framesadded", function() {
+  gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
-      let frames = gDebugger.DebuggerView.Stackframes._frames;
+      let frames = gDebugger.DebuggerView.StackFrames._frames;
       let childNodes = frames.childNodes;
 
-      is(gDebugger.StackFrames.activeThread.state, "paused",
+      is(gDebugger.DebuggerController.activeThread.state, "paused",
         "Should only be getting stack frames while paused.");
 
       is(frames.querySelectorAll(".dbg-stackframe").length, 2,
@@ -37,7 +37,7 @@ function testEvalCallResume() {
         "All children should be frames.");
 
 
-      gPane.activeThread.addOneTimeListener("framescleared", function() {
+      gDebugger.DebuggerController.activeThread.addOneTimeListener("framescleared", function() {
 
         is(frames.querySelectorAll(".dbg-stackframe").length, 0,
           "Should have no frames after resume");
@@ -51,7 +51,7 @@ function testEvalCallResume() {
         closeDebuggerAndFinish(gTab);
       });
 
-      gPane.activeThread.resume();
+      gDebugger.DebuggerController.activeThread.resume();
     }}, 0);
   });
 

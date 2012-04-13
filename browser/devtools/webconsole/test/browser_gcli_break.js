@@ -69,11 +69,12 @@ function testCreateCommands() {
   is(requisition.getStatus().toString(), "ERROR", "break add line is ERROR");
 
   let pane = DebuggerUI.toggleDebugger();
-  pane.onConnected = function test_onConnected(aPane) {
+  pane._frame.addEventListener("Debugger:Connecting", function dbgConnected() {
+    pane._frame.removeEventListener("Debugger:Connecting", dbgConnected, true);
+
     // Wait for the initial resume.
-    aPane.debuggerWindow.gClient.addOneTimeListener("resumed", function() {
-      delete aPane.onConnected;
-      aPane.debuggerWindow.gClient.activeThread.addOneTimeListener("framesadded", function() {
+    pane.debuggerWindow.gClient.addOneTimeListener("resumed", function() {
+      pane.debuggerWindow.gClient.activeThread.addOneTimeListener("framesadded", function() {
         type("break add line " + TEST_URI + " " + content.wrappedJSObject.line0);
         is(requisition.getStatus().toString(), "VALID", "break add line is VALID");
         requisition.exec();
@@ -82,7 +83,7 @@ function testCreateCommands() {
         is(requisition.getStatus().toString(), "VALID", "break list is VALID");
         requisition.exec();
 
-        aPane.debuggerWindow.gClient.activeThread.resume(function() {
+        pane.debuggerWindow.gClient.activeThread.resume(function() {
           type("break del 0");
           is(requisition.getStatus().toString(), "VALID", "break del 0 is VALID");
           requisition.exec();
@@ -94,7 +95,7 @@ function testCreateCommands() {
       // Trigger newScript notifications using eval.
       content.wrappedJSObject.firstCall();
     });
-  }
+  }, true);
 }
 
 function type(command) {
