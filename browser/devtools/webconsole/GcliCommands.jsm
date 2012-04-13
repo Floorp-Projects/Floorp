@@ -229,8 +229,8 @@ gcli.addCommand({
           let dbg = win.DebuggerUI.getDebugger(win.gBrowser.selectedTab);
           let files = [];
           if (dbg) {
-            let scriptsView = dbg.frame.contentWindow.DebuggerView.Scripts;
-            for each (let script in scriptsView.scriptLocations()) {
+            let scriptsView = dbg.debuggerWindow.DebuggerView.Scripts;
+            for each (let script in scriptsView.scriptLocations) {
               files.push(script);
             }
           }

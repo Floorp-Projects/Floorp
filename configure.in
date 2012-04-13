@@ -6367,7 +6367,7 @@ dnl files in the updater.  The --enable-signmar option is for building
 dnl the signmar program.
 dnl ========================================================
 
-MOZ_ARG_ENABLE_BOOL(sign-mar,
+MOZ_ARG_ENABLE_BOOL(signmar,
 [  --enable-signmar     Enable building the signmar program],
     MOZ_ENABLE_SIGNMAR=1,
     MOZ_ENABLE_SIGNMAR= )

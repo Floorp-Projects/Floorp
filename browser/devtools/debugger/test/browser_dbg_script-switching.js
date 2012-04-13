@@ -29,7 +29,7 @@ function test()
     gPane = aPane;
     gDebugger = gPane.debuggerWindow;
 
-    gPane.activeThread.addOneTimeListener("framesadded", function() {
+    gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
       framesAdded = true;
       runTest();
     });
@@ -57,7 +57,7 @@ function test()
 function testScriptsDisplay() {
   gScripts = gDebugger.DebuggerView.Scripts._scripts;
 
-  is(gDebugger.StackFrames.activeThread.state, "paused",
+  is(gDebugger.DebuggerController.activeThread.state, "paused",
     "Should only be getting stack frames while paused.");
 
   is(gScripts.itemCount, 2, "Found the expected number of scripts.");
@@ -79,6 +79,8 @@ function testScriptsDisplay() {
   ok(gDebugger.DebuggerView.Scripts.containsLabel(
     label2), "Second script label is incorrect.");
 
+  dump("Debugger editor text:\n" + gDebugger.editor.getText() + "\n");
+
   ok(gDebugger.editor.getText().search(/debugger/) != -1,
     "The correct script was loaded initially.");
 
@@ -98,6 +100,8 @@ function testScriptsDisplay() {
 
 function testSwitchPaused()
 {
+  dump("Debugger editor text:\n" + gDebugger.editor.getText() + "\n");
+
   ok(gDebugger.editor.getText().search(/debugger/) == -1,
     "The second script is no longer displayed.");
 
@@ -107,7 +111,7 @@ function testSwitchPaused()
   is(gDebugger.editor.getDebugLocation(), -1,
      "editor debugger location has been cleared.");
 
-  gDebugger.StackFrames.activeThread.resume(function() {
+  gDebugger.DebuggerController.activeThread.resume(function() {
     window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
       let url = aEvent.detail.url;
       if (url.indexOf("-02.js") != -1) {
