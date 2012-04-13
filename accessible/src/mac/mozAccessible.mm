@@ -472,6 +472,41 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 
 - (NSString*)subrole
 {
+  if (!mGeckoAccessible)
+    return nil;
+
+  nsIContent* content = mGeckoAccessible->GetContent();
+  if (!content || !content->IsHTML())
+    return nil;
+
+  nsIAtom* tag = content->Tag();
+
+  switch (mRole) {
+    case roles::LIST:
+      if ((tag == nsGkAtoms::ul) || (tag == nsGkAtoms::ol))
+        return NSAccessibilityContentListSubrole;
+
+      if (tag == nsGkAtoms::dl)
+        return NSAccessibilityDefinitionListSubrole;
+
+      break;
+
+    case roles::LISTITEM:
+      if (tag == nsGkAtoms::dt)
+        return @"AXTerm";
+
+      break;
+
+    case roles::PARAGRAPH:
+      if (tag == nsGkAtoms::dd)
+        return @"AXDefinition";
+
+      break;
+
+    default:
+      break;
+  }
+
   return nil;
 }
 

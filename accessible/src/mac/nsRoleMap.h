@@ -76,7 +76,7 @@ static const NSString* AXRoles [] = {
   @"AXHelpTag",                                 // roles::HELPBALLOON          31
   NSAccessibilityUnknownRole,                   // roles::CHARACTER            32     Unused on OS X.
   NSAccessibilityListRole,                      // roles::LIST                 33
-  NSAccessibilityRowRole,                       // roles::LISTITEM             34
+  NSAccessibilityGroupRole,                     // roles::LISTITEM             34
   NSAccessibilityOutlineRole,                   // roles::OUTLINE              35
   NSAccessibilityRowRole,                       // roles::OUTLINEITEM          36     XXX: use OutlineRow as subrole.
   NSAccessibilityRadioButtonRole,               // roles::PAGETAB              37
