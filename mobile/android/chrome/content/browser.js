@@ -800,16 +800,18 @@ var BrowserApp = {
   setPreferences: function setPreferences(aPref) {
     let json = JSON.parse(aPref);
 
-    // The plugin pref is actually two separate prefs, so
-    // we need to handle it differently
     if (json.name == "plugin.enable") {
+      // The plugin pref is actually two separate prefs, so
+      // we need to handle it differently
       PluginHelper.setPluginPreference(json.value);
       return;
-    } else if(json.name == MasterPassword.pref) {
+    } else if (json.name == MasterPassword.pref) {
+      // MasterPassword pref is not real, we just need take action and leave
       if (MasterPassword.enabled)
         MasterPassword.removePassword(json.value);
       else
         MasterPassword.setPassword(json.value);
+      return;
     }
 
     // when sending to java, we normalized special preferences that use
@@ -826,11 +828,11 @@ var BrowserApp = {
         break;
     }
 
-    if (json.type == "bool")
+    if (json.type == "bool") {
       Services.prefs.setBoolPref(json.name, json.value);
-    else if (json.type == "int")
+    } else if (json.type == "int") {
       Services.prefs.setIntPref(json.name, json.value);
-    else {
+    } else {
       let pref = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(Ci.nsIPrefLocalizedString);
       pref.data = json.value;
       Services.prefs.setComplexValue(json.name, Ci.nsISupportsString, pref);
@@ -841,6 +843,7 @@ var BrowserApp = {
     let doc = aBrowser.contentDocument;
     if (!doc)
       return;
+
     let focused = doc.activeElement;
     if ((focused instanceof HTMLInputElement && focused.mozIsTextField(false)) || (focused instanceof HTMLTextAreaElement)) {
       let tab = BrowserApp.getTabForBrowser(aBrowser);
