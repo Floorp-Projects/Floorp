@@ -42,7 +42,7 @@ interface nsIDOMMozWakeLockListener;
 /**
  * This interface implements navigator.mozPower
  */
-[scriptable, uuid(256a3287-f528-45b5-9ba8-2b3650c056e6)]
+[scriptable, uuid(4586bed1-cf78-4436-b503-88277d645b68)]
 interface nsIDOMMozPowerManager : nsISupports
 {
     void    powerOff();
@@ -96,11 +96,4 @@ interface nsIDOMMozPowerManager : nsISupports
      * @throw NS_ERROR_INVALID_ARG if brightness is not in the range [0, 1].
      */
     attribute double screenBrightness;
-
-    /**
-     * Is it possible that the device's CPU will sleep after the screen is
-     * disabled?  Setting this attribute to false will prevent the device
-     * entering suspend state.
-     */
-    attribute boolean cpuSleepAllowed;
 };
