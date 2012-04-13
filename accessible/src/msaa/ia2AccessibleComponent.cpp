@@ -38,26 +38,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "CAccessibleComponent.h"
+#include "ia2AccessibleComponent.h"
 
 #include "AccessibleComponent_i.c"
 
-#include "nsAccessible.h"
-#include "nsCoreUtils.h"
-#include "nsWinUtils.h"
+#include "nsAccessibleWrap.h"
 #include "States.h"
 
-#include "nsString.h"
-
-#include "nsIDOMCSSPrimitiveValue.h"
-#include "nsIDOMNSRGBAColor.h"
+#include "nsIFrame.h"
 
 using namespace mozilla::a11y;
 
 // IUnknown
 
 STDMETHODIMP
-CAccessibleComponent::QueryInterface(REFIID iid, void** ppv)
+ia2AccessibleComponent::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = NULL;
 
@@ -73,13 +68,13 @@ CAccessibleComponent::QueryInterface(REFIID iid, void** ppv)
 // IAccessibleComponent
 
 STDMETHODIMP
-CAccessibleComponent::get_locationInParent(long *aX, long *aY)
+ia2AccessibleComponent::get_locationInParent(long* aX, long* aY)
 {
 __try {
   *aX = 0;
   *aY = 0;
 
-  nsRefPtr<nsAccessible> acc(do_QueryObject(this));
+  nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -93,10 +88,7 @@ __try {
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
-  nsCOMPtr<nsIAccessible> parentAcc;
-  rv = acc->GetParent(getter_AddRefs(parentAcc));
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+  nsAccessible* parentAcc = acc->Parent();
 
   // The coordinates of the returned position are relative to this object's
   // parent or relative to the screen on which this object is rendered if it
@@ -123,10 +115,10 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleComponent::get_foreground(IA2Color* aForeground)
+ia2AccessibleComponent::get_foreground(IA2Color* aForeground)
 {
 __try {
-  nsRefPtr<nsAccessible> acc(do_QueryObject(this));
+  nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -142,10 +134,10 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleComponent::get_background(IA2Color* aBackground)
+ia2AccessibleComponent::get_background(IA2Color* aBackground)
 {
 __try {
-  nsRefPtr<nsAccessible> acc(do_QueryObject(this));
+  nsAccessibleWrap* acc = static_cast<nsAccessibleWrap*>(this);
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
