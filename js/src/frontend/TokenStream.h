@@ -336,14 +336,12 @@ struct Token {
 
     void setName(JSOp op, PropertyName *name) {
         JS_ASSERT(op == JSOP_NAME);
-        JS_ASSERT(!IsPoisonedPtr(name));
         u.s.op = op;
         u.s.n.name = name;
     }
 
     void setAtom(JSOp op, JSAtom *atom) {
         JS_ASSERT(op == JSOP_STRING || op == JSOP_XMLCOMMENT || JSOP_XMLCDATA);
-        JS_ASSERT(!IsPoisonedPtr(atom));
         u.s.op = op;
         u.s.n.atom = atom;
     }
@@ -352,8 +350,6 @@ struct Token {
         JS_ASSERT(target);
         JS_ASSERT(data);
         JS_ASSERT(!target->empty());
-        JS_ASSERT(!IsPoisonedPtr(target));
-        JS_ASSERT(!IsPoisonedPtr(data));
         u.xmlpi.target = target;
         u.xmlpi.data = data;
     }
@@ -812,15 +808,13 @@ class TokenStream
     void updateFlagsForEOL();
 
     Token               tokens[ntokens];/* circular token buffer */
-    JS::SkipRoot        tokensRoot;     /* prevent overwriting of token buffer */
-    unsigned            cursor;         /* index of last parsed token */
-    unsigned            lookahead;      /* count of lookahead tokens */
-    unsigned            lineno;         /* current line number */
-    unsigned            flags;          /* flags -- see above */
+    unsigned               cursor;         /* index of last parsed token */
+    unsigned               lookahead;      /* count of lookahead tokens */
+    unsigned               lineno;         /* current line number */
+    unsigned               flags;          /* flags -- see above */
     const jschar        *linebase;      /* start of current line;  points into userbuf */
     const jschar        *prevLinebase;  /* start of previous line;  NULL if on the first line */
     TokenBuf            userbuf;        /* user input buffer */
-    JS::SkipRoot        userbufRoot;    /* prevent overwriting of char pointers within userbuf */
     const char          *filename;      /* input filename or null */
     jschar              *sourceMap;     /* source map's filename or null */
     void                *listenerTSData;/* listener data for this TokenStream */

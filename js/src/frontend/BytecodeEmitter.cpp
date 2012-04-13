@@ -423,7 +423,7 @@ frontend::PushStatement(TreeContext *tc, StmtInfo *stmt, StmtType type, ptrdiff_
     stmt->blockid = tc->blockid();
     SET_STATEMENT_TOP(stmt, top);
     stmt->label = NULL;
-    stmt->blockObj = NULL;
+    JS_ASSERT(!stmt->blockObj);
     stmt->down = tc->topStmt;
     tc->topStmt = stmt;
     if (STMT_LINKS_SCOPE(stmt)) {
@@ -1360,6 +1360,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     Definition *dn;
     JSOp op;
+    JSAtom *atom;
     Definition::Kind dn_kind;
 
     JS_ASSERT(pn->isKind(PNK_NAME));
@@ -1393,7 +1394,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return JS_TRUE;
 
     JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
-    RootedVarAtom atom(cx, pn->pn_atom);
+    atom = pn->pn_atom;
     UpvarCookie cookie = dn->pn_cookie;
     dn_kind = dn->kind();
 
@@ -2368,7 +2369,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     int noteIndex;
     size_t switchSize, tableSize;
     jsbytecode *pc, *savepc;
-    StmtInfo stmtInfo(cx);
+    StmtInfo stmtInfo;
 
     /* Try for most optimal, fall back if not dense ints, and per ECMAv2. */
     switchOp = JSOP_TABLESWITCH;
@@ -3981,7 +3982,7 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
         JS_ASSERT(isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
 
         gc::AllocKind kind = GuessObjectGCKind(pn_count);
-        RootedVarObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass, kind));
+        JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
         if (!obj)
             return false;
 
@@ -4140,7 +4141,7 @@ EmitCatch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 MOZ_NEVER_INLINE static bool
 EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-    StmtInfo stmtInfo(cx);
+    StmtInfo stmtInfo;
     ptrdiff_t catchJump = -1;
 
     /*
@@ -4372,7 +4373,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 static bool
 EmitIf(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-    StmtInfo stmtInfo(cx);
+    StmtInfo stmtInfo;
 
     /* Initialize so we can detect else-if chains and avoid recursion. */
     stmtInfo.type = STMT_IF;
@@ -4529,7 +4530,7 @@ EmitLet(JSContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
             return false;
     }
 
-    StmtInfo stmtInfo(cx);
+    StmtInfo stmtInfo;
     PushBlockScope(bce, &stmtInfo, blockObj, bce->offset());
 
     if (!letNotes.update(cx, bce, bce->offset()))
@@ -4655,7 +4656,7 @@ EmitLexicalScope(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     JS_ASSERT(pn->isKind(PNK_LEXICALSCOPE));
     JS_ASSERT(pn->getOp() == JSOP_LEAVEBLOCK);
 
-    StmtInfo stmtInfo(cx);
+    StmtInfo stmtInfo;
     ObjectBox *objbox = pn->pn_objbox;
     StaticBlockObject &blockObj = objbox->object->asStaticBlock();
     PushBlockScope(bce, &stmtInfo, blockObj, bce->offset());
@@ -4704,7 +4705,7 @@ EmitLexicalScope(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 static bool
 EmitWith(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-    StmtInfo stmtInfo(cx);
+    StmtInfo stmtInfo;
     if (!EmitTree(cx, bce, pn->pn_left))
         return false;
     PushStatement(bce, &stmtInfo, STMT_WITH, bce->offset());
@@ -4721,7 +4722,7 @@ EmitWith(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 static bool
 EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 {
-    StmtInfo stmtInfo(cx);
+    StmtInfo stmtInfo;
     PushStatement(bce, &stmtInfo, STMT_FOR_IN_LOOP, top);
 
     ParseNode *forHead = pn->pn_left;
@@ -4787,7 +4788,7 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
         return false;
 
     /* Enter the block before the loop body, after evaluating the obj. */
-    StmtInfo letStmt(cx);
+    StmtInfo letStmt;
     if (letDecl) {
         PushBlockScope(bce, &letStmt, *blockObj, bce->offset());
         letStmt.flags |= SIF_FOR_BLOCK;
@@ -4897,7 +4898,7 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 static bool
 EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 {
-    StmtInfo stmtInfo(cx);
+    StmtInfo stmtInfo;
     PushStatement(bce, &stmtInfo, STMT_FOR_LOOP, top);
 
     ParseNode *forHead = pn->pn_left;
@@ -5054,7 +5055,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return Emit1(cx, bce, JSOP_GETFUNNS) >= 0;
 #endif
 
-    RootedVarFunction fun(cx, pn->pn_funbox->function());
+    JSFunction *fun = pn->pn_funbox->function();
     JS_ASSERT(fun->isInterpreted());
     if (fun->script()) {
         /*
@@ -5177,7 +5178,7 @@ EmitDo(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (!EmitLoopEntry(cx, bce, NULL))
         return false;
 
-    StmtInfo stmtInfo(cx);
+    StmtInfo stmtInfo;
     PushStatement(bce, &stmtInfo, STMT_DO_LOOP, top);
     if (!EmitTree(cx, bce, pn->pn_left))
         return false;
@@ -5230,7 +5231,7 @@ EmitWhile(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
      *  . . .
      *  N    N*(ifeq-fail; goto); ifeq-pass  goto; N*ifne-pass; ifne-fail
      */
-    StmtInfo stmtInfo(cx);
+    StmtInfo stmtInfo;
     PushStatement(bce, &stmtInfo, STMT_WHILE_LOOP, top);
 
     ptrdiff_t noteIndex = NewSrcNote(cx, bce, SRC_WHILE);
@@ -5368,7 +5369,7 @@ EmitStatementList(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t 
             return false;
     }
 
-    StmtInfo stmtInfo(cx);
+    StmtInfo stmtInfo;
     PushStatement(bce, &stmtInfo, STMT_BLOCK, top);
 
     ParseNode *pnchild = pn->pn_head;
@@ -5849,7 +5850,7 @@ EmitLabel(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return false;
 
     /* Emit code for the labeled statement. */
-    StmtInfo stmtInfo(cx);
+    StmtInfo stmtInfo;
     PushStatement(bce, &stmtInfo, STMT_LABEL, bce->offset());
     stmtInfo.label = atom;
     if (!EmitTree(cx, bce, pn2))
@@ -5873,7 +5874,7 @@ static bool
 EmitSyntheticStatements(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 {
     JS_ASSERT(pn->isArity(PN_LIST));
-    StmtInfo stmtInfo(cx);
+    StmtInfo stmtInfo;
     PushStatement(bce, &stmtInfo, STMT_SEQ, top);
     for (ParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
         if (!EmitTree(cx, bce, pn2))
@@ -5949,7 +5950,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * Try to construct the shape of the object as we go, so we can emit a
      * JSOP_NEWOBJECT with the final shape instead.
      */
-    RootedVarObject obj(cx);
+    JSObject *obj = NULL;
     if (bce->compileAndGo()) {
         gc::AllocKind kind = GuessObjectGCKind(pn->pn_count);
         obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);

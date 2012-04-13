@@ -96,11 +96,7 @@ inline bool
 JSObject::defaultValue(JSContext *cx, JSType hint, js::Value *vp)
 {
     JSConvertOp op = getClass()->convert;
-    bool ok;
-    if (op == JS_ConvertStub)
-        ok = js::DefaultValue(cx, js::RootedVarObject(cx, this), hint, vp);
-    else
-        ok = op(cx, this, hint, vp);
+    bool ok = (op == JS_ConvertStub ? js::DefaultValue : op)(cx, this, hint, vp);
     JS_ASSERT_IF(ok, vp->isPrimitive());
     return ok;
 }
@@ -124,10 +120,7 @@ JSObject::setGeneric(JSContext *cx, jsid id, js::Value *vp, JSBool strict)
 {
     if (getOps()->setGeneric)
         return nonNativeSetProperty(cx, id, vp, strict);
-    return js_SetPropertyHelper(cx,
-                                js::RootedVarObject(cx, this),
-                                js::RootedVarId(cx, id),
-                                0, vp, strict);
+    return js_SetPropertyHelper(cx, this, id, 0, vp, strict);
 }
 
 inline JSBool
@@ -141,7 +134,7 @@ JSObject::setElement(JSContext *cx, uint32_t index, js::Value *vp, JSBool strict
 {
     if (getOps()->setElement)
         return nonNativeSetElement(cx, index, vp, strict);
-    return js_SetElementHelper(cx, js::RootedVarObject(cx, this), index, 0, vp, strict);
+    return js_SetElementHelper(cx, this, index, 0, vp, strict);
 }
 
 inline JSBool
@@ -191,7 +184,7 @@ JSObject::getGeneric(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp)
         if (!op(cx, this, receiver, id, vp))
             return false;
     } else {
-        if (!js_GetProperty(cx, js::RootedVarObject(cx, this), js::RootedVarObject(cx, receiver), id, vp))
+        if (!js_GetProperty(cx, this, receiver, id, vp))
             return false;
     }
     return true;
@@ -1542,11 +1535,11 @@ FindClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey, JSObject
  * avoid losing creation site information for objects made by scripted 'new'.
  */
 JSObject *
-NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc::AllocKind kind);
+NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::AllocKind kind);
 
 /* Make an object with pregenerated shape from a NEWOBJECT bytecode. */
 static inline JSObject *
-CopyInitializerObject(JSContext *cx, HandleObject baseobj)
+CopyInitializerObject(JSContext *cx, JSObject *baseobj)
 {
     JS_ASSERT(baseobj->getClass() == &ObjectClass);
     JS_ASSERT(!baseobj->inDictionaryMode());
@@ -1568,7 +1561,7 @@ CopyInitializerObject(JSContext *cx, HandleObject baseobj)
 }
 
 JSObject *
-NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
+NewReshapedObject(JSContext *cx, js::types::TypeObject *type, JSObject *parent,
                   gc::AllocKind kind, const Shape *shape);
 
 /*
@@ -1739,6 +1732,12 @@ js_InitClass(JSContext *cx, js::HandleObject obj, JSObject *parent_proto,
              JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
              JSObject **ctorp = NULL,
              js::gc::AllocKind ctorKind = JSFunction::FinalizeKind);
+
+inline JSObject *
+js_GetProtoIfDenseArray(JSObject *obj)
+{
+    return obj->isDenseArray() ? obj->getProto() : obj;
+}
 
 /*
  * js_PurgeScopeChain does nothing if obj is not itself a prototype or parent

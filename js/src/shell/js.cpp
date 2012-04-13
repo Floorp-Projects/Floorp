@@ -2742,15 +2742,13 @@ ShapeOf(JSContext *cx, unsigned argc, jsval *vp)
  * non-native referent may be simplified to data properties.
  */
 static JSBool
-CopyProperty(JSContext *cx, JSObject *obj_, JSObject *referent, jsid id,
+CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
              unsigned lookupFlags, JSObject **objp)
 {
     JSProperty *prop;
     PropertyDescriptor desc;
     unsigned propFlags = 0;
     JSObject *obj2;
-
-    RootedVarObject obj(cx, obj_);
 
     *objp = NULL;
     if (referent->isNative()) {
@@ -4303,11 +4301,9 @@ global_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-global_resolve(JSContext *cx, JSObject *obj_, jsid id, unsigned flags,
+global_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
                JSObject **objp)
 {
-    RootedVarObject obj(cx, obj_);
-
 #ifdef LAZY_STANDARD_CLASSES
     JSBool resolved;
 

@@ -270,10 +270,8 @@ ProxyHandler::keys(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 }
 
 bool
-ProxyHandler::iterate(JSContext *cx, JSObject *proxy_, unsigned flags, Value *vp)
+ProxyHandler::iterate(JSContext *cx, JSObject *proxy, unsigned flags, Value *vp)
 {
-    RootedVarObject proxy(cx, proxy_);
-
     JS_ASSERT(OperationInProgress(cx, proxy));
     AutoIdVector props(cx);
     if ((flags & JSITER_OWNONLY)
@@ -320,7 +318,7 @@ ProxyHandler::regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g)
 bool
 ProxyHandler::defaultValue(JSContext *cx, JSObject *proxy, JSType hint, Value *vp)
 {
-    return DefaultValue(cx, RootedVarObject(cx, proxy), hint, vp);
+    return DefaultValue(cx, proxy, hint, vp);
 }
 
 bool
@@ -1758,8 +1756,7 @@ FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
      * number of fixed slots as the proxy so that we can swap their contents.
      */
     gc::AllocKind kind = proxy->getAllocKind();
-    RootedVarObject newborn(cx);
-    newborn = NewObjectWithGivenProto(cx, clasp, proto, parent, kind);
+    JSObject *newborn = NewObjectWithGivenProto(cx, clasp, proto, parent, kind);
     if (!newborn)
         return false;
 
