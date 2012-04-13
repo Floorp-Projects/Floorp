@@ -26,9 +26,21 @@ ifneq (,$(GENERATED_DIRS))
   GARBAGE_DIRS        +=$(tmpauto)
 endif
 
-%/.mkdir.done:
+## Only define rules once
+ifndef INCLUDED_AUTOTARGETS_MK
+
+%/.mkdir.done: # mkdir -p -p => mkdir -p
 	$(subst $(SPACE)-p,$(null),$(MKDIR)) -p $(dir $@)
 	@$(TOUCH) $@
+
+# A handful of makefiles are attempting "mkdir dot".  Likely not intended
+# or stale logic so add a stub target to handle the request and warn for now.
+.mkdir.done:
+	@echo "WARNING: $(MKDIR) -dot- requested by $(MAKE) -C $(CURDIR) $(MAKECMDGOALS)"
+	@$(TOUCH) $@
+
+INCLUDED_AUTOTARGETS_MK = 1
+endif
 
 #################################################################
 # One ring/dep to rule them all:
