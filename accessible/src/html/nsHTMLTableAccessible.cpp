@@ -39,6 +39,7 @@
 
 #include "nsHTMLTableAccessible.h"
 
+#include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccTreeWalker.h"
 #include "nsAccUtils.h"

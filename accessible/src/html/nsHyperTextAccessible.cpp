@@ -39,6 +39,7 @@
 
 #include "nsHyperTextAccessible.h"
 
+#include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsDocAccessible.h"

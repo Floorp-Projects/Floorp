@@ -39,6 +39,7 @@
 
 #include "nsXULFormControlAccessible.h"
 
+#include "Accessible-inl.h"
 #include "nsAccUtils.h"
 #include "nsAccTreeWalker.h"
 #include "nsCoreUtils.h"

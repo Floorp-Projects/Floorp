@@ -40,6 +40,7 @@
 #define CreateEvent CreateEventA
 #include "nsIDOMDocument.h"
 
+#include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsApplicationAccessibleWrap.h"
 #include "nsAccUtils.h"
