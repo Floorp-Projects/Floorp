@@ -2481,7 +2481,7 @@ DebuggerScript_checkThis(JSContext *cx, const CallArgs &args, const char *fnname
 static JSBool
 DebuggerScript_getUrl(JSContext *cx, unsigned argc, Value *vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getUrl", args, obj, script);
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get url)", args, obj, script);
 
     JSString *str = js_NewStringCopyZ(cx, script->filename);
     if (!str)
@@ -2493,7 +2493,7 @@ DebuggerScript_getUrl(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 DebuggerScript_getStartLine(JSContext *cx, unsigned argc, Value *vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getStartLine", args, obj, script);
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get startLine)", args, obj, script);
     args.rval().setNumber(script->lineno);
     return true;
 }
@@ -2501,10 +2501,18 @@ DebuggerScript_getStartLine(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 DebuggerScript_getLineCount(JSContext *cx, unsigned argc, Value *vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getLineCount", args, obj, script);
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get lineCount)", args, obj, script);
 
     unsigned maxLine = js_GetScriptLineExtent(script);
     args.rval().setNumber(double(maxLine));
+    return true;
+}
+
+static JSBool
+DebuggerScript_getStaticLevel(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get staticLevel)", args, obj, script);
+    args.rval().setNumber(uint32_t(script->staticLevel));
     return true;
 }
 
@@ -2926,6 +2934,7 @@ static JSPropertySpec DebuggerScript_properties[] = {
     JS_PSG("url", DebuggerScript_getUrl, 0),
     JS_PSG("startLine", DebuggerScript_getStartLine, 0),
     JS_PSG("lineCount", DebuggerScript_getLineCount, 0),
+    JS_PSG("staticLevel", DebuggerScript_getStaticLevel, 0),
     JS_PS_END
 };
 
