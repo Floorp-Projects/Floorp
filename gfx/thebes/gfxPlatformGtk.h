@@ -129,7 +129,7 @@ public:
 
     static PRInt32 GetDPI();
 
-    static bool UseXRender() {
+    static bool UseClientSideRendering() {
 #if defined(MOZ_X11) && defined(MOZ_PLATFORM_MAEMO)
         // XRender is not accelerated on the Maemo at the moment, and 
         // X server pixman is out of our control; it's likely to be 
@@ -141,8 +141,6 @@ public:
         // rendering, but until we have the ability to featuer test 
         // this, we'll only disable this for maemo.
         return true;
-#elif defined(MOZ_X11)
-        return sUseXRender;
 #else
         return false;
 #endif
@@ -155,9 +153,6 @@ protected:
 
 private:
     virtual qcms_profile *GetPlatformCMSOutputProfile();
-#ifdef MOZ_X11
-    static bool sUseXRender;
-#endif
 };
 
 #endif /* GFX_PLATFORM_GTK_H */
