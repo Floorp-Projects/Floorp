@@ -130,7 +130,7 @@ RegExpObjectBuilder::clone(Handle<RegExpObject *> other, Handle<RegExpObject *> 
     RegExpFlag staticsFlags = res->getFlags();
     if ((origFlags & staticsFlags) != staticsFlags) {
         RegExpFlag newFlags = RegExpFlag(origFlags | staticsFlags);
-        return build(RootedVar<JSLinearString*>(cx, other->getSource()), newFlags);
+        return build(RootedVar<JSAtom *>(cx, other->getSource()), newFlags);
     }
 
     RegExpGuard g;

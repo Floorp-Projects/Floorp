@@ -2394,7 +2394,8 @@ class SplitMatchResult {
 
 template<class Matcher>
 static JSObject *
-SplitHelper(JSContext *cx, Handle<JSLinearString*> str, uint32_t limit, Matcher splitMatch, TypeObject *type)
+SplitHelper(JSContext *cx, Handle<JSLinearString*> str, uint32_t limit, const Matcher &splitMatch,
+            TypeObject *type)
 {
     size_t strLength = str->length();
     SplitMatchResult result;
@@ -2535,7 +2536,8 @@ class SplitRegExpMatcher
 
     static const bool returnsCaptures = true;
 
-    bool operator()(JSContext *cx, JSLinearString *str, size_t index, SplitMatchResult *result)
+    bool operator()(JSContext *cx, JSLinearString *str, size_t index,
+                    SplitMatchResult *result) const
     {
         Value rval = UndefinedValue();
         const jschar *chars = str->chars();
@@ -2565,7 +2567,7 @@ class SplitStringMatcher
 
     static const bool returnsCaptures = false;
 
-    bool operator()(JSContext *cx, JSLinearString *str, size_t index, SplitMatchResult *res)
+    bool operator()(JSContext *cx, JSLinearString *str, size_t index, SplitMatchResult *res) const
     {
         JS_ASSERT(index == 0 || index < str->length());
         const jschar *chars = str->chars();
