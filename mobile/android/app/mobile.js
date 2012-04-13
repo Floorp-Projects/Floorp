@@ -362,9 +362,20 @@ pref("places.frecency.unvisitedTypedBonus", 200);
 
 // disable color management
 pref("gfx.color_management.mode", 0);
+
 #ifdef ANDROID
 // 0=fixed margin, 1=velocity bias, 2=dynamic resolution, 3=no margins
 pref("gfx.displayport.strategy", 1);
+// all of the following displayport strategy prefs will be divided by 1000
+// to obtain some multiplier which is then used in the strategy.
+// fixed margin strategy options
+pref("gfx.displayport.strategy_fm.multiplier", -1); // displayport dimension multiplier
+pref("gfx.displayport.strategy_fm.danger_x", -1); // danger zone on x-axis when multiplied by viewport width
+pref("gfx.displayport.strategy_fm.danger_y", -1); // danger zone on y-axis when multiplied by viewport height
+// velocity bias strategy options
+pref("gfx.displayport.strategy_vb.multiplier", -1); // displayport dimension multiplier
+pref("gfx.displayport.strategy_vb.threshold", -1); // velocity threshold in pixels/frame when multiplied by screen DPI
+pref("gfx.displayport.strategy_vb.reverse_buffer", -1); // fraction of buffer to keep in reverse direction from scroll
 #endif
 
 // don't allow JS to move and resize existing windows

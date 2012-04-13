@@ -5,9 +5,11 @@
 
 package org.mozilla.gecko.gfx;
 
+import java.util.Map;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.util.Log;
+import org.json.JSONArray;
 import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.GeckoAppShell;
 
@@ -15,7 +17,15 @@ final class DisplayPortCalculator {
     private static final String LOGTAG = "GeckoDisplayPortCalculator";
     private static final PointF ZERO_VELOCITY = new PointF(0, 0);
 
-    private static DisplayPortStrategy sStrategy = new VelocityBiasStrategy();
+    private static final String PREF_DISPLAYPORT_STRATEGY = "gfx.displayport.strategy";
+    private static final String PREF_DISPLAYPORT_FM_MULTIPLIER = "gfx.displayport.strategy_fm.multiplier";
+    private static final String PREF_DISPLAYPORT_FM_DANGER_X = "gfx.displayport.strategy_fm.danger_x";
+    private static final String PREF_DISPLAYPORT_FM_DANGER_Y = "gfx.displayport.strategy_fm.danger_y";
+    private static final String PREF_DISPLAYPORT_VB_MULTIPLIER = "gfx.displayport.strategy_vb.multiplier";
+    private static final String PREF_DISPLAYPORT_VB_VELOCITY_THRESHOLD = "gfx.displayport.strategy_vb.threshold";
+    private static final String PREF_DISPLAYPORT_VB_REVERSE_BUFFER = "gfx.displayport.strategy_vb.reverse_buffer";
+
+    private static DisplayPortStrategy sStrategy = new VelocityBiasStrategy(null);
 
     static DisplayPortMetrics calculate(ImmutableViewportMetrics metrics, PointF velocity) {
         return sStrategy.calculate(metrics, (velocity == null ? ZERO_VELOCITY : velocity));
@@ -28,28 +38,51 @@ final class DisplayPortCalculator {
         return sStrategy.aboutToCheckerboard(metrics, (velocity == null ? ZERO_VELOCITY : velocity), displayPort);
     }
 
+    static void addPrefNames(JSONArray prefs) {
+        prefs.put(PREF_DISPLAYPORT_STRATEGY);
+        prefs.put(PREF_DISPLAYPORT_FM_MULTIPLIER);
+        prefs.put(PREF_DISPLAYPORT_FM_DANGER_X);
+        prefs.put(PREF_DISPLAYPORT_FM_DANGER_Y);
+        prefs.put(PREF_DISPLAYPORT_VB_MULTIPLIER);
+        prefs.put(PREF_DISPLAYPORT_VB_VELOCITY_THRESHOLD);
+        prefs.put(PREF_DISPLAYPORT_VB_REVERSE_BUFFER);
+    }
+
     /**
      * Set the active strategy to use.
      * See the gfx.displayport.strategy pref in mobile/android/app/mobile.js to see the
      * mapping between ints and strategies.
      */
-    static void setStrategy(int strategy) {
+    static boolean setStrategy(Map<String, Integer> prefs) {
+        Integer strategy = prefs.get(PREF_DISPLAYPORT_STRATEGY);
+        if (strategy == null) {
+            return false;
+        }
+
         switch (strategy) {
             case 0:
-            default:
-                sStrategy = new FixedMarginStrategy();
+                sStrategy = new FixedMarginStrategy(prefs);
                 break;
             case 1:
-                sStrategy = new VelocityBiasStrategy();
+                sStrategy = new VelocityBiasStrategy(prefs);
                 break;
             case 2:
-                sStrategy = new DynamicResolutionStrategy();
+                sStrategy = new DynamicResolutionStrategy(prefs);
                 break;
             case 3:
-                sStrategy = new NoMarginStrategy();
+                sStrategy = new NoMarginStrategy(prefs);
                 break;
+            default:
+                Log.e(LOGTAG, "Invalid strategy index specified");
+                return false;
         }
-        Log.i(LOGTAG, "Set strategy " + sStrategy.getClass().getName());
+        Log.i(LOGTAG, "Set strategy " + sStrategy.toString());
+        return true;
+    }
+
+    private static float getFloatPref(Map<String, Integer> prefs, String prefName, int defaultValue) {
+        Integer value = (prefs == null ? null : prefs.get(prefName));
+        return (float)(value == null || value < 0 ? defaultValue : value) / 1000f;
     }
 
     private interface DisplayPortStrategy {
@@ -135,6 +168,10 @@ final class DisplayPortCalculator {
      * This class implements the variation where we basically don't bother with a a display port.
      */
     private static class NoMarginStrategy implements DisplayPortStrategy {
+        NoMarginStrategy(Map<String, Integer> prefs) {
+            // no prefs in this strategy
+        }
+
         public DisplayPortMetrics calculate(ImmutableViewportMetrics metrics, PointF velocity) {
             return new DisplayPortMetrics(metrics.viewportRectLeft,
                     metrics.viewportRectTop,
@@ -145,6 +182,11 @@ final class DisplayPortCalculator {
 
         public boolean aboutToCheckerboard(ImmutableViewportMetrics metrics, PointF velocity, DisplayPortMetrics displayPort) {
             return true;
+        }
+
+        @Override
+        public String toString() {
+            return "NoMarginStrategy";
         }
     }
 
@@ -159,12 +201,18 @@ final class DisplayPortCalculator {
     private static class FixedMarginStrategy implements DisplayPortStrategy {
         // The length of each axis of the display port will be the corresponding view length
         // multiplied by this factor.
-        private static final float SIZE_MULTIPLIER = 1.5f;
+        private final float SIZE_MULTIPLIER;
 
         // If the visible rect is within the danger zone (measured as a fraction of the view size
         // from the edge of the displayport) we start redrawing to minimize checkerboarding.
-        private static final float DANGER_ZONE_X_MULTIPLIER = 0.10f;
-        private static final float DANGER_ZONE_Y_MULTIPLIER = 0.20f;
+        private final float DANGER_ZONE_X_MULTIPLIER;
+        private final float DANGER_ZONE_Y_MULTIPLIER;
+
+        FixedMarginStrategy(Map<String, Integer> prefs) {
+            SIZE_MULTIPLIER = getFloatPref(prefs, PREF_DISPLAYPORT_FM_MULTIPLIER, 1500);
+            DANGER_ZONE_X_MULTIPLIER = getFloatPref(prefs, PREF_DISPLAYPORT_FM_DANGER_X, 100);
+            DANGER_ZONE_Y_MULTIPLIER = getFloatPref(prefs, PREF_DISPLAYPORT_FM_DANGER_Y, 200);
+        }
 
         public DisplayPortMetrics calculate(ImmutableViewportMetrics metrics, PointF velocity) {
             float displayPortWidth = metrics.getWidth() * SIZE_MULTIPLIER;
@@ -208,6 +256,11 @@ final class DisplayPortCalculator {
             RectF adjustedViewport = expandByDangerZone(metrics.getViewport(), DANGER_ZONE_X_MULTIPLIER, DANGER_ZONE_Y_MULTIPLIER, metrics);
             return !displayPort.contains(adjustedViewport);
         }
+
+        @Override
+        public String toString() {
+            return "FixedMarginStrategy mult=" + SIZE_MULTIPLIER + ", dangerX=" + DANGER_ZONE_X_MULTIPLIER + ", dangerY=" + DANGER_ZONE_Y_MULTIPLIER;
+        }
     }
 
     /**
@@ -222,11 +275,17 @@ final class DisplayPortCalculator {
     private static class VelocityBiasStrategy implements DisplayPortStrategy {
         // The length of each axis of the display port will be the corresponding view length
         // multiplied by this factor.
-        private static final float SIZE_MULTIPLIER = 1.5f;
+        private final float SIZE_MULTIPLIER;
         // The velocity above which we apply the velocity bias
-        private static final float VELOCITY_THRESHOLD = GeckoAppShell.getDpi() / 32f;
+        private final float VELOCITY_THRESHOLD;
         // How much of the buffer to keep in the reverse direction of the velocity
-        private static final float REVERSE_BUFFER = 0.2f;
+        private final float REVERSE_BUFFER;
+
+        VelocityBiasStrategy(Map<String, Integer> prefs) {
+            SIZE_MULTIPLIER = getFloatPref(prefs, PREF_DISPLAYPORT_VB_MULTIPLIER, 1500);
+            VELOCITY_THRESHOLD = GeckoAppShell.getDpi() * getFloatPref(prefs, PREF_DISPLAYPORT_VB_VELOCITY_THRESHOLD, 32);
+            REVERSE_BUFFER = getFloatPref(prefs, PREF_DISPLAYPORT_VB_REVERSE_BUFFER, 200);
+        }
 
         public DisplayPortMetrics calculate(ImmutableViewportMetrics metrics, PointF velocity) {
             float displayPortWidth = metrics.getWidth() * SIZE_MULTIPLIER;
@@ -286,6 +345,11 @@ final class DisplayPortCalculator {
             // want to re-center the displayport and draw stuff on all sides, so again we don't want to throttle
             // there. When we're not panning we're not drawing anyway so it doesn't make a difference there.
             return true;
+        }
+
+        @Override
+        public String toString() {
+            return "VelocityBiasStrategy mult=" + SIZE_MULTIPLIER + ", threshold=" + VELOCITY_THRESHOLD + ", reverse=" + REVERSE_BUFFER;
         }
     }
 
@@ -348,6 +412,10 @@ final class DisplayPortCalculator {
         // danger zone, and thus will be constantly drawing.
         private static final float PREDICTION_VELOCITY_MULTIPLIER = 30.0f;
         private static final float DANGER_ZONE_MULTIPLIER = 0.20f; // must be less than (SIZE_MULTIPLIER - 1.0f)
+
+        DynamicResolutionStrategy(Map<String, Integer> prefs) {
+            // ignore prefs for now
+        }
 
         public DisplayPortMetrics calculate(ImmutableViewportMetrics metrics, PointF velocity) {
             float displayPortWidth = metrics.getWidth() * SIZE_MULTIPLIER;
@@ -475,6 +543,11 @@ final class DisplayPortCalculator {
             // safety zone. this also clamps it to page bounds.
             predictedViewport = expandByDangerZone(predictedViewport, DANGER_ZONE_MULTIPLIER, DANGER_ZONE_MULTIPLIER, metrics);
             return !displayPort.contains(predictedViewport);
+        }
+
+        @Override
+        public String toString() {
+            return "DynamicResolutionStrategy";
         }
     }
 }
