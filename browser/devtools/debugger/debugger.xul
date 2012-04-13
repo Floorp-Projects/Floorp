@@ -47,54 +47,58 @@
 ]>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/source-editor-overlay.xul"?>
+
 <xul:window xmlns="http://www.w3.org/1999/xhtml"
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-    <xul:script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
-    <xul:script type="text/javascript" src="debugger.js"/>
-    <xul:script type="text/javascript" src="debugger-view.js"/>
-    <xul:popupset id="debugger-popups">
-      <xul:menupopup id="sourceEditorContextMenu"
-                     onpopupshowing="goUpdateSourceEditorMenuItems()">
-        <xul:menuitem id="se-cMenu-copy"/>
-        <xul:menuseparator/>
-        <xul:menuitem id="se-cMenu-selectAll"/>
-        <xul:menuseparator/>
-        <xul:menuitem id="se-cMenu-find"/>
-        <xul:menuitem id="se-cMenu-findAgain"/>
-        <xul:menuseparator/>
-        <xul:menuitem id="se-cMenu-gotoLine"/>
-      </xul:menupopup>
-    </xul:popupset>
-    <xul:commandset id="editMenuCommands"/>
-    <xul:commandset id="sourceEditorCommands"/>
-    <xul:keyset id="sourceEditorKeys"/>
 
-    <div id="body" class="vbox flex">
-        <xul:toolbar id="dbg-toolbar">
-            <xul:button id="close">&debuggerUI.closeButton;</xul:button>
-            <xul:button id="resume"/>
-            <xul:button id="step-over">&debuggerUI.stepOverButton;</xul:button>
-            <xul:button id="step-in">&debuggerUI.stepInButton;</xul:button>
-            <xul:button id="step-out">&debuggerUI.stepOutButton;</xul:button>
-            <xul:menulist id="scripts"/>
-        </xul:toolbar>
-        <div id="dbg-content" class="hbox flex">
-            <div id="stack" class="vbox">
-                <div class="title unselectable">&debuggerUI.stackTitle;</div>
-                <div id="stackframes" class="vbox flex"></div>
-            </div>
-            <div id="script" class="vbox flex">
-                <div class="title unselectable">&debuggerUI.scriptTitle;</div>
-                <div id="editor" class="vbox flex"></div>
-            </div>
-            <div id="properties" class="vbox">
-                <div class="title unselectable">&debuggerUI.propertiesTitle;</div>
-                <div id="variables" class="vbox flex"></div>
-            </div>
-        </div>
-        <div id="dbg-statusbar">
-            <span id="status"></span>
-        </div>
+  <xul:script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <xul:script type="text/javascript" src="debugger-controller.js"/>
+  <xul:script type="text/javascript" src="debugger-view.js"/>
+
+  <xul:popupset id="debugger-popups">
+    <xul:menupopup id="sourceEditorContextMenu"
+                   onpopupshowing="goUpdateSourceEditorMenuItems()">
+      <xul:menuitem id="se-cMenu-copy"/>
+      <xul:menuseparator/>
+      <xul:menuitem id="se-cMenu-selectAll"/>
+      <xul:menuseparator/>
+      <xul:menuitem id="se-cMenu-find"/>
+      <xul:menuitem id="se-cMenu-findAgain"/>
+      <xul:menuseparator/>
+      <xul:menuitem id="se-cMenu-gotoLine"/>
+    </xul:menupopup>
+  </xul:popupset>
+
+  <xul:commandset id="editMenuCommands"/>
+  <xul:commandset id="sourceEditorCommands"/>
+  <xul:keyset id="sourceEditorKeys"/>
+
+  <div id="body" class="vbox flex">
+    <xul:toolbar id="dbg-toolbar">
+      <xul:button id="close">&debuggerUI.closeButton;</xul:button>
+      <xul:button id="resume"/>
+      <xul:button id="step-over">&debuggerUI.stepOverButton;</xul:button>
+      <xul:button id="step-in">&debuggerUI.stepInButton;</xul:button>
+      <xul:button id="step-out">&debuggerUI.stepOutButton;</xul:button>
+      <xul:menulist id="scripts"/>
+    </xul:toolbar>
+    <div id="dbg-content" class="hbox flex">
+      <div id="stack" class="vbox">
+        <div class="title unselectable">&debuggerUI.stackTitle;</div>
+        <div id="stackframes" class="vbox flex"></div>
+      </div>
+      <div id="script" class="vbox flex">
+        <div class="title unselectable">&debuggerUI.scriptTitle;</div>
+        <div id="editor" class="vbox flex"></div>
+      </div>
+      <div id="properties" class="vbox">
+        <div class="title unselectable">&debuggerUI.propertiesTitle;</div>
+        <div id="variables" class="vbox flex"></div>
+      </div>
     </div>
+    <div id="dbg-statusbar">
+      <span id="status"></span>
+    </div>
+  </div>
 
 </xul:window>
