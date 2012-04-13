@@ -724,3 +724,21 @@ pref("gfx.show_checkerboard_pattern", false);
 
 pref("remote-debugger.enabled", false);
 pref("remote-debugger.port", 6000);
+
+// This fraction in 1000ths of velocity remains after every animation frame when the velocity is low.
+pref("ui.scrolling.friction_slow", -1);
+// This fraction in 1000ths of velocity remains after every animation frame when the velocity is high.
+pref("ui.scrolling.friction_fast", -1);
+// Below this velocity (in pixels per frame), the friction starts increasing from friction_fast
+// to friction_slow.
+pref("ui.scrolling.velocity_threshold", -1);
+// The maximum velocity change factor between events, per ms, in 1000ths.
+// Direction changes are excluded.
+pref("ui.scrolling.max_event_acceleration", -1);
+// The rate of deceleration when the surface has overscrolled, in 1000ths.
+pref("ui.scrolling.overscroll_decel_rate", -1);
+// The fraction of the surface which can be overscrolled before it must snap back, in 1000ths.
+pref("ui.scrolling.overscroll_snap_limit", -1);
+// The minimum amount of space that must be present for an axis to be considered scrollable,
+// in 1/1000ths of pixels.
+pref("ui.scrolling.min_scrollable_distance", -1);
