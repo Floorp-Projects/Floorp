@@ -47,7 +47,7 @@ interface nsIWifi : nsISupports {
     void shutdown();
 };
 
-[scriptable, uuid(36e4137b-dc8b-47e2-a90c-6adfb731fc41)]
+[scriptable, uuid(e3d5a7d7-6abd-4ac2-83dc-5315ec08a1c3)]
 interface nsIDOMWifiManager : nsISupports {
     /**
      * TODO Remove in favor of a settings API.
@@ -116,22 +116,24 @@ interface nsIDOMWifiManager : nsISupports {
     readonly attribute jsval connectionInformation;
 
     /**
-     * These four functions serve as state notification listeners.
-     * onconnecting: Fires when we start the process of connecting to a
-     *               network.
-     * onassociate: Fires when we have connected to an access point but do not
-     *              yet have an IP address.
-     * onconnect: Fires once we are fully connected to an access point and can
-     *            access the internet.
-     * ondisconnect: Fires when we either fail to connect to an access point
-     *               (transition: onassociate -> ondisconnect) or when we were
-     *               connected to a network but have disconnected for any
-     *               reason (transition: onconnect -> ondisconnect).
+     * State notification listeners. These all take an
+     * nsIDOMWifiStatusChangeEvent with the new status and a network (which
+     * may be null).
+     *
+     * The possible statuses are:
+     *   - connecting: Fires when we start the process of connecting to a
+     *                 network.
+     *   - associated: Fires when we have connected to an access point but do
+     *                 not yet have an IP address.
+     *   - connected: Fires once we are fully connected to an access point and
+     *                can access the internet.
+     *   - disconnected: Fires when we either fail to connect to an access
+     *                   point (transition: associated -> disconnected) or
+     *                   when we were connected to a network but have
+     *                   disconnected for any reason (transition: connected ->
+     *                   disconnected).
      */
-             attribute nsIDOMEventListener onconnecting;
-             attribute nsIDOMEventListener onassociate;
-             attribute nsIDOMEventListener onconnect;
-             attribute nsIDOMEventListener ondisconnect;
+             attribute nsIDOMEventListener onstatuschange;
 
     /**
      * An event listener that is called with information about the signal
@@ -141,12 +143,18 @@ interface nsIDOMWifiManager : nsISupports {
 };
 
 [scriptable, uuid(4674c6f1-ea64-44db-ac2f-e7bd6514dfd6)]
-interface nsIDOMWifiStateChangeEvent : nsIDOMEvent {
+interface nsIDOMWifiStatusChangeEvent : nsIDOMEvent {
     /**
      * Network object with a SSID field describing the network affected by
-     * this change.
+     * this change. This might be null.
      */
     readonly attribute jsval network;
+
+    /**
+     * String describing the current status of the wifi manager. See above for
+     * the possible values.
+     */
+    readonly attribute string status;
 };
 
 [scriptable, uuid(5c9ee332-dd98-4227-b7fc-768418fd50e3)]
