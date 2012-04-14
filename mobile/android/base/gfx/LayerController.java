@@ -128,6 +128,10 @@ public class LayerController {
         return mViewportMetrics.getViewport();
     }
 
+    public RectF getCssViewport() {
+        return mViewportMetrics.getCssViewport();
+    }
+
     public FloatSize getViewportSize() {
         return mViewportMetrics.getSize();
     }
