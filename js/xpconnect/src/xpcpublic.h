@@ -209,6 +209,8 @@ xpc_UnmarkSkippableJSHolders();
 NS_EXPORT_(void)
 xpc_ActivateDebugMode();
 
+class nsIMemoryMultiReporterCallback;
+
 namespace xpc {
 
 // If these functions return false, then an exception will be set on cx.
@@ -250,14 +252,6 @@ bool
 DOM_DefineQuickStubs(JSContext *cx, JSObject *proto, PRUint32 flags,
                      PRUint32 interfaceCount, const nsIID **interfaceArray);
 
-} // namespace xpc
-
-class nsIMemoryMultiReporterCallback;
-
-namespace mozilla {
-namespace xpconnect {
-namespace memory {
-
 // This reports all the stats in |rtStats| that belong in the "explicit" tree,
 // (which isn't all of them).
 nsresult
@@ -266,9 +260,9 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                                  nsIMemoryMultiReporterCallback *cb,
                                  nsISupports *closure);
 
-} // namespace memory
-} // namespace xpconnect
+} // namespace xpc
 
+namespace mozilla {
 namespace dom {
 namespace binding {
 
