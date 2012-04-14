@@ -306,10 +306,10 @@ nsresult JSContextAutoPopper::Push(JSContext *cx)
     return NS_ERROR_FAILURE;
 
   mService = do_GetService(sJSStackContractID);
-  if (mService) {
+  if(mService) {
     // Get the safe context if we're not provided one.
-    if (!cx) {
-      cx = mService->GetSafeJSContext();
+    if (!cx && NS_FAILED(mService->GetSafeJSContext(&cx))) {
+      cx = nsnull;
     }
 
     // Save cx in mContext to indicate need to pop.

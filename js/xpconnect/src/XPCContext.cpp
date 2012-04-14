@@ -77,9 +77,8 @@ XPCContext::~XPCContext()
     for (PRCList *scopeptr = PR_NEXT_LINK(&mScopes);
          scopeptr != &mScopes;
          scopeptr = PR_NEXT_LINK(scopeptr)) {
-        XPCWrappedNativeScope *scope =
-            static_cast<XPCWrappedNativeScope*>(scopeptr);
-        scope->ClearContext();
+        XPCWrappedNativeScope *scope = (XPCWrappedNativeScope *)scopeptr;
+        scope->SetContext(nsnull);
     }
 
     // we do not call JS_RemoveArgumentFormatter because we now only

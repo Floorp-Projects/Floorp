@@ -588,7 +588,7 @@ PluginModuleParent::AnswerNPN_UserAgent(nsCString* userAgent)
 PluginIdentifierParent*
 PluginModuleParent::GetIdentifierForNPIdentifier(NPP npp, NPIdentifier aIdentifier)
 {
-    PluginIdentifierParent* ident = nsnull;
+    PluginIdentifierParent* ident;
     if (mIdentifiers.Get(aIdentifier, &ident)) {
         if (ident->IsTemporary()) {
             ident->AddTemporaryRef();

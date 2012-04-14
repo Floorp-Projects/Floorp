@@ -38,7 +38,7 @@ var W3CTest = {
    * directory. Used as a key into the expectedFailures dictionary.
    */
   "getURL": function() {
-    return this.runner.currentTestURL.substring("/tests/dom/imported-tests/".length);
+    return this.runner.currentTestURL.substring("/tests/dom/tests/mochitest/w3c/".length);
   },
 
   /**

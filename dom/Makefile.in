@@ -105,12 +105,7 @@ DIRS += \
   bluetooth \
   $(NULL)
 endif
-
-TEST_DIRS += \
-  tests \
-  imported-tests \
-  $(NULL)
-
+TEST_DIRS += tests
 ifneq (,$(filter gtk2 cocoa windows android qt os2,$(MOZ_WIDGET_TOOLKIT)))
 TEST_DIRS += plugins/test
 endif
