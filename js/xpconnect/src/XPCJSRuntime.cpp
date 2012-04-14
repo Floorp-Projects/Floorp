@@ -68,7 +68,6 @@
 #endif
 
 using namespace mozilla;
-using namespace mozilla::xpconnect::memory;
 
 /***************************************************************************/
 
@@ -1377,9 +1376,7 @@ MakePath(const nsACString &pathPrefix, const JS::CompartmentStats &cStats,
            nsDependentCString(reporterName);
 }
 
-namespace mozilla {
-namespace xpconnect {
-namespace memory {
+namespace xpc {
 
 static nsresult
 ReportCompartmentStats(const JS::CompartmentStats &cStats,
@@ -1641,9 +1638,7 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
     return NS_OK;
 }
 
-} // namespace memory
-} // namespace xpconnect
-} // namespace mozilla
+} // namespace xpc
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsMallocSizeOf, "js")
 
@@ -1762,7 +1757,8 @@ public:
         // "explicit" tree, then we report other stuff.
 
         nsresult rv =
-            ReportJSRuntimeExplicitTreeStats(rtStats, pathPrefix, cb, closure);
+            xpc::ReportJSRuntimeExplicitTreeStats(rtStats, pathPrefix, cb,
+                                                  closure);
         NS_ENSURE_SUCCESS(rv, rv);
 
         REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("xpconnect"),
