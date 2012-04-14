@@ -190,10 +190,10 @@ class Debugger::FrameRange {
 
         /* Find our global, if we were not given one. */
         if (!global)
-            global = &fp->scopeChain().global();
+            global = &fp->global();
 
         /* The frame and global must match. */
-        JS_ASSERT(&fp->scopeChain().global() == global);
+        JS_ASSERT(&fp->global() == global);
 
         /* Find the list of debuggers we'll iterate over. There may be none. */
         debuggers = global->getDebuggers();
@@ -278,7 +278,7 @@ ScriptGlobal(JSContext *cx, JSScript *script, GlobalObject *scriptGlobal)
     for (AllFramesIter i(cx->stack.space()); ; ++i) {
         JS_ASSERT(!i.done());
         if (i.fp()->maybeScript() == script)
-            return &i.fp()->scopeChain().global();
+            return &i.fp()->global();
     }
     JS_NOT_REACHED("ScriptGlobal: live non-held script not on stack");
 }
@@ -525,7 +525,7 @@ Debugger::slowPathOnEnterFrame(JSContext *cx, Value *vp)
 {
     /* Build the list of recipients. */
     AutoValueVector triggered(cx);
-    GlobalObject *global = &cx->fp()->scopeChain().global();
+    GlobalObject *global = &cx->fp()->global();
     if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
         for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
             Debugger *dbg = *p;
@@ -557,7 +557,7 @@ bool
 Debugger::slowPathOnLeaveFrame(JSContext *cx, bool frameOk)
 {
     StackFrame *fp = cx->fp();
-    GlobalObject *global = &fp->scopeChain().global();
+    GlobalObject *global = &fp->global();
 
     /* Save the frame's completion value. */
     JSTrapStatus status;
@@ -1025,7 +1025,7 @@ Debugger::dispatchHook(JSContext *cx, Value *vp, Hook which)
      * different compartments--every compartment *except* this one.
      */
     AutoValueVector triggered(cx);
-    GlobalObject *global = &cx->fp()->scopeChain().global();
+    GlobalObject *global = &cx->fp()->global();
     if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
         for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
             Debugger *dbg = *p;
@@ -1113,7 +1113,7 @@ Debugger::onTrap(JSContext *cx, Value *vp)
 {
     StackFrame *fp = cx->fp();
     JSScript *script = fp->script();
-    GlobalObject *scriptGlobal = &fp->scopeChain().global();
+    GlobalObject *scriptGlobal = &fp->global();
     jsbytecode *pc = cx->regs().pc;
     BreakpointSite *site = script->getBreakpointSite(pc);
     JSOp op = JSOp(*pc);
@@ -1211,7 +1211,7 @@ Debugger::onSingleStep(JSContext *cx, Value *vp)
     {
         uint32_t stepperCount = 0;
         JSScript *trappingScript = fp->script();
-        GlobalObject *global = &fp->scopeChain().global();
+        GlobalObject *global = &fp->global();
         if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
             for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
                 Debugger *dbg = *p;
@@ -1945,7 +1945,7 @@ Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
      */
     for (FrameMap::Enum e(frames); !e.empty(); e.popFront()) {
         StackFrame *fp = e.front().key;
-        if (&fp->scopeChain().global() == global) {
+        if (&fp->global() == global) {
             e.front().value->setPrivate(NULL);
             e.removeFront();
         }
@@ -2120,7 +2120,7 @@ class Debugger::ScriptQuery {
                  */
                 JS_ASSERT(!script->getGlobalObjectOrNull());
 
-                GlobalObject *global = &fri.fp()->scopeChain().global();
+                GlobalObject *global = &fri.fp()->global();
                 if (!consider(script, global, vector))
                     return false;
             }
@@ -3051,7 +3051,7 @@ DebuggerFrame_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
 
     Env *env;
     {
-        AutoCompartment ac(cx, &fp->scopeChain());
+        AutoCompartment ac(cx, fp->scopeChain());
         if (!ac.enter())
             return false;
         env = Frame_GetEnv(cx, fp);
@@ -3095,7 +3095,7 @@ DebuggerFrame_getThis(JSContext *cx, unsigned argc, Value *vp)
     THIS_FRAME(cx, argc, vp, "get this", args, thisobj, fp);
     Value thisv;
     {
-        AutoCompartment ac(cx, &fp->scopeChain());
+        AutoCompartment ac(cx, fp->scopeChain());
         if (!ac.enter())
             return false;
         if (!ComputeThis(cx, fp))
@@ -3316,7 +3316,7 @@ DebuggerFrame_setOnStep(JSContext *cx, unsigned argc, Value *vp)
     int delta = !args[0].isUndefined() - !prior.isUndefined();
     if (delta != 0) {
         /* Try to adjust this frame's script single-step mode count. */
-        AutoCompartment ac(cx, &fp->scopeChain());
+        AutoCompartment ac(cx, fp->scopeChain());
         if (!ac.enter())
             return false;
         if (!fp->script()->changeStepModeCount(cx, delta))
@@ -3379,7 +3379,7 @@ EvaluateInEnv(JSContext *cx, Env *env, StackFrame *fp, const jschar *chars,
      * we use a static level that will cause us not to attempt to optimize
      * variable references made by this frame.
      */
-    JSPrincipals *prin = fp->scopeChain().principals(cx);
+    JSPrincipals *prin = fp->scopeChain()->principals(cx);
     JSScript *script = frontend::CompileScript(cx, env, fp, prin, prin,
                                                TCF_COMPILE_N_GO | TCF_NEED_SCRIPT_GLOBAL,
                                                chars, length, filename, lineno,
@@ -3442,7 +3442,7 @@ DebuggerFrameEval(JSContext *cx, unsigned argc, Value *vp, EvalBindingsMode mode
         }
     }
 
-    AutoCompartment ac(cx, &fp->scopeChain());
+    AutoCompartment ac(cx, fp->scopeChain());
     if (!ac.enter())
         return false;
 

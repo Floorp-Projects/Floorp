@@ -86,7 +86,7 @@ PatchGetFallback(VMFrame &f, ic::GetGlobalNameIC *ic)
 void JS_FASTCALL
 ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
 {
-    JSObject &obj = f.fp()->scopeChain().global();
+    JSObject &obj = f.fp()->global();
     PropertyName *name = f.script()->getName(GET_UINT32_INDEX(f.pc()));
 
     RecompilationMonitor monitor(f.cx);
@@ -190,7 +190,7 @@ UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, const Sh
 void JS_FASTCALL
 ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
-    JSObject &obj = f.fp()->scopeChain().global();
+    JSObject &obj = f.fp()->global();
     JSScript *script = f.script();
     PropertyName *name = script->getName(GET_UINT32_INDEX(f.pc()));
 

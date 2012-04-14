@@ -523,7 +523,7 @@ JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fpArg)
 {
     StackFrame *fp = Valueify(fpArg);
     if (fp->annotation() && fp->isScriptFrame()) {
-        JSPrincipals *principals = fp->scopeChain().principals(cx);
+        JSPrincipals *principals = fp->scopeChain()->principals(cx);
 
         if (principals) {
             /*
@@ -555,7 +555,7 @@ JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fpArg)
     StackFrame *fp = Valueify(fpArg);
     JS_ASSERT(cx->stack.containsSlow(fp));
 
-    js::AutoCompartment ac(cx, &fp->scopeChain());
+    js::AutoCompartment ac(cx, fp->scopeChain());
     if (!ac.enter())
         return NULL;
 
@@ -576,7 +576,7 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fpArg)
     if (!fp->isFunctionFrame())
         return NULL;
 
-    js::AutoCompartment ac(cx, &fp->scopeChain());
+    js::AutoCompartment ac(cx, fp->scopeChain());
     if (!ac.enter())
         return NULL;
 
@@ -596,7 +596,7 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fpArg, jsval *thisv)
     if (fp->isDummyFrame())
         return false;
 
-    js::AutoCompartment ac(cx, &fp->scopeChain());
+    js::AutoCompartment ac(cx, fp->scopeChain());
     if (!ac.enter())
         return false;
 
