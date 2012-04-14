@@ -1247,14 +1247,15 @@ StackIter::isFunctionFrame() const
 {
     switch (state_) {
       case DONE:
-        JS_NOT_REACHED("Unexpected state");
-        return false;
+        break;
       case SCRIPTED:
         return fp()->isFunctionFrame();
       case NATIVE:
       case IMPLICIT_NATIVE:
         return true;
     }
+    JS_NOT_REACHED("Unexpected state");
+    return false;
 }
 
 bool
@@ -1262,14 +1263,15 @@ StackIter::isEvalFrame() const
 {
     switch (state_) {
       case DONE:
-        JS_NOT_REACHED("Unexpected state");
-        return false;
+        break;
       case SCRIPTED:
         return fp()->isEvalFrame();
       case NATIVE:
       case IMPLICIT_NATIVE:
         return false;
     }
+    JS_NOT_REACHED("Unexpected state");
+    return false;
 }
 
 bool
@@ -1278,14 +1280,15 @@ StackIter::isNonEvalFunctionFrame() const
     JS_ASSERT(!done());
     switch (state_) {
       case DONE:
-        JS_NOT_REACHED("Unexpected state");
-        return false;
+        break;
       case SCRIPTED:
         return fp()->isNonEvalFunctionFrame();
       case NATIVE:
       case IMPLICIT_NATIVE:
         return !isEvalFrame() && isFunctionFrame();
     }
+    JS_NOT_REACHED("Unexpected state");
+    return false;
 }
 
 JSObject &
@@ -1294,14 +1297,15 @@ StackIter::callee() const
     JS_ASSERT(isFunctionFrame());
     switch (state_) {
       case DONE:
-        JS_NOT_REACHED("Unexpected state");
-        return *(JSObject *) NULL;
+        break;
       case SCRIPTED:
         return fp()->callee();
       case NATIVE:
       case IMPLICIT_NATIVE:
         return nativeArgs().callee();
     }
+    JS_NOT_REACHED("Unexpected state");
+    return *(JSObject *) NULL;
 }
 
 Value
@@ -1310,14 +1314,15 @@ StackIter::calleev() const
     JS_ASSERT(isFunctionFrame());
     switch (state_) {
       case DONE:
-        JS_NOT_REACHED("Unexpected state");
-        return Value();
+        break;
       case SCRIPTED:
         return fp()->calleev();
       case NATIVE:
       case IMPLICIT_NATIVE:
         return nativeArgs().calleev();
     }
+    JS_NOT_REACHED("Unexpected state");
+    return Value();
 }
 
 /*****************************************************************************/
