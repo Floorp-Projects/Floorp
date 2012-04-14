@@ -1769,6 +1769,8 @@ Tab.prototype = {
     let viewport = {
       width: gScreenWidth,
       height: gScreenHeight,
+      cssWidth: gScreenWidth / this._zoom,
+      cssHeight: gScreenHeight / this._zoom,
       pageWidth: gScreenWidth,
       pageHeight: gScreenHeight,
       // We make up matching css page dimensions
@@ -1778,16 +1780,16 @@ Tab.prototype = {
     };
 
     // Set the viewport offset to current scroll offset
-    viewport.x = this.browser.contentWindow.scrollX || 0;
-    viewport.y = this.browser.contentWindow.scrollY || 0;
+    viewport.cssX = this.browser.contentWindow.scrollX || 0;
+    viewport.cssY = this.browser.contentWindow.scrollY || 0;
 
     // Transform coordinates based on zoom
-    viewport.x = Math.round(viewport.x * viewport.zoom);
-    viewport.y = Math.round(viewport.y * viewport.zoom);
+    viewport.x = Math.round(viewport.cssX * viewport.zoom);
+    viewport.y = Math.round(viewport.cssY * viewport.zoom);
 
     let doc = this.browser.contentDocument;
     if (doc != null) {
-      let [pageWidth, pageHeight] = this.getPageSize(doc, viewport.width, viewport.height);
+      let [pageWidth, pageHeight] = this.getPageSize(doc, viewport.cssWidth, viewport.cssHeight);
 
       let cssPageWidth = pageWidth;
       let cssPageHeight = pageHeight;
@@ -2521,16 +2523,14 @@ var BrowserEventHandler = {
       let rect = ElementTouchHelper.getBoundingContentRect(element);
 
       let viewport = BrowserApp.selectedTab.getViewport();
-      let vRect = new Rect(viewport.x, viewport.y, viewport.width, viewport.height);
-
-      let zoom = viewport.zoom;
+      let vRect = new Rect(viewport.cssX, viewport.cssY, viewport.cssWidth, viewport.cssHeight);
       let bRect = new Rect(Math.max(0,rect.x - margin),
                            rect.y,
                            rect.w + 2*margin,
                            rect.h);
+
       // constrict the rect to the screen width
-      bRect.width = Math.min(bRect.width, viewport.pageWidth/zoom - bRect.x);
-      bRect.scale(zoom, zoom);
+      bRect.width = Math.min(bRect.width, viewport.cssPageWidth - bRect.x);
 
       let overlap = vRect.intersect(bRect);
       let overlapArea = overlap.width*overlap.height;
@@ -2538,8 +2538,8 @@ var BrowserEventHandler = {
       // on the screen at any time and if its already stretching the width of the screen
       let availHeight = Math.min(bRect.width*vRect.height/vRect.width, bRect.height);
       let showing = overlapArea/(bRect.width*availHeight);
-      let dw = (bRect.width - vRect.width)/zoom;
-      let dx = (bRect.x - vRect.x)/zoom;
+      let dw = (bRect.width - vRect.width);
+      let dx = (bRect.x - vRect.x);
 
       if (showing > 0.9 &&
           dx > minDifference && dx < maxDifference &&

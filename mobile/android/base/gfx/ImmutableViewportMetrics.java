@@ -70,6 +70,10 @@ public class ImmutableViewportMetrics {
                          viewportRectBottom);
     }
 
+    public RectF getCssViewport() {
+        return RectUtils.scale(getViewport(), 1/zoomFactor);
+    }
+
     public FloatSize getPageSize() {
         return new FloatSize(pageSizeWidth, pageSizeHeight);
     }
