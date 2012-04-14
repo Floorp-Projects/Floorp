@@ -51,12 +51,6 @@ let Keys = { meta: false };
 // Class: UI
 // Singleton top-level UI manager.
 let UI = {
-  // Pref that controls whether to display site icons
-  PREF_CHROME_SITE_ICONS: "browser.chrome.site_icons",
-
-  // Pref that controls whether to display fav icons
-  PREF_CHROME_FAVICONS: "browser.chrome.favicons",
-
   // Variable: _frameInitialized
   // True if the Tab View UI frame has been initialized.
   _frameInitialized: false,
@@ -146,12 +140,6 @@ let UI = {
   // Variable: _originalSmoothScroll
   // Used to keep track of the tab strip smooth scroll value.
   _originalSmoothScroll: null,
-
-  // Used to keep track of the browser.chrome.site_icons pref value.
-  _prefSiteIcons: null,
-
-  // Used to keep track of the browser.chrome.favicons pref value.
-  _prefFavicons: null,
 
   // ----------
   // Function: toString
@@ -253,10 +241,6 @@ let UI = {
       // ___ add tab action handlers
       this._addTabActionHandlers();
 
-      // ___ add preference observers
-      Services.prefs.addObserver(this.PREF_CHROME_SITE_ICONS, this, false);
-      Services.prefs.addObserver(this.PREF_CHROME_FAVICONS, this, false);
-
       // ___ groups
       GroupItems.init();
       GroupItems.pauseArrange();
@@ -265,6 +249,9 @@ let UI = {
       // ___ tabs
       TabItems.init();
       TabItems.pausePainting();
+
+      // ___ favicons
+      FavIcons.init();
 
       if (!hasGroupItemsData)
         this.reset();
@@ -330,11 +317,9 @@ let UI = {
     // additional clean up
     TabItems.uninit();
     GroupItems.uninit();
+    FavIcons.uninit();
     Storage.uninit();
     StoragePolicy.uninit();
-
-    Services.prefs.removeObserver(this.PREF_CHROME_SITE_ICONS, this);
-    Services.prefs.removeObserver(this.PREF_CHROME_FAVICONS, this);
 
     this._removeTabActionHandlers();
     this._currentTab = null;
@@ -871,19 +856,6 @@ let UI = {
   _removeTabActionHandlers: function UI__removeTabActionHandlers() {
     for (let name in this._eventListeners)
       AllTabs.unregister(name, this._eventListeners[name]);
-  },
-
-  // ----------
-  // Function: observe
-  // Observes different preference value changes.
-  observe: function UI_observe(subject, topic, data) {
-    if (data == this.PREF_CHROME_SITE_ICONS) {
-      this._prefSiteIcons =
-        Services.prefs.getBoolPref(this.PREF_CHROME_SITE_ICONS);
-    } else if (data == this.PREF_CHROME_FAVICONS) {
-      this._prefFavicons =
-        Services.prefs.getBoolPref(this.PREF_CHROME_FAVICONS);
-    }
   },
 
   // ----------
@@ -1653,79 +1625,6 @@ let UI = {
     this._save();
     GroupItems.saveAll();
     TabItems.saveAll();
-  },
-
-  // ----------
-  // Function: _isImageDocument
-  // Checks whether an image is loaded into the given tab.
-  _isImageDocument: function UI__isImageDocument(tab, callback) {
-    let mm = tab.linkedBrowser.messageManager;
-    let message = "Panorama:isImageDocument";
-
-    mm.addMessageListener(message, function onMessage(cx) {
-      mm.removeMessageListener(cx.name, onMessage);
-      callback(cx.json.isImageDocument);
-    });
-    mm.sendAsyncMessage(message);
-  },
-
-  // ----------
-  // Function: _shouldLoadFavIcon
-  // Checks whether fav icon should be loaded for a given tab.
-  _shouldLoadFavIcon: function UI__shouldLoadFavIcon(tab) {
-    let uri = tab.linkedBrowser.currentURI;
-
-    if (!uri)
-      return false;
-
-    if (this._prefSiteIcons == null)
-      this._prefSiteIcons =
-        Services.prefs.getBoolPref(this.PREF_CHROME_SITE_ICONS);
-
-    if (!this._prefSiteIcons)
-      return false;
-
-    if (this._prefFavicons == null)
-      this._prefFavicons =
-        Services.prefs.getBoolPref(this.PREF_CHROME_FAVICONS);
-
-    return (this._prefFavicons && ("schemeIs" in uri) &&
-            (uri.schemeIs("http") || uri.schemeIs("https")));
-  },
-
-  // ----------
-  // Function: getFavIconUrlForTab
-  // Gets the "favicon link URI" for the given xul:tab, or null if unavailable.
-  getFavIconUrlForTab: function UI_getFavIconUrlForTab(tab, callback) {
-    this._isImageDocument(tab, function(isImageDoc) {
-      if (isImageDoc) {
-        callback(tab.pinned ? tab.image : null);
-      } else {
-        let tabImage = tab.image;
-        if (tabImage) {
-          // if starts with http/https, fetch icon from favicon service via the moz-anno protocal
-          if (/^https?:/.test(tabImage))
-            tabImage = gFavIconService.getFaviconLinkForIcon(gWindow.makeURI(tab.image)).spec;
-
-          callback(tabImage);
-        } else {
-          // ensure we don't show the default icon for about:-style error pages
-          if (!this._shouldLoadFavIcon(tab)) {
-            callback(null);
-          } else {
-            // determine to load the default/cached icon or not
-            gFavIconService.getFaviconURLForPage(tab.linkedBrowser.currentURI,
-              function (uri) {
-                if (!uri) {
-                  callback(gFavIconService.defaultFavicon.spec);
-                } else {
-                  callback(gFavIconService.getFaviconLinkForIcon(uri).spec);
-                }
-              });
-          }
-        }
-      }
-    }.bind(this));
   },
 
   // ----------
