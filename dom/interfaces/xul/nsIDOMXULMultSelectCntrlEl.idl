@@ -42,6 +42,10 @@
 [scriptable, uuid(E3CD8269-9502-4E70-910C-0D6D71B22253)]
 interface nsIDOMXULMultiSelectControlElement : nsIDOMXULSelectControlElement
 {
+%{C++
+  using nsIDOMXULSelectControlElement::GetSelectedItem;
+%}
+
   attribute DOMString selType;
 
   attribute nsIDOMXULSelectControlItemElement currentItem;
