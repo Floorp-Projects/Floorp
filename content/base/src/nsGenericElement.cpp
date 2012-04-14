@@ -3610,7 +3610,7 @@ nsGenericElement::GetInlineStyleRule()
   return nsnull;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGenericElement::SetInlineStyleRule(css::StyleRule* aStyleRule,
                                      const nsAString* aSerialized,
                                      bool aNotify)
