@@ -2145,7 +2145,7 @@ DumpStack(JSContext *cx, unsigned argc, Value *vp)
     uint32_t index = 0;
     for (; !iter.done(); ++index, ++iter) {
         Value v;
-        if (iter.isNonEvalFunctionFrame()) {
+        if (iter.isNonEvalFunctionFrame() || iter.isNativeCall()) {
             v = iter.calleev();
         } else if (iter.isEvalFrame()) {
             v = StringValue(evalStr);
