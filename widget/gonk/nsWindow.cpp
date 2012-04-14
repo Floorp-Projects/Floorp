@@ -128,7 +128,7 @@ public:
         {
             ScopedClose fd(open(kSleepFile, O_RDONLY, 0));
             do {
-                len = read(fd.mFd, &buf, 1);
+                len = read(fd.get(), &buf, 1);
             } while (len < 0 && errno == EINTR);
             NS_WARN_IF_FALSE(len >= 0, "WAIT_FOR_FB_SLEEP failed");
             NS_DispatchToMainThread(mScreenOffEvent);
@@ -137,7 +137,7 @@ public:
         {
             ScopedClose fd(open(kWakeFile, O_RDONLY, 0));
             do {
-                len = read(fd.mFd, &buf, 1);
+                len = read(fd.get(), &buf, 1);
             } while (len < 0 && errno == EINTR);
             NS_WARN_IF_FALSE(len >= 0, "WAIT_FOR_FB_WAKE failed");
             NS_DispatchToMainThread(mScreenOnEvent);

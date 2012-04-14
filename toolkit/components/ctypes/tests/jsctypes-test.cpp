@@ -23,7 +23,6 @@
  *  Fredrik Larsson <nossralf@gmail.com>
  *  Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
  *  Dan Witte <dwitte@mozilla.com>
- *  David Rajchenbach-Teller <dteller@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,15 +39,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "jsctypes-test.h"
-#include "jsapi.h"
 #include "nsCRTGlue.h"
 #include <math.h>
 #include <stdarg.h>
-#include <stdio.h>
-
-#if defined(XP_WIN)
-#define snprintf _snprintf
-#endif // defined(XP_WIN)
 
 template <typename T> struct ValueTraits {
   static T literal() { return static_cast<T>(109.25); }
@@ -410,3 +403,4 @@ test_vector_add_va_cdecl(PRUint8 num_vecs,
 }
 
 RECT data_rect = { -1, -2, 3, 4 };
+

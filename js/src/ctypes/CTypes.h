@@ -430,16 +430,6 @@ enum CClosureSlot {
   CCLOSURE_SLOTS
 };
 
-enum CDataFinalizerSlot {
-  // The type of the value (a CType JSObject).
-  // We hold it to permit ImplicitConvert and ToSource.
-  SLOT_DATAFINALIZER_VALTYPE           = 0,
-  // The type of the function used at finalization (a CType JSObject).
-  // We hold it to permit |ToSource|.
-  SLOT_DATAFINALIZER_CODETYPE          = 1,
-  CDATAFINALIZER_SLOTS
-};
-
 enum TypeCtorSlot {
   SLOT_FN_CTORPROTO = 0 // ctypes.{Pointer,Array,Struct}Type.prototype
   // JSFunction objects always get exactly two slots.

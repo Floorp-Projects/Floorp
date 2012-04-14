@@ -39,13 +39,17 @@ package org.mozilla.gecko.sync.stage;
 
 import java.net.URISyntaxException;
 
+import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.sync.MetaGlobalException;
 import org.mozilla.gecko.sync.repositories.ConstrainedServer11Repository;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.android.AndroidBrowserHistoryRepository;
+import org.mozilla.gecko.sync.repositories.android.FennecControlHelper;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecordFactory;
 
 public class AndroidBrowserHistoryServerSyncStage extends ServerSyncStage {
+  protected static final String LOG_TAG = "HistoryStage";
 
   // Eventually this kind of sync stage will be data-driven,
   // and all this hard-coding can go away.
@@ -79,5 +83,17 @@ public class AndroidBrowserHistoryServerSyncStage extends ServerSyncStage {
   @Override
   protected RecordFactory getRecordFactory() {
     return new HistoryRecordFactory();
+  }
+
+  @Override
+  protected boolean isEnabled() throws MetaGlobalException {
+    if (session == null || session.getContext() == null) {
+      return false;
+    }
+    boolean migrated = FennecControlHelper.isHistoryMigrated(session.getContext());
+    if (!migrated) {
+      Logger.warn(LOG_TAG, "Not enabling history engine since Fennec history is not migrated.");
+    }
+    return super.isEnabled() && migrated;
   }
 }

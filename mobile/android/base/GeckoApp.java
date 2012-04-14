@@ -2270,7 +2270,7 @@ abstract public class GeckoApp
             Log.i(LOGTAG, "checking profile migration in: " + profileDir.getAbsolutePath());
             final GeckoApp app = GeckoApp.mAppContext;
             ProfileMigrator profileMigrator =
-                new ProfileMigrator(app.getContentResolver(), profileDir);
+                new ProfileMigrator(app, profileDir);
 
             // Do a migration run on the first start after an upgrade.
             if (!profileMigrator.hasMigrationRun()) {
