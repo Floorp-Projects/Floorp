@@ -124,6 +124,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsDocument::)
 
   // nsIDOMHTMLDocument interface
+  using nsDocument::GetPlugins;
   NS_DECL_NSIDOMHTMLDOCUMENT
 
   /**
