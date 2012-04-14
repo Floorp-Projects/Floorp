@@ -653,50 +653,6 @@ xpc_qsVariantToJsval(XPCLazyCallContext &ccx,
                      nsIVariant *p,
                      jsval *rval);
 
-/**
- * Convert a jsval to PRInt64. Return true on success.
- */
-inline JSBool
-xpc_qsValueToInt64(JSContext *cx,
-                   jsval v,
-                   PRInt64 *result)
-{
-    if (JSVAL_IS_INT(v)) {
-        int32_t intval;
-        if (!JS_ValueToECMAInt32(cx, v, &intval))
-            return false;
-        *result = static_cast<PRInt64>(intval);
-    } else {
-        double doubleval;
-        if (!JS_ValueToNumber(cx, v, &doubleval))
-            return false;
-        *result = static_cast<PRInt64>(doubleval);
-    }
-    return true;
-}
-
-/**
- * Convert a jsval to PRUint64. Return true on success.
- */
-inline JSBool
-xpc_qsValueToUint64(JSContext *cx,
-                    jsval v,
-                    PRUint64 *result)
-{
-    if (JSVAL_IS_INT(v)) {
-        uint32_t intval;
-        if (!JS_ValueToECMAUint32(cx, v, &intval))
-            return false;
-        *result = static_cast<PRUint64>(intval);
-    } else {
-        double doubleval;
-        if (!JS_ValueToNumber(cx, v, &doubleval))
-            return false;
-        *result = static_cast<PRUint64>(doubleval);
-    }
-    return true;
-}
-
 #ifdef DEBUG
 void
 xpc_qsAssertContextOK(JSContext *cx);
