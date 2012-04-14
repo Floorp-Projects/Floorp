@@ -5823,11 +5823,10 @@ DefineIDBInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
   const char* interface;
   if (aIID->Equals(NS_GET_IID(nsIIDBCursor))) {
     interface = IDBConstant::IDBCursor;
-  }
-  else if (aIID->Equals(NS_GET_IID(nsIIDBRequest))) {
+  } else if (aIID->Equals(NS_GET_IID(nsIIDBRequest))) {
     interface = IDBConstant::IDBRequest;
-  }
-  else if (aIID->Equals(NS_GET_IID(nsIIDBTransaction))) {
+  } else {
+    MOZ_ASSERT(aIID->Equals(NS_GET_IID(nsIIDBTransaction)));
     interface = IDBConstant::IDBTransaction;
   }
 
@@ -8776,9 +8775,9 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSObject *obj,
     }
   }
 
-  nsHTMLDocument *doc = GetDocument(obj);
-  nsISupports *result;
-  nsWrapperCache *cache;
+  nsHTMLDocument* doc = GetDocument(obj);
+  nsISupports* result = nsnull;
+  nsWrapperCache* cache = nsnull;
   nsresult rv = NS_OK;
 
   if (JSID_IS_STRING(id)) {

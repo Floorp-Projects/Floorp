@@ -432,7 +432,7 @@ ContentParent::ContentParent()
         nsCString buildID(gAppData->buildID);
 
         //Sending all information to content process
-        SendAppInfo(version, buildID);
+        unused << SendAppInfo(version, buildID);
     }
 }
 
@@ -718,10 +718,10 @@ ContentParent::Observe(nsISupports* aSubject,
         unused << SendPMemoryReportRequestConstructor();
     }
     else if (!strcmp(aTopic, "child-gc-request")){
-        SendGarbageCollect();
+        unused << SendGarbageCollect();
     }
     else if (!strcmp(aTopic, "child-cc-request")){
-        SendCycleCollect();
+        unused << SendCycleCollect();
     }
 #ifdef ACCESSIBILITY
     // Make sure accessibility is running in content process when accessibility
