@@ -49,6 +49,9 @@
 #include "jstypedarray.h"
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/ipc/Ril.h"
+#ifdef MOZ_B2G_BT
+#include "mozilla/ipc/DBusThread.h"
+#endif
 #include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
@@ -231,6 +234,11 @@ SystemWorkerManager::Init()
   rv = InitWifi(cx);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef MOZ_B2G_BT
+  rv = InitBluetooth(cx);
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
   nsCOMPtr<nsIObserverService> obs =
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
   if (!obs) {
@@ -252,7 +260,9 @@ SystemWorkerManager::Shutdown()
   mShutdown = true;
 
   StopRil();
-
+#ifdef MOZ_B2G_BT
+  StopDBus();
+#endif
   mRILWorker = nsnull;
   nsCOMPtr<nsIWifi> wifi(do_QueryInterface(mWifiWorker));
   if (wifi) {
@@ -362,6 +372,19 @@ SystemWorkerManager::InitWifi(JSContext *cx)
   NS_ENSURE_TRUE(worker, NS_ERROR_FAILURE);
 
   mWifiWorker = worker;
+  return NS_OK;
+}
+
+nsresult
+SystemWorkerManager::InitBluetooth(JSContext *cx)
+{
+  // nsCOMPtr<nsIWorkerHolder> worker = do_CreateInstance(kWifiWorkerCID);
+  // NS_ENSURE_TRUE(worker, NS_ERROR_FAILURE);
+
+  // mWifiWorker = worker;
+#ifdef MOZ_B2G_BT
+  StartDBus();
+#endif
   return NS_OK;
 }
 
