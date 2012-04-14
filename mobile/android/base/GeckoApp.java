@@ -1951,7 +1951,7 @@ abstract public class GeckoApp
 
         if (Intent.ACTION_MAIN.equals(action)) {
             Log.i(LOGTAG, "Intent : ACTION_MAIN");
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createLoadEvent(""));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(""));
         }
         else if (ACTION_LOAD.equals(action)) {
             String uri = intent.getDataString();
@@ -1960,17 +1960,17 @@ abstract public class GeckoApp
         }
         else if (Intent.ACTION_VIEW.equals(action)) {
             String uri = intent.getDataString();
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createLoadEvent(uri));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
             Log.i(LOGTAG,"onNewIntent: " + uri);
         }
         else if (ACTION_WEBAPP.equals(action)) {
             String uri = getURIFromIntent(intent);
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createLoadEvent(uri));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createWebappLoadEvent(uri));
             Log.i(LOGTAG,"Intent : WEBAPP - " + uri);
         }
         else if (ACTION_BOOKMARK.equals(action)) {
             String uri = getURIFromIntent(intent);
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createLoadEvent(uri));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBookmarkLoadEvent(uri));
             Log.i(LOGTAG,"Intent : BOOKMARK - " + uri);
         }
     }

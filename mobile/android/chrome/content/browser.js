@@ -253,6 +253,7 @@ var BrowserApp = {
     let loadParams = {};
     let url = "about:home";
     let forceRestore = false;
+    let pinned = false;
     if ("arguments" in window) {
       if (window.arguments[0])
         url = window.arguments[0];
@@ -262,6 +263,8 @@ var BrowserApp = {
         gScreenWidth = window.arguments[2];
       if (window.arguments[3])
         gScreenHeight = window.arguments[3];
+      if (window.arguments[4])
+        pinned = window.arguments[4];
     }
 
     if (url == "about:empty")
@@ -289,6 +292,7 @@ var BrowserApp = {
 
       // Open any commandline URLs, except the homepage
       if (url && url != "about:home") {
+        loadParams.pinned = pinned;
         this.addTab(url, loadParams);
       } else {
         // Let the session make a restored tab active
@@ -319,6 +323,7 @@ var BrowserApp = {
       ss.restoreLastSession(restoreToFront, forceRestore);
     } else {
       loadParams.showProgress = (url != "about:home");
+      loadParams.pinned = pinned;
       this.addTab(url, loadParams);
 
       // show telemetry door hanger if we aren't restoring a session
@@ -569,6 +574,12 @@ var BrowserApp = {
     let selected = "selected" in aParams ? aParams.selected : true;
     if (selected)
       this.selectedTab = newTab;
+
+    let pinned = "pinned" in aParams ? aParams.pinned : false;
+    if (pinned) {
+      let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+      ss.setTabValue(newTab, "appOrigin", aURI);
+    }
 
     let evt = document.createEvent("UIEvents");
     evt.initUIEvent("TabOpen", true, false, window, null);
@@ -1440,7 +1451,26 @@ nsBrowserAccess.prototype = {
       } catch(e) { }
     }
 
-    let newTab = (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW || aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB);
+    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+    let pinned = false;
+
+    if (aURI && aWhere == Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB) {
+      pinned = true;
+      let spec = aURI.spec;
+      let tabs = BrowserApp.tabs;
+      for (let i = 0; i < tabs.length; i++) {
+        let appOrigin = ss.getTabValue(tabs[i], "appOrigin");
+        if (appOrigin == spec) {
+          let tab = tabs[i];
+          BrowserApp.selectTab(tab);
+          return tab.browser;
+        }
+      }
+    }
+
+    let newTab = (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW ||
+                  aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB ||
+                  aWhere == Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB);
 
     if (newTab) {
       let parentId = -1;
@@ -1455,7 +1485,9 @@ nsBrowserAccess.prototype = {
                                                                       referrerURI: referrer,
                                                                       external: isExternal,
                                                                       parentId: parentId,
-                                                                      selected: true });
+                                                                      selected: true,
+                                                                      pinned: pinned });
+
       return tab.browser;
     }
 
@@ -4618,12 +4650,10 @@ var WebappsUI = {
         tab = tabs[i];
     }
 
-    if (tab) {
+    if (tab)
       BrowserApp.selectTab(tab);
-    } else {
-      tab = BrowserApp.addTab(aURI);
-      ss.setTabValue(tab, "appOrigin", aOrigin);
-    }
+    else
+      BrowserApp.addTab(aURI, { pinned: true });
   }
 }
 
