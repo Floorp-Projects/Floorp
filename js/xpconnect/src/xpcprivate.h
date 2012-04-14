@@ -1606,7 +1606,7 @@ public:
     static void InitStatics() { gScopes = nsnull; gDyingScopes = nsnull; }
 
     XPCContext *GetContext() { return mContext; }
-    void SetContext(XPCContext *xpcc) { mContext = nsnull; }
+    void ClearContext() { mContext = nsnull; }
 
     nsDataHashtable<nsDepCharHashKey, JSObject*>& GetCachedDOMPrototypes()
     {
