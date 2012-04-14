@@ -471,8 +471,6 @@ struct JSCompartment
     js::DebugScriptMap *debugScriptMap;
 };
 
-#define JS_PROPERTY_TREE(cx)    ((cx)->compartment->propertyTree)
-
 namespace js {
 static inline MathCache *
 GetMathCache(JSContext *cx)
