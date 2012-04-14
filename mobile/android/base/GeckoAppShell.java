@@ -430,7 +430,7 @@ public class GeckoAppShell
         }
     }
 
-    public static void runGecko(String apkPath, String args, String url, boolean restoreSession) {
+    public static void runGecko(String apkPath, String args, String url, String type, boolean restoreSession) {
         // run gecko -- it will spawn its own thread
         GeckoAppShell.nativeInit();
 
@@ -446,7 +446,9 @@ public class GeckoAppShell
         if (args != null)
             combinedArgs += " " + args;
         if (url != null)
-            combinedArgs += " -remote " + url;
+            combinedArgs += " -url " + url;
+        if (type != null)
+            combinedArgs += " " + type;
         if (restoreSession)
             combinedArgs += " -restoresession";
 
