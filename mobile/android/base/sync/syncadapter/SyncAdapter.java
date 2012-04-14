@@ -421,9 +421,13 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
     if (accountGUID == null) {
       Logger.info(LOG_TAG, "Account GUID was null. Creating a new one.");
       accountGUID = Utils.generateGuid();
-      mAccountManager.setUserData(localAccount, Constants.ACCOUNT_GUID, accountGUID);
+      setAccountGUID(mAccountManager, localAccount, accountGUID);
     }
     return accountGUID;
+  }
+
+  public static void setAccountGUID(AccountManager accountManager, Account account, String accountGUID) {
+    accountManager.setUserData(account, Constants.ACCOUNT_GUID, accountGUID);
   }
 
   @Override
@@ -431,9 +435,13 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
     String clientName = mAccountManager.getUserData(localAccount, Constants.CLIENT_NAME);
     if (clientName == null) {
       clientName = GlobalConstants.PRODUCT_NAME + " on " + android.os.Build.MODEL;
-      mAccountManager.setUserData(localAccount, Constants.CLIENT_NAME, clientName);
+      setClientName(mAccountManager, localAccount, clientName);
     }
     return clientName;
+  }
+
+  public static void setClientName(AccountManager accountManager, Account account, String clientName) {
+    accountManager.setUserData(account, Constants.CLIENT_NAME, clientName);
   }
 
   @Override
