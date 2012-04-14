@@ -127,13 +127,13 @@ argumentUnboxingTemplates = {
         "        return JS_FALSE;\n",
 
     'long long':
-        "    PRInt64 ${name};\n"
-        "    if (!xpc_qsValueToInt64(cx, ${argVal}, &${name}))\n"
+        "    int64_t ${name};\n"
+        "    if (!xpc::ValueToInt64(cx, ${argVal}, &${name}))\n"
         "        return JS_FALSE;\n",
 
     'unsigned long long':
-        "    PRUint64 ${name};\n"
-        "    if (!xpc_qsValueToUint64(cx, ${argVal}, &${name}))\n"
+        "    uint64_t ${name};\n"
+        "    if (!xpc::ValueToUint64(cx, ${argVal}, &${name}))\n"
         "        return JS_FALSE;\n",
 
     'float':
