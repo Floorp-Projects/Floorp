@@ -943,6 +943,9 @@ JSScript::destroySourceMap(FreeOp *fop)
 const char *
 js::SaveScriptFilename(JSContext *cx, const char *filename)
 {
+    if (!filename)
+        return NULL;
+
     JSCompartment *comp = cx->compartment;
 
     ScriptFilenameTable::AddPtr p = comp->scriptFilenameTable.lookupForAdd(filename);
@@ -985,6 +988,7 @@ js::SaveScriptFilename(JSContext *cx, const char *filename)
 void
 js::MarkScriptFilename(const char *filename)
 {
+    JS_ASSERT(filename);
     ScriptFilenameEntry *sfe = FILENAME_TO_SFE(filename);
     sfe->marked = true;
 }

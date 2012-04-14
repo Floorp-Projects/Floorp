@@ -637,6 +637,15 @@ let Utils = {
   },
 
   // ----------
+  // Function: isValidXULTab
+  // A xulTab is valid if it has not been closed,
+  // and it has not been removed from the DOM
+  // Returns true if the tab is valid.
+  isValidXULTab: function Utils_isValidXULTab(xulTab) {
+    return !xulTab.closing && xulTab.parentNode;
+  },
+
+  // ----------
   // Function: isNumber
   // Returns true if the argument is a valid number.
   isNumber: function Utils_isNumber(n) {
