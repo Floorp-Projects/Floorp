@@ -119,13 +119,13 @@ ProgressMeterAccessible<Max>::Value(nsString& aValue)
 
   double maxValue = 0;
   nsresult rv = GetMaximumValue(&maxValue);
-  NS_ENSURE_SUCCESS(rv, );
-  if (maxValue == 0)
+  if (NS_FAILED(rv) || maxValue == 0)
     return;
 
   double curValue = 0;
   GetCurrentValue(&curValue);
-  NS_ENSURE_SUCCESS(rv, );
+  if (NS_FAILED(rv))
+    return;
 
   // Treat the current value bigger than maximum as 100%.
   double percentValue = (curValue < maxValue) ?
