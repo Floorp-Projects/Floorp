@@ -1348,10 +1348,10 @@ _getstringidentifier(const NPUTF8* name)
   if (!stack)
     return NULL;
 
-  JSContext* cx = stack->GetSafeJSContext();
-  if (!cx) {
+  JSContext *cx = nsnull;
+  stack->GetSafeJSContext(&cx);
+  if (!cx)
     return NULL;
-  }
 
   JSAutoRequest ar(cx);
   return doGetIdentifier(cx, name);
@@ -1369,10 +1369,10 @@ _getstringidentifiers(const NPUTF8** names, int32_t nameCount,
   if (!stack)
     return;
 
-  JSContext* cx = stack->GetSafeJSContext();
-  if (!cx) {
+  JSContext *cx = nsnull;
+  stack->GetSafeJSContext(&cx);
+  if (!cx)
     return;
-  }
 
   JSAutoRequest ar(cx);
 

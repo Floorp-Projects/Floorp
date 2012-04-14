@@ -1501,9 +1501,11 @@ nsresult SafeJSContext::Push() {
     return NS_ERROR_FAILURE;
 
   mService = do_GetService(sJSStackContractID);
-  if (mService) {
-    JSContext* cx = mService->GetSafeJSContext();
-    if (cx && NS_SUCCEEDED(mService->Push(cx))) {
+  if(mService) {
+    JSContext *cx;
+    if (NS_SUCCEEDED(mService->GetSafeJSContext(&cx)) &&
+        cx &&
+        NS_SUCCEEDED(mService->Push(cx))) {
       // Save cx in mContext to indicate need to pop.
       mContext = cx;
     }

@@ -53,12 +53,11 @@ def copy(thissrcdir, dest, directories):
   print "Copying %s..." % (directories, )
   for d in directories:
     dirtocreate = dest
+    os.makedirs(d)
 
     subdirs, mochitests, supportfiles = parseManifestFile(dest, d)
     sourcedir = "hg-%s/%s" % (dest, d)
     destdir = "%s/%s" % (dest, d)
-    os.makedirs(destdir)
-
     for mochitest in mochitests:
       shutil.copy("%s/%s" % (sourcedir, mochitest), "%s/test_%s" % (destdir, mochitest))
     for support in supportfiles:
@@ -140,9 +139,9 @@ def printMakefiles(thissrcdir, dest, directories):
 
 def hgadd(dest, directories):
   """Inform hg of the files in |directories|."""
-  print "hg addremoving..."
+  print "hg adding..."
   for d in directories:
-    subprocess.check_call(["hg", "addremove", "%s/%s" % (dest, d)])
+    subprocess.check_call(["hg", "add", "%s/%s" % (dest, d)])
 
 def importDirs(thissrcdir, dest, directories):
   copy(thissrcdir, dest, directories)
@@ -171,7 +170,7 @@ def importRepo(confFile, thissrcdir):
     print "Done"
 
 if __name__ == "__main__":
-  if len(sys.argv) != 2:
+  if len(sys.argv) == 2:
     print "Need one argument."
   else:
-    importRepo(sys.argv[1], "dom/imported-tests")
+    importRepo(sys.argv[1], "dom/tests/mochitest/w3c")

@@ -100,6 +100,7 @@ using mozilla::MutexAutoLock;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 using mozilla::dom::workers::exceptions::ThrowDOMExceptionForCode;
+using mozilla::xpconnect::memory::ReportJSRuntimeExplicitTreeStats;
 
 USING_WORKERS_NAMESPACE
 using namespace mozilla::dom::workers::events;
@@ -262,8 +263,12 @@ public:
 
     // Always report, even if we're disabled, so that we at least get an entry
     // in about::memory.
-    return xpc::ReportJSRuntimeExplicitTreeStats(rtStats, mPathPrefix,
-                                                 aCallback, aClosure);
+    rv = ReportJSRuntimeExplicitTreeStats(rtStats, mPathPrefix, aCallback, aClosure);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    return NS_OK;
   }
 
   NS_IMETHOD

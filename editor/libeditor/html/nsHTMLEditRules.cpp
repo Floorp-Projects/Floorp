@@ -685,41 +685,41 @@ nsHTMLEditRules::GetListState(bool *aMixed, bool *aOL, bool *aUL, bool *aDL)
   nsresult res = GetListActionNodes(arrayOfNodes, false, true);
   NS_ENSURE_SUCCESS(res, res);
 
-  // Examine list type for nodes in selection.
+  // examine list type for nodes in selection
   PRInt32 listCount = arrayOfNodes.Count();
-  for (PRInt32 i = listCount - 1; i >= 0; --i) {
-    nsIDOMNode* curDOMNode = arrayOfNodes[i];
-    nsCOMPtr<dom::Element> curElement = do_QueryInterface(curDOMNode);
-
-    if (!curElement) {
-      bNonList = true;
-    } else if (curElement->IsHTML(nsGkAtoms::ul)) {
+  PRInt32 i;
+  for (i=listCount-1; i>=0; i--)
+  {
+    nsIDOMNode* curNode = arrayOfNodes[i];
+    
+    if (nsHTMLEditUtils::IsUnorderedList(curNode))
       *aUL = true;
-    } else if (curElement->IsHTML(nsGkAtoms::ol)) {
+    else if (nsHTMLEditUtils::IsOrderedList(curNode))
       *aOL = true;
-    } else if (curElement->IsHTML(nsGkAtoms::li)) {
-      if (nsINode* parent = curElement->GetElementParent()) {
-        if (parent->AsElement()->IsHTML(nsGkAtoms::ul)) {
-          *aUL = true;
-        } else if (parent->AsElement()->IsHTML(nsGkAtoms::ol)) {
-          *aOL = true;
-        }
-      }
-    } else if (curElement->IsHTML(nsGkAtoms::dl) ||
-               curElement->IsHTML(nsGkAtoms::dt) ||
-               curElement->IsHTML(nsGkAtoms::dd)) {
-      *aDL = true;
-    } else {
-      bNonList = true;
+    else if (nsEditor::NodeIsType(curNode, nsEditProperty::li))
+    {
+      nsCOMPtr<nsIDOMNode> parent;
+      PRInt32 offset;
+      res = nsEditor::GetNodeLocation(curNode, address_of(parent), &offset);
+      NS_ENSURE_SUCCESS(res, res);
+      if (nsHTMLEditUtils::IsUnorderedList(parent))
+        *aUL = true;
+      else if (nsHTMLEditUtils::IsOrderedList(parent))
+        *aOL = true;
     }
+    else if (nsEditor::NodeIsType(curNode, nsEditProperty::dl) ||
+             nsEditor::NodeIsType(curNode, nsEditProperty::dt) ||
+             nsEditor::NodeIsType(curNode, nsEditProperty::dd) )
+    {
+      *aDL = true;
+    }
+    else bNonList = true;
   }  
   
   // hokey arithmetic with booleans
-  if ((*aUL + *aOL + *aDL + bNonList) > 1) {
-    *aMixed = true;
-  }
-
-  return NS_OK;
+  if ( (*aUL + *aOL + *aDL + bNonList) > 1) *aMixed = true;
+  
+  return res;
 }
 
 nsresult 

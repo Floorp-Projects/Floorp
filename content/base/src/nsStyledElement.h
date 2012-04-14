@@ -74,9 +74,9 @@ public:
   virtual const nsAttrValue* DoGetClasses() const;
 
   virtual mozilla::css::StyleRule* GetInlineStyleRule();
-  virtual nsresult SetInlineStyleRule(mozilla::css::StyleRule* aStyleRule,
-                                      const nsAString* aSerialized,
-                                      bool aNotify);
+  NS_IMETHOD SetInlineStyleRule(mozilla::css::StyleRule* aStyleRule,
+                                const nsAString* aSerialized,
+                                bool aNotify);
 
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);

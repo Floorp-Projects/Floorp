@@ -339,8 +339,6 @@ private:
   nsDOMStorage* mOwner;
 };
 
-class nsDOMStorage2;
-
 class nsDOMStorage : public nsIDOMStorageObsolete,
                      public nsPIDOMStorage
 {
@@ -368,6 +366,9 @@ public:
   virtual nsIPrincipal* Principal();
   virtual bool CanAccess(nsIPrincipal *aPrincipal);
   virtual nsDOMStorageType StorageType();
+  virtual void BroadcastChangeNotification(const nsSubstring &aKey,
+                                           const nsSubstring &aOldValue,
+                                           const nsSubstring &aNewValue);
 
   // Check whether storage may be used by the caller, and whether it
   // is session only.  Returns true if storage may be used.
@@ -418,7 +419,7 @@ public:
 
   friend class nsIDOMStorage2;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsDOMStorage2* mEventBroadcaster;
+  nsPIDOMStorage* mEventBroadcaster;
 };
 
 class nsDOMStorage2 : public nsIDOMStorage,
@@ -444,10 +445,10 @@ public:
   virtual nsIPrincipal* Principal();
   virtual bool CanAccess(nsIPrincipal *aPrincipal);
   virtual nsDOMStorageType StorageType();
+  virtual void BroadcastChangeNotification(const nsSubstring &aKey,
+                                           const nsSubstring &aOldValue,
+                                           const nsSubstring &aNewValue);
 
-  void BroadcastChangeNotification(const nsSubstring &aKey,
-                                   const nsSubstring &aOldValue,
-                                   const nsSubstring &aNewValue);
   nsresult InitAsSessionStorageFork(nsIPrincipal *aPrincipal,
                                     const nsSubstring &aDocumentURI,
                                     nsIDOMStorageObsolete* aStorage);

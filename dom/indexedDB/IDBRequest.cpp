@@ -134,8 +134,7 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
     nsIThreadJSContextStack* cxStack = nsContentUtils::ThreadJSContextStack();
     NS_ASSERTION(cxStack, "Failed to get thread context stack!");
 
-    cx = cxStack->GetSafeJSContext();
-    if (!cx) {
+    if (NS_FAILED(cxStack->GetSafeJSContext(&cx))) {
       NS_WARNING("Failed to get safe JSContext!");
       rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       mError = DOMError::CreateForNSResult(rv);

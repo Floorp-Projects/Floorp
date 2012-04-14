@@ -41,7 +41,6 @@
 
 #include "mozilla/plugins/PPluginInstanceParent.h"
 #include "mozilla/plugins/PluginScriptableObjectParent.h"
-#include "mozilla/unused.h"
 #if defined(OS_WIN)
 #include "mozilla/gfx/SharedDIBWin.h"
 #elif defined(MOZ_WIDGET_COCOA)
@@ -306,10 +305,7 @@ public:
     nsresult HandleGUIEvent(const nsGUIEvent& anEvent, bool* handled);
 #endif
 
-    void DidComposite()
-    {
-        unused << SendNPP_DidComposite();
-    }
+    void DidComposite() { SendNPP_DidComposite(); }
 
 private:
     // Create an appropriate platform surface for a background of size
