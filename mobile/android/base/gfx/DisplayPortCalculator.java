@@ -24,6 +24,10 @@ final class DisplayPortCalculator {
     private static final String PREF_DISPLAYPORT_VB_MULTIPLIER = "gfx.displayport.strategy_vb.multiplier";
     private static final String PREF_DISPLAYPORT_VB_VELOCITY_THRESHOLD = "gfx.displayport.strategy_vb.threshold";
     private static final String PREF_DISPLAYPORT_VB_REVERSE_BUFFER = "gfx.displayport.strategy_vb.reverse_buffer";
+    private static final String PREF_DISPLAYPORT_VB_DANGER_X_BASE = "gfx.displayport.strategy_vb.danger_x_base";
+    private static final String PREF_DISPLAYPORT_VB_DANGER_Y_BASE = "gfx.displayport.strategy_vb.danger_y_base";
+    private static final String PREF_DISPLAYPORT_VB_DANGER_X_INCR = "gfx.displayport.strategy_vb.danger_x_incr";
+    private static final String PREF_DISPLAYPORT_VB_DANGER_Y_INCR = "gfx.displayport.strategy_vb.danger_y_incr";
 
     private static DisplayPortStrategy sStrategy = new VelocityBiasStrategy(null);
 
@@ -46,6 +50,10 @@ final class DisplayPortCalculator {
         prefs.put(PREF_DISPLAYPORT_VB_MULTIPLIER);
         prefs.put(PREF_DISPLAYPORT_VB_VELOCITY_THRESHOLD);
         prefs.put(PREF_DISPLAYPORT_VB_REVERSE_BUFFER);
+        prefs.put(PREF_DISPLAYPORT_VB_DANGER_X_BASE);
+        prefs.put(PREF_DISPLAYPORT_VB_DANGER_Y_BASE);
+        prefs.put(PREF_DISPLAYPORT_VB_DANGER_X_INCR);
+        prefs.put(PREF_DISPLAYPORT_VB_DANGER_Y_INCR);
     }
 
     /**
@@ -280,11 +288,55 @@ final class DisplayPortCalculator {
         private final float VELOCITY_THRESHOLD;
         // How much of the buffer to keep in the reverse direction of the velocity
         private final float REVERSE_BUFFER;
+        // If the visible rect is within the danger zone we start redrawing to minimize
+        // checkerboarding. the danger zone amount is a linear function of the form:
+        //    viewportsize * (base + velocity * incr)
+        // where base and incr are configurable values.
+        private final float DANGER_ZONE_BASE_X_MULTIPLIER;
+        private final float DANGER_ZONE_BASE_Y_MULTIPLIER;
+        private final float DANGER_ZONE_INCR_X_MULTIPLIER;
+        private final float DANGER_ZONE_INCR_Y_MULTIPLIER;
 
         VelocityBiasStrategy(Map<String, Integer> prefs) {
             SIZE_MULTIPLIER = getFloatPref(prefs, PREF_DISPLAYPORT_VB_MULTIPLIER, 1500);
             VELOCITY_THRESHOLD = GeckoAppShell.getDpi() * getFloatPref(prefs, PREF_DISPLAYPORT_VB_VELOCITY_THRESHOLD, 32);
             REVERSE_BUFFER = getFloatPref(prefs, PREF_DISPLAYPORT_VB_REVERSE_BUFFER, 200);
+            DANGER_ZONE_BASE_X_MULTIPLIER = getFloatPref(prefs, PREF_DISPLAYPORT_VB_DANGER_X_BASE, 1000);
+            DANGER_ZONE_BASE_Y_MULTIPLIER = getFloatPref(prefs, PREF_DISPLAYPORT_VB_DANGER_Y_BASE, 1000);
+            DANGER_ZONE_INCR_X_MULTIPLIER = getFloatPref(prefs, PREF_DISPLAYPORT_VB_DANGER_X_INCR, 0);
+            DANGER_ZONE_INCR_Y_MULTIPLIER = getFloatPref(prefs, PREF_DISPLAYPORT_VB_DANGER_Y_INCR, 0);
+        }
+
+        /**
+         * Split the given amounts into margins based on the VELOCITY_THRESHOLD and REVERSE_BUFFER values.
+         * If the velocity is above the VELOCITY_THRESHOLD on an axis, split the amount into REVERSE_BUFFER
+         * and 1.0 - REVERSE_BUFFER fractions. The REVERSE_BUFFER fraction is set as the margin in the
+         * direction opposite to the velocity, and the remaining fraction is set as the margin in the direction
+         * of the velocity. If the velocity is lower than VELOCITY_THRESHOLD, split the amount evenly into the
+         * two margins on that axis.
+         */
+        private RectF velocityBiasedMargins(float xAmount, float yAmount, PointF velocity) {
+            RectF margins = new RectF();
+
+            if (velocity.x > VELOCITY_THRESHOLD) {
+                margins.left = xAmount * REVERSE_BUFFER;
+            } else if (velocity.x < -VELOCITY_THRESHOLD) {
+                margins.left = xAmount * (1.0f - REVERSE_BUFFER);
+            } else {
+                margins.left = xAmount / 2.0f;
+            }
+            margins.right = xAmount - margins.left;
+    
+            if (velocity.y > VELOCITY_THRESHOLD) {
+                margins.top = yAmount * REVERSE_BUFFER;
+            } else if (velocity.y < -VELOCITY_THRESHOLD) {
+                margins.top = yAmount * (1.0f - REVERSE_BUFFER);
+            } else {
+                margins.top = yAmount / 2.0f;
+            }
+            margins.bottom = yAmount - margins.top;
+
+            return margins;
         }
 
         public DisplayPortMetrics calculate(ImmutableViewportMetrics metrics, PointF velocity) {
@@ -306,29 +358,9 @@ final class DisplayPortCalculator {
             float horizontalBuffer = displayPortWidth - metrics.getWidth();
             float verticalBuffer = displayPortHeight - metrics.getHeight();
 
-            // if we're panning above the VELOCITY_THRESHOLD on an axis, apply the margin so that it
-            // is entirely in the direction of panning. Otherwise, split the margin evenly on both sides of
-            // the display port.
-            RectF margins = new RectF();
-            if (velocity.x > VELOCITY_THRESHOLD) {
-                margins.left = horizontalBuffer * REVERSE_BUFFER;
-            } else if (velocity.x < -VELOCITY_THRESHOLD) {
-                margins.left = horizontalBuffer * (1.0f - REVERSE_BUFFER);
-            } else {
-                margins.left = horizontalBuffer / 2.0f;
-            }
-            margins.right = horizontalBuffer - margins.left;
-
-            if (velocity.y > VELOCITY_THRESHOLD) {
-                margins.top = verticalBuffer * REVERSE_BUFFER;
-            } else if (velocity.y < -VELOCITY_THRESHOLD) {
-                margins.top = verticalBuffer * (1.0f - REVERSE_BUFFER);
-            } else {
-                margins.top = verticalBuffer / 2.0f;
-            }
-            margins.bottom = verticalBuffer - margins.top;
-
-            // and finally shift the margins to account for page bounds
+            // split the buffer amounts into margins based on velocity, and shift it to
+            // take into account the page bounds
+            RectF margins = velocityBiasedMargins(horizontalBuffer, verticalBuffer, velocity);
             margins = shiftMarginsForPageBounds(margins, metrics);
 
             return new DisplayPortMetrics(metrics.viewportRectLeft - margins.left,
@@ -339,17 +371,34 @@ final class DisplayPortCalculator {
         }
 
         public boolean aboutToCheckerboard(ImmutableViewportMetrics metrics, PointF velocity, DisplayPortMetrics displayPort) {
-            // Since we have such a small margin, we want to be drawing more aggressively. At the start of a
-            // pan the velocity is going to be large so we're almost certainly going to go into checkerboard
-            // on every frame, so drawing all the time seems like the right thing. At the end of the pan we
-            // want to re-center the displayport and draw stuff on all sides, so again we don't want to throttle
-            // there. When we're not panning we're not drawing anyway so it doesn't make a difference there.
-            return true;
+            // calculate the danger zone amounts based on the prefs
+            float dangerZoneX = metrics.getWidth() * (DANGER_ZONE_BASE_X_MULTIPLIER + (velocity.x * DANGER_ZONE_INCR_X_MULTIPLIER));
+            float dangerZoneY = metrics.getHeight() * (DANGER_ZONE_BASE_Y_MULTIPLIER + (velocity.y * DANGER_ZONE_INCR_Y_MULTIPLIER));
+            // clamp it such that when added to the viewport, they don't exceed page size.
+            // this is a prerequisite to calling shiftMarginsForPageBounds as we do below.
+            dangerZoneX = Math.min(dangerZoneX, metrics.pageSizeWidth - metrics.getWidth());
+            dangerZoneY = Math.min(dangerZoneY, metrics.pageSizeHeight - metrics.getHeight());
+
+            // split the danger zone into margins based on velocity, and ensure it doesn't exceed
+            // page bounds.
+            RectF dangerMargins = velocityBiasedMargins(dangerZoneX, dangerZoneY, velocity);
+            dangerMargins = shiftMarginsForPageBounds(dangerMargins, metrics);
+
+            // we're about to checkerboard if the current viewport area + the danger zone margins
+            // fall out of the current displayport anywhere.
+            RectF adjustedViewport = new RectF(
+                    metrics.viewportRectLeft - dangerMargins.left,
+                    metrics.viewportRectTop - dangerMargins.top,
+                    metrics.viewportRectRight + dangerMargins.right,
+                    metrics.viewportRectBottom + dangerMargins.bottom);
+            return !displayPort.contains(adjustedViewport);
         }
 
         @Override
         public String toString() {
-            return "VelocityBiasStrategy mult=" + SIZE_MULTIPLIER + ", threshold=" + VELOCITY_THRESHOLD + ", reverse=" + REVERSE_BUFFER;
+            return "VelocityBiasStrategy mult=" + SIZE_MULTIPLIER + ", threshold=" + VELOCITY_THRESHOLD + ", reverse=" + REVERSE_BUFFER
+                + ", dangerBaseX=" + DANGER_ZONE_BASE_X_MULTIPLIER + ", dangerBaseY=" + DANGER_ZONE_BASE_Y_MULTIPLIER
+                + ", dangerIncrX=" + DANGER_ZONE_INCR_Y_MULTIPLIER + ", dangerIncrY=" + DANGER_ZONE_INCR_Y_MULTIPLIER;
         }
     }
 
