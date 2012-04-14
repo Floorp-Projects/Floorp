@@ -93,15 +93,9 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
     return NS_OK;
   }
 
-  if (mRoleMapEntry &&
-      (mRoleMapEntry->role == roles::GRAPHIC ||
-       mRoleMapEntry->role == roles::IMAGE_MAP ||
-       mRoleMapEntry->role == roles::SLIDER ||
-       mRoleMapEntry->role == roles::PROGRESSBAR ||
-       mRoleMapEntry->role == roles::SEPARATOR)) {
-    // ARIA roles that these interfaces are not appropriate for
+  // ARIA roles that these interfaces are not appropriate for.
+  if (!IsTextRole())
     return nsAccessible::QueryInterface(aIID, aInstancePtr);
-  }
 
   if (aIID.Equals(NS_GET_IID(nsIAccessibleText))) {
     *aInstancePtr = static_cast<nsIAccessibleText*>(this);
@@ -2397,4 +2391,18 @@ nsHyperTextAccessible::GetSpellTextAttribute(nsINode* aNode,
   }
 
   return NS_OK;
+}
+
+bool 
+nsHyperTextAccessible::IsTextRole()
+{
+  if (mRoleMapEntry &&
+      (mRoleMapEntry->role == roles::GRAPHIC ||
+       mRoleMapEntry->role == roles::IMAGE_MAP ||
+       mRoleMapEntry->role == roles::SLIDER ||
+       mRoleMapEntry->role == roles::PROGRESSBAR ||
+       mRoleMapEntry->role == roles::SEPARATOR))
+    return false;
+
+  return true;
 }

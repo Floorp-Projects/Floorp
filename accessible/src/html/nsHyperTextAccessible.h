@@ -201,6 +201,12 @@ public:
                                       nsIDOMNode **aEndNode,
                                       PRInt32 *aEndOffset);
 
+  /**
+   * Return true if the used ARIA role (if any) allows the hypertext accessible
+   * to expose text interfaces.
+   */
+  bool IsTextRole();
+
   //////////////////////////////////////////////////////////////////////////////
   // TextAccessible
 

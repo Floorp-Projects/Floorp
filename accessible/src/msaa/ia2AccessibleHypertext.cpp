@@ -38,26 +38,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "CAccessibleHypertext.h"
+#include "ia2AccessibleHypertext.h"
 
 #include "AccessibleHypertext_i.c"
 
-#include "nsHyperTextAccessible.h"
+#include "nsHyperTextAccessibleWrap.h"
 
 // IUnknown
 
 STDMETHODIMP
-CAccessibleHypertext::QueryInterface(REFIID iid, void** ppv)
+ia2AccessibleHypertext::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = NULL;
   if (IID_IAccessibleHypertext == iid) {
-    nsCOMPtr<nsIAccessibleHyperText> hyperAcc(do_QueryObject(this));
-    if (!hyperAcc)
-      return E_NOINTERFACE;
-
-    *ppv = static_cast<IAccessibleHypertext*>(this);
-    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
-    return S_OK;
+    nsHyperTextAccessibleWrap* hyperAcc = static_cast<nsHyperTextAccessibleWrap*>(this);
+    if (hyperAcc->IsTextRole()) {
+      *ppv = static_cast<IAccessibleHypertext*>(this);
+      (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
+      return S_OK;
+    }
+    return E_NOINTERFACE;
   }
 
   return CAccessibleText::QueryInterface(iid, ppv);
@@ -66,12 +66,12 @@ CAccessibleHypertext::QueryInterface(REFIID iid, void** ppv)
 // IAccessibleHypertext
 
 STDMETHODIMP
-CAccessibleHypertext::get_nHyperlinks(long *aHyperlinkCount)
+ia2AccessibleHypertext::get_nHyperlinks(long* aHyperlinkCount)
 {
 __try {
   *aHyperlinkCount = 0;
 
-  nsRefPtr<nsHyperTextAccessible> hyperText = do_QueryObject(this);
+  nsHyperTextAccessibleWrap* hyperText = static_cast<nsHyperTextAccessibleWrap*>(this);
   if (hyperText->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -83,13 +83,13 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleHypertext::get_hyperlink(long aLinkIndex,
-                                    IAccessibleHyperlink **aHyperlink)
+ia2AccessibleHypertext::get_hyperlink(long aLinkIndex,
+                                      IAccessibleHyperlink** aHyperlink)
 {
 __try {
   *aHyperlink = NULL;
 
-  nsRefPtr<nsHyperTextAccessible> hyperText = do_QueryObject(this);
+  nsHyperTextAccessibleWrap* hyperText = static_cast<nsHyperTextAccessibleWrap*>(this);
   if (hyperText->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -112,12 +112,12 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleHypertext::get_hyperlinkIndex(long aCharIndex, long *aHyperlinkIndex)
+ia2AccessibleHypertext::get_hyperlinkIndex(long aCharIndex, long* aHyperlinkIndex)
 {
 __try {
   *aHyperlinkIndex = 0;
 
-  nsRefPtr<nsHyperTextAccessible> hyperAcc(do_QueryObject(this));
+  nsHyperTextAccessibleWrap* hyperAcc = static_cast<nsHyperTextAccessibleWrap*>(this);
   if (hyperAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
