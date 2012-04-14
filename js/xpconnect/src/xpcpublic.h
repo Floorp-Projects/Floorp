@@ -260,6 +260,46 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                                  nsIMemoryMultiReporterCallback *cb,
                                  nsISupports *closure);
 
+/**
+ * Convert a jsval to PRInt64. Return true on success.
+ */
+inline bool
+ValueToInt64(JSContext *cx, JS::Value v, int64_t *result)
+{
+    if (JSVAL_IS_INT(v)) {
+        int32_t intval;
+        if (!JS_ValueToECMAInt32(cx, v, &intval))
+            return false;
+        *result = static_cast<int64_t>(intval);
+    } else {
+        double doubleval;
+        if (!JS_ValueToNumber(cx, v, &doubleval))
+            return false;
+        *result = static_cast<int64_t>(doubleval);
+    }
+    return true;
+}
+
+/**
+ * Convert a jsval to uint64_t. Return true on success.
+ */
+inline bool
+ValueToUint64(JSContext *cx, JS::Value v, uint64_t *result)
+{
+    if (JSVAL_IS_INT(v)) {
+        uint32_t intval;
+        if (!JS_ValueToECMAUint32(cx, v, &intval))
+            return false;
+        *result = static_cast<uint64_t>(intval);
+    } else {
+        double doubleval;
+        if (!JS_ValueToNumber(cx, v, &doubleval))
+            return false;
+        *result = static_cast<uint64_t>(doubleval);
+    }
+    return true;
+}
+
 } // namespace xpc
 
 namespace mozilla {
