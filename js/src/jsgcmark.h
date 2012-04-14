@@ -191,6 +191,12 @@ Mark(JSTracer *trc, HeapPtr<JSObject> *o, const char *name)
 }
 
 inline void
+Mark(JSTracer *trc, HeapPtr<JSScript> *o, const char *name)
+{
+    MarkScript(trc, o, name);
+}
+
+inline void
 Mark(JSTracer *trc, HeapPtr<JSXML> *xml, const char *name)
 {
     MarkXML(trc, xml, name);
@@ -208,6 +214,41 @@ inline bool
 IsMarked(Cell *cell)
 {
     return !IsAboutToBeFinalized(cell);
+}
+
+inline Cell *
+ToMarkable(const Value &v)
+{
+    if (v.isMarkable())
+        return (Cell *)v.toGCThing();
+    return NULL;
+}
+
+inline Cell *
+ToMarkable(Cell *cell)
+{
+    return cell;
+}
+
+inline JSGCTraceKind
+TraceKind(const Value &v)
+{
+    JS_ASSERT(v.isMarkable());
+    if (v.isObject())
+        return JSTRACE_OBJECT;
+    return JSTRACE_STRING;
+}
+
+inline JSGCTraceKind
+TraceKind(JSObject *obj)
+{
+    return JSTRACE_OBJECT;
+}
+
+inline JSGCTraceKind
+TraceKind(JSScript *script)
+{
+    return JSTRACE_SCRIPT;
 }
 
 } /* namespace gc */

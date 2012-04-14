@@ -162,7 +162,7 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
     @Override
     public KeyBundle keyBundle() {
       try {
-        return session.keyForCollection(COLLECTION_NAME);
+        return session.keyBundleForCollection(COLLECTION_NAME);
       } catch (NoCollectionKeysSetException e) {
         session.abort(e, "No collection keys set.");
         return null;
@@ -241,7 +241,7 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
     @Override
     public KeyBundle keyBundle() {
       try {
-        return session.keyForCollection(COLLECTION_NAME);
+        return session.keyBundleForCollection(COLLECTION_NAME);
       } catch (NoCollectionKeysSetException e) {
         session.abort(e, "No collection keys set.");
         return null;

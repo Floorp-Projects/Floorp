@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "ScaledFontWin.h"
-#include "ScaeldFontBase.h"
+#include "ScaledFontBase.h"
 
 #ifdef USE_SKIA
 #include "skia/SkTypeface_win.h"
@@ -55,7 +55,7 @@ ScaledFontWin::ScaledFontWin(LOGFONT* aFont, Float aSize)
 SkTypeface* ScaledFontWin::GetSkTypeface()
 {
   if (!mTypeface) {
-    mTypeface = SkCreateTypefaceFromLOGFONT(lf);
+    mTypeface = SkCreateTypefaceFromLOGFONT(mLogFont);
   }
   return mTypeface;
 }

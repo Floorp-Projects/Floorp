@@ -44,7 +44,6 @@ import org.mozilla.gecko.db.BrowserContract.ImageColumns;
 import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
-import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.sqlite.SQLiteBridgeException;
 
@@ -89,6 +88,7 @@ public class ProfileMigrator {
     private static final String PREFS_NAME = "ProfileMigrator";
     private File mProfileDir;
     private ContentResolver mCr;
+    private Context mContext;
 
     // Default number of history entries to migrate in one run.
     private static final int DEFAULT_HISTORY_MIGRATE_COUNT = 2000;
@@ -157,6 +157,12 @@ public class ProfileMigrator {
     private static final int kPlacesTypeFolder   = 2;
 
     /*
+      For statistics keeping.
+    */
+    private final String kHistoryCountQuery =
+        "SELECT COUNT(*) FROM moz_historyvisits";
+
+    /*
       The sort criterion here corresponds to the one used for the
       Awesomebar results. It's a simplification of Frecency.
       We must divide date by 1000 due to the micro (Places)
@@ -193,39 +199,49 @@ public class ProfileMigrator {
     private final String kHistoryDate   = "h_date";
     private final String kHistoryVisits = "h_visits";
 
-    public ProfileMigrator(ContentResolver cr, File profileDir) {
+    public ProfileMigrator(Context context, File profileDir) {
         mProfileDir = profileDir;
-        mCr = cr;
+        mContext = context;
+        mCr = mContext.getContentResolver();
     }
 
     public void launch() {
+        boolean timeThisRun = false;
+        Telemetry.Timer timer = null;
+        // First run, time things
+        if (!hasMigrationRun()) {
+            timeThisRun = true;
+            timer = new Telemetry.Timer("BROWSERPROVIDER_XUL_IMPORT_TIME");
+        }
         launch(DEFAULT_HISTORY_MIGRATE_COUNT);
+        if (timeThisRun)
+            timer.stop();
     }
 
     public void launch(int maxEntries) {
         new PlacesRunnable(maxEntries).run();
     }
 
-    // Has migration run before?
-    public boolean hasMigrationRun() {
-        return isBookmarksMigrated() && (getMigratedHistoryEntries() > 0);
-    }
-
-    // Has migration entirely finished?
-    public boolean hasMigrationFinished() {
-        return isBookmarksMigrated() && isHistoryMigrated();
-    }
-
-    public boolean isBookmarksMigrated() {
+    public boolean areBookmarksMigrated() {
         return getPreferences().getBoolean(PREFS_MIGRATE_BOOKMARKS_DONE, false);
     }
 
-    protected SharedPreferences getPreferences() {
-        return GeckoApp.mAppContext.getSharedPreferences(PREFS_NAME, 0);
+    public boolean isHistoryMigrated() {
+        return getPreferences().getBoolean(PREFS_MIGRATE_HISTORY_DONE, false);
     }
 
-    protected boolean isHistoryMigrated() {
-        return getPreferences().getBoolean(PREFS_MIGRATE_HISTORY_DONE, false);
+    // Has migration run before?
+    protected boolean hasMigrationRun() {
+        return areBookmarksMigrated() && (getMigratedHistoryEntries() > 0);
+    }
+
+    // Has migration entirely finished?
+    protected boolean hasMigrationFinished() {
+        return areBookmarksMigrated() && isHistoryMigrated();
+    }
+
+    protected SharedPreferences getPreferences() {
+        return mContext.getSharedPreferences(PREFS_NAME, 0);
     }
 
     protected int getMigratedHistoryEntries() {
@@ -323,55 +339,6 @@ public class ProfileMigrator {
             }
         }
 
-        // Get a list of the last times an URL was accessed
-        protected Map<String, Long> gatherBrowserDBHistory() {
-            Map<String, Long> history = new HashMap<String, Long>();
-
-            Cursor cursor =
-                BrowserDB.getRecentHistory(mCr, BrowserDB.getMaxHistoryCount());
-            final int urlCol =
-                cursor.getColumnIndexOrThrow(BrowserDB.URLColumns.URL);
-            final int dateCol =
-                cursor.getColumnIndexOrThrow(BrowserDB.URLColumns.DATE_LAST_VISITED);
-
-            cursor.moveToFirst();
-            while (!cursor.isAfterLast()) {
-                String url = cursor.getString(urlCol);
-                Long date = cursor.getLong(dateCol);
-                // getRecentHistory returns newest-to-oldest, which means
-                // we remember the most recent access
-                if (!history.containsKey(url)) {
-                    history.put(url, date);
-                }
-                cursor.moveToNext();
-            }
-            cursor.close();
-
-            return history;
-        }
-
-        protected void addHistory(Map<String, Long> browserDBHistory,
-                                  String url, String title, long date, int visits) {
-            boolean allowUpdate = false;
-
-            if (!browserDBHistory.containsKey(url)) {
-                // BrowserDB doesn't know the URL, allow it to be
-                // inserted with places date.
-                allowUpdate = true;
-            } else {
-                long androidDate = browserDBHistory.get(url);
-                if (androidDate < date) {
-                    // Places URL hit is newer than BrowserDB,
-                    // allow it to be updated with places date.
-                    allowUpdate = true;
-                }
-            }
-
-            if (allowUpdate) {
-                updateBrowserHistory(url, title, date, visits);
-            }
-        }
-
         protected void updateBrowserHistory(String url, String title,
                                             long date, int visits) {
             Cursor cursor = null;
@@ -379,7 +346,8 @@ public class ProfileMigrator {
             try {
                 final String[] projection = new String[] {
                     History._ID,
-                    History.VISITS
+                    History.VISITS,
+                    History.DATE_LAST_VISITED
                 };
 
                 cursor = mCr.query(getHistoryUri(),
@@ -390,17 +358,22 @@ public class ProfileMigrator {
 
                 ContentValues values = new ContentValues();
                 ContentProviderOperation.Builder builder = null;
-                values.put(History.DATE_LAST_VISITED, date);
                 // Restore deleted record if possible
                 values.put(History.IS_DELETED, 0);
 
                 if (cursor.moveToFirst()) {
                     int visitsCol = cursor.getColumnIndexOrThrow(History.VISITS);
+                    int dateCol = cursor.getColumnIndexOrThrow(History.DATE_LAST_VISITED);
                     int oldVisits = cursor.getInt(visitsCol);
+                    long oldDate = cursor.getLong(dateCol);
 
                     values.put(History.VISITS, oldVisits + visits);
                     if (title != null) {
                         values.put(History.TITLE, title);
+                    }
+                    // Only update last visited if newer.
+                    if (date > oldDate) {
+                        values.put(History.DATE_LAST_VISITED, date);
                     }
 
                     int idCol = cursor.getColumnIndexOrThrow(History._ID);
@@ -421,6 +394,7 @@ public class ProfileMigrator {
                     } else {
                         values.put(History.TITLE, url);
                     }
+                    values.put(History.DATE_LAST_VISITED, date);
 
                     // Insert
                     builder = ContentProviderOperation.newInsert(getHistoryUri());
@@ -516,13 +490,18 @@ public class ProfileMigrator {
         }
 
         protected void doMigrateHistoryBatch(SQLiteBridge db,
-                                             Map<String, Long> browserDBHistory,
                                              int maxEntries, int currentEntries) {
             final ArrayList<String> placesHistory = new ArrayList<String>();
             mOperations = new ArrayList<ContentProviderOperation>();
             int queryResultEntries = 0;
 
             try {
+                Cursor cursor = db.rawQuery(kHistoryCountQuery, null);
+                cursor.moveToFirst();
+                int historyCount = cursor.getInt(0);
+                Telemetry.HistogramAdd("BROWSERPROVIDER_XUL_IMPORT_HISTORY",
+                                       historyCount);
+
                 final String currentTime = Long.toString(System.currentTimeMillis());
                 final String[] queryParams = new String[] {
                     /* current time */
@@ -531,7 +510,7 @@ public class ProfileMigrator {
                     Integer.toString(maxEntries),
                     Integer.toString(currentEntries)
                 };
-                Cursor cursor = db.rawQuery(kHistoryQuery, queryParams);
+                cursor = db.rawQuery(kHistoryQuery, queryParams);
                 queryResultEntries = cursor.getCount();
 
                 final int urlCol = cursor.getColumnIndex(kHistoryUrl);
@@ -558,7 +537,7 @@ public class ProfileMigrator {
                         placesHistory.add(url);
                         addFavicon(url, faviconUrl, faviconGuid,
                                    faviconMime, faviconDataBuff);
-                        addHistory(browserDBHistory, url, title, date, visits);
+                        updateBrowserHistory(url, title, date, visits);
                     } catch (Exception e) {
                         Log.e(LOGTAG, "Error adding history entry: ", e);
                     }
@@ -593,8 +572,6 @@ public class ProfileMigrator {
         }
 
         protected void migrateHistory(SQLiteBridge db) {
-            Map<String, Long> browserDBHistory = gatherBrowserDBHistory();
-
             for (int i = 0; i < mMaxEntries; i += HISTORY_MAX_BATCH) {
                 int currentEntries = getMigratedHistoryEntries();
                 int fetchEntries = Math.min(mMaxEntries, HISTORY_MAX_BATCH);
@@ -602,8 +579,7 @@ public class ProfileMigrator {
                 Log.i(LOGTAG, "Processed " + currentEntries + " history entries");
                 Log.i(LOGTAG, "Fetching " + fetchEntries + " more history entries");
 
-                doMigrateHistoryBatch(db, browserDBHistory,
-                                      fetchEntries, currentEntries);
+                doMigrateHistoryBatch(db, fetchEntries, currentEntries);
             }
         }
 
@@ -701,6 +677,11 @@ public class ProfileMigrator {
                 final int faviconDataCol = cursor.getColumnIndex(kFaviconData);
                 final int faviconUrlCol = cursor.getColumnIndex(kFaviconUrl);
                 final int faviconGuidCol = cursor.getColumnIndex(kFaviconGuid);
+
+                // Keep statistics
+                int bookmarkCount = cursor.getCount();
+                Telemetry.HistogramAdd("BROWSERPROVIDER_XUL_IMPORT_BOOKMARKS",
+                                       bookmarkCount);
 
                 // The keys are places IDs.
                 Set<Long> openFolders = new HashSet<Long>();
@@ -848,18 +829,21 @@ public class ProfileMigrator {
             File dbFile = new File(dbPath);
             if (!dbFile.exists()) {
                 Log.i(LOGTAG, "No database");
+                // Nothing to do, so mark as done.
+                setMigratedBookmarks();
+                setMigratedHistory();
                 return;
             }
             File dbFileWal = new File(dbPathWal);
             File dbFileShm = new File(dbPathShm);
 
             SQLiteBridge db = null;
-            GeckoAppShell.loadSQLiteLibs(GeckoApp.mAppContext, GeckoApp.mAppContext.getApplication().getPackageResourcePath());
+            GeckoAppShell.loadSQLiteLibs(mContext, mContext.getPackageResourcePath());
             try {
                 db = new SQLiteBridge(dbPath);
                 calculateReroot(db);
 
-                if (!isBookmarksMigrated()) {
+                if (!areBookmarksMigrated()) {
                     migrateBookmarks(db);
                     setMigratedBookmarks();
                 } else {
@@ -895,7 +879,7 @@ public class ProfileMigrator {
         }
 
         protected void cleanupXULLibCache() {
-            File cacheFile = GeckoAppShell.getCacheDir(GeckoApp.mAppContext);
+            File cacheFile = GeckoAppShell.getCacheDir(mContext);
             File[] files = cacheFile.listFiles();
             if (files != null) {
                 Iterator<File> cacheFiles = Arrays.asList(files).iterator();
