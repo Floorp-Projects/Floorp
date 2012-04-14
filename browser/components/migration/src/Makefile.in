@@ -48,24 +48,26 @@ ifndef MOZ_MEMORY
 USE_STATIC_LIBS = 1
 endif
 
-ifeq ($(OS_ARCH)_$(GNU_CXX),WINNT_)
-CPPSRCS += nsIEProfileMigrator.cpp \
-           nsBrowserProfileMigratorUtils.cpp \
-           nsIEHistoryEnumerator.cpp \
-           $(NULL)
-endif
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += nsSafariProfileMigrator.cpp \
-           nsBrowserProfileMigratorUtils.cpp \
-           $(NULL)
-endif
-
 EXTRA_PP_COMPONENTS = \
   ProfileMigrator.js \
   ChromeProfileMigrator.js \
   FirefoxProfileMigrator.js \
   $(NULL)
+
+ifeq ($(OS_ARCH)_$(GNU_CXX),WINNT_)
+CPPSRCS += nsIEProfileMigrator.cpp \
+           nsBrowserProfileMigratorUtils.cpp \
+           nsIEHistoryEnumerator.cpp \
+           $(NULL)
+
+EXTRA_PP_COMPONENTS += SafariProfileMigrator.js \
+                       $(NULL)
+endif
+
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+EXTRA_PP_COMPONENTS += SafariProfileMigrator.js \
+                       $(NULL)
+endif
 
 EXTRA_COMPONENTS = \
 	BrowserProfileMigrators.manifest \
