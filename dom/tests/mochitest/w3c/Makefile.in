@@ -24,7 +24,7 @@ _SUPPORT_FILES = \
   WebIDLParser.js \
   $(NULL)
 
-testharnessreport.js: testharnessreport.js.in writeReporter.py 
+testharnessreport.js: testharnessreport.js.in writeReporter.py html.json webapps.json
 	$(PYTHON_PATH) $(srcdir)/writeReporter.py $<
 
 libs:: $(_SUPPORT_FILES)
