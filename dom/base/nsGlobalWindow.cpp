@@ -10740,33 +10740,6 @@ nsGlobalWindow::SetHasAudioAvailableEventListeners()
   }
 }
 
-//*****************************************************************************
-// nsGlobalWindow: Creator Function (This should go away)
-//*****************************************************************************
-
-nsresult
-NS_NewScriptGlobalObject(bool aIsChrome, bool aIsModalContentWindow,
-                         nsIScriptGlobalObject **aResult)
-{
-  *aResult = nsnull;
-
-  nsGlobalWindow *global;
-
-  if (aIsChrome) {
-    global = new nsGlobalChromeWindow(nsnull);
-  } else if (aIsModalContentWindow) {
-    global = new nsGlobalModalWindow(nsnull);
-  } else {
-    global = new nsGlobalWindow(nsnull);
-  }
-
-  NS_ENSURE_TRUE(global, NS_ERROR_OUT_OF_MEMORY);
-
-  NS_ADDREF(*aResult = global);
-
-  return NS_OK;
-}
-
 #define EVENT(name_, id_, type_, struct_)                                    \
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
                                              jsval *vp) {                    \
