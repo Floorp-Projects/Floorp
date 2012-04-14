@@ -1386,7 +1386,7 @@ JS_EnterCrossCompartmentCallStackFrame(JSContext *cx, JSStackFrame *target)
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
 
-    return JS_EnterCrossCompartmentCall(cx, &Valueify(target)->scopeChain().global());
+    return JS_EnterCrossCompartmentCall(cx, &Valueify(target)->global());
 }
 
 JS_PUBLIC_API(void)
@@ -1452,7 +1452,7 @@ bool
 AutoEnterFrameCompartment::enter(JSContext *cx, JSStackFrame *target)
 {
     JS_ASSERT(!call);
-    if (cx->compartment == Valueify(target)->scopeChain().compartment()) {
+    if (cx->compartment == Valueify(target)->scopeChain()->compartment()) {
         call = reinterpret_cast<JSCrossCompartmentCall*>(1);
         return true;
     }
@@ -4539,7 +4539,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent_)
 
     if (!parent) {
         if (cx->hasfp())
-            parent = &cx->fp()->scopeChain();
+            parent = cx->fp()->scopeChain();
         if (!parent)
             parent = cx->globalObject;
         JS_ASSERT(parent);

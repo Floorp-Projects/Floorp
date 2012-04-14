@@ -5185,7 +5185,7 @@ NestingPrologue(JSContext *cx, StackFrame *fp)
     TypeScriptNesting *nesting = script->nesting();
 
     if (nesting->parent)
-        CheckNestingParent(cx, &fp->scopeChain(), script);
+        CheckNestingParent(cx, fp->scopeChain(), script);
 
     if (script->isOuterFunction) {
         /*

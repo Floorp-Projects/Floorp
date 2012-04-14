@@ -1096,7 +1096,7 @@ DirectEval(JSContext *cx, const CallArgs &args)
     /* Direct eval can assume it was called from an interpreted frame. */
     StackFrame *caller = cx->fp();
     JS_ASSERT(caller->isScriptFrame());
-    JS_ASSERT(IsBuiltinEvalForScope(&caller->scopeChain(), args.calleev()));
+    JS_ASSERT(IsBuiltinEvalForScope(caller->scopeChain(), args.calleev()));
     JS_ASSERT(JSOp(*cx->regs().pc) == JSOP_EVAL);
 
     AutoFunctionCallProbe callProbe(cx, args.callee().toFunction(), caller->script());
@@ -6304,7 +6304,7 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
             fprintf(stderr, " generator");
         fputc('\n', stderr);
 
-        fprintf(stderr, "  scopeChain: (JSObject *) %p\n", (void *) &fp->scopeChain());
+        fprintf(stderr, "  scopeChain: (JSObject *) %p\n", (void *) fp->scopeChain());
 
         fputc('\n', stderr);
     }

@@ -995,7 +995,7 @@ JSContext::resetCompartment()
 {
     JSObject *scopeobj;
     if (stack.hasfp()) {
-        scopeobj = &fp()->scopeChain();
+        scopeobj = fp()->scopeChain();
     } else {
         scopeobj = globalObject;
         if (!scopeobj)

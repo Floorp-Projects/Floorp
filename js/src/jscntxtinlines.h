@@ -76,7 +76,7 @@ static inline GlobalObject *
 GetGlobalForScopeChain(JSContext *cx)
 {
     if (cx->hasfp())
-        return &cx->fp()->scopeChain().global();
+        return &cx->fp()->global();
 
     JSObject *scope = JS_ObjectToInnerObject(cx, cx->globalObject);
     if (!scope)
@@ -231,7 +231,7 @@ class CompartmentChecker
 
     void check(StackFrame *fp) {
         if (fp)
-            check(&fp->scopeChain());
+            check(fp->scopeChain());
     }
 };
 
