@@ -45,6 +45,11 @@ XPCOMUtils.defineLazyServiceGetter(Services, 'fm', function() {
            .getService(Ci.nsFocusManager);
 });
 
+XPCOMUtils.defineLazyGetter(this, 'DebuggerServer', function() {
+  Cu.import('resource://gre/modules/devtools/dbg-server.jsm');
+  return DebuggerServer;
+});
+
 // FIXME Bug 707625
 // until we have a proper security model, add some rights to
 // the pre-installed web applications
@@ -541,3 +546,24 @@ var WebappsHelper = {
     }
   }
 }
+
+// Start the debugger server.
+function startDebugger() {
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init();
+    DebuggerServer.addActors('chrome://browser/content/dbg-browser-actors.js');
+  }
+
+  let port = Services.prefs.getIntPref('devtools.debugger.port') || 6000;
+  try {
+    DebuggerServer.openListener(port, false);
+  } catch (e) {
+    dump('Unable to start debugger server: ' + e + '\n');
+  }
+}
+
+window.addEventListener('ContentStart', function(evt) {
+  if (Services.prefs.getBoolPref('devtools.debugger.enabled')) {
+    startDebugger();
+  }
+}, false);

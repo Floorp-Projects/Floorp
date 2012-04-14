@@ -194,7 +194,7 @@ function addNewTabPageTab() {
 function checkGrid(aSitesPattern, aSites) {
   let length = aSitesPattern.split(",").length;
   let sites = (aSites || getGrid().sites).slice(0, length);
-  let expected = sites.map(function (aSite) {
+  let current = sites.map(function (aSite) {
     if (!aSite)
       return "";
 
@@ -208,7 +208,7 @@ function checkGrid(aSitesPattern, aSites) {
     return aSite.url.replace(/^about:blank#(\d+)$/, "$1") + (pinned ? "p" : "");
   });
 
-  is(aSitesPattern, expected, "grid status = " + aSitesPattern);
+  is(current, aSitesPattern, "grid status = " + aSitesPattern);
 }
 
 /**
