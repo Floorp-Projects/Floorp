@@ -1274,14 +1274,16 @@ def writeDefiner(f, conf, stringtable, interfaces):
     f.write("\n")
 
     # the definer function (entry point to this quick stubs file)
-    f.write("JSBool %s_DefineQuickStubs(" % conf.name)
+    f.write("namespace xpc {\n")
+    f.write("bool %s_DefineQuickStubs(" % conf.name)
     f.write("JSContext *cx, JSObject *proto, unsigned flags, PRUint32 count, "
             "const nsID **iids)\n"
             "{\n")
-    f.write("    return xpc_qsDefineQuickStubs("
+    f.write("    return !!xpc_qsDefineQuickStubs("
             "cx, proto, flags, count, iids, %d, tableData, %s, %s, %s);\n" % (
             size, prop_array_name, func_array_name, table_name))
-    f.write("}\n\n\n")
+    f.write("}\n")
+    f.write("} // namespace xpc\n\n\n")
 
 
 stubTopTemplate = '''\
