@@ -886,7 +886,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
     mJSObject(nsnull),
-    mPendingStorageEventsObsolete(nsnull),
     mTimeoutsSuspendDepth(0),
     mFocusMethod(0),
     mSerial(0),
@@ -921,10 +920,9 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
         os->AddObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
                         false);
 
-        // Watch for dom-storage-changed so we can fire storage
+        // Watch for dom-storage2-changed so we can fire storage
         // events. Use a strong reference.
         os->AddObserver(mObserver, "dom-storage2-changed", false);
-        os->AddObserver(mObserver, "dom-storage-changed", false);
       }
     }
   } else {
@@ -1203,7 +1201,6 @@ nsGlobalWindow::CleanUp(bool aIgnoreModalDialog)
     if (os) {
       os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
       os->RemoveObserver(mObserver, "dom-storage2-changed");
-      os->RemoveObserver(mObserver, "dom-storage-changed");
     }
 
     // Drop its reference to this dying window, in case for some bogus reason
@@ -1226,7 +1223,6 @@ nsGlobalWindow::CleanUp(bool aIgnoreModalDialog)
   mWindowUtils = nsnull;
   mApplicationCache = nsnull;
   mIndexedDB = nsnull;
-  mPendingStorageEventsObsolete = nsnull;
 
   mPerformance = nsnull;
 
@@ -8475,76 +8471,6 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  if (IsInnerWindow() && !nsCRT::strcmp(aTopic, "dom-storage-changed")) {
-    nsIPrincipal *principal;
-    nsresult rv;
-
-    principal = GetPrincipal();
-    if (principal) {
-      // A global storage object changed, check to see if it's one
-      // this window can access.
-
-      nsCOMPtr<nsIURI> codebase;
-      principal->GetURI(getter_AddRefs(codebase));
-
-      if (!codebase) {
-        return NS_OK;
-      }
-
-      nsCAutoString currentDomain;
-      rv = codebase->GetAsciiHost(currentDomain);
-      if (NS_FAILED(rv)) {
-        return NS_OK;
-      }
-    }
-
-    nsAutoString domain(aData);
-
-    if (IsFrozen()) {
-      // This window is frozen, rather than firing the events here,
-      // store the domain in which the change happened and fire the
-      // events if we're ever thawed.
-
-      if (!mPendingStorageEventsObsolete) {
-        mPendingStorageEventsObsolete = new nsDataHashtable<nsStringHashKey, bool>;
-        NS_ENSURE_TRUE(mPendingStorageEventsObsolete, NS_ERROR_OUT_OF_MEMORY);
-
-        rv = mPendingStorageEventsObsolete->Init();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      mPendingStorageEventsObsolete->Put(domain, true);
-
-      return NS_OK;
-    }
-
-    nsRefPtr<nsDOMStorageEventObsolete> event = new nsDOMStorageEventObsolete();
-    NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
-
-    rv = event->InitStorageEvent(NS_LITERAL_STRING("storage"), false, false, domain);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
-
-    nsCOMPtr<nsIDOMEventTarget> target;
-
-    if (htmlDoc) {
-      nsCOMPtr<nsIDOMHTMLElement> body;
-      htmlDoc->GetBody(getter_AddRefs(body));
-
-      target = do_QueryInterface(body);
-    }
-
-    if (!target) {
-      target = this;
-    }
-
-    bool defaultActionEnabled;
-    target->DispatchEvent((nsIDOMStorageEventObsolete *)event, &defaultActionEnabled);
-
-    return NS_OK;
-  }
-
   if (IsInnerWindow() && !nsCRT::strcmp(aTopic, "dom-storage2-changed")) {
     nsIPrincipal *principal;
     nsresult rv;
@@ -8698,22 +8624,6 @@ nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
                                   url, storageArea);
 }
 
-static PLDHashOperator
-FirePendingStorageEvents(const nsAString& aKey, bool aData, void *userArg)
-{
-  nsGlobalWindow *win = static_cast<nsGlobalWindow *>(userArg);
-
-  nsCOMPtr<nsIDOMStorage> storage;
-  win->GetSessionStorage(getter_AddRefs(storage));
-
-  if (storage) {
-    win->Observe(storage, "dom-storage-changed",
-                 aKey.IsEmpty() ? nsnull : PromiseFlatString(aKey).get());
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 nsresult
 nsGlobalWindow::FireDelayedDOMEvents()
 {
@@ -8721,12 +8631,6 @@ nsGlobalWindow::FireDelayedDOMEvents()
 
   for (PRInt32 i = 0; i < mPendingStorageEvents.Count(); ++i) {
     Observe(mPendingStorageEvents[i], "dom-storage2-changed", nsnull);
-  }
-
-  if (mPendingStorageEventsObsolete) {
-    // Fire pending storage events.
-    mPendingStorageEventsObsolete->EnumerateRead(FirePendingStorageEvents, this);
-    mPendingStorageEventsObsolete = nsnull;
   }
 
   if (mApplicationCache) {
