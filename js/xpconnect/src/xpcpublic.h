@@ -228,6 +228,28 @@ nsIPrincipal *GetCompartmentPrincipal(JSCompartment *compartment);
 #ifdef DEBUG
 void DumpJSHeap(FILE* file);
 #endif
+
+/**
+ * Define quick stubs on the given object, @a proto.
+ *
+ * @param cx
+ *     A context.  Requires request.
+ * @param proto
+ *     The (newly created) prototype object for a DOM class.  The JS half
+ *     of an XPCWrappedNativeProto.
+ * @param flags
+ *     Property flags for the quick stub properties--should be either
+ *     JSPROP_ENUMERATE or 0.
+ * @param interfaceCount
+ *     The number of interfaces the class implements.
+ * @param interfaceArray
+ *     The interfaces the class implements; interfaceArray and
+ *     interfaceCount are like what nsIClassInfo.getInterfaces returns.
+ */
+bool
+DOM_DefineQuickStubs(JSContext *cx, JSObject *proto, PRUint32 flags,
+                     PRUint32 interfaceCount, const nsIID **interfaceArray);
+
 } // namespace xpc
 
 class nsIMemoryMultiReporterCallback;
