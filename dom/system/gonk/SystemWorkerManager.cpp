@@ -216,15 +216,16 @@ SystemWorkerManager::Init()
   NS_ASSERTION(NS_IsMainThread(), "We can only initialize on the main thread");
   NS_ASSERTION(!mShutdown, "Already shutdown!");
 
-  JSContext* cx = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext();
-  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+  JSContext *cx;
+  nsresult rv = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCxPusher pusher;
-  if (!pusher.Push(cx, false)) {
+  if (!cx || !pusher.Push(cx, false)) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = InitRIL(cx);
+  rv = InitRIL(cx);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = InitWifi(cx);

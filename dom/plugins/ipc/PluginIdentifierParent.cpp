@@ -69,7 +69,8 @@ PluginIdentifierParent::RecvRetain()
     return false;
   }
 
-  JSContext* cx = stack->GetSafeJSContext();
+  JSContext *cx = nsnull;
+  stack->GetSafeJSContext(&cx);
   if (!cx) {
     return false;
   }

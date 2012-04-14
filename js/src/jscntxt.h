@@ -1015,8 +1015,6 @@ struct JSContext : js::ContextFriendFields
     js::LifoAlloc &tempLifoAlloc() { return runtime->tempLifoAlloc; }
     inline js::LifoAlloc &typeLifoAlloc();
 
-    inline js::PropertyTree &propertyTree();
-
 #ifdef JS_THREADSAFE
     unsigned            outstandingRequests;/* number of JS_BeginRequest calls
                                                without the corresponding

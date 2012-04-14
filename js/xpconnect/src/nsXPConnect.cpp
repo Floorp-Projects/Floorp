@@ -2373,6 +2373,18 @@ nsXPConnect::SetReportAllJSExceptions(bool newval)
     return NS_OK;
 }
 
+/* [noscript, notxpcom] bool defineDOMQuickStubs (in JSContextPtr cx, in JSObjectPtr proto, in PRUint32 flags, in PRUint32 interfaceCount, [array, size_is (interfaceCount)] in nsIIDPtr interfaceArray); */
+NS_IMETHODIMP_(bool)
+nsXPConnect::DefineDOMQuickStubs(JSContext * cx,
+                                 JSObject * proto,
+                                 PRUint32 flags,
+                                 PRUint32 interfaceCount,
+                                 const nsIID * *interfaceArray)
+{
+    return DOM_DefineQuickStubs(cx, proto, flags,
+                                interfaceCount, interfaceArray);
+}
+
 /* attribute JSRuntime runtime; */
 NS_IMETHODIMP
 nsXPConnect::GetRuntime(JSRuntime **runtime)
@@ -2593,17 +2605,21 @@ nsXPConnect::Push(JSContext * cx)
      return data->GetJSContextStack()->Push(cx) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-/* virtual */
-JSContext*
-nsXPConnect::GetSafeJSContext()
+/* attribute JSContext SafeJSContext; */
+NS_IMETHODIMP
+nsXPConnect::GetSafeJSContext(JSContext * *aSafeJSContext)
 {
-    XPCPerThreadData *data = XPCPerThreadData::GetData(NULL);
+    NS_ASSERTION(aSafeJSContext, "loser!");
+
+    XPCPerThreadData* data = XPCPerThreadData::GetData(nsnull);
 
     if (!data) {
-        return NULL;
+        *aSafeJSContext = nsnull;
+        return NS_ERROR_FAILURE;
     }
 
-    return data->GetJSContextStack()->GetSafeJSContext();
+    *aSafeJSContext = data->GetJSContextStack()->GetSafeJSContext();
+    return *aSafeJSContext ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsIPrincipal*

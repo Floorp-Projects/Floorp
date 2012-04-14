@@ -754,7 +754,8 @@ public:
   virtual void SetValueMissingState(const nsAString& aName, bool aValue);
 
   // for radio group
-  nsRadioGroupStruct* GetRadioGroup(const nsAString& aName);
+  nsresult GetRadioGroup(const nsAString& aName,
+                         nsRadioGroupStruct **aRadioGroup);
 
   // nsIDOMNode
   NS_DECL_NSIDOMNODE
