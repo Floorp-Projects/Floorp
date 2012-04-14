@@ -1252,7 +1252,7 @@ StackIter::isFunctionFrame() const
         return fp()->isFunctionFrame();
       case NATIVE:
       case IMPLICIT_NATIVE:
-        return true;
+        return false;
     }
     JS_NOT_REACHED("Unexpected state");
     return false;
@@ -1294,11 +1294,11 @@ StackIter::isNonEvalFunctionFrame() const
 JSObject &
 StackIter::callee() const
 {
-    JS_ASSERT(isFunctionFrame());
     switch (state_) {
       case DONE:
         break;
       case SCRIPTED:
+        JS_ASSERT(isFunctionFrame());
         return fp()->callee();
       case NATIVE:
       case IMPLICIT_NATIVE:
@@ -1311,11 +1311,11 @@ StackIter::callee() const
 Value
 StackIter::calleev() const
 {
-    JS_ASSERT(isFunctionFrame());
     switch (state_) {
       case DONE:
         break;
       case SCRIPTED:
+        JS_ASSERT(isFunctionFrame());
         return fp()->calleev();
       case NATIVE:
       case IMPLICIT_NATIVE:

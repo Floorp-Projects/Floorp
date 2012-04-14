@@ -132,9 +132,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     if (iter.done())
         return true;
 
-    StackFrame *fp = NULL;
-    if (iter.isScript())
-        fp = iter.fp();
+    StackFrame *fp = iter.fp();
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.argumentsAtom)) {
         /* Warn if strict about f.arguments or equivalent unqualified uses. */
