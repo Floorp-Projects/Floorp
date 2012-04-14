@@ -60,10 +60,8 @@
 
 //prototype
 nsresult GetListState(nsIEditor *aEditor, bool *aMixed, PRUnichar **tagStr);
-nsresult RemoveOneProperty(nsIHTMLEditor *aEditor,const nsString& aProp,
-                           const nsString &aAttr);
-nsresult RemoveTextProperty(nsIEditor *aEditor, const PRUnichar *prop,
-                            const PRUnichar *attr);
+nsresult RemoveOneProperty(nsIHTMLEditor* aEditor, const nsAString& aProp);
+nsresult RemoveTextProperty(nsIHTMLEditor* aEditor, const nsAString& aProp);
 nsresult SetTextProperty(nsIEditor *aEditor, const PRUnichar *prop,
                          const PRUnichar *attr, const PRUnichar *value);
 
@@ -264,34 +262,26 @@ nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
   if (doTagRemoval) {
     // Also remove equivalent properties (bug 317093)
     if (tagName.EqualsLiteral("b")) {
-      rv = RemoveTextProperty(aEditor, NS_LITERAL_STRING("strong").get(), nsnull);
+      rv = RemoveTextProperty(htmlEditor, NS_LITERAL_STRING("strong"));
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (tagName.EqualsLiteral("i")) {
-      rv = RemoveTextProperty(aEditor, NS_LITERAL_STRING("em").get(), nsnull);
+      rv = RemoveTextProperty(htmlEditor, NS_LITERAL_STRING("em"));
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (tagName.EqualsLiteral("strike")) {
-      rv = RemoveTextProperty(aEditor, NS_LITERAL_STRING("s").get(), nsnull);
+      rv = RemoveTextProperty(htmlEditor, NS_LITERAL_STRING("s"));
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    rv = RemoveTextProperty(aEditor, tagName.get(), nsnull);
+    rv = RemoveTextProperty(htmlEditor, tagName);
   } else {
     // Superscript and Subscript styles are mutually exclusive
-    nsAutoString removeName; 
     aEditor->BeginTransaction();
 
-    if (tagName.EqualsLiteral("sub"))
-    {
-      removeName.AssignLiteral("sup");
-      rv = RemoveTextProperty(aEditor,tagName.get(), nsnull);
-    } 
-    else if (tagName.EqualsLiteral("sup"))
-    {
-      removeName.AssignLiteral("sub");
-      rv = RemoveTextProperty(aEditor, tagName.get(), nsnull);
+    if (tagName.EqualsLiteral("sub") || tagName.EqualsLiteral("sup")) {
+      rv = RemoveTextProperty(htmlEditor, tagName);
     }
     if (NS_SUCCEEDED(rv))
-      rv = SetTextProperty(aEditor,tagName.get(), nsnull, nsnull);
+      rv = SetTextProperty(aEditor, tagName.get(), nsnull, nsnull);
 
     aEditor->EndTransaction();
   }
@@ -1583,48 +1573,30 @@ GetListState(nsIEditor *aEditor, bool *aMixed, PRUnichar **_retval)
 }
 
 nsresult
-RemoveOneProperty(nsIHTMLEditor *aEditor,const nsString& aProp, 
-                  const nsString &aAttr)
+RemoveOneProperty(nsIHTMLEditor* aEditor, const nsAString& aProp)
 {
-  NS_ENSURE_TRUE(aEditor, NS_ERROR_NOT_INITIALIZED);
+  MOZ_ASSERT(aEditor);
 
   /// XXX Hack alert! Look in nsIEditProperty.h for this
   nsCOMPtr<nsIAtom> styleAtom = do_GetAtom(aProp);
-  NS_ENSURE_TRUE( styleAtom, NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(styleAtom, NS_ERROR_OUT_OF_MEMORY);
 
-  return aEditor->RemoveInlineProperty(styleAtom, aAttr);
+  return aEditor->RemoveInlineProperty(styleAtom, EmptyString());
 }
 
 
 // the name of the attribute here should be the contents of the appropriate
 // tag, e.g. 'b' for bold, 'i' for italics.
 nsresult
-RemoveTextProperty(nsIEditor *aEditor, const PRUnichar *prop, 
-                   const PRUnichar *attr)
+RemoveTextProperty(nsIHTMLEditor* aEditor, const nsAString& aProp)
 {
-  NS_ENSURE_TRUE(aEditor, NS_ERROR_NOT_INITIALIZED);
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(aEditor);
-  NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
-  // OK, I'm really hacking now. This is just so that 
-  //     we can accept 'all' as input.  
-  nsAutoString  allStr(prop);
-  
-  ToLowerCase(allStr);
-  bool      doingAll = (allStr.EqualsLiteral("all"));
-  nsresult  err = NS_OK;
+  MOZ_ASSERT(aEditor);
 
-  if (doingAll)
-  {
-    err = editor->RemoveAllInlineProperties();
-  }
-  else
-  {
-    nsAutoString  aProp(prop);
-    nsAutoString  aAttr(attr);
-    err = RemoveOneProperty(editor,aProp, aAttr);
+  if (aProp.LowerCaseEqualsLiteral("all")) {
+    return aEditor->RemoveAllInlineProperties();
   }
   
-  return err;
+  return RemoveOneProperty(aEditor, aProp);
 }
 
 // the name of the attribute here should be the contents of the appropriate
