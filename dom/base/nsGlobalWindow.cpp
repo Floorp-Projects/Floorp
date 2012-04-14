@@ -6199,7 +6199,7 @@ PostMessageEvent::Run()
     // we need to find a JSContext.
     nsIThreadJSContextStack* cxStack = nsContentUtils::ThreadJSContextStack();
     if (cxStack) {
-      cxStack->GetSafeJSContext(&cx);
+      cx = cxStack->GetSafeJSContext();
     }
 
     if (!cx) {

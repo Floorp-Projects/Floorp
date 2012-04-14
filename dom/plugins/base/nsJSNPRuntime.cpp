@@ -1985,8 +1985,7 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
     return;
   }
 
-  JSContext *cx;
-  stack->GetSafeJSContext(&cx);
+  JSContext* cx = stack->GetSafeJSContext();
   if (!cx) {
     NS_ERROR("No safe JS context available!");
 

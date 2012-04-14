@@ -134,8 +134,7 @@ nsEventListenerInfo::ToSource(nsAString& aResult)
   nsCOMPtr<nsIThreadJSContextStack> stack =
     nsContentUtils::ThreadJSContextStack();
   if (stack) {
-    JSContext* cx = nsnull;
-    stack->GetSafeJSContext(&cx);
+    JSContext* cx = stack->GetSafeJSContext();
     if (cx && NS_SUCCEEDED(stack->Push(cx))) {
       {
         // Extra block to finish the auto request before calling pop
@@ -177,8 +176,7 @@ nsEventListenerInfo::GetDebugObject(nsISupports** aRetVal)
   nsCOMPtr<nsIThreadJSContextStack> stack =
     nsContentUtils::ThreadJSContextStack();
   if (stack) {
-    JSContext* cx = nsnull;
-    stack->GetSafeJSContext(&cx);
+    JSContext* cx = stack->GetSafeJSContext();
     if (cx && NS_SUCCEEDED(stack->Push(cx))) {
       {
         // Extra block to finish the auto request before calling pop

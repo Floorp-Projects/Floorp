@@ -1337,8 +1337,8 @@ RuntimeService::AutoSafeJSContext::GetSafeContext()
   nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
   NS_ASSERTION(stack, "This should never be null!");
 
-  JSContext* cx;
-  if (NS_FAILED(stack->GetSafeJSContext(&cx))) {
+  JSContext* cx = stack->GetSafeJSContext();
+  if (!cx) {
     NS_ERROR("Couldn't get safe JSContext!");
     return nsnull;
   }
