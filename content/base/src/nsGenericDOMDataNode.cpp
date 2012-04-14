@@ -949,41 +949,6 @@ nsGenericDOMDataNode::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   return NS_OK;
 }
 
-nsIDOMCSSStyleDeclaration*
-nsGenericDOMDataNode::GetSMILOverrideStyle()
-{
-  return nsnull;
-}
-
-css::StyleRule*
-nsGenericDOMDataNode::GetSMILOverrideStyleRule()
-{
-  return nsnull;
-}
-
-nsresult
-nsGenericDOMDataNode::SetSMILOverrideStyleRule(css::StyleRule* aStyleRule,
-                                               bool aNotify)
-{
-  NS_NOTREACHED("How come we're setting SMILOverrideStyle on a non-element?");
-  return NS_ERROR_UNEXPECTED;
-}
-
-css::StyleRule*
-nsGenericDOMDataNode::GetInlineStyleRule()
-{
-  return nsnull;
-}
-
-NS_IMETHODIMP
-nsGenericDOMDataNode::SetInlineStyleRule(css::StyleRule* aStyleRule,
-                                         const nsAString* aSerialized,
-                                         bool aNotify)
-{
-  NS_NOTREACHED("How come we're setting inline style on a non-element?");
-  return NS_ERROR_UNEXPECTED;
-}
-
 NS_IMETHODIMP_(bool)
 nsGenericDOMDataNode::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
