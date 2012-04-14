@@ -14,6 +14,7 @@ import org.mozilla.gecko.sync.jpake.JPakeClient;
 import org.mozilla.gecko.sync.jpake.JPakeNoActivePairingException;
 import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
+import org.mozilla.gecko.sync.setup.SyncAccounts.SyncAccountParameters;
 
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
@@ -356,26 +357,38 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
    * @param jCreds
    */
   public void onComplete(JSONObject jCreds) {
+    boolean result = true;
+
     if (!pairWithPin) {
       String accountName  = (String) jCreds.get(Constants.JSON_KEY_ACCOUNT);
       String password     = (String) jCreds.get(Constants.JSON_KEY_PASSWORD);
       String syncKey      = (String) jCreds.get(Constants.JSON_KEY_SYNCKEY);
       String serverURL    = (String) jCreds.get(Constants.JSON_KEY_SERVER);
 
-      Logger.debug(LOG_TAG, "Using account manager " + mAccountManager);
-      final Intent intent = SyncAccounts.createAccount(mContext, mAccountManager,
-                                                          accountName,
-                                                          syncKey, password, serverURL);
+      final SyncAccountParameters syncAccount = new SyncAccountParameters(mContext, mAccountManager,
+          accountName, syncKey, password, serverURL);
+      final Account account = SyncAccounts.createSyncAccount(syncAccount);
+      result = (account != null);
+
+      final Intent intent = new Intent(); // The intent to return.
+      intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, syncAccount.username);
+      intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, Constants.ACCOUNTTYPE_SYNC);
+      intent.putExtra(AccountManager.KEY_AUTHTOKEN, Constants.ACCOUNTTYPE_SYNC);
       setAccountAuthenticatorResult(intent.getExtras());
 
-      setResult(RESULT_OK, intent);
+      if (result) {
+        setResult(RESULT_OK, intent);
+      } else {
+        setResult(RESULT_CANCELED, intent);
+      }
     }
 
-    jClient = null; // Sync is set up. Kill reference to JPakeClient object.
+    jClient = null; // Sync should be set up. Kill reference to JPakeClient object.
+    final boolean res = result;
     runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        displayAccount(true);
+        displayResult(res);
       }
     });
   }
@@ -396,16 +409,20 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
   }
 
   /**
-   * Displays Sync account setup completed feedback to user.
+   * Displays Sync account setup result to user.
    *
    * @param isSetup
-   *          boolean for whether success screen is reached during setup
-   *          completion, or otherwise.
+   *          true is account was set up successfully, false otherwise.
    */
-  private void displayAccount(boolean isSetup) {
-    Intent intent = new Intent(mContext, SetupSuccessActivity.class);
+  private void displayResult(boolean isSuccess) {
+    Intent intent = null;
+    if (isSuccess) {
+      intent = new Intent(mContext, SetupSuccessActivity.class);
+    }  else {
+      intent = new Intent(mContext, SetupFailureActivity.class);
+    }
     intent.setFlags(Constants.FLAG_ACTIVITY_REORDER_TO_FRONT_NO_ANIMATION);
-    intent.putExtra(Constants.INTENT_EXTRA_IS_SETUP, isSetup);
+    intent.putExtra(Constants.INTENT_EXTRA_IS_SETUP, !pairWithPin);
     startActivity(intent);
     finish();
   }

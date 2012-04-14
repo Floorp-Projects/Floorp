@@ -25,7 +25,7 @@ public interface GlobalSyncStage {
     updateEnabledEngines,
     */
     syncTabs,
-    // syncPasswords,
+    syncPasswords,
     syncBookmarks,
     syncHistory,
     syncFormHistory,
