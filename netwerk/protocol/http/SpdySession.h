@@ -91,10 +91,19 @@ public:
   const static PRUint8 kFlag_Data_UNI  = 0x02;
   const static PRUint8 kFlag_Data_ZLIB = 0x02;
   
-  const static PRUint8 kPri00   = 0x00;
-  const static PRUint8 kPri01   = 0x40;
-  const static PRUint8 kPri02   = 0x80;
-  const static PRUint8 kPri03   = 0xC0;
+  // The protocol document for v2 specifies that the
+  // highest value (3) is the highest priority, but in
+  // reality 0 is the highest priority. 
+  //
+  // Draft 3 notes here https://sites.google.com/a/chromium.org/dev/spdy/spdy-protocol/
+  // are the best guide to the mistake. Also see
+  // GetLowestPriority() and GetHighestPriority() in spdy_framer.h of
+  // chromium source.
+
+  const static PRUint8 kPri00   = 0 << 6; // highest
+  const static PRUint8 kPri01   = 1 << 6;
+  const static PRUint8 kPri02   = 2 << 6;
+  const static PRUint8 kPri03   = 3 << 6; // lowest
 
   enum
   {

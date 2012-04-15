@@ -325,8 +325,6 @@ SpdyStream::ParseHttpRequestHeaders(const char *buf,
   memset (mTxInlineFrame + 12, 0, 4);
 
   // Priority flags are the C0 mask of byte 16.
-  // From low to high: 00 40 80 C0
-  // higher raw priority values are actually less important
   //
   // The other 6 bits of 16 are unused. Spdy/3 will expand
   // priority to 4 bits.
@@ -336,13 +334,13 @@ SpdyStream::ParseHttpRequestHeaders(const char *buf,
   // receive windows, separate from their spdy priority
   //
   if (mPriority >= nsISupportsPriority::PRIORITY_LOW)
-    mTxInlineFrame[16] = SpdySession::kPri00;
-  else if (mPriority >= nsISupportsPriority::PRIORITY_NORMAL)
-    mTxInlineFrame[16] = SpdySession::kPri01;
-  else if (mPriority >= nsISupportsPriority::PRIORITY_HIGH)
-    mTxInlineFrame[16] = SpdySession::kPri02;
-  else
     mTxInlineFrame[16] = SpdySession::kPri03;
+  else if (mPriority >= nsISupportsPriority::PRIORITY_NORMAL)
+    mTxInlineFrame[16] = SpdySession::kPri02;
+  else if (mPriority >= nsISupportsPriority::PRIORITY_HIGH)
+    mTxInlineFrame[16] = SpdySession::kPri01;
+  else
+    mTxInlineFrame[16] = SpdySession::kPri00;
 
   mTxInlineFrame[17] = 0;                         /* unused */
   
