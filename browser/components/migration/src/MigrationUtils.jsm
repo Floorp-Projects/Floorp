@@ -406,9 +406,7 @@ let MigrationUtils = Object.freeze({
         migrator = Cc["@mozilla.org/profile/migrator;1?app=browser&type=" +
                       aKey].createInstance(Ci.nsIBrowserProfileMigrator);
       }
-      catch(ex) {
-        Cu.reportError("Could not get migrator '" + aKey + "' (" + ex + ")");
-      }
+      catch(ex) { }
       this._migrators.set(aKey, migrator);
     }
 

@@ -84,6 +84,7 @@ CPPSRCS += \
   GonkHal.cpp \
   Power.cpp \
   GonkSensor.cpp \
+  UeventPoller.cpp \
   $(NULL)
 else ifeq (Linux,$(OS_TARGET))
 CPPSRCS += \

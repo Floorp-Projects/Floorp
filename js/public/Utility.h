@@ -158,9 +158,20 @@ PrintBacktrace()
         } \
     } while (0)
 
+#  define JS_OOM_POSSIBLY_FAIL_REPORT(cx) \
+    do \
+    { \
+        if (++OOM_counter > OOM_maxAllocations) { \
+            JS_OOM_EMIT_BACKTRACE();\
+            js_ReportOutOfMemory(cx);\
+            return NULL; \
+        } \
+    } while (0)
+
 # else
 #  define JS_OOM_POSSIBLY_FAIL() do {} while(0)
-# endif
+#  define JS_OOM_POSSIBLY_FAIL_REPORT(cx) do {} while(0)
+# endif /* DEBUG */
 
 /*
  * SpiderMonkey code should not be calling these allocation functions directly.
