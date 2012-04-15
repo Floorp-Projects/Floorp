@@ -124,22 +124,12 @@ function PopupNotifications(tabbrowser, panel, iconBox) {
   this.window = tabbrowser.ownerDocument.defaultView;
   this.panel = panel;
   this.tabbrowser = tabbrowser;
-
-  this._onIconBoxCommand = this._onIconBoxCommand.bind(this);
   this.iconBox = iconBox;
 
-  this.panel.addEventListener("popuphidden", this._onPopupHidden.bind(this), true);
+  this.panel.addEventListener("popuphidden", this, true);
 
-  let self = this;
-  function updateFromListeners() {
-    // setTimeout(..., 0) needed, otherwise openPopup from "activate" event
-    // handler results in the popup being hidden again for some reason...
-    self.window.setTimeout(function () {
-      self._update();
-    }, 0);
-  }
-  this.window.addEventListener("activate", updateFromListeners, true);
-  this.tabbrowser.tabContainer.addEventListener("TabSelect", updateFromListeners, true);
+  this.window.addEventListener("activate", this, true);
+  this.tabbrowser.tabContainer.addEventListener("TabSelect", this, true);
 }
 
 PopupNotifications.prototype = {
@@ -152,13 +142,13 @@ PopupNotifications.prototype = {
   set iconBox(iconBox) {
     // Remove the listeners on the old iconBox, if needed
     if (this._iconBox) {
-      this._iconBox.removeEventListener("click", this._onIconBoxCommand, false);
-      this._iconBox.removeEventListener("keypress", this._onIconBoxCommand, false);
+      this._iconBox.removeEventListener("click", this, false);
+      this._iconBox.removeEventListener("keypress", this, false);
     }
     this._iconBox = iconBox;
     if (iconBox) {
-      iconBox.addEventListener("click", this._onIconBoxCommand, false);
-      iconBox.addEventListener("keypress", this._onIconBoxCommand, false);
+      iconBox.addEventListener("click", this, false);
+      iconBox.addEventListener("keypress", this, false);
     }
   },
   get iconBox() {
@@ -352,6 +342,27 @@ PopupNotifications.prototype = {
     // update the panel, if needed
     if (isCurrent)
       this._update();
+  },
+
+  handleEvent: function (aEvent) {
+    switch (aEvent.type) {
+      case "popuphidden":
+        this._onPopupHidden(aEvent);
+        break;
+      case "activate":
+      case "TabSelect":
+        let self = this;
+        // setTimeout(..., 0) needed, otherwise openPopup from "activate" event
+        // handler results in the popup being hidden again for some reason...
+        this.window.setTimeout(function () {
+          self._update();
+        }, 0);
+        break;
+      case "click":
+      case "keypress":
+        this._onIconBoxCommand(aEvent);
+        break;
+    }
   },
 
 ////////////////////////////////////////////////////////////////////////////////
