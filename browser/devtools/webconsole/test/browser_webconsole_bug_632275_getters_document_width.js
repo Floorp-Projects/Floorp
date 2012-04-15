@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-bug-632275-getters.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-632275-getters.html";
 
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.gcli.enable");
