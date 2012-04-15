@@ -944,9 +944,9 @@ nsresult nsPluginHost::CreateListenerForChannel(nsIChannel* aChannel,
 }
 
 nsresult
-nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL,
-                                        nsObjectLoadingContent *aContent,
-                                        nsPluginInstanceOwner** aOwner)
+nsPluginHost::InstantiateEmbeddedPluginInstance(const char *aMimeType, nsIURI* aURL,
+                                                nsObjectLoadingContent *aContent,
+                                                nsPluginInstanceOwner** aOwner)
 {
   NS_ENSURE_ARG_POINTER(aOwner);
 
@@ -1099,11 +1099,11 @@ nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL,
   return NS_OK;
 }
 
-nsresult nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
-                                                 nsIURI* aURI,
-                                                 nsObjectLoadingContent *aContent,
-                                                 nsPluginInstanceOwner **aOwner,
-                                                 nsIStreamListener **aStreamListener)
+nsresult nsPluginHost::InstantiateFullPagePluginInstance(const char *aMimeType,
+                                                         nsIURI* aURI,
+                                                         nsObjectLoadingContent *aContent,
+                                                         nsPluginInstanceOwner **aOwner,
+                                                         nsIStreamListener **aStreamListener)
 {
 #ifdef PLUGIN_LOGGING
   nsCAutoString urlSpec;
@@ -1145,7 +1145,7 @@ nsresult nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
   instanceOwner->CreateWidget();
   instanceOwner->CallSetWindow();
 
-  rv = NewFullPagePluginStream(aURI, instance.get(), aStreamListener);
+  rv = NewFullPagePluginStreamListener(aURI, instance.get(), aStreamListener);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -3246,33 +3246,28 @@ nsresult nsPluginHost::NewEmbeddedPluginStreamListener(nsIURI* aURL,
                                                        nsNPAPIPluginInstance* aInstance,
                                                        nsIStreamListener** aListener)
 {
-  if (!aURL)
-    return NS_OK;
+  NS_ENSURE_ARG_POINTER(aURL);
 
   nsRefPtr<nsPluginStreamListenerPeer> listener = new nsPluginStreamListenerPeer();
-  if (!listener)
-    return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv;
-
-  // if we have an instance, everything has been set up
+  // If we have an instance, everything has been set up
   // if we only have an owner, then we need to pass it in
   // so the listener can set up the instance later after
-  // we've determined the mimetype of the stream
-  if (aInstance)
+  // we've determined the mimetype of the stream.
+  nsresult rv = NS_ERROR_ILLEGAL_VALUE;
+  if (aInstance) {
     rv = listener->InitializeEmbedded(aURL, aInstance, nsnull);
-  else if (aContent)
+  } else if (aContent) {
     rv = listener->InitializeEmbedded(aURL, nsnull, aContent);
-  else
-    rv = NS_ERROR_ILLEGAL_VALUE;
+  }
 
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
     NS_ADDREF(*aListener = listener);
+  }
 
   return rv;
 }
 
-// Called by InstantiateEmbeddedPlugin()
 nsresult nsPluginHost::NewEmbeddedPluginStream(nsIURI* aURL,
                                                nsObjectLoadingContent *aContent,
                                                nsNPAPIPluginInstance* aInstance)
@@ -3308,17 +3303,13 @@ nsresult nsPluginHost::NewEmbeddedPluginStream(nsIURI* aURL,
   return rv;
 }
 
-// Called by InstantiateFullPagePlugin()
-nsresult nsPluginHost::NewFullPagePluginStream(nsIURI* aURI,
-                                               nsNPAPIPluginInstance *aInstance,
-                                               nsIStreamListener **aStreamListener)
+nsresult nsPluginHost::NewFullPagePluginStreamListener(nsIURI* aURI,
+                                                       nsNPAPIPluginInstance *aInstance,
+                                                       nsIStreamListener **aStreamListener)
 {
-  NS_ASSERTION(aStreamListener, "Stream listener out param cannot be null");
+  NS_ENSURE_ARG_POINTER(aStreamListener);
 
   nsRefPtr<nsPluginStreamListenerPeer> listener = new nsPluginStreamListenerPeer();
-  if (!listener)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   nsresult rv = listener->InitializeFullPage(aURI, aInstance);
   if (NS_FAILED(rv)) {
     return rv;
