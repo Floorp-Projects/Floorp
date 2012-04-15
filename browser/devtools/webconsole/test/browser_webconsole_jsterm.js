@@ -39,7 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-console.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
 let jsterm;
 

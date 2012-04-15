@@ -40,7 +40,7 @@
 
 // Tests the console history feature accessed via the up and down arrow keys.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-console.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
 // Constants used for defining the direction of JSTerm input history navigation.
 const HISTORY_BACK = -1;

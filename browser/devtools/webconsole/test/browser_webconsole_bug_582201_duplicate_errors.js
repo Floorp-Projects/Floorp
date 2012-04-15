@@ -41,7 +41,7 @@
 // Tests that exceptions thrown by content don't show up twice in the Web
 // Console.
 
-const TEST_DUPLICATE_ERROR_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-duplicate-error.html";
+const TEST_DUPLICATE_ERROR_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-duplicate-error.html";
 
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.gcli.enable");
