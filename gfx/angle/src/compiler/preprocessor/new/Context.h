@@ -10,12 +10,16 @@
 #include <map>
 
 #include "common/angleutils.h"
-#include "Input.h"
 #include "Macro.h"
 #include "Token.h"
 
+struct YYLTYPE;
+union YYSTYPE;
+
 namespace pp
 {
+
+class Lexer;
 
 class Context
 {
@@ -23,13 +27,12 @@ class Context
     Context();
     ~Context();
 
-    bool init();
     bool process(int count, const char* const string[], const int length[],
                  TokenVector* output);
 
-    void* lexer() { return mLexer; }
-    int readInput(char* buf, int maxSize);
     TokenVector* output() { return mOutput; }
+
+    int lex(YYSTYPE* lvalp, YYLTYPE* llocp);
 
     bool defineMacro(pp::Token::Location location,
                      pp::Macro::Type type,
@@ -44,13 +47,10 @@ class Context
     typedef std::map<std::string, Macro*> MacroSet;
 
     void reset();
-    bool initLexer();
-    void destroyLexer();
     void defineBuiltInMacro(const std::string& name, int value);
     bool parse();
 
-    void* mLexer;  // Lexer handle.
-    Input* mInput;
+    std::auto_ptr<Lexer> mLexer;
     TokenVector* mOutput;
     MacroSet mMacros;  // Defined macros.
 };

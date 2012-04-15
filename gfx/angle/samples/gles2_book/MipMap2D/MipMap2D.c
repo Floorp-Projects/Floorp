@@ -151,7 +151,7 @@ GLuint CreateMipMappedTexture2D( )
    int    level;
    GLubyte *pixels;
    GLubyte *prevImage;
-   GLubyte *newImage;
+   GLubyte *newImage = NULL;
       
    pixels = GenCheckImage( width, height, 8 );
    if ( pixels == NULL )

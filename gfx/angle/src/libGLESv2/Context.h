@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2011 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -104,7 +104,7 @@ struct Color
 class VertexAttribute
 {
   public:
-    VertexAttribute() : mType(GL_FLOAT), mSize(0), mNormalized(false), mStride(0), mPointer(NULL), mArrayEnabled(false)
+    VertexAttribute() : mType(GL_FLOAT), mSize(0), mNormalized(false), mStride(0), mPointer(NULL), mArrayEnabled(false), mDivisor(0)
     {
         mCurrentValue[0] = 0.0f;
         mCurrentValue[1] = 0.0f;
@@ -147,6 +147,7 @@ class VertexAttribute
 
     bool mArrayEnabled;   // From glEnable/DisableVertexAttribArray
     float mCurrentValue[4];   // From glVertexAttrib
+    unsigned int mDivisor;
 };
 
 typedef VertexAttribute VertexAttributeArray[MAX_VERTEX_ATTRIBS];
@@ -243,14 +244,14 @@ class VertexDeclarationCache
     VertexDeclarationCache();
     ~VertexDeclarationCache();
 
-    GLenum applyDeclaration(IDirect3DDevice9 *device, TranslatedAttribute attributes[], Program *program);
+    GLenum applyDeclaration(IDirect3DDevice9 *device, TranslatedAttribute attributes[], Program *program, GLsizei instances, GLsizei *repeatDraw);
 
     void markStateDirty();
 
   private:
     UINT mMaxLru;
 
-    enum { NUM_VERTEX_DECL_CACHE_ENTRIES = 16 };
+    enum { NUM_VERTEX_DECL_CACHE_ENTRIES = 32 };
 
     struct VBData
     {
@@ -261,6 +262,7 @@ class VertexDeclarationCache
 
     VBData mAppliedVBs[MAX_VERTEX_ATTRIBS];
     IDirect3DVertexDeclaration9 *mLastSetVDecl;
+    bool mInstancingEnabled;
 
     struct VertexDeclCacheEntry
     {
@@ -423,6 +425,7 @@ class Context
     void setRenderbufferStorage(RenderbufferStorage *renderbuffer);
 
     void setVertexAttrib(GLuint index, const GLfloat *values);
+    void setVertexAttribDivisor(GLuint index, GLuint divisor);
 
     Buffer *getBuffer(GLuint handle);
     Fence *getFence(GLuint handle);
@@ -450,13 +453,11 @@ class Context
 
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei *bufSize, void* pixels);
     void clear(GLbitfield mask);
-    void drawArrays(GLenum mode, GLint first, GLsizei count);
-    void drawElements(GLenum mode, GLsizei count, GLenum type, const void *indices);
+    void drawArrays(GLenum mode, GLint first, GLsizei count, GLsizei instances);
+    void drawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instances);
     void sync(bool block);   // flush/finish
 
-	// Draw the last segment of a line loop
-    void drawClosingLine(unsigned int first, unsigned int last, int minIndex);
-    void drawClosingLine(GLsizei count, GLenum type, const void *indices, int minIndex);
+    void drawLineLoop(GLsizei count, GLenum type, const GLvoid *indices, int minIndex);
 
     void recordInvalidEnum();
     void recordInvalidValue();
@@ -496,6 +497,7 @@ class Context
     bool supportsLuminanceAlphaTextures() const;
     bool supports32bitIndices() const;
     bool supportsNonPower2Texture() const;
+    bool supportsInstancing() const;
 
     void blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, 
                          GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
@@ -510,8 +512,8 @@ class Context
 
     bool applyRenderTarget(bool ignoreViewport);
     void applyState(GLenum drawMode);
-    GLenum applyVertexBuffer(GLint first, GLsizei count);
-    GLenum applyIndexBuffer(const void *indices, GLsizei count, GLenum mode, GLenum type, TranslatedIndexData *indexInfo);
+    GLenum applyVertexBuffer(GLint first, GLsizei count, GLsizei instances, GLsizei *repeatDraw);
+    GLenum applyIndexBuffer(const GLvoid *indices, GLsizei count, GLenum mode, GLenum type, TranslatedIndexData *indexInfo);
     void applyShaders();
     void applyTextures();
     void applyTextures(SamplerType type);
@@ -558,7 +560,7 @@ class Context
 
     Blit *mBlit;
 
-    StreamingIndexBuffer *mClosingIB;
+    StreamingIndexBuffer *mLineLoopIB;
     
     BindingPointer<Texture> mIncompleteTextures[TEXTURE_TYPE_COUNT];
 
@@ -595,6 +597,7 @@ class Context
     bool mSupportsShaderModel3;
     bool mSupportsVertexTexture;
     bool mSupportsNonPower2Texture;
+    bool mSupportsInstancing;
     int  mMaxRenderbufferDimension;
     int  mMaxTextureDimension;
     int  mMaxCubeTextureDimension;
