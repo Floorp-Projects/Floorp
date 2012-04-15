@@ -6,7 +6,7 @@
 == bug582940-1.html bug582940-1-ref.html
 == bug592656-1.html bug592656-1-ref.html
 == bug608373-1.html bug608373-1-ref.html
-fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == view-source:bug482921-1.html bug482921-1-ref.html # bug 703201
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia) == view-source:bug482921-1.html bug482921-1-ref.html # bug 703201
 == view-source:bug482921-2.xhtml bug482921-2-ref.html
 == bug659763-1.html bug659763-1-ref.html
 == bug659763-2.html bug659763-2-ref.html
