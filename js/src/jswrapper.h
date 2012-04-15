@@ -51,18 +51,15 @@ namespace js {
 
 class DummyFrameGuard;
 
-/* No-op wrapper handler base class. */
-class JS_FRIEND_API(Wrapper) : public ProxyHandler
+/* Base class that just implements no-op forwarding methods for funamental
+ * traps. This is meant to be used as a base class for ProxyHandlers that
+ * want transparent forwarding behavior but don't want to use the derived
+ * traps and other baggage of js::Wrapper.
+ */
+class JS_FRIEND_API(AbstractWrapper) : public ProxyHandler
 {
-    unsigned mFlags;
   public:
-    unsigned flags() const { return mFlags; }
-
-    explicit Wrapper(unsigned flags);
-
-    typedef enum { PermitObjectAccess, PermitPropertyAccess, DenyAccess } Permission;
-
-    virtual ~Wrapper();
+    explicit AbstractWrapper();
 
     /* ES5 Harmony fundamental wrapper traps. */
     virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, bool set,
@@ -75,30 +72,6 @@ class JS_FRIEND_API(Wrapper) : public ProxyHandler
     virtual bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp) MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool fix(JSContext *cx, JSObject *wrapper, Value *vp) MOZ_OVERRIDE;
-
-    /* ES5 Harmony derived wrapper traps. */
-    virtual bool has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp) MOZ_OVERRIDE;
-    virtual bool hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp) MOZ_OVERRIDE;
-    virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, Value *vp) MOZ_OVERRIDE;
-    virtual bool set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, bool strict,
-                     Value *vp) MOZ_OVERRIDE;
-    virtual bool keys(JSContext *cx, JSObject *wrapper, AutoIdVector &props) MOZ_OVERRIDE;
-    virtual bool iterate(JSContext *cx, JSObject *wrapper, unsigned flags, Value *vp) MOZ_OVERRIDE;
-
-    /* Spidermonkey extensions. */
-    virtual bool call(JSContext *cx, JSObject *wrapper, unsigned argc, Value *vp) MOZ_OVERRIDE;
-    virtual bool construct(JSContext *cx, JSObject *wrapper, unsigned argc, Value *argv, Value *rval) MOZ_OVERRIDE;
-    virtual bool nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs args) MOZ_OVERRIDE;
-    virtual bool hasInstance(JSContext *cx, JSObject *wrapper, const Value *vp, bool *bp) MOZ_OVERRIDE;
-    virtual JSType typeOf(JSContext *cx, JSObject *proxy) MOZ_OVERRIDE;
-    virtual bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx) MOZ_OVERRIDE;
-    virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper) MOZ_OVERRIDE;
-    virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, unsigned indent) MOZ_OVERRIDE;
-    virtual bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g) MOZ_OVERRIDE;
-    virtual bool defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp) MOZ_OVERRIDE;
-    virtual bool iteratorNext(JSContext *cx, JSObject *wrapper, Value *vp) MOZ_OVERRIDE;
-
-    virtual void trace(JSTracer *trc, JSObject *wrapper) MOZ_OVERRIDE;
 
     /* Policy enforcement traps.
      *
@@ -132,13 +105,56 @@ class JS_FRIEND_API(Wrapper) : public ProxyHandler
     virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act, bool *bp);
     virtual void leave(JSContext *cx, JSObject *wrapper);
 
+    static JSObject *wrappedObject(const JSObject *wrapper);
+    static Wrapper *wrapperHandler(const JSObject *wrapper);
+};
+
+/* No-op wrapper handler base class. */
+class JS_FRIEND_API(Wrapper) : public AbstractWrapper
+{
+    unsigned mFlags;
+  public:
+    unsigned flags() const { return mFlags; }
+
+    explicit Wrapper(unsigned flags);
+
+    typedef enum { PermitObjectAccess, PermitPropertyAccess, DenyAccess } Permission;
+
+    virtual ~Wrapper();
+
+    /* ES5 Harmony derived wrapper traps. */
+    virtual bool has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp) MOZ_OVERRIDE;
+    virtual bool hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp) MOZ_OVERRIDE;
+    virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, Value *vp) MOZ_OVERRIDE;
+    virtual bool set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, bool strict,
+                     Value *vp) MOZ_OVERRIDE;
+    virtual bool keys(JSContext *cx, JSObject *wrapper, AutoIdVector &props) MOZ_OVERRIDE;
+    virtual bool iterate(JSContext *cx, JSObject *wrapper, unsigned flags, Value *vp) MOZ_OVERRIDE;
+
+    /* Spidermonkey extensions. */
+    virtual bool call(JSContext *cx, JSObject *wrapper, unsigned argc, Value *vp) MOZ_OVERRIDE;
+    virtual bool construct(JSContext *cx, JSObject *wrapper, unsigned argc, Value *argv, Value *rval) MOZ_OVERRIDE;
+    virtual bool nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs args) MOZ_OVERRIDE;
+    virtual bool hasInstance(JSContext *cx, JSObject *wrapper, const Value *vp, bool *bp) MOZ_OVERRIDE;
+    virtual JSType typeOf(JSContext *cx, JSObject *proxy) MOZ_OVERRIDE;
+    virtual bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx) MOZ_OVERRIDE;
+    virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper) MOZ_OVERRIDE;
+    virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, unsigned indent) MOZ_OVERRIDE;
+    virtual bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g) MOZ_OVERRIDE;
+    virtual bool defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp) MOZ_OVERRIDE;
+    virtual bool iteratorNext(JSContext *cx, JSObject *wrapper, Value *vp) MOZ_OVERRIDE;
+
+    virtual void trace(JSTracer *trc, JSObject *wrapper) MOZ_OVERRIDE;
+
+    using AbstractWrapper::Action;
+
     static Wrapper singleton;
 
     static JSObject *New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
                          Wrapper *handler);
 
-    static JSObject *wrappedObject(const JSObject *wrapper);
-    static Wrapper *wrapperHandler(const JSObject *wrapper);
+    using AbstractWrapper::wrappedObject;
+    using AbstractWrapper::wrapperHandler;
 
     enum {
         CROSS_COMPARTMENT = 1 << 0,
