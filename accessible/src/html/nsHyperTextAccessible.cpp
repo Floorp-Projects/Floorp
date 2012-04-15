@@ -2241,11 +2241,11 @@ nsHyperTextAccessible::GetChildIndexAtOffset(PRUint32 aOffset)
 // nsHyperTextAccessible protected
 
 nsresult
-nsHyperTextAccessible::GetDOMPointByFrameOffset(nsIFrame *aFrame,
+nsHyperTextAccessible::GetDOMPointByFrameOffset(nsIFrame* aFrame,
                                                 PRInt32 aOffset,
-                                                nsIAccessible *aAccessible,
-                                                nsIDOMNode **aNode,
-                                                PRInt32 *aNodeOffset)
+                                                nsAccessible* aAccessible,
+                                                nsIDOMNode** aNode,
+                                                PRInt32* aNodeOffset)
 {
   NS_ENSURE_ARG(aAccessible);
 
@@ -2254,13 +2254,13 @@ nsHyperTextAccessible::GetDOMPointByFrameOffset(nsIFrame *aFrame,
   if (!aFrame) {
     // If the given frame is null then set offset after the DOM node of the
     // given accessible.
-    nsCOMPtr<nsIDOMNode> DOMNode;
-    aAccessible->GetDOMNode(getter_AddRefs(DOMNode));
-    nsCOMPtr<nsIContent> content(do_QueryInterface(DOMNode));
-    NS_ENSURE_STATE(content);
+    NS_ASSERTION(!aAccessible->IsDoc(), 
+                 "Shouldn't be called on document accessible!");
 
-    nsCOMPtr<nsIContent> parent(content->GetParent());
-    NS_ENSURE_STATE(parent);
+    nsIContent* content = aAccessible->GetContent();
+    NS_ASSERTION(content, "Shouldn't operate on defunct accessible!");
+
+    nsIContent* parent = content->GetParent();
 
     *aNodeOffset = parent->IndexOf(content) + 1;
     node = do_QueryInterface(parent);
