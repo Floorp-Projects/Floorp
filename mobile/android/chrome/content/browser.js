@@ -765,12 +765,18 @@ var BrowserApp = {
             case Ci.nsIPrefBranch.PREF_STRING:
             default:
               pref.type = "string";
-              pref.value = Services.prefs.getComplexValue(prefName, Ci.nsIPrefLocalizedString).data;
+              try {
+                // Try in case it's a localized string (will throw an exception if not)
+                pref.value = Services.prefs.getComplexValue(prefName, Ci.nsIPrefLocalizedString).data;
+              } catch (e) {
+                pref.value = Services.prefs.getCharPref(prefName);
+              }
               break;
           }
         } catch (e) {
-            // preference does not exist; do not send it
-            continue;
+          dump("Error reading pref [" + prefName + "]: " + e);
+          // preference does not exist; do not send it
+          continue;
         }
 
         // some preferences use integers or strings instead of booleans for
