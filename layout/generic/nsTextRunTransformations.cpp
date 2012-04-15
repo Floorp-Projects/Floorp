@@ -46,12 +46,20 @@
 #include "gfxContext.h"
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsUnicodeProperties.h"
 
 #define SZLIG 0x00DF
 
 // Unicode characters needing special casing treatment in tr/az languages
 #define LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE  0x0130
 #define LATIN_SMALL_LETTER_DOTLESS_I           0x0131
+
+// Greek sigma needs custom handling for the lowercase transform; for details
+// see comments under "case NS_STYLE_TEXT_TRANSFORM_LOWERCASE" within
+// nsCaseTransformTextRunFactory::RebuildTextRun(), and bug 740120.
+#define GREEK_CAPITAL_LETTER_SIGMA      0x03A3
+#define GREEK_SMALL_LETTER_FINAL_SIGMA  0x03C2
+#define GREEK_SMALL_LETTER_SIGMA        0x03C3
 
 nsTransformedTextRun *
 nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
@@ -376,7 +384,10 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   } languageSpecificCasing = eNone;
 
   const nsIAtom* lang = nsnull;
-  bool capitalizeDutchIJ = false;  
+  bool capitalizeDutchIJ = false;
+  bool prevIsLetter = false;
+  PRUint32 sigmaIndex = PRUint32(-1);
+  nsIUGenCategory::nsUGenCategory cat;
   PRUint32 i;
   for (i = 0; i < length; ++i) {
     PRUint32 ch = str[i];
@@ -411,21 +422,82 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
       if (languageSpecificCasing == eTurkish && ch == 'I') {
         ch = LATIN_SMALL_LETTER_DOTLESS_I;
-      } else {
-        ch = ToLowerCase(ch);
+        prevIsLetter = true;
+        sigmaIndex = PRUint32(-1);
+        break;
+      }
+
+      // Special lowercasing behavior for Greek Sigma: note that this is listed
+      // as context-sensitive in Unicode's SpecialCasing.txt, but is *not* a
+      // language-specific mapping; it applies regardless of the language of
+      // the element.
+      //
+      // The lowercase mapping for CAPITAL SIGMA should be to SMALL SIGMA (i.e.
+      // the non-final form) whenever there is a following letter, or when the
+      // CAPITAL SIGMA occurs in isolation (neither preceded nor followed by a
+      // LETTER); and to FINAL SIGMA when it is preceded by another letter but
+      // not followed by one.
+      //
+      // To implement the context-sensitive nature of this mapping, we keep
+      // track of whether the previous character was a letter. If not, CAPITAL
+      // SIGMA will map directly to SMALL SIGMA. If the previous character
+      // was a letter, CAPITAL SIGMA maps to FINAL SIGMA and we record the
+      // position in the converted string; if we then encounter another letter,
+      // that FINAL SIGMA is replaced with a standard SMALL SIGMA.
+
+      cat = mozilla::unicode::GetGenCategory(ch);
+
+      // If sigmaIndex is not -1, it marks where we have provisionally mapped
+      // a CAPITAL SIGMA to FINAL SIGMA; if we now find another letter, we
+      // need to change it to SMALL SIGMA.
+      if (sigmaIndex != PRUint32(-1)) {
+        if (cat == nsIUGenCategory::kLetter) {
+          convertedString.SetCharAt(GREEK_SMALL_LETTER_SIGMA, sigmaIndex);
+        }
+      }
+
+      if (ch == GREEK_CAPITAL_LETTER_SIGMA) {
+        // If preceding char was a letter, map to FINAL instead of SMALL,
+        // and note where it occurred by setting sigmaIndex; we'll change it
+        // to standard SMALL SIGMA later if another letter follows
+        if (prevIsLetter) {
+          ch = GREEK_SMALL_LETTER_FINAL_SIGMA;
+          sigmaIndex = convertedString.Length();
+        } else {
+          // CAPITAL SIGMA not preceded by a letter is unconditionally mapped
+          // to SMALL SIGMA
+          ch = GREEK_SMALL_LETTER_SIGMA;
+          sigmaIndex = PRUint32(-1);
+        }
+        prevIsLetter = true;
+        break;
+      }
+
+      ch = ToLowerCase(ch);
+
+      // ignore diacritics for the purpose of contextual sigma mapping;
+      // otherwise, reset prevIsLetter appropriately and clear the
+      // sigmaIndex marker
+      if (cat != nsIUGenCategory::kMark) {
+        prevIsLetter = (cat == nsIUGenCategory::kLetter);
+        sigmaIndex = PRUint32(-1);
       }
       break;
+
     case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
       if (ch == SZLIG) {
         convertedString.Append('S');
         extraChar = true;
         ch = 'S';
-      } else if (languageSpecificCasing == eTurkish && ch == 'i') {
-        ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
-      } else {
-        ch = ToUpperCase(ch);
+        break;
       }
+      if (languageSpecificCasing == eTurkish && ch == 'i') {
+        ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
+        break;
+      }
+      ch = ToUpperCase(ch);
       break;
+
     case NS_STYLE_TEXT_TRANSFORM_CAPITALIZE:
       if (capitalizeDutchIJ && ch == 'j') {
         ch = 'J';
@@ -438,16 +510,21 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
           convertedString.Append('S');
           extraChar = true;
           ch = 'S';
-        } else if (languageSpecificCasing == eTurkish && ch == 'i') {
+          break;
+        }
+        if (languageSpecificCasing == eTurkish && ch == 'i') {
           ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
-        } else if (languageSpecificCasing == eDutch && ch == 'i') {
+          break;
+        }
+        if (languageSpecificCasing == eDutch && ch == 'i') {
           ch = 'I';
           capitalizeDutchIJ = true;
-        } else {
-          ch = ToTitleCase(ch);
+          break;
         }
+        ch = ToTitleCase(ch);
       }
       break;
+
     default:
       break;
     }
