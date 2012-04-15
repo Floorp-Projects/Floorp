@@ -182,7 +182,7 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
     PRUint32 mergeRunStart = iter.GetStringStart();
     PRUint32 k;
     for (k = iter.GetStringStart(); k < iter.GetStringEnd(); ++k) {
-      gfxTextRun::CompressedGlyph g = aSrc->GetCharacterGlyphs()[k];
+      const gfxTextRun::CompressedGlyph g = aSrc->GetCharacterGlyphs()[k];
       if (g.IsSimpleGlyph()) {
         if (!anyMissing) {
           gfxTextRun::DetailedGlyph details;
@@ -222,12 +222,14 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
       // just discard the entire merge run. See comment at start of this
       // function.
       if (!aCharsToMerge[mergeRunStart]) {
+        gfxTextRun::CompressedGlyph mergedGlyphs =
+          aSrc->GetCharacterGlyphs()[mergeRunStart];
         if (anyMissing) {
-          g.SetMissing(glyphs.Length());
+          mergedGlyphs.SetMissing(glyphs.Length());
         } else {
-          g.SetComplex(true, true, glyphs.Length());
+          mergedGlyphs.SetComplex(true, true, glyphs.Length());
         }
-        aDest->SetGlyphs(offset, g, glyphs.Elements());
+        aDest->SetGlyphs(offset, mergedGlyphs, glyphs.Elements());
         ++offset;
       }
 
