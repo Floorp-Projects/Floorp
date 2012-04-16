@@ -311,6 +311,10 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
     return NS_ERROR_INVALID_ARG;
   }
 
+  if (content->GetCurrentDoc() != presShell->GetDocument()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   nsRect lastDisplayPort;
   if (nsLayoutUtils::GetDisplayPort(content, &lastDisplayPort) &&
       displayport.IsEqualInterior(lastDisplayPort)) {
