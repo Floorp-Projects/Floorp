@@ -334,6 +334,7 @@ template <typename T> template <typename S>
 inline
 Handle<T>::Handle(const RootedVar<S> &root)
 {
+    testAssign<S>();
     ptr = reinterpret_cast<const T *>(root.address());
 }
 
