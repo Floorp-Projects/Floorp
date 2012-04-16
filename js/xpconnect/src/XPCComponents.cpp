@@ -1833,6 +1833,79 @@ nsXPCComponents_Exception::Construct(nsIXPConnectWrappedNative *wrapper, JSConte
     return CallOrConstruct(wrapper, cx, obj, argc, argv, vp, _retval);
 }
 
+struct NS_STACK_CLASS ExceptionArgParser
+{
+    ExceptionArgParser(JSContext *context,
+                       nsXPConnect *xpconnect)
+        : eMsg("exception")
+        , eResult(NS_ERROR_FAILURE)
+        , cx(context)
+        , xpc(xpconnect)
+    {}
+
+    // Public exception parameter values. During construction, these are
+    // initialized to the appropriate defaults.
+    const char*             eMsg;
+    nsresult                eResult;
+    nsCOMPtr<nsIStackFrame> eStack;
+    nsCOMPtr<nsISupports>   eData;
+
+    // Parse the constructor arguments into the above |eFoo| parameter values.
+    bool parse(uint32_t argc, JS::Value *argv) {
+        // all params are optional - grab any passed in
+        switch (argc) {
+            default:    // more than 4 - ignore extra
+                // ...fall through...
+            case 4:     // argv[3] is object for eData
+                if (JSVAL_IS_NULL(argv[3])) {
+                    // do nothing, leave eData as null
+                } else {
+                    if (JSVAL_IS_PRIMITIVE(argv[3]) ||
+                        NS_FAILED(xpc->WrapJS(cx, JSVAL_TO_OBJECT(argv[3]),
+                                              NS_GET_IID(nsISupports),
+                                              (void**)getter_AddRefs(eData))))
+                        return false;
+                }
+                // ...fall through...
+            case 3:     // argv[2] is object for eStack
+                if (JSVAL_IS_NULL(argv[2])) {
+                    // do nothing, leave eStack as null
+                } else {
+                    if (JSVAL_IS_PRIMITIVE(argv[2]) ||
+                        NS_FAILED(xpc->WrapJS(cx, JSVAL_TO_OBJECT(argv[2]),
+                                              NS_GET_IID(nsIStackFrame),
+                                              (void**)getter_AddRefs(eStack))))
+                        return false;
+                }
+                // fall through...
+            case 2:     // argv[1] is nsresult for eResult
+                if (!JS_ValueToECMAInt32(cx, argv[1], (int32_t*) &eResult))
+                    return false;
+                // ...fall through...
+            case 1:     // argv[0] is string for eMsg
+                {
+                    JSString* str = JS_ValueToString(cx, argv[0]);
+                    if (!str || !(eMsg = messageBytes.encode(cx, str)))
+                        return false;
+                }
+                // ...fall through...
+            case 0: // this case required so that 'default' does not include zero.
+                ;   // -- do nothing --
+        }
+
+        return true;
+    }
+
+  protected:
+
+    // If there's a non-default exception string, hold onto the allocated bytes.
+    JSAutoByteString messageBytes;
+
+    // Various bits and pieces that are helpful to have around.
+    JSContext *cx;
+    nsXPConnect *xpc;
+};
+
 // static
 nsresult
 nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
@@ -1857,56 +1930,14 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
         return NS_OK;
     }
 
-    // initialization params for the exception object we will create
-    const char*             eMsg = "exception";
-    JSAutoByteString        eMsgBytes;
-    nsresult                eResult = NS_ERROR_FAILURE;
-    nsCOMPtr<nsIStackFrame> eStack;
-    nsCOMPtr<nsISupports>   eData;
-
-    // all params are optional - grab any passed in
-    switch (argc) {
-        default:    // more than 4 - ignore extra
-            // ...fall through...
-        case 4:     // argv[3] is object for eData
-            if (JSVAL_IS_NULL(argv[3])) {
-                // do nothing, leave eData as null
-            } else {
-                if (JSVAL_IS_PRIMITIVE(argv[3]) ||
-                    NS_FAILED(xpc->WrapJS(cx, JSVAL_TO_OBJECT(argv[3]),
-                                          NS_GET_IID(nsISupports),
-                                          (void**)getter_AddRefs(eData))))
-                    return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
-            }
-            // ...fall through...
-        case 3:     // argv[2] is object for eStack
-            if (JSVAL_IS_NULL(argv[2])) {
-                // do nothing, leave eStack as null
-            } else {
-                if (JSVAL_IS_PRIMITIVE(argv[2]) ||
-                    NS_FAILED(xpc->WrapJS(cx, JSVAL_TO_OBJECT(argv[2]),
-                                          NS_GET_IID(nsIStackFrame),
-                                          (void**)getter_AddRefs(eStack))))
-                    return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
-            }
-            // fall through...
-        case 2:     // argv[1] is nsresult for eResult
-            if (!JS_ValueToECMAInt32(cx, argv[1], (int32_t*) &eResult))
-                return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
-            // ...fall through...
-        case 1:     // argv[0] is string for eMsg
-            {
-                JSString* str = JS_ValueToString(cx, argv[0]);
-                if (!str || !(eMsg = eMsgBytes.encode(cx, str)))
-                    return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
-            }
-            // ...fall through...
-        case 0: // this case required so that 'default' does not include zero.
-            ;   // -- do nothing --
-    }
+    // Parse the arguments to the Exception constructor.
+    ExceptionArgParser args(cx, xpc);
+    if (!args.parse(argc, argv))
+        return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
 
     nsCOMPtr<nsIException> e;
-    nsXPCException::NewException(eMsg, eResult, eStack, eData, getter_AddRefs(e));
+    nsXPCException::NewException(args.eMsg, args.eResult, args.eStack,
+                                 args.eData, getter_AddRefs(e));
     if (!e)
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 
