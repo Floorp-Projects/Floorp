@@ -1526,7 +1526,7 @@ AndroidBridge::HandleGeckoMessage(const nsAString &aMessage, nsAString &aRet)
         env->ExceptionDescribe();
         env->ExceptionClear();
     }
-    nsJNIString jniStr(returnMessage);
+    nsJNIString jniStr(returnMessage, env);
     aRet.Assign(jniStr);
     ALOG_BRIDGE("leaving %s", __PRETTY_FUNCTION__);
 }
