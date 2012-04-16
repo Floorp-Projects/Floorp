@@ -1847,7 +1847,8 @@ public:
             FLAG_CHAR_IS_TAB              = 0x08,
             FLAG_CHAR_IS_NEWLINE          = 0x10,
             FLAG_CHAR_IS_LOW_SURROGATE    = 0x20,
-            
+            CHAR_IDENTITY_FLAGS_MASK      = 0x38,
+
             GLYPH_COUNT_MASK = 0x00FFFF00U,
             GLYPH_COUNT_SHIFT = 8
         };
@@ -1901,6 +1902,10 @@ public:
             return !IsSimpleGlyph() && (mValue & FLAG_CHAR_IS_LOW_SURROGATE) != 0;
         }
 
+        PRUint32 CharIdentityFlags() const {
+            return IsSimpleGlyph() ? 0 : (mValue & CHAR_IDENTITY_FLAGS_MASK);
+        }
+
         void SetClusterStart(bool aIsClusterStart) {
             NS_ASSERTION(!IsSimpleGlyph(),
                          "can't call SetClusterStart on simple glyphs");
@@ -1927,15 +1932,17 @@ public:
         CompressedGlyph& SetSimpleGlyph(PRUint32 aAdvanceAppUnits, PRUint32 aGlyph) {
             NS_ASSERTION(IsSimpleAdvance(aAdvanceAppUnits), "Advance overflow");
             NS_ASSERTION(IsSimpleGlyphID(aGlyph), "Glyph overflow");
-            mValue = (mValue & FLAGS_CAN_BREAK_BEFORE) |
+            NS_ASSERTION(!CharIdentityFlags(), "Char identity flags lost");
+            mValue = (mValue & (FLAGS_CAN_BREAK_BEFORE | FLAG_CHAR_IS_SPACE)) |
                 FLAG_IS_SIMPLE_GLYPH |
                 (aAdvanceAppUnits << ADVANCE_SHIFT) | aGlyph;
             return *this;
         }
         CompressedGlyph& SetComplex(bool aClusterStart, bool aLigatureStart,
                 PRUint32 aGlyphCount) {
-            mValue = (mValue & FLAGS_CAN_BREAK_BEFORE) |
+            mValue = (mValue & (FLAGS_CAN_BREAK_BEFORE | FLAG_CHAR_IS_SPACE)) |
                 FLAG_NOT_MISSING |
+                CharIdentityFlags() |
                 (aClusterStart ? 0 : FLAG_NOT_CLUSTER_START) |
                 (aLigatureStart ? 0 : FLAG_NOT_LIGATURE_GROUP_START) |
                 (aGlyphCount << GLYPH_COUNT_SHIFT);
@@ -1946,7 +1953,9 @@ public:
          * the cluster-start flag (see bugs 618870 and 619286).
          */
         CompressedGlyph& SetMissing(PRUint32 aGlyphCount) {
-            mValue = (mValue & (FLAGS_CAN_BREAK_BEFORE | FLAG_NOT_CLUSTER_START)) |
+            mValue = (mValue & (FLAGS_CAN_BREAK_BEFORE | FLAG_NOT_CLUSTER_START |
+                                FLAG_CHAR_IS_SPACE)) |
+                CharIdentityFlags() |
                 (aGlyphCount << GLYPH_COUNT_SHIFT);
             return *this;
         }
