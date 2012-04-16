@@ -329,6 +329,8 @@ namespace {
  * RAII class to help us remember to close file descriptors.
  */
 const char *screenEnabledFilename = "/sys/power/state";
+const char *wakeLockFilename = "/sys/power/wake_lock";
+const char *wakeUnlockFilename = "/sys/power/wake_unlock";
 
 template<ssize_t n>
 bool ReadFromFile(const char *filename, char (&buf)[n])
@@ -369,6 +371,12 @@ void WriteToFile(const char *filename, const char *toWrite)
 // we read, we always get "mem"!  So we have to keep track ourselves whether
 // the screen is on or not.
 bool sScreenEnabled = true;
+
+// We can read wakeLockFilename to find out whether the cpu wake lock
+// is already acquired, but reading and parsing it is a lot more work
+// than tracking it ourselves, and it won't be accurate anyway (kernel
+// internal wake locks aren't counted here.)
+bool sCpuSleepAllowed = true;
 
 } // anonymous namespace
 
@@ -420,6 +428,19 @@ SetScreenBrightness(double brightness)
   aConfig.color() = color;
   hal::SetLight(hal::eHalLightID_Backlight, aConfig);
   hal::SetLight(hal::eHalLightID_Buttons, aConfig);
+}
+
+bool
+GetCpuSleepAllowed()
+{
+  return sCpuSleepAllowed;
+}
+
+void
+SetCpuSleepAllowed(bool aAllowed)
+{
+  WriteToFile(aAllowed ? wakeUnlockFilename : wakeLockFilename, "gecko");
+  sCpuSleepAllowed = aAllowed;
 }
 
 static light_device_t* sLights[hal::eHalLightID_Count];	// will be initialized to NULL
