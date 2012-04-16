@@ -41,12 +41,13 @@ const EXPORTED_SYMBOLS = ["XPCOMUtils", "Services", "NetUtil", "PlacesUtils",
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-common/stringbundle.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-common/observers.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
@@ -68,6 +69,24 @@ let Utils = {
   encodeUTF8: CommonUtils.encodeUTF8,
   decodeUTF8: CommonUtils.decodeUTF8,
   safeAtoB: CommonUtils.safeAtoB,
+  byteArrayToString: CommonUtils.byteArrayToString,
+  bytesAsHex: CommonUtils.bytesAsHex,
+  encodeBase32: CommonUtils.encodeBase32,
+  decodeBase32: CommonUtils.decodeBase32,
+
+  // Aliases from CryptoUtils.
+  generateRandomBytes: CryptoUtils.generateRandomBytes,
+  computeHTTPMACSHA1: CryptoUtils.computeHTTPMACSHA1,
+  digestUTF8: CryptoUtils.digestUTF8,
+  digestBytes: CryptoUtils.digestBytes,
+  sha1: CryptoUtils.sha1,
+  sha1Base32: CryptoUtils.sha1Base32,
+  makeHMACKey: CryptoUtils.makeHMACKey,
+  makeHMACHasher: CryptoUtils.makeHMACHasher,
+  hkdfExpand: CryptoUtils.hkdfExpand,
+  pbkdf2Generate: CryptoUtils.pbkdf2Generate,
+  deriveKeyFromPassphrase: CryptoUtils.deriveKeyFromPassphrase,
+  getHTTPMACSHA1Header: CryptoUtils.getHTTPMACSHA1Header,
 
   /**
    * Wrap a function to catch all exceptions and log them
@@ -181,20 +200,6 @@ let Utils = {
     }
   },
 
-  byteArrayToString: function byteArrayToString(bytes) {
-    return [String.fromCharCode(byte) for each (byte in bytes)].join("");
-  },
-
-  /**
-   * Generate a string of random bytes.
-   */
-  generateRandomBytes: function generateRandomBytes(length) {
-    let rng = Cc["@mozilla.org/security/random-generator;1"]
-                .createInstance(Ci.nsIRandomGenerator);
-    let bytes = rng.generateRandomBytes(length);
-    return Utils.byteArrayToString(bytes);
-  },
-
   /**
    * Encode byte string as base64url (RFC 4648).
    */
@@ -291,310 +296,6 @@ let Utils = {
   },
 
   /**
-   * UTF8-encode a message and hash it with the given hasher. Returns a
-   * string containing bytes. The hasher is reset if it's an HMAC hasher.
-   */
-  digestUTF8: function digestUTF8(message, hasher) {
-    let data = this._utf8Converter.convertToByteArray(message, {});
-    hasher.update(data, data.length);
-    let result = hasher.finish(false);
-    if (hasher instanceof Ci.nsICryptoHMAC) {
-      hasher.reset();
-    }
-    return result;
-  },
-
-  /**
-   * Treat the given message as a bytes string and hash it with the given
-   * hasher. Returns a string containing bytes. The hasher is reset if it's
-   * an HMAC hasher.
-   */
-  digestBytes: function digestBytes(message, hasher) {
-    // No UTF-8 encoding for you, sunshine.
-    let bytes = [b.charCodeAt() for each (b in message)];
-    hasher.update(bytes, bytes.length);
-    let result = hasher.finish(false);
-    if (hasher instanceof Ci.nsICryptoHMAC) {
-      hasher.reset();
-    }
-    return result;
-  },
-
-  bytesAsHex: function bytesAsHex(bytes) {
-    let hex = "";
-    for (let i = 0; i < bytes.length; i++) {
-      hex += ("0" + bytes[i].charCodeAt().toString(16)).slice(-2);
-    }
-    return hex;
-  },
-
-  _sha1: function _sha1(message) {
-    let hasher = Cc["@mozilla.org/security/hash;1"].
-      createInstance(Ci.nsICryptoHash);
-    hasher.init(hasher.SHA1);
-    return Utils.digestUTF8(message, hasher);
-  },
-
-  sha1: function sha1(message) {
-    return Utils.bytesAsHex(Utils._sha1(message));
-  },
-
-  sha1Base32: function sha1Base32(message) {
-    return Utils.encodeBase32(Utils._sha1(message));
-  },
-  
-  /**
-   * Produce an HMAC key object from a key string.
-   */
-  makeHMACKey: function makeHMACKey(str) {
-    return Svc.KeyFactory.keyFromString(Ci.nsIKeyObject.HMAC, str);
-  },
-    
-  /**
-   * Produce an HMAC hasher and initialize it with the given HMAC key.
-   */
-  makeHMACHasher: function makeHMACHasher(type, key) {
-    let hasher = Cc["@mozilla.org/security/hmac;1"]
-                   .createInstance(Ci.nsICryptoHMAC);
-    hasher.init(type, key);
-    return hasher;
-  },
-
-  /**
-   * HMAC-based Key Derivation Step 2 according to RFC 5869.
-   */
-  hkdfExpand: function hkdfExpand(prk, info, len) {
-    const BLOCKSIZE = 256 / 8;
-    let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256,
-                                 Utils.makeHMACKey(prk));
-    let T = "";
-    let Tn = "";
-    let iterations = Math.ceil(len/BLOCKSIZE);
-    for (let i = 0; i < iterations; i++) {
-      Tn = Utils.digestBytes(Tn + info + String.fromCharCode(i + 1), h);
-      T += Tn;
-    }
-    return T.slice(0, len);
-  },
-
-  /**
-   * PBKDF2 implementation in Javascript.
-   * 
-   * The arguments to this function correspond to items in 
-   * PKCS #5, v2.0 pp. 9-10 
-   * 
-   * P: the passphrase, an octet string:              e.g., "secret phrase"
-   * S: the salt, an octet string:                    e.g., "DNXPzPpiwn"
-   * c: the number of iterations, a positive integer: e.g., 4096
-   * dkLen: the length in octets of the destination 
-   *        key, a positive integer:                  e.g., 16
-   *        
-   * The output is an octet string of length dkLen, which you
-   * can encode as you wish.
-   */
-  pbkdf2Generate : function pbkdf2Generate(P, S, c, dkLen) {
-    // We don't have a default in the algo itself, as NSS does.
-    // Use the constant.
-    if (!dkLen)
-      dkLen = SYNC_KEY_DECODED_LENGTH;
-    
-    /* For HMAC-SHA-1 */
-    const HLEN = 20;
-    
-    function F(S, c, i, h) {
-    
-      function XOR(a, b, isA) {
-        if (a.length != b.length) {
-          return false;
-        }
-
-        let val = [];
-        for (let i = 0; i < a.length; i++) {
-          if (isA) {
-            val[i] = a[i] ^ b[i];
-          } else {
-            val[i] = a.charCodeAt(i) ^ b.charCodeAt(i);
-          }
-        }
-
-        return val;
-      }
-    
-      let ret;
-      let U = [];
-
-      /* Encode i into 4 octets: _INT */
-      let I = [];
-      I[0] = String.fromCharCode((i >> 24) & 0xff);
-      I[1] = String.fromCharCode((i >> 16) & 0xff);
-      I[2] = String.fromCharCode((i >> 8) & 0xff);
-      I[3] = String.fromCharCode(i & 0xff);
-
-      U[0] = Utils.digestBytes(S + I.join(''), h);
-      for (let j = 1; j < c; j++) {
-        U[j] = Utils.digestBytes(U[j - 1], h);
-      }
-
-      ret = U[0];
-      for (j = 1; j < c; j++) {
-        ret = Utils.byteArrayToString(XOR(ret, U[j]));
-      }
-
-      return ret;
-    }
-    
-    let l = Math.ceil(dkLen / HLEN);
-    let r = dkLen - ((l - 1) * HLEN);
-
-    // Reuse the key and the hasher. Remaking them 4096 times is 'spensive.
-    let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA1, Utils.makeHMACKey(P));
-    
-    T = [];
-    for (let i = 0; i < l;) {
-      T[i] = F(S, c, ++i, h);
-    }
-
-    let ret = '';
-    for (i = 0; i < l-1;) {
-      ret += T[i++];
-    }
-    ret += T[l - 1].substr(0, r);
-
-    return ret;
-  },
-
-
-  /**
-   * Base32 decode (RFC 4648) a string.
-   */
-  decodeBase32: function decodeBase32(str) {
-    const key = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-
-    let padChar = str.indexOf("=");
-    let chars = (padChar == -1) ? str.length : padChar;
-    let bytes = Math.floor(chars * 5 / 8);
-    let blocks = Math.ceil(chars / 8);
-
-    // Process a chunk of 5 bytes / 8 characters.
-    // The processing of this is known in advance,
-    // so avoid arithmetic!
-    function processBlock(ret, cOffset, rOffset) {
-      let c, val;
-
-      // N.B., this relies on
-      //   undefined | foo == foo.
-      function accumulate(val) {
-        ret[rOffset] |= val;
-      }
-
-      function advance() {
-        c  = str[cOffset++];
-        if (!c || c == "" || c == "=") // Easier than range checking.
-          throw "Done";                // Will be caught far away.
-        val = key.indexOf(c);
-        if (val == -1)
-          throw "Unknown character in base32: " + c;
-      }
-
-      // Handle a left shift, restricted to bytes.
-      function left(octet, shift)
-        (octet << shift) & 0xff;
-
-      advance();
-      accumulate(left(val, 3));
-      advance();
-      accumulate(val >> 2);
-      ++rOffset;
-      accumulate(left(val, 6));
-      advance();
-      accumulate(left(val, 1));
-      advance();
-      accumulate(val >> 4);
-      ++rOffset;
-      accumulate(left(val, 4));
-      advance();
-      accumulate(val >> 1);
-      ++rOffset;
-      accumulate(left(val, 7));
-      advance();
-      accumulate(left(val, 2));
-      advance();
-      accumulate(val >> 3);
-      ++rOffset;
-      accumulate(left(val, 5));
-      advance();
-      accumulate(val);
-      ++rOffset;
-    }
-
-    // Our output. Define to be explicit (and maybe the compiler will be smart).
-    let ret  = new Array(bytes);
-    let i    = 0;
-    let cOff = 0;
-    let rOff = 0;
-
-    for (; i < blocks; ++i) {
-      try {
-        processBlock(ret, cOff, rOff);
-      } catch (ex) {
-        // Handle the detection of padding.
-        if (ex == "Done")
-          break;
-        throw ex;
-      }
-      cOff += 8;
-      rOff += 5;
-    }
-
-    // Slice in case our shift overflowed to the right.
-    return Utils.byteArrayToString(ret.slice(0, bytes));
-  },
-
-  /**
-   * Base32 encode (RFC 4648) a string
-   */
-  encodeBase32: function encodeBase32(bytes) {
-    const key = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-    let quanta = Math.floor(bytes.length / 5);
-    let leftover = bytes.length % 5;
-
-    // Pad the last quantum with zeros so the length is a multiple of 5.
-    if (leftover) {
-      quanta += 1;
-      for (let i = leftover; i < 5; i++)
-        bytes += "\0";
-    }
-
-    // Chop the string into quanta of 5 bytes (40 bits). Each quantum
-    // is turned into 8 characters from the 32 character base.
-    let ret = "";
-    for (let i = 0; i < bytes.length; i += 5) {
-      let c = [byte.charCodeAt() for each (byte in bytes.slice(i, i + 5))];
-      ret += key[c[0] >> 3]
-           + key[((c[0] << 2) & 0x1f) | (c[1] >> 6)]
-           + key[(c[1] >> 1) & 0x1f]
-           + key[((c[1] << 4) & 0x1f) | (c[2] >> 4)]
-           + key[((c[2] << 1) & 0x1f) | (c[3] >> 7)]
-           + key[(c[3] >> 2) & 0x1f]
-           + key[((c[3] << 3) & 0x1f) | (c[4] >> 5)]
-           + key[c[4] & 0x1f];
-    }
-
-    switch (leftover) {
-      case 1:
-        return ret.slice(0, -6) + "======";
-      case 2:
-        return ret.slice(0, -4) + "====";
-      case 3:
-        return ret.slice(0, -3) + "===";
-      case 4:
-        return ret.slice(0, -1) + "=";
-      default:
-        return ret;
-    }
-  },
-
-  /**
    * Turn RFC 4648 base32 into our own user-friendly version.
    *   ABCDEFGHIJKLMNOPQRSTUVWXYZ234567
    * becomes
@@ -611,7 +312,6 @@ let Utils = {
                 .replace("8", 'L', "g")
                 .replace("9", 'O', "g");
   },
-
 
   /**
    * Key manipulation.
@@ -635,23 +335,13 @@ let Utils = {
     return btoa(keyData);
   },
 
-  deriveKeyFromPassphrase: function deriveKeyFromPassphrase(passphrase, salt, keyLength, forceJS) {
-    if (Svc.Crypto.deriveKeyFromPassphrase && !forceJS) {
-      return Svc.Crypto.deriveKeyFromPassphrase(passphrase, salt, keyLength);
-    }
-    else {
-      // Fall back to JS implementation.
-      // 4096 is hardcoded in WeaveCrypto, so do so here.
-      return Utils.pbkdf2Generate(passphrase, atob(salt), 4096, keyLength);
-    }
-  },
-
   /**
    * N.B., salt should be base64 encoded, even though we have to decode
    * it later!
    */
   derivePresentableKeyFromPassphrase : function derivePresentableKeyFromPassphrase(passphrase, salt, keyLength, forceJS) {
-    let k = Utils.deriveKeyFromPassphrase(passphrase, salt, keyLength, forceJS);
+    let k = CryptoUtils.deriveKeyFromPassphrase(passphrase, salt, keyLength,
+                                                forceJS);
     return Utils.encodeKeyBase32(k);
   },
 
@@ -660,7 +350,8 @@ let Utils = {
    * it later!
    */
   deriveEncodedKeyFromPassphrase : function deriveEncodedKeyFromPassphrase(passphrase, salt, keyLength, forceJS) {
-    let k = Utils.deriveKeyFromPassphrase(passphrase, salt, keyLength, forceJS);
+    let k = CryptoUtils.deriveKeyFromPassphrase(passphrase, salt, keyLength,
+                                                forceJS);
     return Utils.base64Key(k);
   },
 
@@ -671,130 +362,6 @@ let Utils = {
    */
   presentEncodedKeyAsSyncKey : function presentEncodedKeyAsSyncKey(encodedKey) {
     return Utils.encodeKeyBase32(atob(encodedKey));
-  },
-
-  /**
-   * Compute the HTTP MAC SHA-1 for an HTTP request.
-   *
-   * @param  identifier
-   *         (string) MAC Key Identifier.
-   * @param  key
-   *         (string) MAC Key.
-   * @param  method
-   *         (string) HTTP request method.
-   * @param  URI
-   *         (nsIURI) HTTP request URI.
-   * @param  extra
-   *         (object) Optional extra parameters. Valid keys are:
-   *           nonce_bytes - How many bytes the nonce should be. This defaults
-   *             to 8. Note that this many bytes are Base64 encoded, so the
-   *             string length of the nonce will be longer than this value.
-   *           ts - Timestamp to use. Should only be defined for testing.
-   *           nonce - String nonce. Should only be defined for testing as this
-   *             function will generate a cryptographically secure random one
-   *             if not defined.
-   *           ext - Extra string to be included in MAC. Per the HTTP MAC spec,
-   *             the format is undefined and thus application specific.
-   * @returns
-   *         (object) Contains results of operation and input arguments (for
-   *           symmetry). The object has the following keys:
-   *
-   *           identifier - (string) MAC Key Identifier (from arguments).
-   *           key - (string) MAC Key (from arguments).
-   *           method - (string) HTTP request method (from arguments).
-   *           hostname - (string) HTTP hostname used (derived from arguments).
-   *           port - (string) HTTP port number used (derived from arguments).
-   *           mac - (string) Raw HMAC digest bytes.
-   *           getHeader - (function) Call to obtain the string Authorization
-   *             header value for this invocation.
-   *           nonce - (string) Nonce value used.
-   *           ts - (number) Integer seconds since Unix epoch that was used.
-   */
-  computeHTTPMACSHA1: function computeHTTPMACSHA1(identifier, key, method,
-                                                  uri, extra) {
-    let ts = (extra && extra.ts) ? extra.ts : Math.floor(Date.now() / 1000);
-    let nonce_bytes = (extra && extra.nonce_bytes > 0) ? extra.nonce_bytes : 8;
-
-    // We are allowed to use more than the Base64 alphabet if we want.
-    let nonce = (extra && extra.nonce)
-                ? extra.nonce
-                : btoa(Utils.generateRandomBytes(nonce_bytes));
-
-    let host = uri.asciiHost;
-    let port;
-    let usedMethod = method.toUpperCase();
-
-    if (uri.port != -1) {
-      port = uri.port;
-    } else if (uri.scheme == "http") {
-      port = "80";
-    } else if (uri.scheme == "https") {
-      port = "443";
-    } else {
-      throw new Error("Unsupported URI scheme: " + uri.scheme);
-    }
-
-    let ext = (extra && extra.ext) ? extra.ext : "";
-
-    let requestString = ts.toString(10) + "\n" +
-                        nonce           + "\n" +
-                        usedMethod      + "\n" +
-                        uri.path        + "\n" +
-                        host            + "\n" +
-                        port            + "\n" +
-                        ext             + "\n";
-
-    let hasher = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA1,
-                                      Utils.makeHMACKey(key));
-    let mac = Utils.digestBytes(requestString, hasher);
-
-    function getHeader() {
-      return Utils.getHTTPMACSHA1Header(this.identifier, this.ts, this.nonce,
-                                        this.mac, this.ext);
-    }
-
-    return {
-      identifier: identifier,
-      key:        key,
-      method:     usedMethod,
-      hostname:   host,
-      port:       port,
-      mac:        mac,
-      nonce:      nonce,
-      ts:         ts,
-      ext:        ext,
-      getHeader:  getHeader
-    };
-  },
-
-  /**
-   * Obtain the HTTP MAC Authorization header value from fields.
-   *
-   * @param  identifier
-   *         (string) MAC key identifier.
-   * @param  ts
-   *         (number) Integer seconds since Unix epoch.
-   * @param  nonce
-   *         (string) Nonce value.
-   * @param  mac
-   *         (string) Computed HMAC digest (raw bytes).
-   * @param  ext
-   *         (optional) (string) Extra string content.
-   * @returns
-   *         (string) Value to put in Authorization header.
-   */
-  getHTTPMACSHA1Header: function getHTTPMACSHA1Header(identifier, ts, nonce,
-                                                      mac, ext) {
-    let header ='MAC id="' + identifier + '", ' +
-                'ts="'     + ts         + '", ' +
-                'nonce="'  + nonce      + '", ' +
-                'mac="'    + btoa(mac)  + '"';
-
-    if (!ext) {
-      return header;
-    }
-
-    return header += ', ext="' + ext +'"';
   },
 
   /**
@@ -897,7 +464,7 @@ let Utils = {
     // Note that this is a different base32 alphabet to the one we use for
     // other tasks. It's lowercase, uses different letters, and needs to be
     // decoded with decodeKeyBase32, not just decodeBase32.
-    return Utils.encodeKeyBase32(Utils.generateRandomBytes(16));
+    return Utils.encodeKeyBase32(CryptoUtils.generateRandomBytes(16));
   },
 
   /**
@@ -1084,7 +651,6 @@ let _sessionCID = Services.appinfo.ID == SEAMONKEY_ID ?
 
 [["Form", "@mozilla.org/satchel/form-history;1", "nsIFormHistory2"],
  ["Idle", "@mozilla.org/widget/idleservice;1", "nsIIdleService"],
- ["KeyFactory", "@mozilla.org/security/keyobjectfactory;1", "nsIKeyObjectFactory"],
  ["Session", _sessionCID, "nsISessionStore"]
 ].forEach(function([name, contract, iface]) {
   XPCOMUtils.defineLazyServiceGetter(Svc, name, contract, iface);

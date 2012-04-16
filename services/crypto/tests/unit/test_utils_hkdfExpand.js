@@ -1,4 +1,8 @@
-Cu.import("resource://services-sync/util.js");
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-crypto/utils.js");
 
 // Test vectors from RFC 5869
 
@@ -60,8 +64,8 @@ let tc3 = {
 };
 
 function sha256HMAC(message, key) {
-  let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256, key);
-  return Utils.digestBytes(message, h);
+  let h = CryptoUtils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256, key);
+  return CryptoUtils.digestBytes(message, h);
 }
 
 function _hexToString(hex) {
@@ -80,13 +84,13 @@ function _hexToString(hex) {
 function extract_hex(salt, ikm) {
   salt = _hexToString(salt);
   ikm = _hexToString(ikm);
-  return Utils.bytesAsHex(sha256HMAC(ikm, Utils.makeHMACKey(salt)));
+  return CommonUtils.bytesAsHex(sha256HMAC(ikm, CryptoUtils.makeHMACKey(salt)));
 }
 
 function expand_hex(prk, info, len) {
   prk = _hexToString(prk);
   info = _hexToString(info);
-  return Utils.bytesAsHex(Utils.hkdfExpand(prk, info, len));
+  return CommonUtils.bytesAsHex(CryptoUtils.hkdfExpand(prk, info, len));
 }
 
 function run_test() {
