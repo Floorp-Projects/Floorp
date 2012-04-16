@@ -54,6 +54,16 @@ static void DrawDebugOverlay(gfxImageSurface* imgSurf, int x, int y)
 namespace mozilla {
 namespace layers {
 
+gfxASurface::gfxImageFormat
+BasicTiledLayerBuffer::GetFormat() const
+{
+  if (mThebesLayer->CanUseOpaqueSurface()) {
+    return gfxASurface::ImageFormatRGB16_565;
+  } else {
+    return gfxASurface::ImageFormatARGB32;
+  }
+}
+
 void
 BasicTiledLayerBuffer::PaintThebes(BasicTiledThebesLayer* aLayer,
                                    const nsIntRegion& aNewValidRegion,
@@ -71,7 +81,7 @@ BasicTiledLayerBuffer::PaintThebes(BasicTiledThebesLayer* aLayer,
   if (UseSinglePaintBuffer()) {
     SAMPLE_LABEL("BasicTiledLayerBuffer", "PaintThebesSingleBuffer");
     const nsIntRect bounds = aPaintRegion.GetBounds();
-    mSinglePaintBuffer = new gfxImageSurface(gfxIntSize(bounds.width, bounds.height), gfxASurface::ImageFormatRGB16_565);
+    mSinglePaintBuffer = new gfxImageSurface(gfxIntSize(bounds.width, bounds.height), GetFormat());
     mSinglePaintBufferOffset = nsIntPoint(bounds.x, bounds.y);
     nsRefPtr<gfxContext> ctxt = new gfxContext(mSinglePaintBuffer);
     ctxt->NewPath();
@@ -122,7 +132,8 @@ BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
                                             const nsIntRect& aDirtyRect)
 {
   if (aTile == GetPlaceholderTile()) {
-    gfxImageSurface* tmpTile = new gfxImageSurface(gfxIntSize(GetTileLength(), GetTileLength()), gfxASurface::ImageFormatRGB16_565);
+    gfxImageSurface* tmpTile = new gfxImageSurface(gfxIntSize(GetTileLength(), GetTileLength()),
+                                                   GetFormat());
     aTile = BasicTiledLayerTile(tmpTile);
   }
 
@@ -137,11 +148,13 @@ BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
 
   // Bug 742100, this gfxContext really should live on the stack.
   nsRefPtr<gfxContext> ctxt = new gfxContext(writableSurface);
-  ctxt->NewPath();
-  ctxt->SetOperator(gfxContext::OPERATOR_CLEAR);
-  ctxt->Rectangle(drawRect, true);
-  ctxt->Fill();
-  ctxt->SetOperator(gfxContext::OPERATOR_OVER);
+ if (!mThebesLayer->CanUseOpaqueSurface()) {
+    ctxt->NewPath();
+    ctxt->SetOperator(gfxContext::OPERATOR_CLEAR);
+    ctxt->Rectangle(drawRect, true);
+    ctxt->Fill();
+    ctxt->SetOperator(gfxContext::OPERATOR_OVER);
+  }
   if (mSinglePaintBuffer) {
     ctxt->NewPath();
     ctxt->SetSource(mSinglePaintBuffer.get(),
