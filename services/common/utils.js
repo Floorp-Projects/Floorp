@@ -89,10 +89,34 @@ let CommonUtils = {
    * Return a timer that is scheduled to call the callback after waiting the
    * provided time or as soon as possible. The timer will be set as a property
    * of the provided object with the given timer name.
+   *
+   * @param callback
+   *        (function) Called when the timer fires.
+   * @param wait
+   *        (number) Integer milliseconds timer delay.
+   * @param thisObj
+   *        (object) Context callback is bound to during call. Timer is also
+   *        attached to this object.
+   * @param name
+   *        (string) Property in thisObj to assign created timer to.
+   * @param type
+   *        (nsITimer.TYPE_*) Type of timer to create. Defaults to
+   *        TYPE_ONE_SHOT.
    */
-  namedTimer: function namedTimer(callback, wait, thisObj, name) {
+  namedTimer: function namedTimer(callback, wait, thisObj, name, type) {
     if (!thisObj || !name) {
-      throw "You must provide both an object and a property name for the timer!";
+      throw new Error("You must provide both an object and a property name " +
+                      "for the timer!");
+    }
+
+    // TYPE_ONE_SHOT is conveniently 0.
+    type = type || Ci.nsITimer.TYPE_ONE_SHOT;
+
+    // We rely below on TYPE_ONE_SHOT being the only timer that should be
+    // cancelled after firing. If we see a type that was not known when this
+    // was implemented, scream loudly.
+    if (type > Ci.nsITimer.TYPE_REPEATING_PRECISE) {
+      throw new Error("Unknown timer type seen: " + type);
     }
 
     // Delay an existing timer if it exists
@@ -102,11 +126,11 @@ let CommonUtils = {
     }
 
     // Create a special timer that we can add extra properties
-    let timer = {};
+    let timer = {_type: type};
     timer.__proto__ = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
     // Provide an easy way to clear out the timer
-    timer.clear = function() {
+    timer.clear = function clear() {
       thisObj[name] = null;
       timer.cancel();
     };
@@ -114,11 +138,13 @@ let CommonUtils = {
     // Initialize the timer with a smart callback
     timer.initWithCallback({
       notify: function notify() {
-        // Clear out the timer once it's been triggered
-        timer.clear();
+        // Clear out the timer once it's been triggered if it's a one shot.
+        if (timer._type == Ci.nsITimer.TYPE_ONE_SHOT) {
+          timer.clear();
+        }
         callback.call(thisObj, timer);
       }
-    }, wait, timer.TYPE_ONE_SHOT);
+    }, wait, type);
 
     return thisObj[name] = timer;
   },
