@@ -23,6 +23,7 @@
  *  Fredrik Larsson <nossralf@gmail.com>
  *  Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
  *  Dan Witte <dwitte@mozilla.com>
+ *  David Rajchenbach-Teller <dteller@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
