@@ -121,6 +121,7 @@ protected:
   }
 
 private:
+  gfxASurface::gfxImageFormat GetFormat() const;
   BasicTiledThebesLayer* mThebesLayer;
   LayerManager::DrawThebesLayerCallback mCallback;
   void* mCallbackData;

@@ -48,6 +48,7 @@
 #include "ImageLayerOGL.h"
 #include "ColorLayerOGL.h"
 #include "CanvasLayerOGL.h"
+#include "TiledThebesLayerOGL.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Preferences.h"
 
@@ -1264,7 +1265,11 @@ LayerManagerOGL::CreateShadowThebesLayer()
     NS_WARNING("Call on destroyed layer manager");
     return nsnull;
   }
+#ifdef FORCE_BASICTILEDTHEBESLAYER
+  return nsRefPtr<ShadowThebesLayer>(new TiledThebesLayerOGL(this)).forget();
+#else
   return nsRefPtr<ShadowThebesLayerOGL>(new ShadowThebesLayerOGL(this)).forget();
+#endif
 }
 
 already_AddRefed<ShadowContainerLayer>
