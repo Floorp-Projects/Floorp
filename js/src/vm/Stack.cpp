@@ -1165,10 +1165,10 @@ StackIter::settleOnNewState()
             }
 
             state_ = SCRIPTED;
-            DebugOnly<JSScript *> script = fp_->script();
+            script_ = fp_->script();
             JS_ASSERT_IF(op != JSOP_FUNAPPLY,
-                         sp_ >= fp_->base() && sp_ <= fp_->slots() + script->nslots);
-            JS_ASSERT(pc_ >= script->code && pc_ < script->code + script->length);
+                         sp_ >= fp_->base() && sp_ <= fp_->slots() + script_->nslots);
+            JS_ASSERT(pc_ >= script_->code && pc_ < script_->code + script_->length);
             return;
         }
 
@@ -1214,10 +1214,9 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
 StackIter &
 StackIter::operator++()
 {
-    JS_ASSERT(!done());
     switch (state_) {
       case DONE:
-        JS_NOT_REACHED("");
+        JS_NOT_REACHED("Unexpected state");
       case SCRIPTED:
         popFrame();
         settleOnNewState();
@@ -1241,6 +1240,89 @@ StackIter::operator==(const StackIter &rhs) const
             (isScript() == rhs.isScript() &&
              ((isScript() && fp() == rhs.fp()) ||
               (!isScript() && nativeArgs().base() == rhs.nativeArgs().base()))));
+}
+
+bool
+StackIter::isFunctionFrame() const
+{
+    switch (state_) {
+      case DONE:
+        break;
+      case SCRIPTED:
+        return fp()->isFunctionFrame();
+      case NATIVE:
+      case IMPLICIT_NATIVE:
+        return false;
+    }
+    JS_NOT_REACHED("Unexpected state");
+    return false;
+}
+
+bool
+StackIter::isEvalFrame() const
+{
+    switch (state_) {
+      case DONE:
+        break;
+      case SCRIPTED:
+        return fp()->isEvalFrame();
+      case NATIVE:
+      case IMPLICIT_NATIVE:
+        return false;
+    }
+    JS_NOT_REACHED("Unexpected state");
+    return false;
+}
+
+bool
+StackIter::isNonEvalFunctionFrame() const
+{
+    JS_ASSERT(!done());
+    switch (state_) {
+      case DONE:
+        break;
+      case SCRIPTED:
+        return fp()->isNonEvalFunctionFrame();
+      case NATIVE:
+      case IMPLICIT_NATIVE:
+        return !isEvalFrame() && isFunctionFrame();
+    }
+    JS_NOT_REACHED("Unexpected state");
+    return false;
+}
+
+JSObject &
+StackIter::callee() const
+{
+    switch (state_) {
+      case DONE:
+        break;
+      case SCRIPTED:
+        JS_ASSERT(isFunctionFrame());
+        return fp()->callee();
+      case NATIVE:
+      case IMPLICIT_NATIVE:
+        return nativeArgs().callee();
+    }
+    JS_NOT_REACHED("Unexpected state");
+    return *(JSObject *) NULL;
+}
+
+Value
+StackIter::calleev() const
+{
+    switch (state_) {
+      case DONE:
+        break;
+      case SCRIPTED:
+        JS_ASSERT(isFunctionFrame());
+        return fp()->calleev();
+      case NATIVE:
+      case IMPLICIT_NATIVE:
+        return nativeArgs().calleev();
+    }
+    JS_NOT_REACHED("Unexpected state");
+    return Value();
 }
 
 /*****************************************************************************/

@@ -312,7 +312,7 @@ Shape::getChildBinding(JSContext *cx, const StackShape &child)
 
     Shape *shape = JS_PROPERTY_TREE(cx).getChild(cx, this, numFixedSlots(), child);
     if (shape) {
-        JS_ASSERT(shape->parent == this);
+        //JS_ASSERT(shape->parent == this); // XXX 'this' is not rooted here
 
         /*
          * Update the number of fixed slots which bindings of this shape will
@@ -520,12 +520,14 @@ JSObject::addProperty(JSContext *cx, jsid id,
 
     NormalizeGetterAndSetter(cx, this, id, attrs, flags, getter, setter);
 
+    RootedVarObject self(cx, this);
+
     Shape **spp = NULL;
     if (inDictionaryMode())
         spp = lastProperty()->table().search(id, true);
 
-    return addPropertyInternal(cx, id, getter, setter, slot, attrs, flags, shortid,
-                               spp, allowDictionary);
+    return self->addPropertyInternal(cx, id, getter, setter, slot, attrs, flags, shortid,
+                                     spp, allowDictionary);
 }
 
 Shape *
@@ -551,7 +553,7 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
             (!stableSlot || lastProperty()->entryCount() >= PropertyTree::MAX_HEIGHT)) {
             if (!toDictionaryMode(cx))
                 return NULL;
-            table = &lastProperty()->table();
+            table = &self->lastProperty()->table();
             spp = table->search(id, true);
         }
     } else {
@@ -995,7 +997,7 @@ JSObject::replaceWithNewEquivalentShape(JSContext *cx, Shape *oldShape, Shape *n
         RootShape newRoot(cx, &newShape);
         if (!toDictionaryMode(cx))
             return NULL;
-        oldShape = lastProperty();
+        oldShape = self->lastProperty();
     }
 
     if (!newShape) {
@@ -1022,7 +1024,7 @@ JSObject::replaceWithNewEquivalentShape(JSContext *cx, Shape *oldShape, Shape *n
     JS_ASSERT(newShape->parent == oldShape);
     oldShape->removeFromDictionary(self);
 
-    if (newShape == lastProperty())
+    if (newShape == self->lastProperty())
         oldShape->handoffTableTo(newShape);
 
     if (spp)
@@ -1269,7 +1271,7 @@ Bindings::setParent(JSContext *cx, JSObject *obj)
      * mark the stack value as non-relocatable for the stack root analysis.
      */
     Bindings *self = this;
-    CheckRoot root(cx, &self);
+    SkipRoot root(cx, &self);
 
     RootObject rootObj(cx, &obj);
 
@@ -1320,6 +1322,9 @@ EmptyShape::getInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSObje
     if (p)
         return p->shape;
 
+    RootObject protoRoot(cx, &lookup.proto);
+    RootObject parentRoot(cx, &lookup.parent);
+
     RootedVar<UnownedBaseShape*> nbase(cx);
 
     StackBaseShape base(clasp, parent, objectFlags);
@@ -1334,7 +1339,7 @@ EmptyShape::getInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSObje
 
     InitialShapeEntry entry;
     entry.shape = shape;
-    entry.proto = proto;
+    entry.proto = lookup.proto;
 
     if (!table.relookupOrAdd(p, lookup, entry))
         return NULL;

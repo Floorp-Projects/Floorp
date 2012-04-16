@@ -30,7 +30,7 @@ let appName = xulAppInfo.name;
 loader.loadSubScript("chrome://marionette/content/atoms.js", utils);
 
 // import logger
-Cu.import("resource://gre/modules/services-sync/log4moz.js");
+Cu.import("resource://gre/modules/services-common/log4moz.js");
 let logger = Log4Moz.repository.getLogger("Marionette");
 logger.info('marionette-actors.js loaded');
 

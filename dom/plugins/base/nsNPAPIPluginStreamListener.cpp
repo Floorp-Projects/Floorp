@@ -48,6 +48,8 @@
 #include "nsPluginLogging.h"
 #include "nsPluginStreamListenerPeer.h"
 
+#include "mozilla/StandardInteger.h"
+
 NS_IMPL_ISUPPORTS1(nsPluginStreamToFile, nsIOutputStream)
 
 nsPluginStreamToFile::nsPluginStreamToFile(const char* target,
@@ -653,7 +655,7 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
           // This alignment code is most likely bogus, but we'll leave
           // it in for now in case it matters for some plugins on some
           // architectures. Who knows...
-          if (writeCount % sizeof(PRWord)) {
+          if (writeCount % sizeof(intptr_t)) {
             // memmove will take care  about alignment 
             memmove(mStreamBuffer, ptrStreamBuffer + writeCount,
                     mStreamBufferByteCount);

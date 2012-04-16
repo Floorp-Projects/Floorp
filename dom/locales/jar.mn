@@ -26,3 +26,4 @@
   locale/@AB_CD@/global-platform/win/accessible.properties     (%chrome/accessibility/win/accessible.properties)
   locale/@AB_CD@/global-platform/mac/accessible.properties     (%chrome/accessibility/mac/accessible.properties)
   locale/@AB_CD@/global-platform/unix/accessible.properties    (%chrome/accessibility/unix/accessible.properties)
+  locale/@AB_CD@/global/AccessFu.properties                    (%chrome/accessibility/AccessFu.properties)

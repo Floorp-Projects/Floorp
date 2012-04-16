@@ -62,7 +62,7 @@
       vsizeAmounts.push(aAmount);
     } else if (aPath === "resident") {
       residentAmounts.push(aAmount);
-    } else if (aPath === "js-gc-heap") {
+    } else if (aPath === "js-main-runtime-gc-heap-committed") {
       jsGcHeapAmounts.push(aAmount); 
     } else if (aPath === "heap-allocated") {
       heapAllocatedAmounts.push(aAmount);
@@ -122,12 +122,12 @@
        aName + "'s size is reasonable");
   }
 
-  checkSpecialReport("explicit",       explicitAmounts);
-  checkSpecialReport("vsize",          vsizeAmounts);
-  checkSpecialReport("resident",       residentAmounts);
-  checkSpecialReport("js-gc-heap",     jsGcHeapAmounts);
-  checkSpecialReport("heap-allocated", heapAllocatedAmounts);
-  checkSpecialReport("storage-sqlite", storageSqliteAmounts);
+  checkSpecialReport("explicit",                          explicitAmounts);
+  checkSpecialReport("vsize",                             vsizeAmounts);
+  checkSpecialReport("resident",                          residentAmounts);
+  checkSpecialReport("js-main-runtime-gc-heap-committed", jsGcHeapAmounts);
+  checkSpecialReport("heap-allocated",                    heapAllocatedAmounts);
+  checkSpecialReport("storage-sqlite",                    storageSqliteAmounts);
 
   ok(areJsCompartmentsPresent,  "js compartments are present");
   ok(isSandboxLocationShown,    "sandbox locations are present");

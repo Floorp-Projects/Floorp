@@ -53,7 +53,9 @@
 #include "jsdbgapi.h"
 #include "WrapperFactory.h"
 #include "AccessCheck.h"
+#include "XrayWrapper.h"
 
+#include "xpcpublic.h"
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
 
@@ -84,8 +86,6 @@
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 #include "nsDOMEventTargetHelper.h"
-#include "xpcprivate.h"
-#include "XrayWrapper.h"
 
 // General helper includes
 #include "nsGlobalWindow.h"
@@ -4924,8 +4924,7 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
     count++;
   }
 
-  if (!sXPConnect->DefineDOMQuickStubs(cx, proto, flags,
-                                       count, mData->mInterfaces)) {
+  if (!xpc::DOM_DefineQuickStubs(cx, proto, flags, count, mData->mInterfaces)) {
     JS_ClearPendingException(cx);
   }
 

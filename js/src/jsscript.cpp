@@ -103,7 +103,7 @@ Bindings::lookup(JSContext *cx, JSAtom *name, unsigned *indexp) const
 }
 
 bool
-Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
+Bindings::add(JSContext *cx, HandleAtom name, BindingKind kind)
 {
     if (!ensureShape(cx))
         return false;
@@ -492,10 +492,10 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
                 continue;
             }
 
-            JSAtom *name;
+            RootedVarAtom name(cx);
             if (mode == XDR_ENCODE)
                 name = names[i];
-            if (!XDRAtom(xdr, &name))
+            if (!XDRAtom(xdr, name.address()))
                 return false;
             if (mode == XDR_DECODE) {
                 BindingKind kind = (i < nargs)

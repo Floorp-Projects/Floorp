@@ -133,7 +133,7 @@ __try {
     *ppv = static_cast<IAccessible2*>(this);
 
   if (NULL == *ppv) {
-    HRESULT hr = CAccessibleComponent::QueryInterface(iid, ppv);
+    HRESULT hr = ia2AccessibleComponent::QueryInterface(iid, ppv);
     if (SUCCEEDED(hr))
       return hr;
   }

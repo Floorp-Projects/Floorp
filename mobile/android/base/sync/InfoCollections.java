@@ -5,7 +5,6 @@
 package org.mozilla.gecko.sync;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Set;

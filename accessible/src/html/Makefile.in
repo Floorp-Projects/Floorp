@@ -51,7 +51,7 @@ LIBXUL_LIBRARY = 1
 
 CPPSRCS = \
   nsHTMLCanvasAccessible.cpp \
-  nsHTMLFormControlAccessible.cpp \
+  HTMLFormControlAccessible.cpp \
   nsHTMLImageAccessible.cpp \
   nsHTMLImageMapAccessible.cpp \
   nsHTMLLinkAccessible.cpp \
@@ -63,7 +63,6 @@ CPPSRCS = \
 
 EXPORTS = \
   nsHyperTextAccessible.h \
-  nsHTMLFormControlAccessible.h \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

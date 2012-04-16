@@ -79,6 +79,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/StandardInteger.h"
 #include "FrameLayerBuilder.h"
 #include "nsSMILKeySpline.h"
 #include "nsSubDocumentFrame.h"
@@ -2100,11 +2101,11 @@ public:
   }
 
 protected:
-  void SetCount(PRWord aCount) {
+  void SetCount(intptr_t aCount) {
     mProps.Set(nsIFrame::ScrollLayerCount(), reinterpret_cast<void*>(aCount));
   }
 
-  PRWord mCount;
+  intptr_t mCount;
   FrameProperties mProps;
   nsIFrame* mScrollFrame;
   nsIFrame* mScrolledFrame;

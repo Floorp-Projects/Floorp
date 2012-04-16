@@ -54,6 +54,11 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "compiler/preprocessor/slglobals.h"
 #include "compiler/util.h"
 
+#if defined(_MSC_VER)
+#pragma warning(disable: 4054)
+#pragma warning(disable: 4152)
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////// Preprocessor and Token Recorder and Playback: ////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -260,6 +265,8 @@ int ReadToken(TokenStream *pTok, yystypepp * yylvalpp)
     char string_val[MAX_STRING_LEN + 1];
     int ltoken, len;
     char ch;
+    int base, accum;
+    char ch_val;
 
     ltoken = lReadByte(pTok);
     if (ltoken >= 0) {
@@ -310,18 +317,41 @@ int ReadToken(TokenStream *pTok, yystypepp * yylvalpp)
             break;
         case CPP_INTCONSTANT:
             len = 0;
+	    accum = 0;
             ch = lReadByte(pTok);
-            while ((ch >= '0' && ch <= '9'))
-            {
-                if (len < MAX_SYMBOL_NAME_LEN) {
+            if (ch == '0') {
+                symbol_name[len++] = ch;
+                ch = lReadByte(pTok);
+                if (ch == 'x' || ch == 'X') {
                     symbol_name[len++] = ch;
+                    base = 16;
                     ch = lReadByte(pTok);
+                } else {
+                    base = 8;
                 }
+            } else {
+                base = 10;
+            }
+
+            while (len < MAX_SYMBOL_NAME_LEN)
+            {
+                ch_val = -1;
+                if (isdigit(ch))
+                    ch_val = ch - '0';
+                else if (isxdigit(ch))
+                    ch_val = tolower(ch) - 'a' + 10;
+
+                if (ch_val < 0 || ch_val >= base)
+                    break;
+
+                symbol_name[len++] = ch;
+                accum = accum * base + ch_val;
+                ch = lReadByte(pTok);
             }
             symbol_name[len] = '\0';
             assert(ch == '\0');
-            strcpy(yylvalpp->symbol_name,symbol_name);
-            yylvalpp->sc_int=atoi(yylvalpp->symbol_name);
+            strcpy(yylvalpp->symbol_name, symbol_name);
+            yylvalpp->sc_int = accum;
             break;
         case '(':
             yylvalpp->sc_int = lReadByte(pTok);

@@ -7,6 +7,7 @@
 #ifndef MOZILLA_A11Y_XPCOM_XPACCESSIBLETABLE_H_
 #define MOZILLA_A11Y_XPCOM_XPACCESSIBLETABLE_H_
 
+#include "nsAString.h"
 #include "nscore.h"
 
 class nsIAccessible;
@@ -22,6 +23,7 @@ public:
   xpcAccessibleTable(mozilla::a11y::TableAccessible* aTable) : mTable(aTable) { }
 
   nsresult GetCaption(nsIAccessible** aCaption);
+  nsresult GetSummary(nsAString& aSummary);
   nsresult IsProbablyForLayout(bool* aIsForLayout);
 
 protected:
@@ -31,7 +33,8 @@ protected:
 #define NS_DECL_OR_FORWARD_NSIACCESSIBLETABLE_WITH_XPCACCESSIBLETABLE \
   NS_IMETHOD GetCaption(nsIAccessible** aCaption) \
     { return xpcAccessibleTable::GetCaption(aCaption); } \
-  NS_SCRIPTABLE NS_IMETHOD GetSummary(nsAString & aSummary); \
+  NS_SCRIPTABLE NS_IMETHOD GetSummary(nsAString & aSummary) \
+    { return xpcAccessibleTable::GetSummary(aSummary); } \
   NS_SCRIPTABLE NS_IMETHOD GetColumnCount(PRInt32 *aColumnCount); \
   NS_SCRIPTABLE NS_IMETHOD GetRowCount(PRInt32 *aRowCount); \
   NS_SCRIPTABLE NS_IMETHOD GetCellAt(PRInt32 rowIndex, PRInt32 columnIndex, nsIAccessible * *_retval NS_OUTPARAM); \

@@ -45,6 +45,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Util.h"
+#include "mozilla/Preferences.h"
 
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
@@ -1206,6 +1207,7 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
     MOZ_ASSERT_IF(strcmp(clasp->name, "Sandbox") &&
                   strcmp(clasp->name, "nsXBLPrototypeScript compilation scope") &&
                   strcmp(clasp->name, "nsXULPrototypeScript compilation scope") &&
+                  mozilla::Preferences::GetBool("javascript.options.typeinference") &&
                   (ssm = XPCWrapper::GetSecurityManager()) &&
                   NS_SUCCEEDED(ssm->IsSystemPrincipal(principal, &isSystem.value)) &&
                   !isSystem.value,
@@ -2371,18 +2373,6 @@ nsXPConnect::SetReportAllJSExceptions(bool newval)
         gReportAllJSExceptions = newval ? 2 : 0;
 
     return NS_OK;
-}
-
-/* [noscript, notxpcom] bool defineDOMQuickStubs (in JSContextPtr cx, in JSObjectPtr proto, in PRUint32 flags, in PRUint32 interfaceCount, [array, size_is (interfaceCount)] in nsIIDPtr interfaceArray); */
-NS_IMETHODIMP_(bool)
-nsXPConnect::DefineDOMQuickStubs(JSContext * cx,
-                                 JSObject * proto,
-                                 PRUint32 flags,
-                                 PRUint32 interfaceCount,
-                                 const nsIID * *interfaceArray)
-{
-    return DOM_DefineQuickStubs(cx, proto, flags,
-                                interfaceCount, interfaceArray);
 }
 
 /* attribute JSRuntime runtime; */
