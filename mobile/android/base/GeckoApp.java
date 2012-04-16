@@ -2681,10 +2681,12 @@ abstract public class GeckoApp
     static abstract class FilePickerResultHandler implements ActivityResultHandler {
         String handleActivityResult(int resultCode, Intent data) {
             if (data == null && resultCode != RESULT_OK)
-                return null;
+                return "";
             Uri uri = data.getData();
-            if ("file".equals(uri.getScheme()))
-                return uri.getPath();
+            if ("file".equals(uri.getScheme())) {
+                String path = uri.getPath();
+                return path == null ? "" : path;
+            }
             try {
                 ContentResolver cr = GeckoApp.mAppContext.getContentResolver();
                 Cursor cursor = cr.query(uri, new String[] { OpenableColumns.DISPLAY_NAME },
@@ -2719,11 +2721,12 @@ abstract public class GeckoApp
                     len = is.read(buf);
                 }
                 fos.close();
-                return file.getAbsolutePath();
+                String path = file.getAbsolutePath();
+                return path == null ? "" : path;
             } catch (Exception e) {
                 Log.e(LOGTAG, "showing file picker", e);
             }
-            return null;
+            return "";
         }
     }
 
