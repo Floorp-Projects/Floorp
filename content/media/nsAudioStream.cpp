@@ -332,7 +332,7 @@ static int PrefChanged(const char* aPref, void* aClosure)
       gVolumeScale = NS_MAX<double>(0, PR_strtod(utf8.get(), nsnull));
     }
   } else if (strcmp(aPref, PREF_USE_CUBEB) == 0) {
-    bool value = Preferences::GetBool(aPref, false);
+    bool value = Preferences::GetBool(aPref, true);
     mozilla::MutexAutoLock lock(*gAudioPrefsLock);
     gUseCubeb = value;
   }
@@ -878,7 +878,8 @@ private:
                  // once the remaining contents of mBuffer are requested by
                  // cubeb, after which StateCallback will indicate drain
                  // completion.
-    DRAINED      // StateCallback has indicated that the drain is complete.
+    DRAINED,     // StateCallback has indicated that the drain is complete.
+    ERRORED      // Stream disabled due to an internal error.
   };
 
   StreamState mState;
@@ -986,7 +987,7 @@ nsresult
 nsBufferedAudioStream::Write(const void* aBuf, PRUint32 aFrames)
 {
   MonitorAutoLock mon(mMonitor);
-  if (!mCubebStream) {
+  if (!mCubebStream || mState == ERRORED) {
     return NS_ERROR_FAILURE;
   }
   NS_ASSERTION(mState == INITIALIZED || mState == STARTED, "Stream write in unexpected state.");
@@ -1008,8 +1009,12 @@ nsBufferedAudioStream::Write(const void* aBuf, PRUint32 aFrames)
       mState = STARTED;
     }
 
-    if (bytesToCopy > 0) {
+    if (mState == STARTED && bytesToCopy > 0) {
       mon.Wait();
+    }
+
+    if (mState != STARTED) {
+      return NS_ERROR_FAILURE;
     }
   }
 
@@ -1046,7 +1051,7 @@ nsBufferedAudioStream::Drain()
     return;
   }
   mState = DRAINING;
-  while (mState != DRAINED) {
+  while (mState == DRAINING) {
     mon.Wait();
   }
 }
@@ -1099,7 +1104,7 @@ nsBufferedAudioStream::GetPositionInFramesUnlocked()
 {
   mMonitor.AssertCurrentThreadOwns();
 
-  if (!mCubebStream) {
+  if (!mCubebStream || mState == ERRORED) {
     return -1;
   }
 
@@ -1185,6 +1190,10 @@ nsBufferedAudioStream::StateCallback(cubeb_state aState)
   if (aState == CUBEB_STATE_DRAINED) {
     MonitorAutoLock mon(mMonitor);
     mState = DRAINED;
+    mon.NotifyAll();
+  } else if (aState == CUBEB_STATE_ERROR) {
+    MonitorAutoLock mon(mMonitor);
+    mState = ERRORED;
     mon.NotifyAll();
   }
   return CUBEB_OK;
