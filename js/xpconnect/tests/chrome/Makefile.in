@@ -68,13 +68,14 @@ _CHROME_FILES = \
 		test_bug654370.xul \
 		test_bug658560.xul \
 		test_bug679861.xul \
-		test_APIExposer.xul \
 		test_bug664689.xul \
+		test_bug706301.xul \
+		test_bug743843.xul \
+		test_APIExposer.xul \
 		test_precisegc.xul \
 		test_nodelists.xul \
 		test_getweakmapkeys.xul \
 		test_weakmaps.xul \
-		test_bug706301.xul \
 		test_exnstack.xul \
 		test_weakref.xul \
 		$(NULL)

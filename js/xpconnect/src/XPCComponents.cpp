@@ -1857,15 +1857,30 @@ struct NS_STACK_CLASS ExceptionArgParser
          * optional:
          *
          * Argument 0: Exception message (defaults to 'exception').
-         * Argument 1: Result code (defaults to NS_ERROR_FAILURE).
+         * Argument 1: Result code (defaults to NS_ERROR_FAILURE) _or_ options
+         *             object (see below).
          * Argument 2: Stack (defaults to the current stack, which we trigger
          *                    by leaving this NULL in the parser).
          * Argument 3: Optional user data (defaults to NULL).
+         *
+         * To dig our way out of this clunky API, we now support passing an
+         * options object as the second parameter (as opposed to a result code).
+         * If this is the case, all subsequent arguments are ignored, and the
+         * following properties are parsed out of the object (using the
+         * associated default if the property does not exist):
+         *
+         *   result:    Result code (see argument 1).
+         *   stack:     Call stack (see argument 2).
+         *   data:      User data (see argument 3).
          */
         if (argc > 0 && !parseMessage(argv[0]))
             return false;
-        if (argc > 1 && !parseResult(argv[1]))
-            return false;
+        if (argc > 1) {
+            if (argv[1].isObject())
+                return parseOptionsObject(argv[1].toObject());
+            if (!parseResult(argv[1]))
+                return false;
+        }
         if (argc > 2 && !parseStack(argv[2]))
             return false;
         if (argc > 3 && !parseData(argv[3]))
@@ -1913,6 +1928,40 @@ struct NS_STACK_CLASS ExceptionArgParser
         return NS_SUCCEEDED(xpc->WrapJS(cx, &v.toObject(),
                                         NS_GET_IID(nsISupports),
                                         getter_AddRefs(eData)));
+    }
+
+    bool parseOptionsObject(JSObject &obj) {
+        JS::Value v;
+
+        if (!getOption(obj, "result", &v) ||
+            (!v.isUndefined() && !parseResult(v)))
+            return false;
+
+        if (!getOption(obj, "stack", &v) ||
+            (!v.isUndefined() && !parseStack(v)))
+            return false;
+
+        if (!getOption(obj, "data", &v) ||
+            (!v.isUndefined() && !parseData(v)))
+            return false;
+
+        return true;
+    }
+
+    bool getOption(JSObject &obj, const char *name, JS::Value *rv) {
+        // Look for the property.
+        JSBool found;
+        if (!JS_HasProperty(cx, &obj, name, &found))
+            return false;
+
+        // If it wasn't found, indicate with undefined.
+        if (!found) {
+            *rv = JSVAL_VOID;
+            return true;
+        }
+
+        // Get the property.
+        return JS_GetProperty(cx, &obj, name, rv);
     }
 
     /*
