@@ -1142,7 +1142,7 @@ class ScriptAnalysis
      * presence of NAME opcodes which could alias local variables or arguments
      * keeps us from tracking variable values at each point.
      */
-    bool trackSlot(uint32_t slot) { return !slotEscapes(slot) && canTrackVars; }
+    bool trackSlot(uint32_t slot) { return !slotEscapes(slot) && canTrackVars && slot < 1000; }
 
     const LifetimeVariable & liveness(uint32_t slot) {
         JS_ASSERT(script->compartment()->activeAnalysis);
