@@ -565,8 +565,9 @@ LIRGenerator::visitAdd(MAdd *ins)
         JS_ASSERT(lhs->type() == MIRType_Int32);
         ReorderCommutative(&lhs, &rhs);
         LAddI *lir = new LAddI;
-        if (!assignSnapshot(lir))
+        if (!ins->isTruncated() && !assignSnapshot(lir))
             return false;
+
         return lowerForALU(lir, ins, lhs, rhs);
     }
 
@@ -589,8 +590,9 @@ LIRGenerator::visitSub(MSub *ins)
     if (ins->specialization() == MIRType_Int32) {
         JS_ASSERT(lhs->type() == MIRType_Int32);
         LSubI *lir = new LSubI;
-        if (!assignSnapshot(lir))
+        if (!ins->isTruncated() && !assignSnapshot(lir))
             return false;
+
         return lowerForALU(lir, ins, lhs, rhs);
     }
     if (ins->specialization() == MIRType_Double) {
