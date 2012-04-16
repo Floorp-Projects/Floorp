@@ -127,6 +127,7 @@
 #include "nsRenderingContext.h"
 #include "CSSCalc.h"
 #include "nsAbsoluteContainingBlock.h"
+#include "nsFontInflationData.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
@@ -3517,6 +3518,10 @@ nsFrame::MarkIntrinsicWidthsDirty()
     SizeNeedsRecalc(metrics->mBlockMinSize);
     CoordNeedsRecalc(metrics->mFlex);
     CoordNeedsRecalc(metrics->mAscent);
+  }
+
+  if (GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) {
+    nsFontInflationData::MarkFontInflationDataTextDirty(this);
   }
 }
 

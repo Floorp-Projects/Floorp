@@ -44,13 +44,46 @@
 #include "nsLayoutUtils.h"
 #include "nsBlockFrame.h"
 
+struct nsHTMLReflowState;
+
 class nsFontInflationData
 {
 public:
 
   static nsFontInflationData* FindFontInflationDataFor(const nsIFrame *aFrame);
 
+  static void
+    UpdateFontInflationDataWidthFor(const nsHTMLReflowState& aReflowState);
+
+  static void MarkFontInflationDataTextDirty(nsIFrame *aFrame);
+
+  bool InflationEnabled() {
+    if (mTextDirty) {
+      ScanText();
+    }
+    return mInflationEnabled;
+  }
+
 private:
+
+  nsFontInflationData(nsIFrame* aBFCFrame);
+
+  nsFontInflationData(const nsFontInflationData&) MOZ_DELETE;
+  void operator=(const nsFontInflationData&) MOZ_DELETE;
+
+  void UpdateWidth(const nsHTMLReflowState &aReflowState);
+  enum SearchDirection { eFromStart, eFromEnd };
+  static nsIFrame* FindEdgeInflatableFrameIn(nsIFrame *aFrame,
+                                             SearchDirection aDirection);
+
+  void MarkTextDirty() { mTextDirty = true; }
+  void ScanText();
+  // Scan text in the subtree rooted at aFrame.  Increment mTextAmount
+  // by multiplying the number of characters found by the font size
+  // (yielding the width that would be occupied by the characters if
+  // they were all em squares).  But stop scanning if mTextAmount
+  // crosses mTextThreshold.
+  void ScanTextIn(nsIFrame *aFrame);
 
   static const nsIFrame* FlowRootFor(const nsIFrame *aFrame)
   {
@@ -60,6 +93,10 @@ private:
     return aFrame;
   }
 
+  nsIFrame *mBFCFrame;
+  nscoord mTextAmount, mTextThreshold;
+  bool mInflationEnabled; // for this BFC
+  bool mTextDirty;
 };
 
 #endif /* !defined(nsFontInflationData_h_) */
