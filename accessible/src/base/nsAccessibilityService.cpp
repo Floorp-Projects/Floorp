@@ -1075,12 +1075,12 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     }
 
     newAcc = new nsHyperTextAccessibleWrap(content, docAcc);
-    if (docAcc->BindToDocument(newAcc, nsAccUtils::GetRoleMapEntry(aNode)))
+    if (docAcc->BindToDocument(newAcc, aria::GetRoleMap(aNode)))
       return newAcc;
     return nsnull;
   }
 
-  nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(aNode);
+  nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(aNode);
   if (roleMapEntry && !nsCRT::strcmp(roleMapEntry->roleString, "presentation")) {
     // Ignore presentation role if element is focusable (focus event shouldn't
     // be ever lost and should be sensible).
@@ -1127,8 +1127,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
           }
 
 #ifdef DEBUG
-          nsRoleMapEntry *tableRoleMapEntry =
-            nsAccUtils::GetRoleMapEntry(tableContent);
+          nsRoleMapEntry* tableRoleMapEntry = aria::GetRoleMap(tableContent);
           NS_ASSERTION(tableRoleMapEntry &&
                        !nsCRT::strcmp(tableRoleMapEntry->roleString, "presentation"),
                        "No accessible for parent table and it didn't have role of presentation");
@@ -1667,7 +1666,7 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
   if (tag == nsGkAtoms::a) {
     // Only some roles truly enjoy life as nsHTMLLinkAccessibles, for details
     // see closed bug 494807.
-    nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(aContent);
+    nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(aContent);
     if (roleMapEntry && roleMapEntry->role != roles::NOTHING &&
         roleMapEntry->role != roles::LINK) {
       nsAccessible* accessible = new nsHyperTextAccessibleWrap(aContent, aDoc);
