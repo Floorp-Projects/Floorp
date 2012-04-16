@@ -276,7 +276,7 @@ public:
    * @param aRoleMapEntry The ARIA nsRoleMapEntry* for the accessible, or 
    *                      nsnull if none.
    */
-  virtual void SetRoleMapEntry(nsRoleMapEntry *aRoleMapEntry);
+  virtual void SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry);
 
   /**
    * Update the children cache.
@@ -836,8 +836,11 @@ protected:
 
   nsAutoPtr<AccGroupInfo> mGroupInfo;
   friend class AccGroupInfo;
-
-  nsRoleMapEntry *mRoleMapEntry; // Non-null indicates author-supplied role; possibly state & value as well
+  
+  /**
+   * Non-null indicates author-supplied role; possibly state & value as well
+   */
+  nsRoleMapEntry* mRoleMapEntry;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAccessible,
