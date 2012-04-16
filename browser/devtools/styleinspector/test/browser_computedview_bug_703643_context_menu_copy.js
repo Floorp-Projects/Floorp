@@ -8,6 +8,10 @@ let doc;
 let stylePanel;
 let cssHtmlTree;
 
+XPCOMUtils.defineLazyGetter(this, "osString", function() {
+  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
+});
+
 function createDocument()
 {
   doc.body.innerHTML = '<style type="text/css"> ' +
@@ -63,13 +67,14 @@ function checkCopyProperty()
   info("Checking that cssHtmlTree.siBoundCopyDeclaration() returns the " +
        "correct clipboard value");
   let expectedPattern = "color: rgb\\(255, 255, 0\\);";
-  info("Expected pattern: " + expectedPattern);
 
   SimpleTest.waitForClipboard(function CS_boundCopyPropCheck() {
       return checkClipboardData(expectedPattern);
     },
     cssHtmlTree.siBoundCopyDeclaration,
-    checkCopyPropertyName, checkCopyPropertyName);
+    checkCopyPropertyName, function() {
+      failedClipboard(expectedPattern, checkCopyPropertyName);
+    });
 }
 
 function checkCopyPropertyName()
@@ -77,13 +82,14 @@ function checkCopyPropertyName()
   info("Checking that cssHtmlTree.siBoundCopyProperty() returns the " +
        "correct clipboard value");
   let expectedPattern = "color";
-  info("Expected pattern: " + expectedPattern);
 
   SimpleTest.waitForClipboard(function CS_boundCopyPropNameCheck() {
       return checkClipboardData(expectedPattern);
     },
     cssHtmlTree.siBoundCopyProperty,
-    checkCopyPropertyValue, checkCopyPropertyValue);
+    checkCopyPropertyValue, function() {
+      failedClipboard(expectedPattern, checkCopyPropertyValue);
+    });
 }
 
 function checkCopyPropertyValue()
@@ -91,13 +97,14 @@ function checkCopyPropertyValue()
   info("Checking that cssHtmlTree.siBoundCopyPropertyValue() returns the " +
        "correct clipboard value");
   let expectedPattern = "rgb\\(255, 255, 0\\)";
-  info("Expected pattern: " + expectedPattern);
 
   SimpleTest.waitForClipboard(function CS_boundCopyPropValueCheck() {
       return checkClipboardData(expectedPattern);
     },
     cssHtmlTree.siBoundCopyPropertyValue,
-    checkCopySelection, checkCopySelection);
+    checkCopySelection, function() {
+      failedClipboard(expectedPattern, checkCopySelection);
+    });
 }
 
 function checkCopySelection()
@@ -119,12 +126,13 @@ function checkCopySelection()
                  "font-family: helvetica,sans-serif[\\r\\n]+" +
                  "font-size: 16px[\\r\\n]+" +
                  "font-variant: small-caps[\\r\\n]*";
-  info("Expected pattern: " + expectedPattern);
 
   SimpleTest.waitForClipboard(function CS_boundCopyCheck() {
       return checkClipboardData(expectedPattern);
     },
-    cssHtmlTree.siBoundCopy, closeStyleInspector, closeStyleInspector);
+    cssHtmlTree.siBoundCopy, closeStyleInspector, function() {
+      failedClipboard(expectedPattern, closeStyleInspector);
+    });
 }
 
 function checkClipboardData(aExpectedPattern)
@@ -132,6 +140,28 @@ function checkClipboardData(aExpectedPattern)
   let actual = SpecialPowers.getClipboardData("text/unicode");
   let expectedRegExp = new RegExp(aExpectedPattern, "g");
   return expectedRegExp.test(actual);
+}
+
+function failedClipboard(aExpectedPattern, aCallback)
+{
+  // Format expected text for comparison
+  let terminator = osString == "WINNT" ? "\r\n" : "\n";
+  aExpectedPattern = aExpectedPattern.replace(/\[\\r\\n\][+*]/g, terminator);
+  aExpectedPattern = aExpectedPattern.replace(/\\\(/g, "(");
+  aExpectedPattern = aExpectedPattern.replace(/\\\)/g, ")");
+
+  let actual = SpecialPowers.getClipboardData("text/unicode");
+
+  // Trim the right hand side of our strings. This is because expectedPattern
+  // accounts for windows sometimes adding a newline to our copied data.
+  aExpectedPattern = aExpectedPattern.trimRight();
+  actual = actual.trimRight();
+
+  dump("TEST-UNEXPECTED-FAIL | Clipboard text does not match expected ... " +
+    "results (escaped for accurate comparison):\n");
+  info("Actual: " + escape(actual));
+  info("Expected: " + escape(aExpectedPattern));
+  aCallback();
 }
 
 function closeStyleInspector()

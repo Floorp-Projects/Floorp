@@ -552,6 +552,10 @@ CssHtmlTree.prototype = {
     menuitem.disabled = disable;
 
     let node = this.doc.popupNode;
+    if (!node) {
+      return;
+    }
+
     if (!node.classList.contains("property-view")) {
       while (node = node.parentElement) {
         if (node.classList.contains("property-view")) {
@@ -599,6 +603,10 @@ CssHtmlTree.prototype = {
   computedViewCopyDeclaration: function si_computedViewCopyDeclaration(aEvent)
   {
     let node = this.doc.popupNode;
+    if (!node) {
+      return;
+    }
+
     if (!node.classList.contains("property-view")) {
       while (node = node.parentElement) {
         if (node.classList.contains("property-view")) {
@@ -622,6 +630,10 @@ CssHtmlTree.prototype = {
   computedViewCopyProperty: function si_computedViewCopyProperty(aEvent)
   {
     let node = this.doc.popupNode;
+    if (!node) {
+      return;
+    }
+
     if (!node.classList.contains("property-view")) {
       while (node = node.parentElement) {
         if (node.classList.contains("property-view")) {
@@ -643,6 +655,10 @@ CssHtmlTree.prototype = {
   computedViewCopyPropertyValue: function si_computedViewCopyPropertyValue(aEvent)
   {
     let node = this.doc.popupNode;
+    if (!node) {
+      return;
+    }
+
     if (!node.classList.contains("property-view")) {
       while (node = node.parentElement) {
         if (node.classList.contains("property-view")) {
