@@ -1856,39 +1856,18 @@ struct NS_STACK_CLASS ExceptionArgParser
         switch (argc) {
             default:    // more than 4 - ignore extra
                 // ...fall through...
-            case 4:     // argv[3] is object for eData
-                if (JSVAL_IS_NULL(argv[3])) {
-                    // do nothing, leave eData as null
-                } else {
-                    if (JSVAL_IS_PRIMITIVE(argv[3]) ||
-                        NS_FAILED(xpc->WrapJS(cx, JSVAL_TO_OBJECT(argv[3]),
-                                              NS_GET_IID(nsISupports),
-                                              (void**)getter_AddRefs(eData))))
-                        return false;
-                }
-                // ...fall through...
-            case 3:     // argv[2] is object for eStack
-                if (JSVAL_IS_NULL(argv[2])) {
-                    // do nothing, leave eStack as null
-                } else {
-                    if (JSVAL_IS_PRIMITIVE(argv[2]) ||
-                        NS_FAILED(xpc->WrapJS(cx, JSVAL_TO_OBJECT(argv[2]),
-                                              NS_GET_IID(nsIStackFrame),
-                                              (void**)getter_AddRefs(eStack))))
-                        return false;
-                }
-                // fall through...
-            case 2:     // argv[1] is nsresult for eResult
-                if (!JS_ValueToECMAInt32(cx, argv[1], (int32_t*) &eResult))
+            case 4:
+                if (!parseData(argv[3]))
                     return false;
-                // ...fall through...
-            case 1:     // argv[0] is string for eMsg
-                {
-                    JSString* str = JS_ValueToString(cx, argv[0]);
-                    if (!str || !(eMsg = messageBytes.encode(cx, str)))
-                        return false;
-                }
-                // ...fall through...
+            case 3:
+                if (!parseStack(argv[2]))
+                    return false;
+            case 2:
+                if (!parseResult(argv[1]))
+                    return false;
+            case 1:
+                if (!parseMessage(argv[0]))
+                    return false;
             case 0: // this case required so that 'default' does not include zero.
                 ;   // -- do nothing --
         }
@@ -1897,6 +1876,50 @@ struct NS_STACK_CLASS ExceptionArgParser
     }
 
   protected:
+
+    /*
+     * Parsing helpers.
+     */
+
+    bool parseMessage(JS::Value &v) {
+        JSString *str = JS_ValueToString(cx, v);
+        if (!str)
+           return false;
+        eMsg = messageBytes.encode(cx, str);
+        return !!eMsg;
+    }
+
+    bool parseResult(JS::Value &v) {
+        return JS_ValueToECMAInt32(cx, v, (int32_t*) &eResult);
+    }
+
+    bool parseStack(JS::Value &v) {
+        if (!v.isObject()) {
+            // eStack has already been initialized to null, which is what we want
+            // for any non-object values (including null).
+            return true;
+        }
+
+        return NS_SUCCEEDED(xpc->WrapJS(cx, JSVAL_TO_OBJECT(v),
+                                        NS_GET_IID(nsIStackFrame),
+                                        getter_AddRefs(eStack)));
+    }
+
+    bool parseData(JS::Value &v) {
+        if (!v.isObject()) {
+            // eData has already been initialized to null, which is what we want
+            // for any non-object values (including null).
+            return true;
+        }
+
+        return NS_SUCCEEDED(xpc->WrapJS(cx, &v.toObject(),
+                                        NS_GET_IID(nsISupports),
+                                        getter_AddRefs(eData)));
+    }
+
+    /*
+     * Internal data members.
+     */
 
     // If there's a non-default exception string, hold onto the allocated bytes.
     JSAutoByteString messageBytes;
