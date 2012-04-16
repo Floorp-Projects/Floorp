@@ -1436,8 +1436,8 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
 
-  bool hasBoxShadow = GetStyleBorder()->mBoxShadow != nsnull;
-  if (hasBoxShadow) {
+  nsCSSShadowArray* shadows = GetStyleBorder()->mBoxShadow;
+  if (shadows && shadows->HasShadowWithInset(false)) {
     nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayBoxShadowOuter(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1448,7 +1448,7 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
     DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground, &bg);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (hasBoxShadow) {
+  if (shadows && shadows->HasShadowWithInset(true)) {
     rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayBoxShadowInner(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
