@@ -68,7 +68,6 @@
 #endif
 
 using namespace mozilla;
-using namespace mozilla::xpconnect::memory;
 
 /***************************************************************************/
 
@@ -1251,24 +1250,6 @@ GetCompartmentName(JSCompartment *c, bool getAddress, nsCString &name)
     }
 }
 
-// We have per-compartment GC heap totals, so we can't put the total GC heap
-// size in the explicit allocations tree.  But it's a useful figure, so put it
-// in the "others" list.
-
-static PRInt64
-GetGCChunkTotalBytes()
-{
-    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
-    return PRInt64(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) * js::gc::ChunkSize;
-}
-
-NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSGCHeap,
-                             "js-gc-heap",
-                             KIND_OTHER,
-                             nsIMemoryReporter::UNITS_BYTES,
-                             GetGCChunkTotalBytes,
-                             "Memory used by the garbage-collected JavaScript heap.")
-
 static PRInt64
 GetJSSystemCompartmentCount()
 {
@@ -1377,9 +1358,7 @@ MakePath(const nsACString &pathPrefix, const JS::CompartmentStats &cStats,
            nsDependentCString(reporterName);
 }
 
-namespace mozilla {
-namespace xpconnect {
-namespace memory {
+namespace xpc {
 
 static nsresult
 ReportCompartmentStats(const JS::CompartmentStats &cStats,
@@ -1393,7 +1372,7 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                      cStats.gcHeapArenaHeaders,
                      "Memory on the compartment's garbage-collected JavaScript "
                      "heap, within arenas, that is used to hold internal "
-                     "book-keeping information.");
+                     "bookkeeping information.");
 
     REPORT_GC_BYTES0(MakePath(pathPrefix, cStats, "gc-heap/arena/padding"),
                      cStats.gcHeapArenaPadding,
@@ -1631,7 +1610,7 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
     REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-chunk-admin"),
                     rtStats.gcHeapChunkAdmin,
                     "Memory on the garbage-collected JavaScript heap, within "
-                    "chunks, that is used to hold internal book-keeping "
+                    "chunks, that is used to hold internal bookkeeping "
                     "information.");
 
     // gcTotal is the sum of everything we've reported for the GC heap.  It
@@ -1641,9 +1620,7 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
     return NS_OK;
 }
 
-} // namespace memory
-} // namespace xpconnect
-} // namespace mozilla
+} // namespace xpc
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsMallocSizeOf, "js")
 
@@ -1762,7 +1739,8 @@ public:
         // "explicit" tree, then we report other stuff.
 
         nsresult rv =
-            ReportJSRuntimeExplicitTreeStats(rtStats, pathPrefix, cb, closure);
+            xpc::ReportJSRuntimeExplicitTreeStats(rtStats, pathPrefix, cb,
+                                                  closure);
         NS_ENSURE_SUCCESS(rv, rv);
 
         REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("xpconnect"),
@@ -1783,12 +1761,6 @@ public:
                      "Shown here for easy comparison with other 'js-gc' "
                      "reporters.");
 
-        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-decommitted"),
-                     nsIMemoryReporter::KIND_OTHER,
-                     rtStats.gcHeapChunkCleanDecommitted + rtStats.gcHeapChunkDirtyDecommitted,
-                     "The same as 'explicit/js/gc-heap-decommitted'.  Shown "
-                     "here for easy comparison with other 'js-gc' reporters.");
-
         REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-arena-unused"),
                      nsIMemoryReporter::KIND_OTHER,
                      rtStats.gcHeapArenaUnused,
@@ -1797,15 +1769,40 @@ public:
                      "useful data but currently isn't. This is the sum of all "
                      "compartments' 'gc-heap/arena-unused' numbers.");
 
-        REPORT(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-unused-fraction"),
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-unused"),
+                     nsIMemoryReporter::KIND_OTHER,
+                     rtStats.gcHeapUnused,
+                     "Amount of the GC heap that's committed, but that is "
+                     "neither part of an active allocation nor being used for "
+                     "bookkeeping.  Equal to 'gc-heap-chunk-dirty-unused' + "
+                     "'gc-heap-chunk-clean-unused' + 'gc-heap-arena-unused'.");
+
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed"),
+                     nsIMemoryReporter::KIND_OTHER,
+                     rtStats.gcHeapCommitted,
+                     "Committed memory (i.e., in physical memory or swap) "
+                     "used by the garbage-collected JavaScript heap.");
+
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-allocated"),
+                     nsIMemoryReporter::KIND_OTHER,
+                     (rtStats.gcHeapCommitted - rtStats.gcHeapUnused),
+                     "Amount of the GC heap used for active allocations and "
+                     "bookkeeping.  This is calculated as 'gc-heap-committed' "
+                     "- 'gc-heap-unused'.");
+
+        REPORT(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-fragmentation"),
                nsIMemoryReporter::KIND_OTHER,
                nsIMemoryReporter::UNITS_PERCENTAGE,
-               rtStats.gcHeapUnusedPercentage,
-               "Fraction of the main JSRuntime's garbage-collected JavaScript "
-               "heap that is unused. Computed as "
-               "('js-gc-heap-chunk-clean-unused' + "
-               "'js-gc-heap-chunk-dirty-unused' + 'js-gc-heap-decommitted' + "
-               "'js-gc-heap-arena-unused') / 'js-gc-heap'.");
+               rtStats.gcHeapFragmentationPercentage,
+               "Fraction of the committed part of the main JSRuntime's "
+               "garbage-collected heap that is unused. Computed as "
+               "'gc-heap-unused' / 'gc-heap-committed'.");
+
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-decommitted"),
+                     nsIMemoryReporter::KIND_OTHER,
+                     rtStats.gcHeapChunkCleanDecommitted + rtStats.gcHeapChunkDirtyDecommitted,
+                     "The same as 'explicit/js/gc-heap-decommitted'.  Shown "
+                     "here for easy comparison with other 'js-gc' reporters.");
 
         REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-objects"),
                      nsIMemoryReporter::KIND_OTHER, rtStats.totalObjects,
@@ -2012,7 +2009,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     JS_SetAccumulateTelemetryCallback(mJSRuntime, AccumulateTelemetryCallback);
     js::SetActivityCallback(mJSRuntime, ActivityCallback, this);
         
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSSystemCompartmentCount));
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSUserCompartmentCount));
     NS_RegisterMemoryMultiReporter(new JSMemoryMultiReporter);

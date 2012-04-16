@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html><head>
+    <title>Testcase for bug 740743</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+	
+fieldset { padding: 2px; }
+legend { padding: 0; }
+span { background: lime; display: block;}
+legend > span {
+   padding-left: 2px;
+   padding-right: 2px;
+}
+
+.s10 { width:10px; height:10px; }
+.h10 { height:10px; }
+.w50 { width:50px; }
+.hidden { overflow:hidden; }
+.scroll { overflow:scroll; }
+.auto { overflow:auto; }
+
+.o { text-overflow: ellipsis; }
+
+#inline span { display:inline; }
+#inline-block span { display:inline-block; }
+
+    </style>
+</head>
+<body>
+
+<fieldset><legend><span class="hidden s10"><b>Legend Test</b></span></legend></fieldset>
+<fieldset><legend><span class="scroll s10">Legend Test</span></legend></fieldset>
+<fieldset><legend><span class="auto s10">Legend Test</span></legend></fieldset>
+<fieldset><legend><span class="hidden w50"><b>Legend Test</b></span></legend></fieldset>
+<fieldset><legend><span class="scroll w50">Legend Test</span></legend></fieldset>
+<fieldset><legend><span class="auto w50"><b>Legend Test</b></span></legend></fieldset>
+<fieldset><legend><span class="hidden">Legend Test</span></legend></fieldset>
+<fieldset><legend><span class="auto"><b>Legend Test</b></span></legend></fieldset>
+<fieldset><legend><span class="auto"><b>Legend Test</b></span></legend></fieldset>
+<fieldset><legend><span class="auto"><b>Legend Test</b></span></legend></fieldset>
+
+<fieldset><legend><span class="hidden w50 o"><b>Legend Test</b></span></legend></fieldset>
+<fieldset><legend><span class="hidden w50 o">Test Legend</span></legend></fieldset>
+<fieldset><legend><span class="hidden o">Test Legend</span></legend></fieldset>
+<fieldset><legend><span class="auto w50 o"><b>Legend Test</b></span></legend></fieldset>
+<fieldset><legend align="right"><span class="hidden w50 o">Test Legend</span></legend></fieldset>
+<fieldset><legend align="center"><span class="hidden w50 o">Test Legend</span></legend></fieldset>
+
+<div id="inline">
+<span class="hidden s10"><b>Legend Test</b></span>
+<span class="scroll s10">Legend Test</span>
+<span class="auto s10">Legend Test</span>
+<span class="hidden w50"><b>Legend Test</b></span>
+<span class="scroll w50">Legend Test</span>
+<span class="auto w50"><b>Legend Test</b></span>
+<span class="hidden">Legend Test</span>
+<span class="auto"><b>Legend Test</b></span>
+
+<span class="hidden w50 o"><b>Legend Test</b></span>
+<span class="hidden w50 o">Test Legend</span>
+<span class="hidden o">Test Legend</span>
+<span class="auto w50 o"><b>Legend Test</b></span>
+<span class="hidden w50 o">Test Legend</span>
+<span class="hidden w50 o">Test Legend</span>
+</div>
+
+<div id="inline-block">
+<span class="hidden s10"><b>Legend Test</b></span>
+<span class="scroll s10">Legend Test</span>
+<span class="auto s10">Legend Test</span>
+<span class="hidden w50"><b>Legend Test</b></span>
+<span class="scroll w50">Legend Test</span>
+<span class="auto w50"><b>Legend Test</b></span>
+<span class="hidden">Legend Test</span>
+<span class="auto"><b>Legend Test</b></span>
+<span class="auto"><b>Legend Test</b></span>
+
+<span class="hidden w50 o"><b>Legend Test</b></span>
+<span class="hidden w50 o">Test Legend</span>
+<span class="hidden o">Test Legend</span>
+<span class="auto w50 o"><b>Legend Test</b></span>
+<span class="hidden w50 o">Test Legend</span>
+<span class="hidden w50 o">Test Legend</span>
+</div>
+
+<span class="auto w50"><b>Legend Test</b></span>
+<span><b>Legend Test</b></span>
+<span><b>Legend Test</b></span>
+
+</body>
+</html>

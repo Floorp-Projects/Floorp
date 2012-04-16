@@ -37,8 +37,13 @@ public class FormHistoryRepositorySession extends
     StoreTrackingRepositorySession {
   public static String LOG_TAG = "FormHistoryRepoSess";
 
-  protected static Uri FORM_HISTORY_CONTENT_URI = BrowserContractHelpers.FORM_HISTORY_CONTENT_URI;
-  protected static Uri DELETED_FORM_HISTORY_CONTENT_URI = BrowserContractHelpers.DELETED_FORM_HISTORY_CONTENT_URI;
+  /**
+   * Number of records to insert in one batch.
+   */
+  public static final int INSERT_ITEM_THRESHOLD = 200;
+
+  private static Uri FORM_HISTORY_CONTENT_URI = BrowserContractHelpers.FORM_HISTORY_CONTENT_URI;
+  private static Uri DELETED_FORM_HISTORY_CONTENT_URI = BrowserContractHelpers.DELETED_FORM_HISTORY_CONTENT_URI;
 
   public static class FormHistoryRepository extends Repository {
 
@@ -79,7 +84,9 @@ public class FormHistoryRepositorySession extends
 
   protected void releaseProviders() {
     try {
-      formsProvider.release();
+      if (formsProvider != null) {
+        formsProvider.release();
+      }
     } catch (Exception e) {
     }
   }
@@ -170,7 +177,7 @@ public class FormHistoryRepositorySession extends
     delegateQueue.execute(command);
   }
 
-  protected FormHistoryRecord retrieveDuringFetch(Cursor cursor) {
+  protected static FormHistoryRecord retrieveDuringFetch(final Cursor cursor) {
     // A simple and efficient way to distinguish two tables.
     if (cursor.getColumnCount() == BrowserContractHelpers.FormHistoryColumns.length) {
       return formHistoryRecordFromCursor(cursor);
@@ -179,7 +186,7 @@ public class FormHistoryRepositorySession extends
     }
   }
 
-  protected FormHistoryRecord formHistoryRecordFromCursor(Cursor cursor) {
+  protected static FormHistoryRecord formHistoryRecordFromCursor(final Cursor cursor) {
     String guid = RepoUtils.getStringFromCursor(cursor, FormHistory.GUID);
     String collection = "forms";
     FormHistoryRecord record = new FormHistoryRecord(guid, collection, 0, false);
@@ -194,7 +201,7 @@ public class FormHistoryRepositorySession extends
     return record;
   }
 
-  protected FormHistoryRecord deletedFormHistoryRecordFromCursor(Cursor cursor) {
+  protected static FormHistoryRecord deletedFormHistoryRecordFromCursor(final Cursor cursor) {
     String guid = RepoUtils.getStringFromCursor(cursor, DeletedFormHistory.GUID);
     String collection = "forms";
     FormHistoryRecord record = new FormHistoryRecord(guid, collection, 0, false);
@@ -208,7 +215,7 @@ public class FormHistoryRepositorySession extends
     return record;
   }
 
-  protected void fetchFromCursor(Cursor cursor, RecordFilter filter, final RepositorySessionFetchRecordsDelegate delegate)
+  protected static void fetchFromCursor(final Cursor cursor, final RecordFilter filter, final RepositorySessionFetchRecordsDelegate delegate)
       throws NullCursorException {
     Logger.debug(LOG_TAG, "Fetch from cursor");
     if (cursor == null) {
@@ -270,12 +277,12 @@ public class FormHistoryRepositorySession extends
     delegateQueue.execute(command);
   }
 
-  protected String regularBetween(long start, long end) {
+  protected static String regularBetween(long start, long end) {
     return FormHistory.FIRST_USED + " >= " + Long.toString(1000 * start) + " AND " +
            FormHistory.FIRST_USED + " <= " + Long.toString(1000 * end); // Microseconds.
   }
 
-  protected String deletedBetween(long start, long end) {
+  protected static String deletedBetween(long start, long end) {
     return DeletedFormHistory.TIME_DELETED + " >= " + Long.toString(start) + " AND " +
            DeletedFormHistory.TIME_DELETED + " <= " + Long.toString(end); // Milliseconds.
   }
@@ -411,8 +418,7 @@ public class FormHistoryRepositorySession extends
    *          The local <code>Record</code> to replace.
    * @throws RemoteException
    */
-  protected void deleteExistingRecord(Record existingRecord)
-      throws RemoteException {
+  protected void deleteExistingRecord(Record existingRecord) throws RemoteException {
     if (existingRecord.deleted) {
       formsProvider.delete(DELETED_FORM_HISTORY_CONTENT_URI, GUID_IS, new String[] { existingRecord.guid });
       return;
@@ -420,7 +426,7 @@ public class FormHistoryRepositorySession extends
     formsProvider.delete(FORM_HISTORY_CONTENT_URI, GUID_IS, new String[] { existingRecord.guid });
   }
 
-  protected ContentValues contentValuesForRegularRecord(Record rawRecord) {
+  protected static ContentValues contentValuesForRegularRecord(Record rawRecord) {
     if (rawRecord.deleted) {
       throw new IllegalArgumentException("Deleted record passed to insertNewRegularRecord.");
     }
@@ -436,54 +442,39 @@ public class FormHistoryRepositorySession extends
 
   protected Object recordsBufferMonitor = new Object();
   protected ArrayList<ContentValues> recordsBuffer = new ArrayList<ContentValues>();
-  private static final int INSERT_ITEM_THRESHOLD = 5;
 
   protected void enqueueRegularRecord(Record record) {
     synchronized (recordsBufferMonitor) {
       if (recordsBuffer.size() >= INSERT_ITEM_THRESHOLD) {
         // Insert the existing contents, then enqueue.
-        flushInsertQueue();
+        try {
+          flushInsertQueue();
+        } catch (Exception e) {
+          delegate.onRecordStoreFailed(e);
+          return;
+        }
       }
       // Store the ContentValues, rather than the record.
       recordsBuffer.add(contentValuesForRegularRecord(record));
     }
   }
 
-  public class RecordInsertRunnable implements Runnable {
-    ContentValues[] queue;
-
-    public RecordInsertRunnable(ArrayList<ContentValues> queue) {
-      ContentValues[] values = new ContentValues[queue.size()];
-      this.queue = queue.toArray(values);
-    }
-
-    @Override
-    public void run() {
-      if (queue == null || queue.length == 0) {
-        Logger.debug(LOG_TAG, "No form history items to insert: RecordInsertRunnable returning immediately.");
-        return;
-      }
-
-      try {
-        Logger.debug(LOG_TAG, "Inserting " + queue.length + " form history items...");
-        long before = System.currentTimeMillis();
-        formsProvider.bulkInsert(FORM_HISTORY_CONTENT_URI, queue);
-        long after = System.currentTimeMillis();
-        Logger.debug(LOG_TAG, "Inserting " + queue.length + " form history items... DONE (" + (after - before) + " milliseconds).");
-      } catch (RemoteException e) {
-        // TODO: REALLY HANDLE THIS ERROR by making this not be a Runnable and handling errors inline.
-        e.printStackTrace();
-      }
-    }
-  }
-
   // Should always be called from storeWorkQueue.
-  protected void flushInsertQueue() {
+  protected void flushInsertQueue() throws RemoteException {
     synchronized (recordsBufferMonitor) {
       if (recordsBuffer.size() > 0) {
-        final ArrayList<ContentValues> outgoing = recordsBuffer;
+        final ContentValues[] outgoing = recordsBuffer.toArray(new ContentValues[0]);
         recordsBuffer = new ArrayList<ContentValues>();
-        new RecordInsertRunnable(outgoing).run();
+
+        if (outgoing == null || outgoing.length == 0) {
+          Logger.debug(LOG_TAG, "No form history items to insert; returning immediately.");
+          return;
+        }
+
+        long before = System.currentTimeMillis();
+        formsProvider.bulkInsert(FORM_HISTORY_CONTENT_URI, outgoing);
+        long after = System.currentTimeMillis();
+        Logger.debug(LOG_TAG, "Inserted " + outgoing.length + " form history items in (" + (after - before) + " milliseconds).");
       }
     }
   }
@@ -494,10 +485,14 @@ public class FormHistoryRepositorySession extends
       @Override
       public void run() {
         Logger.debug(LOG_TAG, "Checking for residual form history items to insert.");
-        synchronized (recordsBufferMonitor) {
-          flushInsertQueue();
+        try {
+          synchronized (recordsBufferMonitor) {
+            flushInsertQueue();
+          }
+          storeDone(now());
+        } catch (Exception e) {
+          delegate.onRecordStoreFailed(e);
         }
-        storeDone(now()); // XXX?
       }
     };
     storeWorkQueue.execute(command);

@@ -39,6 +39,7 @@
 
 #include "nsHTMLTableAccessible.h"
 
+#include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccTreeWalker.h"
 #include "nsAccUtils.h"
@@ -553,13 +554,13 @@ nsHTMLTableAccessible::Caption()
   return child && child->Role() == roles::CAPTION ? child : nsnull;
 }
 
-NS_IMETHODIMP
-nsHTMLTableAccessible::GetSummary(nsAString &aSummary)
+void
+nsHTMLTableAccessible::Summary(nsString& aSummary)
 {
   nsCOMPtr<nsIDOMHTMLTableElement> table(do_QueryInterface(mContent));
-  NS_ENSURE_TRUE(table, NS_ERROR_FAILURE);
-
-  return table->GetSummary(aSummary);
+  
+  if (table)
+    table->GetSummary(aSummary);
 }
 
 NS_IMETHODIMP

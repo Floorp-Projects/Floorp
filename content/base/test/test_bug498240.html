@@ -77,12 +77,12 @@ function testInsertNode(node) {
   p = create('g<b>h</b>');
   select(p.childNodes[0],0,p.childNodes[0],0);
   insertClone(node);
-  check(p.childNodes[0],0,p.childNodes[0],0);
+  check(p.childNodes[0],0,p,2);
 
   p = create('i<b>j</b>');
   select(p.childNodes[0],1,p.childNodes[0],1);
   insertClone(node);
-  check(p.childNodes[0],1,p.childNodes[0],1);
+  check(p.childNodes[0],1,p,2);
 
   p = create('k<b>l</b>');
   select(p.childNodes[0],0,p.childNodes[1].childNodes[0],0);
@@ -137,12 +137,12 @@ function testInsertNode(node) {
   p = create('<i>O</i><b>P</b>');
   select(p,1,p,1);
   insertClone(node);
-  check(p,1,p,1);
+  check(p,1,p,2);
 
   p = create('<i>Q</i><b>R</b>');
   select(p,2,p,2);
   insertClone(node);
-  check(p,2,p,2);
+  check(p,2,p,3);
 
   p = create('<i>S</i><b>T</b>');
   select(p,1,p,1);

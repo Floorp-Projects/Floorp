@@ -57,6 +57,8 @@
 #include "FrameLayerBuilder.h"
 #include "nsThemeConstants.h"
 
+#include "mozilla/StandardInteger.h"
+
 #include <stdlib.h>
 
 class nsIPresShell;
@@ -1559,6 +1561,9 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Background", TYPE_BACKGROUND)
+  // Returns the value of GetUnderlyingFrame()->IsThemed(), but cached
+  bool IsThemed() { return mIsThemed; }
+
 protected:
   nsRegion GetInsideClipRegion(nsPresContext* aPresContext, PRUint8 aClip,
                                const nsRect& aRect, bool* aSnap);
@@ -1701,8 +1706,8 @@ public:
                                                 nsIFrame* aFrame);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx);
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion,
-                                   const nsRect& aAllowVisibleRegionExpansion);
+                                 nsRegion* aVisibleRegion,
+                                 const nsRect& aAllowVisibleRegionExpansion);
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) {
     NS_WARNING("This list should already have been flattened!!!");
     return false;
@@ -1737,8 +1742,15 @@ public:
 
 protected:
   nsDisplayWrapList() {}
-  
+
+  void MergeFrom(nsDisplayWrapList* aOther)
+  {
+    mList.AppendToBottom(&aOther->mList);
+    mBounds.UnionRect(mBounds, aOther->mBounds);
+  }
+
   nsDisplayList mList;
+  nsRect mBounds;
 };
 
 /**
@@ -1887,8 +1899,8 @@ public:
   // Get the number of nsDisplayScrollLayers for a scroll frame. Note that this
   // number does not include nsDisplayScrollInfoLayers. If this number is not 1
   // after merging, all the nsDisplayScrollLayers should flatten away.
-  PRWord GetScrollLayerCount();
-  PRWord RemoveScrollLayerCount();
+  intptr_t GetScrollLayerCount();
+  intptr_t RemoveScrollLayerCount();
 
 private:
   nsIFrame* mScrollFrame;
@@ -2065,7 +2077,7 @@ public:
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
     *aSnap = false;
-    return mBounds + aBuilder->ToReferenceFrame(mEffectsFrame);
+    return mEffectsBounds + aBuilder->ToReferenceFrame(mEffectsFrame);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx);
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -2083,7 +2095,7 @@ public:
 private:
   nsIFrame* mEffectsFrame;
   // relative to mEffectsFrame
-  nsRect    mBounds;
+  nsRect    mEffectsBounds;
 };
 
 /* A display item that applies a transformation to all of its descendant

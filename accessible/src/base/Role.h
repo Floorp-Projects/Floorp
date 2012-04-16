@@ -40,6 +40,10 @@
 #ifndef _role_h_
 #define _role_h_
 
+/**
+ * Note: Make sure to update the localized role names when changing the list.
+ */
+
 namespace mozilla {
 namespace a11y {
 namespace roles {

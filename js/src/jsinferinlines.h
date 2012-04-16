@@ -1427,11 +1427,11 @@ inline bool
 JSScript::ensureRanAnalysis(JSContext *cx, JSObject *scope)
 {
     JSScript *self = this;
+    JS::SkipRoot root(cx, &self);
 
     if (!self->ensureHasTypes(cx))
         return false;
     if (!self->types->hasScope()) {
-        js::CheckRoot root(cx, &self);
         js::RootObject objRoot(cx, &scope);
         if (!js::types::TypeScript::SetScope(cx, self, scope))
             return false;

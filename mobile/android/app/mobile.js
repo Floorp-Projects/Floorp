@@ -90,7 +90,7 @@ pref("ui.scrollbarsCanOverlapContent", 1);
 
 /* cache prefs */
 pref("browser.cache.disk.enable", true);
-pref("browser.cache.disk.capacity", 10240); // kilobytes
+pref("browser.cache.disk.capacity", 20480); // kilobytes
 pref("browser.cache.disk.smart_size.enabled", false);
 pref("browser.cache.disk.smart_size.first_run", false);
 
@@ -251,6 +251,7 @@ pref("privacy.popups.showBrowserMessage", true);
 /* disable opening windows with the dialog feature */
 pref("dom.disable_window_open_dialog_feature", true);
 pref("dom.disable_window_showModalDialog", true);
+pref("dom.disable_window_print", true);
 
 pref("keyword.enabled", true);
 pref("keyword.URL", "https://www.google.com/m?ie=UTF-8&oe=UTF-8&sourceid=navclient&gfns=1&q=");
@@ -362,9 +363,24 @@ pref("places.frecency.unvisitedTypedBonus", 200);
 
 // disable color management
 pref("gfx.color_management.mode", 0);
+
 #ifdef ANDROID
 // 0=fixed margin, 1=velocity bias, 2=dynamic resolution, 3=no margins
 pref("gfx.displayport.strategy", 1);
+// all of the following displayport strategy prefs will be divided by 1000
+// to obtain some multiplier which is then used in the strategy.
+// fixed margin strategy options
+pref("gfx.displayport.strategy_fm.multiplier", -1); // displayport dimension multiplier
+pref("gfx.displayport.strategy_fm.danger_x", -1); // danger zone on x-axis when multiplied by viewport width
+pref("gfx.displayport.strategy_fm.danger_y", -1); // danger zone on y-axis when multiplied by viewport height
+// velocity bias strategy options
+pref("gfx.displayport.strategy_vb.multiplier", -1); // displayport dimension multiplier
+pref("gfx.displayport.strategy_vb.threshold", -1); // velocity threshold in pixels/frame when multiplied by screen DPI
+pref("gfx.displayport.strategy_vb.reverse_buffer", -1); // fraction of buffer to keep in reverse direction from scroll
+pref("gfx.displayport.strategy_vb.danger_x_base", -1); // danger zone on x-axis when multiplied by viewport width
+pref("gfx.displayport.strategy_vb.danger_y_base", -1); // danger zone on y-axis when multiplied by viewport height
+pref("gfx.displayport.strategy_vb.danger_x_incr", -1); // additional danger zone on x-axis when multiplied by viewport width and velocity
+pref("gfx.displayport.strategy_vb.danger_y_incr", -1); // additional danger zone on y-axis when multiplied by viewport height and velocity
 #endif
 
 // don't allow JS to move and resize existing windows
@@ -713,3 +729,21 @@ pref("gfx.show_checkerboard_pattern", false);
 
 pref("remote-debugger.enabled", false);
 pref("remote-debugger.port", 6000);
+
+// This fraction in 1000ths of velocity remains after every animation frame when the velocity is low.
+pref("ui.scrolling.friction_slow", -1);
+// This fraction in 1000ths of velocity remains after every animation frame when the velocity is high.
+pref("ui.scrolling.friction_fast", -1);
+// Below this velocity (in pixels per frame), the friction starts increasing from friction_fast
+// to friction_slow.
+pref("ui.scrolling.velocity_threshold", -1);
+// The maximum velocity change factor between events, per ms, in 1000ths.
+// Direction changes are excluded.
+pref("ui.scrolling.max_event_acceleration", -1);
+// The rate of deceleration when the surface has overscrolled, in 1000ths.
+pref("ui.scrolling.overscroll_decel_rate", -1);
+// The fraction of the surface which can be overscrolled before it must snap back, in 1000ths.
+pref("ui.scrolling.overscroll_snap_limit", -1);
+// The minimum amount of space that must be present for an axis to be considered scrollable,
+// in 1/1000ths of pixels.
+pref("ui.scrolling.min_scrollable_distance", -1);

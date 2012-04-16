@@ -57,6 +57,8 @@
 #include "plstr.h"
 #include "nsIScriptExternalNameSet.h"
 
+#include "mozilla/StandardInteger.h"
+
 class nsIDocShell;
 class nsString;
 class nsIClassInfo;
@@ -147,8 +149,8 @@ private:
 // Property Policy
 union SecurityLevel
 {
-    PRWord   level;
-    char*    capability;
+    intptr_t   level;
+    char*      capability;
 };
 
 // Security levels

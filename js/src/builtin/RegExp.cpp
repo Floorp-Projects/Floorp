@@ -54,7 +54,7 @@ using namespace js::types;
 class RegExpMatchBuilder
 {
     JSContext   * const cx;
-    JSObject    * const array;
+    RootedVarObject array;
 
     bool setProperty(JSAtom *name, Value v) {
         return !!js_DefineProperty(cx, array, ATOM_TO_JSID(name), &v,
@@ -62,7 +62,7 @@ class RegExpMatchBuilder
     }
 
   public:
-    RegExpMatchBuilder(JSContext *cx, JSObject *array) : cx(cx), array(array) {}
+    RegExpMatchBuilder(JSContext *cx, JSObject *array) : cx(cx), array(cx, array) {}
 
     bool append(uint32_t index, Value v) {
         JS_ASSERT(!array->getOps()->getElement);
@@ -81,9 +81,11 @@ class RegExpMatchBuilder
 };
 
 static bool
-CreateRegExpMatchResult(JSContext *cx, JSString *input, const jschar *chars, size_t length,
+CreateRegExpMatchResult(JSContext *cx, JSString *input_, const jschar *chars, size_t length,
                         MatchPairs *matchPairs, Value *rval)
 {
+    RootedVarString input(cx, input_);
+
     /*
      * Create the (slow) result array for a match.
      *
@@ -93,7 +95,7 @@ CreateRegExpMatchResult(JSContext *cx, JSString *input, const jschar *chars, siz
      *  input:          input string
      *  index:          start index for the match
      */
-    JSObject *array = NewSlowEmptyArray(cx);
+    RootedVarObject array(cx, NewSlowEmptyArray(cx));
     if (!array)
         return false;
 
@@ -225,7 +227,8 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
 {
     if (args.length() == 0) {
         RegExpStatics *res = cx->regExpStatics();
-        RegExpObject *reobj = builder.build(cx->runtime->emptyString, res->getFlags());
+        RegExpObject *reobj = builder.build(RootedVarAtom(cx, cx->runtime->emptyString),
+                                            res->getFlags());
         if (!reobj)
             return false;
         args.rval() = ObjectValue(*reobj);
@@ -272,7 +275,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
         if (!sourceObj.getProperty(cx, cx->runtime->atomState.sourceAtom, &v))
             return false;
 
-        RegExpObject *reobj = builder.build(&v.toString()->asAtom(), flags);
+        RegExpObject *reobj = builder.build(RootedVarAtom(cx, &v.toString()->asAtom()), flags);
         if (!reobj)
             return false;
 
@@ -304,7 +307,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
             return false;
     }
 
-    JSAtom *escapedSourceStr = EscapeNakedForwardSlashes(cx, source);
+    RootedVarAtom escapedSourceStr(cx, EscapeNakedForwardSlashes(cx, source));
     if (!escapedSourceStr)
         return false;
 
@@ -482,22 +485,22 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = &obj->asGlobal();
+    RootedVar<GlobalObject*> global(cx, &obj->asGlobal());
 
-    JSObject *proto = global->createBlankPrototype(cx, &RegExpClass);
+    RootedVarObject proto(cx, global->createBlankPrototype(cx, &RegExpClass));
     if (!proto)
         return NULL;
     proto->setPrivate(NULL);
 
-    RegExpObject *reproto = &proto->asRegExp();
-    RegExpObjectBuilder builder(cx, reproto);
-    if (!builder.build(cx->runtime->emptyString, RegExpFlag(0)))
+    RegExpObjectBuilder builder(cx, &proto->asRegExp());
+    if (!builder.build(RootedVarAtom(cx, cx->runtime->emptyString), RegExpFlag(0)))
         return NULL;
 
     if (!DefinePropertiesAndBrand(cx, proto, NULL, regexp_methods))
         return NULL;
 
-    JSFunction *ctor = global->createConstructor(cx, regexp_construct, CLASS_ATOM(cx, RegExp), 2);
+    RootedVarFunction ctor(cx);
+    ctor = global->createConstructor(cx, regexp_construct, CLASS_ATOM(cx, RegExp), 2);
     if (!ctor)
         return NULL;
 
@@ -575,14 +578,14 @@ ExecuteRegExp(JSContext *cx, Native native, unsigned argc, Value *vp)
     if (!obj)
         return ok;
 
-    RegExpObject &reobj = obj->asRegExp();
+    RootedVar<RegExpObject*> reobj(cx, &obj->asRegExp());
 
     RegExpGuard re;
-    if (StartsWithGreedyStar(reobj.getSource())) {
-        if (!GetSharedForGreedyStar(cx, reobj.getSource(), reobj.getFlags(), &re))
+    if (StartsWithGreedyStar(reobj->getSource())) {
+        if (!GetSharedForGreedyStar(cx, reobj->getSource(), reobj->getFlags(), &re))
             return false;
     } else {
-        if (!reobj.getShared(cx, &re))
+        if (!reobj->getShared(cx, &re))
             return false;
     }
 
@@ -601,7 +604,7 @@ ExecuteRegExp(JSContext *cx, Native native, unsigned argc, Value *vp)
     size_t length = input->length();
 
     /* Step 4. */
-    const Value &lastIndex = reobj.getLastIndex();
+    const Value &lastIndex = reobj->getLastIndex();
 
     /* Step 5. */
     double i;
@@ -614,7 +617,7 @@ ExecuteRegExp(JSContext *cx, Native native, unsigned argc, Value *vp)
 
     /* Step 9a. */
     if (i < 0 || i > length) {
-        reobj.zeroLastIndex();
+        reobj->zeroLastIndex();
         args.rval() = NullValue();
         return true;
     }
@@ -630,9 +633,9 @@ ExecuteRegExp(JSContext *cx, Native native, unsigned argc, Value *vp)
     /* Step 11 (with sticky extension). */
     if (re->global() || (!args.rval().isNull() && re->sticky())) {
         if (args.rval().isNull())
-            reobj.zeroLastIndex();
+            reobj->zeroLastIndex();
         else
-            reobj.setLastIndex(lastIndexInt);
+            reobj->setLastIndex(lastIndexInt);
     }
 
     return true;

@@ -442,9 +442,24 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createLoadEvent(String uri) {
+    public static GeckoEvent createURILoadEvent(String uri) {
         GeckoEvent event = new GeckoEvent(LOAD_URI);
         event.mCharacters = uri;
+        event.mCharactersExtra = "";
+        return event;
+    }
+
+    public static GeckoEvent createWebappLoadEvent(String uri) {
+        GeckoEvent event = new GeckoEvent(LOAD_URI);
+        event.mCharacters = uri;
+        event.mCharactersExtra = "-webapp";
+        return event;
+    }
+
+    public static GeckoEvent createBookmarkLoadEvent(String uri) {
+        GeckoEvent event = new GeckoEvent(LOAD_URI);
+        event.mCharacters = uri;
+        event.mCharactersExtra = "-bookmark";
         return event;
     }
 

@@ -490,7 +490,7 @@ nsSVGForeignObjectFrame::NotifySVGChanged(PRUint32 aFlags)
   }
 }
 
-gfxRect
+SVGBBox
 nsSVGForeignObjectFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                              PRUint32 aFlags)
 {
@@ -505,7 +505,7 @@ nsSVGForeignObjectFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 
   if (aToBBoxUserspace.IsSingular()) {
     // XXX ReportToConsole
-    return gfxRect(0.0, 0.0, 0.0, 0.0);
+    return SVGBBox();
   }
   return aToBBoxUserspace.TransformBounds(gfxRect(0.0, 0.0, w, h));
 }

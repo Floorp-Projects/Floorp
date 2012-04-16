@@ -63,6 +63,7 @@ DIRS += \
   base \
   generic \
   html \
+  jsat \
   xpcom \
   xforms \
   $(null)

@@ -53,17 +53,17 @@ namespace js {
 
 class RopeBuilder {
     JSContext *cx;
-    JSString *res;
+    RootedVarString res;
 
     RopeBuilder(const RopeBuilder &other) MOZ_DELETE;
     void operator=(const RopeBuilder &other) MOZ_DELETE;
 
   public:
     RopeBuilder(JSContext *cx)
-      : cx(cx), res(cx->runtime->emptyString)
+      : cx(cx), res(cx, cx->runtime->emptyString)
     {}
 
-    inline bool append(JSString *str) {
+    inline bool append(HandleString str) {
         res = js_ConcatStrings(cx, res, str);
         return !!res;
     }

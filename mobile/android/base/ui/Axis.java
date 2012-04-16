@@ -38,6 +38,9 @@
 
 package org.mozilla.gecko.ui;
 
+import java.util.Map;
+import android.util.Log;
+import org.json.JSONArray;
 import org.mozilla.gecko.FloatUtils;
 
 /**
@@ -46,26 +49,74 @@ import org.mozilla.gecko.FloatUtils;
  * like displacement, velocity, viewport dimensions, etc. pertaining to
  * a particular axis.
  */
-abstract class Axis {
+public abstract class Axis {
+    private static final String LOGTAG = "GeckoAxis";
+
+    private static final String PREF_SCROLLING_FRICTION_SLOW = "ui.scrolling.friction_slow";
+    private static final String PREF_SCROLLING_FRICTION_FAST = "ui.scrolling.friction_fast";
+    private static final String PREF_SCROLLING_VELOCITY_THRESHOLD = "ui.scrolling.velocity_threshold";
+    private static final String PREF_SCROLLING_MAX_EVENT_ACCELERATION = "ui.scrolling.max_event_acceleration";
+    private static final String PREF_SCROLLING_OVERSCROLL_DECEL_RATE = "ui.scrolling.overscroll_decel_rate";
+    private static final String PREF_SCROLLING_OVERSCROLL_SNAP_LIMIT = "ui.scrolling.overscroll_snap_limit";
+    private static final String PREF_SCROLLING_MIN_SCROLLABLE_DISTANCE = "ui.scrolling.min_scrollable_distance";
+
     // This fraction of velocity remains after every animation frame when the velocity is low.
-    private static final float FRICTION_SLOW = 0.85f;
+    private static float FRICTION_SLOW;
     // This fraction of velocity remains after every animation frame when the velocity is high.
-    private static final float FRICTION_FAST = 0.97f;
+    private static float FRICTION_FAST;
     // Below this velocity (in pixels per frame), the friction starts increasing from FRICTION_FAST
     // to FRICTION_SLOW.
-    private static final float VELOCITY_THRESHOLD = 10.0f;
+    private static float VELOCITY_THRESHOLD;
     // The maximum velocity change factor between events, per ms, in %.
     // Direction changes are excluded.
-    private static final float MAX_EVENT_ACCELERATION = 0.012f;
+    private static float MAX_EVENT_ACCELERATION;
 
     // The rate of deceleration when the surface has overscrolled.
-    private static final float OVERSCROLL_DECEL_RATE = 0.04f;
+    private static float OVERSCROLL_DECEL_RATE;
     // The percentage of the surface which can be overscrolled before it must snap back.
-    private static final float SNAP_LIMIT = 0.3f;
+    private static float SNAP_LIMIT;
 
     // The minimum amount of space that must be present for an axis to be considered scrollable,
     // in pixels.
-    private static final float MIN_SCROLLABLE_DISTANCE = 0.5f;
+    private static float MIN_SCROLLABLE_DISTANCE;
+
+    private static float getFloatPref(Map<String, Integer> prefs, String prefName, int defaultValue) {
+        Integer value = (prefs == null ? null : prefs.get(prefName));
+        return (float)(value == null || value < 0 ? defaultValue : value) / 1000f;
+    }
+
+    private static int getIntPref(Map<String, Integer> prefs, String prefName, int defaultValue) {
+        Integer value = (prefs == null ? null : prefs.get(prefName));
+        return (value == null || value < 0 ? defaultValue : value);
+    }
+
+    public static void addPrefNames(JSONArray prefs) {
+        prefs.put(PREF_SCROLLING_FRICTION_FAST);
+        prefs.put(PREF_SCROLLING_FRICTION_SLOW);
+        prefs.put(PREF_SCROLLING_VELOCITY_THRESHOLD);
+        prefs.put(PREF_SCROLLING_MAX_EVENT_ACCELERATION);
+        prefs.put(PREF_SCROLLING_OVERSCROLL_DECEL_RATE);
+        prefs.put(PREF_SCROLLING_OVERSCROLL_SNAP_LIMIT);
+        prefs.put(PREF_SCROLLING_MIN_SCROLLABLE_DISTANCE);
+    }
+
+    public static void setPrefs(Map<String, Integer> prefs) {
+        FRICTION_SLOW = getFloatPref(prefs, PREF_SCROLLING_FRICTION_SLOW, 850);
+        FRICTION_FAST = getFloatPref(prefs, PREF_SCROLLING_FRICTION_FAST, 970);
+        VELOCITY_THRESHOLD = getIntPref(prefs, PREF_SCROLLING_VELOCITY_THRESHOLD, 10);
+        MAX_EVENT_ACCELERATION = getFloatPref(prefs, PREF_SCROLLING_MAX_EVENT_ACCELERATION, 12);
+        OVERSCROLL_DECEL_RATE = getFloatPref(prefs, PREF_SCROLLING_OVERSCROLL_DECEL_RATE, 40);
+        SNAP_LIMIT = getFloatPref(prefs, PREF_SCROLLING_OVERSCROLL_SNAP_LIMIT, 300);
+        MIN_SCROLLABLE_DISTANCE = getFloatPref(prefs, PREF_SCROLLING_MIN_SCROLLABLE_DISTANCE, 500);
+        Log.i(LOGTAG, "Prefs: " + FRICTION_SLOW + "," + FRICTION_FAST + "," + VELOCITY_THRESHOLD + ","
+                + MAX_EVENT_ACCELERATION + "," + OVERSCROLL_DECEL_RATE + "," + SNAP_LIMIT + "," + MIN_SCROLLABLE_DISTANCE);
+    }
+
+    static {
+        // set the scrolling parameters to default values on startup
+        setPrefs(null);
+    }
+
     // The number of milliseconds per frame assuming 60 fps
     private static final float MS_PER_FRAME = 1000.0f / 60.0f;
 

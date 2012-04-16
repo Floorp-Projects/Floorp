@@ -71,29 +71,6 @@ class txDouble
 {
 public:
     /**
-     * Useful constants
-     */
-    static const dpun NaN;
-    static const dpun POSITIVE_INFINITY;
-    static const dpun NEGATIVE_INFINITY;
-
-    /**
-     * Determines whether the given double represents positive or negative
-     * inifinity.
-     */
-    static bool isInfinite(double aDbl);
-
-    /**
-     * Determines whether the given double is NaN.
-     */
-    static bool isNaN(double aDbl);
-
-    /**
-     * Determines whether the given double is negative.
-     */
-    static bool isNeg(double aDbl);
-
-    /**
      * Converts the value of the given double to a string, and appends
      * the result to the destination string.
      */

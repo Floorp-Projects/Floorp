@@ -7285,7 +7285,7 @@ var gPluginHandler = {
     };
     let options = { dismissed: true };
     PopupNotifications.show(aBrowser, "click-to-play-plugins",
-                            messageString, "addons-notification-icon",
+                            messageString, "plugins-notification-icon",
                             action, null, options);
   },
 

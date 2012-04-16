@@ -219,7 +219,8 @@ ShShaderType FindShaderType(const char* fileName)
     if (ext && strcmp(ext, ".sl") == 0)
         for (; ext > fileName && ext[0] != '.'; ext--);
 
-    if (ext = strrchr(fileName, '.')) {
+    ext = strrchr(fileName, '.');
+    if (ext) {
         if (strncmp(ext, ".frag", 4) == 0) return SH_FRAGMENT_SHADER;
         if (strncmp(ext, ".vert", 4) == 0) return SH_VERTEX_SHADER;
     }

@@ -55,6 +55,7 @@
 
 #include "nsContentUtils.h"
 
+#include "mozilla/StandardInteger.h"
 #include "mozilla/Util.h"
 
 bool
@@ -968,7 +969,7 @@ XPCWrappedNative::~XPCWrappedNative()
     Destroy();
 }
 
-static const PRWord WRAPPER_WORD_POISON = 0xa8a8a8a8;
+static const intptr_t WRAPPER_WORD_POISON = 0xa8a8a8a8;
 
 void
 XPCWrappedNative::Destroy()

@@ -54,6 +54,7 @@ random-if(d2d) == filter-filterRes-low-01.svg pass.svg
 == filter-inner-svg-02.svg pass.svg
 == filter-inner-svg-03.svg pass.svg
 fails == filter-marked-line-01.svg pass.svg # bug 477704
+== filter-kernelUnitLength-01.svg filter-kernelUnitLength-01-ref.svg
 == filter-marked-line-02.svg pass.svg
 == filter-marked-line-03.svg pass.svg
 == filter-marked-line-04.svg pass.svg

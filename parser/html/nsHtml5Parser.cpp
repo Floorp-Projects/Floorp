@@ -384,22 +384,14 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     // prevSearchBuf is the previous buffer before the keyholder or null if
     // there isn't one.
   } else {
-    // We have a first-level write in the document.open() case. We insert
-    // before mLastBuffer. We need to put a marker there, because otherwise
-    // additional document.writes from nested event loops would insert in the
-    // wrong place. Sigh.
-    firstLevelMarker = new nsHtml5OwningUTF16Buffer((void*)nsnull);
-    if (mFirstBuffer == mLastBuffer) {
-      firstLevelMarker->next = mLastBuffer;
-      mFirstBuffer = firstLevelMarker;
-    } else {
-      prevSearchBuf = mFirstBuffer;
-      while (prevSearchBuf->next != mLastBuffer) {
-        prevSearchBuf = prevSearchBuf->next;
-      }
-      firstLevelMarker->next = mLastBuffer;
-      prevSearchBuf->next = firstLevelMarker;
-    }
+    // We have a first-level write in the document.open() case. We insert before
+    // mLastBuffer, effectively, by making mLastBuffer be a new sentinel object
+    // and redesignating the previous mLastBuffer as our firstLevelMarker.  We
+    // need to put a marker there, because otherwise additional document.writes
+    // from nested event loops would insert in the wrong place. Sigh.
+    mLastBuffer->next = new nsHtml5OwningUTF16Buffer((void*)nsnull);
+    firstLevelMarker = mLastBuffer;
+    mLastBuffer = mLastBuffer->next;
   }
 
   nsHtml5DependentUTF16Buffer stackBuffer(aSourceBuffer);

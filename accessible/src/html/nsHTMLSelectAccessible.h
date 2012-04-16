@@ -39,7 +39,7 @@
 #ifndef __nsHTMLSelectAccessible_h__
 #define __nsHTMLSelectAccessible_h__
 
-#include "nsHTMLFormControlAccessible.h"
+#include "HTMLFormControlAccessible.h"
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMNode.h"

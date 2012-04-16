@@ -26,6 +26,9 @@
 #include "esUtil.h"
 #include "esUtil_win.h"
 
+#if defined(_MSC_VER)
+#pragma warning(disable: 4204) // nonstandard extension used : non-constant aggregate initializer
+#endif
 
 ///
 //  Extensions
