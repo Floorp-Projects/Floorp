@@ -133,6 +133,7 @@ typedef FrameMetrics::ViewID ViewID;
 
 static PRUint32 sFontSizeInflationEmPerLine;
 static PRUint32 sFontSizeInflationMinTwips;
+/* static */ PRUint32 nsLayoutUtils::sFontSizeInflationLineThreshold;
 
 static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
 
@@ -4452,6 +4453,8 @@ nsLayoutUtils::Initialize()
                                         "font.size.inflation.emPerLine");
   mozilla::Preferences::AddUintVarCache(&sFontSizeInflationMinTwips,
                                         "font.size.inflation.minTwips");
+  mozilla::Preferences::AddUintVarCache(&sFontSizeInflationLineThreshold,
+                                        "font.size.inflation.lineThreshold");
 }
 
 /* static */
