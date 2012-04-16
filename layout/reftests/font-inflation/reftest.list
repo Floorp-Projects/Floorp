@@ -8,8 +8,8 @@ test-pref(font.size.inflation.emPerLine,15) == bullet-2.html bullet-2-ref.html
 test-pref(font.size.inflation.emPerLine,15) == input-text-1-height.html input-text-1-height-ref.html
 test-pref(font.size.inflation.emPerLine,15) == input-text-1-noheight.html input-text-1-noheight-ref.html
 test-pref(font.size.inflation.emPerLine,15) == input-text-2-height.html input-text-2-height-ref.html
-test-pref(font.size.inflation.emPerLine,15) == input-text-2-height.html input-text-2-height-ref.html
-test-pref(font.size.inflation.emPerLine,15) == input-text-3-noheight.html input-text-3-noheight-ref.html
+# test-pref(font.size.inflation.emPerLine,15) == input-text-2-noheight.html input-text-2-noheight-ref.html
+test-pref(font.size.inflation.emPerLine,15) == input-text-3-height.html input-text-3-height-ref.html
 test-pref(font.size.inflation.emPerLine,15) == input-text-3-noheight.html input-text-3-noheight-ref.html
 test-pref(font.size.inflation.emPerLine,15) == textarea-1.html textarea-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) == textarea-2.html textarea-2-ref.html
