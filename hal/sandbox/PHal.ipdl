@@ -120,6 +120,9 @@ parent:
     sync GetScreenEnabled() returns (bool enabled);
     SetScreenEnabled(bool enabled);
 
+    sync GetCpuSleepAllowed() returns (bool allowed);
+    SetCpuSleepAllowed(bool allowed);
+
     sync GetScreenBrightness() returns (double brightness);
     SetScreenBrightness(double brightness);
     
