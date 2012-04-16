@@ -1852,26 +1852,24 @@ struct NS_STACK_CLASS ExceptionArgParser
 
     // Parse the constructor arguments into the above |eFoo| parameter values.
     bool parse(uint32_t argc, JS::Value *argv) {
-        // all params are optional - grab any passed in
-        switch (argc) {
-            default:    // more than 4 - ignore extra
-                // ...fall through...
-            case 4:
-                if (!parseData(argv[3]))
-                    return false;
-            case 3:
-                if (!parseStack(argv[2]))
-                    return false;
-            case 2:
-                if (!parseResult(argv[1]))
-                    return false;
-            case 1:
-                if (!parseMessage(argv[0]))
-                    return false;
-            case 0: // this case required so that 'default' does not include zero.
-                ;   // -- do nothing --
-        }
-
+        /*
+         * The Components.Exception takes a series of arguments, all of them
+         * optional:
+         *
+         * Argument 0: Exception message (defaults to 'exception').
+         * Argument 1: Result code (defaults to NS_ERROR_FAILURE).
+         * Argument 2: Stack (defaults to the current stack, which we trigger
+         *                    by leaving this NULL in the parser).
+         * Argument 3: Optional user data (defaults to NULL).
+         */
+        if (argc > 0 && !parseMessage(argv[0]))
+            return false;
+        if (argc > 1 && !parseResult(argv[1]))
+            return false;
+        if (argc > 2 && !parseStack(argv[2]))
+            return false;
+        if (argc > 3 && !parseData(argv[3]))
+            return false;
         return true;
     }
 
