@@ -82,7 +82,8 @@ public abstract class Layer {
 
         if (mTransactionLock.tryLock()) {
             try {
-                return performUpdates(context);
+                performUpdates(context);
+                return true;
             } finally {
                 mTransactionLock.unlock();
             }
@@ -170,7 +171,7 @@ public abstract class Layer {
      * superclass implementation. Returns false if there is still work to be done after this
      * update is complete.
      */
-    protected boolean performUpdates(RenderContext context) {
+    protected void performUpdates(RenderContext context) {
         if (mNewPosition != null) {
             mPosition = mNewPosition;
             mNewPosition = null;
@@ -179,8 +180,6 @@ public abstract class Layer {
             mResolution = mNewResolution;
             mNewResolution = 0.0f;
         }
-
-        return true;
     }
 
     public static class RenderContext {
