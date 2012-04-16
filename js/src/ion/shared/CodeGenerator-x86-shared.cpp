@@ -629,10 +629,12 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
     masm.cdq();
     masm.idiv(rhs);
 
-    // If the remainder is > 0, bailout since this must be a double.
-    masm.testl(remainder, remainder);
-    if (!bailoutIf(Assembler::NonZero, ins->snapshot()))
-        return false;
+    if (!mir->isTruncated()) {
+        // If the remainder is > 0, bailout since this must be a double.
+        masm.testl(remainder, remainder);
+        if (!bailoutIf(Assembler::NonZero, ins->snapshot()))
+            return false;
+    }
 
     return true;
 }
