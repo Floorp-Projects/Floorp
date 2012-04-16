@@ -283,7 +283,7 @@ MarkIdInternal(JSTracer *trc, jsid *id)
 }
 
 void
-MarkId(JSTracer *trc, HeapId *id, const char *name)
+MarkId(JSTracer *trc, EncapsulatedId *id, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
     MarkIdInternal(trc, id->unsafeGet());

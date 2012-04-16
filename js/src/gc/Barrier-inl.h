@@ -313,30 +313,8 @@ HeapSlot::post(JSCompartment *comp, JSObject *owner, uint32_t slot)
     HeapSlot::writeBarrierPost(comp, owner, slot);
 }
 
-inline
-HeapId::HeapId(jsid id)
-    : value(id)
-{
-    JS_ASSERT(!IsPoisonedId(id));
-    post();
-}
-
-inline
-HeapId::~HeapId()
-{
-    pre();
-}
-
 inline void
-HeapId::init(jsid id)
-{
-    JS_ASSERT(!IsPoisonedId(id));
-    value = id;
-    post();
-}
-
-inline void
-HeapId::pre()
+EncapsulatedId::pre()
 {
 #ifdef JSGC_INCREMENTAL
     if (JSID_IS_OBJECT(value)) {
@@ -355,6 +333,54 @@ HeapId::pre()
         }
     }
 #endif
+}
+
+inline
+RelocatableId::~RelocatableId()
+{
+    pre();
+}
+
+inline RelocatableId &
+RelocatableId::operator=(jsid id)
+{
+    if (id != value)
+        pre();
+    JS_ASSERT(!IsPoisonedId(id));
+    value = id;
+    return *this;
+}
+
+inline RelocatableId &
+RelocatableId::operator=(const RelocatableId &v)
+{
+    if (v.value != value)
+        pre();
+    JS_ASSERT(!IsPoisonedId(v.value));
+    value = v.value;
+    return *this;
+}
+
+inline
+HeapId::HeapId(jsid id)
+    : EncapsulatedId(id)
+{
+    JS_ASSERT(!IsPoisonedId(id));
+    post();
+}
+
+inline
+HeapId::~HeapId()
+{
+    pre();
+}
+
+inline void
+HeapId::init(jsid id)
+{
+    JS_ASSERT(!IsPoisonedId(id));
+    value = id;
+    post();
 }
 
 inline void
