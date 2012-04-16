@@ -82,7 +82,7 @@
 #include "nsSVGEffects.h"
 #include "nsSVGIntegrationUtils.h"
 #include "gfxDrawable.h"
-
+#include "sampler.h"
 #include "nsCSSRenderingBorders.h"
 
 using namespace mozilla;
@@ -501,6 +501,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
                             nsStyleContext* aStyleContext,
                             PRIntn aSkipSides)
 {
+  SAMPLE_LABEL("nsCSSRendering", "PaintBorder");
   nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
   const nsStyleBorder *styleBorder = aStyleContext->GetStyleBorder();
   // Don't check RelevantLinkVisited here, since we want to take the
@@ -1458,6 +1459,7 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
                                 PRUint32 aFlags,
                                 nsRect* aBGClipRect)
 {
+  SAMPLE_LABEL("nsCSSRendering", "PaintBackground");
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
 
@@ -1966,6 +1968,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
                               const nsRect& aOneCellArea,
                               const nsRect& aFillArea)
 {
+  SAMPLE_LABEL("nsCSSRendering", "PaintGradient");
   if (aOneCellArea.IsEmpty())
     return;
 
