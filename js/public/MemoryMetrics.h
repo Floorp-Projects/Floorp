@@ -114,13 +114,15 @@ struct RuntimeStats
       , runtimeStackCommitted(0)
       , runtimeGCMarker(0)
       , gcHeapChunkTotal(0)
+      , gcHeapCommitted(0)
+      , gcHeapUnused(0)
       , gcHeapChunkCleanUnused(0)
       , gcHeapChunkDirtyUnused(0)
       , gcHeapChunkCleanDecommitted(0)
       , gcHeapChunkDirtyDecommitted(0)
       , gcHeapArenaUnused(0)
       , gcHeapChunkAdmin(0)
-      , gcHeapUnusedPercentage(0)
+      , gcHeapFragmentationPercentage(0)
       , totalObjects(0)
       , totalShapes(0)
       , totalScripts(0)
@@ -144,13 +146,15 @@ struct RuntimeStats
     size_t runtimeStackCommitted;
     size_t runtimeGCMarker;
     size_t gcHeapChunkTotal;
+    size_t gcHeapCommitted;
+    size_t gcHeapUnused;
     size_t gcHeapChunkCleanUnused;
     size_t gcHeapChunkDirtyUnused;
     size_t gcHeapChunkCleanDecommitted;
     size_t gcHeapChunkDirtyDecommitted;
     size_t gcHeapArenaUnused;
     size_t gcHeapChunkAdmin;
-    size_t gcHeapUnusedPercentage;
+    size_t gcHeapFragmentationPercentage;
     size_t totalObjects;
     size_t totalShapes;
     size_t totalScripts;
