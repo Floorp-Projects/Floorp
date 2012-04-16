@@ -79,6 +79,8 @@ struct Parser : private AutoGCRooter
     ParseNodeAllocator  allocator;
     uint32_t            functionCount;  /* number of functions in current unit */
     ObjectBox           *traceListHead; /* list of parsed object for GC tracing */
+
+    /* This is a TreeContext or a BytecodeEmitter; see the comment on TCF_COMPILING. */
     TreeContext         *tc;            /* innermost tree context (stack-allocated) */
 
     /* Root atoms and objects allocated for the parsed tree. */
