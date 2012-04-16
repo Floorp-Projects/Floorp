@@ -15,7 +15,7 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineTh
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == input-text-1-height.html input-text-1-height-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == input-text-1-noheight.html input-text-1-noheight-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == input-text-2-height.html input-text-2-height-ref.html
-# test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == input-text-2-noheight.html input-text-2-noheight-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == input-text-2-noheight.html input-text-2-noheight-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == input-text-3-height.html input-text-3-height-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == input-text-3-noheight.html input-text-3-noheight-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == textarea-1.html textarea-1-ref.html
