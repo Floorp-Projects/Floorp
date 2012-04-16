@@ -45,6 +45,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Util.h"
+#include "mozilla/Preferences.h"
 
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
@@ -1206,6 +1207,7 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
     MOZ_ASSERT_IF(strcmp(clasp->name, "Sandbox") &&
                   strcmp(clasp->name, "nsXBLPrototypeScript compilation scope") &&
                   strcmp(clasp->name, "nsXULPrototypeScript compilation scope") &&
+                  mozilla::Preferences::GetBool("javascript.options.typeinference") &&
                   (ssm = XPCWrapper::GetSecurityManager()) &&
                   NS_SUCCEEDED(ssm->IsSystemPrincipal(principal, &isSystem.value)) &&
                   !isSystem.value,
