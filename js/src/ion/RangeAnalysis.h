@@ -18,7 +18,9 @@ class RangeAnalysis
 
   public:
     RangeAnalysis(MIRGraph &graph);
-    bool analyze();
+    bool analyzeEarly();
+    bool analyzeLate();
+    static bool AllUsesTruncate(MInstruction *m);
 };
 
 
