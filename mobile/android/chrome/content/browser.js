@@ -2985,9 +2985,7 @@ var FormAssistant = {
         if (!this._currentInputElement)
           break;
 
-        // Remove focus from the textbox to avoid some bad IME interactions
-        this._currentInputElement.blur();
-        this._currentInputElement.value = aData;
+        this._currentInputElement.QueryInterface(Ci.nsIDOMNSEditableElement).setUserInput(aData);
 
         let event = this._currentInputElement.ownerDocument.createEvent("Events");
         event.initEvent("DOMAutoComplete", true, true);
