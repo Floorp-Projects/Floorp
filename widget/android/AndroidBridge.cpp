@@ -422,13 +422,13 @@ getHandlersFromStringArray(JNIEnv *aJNIEnv, jobjectArray jArr, jsize aLen,
     nsString empty = EmptyString();
     for (jsize i = 0; i < aLen; i+=4) {
         nsJNIString name( 
-            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i)));
+            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i)), aJNIEnv);
         nsJNIString isDefault(
-            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i + 1)));
+            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i + 1)), aJNIEnv);
         nsJNIString packageName( 
-            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i + 2)));
+            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i + 2)), aJNIEnv);
         nsJNIString className( 
-            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i + 3)));
+            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i + 3)), aJNIEnv);
         nsIHandlerApp* app = nsOSHelperAppService::
             CreateAndroidHandlerApp(name, className, packageName,
                                     className, aMimeType, aAction);
@@ -561,7 +561,7 @@ AndroidBridge::GetMimeTypeFromExtensions(const nsACString& aFileExt, nsCString& 
         env->CallStaticObjectMethod(mGeckoAppShellClass,
                                         jGetMimeTypeFromExtensions,
                                         jstrExt));
-    nsJNIString jniStr(jstrType);
+    nsJNIString jniStr(jstrType, env);
     aMimeType.Assign(NS_ConvertUTF16toUTF8(jniStr.get()));
 }
 
@@ -581,7 +581,7 @@ AndroidBridge::GetExtensionFromMimeType(const nsACString& aMimeType, nsACString&
         env->CallStaticObjectMethod(mGeckoAppShellClass,
                                         jGetExtensionFromMimeType,
                                         jstrType));
-    nsJNIString jniStr(jstrExt);
+    nsJNIString jniStr(jstrExt, env);
     aFileExt.Assign(NS_ConvertUTF16toUTF8(jniStr.get()));
 }
 
@@ -612,7 +612,7 @@ AndroidBridge::GetClipboardText(nsAString& aText)
                                                     jGetClipboardText));
     if (!jstrType)
         return false;
-    nsJNIString jniStr(jstrType);
+    nsJNIString jniStr(jstrType, env);
     aText.Assign(jniStr);
     return true;
 }
@@ -752,7 +752,7 @@ AndroidBridge::ShowFilePickerForExtensions(nsAString& aFilePath, const nsAString
     jstring jstr =  static_cast<jstring>(env->CallStaticObjectMethod(
                                          mGeckoAppShellClass,
                                          jShowFilePickerForExtensions, jstrFilers));
-    aFilePath.Assign(nsJNIString(jstr));
+    aFilePath.Assign(nsJNIString(jstr, env));
 }
 
 void
@@ -770,7 +770,7 @@ AndroidBridge::ShowFilePickerForMimeType(nsAString& aFilePath, const nsAString& 
     jstring jstr =  static_cast<jstring>(env->CallStaticObjectMethod(
                                              mGeckoAppShellClass,
                                              jShowFilePickerForMimeType, jstrFilers));
-    aFilePath.Assign(nsJNIString(jstr));
+    aFilePath.Assign(nsJNIString(jstr, env));
 }
 
 void
@@ -1165,7 +1165,7 @@ AndroidBridge::GetStaticStringField(const char *className, const char *fieldName
     if (!jstr)
         return false;
 
-    result.Assign(nsJNIString(jstr));
+    result.Assign(nsJNIString(jstr, env));
     return true;
 }
 
