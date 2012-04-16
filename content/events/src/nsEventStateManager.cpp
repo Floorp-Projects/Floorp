@@ -1067,9 +1067,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   // Store last known screenPoint and clientPoint so pointer lock
   // can use these values as constants.
   if (NS_IS_TRUSTED_EVENT(aEvent) &&
-      (NS_IS_MOUSE_EVENT_STRUCT(aEvent) &&
+      ((NS_IS_MOUSE_EVENT_STRUCT(aEvent) &&
        IsMouseEventReal(aEvent)) ||
-       aEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
+       aEvent->eventStructType == NS_MOUSE_SCROLL_EVENT)) {
     if (!sIsPointerLocked) {
       sLastScreenPoint = nsDOMUIEvent::CalculateScreenPoint(aPresContext, aEvent);
       sLastClientPoint = nsDOMUIEvent::CalculateClientPoint(aPresContext, aEvent, nsnull);
