@@ -140,7 +140,7 @@
   <string name="bookmarkdefaults_url_aboutfirefox">about:firefox</string>
 
   <string name="bookmarkdefaults_title_addons">@bookmarks_addons@</string>
-  <string name="bookmarkdefaults_url_addons">https://addons.mozilla.org/@AB_CD@/mobile/</string>
+  <string name="bookmarkdefaults_url_addons">https://addons.mozilla.org/@AB_CD@/android/</string>
 
   <string name="bookmarkdefaults_title_support">@bookmarks_support@</string>
   <string name="bookmarkdefaults_url_support">http://support.mozilla.org/@AB_CD@/mobile</string>
