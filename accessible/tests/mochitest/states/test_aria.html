@@ -163,6 +163,12 @@
       testStates("aria_hslider", 0, EXT_STATE_HORIZONTAL);
       testStates("aria_vslider", 0, EXT_STATE_VERTICAL);
 
+      // indeterminate ARIA progressbars (no aria-valuenow or aria-valuetext attribute)
+      // should expose mixed state
+      testStates("aria_progressbar", STATE_MIXED);
+      testStates("aria_progressbar_valuenow", 0, 0, STATE_MIXED);
+      testStates("aria_progressbar_valuetext", 0, 0, STATE_MIXED);
+
       SimpleTest.finish();
     }
 
@@ -213,6 +219,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=457226"
      title="Mochitests for ARIA states">
     Mozilla Bug 457226
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=740851"
+     title="ARIA undetermined progressmeters should expose mixed state">
+    Mozilla Bug 740851
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -313,5 +324,10 @@
   <div id="aria_slider" role="slider">slider</div>
   <div id="aria_hslider" role="slider" aria-orientation="horizontal">horizontal slider</div>
   <div id="aria_vslider" role="slider" aria-orientation="vertical">vertical slider</div>
+  
+  <!-- indeterminate ARIA progressbars should expose mixed state -->
+  <div id="aria_progressbar" role="progressbar"></div>
+  <div id="aria_progressbar_valuenow" role="progressbar" aria-valuenow="1"></div>
+  <div id="aria_progressbar_valuetext" role="progressbar" aria-valuetext="value"></div>
 </body>
 </html>

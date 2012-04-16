@@ -209,6 +209,8 @@ xpc_UnmarkSkippableJSHolders();
 NS_EXPORT_(void)
 xpc_ActivateDebugMode();
 
+class nsIMemoryMultiReporterCallback;
+
 namespace xpc {
 
 // If these functions return false, then an exception will be set on cx.
@@ -228,13 +230,27 @@ nsIPrincipal *GetCompartmentPrincipal(JSCompartment *compartment);
 #ifdef DEBUG
 void DumpJSHeap(FILE* file);
 #endif
-} // namespace xpc
 
-class nsIMemoryMultiReporterCallback;
-
-namespace mozilla {
-namespace xpconnect {
-namespace memory {
+/**
+ * Define quick stubs on the given object, @a proto.
+ *
+ * @param cx
+ *     A context.  Requires request.
+ * @param proto
+ *     The (newly created) prototype object for a DOM class.  The JS half
+ *     of an XPCWrappedNativeProto.
+ * @param flags
+ *     Property flags for the quick stub properties--should be either
+ *     JSPROP_ENUMERATE or 0.
+ * @param interfaceCount
+ *     The number of interfaces the class implements.
+ * @param interfaceArray
+ *     The interfaces the class implements; interfaceArray and
+ *     interfaceCount are like what nsIClassInfo.getInterfaces returns.
+ */
+bool
+DOM_DefineQuickStubs(JSContext *cx, JSObject *proto, PRUint32 flags,
+                     PRUint32 interfaceCount, const nsIID **interfaceArray);
 
 // This reports all the stats in |rtStats| that belong in the "explicit" tree,
 // (which isn't all of them).
@@ -244,9 +260,49 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                                  nsIMemoryMultiReporterCallback *cb,
                                  nsISupports *closure);
 
-} // namespace memory
-} // namespace xpconnect
+/**
+ * Convert a jsval to PRInt64. Return true on success.
+ */
+inline bool
+ValueToInt64(JSContext *cx, JS::Value v, int64_t *result)
+{
+    if (JSVAL_IS_INT(v)) {
+        int32_t intval;
+        if (!JS_ValueToECMAInt32(cx, v, &intval))
+            return false;
+        *result = static_cast<int64_t>(intval);
+    } else {
+        double doubleval;
+        if (!JS_ValueToNumber(cx, v, &doubleval))
+            return false;
+        *result = static_cast<int64_t>(doubleval);
+    }
+    return true;
+}
 
+/**
+ * Convert a jsval to uint64_t. Return true on success.
+ */
+inline bool
+ValueToUint64(JSContext *cx, JS::Value v, uint64_t *result)
+{
+    if (JSVAL_IS_INT(v)) {
+        uint32_t intval;
+        if (!JS_ValueToECMAUint32(cx, v, &intval))
+            return false;
+        *result = static_cast<uint64_t>(intval);
+    } else {
+        double doubleval;
+        if (!JS_ValueToNumber(cx, v, &doubleval))
+            return false;
+        *result = static_cast<uint64_t>(doubleval);
+    }
+    return true;
+}
+
+} // namespace xpc
+
+namespace mozilla {
 namespace dom {
 namespace binding {
 

@@ -2107,8 +2107,8 @@ let GroupItems = {
   // Function: getAppTabFavIconUrl
   // Gets the fav icon url for app tab.
   getAppTabFavIconUrl: function GroupItems_getAppTabFavIconUrl(xulTab, callback) {
-    UI.getFavIconUrlForTab(xulTab, function GroupItems_getAppTabFavIconUrl_getFavIconUrlForTab(iconUrl) {
-      callback(iconUrl || gFavIconService.defaultFavicon.spec);
+    FavIcons.getFavIconUrlForTab(xulTab, function GroupItems_getAppTabFavIconUrl_getFavIconUrlForTab(iconUrl) {
+      callback(iconUrl || FavIcons.defaultFavicon);
     });
   },
 

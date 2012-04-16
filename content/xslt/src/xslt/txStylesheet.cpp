@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/FloatingPoint.h"
+
 #include "txStylesheet.h"
 #include "txExpr.h"
 #include "txXSLTPatterns.h"
@@ -442,9 +444,9 @@ txStylesheet::addTemplate(txTemplateItem* aTemplate,
     PRUint32 unionPos = 1; // only used when unionPattern is set
     while (simple) {
         double priority = aTemplate->mPrio;
-        if (txDouble::isNaN(priority)) {
+        if (MOZ_DOUBLE_IS_NaN(priority)) {
             priority = simple->getDefaultPriority();
-            NS_ASSERTION(!txDouble::isNaN(priority),
+            NS_ASSERTION(!MOZ_DOUBLE_IS_NaN(priority),
                          "simple pattern without default priority");
         }
 

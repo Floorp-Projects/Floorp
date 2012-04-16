@@ -1,6 +1,6 @@
 This is the ANGLE project, from http://code.google.com/p/angleproject/
 
-Current revision: r963
+Current revision: r1042
 
 == Applied local patches ==
 
@@ -8,10 +8,9 @@ In this order:
   angle-renaming-debug.patch - rename debug.h to compilerdebug.h to avoid conflict in our makefiles
   angle-intrinsic-msvc2005.patch - work around a MSVC 2005 compile error
   angle-use-xmalloc.patch - see bug 680840. Can drop this patch whenever the new preprocessor lands.
-  angle-castrate-bug-241.patch - see bug 699033 / angle bug 241
   angle-enforce-readpixels-spec.patch - see bug 724476.
   angle-impl-read-bgra.patch - see bug 724476.
-  gfx/angle/angle-long-identifier-hash-spooky.patch - see bug 676071
+  angle-long-identifier-hash-spooky.patch - see bug 676071
 
 In addition to these patches, the Makefile.in files are ours, they're not present in upsteam ANGLE.
 

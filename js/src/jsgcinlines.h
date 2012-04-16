@@ -440,7 +440,7 @@ NewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
     JS_ASSERT(!cx->runtime->noGCOrAllocationCheck);
 
     /* For testing out of memory conditions */
-    JS_OOM_POSSIBLY_FAIL();
+    JS_OOM_POSSIBLY_FAIL_REPORT(cx);
 
 #ifdef JS_GC_ZEAL
     if (cx->runtime->needZealousGC())

@@ -388,6 +388,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/abouthome_sync_bg.9.png \
   res/drawable-hdpi/abouthome_sync_pressed_bg.9.png \
   res/drawable-hdpi/abouthome_thumbnail.png \
+  res/drawable-hdpi/address_bar_bg_shadow.png \
   res/drawable-hdpi/awesomebar_tab.9.png \
   res/drawable-hdpi/awesomebar_tab_pressed.9.png \
   res/drawable-hdpi/ic_addons_empty.png \
@@ -452,6 +453,7 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/abouthome_sync_bg.9.png \
   res/drawable-xhdpi-v11/abouthome_sync_pressed_bg.9.png \
   res/drawable-xhdpi-v11/abouthome_thumbnail.png \
+  res/drawable-xhdpi-v11/address_bar_bg_shadow.png \
   res/drawable-xhdpi-v11/awesomebar_tab.9.png \
   res/drawable-xhdpi-v11/awesomebar_tab_pressed.9.png \
   res/drawable-xhdpi-v11/ic_addons_empty.png \
@@ -552,7 +554,8 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/abouthome_sync_box.xml                 \
   mobile/android/base/resources/drawable/abouthome_topsites_bg_repeat.xml       \
   mobile/android/base/resources/drawable/address_bar_bg.xml                     \
-  mobile/android/base/resources/drawable/address_bar_bg_shadow.xml              \
+  mobile/android/base/resources/drawable/address_bar_bg_shadow.png              \
+  mobile/android/base/resources/drawable/address_bar_bg_shadow_repeat.xml       \
   mobile/android/base/resources/drawable/address_bar_url_default.xml            \
   mobile/android/base/resources/drawable/address_bar_url_pressed.xml            \
   mobile/android/base/resources/drawable/autocomplete_list_bg.9.png             \

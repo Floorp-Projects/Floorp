@@ -74,7 +74,7 @@ class RopeBuilder;
 }  /* namespace js */
 
 extern JSString * JS_FASTCALL
-js_ConcatStrings(JSContext *cx, JSString *s1, JSString *s2);
+js_ConcatStrings(JSContext *cx, js::HandleString s1, js::HandleString s2);
 
 extern JSString * JS_FASTCALL
 js_toLowerCase(JSContext *cx, JSString *str);

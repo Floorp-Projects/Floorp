@@ -47,10 +47,9 @@ class nsIDOMStorageObsolete;
 class nsIURI;
 class nsIPrincipal;
 
-// {BAFFCEB1-FD40-4ea9-8378-3509DD79204A}
-#define NS_PIDOMSTORAGE_IID                                 \
-  { 0xbaffceb1, 0xfd40, 0x4ea9,  \
-    { 0x83, 0x78, 0x35, 0x9, 0xdd, 0x79, 0x20, 0x4a } }
+#define NS_PIDOMSTORAGE_IID \
+{ 0x86dfe3c4, 0x4286, 0x4648, \
+  { 0xb2, 0x09, 0x55, 0x27, 0x50, 0x59, 0x26, 0xac } }
 
 class nsPIDOMStorage : public nsISupports
 {
@@ -76,10 +75,6 @@ public:
   virtual bool CanAccess(nsIPrincipal *aPrincipal) = 0;
 
   virtual nsDOMStorageType StorageType() = 0;
-
-  virtual void BroadcastChangeNotification(const nsSubstring &aKey,
-                                           const nsSubstring &aOldValue,
-                                           const nsSubstring &aNewValue) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMStorage, NS_PIDOMSTORAGE_IID)

@@ -40,6 +40,7 @@
 
 #include "nsXULListboxAccessible.h"
 
+#include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsDocAccessible.h"
@@ -239,14 +240,6 @@ nsXULListboxAccessible::NativeRole()
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULListboxAccessible. nsIAccessibleTable
-
-NS_IMETHODIMP
-nsXULListboxAccessible::GetSummary(nsAString &aSummary)
-{
-  aSummary.Truncate();
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsXULListboxAccessible::GetColumnCount(PRInt32 *aColumnsCout)

@@ -169,6 +169,7 @@
 #include "nsIEditingSession.h"
 
 #include "nsPIDOMWindow.h"
+#include "nsGlobalWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsIDOMDocument.h"
 #include "nsICachingChannel.h"
@@ -9725,7 +9726,12 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
             }
         }
 
-        mCurrentURI->Equals(newURI, &equalURIs);
+        if (mCurrentURI) {
+            mCurrentURI->Equals(newURI, &equalURIs);
+        }
+        else {
+            equalURIs = false;
+        }
 
     } // end of same-origin check
 
@@ -10855,10 +10861,6 @@ nsDocShell::EnsureScriptEnvironment()
     mInEnsureScriptEnv = true;
 #endif
 
-    nsCOMPtr<nsIDOMScriptObjectFactory> factory =
-        do_GetService(kDOMScriptObjectFactoryCID);
-    NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
-
     nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
     NS_ENSURE_TRUE(browserChrome, NS_ERROR_NOT_AVAILABLE);
 
@@ -10871,20 +10873,15 @@ nsDocShell::EnsureScriptEnvironment()
 
     // If our window is modal and we're not opened as chrome, make
     // this window a modal content window.
-    factory->NewScriptGlobalObject(mItemType == typeChrome,
-                                   isModalContentWindow,
-                                   getter_AddRefs(mScriptGlobal));
-    NS_ENSURE_TRUE(mScriptGlobal, NS_ERROR_FAILURE);
+    nsRefPtr<nsGlobalWindow> window =
+        NS_NewScriptGlobalObject(mItemType == typeChrome, isModalContentWindow);
+    MOZ_ASSERT(window);
+    mScriptGlobal = window;
 
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mScriptGlobal));
-    win->SetDocShell(static_cast<nsIDocShell *>(this));
+    window->SetDocShell(this);
 
     // Ensure the script object is set up to run script.
-    nsresult rv;
-    rv = mScriptGlobal->EnsureScriptEnvironment();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
+    return mScriptGlobal->EnsureScriptEnvironment();
 }
 
 

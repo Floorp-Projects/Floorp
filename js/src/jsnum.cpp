@@ -41,6 +41,14 @@
 /*
  * JS number type and wrapper class.
  */
+
+#include "mozilla/FloatingPoint.h"
+#include "mozilla/RangedPtr.h"
+
+#include "double-conversion.h"
+// Avoid warnings about ASSERT being defined by the assembler as well.
+#undef ASSERT
+
 #ifdef XP_OS2
 #define _PC_53  PC_53
 #define _MCW_EM MCW_EM
@@ -51,11 +59,6 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "mozilla/RangedPtr.h"
-#include "double-conversion.h"
-// Avoid warnings about ASSERT being defined by the assembler as well.
-#undef ASSERT
 
 #include "jstypes.h"
 #include "jsutil.h"
@@ -269,7 +272,7 @@ num_isNaN(JSContext *cx, unsigned argc, Value *vp)
     double x;
     if (!ToNumber(cx, vp[2], &x))
         return false;
-    vp->setBoolean(JSDOUBLE_IS_NaN(x));
+    vp->setBoolean(MOZ_DOUBLE_IS_NaN(x));
     return JS_TRUE;
 }
 
@@ -283,7 +286,7 @@ num_isFinite(JSContext *cx, unsigned argc, Value *vp)
     double x;
     if (!ToNumber(cx, vp[2], &x))
         return JS_FALSE;
-    vp->setBoolean(JSDOUBLE_IS_FINITE(x));
+    vp->setBoolean(MOZ_DOUBLE_IS_FINITE(x));
     return JS_TRUE;
 }
 
@@ -927,25 +930,25 @@ InitRuntimeNumberState(JSRuntime *rt)
 {
     FIX_FPU();
 
-    jsdpun u;
-    u.s.hi = JSDOUBLE_HI32_NAN;
-    u.s.lo = JSDOUBLE_LO32_NAN;
-    number_constants[NC_NaN].dval = js_NaN = u.d;
-    rt->NaNValue.setDouble(u.d);
+    double d;
 
-    u.s.hi = JSDOUBLE_HI32_EXPMASK;
-    u.s.lo = 0x00000000;
-    number_constants[NC_POSITIVE_INFINITY].dval = js_PositiveInfinity = u.d;
-    rt->positiveInfinityValue.setDouble(u.d);
+    /*
+     * Our NaN must be one particular canonical value, because we rely on NaN
+     * encoding for our value representation.  See jsval.h.
+     */
+    d = MOZ_DOUBLE_SPECIFIC_NaN(0, 0x8000000000000ULL);
+    number_constants[NC_NaN].dval = js_NaN = d;
+    rt->NaNValue.setDouble(d);
 
-    u.s.hi = JSDOUBLE_HI32_SIGNBIT | JSDOUBLE_HI32_EXPMASK;
-    u.s.lo = 0x00000000;
-    number_constants[NC_NEGATIVE_INFINITY].dval = js_NegativeInfinity = u.d;
-    rt->negativeInfinityValue.setDouble(u.d);
+    d = MOZ_DOUBLE_POSITIVE_INFINITY();
+    number_constants[NC_POSITIVE_INFINITY].dval = js_PositiveInfinity = d;
+    rt->positiveInfinityValue.setDouble(d);
 
-    u.s.hi = 0;
-    u.s.lo = 1;
-    number_constants[NC_MIN_VALUE].dval = u.d;
+    d = MOZ_DOUBLE_NEGATIVE_INFINITY();
+    number_constants[NC_NEGATIVE_INFINITY].dval = js_NegativeInfinity = d;
+    rt->negativeInfinityValue.setDouble(d);
+
+    number_constants[NC_MIN_VALUE].dval = MOZ_DOUBLE_MIN_VALUE();
 
     /* Copy locale-specific separators into the runtime strings. */
     const char *thousandsSeparator, *decimalPoint, *grouping;
@@ -1014,14 +1017,15 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     /* XXX must do at least once per new thread, so do it per JSContext... */
     FIX_FPU();
 
-    GlobalObject *global = &obj->asGlobal();
+    RootedVar<GlobalObject*> global(cx, &obj->asGlobal());
 
-    JSObject *numberProto = global->createBlankPrototype(cx, &NumberClass);
+    RootedVarObject numberProto(cx, global->createBlankPrototype(cx, &NumberClass));
     if (!numberProto)
         return NULL;
     numberProto->asNumber().setPrimitiveValue(0);
 
-    JSFunction *ctor = global->createConstructor(cx, Number, CLASS_ATOM(cx, Number), 1);
+    RootedVarFunction ctor(cx);
+    ctor = global->createConstructor(cx, Number, CLASS_ATOM(cx, Number), 1);
     if (!ctor)
         return NULL;
 
@@ -1064,7 +1068,7 @@ FracNumberToCString(JSContext *cx, ToCStringBuf *cbuf, double d, int base = 10)
 #ifdef DEBUG
     {
         int32_t _;
-        JS_ASSERT(!JSDOUBLE_IS_INT32(d, &_));
+        JS_ASSERT(!MOZ_DOUBLE_IS_INT32(d, &_));
     }
 #endif
 
@@ -1092,7 +1096,7 @@ char *
 NumberToCString(JSContext *cx, ToCStringBuf *cbuf, double d, int base/* = 10*/)
 {
     int32_t i;
-    return (JSDOUBLE_IS_INT32(d, &i))
+    return MOZ_DOUBLE_IS_INT32(d, &i)
            ? IntToCString(cbuf, i, base)
            : FracNumberToCString(cx, cbuf, d, base);
 }
@@ -1116,7 +1120,7 @@ js_NumberToStringWithBase(JSContext *cx, double d, int base)
     JSCompartment *c = cx->compartment;
 
     int32_t i;
-    if (JSDOUBLE_IS_INT32(d, &i)) {
+    if (MOZ_DOUBLE_IS_INT32(d, &i)) {
         if (base == 10 && StaticStrings::hasInt(i))
             return cx->runtime->staticStrings.getInt(i);
         if (unsigned(i) < unsigned(base)) {
@@ -1289,10 +1293,6 @@ ToUint32Slow(JSContext *cx, const Value &v, uint32_t *out)
     return true;
 }
 
-}  /* namespace js */
-
-namespace js {
-
 bool
 NonstandardToInt32Slow(JSContext *cx, const Value &v, int32_t *out)
 {
@@ -1304,7 +1304,7 @@ NonstandardToInt32Slow(JSContext *cx, const Value &v, int32_t *out)
         return false;
     }
 
-    if (JSDOUBLE_IS_NaN(d) || d <= -2147483649.0 || 2147483648.0 <= d) {
+    if (MOZ_DOUBLE_IS_NaN(d) || d <= -2147483649.0 || 2147483648.0 <= d) {
         js_ReportValueError(cx, JSMSG_CANT_CONVERT,
                             JSDVG_SEARCH_STACK, v, NULL);
         return false;
@@ -1324,7 +1324,7 @@ ValueToUint16Slow(JSContext *cx, const Value &v, uint16_t *out)
         return false;
     }
 
-    if (d == 0 || !JSDOUBLE_IS_FINITE(d)) {
+    if (d == 0 || !MOZ_DOUBLE_IS_FINITE(d)) {
         *out = 0;
         return true;
     }

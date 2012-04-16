@@ -306,7 +306,7 @@ JSRope::flatten(JSContext *maybecx)
 }
 
 JSString * JS_FASTCALL
-js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
+js_ConcatStrings(JSContext *cx, HandleString left, HandleString right)
 {
     JS_ASSERT_IF(!left->isAtom(), left->compartment() == cx->compartment);
     JS_ASSERT_IF(!right->isAtom(), right->compartment() == cx->compartment);

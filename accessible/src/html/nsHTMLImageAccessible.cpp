@@ -243,8 +243,7 @@ nsHTMLImageAccessible::GetLongDescURI() const
   nsDocAccessible* document = Document();
   if (document) {
     IDRefsIterator iter(document, mContent, nsGkAtoms::aria_describedby);
-    nsIContent* target = nsnull;
-    while (target = iter.NextElem()) {
+    while (nsIContent* target = iter.NextElem()) {
       if ((target->IsHTML(nsGkAtoms::a) || target->IsHTML(nsGkAtoms::area)) &&
           target->HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
         nsGenericHTMLElement* element =

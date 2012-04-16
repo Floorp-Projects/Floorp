@@ -1444,11 +1444,13 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       ScaleToOutsidePixels(item->GetVisibleRect(), false);
     bool snap;
     nsRect itemContent = item->GetBounds(mBuilder, &snap);
+    nsIntRect itemDrawRect = ScaleToOutsidePixels(itemContent, snap);
     if (aClip.mHaveClipRect) {
-      itemContent.IntersectRect(aClip.mClipRect, itemContent);
+      itemContent.IntersectRect(itemContent, aClip.mClipRect);
+      nsIntRect clipRect = ScaleToNearestPixels(aClip.mClipRect);
+      itemDrawRect.IntersectRect(itemDrawRect, clipRect);
     }
     mBounds.UnionRect(mBounds, itemContent);
-    nsIntRect itemDrawRect = ScaleToOutsidePixels(itemContent, snap);
     itemVisibleRect.IntersectRect(itemVisibleRect, itemDrawRect);
 
     LayerState layerState = item->GetLayerState(mBuilder, mManager);

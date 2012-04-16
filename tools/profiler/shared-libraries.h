@@ -133,6 +133,7 @@ public:
 
   uintptr_t GetStart() const { return mStart; }
   uintptr_t GetEnd() const { return mEnd; }
+  uintptr_t GetOffset() const { return mOffset; }
 #ifdef XP_WIN
   nsID GetPdbSignature() const { return mPdbSignature; }
   uint32_t GetPdbAge() const { return mPdbAge; }

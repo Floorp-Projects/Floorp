@@ -42,22 +42,19 @@
 #import "mozView.h"
 #import "nsRoleMap.h"
 
+#include "Accessible-inl.h"
+#include "nsIAccessibleRelation.h"
+#include "nsIAccessibleText.h"
+#include "nsIAccessibleEditableText.h"
+#include "nsRootAccessible.h"
+#include "Relation.h"
+#include "Role.h"
+
+#include "mozilla/Services.h"
 #include "nsRect.h"
 #include "nsCocoaUtils.h"
 #include "nsCoord.h"
 #include "nsObjCExceptions.h"
-
-#include "nsIAccessible.h"
-#include "nsIAccessibleRelation.h"
-#include "nsIAccessibleText.h"
-#include "nsIAccessibleEditableText.h"
-#include "Relation.h"
-#include "Role.h"
-
-#include "nsAccessNode.h"
-#include "nsRootAccessible.h"
-
-#include "mozilla/Services.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -475,6 +472,41 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 
 - (NSString*)subrole
 {
+  if (!mGeckoAccessible)
+    return nil;
+
+  nsIContent* content = mGeckoAccessible->GetContent();
+  if (!content || !content->IsHTML())
+    return nil;
+
+  nsIAtom* tag = content->Tag();
+
+  switch (mRole) {
+    case roles::LIST:
+      if ((tag == nsGkAtoms::ul) || (tag == nsGkAtoms::ol))
+        return NSAccessibilityContentListSubrole;
+
+      if (tag == nsGkAtoms::dl)
+        return NSAccessibilityDefinitionListSubrole;
+
+      break;
+
+    case roles::LISTITEM:
+      if (tag == nsGkAtoms::dt)
+        return @"AXTerm";
+
+      break;
+
+    case roles::PARAGRAPH:
+      if (tag == nsGkAtoms::dd)
+        return @"AXDefinition";
+
+      break;
+
+    default:
+      break;
+  }
+
   return nil;
 }
 

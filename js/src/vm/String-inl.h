@@ -117,7 +117,7 @@ JSRope::init(JSString *left, JSString *right, size_t length)
 }
 
 JS_ALWAYS_INLINE JSRope *
-JSRope::new_(JSContext *cx, JSString *left, JSString *right, size_t length)
+JSRope::new_(JSContext *cx, js::HandleString left, js::HandleString right, size_t length)
 {
     if (!validateLength(cx, length))
         return NULL;
@@ -138,6 +138,7 @@ JSRope::markChildren(JSTracer *trc)
 JS_ALWAYS_INLINE void
 JSDependentString::init(JSLinearString *base, const jschar *chars, size_t length)
 {
+    JS_ASSERT(!js::IsPoisonedPtr(base));
     d.lengthAndFlags = buildLengthAndFlags(length, DEPENDENT_BIT);
     d.u1.chars = chars;
     d.s.u2.base = base;
@@ -154,6 +155,15 @@ JSDependentString::new_(JSContext *cx, JSLinearString *base, const jschar *chars
     JS_ASSERT(base->isFlat());
     JS_ASSERT(chars >= base->chars() && chars < base->chars() + base->length());
     JS_ASSERT(length <= base->length() - (chars - base->chars()));
+
+    JS::Root<JSLinearString*> baseRoot(cx, &base);
+
+    /*
+     * The characters may be an internal pointer to a GC thing, so prevent them
+     * from being overwritten. For now this prevents strings used as dependent
+     * bases of other strings from being moved by the GC.
+     */
+    JS::SkipRoot charsRoot(cx, &chars);
 
     JSDependentString *str = (JSDependentString *)js_NewGCString(cx);
     if (!str)

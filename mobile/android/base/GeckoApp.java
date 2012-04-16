@@ -123,7 +123,7 @@ abstract public class GeckoApp
     public static boolean mDOMFullScreen = false;
     public static Menu sMenu;
     private static GeckoThread sGeckoThread = null;
-    public GeckoAppHandler mMainHandler;
+    public Handler mMainHandler;
     private GeckoProfile mProfile;
     public static boolean sIsGeckoReady = false;
     public static int mOrientation;
@@ -144,9 +144,6 @@ abstract public class GeckoApp
     public String mLastTitle;
     private boolean mRestoreSession = false;
     private boolean mInitialized = false;
-
-    private static final String HANDLER_MSG_TYPE = "type";
-    private static final int HANDLER_MSG_TYPE_INITIALIZE = 1;
 
     static class ExtraMenuItem implements MenuItem.OnMenuItemClickListener {
         String label;
@@ -1016,6 +1013,25 @@ abstract public class GeckoApp
                         });
                     }
                 });
+            } else if (event.equals("Accessibility:Event")) {
+                final int eventType = message.getInt("eventType");
+
+                final JSONArray text = message.getJSONArray("text");
+                final int len = text.length();
+                final String[] textList = new String[len];
+                for (int i = 0; i < len; i++)
+                    textList[i] = text.getString(i);
+
+                final String description = message.optString("description");
+                final boolean enabled = message.optBoolean("enabled", true);
+                final boolean checked = message.optBoolean("checked");
+                final boolean password = message.optBoolean("password");
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        GeckoAppShell.emitGeckoAccessibilityEvent(eventType, textList, description,
+                                                                  enabled, checked, password);
+                    }
+                });
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1561,7 +1577,7 @@ abstract public class GeckoApp
         }
 
         GeckoAppShell.loadMozGlue();
-        mMainHandler = new GeckoAppHandler();
+        mMainHandler = new Handler();
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onCreate");
         if (savedInstanceState != null) {
             mLastTitle = savedInstanceState.getString(SAVED_STATE_TITLE);
@@ -1731,6 +1747,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Tab:HasTouchListener", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Session:StatePurged", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Bookmark:Insert", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Accessibility:Event", GeckoApp.mAppContext);
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
@@ -1934,7 +1951,7 @@ abstract public class GeckoApp
 
         if (Intent.ACTION_MAIN.equals(action)) {
             Log.i(LOGTAG, "Intent : ACTION_MAIN");
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createLoadEvent(""));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(""));
         }
         else if (ACTION_LOAD.equals(action)) {
             String uri = intent.getDataString();
@@ -1943,17 +1960,17 @@ abstract public class GeckoApp
         }
         else if (Intent.ACTION_VIEW.equals(action)) {
             String uri = intent.getDataString();
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createLoadEvent(uri));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
             Log.i(LOGTAG,"onNewIntent: " + uri);
         }
         else if (ACTION_WEBAPP.equals(action)) {
             String uri = getURIFromIntent(intent);
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createLoadEvent(uri));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createWebappLoadEvent(uri));
             Log.i(LOGTAG,"Intent : WEBAPP - " + uri);
         }
         else if (ACTION_BOOKMARK.equals(action)) {
             String uri = getURIFromIntent(intent);
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createLoadEvent(uri));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBookmarkLoadEvent(uri));
             Log.i(LOGTAG,"Intent : BOOKMARK - " + uri);
         }
     }
@@ -1986,23 +2003,20 @@ abstract public class GeckoApp
         // Undo whatever we did in onPause.
         super.onResume();
 
-        /* We load the initial UI and wait until it is shown to the user
-           to continue other initializations and loading about:home (if needed) */
-        if (!mInitialized) {
-            Bundle bundle = new Bundle();
-            bundle.putInt(HANDLER_MSG_TYPE, HANDLER_MSG_TYPE_INITIALIZE);
-            
-            Message message = mMainHandler.obtainMessage();
-            message.setData(bundle);
-            mMainHandler.sendMessage(message);
-        }
-
         int newOrientation = getResources().getConfiguration().orientation;
 
         if (mOrientation != newOrientation) {
             mOrientation = newOrientation;
             refreshActionBar();
         }
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+
+        if (!mInitialized && hasFocus)
+            initialize();
     }
 
     @Override
@@ -2814,24 +2828,6 @@ abstract public class GeckoApp
             }
         });
     }
-
-    public class GeckoAppHandler extends Handler {
-        @Override
-        public void handleMessage(Message message) {
-            Bundle bundle = message.getData();
-            if (bundle == null)
-                return;
-
-            int type = bundle.getInt(HANDLER_MSG_TYPE);
-
-            switch (type) {
-                case HANDLER_MSG_TYPE_INITIALIZE:
-                    initialize();
-                    break;
-
-            }
-        }
-    } 
 }
 
 class PluginLayoutParams extends AbsoluteLayout.LayoutParams
