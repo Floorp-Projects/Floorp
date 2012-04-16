@@ -66,6 +66,7 @@
 #include "gfxXlibSurface.h"
 #endif
 
+#include "sampler.h"
 #include "GLContext.h"
 
 #define PIXMAN_DONT_DEFINE_STDINT
@@ -668,6 +669,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
                               void* aCallbackData,
                               ReadbackProcessor* aReadback)
 {
+  SAMPLE_LABEL("BasicThebesLayer", "PaintThebes");
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");
   nsRefPtr<gfxASurface> targetSurface = aContext->CurrentSurface();
@@ -1632,6 +1634,7 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
                                           void* aCallbackData,
                                           EndTransactionFlags aFlags)
 {
+  SAMPLE_LABEL("BasicLayerManager", "EndTranscationInternal");
 #ifdef MOZ_LAYERS_HAVE_LOG
   MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
   Log();
