@@ -1,3 +1,10 @@
+# The following tests were written before
+# font.size.inflation.lineThreshold was implemented, and thus assumed
+# that there wasn't a threshold of text required for inflation.  To run
+# them compatibly without having to rewrite all of them, we run them
+# with the lineThreshold preference explicitly set to zero.  However,
+# newer tests should probably focus more on testing nonzero values of
+# that preference.
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == text-1.html text-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == text-2.html text-2-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == text-3.html text-3-ref.html
@@ -45,3 +52,18 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineTh
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == fixed-height-body.html fixed-height-body-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == fixed-height-body-child.html fixed-height-body-child-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == consecutive-inline.html consecutive-inline-ref.html
+
+# The tests below use nonzero values of the lineThreshold preference.
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == text-1.html text-1.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-1a.html threshold-1a.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-1b.html threshold-1b-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-1c.html threshold-1c-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-2.html threshold-2-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-3.html threshold-3-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-float-1.html threshold-scope-float-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-float-2.html threshold-scope-float-2-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-float-overflow-1.html threshold-scope-float-overflow-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-float-overflow-2.html threshold-scope-float-overflow-2-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-cell-1.html threshold-scope-cell-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-cell-2.html threshold-scope-cell-2-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-cell-3.html threshold-scope-cell-3-ref.html
