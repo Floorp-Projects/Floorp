@@ -3991,6 +3991,10 @@ nsLayoutUtils::GetRectDifferenceStrips(const nsRect& aR1, const nsRect& aR2,
 nsDeviceContext*
 nsLayoutUtils::GetDeviceContextForScreenInfo(nsPIDOMWindow* aWindow)
 {
+  if (!aWindow) {
+    return nsnull;
+  }
+
   nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
   while (docShell) {
     // Now make sure our size is up to date.  That will mean that the device
