@@ -72,6 +72,7 @@ EXPORTS = \
 CPPSRCS = \
         BasicImages.cpp \
         BasicLayers.cpp \
+        BasicTiledThebesLayer.cpp \
         Layers.cpp \
         RenderTrace.cpp \
         ReadbackProcessor.cpp \
