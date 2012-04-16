@@ -526,10 +526,12 @@ CodeGeneratorARM::visitDivI(LDivI *ins)
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
-    // idivmod returns the qoutient in r0, and the remainder in r1.
-    masm.ma_cmp(r1, Imm32(0));
-    if (!bailoutIf(Assembler::NonZero, ins->snapshot()))
-        return false;
+    // idivmod returns the quotient in r0, and the remainder in r1.
+    if (!mir->isTruncated()) {
+        masm.ma_cmp(r1, Imm32(0));
+        if (!bailoutIf(Assembler::NonZero, ins->snapshot()))
+            return false;
+    }
     return true;
 }
 
