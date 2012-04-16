@@ -372,6 +372,8 @@ private:
   bool mJankOnly;
 };
 
+std::string GetSharedLibraryInfoString();
+
 /**
  * This is an event used to save the profile on the main thread
  * to be sure that it is not being modified while saving.
@@ -407,6 +409,7 @@ public:
     stream.open(buff);
     if (stream.is_open()) {
       stream << *(t->GetPrimaryThreadProfile());
+      stream << "h-" << GetSharedLibraryInfoString() << std::endl;
       stream.close();
       LOG("Saved to " FOLDER "profile_TYPE_PID.txt");
     } else {
