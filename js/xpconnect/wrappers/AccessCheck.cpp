@@ -254,21 +254,7 @@ GetPrincipal(JSObject *obj)
 bool
 AccessCheck::documentDomainMakesSameOrigin(JSContext *cx, JSObject *obj)
 {
-    JSObject *scope = nsnull;
-    JSStackFrame *fp = nsnull;
-    JS_FrameIterator(cx, &fp);
-    if (fp) {
-        while (!JS_IsScriptFrame(cx, fp)) {
-            if (!JS_FrameIterator(cx, &fp))
-                break;
-        }
-
-        if (fp)
-            scope = JS_GetGlobalForFrame(fp);
-    }
-
-    if (!scope)
-        scope = JS_GetGlobalForScopeChain(cx);
+    JSObject *scope = JS_GetScriptedGlobal(cx);
 
     nsIPrincipal *subject;
     nsIPrincipal *object;
