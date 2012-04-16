@@ -133,20 +133,12 @@ Cu.import("resource://gre/modules/debug.js");
 Cu.import("resource:///modules/TelemetryTimestamps.jsm");
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
-  Cu.import("resource://gre/modules/NetUtil.jsm");
-  return NetUtil;
-});
-
-XPCOMUtils.defineLazyGetter(this, "ScratchpadManager", function() {
-  Cu.import("resource:///modules/devtools/scratchpad-manager.jsm");
-  return ScratchpadManager;
-});
-
-XPCOMUtils.defineLazyGetter(this, "XPathGenerator", function() {
-  Cu.import("resource:///modules/sessionstore/XPathGenerator.jsm");
-  return XPathGenerator;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
+                                  "resource:///modules/devtools/scratchpad-manager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "XPathGenerator",
+                                  "resource:///modules/sessionstore/XPathGenerator.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "CookieSvc",
   "@mozilla.org/cookiemanager;1", "nsICookieManager2");
