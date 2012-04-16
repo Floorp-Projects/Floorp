@@ -724,6 +724,14 @@ class nsCSSShadowArray {
       return &mArray[i];
     }
 
+    bool HasShadowWithInset(bool aInset) {
+      for (PRUint32 i = 0; i < mLength; ++i) {
+        if (mArray[i].mInset == aInset)
+          return true;
+      }
+      return false;
+    }
+
     NS_INLINE_DECL_REFCOUNTING(nsCSSShadowArray)
 
   private:
