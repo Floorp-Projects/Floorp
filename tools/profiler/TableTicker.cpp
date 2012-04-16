@@ -459,7 +459,7 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
   void *array[100];
   int count = backtrace (array, 100);
 
-  aProfile.addTag(ProfileEntry('s', "(root)", 0));
+  aProfile.addTag(ProfileEntry('s', "(root)"));
 
   for (int i = 0; i < count; i++) {
     if( (intptr_t)array[i] == -1 ) break;
