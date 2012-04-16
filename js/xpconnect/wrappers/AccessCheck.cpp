@@ -364,18 +364,15 @@ AccessCheck::isSystemOnlyAccessPermitted(JSContext *cx)
         return false;
     }
 
+    JSScript *script = nsnull;
     if (!fp) {
-        if (!JS_FrameIterator(cx, &fp)) {
+        if (!JS_DescribeScriptedCaller(cx, &script, nsnull)) {
             // No code at all is running. So we must be arriving here as the result
             // of C++ code asking us to do something. Allow access.
             return true;
         }
-
-        // Some code is running, we can't make the assumption, as above, but we
-        // can't use a native frame, so clear fp.
-        fp = NULL;
-    } else if (!JS_IsScriptFrame(cx, fp)) {
-        fp = NULL;
+    } else if (JS_IsScriptFrame(cx, fp)) {
+        script = JS_GetFrameScript(cx, fp);
     }
 
     bool privileged;
@@ -388,8 +385,8 @@ AccessCheck::isSystemOnlyAccessPermitted(JSContext *cx)
     // cloned into a less privileged context.
     static const char prefix[] = "chrome://global/";
     const char *filename;
-    if (fp &&
-        (filename = JS_GetScriptFilename(cx, JS_GetFrameScript(cx, fp))) &&
+    if (script &&
+        (filename = JS_GetScriptFilename(cx, script)) &&
         !strncmp(filename, prefix, ArrayLength(prefix) - 1)) {
         return true;
     }
