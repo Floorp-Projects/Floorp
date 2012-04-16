@@ -104,6 +104,7 @@
 #include "nsDataHashtable.h"
 #include "nsTextFrame.h"
 #include "nsFontFaceList.h"
+#include "nsFontInflationData.h"
 
 #include "nsSVGUtils.h"
 #include "nsSVGIntegrationUtils.h"
@@ -4712,6 +4713,14 @@ nsLayoutUtils::FontSizeInflationInner(const nsIFrame *aFrame,
   return (1.0f / ratio) + (1.0f / 3.0f);
 }
 
+static inline bool
+InflationDataSaysEnabled(const nsIFrame *aFrame)
+{
+  nsFontInflationData *data =
+    nsFontInflationData::FindFontInflationDataFor(aFrame);
+  return data && data->InflationEnabled();
+}
+
 static bool
 ShouldInflateFontsForContainer(const nsIFrame *aFrame)
 {
@@ -4728,7 +4737,8 @@ ShouldInflateFontsForContainer(const nsIFrame *aFrame)
          !(aFrame->GetStateBits() & NS_FRAME_IN_CONSTRAINED_HEIGHT) &&
          // We also want to disable font inflation for containers that have
          // preformatted text.
-         styleText->WhiteSpaceCanWrap();
+         styleText->WhiteSpaceCanWrap() &&
+         InflationDataSaysEnabled(aFrame);
 }
 
 nscoord
