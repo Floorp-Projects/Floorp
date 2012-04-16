@@ -681,14 +681,6 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
         AssertGraphCoherency(graph);
     }
 
-    if (js_IonOptions.rangeAnalysis) {
-        RangeAnalysis rangeAnalysis(graph);
-        if (!rangeAnalysis.analyzeEarly())
-            return false;
-        IonSpewPass("Range Analysis (Early)");
-        AssertGraphCoherency(graph);
-    }
-
     if (js_IonOptions.gvn) {
         ValueNumberer gvn(graph, js_IonOptions.gvnIsOptimistic);
         if (!gvn.analyze())
@@ -712,9 +704,9 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
 
     if (js_IonOptions.rangeAnalysis) {
         RangeAnalysis rangeAnalysis(graph);
-        if (!rangeAnalysis.analyzeLate())
+        if (!rangeAnalysis.analyze())
             return false;
-        IonSpewPass("Range Analysis (Late)");
+        IonSpewPass("Range Analysis");
         AssertGraphCoherency(graph);
     }
 
