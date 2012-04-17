@@ -3323,6 +3323,23 @@ nsWindow::CheckNeedDragLeave(nsWindow* aInnerMostWidget,
     sLastDragMotionWindow = aInnerMostWidget;
 }
 
+void
+nsWindow::DispatchDragEvent(PRUint32 aMsg, const nsIntPoint& aRefPoint,
+                            guint aTime)
+{
+    nsDragEvent event(true, aMsg, this);
+
+    if (aMsg == NS_DRAGDROP_OVER) {
+        InitDragEvent(event);
+    }
+
+    event.refPoint = aRefPoint;
+    event.time = aTime;
+
+    nsEventStatus status;
+    DispatchEvent(&event, status);
+}
+
 gboolean
 nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
                             GdkDragContext *aDragContext,
@@ -3385,16 +3402,8 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
 
     dragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
 
-    nsDragEvent event(true, NS_DRAGDROP_OVER, innerMostWidget);
-
-    InitDragEvent(event);
-
-    event.refPoint.x = retx;
-    event.refPoint.y = rety;
-    event.time = aTime;
-
-    nsEventStatus status;
-    innerMostWidget->DispatchEvent(&event, status);
+    innerMostWidget->
+        DispatchDragEvent(NS_DRAGDROP_OVER, nsIntPoint(retx, rety), aTime);
 
     // Reply to tell the source whether we can drop and what action would be
     // taken.
@@ -3497,16 +3506,8 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
 
     dragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
 
-    nsDragEvent event(true, NS_DRAGDROP_OVER, innerMostWidget);
-
-    InitDragEvent(event);
-
-    event.refPoint.x = retx;
-    event.refPoint.y = rety;
-    event.time = aTime;
-
-    nsEventStatus status;
-    innerMostWidget->DispatchEvent(&event, status);
+    innerMostWidget->
+        DispatchDragEvent(NS_DRAGDROP_OVER, nsIntPoint(retx, rety), aTime);
 
     gboolean success = FALSE;
 
@@ -3517,12 +3518,8 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
         bool canDrop;
         dragServiceGTK->GetCanDrop(&canDrop);
         PRUint32 msg = canDrop ? NS_DRAGDROP_DROP : NS_DRAGDROP_EXIT;
-        nsDragEvent event(true, msg, innerMostWidget);
-        event.refPoint.x = retx;
-        event.refPoint.y = rety;
 
-        nsEventStatus status = nsEventStatus_eIgnore;
-        innerMostWidget->DispatchEvent(&event, status);
+        innerMostWidget->DispatchDragEvent(msg, nsIntPoint(retx, rety), aTime);
 
         success = canDrop;
     }
@@ -3572,10 +3569,7 @@ nsWindow::OnDragLeave(void)
 {
     LOGDRAG(("nsWindow::OnDragLeave(%p)\n", (void*)this));
 
-    nsDragEvent event(true, NS_DRAGDROP_EXIT, this);
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
+    DispatchDragEvent(NS_DRAGDROP_EXIT, nsIntPoint(0, 0), 0);
 
     nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
 
