@@ -307,7 +307,6 @@ public:
 #endif /* MOZ_X11 */
 
     static guint32     sLastButtonPressTime;
-    static guint32     sLastButtonReleaseTime;
 
     NS_IMETHOD         BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
     NS_IMETHOD         BeginMoveDrag(nsMouseEvent* aEvent);
