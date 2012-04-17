@@ -19,6 +19,22 @@ var gProvider;
 var gServer;
 var gAddonInstalled = false;
 
+var channel = "default";
+try {
+  channel = Services.prefs.getCharPref("app.update.channel");
+}
+catch (e) { }
+if (channel != "aurora" &&
+    channel != "beta" &&
+    channel != "release") {
+  var version = "nightly";
+}
+else {
+  version = Services.appinfo.version.replace(/^([^\.]+\.[0-9]+[a-z]*).*/gi, "$1");
+}
+
+const COMPATIBILITY_PREF = "extensions.checkCompatibility." + version;
+
 function test() {
   requestLongerTimeout(2);
   // Turn on searching for this test
@@ -592,7 +608,7 @@ add_test(function() {
 
 // Tests that incompatible add-ons are shown with a warning if compatibility checking is disabled
 add_test(function() {
-  AddonManager.checkCompatiblity = false;
+  Services.prefs.setBoolPref(COMPATIBILITY_PREF, false);
   search("incompatible", false, function() {
     var item = get_addon_item("remote5");
     is_element_visible(item, "Incompatible addon should be visible");
@@ -601,7 +617,7 @@ add_test(function() {
     var item = get_addon_item("remote6");
     is(item, null, "Addon incompatible with the product should not be visible");
 
-    AddonManager.checkCompatiblity = true;
+    Services.prefs.clearUserPref(COMPATIBILITY_PREF);
     run_next_test();
   });
 });

@@ -16,8 +16,23 @@ function end_test() {
 add_test(function() {
   info("Testing compatibility checking warning");
 
-  info("Setting checkCompatibility to false");
-  AddonManager.checkCompatibility = false;
+  var channel = "default";
+  try {
+    channel = Services.prefs.getCharPref("app.update.channel");
+  }
+  catch (e) { }
+  if (channel != "aurora" &&
+      channel != "beta" &&
+      channel != "release") {
+    var version = "nightly";
+  }
+  else {
+    version = Services.appinfo.version.replace(/^([^\.]+\.[0-9]+[a-z]*).*/gi, "$1");
+  }
+
+  var pref = "extensions.checkCompatibility." + version;
+  info("Setting " + pref + " pref to false")
+  Services.prefs.setBoolPref(pref, false);
 
   open_manager("addons://list/extension", function(aWindow) {
     var hbox = aWindow.document.querySelector("#list-view hbox.global-warning-checkcompatibility");
