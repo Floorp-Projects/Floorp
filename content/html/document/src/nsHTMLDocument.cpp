@@ -2953,7 +2953,9 @@ ConvertToMidasInternalCommandInner(const nsAString & inCommandID,
               }
             }
 
-            return j != ArrayLength(gBlocks);
+            if (j == ArrayLength(gBlocks)) {
+              outParam.Truncate();
+            }
           }
           else {
             CopyUTF16toUTF8(inParam, outParam);
@@ -3101,6 +3103,11 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
                                      cmdToDispatch, paramStr, isBool, boolVal))
     return NS_OK;
 
+  if (cmdToDispatch.EqualsLiteral("cmd_paragraphState") && paramStr.IsEmpty()) {
+    // Invalid value
+    return NS_OK;
+  }
+
   if (!isBool && paramStr.IsEmpty()) {
     rv = cmdMgr->DoCommand(cmdToDispatch.get(), nsnull, window);
   } else {
@@ -3179,10 +3186,8 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
   if (!window)
     return NS_ERROR_FAILURE;
 
-  nsCAutoString cmdToDispatch, paramToCheck;
-  bool dummy;
-  if (!ConvertToMidasInternalCommand(commandID, commandID,
-                                     cmdToDispatch, paramToCheck, dummy, dummy))
+  nsCAutoString cmdToDispatch;
+  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch))
     return NS_ERROR_NOT_IMPLEMENTED;
 
   nsresult rv;
