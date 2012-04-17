@@ -53,6 +53,7 @@ LOCAL_INCLUDES = \
 		$(NULL)
 
 CPPSRCS		= \
+		DirectionalityUtils.cpp \
 		nsAtomListUtils.cpp \
 		nsAttrAndChildArray.cpp \
 		nsAttrValue.cpp \
