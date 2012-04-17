@@ -3368,9 +3368,6 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
     if (!innerMostWidget)
         innerMostWidget = this;
 
-    // update the drag context
-    dragSessionGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
-
     // clear any drag leave timer that might be pending so that it
     // doesn't get processed when we actually go out to get data.
     if (mDragLeaveTimer) {
@@ -3380,6 +3377,8 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
 
     CheckNeedDragLeave(innerMostWidget, dragService, aDragContext, retx, rety);
 
+    // update the drag context
+    dragSessionGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
     // notify the drag service that we are starting a drag motion.
     dragSessionGTK->TargetStartDragMotion();
 
@@ -3457,9 +3456,6 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     if (!innerMostWidget)
         innerMostWidget = this;
 
-    // set this now before any of the drag enter or leave events happen
-    dragServiceGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
-
     // clear any drag leave timer that might be pending so that it
     // doesn't get processed when we actually go out to get data.
     if (mDragLeaveTimer) {
@@ -3492,6 +3488,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     // contain a position.  However, we can't assume the same when the Motif
     // protocol is used.
 
+    dragServiceGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
     dragServiceGTK->SetCanDrop(false);
 
     nsDragEvent event(true, NS_DRAGDROP_OVER, innerMostWidget);
