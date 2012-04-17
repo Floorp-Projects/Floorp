@@ -261,7 +261,13 @@ public class GeckoLayerClient implements GeckoEventResponder,
                 Map<String, Integer> prefValues = new HashMap<String, Integer>();
                 for (int i = jsonPrefs.length() - 1; i >= 0; i--) {
                     JSONObject pref = jsonPrefs.getJSONObject(i);
-                    prefValues.put(pref.getString("name"), pref.getInt("value"));
+                    String name = pref.getString("name");
+                    try {
+                        prefValues.put(name, pref.getInt("value"));
+                    } catch (JSONException je) {
+                        // the pref value couldn't be parsed as an int. drop this pref
+                        // and continue with the rest
+                    }
                 }
                 // check return value from setStrategy to make sure that this is the
                 // right batch of prefs, since other java code may also have sent requests
