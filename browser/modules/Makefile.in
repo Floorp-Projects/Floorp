@@ -62,4 +62,8 @@ EXTRA_JS_MODULES += \
 	$(NULL)
 endif
 
+EXTRA_PP_JS_MODULES = \
+	WebappsInstaller.jsm \
+	$(NULL)
+
 include $(topsrcdir)/config/rules.mk
