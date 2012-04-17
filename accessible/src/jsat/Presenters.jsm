@@ -251,7 +251,7 @@ AndroidPresenter.prototype.tabSelected = function(aObject) {
     context.push(parent);
   context.reverse();
 
-  this.pivotChanged(vcDoc.virtualCursor.position, context);
+  this.pivotChanged(vcDoc.virtualCursor.position || aObject, context);
 };
 
 AndroidPresenter.prototype.sendMessageToJava = function(aMessage) {
