@@ -3491,6 +3491,8 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     dragServiceGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
     dragServiceGTK->SetCanDrop(false);
 
+    dragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
+
     nsDragEvent event(true, NS_DRAGDROP_OVER, innerMostWidget);
 
     InitDragEvent(event);
