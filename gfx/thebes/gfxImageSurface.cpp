@@ -123,7 +123,7 @@ TryAllocAlignedBytes(size_t aSize)
 #endif
 }
 
-gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) :
+gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format, bool aClear) :
     mSize(size), mOwnsData(false), mData(nsnull), mFormat(format)
 {
     mStride = ComputeStride();
@@ -139,7 +139,8 @@ gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) 
         mData = (unsigned char *) TryAllocAlignedBytes(mSize.height * mStride);
         if (!mData)
             return;
-        memset(mData, 0, mSize.height * mStride);
+        if (aClear)
+            memset(mData, 0, mSize.height * mStride);
     }
 
     mOwnsData = true;
