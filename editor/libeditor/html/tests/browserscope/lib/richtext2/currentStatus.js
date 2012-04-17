@@ -6040,72 +6040,72 @@ const TEST_RESULTS = {
       },
       "FC:g_SPANs:c:g-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font color=\"green\"><span style=\"color: blue\">`[foobarbaz]´</span></font>",
-          "innerHTML": "<font color=\"green\"><span style=\"color: blue\">`[foobarbaz]´</span></font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font color=\"green\"><span style=\"color: blue\">`[foobarbaz]´</span></font></body>",
-          "bodyInnerHTML": "<font color=\"green\"><span style=\"color: blue\">`[foobarbaz]´</span></font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font color=\"green\"><span style=\"color: blue\">`[foobarbaz]´</span></font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font color=\"green\">`[foobarbaz]´</font>",
+          "innerHTML": "<font color=\"green\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font color=\"green\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font color=\"green\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font color=\"green\">`[foobarbaz]´</font></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font color=\"green\"><span style=\"color: blue\">`[foobarbaz]´</span></font>",
-          "innerHTML": "<font color=\"green\"><span style=\"color: blue\">`[foobarbaz]´</span></font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font color=\"green\"><span style=\"color: blue\">`[foobarbaz]´</span></font></body>",
-          "bodyInnerHTML": "<font color=\"green\"><span style=\"color: blue\">`[foobarbaz]´</span></font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font color=\"green\"><span style=\"color: blue\">`[foobarbaz]´</span></font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font color=\"green\">`[foobarbaz]´</font>",
+          "innerHTML": "<font color=\"green\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font color=\"green\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font color=\"green\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font color=\"green\">`[foobarbaz]´</font></body>"
         },
         "div": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font color=\"green\"><span style=\"color: blue\">`[foobarbaz]´</span></font>",
-          "innerHTML": "<font color=\"green\"><span style=\"color: blue\">`[foobarbaz]´</span></font>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font color=\"green\"><span style=\"color: blue\">`[foobarbaz]´</span></font></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font color=\"green\"><span style=\"color: blue\">`[foobarbaz]´</span></font></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font color=\"green\"><span style=\"color: blue\">`[foobarbaz]´</span></font></div>CAN<br>ARY</body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font color=\"green\">`[foobarbaz]´</font>",
+          "innerHTML": "<font color=\"green\">`[foobarbaz]´</font>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font color=\"green\">`[foobarbaz]´</font></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font color=\"green\">`[foobarbaz]´</font></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font color=\"green\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
         }
       },
       "FC:g_FONTc:b.s:c:r-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font style=\"color: red\" color=\"green\">`[foobarbaz]´</font>",
-          "innerHTML": "<font style=\"color: red\" color=\"green\">`[foobarbaz]´</font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font color=\"green\" style=\"color: red\">`[foobarbaz]´</font></body>",
-          "bodyInnerHTML": "<font style=\"color: red\" color=\"green\">`[foobarbaz]´</font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font color=\"green\" style=\"color: red\">`[foobarbaz]´</font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font color=\"green\">`[foobarbaz]´</font>",
+          "innerHTML": "<font color=\"green\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font color=\"green\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font color=\"green\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font color=\"green\">`[foobarbaz]´</font></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font style=\"color: red\" color=\"green\">`[foobarbaz]´</font>",
-          "innerHTML": "<font style=\"color: red\" color=\"green\">`[foobarbaz]´</font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font color=\"green\" style=\"color: red\">`[foobarbaz]´</font></body>",
-          "bodyInnerHTML": "<font style=\"color: red\" color=\"green\">`[foobarbaz]´</font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font color=\"green\" style=\"color: red\">`[foobarbaz]´</font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font color=\"green\">`[foobarbaz]´</font>",
+          "innerHTML": "<font color=\"green\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font color=\"green\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font color=\"green\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font color=\"green\">`[foobarbaz]´</font></body>"
         },
         "div": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font style=\"color: red\" color=\"green\">`[foobarbaz]´</font>",
-          "innerHTML": "<font style=\"color: red\" color=\"green\">`[foobarbaz]´</font>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font color=\"green\" style=\"color: red\">`[foobarbaz]´</font></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font style=\"color: red\" color=\"green\">`[foobarbaz]´</font></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font color=\"green\" style=\"color: red\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font color=\"green\">`[foobarbaz]´</font>",
+          "innerHTML": "<font color=\"green\">`[foobarbaz]´</font>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font color=\"green\">`[foobarbaz]´</font></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font color=\"green\">`[foobarbaz]´</font></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font color=\"green\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
         }
       },
       "FC:g_FONTc:b.sz:6-1_SI": {
@@ -6285,72 +6285,72 @@ const TEST_RESULTS = {
       },
       "FN:c_SPANs:ff:a-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font face=\"courier\"><span style=\"font-family: arial\">`[foobarbaz]´</span></font>",
-          "innerHTML": "<font face=\"courier\"><span style=\"font-family: arial\">`[foobarbaz]´</span></font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font face=\"courier\"><span style=\"font-family: arial\">`[foobarbaz]´</span></font></body>",
-          "bodyInnerHTML": "<font face=\"courier\"><span style=\"font-family: arial\">`[foobarbaz]´</span></font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font face=\"courier\"><span style=\"font-family: arial\">`[foobarbaz]´</span></font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "innerHTML": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font face=\"courier\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font face=\"courier\">`[foobarbaz]´</font></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font face=\"courier\"><span style=\"font-family: arial\">`[foobarbaz]´</span></font>",
-          "innerHTML": "<font face=\"courier\"><span style=\"font-family: arial\">`[foobarbaz]´</span></font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font face=\"courier\"><span style=\"font-family: arial\">`[foobarbaz]´</span></font></body>",
-          "bodyInnerHTML": "<font face=\"courier\"><span style=\"font-family: arial\">`[foobarbaz]´</span></font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font face=\"courier\"><span style=\"font-family: arial\">`[foobarbaz]´</span></font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "innerHTML": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font face=\"courier\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font face=\"courier\">`[foobarbaz]´</font></body>"
         },
         "div": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font face=\"courier\"><span style=\"font-family: arial\">`[foobarbaz]´</span></font>",
-          "innerHTML": "<font face=\"courier\"><span style=\"font-family: arial\">`[foobarbaz]´</span></font>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font face=\"courier\"><span style=\"font-family: arial\">`[foobarbaz]´</span></font></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font face=\"courier\"><span style=\"font-family: arial\">`[foobarbaz]´</span></font></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font face=\"courier\"><span style=\"font-family: arial\">`[foobarbaz]´</span></font></div>CAN<br>ARY</body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "innerHTML": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font face=\"courier\">`[foobarbaz]´</font></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font face=\"courier\">`[foobarbaz]´</font></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font face=\"courier\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
         }
       },
       "FN:c_FONTf:a.s:ff:v-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font style=\"font-family: verdana\" face=\"courier\">`[foobarbaz]´</font>",
-          "innerHTML": "<font style=\"font-family: verdana\" face=\"courier\">`[foobarbaz]´</font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font face=\"courier\" style=\"font-family: verdana\">`[foobarbaz]´</font></body>",
-          "bodyInnerHTML": "<font style=\"font-family: verdana\" face=\"courier\">`[foobarbaz]´</font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font face=\"courier\" style=\"font-family: verdana\">`[foobarbaz]´</font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "innerHTML": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font face=\"courier\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font face=\"courier\">`[foobarbaz]´</font></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font style=\"font-family: verdana\" face=\"courier\">`[foobarbaz]´</font>",
-          "innerHTML": "<font style=\"font-family: verdana\" face=\"courier\">`[foobarbaz]´</font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font face=\"courier\" style=\"font-family: verdana\">`[foobarbaz]´</font></body>",
-          "bodyInnerHTML": "<font style=\"font-family: verdana\" face=\"courier\">`[foobarbaz]´</font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font face=\"courier\" style=\"font-family: verdana\">`[foobarbaz]´</font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "innerHTML": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font face=\"courier\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font face=\"courier\">`[foobarbaz]´</font></body>"
         },
         "div": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font style=\"font-family: verdana\" face=\"courier\">`[foobarbaz]´</font>",
-          "innerHTML": "<font style=\"font-family: verdana\" face=\"courier\">`[foobarbaz]´</font>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font face=\"courier\" style=\"font-family: verdana\">`[foobarbaz]´</font></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font style=\"font-family: verdana\" face=\"courier\">`[foobarbaz]´</font></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font face=\"courier\" style=\"font-family: verdana\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "innerHTML": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font face=\"courier\">`[foobarbaz]´</font></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font face=\"courier\">`[foobarbaz]´</font></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font face=\"courier\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
         }
       },
       "FN:c_FONTf:a-1_SI": {
@@ -6460,37 +6460,37 @@ const TEST_RESULTS = {
       },
       "FN:c_SPANs:ff:v-FONTf:a-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font face=\"courier\"><span style=\"font-family: verdana\">`[foobarbaz]´</span></font>",
-          "innerHTML": "<font face=\"courier\"><span style=\"font-family: verdana\">`[foobarbaz]´</span></font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font face=\"courier\"><span style=\"font-family: verdana\">`[foobarbaz]´</span></font></body>",
-          "bodyInnerHTML": "<font face=\"courier\"><span style=\"font-family: verdana\">`[foobarbaz]´</span></font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font face=\"courier\"><span style=\"font-family: verdana\">`[foobarbaz]´</span></font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "innerHTML": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font face=\"courier\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font face=\"courier\">`[foobarbaz]´</font></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font face=\"courier\"><span style=\"font-family: verdana\">`[foobarbaz]´</span></font>",
-          "innerHTML": "<font face=\"courier\"><span style=\"font-family: verdana\">`[foobarbaz]´</span></font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font face=\"courier\"><span style=\"font-family: verdana\">`[foobarbaz]´</span></font></body>",
-          "bodyInnerHTML": "<font face=\"courier\"><span style=\"font-family: verdana\">`[foobarbaz]´</span></font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font face=\"courier\"><span style=\"font-family: verdana\">`[foobarbaz]´</span></font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "innerHTML": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font face=\"courier\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font face=\"courier\">`[foobarbaz]´</font></body>"
         },
         "div": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font face=\"courier\"><span style=\"font-family: verdana\">`[foobarbaz]´</span></font>",
-          "innerHTML": "<font face=\"courier\"><span style=\"font-family: verdana\">`[foobarbaz]´</span></font>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font face=\"courier\"><span style=\"font-family: verdana\">`[foobarbaz]´</span></font></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font face=\"courier\"><span style=\"font-family: verdana\">`[foobarbaz]´</span></font></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font face=\"courier\"><span style=\"font-family: verdana\">`[foobarbaz]´</span></font></div>CAN<br>ARY</body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "innerHTML": "<font face=\"courier\">`[foobarbaz]´</font>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font face=\"courier\">`[foobarbaz]´</font></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font face=\"courier\">`[foobarbaz]´</font></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font face=\"courier\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
         }
       },
       "FS:1_FONTsz:4-1_SW": {
@@ -7304,37 +7304,37 @@ const TEST_RESULTS = {
       },
       "FN:c_FONTf:a-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font style=\"font-family: courier;\" face=\"arial\">`[foobarbaz]´</font>",
-          "innerHTML": "<font style=\"font-family: courier;\" face=\"arial\">`[foobarbaz]´</font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font face=\"arial\" style=\"font-family: courier;\">`[foobarbaz]´</font></body>",
-          "bodyInnerHTML": "<font style=\"font-family: courier;\" face=\"arial\">`[foobarbaz]´</font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font face=\"arial\" style=\"font-family: courier;\">`[foobarbaz]´</font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font style=\"font-family: courier;\">`[foobarbaz]´</font>",
+          "innerHTML": "<font style=\"font-family: courier;\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font style=\"font-family: courier;\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font style=\"font-family: courier;\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font style=\"font-family: courier;\">`[foobarbaz]´</font></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font style=\"font-family: courier;\" face=\"arial\">`[foobarbaz]´</font>",
-          "innerHTML": "<font style=\"font-family: courier;\" face=\"arial\">`[foobarbaz]´</font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font face=\"arial\" style=\"font-family: courier;\">`[foobarbaz]´</font></body>",
-          "bodyInnerHTML": "<font style=\"font-family: courier;\" face=\"arial\">`[foobarbaz]´</font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font face=\"arial\" style=\"font-family: courier;\">`[foobarbaz]´</font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font style=\"font-family: courier;\">`[foobarbaz]´</font>",
+          "innerHTML": "<font style=\"font-family: courier;\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font style=\"font-family: courier;\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font style=\"font-family: courier;\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font style=\"font-family: courier;\">`[foobarbaz]´</font></body>"
         },
         "div": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font style=\"font-family: courier;\" face=\"arial\">`[foobarbaz]´</font>",
-          "innerHTML": "<font style=\"font-family: courier;\" face=\"arial\">`[foobarbaz]´</font>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font face=\"arial\" style=\"font-family: courier;\">`[foobarbaz]´</font></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font style=\"font-family: courier;\" face=\"arial\">`[foobarbaz]´</font></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font face=\"arial\" style=\"font-family: courier;\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font style=\"font-family: courier;\">`[foobarbaz]´</font>",
+          "innerHTML": "<font style=\"font-family: courier;\">`[foobarbaz]´</font>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font style=\"font-family: courier;\">`[foobarbaz]´</font></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font style=\"font-family: courier;\">`[foobarbaz]´</font></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font style=\"font-family: courier;\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
         }
       },
       "FN:c_FONTf:a-1_SI": {
@@ -7413,33 +7413,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<font style=\"font-family: arial;\" face=\"arial\">`[foobarbaz]´</font>",
-          "innerHTML": "<font style=\"font-family: arial;\" face=\"arial\">`[foobarbaz]´</font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font face=\"arial\" style=\"font-family: arial;\">`[foobarbaz]´</font></body>",
-          "bodyInnerHTML": "<font style=\"font-family: arial;\" face=\"arial\">`[foobarbaz]´</font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font face=\"arial\" style=\"font-family: arial;\">`[foobarbaz]´</font></body>"
+          "output": "<font style=\"font-family: arial;\">`[foobarbaz]´</font>",
+          "innerHTML": "<font style=\"font-family: arial;\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font style=\"font-family: arial;\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font style=\"font-family: arial;\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font style=\"font-family: arial;\">`[foobarbaz]´</font></body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<font style=\"font-family: arial;\" face=\"arial\">`[foobarbaz]´</font>",
-          "innerHTML": "<font style=\"font-family: arial;\" face=\"arial\">`[foobarbaz]´</font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font face=\"arial\" style=\"font-family: arial;\">`[foobarbaz]´</font></body>",
-          "bodyInnerHTML": "<font style=\"font-family: arial;\" face=\"arial\">`[foobarbaz]´</font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font face=\"arial\" style=\"font-family: arial;\">`[foobarbaz]´</font></body>"
+          "output": "<font style=\"font-family: arial;\">`[foobarbaz]´</font>",
+          "innerHTML": "<font style=\"font-family: arial;\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font style=\"font-family: arial;\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font style=\"font-family: arial;\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font style=\"font-family: arial;\">`[foobarbaz]´</font></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<font style=\"font-family: arial;\" face=\"arial\">`[foobarbaz]´</font>",
-          "innerHTML": "<font style=\"font-family: arial;\" face=\"arial\">`[foobarbaz]´</font>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font face=\"arial\" style=\"font-family: arial;\">`[foobarbaz]´</font></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font style=\"font-family: arial;\" face=\"arial\">`[foobarbaz]´</font></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font face=\"arial\" style=\"font-family: arial;\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
+          "output": "<font style=\"font-family: arial;\">`[foobarbaz]´</font>",
+          "innerHTML": "<font style=\"font-family: arial;\">`[foobarbaz]´</font>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font style=\"font-family: arial;\">`[foobarbaz]´</font></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font style=\"font-family: arial;\">`[foobarbaz]´</font></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font style=\"font-family: arial;\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
         }
       },
       "FN:a_FONTf:a-1_SO": {
@@ -7448,33 +7448,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "{<font style=\"font-family: arial;\" face=\"arial\">`foobarbaz´</font>}",
-          "innerHTML": "{<font style=\"font-family: arial;\" face=\"arial\">`foobarbaz´</font>}",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">{<font face=\"arial\" style=\"font-family: arial;\">`foobarbaz´</font>}</body>",
-          "bodyInnerHTML": "{<font style=\"font-family: arial;\" face=\"arial\">`foobarbaz´</font>}",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">{<font face=\"arial\" style=\"font-family: arial;\">`foobarbaz´</font>}</body>"
+          "output": "{<font style=\"font-family: arial;\">`foobarbaz´</font>}",
+          "innerHTML": "{<font style=\"font-family: arial;\">`foobarbaz´</font>}",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">{<font style=\"font-family: arial;\">`foobarbaz´</font>}</body>",
+          "bodyInnerHTML": "{<font style=\"font-family: arial;\">`foobarbaz´</font>}",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">{<font style=\"font-family: arial;\">`foobarbaz´</font>}</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "{<font style=\"font-family: arial;\" face=\"arial\">`foobarbaz´</font>}",
-          "innerHTML": "{<font style=\"font-family: arial;\" face=\"arial\">`foobarbaz´</font>}",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">{<font face=\"arial\" style=\"font-family: arial;\">`foobarbaz´</font>}</body>",
-          "bodyInnerHTML": "{<font style=\"font-family: arial;\" face=\"arial\">`foobarbaz´</font>}",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">{<font face=\"arial\" style=\"font-family: arial;\">`foobarbaz´</font>}</body>"
+          "output": "{<font style=\"font-family: arial;\">`foobarbaz´</font>}",
+          "innerHTML": "{<font style=\"font-family: arial;\">`foobarbaz´</font>}",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">{<font style=\"font-family: arial;\">`foobarbaz´</font>}</body>",
+          "bodyInnerHTML": "{<font style=\"font-family: arial;\">`foobarbaz´</font>}",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">{<font style=\"font-family: arial;\">`foobarbaz´</font>}</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "{<font style=\"font-family: arial;\" face=\"arial\">`foobarbaz´</font>}",
-          "innerHTML": "{<font style=\"font-family: arial;\" face=\"arial\">`foobarbaz´</font>}",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">{<font face=\"arial\" style=\"font-family: arial;\">`foobarbaz´</font>}</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">{<font style=\"font-family: arial;\" face=\"arial\">`foobarbaz´</font>}</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">{<font face=\"arial\" style=\"font-family: arial;\">`foobarbaz´</font>}</div>CAN<br>ARY</body>"
+          "output": "{<font style=\"font-family: arial;\">`foobarbaz´</font>}",
+          "innerHTML": "{<font style=\"font-family: arial;\">`foobarbaz´</font>}",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">{<font style=\"font-family: arial;\">`foobarbaz´</font>}</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">{<font style=\"font-family: arial;\">`foobarbaz´</font>}</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">{<font style=\"font-family: arial;\">`foobarbaz´</font>}</div>CAN<br>ARY</body>"
         }
       },
       "FN:a_SPANs:ff:a-1_SI": {
@@ -8259,33 +8259,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<b><span style=\"font-weight: bold\">`[bar]´</span></b>`baz´",
-          "innerHTML": "`foo´<b><span style=\"font-weight: bold\">`[bar]´</span></b>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<b><span style=\"font-weight: bold\">`[bar]´</span></b>`baz´</body>",
-          "bodyInnerHTML": "`foo´<b><span style=\"font-weight: bold\">`[bar]´</span></b>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<b><span style=\"font-weight: bold\">`[bar]´</span></b>`baz´</body>"
+          "output": "`foo´<b>`[bar]´</b>`baz´",
+          "innerHTML": "`foo´<b>`[bar]´</b>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<b>`[bar]´</b>`baz´</body>",
+          "bodyInnerHTML": "`foo´<b>`[bar]´</b>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<b>`[bar]´</b>`baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<b><span style=\"font-weight: bold\">`[bar]´</span></b>`baz´",
-          "innerHTML": "`foo´<b><span style=\"font-weight: bold\">`[bar]´</span></b>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<b><span style=\"font-weight: bold\">`[bar]´</span></b>`baz´</body>",
-          "bodyInnerHTML": "`foo´<b><span style=\"font-weight: bold\">`[bar]´</span></b>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<b><span style=\"font-weight: bold\">`[bar]´</span></b>`baz´</body>"
+          "output": "`foo´<b>`[bar]´</b>`baz´",
+          "innerHTML": "`foo´<b>`[bar]´</b>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<b>`[bar]´</b>`baz´</body>",
+          "bodyInnerHTML": "`foo´<b>`[bar]´</b>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<b>`[bar]´</b>`baz´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<b><span style=\"font-weight: bold\">`[bar]´</span></b>`baz´",
-          "innerHTML": "`foo´<b><span style=\"font-weight: bold\">`[bar]´</span></b>`baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<b><span style=\"font-weight: bold\">`[bar]´</span></b>`baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<b><span style=\"font-weight: bold\">`[bar]´</span></b>`baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<b><span style=\"font-weight: bold\">`[bar]´</span></b>`baz´</div>CAN<br>ARY</body>"
+          "output": "`foo´<b>`[bar]´</b>`baz´",
+          "innerHTML": "`foo´<b>`[bar]´</b>`baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<b>`[bar]´</b>`baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<b>`[bar]´</b>`baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<b>`[bar]´</b>`baz´</div>CAN<br>ARY</body>"
         }
       },
       "B_SPANs:fw:b-1_SO": {
@@ -8294,33 +8294,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<b><span style=\"font-weight: bold\">`bar´</span></b>`]baz´",
-          "innerHTML": "`foo[´<b><span style=\"font-weight: bold\">`bar´</span></b>`]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<b><span style=\"font-weight: bold\">`bar´</span></b>`]baz´</body>",
-          "bodyInnerHTML": "`foo[´<b><span style=\"font-weight: bold\">`bar´</span></b>`]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<b><span style=\"font-weight: bold\">`bar´</span></b>`]baz´</body>"
+          "output": "`foo[´<b>`bar´</b>`]baz´",
+          "innerHTML": "`foo[´<b>`bar´</b>`]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<b>`bar´</b>`]baz´</body>",
+          "bodyInnerHTML": "`foo[´<b>`bar´</b>`]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<b>`bar´</b>`]baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<b><span style=\"font-weight: bold\">`bar´</span></b>`]baz´",
-          "innerHTML": "`foo[´<b><span style=\"font-weight: bold\">`bar´</span></b>`]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<b><span style=\"font-weight: bold\">`bar´</span></b>`]baz´</body>",
-          "bodyInnerHTML": "`foo[´<b><span style=\"font-weight: bold\">`bar´</span></b>`]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<b><span style=\"font-weight: bold\">`bar´</span></b>`]baz´</body>"
+          "output": "`foo[´<b>`bar´</b>`]baz´",
+          "innerHTML": "`foo[´<b>`bar´</b>`]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<b>`bar´</b>`]baz´</body>",
+          "bodyInnerHTML": "`foo[´<b>`bar´</b>`]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<b>`bar´</b>`]baz´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<b><span style=\"font-weight: bold\">`bar´</span></b>`]baz´",
-          "innerHTML": "`foo[´<b><span style=\"font-weight: bold\">`bar´</span></b>`]baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<b><span style=\"font-weight: bold\">`bar´</span></b>`]baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<b><span style=\"font-weight: bold\">`bar´</span></b>`]baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<b><span style=\"font-weight: bold\">`bar´</span></b>`]baz´</div>CAN<br>ARY</body>"
+          "output": "`foo[´<b>`bar´</b>`]baz´",
+          "innerHTML": "`foo[´<b>`bar´</b>`]baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<b>`bar´</b>`]baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<b>`bar´</b>`]baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<b>`bar´</b>`]baz´</div>CAN<br>ARY</body>"
         }
       },
       "B_SPANs:fw:b-1_SL": {
@@ -8329,33 +8329,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<b><span style=\"font-weight: bold\">`bar]´</span></b>`baz´",
-          "innerHTML": "`foo[´<b><span style=\"font-weight: bold\">`bar]´</span></b>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<b><span style=\"font-weight: bold\">`bar]´</span></b>`baz´</body>",
-          "bodyInnerHTML": "`foo[´<b><span style=\"font-weight: bold\">`bar]´</span></b>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<b><span style=\"font-weight: bold\">`bar]´</span></b>`baz´</body>"
+          "output": "`foo[´<b>`bar]´</b>`baz´",
+          "innerHTML": "`foo[´<b>`bar]´</b>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<b>`bar]´</b>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<b>`bar]´</b>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<b>`bar]´</b>`baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<b><span style=\"font-weight: bold\">`bar]´</span></b>`baz´",
-          "innerHTML": "`foo[´<b><span style=\"font-weight: bold\">`bar]´</span></b>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<b><span style=\"font-weight: bold\">`bar]´</span></b>`baz´</body>",
-          "bodyInnerHTML": "`foo[´<b><span style=\"font-weight: bold\">`bar]´</span></b>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<b><span style=\"font-weight: bold\">`bar]´</span></b>`baz´</body>"
+          "output": "`foo[´<b>`bar]´</b>`baz´",
+          "innerHTML": "`foo[´<b>`bar]´</b>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<b>`bar]´</b>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<b>`bar]´</b>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<b>`bar]´</b>`baz´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<b><span style=\"font-weight: bold\">`bar]´</span></b>`baz´",
-          "innerHTML": "`foo[´<b><span style=\"font-weight: bold\">`bar]´</span></b>`baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<b><span style=\"font-weight: bold\">`bar]´</span></b>`baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<b><span style=\"font-weight: bold\">`bar]´</span></b>`baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<b><span style=\"font-weight: bold\">`bar]´</span></b>`baz´</div>CAN<br>ARY</body>"
+          "output": "`foo[´<b>`bar]´</b>`baz´",
+          "innerHTML": "`foo[´<b>`bar]´</b>`baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<b>`bar]´</b>`baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<b>`bar]´</b>`baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<b>`bar]´</b>`baz´</div>CAN<br>ARY</body>"
         }
       },
       "B_SPANs:fw:b-1_SR": {
@@ -8364,33 +8364,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<b><span style=\"font-weight: bold\">`[bar´</span></b>`]baz´",
-          "innerHTML": "`foo´<b><span style=\"font-weight: bold\">`[bar´</span></b>`]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<b><span style=\"font-weight: bold\">`[bar´</span></b>`]baz´</body>",
-          "bodyInnerHTML": "`foo´<b><span style=\"font-weight: bold\">`[bar´</span></b>`]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<b><span style=\"font-weight: bold\">`[bar´</span></b>`]baz´</body>"
+          "output": "`foo´<b>`[bar´</b>`]baz´",
+          "innerHTML": "`foo´<b>`[bar´</b>`]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<b>`[bar´</b>`]baz´</body>",
+          "bodyInnerHTML": "`foo´<b>`[bar´</b>`]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<b>`[bar´</b>`]baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<b><span style=\"font-weight: bold\">`[bar´</span></b>`]baz´",
-          "innerHTML": "`foo´<b><span style=\"font-weight: bold\">`[bar´</span></b>`]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<b><span style=\"font-weight: bold\">`[bar´</span></b>`]baz´</body>",
-          "bodyInnerHTML": "`foo´<b><span style=\"font-weight: bold\">`[bar´</span></b>`]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<b><span style=\"font-weight: bold\">`[bar´</span></b>`]baz´</body>"
+          "output": "`foo´<b>`[bar´</b>`]baz´",
+          "innerHTML": "`foo´<b>`[bar´</b>`]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<b>`[bar´</b>`]baz´</body>",
+          "bodyInnerHTML": "`foo´<b>`[bar´</b>`]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<b>`[bar´</b>`]baz´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<b><span style=\"font-weight: bold\">`[bar´</span></b>`]baz´",
-          "innerHTML": "`foo´<b><span style=\"font-weight: bold\">`[bar´</span></b>`]baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<b><span style=\"font-weight: bold\">`[bar´</span></b>`]baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<b><span style=\"font-weight: bold\">`[bar´</span></b>`]baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<b><span style=\"font-weight: bold\">`[bar´</span></b>`]baz´</div>CAN<br>ARY</body>"
+          "output": "`foo´<b>`[bar´</b>`]baz´",
+          "innerHTML": "`foo´<b>`[bar´</b>`]baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<b>`[bar´</b>`]baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<b>`[bar´</b>`]baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<b>`[bar´</b>`]baz´</div>CAN<br>ARY</body>"
         }
       },
       "B_B-P3-1_SO12": {
@@ -8819,33 +8819,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<i><span style=\"font-style: italic\">`[bar]´</span></i>`baz´",
-          "innerHTML": "`foo´<i><span style=\"font-style: italic\">`[bar]´</span></i>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<i><span style=\"font-style: italic\">`[bar]´</span></i>`baz´</body>",
-          "bodyInnerHTML": "`foo´<i><span style=\"font-style: italic\">`[bar]´</span></i>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<i><span style=\"font-style: italic\">`[bar]´</span></i>`baz´</body>"
+          "output": "`foo´<i>`[bar]´</i>`baz´",
+          "innerHTML": "`foo´<i>`[bar]´</i>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<i>`[bar]´</i>`baz´</body>",
+          "bodyInnerHTML": "`foo´<i>`[bar]´</i>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<i>`[bar]´</i>`baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<i><span style=\"font-style: italic\">`[bar]´</span></i>`baz´",
-          "innerHTML": "`foo´<i><span style=\"font-style: italic\">`[bar]´</span></i>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<i><span style=\"font-style: italic\">`[bar]´</span></i>`baz´</body>",
-          "bodyInnerHTML": "`foo´<i><span style=\"font-style: italic\">`[bar]´</span></i>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<i><span style=\"font-style: italic\">`[bar]´</span></i>`baz´</body>"
+          "output": "`foo´<i>`[bar]´</i>`baz´",
+          "innerHTML": "`foo´<i>`[bar]´</i>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<i>`[bar]´</i>`baz´</body>",
+          "bodyInnerHTML": "`foo´<i>`[bar]´</i>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<i>`[bar]´</i>`baz´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<i><span style=\"font-style: italic\">`[bar]´</span></i>`baz´",
-          "innerHTML": "`foo´<i><span style=\"font-style: italic\">`[bar]´</span></i>`baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<i><span style=\"font-style: italic\">`[bar]´</span></i>`baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<i><span style=\"font-style: italic\">`[bar]´</span></i>`baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<i><span style=\"font-style: italic\">`[bar]´</span></i>`baz´</div>CAN<br>ARY</body>"
+          "output": "`foo´<i>`[bar]´</i>`baz´",
+          "innerHTML": "`foo´<i>`[bar]´</i>`baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<i>`[bar]´</i>`baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<i>`[bar]´</i>`baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<i>`[bar]´</i>`baz´</div>CAN<br>ARY</body>"
         }
       },
       "I_SPANs:fs:i-1_SO": {
@@ -8854,33 +8854,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<i><span style=\"font-style: italic\">`bar´</span></i>`]baz´",
-          "innerHTML": "`foo[´<i><span style=\"font-style: italic\">`bar´</span></i>`]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<i><span style=\"font-style: italic\">`bar´</span></i>`]baz´</body>",
-          "bodyInnerHTML": "`foo[´<i><span style=\"font-style: italic\">`bar´</span></i>`]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<i><span style=\"font-style: italic\">`bar´</span></i>`]baz´</body>"
+          "output": "`foo[´<i>`bar´</i>`]baz´",
+          "innerHTML": "`foo[´<i>`bar´</i>`]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<i>`bar´</i>`]baz´</body>",
+          "bodyInnerHTML": "`foo[´<i>`bar´</i>`]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<i>`bar´</i>`]baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<i><span style=\"font-style: italic\">`bar´</span></i>`]baz´",
-          "innerHTML": "`foo[´<i><span style=\"font-style: italic\">`bar´</span></i>`]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<i><span style=\"font-style: italic\">`bar´</span></i>`]baz´</body>",
-          "bodyInnerHTML": "`foo[´<i><span style=\"font-style: italic\">`bar´</span></i>`]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<i><span style=\"font-style: italic\">`bar´</span></i>`]baz´</body>"
+          "output": "`foo[´<i>`bar´</i>`]baz´",
+          "innerHTML": "`foo[´<i>`bar´</i>`]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<i>`bar´</i>`]baz´</body>",
+          "bodyInnerHTML": "`foo[´<i>`bar´</i>`]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<i>`bar´</i>`]baz´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<i><span style=\"font-style: italic\">`bar´</span></i>`]baz´",
-          "innerHTML": "`foo[´<i><span style=\"font-style: italic\">`bar´</span></i>`]baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<i><span style=\"font-style: italic\">`bar´</span></i>`]baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<i><span style=\"font-style: italic\">`bar´</span></i>`]baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<i><span style=\"font-style: italic\">`bar´</span></i>`]baz´</div>CAN<br>ARY</body>"
+          "output": "`foo[´<i>`bar´</i>`]baz´",
+          "innerHTML": "`foo[´<i>`bar´</i>`]baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<i>`bar´</i>`]baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<i>`bar´</i>`]baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<i>`bar´</i>`]baz´</div>CAN<br>ARY</body>"
         }
       },
       "I_SPANs:fs:i-1_SL": {
@@ -8889,33 +8889,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<i><span style=\"font-style: italic\">`bar]´</span></i>`baz´",
-          "innerHTML": "`foo[´<i><span style=\"font-style: italic\">`bar]´</span></i>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<i><span style=\"font-style: italic\">`bar]´</span></i>`baz´</body>",
-          "bodyInnerHTML": "`foo[´<i><span style=\"font-style: italic\">`bar]´</span></i>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<i><span style=\"font-style: italic\">`bar]´</span></i>`baz´</body>"
+          "output": "`foo[´<i>`bar]´</i>`baz´",
+          "innerHTML": "`foo[´<i>`bar]´</i>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<i>`bar]´</i>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<i>`bar]´</i>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<i>`bar]´</i>`baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<i><span style=\"font-style: italic\">`bar]´</span></i>`baz´",
-          "innerHTML": "`foo[´<i><span style=\"font-style: italic\">`bar]´</span></i>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<i><span style=\"font-style: italic\">`bar]´</span></i>`baz´</body>",
-          "bodyInnerHTML": "`foo[´<i><span style=\"font-style: italic\">`bar]´</span></i>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<i><span style=\"font-style: italic\">`bar]´</span></i>`baz´</body>"
+          "output": "`foo[´<i>`bar]´</i>`baz´",
+          "innerHTML": "`foo[´<i>`bar]´</i>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<i>`bar]´</i>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<i>`bar]´</i>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<i>`bar]´</i>`baz´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<i><span style=\"font-style: italic\">`bar]´</span></i>`baz´",
-          "innerHTML": "`foo[´<i><span style=\"font-style: italic\">`bar]´</span></i>`baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<i><span style=\"font-style: italic\">`bar]´</span></i>`baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<i><span style=\"font-style: italic\">`bar]´</span></i>`baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<i><span style=\"font-style: italic\">`bar]´</span></i>`baz´</div>CAN<br>ARY</body>"
+          "output": "`foo[´<i>`bar]´</i>`baz´",
+          "innerHTML": "`foo[´<i>`bar]´</i>`baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<i>`bar]´</i>`baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<i>`bar]´</i>`baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<i>`bar]´</i>`baz´</div>CAN<br>ARY</body>"
         }
       },
       "I_SPANs:fs:i-1_SR": {
@@ -8924,33 +8924,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<i><span style=\"font-style: italic\">`[bar´</span></i>`]baz´",
-          "innerHTML": "`foo´<i><span style=\"font-style: italic\">`[bar´</span></i>`]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<i><span style=\"font-style: italic\">`[bar´</span></i>`]baz´</body>",
-          "bodyInnerHTML": "`foo´<i><span style=\"font-style: italic\">`[bar´</span></i>`]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<i><span style=\"font-style: italic\">`[bar´</span></i>`]baz´</body>"
+          "output": "`foo´<i>`[bar´</i>`]baz´",
+          "innerHTML": "`foo´<i>`[bar´</i>`]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<i>`[bar´</i>`]baz´</body>",
+          "bodyInnerHTML": "`foo´<i>`[bar´</i>`]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<i>`[bar´</i>`]baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<i><span style=\"font-style: italic\">`[bar´</span></i>`]baz´",
-          "innerHTML": "`foo´<i><span style=\"font-style: italic\">`[bar´</span></i>`]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<i><span style=\"font-style: italic\">`[bar´</span></i>`]baz´</body>",
-          "bodyInnerHTML": "`foo´<i><span style=\"font-style: italic\">`[bar´</span></i>`]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<i><span style=\"font-style: italic\">`[bar´</span></i>`]baz´</body>"
+          "output": "`foo´<i>`[bar´</i>`]baz´",
+          "innerHTML": "`foo´<i>`[bar´</i>`]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<i>`[bar´</i>`]baz´</body>",
+          "bodyInnerHTML": "`foo´<i>`[bar´</i>`]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<i>`[bar´</i>`]baz´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<i><span style=\"font-style: italic\">`[bar´</span></i>`]baz´",
-          "innerHTML": "`foo´<i><span style=\"font-style: italic\">`[bar´</span></i>`]baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<i><span style=\"font-style: italic\">`[bar´</span></i>`]baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<i><span style=\"font-style: italic\">`[bar´</span></i>`]baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<i><span style=\"font-style: italic\">`[bar´</span></i>`]baz´</div>CAN<br>ARY</body>"
+          "output": "`foo´<i>`[bar´</i>`]baz´",
+          "innerHTML": "`foo´<i>`[bar´</i>`]baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<i>`[bar´</i>`]baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<i>`[bar´</i>`]baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<i>`[bar´</i>`]baz´</div>CAN<br>ARY</body>"
         }
       },
       "I_I-P3-1_SO2": {
@@ -9134,33 +9134,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<u><span style=\"text-decoration: underline\">`[bar]´</span></u>`baz´",
-          "innerHTML": "`foo´<u><span style=\"text-decoration: underline\">`[bar]´</span></u>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<u><span style=\"text-decoration: underline\">`[bar]´</span></u>`baz´</body>",
-          "bodyInnerHTML": "`foo´<u><span style=\"text-decoration: underline\">`[bar]´</span></u>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<u><span style=\"text-decoration: underline\">`[bar]´</span></u>`baz´</body>"
+          "output": "`foo´<u>`[bar]´</u>`baz´",
+          "innerHTML": "`foo´<u>`[bar]´</u>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<u>`[bar]´</u>`baz´</body>",
+          "bodyInnerHTML": "`foo´<u>`[bar]´</u>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<u>`[bar]´</u>`baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<u><span style=\"text-decoration: underline\">`[bar]´</span></u>`baz´",
-          "innerHTML": "`foo´<u><span style=\"text-decoration: underline\">`[bar]´</span></u>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<u><span style=\"text-decoration: underline\">`[bar]´</span></u>`baz´</body>",
-          "bodyInnerHTML": "`foo´<u><span style=\"text-decoration: underline\">`[bar]´</span></u>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<u><span style=\"text-decoration: underline\">`[bar]´</span></u>`baz´</body>"
+          "output": "`foo´<u>`[bar]´</u>`baz´",
+          "innerHTML": "`foo´<u>`[bar]´</u>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<u>`[bar]´</u>`baz´</body>",
+          "bodyInnerHTML": "`foo´<u>`[bar]´</u>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<u>`[bar]´</u>`baz´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<u><span style=\"text-decoration: underline\">`[bar]´</span></u>`baz´",
-          "innerHTML": "`foo´<u><span style=\"text-decoration: underline\">`[bar]´</span></u>`baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<u><span style=\"text-decoration: underline\">`[bar]´</span></u>`baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<u><span style=\"text-decoration: underline\">`[bar]´</span></u>`baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<u><span style=\"text-decoration: underline\">`[bar]´</span></u>`baz´</div>CAN<br>ARY</body>"
+          "output": "`foo´<u>`[bar]´</u>`baz´",
+          "innerHTML": "`foo´<u>`[bar]´</u>`baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<u>`[bar]´</u>`baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<u>`[bar]´</u>`baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<u>`[bar]´</u>`baz´</div>CAN<br>ARY</body>"
         }
       },
       "U_SPANs:td:u-1_SO": {
@@ -9169,33 +9169,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<u><span style=\"text-decoration: underline\">`bar´</span></u>`]baz´",
-          "innerHTML": "`foo[´<u><span style=\"text-decoration: underline\">`bar´</span></u>`]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<u><span style=\"text-decoration: underline\">`bar´</span></u>`]baz´</body>",
-          "bodyInnerHTML": "`foo[´<u><span style=\"text-decoration: underline\">`bar´</span></u>`]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<u><span style=\"text-decoration: underline\">`bar´</span></u>`]baz´</body>"
+          "output": "`foo[´<u>`bar´</u>`]baz´",
+          "innerHTML": "`foo[´<u>`bar´</u>`]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<u>`bar´</u>`]baz´</body>",
+          "bodyInnerHTML": "`foo[´<u>`bar´</u>`]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<u>`bar´</u>`]baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<u><span style=\"text-decoration: underline\">`bar´</span></u>`]baz´",
-          "innerHTML": "`foo[´<u><span style=\"text-decoration: underline\">`bar´</span></u>`]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<u><span style=\"text-decoration: underline\">`bar´</span></u>`]baz´</body>",
-          "bodyInnerHTML": "`foo[´<u><span style=\"text-decoration: underline\">`bar´</span></u>`]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<u><span style=\"text-decoration: underline\">`bar´</span></u>`]baz´</body>"
+          "output": "`foo[´<u>`bar´</u>`]baz´",
+          "innerHTML": "`foo[´<u>`bar´</u>`]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<u>`bar´</u>`]baz´</body>",
+          "bodyInnerHTML": "`foo[´<u>`bar´</u>`]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<u>`bar´</u>`]baz´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<u><span style=\"text-decoration: underline\">`bar´</span></u>`]baz´",
-          "innerHTML": "`foo[´<u><span style=\"text-decoration: underline\">`bar´</span></u>`]baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<u><span style=\"text-decoration: underline\">`bar´</span></u>`]baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<u><span style=\"text-decoration: underline\">`bar´</span></u>`]baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<u><span style=\"text-decoration: underline\">`bar´</span></u>`]baz´</div>CAN<br>ARY</body>"
+          "output": "`foo[´<u>`bar´</u>`]baz´",
+          "innerHTML": "`foo[´<u>`bar´</u>`]baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<u>`bar´</u>`]baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<u>`bar´</u>`]baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<u>`bar´</u>`]baz´</div>CAN<br>ARY</body>"
         }
       },
       "U_SPANs:td:u-1_SL": {
@@ -9204,33 +9204,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<u><span style=\"text-decoration: underline\">`bar]´</span></u>`baz´",
-          "innerHTML": "`foo[´<u><span style=\"text-decoration: underline\">`bar]´</span></u>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<u><span style=\"text-decoration: underline\">`bar]´</span></u>`baz´</body>",
-          "bodyInnerHTML": "`foo[´<u><span style=\"text-decoration: underline\">`bar]´</span></u>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<u><span style=\"text-decoration: underline\">`bar]´</span></u>`baz´</body>"
+          "output": "`foo[´<u>`bar]´</u>`baz´",
+          "innerHTML": "`foo[´<u>`bar]´</u>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<u>`bar]´</u>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<u>`bar]´</u>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<u>`bar]´</u>`baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<u><span style=\"text-decoration: underline\">`bar]´</span></u>`baz´",
-          "innerHTML": "`foo[´<u><span style=\"text-decoration: underline\">`bar]´</span></u>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<u><span style=\"text-decoration: underline\">`bar]´</span></u>`baz´</body>",
-          "bodyInnerHTML": "`foo[´<u><span style=\"text-decoration: underline\">`bar]´</span></u>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<u><span style=\"text-decoration: underline\">`bar]´</span></u>`baz´</body>"
+          "output": "`foo[´<u>`bar]´</u>`baz´",
+          "innerHTML": "`foo[´<u>`bar]´</u>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<u>`bar]´</u>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<u>`bar]´</u>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<u>`bar]´</u>`baz´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<u><span style=\"text-decoration: underline\">`bar]´</span></u>`baz´",
-          "innerHTML": "`foo[´<u><span style=\"text-decoration: underline\">`bar]´</span></u>`baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<u><span style=\"text-decoration: underline\">`bar]´</span></u>`baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<u><span style=\"text-decoration: underline\">`bar]´</span></u>`baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<u><span style=\"text-decoration: underline\">`bar]´</span></u>`baz´</div>CAN<br>ARY</body>"
+          "output": "`foo[´<u>`bar]´</u>`baz´",
+          "innerHTML": "`foo[´<u>`bar]´</u>`baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<u>`bar]´</u>`baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<u>`bar]´</u>`baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<u>`bar]´</u>`baz´</div>CAN<br>ARY</body>"
         }
       },
       "U_SPANs:td:u-1_SR": {
@@ -9239,33 +9239,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<u><span style=\"text-decoration: underline\">`[bar´</span></u>`]baz´",
-          "innerHTML": "`foo´<u><span style=\"text-decoration: underline\">`[bar´</span></u>`]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<u><span style=\"text-decoration: underline\">`[bar´</span></u>`]baz´</body>",
-          "bodyInnerHTML": "`foo´<u><span style=\"text-decoration: underline\">`[bar´</span></u>`]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<u><span style=\"text-decoration: underline\">`[bar´</span></u>`]baz´</body>"
+          "output": "`foo´<u>`[bar´</u>`]baz´",
+          "innerHTML": "`foo´<u>`[bar´</u>`]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<u>`[bar´</u>`]baz´</body>",
+          "bodyInnerHTML": "`foo´<u>`[bar´</u>`]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<u>`[bar´</u>`]baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<u><span style=\"text-decoration: underline\">`[bar´</span></u>`]baz´",
-          "innerHTML": "`foo´<u><span style=\"text-decoration: underline\">`[bar´</span></u>`]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<u><span style=\"text-decoration: underline\">`[bar´</span></u>`]baz´</body>",
-          "bodyInnerHTML": "`foo´<u><span style=\"text-decoration: underline\">`[bar´</span></u>`]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<u><span style=\"text-decoration: underline\">`[bar´</span></u>`]baz´</body>"
+          "output": "`foo´<u>`[bar´</u>`]baz´",
+          "innerHTML": "`foo´<u>`[bar´</u>`]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<u>`[bar´</u>`]baz´</body>",
+          "bodyInnerHTML": "`foo´<u>`[bar´</u>`]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<u>`[bar´</u>`]baz´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<u><span style=\"text-decoration: underline\">`[bar´</span></u>`]baz´",
-          "innerHTML": "`foo´<u><span style=\"text-decoration: underline\">`[bar´</span></u>`]baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<u><span style=\"text-decoration: underline\">`[bar´</span></u>`]baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<u><span style=\"text-decoration: underline\">`[bar´</span></u>`]baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<u><span style=\"text-decoration: underline\">`[bar´</span></u>`]baz´</div>CAN<br>ARY</body>"
+          "output": "`foo´<u>`[bar´</u>`]baz´",
+          "innerHTML": "`foo´<u>`[bar´</u>`]baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<u>`[bar´</u>`]baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<u>`[bar´</u>`]baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<u>`[bar´</u>`]baz´</div>CAN<br>ARY</body>"
         }
       },
       "U_U-S-1_SO": {
@@ -9694,33 +9694,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<strike><span style=\"text-decoration:line-through\">`[bar]´</span></strike>`baz´",
-          "innerHTML": "`foo´<strike><span style=\"text-decoration:line-through\">`[bar]´</span></strike>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<strike><span style=\"text-decoration:line-through\">`[bar]´</span></strike>`baz´</body>",
-          "bodyInnerHTML": "`foo´<strike><span style=\"text-decoration:line-through\">`[bar]´</span></strike>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<strike><span style=\"text-decoration:line-through\">`[bar]´</span></strike>`baz´</body>"
+          "output": "`foo´<strike>`[bar]´</strike>`baz´",
+          "innerHTML": "`foo´<strike>`[bar]´</strike>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<strike>`[bar]´</strike>`baz´</body>",
+          "bodyInnerHTML": "`foo´<strike>`[bar]´</strike>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<strike>`[bar]´</strike>`baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<strike><span style=\"text-decoration:line-through\">`[bar]´</span></strike>`baz´",
-          "innerHTML": "`foo´<strike><span style=\"text-decoration:line-through\">`[bar]´</span></strike>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<strike><span style=\"text-decoration:line-through\">`[bar]´</span></strike>`baz´</body>",
-          "bodyInnerHTML": "`foo´<strike><span style=\"text-decoration:line-through\">`[bar]´</span></strike>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<strike><span style=\"text-decoration:line-through\">`[bar]´</span></strike>`baz´</body>"
+          "output": "`foo´<strike>`[bar]´</strike>`baz´",
+          "innerHTML": "`foo´<strike>`[bar]´</strike>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<strike>`[bar]´</strike>`baz´</body>",
+          "bodyInnerHTML": "`foo´<strike>`[bar]´</strike>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<strike>`[bar]´</strike>`baz´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<strike><span style=\"text-decoration:line-through\">`[bar]´</span></strike>`baz´",
-          "innerHTML": "`foo´<strike><span style=\"text-decoration:line-through\">`[bar]´</span></strike>`baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<strike><span style=\"text-decoration:line-through\">`[bar]´</span></strike>`baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<strike><span style=\"text-decoration:line-through\">`[bar]´</span></strike>`baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<strike><span style=\"text-decoration:line-through\">`[bar]´</span></strike>`baz´</div>CAN<br>ARY</body>"
+          "output": "`foo´<strike>`[bar]´</strike>`baz´",
+          "innerHTML": "`foo´<strike>`[bar]´</strike>`baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<strike>`[bar]´</strike>`baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<strike>`[bar]´</strike>`baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<strike>`[bar]´</strike>`baz´</div>CAN<br>ARY</body>"
         }
       },
       "S_SPANs:td:lt-1_SO": {
@@ -9729,33 +9729,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<strike><span style=\"text-decoration:line-through\">`bar´</span></strike>`]baz´",
-          "innerHTML": "`foo[´<strike><span style=\"text-decoration:line-through\">`bar´</span></strike>`]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<strike><span style=\"text-decoration:line-through\">`bar´</span></strike>`]baz´</body>",
-          "bodyInnerHTML": "`foo[´<strike><span style=\"text-decoration:line-through\">`bar´</span></strike>`]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<strike><span style=\"text-decoration:line-through\">`bar´</span></strike>`]baz´</body>"
+          "output": "`foo[´<strike>`bar´</strike>`]baz´",
+          "innerHTML": "`foo[´<strike>`bar´</strike>`]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<strike>`bar´</strike>`]baz´</body>",
+          "bodyInnerHTML": "`foo[´<strike>`bar´</strike>`]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<strike>`bar´</strike>`]baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<strike><span style=\"text-decoration:line-through\">`bar´</span></strike>`]baz´",
-          "innerHTML": "`foo[´<strike><span style=\"text-decoration:line-through\">`bar´</span></strike>`]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<strike><span style=\"text-decoration:line-through\">`bar´</span></strike>`]baz´</body>",
-          "bodyInnerHTML": "`foo[´<strike><span style=\"text-decoration:line-through\">`bar´</span></strike>`]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<strike><span style=\"text-decoration:line-through\">`bar´</span></strike>`]baz´</body>"
+          "output": "`foo[´<strike>`bar´</strike>`]baz´",
+          "innerHTML": "`foo[´<strike>`bar´</strike>`]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<strike>`bar´</strike>`]baz´</body>",
+          "bodyInnerHTML": "`foo[´<strike>`bar´</strike>`]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<strike>`bar´</strike>`]baz´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<strike><span style=\"text-decoration:line-through\">`bar´</span></strike>`]baz´",
-          "innerHTML": "`foo[´<strike><span style=\"text-decoration:line-through\">`bar´</span></strike>`]baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<strike><span style=\"text-decoration:line-through\">`bar´</span></strike>`]baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<strike><span style=\"text-decoration:line-through\">`bar´</span></strike>`]baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<strike><span style=\"text-decoration:line-through\">`bar´</span></strike>`]baz´</div>CAN<br>ARY</body>"
+          "output": "`foo[´<strike>`bar´</strike>`]baz´",
+          "innerHTML": "`foo[´<strike>`bar´</strike>`]baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<strike>`bar´</strike>`]baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<strike>`bar´</strike>`]baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<strike>`bar´</strike>`]baz´</div>CAN<br>ARY</body>"
         }
       },
       "S_SPANs:td:lt-1_SL": {
@@ -9764,33 +9764,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<strike><span style=\"text-decoration:line-through\">`bar]´</span></strike>`baz´",
-          "innerHTML": "`foo[´<strike><span style=\"text-decoration:line-through\">`bar]´</span></strike>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<strike><span style=\"text-decoration:line-through\">`bar]´</span></strike>`baz´</body>",
-          "bodyInnerHTML": "`foo[´<strike><span style=\"text-decoration:line-through\">`bar]´</span></strike>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<strike><span style=\"text-decoration:line-through\">`bar]´</span></strike>`baz´</body>"
+          "output": "`foo[´<strike>`bar]´</strike>`baz´",
+          "innerHTML": "`foo[´<strike>`bar]´</strike>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<strike>`bar]´</strike>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<strike>`bar]´</strike>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<strike>`bar]´</strike>`baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<strike><span style=\"text-decoration:line-through\">`bar]´</span></strike>`baz´",
-          "innerHTML": "`foo[´<strike><span style=\"text-decoration:line-through\">`bar]´</span></strike>`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<strike><span style=\"text-decoration:line-through\">`bar]´</span></strike>`baz´</body>",
-          "bodyInnerHTML": "`foo[´<strike><span style=\"text-decoration:line-through\">`bar]´</span></strike>`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<strike><span style=\"text-decoration:line-through\">`bar]´</span></strike>`baz´</body>"
+          "output": "`foo[´<strike>`bar]´</strike>`baz´",
+          "innerHTML": "`foo[´<strike>`bar]´</strike>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<strike>`bar]´</strike>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<strike>`bar]´</strike>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<strike>`bar]´</strike>`baz´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo[´<strike><span style=\"text-decoration:line-through\">`bar]´</span></strike>`baz´",
-          "innerHTML": "`foo[´<strike><span style=\"text-decoration:line-through\">`bar]´</span></strike>`baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<strike><span style=\"text-decoration:line-through\">`bar]´</span></strike>`baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<strike><span style=\"text-decoration:line-through\">`bar]´</span></strike>`baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<strike><span style=\"text-decoration:line-through\">`bar]´</span></strike>`baz´</div>CAN<br>ARY</body>"
+          "output": "`foo[´<strike>`bar]´</strike>`baz´",
+          "innerHTML": "`foo[´<strike>`bar]´</strike>`baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<strike>`bar]´</strike>`baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<strike>`bar]´</strike>`baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<strike>`bar]´</strike>`baz´</div>CAN<br>ARY</body>"
         }
       },
       "S_SPANs:td:lt-1_SR": {
@@ -9799,33 +9799,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<strike><span style=\"text-decoration:line-through\">`[bar´</span></strike>`]baz´",
-          "innerHTML": "`foo´<strike><span style=\"text-decoration:line-through\">`[bar´</span></strike>`]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<strike><span style=\"text-decoration:line-through\">`[bar´</span></strike>`]baz´</body>",
-          "bodyInnerHTML": "`foo´<strike><span style=\"text-decoration:line-through\">`[bar´</span></strike>`]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<strike><span style=\"text-decoration:line-through\">`[bar´</span></strike>`]baz´</body>"
+          "output": "`foo´<strike>`[bar´</strike>`]baz´",
+          "innerHTML": "`foo´<strike>`[bar´</strike>`]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<strike>`[bar´</strike>`]baz´</body>",
+          "bodyInnerHTML": "`foo´<strike>`[bar´</strike>`]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<strike>`[bar´</strike>`]baz´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<strike><span style=\"text-decoration:line-through\">`[bar´</span></strike>`]baz´",
-          "innerHTML": "`foo´<strike><span style=\"text-decoration:line-through\">`[bar´</span></strike>`]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<strike><span style=\"text-decoration:line-through\">`[bar´</span></strike>`]baz´</body>",
-          "bodyInnerHTML": "`foo´<strike><span style=\"text-decoration:line-through\">`[bar´</span></strike>`]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<strike><span style=\"text-decoration:line-through\">`[bar´</span></strike>`]baz´</body>"
+          "output": "`foo´<strike>`[bar´</strike>`]baz´",
+          "innerHTML": "`foo´<strike>`[bar´</strike>`]baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<strike>`[bar´</strike>`]baz´</body>",
+          "bodyInnerHTML": "`foo´<strike>`[bar´</strike>`]baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<strike>`[bar´</strike>`]baz´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "`foo´<strike><span style=\"text-decoration:line-through\">`[bar´</span></strike>`]baz´",
-          "innerHTML": "`foo´<strike><span style=\"text-decoration:line-through\">`[bar´</span></strike>`]baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<strike><span style=\"text-decoration:line-through\">`[bar´</span></strike>`]baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<strike><span style=\"text-decoration:line-through\">`[bar´</span></strike>`]baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<strike><span style=\"text-decoration:line-through\">`[bar´</span></strike>`]baz´</div>CAN<br>ARY</body>"
+          "output": "`foo´<strike>`[bar´</strike>`]baz´",
+          "innerHTML": "`foo´<strike>`[bar´</strike>`]baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<strike>`[bar´</strike>`]baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<strike>`[bar´</strike>`]baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<strike>`[bar´</strike>`]baz´</div>CAN<br>ARY</body>"
         }
       },
       "S_S-U-1_SI": {
