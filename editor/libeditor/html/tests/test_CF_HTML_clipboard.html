@@ -27,6 +27,12 @@ function copyCF_HTML(cfhtml, success, failure) {
   const Ci = Components.interfaces;
   const CF_HTML = "application/x-moz-nativehtml";
 
+  function getLoadContext() {
+    return window.QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIWebNavigation)
+                 .QueryInterface(Ci.nsILoadContext);
+  }
+
   var cb = Cc["@mozilla.org/widget/clipboard;1"].
            getService(Ci.nsIClipboard);
 
@@ -47,6 +53,7 @@ function copyCF_HTML(cfhtml, success, failure) {
 
     var trans = Cc["@mozilla.org/widget/transferable;1"].
                 createInstance(Ci.nsITransferable);
+    trans.init(getLoadContext());
     trans.addDataFlavor(CF_HTML);
     cb.getData(trans, cb.kGlobalClipboard);
     var data = {};
@@ -62,6 +69,7 @@ function copyCF_HTML(cfhtml, success, failure) {
 
   var trans = Cc["@mozilla.org/widget/transferable;1"].
               createInstance(Ci.nsITransferable);
+  trans.init(getLoadContext());
   trans.addDataFlavor(CF_HTML);
   var data = Cc["@mozilla.org/supports-cstring;1"].
              createInstance(Ci.nsISupportsCString);

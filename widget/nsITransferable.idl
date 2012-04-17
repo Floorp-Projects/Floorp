@@ -63,6 +63,7 @@
   *
   */
 interface nsITransferable;
+interface nsILoadContext;
 
 [scriptable, uuid(7E225E5F-711C-11D7-9FAE-000393636592)]
 interface nsIFlavorDataProvider : nsISupports
@@ -80,11 +81,21 @@ interface nsIFlavorDataProvider : nsISupports
 };
 
 
-[scriptable, uuid(8B5314BC-DB01-11d2-96CE-0060B0FB9956)]
+[scriptable, uuid(51fede5f-8d3f-4625-9402-e82c21110541)]
 interface nsITransferable : nsISupports
 {
   const long kFlavorHasDataProvider = 0;
-  
+
+  /**
+   * Initializes a transferable object.  This should be called on alli
+   * transferable objects.  Failure to do so will result in fatal assertions in
+   * debug builds.
+   *
+   * @param aContext the load context associated with the transferable object.
+   *        This can be set to null if a load context is not available.
+   */
+  void init(in nsILoadContext aContext);
+
   /**
     * Computes a list of flavors (mime types as nsISupportsCString) that the transferable 
     * can export, either through intrinsic knowledge or output data converters.

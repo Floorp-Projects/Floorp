@@ -17,6 +17,7 @@ class nsITransferable;
 class nsACString;
 class nsAString;
 class nsIPresShell;
+class nsILoadContext;
 
 class nsCopySupport
 {
@@ -33,6 +34,7 @@ class nsCopySupport
     static nsresult GetContents(const nsACString& aMimeType, PRUint32 aFlags, nsISelection *aSel, nsIDocument *aDoc, nsAString& outdata);
     
     static nsresult ImageCopy(nsIImageLoadingContent* aImageElement,
+                              nsILoadContext* aLoadContext,
                               PRInt32 aCopyFlags);
 
     // Get the selection as a transferable. Similar to HTMLCopy except does

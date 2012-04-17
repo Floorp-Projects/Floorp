@@ -1012,7 +1012,7 @@ HUD_SERVICE.prototype =
         strings.push("[" + timestampString + "] " + item.clipboardText);
       }
     }
-    clipboardHelper.copyString(strings.join("\n"));
+    clipboardHelper.copyString(strings.join("\n"), this.doc);
   }
 };
 

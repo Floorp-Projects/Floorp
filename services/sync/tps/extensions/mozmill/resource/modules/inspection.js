@@ -231,7 +231,7 @@ var isMagicAnonymousDiv = function (_document, node) {
 
 var copyToClipboard = function(str){
   const gClipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"] .getService(Components.interfaces.nsIClipboardHelper);
-  gClipboardHelper.copyString(str);
+  gClipboardHelper.copyString(str, _window.document);
 }
 
 var getControllerAndDocument = function (_document, _window) {

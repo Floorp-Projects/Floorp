@@ -22,6 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=166235
 
 /** Test for Bug 166235 **/
   var Cc = SpecialPowers.wrap(Components).classes;
+  var Ci = SpecialPowers.wrap(Components).interfaces;
 
   var webnav = SpecialPowers.wrap(window).QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                                          .getInterface(Components.interfaces.nsIWebNavigation)
@@ -36,6 +37,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=166235
 
   var textarea = SpecialPowers.wrap(document).getElementById('input');
 
+  function getLoadContext() {
+    return SpecialPowers.wrap(window).QueryInterface(Ci.nsIInterfaceRequestor)
+                                     .getInterface(Ci.nsIWebNavigation)
+                                     .QueryInterface(Ci.nsILoadContext);
+  }
+
   function copyChildrenToClipboard(id) {
     textarea.blur();
     clipboard.emptyClipboard(1);
@@ -48,6 +55,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=166235
   function getClipboardData(mime) {
     var transferable = Cc['@mozilla.org/widget/transferable;1']
                          .createInstance(Components.interfaces.nsITransferable);
+    transferable.init(getLoadContext());
     transferable.addDataFlavor(mime);
     clipboard.getData(transferable, 1);
     var data = SpecialPowers.wrap({});
