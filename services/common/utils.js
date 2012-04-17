@@ -56,6 +56,13 @@ let CommonUtils = {
   },
 
   /**
+   * Encode byte string as base64URL (RFC 4648).
+   */
+  encodeBase64URL: function encodeBase64URL(bytes) {
+    return btoa(bytes).replace("+", "-", "g").replace("/", "_", "g");
+  },
+  
+  /**
    * Create a nsIURI instance from a string.
    */
   makeURI: function makeURI(URIString) {
