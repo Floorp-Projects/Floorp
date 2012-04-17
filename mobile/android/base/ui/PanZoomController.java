@@ -57,6 +57,8 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -165,6 +167,7 @@ public class PanZoomController
 
         JSONArray prefs = new JSONArray();
         prefs.put(PREF_ZOOM_ANIMATION_FRAMES);
+        Axis.addPrefNames(prefs);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(MESSAGE_PREFS_GET, prefs.toString()));
     }
 
@@ -209,14 +212,29 @@ public class PanZoomController
                 });
             } else if (MESSAGE_PREFS_DATA.equals(event)) {
                 JSONArray jsonPrefs = message.getJSONArray("preferences");
+                Map<String, Integer> axisPrefs = new HashMap<String, Integer>();
+                String zoomAnimationFrames = null;
                 for (int i = jsonPrefs.length() - 1; i >= 0; i--) {
                     JSONObject pref = jsonPrefs.getJSONObject(i);
                     String name = pref.getString("name");
                     if (PREF_ZOOM_ANIMATION_FRAMES.equals(name)) {
-                        setZoomAnimationFrames(pref.getString("value"));
-                        GeckoAppShell.unregisterGeckoEventListener(MESSAGE_PREFS_DATA, this);
-                        break;
+                        zoomAnimationFrames = pref.getString("value");
+                    } else {
+                        try {
+                            axisPrefs.put(name, pref.getInt("value"));
+                        } catch (JSONException je) {
+                            // the value could not be parsed as an int. ignore this
+                            // pref and continue
+                        }
                     }
+                }
+                // check for null to make sure the batch of preferences we got notified
+                // of are in the fact the ones we requested and not those requested by
+                // other java code
+                if (zoomAnimationFrames != null) {
+                    setZoomAnimationFrames(zoomAnimationFrames);
+                    Axis.setPrefs(axisPrefs);
+                    GeckoAppShell.unregisterGeckoEventListener(MESSAGE_PREFS_DATA, this);
                 }
             }
         } catch (Exception e) {
@@ -226,7 +244,7 @@ public class PanZoomController
 
     private void setZoomAnimationFrames(String frames) {
         try {
-            if (frames != null && frames.length() > 0) {
+            if (frames.length() > 0) {
                 StringTokenizer st = new StringTokenizer(frames, ",");
                 float[] values = new float[st.countTokens()];
                 for (int i = 0; i < values.length; i++) {

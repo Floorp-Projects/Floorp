@@ -49,7 +49,7 @@ import org.mozilla.gecko.FloatUtils;
  * like displacement, velocity, viewport dimensions, etc. pertaining to
  * a particular axis.
  */
-public abstract class Axis {
+abstract class Axis {
     private static final String LOGTAG = "GeckoAxis";
 
     private static final String PREF_SCROLLING_FRICTION_SLOW = "ui.scrolling.friction_slow";
@@ -90,7 +90,7 @@ public abstract class Axis {
         return (value == null || value < 0 ? defaultValue : value);
     }
 
-    public static void addPrefNames(JSONArray prefs) {
+    static void addPrefNames(JSONArray prefs) {
         prefs.put(PREF_SCROLLING_FRICTION_FAST);
         prefs.put(PREF_SCROLLING_FRICTION_SLOW);
         prefs.put(PREF_SCROLLING_VELOCITY_THRESHOLD);
@@ -100,7 +100,7 @@ public abstract class Axis {
         prefs.put(PREF_SCROLLING_MIN_SCROLLABLE_DISTANCE);
     }
 
-    public static void setPrefs(Map<String, Integer> prefs) {
+    static void setPrefs(Map<String, Integer> prefs) {
         FRICTION_SLOW = getFloatPref(prefs, PREF_SCROLLING_FRICTION_SLOW, 850);
         FRICTION_FAST = getFloatPref(prefs, PREF_SCROLLING_FRICTION_FAST, 970);
         VELOCITY_THRESHOLD = getIntPref(prefs, PREF_SCROLLING_VELOCITY_THRESHOLD, 10);
