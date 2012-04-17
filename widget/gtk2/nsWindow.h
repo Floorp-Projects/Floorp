@@ -261,7 +261,6 @@ public:
                                                guint            aTime,
                                                gpointer         aData);
     void               OnDragLeave(void);
-    void               OnDragEnter(nscoord aX, nscoord aY);
 
 private:
     void               NativeResize(PRInt32 aWidth,
@@ -297,10 +296,10 @@ public:
 
     void               ThemeChanged(void);
 
-    void CheckNeedDragLeaveEnter(nsWindow* aInnerMostWidget,
-                                 nsIDragService* aDragService,
-                                 GdkDragContext *aDragContext,
-                                 nscoord aX, nscoord aY);
+    void CheckNeedDragLeave(nsWindow* aInnerMostWidget,
+                            nsIDragService* aDragService,
+                            GdkDragContext *aDragContext,
+                            nscoord aX, nscoord aY);
 
 #ifdef MOZ_X11
     Window             mOldFocusWindow;

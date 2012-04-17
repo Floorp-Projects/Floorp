@@ -3295,14 +3295,14 @@ nsWindow::ThemeChanged()
 }
 
 void
-nsWindow::CheckNeedDragLeaveEnter(nsWindow* aInnerMostWidget,
-                                  nsIDragService* aDragService,
-                                  GdkDragContext *aDragContext,
-                                  nscoord aX, nscoord aY)
+nsWindow::CheckNeedDragLeave(nsWindow* aInnerMostWidget,
+                             nsIDragService* aDragService,
+                             GdkDragContext *aDragContext,
+                             nscoord aX, nscoord aY)
 {
     // check to see if there was a drag motion window already in place
     if (sLastDragMotionWindow) {
-        // same as the last window so no need for dragenter and dragleave events
+        // same as the last window so no need for dragleave event
         if (sLastDragMotionWindow == aInnerMostWidget) {
             UpdateDragStatus(aDragContext, aDragService);
             return;
@@ -3316,9 +3316,8 @@ nsWindow::CheckNeedDragLeaveEnter(nsWindow* aInnerMostWidget,
     // Make sure that the drag service knows we're now dragging
     aDragService->StartDragSession();
 
-    // update our drag status and send a dragenter event to the window
+    // update our drag status
     UpdateDragStatus(aDragContext, aDragService);
-    aInnerMostWidget->OnDragEnter(aX, aY);
 
     // set the last window to the innerMostWidget
     sLastDragMotionWindow = aInnerMostWidget;
@@ -3379,7 +3378,7 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
         mDragLeaveTimer = nsnull;
     }
 
-    CheckNeedDragLeaveEnter(innerMostWidget, dragService, aDragContext, retx, rety);
+    CheckNeedDragLeave(innerMostWidget, dragService, aDragContext, retx, rety);
 
     // notify the drag service that we are starting a drag motion.
     dragSessionGTK->TargetStartDragMotion();
@@ -3468,7 +3467,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
         mDragLeaveTimer = nsnull;
     }
 
-    CheckNeedDragLeaveEnter(innerMostWidget, dragService, aDragContext, retx, rety);
+    CheckNeedDragLeave(innerMostWidget, dragService, aDragContext, retx, rety);
 
     // http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#drag-and-drop-processing-model
     // (as at 27 December 2010) indicates that a "drop" event should only be
@@ -3601,22 +3600,6 @@ nsWindow::OnDragLeave(void)
             }
         }
     }
-}
-
-void
-nsWindow::OnDragEnter(nscoord aX, nscoord aY)
-{
-    // XXX Do we want to pass this on only if the event's subwindow is null?
-
-    LOGDRAG(("nsWindow::OnDragEnter(%p)\n", (void*)this));
-
-    nsDragEvent event(true, NS_DRAGDROP_ENTER, this);
-
-    event.refPoint.x = aX;
-    event.refPoint.y = aY;
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
 }
 
 static void
