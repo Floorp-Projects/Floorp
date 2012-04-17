@@ -1048,6 +1048,12 @@ protected:
   nsIContent* GetFirstBaseNodeWithHref();
   nsresult SetFirstBaseNodeWithHref(nsIContent *node);
 
+  inline void
+  SetDocumentDirectionality(mozilla::directionality::Directionality aDir)
+  {
+    mDirectionality = aDir;
+  }
+
   // Get the first <title> element with the given IsNodeOfType type, or
   // return null if there isn't one
   nsIContent* GetTitleContent(PRUint32 aNodeType);
