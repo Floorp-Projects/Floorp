@@ -709,7 +709,7 @@ protected:
   nsresult RemoveStyleInside(nsIDOMNode *aNode, 
                              nsIAtom *aProperty, 
                              const nsAString *aAttribute, 
-                             bool aChildrenOnly = false);
+                             const bool aChildrenOnly = false);
   nsresult RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAString *aAttribute);
 
   bool NodeIsProperty(nsIDOMNode *aNode);
