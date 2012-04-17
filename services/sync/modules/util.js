@@ -201,18 +201,11 @@ let Utils = {
   },
 
   /**
-   * Encode byte string as base64url (RFC 4648).
-   */
-  encodeBase64url: function encodeBase64url(bytes) {
-    return btoa(bytes).replace('+', '-', 'g').replace('/', '_', 'g');
-  },
-
-  /**
    * GUIDs are 9 random bytes encoded with base64url (RFC 4648).
    * That makes them 12 characters long with 72 bits of entropy.
    */
   makeGUID: function makeGUID() {
-    return Utils.encodeBase64url(Utils.generateRandomBytes(9));
+    return CommonUtils.encodeBase64URL(Utils.generateRandomBytes(9));
   },
 
   _base64url_regex: /^[-abcdefghijklmnopqrstuvwxyz0123456789_]{12}$/i,
