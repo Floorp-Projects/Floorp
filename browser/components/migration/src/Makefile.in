@@ -57,7 +57,8 @@ EXTRA_PP_COMPONENTS = \
 ifeq ($(OS_ARCH)_$(GNU_CXX),WINNT_)
 CPPSRCS += nsIEHistoryEnumerator.cpp
 
-EXTRA_PP_COMPONENTS += SafariProfileMigrator.js \
+EXTRA_PP_COMPONENTS += IEProfileMigrator.js \
+                       SafariProfileMigrator.js \
                        $(NULL)
 endif
 
