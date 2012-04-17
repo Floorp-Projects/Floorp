@@ -24,11 +24,6 @@ function Presenter() {}
 
 Presenter.prototype = {
   /**
-   * The padding in pixels between the object and the highlight border.
-   */
-  BORDER_PADDING: 2,
-
-  /**
    * Attach function for presenter.
    * @param {ChromeWindow} aWindow Chrome window the presenter could use.
    */
@@ -95,6 +90,11 @@ Presenter.prototype = {
 function VisualPresenter() {}
 
 VisualPresenter.prototype = new Presenter();
+
+/**
+ * The padding in pixels between the object and the highlight border.
+ */
+VisualPresenter.prototype.BORDER_PADDING = 2;
 
 VisualPresenter.prototype.attach = function(aWindow) {
   this.chromeWin = aWindow;
