@@ -112,6 +112,11 @@ ScriptsView.prototype = {
    * @return boolean
    */
   contains: function DVS_contains(aUrl) {
+    if (this._tmpScripts.some(function(element) {
+      return element.script.url == aUrl;
+    })) {
+      return true;
+    }
     if (this._scripts.getElementsByAttribute("value", aUrl).length > 0) {
       return true;
     }
@@ -127,6 +132,11 @@ ScriptsView.prototype = {
    * @return boolean
    */
   containsLabel: function DVS_containsLabel(aLabel) {
+    if (this._tmpScripts.some(function(element) {
+      return element.label == aLabel;
+    })) {
+      return true;
+    }
     if (this._scripts.getElementsByAttribute("label", aLabel).length > 0) {
       return true;
     }
@@ -172,6 +182,18 @@ ScriptsView.prototype = {
   },
 
   /**
+   * Returns the list of labels in the scripts container.
+   * @return array
+   */
+  get scriptLabels() {
+    let labels = [];
+    for (let i = 0, l = this._scripts.itemCount; i < l; i++) {
+      labels.push(this._scripts.getItemAtIndex(i).label);
+    }
+    return labels;
+  },
+
+  /**
    * Returns the list of URIs for scripts in the page.
    * @return array
    */
@@ -184,29 +206,94 @@ ScriptsView.prototype = {
   },
 
   /**
-   * Adds a script to the scripts container.
-   * If the script already exists (was previously added), null is returned.
-   * Otherwise, the newly created element is returned.
+   * Prepares a script to be added to the scripts container. This allows
+   * for a large number of scripts to be batched up before being
+   * alphabetically sorted and added in the container.
+   * @see ScriptsView.commitScripts
+   *
+   * If aForceFlag is true, the script will be immediately inserted at the
+   * necessary position in the container so that all the scripts remain sorted.
+   * This can be much slower than batching up multiple scripts.
    *
    * @param string aLabel
    *        The simplified script location to be shown.
    * @param string aScript
    *        The source script.
-   * @return object
-   *         The newly created html node representing the added script.
+   * @param boolean aForceFlag
+   *        True to force the script to be immediately added.
    */
-  addScript: function DVS_addScript(aLabel, aScript) {
-    // Make sure we don't duplicate anything.
-    if (this.containsLabel(aLabel)) {
-      return null;
+  addScript: function DVS_addScript(aLabel, aScript, aForceFlag) {
+    // Batch the script to be added later.
+    if (!aForceFlag) {
+      this._tmpScripts.push({ label: aLabel, script: aScript });
+      return;
     }
 
-    let script = this._scripts.appendItem(aLabel, aScript.url);
-    script.setAttribute("tooltiptext", aScript.url);
-    script.setUserData("sourceScript", aScript, null);
+    // Find the target position in the menulist and insert the script there.
+    for (let i = 0, l = this._scripts.itemCount; i < l; i++) {
+      if (this._scripts.getItemAtIndex(i).label > aLabel) {
+        this._createScriptElement(aLabel, aScript, i);
+        return;
+      }
+    }
+    // The script is alphabetically the last one.
+    this._createScriptElement(aLabel, aScript, -1, true);
+  },
 
-    this._scripts.selectedItem = script;
-    return script;
+  /**
+   * Adds all the prepared scripts to the scripts container.
+   * If a script already exists (was previously added), nothing happens.
+   */
+  commitScripts: function DVS_commitScripts() {
+    let newScripts = this._tmpScripts;
+    this._tmpScripts = [];
+
+    if (!newScripts || !newScripts.length) {
+      return;
+    }
+    newScripts.sort(function(a, b) {
+      return a.label.toLowerCase() > b.label.toLowerCase();
+    });
+
+    for (let i = 0, l = newScripts.length; i < l; i++) {
+      let item = newScripts[i];
+      this._createScriptElement(item.label, item.script, -1, true);
+    }
+  },
+
+  /**
+   * Creates a custom script element and adds it to the scripts container.
+   * If the script with the specified label already exists, nothing happens.
+   *
+   * @param string aLabel
+   *        The simplified script location to be shown.
+   * @param string aScript
+   *        The source script.
+   * @param number aIndex
+   *        The index where to insert to new script in the container.
+   *        Pass -1 to append the script at the end.
+   * @param boolean aSelectIfEmptyFlag
+   *        True to set the newly created script as the currently selected item
+   *        if there are no other existing scripts in the container.
+   */
+  _createScriptElement: function DVS__createScriptElement(
+    aLabel, aScript, aIndex, aSelectIfEmptyFlag)
+  {
+    // Make sure we don't duplicate anything.
+    if (aLabel == "null" || this.containsLabel(aLabel)) {
+      return;
+    }
+
+    let scriptItem =
+      aIndex == -1 ? this._scripts.appendItem(aLabel, aScript.url)
+                   : this._scripts.insertItemAt(aIndex, aLabel, aScript.url);
+
+    scriptItem.setAttribute("tooltiptext", aScript.url);
+    scriptItem.setUserData("sourceScript", aScript, null);
+
+    if (this._scripts.itemCount == 1 && aSelectIfEmptyFlag) {
+      this._scripts.selectedItem = scriptItem;
+    }
   },
 
   /**
@@ -228,6 +315,7 @@ ScriptsView.prototype = {
   initialize: function DVS_initialize() {
     this._scripts = document.getElementById("scripts");
     this._scripts.addEventListener("select", this._onScriptsChange, false);
+    this.commitScripts();
   },
 
   /**
@@ -381,7 +469,7 @@ StackFramesView.prototype = {
    *        The frame depth specified by the debugger.
    */
   unhighlightFrame: function DVF_unhighlightFrame(aDepth) {
-    this.highlightFrame(aDepth, true)
+    this.highlightFrame(aDepth, true);
   },
 
   /**
