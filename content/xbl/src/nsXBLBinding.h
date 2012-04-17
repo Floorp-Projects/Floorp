@@ -156,6 +156,9 @@ public:
 // MEMBER VARIABLES
 protected:
 
+  bool mIsStyleBinding;
+  bool mMarkedForDeath;
+
   nsXBLPrototypeBinding* mPrototypeBinding; // Weak, but we're holding a ref to the docinfo
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
   nsRefPtr<nsXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
@@ -164,9 +167,6 @@ protected:
   
   // A hash from nsIContent* -> (a sorted array of nsXBLInsertionPoint)
   nsClassHashtable<nsISupportsHashKey, nsInsertionPointList>* mInsertionPointTable;
-
-  bool mIsStyleBinding;
-  bool mMarkedForDeath;
 };
 
 #endif // nsXBLBinding_h_
