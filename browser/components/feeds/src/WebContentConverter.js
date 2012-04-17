@@ -401,9 +401,8 @@ WebContentConverterRegistrar.prototype = {
   function WCCR_registerProtocolHandler(aProtocol, aURIString, aTitle, aContentWindow) {
     LOG("registerProtocolHandler(" + aProtocol + "," + aURIString + "," + aTitle + ")");
 
-    if (Cc["@mozilla.org/privatebrowsing;1"].
-        getService(Ci.nsIPrivateBrowsingService).
-        privateBrowsingEnabled) {
+    var browserWindow = this._getBrowserWindowForContentWindow(aContentWindow);    
+    if (browserWindow.gPrivateBrowsingUI.privateWindow) {
       // Inside the private browsing mode, we don't want to alert the user to save
       // a protocol handler.  We log it to the error console so that web developers
       // would have some way to tell what's going wrong.
@@ -488,7 +487,7 @@ WebContentConverterRegistrar.prototype = {
       buttons = [addButton];
     }
 
-    var browserWindow = this._getBrowserWindowForContentWindow(aContentWindow);
+
     var browserElement = this._getBrowserForContentWindow(browserWindow, aContentWindow);
     var notificationBox = browserWindow.getBrowser().getNotificationBox(browserElement);
     notificationBox.appendNotification(message,

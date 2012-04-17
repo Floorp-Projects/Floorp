@@ -72,9 +72,23 @@ installer:
 package:
 	@$(MAKE) -C mobile/android/installer
 
-install::
 ifeq ($(OS_TARGET),Android)
+ifeq ($(MOZ_ANDROID_INSTALL_TARGET),)
+# Determine if there's more than one device connected
+android_devices=$(filter device,$(shell $(ANDROID_PLATFORM_TOOLS)/adb devices))
+ifneq ($(android_devices),device)
+install::
+	@echo "Multiple devices are connected. Define MOZ_ANDROID_INSTALL_TARGET to specify the install target."
+	$(ANDROID_PLATFORM_TOOLS)/adb devices
+	@exit 1
+else
+install::
 	$(ANDROID_PLATFORM_TOOLS)/adb install -r $(DIST)/$(PKG_PATH)$(PKG_BASENAME).apk
+endif
+else
+install::
+	$(ANDROID_PLATFORM_TOOLS)/adb -s $(MOZ_ANDROID_INSTALL_TARGET) install -r $(DIST)/$(PKG_PATH)$(PKG_BASENAME).apk
+endif
 else
 	@echo "Mobile can't be installed directly."
 	@exit 1

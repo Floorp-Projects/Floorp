@@ -66,7 +66,6 @@
 #include "jsautooplen.h"        // generated headers last
 
 #include "ds/LifoAlloc.h"
-#include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
@@ -365,29 +364,6 @@ ReportStatementTooLarge(JSContext *cx, BytecodeEmitter *bce)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NEED_DIET,
                          StatementName(bce));
-}
-
-bool
-TreeContext::inStatement(StmtType type)
-{
-    for (StmtInfo *stmt = topStmt; stmt; stmt = stmt->down) {
-        if (stmt->type == type)
-            return true;
-    }
-    return false;
-}
-
-bool
-TreeContext::skipSpansGenerator(unsigned skip)
-{
-    TreeContext *tc = this;
-    for (unsigned i = 0; i < skip; ++i, tc = tc->parent) {
-        if (!tc)
-            return false;
-        if (tc->flags & TCF_FUN_IS_GENERATOR)
-            return true;
-    }
-    return false;
 }
 
 bool
@@ -5063,7 +5039,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         /*
          * This second pass is needed to emit JSOP_NOP with a source note
          * for the already-emitted function definition prolog opcode. See
-         * comments in the PNK_STATEMENTLIST case.
+         * comments in EmitStatementList.
          */
         JS_ASSERT(pn->isOp(JSOP_NOP));
         JS_ASSERT(bce->inFunction());

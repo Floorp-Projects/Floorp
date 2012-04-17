@@ -1,9 +1,9 @@
 # HG changeset patch
-# Parent 326590fb862cf7e277487f48c7a434bde3566ea0
+# Parent f22671e05062a082c7b22192868b804fbf42653b
 diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
 --- a/gfx/angle/Makefile.in
 +++ b/gfx/angle/Makefile.in
-@@ -75,17 +75,17 @@ CPPSRCS = \
+@@ -73,17 +73,17 @@ CPPSRCS = \
          parseConst.cpp \
          ParseHelper.cpp \
          PoolAlloc.cpp \
@@ -48,7 +48,7 @@ diff --git a/gfx/angle/src/compiler/OutputHLSL.cpp b/gfx/angle/src/compiler/Outp
 +++ b/gfx/angle/src/compiler/OutputHLSL.cpp
 @@ -1,17 +1,17 @@
  //
- // Copyright (c) 2002-2011 The ANGLE Project Authors. All rights reserved.
+ // Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
  // Use of this source code is governed by a BSD-style license that can be
  // found in the LICENSE file.
  //
@@ -191,8 +191,8 @@ diff --git a/gfx/angle/src/compiler/preprocessor/tokens.c b/gfx/angle/src/compil
  #include "compiler/preprocessor/slglobals.h"
  #include "compiler/util.h"
  
- ///////////////////////////////////////////////////////////////////////////////////////////////
- //////////////////////// Preprocessor and Token Recorder and Playback: ////////////////////////
- ///////////////////////////////////////////////////////////////////////////////////////////////
+ #if defined(_MSC_VER)
+ #pragma warning(disable: 4054)
+ #pragma warning(disable: 4152)
+ #endif
  
- /*

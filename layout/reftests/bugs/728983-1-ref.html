@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<div style="-moz-column-count:2; column-count:2; width:300px; height:100px;">
+  <div id="o" style="opacity:0.5; width:100px; height:200px; background:lime;">
+	<div id="d" style="height:50px; width:80px; background:green; padding:2px">Text</div>
+  </div>
+</div>
+<script>
+var o = document.getElementById("o");
+var d = document.getElementById("d");
+document.body.getBoundingClientRect();
+o.style.opacity = 0.8;
+function doTest() {
+  o.style.opacity = 0.9;
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

@@ -149,6 +149,17 @@ double GetScreenBrightness();
 void SetScreenBrightness(double brightness);
 
 /**
+ * Determine whether the device is allowed to sleep.
+ */
+bool GetCpuSleepAllowed();
+
+/**
+ * Set whether the device is allowed to suspend automatically after
+ * the screen is disabled.
+ */
+void SetCpuSleepAllowed(bool allowed);
+
+/**
  * Set the value of a light to a particular color, with a specific flash pattern.
  * light specifices which light.  See Hal.idl for the list of constants
  * mode specifies user set or based on ambient light sensor

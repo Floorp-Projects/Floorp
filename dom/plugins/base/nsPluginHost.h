@@ -218,15 +218,15 @@ public:
 
   // The last argument should be false if we already have an in-flight stream
   // and don't need to set up a new stream.
-  nsresult InstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL,
-                                     nsObjectLoadingContent *aContent,
-                                     nsPluginInstanceOwner** aOwner);
+  nsresult InstantiateEmbeddedPluginInstance(const char *aMimeType, nsIURI* aURL,
+                                             nsObjectLoadingContent *aContent,
+                                             nsPluginInstanceOwner** aOwner);
 
-  nsresult InstantiateFullPagePlugin(const char *aMimeType,
-                                     nsIURI* aURI,
-                                     nsObjectLoadingContent *aContent,
-                                     nsPluginInstanceOwner **aOwner,
-                                     nsIStreamListener **aStreamListener);
+  nsresult InstantiateFullPagePluginInstance(const char *aMimeType,
+                                             nsIURI* aURI,
+                                             nsObjectLoadingContent *aContent,
+                                             nsPluginInstanceOwner **aOwner,
+                                             nsIStreamListener **aStreamListener);
 
   // Does not accept NULL and should never fail.
   nsPluginTag* TagForPlugin(nsNPAPIPlugin* aPlugin);
@@ -246,9 +246,9 @@ private:
   NewEmbeddedPluginStream(nsIURI* aURL, nsObjectLoadingContent *aContent, nsNPAPIPluginInstance* aInstance);
 
   nsresult
-  NewFullPagePluginStream(nsIURI* aURI,
-                          nsNPAPIPluginInstance *aInstance,
-                          nsIStreamListener **aStreamListener);
+  NewFullPagePluginStreamListener(nsIURI* aURI,
+                                  nsNPAPIPluginInstance *aInstance,
+                                  nsIStreamListener **aStreamListener);
 
   // Return an nsPluginTag for this type, if any.  If aCheckEnabled is
   // true, only enabled plugins will be returned.

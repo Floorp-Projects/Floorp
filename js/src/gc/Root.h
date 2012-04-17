@@ -102,8 +102,8 @@ template <typename T>
 struct RootMethods { };
 
 /*
- * Reference to a stack location rooted for GC. See "Moving GC Stack Rooting"
- * comment in jscntxt.h.
+ * Reference to a stack location rooted for GC. See the "Moving GC Stack
+ * Rooting" comment above.
  */
 template <typename T>
 class Handle
@@ -334,6 +334,7 @@ template <typename T> template <typename S>
 inline
 Handle<T>::Handle(const RootedVar<S> &root)
 {
+    testAssign<S>();
     ptr = reinterpret_cast<const T *>(root.address());
 }
 
