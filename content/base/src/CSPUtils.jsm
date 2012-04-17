@@ -87,7 +87,7 @@ function CSPWarning(aMsg, aSource, aScriptSample, aLineNum) {
 
   var consoleMsg = Components.classes["@mozilla.org/scripterror;1"]
                     .createInstance(Components.interfaces.nsIScriptError);
-  consoleMsg.init('CSP: ' + aMsg, aSource, aScriptSample, aLineNum, 0,
+  consoleMsg.init(textMessage, aSource, aScriptSample, aLineNum, 0,
                   Components.interfaces.nsIScriptError.warningFlag,
                   "Content Security Policy");
   Components.classes["@mozilla.org/consoleservice;1"]
@@ -100,7 +100,7 @@ function CSPError(aMsg) {
 
   var consoleMsg = Components.classes["@mozilla.org/scripterror;1"]
                     .createInstance(Components.interfaces.nsIScriptError);
-  consoleMsg.init('CSP: ' + aMsg, null, null, 0, 0,
+  consoleMsg.init(textMessage, null, null, 0, 0,
                   Components.interfaces.nsIScriptError.errorFlag,
                   "Content Security Policy");
   Components.classes["@mozilla.org/consoleservice;1"]
@@ -213,7 +213,7 @@ CSPRep.ALLOW_DIRECTIVE   = "allow";
   * @param aStr
   *        string rep of a CSP
   * @param self (optional)
-  *        string or CSPSource representing the "self" source
+  *        URI representing the "self" source
   * @param docRequest (optional)
   *        request for the parent document which may need to be suspended
   *        while the policy-uri is asynchronously fetched
@@ -231,8 +231,6 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
   var selfUri = null;
   if (self instanceof Components.interfaces.nsIURI)
     selfUri = self.clone();
-  else if (self)
-    selfUri = gIoService.newURI(self, null, null);
 
   var dirs = aStr.split(";");
 
@@ -452,8 +450,8 @@ CSPRep.prototype = {
     var dirs = [];
 
     if (this._allowEval || this._allowInlineScripts) {
-      dirs.push("options " + (this._allowEval ? "eval-script" : "")
-                           + (this._allowInlineScripts ? "inline-script" : ""));
+      dirs.push("options" + (this._allowEval ? " eval-script" : "")
+                           + (this._allowInlineScripts ? " inline-script" : ""));
     }
     for (var i in this._directives) {
       if (this._directives[i]) {
@@ -604,7 +602,7 @@ function CSPSourceList() {
  * @param aStr
  *        string rep of a CSP Source List
  * @param self (optional)
- *        string or CSPSource representing the "self" source
+ *        URI or CSPSource representing the "self" source
  * @param enforceSelfChecks (optional)
  *        if present, and "true", will check to be sure "self" has the
  *        appropriate values to inherit when they are omitted from the source.
@@ -617,6 +615,12 @@ CSPSourceList.fromString = function(aStr, self, enforceSelfChecks) {
   //                       | "'none'"
   //    <source-list>    ::= <source>
   //                       | <source-list>" "<source>
+
+  /* If self parameter is passed, convert to CSPSource,
+     unless it is already a CSPSource. */
+  if(self && !(self instanceof CSPSource)) {
+     self = CSPSource.create(self);
+  }
 
   var slObj = new CSPSourceList();
   if (aStr === "'none'")
@@ -810,6 +814,15 @@ function CSPSource() {
  *  - nsURI
  *  - string
  *  - CSPSource (clone)
+ * @param aData 
+ *        string, nsURI, or CSPSource
+ * @param self (optional)
+ *	  if present, string, URI, or CSPSource representing the "self" resource 
+ * @param enforceSelfChecks (optional)
+ *	  if present, and "true", will check to be sure "self" has the
+ *        appropriate values to inherit when they are omitted from the source.
+ * @returns
+ *        an instance of CSPSource
  */
 CSPSource.create = function(aData, self, enforceSelfChecks) {
   if (typeof aData === 'string')
@@ -912,7 +925,7 @@ CSPSource.fromURI = function(aURI, self, enforceSelfChecks) {
  * @param aStr
  *        string rep of a CSP Source
  * @param self (optional)
- *        string or CSPSource representing the "self" source
+ *        string, URI, or CSPSource representing the "self" source
  * @param enforceSelfChecks (optional)
  *        if present, and "true", will check to be sure "self" has the
  *        appropriate values to inherit when they are omitted from aURI.
