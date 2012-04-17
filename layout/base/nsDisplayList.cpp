@@ -1839,7 +1839,7 @@ bool nsDisplayOpacity::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* a
   // aItem->GetUnderlyingFrame() returns non-null because it's nsDisplayOpacity
   if (aItem->GetUnderlyingFrame()->GetContent() != mFrame->GetContent())
     return false;
-  MergeFrom(static_cast<nsDisplayOpacity*>(aItem));
+  MergeFromTrackingMergedFrames(static_cast<nsDisplayOpacity*>(aItem));
   return true;
 }
 
@@ -2007,12 +2007,15 @@ nsDisplayScrollLayer::TryMerge(nsDisplayListBuilder* aBuilder,
   props.Set(nsIFrame::ScrollLayerCount(),
     reinterpret_cast<void*>(GetScrollLayerCount() - 1));
 
-  MergeFrom(other);
+  // Swap frames with the other item before doing MergeFrom.
   // XXX - This ensures that the frame associated with a scroll layer after
   // merging is the first, rather than the last. This tends to change less,
   // ensuring we're more likely to retain the associated gfx layer.
   // See Bug 729534 and Bug 731641.
+  nsIFrame* tmp = mFrame;
   mFrame = other->mFrame;
+  other->mFrame = tmp;
+  MergeFromTrackingMergedFrames(other);
   return true;
 }
 
@@ -2152,6 +2155,7 @@ bool nsDisplayClip::TryMerge(nsDisplayListBuilder* aBuilder,
   nsDisplayClip* other = static_cast<nsDisplayClip*>(aItem);
   if (!other->mClip.IsEqualInterior(mClip))
     return false;
+  // No need to track merged frames for clipping
   MergeFrom(other);
   return true;
 }
@@ -2247,6 +2251,7 @@ bool nsDisplayClipRoundedRect::TryMerge(nsDisplayListBuilder* aBuilder, nsDispla
   if (!mClip.IsEqualInterior(other->mClip) ||
       memcmp(mRadii, other->mRadii, sizeof(mRadii)) != 0)
     return false;
+  // No need to track merged frames for clipping
   MergeFrom(other);
   return true;
 }
@@ -3063,7 +3068,7 @@ bool nsDisplaySVGEffects::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem
   if (aItem->GetUnderlyingFrame()->GetContent() != mFrame->GetContent())
     return false;
   nsDisplaySVGEffects* other = static_cast<nsDisplaySVGEffects*>(aItem);
-  MergeFrom(other);
+  MergeFromTrackingMergedFrames(other);
   mEffectsBounds.UnionRect(mEffectsBounds,
     other->mEffectsBounds + other->mEffectsFrame->GetOffsetTo(mEffectsFrame));
   return true;

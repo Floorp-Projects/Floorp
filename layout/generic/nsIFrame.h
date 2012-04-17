@@ -306,6 +306,11 @@ typedef PRUint64 nsFrameState;
 // everything whose nearest ancestor container for this frame?
 #define NS_FRAME_FONT_INFLATION_CONTAINER           NS_FRAME_STATE_BIT(41)
 
+// Does this frame manage a region in which we do font size inflation,
+// i.e., roughly, is it an element establishing a new block formatting
+// context?
+#define NS_FRAME_FONT_INFLATION_FLOW_ROOT           NS_FRAME_STATE_BIT(42)
+
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
 #define NS_STATE_IS_DIRECTION_NORMAL                NS_FRAME_STATE_BIT(31)

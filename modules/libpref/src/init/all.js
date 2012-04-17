@@ -1672,6 +1672,28 @@ pref("font.size.inflation.emPerLine", 0);
  * used.
  */
 pref("font.size.inflation.minTwips", 0);
+/*
+ * Since the goal of font size inflation is to avoid having to
+ * repeatedly scroll side to side to read a block of text, and there are
+ * a number of page layouts where a relatively small chunk of text is
+ * better of not being inflated according to the same algorithm we use
+ * for larger chunks of text, we want a threshold for an amount of text
+ * that triggers font size inflation.  This preference controls that
+ * threshold.
+ *
+ * It controls the threshold used within an *approximation* of the
+ * number of lines of text we use.  In particular, if we assume that
+ * each character (collapsing collapsible whitespace) has a width the
+ * same as the em-size of the font (when, normally, it's actually quite
+ * a bit smaller on average), this preference gives the percentage of a
+ * number of lines of text we'd need to trigger inflation.  This means
+ * that a percentage of 100 means that we'd need a number of characters
+ * (we know the font size and the width) equivalent to one line of
+ * square text (which is actually a lot less than a real line of text).
+ *
+ * A value of 0 means there's no character length threshold.
+ */
+pref("font.size.inflation.lineThreshold", 400);
 
 #ifdef XP_WIN
 

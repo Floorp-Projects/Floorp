@@ -1578,6 +1578,8 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
 
   --mWriteLevel;
 
+  SetReadyStateInternal(nsIDocument::READYSTATE_LOADING);
+
   NS_ENSURE_SUCCESS(rv, rv);
   return CallQueryInterface(this, aReturn);
 }

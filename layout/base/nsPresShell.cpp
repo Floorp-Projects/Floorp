@@ -5060,7 +5060,8 @@ void PresShell::UpdateCanvasBackground()
 nscolor PresShell::ComputeBackstopColor(nsIView* aDisplayRoot)
 {
   nsIWidget* widget = aDisplayRoot->GetWidget();
-  if (widget && widget->GetTransparencyMode() != eTransparencyOpaque) {
+  if (widget && (widget->GetTransparencyMode() != eTransparencyOpaque ||
+                 widget->WidgetPaintsBackground())) {
     // Within a transparent widget, so the backstop color must be
     // totally transparent.
     return NS_RGBA(0,0,0,0);

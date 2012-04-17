@@ -53,6 +53,9 @@
 #include "nsSVGForeignObjectElement.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGUtils.h"
+#include "mozilla/AutoRestore.h"
+
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 // Implementation
@@ -93,6 +96,8 @@ nsSVGForeignObjectFrame::Init(nsIContent* aContent,
   nsresult rv = nsSVGForeignObjectFrameBase::Init(aContent, aParent, aPrevInFlow);
   AddStateBits(aParent->GetStateBits() &
                (NS_STATE_SVG_NONDISPLAY_CHILD | NS_STATE_SVG_CLIPPATH_CHILD));
+  AddStateBits(NS_FRAME_FONT_INFLATION_CONTAINER |
+               NS_FRAME_FONT_INFLATION_FLOW_ROOT);
   return rv;
 }
 
@@ -574,6 +579,14 @@ nsSVGForeignObjectFrame::DoReflow()
     presShell->GetReferenceRenderingContext();
   if (!renderingContext)
     return;
+
+  AutoRestore<nsIFrame*> restoreCurrentInflationContainer(
+    presContext->mCurrentInflationContainer);
+  AutoRestore<nscoord> restoreCurrentInflationContainerWidth(
+    presContext->mCurrentInflationContainerWidth);
+
+  presContext->mCurrentInflationContainer = this;
+  presContext->mCurrentInflationContainerWidth = mRect.width;
 
   mInReflow = true;
 

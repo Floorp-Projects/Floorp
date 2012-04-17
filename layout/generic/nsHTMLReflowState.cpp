@@ -56,9 +56,8 @@
 #include "nsIPercentHeightObserver.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/Preferences.h"
-#ifdef IBMBIDI
 #include "nsBidiUtils.h"
-#endif
+#include "nsFontInflationData.h"
 
 #ifdef NS_DEBUG
 #undef NOISY_VERTICAL_ALIGN
@@ -316,6 +315,12 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
                    "have unconstrained width; this should only result from "
                    "very large sizes, not attempts at intrinsic width "
                    "calculation");
+
+  if (frame->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) {
+    // Create our font inflation data if we don't have it already, and
+    // give it our current width information.
+    nsFontInflationData::UpdateFontInflationDataWidthFor(*this);
+  }
 }
 
 void nsHTMLReflowState::InitCBReflowState()
