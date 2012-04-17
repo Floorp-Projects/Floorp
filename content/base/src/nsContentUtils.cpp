@@ -4109,16 +4109,9 @@ nsContentUtils::CreateDocument(const nsAString& aNamespaceURI,
                                DocumentFlavor aFlavor,
                                nsIDOMDocument** aResult)
 {
-  nsresult rv = NS_NewDOMDocument(aResult, aNamespaceURI, aQualifiedName,
-                                  aDoctype, aDocumentURI, aBaseURI, aPrincipal,
-                                  true, aEventObject, aFlavor);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(*aResult);
-  
-  // created documents are immediately "complete" (ready to use)
-  document->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
-  return NS_OK;
+  return NS_NewDOMDocument(aResult, aNamespaceURI, aQualifiedName,
+                           aDoctype, aDocumentURI, aBaseURI, aPrincipal,
+                           true, aEventObject, aFlavor);
 }
 
 /* static */
