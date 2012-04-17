@@ -36,13 +36,8 @@ var knownFailures = {
     'fontsize-2' : true,
   },
   'c': {
-    'fontname-0' : true,
-    'fontname-2' : true,
-    'fontname-3' : true,
     'fontsize-1' : true,
     'fontsize-2' : true,
-    'forecolor-0' : true,
-    'forecolor-2' : true,
   },
 };
 
