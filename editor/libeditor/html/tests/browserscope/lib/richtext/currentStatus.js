@@ -22,7 +22,6 @@ var knownFailures = {
     'backcolor-1' : true,
     'createbookmark-0' : true,
     'fontsize-1' : true,
-    'hilitecolor-0' : true,
     'subscript-1' : true,
     'superscript-1' : true,
   },
