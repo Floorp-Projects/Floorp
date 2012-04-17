@@ -1,0 +1,9 @@
+# WebappRTCommandLineHandler.js
+component {6d69c782-40a3-469b-8bfd-3ee366105a4a} WebappRTCommandLineHandler.js application=webapprt@mozilla.org
+contract @mozilla.org/webapprt/clh;1 {6d69c782-40a3-469b-8bfd-3ee366105a4a} application=webapprt@mozilla.org
+category command-line-handler x-default @mozilla.org/webapprt/clh;1 application=webapprt@mozilla.org
+
+# WebappRTDirectoryProvider.js
+component {e1799fda-4b2f-4457-b671-e0641d95698d} WebappRTDirectoryProvider.js application=webapprt@mozilla.org
+contract @mozilla.org/webapprt/directory-provider;1 {e1799fda-4b2f-4457-b671-e0641d95698d} application=webapprt@mozilla.org
+category xpcom-directory-providers webapprt-directory-provider @mozilla.org/webapprt/directory-provider;1 application=webapprt@mozilla.org

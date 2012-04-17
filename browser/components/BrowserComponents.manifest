@@ -24,8 +24,22 @@ category command-line-handler x-default @mozilla.org/browser/final-clh;1 applica
 category command-line-validator b-browser @mozilla.org/browser/clh;1 application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
 
 # nsBrowserGlue.js
+
+# WebappRT doesn't need these instructions, and they don't necessarily work
+# with it, but it does use a GRE directory that the GRE shares with Firefox,
+# so in order to prevent the instructions from being processed for WebappRT,
+# we need to restrict them to the applications that depend on them, i.e.:
+#
+#   b2g:            {3c2e2abc-06d4-11e1-ac3b-374f68613e61}
+#   browser:        {ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+#   mobile/android: {aa3c5121-dab2-40e2-81ca-7ea25febc110}
+#   mobile/xul:     {a23983c0-fd0e-11dc-95ff-0800200c9a66}
+#
+# In theory we should do this for all these instructions, but in practice it is
+# sufficient to do it for the app-startup one, and the file is simpler that way.
+
 component {eab9012e-5f74-4cbc-b2b5-a590235513cc} nsBrowserGlue.js
 contract @mozilla.org/browser/browserglue;1 {eab9012e-5f74-4cbc-b2b5-a590235513cc}
-category app-startup nsBrowserGlue service,@mozilla.org/browser/browserglue;1
+category app-startup nsBrowserGlue service,@mozilla.org/browser/browserglue;1 application={3c2e2abc-06d4-11e1-ac3b-374f68613e61} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384} application={aa3c5121-dab2-40e2-81ca-7ea25febc110} application={a23983c0-fd0e-11dc-95ff-0800200c9a66}
 component {d8903bf6-68d5-4e97-bcd1-e4d3012f721a} nsBrowserGlue.js
 contract @mozilla.org/content-permission/prompt;1 {d8903bf6-68d5-4e97-bcd1-e4d3012f721a}

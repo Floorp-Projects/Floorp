@@ -1,0 +1,48 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH     = ..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+
+include $(topsrcdir)/config/config.mk
+
+DIRS = $(NULL)
+
+ifneq (,$(filter WINNT,$(OS_ARCH)))
+DIRS += win
+else
+ifeq ($(OS_ARCH),Darwin)
+DIRS += mac
+endif # mac
+endif # windows
+
+EXTRA_PP_COMPONENTS = \
+  WebappRTComponents.manifest \
+  WebappRTCommandLineHandler.js \
+  WebappRTDirectoryProvider.js \
+  $(NULL)
+
+EXTRA_JS_MODULES = \
+	WebappRT.jsm \
+	$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+libs:: prefs.js
+	$(NSINSTALL) -D $(DIST)/bin/defaults/pref/webapprt@mozilla.org
+	$(INSTALL) $^ $(DIST)/bin/defaults/pref/webapprt@mozilla.org
+
+GRE_MILESTONE := $(shell tail -n 1 $(topsrcdir)/config/milestone.txt 2>/dev/null || tail -1 $(topsrcdir)/config/milestone.txt)
+GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
+DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
+
+webapprt.ini: webapprt.ini.in $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
+
+libs:: webapprt.ini
+	$(INSTALL) webapprt.ini $(DIST)/bin
+
+GARBAGE += webapprt.ini
