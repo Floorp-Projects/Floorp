@@ -49,32 +49,7 @@ add_test(function test_delay() {
   }
   CommonUtils.namedTimer(callback, delay, that, "_zetimer");
   CommonUtils.namedTimer(callback, 2 * delay, that, "_zetimer");
-});
-
-add_test(function test_repeating() {
-  _("Ensure a repeating timer type works.");
-
-  const delay = 100;
-  let count = 0;
-  let that = {};
-  let t0 = Date.now();
-  function callback() {
-    count += 1;
-
-    if (count < 2) {
-      return;
-    }
-
-    let elapsed = Date.now() - t0;
-    let expectedDelay = 2 * delay;
-    do_check_true(elapsed > expectedDelay);
-
-    this._letimer.clear();
-    run_next_test();
-  }
-
-  CommonUtils.namedTimer(callback, delay, that, "_letimer",
-                         Ci.nsITimer.TYPE_REPEATING_SLACK);
+  run_next_test();
 });
 
 add_test(function test_clear() {
@@ -89,4 +64,6 @@ add_test(function test_clear() {
   that._zetimer.clear();
   do_check_eq(that._zetimer, null);
   CommonUtils.nextTick(run_next_test);
+
+  run_next_test();
 });
