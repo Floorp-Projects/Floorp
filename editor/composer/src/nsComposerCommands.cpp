@@ -914,8 +914,8 @@ nsHighlightColorStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
 //    rv = RemoveOneProperty(htmlEditor, NS_LITERAL_STRING("font"), NS_LITERAL_STRING("bgcolor"));
     rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("bgcolor"));
   } else {
-    rv = htmlEditor->SetCSSInlineProperty(fontAtom, NS_LITERAL_STRING("bgcolor"),
-                                          newState);
+    rv = htmlEditor->SetInlineProperty(fontAtom, NS_LITERAL_STRING("bgcolor"),
+                                       newState);
   }
 
   return rv;
