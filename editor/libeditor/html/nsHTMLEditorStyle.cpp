@@ -374,11 +374,46 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
   aProperty->ToString(tag);
   ToLowerCase(tag);
 
+  // If this is an element that can't be contained in a span, we have to
+  // recurse to its children.
+  if (!TagCanContain(NS_LITERAL_STRING("span"), aNode)) {
+    nsCOMPtr<nsIDOMNodeList> childNodes;
+    res = aNode->GetChildNodes(getter_AddRefs(childNodes));
+    NS_ENSURE_SUCCESS(res, res);
+    if (childNodes) {
+      PRInt32 j;
+      PRUint32 childCount;
+      childNodes->GetLength(&childCount);
+      if (childCount) {
+        nsCOMArray<nsIDOMNode> arrayOfNodes;
+        nsCOMPtr<nsIDOMNode> node;
+
+        // populate the list
+        for (j = 0; j < (PRInt32)childCount; j++) {
+          nsCOMPtr<nsIDOMNode> childNode;
+          res = childNodes->Item(j, getter_AddRefs(childNode));
+          if ((NS_SUCCEEDED(res)) && childNode && IsEditable(childNode)) {
+            arrayOfNodes.AppendObject(childNode);
+          }
+        }
+
+        // then loop through the list, set the property on each node
+        PRInt32 listCount = arrayOfNodes.Count();
+        for (j = 0; j < listCount; j++) {
+          node = arrayOfNodes[j];
+          res = SetInlinePropertyOnNode(node, aProperty, aAttribute, aValue);
+          NS_ENSURE_SUCCESS(res, res);
+        }
+      }
+    }
+    return res;
+  }
+
   bool useCSS = (IsCSSEnabled() &&
     mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty, aAttribute)) ||
     // bgcolor is always done using CSS
     aAttribute->EqualsLiteral("bgcolor");
-  
+
   if (useCSS) {
     nsCOMPtr<nsIDOMNode> tmp = aNode;
     if (IsTextNode(tmp))
@@ -444,72 +479,33 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
     return SetAttribute(elem, *aAttribute, *aValue);
   }
   
-  // can it be put inside inline node?
-  if (TagCanContain(tag, aNode))
+  // Either put it inside a neighboring node, or make a new one.
+
+  nsCOMPtr<nsIDOMNode> priorNode, nextNode;
+  // is either of it's neighbors the right kind of node?
+  GetPriorHTMLSibling(aNode, address_of(priorNode));
+  GetNextHTMLSibling(aNode, address_of(nextNode));
+  if (priorNode && NodeIsType(priorNode, aProperty) && 
+      HasAttrVal(priorNode, aAttribute, aValue)     &&
+      IsOnlyAttribute(priorNode, aAttribute) )
   {
-    nsCOMPtr<nsIDOMNode> priorNode, nextNode;
-    // is either of it's neighbors the right kind of node?
-    GetPriorHTMLSibling(aNode, address_of(priorNode));
-    GetNextHTMLSibling(aNode, address_of(nextNode));
-    if (priorNode && NodeIsType(priorNode, aProperty) && 
-        HasAttrVal(priorNode, aAttribute, aValue)     &&
-        IsOnlyAttribute(priorNode, aAttribute) )
-    {
-      // previous sib is already right kind of inline node; slide this over into it
-      res = MoveNode(aNode, priorNode, -1);
-    }
-    else if (nextNode && NodeIsType(nextNode, aProperty) && 
-             HasAttrVal(nextNode, aAttribute, aValue)    &&
-             IsOnlyAttribute(priorNode, aAttribute) )
-    {
-      // following sib is already right kind of inline node; slide this over into it
-      res = MoveNode(aNode, nextNode, 0);
-    }
-    else
-    {
-      // ok, chuck it in its very own container
-      res = InsertContainerAbove(aNode, address_of(tmp), tag, aAttribute, aValue);
-    }
-    NS_ENSURE_SUCCESS(res, res);
-    return RemoveStyleInside(aNode, aProperty, aAttribute);
+    // previous sib is already right kind of inline node; slide this over into it
+    res = MoveNode(aNode, priorNode, -1);
   }
-  // none of the above?  then cycle through the children.
-  nsCOMPtr<nsIDOMNodeList> childNodes;
-  res = aNode->GetChildNodes(getter_AddRefs(childNodes));
+  else if (nextNode && NodeIsType(nextNode, aProperty) && 
+           HasAttrVal(nextNode, aAttribute, aValue)    &&
+           IsOnlyAttribute(priorNode, aAttribute) )
+  {
+    // following sib is already right kind of inline node; slide this over into it
+    res = MoveNode(aNode, nextNode, 0);
+  }
+  else
+  {
+    // ok, chuck it in its very own container
+    res = InsertContainerAbove(aNode, address_of(tmp), tag, aAttribute, aValue);
+  }
   NS_ENSURE_SUCCESS(res, res);
-  if (childNodes)
-  {
-    PRInt32 j;
-    PRUint32 childCount;
-    childNodes->GetLength(&childCount);
-    if (childCount)
-    {
-      nsCOMArray<nsIDOMNode> arrayOfNodes;
-      nsCOMPtr<nsIDOMNode> node;
-      
-      // populate the list
-      for (j=0 ; j < (PRInt32)childCount; j++)
-      {
-        nsCOMPtr<nsIDOMNode> childNode;
-        res = childNodes->Item(j, getter_AddRefs(childNode));
-        if ((NS_SUCCEEDED(res)) && (childNode) && IsEditable(childNode))
-        {
-          arrayOfNodes.AppendObject(childNode);
-        }
-      }
-      
-      // then loop through the list, set the property on each node
-      PRInt32 listCount = arrayOfNodes.Count();
-      for (j = 0; j < listCount; j++)
-      {
-        node = arrayOfNodes[j];
-        res = SetInlinePropertyOnNode(node, aProperty, aAttribute, aValue);
-        NS_ENSURE_SUCCESS(res, res);
-      }
-      arrayOfNodes.Clear();
-    }
-  }
-  return res;
+  return RemoveStyleInside(aNode, aProperty, aAttribute);
 }
 
 
