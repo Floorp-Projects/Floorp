@@ -5591,12 +5591,10 @@ MOZ_ARG_DISABLE_BOOL(webm,
 
 dnl system libvpx Support
 dnl ========================================================
-MOZ_ARG_WITH_STRING(system-libvpx,
-[  --with-system-libvpx=[PFX]
-                          Use system libvpx [installed at prefix PFX]],
-    LIBVPX_DIR=$withval)
+MOZ_ARG_WITH_BOOL(system-libvpx,
+[  --with-system-libvpx    Use system libvpx (located with pkgconfig)],
+    MOZ_NATIVE_LIBVPX=1)
 
-MOZ_NATIVE_LIBVPX=
 MOZ_LIBVPX_INCLUDES=
 MOZ_LIBVPX_LIBS=
 
@@ -5609,54 +5607,18 @@ if test -n "$MOZ_WEBM"; then
         AC_DEFINE(MOZ_VP8_ENCODER)
     fi
 
-    if test -n "$LIBVPX_DIR" -a "$LIBVPX_DIR" != no; then
-        _SAVE_CFLAGS=$CFLAGS
-        _SAVE_LDFLAGS=$LDFLAGS
-        _SAVE_LIBS=$LIBS
-        if test "${LIBVPX_DIR}" = "yes"; then
-            LIBVPX_DIR=/usr
-        fi
-        CFLAGS="-I${LIBVPX_DIR}/include $CFLAGS"
-        LDFLAGS="-L${LIBVPX_DIR}/lib $LDFLAGS"
-        MOZ_NATIVE_LIBVPX_DEC_TEST=
-        MOZ_CHECK_HEADER(vpx/vpx_decoder.h,
-            [if test ! -f "${LIBVPX_DIR}/include/vpx/vpx_decoder.h"; then
-             AC_MSG_ERROR([vpx/vpx_decoder.h found, but is not in ${LIBVPX_DIR}/include])
-            fi],
-            AC_MSG_ERROR([--with-system-libvpx requested but vpx/vpx_decoder.h not found]))
-        AC_CHECK_LIB(vpx, vpx_codec_dec_init_ver,
-                     [MOZ_NATIVE_LIBVPX_DEC_TEST=1],
-                     ([--with-system-libvpx requested but symbol vpx_codec_dec_init_ver not found]))
-        if test -n "$MOZ_NATIVE_LIBVPX_DEC_TEST" ; then
-            AC_MSG_CHECKING([for libvpx version >= v1.0.0])
-            dnl We need at least v1.0.0 to fix several crash bugs (for which we
-            dnl had local patches prior to v1.0.0).
-            dnl
-            dnl This is a terrible test for the library version, but we don't
-            dnl have a good one. There is no version number in a public header,
-            dnl and testing the headers still doesn't guarantee we link against
-            dnl the right version. While we could call vpx_codec_version() at
-            dnl run-time, that would break cross-compiling. There are no
-            dnl additional exported decoder symbols between the v1.0.0 release
-            dnl and the v0.9.7 one to check for.
-            AC_TRY_COMPILE([
-                #include <vpx/vpx_decoder.h>
-                #if !defined(VPX_CODEC_USE_INPUT_FRAGMENTS)
-                    #error "test failed."
-                #endif
-                ],
-                [return 0;],
-                [AC_MSG_RESULT([yes])
-                 MOZ_NATIVE_LIBVPX=1
-                 AC_DEFINE(MOZ_NATIVE_LIBVPX)
-                 MOZ_LIBVPX_INCLUDES="-I${LIBVPX_DIR}/include"
-                 MOZ_LIBVPX_LIBS="-L${LIBVPX_DIR}/lib -lvpx"],
-                [AC_MSG_RESULT([no])
-                 AC_MSG_ERROR([--with-system-libvpx requested but it is not v1.0.0 or later])])
-        fi
-        CFLAGS=$_SAVE_CFLAGS
-        LDFLAGS=$_SAVE_LDFLAGS
-        LIBS=$_SAVE_LIBS
+    if test -n "$MOZ_NATIVE_LIBVPX"; then
+        dnl ============================
+        dnl === libvpx Version check ===
+        dnl ============================
+        dnl Check to see if we have a system libvpx package.
+        PKG_CHECK_MODULES(LIBVPX, vpx >= 1.0.0)
+
+        MOZ_CHECK_HEADER([vpx/vpx_decoder.h], [], 
+         [AC_MSG_ERROR([Couldn't find vpx/vpx_decoder.h which is required for build with system libvpx. Use --without-system-libvpx to build with in-tree libvpx.])])
+
+        AC_CHECK_LIB(vpx, vpx_codec_dec_init_ver, [], 
+         [AC_MSG_ERROR([--with-system-libvpx requested but symbol vpx_codec_dec_init_ver not found])])
     fi
 fi
 
