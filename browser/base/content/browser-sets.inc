@@ -269,7 +269,7 @@
         modifiers="accel,shift"
 #endif
     />
-    <key id="key_inspect" key="&inspectMenu.commandkey;" command="Inspector:Inspect"
+    <key id="key_inspect" key="&inspectMenu.commandkey;" command="Tools:Inspect"
 #ifdef XP_MACOSX
         modifiers="accel,alt"
 #else
