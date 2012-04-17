@@ -16,12 +16,15 @@ function test() {
 
   createTab(function() {
     let id = TiltUtils.getWindowId(gBrowser.selectedBrowser.contentWindow);
+    let initialActiveElement;
 
     is(id, Tilt.currentWindowId,
       "The unique window identifiers should match for the same window.");
 
     createTilt({
       onInspectorOpen: function() {
+        initialActiveElement = document.activeElement;
+
         is(Tilt.visualizers[id], null,
           "A instance of the visualizer shouldn't be initialized yet.");
       },
@@ -37,8 +40,8 @@ function test() {
       },
       onTiltClose: function()
       {
-        is(document.activeElement, gBrowser.selectedBrowser,
-          "The focus wasn't correctly given back to the selectedBrowser.");
+        is(document.activeElement, initialActiveElement,
+          "The focus wasn't correctly given back to the initial element.");
 
         is(Tilt.visualizers[id], null,
           "The current instance of the visualizer wasn't destroyed properly.");
