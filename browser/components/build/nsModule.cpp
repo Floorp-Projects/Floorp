@@ -50,7 +50,6 @@
 #endif
 
 #if defined(XP_WIN) && !defined(__MINGW32__)
-#include "nsIEProfileMigrator.h"
 #include "nsIEHistoryEnumerator.h"
 #endif
 
@@ -76,7 +75,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGNOMEShellService, Init)
 #endif
 
 #if defined(XP_WIN) && !defined(__MINGW32__)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsIEProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIEHistoryEnumerator)
 #endif
 
@@ -93,7 +91,6 @@ NS_DEFINE_NAMED_CID(NS_SHELLSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_FEEDSNIFFER_CID);
 NS_DEFINE_NAMED_CID(NS_BROWSER_ABOUT_REDIRECTOR_CID);
 #if defined(XP_WIN) && !defined(__MINGW32__)
-NS_DEFINE_NAMED_CID(NS_WINIEPROFILEMIGRATOR_CID);
 NS_DEFINE_NAMED_CID(NS_WINIEHISTORYENUMERATOR_CID);
 #elif defined(XP_MACOSX)
 NS_DEFINE_NAMED_CID(NS_SHELLSERVICE_CID);
@@ -110,7 +107,6 @@ static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
     { &kNS_FEEDSNIFFER_CID, false, NULL, nsFeedSnifferConstructor },
     { &kNS_BROWSER_ABOUT_REDIRECTOR_CID, false, NULL, AboutRedirector::Create },
 #if defined(XP_WIN) && !defined(__MINGW32__)
-    { &kNS_WINIEPROFILEMIGRATOR_CID, false, NULL, nsIEProfileMigratorConstructor },
     { &kNS_WINIEHISTORYENUMERATOR_CID, false, NULL, nsIEHistoryEnumeratorConstructor },
 #elif defined(XP_MACOSX)
     { &kNS_SHELLSERVICE_CID, false, NULL, nsMacShellServiceConstructor },
@@ -144,7 +140,6 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "newtab", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "permissions", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
 #if defined(XP_WIN) && !defined(__MINGW32__)
-    { NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "ie", &kNS_WINIEPROFILEMIGRATOR_CID },
     { NS_IEHISTORYENUMERATOR_CONTRACTID, &kNS_WINIEHISTORYENUMERATOR_CID },
 #elif defined(XP_MACOSX)
     { NS_SHELLSERVICE_CONTRACTID, &kNS_SHELLSERVICE_CID },
