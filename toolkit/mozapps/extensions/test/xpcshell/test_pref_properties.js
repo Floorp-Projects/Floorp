@@ -132,7 +132,9 @@ function run_test() {
   try {
     channel = Services.prefs.getCharPref("app.update.channel");
   } catch (e) { }
-  if (isNightlyChannel(channel)) {
+  if (channel != "aurora" &&
+      channel != "beta" &&
+      channel != "release") {
     var version = "nightly";
   } else {
     version = Services.appinfo.version.replace(/^([^\.]+\.[0-9]+[a-z]*).*/gi, "$1");
