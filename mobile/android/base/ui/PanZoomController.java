@@ -38,8 +38,9 @@
 
 package org.mozilla.gecko.ui;
 
-import org.json.JSONObject;
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.PointUtils;
@@ -55,6 +56,8 @@ import android.util.FloatMath;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import java.util.Arrays;
+import java.util.StringTokenizer;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -72,6 +75,10 @@ public class PanZoomController
 
     private static String MESSAGE_ZOOM_RECT = "Browser:ZoomToRect";
     private static String MESSAGE_ZOOM_PAGE = "Browser:ZoomToPageWidth";
+    private static String MESSAGE_PREFS_GET = "Preferences:Get";
+    private static String MESSAGE_PREFS_DATA = "Preferences:Data";
+
+    private static final String PREF_ZOOM_ANIMATION_FRAMES = "ui.zooming.animation_frames";
 
     // Animation stops if the velocity is below this value when overscrolled or panning.
     private static final float STOPPED_THRESHOLD = 4.0f;
@@ -90,7 +97,7 @@ public class PanZoomController
     private static final float MAX_ZOOM = 4.0f;
 
     /* 16 precomputed frames of the _ease-out_ animation from the CSS Transitions specification. */
-    private static final float[] EASE_OUT_ANIMATION_FRAMES = {
+    private static float[] ZOOM_ANIMATION_FRAMES = new float[] {
         0.00000f,   /* 0 */
         0.10211f,   /* 1 */
         0.19864f,   /* 2 */
@@ -154,6 +161,11 @@ public class PanZoomController
 
         GeckoAppShell.registerGeckoEventListener(MESSAGE_ZOOM_RECT, this);
         GeckoAppShell.registerGeckoEventListener(MESSAGE_ZOOM_PAGE, this);
+        GeckoAppShell.registerGeckoEventListener(MESSAGE_PREFS_DATA, this);
+
+        JSONArray prefs = new JSONArray();
+        prefs.put(PREF_ZOOM_ANIMATION_FRAMES);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(MESSAGE_PREFS_GET, prefs.toString()));
     }
 
     // for debugging bug 713011; it can be taken out once that is resolved.
@@ -195,9 +207,37 @@ public class PanZoomController
                         animatedZoomTo(r);
                     }
                 });
+            } else if (MESSAGE_PREFS_DATA.equals(event)) {
+                JSONArray jsonPrefs = message.getJSONArray("preferences");
+                for (int i = jsonPrefs.length() - 1; i >= 0; i--) {
+                    JSONObject pref = jsonPrefs.getJSONObject(i);
+                    String name = pref.getString("name");
+                    if (PREF_ZOOM_ANIMATION_FRAMES.equals(name)) {
+                        setZoomAnimationFrames(pref.getString("value"));
+                        GeckoAppShell.unregisterGeckoEventListener(MESSAGE_PREFS_DATA, this);
+                        break;
+                    }
+                }
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
+        }
+    }
+
+    private void setZoomAnimationFrames(String frames) {
+        try {
+            if (frames != null && frames.length() > 0) {
+                StringTokenizer st = new StringTokenizer(frames, ",");
+                float[] values = new float[st.countTokens()];
+                for (int i = 0; i < values.length; i++) {
+                    values[i] = Float.parseFloat(st.nextToken());
+                }
+                ZOOM_ANIMATION_FRAMES = values;
+            }
+        } catch (NumberFormatException e) {
+            Log.e(LOGTAG, "Error setting zoom animation frames", e);
+        } finally {
+            Log.i(LOGTAG, "Zoom animation frames: " + Arrays.toString(ZOOM_ANIMATION_FRAMES));
         }
     }
 
@@ -615,7 +655,7 @@ public class PanZoomController
             }
 
             /* Perform the next frame of the bounce-back animation. */
-            if (mBounceFrame < EASE_OUT_ANIMATION_FRAMES.length) {
+            if (mBounceFrame < ZOOM_ANIMATION_FRAMES.length) {
                 advanceBounce();
                 return;
             }
@@ -629,7 +669,7 @@ public class PanZoomController
         /* Performs one frame of a bounce animation. */
         private void advanceBounce() {
             synchronized (mController) {
-                float t = EASE_OUT_ANIMATION_FRAMES[mBounceFrame];
+                float t = ZOOM_ANIMATION_FRAMES[mBounceFrame];
                 ViewportMetrics newMetrics = mBounceStartMetrics.interpolate(mBounceEndMetrics, t);
                 mController.setViewportMetrics(newMetrics);
                 mController.notifyLayerClientOfGeometryChange();
