@@ -15,6 +15,19 @@ function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
+  var channel = "default";
+  try {
+    channel = Services.prefs.getCharPref("app.update.channel");
+  } catch (e) { }
+  if (channel != "aurora" &&
+      channel != "beta" &&
+      channel != "release") {
+    var version = "nightly";
+  } else {
+    version = Services.appinfo.version.replace(/^([^\.]+\.[0-9]+[a-z]*).*/gi, "$1");
+  }
+  COMPATIBILITY_PREF = "extensions.checkCompatibility." + version;
+
   // Create and configure the HTTP server.
   gServer = new nsHttpServer();
   gServer.registerDirectory("/data/", do_get_file("data"));
@@ -71,7 +84,7 @@ function run_test_2() {
 // Compatibility checking disabled.
 function run_test_3() {
   do_print("Testing with all compatibility checking disabled");
-  AddonManager.checkCompatibility = false;
+  Services.prefs.setBoolPref(COMPATIBILITY_PREF, false);
 
   AddonRepository.searchAddons("test", 6, {
     searchSucceeded: function(aAddons) {

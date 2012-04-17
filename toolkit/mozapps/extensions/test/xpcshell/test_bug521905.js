@@ -41,7 +41,8 @@ const ID = "bug521905@tests.mozilla.org";
 
 // Disables security checking our updates which haven't been signed
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
-AddonManager.checkCompatibility = false;
+// Disables compatibility checking
+Services.prefs.setBoolPref("extensions.checkCompatibility.2.0pre", false);
 
 function run_test() {
   var channel = "default";
@@ -52,7 +53,9 @@ function run_test() {
 
   // This test is only relevant on builds where the version is included in the
   // checkCompatibility preference name
-  if (isNightlyChannel(channel)) {
+  if (channel != "aurora" &&
+      channel != "beta" &&
+      channel != "release") {
     return;
   }
 

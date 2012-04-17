@@ -26,10 +26,6 @@ var gAddonsList;
 
 var TEST_UNPACKED = false;
 
-function isNightlyChannel(channel) {
-  return channel != "aurora" && channel != "beta" && channel != "release" && channel != "esr";
-}
-
 function createAppInfo(id, name, version, platformVersion) {
   gAppInfo = {
     // nsIXULAppInfo
