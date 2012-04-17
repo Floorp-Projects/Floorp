@@ -158,7 +158,9 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
   NS_ASSERTION(svgElement, "Content is not an SVG 'svg' element!");
 #endif
 
-  AddStateBits(NS_STATE_IS_OUTER_SVG);
+  AddStateBits(NS_STATE_IS_OUTER_SVG |
+               NS_FRAME_FONT_INFLATION_CONTAINER |
+               NS_FRAME_FONT_INFLATION_FLOW_ROOT);
 
   // Check for conditional processing attributes here rather than in
   // nsCSSFrameConstructor::FindSVGData because we want to avoid

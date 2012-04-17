@@ -260,21 +260,11 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
     nsCAutoString uriStr;
     nsCAutoString scheme;
 
-    JSStackFrame* frame = nsnull;
     JSScript* script = nsnull;
 
     // Figure out who's calling us
-    do
-    {
-        frame = JS_FrameIterator(cx, &frame);
-
-        if (frame)
-            script = JS_GetFrameScript(cx, frame);
-    } while (frame && !script);
-
-    if (!script) {
-        // No script means we don't know who's calling, bail.
-
+    if (!JS_DescribeScriptedCaller(cx, &script, nsnull)) {
+        // No scripted frame means we don't know who's calling, bail.
         return NS_ERROR_FAILURE;
     }
 

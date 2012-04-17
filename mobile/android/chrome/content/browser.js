@@ -1710,6 +1710,7 @@ Tab.prototype = {
 
     // finally, we set the display port, taking care to convert everything into the CSS-pixel
     // coordinate space, because that is what the function accepts.
+    cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     cwu.setDisplayPortForElement((aDisplayPort.left / resolution) - (aViewportX / zoom),
                                  (aDisplayPort.top / resolution) - (aViewportY / zoom),
                                  (aDisplayPort.right - aDisplayPort.left) / resolution,
@@ -2984,9 +2985,7 @@ var FormAssistant = {
         if (!this._currentInputElement)
           break;
 
-        // Remove focus from the textbox to avoid some bad IME interactions
-        this._currentInputElement.blur();
-        this._currentInputElement.value = aData;
+        this._currentInputElement.QueryInterface(Ci.nsIDOMNSEditableElement).setUserInput(aData);
 
         let event = this._currentInputElement.ownerDocument.createEvent("Events");
         event.initEvent("DOMAutoComplete", true, true);
