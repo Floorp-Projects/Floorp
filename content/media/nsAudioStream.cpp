@@ -83,10 +83,6 @@ using mozilla::TimeStamp;
 PRLogModuleInfo* gAudioStreamLog = nsnull;
 #endif
 
-#if defined(MOZ_CUBEB)
-static cubeb* gCubebContext;
-#endif
-
 static const PRUint32 FAKE_BUFFER_SIZE = 176400;
 
 // Number of milliseconds per second.
@@ -336,7 +332,7 @@ static int PrefChanged(const char* aPref, void* aClosure)
       gVolumeScale = NS_MAX<double>(0, PR_strtod(utf8.get(), nsnull));
     }
   } else if (strcmp(aPref, PREF_USE_CUBEB) == 0) {
-    bool value = Preferences::GetBool(aPref, false);
+    bool value = Preferences::GetBool(aPref, true);
     mozilla::MutexAutoLock lock(*gAudioPrefsLock);
     gUseCubeb = value;
   }
@@ -355,6 +351,19 @@ static bool GetUseCubeb()
   mozilla::MutexAutoLock lock(*gAudioPrefsLock);
   return gUseCubeb;
 }
+
+static cubeb* gCubebContext;
+
+static cubeb* GetCubebContext()
+{
+  mozilla::MutexAutoLock lock(*gAudioPrefsLock);
+  if (gCubebContext ||
+      cubeb_init(&gCubebContext, "nsAudioStream") == CUBEB_OK) {
+    return gCubebContext;
+  }
+  NS_WARNING("cubeb_init failed");
+  return nsnull;
+}
 #endif
 
 void nsAudioStream::InitLibrary()
@@ -368,9 +377,6 @@ void nsAudioStream::InitLibrary()
 #if defined(MOZ_CUBEB)
   PrefChanged(PREF_USE_CUBEB, nsnull);
   Preferences::RegisterCallback(PrefChanged, PREF_USE_CUBEB);
-  if (cubeb_init(&gCubebContext, "nsAudioStream") != 0) {
-    NS_WARNING("cubeb_init failed");
-  }
 #endif
 }
 
@@ -872,7 +878,8 @@ private:
                  // once the remaining contents of mBuffer are requested by
                  // cubeb, after which StateCallback will indicate drain
                  // completion.
-    DRAINED      // StateCallback has indicated that the drain is complete.
+    DRAINED,     // StateCallback has indicated that the drain is complete.
+    ERRORED      // Stream disabled due to an internal error.
   };
 
   StreamState mState;
@@ -915,7 +922,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS0(nsBufferedAudioStream)
 nsresult
 nsBufferedAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat)
 {
-  if (!gCubebContext || aNumChannels < 0 || aRate < 0) {
+  cubeb* cubebContext = GetCubebContext();
+
+  if (!cubebContext || aNumChannels < 0 || aRate < 0) {
     return NS_ERROR_FAILURE;
   }
 
@@ -941,7 +950,7 @@ nsBufferedAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aF
 
   {
     cubeb_stream* stream;
-    if (cubeb_stream_init(gCubebContext, &stream, "nsBufferedAudioStream", params,
+    if (cubeb_stream_init(cubebContext, &stream, "nsBufferedAudioStream", params,
                           DEFAULT_LATENCY_MS, DataCallback_S, StateCallback_S, this) == CUBEB_OK) {
       mCubebStream.own(stream);
     }
@@ -978,7 +987,7 @@ nsresult
 nsBufferedAudioStream::Write(const void* aBuf, PRUint32 aFrames)
 {
   MonitorAutoLock mon(mMonitor);
-  if (!mCubebStream) {
+  if (!mCubebStream || mState == ERRORED) {
     return NS_ERROR_FAILURE;
   }
   NS_ASSERTION(mState == INITIALIZED || mState == STARTED, "Stream write in unexpected state.");
@@ -1000,8 +1009,12 @@ nsBufferedAudioStream::Write(const void* aBuf, PRUint32 aFrames)
       mState = STARTED;
     }
 
-    if (bytesToCopy > 0) {
+    if (mState == STARTED && bytesToCopy > 0) {
       mon.Wait();
+    }
+
+    if (mState != STARTED) {
+      return NS_ERROR_FAILURE;
     }
   }
 
@@ -1038,7 +1051,7 @@ nsBufferedAudioStream::Drain()
     return;
   }
   mState = DRAINING;
-  while (mState != DRAINED) {
+  while (mState == DRAINING) {
     mon.Wait();
   }
 }
@@ -1091,7 +1104,7 @@ nsBufferedAudioStream::GetPositionInFramesUnlocked()
 {
   mMonitor.AssertCurrentThreadOwns();
 
-  if (!mCubebStream) {
+  if (!mCubebStream || mState == ERRORED) {
     return -1;
   }
 
@@ -1177,6 +1190,10 @@ nsBufferedAudioStream::StateCallback(cubeb_state aState)
   if (aState == CUBEB_STATE_DRAINED) {
     MonitorAutoLock mon(mMonitor);
     mState = DRAINED;
+    mon.NotifyAll();
+  } else if (aState == CUBEB_STATE_ERROR) {
+    MonitorAutoLock mon(mMonitor);
+    mState = ERRORED;
     mon.NotifyAll();
   }
   return CUBEB_OK;

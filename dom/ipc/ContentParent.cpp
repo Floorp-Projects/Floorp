@@ -1172,7 +1172,8 @@ ContentParent::RecvAddGeolocationListener()
     if (!geo) {
       return true;
     }
-    geo->WatchPosition(this, nsnull, nsnull, &mGeolocationWatchID);
+    jsval dummy = JSVAL_VOID;
+    geo->WatchPosition(this, nsnull, dummy, nsnull, &mGeolocationWatchID);
   }
   return true;
 }

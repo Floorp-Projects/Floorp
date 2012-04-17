@@ -96,7 +96,6 @@ struct JSFunction : public JSObject
     } u;
     js::HeapPtrAtom  atom;        /* name for diagnostics and decompiling */
 
-    bool optimizedClosure()  const { return kind() > JSFUN_INTERPRETED; }
     bool isInterpreted()     const { return kind() >= JSFUN_INTERPRETED; }
     bool isNative()          const { return !isInterpreted(); }
     bool isNativeConstructor() const { return flags & JSFUN_CONSTRUCTOR; }

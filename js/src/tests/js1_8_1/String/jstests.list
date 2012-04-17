@@ -1,2 +1,0 @@
-url-prefix ../../jsreftest.html?test=js1_8_1/String/
-fails script regress-305064.js

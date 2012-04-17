@@ -57,14 +57,13 @@
 #include "nsIDOMGeoPositionError.h"
 #include "nsIDOMGeoPositionCallback.h"
 #include "nsIDOMGeoPositionErrorCallback.h"
-#include "nsIDOMGeoPositionOptions.h"
 #include "nsIDOMNavigatorGeolocation.h"
 
 #include "nsPIDOMWindow.h"
 
 #include "nsIGeolocationProvider.h"
 #include "nsIContentPermissionPrompt.h"
-
+#include "DictionaryHelpers.h"
 #include "PCOMContentPermissionRequestChild.h"
 
 class nsGeolocationService;
@@ -85,9 +84,8 @@ class nsGeolocationRequest
   nsGeolocationRequest(nsGeolocation* locator,
                        nsIDOMGeoPositionCallback* callback,
                        nsIDOMGeoPositionErrorCallback* errorCallback,
-                       nsIDOMGeoPositionOptions* options,
                        bool watchPositionRequest = false);
-  nsresult Init();
+  nsresult Init(JSContext* aCx, const jsval& aOptions);
   void Shutdown();
 
   // Called by the geolocation device to notify that a location has changed.
@@ -114,7 +112,7 @@ class nsGeolocationRequest
   nsCOMPtr<nsITimer> mTimeoutTimer;
   nsCOMPtr<nsIDOMGeoPositionCallback> mCallback;
   nsCOMPtr<nsIDOMGeoPositionErrorCallback> mErrorCallback;
-  nsCOMPtr<nsIDOMGeoPositionOptions> mOptions;
+  nsAutoPtr<mozilla::dom::GeoPositionOptions> mOptions;
 
   nsRefPtr<nsGeolocation> mLocator;
 };

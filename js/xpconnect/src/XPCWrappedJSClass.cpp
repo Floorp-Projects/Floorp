@@ -1037,15 +1037,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                 // Finally, check to see if this is the last JS frame on the
                 // stack. If so then we always want to report it.
                 if (!reportable) {
-                    bool onlyNativeStackFrames = true;
-                    JSStackFrame * fp = nsnull;
-                    while ((fp = JS_FrameIterator(cx, &fp))) {
-                        if (JS_IsScriptFrame(cx, fp)) {
-                            onlyNativeStackFrames = false;
-                            break;
-                        }
-                    }
-                    reportable = onlyNativeStackFrames;
+                    reportable = !JS_DescribeScriptedCaller(cx, nsnull, nsnull);
                 }
 
                 // Ugly special case for GetInterface. It's "special" in the

@@ -61,7 +61,7 @@
  * a11y telemetry
  */
 HISTOGRAM_FLAG(A11Y_INSTANTIATED_FLAG, "has accessibility support been instantiated")
-HISTOGRAM_ENUMERATED_VALUES(A11Y_CONSUMERS, 9, "Accessibility client by enum id")
+HISTOGRAM_ENUMERATED_VALUES(A11Y_CONSUMERS, 11, "Accessibility client by enum id")
 HISTOGRAM_FLAG(A11Y_ISIMPLEDOM_USAGE_FLAG, "have the ISimpleDOM* accessibility interfaces been used")
 HISTOGRAM_FLAG(A11Y_IATABLE_USAGE_FLAG, "has the IAccessibleTable accessibility interface been used")
 HISTOGRAM_FLAG(A11Y_XFORMS_USAGE_FLAG, "has XForms accessibility been instantiated")
@@ -96,7 +96,7 @@ HISTOGRAM(TELEMETRY_PING, 1, 3000, 10, EXPONENTIAL, "Time taken to submit teleme
 HISTOGRAM_BOOLEAN(TELEMETRY_SUCCESS,  "Successful telemetry submission")
 HISTOGRAM(MEMORY_JS_COMPARTMENTS_SYSTEM, 1, 1000, 50, EXPONENTIAL, "Total JavaScript compartments used for add-ons and internals.")
 HISTOGRAM(MEMORY_JS_COMPARTMENTS_USER, 1, 1000, 50, EXPONENTIAL, "Total JavaScript compartments used for web pages")
-HISTOGRAM(MEMORY_JS_GC_HEAP, 1024, 512 * 1024, 50, EXPONENTIAL, "Memory used by the garbage-collected JavaScript heap (KB)")
+HISTOGRAM(MEMORY_JS_GC_HEAP_COMMITTED, 1024, 512 * 1024, 50, EXPONENTIAL, "Committed memory used by the garbage-collected JavaScript heap (KB)")
 HISTOGRAM(MEMORY_RESIDENT, 32 * 1024, 1024 * 1024, 50, EXPONENTIAL, "Resident memory size (KB)")
 HISTOGRAM(MEMORY_STORAGE_SQLITE, 1024, 512 * 1024, 50, EXPONENTIAL, "Memory used by SQLite (KB)")
 HISTOGRAM(MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED, 1024, 1024 * 1024, 50, EXPONENTIAL, "Memory used for uncompressed, in-use content images (KB)")

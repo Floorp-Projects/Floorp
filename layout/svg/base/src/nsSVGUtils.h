@@ -143,6 +143,44 @@ IsSVGWhitespace(PRUnichar aChar)
  */
 bool NS_SMILEnabled();
 
+/**
+ * Sometimes we need to distinguish between an empty box and a box
+ * that contains an element that has no size e.g. a point at the origin.
+ */
+class SVGBBox {
+public:
+  SVGBBox() 
+    : mIsEmpty(true) {}
+
+  SVGBBox(const gfxRect& aRect) 
+    : mBBox(aRect), mIsEmpty(false) {}
+
+  SVGBBox& operator=(const gfxRect& aRect) {
+    mBBox = aRect;
+    mIsEmpty = false;
+    return *this;
+  }
+
+  operator const gfxRect& () const {
+    return mBBox;
+  }
+
+  bool IsEmpty() const {
+    return mIsEmpty;
+  }
+
+  void UnionEdges(const SVGBBox& aSVGBBox) {
+    if (aSVGBBox.mIsEmpty) {
+      return;
+    }
+    mBBox = mIsEmpty ? aSVGBBox.mBBox : mBBox.UnionEdges(aSVGBBox.mBBox);
+    mIsEmpty = false;
+  }
+
+private:
+  gfxRect mBBox;
+  bool    mIsEmpty;
+};
 
 // GRRR WINDOWS HATE HATE HATE
 #undef CLIP_MASK

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2011 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -270,7 +270,7 @@ TextureType Program::getSamplerTextureType(SamplerType type, unsigned int sample
 
 GLint Program::getUniformLocation(std::string name)
 {
-    int subscript = 0;
+    unsigned int subscript = 0;
 
     // Strip any trailing array operator and retrieve the subscript
     size_t open = name.find_last_of('[');
@@ -1145,7 +1145,7 @@ int Program::packVaryings(const Varying *packing[][4])
     Context *context = getContext();
     const int maxVaryingVectors = context->getMaximumVaryingVectors();
 
-    for (VaryingList::iterator varying = mFragmentShader->varyings.begin(); varying != mFragmentShader->varyings.end(); varying++)
+    for (VaryingList::iterator varying = mFragmentShader->mVaryings.begin(); varying != mFragmentShader->mVaryings.end(); varying++)
     {
         int n = VariableRowCount(varying->type) * varying->size;
         int m = VariableColumnCount(varying->type);
@@ -1296,13 +1296,13 @@ bool Program::linkVaryings()
     }
 
     // Reset the varying register assignments
-    for (VaryingList::iterator fragVar = mFragmentShader->varyings.begin(); fragVar != mFragmentShader->varyings.end(); fragVar++)
+    for (VaryingList::iterator fragVar = mFragmentShader->mVaryings.begin(); fragVar != mFragmentShader->mVaryings.end(); fragVar++)
     {
         fragVar->reg = -1;
         fragVar->col = -1;
     }
 
-    for (VaryingList::iterator vtxVar = mVertexShader->varyings.begin(); vtxVar != mVertexShader->varyings.end(); vtxVar++)
+    for (VaryingList::iterator vtxVar = mVertexShader->mVaryings.begin(); vtxVar != mVertexShader->mVaryings.end(); vtxVar++)
     {
         vtxVar->reg = -1;
         vtxVar->col = -1;
@@ -1329,11 +1329,11 @@ bool Program::linkVaryings()
         return false;
     }
 
-    for (VaryingList::iterator input = mFragmentShader->varyings.begin(); input != mFragmentShader->varyings.end(); input++)
+    for (VaryingList::iterator input = mFragmentShader->mVaryings.begin(); input != mFragmentShader->mVaryings.end(); input++)
     {
         bool matched = false;
 
-        for (VaryingList::iterator output = mVertexShader->varyings.begin(); output != mVertexShader->varyings.end(); output++)
+        for (VaryingList::iterator output = mVertexShader->mVaryings.begin(); output != mVertexShader->mVaryings.end(); output++)
         {
             if (output->name == input->name)
             {
@@ -1444,7 +1444,7 @@ bool Program::linkVaryings()
         mVertexHLSL += "    output.gl_FragCoord = gl_Position;\n";
     }
 
-    for (VaryingList::iterator varying = mVertexShader->varyings.begin(); varying != mVertexShader->varyings.end(); varying++)
+    for (VaryingList::iterator varying = mVertexShader->mVaryings.begin(); varying != mVertexShader->mVaryings.end(); varying++)
     {
         if (varying->reg >= 0)
         {
@@ -1512,7 +1512,7 @@ bool Program::linkVaryings()
     mPixelHLSL += "struct PS_INPUT\n"
                   "{\n";
     
-    for (VaryingList::iterator varying = mFragmentShader->varyings.begin(); varying != mFragmentShader->varyings.end(); varying++)
+    for (VaryingList::iterator varying = mFragmentShader->mVaryings.begin(); varying != mFragmentShader->mVaryings.end(); varying++)
     {
         if (varying->reg >= 0)
         {
@@ -1588,7 +1588,7 @@ bool Program::linkVaryings()
         mPixelHLSL += "    gl_FrontFacing = dx_PointsOrLines || (dx_FrontCCW ? (input.vFace >= 0.0) : (input.vFace <= 0.0));\n";
     }
 
-    for (VaryingList::iterator varying = mFragmentShader->varyings.begin(); varying != mFragmentShader->varyings.end(); varying++)
+    for (VaryingList::iterator varying = mFragmentShader->mVaryings.begin(); varying != mFragmentShader->mVaryings.end(); varying++)
     {
         if (varying->reg >= 0)
         {
@@ -1902,7 +1902,7 @@ bool Program::defineUniform(const D3DXHANDLE &constantHandle, const D3DXCONSTANT
     }
 }
 
-bool Program::defineUniform(const D3DXCONSTANT_DESC &constantDescription, std::string &_name)
+bool Program::defineUniform(const D3DXCONSTANT_DESC &constantDescription, const std::string &_name)
 {
     Uniform *uniform = createUniform(constantDescription, _name);
 
@@ -1943,7 +1943,7 @@ bool Program::defineUniform(const D3DXCONSTANT_DESC &constantDescription, std::s
     return true;
 }
 
-Uniform *Program::createUniform(const D3DXCONSTANT_DESC &constantDescription, std::string &_name)
+Uniform *Program::createUniform(const D3DXCONSTANT_DESC &constantDescription, const std::string &_name)
 {
     if (constantDescription.Rows == 1)   // Vectors and scalars
     {
@@ -2031,16 +2031,26 @@ std::string Program::decorateAttribute(const std::string &name)
 
 std::string Program::undecorateUniform(const std::string &_name)
 {
-    if (_name[0] == '_')
+    std::string name = _name;
+    
+    // Remove any structure field decoration
+    size_t pos = 0;
+    while ((pos = name.find("._", pos)) != std::string::npos)
     {
-        return _name.substr(1);
+        name.replace(pos, 2, ".");
     }
-    else if (_name.compare(0, 3, "ar_") == 0)
+
+    // Remove the leading decoration
+    if (name[0] == '_')
     {
-        return _name.substr(3);
+        return name.substr(1);
+    }
+    else if (name.compare(0, 3, "ar_") == 0)
+    {
+        return name.substr(3);
     }
     
-    return _name;
+    return name;
 }
 
 void Program::applyUniformnbv(Uniform *targetUniform, GLsizei count, int width, const GLboolean *v)
@@ -2454,17 +2464,14 @@ void Program::getInfoLog(GLsizei bufSize, GLsizei *length, char *infoLog)
 {
     int index = 0;
 
-    if (mInfoLog)
+    if (bufSize > 0)
     {
-        while (index < bufSize - 1 && index < (int)strlen(mInfoLog))
+        if (mInfoLog)
         {
-            infoLog[index] = mInfoLog[index];
-            index++;
+            index = std::min(bufSize - 1, (int)strlen(mInfoLog));
+            memcpy(infoLog, mInfoLog, index);
         }
-    }
 
-    if (bufSize)
-    {
         infoLog[index] = '\0';
     }
 

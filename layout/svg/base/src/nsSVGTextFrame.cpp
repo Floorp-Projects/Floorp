@@ -261,7 +261,7 @@ nsSVGTextFrame::UpdateBounds()
   // nsSVGUtils::InvalidateBounds(this) if not first reflow.
 }
 
-gfxRect
+SVGBBox
 nsSVGTextFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                     PRUint32 aFlags)
 {
