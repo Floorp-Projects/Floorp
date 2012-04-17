@@ -68,6 +68,11 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
     // per-tab and is updated when we switch tabs).
     private boolean mWaitForTouchListeners;
 
+    // true if we should send the current block of events to gecko. this
+    // is false if mWaitForTouchListeners was false when we received the
+    // touchstart event.
+    private boolean mSendBlockToListeners;
+
     // true if we should hold incoming events in our queue. this is re-set for every
     // block of events, this is cleared once we find out if the block has been
     // default-prevented or not (or we time out waiting for that).
@@ -144,18 +149,16 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
 
         if (isDownEvent(event)) {
             // this is the start of a new block of events! whee!
+            mSendBlockToListeners = mWaitForTouchListeners;
             mHoldInQueue = mWaitForTouchListeners;
             if (mHoldInQueue) {
                 // if we're holding the events in the queue, set the timeout so that
                 // we dispatch these events if we don't get a default-prevented notification
                 mView.postDelayed(mListenerTimeoutProcessor, EVENT_LISTENER_TIMEOUT);
-            } else {
-                // if we're not holding these events, then we still need to pretend like
-                // we did and had a ListenerTimeoutProcessor fire so that when we get
-                // the default-prevented notification for this block, it doesn't accidentally
-                // act upon some other block
-                mProcessingBalance++;
             }
+            // if mSendBlockToListeners is false, then we're neither going to hold it
+            // in the queue nor send it to the listeners, so we don't need to update
+            // the mProcessingBalance here.
         }
 
         // if we need to hold the events, add it to the queue. if we need to dispatch
@@ -169,8 +172,10 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
             dispatchEvent(event);
         }
 
-        // notify gecko of the event
-        mOnTouchListener.onTouch(mView, event);
+        if (mSendBlockToListeners) {
+            // notify gecko of the event
+            mOnTouchListener.onTouch(mView, event);
+        }
 
         return true;
     }
