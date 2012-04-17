@@ -13,8 +13,7 @@
 #include <stdlib.h>
 #include "cubeb/cubeb.h"
 
-#include <stdio.h>
-
+#define CUBEB_STREAM_MAX 32
 #define NBUFS 4
 
 const GUID KSDATAFORMAT_SUBTYPE_PCM =
@@ -32,6 +31,8 @@ struct cubeb {
   HANDLE thread;
   int shutdown;
   PSLIST_HEADER work;
+  CRITICAL_SECTION lock;
+  unsigned int active_streams;
 };
 
 struct cubeb_stream {
@@ -41,6 +42,7 @@ struct cubeb_stream {
   cubeb_state_callback state_callback;
   void * user_ptr;
   WAVEHDR buffers[NBUFS];
+  size_t buffer_size;
   int next_buffer;
   int free_buffers;
   int shutdown;
@@ -57,7 +59,7 @@ bytes_per_frame(cubeb_stream_params params)
 
   switch (params.format) {
   case CUBEB_SAMPLE_S16LE:
-    bytes = sizeof(signed int);
+    bytes = sizeof(signed short);
     break;
   case CUBEB_SAMPLE_FLOAT32LE:
     bytes = sizeof(float);
@@ -76,7 +78,7 @@ cubeb_get_next_buffer(cubeb_stream * stm)
 
   assert(stm->free_buffers > 0 && stm->free_buffers <= NBUFS);
   hdr = &stm->buffers[stm->next_buffer];
-  assert(hdr->dwFlags == 0 ||
+  assert(hdr->dwFlags & WHDR_PREPARED ||
          (hdr->dwFlags & WHDR_DONE && !(hdr->dwFlags & WHDR_INQUEUE)));
   stm->next_buffer = (stm->next_buffer + 1) % NBUFS;
   stm->free_buffers -= 1;
@@ -85,33 +87,62 @@ cubeb_get_next_buffer(cubeb_stream * stm)
 }
 
 static void
-cubeb_submit_buffer(cubeb_stream * stm, WAVEHDR * hdr)
+cubeb_refill_stream(cubeb_stream * stm)
 {
+  WAVEHDR * hdr;
   long got;
+  long wanted;
   MMRESULT r;
 
-  got = stm->data_callback(stm, stm->user_ptr, hdr->lpData,
-                           hdr->dwBufferLength / bytes_per_frame(stm->params));
+  EnterCriticalSection(&stm->lock);
+  stm->free_buffers += 1;
+  assert(stm->free_buffers > 0 && stm->free_buffers <= NBUFS);
+
+  if (stm->draining) {
+    LeaveCriticalSection(&stm->lock);
+    if (stm->free_buffers == NBUFS) {
+      stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_DRAINED);
+    }
+    SetEvent(stm->event);
+    return;
+  }
+
+  if (stm->shutdown) {
+    LeaveCriticalSection(&stm->lock);
+    SetEvent(stm->event);
+    return;
+  }
+
+  hdr = cubeb_get_next_buffer(stm);
+
+  wanted = (DWORD) stm->buffer_size / bytes_per_frame(stm->params);
+
+  /* It is assumed that the caller is holding this lock.  It must be dropped
+     during the callback to avoid deadlocks. */
+  LeaveCriticalSection(&stm->lock);
+  got = stm->data_callback(stm, stm->user_ptr, hdr->lpData, wanted);
+  EnterCriticalSection(&stm->lock);
   if (got < 0) {
     /* XXX handle this case */
     assert(0);
     return;
-  } else if ((DWORD) got < hdr->dwBufferLength / bytes_per_frame(stm->params)) {
-    r = waveOutUnprepareHeader(stm->waveout, hdr, sizeof(*hdr));
-    assert(r == MMSYSERR_NOERROR);
-
-    hdr->dwBufferLength = got * bytes_per_frame(stm->params);
-
-    r = waveOutPrepareHeader(stm->waveout, hdr, sizeof(*hdr));
-    assert(r == MMSYSERR_NOERROR);
-
+  } else if (got < wanted) {
     stm->draining = 1;
   }
 
   assert(hdr->dwFlags & WHDR_PREPARED);
 
+  hdr->dwBufferLength = got * bytes_per_frame(stm->params);
+  assert(hdr->dwBufferLength <= stm->buffer_size);
+
   r = waveOutWrite(stm->waveout, hdr, sizeof(*hdr));
-  assert(r == MMSYSERR_NOERROR);
+  if (r != MMSYSERR_NOERROR) {
+    LeaveCriticalSection(&stm->lock);
+    stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_ERROR);
+    return;
+  }
+
+  LeaveCriticalSection(&stm->lock);
 }
 
 static unsigned __stdcall
@@ -122,34 +153,14 @@ cubeb_buffer_thread(void * user_ptr)
 
   for (;;) {
     DWORD rv;
-    struct cubeb_stream_item * item;
+    PSLIST_ENTRY item;
 
     rv = WaitForSingleObject(ctx->event, INFINITE);
     assert(rv == WAIT_OBJECT_0);
 
-    item = (struct cubeb_stream_item *) InterlockedPopEntrySList(ctx->work);
-    while (item) {
-      cubeb_stream * stm = item->stream;
-
-      EnterCriticalSection(&stm->lock);
-      stm->free_buffers += 1;
-      assert(stm->free_buffers > 0 && stm->free_buffers <= NBUFS);
-
-      if (stm->draining || stm->shutdown) {
-        if (stm->free_buffers == NBUFS) {
-          if (stm->draining) {
-            stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_DRAINED);
-          }
-          SetEvent(stm->event);
-        }
-      } else {
-        cubeb_submit_buffer(stm, cubeb_get_next_buffer(stm));
-      }
-      LeaveCriticalSection(&stm->lock);
-
+    while ((item = InterlockedPopEntrySList(ctx->work)) != NULL) {
+      cubeb_refill_stream(((struct cubeb_stream_item *) item)->stream);
       _aligned_free(item);
-
-      item = (struct cubeb_stream_item *) InterlockedPopEntrySList(ctx->work);
     }
 
     if (ctx->shutdown) {
@@ -183,6 +194,9 @@ cubeb_init(cubeb ** context, char const * context_name)
 {
   cubeb * ctx;
 
+  assert(context);
+  *context = NULL;
+
   ctx = calloc(1, sizeof(*ctx));
   assert(ctx);
 
@@ -202,6 +216,9 @@ cubeb_init(cubeb ** context, char const * context_name)
     return CUBEB_ERROR;
   }
 
+  InitializeCriticalSection(&ctx->lock);
+  ctx->active_streams = 0;
+
   *context = ctx;
 
   return CUBEB_OK;
@@ -212,7 +229,10 @@ cubeb_destroy(cubeb * ctx)
 {
   DWORD rv;
 
+  assert(ctx->active_streams == 0);
   assert(!InterlockedPopEntrySList(ctx->work));
+
+  DeleteCriticalSection(&ctx->lock);
 
   if (ctx->thread) {
     ctx->shutdown = 1;
@@ -243,6 +263,11 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   cubeb_stream * stm;
   int i;
   size_t bufsz;
+
+  assert(context);
+  assert(stream);
+
+  *stream = NULL;
 
   if (stream_params.rate < 1 || stream_params.rate > 192000 ||
       stream_params.channels < 1 || stream_params.channels > 32 ||
@@ -286,6 +311,17 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   wfx.Samples.wSamplesPerBlock = 0;
   wfx.Samples.wReserved = 0;
 
+  EnterCriticalSection(&context->lock);
+  /* CUBEB_STREAM_MAX is a horrible hack to avoid a situation where, when
+     many streams are active at once, a subset of them will not consume (via
+     playback) or release (via waveOutReset) their buffers. */
+  if (context->active_streams >= CUBEB_STREAM_MAX) {
+    LeaveCriticalSection(&context->lock);
+    return CUBEB_ERROR;
+  }
+  context->active_streams += 1;
+  LeaveCriticalSection(&context->lock);
+
   stm = calloc(1, sizeof(*stm));
   assert(stm);
 
@@ -303,12 +339,7 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   }
   assert(bufsz % bytes_per_frame(stm->params) == 0);
 
-  for (i = 0; i < NBUFS; ++i) {
-    stm->buffers[i].lpData = calloc(1, bufsz);
-    assert(stm->buffers[i].lpData);
-    stm->buffers[i].dwBufferLength = bufsz;
-    stm->buffers[i].dwFlags = 0;
-  }
+  stm->buffer_size = bufsz;
 
   InitializeCriticalSection(&stm->lock);
 
@@ -317,8 +348,6 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
     cubeb_stream_destroy(stm);
     return CUBEB_ERROR;
   }
-
-  stm->free_buffers = NBUFS;
 
   /* cubeb_buffer_callback will be called during waveOutOpen, so all
      other initialization must be complete before calling it. */
@@ -329,18 +358,28 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
     cubeb_stream_destroy(stm);
     return CUBEB_ERROR;
   }
-  assert(r == MMSYSERR_NOERROR);
 
   r = waveOutPause(stm->waveout);
-  assert(r == MMSYSERR_NOERROR);
+  if (r != MMSYSERR_NOERROR) {
+    cubeb_stream_destroy(stm);
+    return CUBEB_ERROR;
+  }
 
   for (i = 0; i < NBUFS; ++i) {
-    WAVEHDR * hdr = cubeb_get_next_buffer(stm);
+    WAVEHDR * hdr = &stm->buffers[i];
+
+    hdr->lpData = calloc(1, bufsz);
+    assert(hdr->lpData);
+    hdr->dwBufferLength = bufsz;
+    hdr->dwFlags = 0;
 
     r = waveOutPrepareHeader(stm->waveout, hdr, sizeof(*hdr));
-    assert(r == MMSYSERR_NOERROR);
+    if (r != MMSYSERR_NOERROR) {
+      cubeb_stream_destroy(stm);
+      return CUBEB_ERROR;
+    }
 
-    cubeb_submit_buffer(stm, hdr);
+    cubeb_refill_stream(stm);
   }
 
   *stream = stm;
@@ -351,7 +390,6 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
 void
 cubeb_stream_destroy(cubeb_stream * stm)
 {
-  MMRESULT r;
   DWORD rv;
   int i;
   int enqueued;
@@ -360,25 +398,32 @@ cubeb_stream_destroy(cubeb_stream * stm)
     EnterCriticalSection(&stm->lock);
     stm->shutdown = 1;
 
-    r = waveOutReset(stm->waveout);
-    assert(r == MMSYSERR_NOERROR);
+    waveOutReset(stm->waveout);
 
     enqueued = NBUFS - stm->free_buffers;
     LeaveCriticalSection(&stm->lock);
 
-    /* wait for all blocks to complete */
-    if (enqueued > 0) {
+    /* Wait for all blocks to complete. */
+    while (enqueued > 0) {
       rv = WaitForSingleObject(stm->event, INFINITE);
       assert(rv == WAIT_OBJECT_0);
+
+      EnterCriticalSection(&stm->lock);
+      enqueued = NBUFS - stm->free_buffers;
+      LeaveCriticalSection(&stm->lock);
     }
+
+    EnterCriticalSection(&stm->lock);
 
     for (i = 0; i < NBUFS; ++i) {
-      r = waveOutUnprepareHeader(stm->waveout, &stm->buffers[i], sizeof(stm->buffers[i]));
-      assert(r == MMSYSERR_NOERROR);
+      if (stm->buffers[i].dwFlags & WHDR_PREPARED) {
+        waveOutUnprepareHeader(stm->waveout, &stm->buffers[i], sizeof(stm->buffers[i]));
+      }
     }
 
-    r = waveOutClose(stm->waveout);
-    assert(r == MMSYSERR_NOERROR);
+    waveOutClose(stm->waveout);
+
+    LeaveCriticalSection(&stm->lock);
   }
 
   if (stm->event) {
@@ -391,6 +436,11 @@ cubeb_stream_destroy(cubeb_stream * stm)
     free(stm->buffers[i].lpData);
   }
 
+  EnterCriticalSection(&stm->context->lock);
+  assert(stm->context->active_streams >= 1);
+  stm->context->active_streams -= 1;
+  LeaveCriticalSection(&stm->context->lock);
+
   free(stm);
 }
 
@@ -399,8 +449,13 @@ cubeb_stream_start(cubeb_stream * stm)
 {
   MMRESULT r;
 
+  EnterCriticalSection(&stm->lock);
   r = waveOutRestart(stm->waveout);
-  assert(r == MMSYSERR_NOERROR);
+  LeaveCriticalSection(&stm->lock);
+
+  if (r != MMSYSERR_NOERROR) {
+    return CUBEB_ERROR;
+  }
 
   stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STARTED);
 
@@ -412,8 +467,13 @@ cubeb_stream_stop(cubeb_stream * stm)
 {
   MMRESULT r;
 
+  EnterCriticalSection(&stm->lock);
   r = waveOutPause(stm->waveout);
-  assert(r == MMSYSERR_NOERROR);
+  LeaveCriticalSection(&stm->lock);
+
+  if (r != MMSYSERR_NOERROR) {
+    return CUBEB_ERROR;
+  }
 
   stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STOPPED);
 
@@ -426,10 +486,14 @@ cubeb_stream_get_position(cubeb_stream * stm, uint64_t * position)
   MMRESULT r;
   MMTIME time;
 
+  EnterCriticalSection(&stm->lock);
   time.wType = TIME_SAMPLES;
   r = waveOutGetPosition(stm->waveout, &time, sizeof(time));
-  assert(r == MMSYSERR_NOERROR);
-  assert(time.wType == TIME_SAMPLES);
+  LeaveCriticalSection(&stm->lock);
+
+  if (r != MMSYSERR_NOERROR || time.wType != TIME_SAMPLES) {
+    return CUBEB_ERROR;
+  }
 
   *position = time.u.sample;
 

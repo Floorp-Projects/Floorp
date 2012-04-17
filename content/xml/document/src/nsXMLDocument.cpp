@@ -457,6 +457,14 @@ nsXMLDocument::Load(const nsAString& aUrl, bool *aReturn)
     return rv;
   }
 
+  // StartDocumentLoad asserts that readyState is uninitialized, so
+  // uninitialize it. SetReadyStateInternal make this transition invisible to
+  // Web content. But before doing that, assert that the current readyState
+  // is complete as it should be after the call to ResetToURI() above.
+  MOZ_ASSERT(GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE,
+             "Bad readyState");
+  SetReadyStateInternal(nsIDocument::READYSTATE_UNINITIALIZED);
+
   // Prepare for loading the XML document "into oneself"
   nsCOMPtr<nsIStreamListener> listener;
   if (NS_FAILED(rv = StartDocumentLoad(kLoadAsData, channel, 

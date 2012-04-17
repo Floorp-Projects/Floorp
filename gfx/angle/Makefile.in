@@ -60,6 +60,7 @@ LOCAL_INCLUDES += -I$(srcdir)/include -I$(srcdir)/src
 VPATH += $(srcdir)/src
 VPATH += $(srcdir)/src/compiler
 VPATH += $(srcdir)/src/compiler/preprocessor
+VPATH += $(srcdir)/src/compiler/preprocessor/new
 
 CPPSRCS = \
 	Compiler.cpp \
@@ -86,6 +87,12 @@ CPPSRCS = \
         MapLongVariableNames.cpp \
         spooky.cpp \
         BuiltInFunctionEmulator.cpp \
+        Input.cpp \
+        Lexer.cpp \
+        pp_lex.cpp \
+        Preprocessor.cpp \
+        Token.cpp \
+        lexer_glue.cpp \
         $(NULL)
 
 # flex/yacc generated files

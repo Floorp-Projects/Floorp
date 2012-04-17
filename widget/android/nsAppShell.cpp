@@ -587,7 +587,7 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
                 delete mQueuedDrawEvent;
             }
 
-            if (mAllowCoalescingNextDraw) {
+            if (!mAllowCoalescingNextDraw) {
                 // if we're not allowing coalescing of this draw event, then
                 // don't set mQueuedDrawEvent to point to this; that way the
                 // next draw event that comes in won't kill this one.

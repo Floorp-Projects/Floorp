@@ -43,6 +43,9 @@
 #include "gfxSkipChars.h"
 #include "nsTextFragment.h"
 
+class nsIContent;
+struct nsStyleText;
+
 #define BIG_TEXT_NODE_SIZE 4096
 
 #define CH_NBSP   160
@@ -147,6 +150,10 @@ public:
     aArray->AppendElement(aOffset);
   }
 
+  static PRUint32
+  ComputeApproximateLengthWithWhitespaceCompression(nsIContent *aContent,
+                                                    const nsStyleText
+                                                      *aStyleText);
 };
 
 class nsSkipCharsRunIterator {

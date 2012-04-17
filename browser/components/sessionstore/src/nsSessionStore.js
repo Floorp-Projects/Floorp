@@ -133,31 +133,17 @@ Cu.import("resource://gre/modules/debug.js");
 Cu.import("resource:///modules/TelemetryTimestamps.jsm");
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
-  Cu.import("resource://gre/modules/NetUtil.jsm");
-  return NetUtil;
-});
-
-XPCOMUtils.defineLazyGetter(this, "ScratchpadManager", function() {
-  Cu.import("resource:///modules/devtools/scratchpad-manager.jsm");
-  return ScratchpadManager;
-});
-
-XPCOMUtils.defineLazyGetter(this, "XPathGenerator", function() {
-  Cu.import("resource:///modules/sessionstore/XPathGenerator.jsm");
-  return XPathGenerator;
-});
-
-XPCOMUtils.defineLazyServiceGetter(this, "CookieSvc",
-  "@mozilla.org/cookiemanager;1", "nsICookieManager2");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
+                                  "resource:///modules/devtools/scratchpad-manager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "XPathGenerator",
+                                  "resource:///modules/sessionstore/XPathGenerator.jsm");
 
 #ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
   "@mozilla.org/xre/app-info;1", "nsICrashReporter");
 #endif
-
-XPCOMUtils.defineLazyServiceGetter(this, "SecuritySvc",
-  "@mozilla.org/scriptsecuritymanager;1", "nsIScriptSecurityManager");
 
 function debug(aMsg) {
   aMsg = ("SessionStore: " + aMsg).replace(/\S{80}/g, "$&\n");
@@ -168,8 +154,7 @@ function debug(aMsg) {
 
 function SessionStoreService() {
   XPCOMUtils.defineLazyGetter(this, "_prefBranch", function () {
-    return Cc["@mozilla.org/preferences-service;1"].
-           getService(Ci.nsIPrefService).getBranch("browser.");
+    return Services.prefs.getBranch("browser.");
   });
 
   // minimal interval between two save operations (in milliseconds)
@@ -2141,7 +2126,7 @@ SessionStoreService.prototype = {
 
       let storage, storageItemCount = 0;
       try {
-        var principal = SecuritySvc.getCodebasePrincipal(uri);
+        var principal = Services.scriptSecurityManager.getCodebasePrincipal(uri);
 
         // Using getSessionStorageForPrincipal instead of getSessionStorageForURI
         // just to be able to pass aCreate = false, that avoids creation of the
@@ -2515,7 +2500,7 @@ SessionStoreService.prototype = {
       for (var [host, isPinned] in Iterator(internalWindow.hosts)) {
         let list;
         try {
-          list = CookieSvc.getCookiesFromHost(host);
+          list = Services.cookies.getCookiesFromHost(host);
         }
         catch (ex) {
           debug("getCookiesFromHost failed. Host: " + host);
@@ -3711,9 +3696,9 @@ SessionStoreService.prototype = {
     for (let i = 0; i < aCookies.length; i++) {
       var cookie = aCookies[i];
       try {
-        CookieSvc.add(cookie.host, cookie.path || "", cookie.name || "",
-                      cookie.value, !!cookie.secure, !!cookie.httponly, true,
-                      "expiry" in cookie ? cookie.expiry : MAX_EXPIRY);
+        Services.cookies.add(cookie.host, cookie.path || "", cookie.name || "",
+                             cookie.value, !!cookie.secure, !!cookie.httponly, true,
+                             "expiry" in cookie ? cookie.expiry : MAX_EXPIRY);
       }
       catch (ex) { Cu.reportError(ex); } // don't let a single cookie stop recovering
     }

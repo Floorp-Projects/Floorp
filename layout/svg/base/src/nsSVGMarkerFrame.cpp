@@ -177,18 +177,20 @@ nsSVGMarkerFrame::PaintMark(nsRenderingContext *aContext,
   return NS_OK;
 }
 
-gfxRect
+SVGBBox
 nsSVGMarkerFrame::GetMarkBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                           PRUint32 aFlags,
                                           nsSVGPathGeometryFrame *aMarkedFrame,
                                           const nsSVGMark *aMark,
                                           float aStrokeWidth)
 {
+  SVGBBox bbox;
+
   // If the flag is set when we get here, it means this marker frame
   // has already been used in calculating the current mark bbox, and
   // the document has a marker reference loop.
   if (mInUse)
-    return gfxRect();
+    return bbox;
 
   AutoMarkerReferencer markerRef(this, aMarkedFrame);
 
@@ -197,7 +199,7 @@ nsSVGMarkerFrame::GetMarkBBoxContribution(const gfxMatrix &aToBBoxUserspace,
   const nsSVGViewBoxRect viewBox = content->GetViewBoxRect();
 
   if (viewBox.width <= 0.0f || viewBox.height <= 0.0f) {
-    return gfxRect();
+    return bbox;
   }
 
   mStrokeWidth = aStrokeWidth;
@@ -211,9 +213,6 @@ nsSVGMarkerFrame::GetMarkBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 
   gfxMatrix tm = viewBoxTM * markerTM * aToBBoxUserspace;
 
-  gfxRect bbox;
-  bool firstChild = true;
-
   for (nsIFrame* kid = mFrames.FirstChild();
        kid;
        kid = kid->GetNextSibling()) {
@@ -224,15 +223,8 @@ nsSVGMarkerFrame::GetMarkBBoxContribution(const gfxMatrix &aToBBoxUserspace,
       // getBBox() accepts flags, maybe we should strip some of those here?
 
       // We need to include zero width/height vertical/horizontal lines, so we have
-      // to use UnionEdges, but we must special case the first bbox so that we don't
-      // include the initial gfxRect(0,0,0,0).
-      gfxRect childBBox = child->GetBBoxContribution(tm, aFlags);
-      if (firstChild && (childBBox.Width() > 0 || childBBox.Height() > 0)) {
-        bbox = childBBox;
-        firstChild = false;
-        continue;
-      }
-      bbox = bbox.UnionEdges(childBBox);
+      // to use UnionEdges.
+      bbox.UnionEdges(child->GetBBoxContribution(tm, aFlags));
     }
   }
 

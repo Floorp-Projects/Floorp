@@ -22,6 +22,19 @@ xpcAccessibleTable::GetCaption(nsIAccessible** aCaption)
 }
 
 nsresult
+xpcAccessibleTable::GetSummary(nsAString& aSummary)
+{
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  nsAutoString summary;
+  mTable->Summary(summary);
+  aSummary.Assign(summary);
+
+  return NS_OK;
+}
+
+nsresult
 xpcAccessibleTable::IsProbablyForLayout(bool* aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);

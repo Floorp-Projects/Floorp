@@ -1,3 +1,0 @@
-include Eval/jstests.list
-include Functions/jstests.list
-include Regress/jstests.list

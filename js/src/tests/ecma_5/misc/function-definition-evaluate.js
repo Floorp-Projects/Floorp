@@ -1,3 +1,4 @@
+// |reftest| skip-if(!xulRuntime.shell) -- needs evaluate()
 /*
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/

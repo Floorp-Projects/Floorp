@@ -1,5 +1,0 @@
-url-prefix ../../jsreftest.html?test=js1_8_1/strict/
-skip-if(Android) script 8.7.2.js
-skip-if(Android) script 12.2.1.js
-skip-if(Android) script generator-eval-arguments.js
-skip-if(Android) script let-block-eval-arguments.js
