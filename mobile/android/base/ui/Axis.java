@@ -139,7 +139,7 @@ abstract class Axis {
     private float mTouchPos;                /* Position of the most recent touch event on the current drag. */
     private float mLastTouchPos;            /* Position of the touch event before touchPos. */
     private float mVelocity;                /* Velocity in this direction; pixels per animation frame. */
-    public boolean mScrollingDisabled;      /* Whether movement on this axis is locked. */
+    private boolean mScrollingDisabled;     /* Whether movement on this axis is locked. */
     private boolean mDisableSnap;           /* Whether overscroll snapping is disabled. */
     private float mDisplacement;
 
