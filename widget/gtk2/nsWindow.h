@@ -507,8 +507,6 @@ private:
     // leaving fullscreen
     nsSizeMode         mLastSizeMode;
 
-    static bool        sIsDraggingOutOf;
-    // drag in progress
     static bool DragInProgress(void);
 
     void         FireDragLeaveTimer       (void);
