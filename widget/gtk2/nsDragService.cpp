@@ -988,8 +988,6 @@ nsDragService::TargetSetLastContext(GtkWidget      *aWidget,
 NS_IMETHODIMP
 nsDragService::TargetStartDragMotion(void)
 {
-    PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::TargetStartDragMotion"));
-    mCanDrop = false;
     return NS_OK;
 }
 
