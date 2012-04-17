@@ -420,6 +420,8 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/site_security_identified.png \
   res/drawable-hdpi/site_security_verified.png \
   res/drawable-hdpi/urlbar_stop.png \
+  res/drawable-hdpi/validation_arrow.png \
+  res/drawable-hdpi/validation_bg.9.png \
   $(addprefix res/drawable-hdpi/,$(notdir $(SYNC_RES_DRAWABLE_HDPI))) \
   $(NULL)
 
@@ -481,6 +483,8 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/site_security_identified.png \
   res/drawable-xhdpi-v11/site_security_verified.png \
   res/drawable-xhdpi-v11/tabs_button_tail.9.png \
+  res/drawable-xhdpi-v11/validation_arrow.png \
+  res/drawable-xhdpi-v11/validation_bg.9.png \
   $(NULL)
 
 RES_DRAWABLE_LAND_V14 = \
