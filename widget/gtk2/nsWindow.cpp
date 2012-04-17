@@ -3354,7 +3354,8 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
 
     // get our drag context
     nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
-    nsCOMPtr<nsIDragSessionGTK> dragSessionGTK = do_QueryInterface(dragService);
+    nsDragService *dragServiceGTK =
+        static_cast<nsDragService*>(dragService.get());
 
     // first, figure out which internal widget this drag motion actually
     // happened on
@@ -3378,9 +3379,9 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
     CheckNeedDragLeave(innerMostWidget, dragService, aDragContext, retx, rety);
 
     // update the drag context
-    dragSessionGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
-    // notify the drag service that we are starting a drag motion.
-    dragSessionGTK->TargetStartDragMotion();
+    dragServiceGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
+
+    dragServiceGTK->SetCanDrop(false);
 
     dragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
 
@@ -3395,11 +3396,12 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
     nsEventStatus status;
     innerMostWidget->DispatchEvent(&event, status);
 
-    // we're done with the drag motion event.  notify the drag service.
-    dragSessionGTK->TargetEndDragMotion(aWidget, aDragContext, aTime);
+    // Reply to tell the source whether we can drop and what action would be
+    // taken.
+    dragServiceGTK->TargetEndDragMotion(aWidget, aDragContext, aTime);
 
     // and unset our context
-    dragSessionGTK->TargetSetLastContext(0, 0, 0);
+    dragServiceGTK->TargetSetLastContext(0, 0, 0);
 
     return TRUE;
 }
