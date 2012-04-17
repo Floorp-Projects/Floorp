@@ -186,6 +186,7 @@ Highlighter.prototype = {
    */
   destroy: function Highlighter_destroy()
   {
+    this.detachKeysListeners();
     this.detachMouseListeners();
     this.detachPageListeners();
 
@@ -301,6 +302,7 @@ Highlighter.prototype = {
     if (!this.hidden) return;
     this.veilContainer.removeAttribute("hidden");
     this.nodeInfo.container.removeAttribute("hidden");
+    this.attachKeysListeners();
     this.attachPageListeners();
     this.invalidateSize();
     this.hidden = false;
@@ -313,6 +315,7 @@ Highlighter.prototype = {
     if (this.hidden) return;
     this.veilContainer.setAttribute("hidden", "true");
     this.nodeInfo.container.setAttribute("hidden", "true");
+    this.detachKeysListeners();
     this.detachPageListeners();
     this.hidden = true;
   },
@@ -808,6 +811,18 @@ Highlighter.prototype = {
     this.browser.removeEventListener("MozAfterPaint", this, true);
   },
 
+  attachKeysListeners: function Highlighter_attachKeysListeners()
+  {
+    this.browser.addEventListener("keypress", this, true);
+    this.highlighterContainer.addEventListener("keypress", this, true);
+  },
+
+  detachKeysListeners: function Highlighter_detachKeysListeners()
+  {
+    this.browser.removeEventListener("keypress", this, true);
+    this.highlighterContainer.removeEventListener("keypress", this, true);
+  },
+
   /**
    * Generic event handler.
    *
@@ -837,6 +852,14 @@ Highlighter.prototype = {
         aEvent.stopPropagation();
         aEvent.preventDefault();
         break;
+      case "keypress":
+        switch (aEvent.keyCode) {
+          case this.chromeWin.KeyEvent.DOM_VK_RETURN:
+            this.locked ? this.unlock() : this.lock();
+            aEvent.preventDefault();
+            aEvent.stopPropagation();
+            break;
+        }
     }
   },
 

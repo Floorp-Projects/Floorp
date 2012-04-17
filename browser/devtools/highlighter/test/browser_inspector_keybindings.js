@@ -40,7 +40,8 @@ function test()
   function lockNode()
   {
     InspectorUI.highlighter.removeListener("nodeselected", lockNode);
-    synthesizeKeyFromKeyTag("key_inspect");
+    EventUtils.synthesizeKey("VK_RETURN", { });
+
     executeSoon(isTheNodeLocked);
   }
 
@@ -52,7 +53,8 @@ function test()
   }
 
   function unlockNode() {
-    synthesizeKeyFromKeyTag("key_inspect");
+    EventUtils.synthesizeKey("VK_RETURN", { });
+
     executeSoon(isTheNodeUnlocked);
   }
 
