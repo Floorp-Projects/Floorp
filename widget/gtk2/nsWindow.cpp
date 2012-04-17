@@ -3448,6 +3448,8 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
     nsDragService *dragServiceGTK = static_cast<nsDragService*>(dragService.get());
 
+    dragServiceGTK->SetDragEndPoint(nsIntPoint(aX, aY) + WidgetToScreenOffset());
+
     nscoord retx = 0;
     nscoord rety = 0;
 
@@ -3540,13 +3542,6 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
 
     // Make sure to end the drag session. If this drag started in a
     // different app, we won't get a drag_end signal to end it from.
-    gint x, y;
-    GdkDisplay* display = gdk_display_get_default();
-    if (display) {
-      // get the current cursor position
-      gdk_display_get_pointer(display, NULL, &x, &y, NULL);
-      dragServiceGTK->SetDragEndPoint(nsIntPoint(x, y));
-    }
     dragService->EndDragSession(true);
 
     return TRUE;
