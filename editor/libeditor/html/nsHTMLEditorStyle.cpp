@@ -109,18 +109,6 @@ NS_IMETHODIMP nsHTMLEditor::RemoveAllDefaultProperties()
 }
 
 
-// Add the CSS style corresponding to the HTML inline style defined
-// by aProperty aAttribute and aValue to the selection
-NS_IMETHODIMP nsHTMLEditor::SetCSSInlineProperty(nsIAtom *aProperty, 
-                            const nsAString & aAttribute, 
-                            const nsAString & aValue)
-{
-  if (IsCSSEnabled()) {
-    return SetInlineProperty(aProperty, aAttribute, aValue);
-  }
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty, 
                             const nsAString & aAttribute, 
                             const nsAString & aValue)
@@ -385,60 +373,58 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
   nsAutoString tag;
   aProperty->ToString(tag);
   ToLowerCase(tag);
-  
-  if (IsCSSEnabled())
-  {
-    // we are in CSS mode
-    if (mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty, aAttribute))
-    {
-      // the HTML style defined by aProperty/aAttribute has a CSS equivalence
-      // in this implementation for the node aNode
-      nsCOMPtr<nsIDOMNode> tmp = aNode;
-      if (IsTextNode(tmp))
-      {
-        // we are working on a text node and need to create a span container
-        // that will carry the styles
-        InsertContainerAbove( aNode, 
-                              address_of(tmp), 
-                              NS_LITERAL_STRING("span"),
-                              nsnull,
-                              nsnull);
-      }
-      nsCOMPtr<nsIDOMElement>element;
-      element = do_QueryInterface(tmp);
-      // first we have to remove occurences of the same style hint in the
-      // children of the aNode
-      res = RemoveStyleInside(tmp, aProperty, aAttribute, true);
-      NS_ENSURE_SUCCESS(res, res);
-      PRInt32 count;
-      // then we add the css styles corresponding to the HTML style request
-      res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, aProperty, aAttribute, aValue, &count, false);
-      NS_ENSURE_SUCCESS(res, res);
 
-      nsCOMPtr<nsIDOMNode> nextSibling, previousSibling;
-      GetNextHTMLSibling(tmp, address_of(nextSibling));
-      GetPriorHTMLSibling(tmp, address_of(previousSibling));
-      if (nextSibling || previousSibling)
-      {
-        nsCOMPtr<nsIDOMNode> mergeParent;
-        res = tmp->GetParentNode(getter_AddRefs(mergeParent));
-        NS_ENSURE_SUCCESS(res, res);
-        if (previousSibling &&
-            nsEditor::NodeIsType(previousSibling, nsEditProperty::span) &&
-            NodesSameType(tmp, previousSibling))
-        {
-          res = JoinNodes(previousSibling, tmp, mergeParent);
-          NS_ENSURE_SUCCESS(res, res);
-        }
-        if (nextSibling &&
-            nsEditor::NodeIsType(nextSibling, nsEditProperty::span) &&
-            NodesSameType(tmp, nextSibling))
-        {
-          res = JoinNodes(tmp, nextSibling, mergeParent);
-        }
-      }
-      return res;
+  bool useCSS = (IsCSSEnabled() &&
+    mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty, aAttribute)) ||
+    // bgcolor is always done using CSS
+    aAttribute->EqualsLiteral("bgcolor");
+  
+  if (useCSS) {
+    nsCOMPtr<nsIDOMNode> tmp = aNode;
+    if (IsTextNode(tmp))
+    {
+      // we are working on a text node and need to create a span container
+      // that will carry the styles
+      InsertContainerAbove(aNode, 
+                           address_of(tmp), 
+                           NS_LITERAL_STRING("span"),
+                           nsnull,
+                           nsnull);
     }
+    nsCOMPtr<nsIDOMElement>element;
+    element = do_QueryInterface(tmp);
+    // first we have to remove occurences of the same style hint in the
+    // children of the aNode
+    res = RemoveStyleInside(tmp, aProperty, aAttribute, true);
+    NS_ENSURE_SUCCESS(res, res);
+    PRInt32 count;
+    // then we add the css styles corresponding to the HTML style request
+    res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, aProperty, aAttribute, aValue, &count, false);
+    NS_ENSURE_SUCCESS(res, res);
+
+    nsCOMPtr<nsIDOMNode> nextSibling, previousSibling;
+    GetNextHTMLSibling(tmp, address_of(nextSibling));
+    GetPriorHTMLSibling(tmp, address_of(previousSibling));
+    if (nextSibling || previousSibling)
+    {
+      nsCOMPtr<nsIDOMNode> mergeParent;
+      res = tmp->GetParentNode(getter_AddRefs(mergeParent));
+      NS_ENSURE_SUCCESS(res, res);
+      if (previousSibling &&
+          nsEditor::NodeIsType(previousSibling, nsEditProperty::span) &&
+          NodesSameType(tmp, previousSibling))
+      {
+        res = JoinNodes(previousSibling, tmp, mergeParent);
+        NS_ENSURE_SUCCESS(res, res);
+      }
+      if (nextSibling &&
+          nsEditor::NodeIsType(nextSibling, nsEditProperty::span) &&
+          NodesSameType(tmp, nextSibling))
+      {
+        res = JoinNodes(tmp, nextSibling, mergeParent);
+      }
+    }
+    return res;
   }
   
   // don't need to do anything if property already set on node
