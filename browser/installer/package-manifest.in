@@ -411,7 +411,11 @@
 @BINPATH@/components/ProfileMigrator.js
 @BINPATH@/components/ChromeProfileMigrator.js
 @BINPATH@/components/FirefoxProfileMigrator.js
+#ifdef XP_WIN
+@BINPATH@/components/SafariProfileMigrator.js
+#endif
 #ifdef XP_MACOSX
+@BINPATH@/components/SafariProfileMigrator.js
 @BINPATH@/components/libalerts.dylib
 #endif
 #ifdef MOZ_ENABLE_DBUS
