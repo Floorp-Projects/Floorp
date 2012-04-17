@@ -274,7 +274,6 @@ static nsresult    initialize_prefs        (void);
 
 // this is the last window that had a drag event happen on it.
 nsWindow *nsWindow::sLastDragMotionWindow = NULL;
-bool nsWindow::sIsDraggingOutOf = false;
 
 // Time of the last button release event. We use it to detect when the
 // drag ended before we could properly setup drag and drop.
@@ -2514,10 +2513,6 @@ nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 void
 nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
 {
-    // when we receive this, it must be that the gtk dragging is over,
-    // it is dropped either in or out of mozilla, clear the flag
-    sIsDraggingOutOf = false;
-
     // see if we can compress this event
     // XXXldb Why skip every other motion event when we have multiple,
     // but not more than that?
@@ -3398,8 +3393,6 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
       }
     }
 
-    sIsDraggingOutOf = false;
-
     // get our drag context
     nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
     nsDragService *dragServiceGTK =
@@ -3451,8 +3444,6 @@ nsWindow::OnDragLeaveEvent(GtkWidget *aWidget,
     // XXX Do we want to pass this on only if the event's subwindow is null?
 
     LOGDRAG(("nsWindow::OnDragLeaveSignal(%p)\n", (void*)this));
-
-    sIsDraggingOutOf = true;
 
     if (mDragLeaveTimer) {
         return;
@@ -5112,10 +5103,15 @@ check_for_rollup(gdouble aMouseX, gdouble aMouseY,
 bool
 nsWindow::DragInProgress(void)
 {
-    // sLastDragMotionWindow means the drag arrow is over mozilla
-    // sIsDraggingOutOf means the drag arrow is out of mozilla
-    // both cases mean the dragging is happenning.
-    return (sLastDragMotionWindow || sIsDraggingOutOf);
+    nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
+
+    if (!dragService)
+        return false;
+
+    nsCOMPtr<nsIDragSession> currentDragSession;
+    dragService->GetCurrentSession(getter_AddRefs(currentDragSession));
+
+    return currentDragSession != nsnull;
 }
 
 static bool
