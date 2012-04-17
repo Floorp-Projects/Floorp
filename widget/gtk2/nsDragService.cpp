@@ -547,6 +547,15 @@ NS_IMETHODIMP
 nsDragService::GetNumDropItems(PRUint32 * aNumItems)
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::GetNumDropItems"));
+
+    if (!mTargetWidget) {
+        PR_LOG(sDragLm, PR_LOG_DEBUG,
+               ("*** warning: GetNumDropItems \
+               called without a valid target widget!\n"));
+        *aNumItems = 0;
+        return NS_OK;
+    }
+
     bool isList = IsTargetContextList();
     if (isList)
         mSourceDataItems->Count(aNumItems);
@@ -574,12 +583,18 @@ nsDragService::GetData(nsITransferable * aTransferable,
     if (!aTransferable)
         return NS_ERROR_INVALID_ARG;
 
+    if (!mTargetWidget) {
+        PR_LOG(sDragLm, PR_LOG_DEBUG,
+               ("*** warning: GetData \
+               called without a valid target widget!\n"));
+        return NS_ERROR_FAILURE;
+    }
+
     // get flavor list that includes all acceptable flavors (including
     // ones obtained through conversion). Flavors are nsISupportsStrings
     // so that they can be seen from JS.
-    nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsISupportsArray> flavorList;
-    rv = aTransferable->FlavorsTransferableCanImport(
+    nsresult rv = aTransferable->FlavorsTransferableCanImport(
                         getter_AddRefs(flavorList));
     if (NS_FAILED(rv))
         return rv;
@@ -878,10 +893,10 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
     *_retval = false;
 
     // check to make sure that we have a drag object set, here
-    if (!mTargetDragContext) {
+    if (!mTargetWidget) {
         PR_LOG(sDragLm, PR_LOG_DEBUG,
                ("*** warning: IsDataFlavorSupported \
-               called without a valid drag context!\n"));
+               called without a valid target widget!\n"));
         return NS_OK;
     }
 
@@ -1073,9 +1088,6 @@ bool
 nsDragService::IsTargetContextList(void)
 {
     bool retval = false;
-
-    if (!mTargetDragContext)
-        return retval;
 
     // gMimeListType drags only work for drags within a single process.
     // The gtk_drag_get_source_widget() function will return NULL if the
