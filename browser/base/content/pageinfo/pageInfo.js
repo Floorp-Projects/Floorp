@@ -1243,7 +1243,7 @@ function doCopy()
         elem.removeAttribute("copybuffer");
       }
     }
-    gClipboardHelper.copyString(text.join("\n"));
+    gClipboardHelper.copyString(text.join("\n"), document);
   }
 }
 

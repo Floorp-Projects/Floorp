@@ -938,10 +938,10 @@ SpecialPowersAPI.prototype = {
       return aDocument.documentURIObject;
   },
 
-  copyString: function(str) {
+  copyString: function(str, doc) {
     Components.classes["@mozilla.org/widget/clipboardhelper;1"].
       getService(Components.interfaces.nsIClipboardHelper).
-      copyString(str);
+      copyString(str, doc);
   },
 
   openDialog: function(win, args) {
@@ -996,6 +996,8 @@ SpecialPowersAPI.prototype = {
 
     var xferable = Components.classes["@mozilla.org/widget/transferable;1"].
                    createInstance(Components.interfaces.nsITransferable);
+    xferable.init(this._getDocShell(content.window)
+                      .QueryInterface(Components.interfaces.nsILoadContext));
     xferable.addDataFlavor(flavor);
     this._cb.getData(xferable, this._cb.kGlobalClipboard);
     var data = {};
@@ -1009,10 +1011,10 @@ SpecialPowersAPI.prototype = {
     return data.QueryInterface(Components.interfaces.nsISupportsString).data;
   },
 
-  clipboardCopyString: function(preExpectedVal) {  
+  clipboardCopyString: function(preExpectedVal, doc) {
     var cbHelperSvc = Components.classes["@mozilla.org/widget/clipboardhelper;1"].
                       getService(Components.interfaces.nsIClipboardHelper);
-    cbHelperSvc.copyString(preExpectedVal);
+    cbHelperSvc.copyString(preExpectedVal, doc);
   },
 
   supportsSelectionClipboard: function() {

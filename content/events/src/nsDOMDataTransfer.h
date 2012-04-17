@@ -97,7 +97,8 @@ public:
 
   // converts the data into an array of nsITransferable objects to be used for
   // drag and drop or clipboard operations.
-  void GetTransferables(nsISupportsArray** transferables);
+  void GetTransferables(nsISupportsArray** transferables,
+                        nsIDOMNode* aDragTarget);
 
   // converts the data in the variant to an nsISupportString if possible or
   // an nsISupports or null otherwise.

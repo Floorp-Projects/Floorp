@@ -317,7 +317,7 @@ function copySourceLocation(aDownload)
   if (gPerformAllCallback === null) {
     let uris = [];
     gPerformAllCallback = function(aURI) aURI ? uris.push(aURI) :
-      clipboard.copyString(uris.join("\n"));
+      clipboard.copyString(uris.join("\n"), document);
   }
 
   // We have a callback to use, so use it to add a uri
@@ -325,7 +325,7 @@ function copySourceLocation(aDownload)
     gPerformAllCallback(uri);
   else {
     // It's a plain copy source, so copy it
-    clipboard.copyString(uri);
+    clipboard.copyString(uri, document);
   }
 }
 
@@ -712,6 +712,7 @@ var gDownloadDNDObserver =
 function pasteHandler() {
   let trans = Cc["@mozilla.org/widget/transferable;1"].
               createInstance(Ci.nsITransferable);
+  trans.init(null);
   let flavors = ["text/x-moz-url", "text/unicode"];
   flavors.forEach(trans.addDataFlavor);
 

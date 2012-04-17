@@ -795,7 +795,7 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
   } else {
     nsCOMPtr<nsIClipboardHelper> clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
     if (clipboard) {
-      clipboard->CopyString(NS_ConvertASCIItoUTF16(string));
+      clipboard->CopyString(NS_ConvertASCIItoUTF16(string), nsnull);
     }
   }
 

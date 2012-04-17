@@ -93,6 +93,7 @@ nsClipboardPrivacyHandler::Observe(nsISupports *aSubject, char const *aTopic, PR
       nsCOMPtr<nsITransferable> nullData =
         do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
       NS_ENSURE_SUCCESS(rv, rv);
+      nullData->Init(nsnull);
       rv = clipboard->SetData(nullData, nsnull,
                               nsIClipboard::kGlobalClipboard);
       NS_ENSURE_SUCCESS(rv, rv);

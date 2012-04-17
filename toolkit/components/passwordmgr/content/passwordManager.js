@@ -322,7 +322,7 @@ function CopyPassword() {
                   getService(Components.interfaces.nsIClipboardHelper);
   var row = document.getElementById("signonsTree").currentIndex;
   var password = signonsTreeView.getCellText(row, {id : "passwordCol" });
-  clipboard.copyString(password);
+  clipboard.copyString(password, document);
 }
 
 function UpdateCopyPassword() {

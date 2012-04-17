@@ -844,6 +844,7 @@ NS_IMETHODIMP nsDragService::NativeDragEnter(PDRAGINFO pdinfo)
     nsCOMPtr<nsITransferable> trans(
             do_CreateInstance("@mozilla.org/widget/transferable;1", &rv));
     if (trans) {
+      trans->Init(nsnull);
 
       bool isUrl = DrgVerifyType(pditem, "UniformResourceLocator");
       bool isAlt = (WinGetKeyState(HWND_DESKTOP, VK_ALT) & 0x8000);

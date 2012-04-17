@@ -478,6 +478,12 @@ function appendChildren(parentElem, childNodes) {
     parentElem.appendChild(childNodes[i]);
 }
 
+function getLoadContext() {
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIWebNavigation)
+               .QueryInterface(Ci.nsILoadContext);
+}
+
 function copyContentsToClipboard() {
   // Get the HTML and text representations for the important part of the page.
   let contentsDiv = document.getElementById("contents");
@@ -491,6 +497,7 @@ function copyContentsToClipboard() {
 
   let transferable = Cc["@mozilla.org/widget/transferable;1"]
                        .createInstance(Ci.nsITransferable);
+  transferable.init(getLoadContext());
 
   // Add the HTML flavor.
   transferable.addDataFlavor("text/html");
