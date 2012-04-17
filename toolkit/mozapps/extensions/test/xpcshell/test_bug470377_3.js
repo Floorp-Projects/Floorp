@@ -102,21 +102,8 @@ function run_test_1() {
 }
 
 function run_test_2() {
-  // Disable compatibility checks
-  var channel = "default";
-  try {
-    channel = Services.prefs.getCharPref("app.update.channel");
-  }
-  catch (e) { }
+  AddonManager.checkCompatibility = false;
 
-  if (channel != "aurora" &&
-      channel != "beta" &&
-      channel != "release") {
-    Services.prefs.setBoolPref("extensions.checkCompatibility.nightly", false);
-  }
-  else {
-    Services.prefs.setBoolPref("extensions.checkCompatibility.2.2", false);
-  }
   restartManager();
 
   AddonManager.getAddonsByIDs(["bug470377_1@tests.mozilla.org",

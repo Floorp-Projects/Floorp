@@ -6,23 +6,11 @@
 
 Components.utils.import("resource://gre/modules/AddonUpdateChecker.jsm");
 
-var COMPATIBILITY_PREF;
-
 do_load_httpd_js();
 var testserver;
 
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-
-  var channel = "default";
-  try {
-    channel = Services.prefs.getCharPref("app.update.channel");
-  } catch (e) { }
-  if (channel != "aurora" && channel != "beta" && channel != "release")
-    var version = "nightly";
-  else
-    version = Services.appinfo.version.replace(/^([^\.]+\.[0-9]+[a-z]*).*/gi, "$1");
-  COMPATIBILITY_PREF = "extensions.checkCompatibility." + version;
 
   // Create and configure the HTTP server.
   testserver = new nsHttpServer();
