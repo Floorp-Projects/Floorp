@@ -2818,7 +2818,7 @@ static const struct MidasCommand gMidasCommandTable[] = {
   { "redo",          "cmd_redo",            "", true,  false },
   { "indent",        "cmd_indent",          "", true,  false },
   { "outdent",       "cmd_outdent",         "", true,  false },
-  { "backcolor",     "cmd_backgroundColor", "", false, false },
+  { "backcolor",     "cmd_highlight",       "", false, false },
   { "forecolor",     "cmd_fontColor",       "", false, false },
   { "hilitecolor",   "cmd_highlight",       "", false, false },
   { "fontname",      "cmd_fontFace",        "", false, false },
