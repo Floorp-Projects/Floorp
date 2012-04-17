@@ -620,19 +620,21 @@ nsresult nsHTMLEditor::ApplyDefaultProperties()
 }
 
 nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode, 
-                                         nsIAtom *aProperty,   // null here means remove all properties
+                                         // null here means remove all properties
+                                         nsIAtom *aProperty,
                                          const nsAString *aAttribute,
-                                         bool aChildrenOnly)
+                                         const bool aChildrenOnly)
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
-  if (IsTextNode(aNode)) return NS_OK;
-  nsresult res = NS_OK;
+  if (IsTextNode(aNode)) {
+    return NS_OK;
+  }
+  nsresult res;
 
   // first process the children
   nsCOMPtr<nsIDOMNode> child, tmp;
   aNode->GetFirstChild(getter_AddRefs(child));
-  while (child)
-  {
+  while (child) {
     // cache next sibling since we might remove child
     child->GetNextSibling(getter_AddRefs(tmp));
     res = RemoveStyleInside(child, aProperty, aAttribute);
@@ -641,22 +643,28 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
   }
 
   // then process the node itself
-  if ((!aChildrenOnly &&
-        ((aProperty && NodeIsType(aNode, aProperty)) || // node is prop we asked for
-        (aProperty == nsEditProperty::href && nsHTMLEditUtils::IsLink(aNode)) || // but check for link (<a href=...)
-        (aProperty == nsEditProperty::name && nsHTMLEditUtils::IsNamedAnchor(aNode)))) || // and for named anchors
-        (!aProperty && NodeIsProperty(aNode)))  // or node is any prop and we asked for that
-  {
+  if (
+    (!aChildrenOnly &&
+      (
+        // node is prop we asked for
+        (aProperty && NodeIsType(aNode, aProperty)) ||
+        // but check for link (<a href=...)
+        (aProperty == nsEditProperty::href && nsHTMLEditUtils::IsLink(aNode)) ||
+        // and for named anchors
+        (aProperty == nsEditProperty::name && nsHTMLEditUtils::IsNamedAnchor(aNode))
+      )
+    ) ||
+    // or node is any prop and we asked for that
+    (!aProperty && NodeIsProperty(aNode))
+  ) {
     // if we weren't passed an attribute, then we want to 
     // remove any matching inlinestyles entirely
-    if (!aAttribute || aAttribute->IsEmpty())
-    {
+    if (!aAttribute || aAttribute->IsEmpty()) {
       NS_NAMED_LITERAL_STRING(styleAttr, "style");
       NS_NAMED_LITERAL_STRING(classAttr, "class");
       bool hasStyleAttr = HasAttr(aNode, &styleAttr);
-      bool hasClassAtrr = HasAttr(aNode, &classAttr);
-      if (aProperty &&
-          (hasStyleAttr || hasClassAtrr)) {
+      bool hasClassAttr = HasAttr(aNode, &classAttr);
+      if (aProperty && (hasStyleAttr || hasClassAttr)) {
         // aNode carries inline styles or a class attribute so we can't
         // just remove the element... We need to create above the element
         // a span that will carry those styles or class, then we can delete
@@ -669,8 +677,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
         NS_ENSURE_SUCCESS(res, res);
         res = CloneAttribute(classAttr, spanNode, aNode);
         NS_ENSURE_SUCCESS(res, res);
-        if (hasStyleAttr)
-        {
+        if (hasStyleAttr) {
           // we need to remove the styles property corresponding to
           // aProperty (bug 215406)
           nsAutoString propertyValue;
@@ -684,59 +691,52 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
         }
       }
       res = RemoveContainer(aNode);
-    }
-    // otherwise we just want to eliminate the attribute
-    else
-    {
-      if (HasAttr(aNode, aAttribute))
-      {
+      NS_ENSURE_SUCCESS(res, res);
+    } else {
+      // otherwise we just want to eliminate the attribute
+      if (HasAttr(aNode, aAttribute)) {
         // if this matching attribute is the ONLY one on the node,
         // then remove the whole node.  Otherwise just nix the attribute.
-        if (IsOnlyAttribute(aNode, aAttribute))
-        {
+        if (IsOnlyAttribute(aNode, aAttribute)) {
           res = RemoveContainer(aNode);
-        }
-        else
-        {
+        } else {
           nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
           NS_ENSURE_TRUE(elem, NS_ERROR_NULL_POINTER);
           res = RemoveAttribute(elem, *aAttribute);
         }
+        NS_ENSURE_SUCCESS(res, res);
       }
     }
-  }
-  else {
-    if (!aChildrenOnly && IsCSSEnabled() &&
-        mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty, aAttribute)) {
-      // the HTML style defined by aProperty/aAttribute has a CSS equivalence
-      // in this implementation for the node aNode; let's check if it carries those css styles
-      nsAutoString propertyValue;
-      bool isSet;
-      mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(aNode, aProperty, aAttribute,
-                                                         isSet, propertyValue,
-                                                         SPECIFIED_STYLE_TYPE);
-      if (isSet) {
-        // yes, tmp has the corresponding css declarations in its style attribute
-        // let's remove them
-        mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(aNode,
-                                                      aProperty,
-                                                      aAttribute,
-                                                      &propertyValue,
-                                                      false);
-        // remove the node if it is a span, if its style attribute is empty or absent,
-        // and if it does not have a class nor an id
-        RemoveElementIfNoStyleOrIdOrClass(aNode);
-        res = NS_OK;
-      }
+  } else if (!aChildrenOnly && IsCSSEnabled() &&
+             mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty, aAttribute)) {
+    // the HTML style defined by aProperty/aAttribute has a CSS equivalence in
+    // this implementation for the node aNode; let's check if it carries those
+    // css styles
+    nsAutoString propertyValue;
+    bool isSet;
+    mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(aNode, aProperty, aAttribute,
+                                                       isSet, propertyValue,
+                                                       SPECIFIED_STYLE_TYPE);
+    if (isSet) {
+      // yes, tmp has the corresponding css declarations in its style attribute
+      // let's remove them
+      mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(aNode,
+                                                    aProperty,
+                                                    aAttribute,
+                                                    &propertyValue,
+                                                    false);
+      // remove the node if it is a span, if its style attribute is empty or
+      // absent, and if it does not have a class nor an id
+      RemoveElementIfNoStyleOrIdOrClass(aNode);
     }
-  }  
-  if ( aProperty == nsEditProperty::font &&    // or node is big or small and we are setting font size
-       (nsHTMLEditUtils::IsBig(aNode) || nsHTMLEditUtils::IsSmall(aNode)) &&
-       aAttribute && aAttribute->LowerCaseEqualsLiteral("size"))       
-  {
-    res = RemoveContainer(aNode);  // if we are setting font size, remove any nested bigs and smalls
   }
-  return res;
+
+  if (aProperty == nsEditProperty::font &&    // or node is big or small and we are setting font size
+      (nsHTMLEditUtils::IsBig(aNode) || nsHTMLEditUtils::IsSmall(aNode)) &&
+      aAttribute && aAttribute->LowerCaseEqualsLiteral("size")) {
+    return RemoveContainer(aNode);  // if we are setting font size, remove any nested bigs and smalls
+  }
+  return NS_OK;
 }
 
 bool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode, 
