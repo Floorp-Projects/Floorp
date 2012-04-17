@@ -1531,7 +1531,7 @@ private void CancelNotification()
             }
             catch (FileNotFoundException e) {
                 sRet += " file not found";
-                e.printStackTrace();
+                Log.d("SUT", "HashFile: "+e);
             }
             catch (IOException e) {
                 sRet += " io exception";
@@ -3508,7 +3508,7 @@ private void CancelNotification()
                     }
                 catch (IllegalThreadStateException itse) {
                     lcv++;
-                    itse.printStackTrace();
+                    Log.d("SUT", "StartPrg waited 10s for "+progArray[0]);
                     }
                 }
             }
@@ -3639,7 +3639,7 @@ private void CancelNotification()
                         }
                     catch (IllegalThreadStateException itse) {
                         lcv++;
-                        itse.printStackTrace();
+                        Log.d("SUT", "StartPrg2 waited 10s for "+theArgs[0]);
                         }
                     }
                 }
