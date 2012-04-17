@@ -268,7 +268,19 @@ OnSourceGrabEventAfter(GtkWidget *widget, GdkEvent *event, gpointer user_data)
 
     if (sMotionEventTimerID) {
         g_source_remove(sMotionEventTimerID);
+        sMotionEventTimerID = 0;
     }
+
+    // If there is no longer a grab on the widget, then the drag motion is
+    // over (though the data may not be fetched yet).
+    if (gtk_grab_get_current() != widget)
+        return;
+
+    // Update the cursor position.  The last of these recorded gets used for
+    // the NS_DRAGDROP_END event.
+    nsDragService *dragService = static_cast<nsDragService*>(user_data);
+    dragService->
+        SetDragEndPoint(nsIntPoint(event->motion.x_root, event->motion.y_root));
 
     MotionEventData *data = new MotionEventData(widget, event);
 
@@ -352,8 +364,10 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
             // Only motion events are required but connect to
             // "event-after" as this is never blocked by other handlers.
             g_signal_connect(mGrabWidget, "event-after",
-                             G_CALLBACK(OnSourceGrabEventAfter), NULL);
+                             G_CALLBACK(OnSourceGrabEventAfter), this);
         }
+        // We don't have a drag end point yet.
+        mEndDragPoint = nsIntPoint(-1, -1);
     }
     else {
         rv = NS_ERROR_FAILURE;
@@ -429,7 +443,7 @@ nsDragService::EndDragSession(bool aDoneDrag)
 
     if (mGrabWidget) {
         g_signal_handlers_disconnect_by_func(mGrabWidget,
-             FuncToGpointer(OnSourceGrabEventAfter), NULL);
+             FuncToGpointer(OnSourceGrabEventAfter), this);
         g_object_unref(mGrabWidget);
         mGrabWidget = NULL;
 
@@ -1326,11 +1340,14 @@ nsDragService::SourceEndDragSession(GdkDragContext *aContext,
     if (!mDoingDrag)
         return; // EndDragSession() was already called on drop or drag-failed
 
-    gint x, y;
-    GdkDisplay* display = gdk_display_get_default();
-    if (display) {
-      gdk_display_get_pointer(display, NULL, &x, &y, NULL);
-      SetDragEndPoint(nsIntPoint(x, y));
+    if (mEndDragPoint.x < 0) {
+        // We don't have a drag end point, so guess
+        gint x, y;
+        GdkDisplay* display = gdk_display_get_default();
+        if (display) {
+            gdk_display_get_pointer(display, NULL, &x, &y, NULL);
+            SetDragEndPoint(nsIntPoint(x, y));
+        }
     }
 
     // Either the drag was aborted or the drop occurred outside the app.
