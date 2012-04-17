@@ -421,9 +421,11 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
                            const gfxRect&   aImageRect,
                            const gfxRect&   aFill,
                            const gfxImageSurface::gfxImageFormat aFormat,
-                           const gfxPattern::GraphicsFilter& aFilter)
+                           const gfxPattern::GraphicsFilter& aFilter,
+                           PRUint32         aImageFlags)
 {
-    bool doTile = !aImageRect.Contains(aSourceRect);
+    bool doTile = !aImageRect.Contains(aSourceRect) &&
+                  !(aImageFlags & imgIContainer::FLAG_CLAMP);
 
     nsRefPtr<gfxASurface> currentTarget = aContext->CurrentSurface();
     gfxMatrix deviceSpaceToImageSpace =
