@@ -4527,37 +4527,37 @@ const TEST_RESULTS = {
       },
       "BC:blue_TEXT-1_SI": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"blue\" onload=\"setDesignMode()\">`foo[bar]baz´</body>",
-          "innerHTML": "`foo[bar]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"blue\" onload=\"setDesignMode()\">`foo[bar]baz´</body>",
-          "bodyInnerHTML": "`foo[bar]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"blue\" onload=\"setDesignMode()\">`foo[bar]baz´</body>"
+          "valresult": 8,
+          "selresult": 2,
+          "output": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "innerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>"
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"blue\">`foo[bar]baz´</body>",
-          "innerHTML": "`foo[bar]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"blue\">`foo[bar]baz´</body>",
-          "bodyInnerHTML": "`foo[bar]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"blue\">`foo[bar]baz´</body>"
+          "valresult": 8,
+          "selresult": 2,
+          "output": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "innerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>"
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "`foo[bar]baz´",
-          "innerHTML": "`foo[bar]baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[bar]baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[bar]baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"blue\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[bar]baz´</div>CAN<br>ARY</body>"
+          "valresult": 8,
+          "selresult": 2,
+          "output": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "innerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</div>CAN<br>ARY</body>"
         }
       },
       "FC:blue_TEXT-1_SI": {
@@ -5301,37 +5301,37 @@ const TEST_RESULTS = {
       },
       "BC:blue_TEXT-1_SI": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: blue;\">`foo[bar]baz´</body>",
-          "innerHTML": "`foo[bar]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: blue;\">`foo[bar]baz´</body>",
-          "bodyInnerHTML": "`foo[bar]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: blue;\">`foo[bar]baz´</body>"
+          "valresult": 8,
+          "selresult": 2,
+          "output": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "innerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>"
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: blue;\">`foo[bar]baz´</body>",
-          "innerHTML": "`foo[bar]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: blue;\">`foo[bar]baz´</body>",
-          "bodyInnerHTML": "`foo[bar]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: blue;\">`foo[bar]baz´</body>"
+          "valresult": 8,
+          "selresult": 2,
+          "output": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "innerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>"
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: blue;\">`foo[bar]baz´</div>",
-          "innerHTML": "`foo[bar]baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: blue;\">`foo[bar]baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: blue;\" id=\"editor-div\" contenteditable=\"true\">`foo[bar]baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: blue;\">`foo[bar]baz´</div>CAN<br>ARY</body>"
+          "valresult": 8,
+          "selresult": 2,
+          "output": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "innerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</div>CAN<br>ARY</body>"
         }
       },
       "FC:blue_TEXT-1_SI": {
@@ -5900,107 +5900,107 @@ const TEST_RESULTS = {
       },
       "BC:842_FONTs:bc:fca-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#884422\" onload=\"setDesignMode()\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></body>",
-          "innerHTML": "<font style=\"background-color: #ffccaa\">`[foobarbaz]´</font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#884422\" onload=\"setDesignMode()\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></body>",
-          "bodyInnerHTML": "<font style=\"background-color: #ffccaa\">`[foobarbaz]´</font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#884422\" onload=\"setDesignMode()\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font>",
+          "innerHTML": "<font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#884422\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></body>",
-          "innerHTML": "<font style=\"background-color: #ffccaa\">`[foobarbaz]´</font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#884422\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></body>",
-          "bodyInnerHTML": "<font style=\"background-color: #ffccaa\">`[foobarbaz]´</font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#884422\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font>",
+          "innerHTML": "<font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<font style=\"background-color: #ffccaa\">`[foobarbaz]´</font>",
+          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(136, 68, 34);\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></div>",
           "innerHTML": "<font style=\"background-color: #ffccaa\">`[foobarbaz]´</font>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#884422\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(136, 68, 34);\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: rgb(136, 68, 34);\" id=\"editor-div\" contenteditable=\"true\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(136, 68, 34);\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
         }
       },
       "BC:00f_SPANs:bc:f00-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#0000ff\" onload=\"setDesignMode()\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></body>",
-          "innerHTML": "<span style=\"background-color: #ff0000\">`[foobarbaz]´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#0000ff\" onload=\"setDesignMode()\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></body>",
-          "bodyInnerHTML": "<span style=\"background-color: #ff0000\">`[foobarbaz]´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#0000ff\" onload=\"setDesignMode()\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span>",
+          "innerHTML": "<span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span></body>",
+          "bodyInnerHTML": "<span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#0000ff\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></body>",
-          "innerHTML": "<span style=\"background-color: #ff0000\">`[foobarbaz]´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#0000ff\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></body>",
-          "bodyInnerHTML": "<span style=\"background-color: #ff0000\">`[foobarbaz]´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#0000ff\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span>",
+          "innerHTML": "<span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span></body>",
+          "bodyInnerHTML": "<span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<span style=\"background-color: #ff0000\">`[foobarbaz]´</span>",
+          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(0, 0, 255);\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></div>",
           "innerHTML": "<span style=\"background-color: #ff0000\">`[foobarbaz]´</span>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#0000ff\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></div>CAN<br>ARY</body>"
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(0, 0, 255);\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: rgb(0, 0, 255);\" id=\"editor-div\" contenteditable=\"true\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(0, 0, 255);\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></div>CAN<br>ARY</body>"
         }
       },
       "BC:ace_FONT.ass.s:bc:rgb-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#aaccee\" onload=\"setDesignMode()\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>",
-          "innerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0)\">`[foobarbaz]´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#aaccee\" onload=\"setDesignMode()\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>",
-          "bodyInnerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0)\">`[foobarbaz]´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#aaccee\" onload=\"setDesignMode()\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<span class=\"Apple-style-span\" style=\"background-color: rgb(170, 204, 238);\">`[foobarbaz]´</span>",
+          "innerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(170, 204, 238);\">`[foobarbaz]´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: rgb(170, 204, 238);\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>",
+          "bodyInnerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(170, 204, 238);\">`[foobarbaz]´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: rgb(170, 204, 238);\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#aaccee\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>",
-          "innerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0)\">`[foobarbaz]´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#aaccee\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>",
-          "bodyInnerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0)\">`[foobarbaz]´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#aaccee\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<span class=\"Apple-style-span\" style=\"background-color: rgb(170, 204, 238);\">`[foobarbaz]´</span>",
+          "innerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(170, 204, 238);\">`[foobarbaz]´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: rgb(170, 204, 238);\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>",
+          "bodyInnerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(170, 204, 238);\">`[foobarbaz]´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: rgb(170, 204, 238);\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0)\">`[foobarbaz]´</span>",
+          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(170, 204, 238);\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></div>",
           "innerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0)\">`[foobarbaz]´</span>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0)\">`[foobarbaz]´</span></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#aaccee\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></div>CAN<br>ARY</body>"
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(170, 204, 238);\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: rgb(170, 204, 238);\" id=\"editor-div\" contenteditable=\"true\"><span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0)\">`[foobarbaz]´</span></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(170, 204, 238);\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></div>CAN<br>ARY</body>"
         }
       },
       "FC:g_FONTc:b-1_SW": {
@@ -6954,212 +6954,212 @@ const TEST_RESULTS = {
       },
       "BC:gray_SPANs:bc:b-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></body>",
-          "innerHTML": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></body>",
-          "bodyInnerHTML": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<span style=\"background-color: gray;\">`[foobarbaz]´</span>",
+          "innerHTML": "<span style=\"background-color: gray;\">`[foobarbaz]´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: gray;\">`[foobarbaz]´</span></body>",
+          "bodyInnerHTML": "<span style=\"background-color: gray;\">`[foobarbaz]´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: gray;\">`[foobarbaz]´</span></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></body>",
-          "innerHTML": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></body>",
-          "bodyInnerHTML": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<span style=\"background-color: gray;\">`[foobarbaz]´</span>",
+          "innerHTML": "<span style=\"background-color: gray;\">`[foobarbaz]´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: gray;\">`[foobarbaz]´</span></body>",
+          "bodyInnerHTML": "<span style=\"background-color: gray;\">`[foobarbaz]´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: gray;\">`[foobarbaz]´</span></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></div>",
-          "innerHTML": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: gray;\" id=\"editor-div\" contenteditable=\"true\"><span style=\"background-color: blue\">`[foobarbaz]´</span></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></div>CAN<br>ARY</body>"
+          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`[foobarbaz]´</div>",
+          "innerHTML": "`[foobarbaz]´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`[foobarbaz]´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: gray;\" id=\"editor-div\" contenteditable=\"true\">`[foobarbaz]´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`[foobarbaz]´</div>CAN<br>ARY</body>"
         }
       },
       "BC:gray_SPANs:bc:b-1_SO": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</body>",
-          "innerHTML": "{<span style=\"background-color: blue\">`foobarbaz´</span>}",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</body>",
-          "bodyInnerHTML": "{<span style=\"background-color: blue\">`foobarbaz´</span>}",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "{<span style=\"background-color: gray;\">`foobarbaz´</span>}",
+          "innerHTML": "{<span style=\"background-color: gray;\">`foobarbaz´</span>}",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">{<span style=\"background-color: gray;\">`foobarbaz´</span>}</body>",
+          "bodyInnerHTML": "{<span style=\"background-color: gray;\">`foobarbaz´</span>}",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">{<span style=\"background-color: gray;\">`foobarbaz´</span>}</body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</body>",
-          "innerHTML": "{<span style=\"background-color: blue\">`foobarbaz´</span>}",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</body>",
-          "bodyInnerHTML": "{<span style=\"background-color: blue\">`foobarbaz´</span>}",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "{<span style=\"background-color: gray;\">`foobarbaz´</span>}",
+          "innerHTML": "{<span style=\"background-color: gray;\">`foobarbaz´</span>}",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">{<span style=\"background-color: gray;\">`foobarbaz´</span>}</body>",
+          "bodyInnerHTML": "{<span style=\"background-color: gray;\">`foobarbaz´</span>}",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">{<span style=\"background-color: gray;\">`foobarbaz´</span>}</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</div>",
-          "innerHTML": "{<span style=\"background-color: blue\">`foobarbaz´</span>}",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: gray;\" id=\"editor-div\" contenteditable=\"true\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</div>CAN<br>ARY</body>"
+          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">{`foobarbaz´}</div>",
+          "innerHTML": "{`foobarbaz´}",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">{`foobarbaz´}</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: gray;\" id=\"editor-div\" contenteditable=\"true\">{`foobarbaz´}</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">{`foobarbaz´}</div>CAN<br>ARY</body>"
         }
       },
       "BC:gray_SPANs:bc:b-1_SI": {
         "dM": {
           "valscore": 0,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></body>",
-          "innerHTML": "<span style=\"background-color: blue\">`foo[bar]baz´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></body>",
-          "bodyInnerHTML": "<span style=\"background-color: blue\">`foo[bar]baz´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></body>"
+          "valresult": 7,
+          "selresult": 2,
+          "output": "<span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span>",
+          "innerHTML": "<span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span></body>",
+          "bodyInnerHTML": "<span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span></body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></body>",
-          "innerHTML": "<span style=\"background-color: blue\">`foo[bar]baz´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></body>",
-          "bodyInnerHTML": "<span style=\"background-color: blue\">`foo[bar]baz´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></body>"
+          "valresult": 7,
+          "selresult": 2,
+          "output": "<span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span>",
+          "innerHTML": "<span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span></body>",
+          "bodyInnerHTML": "<span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></div>",
-          "innerHTML": "<span style=\"background-color: blue\">`foo[bar]baz´</span>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: gray;\" id=\"editor-div\" contenteditable=\"true\"><span style=\"background-color: blue\">`foo[bar]baz´</span></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></div>CAN<br>ARY</body>"
+          "valresult": 7,
+          "selresult": 2,
+          "output": "<span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span>",
+          "innerHTML": "<span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span></div>CAN<br>ARY</body>"
         }
       },
       "BC:gray_P-SPANs:bc:b-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p>",
-          "innerHTML": "<p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p></body>",
-          "bodyInnerHTML": "<p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<p style=\"background-color: gray;\">`[foobarbaz]´</p>",
+          "innerHTML": "<p style=\"background-color: gray;\">`[foobarbaz]´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\">`[foobarbaz]´</p></body>",
+          "bodyInnerHTML": "<p style=\"background-color: gray;\">`[foobarbaz]´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\">`[foobarbaz]´</p></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p>",
-          "innerHTML": "<p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p></body>",
-          "bodyInnerHTML": "<p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<p style=\"background-color: gray;\">`[foobarbaz]´</p>",
+          "innerHTML": "<p style=\"background-color: gray;\">`[foobarbaz]´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\">`[foobarbaz]´</p></body>",
+          "bodyInnerHTML": "<p style=\"background-color: gray;\">`[foobarbaz]´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\">`[foobarbaz]´</p></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p>",
-          "innerHTML": "<p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p></div>CAN<br>ARY</body>"
+          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><p>`[foobarbaz]´</p></div>",
+          "innerHTML": "<p>`[foobarbaz]´</p>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><p>`[foobarbaz]´</p></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: gray;\" id=\"editor-div\" contenteditable=\"true\"><p>`[foobarbaz]´</p></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><p>`[foobarbaz]´</p></div>CAN<br>ARY</body>"
         }
       },
       "BC:gray_P-SPANs:bc:b-2_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p></body>",
-          "bodyInnerHTML": "<p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p>",
+          "innerHTML": "<p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p></body>",
+          "bodyInnerHTML": "<p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p></body>",
-          "bodyInnerHTML": "<p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p>",
+          "innerHTML": "<p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p></body>",
+          "bodyInnerHTML": "<p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p></body>"
         },
         "div": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p></div>CAN<br>ARY</body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p>",
+          "innerHTML": "<p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p></div>CAN<br>ARY</body>"
         }
       },
       "BC:gray_P-SPANs:bc:b-3_SO": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p></body>",
-          "bodyInnerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p>",
+          "innerHTML": "<p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p></body>",
+          "bodyInnerHTML": "<p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p></body>",
-          "bodyInnerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p>",
+          "innerHTML": "<p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p></body>",
+          "bodyInnerHTML": "<p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p></body>"
         },
         "div": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p></div>CAN<br>ARY</body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p>",
+          "innerHTML": "<p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p></div>CAN<br>ARY</body>"
         }
       },
       "BC:gray_P-SPANs:bc:b-3_SL": {
@@ -7168,33 +7168,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p></body>",
-          "bodyInnerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p></body>"
+          "output": "<p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p>",
+          "innerHTML": "<p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p></body>",
+          "bodyInnerHTML": "<p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p></body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p></body>",
-          "bodyInnerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p></body>"
+          "output": "<p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p>",
+          "innerHTML": "<p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p></body>",
+          "bodyInnerHTML": "<p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p></div>CAN<br>ARY</body>"
+          "output": "<p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p>",
+          "innerHTML": "<p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p></div>CAN<br>ARY</body>"
         }
       },
       "BC:gray_SPANs:bc:b-2_SL": {
@@ -7203,33 +7203,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</body>",
-          "innerHTML": "`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</body>",
-          "bodyInnerHTML": "`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</body>"
+          "output": "`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´",
+          "innerHTML": "`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´</body>",
+          "bodyInnerHTML": "`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</body>",
-          "innerHTML": "`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</body>",
-          "bodyInnerHTML": "`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</body>"
+          "output": "`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´",
+          "innerHTML": "`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´</body>",
+          "bodyInnerHTML": "`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</div>",
-          "innerHTML": "`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: gray;\" id=\"editor-div\" contenteditable=\"true\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</div>CAN<br>ARY</body>"
+          "output": "`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´",
+          "innerHTML": "`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´</div>CAN<br>ARY</body>"
         }
       },
       "BC:gray_SPANs:bc:b-2_SR": {
@@ -7238,33 +7238,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</body>",
-          "innerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</body>",
-          "bodyInnerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</body>"
+          "output": "`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´",
+          "innerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´</body>",
+          "bodyInnerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</body>",
-          "innerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</body>",
-          "bodyInnerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</body>"
+          "output": "`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´",
+          "innerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´</body>",
+          "bodyInnerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</div>",
-          "innerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: gray;\" id=\"editor-div\" contenteditable=\"true\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</div>CAN<br>ARY</body>"
+          "output": "`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´",
+          "innerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´</div>CAN<br>ARY</body>"
         }
       },
       "FN:c_SPANs:ff:a-1_SW": {
@@ -23350,21 +23350,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         }
       },
       "BC_SPANs:bc:abc-1_SI": {
@@ -23373,21 +23373,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         }
       },
       "BC_FONTs:bc:084-SPAN-1_SI": {
@@ -23396,21 +23396,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         }
       },
       "BC_SPANs:bc:cde-SPAN-1_SI": {
@@ -23419,21 +23419,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         }
       },
       "BC_SPAN.ass.s:bc:rgb-1_SI": {
@@ -23442,21 +23442,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         }
       },
       "BC_SPAN.bcred-1_SI": {
@@ -23465,21 +23465,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         }
       },
       "BC_MYBCRED-1-SI": {
@@ -23488,21 +23488,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         }
       },
       "FC_FONTc:f00-1_SI": {
