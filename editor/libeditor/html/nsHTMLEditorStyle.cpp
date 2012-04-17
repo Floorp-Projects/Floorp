@@ -428,10 +428,16 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
     }
     nsCOMPtr<nsIDOMElement>element;
     element = do_QueryInterface(tmp);
-    // first we have to remove occurences of the same style hint in the
-    // children of the aNode
+    // First we have to remove occurrences of the same style hint in the
+    // children of aNode, and any equivalent non-CSS attribute on aNode itself
+    // (if applicable).
     res = RemoveStyleInside(tmp, aProperty, aAttribute, true);
     NS_ENSURE_SUCCESS(res, res);
+    if (NodeIsType(aNode, aProperty)) {
+      nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
+      res = RemoveAttribute(elem, *aAttribute);
+      NS_ENSURE_SUCCESS(res, res);
+    }
     PRInt32 count;
     // then we add the css styles corresponding to the HTML style request
     res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, aProperty, aAttribute, aValue, &count, false);
@@ -471,9 +477,13 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
   // is it already the right kind of node, but with wrong attribute?
   if (NodeIsType(aNode, aProperty))
   {
-    // just set the attribute on it.
-    // but first remove any contrary style in it's children.
+    // Just set the attribute on it.  But first remove any contrary style in
+    // its children, and remove any conflicting CSS style on it.
     res = RemoveStyleInside(aNode, aProperty, aAttribute, true);
+    NS_ENSURE_SUCCESS(res, res);
+    res = mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(aNode, aProperty,
+                                                        aAttribute, nsnull,
+                                                        false);
     NS_ENSURE_SUCCESS(res, res);
     nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
     return SetAttribute(elem, *aAttribute, *aValue);
@@ -677,18 +687,6 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
         NS_ENSURE_SUCCESS(res, res);
         res = CloneAttribute(classAttr, spanNode, aNode);
         NS_ENSURE_SUCCESS(res, res);
-        if (hasStyleAttr) {
-          // we need to remove the styles property corresponding to
-          // aProperty (bug 215406)
-          nsAutoString propertyValue;
-          mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(spanNode,
-                                                        aProperty,
-                                                        aAttribute,
-                                                        &propertyValue,
-                                                        false);
-          // remove the span if it's useless
-          RemoveElementIfNoStyleOrIdOrClass(spanNode);
-        }
       }
       res = RemoveContainer(aNode);
       NS_ENSURE_SUCCESS(res, res);
@@ -707,8 +705,10 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
         NS_ENSURE_SUCCESS(res, res);
       }
     }
-  } else if (!aChildrenOnly && IsCSSEnabled() &&
-             mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty, aAttribute)) {
+  }
+
+  if (!aChildrenOnly &&
+      mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty, aAttribute)) {
     // the HTML style defined by aProperty/aAttribute has a CSS equivalence in
     // this implementation for the node aNode; let's check if it carries those
     // css styles
