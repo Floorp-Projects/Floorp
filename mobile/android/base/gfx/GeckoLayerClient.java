@@ -43,7 +43,6 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoEventResponder;
-import org.mozilla.gecko.ui.Axis;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -124,7 +123,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
         JSONArray prefs = new JSONArray();
         DisplayPortCalculator.addPrefNames(prefs);
-        Axis.addPrefNames(prefs);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Preferences:Get", prefs.toString()));
     }
 
@@ -273,7 +271,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
                 // right batch of prefs, since other java code may also have sent requests
                 // for prefs.
                 if (DisplayPortCalculator.setStrategy(prefValues)) {
-                    Axis.setPrefs(prefValues);
                     GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", this);
                 }
             }
