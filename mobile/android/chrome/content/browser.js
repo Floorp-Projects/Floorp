@@ -1641,7 +1641,7 @@ var SelectionHandler = {
                                 aY - offset.y < this.cache.rect.bottom);
         if (pointInSelection) {
           let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-          clipboard.copyString(selectedText);
+          clipboard.copyString(selectedText, element.ownerDocument);
           NativeWindow.toast.show(Strings.browser.GetStringFromName("selectionHelper.textCopied"), "short");
         }
       }
@@ -4817,9 +4817,9 @@ var ClipboardHelper = {
     let selectionEnd = aElement.selectionEnd;
     if (selectionStart != selectionEnd) {
       string = aElement.value.slice(selectionStart, selectionEnd);
-      this.clipboardHelper.copyString(string);
+      this.clipboardHelper.copyString(string, aElement.ownerDocument);
     } else {
-      this.clipboardHelper.copyString(aElement.value);
+      this.clipboardHelper.copyString(aElement.value, aElement.ownerDocument);
     }
   },
 

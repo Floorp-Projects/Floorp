@@ -93,6 +93,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsIParserUtils.h"
+#include "nsILoadContext.h"
 
 using namespace mozilla;
 
@@ -985,6 +986,10 @@ NS_IMETHODIMP nsHTMLEditor::PrepareHTMLTransferable(nsITransferable **aTransfera
   // Get the nsITransferable interface for getting the data from the clipboard
   if (aTransferable)
   {
+    nsCOMPtr<nsIDocument> destdoc = GetDocument();
+    nsILoadContext* loadContext = destdoc ? destdoc->GetLoadContext() : nsnull;
+    (*aTransferable)->Init(loadContext);
+
     // Create the desired DataFlavor for the type of data
     // we want to get out of the transferable
     // This should only happen in html editors, not plaintext
@@ -1535,6 +1540,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
     nsCOMPtr<nsITransferable> contextTrans =
                   do_CreateInstance("@mozilla.org/widget/transferable;1");
     NS_ENSURE_TRUE(contextTrans, NS_ERROR_NULL_POINTER);
+    contextTrans->Init(nsnull);
     contextTrans->AddDataFlavor(kHTMLContext);
     clipboard->GetData(contextTrans, aSelectionType);
     contextTrans->GetTransferData(kHTMLContext, getter_AddRefs(contextDataObj), &contextLen);
@@ -1542,6 +1548,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
     nsCOMPtr<nsITransferable> infoTrans =
                   do_CreateInstance("@mozilla.org/widget/transferable;1");
     NS_ENSURE_TRUE(infoTrans, NS_ERROR_NULL_POINTER);
+    infoTrans->Init(nsnull);
     infoTrans->AddDataFlavor(kHTMLInfo);
     clipboard->GetData(infoTrans, aSelectionType);
     infoTrans->GetTransferData(kHTMLInfo, getter_AddRefs(infoDataObj), &infoLen);
@@ -1774,6 +1781,10 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
                  do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(trans, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocument> destdoc = GetDocument();
+  nsILoadContext* loadContext = destdoc ? destdoc->GetLoadContext() : nsnull;
+  trans->Init(loadContext);
 
   // We only handle plaintext pastes here
   trans->AddDataFlavor(kUnicodeMime);

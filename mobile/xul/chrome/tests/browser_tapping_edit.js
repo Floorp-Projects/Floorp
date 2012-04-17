@@ -237,7 +237,7 @@ gTests.push({
 
     // Put some data on the clipboard to get "paste" to be active
     let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-    clipboard.copyString("We are testing Firefox");
+    clipboard.copyString("We are testing Firefox", content.document);
     
     let event = content.document.createEvent("PopupEvents");
     event.initEvent("contextmenu", true, true);

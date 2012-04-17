@@ -548,6 +548,13 @@ function doNextTest() {
   doNextTest();
 }
 
+function getLoadContext() {
+  const Ci = Components.interfaces;
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIWebNavigation)
+               .QueryInterface(Ci.nsILoadContext);
+}
+
 function runTest(test) {
   var elem = document.getElementById(test.id);
   if ("isIFrame" in test) {
@@ -560,6 +567,7 @@ function runTest(test) {
 
   var trans = Components.classes["@mozilla.org/widget/transferable;1"]
                         .createInstance(Components.interfaces.nsITransferable);
+  trans.init(getLoadContext());
   var data = Components.classes["@mozilla.org/supports-string;1"]
                        .createInstance(Components.interfaces.nsISupportsString);
   data.data = test.payload;
