@@ -3324,6 +3324,37 @@ nsWindow::CheckNeedDragLeave(nsWindow* aInnerMostWidget,
 }
 
 void
+nsWindow::DispatchDragMotionEvents(nsDragService *aDragService,
+                                   const nsIntPoint& aWindowPoint, guint aTime)
+{
+    aDragService->SetCanDrop(false);
+
+    aDragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
+
+    DispatchDragEvent(NS_DRAGDROP_OVER, aWindowPoint, aTime);
+}
+
+// Returns true if the drop was successful
+gboolean
+nsWindow::DispatchDragDropEvent(nsDragService *aDragService,
+                                const nsIntPoint& aWindowPoint, guint aTime)
+{
+    // We need to check mIsDestroyed here because the nsRefPtr
+    // only protects this from being deleted, it does NOT protect
+    // against nsView::~nsView() calling Destroy() on it, bug 378670.
+    if (mIsDestroyed)
+        return FALSE;
+
+    bool canDrop;
+    aDragService->GetCanDrop(&canDrop);
+    PRUint32 msg = canDrop ? NS_DRAGDROP_DROP : NS_DRAGDROP_EXIT;
+
+    DispatchDragEvent(msg, aWindowPoint, aTime);
+
+    return canDrop;
+}
+
+void
 nsWindow::DispatchDragEvent(PRUint32 aMsg, const nsIntPoint& aRefPoint,
                             guint aTime)
 {
@@ -3398,12 +3429,8 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
     // update the drag context
     dragServiceGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
 
-    dragServiceGTK->SetCanDrop(false);
-
-    dragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
-
     innerMostWidget->
-        DispatchDragEvent(NS_DRAGDROP_OVER, nsIntPoint(retx, rety), aTime);
+        DispatchDragMotionEvents(dragServiceGTK, nsIntPoint(retx, rety), aTime);
 
     // Reply to tell the source whether we can drop and what action would be
     // taken.
@@ -3502,27 +3529,12 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     // protocol is used.
 
     dragServiceGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
-    dragServiceGTK->SetCanDrop(false);
-
-    dragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
 
     innerMostWidget->
-        DispatchDragEvent(NS_DRAGDROP_OVER, nsIntPoint(retx, rety), aTime);
+        DispatchDragMotionEvents(dragServiceGTK, nsIntPoint(retx, rety), aTime);
 
-    gboolean success = FALSE;
-
-    // We need to check innerMostWidget->mIsDestroyed here because the nsRefPtr
-    // only protects innerMostWidget from being deleted, it does NOT protect
-    // against nsView::~nsView() calling Destroy() on it, bug 378670.
-    if (!innerMostWidget->mIsDestroyed) {
-        bool canDrop;
-        dragServiceGTK->GetCanDrop(&canDrop);
-        PRUint32 msg = canDrop ? NS_DRAGDROP_DROP : NS_DRAGDROP_EXIT;
-
-        innerMostWidget->DispatchDragEvent(msg, nsIntPoint(retx, rety), aTime);
-
-        success = canDrop;
-    }
+    gboolean success = innerMostWidget->
+        DispatchDragDropEvent(dragServiceGTK, nsIntPoint(retx, rety), aTime);
 
     // before we unset the context we need to do a drop_finish
 
