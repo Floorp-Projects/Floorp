@@ -277,7 +277,7 @@ nsWindow *nsWindow::sLastDragMotionWindow = NULL;
 
 // Time of the last button release event. We use it to detect when the
 // drag ended before we could properly setup drag and drop.
-guint32   nsWindow::sLastButtonReleaseTime = 0;
+static guint32 sLastButtonReleaseTime = 0;
 static guint32 sLastUserInputTime = GDK_CURRENT_TIME;
 static guint32 sRetryGrabTime;
 
@@ -3376,23 +3376,6 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
 {
     LOGDRAG(("nsWindow::OnDragMotionSignal\n"));
 
-    if (sLastButtonReleaseTime) {
-      // The drag ended before it was even setup to handle the end of the drag
-      // So, we fake the button getting released again to release the drag
-      GtkWidget *widget = gtk_grab_get_current();
-      GdkEvent event;
-      gboolean retval;
-      memset(&event, 0, sizeof(event));
-      event.type = GDK_BUTTON_RELEASE;
-      event.button.time = sLastButtonReleaseTime;
-      event.button.button = 1;
-      sLastButtonReleaseTime = 0;
-      if (widget) {
-        g_signal_emit_by_name(widget, "button_release_event", &event, &retval);
-        return TRUE;
-      }
-    }
-
     // get our drag context
     nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
     nsDragService *dragServiceGTK =
@@ -5951,6 +5934,24 @@ drag_motion_event_cb(GtkWidget *aWidget,
     nsRefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
     if (!window)
         return FALSE;
+
+    if (sLastButtonReleaseTime) {
+      // The drag ended before it was even setup to handle the end of the drag
+      // So, we fake the button getting released again to release the drag
+      GtkWidget *widget = gtk_grab_get_current();
+      GdkEvent event;
+      gboolean retval;
+      memset(&event, 0, sizeof(event));
+      event.type = GDK_BUTTON_RELEASE;
+      event.button.time = sLastButtonReleaseTime;
+      event.button.button = 1;
+      sLastButtonReleaseTime = 0;
+      if (widget) {
+        g_signal_emit_by_name(widget, "button_release_event", &event, &retval);
+        // FALSE means we won't reply with a status message.
+        return FALSE;
+      }
+    }
 
     return window->OnDragMotionEvent(aWidget,
                                      aDragContext,
