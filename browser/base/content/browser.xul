@@ -855,6 +855,9 @@
                      label="&printButton.label;" command="cmd_print"
                      tooltiptext="&printButton.tooltip;"/>
 
+      <!-- This is a placeholder for the Downloads Indicator.  It is visible
+           only during the customization of the toolbar or in the palette, and
+           is replaced when customization is done. -->
       <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      observes="Tools:Downloads"
                      ondrop="DownloadsButtonDNDObserver.onDrop(event)"
