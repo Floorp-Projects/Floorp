@@ -1,5 +1,0 @@
-url-prefix ../../jsreftest.html?test=js1_4/Eval/
-script eval-001.js
-script eval-002.js
-script eval-003.js
-script regress-531682.js

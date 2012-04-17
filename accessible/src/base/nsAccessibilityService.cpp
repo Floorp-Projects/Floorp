@@ -202,8 +202,7 @@ nsAccessibilityService::CreateOuterDocAccessible(nsIContent* aContent,
                                                  nsIPresShell* aPresShell)
 {
   nsAccessible* accessible =
-    new OuterDocAccessible(aContent,
-                           nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new OuterDocAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -213,8 +212,7 @@ nsAccessibilityService::CreateHTMLButtonAccessible(nsIContent* aContent,
                                                    nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new HTMLButtonAccessible(aContent, 
-                             nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new HTMLButtonAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -224,8 +222,7 @@ nsAccessibilityService::CreateHTMLLIAccessible(nsIContent* aContent,
                                                nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLLIAccessible(aContent, 
-                           nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new nsHTMLLIAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -235,8 +232,7 @@ nsAccessibilityService::CreateHyperTextAccessible(nsIContent* aContent,
                                                   nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHyperTextAccessibleWrap(aContent, 
-                                  nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new nsHyperTextAccessibleWrap(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -246,8 +242,7 @@ nsAccessibilityService::CreateHTMLCheckboxAccessible(nsIContent* aContent,
                                                      nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new HTMLCheckboxAccessible(aContent, 
-                               nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new HTMLCheckboxAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -257,8 +252,7 @@ nsAccessibilityService::CreateHTMLComboboxAccessible(nsIContent* aContent,
                                                      nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLComboboxAccessible(aContent, 
-                                 nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new nsHTMLComboboxAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -268,8 +262,7 @@ nsAccessibilityService::CreateHTMLCanvasAccessible(nsIContent* aContent,
                                                    nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLCanvasAccessible(aContent, 
-                               nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new nsHTMLCanvasAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -279,8 +272,7 @@ nsAccessibilityService::CreateHTMLFileInputAccessible(nsIContent* aContent,
                                                       nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new HTMLFileInputAccessible(aContent, 
-                                nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new HTMLFileInputAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -290,8 +282,7 @@ nsAccessibilityService::CreateHTMLImageAccessible(nsIContent* aContent,
                                                   nsIPresShell* aPresShell)
 {
   nsAccessible* accessible =
-    new nsHTMLImageAccessibleWrap(aContent,
-                                  nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new nsHTMLImageAccessibleWrap(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -301,8 +292,7 @@ nsAccessibilityService::CreateHTMLImageMapAccessible(nsIContent* aContent,
                                                      nsIPresShell* aPresShell)
 {
   nsAccessible* accessible =
-    new nsHTMLImageMapAccessible(aContent,
-                                 nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new nsHTMLImageMapAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -312,8 +302,7 @@ nsAccessibilityService::CreateHTMLGroupboxAccessible(nsIContent* aContent,
                                                      nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new HTMLGroupboxAccessible(aContent, 
-                               nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new HTMLGroupboxAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -323,8 +312,7 @@ nsAccessibilityService::CreateHTMLListboxAccessible(nsIContent* aContent,
                                                     nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLSelectListAccessible(aContent, 
-                                   nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new nsHTMLSelectListAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -334,8 +322,7 @@ nsAccessibilityService::CreateHTMLMediaAccessible(nsIContent* aContent,
                                                   nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsEnumRoleAccessible(aContent, 
-                             nsAccUtils::GetDocAccessibleFor(aPresShell),
+    new nsEnumRoleAccessible(aContent, GetDocAccessible(aPresShell),
                              roles::GROUPING);
   NS_ADDREF(accessible);
   return accessible;
@@ -379,7 +366,7 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
 
     nsAccessible* accessible = 
       new nsHTMLWin32ObjectOwnerAccessible(aContent,
-                                           nsAccUtils::GetDocAccessibleFor(aPresShell),
+                                           GetDocAccessible(aPresShell),
                                            pluginPort);
     NS_ADDREF(accessible);
     return accessible;
@@ -393,8 +380,7 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
       NPPVpluginNativeAccessibleAtkPlugId, &plugId);
     if (NS_SUCCEEDED(rv) && !plugId.IsEmpty()) {
       AtkSocketAccessible* socketAccessible =
-        new AtkSocketAccessible(aContent, 
-                                nsAccUtils::GetDocAccessibleFor(aPresShell), 
+        new AtkSocketAccessible(aContent, GetDocAccessible(aPresShell),
                                 plugId);
 
       NS_ADDREF(socketAccessible);
@@ -415,8 +401,7 @@ nsAccessibilityService::CreateHTMLRadioButtonAccessible(nsIContent* aContent,
                                                         nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new HTMLRadioButtonAccessible(aContent, 
-                                  nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new HTMLRadioButtonAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -426,8 +411,7 @@ nsAccessibilityService::CreateHTMLTableAccessible(nsIContent* aContent,
                                                   nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLTableAccessibleWrap(aContent, 
-                                  nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new nsHTMLTableAccessibleWrap(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -437,8 +421,7 @@ nsAccessibilityService::CreateHTMLTableCellAccessible(nsIContent* aContent,
                                                       nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLTableCellAccessibleWrap(aContent,
-                                      nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new nsHTMLTableCellAccessibleWrap(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -448,8 +431,7 @@ nsAccessibilityService::CreateHTMLTextAccessible(nsIContent* aContent,
                                                  nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLTextAccessible(aContent, 
-                             nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new nsHTMLTextAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -459,8 +441,7 @@ nsAccessibilityService::CreateHTMLTextFieldAccessible(nsIContent* aContent,
                                                       nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new HTMLTextFieldAccessible(aContent, 
-                                nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new HTMLTextFieldAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -470,8 +451,7 @@ nsAccessibilityService::CreateHTMLLabelAccessible(nsIContent* aContent,
                                                   nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLLabelAccessible(aContent, 
-                              nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new nsHTMLLabelAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -481,8 +461,7 @@ nsAccessibilityService::CreateHTMLHRAccessible(nsIContent* aContent,
                                                nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLHRAccessible(aContent, 
-                           nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new nsHTMLHRAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -492,8 +471,7 @@ nsAccessibilityService::CreateHTMLBRAccessible(nsIContent* aContent,
                                                nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLBRAccessible(aContent, 
-                           nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new nsHTMLBRAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -503,8 +481,7 @@ nsAccessibilityService::CreateHTMLCaptionAccessible(nsIContent* aContent,
                                                     nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLCaptionAccessible(aContent, 
-                                nsAccUtils::GetDocAccessibleFor(aPresShell));
+    new nsHTMLCaptionAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -539,7 +516,7 @@ nsAccessibilityService::ContentRangeInserted(nsIPresShell* aPresShell,
          NS_ConvertUTF16toUTF8(ctag).get(), cid.get(), aEndChild);
 #endif
 
-  nsDocAccessible* docAccessible = GetDocAccessible(aPresShell->GetDocument());
+  nsDocAccessible* docAccessible = GetDocAccessible(aPresShell);
   if (docAccessible)
     docAccessible->ContentInserted(aContainer, aStartChild, aEndChild);
 }
@@ -573,7 +550,7 @@ nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
            NS_ConvertUTF16toUTF8(ctag).get(), cid.get());
 #endif
 
-  nsDocAccessible* docAccessible = GetDocAccessible(aPresShell->GetDocument());
+  nsDocAccessible* docAccessible = GetDocAccessible(aPresShell);
   if (docAccessible)
     docAccessible->ContentRemoved(aContainer, aChild);
 }
@@ -582,7 +559,7 @@ void
 nsAccessibilityService::UpdateText(nsIPresShell* aPresShell,
                                    nsIContent* aContent)
 {
-  nsDocAccessible* document = GetDocAccessible(aPresShell->GetDocument());
+  nsDocAccessible* document = GetDocAccessible(aPresShell);
   if (document)
     document->UpdateText(aContent);
 }
@@ -592,7 +569,7 @@ nsAccessibilityService::TreeViewChanged(nsIPresShell* aPresShell,
                                         nsIContent* aContent,
                                         nsITreeView* aView)
 {
-  nsDocAccessible* document = GetDocAccessible(aPresShell->GetDocument());
+  nsDocAccessible* document = GetDocAccessible(aPresShell);
   if (document) {
     nsAccessible* accessible = document->GetAccessible(aContent);
     if (accessible) {
@@ -608,7 +585,7 @@ nsAccessibilityService::UpdateListBullet(nsIPresShell* aPresShell,
                                          nsIContent* aHTMLListItemContent,
                                          bool aHasBullet)
 {
-  nsDocAccessible* document = GetDocAccessible(aPresShell->GetDocument());
+  nsDocAccessible* document = GetDocAccessible(aPresShell);
   if (document) {
     nsAccessible* accessible = document->GetAccessible(aHTMLListItemContent);
     if (accessible) {
@@ -623,7 +600,7 @@ void
 nsAccessibilityService::UpdateImageMap(nsImageFrame* aImageFrame)
 {
   nsIPresShell* presShell = aImageFrame->PresContext()->PresShell();
-  nsDocAccessible* document = GetDocAccessible(presShell->GetDocument());
+  nsDocAccessible* document = GetDocAccessible(presShell);
   if (document) {
     nsAccessible* accessible =
       document->GetAccessible(aImageFrame->GetContent());
@@ -682,7 +659,7 @@ void
 nsAccessibilityService::RecreateAccessible(nsIPresShell* aPresShell,
                                            nsIContent* aContent)
 {
-  nsDocAccessible* document = GetDocAccessible(aPresShell->GetDocument());
+  nsDocAccessible* document = GetDocAccessible(aPresShell);
   if (document)
     document->RecreateAccessible(aContent);
 }

@@ -1,3 +1,4 @@
+// |reftest| skip-if(!xulRuntime.shell&&((Android||(isDebugBuild&&xulRuntime.OS=="Linux")||xulRuntime.XPCOMABI.match(/x86_64/)))) silentfail slow -- can fail silently due to out of memory, bug 615011 - timeouts on slow debug Linux
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1

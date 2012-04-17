@@ -136,15 +136,12 @@ ScriptErrorReporter(JSContext *cx,
     int i, j, k, n;
     char *prefix = NULL, *tmp;
     const char *ctmp;
-    JSStackFrame * fp = nsnull;
     nsCOMPtr<nsIXPConnect> xpc;
 
     // Don't report an exception from inner JS frames as the callers may intend
     // to handle it.
-    while ((fp = JS_FrameIterator(cx, &fp))) {
-        if (JS_IsScriptFrame(cx, fp)) {
-            return;
-        }
+    if (JS_DescribeScriptedCaller(cx, nsnull, nsnull)) {
+        return;
     }
 
     // In some cases cx->fp is null here so use XPConnect to tell us about inner

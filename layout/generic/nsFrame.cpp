@@ -121,11 +121,13 @@
 #include "nsSVGEffects.h"
 #include "nsChangeHint.h"
 #include "nsDeckFrame.h"
+#include "nsTableFrame.h"
 
 #include "gfxContext.h"
 #include "nsRenderingContext.h"
 #include "CSSCalc.h"
 #include "nsAbsoluteContainingBlock.h"
+#include "nsFontInflationData.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
@@ -536,8 +538,16 @@ nsFrame::Init(nsIContent*      aContent,
 #endif
       ) {
     if (IsFontSizeInflationContainer(this, disp)) {
-      mState |= NS_FRAME_FONT_INFLATION_CONTAINER;
+      AddStateBits(NS_FRAME_FONT_INFLATION_CONTAINER);
+      if (!GetParent() ||
+          // I'd use NS_FRAME_OUT_OF_FLOW, but it's not set yet.
+          disp->IsFloating() || disp->IsAbsolutelyPositioned()) {
+        AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
+      }
     }
+    NS_ASSERTION(GetParent() ||
+                 (GetStateBits() & NS_FRAME_FONT_INFLATION_CONTAINER),
+                 "root frame should always be a container");
   }
 
   DidSetStyleContext(nsnull);
@@ -3508,6 +3518,10 @@ nsFrame::MarkIntrinsicWidthsDirty()
     SizeNeedsRecalc(metrics->mBlockMinSize);
     CoordNeedsRecalc(metrics->mFlex);
     CoordNeedsRecalc(metrics->mAscent);
+  }
+
+  if (GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) {
+    nsFontInflationData::MarkFontInflationDataTextDirty(this);
   }
 }
 
