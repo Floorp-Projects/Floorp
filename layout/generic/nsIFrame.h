@@ -815,11 +815,6 @@ public:
                                          nsStyleContext* aStyleContext) = 0;
 
   /**
-   * @return false if this frame definitely has no borders at all
-   */                 
-  bool HasBorder() const;
-
-  /**
    * Accessor functions for geometric parent
    */
   nsIFrame* GetParent() const { return mParent; }
