@@ -1179,7 +1179,7 @@ nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 
   nsStyleContext* bgSC;
   nsPresContext* presContext = mFrame->PresContext();
-  if (!nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC))
+  if (!nsCSSRendering::FindBackground(presContext, mFrame, &bgSC))
     return result;
   const nsStyleBackground* bg = bgSC->GetStyleBackground();
   const nsStyleBackground::Layer& bottomLayer = bg->BottomLayer();

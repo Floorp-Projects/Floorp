@@ -826,6 +826,11 @@ struct nsStyleBorder {
     return mComputedBorder;
   }
 
+  bool HasBorder() const
+  {
+    return mComputedBorder != nsMargin(0,0,0,0) || mBorderImageSource;
+  }
+
   // Get the actual border width for a particular side, in appunits.  Note that
   // this is zero if and only if there is no border to be painted for this
   // side.  That is, this value takes into account the border style and the
