@@ -2931,8 +2931,8 @@ XREMain::XRE_mainInit(const nsXREAppData* aAppData, bool* aExitFlag)
       SetAllocatedString(mAppData->maxVersion, "1.*");
     }
 
-    if (NS_CompareVersions(mAppData->minVersion, gToolkitVersion) > 0 ||
-        NS_CompareVersions(mAppData->maxVersion, gToolkitVersion) < 0) {
+    if (mozilla::Version(mAppData->minVersion) > gToolkitVersion ||
+        mozilla::Version(mAppData->maxVersion) < gToolkitVersion) {
       Output(true, "Error: Platform version '%s' is not compatible with\n"
              "minVersion >= %s\nmaxVersion <= %s\n",
              gToolkitVersion,
