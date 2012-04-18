@@ -38,7 +38,7 @@
 
 // Tests that network log messages bring up the network panel.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-bug-618078-network-exceptions.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-618078-network-exceptions.html";
 
 let testEnded = false;
 

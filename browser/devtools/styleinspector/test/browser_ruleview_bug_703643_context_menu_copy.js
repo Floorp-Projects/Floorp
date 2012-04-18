@@ -3,6 +3,13 @@
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
 let doc;
+let tempScope = {};
+Cu.import("resource:///modules/devtools/CssRuleView.jsm", tempScope);
+let inplaceEditor = tempScope._getInplaceEditorForSpan;
+
+XPCOMUtils.defineLazyGetter(this, "osString", function() {
+  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
+});
 
 function createDocument()
 {
@@ -37,6 +44,30 @@ function openInspector()
   Services.obs.addObserver(inspectorUIOpen,
     InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
   InspectorUI.openInspectorUI();
+}
+
+function waitForEditorFocus(aParent, aCallback)
+{
+  aParent.addEventListener("focus", function onFocus(evt) {
+    if (inplaceEditor(evt.target)) {
+      aParent.removeEventListener("focus", onFocus, true);
+      let editor = inplaceEditor(evt.target);
+      executeSoon(function() {
+        aCallback(editor);
+      });
+    }
+  }, true);
+}
+
+function waitForEditorBlur(aEditor, aCallback)
+{
+  let input = aEditor.input;
+  input.addEventListener("blur", function onBlur() {
+    input.removeEventListener("blur", onBlur, false);
+    executeSoon(function() {
+      aCallback();
+    });
+  }, false);
 }
 
 function inspectorUIOpen()
@@ -78,12 +109,13 @@ function testClip()
       "    font-family: helvetica,sans-serif;[\\r\\n]+" +
       "    color: rgb\\(170, 170, 170\\);[\\r\\n]+" +
       "}[\\r\\n]*";
-    info("Expected pattern: " + expectedPattern);
 
     SimpleTest.waitForClipboard(function IUI_boundCopyPropCheck() {
         return checkClipboardData(expectedPattern);
       },
-      checkCopyRule, checkCopyProperty, checkCopyProperty);
+      checkCopyRule, checkCopyRuleWithEditorSelected, function() {
+        failedClipboard(expectedPattern, checkCopyRuleWithEditorSelected);
+      });
   });
 }
 
@@ -107,20 +139,86 @@ function checkCopyRule() {
     ruleView.contentWindow);
 
   InspectorUI.ruleView._boundCopyRule();
+  let menu = contentDoc.querySelector("#rule-view-context-menu");
+  ok(menu, "we have the context menu");
+  menu.hidePopup();
+}
+
+function checkCopyRuleWithEditorSelected()
+{
+  let ruleView = document.querySelector("#devtools-sidebar-iframe-ruleview");
+  let contentDoc = ruleView.contentDocument;
+  let rows = contentDoc.querySelectorAll(".rule-view-row");
+  let propNodes = contentDoc.querySelectorAll(".ruleview-property");
+  let propNode = propNodes[2];
+  let propNameNode = propNode.querySelector(".ruleview-propertyname");
+
+  ok(propNameNode, "we have the property name node");
+
+  info("Checking that _boundCopyRule()  returns the correct clipboard value");
+  let expectedPattern = "element {[\\r\\n]+" +
+    "    margin: 10em;[\\r\\n]+" +
+    "    font-size: 14pt;[\\r\\n]+" +
+    "    font-family: helvetica,sans-serif;[\\r\\n]+" +
+    "    color: rgb\\(170, 170, 170\\);[\\r\\n]+" +
+    "}[\\r\\n]*";
+
+  let elementRuleEditor = rows[0]._ruleEditor;
+  waitForEditorFocus(elementRuleEditor.element, function onNewElement(aEditor) {
+    ok(aEditor, "we have the editor");
+
+    waitForBlur.editor = aEditor;
+
+    // We need the context menu to open in the correct place in order for
+    // popupNode to be propertly set.
+    EventUtils.synthesizeMouse(aEditor.input, 1, 1,
+      { type: "contextmenu", button: 2 }, ruleView.contentWindow);
+
+    SimpleTest.waitForClipboard(function IUI_boundCopyCheckWithSelection() {
+      let menu = contentDoc.querySelector("#rule-view-context-menu");
+      ok(menu, "we have the context menu");
+      menu.hidePopup();
+
+      return checkClipboardData(expectedPattern);
+    }, InspectorUI.ruleView._boundCopyRule, waitForBlur, function() {
+      failedClipboard(expectedPattern, checkCopyProperty);
+    });
+  });
+  EventUtils.synthesizeMouse(propNameNode, 1, 1, { }, ruleView.contentWindow);
+}
+
+function waitForBlur()
+{
+  waitForEditorBlur(waitForBlur.editor, function() {
+    waitForBlur.editor = null;
+    checkCopyProperty();
+  });
+  waitForBlur.editor.input.blur();
 }
 
 function checkCopyProperty()
 {
+  let ruleView = document.querySelector("#devtools-sidebar-iframe-ruleview");
+  let contentDoc = ruleView.contentDocument;
+  let props = contentDoc.querySelectorAll(".ruleview-property");
+  let prop = props[2];
+
   info("Checking that _onCopyDeclaration() returns " +
        "the correct clipboard value");
   let expectedPattern = "font-family: helvetica,sans-serif;";
-  info("Expected pattern: " + expectedPattern);
+
+  // We need the context menu to open in the correct place in order for
+  // popupNode to be propertly set.
+  EventUtils.synthesizeMouse(prop, 1, 1, { type: "contextmenu", button: 2 },
+    ruleView.contentWindow);
 
   SimpleTest.waitForClipboard(function IUI_boundCopyPropCheck() {
-      return checkClipboardData(expectedPattern);
-    },
-    InspectorUI.ruleView._boundCopyDeclaration,
-    checkCopyPropertyName, checkCopyPropertyName);
+    return checkClipboardData(expectedPattern);
+  },
+  InspectorUI.ruleView._boundCopyDeclaration,
+  checkCopyPropertyName, function() {
+    failedClipboard(expectedPattern, checkCopyPropertyName);
+  });
 }
 
 function checkCopyPropertyName()
@@ -128,13 +226,14 @@ function checkCopyPropertyName()
   info("Checking that _onCopyProperty() returns " +
        "the correct clipboard value");
   let expectedPattern = "font-family";
-  info("Expected pattern: " + expectedPattern);
 
   SimpleTest.waitForClipboard(function IUI_boundCopyPropNameCheck() {
-      return checkClipboardData(expectedPattern);
-    },
-    InspectorUI.ruleView._boundCopyProperty,
-    checkCopyPropertyValue, checkCopyPropertyValue);
+    return checkClipboardData(expectedPattern);
+  },
+  InspectorUI.ruleView._boundCopyProperty,
+  checkCopyPropertyValue, function() {
+    failedClipboard(expectedPattern, checkCopyPropertyValue);
+  });
 }
 
 function checkCopyPropertyValue()
@@ -142,13 +241,14 @@ function checkCopyPropertyValue()
   info("Checking that _onCopyPropertyValue() " +
        " returns the correct clipboard value");
   let expectedPattern = "helvetica,sans-serif";
-  info("Expected pattern: " + expectedPattern);
 
   SimpleTest.waitForClipboard(function IUI_boundCopyPropValueCheck() {
-      return checkClipboardData(expectedPattern);
-    },
-    InspectorUI.ruleView._boundCopyPropertyValue,
-    checkCopySelection, checkCopySelection);
+    return checkClipboardData(expectedPattern);
+  },
+  InspectorUI.ruleView._boundCopyPropertyValue,
+  checkCopySelection, function() {
+    failedClipboard(expectedPattern, checkCopySelection);
+  });
 }
 
 function checkCopySelection()
@@ -160,10 +260,12 @@ function checkCopySelection()
   let range = document.createRange();
   range.setStart(props[0], 0);
   range.setEnd(props[4], 8);
-  ruleView.contentWindow.getSelection().addRange(range);
 
-  info("Checking that _onCopy()  returns the correct" +
-       "clipboard value");
+  let selection = ruleView.contentWindow.getSelection();
+  selection.addRange(range);
+
+  info("Checking that _boundCopy()  returns the correct" +
+    "clipboard value");
   let expectedPattern = "    margin: 10em;[\\r\\n]+" +
                         "    font-size: 14pt;[\\r\\n]+" +
                         "    font-family: helvetica,sans-serif;[\\r\\n]+" +
@@ -171,11 +273,12 @@ function checkCopySelection()
                         "}[\\r\\n]+" +
                         "html {[\\r\\n]+" +
                         "    color: rgb\\(0, 0, 0\\);[\\r\\n]*";
-  info("Expected pattern: " + expectedPattern);
 
   SimpleTest.waitForClipboard(function IUI_boundCopyCheck() {
-      return checkClipboardData(expectedPattern);
-    },InspectorUI.ruleView._boundCopy, finishup, finishup);
+    return checkClipboardData(expectedPattern);
+  },InspectorUI.ruleView._boundCopy, finishup, function() {
+    failedClipboard(expectedPattern, finishup);
+  });
 }
 
 function checkClipboardData(aExpectedPattern)
@@ -183,6 +286,28 @@ function checkClipboardData(aExpectedPattern)
   let actual = SpecialPowers.getClipboardData("text/unicode");
   let expectedRegExp = new RegExp(aExpectedPattern, "g");
   return expectedRegExp.test(actual);
+}
+
+function failedClipboard(aExpectedPattern, aCallback)
+{
+  // Format expected text for comparison
+  let terminator = osString == "WINNT" ? "\r\n" : "\n";
+  aExpectedPattern = aExpectedPattern.replace(/\[\\r\\n\][+*]/g, terminator);
+  aExpectedPattern = aExpectedPattern.replace(/\\\(/g, "(");
+  aExpectedPattern = aExpectedPattern.replace(/\\\)/g, ")");
+
+  let actual = SpecialPowers.getClipboardData("text/unicode");
+
+  // Trim the right hand side of our strings. This is because expectedPattern
+  // accounts for windows sometimes adding a newline to our copied data.
+  aExpectedPattern = aExpectedPattern.trimRight();
+  actual = actual.trimRight();
+
+  dump("TEST-UNEXPECTED-FAIL | Clipboard text does not match expected ... " +
+    "results (escaped for accurate comparison):\n");
+  info("Actual: " + escape(actual));
+  info("Expected: " + escape(aExpectedPattern));
+  aCallback();
 }
 
 function finishup()
