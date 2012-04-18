@@ -513,7 +513,7 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
   nsresult rv = NS_StackWalk(StackWalkCallback, 0, &array, thread);
 #endif
   if (NS_SUCCEEDED(rv)) {
-    aProfile.addTag(ProfileEntry('s', "(root)", 0));
+    aProfile.addTag(ProfileEntry('s', "(root)"));
 
     for (size_t i = array.count; i > 0; --i) {
       aProfile.addTag(ProfileEntry('l', (const char*)array.array[i - 1]));
