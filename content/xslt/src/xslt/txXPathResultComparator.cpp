@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/FloatingPoint.h"
+
 #include "txXPathResultComparator.h"
 #include "txExpr.h"
 #include "txCore.h"
@@ -246,10 +248,10 @@ int txResultNumberComparator::compareValues(txObject* aVal1, txObject* aVal2)
     double dval1 = ((NumberValue*)aVal1)->mVal;
     double dval2 = ((NumberValue*)aVal2)->mVal;
 
-    if (txDouble::isNaN(dval1))
-        return txDouble::isNaN(dval2) ? 0 : -mAscending;
+    if (MOZ_DOUBLE_IS_NaN(dval1))
+        return MOZ_DOUBLE_IS_NaN(dval2) ? 0 : -mAscending;
 
-    if (txDouble::isNaN(dval2))
+    if (MOZ_DOUBLE_IS_NaN(dval2))
         return mAscending;
 
     if (dval1 == dval2)

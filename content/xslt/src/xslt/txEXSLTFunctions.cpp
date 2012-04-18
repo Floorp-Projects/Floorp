@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/Util.h"
 
 #include "nsIAtom.h"
@@ -611,20 +612,20 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
 
             if (nodes->isEmpty()) {
                 return aContext->recycler()->
-                    getNumberResult(txDouble::NaN, aResult);
+                    getNumberResult(MOZ_DOUBLE_NaN(), aResult);
             }
 
             bool findMax = mType == MAX;
 
-            double res = findMax ? txDouble::NEGATIVE_INFINITY :
-                                   txDouble::POSITIVE_INFINITY;
+            double res = findMax ? MOZ_DOUBLE_NEGATIVE_INFINITY() :
+                                   MOZ_DOUBLE_POSITIVE_INFINITY();
             PRInt32 i, len = nodes->size();
             for (i = 0; i < len; ++i) {
                 nsAutoString str;
                 txXPathNodeUtils::appendNodeValue(nodes->get(i), str);
                 double val = txDouble::toDouble(str);
-                if (txDouble::isNaN(val)) {
-                    res = txDouble::NaN;
+                if (MOZ_DOUBLE_IS_NaN(val)) {
+                    res = MOZ_DOUBLE_NaN();
                     break;
                 }
 
@@ -654,15 +655,15 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
             NS_ENSURE_SUCCESS(rv, rv);
 
             bool findMax = mType == HIGHEST;
-            double res = findMax ? txDouble::NEGATIVE_INFINITY :
-                                   txDouble::POSITIVE_INFINITY;
+            double res = findMax ? MOZ_DOUBLE_NEGATIVE_INFINITY() :
+                                   MOZ_DOUBLE_POSITIVE_INFINITY();
             PRInt32 i, len = nodes->size();
             for (i = 0; i < len; ++i) {
                 nsAutoString str;
                 const txXPathNode& node = nodes->get(i);
                 txXPathNodeUtils::appendNodeValue(node, str);
                 double val = txDouble::toDouble(str);
-                if (txDouble::isNaN(val)) {
+                if (MOZ_DOUBLE_IS_NaN(val)) {
                     resultSet->clear();
                     break;
                 }

@@ -56,11 +56,6 @@
 
 #include "jstypedarray.h"
 
-#if defined(USE_ANGLE)
-// shader translator
-#include "angle/ShaderLang.h"
-#endif
-
 #include "WebGLTexelConversions.h"
 #include "WebGLValidateStrings.h"
 
@@ -3029,8 +3024,14 @@ WebGLContext::GetUniformLocation(nsIWebGLProgram *pobj, const nsAString& name, n
     GLint intlocation = gl->fGetUniformLocation(progname, mappedName.get());
 
     WebGLUniformLocation *loc = nsnull;
-    if (intlocation >= 0)
-        NS_ADDREF(loc = new WebGLUniformLocation(this, prog, intlocation));
+    if (intlocation >= 0) {
+        WebGLUniformInfo info = prog->GetUniformInfoForMappedIdentifier(mappedName);
+        loc = new WebGLUniformLocation(this,
+                                       prog,
+                                       intlocation,
+                                       info);
+        NS_ADDREF(loc);
+    }
     *retval = loc;
     return NS_OK;
 }
@@ -4139,14 +4140,39 @@ WebGLContext::name(nsIWebGLUniformLocation *aLocation, const JS::Value& aValue, 
     if (JS_GetTypedArrayType(wa) != js::TypedArray::arrayType) {                \
         return ErrorInvalidOperation(#name ": array must be " #arrayType);      \
     }                                                                           \
-    if (JS_GetTypedArrayLength(wa) == 0 ||                                      \
-        JS_GetTypedArrayLength(wa) % cnt != 0) {                                \
-        return ErrorInvalidValue(#name ": array must be > 0 elements and have " \
-                                "a length multiple of %d", cnt);                \
+    int elementSize = location_object->ElementSize();                           \
+    if (cnt != elementSize) {                                                   \
+        return ErrorInvalidOperation(                                           \
+            #name ": this function expected a uniform of element size %d,"      \
+            " got a uniform of element size %d",                                \
+            cnt,                                                                \
+            elementSize);                                                       \
+    }                                                                           \
+    PRUint32 arrayLength = JS_GetTypedArrayLength(wa);                          \
+    const WebGLUniformInfo& info = location_object->Info();                     \
+    PRUint32 expectedArrayLength = cnt * info.arraySize;                        \
+    if (arrayLength < expectedArrayLength ||                                    \
+        (arrayLength % cnt))                                                    \
+    {                                                                           \
+        return ErrorInvalidValue("%s: expected an array of length a multiple of" \
+                                 " %d and at least %d, got an array of length %d", \
+                                 #name,                                         \
+                                 cnt,                                           \
+                                 expectedArrayLength,                           \
+                                 arrayLength);                                  \
+    }                                                                           \
+    if (!info.isArray &&                                                        \
+        arrayLength > expectedArrayLength) {                                    \
+        return ErrorInvalidOperation("%s: expected an array of length exactly %d" \
+                                     " (since this uniform is not an array uniform)," \
+                                     " got an array of length %d", \
+                                 #name,                                         \
+                                 expectedArrayLength,                           \
+                                 arrayLength);                                  \
     }                                                                           \
                                                                                 \
     MakeContextCurrent();                                                       \
-    gl->f##name(location, JS_GetTypedArrayLength(wa) / cnt,                     \
+    gl->f##name(location, info.arraySize,                                       \
                 static_cast<ptrType*>(JS_GetTypedArrayData(wa)));               \
     return NS_OK;                                                               \
 }
@@ -4168,12 +4194,37 @@ WebGLContext::name(nsIWebGLUniformLocation* aLocation, bool aTranspose,         
     nsIWebGLUniformLocation* ploc = aLocation;                                  \
     OBTAIN_UNIFORM_LOCATION(#name ": location")                                 \
     if (JS_GetTypedArrayType(wa) != js::TypedArray::TYPE_FLOAT32) {             \
-        return ErrorInvalidValue(#name ": array must be TYPE_FLOAT32");         \
+        return ErrorInvalidValue(#name ": array must be of Float32 type");      \
     }                                                                           \
-    if (JS_GetTypedArrayLength(wa) == 0 ||                                      \
-        JS_GetTypedArrayLength(wa) % (dim*dim) != 0) {                          \
-        return ErrorInvalidValue(#name ": array length must be >0 and "         \
-                                 "multiple of %d", dim*dim);                    \
+    int elementSize = location_object->ElementSize();                           \
+    if (dim*dim != elementSize) {                                               \
+        return ErrorInvalidOperation(                                           \
+            #name ": this function expected a uniform of element size %d,"      \
+            " got a uniform of element size %d",                                \
+            dim*dim,                                                            \
+            elementSize);                                                       \
+    }                                                                           \
+    PRUint32 arrayLength = JS_GetTypedArrayLength(wa);                          \
+    const WebGLUniformInfo& info = location_object->Info();                     \
+    PRUint32 expectedArrayLength = dim * dim * info.arraySize;                  \
+    if (arrayLength < expectedArrayLength ||                                    \
+        (arrayLength % (dim*dim)))                                              \
+    {                                                                           \
+        return ErrorInvalidValue("%s: expected an array of length a multiple of" \
+                                 " %d and at least %d, got an array of length %d", \
+                                 #name,                                         \
+                                 dim*dim,                                       \
+                                 expectedArrayLength,                           \
+                                 arrayLength);                                  \
+    }                                                                           \
+    if (!info.isArray &&                                          \
+        arrayLength > expectedArrayLength) {                                    \
+        return ErrorInvalidOperation("%s: expected an array of length exactly %d" \
+                                     " (since this uniform is not an array uniform)," \
+                                     " got an array of length %d", \
+                                 #name,                                         \
+                                 expectedArrayLength,                           \
+                                 arrayLength);                                  \
     }                                                                           \
     if (aTranspose) {                                                           \
         return ErrorInvalidValue(#name ": transpose must be FALSE as per the "  \
@@ -4181,7 +4232,7 @@ WebGLContext::name(nsIWebGLUniformLocation* aLocation, bool aTranspose,         
     }                                                                           \
                                                                                 \
     MakeContextCurrent();                                                       \
-    gl->f##name(location, JS_GetTypedArrayLength(wa) / (dim*dim), false,        \
+    gl->f##name(location, info.arraySize, false,                  \
                 static_cast<WebGLfloat*>(JS_GetTypedArrayData(wa)));            \
     return NS_OK;                                                               \
 }
@@ -4534,11 +4585,10 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
                                        targetShaderSourceLanguage,
                                        &resources);
 
-        int compileOptions = 0;
+        int compileOptions = SH_ATTRIBUTES_UNIFORMS;
         if (useShaderSourceTranslation) {
             compileOptions |= SH_OBJECT_CODE
-                            | SH_MAP_LONG_VARIABLE_NAMES
-                            | SH_ATTRIBUTES_UNIFORMS;
+                            | SH_MAP_LONG_VARIABLE_NAMES;
 #ifdef XP_MACOSX
             // work around bug 665578
             if (gl->WorkAroundDriverBugs() &&
@@ -4581,11 +4631,37 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
 
         shader->mAttributes.Clear();
         shader->mUniforms.Clear();
+        shader->mUniformInfos.Clear();
+
         nsAutoArrayPtr<char> attribute_name(new char[attrib_max_length+1]);
         nsAutoArrayPtr<char> uniform_name(new char[uniform_max_length+1]);
         nsAutoArrayPtr<char> mapped_name(new char[mapped_max_length+1]);
 
+
+        for (int i = 0; i < num_uniforms; i++) {
+            int length, size;
+            ShDataType type;
+            ShGetActiveUniform(compiler, i,
+                                &length, &size, &type,
+                                uniform_name,
+                                mapped_name);
+            if (useShaderSourceTranslation) {
+                shader->mUniforms.AppendElement(WebGLMappedIdentifier(
+                                                    nsDependentCString(uniform_name),
+                                                    nsDependentCString(mapped_name)));
+            }
+
+            // we always query uniform info, regardless of useShaderSourceTranslation,
+            // as we need it to validate uniform setter calls, and it doesn't rely on
+            // shader translation.
+            shader->mUniformInfos.AppendElement(WebGLUniformInfo(
+                                                    size,
+                                                    length > 1 && mapped_name[length - 1] == ']',
+                                                    type));
+        }
+
         if (useShaderSourceTranslation) {
+
             for (int i = 0; i < num_attributes; i++) {
                 int length, size;
                 ShDataType type;
@@ -4596,18 +4672,6 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
                 shader->mAttributes.AppendElement(WebGLMappedIdentifier(
                                                     nsDependentCString(attribute_name),
                                                     nsDependentCString(mapped_name)));
-            }
-
-            for (int i = 0; i < num_uniforms; i++) {
-                int length, size;
-                ShDataType type;
-                ShGetActiveUniform(compiler, i,
-                                   &length, &size, &type,
-                                   uniform_name,
-                                   mapped_name);
-                shader->mUniforms.AppendElement(WebGLMappedIdentifier(
-                                                  nsDependentCString(uniform_name),
-                                                  nsDependentCString(mapped_name)));
             }
 
             int len = 0;

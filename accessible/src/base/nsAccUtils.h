@@ -44,7 +44,6 @@
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleTable.h"
 
-#include "nsARIAMap.h"
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
 
@@ -60,6 +59,7 @@ class nsAccessible;
 class nsHyperTextAccessible;
 class nsHTMLTableAccessible;
 class nsDocAccessible;
+struct nsRoleMapEntry;
 #ifdef MOZ_XUL
 class nsXULTreeAccessible;
 #endif
@@ -248,16 +248,6 @@ public:
    * @param aAccessNode  the accessible
    */
   static nsIntPoint GetScreenCoordsForParent(nsAccessNode *aAccessNode);
-
-  /**
-   * Get the role map entry for a given DOM node. This will use the first
-   * ARIA role if the role attribute provides a space delimited list of roles.
-   *
-   * @param aNode  [in] the DOM node to get the role map entry for
-   * @return        a pointer to the role map entry for the ARIA role, or nsnull
-   *                if none
-   */
-  static nsRoleMapEntry *GetRoleMapEntry(nsINode *aNode);
 
   /**
    * Return the role of the given accessible.

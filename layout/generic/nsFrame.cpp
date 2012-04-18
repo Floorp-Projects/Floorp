@@ -1409,16 +1409,19 @@ nsIFrame::HasBorder() const
 nsresult
 nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
                                         const nsDisplayListSet& aLists,
-                                        bool                    aForceBackground)
+                                        bool                    aForceBackground,
+                                        nsDisplayBackground**   aBackground)
 {
   // Here we don't try to detect background propagation. Frames that might
   // receive a propagated background should just set aForceBackground to
   // true.
   if (aBuilder->IsForEventDelivery() || aForceBackground ||
       !GetStyleBackground()->IsTransparent() || GetStyleDisplay()->mAppearance) {
-    return aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayBackground(aBuilder, this));
+    nsDisplayBackground* bg = new (aBuilder) nsDisplayBackground(aBuilder, this);
+    *aBackground = bg;
+    return aLists.BorderBackground()->AppendNewToTop(bg);
   }
+  *aBackground = nsnull;
   return NS_OK;
 }
 
@@ -1433,24 +1436,28 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
 
-  bool hasBoxShadow = GetStyleBorder()->mBoxShadow != nsnull;
-  if (hasBoxShadow) {
+  nsCSSShadowArray* shadows = GetStyleBorder()->mBoxShadow;
+  if (shadows && shadows->HasShadowWithInset(false)) {
     nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayBoxShadowOuter(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  nsDisplayBackground* bg;
   nsresult rv =
-    DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground);
+    DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground, &bg);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (hasBoxShadow) {
+  if (shadows && shadows->HasShadowWithInset(true)) {
     rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayBoxShadowInner(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  
-  if (HasBorder()) {
+
+  // If there's a themed background, we should not create a border item.
+  // It won't be rendered. Calling HasBorder() for themed frames is expensive
+  // too (calls into native theme code), so avoiding it is valuable.
+  if ((!bg || !bg->IsThemed()) && HasBorder()) {
     rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayBorder(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2148,13 +2155,17 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT)) {
     // Genuine stacking contexts, and positioned pseudo-stacking-contexts,
     // go in this level.
-    rv = aLists.PositionedDescendants()->AppendNewToTop(new (aBuilder)
-        nsDisplayWrapList(aBuilder, child, &list));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (!list.IsEmpty()) {
+      rv = aLists.PositionedDescendants()->AppendNewToTop(new (aBuilder)
+          nsDisplayWrapList(aBuilder, child, &list));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   } else if (disp->IsFloating()) {
-    rv = aLists.Floats()->AppendNewToTop(new (aBuilder)
-        nsDisplayWrapList(aBuilder, child, &list));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (!list.IsEmpty()) {
+      rv = aLists.Floats()->AppendNewToTop(new (aBuilder)
+          nsDisplayWrapList(aBuilder, child, &list));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   } else {
     aLists.Content()->AppendToTop(&list);
   }

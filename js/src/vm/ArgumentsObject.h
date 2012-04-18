@@ -138,7 +138,7 @@ class ArgumentsObject : public JSObject
 
     void initInitialLength(uint32_t length);
     void initData(ArgumentsData *data);
-    static ArgumentsObject *create(JSContext *cx, uint32_t argc, JSObject &callee);
+    static ArgumentsObject *create(JSContext *cx, uint32_t argc, HandleObject callee);
 
   public:
     static const uint32_t RESERVED_SLOTS = 3;
@@ -159,7 +159,7 @@ class ArgumentsObject : public JSObject
      * Cannot recover any fields of the arguments object, and replace it by
      * the poison value.
      */
-    static ArgumentsObject *createPoison(JSContext *cx, uint32_t argc, JSObject &callee);
+    static ArgumentsObject *createPoison(JSContext *cx, uint32_t argc, HandleObject callee);
 
     /*
      * Return the initial length of the arguments.  This may differ from the

@@ -54,6 +54,8 @@
 #include "frontend/Parser.h"
 #include "frontend/ParseMaps.h"
 
+#include "vm/ScopeObject.h"
+
 namespace js {
 
 typedef HashSet<JSAtom *> FuncStmtSet;
@@ -136,12 +138,12 @@ struct StmtInfo {
     ptrdiff_t       update;         /* loop update offset (top if none) */
     ptrdiff_t       breaks;         /* offset of last break in loop */
     ptrdiff_t       continues;      /* offset of last continue in loop */
-    union {
-        JSAtom      *label;         /* name of LABEL */
-        StaticBlockObject *blockObj;/* block scope object */
-    };
+    RootedVarAtom   label;          /* name of LABEL */
+    RootedVar<StaticBlockObject *> blockObj; /* block scope object */
     StmtInfo        *down;          /* info for enclosing statement */
     StmtInfo        *downScope;     /* next enclosing lexical scope */
+
+    StmtInfo(JSContext *cx) : label(cx), blockObj(cx) {}
 };
 
 #define SIF_SCOPE        0x0001     /* statement has its own lexical scope */
@@ -165,7 +167,13 @@ struct StmtInfo {
 
 JS_ENUM_HEADER(TreeContextFlags, uint32_t)
 {
-    /* TreeContext is BytecodeEmitter */
+    /*
+     * There are two parsing modes.
+     * - If we are parsing only to get the parse tree, all TreeContexts used
+     *   are truly TreeContexts, and this flag is clear for each of them.
+     * - If we are parsing to do bytecode compilation, all TreeContexts are
+     *   actually BytecodeEmitters and this flag is set for each of them.
+     */
     TCF_COMPILING =                            0x1,
 
     /* parsing inside function body */
@@ -336,7 +344,8 @@ struct TreeContext {                /* tree context for semantic checks */
                                        non-zero depth in current paren tree */
     StmtInfo        *topStmt;       /* top of statement info stack */
     StmtInfo        *topScopeStmt;  /* top lexical scope statement */
-    StaticBlockObject *blockChain;  /* compile block scope chain (NB: one
+    RootedVar<StaticBlockObject *> blockChain;
+                                    /* compile time block scope chain (NB: one
                                        deeper than the topScopeStmt/downScope
                                        chain when in head of let block/expr) */
     ParseNode       *blockNode;     /* parse node for a block with let declarations
@@ -351,11 +360,9 @@ struct TreeContext {                /* tree context for semantic checks */
                                        inside a generator expression */
 
   private:
-    union {
-        JSFunction  *fun_;          /* function to store argument and variable
+    RootedVarFunction fun_;         /* function to store argument and variable
                                        names when flags & TCF_IN_FUNCTION */
-        JSObject    *scopeChain_;   /* scope chain object for the script */
-    };
+    RootedVarObject   scopeChain_;  /* scope chain object for the script */
 
   public:
     JSFunction *fun() const {
@@ -376,8 +383,16 @@ struct TreeContext {                /* tree context for semantic checks */
     }
 
     OwnedAtomDefnMapPtr lexdeps;    /* unresolved lexical name dependencies */
-    TreeContext     *parent;        /* enclosing function or global context */
-    unsigned           staticLevel;    /* static compilation unit nesting level */
+
+    /*
+     * Enclosing function or global context.  If |this| is truly a TreeContext,
+     * then |parent| will also be a TreeContext.  If |this| is a
+     * BytecodeEmitter, then |parent| will also be a BytecodeEmitter.  See the
+     * comment on TCF_COMPILING.
+     */
+    TreeContext     *parent;
+
+    unsigned        staticLevel;    /* static compilation unit nesting level */
 
     FunctionBox     *funbox;        /* null or box for function we're compiling
                                        if (flags & TCF_IN_FUNCTION) and not in
@@ -428,19 +443,11 @@ struct TreeContext {                /* tree context for semantic checks */
      */
     bool atBodyLevel() { return !topStmt || (topStmt->flags & SIF_BODY_BLOCK); }
 
-    /* Test whether we're in a statement of given type. */
-    bool inStatement(StmtType type);
-
     bool inStrictMode() const {
         return flags & TCF_STRICT_MODE_CODE;
     }
 
     inline bool needStrictChecks();
-
-    // Return true there is a generator function within |skip| lexical scopes
-    // (going upward) from this context's lexical scope. Always return true if
-    // this context is itself a generator.
-    bool skipSpansGenerator(unsigned skip);
 
     bool compileAndGo() const { return flags & TCF_COMPILE_N_GO; }
     bool inFunction() const { return flags & TCF_IN_FUNCTION; }
@@ -544,7 +551,8 @@ class GCConstList {
 
 struct GlobalScope {
     GlobalScope(JSContext *cx, JSObject *globalObj, BytecodeEmitter *bce)
-      : globalObj(globalObj), bce(bce), defs(cx), names(cx)
+      : globalObj(cx, globalObj), bce(bce), defs(cx), names(cx),
+        defsRoot(cx, &defs), namesRoot(cx, &names)
     { }
 
     struct GlobalDef {
@@ -558,7 +566,7 @@ struct GlobalScope {
         GlobalDef(JSAtom *atom, FunctionBox *box) : atom(atom), funbox(box) { }
     };
 
-    JSObject        *globalObj;
+    RootedVarObject globalObj;
     BytecodeEmitter *bce;
 
     /*
@@ -571,6 +579,13 @@ struct GlobalScope {
      */
     Vector<GlobalDef, 16> defs;
     AtomIndexMap      names;
+
+    /*
+     * Protect the inline elements within defs/names from being clobbered by
+     * root analysis. The atoms in this structure must be separately rooted.
+     */
+    JS::SkipRoot      defsRoot;
+    JS::SkipRoot      namesRoot;
 };
 
 struct BytecodeEmitter : public TreeContext

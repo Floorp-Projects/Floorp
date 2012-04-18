@@ -282,8 +282,6 @@ public:
 
     void FireAndWaitForTracerEvent();
 
-    bool GetAccessibilityEnabled();
-
     class AutoLocalJNIFrame {
     public:
         AutoLocalJNIFrame(int nEntries = 128)
@@ -388,8 +386,6 @@ public:
     void HandleGeckoMessage(const nsAString& message, nsAString &aRet);
 
     nsCOMPtr<nsIAndroidDrawMetadataProvider> GetDrawMetadataProvider();
-
-    void EmitGeckoAccessibilityEvent (PRInt32 eventType, const nsTArray<nsString>& text, const nsAString& description, bool enabled, bool checked, bool password);
 
     void CheckURIVisited(const nsAString& uri);
     void MarkURIVisited(const nsAString& uri);
@@ -523,11 +519,9 @@ protected:
     jmethodID jEnableBatteryNotifications;
     jmethodID jDisableBatteryNotifications;
     jmethodID jGetCurrentBatteryInformation;
-    jmethodID jGetAccessibilityEnabled;
     jmethodID jHandleGeckoMessage;
     jmethodID jCheckUriVisited;
     jmethodID jMarkUriVisited;
-    jmethodID jEmitGeckoAccessibilityEvent;
     jmethodID jRemovePluginView;
 
     jmethodID jNumberOfMessages;

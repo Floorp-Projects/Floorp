@@ -746,11 +746,23 @@ $(error SHARED_LIBRARY_LIBS must contain .$(LIB_SUFFIX) files only)
 endif
 
 # Create dependencies on static (and shared EXTRA_DSO_LIBS) libraries
-DO_EXPAND_LIBS = $(foreach f,$(1),$(if $(filter %.$(LIB_SUFFIX),$(f)),$(if $(wildcard $(f).$(LIBS_DESC_SUFFIX)),$(f).$(LIBS_DESC_SUFFIX),$(if $(wildcard $(f)),$(f)))))
-LIBS_DEPS = $(call DO_EXPAND_LIBS,$(filter %.$(LIB_SUFFIX),$(LIBS) $(if $(PROGRAM)$(SIMPLE_PROGRAMS),$(MOZ_GLUE_PROGRAM_LDFLAGS))))
-SHARED_LIBRARY_LIBS_DEPS = $(call DO_EXPAND_LIBS,$(SHARED_LIBRARY_LIBS))
+ifneq (,$(strip $(filter %.$(LIB_SUFFIX),$(LIBS) $(EXTRA_DSO_LDOPTS)) $(SHARED_LIBRARY_LIBS) $(EXTRA_DSO_LIBS)))
+$(MDDEPDIR)/libs: Makefile.in
+	@mkdir -p $(MDDEPDIR)
+	@$(EXPAND_LIBS_DEPS) LIBS_DEPS = $(filter %.$(LIB_SUFFIX),$(LIBS)) , \
+	                     SHARED_LIBRARY_LIBS_DEPS = $(SHARED_LIBRARY_LIBS) , \
+	                     DSO_LDOPTS_DEPS = $(EXTRA_DSO_LIBS) $(filter %.$(LIB_SUFFIX), $(EXTRA_DSO_LDOPTS)) > $@
+
+ifneq (,$(wildcard $(MDDEPDIR)/libs))
+include $(MDDEPDIR)/libs
+endif
+
+$(MDDEPDIR)/libs: $(wildcard $(filter %.$(LIBS_DESC_SUFFIX),$(LIBS_DEPS) $(SHARED_LIBRARY_LIBS_DEPS) $(DSO_LDOPTS_DEPS)))
+
+EXTRA_DEPS += $(MDDEPDIR)/libs
+endif
+
 HOST_LIBS_DEPS = $(filter %.$(LIB_SUFFIX),$(HOST_LIBS))
-DSO_LDOPTS_DEPS = $(call DO_EXPAND_LIBS,$(EXTRA_DSO_LIBS) $(filter %.$(LIB_SUFFIX), $(EXTRA_DSO_LDOPTS)))
 
 # Dependencies which, if modified, should cause everything to rebuild
 GLOBAL_DEPS += Makefile Makefile.in $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk
@@ -869,12 +881,8 @@ ifdef MOZ_PROFILE_GENERATE
 	touch -t `date +%Y%m%d%H%M.%S -d "now+5seconds"` pgo.relink
 endif
 else # !WINNT || GNU_CC
-ifeq ($(CPP_PROG_LINK),1)
 	$(EXPAND_CCC) -o $@ $(CXXFLAGS) $(PROGOBJS) $(RESFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(WRAP_LDFLAGS) $(LIBS_DIR) $(LIBS) $(MOZ_GLUE_PROGRAM_LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(EXE_DEF_FILE)
 	@$(call CHECK_STDCXX,$@)
-else # ! CPP_PROG_LINK
-	$(EXPAND_CC) -o $@ $(CFLAGS) $(PROGOBJS) $(RESFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(WRAP_LDFLAGS) $(LIBS_DIR) $(LIBS) $(MOZ_GLUE_PROGRAM_LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(EXE_DEF_FILE)
-endif # CPP_PROG_LINK
 endif # WINNT && !GNU_CC
 
 ifdef ENABLE_STRIP
@@ -927,12 +935,8 @@ ifdef MSMANIFEST_TOOL
 	fi
 endif	# MSVC with manifest tool
 else
-ifeq ($(CPP_PROG_LINK),1)
 	$(EXPAND_CCC) $(CXXFLAGS) -o $@ $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(WRAP_LDFLAGS) $(LIBS_DIR) $(LIBS) $(MOZ_GLUE_PROGRAM_LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS)
 	@$(call CHECK_STDCXX,$@)
-else
-	$(EXPAND_CC) $(CFLAGS) $(OUTOPTION)$@ $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(WRAP_LDFLAGS) $(LIBS_DIR) $(LIBS) $(MOZ_GLUE_PROGRAM_LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS)
-endif # CPP_PROG_LINK
 endif # WINNT && !GNU_CC
 
 ifdef ENABLE_STRIP
@@ -1111,24 +1115,26 @@ endif # COMPILER_DEPEND
 
 endif # MOZ_AUTO_DEPS
 
+$(OBJS) $(HOST_OBJS): $(GLOBAL_DEPS)
+
 # Rules for building native targets must come first because of the host_ prefix
-host_%.$(OBJ_SUFFIX): %.c $(GLOBAL_DEPS)
+host_%.$(OBJ_SUFFIX): %.c
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
-host_%.$(OBJ_SUFFIX): %.cpp $(GLOBAL_DEPS)
+host_%.$(OBJ_SUFFIX): %.cpp
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
-host_%.$(OBJ_SUFFIX): %.cc $(GLOBAL_DEPS)
+host_%.$(OBJ_SUFFIX): %.cc
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
-host_%.$(OBJ_SUFFIX): %.m $(GLOBAL_DEPS)
+host_%.$(OBJ_SUFFIX): %.m
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CFLAGS) $(HOST_CMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
-host_%.$(OBJ_SUFFIX): %.mm $(GLOBAL_DEPS)
+host_%.$(OBJ_SUFFIX): %.mm
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(HOST_CMMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
@@ -1137,7 +1143,7 @@ host_%.$(OBJ_SUFFIX): %.mm $(GLOBAL_DEPS)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) $(OUTOPTION)$@ $(_VPATH_SRCS)
 
-%.$(OBJ_SUFFIX): %.c $(GLOBAL_DEPS)
+%.$(OBJ_SUFFIX): %.c
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
@@ -1145,23 +1151,23 @@ host_%.$(OBJ_SUFFIX): %.mm $(GLOBAL_DEPS)
 # DEFINES and ACDEFINES are needed here to enable conditional compilation of Q_OBJECTs:
 # 'moc' only knows about #defines it gets on the command line (-D...), not in
 # included headers like mozilla-config.h
-moc_%.cpp: %.h $(GLOBAL_DEPS)
+moc_%.cpp: %.h
 	$(ELOG) $(MOC) $(DEFINES) $(ACDEFINES) $< $(OUTOPTION)$@
 
-moc_%.cc: %.cc $(GLOBAL_DEPS)
+moc_%.cc: %.cc
 	$(ELOG) $(MOC) $(DEFINES) $(ACDEFINES) $(_VPATH_SRCS:.cc=.h) $(OUTOPTION)$@
 
-qrc_%.cpp: %.qrc $(GLOBAL_DEPS)
+qrc_%.cpp: %.qrc
 	$(ELOG) $(RCC) -name $* $< $(OUTOPTION)$@
 
 ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
-%.$(OBJ_SUFFIX): %.$(ASM_SUFFIX) $(GLOBAL_DEPS)
+%.$(OBJ_SUFFIX): %.$(ASM_SUFFIX)
 	$(AS) $(ASOUTOPTION)$@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(_VPATH_SRCS)
 endif
 
-%.$(OBJ_SUFFIX): %.S $(GLOBAL_DEPS)
+%.$(OBJ_SUFFIX): %.S
 	$(AS) -o $@ $(ASFLAGS) -c $<
 
 %:: %.cpp $(GLOBAL_DEPS)
@@ -1171,12 +1177,12 @@ endif
 #
 # Please keep the next two rules in sync.
 #
-%.$(OBJ_SUFFIX): %.cc $(GLOBAL_DEPS)
+%.$(OBJ_SUFFIX): %.cc
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 
-%.$(OBJ_SUFFIX): %.cpp $(GLOBAL_DEPS)
+%.$(OBJ_SUFFIX): %.cpp
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 ifdef STRICT_CPLUSPLUS_SUFFIX
@@ -1187,12 +1193,12 @@ else
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 endif #STRICT_CPLUSPLUS_SUFFIX
 
-$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm $(GLOBAL_DEPS)
+$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $(COMPILE_CMMFLAGS) $(_VPATH_SRCS)
 
-$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.m $(GLOBAL_DEPS)
+$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.m
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $(COMPILE_CMFLAGS) $(_VPATH_SRCS)

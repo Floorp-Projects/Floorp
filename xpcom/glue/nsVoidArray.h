@@ -41,6 +41,8 @@
 
 #include "nsDebug.h"
 
+#include "mozilla/StandardInteger.h"
+
 // Comparator callback function for sorting array values.
 typedef int (* nsVoidArrayComparatorFunc)
             (const void* aElement1, const void* aElement2, void* aData);
@@ -297,19 +299,19 @@ private:
 
   bool HasSingle() const
   {
-    return !!(reinterpret_cast<PRWord>(mImpl) & 0x1);
+    return !!(reinterpret_cast<intptr_t>(mImpl) & 0x1);
   }
   void* GetSingle() const
   {
     NS_ASSERTION(HasSingle(), "wrong type");
     return reinterpret_cast<void*>
-                           (reinterpret_cast<PRWord>(mImpl) & ~0x1);
+                           (reinterpret_cast<intptr_t>(mImpl) & ~0x1);
   }
   void SetSingle(void *aChild)
   {
     NS_ASSERTION(HasSingle() || !mImpl, "overwriting array");
     mImpl = reinterpret_cast<Impl*>
-                            (reinterpret_cast<PRWord>(aChild) | 0x1);
+                            (reinterpret_cast<intptr_t>(aChild) | 0x1);
   }
   bool IsEmpty() const
   {

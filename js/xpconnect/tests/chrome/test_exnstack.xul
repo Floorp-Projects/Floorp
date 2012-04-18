@@ -54,7 +54,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=735544
 
       ok(/throwAsOuter/.exec(stackFrames[2]),
          "The 3rd-from-bottom frame should be thrown by the other");
-      ok(/Window/.exec(stackFrames[2]), "Should have a |Window| argument");
 
       ok(!/throwAsChrome/.exec(e.stack),
          "The entire stack should not cross into chrome.");

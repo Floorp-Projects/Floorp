@@ -277,10 +277,10 @@ class IonBuilder : public MIRGenerator
 
     MDefinition *createThisNative();
     MDefinition *createThisScripted(MDefinition *callee);
-    MDefinition *createThisScriptedSingleton(JSFunction *target, JSObject *proto, MDefinition *callee);
-    MDefinition *createThis(JSFunction *target, MDefinition *callee);
+    MDefinition *createThisScriptedSingleton(HandleFunction target, HandleObject proto, MDefinition *callee);
+    MDefinition *createThis(HandleFunction target, MDefinition *callee);
 
-    bool makeCall(JSFunction *target, uint32 argc, bool constructing);
+    bool makeCall(HandleFunction target, uint32 argc, bool constructing);
 
     bool jsop_add(MDefinition *left, MDefinition *right);
     bool jsop_bitnot();

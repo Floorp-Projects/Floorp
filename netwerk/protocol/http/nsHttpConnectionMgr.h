@@ -105,6 +105,10 @@ public:
     // there are no more idle connections or active spdy ones
     void ConditionallyStopPruneDeadConnectionsTimer();
 
+    // Stops timer used for the read timeout tick if there are no currently
+    // active connections.
+    void ConditionallyStopReadTimeoutTick();
+
     // adds a transaction to the list of managed transactions.
     nsresult AddTransaction(nsHttpTransaction *, PRInt32 priority);
 

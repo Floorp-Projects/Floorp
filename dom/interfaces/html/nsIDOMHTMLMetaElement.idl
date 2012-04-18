@@ -50,7 +50,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(75f9f39c-7389-4acb-9100-cda379151b12)]
+[scriptable, uuid(AA3B1280-669C-43ED-8815-B60B395A8D66)]
 interface nsIDOMHTMLMetaElement : nsIDOMHTMLElement
 {
            attribute DOMString        content;

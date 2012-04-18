@@ -193,6 +193,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Preferences:Set", false);
     Services.obs.addObserver(this, "ScrollTo:FocusedInput", false);
     Services.obs.addObserver(this, "Sanitize:ClearAll", false);
+    Services.obs.addObserver(this, "Telemetry:Add", false);
     Services.obs.addObserver(this, "PanZoom:PanZoom", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
     Services.obs.addObserver(this, "Viewport:Change", false);
@@ -249,8 +250,10 @@ var BrowserApp = {
     // Init FormHistory
     Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
+    let loadParams = {};
     let url = "about:home";
     let forceRestore = false;
+    let pinned = false;
     if ("arguments" in window) {
       if (window.arguments[0])
         url = window.arguments[0];
@@ -260,7 +263,12 @@ var BrowserApp = {
         gScreenWidth = window.arguments[2];
       if (window.arguments[3])
         gScreenHeight = window.arguments[3];
+      if (window.arguments[4])
+        pinned = window.arguments[4];
     }
+
+    if (url == "about:empty")
+      loadParams.flags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
 
     // XXX maybe we don't do this if the launch was kicked off from external
     Services.io.offline = false;
@@ -284,7 +292,8 @@ var BrowserApp = {
 
       // Open any commandline URLs, except the homepage
       if (url && url != "about:home") {
-        this.addTab(url);
+        loadParams.pinned = pinned;
+        this.addTab(url, loadParams);
       } else {
         // Let the session make a restored tab active
         restoreToFront = true;
@@ -313,7 +322,9 @@ var BrowserApp = {
       // Start the restore
       ss.restoreLastSession(restoreToFront, forceRestore);
     } else {
-      this.addTab(url, { showProgress: url != "about:home" });
+      loadParams.showProgress = (url != "about:home");
+      loadParams.pinned = pinned;
+      this.addTab(url, loadParams);
 
       // show telemetry door hanger if we aren't restoring a session
       this._showTelemetryPrompt();
@@ -564,6 +575,12 @@ var BrowserApp = {
     if (selected)
       this.selectedTab = newTab;
 
+    let pinned = "pinned" in aParams ? aParams.pinned : false;
+    if (pinned) {
+      let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+      ss.setTabValue(newTab, "appOrigin", aURI);
+    }
+
     let evt = document.createEvent("UIEvents");
     evt.initUIEvent("TabOpen", true, false, window, null);
     newTab.browser.dispatchEvent(evt);
@@ -748,12 +765,18 @@ var BrowserApp = {
             case Ci.nsIPrefBranch.PREF_STRING:
             default:
               pref.type = "string";
-              pref.value = Services.prefs.getComplexValue(prefName, Ci.nsIPrefLocalizedString).data;
+              try {
+                // Try in case it's a localized string (will throw an exception if not)
+                pref.value = Services.prefs.getComplexValue(prefName, Ci.nsIPrefLocalizedString).data;
+              } catch (e) {
+                pref.value = Services.prefs.getCharPref(prefName);
+              }
               break;
           }
         } catch (e) {
-            // preference does not exist; do not send it
-            continue;
+          dump("Error reading pref [" + prefName + "]: " + e);
+          // preference does not exist; do not send it
+          continue;
         }
 
         // some preferences use integers or strings instead of booleans for
@@ -783,19 +806,29 @@ var BrowserApp = {
     } catch (e) {}
   },
 
+  addTelemetry: function addTelemetry(aData) {
+    let json = JSON.parse(aData);
+    var telemetry = Cc["@mozilla.org/base/telemetry;1"]
+          .getService(Ci.nsITelemetry);
+    let histogram = telemetry.getHistogramById(json.name);
+    histogram.add(json.value);
+  },
+
   setPreferences: function setPreferences(aPref) {
     let json = JSON.parse(aPref);
 
-    // The plugin pref is actually two separate prefs, so
-    // we need to handle it differently
     if (json.name == "plugin.enable") {
+      // The plugin pref is actually two separate prefs, so
+      // we need to handle it differently
       PluginHelper.setPluginPreference(json.value);
       return;
-    } else if(json.name == MasterPassword.pref) {
+    } else if (json.name == MasterPassword.pref) {
+      // MasterPassword pref is not real, we just need take action and leave
       if (MasterPassword.enabled)
         MasterPassword.removePassword(json.value);
       else
         MasterPassword.setPassword(json.value);
+      return;
     }
 
     // when sending to java, we normalized special preferences that use
@@ -812,11 +845,11 @@ var BrowserApp = {
         break;
     }
 
-    if (json.type == "bool")
+    if (json.type == "bool") {
       Services.prefs.setBoolPref(json.name, json.value);
-    else if (json.type == "int")
+    } else if (json.type == "int") {
       Services.prefs.setIntPref(json.name, json.value);
-    else {
+    } else {
       let pref = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(Ci.nsIPrefLocalizedString);
       pref.data = json.value;
       Services.prefs.setComplexValue(json.name, Ci.nsISupportsString, pref);
@@ -827,6 +860,7 @@ var BrowserApp = {
     let doc = aBrowser.contentDocument;
     if (!doc)
       return;
+
     let focused = doc.activeElement;
     if ((focused instanceof HTMLInputElement && focused.mozIsTextField(false)) || (focused instanceof HTMLTextAreaElement)) {
       let tab = BrowserApp.getTabForBrowser(aBrowser);
@@ -968,6 +1002,8 @@ var BrowserApp = {
       } else {
         profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
       }
+    } else if (aTopic == "Telemetry:Add") {
+      this.addTelemetry(aData);
     }
   },
 
@@ -1421,7 +1457,26 @@ nsBrowserAccess.prototype = {
       } catch(e) { }
     }
 
-    let newTab = (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW || aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB);
+    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+    let pinned = false;
+
+    if (aURI && aWhere == Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB) {
+      pinned = true;
+      let spec = aURI.spec;
+      let tabs = BrowserApp.tabs;
+      for (let i = 0; i < tabs.length; i++) {
+        let appOrigin = ss.getTabValue(tabs[i], "appOrigin");
+        if (appOrigin == spec) {
+          let tab = tabs[i];
+          BrowserApp.selectTab(tab);
+          return tab.browser;
+        }
+      }
+    }
+
+    let newTab = (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW ||
+                  aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB ||
+                  aWhere == Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB);
 
     if (newTab) {
       let parentId = -1;
@@ -1436,7 +1491,9 @@ nsBrowserAccess.prototype = {
                                                                       referrerURI: referrer,
                                                                       external: isExternal,
                                                                       parentId: parentId,
-                                                                      selected: true });
+                                                                      selected: true,
+                                                                      pinned: pinned });
+
       return tab.browser;
     }
 
@@ -1482,7 +1539,6 @@ function Tab(aURL, aParams) {
   this.contentDocumentIsDisplayed = true;
   this.clickToPlayPluginDoorhangerShown = false;
   this.clickToPlayPluginsActivated = false;
-  this.loadEventProcessed = false;
 }
 
 Tab.prototype = {
@@ -1535,7 +1591,6 @@ Tab.prototype = {
     this.browser.sessionHistory.addSHistoryListener(this);
 
     this.browser.addEventListener("DOMContentLoaded", this, true);
-    this.browser.addEventListener("load", this, true);
     this.browser.addEventListener("DOMLinkAdded", this, true);
     this.browser.addEventListener("DOMTitleChanged", this, true);
     this.browser.addEventListener("DOMWindowClose", this, true);
@@ -1580,7 +1635,6 @@ Tab.prototype = {
 
     this.browser.removeProgressListener(this);
     this.browser.removeEventListener("DOMContentLoaded", this, true);
-    this.browser.removeEventListener("load", this, true);
     this.browser.removeEventListener("DOMLinkAdded", this, true);
     this.browser.removeEventListener("DOMTitleChanged", this, true);
     this.browser.removeEventListener("DOMWindowClose", this, true);
@@ -1815,25 +1869,6 @@ Tab.prototype = {
         break;
       }
 
-      case "load": {
-        this.loadEventProcessed = true;
-        // Show a plugin doorhanger if there are no clickable overlays showing
-        let contentWindow = this.browser.contentWindow;
-        let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIDOMWindowUtils);
-        // XXX not sure if we should enable plugins for the parent documents...
-        let plugins = cwu.plugins;
-        let isAnyPluginVisible = false;
-        for (let plugin of plugins) {
-          let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-          if (overlay && !PluginHelper.isTooSmall(plugin, overlay))
-            isAnyPluginVisible = true;
-        }
-        if (plugins && plugins.length && !isAnyPluginVisible)
-          PluginHelper.showDoorHanger(this);
-        break;
-      }
-
       case "DOMLinkAdded": {
         let target = aEvent.originalTarget;
         if (!target.href || target.disabled)
@@ -1940,16 +1975,18 @@ Tab.prototype = {
       case "PluginClickToPlay": {
         let plugin = aEvent.target;
 
-        if (this.clickToPlayPluginsActivated) {
+        // Check if plugins have already been activated for this page, or if the user
+        // has set a permission to always play plugins on the site
+        if (this.clickToPlayPluginsActivated ||
+            Services.perms.testPermission(this.browser.currentURI, "plugins") == Services.perms.ALLOW_ACTION) {
           PluginHelper.playPlugin(plugin);
           return;
         }
 
-        // If the overlay is too small, hide the overlay and act like this
-        // is a hidden plugin object
+        // If the plugin is hidden, or if the overlay is too small, show a doorhanger notification
         let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
         if (!overlay || PluginHelper.isTooSmall(plugin, overlay)) {
-          if (this.loadEventProcessed && !this.clickToPlayPluginDoorhangerShown)
+          if (!this.clickToPlayPluginDoorhangerShown)
             PluginHelper.showDoorHanger(this);
 
           if (!overlay)
@@ -1967,6 +2004,9 @@ Tab.prototype = {
           let tab = BrowserApp.getTabForWindow(win);
           tab.clickToPlayPluginsActivated = true;
           PluginHelper.playAllPlugins(win);
+
+          if (tab.clickToPlayPluginDoorhangerShown)
+            NativeWindow.doorhanger.hide("ask-to-play-plugins", tab.id);
         }, true);
         break;
       }
@@ -2036,7 +2076,6 @@ Tab.prototype = {
     // Reset state of click-to-play plugin notifications.
     this.clickToPlayPluginDoorhangerShown = false;
     this.clickToPlayPluginsActivated = false;
-    this.loadEventProcessed = false;
 
     let message = {
       gecko: {
@@ -4617,12 +4656,10 @@ var WebappsUI = {
         tab = tabs[i];
     }
 
-    if (tab) {
+    if (tab)
       BrowserApp.selectTab(tab);
-    } else {
-      tab = BrowserApp.addTab(aURI);
-      ss.setTabValue(tab, "appOrigin", aOrigin);
-    }
+    else
+      BrowserApp.addTab(aURI, { pinned: true });
   }
 }
 

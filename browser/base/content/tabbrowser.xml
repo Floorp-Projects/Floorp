@@ -4036,8 +4036,10 @@
 
       <property name="label">
         <setter><![CDATA[
-          if (!this.label)
+          if (!this.label) {
             this.removeAttribute("mirror");
+            this.removeAttribute("sizelimit");
+          }
 
           this.style.minWidth = this.getAttribute("type") == "status" &&
                                 this.getAttribute("previoustype") == "status"
@@ -4115,6 +4117,11 @@
             this.removeAttribute("mirror");
           else
             this.setAttribute("mirror", "true");
+
+          if (!this.hasAttribute("sizelimit")) {
+            this.setAttribute("sizelimit", "true");
+            this._calcMouseTargetRect();
+          }
         </body>
       </method>
     </implementation>

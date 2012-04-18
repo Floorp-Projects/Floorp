@@ -43,6 +43,7 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoEventResponder;
+import org.mozilla.gecko.ui.Axis;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -56,11 +57,12 @@ import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import java.util.Map;
+import java.util.HashMap;
 
 public class GeckoLayerClient implements GeckoEventResponder,
                                          LayerView.Listener {
     private static final String LOGTAG = "GeckoLayerClient";
-    private static final String PREF_DISPLAYPORT_STRATEGY = "gfx.displayport.strategy";
 
     private LayerController mLayerController;
     private LayerRenderer mLayerRenderer;
@@ -119,7 +121,11 @@ public class GeckoLayerClient implements GeckoEventResponder,
         layerController.setRoot(mRootLayer);
 
         sendResizeEventIfNecessary(true);
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Preferences:Get", "[ \"" + PREF_DISPLAYPORT_STRATEGY + "\" ]"));
+
+        JSONArray prefs = new JSONArray();
+        DisplayPortCalculator.addPrefNames(prefs);
+        Axis.addPrefNames(prefs);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Preferences:Get", prefs.toString()));
     }
 
     DisplayPortMetrics getDisplayPort() {
@@ -252,12 +258,17 @@ public class GeckoLayerClient implements GeckoEventResponder,
                 Log.i(LOGTAG, "Showing checks: " + showChecks);
             } else if ("Preferences:Data".equals(event)) {
                 JSONArray jsonPrefs = message.getJSONArray("preferences");
+                Map<String, Integer> prefValues = new HashMap<String, Integer>();
                 for (int i = jsonPrefs.length() - 1; i >= 0; i--) {
                     JSONObject pref = jsonPrefs.getJSONObject(i);
-                    if (pref.getString("name").equals(PREF_DISPLAYPORT_STRATEGY)) {
-                        DisplayPortCalculator.setStrategy(pref.getInt("value"));
-                        GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", this);
-                    }
+                    prefValues.put(pref.getString("name"), pref.getInt("value"));
+                }
+                // check return value from setStrategy to make sure that this is the
+                // right batch of prefs, since other java code may also have sent requests
+                // for prefs.
+                if (DisplayPortCalculator.setStrategy(prefValues)) {
+                    Axis.setPrefs(prefValues);
+                    GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", this);
                 }
             }
         } catch (JSONException e) {

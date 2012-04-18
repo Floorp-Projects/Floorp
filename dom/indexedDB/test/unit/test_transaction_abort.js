@@ -201,8 +201,8 @@ function testSteps()
   let keys = [];
   let abortEventCount = 0;
   function abortErrorHandler(event) {
-      is(event.target.errorCode, IDBDatabaseException.ABORT_ERR,
-         "Good code");
+      is(event.target.error.name, "AbortError",
+         "Good error");
       abortEventCount++;
       event.preventDefault();
   };
@@ -361,13 +361,13 @@ function testSteps()
   event = yield;
   is(event.type, "error", "abort() should make all requests fail");
   is(event.target, request1, "abort() should make all requests fail");
-  is(event.target.errorCode, IDBDatabaseException.ABORT_ERR, "abort() should make all requests fail");
+  is(event.target.error.name, "AbortError", "abort() should make all requests fail");
   event.preventDefault();
 
   event = yield;
   is(event.type, "error", "abort() should make all requests fail");
   is(event.target, request2, "abort() should make all requests fail");
-  is(event.target.errorCode, IDBDatabaseException.ABORT_ERR, "abort() should make all requests fail");
+  is(event.target.error.name, "AbortError", "abort() should make all requests fail");
   event.preventDefault();
 
   event = yield;

@@ -1833,6 +1833,149 @@ nsXPCComponents_Exception::Construct(nsIXPConnectWrappedNative *wrapper, JSConte
     return CallOrConstruct(wrapper, cx, obj, argc, argv, vp, _retval);
 }
 
+struct NS_STACK_CLASS ExceptionArgParser
+{
+    ExceptionArgParser(JSContext *context,
+                       nsXPConnect *xpconnect)
+        : eMsg("exception")
+        , eResult(NS_ERROR_FAILURE)
+        , cx(context)
+        , xpc(xpconnect)
+    {}
+
+    // Public exception parameter values. During construction, these are
+    // initialized to the appropriate defaults.
+    const char*             eMsg;
+    nsresult                eResult;
+    nsCOMPtr<nsIStackFrame> eStack;
+    nsCOMPtr<nsISupports>   eData;
+
+    // Parse the constructor arguments into the above |eFoo| parameter values.
+    bool parse(uint32_t argc, JS::Value *argv) {
+        /*
+         * The Components.Exception takes a series of arguments, all of them
+         * optional:
+         *
+         * Argument 0: Exception message (defaults to 'exception').
+         * Argument 1: Result code (defaults to NS_ERROR_FAILURE) _or_ options
+         *             object (see below).
+         * Argument 2: Stack (defaults to the current stack, which we trigger
+         *                    by leaving this NULL in the parser).
+         * Argument 3: Optional user data (defaults to NULL).
+         *
+         * To dig our way out of this clunky API, we now support passing an
+         * options object as the second parameter (as opposed to a result code).
+         * If this is the case, all subsequent arguments are ignored, and the
+         * following properties are parsed out of the object (using the
+         * associated default if the property does not exist):
+         *
+         *   result:    Result code (see argument 1).
+         *   stack:     Call stack (see argument 2).
+         *   data:      User data (see argument 3).
+         */
+        if (argc > 0 && !parseMessage(argv[0]))
+            return false;
+        if (argc > 1) {
+            if (argv[1].isObject())
+                return parseOptionsObject(argv[1].toObject());
+            if (!parseResult(argv[1]))
+                return false;
+        }
+        if (argc > 2 && !parseStack(argv[2]))
+            return false;
+        if (argc > 3 && !parseData(argv[3]))
+            return false;
+        return true;
+    }
+
+  protected:
+
+    /*
+     * Parsing helpers.
+     */
+
+    bool parseMessage(JS::Value &v) {
+        JSString *str = JS_ValueToString(cx, v);
+        if (!str)
+           return false;
+        eMsg = messageBytes.encode(cx, str);
+        return !!eMsg;
+    }
+
+    bool parseResult(JS::Value &v) {
+        return JS_ValueToECMAInt32(cx, v, (int32_t*) &eResult);
+    }
+
+    bool parseStack(JS::Value &v) {
+        if (!v.isObject()) {
+            // eStack has already been initialized to null, which is what we want
+            // for any non-object values (including null).
+            return true;
+        }
+
+        return NS_SUCCEEDED(xpc->WrapJS(cx, JSVAL_TO_OBJECT(v),
+                                        NS_GET_IID(nsIStackFrame),
+                                        getter_AddRefs(eStack)));
+    }
+
+    bool parseData(JS::Value &v) {
+        if (!v.isObject()) {
+            // eData has already been initialized to null, which is what we want
+            // for any non-object values (including null).
+            return true;
+        }
+
+        return NS_SUCCEEDED(xpc->WrapJS(cx, &v.toObject(),
+                                        NS_GET_IID(nsISupports),
+                                        getter_AddRefs(eData)));
+    }
+
+    bool parseOptionsObject(JSObject &obj) {
+        JS::Value v;
+
+        if (!getOption(obj, "result", &v) ||
+            (!v.isUndefined() && !parseResult(v)))
+            return false;
+
+        if (!getOption(obj, "stack", &v) ||
+            (!v.isUndefined() && !parseStack(v)))
+            return false;
+
+        if (!getOption(obj, "data", &v) ||
+            (!v.isUndefined() && !parseData(v)))
+            return false;
+
+        return true;
+    }
+
+    bool getOption(JSObject &obj, const char *name, JS::Value *rv) {
+        // Look for the property.
+        JSBool found;
+        if (!JS_HasProperty(cx, &obj, name, &found))
+            return false;
+
+        // If it wasn't found, indicate with undefined.
+        if (!found) {
+            *rv = JSVAL_VOID;
+            return true;
+        }
+
+        // Get the property.
+        return JS_GetProperty(cx, &obj, name, rv);
+    }
+
+    /*
+     * Internal data members.
+     */
+
+    // If there's a non-default exception string, hold onto the allocated bytes.
+    JSAutoByteString messageBytes;
+
+    // Various bits and pieces that are helpful to have around.
+    JSContext *cx;
+    nsXPConnect *xpc;
+};
+
 // static
 nsresult
 nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
@@ -1857,56 +2000,14 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
         return NS_OK;
     }
 
-    // initialization params for the exception object we will create
-    const char*             eMsg = "exception";
-    JSAutoByteString        eMsgBytes;
-    nsresult                eResult = NS_ERROR_FAILURE;
-    nsCOMPtr<nsIStackFrame> eStack;
-    nsCOMPtr<nsISupports>   eData;
-
-    // all params are optional - grab any passed in
-    switch (argc) {
-        default:    // more than 4 - ignore extra
-            // ...fall through...
-        case 4:     // argv[3] is object for eData
-            if (JSVAL_IS_NULL(argv[3])) {
-                // do nothing, leave eData as null
-            } else {
-                if (JSVAL_IS_PRIMITIVE(argv[3]) ||
-                    NS_FAILED(xpc->WrapJS(cx, JSVAL_TO_OBJECT(argv[3]),
-                                          NS_GET_IID(nsISupports),
-                                          (void**)getter_AddRefs(eData))))
-                    return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
-            }
-            // ...fall through...
-        case 3:     // argv[2] is object for eStack
-            if (JSVAL_IS_NULL(argv[2])) {
-                // do nothing, leave eStack as null
-            } else {
-                if (JSVAL_IS_PRIMITIVE(argv[2]) ||
-                    NS_FAILED(xpc->WrapJS(cx, JSVAL_TO_OBJECT(argv[2]),
-                                          NS_GET_IID(nsIStackFrame),
-                                          (void**)getter_AddRefs(eStack))))
-                    return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
-            }
-            // fall through...
-        case 2:     // argv[1] is nsresult for eResult
-            if (!JS_ValueToECMAInt32(cx, argv[1], (int32_t*) &eResult))
-                return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
-            // ...fall through...
-        case 1:     // argv[0] is string for eMsg
-            {
-                JSString* str = JS_ValueToString(cx, argv[0]);
-                if (!str || !(eMsg = eMsgBytes.encode(cx, str)))
-                    return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
-            }
-            // ...fall through...
-        case 0: // this case required so that 'default' does not include zero.
-            ;   // -- do nothing --
-    }
+    // Parse the arguments to the Exception constructor.
+    ExceptionArgParser args(cx, xpc);
+    if (!args.parse(argc, argv))
+        return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
 
     nsCOMPtr<nsIException> e;
-    nsXPCException::NewException(eMsg, eResult, eStack, eData, getter_AddRefs(e));
+    nsXPCException::NewException(args.eMsg, args.eResult, args.eStack,
+                                 args.eData, getter_AddRefs(e));
     if (!e)
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 

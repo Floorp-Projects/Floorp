@@ -39,9 +39,9 @@
 
 #include "nsTextEquivUtils.h"
 
+#include "Accessible-inl.h"
 #include "AccIterator.h"
 #include "nsAccessibilityService.h"
-#include "nsAccessible.h"
 #include "nsAccUtils.h"
 
 #include "nsIDOMXULLabeledControlEl.h"

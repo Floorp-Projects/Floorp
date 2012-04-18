@@ -21,6 +21,129 @@ namespace js {
 
 class ObjectImpl;
 
+class AutoPropDescArrayRooter;
+
+static inline PropertyOp
+CastAsPropertyOp(JSObject *object)
+{
+    return JS_DATA_TO_FUNC_PTR(PropertyOp, object);
+}
+
+static inline StrictPropertyOp
+CastAsStrictPropertyOp(JSObject *object)
+{
+    return JS_DATA_TO_FUNC_PTR(StrictPropertyOp, object);
+}
+
+/*
+ * A representation of ECMA-262 ed. 5's internal Property Descriptor data
+ * structure.
+ */
+struct PropDesc {
+    /*
+     * Original object from which this descriptor derives, passed through for
+     * the benefit of proxies.
+     */
+    Value pd;
+
+    Value value, get, set;
+
+    /* Property descriptor boolean fields. */
+    uint8_t attrs;
+
+    /* Bits indicating which values are set. */
+    bool hasGet : 1;
+    bool hasSet : 1;
+    bool hasValue : 1;
+    bool hasWritable : 1;
+    bool hasEnumerable : 1;
+    bool hasConfigurable : 1;
+
+    friend class AutoPropDescArrayRooter;
+
+    PropDesc();
+
+    /*
+     * 8.10.5 ToPropertyDescriptor(Obj)
+     *
+     * If checkAccessors is false, skip steps 7.b and 8.b, which throw a
+     * TypeError if .get or .set is neither a callable object nor undefined.
+     *
+     * (DebuggerObject_defineProperty uses this: the .get and .set properties
+     * are expected to be Debugger.Object wrappers of functions, which are not
+     * themselves callable.)
+     */
+    bool initialize(JSContext* cx, const Value &v, bool checkAccessors = true);
+
+    /*
+     * 8.10.4 FromPropertyDescriptor(Desc)
+     *
+     * initFromPropertyDescriptor sets pd to undefined and populates all the
+     * other fields of this PropDesc from desc.
+     *
+     * makeObject populates pd based on the other fields of *this, creating a
+     * new property descriptor JSObject and defining properties on it.
+     */
+    void initFromPropertyDescriptor(const PropertyDescriptor &desc);
+    bool makeObject(JSContext *cx);
+
+    /* 8.10.1 IsAccessorDescriptor(desc) */
+    bool isAccessorDescriptor() const {
+        return hasGet || hasSet;
+    }
+
+    /* 8.10.2 IsDataDescriptor(desc) */
+    bool isDataDescriptor() const {
+        return hasValue || hasWritable;
+    }
+
+    /* 8.10.3 IsGenericDescriptor(desc) */
+    bool isGenericDescriptor() const {
+        return !isAccessorDescriptor() && !isDataDescriptor();
+    }
+
+    bool configurable() const {
+        return (attrs & JSPROP_PERMANENT) == 0;
+    }
+
+    bool enumerable() const {
+        return (attrs & JSPROP_ENUMERATE) != 0;
+    }
+
+    bool writable() const {
+        return (attrs & JSPROP_READONLY) == 0;
+    }
+
+    JSObject* getterObject() const {
+        return get.isUndefined() ? NULL : &get.toObject();
+    }
+    JSObject* setterObject() const {
+        return set.isUndefined() ? NULL : &set.toObject();
+    }
+
+    const Value &getterValue() const {
+        return get;
+    }
+    const Value &setterValue() const {
+        return set;
+    }
+
+    PropertyOp getter() const {
+        return CastAsPropertyOp(getterObject());
+    }
+    StrictPropertyOp setter() const {
+        return CastAsStrictPropertyOp(setterObject());
+    }
+
+    /*
+     * Throw a TypeError if a getter/setter is present and is neither callable
+     * nor undefined. These methods do exactly the type checks that are skipped
+     * by passing false as the checkAccessors parameter of initialize.
+     */
+    inline bool checkGetter(JSContext *cx);
+    inline bool checkSetter(JSContext *cx);
+};
+
 class DenseElementsHeader;
 class SparseElementsHeader;
 class Uint8ElementsHeader;
@@ -129,9 +252,8 @@ class DenseElementsHeader : public ElementsHeader
         return ElementsHeader::length;
     }
 
-    bool defineElement(JSContext *cx, ObjectImpl *obj,
-                       uint32_t index, const Value &value,
-                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+    bool defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
+                       bool shouldThrow, bool *succeeded);
 
   private:
     inline bool isDenseElements() const MOZ_DELETE;
@@ -154,9 +276,8 @@ class SparseElementsHeader : public ElementsHeader
         return ElementsHeader::length;
     }
 
-    bool defineElement(JSContext *cx, ObjectImpl *obj,
-                       uint32_t index, const Value &value,
-                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+    bool defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
+                       bool shouldThrow, bool *succeeded);
 
   private:
     inline bool isSparseElements() const MOZ_DELETE;
@@ -263,9 +384,8 @@ class TypedElementsHeader : public ElementsHeader
         return ElementsHeader::length;
     }
 
-    bool defineElement(JSContext *cx, ObjectImpl *obj,
-                       uint32_t index, const Value &value,
-                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+    bool defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
+                       bool shouldThrow, bool *succeeded);
 
   private:
     TypedElementsHeader(const TypedElementsHeader &other) MOZ_DELETE;
@@ -349,9 +469,8 @@ class Uint8ClampedElementsHeader : public TypedElementsHeader<uint8_clamped>
 class ArrayBufferElementsHeader : public ElementsHeader
 {
   public:
-    bool defineElement(JSContext *cx, ObjectImpl *obj,
-                       uint32_t index, const Value &value,
-                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+    bool defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
+                       bool shouldThrow, bool *succeeded);
 
   private:
     inline bool isArrayBufferElements() const MOZ_DELETE;
@@ -747,6 +866,10 @@ class ObjectImpl : public gc::Cell
 
     const Shape * nativeLookup(JSContext *cx, jsid id);
 
+#ifdef DEBUG
+    const Shape * nativeLookupNoAllocation(JSContext *cx, jsid id);
+#endif
+
     inline Class *getClass() const;
     inline JSClass *getJSClass() const;
     inline bool hasClass(const Class *c) const;
@@ -905,8 +1028,8 @@ class ObjectImpl : public gc::Cell
 };
 
 extern bool
-DefineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const Value &value,
-              PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+DefineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
+              bool shouldThrow, bool *succeeded);
 
 } /* namespace js */
 

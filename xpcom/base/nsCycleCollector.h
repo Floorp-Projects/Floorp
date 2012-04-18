@@ -134,7 +134,6 @@ void nsCycleCollector_DEBUG_wasFreed(nsISupports *n);
 // Helpers for interacting with language-identified scripts
 
 void nsCycleCollector_registerRuntime(PRUint32 langID, nsCycleCollectionLanguageRuntime *rt);
-nsCycleCollectionLanguageRuntime * nsCycleCollector_getRuntime(PRUint32 langID);
 void nsCycleCollector_forgetRuntime(PRUint32 langID);
 
 #define NS_CYCLE_COLLECTOR_LOGGER_CID \

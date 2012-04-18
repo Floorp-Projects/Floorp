@@ -18,5 +18,8 @@
     <!-- empty container should not affect parent's bbox -->
     <g/>
     <circle cx="100" cy="100" r="5"/>
+    <g/>
+    <circle cx="100" cy="100" r="5"/>
+    <g/>
   </g>
 </svg>

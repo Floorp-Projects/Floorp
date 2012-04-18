@@ -189,17 +189,6 @@ JS_END_EXTERN_C
 
 namespace js {
 
-struct ContextFriendFields {
-    JSRuntime *const    runtime;
-
-    ContextFriendFields(JSRuntime *rt)
-      : runtime(rt) { }
-
-    static const ContextFriendFields *get(const JSContext *cx) {
-        return reinterpret_cast<const ContextFriendFields *>(cx);
-    }
-};
-
 struct RuntimeFriendFields {
     /*
      * If non-zero, we were been asked to call the operation callback as soon
@@ -791,6 +780,15 @@ CastToJSFreeOp(FreeOp *fop)
 {
     return reinterpret_cast<JSFreeOp *>(fop);
 }
+
+/* Implemented in jsexn.cpp. */
+
+/*
+ * Get an error type name from a number.
+ * If no exception is associated, return NULL.
+ */
+extern JS_FRIEND_API(const jschar*)
+GetErrorTypeNameFromNumber(JSContext* cx, const unsigned errorNumber);
 
 } /* namespace js */
 

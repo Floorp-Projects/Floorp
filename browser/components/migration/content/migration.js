@@ -215,16 +215,15 @@ var MigrationWizard = {
     var dataSources = document.getElementById("dataSources");
     while (dataSources.hasChildNodes())
       dataSources.removeChild(dataSources.firstChild);
-    
-    var bundle = document.getElementById("bundle");
-    
+
     var items = this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate);
     for (var i = 0; i < 16; ++i) {
       var itemID = (items >> i) & 0x1 ? Math.pow(2, i) : 0;
       if (itemID > 0) {
         var checkbox = document.createElement("checkbox");
         checkbox.id = itemID;
-        checkbox.setAttribute("label", bundle.getString(itemID + "_" + this._source));
+        checkbox.setAttribute("label", 
+          MigrationUtils.getLocalizedString(itemID + "_" + this._source));
         dataSources.appendChild(checkbox);
         if (!this._itemsFlags || this._itemsFlags & itemID)
           checkbox.checked = true;
@@ -274,13 +273,13 @@ var MigrationWizard = {
       return;
     }
 
-    var bundle = document.getElementById("brandBundle");
+    var brandBundle = document.getElementById("brandBundle");
     // These strings don't exist when not using official branding. If that's
     // the case, just skip this page.
     try {
-      var pageTitle = bundle.getString("homePageMigrationPageTitle");
-      var pageDesc = bundle.getString("homePageMigrationDescription");
-      var mainStr = bundle.getString("homePageSingleStartMain");
+      var pageTitle = brandBundle.getString("homePageMigrationPageTitle");
+      var pageDesc = brandBundle.getString("homePageMigrationDescription");
+      var mainStr = brandBundle.getString("homePageSingleStartMain");
     }
     catch (e) {
       this._wiz.advance();
@@ -318,10 +317,9 @@ var MigrationWizard = {
     var oldHomePageURL = this._migrator.sourceHomePageURL;
 
     if (oldHomePageURL && source) {
-      var bundle2 = document.getElementById("bundle");
-      var appName = bundle2.getString(source);
-      var oldHomePageLabel = bundle.getFormattedString("homePageImport",
-                                                       [appName]);
+      var appName = MigrationUtils.getLocalizedString(source);
+      var oldHomePageLabel =
+        brandBundle.getFormattedString("homePageImport", [appName]);
       var oldHomePage = document.getElementById("oldHomePage");
       oldHomePage.setAttribute("label", oldHomePageLabel);
       oldHomePage.setAttribute("value", oldHomePageURL);
@@ -372,8 +370,7 @@ var MigrationWizard = {
     var items = document.getElementById(aID);
     while (items.hasChildNodes())
       items.removeChild(items.firstChild);
-    
-    var bundle = document.getElementById("bundle");
+
     var brandBundle = document.getElementById("brandBundle");
     var itemID;
     for (var i = 0; i < 16; ++i) {
@@ -382,7 +379,8 @@ var MigrationWizard = {
         var label = document.createElement("label");
         label.id = itemID + "_migrated";
         try {
-          label.setAttribute("value", bundle.getString(itemID + "_" + this._source));
+          label.setAttribute("value",
+            MigrationUtils.getLocalizedString(itemID + "_" + this._source));
           items.appendChild(label);
         }
         catch (e) {

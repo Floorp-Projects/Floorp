@@ -430,7 +430,7 @@ public class GeckoAppShell
         }
     }
 
-    public static void runGecko(String apkPath, String args, String url, boolean restoreSession) {
+    public static void runGecko(String apkPath, String args, String url, String type, boolean restoreSession) {
         // run gecko -- it will spawn its own thread
         GeckoAppShell.nativeInit();
 
@@ -446,7 +446,9 @@ public class GeckoAppShell
         if (args != null)
             combinedArgs += " " + args;
         if (url != null)
-            combinedArgs += " -remote " + url;
+            combinedArgs += " -url " + url;
+        if (type != null)
+            combinedArgs += " " + type;
         if (restoreSession)
             combinedArgs += " -restoresession";
 
@@ -1456,12 +1458,6 @@ public class GeckoAppShell
         }
     }
 
-    public static boolean getAccessibilityEnabled() {
-        AccessibilityManager accessibilityManager =
-            (AccessibilityManager) GeckoApp.mAppContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
-        return accessibilityManager.isEnabled();
-    }
-
     public static void addPluginView(View view,
                                      int x, int y,
                                      int w, int h,
@@ -1739,7 +1735,17 @@ public class GeckoAppShell
                 }
                 return promptServiceResult;
             }
-            
+
+            if (type.equals("Accessibility:IsEnabled")) {
+                JSONObject ret = new JSONObject();
+                AccessibilityManager accessibilityManager =
+                    (AccessibilityManager) GeckoApp.mAppContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
+                try {
+                    ret.put("enabled", accessibilityManager.isEnabled());
+                } catch (Exception ex) { }
+                return ret.toString();
+            }
+
             if (mEventListeners == null)
                 return "";
 

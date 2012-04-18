@@ -30,13 +30,24 @@ XPCOMUtils.defineLazyGetter(Services, 'idle', function() {
 });
 
 XPCOMUtils.defineLazyGetter(Services, 'audioManager', function() {
+#ifdef MOZ_WIDGET_GONK
   return Cc['@mozilla.org/telephony/audiomanager;1']
            .getService(Ci.nsIAudioManager);
+#else
+  return {
+    "masterVolume": 0
+  };
+#endif
 });
 
 XPCOMUtils.defineLazyServiceGetter(Services, 'fm', function() {
   return Cc['@mozilla.org/focus-manager;1']
            .getService(Ci.nsFocusManager);
+});
+
+XPCOMUtils.defineLazyGetter(this, 'DebuggerServer', function() {
+  Cu.import('resource://gre/modules/devtools/dbg-server.jsm');
+  return DebuggerServer;
 });
 
 // FIXME Bug 707625
@@ -79,11 +90,12 @@ var shell = {
     return Services.prefs.getCharPref('browser.homescreenURL');
   },
 
-  start: function shell_init() {
+  start: function shell_start() {
     let homeURL = this.homeURL;
     if (!homeURL) {
       let msg = 'Fatal error during startup: No homescreen found: try setting B2G_HOMESCREEN';
-      return alert(msg);
+      alert(msg);
+      return;
     }
 
     ['keydown', 'keypress', 'keyup'].forEach((function listenKey(type) {
@@ -100,9 +112,7 @@ var shell = {
     // a specific value when the device starts. This way the front-end
     // can display a notification when the volume change and show a volume
     // level modified from this point.
-    try {
-      Services.audioManager.masterVolume = 0.5;
-    } catch(e) {}
+    Services.audioManager.masterVolume = 0.5;
 
     let domains = "";
     try {
@@ -297,6 +307,7 @@ var shell = {
       }
     }
   }
+
   let wakeLockHandler = function wakeLockHandler(topic, state) {
     // Turn off the screen when no one needs the it or all of them are
     // invisible, otherwise turn the screen on. Note that the CPU
@@ -313,7 +324,11 @@ var shell = {
       }
     }
   }
+
   let idleTimeout = Services.prefs.getIntPref("power.screen.timeout");
+  if (!('mozSettings' in navigator))
+    return;
+
   let request = navigator.mozSettings.getLock().get("power.screen.timeout");
   request.onsuccess = function onSuccess() {
     idleTimeout = request.result["power.screen.timeout"] || idleTimeout;
@@ -321,13 +336,15 @@ var shell = {
       Services.idle.addIdleObserver(idleHandler, idleTimeout);
       power.addWakeLockListener(wakeLockHandler);
     }
-  }
+  };
+
   request.onerror = function onError() {
     if (idleTimeout) {
       Services.idle.addIdleObserver(idleHandler, idleTimeout);
       power.addWakeLockListener(wakeLockHandler);
     }
-  }
+  };
+
   // XXX We may override other's callback here, but this is the only
   // user of mozSettings in shell.js at this moment.
   navigator.mozSettings.onsettingchange = function onSettingChange(e) {
@@ -425,7 +442,7 @@ Services.obs.addObserver(function onConsoleAPILogEvent(subject, topic, data) {
   serverSocket.asyncListen(listener);
 })();
 
-CustomEventManager = {
+var CustomEventManager = {
   init: function custevt_init() {
     window.addEventListener("ContentStart", (function(evt) {
       content.addEventListener("mozContentEvent", this, false, true);
@@ -449,7 +466,7 @@ CustomEventManager = {
   }
 }
 
-AlertsHelper = {
+var AlertsHelper = {
   _listeners: {},
   _count: 0,
 
@@ -480,7 +497,7 @@ AlertsHelper = {
   }
 }
 
-WebappsHelper = {
+var WebappsHelper = {
   _installers: {},
   _count: 0,
 
@@ -529,3 +546,24 @@ WebappsHelper = {
     }
   }
 }
+
+// Start the debugger server.
+function startDebugger() {
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init();
+    DebuggerServer.addActors('chrome://browser/content/dbg-browser-actors.js');
+  }
+
+  let port = Services.prefs.getIntPref('devtools.debugger.port') || 6000;
+  try {
+    DebuggerServer.openListener(port, false);
+  } catch (e) {
+    dump('Unable to start debugger server: ' + e + '\n');
+  }
+}
+
+window.addEventListener('ContentStart', function(evt) {
+  if (Services.prefs.getBoolPref('devtools.debugger.enabled')) {
+    startDebugger();
+  }
+}, false);

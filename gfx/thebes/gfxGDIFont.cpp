@@ -156,9 +156,13 @@ gfxGDIFont::ShapeWord(gfxContext *aContext,
 
     bool ok = false;
 
-    // ensure the cairo font is set up, so there's no risk it'll fall back to
-    // creating a "toy" font internally (see bug 544617)
-    SetupCairoFont(aContext);
+    // Ensure the cairo font is set up, so there's no risk it'll fall back to
+    // creating a "toy" font internally (see bug 544617).
+    // We must check that this succeeded, otherwise we risk cairo creating the
+    // wrong kind of font internally as a fallback (bug 744480).
+    if (!SetupCairoFont(aContext)) {
+        return false;
+    }
 
 #ifdef MOZ_GRAPHITE
     if (mGraphiteShaper && gfxPlatform::GetPlatform()->UseGraphiteShaping()) {

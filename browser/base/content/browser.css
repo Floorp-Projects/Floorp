@@ -441,7 +441,8 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 #notification-popup-box[anchorid="indexedDB-notification-icon"] > #indexedDB-notification-icon,
 #notification-popup-box[anchorid="addons-notification-icon"] > #addons-notification-icon,
 #notification-popup-box[anchorid="password-notification-icon"] > #password-notification-icon,
-#notification-popup-box[anchorid="webapps-notification-icon"] > #webapps-notification-icon {
+#notification-popup-box[anchorid="webapps-notification-icon"] > #webapps-notification-icon,
+#notification-popup-box[anchorid="plugins-notification-icon"] > #plugins-notification-icon {
   display: -moz-box;
 }
 
@@ -479,7 +480,7 @@ statuspanel {
   position: fixed;
   margin-top: -3em;
   left: 0;
-  max-width: 50%;
+  max-width: -moz-calc(100% - 5px);
   pointer-events: none;
 }
 
@@ -487,6 +488,10 @@ statuspanel:-moz-locale-dir(ltr)[mirror],
 statuspanel:-moz-locale-dir(rtl):not([mirror]) {
   left: auto;
   right: 0;
+}
+
+statuspanel[sizelimit] {
+  max-width: 50%;
 }
 
 statuspanel[type=status] {

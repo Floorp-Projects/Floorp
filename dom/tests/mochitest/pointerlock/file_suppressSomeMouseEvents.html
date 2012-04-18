@@ -1,0 +1,161 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+-->
+<head>
+  <title>Bug 633602 - file_cursorPosEvents.html</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="pointerlock_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+    #child {
+      width: 100px;
+      height: 100px;
+      background-color:Green;
+    }
+  </style>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+  Mozilla Bug 633602</a>
+
+  <div id="parent">
+    <div id="child"></div>
+  </div>
+
+  <script type="application/javascript">
+      /*
+       * Test for Bug 633602
+       * Test will check to make sure that the following mouse events are no
+       * longer executed in pointer lock.
+       *  - mouseover, mouseout, mouseenter, mouseleave
+       */
+
+      SimpleTest.waitForExplicitFinish();
+
+      function PointerEventStats() {
+        this.mouseEnter = false;
+        this.mouseLeave = false;
+        this.mouseOver = false;
+        this.mouseOut = false;
+      }
+
+      var parent
+        , child
+        , parentStats = new PointerEventStats()
+        , childStats = new PointerEventStats()
+        , isPointerLocked = false;
+
+      function runTests () {
+        ok(isPointerLocked, "expected mouse to be locked, but wasn't.");
+
+        is(childStats.mouseEnter, false,
+           "child's mouseenter should not be firing in Full Screen and Pointer Lock.");
+        is(childStats.mouseOver, false,
+           "child's mouseover should not be firing in Full Screen and Pointer Lock.");
+        is(childStats.mouseLeave, false,
+           "child's mouseleave should not be firing in Full Screen and Pointer Lock.");
+        is(childStats.mouseOut, false,
+           "child's mouseout should not be firing in Full Screen and Pointer Lock.");
+
+        is(parentStats.mouseEnter, false,
+           "parent's mouseenter should not be firing in Full Screen and Pointer Lock.");
+        is(parentStats.mouseOver, false,
+           "parent's mouseover should not be firing in Full Screen and Pointer Lock.");
+        is(parentStats.mouseLeave, false,
+           "parent's mouseleave should not be firing in Full Screen and Pointer Lock.");
+        is(parentStats.mouseOut, false,
+           "parent's mouseout should not be firing in Full Screen and Pointer Lock.");
+      }
+
+      var parentMoveListener = function () {
+        isPointerLocked = !!document.mozPointerLockElement;
+        removeEventListeners();
+        document.mozExitPointerLock();
+      };
+
+      var parentOutListener = function (e) {
+          parentStats.mouseOut = true;
+      };
+      var parentLeaveListener = function (e) {
+          parentStats.mouseLeave = true;
+      };
+      var parentOverListener = function (e) {
+          parentStats.mouseOver = true;
+      };
+      var parentEnterListener = function (e) {
+          parentStats.mouseEnter = true;
+      };
+
+      var childOutListener = function (e) {
+          childStats.mouseOut = true;
+      };
+      var childLeaveListener = function (e) {
+          childStats.mouseLeave = true;
+      };
+      var childOverListener = function (e) {
+          childStats.mouseOver = true;
+      };
+      var childEnterListener = function (e) {
+          childStats.mouseEnter = true;
+      };
+
+      function addEventListeners() {
+        parent.addEventListener("mousemove", parentMoveListener, false);
+
+        parent.addEventListener("mouseout", parentOutListener, false);
+        parent.addEventListener("mouseleave", parentLeaveListener, false);
+        parent.addEventListener("mouseover", parentOverListener, false);
+        parent.addEventListener("mouseenter", parentEnterListener, false);
+
+        child.addEventListener("mouseout", childOutListener, false);
+        child.addEventListener("mouseleave", childLeaveListener, false);
+        child.addEventListener("mouseover", childOverListener, false);
+        child.addEventListener("mouseenter", childEnterListener, false);
+      }
+
+      function removeEventListeners() {
+        parent.removeEventListener("mousemove", parentMoveListener, false);
+
+        parent.removeEventListener("mouseout", parentOutListener, false);
+        parent.removeEventListener("mouseleave", parentLeaveListener, false);
+        parent.removeEventListener("mouseover", parentOverListener, false);
+        parent.removeEventListener("mouseenter", parentEnterListener, false);
+
+        child.removeEventListener("mouseout", childOutListener, false);
+        child.removeEventListener("mouseleave", childLeaveListener, false);
+        child.removeEventListener("mouseover"  , childOverListener, false);
+        child.removeEventListener("mouseenter", childEnterListener, false);
+      }
+
+      document.addEventListener("mozpointerlockchange", function (e) {
+        if (document.mozPointerLockElement === parent) {
+          addEventListeners();
+          synthesizeMouseAtCenter(child, { type: "mousemove" }, window);
+        }
+        else {
+          document.mozCancelFullScreen();
+        }
+      }, false);
+
+      document.addEventListener("mozfullscreenchange", function() {
+        if (document.mozFullScreenElement === parent) {
+          parent.mozRequestPointerLock();
+        }
+        else {
+          runTests();
+          SimpleTest.finish();
+        }
+      }, false);
+
+      function start() {
+        parent = document.getElementById("parent");
+        child = document.getElementById("child");
+        parent.mozRequestFullScreen();
+      }
+  </script>
+</body>
+</html>

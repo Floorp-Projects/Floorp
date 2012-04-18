@@ -315,6 +315,13 @@ FeedConverter.prototype = {
     // The value doesn't matter.
     try {
       var httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
+      // Make sure to check requestSucceeded before the potentially-throwing
+      // getResponseHeader.
+      if (!httpChannel.requestSucceeded) {
+        // Just give up, but don't forget to cancel the channel first!
+        request.cancel(0x804b0002); // NS_BINDING_ABORTED
+        return;
+      }
       var noSniff = httpChannel.getResponseHeader("X-Moz-Is-Feed");
     }
     catch (ex) {

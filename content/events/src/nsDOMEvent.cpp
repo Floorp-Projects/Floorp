@@ -100,6 +100,8 @@ static const char* const sEventNames[] = {
   "MozBeforeResize",
   "mozfullscreenchange",
   "mozfullscreenerror",
+  "mozpointerlockchange",
+  "mozpointerlockerror",
   "MozSwipeGesture",
   "MozMagnifyGestureStart",
   "MozMagnifyGestureUpdate",
@@ -1170,6 +1172,10 @@ nsDOMEvent::GetScreenCoords(nsPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIntPoint aPoint)
 {
+  if (nsEventStateManager::sIsPointerLocked) {
+    return nsEventStateManager::sLastScreenPoint;
+  }
+
   if (!aEvent || 
        (aEvent->eventStructType != NS_MOUSE_EVENT &&
         aEvent->eventStructType != NS_POPUP_EVENT &&
@@ -1225,6 +1231,10 @@ nsDOMEvent::GetClientCoords(nsPresContext* aPresContext,
                             nsIntPoint aPoint,
                             nsIntPoint aDefaultPoint)
 {
+  if (nsEventStateManager::sIsPointerLocked) {
+    return nsEventStateManager::sLastClientPoint;
+  }
+
   if (!aEvent ||
       (aEvent->eventStructType != NS_MOUSE_EVENT &&
        aEvent->eventStructType != NS_POPUP_EVENT &&

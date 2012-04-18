@@ -38,6 +38,7 @@
 
 #include "TextUpdater.h"
 
+#include "Accessible-inl.h"
 #include "nsDocAccessible.h"
 #include "nsTextAccessible.h"
 

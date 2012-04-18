@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var frame = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
+  document.body.appendChild(frame);
+  var frameScreen = frame.contentWindow.screen;
+  document.body.removeChild(frame);
+  frameScreen.top;
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

@@ -108,23 +108,23 @@ expect = '@';
 addThis();
 
 status = inSection(2);
-actual = stackFrames[1].substring(0,9);
-expect = 'A(44,13)@';
+actual = stackFrames[1].substring(0,2);
+expect = 'A@';
 addThis();
 
 status = inSection(3);
-actual = stackFrames[2].substring(0,9);
-expect = 'B(45,14)@';
+actual = stackFrames[2].substring(0,2);
+expect = 'B@';
 addThis();
 
 status = inSection(4);
-actual = stackFrames[3].substring(0,9);
-expect = 'C(46,15)@';
+actual = stackFrames[3].substring(0,2);
+expect = 'C@';
 addThis();
 
 status = inSection(5);
-actual = stackFrames[4].substring(0,9);
-expect = 'D(47,16)@';
+actual = stackFrames[4].substring(0,2);
+expect = 'D@';
 addThis();
 
 
@@ -137,23 +137,23 @@ expect = '@';
 addThis();
 
 status = inSection(7);
-actual = stackFrames[1].substring(0,21);
-expect = 'A("44:foo","13:bar")@';
+actual = stackFrames[1].substring(0,2);
+expect = 'A@';
 addThis();
 
 status = inSection(8);
-actual = stackFrames[2].substring(0,23);
-expect = 'B("44:foo1","13:bar1")@';
+actual = stackFrames[2].substring(0,2);
+expect = 'B@';
 addThis();
 
 status = inSection(9);
-actual = stackFrames[3].substring(0,25);
-expect = 'C("44:foo11","13:bar11")@';
+actual = stackFrames[3].substring(0,2);
+expect = 'C@';
 addThis();
 
 status = inSection(10);
-actual = stackFrames[4].substring(0,27);
-expect = 'D("44:foo111","13:bar111")@';;
+actual = stackFrames[4].substring(0,2);
+expect = 'D@';;
 addThis();
 
 
@@ -169,13 +169,13 @@ expect = '@';
 addThis();
 
 status = inSection(12);
-actual = stackFrames[1].substring(0,3);
-expect = '()@';
+actual = stackFrames[1].substring(0,1);
+expect = '@';
 addThis();
 
 status = inSection(13);
-actual = stackFrames[2].substring(0,9);
-expect = 'A(44,13)@';
+actual = stackFrames[2].substring(0,2);
+expect = 'A@';
 addThis();
 
 // etc. for the rest of the frames as above
@@ -194,13 +194,13 @@ expect = '@';
 addThis();
 
 status = inSection(15);
-actual = stackFrames[1].substring(0,12);
-expect = 'anonymous()@';
+actual = stackFrames[1].substring(0,10);
+expect = 'anonymous@';
 addThis();
 
 status = inSection(16);
-actual = stackFrames[2].substring(0,9);
-expect = 'A(44,13)@';
+actual = stackFrames[2].substring(0,2);
+expect = 'A@';
 addThis();
 
 // etc. for the rest of the frames as above

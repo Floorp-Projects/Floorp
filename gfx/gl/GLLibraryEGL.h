@@ -108,8 +108,8 @@ public:
     GLLibraryEGL() 
         : mInitialized(false),
           mEGLLibrary(nsnull),
-          mHasRobustness(false),
           mIsANGLE(false),
+          mHasRobustness(false),
           mHave_EGL_KHR_image_base(false),
           mHave_EGL_KHR_image_pixmap(false),
           mHave_EGL_KHR_gl_texture_2D_image(false),

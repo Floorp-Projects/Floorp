@@ -38,6 +38,7 @@
 
 #include "ARIAGridAccessible.h"
 
+#include "Accessible-inl.h"
 #include "AccIterator.h"
 #include "nsAccUtils.h"
 #include "Role.h"
@@ -82,18 +83,6 @@ ARIAGridAccessible::Shutdown()
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibleTable
-
-NS_IMETHODIMP
-ARIAGridAccessible::GetSummary(nsAString& aSummary)
-{
-  aSummary.Truncate();
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  // XXX: should be pointed by aria-describedby on grid?
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 NS_IMETHODIMP
 ARIAGridAccessible::GetColumnCount(PRInt32* aColumnCount)

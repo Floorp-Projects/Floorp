@@ -12,7 +12,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 
-const DEBUG = true; // set to false to suppress debug messages
+const DEBUG = false; // set to false to suppress debug messages
 
 const DOMWIFIMANAGER_CONTRACTID = "@mozilla.org/wifimanager;1";
 const DOMWIFIMANAGER_CID        = Components.ID("{2cf775a7-1837-410c-9e26-323c42e076da}");
@@ -47,6 +47,7 @@ DOMWifiManager.prototype = {
 
     // Maintain this state for synchronous APIs.
     this._currentNetwork = null;
+    this._connectionStatus = "disconnected";
     this._enabled = true;
     this._lastConnectionInfo = null;
 
@@ -65,10 +66,12 @@ DOMWifiManager.prototype = {
       this._currentNetwork = state.network;
       this._lastConnectionInfo = state.connectionInfo;
       this._enabled = state.enabled;
+      this._connectionStatus = state.status;
     } else {
       this._currentNetwork = null;
       this._lastConnectionInfo = null;
-      this._enabled = null;
+      this._enabled = false;
+      this._connectionStatus = "disconnected";
     }
   },
 
@@ -126,33 +129,37 @@ DOMWifiManager.prototype = {
         break;
 
       case "WifiManager:forget:Return:OK":
-        request = this._takeRequest(msg.rid);
+        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireSuccess(request, true);
         break;
 
       case "WifiManager:forget:Return:NO":
-        request = this._takeRequest(msg.rid);
+        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireError(request, msg.data);
         break;
 
       case "WifiManager:onconnecting":
         this._currentNetwork = msg.network;
+        this._connectionStatus = "connecting";
         this._fireOnConnecting(msg.network);
         break;
 
       case "WifiManager:onassociate":
         this._currentNetwork = msg.network;
+        this._connectionStatus = "associated";
         this._fireOnAssociate(msg.network);
         break;
 
       case "WifiManager:onconnect":
         this._currentNetwork = msg.network;
+        this._connectionStatus = "connected";
         this._fireOnConnect(msg.network);
         break;
 
       case "WifiManager:ondisconnect":
         this._fireOnDisconnect(this._currentNetwork);
         this._currentNetwork = null;
+        this._connectionStatus = "disconnected";
         this._lastConnectionInfo = null;
         break;
 
@@ -221,7 +228,7 @@ DOMWifiManager.prototype = {
   forget: function nsIDOMWifiManager_forget(network) {
     if (!this._hasPrivileges)
       throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
-    var request = Services.DOMRequest.createRequest(this._window);
+    var request = this.createRequest();
     this._sendMessageForRequest("WifiManager:forget", network, request);
     return request;
   },
@@ -232,10 +239,10 @@ DOMWifiManager.prototype = {
     return this._enabled;
   },
 
-  get connectedNetwork() {
+  get connection() {
     if (!this._hasPrivileges)
       throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
-    return this._currentNetwork;
+    return { status: this._connectionStatus, network: this._currentNetwork };
   },
 
   get connectionInfo() {
