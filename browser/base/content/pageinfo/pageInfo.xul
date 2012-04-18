@@ -91,12 +91,14 @@
     <command id="cmd_installDef"    oncommand="onCheckboxClick('install');"/>
     <command id="cmd_geoDef"        oncommand="onCheckboxClick('geo');"/>
     <command id="cmd_indexedDBDef"  oncommand="onCheckboxClick('indexedDB');"/>
+    <command id="cmd_pluginsDef"    oncommand="onCheckboxClick('plugins');"/>
     <command id="cmd_imageToggle"   oncommand="onRadioClick('image');"/>
     <command id="cmd_popupToggle"   oncommand="onRadioClick('popup');"/>
     <command id="cmd_cookieToggle"  oncommand="onRadioClick('cookie');"/>
     <command id="cmd_installToggle" oncommand="onRadioClick('install');"/>
     <command id="cmd_geoToggle"     oncommand="onRadioClick('geo');"/>
     <command id="cmd_indexedDBToggle" oncommand="onRadioClick('indexedDB');"/>
+    <command id="cmd_pluginsToggle" oncommand="onRadioClick('plugins');"/>
   </commandset>
 
   <keyset>
@@ -399,6 +401,18 @@
             <radiogroup id="indexedDBRadioGroup" orient="horizontal">
               <radio id="indexedDB#1" command="cmd_indexedDBToggle" label="&permAllow;"/>
               <radio id="indexedDB#2" command="cmd_indexedDBToggle" label="&permBlock;"/>
+            </radiogroup>
+          </hbox>
+        </vbox>
+        <vbox class="permission" id="permPluginsRow">
+          <label class="permissionLabel" id="permPluginsLabel"
+                 value="&permPlugins;" control="pluginsRadioGroup"/>
+          <hbox role="group" aria-labelledby="permPluginsLabel">
+            <checkbox id="pluginsDef" command="cmd_pluginsDef" label="&permAskAlways;"/>
+            <spacer flex="1"/>
+            <radiogroup id="pluginsRadioGroup" orient="horizontal">
+              <radio id="plugins#1" command="cmd_pluginsToggle" label="&permAllow;"/>
+              <radio id="plugins#2" command="cmd_pluginsToggle" label="&permBlock;"/>
             </radiogroup>
           </hbox>
         </vbox>

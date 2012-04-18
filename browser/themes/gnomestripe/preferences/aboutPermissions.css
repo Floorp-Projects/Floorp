@@ -87,6 +87,9 @@
 .pref-icon[type="image"] {
   list-style-image: url(chrome://global/skin/icons/question-64.png);
 }
+.pref-icon[type="plugins"] {
+  list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric.png);
+}
 
 .pref-title {
   font-size: 125%;
