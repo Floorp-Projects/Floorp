@@ -1342,7 +1342,7 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (GetContent()->IsXUL()) {
       const nsStyleDisplay* styles = mStyleContext->GetStyleDisplay();
       if (styles && styles->mAppearance == NS_THEME_WIN_EXCLUDE_GLASS) {
-        nsRect rect = mRect + aBuilder->ToReferenceFrame(GetParent());
+        nsRect rect = nsRect(aBuilder->ToReferenceFrame(this), GetSize());
         aBuilder->AddExcludedGlassRegion(rect);
       }
   }

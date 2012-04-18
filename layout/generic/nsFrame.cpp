@@ -1816,7 +1816,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   nsDisplayListCollection set;
   nsresult rv;
   {    
-    nsDisplayListBuilder::AutoIsRootSetter rootSetter(aBuilder, true);
+    nsDisplayListBuilder::AutoBuildingDisplayList rootSetter(aBuilder, true);
     nsDisplayListBuilder::AutoInTransformSetter
       inTransformSetter(aBuilder, inTransform);
     rv = BuildDisplayList(aBuilder, dirtyRect, set);
@@ -2069,7 +2069,10 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // If you change this, also change IsPseudoStackingContextFromStyle()
     pseudoStackingContext = true;
   }
-  
+
+  nsDisplayListBuilder::AutoBuildingDisplayList
+    buildingForChild(aBuilder, child, pseudoStackingContext);
+
   nsRect overflowClip;
   nscoord overflowClipRadii[8];
   bool applyOverflowClip =
@@ -2084,7 +2087,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // overflow:hidden etc creates an nsHTML/XULScrollFrame which does its own
   // clipping.
 
-  nsDisplayListBuilder::AutoIsRootSetter rootSetter(aBuilder, pseudoStackingContext);
   nsresult rv;
   if (!pseudoStackingContext) {
     // THIS IS THE COMMON CASE.
