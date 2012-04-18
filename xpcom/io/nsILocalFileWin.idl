@@ -39,7 +39,7 @@
 
 #include "nsILocalFile.idl"
 
-[scriptable, uuid(def24611-88a1-2cac-74fd-4b0b12bcaed5)]
+[scriptable, uuid(c7b3fd13-30f2-46e5-a0d9-7a79a9b73c5b)]
 interface nsILocalFileWin : nsILocalFile
 {
    /**
