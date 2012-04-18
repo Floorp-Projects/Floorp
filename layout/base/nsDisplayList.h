@@ -2097,7 +2097,7 @@ public:
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
     *aSnap = false;
-    return mEffectsBounds + aBuilder->ToReferenceFrame(mEffectsFrame);
+    return mEffectsBounds + ToReferenceFrame();
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx);
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -2106,16 +2106,13 @@ public:
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem);
   NS_DISPLAY_DECL_NAME("SVGEffects", TYPE_SVG_EFFECTS)
 
-  nsIFrame* GetEffectsFrame() { return mEffectsFrame; }
-
 #ifdef MOZ_DUMP_PAINTING
   void PrintEffects(FILE* aOutput);
 #endif
 
 private:
-  nsIFrame* mEffectsFrame;
-  // relative to mEffectsFrame
-  nsRect    mEffectsBounds;
+  // relative to mFrame
+  nsRect mEffectsBounds;
 };
 
 /* A display item that applies a transformation to all of its descendant
