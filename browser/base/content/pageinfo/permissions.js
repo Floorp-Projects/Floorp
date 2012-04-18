@@ -82,6 +82,12 @@ var gPermObj = {
   indexedDB: function getIndexedDBDefaultPermissions()
   {
     return BLOCK;
+  },
+  plugins: function getPluginsDefaultPermissions()
+  {
+    if (gPrefs.getBoolPref("plugins.click_to_play"))
+      return BLOCK;
+    return ALLOW;
   }
 };
 
@@ -133,6 +139,9 @@ function onUnloadPermission()
 
 function initRow(aPartId)
 {
+  if (aPartId == "plugins" && !gPrefs.getBoolPref("plugins.click_to_play"))
+    document.getElementById("permPluginsRow").hidden = true;
+
   var permissionManager = Components.classes[PERMISSION_CONTRACTID]
                                     .getService(nsIPermissionManager);
 

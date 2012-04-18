@@ -223,6 +223,27 @@
         </vbox>
       </hbox>
 
+      <!-- Opt-in activation of Plug-ins -->
+      <hbox id="plugins-pref-item"
+            class="pref-item" align="top">
+        <image class="pref-icon" type="plugins"/>
+        <vbox>
+          <label class="pref-title" value="&plugins.label;"/>
+          <hbox>
+            <menulist id="plugins-menulist"
+                      class="pref-menulist"
+                      type="plugins"
+                      oncommand="AboutPermissions.onPermissionCommand(event);">
+              <menupopup>
+                <menuitem id="plugins-0" value="0" label="&permission.alwaysAsk;"/>
+                <menuitem id="plugins-1" value="1" label="&permission.allow;"/>
+                <menuitem id="plugins-2" value="2" label="&permission.block;"/>
+              </menupopup>
+            </menulist>
+          </hbox>
+        </vbox>
+      </hbox>
+
     </vbox>
   </hbox>
 
