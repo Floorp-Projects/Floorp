@@ -353,6 +353,17 @@ let PermissionDefaults = {
   set popup(aValue) {
     let value = (aValue == this.DENY);
     Services.prefs.setBoolPref("dom.disable_open_during_load", value);
+  },
+
+  get plugins() {
+    if (Services.prefs.getBoolPref("plugins.click_to_play")) {
+      return this.UNKNOWN;
+    }
+    return this.ALLOW;
+  },
+  set plugins(aValue) {
+    let value = (aValue != this.ALLOW);
+    Services.prefs.setBoolPref("plugins.click_to_play", value);
   }
 }
 
@@ -392,12 +403,17 @@ let AboutPermissions = {
    *
    * Potential future additions: "sts/use", "sts/subd"
    */
-  _supportedPermissions: ["password", "cookie", "geo", "indexedDB", "popup"],
+  _supportedPermissions: ["password", "cookie", "geo", "indexedDB", "popup", "plugins"],
 
   /**
    * Permissions that don't have a global "Allow" option.
    */
   _noGlobalAllow: ["geo", "indexedDB"],
+
+  /**
+   * Permissions that don't have a global "Deny" option.
+   */
+  _noGlobalDeny: ["plugins"],
 
   _stringBundle: Services.strings.
                  createBundle("chrome://browser/locale/preferences/aboutPermissions.properties"),
@@ -419,6 +435,7 @@ let AboutPermissions = {
     Services.prefs.addObserver("geo.enabled", this, false);
     Services.prefs.addObserver("dom.indexedDB.enabled", this, false);
     Services.prefs.addObserver("dom.disable_open_during_load", this, false);
+    Services.prefs.addObserver("plugins.click_to_play", this, false);
 
     Services.obs.addObserver(this, "perm-changed", false);
     Services.obs.addObserver(this, "passwordmgr-storage-changed", false);
@@ -439,6 +456,7 @@ let AboutPermissions = {
       Services.prefs.removeObserver("geo.enabled", this, false);
       Services.prefs.removeObserver("dom.indexedDB.enabled", this, false);
       Services.prefs.removeObserver("dom.disable_open_during_load", this, false);
+      Services.prefs.removeObserver("plugins.click_to_play", this, false);
 
       Services.obs.removeObserver(this, "perm-changed", false);
       Services.obs.removeObserver(this, "passwordmgr-storage-changed", false);
@@ -752,13 +770,23 @@ let AboutPermissions = {
     let allowItem = document.getElementById(aType + "-" + PermissionDefaults.ALLOW);
     allowItem.hidden = !this._selectedSite &&
                        this._noGlobalAllow.indexOf(aType) != -1;
+    let denyItem = document.getElementById(aType + "-" + PermissionDefaults.DENY);
+    denyItem.hidden = !this._selectedSite &&
+                      this._noGlobalDeny.indexOf(aType) != -1;
 
     let permissionMenulist = document.getElementById(aType + "-menulist");
-    let permissionValue;    
+    let permissionValue;
     if (!this._selectedSite) {
       // If there is no selected site, we are updating the default permissions interface.
       permissionValue = PermissionDefaults[aType];
+      if (aType == "plugins")
+        document.getElementById("plugins-pref-item").hidden = false;
     } else {
+      if (aType == "plugins") {
+        document.getElementById("plugins-pref-item").hidden =
+          !Services.prefs.getBoolPref("plugins.click_to_play");
+        return;
+      }
       let result = {};
       permissionValue = this._selectedSite.getPermission(aType, result) ?
                         result.value : PermissionDefaults[aType];
