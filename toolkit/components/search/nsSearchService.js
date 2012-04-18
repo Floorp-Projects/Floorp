@@ -72,6 +72,11 @@ const SEARCH_SERVICE_TOPIC       = "browser-search-service";
  */
 const SEARCH_SERVICE_METADATA_WRITTEN  = "write-metadata-to-disk-complete";
 
+/**
+ * Sent whenever the cache is fully written to disk.
+ */
+const SEARCH_SERVICE_CACHE_WRITTEN  = "write-cache-to-disk-complete";
+
 const SEARCH_TYPE_MOZSEARCH      = Ci.nsISearchEngine.TYPE_MOZSEARCH;
 const SEARCH_TYPE_OPENSEARCH     = Ci.nsISearchEngine.TYPE_OPENSEARCH;
 const SEARCH_TYPE_SHERLOCK       = Ci.nsISearchEngine.TYPE_SHERLOCK;
@@ -2674,8 +2679,13 @@ SearchService.prototype = {
 
       // Write to the cache file asynchronously
       NetUtil.asyncCopy(data, ostream, function(rv) {
-        if (!Components.isSuccessCode(rv))
+        if (Components.isSuccessCode(rv)) {
+          Services.obs.notifyObservers(null,
+                                       SEARCH_SERVICE_TOPIC,
+                                       SEARCH_SERVICE_CACHE_WRITTEN);
+        } else {
           LOG("_buildCache: failure during asyncCopy: " + rv);
+        }
       });
     } catch (ex) {
       LOG("_buildCache: Could not write to cache file: " + ex);
