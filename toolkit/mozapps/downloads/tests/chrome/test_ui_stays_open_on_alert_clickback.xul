@@ -55,6 +55,8 @@
   <script type="application/javascript">
   <![CDATA[
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 function test()
 {
   var dmui = getDMUI();
@@ -69,15 +71,19 @@ function test()
   // Empty any old downloads
   dm.DBConnection.executeSimpleSQL("DELETE FROM moz_downloads");
 
-  let setClose = function(aVal) Cc["@mozilla.org/preferences-service;1"].
-    getService(Ci.nsIPrefBranch).
-    setBoolPref("browser.download.manager.closeWhenDone", aVal);
+  function setClose(aVal) {
+    Services.prefs.setBoolPref("browser.download.manager.closeWhenDone", aVal);
+  }
 
   // Close the UI if necessary
   let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
            getService(Ci.nsIWindowMediator);
   let win = wm.getMostRecentWindow("Download:Manager");
   if (win) win.close();
+
+  // Ensure that the download manager callbacks always use the window UI instead
+  // of the panel in the browser's window.
+  Services.prefs.setBoolPref("browser.download.useToolkitUI", true);
 
   let os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
@@ -101,11 +107,9 @@ function test()
       setClose(false);
       os.removeObserver(testObs, DLMGR_UI_DONE);
 
-      try {
-        Cc["@mozilla.org/preferences-service;1"].
-        getService(Ci.nsIPrefBranch).
-        clearUserPref("browser.download.manager.closeWhenDone");
-      } catch (err) { }
+      Services.prefs.clearUserPref("browser.download.manager.closeWhenDone");
+      Services.prefs.clearUserPref("browser.download.useToolkitUI");
+
       SimpleTest.finish();
     }
   };

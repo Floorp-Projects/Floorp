@@ -43,6 +43,7 @@
 #include "mozilla/HashFunctions.h"
 
 #include "nsXULAppAPI.h"
+#include "nsIXULAppInfo.h"
 
 #include "mozilla/Preferences.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -83,6 +84,8 @@ namespace mozilla {
 // Definitions
 #define INITIAL_PREF_FILES 10
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
+
+#define WEBAPPRT_APPID "webapprt@mozilla.org"
 
 // Prototypes
 static nsresult openPrefFile(nsIFile* aFile);
@@ -1015,6 +1018,14 @@ static nsresult pref_InitInitialObjects()
   // - $app/defaults/preferences/*.js
   // and in non omni.jar case:
   // - $app/defaults/preferences/*.js
+  //
+  // When we're running WebappRT (i.e. $app == WEBAPPRT_APPID), in omni.jar
+  // case, we also load:
+  // - jar:$gre/omni.jar!/defaults/pref/$WEBAPPRT_APPID/*.js
+  // This allows WebappRT-specific prefs to override those of another app
+  // with whom it shares an app dir (i.e. Firefox).
+  // (A $WEBAPPRT_APPID dir is similarly hardcoded into the app pref dir list
+  // in nsXREDirProvider for when we're running WebappRT in non omni.jar case.)
 
   nsZipFind *findPtr;
   nsAutoPtr<nsZipFind> find;
@@ -1038,6 +1049,30 @@ static nsresult pref_InitInitialObjects()
     }
 
     prefEntries.Sort();
+
+    // Load jar:$gre/omni.jar!/defaults/pref/$WEBAPPRT_APPID/*.js
+    // if we're running WebappRT.
+    nsCOMPtr<nsIXULAppInfo> appInfo =
+      do_GetService("@mozilla.org/xre/app-info;1", &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCAutoString appID;
+      if (NS_SUCCEEDED(appInfo->GetID(appID)) && appID.Equals(WEBAPPRT_APPID)) {
+        nsCAutoString prefsPath("defaults/pref/");
+        prefsPath.Append(appID);
+        prefsPath.AppendLiteral("/*.js$");
+        rv = jarReader->FindInit(prefsPath.get(), &findPtr);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // Make sure the files get read last by putting them at the beginning
+        // of the list of pref entries (which is processed backwards), so prefs
+        // in these app-specific files override those in non-app-specific ones.
+        find = findPtr;
+        while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
+          prefEntries.InsertElementAt(0, Substring(entryName, entryNameLen));
+        }
+      }
+    }
+
     for (PRUint32 i = prefEntries.Length(); i--; ) {
       rv = pref_ReadPrefFromJar(jarReader, prefEntries[i].get());
       if (NS_FAILED(rv))
