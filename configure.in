@@ -5795,6 +5795,49 @@ linux*)
 fi
 
 dnl ========================================================
+dnl = Enable GStreamer
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(gstreamer,
+[  --enable-gstreamer           Enable GStreamer support],
+MOZ_GSTREAMER=1,
+MOZ_GSTREAMER=)
+
+if test "$MOZ_GSTREAMER"; then
+    # API version, eg 0.10, 1.0 etc
+    GST_API_VERSION=0.10
+    # core/base release number
+    # depend on >= 0.10.33 as that's when the playbin2 source-setup signal was
+    # introduced
+    GST_VERSION=0.10.33
+    PKG_CHECK_MODULES(GSTREAMER,
+                      gstreamer-$GST_API_VERSION >= $GST_VERSION
+                      gstreamer-app-$GST_API_VERSION
+                      gstreamer-plugins-base-$GST_API_VERSION)
+    if test -n "$GSTREAMER_LIBS"; then
+       _SAVE_LDFLAGS=$LDFLAGS
+       LDFLAGS="$LDFLAGS -lgstvideo-$GST_API_VERSION"
+       AC_TRY_LINK(,[return 0;],_HAVE_LIBGSTVIDEO=1,_HAVE_LIBGSTVIDEO=)
+       if test -n "$_HAVE_LIBGSTVIDEO" ; then
+          GSTREAMER_LIBS="$GSTREAMER_LIBS -lgstvideo-$GST_API_VERSION"
+       else
+          AC_MSG_ERROR([gstreamer video backend requires libgstvideo])
+       fi
+       LDFLAGS=$_SAVE_LDFLAGS
+    else
+       AC_MSG_ERROR([gstreamer backend requires the gstreamer packages])
+    fi
+fi
+AC_SUBST(GSTREAMER_CFLAGS)
+AC_SUBST(GSTREAMER_LIBS)
+AC_SUBST(MOZ_GSTREAMER)
+
+if test -n "$MOZ_GSTREAMER"; then
+   AC_DEFINE(MOZ_GSTREAMER)
+   MOZ_MEDIA=1
+fi
+
+
+dnl ========================================================
 dnl Permissions System
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(permissions,
