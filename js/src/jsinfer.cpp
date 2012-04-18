@@ -5047,7 +5047,7 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
      * IM does not run the prologue at function frame entry, so disable the
      * nesting state if it's enabled.
      */
-    if (ion::IsEnabled())
+    if (ion::IsEnabled(cx))
         return true;
 
     if (!script->isInnerFunction || nullClosure) {

@@ -4675,7 +4675,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
 
 #if defined(JS_ION)
     if (op->getBoolOption("ion"))
-        ion::js_IonOptions.enabled = true;
+        JS_ToggleOptions(cx, JSOPTION_ION);
 
     if (const char *str = op->getStringOption("ion-gvn")) {
         if (strcmp(str, "off") == 0)
@@ -4734,7 +4734,8 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
     }
 
     if (op->getBoolOption("ion-eager")) {
-        ion::js_IonOptions.enabled = true;
+        if (!(JS_GetOptions(cx) & JSOPTION_ION))
+            JS_ToggleOptions(cx, JSOPTION_ION);
         ion::js_IonOptions.setEagerCompilation();
     }
 #endif

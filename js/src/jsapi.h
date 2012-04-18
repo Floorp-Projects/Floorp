@@ -2674,10 +2674,12 @@ JS_StringToVersion(const char *string);
 
 #define JSOPTION_TYPE_INFERENCE JS_BIT(18)      /* Perform type inference. */
 
+#define JSOPTION_ION            JS_BIT(19)      /* IonMonkey */
+
 /* Options which reflect compile-time properties of scripts. */
 #define JSCOMPILEOPTION_MASK    (JSOPTION_XML)
 
-#define JSRUNOPTION_MASK        (JS_BITMASK(19) & ~JSCOMPILEOPTION_MASK)
+#define JSRUNOPTION_MASK        (JS_BITMASK(20) & ~JSCOMPILEOPTION_MASK)
 #define JSALLOPTION_MASK        (JSCOMPILEOPTION_MASK | JSRUNOPTION_MASK)
 
 extern JS_PUBLIC_API(uint32_t)
