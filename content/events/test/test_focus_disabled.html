@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=375008
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 375008</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=375008">Mozilla Bug 375008</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 375008 **/
+
+elementsToTest = [
+  "button",
+  "input",
+  "fieldset",
+  "select",
+  "textarea",
+  "optgroup",
+  "option"
+];
+
+var content = document.getElementById('content');
+var input = null;
+var idx = 0;
+var element = null;
+
+const ELEMENT_DISABLED_PHASE = 1;
+const ELEMENT_ENABLED_PHASE = 2;
+var testPhase = ELEMENT_DISABLED_PHASE;
+
+function checkEndOfPhase() {
+  if (idx == elementsToTest.length) {
+    if (testPhase == ELEMENT_ENABLED_PHASE) {
+      SimpleTest.finish();
+      return;
+    }
+
+    idx = 0;
+    testPhase = ELEMENT_ENABLED_PHASE;
+  }
+}
+
+function init() {
+  // Here, we create the following DOM inside $(content):
+  // <input><element tabindex='1'>
+  // There is one round of tests with disabled=true and another with false.
+
+  input = document.createElement('input');
+  content.appendChild(input);
+
+  element = document.createElement(elementsToTest[idx]);
+  element.disabled = (testPhase == ELEMENT_DISABLED_PHASE) ? true : false;
+  element.tabIndex = 1;
+
+  // <button> and <option> need a content to make sure they are clickable.
+  if (element.tagName == "BUTTON" ||
+      element.tagName == "OPTION") {
+    element.innerHTML = "foo";
+  }
+  // <optgroup> need a content too to make sure it is clickable.
+  if (element.tagName == "OPTGROUP") {
+    element.appendChild(document.createElement("option"));
+    element.firstChild.value = "foobar";
+  }
+
+  content.appendChild(element);
+
+  idx++;
+}
+
+function test() {
+  if (testPhase == ELEMENT_DISABLED_PHASE) {
+    if (element.tagName == "OPTGROUP") {
+      // TODO: doesn't work because of bug 577306.
+      todo_is(document.activeElement, input, "[" + element.tagName + "] input should still be focused");
+    } else {
+      is(document.activeElement, input, "[" + element.tagName + "] input should still be focused");
+    }
+  } else {
+    is(document.activeElement, element, "focus should have moved to " + element);
+  }
+}
+
+function cleanup() {
+  element = null;
+  input = null;
+  content.innerHTML = "";
+}
+
+function next() {
+  // Check if we need to change phase or stop the test.
+  checkEndOfPhase();
+
+  // Initialise |input| and |element| and put them inside |content|.
+  init();
+
+  input.onfocus = function() {
+    // Try to focus the element and then check if it has been actually focused.
+    // After that, we blur the focused element and we remove all elements from
+    // $(content) and we go for the next test.
+    synthesizeMouseAtCenter(element, {});
+
+    test();
+
+    if (document.activeElement != input && document.activeElement != element) {
+      cleanup();
+      next();
+      return;
+    }
+
+    document.activeElement.onblur = function() {
+      cleanup();
+      next();
+    };
+
+    document.activeElement.blur();
+  };
+
+  input.focus();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(next);
+
+</script>
+</pre>
+</body>
+</html>
