@@ -22,7 +22,9 @@ let WebappsInstaller = {
    */
   install: function(aData) {
 
-#ifdef XP_MACOSX
+#ifdef XP_WIN
+    let shell = new WinNativeApp(aData);
+#elifdef XP_MACOSX
     let shell = new MacNativeApp(aData);
 #else
     return false;
@@ -102,7 +104,333 @@ function NativeApp(aData) {
   this.profileFolder = Services.dirsvc.get("ProfD", Ci.nsIFile);
 }
 
-#ifdef XP_MACOSX
+#ifdef XP_WIN
+/*************************************
+ * Windows app installer
+ *
+ * The Windows installation process will generate the following files:
+ *
+ * ${FolderName} = app-origin;protocol;port
+ *                 e.g.: subdomain.example.com;http;-1
+ *
+ * %APPDATA%/${FolderName}
+ *   - webapp.ini
+ *   - webapp.json
+ *   - ${AppName}.exe
+ *   - ${AppName}.lnk
+ *   / uninstall
+ *     - webapp-uninstaller.exe
+ *     - shortcut_logs.ini
+ *   / chrome/icons/default/
+ *     - topwindow.ico
+ *
+ * After the app runs for the first time, a profiles/ folder will also be
+ * created which will host the user profile for this app.
+ */
+
+/**
+ * Constructor for the Windows native app shell
+ *
+ * @param aData the data object provided by the web app with
+ *              all the app settings and specifications.
+ */
+function WinNativeApp(aData) {
+  NativeApp.call(this, aData);
+  this._init();
+}
+
+WinNativeApp.prototype = {
+  /**
+   * Install the app in the system by creating the folder structure,
+   *
+   */
+  install: function() {
+    // Remove previously installed app (for update purposes)
+    this._removeInstallation();
+
+    try {
+      this._createDirectoryStructure();
+      this._copyPrebuiltFiles();
+      this._createConfigFiles();
+      this._createShortcutFiles();
+      this._writeSystemKeys();
+    } catch (ex) {
+      this._removeInstallation();
+      throw(ex);
+    }
+
+    getIconForApp(this, function() {});
+  },
+
+  /**
+   * Initializes properties that will be used during the installation process,
+   * such as paths and filenames.
+   */
+  _init: function() {
+    let filenameRE = new RegExp("[<>:\"/\\\\|\\?\\*]", "gi");
+
+    this.appNameAsFilename = this.appNameAsFilename.replace(filenameRE, "");
+    if (this.appNameAsFilename == "") {
+      this.appNameAsFilename = "webapp";
+    }
+
+    // The ${InstallDir} format is as follows:
+    //  host of the app origin + ";" +
+    //  protocol + ";" +
+    //  port (-1 for default port)
+    this.installDir = Services.dirsvc.get("AppData", Ci.nsIFile);
+    this.installDir.append(this.launchURI.host + ";" + 
+                           this.launchURI.scheme + ";" +
+                           this.launchURI.port);
+
+    this.uninstallDir = this.installDir.clone();
+    this.uninstallDir.append("uninstall");
+
+    this.uninstallerFile = this.installDir.clone();
+    this.uninstallerFile.append("webapp-uninstaller.exe");
+
+    this.iconFile = this.installDir.clone();
+    this.iconFile.append("chrome");
+    this.iconFile.append("icons");
+    this.iconFile.append("default");
+    this.iconFile.append("topwindow.ico");
+
+    this.processFolder = Services.dirsvc.get("CurProcD", Ci.nsIFile);
+
+    this.desktopShortcut = Services.dirsvc.get("Desk", Ci.nsILocalFile);
+    this.desktopShortcut.append(this.appNameAsFilename + ".lnk");
+    this.desktopShortcut.followLinks = false;
+
+    this.startMenuShortcut = Services.dirsvc.get("Progs", Ci.nsILocalFile);
+    this.startMenuShortcut.append(this.appNameAsFilename + ".lnk");
+    this.startMenuShortcut.followLinks = false;
+
+    this.uninstallSubkeyStr = this.launchURI.scheme + "://" +
+                              this.launchURI.host + ":" +
+                              this.launchURI.port;
+  },
+
+  /**
+   * Remove the current installation
+   */
+  _removeInstallation : function() {
+    let uninstallKey;
+    try {
+      uninstallKey = Cc["@mozilla.org/windows-registry-key;1"]
+                     .createInstance(Ci.nsIWindowsRegKey);
+      uninstallKey.open(uninstallKey.ROOT_KEY_CURRENT_USER,
+                        "SOFTWARE\\Microsoft\\Windows\\" +
+                        "CurrentVersion\\Uninstall",
+                        uninstallKey.ACCESS_WRITE);
+      if(uninstallKey.hasChild(this.uninstallSubkeyStr)) {
+        uninstallKey.removeChild(this.uninstallSubkeyStr);
+      }
+    } finally {
+      if(uninstallKey)
+        uninstallKey.close();
+    }
+
+    try {
+      if(this.installDir.exists()) {
+        let dir = this.installDir.QueryInterface(Ci.nsILocalFile);
+        // We need to set followLinks to false so that the shortcut
+        // files can be removed even after the .exe it was pointing
+        // to was removed.
+        dir.followLinks = false;
+        dir.remove(true);
+      }
+    } catch(ex) {
+    }
+
+    try {
+      if(this.desktopShortcut && this.desktopShortcut.exists()) {
+        this.desktopShortcut.remove(false);
+      }
+
+      if(this.startMenuShortcut && this.startMenuShortcut.exists()) {
+        this.startMenuShortcut.remove(false);
+      }
+    } catch(ex) {
+    }
+  },
+
+  /**
+   * Creates the main directory structure.
+   */
+  _createDirectoryStructure: function() {
+    this.installDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    this.uninstallDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  },
+
+  /**
+   * Copy the pre-built files into their destination folders.
+   */
+  _copyPrebuiltFiles: function() {
+    let webapprt = this.processFolder.clone();
+    webapprt.append("webapprt-stub.exe");
+    webapprt.copyTo(this.installDir, this.appNameAsFilename + ".exe");
+
+    let uninstaller = this.processFolder.clone();
+    uninstaller.append("webapp-uninstaller.exe");
+    uninstaller.copyTo(this.uninstallDir, this.uninstallerFile.leafName);
+  },
+
+  /**
+   * Creates the configuration files into their destination folders.
+   */
+  _createConfigFiles: function() {
+    // ${InstallDir}/webapp.json
+    let json = {
+      "registryDir": this.profileFolder.path,
+      "app": this.app
+    };
+
+    let configJson = this.installDir.clone();
+    configJson.append("webapp.json");
+    writeToFile(configJson, JSON.stringify(json), function() {});
+
+    // ${InstallDir}/webapp.ini
+    let webappINI = this.installDir.clone().QueryInterface(Ci.nsILocalFile);
+    webappINI.append("webapp.ini");
+
+    let factory = Cc["@mozilla.org/xpcom/ini-processor-factory;1"]
+                    .getService(Ci.nsIINIParserFactory);
+
+    let writer = factory.createINIParser(webappINI).QueryInterface(Ci.nsIINIParserWriter);
+    writer.setString("Webapp", "Name", this.appName);
+    writer.setString("Webapp", "Profile", this.installDir.leafName);
+    writer.setString("Webapp", "Executable", this.appNameAsFilename + ".exe");
+    writer.setString("WebappRT", "InstallDir", this.processFolder.path);
+    writer.setString("Branding", "BrandFullName", this.appName);
+    writer.setString("Branding", "BrandShortName", this.appName);
+    writer.writeFile();
+
+    // ${UninstallDir}/shortcut_logs.ini
+    let shortcutLogsINI = this.uninstallDir.clone().QueryInterface(Ci.nsILocalFile);
+    shortcutLogsINI.append("shortcut_logs.ini");
+
+    writer = factory.createINIParser(shortcutLogsINI).QueryInterface(Ci.nsIINIParserWriter);
+    writer.setString("STARTMENU", "Shortcut", this.appNameAsFilename + ".lnk");
+    writer.setString("DESKTOP", "Shortcut", this.appNameAsFilename + ".lnk");
+    writer.setString("TASKBAR", "Migrated", "true");
+
+    writer = null;
+    factory = null;
+
+    // ${UninstallDir}/uninstall.log
+    let uninstallContent = 
+      "File: \\webapp.ini\r\n" +
+      "File: \\webapp.json\r\n" +
+      "File: \\webapprt.old\r\n" +
+      "File: \\chrome\\icons\\default\\topwindow.ico";
+    let uninstallLog = this.uninstallDir.clone();
+    uninstallLog.append("uninstall.log");
+    writeToFile(uninstallLog, uninstallContent, function() {});
+  },
+
+  /**
+   * Writes the keys to the system registry that are necessary for the app operation
+   * and uninstall process.
+   */
+  _writeSystemKeys: function() {
+    let parentKey;
+    let uninstallKey;
+    let subKey;
+
+    try {
+      parentKey = Cc["@mozilla.org/windows-registry-key;1"]
+                  .createInstance(Ci.nsIWindowsRegKey);
+      parentKey.open(parentKey.ROOT_KEY_CURRENT_USER,
+                     "SOFTWARE\\Microsoft\\Windows\\CurrentVersion",
+                     parentKey.ACCESS_WRITE);
+      uninstallKey = parentKey.createChild("Uninstall", parentKey.ACCESS_WRITE)
+      subKey = uninstallKey.createChild(this.uninstallSubkeyStr, uninstallKey.ACCESS_WRITE);
+
+      subKey.writeStringValue("DisplayName", this.appName);
+
+      subKey.writeStringValue("UninstallString", this.uninstallerFile.path);
+      subKey.writeStringValue("InstallLocation", this.installDir.path);
+      subKey.writeStringValue("AppFilename", this.appNameAsFilename);
+
+      if(this.iconFile) {
+        subKey.writeStringValue("DisplayIcon", this.iconFile.path);
+      }
+
+      subKey.writeIntValue("NoModify", 1);
+      subKey.writeIntValue("NoRepair", 1);
+    } catch(ex) {
+      throw(ex);
+    } finally {
+      if(subKey) subKey.close();
+      if(uninstallKey) uninstallKey.close();
+      if(parentKey) parentKey.close();
+    }
+  },
+
+  /**
+   * Creates a shortcut file inside the app installation folder and makes
+   * two copies of it: one into the desktop and one into the start menu.
+   */
+  _createShortcutFiles: function() {
+    let shortcut = this.installDir.clone().QueryInterface(Ci.nsILocalFileWin);
+    shortcut.append(this.appNameAsFilename + ".lnk");
+
+    let target = this.installDir.clone();
+    target.append(this.appNameAsFilename + ".exe");
+
+    /* function nsILocalFileWin.setShortcut(targetFile, workingDir, args,
+                                            description, iconFile, iconIndex) */
+
+    shortcut.setShortcut(target, this.installDir.clone(), null,
+                         this.shortDescription, this.iconFile, 0);
+
+    let desktop = Services.dirsvc.get("Desk", Ci.nsILocalFile);
+    let startMenu = Services.dirsvc.get("Progs", Ci.nsILocalFile);
+
+    shortcut.copyTo(desktop, this.appNameAsFilename + ".lnk");
+    shortcut.copyTo(startMenu, this.appNameAsFilename + ".lnk");
+  },
+
+  /**
+   * This variable specifies if the icon retrieval process should
+   * use a temporary file in the system or a binary stream. This
+   * is accessed by a common function in WebappsIconHelpers.js and
+   * is different for each platform.
+   */
+  useTmpForIcon: false,
+
+  /**
+   * Process the icon from the imageStream as retrieved from
+   * the URL by getIconForApp(). This will save the icon to the
+   * topwindow.ico file.
+   *
+   * @param aMimeType     ahe icon mimetype
+   * @param aImageStream  the stream for the image data
+   * @param aCallback     a callback function to be called
+   *                      after the process finishes
+   */
+  processIcon: function(aMimeType, aImageStream, aCallback) {
+    let iconStream;
+    try {
+      let imgTools = Cc["@mozilla.org/image/tools;1"]
+                       .createInstance(Ci.imgITools);
+      let imgContainer = { value: null };
+
+      imgTools.decodeImageData(aImageStream, aMimeType, imgContainer);
+      iconStream = imgTools.encodeImage(imgContainer.value,
+                                        "image/vnd.microsoft.icon",
+                                        "format=bmp;bpp=32");
+    } catch (e) {
+      throw("processIcon - Failure converting icon (" + e + ")");
+    }
+
+    this.iconFile.parent.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    let outputStream = FileUtils.openSafeFileOutputStream(this.iconFile);
+    NetUtil.asyncCopy(iconStream, outputStream);
+  }
+}
+
+#elifdef XP_MACOSX
 
 function MacNativeApp(aData) {
   NativeApp.call(this, aData);
