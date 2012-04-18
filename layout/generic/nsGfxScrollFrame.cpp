@@ -2195,8 +2195,13 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   dirtyRect.IntersectRect(aDirtyRect, mScrollPort);
 
   // Override the dirty rectangle if the displayport has been set.
+  nsRect displayPort;
   bool usingDisplayport =
-    nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &dirtyRect);
+    nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort) &&
+    !aBuilder->IsForEventDelivery();
+  if (usingDisplayport) {
+    dirtyRect = displayPort;
+  }
 
   nsDisplayListCollection set;
   rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
