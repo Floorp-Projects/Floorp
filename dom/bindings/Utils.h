@@ -267,12 +267,12 @@ WrapNewBindingObject(JSContext* cx, JSObject* scope, T* value, JS::Value* vp)
     }
   }
 
-  // Now make sure that |obj| is wrapped for the compartment of |scope|
-  // correctly.  That means entering the compartment of |scope|.
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(cx, scope)) {
-    return false;
-  }
+  // When called via XrayWrapper, we end up here while running in the
+  // chrome compartment.  But the obj we have would be created in
+  // whatever the content compartment is.  So at this point we need to
+  // make sure it's correctly wrapped for the compartment of |scope|.
+  // cx should already be in the compartment of |scope| here.
+  MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
   *vp = JS::ObjectValue(*obj);
   return JS_WrapValue(cx, vp);
 }
