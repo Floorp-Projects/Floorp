@@ -621,7 +621,8 @@ BookmarkImporter.prototype = {
     // worry about data
     if (aIconURI) {
       if (aIconURI.scheme == "chrome") {
-        PlacesUtils.favicons.setFaviconUrlForPage(aPageURI, aIconURI);
+        PlacesUtils.favicons.setAndFetchFaviconForPage(aPageURI, aIconURI,
+                                                       false);
         return;
       }
     }
@@ -636,7 +637,9 @@ BookmarkImporter.prototype = {
     if (aIconURI) {
       faviconURI = aIconURI;
     } else {
-      // make up favicon URL
+      // Make up a favicon URI for this page.  Later, we'll make sure that this
+      // favicon URI is always associated with local favicon data, so that we
+      // don't load this URI from the network.
       let faviconSpec = "http://www.mozilla.org/2005/made-up-favicon/"
                       + serialNumber
                       + "-"
@@ -645,12 +648,11 @@ BookmarkImporter.prototype = {
       serialNumber++;
     }
 
-    // save the favicon data
     // This could fail if the favicon is bigger than defined limit, in such a
-    // case data will not be saved to the db but we will still continue.
-    PlacesUtils.favicons.setFaviconDataFromDataURL(faviconURI, aData, 0);
-
-    PlacesUtils.favicons.setFaviconUrlForPage(aPageURI, faviconURI);
+    // case neither the favicon URI nor the favicon data will be saved.  If the
+    // bookmark is visited again later, the URI and data will be fetched.
+    PlacesUtils.favicons.replaceFaviconDataFromDataURL(faviconURI, aData);
+    PlacesUtils.favicons.setAndFetchFaviconForPage(aPageURI, faviconURI, false);
   },
 
   /**

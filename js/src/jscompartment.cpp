@@ -93,7 +93,9 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     debugModeBits(rt->debugMode ? DebugFromC : 0),
     mathCache(NULL),
 	watchpointMap(NULL),
-    scriptCountsMap(NULL)
+    scriptCountsMap(NULL),
+    sourceMapMap(NULL),
+    debugScriptMap(NULL)
 #ifdef JS_ION
     , ionCompartment_(NULL)
 #endif
@@ -121,6 +123,8 @@ JSCompartment::~JSCompartment()
     Foreground::delete_(mathCache);
     Foreground::delete_(watchpointMap);
     Foreground::delete_(scriptCountsMap);
+    Foreground::delete_(sourceMapMap);
+    Foreground::delete_(debugScriptMap);
 
 #ifdef DEBUG
     for (size_t i = 0; i < ArrayLength(evalCache); ++i)

@@ -51,13 +51,14 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIEXCEPTION
   NS_IMETHOD Init(nsresult aNSResult, const char* aName,
-                  const char* aMessage,
+                  const char* aMessage, PRUint16 aCode,
                   nsIException* aDefaultException);
 
 protected:
   nsresult mResult;
   const char* mName;
   const char* mMessage;
+  PRUint16 mCode;                                                            \
   nsCOMPtr<nsIException> mInner;
 };
 
@@ -74,5 +75,3 @@ NS_New##domname(nsresult aNSResult, nsIException* aDefaultException,         \
 DECL_INTERNAL_DOM_EXCEPTION(DOMException)
 DECL_INTERNAL_DOM_EXCEPTION(SVGException)
 DECL_INTERNAL_DOM_EXCEPTION(XPathException)
-DECL_INTERNAL_DOM_EXCEPTION(FileException)
-DECL_INTERNAL_DOM_EXCEPTION(IDBDatabaseException)

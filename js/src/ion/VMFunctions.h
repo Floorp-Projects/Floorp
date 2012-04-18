@@ -51,7 +51,8 @@ enum DataType {
     Type_Bool,
     Type_Int32,
     Type_Object,
-    Type_Value
+    Type_Value,
+    Type_Handle
 };
 
 // Contains information about a virtual machine function that can be called
@@ -186,6 +187,10 @@ template <> struct TypeToDataType<bool> { static const DataType result = Type_Bo
 template <> struct TypeToDataType<JSObject *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<JSString *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<JSFixedString *> { static const DataType result = Type_Object; };
+template <> struct TypeToDataType<HandleObject> { static const DataType result = Type_Handle; };
+template <> struct TypeToDataType<HandleString> { static const DataType result = Type_Handle; };
+template <> struct TypeToDataType<HandlePropertyName> { static const DataType result = Type_Handle; };
+template <> struct TypeToDataType<HandleFunction> { static const DataType result = Type_Handle; };
 
 // Convert argument types to properties of the argument known by the jit.
 template <class T> struct TypeToArgProperties {
@@ -194,6 +199,18 @@ template <class T> struct TypeToArgProperties {
 };
 template <> struct TypeToArgProperties<const Value &> {
     static const uint32 result = TypeToArgProperties<Value>::result | VMFunction::ByRef;
+};
+template <> struct TypeToArgProperties<HandleObject> {
+    static const uint32 result = TypeToArgProperties<JSObject *>::result | VMFunction::ByRef;
+};
+template <> struct TypeToArgProperties<HandleString> {
+    static const uint32 result = TypeToArgProperties<JSString *>::result | VMFunction::ByRef;
+};
+template <> struct TypeToArgProperties<HandlePropertyName> {
+    static const uint32 result = TypeToArgProperties<PropertyName *>::result | VMFunction::ByRef;
+};
+template <> struct TypeToArgProperties<HandleFunction> {
+    static const uint32 result = TypeToArgProperties<JSFunction *>::result | VMFunction::ByRef;
 };
 
 template <class> struct OutParamToDataType { static const DataType result = Type_Void; };
@@ -324,8 +341,8 @@ bool InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Va
 bool InvokeConstructorFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval);
 bool ReportOverRecursed(JSContext *cx);
 
-bool DefVarOrConst(JSContext *cx, PropertyName *dn, unsigned attrs, JSObject *scopeChain);
-bool InitProp(JSContext *cx, JSObject *obj, PropertyName *name, const Value &value);
+bool DefVarOrConst(JSContext *cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain);
+bool InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value &value);
 
 template<bool Equal>
 bool LooselyEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
@@ -340,11 +357,11 @@ bool GreaterThanOrEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBoo
 
 bool ValueToBooleanComplement(JSContext *cx, const Value &input, JSBool *output);
 
-bool IteratorMore(JSContext *cx, JSObject *obj, JSBool *res);
+bool IteratorMore(JSContext *cx, HandleObject obj, JSBool *res);
 
 // Allocation functions for JSOP_NEWARRAY and JSOP_NEWOBJECT
 JSObject *NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type);
-JSObject *NewInitObject(JSContext *cx, JSObject *baseObj, types::TypeObject *type);
+JSObject *NewInitObject(JSContext *cx, HandleObject baseObj, types::TypeObject *type);
 
 bool ArrayPopDense(JSContext *cx, JSObject *obj, Value *rval);
 bool ArrayPushDense(JSContext *cx, JSObject *obj, const Value &v, uint32_t *length);

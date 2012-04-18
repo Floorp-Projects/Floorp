@@ -1,39 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Android Sync Client.
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- * Richard Newman <rnewman@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync;
 
@@ -52,12 +19,6 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
   private static final String LOG_TAG = "MetaGlobal";
   protected String metaURL;
   protected String credentials;
-
-  public boolean isModified;
-  protected boolean isNew;
-
-  // Fetched object.
-  private CryptoRecord record;
 
   // Fields.
   protected ExtendedJSONObject  engines;
@@ -104,51 +65,52 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
     }
   }
 
-  private CryptoRecord ensureRecord() {
-    if (this.record == null) {
-      this.record = new CryptoRecord(new ExtendedJSONObject());
-    }
-    return this.record;
+  protected ExtendedJSONObject asRecordContents() {
+    ExtendedJSONObject json = new ExtendedJSONObject();
+    json.put("storageVersion", storageVersion);
+    json.put("engines", engines);
+    json.put("syncID", syncID);
+    return json;
   }
 
-  protected void setRecord(ExtendedJSONObject obj) throws IOException, ParseException, NonObjectJSONException {
-    this.record = CryptoRecord.fromJSONRecord(obj);
+  public CryptoRecord asCryptoRecord() {
+    ExtendedJSONObject payload = this.asRecordContents();
+    CryptoRecord record = new CryptoRecord(payload);
+    record.collection = "meta";
+    record.guid       = "global";
+    record.deleted    = false;
+    return record;
   }
 
-  private void unpack(SyncStorageResponse response) throws IllegalStateException, IOException, ParseException, NonObjectJSONException {
-    this.setRecord(response.jsonObjectBody());
+  public void setFromRecord(CryptoRecord record) throws IllegalStateException, IOException, ParseException, NonObjectJSONException {
     Log.i(LOG_TAG, "meta/global is " + record.payload.toJSONString());
-    this.isModified = false;
     this.storageVersion = (Long) record.payload.get("storageVersion");
-    this.engines  = record.payload.getObject("engines");
+    this.engines = record.payload.getObject("engines");
     this.syncID = (String) record.payload.get("syncID");
   }
 
   public Long getStorageVersion() {
     return this.storageVersion;
   }
+
   public void setStorageVersion(Long version) {
     this.storageVersion = version;
-    this.ensureRecord().payload.put("storageVersion", version);
-    this.isModified = true;
   }
 
   public ExtendedJSONObject getEngines() {
     return engines;
   }
+
   public void setEngines(ExtendedJSONObject engines) {
     this.engines = engines;
-    this.ensureRecord().payload.put("engines", engines);
-    this.isModified = true;
   }
 
   public String getSyncID() {
     return syncID;
   }
+
   public void setSyncID(String syncID) {
     this.syncID = syncID;
-    this.ensureRecord().payload.put("syncID", syncID);
-    this.isModified = true;
   }
 
   // SyncStorageRequestDelegate methods for fetching.
@@ -169,7 +131,6 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
   }
 
   private void handleUploadSuccess(SyncStorageResponse response) {
-    this.isModified = false;
     this.callback.handleSuccess(this, response);
     this.callback = null;
   }
@@ -177,7 +138,8 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
   private void handleDownloadSuccess(SyncStorageResponse response) {
     if (response.wasSuccessful()) {
       try {
-        this.unpack(response);
+        CryptoRecord record = CryptoRecord.fromJSONRecord(response.jsonObjectBody());
+        this.setFromRecord(record);
         this.callback.handleSuccess(this, response);
         this.callback = null;
       } catch (Exception e) {

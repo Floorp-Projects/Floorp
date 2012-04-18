@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/FloatingPoint.h"
+
 #include "Key.h"
 #include "nsIStreamBufferAccess.h"
 #include "jsfriendapi.h"
@@ -150,7 +152,7 @@ Key::EncodeJSVal(JSContext* aCx, const jsval aVal, PRUint8 aTypeOffset)
 
   if (JSVAL_IS_DOUBLE(aVal)) {
     double d = JSVAL_TO_DOUBLE(aVal);
-    if (DOUBLE_IS_NaN(d)) {
+    if (MOZ_DOUBLE_IS_NaN(d)) {
       return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
     }
     EncodeNumber(d, eFloat + aTypeOffset);

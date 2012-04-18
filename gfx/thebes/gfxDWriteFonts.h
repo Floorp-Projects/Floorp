@@ -97,6 +97,8 @@ public:
     virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
                                      FontCacheSizes*   aSizes) const;
 
+    virtual FontType GetType() const { return FONT_TYPE_DWRITE; }
+
 protected:
     friend class gfxDWriteShaper;
 

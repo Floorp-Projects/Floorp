@@ -39,11 +39,14 @@
 
 #include "nsARIAMap.h"
 
+#include "nsCoreUtils.h"
 #include "Role.h"
 #include "States.h"
 
 #include "nsIContent.h"
+#include "nsWhitespaceTokenizer.h"
 
+using namespace mozilla;
 using namespace mozilla::a11y;
 using namespace mozilla::a11y::aria;
 
@@ -62,7 +65,7 @@ using namespace mozilla::a11y::aria;
  *    banner, contentinfo, main, navigation, note, search, secondary, seealso, breadcrumbs
  */
 
-nsRoleMapEntry nsARIAMap::gWAIRoleMap[] = 
+static nsRoleMapEntry sWAIRoleMaps[] =
 {
   {
     "alert",
@@ -380,7 +383,8 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eHasValueMinMax,
     eNoAction,
     eNoLiveAttr,
-    states::READONLY
+    states::READONLY,
+    eIndeterminateIfNoValue
   },
   {
     "radio",
@@ -585,9 +589,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   }
 };
 
-PRUint32 nsARIAMap::gWAIRoleMapLength = NS_ARRAY_LENGTH(nsARIAMap::gWAIRoleMap);
-
-nsRoleMapEntry nsARIAMap::gLandmarkRoleMap = {
+static nsRoleMapEntry sLandmarkRoleMap = {
   "",
   roles::NOTHING,
   kUseNativeRole,
@@ -666,3 +668,39 @@ nsAttributeCharacteristics nsARIAMap::gWAIUnivAttrMap[] = {
 };
 
 PRUint32 nsARIAMap::gWAIUnivAttrMapLength = NS_ARRAY_LENGTH(nsARIAMap::gWAIUnivAttrMap);
+
+nsRoleMapEntry*
+aria::GetRoleMap(nsINode* aNode)
+{
+  nsIContent* content = nsCoreUtils::GetRoleContent(aNode);
+  nsAutoString roleString;
+  if (!content ||
+      !content->GetAttr(kNameSpaceID_None, nsGkAtoms::role, roleString) ||
+      roleString.IsEmpty()) {
+    // We treat role="" as if the role attribute is absent (per aria spec:8.1.1)
+    return nsnull;
+  }
+
+  nsWhitespaceTokenizer tokenizer(roleString);
+  while (tokenizer.hasMoreTokens()) {
+    // Do a binary search through table for the next role in role list
+    NS_LossyConvertUTF16toASCII role(tokenizer.nextToken());
+    PRUint32 low = 0;
+    PRUint32 high = ArrayLength(sWAIRoleMaps);
+    while (low < high) {
+      PRUint32 idx = (low + high) / 2;
+      PRInt32 compare = strcmp(role.get(), sWAIRoleMaps[idx].roleString);
+      if (compare == 0) 
+        return sWAIRoleMaps + idx;
+
+      if (compare < 0)
+        high = idx;
+      else
+        low = idx + 1;
+    }
+  }
+
+  // Always use some entry if there is a non-empty role string
+  // To ensure an accessible object is created
+  return &sLandmarkRoleMap;
+}

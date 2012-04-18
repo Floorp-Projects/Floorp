@@ -30,11 +30,6 @@ XPCOMUtils.defineLazyGetter(this, "gPrivateBrowsing", function() {
            getService(Ci.nsIPrivateBrowsingService);
 });
 
-XPCOMUtils.defineLazyGetter(this, "gFavIconService", function() {
-  return Cc["@mozilla.org/browser/favicon-service;1"].
-           getService(Ci.nsIFaviconService);
-});
-
 XPCOMUtils.defineLazyGetter(this, "gNetUtil", function() {
   var obj = {};
   Cu.import("resource://gre/modules/NetUtil.jsm", obj);
@@ -60,7 +55,7 @@ let AllTabs = {
   },
 
   get tabs() {
-    return Array.filter(gBrowser.tabs, function (tab) !tab.closing);
+    return Array.filter(gBrowser.tabs, function (tab) Utils.isValidXULTab(tab));
   },
 
   register: function AllTabs_register(eventName, callback) {
@@ -80,6 +75,7 @@ let AllTabs = {
 #include items.js
 #include groupitems.js
 #include tabitems.js
+#include favicons.js
 #include drag.js
 #include trench.js
 #include thumbnailStorage.js

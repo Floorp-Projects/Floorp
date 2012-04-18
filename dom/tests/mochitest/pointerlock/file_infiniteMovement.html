@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+-->
+  <head>
+    <title>Bug 633602 - file_movementXY.html</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js">
+    </script>
+    <script type="application/javascript" src="pointerlock_utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <a target="_blank"
+      href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+      Mozilla Bug 633602
+    </a>
+    <div id="div"></div>
+    <pre id="test">
+      <script type="application/javascript">
+        /*
+         * Test for Bug 633602
+         * This test checks if mozMovementX and mozMovementY
+         * are present in a mouse event object.
+         * It also checks the values for mozMovementXY.
+         * They should be equal to the current screenXY minus
+         * the last screenXY
+         * This test will also test that the incremental movement is
+         * not constrained to the width of the screen.
+         */
+
+        SimpleTest.waitForExplicitFinish();
+
+        var div = document.getElementById("div")
+          , divCenterWidth = 0
+          , divCenterHeight = 0
+          , totalMovementX = 0
+          , totalMovementY = 0;
+
+        function runTests () {
+          ok(totalMovementX > div.getBoundingClientRect().width,
+               "Should have moved more than one screen's worth in width." +
+               "TotalX: " + totalMovementX + " Screensize X: " + div.getBoundingClientRect().width);
+          ok(totalMovementY > div.getBoundingClientRect().height,
+             "Should have moved more than one screen's worth in height." +
+             "TotalY: " + totalMovementY + " Screensize Y: " + div.getBoundingClientRect().height);
+        }
+
+        var firstMoveListener = function (e) {
+          div.removeEventListener("mousemove", firstMoveListener, false);
+          div.addEventListener("mousemove", secondMoveListener, false);
+
+          synthesizeMouse(div,(divCenterWidth/2) * 3,
+            (divCenterHeight/2) * 3, {
+            type: "mousemove"
+          }, window);
+        }
+
+        var secondMoveListener = function (e) {
+          totalMovementX = divCenterWidth + ((divCenterWidth / 2) * 3);
+          totalMovementY = divCenterHeight + ((divCenterHeight / 2) * 3);
+
+          div.removeEventListener("mousemove", secondMoveListener, false);
+          document.mozCancelFullScreen();
+        }
+
+        document.addEventListener("mozpointerlockchange", function (e) {
+          if (document.mozPointerLockElement === div) {
+            div.addEventListener("mousemove", firstMoveListener, false);
+
+            divCenterWidth = Math.round(div.getBoundingClientRect().width / 2);
+            divCenterHeight = Math.round(div.getBoundingClientRect().height / 2);
+
+            synthesizeMouse(div, divCenterWidth, divCenterHeight, {
+              type: "mousemove"
+            }, window);
+          }
+        }, false);
+
+        document.addEventListener("mozfullscreenchange", function() {
+          if (document.mozFullScreenElement === div) {
+            div.mozRequestPointerLock();
+          }
+          else {
+            runTests();
+            SimpleTest.finish();
+          }
+        }, false);
+
+        function start() {
+          div.mozRequestFullScreen();
+        }
+      </script>
+    </pre>
+  </body>
+</html>

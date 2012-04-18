@@ -395,9 +395,6 @@ public:
 
   static PRUint32 CopyNewlineNormalizedUnicodeTo(nsReadingIterator<PRUnichar>& aSrcStart, const nsReadingIterator<PRUnichar>& aSrcEnd, nsAString& aDest);
 
-  static nsISupports *
-  GetClassInfoInstance(nsDOMClassInfoID aID);
-
   static const nsDependentSubstring TrimCharsInSet(const char* aSet,
                                                    const nsAString& aValue);
 
@@ -2210,81 +2207,6 @@ public:
       return NS_ERROR_OUT_OF_MEMORY;                                          \
     }                                                                         \
   } else
-
-/**
- * Macros to workaround math-bugs bugs in various platforms
- */
-
-/**
- * Stefan Hanske <sh990154@mail.uni-greifswald.de> reports:
- *  ARM is a little endian architecture but 64 bit double words are stored
- * differently: the 32 bit words are in little endian byte order, the two words
- * are stored in big endian`s way.
- */
-
-#if defined(__arm) || defined(__arm32__) || defined(__arm26__) || defined(__arm__)
-#if !defined(__VFP_FP__)
-#define FPU_IS_ARM_FPA
-#endif
-#endif
-
-typedef union dpun {
-    struct {
-#if defined(IS_LITTLE_ENDIAN) && !defined(FPU_IS_ARM_FPA)
-        PRUint32 lo, hi;
-#else
-        PRUint32 hi, lo;
-#endif
-    } s;
-    PRFloat64 d;
-public:
-    operator double() const {
-        return d;
-    }
-} dpun;
-
-/**
- * Utility class for doubles
- */
-#if (__GNUC__ == 2 && __GNUC_MINOR__ > 95) || __GNUC__ > 2
-/**
- * This version of the macros is safe for the alias optimizations
- * that gcc does, but uses gcc-specific extensions.
- */
-#define DOUBLE_HI32(x) (__extension__ ({ dpun u; u.d = (x); u.s.hi; }))
-#define DOUBLE_LO32(x) (__extension__ ({ dpun u; u.d = (x); u.s.lo; }))
-
-#else // __GNUC__
-
-/* We don't know of any non-gcc compilers that perform alias optimization,
- * so this code should work.
- */
-
-#if defined(IS_LITTLE_ENDIAN) && !defined(FPU_IS_ARM_FPA)
-#define DOUBLE_HI32(x)        (((PRUint32 *)&(x))[1])
-#define DOUBLE_LO32(x)        (((PRUint32 *)&(x))[0])
-#else
-#define DOUBLE_HI32(x)        (((PRUint32 *)&(x))[0])
-#define DOUBLE_LO32(x)        (((PRUint32 *)&(x))[1])
-#endif
-
-#endif // __GNUC__
-
-#define DOUBLE_HI32_SIGNBIT   0x80000000
-#define DOUBLE_HI32_EXPMASK   0x7ff00000
-#define DOUBLE_HI32_MANTMASK  0x000fffff
-
-#define DOUBLE_IS_NaN(x)                                                \
-((DOUBLE_HI32(x) & DOUBLE_HI32_EXPMASK) == DOUBLE_HI32_EXPMASK && \
- (DOUBLE_LO32(x) || (DOUBLE_HI32(x) & DOUBLE_HI32_MANTMASK)))
-
-#ifdef IS_BIG_ENDIAN
-#define DOUBLE_NaN {{DOUBLE_HI32_EXPMASK | DOUBLE_HI32_MANTMASK,   \
-                        0xffffffff}}
-#else
-#define DOUBLE_NaN {{0xffffffff,                                         \
-                        DOUBLE_HI32_EXPMASK | DOUBLE_HI32_MANTMASK}}
-#endif
 
 /*
  * In the following helper macros we exploit the fact that the result of a

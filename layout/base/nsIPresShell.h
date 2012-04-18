@@ -134,10 +134,13 @@ class LayerManager;
 #define CAPTURE_RETARGETTOELEMENT 2
 // true if the current capture wants drags to be prevented
 #define CAPTURE_PREVENTDRAG 4
+// true when the mouse is pointer locked, and events are sent to locked elemnt
+#define CAPTURE_POINTERLOCK 8
 
 typedef struct CapturingContentInfo {
   // capture should only be allowed during a mousedown event
   bool mAllowed;
+  bool mPointerLock;
   bool mRetargetToElement;
   bool mPreventDrag;
   nsIContent* mContent;
@@ -1103,6 +1106,11 @@ public:
    *
    * If CAPTURE_PREVENTDRAG is set then drags are prevented from starting while
    * this capture is active.
+   *
+   * If CAPTURE_POINTERLOCK is set, similar to CAPTURE_RETARGETTOELEMENT, then
+   * events are targeted at aContent, but capturing is held more strongly (i.e.,
+   * calls to SetCapturingContent won't unlock unless CAPTURE_POINTERLOCK is
+   * set again).
    */
   static void SetCapturingContent(nsIContent* aContent, PRUint8 aFlags);
 

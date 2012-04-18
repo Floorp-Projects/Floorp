@@ -220,7 +220,7 @@ CodeGenerator::visitRegExp(LRegExp *lir)
 bool
 CodeGenerator::visitLambda(LLambda *lir)
 {
-    typedef JSObject *(*pf)(JSContext *, JSFunction *, JSObject *);
+    typedef JSObject *(*pf)(JSContext *, HandleFunction, HandleObject);
     static const VMFunction Info = FunctionInfo<pf>(js::Lambda);
 
     pushArg(ToRegister(lir->scopeChain()));
@@ -778,9 +778,8 @@ CodeGenerator::visitDefVar(LDefVar *lir)
     Register scopeChain = ToRegister(lir->getScopeChain());
     Register nameTemp   = ToRegister(lir->nameTemp());
 
-    typedef bool (*pf)(JSContext *, PropertyName *, unsigned, JSObject *);
-    static const VMFunction DefVarOrConstInfo =
-        FunctionInfo<pf>(DefVarOrConst);
+    typedef bool (*pf)(JSContext *, HandlePropertyName, unsigned, HandleObject);
+    static const VMFunction DefVarOrConstInfo = FunctionInfo<pf>(DefVarOrConst);
 
     masm.movePtr(ImmWord(lir->mir()->name()), nameTemp);
 
@@ -940,7 +939,7 @@ CodeGenerator::visitNewObjectVMCall(LNewObject *lir)
 {
     Register objReg = ToRegister(lir->output());
 
-    typedef JSObject *(*pf)(JSContext *, JSObject *, types::TypeObject *);
+    typedef JSObject *(*pf)(JSContext *, HandleObject, types::TypeObject *);
     static const VMFunction Info = FunctionInfo<pf>(NewInitObject);
 
     JS_ASSERT(!lir->isCall());
@@ -963,7 +962,7 @@ CodeGenerator::visitNewObject(LNewObject *lir)
 {
     Register objReg = ToRegister(lir->output());
 
-    JSObject *baseObj = lir->mir()->baseObj();
+    RootedVarObject baseObj(gen->cx, lir->mir()->baseObj());
     types::TypeObject *typeObj = lir->mir()->type();
 
     if (!gen->cx->typeInferenceEnabled() || !typeObj ||
@@ -976,7 +975,7 @@ CodeGenerator::visitNewObject(LNewObject *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    JSObject *templateObject = CopyInitializerObject(gen->cx, baseObj);
+    RootedVarObject templateObject(gen->cx, CopyInitializerObject(gen->cx, baseObj));
     if (!templateObject)
         return false;
     templateObject->setType(typeObj);
@@ -1001,7 +1000,7 @@ CodeGenerator::visitInitProp(LInitProp *lir)
 {
     Register objReg = ToRegister(lir->getObject());
 
-    typedef bool(*pf)(JSContext *cx, JSObject *obj, PropertyName *name, const Value &value);
+    typedef bool(*pf)(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value &value);
     static const VMFunction InitPropInfo = FunctionInfo<pf>(InitProp);
 
     pushArg(objReg);
@@ -1041,7 +1040,7 @@ CodeGenerator::visitCreateThisVMCall(LCreateThis *lir)
     JS_ASSERT(!lir->isCall());
     saveLive(lir);
 
-    typedef JSObject *(*pf)(JSContext *cx, JSObject *callee, JSObject *proto);
+    typedef JSObject *(*pf)(JSContext *cx, HandleObject callee, JSObject *proto);
     static const VMFunction CreateThisInfo =
         FunctionInfo<pf>(js_CreateThisForFunctionWithProto);
 
@@ -1310,7 +1309,7 @@ CodeGenerator::visitIsNullOrUndefinedAndBranch(LIsNullOrUndefinedAndBranch *lir)
 bool
 CodeGenerator::visitConcat(LConcat *lir)
 {
-    typedef JSString *(*pf)(JSContext *, JSString *, JSString *);
+    typedef JSString *(*pf)(JSContext *, HandleString, HandleString);
     static const VMFunction js_ConcatStringsInfo = FunctionInfo<pf>(js_ConcatStrings);
 
     pushArg(ToRegister(lir->rhs()));
@@ -1842,7 +1841,7 @@ CodeGenerator::visitArrayPushT(LArrayPushT *lir)
 bool
 CodeGenerator::visitCallIteratorStart(LCallIteratorStart *lir)
 {
-    typedef JSObject *(*pf)(JSContext *, JSObject *, uint32_t);
+    typedef JSObject *(*pf)(JSContext *, HandleObject, uint32_t);
     static const VMFunction Info = FunctionInfo<pf>(GetIteratorObject);
 
     pushArg(Imm32(lir->mir()->flags()));
@@ -1858,7 +1857,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart *lir)
 
     uint32_t flags = lir->mir()->flags();
 
-    typedef JSObject *(*pf)(JSContext *, JSObject *, uint32_t);
+    typedef JSObject *(*pf)(JSContext *, HandleObject, uint32_t);
     static const VMFunction Info = FunctionInfo<pf>(GetIteratorObject);
 
     OutOfLineCode *ool = oolCallVM(Info, lir, (ArgList(), obj, Imm32(flags)), StoreRegisterTo(output));
@@ -1974,7 +1973,7 @@ CodeGenerator::visitIteratorMore(LIteratorMore *lir)
     const Register output = ToRegister(lir->output());
     const Register temp = ToRegister(lir->temp());
 
-    typedef bool (*pf)(JSContext *, JSObject *, JSBool *);
+    typedef bool (*pf)(JSContext *, HandleObject, JSBool *);
     static const VMFunction Info = FunctionInfo<pf>(ion::IteratorMore);
     OutOfLineCode *ool = oolCallVM(Info, lir, (ArgList(), obj), StoreRegisterTo(output));
     if (!ool)
@@ -2167,7 +2166,7 @@ CodeGenerator::visitOutOfLineUnboxDouble(OutOfLineUnboxDouble *ool)
     return true;
 }
 
-typedef bool (*GetPropertyOrNameFn)(JSContext *, JSObject *, PropertyName *, Value *);
+typedef bool (*GetPropertyOrNameFn)(JSContext *, HandleObject, HandlePropertyName, Value *);
 
 bool
 CodeGenerator::visitCallGetProperty(LCallGetProperty *lir)

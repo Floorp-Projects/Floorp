@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/FloatingPoint.h"
+
 #include "jscntxt.h"
 #include "jsscope.h"
 #include "jsobj.h"
@@ -216,11 +218,14 @@ stubs::ToId(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::ImplicitThis(VMFrame &f, PropertyName *name)
+stubs::ImplicitThis(VMFrame &f, PropertyName *name_)
 {
+    RootedVarObject scopeObj(f.cx, f.cx->stack.currentScriptedScopeChain());
+    RootedVarPropertyName name(f.cx, name_);
+
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!FindPropertyHelper(f.cx, name, false, f.cx->stack.currentScriptedScopeChain(), &obj, &obj2, &prop))
+    if (!FindPropertyHelper(f.cx, name, false, scopeObj, &obj, &obj2, &prop))
         THROW();
 
     if (!ComputeImplicitThis(f.cx, obj, &f.regs.sp[0]))
@@ -316,9 +321,9 @@ stubs::Ursh(VMFrame &f)
 
 template<JSBool strict>
 void JS_FASTCALL
-stubs::DefFun(VMFrame &f, JSFunction *fun)
+stubs::DefFun(VMFrame &f, JSFunction *fun_)
 {
-    JSObject *obj2;
+    RootedVarFunction fun(f.cx, fun_);
 
     JSContext *cx = f.cx;
     StackFrame *fp = f.fp();
@@ -331,6 +336,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
      */
     JSObject *obj = fun;
 
+    RootedVarObject obj2(f.cx);
     if (fun->isNullClosure()) {
         /*
          * Even a null closure needs a parent for principals finding.
@@ -620,7 +626,7 @@ stubs::Add(VMFrame &f)
     /* The string + string case is easily the hottest;  try it first. */
     bool lIsString = lval.isString();
     bool rIsString = rval.isString();
-    JSString *lstr, *rstr;
+    RootedVarString lstr(cx), rstr(cx);
     if (lIsString && rIsString) {
         lstr = lval.toString();
         rstr = rval.toString();
@@ -726,13 +732,13 @@ stubs::Div(VMFrame &f)
         const Value *vp;
 #ifdef XP_WIN
         /* XXX MSVC miscompiles such that (NaN == 0) */
-        if (JSDOUBLE_IS_NaN(d2))
+        if (MOZ_DOUBLE_IS_NaN(d2))
             vp = &rt->NaNValue;
         else
 #endif
-        if (d1 == 0 || JSDOUBLE_IS_NaN(d1))
+        if (d1 == 0 || MOZ_DOUBLE_IS_NaN(d1))
             vp = &rt->NaNValue;
-        else if (JSDOUBLE_IS_NEG(d1) != JSDOUBLE_IS_NEG(d2))
+        else if (MOZ_DOUBLE_IS_NEGATIVE(d1) != MOZ_DOUBLE_IS_NEGATIVE(d2))
             vp = &rt->negativeInfinityValue;
         else
             vp = &rt->positiveInfinityValue;
@@ -924,7 +930,7 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
     JSObject *obj;
 
     if (baseobj) {
-        obj = CopyInitializerObject(cx, baseobj);
+        obj = CopyInitializerObject(cx, RootedVarObject(cx, baseobj));
     } else {
         gc::AllocKind kind = GuessObjectGCKind(0);
         obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
@@ -999,9 +1005,11 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
 }
 
 JSObject * JS_FASTCALL
-stubs::Lambda(VMFrame &f, JSFunction *fun)
+stubs::Lambda(VMFrame &f, JSFunction *fun_)
 {
-    JSObject *parent;
+    RootedVarFunction fun(f.cx, fun_);
+
+    RootedVarObject parent(f.cx);
     if (fun->isNullClosure()) {
         parent = &f.fp()->scopeChain();
     } else {
@@ -1072,7 +1080,7 @@ InitPropOrMethod(VMFrame &f, PropertyName *name, JSOp op)
     rval = regs.sp[-1];
 
     /* Load the object being initialized into lval/obj. */
-    JSObject *obj = &regs.sp[-2].toObject();
+    RootedVarObject obj(cx, &regs.sp[-2].toObject());
     JS_ASSERT(obj->isNative());
 
     /* Get the immediate property name into id. */
@@ -1113,7 +1121,7 @@ stubs::IterMore(VMFrame &f)
 
     Value v;
     JSObject *iterobj = &f.regs.sp[-1].toObject();
-    if (!js_IteratorMore(f.cx, iterobj, &v))
+    if (!js_IteratorMore(f.cx, RootedVarObject(f.cx, iterobj), &v))
         THROWV(JS_FALSE);
 
     return v.toBoolean();
@@ -1380,7 +1388,7 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
         if (d == 0) {
             /* Treat -0 (double) as 0. */
             tableIdx = 0;
-        } else if (!JSDOUBLE_IS_INT32(d, &tableIdx)) {
+        } else if (!MOZ_DOUBLE_IS_INT32(d, &tableIdx)) {
             goto finally;
         }
     } else {
@@ -1416,11 +1424,14 @@ stubs::Pos(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::DelName(VMFrame &f, PropertyName *name)
+stubs::DelName(VMFrame &f, PropertyName *name_)
 {
+    RootedVarObject scopeObj(f.cx, f.cx->stack.currentScriptedScopeChain());
+    RootedVarPropertyName name(f.cx, name_);
+
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!FindProperty(f.cx, name, f.cx->stack.currentScriptedScopeChain(), &obj, &obj2, &prop))
+    if (!FindProperty(f.cx, name, scopeObj, &obj, &obj2, &prop))
         THROW();
 
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
@@ -1483,7 +1494,7 @@ stubs::DefVarOrConst(VMFrame &f, PropertyName *dn)
 
     JSObject &obj = f.fp()->varObj();
 
-    if (!DefVarOrConstOperation(f.cx, obj, dn, attrs))
+    if (!DefVarOrConstOperation(f.cx, RootedVarObject(f.cx, &obj), dn, attrs))
         THROW();
 }
 

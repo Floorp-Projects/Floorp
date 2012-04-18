@@ -68,7 +68,6 @@ CPPSRCS = \
   nsAccTreeWalker.cpp \
   nsBaseWidgetAccessible.cpp \
   nsEventShell.cpp \
-  nsFormControlAccessible.cpp \
   nsRootAccessible.cpp \
   nsApplicationAccessible.cpp \
   nsCaretAccessible.cpp \
@@ -85,13 +84,11 @@ EXPORTS = \
   nsAccessibilityService.h \
   nsAccessible.h \
   nsAccessNode.h \
-  nsARIAMap.h \
   $(NULL)
 
 EXPORTS_NAMESPACES = mozilla/a11y
 
 EXPORTS_mozilla/a11y = \
-  ARIAStateMap.h \
   FocusManager.h \
   States.h \
   Role.h \

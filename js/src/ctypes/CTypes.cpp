@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/FloatingPoint.h"
+
 #include "CTypes.h"
 #include "Library.h"
 #include "jsnum.h"
@@ -490,14 +492,6 @@ static JSFunctionSpec sModuleFunctions[] = {
   JS_FN("libraryName", Library::Name, 1, CTYPESFN_FLAGS),
   JS_FS_END
 };
-
-static inline bool FloatIsFinite(double f) {
-#ifdef WIN32
-  return _finite(f) != 0;
-#else
-  return finite(f);
-#endif
-}
 
 JS_ALWAYS_INLINE JSString*
 NewUCString(JSContext* cx, const AutoString& from)
@@ -1539,7 +1533,7 @@ jsvalToIntegerExplicit(jsval val, IntegerType* result)
   if (JSVAL_IS_DOUBLE(val)) {
     // Convert -Inf, Inf, and NaN to 0; otherwise, convert by C-style cast.
     double d = JSVAL_TO_DOUBLE(val);
-    *result = FloatIsFinite(d) ? IntegerType(d) : 0;
+    *result = MOZ_DOUBLE_IS_FINITE(d) ? IntegerType(d) : 0;
     return true;
   }
   if (!JSVAL_IS_PRIMITIVE(val)) {

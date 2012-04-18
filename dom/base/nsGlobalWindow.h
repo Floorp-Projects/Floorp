@@ -939,7 +939,6 @@ protected:
 
   typedef nsCOMArray<nsIDOMStorageEvent> nsDOMStorageEventArray;
   nsDOMStorageEventArray mPendingStorageEvents;
-  nsAutoPtr< nsDataHashtable<nsStringHashKey, bool> > mPendingStorageEventsObsolete;
 
   PRUint32 mTimeoutsSuspendDepth;
 
@@ -1058,8 +1057,20 @@ protected:
 };
 
 /* factory function */
-nsresult
-NS_NewScriptGlobalObject(bool aIsChrome, bool aIsModalContentWindow,
-                         nsIScriptGlobalObject **aResult);
+inline already_AddRefed<nsGlobalWindow>
+NS_NewScriptGlobalObject(bool aIsChrome, bool aIsModalContentWindow)
+{
+  nsRefPtr<nsGlobalWindow> global;
+
+  if (aIsChrome) {
+    global = new nsGlobalChromeWindow(nsnull);
+  } else if (aIsModalContentWindow) {
+    global = new nsGlobalModalWindow(nsnull);
+  } else {
+    global = new nsGlobalWindow(nsnull);
+  }
+
+  return global.forget();
+}
 
 #endif /* nsGlobalWindow_h___ */

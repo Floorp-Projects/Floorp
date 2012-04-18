@@ -163,26 +163,26 @@ class ElementIteratorObject : public JSObject {
 };
 
 bool
-VectorToIdArray(JSContext *cx, js::AutoIdVector &props, JSIdArray **idap);
+VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap);
 
 bool
-GetIterator(JSContext *cx, JSObject *obj, unsigned flags, js::Value *vp);
+GetIterator(JSContext *cx, HandleObject obj, unsigned flags, Value *vp);
 
 JSObject *
-GetIteratorObject(JSContext *cx, JSObject *obj, unsigned flags);
+GetIteratorObject(JSContext *cx, HandleObject obj, unsigned flags);
 
 bool
-VectorToKeyIterator(JSContext *cx, JSObject *obj, unsigned flags, js::AutoIdVector &props, js::Value *vp);
+VectorToKeyIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props, Value *vp);
 
 bool
-VectorToValueIterator(JSContext *cx, JSObject *obj, unsigned flags, js::AutoIdVector &props, js::Value *vp);
+VectorToValueIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props, Value *vp);
 
 /*
  * Creates either a key or value iterator, depending on flags. For a value
  * iterator, performs value-lookup to convert the given list of jsids.
  */
 bool
-EnumeratedIdVectorToIterator(JSContext *cx, JSObject *obj, unsigned flags, js::AutoIdVector &props, js::Value *vp);
+EnumeratedIdVectorToIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props, Value *vp);
 
 /*
  * Convert the value stored in *vp to its iteration object. The flags should
@@ -191,7 +191,7 @@ EnumeratedIdVectorToIterator(JSContext *cx, JSObject *obj, unsigned flags, js::A
  * iterator will never be exposed to scripts.
  */
 extern JSBool
-ValueToIterator(JSContext *cx, unsigned flags, js::Value *vp);
+ValueToIterator(JSContext *cx, unsigned flags, Value *vp);
 
 extern bool
 CloseIterator(JSContext *cx, JSObject *iterObj);
@@ -219,7 +219,7 @@ js_SuppressDeletedElements(JSContext *cx, JSObject *obj, uint32_t begin, uint32_
  * picked up by IteratorNext(). The value is cached in the current context.
  */
 extern bool
-js_IteratorMore(JSContext *cx, JSObject *iterobj, js::Value *rval);
+js_IteratorMore(JSContext *cx, js::HandleObject iterobj, js::Value *rval);
 
 extern bool
 js_IteratorNext(JSContext *cx, JSObject *iterobj, js::Value *rval);
@@ -236,7 +236,7 @@ namespace js {
  * more values, store the magic value JS_NO_ITER_VALUE in *vp and return true.
  */
 inline bool
-Next(JSContext *cx, JSObject *iter, Value *vp)
+Next(JSContext *cx, HandleObject iter, Value *vp)
 {
     if (!js_IteratorMore(cx, iter, vp))
         return false;
@@ -265,7 +265,7 @@ ForOf(JSContext *cx, const Value &iterable, Op op)
     Value iterv(iterable);
     if (!ValueToIterator(cx, JSITER_FOR_OF, &iterv))
         return false;
-    JSObject *iter = &iterv.toObject();
+    RootedVarObject iter(cx, &iterv.toObject());
 
     bool ok = true;
     while (ok) {

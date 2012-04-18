@@ -300,9 +300,6 @@ pref("accessibility.typeaheadfind.prefillwithselection", true);
 // use Mac OS X Appearance panel text smoothing setting when rendering text, disabled by default
 pref("gfx.use_text_smoothing_setting", false);
 
-// show checkerboard pattern on android, enabled by default (option exists for image analysis testing)
-pref("gfx.show_checkerboard_pattern", true);
-
 // loading and rendering of framesets and iframes
 pref("browser.frames.enabled", true);
 
@@ -820,9 +817,11 @@ pref("network.http.pipelining.max-optimistic-requests" , 4);
 
 pref("network.http.pipelining.aggressive", false);
 pref("network.http.pipelining.maxsize" , 300000);
+pref("network.http.pipelining.reschedule-on-timeout", true);
+pref("network.http.pipelining.reschedule-timeout", 1500);
 
 // The read-timeout is a ms timer that causes the transaction to be completely
-// restarted without pipelining. Set to 0 to disable.
+// restarted without pipelining.
 pref("network.http.pipelining.read-timeout", 30000);
 
 // Prompt for 307 redirects
@@ -3492,6 +3491,7 @@ pref("full-screen-api.allow-trusted-requests-only", true);
 pref("full-screen-api.key-input-restricted", true);
 pref("full-screen-api.warning.enabled", true);
 pref("full-screen-api.exit-on-deactivate", true);
+pref("full-screen-api.pointer-lock.enabled", true);
 
 // Time limit, in milliseconds, for nsEventStateManager::IsHandlingUserInput().
 // Used to detect long running handlers of user-generated events.

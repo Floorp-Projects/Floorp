@@ -1,6 +1,9 @@
 deps = {
   "trunk/third_party/gyp":
       "http://gyp.googlecode.com/svn/trunk@1080",
+
+  "trunk/third_party/googletest":
+      "http://googletest.googlecode.com/svn/trunk@573", #release 1.6.0
 }
 
 hooks = [

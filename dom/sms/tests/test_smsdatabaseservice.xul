@@ -1,0 +1,330 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Test SmsDatabaseService"
+        onload="run_test();">
+  <title>Test SmsDatabaseService</title>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"><![CDATA[
+
+function run_test() {
+  SimpleTest.waitForExplicitFinish();
+  run_next_test();
+}
+
+let gTests = [];
+
+function add_test(func) {
+  gTests.push(func);
+}
+
+function run_next_test() {
+  let func = gTests.shift();
+  if (!func) {
+    SimpleTest.finish();
+    return;
+  }
+  SimpleTest.executeSoon(func);
+}
+
+
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
+let gIDBManager = Cc["@mozilla.org/dom/indexeddb/manager;1"]
+                    .getService(Ci.nsIIndexedDatabaseManager);
+
+let gSmsDatabaseService = Cc["@mozilla.org/sms/rilsmsdatabaseservice;1"]
+                          .getService(Ci.nsISmsDatabaseService);
+
+let gRegistrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+
+
+let SmsRequestManagerImpl = {
+  notifySmsSent: function notifySmsSent(requestId, message) {
+    ok(false, "Unexpected notifySmsSent.");
+  },
+  notifySmsSendFailed: function notifySmsSendFailed(requestId, error) {
+    ok(false, "Unexpected notifySmsSendFailed.");
+  },
+  notifyGotSms: function notifyGotSms(requestId, message) {
+    ok(false, "Unexpected notifyGotSms.");
+  },
+  notifyGetSmsFailed: function notifyGetSmsFailed(requestId, error) {
+    ok(false, "Unexpected notifyGetSmsFailed." + k);
+  },
+  notifySmsDeleted: function notifySmsDeleted(requestId, message) {
+    ok(false, "Unexpected notifySmsSent.");
+  },
+  notifySmsDeleteFailed: function notifySmsDeleteFailed(requestId, error) {
+    ok(false, "Unexpected notifySmsDeleteFailed.");
+  },
+  notifyNoMessageInList: function notifyNoMessageInList(requestId) {
+    ok(false, "Unexpected notifyNoMessageInList.");
+  },
+  noitfyCreateMessageList: function notifyCreateMessageList(requestId,
+                                                            listId,
+                                                            message) {
+    ok(false, "Unexpected notifyCreateMessageList.");
+  },
+  notifyGotNextMessage: function notifyGotNextMessage(requestId, message) {
+    ok(false, "Unexpected notifyGotNextMessage.");
+  },
+  notifyReadMessageListFailed: function notifyReadMessageListFailed(requestId, error) {
+    ok(false, "Unexpected notifyReadMessageListFailed.");
+  }
+};
+
+let FakeSmsRequestManagerService = {
+  contractID: "@mozilla.org/sms/smsrequestmanager;1",
+  //get CID() { return gRegistrar.contractIDToCID(this.contractID); },
+  CID: Components.ID("{a97a3129-1e0b-45da-a385-cfe5b0b1c48f}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISmsRequestManager,
+                                         Ci.nsIFactory]),
+  createInstance: function createInstance(outer, iid) {
+    if (outer != null) {
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+    }
+    return this;
+  },
+  __proto__: SmsRequestManagerImpl
+};
+
+/**
+ * Create and register a new fake nsISmsRequestManager service.
+ *
+ * Example:
+ *
+ *   fakeSmsRequestManager({
+ *     notifySmsSent: function notifySmsSent() {
+ *       ...
+ *     }
+ *   });
+ */
+function fakeSmsRequestManager(obj) {
+  let service = FakeSmsRequestManagerService;
+
+  // Clean previous methods from the service, then copy new ones onto it.
+  for (let name in SmsRequestManagerImpl) {
+    delete service[name];
+  }
+  for (let name in obj) {
+    service[name] = obj[name];
+  }
+
+  // Register service
+  let oldFactory = Components.manager.getClassObject(Cc[service.contractID],
+                                                     Ci.nsIFactory);
+  gRegistrar.unregisterFactory(service.CID, oldFactory);
+  gRegistrar.registerFactory(service.CID,
+                             "Fake SmsRequestManager",
+                             service.contractID,
+                             service);
+}
+
+const DB_NAME = "sms";
+const DB_VERSION = 1;
+const STORE_NAME = "sms";
+gIDBManager.initWindowless(this);
+
+let _db;
+function ensureDB(callback) {
+  if (_db) {
+    callback(_db);
+    return;
+  }
+  let request;
+  try {
+    request = mozIndexedDB.open(DB_NAME, DB_VERSION);
+  } catch (ex) {
+    ok(false, ex);
+  }
+  request.onsuccess = function onsuccess(event) {
+    _db = request.result;
+    callback(_db);
+  };
+  request.onerror =
+  request.onupgradeneeded =
+  request.onblocked = function onerror(event) {
+    ok(false, "Opening DB failed: " + request.errorCode);
+  };
+};
+
+function checkDB(callback) {
+  ensureDB(function (db) {
+    let txn = db.transaction([STORE_NAME], Ci.nsIIDBTransaction.READ_WRITE);
+    let store = txn.objectStore(STORE_NAME);
+    txn.oncomplete = run_next_test;
+    txn.onerror = function onerror(event) {
+      ok(false, "Transaction failed: " + event.target.errorCode);
+    };
+    callback(store);
+  });
+}
+
+
+let sms = [
+  {
+    sender: "+34666000000",
+    receiver: "+34666111000",
+    body: "message 0",
+    timestamp: 1329999861762
+  },
+  {
+    sender: "+34666000111",
+    receiver: "+34666111111",
+    body: "message 1",
+    timestamp: 1329999861763
+  },
+  {
+    sender: "+34666000222",
+    receiver: "+34666111222",
+    body: "message 2",
+    timestamp: 1329999861764
+  },
+  {
+    sender: "+34666000333",
+    receiver: "+34666111333",
+    body: "message 3",
+    timestamp: 1329999861765
+  }
+];
+
+add_test(function test_save_received_message() {
+  let messageId = gSmsDatabaseService.saveReceivedMessage(sms[0].sender,
+                                                          sms[0].body,
+                                                          sms[0].timestamp);
+  checkDB(function (store) {
+    let request = store.get(messageId);
+    request.onsuccess = function onsuccess() {
+      let data = request.result;
+      isnot(data, null);
+      is(data.id,        messageId);
+      is(data.sender,    sms[0].sender);
+      is(data.receiver,  null);
+      is(data.body,      sms[0].body);
+      is(data.timestamp, sms[0].timestamp);
+    };
+  });
+});
+
+add_test(function test_save_sent_message() {
+  let messageId = gSmsDatabaseService.saveSentMessage(sms[1].receiver,
+                                                      sms[1].body,
+                                                      sms[1].timestamp);
+
+  checkDB(function (store) {
+    let request = store.get(messageId);
+    request.onsuccess = function onsuccess() {
+      let data = request.result;
+      isnot(data, null);
+      is(data.id,        messageId);
+      is(data.sender,    null);
+      is(data.receiver,  sms[1].receiver);
+      is(data.body,      sms[1].body);
+      is(data.timestamp, sms[1].timestamp);
+    };
+  });
+});
+
+add_test(function test_getMessage_success() {
+  fakeSmsRequestManager({
+    notifyGotSms: function notifyGotSms(requestId, message) {
+      is(requestId, 42);
+      ok(message instanceof Ci.nsIDOMMozSmsMessage);
+      is(message.id,       messageId);
+      is(message.delivery, "received");
+      is(message.sender,   sms[2].sender);
+      is(message.receiver, null);
+      is(message.body,     sms[2].body);
+      run_next_test();
+    }
+  });
+  let messageId = gSmsDatabaseService.saveReceivedMessage(sms[2].sender,
+                                                          sms[2].body,
+                                                          sms[2].timestamp);
+  SimpleTest.executeSoon(function () {
+    gSmsDatabaseService.getMessage(messageId, 42);
+  });
+});
+
+add_test(function test_getMessage_failed() {
+  fakeSmsRequestManager({
+    notifyGetSmsFailed: function notifyGetSmsFailed(requestId, error) {
+      is(requestId, 23);
+      is(error, Ci.nsISmsRequestManager.NOT_FOUND_ERROR);
+      run_next_test();
+    }
+  });
+  gSmsDatabaseService.getMessage(-1, 23);
+});
+
+add_test(function test_createMessageList_empty_filter() {
+  fakeSmsRequestManager({
+    notifyCreateMessageList: function notifyCreateMessageList(requestId,
+                                                              listId,
+                                                              message) {
+      is(requestId, 24);
+      is(message.sender,              sms[0].sender);
+      is(message.receiver,            null);
+      is(message.body,                sms[0].body);
+      is(message.timestamp.getTime(), sms[0].timestamp);
+      // TODO check the rest of the message list
+      run_next_test();
+    },
+  });
+  let filter = new MozSmsFilter();
+  gSmsDatabaseService.createMessageList(filter, false, 24);
+});
+
+add_test(function test_createMessageList_delivery_sent_filter() {
+  fakeSmsRequestManager({
+    notifyCreateMessageList: function notifyCreateMessageList(requestId,
+                                                              listId,
+                                                              message) {
+      is(requestId, 24);
+      is(message.sender,              null);
+      is(message.receiver,            sms[1].receiver);
+      is(message.body,                sms[1].body);
+      is(message.timestamp.getTime(), sms[1].timestamp);
+      // TODO check the rest of the message list
+      run_next_test();
+    },
+  });
+  let filter = new MozSmsFilter();
+  filter.delivery = "sent";
+  gSmsDatabaseService.createMessageList(filter, false, 24);
+});
+
+add_test(function test_createMessageList_delivery_received_filter() {
+  fakeSmsRequestManager({
+    notifyCreateMessageList: function notifyCreateMessageList(requestId,
+                                                              listId,
+                                                              message) {
+      is(requestId, 24);
+      is(message.sender,              sms[0].sender);
+      is(message.receiver,            null);
+      is(message.body,                sms[0].body);
+      is(message.timestamp.getTime(), sms[0].timestamp);
+      // TODO check the rest of the message list
+      run_next_test();
+    },
+  });
+  let filter = new MozSmsFilter();
+  filter.delivery = "received";
+  gSmsDatabaseService.createMessageList(filter, false, 24);
+});
+
+]]></script>
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+  </body>
+</window>

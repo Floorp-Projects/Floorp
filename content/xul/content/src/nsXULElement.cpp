@@ -2686,11 +2686,10 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                                    const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     NS_PRECONDITION(aNodeInfos, "missing nodeinfo array");
-    nsresult rv;
 
     // Read Node Info
     PRUint32 number;
-    rv |= aStream->Read32(&number);
+    nsresult rv = aStream->Read32(&number);
     mNodeInfo = aNodeInfos->SafeObjectAt(number);
     if (!mNodeInfo)
         return NS_ERROR_UNEXPECTED;

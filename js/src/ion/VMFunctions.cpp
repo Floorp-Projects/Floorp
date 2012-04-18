@@ -94,18 +94,18 @@ ReportOverRecursed(JSContext *cx)
 }
 
 bool
-DefVarOrConst(JSContext *cx, PropertyName *dn, unsigned attrs, JSObject *scopeChain)
+DefVarOrConst(JSContext *cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain)
 {
     // Given the ScopeChain, extract the VarObj.
-    JSObject *obj = scopeChain;
+    RootedVarObject obj(cx, scopeChain);
     while (!obj->isVarObj())
         obj = obj->enclosingScope();
 
-    return DefVarOrConstOperation(cx, *obj, dn, attrs);
+    return DefVarOrConstOperation(cx, obj, dn, attrs);
 }
 
 bool
-InitProp(JSContext *cx, JSObject *obj, PropertyName *name, const Value &value)
+InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value &value)
 {
     // Copy the incoming value. This may be overwritten; the return value is discarded.
     Value rval = value;
@@ -192,7 +192,7 @@ ValueToBooleanComplement(JSContext *cx, const Value &input, JSBool *output)
 }
 
 bool
-IteratorMore(JSContext *cx, JSObject *obj, JSBool *res)
+IteratorMore(JSContext *cx, HandleObject obj, JSBool *res)
 {
     Value tmp;
     if (!js_IteratorMore(cx, obj, &tmp))
@@ -222,9 +222,9 @@ NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type)
 }
 
 JSObject*
-NewInitObject(JSContext *cx, JSObject *baseObj, types::TypeObject *type)
+NewInitObject(JSContext *cx, HandleObject baseObj, types::TypeObject *type)
 {
-    JSObject *obj = CopyInitializerObject(cx, baseObj);
+    RootedVarObject obj(cx, CopyInitializerObject(cx, baseObj));
     if (!obj)
         return NULL;
 

@@ -50,7 +50,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(75825309-f449-451f-a252-c3ac83c857af)]
+[scriptable, uuid(FDAF779F-BCCA-4653-91AE-CD4D23E4CC69)]
 interface nsIDOMHTMLPreElement : nsIDOMHTMLElement
 {
            attribute long             width;

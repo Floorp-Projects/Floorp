@@ -279,12 +279,10 @@ RadioInterfaceLayer.prototype = {
         // indicating the time, daylight savings flag, and timezone
         // sent from the network and a timestamp of when the message was received
         // so an offset can be added if/when the time is actually set.
-        if (DEBUG) {
-          debug("nitzTime networkTime=" + message.networkTimeInSeconds
-               + " timezone=" + message.networkTimeZoneInMinutes
-               + " dst=" + message.dstFlag
-               + " timestamp=" + message.localTimeStampInMS);
-        }
+        debug("nitzTime networkTime=" + message.networkTimeInSeconds +
+              " timezone=" + message.networkTimeZoneInMinutes +
+              " dst=" + message.dstFlag +
+              " timestamp=" + message.localTimeStampInMS);
         break;
       case "siminfo":
         this.radioState.msisdn = message.msisdn;

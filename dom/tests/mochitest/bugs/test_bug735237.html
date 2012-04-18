@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=735237
+-->
+<head>
+  <title>Test for Bug 735237</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=735237">Mozilla Bug 735237</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 735237 **/
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({"set": [["dom.disable_window_showModalDialog", true]]}, function() {
+  var caughtException = false;
+  try {
+    window.showModalDialog("http://example.com/");
+  } catch (e) {
+    caughtException = true;
+  }
+  ok(caughtException, "showModalDialog should throw an exception");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

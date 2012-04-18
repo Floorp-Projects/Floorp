@@ -19,7 +19,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -46,7 +46,6 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>C:\Users\Bas\Dev\gfx-debug\dist\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -58,7 +57,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_SSE2;WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -78,6 +77,7 @@
     <ClInclude Include="BaseRect.h" />
     <ClInclude Include="BaseSize.h" />
     <ClInclude Include="DrawTargetD2D.h" />
+    <ClInclude Include="DrawTargetDual.h" />
     <ClInclude Include="GradientStopsD2D.h" />
     <ClInclude Include="HelpersD2D.h" />
     <ClInclude Include="Logging.h" />
@@ -90,9 +90,11 @@
     <ClInclude Include="SourceSurfaceD2DTarget.h" />
     <ClInclude Include="Tools.h" />
     <ClInclude Include="Types.h" />
+    <ClInclude Include="UserData.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DrawTargetD2D.cpp" />
+    <ClCompile Include="DrawTargetDual.cpp" />
     <ClCompile Include="Factory.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="PathD2D.cpp" />

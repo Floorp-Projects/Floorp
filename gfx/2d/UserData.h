@@ -39,7 +39,7 @@
 #define MOZILLA_GFX_USERDATA_H_
 
 #include <stdlib.h>
-#include "mozilla/mozalloc.h"
+#include "mozilla/Assertions.h"
 
 namespace mozilla {
 namespace gfx {
@@ -65,7 +65,11 @@ public:
     // but that would propagate an stl dependency out which we'd rather not
     // do (see bug 666609). Plus, the entries array is expect to stay small
     // so doing a realloc everytime we add a new entry shouldn't be too costly
-    entries = static_cast<Entry*>(moz_xrealloc(entries, sizeof(Entry)*(count+1)));
+    entries = static_cast<Entry*>(realloc(entries, sizeof(Entry)*(count+1)));
+
+    if (!entries) {
+      MOZ_CRASH();
+    }
 
     entries[count].key      = key;
     entries[count].userData = userData;

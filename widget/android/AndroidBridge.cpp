@@ -167,7 +167,6 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jGetCurrentBatteryInformation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getCurrentBatteryInformation", "()[D");
     jRemovePluginView = jEnv->GetStaticMethodID(jGeckoAppShellClass, "removePluginView", "(Landroid/view/View;)V");
 
-    jGetAccessibilityEnabled = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getAccessibilityEnabled", "()Z");
     jHandleGeckoMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "handleGeckoMessage", "(Ljava/lang/String;)Ljava/lang/String;");
     jCheckUriVisited = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "checkUriVisited", "(Ljava/lang/String;)V");
     jMarkUriVisited = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "markUriVisited", "(Ljava/lang/String;)V");
@@ -184,7 +183,6 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jGetCurrentNetworkInformation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getCurrentNetworkInformation", "()[D");
     jEnableNetworkNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableNetworkNotifications", "()V");
     jDisableNetworkNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "disableNetworkNotifications", "()V");
-    jEmitGeckoAccessibilityEvent = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "emitGeckoAccessibilityEvent", "(I[Ljava/lang/String;Ljava/lang/String;ZZZ)V");
 
     jGetScreenOrientation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getScreenOrientation", "()S");
     jEnableScreenOrientationNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableScreenOrientationNotifications", "()V");
@@ -815,18 +813,6 @@ AndroidBridge::HideProgressDialogOnce()
         env->CallStaticVoidMethod(mGeckoAppShellClass, jHideProgressDialog);
         once = true;
     }
-}
-
-bool
-AndroidBridge::GetAccessibilityEnabled()
-{
-    ALOG_BRIDGE("AndroidBridge::GetAccessibilityEnabled");
-
-    JNIEnv *env = GetJNIEnv();
-    if (!env)
-        return false;
-
-    return env->CallStaticBooleanMethod(mGeckoAppShellClass, jGetAccessibilityEnabled);
 }
 
 void
@@ -1575,19 +1561,6 @@ AndroidBridge::MarkURIVisited(const nsAString& aURI)
     AutoLocalJNIFrame jniFrame(env, 1);
     jstring jstrURI = env->NewString(nsPromiseFlatString(aURI).get(), aURI.Length());
     env->CallStaticVoidMethod(mGeckoAppShellClass, jMarkUriVisited, jstrURI);
-}
-
-void AndroidBridge::EmitGeckoAccessibilityEvent (PRInt32 eventType, const nsTArray<nsString>& text, const nsAString& description, bool enabled, bool checked, bool password) {
-    AutoLocalJNIFrame jniFrame;
-    jobjectArray jarrayText = mJNIEnv->NewObjectArray(text.Length(),
-                                                      jStringClass, 0);
-    for (PRUint32 i = 0; i < text.Length() ; i++) {
-        jstring jstrText = mJNIEnv->NewString(nsPromiseFlatString(text[i]).get(),
-                                              text[i].Length());
-        mJNIEnv->SetObjectArrayElement(jarrayText, i, jstrText);
-    }
-    jstring jstrDescription = mJNIEnv->NewString(nsPromiseFlatString(description).get(), description.Length());
-    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEmitGeckoAccessibilityEvent, eventType, jarrayText, jstrDescription, enabled, checked, password);
 }
 
 PRUint16

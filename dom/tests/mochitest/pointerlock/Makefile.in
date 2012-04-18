@@ -1,0 +1,38 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH	= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir	= @srcdir@
+VPATH	= @srcdir@
+relativesrcdir	= dom/tests/mochitest/pointerlock
+
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/rules.mk
+
+_TEST_FILES	= \
+		test_pointerlock-api.html \
+		pointerlock_utils.js \
+		file_pointerlock-api.html \
+		file_pointerlockerror.html \
+		file_escapeKey.html \
+		file_withoutDOM.html \
+		file_removedFromDOM.html \
+		file_pointerLockPref.html \
+		file_nestedFullScreen.html \
+		file_doubleLock.html \
+		file_childIframe.html \
+		file_movementXY.html \
+		file_infiniteMovement.html \
+		file_retargetMouseEvents.html \
+		file_targetOutOfFocus.html \
+		file_screenClientXYConst.html \
+		file_suppressSomeMouseEvents.html \
+		file_locksvgelement.html \
+		iframe_differentDOM.html \
+		$(NULL)
+
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

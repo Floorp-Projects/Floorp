@@ -3604,12 +3604,12 @@ function FillHistoryMenu(aParent) {
     item.setAttribute("index", j);
 
     if (j != index) {
-      function FHM_getFaviconURLCallback(aURI) {
-        let iconURL = PlacesUtils.favicons.getFaviconLinkForIcon(aURI).spec;
-        item.style.listStyleImage = "url(" + iconURL + ")";
-      }
-      PlacesUtils.favicons.getFaviconURLForPage(entry.URI,
-                                                FHM_getFaviconURLCallback);
+      PlacesUtils.favicons.getFaviconURLForPage(entry.URI, function (aURI) {
+        if (aURI) {
+          let iconURL = PlacesUtils.favicons.getFaviconLinkForIcon(aURI).spec;
+          item.style.listStyleImage = "url(" + iconURL + ")";
+        }
+      });
     }
 
     if (j < index) {
@@ -7285,7 +7285,7 @@ var gPluginHandler = {
     };
     let options = { dismissed: true };
     PopupNotifications.show(aBrowser, "click-to-play-plugins",
-                            messageString, "addons-notification-icon",
+                            messageString, "plugins-notification-icon",
                             action, null, options);
   },
 

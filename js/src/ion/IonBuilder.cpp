@@ -2504,7 +2504,7 @@ IonBuilder::getSingletonPrototype(JSFunction *target)
 }
 
 MDefinition *
-IonBuilder::createThisScriptedSingleton(JSFunction *target, JSObject *proto, MDefinition *callee)
+IonBuilder::createThisScriptedSingleton(HandleFunction target, HandleObject proto, MDefinition *callee)
 {
     // Generate an inline path to create a new |this| object with
     // the given singleton prototype.
@@ -2514,7 +2514,7 @@ IonBuilder::createThisScriptedSingleton(JSFunction *target, JSObject *proto, MDe
     if (!types::TypeScript::ThisTypes(target->script())->hasType(types::Type::ObjectType(type)))
         return NULL;
 
-    JSObject *templateObject = js_CreateThisForFunctionWithProto(cx, target, proto);
+    RootedVarObject templateObject(cx, js_CreateThisForFunctionWithProto(cx, target, proto));
     if (!templateObject)
         return NULL;
 
@@ -2532,7 +2532,7 @@ IonBuilder::createThisScriptedSingleton(JSFunction *target, JSObject *proto, MDe
 }
 
 MDefinition *
-IonBuilder::createThis(JSFunction *target, MDefinition *callee)
+IonBuilder::createThis(HandleFunction target, MDefinition *callee)
 {
     if (target->isNative()) {
         if (!target->isNativeConstructor())
@@ -2541,7 +2541,7 @@ IonBuilder::createThis(JSFunction *target, MDefinition *callee)
     }
 
     MDefinition *createThis = NULL;
-    JSObject *proto = getSingletonPrototype(target);
+    RootedVarObject proto(cx, getSingletonPrototype(target));
 
     // Try baking in the prototype.
     if (proto)
@@ -2565,14 +2565,14 @@ IonBuilder::jsop_funcall(uint32 argc)
     // argc+2: The native 'call' function.
 
     // If |Function.prototype.call| may be overridden, don't optimize callsite.
-    JSFunction *native = getSingleCallTarget(argc, pc);
+    RootedVarFunction native(cx, getSingleCallTarget(argc, pc));
     if (!native || !native->isNative() || native->native() != &js_fun_call)
         return makeCall(native, argc, false);
 
     // Extract call target.
     types::TypeSet *funTypes = oracle->getCallArg(script, argc, 0, pc);
-    JSObject *funobj   = (funTypes) ? funTypes->getSingleton(cx, false) : NULL;
-    JSFunction *target = (funobj && funobj->isFunction()) ? funobj->toFunction() : NULL;
+    RootedVarObject funobj(cx, (funTypes) ? funTypes->getSingleton(cx, false) : NULL);
+    RootedVarFunction target(cx, (funobj && funobj->isFunction()) ? funobj->toFunction() : NULL);
 
     // Unwrap the (JSFunction *) parameter.
     int funcDepth = -((int)argc + 1);
@@ -2607,7 +2607,7 @@ bool
 IonBuilder::jsop_call(uint32 argc, bool constructing)
 {
     // Acquire known call target if existent.
-    JSFunction *target = getSingleCallTarget(argc, pc);
+    RootedVarFunction target(cx, getSingleCallTarget(argc, pc));
 
     // Attempt to inline native and scripted functions.
     if (inliningEnabled() && target) {
@@ -2621,7 +2621,7 @@ IonBuilder::jsop_call(uint32 argc, bool constructing)
 }
 
 bool
-IonBuilder::makeCall(JSFunction *target, uint32 argc, bool constructing)
+IonBuilder::makeCall(HandleFunction target, uint32 argc, bool constructing)
 {
     // This function may be called with mutated stack.
     // Querying TI for popped types is invalid.

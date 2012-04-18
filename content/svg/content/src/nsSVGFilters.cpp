@@ -100,6 +100,16 @@ CopyRect(const nsSVGFE::Image* aDest, const nsSVGFE::Image* aSrc, const nsIntRec
                aSrc->mImage->Stride(), aDataRect);
 }
 
+static void
+CopyAndScaleDeviceOffset(const gfxImageSurface *aImage, gfxImageSurface *aResult,
+                         gfxFloat kernelX, gfxFloat kernelY)
+{
+  gfxPoint deviceOffset = aImage->GetDeviceOffset();
+  deviceOffset.x /= kernelX;
+  deviceOffset.y /= kernelY;
+  aResult->SetDeviceOffset(deviceOffset);
+}
+
 //--------------------Filter Element Base Class-----------------------
 
 nsSVGElement::LengthInfo nsSVGFE::sLengthInfo[4] =
@@ -181,6 +191,10 @@ nsSVGFE::SetupScalingFilter(nsSVGFilterInstance *aInstance,
     result.mTarget = nsnull;
     return result;
   }
+
+  CopyAndScaleDeviceOffset(aSource->mImage, result.mSource, kernelX, kernelY);
+  CopyAndScaleDeviceOffset(aTarget->mImage, result.mTarget, kernelX, kernelY);
+
   result.mRealTarget = aTarget->mImage;
 
   gfxContext ctx(result.mSource);

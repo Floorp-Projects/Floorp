@@ -99,9 +99,14 @@ interface nsIDOMWifiManager : nsISupports {
     readonly attribute boolean enabled;
 
     /**
-     * A network object describing the currently connected network.
+     * An non-null object containing the following information:
+     *  - status ("disconnected", "connecting", "associated", "connected")
+     *  - network
+     *
+     *  Note that the object returned is read only. Any changes required must
+     *  be done by calling other APIs.
      */
-    readonly attribute jsval connectedNetwork;
+    readonly attribute jsval connection;
 
     /**
      * A connectionInformation object with the same information found in an

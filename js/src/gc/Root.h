@@ -40,10 +40,13 @@
 #ifndef jsgc_root_h__
 #define jsgc_root_h__
 
-#include "jsapi.h"
-#include "jsprvtd.h"
+#include "jspubtd.h"
 
-namespace js {
+#include "js/Utility.h"
+
+#ifdef __cplusplus
+
+namespace JS {
 
 /*
  * Moving GC Stack Rooting
@@ -92,33 +95,55 @@ namespace js {
  *   fix than when relying on a separate rooting analysis.
  */
 
-template <> struct RootMethods<const jsid>
+template <typename T> class Root;
+template <typename T> class RootedVar;
+
+template <typename T>
+struct RootMethods { };
+
+/*
+ * Reference to a stack location rooted for GC. See the "Moving GC Stack
+ * Rooting" comment above.
+ */
+template <typename T>
+class Handle
 {
-    static jsid initial() { return JSID_VOID; }
-    static ThingRootKind kind() { return THING_ROOT_ID; }
-    static bool poisoned(jsid id) { return IsPoisonedId(id); }
+  public:
+    /* Copy handles of different types, with implicit coercion. */
+    template <typename S> Handle(Handle<S> handle) {
+        testAssign<S>();
+        ptr = reinterpret_cast<const T *>(handle.address());
+    }
+
+    /* Get a handle from a rooted stack location, with implicit coercion. */
+    template <typename S> inline Handle(const Root<S> &root);
+    template <typename S> inline Handle(const RootedVar<S> &root);
+
+    const T *address() { return ptr; }
+
+    operator T () { return value(); }
+    T operator ->() { return value(); }
+
+  private:
+    const T *ptr;
+    T value() { return *ptr; }
+
+    template <typename S>
+    void testAssign() {
+#ifdef DEBUG
+        T a = RootMethods<T>::initial();
+        S b = RootMethods<S>::initial();
+        a = b;
+        (void)a;
+#endif
+    }
 };
 
-template <> struct RootMethods<jsid>
-{
-    static jsid initial() { return JSID_VOID; }
-    static ThingRootKind kind() { return THING_ROOT_ID; }
-    static bool poisoned(jsid id) { return IsPoisonedId(id); }
-};
-
-template <> struct RootMethods<const Value>
-{
-    static Value initial() { return UndefinedValue(); }
-    static ThingRootKind kind() { return THING_ROOT_VALUE; }
-    static bool poisoned(const Value &v) { return IsPoisonedValue(v); }
-};
-
-template <> struct RootMethods<Value>
-{
-    static Value initial() { return UndefinedValue(); }
-    static ThingRootKind kind() { return THING_ROOT_VALUE; }
-    static bool poisoned(const Value &v) { return IsPoisonedValue(v); }
-};
+typedef Handle<JSObject*>    HandleObject;
+typedef Handle<JSFunction*>  HandleFunction;
+typedef Handle<JSString*>    HandleString;
+typedef Handle<jsid>         HandleId;
+typedef Handle<Value>        HandleValue;
 
 template <typename T>
 struct RootMethods<T *>
@@ -142,10 +167,12 @@ template <typename T>
 class Root
 {
   public:
-    Root(JSContext *cx, const T *ptr
+    Root(JSContext *cx_, const T *ptr
          JS_GUARD_OBJECT_NOTIFIER_PARAM)
     {
 #ifdef JSGC_ROOT_ANALYSIS
+        ContextFriendFields *cx = ContextFriendFields::get(cx_);
+
         ThingRootKind kind = RootMethods<T>::kind();
         this->stack = reinterpret_cast<Root<T>**>(&cx->thingGCRooters[kind]);
         this->prev = *stack;
@@ -191,53 +218,58 @@ Handle<T>::Handle(const Root<S> &root)
     ptr = reinterpret_cast<const T *>(root.address());
 }
 
-typedef Root<JSObject*>          RootObject;
-typedef Root<JSFunction*>        RootFunction;
-typedef Root<Shape*>             RootShape;
-typedef Root<BaseShape*>         RootBaseShape;
-typedef Root<types::TypeObject*> RootTypeObject;
-typedef Root<JSString*>          RootString;
-typedef Root<JSAtom*>            RootAtom;
-typedef Root<jsid>               RootId;
-typedef Root<Value>              RootValue;
+typedef Root<JSObject*>    RootObject;
+typedef Root<JSFunction*>  RootFunction;
+typedef Root<JSString*>    RootString;
+typedef Root<jsid>         RootId;
+typedef Root<Value>        RootValue;
 
-/* Mark a stack location as a root for a rooting analysis. */
-class CheckRoot
+/*
+ * Mark a stack location as a root for the rooting analysis, without actually
+ * rooting it in release builds. This should only be used for stack locations
+ * of GC things that cannot be relocated by a garbage collection, and that
+ * are definitely reachable via another path.
+ */
+class SkipRoot
 {
 #if defined(DEBUG) && defined(JSGC_ROOT_ANALYSIS)
 
-    CheckRoot **stack, *prev;
-    const uint8_t *ptr;
+    SkipRoot **stack, *prev;
+    const uint8_t *start;
+    const uint8_t *end;
 
   public:
     template <typename T>
-    CheckRoot(JSContext *cx, const T *ptr
+    SkipRoot(JSContext *cx_, const T *ptr
               JS_GUARD_OBJECT_NOTIFIER_PARAM)
     {
-        this->stack = &cx->checkGCRooters;
+        ContextFriendFields *cx = ContextFriendFields::get(cx_);
+
+        this->stack = &cx->skipGCRooters;
         this->prev = *stack;
         *stack = this;
-        this->ptr = static_cast<const uint8_t*>(ptr);
+        this->start = (const uint8_t *) ptr;
+        this->end = this->start + sizeof(T);
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    ~CheckRoot()
+    ~SkipRoot()
     {
         JS_ASSERT(*stack == this);
         *stack = prev;
     }
 
-    CheckRoot *previous() { return prev; }
+    SkipRoot *previous() { return prev; }
 
     bool contains(const uint8_t *v, size_t len) {
-        return ptr >= v && ptr < v + len;
+        return v >= start && v + len <= end;
     }
 
 #else /* DEBUG && JSGC_ROOT_ANALYSIS */
 
   public:
     template <typename T>
-    CheckRoot(JSContext *cx, const T *ptr
+    SkipRoot(JSContext *cx, const T *ptr
               JS_GUARD_OBJECT_NOTIFIER_PARAM)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
@@ -254,18 +286,28 @@ class RootedVar
 {
   public:
     RootedVar(JSContext *cx)
-        : ptr(RootMethods<T>::initial()), root(cx, &ptr)
+      : ptr(RootMethods<T>::initial()), root(cx, &ptr)
     {}
 
     RootedVar(JSContext *cx, T initial)
-        : ptr(initial), root(cx, &ptr)
+      : ptr(initial), root(cx, &ptr)
     {}
 
-    operator T () { return ptr; }
-    T operator ->() { return ptr; }
+    operator T () const { return ptr; }
+    T operator ->() const { return ptr; }
     T * address() { return &ptr; }
     const T * address() const { return &ptr; }
+    T & reference() { return ptr; }
     T raw() { return ptr; }
+
+    /*
+     * This method is only necessary due to an obscure C++98 requirement (that
+     * there be an accessible, usable copy constructor when passing a temporary
+     * to an implicitly-called constructor for use with a const-ref parameter).
+     * (Head spinning yet?)  We can remove this when we build the JS engine
+     * with -std=c++11.
+     */
+    operator Handle<T> () const { return Handle<T>(*this); }
 
     T & operator =(T value)
     {
@@ -274,27 +316,36 @@ class RootedVar
         return ptr;
     }
 
+    T & operator =(const RootedVar &value)
+    {
+        ptr = value;
+        return ptr;
+    }
+
   private:
     T ptr;
     Root<T> root;
+
+    RootedVar() MOZ_DELETE;
+    RootedVar(const RootedVar &) MOZ_DELETE;
 };
 
 template <typename T> template <typename S>
 inline
 Handle<T>::Handle(const RootedVar<S> &root)
 {
+    testAssign<S>();
     ptr = reinterpret_cast<const T *>(root.address());
 }
 
-typedef RootedVar<JSObject*>          RootedVarObject;
-typedef RootedVar<JSFunction*>        RootedVarFunction;
-typedef RootedVar<Shape*>             RootedVarShape;
-typedef RootedVar<BaseShape*>         RootedVarBaseShape;
-typedef RootedVar<types::TypeObject*> RootedVarTypeObject;
-typedef RootedVar<JSString*>          RootedVarString;
-typedef RootedVar<JSAtom*>            RootedVarAtom;
-typedef RootedVar<jsid>               RootedVarId;
-typedef RootedVar<Value>              RootedVarValue;
+typedef RootedVar<JSObject*>    RootedVarObject;
+typedef RootedVar<JSFunction*>  RootedVarFunction;
+typedef RootedVar<JSString*>    RootedVarString;
+typedef RootedVar<jsid>         RootedVarId;
+typedef RootedVar<Value>        RootedVarValue;
 
-}  /* namespace js */
+}  /* namespace JS */
+
+#endif  /* __cplusplus */
+
 #endif  /* jsgc_root_h___ */

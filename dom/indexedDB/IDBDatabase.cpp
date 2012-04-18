@@ -553,7 +553,7 @@ IDBDatabase::Transaction(const jsval& aStoreNames,
       transactionMode = IDBTransaction::READ_WRITE;
     }
     else if (!aMode.EqualsLiteral("readonly")) {
-      return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
+      return NS_ERROR_TYPE_ERR;
     }
   }
 

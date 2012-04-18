@@ -73,13 +73,6 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeGridAccessible,
 // nsXULTreeGridAccessible: nsIAccessibleTable implementation
 
 NS_IMETHODIMP
-nsXULTreeGridAccessible::GetSummary(nsAString &aSummary)
-{
-  aSummary.Truncate();
-  return IsDefunct() ? NS_ERROR_FAILURE : NS_OK;
-}
-
-NS_IMETHODIMP
 nsXULTreeGridAccessible::GetColumnCount(PRInt32 *aColumnCount)
 {
   NS_ENSURE_ARG_POINTER(aColumnCount);

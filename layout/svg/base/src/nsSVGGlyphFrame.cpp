@@ -590,7 +590,7 @@ nsSVGGlyphFrame::DrawCharacters(CharacterIterator *aIter,
   }
 }
 
-gfxRect
+SVGBBox
 nsSVGGlyphFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                      PRUint32 aFlags)
 {

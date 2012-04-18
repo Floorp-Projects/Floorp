@@ -57,7 +57,7 @@ DIRS	+= \
 	orientation \
 	sessionstorage \
 	storageevent \
-	w3c \
+	pointerlock \
 	browser-frame \
 	$(NULL)
 

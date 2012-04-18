@@ -408,14 +408,14 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
             boolean locallyModified = existingRecord.lastModified > lastLocalRetrieval;
             if (!locallyModified) {
               trace("Remote modified, local not. Deleting.");
-              storeRecordDeletion(record);
+              storeRecordDeletion(record, existingRecord);
               return;
             }
 
             trace("Both local and remote records have been modified.");
             if (record.lastModified > existingRecord.lastModified) {
               trace("Remote is newer, and deleted. Deleting local.");
-              storeRecordDeletion(record);
+              storeRecordDeletion(record, existingRecord);
               return;
             }
 
@@ -497,7 +497,14 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     storeWorkQueue.execute(command);
   }
 
-  protected void storeRecordDeletion(final Record record) {
+  /**
+   * Process a request for deletion of a record.
+   * Neither argument will ever be null.
+   *
+   * @param record the incoming record. This will be mostly blank, given that it's a deletion.
+   * @param existingRecord the existing record. Use this to decide how to process the deletion.
+   */
+  protected void storeRecordDeletion(final Record record, final Record existingRecord) {
     // TODO: we ought to mark the record as deleted rather than purging it,
     // in order to support syncing to multiple destinations. Bug 722607.
     dbHelper.purgeGuid(record.guid);
@@ -648,20 +655,24 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     putRecordToGuidMap(buildRecordString(record), record.guid);
   }
 
-  // Wipe method and thread.
+  protected WipeRunnable getWipeRunnable(RepositorySessionWipeDelegate delegate) {
+    return new WipeRunnable(delegate);
+  }
+
   @Override
   public void wipe(RepositorySessionWipeDelegate delegate) {
-    Runnable command = new WipeRunnable(delegate);
+    Runnable command = getWipeRunnable(delegate);
     storeWorkQueue.execute(command);
   }
 
   class WipeRunnable implements Runnable {
-    private RepositorySessionWipeDelegate delegate;
+    protected RepositorySessionWipeDelegate delegate;
 
     public WipeRunnable(RepositorySessionWipeDelegate delegate) {
       this.delegate = delegate;
     }
 
+    @Override
     public void run() {
       if (!isActive()) {
         delegate.onWipeFailed(new InactiveSessionException(null));
