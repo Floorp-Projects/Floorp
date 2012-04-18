@@ -257,6 +257,7 @@ Highlighter.prototype = {
   {
     this.emitEvent("pseudoclasstoggled", [aPseudo]);
     this.updateInfobar();
+    this.moveInfobar();
   },
 
   /**
@@ -501,6 +502,20 @@ Highlighter.prototype = {
     menu = menu.cloneNode(true);
     menu.id = "highlighter-node-menu";
 
+    let separator = this.chromeDoc.createElement("menuseparator");
+    menu.appendChild(separator);
+
+    menu.addEventListener("popupshowing", function() {
+      let items = menu.getElementsByClassName("highlighter-pseudo-class-menuitem");
+      let i = items.length;
+      while (i--) {
+        menu.removeChild(items[i]);
+      }
+
+      let fragment = this.buildPseudoClassMenu();
+      menu.appendChild(fragment);
+    }.bind(this), true);
+
     nodemenu.appendChild(menu);
 
     // <hbox id="highlighter-nodeinfobar-text"/>
@@ -524,12 +539,6 @@ Highlighter.prototype = {
 
     aParent.appendChild(container);
 
-    nodeInfobar.onclick = (function _onInfobarRightClick(aEvent) {
-      if (aEvent.button == 2) {
-        this.openPseudoClassMenu();
-      }
-    }).bind(this);
-
     let barHeight = container.getBoundingClientRect().height;
 
     this.nodeInfo = {
@@ -543,23 +552,6 @@ Highlighter.prototype = {
   },
 
   /**
-   * Open the infobar's pseudo-class context menu.
-   */
-  openPseudoClassMenu: function Highlighter_openPseudoClassMenu()
-  {
-    let menu = this.chromeDoc.createElement("menupopup");
-    menu.id = "infobar-context-menu";
-
-    let popupSet = this.chromeDoc.getElementById("mainPopupSet");
-    popupSet.appendChild(menu);
-
-    let fragment = this.buildPseudoClassMenu();
-    menu.appendChild(fragment);
-
-    menu.openPopup(this.nodeInfo.pseudoClassesBox, "end_before", 0, 0, true, false);
-  },
-
-  /**
    * Create the menuitems for toggling the selection's pseudo-class state
    *
    * @returns DocumentFragment. The menuitems for toggling pseudo-classes.
@@ -570,12 +562,14 @@ Highlighter.prototype = {
     for (let i = 0; i < PSEUDO_CLASSES.length; i++) {
       let pseudo = PSEUDO_CLASSES[i];
       let item = this.chromeDoc.createElement("menuitem");
+      item.id = "highlighter-pseudo-class-menuitem-" + pseudo;
       item.setAttribute("type", "checkbox");
       item.setAttribute("label", pseudo);
+      item.className = "highlighter-pseudo-class-menuitem";
+      item.setAttribute("checked", DOMUtils.hasPseudoClassLock(this.node,
+                        pseudo));
       item.addEventListener("command",
                             this.pseudoClassLockToggled.bind(this, pseudo), false);
-      item.setAttribute("checked", DOMUtils.hasPseudoClassLock(this.node,
-                         pseudo));
       fragment.appendChild(item);
     }
     return fragment;
