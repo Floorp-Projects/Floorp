@@ -96,7 +96,8 @@
       let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils, Cr = Components.results;
       Cu.import("resource://gre/modules/Services.jsm");
 
-      // Include the build date if this is an "a#" (nightly or aurora) build
+      // Include the build date and warning about Telemetry
+      // if this is an "a#" (nightly or aurora) build
 #expand const version = "__MOZ_APP_VERSION__";
       if (/a\d+$/.test(version)) {
         let buildID = Services.appinfo.appBuildID;
@@ -106,6 +107,7 @@
         versionPara.appendChild(br);
         let date = document.createTextNode("(" + buildDate + ")");
         versionPara.appendChild(date);
+        document.getElementById("aboutTelemetry").hidden = false;
       }
 
       // get URLs from prefs
@@ -248,12 +250,6 @@
         }, 2000);
       }
 #endif
-      // Display warning about telemetry
-      // if this is an "a#" (Nightly or Aurora) build
-      let version = Services.appinfo.version;
-      if (/a\d+$/.test(version)) {
-        document.getElementById("aboutTelemetry").hidden = false;
-      }
     ]]></script>
   </div>
 </body>

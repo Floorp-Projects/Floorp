@@ -112,7 +112,12 @@ var shell = {
     // a specific value when the device starts. This way the front-end
     // can display a notification when the volume change and show a volume
     // level modified from this point.
-    Services.audioManager.masterVolume = 0.5;
+    // try catch block must be used since the emulator fails here. bug 746429
+    try {
+      Services.audioManager.masterVolume = 0.5;
+    } catch(e) {
+      dump('Error setting master volume: ' + e + '\n');
+    }
 
     let domains = "";
     try {
