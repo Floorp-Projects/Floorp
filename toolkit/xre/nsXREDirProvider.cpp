@@ -469,8 +469,7 @@ LoadDirsIntoArray(nsCOMArray<nsIFile>& aSourceDirs,
                        aAppendList,
                        aDirectories);
     }
-
-    if (NS_SUCCEEDED(appended->Exists(&exists)) && exists)
+    else if (NS_SUCCEEDED(appended->Exists(&exists)) && exists)
       aDirectories.AppendObject(appended);
   }
 }
