@@ -801,6 +801,33 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       transformOrigin: xOrigin + "% " + yOrigin + "%",
       transform: "scale(" + zoomScaleFactor + ")"
     };
+  },
+
+  // ----------
+  // Function: updateCanvas
+  // Updates the tabitem's canvas.
+  updateCanvas: function TabItem_updateCanvas() {
+    // ___ thumbnail
+    let $canvas = this.$canvas;
+    if (!this.canvasSizeForced) {
+      let w = $canvas.width();
+      let h = $canvas.height();
+      if (w != $canvas[0].width || h != $canvas[0].height) {
+        $canvas[0].width = w;
+        $canvas[0].height = h;
+      }
+    }
+
+    TabItems._lastUpdateTime = Date.now();
+    this._lastTabUpdateTime = TabItems._lastUpdateTime;
+
+    if (this.tabCanvas)
+      this.tabCanvas.paint();
+    this.saveThumbnail();
+
+    // ___ cache
+    if (this.isShowingCachedData())
+      this.hideCachedData();
   }
 });
 
@@ -828,6 +855,7 @@ let TabItems = {
   tempCanvas: null,
   _reconnectingPaused: false,
   tabItemPadding: {},
+  _mozAfterPaintHandler: null,
 
   // ----------
   // Function: toString
@@ -858,6 +886,10 @@ let TabItems = {
     // algorithm breaks down
     this.tempCanvas.width = 150;
     this.tempCanvas.height = 112;
+
+    let mm = gWindow.messageManager;
+    this._mozAfterPaintHandler = this.onMozAfterPaint.bind(this);
+    mm.addMessageListener("Panorama:MozAfterPaint", this._mozAfterPaintHandler);
 
     // When a tab is opened, create the TabItem
     this._eventListeners.open = function (event) {
@@ -908,6 +940,9 @@ let TabItems = {
   // ----------
   // Function: uninit
   uninit: function TabItems_uninit() {
+    let mm = gWindow.messageManager;
+    mm.removeMessageListener("Panorama:MozAfterPaint", this._mozAfterPaintHandler);
+
     for (let name in this._eventListeners) {
       AllTabs.unregister(name, this._eventListeners[name]);
     }
@@ -946,20 +981,33 @@ let TabItems = {
     return this._fragment;
   },
 
-  // ----------
-  // Function: isComplete
-  // Return whether the xul:tab has fully loaded.
-  isComplete: function TabItems_isComplete(tab) {
-    // If our readyState is complete, but we're showing about:blank,
-    // and we're not loading about:blank, it means we haven't really
-    // started loading. This can happen to the first few tabs in a
-    // page.
+  // Function: _isComplete
+  // Checks whether the xul:tab has fully loaded and calls a callback with a 
+  // boolean indicates whether the tab is loaded or not.
+  _isComplete: function TabItems__isComplete(tab, callback) {
     Utils.assertThrow(tab, "tab");
-    return (
-      tab.linkedBrowser.contentDocument.readyState == 'complete' &&
-      !(tab.linkedBrowser.contentDocument.URL == 'about:blank' &&
-        tab._tabViewTabItem.getTabState().url != 'about:blank')
-    );
+
+    let mm = tab.linkedBrowser.messageManager;
+    let message = "Panorama:isDocumentLoaded";
+
+    mm.addMessageListener(message, function onMessage(cx) {
+      mm.removeMessageListener(cx.name, onMessage);
+      callback(cx.json.isLoaded);
+    });
+    mm.sendAsyncMessage(message);
+  },
+
+  // ----------
+  // Function: onMozAfterPaint
+  // Called when a web page is painted.
+  onMozAfterPaint: function TabItems_onMozAfterPaint(cx) {
+    let index = gBrowser.browsers.indexOf(cx.target);
+    if (index == -1)
+      return;
+
+    let tab = gBrowser.tabs[index];
+    if (!tab.pinned)
+      this.update(tab);
   },
 
   // ----------
@@ -1040,35 +1088,22 @@ let TabItems = {
       tabItem.$container.attr("title", label + "\n" + tabUrl);
 
       // ___ Make sure the tab is complete and ready for updating.
-      if (!this.isComplete(tab) && (!options || !options.force)) {
-        // If it's incomplete, stick it on the end of the queue
-        this._tabsWaitingForUpdate.push(tab);
-        return;
+      if (options && options.force) {
+        tabItem.updateCanvas();
+        tabItem._sendToSubscribers("updated");
+      } else {
+        this._isComplete(tab, function TabItems__update_isComplete(isComplete) {
+          if (!Utils.isValidXULTab(tab) || tab.pinned)
+            return;
+
+          if (isComplete) {
+            tabItem.updateCanvas();
+            tabItem._sendToSubscribers("updated");
+          } else {
+            this._tabsWaitingForUpdate.push(tab);
+          }
+        }.bind(this));
       }
-
-      // ___ thumbnail
-      let $canvas = tabItem.$canvas;
-      if (!tabItem.canvasSizeForced) {
-        let w = $canvas.width();
-        let h = $canvas.height();
-        if (w != tabItem.$canvas[0].width || h != tabItem.$canvas[0].height) {
-          tabItem.$canvas[0].width = w;
-          tabItem.$canvas[0].height = h;
-        }
-      }
-
-      this._lastUpdateTime = Date.now();
-      tabItem._lastTabUpdateTime = this._lastUpdateTime;
-
-      tabItem.tabCanvas.paint();
-      tabItem.saveThumbnail();
-
-      // ___ cache
-      if (tabItem.isShowingCachedData())
-        tabItem.hideCachedData();
-
-      // ___ notify subscribers that a full update has completed.
-      tabItem._sendToSubscribers("updated");
     } catch(e) {
       Utils.log(e);
     }
