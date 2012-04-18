@@ -48,6 +48,7 @@
 #include "nsIObserverService.h"
 #include "nsIAppStartup.h"
 #include "nsIGeolocationProvider.h"
+#include "nsCacheService.h"
 
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
@@ -330,6 +331,11 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
             nsCOMPtr<nsIObserverService> obsServ =
                 mozilla::services::GetObserverService();
             obsServ->NotifyObservers(nsnull, "application-background", nsnull);
+
+            // If we are OOM killed with the disk cache enabled, the entire
+            // cache will be cleared (bug 105843), so shut down the cache here
+            // and re-init on resume
+            nsCacheService::GlobalInstance()->Shutdown();
         }
 
         // We really want to send a notification like profile-before-change,
@@ -458,6 +464,11 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
 
     case AndroidGeckoEvent::ACTIVITY_RESUMING: {
         if (curEvent->Flags() == 0) {
+            // If we are OOM killed with the disk cache enabled, the entire
+            // cache will be cleared (bug 105843), so shut down cache on pause
+            // and re-init here
+            nsCacheService::GlobalInstance()->Init();
+
             // We didn't return from one of our own activities, so restore
             // to foreground status
             nsCOMPtr<nsIObserverService> obsServ =
