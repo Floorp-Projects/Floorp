@@ -7,6 +7,7 @@
 const PREF_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault"
 const PREF_GETADDONS_GETSEARCHRESULTS = "extensions.getAddons.search.url";
 const SEARCH_URL = TESTROOT + "browser_details.xml";
+const PREF_EM_HOTFIX_ID = "extensions.hotfix.id";
 
 var gManagerWindow;
 var gCategoryUtilities;
@@ -47,6 +48,7 @@ function test() {
   // Turn on searching for this test
   Services.prefs.setIntPref(PREF_SEARCH_MAXRESULTS, 15);
   Services.prefs.setCharPref(PREF_GETADDONS_GETSEARCHRESULTS, SEARCH_URL);
+  Services.prefs.setCharPref(PREF_EM_HOTFIX_ID, "hotfix@tests.mozilla.org");
 
   waitForExplicitFinish();
 
@@ -141,6 +143,9 @@ function test() {
     blocklistURL: "http://example.com/addon8@tests.mozilla.org",
     name: "Test add-on 8",
     blocklistState: Ci.nsIBlocklistService.STATE_OUTDATED
+  }, {
+    id: "hotfix@tests.mozilla.org",
+    name: "Test hotfix 1",
   }]);
 
   open_manager(null, function(aWindow) {
@@ -152,6 +157,7 @@ function test() {
 }
 
 function end_test() {
+  Services.prefs.clearUserPref(PREF_EM_HOTFIX_ID);
   close_manager(gManagerWindow, function() {
     finish();
   });
@@ -175,6 +181,7 @@ add_test(function() {
     is_element_visible(get("detail-contrib-suggested"), "Contributions amount should be visible");
     ok(get("detail-contrib-suggested").value, "$0.99");
 
+    is_element_visible(get("detail-updates-row"), "Updates should not be hidden");
     is_element_hidden(get("detail-dateUpdated"), "Update date should be hidden");
 
     is_element_visible(get("detail-rating-row"), "Rating row should not be hidden");
@@ -336,6 +343,7 @@ add_test(function() {
 
     is_element_hidden(get("detail-contributions"), "Contributions section should be hidden");
 
+    is_element_visible(get("detail-updates-row"), "Updates should not be hidden");
     is_element_visible(get("detail-dateUpdated"), "Update date should not be hidden");
     is(get("detail-dateUpdated").value, formatDate(gDate), "Update date should be correct");
 
@@ -675,6 +683,26 @@ add_test(function() {
 
       run_next_test();
     });
+  });
+});
+
+// Opens and tests the details view for hotfix 1
+add_test(function() {
+  open_details("hotfix@tests.mozilla.org", "extension", function() {
+    is(get("detail-name").textContent, "Test hotfix 1", "Name should be correct");
+
+    is_element_hidden(get("detail-updates-row"), "Updates should be hidden");
+
+    is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
+    is_element_hidden(get("detail-enable-btn"), "Enable button should be hidden");
+    is_element_visible(get("detail-disable-btn"), "Disable button should be visible");
+    is_element_visible(get("detail-uninstall-btn"), "Remove button should be visible");
+
+    is_element_hidden(get("detail-warning"), "Warning message should be hidden");
+    is_element_hidden(get("detail-warning-link"), "Warning link should be hidden");
+    is_element_hidden(get("detail-pending"), "Pending message should be hidden");
+
+    run_next_test();
   });
 });
 
