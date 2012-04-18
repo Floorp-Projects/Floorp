@@ -153,24 +153,24 @@ ContactDB.prototype = {
       };
 
       txn.onabort = function (event) {
-        debug("Caught error on transaction" + event.target.errorCode);
-        switch(event.target.errorCode) {
-          case Ci.nsIIDBDatabaseException.ABORT_ERR:
-          case Ci.nsIIDBDatabaseException.CONSTRAINT_ERR:
-          case Ci.nsIIDBDatabaseException.DATA_ERR:
-          case Ci.nsIIDBDatabaseException.TRANSIENT_ERR:
-          case Ci.nsIIDBDatabaseException.NOT_ALLOWED_ERR:
-          case Ci.nsIIDBDatabaseException.NOT_FOUND_ERR:
-          case Ci.nsIIDBDatabaseException.QUOTA_ERR:
-          case Ci.nsIIDBDatabaseException.READ_ONLY_ERR:
-          case Ci.nsIIDBDatabaseException.TIMEOUT_ERR:
-          case Ci.nsIIDBDatabaseException.TRANSACTION_INACTIVE_ERR:
-          case Ci.nsIIDBDatabaseException.VERSION_ERR:
-          case Ci.nsIIDBDatabaseException.UNKNOWN_ERR:
+        debug("Caught error on transaction" + event.target.error.name);
+        switch(event.target.error.name) {
+          case "AbortError":
+          case "ConstraintError":
+          case "DataError":
+          case "SyntaxError":
+          case "InvalidStateError":
+          case "NotFoundError":
+          case "QuotaExceededError":
+          case "ReadOnlyError":
+          case "TimeoutError":
+          case "TransactionInactiveError":
+          case "VersionError":
+          case "UnknownError":
             failureCb("UnknownError");
             break;
           default:
-            debug("Unknown errorCode", event.target.errorCode);
+            debug("Unknown error", event.target.error.name);
             failureCb("UnknownError");
             break;
         }

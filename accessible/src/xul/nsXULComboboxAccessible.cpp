@@ -40,6 +40,7 @@
 
 #include "nsXULComboboxAccessible.h"
 
+#include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsDocAccessible.h"
 #include "nsCoreUtils.h"

@@ -12,7 +12,6 @@ import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecord;
-import org.mozilla.gecko.sync.repositories.domain.PasswordRecord;
 
 import android.content.ContentProviderClient;
 import android.content.Context;
@@ -171,30 +170,6 @@ public class RepoUtils {
     }
   }
 
-  public static PasswordRecord passwordFromMirrorCursor(Cursor cur) {
-    
-    String guid = getStringFromCursor(cur, BrowserContract.SyncColumns.GUID);
-    String collection = "passwords";
-    long lastModified = getLongFromCursor(cur, BrowserContract.SyncColumns.DATE_MODIFIED);
-    boolean deleted = getLongFromCursor(cur, BrowserContract.SyncColumns.IS_DELETED) == 1 ? true : false;
-    PasswordRecord rec = new PasswordRecord(guid, collection, lastModified, deleted);
-    rec.hostname = getStringFromCursor(cur, BrowserContract.Passwords.HOSTNAME);
-    rec.httpRealm = getStringFromCursor(cur, BrowserContract.Passwords.HTTP_REALM);
-    rec.formSubmitURL = getStringFromCursor(cur, BrowserContract.Passwords.FORM_SUBMIT_URL);
-    rec.usernameField = getStringFromCursor(cur, BrowserContract.Passwords.USERNAME_FIELD);
-    rec.passwordField = getStringFromCursor(cur, BrowserContract.Passwords.PASSWORD_FIELD);
-    rec.encType = getStringFromCursor(cur, BrowserContract.Passwords.ENC_TYPE);
-    
-    // TODO decryption of username/password here (Bug 711636)
-    rec.username = getStringFromCursor(cur, BrowserContract.Passwords.ENCRYPTED_USERNAME);
-    rec.password = getStringFromCursor(cur, BrowserContract.Passwords.ENCRYPTED_PASSWORD);
-    
-    rec.timeLastUsed = getLongFromCursor(cur, BrowserContract.Passwords.TIME_LAST_USED);
-    rec.timesUsed = getLongFromCursor(cur, BrowserContract.Passwords.TIMES_USED);
-    
-    return rec;
-  }
-  
   public static void queryTimeLogger(String methodCallingQuery, long queryStart, long queryEnd) {
     long elapsedTime = queryEnd - queryStart;
     Logger.debug(LOG_TAG, "Query timer: " + methodCallingQuery + " took " + elapsedTime + "ms.");

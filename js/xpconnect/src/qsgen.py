@@ -456,13 +456,13 @@ argumentUnboxingTemplates = {
         "        return JS_FALSE;\n",
 
     'long long':
-        "    PRInt64 ${name};\n"
-        "    if (!xpc_qsValueToInt64(cx, ${argVal}, &${name}))\n"
+        "    int64_t ${name};\n"
+        "    if (!xpc::ValueToInt64(cx, ${argVal}, &${name}))\n"
         "        return JS_FALSE;\n",
 
     'unsigned long long':
-        "    PRUint64 ${name};\n"
-        "    if (!xpc_qsValueToUint64(cx, ${argVal}, &${name}))\n"
+        "    uint64_t ${name};\n"
+        "    if (!xpc::ValueToUint64(cx, ${argVal}, &${name}))\n"
         "        return JS_FALSE;\n",
 
     'float':
@@ -1274,14 +1274,16 @@ def writeDefiner(f, conf, stringtable, interfaces):
     f.write("\n")
 
     # the definer function (entry point to this quick stubs file)
-    f.write("JSBool %s_DefineQuickStubs(" % conf.name)
+    f.write("namespace xpc {\n")
+    f.write("bool %s_DefineQuickStubs(" % conf.name)
     f.write("JSContext *cx, JSObject *proto, unsigned flags, PRUint32 count, "
             "const nsID **iids)\n"
             "{\n")
-    f.write("    return xpc_qsDefineQuickStubs("
+    f.write("    return !!xpc_qsDefineQuickStubs("
             "cx, proto, flags, count, iids, %d, tableData, %s, %s, %s);\n" % (
             size, prop_array_name, func_array_name, table_name))
-    f.write("}\n\n\n")
+    f.write("}\n")
+    f.write("} // namespace xpc\n\n\n")
 
 
 stubTopTemplate = '''\

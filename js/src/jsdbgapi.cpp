@@ -687,7 +687,7 @@ JS_GetScriptFilename(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(const jschar *)
 JS_GetScriptSourceMap(JSContext *cx, JSScript *script)
 {
-    return script->sourceMap;
+    return script->hasSourceMap ? script->getSourceMap() : NULL;
 }
 
 JS_PUBLIC_API(unsigned)
@@ -797,12 +797,14 @@ JS_PropertyIterator(JSObject *obj, JSScopeProperty **iteratorp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
+JS_GetPropertyDesc(JSContext *cx, JSObject *obj_, JSScopeProperty *sprop,
                    JSPropertyDesc *pd)
 {
-    assertSameCompartment(cx, obj);
+    assertSameCompartment(cx, obj_);
     Shape *shape = (Shape *) sprop;
     pd->id = IdToJsval(shape->propid());
+
+    RootedVarObject obj(cx, obj_);
 
     JSBool wasThrowing = cx->isExceptionPending();
     Value lastException = UndefinedValue();

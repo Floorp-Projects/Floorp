@@ -25,7 +25,7 @@ add_test(function test_working_bid_exchange() {
 
       let body = JSON.stringify({
         id:           "id",
-        secret:       "key",
+        key:          "key",
         api_endpoint: service,
         uid:          "uid",
       });
@@ -148,7 +148,7 @@ add_test(function test_rich_media_types() {
 
       let body = JSON.stringify({
         id:           "id",
-        secret:       "key",
+        key:          "key",
         api_endpoint: "foo",
         uid:          "uid",
       });
@@ -163,4 +163,44 @@ add_test(function test_rich_media_types() {
 
     server.stop(run_next_test);
   });
+});
+
+add_test(function test_exception_during_callback() {
+  _("Ensure that exceptions thrown during callback handling are handled.");
+
+  let server = httpd_setup({
+    "/foo": function(request, response) {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.setHeader("Content-Type", "application/json");
+
+      let body = JSON.stringify({
+        id:           "id",
+        key:          "key",
+        api_endpoint: "foo",
+        uid:          "uid",
+      });
+      response.bodyOutputStream.write(body, body.length);
+    }
+  });
+
+  let url = TEST_SERVER_URL + "foo";
+  let client = new TokenServerClient();
+  let cb = Async.makeSpinningCallback();
+  let callbackCount = 0;
+
+  client.getTokenFromBrowserIDAssertion(url, "assertion", function(error, r) {
+    do_check_eq(null, error);
+
+    cb();
+
+    callbackCount += 1;
+    throw new Error("I am a bad function!");
+  });
+
+  cb.wait();
+  // This relies on some heavy event loop magic. The error in the main
+  // callback should already have been raised at this point.
+  do_check_eq(callbackCount, 1);
+
+  server.stop(run_next_test);
 });

@@ -196,6 +196,7 @@ public:
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                       const InputContextAction& aAction);
     NS_IMETHOD_(InputContext) GetInputContext();
+    NS_IMETHOD_(bool)  HasGLContext();
 
     //
     // utility methods

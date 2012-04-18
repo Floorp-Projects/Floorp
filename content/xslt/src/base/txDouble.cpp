@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/FloatingPoint.h"
+
 #include "nsString.h"
 #include "txCore.h"
 #include "txXMLUtils.h"
@@ -48,42 +50,6 @@
 /*
  * Utility class for doubles
  */
-
-//-- Initialize Double related constants
-const dpun txDouble::NaN = DOUBLE_NaN;
-#ifdef IS_BIG_ENDIAN
-const dpun txDouble::POSITIVE_INFINITY = {{DOUBLE_HI32_EXPMASK, 0}};
-const dpun txDouble::NEGATIVE_INFINITY = {{DOUBLE_HI32_EXPMASK | DOUBLE_HI32_SIGNBIT, 0}};
-#else
-const dpun txDouble::POSITIVE_INFINITY = {{0, DOUBLE_HI32_EXPMASK}};
-const dpun txDouble::NEGATIVE_INFINITY = {{0, DOUBLE_HI32_EXPMASK | DOUBLE_HI32_SIGNBIT}};
-#endif
-
-/*
- * Determines whether the given double represents positive or negative
- * inifinity
- */
-bool txDouble::isInfinite(double aDbl)
-{
-    return ((DOUBLE_HI32(aDbl) & ~DOUBLE_HI32_SIGNBIT) == DOUBLE_HI32_EXPMASK &&
-            !DOUBLE_LO32(aDbl));
-}
-
-/*
- * Determines whether the given double is NaN
- */
-bool txDouble::isNaN(double aDbl)
-{
-    return DOUBLE_IS_NaN(aDbl);
-}
-
-/*
- * Determines whether the given double is negative
- */
-bool txDouble::isNeg(double aDbl)
-{
-    return (DOUBLE_HI32(aDbl) & DOUBLE_HI32_SIGNBIT) != 0;
-}
 
 /*
  * Converts the given String to a double, if the String value does not
@@ -170,7 +136,7 @@ public:
     {
         if (mState == eIllegal || mBuffer.IsEmpty() ||
             (mBuffer.Length() == 1 && mBuffer[0] == '.')) {
-            return txDouble::NaN;
+            return MOZ_DOUBLE_NaN();
         }
         return mSign*PR_strtod(mBuffer.get(), 0);
     }
@@ -207,11 +173,11 @@ void txDouble::toString(double aValue, nsAString& aDest)
 
     // check for special cases
 
-    if (isNaN(aValue)) {
+    if (MOZ_DOUBLE_IS_NaN(aValue)) {
         aDest.AppendLiteral("NaN");
         return;
     }
-    if (isInfinite(aValue)) {
+    if (MOZ_DOUBLE_IS_INFINITE(aValue)) {
         if (aValue < 0)
             aDest.Append(PRUnichar('-'));
         aDest.AppendLiteral("Infinity");

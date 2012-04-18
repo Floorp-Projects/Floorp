@@ -118,8 +118,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0xe7af49c1, 0xd11b, 0x4070, \
-    { 0x99, 0x7a, 0x2d, 0x2b, 0x7, 0x4b, 0xea, 0xf4 } }
+  { 0xb5bb55c7, 0x9a50, 0x4fa8, \
+    { 0xa7, 0x6e, 0xbd, 0x31, 0x6f, 0x3e, 0x9c, 0x13 } }
 
 /*
  * Window shadow styles
@@ -1377,6 +1377,11 @@ class nsIWidget : public nsISupports {
                                                 PRUint32 aModifierFlags) = 0;
 
     /**
+     * A shortcut to SynthesizeNativeMouseEvent, abstracting away the native message.
+     */
+    virtual nsresult SynthesizeNativeMouseMove(nsIntPoint aPoint) = 0;
+
+    /**
      * Utility method intended for testing. Dispatching native mouse scroll
      * events may move the mouse cursor.
      *
@@ -1584,6 +1589,12 @@ class nsIWidget : public nsISupports {
      * widget.
      */
     virtual PRUint32 GetGLFrameBufferFormat() { return 0; /*GL_NONE*/ }
+
+    /**
+     * Return true if widget has it's own GL context
+     */
+    virtual bool HasGLContext() { return false; }
+
 protected:
 
     // keep the list of children.  We also keep track of our siblings.

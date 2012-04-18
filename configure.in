@@ -6367,7 +6367,7 @@ dnl files in the updater.  The --enable-signmar option is for building
 dnl the signmar program.
 dnl ========================================================
 
-MOZ_ARG_ENABLE_BOOL(sign-mar,
+MOZ_ARG_ENABLE_BOOL(signmar,
 [  --enable-signmar     Enable building the signmar program],
     MOZ_ENABLE_SIGNMAR=1,
     MOZ_ENABLE_SIGNMAR= )
@@ -6865,6 +6865,7 @@ MOZ_GL_DEFAULT_PROVIDER=$MOZ_GL_PROVIDER
 AC_SUBST(MOZ_GL_PROVIDER)
 AC_DEFINE_UNQUOTED(MOZ_GL_PROVIDER, GLContextProvider$MOZ_GL_PROVIDER)
 fi
+AC_SUBST(MOZ_GL_DEFAULT_PROVIDER)
 
 dnl ========================================================
 dnl = faststripe theme
@@ -8647,6 +8648,7 @@ AC_SUBST(MOZ_VP8_ERROR_CONCEALMENT)
 AC_SUBST(MOZ_VP8_ENCODER)
 AC_SUBST(MOZ_OGG)
 AC_SUBST(MOZ_ALSA_LIBS)
+AC_SUBST(MOZ_ALSA_CFLAGS)
 AC_SUBST(VPX_AS)
 AC_SUBST(VPX_ASFLAGS)
 AC_SUBST(VPX_DASH_C_FLAG)

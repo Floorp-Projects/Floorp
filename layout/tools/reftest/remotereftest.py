@@ -370,7 +370,11 @@ user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
     def cleanup(self, profileDir):
         # Pull results back from device
         if (self.remoteLogFile):
-            self._devicemanager.getFile(self.remoteLogFile, self.localLogName)
+            try:
+                self._devicemanager.getFile(self.remoteLogFile, self.localLogName)
+            except:
+                print "ERROR: We were not able to retrieve the info from %s" % self.remoteLogFile
+                sys.exit(5)
         self._devicemanager.removeDir(self.remoteProfile)
         self._devicemanager.removeDir(self.remoteTestRoot)
         RefTest.cleanup(self, profileDir)

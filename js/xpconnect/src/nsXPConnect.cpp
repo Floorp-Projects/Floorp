@@ -45,6 +45,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Util.h"
+#include "mozilla/Preferences.h"
 
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
@@ -1200,6 +1201,19 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
                        bool wantXrays, JSObject **global,
                        JSCompartment **compartment)
 {
+    // Make sure that Type Inference is enabled for everything non-chrome.
+    // Sandboxes and compilation scopes are exceptions. See bug 744034.
+    mozilla::DebugOnly<bool> isSystem;
+    mozilla::DebugOnly<nsIScriptSecurityManager*> ssm;
+    MOZ_ASSERT_IF(strcmp(clasp->name, "Sandbox") &&
+                  strcmp(clasp->name, "nsXBLPrototypeScript compilation scope") &&
+                  strcmp(clasp->name, "nsXULPrototypeScript compilation scope") &&
+                  mozilla::Preferences::GetBool("javascript.options.typeinference") &&
+                  (ssm = XPCWrapper::GetSecurityManager()) &&
+                  NS_SUCCEEDED(ssm->IsSystemPrincipal(principal, &isSystem.value)) &&
+                  !isSystem.value,
+                  JS_GetOptions(cx) & JSOPTION_TYPE_INFERENCE);
+
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "using a principal off the main thread?");
     NS_ABORT_IF_FALSE(principal, "bad key");
 
@@ -2360,18 +2374,6 @@ nsXPConnect::SetReportAllJSExceptions(bool newval)
         gReportAllJSExceptions = newval ? 2 : 0;
 
     return NS_OK;
-}
-
-/* [noscript, notxpcom] bool defineDOMQuickStubs (in JSContextPtr cx, in JSObjectPtr proto, in PRUint32 flags, in PRUint32 interfaceCount, [array, size_is (interfaceCount)] in nsIIDPtr interfaceArray); */
-NS_IMETHODIMP_(bool)
-nsXPConnect::DefineDOMQuickStubs(JSContext * cx,
-                                 JSObject * proto,
-                                 PRUint32 flags,
-                                 PRUint32 interfaceCount,
-                                 const nsIID * *interfaceArray)
-{
-    return DOM_DefineQuickStubs(cx, proto, flags,
-                                interfaceCount, interfaceArray);
 }
 
 /* attribute JSRuntime runtime; */

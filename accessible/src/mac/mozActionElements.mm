@@ -39,9 +39,8 @@
 #import "mozActionElements.h"
 
 #import "MacUtils.h"
-
-#import "nsIAccessible.h"
-#import "nsXULTabAccessible.h"
+#include "Accessible-inl.h"
+#include "nsXULTabAccessible.h"
 
 #include "nsObjCExceptions.h"
 

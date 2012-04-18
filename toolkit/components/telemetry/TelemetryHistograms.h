@@ -96,7 +96,7 @@ HISTOGRAM(TELEMETRY_PING, 1, 3000, 10, EXPONENTIAL, "Time taken to submit teleme
 HISTOGRAM_BOOLEAN(TELEMETRY_SUCCESS,  "Successful telemetry submission")
 HISTOGRAM(MEMORY_JS_COMPARTMENTS_SYSTEM, 1, 1000, 50, EXPONENTIAL, "Total JavaScript compartments used for add-ons and internals.")
 HISTOGRAM(MEMORY_JS_COMPARTMENTS_USER, 1, 1000, 50, EXPONENTIAL, "Total JavaScript compartments used for web pages")
-HISTOGRAM(MEMORY_JS_GC_HEAP, 1024, 512 * 1024, 50, EXPONENTIAL, "Memory used by the garbage-collected JavaScript heap (KB)")
+HISTOGRAM(MEMORY_JS_GC_HEAP_COMMITTED, 1024, 512 * 1024, 50, EXPONENTIAL, "Committed memory used by the garbage-collected JavaScript heap (KB)")
 HISTOGRAM(MEMORY_RESIDENT, 32 * 1024, 1024 * 1024, 50, EXPONENTIAL, "Resident memory size (KB)")
 HISTOGRAM(MEMORY_STORAGE_SQLITE, 1024, 512 * 1024, 50, EXPONENTIAL, "Memory used by SQLite (KB)")
 HISTOGRAM(MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED, 1024, 1024 * 1024, 50, EXPONENTIAL, "Memory used for uncompressed, in-use content images (KB)")
@@ -433,6 +433,15 @@ HISTOGRAM_FLAG(TELEMETRY_TEST_FLAG, "a testing histogram; not meant to be touche
  */
 HISTOGRAM_FLAG(STARTUP_CRASH_DETECTED, "Whether there was a crash during the last startup")
 HISTOGRAM_ENUMERATED_VALUES(SAFE_MODE_USAGE, 3, "Whether the user is in safe mode (No, Yes, Forced)")
+
+/**
+ * Native Fennec Telemetry
+ */
+#if defined(ANDROID)
+HISTOGRAM(BROWSERPROVIDER_XUL_IMPORT_TIME, 20, 600000, 20, EXPONENTIAL, "Time for the initial conversion of a XUL places database (ms)")
+HISTOGRAM(BROWSERPROVIDER_XUL_IMPORT_BOOKMARKS, 1, 50000, 20, EXPONENTIAL, "Number of bookmarks in the original XUL places database")
+HISTOGRAM(BROWSERPROVIDER_XUL_IMPORT_HISTORY, 1, 1000000, 20, EXPONENTIAL, "Number of history entries in the original XUL places database")
+#endif
 
 #undef HISTOGRAM_ENUMERATED_VALUES
 #undef HISTOGRAM_BOOLEAN

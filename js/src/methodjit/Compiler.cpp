@@ -6538,7 +6538,7 @@ mjit::Compiler::jsop_newinit()
 {
     bool isArray;
     unsigned count = 0;
-    JSObject *baseobj = NULL;
+    RootedVarObject baseobj(cx);
     switch (*PC) {
       case JSOP_NEWINIT:
         isArray = (GET_UINT8(PC) == JSProto_Array);
@@ -6574,7 +6574,7 @@ mjit::Compiler::jsop_newinit()
      * Don't bake in types for non-compileAndGo scripts, or at initializers
      * producing objects with singleton types.
      */
-    types::TypeObject *type = NULL;
+    RootedVarTypeObject type(cx);
     if (globalObj && !types::UseNewTypeForInitializer(cx, script, PC)) {
         type = types::TypeScript::InitObject(cx, script, PC,
                                              isArray ? JSProto_Array : JSProto_Object);
@@ -7011,7 +7011,7 @@ mjit::Compiler::constructThis()
 {
     JS_ASSERT(isConstructing);
 
-    JSFunction *fun = script->function();
+    RootedVarFunction fun(cx, script->function());
 
     do {
         if (!cx->typeInferenceEnabled() ||

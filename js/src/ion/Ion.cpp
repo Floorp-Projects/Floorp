@@ -915,7 +915,8 @@ ion::CanEnter(JSContext *cx, JSScript *script, StackFrame *fp, bool newType)
     // Creating |this| is done before building Ion because it may change the
     // type information and invalidate compilation results.
     if (fp->isConstructing() && fp->functionThis().isPrimitive()) {
-        JSObject *obj = js_CreateThisForFunction(cx, &fp->callee(), newType);
+        RootedVarObject callee(cx, &fp->callee());
+        RootedVarObject obj(cx, js_CreateThisForFunction(cx, callee, newType));
         if (!obj)
             return Method_Skipped;
         fp->functionThis().setObject(*obj);

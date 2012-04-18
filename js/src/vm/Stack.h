@@ -1879,22 +1879,28 @@ class StackIter
     bool operator==(const StackIter &rhs) const;
     bool operator!=(const StackIter &rhs) const { return !(*this == rhs); }
 
-    bool isScript() const { JS_ASSERT(!done()); return state_ == SCRIPTED; }
-    bool isScripted() const { JS_ASSERT(!done()); return state_ == SCRIPTED || state_ == ION; }
+    bool isScript() const { JS_ASSERT(!done()); return state_ == SCRIPTED || state_ == ION; }
+    bool isImplicitNativeCall() const {
+        JS_ASSERT(!done());
+        return state_ == IMPLICIT_NATIVE;
+    }
+    bool isNativeCall() const {
+        JS_ASSERT(!done());
+        return state_ == NATIVE || state_ == IMPLICIT_NATIVE;
+    }
 
     bool isFunctionFrame() const;
     bool isEvalFrame() const;
     bool isNonEvalFunctionFrame() const;
 
-    StackFrame *fp() const { JS_ASSERT(!done() && isScript()); return fp_; }
-    Value      *sp() const { JS_ASSERT(!done() && isScript()); return sp_; }
-    jsbytecode *pc() const { JS_ASSERT(!done() && isScripted()); return pc_; }
-    JSScript   *script() const { JS_ASSERT(!done() && isScripted()); return script_; }
+    StackFrame *fp() const { JS_ASSERT(isScript()); return fp_; }
+    Value      *sp() const { JS_ASSERT(isScript()); return sp_; }
+    jsbytecode *pc() const { JS_ASSERT(isScript()); return pc_; }
+    JSScript   *script() const { JS_ASSERT(isScript()); return script_; }
     JSObject   &callee() const;
     Value       calleev() const;
 
-    bool isNativeCall() const { JS_ASSERT(!done()); return state_ != SCRIPTED; }
-    CallArgs nativeArgs() const { JS_ASSERT(!done() && isNativeCall()); return args_; }
+    CallArgs nativeArgs() const { JS_ASSERT(isNativeCall()); return args_; }
 };
 
 /* A filtering of the StackIter to only stop at scripts. */

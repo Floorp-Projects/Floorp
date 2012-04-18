@@ -267,7 +267,12 @@ public class PanZoomController
 
         switch (mState) {
         case ANIMATED_ZOOM:
-            return false;
+            // We just interrupted a double-tap animation, so force a redraw in
+            // case this touchstart is just a tap that doesn't end up triggering
+            // a redraw
+            mController.setForceRedraw();
+            mController.notifyLayerClientOfGeometryChange();
+            // fall through
         case FLING:
         case BOUNCE:
         case NOTHING:
@@ -289,11 +294,15 @@ public class PanZoomController
     private boolean onTouchMove(MotionEvent event) {
 
         switch (mState) {
-        case NOTHING:
         case FLING:
         case BOUNCE:
             // should never happen
             Log.e(LOGTAG, "Received impossible touch move while in " + mState);
+            // fall through
+        case ANIMATED_ZOOM:
+        case NOTHING:
+            // may happen if user double-taps and drags without lifting after the
+            // second tap. ignore the move if this happens.
             return false;
 
         case TOUCHING:
@@ -323,7 +332,6 @@ public class PanZoomController
             track(event);
             return true;
 
-        case ANIMATED_ZOOM:
         case PINCHING:
             // scale gesture listener will handle this
             return false;
@@ -335,12 +343,17 @@ public class PanZoomController
     private boolean onTouchEnd(MotionEvent event) {
 
         switch (mState) {
-        case NOTHING:
         case FLING:
         case BOUNCE:
             // should never happen
             Log.e(LOGTAG, "Received impossible touch end while in " + mState);
+            // fall through
+        case ANIMATED_ZOOM:
+        case NOTHING:
+            // may happen if user double-taps and drags without lifting after the
+            // second tap. ignore if this happens.
             return false;
+
         case TOUCHING:
             mState = PanZoomState.NOTHING;
             // the switch into TOUCHING might have happened while the page was
@@ -348,6 +361,7 @@ public class PanZoomController
             // was the case
             bounce();
             return false;
+
         case PANNING:
         case PANNING_LOCKED:
         case PANNING_HOLD:
@@ -355,11 +369,10 @@ public class PanZoomController
             mState = PanZoomState.FLING;
             fling();
             return true;
+
         case PINCHING:
             mState = PanZoomState.NOTHING;
             return true;
-        case ANIMATED_ZOOM:
-            return false;
         }
         Log.e(LOGTAG, "Unhandled case " + mState + " in onTouchEnd");
         return false;
@@ -472,16 +485,17 @@ public class PanZoomController
             return;
         }
 
-        mState = PanZoomState.BOUNCE;
-        // set the animation target *after* setting state BOUNCE, so that
-        // the getRedrawHint() is returning false and we don't clobber the display
-        // port we set as a result of this animation target call.
+        // At this point we have already set mState to BOUNCE or ANIMATED_ZOOM, so
+        // getRedrawHint() is returning false. This means we can safely call
+        // setAnimationTarget to set the new final display port and not have it get
+        // clobbered by display ports from intermediate animation frames.
         mController.setAnimationTarget(metrics);
         startAnimationTimer(new BounceRunnable(bounceStartMetrics, metrics));
     }
 
     /* Performs a bounce-back animation to the nearest valid viewport metrics. */
     private void bounce() {
+        mState = PanZoomState.BOUNCE;
         bounce(getValidViewportMetrics());
     }
 
@@ -595,7 +609,7 @@ public class PanZoomController
              * animation by setting the state to PanZoomState.NOTHING. Handle this case and bail
              * out.
              */
-            if (mState != PanZoomState.BOUNCE) {
+            if (!(mState == PanZoomState.BOUNCE || mState == PanZoomState.ANIMATED_ZOOM)) {
                 finishAnimation();
                 return;
             }

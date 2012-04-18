@@ -169,6 +169,7 @@
 #include "nsIEditingSession.h"
 
 #include "nsPIDOMWindow.h"
+#include "nsGlobalWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsIDOMDocument.h"
 #include "nsICachingChannel.h"
@@ -7894,8 +7895,7 @@ namespace
 {
 
 // Callback used by CopyFavicon to inform the favicon service that one URI
-// (mNewURI) has the same favicon URI (OnFaviconDataAvailable's aFaviconURI) as
-// another.
+// (mNewURI) has the same favicon URI (OnComplete's aFaviconURI) as another.
 class nsCopyFaviconCallback : public nsIFaviconDataCallback
 {
 public:
@@ -7907,9 +7907,14 @@ public:
     }
 
     NS_IMETHODIMP
-    OnFaviconDataAvailable(nsIURI *aFaviconURI, PRUint32 aDataLen,
-                           const PRUint8 *aData, const nsACString &aMimeType)
+    OnComplete(nsIURI *aFaviconURI, PRUint32 aDataLen,
+               const PRUint8 *aData, const nsACString &aMimeType)
     {
+        // Continue only if there is an associated favicon.
+        if (!aFaviconURI) {
+          return NS_OK;
+        }
+
         NS_ASSERTION(aDataLen == 0,
                      "We weren't expecting the callback to deliver data.");
         nsCOMPtr<mozIAsyncFavicons> favSvc =
@@ -9721,7 +9726,12 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
             }
         }
 
-        mCurrentURI->Equals(newURI, &equalURIs);
+        if (mCurrentURI) {
+            mCurrentURI->Equals(newURI, &equalURIs);
+        }
+        else {
+            equalURIs = false;
+        }
 
     } // end of same-origin check
 
@@ -10851,10 +10861,6 @@ nsDocShell::EnsureScriptEnvironment()
     mInEnsureScriptEnv = true;
 #endif
 
-    nsCOMPtr<nsIDOMScriptObjectFactory> factory =
-        do_GetService(kDOMScriptObjectFactoryCID);
-    NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
-
     nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
     NS_ENSURE_TRUE(browserChrome, NS_ERROR_NOT_AVAILABLE);
 
@@ -10867,20 +10873,15 @@ nsDocShell::EnsureScriptEnvironment()
 
     // If our window is modal and we're not opened as chrome, make
     // this window a modal content window.
-    factory->NewScriptGlobalObject(mItemType == typeChrome,
-                                   isModalContentWindow,
-                                   getter_AddRefs(mScriptGlobal));
-    NS_ENSURE_TRUE(mScriptGlobal, NS_ERROR_FAILURE);
+    nsRefPtr<nsGlobalWindow> window =
+        NS_NewScriptGlobalObject(mItemType == typeChrome, isModalContentWindow);
+    MOZ_ASSERT(window);
+    mScriptGlobal = window;
 
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mScriptGlobal));
-    win->SetDocShell(static_cast<nsIDocShell *>(this));
+    window->SetDocShell(this);
 
     // Ensure the script object is set up to run script.
-    nsresult rv;
-    rv = mScriptGlobal->EnsureScriptEnvironment();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
+    return mScriptGlobal->EnsureScriptEnvironment();
 }
 
 

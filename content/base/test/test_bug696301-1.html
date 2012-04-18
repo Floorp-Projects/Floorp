@@ -38,7 +38,7 @@ window.onerror = function(message, uri, line) {
 errorFired = false;
 global = "";
 window.onerror = function(message, uri, line) {
-  is(message, "c is not defined", "Should have correct error message");
+  is(message, "ReferenceError: c is not defined", "Should have correct error message");
   is(uri,
      "http://example.com/tests/content/base/test/bug696301-script-1.js",
      "Should also have correct script URI");

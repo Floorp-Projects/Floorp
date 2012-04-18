@@ -56,8 +56,16 @@ _TEST_FILES = \
 _CHROME_TEST_FILES = \
   $(NULL)
 
+ifdef MOZ_B2G_RIL
+_CHROME_TEST_FILES += \
+  test_smsdatabaseservice.xul \
+  $(NULL)
+endif
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
-#libs:: $(_CHROME_TEST_FILES)
-#	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+ifneq (,$(_CHROME_TEST_FILES))
+libs:: $(_CHROME_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+endif

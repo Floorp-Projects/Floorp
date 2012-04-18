@@ -2140,22 +2140,22 @@ DumpStack(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     StackIter iter(cx);
-    JS_ASSERT((iter.isScripted() && !iter.isScript()) ||
-              iter.nativeArgs().callee().toFunction()->native() == DumpStack);
+
+    // This assert does not yet work with IonMonkey.
+    JS_ASSERT(iter.isNativeCall() && iter.callee().toFunction()->native() == DumpStack);
+
     ++iter;
 
     uint32_t index = 0;
     for (; !iter.done(); ++index, ++iter) {
         Value v;
-        if (iter.isNonEvalFunctionFrame()) {
-            v = ObjectValue(iter.callee());
+        if (iter.isNonEvalFunctionFrame() || iter.isNativeCall()) {
+            v = iter.calleev();
         } else if (iter.isEvalFrame()) {
             v = StringValue(evalStr);
         } else {
             v = StringValue(globalStr);
         }
-        if (v.isNull())
-            return false;
         if (!JS_SetElement(cx, arr, index, &v))
             return false;
     }
@@ -2742,13 +2742,15 @@ ShapeOf(JSContext *cx, unsigned argc, jsval *vp)
  * non-native referent may be simplified to data properties.
  */
 static JSBool
-CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
+CopyProperty(JSContext *cx, JSObject *obj_, JSObject *referent, jsid id,
              unsigned lookupFlags, JSObject **objp)
 {
     JSProperty *prop;
     PropertyDescriptor desc;
     unsigned propFlags = 0;
     JSObject *obj2;
+
+    RootedVarObject obj(cx, obj_);
 
     *objp = NULL;
     if (referent->isNative()) {
@@ -4301,9 +4303,11 @@ global_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-global_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
+global_resolve(JSContext *cx, JSObject *obj_, jsid id, unsigned flags,
                JSObject **objp)
 {
+    RootedVarObject obj(cx, obj_);
+
 #ifdef LAZY_STANDARD_CLASSES
     JSBool resolved;
 

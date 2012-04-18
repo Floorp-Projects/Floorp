@@ -417,15 +417,20 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         if (!uri)
             break;
 
-        const char *argv[3] = {
+        char *flag = ToNewUTF8String(curEvent->CharactersExtra());
+
+        const char *argv[4] = {
             "dummyappname",
-            "-remote",
-            uri
+            "-url",
+            uri,
+            flag ? flag : ""
         };
-        nsresult rv = cmdline->Init(3, const_cast<char **>(argv), nsnull, nsICommandLine::STATE_REMOTE_AUTO);
+        nsresult rv = cmdline->Init(4, const_cast<char **>(argv), nsnull, nsICommandLine::STATE_REMOTE_AUTO);
         if (NS_SUCCEEDED(rv))
             cmdline->Run();
         nsMemory::Free(uri);
+        if (flag)
+            nsMemory::Free(flag);
         break;
     }
 

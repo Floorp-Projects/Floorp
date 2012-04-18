@@ -92,28 +92,28 @@ Site.prototype = {
    *        A callback function that takes a favicon image URL as a parameter.
    */
   getFavicon: function Site_getFavicon(aCallback) {
-    let callbackExecuted = false;
-    function faviconDataCallback(aURI, aDataLen, aData, aMimeType) {
-      // We don't need a second callback, so we can ignore it to avoid making
-      // a second database query for the favicon data.
-      if (callbackExecuted) {
-        return;
-      }
+    function invokeCallback(aFaviconURI) {
       try {
         // Use getFaviconLinkForIcon to get image data from the database instead
         // of using the favicon URI to fetch image data over the network.
-        aCallback(gFaviconService.getFaviconLinkForIcon(aURI).spec);
-        callbackExecuted = true;
+        aCallback(gFaviconService.getFaviconLinkForIcon(aFaviconURI).spec);
       } catch (e) {
         Cu.reportError("AboutPermissions: " + e);
       }
     }
 
-    // Try to find favicion for both URIs. Callback will only be called if a
-    // favicon URI is found. We'll ignore the second callback if it is called,
-    // so this means we'll always prefer the https favicon.
-    gFaviconService.getFaviconURLForPage(this.httpsURI, faviconDataCallback);
-    gFaviconService.getFaviconURLForPage(this.httpURI, faviconDataCallback);
+    // Try to find favicon for both URIs, but always prefer the https favicon.
+    gFaviconService.getFaviconURLForPage(this.httpsURI, function (aURI) {
+      if (aURI) {
+        invokeCallback(aURI);
+      } else {
+        gFaviconService.getFaviconURLForPage(this.httpURI, function (aURI) {
+          if (aURI) {
+            invokeCallback(aURI);
+          }
+        });
+      }
+    }.bind(this));
   },
 
   /**

@@ -82,13 +82,7 @@ public:
 
   nsresult NotifyHelperCompleted(HelperBase* aHelper);
 
-  void SetError(nsresult rv)
-  {
-    NS_ASSERTION(NS_FAILED(rv), "Er, what?");
-    NS_ASSERTION(mErrorCode == NS_OK, "Already have an error?");
-
-    mErrorCode = rv;
-  }
+  void SetError(nsresult rv);
 
 protected:
   IDBRequest();
@@ -121,7 +115,7 @@ protected:
 
   jsval mResultVal;
 
-  PRUint16 mErrorCode;
+  nsCOMPtr<nsIDOMDOMError> mError;
   bool mHaveResultOrErrorCode;
   bool mRooted;
 };

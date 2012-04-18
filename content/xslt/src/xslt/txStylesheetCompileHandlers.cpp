@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/Util.h"
 
 #include "txStylesheetCompiler.h"
@@ -303,7 +304,7 @@ getNumberAttr(txStylesheetAttr* aAttributes,
               txStylesheetCompilerState& aState,
               double& aNumber)
 {
-    aNumber = txDouble::NaN;
+    aNumber = MOZ_DOUBLE_NaN();
     txStylesheetAttr* attr = nsnull;
     nsresult rv = getStyleAttr(aAttributes, aAttrCount, kNameSpaceID_None,
                                aName, aRequired, &attr);
@@ -312,7 +313,7 @@ getNumberAttr(txStylesheetAttr* aAttributes,
     }
 
     aNumber = txDouble::toDouble(attr->mValue);
-    if (txDouble::isNaN(aNumber) && (aRequired || !aState.fcp())) {
+    if (MOZ_DOUBLE_IS_NaN(aNumber) && (aRequired || !aState.fcp())) {
         // XXX ErrorReport: number parse failure
         return NS_ERROR_XSLT_PARSE_FAILURE;
     }
@@ -552,7 +553,7 @@ txFnStartLREStylesheet(PRInt32 aNamespaceID,
     NS_ENSURE_SUCCESS(rv, rv);
 
     txExpandedName nullExpr;
-    double prio = txDouble::NaN;
+    double prio = MOZ_DOUBLE_NaN();
 
     nsAutoPtr<txPattern> match(new txRootPattern());
     NS_ENSURE_TRUE(match, NS_ERROR_OUT_OF_MEMORY);
@@ -1145,7 +1146,7 @@ txFnStartTemplate(PRInt32 aNamespaceID,
                       aState, mode);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    double prio = txDouble::NaN;
+    double prio = MOZ_DOUBLE_NaN();
     rv = getNumberAttr(aAttributes, aAttrCount, nsGkAtoms::priority,
                        false, aState, prio);
     NS_ENSURE_SUCCESS(rv, rv);

@@ -573,7 +573,7 @@ ParallelArray_scatter(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static JSBool
-ParallelArray_forward_method(JSContext *cx, unsigned argc, Value *vp, Native native, PropertyName *name)
+ParallelArray_forward_method(JSContext *cx, unsigned argc, Value *vp, Native native, jsid id)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -583,8 +583,8 @@ ParallelArray_forward_method(JSContext *cx, unsigned argc, Value *vp, Native nat
         return false;
 
     Value callable;
-    JSObject *buffer = GetBuffer(obj);
-    if (!js_GetMethod(cx, buffer, ATOM_TO_JSID(name), 0, &callable))
+    RootedVarObject buffer(cx, GetBuffer(obj));
+    if (!js_GetMethod(cx, buffer, id, 0, &callable))
         return false;
 
     Value rval;
@@ -598,19 +598,22 @@ ParallelArray_forward_method(JSContext *cx, unsigned argc, Value *vp, Native nat
 static JSBool
 ParallelArray_toString(JSContext *cx, unsigned argc, Value *vp)
 {
-    return ParallelArray_forward_method(cx, argc, vp, ParallelArray_toString, cx->runtime->atomState.toStringAtom);
+    return ParallelArray_forward_method(cx, argc, vp, ParallelArray_toString,
+                                        ATOM_TO_JSID(cx->runtime->atomState.toStringAtom));
 }
 
 static JSBool
 ParallelArray_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
 {
-    return ParallelArray_forward_method(cx, argc, vp, ParallelArray_toLocaleString, cx->runtime->atomState.toStringAtom);
+    return ParallelArray_forward_method(cx, argc, vp, ParallelArray_toLocaleString,
+                                        ATOM_TO_JSID(cx->runtime->atomState.toStringAtom));
 }
 
 static JSBool
 ParallelArray_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
-    return ParallelArray_forward_method(cx, argc, vp, ParallelArray_toSource, cx->runtime->atomState.toStringAtom);
+    return ParallelArray_forward_method(cx, argc, vp, ParallelArray_toSource,
+                                        ATOM_TO_JSID(cx->runtime->atomState.toStringAtom));
 }
 
 static JSBool

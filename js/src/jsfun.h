@@ -96,7 +96,6 @@ struct JSFunction : public JSObject
     } u;
     js::HeapPtrAtom  atom;        /* name for diagnostics and decompiling */
 
-    bool optimizedClosure()  const { return kind() > JSFUN_INTERPRETED; }
     bool isInterpreted()     const { return kind() >= JSFUN_INTERPRETED; }
     bool isNative()          const { return !isInterpreted(); }
     bool isNativeConstructor() const { return flags & JSFUN_CONSTRUCTOR; }
@@ -245,7 +244,8 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, unsigned nargs,
                js::gc::AllocKind kind = JSFunction::FinalizeKind);
 
 extern JSFunction * JS_FASTCALL
-js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent, JSObject *proto,
+js_CloneFunctionObject(JSContext *cx, js::HandleFunction fun,
+                       js::HandleObject parent, js::HandleObject proto,
                        js::gc::AllocKind kind = JSFunction::FinalizeKind);
 
 extern JSFunction *

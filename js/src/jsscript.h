@@ -197,23 +197,23 @@ class Bindings
      * runtime, by calling an "add" method. All ARGUMENT bindings must be added
      * before before any VARIABLE or CONSTANT bindings.
      */
-    bool add(JSContext *cx, JSAtom *name, BindingKind kind);
+    bool add(JSContext *cx, HandleAtom name, BindingKind kind);
 
     /* Convenience specializations. */
-    bool addVariable(JSContext *cx, JSAtom *name) {
+    bool addVariable(JSContext *cx, HandleAtom name) {
         return add(cx, name, VARIABLE);
     }
-    bool addConstant(JSContext *cx, JSAtom *name) {
+    bool addConstant(JSContext *cx, HandleAtom name) {
         return add(cx, name, CONSTANT);
     }
-    bool addArgument(JSContext *cx, JSAtom *name, uint16_t *slotp) {
+    bool addArgument(JSContext *cx, HandleAtom name, uint16_t *slotp) {
         JS_ASSERT(name != NULL); /* not destructuring */
         *slotp = nargs;
         return add(cx, name, ARGUMENT);
     }
     bool addDestructuring(JSContext *cx, uint16_t *slotp) {
         *slotp = nargs;
-        return add(cx, NULL, ARGUMENT);
+        return add(cx, RootedVarAtom(cx), ARGUMENT);
     }
 
     void noteDup() { hasDup_ = true; }
@@ -328,6 +328,11 @@ typedef HashMap<JSScript *,
                 DefaultHasher<JSScript *>,
                 SystemAllocPolicy> ScriptCountsMap;
 
+typedef HashMap<JSScript *,
+                jschar *,
+                DefaultHasher<JSScript *>,
+                SystemAllocPolicy> SourceMapMap;
+
 class DebugScript
 {
     friend struct ::JSScript;
@@ -350,6 +355,11 @@ class DebugScript
      */
     BreakpointSite  *breakpoints[1];
 };
+
+typedef HashMap<JSScript *,
+                DebugScript *,
+                DefaultHasher<JSScript *>,
+                SystemAllocPolicy> DebugScriptMap;
 
 } /* namespace js */
 
@@ -430,8 +440,6 @@ struct JSScript : public js::gc::Cell
     JSPrincipals    *principals;/* principals for this script */
     JSPrincipals    *originPrincipals; /* see jsapi.h 'originPrincipals' comment */
 
-    jschar          *sourceMap; /* source map file or null */
-
     /*
      * A global object for the script.
      * - All scripts returned by JSAPI functions (JS_CompileScript,
@@ -455,7 +463,6 @@ struct JSScript : public js::gc::Cell
 #endif
 
   private:
-    js::DebugScript     *debug;
     js::HeapPtrFunction function_;
 
     size_t          useCount;   /* Number of times the script has been called
@@ -478,11 +485,11 @@ struct JSScript : public js::gc::Cell
     // Unique identifier within the compartment for this script, used for
     // printing analysis information.
     uint32_t        id_;
- #if JS_BITS_PER_WORD == 64
   private:
-    uint32_t        idpad64;
- #endif
-#elif JS_BITS_PER_WORD == 32
+    uint32_t        idpad;
+#endif
+
+#if JS_BITS_PER_WORD == 32
   private:
     uint32_t        pad32;
 #endif
@@ -553,6 +560,10 @@ struct JSScript : public js::gc::Cell
     bool            isGenerator:1;    /* is a generator */
     bool            hasScriptCounts:1;/* script has an entry in
                                          JSCompartment::scriptCountsMap */
+    bool            hasSourceMap:1;   /* script has an entry in
+                                         JSCompartment::sourceMapMap */
+    bool            hasDebugScript:1; /* script has an entry in
+                                         JSCompartment::debugScriptMap */
 
   private:
     /* See comments below. */
@@ -721,11 +732,15 @@ struct JSScript : public js::gc::Cell
 #endif
 
   public:
-    js::PCCounts getPCCounts(jsbytecode *pc);
-
     bool initScriptCounts(JSContext *cx);
+    js::PCCounts getPCCounts(jsbytecode *pc);
     js::ScriptCounts releaseScriptCounts();
     void destroyScriptCounts(js::FreeOp *fop);
+
+    bool setSourceMap(JSContext *cx, jschar *sourceMap);
+    jschar *getSourceMap();
+    jschar *releaseSourceMap();
+    void destroySourceMap(js::FreeOp *fop);
 
     jsbytecode *main() {
         return code + mainOffset;
@@ -856,16 +871,19 @@ struct JSScript : public js::gc::Cell
     /* Attempt to change this->stepMode to |newValue|. */
     bool tryNewStepMode(JSContext *cx, uint32_t newValue);
 
-    bool ensureHasDebug(JSContext *cx);
+    bool ensureHasDebugScript(JSContext *cx);
+    js::DebugScript *debugScript();
+    js::DebugScript *releaseDebugScript();
+    void destroyDebugScript(js::FreeOp *fop);
 
   public:
     bool hasBreakpointsAt(jsbytecode *pc) { return !!getBreakpointSite(pc); }
-    bool hasAnyBreakpointsOrStepMode() { return !!debug; }
+    bool hasAnyBreakpointsOrStepMode() { return hasDebugScript; }
 
     js::BreakpointSite *getBreakpointSite(jsbytecode *pc)
     {
         JS_ASSERT(size_t(pc - code) < length);
-        return debug ? debug->breakpoints[pc - code] : NULL;
+        return hasDebugScript ? debugScript()->breakpoints[pc - code] : NULL;
     }
 
     js::BreakpointSite *getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc,
@@ -894,10 +912,10 @@ struct JSScript : public js::gc::Cell
      */
     bool changeStepModeCount(JSContext *cx, int delta);
 
-    bool stepModeEnabled() { return debug && !!debug->stepMode; }
+    bool stepModeEnabled() { return hasDebugScript && !!debugScript()->stepMode; }
 
 #ifdef DEBUG
-    uint32_t stepModeCount() { return debug ? (debug->stepMode & stepCountMask) : 0; }
+    uint32_t stepModeCount() { return hasDebugScript ? (debugScript()->stepMode & stepCountMask) : 0; }
 #endif
 
     void finalize(js::FreeOp *fop);
@@ -915,7 +933,7 @@ struct JSScript : public js::gc::Cell
     void markChildren(JSTracer *trc);
 };
 
-/* If this fails, padding_ can be removed or added. */
+/* If this fails, add/remove padding within JSScript. */
 JS_STATIC_ASSERT(sizeof(JSScript) % js::gc::Cell::CellSize == 0);
 
 static JS_INLINE unsigned

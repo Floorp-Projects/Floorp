@@ -69,7 +69,7 @@ function testSteps()
   is(event.target, requests[2], "fired at the right request");
   event.target.result.close();
 
-  requests[3].onerror = new ExpectError(IDBDatabaseException.VERSION_ERR);
+  requests[3].onerror = new ExpectError("VersionError");
 
   event = yield;
 

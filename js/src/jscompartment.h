@@ -470,7 +470,11 @@ struct JSCompartment
     js::WatchpointMap *watchpointMap;
 
     js::ScriptCountsMap *scriptCountsMap;
-	
+
+    js::SourceMapMap *sourceMapMap;
+
+    js::DebugScriptMap *debugScriptMap;
+
 #ifdef JS_ION
   private:
     js::ion::IonCompartment *ionCompartment_;

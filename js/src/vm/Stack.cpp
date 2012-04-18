@@ -1317,10 +1317,9 @@ StackIter::popIonFrame()
 StackIter &
 StackIter::operator++()
 {
-    JS_ASSERT(!done());
     switch (state_) {
       case DONE:
-        JS_NOT_REACHED("");
+        JS_NOT_REACHED("Unexpected state");
       case SCRIPTED:
         popFrame();
         settleOnNewState();
@@ -1354,30 +1353,35 @@ StackIter::operator==(const StackIter &rhs) const
 bool
 StackIter::isFunctionFrame() const
 {
-    JS_ASSERT(!done());
     switch (state_) {
-      case ION:
-        return ionInlineFrames_.isFunctionFrame();
+      case DONE:
+        break;
       case SCRIPTED:
         return fp()->isFunctionFrame();
-      default:
-        return true;
+      case ION:
+        return ionInlineFrames_.isFunctionFrame();
+      case NATIVE:
+      case IMPLICIT_NATIVE:
+        return false;
     }
-    JS_NOT_REACHED("Unreachable");
+    JS_NOT_REACHED("Unexpected state");
     return false;
 }
 
 bool
 StackIter::isEvalFrame() const
 {
-    JS_ASSERT(!done());
     switch (state_) {
+      case DONE:
+        break;
       case SCRIPTED:
         return fp()->isEvalFrame();
-      default:
+      case ION:
+      case NATIVE:
+      case IMPLICIT_NATIVE:
         return false;
     }
-    JS_NOT_REACHED("Unreachable");
+    JS_NOT_REACHED("Unexpected state");
     return false;
 }
 
@@ -1386,44 +1390,54 @@ StackIter::isNonEvalFunctionFrame() const
 {
     JS_ASSERT(!done());
     switch (state_) {
+      case DONE:
+        break;
       case SCRIPTED:
         return fp()->isNonEvalFunctionFrame();
-      default:
+      case ION:
+      case NATIVE:
+      case IMPLICIT_NATIVE:
         return !isEvalFrame() && isFunctionFrame();
     }
-    JS_NOT_REACHED("Unreachable");
+    JS_NOT_REACHED("Unexpected state");
     return false;
 }
 
 JSObject &
 StackIter::callee() const
 {
-    JS_ASSERT(isFunctionFrame());
     switch (state_) {
+      case DONE:
+        break;
+      case SCRIPTED:
+        JS_ASSERT(isFunctionFrame());
+        return fp()->callee();
       case ION:
         return *ionInlineFrames_.callee();
-      case SCRIPTED:
-        return fp()->callee();
-      default:
+      case NATIVE:
+      case IMPLICIT_NATIVE:
         return nativeArgs().callee();
     }
-    JS_NOT_REACHED("Unreachable");
+    JS_NOT_REACHED("Unexpected state");
     return *(JSObject *) NULL;
 }
 
 Value
 StackIter::calleev() const
 {
-    JS_ASSERT(isFunctionFrame());
     switch (state_) {
+      case DONE:
+        break;
+      case SCRIPTED:
+        JS_ASSERT(isFunctionFrame());
+        return fp()->calleev();
       case ION:
         return ObjectValue(*ionInlineFrames_.callee());
-      case SCRIPTED:
-        return fp()->calleev();
-      default:
+      case NATIVE:
+      case IMPLICIT_NATIVE:
         return nativeArgs().calleev();
     }
-    JS_NOT_REACHED("Unreachable");
+    JS_NOT_REACHED("Unexpected state");
     return Value();
 }
 

@@ -53,7 +53,7 @@
 
 interface nsIDOMValidityState;
 
-[scriptable, uuid(828961d4-cca1-4024-aaf1-dc0e0d1e6d98)]
+[scriptable, uuid(2A50D295-8DB8-4223-AE0D-070C6EB6C76E)]
 interface nsIDOMHTMLSelectElement : nsIDOMHTMLElement
 {
            attribute boolean                     autofocus;

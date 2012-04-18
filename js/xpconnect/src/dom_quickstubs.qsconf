@@ -457,7 +457,6 @@ members = [
     'nsIIDBCursor.*',
     'nsIIDBCursorWithValue.*',
     'nsIIDBDatabase.*',
-    'nsIIDBDatabaseException.*',
     'nsIIDBIndex.*',
     'nsIIDBKeyRange.*',
     'nsIIDBObjectStore.*',

@@ -526,6 +526,14 @@ public:
   NS_HIDDEN_(nsresult) GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& aResult);
 
   /**
+   * Gets the absolute URI values of an attribute, by resolving any relative
+   * URIs in the attribute against the baseuri of the element. If a substring
+   * isn't a relative URI, the substring is returned as is. Only works for
+   * attributes in null namespace.
+   */
+  bool GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsIURI** aURI) const;
+
+  /**
    * Returns the current disabled state of the element.
    */
   virtual bool IsDisabled() const {
@@ -704,14 +712,6 @@ protected:
    * @param aValue   Double value of attribute.
    */
   NS_HIDDEN_(nsresult) SetDoubleAttr(nsIAtom* aAttr, double aValue);
-
-  /**
-   * Helper for GetURIAttr and GetHrefURIForAnchors which returns an
-   * nsIURI in the out param.
-   *
-   * @return true if we had the attr, false otherwise.
-   */
-  NS_HIDDEN_(bool) GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsIURI** aURI) const;
 
   /**
    * This method works like GetURIAttr, except that it supports multiple

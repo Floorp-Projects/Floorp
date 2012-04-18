@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+  -->
+  <head>
+    <title>Bug 633602</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js">
+    </script>
+    <script type="application/javascript" src="pointerlock_utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+      Mozilla Bug 633602</a>
+    <p id="display"></p>
+    <div id="div"></div>
+    <pre id="test">
+      <script type="application/javascript">
+        /*
+         * Test for Bug 633602
+         * Tests full-screen-api.pointer-lock pref
+         */
+
+        SimpleTest.waitForExplicitFinish();
+
+        var div = document.getElementById("div")
+          , prefEnabled = false
+          , prefDisabled = false;
+
+        function runTests () {
+          ok(prefEnabled, "Element should be able to lock the pointer " +
+            "if pointer-lock pref is set to TRUE");
+          ok(prefDisabled, "Element should NOT be able to lock the pointer " +
+            "if pointer-lock pref is set to FALSE");
+        }
+
+        document.addEventListener("mozpointerlockchange", function (e) {
+          if (document.mozPointerLockElement === div) {
+            prefEnabled = true;
+            document.mozExitPointerLock();
+          }
+          else {
+            SpecialPowers.setBoolPref("full-screen-api.pointer-lock.enabled",
+                                      false );
+            div.mozRequestPointerLock();
+          }
+        }, false);
+
+        document.addEventListener("mozpointerlockerror", function (e) {
+          prefDisabled = true;
+          document.mozCancelFullScreen();
+        }, false);
+
+        document.addEventListener("mozfullscreenchange", function (e) {
+          if (document.mozFullScreenElement === div) {
+            SpecialPowers.setBoolPref("full-screen-api.pointer-lock.enabled",
+                                      true );
+            div.mozRequestPointerLock();
+          }
+          else {
+            SpecialPowers.setBoolPref("full-screen-api.pointer-lock.enabled",
+                                       true );
+            runTests();
+            SimpleTest.finish();
+          }
+        }, false);
+
+        function start() {
+          div.mozRequestFullScreen();
+        }
+      </script>
+    </pre>
+  </body>
+</html>

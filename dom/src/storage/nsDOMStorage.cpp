@@ -1742,25 +1742,6 @@ nsDOMStorage::StorageType()
   return mStorageType;
 }
 
-void
-nsDOMStorage::BroadcastChangeNotification(const nsSubstring &aKey,
-                                          const nsSubstring &aOldValue,
-                                          const nsSubstring &aNewValue)
-{
-  nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
-  if (!observerService) {
-    return;
-  }
-
-  // Fire off a notification that a storage object changed. If the
-  // storage object is a session storage object, we don't pass a
-  // domain, but if it's a global storage object we do.
-  observerService->NotifyObservers((nsIDOMStorageObsolete *)this,
-                                   "dom-storage-changed",
-                                   NS_ConvertUTF8toUTF16(mStorageImpl->mDomain).get());
-}
-
 //
 // nsDOMStorage2
 //
@@ -1925,8 +1906,8 @@ StorageNotifierRunnable::Run()
 
 void
 nsDOMStorage2::BroadcastChangeNotification(const nsSubstring &aKey,
-                                          const nsSubstring &aOldValue,
-                                          const nsSubstring &aNewValue)
+                                           const nsSubstring &aOldValue,
+                                           const nsSubstring &aNewValue)
 {
   nsresult rv;
   nsCOMPtr<nsIDOMStorageEvent> event = new nsDOMStorageEvent();

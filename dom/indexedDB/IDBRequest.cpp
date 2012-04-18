@@ -56,12 +56,12 @@
 #include "AsyncConnectionHelper.h"
 #include "IDBEvents.h"
 #include "IDBTransaction.h"
+#include "DOMError.h"
 
 USING_INDEXEDDB_NAMESPACE
 
 IDBRequest::IDBRequest()
 : mResultVal(JSVAL_VOID),
-  mErrorCode(0),
   mHaveResultOrErrorCode(false),
   mRooted(false)
 {
@@ -100,7 +100,7 @@ IDBRequest::Reset()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   mResultVal = JSVAL_VOID;
   mHaveResultOrErrorCode = false;
-  mErrorCode = 0;
+  mError = nsnull;
   UnrootResultVal();
 }
 
@@ -124,7 +124,7 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
 
   // If the request failed then set the error code and return.
   if (NS_FAILED(rv)) {
-    mErrorCode = NS_ERROR_GET_CODE(rv);
+    mError = DOMError::CreateForNSResult(rv);
     return NS_OK;
   }
 
@@ -137,7 +137,7 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
     if (NS_FAILED(cxStack->GetSafeJSContext(&cx))) {
       NS_WARNING("Failed to get safe JSContext!");
       rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-      mErrorCode = NS_ERROR_GET_CODE(rv);
+      mError = DOMError::CreateForNSResult(rv);
       return rv;
     }
   }
@@ -167,14 +167,23 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
   }
 
   if (NS_SUCCEEDED(rv)) {
-    mErrorCode = 0;
+    mError = nsnull;
   }
   else {
-    mErrorCode = NS_ERROR_GET_CODE(rv);
+    mError = DOMError::CreateForNSResult(rv);
     mResultVal = JSVAL_VOID;
   }
 
   return rv;
+}
+
+void
+IDBRequest::SetError(nsresult rv)
+{
+  NS_ASSERTION(NS_FAILED(rv), "Er, what?");
+  NS_ASSERTION(!mError, "Already have an error?");
+
+  mError = DOMError::CreateForNSResult(rv);
 }
 
 void
@@ -239,7 +248,7 @@ IDBRequest::GetResult(jsval* aResult)
 }
 
 NS_IMETHODIMP
-IDBRequest::GetErrorCode(PRUint16* aErrorCode)
+IDBRequest::GetError(nsIDOMDOMError** aError)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -248,7 +257,7 @@ IDBRequest::GetErrorCode(PRUint16* aErrorCode)
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  *aErrorCode = mErrorCode;
+  NS_IF_ADDREF(*aError = mError);
   return NS_OK;
 }
 

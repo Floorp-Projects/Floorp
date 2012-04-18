@@ -59,11 +59,10 @@
 #include "nsCRT.h"
 
 //prototype
-nsresult GetListState(nsIEditor *aEditor, bool *aMixed, PRUnichar **tagStr);
-nsresult RemoveOneProperty(nsIHTMLEditor *aEditor,const nsString& aProp,
-                           const nsString &aAttr);
-nsresult RemoveTextProperty(nsIEditor *aEditor, const PRUnichar *prop,
-                            const PRUnichar *attr);
+nsresult GetListState(nsIHTMLEditor* aEditor, bool* aMixed,
+                      nsAString& aLocalName);
+nsresult RemoveOneProperty(nsIHTMLEditor* aEditor, const nsAString& aProp);
+nsresult RemoveTextProperty(nsIHTMLEditor* aEditor, const nsAString& aProp);
 nsresult SetTextProperty(nsIEditor *aEditor, const PRUnichar *prop,
                          const PRUnichar *attr, const PRUnichar *value);
 
@@ -264,34 +263,26 @@ nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
   if (doTagRemoval) {
     // Also remove equivalent properties (bug 317093)
     if (tagName.EqualsLiteral("b")) {
-      rv = RemoveTextProperty(aEditor, NS_LITERAL_STRING("strong").get(), nsnull);
+      rv = RemoveTextProperty(htmlEditor, NS_LITERAL_STRING("strong"));
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (tagName.EqualsLiteral("i")) {
-      rv = RemoveTextProperty(aEditor, NS_LITERAL_STRING("em").get(), nsnull);
+      rv = RemoveTextProperty(htmlEditor, NS_LITERAL_STRING("em"));
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (tagName.EqualsLiteral("strike")) {
-      rv = RemoveTextProperty(aEditor, NS_LITERAL_STRING("s").get(), nsnull);
+      rv = RemoveTextProperty(htmlEditor, NS_LITERAL_STRING("s"));
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    rv = RemoveTextProperty(aEditor, tagName.get(), nsnull);
+    rv = RemoveTextProperty(htmlEditor, tagName);
   } else {
     // Superscript and Subscript styles are mutually exclusive
-    nsAutoString removeName; 
     aEditor->BeginTransaction();
 
-    if (tagName.EqualsLiteral("sub"))
-    {
-      removeName.AssignLiteral("sup");
-      rv = RemoveTextProperty(aEditor,tagName.get(), nsnull);
-    } 
-    else if (tagName.EqualsLiteral("sup"))
-    {
-      removeName.AssignLiteral("sub");
-      rv = RemoveTextProperty(aEditor, tagName.get(), nsnull);
+    if (tagName.EqualsLiteral("sub") || tagName.EqualsLiteral("sup")) {
+      rv = RemoveTextProperty(htmlEditor, tagName);
     }
     if (NS_SUCCEEDED(rv))
-      rv = SetTextProperty(aEditor,tagName.get(), nsnull, nsnull);
+      rv = SetTextProperty(aEditor, tagName.get(), nsnull, nsnull);
 
     aEditor->EndTransaction();
   }
@@ -309,19 +300,19 @@ nsListCommand::GetCurrentState(nsIEditor *aEditor, const char* aTagName,
                                nsICommandParams *aParams)
 {
   NS_ASSERTION(aEditor, "Need editor here");
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
+  NS_ENSURE_TRUE(htmlEditor, NS_ERROR_NO_INTERFACE);
 
   bool bMixed;
-  PRUnichar *tagStr;
-  nsresult rv = GetListState(aEditor,&bMixed, &tagStr);
+  nsAutoString localName;
+  nsresult rv = GetListState(htmlEditor, &bMixed, localName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Need to use mTagName????
-  bool inList = (0 == nsCRT::strcmp(tagStr,
-                   NS_ConvertASCIItoUTF16(mTagName).get()));
+  bool inList = localName.EqualsASCII(mTagName);
   aParams->SetBooleanValue(STATE_ALL, !bMixed && inList);
   aParams->SetBooleanValue(STATE_MIXED, bMixed);
   aParams->SetBooleanValue(STATE_ENABLED, true);
-  if (tagStr) NS_Free(tagStr);
   return NS_OK;
 }
 
@@ -404,33 +395,24 @@ nsListItemCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  if (inList)
-  {
+  if (inList) {
     // To remove a list, first get what kind of list we're in
     bool bMixed;
-    PRUnichar *tagStr;
-    rv = GetListState(aEditor,&bMixed, &tagStr);
+    nsAutoString localName;
+    rv = GetListState(htmlEditor, &bMixed, localName);
     NS_ENSURE_SUCCESS(rv, rv); 
-    if (tagStr)
-    {
-      if (!bMixed)
-      {
-        rv = htmlEditor->RemoveList(nsDependentString(tagStr));    
-      }
-      NS_Free(tagStr);
+    if (localName.IsEmpty() || bMixed) {
+      return rv;
     }
+    return htmlEditor->RemoveList(localName);
   }
-  else
-  {
-    nsAutoString itemType; itemType.AssignWithConversion(mTagName);
-    // Set to the requested paragraph type
-    //XXX Note: This actually doesn't work for "LI",
-    //    but we currently don't use this for non DL lists anyway.
-    // Problem: won't this replace any current block paragraph style?
-    rv = htmlEditor->SetParagraphFormat(itemType);
-  }
-    
-  return rv;
+
+  nsAutoString itemType; itemType.AssignWithConversion(mTagName);
+  // Set to the requested paragraph type
+  //XXX Note: This actually doesn't work for "LI",
+  //    but we currently don't use this for non DL lists anyway.
+  // Problem: won't this replace any current block paragraph style?
+  return htmlEditor->SetParagraphFormat(itemType);
 }
 
 NS_IMETHODIMP
@@ -438,28 +420,27 @@ nsRemoveListCommand::IsCommandEnabled(const char * aCommandName,
                                       nsISupports *refCon,
                                       bool *outCmdEnabled)
 {
+  *outCmdEnabled = false;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor)
-  {
-    bool isEditable = false;
-    nsresult rv = editor->GetIsSelectionEditable(&isEditable);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (isEditable)
-    {
-      // It is enabled if we are in any list type
-      bool bMixed;
-      PRUnichar *tagStr;
-      nsresult rv = GetListState(editor, &bMixed, &tagStr);
-      NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(editor, NS_OK);
 
-      *outCmdEnabled = bMixed ? true : (tagStr && *tagStr);
-      
-      if (tagStr) NS_Free(tagStr);
-      return NS_OK;
-    }
+  bool isEditable = false;
+  nsresult rv = editor->GetIsSelectionEditable(&isEditable);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isEditable) {
+    return NS_OK;
   }
 
-  *outCmdEnabled = false;
+  // It is enabled if we are in any list type
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(refCon);
+  NS_ENSURE_TRUE(htmlEditor, NS_ERROR_NO_INTERFACE);
+
+  bool bMixed;
+  nsAutoString localName;
+  rv = GetListState(htmlEditor, &bMixed, localName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *outCmdEnabled = bMixed || !localName.IsEmpty();
   return NS_OK;
 }
 
@@ -1552,79 +1533,57 @@ nsInsertTagCommand::GetCommandStateParams(const char *aCommandName,
 /****************************/
 
 nsresult
-GetListState(nsIEditor *aEditor, bool *aMixed, PRUnichar **_retval)
+GetListState(nsIHTMLEditor* aEditor, bool* aMixed, nsAString& aLocalName)
 {
-  NS_ENSURE_TRUE(aMixed && _retval && aEditor, NS_ERROR_NULL_POINTER);
-  *_retval = nsnull;
-  *aMixed = false;
+  MOZ_ASSERT(aEditor);
+  MOZ_ASSERT(aMixed);
 
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
-  nsresult err = NS_ERROR_NO_INTERFACE;
-  if (htmlEditor)
-  {
-    bool bOL, bUL, bDL;
-    err = htmlEditor->GetListState(aMixed, &bOL, &bUL, &bDL);
-    if (NS_SUCCEEDED(err))
-    {
-      if (!*aMixed)
-      {
-        nsAutoString tagStr;
-        if (bOL) 
-          tagStr.AssignLiteral("ol");
-        else if (bUL) 
-          tagStr.AssignLiteral("ul");
-        else if (bDL) 
-          tagStr.AssignLiteral("dl");
-        *_retval = ToNewUnicode(tagStr);
-      }
-    }  
+  *aMixed = false;
+  aLocalName.Truncate();
+
+  bool bOL, bUL, bDL;
+  nsresult rv = aEditor->GetListState(aMixed, &bOL, &bUL, &bDL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (*aMixed) {
+    return NS_OK;
   }
-  return err;
+
+  if (bOL) {
+    aLocalName.AssignLiteral("ol");
+  } else if (bUL) {
+    aLocalName.AssignLiteral("ul");
+  } else if (bDL) {
+    aLocalName.AssignLiteral("dl");
+  }
+  return NS_OK;
 }
 
 nsresult
-RemoveOneProperty(nsIHTMLEditor *aEditor,const nsString& aProp, 
-                  const nsString &aAttr)
+RemoveOneProperty(nsIHTMLEditor* aEditor, const nsAString& aProp)
 {
-  NS_ENSURE_TRUE(aEditor, NS_ERROR_NOT_INITIALIZED);
+  MOZ_ASSERT(aEditor);
 
   /// XXX Hack alert! Look in nsIEditProperty.h for this
   nsCOMPtr<nsIAtom> styleAtom = do_GetAtom(aProp);
-  NS_ENSURE_TRUE( styleAtom, NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(styleAtom, NS_ERROR_OUT_OF_MEMORY);
 
-  return aEditor->RemoveInlineProperty(styleAtom, aAttr);
+  return aEditor->RemoveInlineProperty(styleAtom, EmptyString());
 }
 
 
 // the name of the attribute here should be the contents of the appropriate
 // tag, e.g. 'b' for bold, 'i' for italics.
 nsresult
-RemoveTextProperty(nsIEditor *aEditor, const PRUnichar *prop, 
-                   const PRUnichar *attr)
+RemoveTextProperty(nsIHTMLEditor* aEditor, const nsAString& aProp)
 {
-  NS_ENSURE_TRUE(aEditor, NS_ERROR_NOT_INITIALIZED);
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(aEditor);
-  NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
-  // OK, I'm really hacking now. This is just so that 
-  //     we can accept 'all' as input.  
-  nsAutoString  allStr(prop);
-  
-  ToLowerCase(allStr);
-  bool      doingAll = (allStr.EqualsLiteral("all"));
-  nsresult  err = NS_OK;
+  MOZ_ASSERT(aEditor);
 
-  if (doingAll)
-  {
-    err = editor->RemoveAllInlineProperties();
-  }
-  else
-  {
-    nsAutoString  aProp(prop);
-    nsAutoString  aAttr(attr);
-    err = RemoveOneProperty(editor,aProp, aAttr);
+  if (aProp.LowerCaseEqualsLiteral("all")) {
+    return aEditor->RemoveAllInlineProperties();
   }
   
-  return err;
+  return RemoveOneProperty(aEditor, aProp);
 }
 
 // the name of the attribute here should be the contents of the appropriate

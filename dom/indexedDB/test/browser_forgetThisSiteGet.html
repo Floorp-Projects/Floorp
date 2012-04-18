@@ -15,7 +15,7 @@
         let event = yield;
 
         if (event.type == "error") {
-          testException = event.target.errorCode;
+          testException = event.target.error.name;
         }
         else {
           let db = event.target.result;

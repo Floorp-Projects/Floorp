@@ -10,7 +10,7 @@ const MARIONETTE_CID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/services-sync/log4moz.js");
+Cu.import("resource://gre/modules/services-common/log4moz.js");
 
 function MarionetteComponent() {
   this._loaded = false;

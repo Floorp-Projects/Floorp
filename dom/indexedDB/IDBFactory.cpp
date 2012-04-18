@@ -512,7 +512,7 @@ IDBFactory::Open(const nsAString& aName,
                  nsIIDBOpenDBRequest** _retval)
 {
   if (aVersion < 1 && aArgc) {
-    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
+    return NS_ERROR_TYPE_ERR;
   }
 
   return OpenCommon(aName, aVersion, false, _retval);

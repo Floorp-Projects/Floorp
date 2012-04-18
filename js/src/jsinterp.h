@@ -323,7 +323,7 @@ extern void
 UnwindForUncatchableException(JSContext *cx, const FrameRegs &regs);
 
 extern bool
-OnUnknownMethod(JSContext *cx, JSObject *obj, Value idval, Value *vp);
+OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval, Value *vp);
 
 extern bool
 IsActiveWithOrBlock(JSContext *cx, JSObject &obj, uint32_t stackDepth);
@@ -382,19 +382,13 @@ bool
 GetProperty(JSContext *cx, const Value &value, PropertyName *name, Value *vp);
 
 bool
-GetScopeName(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp);
+GetScopeName(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *vp);
 
 bool
-GetScopeNameForTypeOf(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp);
+GetScopeNameForTypeOf(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *vp);
 
 JSObject *
-Lambda(JSContext *cx, JSFunction *fun, JSObject *parent);
-
-JSObject *
-LambdaJoinableForCall(JSContext *cx, JSFunction *fun, JSObject *parent, JSObject *callee, uint32_t argc);
-
-JSObject *
-LambdaJoinableForSet(JSContext *cx, JSFunction *fun, JSObject *parent, JSObject *target);
+Lambda(JSContext *cx, HandleFunction fun, HandleObject parent);
 
 bool
 GetElement(JSContext *cx, const Value &lref, const Value &rref, Value *res);
