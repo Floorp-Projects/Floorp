@@ -1243,8 +1243,8 @@ def getArgumentConversionTemplate(type, descriptor):
             nullBehavior = "eNull"
             undefinedBehavior = "eNull"
         else:
-            nullBehavior = "eDefaultNullBehavior"
-            undefinedBehavior = "eDefaultUndefinedBehavior"
+            nullBehavior = "eStringify"
+            undefinedBehavior = "eStringify"
 
         return (
             "  xpc_qsDOMString ${name}(cx, ${argVal}, ${argPtr},\n"
