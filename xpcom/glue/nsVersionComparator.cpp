@@ -306,13 +306,10 @@ CompareVP(VersionPartW &v1, VersionPartW &v2)
 
   return wcscmp(v1.extraD, v2.extraD);
 }
-#endif
 
-namespace mozilla {
 
-#ifdef XP_WIN
 PRInt32
-CompareVersions(const PRUnichar *A, const PRUnichar *B)
+NS_CompareVersions(const PRUnichar *A, const PRUnichar *B)
 {
   PRUnichar *A2 = wcsdup(A);
   if (!A2)
@@ -347,7 +344,7 @@ CompareVersions(const PRUnichar *A, const PRUnichar *B)
 #endif
 
 PRInt32
-CompareVersions(const char *A, const char *B)
+NS_CompareVersions(const char *A, const char *B)
 {
   char *A2 = strdup(A);
   if (!A2)
@@ -379,6 +376,4 @@ CompareVersions(const char *A, const char *B)
 
   return result;
 }
-
-} // namespace mozilla
 
