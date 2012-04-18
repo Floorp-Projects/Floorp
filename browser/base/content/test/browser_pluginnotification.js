@@ -286,7 +286,7 @@ function test10b() {
   prepareTest(test11a, gTestRoot + "plugin_test3.html");
 }
 
-// Tests that the going back will reshow the notification for click-to-play plugins (part 1/3)
+// Tests that the going back will reshow the notification for click-to-play plugins (part 1/4)
 function test11a() {
   var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(popupNotification, "Test 11a, Should have a click-to-play notification");
@@ -294,29 +294,36 @@ function test11a() {
   prepareTest(test11b, "about:blank");
 }
 
-// Tests that the going back will reshow the notification for click-to-play plugins (part 2/3)
+// Tests that the going back will reshow the notification for click-to-play plugins (part 2/4)
 function test11b() {
   var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(!popupNotification, "Test 11b, Should not have a click-to-play notification");
 
-  gTestBrowser.addEventListener("pageshow", test11c, false);
+  Services.obs.addObserver(test11d, "PopupNotifications-updateNotShowing", false);
+  //gTestBrowser.addEventListener("pageshow", test11c, false);
   gTestBrowser.contentWindow.history.back();
 }
 
-// Tests that the going back will reshow the notification for click-to-play plugins (part 3/3)
+// Tests that the going back will reshow the notification for click-to-play plugins (part 3/4)
 function test11c() {
   gTestBrowser.removeEventListener("pageshow", test11c, false);
-  // Make sure that the event handlers for pageshow can execute before checking for their effects.
-  executeSoon(function() {
-    todo(false, "The following test that checks for the notification fails intermittently, bug 742619.");
-    //var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-    //ok(popupNotification, "Test 11c, Should have a click-to-play notification");
+  Services.obs.addObserver(test11d, "PopupNotifications-updateNotShowing", false);
+}
+
+// Tests that the going back will reshow the notification for click-to-play plugins (part 4/4)
+function test11d() {
+  Services.obs.removeObserver(test11d, "PopupNotifications-updateNotShowing", false);
+  setTimeout(function() {
+    var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+    ok(popupNotification, "Test 11d, Should have a click-to-play notification");
     is(gClickToPlayPluginActualEvents, gClickToPlayPluginExpectedEvents,
        "There should be a PluginClickToPlay event for each plugin that was " +
        "blocked due to the plugins.click_to_play pref");
 
     prepareTest(test12a, gTestRoot + "plugin_clickToPlayAllow.html");
-  });
+  }, 1000);
+
+  
 }
 
 // Tests that the "Allow Always" permission works for click-to-play plugins (part 1/3)
@@ -327,6 +334,7 @@ function test12a() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 12a, Plugin should not be activated");
 
+  // Simulate clicking the "Allow Always" button.
   popupNotification.secondaryActions[0].callback();
   setTimeout(test12b, 0);
 }
@@ -363,6 +371,7 @@ function test13a() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 13a, Plugin should not be activated");
 
+  // Simulate clicking the "Deny Always" button.
   popupNotification.secondaryActions[1].callback();
   setTimeout(test13b, 0);
 }
