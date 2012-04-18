@@ -61,6 +61,9 @@ struct PropDesc {
     bool hasEnumerable_ : 1;
     bool hasConfigurable_ : 1;
 
+    /* Or maybe this represents a property's absence, and it's undefined. */
+    bool isUndefined_ : 1;
+
   public:
     friend class AutoPropDescArrayRooter;
     friend void JS::AutoGCRooter::trace(JSTracer *trc);
@@ -91,68 +94,79 @@ struct PropDesc {
     void initFromPropertyDescriptor(const PropertyDescriptor &desc);
     bool makeObject(JSContext *cx);
 
-    bool hasGet() const { return hasGet_; }
-    bool hasSet() const { return hasSet_; }
-    bool hasValue() const { return hasValue_; }
-    bool hasWritable() const { return hasWritable_; }
-    bool hasEnumerable() const { return hasEnumerable_; }
-    bool hasConfigurable() const { return hasConfigurable_; }
+    void setUndefined() { isUndefined_ = true; }
 
-    Value pd() const { return pd_; }
+    bool isUndefined() const { return isUndefined_; }
+
+    bool hasGet() const { MOZ_ASSERT(!isUndefined()); return hasGet_; }
+    bool hasSet() const { MOZ_ASSERT(!isUndefined()); return hasSet_; }
+    bool hasValue() const { MOZ_ASSERT(!isUndefined()); return hasValue_; }
+    bool hasWritable() const { MOZ_ASSERT(!isUndefined()); return hasWritable_; }
+    bool hasEnumerable() const { MOZ_ASSERT(!isUndefined()); return hasEnumerable_; }
+    bool hasConfigurable() const { MOZ_ASSERT(!isUndefined()); return hasConfigurable_; }
+
+    Value pd() const { MOZ_ASSERT(!isUndefined()); return pd_; }
     void clearPd() { pd_ = UndefinedValue(); }
 
-    uint8_t attributes() const { return attrs; }
+    uint8_t attributes() const { MOZ_ASSERT(!isUndefined()); return attrs; }
 
     /* 8.10.1 IsAccessorDescriptor(desc) */
     bool isAccessorDescriptor() const {
-        return hasGet_ || hasSet_;
+        return !isUndefined() && (hasGet() || hasSet());
     }
 
     /* 8.10.2 IsDataDescriptor(desc) */
     bool isDataDescriptor() const {
-        return hasValue_ || hasWritable_;
+        return !isUndefined() && (hasValue() || hasWritable());
     }
 
     /* 8.10.3 IsGenericDescriptor(desc) */
     bool isGenericDescriptor() const {
-        return !isAccessorDescriptor() && !isDataDescriptor();
+        return !isUndefined() && !isAccessorDescriptor() && !isDataDescriptor();
     }
 
     bool configurable() const {
-        MOZ_ASSERT(hasConfigurable_);
+        MOZ_ASSERT(!isUndefined());
+        MOZ_ASSERT(hasConfigurable());
         return (attrs & JSPROP_PERMANENT) == 0;
     }
 
     bool enumerable() const {
-        MOZ_ASSERT(hasEnumerable_);
+        MOZ_ASSERT(!isUndefined());
+        MOZ_ASSERT(hasEnumerable());
         return (attrs & JSPROP_ENUMERATE) != 0;
     }
 
     bool writable() const {
-        MOZ_ASSERT(hasWritable_);
+        MOZ_ASSERT(!isUndefined());
+        MOZ_ASSERT(hasWritable());
         return (attrs & JSPROP_READONLY) == 0;
     }
 
     const Value & value() const {
-        MOZ_ASSERT(hasValue_);
+        MOZ_ASSERT(hasValue());
         return value_;
     }
 
     JSObject * getterObject() const {
-        MOZ_ASSERT(hasGet_);
+        MOZ_ASSERT(!isUndefined());
+        MOZ_ASSERT(hasGet());
         return get_.isUndefined() ? NULL : &get_.toObject();
     }
     JSObject * setterObject() const {
-        MOZ_ASSERT(hasSet_);
+        MOZ_ASSERT(!isUndefined());
+        MOZ_ASSERT(hasSet());
         return set_.isUndefined() ? NULL : &set_.toObject();
     }
 
     const Value & getterValue() const {
-        MOZ_ASSERT(hasGet_);
+        MOZ_ASSERT(!isUndefined());
+        MOZ_ASSERT(hasGet());
         return get_;
     }
     const Value & setterValue() const {
-        MOZ_ASSERT(hasSet_);
+        MOZ_ASSERT(!isUndefined());
+        MOZ_ASSERT(hasSet());
         return set_;
     }
 

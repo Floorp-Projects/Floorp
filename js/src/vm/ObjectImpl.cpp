@@ -20,12 +20,27 @@
 
 using namespace js;
 
+PropDesc::PropDesc()
+  : pd_(UndefinedValue()),
+    value_(UndefinedValue()),
+    get_(UndefinedValue()),
+    set_(UndefinedValue()),
+    attrs(0),
+    hasGet_(false),
+    hasSet_(false),
+    hasValue_(false),
+    hasWritable_(false),
+    hasEnumerable_(false),
+    hasConfigurable_(false),
+    isUndefined_(true)
+{
+}
+
 bool
 PropDesc::checkGetter(JSContext *cx)
 {
-    if (hasGet()) {
-        const Value &get = getterValue();
-        if (!js_IsCallable(get) && !get.isUndefined()) {
+    if (hasGet_) {
+        if (!js_IsCallable(get_) && !get_.isUndefined()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
                                  js_getter_str);
             return false;
@@ -37,9 +52,8 @@ PropDesc::checkGetter(JSContext *cx)
 bool
 PropDesc::checkSetter(JSContext *cx)
 {
-    if (hasSet()) {
-        const Value &set = setterValue();
-        if (!js_IsCallable(set) && !set.isUndefined()) {
+    if (hasSet_) {
+        if (!js_IsCallable(set_) && !set_.isUndefined()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
                                  js_setter_str);
             return false;
@@ -68,6 +82,8 @@ bool
 PropDesc::unwrapDebuggerObjectsInto(JSContext *cx, Debugger *dbg, JSObject *obj,
                                     PropDesc *unwrapped) const
 {
+    MOZ_ASSERT(!isUndefined());
+
     *unwrapped = *this;
 
     if (unwrapped->hasValue()) {
@@ -106,6 +122,8 @@ bool
 PropDesc::wrapInto(JSContext *cx, JSObject *obj, const jsid &id, jsid *wrappedId,
                    PropDesc *desc) const
 {
+    MOZ_ASSERT(!isUndefined());
+
     JSCompartment *comp = cx->compartment;
 
     *wrappedId = id;
