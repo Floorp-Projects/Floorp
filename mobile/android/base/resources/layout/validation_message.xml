@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="wrap_content"
-                android:layout_height="fill_parent">
+                android:layout_height="50dip">
 
     <TextView android:id="@+id/validation_message_text"
               android:layout_width="wrap_content"
@@ -15,14 +15,24 @@
               android:gravity="center"
               android:singleLine="true"
               android:scrollHorizontally="true"
-              android:ellipsize="marquee"
-              android:layout_alignParentTop="true"/>
+              android:ellipsize="marquee"/>
 
-    <ImageView android:layout_width="24dip"
+    <ImageView android:id="@+id/validation_message_arrow"
+               android:layout_width="24dip"
                android:layout_height="10dip"
                android:layout_centerHorizontal="true"
                android:layout_alignParentTop="true"
                android:src="@drawable/validation_arrow"
                android:scaleType="fitXY"/>
+
+    <ImageView android:id="@+id/validation_message_arrow_inverted"
+               android:layout_width="24dip"
+               android:layout_height="10dip"
+               android:layout_centerHorizontal="true"
+               android:layout_marginTop="35dip"
+               android:layout_alignParentTop="true"
+               android:src="@drawable/validation_arrow_inverted"
+               android:scaleType="fitXY"
+               android:visibility="gone"/>
 
 </RelativeLayout>
