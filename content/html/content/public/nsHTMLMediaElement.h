@@ -302,6 +302,13 @@ public:
   static char const *const gWebMCodecs[4];
 #endif
 
+#ifdef MOZ_GSTREAMER
+  static bool IsH264Enabled();
+  static bool IsH264Type(const nsACString& aType);
+  static const char gH264Types[3][17];
+  static char const *const gH264Codecs[6];
+#endif
+
   /**
    * Called when a child source element is added to this media element. This
    * may queue a task to run the select resource algorithm if appropriate.

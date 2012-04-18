@@ -555,6 +555,10 @@ ifdef MOZ_ENABLE_QT
 EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS) $(XEXT_LIBS)
 endif
 
+ifdef MOZ_GSTREAMER
+EXTRA_DSO_LDOPTS += $(GSTREAMER_LIBS)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 export:: $(RDF_UTIL_SRC_CPPSRCS) $(INTL_UNICHARUTIL_UTIL_CPPSRCS)

@@ -458,6 +458,7 @@ nsBuiltinDecoderStateMachine::~nsBuiltinDecoderStateMachine()
   if (mTimer)
     mTimer->Cancel();
   mTimer = nsnull;
+  mReader = nsnull;
  
   StateMachineTracker::Instance().CleanupGlobalStateMachine();
 }

@@ -389,7 +389,7 @@ public:
   typedef mozilla::VideoFrameContainer VideoFrameContainer;
 
   nsBuiltinDecoderReader(nsBuiltinDecoder* aDecoder);
-  ~nsBuiltinDecoderReader();
+  virtual ~nsBuiltinDecoderReader();
 
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.

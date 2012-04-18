@@ -106,6 +106,9 @@
 #ifdef MOZ_RAW
 #include "nsRawDecoder.h"
 #endif
+#ifdef MOZ_GSTREAMER
+#include "nsGStreamerDecoder.h"
+#endif
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gMediaElementLog;
@@ -1846,6 +1849,45 @@ nsHTMLMediaElement::IsWebMType(const nsACString& aType)
 }
 #endif
 
+#ifdef MOZ_GSTREAMER
+const char nsHTMLMediaElement::gH264Types[3][17] = {
+  "video/mp4",
+  "video/3gpp",
+  "video/quicktime",
+};
+
+char const *const nsHTMLMediaElement::gH264Codecs[6] = {
+  "avc1.42E01E",
+  "avc1.58A01E",
+  "avc1.4D401E",
+  "avc1.64001E",
+  "mp4a.40.2",
+  nsnull
+};
+
+bool
+nsHTMLMediaElement::IsH264Enabled()
+{
+  return Preferences::GetBool("media.h264.enabled");
+}
+
+bool
+nsHTMLMediaElement::IsH264Type(const nsACString& aType)
+{
+  if (!IsH264Enabled()) {
+    return false;
+  }
+
+  for (PRUint32 i = 0; i < ArrayLength(gH264Types); ++i) {
+    if (aType.EqualsASCII(gH264Types[i])) {
+      return true;
+    }
+  }
+
+  return false;
+}
+#endif
+
 /* static */
 nsHTMLMediaElement::CanPlayStatus 
 nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
@@ -1872,6 +1914,13 @@ nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
 #ifdef MOZ_WEBM
   if (IsWebMType(nsDependentCString(aMIMEType))) {
     *aCodecList = gWebMCodecs;
+    return CANPLAY_YES;
+  }
+#endif
+
+#ifdef MOZ_GSTREAMER
+  if (IsH264Type(nsDependentCString(aMIMEType))) {
+    *aCodecList = gH264Codecs;
     return CANPLAY_YES;
   }
 #endif
@@ -1987,7 +2036,11 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 #endif
 #ifdef MOZ_OGG
   if (IsOggType(aType)) {
+#ifdef MOZ_GSTREAMER 
+    nsRefPtr<nsGStreamerDecoder> decoder = new nsGStreamerDecoder();
+#else
     nsRefPtr<nsOggDecoder> decoder = new nsOggDecoder();
+#endif
     if (decoder->Init(this)) {
       return decoder.forget();
     }
@@ -2003,7 +2056,20 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 #endif
 #ifdef MOZ_WEBM
   if (IsWebMType(aType)) {
+#ifdef MOZ_GSTREAMER 
+    nsRefPtr<nsGStreamerDecoder> decoder = new nsGStreamerDecoder();
+#else
     nsRefPtr<nsWebMDecoder> decoder = new nsWebMDecoder();
+#endif
+    if (decoder->Init(this)) {
+      return decoder.forget();
+    }
+  }
+#endif
+
+#ifdef MOZ_GSTREAMER 
+  if (IsH264Type(aType)) {
+    nsRefPtr<nsGStreamerDecoder> decoder = new nsGStreamerDecoder();
     if (decoder->Init(this)) {
       return decoder.forget();
     }

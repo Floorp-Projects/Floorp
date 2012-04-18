@@ -183,6 +183,12 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(NULL)
 endif
 
+ifdef MOZ_GSTREAMER
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/content/media/gstreamer/$(LIB_PREFIX)gkcongstreamer_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
 ifdef NS_PRINTING
 SHARED_LIBRARY_LIBS += \
 		../printing/$(LIB_PREFIX)gkprinting_s.$(LIB_SUFFIX) \
@@ -222,6 +228,10 @@ endif
 
 SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/js/xpconnect/src/$(LIB_PREFIX)xpconnect_s.$(LIB_SUFFIX)
+
+ifdef MOZ_GSTREAMER
+EXTRA_DSO_LDOPTS += $(GSTREAMER_LIBS)
+endif
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
