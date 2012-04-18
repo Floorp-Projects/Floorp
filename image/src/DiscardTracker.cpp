@@ -45,8 +45,6 @@ DiscardTimeoutChangedCallback(const char* aPref, void *aClosure)
 nsresult
 DiscardTracker::Reset(Node *node)
 {
-  EnsureMainThread();
-
   // We shouldn't call Reset() with a null |img| pointer, on images which can't
   // be discarded, or on animated images (which should be marked as
   // non-discardable, anyway).
@@ -86,8 +84,6 @@ DiscardTracker::Reset(Node *node)
 void
 DiscardTracker::Remove(Node *node)
 {
-  EnsureMainThread();
-
   if (node->isInList())
     node->remove();
 
@@ -101,8 +97,6 @@ DiscardTracker::Remove(Node *node)
 void
 DiscardTracker::Shutdown()
 {
-  EnsureMainThread();
-
   if (sTimer) {
     sTimer->Cancel();
     sTimer = NULL;
@@ -115,8 +109,6 @@ DiscardTracker::Shutdown()
 void
 DiscardTracker::DiscardAll()
 {
-  EnsureMainThread();
-
   if (!sInitialized)
     return;
 
@@ -134,8 +126,6 @@ DiscardTracker::DiscardAll()
 void
 DiscardTracker::InformAllocation(PRInt64 bytes)
 {
-  EnsureMainThread();
-
   // This function is called back e.g. from RasterImage::Discard(); be careful!
 
   sCurrentDecodedImageBytes += bytes;
@@ -144,17 +134,6 @@ DiscardTracker::InformAllocation(PRInt64 bytes)
   // If we're using too much memory for decoded images, MaybeDiscardSoon will
   // enqueue a callback to discard some images.
   MaybeDiscardSoon();
-}
-
-void
-DiscardTracker::EnsureMainThread()
-{
-  // NS_RUNTIMEABORT is a fatal crash even in release builds.  We need to crash
-  // release builds here in order to investigate bug 745141 -- we're being
-  // called from off main thread, but we don't know how!
-  if (!NS_IsMainThread()) {
-    NS_RUNTIMEABORT("Must be on main thread!");
-  }
 }
 
 /**
