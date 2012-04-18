@@ -150,7 +150,7 @@ function RadioInterfaceLayer() {
   this.radioState = {
     radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
     cardState:      RIL.GECKO_CARDSTATE_UNAVAILABLE,
-    msisdn:         null,
+    icc:            null,
 
     // These objects implement the nsIDOMMozMobileConnectionInfo interface,
     // although the actual implementation lives in the content process.
@@ -276,8 +276,8 @@ RadioInterfaceLayer.prototype = {
               " dst=" + message.dstFlag +
               " timestamp=" + message.localTimeStampInMS);
         break;
-      case "siminfo":
-        this.radioState.msisdn = message.msisdn;
+      case "iccinfochange":
+        this.radioState.icc = message;
         break;
       default:
         throw new Error("Don't know about this message type: " + message.type);
