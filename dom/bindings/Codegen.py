@@ -912,7 +912,7 @@ def CheckPref(descriptor, scopeName, varName, retval, wrapperCache = None):
     else:
         wrapperCache = ""
     return """
-  if (!%s->ParisBindingsEnabled()) {
+  if (!%s->ExperimentalBindingsEnabled()) {
 %s    %s = false;
     return %s;
   }
