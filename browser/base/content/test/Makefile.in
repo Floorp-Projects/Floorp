@@ -281,6 +281,7 @@ _BROWSER_FILES = \
                  redirect_bug623155.sjs \
                  browser_tabDrop.js \
                  browser_lastAccessedTab.js \
+                 browser_bug734076.js \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
