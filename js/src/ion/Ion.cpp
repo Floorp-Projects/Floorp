@@ -834,7 +834,7 @@ CheckFrame(StackFrame *fp)
 static MethodStatus
 Compile(JSContext *cx, JSScript *script, js::StackFrame *fp, jsbytecode *osrPc)
 {
-    JS_ASSERT(ion::IsEnabled());
+    JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_LOOPENTRY);
 
     if (cx->compartment->debugMode()) {
@@ -866,7 +866,7 @@ Compile(JSContext *cx, JSScript *script, js::StackFrame *fp, jsbytecode *osrPc)
 MethodStatus
 ion::CanEnterAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode *pc)
 {
-    JS_ASSERT(ion::IsEnabled());
+    JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT((JSOp)*pc == JSOP_LOOPENTRY);
 
     // Skip if the script has been disabled.
@@ -905,7 +905,7 @@ ion::CanEnterAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecod
 MethodStatus
 ion::CanEnter(JSContext *cx, JSScript *script, StackFrame *fp, bool newType)
 {
-    JS_ASSERT(ion::IsEnabled());
+    JS_ASSERT(ion::IsEnabled(cx));
 
     // Skip if the script has been disabled.
     if (script->ion == ION_DISABLED_SCRIPT)
@@ -943,7 +943,7 @@ ion::CanEnter(JSContext *cx, JSScript *script, StackFrame *fp, bool newType)
 static bool
 EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 {
-    JS_ASSERT(ion::IsEnabled());
+    JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT(CheckFrame(fp));
 
     EnterIonCode enter = cx->compartment->ionCompartment()->enterJITInfallible();

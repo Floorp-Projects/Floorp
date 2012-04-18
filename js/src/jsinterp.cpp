@@ -463,7 +463,7 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 #endif
 	
 #ifdef JS_ION
-    if (ion::IsEnabled()) {
+    if (ion::IsEnabled(cx)) {
         ion::MethodStatus status = ion::CanEnter(cx, script, fp, false);
         if (status == ion::Method_Error)
             return false;
@@ -1846,7 +1846,7 @@ BEGIN_CASE(JSOP_LOOPENTRY)
     // Attempt on-stack replacement with Ion code. IonMonkey OSR takes place at
     // the point of the initial loop entry, to consolidate hoisted code between
     // entry points.
-    if (ion::IsEnabled()) {
+    if (ion::IsEnabled(cx)) {
         ion::MethodStatus status =
             ion::CanEnterAtBranch(cx, script, regs.fp(), regs.pc);
         if (status == ion::Method_Error)
@@ -2842,7 +2842,7 @@ BEGIN_CASE(JSOP_FUNCALL)
 #endif
 
 #ifdef JS_ION
-    if (!newType && ion::IsEnabled()) {
+    if (!newType && ion::IsEnabled(cx)) {
         ion::MethodStatus status = ion::CanEnter(cx, script, regs.fp(), newType);
         if (status == ion::Method_Error)
             goto error;

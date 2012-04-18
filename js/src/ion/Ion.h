@@ -53,11 +53,6 @@ class TempAllocator;
 
 struct IonOptions
 {
-    // If Ion is supported, this toggles whether Ion is used.
-    //
-    // Default: false
-    bool enabled;
-
     // Toggles whether global value numbering is used.
     //
     // Default: true
@@ -115,8 +110,7 @@ struct IonOptions
     }
 
     IonOptions()
-      : enabled(false),
-        gvn(true),
+      : gvn(true),
         gvnIsOptimistic(true),
         licm(true),
         osr(true),
@@ -174,9 +168,9 @@ void InvalidateAll(FreeOp *fop, JSCompartment *comp);
 void FinishInvalidation(FreeOp *fop, JSScript *script);
 void MarkFromIon(JSCompartment *comp, Value *vp);
 
-static inline bool IsEnabled()
+static inline bool IsEnabled(JSContext *cx)
 {
-    return js_IonOptions.enabled;
+    return cx->hasRunOption(JSOPTION_ION);
 }
 
 } // namespace ion
