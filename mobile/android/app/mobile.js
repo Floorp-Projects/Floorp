@@ -747,3 +747,6 @@ pref("ui.scrolling.overscroll_snap_limit", -1);
 // The minimum amount of space that must be present for an axis to be considered scrollable,
 // in 1/1000ths of pixels.
 pref("ui.scrolling.min_scrollable_distance", -1);
+// A comma-separated list of float values in the range [0.0, 1.0) that are used as
+// interpolation frames for zoom animations.
+pref("ui.zooming.animation_frames", "");

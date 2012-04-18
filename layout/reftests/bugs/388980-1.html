@@ -6,7 +6,7 @@
 var text = '<html><head></head><body style="font-size:16px;">'
 	+ '<p id="redpar">This paragraph should be red</p>'
 	+ '<p id="bluepar">This paragraph should be blue</p>'
-	+ '<p id="normalpar">This paragraph should not be colored</p>'
+	+ '<p>This paragraph should not be colored</p>'
 	+'</body></html>';
 
 
@@ -28,11 +28,10 @@ function initIFrame() {
 	// Test hilighting with styleWithCSS, should hilight the text...
 	doc.execCommand("styleWithCSS", false, true);
 	colorPar("redpar", "red");
-	colorPar("bluepar", "blue");
 
-	// Test highlighting without styleWithCSS, should do nothing.
+	// Test highlighting without styleWithCSS, should also work.
 	doc.execCommand("styleWithCSS", false, false);
-	colorPar("normalpar", "red");
+	colorPar("bluepar", "blue");
 
 }
 </script>

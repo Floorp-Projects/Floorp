@@ -121,8 +121,22 @@ nsAppShellService::CreateHiddenWindow()
   PRUint32    chromeMask = 0;
   nsAdoptingCString prefVal =
       Preferences::GetCString("browser.hiddenWindowChromeURL");
-  const char* hiddenWindowURL = prefVal.get() ? prefVal.get() : DEFAULT_HIDDENWINDOW_URL;
-  mApplicationProvidedHiddenWindow = prefVal.get() ? true : false;
+
+  // Set mApplicationProvidedHiddenWindow to true only if there is a hidden
+  // window chrome URL in preferences AND it is set to a non-default value.
+  // This enables an app that doesn't have a hidden window (like WebappRT)
+  // to share an app directory with one that does (like Firefox), the former
+  // taking advantage of this behavior to "unset" the latter's hidden window
+  // pref by setting it to the default value.
+  //
+  // (Ideally, the former would be able to simply unset the latter's pref,
+  // but there is no way to do that; even more ideally, the two apps would not
+  // share an app directory, but in the case of WebappRT and Firefox that's
+  // a longer-term fix.)
+  //
+  mApplicationProvidedHiddenWindow = prefVal.get() && strcmp(prefVal.get(), DEFAULT_HIDDENWINDOW_URL) ? true : false;
+
+  const char* hiddenWindowURL = mApplicationProvidedHiddenWindow ? prefVal.get() : DEFAULT_HIDDENWINDOW_URL;
 #else
   static const char hiddenWindowURL[] = DEFAULT_HIDDENWINDOW_URL;
   PRUint32    chromeMask =  nsIWebBrowserChrome::CHROME_ALL;

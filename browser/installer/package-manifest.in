@@ -308,6 +308,9 @@
 @BINPATH@/components/nsBrowserGlue.js
 @BINPATH@/components/nsSetDefaultBrowser.manifest
 @BINPATH@/components/nsSetDefaultBrowser.js
+@BINPATH@/components/BrowserDownloads.manifest
+@BINPATH@/components/DownloadsStartup.js
+@BINPATH@/components/DownloadsUI.js
 @BINPATH@/components/BrowserPlaces.manifest
 @BINPATH@/components/BrowserPageThumbs.manifest
 @BINPATH@/components/nsPrivateBrowsingService.manifest
@@ -409,6 +412,7 @@
 @BINPATH@/components/ChromeProfileMigrator.js
 @BINPATH@/components/FirefoxProfileMigrator.js
 #ifdef XP_WIN
+@BINPATH@/components/IEProfileMigrator.js
 @BINPATH@/components/SafariProfileMigrator.js
 #endif
 #ifdef XP_MACOSX
@@ -498,6 +502,9 @@
 @BINPATH@/@PREF_DIR@/channel-prefs.js
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/@PREF_DIR@/services-sync.js
+#endif
+#ifdef MOZ_WEBAPP_RUNTIME
+@BINPATH@/@PREF_DIR@/webapprt@mozilla.org/prefs.js
 #endif
 @BINPATH@/greprefs.js
 @BINPATH@/defaults/autoconfig/platform.js
@@ -619,4 +626,15 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/MozSounds.cmd
 @BINPATH@/*.xqs
 @BINPATH@/components/*.xqs
+#endif
+
+#ifdef MOZ_WEBAPP_RUNTIME
+; [Webapp Runtime]
+@BINPATH@/webapprt-stub@BIN_SUFFIX@
+@BINPATH@/chrome/webapprt@JAREXT@
+@BINPATH@/chrome/webapprt.manifest
+@BINPATH@/components/WebappRTComponents.manifest
+@BINPATH@/components/WebappRTDirectoryProvider.js
+@BINPATH@/components/WebappRTCommandLineHandler.js
+@BINPATH@/webapprt.ini
 #endif
