@@ -1512,11 +1512,15 @@ def getWrapTemplateForTypeImpl(type, result, descriptorProvider,
     if type.isCallback() and not type.isInterface():
         # XXXbz we're going to assume that callback types are always
         # nullable and always have [TreatNonCallableAsNull] for now.
+        # See comments in WrapNewBindingObject explaining why we need
+        # to wrap here.
         return """
   ${jsvalRef} = JS::ObjectOrNullValue(%s);
   return JS_WrapValue(cx, ${jsvalPtr});""" % result
 
     if type.tag() == IDLType.Tags.any:
+        # See comments in WrapNewBindingObject explaining why we need
+        # to wrap here.
         return """
   ${jsvalRef} = %s;\n
   return JS_WrapValue(cx, ${jsvalPtr});""" % result
