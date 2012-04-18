@@ -100,8 +100,6 @@ class DiscardTracker
     static void TimerCallback(nsITimer *aTimer, void *aClosure);
     static void DiscardNow();
 
-    static void EnsureMainThread();
-
     static LinkedList<Node> sDiscardableImages;
     static nsCOMPtr<nsITimer> sTimer;
     static bool sInitialized;
