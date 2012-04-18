@@ -1529,6 +1529,7 @@ NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc, Value
 void
 PropDesc::initFromPropertyDescriptor(const PropertyDescriptor &desc)
 {
+    isUndefined_ = false;
     pd_.setUndefined();
     attrs = uint8_t(desc.attrs);
     JS_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
@@ -1560,6 +1561,8 @@ PropDesc::initFromPropertyDescriptor(const PropertyDescriptor &desc)
 bool
 PropDesc::makeObject(JSContext *cx)
 {
+    MOZ_ASSERT(!isUndefined());
+
     JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass);
     if (!obj)
         return false;
@@ -1728,21 +1731,6 @@ HasProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, bool *foundp)
     return !!obj->getGeneric(cx, id, vp);
 }
 
-PropDesc::PropDesc()
-  : pd_(UndefinedValue()),
-    value_(UndefinedValue()),
-    get_(UndefinedValue()),
-    set_(UndefinedValue()),
-    attrs(0),
-    hasGet_(false),
-    hasSet_(false),
-    hasValue_(false),
-    hasWritable_(false),
-    hasEnumerable_(false),
-    hasConfigurable_(false)
-{
-}
-
 bool
 PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
 {
@@ -1758,7 +1746,12 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     /* Make a copy of the descriptor. We might need it later. */
     pd_ = v;
 
-    /* Start with the proper defaults. */
+    isUndefined_ = false;
+
+    /*
+     * Start with the proper defaults.  XXX shouldn't be necessary when we get
+     * rid of PropDesc::attributes()
+     */
     attrs = JSPROP_PERMANENT | JSPROP_READONLY;
 
     bool found;
