@@ -81,6 +81,7 @@ using mozilla::unused;
 #include "imgIEncoder.h"
 
 #include "nsStringGlue.h"
+#include "nsAutoPtr.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -891,6 +892,34 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             if (win->mFocus)
                 win->mFocus->OnKeyEvent(ae);
             break;
+
+        case AndroidGeckoEvent::VIEWPORT:
+        case AndroidGeckoEvent::BROADCAST: {
+            if (ae->Characters().Length() == 0)
+                break;
+
+            nsCOMPtr<nsIObserverService> obsServ =
+                mozilla::services::GetObserverService();
+
+            const NS_ConvertUTF16toUTF8 topic(ae->Characters());
+            const nsPromiseFlatString& data = PromiseFlatString(ae->CharactersExtra());
+
+            obsServ->NotifyObservers(nsnull, topic.get(), data.get());
+
+            if (ae->Type() == AndroidGeckoEvent::VIEWPORT) {
+                // We know that we've caused a complete invalidation
+                // and don't want to wait for the refresh driver
+                // to kick off a draw so we start one now.
+                // There are other smaller invalidations for touch hilighting that
+                // happen earlier so we don't necessarily want to have the
+                // refresh driver naively start a paint when we get the first
+                // invalidation.
+                nsIntRect rect(0, 0, win->mBounds.width, win->mBounds.height);
+                nsAutoPtr<AndroidGeckoEvent> event(new AndroidGeckoEvent(AndroidGeckoEvent::DRAW, rect));
+                win->OnDraw(event);
+            }
+            break;
+        }
 
         case AndroidGeckoEvent::DRAW:
             layers::renderTraceEventStart("Global draw start", "414141");
