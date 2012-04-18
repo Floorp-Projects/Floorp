@@ -115,7 +115,6 @@ _TEST_FILES = \
 		test_eventctors.html \
 		test_bug635465.html \
 		test_bug741666.html \
-		test_focus_disabled.html \
 		$(NULL)
 
 #bug 585630
