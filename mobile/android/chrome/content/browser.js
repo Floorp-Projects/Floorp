@@ -1984,6 +1984,9 @@ Tab.prototype = {
           return;
         }
 
+        // Force a style flush, so that we ensure our binding is attached.
+        plugin.clientTop;
+
         // If the plugin is hidden, or if the overlay is too small, show a doorhanger notification
         let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
         if (!overlay || PluginHelper.isTooSmall(plugin, overlay)) {
