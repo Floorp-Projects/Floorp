@@ -1250,7 +1250,7 @@ AnyTablePartHasBorderOrBackground(nsIFrame* aStart, nsIFrame* aEnd)
     if (f->GetStyleVisibility()->IsVisible() &&
         (!f->GetStyleBackground()->IsTransparent() ||
          f->GetStyleDisplay()->mAppearance ||
-         f->HasBorder()))
+         f->GetStyleBorder()->HasBorder()))
       return true;
 
     nsTableCellFrame *cellFrame = do_QueryFrame(f);
