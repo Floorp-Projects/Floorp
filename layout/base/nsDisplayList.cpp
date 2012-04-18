@@ -79,6 +79,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mIgnoreScrollFrame(nsnull),
       mCurrentTableItem(nsnull),
       mFinalTransparentRegion(nsnull),
+      mCachedOffsetFrame(aReferenceFrame),
+      mCachedOffset(0, 0),
       mMode(aMode),
       mBuildCaret(aBuildCaret),
       mIgnoreSuppression(false),
@@ -1582,8 +1584,11 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
-                                     nsIFrame* aFrame)
-  : nsDisplayItem(aBuilder, aFrame) {
+                                     nsIFrame* aFrame, nsDisplayItem* aItem,
+                                     const nsPoint& aToReferenceFrame)
+  : nsDisplayItem(aBuilder, aFrame, aToReferenceFrame) {
+  mList.AppendToTop(aItem);
+  mBounds = mList.GetBounds(aBuilder);
 }
 
 nsDisplayWrapList::~nsDisplayWrapList() {
@@ -2099,7 +2104,9 @@ nsDisplayScrollInfoLayer::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
 nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame, nsDisplayItem* aItem,
                              const nsRect& aRect)
-   : nsDisplayWrapList(aBuilder, aFrame, aItem), mClip(aRect) {
+   : nsDisplayWrapList(aBuilder, aFrame, aItem,
+       aFrame == aItem->GetUnderlyingFrame() ? aItem->ToReferenceFrame() : aBuilder->ToReferenceFrame(aFrame)),
+     mClip(aRect) {
   MOZ_COUNT_CTOR(nsDisplayClip);
 }
 
