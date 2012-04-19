@@ -89,6 +89,20 @@ function midPoint(aPointA, aPointB)
   return pointC;
 }
 
+function computedView()
+{
+  return InspectorUI.sidebar._toolContext("computedview");
+}
+
+function computedViewTree()
+{
+  return computedView().view;
+}
+
+function ruleView()
+{
+  return InspectorUI.sidebar._toolContext("ruleview").view;
+}
 function synthesizeKeyFromKeyTag(aKeyId) {
   let key = document.getElementById(aKeyId);
   isnot(key, null, "Successfully retrieved the <key> node");
