@@ -181,8 +181,7 @@ nsDragService::~nsDragService()
 
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsDragService, nsBaseDragService,
-                             nsIDragSessionGTK, nsIObserver)
+NS_IMPL_ISUPPORTS_INHERITED1(nsDragService, nsBaseDragService, nsIObserver)
 
 /* static */ nsDragService*
 nsDragService::GetInstance()
@@ -1014,36 +1013,14 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
     return NS_OK;
 }
 
-// nsIDragSessionGTK
-
-NS_IMETHODIMP
-nsDragService::TargetSetLastContext(GtkWidget      *aWidget,
-                                    GdkDragContext *aContext,
-                                    guint           aTime)
-{
-    PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::TargetSetLastContext"));
-    mTargetWidget = aWidget;
-    mTargetDragContext = aContext;
-    mTargetTime = aTime;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDragService::TargetStartDragMotion(void)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDragService::TargetEndDragMotion(GtkWidget      *aWidget,
-                                   GdkDragContext *aContext,
-                                   guint           aTime)
+void
+nsDragService::ReplyToDragMotion()
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG,
-           ("nsDragService::TargetEndDragMotion %d", mCanDrop));
+           ("nsDragService::ReplyToDragMotion %d", mCanDrop));
 
+    GdkDragAction action = (GdkDragAction)0;
     if (mCanDrop) {
-        GdkDragAction action;
         // notify the dragger if we can drop
         switch (mDragAction) {
         case DRAGDROP_ACTION_COPY:
@@ -1056,16 +1033,12 @@ nsDragService::TargetEndDragMotion(GtkWidget      *aWidget,
           action = GDK_ACTION_MOVE;
           break;
         }
-        gdk_drag_status(aContext, action, aTime);
-    }
-    else {
-        gdk_drag_status(aContext, (GdkDragAction)0, aTime);
     }
 
-    return NS_OK;
+    gdk_drag_status(mTargetDragContext, action, mTargetTime);
 }
 
-NS_IMETHODIMP
+void
 nsDragService::TargetDataReceived(GtkWidget         *aWidget,
                                   GdkDragContext    *aContext,
                                   gint               aX,
@@ -1087,16 +1060,7 @@ nsDragService::TargetDataReceived(GtkWidget         *aWidget,
                ("Failed to get data.  selection data len was %d\n",
                 aSelectionData->length));
     }
-    return NS_OK;
 }
-
-
-NS_IMETHODIMP
-nsDragService::TargetSetTimeCallback(nsIDragSessionGTKTimeCB aCallback)
-{
-    return NS_OK;
-}
-
 
 bool
 nsDragService::IsTargetContextList(void)
@@ -1909,7 +1873,7 @@ nsDragService::RunScheduledTask()
         if (task == eDragTaskMotion) {
             // Reply to tell the source whether we can drop and what
             // action would be taken.
-            TargetEndDragMotion(mTargetWidget, mTargetDragContext, mTargetTime);
+            ReplyToDragMotion();
         }
     }
 
