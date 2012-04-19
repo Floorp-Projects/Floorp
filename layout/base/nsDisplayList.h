@@ -1744,6 +1744,13 @@ public:
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame) {}
   virtual ~nsDisplayWrapList();
+  /**
+   * Call this if the wrapped list is changed.
+   */
+  void UpdateBounds(nsDisplayListBuilder* aBuilder)
+  {
+    mBounds = mList.GetBounds(aBuilder);
+  }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap);

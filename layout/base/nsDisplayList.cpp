@@ -1573,14 +1573,14 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayList* aList)
   : nsDisplayItem(aBuilder, aFrame) {
   mList.AppendToTop(aList);
-  mBounds = mList.GetBounds(aBuilder);
+  UpdateBounds(aBuilder);
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayItem* aItem)
   : nsDisplayItem(aBuilder, aFrame) {
   mList.AppendToTop(aItem);
-  mBounds = mList.GetBounds(aBuilder);
+  UpdateBounds(aBuilder);
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
