@@ -49,34 +49,9 @@
     *  section BIDIRECTIONAL PROPERTIES
     *  for the detailed definition of the following categories
     *
-    *  The values here must match the equivalents in %map in
-    * mozilla/intl/unicharutil/tools/genbidicattable.pl
+    *  The values here must match the equivalents in %bidicategorycode in
+    *  mozilla/intl/unicharutil/tools/genUnicodePropertyData.pl
     */
-
-typedef enum {
-  eBidiCat_Undefined,
-  eBidiCat_L,          /* Left-to-Right               */
-  eBidiCat_R,          /* Right-to-Left               */
-  eBidiCat_AL,         /* Right-to-Left Arabic        */
-  eBidiCat_AN,         /* Arabic Number               */
-  eBidiCat_EN,         /* European Number             */
-  eBidiCat_ES,         /* European Number Separator   */
-  eBidiCat_ET,         /* European Number Terminator  */
-  eBidiCat_CS,         /* Common Number Separator     */
-  eBidiCat_ON,         /* Other Neutrals              */
-  eBidiCat_NSM,        /* Non-Spacing Mark            */
-  eBidiCat_BN,         /* Boundary Neutral            */
-  eBidiCat_B,          /* Paragraph Separator         */
-  eBidiCat_S,          /* Segment Separator           */
-  eBidiCat_WS,         /* Whitespace                  */
-  eBidiCat_CC = 0xf,   /* Control Code                */
-                       /* (internal use only - will never be outputed) */
-  eBidiCat_LRE = 0x2a, /* Left-to-Right Embedding     */
-  eBidiCat_RLE = 0x2b, /* Right-to-Left Embedding     */
-  eBidiCat_PDF = 0x2c, /* Pop Directional Formatting  */
-  eBidiCat_LRO = 0x2d, /* Left-to-Right Override      */
-  eBidiCat_RLO = 0x2e  /* Right-to-Left Override      */
-} eBidiCategory;
 
 enum nsCharType   { 
   eCharType_LeftToRight              = 0, 
@@ -140,11 +115,6 @@ typedef enum nsCharType nsCharType;
    *        IBMBIDI_NUMERAL_HINDICONTEXT: convert numbers in Arabic text to Hindi, otherwise to Arabic
    */
   nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32  aNumFlag);
-
-  /**
-   * Give a UTF-32 codepoint, return a nsCharType (compatible with ICU)
-   */
-  nsCharType GetCharType(PRUint32 aChar);
 
   /**
    * Give a UTF-32 codepoint
