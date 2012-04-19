@@ -57,6 +57,7 @@ EXPORTS_mozilla/dom/network = \
 
 CPPSRCS = \
   Connection.cpp \
+  MobileConnection.cpp \
   Utils.cpp \
   $(NULL)
 
