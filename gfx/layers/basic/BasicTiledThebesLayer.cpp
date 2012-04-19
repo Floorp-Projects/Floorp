@@ -79,10 +79,12 @@ BasicTiledLayerBuffer::PaintThebes(BasicTiledThebesLayer* aLayer,
   long start = PR_IntervalNow();
 #endif
   if (UseSinglePaintBuffer()) {
-    SAMPLE_LABEL("BasicTiledLayerBuffer", "PaintThebesSingleBuffer");
     const nsIntRect bounds = aPaintRegion.GetBounds();
-    mSinglePaintBuffer = new gfxImageSurface(gfxIntSize(bounds.width, bounds.height), GetFormat());
-    mSinglePaintBufferOffset = nsIntPoint(bounds.x, bounds.y);
+    {
+      SAMPLE_LABEL("BasicTiledLayerBuffer", "PaintThebesSingleBufferAlloc");
+      mSinglePaintBuffer = new gfxImageSurface(gfxIntSize(bounds.width, bounds.height), GetFormat(), !aLayer->CanUseOpaqueSurface());
+      mSinglePaintBufferOffset = nsIntPoint(bounds.x, bounds.y);
+    }
     nsRefPtr<gfxContext> ctxt = new gfxContext(mSinglePaintBuffer);
     ctxt->NewPath();
     ctxt->Translate(gfxPoint(-bounds.x, -bounds.y));
@@ -92,6 +94,7 @@ BasicTiledLayerBuffer::PaintThebes(BasicTiledThebesLayer* aLayer,
     }
     start = PR_IntervalNow();
 #endif
+    SAMPLE_LABEL("BasicTiledLayerBuffer", "PaintThebesSingleBufferDraw");
     mCallback(mThebesLayer, ctxt, aPaintRegion, aPaintRegion, mCallbackData);
   }
 
@@ -133,7 +136,7 @@ BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
 {
   if (aTile == GetPlaceholderTile()) {
     gfxImageSurface* tmpTile = new gfxImageSurface(gfxIntSize(GetTileLength(), GetTileLength()),
-                                                   GetFormat());
+                                                   GetFormat(), !mThebesLayer->CanUseOpaqueSurface());
     aTile = BasicTiledLayerTile(tmpTile);
   }
 
