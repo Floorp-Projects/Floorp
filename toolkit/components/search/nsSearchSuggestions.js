@@ -399,6 +399,26 @@ SuggestAutoComplete.prototype = {
     if (!previousResult)
       this._formHistoryResult = null;
 
+    // Start search immediately if possible, otherwise once the search
+    // service is initialized
+    if (Services.search.isInitialized) {
+      this._triggerSearch(searchString, searchParam, listener);
+      return;
+    }
+
+    Services.search.init((function startSearch_cb(aResult) {
+      if (!Components.isSuccessCode(aResult)) {
+        Cu.reportError("Could not initialize search service, bailing out: " + aResult);
+        return;
+      }
+      this._triggerSearch(searchString, searchParam, listener);
+    }).bind(this));
+  },
+
+  /**
+   * Actual implementation of search.
+   */
+  _triggerSearch: function(searchString, searchParam, listener) {
     // If there's an existing request, stop it. There is no smart filtering
     // here as there is when looking through history/form data because the
     // result set returned by the server is different for every typed value -
