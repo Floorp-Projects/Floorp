@@ -460,22 +460,22 @@ public class ProfileMigrator {
             final String clientName = mSyncSettingsMap.get("services.sync.client.name");
             final String clientGuid = mSyncSettingsMap.get("services.sync.client.GUID");
 
-            if (userName == null || syncKey == null || syncPass == null) {
-                // This isn't going to work. Give up.
-                Log.e(LOGTAG, "Profile has incomplete Sync config. Not migrating.");
-                setMigratedSync();
-                return;
-            }
+            GeckoAppShell.getHandler().post(new Runnable() {
+                public void run() {
+                    if (userName == null || syncKey == null || syncPass == null) {
+                        // This isn't going to work. Give up.
+                        Log.e(LOGTAG, "Profile has incomplete Sync config. Not migrating.");
+                        setMigratedSync();
+                        return;
+                    }
 
-            final SyncAccountParameters params =
-                new SyncAccountParameters(mContext, null,
-                                          userName, syncKey,
-                                          syncPass, serverURL, clusterURL,
-                                          clientName, clientGuid);
+                    final SyncAccountParameters params =
+                        new SyncAccountParameters(mContext, null,
+                                                  userName, syncKey,
+                                                  syncPass, serverURL, clusterURL,
+                                                  clientName, clientGuid);
 
-            new SyncAccounts.CreateSyncAccountTask() {
-                @Override
-                protected void onPostExecute(Account account) {
+                    final Account account = SyncAccounts.createSyncAccount(params);
                     if (account == null) {
                         Log.e(LOGTAG, "Failed to migrate Sync account.");
                     } else {
@@ -483,7 +483,7 @@ public class ProfileMigrator {
                     }
                     setMigratedSync();
                 }
-            }.execute(params);
+            });
         }
 
         protected void registerAndRequest() {
@@ -503,8 +503,12 @@ public class ProfileMigrator {
                 @Override
                 protected void onPostExecute(Boolean result) {
                     if (result.booleanValue()) {
-                        Log.i(LOGTAG, "Sync account already configured, skipping.");
-                        setMigratedSync();
+                        GeckoAppShell.getHandler().post(new Runnable() {
+                            public void run() {
+                                Log.i(LOGTAG, "Sync account already configured, skipping.");
+                                setMigratedSync();
+                            }
+                        });
                     } else {
                         // No account configured, fire up.
                         registerAndRequest();
