@@ -714,6 +714,7 @@ function CssRuleView(aDoc, aStore)
   this.element.addEventListener("copy", this._boundCopy);
 
   this._createContextMenu();
+  this._showEmpty();
 }
 
 CssRuleView.prototype = {
@@ -769,6 +770,7 @@ CssRuleView.prototype = {
 
     this._viewedElement = aElement;
     if (!this._viewedElement) {
+      this._showEmpty();
       return;
     }
 
@@ -806,6 +808,21 @@ CssRuleView.prototype = {
     this._clearRules();
     this._elementStyle.populate();
     this._createEditors();
+  },
+
+  /**
+   * Show the user that the rule view has no node selected.
+   */
+  _showEmpty: function CssRuleView_showEmpty()
+  {
+    if (this.doc.getElementById("noResults") > 0) {
+      return;
+    }
+
+    createChild(this.element, "div", {
+      id: "noResults",
+      textContent: CssLogic.l10n("rule.empty")
+    });
   },
 
   /**
