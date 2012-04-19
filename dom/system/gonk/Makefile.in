@@ -49,6 +49,7 @@ endif
 EXTRA_COMPONENTS = \
   RadioInterfaceLayer.manifest \
   RadioInterfaceLayer.js \
+  RILContentHelper.js \
   $(NULL)
 
 EXTRA_JS_MODULES = \
