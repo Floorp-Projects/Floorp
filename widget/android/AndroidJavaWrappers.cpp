@@ -62,7 +62,6 @@ jfieldID AndroidGeckoEvent::jKeyCodeField = 0;
 jfieldID AndroidGeckoEvent::jMetaStateField = 0;
 jfieldID AndroidGeckoEvent::jFlagsField = 0;
 jfieldID AndroidGeckoEvent::jUnicodeCharField = 0;
-jfieldID AndroidGeckoEvent::jRepeatCountField = 0;
 jfieldID AndroidGeckoEvent::jOffsetField = 0;
 jfieldID AndroidGeckoEvent::jCountField = 0;
 jfieldID AndroidGeckoEvent::jPointerIndexField = 0;
@@ -174,7 +173,6 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jMetaStateField = getField("mMetaState", "I");
     jFlagsField = getField("mFlags", "I");
     jUnicodeCharField = getField("mUnicodeChar", "I");
-    jRepeatCountField = getField("mRepeatCount", "I");
     jOffsetField = getField("mOffset", "I");
     jCountField = getField("mCount", "I");
     jPointerIndexField = getField("mPointerIndex", "I");
@@ -432,7 +430,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             mFlags = jenv->GetIntField(jobj, jFlagsField);
             mKeyCode = jenv->GetIntField(jobj, jKeyCodeField);
             mUnicodeChar = jenv->GetIntField(jobj, jUnicodeCharField);
-            mRepeatCount = jenv->GetIntField(jobj, jRepeatCountField);
             ReadCharactersField(jenv);
             break;
 
