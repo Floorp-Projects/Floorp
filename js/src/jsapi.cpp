@@ -95,6 +95,7 @@
 #include "js/MemoryMetrics.h"
 #include "yarr/BumpPointerAllocator.h"
 #include "vm/MethodGuard.h"
+#include "vm/NumericConversions.h"
 #include "vm/StringBuffer.h"
 #include "vm/Xdr.h"
 
@@ -345,7 +346,7 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
           case 'I':
             if (!JS_ValueToNumber(cx, *sp, &d))
                 return JS_FALSE;
-            *va_arg(ap, double *) = js_DoubleToInteger(d);
+            *va_arg(ap, double *) = ToInteger(d);
             break;
           case 'S':
           case 'W':
@@ -556,13 +557,13 @@ JS_DoubleIsInt32(double d, int32_t *ip)
 JS_PUBLIC_API(int32_t)
 JS_DoubleToInt32(double d)
 {
-    return js_DoubleToECMAInt32(d);
+    return ToInt32(d);
 }
 
 JS_PUBLIC_API(uint32_t)
 JS_DoubleToUint32(double d)
 {
-    return js_DoubleToECMAUint32(d);
+    return ToUint32(d);
 }
 
 JS_PUBLIC_API(JSBool)
