@@ -71,6 +71,8 @@ _BROWSER_TEST_FILES = \
 	browser_dbg_location-changes.js \
 	browser_dbg_script-switching.js \
 	browser_dbg_scripts-sorting.js \
+	browser_dbg_scripts-searching-01.js \
+	browser_dbg_scripts-searching-02.js \
 	browser_dbg_pause-resume.js \
 	browser_dbg_update-editor-mode.js \
 	$(warning browser_dbg_select-line.js temporarily disabled due to oranges, see bug 726609) \

@@ -44,3 +44,7 @@
   -  widget that displays the variables in the various available scopes in the
   -  debugger. -->
 <!ENTITY debuggerUI.propertiesTitle  "Scope variables">
+
+<!-- LOCALIZATION NOTE (debuggerUI.emptyFilterText): This is the text that
+  -  appears in the filter text box when it is empty. -->
+<!ENTITY debuggerUI.emptyFilterText  "Filter scripts">
