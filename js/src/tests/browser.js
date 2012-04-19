@@ -224,7 +224,8 @@ function optionsInit() {
     xml:        true,
     relimit:    true,
     methodjit:  true,
-    methodjit_always: true
+    methodjit_always: true,
+    ion:        true
   };
 
   // record initial values to support resetting

@@ -649,7 +649,8 @@ function optionsClear() {
     var optionName = optionNames[i];
     if (optionName &&
         optionName != "methodjit" &&
-        optionName != "methodjit_always")
+        optionName != "methodjit_always" &&
+        optionName != "ion")
     {
       options(optionName);
     }

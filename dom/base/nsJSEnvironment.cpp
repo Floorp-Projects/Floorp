@@ -929,6 +929,7 @@ static const char js_pccounts_content_str[]   = JS_OPTIONS_DOT_STR "pccounts.con
 static const char js_pccounts_chrome_str[]    = JS_OPTIONS_DOT_STR "pccounts.chrome";
 static const char js_jit_hardening_str[]      = JS_OPTIONS_DOT_STR "jit_hardening";
 static const char js_memlog_option_str[] = JS_OPTIONS_DOT_STR "mem.log";
+static const char js_ion_content_str[]        = JS_OPTIONS_DOT_STR "ion.content";
 
 int
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
@@ -964,6 +965,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   bool useMethodJITAlways = Preferences::GetBool(js_methodjit_always_str);
   bool useTypeInference = !chromeWindow && contentWindow && Preferences::GetBool(js_typeinfer_str);
   bool useHardening = Preferences::GetBool(js_jit_hardening_str);
+  bool useIon = Preferences::GetBool(js_ion_content_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (xr) {
     bool safeMode = false;
@@ -974,6 +976,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
       useTypeInference = false;
       useMethodJITAlways = true;
       useHardening = false;
+      useIon = false;
     }
   }    
 
@@ -996,6 +999,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions |= JSOPTION_TYPE_INFERENCE;
   else
     newDefaultJSOptions &= ~JSOPTION_TYPE_INFERENCE;
+
+  if (useIon)
+    newDefaultJSOptions |= JSOPTION_ION;
+  else
+    newDefaultJSOptions &= ~JSOPTION_ION;
 
 #ifdef DEBUG
   // In debug builds, warnings are enabled in chrome context if

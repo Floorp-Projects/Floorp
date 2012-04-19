@@ -662,6 +662,7 @@ pref("javascript.options.strict.debug",     true);
 #endif
 pref("javascript.options.relimit",          true);
 pref("javascript.options.methodjit.content", true);
+pref("javascript.options.ion.content",      true);
 pref("javascript.options.methodjit.chrome",  true);
 pref("javascript.options.pccounts.content", false);
 pref("javascript.options.pccounts.chrome",  false);
