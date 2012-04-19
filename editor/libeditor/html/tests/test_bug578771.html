@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=578771
+-->
+
+<head>
+  <title>Test for Bug 578771</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>  
+</head>
+
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=578771">Mozilla Bug 578771</a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+
+  <pre id="test">
+    <script type="application/javascript">
+
+      /** Test for Bug 578771 **/
+      SimpleTest.waitForExplicitFinish();
+
+      // Avoid platform selection differences
+      SpecialPowers.setBoolPref("layout.word_select.eat_space_to_next_word", false);
+
+      function testElem(elem, elemTag) {
+        var ce = document.getElementById("ce");
+        ce.focus();
+
+        synthesizeMouse(elem, 5, 5, {clickCount: 2 });   
+        ok(elem.selectionStart == 0 && elem.selectionEnd == 7,
+           " Double-clicking on another " + elemTag + " works correctly");
+
+        ce.focus();
+        synthesizeMouse(elem, 5, 5, {clickCount: 3 });   
+        ok(elem.selectionStart == 0 && elem.selectionEnd == 14,
+           "Triple-clicking on another " + elemTag + " works correctly");
+      }
+
+      SimpleTest.waitForFocus(function() {
+        var input = document.getElementById("ip");
+        testElem(input, "input");
+
+        var textarea = document.getElementById("ta");
+        testElem(textarea, "textarea");
+
+        SpecialPowers.clearUserPref("layout.word_select.eat_space_to_next_word");
+        SimpleTest.finish();
+      });
+   </script>
+  </pre>
+
+  <input id="ip" type="text" value="Mozilla editor" />
+  <textarea id="ta">Mozilla editor</textarea>
+  <div id="ce" contenteditable="true">Contenteditable div that could interfere with focus</div>
+</body>
+</html>
