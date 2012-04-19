@@ -1371,7 +1371,7 @@ $(foreach namespace,$(EXPORTS_NAMESPACES),$(eval $(EXPORT_NAMESPACE_RULE)))
 ifdef GRE_MODULE
 PREF_DIR = greprefs
 else
-ifneq (,$(XPI_NAME)$(LIBXUL_SDK))
+ifneq (,$(XPI_NAME)$(LIBXUL_SDK)$(MOZ_PHOENIX))
 PREF_DIR = defaults/preferences
 else
 PREF_DIR = defaults/pref

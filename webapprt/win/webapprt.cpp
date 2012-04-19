@@ -27,7 +27,7 @@ XRE_mainType XRE_main;
 namespace {
   const char kAPP_INI[] = "application.ini";
   const char kWEBAPP_INI[] = "webapp.ini";
-  const char kWEBAPPRT_INI[] = "webapprt.ini";
+  const char kWEBAPPRT_PATH[] = "webapprt";
   const char kAPP_ENV_PREFIX[] = "XUL_APP_FILE=";
   const char kAPP_RT[] = "webapprt-stub.exe";
 
@@ -262,10 +262,14 @@ namespace {
 
       ScopedLogging log;
 
-      // Get the path to the runtime's INI file.  This should be in the
-      // same directory as the GRE.
+      // Get the path to the runtime.
+      char rtPath[MAXPATHLEN];
+      rv = joinPath(rtPath, greDir, kWEBAPPRT_PATH, MAXPATHLEN);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Get the path to the runtime's INI file.
       char rtIniPath[MAXPATHLEN];
-      rv = joinPath(rtIniPath, greDir, kWEBAPPRT_INI, MAXPATHLEN);
+      rv = joinPath(rtIniPath, rtPath, kAPP_INI, MAXPATHLEN);
       NS_ENSURE_SUCCESS(rv, false);
 
       // Load the runtime's INI from its path.
@@ -284,13 +288,11 @@ namespace {
       SetAllocatedString(webShellAppData->profile, profile);
 
       nsCOMPtr<nsILocalFile> directory;
-      rv = XRE_GetFileFromPath(greDir,
-                               getter_AddRefs(directory));
+      rv = XRE_GetFileFromPath(rtPath, getter_AddRefs(directory));
       NS_ENSURE_SUCCESS(rv, false);
 
       nsCOMPtr<nsILocalFile> xreDir;
-      rv = XRE_GetFileFromPath(greDir,
-                               getter_AddRefs(xreDir));
+      rv = XRE_GetFileFromPath(greDir, getter_AddRefs(xreDir));
       NS_ENSURE_SUCCESS(rv, false);
 
       xreDir.forget(&webShellAppData->xreDirectory);
