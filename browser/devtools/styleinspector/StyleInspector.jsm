@@ -100,7 +100,11 @@ function RuleViewTool(aInspector, aFrame)
   this.inspector = aInspector;
   this.chromeWindow = this.inspector.chromeWindow;
   this.doc = aFrame.contentDocument;
-  this.view = new CssRuleView(this.doc, aInspector._getStore("ruleview"));
+
+  if (!this.inspector._ruleViewStore) {
+   this.inspector._ruleViewStore = {};
+  }
+  this.view = new CssRuleView(this.doc, this.inspector._ruleViewStore);
   this.doc.documentElement.appendChild(this.view.element);
 
   this._changeHandler = function() {
