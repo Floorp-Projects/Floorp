@@ -116,10 +116,10 @@ public class ProfileMigrator {
        These queries are derived from the low-level Places schema
        https://developer.mozilla.org/en/The_Places_database
     */
-    private final String kRootQuery =
+    private static final String kRootQuery =
         "SELECT root_name, folder_id FROM moz_bookmarks_roots";
-    private final String kRootName     = "root_name";
-    private final String kRootFolderId = "folder_id";
+    private static final String kRootName     = "root_name";
+    private static final String kRootFolderId = "folder_id";
 
     private static final String kBookmarkQuerySelect =
         "SELECT places.url             AS p_url,"         +
@@ -161,19 +161,19 @@ public class ProfileMigrator {
         kBookmarkQueryTrailer;
 
     // Result column of relevant data
-    private final String kBookmarkUrl      = "p_url";
-    private final String kBookmarkTitle    = "b_title";
-    private final String kBookmarkGuid     = "b_guid";
-    private final String kBookmarkId       = "b_id";
-    private final String kBookmarkType     = "b_type";
-    private final String kBookmarkParent   = "b_parent";
-    private final String kBookmarkAdded    = "b_added";
-    private final String kBookmarkModified = "b_modified";
-    private final String kBookmarkPosition = "b_position";
-    private final String kFaviconData      = "f_data";
-    private final String kFaviconMime      = "f_mime_type";
-    private final String kFaviconUrl       = "f_url";
-    private final String kFaviconGuid      = "f_guid";
+    private static final String kBookmarkUrl      = "p_url";
+    private static final String kBookmarkTitle    = "b_title";
+    private static final String kBookmarkGuid     = "b_guid";
+    private static final String kBookmarkId       = "b_id";
+    private static final String kBookmarkType     = "b_type";
+    private static final String kBookmarkParent   = "b_parent";
+    private static final String kBookmarkAdded    = "b_added";
+    private static final String kBookmarkModified = "b_modified";
+    private static final String kBookmarkPosition = "b_position";
+    private static final String kFaviconData      = "f_data";
+    private static final String kFaviconMime      = "f_mime_type";
+    private static final String kFaviconUrl       = "f_url";
+    private static final String kFaviconGuid      = "f_guid";
 
     // Helper constants
     private static final int kPlacesTypeBookmark = 1;
@@ -182,7 +182,7 @@ public class ProfileMigrator {
     /*
       For statistics keeping.
     */
-    private final String kHistoryCountQuery =
+    private static final String kHistoryCountQuery =
         "SELECT COUNT(*) FROM moz_historyvisits";
 
     /*
@@ -238,7 +238,7 @@ public class ProfileMigrator {
     /*
       Sync settings to get from prefs.js.
     */
-    private final String[] kSyncSettingsList = new String[] {
+    private static final String[] kSyncSettingsList = new String[] {
         "services.sync.account",
         "services.sync.client.name",
         "services.sync.client.GUID",
@@ -249,8 +249,8 @@ public class ProfileMigrator {
     /*
       Sync settings to get from password manager.
     */
-    private final String kSyncHostName = "chrome://weave";
-    private final String[] kSyncRealmList = new String[] {
+    private static final String kSyncHostName = "chrome://weave";
+    private static final String[] kSyncRealmList = new String[] {
         "Mozilla Services Password",
         "Mozilla Services Encryption Passphrase"
     };
