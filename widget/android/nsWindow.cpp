@@ -77,6 +77,7 @@ using mozilla::unused;
 #include "nsTArray.h"
 
 #include "AndroidBridge.h"
+#include "android_npapi.h"
 
 #include "imgIEncoder.h"
 
@@ -1707,21 +1708,63 @@ static unsigned int ConvertAndroidKeyCodeToDOMKeyCode(int androidKeyCode)
     }
 }
 
-void
-nsWindow::InitKeyEvent(nsKeyEvent& event, AndroidGeckoEvent& key)
+static void InitPluginEvent(ANPEvent* pluginEvent, ANPKeyActions keyAction,
+                            AndroidGeckoEvent& key)
 {
-    event.keyCode = ConvertAndroidKeyCodeToDOMKeyCode(key.KeyCode());
+    int androidKeyCode = key.KeyCode();
+    PRUint32 domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(androidKeyCode);
 
-    // Android gives us \n, so filter out some control characters.
-    if (event.message == NS_KEY_PRESS &&
-        key.UnicodeChar() >= ' ') {
-        event.charCode = key.UnicodeChar();
-        if (key.UnicodeChar())
-            event.keyCode = 0;
+    int modifiers = 0;
+    if (key.IsAltPressed())
+      modifiers |= kAlt_ANPKeyModifier;
+    if (key.IsShiftPressed())
+      modifiers |= kShift_ANPKeyModifier;
+
+    pluginEvent->inSize = sizeof(ANPEvent);
+    pluginEvent->eventType = kKey_ANPEventType;
+    pluginEvent->data.key.action = keyAction;
+    pluginEvent->data.key.nativeCode = androidKeyCode;
+    pluginEvent->data.key.virtualCode = domKeyCode;
+    pluginEvent->data.key.unichar = key.UnicodeChar();
+    pluginEvent->data.key.modifiers = modifiers;
+    pluginEvent->data.key.repeatCount = key.RepeatCount();
+}
+
+void
+nsWindow::InitKeyEvent(nsKeyEvent& event, AndroidGeckoEvent& key,
+                       ANPEvent* pluginEvent)
+{
+    int androidKeyCode = key.KeyCode();
+    PRUint32 domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(androidKeyCode);
+
+    if (event.message == NS_KEY_PRESS) {
+        // Android gives us \n, so filter out some control characters.
+        event.isChar = (key.UnicodeChar() >= ' ');
+        event.charCode = event.isChar ? key.UnicodeChar() : 0;
+        event.keyCode = (event.charCode > 0) ? 0 : domKeyCode;
+        event.pluginEvent = NULL;
+    } else {
+#ifdef DEBUG
+        if (event.message != NS_KEY_DOWN && event.message != NS_KEY_UP) {
+            ALOG("InitKeyEvent: unexpected event.message %d", event.message);
+        }
+#endif // DEBUG
+
+        // Flash will want a pluginEvent for keydown and keyup events.
+        ANPKeyActions action = event.message == NS_KEY_DOWN
+                             ? kDown_ANPKeyAction
+                             : kUp_ANPKeyAction;
+        InitPluginEvent(pluginEvent, action, key);
+
+        event.isChar = false;
+        event.charCode = 0;
+        event.keyCode = domKeyCode;
+        event.pluginEvent = pluginEvent;
     }
-    event.isShift = !!(key.MetaState() & AndroidKeyEvent::META_SHIFT_ON);
+
+    event.isShift = key.IsShiftPressed();
     event.isControl = gMenu;
-    event.isAlt = !!(key.MetaState() & AndroidKeyEvent::META_ALT_ON);
+    event.isAlt = key.IsAltPressed();
     event.isMeta = false;
     event.time = key.Time();
 
@@ -1764,7 +1807,8 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
         switch (keyCode) {
             case AndroidKeyEvent::KEYCODE_BACK: {
                 nsKeyEvent pressEvent(true, NS_KEY_PRESS, this);
-                InitKeyEvent(pressEvent, *ae);
+                ANPEvent pluginEvent;
+                InitKeyEvent(pressEvent, *ae, &pluginEvent);
                 DispatchEvent(&pressEvent);
                 return;
             }
@@ -1834,7 +1878,8 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
 
     nsEventStatus status;
     nsKeyEvent event(true, msg, this);
-    InitKeyEvent(event, *ae);
+    ANPEvent pluginEvent;
+    InitKeyEvent(event, *ae, &pluginEvent);
     DispatchEvent(&event, status);
 
     if (Destroyed())
@@ -1843,7 +1888,7 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
         return;
 
     nsKeyEvent pressEvent(true, NS_KEY_PRESS, this);
-    InitKeyEvent(pressEvent, *ae);
+    InitKeyEvent(pressEvent, *ae, &pluginEvent);
     if (status == nsEventStatus_eConsumeNoDefault) {
         pressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
     }
@@ -1968,10 +2013,11 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
         }
         return;
     case AndroidGeckoEvent::IME_DELETE_TEXT:
-        {   
+        {
             ALOGIME("IME: IME_DELETE_TEXT");
             nsKeyEvent event(true, NS_KEY_PRESS, this);
-            InitEvent(event, nsnull);
+            ANPEvent pluginEvent;
+            InitKeyEvent(event, *ae, &pluginEvent);
             event.keyCode = NS_VK_BACK;
             DispatchEvent(&event);
         }
