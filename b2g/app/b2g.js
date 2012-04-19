@@ -430,6 +430,9 @@ pref("dom.mozBrowserFramesWhitelist", "http://homescreen.gaiamobile.org,http://b
 pref("dom.sms.enabled", true);
 pref("dom.sms.whitelist", "file://,http://homescreen.gaiamobile.org,http://sms.gaiamobile.org");
 
+// Temporary permission hack for WebMobileConnection
+pref("dom.mobileconnection.whitelist", "http://homescreen.gaiamobile.org");
+
 // Temporary permission hack for WebContacts
 pref("dom.mozContacts.enabled", true);
 pref("dom.mozContacts.whitelist", "http://dialer.gaiamobile.org,http://sms.gaiamobile.org");
