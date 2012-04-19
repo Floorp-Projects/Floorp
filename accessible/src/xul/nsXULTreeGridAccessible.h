@@ -60,6 +60,10 @@ public:
   // nsIAccessibleTable
   NS_DECL_OR_FORWARD_NSIACCESSIBLETABLE_WITH_XPCACCESSIBLETABLE
 
+  // TableAccessible
+  virtual PRUint32 ColCount();
+  virtual PRUint32 RowCount();
+
   // nsAccessNode
   virtual void Shutdown();
 
