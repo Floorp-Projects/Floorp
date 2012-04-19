@@ -42,60 +42,18 @@ import android.content.Context;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.widget.ImageView;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import org.mozilla.gecko.R;
 
 public class SetupScreen extends Dialog
 {
     private static final String LOGTAG = "SetupScreen";
-    // Default delay before showing dialog, in milliseconds
-    private static final int DEFAULT_DELAY = 100;
     private AnimationDrawable mProgressSpinner;
-    private Context mContext;
-    private Timer mTimer;
-    private TimerTask mShowTask;
-
-    public class ShowTask extends TimerTask {
-        private Handler mHandler;
-
-        public ShowTask(Handler aHandler) {
-            mHandler = aHandler;
-        }
-
-        @Override
-        public void run() {
-            mHandler.post(new Runnable() {
-                    public void run() {
-                        SetupScreen.this.show();
-                    }
-            });
-
-        }
-
-        @Override
-        public boolean cancel() {
-            boolean stillInQueue = super.cancel();
-            if (!stillInQueue) {
-                mHandler.post(new Runnable() {
-                        public void run() {
-                            // SetupScreen.dismiss calls us,
-                            // we need to call the real Dialog.dismiss.
-                            SetupScreen.super.dismiss();
-                        }
-                });
-            }
-            return stillInQueue;
-        }
-    }
 
     public SetupScreen(Context aContext) {
         super(aContext, android.R.style.Theme_NoTitleBar_Fullscreen);
-        mContext = aContext;
     }
 
     @Override
@@ -114,35 +72,5 @@ public class SetupScreen extends Dialog
     @Override
     public void onWindowFocusChanged (boolean hasFocus) {
         mProgressSpinner.start();
-    }
-
-    public void showDelayed(Handler aHandler) {
-        showDelayed(aHandler, DEFAULT_DELAY);
-    }
-
-    // Delay showing the dialog until at least aDelay ms have
-    // passed. We need to know the handler to (eventually) post the UI
-    // actions on.
-    public void showDelayed(Handler aHandler, int aDelay) {
-        mTimer = new Timer("SetupScreen");
-        mShowTask = new ShowTask(aHandler);
-        mTimer.schedule(mShowTask, aDelay);
-    }
-
-    @Override
-    public void dismiss() {
-        // Cancel the timers/tasks if we were using showDelayed,
-        // and post to the correct handler.
-        if (mShowTask != null) {
-            mShowTask.cancel();
-            mShowTask = null;
-        } else {
-            // If not using showDelayed, just dismiss here.
-            super.dismiss();
-        }
-        if (mTimer != null) {
-            mTimer.cancel();
-            mTimer = null;
-        }
     }
 }
