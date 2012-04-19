@@ -11,7 +11,7 @@ const NS_APP_CHROME_DIR_LIST = "AChromDL";
 
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/WebappRT.jsm");
+Cu.import("resource://webapprt/modules/WebappRT.jsm");
 
 function DirectoryProvider() {}
 

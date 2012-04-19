@@ -7,7 +7,7 @@ topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
 
-include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
 
 # Build a binary bootstrapping with XRE_main
 PROGRAM   = webapprt-stub$(BIN_SUFFIX)
@@ -50,8 +50,6 @@ CONFIG_DIR = instgen
 SFX_MODULE = $(topsrcdir)/other-licenses/7zstub/firefox/7zSD.sfx
 APP_VERSION := $(shell cat $(topsrcdir)/browser/config/version.txt)
 DEFINES += -DAPP_VERSION=$(APP_VERSION)
-
-include $(topsrcdir)/config/config.mk
 
 ifdef _MSC_VER
 # Always enter a Windows program through wmain, whether or not we're

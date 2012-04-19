@@ -43,7 +43,6 @@
 #include "mozilla/HashFunctions.h"
 
 #include "nsXULAppAPI.h"
-#include "nsIXULAppInfo.h"
 
 #include "mozilla/Preferences.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -84,8 +83,6 @@ namespace mozilla {
 // Definitions
 #define INITIAL_PREF_FILES 10
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
-
-#define WEBAPPRT_APPID "webapprt@mozilla.org"
 
 // Prototypes
 static nsresult openPrefFile(nsIFile* aFile);
@@ -861,7 +858,7 @@ pref_LoadPrefsInDir(nsIFile* aDir, char const *const *aSpecialFiles, PRUint32 aS
   if (NS_FAILED(rv)) {
     // If the directory doesn't exist, then we have no reason to complain.  We
     // loaded everything (and nothing) successfully.
-    if (rv == NS_ERROR_FILE_NOT_FOUND)
+    if (rv == NS_ERROR_FILE_NOT_FOUND || rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
       rv = NS_OK;
     return rv;
   }
@@ -1018,14 +1015,10 @@ static nsresult pref_InitInitialObjects()
   // - $app/defaults/preferences/*.js
   // and in non omni.jar case:
   // - $app/defaults/preferences/*.js
-  //
-  // When we're running WebappRT (i.e. $app == WEBAPPRT_APPID), in omni.jar
-  // case, we also load:
-  // - jar:$gre/omni.jar!/defaults/pref/$WEBAPPRT_APPID/*.js
-  // This allows WebappRT-specific prefs to override those of another app
-  // with whom it shares an app dir (i.e. Firefox).
-  // (A $WEBAPPRT_APPID dir is similarly hardcoded into the app pref dir list
-  // in nsXREDirProvider for when we're running WebappRT in non omni.jar case.)
+  // When $app == $gre, we additionally load, in omni.jar case:
+  // - jar:$gre/omni.jar!/defaults/preferences/*.js
+  // Thus, in omni.jar case, we always load app-specific default preferences
+  // from omni.jar, whether or not $app == $gre.
 
   nsZipFind *findPtr;
   nsAutoPtr<nsZipFind> find;
@@ -1049,30 +1042,6 @@ static nsresult pref_InitInitialObjects()
     }
 
     prefEntries.Sort();
-
-    // Load jar:$gre/omni.jar!/defaults/pref/$WEBAPPRT_APPID/*.js
-    // if we're running WebappRT.
-    nsCOMPtr<nsIXULAppInfo> appInfo =
-      do_GetService("@mozilla.org/xre/app-info;1", &rv);
-    if (NS_SUCCEEDED(rv)) {
-      nsCAutoString appID;
-      if (NS_SUCCEEDED(appInfo->GetID(appID)) && appID.Equals(WEBAPPRT_APPID)) {
-        nsCAutoString prefsPath("defaults/pref/");
-        prefsPath.Append(appID);
-        prefsPath.AppendLiteral("/*.js$");
-        rv = jarReader->FindInit(prefsPath.get(), &findPtr);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // Make sure the files get read last by putting them at the beginning
-        // of the list of pref entries (which is processed backwards), so prefs
-        // in these app-specific files override those in non-app-specific ones.
-        find = findPtr;
-        while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
-          prefEntries.InsertElementAt(0, Substring(entryName, entryNameLen));
-        }
-      }
-    }
-
     for (PRUint32 i = prefEntries.Length(); i--; ) {
       rv = pref_ReadPrefFromJar(jarReader, prefEntries[i].get());
       if (NS_FAILED(rv))
@@ -1123,7 +1092,12 @@ static nsresult pref_InitInitialObjects()
     NS_WARNING("Error parsing application default preferences.");
 
   // Load jar:$app/omni.jar!/defaults/preferences/*.js
+  // or jar:$gre/omni.jar!/defaults/preferences/*.js.
   nsRefPtr<nsZipArchive> appJarReader = mozilla::Omnijar::GetReader(mozilla::Omnijar::APP);
+  // GetReader(mozilla::Omnijar::APP) returns null when $app == $gre, in which
+  // case we look for app-specific default preferences in $gre.
+  if (!appJarReader)
+    appJarReader = mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE);
   if (appJarReader) {
     rv = appJarReader->FindInit("defaults/preferences/*.js$", &findPtr);
     NS_ENSURE_SUCCESS(rv, rv);

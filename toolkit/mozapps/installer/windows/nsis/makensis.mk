@@ -113,6 +113,6 @@ webapp_uninstaller::
 	$(INSTALL) $(addprefix $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
 	$(INSTALL) $(addprefix $(MOZILLA_DIR)/other-licenses/nsis/Plugins/,$(CUSTOM_NSIS_PLUGINS)) $(CONFIG_DIR)
 	cd $(CONFIG_DIR) && $(MAKENSISU) webapp-uninstaller.nsi
-	$(NSINSTALL) -D $(DIST)/bin/
-	cp $(CONFIG_DIR)/webapp-uninstaller.exe $(DIST)/bin
+	$(NSINSTALL) -D $(FINAL_TARGET)
+	cp $(CONFIG_DIR)/webapp-uninstaller.exe $(FINAL_TARGET)
 endif
