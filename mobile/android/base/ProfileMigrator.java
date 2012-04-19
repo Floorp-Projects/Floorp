@@ -275,7 +275,8 @@ public class ProfileMigrator {
 
     // Has migration run before?
     protected boolean hasMigrationRun() {
-        return areBookmarksMigrated() && (getMigratedHistoryEntries() > 0);
+        return areBookmarksMigrated()
+            && ((getMigratedHistoryEntries() > 0) || isHistoryMigrated());
     }
 
     // Has migration entirely finished?
@@ -578,6 +579,8 @@ public class ProfileMigrator {
                 cursor.close();
             } catch (SQLiteBridgeException e) {
                 Log.e(LOGTAG, "Failed to get bookmark roots: ", e);
+                // Do not try again.
+                setMigratedBookmarks();
                 return;
             }
         }
@@ -789,6 +792,8 @@ public class ProfileMigrator {
                 cursor.close();
             } catch (SQLiteBridgeException e) {
                 Log.e(LOGTAG, "Failed to get history: ", e);
+                // Do not try again.
+                setMigratedHistory();
                 return;
             }
 
@@ -1037,6 +1042,8 @@ public class ProfileMigrator {
                 cursor.close();
             } catch (SQLiteBridgeException e) {
                 Log.e(LOGTAG, "Failed to get bookmarks: ", e);
+                // Do not try again.
+                setMigratedBookmarks();
                 return;
             }
 
