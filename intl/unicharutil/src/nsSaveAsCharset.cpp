@@ -45,7 +45,6 @@
 #include "nsSaveAsCharset.h"
 #include "nsCRT.h"
 #include "nsUnicharUtils.h"
-#include "nsCompressedCharMap.h"
 #include "nsReadableUtils.h"
 #include "nsWhitespaceTokenizer.h"
 

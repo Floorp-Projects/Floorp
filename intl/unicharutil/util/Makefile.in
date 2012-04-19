@@ -61,7 +61,6 @@ SDK_HEADERS = \
 	$(NULL)
 
 EXPORTS = \
-	nsCompressedCharMap.h \
 	nsBidiUtils.h \
 	nsUnicodeProperties.h \
 	nsUnicodeScriptCodes.h \

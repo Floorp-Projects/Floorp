@@ -65,7 +65,6 @@
 #include "nsMathUtils.h"
 #include "nsBidiUtils.h"
 #include "nsUnicodeRange.h"
-#include "nsCompressedCharMap.h"
 #include "nsStyleConsts.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -4172,13 +4171,13 @@ gfxShapedWord::SetGlyphs(PRUint32 aIndex, CompressedGlyph aGlyph,
     mCharacterGlyphs[aIndex] = aGlyph;
 }
 
-#include "ignorable.x-ccmap"
-DEFINE_X_CCMAP(gIgnorableCCMapExt, const);
-
+#define ZWNJ 0x200C
+#define ZWJ  0x200D
 static inline bool
 IsDefaultIgnorable(PRUint32 aChar)
 {
-    return CCMAP_HAS_CHAR_EXT(gIgnorableCCMapExt, aChar);
+    return GetIdentifierModification(aChar) == XIDMOD_DEFAULT_IGNORABLE ||
+           aChar == ZWNJ || aChar == ZWJ;
 }
 
 void

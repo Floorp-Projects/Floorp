@@ -141,7 +141,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIMEStateManager.h"
 #include "nsContentErrors.h"
 #include "nsUnicharUtilCIID.h"
-#include "nsCompressedCharMap.h"
 #include "nsINativeKeyBindings.h"
 #include "nsIDOMNSEvent.h"
 #include "nsXULPopupManager.h"
