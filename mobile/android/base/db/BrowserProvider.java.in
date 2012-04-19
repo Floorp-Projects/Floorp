@@ -1497,7 +1497,7 @@ public class BrowserProvider extends ContentProvider {
                 boolean needHistory = wantHistory && !migrator.isHistoryMigrated();
 
                 if (needBookmarks || needHistory) {
-                    migrator.launch();
+                    migrator.launchPlaces();
 
                     needBookmarks = wantBookmarks && !migrator.areBookmarksMigrated();
                     needHistory = wantHistory && !migrator.isHistoryMigrated();

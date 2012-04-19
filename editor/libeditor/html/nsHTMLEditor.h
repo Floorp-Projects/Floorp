@@ -970,6 +970,7 @@ public:
 friend class nsHTMLEditRules;
 friend class nsTextEditRules;
 friend class nsWSRunObject;
+friend class nsHTMLEditorEventListener;
 
 };
 #endif //nsHTMLEditor_h__
