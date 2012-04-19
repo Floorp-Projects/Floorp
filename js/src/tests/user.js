@@ -29,6 +29,7 @@ user_pref("extensions.checkUpdateSecurity", false);
 user_pref("browser.EULA.override", true);
 user_pref("javascript.options.methodjit.chrome", true);
 user_pref("javascript.options.methodjit.content", true);
+user_pref("javascript.options.ion.content", true);
 user_pref("javascript.options.methodjit_always", false);
 user_pref("javascript.options.strict", false);
 user_pref("javascript.options.werror", false);
