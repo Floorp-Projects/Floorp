@@ -5708,7 +5708,11 @@ drag_leave_event_cb(GtkWidget *aWidget,
 
     nsWindow *mostRecentDragWindow = dragService->GetMostRecentDestWindow();
     if (!mostRecentDragWindow) {
-        NS_WARNING("Spurious drag leave signal");
+        // This can happen when the target will not accept a drop.  A GTK drag
+        // source sends the leave message to the destination before the
+        // drag-failed signal on the source widget, but the leave message goes
+        // via the X server, and so doesn't get processed at least until the
+        // event loop runs again.
         return;
     }
 
