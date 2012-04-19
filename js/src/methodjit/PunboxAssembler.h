@@ -43,7 +43,7 @@
 #include "assembler/assembler/MacroAssembler.h"
 #include "methodjit/MachineRegs.h"
 #include "methodjit/RematInfo.h"
-#include "jsnum.h"
+#include "jsval.h"
 
 namespace js {
 namespace mjit {
@@ -397,9 +397,12 @@ class PunboxAssembler : public JSC::MacroAssembler
     }
 
     void loadStaticDouble(const double *dp, FPRegisterID dest, RegisterID scratch) {
-        jsdpun du;
-        du.d = *dp;
-        move(ImmPtr(reinterpret_cast<void*>(du.u64)), scratch);
+        union DoublePun {
+            double d;
+            uint64_t u;
+        } pun;
+        pun.d = *dp;
+        move(ImmPtr(reinterpret_cast<void*>(pun.u)), scratch);
         m_assembler.movq_rr(scratch, dest);
     }
 
