@@ -49,7 +49,6 @@ _BROWSER_FILES = \
 		browser_inspector_highlighter.js \
 		browser_inspector_iframeTest.js \
 		browser_inspector_scrolling.js \
-		browser_inspector_store.js \
 		browser_inspector_tab_switch.js \
 		browser_inspector_treePanel_output.js \
 		browser_inspector_treePanel_input.html \
