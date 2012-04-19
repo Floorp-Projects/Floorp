@@ -51,8 +51,6 @@
 class gfxASurface;
 class nsIdleService;
 
-struct ANPEvent;
-
 namespace mozilla {
     class AndroidGeckoEvent;
     class AndroidKeyEvent;
@@ -233,8 +231,7 @@ protected:
     static void LogWindow(nsWindow *win, int index, int indent);
 
 private:
-    void InitKeyEvent(nsKeyEvent& event, mozilla::AndroidGeckoEvent& key,
-                      ANPEvent* pluginEvent);
+    void InitKeyEvent(nsKeyEvent& event, mozilla::AndroidGeckoEvent& key);
     bool DispatchMultitouchEvent(nsTouchEvent &event,
                              mozilla::AndroidGeckoEvent *ae);
     void DispatchMotionEvent(nsInputEvent &event,
