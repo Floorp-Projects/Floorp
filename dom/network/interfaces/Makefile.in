@@ -48,6 +48,7 @@ include $(topsrcdir)/dom/dom-config.mk
 XPIDLSRCS = \
   nsIDOMNavigatorNetwork.idl \
   nsIDOMConnection.idl \
+  nsIDOMMobileConnection.idl \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
