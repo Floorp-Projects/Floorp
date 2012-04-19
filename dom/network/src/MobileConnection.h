@@ -7,6 +7,7 @@
 
 #include "nsIObserver.h"
 #include "nsIDOMMobileConnection.h"
+#include "nsIMobileConnectionProvider.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -34,6 +35,10 @@ public:
                                            nsDOMEventTargetHelper)
 
 private:
+  nsCOMPtr<nsIMobileConnectionProvider> mProvider;
+
+  nsresult InternalDispatchEvent(const nsAString& aType);
+
   NS_DECL_EVENT_HANDLER(cardstatechange)
   NS_DECL_EVENT_HANDLER(voicechange)
   NS_DECL_EVENT_HANDLER(datachange)
