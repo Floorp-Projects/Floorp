@@ -1829,7 +1829,18 @@ gboolean
 nsDragService::RunScheduledTask()
 {
     if (mTargetWindow && mTargetWindow != mPendingWindow) {
-        mTargetWindow->OnDragLeave();
+        PR_LOG(sDragLm, PR_LOG_DEBUG,
+               ("nsDragService: dispatch drag leave (%p)\n",
+                mTargetWindow.get()));
+        mTargetWindow->
+            DispatchDragEvent(NS_DRAGDROP_EXIT, mTargetWindowPoint, 0);
+
+        if (!mSourceNode) {
+            // The drag that was initiated in a different app. End the drag
+            // session, since we're done with it for now (until the user drags
+            // back into this app).
+            EndDragSession(false);
+        }
     }
 
     // It is possible that the pending state has been updated during dispatch
@@ -1889,8 +1900,7 @@ nsDragService::RunScheduledTask()
     // protocol is used.
     if (task == eDragTaskMotion || positionHasChanged) {
         nsWindow::UpdateDragStatus(mTargetDragContext, this);
-        mTargetWindow->
-            DispatchDragMotionEvents(this, mTargetWindowPoint, mTargetTime);
+        DispatchMotionEvents();
 
         if (task == eDragTaskMotion) {
             // Reply to tell the source whether we can drop and what
@@ -1900,8 +1910,7 @@ nsDragService::RunScheduledTask()
     }
 
     if (task == eDragTaskDrop) {
-        gboolean success = mTargetWindow->
-            DispatchDragDropEvent(this, mTargetWindowPoint, mTargetTime);
+        gboolean success = DispatchDropEvent();
 
         // Perhaps we should set the del parameter to TRUE when the drag
         // action is move, but we don't know whether the data was successfully
@@ -1931,4 +1940,32 @@ nsDragService::RunScheduledTask()
     // Returning false removes the task source from the event loop.
     mTaskSource = 0;
     return FALSE;
+}
+
+void
+nsDragService::DispatchMotionEvents()
+{
+    mCanDrop = false;
+
+    FireDragEventAtSource(NS_DRAGDROP_DRAG);
+
+    mTargetWindow->
+        DispatchDragEvent(NS_DRAGDROP_OVER, mTargetWindowPoint, mTargetTime);
+}
+
+// Returns true if the drop was successful
+gboolean
+nsDragService::DispatchDropEvent()
+{
+    // We need to check IsDestroyed here because the nsRefPtr
+    // only protects this from being deleted, it does NOT protect
+    // against nsView::~nsView() calling Destroy() on it, bug 378273.
+    if (mTargetWindow->IsDestroyed())
+        return FALSE;
+
+    PRUint32 msg = mCanDrop ? NS_DRAGDROP_DROP : NS_DRAGDROP_EXIT;
+
+    mTargetWindow->DispatchDragEvent(msg, mTargetWindowPoint, mTargetTime);
+
+    return mCanDrop;
 }

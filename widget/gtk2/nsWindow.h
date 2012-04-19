@@ -245,7 +245,6 @@ public:
                                                guint            aInfo,
                                                guint            aTime,
                                                gpointer         aData);
-    void               OnDragLeave(void);
 
 private:
     void               NativeResize(PRInt32 aWidth,
@@ -300,12 +299,6 @@ public:
     void               DispatchDragEvent(PRUint32 aMsg,
                                          const nsIntPoint& aRefPoint,
                                          guint aTime);
-    void               DispatchDragMotionEvents(nsDragService *aDragService,
-                                                const nsIntPoint& aPoint,
-                                                guint aTime);
-    gboolean           DispatchDragDropEvent(nsDragService *aDragService,
-                                             const nsIntPoint& aWindowPoint,
-                                             guint aTime);
     static void        UpdateDragStatus (GdkDragContext *aDragContext,
                                          nsIDragService *aDragService);
     // If this dispatched the keydown event actually, this returns TRUE,
