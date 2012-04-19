@@ -5040,15 +5040,13 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
     if (!script->bindings.setParent(cx, script->types->global))
         return false;
 
-    if (!cx->typeInferenceEnabled())
-        return true;
-
+#ifdef JS_ION
     /*
-     * IM does not run the prologue at function frame entry, so disable the
-     * nesting state if it's enabled.
+     * This is currently incompatible with IonMonkey. Fate is pending scope
+     * overhaul work. For now, we disable. See bug 747226 and bug 725667.
      */
-    if (ion::IsEnabled(cx))
-        return true;
+    return true;
+#endif
 
     if (!script->isInnerFunction || nullClosure) {
         /*
