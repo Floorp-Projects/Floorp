@@ -121,7 +121,7 @@ public class ProfileMigrator {
     private final String kRootName     = "root_name";
     private final String kRootFolderId = "folder_id";
 
-    private final String kBookmarkQuery =
+    private static final String kBookmarkQuerySelect =
         "SELECT places.url             AS p_url,"         +
         "       bookmark.guid          AS b_guid,"        +
         "       bookmark.id            AS b_id,"          +
@@ -130,11 +130,9 @@ public class ProfileMigrator {
         "       bookmark.parent        AS b_parent,"      +
         "       bookmark.dateAdded     AS b_added,"       +
         "       bookmark.lastModified  AS b_modified,"    +
-        "       bookmark.position      AS b_position,"    +
-        "       favicon.data           AS f_data,"        +
-        "       favicon.mime_type      AS f_mime_type,"   +
-        "       favicon.url            AS f_url,"         +
-        "       favicon.guid           AS f_guid "        +
+        "       bookmark.position      AS b_position,";
+
+    private static final String kBookmarkQueryTrailer =
         "FROM ((moz_bookmarks AS bookmark "               +
         "       LEFT OUTER JOIN moz_places AS places "    +
         "       ON places.id = bookmark.fk) "             +
@@ -146,6 +144,21 @@ public class ProfileMigrator {
         // This gives us a better chance of adding a folder before
         // adding its contents and hence avoiding extra iterations below.
         "ORDER BY bookmark.id";
+
+    private static final String kBookmarkQueryGuid =
+        kBookmarkQuerySelect                              +
+        "       favicon.data           AS f_data,"        +
+        "       favicon.mime_type      AS f_mime_type,"   +
+        "       favicon.url            AS f_url,"         +
+        "       favicon.guid           AS f_guid "        +
+        kBookmarkQueryTrailer;
+
+    private static final String kBookmarkQueryNoGuid =
+        kBookmarkQuerySelect                              +
+        "       favicon.data           AS f_data,"        +
+        "       favicon.mime_type      AS f_mime_type,"   +
+        "       favicon.url            AS f_url "         +
+        kBookmarkQueryTrailer;
 
     // Result column of relevant data
     private final String kBookmarkUrl      = "p_url";
@@ -178,20 +191,18 @@ public class ProfileMigrator {
       We must divide date by 1000 due to the micro (Places)
       vs milli (Android) distiction.
     */
-    private final String kHistoryQuery =
+    private static final String kHistoryQuerySelect =
         "SELECT places.url              AS p_url, "       +
         "       places.title            AS p_title, "     +
+        "       places.guid             AS p_guid, "      +
         "       MAX(history.visit_date) AS h_date, "      +
         "       COUNT(*) AS h_visits, "                   +
         // see BrowserDB.filterAllSites for this formula
         "       MAX(1, 100 * 225 / (" +
-                  "((MAX(history.visit_date)/1000 - ?) / 86400000) * " +
-                  "((MAX(history.visit_date)/1000 - ?) / 86400000) + 225)) AS a_recent, " +
-        "       favicon.data            AS f_data, "      +
-        "       favicon.mime_type       AS f_mime_type, " +
-        "       places.guid             AS p_guid, "      +
-        "       favicon.url             AS f_url, "       +
-        "       favicon.guid            AS f_guid "       +
+        "          ((MAX(history.visit_date)/1000 - ?) / 86400000) * " +
+        "          ((MAX(history.visit_date)/1000 - ?) / 86400000) + 225)) AS a_recent, ";
+
+    private static final String kHistoryQueryTrailer =
         "FROM (moz_historyvisits AS history "             +
         "      JOIN moz_places AS places "                +
         "      ON places.id = history.place_id "          +
@@ -203,11 +214,26 @@ public class ProfileMigrator {
         "ORDER BY h_visits * a_recent "                   +
         "DESC LIMIT ? OFFSET ?";
 
-    private final String kHistoryUrl    = "p_url";
-    private final String kHistoryTitle  = "p_title";
-    private final String kHistoryGuid   = "p_guid";
-    private final String kHistoryDate   = "h_date";
-    private final String kHistoryVisits = "h_visits";
+    private static final String kHistoryQueryGuid =
+        kHistoryQuerySelect                               +
+        "       favicon.data            AS f_data, "      +
+        "       favicon.mime_type       AS f_mime_type, " +
+        "       favicon.url             AS f_url, "       +
+        "       favicon.guid            AS f_guid "       +
+        kHistoryQueryTrailer;
+
+    private static final String kHistoryQueryNoGuid =
+        kHistoryQuerySelect                               +
+        "       favicon.data            AS f_data, "      +
+        "       favicon.mime_type       AS f_mime_type, " +
+        "       favicon.url             AS f_url "        +
+        kHistoryQueryTrailer;
+
+    private static final String kHistoryUrl    = "p_url";
+    private static final String kHistoryTitle  = "p_title";
+    private static final String kHistoryGuid   = "p_guid";
+    private static final String kHistoryDate   = "h_date";
+    private static final String kHistoryVisits = "h_visits";
 
     /*
       Sync settings to get from prefs.js.
@@ -514,6 +540,10 @@ public class ProfileMigrator {
         private Map<Long, Long> mRerootMap;
         private ArrayList<ContentProviderOperation> mOperations;
         private int mMaxEntries;
+        // We support 2 classes of schemas: Firefox Places 12-13
+        // and Firefox Places 13-20. The relevant difference for us
+        // is whether there is a GUID on favicons or not.
+        private boolean mHasFaviconGUID;
 
         public PlacesRunnable(int limit) {
             mMaxEntries = limit;
@@ -555,6 +585,27 @@ public class ProfileMigrator {
             }
             // Default fallback
             return Bookmarks.FIXED_ROOT_ID;
+        }
+
+        // Check the Schema version of the Firefox Places Database.
+        public boolean checkPlacesSchema(SQLiteBridge db) {
+            final int schemaVersion = db.getVersion();
+            Log.d(LOGTAG, "Schema version " + schemaVersion);
+            if (schemaVersion < 12) {
+                Log.e(LOGTAG, "Places DB is too old, not migrating.");
+                return false;
+            } else if (schemaVersion >= 12 && schemaVersion <= 13) {
+                Log.d(LOGTAG, "Not Migrating Favicon GUIDs.");
+                mHasFaviconGUID = false;
+                return true;
+            } else if (schemaVersion <= 20) {
+                Log.d(LOGTAG, "Migrating Favicon GUIDs.");
+                mHasFaviconGUID = true;
+                return true;
+            } else {
+                Log.e(LOGTAG, "Too new (corrupted?) Places schema.");
+                return false;
+            }
         }
 
         // We want to know the id of special root folders in the places DB,
@@ -698,7 +749,9 @@ public class ProfileMigrator {
                 values.put(Images.FAVICON_URL, faviconUrl);
                 // Restore deleted record if possible
                 values.put(Images.IS_DELETED, 0);
-                values.put(Images.GUID, faviconGuid);
+                if (faviconGuid != null) {
+                    values.put(Images.GUID, faviconGuid);
+                }
 
                 Cursor cursor = null;
                 ContentProviderOperation.Builder builder = null;
@@ -756,7 +809,12 @@ public class ProfileMigrator {
                     Integer.toString(maxEntries),
                     Integer.toString(currentEntries)
                 };
-                cursor = db.rawQuery(kHistoryQuery, queryParams);
+
+                if (mHasFaviconGUID) {
+                    cursor = db.rawQuery(kHistoryQueryGuid, queryParams);
+                } else {
+                    cursor = db.rawQuery(kHistoryQueryNoGuid, queryParams);
+                }
                 queryResultEntries = cursor.getCount();
 
                 final int urlCol = cursor.getColumnIndex(kHistoryUrl);
@@ -766,6 +824,7 @@ public class ProfileMigrator {
                 final int faviconMimeCol = cursor.getColumnIndex(kFaviconMime);
                 final int faviconDataCol = cursor.getColumnIndex(kFaviconData);
                 final int faviconUrlCol = cursor.getColumnIndex(kFaviconUrl);
+                // Safe even if it doesn't exist.
                 final int faviconGuidCol = cursor.getColumnIndex(kFaviconGuid);
 
                 cursor.moveToFirst();
@@ -777,7 +836,10 @@ public class ProfileMigrator {
                     byte[] faviconDataBuff = cursor.getBlob(faviconDataCol);
                     String faviconMime = cursor.getString(faviconMimeCol);
                     String faviconUrl = cursor.getString(faviconUrlCol);
-                    String faviconGuid = cursor.getString(faviconGuidCol);
+                    String faviconGuid = null;
+                    if (mHasFaviconGUID) {
+                        faviconGuid = cursor.getString(faviconGuidCol);
+                    }
 
                     try {
                         placesHistory.add(url);
@@ -911,7 +973,12 @@ public class ProfileMigrator {
             try {
                 Log.i(LOGTAG, "Fetching bookmarks from places");
 
-                Cursor cursor = db.rawQuery(kBookmarkQuery, null);
+                Cursor cursor = null;
+                if (mHasFaviconGUID) {
+                    cursor = db.rawQuery(kBookmarkQueryGuid, null);
+                } else {
+                    cursor = db.rawQuery(kBookmarkQueryNoGuid, null);
+                }
                 final int urlCol = cursor.getColumnIndex(kBookmarkUrl);
                 final int titleCol = cursor.getColumnIndex(kBookmarkTitle);
                 final int guidCol = cursor.getColumnIndex(kBookmarkGuid);
@@ -983,7 +1050,10 @@ public class ProfileMigrator {
                         byte[] faviconDataBuff = cursor.getBlob(faviconDataCol);
                         String faviconMime = cursor.getString(faviconMimeCol);
                         String faviconUrl = cursor.getString(faviconUrlCol);
-                        String faviconGuid = cursor.getString(faviconGuidCol);
+                        String faviconGuid = null;
+                        if (mHasFaviconGUID) {
+                            faviconGuid = cursor.getString(faviconGuidCol);
+                        }
 
                         // Is the parent for this bookmark already added?
                         // If so, we can add the bookmark itself.
@@ -1091,19 +1161,26 @@ public class ProfileMigrator {
             GeckoAppShell.loadSQLiteLibs(mContext, mContext.getPackageResourcePath());
             try {
                 db = new SQLiteBridge(dbPath);
-                calculateReroot(db);
-
-                if (!areBookmarksMigrated()) {
-                    migrateBookmarks(db);
+                if (!checkPlacesSchema(db)) {
+                    // Incompatible schema. Bail out.
                     setMigratedBookmarks();
+                    setMigratedHistory();
                 } else {
-                    Log.i(LOGTAG, "Bookmarks already migrated. Skipping...");
-                }
+                    // Compatible schema. Let's go.
+                    calculateReroot(db);
 
-                if (!isHistoryMigrated()) {
-                    migrateHistory(db);
-                } else {
-                    Log.i(LOGTAG, "History already migrated. Skipping...");
+                    if (!areBookmarksMigrated()) {
+                        migrateBookmarks(db);
+                        setMigratedBookmarks();
+                    } else {
+                        Log.i(LOGTAG, "Bookmarks already migrated. Skipping...");
+                    }
+
+                    if (!isHistoryMigrated()) {
+                        migrateHistory(db);
+                    } else {
+                        Log.i(LOGTAG, "History already migrated. Skipping...");
+                    }
                 }
 
                 db.close();
