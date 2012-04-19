@@ -78,6 +78,7 @@
 #include "nsIWebNavigation.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "Connection.h"
+#include "MobileConnection.h"
 
 #ifdef MOZ_B2G_RIL
 #include "TelephonyFactory.h"
@@ -193,6 +194,11 @@ Navigator::Invalidate()
   if (mConnection) {
     mConnection->Shutdown();
     mConnection = nsnull;
+  }
+
+  if (mMobileConnection) {
+    mMobileConnection->Shutdown();
+    mMobileConnection = nsnull;
   }
 
 #ifdef MOZ_B2G_BT
@@ -1136,6 +1142,37 @@ Navigator::GetMozConnection(nsIDOMMozConnection** aConnection)
   }
 
   NS_ADDREF(*aConnection = mConnection);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Navigator::GetMozMobileConnection(nsIDOMMozMobileConnection** aMobileConnection)
+{
+  *aMobileConnection = nsnull;
+
+  if (!mMobileConnection) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+    NS_ENSURE_TRUE(window && window->GetDocShell(), NS_OK);
+
+    // Chrome is always allowed access, so do the permission check only
+    // for non-chrome pages.
+    if (!nsContentUtils::IsCallerChrome()) {
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(window->GetExtantDocument());
+      NS_ENSURE_TRUE(doc, NS_OK);
+
+      nsCOMPtr<nsIURI> uri;
+      doc->NodePrincipal()->GetURI(getter_AddRefs(uri));
+
+      if (!nsContentUtils::URIIsChromeOrInPref(uri, "dom.mobileconnection.whitelist")) {
+        return NS_OK;
+      }
+    }
+
+    mMobileConnection = new network::MobileConnection();
+    mMobileConnection->Init(window);
+  }
+
+  NS_ADDREF(*aMobileConnection = mMobileConnection);
   return NS_OK;
 }
 
