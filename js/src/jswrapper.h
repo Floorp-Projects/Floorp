@@ -51,7 +51,7 @@ namespace js {
 
 class DummyFrameGuard;
 
-/* Base class that just implements no-op forwarding methods for fundamental
+/* Base class that just implements no-op forwarding methods for funamental
  * traps. This is meant to be used as a base class for ProxyHandlers that
  * want transparent forwarding behavior but don't want to use the derived
  * traps and other baggage of js::Wrapper.
