@@ -1710,6 +1710,7 @@ WrapPreserve3DListInternal(nsIFrame* aFrame, nsDisplayListBuilder *aBuilder, nsD
           }
           nsDisplayOpacity *opacity = static_cast<nsDisplayOpacity*>(item);
           rv = WrapPreserve3DListInternal(aFrame, aBuilder, opacity->GetList(), aIndex);
+          opacity->UpdateBounds(aBuilder);
           newList.AppendToTop(item);
           break;
         }
