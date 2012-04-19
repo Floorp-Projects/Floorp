@@ -9,6 +9,10 @@ VPATH     = @srcdir@
 
 include $(topsrcdir)/config/config.mk
 
+# config.mk sets FINAL_TARGET to $(DIST)/bin, but we want to copy build products
+# into a WebappRT-specific subdirectory, so we redefine it here.
+FINAL_TARGET = $(DIST)/bin/webapprt
+
 DIRS = $(NULL)
 
 ifneq (,$(filter WINNT,$(OS_ARCH)))
@@ -20,29 +24,32 @@ endif # mac
 endif # windows
 
 EXTRA_PP_COMPONENTS = \
-  WebappRTComponents.manifest \
-  WebappRTCommandLineHandler.js \
-  WebappRTDirectoryProvider.js \
+  components.manifest \
+  CommandLineHandler.js \
+  DirectoryProvider.js \
   $(NULL)
 
 EXTRA_JS_MODULES = \
-	WebappRT.jsm \
-	$(NULL)
+  WebappRT.jsm \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
+libs::
+	$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/chrome.manifest "resource webapprt ./"
+
 libs:: prefs.js
-	$(NSINSTALL) -D $(DIST)/bin/defaults/pref/webapprt@mozilla.org
-	$(INSTALL) $^ $(DIST)/bin/defaults/pref/webapprt@mozilla.org
+	$(NSINSTALL) -D $(FINAL_TARGET)/defaults/preferences
+	$(INSTALL) $^ $(FINAL_TARGET)/defaults/preferences
 
 GRE_MILESTONE := $(shell tail -n 1 $(topsrcdir)/config/milestone.txt 2>/dev/null || tail -1 $(topsrcdir)/config/milestone.txt)
 GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
 
-webapprt.ini: webapprt.ini.in $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
+application.ini: application.ini.in $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
 
-libs:: webapprt.ini
-	$(INSTALL) webapprt.ini $(DIST)/bin
+libs:: application.ini
+	$(INSTALL) application.ini $(FINAL_TARGET)
 
-GARBAGE += webapprt.ini
+GARBAGE += application.ini

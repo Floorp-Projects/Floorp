@@ -405,10 +405,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
             mLayerRendererInitialized = true;
         }
 
-        // Build the contexts and create the frame.
-        Layer.RenderContext pageContext = mLayerRenderer.createPageContext(mFrameMetrics);
-        Layer.RenderContext screenContext = mLayerRenderer.createScreenContext();
-        return mLayerRenderer.createFrame(pageContext, screenContext);
+        return mLayerRenderer.createFrame(mFrameMetrics);
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */

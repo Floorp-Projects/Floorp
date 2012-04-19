@@ -111,9 +111,9 @@ toolbar[mode="full"] toolbarseparator {
   border-bottom: 1px solid rgba(0, 0, 0, 0.57);
 }
 
-#navigator-toolbox[tabsontop="true"] > #nav-bar,
-#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar,
-#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar {
+#nav-bar[tabsontop=true],
+#nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + toolbar,
+#nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar {
   -moz-appearance: none;
   margin-top: 0; /* don't overlay the bottom border of the tabs toolbar */
   padding-top: 4px !important;
@@ -124,17 +124,17 @@ toolbar[mode="full"] toolbarseparator {
 }
 
 #PersonalToolbar:-moz-lwtheme,
-#navigator-toolbox[tabsontop="true"] > #nav-bar:-moz-lwtheme,
-#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar:-moz-lwtheme,
-#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:-moz-lwtheme {
+#nav-bar[tabsontop=true]:-moz-lwtheme,
+#nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + toolbar:-moz-lwtheme,
+#nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar:-moz-lwtheme {
   background-color: transparent;
   border-bottom-color: transparent;
 }
 
 #PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive,
-#navigator-toolbox[tabsontop="true"] > #nav-bar:not(:-moz-lwtheme):-moz-window-inactive,
-#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar:not(:-moz-lwtheme):-moz-window-inactive,
-#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive {
+#nav-bar[tabsontop=true]:not(:-moz-lwtheme):-moz-window-inactive,
+#nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + toolbar:not(:-moz-lwtheme):-moz-window-inactive,
+#nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive {
   background-color: -moz-mac-chrome-inactive;
   border-bottom-color: rgba(0, 0, 0, 0.32);
 }

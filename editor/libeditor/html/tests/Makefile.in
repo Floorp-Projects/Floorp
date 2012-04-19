@@ -92,6 +92,7 @@ _TEST_FILES = \
 		test_bug674861.html \
 		test_bug676401.html \
 		test_bug677752.html \
+		test_bug686203.html \
 		test_bug697842.html \
 		test_bug725069.html \
 		test_bug735059.html \
