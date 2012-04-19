@@ -647,7 +647,7 @@ date_UTC(JSContext *cx, unsigned argc, Value *vp)
     if (!date_msecFromArgs(cx, args, &msec_time))
         return JS_FALSE;
 
-    msec_time = TIMECLIP(msec_time);
+    msec_time = TimeClip(msec_time);
 
     args.rval().setNumber(msec_time);
     return JS_TRUE;
@@ -1206,7 +1206,7 @@ date_parse(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    result = TIMECLIP(result);
+    result = TimeClip(result);
     vp->setNumber(result);
     return true;
 }
@@ -1747,7 +1747,7 @@ date_setTime(JSContext *cx, unsigned argc, Value *vp)
     if (!ToNumber(cx, args[0], &result))
         return false;
 
-    return SetUTCTime(cx, obj, TIMECLIP(result), &args.rval());
+    return SetUTCTime(cx, obj, TimeClip(result), &args.rval());
 }
 
 static JSBool
@@ -1843,7 +1843,7 @@ date_makeTime(JSContext *cx, Native native, unsigned maxargs, JSBool local, unsi
     if (local)
         result = UTC(result, cx);
 
-    return SetUTCTime(cx, obj, TIMECLIP(result), &args.rval());
+    return SetUTCTime(cx, obj, TimeClip(result), &args.rval());
 }
 
 static JSBool
@@ -1973,7 +1973,7 @@ date_makeDate(JSContext *cx, Native native, unsigned maxargs, JSBool local, unsi
     if (local)
         result = UTC(result, cx);
 
-    return SetUTCTime(cx, obj, TIMECLIP(result), &args.rval());
+    return SetUTCTime(cx, obj, TimeClip(result), &args.rval());
 }
 
 static JSBool
@@ -2046,7 +2046,7 @@ date_setYear(JSContext *cx, unsigned argc, Value *vp)
     result = MakeDate(day, TimeWithinDay(t));
     result = UTC(result, cx);
 
-    return SetUTCTime(cx, obj, TIMECLIP(result), &args.rval());
+    return SetUTCTime(cx, obj, TimeClip(result), &args.rval());
 }
 
 /* constants for toString, toUTCString */
@@ -2623,7 +2623,7 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
             /* the argument is a millisecond number */
             if (!ToNumber(cx, args[0], &d))
                 return false;
-            d = TIMECLIP(d);
+            d = TimeClip(d);
         } else {
             /* the argument is a string; parse it. */
             JSString *str = ToString(cx, args[0]);
@@ -2637,7 +2637,7 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
             if (!date_parseString(linearStr, &d, cx))
                 d = js_NaN;
             else
-                d = TIMECLIP(d);
+                d = TimeClip(d);
         }
     } else {
         double msec_time;
@@ -2646,7 +2646,7 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
 
         if (MOZ_DOUBLE_IS_FINITE(msec_time)) {
             msec_time = UTC(msec_time, cx);
-            msec_time = TIMECLIP(msec_time);
+            msec_time = TimeClip(msec_time);
         }
         d = msec_time;
     }
