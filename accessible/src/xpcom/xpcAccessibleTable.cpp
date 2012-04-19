@@ -22,6 +22,32 @@ xpcAccessibleTable::GetCaption(nsIAccessible** aCaption)
 }
 
 nsresult
+xpcAccessibleTable::GetColumnCount(PRInt32* aColumnCount)
+{
+  NS_ENSURE_ARG_POINTER(aColumnCount);
+  *aColumnCount = 0;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  *aColumnCount = mTable->ColCount();
+  return NS_OK;
+}
+
+nsresult
+xpcAccessibleTable::GetRowCount(PRInt32* aRowCount)
+{
+  NS_ENSURE_ARG_POINTER(aRowCount);
+  *aRowCount = 0;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  *aRowCount = mTable->RowCount();
+  return NS_OK;
+}
+
+nsresult
 xpcAccessibleTable::GetSummary(nsAString& aSummary)
 {
   if (!mTable)
