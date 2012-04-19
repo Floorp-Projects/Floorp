@@ -317,6 +317,14 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                  PRUint32 aActionType)
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::InvokeDragSession"));
+
+    // If the previous source drag has not yet completed, signal handlers need
+    // to be removed from mGrabWidget and dragend needs to be dispatched to
+    // the source node, but we can't call EndDragSession yet because we don't
+    // know whether or not the drag succeeded.
+    if (mSourceNode)
+        return NS_ERROR_NOT_AVAILABLE;
+
     nsresult rv = nsBaseDragService::InvokeDragSession(aDOMNode,
                                                        aArrayTransferables,
                                                        aRegion, aActionType);
