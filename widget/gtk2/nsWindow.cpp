@@ -272,9 +272,6 @@ static void    drag_data_received_event_cb(GtkWidget *aWidget,
 /* initialization static functions */
 static nsresult    initialize_prefs        (void);
 
-// this is the last window that had a drag event happen on it.
-nsWindow *nsWindow::sLastDragMotionWindow = NULL;
-
 // Time of the last button release event. We use it to detect when the
 // drag ended before we could properly setup drag and drop.
 static guint32 sLastButtonReleaseTime = 0;
@@ -433,9 +430,6 @@ nsWindow::nsWindow()
 nsWindow::~nsWindow()
 {
     LOG(("nsWindow::~nsWindow() [%p]\n", (void *)this));
-    if (sLastDragMotionWindow == this) {
-        sLastDragMotionWindow = NULL;
-    }
 
     delete[] mTransparencyBitmap;
     mTransparencyBitmap = nsnull;
@@ -687,6 +681,11 @@ nsWindow::Destroy(void)
         gRollupListener = nsnull;
     }
 
+    nsDragService *dragService = nsDragService::GetInstance();
+    if (this == dragService->GetMostRecentDestWindow()) {
+        dragService->ScheduleLeaveEvent();
+    }
+
     NativeShow(false);
 
     if (mIMModule) {
@@ -714,11 +713,6 @@ nsWindow::Destroy(void)
     // Destroy thebes surface now. Badness can happen if we destroy
     // the surface after its X Window.
     mThebesSurface = nsnull;
-
-    if (mDragLeaveTimer) {
-        mDragLeaveTimer->Cancel();
-        mDragLeaveTimer = nsnull;
-    }
 
     GtkWidget *owningWidget = GetMozContainerWidget();
     if (mShell) {
@@ -3310,35 +3304,6 @@ nsWindow::ThemeChanged()
 }
 
 void
-nsWindow::CheckNeedDragLeave(nsWindow* aInnerMostWidget,
-                             nsIDragService* aDragService,
-                             GdkDragContext *aDragContext,
-                             nscoord aX, nscoord aY)
-{
-    // check to see if there was a drag motion window already in place
-    if (sLastDragMotionWindow) {
-        // same as the last window so no need for dragleave event
-        if (sLastDragMotionWindow == aInnerMostWidget) {
-            UpdateDragStatus(aDragContext, aDragService);
-            return;
-        }
-
-        // send a dragleave event to the last window that got a motion event
-        nsRefPtr<nsWindow> kungFuDeathGrip = sLastDragMotionWindow;
-        sLastDragMotionWindow->OnDragLeave();
-    }
-
-    // Make sure that the drag service knows we're now dragging
-    aDragService->StartDragSession();
-
-    // update our drag status
-    UpdateDragStatus(aDragContext, aDragService);
-
-    // set the last window to the innerMostWidget
-    sLastDragMotionWindow = aInnerMostWidget;
-}
-
-void
 nsWindow::DispatchDragMotionEvents(nsDragService *aDragService,
                                    const nsIntPoint& aWindowPoint, guint aTime)
 {
@@ -3384,170 +3349,6 @@ nsWindow::DispatchDragEvent(PRUint32 aMsg, const nsIntPoint& aRefPoint,
 
     nsEventStatus status;
     DispatchEvent(&event, status);
-}
-
-gboolean
-nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
-                            GdkDragContext *aDragContext,
-                            gint aX,
-                            gint aY,
-                            guint aTime,
-                            gpointer aData)
-{
-    LOGDRAG(("nsWindow::OnDragMotionSignal\n"));
-
-    // get our drag context
-    nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
-    nsDragService *dragServiceGTK =
-        static_cast<nsDragService*>(dragService.get());
-
-    // first, figure out which internal widget this drag motion actually
-    // happened on
-    nscoord retx = 0;
-    nscoord rety = 0;
-
-    GdkWindow *innerWindow = get_inner_gdk_window(gtk_widget_get_window(aWidget), aX, aY,
-                                                  &retx, &rety);
-    nsRefPtr<nsWindow> innerMostWidget = get_window_for_gdk_window(innerWindow);
-
-    if (!innerMostWidget)
-        innerMostWidget = this;
-
-    // clear any drag leave timer that might be pending so that it
-    // doesn't get processed when we actually go out to get data.
-    if (mDragLeaveTimer) {
-        mDragLeaveTimer->Cancel();
-        mDragLeaveTimer = nsnull;
-    }
-
-    CheckNeedDragLeave(innerMostWidget, dragService, aDragContext, retx, rety);
-
-    // update the drag context
-    dragServiceGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
-
-    innerMostWidget->
-        DispatchDragMotionEvents(dragServiceGTK, nsIntPoint(retx, rety), aTime);
-
-    // Reply to tell the source whether we can drop and what action would be
-    // taken.
-    dragServiceGTK->TargetEndDragMotion(aWidget, aDragContext, aTime);
-
-    // and unset our context
-    dragServiceGTK->TargetSetLastContext(0, 0, 0);
-
-    return TRUE;
-}
-
-void
-nsWindow::OnDragLeaveEvent(GtkWidget *aWidget,
-                           GdkDragContext *aDragContext,
-                           guint aTime,
-                           gpointer aData)
-{
-    // XXX Do we want to pass this on only if the event's subwindow is null?
-
-    LOGDRAG(("nsWindow::OnDragLeaveSignal(%p)\n", (void*)this));
-
-    if (mDragLeaveTimer) {
-        return;
-    }
-
-    // create a fast timer - we're delaying the drag leave until the
-    // next mainloop in hopes that we might be able to get a drag drop
-    // signal
-    mDragLeaveTimer = do_CreateInstance("@mozilla.org/timer;1");
-    NS_ASSERTION(mDragLeaveTimer, "Failed to create drag leave timer!");
-    // fire this baby asafp, but not too quickly... see bug 216800 ;-)
-    mDragLeaveTimer->InitWithFuncCallback(DragLeaveTimerCallback,
-                                          (void *)this,
-                                          20, nsITimer::TYPE_ONE_SHOT);
-}
-
-gboolean
-nsWindow::OnDragDropEvent(GtkWidget *aWidget,
-                          GdkDragContext *aDragContext,
-                          gint aX,
-                          gint aY,
-                          guint aTime,
-                          gpointer aData)
-
-{
-    LOGDRAG(("nsWindow::OnDragDropSignal\n"));
-
-    // get our drag context
-    nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
-    nsDragService *dragServiceGTK = static_cast<nsDragService*>(dragService.get());
-
-    dragServiceGTK->SetDragEndPoint(nsIntPoint(aX, aY) + WidgetToScreenOffset());
-
-    nscoord retx = 0;
-    nscoord rety = 0;
-
-    GdkWindow *innerWindow = get_inner_gdk_window(gtk_widget_get_window(aWidget), aX, aY,
-                                                  &retx, &rety);
-    nsRefPtr<nsWindow> innerMostWidget = get_window_for_gdk_window(innerWindow);
-
-    if (!innerMostWidget)
-        innerMostWidget = this;
-
-    // clear any drag leave timer that might be pending so that it
-    // doesn't get processed when we actually go out to get data.
-    if (mDragLeaveTimer) {
-        mDragLeaveTimer->Cancel();
-        mDragLeaveTimer = nsnull;
-    }
-
-    CheckNeedDragLeave(innerMostWidget, dragService, aDragContext, retx, rety);
-
-    // http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#drag-and-drop-processing-model
-    // (as at 27 December 2010) indicates that a "drop" event should only be
-    // fired (at the current target element) if the current drag operation is
-    // not none.  The current drag operation will only be set to a non-none
-    // value during a "dragover" event.
-    //
-    // If the user has ended the drag before any dragover events have been
-    // sent, then the spec recommends skipping the drop (because the current
-    // drag operation is none).  However, here we assume that, by releasing
-    // the mouse button, the user has indicated that they want to drop, so we
-    // proceed with the drop where possible.
-    //
-    // In order to make the events appear to content in the same way as if the
-    // spec is being followed we make sure to dispatch a "dragover" event with
-    // appropriate coordinates and check canDrop before the "drop" event.
-    //
-    // When the Xdnd protocol is used for source/destination communication (as
-    // should be the case with GTK source applications) a dragover event
-    // should have already been sent during the drag-motion signal, which
-    // would have already been received because XdndDrop messages do not
-    // contain a position.  However, we can't assume the same when the Motif
-    // protocol is used.
-
-    dragServiceGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
-
-    innerMostWidget->
-        DispatchDragMotionEvents(dragServiceGTK, nsIntPoint(retx, rety), aTime);
-
-    gboolean success = innerMostWidget->
-        DispatchDragDropEvent(dragServiceGTK, nsIntPoint(retx, rety), aTime);
-
-    // before we unset the context we need to do a drop_finish
-
-    gdk_drop_finish(aDragContext, success, aTime);
-
-    // after a drop takes place we need to make sure that the drag
-    // service doesn't think that it still has a context.  if the other
-    // way ( besides the drop ) to end a drag event is during the leave
-    // event and and that case is handled in that handler.
-    dragServiceGTK->TargetSetLastContext(0, 0, 0);
-
-    // clear the sLastDragMotion window
-    sLastDragMotionWindow = 0;
-
-    // Make sure to end the drag session. If this drag started in a
-    // different app, we won't get a drag_end signal to end it from.
-    dragService->EndDragSession(true);
-
-    return TRUE;
 }
 
 void
@@ -5910,7 +5711,7 @@ nsWindow::InitDragEvent(nsDragEvent &aEvent)
 // drag context.  Gtk gets this from a combination of the key settings
 // and what the source is offering.
 
-void
+/* static */ void
 nsWindow::UpdateDragStatus(GdkDragContext *aDragContext,
                            nsIDragService *aDragService)
 {
@@ -5973,9 +5774,24 @@ drag_motion_event_cb(GtkWidget *aWidget,
       }
     }
 
-    return window->OnDragMotionEvent(aWidget,
-                                     aDragContext,
-                                     aX, aY, aTime, aData);
+    // figure out which internal widget this drag motion actually happened on
+    nscoord retx = 0;
+    nscoord rety = 0;
+
+    GdkWindow *innerWindow =
+        get_inner_gdk_window(gtk_widget_get_window(aWidget), aX, aY,
+                             &retx, &rety);
+    nsRefPtr<nsWindow> innerMostWindow = get_window_for_gdk_window(innerWindow);
+
+    if (!innerMostWindow) {
+        innerMostWindow = window;
+    }
+
+    LOGDRAG(("nsWindow drag-motion signal for %p\n", (void*)innerMostWindow));
+
+    return nsDragService::GetInstance()->
+        ScheduleMotionEvent(innerMostWindow, aDragContext,
+                            nsIntPoint(aX, aY), aTime);
 }
 
 static void
@@ -5988,7 +5804,27 @@ drag_leave_event_cb(GtkWidget *aWidget,
     if (!window)
         return;
 
-    window->OnDragLeaveEvent(aWidget, aDragContext, aTime, aData);
+    nsDragService *dragService = nsDragService::GetInstance();
+
+    nsWindow *mostRecentDragWindow = dragService->GetMostRecentDestWindow();
+    if (!mostRecentDragWindow) {
+        NS_WARNING("Spurious drag leave signal");
+        return;
+    }
+
+    GtkWidget *mozContainer = mostRecentDragWindow->GetMozContainerWidget();
+    if (aWidget != mozContainer)
+    {
+        // When the drag moves between widgets, GTK can send leave signal for
+        // the old widget after the motion or drop signal for the new widget.
+        // We'll send the leave event when the motion or drop event is run.
+        return;
+    }
+
+    LOGDRAG(("nsWindow drag-leave signal for %p\n",
+             (void*)mostRecentDragWindow));
+
+    dragService->ScheduleLeaveEvent();
 }
 
 
@@ -6004,9 +5840,24 @@ drag_drop_event_cb(GtkWidget *aWidget,
     if (!window)
         return FALSE;
 
-    return window->OnDragDropEvent(aWidget,
-                                   aDragContext,
-                                   aX, aY, aTime, aData);
+    // figure out which internal widget this drag motion actually happened on
+    nscoord retx = 0;
+    nscoord rety = 0;
+
+    GdkWindow *innerWindow =
+        get_inner_gdk_window(gtk_widget_get_window(aWidget), aX, aY,
+                             &retx, &rety);
+    nsRefPtr<nsWindow> innerMostWindow = get_window_for_gdk_window(innerWindow);
+
+    if (!innerMostWindow) {
+        innerMostWindow = window;
+    }
+
+    LOGDRAG(("nsWindow drag-drop signal for %p\n", (void*)innerMostWindow));
+
+    return nsDragService::GetInstance()->
+        ScheduleDropEvent(innerMostWindow, aDragContext,
+                          nsIntPoint(aX, aY), aTime);
 }
 
 static void
@@ -6039,30 +5890,6 @@ initialize_prefs(void)
         Preferences::GetBool("mozilla.widget.disable-native-theme", false);
 
     return NS_OK;
-}
-
-void
-nsWindow::FireDragLeaveTimer(void)
-{
-    LOGDRAG(("nsWindow::FireDragLeaveTimer(%p)\n", (void*)this));
-
-    mDragLeaveTimer = nsnull;
-
-    // clean up any pending drag motion window info
-    if (sLastDragMotionWindow) {
-        nsRefPtr<nsWindow> kungFuDeathGrip = sLastDragMotionWindow;
-        // send our leave signal
-        sLastDragMotionWindow->OnDragLeave();
-        sLastDragMotionWindow = 0;
-    }
-}
-
-/* static */
-void
-nsWindow::DragLeaveTimerCallback(nsITimer *aTimer, void *aClosure)
-{
-    nsRefPtr<nsWindow> window = static_cast<nsWindow *>(aClosure);
-    window->FireDragLeaveTimer();
 }
 
 static GdkWindow *
