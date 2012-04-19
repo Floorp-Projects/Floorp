@@ -61,7 +61,7 @@ namespace js {
 
 /* ES5 15.9.1.14. */
 inline double
-TIMECLIP(double time)
+TimeClip(double time)
 {
     /* Steps 1-2. */
     if (!MOZ_DOUBLE_IS_FINITE(time) || abs(time) > 8.64e15)
