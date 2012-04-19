@@ -1336,8 +1336,10 @@ nsDragService::SourceEndDragSession(GdkDragContext *aContext,
     // this just releases the list of data items that we provide
     mSourceDataItems = nsnull;
 
-    if (!mDoingDrag)
-        return; // EndDragSession() was already called on drop or drag-failed
+    if (!mDoingDrag || mScheduledTask == eDragTaskSourceEnd)
+        // EndDragSession() was already called on drop
+        // or SourceEndDragSession on drag-failed
+        return;
 
     if (mEndDragPoint.x < 0) {
         // We don't have a drag end point, so guess
@@ -1390,8 +1392,8 @@ nsDragService::SourceEndDragSession(GdkDragContext *aContext,
         mDataTransfer->SetDropEffectInt(dropEffect);
     }
 
-    // Inform the drag session that we're ending the drag.
-    EndDragSession(true);
+    // Schedule the appropriate drag end dom events.
+    Schedule(eDragTaskSourceEnd, nsnull, NULL, nsIntPoint(), 0);
 }
 
 static void
@@ -1680,11 +1682,11 @@ invisibleSourceDragEnd(GtkWidget        *aWidget,
     dragService->SourceEndDragSession(aContext, MOZ_GTK_DRAG_RESULT_SUCCESS);
 }
 
-// The following methods handle responding to GTK drag destination signals and
+// The following methods handle responding to GTK drag signals and
 // tracking state between these signals.
 //
 // In general, GTK does not expect us to run the event loop while handling its
-// drag destination signals, however our drag event handlers may run the
+// drag signals, however our drag event handlers may run the
 // event loop, most often to fetch information about the drag data.
 // 
 // GTK, for example, uses the return value from drag-motion signals to
@@ -1698,6 +1700,14 @@ invisibleSourceDragEnd(GtkWidget        *aWidget,
 // returns so that when the Motif drag protocol is used, the
 // XmTRANSFER_SUCCESS during gtk_drag_finish is sent after the XmDROP_START
 // reply sent on return from the drag-drop signal handler.
+//
+// Similarly drag-end for a successful drag and drag-failed are not good
+// times to run a nested event loop as gtk_drag_drop_finished() and
+// gtk_drag_source_info_destroy() don't gtk_drag_clear_source_info() or remove
+// drop_timeout until after at least the first of these signals is sent.
+// Processing other events (e.g. a slow GDK_DROP_FINISHED reply, or the drop
+// timeout) could cause gtk_drag_drop_finished to be called again with the
+// same GtkDragSourceInfo, which won't like being destroyed twice.
 //
 // Therefore we reply to the signals immediately and schedule a task to
 // dispatch the Gecko events, which may run the event loop.
@@ -1766,14 +1776,18 @@ nsDragService::Schedule(DragTask aTask, nsWindow *aWindow,
                         GdkDragContext *aDragContext,
                         nsIntPoint aWindowPoint, guint aTime)
 {
-    // If we haven't yet run a scheduled drop task, just say that
-    // we are not ready to receive another drop.
-    if (mScheduledTask == eDragTaskDrop)
-        return FALSE;
-
     // If there is an existing leave or motion task scheduled, then that
     // will be replaced.  When the new task is run, it will dispatch
     // any necessary leave or motion events.
+
+    // If aTask is eDragTaskSourceEnd, then it will replace even a scheduled
+    // drop event (which could happen if the drop event has not been processed
+    // within the allowed time).  Otherwise, if we haven't yet run a scheduled
+    // drop or end task, just say that we are not ready to receive another
+    // drop.
+    if (mScheduledTask == eDragTaskSourceEnd ||
+        (mScheduledTask == eDragTaskDrop && aTask != eDragTaskSourceEnd))
+        return FALSE;
 
     mScheduledTask = aTask;
     mPendingWindow = aWindow;
@@ -1834,7 +1848,12 @@ nsDragService::RunScheduledTask()
     mTargetWindow = mPendingWindow.forget();
     mTargetWindowPoint = mPendingWindowPoint;
 
-    if (task == eDragTaskLeave) {
+    if (task == eDragTaskLeave || task == eDragTaskSourceEnd) {
+        if (task == eDragTaskSourceEnd) {
+            // Dispatch drag end events.
+            EndDragSession(true);
+        }
+
         // Nothing more to do
         // Returning false removes the task source from the event loop.
         mTaskSource = 0;
