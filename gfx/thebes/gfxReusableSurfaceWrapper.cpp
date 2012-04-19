@@ -61,7 +61,7 @@ gfxReusableSurfaceWrapper::GetWritable(gfxImageSurface** aSurface)
   }
 
   // Something else is reading the surface, copy it
-  gfxImageSurface* copySurface = new gfxImageSurface(mSurface->GetSize(), mSurface->Format());
+  gfxImageSurface* copySurface = new gfxImageSurface(mSurface->GetSize(), mSurface->Format(), false);
   copySurface->CopyFrom(mSurface);
   *aSurface = copySurface;
 
