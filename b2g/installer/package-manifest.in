@@ -413,6 +413,7 @@
 #ifdef MOZ_B2G_RIL
 @BINPATH@/components/RadioInterfaceLayer.manifest
 @BINPATH@/components/RadioInterfaceLayer.js
+@BINPATH@/components/RILContentHelper.js
 @BINPATH@/components/SmsDatabaseService.manifest
 @BINPATH@/components/SmsDatabaseService.js
 @BINPATH@/components/WifiWorker.js
