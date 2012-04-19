@@ -25,6 +25,7 @@ CPPSRCS = \
 
 XPIDLSRCS = \
   nsIAudioManager.idl \
+  nsINetworkManager.idl \
   nsIRadioInterfaceLayer.idl \
   nsIWorkerHolder.idl \
   $(NULL)
