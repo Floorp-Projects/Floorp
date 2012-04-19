@@ -761,28 +761,20 @@ IonCompile(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode *osrPc)
     if (!info)
         return false;
 
-    if (cx->typeInferenceEnabled()) {
-        types::AutoEnterTypeInference enter(cx, true);
-        TypeInferenceOracle oracle;
+    types::AutoEnterTypeInference enter(cx, true);
+    TypeInferenceOracle oracle;
 
-        if (!oracle.init(cx, script))
-            return false;
+    if (!oracle.init(cx, script))
+        return false;
 
-        types::AutoEnterCompilation enterCompiler(cx, script, false, 0);
+    types::AutoEnterCompilation enterCompiler(cx, script, false, 0);
 
-        IonBuilder builder(cx, &fp->scopeChain(), temp, graph, &oracle, *info);
-        if (!TestCompiler(builder, graph)) {
-            IonSpew(IonSpew_Abort, "IM Compilation failed.");
-            return false;
-        }
-    } else {
-        DummyOracle oracle;
-        IonBuilder builder(cx, &fp->scopeChain(), temp, graph, &oracle, *info);
-        if (!TestCompiler(builder, graph)) {
-            IonSpew(IonSpew_Abort, "IM Compilation failed.");
-            return false;
-        }
+    IonBuilder builder(cx, &fp->scopeChain(), temp, graph, &oracle, *info);
+    if (!TestCompiler(builder, graph)) {
+        IonSpew(IonSpew_Abort, "IM Compilation failed.");
+        return false;
     }
+
     return true;
 }
 
