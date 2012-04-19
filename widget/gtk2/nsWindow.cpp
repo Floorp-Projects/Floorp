@@ -55,7 +55,6 @@
 
 #include "nsWidgetsCID.h"
 #include "nsDragService.h"
-#include "nsIDragSessionGTK.h"
 
 #include "nsGtkKeyUtils.h"
 #include "nsGtkCursors.h"
@@ -3332,12 +3331,9 @@ nsWindow::OnDragDataReceivedEvent(GtkWidget *aWidget,
 {
     LOGDRAG(("nsWindow::OnDragDataReceived(%p)\n", (void*)this));
 
-    // get our drag context
-    nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
-    nsCOMPtr<nsIDragSessionGTK> dragSessionGTK = do_QueryInterface(dragService);
-
-    dragSessionGTK->TargetDataReceived(aWidget, aDragContext, aX, aY,
-                                       aSelectionData, aInfo, aTime);
+    nsDragService::GetInstance()->
+        TargetDataReceived(aWidget, aDragContext, aX, aY,
+                           aSelectionData, aInfo, aTime);
 }
 
 static void
