@@ -90,6 +90,7 @@ let DebuggerView = {
  */
 function ScriptsView() {
   this._onScriptsChange = this._onScriptsChange.bind(this);
+  this._onScriptsSearch = this._onScriptsSearch.bind(this);
 }
 
 ScriptsView.prototype = {
@@ -101,6 +102,14 @@ ScriptsView.prototype = {
     while (this._scripts.firstChild) {
       this._scripts.removeChild(this._scripts.firstChild);
     }
+  },
+
+  /**
+   * Removes the input in the searchbox and unhides all the scripts.
+   */
+  clearSearch: function DVS_clearSearch() {
+    this._searchbox.value = "";
+    this._onScriptsSearch({});
   },
 
   /**
@@ -206,6 +215,18 @@ ScriptsView.prototype = {
   },
 
   /**
+   * Gets the number of visible (hidden=false) scripts in the container.
+   * @return number
+   */
+  get visibleItemsCount() {
+    let count = 0;
+    for (let i = 0, l = this._scripts.itemCount; i < l; i++) {
+      count += this._scripts.getItemAtIndex(i).hidden ? 0 : 1;
+    }
+    return count;
+  },
+
+  /**
    * Prepares a script to be added to the scripts container. This allows
    * for a large number of scripts to be batched up before being
    * alphabetically sorted and added in the container.
@@ -297,24 +318,108 @@ ScriptsView.prototype = {
   },
 
   /**
-   * The cached click listener for the scripts container.
+   * The click listener for the scripts container.
    */
   _onScriptsChange: function DVS__onScriptsChange() {
     let script = this._scripts.selectedItem.getUserData("sourceScript");
+    this._preferredScript = script;
     DebuggerController.SourceScripts.showScript(script);
   },
 
   /**
-   * The cached scripts container.
+   * The search listener for the scripts search box.
+   */
+  _onScriptsSearch: function DVS__onScriptsSearch(e) {
+    let editor = DebuggerView.editor;
+    let scripts = this._scripts;
+    let rawValue = this._searchbox.value.toLowerCase();
+
+    let rawLength = rawValue.length;
+    let lastColon = rawValue.lastIndexOf(":");
+    let lastAt = rawValue.lastIndexOf("@");
+
+    let fileEnd = lastColon != -1 ? lastColon : lastAt != -1 ? lastAt : rawLength;
+    let lineEnd = lastAt != -1 ? lastAt : rawLength;
+
+    let file = rawValue.slice(0, fileEnd);
+    let line = window.parseInt(rawValue.slice(fileEnd + 1, lineEnd)) || -1;
+    let token = rawValue.slice(lineEnd + 1);
+
+    // Presume we won't find anything.
+    scripts.selectedItem = this._preferredScript;
+
+    // If we're not searching for a file anymore, unhide all the scripts.
+    if (!file) {
+      for (let i = 0, l = scripts.itemCount; i < l; i++) {
+        scripts.getItemAtIndex(i).hidden = false;
+      }
+    } else {
+      for (let i = 0, l = scripts.itemCount, found = false; i < l; i++) {
+        let item = scripts.getItemAtIndex(i);
+        let target = item.value.toLowerCase();
+
+        // Search is not case sensitive, and is tied to the url not the label.
+        if (target.match(file)) {
+          item.hidden = false;
+
+          if (!found) {
+            found = true;
+            scripts.selectedItem = item;
+          }
+        }
+        // Hide what doesn't match our search.
+        else {
+          item.hidden = true;
+        }
+      }
+    }
+    if (line > -1) {
+      editor.setCaretPosition(line - 1);
+    }
+    if (token) {
+      let offset = editor.find(token, { ignoreCase: true });
+      if (offset > -1) {
+        editor.setCaretPosition(0);
+        editor.setCaretOffset(offset);
+      }
+    }
+  },
+
+  /**
+   * The keyup listener for the scripts search box.
+   */
+  _onScriptsKeyUp: function DVS__onScriptsKeyUp(e) {
+    if (e.keyCode === e.DOM_VK_ESCAPE) {
+      DebuggerView.editor.focus();
+      return;
+    }
+
+    if (e.keyCode === e.DOM_VK_RETURN || e.keyCode === e.DOM_VK_ENTER) {
+      let editor = DebuggerView.editor;
+      let offset = editor.findNext(true);
+      if (offset > -1) {
+        editor.setCaretPosition(0);
+        editor.setCaretOffset(offset);
+      }
+    }
+  },
+
+  /**
+   * The cached scripts container and search box.
    */
   _scripts: null,
+  _searchbox: null,
 
   /**
    * Initialization function, called when the debugger is initialized.
    */
   initialize: function DVS_initialize() {
     this._scripts = document.getElementById("scripts");
+    this._searchbox = document.getElementById("scripts-search");
     this._scripts.addEventListener("select", this._onScriptsChange, false);
+    this._searchbox.addEventListener("select", this._onScriptsSearch, false);
+    this._searchbox.addEventListener("input", this._onScriptsSearch, false);
+    this._searchbox.addEventListener("keyup", this._onScriptsKeyUp, false);
     this.commitScripts();
   },
 
@@ -323,7 +428,11 @@ ScriptsView.prototype = {
    */
   destroy: function DVS_destroy() {
     this._scripts.removeEventListener("select", this._onScriptsChange, false);
+    this._searchbox.removeEventListener("select", this._onScriptsSearch, false);
+    this._searchbox.removeEventListener("input", this._onScriptsSearch, false);
+    this._searchbox.removeEventListener("keyup", this._onScriptsKeyUp, false);
     this._scripts = null;
+    this._searchbox = null;
   }
 };
 
@@ -365,6 +474,8 @@ StackFramesView.prototype = {
     else {
       status.textContent = "";
     }
+
+    DebuggerView.Scripts.clearSearch();
   },
 
   /**
