@@ -51,81 +51,6 @@
 using namespace js;
 using namespace js::frontend;
 
-/*
- * Walk the function box list at |*funboxHead|, removing boxes for deleted
- * functions and cleaning up method lists. We do this once, before
- * performing function analysis, to avoid traversing possibly long function
- * lists repeatedly when recycling nodes.
- *
- * There are actually three possible states for function boxes and their
- * nodes:
- *
- * - Live: funbox->node points to the node, and funbox->node->pn_funbox
- *   points back to the funbox.
- *
- * - Recycled: funbox->node points to the node, but funbox->node->pn_funbox
- *   is NULL. When a function node is part of a tree that gets recycled, we
- *   must avoid corrupting any method list the node is on, so we leave the
- *   function node unrecycled until we call CleanFunctionList. At recycle
- *   time, we clear such nodes' pn_funbox pointers to indicate that they
- *   are deleted and should be recycled once we get here.
- *
- * - Mutated: funbox->node is NULL; the contents of the node itself could
- *   be anything. When we mutate a function node into some other kind of
- *   node, we lose all indication that the node was ever part of the
- *   function box tree; it could later be recycled, reallocated, and turned
- *   into anything at all. (Fortunately, method list members never get
- *   mutated, so we don't have to worry about that case.)
- *   ParseNodeAllocator::prepareNodeForMutation clears the node's function
- *   box's node pointer, disconnecting it entirely from the function box tree,
- *   and marking the function box to be trimmed out.
- */
-static void
-CleanFunctionList(ParseNodeAllocator *allocator, FunctionBox **funboxHead)
-{
-    FunctionBox **link = funboxHead;
-    while (FunctionBox *box = *link) {
-        if (!box->node) {
-            /*
-             * This funbox's parse node was mutated into something else. Drop the box,
-             * and stay at the same link.
-             */
-            *link = box->siblings;
-        } else if (!box->node->pn_funbox) {
-            /*
-             * This funbox's parse node is ready to be recycled. Drop the box, recycle
-             * the node, and stay at the same link.
-             */
-            *link = box->siblings;
-            allocator->freeNode(box->node);
-        } else {
-            /* The function is still live. */
-
-            /* First, remove nodes for deleted functions from our methods list. */
-            {
-                ParseNode **methodLink = &box->methods;
-                while (ParseNode *method = *methodLink) {
-                    /* Method nodes are never rewritten in place to be other kinds of nodes. */
-                    JS_ASSERT(method->isArity(PN_FUNC));
-                    if (!method->pn_funbox) {
-                        /* Deleted: drop the node, and stay on this link. */
-                        *methodLink = method->pn_link;
-                    } else {
-                        /* Live: keep the node, and move to the next link. */
-                        methodLink = &method->pn_link;
-                    }
-                }
-            }
-
-            /* Second, remove boxes for deleted functions from our kids list. */
-            CleanFunctionList(allocator, &box->kids);
-
-            /* Keep the box on the list, and move to the next link. */
-            link = &box->siblings;
-        }
-    }
-}
-
 static void
 FlagHeavyweights(Definition *dn, FunctionBox *funbox, uint32_t *tcflags)
 {
@@ -153,7 +78,12 @@ SetFunctionKinds(FunctionBox *funbox, uint32_t *tcflags, bool isDirectEval)
 {
     for (; funbox; funbox = funbox->siblings) {
         ParseNode *fn = funbox->node;
+        if (!fn)
+            continue;
+
         ParseNode *pn = fn->pn_body;
+        if (!pn)
+            continue;
 
         if (funbox->kids)
             SetFunctionKinds(funbox->kids, tcflags, isDirectEval);
@@ -261,7 +191,6 @@ MarkExtensibleScopeDescendants(JSContext *context, FunctionBox *funbox, bool has
 bool
 frontend::AnalyzeFunctions(TreeContext *tc)
 {
-    CleanFunctionList(&tc->parser->allocator, &tc->functionList);
     if (!tc->functionList)
         return true;
     if (!MarkExtensibleScopeDescendants(tc->parser->context, tc->functionList, false))
