@@ -42,7 +42,6 @@
 #define nsDragService_h__
 
 #include "nsBaseDragService.h"
-#include "nsIDragSessionGTK.h"
 #include "nsIObserver.h"
 #include <gtk/gtk.h>
 
@@ -76,7 +75,6 @@ class nsAutoRefTraits<GdkDragContext> :
  */
 
 class nsDragService : public nsBaseDragService,
-                      public nsIDragSessionGTK,
                       public nsIObserver
 {
 public:
@@ -103,29 +101,18 @@ public:
                                       PRUint32 aItemIndex);
     NS_IMETHOD IsDataFlavorSupported (const char *aDataFlavor, bool *_retval);
 
-    // nsIDragSessionGTK
+    // Methods called from nsWindow to handle responding to GTK drag
+    // destination signals
 
-    NS_IMETHOD TargetSetLastContext  (GtkWidget      *aWidget,
-                                      GdkDragContext *aContext,
-                                      guint           aTime);
-    NS_IMETHOD TargetStartDragMotion (void);
-    NS_IMETHOD TargetEndDragMotion   (GtkWidget      *aWidget,
-                                      GdkDragContext *aContext,
-                                      guint           aTime);
-    NS_IMETHOD TargetDataReceived    (GtkWidget         *aWidget,
+    static nsDragService* GetInstance();
+
+    void TargetDataReceived          (GtkWidget         *aWidget,
                                       GdkDragContext    *aContext,
                                       gint               aX,
                                       gint               aY,
                                       GtkSelectionData  *aSelection_data,
                                       guint              aInfo,
                                       guint32            aTime);
-
-    NS_IMETHOD TargetSetTimeCallback (nsIDragSessionGTKTimeCB aCallback);
-
-    static nsDragService* GetInstance();
-
-    // Methods called from nsWindow to handle responding to GTK drag
-    // destination signals
 
     gboolean ScheduleMotionEvent(nsWindow *aWindow,
                                  GdkDragContext *aDragContext,
@@ -246,6 +233,7 @@ private:
     gboolean RunScheduledTask();
     void UpdateDragAction();
     void DispatchMotionEvents();
+    void ReplyToDragMotion();
     gboolean DispatchDropEvent();
 };
 
