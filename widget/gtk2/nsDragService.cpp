@@ -179,6 +179,15 @@ nsDragService::~nsDragService()
 NS_IMPL_ISUPPORTS_INHERITED2(nsDragService, nsBaseDragService,
                              nsIDragSessionGTK, nsIObserver)
 
+/* static */ nsDragService*
+nsDragService::GetInstance()
+{
+    static const nsIID iid = NS_DRAGSERVICE_CID;
+    nsCOMPtr<nsIDragService> dragService = do_GetService(iid);
+    return static_cast<nsDragService*>(dragService.get());
+    // We rely on XPCOM keeping a reference to the service.
+}
+
 // nsIObserver
 
 NS_IMETHODIMP
