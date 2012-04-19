@@ -98,6 +98,8 @@ public:
 
     NS_IMETHOD TargetSetTimeCallback (nsIDragSessionGTKTimeCB aCallback);
 
+    static nsDragService* GetInstance();
+
     //  END PUBLIC API
 
     // These methods are public only so that they can be called from functions
