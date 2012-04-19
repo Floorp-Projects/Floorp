@@ -3304,37 +3304,6 @@ nsWindow::ThemeChanged()
 }
 
 void
-nsWindow::DispatchDragMotionEvents(nsDragService *aDragService,
-                                   const nsIntPoint& aWindowPoint, guint aTime)
-{
-    aDragService->SetCanDrop(false);
-
-    aDragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
-
-    DispatchDragEvent(NS_DRAGDROP_OVER, aWindowPoint, aTime);
-}
-
-// Returns true if the drop was successful
-gboolean
-nsWindow::DispatchDragDropEvent(nsDragService *aDragService,
-                                const nsIntPoint& aWindowPoint, guint aTime)
-{
-    // We need to check mIsDestroyed here because the nsRefPtr
-    // only protects this from being deleted, it does NOT protect
-    // against nsView::~nsView() calling Destroy() on it, bug 378670.
-    if (mIsDestroyed)
-        return FALSE;
-
-    bool canDrop;
-    aDragService->GetCanDrop(&canDrop);
-    PRUint32 msg = canDrop ? NS_DRAGDROP_DROP : NS_DRAGDROP_EXIT;
-
-    DispatchDragEvent(msg, aWindowPoint, aTime);
-
-    return canDrop;
-}
-
-void
 nsWindow::DispatchDragEvent(PRUint32 aMsg, const nsIntPoint& aRefPoint,
                             guint aTime)
 {
@@ -3369,34 +3338,6 @@ nsWindow::OnDragDataReceivedEvent(GtkWidget *aWidget,
 
     dragSessionGTK->TargetDataReceived(aWidget, aDragContext, aX, aY,
                                        aSelectionData, aInfo, aTime);
-}
-
-void
-nsWindow::OnDragLeave(void)
-{
-    LOGDRAG(("nsWindow::OnDragLeave(%p)\n", (void*)this));
-
-    DispatchDragEvent(NS_DRAGDROP_EXIT, nsIntPoint(0, 0), 0);
-
-    nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
-
-    if (dragService) {
-        nsCOMPtr<nsIDragSession> currentDragSession;
-        dragService->GetCurrentSession(getter_AddRefs(currentDragSession));
-
-        if (currentDragSession) {
-            nsCOMPtr<nsIDOMNode> sourceNode;
-            currentDragSession->GetSourceNode(getter_AddRefs(sourceNode));
-
-            if (!sourceNode) {
-                // We're leaving a window while doing a drag that was
-                // initiated in a different app. End the drag session,
-                // since we're done with it for now (until the user
-                // drags back into mozilla).
-                dragService->EndDragSession(false);
-            }
-        }
-    }
 }
 
 static void
