@@ -5648,43 +5648,6 @@ nsWindow::InitDragEvent(nsDragEvent &aEvent)
     KeymapWrapper::InitInputEvent(aEvent, modifierState);
 }
 
-// This will update the drag action based on the information in the
-// drag context.  Gtk gets this from a combination of the key settings
-// and what the source is offering.
-
-/* static */ void
-nsWindow::UpdateDragStatus(GdkDragContext *aDragContext,
-                           nsIDragService *aDragService)
-{
-    // default is to do nothing
-    int action = nsIDragService::DRAGDROP_ACTION_NONE;
-    GdkDragAction gdkAction = gdk_drag_context_get_actions(aDragContext);
-
-    // set the default just in case nothing matches below
-    if (gdkAction & GDK_ACTION_DEFAULT)
-        action = nsIDragService::DRAGDROP_ACTION_MOVE;
-
-    // first check to see if move is set
-    if (gdkAction & GDK_ACTION_MOVE)
-        action = nsIDragService::DRAGDROP_ACTION_MOVE;
-
-    // then fall to the others
-    else if (gdkAction & GDK_ACTION_LINK)
-        action = nsIDragService::DRAGDROP_ACTION_LINK;
-
-    // copy is ctrl
-    else if (gdkAction & GDK_ACTION_COPY)
-        action = nsIDragService::DRAGDROP_ACTION_COPY;
-
-    // update the drag information
-    nsCOMPtr<nsIDragSession> session;
-    aDragService->GetCurrentSession(getter_AddRefs(session));
-
-    if (session)
-        session->SetDragAction(action);
-}
-
-
 static gboolean
 drag_motion_event_cb(GtkWidget *aWidget,
                      GdkDragContext *aDragContext,

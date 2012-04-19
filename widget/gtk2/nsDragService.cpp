@@ -62,6 +62,10 @@
 #include "nsCRT.h"
 #include "mozilla/Services.h"
 
+#if defined(MOZ_WIDGET_GTK2)
+#include "gtk2compat.h"
+#endif
+
 #include "gfxASurface.h"
 #include "gfxXlibSurface.h"
 #include "gfxContext.h"
@@ -1899,7 +1903,7 @@ nsDragService::RunScheduledTask()
     // contain a position.  However, we can't assume the same when the Motif
     // protocol is used.
     if (task == eDragTaskMotion || positionHasChanged) {
-        nsWindow::UpdateDragStatus(mTargetDragContext, this);
+        UpdateDragAction();
         DispatchMotionEvents();
 
         if (task == eDragTaskMotion) {
@@ -1940,6 +1944,44 @@ nsDragService::RunScheduledTask()
     // Returning false removes the task source from the event loop.
     mTaskSource = 0;
     return FALSE;
+}
+
+// This will update the drag action based on the information in the
+// drag context.  Gtk gets this from a combination of the key settings
+// and what the source is offering.
+
+void
+nsDragService::UpdateDragAction()
+{
+    // This doesn't look right.  dragSession.dragAction is used by
+    // nsContentUtils::SetDataTransferInEvent() to set the initial
+    // dataTransfer.dropEffect, so GdkDragContext::suggested_action would be
+    // more appropriate.  GdkDragContext::actions should be used to set
+    // dataTransfer.effectAllowed, which doesn't currently happen with
+    // external sources.
+
+    // default is to do nothing
+    int action = nsIDragService::DRAGDROP_ACTION_NONE;
+    GdkDragAction gdkAction = gdk_drag_context_get_actions(mTargetDragContext);
+
+    // set the default just in case nothing matches below
+    if (gdkAction & GDK_ACTION_DEFAULT)
+        action = nsIDragService::DRAGDROP_ACTION_MOVE;
+
+    // first check to see if move is set
+    if (gdkAction & GDK_ACTION_MOVE)
+        action = nsIDragService::DRAGDROP_ACTION_MOVE;
+
+    // then fall to the others
+    else if (gdkAction & GDK_ACTION_LINK)
+        action = nsIDragService::DRAGDROP_ACTION_LINK;
+
+    // copy is ctrl
+    else if (gdkAction & GDK_ACTION_COPY)
+        action = nsIDragService::DRAGDROP_ACTION_COPY;
+
+    // update the drag information
+    SetDragAction(action);
 }
 
 void
