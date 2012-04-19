@@ -71,6 +71,10 @@ public:
   // nsAccessNode
   virtual void Shutdown();
 
+  // TableAccessible
+  virtual PRUint32 ColCount();
+  virtual PRUint32 RowCount();
+
 protected:
   /**
    * Return true if the given row index is valid.
