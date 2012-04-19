@@ -42,7 +42,8 @@
 
 #include "jscntxt.h"
 #include "jstypedarray.h"
-#include "jstypedarrayinlines.h"
+
+#include "vm/NumericConversions.h"
 
 #include "jsnuminlines.h"
 #include "jstypedarrayinlines.h"
@@ -129,7 +130,7 @@ ConstantFoldForIntArray(JSContext *cx, JSObject *tarray, ValueRemat *vr)
     if (v.isDouble()) {
         i32 = (TypedArray::getType(tarray) == js::TypedArray::TYPE_UINT8_CLAMPED)
               ? ClampDoubleToUint8(v.toDouble())
-              : js_DoubleToECMAInt32(v.toDouble());
+              : ToInt32(v.toDouble());
     } else if (v.isInt32()) {
         i32 = v.toInt32();
         if (TypedArray::getType(tarray) == js::TypedArray::TYPE_UINT8_CLAMPED)

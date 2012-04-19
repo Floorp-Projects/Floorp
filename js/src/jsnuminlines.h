@@ -40,6 +40,7 @@
 #ifndef jsnuminlines_h___
 #define jsnuminlines_h___
 
+#include "vm/NumericConversions.h"
 #include "vm/Unicode.h"
 
 #include "jsstrinlines.h"
@@ -51,7 +52,7 @@ template<typename T> struct NumberTraits { };
 template<> struct NumberTraits<int32_t> {
   static JS_ALWAYS_INLINE int32_t NaN() { return 0; }
   static JS_ALWAYS_INLINE int32_t toSelfType(int32_t i) { return i; }
-  static JS_ALWAYS_INLINE int32_t toSelfType(double d) { return js_DoubleToECMAUint32(d); }
+  static JS_ALWAYS_INLINE int32_t toSelfType(double d) { return ToUint32(d); }
 };
 template<> struct NumberTraits<double> {
   static JS_ALWAYS_INLINE double NaN() { return js_NaN; }
