@@ -244,6 +244,7 @@ private:
     // Callback for g_idle_add_full() to run mScheduledTask.
     static gboolean TaskDispatchCallback(gpointer data);
     gboolean RunScheduledTask();
+    void UpdateDragAction();
     void DispatchMotionEvents();
     gboolean DispatchDropEvent();
 };
