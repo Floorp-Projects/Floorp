@@ -2298,13 +2298,33 @@ abstract public class GeckoApp
 
                     // Do a migration run on the first start after an upgrade.
                     if (!profileMigrator.hasMigrationRun()) {
+                        // Show the "Setting up Fennec" screen if this takes
+                        // a while.
                         final SetupScreen setupScreen = new SetupScreen(app);
 
-                        // Don't show unless this take a while.
-                        setupScreen.showDelayed(mMainHandler);
+                        final Runnable startCallback = new Runnable() {
+                            public void run() {
+                                GeckoApp.mAppContext.runOnUiThread(new Runnable() {
+                                    public void run() {
+                                       setupScreen.show();
+                                    }
+                                });
+                            }
+                        };
 
+                        final Runnable stopCallback = new Runnable() {
+                            public void run() {
+                                GeckoApp.mAppContext.runOnUiThread(new Runnable() {
+                                    public void run() {
+                                        setupScreen.dismiss();
+                                    }
+                                });
+                            }
+                        };
+
+                        profileMigrator.setLongOperationCallbacks(startCallback,
+                                                                  stopCallback);
                         profileMigrator.launchPlaces();
-                        setupScreen.dismiss();
 
                         long timeDiff = SystemClock.uptimeMillis() - currentTime;
                         Log.i(LOGTAG, "Profile migration took " + timeDiff + " ms");
