@@ -763,13 +763,13 @@ CssRuleView.prototype = {
 
     this.clear();
 
+    if (this._elementStyle) {
+      delete this._elementStyle;
+    }
+
     this._viewedElement = aElement;
     if (!this._viewedElement) {
       return;
-    }
-
-    if (this._elementStyle) {
-      delete this._elementStyle.onChanged;
     }
 
     this._elementStyle = new ElementStyle(aElement, this.store);
