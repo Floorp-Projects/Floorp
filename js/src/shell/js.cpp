@@ -156,9 +156,10 @@ static double MAX_TIMEOUT_INTERVAL = 1800.0;
 static double gTimeoutInterval = -1.0;
 static volatile bool gCanceled = false;
 
-static bool enableMethodJit = false;
-static bool enableTypeInference = false;
+static bool enableMethodJit = true;
+static bool enableTypeInference = true;
 static bool enableDisassemblyDumps = false;
+static bool enableIon = true;
 
 static bool printTiming = false;
 
@@ -4536,6 +4537,8 @@ NewContext(JSRuntime *rt)
         JS_ToggleOptions(cx, JSOPTION_METHODJIT);
     if (enableTypeInference)
         JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
+    if (enableIon)
+        JS_ToggleOptions(cx, JSOPTION_ION);
     return cx;
 }
 
@@ -4657,8 +4660,8 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
     if (op->getBoolOption('c'))
         compileOnly = true;
 
-    if (op->getBoolOption('m')) {
-        enableMethodJit = true;
+    if (op->getBoolOption("no-jm")) {
+        enableMethodJit = false;
         JS_ToggleOptions(cx, JSOPTION_METHODJIT);
     }
 
@@ -4674,8 +4677,10 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
         enableDisassemblyDumps = true;
 
 #if defined(JS_ION)
-    if (op->getBoolOption("ion"))
+    if (op->getBoolOption("no-ion")) {
+        enableIon = false;
         JS_ToggleOptions(cx, JSOPTION_ION);
+    }
 
     if (const char *str = op->getStringOption("ion-gvn")) {
         if (strcmp(str, "off") == 0)
@@ -4733,11 +4738,8 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
             return OptionFailure("ion-regalloc", str);
     }
 
-    if (op->getBoolOption("ion-eager")) {
-        if (!(JS_GetOptions(cx) & JSOPTION_ION))
-            JS_ToggleOptions(cx, JSOPTION_ION);
+    if (op->getBoolOption("ion-eager"))
         ion::js_IonOptions.setEagerCompilation();
-    }
 #endif
 
     /* |scriptArgs| gets bound on the global before any code is run. */
@@ -4792,8 +4794,8 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
      * First check to see if type inference is enabled. This flag must be set
      * on the compartment when it is constructed.
      */
-    if (op->getBoolOption('n')) {
-        enableTypeInference = !enableTypeInference;
+    if (op->getBoolOption("no-ti")) {
+        enableTypeInference = false;
         JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
     }
 
@@ -4971,8 +4973,8 @@ main(int argc, char **argv, char **envp)
     if (!op.addMultiStringOption('f', "file", "PATH", "File path to run")
         || !op.addMultiStringOption('e', "execute", "CODE", "Inline code to run")
         || !op.addBoolOption('i', "shell", "Enter prompt after running code")
-        || !op.addBoolOption('m', "methodjit", "Enable the JaegerMonkey method JIT")
-        || !op.addBoolOption('n', "typeinfer", "Enable type inference")
+        || !op.addBoolOption('\0', "no-jm", "Disable the JaegerMonkey method JIT")
+        || !op.addBoolOption('\0', "no-ti", "Disable type inference")
         || !op.addBoolOption('c', "compileonly", "Only compile, don't run (syntax checking mode)")
         || !op.addBoolOption('d', "debugjit", "Enable runtime debug mode for method JIT code")
         || !op.addBoolOption('a', "always-mjit",
@@ -4996,7 +4998,7 @@ main(int argc, char **argv, char **envp)
         || !op.addOptionalMultiStringArg("scriptArgs",
                                          "String arguments to bind as |arguments| in the "
                                          "shell's global")
-        || !op.addBoolOption('\0', "ion", "Enable IonMonkey")
+        || !op.addBoolOption('\0', "no-ion", "Disable IonMonkey")
         || !op.addStringOption('\0', "ion-gvn", "[mode]",
                                "Specify Ion global value numbering:\n"
                                "  off: disable GVN\n"
@@ -5014,7 +5016,7 @@ main(int argc, char **argv, char **envp)
                                "Specify Ion register allocation:\n"
                                "  greedy: Greedy register allocation\n"
                                "  lsra: Linear Scan register allocation (default)")
-        || !op.addBoolOption('\0', "ion-eager", "Always compile methods")
+        || !op.addBoolOption('\0', "ion-eager", "Always ion-compile methods")
     )
     {
         return EXIT_FAILURE;
