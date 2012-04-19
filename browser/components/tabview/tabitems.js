@@ -278,12 +278,6 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   },
 
   // ----------
-  // Function: loadThumbnail
-  // Loads the tabItems thumbnail.
-  loadThumbnail: function TabItem_loadThumbnail() {
-  },
-
-  // ----------
   // Function: _reconnect
   // Load the reciever's persistent data from storage. If there is none, 
   // treats it as a new tab. 
