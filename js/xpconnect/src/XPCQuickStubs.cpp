@@ -116,6 +116,54 @@ LookupInterfaceOrAncestor(PRUint32 tableSize, const xpc_qsHashEntry *table,
     return entry;
 }
 
+// Apply |op| to |obj|, |id|, and |vp|. If |op| is a setter, treat the assignment as lenient.
+template<typename Op>
+static inline JSBool ApplyPropertyOp(JSContext *cx, Op op, JSObject *obj, jsid id, jsval *vp);
+
+template<>
+inline JSBool
+ApplyPropertyOp<JSPropertyOp>(JSContext *cx, JSPropertyOp op, JSObject *obj, jsid id, jsval *vp)
+{
+    return op(cx, obj, id, vp);
+}
+
+template<>
+inline JSBool
+ApplyPropertyOp<JSStrictPropertyOp>(JSContext *cx, JSStrictPropertyOp op, JSObject *obj,
+                                    jsid id, jsval *vp)
+{
+    return op(cx, obj, id, true, vp);
+}
+
+template<typename Op>
+static JSBool
+PropertyOpForwarder(JSContext *cx, unsigned argc, jsval *vp)
+{
+    // Layout:
+    //   this = our this
+    //   property op to call = callee reserved slot 0
+    //   name of the property = callee reserved slot 1
+
+    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return false;
+
+    jsval v = js::GetFunctionNativeReserved(callee, 0);
+
+    JSObject *ptrobj = JSVAL_TO_OBJECT(v);
+    Op *popp = static_cast<Op *>(JS_GetPrivate(ptrobj));
+
+    v = js::GetFunctionNativeReserved(callee, 1);
+
+    jsval argval = (argc > 0) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
+    jsid id;
+    if (!JS_ValueToId(cx, argval, &id))
+        return false;
+    JS_SET_RVAL(cx, vp, argval);
+    return ApplyPropertyOp<Op>(cx, *popp, obj, id, vp);
+}
+
 static void
 PointerFinalize(JSFreeOp *fop, JSObject *obj)
 {
@@ -123,12 +171,43 @@ PointerFinalize(JSFreeOp *fop, JSObject *obj)
     delete popp;
 }
 
-JSClass
+static JSClass
 PointerHolderClass = {
     "Pointer", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, PointerFinalize
 };
+
+template<typename Op>
+static JSObject *
+GeneratePropertyOp(JSContext *cx, JSObject *obj, jsid id, unsigned argc, Op pop)
+{
+    // The JS engine provides two reserved slots on function objects for
+    // XPConnect to use. Use them to stick the necessary info here.
+    JSFunction *fun =
+        js::NewFunctionByIdWithReserved(cx, PropertyOpForwarder<Op>, argc, 0, obj, id);
+    if (!fun)
+        return nsnull;
+
+    JSObject *funobj = JS_GetFunctionObject(fun);
+
+    JS::AutoObjectRooter tvr(cx, funobj);
+
+    // Unfortunately, we cannot guarantee that Op is aligned. Use a
+    // second object to work around this.
+    JSObject *ptrobj = JS_NewObject(cx, &PointerHolderClass, nsnull, funobj);
+    if (!ptrobj)
+        return nsnull;
+    Op *popp = new Op;
+    if (!popp)
+        return nsnull;
+    *popp = pop;
+    JS_SetPrivate(ptrobj, popp);
+
+    js::SetFunctionNativeReserved(funobj, 0, OBJECT_TO_JSVAL(ptrobj));
+    js::SetFunctionNativeReserved(funobj, 1, js::IdToJsval(id));
+    return funobj;
+}
 
 static JSBool
 ReifyPropertyOps(JSContext *cx, JSObject *obj, jsid id, unsigned orig_attrs,
