@@ -237,22 +237,6 @@ public:
                                                GdkEventVisibility *aEvent);
     void               OnWindowStateEvent(GtkWidget *aWidget,
                                           GdkEventWindowState *aEvent);
-    gboolean           OnDragMotionEvent(GtkWidget       *aWidget,
-                                         GdkDragContext  *aDragContext,
-                                         gint             aX,
-                                         gint             aY,
-                                         guint            aTime,
-                                         gpointer         aData);
-    void               OnDragLeaveEvent(GtkWidget *      aWidget,
-                                        GdkDragContext   *aDragContext,
-                                        guint            aTime,
-                                        gpointer         aData);
-    gboolean           OnDragDropEvent(GtkWidget        *aWidget,
-                                       GdkDragContext   *aDragContext,
-                                       gint             aX,
-                                       gint             aY,
-                                       guint            aTime,
-                                       gpointer         aData);
     void               OnDragDataReceivedEvent(GtkWidget       *aWidget,
                                                GdkDragContext  *aDragContext,
                                                gint             aX,
@@ -297,11 +281,6 @@ public:
 
     void               ThemeChanged(void);
 
-    void CheckNeedDragLeave(nsWindow* aInnerMostWidget,
-                            nsIDragService* aDragService,
-                            GdkDragContext *aDragContext,
-                            nscoord aX, nscoord aY);
-
 #ifdef MOZ_X11
     Window             mOldFocusWindow;
 #endif /* MOZ_X11 */
@@ -312,6 +291,9 @@ public:
     NS_IMETHOD         BeginMoveDrag(nsMouseEvent* aEvent);
 
     MozContainer*      GetMozContainer() { return mContainer; }
+    // GetMozContainerWidget returns the MozContainer even for undestroyed
+    // descendant windows
+    GtkWidget*         GetMozContainerWidget();
     GdkWindow*         GetGdkWindow() { return mGdkWindow; }
     bool               IsDestroyed() { return mIsDestroyed; }
 
@@ -324,6 +306,8 @@ public:
     gboolean           DispatchDragDropEvent(nsDragService *aDragService,
                                              const nsIntPoint& aWindowPoint,
                                              guint aTime);
+    static void        UpdateDragStatus (GdkDragContext *aDragContext,
+                                         nsIDragService *aDragService);
     // If this dispatched the keydown event actually, this returns TRUE,
     // otherwise, FALSE.
     bool               DispatchKeyDownEvent(GdkEventKey *aEvent,
@@ -393,7 +377,6 @@ protected:
 private:
     void               DestroyChildWindows();
     void               GetToplevelWidget(GtkWidget **aWidget);
-    GtkWidget         *GetMozContainerWidget();
     nsWindow          *GetContainerWindow();
     void               SetUrgencyHint(GtkWidget *top_window, bool state);
     void              *SetupPluginPort(void);
@@ -493,13 +476,8 @@ private:
     gchar*       mTransparencyBitmap;
  
     // all of our DND stuff
-    // this is the last window that had a drag event happen on it.
-    static nsWindow    *sLastDragMotionWindow;
     void   InitDragEvent         (nsDragEvent &aEvent);
-    void   UpdateDragStatus      (GdkDragContext *aDragContext,
-                                  nsIDragService *aDragService);
 
-    nsCOMPtr<nsITimer> mDragLeaveTimer;
     float              mLastMotionPressure;
 
     // Remember the last sizemode so that we can restore it when
@@ -507,9 +485,6 @@ private:
     nsSizeMode         mLastSizeMode;
 
     static bool DragInProgress(void);
-
-    void         FireDragLeaveTimer       (void);
-    static void  DragLeaveTimerCallback  (nsITimer *aTimer, void *aClosure);
 
     void DispatchMissedButtonReleases(GdkEventCrossing *aGdkEvent);
 

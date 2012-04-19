@@ -127,6 +127,7 @@ invisibleSourceDragDataGet(GtkWidget        *aWidget,
                            gpointer          aData);
 
 nsDragService::nsDragService()
+    : mTaskSource(0)
 {
     // We have to destroy the hidden widget before the event loop stops
     // running.
@@ -162,9 +163,6 @@ nsDragService::nsDragService()
         sDragLm = PR_NewLogModule("nsDragService");
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::nsDragService"));
     mGrabWidget = 0;
-    mTargetWidget = 0;
-    mTargetDragContext = 0;
-    mTargetTime = 0;
     mCanDrop = false;
     mTargetDragDataReceived = false;
     mTargetDragData = 0;
@@ -174,6 +172,9 @@ nsDragService::nsDragService()
 nsDragService::~nsDragService()
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::~nsDragService"));
+    if (mTaskSource)
+        g_source_remove(mTaskSource);
+
 }
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsDragService, nsBaseDragService,
@@ -1131,7 +1132,8 @@ nsDragService::GetTargetDragData(GdkAtom aFlavor)
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("getting data flavor %d\n", aFlavor));
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("mLastWidget is %p and mLastContext is %p\n",
-                                   mTargetWidget, mTargetDragContext));
+                                   mTargetWidget.get(),
+                                   mTargetDragContext.get()));
     // reset our target data areas
     TargetResetData();
     gtk_drag_get_data(mTargetWidget, mTargetDragContext, aFlavor, mTargetTime);
@@ -1702,3 +1704,231 @@ invisibleSourceDragEnd(GtkWidget        *aWidget,
     dragService->SourceEndDragSession(aContext, MOZ_GTK_DRAG_RESULT_SUCCESS);
 }
 
+// The following methods handle responding to GTK drag destination signals and
+// tracking state between these signals.
+//
+// In general, GTK does not expect us to run the event loop while handling its
+// drag destination signals, however our drag event handlers may run the
+// event loop, most often to fetch information about the drag data.
+// 
+// GTK, for example, uses the return value from drag-motion signals to
+// determine whether drag-leave signals should be sent.  If an event loop is
+// run during drag-motion the XdndLeave message can get processed but when GTK
+// receives the message it does not yet know that it needs to send the
+// drag-leave signal to our widget.
+//
+// After a drag-drop signal, we need to reply with gtk_drag_finish().
+// However, gtk_drag_finish should happen after the drag-drop signal handler
+// returns so that when the Motif drag protocol is used, the
+// XmTRANSFER_SUCCESS during gtk_drag_finish is sent after the XmDROP_START
+// reply sent on return from the drag-drop signal handler.
+//
+// Therefore we reply to the signals immediately and schedule a task to
+// dispatch the Gecko events, which may run the event loop.
+//
+// Action in response to drag-leave signals is also delayed until the event
+// loop runs again so that we find out whether a drag-drop signal follows.
+//
+// A single task is scheduled to manage responses to all three GTK signals.
+// If further signals are received while the task is scheduled, the scheduled
+// response is updated, sometimes effectively compressing successive signals.
+//
+// No Gecko drag events are dispatched (during nested event loops) while other
+// Gecko drag events are in flight.  This helps event handlers that may not
+// expect nested events, while accessing an event's dataTransfer for example.
+
+gboolean
+nsDragService::ScheduleMotionEvent(nsWindow *aWindow,
+                                   GdkDragContext *aDragContext,
+                                   nsIntPoint aWindowPoint, guint aTime)
+{
+    if (mScheduledTask == eDragTaskMotion) {
+        // The drag source has sent another motion message before we've
+        // replied to the previous.  That shouldn't happen with Xdnd.  The
+        // spec for Motif drags is less clear, but we'll just update the
+        // scheduled task with the new position reply only to the most
+        // recent message.
+        NS_WARNING("Drag Motion message received before previous reply was sent");
+    }
+
+    // Returning TRUE means we'll reply with a status message, unless we first
+    // get a leave.
+    return Schedule(eDragTaskMotion, aWindow, aDragContext,
+                    aWindowPoint, aTime);
+}
+
+void
+nsDragService::ScheduleLeaveEvent()
+{
+    // We don't know at this stage whether a drop signal will immediately
+    // follow.  If the drop signal gets sent it will happen before we return
+    // to the main loop and the scheduled leave task will be replaced.
+    if (!Schedule(eDragTaskLeave, nsnull, NULL, nsIntPoint(), 0)) {
+        NS_WARNING("Drag leave after drop");
+    }        
+}
+
+gboolean
+nsDragService::ScheduleDropEvent(nsWindow *aWindow,
+                                 GdkDragContext *aDragContext,
+                                 nsIntPoint aWindowPoint, guint aTime)
+{
+    if (!Schedule(eDragTaskDrop, aWindow,
+                  aDragContext, aWindowPoint, aTime)) {
+        NS_WARNING("Additional drag drop ignored");
+        return FALSE;        
+    }
+
+    SetDragEndPoint(aWindowPoint + aWindow->WidgetToScreenOffset());
+
+    // We'll reply with gtk_drag_finish().
+    return TRUE;
+}
+
+gboolean
+nsDragService::Schedule(DragTask aTask, nsWindow *aWindow,
+                        GdkDragContext *aDragContext,
+                        nsIntPoint aWindowPoint, guint aTime)
+{
+    // If we haven't yet run a scheduled drop task, just say that
+    // we are not ready to receive another drop.
+    if (mScheduledTask == eDragTaskDrop)
+        return FALSE;
+
+    // If there is an existing leave or motion task scheduled, then that
+    // will be replaced.  When the new task is run, it will dispatch
+    // any necessary leave or motion events.
+
+    mScheduledTask = aTask;
+    mPendingWindow = aWindow;
+    mPendingDragContext = aDragContext;
+    mPendingWindowPoint = aWindowPoint;
+    mPendingTime = aTime;
+
+    if (!mTaskSource) {
+        // High priority is used here because the native events involved have
+        // already waited at default priority.  Perhaps a lower than default
+        // priority could be used for motion tasks because there is a chance
+        // that a leave or drop is waiting, but managing different priorities
+        // may not be worth the effort.  Motion tasks shouldn't queue up as
+        // they should be throttled based on replies.
+        mTaskSource =
+            g_idle_add_full(G_PRIORITY_HIGH, TaskDispatchCallback, this, NULL);
+    }
+    return TRUE;
+}
+
+gboolean
+nsDragService::TaskDispatchCallback(gpointer data)
+{
+    nsRefPtr<nsDragService> dragService = static_cast<nsDragService*>(data);
+    return dragService->RunScheduledTask();
+}
+
+gboolean
+nsDragService::RunScheduledTask()
+{
+    if (mTargetWindow && mTargetWindow != mPendingWindow) {
+        mTargetWindow->OnDragLeave();
+    }
+
+    // It is possible that the pending state has been updated during dispatch
+    // of the leave event.  That's fine.
+
+    // Now we collect the pending state because, from this point on, we want
+    // to use the same state for all events dispatched.  All state is updated
+    // so that when other tasks are scheduled during dispatch here, this
+    // task is considered to have already been run.
+    bool positionHasChanged =
+        mPendingWindow != mTargetWindow ||
+        mPendingWindowPoint != mTargetWindowPoint;
+    DragTask task = mScheduledTask;
+    mScheduledTask = eDragTaskNone;
+    mTargetWindow = mPendingWindow.forget();
+    mTargetWindowPoint = mPendingWindowPoint;
+
+    if (task == eDragTaskLeave) {
+        // Nothing more to do
+        // Returning false removes the task source from the event loop.
+        mTaskSource = 0;
+        return FALSE;
+    }
+
+    // This may be the start of a destination drag session.
+    StartDragSession();
+
+    // mTargetWidget may be NULL if the window has been destroyed.
+    // (The leave event is not scheduled if a drop task is still scheduled.)
+    // We still reply appropriately to indicate that the drop will or didn't
+    // succeeed. 
+    mTargetWidget = mTargetWindow->GetMozContainerWidget();
+    mTargetDragContext.steal(mPendingDragContext);
+    mTargetTime = mPendingTime;
+
+    // http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#drag-and-drop-processing-model
+    // (as at 27 December 2010) indicates that a "drop" event should only be
+    // fired (at the current target element) if the current drag operation is
+    // not none.  The current drag operation will only be set to a non-none
+    // value during a "dragover" event.
+    //
+    // If the user has ended the drag before any dragover events have been
+    // sent, then the spec recommends skipping the drop (because the current
+    // drag operation is none).  However, here we assume that, by releasing
+    // the mouse button, the user has indicated that they want to drop, so we
+    // proceed with the drop where possible.
+    //
+    // In order to make the events appear to content in the same way as if the
+    // spec is being followed we make sure to dispatch a "dragover" event with
+    // appropriate coordinates and check canDrop before the "drop" event.
+    //
+    // When the Xdnd protocol is used for source/destination communication (as
+    // should be the case with GTK source applications) a dragover event
+    // should have already been sent during the drag-motion signal, which
+    // would have already been received because XdndDrop messages do not
+    // contain a position.  However, we can't assume the same when the Motif
+    // protocol is used.
+    if (task == eDragTaskMotion || positionHasChanged) {
+        nsWindow::UpdateDragStatus(mTargetDragContext, this);
+        mTargetWindow->
+            DispatchDragMotionEvents(this, mTargetWindowPoint, mTargetTime);
+
+        if (task == eDragTaskMotion) {
+            // Reply to tell the source whether we can drop and what
+            // action would be taken.
+            TargetEndDragMotion(mTargetWidget, mTargetDragContext, mTargetTime);
+        }
+    }
+
+    if (task == eDragTaskDrop) {
+        gboolean success = mTargetWindow->
+            DispatchDragDropEvent(this, mTargetWindowPoint, mTargetTime);
+
+        // Perhaps we should set the del parameter to TRUE when the drag
+        // action is move, but we don't know whether the data was successfully
+        // transferred.
+        gtk_drag_finish(mTargetDragContext, success,
+                        /* del = */ FALSE, mTargetTime);
+
+        // This drag is over, so clear out our reference to the previous
+        // window.
+        mTargetWindow = nsnull;
+        // Make sure to end the drag session. If this drag started in a
+        // different app, we won't get a drag_end signal to end it from.
+        EndDragSession(true);
+    }
+
+    // We're done with the drag context.
+    mTargetWidget = NULL;
+    mTargetDragContext = NULL;
+
+    // If we got another drag signal while running the sheduled task, that
+    // must have happened while running a nested event loop.  Leave the task
+    // source on the event loop.
+    if (mScheduledTask != eDragTaskNone)
+        return TRUE;
+
+    // We have no task scheduled.
+    // Returning false removes the task source from the event loop.
+    mTaskSource = 0;
+    return FALSE;
+}
