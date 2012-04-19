@@ -52,6 +52,7 @@
 #include "nsViewportFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "nsIObserver.h"
+#include "nsContentUtils.h"
 
 typedef nsContentView::ViewConfig ViewConfig;
 using namespace mozilla::layers;
@@ -695,8 +696,7 @@ RenderFrameParent::BuildViewMap()
 LayerManager*
 RenderFrameParent::GetLayerManager() const
 {
-  nsIDocument* doc = mFrameLoader->OwnerDoc();
-  return doc->GetShell()->GetLayerManager();
+  return nsContentUtils::LayerManagerForDocument(mFrameLoader->OwnerDoc()).get();
 }
 
 ShadowLayersParent*
