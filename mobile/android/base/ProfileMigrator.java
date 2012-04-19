@@ -42,11 +42,15 @@ import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.ImageColumns;
 import org.mozilla.gecko.db.BrowserContract.Images;
+import org.mozilla.gecko.db.BrowserContract.Passwords;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.sqlite.SQLiteBridgeException;
+import org.mozilla.gecko.sync.setup.SyncAccounts;
+import org.mozilla.gecko.sync.setup.SyncAccounts.SyncAccountParameters;
 
+import android.accounts.Account;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -61,11 +65,12 @@ import android.database.sqlite.SQLiteConstraintException;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.RemoteException;
 import android.provider.Browser;
+import android.text.TextUtils;
 import android.util.Log;
-import android.net.Uri;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -82,6 +87,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONException;
 
 public class ProfileMigrator {
     private static final String LOGTAG = "ProfileMigrator";
@@ -101,6 +110,7 @@ public class ProfileMigrator {
     private static final String PREFS_MIGRATE_HISTORY_DONE = "history_done";
     // Number of history entries already migrated.
     private static final String PREFS_MIGRATE_HISTORY_COUNT = "history_count";
+    private static final String PREFS_MIGRATE_SYNC_DONE = "sync_done";
 
     /*
        These queries are derived from the low-level Places schema
@@ -199,13 +209,34 @@ public class ProfileMigrator {
     private final String kHistoryDate   = "h_date";
     private final String kHistoryVisits = "h_visits";
 
+    /*
+      Sync settings to get from prefs.js.
+    */
+    private final String[] kSyncSettingsList = new String[] {
+        "services.sync.account",
+        "services.sync.client.name",
+        "services.sync.client.GUID",
+        "services.sync.serverURL",
+        "services.sync.clusterURL"
+    };
+
+    /*
+      Sync settings to get from password manager.
+    */
+    private final String kSyncHostName = "chrome://weave";
+    private final String[] kSyncRealmList = new String[] {
+        "Mozilla Services Password",
+        "Mozilla Services Encryption Passphrase"
+    };
+
+
     public ProfileMigrator(Context context, File profileDir) {
         mProfileDir = profileDir;
         mContext = context;
         mCr = mContext.getContentResolver();
     }
 
-    public void launch() {
+    public void launchPlaces() {
         boolean timeThisRun = false;
         Telemetry.Timer timer = null;
         // First run, time things
@@ -213,13 +244,20 @@ public class ProfileMigrator {
             timeThisRun = true;
             timer = new Telemetry.Timer("BROWSERPROVIDER_XUL_IMPORT_TIME");
         }
-        launch(DEFAULT_HISTORY_MIGRATE_COUNT);
+        launchPlaces(DEFAULT_HISTORY_MIGRATE_COUNT);
         if (timeThisRun)
             timer.stop();
     }
 
-    public void launch(int maxEntries) {
+    public void launchPlaces(int maxEntries) {
+        // Places migration is heavy on the phone, allow it to block
+        // other processing.
         new PlacesRunnable(maxEntries).run();
+    }
+
+    public void launchSyncPrefs() {
+        // Sync settings will post a runnable, no need for a seperate thread.
+        new SyncTask().run();
     }
 
     public boolean areBookmarksMigrated() {
@@ -228,6 +266,11 @@ public class ProfileMigrator {
 
     public boolean isHistoryMigrated() {
         return getPreferences().getBoolean(PREFS_MIGRATE_HISTORY_DONE, false);
+    }
+
+    // Have Sync settings been transferred?
+    public boolean hasSyncMigrated() {
+        return getPreferences().getBoolean(PREFS_MIGRATE_SYNC_DONE, false);
     }
 
     // Has migration run before?
@@ -264,6 +307,206 @@ public class ProfileMigrator {
         SharedPreferences.Editor editor = getPreferences().edit();
         editor.putBoolean(PREFS_MIGRATE_BOOKMARKS_DONE, true);
         editor.commit();
+    }
+
+    protected void setMigratedSync() {
+        SharedPreferences.Editor editor = getPreferences().edit();
+        editor.putBoolean(PREFS_MIGRATE_SYNC_DONE, true);
+        editor.commit();
+    }
+
+    private class SyncTask implements Runnable, GeckoEventListener {
+        private List<String> mSyncSettingsList;
+        private Map<String, String> mSyncSettingsMap;
+
+        // Initialize preferences by sending the "Preferences:Get" command to Gecko
+        protected void requestValues() {
+            mSyncSettingsList = Arrays.asList(kSyncSettingsList);
+            mSyncSettingsMap = new HashMap<String, String>();
+            JSONArray jsonPrefs = new JSONArray(mSyncSettingsList);
+            Log.d(LOGTAG, "Sending: " + jsonPrefs.toString());
+            GeckoEvent event =
+                GeckoEvent.createBroadcastEvent("Preferences:Get",
+                                                jsonPrefs.toString());
+            GeckoAppShell.sendEventToGecko(event);
+        }
+
+        // Receive settings reply from Gecko, do the rest of the setup
+        public void handleMessage(String event, JSONObject message) {
+            Log.d(LOGTAG, "Received event: " + event);
+            try {
+                if (event.equals("Preferences:Data")) {
+                    // Receive most settings from Gecko's service.
+                    // This includes personal info, so don't log.
+                    // Log.d(LOGTAG, "Message: " + message.toString());
+                    JSONArray jsonPrefs = message.getJSONArray("preferences");
+                    parsePrefs(jsonPrefs);
+                    GeckoAppShell.unregisterGeckoEventListener("Preferences:Data",
+                                                               (GeckoEventListener)this);
+
+                    // Now call the password provider to fill in the rest.
+                    for (String location: kSyncRealmList) {
+                        Log.d(LOGTAG, "Checking: " + location);
+                        String passwd = getPassword(location);
+                        if (!TextUtils.isEmpty(passwd)) {
+                            Log.d(LOGTAG, "Got password");
+                            mSyncSettingsMap.put(location, passwd);
+                        } else {
+                            Log.d(LOGTAG, "No password found");
+                            mSyncSettingsMap.put(location, null);
+                        }
+                    }
+
+                    // Call Sync and transfer settings.
+                    configureSync();
+                }
+            } catch (Exception e) {
+                Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
+            }
+        }
+
+        protected String getPassword(String realm) {
+            Cursor cursor = null;
+            String result = null;
+            try {
+                cursor = mCr.query(Passwords.CONTENT_URI,
+                                   null,
+                                   Passwords.HOSTNAME + " = ? AND "
+                                   + Passwords.HTTP_REALM + " = ?",
+                                   new String[] { kSyncHostName, realm },
+                                   null);
+
+                if (cursor != null) {
+                    final int userCol =
+                        cursor.getColumnIndexOrThrow(Passwords.ENCRYPTED_USERNAME);
+                    final int passCol =
+                        cursor.getColumnIndexOrThrow(Passwords.ENCRYPTED_PASSWORD);
+
+                    if (cursor.moveToFirst()) {
+                        String user = cursor.getString(userCol);
+                        String pass = cursor.getString(passCol);
+                        result = pass;
+                    } else {
+                        Log.i(LOGTAG, "No password found for realm = " + realm);
+                    }
+                }
+            } finally {
+                if (cursor != null)
+                    cursor.close();
+            }
+
+            return result;
+        }
+
+        protected void parsePrefs(JSONArray jsonPrefs) {
+            try {
+                final int length = jsonPrefs.length();
+                for (int i = 0; i < length; i++) {
+                    JSONObject jPref = jsonPrefs.getJSONObject(i);
+                    final String prefName = jPref.getString("name");
+                    final String prefType = jPref.getString("type");
+                    if ("bool".equals(prefType)) {
+                        final boolean value = jPref.getBoolean("value");
+                        mSyncSettingsMap.put(prefName, value ? "1" : "0");
+                    } else {
+                        final String value = jPref.getString("value");
+                        if (!TextUtils.isEmpty(value)) {
+                            mSyncSettingsMap.put(prefName, value);
+                        } else {
+                            Log.w(LOGTAG, "Could not recover setting for = " + prefName);
+                            mSyncSettingsMap.put(prefName, null);
+                        }
+                    }
+                }
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "Exception handling preferences answer: "
+                      + e.getMessage());
+            }
+        }
+
+        protected void configureSync() {
+            final String userName = mSyncSettingsMap.get("services.sync.account");
+            final String syncKey = mSyncSettingsMap.get("Mozilla Services Password");
+            final String syncPass = mSyncSettingsMap.get("Mozilla Services Encryption Passphrase");
+            final String serverURL = mSyncSettingsMap.get("services.sync.serverURL");
+            final String clusterURL = mSyncSettingsMap.get("services.sync.clusterURL");
+            final String clientName = mSyncSettingsMap.get("services.sync.client.name");
+            final String clientGuid = mSyncSettingsMap.get("services.sync.client.GUID");
+
+            if (userName == null || syncKey == null || syncPass == null) {
+                // This isn't going to work. Give up.
+                Log.e(LOGTAG, "Profile has incomplete Sync config. Not migrating.");
+                setMigratedSync();
+                return;
+            }
+
+            final SyncAccountParameters params =
+                new SyncAccountParameters(mContext, null,
+                                          userName, syncKey,
+                                          syncPass, serverURL, clusterURL,
+                                          clientName, clientGuid);
+
+            new SyncAccounts.CreateSyncAccountTask() {
+                @Override
+                protected void onPostExecute(Account account) {
+                    if (account == null) {
+                        Log.e(LOGTAG, "Failed to migrate Sync account.");
+                    } else {
+                        Log.i(LOGTAG, "Migrating Sync account succeeded.");
+                    }
+                    setMigratedSync();
+                }
+            }.execute(params);
+        }
+
+        protected void registerAndRequest() {
+            GeckoAppShell.getHandler().post(new Runnable() {
+                public void run() {
+                    GeckoAppShell.registerGeckoEventListener("Preferences:Data",
+                                                             SyncTask.this);
+                    requestValues();
+                }
+            });
+        }
+
+        @Override
+        public void run() {
+            // Run only if no Sync accounts exist.
+            new SyncAccounts.AccountsExistTask() {
+                @Override
+                protected void onPostExecute(Boolean result) {
+                    if (result.booleanValue()) {
+                        Log.i(LOGTAG, "Sync account already configured, skipping.");
+                        setMigratedSync();
+                    } else {
+                        // No account configured, fire up.
+                        registerAndRequest();
+                    }
+                }
+            }.execute(mContext);
+        }
+    }
+
+    private class MiscTask implements Runnable {
+        protected void cleanupXULLibCache() {
+            File cacheFile = GeckoAppShell.getCacheDir(mContext);
+            File[] files = cacheFile.listFiles();
+            if (files != null) {
+                Iterator cacheFiles = Arrays.asList(files).iterator();
+                while (cacheFiles.hasNext()) {
+                    File libFile = (File)cacheFiles.next();
+                    if (libFile.getName().endsWith(".so")) {
+                        libFile.delete();
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void run() {
+            // XXX: Land dependent bugs (732069) first
+            // cleanupXULLibCache();
+        }
     }
 
     private class PlacesRunnable implements Runnable {
@@ -878,25 +1121,9 @@ public class ProfileMigrator {
             }
         }
 
-        protected void cleanupXULLibCache() {
-            File cacheFile = GeckoAppShell.getCacheDir(mContext);
-            File[] files = cacheFile.listFiles();
-            if (files != null) {
-                Iterator<File> cacheFiles = Arrays.asList(files).iterator();
-                while (cacheFiles.hasNext()) {
-                    File libFile = cacheFiles.next();
-                    if (libFile.getName().endsWith(".so")) {
-                        libFile.delete();
-                    }
-                }
-            }
-        }
-
         @Override
         public void run() {
             migratePlaces(mProfileDir);
-            // XXX: Land dependent bugs first
-            // cleanupXULLibCache();
         }
     }
 }

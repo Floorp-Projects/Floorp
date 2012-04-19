@@ -1407,15 +1407,6 @@ nsIFrame::GetCaretColorAt(PRInt32 aOffset)
   return GetStyleColor()->mColor;
 }
 
-bool
-nsIFrame::HasBorder() const
-{
-  // Border images contribute to the background of the content area
-  // even if there's no border proper.
-  return (GetUsedBorder() != nsMargin(0,0,0,0) ||
-          GetStyleBorder()->IsBorderImageLoaded());
-}
-
 nsresult
 nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
                                         const nsDisplayListSet& aLists,
@@ -1465,9 +1456,8 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
   }
 
   // If there's a themed background, we should not create a border item.
-  // It won't be rendered. Calling HasBorder() for themed frames is expensive
-  // too (calls into native theme code), so avoiding it is valuable.
-  if ((!bg || !bg->IsThemed()) && HasBorder()) {
+  // It won't be rendered.
+  if ((!bg || !bg->IsThemed()) && GetStyleBorder()->HasBorder()) {
     rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayBorder(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1720,6 +1710,7 @@ WrapPreserve3DListInternal(nsIFrame* aFrame, nsDisplayListBuilder *aBuilder, nsD
           }
           nsDisplayOpacity *opacity = static_cast<nsDisplayOpacity*>(item);
           rv = WrapPreserve3DListInternal(aFrame, aBuilder, opacity->GetList(), aIndex);
+          opacity->UpdateBounds(aBuilder);
           newList.AppendToTop(item);
           break;
         }
@@ -1816,7 +1807,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   nsDisplayListCollection set;
   nsresult rv;
   {    
-    nsDisplayListBuilder::AutoIsRootSetter rootSetter(aBuilder, true);
+    nsDisplayListBuilder::AutoBuildingDisplayList rootSetter(aBuilder, true);
     nsDisplayListBuilder::AutoInTransformSetter
       inTransformSetter(aBuilder, inTransform);
     rv = BuildDisplayList(aBuilder, dirtyRect, set);
@@ -2069,7 +2060,10 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // If you change this, also change IsPseudoStackingContextFromStyle()
     pseudoStackingContext = true;
   }
-  
+
+  nsDisplayListBuilder::AutoBuildingDisplayList
+    buildingForChild(aBuilder, child, pseudoStackingContext);
+
   nsRect overflowClip;
   nscoord overflowClipRadii[8];
   bool applyOverflowClip =
@@ -2084,7 +2078,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // overflow:hidden etc creates an nsHTML/XULScrollFrame which does its own
   // clipping.
 
-  nsDisplayListBuilder::AutoIsRootSetter rootSetter(aBuilder, pseudoStackingContext);
   nsresult rv;
   if (!pseudoStackingContext) {
     // THIS IS THE COMMON CASE.
@@ -3874,7 +3867,7 @@ nsRect
 nsFrame::ComputeSimpleTightBounds(gfxContext* aContext) const
 {
   if (GetStyleOutline()->GetOutlineStyle() != NS_STYLE_BORDER_STYLE_NONE ||
-      HasBorder() || !GetStyleBackground()->IsTransparent() ||
+      GetStyleBorder()->HasBorder() || !GetStyleBackground()->IsTransparent() ||
       GetStyleDisplay()->mAppearance) {
     // Not necessarily tight, due to clipping, negative
     // outline-offset, and lots of other issues, but that's OK

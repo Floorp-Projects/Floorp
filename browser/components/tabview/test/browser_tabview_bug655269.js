@@ -6,13 +6,14 @@ function test() {
 
   newWindowWithTabView(function (win) {
     let cw = win.TabView.getContentWindow();
-    let tabItem = win.gBrowser.tabs[0]._tabViewTabItem;
 
-    tabItem.addSubscriber("savedCachedImageData", function onSaved() {
-      tabItem.removeSubscriber("savedCachedImageData", onSaved);
+    win.addEventListener("SSWindowClosing", function onClose() {
+      win.removeEventListener("SSWindowClosing", onClose);
 
-      ok(cw.UI.isDOMWindowClosing, "dom window is closing");
-      waitForFocus(finish);
+      executeSoon(function () {
+        ok(cw.UI.isDOMWindowClosing, "dom window is closing");
+        waitForFocus(finish);
+      });
     });
 
     win.close();

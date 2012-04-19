@@ -158,14 +158,8 @@ let UI = {
       // initialize the direction of the page
       this._initPageDirection();
 
-      // ___ thumbnail storage
-      ThumbnailStorage.init();
-
       // ___ storage
       Storage.init();
-
-      // ___ storage policy
-      StoragePolicy.init();
 
       if (Storage.readWindowBusyState(gWindow))
         this.storageBusy();
@@ -277,7 +271,6 @@ let UI = {
           GroupItems.removeHiddenGroups();
 
         TabItems.saveAll();
-        TabItems.saveAllThumbnails({synchronously: true});
 
         self._save();
       }, false);
@@ -319,7 +312,6 @@ let UI = {
     GroupItems.uninit();
     FavIcons.uninit();
     Storage.uninit();
-    StoragePolicy.uninit();
 
     this._removeTabActionHandlers();
     this._currentTab = null;
@@ -717,11 +709,6 @@ let UI = {
         if (data == "enter" || data == "exit") {
           Search.hide();
           self._privateBrowsing.transitionMode = data;
-
-          // make sure to save all thumbnails that haven't been saved yet
-          // before we enter the private browsing mode
-          if (data == "enter")
-            TabItems.saveAllThumbnails({synchronously: true});
         }
       } else if (topic == "private-browsing-transition-complete") {
         // We use .transitionMode here, as aData is empty.

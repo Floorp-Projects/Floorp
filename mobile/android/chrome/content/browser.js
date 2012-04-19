@@ -1553,6 +1553,9 @@ Tab.prototype = {
     this.setBrowserSize(kDefaultCSSViewportWidth, kDefaultCSSViewportHeight);
     BrowserApp.deck.appendChild(this.browser);
 
+    // Must be called after appendChild so the docshell has been created.
+    this.setActive(false);
+
     this.browser.stop();
 
     let frameLoader = this.browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
@@ -1656,7 +1659,7 @@ Tab.prototype = {
 
   // This should be called to update the browser when the tab gets selected/unselected
   setActive: function setActive(aActive) {
-    if (!this.browser)
+    if (!this.browser || !this.browser.docShell)
       return;
 
     if (aActive) {
@@ -1983,6 +1986,9 @@ Tab.prototype = {
           PluginHelper.playPlugin(plugin);
           return;
         }
+
+        // Force a style flush, so that we ensure our binding is attached.
+        plugin.clientTop;
 
         // If the plugin is hidden, or if the overlay is too small, show a doorhanger notification
         let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");

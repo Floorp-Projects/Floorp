@@ -79,6 +79,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mIgnoreScrollFrame(nsnull),
       mCurrentTableItem(nsnull),
       mFinalTransparentRegion(nsnull),
+      mCachedOffsetFrame(aReferenceFrame),
+      mCachedOffset(0, 0),
       mMode(aMode),
       mBuildCaret(aBuildCaret),
       mIgnoreSuppression(false),
@@ -1177,7 +1179,7 @@ nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 
   nsStyleContext* bgSC;
   nsPresContext* presContext = mFrame->PresContext();
-  if (!nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC))
+  if (!nsCSSRendering::FindBackground(presContext, mFrame, &bgSC))
     return result;
   const nsStyleBackground* bg = bgSC->GetStyleBackground();
   const nsStyleBackground::Layer& bottomLayer = bg->BottomLayer();
@@ -1571,19 +1573,22 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayList* aList)
   : nsDisplayItem(aBuilder, aFrame) {
   mList.AppendToTop(aList);
-  mBounds = mList.GetBounds(aBuilder);
+  UpdateBounds(aBuilder);
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayItem* aItem)
   : nsDisplayItem(aBuilder, aFrame) {
   mList.AppendToTop(aItem);
-  mBounds = mList.GetBounds(aBuilder);
+  UpdateBounds(aBuilder);
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
-                                     nsIFrame* aFrame)
-  : nsDisplayItem(aBuilder, aFrame) {
+                                     nsIFrame* aFrame, nsDisplayItem* aItem,
+                                     const nsPoint& aToReferenceFrame)
+  : nsDisplayItem(aBuilder, aFrame, aToReferenceFrame) {
+  mList.AppendToTop(aItem);
+  mBounds = mList.GetBounds(aBuilder);
 }
 
 nsDisplayWrapList::~nsDisplayWrapList() {
@@ -2099,7 +2104,9 @@ nsDisplayScrollInfoLayer::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
 nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame, nsDisplayItem* aItem,
                              const nsRect& aRect)
-   : nsDisplayWrapList(aBuilder, aFrame, aItem), mClip(aRect) {
+   : nsDisplayWrapList(aBuilder, aFrame, aItem,
+       aFrame == aItem->GetUnderlyingFrame() ? aItem->ToReferenceFrame() : aBuilder->ToReferenceFrame(aFrame)),
+     mClip(aRect) {
   MOZ_COUNT_CTOR(nsDisplayClip);
 }
 
@@ -3000,7 +3007,7 @@ bool nsDisplayTransform::UntransformRect(const nsRect &aUntransformedBounds,
 
 nsDisplaySVGEffects::nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame, nsDisplayList* aList)
-    : nsDisplayWrapList(aBuilder, aFrame, aList), mEffectsFrame(aFrame),
+    : nsDisplayWrapList(aBuilder, aFrame, aList),
       mEffectsBounds(aFrame->GetVisualOverflowRectRelativeToSelf())
 {
   MOZ_COUNT_CTOR(nsDisplaySVGEffects);
@@ -3027,8 +3034,8 @@ nsDisplaySVGEffects::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect
                              HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
 {
   nsPoint rectCenter(aRect.x + aRect.width / 2, aRect.y + aRect.height / 2);
-  if (nsSVGIntegrationUtils::HitTestFrameForEffects(mEffectsFrame,
-      rectCenter - aBuilder->ToReferenceFrame(mEffectsFrame))) {
+  if (nsSVGIntegrationUtils::HitTestFrameForEffects(mFrame,
+      rectCenter - ToReferenceFrame())) {
     mList.HitTest(aBuilder, aRect, aState, aOutFrames);
   }
 }
@@ -3037,15 +3044,15 @@ void nsDisplaySVGEffects::Paint(nsDisplayListBuilder* aBuilder,
                                 nsRenderingContext* aCtx)
 {
   nsSVGIntegrationUtils::PaintFramesWithEffects(aCtx,
-          mEffectsFrame, mVisibleRect, aBuilder, &mList);
+          mFrame, mVisibleRect, aBuilder, &mList);
 }
 
 bool nsDisplaySVGEffects::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                               nsRegion* aVisibleRegion,
                                               const nsRect& aAllowVisibleRegionExpansion) {
-  nsPoint offset = aBuilder->ToReferenceFrame(mEffectsFrame);
+  nsPoint offset = ToReferenceFrame();
   nsRect dirtyRect =
-    nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(mEffectsFrame,
+    nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(mFrame,
                                                            mVisibleRect - offset) +
     offset;
 
@@ -3070,7 +3077,7 @@ bool nsDisplaySVGEffects::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem
   nsDisplaySVGEffects* other = static_cast<nsDisplaySVGEffects*>(aItem);
   MergeFromTrackingMergedFrames(other);
   mEffectsBounds.UnionRect(mEffectsBounds,
-    other->mEffectsBounds + other->mEffectsFrame->GetOffsetTo(mEffectsFrame));
+    other->mEffectsBounds + other->mFrame->GetOffsetTo(mFrame));
   return true;
 }
 
@@ -3079,16 +3086,16 @@ void
 nsDisplaySVGEffects::PrintEffects(FILE* aOutput)
 {
   nsIFrame* firstFrame =
-    nsLayoutUtils::GetFirstContinuationOrSpecialSibling(mEffectsFrame);
+    nsLayoutUtils::GetFirstContinuationOrSpecialSibling(mFrame);
   nsSVGEffects::EffectProperties effectProperties =
     nsSVGEffects::GetEffectProperties(firstFrame);
   bool isOK = true;
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
   bool first = true;
   fprintf(aOutput, " effects=(");
-  if (mEffectsFrame->GetStyleDisplay()->mOpacity != 1.0f) {
+  if (mFrame->GetStyleDisplay()->mOpacity != 1.0f) {
     first = false;
-    fprintf(aOutput, "opacity(%f)", mEffectsFrame->GetStyleDisplay()->mOpacity);
+    fprintf(aOutput, "opacity(%f)", mFrame->GetStyleDisplay()->mOpacity);
   }
   if (clipPathFrame) {
     if (!first) {
