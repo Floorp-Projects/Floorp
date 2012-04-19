@@ -147,6 +147,18 @@ private:
                             const nsACString &aSourceString);
 
   /**
+   * Tests if aSourceString starts with aToken in a case sensitive way.
+   *
+   * @param aToken
+   *        The string to search for.
+   * @param aSourceString
+   *        The string to search.
+   * @return true if found, false otherwise.
+   */
+  static bool findBeginningCaseSensitive(const nsDependentCSubstring &aToken,
+                                         const nsACString &aSourceString);
+
+  /**
    * Searches aSourceString for aToken anywhere in the string in a case-
    * insensitive way.
    *
