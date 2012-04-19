@@ -741,18 +741,31 @@ nsEditorSpellCheck::UpdateCurrentDictionary()
   }
 
   // If we have not set dictionary, and the editable element doesn't have a
-  // lang attribute, we try to get a dictionary. First try, en-US. If it does
-  // not work, pick the first one.
+  // lang attribute, we try to get a dictionary. First try LANG environment variable,
+  // then en-US. If it does not work, pick the first one.
   if (mPreferredLang.IsEmpty()) {
     nsAutoString currentDictionary;
     rv = GetCurrentDictionary(currentDictionary);
     if (NS_FAILED(rv) || currentDictionary.IsEmpty()) {
-      rv = SetCurrentDictionary(NS_LITERAL_STRING("en-US"));
+      // Try to get current dictionary from environment variable LANG
+      char* env_lang = getenv("LANG");
+      if (env_lang != nsnull) {
+        nsString lang = NS_ConvertUTF8toUTF16(env_lang);
+        // Strip trailing charset if there is any
+        PRInt32 dot_pos = lang.FindChar('.');
+        if (dot_pos != -1) {
+          lang = Substring(lang, 0, dot_pos - 1);
+        }
+        rv = SetCurrentDictionary(lang);
+      }
       if (NS_FAILED(rv)) {
-        nsTArray<nsString> dictList;
-        rv = mSpellChecker->GetDictionaryList(&dictList);
-        if (NS_SUCCEEDED(rv) && dictList.Length() > 0) {
-          SetCurrentDictionary(dictList[0]);
+        rv = SetCurrentDictionary(NS_LITERAL_STRING("en-US"));
+        if (NS_FAILED(rv)) {
+          nsTArray<nsString> dictList;
+          rv = mSpellChecker->GetDictionaryList(&dictList);
+          if (NS_SUCCEEDED(rv) && dictList.Length() > 0) {
+            SetCurrentDictionary(dictList[0]);
+          }
         }
       }
     }
