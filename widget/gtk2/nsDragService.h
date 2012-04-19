@@ -156,7 +156,8 @@ private:
         eDragTaskNone,
         eDragTaskMotion,
         eDragTaskLeave,
-        eDragTaskDrop
+        eDragTaskDrop,
+        eDragTaskSourceEnd
     };
     DragTask mScheduledTask;
     // mTaskSource is the GSource id for the task that is either scheduled
