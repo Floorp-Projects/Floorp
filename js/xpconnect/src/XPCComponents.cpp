@@ -3066,98 +3066,6 @@ class Identity : public nsISupports
 
 NS_IMPL_ISUPPORTS0(Identity)
 
-class SandboxProxyHandler : public js::AbstractWrapper {
-public:
-    SandboxProxyHandler() : js::AbstractWrapper()
-    {
-    }
-
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
-                                       bool set, PropertyDescriptor *desc);
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy,
-                                          jsid id, bool set,
-                                          PropertyDescriptor *desc);
-};
-
-SandboxProxyHandler sandboxProxyHandler;
-
-template<typename Op>
-bool BindPropertyOp(JSContext *cx, JSObject *targetObj, Op& op,
-                    PropertyDescriptor *desc, jsid id, unsigned attrFlag)
-{
-    if (!op) {
-        return true;
-    }
-
-    JSObject *func;
-    if (desc->attrs & attrFlag) {
-        // Already an object
-        func = JS_FUNC_TO_DATA_PTR(JSObject *, op);
-    } else {
-        // We have an actual property op.  For getters, we use 0
-        // args, for setters we use 1 arg.
-        uint32_t args = (attrFlag == JSPROP_GETTER) ? 0 : 1;
-        func = GeneratePropertyOp(cx, desc->obj, id, args, op);
-        if (!func)
-            return false;
-    }
-    func = JS_BindCallable(cx, func, targetObj);
-    if (!func)
-        return false;
-    op = JS_DATA_TO_FUNC_PTR(Op, func);
-    desc->attrs |= attrFlag;
-    return true;
-}
-
-bool
-SandboxProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy,
-                                           jsid id, bool set,
-                                           PropertyDescriptor *desc)
-{
-    JSObject *obj = wrappedObject(proxy);
-    JS_ASSERT(js::GetObjectCompartment(obj) == js::GetObjectCompartment(proxy));
-    // XXXbz Not sure about the JSRESOLVE_QUALIFIED here, but we have
-    // no way to tell for sure whether to use it.
-    if (!JS_GetPropertyDescriptorById(cx, obj, id,
-                                      (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
-                                      desc))
-        return false;
-
-    if (!desc->obj)
-        return true; // No property, nothing to do
-
-    // Now fix up the getter/setter/value as needed to be bound to desc->obj
-    if (!BindPropertyOp(cx, obj, desc->getter, desc, id, JSPROP_GETTER))
-        return false;
-    if (!BindPropertyOp(cx, obj, desc->setter, desc, id, JSPROP_SETTER))
-        return false;
-    if (desc->value.isObject()) {
-        JSObject* val = &desc->value.toObject();
-        if (JS_ObjectIsCallable(cx, val)) {
-            val = JS_BindCallable(cx, val, obj);
-            if (!val)
-                return false;
-            desc->value = ObjectValue(*val);
-        }
-    }
-
-    return true;
-}
-
-bool
-SandboxProxyHandler::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy,
-                                              jsid id, bool set,
-                                              PropertyDescriptor *desc)
-{
-    if (!getPropertyDescriptor(cx, proxy, id, set, desc))
-        return false;
-
-    if (desc->obj != wrappedObject(proxy))
-        desc->obj = nsnull;
-
-    return true;
-}
-
 nsresult
 xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSObject *proto,
                         bool wantXrays, const nsACString &sandboxName, nsISupports *identityPtr)
@@ -3224,20 +3132,6 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSOb
                 if (!xpc::WrapperFactory::WaiveXrayAndWrap(cx, &v))
                     return NS_ERROR_FAILURE;
                 proto = JSVAL_TO_OBJECT(v);
-            }
-
-            // Now check what sort of thing we've got in |proto|
-            JSObject *unwrappedProto = js::UnwrapObject(proto, false);
-            js::Class *unwrappedClass = js::GetObjectClass(unwrappedProto);
-            if (IS_WRAPPER_CLASS(unwrappedClass) ||
-                mozilla::dom::bindings::IsDOMClass(Jsvalify(unwrappedClass))) {
-                // Wrap it up in a proxy that will do the right thing in terms
-                // of this-binding for methods.
-                proto = js::NewProxyObject(cx, &sandboxProxyHandler,
-                                           ObjectValue(*proto), nsnull,
-                                           sandbox);
-                if (!proto)
-                    return NS_ERROR_OUT_OF_MEMORY;
             }
 
             ok = JS_SetPrototype(cx, sandbox, proto);
