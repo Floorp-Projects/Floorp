@@ -48,6 +48,7 @@
 #include "nsRuleData.h"
 #include "nsIDocument.h"
 #include "nsAlgorithm.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 
@@ -116,32 +117,59 @@ NS_IMPL_STRING_ATTR(nsHTMLFontElement, Color, color)
 NS_IMPL_STRING_ATTR(nsHTMLFontElement, Face, face)
 NS_IMPL_STRING_ATTR(nsHTMLFontElement, Size, size)
 
-static const nsAttrValue::EnumTable kRelFontSizeTable[] = {
-  { "-10", -10 },
-  { "-9", -9 },
-  { "-8", -8 },
-  { "-7", -7 },
-  { "-6", -6 },
-  { "-5", -5 },
-  { "-4", -4 },
-  { "-3", -3 },
-  { "-2", -2 },
-  { "-1", -1 },
-  { "-0", 0 },
-  { "+0", 0 },
-  { "+1", 1 },
-  { "+2", 2 },
-  { "+3", 3 },
-  { "+4", 4 },
-  { "+5", 5 },
-  { "+6", 6 },
-  { "+7", 7 },
-  { "+8", 8 },
-  { "+9", 9 },
-  { "+10", 10 },
-  { 0 }
-};
 
+// Returns 1 to 7, or 0 on error.  Follows HTML spec as of April 16, 2012.
+static PRInt32
+ParseLegacyFontSize(const nsAString& aValue)
+{
+  nsAString::const_iterator iter, end;
+  aValue.BeginReading(iter);
+  aValue.EndReading(end);
+
+  while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {
+    ++iter;
+  }
+
+  if (iter == end) {
+    return 0;
+  }
+
+  bool relative = false;
+  bool negate = false;
+  if (*iter == PRUnichar('-')) {
+    relative = true;
+    negate = true;
+    ++iter;
+  } else if (*iter == PRUnichar('+')) {
+    relative = true;
+    ++iter;
+  }
+
+  if (*iter < PRUnichar('0') || *iter > PRUnichar('9')) {
+    return 0;
+  }
+
+  // We don't have to worry about overflow, since we can bail out as soon as
+  // we're bigger than 7.
+  PRInt32 value = 0;
+  while (iter != end && *iter >= PRUnichar('0') && *iter <= PRUnichar('9')) {
+    value = 10*value + (*iter - PRUnichar('0'));
+    if (value >= 7) {
+      break;
+    }
+    ++iter;
+  }
+
+  if (relative) {
+    if (negate) {
+      value = 3 - value;
+    } else {
+      value = 3 + value;
+    }
+  }
+
+  return clamped(value, 1, 7);
+}
 
 bool
 nsHTMLFontElement::ParseAttribute(PRInt32 aNamespaceID,
@@ -151,26 +179,12 @@ nsHTMLFontElement::ParseAttribute(PRInt32 aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::size) {
-      nsAutoString tmp(aValue);
-      tmp.CompressWhitespace(true, true);
-      PRUnichar ch = tmp.IsEmpty() ? 0 : tmp.First();
-      if ((ch == '+' || ch == '-')) {
-          if (aResult.ParseEnumValue(aValue, kRelFontSizeTable, false))
-              return true;
-
-          // truncate after digit, then parse it again.
-          PRUint32 i;
-          for (i = 1; i < tmp.Length(); i++) {
-              ch = tmp.CharAt(i);
-              if (!nsCRT::IsAsciiDigit(ch)) {
-                  tmp.Truncate(i);
-                  break;
-              }
-          }
-          return aResult.ParseEnumValue(tmp, kRelFontSizeTable, false);
+      PRInt32 size = ParseLegacyFontSize(aValue);
+      if (size) {
+        aResult.SetTo(size, &aValue);
+        return true;
       }
-
-      return aResult.ParseIntValue(aValue);
+      return false;
     }
     if (aAttribute == nsGkAtoms::pointSize ||
         aAttribute == nsGkAtoms::fontWeight) {
@@ -207,20 +221,10 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       if (value && value->Type() == nsAttrValue::eInteger)
         fontSize->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Point);
       else {
-        // size: int, enum , 
+        // size: int
         value = aAttributes->GetAttr(nsGkAtoms::size);
-        if (value) {
-          nsAttrValue::ValueType unit = value->Type();
-          if (unit == nsAttrValue::eInteger || unit == nsAttrValue::eEnum) { 
-            PRInt32 size;
-            if (unit == nsAttrValue::eEnum) // int (+/-)
-              size = value->GetEnumValue() + 3;
-            else
-              size = value->GetIntegerValue();
-
-            size = clamped(size, 1, 7);
-            fontSize->SetIntValue(size, eCSSUnit_Enumerated);
-          }
+        if (value && value->Type() == nsAttrValue::eInteger) {
+          fontSize->SetIntValue(value->GetIntegerValue(), eCSSUnit_Enumerated);
         }
       }
     }
