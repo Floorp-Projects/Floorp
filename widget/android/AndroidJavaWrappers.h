@@ -597,6 +597,7 @@ public:
     bool IsShiftPressed() const { return (mMetaState & AndroidKeyEvent::META_SHIFT_MASK) != 0; }
     int Flags() { return mFlags; }
     int UnicodeChar() { return mUnicodeChar; }
+    int RepeatCount() const { return mRepeatCount; }
     int Offset() { return mOffset; }
     int Count() { return mCount; }
     int PointerIndex() { return mPointerIndex; }
@@ -621,6 +622,7 @@ protected:
     nsIntRect mRect;
     int mFlags, mMetaState;
     int mKeyCode, mUnicodeChar;
+    int mRepeatCount;
     int mOffset, mCount;
     int mRangeType, mRangeStyles;
     int mRangeForeColor, mRangeBackColor;
@@ -673,6 +675,7 @@ protected:
     static jfieldID jCountField;
     static jfieldID jPointerIndexField;
     static jfieldID jUnicodeCharField;
+    static jfieldID jRepeatCountField;
     static jfieldID jRangeTypeField;
     static jfieldID jRangeStylesField;
     static jfieldID jRangeForeColorField;
