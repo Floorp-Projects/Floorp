@@ -4764,6 +4764,19 @@ nsEventStateManager::SetContentState(nsIContent *aContent, nsEventStates aState)
 void
 nsEventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
 {
+  /*
+   * Anchor and area elements when focused or hovered might make the UI to show
+   * the current link. We want to make sure that the UI gets informed when they
+   * are actually removed from the DOM.
+   */
+  if (aContent->IsHTML() &&
+      (aContent->Tag() == nsGkAtoms::a || aContent->Tag() == nsGkAtoms::area) &&
+      (aContent->AsElement()->State().HasAtLeastOneOfStates(NS_EVENT_STATE_FOCUS |
+                                                            NS_EVENT_STATE_HOVER))) {
+    nsGenericHTMLElement* element = static_cast<nsGenericHTMLElement*>(aContent);
+    element->LeaveLink(element->GetPresContext());
+  }
+
   // inform the focus manager that the content is being removed. If this
   // content is focused, the focus will be removed without firing events.
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
