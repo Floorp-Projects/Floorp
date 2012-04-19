@@ -57,6 +57,7 @@ const DATACALLINFO_CID =
 const nsIAudioManager = Ci.nsIAudioManager;
 const nsIRadioInterfaceLayer = Ci.nsIRadioInterfaceLayer;
 
+const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kSmsReceivedObserverTopic          = "sms-received";
 const kSmsDeliveredObserverTopic         = "sms-delivered";
 const DOM_SMS_DELIVERY_RECEIVED          = "received";
@@ -1175,26 +1176,29 @@ RadioInterfaceLayer.prototype = {
 
 let RILNetworkInterface = {
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRILDataCallback]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsINetworkInterface,
+                                         Ci.nsIRILDataCallback]),
 
-  state: RIL.GECKO_NETWORK_STATE_UNKNOWN,
+  // nsINetworkInterface
+
+  NETWORK_STATE_UNKNOWN:       Ci.nsINetworkInterface.NETWORK_STATE_UNKNOWN,
+  NETWORK_STATE_CONNECTING:    Ci.nsINetworkInterface.CONNECTING,
+  NETWORK_STATE_CONNECTED:     Ci.nsINetworkInterface.CONNECTED,
+  NETWORK_STATE_SUSPENDED:     Ci.nsINetworkInterface.SUSPENDED,
+  NETWORK_STATE_DISCONNECTING: Ci.nsINetworkInterface.DISCONNECTING,
+  NETWORK_STATE_DISCONNECTED:  Ci.nsINetworkInterface.DISCONNECTED,
+
+  state: Ci.nsINetworkInterface.NETWORK_STATE_UNKNOWN,
+
+  NETWORK_TYPE_WIFI:       Ci.nsINetworkInterface.NETWORK_TYPE_WIFI,
+  NETWORK_TYPE_MOBILE:     Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE,
+  NETWORK_TYPE_MOBILE_MMS: Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS,
+
+  type: Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE,
+
   name: null,
 
-  worker: null,
-  cid: null,
-  registeredAsDataCallCallback: false,
-  connecting: false,
-
-  initWorker: function initWorker() {
-    debug("Starting net_worker.");
-    this.worker = new ChromeWorker("resource://gre/modules/net_worker.js");
-    this.worker.onerror = function onerror(event) {
-      debug("Received error from worker: " + event.filename +
-            ":" + event.lineno + ": " + event.message + "\n");
-      // Prevent the event from bubbling any further.
-      event.preventDefault();
-    };
-  },
+  dhcp: false,
 
   // nsIRILDataCallback
 
@@ -1206,6 +1210,12 @@ let RILNetworkInterface = {
       this.cid = cid;
       this.name = interfaceName;
       debug("Data call ID: " + cid + ", interface name: " + interfaceName);
+      if (!this.registeredAsNetworkInterface) {
+        let networkManager = Cc["@mozilla.org/network/manager;1"]
+                               .getService(Ci.nsINetworkManager);
+        networkManager.registerNetworkInterface(this);
+        this.registeredAsNetworkInterface = true;
+      }
     }
     if (this.cid != cid) {
       return;
@@ -1215,18 +1225,20 @@ let RILNetworkInterface = {
     }
 
     this.state = callState;
-
-    if (callState == RIL.GECKO_NETWORK_STATE_CONNECTED) {
-      debug("Data call is connected, going to configure networking bits.");
-      this.worker.postMessage({cmd: "setDefaultRouteAndDNS",
-                               ifname: this.name});
-    }
+    Services.obs.notifyObservers(this,
+                                 kNetworkInterfaceStateChangedTopic,
+                                 null);
   },
 
   receiveDataCallList: function receiveDataCallList(dataCalls, length) {
   },
 
   // Helpers
+
+  cid: null,
+  registeredAsDataCallCallback: false,
+  registeredAsNetworkInterface: false,
+  connecting: false,
 
   get mRIL() {
     delete this.mRIL;
@@ -1245,10 +1257,6 @@ let RILNetworkInterface = {
     if (!this.registeredAsDataCallCallback) {
       this.mRIL.registerDataCallCallback(this);
       this.registeredAsDataCallCallback = true;
-    }
-
-    if (!this.worker) {
-      this.initWorker();
     }
 
     let apn, user, passwd;
