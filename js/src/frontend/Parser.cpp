@@ -224,7 +224,6 @@ Parser::newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc)
     ++tc->parser->functionCount;
     funbox->kids = NULL;
     funbox->parent = tc->funbox;
-    funbox->methods = NULL;
     new (&funbox->bindings) Bindings(context);
     funbox->queued = false;
     funbox->inLoop = false;
@@ -3968,25 +3967,6 @@ Parser::expressionStatement()
         return NULL;
     pn->pn_pos = pn2->pn_pos;
     pn->pn_kid = pn2;
-
-    if (pn2->getKind() == PNK_ASSIGN) {
-        /*
-         * Keep track of all apparent methods created by assignments such
-         * as this.foo = function (...) {...} in a function that could end
-         * up a constructor function. See Parser::setFunctionKinds.
-         */
-        JS_ASSERT(pn2->isOp(JSOP_NOP));
-        if (tc->funbox &&
-            pn2->pn_left->isOp(JSOP_SETPROP) &&
-            pn2->pn_left->pn_expr->isKind(PNK_THIS) &&
-            pn2->pn_right->isOp(JSOP_LAMBDA))
-        {
-            JS_ASSERT(!pn2->isDefn());
-            JS_ASSERT(!pn2->isUsed());
-            pn2->pn_right->pn_link = tc->funbox->methods;
-            tc->funbox->methods = pn2->pn_right;
-        }
-    }
 
     /* Check termination of this primitive statement. */
     return MatchOrInsertSemicolon(context, &tokenStream) ? pn : NULL;
