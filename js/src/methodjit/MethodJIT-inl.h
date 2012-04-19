@@ -55,7 +55,27 @@ enum CompileRequest
  * of type information and less recompilation.
  */
 static const size_t USES_BEFORE_COMPILE = 16;
-static const size_t INFER_USES_BEFORE_COMPILE = 40;
+static const size_t INFER_USES_BEFORE_COMPILE = 43;
+
+static inline bool
+IonGetsFirstChance(JSContext *cx, JSScript *script, bool osr)
+{
+#ifdef JS_ION
+    if (!ion::IsEnabled(cx))
+        return false;
+
+    // If there's no way this script is going to be Ion compiled, let JM take over.
+    if (!script->canIonCompile())
+        return false;
+
+    // If we're going to OSR, but IM has forbidden OSR on this script, let JM take over.
+    if (osr && script->isOsrForbidden())
+        return false;
+
+    return true;
+#endif
+    return false;
+}
 
 static inline CompileStatus
 CanMethodJIT(JSContext *cx, JSScript *script, bool construct, CompileRequest request)
@@ -65,6 +85,8 @@ CanMethodJIT(JSContext *cx, JSScript *script, bool construct, CompileRequest req
     JITScriptStatus status = script->getJITStatus(construct);
     if (status == JITScript_Invalid)
         return Compile_Abort;
+    if (IonGetsFirstChance(cx, script, false))
+        return Compile_Skipped;
     if (request == CompileRequest_Interpreter && status == JITScript_None &&
         !cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) &&
         (cx->typeInferenceEnabled()
@@ -90,6 +112,8 @@ CanMethodJITAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode
     JITScriptStatus status = script->getJITStatus(fp->isConstructing());
     if (status == JITScript_Invalid)
         return Compile_Abort;
+    if (IonGetsFirstChance(cx, script, true))
+        return Compile_Skipped;
     if (status == JITScript_None && !cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS)) {
         if ((cx->typeInferenceEnabled())
              ? script->incUseCount() <= INFER_USES_BEFORE_COMPILE

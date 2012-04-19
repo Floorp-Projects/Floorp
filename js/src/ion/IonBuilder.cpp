@@ -2445,16 +2445,9 @@ IonBuilder::inlineScriptedCall(JSFunction *target, uint32 argc)
     MIRGraphExits exits;
     AutoAccumulateExits aae(graph(), exits);
 
-    if (cx->typeInferenceEnabled()) {
-        TypeInferenceOracle oracle;
-        if (!oracle.init(cx, target->script()))
-            return false;
-        IonBuilder inlineBuilder(cx, NULL, temp(), graph(), &oracle,
-                                 *info, inliningDepth + 1, loopDepth_);
-        return jsop_call_inline(target, argc, inlineBuilder);
-    }
-
-    DummyOracle oracle;
+    TypeInferenceOracle oracle;
+    if (!oracle.init(cx, target->script()))
+        return false;
     IonBuilder inlineBuilder(cx, NULL, temp(), graph(), &oracle,
                              *info, inliningDepth + 1, loopDepth_);
     return jsop_call_inline(target, argc, inlineBuilder);

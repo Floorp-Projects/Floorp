@@ -170,7 +170,7 @@ void MarkFromIon(JSCompartment *comp, Value *vp);
 
 static inline bool IsEnabled(JSContext *cx)
 {
-    return cx->hasRunOption(JSOPTION_ION);
+    return cx->hasRunOption(JSOPTION_ION) && cx->typeInferenceEnabled();
 }
 
 } // namespace ion

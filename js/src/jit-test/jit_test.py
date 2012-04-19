@@ -433,7 +433,7 @@ def main(argv):
                   help='With --write-failures=FILE, additionally write the output of failed tests to [FILE]')
     op.add_option('--ion', dest='ion', action='store_true',
                   help='Run tests with --ion flag (ignores --jitflags)')
-    op.add_option('--ion-tbpl', dest='ion_tbpl', action='store_true',
+    op.add_option('--tbpl', dest='tbpl', action='store_true',
                   help='Run tests with all IonMonkey option combinations (ignores --jitflags)')
     (OPTIONS, args) = op.parse_args(argv)
     if len(args) < 1:
@@ -499,11 +499,20 @@ def main(argv):
 
     # The full test list is ready. Now create copies for each JIT configuration.
     job_list = []
-    if OPTIONS.ion_tbpl:
+    if OPTIONS.tbpl:
         # Running all bits would take forever. Instead, we test a few interesting combinations.
         ion_flags = [ 
-                      ['--ion', '-n'],
-                      ['--ion', '-n', '--ion-gvn=off', '--ion-licm=off' ],
+                      ['--no-jm'],
+                      ['--ion-gvn=off', '--ion-licm=off'],
+                      # Below, equivalents the old shell flags: ,m,am,amd,n,mn,amn,amdn,mdn
+                      ['--no-ion', '--no-jm', '--no-ti'],
+                      ['--no-ion', '--no-ti'],
+                      ['--no-ion', '--no-ti', '-a', '-d'],
+                      ['--no-ion', '--no-jm'],
+                      ['--no-ion'],
+                      ['--no-ion', '-a'],
+                      ['--no-ion', '-a', '-d'],
+                      ['--no-ion', '-d']
                     ]
         for test in test_list:
             for variant in ion_flags:
@@ -511,7 +520,7 @@ def main(argv):
                 new_test.jitflags.extend(variant)
                 job_list.append(new_test)
     elif OPTIONS.ion:
-        args = ['--ion']
+        args = []
         for test in test_list:
             new_test = test.copy()
             new_test.jitflags.extend(args)
