@@ -51,7 +51,9 @@
 #include "jsbool.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "jstypes.h"
+
 #include "vm/Debugger.h"
+#include "vm/NumericConversions.h"
 #include "vm/String.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
@@ -1734,7 +1736,7 @@ stubs::ConvertToTypedInt(JSContext *cx, Value *vp)
     if (vp->isDouble()) {
         if (Clamped)
             return ClampDoubleToUint8(vp->toDouble());
-        return js_DoubleToECMAInt32(vp->toDouble());
+        return ToInt32(vp->toDouble());
     }
 
     if (vp->isNull() || vp->isObject() || vp->isUndefined())

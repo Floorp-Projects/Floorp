@@ -64,7 +64,7 @@
 
 struct JSCompartment;
 
-extern "C" void
+extern void
 js_TraceXML(JSTracer *trc, JSXML* thing);
 
 #if JS_STACK_GROWTH_DIRECTION > 0

@@ -46,13 +46,32 @@
 
 #include "mozilla/FloatingPoint.h"
 
-#include "jscntxt.h"
+#include <math.h>
 
-#define HalfTimeDomain  8.64e15
+#include "jstypes.h"
 
-#define TIMECLIP(d) ((MOZ_DOUBLE_IS_FINITE(d) \
-                      && !((d < 0 ? -d : d) > HalfTimeDomain)) \
-                     ? js_DoubleToInteger(d + (+0.)) : js_NaN)
+#include "vm/NumericConversions.h"
+
+extern "C" {
+struct JSObject;
+struct JSContext;
+}
+
+namespace js {
+
+/* ES5 15.9.1.14. */
+inline double
+TIMECLIP(double time)
+{
+    /* Steps 1-2. */
+    if (!MOZ_DOUBLE_IS_FINITE(time) || abs(time) > 8.64e15)
+        return js_NaN;
+
+    /* Step 3. */
+    return ToInteger(time + (+0.0));
+}
+
+} /* namespace js */
 
 extern JSObject *
 js_InitDateClass(JSContext *cx, JSObject *obj);

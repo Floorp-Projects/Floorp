@@ -75,6 +75,7 @@
 #include "jslibmath.h"
 
 #include "vm/GlobalObject.h"
+#include "vm/NumericConversions.h"
 #include "vm/StringBuffer.h"
 
 #include "jsinferinlines.h"
@@ -614,7 +615,7 @@ date_msecFromArgs(JSContext *cx, CallArgs args, double *rval)
                 *rval = js_NaN;
                 return JS_TRUE;
             }
-            array[loop] = js_DoubleToInteger(d);
+            array[loop] = ToInteger(d);
         } else {
             if (loop == 2) {
                 array[loop] = 1; /* Default the date argument to 1. */
@@ -1785,7 +1786,7 @@ date_makeTime(JSContext *cx, Native native, unsigned maxargs, JSBool local, unsi
         if (!MOZ_DOUBLE_IS_FINITE(nums[i])) {
             argIsNotFinite = true;
         } else {
-            nums[i] = js_DoubleToInteger(nums[i]);
+            nums[i] = ToInteger(nums[i]);
         }
     }
 
@@ -1921,7 +1922,7 @@ date_makeDate(JSContext *cx, Native native, unsigned maxargs, JSBool local, unsi
         if (!MOZ_DOUBLE_IS_FINITE(nums[i])) {
             argIsNotFinite = true;
         } else {
-            nums[i] = js_DoubleToInteger(nums[i]);
+            nums[i] = ToInteger(nums[i]);
         }
     }
 
@@ -2036,7 +2037,7 @@ date_setYear(JSContext *cx, unsigned argc, Value *vp)
         SetDateToNaN(cx, obj, &args.rval());
         return true;
     }
-    year = js_DoubleToInteger(year);
+    year = ToInteger(year);
     if (year >= 0 && year <= 99)
         year += 1900;
 
