@@ -15,7 +15,7 @@
 
 <xul:window id="newtab-window" xmlns="http://www.w3.org/1999/xhtml"
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            xul:disablefastfind="true" xul:title="&newtab.pageTitle;">
+            disablefastfind="true" title="&newtab.pageTitle;">
 
   <div id="newtab-scrollbox">
 
