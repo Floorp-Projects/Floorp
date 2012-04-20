@@ -123,11 +123,9 @@ function onUninstall(aEvent) {
 }
 
 function createShortcut(aTitle, aURL, aIconURL, aType) {
-  // The background images are 72px, but Android will resize as needed.
+  // The images are 64px, but Android will resize as needed.
   // Bigger is better than too small.
-  const kIconSize = 72;
-  const kOverlaySize = 32;
-  const kOffset = 20;
+  const kIconSize = 64;
 
   let canvas = document.createElement("canvas");
 
@@ -147,8 +145,7 @@ function createShortcut(aTitle, aURL, aIconURL, aType) {
 
   let favicon = new Image();
   favicon.onload = function() {
-    // Center the favicon and overlay it on the background
-    ctx.drawImage(favicon, kOffset, kOffset, kOverlaySize, kOverlaySize);
+    ctx.drawImage(favicon, 0, 0, kIconSize, kIconSize);
     _createShortcut();
   }
 
