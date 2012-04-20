@@ -354,12 +354,12 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
 
 
 nsresult
-nsHTMLEditor::SetInlinePropertyOnNode(nsIDOMNode *aNode,
-                                      nsIAtom *aProperty,
-                                      const nsAString *aAttribute,
-                                      const nsAString *aValue)
+nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIDOMNode *aNode,
+                                          nsIAtom *aProperty,
+                                          const nsAString *aAttribute,
+                                          const nsAString *aValue)
 {
-  NS_ENSURE_TRUE(aNode && aProperty, NS_ERROR_NULL_POINTER);
+  MOZ_ASSERT(aNode && aProperty);
 
   nsresult res;
   nsCOMPtr<nsIDOMNode> tmp;
@@ -414,17 +414,7 @@ nsHTMLEditor::SetInlinePropertyOnNode(nsIDOMNode *aNode,
       InsertContainerAbove(aNode, address_of(tmp), NS_LITERAL_STRING("span"),
                            nsnull, nsnull);
     }
-    // First we have to remove occurrences of the same style hint in the
-    // children of aNode, and any equivalent non-CSS attribute on aNode itself
-    // (if applicable).
-    res = RemoveStyleInside(tmp, aProperty, aAttribute, true);
-    NS_ENSURE_SUCCESS(res, res);
-    if (NodeIsType(aNode, aProperty)) {
-      nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
-      res = RemoveAttribute(elem, *aAttribute);
-      NS_ENSURE_SUCCESS(res, res);
-    }
-    // then we add the css styles corresponding to the HTML style request
+    // Add the CSS styles corresponding to the HTML style request
     nsCOMPtr<nsIDOMElement> element;
     element = do_QueryInterface(tmp);
     PRInt32 count;
@@ -456,25 +446,9 @@ nsHTMLEditor::SetInlinePropertyOnNode(nsIDOMNode *aNode,
     return NS_OK;
   }
 
-  // don't need to do anything if property already set on node
-  bool bHasProp;
-  nsCOMPtr<nsIDOMNode> styleNode;
-  IsTextPropertySetByContent(aNode, aProperty, aAttribute, aValue,
-                             bHasProp, getter_AddRefs(styleNode));
-  if (bHasProp) {
-    return NS_OK;
-  }
-
   // is it already the right kind of node, but with wrong attribute?
   if (NodeIsType(aNode, aProperty)) {
-    // Just set the attribute on it.  But first remove any contrary style in
-    // its children, and remove any conflicting CSS style on it.
-    res = RemoveStyleInside(aNode, aProperty, aAttribute, true);
-    NS_ENSURE_SUCCESS(res, res);
-    res = mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(aNode, aProperty,
-                                                        aAttribute, nsnull,
-                                                        false);
-    NS_ENSURE_SUCCESS(res, res);
+    // Just set the attribute on it.
     nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
     return SetAttribute(elem, *aAttribute, *aValue);
   }
@@ -489,18 +463,76 @@ nsHTMLEditor::SetInlinePropertyOnNode(nsIDOMNode *aNode,
       HasAttrVal(priorNode, aAttribute, aValue) &&
       IsOnlyAttribute(priorNode, aAttribute)) {
     // previous sib is already right kind of inline node; slide this over into it
-    res = MoveNode(aNode, priorNode, -1);
-  } else if (nextNode && NodeIsType(nextNode, aProperty) &&
-             HasAttrVal(nextNode, aAttribute, aValue) &&
-             IsOnlyAttribute(priorNode, aAttribute)) {
-    // following sib is already right kind of inline node; slide this over into it
-    res = MoveNode(aNode, nextNode, 0);
-  } else {
-    // ok, chuck it in its very own container
-    res = InsertContainerAbove(aNode, address_of(tmp), tag, aAttribute, aValue);
+    return MoveNode(aNode, priorNode, -1);
   }
+
+  if (nextNode && NodeIsType(nextNode, aProperty) &&
+      HasAttrVal(nextNode, aAttribute, aValue) &&
+      IsOnlyAttribute(priorNode, aAttribute)) {
+    // following sib is already right kind of inline node; slide this over into it
+    return MoveNode(aNode, nextNode, 0);
+  }
+
+  // ok, chuck it in its very own container
+  return InsertContainerAbove(aNode, address_of(tmp), tag, aAttribute, aValue);
+}
+
+
+nsresult
+nsHTMLEditor::SetInlinePropertyOnNode(nsIDOMNode *aNode,
+                                      nsIAtom *aProperty,
+                                      const nsAString *aAttribute,
+                                      const nsAString *aValue)
+{
+  // Before setting the property, we remove it if it's already set.
+  // RemoveStyleInside might remove the node we're looking at or some of its
+  // descendants, however, in which case we want to set the property on
+  // whatever wound up in its place.  We have to save the original siblings and
+  // parent to figure this out.
+  NS_ENSURE_TRUE(aNode && aProperty, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsIContent> node = do_QueryInterface(aNode);
+  NS_ENSURE_STATE(node);
+  nsCOMPtr<nsIContent> previousSibling = node->GetPreviousSibling(),
+                       nextSibling = node->GetNextSibling();
+  nsCOMPtr<nsINode> parent = node->GetNodeParent();
+  NS_ENSURE_STATE(parent);
+
+  nsresult res = RemoveStyleInside(aNode, aProperty, aAttribute);
   NS_ENSURE_SUCCESS(res, res);
-  return RemoveStyleInside(aNode, aProperty, aAttribute);
+
+  if (node->GetNodeParent()) {
+    // The node is still where it was
+    return SetInlinePropertyOnNodeImpl(aNode, aProperty,
+                                       aAttribute, aValue);
+  }
+
+  // It's vanished.  Use the old siblings for reference to construct a
+  // list.  But first, verify that the previous/next siblings are still
+  // where we expect them; otherwise we have to give up.
+  if ((previousSibling && previousSibling->GetNodeParent() != parent) ||
+      (nextSibling && nextSibling->GetNodeParent() != parent)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  nsCOMArray<nsIContent> nodesToSet;
+  nsCOMPtr<nsIContent> cur = previousSibling
+    ? previousSibling->GetNextSibling() : parent->GetFirstChild();
+  while (cur && cur != nextSibling) {
+    if (IsEditable(cur)) {
+      nodesToSet.AppendObject(cur);
+    }
+    cur = cur->GetNextSibling();
+  }
+
+  PRInt32 nodesToSetCount = nodesToSet.Count();
+  for (PRInt32 k = 0; k < nodesToSetCount; k++) {
+    nsCOMPtr<nsIDOMNode> nodeToSet = do_QueryInterface(nodesToSet[k]);
+    res = SetInlinePropertyOnNodeImpl(nodeToSet, aProperty,
+                                      aAttribute, aValue);
+    NS_ENSURE_SUCCESS(res, res);
+  }
+
+  return NS_OK;
 }
 
 
