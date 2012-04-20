@@ -6717,3 +6717,14 @@ JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length,
         return NULL;
     return funobj;
 }
+
+JS_PUBLIC_API(JSObject *)
+JS_GetScriptedGlobal(JSContext *cx)
+{
+    FrameRegsIter i(cx);
+    if (i.done())
+        return JS_GetGlobalForScopeChain(cx);
+
+    return JS_GetGlobalForFrame(Jsvalify(i.fp()));
+}
+

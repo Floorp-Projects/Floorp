@@ -235,7 +235,7 @@ function test9a() {
   });
 
   EventUtils.synthesizeMouse(plugin1, 100, 100, { });
-  setTimeout(test9b, 0);
+  setTimeout(test9b, 1000);
 }
 
 // Tests that activating one click-to-play plugin will activate the other plugins (part 2/2)
@@ -271,7 +271,7 @@ function test10a() {
   ok(popupNotification, "Test 10a, Should have a click-to-play notification");
   var plugin = gTestBrowser.contentDocument.getElementById("test");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 10c, Plugin should not be activated");
+  ok(!objLoadingContent.activated, "Test 10a, Plugin should not be activated");
 
   popupNotification.mainAction.callback();
   setTimeout(test10b, 0);
@@ -281,12 +281,12 @@ function test10a() {
 function test10b() {
   var plugin = gTestBrowser.contentDocument.getElementById("test");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 10c, Plugin should be activated");
+  ok(objLoadingContent.activated, "Test 10b, Plugin should be activated");
 
   prepareTest(test11a, gTestRoot + "plugin_test3.html");
 }
 
-// Tests that the going back will reshow the notification for click-to-play plugins (part 1/3)
+// Tests that the going back will reshow the notification for click-to-play plugins (part 1/4)
 function test11a() {
   var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(popupNotification, "Test 11a, Should have a click-to-play notification");
@@ -294,26 +294,118 @@ function test11a() {
   prepareTest(test11b, "about:blank");
 }
 
-// Tests that the going back will reshow the notification for click-to-play plugins (part 2/3)
+// Tests that the going back will reshow the notification for click-to-play plugins (part 2/4)
 function test11b() {
   var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(!popupNotification, "Test 11b, Should not have a click-to-play notification");
 
-  gTestBrowser.addEventListener("pageshow", test11c, false);
+  Services.obs.addObserver(test11d, "PopupNotifications-updateNotShowing", false);
+  //gTestBrowser.addEventListener("pageshow", test11c, false);
   gTestBrowser.contentWindow.history.back();
 }
 
-// Tests that the going back will reshow the notification for click-to-play plugins (part 3/3)
+// Tests that the going back will reshow the notification for click-to-play plugins (part 3/4)
 function test11c() {
   gTestBrowser.removeEventListener("pageshow", test11c, false);
-  // Make sure that the event handlers for pageshow can execute before checking for their effects.
-  executeSoon(function() {
-    todo(false, "The following test that checks for the notification fails intermittently, bug 742619.");
-    //var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-    //ok(popupNotification, "Test 11c, Should have a click-to-play notification");
+  Services.obs.addObserver(test11d, "PopupNotifications-updateNotShowing", false);
+}
+
+// Tests that the going back will reshow the notification for click-to-play plugins (part 4/4)
+function test11d() {
+  Services.obs.removeObserver(test11d, "PopupNotifications-updateNotShowing", false);
+  setTimeout(function() {
+    var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+    ok(popupNotification, "Test 11d, Should have a click-to-play notification");
     is(gClickToPlayPluginActualEvents, gClickToPlayPluginExpectedEvents,
        "There should be a PluginClickToPlay event for each plugin that was " +
        "blocked due to the plugins.click_to_play pref");
-    finishTest();
-  });
+
+    prepareTest(test12a, gTestRoot + "plugin_clickToPlayAllow.html");
+  }, 1000);
+
+  
+}
+
+// Tests that the "Allow Always" permission works for click-to-play plugins (part 1/3)
+function test12a() {
+  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(popupNotification, "Test 12a, Should have a click-to-play notification");
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 12a, Plugin should not be activated");
+
+  // Simulate clicking the "Allow Always" button.
+  popupNotification.secondaryActions[0].callback();
+  setTimeout(test12b, 0);
+}
+
+// Tests that the "Always" permission works for click-to-play plugins (part 2/3)
+function test12b() {
+  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(!popupNotification, "Test 12b, Should not have a click-to-play notification");
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 12b, Plugin should be activated");
+
+  prepareTest(test12c, gTestRoot + "plugin_clickToPlayAllow.html");
+}
+
+// Tests that the "Always" permission works for click-to-play plugins (part 3/3)
+function test12c() {
+  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(!popupNotification, "Test 12c, Should not have a click-to-play notification");
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 12c, Plugin should be activated");
+
+  Services.perms.removeAll();
+  gNextTest = test13a;
+  gTestBrowser.reload();
+}
+
+// Tests that the "Deny Always" permission works for click-to-play plugins (part 1/3)
+function test13a() {
+  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(popupNotification, "Test 13a, Should have a click-to-play notification");
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 13a, Plugin should not be activated");
+
+  // Simulate clicking the "Deny Always" button.
+  popupNotification.secondaryActions[1].callback();
+  setTimeout(test13b, 0);
+}
+
+// Tests that the "Deny Always" permission works for click-to-play plugins (part 2/3)
+function test13b() {
+  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(!popupNotification, "Test 13b, Should not have a click-to-play notification");
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 13b, Plugin should not be activated");
+
+  gNextTest = test13c;
+  gTestBrowser.reload();
+}
+
+// Tests that the "Deny Always" permission works for click-to-play plugins (part 3/3)
+function test13c() {
+  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(!popupNotification, "Test 13c, Should not have a click-to-play notification");
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 13c, Plugin should not be activated");
+
+  Services.perms.removeAll();
+  Services.prefs.setBoolPref("plugins.click_to_play", false);
+  prepareTest(test14, gTestRoot + "plugin_test2.html");
+}
+
+// Tests that the plugin's "activated" property is true for working plugins with click-to-play disabled.
+function test14() {
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 14, Plugin should be activated");
+
+  finishTest();
 }

@@ -320,6 +320,17 @@ namespace places {
   }
 
   /* static */
+  bool
+  MatchAutoCompleteFunction::findBeginningCaseSensitive(
+    const nsDependentCSubstring &aToken,
+    const nsACString &aSourceString)
+  {
+    NS_PRECONDITION(!aToken.IsEmpty(), "Don't search for an empty token!");
+
+    return StringBeginsWith(aSourceString, aToken);
+  }
+
+  /* static */
   MatchAutoCompleteFunction::searchFunctionPtr
   MatchAutoCompleteFunction::getSearchFunction(PRInt32 aBehavior)
   {
@@ -329,6 +340,8 @@ namespace places {
         return findAnywhere;
       case mozIPlacesAutoComplete::MATCH_BEGINNING:
         return findBeginning;
+      case mozIPlacesAutoComplete::MATCH_BEGINNING_CASE_SENSITIVE:
+        return findBeginningCaseSensitive;
       case mozIPlacesAutoComplete::MATCH_BOUNDARY:
       default:
         return findOnBoundary;

@@ -539,7 +539,8 @@ let Content = {
 
         let listener = {
           onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
-            if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+            if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+                aStateFlage & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
               sendAsyncMessage("Browser:SaveAs:Return", { type: json.type, id: json.id, referrer: json.referrer });
             }
           },

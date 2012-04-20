@@ -4527,37 +4527,37 @@ const TEST_RESULTS = {
       },
       "BC:blue_TEXT-1_SI": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"blue\" onload=\"setDesignMode()\">`foo[bar]baz´</body>",
-          "innerHTML": "`foo[bar]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"blue\" onload=\"setDesignMode()\">`foo[bar]baz´</body>",
-          "bodyInnerHTML": "`foo[bar]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"blue\" onload=\"setDesignMode()\">`foo[bar]baz´</body>"
+          "valresult": 8,
+          "selresult": 2,
+          "output": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "innerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>"
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"blue\">`foo[bar]baz´</body>",
-          "innerHTML": "`foo[bar]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"blue\">`foo[bar]baz´</body>",
-          "bodyInnerHTML": "`foo[bar]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"blue\">`foo[bar]baz´</body>"
+          "valresult": 8,
+          "selresult": 2,
+          "output": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "innerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>"
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "`foo[bar]baz´",
-          "innerHTML": "`foo[bar]baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[bar]baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[bar]baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"blue\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[bar]baz´</div>CAN<br>ARY</body>"
+          "valresult": 8,
+          "selresult": 2,
+          "output": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "innerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</div>CAN<br>ARY</body>"
         }
       },
       "FC:blue_TEXT-1_SI": {
@@ -4597,37 +4597,37 @@ const TEST_RESULTS = {
       },
       "HC:blue_TEXT-1_SI": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "`foo[bar]baz´",
-          "innerHTML": "`foo[bar]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[bar]baz´</body>",
-          "bodyInnerHTML": "`foo[bar]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[bar]baz´</body>"
+          "valresult": 8,
+          "selresult": 2,
+          "output": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "innerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>"
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "`foo[bar]baz´",
-          "innerHTML": "`foo[bar]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[bar]baz´</body>",
-          "bodyInnerHTML": "`foo[bar]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[bar]baz´</body>"
+          "valresult": 8,
+          "selresult": 2,
+          "output": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "innerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>"
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "`foo[bar]baz´",
-          "innerHTML": "`foo[bar]baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[bar]baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[bar]baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[bar]baz´</div>CAN<br>ARY</body>"
+          "valresult": 8,
+          "selresult": 2,
+          "output": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "innerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</div>CAN<br>ARY</body>"
         }
       },
       "FN:a_TEXT-1_SI": {
@@ -5301,37 +5301,37 @@ const TEST_RESULTS = {
       },
       "BC:blue_TEXT-1_SI": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: blue;\">`foo[bar]baz´</body>",
-          "innerHTML": "`foo[bar]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: blue;\">`foo[bar]baz´</body>",
-          "bodyInnerHTML": "`foo[bar]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: blue;\">`foo[bar]baz´</body>"
+          "valresult": 8,
+          "selresult": 2,
+          "output": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "innerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>"
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: blue;\">`foo[bar]baz´</body>",
-          "innerHTML": "`foo[bar]baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: blue;\">`foo[bar]baz´</body>",
-          "bodyInnerHTML": "`foo[bar]baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: blue;\">`foo[bar]baz´</body>"
+          "valresult": 8,
+          "selresult": 2,
+          "output": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "innerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>",
+          "bodyInnerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</body>"
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: blue;\">`foo[bar]baz´</div>",
-          "innerHTML": "`foo[bar]baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: blue;\">`foo[bar]baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: blue;\" id=\"editor-div\" contenteditable=\"true\">`foo[bar]baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: blue;\">`foo[bar]baz´</div>CAN<br>ARY</body>"
+          "valresult": 8,
+          "selresult": 2,
+          "output": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "innerHTML": "`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo[´<span style=\"background-color: blue;\">`bar]´</span>`baz´</div>CAN<br>ARY</body>"
         }
       },
       "FC:blue_TEXT-1_SI": {
@@ -5900,107 +5900,107 @@ const TEST_RESULTS = {
       },
       "BC:842_FONTs:bc:fca-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#884422\" onload=\"setDesignMode()\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></body>",
-          "innerHTML": "<font style=\"background-color: #ffccaa\">`[foobarbaz]´</font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#884422\" onload=\"setDesignMode()\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></body>",
-          "bodyInnerHTML": "<font style=\"background-color: #ffccaa\">`[foobarbaz]´</font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#884422\" onload=\"setDesignMode()\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font>",
+          "innerHTML": "<font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#884422\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></body>",
-          "innerHTML": "<font style=\"background-color: #ffccaa\">`[foobarbaz]´</font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#884422\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></body>",
-          "bodyInnerHTML": "<font style=\"background-color: #ffccaa\">`[foobarbaz]´</font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#884422\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font>",
+          "innerHTML": "<font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font style=\"background-color: rgb(136, 68, 34);\">`[foobarbaz]´</font></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<font style=\"background-color: #ffccaa\">`[foobarbaz]´</font>",
+          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(136, 68, 34);\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></div>",
           "innerHTML": "<font style=\"background-color: #ffccaa\">`[foobarbaz]´</font>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#884422\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(136, 68, 34);\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: rgb(136, 68, 34);\" id=\"editor-div\" contenteditable=\"true\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(136, 68, 34);\"><font style=\"background-color: #ffccaa\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
         }
       },
       "BC:00f_SPANs:bc:f00-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#0000ff\" onload=\"setDesignMode()\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></body>",
-          "innerHTML": "<span style=\"background-color: #ff0000\">`[foobarbaz]´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#0000ff\" onload=\"setDesignMode()\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></body>",
-          "bodyInnerHTML": "<span style=\"background-color: #ff0000\">`[foobarbaz]´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#0000ff\" onload=\"setDesignMode()\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span>",
+          "innerHTML": "<span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span></body>",
+          "bodyInnerHTML": "<span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#0000ff\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></body>",
-          "innerHTML": "<span style=\"background-color: #ff0000\">`[foobarbaz]´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#0000ff\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></body>",
-          "bodyInnerHTML": "<span style=\"background-color: #ff0000\">`[foobarbaz]´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#0000ff\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span>",
+          "innerHTML": "<span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span></body>",
+          "bodyInnerHTML": "<span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: rgb(0, 0, 255);\">`[foobarbaz]´</span></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<span style=\"background-color: #ff0000\">`[foobarbaz]´</span>",
+          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(0, 0, 255);\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></div>",
           "innerHTML": "<span style=\"background-color: #ff0000\">`[foobarbaz]´</span>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#0000ff\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></div>CAN<br>ARY</body>"
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(0, 0, 255);\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: rgb(0, 0, 255);\" id=\"editor-div\" contenteditable=\"true\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(0, 0, 255);\"><span style=\"background-color: #ff0000\">`[foobarbaz]´</span></div>CAN<br>ARY</body>"
         }
       },
       "BC:ace_FONT.ass.s:bc:rgb-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#aaccee\" onload=\"setDesignMode()\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>",
-          "innerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0)\">`[foobarbaz]´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#aaccee\" onload=\"setDesignMode()\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>",
-          "bodyInnerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0)\">`[foobarbaz]´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#aaccee\" onload=\"setDesignMode()\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<span class=\"Apple-style-span\" style=\"background-color: rgb(170, 204, 238);\">`[foobarbaz]´</span>",
+          "innerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(170, 204, 238);\">`[foobarbaz]´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: rgb(170, 204, 238);\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>",
+          "bodyInnerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(170, 204, 238);\">`[foobarbaz]´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: rgb(170, 204, 238);\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#aaccee\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>",
-          "innerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0)\">`[foobarbaz]´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#aaccee\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>",
-          "bodyInnerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0)\">`[foobarbaz]´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" bgcolor=\"#aaccee\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<span class=\"Apple-style-span\" style=\"background-color: rgb(170, 204, 238);\">`[foobarbaz]´</span>",
+          "innerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(170, 204, 238);\">`[foobarbaz]´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: rgb(170, 204, 238);\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>",
+          "bodyInnerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(170, 204, 238);\">`[foobarbaz]´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: rgb(170, 204, 238);\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0)\">`[foobarbaz]´</span>",
+          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(170, 204, 238);\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></div>",
           "innerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0)\">`[foobarbaz]´</span>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0)\">`[foobarbaz]´</span></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" bgcolor=\"#aaccee\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></div>CAN<br>ARY</body>"
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(170, 204, 238);\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: rgb(170, 204, 238);\" id=\"editor-div\" contenteditable=\"true\"><span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0)\">`[foobarbaz]´</span></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: rgb(170, 204, 238);\"><span style=\"background-color: rgb(255, 0, 0)\" class=\"Apple-style-span\">`[foobarbaz]´</span></div>CAN<br>ARY</body>"
         }
       },
       "FC:g_FONTc:b-1_SW": {
@@ -6145,107 +6145,107 @@ const TEST_RESULTS = {
       },
       "HC:g_FONTs:c:b-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font style=\"background-color: blue\">`[foobarbaz]´</font>",
-          "innerHTML": "<font style=\"background-color: blue\">`[foobarbaz]´</font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font style=\"background-color: blue\">`[foobarbaz]´</font></body>",
-          "bodyInnerHTML": "<font style=\"background-color: blue\">`[foobarbaz]´</font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font style=\"background-color: blue\">`[foobarbaz]´</font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font style=\"background-color: green;\">`[foobarbaz]´</font>",
+          "innerHTML": "<font style=\"background-color: green;\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font style=\"background-color: green;\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font style=\"background-color: green;\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><font style=\"background-color: green;\">`[foobarbaz]´</font></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<font style=\"background-color: blue\">`[foobarbaz]´</font>",
-          "innerHTML": "<font style=\"background-color: blue\">`[foobarbaz]´</font>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font style=\"background-color: blue\">`[foobarbaz]´</font></body>",
-          "bodyInnerHTML": "<font style=\"background-color: blue\">`[foobarbaz]´</font>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font style=\"background-color: blue\">`[foobarbaz]´</font></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<font style=\"background-color: green;\">`[foobarbaz]´</font>",
+          "innerHTML": "<font style=\"background-color: green;\">`[foobarbaz]´</font>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font style=\"background-color: green;\">`[foobarbaz]´</font></body>",
+          "bodyInnerHTML": "<font style=\"background-color: green;\">`[foobarbaz]´</font>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><font style=\"background-color: green;\">`[foobarbaz]´</font></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<font style=\"background-color: blue\">`[foobarbaz]´</font>",
+          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: green;\"><font style=\"background-color: blue\">`[foobarbaz]´</font></div>",
           "innerHTML": "<font style=\"background-color: blue\">`[foobarbaz]´</font>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><font style=\"background-color: blue\">`[foobarbaz]´</font></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><font style=\"background-color: blue\">`[foobarbaz]´</font></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><font style=\"background-color: blue\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: green;\"><font style=\"background-color: blue\">`[foobarbaz]´</font></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: green;\" id=\"editor-div\" contenteditable=\"true\"><font style=\"background-color: blue\">`[foobarbaz]´</font></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: green;\"><font style=\"background-color: blue\">`[foobarbaz]´</font></div>CAN<br>ARY</body>"
         }
       },
       "HC:g_SPANs:c:g-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "innerHTML": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: blue\">`[foobarbaz]´</span></body>",
-          "bodyInnerHTML": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: blue\">`[foobarbaz]´</span></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<span style=\"background-color: green;\">`[foobarbaz]´</span>",
+          "innerHTML": "<span style=\"background-color: green;\">`[foobarbaz]´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: green;\">`[foobarbaz]´</span></body>",
+          "bodyInnerHTML": "<span style=\"background-color: green;\">`[foobarbaz]´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: green;\">`[foobarbaz]´</span></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "innerHTML": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: blue\">`[foobarbaz]´</span></body>",
-          "bodyInnerHTML": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: blue\">`[foobarbaz]´</span></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<span style=\"background-color: green;\">`[foobarbaz]´</span>",
+          "innerHTML": "<span style=\"background-color: green;\">`[foobarbaz]´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: green;\">`[foobarbaz]´</span></body>",
+          "bodyInnerHTML": "<span style=\"background-color: green;\">`[foobarbaz]´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: green;\">`[foobarbaz]´</span></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
+          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: green;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></div>",
           "innerHTML": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><span style=\"background-color: blue\">`[foobarbaz]´</span></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><span style=\"background-color: blue\">`[foobarbaz]´</span></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><span style=\"background-color: blue\">`[foobarbaz]´</span></div>CAN<br>ARY</body>"
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: green;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: green;\" id=\"editor-div\" contenteditable=\"true\"><span style=\"background-color: blue\">`[foobarbaz]´</span></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: green;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></div>CAN<br>ARY</body>"
         }
       },
       "HC:g_SPAN.ass.s:c:rgb-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0);\">`[foobarbaz]´</span>",
-          "innerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0);\">`[foobarbaz]´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: rgb(255, 0, 0);\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>",
-          "bodyInnerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0);\">`[foobarbaz]´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: rgb(255, 0, 0);\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<span class=\"Apple-style-span\" style=\"background-color: green;\">`[foobarbaz]´</span>",
+          "innerHTML": "<span class=\"Apple-style-span\" style=\"background-color: green;\">`[foobarbaz]´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: green;\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>",
+          "bodyInnerHTML": "<span class=\"Apple-style-span\" style=\"background-color: green;\">`[foobarbaz]´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: green;\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0);\">`[foobarbaz]´</span>",
-          "innerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0);\">`[foobarbaz]´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: rgb(255, 0, 0);\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>",
-          "bodyInnerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0);\">`[foobarbaz]´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: rgb(255, 0, 0);\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<span class=\"Apple-style-span\" style=\"background-color: green;\">`[foobarbaz]´</span>",
+          "innerHTML": "<span class=\"Apple-style-span\" style=\"background-color: green;\">`[foobarbaz]´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: green;\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>",
+          "bodyInnerHTML": "<span class=\"Apple-style-span\" style=\"background-color: green;\">`[foobarbaz]´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: green;\" class=\"Apple-style-span\">`[foobarbaz]´</span></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0);\">`[foobarbaz]´</span>",
+          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: green;\"><span style=\"background-color: rgb(255, 0, 0);\" class=\"Apple-style-span\">`[foobarbaz]´</span></div>",
           "innerHTML": "<span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0);\">`[foobarbaz]´</span>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><span style=\"background-color: rgb(255, 0, 0);\" class=\"Apple-style-span\">`[foobarbaz]´</span></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0);\">`[foobarbaz]´</span></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><span style=\"background-color: rgb(255, 0, 0);\" class=\"Apple-style-span\">`[foobarbaz]´</span></div>CAN<br>ARY</body>"
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: green;\"><span style=\"background-color: rgb(255, 0, 0);\" class=\"Apple-style-span\">`[foobarbaz]´</span></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: green;\" id=\"editor-div\" contenteditable=\"true\"><span class=\"Apple-style-span\" style=\"background-color: rgb(255, 0, 0);\">`[foobarbaz]´</span></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: green;\"><span style=\"background-color: rgb(255, 0, 0);\" class=\"Apple-style-span\">`[foobarbaz]´</span></div>CAN<br>ARY</body>"
         }
       },
       "FN:c_FONTf:a-1_SW": {
@@ -6954,212 +6954,212 @@ const TEST_RESULTS = {
       },
       "BC:gray_SPANs:bc:b-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></body>",
-          "innerHTML": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></body>",
-          "bodyInnerHTML": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<span style=\"background-color: gray;\">`[foobarbaz]´</span>",
+          "innerHTML": "<span style=\"background-color: gray;\">`[foobarbaz]´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: gray;\">`[foobarbaz]´</span></body>",
+          "bodyInnerHTML": "<span style=\"background-color: gray;\">`[foobarbaz]´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: gray;\">`[foobarbaz]´</span></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></body>",
-          "innerHTML": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></body>",
-          "bodyInnerHTML": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<span style=\"background-color: gray;\">`[foobarbaz]´</span>",
+          "innerHTML": "<span style=\"background-color: gray;\">`[foobarbaz]´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: gray;\">`[foobarbaz]´</span></body>",
+          "bodyInnerHTML": "<span style=\"background-color: gray;\">`[foobarbaz]´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: gray;\">`[foobarbaz]´</span></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></div>",
-          "innerHTML": "<span style=\"background-color: blue\">`[foobarbaz]´</span>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: gray;\" id=\"editor-div\" contenteditable=\"true\"><span style=\"background-color: blue\">`[foobarbaz]´</span></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></div>CAN<br>ARY</body>"
+          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`[foobarbaz]´</div>",
+          "innerHTML": "`[foobarbaz]´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`[foobarbaz]´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: gray;\" id=\"editor-div\" contenteditable=\"true\">`[foobarbaz]´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`[foobarbaz]´</div>CAN<br>ARY</body>"
         }
       },
       "BC:gray_SPANs:bc:b-1_SO": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</body>",
-          "innerHTML": "{<span style=\"background-color: blue\">`foobarbaz´</span>}",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</body>",
-          "bodyInnerHTML": "{<span style=\"background-color: blue\">`foobarbaz´</span>}",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "{<span style=\"background-color: gray;\">`foobarbaz´</span>}",
+          "innerHTML": "{<span style=\"background-color: gray;\">`foobarbaz´</span>}",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">{<span style=\"background-color: gray;\">`foobarbaz´</span>}</body>",
+          "bodyInnerHTML": "{<span style=\"background-color: gray;\">`foobarbaz´</span>}",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">{<span style=\"background-color: gray;\">`foobarbaz´</span>}</body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</body>",
-          "innerHTML": "{<span style=\"background-color: blue\">`foobarbaz´</span>}",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</body>",
-          "bodyInnerHTML": "{<span style=\"background-color: blue\">`foobarbaz´</span>}",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "{<span style=\"background-color: gray;\">`foobarbaz´</span>}",
+          "innerHTML": "{<span style=\"background-color: gray;\">`foobarbaz´</span>}",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">{<span style=\"background-color: gray;\">`foobarbaz´</span>}</body>",
+          "bodyInnerHTML": "{<span style=\"background-color: gray;\">`foobarbaz´</span>}",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">{<span style=\"background-color: gray;\">`foobarbaz´</span>}</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</div>",
-          "innerHTML": "{<span style=\"background-color: blue\">`foobarbaz´</span>}",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: gray;\" id=\"editor-div\" contenteditable=\"true\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">{<span style=\"background-color: blue\">`foobarbaz´</span>}</div>CAN<br>ARY</body>"
+          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">{`foobarbaz´}</div>",
+          "innerHTML": "{`foobarbaz´}",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">{`foobarbaz´}</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: gray;\" id=\"editor-div\" contenteditable=\"true\">{`foobarbaz´}</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">{`foobarbaz´}</div>CAN<br>ARY</body>"
         }
       },
       "BC:gray_SPANs:bc:b-1_SI": {
         "dM": {
           "valscore": 0,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></body>",
-          "innerHTML": "<span style=\"background-color: blue\">`foo[bar]baz´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></body>",
-          "bodyInnerHTML": "<span style=\"background-color: blue\">`foo[bar]baz´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></body>"
+          "valresult": 7,
+          "selresult": 2,
+          "output": "<span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span>",
+          "innerHTML": "<span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span></body>",
+          "bodyInnerHTML": "<span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span></body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></body>",
-          "innerHTML": "<span style=\"background-color: blue\">`foo[bar]baz´</span>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></body>",
-          "bodyInnerHTML": "<span style=\"background-color: blue\">`foo[bar]baz´</span>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></body>"
+          "valresult": 7,
+          "selresult": 2,
+          "output": "<span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span>",
+          "innerHTML": "<span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span></body>",
+          "bodyInnerHTML": "<span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></div>",
-          "innerHTML": "<span style=\"background-color: blue\">`foo[bar]baz´</span>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: gray;\" id=\"editor-div\" contenteditable=\"true\"><span style=\"background-color: blue\">`foo[bar]baz´</span></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><span style=\"background-color: blue\">`foo[bar]baz´</span></div>CAN<br>ARY</body>"
+          "valresult": 7,
+          "selresult": 2,
+          "output": "<span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span>",
+          "innerHTML": "<span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><span style=\"background-color: blue\">`foo[´<span style=\"background-color: gray;\">`bar]´</span>`baz´</span></div>CAN<br>ARY</body>"
         }
       },
       "BC:gray_P-SPANs:bc:b-1_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p>",
-          "innerHTML": "<p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p></body>",
-          "bodyInnerHTML": "<p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<p style=\"background-color: gray;\">`[foobarbaz]´</p>",
+          "innerHTML": "<p style=\"background-color: gray;\">`[foobarbaz]´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\">`[foobarbaz]´</p></body>",
+          "bodyInnerHTML": "<p style=\"background-color: gray;\">`[foobarbaz]´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\">`[foobarbaz]´</p></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p>",
-          "innerHTML": "<p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p></body>",
-          "bodyInnerHTML": "<p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<p style=\"background-color: gray;\">`[foobarbaz]´</p>",
+          "innerHTML": "<p style=\"background-color: gray;\">`[foobarbaz]´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\">`[foobarbaz]´</p></body>",
+          "bodyInnerHTML": "<p style=\"background-color: gray;\">`[foobarbaz]´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\">`[foobarbaz]´</p></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p>",
-          "innerHTML": "<p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p style=\"background-color: gray;\"><span style=\"background-color: blue\">`[foobarbaz]´</span></p></div>CAN<br>ARY</body>"
+          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><p>`[foobarbaz]´</p></div>",
+          "innerHTML": "<p>`[foobarbaz]´</p>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><p>`[foobarbaz]´</p></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: gray;\" id=\"editor-div\" contenteditable=\"true\"><p>`[foobarbaz]´</p></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\"><p>`[foobarbaz]´</p></div>CAN<br>ARY</body>"
         }
       },
       "BC:gray_P-SPANs:bc:b-2_SW": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p></body>",
-          "bodyInnerHTML": "<p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p>",
+          "innerHTML": "<p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p></body>",
+          "bodyInnerHTML": "<p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p></body>",
-          "bodyInnerHTML": "<p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p>",
+          "innerHTML": "<p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p></body>",
+          "bodyInnerHTML": "<p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p></body>"
         },
         "div": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p style=\"background-color: gray;\">`foo´<span style=\"background-color: blue\">`[bar]´</span>`baz´</p></div>CAN<br>ARY</body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p>",
+          "innerHTML": "<p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p>`foo´<span style=\"background-color: gray;\">`[bar]´</span>`baz´</p></div>CAN<br>ARY</body>"
         }
       },
       "BC:gray_P-SPANs:bc:b-3_SO": {
         "dM": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p></body>",
-          "bodyInnerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p>",
+          "innerHTML": "<p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p></body>",
+          "bodyInnerHTML": "<p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p></body>"
         },
         "body": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p></body>",
-          "bodyInnerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p></body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p>",
+          "innerHTML": "<p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p></body>",
+          "bodyInnerHTML": "<p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p></body>"
         },
         "div": {
-          "valscore": 0,
-          "selscore": 0,
-          "valresult": 6,
-          "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`barbaz´</span>`qoz]quz´</p></div>CAN<br>ARY</body>"
+          "valscore": 1,
+          "selscore": 1,
+          "valresult": 8,
+          "selresult": 5,
+          "output": "<p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p>",
+          "innerHTML": "<p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p><span style=\"background-color: gray;\">`[foo´`barbaz´`qoz]´</span>`quz´</p></div>CAN<br>ARY</body>"
         }
       },
       "BC:gray_P-SPANs:bc:b-3_SL": {
@@ -7168,33 +7168,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p></body>",
-          "bodyInnerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p></body>"
+          "output": "<p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p>",
+          "innerHTML": "<p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p></body>",
+          "bodyInnerHTML": "<p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p></body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p></body>",
-          "bodyInnerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p></body>"
+          "output": "<p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p>",
+          "innerHTML": "<p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p></body>",
+          "bodyInnerHTML": "<p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p></body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p>",
-          "innerHTML": "<p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p style=\"background-color: gray;\">`[foo´<span style=\"background-color: blue\">`bar]baz´</span>`qozquz´</p></div>CAN<br>ARY</body>"
+          "output": "<p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p>",
+          "innerHTML": "<p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p><span style=\"background-color: gray;\">`[foo´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`bar]´</span>`baz´</span>`qozquz´</p></div>CAN<br>ARY</body>"
         }
       },
       "BC:gray_SPANs:bc:b-2_SL": {
@@ -7203,33 +7203,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</body>",
-          "innerHTML": "`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</body>",
-          "bodyInnerHTML": "`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</body>"
+          "output": "`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´",
+          "innerHTML": "`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´</body>",
+          "bodyInnerHTML": "`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</body>",
-          "innerHTML": "`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</body>",
-          "bodyInnerHTML": "`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</body>"
+          "output": "`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´",
+          "innerHTML": "`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´</body>",
+          "bodyInnerHTML": "`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</div>",
-          "innerHTML": "`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: gray;\" id=\"editor-div\" contenteditable=\"true\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`foo [bar ´<span style=\"background-color: blue\">`baz] qoz´</span>` quz sic´</div>CAN<br>ARY</body>"
+          "output": "`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´",
+          "innerHTML": "`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo [´<span style=\"background-color: gray;\">`bar ´</span><span style=\"background-color: blue\"><span style=\"background-color: gray;\">`baz]´</span>` qoz´</span>` quz sic´</div>CAN<br>ARY</body>"
         }
       },
       "BC:gray_SPANs:bc:b-2_SR": {
@@ -7238,33 +7238,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</body>",
-          "innerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</body>",
-          "bodyInnerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</body>"
+          "output": "`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´",
+          "innerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´</body>",
+          "bodyInnerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´</body>"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</body>",
-          "innerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</body>",
-          "bodyInnerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</body>"
+          "output": "`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´",
+          "innerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´</body>",
+          "bodyInnerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´</body>"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</div>",
-          "innerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div style=\"background-color: gray;\" id=\"editor-div\" contenteditable=\"true\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\" style=\"background-color: gray;\">`foo bar ´<span style=\"background-color: blue\">`baz [qoz´</span>` quz] sic´</div>CAN<br>ARY</body>"
+          "output": "`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´",
+          "innerHTML": "`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo bar ´<span style=\"background-color: blue\">`baz [´<span style=\"background-color: gray;\">`qoz´</span></span><span style=\"background-color: gray;\">` quz]´</span>` sic´</div>CAN<br>ARY</body>"
         }
       },
       "FN:c_SPANs:ff:a-1_SW": {
@@ -15757,33 +15757,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 8,
           "selresult": 4,
-          "output": "`foo´<hr size=\"2\" width=\"100%\">|`bar´",
-          "innerHTML": "`foo´<hr size=\"2\" width=\"100%\">|`bar´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<hr width=\"100%\" size=\"2\">|`bar´</body>",
-          "bodyInnerHTML": "`foo´<hr size=\"2\" width=\"100%\">|`bar´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<hr width=\"100%\" size=\"2\">|`bar´</body>"
+          "output": "`foo´<hr>|`bar´",
+          "innerHTML": "`foo´<hr>|`bar´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<hr>|`bar´</body>",
+          "bodyInnerHTML": "`foo´<hr>|`bar´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<hr>|`bar´</body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 0,
           "valresult": 8,
           "selresult": 4,
-          "output": "`foo´<hr size=\"2\" width=\"100%\">|`bar´",
-          "innerHTML": "`foo´<hr size=\"2\" width=\"100%\">|`bar´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<hr width=\"100%\" size=\"2\">|`bar´</body>",
-          "bodyInnerHTML": "`foo´<hr size=\"2\" width=\"100%\">|`bar´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<hr width=\"100%\" size=\"2\">|`bar´</body>"
+          "output": "`foo´<hr>|`bar´",
+          "innerHTML": "`foo´<hr>|`bar´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<hr>|`bar´</body>",
+          "bodyInnerHTML": "`foo´<hr>|`bar´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<hr>|`bar´</body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 0,
           "valresult": 8,
           "selresult": 4,
-          "output": "`foo´<hr size=\"2\" width=\"100%\">|`bar´",
-          "innerHTML": "`foo´<hr size=\"2\" width=\"100%\">|`bar´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<hr width=\"100%\" size=\"2\">|`bar´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<hr size=\"2\" width=\"100%\">|`bar´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<hr width=\"100%\" size=\"2\">|`bar´</div>CAN<br>ARY</body>"
+          "output": "`foo´<hr>|`bar´",
+          "innerHTML": "`foo´<hr>|`bar´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<hr>|`bar´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<hr>|`bar´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<hr>|`bar´</div>CAN<br>ARY</body>"
         }
       },
       "IHR_TEXT-1_SI": {
@@ -15792,33 +15792,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 8,
           "selresult": 4,
-          "output": "`foo´<hr size=\"2\" width=\"100%\">|`baz´",
-          "innerHTML": "`foo´<hr size=\"2\" width=\"100%\">|`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<hr width=\"100%\" size=\"2\">|`baz´</body>",
-          "bodyInnerHTML": "`foo´<hr size=\"2\" width=\"100%\">|`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<hr width=\"100%\" size=\"2\">|`baz´</body>"
+          "output": "`foo´<hr>|`baz´",
+          "innerHTML": "`foo´<hr>|`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<hr>|`baz´</body>",
+          "bodyInnerHTML": "`foo´<hr>|`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<hr>|`baz´</body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 0,
           "valresult": 8,
           "selresult": 4,
-          "output": "`foo´<hr size=\"2\" width=\"100%\">|`baz´",
-          "innerHTML": "`foo´<hr size=\"2\" width=\"100%\">|`baz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<hr width=\"100%\" size=\"2\">|`baz´</body>",
-          "bodyInnerHTML": "`foo´<hr size=\"2\" width=\"100%\">|`baz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<hr width=\"100%\" size=\"2\">|`baz´</body>"
+          "output": "`foo´<hr>|`baz´",
+          "innerHTML": "`foo´<hr>|`baz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<hr>|`baz´</body>",
+          "bodyInnerHTML": "`foo´<hr>|`baz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<hr>|`baz´</body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 0,
           "valresult": 8,
           "selresult": 4,
-          "output": "`foo´<hr size=\"2\" width=\"100%\">|`baz´",
-          "innerHTML": "`foo´<hr size=\"2\" width=\"100%\">|`baz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<hr width=\"100%\" size=\"2\">|`baz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<hr size=\"2\" width=\"100%\">|`baz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<hr width=\"100%\" size=\"2\">|`baz´</div>CAN<br>ARY</body>"
+          "output": "`foo´<hr>|`baz´",
+          "innerHTML": "`foo´<hr>|`baz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<hr>|`baz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<hr>|`baz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<hr>|`baz´</div>CAN<br>ARY</body>"
         }
       },
       "IHR_DIV-B-1_SX": {
@@ -15827,33 +15827,33 @@ const TEST_RESULTS = {
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b></div>",
-          "innerHTML": "<div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b></div>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><div><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`bar´</b></div></body>",
-          "bodyInnerHTML": "<div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b></div>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><div><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`bar´</b></div></body>"
+          "output": "<div><b>`foo´</b><hr>|<b>`bar´</b></div>",
+          "innerHTML": "<div><b>`foo´</b><hr>|<b>`bar´</b></div>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><div><b>`foo´</b><hr>|<b>`bar´</b></div></body>",
+          "bodyInnerHTML": "<div><b>`foo´</b><hr>|<b>`bar´</b></div>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><div><b>`foo´</b><hr>|<b>`bar´</b></div></body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b></div>",
-          "innerHTML": "<div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b></div>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><div><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`bar´</b></div></body>",
-          "bodyInnerHTML": "<div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b></div>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><div><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`bar´</b></div></body>"
+          "output": "<div><b>`foo´</b><hr>|<b>`bar´</b></div>",
+          "innerHTML": "<div><b>`foo´</b><hr>|<b>`bar´</b></div>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><div><b>`foo´</b><hr>|<b>`bar´</b></div></body>",
+          "bodyInnerHTML": "<div><b>`foo´</b><hr>|<b>`bar´</b></div>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><div><b>`foo´</b><hr>|<b>`bar´</b></div></body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b></div>",
-          "innerHTML": "<div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b></div>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><div><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`bar´</b></div></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b></div></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><div><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`bar´</b></div></div>CAN<br>ARY</body>"
+          "output": "<div><b>`foo´</b><hr>|<b>`bar´</b></div>",
+          "innerHTML": "<div><b>`foo´</b><hr>|<b>`bar´</b></div>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><div><b>`foo´</b><hr>|<b>`bar´</b></div></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><div><b>`foo´</b><hr>|<b>`bar´</b></div></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><div><b>`foo´</b><hr>|<b>`bar´</b></div></div>CAN<br>ARY</body>"
         }
       },
       "IHR_DIV-B-2_SO": {
@@ -15862,33 +15862,33 @@ const TEST_RESULTS = {
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`baz´</b></div>",
-          "innerHTML": "<div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`baz´</b></div>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><div><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`baz´</b></div></body>",
-          "bodyInnerHTML": "<div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`baz´</b></div>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><div><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`baz´</b></div></body>"
+          "output": "<div><b>`foo´</b><hr>|<b>`baz´</b></div>",
+          "innerHTML": "<div><b>`foo´</b><hr>|<b>`baz´</b></div>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><div><b>`foo´</b><hr>|<b>`baz´</b></div></body>",
+          "bodyInnerHTML": "<div><b>`foo´</b><hr>|<b>`baz´</b></div>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><div><b>`foo´</b><hr>|<b>`baz´</b></div></body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`baz´</b></div>",
-          "innerHTML": "<div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`baz´</b></div>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><div><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`baz´</b></div></body>",
-          "bodyInnerHTML": "<div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`baz´</b></div>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><div><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`baz´</b></div></body>"
+          "output": "<div><b>`foo´</b><hr>|<b>`baz´</b></div>",
+          "innerHTML": "<div><b>`foo´</b><hr>|<b>`baz´</b></div>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><div><b>`foo´</b><hr>|<b>`baz´</b></div></body>",
+          "bodyInnerHTML": "<div><b>`foo´</b><hr>|<b>`baz´</b></div>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><div><b>`foo´</b><hr>|<b>`baz´</b></div></body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`baz´</b></div>",
-          "innerHTML": "<div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`baz´</b></div>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><div><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`baz´</b></div></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><div><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`baz´</b></div></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><div><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`baz´</b></div></div>CAN<br>ARY</body>"
+          "output": "<div><b>`foo´</b><hr>|<b>`baz´</b></div>",
+          "innerHTML": "<div><b>`foo´</b><hr>|<b>`baz´</b></div>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><div><b>`foo´</b><hr>|<b>`baz´</b></div></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><div><b>`foo´</b><hr>|<b>`baz´</b></div></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><div><b>`foo´</b><hr>|<b>`baz´</b></div></div>CAN<br>ARY</body>"
         }
       },
       "IHR_B-1_SC": {
@@ -15897,33 +15897,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 8,
           "selresult": 2,
-          "output": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b>",
-          "innerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`bar´</b></body>",
-          "bodyInnerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`bar´</b></body>"
+          "output": "<b>`foo´</b><hr>|<b>`bar´</b>",
+          "innerHTML": "<b>`foo´</b><hr>|<b>`bar´</b>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr>|<b>`bar´</b></body>",
+          "bodyInnerHTML": "<b>`foo´</b><hr>|<b>`bar´</b>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr>|<b>`bar´</b></body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 0,
           "valresult": 8,
           "selresult": 2,
-          "output": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b>",
-          "innerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`bar´</b></body>",
-          "bodyInnerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`bar´</b></body>"
+          "output": "<b>`foo´</b><hr>|<b>`bar´</b>",
+          "innerHTML": "<b>`foo´</b><hr>|<b>`bar´</b>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr>|<b>`bar´</b></body>",
+          "bodyInnerHTML": "<b>`foo´</b><hr>|<b>`bar´</b>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr>|<b>`bar´</b></body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 0,
           "valresult": 8,
           "selresult": 2,
-          "output": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b>",
-          "innerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`bar´</b></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><b>`foo´</b><hr size=\"2\" width=\"100%\">|<b>`bar´</b></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<b>`bar´</b></div>CAN<br>ARY</body>"
+          "output": "<b>`foo´</b><hr>|<b>`bar´</b>",
+          "innerHTML": "<b>`foo´</b><hr>|<b>`bar´</b>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr>|<b>`bar´</b></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><b>`foo´</b><hr>|<b>`bar´</b></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr>|<b>`bar´</b></div>CAN<br>ARY</body>"
         }
       },
       "IHR_B-1_SS": {
@@ -15932,33 +15932,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 8,
           "selresult": 2,
-          "output": "<hr size=\"2\" width=\"100%\">|<b>`foobar´</b>",
-          "innerHTML": "<hr size=\"2\" width=\"100%\">|<b>`foobar´</b>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><hr width=\"100%\" size=\"2\">|<b>`foobar´</b></body>",
-          "bodyInnerHTML": "<hr size=\"2\" width=\"100%\">|<b>`foobar´</b>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><hr width=\"100%\" size=\"2\">|<b>`foobar´</b></body>"
+          "output": "<hr>|<b>`foobar´</b>",
+          "innerHTML": "<hr>|<b>`foobar´</b>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><hr>|<b>`foobar´</b></body>",
+          "bodyInnerHTML": "<hr>|<b>`foobar´</b>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><hr>|<b>`foobar´</b></body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 0,
           "valresult": 8,
           "selresult": 2,
-          "output": "<hr size=\"2\" width=\"100%\">|<b>`foobar´</b>",
-          "innerHTML": "<hr size=\"2\" width=\"100%\">|<b>`foobar´</b>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><hr width=\"100%\" size=\"2\">|<b>`foobar´</b></body>",
-          "bodyInnerHTML": "<hr size=\"2\" width=\"100%\">|<b>`foobar´</b>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><hr width=\"100%\" size=\"2\">|<b>`foobar´</b></body>"
+          "output": "<hr>|<b>`foobar´</b>",
+          "innerHTML": "<hr>|<b>`foobar´</b>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><hr>|<b>`foobar´</b></body>",
+          "bodyInnerHTML": "<hr>|<b>`foobar´</b>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><hr>|<b>`foobar´</b></body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 0,
           "valresult": 8,
           "selresult": 2,
-          "output": "<hr size=\"2\" width=\"100%\">|<b>`foobar´</b>",
-          "innerHTML": "<hr size=\"2\" width=\"100%\">|<b>`foobar´</b>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><hr width=\"100%\" size=\"2\">|<b>`foobar´</b></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><hr size=\"2\" width=\"100%\">|<b>`foobar´</b></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><hr width=\"100%\" size=\"2\">|<b>`foobar´</b></div>CAN<br>ARY</body>"
+          "output": "<hr>|<b>`foobar´</b>",
+          "innerHTML": "<hr>|<b>`foobar´</b>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><hr>|<b>`foobar´</b></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><hr>|<b>`foobar´</b></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><hr>|<b>`foobar´</b></div>CAN<br>ARY</body>"
         }
       },
       "IHR_B-1_SE": {
@@ -15967,33 +15967,33 @@ const TEST_RESULTS = {
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<b>`foobar´</b><hr size=\"2\" width=\"100%\">|",
-          "innerHTML": "<b>`foobar´</b><hr size=\"2\" width=\"100%\">|",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foobar´</b><hr width=\"100%\" size=\"2\">|</body>",
-          "bodyInnerHTML": "<b>`foobar´</b><hr size=\"2\" width=\"100%\">|",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foobar´</b><hr width=\"100%\" size=\"2\">|</body>"
+          "output": "<b>`foobar´</b><hr>|",
+          "innerHTML": "<b>`foobar´</b><hr>|",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foobar´</b><hr>|</body>",
+          "bodyInnerHTML": "<b>`foobar´</b><hr>|",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foobar´</b><hr>|</body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<b>`foobar´</b><hr size=\"2\" width=\"100%\">|",
-          "innerHTML": "<b>`foobar´</b><hr size=\"2\" width=\"100%\">|",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foobar´</b><hr width=\"100%\" size=\"2\">|</body>",
-          "bodyInnerHTML": "<b>`foobar´</b><hr size=\"2\" width=\"100%\">|",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foobar´</b><hr width=\"100%\" size=\"2\">|</body>"
+          "output": "<b>`foobar´</b><hr>|",
+          "innerHTML": "<b>`foobar´</b><hr>|",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foobar´</b><hr>|</body>",
+          "bodyInnerHTML": "<b>`foobar´</b><hr>|",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foobar´</b><hr>|</body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<b>`foobar´</b><hr size=\"2\" width=\"100%\">|",
-          "innerHTML": "<b>`foobar´</b><hr size=\"2\" width=\"100%\">|",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><b>`foobar´</b><hr width=\"100%\" size=\"2\">|</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><b>`foobar´</b><hr size=\"2\" width=\"100%\">|</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><b>`foobar´</b><hr width=\"100%\" size=\"2\">|</div>CAN<br>ARY</body>"
+          "output": "<b>`foobar´</b><hr>|",
+          "innerHTML": "<b>`foobar´</b><hr>|",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><b>`foobar´</b><hr>|</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><b>`foobar´</b><hr>|</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><b>`foobar´</b><hr>|</div>CAN<br>ARY</body>"
         }
       },
       "IHR_B-2_SL": {
@@ -16002,33 +16002,33 @@ const TEST_RESULTS = {
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b>",
-          "innerHTML": "`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<hr width=\"100%\" size=\"2\">|<b>`qoz´</b></body>",
-          "bodyInnerHTML": "`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<hr width=\"100%\" size=\"2\">|<b>`qoz´</b></body>"
+          "output": "`foo´<hr>|<b>`qoz´</b>",
+          "innerHTML": "`foo´<hr>|<b>`qoz´</b>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<hr>|<b>`qoz´</b></body>",
+          "bodyInnerHTML": "`foo´<hr>|<b>`qoz´</b>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<hr>|<b>`qoz´</b></body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b>",
-          "innerHTML": "`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<hr width=\"100%\" size=\"2\">|<b>`qoz´</b></body>",
-          "bodyInnerHTML": "`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<hr width=\"100%\" size=\"2\">|<b>`qoz´</b></body>"
+          "output": "`foo´<hr>|<b>`qoz´</b>",
+          "innerHTML": "`foo´<hr>|<b>`qoz´</b>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<hr>|<b>`qoz´</b></body>",
+          "bodyInnerHTML": "`foo´<hr>|<b>`qoz´</b>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<hr>|<b>`qoz´</b></body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b>",
-          "innerHTML": "`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<hr width=\"100%\" size=\"2\">|<b>`qoz´</b></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<hr width=\"100%\" size=\"2\">|<b>`qoz´</b></div>CAN<br>ARY</body>"
+          "output": "`foo´<hr>|<b>`qoz´</b>",
+          "innerHTML": "`foo´<hr>|<b>`qoz´</b>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<hr>|<b>`qoz´</b></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<hr>|<b>`qoz´</b></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<hr>|<b>`qoz´</b></div>CAN<br>ARY</body>"
         }
       },
       "IHR_B-2_SLR": {
@@ -16037,33 +16037,33 @@ const TEST_RESULTS = {
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b>",
-          "innerHTML": "`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<hr width=\"100%\" size=\"2\">|<b>`qoz´</b></body>",
-          "bodyInnerHTML": "`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<hr width=\"100%\" size=\"2\">|<b>`qoz´</b></body>"
+          "output": "`foo´<hr>|<b>`qoz´</b>",
+          "innerHTML": "`foo´<hr>|<b>`qoz´</b>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<hr>|<b>`qoz´</b></body>",
+          "bodyInnerHTML": "`foo´<hr>|<b>`qoz´</b>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\">`foo´<hr>|<b>`qoz´</b></body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b>",
-          "innerHTML": "`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<hr width=\"100%\" size=\"2\">|<b>`qoz´</b></body>",
-          "bodyInnerHTML": "`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<hr width=\"100%\" size=\"2\">|<b>`qoz´</b></body>"
+          "output": "`foo´<hr>|<b>`qoz´</b>",
+          "innerHTML": "`foo´<hr>|<b>`qoz´</b>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<hr>|<b>`qoz´</b></body>",
+          "bodyInnerHTML": "`foo´<hr>|<b>`qoz´</b>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\">`foo´<hr>|<b>`qoz´</b></body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b>",
-          "innerHTML": "`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<hr width=\"100%\" size=\"2\">|<b>`qoz´</b></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<hr size=\"2\" width=\"100%\">|<b>`qoz´</b></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<hr width=\"100%\" size=\"2\">|<b>`qoz´</b></div>CAN<br>ARY</body>"
+          "output": "`foo´<hr>|<b>`qoz´</b>",
+          "innerHTML": "`foo´<hr>|<b>`qoz´</b>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\">`foo´<hr>|<b>`qoz´</b></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\">`foo´<hr>|<b>`qoz´</b></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\">`foo´<hr>|<b>`qoz´</b></div>CAN<br>ARY</body>"
         }
       },
       "IHR_B-3_SR": {
@@ -16072,33 +16072,33 @@ const TEST_RESULTS = {
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´",
-          "innerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|`quoz´</body>",
-          "bodyInnerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|`quoz´</body>"
+          "output": "<b>`foo´</b><hr>|`quoz´",
+          "innerHTML": "<b>`foo´</b><hr>|`quoz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr>|`quoz´</body>",
+          "bodyInnerHTML": "<b>`foo´</b><hr>|`quoz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr>|`quoz´</body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´",
-          "innerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|`quoz´</body>",
-          "bodyInnerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|`quoz´</body>"
+          "output": "<b>`foo´</b><hr>|`quoz´",
+          "innerHTML": "<b>`foo´</b><hr>|`quoz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr>|`quoz´</body>",
+          "bodyInnerHTML": "<b>`foo´</b><hr>|`quoz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr>|`quoz´</body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´",
-          "innerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|`quoz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|`quoz´</div>CAN<br>ARY</body>"
+          "output": "<b>`foo´</b><hr>|`quoz´",
+          "innerHTML": "<b>`foo´</b><hr>|`quoz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr>|`quoz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><b>`foo´</b><hr>|`quoz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr>|`quoz´</div>CAN<br>ARY</body>"
         }
       },
       "IHR_B-3_SRR": {
@@ -16107,33 +16107,33 @@ const TEST_RESULTS = {
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´",
-          "innerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|`quoz´</body>",
-          "bodyInnerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|`quoz´</body>"
+          "output": "<b>`foo´</b><hr>|`quoz´",
+          "innerHTML": "<b>`foo´</b><hr>|`quoz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr>|`quoz´</body>",
+          "bodyInnerHTML": "<b>`foo´</b><hr>|`quoz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr>|`quoz´</body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´",
-          "innerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|`quoz´</body>",
-          "bodyInnerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|`quoz´</body>"
+          "output": "<b>`foo´</b><hr>|`quoz´",
+          "innerHTML": "<b>`foo´</b><hr>|`quoz´",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr>|`quoz´</body>",
+          "bodyInnerHTML": "<b>`foo´</b><hr>|`quoz´",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr>|`quoz´</body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´",
-          "innerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|`quoz´</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><b>`foo´</b><hr size=\"2\" width=\"100%\">|`quoz´</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|`quoz´</div>CAN<br>ARY</body>"
+          "output": "<b>`foo´</b><hr>|`quoz´",
+          "innerHTML": "<b>`foo´</b><hr>|`quoz´",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr>|`quoz´</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><b>`foo´</b><hr>|`quoz´</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr>|`quoz´</div>CAN<br>ARY</body>"
         }
       },
       "IHR_B-I-1_SM": {
@@ -16142,33 +16142,33 @@ const TEST_RESULTS = {
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i>",
-          "innerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<i>`quoz´</i></body>",
-          "bodyInnerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<i>`quoz´</i></body>"
+          "output": "<b>`foo´</b><hr>|<i>`quoz´</i>",
+          "innerHTML": "<b>`foo´</b><hr>|<i>`quoz´</i>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr>|<i>`quoz´</i></body>",
+          "bodyInnerHTML": "<b>`foo´</b><hr>|<i>`quoz´</i>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr>|<i>`quoz´</i></body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i>",
-          "innerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<i>`quoz´</i></body>",
-          "bodyInnerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<i>`quoz´</i></body>"
+          "output": "<b>`foo´</b><hr>|<i>`quoz´</i>",
+          "innerHTML": "<b>`foo´</b><hr>|<i>`quoz´</i>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr>|<i>`quoz´</i></body>",
+          "bodyInnerHTML": "<b>`foo´</b><hr>|<i>`quoz´</i>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr>|<i>`quoz´</i></body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i>",
-          "innerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<i>`quoz´</i></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<i>`quoz´</i></div>CAN<br>ARY</body>"
+          "output": "<b>`foo´</b><hr>|<i>`quoz´</i>",
+          "innerHTML": "<b>`foo´</b><hr>|<i>`quoz´</i>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr>|<i>`quoz´</i></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><b>`foo´</b><hr>|<i>`quoz´</i></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr>|<i>`quoz´</i></div>CAN<br>ARY</body>"
         }
       },
       "IHR_B-I-1_SMR": {
@@ -16177,33 +16177,33 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 8,
           "selresult": 2,
-          "output": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i>",
-          "innerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<i>`quoz´</i></body>",
-          "bodyInnerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<i>`quoz´</i></body>"
+          "output": "<b>`foo´</b><hr>|<i>`quoz´</i>",
+          "innerHTML": "<b>`foo´</b><hr>|<i>`quoz´</i>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr>|<i>`quoz´</i></body>",
+          "bodyInnerHTML": "<b>`foo´</b><hr>|<i>`quoz´</i>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><b>`foo´</b><hr>|<i>`quoz´</i></body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 0,
           "valresult": 8,
           "selresult": 2,
-          "output": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i>",
-          "innerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<i>`quoz´</i></body>",
-          "bodyInnerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<i>`quoz´</i></body>"
+          "output": "<b>`foo´</b><hr>|<i>`quoz´</i>",
+          "innerHTML": "<b>`foo´</b><hr>|<i>`quoz´</i>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr>|<i>`quoz´</i></body>",
+          "bodyInnerHTML": "<b>`foo´</b><hr>|<i>`quoz´</i>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><b>`foo´</b><hr>|<i>`quoz´</i></body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 0,
           "valresult": 8,
           "selresult": 2,
-          "output": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i>",
-          "innerHTML": "<b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<i>`quoz´</i></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><b>`foo´</b><hr size=\"2\" width=\"100%\">|<i>`quoz´</i></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr width=\"100%\" size=\"2\">|<i>`quoz´</i></div>CAN<br>ARY</body>"
+          "output": "<b>`foo´</b><hr>|<i>`quoz´</i>",
+          "innerHTML": "<b>`foo´</b><hr>|<i>`quoz´</i>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr>|<i>`quoz´</i></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><b>`foo´</b><hr>|<i>`quoz´</i></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><b>`foo´</b><hr>|<i>`quoz´</i></div>CAN<br>ARY</body>"
         }
       },
       "IHR_P-1_SC": {
@@ -16212,33 +16212,33 @@ const TEST_RESULTS = {
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<p>`foo´</p><hr size=\"2\" width=\"100%\">|<p>`bar´</p>",
-          "innerHTML": "<p>`foo´</p><hr size=\"2\" width=\"100%\">|<p>`bar´</p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p>`foo´</p><hr width=\"100%\" size=\"2\">|<p>`bar´</p></body>",
-          "bodyInnerHTML": "<p>`foo´</p><hr size=\"2\" width=\"100%\">|<p>`bar´</p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p>`foo´</p><hr width=\"100%\" size=\"2\">|<p>`bar´</p></body>"
+          "output": "<p>`foo´</p><hr>|<p>`bar´</p>",
+          "innerHTML": "<p>`foo´</p><hr>|<p>`bar´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p>`foo´</p><hr>|<p>`bar´</p></body>",
+          "bodyInnerHTML": "<p>`foo´</p><hr>|<p>`bar´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p>`foo´</p><hr>|<p>`bar´</p></body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<p>`foo´</p><hr size=\"2\" width=\"100%\">|<p>`bar´</p>",
-          "innerHTML": "<p>`foo´</p><hr size=\"2\" width=\"100%\">|<p>`bar´</p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p>`foo´</p><hr width=\"100%\" size=\"2\">|<p>`bar´</p></body>",
-          "bodyInnerHTML": "<p>`foo´</p><hr size=\"2\" width=\"100%\">|<p>`bar´</p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p>`foo´</p><hr width=\"100%\" size=\"2\">|<p>`bar´</p></body>"
+          "output": "<p>`foo´</p><hr>|<p>`bar´</p>",
+          "innerHTML": "<p>`foo´</p><hr>|<p>`bar´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p>`foo´</p><hr>|<p>`bar´</p></body>",
+          "bodyInnerHTML": "<p>`foo´</p><hr>|<p>`bar´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p>`foo´</p><hr>|<p>`bar´</p></body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<p>`foo´</p><hr size=\"2\" width=\"100%\">|<p>`bar´</p>",
-          "innerHTML": "<p>`foo´</p><hr size=\"2\" width=\"100%\">|<p>`bar´</p>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p>`foo´</p><hr width=\"100%\" size=\"2\">|<p>`bar´</p></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p>`foo´</p><hr size=\"2\" width=\"100%\">|<p>`bar´</p></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p>`foo´</p><hr width=\"100%\" size=\"2\">|<p>`bar´</p></div>CAN<br>ARY</body>"
+          "output": "<p>`foo´</p><hr>|<p>`bar´</p>",
+          "innerHTML": "<p>`foo´</p><hr>|<p>`bar´</p>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p>`foo´</p><hr>|<p>`bar´</p></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p>`foo´</p><hr>|<p>`bar´</p></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p>`foo´</p><hr>|<p>`bar´</p></div>CAN<br>ARY</body>"
         }
       },
       "IHR_P-1_SS": {
@@ -16247,33 +16247,33 @@ const TEST_RESULTS = {
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<hr size=\"2\" width=\"100%\">|<p>`foobar´</p>",
-          "innerHTML": "<hr size=\"2\" width=\"100%\">|<p>`foobar´</p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><hr width=\"100%\" size=\"2\">|<p>`foobar´</p></body>",
-          "bodyInnerHTML": "<hr size=\"2\" width=\"100%\">|<p>`foobar´</p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><hr width=\"100%\" size=\"2\">|<p>`foobar´</p></body>"
+          "output": "<hr>|<p>`foobar´</p>",
+          "innerHTML": "<hr>|<p>`foobar´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><hr>|<p>`foobar´</p></body>",
+          "bodyInnerHTML": "<hr>|<p>`foobar´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><hr>|<p>`foobar´</p></body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<hr size=\"2\" width=\"100%\">|<p>`foobar´</p>",
-          "innerHTML": "<hr size=\"2\" width=\"100%\">|<p>`foobar´</p>",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><hr width=\"100%\" size=\"2\">|<p>`foobar´</p></body>",
-          "bodyInnerHTML": "<hr size=\"2\" width=\"100%\">|<p>`foobar´</p>",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><hr width=\"100%\" size=\"2\">|<p>`foobar´</p></body>"
+          "output": "<hr>|<p>`foobar´</p>",
+          "innerHTML": "<hr>|<p>`foobar´</p>",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><hr>|<p>`foobar´</p></body>",
+          "bodyInnerHTML": "<hr>|<p>`foobar´</p>",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><hr>|<p>`foobar´</p></body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<hr size=\"2\" width=\"100%\">|<p>`foobar´</p>",
-          "innerHTML": "<hr size=\"2\" width=\"100%\">|<p>`foobar´</p>",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><hr width=\"100%\" size=\"2\">|<p>`foobar´</p></div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><hr size=\"2\" width=\"100%\">|<p>`foobar´</p></div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><hr width=\"100%\" size=\"2\">|<p>`foobar´</p></div>CAN<br>ARY</body>"
+          "output": "<hr>|<p>`foobar´</p>",
+          "innerHTML": "<hr>|<p>`foobar´</p>",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><hr>|<p>`foobar´</p></div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><hr>|<p>`foobar´</p></div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><hr>|<p>`foobar´</p></div>CAN<br>ARY</body>"
         }
       },
       "IHR_P-1_SE": {
@@ -16282,33 +16282,33 @@ const TEST_RESULTS = {
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<p>`foobar´</p><hr size=\"2\" width=\"100%\">|",
-          "innerHTML": "<p>`foobar´</p><hr size=\"2\" width=\"100%\">|",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p>`foobar´</p><hr width=\"100%\" size=\"2\">|</body>",
-          "bodyInnerHTML": "<p>`foobar´</p><hr size=\"2\" width=\"100%\">|",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p>`foobar´</p><hr width=\"100%\" size=\"2\">|</body>"
+          "output": "<p>`foobar´</p><hr>|",
+          "innerHTML": "<p>`foobar´</p><hr>|",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p>`foobar´</p><hr>|</body>",
+          "bodyInnerHTML": "<p>`foobar´</p><hr>|",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" onload=\"setDesignMode()\"><p>`foobar´</p><hr>|</body>"
         },
         "body": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<p>`foobar´</p><hr size=\"2\" width=\"100%\">|",
-          "innerHTML": "<p>`foobar´</p><hr size=\"2\" width=\"100%\">|",
-          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p>`foobar´</p><hr width=\"100%\" size=\"2\">|</body>",
-          "bodyInnerHTML": "<p>`foobar´</p><hr size=\"2\" width=\"100%\">|",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p>`foobar´</p><hr width=\"100%\" size=\"2\">|</body>"
+          "output": "<p>`foobar´</p><hr>|",
+          "innerHTML": "<p>`foobar´</p><hr>|",
+          "outerHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p>`foobar´</p><hr>|</body>",
+          "bodyInnerHTML": "<p>`foobar´</p><hr>|",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\"><p>`foobar´</p><hr>|</body>"
         },
         "div": {
           "valscore": 1,
           "selscore": 1,
           "valresult": 8,
           "selresult": 5,
-          "output": "<p>`foobar´</p><hr size=\"2\" width=\"100%\">|",
-          "innerHTML": "<p>`foobar´</p><hr size=\"2\" width=\"100%\">|",
-          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p>`foobar´</p><hr width=\"100%\" size=\"2\">|</div>",
-          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p>`foobar´</p><hr size=\"2\" width=\"100%\">|</div>CAN<br>ARY",
-          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p>`foobar´</p><hr width=\"100%\" size=\"2\">|</div>CAN<br>ARY</body>"
+          "output": "<p>`foobar´</p><hr>|",
+          "innerHTML": "<p>`foobar´</p><hr>|",
+          "outerHTML": "<div xmlns=\"http://www.w3.org/1999/xhtml\" contenteditable=\"true\" id=\"editor-div\"><p>`foobar´</p><hr>|</div>",
+          "bodyInnerHTML": "CAN<br>ARY<div id=\"editor-div\" contenteditable=\"true\"><p>`foobar´</p><hr>|</div>CAN<br>ARY",
+          "bodyOuterHTML": "<body xmlns=\"http://www.w3.org/1999/xhtml\">CAN<br>ARY<div contenteditable=\"true\" id=\"editor-div\"><p>`foobar´</p><hr>|</div>CAN<br>ARY</body>"
         }
       },
       "IP_P-1_SC": {
@@ -19198,25 +19198,25 @@ const TEST_RESULTS = {
     "Proposed": {
       "SELECTALL_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "UNSELECT_TEXT-1": {
@@ -19244,48 +19244,48 @@ const TEST_RESULTS = {
       },
       "UNDO_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "REDO_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "BOLD_TEXT-1": {
@@ -19428,48 +19428,48 @@ const TEST_RESULTS = {
       },
       "FORMATBLOCK_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "CREATELINK_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "UNLINK_TEXT-1": {
@@ -19497,71 +19497,71 @@ const TEST_RESULTS = {
       },
       "INSERTHTML_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "INSERTHORIZONTALRULE_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "INSERTIMAGE_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "INSERTLINEBREAK_TEXT-1": {
@@ -19681,25 +19681,25 @@ const TEST_RESULTS = {
       },
       "DELETE_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "FORWARDDELETE_TEXT-1": {
@@ -19727,48 +19727,48 @@ const TEST_RESULTS = {
       },
       "STYLEWITHCSS_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "CONTENTREADONLY_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "BACKCOLOR_TEXT-1": {
@@ -19888,117 +19888,117 @@ const TEST_RESULTS = {
       },
       "INCREASEFONTSIZE_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "DECREASEFONTSIZE_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "HEADING_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "INDENT_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "OUTDENT_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "CREATEBOOKMARK_TEXT-1": {
@@ -20141,94 +20141,94 @@ const TEST_RESULTS = {
       },
       "REMOVEFORMAT_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "COPY_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "CUT_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "PASTE_TEXT-1": {
         "dM": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "body": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         },
         "div": {
-          "valscore": 0,
+          "valscore": 1,
           "selscore": 0,
-          "valresult": 2,
+          "valresult": 8,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": false
         }
       },
       "garbage-1_TEXT-1": {
@@ -23350,21 +23350,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         }
       },
       "BC_SPANs:bc:abc-1_SI": {
@@ -23373,21 +23373,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         }
       },
       "BC_FONTs:bc:084-SPAN-1_SI": {
@@ -23396,21 +23396,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         }
       },
       "BC_SPANs:bc:cde-SPAN-1_SI": {
@@ -23419,21 +23419,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         }
       },
       "BC_SPAN.ass.s:bc:rgb-1_SI": {
@@ -23442,21 +23442,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         }
       },
       "BC_SPAN.bcred-1_SI": {
@@ -23465,21 +23465,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         }
       },
       "BC_MYBCRED-1-SI": {
@@ -23488,21 +23488,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 6,
           "selresult": 3,
-          "output": ""
+          "output": "transparent"
         }
       },
       "FC_FONTc:f00-1_SI": {

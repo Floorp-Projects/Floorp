@@ -52,7 +52,7 @@ interface nsIContentFilter;
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_EDITOR, 1)
 
 %}
-[scriptable, uuid(FF67AD39-ED58-4CD1-A1A3-DCD988390A97)]
+[scriptable, uuid(833f30de-94c7-4630-a852-2300ef329d7b)]
 
 interface nsIHTMLEditor : nsISupports
 {
@@ -118,9 +118,6 @@ interface nsIHTMLEditor : nsISupports
    *                    Example: aProperty="font", aAttribute="color",
    *                             aValue="0x00FFFF"
    */
-  void setCSSInlineProperty(in nsIAtom aProperty, 
-                            in AString aAttribute,
-                            in AString aValue);
   void setInlineProperty(in nsIAtom aProperty, 
                          in AString aAttribute,
                          in AString aValue);

@@ -84,10 +84,23 @@ class JSObjectBuilder
     mOk = JS_DefineProperty(mCx, aObject, name, STRING_TO_JSVAL(string), NULL, NULL, JSPROP_ENUMERATE);
   }
 
+  void DefineProperty(JSObject *aObject, const char *name, const char *value, size_t valueLength)
+  {
+    if (!mOk)
+      return;
+
+    JSString *string = JS_NewStringCopyN(mCx, value, valueLength);
+    if (!string) {
+      mOk = JS_FALSE;
+      return;
+    }
+
+    mOk = JS_DefineProperty(mCx, aObject, name, STRING_TO_JSVAL(string), NULL, NULL, JSPROP_ENUMERATE);
+  }
+
   void DefineProperty(JSObject *aObject, const char *name, const char *value)
   {
-    nsAutoString string = NS_ConvertASCIItoUTF16(value);
-    DefineProperty(aObject, name, string);
+    DefineProperty(aObject, name, value, strlen(value));
   }
 
   void ArrayPush(JSObject *aArray, int value)

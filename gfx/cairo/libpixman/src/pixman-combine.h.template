@@ -25,10 +25,10 @@
  */
 
 #define MUL_UNc(a, b, t)						\
-    ((t) = (a) * (b) + ONE_HALF, ((((t) >> G_SHIFT ) + (t) ) >> G_SHIFT ))
+    ((t) = (a) * (comp2_t)(b) + ONE_HALF, ((((t) >> G_SHIFT ) + (t) ) >> G_SHIFT ))
 
 #define DIV_UNc(a, b)							\
-    (((comp2_t) (a) * MASK) / (b))
+    (((comp2_t) (a) * MASK + ((b) / 2)) / (b))
 
 #define ADD_UNc(x, y, t)				     \
     ((t) = (x) + (y),					     \

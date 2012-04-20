@@ -1,8 +1,0 @@
-url-prefix ../../jsreftest.html?test=js1_5/Date/
-script regress-188211.js
-script regress-301738-01.js
-script regress-301738-02.js
-script regress-309925-01.js
-script regress-309925-02.js
-script regress-346027.js
-script regress-346363.js

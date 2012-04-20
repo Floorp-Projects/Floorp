@@ -1480,7 +1480,7 @@ nsBrowserAccess.prototype = {
 
     if (newTab) {
       let parentId = -1;
-      if (!isExternal) {
+      if (!isExternal && aOpener) {
         let parent = BrowserApp.getTabForWindow(aOpener.top);
         if (parent)
           parentId = parent.id;
@@ -1553,11 +1553,13 @@ Tab.prototype = {
     this.setBrowserSize(kDefaultCSSViewportWidth, kDefaultCSSViewportHeight);
     BrowserApp.deck.appendChild(this.browser);
 
+    // Must be called after appendChild so the docshell has been created.
+    this.setActive(false);
+
     this.browser.stop();
 
     let frameLoader = this.browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     frameLoader.renderMode = Ci.nsIFrameLoader.RENDER_MODE_ASYNC_SCROLL;
-    frameLoader.clampScrollPosition = false;
 
     // only set tab uri if uri is valid
     let uri = null;
@@ -1656,7 +1658,7 @@ Tab.prototype = {
 
   // This should be called to update the browser when the tab gets selected/unselected
   setActive: function setActive(aActive) {
-    if (!this.browser)
+    if (!this.browser || !this.browser.docShell)
       return;
 
     if (aActive) {
@@ -1710,6 +1712,7 @@ Tab.prototype = {
 
     // finally, we set the display port, taking care to convert everything into the CSS-pixel
     // coordinate space, because that is what the function accepts.
+    cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     cwu.setDisplayPortForElement((aDisplayPort.left / resolution) - (aViewportX / zoom),
                                  (aDisplayPort.top / resolution) - (aViewportY / zoom),
                                  (aDisplayPort.right - aDisplayPort.left) / resolution,
@@ -1722,8 +1725,10 @@ Tab.prototype = {
     let x = aViewport.x / aViewport.zoom;
     let y = aViewport.y / aViewport.zoom;
 
-    // Set scroll position
+    // Set scroll-port size and scroll position (both in CSS pixels)
     let win = this.browser.contentWindow;
+    win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).setScrollPositionClampingScrollPortSize(
+        gScreenWidth / aViewport.zoom, gScreenHeight / aViewport.zoom);
     win.scrollTo(x, y);
     this.userScrollPos.x = win.scrollX;
     this.userScrollPos.y = win.scrollY;
@@ -1982,6 +1987,9 @@ Tab.prototype = {
           PluginHelper.playPlugin(plugin);
           return;
         }
+
+        // Force a style flush, so that we ensure our binding is attached.
+        plugin.clientTop;
 
         // If the plugin is hidden, or if the overlay is too small, show a doorhanger notification
         let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
@@ -2984,9 +2992,7 @@ var FormAssistant = {
         if (!this._currentInputElement)
           break;
 
-        // Remove focus from the textbox to avoid some bad IME interactions
-        this._currentInputElement.blur();
-        this._currentInputElement.value = aData;
+        this._currentInputElement.QueryInterface(Ci.nsIDOMNSEditableElement).setUserInput(aData);
 
         let event = this._currentInputElement.ownerDocument.createEvent("Events");
         event.initEvent("DOMAutoComplete", true, true);
@@ -4646,20 +4652,12 @@ var WebappsUI = {
   },
   
   openURL: function(aURI, aOrigin) {
-    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+    let uri = Services.io.newURI(aURI, null, null);
+    if (!uri)
+      return;
 
-    let tabs = BrowserApp.tabs;
-    let tab = null;
-    for (let i = 0; i < tabs.length; i++) {
-      let appOrigin = ss.getTabValue(tabs[i], "appOrigin");
-      if (appOrigin == aOrigin)
-        tab = tabs[i];
-    }
-
-    if (tab)
-      BrowserApp.selectTab(tab);
-    else
-      BrowserApp.addTab(aURI, { pinned: true });
+    let bwin = window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow;
+    bwin.openURI(uri, null, Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB, Ci.nsIBrowserDOMWindow.OPEN_NEW);
   }
 }
 

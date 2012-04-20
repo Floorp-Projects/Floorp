@@ -71,7 +71,7 @@ public:
      *
      * @see gfxImageFormat
      */
-    gfxImageSurface(const gfxIntSize& size, gfxImageFormat format);
+    gfxImageSurface(const gfxIntSize& size, gfxImageFormat format, bool aClear = true);
     gfxImageSurface(cairo_surface_t *csurf);
 
     virtual ~gfxImageSurface();
