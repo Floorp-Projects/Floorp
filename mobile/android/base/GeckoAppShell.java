@@ -529,14 +529,17 @@ public class GeckoAppShell
                                         final int width, final int height) {
         getHandler().post(new Runnable() {
             public void run() {
-                final Tab tab = Tabs.getInstance().getTab(tabId);
-                if (tab == null)
-                    return;
+                try {
+                    final Tab tab = Tabs.getInstance().getTab(tabId);
+                    if (tab == null)
+                        return;
 
-                Bitmap b = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-                b.copyPixelsFromBuffer(data);
-                freeDirectBuffer(data);
-                GeckoApp.mAppContext.processThumbnail(tab, b, null);
+                    Bitmap b = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+                    b.copyPixelsFromBuffer(data);
+                    GeckoApp.mAppContext.processThumbnail(tab, b, null);
+                } finally {
+                    freeDirectBuffer(data);
+                }
             }
         });
     }
