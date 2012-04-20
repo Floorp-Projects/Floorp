@@ -251,6 +251,8 @@ _BROWSER_FILES = \
                  plugin_test3.html \
                  plugin_both.html \
                  plugin_both2.html \
+                 plugin_clickToPlayAllow.html \
+                 plugin_clickToPlayDeny.html \
                  alltabslistener.html \
                  zoom_test.html \
                  dummy_page.html \
@@ -273,6 +275,7 @@ _BROWSER_FILES = \
                  browser_middleMouse_inherit.js \
                  redirect_bug623155.sjs \
                  browser_tabDrop.js \
+                 browser_lastAccessedTab.js \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

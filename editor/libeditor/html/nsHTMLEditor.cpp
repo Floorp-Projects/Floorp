@@ -136,10 +136,6 @@ nsHTMLEditor::~nsHTMLEditor()
   // we ignore the error.
   nsCOMPtr<nsIEditActionListener> mListener = do_QueryInterface(mRules);
   RemoveEditActionListener(mListener);
-  
-  // Clean up after our anonymous content -- we don't want these nodes to
-  // stay around (which they would, since the frames have an owning reference).
-  HideAnonymousEditingUIs();
 
   //the autopointers will clear themselves up. 
   //but we need to also remove the listeners or we have a leak
@@ -344,6 +340,10 @@ nsHTMLEditor::PreDestroy(bool aDestroyingFrames)
   {
     RemoveOverrideStyleSheet(mStyleSheetURLs[0]);
   }
+
+  // Clean up after our anonymous content -- we don't want these nodes to
+  // stay around (which they would, since the frames have an owning reference).
+  HideAnonymousEditingUIs();
 
   return nsPlaintextEditor::PreDestroy(aDestroyingFrames);
 }

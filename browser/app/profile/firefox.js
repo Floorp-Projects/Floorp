@@ -349,6 +349,12 @@ pref("browser.download.manager.quitBehavior", 0);
 pref("browser.download.manager.scanWhenDone", true);
 pref("browser.download.manager.resumeOnWakeDelay", 10000);
 
+// This allows disabling the Downloads Panel in favor of the old interface.
+pref("browser.download.useToolkitUI", false);
+
+// This controls retention behavior in the Downloads Panel only.
+pref("browser.download.panel.removeFinishedDownloads", false);
+
 // search engines URL
 pref("browser.search.searchEnginesURL",      "https://addons.mozilla.org/%LOCALE%/firefox/search-engines/");
 
@@ -768,6 +774,12 @@ pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 // a gethash request will be forced to check that the result is still in
 // the database.
 pref("urlclassifier.confirm-age", 2700);
+
+// Maximum size of the sqlite3 cache during an update, in bytes
+pref("urlclassifier.updatecachemax", 41943040);
+
+// Maximum size of the sqlite3 cache for lookups, in bytes
+pref("urlclassifier.lookupcachemax", 1048576);
 
 // URL for checking the reason for a malware warning.
 pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");

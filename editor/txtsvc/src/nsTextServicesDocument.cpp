@@ -1893,26 +1893,18 @@ nsTextServicesDocument::DidJoinNodes(nsIDOMNode  *aLeftNode,
   // fflush(stdout);
   //**** KDEBUG ****
 
-  // Make sure that both nodes are text nodes!
+  // Make sure that both nodes are text nodes -- otherwise we don't care.
 
   result = aLeftNode->GetNodeType(&type);
-
   NS_ENSURE_SUCCESS(result, false);
-
-  if (nsIDOMNode::TEXT_NODE != type)
-  {
-    NS_ERROR("JoinNode called with a non-text left node!");
-    return NS_ERROR_FAILURE;
+  if (nsIDOMNode::TEXT_NODE != type) {
+    return NS_OK;
   }
 
   result = aRightNode->GetNodeType(&type);
-
   NS_ENSURE_SUCCESS(result, false);
-
-  if (nsIDOMNode::TEXT_NODE != type)
-  {
-    NS_ERROR("JoinNode called with a non-text right node!");
-    return NS_ERROR_FAILURE;
+  if (nsIDOMNode::TEXT_NODE != type) {
+    return NS_OK;
   }
 
   // Note: The editor merges the contents of the left node into the

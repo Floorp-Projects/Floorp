@@ -85,4 +85,42 @@ function run_test() {
   for (let id in store.getAllIDs()) {
     do_throw("Shouldn't get any ids!");
   }
+
+  _("Add another entry to delete using applyIncomingBatch");
+  let toDelete = {
+    id: Utils.makeGUID(),
+    name: "todelete",
+    value: "entry"
+  };
+  applyEnsureNoFailures([toDelete]);
+  id = "";
+  for (let _id in store.getAllIDs()) {
+    if (id == "")
+      id = _id;
+    else
+      do_throw("Should have only gotten one!");
+  }
+  do_check_true(store.itemExists(id));
+  // mark entry as deleted
+  toDelete.id = id;
+  toDelete.deleted = true;
+  applyEnsureNoFailures([toDelete]);
+  for (let id in store.getAllIDs()) {
+    do_throw("Shouldn't get any ids!");
+  }
+
+  _("Add an entry to wipe");
+  applyEnsureNoFailures([{
+    id: Utils.makeGUID(),
+    name: "towipe",
+    value: "entry"
+  }]);
+
+  Utils.runInTransaction(Svc.Form.DBConnection, function() {
+    store.wipe();
+  });
+
+  for (let id in store.getAllIDs()) {
+    do_throw("Shouldn't get any ids!");
+  }
 }

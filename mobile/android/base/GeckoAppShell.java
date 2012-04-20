@@ -107,6 +107,9 @@ public class GeckoAppShell
     static public final int WPL_STATE_IS_DOCUMENT = 0x00020000;
     static public final int WPL_STATE_IS_NETWORK = 0x00040000;
 
+    public static final String SHORTCUT_TYPE_WEBAPP = "webapp";
+    public static final String SHORTCUT_TYPE_BOOKMARK = "bookmark";
+
     static private File sCacheFile = null;
     static private int sFreeSpace = -1;
     static File sHomeDir = null;
@@ -116,7 +119,8 @@ public class GeckoAppShell
     private static Boolean sLibsSetup = false;
     private static File sGREDir = null;
 
-    private static HashMap<String, ArrayList<GeckoEventListener>> mEventListeners;
+    private static Map<String, CopyOnWriteArrayList<GeckoEventListener>> mEventListeners
+            = new HashMap<String, CopyOnWriteArrayList<GeckoEventListener>>();
 
     /* Is the value in sVibrationEndTime valid? */
     private static boolean sVibrationMaybePlaying = false;
@@ -731,7 +735,7 @@ public class GeckoAppShell
         
                 // the intent to be launched by the shortcut
                 Intent shortcutIntent = new Intent();
-                if (aType.equalsIgnoreCase("webapp")) {
+                if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP)) {
                     shortcutIntent.setAction(GeckoApp.ACTION_WEBAPP);
                     shortcutIntent.setData(Uri.parse(aURI));
                 } else {
@@ -747,14 +751,18 @@ public class GeckoAppShell
                     intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aTitle);
                 else
                     intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aURI);
-                intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, getLauncherIcon(aIcon));
+                intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, getLauncherIcon(aIcon, aType));
+
+                // Do not allow duplicate items
+                intent.putExtra("duplicate", false);
+
                 intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
                 GeckoApp.mAppContext.sendBroadcast(intent);
             }
         });
     }
 
-    static private Bitmap getLauncherIcon(Bitmap aSource) {
+    static private Bitmap getLauncherIcon(Bitmap aSource, String aType) {
         final int kOffset = 6;
         final int kRadius = 5;
         int kIconSize;
@@ -777,9 +785,14 @@ public class GeckoAppShell
         Bitmap bitmap = Bitmap.createBitmap(kIconSize, kIconSize, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
 
+        if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP)) {
+            Rect iconBounds = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+            canvas.drawBitmap(aSource, null, iconBounds, null);
+            return bitmap;
+        }
+
         // draw a base color
         Paint paint = new Paint();
-        
         if (aSource == null) {
             float[] hsv = new float[3];
             hsv[0] = 32.0f;
@@ -1660,16 +1673,27 @@ public class GeckoAppShell
         }
     }
 
-    /* This method is referenced by Robocop via reflection. */
+    /**
+     * Adds a listener for a gecko event.
+     * This method is thread-safe and may be called at any time. In particular, calling it
+     * with an event that is currently being processed has the properly-defined behaviour that
+     * any added listeners will not be invoked on the event currently being processed, but
+     * will be invoked on future events of that type.
+     *
+     * This method is referenced by Robocop via reflection.
+     */
     public static void registerGeckoEventListener(String event, GeckoEventListener listener) {
-        if (mEventListeners == null)
-            mEventListeners = new HashMap<String, ArrayList<GeckoEventListener>>();
-
-        if (!mEventListeners.containsKey(event))
-            mEventListeners.put(event, new ArrayList<GeckoEventListener>());
-
-        ArrayList<GeckoEventListener> listeners = mEventListeners.get(event);
-        listeners.add(listener);
+        synchronized (mEventListeners) {
+            CopyOnWriteArrayList<GeckoEventListener> listeners = mEventListeners.get(event);
+            if (listeners == null) {
+                // create a CopyOnWriteArrayList so that we can modify it
+                // concurrently with iterating through it in handleGeckoMessage.
+                // Otherwise we could end up throwing a ConcurrentModificationException.
+                listeners = new CopyOnWriteArrayList<GeckoEventListener>();
+            }
+            listeners.add(listener);
+            mEventListeners.put(event, listeners);
+        }
     }
 
     static SynchronousQueue<Date> sTracerQueue = new SynchronousQueue<Date>();
@@ -1690,16 +1714,26 @@ public class GeckoAppShell
         }
     }
 
-    /* This method is referenced by Robocop via reflection. */
+    /**
+     * Remove a previously-registered listener for a gecko event.
+     * This method is thread-safe and may be called at any time. In particular, calling it
+     * with an event that is currently being processed has the properly-defined behaviour that
+     * any removed listeners will still be invoked on the event currently being processed, but
+     * will not be invoked on future events of that type.
+     *
+     * This method is referenced by Robocop via reflection.
+     */
     public static void unregisterGeckoEventListener(String event, GeckoEventListener listener) {
-        if (mEventListeners == null)
-            return;
-
-        if (!mEventListeners.containsKey(event))
-            return;
-
-        ArrayList<GeckoEventListener> listeners = mEventListeners.get(event);
-        listeners.remove(listener);
+        synchronized (mEventListeners) {
+            CopyOnWriteArrayList<GeckoEventListener> listeners = mEventListeners.get(event);
+            if (listeners == null) {
+                return;
+            }
+            listeners.remove(listener);
+            if (listeners.size() == 0) {
+                mEventListeners.remove(event);
+            }
+        }
     }
 
     /*
@@ -1746,10 +1780,11 @@ public class GeckoAppShell
                 return ret.toString();
             }
 
-            if (mEventListeners == null)
-                return "";
+            CopyOnWriteArrayList<GeckoEventListener> listeners;
+            synchronized (mEventListeners) {
+                listeners = mEventListeners.get(type);
+            }
 
-            ArrayList<GeckoEventListener> listeners = mEventListeners.get(type);
             if (listeners == null)
                 return "";
 

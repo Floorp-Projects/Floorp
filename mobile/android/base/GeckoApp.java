@@ -141,7 +141,6 @@ abstract public class GeckoApp
     private AboutHomeContent mAboutHomeContent;
     private static AbsoluteLayout mPluginContainer;
 
-    public String mLastTitle;
     private boolean mRestoreSession = false;
     private boolean mInitialized = false;
 
@@ -531,7 +530,9 @@ abstract public class GeckoApp
         if (outState == null)
             outState = new Bundle();
 
-        outState.putString(SAVED_STATE_TITLE, mLastTitle);
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab != null)
+            outState.putString(SAVED_STATE_TITLE, tab.getDisplayTitle());
         outState.putBoolean(SAVED_STATE_SESSION, true);
     }
 
@@ -1579,10 +1580,6 @@ abstract public class GeckoApp
         GeckoAppShell.loadMozGlue();
         mMainHandler = new Handler();
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onCreate");
-        if (savedInstanceState != null) {
-            mLastTitle = savedInstanceState.getString(SAVED_STATE_TITLE);
-            mRestoreSession = savedInstanceState.getBoolean(SAVED_STATE_SESSION);
-        }
 
         LayoutInflater.from(this).setFactory(GeckoViewsFactory.getInstance());
 
@@ -1606,6 +1603,11 @@ abstract public class GeckoApp
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (LinearLayout) findViewById(R.id.main_layout);
 
+        if (savedInstanceState != null) {
+            mBrowserToolbar.setTitle(savedInstanceState.getString(SAVED_STATE_TITLE));
+            mRestoreSession = savedInstanceState.getBoolean(SAVED_STATE_SESSION);
+        }
+
         ((GeckoApplication) getApplication()).addApplicationLifecycleCallbacks(this);
     }
 
@@ -1620,7 +1622,7 @@ abstract public class GeckoApp
             Matcher m = p.matcher(args);
             if (m.find()) {
                 mProfile = GeckoProfile.get(this, m.group(1));
-                mLastTitle = null;
+                mBrowserToolbar.setTitle(null);
             }
         }
 
@@ -1629,12 +1631,12 @@ abstract public class GeckoApp
             checkAndLaunchUpdate();
         }
 
-        mBrowserToolbar.setTitle(mLastTitle);
-
         String passedUri = null;
         String uri = getURIFromIntent(intent);
-        if (uri != null && uri.length() > 0)
-            passedUri = mLastTitle = uri;
+        if (uri != null && uri.length() > 0) {
+            passedUri = uri;
+            mBrowserToolbar.setTitle(uri);
+        }
 
         mRestoreSession |= getProfile().shouldRestoreSession();
         if (passedUri == null || passedUri.equals("about:home")) {
@@ -1646,6 +1648,10 @@ abstract public class GeckoApp
         } else {
             mBrowserToolbar.updateTabCount(1);
         }
+
+        // Start migrating as early as possible, can do this in
+        // parallel with Gecko load.
+        checkMigrateProfile();
 
         Uri data = intent.getData();
         if (data != null && "http".equals(data.getScheme()) &&
@@ -1769,6 +1775,9 @@ abstract public class GeckoApp
         GeckoAppShell.getHandler().postDelayed(new Runnable() {
             public void run() {
                 Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - pre checkLaunchState");
+                // Sync settings need Gecko to be loaded, so
+                // no hurry in starting this.
+                checkMigrateSync();
 
                 /*
                   XXXX see bug 635342
@@ -1782,8 +1791,6 @@ abstract public class GeckoApp
                 if (!checkLaunchState(LaunchState.Launched)) {
                     return;
                 }
-
-                checkMigrateProfile();
             }
         }, 50);
     }
@@ -1854,7 +1861,6 @@ abstract public class GeckoApp
                         !"about".equals(data.getScheme()) && 
                         !"chrome".equals(data.getScheme())) {
                         mIntent.setData(data);
-                        mLastTitle = location;
                     } else {
                         mIntent.putExtra("prefetched", 1);
                     }
@@ -2277,30 +2283,71 @@ abstract public class GeckoApp
     }
 
     private void checkMigrateProfile() {
-        File profileDir = getProfile().getDir();
-        long currentTime = SystemClock.uptimeMillis();
+        final File profileDir = getProfile().getDir();
+        final long currentTime = SystemClock.uptimeMillis();
 
         if (profileDir != null) {
-            Log.i(LOGTAG, "checking profile migration in: " + profileDir.getAbsolutePath());
+            final GeckoApp app = GeckoApp.mAppContext;
+
+            GeckoAppShell.getHandler().post(new Runnable() {
+                public void run() {
+                    Log.i(LOGTAG, "Checking profile migration in: " + profileDir.getAbsolutePath());
+
+                    ProfileMigrator profileMigrator =
+                        new ProfileMigrator(app, profileDir);
+
+                    // Do a migration run on the first start after an upgrade.
+                    if (!profileMigrator.hasMigrationRun()) {
+                        // Show the "Setting up Fennec" screen if this takes
+                        // a while.
+                        final SetupScreen setupScreen = new SetupScreen(app);
+
+                        final Runnable startCallback = new Runnable() {
+                            public void run() {
+                                GeckoApp.mAppContext.runOnUiThread(new Runnable() {
+                                    public void run() {
+                                       setupScreen.show();
+                                    }
+                                });
+                            }
+                        };
+
+                        final Runnable stopCallback = new Runnable() {
+                            public void run() {
+                                GeckoApp.mAppContext.runOnUiThread(new Runnable() {
+                                    public void run() {
+                                        setupScreen.dismiss();
+                                    }
+                                });
+                            }
+                        };
+
+                        profileMigrator.setLongOperationCallbacks(startCallback,
+                                                                  stopCallback);
+                        profileMigrator.launchPlaces();
+
+                        long timeDiff = SystemClock.uptimeMillis() - currentTime;
+                        Log.i(LOGTAG, "Profile migration took " + timeDiff + " ms");
+
+                        // Update about:home with the new information.
+                        updateAboutHomeTopSites();
+                    }
+                }}
+            );
+        }
+    }
+
+    private void checkMigrateSync() {
+        final File profileDir = getProfile().getDir();
+        if (profileDir != null) {
             final GeckoApp app = GeckoApp.mAppContext;
             ProfileMigrator profileMigrator =
                 new ProfileMigrator(app, profileDir);
-
-            // Do a migration run on the first start after an upgrade.
-            if (!profileMigrator.hasMigrationRun()) {
-                final SetupScreen setupScreen = new SetupScreen(app);
-
-                // don't show unless this take a while
-                setupScreen.showDelayed(mMainHandler);
-                profileMigrator.launch();
-                setupScreen.dismiss();
-
-                // Update about:home with the new information.
-                updateAboutHomeTopSites();
+            if (!profileMigrator.hasSyncMigrated()) {
+                Log.i(LOGTAG, "Checking Sync settings in: " + profileDir.getAbsolutePath());
+                profileMigrator.launchSyncPrefs();
             }
         }
-        long timeDiff = SystemClock.uptimeMillis() - currentTime;
-        Log.i(LOGTAG, "Profile migration took " + timeDiff + " ms");
     }
 
     /**

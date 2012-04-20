@@ -1,0 +1,38 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= content
+LIBRARY_NAME	= gkcongstreamer_s
+LIBXUL_LIBRARY 	= 1
+
+
+EXPORTS		+= \
+		nsGStreamerDecoder.h \
+		$(NULL)
+
+CPPSRCS		= \
+		nsGStreamerReader.cpp \
+		nsGStreamerDecoder.cpp \
+		$(NULL)
+
+FORCE_STATIC_LIB = 1
+
+include $(topsrcdir)/config/rules.mk
+
+CFLAGS		+= $(GSTREAMER_CFLAGS)
+CXXFLAGS	+= $(GSTREAMER_CFLAGS)
+
+
+INCLUDES	+= \
+		-I$(srcdir)/../../base/src \
+		-I$(srcdir)/../../html/content/src \
+		$(NULL)
+

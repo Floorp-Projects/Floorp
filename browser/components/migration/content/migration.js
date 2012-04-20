@@ -9,7 +9,7 @@ const Cu = Components.utils;
 const kIMig = Ci.nsIBrowserProfileMigrator;
 const kIPStartup = Ci.nsIProfileStartup;
 
-Cu.import("resource://gre/modules/MigrationUtils.jsm");
+Cu.import("resource:///modules/MigrationUtils.jsm");
 
 var MigrationWizard = {
   _source: "",                  // Source Profile Migrator ContractID suffix

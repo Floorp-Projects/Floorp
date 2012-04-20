@@ -225,13 +225,8 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
     return [NSNumber numberWithBool:[self isEnabled]];
   if ([attribute isEqualToString:NSAccessibilityValueAttribute])
     return [self value];
-  if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute]) {
-    if (mRole == roles::DOCUMENT)
-      return utils::LocalizedString(NS_LITERAL_STRING("htmlContent"));
-
-    return NSAccessibilityRoleDescription([self role], [self subrole]);
-  }
-  
+  if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute]) 
+    return [self roleDescription];  
   if ([attribute isEqualToString:NSAccessibilityDescriptionAttribute])
     return [self customDescription];
   if ([attribute isEqualToString:NSAccessibilityFocusedAttribute])
@@ -508,6 +503,21 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   }
 
   return nil;
+}
+
+- (NSString*)roleDescription
+{
+  if (mRole == roles::DOCUMENT)
+    return utils::LocalizedString(NS_LITERAL_STRING("htmlContent"));
+  
+  NSString* subrole = [self subrole];
+  
+  if ((mRole == roles::LISTITEM) && [subrole isEqualToString:@"AXTerm"])
+    return utils::LocalizedString(NS_LITERAL_STRING("term"));
+  if ((mRole == roles::PARAGRAPH) && [subrole isEqualToString:@"AXDefinition"])
+    return utils::LocalizedString(NS_LITERAL_STRING("definition"));
+  
+  return NSAccessibilityRoleDescription([self role], subrole);
 }
 
 - (NSString*)title

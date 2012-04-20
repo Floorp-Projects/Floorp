@@ -86,7 +86,7 @@ RUN_MOCHITEST_ROBOTIUM = \
   rm -f ./$@.log && \
   $(PYTHON) _tests/testing/mochitest/runtestsremote.py --robocop-path=$(DEPTH)/dist \
     --robocop-ids=$(DEPTH)/build/mobile/robocop/fennec_ids.txt \
-    --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=adb \
+    --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
     --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
     --robocop=$(DEPTH)/build/mobile/robocop/robocop.ini $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 

@@ -41,7 +41,7 @@
 // Tests the property provider, which is part of the code completion
 // infrastructure.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-console.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.gcli.enable");

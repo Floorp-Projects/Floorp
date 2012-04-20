@@ -648,6 +648,10 @@ CssLogic.prototype = {
     this._passId++;
     this._matchedRules = [];
 
+    if (!element) {
+      return;
+    }
+
     do {
       let status = this.viewedElement === element ?
                    CssLogic.STATUS.MATCHED : CssLogic.STATUS.PARENT_MATCH;
