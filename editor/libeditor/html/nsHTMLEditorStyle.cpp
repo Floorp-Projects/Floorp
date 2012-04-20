@@ -408,17 +408,19 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIDOMNode *aNode,
 
   if (useCSS) {
     tmp = aNode;
-    if (IsTextNode(tmp)) {
-      // we are working on a text node and need to create a span container that
-      // will carry the styles
-      InsertContainerAbove(aNode, address_of(tmp), NS_LITERAL_STRING("span"),
-                           nsnull, nsnull);
+    // We only add style="" to <span>s with no attributes (bug 746515).  If we
+    // don't have one, we need to make one.
+    nsCOMPtr<dom::Element> element = do_QueryInterface(tmp);
+    if (!element || !element->IsHTML(nsGkAtoms::span) ||
+        element->GetAttrCount()) {
+      res = InsertContainerAbove(aNode, address_of(tmp),
+                                 NS_LITERAL_STRING("span"),
+                                 nsnull, nsnull);
+      NS_ENSURE_SUCCESS(res, res);
     }
     // Add the CSS styles corresponding to the HTML style request
-    nsCOMPtr<nsIDOMElement> element;
-    element = do_QueryInterface(tmp);
     PRInt32 count;
-    res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, aProperty,
+    res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(tmp, aProperty,
                                                      aAttribute, aValue,
                                                      &count, false);
     NS_ENSURE_SUCCESS(res, res);
