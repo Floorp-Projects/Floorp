@@ -70,7 +70,7 @@ interface nsIDOMFile;
 interface nsIFile;
 interface nsIDOMTouch;
 
-[scriptable, uuid(c7f303a1-4f7b-4d38-a192-c3f0e25dadb1)]
+[scriptable, uuid(66a68858-df38-40e1-a792-fda04ebcc084)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1110,4 +1110,12 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   [implicit_jscontext]
   readonly attribute jsval plugins;
+
+  /**
+   * Set the scrollport size for the purposes of clamping scroll positions for
+   * the root scroll frame of this document to be (aWidth,aHeight) in CSS pixels.
+   *
+   * The caller of this method must have UniversalXPConnect privileges.
+   */
+  void setScrollPositionClampingScrollPortSize(in float aWidth, in float aHeight);
 };

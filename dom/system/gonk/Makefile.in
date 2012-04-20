@@ -25,6 +25,7 @@ CPPSRCS = \
 
 XPIDLSRCS = \
   nsIAudioManager.idl \
+  nsINetworkManager.idl \
   nsIRadioInterfaceLayer.idl \
   nsIWorkerHolder.idl \
   $(NULL)
@@ -47,8 +48,11 @@ LOCAL_INCLUDES += -I$(topsrcdir)/media/libsydneyaudio/src
 endif
 
 EXTRA_COMPONENTS = \
+  NetworkManager.manifest \
+  NetworkManager.js \
   RadioInterfaceLayer.manifest \
   RadioInterfaceLayer.js \
+  RILContentHelper.js \
   $(NULL)
 
 EXTRA_JS_MODULES = \

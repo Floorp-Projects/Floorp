@@ -252,7 +252,12 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
    */
   public void displayAbort(String error) {
     if (!Constants.JPAKE_ERROR_USERABORT.equals(error) && !hasInternet()) {
-      setContentView(R.layout.sync_setup_nointernet);
+      runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          setContentView(R.layout.sync_setup_nointernet);
+        }
+      });
       return;
     }
     if (pairWithPin) {
