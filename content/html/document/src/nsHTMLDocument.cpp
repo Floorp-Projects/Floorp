@@ -2305,7 +2305,7 @@ nsresult
 nsHTMLDocument::ChangeContentEditableCount(nsIContent *aElement,
                                            PRInt32 aChange)
 {
-  NS_ASSERTION(mContentEditableCount + aChange >= 0,
+  NS_ASSERTION(PRInt32(mContentEditableCount) + aChange >= 0,
                "Trying to decrement too much.");
 
   mContentEditableCount += aChange;
