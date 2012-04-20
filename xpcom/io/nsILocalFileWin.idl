@@ -39,7 +39,7 @@
 
 #include "nsILocalFile.idl"
 
-[scriptable, uuid(def24611-88a1-2cac-74fd-4b0b12bcaed5)]
+[scriptable, uuid(c7b3fd13-30f2-46e5-a0d9-7a79a9b73c5b)]
 interface nsILocalFileWin : nsILocalFile
 {
    /**
@@ -83,5 +83,37 @@ interface nsILocalFileWin : nsILocalFile
      * Throws NS_ERROR_FAILURE if the set or get fails.
      */
     attribute unsigned long fileAttributesWin;
+
+    /**
+     * setShortcut
+     *
+     * Creates the specified shortcut, or updates it if it already exists.
+     *
+     * If the shortcut is being updated (i.e. the shortcut already exists),
+     * any excluded parameters will remain unchanged in the shortcut file.
+     * For example, if you want to change the description of a specific
+     * shortcut but keep the target, working dir, args, and icon the same,
+     * pass null for those parameters and only pass in a value for the
+     * description.
+     *
+     * If the shortcut does not already exist and targetFile is not specified,
+     * setShortcut will throw NS_ERROR_FILE_TARGET_DOES_NOT_EXIST.
+     *
+     * @param targetFile      the path that the shortcut should target
+     * @param workingDir      the working dir that should be set for the shortcut
+     * @param args            the args string that should be set for the shortcut
+     * @param description     the description that should be set for the shortcut
+     * @param iconFile        the file containing an icon to be used for this
+                              shortcut
+     * @param iconIndex       this value selects a specific icon from within
+                              iconFile.  If iconFile contains only one icon, this
+                              value should be 0.
+     */
+     void setShortcut([optional] in nsILocalFile targetFile,
+                      [optional] in nsILocalFile workingDir,
+                      [optional] in wstring args,
+                      [optional] in wstring description,
+                      [optional] in nsILocalFile iconFile,
+                      [optional] in long iconIndex);
 };
 

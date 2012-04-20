@@ -242,14 +242,12 @@ nsDOMGeoPositionError::NotifyCallback(nsIDOMGeoPositionErrorCallback* aCallback)
 nsGeolocationRequest::nsGeolocationRequest(nsGeolocation* aLocator,
                                            nsIDOMGeoPositionCallback* aCallback,
                                            nsIDOMGeoPositionErrorCallback* aErrorCallback,
-                                           nsIDOMGeoPositionOptions* aOptions,
                                            bool aWatchPositionRequest)
   : mAllowed(false),
     mCleared(false),
     mIsWatchPositionRequest(aWatchPositionRequest),
     mCallback(aCallback),
     mErrorCallback(aErrorCallback),
-    mOptions(aOptions),
     mLocator(aLocator)
 {
 }
@@ -259,9 +257,13 @@ nsGeolocationRequest::~nsGeolocationRequest()
 }
 
 nsresult
-nsGeolocationRequest::Init()
+nsGeolocationRequest::Init(JSContext* aCx, const jsval& aOptions)
 {
-  // This method is called before the user has given permission for this request.
+  if (aCx && !JSVAL_IS_VOID(aOptions) && !JSVAL_IS_NULL(aOptions)) {
+    mOptions = new mozilla::dom::GeoPositionOptions();
+    nsresult rv = mOptions->Init(aCx, &aOptions);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   return NS_OK;
 }
 
@@ -274,7 +276,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsGeolocationRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsGeolocationRequest)
 
-NS_IMPL_CYCLE_COLLECTION_4(nsGeolocationRequest, mCallback, mErrorCallback, mOptions, mLocator)
+NS_IMPL_CYCLE_COLLECTION_3(nsGeolocationRequest, mCallback, mErrorCallback, mLocator)
 
 
 void
@@ -378,16 +380,11 @@ nsGeolocationRequest::Allow()
   
   PRUint32 maximumAge = 30 * PR_MSEC_PER_SEC;
   if (mOptions) {
-    PRInt32 tempAge;
-    nsresult rv = mOptions->GetMaximumAge(&tempAge);
-    if (NS_SUCCEEDED(rv)) {
-      if (tempAge >= 0)
-        maximumAge = tempAge;
+    if (mOptions->maximumAge >= 0) {
+      maximumAge = mOptions->maximumAge;
     }
-    bool highAccuracy;
-    rv = mOptions->GetEnableHighAccuracy(&highAccuracy);
-    if (NS_SUCCEEDED(rv) && highAccuracy) {
-	geoService->SetHigherAccuracy(true);
+    if (mOptions->enableHighAccuracy) {
+      geoService->SetHigherAccuracy(true);
     }
   }
 
@@ -417,7 +414,7 @@ nsGeolocationRequest::SetTimeoutTimer()
     mTimeoutTimer = nsnull;
   }
   PRInt32 timeout;
-  if (mOptions && NS_SUCCEEDED(mOptions->GetTimeout(&timeout)) && timeout != 0) {
+  if (mOptions && (timeout = mOptions->timeout) != 0) {
 
     if (timeout < 0)
       timeout = 0;
@@ -487,14 +484,11 @@ nsGeolocationRequest::Update(nsIDOMGeoPosition* aPosition)
 void
 nsGeolocationRequest::Shutdown()
 {
-  if (mOptions) {
-      bool highAccuracy;
-      nsresult rv = mOptions->GetEnableHighAccuracy(&highAccuracy);
-      if (NS_SUCCEEDED(rv) && highAccuracy) {
-	  nsRefPtr<nsGeolocationService> geoService = nsGeolocationService::GetInstance();
-	  if (geoService)
-	      geoService->SetHigherAccuracy(false);
-      }
+  if (mOptions && mOptions->enableHighAccuracy) {
+    nsRefPtr<nsGeolocationService> geoService = nsGeolocationService::GetInstance();
+    if (geoService) {
+      geoService->SetHigherAccuracy(false);
+    }
   }
 
   if (mTimeoutTimer) {
@@ -941,7 +935,8 @@ nsGeolocation::Update(nsIDOMGeoPosition *aSomewhere)
 NS_IMETHODIMP
 nsGeolocation::GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
                                   nsIDOMGeoPositionErrorCallback *errorCallback,
-                                  nsIDOMGeoPositionOptions *options)
+                                  const jsval& options,
+                                  JSContext* cx)
 {
   NS_ENSURE_ARG_POINTER(callback);
 
@@ -954,13 +949,12 @@ nsGeolocation::GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
   nsRefPtr<nsGeolocationRequest> request = new nsGeolocationRequest(this,
 								    callback,
 								    errorCallback,
-								    options,
 								    false);
   if (!request)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  if (NS_FAILED(request->Init()))
-    return NS_ERROR_FAILURE; // this as OKAY.  not sure why we wouldn't throw. xxx dft
+  nsresult rv = request->Init(cx, options);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mOwner) {
     if (!RegisterRequestWithPrompt(request))
@@ -984,7 +978,8 @@ nsGeolocation::GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
 NS_IMETHODIMP
 nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *callback,
                              nsIDOMGeoPositionErrorCallback *errorCallback,
-                             nsIDOMGeoPositionOptions *options,
+                             const jsval& options,
+                             JSContext* cx,
                              PRInt32 *_retval NS_OUTPARAM)
 {
 
@@ -999,13 +994,12 @@ nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *callback,
   nsRefPtr<nsGeolocationRequest> request = new nsGeolocationRequest(this,
 								    callback,
 								    errorCallback,
-								    options,
 								    true);
   if (!request)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  if (NS_FAILED(request->Init()))
-    return NS_ERROR_FAILURE; // this as OKAY.  not sure why we wouldn't throw. xxx dft
+  nsresult rv = request->Init(cx, options);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mOwner) {
     if (!RegisterRequestWithPrompt(request))

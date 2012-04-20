@@ -6510,6 +6510,12 @@ nsBlockFrame::Init(nsIContent*      aContent,
       aPrevInFlow->GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
     AddStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
 
+  if ((GetStateBits() &
+       (NS_FRAME_FONT_INFLATION_CONTAINER | NS_BLOCK_FLOAT_MGR)) ==
+      (NS_FRAME_FONT_INFLATION_CONTAINER | NS_BLOCK_FLOAT_MGR)) {
+    AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
+  }
+
   return rv;
 }
 

@@ -518,6 +518,7 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #include "nsIDOMSmsCursor.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMConnection.h"
+#include "nsIDOMMobileConnection.h"
 #include "mozilla/dom/network/Utils.h"
 
 #ifdef MOZ_B2G_RIL
@@ -1458,6 +1459,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(MozConnection, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
+  NS_DEFINE_CLASSINFO_DATA(MozMobileConnection, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
   NS_DEFINE_CLASSINFO_DATA(CSSFontFaceRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSFontFaceStyleDecl, nsCSSStyleDeclSH,
@@ -1834,21 +1838,13 @@ PrintWarningOnConsole(JSContext *cx, const char *stringBundleProperty)
     return;
   }
 
-  JSStackFrame *fp, *iterator = nsnull;
-  fp = ::JS_FrameIterator(cx, &iterator);
-  PRUint32 lineno = 0;
+  unsigned lineno = 0;
+  JSScript *script;
   nsAutoString sourcefile;
-  if (fp) {
-    JSScript* script = ::JS_GetFrameScript(cx, fp);
-    if (script) {
-      const char* filename = ::JS_GetScriptFilename(cx, script);
-      if (filename) {
-        CopyUTF8toUTF16(nsDependentCString(filename), sourcefile);
-      }
-      jsbytecode* pc = ::JS_GetFramePC(cx, fp);
-      if (pc) {
-        lineno = ::JS_PCToLineNumber(cx, script, pc);
-      }
+
+  if (JS_DescribeScriptedCaller(cx, &script, &lineno)) {
+    if (const char *filename = ::JS_GetScriptFilename(cx, script)) {
+      CopyUTF8toUTF16(nsDependentCString(filename), sourcefile);
     }
   }
 
@@ -4080,6 +4076,11 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(MozConnection, nsIDOMMozConnection)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozConnection)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozMobileConnection, nsIDOMMozMobileConnection)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozMobileConnection)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 

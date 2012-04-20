@@ -425,24 +425,26 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
 }
 
 static void
-LoadAppDirIntoArray(nsIFile* aXULAppDir,
-                    const char *const *aAppendList,
-                    nsCOMArray<nsIFile>& aDirectories)
+LoadDirIntoArray(nsIFile* dir,
+                 const char *const *aAppendList,
+                 nsCOMArray<nsIFile>& aDirectories)
 {
-  if (!aXULAppDir)
+  if (!dir)
     return;
 
   nsCOMPtr<nsIFile> subdir;
-  aXULAppDir->Clone(getter_AddRefs(subdir));
+  dir->Clone(getter_AddRefs(subdir));
   if (!subdir)
     return;
 
-  for (; *aAppendList; ++aAppendList)
-    subdir->AppendNative(nsDependentCString(*aAppendList));
+  for (const char *const *a = aAppendList; *a; ++a) {
+    subdir->AppendNative(nsDependentCString(*a));
+  }
 
   bool exists;
-  if (NS_SUCCEEDED(subdir->Exists(&exists)) && exists)
+  if (NS_SUCCEEDED(subdir->Exists(&exists)) && exists) {
     aDirectories.AppendObject(subdir);
+  }
 }
 
 static void
@@ -461,11 +463,11 @@ LoadDirsIntoArray(nsCOMArray<nsIFile>& aSourceDirs,
     nsCAutoString leaf;
     appended->GetNativeLeafName(leaf);
     if (!Substring(leaf, leaf.Length() - 4).Equals(NS_LITERAL_CSTRING(".xpi"))) {
-      for (const char *const *a = aAppendList; *a; ++a)
-        appended->AppendNative(nsDependentCString(*a));
+      LoadDirIntoArray(appended,
+                       aAppendList,
+                       aDirectories);
     }
-
-    if (NS_SUCCEEDED(appended->Exists(&exists)) && exists)
+    else if (NS_SUCCEEDED(appended->Exists(&exists)) && exists)
       aDirectories.AppendObject(appended);
   }
 }
@@ -642,7 +644,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
   else if (!strcmp(aProperty, NS_APP_PREFS_DEFAULTS_DIR_LIST)) {
     nsCOMArray<nsIFile> directories;
 
-    LoadAppDirIntoArray(mXULAppDir, kAppendPrefDir, directories);
+    LoadDirIntoArray(mXULAppDir, kAppendPrefDir, directories);
     LoadDirsIntoArray(mAppBundleDirectories,
                       kAppendPrefDir, directories);
 
@@ -672,9 +674,9 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
 
     static const char *const kAppendChromeDir[] = { "chrome", nsnull };
     nsCOMArray<nsIFile> directories;
-    LoadAppDirIntoArray(mXULAppDir,
-                        kAppendChromeDir,
-                        directories);
+    LoadDirIntoArray(mXULAppDir,
+                     kAppendChromeDir,
+                     directories);
     LoadDirsIntoArray(mAppBundleDirectories,
                       kAppendChromeDir,
                       directories);

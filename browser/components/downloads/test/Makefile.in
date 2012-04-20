@@ -1,0 +1,17 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+DEPTH     = ../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+
+relativesrcdir = browser/components/downloads/test
+
+include $(DEPTH)/config/autoconf.mk
+
+XPCSHELL_TESTS = unit
+
+DIRS = browser
+
+include $(topsrcdir)/config/rules.mk

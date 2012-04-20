@@ -10,7 +10,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/MigrationUtils.jsm");
+Cu.import("resource:///modules/MigrationUtils.jsm");
 
 function ProfileMigrator() {
 }

@@ -1067,9 +1067,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   // Store last known screenPoint and clientPoint so pointer lock
   // can use these values as constants.
   if (NS_IS_TRUSTED_EVENT(aEvent) &&
-      (NS_IS_MOUSE_EVENT_STRUCT(aEvent) &&
+      ((NS_IS_MOUSE_EVENT_STRUCT(aEvent) &&
        IsMouseEventReal(aEvent)) ||
-       aEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
+       aEvent->eventStructType == NS_MOUSE_SCROLL_EVENT)) {
     if (!sIsPointerLocked) {
       sLastScreenPoint = nsDOMUIEvent::CalculateScreenPoint(aPresContext, aEvent);
       sLastClientPoint = nsDOMUIEvent::CalculateClientPoint(aPresContext, aEvent, nsnull);
@@ -4764,6 +4764,19 @@ nsEventStateManager::SetContentState(nsIContent *aContent, nsEventStates aState)
 void
 nsEventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
 {
+  /*
+   * Anchor and area elements when focused or hovered might make the UI to show
+   * the current link. We want to make sure that the UI gets informed when they
+   * are actually removed from the DOM.
+   */
+  if (aContent->IsHTML() &&
+      (aContent->Tag() == nsGkAtoms::a || aContent->Tag() == nsGkAtoms::area) &&
+      (aContent->AsElement()->State().HasAtLeastOneOfStates(NS_EVENT_STATE_FOCUS |
+                                                            NS_EVENT_STATE_HOVER))) {
+    nsGenericHTMLElement* element = static_cast<nsGenericHTMLElement*>(aContent);
+    element->LeaveLink(element->GetPresContext());
+  }
+
   // inform the focus manager that the content is being removed. If this
   // content is focused, the focus will be removed without firing events.
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
