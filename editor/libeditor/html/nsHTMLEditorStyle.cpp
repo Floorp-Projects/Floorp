@@ -710,8 +710,8 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
                                                     aAttribute,
                                                     &propertyValue,
                                                     false);
-      // remove the node if it is a span, if its style attribute is empty or
-      // absent, and if it does not have a class nor an id
+      // remove the node if it is a span or font, if its style attribute is
+      // empty or absent, and if it does not have a class nor an id
       RemoveElementIfNoStyleOrIdOrClass(aNode);
     }
   }
@@ -1862,7 +1862,9 @@ nsHTMLEditor::RemoveElementIfNoStyleOrIdOrClass(nsIDOMNode* aElement)
   NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
 
   // early way out if node is not the right kind of element
-  if (!element->IsHTML(nsGkAtoms::span) || HasStyleOrIdOrClass(element)) {
+  if ((!element->IsHTML(nsGkAtoms::span) &&
+       !element->IsHTML(nsGkAtoms::font)) ||
+      HasStyleOrIdOrClass(element)) {
     return NS_OK;
   }
 
