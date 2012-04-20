@@ -2308,10 +2308,10 @@ nsWindow::SchedulePauseComposition()
 }
 
 void
-nsWindow::ScheduleResumeComposition()
+nsWindow::ScheduleResumeComposition(int width, int height)
 {
     if (sCompositorParent) {
-        sCompositorParent->ScheduleResumeOnCompositorThread();
+        sCompositorParent->ScheduleResumeOnCompositorThread(width, height);
     }
 }
 
