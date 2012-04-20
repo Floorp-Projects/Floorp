@@ -41,6 +41,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/Util.h"
 
 #ifdef MOZ_LOGGING
@@ -715,15 +716,35 @@ ConvertLoadTypeToNavigationType(PRUint32 aLoadType)
 static nsISHEntry* GetRootSHEntry(nsISHEntry *entry);
 
 static void
+IncreasePrivateDocShellCount()
+{
+    gNumberOfPrivateDocShells++;
+    if (gNumberOfPrivateDocShells > 1 ||
+        XRE_GetProcessType() != GeckoProcessType_Content) {
+        return;
+    }
+
+    mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
+    cc->SendPrivateDocShellsExist(true);
+}
+
+static void
 DecreasePrivateDocShellCount()
 {
     MOZ_ASSERT(gNumberOfPrivateDocShells > 0);
     gNumberOfPrivateDocShells--;
     if (!gNumberOfPrivateDocShells)
     {
+        if (XRE_GetProcessType() == GeckoProcessType_Content) {
+            mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
+            cc->SendPrivateDocShellsExist(false);
+            return;
+        }
+
         nsCOMPtr<nsIObserverService> obsvc = mozilla::services::GetObserverService();
-        if (obsvc)
+        if (obsvc) {
             obsvc->NotifyObservers(nsnull, "last-pb-context-exited", nsnull);
+        }
     }
 }
 
@@ -2023,7 +2044,7 @@ nsDocShell::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
     if (aUsePrivateBrowsing != mInPrivateBrowsing) {
         mInPrivateBrowsing = aUsePrivateBrowsing;
         if (aUsePrivateBrowsing) {
-            gNumberOfPrivateDocShells++;
+            IncreasePrivateDocShellCount();
         } else {
             DecreasePrivateDocShellCount();
         }
