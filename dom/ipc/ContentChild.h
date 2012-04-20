@@ -199,6 +199,8 @@ private:
     gfxIntSize mScreenSize;
 #endif
 
+    AppInfo mAppInfo;
+
     /**
      * An ID unique to the process containing our corresponding
      * content parent.
@@ -207,8 +209,6 @@ private:
      * channel to us.
      */
     PRUint64 mID;
-
-    AppInfo mAppInfo;
 
     static ContentChild* sSingleton;
 
