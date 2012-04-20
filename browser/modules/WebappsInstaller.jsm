@@ -22,6 +22,12 @@ let WebappsInstaller = {
    */
   install: function(aData) {
 
+    try {
+      if (Services.prefs.getBoolPref("browser.mozApps.installer.dry_run")) {
+        return true;
+      }
+    } catch (ex) {}
+
 #ifdef XP_WIN
     let shell = new WinNativeApp(aData);
 #elifdef XP_MACOSX
