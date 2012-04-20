@@ -153,8 +153,8 @@ static void *sNativeWindow = nsnull;
 static const double SWIPE_MAX_PINCH_DELTA_INCHES = 0.4;
 static const double SWIPE_MIN_DISTANCE_INCHES = 0.6;
 
-static nsWindow*
-TopWindow()
+nsWindow*
+nsWindow::TopWindow()
 {
     if (!gTopLevelWindows.IsEmpty())
         return gTopLevelWindows[0];
@@ -334,7 +334,7 @@ nsWindow::SetParent(nsIWidget *aNewParent)
         mParent->mChildren.AppendElement(this);
 
     // if we are now in the toplevel window's hierarchy, schedule a redraw
-    if (FindTopLevel() == TopWindow())
+    if (FindTopLevel() == nsWindow::TopWindow())
         RedrawAll();
 
     return NS_OK;
@@ -390,7 +390,7 @@ nsWindow::Show(bool aState)
             // and bring it to the front.
             Resize(0, 0, gAndroidBounds.width, gAndroidBounds.height, false);
             BringToFront();
-        } else if (TopWindow() == this) {
+        } else if (nsWindow::TopWindow() == this) {
             // find the next visible window to show
             unsigned int i;
             for (i = 1; i < gTopLevelWindows.Length(); i++) {
@@ -402,7 +402,7 @@ nsWindow::Show(bool aState)
                 break;
             }
         }
-    } else if (FindTopLevel() == TopWindow()) {
+    } else if (FindTopLevel() == nsWindow::TopWindow()) {
         RedrawAll();
     }
 
@@ -490,7 +490,7 @@ nsWindow::Resize(PRInt32 aX,
         OnSizeChanged(gfxIntSize(aWidth, aHeight));
 
     // Should we skip honoring aRepaint here?
-    if (aRepaint && FindTopLevel() == TopWindow())
+    if (aRepaint && FindTopLevel() == nsWindow::TopWindow())
         RedrawAll();
 
     return NS_OK;
@@ -589,7 +589,7 @@ nsWindow::BringToFront()
     nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
     nsCOMPtr<nsIDOMWindow> existingTopWindow;
     fm->GetActiveWindow(getter_AddRefs(existingTopWindow));
-    if (existingTopWindow && FindTopLevel() == TopWindow())
+    if (existingTopWindow && FindTopLevel() == nsWindow::TopWindow())
         return;
 
     if (!IsTopLevel()) {
