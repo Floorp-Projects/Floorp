@@ -47,9 +47,13 @@ DIRS += chrome \
 	navigation \
 	$(NULL)
 
-XPCSHELL_TESTS = unit
-
 include $(DEPTH)/config/autoconf.mk
+
+XPCSHELL_TESTS = unit
+# FIXME/bug 575918: out-of-process xpcshell is broken on OS X
+ifneq ($(OS_ARCH),Darwin)
+XPCSHELL_TESTS += unit_ipc
+endif
 
 ifneq (mobile,$(MOZ_BUILD_APP))
 	DIRS += browser
