@@ -83,6 +83,7 @@ XPIDLSRCS = \
   nsIRefreshURI.idl \
   nsIContentViewerContainer.idl \
   nsIDocumentLoaderFactory.idl \
+  nsIPrivacyTransitionObserver.idl \
   $(NULL)
 
 EXPORTS = \

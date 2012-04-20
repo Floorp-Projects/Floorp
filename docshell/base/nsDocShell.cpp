@@ -107,6 +107,7 @@
 #include "nsIScriptChannel.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsITimedChannel.h"
+#include "nsIPrivacyTransitionObserver.h"
 #include "nsCPrefetchService.h"
 #include "nsJSON.h"
 #include "IHistory.h"
@@ -2041,7 +2042,8 @@ nsDocShell::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing)
 NS_IMETHODIMP
 nsDocShell::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
 {
-    if (aUsePrivateBrowsing != mInPrivateBrowsing) {
+    bool changed = aUsePrivateBrowsing != mInPrivateBrowsing;
+    if (changed) {
         mInPrivateBrowsing = aUsePrivateBrowsing;
         if (aUsePrivateBrowsing) {
             IncreasePrivateDocShellCount();
@@ -2057,7 +2059,30 @@ nsDocShell::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
             shell->SetUsePrivateBrowsing(aUsePrivateBrowsing);
         }
     }
+
+    if (changed) {
+        nsTObserverArray<nsWeakPtr>::ForwardIterator iter(mPrivacyObservers);
+        while (iter.HasMore()) {
+            nsWeakPtr ref = iter.GetNext();
+            nsCOMPtr<nsIPrivacyTransitionObserver> obs = do_QueryReferent(ref);
+            if (!obs) {
+                mPrivacyObservers.RemoveElement(ref);
+            } else {
+                obs->PrivateModeChanged(aUsePrivateBrowsing);
+            }
+        }
+    }
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::AddWeakPrivacyTransitionObserver(nsIPrivacyTransitionObserver* aObserver)
+{
+    nsWeakPtr weakObs = do_GetWeakReference(aObserver);
+    if (!weakObs) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+    return mPrivacyObservers.AppendElement(weakObs) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsDocShell::GetAllowMetaRedirects(bool * aReturn)
