@@ -100,8 +100,6 @@
 #include "nsIDOMUIEvent.h"
 #include "nsDOMDragEvent.h"
 #include "nsIDOMNSEditableElement.h"
-#include "nsIDOMMozBrowserFrame.h"
-#include "nsIMozBrowserFrame.h"
 
 #include "nsCaret.h"
 
@@ -1703,30 +1701,12 @@ nsEventStateManager::DispatchCrossProcessEvent(nsEvent* aEvent, nsIFrameLoader* 
 
 bool
 nsEventStateManager::IsRemoteTarget(nsIContent* target) {
-  if (!target) {
-    return false;
-  }
-
-  // <browser/iframe remote=true> from XUL
-  if ((target->Tag() == nsGkAtoms::browser ||
-       target->Tag() == nsGkAtoms::iframe) &&
-      target->IsXUL() &&
-      target->AttrValueIs(kNameSpaceID_None, nsGkAtoms::Remote,
-                          nsGkAtoms::_true, eIgnoreCase)) {
-    return true;
-  }
-
-  // <frame/iframe mozbrowser>
-  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(target);
-  if (browserFrame) {
-    bool isRemote = false;
-    browserFrame->GetReallyIsBrowser(&isRemote);
-    if (isRemote) {
-      return true;
-    }
-  }
-
-  return false;
+  return target &&
+         (target->Tag() == nsGkAtoms::browser ||
+          target->Tag() == nsGkAtoms::iframe) &&
+         target->IsXUL() &&
+         target->AttrValueIs(kNameSpaceID_None, nsGkAtoms::Remote,
+                             nsGkAtoms::_true, eIgnoreCase);
 }
 
 

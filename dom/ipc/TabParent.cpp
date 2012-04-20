@@ -70,7 +70,6 @@
 #include "nsIViewManager.h"
 #include "mozilla/unused.h"
 #include "nsDebug.h"
-#include "nsPrintfCString.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -94,7 +93,6 @@ TabParent::TabParent()
   , mIMESeqno(0)
   , mDPI(0)
   , mActive(false)
-  , mShown(false)
 {
 }
 
@@ -106,7 +104,13 @@ void
 TabParent::SetOwnerElement(nsIDOMElement* aElement)
 {
   mFrameElement = aElement;
-  TryCacheDPI();
+
+  // Cache the DPI of the screen, since we may lose the element/widget later
+  if (aElement) {
+    nsCOMPtr<nsIWidget> widget = GetWidget();
+    NS_ABORT_IF_FALSE(widget, "Non-null OwnerElement must provide a widget!");
+    mDPI = widget->GetDPI();
+  }
 }
 
 void
@@ -193,16 +197,6 @@ TabParent::AnswerCreateWindow(PBrowserParent** retval)
 void
 TabParent::LoadURL(nsIURI* aURI)
 {
-    if (!mShown) {
-      nsCAutoString spec;
-      if (aURI) {
-        aURI->GetSpec(spec);
-      }
-      NS_WARNING(nsPrintfCString(1024, "TabParent::LoadURL(%s) called before "
-                                 "Show(). Ignoring LoadURL.\n", spec.get()).get());
-      return;
-    }
-
     nsCString spec;
     aURI->GetSpec(spec);
 
@@ -213,7 +207,6 @@ void
 TabParent::Show(const nsIntSize& size)
 {
     // sigh
-    mShown = true;
     unused << SendShow(size);
 }
 
@@ -628,7 +621,6 @@ TabParent::RecvSetInputContext(const PRInt32& aIMEEnabled,
 bool
 TabParent::RecvGetDPI(float* aValue)
 {
-  TryCacheDPI();
   NS_ABORT_IF_FALSE(mDPI > 0, 
                     "Must not ask for DPI before OwnerElement is received!");
   *aValue = mDPI;
@@ -856,19 +848,6 @@ TabParent::GetFrameLoader() const
   return frameLoaderOwner ? frameLoaderOwner->GetFrameLoader() : nsnull;
 }
 
-void
-TabParent::TryCacheDPI()
-{
-  if (mDPI > 0) {
-    return;
-  }
-
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (widget) {
-    mDPI = widget->GetDPI();
-  }
-}
-
 already_AddRefed<nsIWidget>
 TabParent::GetWidget() const
 {
@@ -880,8 +859,7 @@ TabParent::GetWidget() const
   if (!frame)
     return nsnull;
 
-  nsCOMPtr<nsIWidget> widget = frame->GetNearestWidget();
-  return widget.forget();
+  return nsCOMPtr<nsIWidget>(frame->GetNearestWidget()).forget();
 }
 
 } // namespace tabs
