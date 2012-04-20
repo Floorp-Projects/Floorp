@@ -12,16 +12,14 @@ function createDocument()
   doc.body.innerHTML = "<div style='color:blue;'></div>";
 
   doc.title = "Style Inspector Selector Text Test";
-  stylePanel = new StyleInspector(window);
+  stylePanel = new ComputedViewPanel(window);
 
+  Services.obs.addObserver(SI_checkText, "StyleInspector-populated", false);
 
-  stylePanel.createPanel(false, function() {
-    Services.obs.addObserver(SI_checkText, "StyleInspector-populated", false);
+  let span = doc.querySelector("div");
+  ok(span, "captain, we have the test div");
 
-    let span = doc.querySelector("div");
-    ok(span, "captain, we have the test div");
-    stylePanel.open(span);
-  });
+  stylePanel.createPanel(span);
 }
 
 function SI_checkText()
@@ -34,6 +32,7 @@ function SI_checkText()
       propertyView = aView;
       return true;
     }
+    return false;
   });
 
   ok(propertyView, "found PropertyView for color");
@@ -57,13 +56,12 @@ function SI_checkText()
     ok(false, "getting the selector text should not raise an exception");
   }
 
-  Services.obs.addObserver(finishUp, "StyleInspector-closed", false);
-  stylePanel.close();
+  stylePanel.destroy();
+  finishUp();
 }
 
 function finishUp()
 {
-  Services.obs.removeObserver(finishUp, "StyleInspector-closed", false);
   doc = stylePanel = null;
   gBrowser.removeCurrentTab();
   finish();

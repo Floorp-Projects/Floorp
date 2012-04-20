@@ -2167,7 +2167,7 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
 /* Highlighter toolbar - breadcrumbs */
 
 #inspector-breadcrumbs {
-  padding: 0 3px;
+  -moz-margin-end: 3px;
   /* A fake 1px-shadow is included in the border-images of the
      inspector-breadcrumbs-buttons, to match toolbar-buttons style.
      This negative margin compensate the extra row of pixels created
@@ -2178,6 +2178,44 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
 #inspector-breadcrumbs > .scrollbutton-up,
 #inspector-breadcrumbs > .scrollbutton-down {
   -moz-appearance: none;
+  border: 1px solid hsla(210,8%,5%,.45);
+  background: -moz-linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1)) padding-box;
+  box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset, 0 0 0 1px hsla(210,16%,76%,.15) inset, 0 1px 0 hsla(210,16%,76%,.15);
+  margin: 0 0 1px;
+}
+
+#inspector-breadcrumbs > .scrollbutton-up {
+  -moz-border-start-width: 0;
+}
+
+#inspector-breadcrumbs > .scrollbutton-up:not([disabled]):active:hover,
+#inspector-breadcrumbs > .scrollbutton-down:not([disabled]):active:hover {
+  border-color: hsla(210,8%,5%,.6);
+  background: -moz-linear-gradient(hsla(220,6%,10%,.3), hsla(212,7%,57%,.15) 65%, hsla(212,7%,57%,.3));
+  box-shadow: 0 0 3px hsla(210,8%,5%,.25) inset, 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 0 hsla(210,16%,76%,.15);
+}
+
+#inspector-breadcrumbs > .scrollbutton-up:not([disabled]):active:hover > .toolbarbutton-icon,
+#inspector-breadcrumbs > .scrollbutton-down:not([disabled]):active:hover > .toolbarbutton-icon {
+  -moz-image-region: rect(0px 14px 16px 7px);
+}
+
+#inspector-breadcrumbs > .scrollbutton-up > .toolbarbutton-icon,
+#inspector-breadcrumbs > .scrollbutton-down > .toolbarbutton-icon {
+  -moz-appearance: none;
+  list-style-image: url("chrome://browser/skin/devtools/breadcrumbs-scrollbutton.png");
+  -moz-image-region: rect(0px 7px 16px 0px);
+  margin: 0 5px;
+}
+
+#inspector-breadcrumbs > .scrollbutton-up[disabled] > .toolbarbutton-icon,
+#inspector-breadcrumbs > .scrollbutton-down[disabled] > .toolbarbutton-icon {
+  opacity: 0.5;
+}
+
+#inspector-breadcrumbs > .scrollbutton-up > .toolbarbutton-icon:-moz-locale-dir(rtl),
+#inspector-breadcrumbs > .scrollbutton-down > .toolbarbutton-icon:-moz-locale-dir(ltr) {
+  -moz-transform: scaleX(-1);
 }
 
 .inspector-breadcrumbs-button {
@@ -2186,13 +2224,17 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
   border-style: solid;
   border-width: 1px 13px 2px 13px;
   color: hsl(210,30%,85%);
-  max-width: 85px;
+  width: 85px; /* Can't use max-width. See bug 723132 */
   /* The content of the button can be larger than the button */
   overflow: hidden;
   min-height: 25px;
 
   margin: 0 -11px 0 0;
   padding: 0 9px;
+}
+
+.inspector-breadcrumbs-button:-moz-focusring > label {
+  border-bottom: 1px dotted hsla(210,30%,85%,0.4);
 }
 
 .inspector-breadcrumbs-button[checked] > .inspector-breadcrumbs-tag {
@@ -2220,6 +2262,7 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
 
 .inspector-breadcrumbs-button:-moz-locale-dir(ltr):first-of-type {
   margin-left: 0;
+  border-left-width: 0;
 }
 
 .inspector-breadcrumbs-button {
@@ -2262,6 +2305,10 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
   -moz-border-image: url("chrome://browser/skin/devtools/breadcrumbs/ltr-end.png") 1 13 2 13 fill stretch;
 }
 
+#inspector-breadcrumbs[overflows] > .inspector-breadcrumbs-button:-moz-locale-dir(ltr):last-of-type {
+  border-right-width: 0;
+}
+
 .inspector-breadcrumbs-button[siblings-menu-open]:last-of-type:not([checked]),
 .inspector-breadcrumbs-button:last-of-type:not([checked]):hover:active {
   -moz-border-image: url("chrome://browser/skin/devtools/breadcrumbs/ltr-end-pressed.png") 1 13 2 13 fill stretch;
@@ -2280,6 +2327,7 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
 
 .inspector-breadcrumbs-button:-moz-locale-dir(rtl):first-of-type {
   margin-right: 0;
+  border-right-width: 0;
 }
 
 .inspector-breadcrumbs-button:-moz-locale-dir(rtl) {
@@ -2322,6 +2370,10 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
   -moz-border-image: url("chrome://browser/skin/devtools/breadcrumbs/rtl-end.png") 1 13 2 13 fill stretch;
 }
 
+#inspector-breadcrumbs[overflows] > .inspector-breadcrumbs-button:last-of-type:-moz-locale-dir(rtl) {
+  border-left-width: 0;
+}
+
 .inspector-breadcrumbs-button[siblings-menu-open]:last-of-type:not([checked]):-moz-locale-dir(rtl),
 .inspector-breadcrumbs-button:last-of-type:not([checked]):hover:active:-moz-locale-dir(rtl) {
   -moz-border-image: url("chrome://browser/skin/devtools/breadcrumbs/rtl-end-pressed.png") 1 13 2 13 fill stretch;
@@ -2337,6 +2389,26 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
 }
 
 /* Highlighter toolbar - HTML Tree */
+
+#inspector-treepanel-toolbutton {
+  list-style-image: url("chrome://browser/skin/devtools/treepanel-button.png");
+  -moz-margin-end: 0;
+  -moz-image-region: rect(0px 18px 16px 0px);
+}
+
+#inspector-treepanel-toolbutton[checked] {
+  -moz-image-region: rect(0px 36px 16px 18px);
+}
+
+#inspector-breadcrumbs > .scrollbutton-down:-moz-locale-dir(rtl),
+#inspector-treepanel-toolbutton:-moz-locale-dir(ltr) {
+  border-radius: 3px 0 0 3px;
+}
+
+#inspector-breadcrumbs > .scrollbutton-down:-moz-locale-dir(ltr),
+#inspector-treepanel-toolbutton:-moz-locale-dir(rtl) {
+  border-radius: 0 3px 3px 0;
+}
 
 #inspector-tree-splitter {
   -moz-appearance: none;
