@@ -702,12 +702,12 @@ nsresult
 ProtocolParser::ProcessHostSubComplete(PRUint8 aNumEntries,
                                        const nsACString& aChunk, PRUint32* aStart)
 {
-  NS_ASSERTION(mChunkState.hashSize == COMPLETE_SIZE,
-               "ProcessHostSubComplete should only be called for complete hashes.");
+  NS_ASSERTION(mChunkState.hashSize == PREFIX_SIZE,
+               "ProcessHostSub should only be called for prefix hashes.");
 
   if (aNumEntries == 0) {
     // this is totally comprehensible.
-    NS_WARNING("Expected > 0 entries for a 32-byte hash sub.");
+    NS_WARNING("Expected > 0 entries for a 32-byte hash add.");
     return NS_OK;
   }
 
