@@ -587,8 +587,7 @@ Classifier::ApplyTableUpdates(nsTArray<TableUpdate*>* aUpdates,
 #if defined(DEBUG) && defined(PR_LOGGING)
   prefixSet->Dump();
 #endif
-  rv = prefixSet->WriteFile();
-  NS_ENSURE_SUCCESS(rv, rv);
+  prefixSet->WriteFile();
 
   // This will drop all the temporary storage used during the update.
   rv = store->FinishUpdate();
