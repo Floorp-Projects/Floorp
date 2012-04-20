@@ -606,14 +606,11 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY addonBarCloseButton.tooltip  "Close Add-on Bar">
 <!ENTITY toggleAddonBarCmd.key        "/">
 
-<!-- LOCALIZATION NOTE (htmlPanel.label): This is a label for a button that
-activates the Web Developer->Inspect UI's HTML Tree Panel. -->
-<!ENTITY htmlPanel.label              "HTML">
-
-<!-- LOCALIZATION NOTE (htmlPanel.tooltiptext): The text that appears when a user
-hovers over the HTML panel's toolbar button. -->
-<!ENTITY htmlPanel.tooltiptext        "HTML panel">
-
-<!-- LOCALIZATION NOTE (htmlPanel.accesskey): The key bound to the HTML panel's
+<!-- LOCALIZATION NOTE (markupButton.arialabel): The markup button is the button
+located in front of the breadcrumbs display in the inspector toolbar. The button
+doesn't display any label, but exposes a label to screen-readers with "aria-label".
+-->
+<!ENTITY markupButton.arialabel          "Markup">
+<!-- LOCALIZATION NOTE (markupButton.accesskey): The key bound to the Markup panel's
 toolbar button -->
-<!ENTITY htmlPanel.accesskey          "H">
+<!ENTITY markupButton.accesskey          "M">

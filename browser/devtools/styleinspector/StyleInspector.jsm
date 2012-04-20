@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Mike Ratcliffe <mratcliffe@mozilla.com> (Original Author)
  *   Rob Campbell <rcampbell@mozilla.com>
+ *   Dave Camp <dcamp@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,316 +44,221 @@ const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource:///modules/devtools/CssRuleView.jsm");
+Cu.import("resource:///modules/inspector.jsm");
 
-var EXPORTED_SYMBOLS = ["StyleInspector"];
+// This module doesn't currently export any symbols directly, it only
+// registers inspector tools.
+var EXPORTED_SYMBOLS = [];
 
 /**
- * StyleInspector Constructor Function.
- * @param {window} aContext, the chrome window context we're calling from.
- * @param {InspectorUI} aIUI (optional) An InspectorUI instance if called from the
- *        Highlighter.
+ * Lookup l10n string from a string bundle.
+ * @param {string} aName The key to lookup.
+ * @returns A localized version of the given key.
  */
-function StyleInspector(aContext, aIUI)
+function l10n(aName)
 {
-  this._init(aContext, aIUI);
+  try {
+    return _strings.GetStringFromName(aName);
+  } catch (ex) {
+    Services.console.logStringMessage("Error reading '" + aName + "'");
+    throw new Error("l10n error with " + aName);
+  }
 }
 
-StyleInspector.prototype = {
+function RegisterStyleTools()
+{
+  // Register the rules view
+  if (Services.prefs.getBoolPref("devtools.ruleview.enabled")) {
+    InspectorUI.registerSidebar({
+      id: "ruleview",
+      label: l10n("ruleView.label"),
+      tooltiptext: l10n("ruleView.tooltiptext"),
+      accesskey: l10n("ruleView.accesskey"),
+      contentURL: "chrome://browser/content/devtools/cssruleview.xul",
+      load: function(aInspector, aFrame) new RuleViewTool(aInspector, aFrame),
+      destroy: function(aContext) aContext.destroy()
+    });
+  }
 
-  /**
-   * Initialization method called from constructor.
-   * @param {window} aContext, the chrome window context we're calling from.
-   * @param {InspectorUI} aIUI (optional) An InspectorUI instance if called from
-   *        the Highlighter.
-   */
-  _init: function SI__init(aContext, aIUI)
-  {
-    this.window = aContext;
-    this.IUI = aIUI;
-    this.document = this.window.document;
-    this.cssLogic = new CssLogic();
-    this.panelReady = false;
-    this.iframeReady = false;
+  // Register the computed styles view
+  if (Services.prefs.getBoolPref("devtools.styleinspector.enabled")) {
+    InspectorUI.registerSidebar({
+      id: "computedview",
+      label: this.l10n("style.highlighter.button.label2"),
+      tooltiptext: this.l10n("style.highlighter.button.tooltip2"),
+      accesskey: this.l10n("style.highlighter.accesskey2"),
+      contentURL: "chrome://browser/content/devtools/csshtmltree.xul",
+      load: function(aInspector, aFrame) new ComputedViewTool(aInspector, aFrame),
+      destroy: function(aContext) aContext.destroy()
+    });
+  }
+}
 
-    // Were we invoked from the Highlighter?
-    if (this.IUI) {
-      this.openDocked = true;
-      let isOpen = this.isOpen.bind(this);
+function RuleViewTool(aInspector, aFrame)
+{
+  this.inspector = aInspector;
+  this.chromeWindow = this.inspector.chromeWindow;
+  this.doc = aFrame.contentDocument;
 
-      this.registrationObject = {
-        id: "styleinspector",
-        label: this.l10n("style.highlighter.button.label2"),
-        tooltiptext: this.l10n("style.highlighter.button.tooltip2"),
-        accesskey: this.l10n("style.highlighter.accesskey2"),
-        context: this,
-        get isOpen() isOpen(),
-        onSelect: this.selectNode,
-        onChanged: this.updateNode,
-        show: this.open,
-        hide: this.close,
-        dim: this.dimTool,
-        panel: null,
-        unregister: this.destroy,
-        sidebar: true,
-      };
+  if (!this.inspector._ruleViewStore) {
+   this.inspector._ruleViewStore = {};
+  }
+  this.view = new CssRuleView(this.doc, this.inspector._ruleViewStore);
+  this.doc.documentElement.appendChild(this.view.element);
 
-      // Register the registrationObject with the Highlighter
-      this.IUI.registerTool(this.registrationObject);
-      this.createSidebarContent(true);
-    }
-  },
+  this._changeHandler = function() {
+    this.inspector.markDirty();
+    this.inspector.change("ruleview");
+  }.bind(this);
 
-  /**
-   * Create the iframe in the IUI sidebar's tab panel.
-   * @param {Boolean} aPreserveOnHide Prevents destroy from being called.
-   */
-  createSidebarContent: function SI_createSidebarContent(aPreserveOnHide)
-  {
-    this.preserveOnHide = !!aPreserveOnHide;
+  this.view.element.addEventListener("CssRuleViewChanged", this._changeHandler)
 
-    let boundIframeOnLoad = function loadedInitializeIframe() {
-      if (this.iframe &&
-          this.iframe.getAttribute("src") ==
-          "chrome://browser/content/devtools/csshtmltree.xul") {
-        let selectedNode = this.selectedNode || null;
-        this.cssHtmlTree = new CssHtmlTree(this);
-        this.cssLogic.highlight(selectedNode);
-        this.cssHtmlTree.highlight(selectedNode);
-        this.iframe.removeEventListener("load", boundIframeOnLoad, true);
-        this.iframeReady = true;
+  this._cssLinkHandler = function(aEvent) {
+    let rule = aEvent.detail.rule;
+    let styleSheet = rule.sheet;
+    let doc = this.chromeWindow.content.document;
+    let styleSheets = doc.styleSheets;
+    let contentSheet = false;
+    let line = rule.ruleLine || 0;
 
-        // Now that we've loaded, select any node we were previously asked
-        // to show.
-        this.selectNode(this.selectedNode);
-
-        Services.obs.notifyObservers(null, "StyleInspector-opened", null);
+    // Array.prototype.indexOf always returns -1 here so we loop through
+    // the styleSheets object instead.
+    for each (let sheet in styleSheets) {
+      if (sheet == styleSheet) {
+        contentSheet = true;
+        break;
       }
-    }.bind(this);
-
-    this.iframe = this.IUI.getToolIframe(this.registrationObject);
-
-    this.iframe.addEventListener("load", boundIframeOnLoad, true);
-  },
-
-  /**
-   * Factory method to create the actual style panel
-   * @param {Boolean} aPreserveOnHide Prevents destroy from being called
-   * onpopuphide. USE WITH CAUTION: When this value is set to true then you are
-   * responsible to manually call destroy from outside the style inspector.
-   * @param {function} aCallback (optional) callback to fire when ready.
-   */
-  createPanel: function SI_createPanel(aPreserveOnHide, aCallback)
-  {
-    let popupSet = this.document.getElementById("mainPopupSet");
-    let panel = this.document.createElement("panel");
-    this.preserveOnHide = !!aPreserveOnHide;
-
-    panel.setAttribute("class", "styleInspector");
-    panel.setAttribute("orient", "vertical");
-    panel.setAttribute("ignorekeys", "true");
-    panel.setAttribute("noautofocus", "true");
-    panel.setAttribute("noautohide", "true");
-    panel.setAttribute("titlebar", "normal");
-    panel.setAttribute("close", "true");
-    panel.setAttribute("label", this.l10n("panelTitle"));
-    panel.setAttribute("width", 350);
-    panel.setAttribute("height", this.window.screen.height / 2);
-
-    let iframe = this.document.createElement("iframe");
-    let boundIframeOnLoad = function loadedInitializeIframe()
-    {
-      this.iframe.removeEventListener("load", boundIframeOnLoad, true);
-      this.iframeReady = true;
-      if (aCallback)
-        aCallback(this);
-    }.bind(this);
-
-    iframe.flex = 1;
-    iframe.setAttribute("tooltip", "aHTMLTooltip");
-    iframe.addEventListener("load", boundIframeOnLoad, true);
-    iframe.setAttribute("src", "chrome://browser/content/devtools/csshtmltree.xul");
-
-    panel.appendChild(iframe);
-    popupSet.appendChild(panel);
-
-    this._boundPopupShown = this.popupShown.bind(this);
-    this._boundPopupHidden = this.popupHidden.bind(this);
-    panel.addEventListener("popupshown", this._boundPopupShown, false);
-    panel.addEventListener("popuphidden", this._boundPopupHidden, false);
-
-    this.panel = panel;
-    this.iframe = iframe;
-
-    return panel;
-  },
-
-  /**
-   * Event handler for the popupshown event.
-   */
-  popupShown: function SI_popupShown()
-  {
-    this.panelReady = true;
-    if (this.iframeReady) {
-      this.cssHtmlTree = new CssHtmlTree(this);
-      let selectedNode = this.selectedNode || null;
-      this.cssLogic.highlight(selectedNode);
-      this.cssHtmlTree.highlight(selectedNode);
-      Services.obs.notifyObservers(null, "StyleInspector-opened", null);
     }
-  },
 
-  /**
-   * Event handler for the popuphidden event.
-   * Hide the popup and conditionally destroy it
-   */
-  popupHidden: function SI_popupHidden()
-  {
-    if (this.preserveOnHide) {
-      Services.obs.notifyObservers(null, "StyleInspector-closed", null);
+    if (contentSheet)  {
+      this.chromeWindow.StyleEditor.openChrome(styleSheet, line);
     } else {
-      this.destroy();
-    }
-  },
-
-  /**
-   * Check if the style inspector is open.
-   * @returns boolean
-   */
-  isOpen: function SI_isOpen()
-  {
-    return this.openDocked ? this.IUI.isSidebarOpen &&
-            (this.IUI.sidebarDeck.selectedPanel == this.iframe) :
-           this.panel && this.panel.state && this.panel.state == "open";
-  },
-
-  isLoaded: function SI_isLoaded()
-  {
-    return this.openDocked ? this.iframeReady : this.iframeReady && this.panelReady;
-  },
-
-  /**
-   * Select from Path (via CssHtmlTree_pathClick)
-   * @param aNode The node to inspect.
-   */
-  selectFromPath: function SI_selectFromPath(aNode)
-  {
-    if (this.IUI && this.IUI.selection) {
-      if (aNode != this.IUI.selection) {
-        this.IUI.inspectNode(aNode);
+      let href = styleSheet ? styleSheet.href : "";
+      if (rule.elementStyle.element) {
+        href = rule.elementStyle.element.ownerDocument.location.href;
       }
-    } else {
-      this.selectNode(aNode);
+      let viewSourceUtils = this.chromeWindow.gViewSourceUtils;
+      viewSourceUtils.viewSource(href, null, doc, line);
+    }
+  }.bind(this);
+
+  this.view.element.addEventListener("CssRuleViewCSSLinkClicked",
+                                     this._cssLinkHandler);
+
+  this._onSelect = this.onSelect.bind(this);
+  this.inspector.on("select", this._onSelect);
+
+  this._onChange = this.onChange.bind(this);
+  this.inspector.on("change", this._onChange);
+
+  this.onSelect();
+}
+
+RuleViewTool.prototype = {
+  onSelect: function RVT_onSelect(aEvent, aFrom) {
+    let node = this.inspector.selection;
+    if (!node) {
+      this.view.highlight(null);
+      return;
+    }
+
+    if (this.inspector.locked) {
+      this.view.highlight(node);
     }
   },
 
-  /**
-   * Select a node to inspect in the Style Inspector panel
-   * @param aNode The node to inspect.
-   */
-  selectNode: function SI_selectNode(aNode)
-  {
-    this.selectedNode = aNode;
-    if (this.isLoaded() && !this.dimmed) {
-      this.cssLogic.highlight(aNode);
-      this.cssHtmlTree.highlight(aNode);
+  onChange: function RVT_onChange(aEvent, aFrom) {
+    // We're not that good yet at refreshing, only
+    // refresh when we really need to.
+    if (aFrom != "pseudoclass") {
+      return;
+    }
+
+    if (this.inspector.locked) {
+      this.view.nodeChanged();
     }
   },
 
-  /**
-   * Update the display for the currently-selected node.
-   */
-  updateNode: function SI_updateNode()
+  destroy: function RVT_destroy() {
+    this.inspector.removeListener("select", this._onSelect);
+    this.inspector.removeListener("change", this._onChange);
+    this.view.element.removeEventListener("CssRuleViewChanged",
+                                          this._changeHandler);
+    this.view.element.removeEventListener("CssRuleViewCSSLinkClicked",
+                                          this._cssLinkHandler);
+    this.doc.documentElement.removeChild(this.view.element);
+
+    this.view.destroy();
+
+    delete this._changeHandler;
+    delete this.view;
+    delete this.doc;
+    delete this.inspector;
+  }
+}
+
+function ComputedViewTool(aInspector, aFrame)
+{
+  this.inspector = aInspector;
+  this.iframe = aFrame;
+  this.window = aInspector.chromeWindow;
+  this.document = this.window.document;
+  this.cssLogic = new CssLogic();
+  this.view = new CssHtmlTree(this);
+
+  this._onSelect = this.onSelect.bind(this);
+  this.inspector.on("select", this._onSelect);
+
+  this._onChange = this.onChange.bind(this);
+  this.inspector.on("change", this._onChange);
+
+  // Since refreshes of the computed view are non-destructive,
+  // refresh when the tab is changed so we can notice script-driven
+  // changes.
+  this.inspector.on("sidebaractivated", this._onChange);
+
+  this.cssLogic.highlight(null);
+  this.view.highlight(null);
+
+  this.onSelect();
+}
+
+ComputedViewTool.prototype = {
+  onSelect: function CVT_onSelect(aEvent)
   {
-    if (this.isLoaded() && !this.dimmed) {
-      this.cssLogic.highlight(this.selectedNode);
-      this.cssHtmlTree.refreshPanel();
+    if (this.inspector.locked) {
+      this.cssLogic.highlight(this.inspector.selection);
+      this.view.highlight(this.inspector.selection);
     }
   },
 
-  /**
-   * Dim or undim a panel by setting or removing a dimmed attribute.
-   * @param aState
-   *        true = dim, false = undim
-   */
-  dimTool: function SI_dimTool(aState)
+  onChange: function CVT_change(aEvent, aFrom)
   {
-    this.dimmed = aState;
+    if (aFrom == "computedview" ||
+        this.inspector.selection != this.cssLogic.viewedElement) {
+      return;
+    }
+
+    this.cssLogic.highlight(this.inspector.selection);
+    this.view.refreshPanel();
   },
 
-  /**
-   * Open the panel.
-   * @param {DOMNode} aSelection the (optional) DOM node to select.
-   */
-  open: function SI_open(aSelection)
+  destroy: function CVT_destroy(aContext)
   {
-    this.selectNode(aSelection);
-    if (this.openDocked) {
-      if (!this.iframeReady) {
-        this.iframe.setAttribute("src", "chrome://browser/content/devtools/csshtmltree.xul");
-      }
-    } else {
-      this.panel.openPopup(this.window.gBrowser.selectedBrowser, "end_before", 0, 0,
-        false, false);
-    }
-  },
-
-  /**
-   * Close the panel.
-   */
-  close: function SI_close()
-  {
-    if (this.openDocked) {
-      Services.obs.notifyObservers(null, "StyleInspector-closed", null);
-    } else {
-      this.panel.hidePopup();
-    }
-  },
-
-  /**
-   * Memoized lookup of a l10n string from a string bundle.
-   * @param {string} aName The key to lookup.
-   * @returns A localized version of the given key.
-   */
-  l10n: function SI_l10n(aName)
-  {
-    try {
-      return _strings.GetStringFromName(aName);
-    } catch (ex) {
-      Services.console.logStringMessage("Error reading '" + aName + "'");
-      throw new Error("l10n error with " + aName);
-    }
-  },
-
-  /**
-   * Destroy the style panel, remove listeners etc.
-   */
-  destroy: function SI_destroy()
-  {
-    if (this.isOpen())
-      this.close();
-    if (this.cssHtmlTree)
-      this.cssHtmlTree.destroy();
-    if (this.iframe) {
-      this.iframe.parentNode.removeChild(this.iframe);
-      delete this.iframe;
-    }
+    this.inspector.removeListener("select", this._onSelect);
+    this.inspector.removeListener("change", this._onChange);
+    this.inspector.removeListener("sidebaractivated", this._onChange);
+    this.view.destroy();
+    delete this.view;
 
     delete this.cssLogic;
     delete this.cssHtmlTree;
-    if (this.panel) {
-      this.panel.removeEventListener("popupshown", this._boundPopupShown, false);
-      this.panel.removeEventListener("popuphidden", this._boundPopupHidden, false);
-      delete this._boundPopupShown;
-      delete this._boundPopupHidden;
-      this.panel.parentNode.removeChild(this.panel);
-      delete this.panel;
-    }
-    delete this.doc;
-    delete this.win;
-    delete CssHtmlTree.win;
-    Services.obs.notifyObservers(null, "StyleInspector-closed", null);
-  },
-};
+    delete this.iframe;
+    delete this.window;
+    delete this.document;
+  }
+}
 
 XPCOMUtils.defineLazyGetter(this, "_strings", function() Services.strings
   .createBundle("chrome://browser/locale/devtools/styleinspector.properties"));
@@ -368,3 +274,5 @@ XPCOMUtils.defineLazyGetter(this, "CssHtmlTree", function() {
   Cu.import("resource:///modules/devtools/CssHtmlTree.jsm", tmp);
   return tmp.CssHtmlTree;
 });
+
+RegisterStyleTools();
