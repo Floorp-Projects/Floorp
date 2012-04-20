@@ -53,6 +53,8 @@ class DeviceManagerADB(DeviceManager):
       pass
 
     # Can we run things as root? (currently not required)
+    useRunAsTmp = self.useRunAs
+    self.useRunAs = False
     try:
       self.verifyRoot()
     except DMError, e:
@@ -63,10 +65,11 @@ class DeviceManagerADB(DeviceManager):
         # to check again ourselves that we have root now.
         self.verifyRoot()
       except DMError:
-        if self.useRunAs:
+        if useRunAsTmp:
           print "restarting as root failed, but run-as available"
         else:
           print "restarting as root failed"
+    self.useRunAs = useRunAsTmp
 
     # can we use zip to speed up some file operations? (currently not
     # required)
@@ -313,6 +316,10 @@ class DeviceManagerADB(DeviceManager):
           if (data[0].find("No such file or directory") != -1):
               return []
           if (data[0].find("Not a directory") != -1):
+              return []
+          if (data[0].find("Permission denied") != -1):
+              return []
+          if (data[0].find("opendir failed") != -1):
               return []
       return data
 
@@ -777,10 +784,9 @@ class DeviceManagerADB(DeviceManager):
   def verifyRoot(self):
     # a test to see if we have root privs
     files = self.listFiles("/data/data")
-    if (len(files) == 1):
-      if (files[0].find("Permission denied") != -1):
-        print "NOT running as root"
-        raise DMError("not running as root")
+    if (len(files) == 0):
+      print "NOT running as root"
+      raise DMError("not running as root")
 
     self.haveRoot = True
 
