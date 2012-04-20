@@ -129,6 +129,7 @@ CSRCS	= \
 	pixman-implementation.c \
 	pixman-linear-gradient.c \
 	pixman-matrix.c \
+	pixman-noop.c \
 	pixman-radial-gradient.c \
 	pixman-region16.c \
 	pixman-region32.c \
