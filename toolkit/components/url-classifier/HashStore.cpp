@@ -40,36 +40,13 @@
 #include "zlib.h"
 
 // Main store for SafeBrowsing protocol data. We store
-// known add/sub chunks, prefixes and completions in memory
+// known add/sub chunks, prefixe and completions s in memory
 // during an update, and serialize to disk.
 // We do not store the add prefixes, those are retrieved by
 // decompressing the PrefixSet cache whenever we need to apply
 // an update.
-//
-// byte slicing: Many of the 4-byte values stored here are strongly
-// correlated in the upper bytes, and uncorrelated in the lower
-// bytes. Because zlib/DEFLATE requires match lengths of at least
-// 3 to achieve good compression, and we don't get those if only
-// the upper 16-bits are correlated, it is worthwhile to slice 32-bit
-// values into 4 1-byte slices and compress the slices individually.
-// The slices corresponding to MSBs will compress very well, and the
-// slice corresponding to LSB almost nothing. Because of this, we
-// only apply DEFLATE to the 3 most significant bytes, and store the
-// LSB uncompressed.
-//
-// byte sliced (numValues) data format:
-//    uint32 compressed-size
-//    compressed-size bytes    zlib DEFLATE data
-//        0...numValues        byte MSB of 4-byte numValues data
-//    uint32 compressed-size
-//    compressed-size bytes    zlib DEFLATE data
-//        0...numValues        byte 2nd byte of 4-byte numValues data
-//    uint32 compressed-size
-//    compressed-size bytes    zlib DEFLATE data
-//        0...numValues        byte 3rd byte of 4-byte numValues data
-//    0...numValues            byte LSB of 4-byte numValues data
-//
-// Store data format:
+
+// Data format:
 //    uint32 magic
 //    uint32 version
 //    uint32 numAddChunks
@@ -78,14 +55,20 @@
 //    uint32 numSubPrefixes
 //    uint32 numAddCompletes
 //    uint32 numSubCompletes
-//    0...numAddChunks               uint32 addChunk
-//    0...numSubChunks               uint32 subChunk
-//    byte sliced (numAddPrefixes)   uint32 add chunk of AddPrefixes
-//    byte sliced (numSubPrefixes)   uint32 sub chunk of SubPrefixes
-//    byte sliced (numSubPrefixes)   uint32 add chunk of SubPrefixes
-//    byte sliced (numSubPrefixes)   uint32 SubPrefixes
-//    0...numAddCompletes           32-byte Completions
-//    0...numSubCompletes           32-byte Completions
+//    0...numAddChunks          uint32 addChunk
+//    0...numSubChunks          uint32 subChunk
+//    uint32 compressed-size
+//        compressed-size bytes zlib inflate data
+//        0...numAddPrefixes    uint32 addChunk
+//    uint32 compressed-size
+//        compressed-size bytes zlib inflate data
+//        0...numSubPrefixes    uint32 addChunk
+//    uint32 compressed-size
+//        compressed-size bytes zlib inflate data
+//        0...numSubPrefixes    uint32 subChunk
+//    0...numSubPrefixes        uint32 subPrefix
+//    0...numAddCompletes       32-byte Completions
+//    0...numSubCompletes       32-byte Completions
 //    16-byte MD5 of all preceding data
 
 // NSPR_LOG_MODULES=UrlClassifierDbService:5
@@ -102,7 +85,7 @@ namespace mozilla {
 namespace safebrowsing {
 
 const uint32 STORE_MAGIC = 0x1231af3b;
-const uint32 CURRENT_VERSION = 2;
+const uint32 CURRENT_VERSION = 1;
 
 void
 TableUpdate::NewAddPrefix(PRUint32 aAddChunk, const Prefix& aHash)
@@ -659,82 +642,17 @@ nsresult InflateReadTArray(nsIInputStream* aStream, nsTArray<T>* aOut,
   return NS_OK;
 }
 
-static nsresult
-ByteSliceWrite(nsIOutputStream* aOut, nsTArray<PRUint32>& aData)
-{
-  nsTArray<PRUint8> slice1;
-  nsTArray<PRUint8> slice2;
-  nsTArray<PRUint8> slice3;
-  nsTArray<PRUint8> slice4;
-  PRUint32 count = aData.Length();
-
-  slice1.SetCapacity(count);
-  slice2.SetCapacity(count);
-  slice3.SetCapacity(count);
-  slice4.SetCapacity(count);
-
-  for (PRUint32 i = 0; i < count; i++) {
-    slice1.AppendElement( aData[i] >> 24);
-    slice2.AppendElement((aData[i] >> 16) & 0xFF);
-    slice3.AppendElement((aData[i] >>  8) & 0xFF);
-    slice4.AppendElement( aData[i]        & 0xFF);
-  }
-
-  nsresult rv = DeflateWriteTArray(aOut, slice1);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = DeflateWriteTArray(aOut, slice2);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = DeflateWriteTArray(aOut, slice3);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // The LSB slice is generally uncompressible, don't bother
-  // compressing it.
-  rv = WriteTArray(aOut, slice4);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-static nsresult
-ByteSliceRead(nsIInputStream* aInStream, nsTArray<PRUint32>* aData, PRUint32 count)
-{
-  nsTArray<PRUint8> slice1;
-  nsTArray<PRUint8> slice2;
-  nsTArray<PRUint8> slice3;
-  nsTArray<PRUint8> slice4;
-
-  nsresult rv = InflateReadTArray(aInStream, &slice1, count);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = InflateReadTArray(aInStream, &slice2, count);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = InflateReadTArray(aInStream, &slice3, count);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = ReadTArray(aInStream, &slice4, count);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aData->SetCapacity(count);
-
-  for (uint32 i = 0; i < count; i++) {
-    aData->AppendElement((slice1[i] << 24) | (slice2[i] << 16)
-                         | (slice3[i] << 8) | (slice4[i]));
-  }
-
-  return NS_OK;
-}
-
 nsresult
 HashStore::ReadAddPrefixes()
 {
-  nsTArray<PRUint32> chunks;
+  nsTArray<uint32> chunks;
   PRUint32 count = mHeader.numAddPrefixes;
 
-  nsresult rv = ByteSliceRead(mInputStream, &chunks, count);
+  nsresult rv = InflateReadTArray(mInputStream, &chunks, count);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mAddPrefixes.SetCapacity(count);
-  for (PRUint32 i = 0; i < count; i++) {
+  for (uint32 i = 0; i < count; i++) {
     AddPrefix *add = mAddPrefixes.AppendElement();
     add->prefix.FromUint32(0);
     add->addChunk = chunks[i];
@@ -748,23 +666,23 @@ HashStore::ReadSubPrefixes()
 {
   nsTArray<PRUint32> addchunks;
   nsTArray<PRUint32> subchunks;
-  nsTArray<PRUint32> prefixes;
+  nsTArray<Prefix> prefixes;
   PRUint32 count = mHeader.numSubPrefixes;
 
-  nsresult rv = ByteSliceRead(mInputStream, &addchunks, count);
+  nsresult rv = InflateReadTArray(mInputStream, &addchunks, count);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = ByteSliceRead(mInputStream, &subchunks, count);
+  rv = InflateReadTArray(mInputStream, &subchunks, count);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = ByteSliceRead(mInputStream, &prefixes, count);
+  rv = ReadTArray(mInputStream, &prefixes, count);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mSubPrefixes.SetCapacity(count);
   for (uint32 i = 0; i < count; i++) {
     SubPrefix *sub = mSubPrefixes.AppendElement();
     sub->addChunk = addchunks[i];
-    sub->prefix.FromUint32(prefixes[i]);
+    sub->prefix = prefixes[i];
     sub->subChunk = subchunks[i];
   }
 
@@ -775,7 +693,7 @@ HashStore::ReadSubPrefixes()
 nsresult
 HashStore::WriteAddPrefixes(nsIOutputStream* aOut)
 {
-  nsTArray<PRUint32> chunks;
+  nsTArray<uint32> chunks;
   PRUint32 count = mAddPrefixes.Length();
   chunks.SetCapacity(count);
 
@@ -783,7 +701,7 @@ HashStore::WriteAddPrefixes(nsIOutputStream* aOut)
     chunks.AppendElement(mAddPrefixes[i].Chunk());
   }
 
-  nsresult rv = ByteSliceWrite(aOut, chunks);
+  nsresult rv = DeflateWriteTArray(aOut, chunks);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -792,9 +710,9 @@ HashStore::WriteAddPrefixes(nsIOutputStream* aOut)
 nsresult
 HashStore::WriteSubPrefixes(nsIOutputStream* aOut)
 {
-  nsTArray<PRUint32> addchunks;
-  nsTArray<PRUint32> subchunks;
-  nsTArray<PRUint32> prefixes;
+  nsTArray<uint32> addchunks;
+  nsTArray<uint32> subchunks;
+  nsTArray<Prefix> prefixes;
   PRUint32 count = mSubPrefixes.Length();
   addchunks.SetCapacity(count);
   subchunks.SetCapacity(count);
@@ -802,17 +720,18 @@ HashStore::WriteSubPrefixes(nsIOutputStream* aOut)
 
   for (uint32 i = 0; i < count; i++) {
     addchunks.AppendElement(mSubPrefixes[i].AddChunk());
-    prefixes.AppendElement(mSubPrefixes[i].PrefixHash().ToUint32());
+    prefixes.AppendElement(mSubPrefixes[i].PrefixHash());
     subchunks.AppendElement(mSubPrefixes[i].Chunk());
   }
 
-  nsresult rv = ByteSliceWrite(aOut, addchunks);
+  nsresult rv = DeflateWriteTArray(aOut, addchunks);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = ByteSliceWrite(aOut, subchunks);
+  rv = DeflateWriteTArray(aOut, subchunks);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = ByteSliceWrite(aOut, prefixes);
+  // chunk-ordered prefixes are not compressible
+  rv = WriteTArray(aOut, prefixes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
