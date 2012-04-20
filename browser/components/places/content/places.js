@@ -40,7 +40,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://gre/modules/MigrationUtils.jsm");
+Components.utils.import("resource:///modules/MigrationUtils.jsm");
 
 var PlacesOrganizer = {
   _places: null,

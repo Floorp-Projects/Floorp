@@ -151,7 +151,7 @@ Function un.onInit
   ${un.GetParent} "$INSTDIR" $INSTDIR
   ${un.GetLongPath} "$INSTDIR" $INSTDIR
 
-  ReadINIStr $AppFilename "$INSTDIR\webapp.ini" "WebappRT" "Executable"
+  ReadINIStr $AppFilename "$INSTDIR\webapp.ini" "Webapp" "Executable"
   ReadINIStr $AppName "$INSTDIR\webapp.ini" "Webapp" "Name"
 
   ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}"

@@ -16,9 +16,13 @@
  * @returns the URL string for the largest specified icon
  */
 function getBiggestIconURL(aIcons) {
+  if (!aIcons) {
+    return "chrome://browser/skin/webapps-64.png";
+  }
+
   let iconSizes = Object.keys(aIcons);
   if (iconSizes.length == 0) {
-    return "";
+    return "chrome://browser/skin/webapps-64.png";
   }
   iconSizes.sort(function(a, b) a - b);
   return aIcons[iconSizes.pop()];
@@ -63,7 +67,7 @@ function getIconForApp(aShell, callback) {
         }
       };
 
-      tmpIcon = Services.dirsvc.get("TmpD", Ci.nsIFile);
+      let tmpIcon = Services.dirsvc.get("TmpD", Ci.nsIFile);
       tmpIcon.append("tmpicon." + mimeService.getPrimaryExtension(mimeType, ""));
       tmpIcon.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
 

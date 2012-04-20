@@ -2197,6 +2197,12 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
       rv = profile->GetLocalDir(getter_AddRefs(profileLocalDir));
       NS_ENSURE_SUCCESS(rv, rv);
 
+      bool exists;
+      profileLocalDir->Exists(&exists);
+      if (!exists) {
+        return ProfileMissingDialog(aNative);
+      }
+
       return ProfileLockedDialog(profileDir, profileLocalDir, unlocker,
                                  aNative, aResult);
     }
@@ -2270,6 +2276,12 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
       nsCOMPtr<nsILocalFile> profileLocalDir;
       rv = profile->GetRootDir(getter_AddRefs(profileLocalDir));
       NS_ENSURE_SUCCESS(rv, rv);
+
+      bool exists;
+      profileLocalDir->Exists(&exists);
+      if (!exists) {
+        return ProfileMissingDialog(aNative);
+      }
 
       return ProfileLockedDialog(profileDir, profileLocalDir, unlocker,
                                  aNative, aResult);

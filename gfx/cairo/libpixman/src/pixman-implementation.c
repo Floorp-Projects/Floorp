@@ -27,54 +27,6 @@
 #include <stdlib.h>
 #include "pixman-private.h"
 
-static void
-delegate_combine_32 (pixman_implementation_t * imp,
-                     pixman_op_t               op,
-                     uint32_t *                dest,
-                     const uint32_t *          src,
-                     const uint32_t *          mask,
-                     int                       width)
-{
-    _pixman_implementation_combine_32 (imp->delegate,
-                                       op, dest, src, mask, width);
-}
-
-static void
-delegate_combine_64 (pixman_implementation_t * imp,
-                     pixman_op_t               op,
-                     uint64_t *                dest,
-                     const uint64_t *          src,
-                     const uint64_t *          mask,
-                     int                       width)
-{
-    _pixman_implementation_combine_64 (imp->delegate,
-                                       op, dest, src, mask, width);
-}
-
-static void
-delegate_combine_32_ca (pixman_implementation_t * imp,
-                        pixman_op_t               op,
-                        uint32_t *                dest,
-                        const uint32_t *          src,
-                        const uint32_t *          mask,
-                        int                       width)
-{
-    _pixman_implementation_combine_32_ca (imp->delegate,
-                                          op, dest, src, mask, width);
-}
-
-static void
-delegate_combine_64_ca (pixman_implementation_t * imp,
-                        pixman_op_t               op,
-                        uint64_t *                dest,
-                        const uint64_t *          src,
-                        const uint64_t *          mask,
-                        int                       width)
-{
-    _pixman_implementation_combine_64_ca (imp->delegate,
-                                          op, dest, src, mask, width);
-}
-
 static pixman_bool_t
 delegate_blt (pixman_implementation_t * imp,
               uint32_t *                src_bits,
@@ -85,14 +37,14 @@ delegate_blt (pixman_implementation_t * imp,
               int                       dst_bpp,
               int                       src_x,
               int                       src_y,
-              int                       dst_x,
-              int                       dst_y,
+              int                       dest_x,
+              int                       dest_y,
               int                       width,
               int                       height)
 {
     return _pixman_implementation_blt (
 	imp->delegate, src_bits, dst_bits, src_stride, dst_stride,
-	src_bpp, dst_bpp, src_x, src_y, dst_x, dst_y,
+	src_bpp, dst_bpp, src_x, src_y, dest_x, dest_y,
 	width, height);
 }
 
@@ -150,61 +102,44 @@ _pixman_implementation_create (pixman_implementation_t *delegate,
     imp->src_iter_init = delegate_src_iter_init;
     imp->dest_iter_init = delegate_dest_iter_init;
 
+    imp->fast_paths = fast_paths;
+
     for (i = 0; i < PIXMAN_N_OPERATORS; ++i)
     {
-	imp->combine_32[i] = delegate_combine_32;
-	imp->combine_64[i] = delegate_combine_64;
-	imp->combine_32_ca[i] = delegate_combine_32_ca;
-	imp->combine_64_ca[i] = delegate_combine_64_ca;
+	imp->combine_32[i] = NULL;
+	imp->combine_64[i] = NULL;
+	imp->combine_32_ca[i] = NULL;
+	imp->combine_64_ca[i] = NULL;
     }
-
-    imp->fast_paths = fast_paths;
 
     return imp;
 }
 
-void
-_pixman_implementation_combine_32 (pixman_implementation_t * imp,
-                                   pixman_op_t               op,
-                                   uint32_t *                dest,
-                                   const uint32_t *          src,
-                                   const uint32_t *          mask,
-                                   int                       width)
+pixman_combine_32_func_t
+_pixman_implementation_lookup_combiner (pixman_implementation_t *imp,
+					pixman_op_t		 op,
+					pixman_bool_t		 component_alpha,
+					pixman_bool_t		 narrow)
 {
-    (*imp->combine_32[op]) (imp, op, dest, src, mask, width);
-}
+    pixman_combine_32_func_t f;
 
-void
-_pixman_implementation_combine_64 (pixman_implementation_t * imp,
-                                   pixman_op_t               op,
-                                   uint64_t *                dest,
-                                   const uint64_t *          src,
-                                   const uint64_t *          mask,
-                                   int                       width)
-{
-    (*imp->combine_64[op]) (imp, op, dest, src, mask, width);
-}
+    do
+    {
+	pixman_combine_32_func_t (*combiners[]) =
+	{
+	    (pixman_combine_32_func_t *)imp->combine_64,
+	    (pixman_combine_32_func_t *)imp->combine_64_ca,
+	    imp->combine_32,
+	    imp->combine_32_ca,
+	};
 
-void
-_pixman_implementation_combine_32_ca (pixman_implementation_t * imp,
-                                      pixman_op_t               op,
-                                      uint32_t *                dest,
-                                      const uint32_t *          src,
-                                      const uint32_t *          mask,
-                                      int                       width)
-{
-    (*imp->combine_32_ca[op]) (imp, op, dest, src, mask, width);
-}
+	f = combiners[component_alpha | (narrow << 1)][op];
 
-void
-_pixman_implementation_combine_64_ca (pixman_implementation_t * imp,
-                                      pixman_op_t               op,
-                                      uint64_t *                dest,
-                                      const uint64_t *          src,
-                                      const uint64_t *          mask,
-                                      int                       width)
-{
-    (*imp->combine_64_ca[op]) (imp, op, dest, src, mask, width);
+	imp = imp->delegate;
+    }
+    while (!f);
+
+    return f;
 }
 
 pixman_bool_t
@@ -217,13 +152,13 @@ _pixman_implementation_blt (pixman_implementation_t * imp,
                             int                       dst_bpp,
                             int                       src_x,
                             int                       src_y,
-                            int                       dst_x,
-                            int                       dst_y,
+                            int                       dest_x,
+                            int                       dest_y,
                             int                       width,
                             int                       height)
 {
     return (*imp->blt) (imp, src_bits, dst_bits, src_stride, dst_stride,
-			src_bpp, dst_bpp, src_x, src_y, dst_x, dst_y,
+			src_bpp, dst_bpp, src_x, src_y, dest_x, dest_y,
 			width, height);
 }
 
@@ -239,12 +174,6 @@ _pixman_implementation_fill (pixman_implementation_t *imp,
                              uint32_t                 xor)
 {
     return (*imp->fill) (imp, bits, stride, bpp, x, y, width, height, xor);
-}
-
-static uint32_t *
-get_scanline_null (pixman_iter_t *iter, const uint32_t *mask)
-{
-    return NULL;
 }
 
 void
@@ -266,19 +195,7 @@ _pixman_implementation_src_iter_init (pixman_implementation_t	*imp,
     iter->height = height;
     iter->flags = flags;
 
-    if (!image)
-    {
-	iter->get_scanline = get_scanline_null;
-    }
-    else if ((flags & (ITER_IGNORE_ALPHA | ITER_IGNORE_RGB)) ==
-	     (ITER_IGNORE_ALPHA | ITER_IGNORE_RGB))
-    {
-	iter->get_scanline = _pixman_iter_get_scanline_noop;
-    }
-    else
-    {
-	(*imp->src_iter_init) (imp, iter);
-    }
+    (*imp->src_iter_init) (imp, iter);
 }
 
 void
