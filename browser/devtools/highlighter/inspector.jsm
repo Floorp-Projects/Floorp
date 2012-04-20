@@ -368,10 +368,10 @@ InspectorUI.prototype = {
    */
   toggleSidebar: function IUI_toggleSidebar()
   {
-    if (!this.isSidebarOpen) {
-      this.showSidebar();
+    if (!this.sidebar.visible) {
+      this.sidebar.show();
     } else {
-      this.hideSidebar();
+      this.sidebar.hide();
     }
   },
 
