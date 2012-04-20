@@ -1085,6 +1085,9 @@ MarkWordConservatively(JSTracer *trc, uintptr_t w)
     MarkIfGCThingWord(trc, w);
 }
 
+#ifdef MOZ_ASAN
+JS_NEVER_INLINE
+#endif
 static void
 MarkRangeConservatively(JSTracer *trc, const uintptr_t *begin, const uintptr_t *end)
 {
