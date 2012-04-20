@@ -536,10 +536,10 @@ MacNativeApp.prototype = {
   },
 
   _createConfigFiles: function() {
-    // ${ProfileDir}/config.json
+    // ${ProfileDir}/webapp.json
     let json = {
+      "registryDir": this.profileFolder.path,
       "app": {
-        "profile": this.profileFolder.path,
         "origin": this.launchURI.prePath,
         "installOrigin": "apps.mozillalabs.com",
         "manifest": this.manifest
