@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMMozMobileConnectionInfo;
+interface nsIDOMDOMRequest;
+interface nsIDOMWindow;
+
+/**
+ * XPCOM component (in the content process) that provides the mobile
+ * network information.
+ */
+[scriptable, uuid(1ecd19eb-15d4-47c0-a2cf-80cfa3b94eeb)]
+interface nsIMobileConnectionProvider : nsISupports
+{
+  readonly attribute DOMString cardState;
+  readonly attribute nsIDOMMozMobileConnectionInfo voiceConnectionInfo;
+  readonly attribute nsIDOMMozMobileConnectionInfo dataConnectionInfo;
+
+  nsIDOMDOMRequest getNetworks(in nsIDOMWindow window);
+};

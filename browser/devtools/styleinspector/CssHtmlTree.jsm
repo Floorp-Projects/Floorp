@@ -306,12 +306,10 @@ CssHtmlTree.prototype = {
       this._refreshProcess = new UpdateProcess(this.win, CssHtmlTree.propertyNames, {
         onItem: function(aPropertyName) {
           // Per-item callback.
-          if (this.viewedElement != aElement || !this.styleInspector.isOpen()) {
-            return false;
-          }
           let propView = new PropertyView(this, aPropertyName);
           fragment.appendChild(propView.buildMain());
           fragment.appendChild(propView.buildSelectorContainer());
+
           if (propView.visible) {
             this.numVisibleProperties++;
           }
@@ -324,7 +322,14 @@ CssHtmlTree.prototype = {
           this.propertyContainer.appendChild(fragment);
           this.noResults.hidden = this.numVisibleProperties > 0;
           this._refreshProcess = null;
-          Services.obs.notifyObservers(null, "StyleInspector-populated", null);
+
+          // If a refresh was scheduled during the building, complete it.
+          if (this._needsRefresh) {
+            delete this._needsRefresh;
+            this.refreshPanel();
+          } else {
+            Services.obs.notifyObservers(null, "StyleInspector-populated", null);
+          }
         }.bind(this)});
 
       this._refreshProcess.schedule();
@@ -336,6 +341,15 @@ CssHtmlTree.prototype = {
    */
   refreshPanel: function CssHtmlTree_refreshPanel()
   {
+    // If we're still in the process of creating the initial layout,
+    // leave it alone.
+    if (!this.htmlComplete) {
+      if (this._refreshProcess) {
+        this._needsRefresh = true;
+      }
+      return;
+    }
+
     if (this._refreshProcess) {
       this._refreshProcess.cancel();
     }
@@ -355,7 +369,7 @@ CssHtmlTree.prototype = {
       }.bind(this),
       onDone: function() {
         this._refreshProcess = null;
-        this.noResults.hidden = this.numVisibleProperties > 0
+        this.noResults.hidden = this.numVisibleProperties > 0;
         Services.obs.notifyObservers(null, "StyleInspector-populated", null);
       }.bind(this)
     });
@@ -1203,11 +1217,6 @@ SelectorView.prototype = {
         result = CssLogic.getShortName(source);
       }
 
-      aElement.parentNode.querySelector(".rule-link > a").
-        addEventListener("click", function(aEvent) {
-          this.tree.styleInspector.selectFromPath(source);
-          aEvent.preventDefault();
-        }.bind(this), false);
       result += ".style";
     }
 

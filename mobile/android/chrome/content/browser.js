@@ -1480,7 +1480,7 @@ nsBrowserAccess.prototype = {
 
     if (newTab) {
       let parentId = -1;
-      if (!isExternal) {
+      if (!isExternal && aOpener) {
         let parent = BrowserApp.getTabForWindow(aOpener.top);
         if (parent)
           parentId = parent.id;
@@ -1560,7 +1560,6 @@ Tab.prototype = {
 
     let frameLoader = this.browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     frameLoader.renderMode = Ci.nsIFrameLoader.RENDER_MODE_ASYNC_SCROLL;
-    frameLoader.clampScrollPosition = false;
 
     // only set tab uri if uri is valid
     let uri = null;
@@ -1726,8 +1725,10 @@ Tab.prototype = {
     let x = aViewport.x / aViewport.zoom;
     let y = aViewport.y / aViewport.zoom;
 
-    // Set scroll position
+    // Set scroll-port size and scroll position (both in CSS pixels)
     let win = this.browser.contentWindow;
+    win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).setScrollPositionClampingScrollPortSize(
+        gScreenWidth / aViewport.zoom, gScreenHeight / aViewport.zoom);
     win.scrollTo(x, y);
     this.userScrollPos.x = win.scrollX;
     this.userScrollPos.y = win.scrollY;
@@ -4651,20 +4652,12 @@ var WebappsUI = {
   },
   
   openURL: function(aURI, aOrigin) {
-    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+    let uri = Services.io.newURI(aURI, null, null);
+    if (!uri)
+      return;
 
-    let tabs = BrowserApp.tabs;
-    let tab = null;
-    for (let i = 0; i < tabs.length; i++) {
-      let appOrigin = ss.getTabValue(tabs[i], "appOrigin");
-      if (appOrigin == aOrigin)
-        tab = tabs[i];
-    }
-
-    if (tab)
-      BrowserApp.selectTab(tab);
-    else
-      BrowserApp.addTab(aURI, { pinned: true });
+    let bwin = window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow;
+    bwin.openURI(uri, null, Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB, Ci.nsIBrowserDOMWindow.OPEN_NEW);
   }
 }
 

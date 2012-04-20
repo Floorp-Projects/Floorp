@@ -107,6 +107,9 @@ public class GeckoAppShell
     static public final int WPL_STATE_IS_DOCUMENT = 0x00020000;
     static public final int WPL_STATE_IS_NETWORK = 0x00040000;
 
+    public static final String SHORTCUT_TYPE_WEBAPP = "webapp";
+    public static final String SHORTCUT_TYPE_BOOKMARK = "bookmark";
+
     static private File sCacheFile = null;
     static private int sFreeSpace = -1;
     static File sHomeDir = null;
@@ -732,7 +735,7 @@ public class GeckoAppShell
         
                 // the intent to be launched by the shortcut
                 Intent shortcutIntent = new Intent();
-                if (aType.equalsIgnoreCase("webapp")) {
+                if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP)) {
                     shortcutIntent.setAction(GeckoApp.ACTION_WEBAPP);
                     shortcutIntent.setData(Uri.parse(aURI));
                 } else {
@@ -748,14 +751,18 @@ public class GeckoAppShell
                     intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aTitle);
                 else
                     intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aURI);
-                intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, getLauncherIcon(aIcon));
+                intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, getLauncherIcon(aIcon, aType));
+
+                // Do not allow duplicate items
+                intent.putExtra("duplicate", false);
+
                 intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
                 GeckoApp.mAppContext.sendBroadcast(intent);
             }
         });
     }
 
-    static private Bitmap getLauncherIcon(Bitmap aSource) {
+    static private Bitmap getLauncherIcon(Bitmap aSource, String aType) {
         final int kOffset = 6;
         final int kRadius = 5;
         int kIconSize;
@@ -778,9 +785,14 @@ public class GeckoAppShell
         Bitmap bitmap = Bitmap.createBitmap(kIconSize, kIconSize, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
 
+        if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP)) {
+            Rect iconBounds = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+            canvas.drawBitmap(aSource, null, iconBounds, null);
+            return bitmap;
+        }
+
         // draw a base color
         Paint paint = new Paint();
-        
         if (aSource == null) {
             float[] hsv = new float[3];
             hsv[0] = 32.0f;

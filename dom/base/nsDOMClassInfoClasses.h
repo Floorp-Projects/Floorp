@@ -436,6 +436,7 @@ DOMCI_CLASS(MozSmsFilter)
 DOMCI_CLASS(MozSmsCursor)
 
 DOMCI_CLASS(MozConnection)
+DOMCI_CLASS(MozMobileConnection)
 
 // @font-face in CSS
 DOMCI_CLASS(CSSFontFaceRule)

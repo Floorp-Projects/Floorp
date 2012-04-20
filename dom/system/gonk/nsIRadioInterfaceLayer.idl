@@ -38,6 +38,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsIMobileConnectionProvider.idl"
+
+interface nsIDOMMozMobileConnectionInfo;
+interface nsIDOMDOMRequest;
+interface nsIDOMWindow;
 
 [scriptable, uuid(03eafd60-d138-4f09-81b4-90cd4996b3c7)]
 interface nsIRILTelephonyCallback : nsISupports
@@ -114,6 +119,15 @@ interface nsIRILDataCallback : nsISupports
    */
   void receiveDataCallList([array,size_is(length)] in nsIRILDataCallInfo dataCalls,
                            in unsigned long length);
+};
+
+/**
+ * Helper that runs in the content process and exposes information
+ * to the DOM.
+ */
+[scriptable, uuid(cc9832fd-d3ce-4cab-9abe-48c6046bcebe)]
+interface nsIRILContentHelper : nsIMobileConnectionProvider
+{
 };
 
 [scriptable, uuid(d2025763-fc32-436e-b207-0228ea1ccd12)]

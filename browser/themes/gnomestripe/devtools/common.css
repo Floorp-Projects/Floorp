@@ -57,6 +57,11 @@
   margin: 0 3px;
 }
 
+.devtools-toolbarbutton:-moz-focusring {
+  outline: 1px dotted hsla(210,30%,85%,0.4);
+  outline-offset: -4px;
+}
+
 .devtools-toolbarbutton:not([label]) {
   min-width: 32px;
 }

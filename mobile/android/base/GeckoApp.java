@@ -2287,22 +2287,44 @@ abstract public class GeckoApp
         final long currentTime = SystemClock.uptimeMillis();
 
         if (profileDir != null) {
-            Log.i(LOGTAG, "Checking profile migration in: " + profileDir.getAbsolutePath());
             final GeckoApp app = GeckoApp.mAppContext;
-            final ProfileMigrator profileMigrator =
-                new ProfileMigrator(app, profileDir);
 
-            // Do a migration run on the first start after an upgrade.
-            if (!profileMigrator.hasMigrationRun()) {
-                final SetupScreen setupScreen = new SetupScreen(app);
+            GeckoAppShell.getHandler().post(new Runnable() {
+                public void run() {
+                    Log.i(LOGTAG, "Checking profile migration in: " + profileDir.getAbsolutePath());
 
-                // Don't show unless this take a while.
-                setupScreen.showDelayed(mMainHandler);
+                    ProfileMigrator profileMigrator =
+                        new ProfileMigrator(app, profileDir);
 
-                GeckoAppShell.getHandler().post(new Runnable() {
-                    public void run() {
+                    // Do a migration run on the first start after an upgrade.
+                    if (!profileMigrator.hasMigrationRun()) {
+                        // Show the "Setting up Fennec" screen if this takes
+                        // a while.
+                        final SetupScreen setupScreen = new SetupScreen(app);
+
+                        final Runnable startCallback = new Runnable() {
+                            public void run() {
+                                GeckoApp.mAppContext.runOnUiThread(new Runnable() {
+                                    public void run() {
+                                       setupScreen.show();
+                                    }
+                                });
+                            }
+                        };
+
+                        final Runnable stopCallback = new Runnable() {
+                            public void run() {
+                                GeckoApp.mAppContext.runOnUiThread(new Runnable() {
+                                    public void run() {
+                                        setupScreen.dismiss();
+                                    }
+                                });
+                            }
+                        };
+
+                        profileMigrator.setLongOperationCallbacks(startCallback,
+                                                                  stopCallback);
                         profileMigrator.launchPlaces();
-                        setupScreen.dismiss();
 
                         long timeDiff = SystemClock.uptimeMillis() - currentTime;
                         Log.i(LOGTAG, "Profile migration took " + timeDiff + " ms");
@@ -2310,8 +2332,8 @@ abstract public class GeckoApp
                         // Update about:home with the new information.
                         updateAboutHomeTopSites();
                     }
-                });
-            }
+                }}
+            );
         }
     }
 

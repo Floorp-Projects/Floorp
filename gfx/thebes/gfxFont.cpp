@@ -77,6 +77,7 @@
 #include "harfbuzz/hb-blob.h"
 
 #include "nsCRT.h"
+#include "sampler.h"
 
 #include <algorithm>
 
@@ -1457,6 +1458,7 @@ struct GlyphBuffer {
             cairo_glyph_path(aCR, mGlyphBuffer, mNumGlyphs);
         } else {
             if (aDrawMode & gfxFont::GLYPH_FILL) {
+                SAMPLE_LABEL("GlyphBuffer", "cairo_show_glyphs");
                 cairo_show_glyphs(aCR, mGlyphBuffer, mNumGlyphs);
             }
 
