@@ -76,6 +76,7 @@ public:
 
     static void OnGlobalAndroidEvent(mozilla::AndroidGeckoEvent *ae);
     static gfxIntSize GetAndroidScreenBounds();
+    static nsWindow* TopWindow();
 
     nsWindow* FindWindowForPoint(const nsIntPoint& pt);
 
