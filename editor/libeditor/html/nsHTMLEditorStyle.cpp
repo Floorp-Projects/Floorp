@@ -354,14 +354,14 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
 
 
 nsresult
-nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
-                                       nsIAtom *aProperty, 
-                                       const nsAString *aAttribute,
-                                       const nsAString *aValue)
+nsHTMLEditor::SetInlinePropertyOnNode(nsIDOMNode *aNode,
+                                      nsIAtom *aProperty,
+                                      const nsAString *aAttribute,
+                                      const nsAString *aValue)
 {
   NS_ENSURE_TRUE(aNode && aProperty, NS_ERROR_NULL_POINTER);
 
-  nsresult res = NS_OK;
+  nsresult res;
   nsCOMPtr<nsIDOMNode> tmp;
   nsAutoString tag;
   aProperty->ToString(tag);
@@ -379,13 +379,12 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
       childNodes->GetLength(&childCount);
       if (childCount) {
         nsCOMArray<nsIDOMNode> arrayOfNodes;
-        nsCOMPtr<nsIDOMNode> node;
 
         // populate the list
         for (j = 0; j < (PRInt32)childCount; j++) {
           nsCOMPtr<nsIDOMNode> childNode;
           res = childNodes->Item(j, getter_AddRefs(childNode));
-          if ((NS_SUCCEEDED(res)) && childNode && IsEditable(childNode)) {
+          if (NS_SUCCEEDED(res) && childNode && IsEditable(childNode)) {
             arrayOfNodes.AppendObject(childNode);
           }
         }
@@ -393,13 +392,13 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
         // then loop through the list, set the property on each node
         PRInt32 listCount = arrayOfNodes.Count();
         for (j = 0; j < listCount; j++) {
-          node = arrayOfNodes[j];
-          res = SetInlinePropertyOnNode(node, aProperty, aAttribute, aValue);
+          res = SetInlinePropertyOnNode(arrayOfNodes[j], aProperty,
+                                        aAttribute, aValue);
           NS_ENSURE_SUCCESS(res, res);
         }
       }
     }
-    return res;
+    return NS_OK;
   }
 
   bool useCSS = (IsCSSEnabled() &&
@@ -408,19 +407,13 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
     aAttribute->EqualsLiteral("bgcolor");
 
   if (useCSS) {
-    nsCOMPtr<nsIDOMNode> tmp = aNode;
-    if (IsTextNode(tmp))
-    {
-      // we are working on a text node and need to create a span container
-      // that will carry the styles
-      InsertContainerAbove(aNode, 
-                           address_of(tmp), 
-                           NS_LITERAL_STRING("span"),
-                           nsnull,
-                           nsnull);
+    tmp = aNode;
+    if (IsTextNode(tmp)) {
+      // we are working on a text node and need to create a span container that
+      // will carry the styles
+      InsertContainerAbove(aNode, address_of(tmp), NS_LITERAL_STRING("span"),
+                           nsnull, nsnull);
     }
-    nsCOMPtr<nsIDOMElement>element;
-    element = do_QueryInterface(tmp);
     // First we have to remove occurrences of the same style hint in the
     // children of aNode, and any equivalent non-CSS attribute on aNode itself
     // (if applicable).
@@ -431,45 +424,49 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
       res = RemoveAttribute(elem, *aAttribute);
       NS_ENSURE_SUCCESS(res, res);
     }
-    PRInt32 count;
     // then we add the css styles corresponding to the HTML style request
-    res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, aProperty, aAttribute, aValue, &count, false);
+    nsCOMPtr<nsIDOMElement> element;
+    element = do_QueryInterface(tmp);
+    PRInt32 count;
+    res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, aProperty,
+                                                     aAttribute, aValue,
+                                                     &count, false);
     NS_ENSURE_SUCCESS(res, res);
 
     nsCOMPtr<nsIDOMNode> nextSibling, previousSibling;
     GetNextHTMLSibling(tmp, address_of(nextSibling));
     GetPriorHTMLSibling(tmp, address_of(previousSibling));
-    if (nextSibling || previousSibling)
-    {
+    if (nextSibling || previousSibling) {
       nsCOMPtr<nsIDOMNode> mergeParent;
       res = tmp->GetParentNode(getter_AddRefs(mergeParent));
       NS_ENSURE_SUCCESS(res, res);
       if (previousSibling &&
           nsEditor::NodeIsType(previousSibling, nsEditProperty::span) &&
-          NodesSameType(tmp, previousSibling))
-      {
+          NodesSameType(tmp, previousSibling)) {
         res = JoinNodes(previousSibling, tmp, mergeParent);
         NS_ENSURE_SUCCESS(res, res);
       }
       if (nextSibling &&
           nsEditor::NodeIsType(nextSibling, nsEditProperty::span) &&
-          NodesSameType(tmp, nextSibling))
-      {
+          NodesSameType(tmp, nextSibling)) {
         res = JoinNodes(tmp, nextSibling, mergeParent);
+        NS_ENSURE_SUCCESS(res, res);
       }
     }
-    return res;
+    return NS_OK;
   }
-  
+
   // don't need to do anything if property already set on node
   bool bHasProp;
   nsCOMPtr<nsIDOMNode> styleNode;
-  IsTextPropertySetByContent(aNode, aProperty, aAttribute, aValue, bHasProp, getter_AddRefs(styleNode));
-  if (bHasProp) return NS_OK;
+  IsTextPropertySetByContent(aNode, aProperty, aAttribute, aValue,
+                             bHasProp, getter_AddRefs(styleNode));
+  if (bHasProp) {
+    return NS_OK;
+  }
 
   // is it already the right kind of node, but with wrong attribute?
-  if (NodeIsType(aNode, aProperty))
-  {
+  if (NodeIsType(aNode, aProperty)) {
     // Just set the attribute on it.  But first remove any contrary style in
     // its children, and remove any conflicting CSS style on it.
     res = RemoveStyleInside(aNode, aProperty, aAttribute, true);
@@ -481,29 +478,24 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
     nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
     return SetAttribute(elem, *aAttribute, *aValue);
   }
-  
+
   // Either put it inside a neighboring node, or make a new one.
 
   nsCOMPtr<nsIDOMNode> priorNode, nextNode;
-  // is either of it's neighbors the right kind of node?
+  // is either of its neighbors the right kind of node?
   GetPriorHTMLSibling(aNode, address_of(priorNode));
   GetNextHTMLSibling(aNode, address_of(nextNode));
-  if (priorNode && NodeIsType(priorNode, aProperty) && 
-      HasAttrVal(priorNode, aAttribute, aValue)     &&
-      IsOnlyAttribute(priorNode, aAttribute) )
-  {
+  if (priorNode && NodeIsType(priorNode, aProperty) &&
+      HasAttrVal(priorNode, aAttribute, aValue) &&
+      IsOnlyAttribute(priorNode, aAttribute)) {
     // previous sib is already right kind of inline node; slide this over into it
     res = MoveNode(aNode, priorNode, -1);
-  }
-  else if (nextNode && NodeIsType(nextNode, aProperty) && 
-           HasAttrVal(nextNode, aAttribute, aValue)    &&
-           IsOnlyAttribute(priorNode, aAttribute) )
-  {
+  } else if (nextNode && NodeIsType(nextNode, aProperty) &&
+             HasAttrVal(nextNode, aAttribute, aValue) &&
+             IsOnlyAttribute(priorNode, aAttribute)) {
     // following sib is already right kind of inline node; slide this over into it
     res = MoveNode(aNode, nextNode, 0);
-  }
-  else
-  {
+  } else {
     // ok, chuck it in its very own container
     res = InsertContainerAbove(aNode, address_of(tmp), tag, aAttribute, aValue);
   }
