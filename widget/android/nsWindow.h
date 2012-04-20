@@ -188,7 +188,7 @@ public:
                               ::base::Thread* aCompositorThread);
     static void ScheduleComposite();
     static void SchedulePauseComposition();
-    static void ScheduleResumeComposition();
+    static void ScheduleResumeComposition(int width, int height);
 
     virtual bool WidgetPaintsBackground() { return true; }
 #endif

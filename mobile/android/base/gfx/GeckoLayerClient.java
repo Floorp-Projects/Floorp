@@ -431,12 +431,12 @@ public class GeckoLayerClient implements GeckoEventResponder,
     }
 
     /** Implementation of LayerView.Listener */
-    public void compositionResumeRequested() {
+    public void compositionResumeRequested(int width, int height) {
         // Asking Gecko to resume the compositor takes too long (see
         // https://bugzilla.mozilla.org/show_bug.cgi?id=735230#c23), so we
         // resume the compositor directly. We still need to inform Gecko about
         // the compositor resuming, so that Gecko knows that it can now draw.
-        GeckoAppShell.scheduleResumeComposition();
+        GeckoAppShell.scheduleResumeComposition(width, height);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createCompositorResumeEvent());
     }
 
@@ -447,7 +447,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
         // We need to make this call even when the compositor isn't currently
         // paused (e.g. during an orientation change), to make the compositor
         // aware of the changed surface.
-        compositionResumeRequested();
+        compositionResumeRequested(width, height);
         renderRequested();
     }
 

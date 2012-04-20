@@ -148,6 +148,13 @@ CompositorParent::ResumeComposition()
 }
 
 void
+CompositorParent::ResumeCompositionAndResize(int width, int height)
+{
+  static_cast<LayerManagerOGL*>(mLayerManager.get())->SetSurfaceSize(width, height);
+  ResumeComposition();
+}
+
+void
 CompositorParent::SchedulePauseOnCompositorThread()
 {
   CancelableTask *pauseTask = NewRunnableMethod(this,
@@ -156,10 +163,10 @@ CompositorParent::SchedulePauseOnCompositorThread()
 }
 
 void
-CompositorParent::ScheduleResumeOnCompositorThread()
+CompositorParent::ScheduleResumeOnCompositorThread(int width, int height)
 {
-  CancelableTask *resumeTask = NewRunnableMethod(this,
-                                                 &CompositorParent::ResumeComposition);
+  CancelableTask *resumeTask =
+    NewRunnableMethod(this, &CompositorParent::ResumeCompositionAndResize, width, height);
   mCompositorThread->message_loop()->PostTask(FROM_HERE, resumeTask);
 }
 
@@ -367,7 +374,14 @@ PLayersParent*
 CompositorParent::AllocPLayers(const LayersBackend &backendType)
 {
   if (backendType == LayerManager::LAYERS_OPENGL) {
+#ifdef MOZ_JAVA_COMPOSITOR
+    nsIntRect rect;
+    mWidget->GetBounds(rect);
+    nsRefPtr<LayerManagerOGL> layerManager =
+      new LayerManagerOGL(mWidget, rect.width, rect.height, true);
+#else
     nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(mWidget);
+#endif
     mWidget = NULL;
     mLayerManager = layerManager;
 
