@@ -628,6 +628,9 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 
 #ifdef MOZ_WEBAPP_RUNTIME
 [WebappRuntime]
+#ifdef XP_WIN
+@BINPATH@/webapp-uninstaller@BIN_SUFFIX@
+#endif
 @BINPATH@/webapprt-stub@BIN_SUFFIX@
 @BINPATH@/webapprt/application.ini
 @BINPATH@/webapprt/chrome.manifest
