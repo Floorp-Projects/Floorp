@@ -749,6 +749,10 @@ public class GeckoAppShell
                 else
                     intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aURI);
                 intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, getLauncherIcon(aIcon));
+
+                // Do not allow duplicate items
+                intent.putExtra("duplicate", false);
+
                 intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
                 GeckoApp.mAppContext.sendBroadcast(intent);
             }
