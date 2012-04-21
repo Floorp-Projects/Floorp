@@ -975,11 +975,11 @@ toolbar[mode="icons"] #zoom-in-button {
 }
 
 #identity-box {
-  background-image: -moz-linear-gradient(hsl(0,0%,98%), hsl(0,0%,92%));
-  box-shadow: 0 1px 0 hsla(0,0%,0%,.05) inset;
-  -moz-border-end: 1px solid hsla(0,0%,0%,.1);
   -moz-margin-end: 3px;
-  padding: 1px 4px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 0;
 }
 
 #identity-box:-moz-locale-dir(ltr) {
@@ -1024,37 +1024,11 @@ toolbar[mode="icons"] #zoom-in-button {
   padding-right: 10.01px;
 }
 
-#identity-box:active:hover,
-#identity-box[open="true"] {
-  background-image: -moz-linear-gradient(hsl(0,0%,93%), hsl(0,0%,80%));
-  box-shadow: 0 1px 1px hsla(0,0%,0%,.3) inset,
-              0 1px 3px hsla(0,0%,0%,.3) inset;
-}
-
-#identity-box.verifiedDomain {
-  background-image: -moz-linear-gradient(hsl(215,60%,92%), hsl(215,58%,88%));
-  -moz-border-end-color: hsla(215,54%,33%,.2);
-  color: hsl(215,54%,33%);
-}
-
-#identity-box.verifiedDomain:active:hover,
-#identity-box.verifiedDomain[open="true"] {
-  background-image: -moz-linear-gradient(hsl(215,85%,85%), hsl(215,70%,68%));
-  box-shadow: 0 1px 1px hsla(215,54%,33%,.7) inset,
-              0 1px 3px 1px hsla(215,54%,33%,.5) inset;
-}
-
 #identity-box.verifiedIdentity {
-  background-image: -moz-linear-gradient(hsl(91,70%,90%), hsl(93,60%,81%));
-  -moz-border-end-color: hsla(92,81%,16%,.2);
+  background-color: #fff;
   color: hsl(92,100%,20%);
-}
-
-#identity-box.verifiedIdentity:active:hover,
-#identity-box.verifiedIdentity[open="true"] {
-  background-image: -moz-linear-gradient(hsl(92,69%,77%), hsl(92,44%,51%));
-  box-shadow: 0 1px 1px hsla(92,81%,16%,.6) inset,
-              0 1px 3px 1px hsla(92,81%,16%,.5) inset;
+  -moz-border-end: 1px solid hsla(92,81%,16%,.2);
+  -moz-padding-end: 4px;
 }
 
 #identity-box:-moz-focusring {
@@ -1065,7 +1039,7 @@ toolbar[mode="icons"] #zoom-in-button {
 }
 
 #identity-icon-labels {
-  -moz-margin-start: 6px;
+  -moz-margin-start: 4px;
 }
 
 .urlbar-input-box {
@@ -1112,10 +1086,21 @@ toolbar[mode="icons"] #zoom-in-button {
   height: 16px;
   margin: 0px;
   padding: 0px;
+  list-style-image: url(chrome://browser/skin/identity-icons-generic.png);
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-#page-proxy-favicon:not([src]) {
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+.verifiedDomain > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon {
+  list-style-image: url(chrome://browser/skin/identity-icons-https.png);
+}
+
+.verifiedIdentity > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon {
+  list-style-image: url(chrome://browser/skin/identity-icons-https-ev.png);
+}
+
+#identity-box:hover:active > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon,
+#identity-box[open=true] > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
 #page-proxy-favicon[pageproxystate="invalid"] {
