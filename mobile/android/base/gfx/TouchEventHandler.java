@@ -145,6 +145,11 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
         if (isDownEvent(event)) {
             // this is the start of a new block of events! whee!
             mHoldInQueue = mWaitForTouchListeners;
+
+            // Set mDispatchEvents to true so that we are guaranteed to either queue these
+            // events or dispatch them. The only time we should not do either is once we've
+            // heard back from content to preventDefault this block.
+            mDispatchEvents = true;
             if (mHoldInQueue) {
                 // if we're holding the events in the queue, set the timeout so that
                 // we dispatch these events if we don't get a default-prevented notification

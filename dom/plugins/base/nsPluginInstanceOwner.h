@@ -76,15 +76,10 @@ class nsDisplayListBuilder;
 
 #ifdef MOZ_X11
 class gfxXlibSurface;
-#endif
-
-#ifdef MOZ_WIDGET_GTK2
-#include "gfxXlibNativeRenderer.h"
-#endif
-
 #ifdef MOZ_WIDGET_QT
-#ifdef MOZ_X11
 #include "gfxQtNativeRenderer.h"
+#else
+#include "gfxXlibNativeRenderer.h"
 #endif
 #endif
 
@@ -410,10 +405,10 @@ private:
   
 #ifdef MOZ_X11
   class Renderer
-#if defined(MOZ_WIDGET_GTK2)
-  : public gfxXlibNativeRenderer
-#elif defined(MOZ_WIDGET_QT)
+#if defined(MOZ_WIDGET_QT)
   : public gfxQtNativeRenderer
+#else
+  : public gfxXlibNativeRenderer
 #endif
   {
   public:
