@@ -59,6 +59,7 @@
 #include "nsIJSNativeInitializer.h"
 #include "nsContentUtils.h"
 #include "nsWrapperCache.h"
+#include "nsIObserver.h"
 
 #include "GLContextProvider.h"
 #include "Layers.h"
@@ -526,6 +527,7 @@ class WebGLContext :
     friend class WebGLMemoryMultiReporterWrapper;
     friend class WebGLExtensionLoseContext;
     friend class WebGLContextUserData;
+    friend class WebGLMemoryPressureObserver;
 
 public:
     WebGLContext();
@@ -2885,6 +2887,21 @@ class WebGLMemoryMultiReporterWrapper
     static PRInt64 GetContextCount() {
         return Contexts().Length();
     }
+};
+
+class WebGLMemoryPressureObserver MOZ_FINAL
+    : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  WebGLMemoryPressureObserver(WebGLContext *context)
+    : mContext(context)
+  {}
+
+private:
+  WebGLContext *mContext;
 };
 
 }
