@@ -33,6 +33,7 @@ of the License or (at your option) any later version.
 namespace graphite2 {
 
 class SegCacheStore;
+class SegCache;
 
 class CachedFace : public Face
 {

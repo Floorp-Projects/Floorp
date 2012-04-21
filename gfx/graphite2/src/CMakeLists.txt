@@ -54,6 +54,7 @@ set(GRAPHITE_HEADERS
     ../include/graphite2/Font.h
     ../include/graphite2/Segment.h
     ../include/graphite2/Types.h
+    ../include/graphite2/Log.h
     )
 
 file(GLOB PRIVATE_HEADERS inc/*.h) 

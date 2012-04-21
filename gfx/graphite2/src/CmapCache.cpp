@@ -112,7 +112,7 @@ uint16 CmapCache::operator [] (const uint32 usv) const throw()
 
 CmapCache::operator bool() const throw()
 {
-	return m_blocks;
+	return m_blocks != 0;
 }
 
 
@@ -136,6 +136,6 @@ uint16 DirectCmap::operator [] (const uint32 usv) const throw()
 
 DirectCmap::operator bool () const throw()
 {
-	return _ctable;
+	return _ctable != 0;
 }
 

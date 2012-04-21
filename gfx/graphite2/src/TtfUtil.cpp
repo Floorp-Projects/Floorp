@@ -798,7 +798,7 @@ bool HorMetrics(gid16 nGlyphId, const void * pHmtx, size_t lHmtxSize, const void
 	size_t cLongHorMetrics = be::swap(phhea->num_long_hor_metrics);
 	if (nGlyphId < cLongHorMetrics) 
 	{	// glyph id is acceptable
-                if (nGlyphId * sizeof(Sfnt::HorizontalMetric) > lHmtxSize) return false;
+		if (nGlyphId * sizeof(Sfnt::HorizontalMetric) >= lHmtxSize) return false;
 		nAdvWid = be::swap(phmtx[nGlyphId].advance_width);
 		nLsb = be::swap(phmtx[nGlyphId].left_side_bearing);
 	}
@@ -1149,7 +1149,7 @@ size_t LocaLookup(gid16 nGlyphId,
 	// CheckTable verifies the index_to_loc_format is valid
 	if (be::swap(pTable->index_to_loc_format) == Sfnt::FontHeader::ShortIndexLocFormat)
 	{ // loca entries are two bytes and have been divided by two
-		if (nGlyphId <= (lLocaSize >> 1) - 1) // allow sentinel value to be accessed
+		if (nGlyphId < (lLocaSize >> 1) - 1) // allow sentinel value to be accessed
 		{
 			const uint16 * pShortTable = reinterpret_cast<const uint16 *>(pLoca);
 			return (be::peek<uint16>(pShortTable + nGlyphId) << 1);
@@ -1158,7 +1158,7 @@ size_t LocaLookup(gid16 nGlyphId,
 	
 	if (be::swap(pTable->index_to_loc_format) == Sfnt::FontHeader::LongIndexLocFormat)
 	{ // loca entries are four bytes
-		if (nGlyphId <= (lLocaSize >> 2) - 1)
+		if (nGlyphId < (lLocaSize >> 2) - 1)
 		{
 			const uint32 * pLongTable = reinterpret_cast<const uint32 *>(pLoca);
 			return be::peek<uint32>(pLongTable + nGlyphId);

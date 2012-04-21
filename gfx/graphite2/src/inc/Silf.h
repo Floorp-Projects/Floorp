@@ -64,7 +64,7 @@ public:
     Silf() throw();
     ~Silf() throw();
     
-    bool readGraphite(const void *pSilf, size_t lSilf, const Face &face, uint32 version);
+    bool readGraphite(const byte * const pSilf, size_t lSilf, const Face &face, uint32 version);
     bool runGraphite(Segment *seg, uint8 firstPass=0, uint8 lastPass=0) const;
     uint16 findClassIndex(uint16 cid, uint16 gid) const;
     uint16 getClassGlyph(uint16 cid, unsigned int index) const;
