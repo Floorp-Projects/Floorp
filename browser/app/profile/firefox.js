@@ -877,7 +877,7 @@ pref("browser.ssl_override_behavior", 2);
 // 0 - do not show domain
 // 1 - show effectiveTLD + 1 (e.g. mozilla.org)
 // 2 - show full domain (e.g. bugzilla.mozilla.org)
-pref("browser.identity.ssl_domain_display", 1);
+pref("browser.identity.ssl_domain_display", 0);
 
 // True if the user should be prompted when a web application supports
 // offline apps.
