@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011  Google, Inc.
+ * Copyright © 2012  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -24,24 +24,30 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#ifndef HB_FALLBACK_SHAPE_PRIVATE_HH
-#define HB_FALLBACK_SHAPE_PRIVATE_HH
-
-#include "hb-private.hh"
-
-#include "hb-shape.h"
+#include "hb-mutex-private.hh"
+#include "hb-object-private.hh"
 
 
-HB_BEGIN_DECLS
+#if !defined(HB_NO_MT) && defined(HB_ATOMIC_INT_NIL)
+#ifdef _MSC_VER
+#pragma message("Could not find any system to define atomic_int macros, library will NOT be thread-safe")
+#else
+#warning "Could not find any system to define atomic_int macros, library will NOT be thread-safe"
+#endif
+#endif
 
+#if !defined(HB_NO_MT) && defined(HB_MUTEX_IMPL_NIL)
+#ifdef _MSC_VER
+#pragma message("Could not find any system to define mutex macros, library will NOT be thread-safe")
+#else
+#warning "Could not find any system to define mutex macros, library will NOT be thread-safe"
+#endif
+#endif
 
-HB_INTERNAL hb_bool_t
-_hb_fallback_shape (hb_font_t          *font,
-		    hb_buffer_t        *buffer,
-		    const hb_feature_t *features,
-		    unsigned int        num_features);
-
-
-HB_END_DECLS
-
-#endif /* HB_FALLBACK_SHAPE_PRIVATE_HH */
+#if !defined(HB_NO_MT) && (defined(HB_ATOMIC_INT_NIL) || defined(HB_MUTEX_IMPL_NIL))
+#ifdef _MSC_VER
+#pragma message("To suppress these warnings, define HB_NO_MT")
+#else
+#warning "To suppress these warnings, define HB_NO_MT"
+#endif
+#endif
