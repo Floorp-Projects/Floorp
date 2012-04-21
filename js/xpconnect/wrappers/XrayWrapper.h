@@ -50,6 +50,11 @@ class XPCWrappedNative;
 
 namespace xpc {
 
+JSBool
+holder_get(JSContext *cx, JSObject *holder, jsid id, jsval *vp);
+JSBool
+holder_set(JSContext *cx, JSObject *holder, jsid id, JSBool strict, jsval *vp);
+
 namespace XrayUtils {
 
 extern JSClass HolderClass;
@@ -112,4 +117,18 @@ class XrayWrapper : public Base {
 typedef XrayWrapper<js::CrossCompartmentWrapper, ProxyXrayTraits > XrayProxy;
 typedef XrayWrapper<js::CrossCompartmentWrapper, DOMXrayTraits > XrayDOM;
 
+class SandboxProxyHandler : public js::AbstractWrapper {
+public:
+    SandboxProxyHandler() : js::AbstractWrapper(0)
+    {
+    }
+
+    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+                                       bool set, js::PropertyDescriptor *desc);
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy,
+                                          jsid id, bool set,
+                                          js::PropertyDescriptor *desc);
+};
+
+extern SandboxProxyHandler sandboxProxyHandler;
 }

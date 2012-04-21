@@ -42,6 +42,7 @@
 #include "chrome/common/ipc_message_utils.h"
 
 #include "mozilla/Util.h"
+#include "mozilla/gfx/2D.h"
 
 #include "prtypes.h"
 #include "nsID.h"
@@ -750,6 +751,25 @@ struct ParamTraits<nsIntSize>
             ReadParam(msg, iter, &result->height));
   }
 };
+
+template<>
+struct ParamTraits<mozilla::gfx::Size>
+{
+  typedef mozilla::gfx::Size paramType;
+  
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.width);
+    WriteParam(msg, param.height); 
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->width) &&
+            ReadParam(msg, iter, &result->height));
+  }
+};
+
 
 template<>
 struct ParamTraits<nsRect>

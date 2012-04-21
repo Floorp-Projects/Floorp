@@ -214,7 +214,7 @@ public class GeckoAppShell
     public static native void freeDirectBuffer(ByteBuffer buf);
     public static native void scheduleComposite();
     public static native void schedulePauseComposition();
-    public static native void scheduleResumeComposition();
+    public static native void scheduleResumeComposition(int width, int height);
 
     private static class GeckoMediaScannerClient implements MediaScannerConnectionClient {
         private String mFile = "";
