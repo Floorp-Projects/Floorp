@@ -71,9 +71,24 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 
+#include "nsIObserverService.h"
+
+
 using namespace mozilla;
 using namespace mozilla::gl;
 using namespace mozilla::layers;
+
+NS_IMPL_ISUPPORTS1(WebGLMemoryPressureObserver, nsIObserver)
+
+NS_IMETHODIMP
+WebGLMemoryPressureObserver::Observe(nsISupports* aSubject,
+                                     const char* aTopic,
+                                     const PRUnichar* aSomeData)
+{
+  if (strcmp(aTopic, "memory-pressure") == 0)
+    mContext->ForceLoseContext();
+  return NS_OK;
+}
 
 
 nsresult NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult);
@@ -172,6 +187,16 @@ WebGLContext::WebGLContext()
     mContextRestorer = do_CreateInstance("@mozilla.org/timer;1");
     mContextStatus = ContextStable;
     mContextLostErrorSet = false;
+
+    nsRefPtr<WebGLMemoryPressureObserver> memoryPressureObserver
+        = new WebGLMemoryPressureObserver(this);
+    nsCOMPtr<nsIObserverService> observerService
+        = mozilla::services::GetObserverService();
+    if (observerService) {
+        observerService->AddObserver(memoryPressureObserver,
+                                     "memory-pressure",
+                                     false);
+    }
 }
 
 WebGLContext::~WebGLContext()
