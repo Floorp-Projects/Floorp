@@ -330,15 +330,38 @@ hb_ot_position_complex (hb_ot_shape_context_t *c)
     c->applied_position_complex = TRUE;
   }
 
-  hb_ot_layout_position_finish (c->buffer);
+  hb_ot_layout_position_finish (c->face, c->buffer);
 
   return;
 }
 
 static void
-hb_position_complex_fallback (hb_ot_shape_context_t *c HB_UNUSED)
+hb_position_complex_fallback (hb_ot_shape_context_t *c)
 {
   /* TODO Mark pos */
+  unsigned int count = c->buffer->len;
+  const hb_glyph_info_t *info = c->buffer->info;
+  hb_glyph_position_t *positions = c->buffer->pos;
+  if (c->buffer->props.direction == HB_DIRECTION_RTL) {
+    for (unsigned int i = 1; i < count; i++) {
+      if (FLAG (_hb_glyph_info_get_general_category (&info[i])) &
+	  (FLAG (HB_UNICODE_GENERAL_CATEGORY_FORMAT) |
+	   FLAG (HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK) |
+	   FLAG (HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)))
+        positions[i].x_advance = 0;
+    }
+  } else {
+    for (unsigned int i = 1; i < count; i++) {
+      if (FLAG (_hb_glyph_info_get_general_category (&info[i])) &
+	  (FLAG (HB_UNICODE_GENERAL_CATEGORY_FORMAT) |
+	   FLAG (HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK) |
+	   FLAG (HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK))) {
+        hb_glyph_position_t& pos = positions[i];
+        pos.x_offset = -pos.x_advance;
+        pos.x_advance = 0;
+      }
+    }
+  }
 }
 
 static void
