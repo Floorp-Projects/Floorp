@@ -144,7 +144,7 @@ SegCacheEntry* SegCache::cache(SegCacheStore * store, const uint16* cmapGlyphs, 
 
 void SegCache::purge(SegCacheStore * store)
 {
-    unsigned long long minAccessCount = m_totalAccessCount * m_purgeFactor + 1;
+    unsigned long long minAccessCount = static_cast<unsigned long long>(m_totalAccessCount * m_purgeFactor + 1);
     if (minAccessCount < 2) minAccessCount = 2;
     unsigned long long oldAccessTime = m_totalAccessCount - store->maxSegmentCount() / eAgeFactor;
     purgeLevel(store, m_prefixes, 0, minAccessCount, oldAccessTime);

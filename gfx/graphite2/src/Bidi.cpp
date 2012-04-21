@@ -300,8 +300,8 @@ const bidi_action actionWeak[][10] =
 inline uint8    GetDeferredType(bidi_action a)          { return (a >> 4) & 0xF; }
 inline uint8    GetResolvedType(bidi_action a)          { return a & 0xF; }
 inline DirCode  EmbeddingDirection(int l)               { return l & 1 ? R : L; }
-inline bool     IsDeferredState(bidi_state a)           { return (1 << a) & (rtmask | ltmask | acmask | rcmask | rsmask | lcmask | lsmask); }
-inline bool     IsModifiedClass(DirCode a)              { return (1 << a) & (ALmask | NSMmask | ESmask | CSmask | ETmask | ENmask); }
+inline bool     IsDeferredState(bidi_state a)           { return 0 != ((1 << a) & (rtmask | ltmask | acmask | rcmask | rsmask | lcmask | lsmask)); }
+inline bool     IsModifiedClass(DirCode a)              { return 0 != ((1 << a) & (ALmask | NSMmask | ESmask | CSmask | ETmask | ENmask)); }
 
 void SetDeferredRunClass(Slot *s, Slot *sRun, int nval)
 {
