@@ -122,7 +122,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsILineBreaker.h"
 #include "nsIWordBreaker.h"
 #include "nsUnicodeProperties.h"
-#include "harfbuzz/hb-common.h"
+#include "harfbuzz/hb.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsBindingManager.h"

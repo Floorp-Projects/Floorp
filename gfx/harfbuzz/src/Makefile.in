@@ -52,6 +52,7 @@ CPPSRCS	=                        \
   hb-ot-tag.cc                   \
   hb-shape.cc                    \
   hb-unicode.cc                  \
+  hb-warning.cc                  \
   $(NULL)
 
 EXPORTS_NAMESPACES = harfbuzz
@@ -79,7 +80,7 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DPACKAGE_VERSION="\"moz\""
 DEFINES += -DPACKAGE_BUGREPORT="\"http://bugzilla.mozilla.org/\""
-DEFINES += -DHAVE_OT=1
+DEFINES += -DHAVE_OT=1 -DHB_NO_MT
 
 # Cancel the effect of the -DDEBUG macro if present,
 # because harfbuzz uses that name for its own purposes

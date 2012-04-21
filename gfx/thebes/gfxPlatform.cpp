@@ -63,7 +63,7 @@
 #include "gfxImageSurface.h"
 #include "gfxUserFontSet.h"
 #include "nsUnicodeProperties.h"
-#include "harfbuzz/hb-unicode.h"
+#include "harfbuzz/hb.h"
 #ifdef MOZ_GRAPHITE
 #include "gfxGraphiteShaper.h"
 #endif

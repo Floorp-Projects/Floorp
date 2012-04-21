@@ -24,6 +24,10 @@
  * Google Author(s): Behdad Esfahbod
  */
 
+#ifndef HB_H_IN
+#error "Include <hb.h> instead."
+#endif
+
 #ifndef HB_VERSION_H
 #define HB_VERSION_H
 

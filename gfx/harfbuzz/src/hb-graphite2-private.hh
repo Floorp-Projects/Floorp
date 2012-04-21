@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011  Google, Inc.
+ * Copyright © 2012  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -24,24 +24,19 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#ifndef HB_FALLBACK_SHAPE_PRIVATE_HH
-#define HB_FALLBACK_SHAPE_PRIVATE_HH
+#ifndef HB_GRAPHITE2_PRIVATE_HH
+#define HB_GRAPHITE2_PRIVATE_HH
 
 #include "hb-private.hh"
 
-#include "hb-shape.h"
-
-
-HB_BEGIN_DECLS
+#include "hb-graphite2.h"
 
 
 HB_INTERNAL hb_bool_t
-_hb_fallback_shape (hb_font_t          *font,
-		    hb_buffer_t        *buffer,
-		    const hb_feature_t *features,
-		    unsigned int        num_features);
+_hb_graphite2_shape (hb_font_t          *font,
+		     hb_buffer_t        *buffer,
+		     const hb_feature_t *features,
+		     unsigned int        num_features);
 
 
-HB_END_DECLS
-
-#endif /* HB_FALLBACK_SHAPE_PRIVATE_HH */
+#endif /* HB_GRAPHITE2_PRIVATE_HH */

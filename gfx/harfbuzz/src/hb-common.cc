@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009,2010  Red Hat, Inc.
- * Copyright © 2011  Google, Inc.
+ * Copyright © 2011,2012  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -80,7 +80,7 @@ hb_direction_from_string (const char *str, int len)
   char c = TOLOWER (str[0]);
   for (unsigned int i = 0; i < ARRAY_LENGTH (direction_strings); i++)
     if (c == direction_strings[i][0])
-      return (hb_direction_t) i;
+      return (hb_direction_t) (HB_DIRECTION_LTR + i);
 
   return HB_DIRECTION_INVALID;
 }
@@ -88,8 +88,9 @@ hb_direction_from_string (const char *str, int len)
 const char *
 hb_direction_to_string (hb_direction_t direction)
 {
-  if (likely ((unsigned int) direction < ARRAY_LENGTH (direction_strings)))
-    return direction_strings[direction];
+  if (likely ((unsigned int) (direction - HB_DIRECTION_LTR)
+	      < ARRAY_LENGTH (direction_strings)))
+    return direction_strings[direction - HB_DIRECTION_LTR];
 
   return "invalid";
 }
@@ -264,19 +265,29 @@ hb_script_to_iso15924_tag (hb_script_t script)
 hb_direction_t
 hb_script_get_horizontal_direction (hb_script_t script)
 {
+  /* http://goo.gl/x9ilM */
   switch ((hb_tag_t) script)
   {
+    /* Unicode-1.1 additions */
     case HB_SCRIPT_ARABIC:
     case HB_SCRIPT_HEBREW:
+
+    /* Unicode-3.0 additions */
     case HB_SCRIPT_SYRIAC:
     case HB_SCRIPT_THAANA:
 
     /* Unicode-4.0 additions */
     case HB_SCRIPT_CYPRIOT:
 
+    /* Unicode-4.1 additions */
+    case HB_SCRIPT_KHAROSHTHI:
+
     /* Unicode-5.0 additions */
     case HB_SCRIPT_PHOENICIAN:
     case HB_SCRIPT_NKO:
+
+    /* Unicode-5.1 additions */
+    case HB_SCRIPT_LYDIAN:
 
     /* Unicode-5.2 additions */
     case HB_SCRIPT_AVESTAN:
@@ -289,6 +300,10 @@ hb_script_get_horizontal_direction (hb_script_t script)
 
     /* Unicode-6.0 additions */
     case HB_SCRIPT_MANDAIC:
+
+    /* Unicode-6.1 additions */
+    case HB_SCRIPT_MEROITIC_CURSIVE:
+    case HB_SCRIPT_MEROITIC_HIEROGLYPHS:
 
       return HB_DIRECTION_RTL;
   }
