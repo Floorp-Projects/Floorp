@@ -104,8 +104,9 @@ class WebGLFramebuffer;
 class WebGLRenderbuffer;
 class WebGLUniformLocation;
 class WebGLExtension;
+class WebGLContext;
 struct WebGLVertexAttribData;
-
+class WebGLMemoryPressureObserver;
 class WebGLRectangleObject;
 class WebGLContextBoundObject;
 
@@ -959,6 +960,7 @@ protected:
     ForceDiscreteGPUHelperCGL mForceDiscreteGPUHelper;
 #endif
 
+    nsRefPtr<WebGLMemoryPressureObserver> mMemoryPressureObserver;
 
 public:
     // console logging helpers

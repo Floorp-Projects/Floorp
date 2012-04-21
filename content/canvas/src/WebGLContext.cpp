@@ -187,16 +187,6 @@ WebGLContext::WebGLContext()
     mContextRestorer = do_CreateInstance("@mozilla.org/timer;1");
     mContextStatus = ContextStable;
     mContextLostErrorSet = false;
-
-    nsRefPtr<WebGLMemoryPressureObserver> memoryPressureObserver
-        = new WebGLMemoryPressureObserver(this);
-    nsCOMPtr<nsIObserverService> observerService
-        = mozilla::services::GetObserverService();
-    if (observerService) {
-        observerService->AddObserver(memoryPressureObserver,
-                                     "memory-pressure",
-                                     false);
-    }
 }
 
 WebGLContext::~WebGLContext()
@@ -210,6 +200,16 @@ WebGLContext::~WebGLContext()
 void
 WebGLContext::DestroyResourcesAndContext()
 {
+    if (mMemoryPressureObserver) {
+        nsCOMPtr<nsIObserverService> observerService
+            = mozilla::services::GetObserverService();
+        if (observerService) {
+            observerService->RemoveObserver(mMemoryPressureObserver,
+                                            "memory-pressure");
+        }
+        mMemoryPressureObserver = nsnull;
+    }
+
     if (!gl)
         return;
 
