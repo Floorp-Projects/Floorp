@@ -1055,6 +1055,13 @@ NS_IMETHODIMP
 WebGLContext::Notify(nsITimer* timer)
 {
     TerminateContextLossTimer();
+
+    if (!HTMLCanvasElement()) {
+        // the canvas is gone. That happens when the page was closed before we got
+        // this timer event. In this case, there's nothing to do here, just don't crash.
+        return NS_OK;
+    }
+
     // If the context has been lost and we're waiting for it to be restored, do
     // that now.
     if (mContextStatus == ContextLostAwaitingEvent) {
