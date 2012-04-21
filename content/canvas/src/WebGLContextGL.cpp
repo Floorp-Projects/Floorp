@@ -204,6 +204,9 @@ WebGLContext::BindAttribLocation(nsIWebGLProgram *pobj, WebGLuint location, cons
 NS_IMETHODIMP
 WebGLContext::BindBuffer(WebGLenum target, nsIWebGLBuffer *bobj)
 {
+    if (!IsContextStable())
+        return NS_OK;
+
     WebGLuint bufname;
     WebGLBuffer* buf;
     bool isNull; // allow null objects
@@ -246,6 +249,9 @@ WebGLContext::BindBuffer(WebGLenum target, nsIWebGLBuffer *bobj)
 NS_IMETHODIMP
 WebGLContext::BindFramebuffer(WebGLenum target, nsIWebGLFramebuffer *fbobj)
 {
+    if (!IsContextStable())
+        return NS_OK;
+
     WebGLuint framebuffername;
     bool isNull; // allow null objects
     bool isDeleted; // allow deleted objects
@@ -278,6 +284,9 @@ WebGLContext::BindFramebuffer(WebGLenum target, nsIWebGLFramebuffer *fbobj)
 NS_IMETHODIMP
 WebGLContext::BindRenderbuffer(WebGLenum target, nsIWebGLRenderbuffer *rbobj)
 {
+    if (!IsContextStable())
+        return NS_OK;
+
     WebGLuint renderbuffername;
     bool isNull; // allow null objects
     bool isDeleted; // allow deleted objects
@@ -308,6 +317,9 @@ WebGLContext::BindRenderbuffer(WebGLenum target, nsIWebGLRenderbuffer *rbobj)
 NS_IMETHODIMP
 WebGLContext::BindTexture(WebGLenum target, nsIWebGLTexture *tobj)
 {
+    if (!IsContextStable())
+        return NS_OK;
+
     WebGLuint texturename;
     WebGLTexture *tex;
     bool isNull; // allow null objects
@@ -588,6 +600,9 @@ WebGLContext::BufferData_array(WebGLenum target, JSObject *wa, WebGLenum usage)
 NS_IMETHODIMP
 WebGLContext::BufferSubData(PRInt32 target, PRInt32 offset, const JS::Value& data)
 {
+    if (!IsContextStable())
+        return NS_OK;
+
     if (data.isNull()) {
         // see http://www.khronos.org/bugzilla/show_bug.cgi?id=386
         return NS_OK;
@@ -2075,10 +2090,10 @@ WebGLContext::GetAttribLocation(nsIWebGLProgram *pobj,
 NS_IMETHODIMP
 WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
 {
+    *retval = nsnull;
+
     if (!IsContextStable())
         return NS_OK;
-
-    *retval = nsnull;
 
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
@@ -2843,10 +2858,10 @@ WebGLContext::TexParameteri(WebGLenum target, WebGLenum pname, WebGLint param)
 NS_IMETHODIMP
 WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname, nsIVariant **retval)
 {
+    *retval = nsnull;
+
     if (!IsContextStable())
         return NS_OK;
-
-    *retval = nsnull;
 
     MakeContextCurrent();
 
@@ -2893,10 +2908,10 @@ WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname, nsIVariant **re
 NS_IMETHODIMP
 WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc, nsIVariant **retval)
 {
+    *retval = nsnull;
+
     if (!IsContextStable())
         return NS_OK;
-
-    *retval = nsnull;
 
     WebGLuint progname;
     WebGLProgram *prog;
@@ -3051,10 +3066,10 @@ WebGLContext::GetUniformLocation(nsIWebGLProgram *pobj, const nsAString& name, n
 NS_IMETHODIMP
 WebGLContext::GetVertexAttrib(WebGLuint index, WebGLenum pname, nsIVariant **retval)
 {
+    *retval = nsnull;
+
     if (!IsContextStable())
         return NS_OK;
-
-    *retval = nsnull;
 
     if (!ValidateAttribIndex(index, "getVertexAttrib"))
         return NS_OK;
