@@ -1643,7 +1643,7 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
     if (!DoFakeVertexAttrib0(checked_firstPlusCount.value()))
         return NS_OK;
 
-    SetupRobustnessTimer();
+    SetupContextLossTimer();
     gl->fDrawArrays(mode, first, count);
 
     UndoFakeVertexAttrib0();
@@ -1754,7 +1754,7 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
     if (!DoFakeVertexAttrib0(checked_maxIndexPlusOne.value()))
         return NS_OK;
 
-    SetupRobustnessTimer();
+    SetupContextLossTimer();
     gl->fDrawElements(mode, count, type, reinterpret_cast<GLvoid*>(byteOffset));
 
     UndoFakeVertexAttrib0();
