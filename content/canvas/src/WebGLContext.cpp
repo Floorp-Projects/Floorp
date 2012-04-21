@@ -172,7 +172,6 @@ WebGLContext::WebGLContext()
     mContextRestorer = do_CreateInstance("@mozilla.org/timer;1");
     mContextStatus = ContextStable;
     mContextLostErrorSet = false;
-    mContextLostDueToTest = false;
 }
 
 WebGLContext::~WebGLContext()
@@ -1072,7 +1071,6 @@ WebGLContext::Notify(nsITimer* timer)
         // Set all flags back to the state they were in before the context was
         // lost.
         mContextLostErrorSet = false;
-        mContextLostDueToTest = false;
         mAllowRestore = true;
     }
 
@@ -1089,14 +1087,6 @@ WebGLContext::MaybeRestoreContext()
 
     bool isEGL = gl->GetContextType() == GLContext::ContextTypeEGL,
          isANGLE = gl->IsANGLE();
-
-    // If was lost due to a forced context loss, don't try to handle it.
-    // Also, we also don't try to handle if if we don't have robustness.
-    // Note that the code in this function is used only for situations where
-    // we have an actual context loss, and not a simulated one.
-    if (mContextLostDueToTest ||
-        (!mHasRobustness && !isEGL))
-        return;
 
     GLContext::ContextResetARB resetStatus = GLContext::CONTEXT_NO_ERROR;
     if (mHasRobustness) {

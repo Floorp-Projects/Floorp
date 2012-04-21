@@ -959,7 +959,6 @@ protected:
     bool mDrawSinceRobustnessTimerSet;
     ContextStatus mContextStatus;
     bool mContextLostErrorSet;
-    bool mContextLostDueToTest;
 
 #ifdef XP_MACOSX
     // see bug 713305. This RAII helper guarantees that we're on the discrete GPU, during its lifetime
