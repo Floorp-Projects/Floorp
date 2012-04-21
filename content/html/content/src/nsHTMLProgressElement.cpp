@@ -41,7 +41,7 @@
 #include "nsEventStateManager.h"
 
 
-class nsHTMLProgressElement : public nsGenericHTMLElement,
+class nsHTMLProgressElement : public nsGenericHTMLFormElement,
                               public nsIDOMHTMLProgressElement
 {
 public:
@@ -52,16 +52,21 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLFormElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
 
   // nsIDOMHTMLProgressElement
   NS_DECL_NSIDOMHTMLPROGRESSELEMENT
+
+  // nsIFormControl
+  NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_PROGRESS; }
+  NS_IMETHOD Reset();
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
 
   nsEventStates IntrinsicState() const;
 
@@ -95,7 +100,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Progress)
 
 
 nsHTMLProgressElement::nsHTMLProgressElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+  : nsGenericHTMLFormElement(aNodeInfo)
 {
   // We start out indeterminate
   AddStatesSilently(NS_EVENT_STATE_INDETERMINATE);
@@ -114,7 +119,7 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLProgressElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLProgressElement,
                                    nsIDOMHTMLProgressElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLProgressElement,
-                                               nsGenericHTMLElement)
+                                               nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLProgressElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLProgressElement)
@@ -137,7 +142,7 @@ nsHTMLProgressElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 nsEventStates
 nsHTMLProgressElement::IntrinsicState() const
 {
-  nsEventStates state = nsGenericHTMLElement::IntrinsicState();
+  nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
 
   if (IsIndeterminate()) {
     state |= NS_EVENT_STATE_INDETERMINATE;
@@ -156,8 +161,14 @@ nsHTMLProgressElement::ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute,
-                                              aValue, aResult);
+  return nsGenericHTMLFormElement::ParseAttribute(aNamespaceID, aAttribute,
+                                                  aValue, aResult);
+}
+
+NS_IMETHODIMP
+nsHTMLProgressElement::GetForm(nsIDOMHTMLFormElement** aForm)
+{
+  return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
 NS_IMETHODIMP
