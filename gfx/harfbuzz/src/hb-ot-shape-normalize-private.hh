@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011  Google, Inc.
+ * Copyright © 2012  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -24,24 +24,23 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#ifndef HB_FALLBACK_SHAPE_PRIVATE_HH
-#define HB_FALLBACK_SHAPE_PRIVATE_HH
+#ifndef HB_OT_SHAPE_NORMALIZE_PRIVATE_HH
+#define HB_OT_SHAPE_NORMALIZE_PRIVATE_HH
 
 #include "hb-private.hh"
 
-#include "hb-shape.h"
+#include "hb-font.h"
+#include "hb-buffer.h"
 
 
-HB_BEGIN_DECLS
+enum hb_ot_shape_normalization_mode_t {
+  HB_OT_SHAPE_NORMALIZATION_MODE_DECOMPOSED,
+  HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS, /* never composes base-to-base */
+  HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_FULL /* including base-to-base composition */
+};
 
+HB_INTERNAL void _hb_ot_shape_normalize (hb_font_t *font,
+					 hb_buffer_t *buffer,
+					 hb_ot_shape_normalization_mode_t mode);
 
-HB_INTERNAL hb_bool_t
-_hb_fallback_shape (hb_font_t          *font,
-		    hb_buffer_t        *buffer,
-		    const hb_feature_t *features,
-		    unsigned int        num_features);
-
-
-HB_END_DECLS
-
-#endif /* HB_FALLBACK_SHAPE_PRIVATE_HH */
+#endif /* HB_OT_SHAPE_NORMALIZE_PRIVATE_HH */

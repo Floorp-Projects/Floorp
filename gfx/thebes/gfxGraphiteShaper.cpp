@@ -51,7 +51,7 @@
 #include "graphite2/Font.h"
 #include "graphite2/Segment.h"
 
-#include "harfbuzz/hb-blob.h"
+#include "harfbuzz/hb.h"
 
 #include "cairo.h"
 
