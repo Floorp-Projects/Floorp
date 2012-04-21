@@ -5459,7 +5459,6 @@ WebGLContext::LoseContext()
     if (!IsContextStable())
         return false;
 
-    mContextLostDueToTest = true;
     ForceLoseContext();
 
     return true;
