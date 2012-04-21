@@ -32,6 +32,7 @@
 #include "hb-ot-layout-gsub-table.hh"
 #include "hb-ot-layout-gpos-table.hh"
 #include "hb-ot-maxp-table.hh"
+#include "hb-ot-shape-private.hh"
 
 
 #include <stdlib.h>
@@ -506,8 +507,33 @@ hb_ot_layout_position_lookup   (hb_font_t    *font,
 }
 
 void
-hb_ot_layout_position_finish (hb_buffer_t  *buffer)
+hb_ot_layout_position_finish (hb_face_t *face, hb_buffer_t *buffer)
 {
+  /* force diacritics to have zero width */
+  unsigned int count = buffer->len;
+  const hb_glyph_info_t *info = buffer->info;
+  hb_glyph_position_t *positions = buffer->pos;
+  /*
+   * Forcibly zero widths of chars with GC=Mn; we don't use the GDEF 'Mark' class
+   * because some fonts (e.g. C-DAC Yogesh) classify spacing Indic matras as 'Mark'
+   * but we don't want to force their width to zero.
+   */
+  if (buffer->props.direction == HB_DIRECTION_RTL) {
+    for (unsigned int i = 1; i < count; i++) {
+      if (_hb_glyph_info_get_general_category (&info[i]) == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK) {
+        positions[i].x_advance = 0;
+      }
+    }
+  } else {
+    for (unsigned int i = 1; i < count; i++) {
+      if (_hb_glyph_info_get_general_category (&info[i]) == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK) {
+        hb_glyph_position_t& pos = positions[i];
+        pos.x_offset -= pos.x_advance;
+        pos.x_advance = 0;
+      }
+    }
+  }
+
   GPOS::position_finish (buffer);
 }
 
