@@ -121,14 +121,15 @@ void gr_tag_to_str(gr_uint32 tag, char *str)
     }
 }
         
+#define zeropad(x) if (x == 0x20202020) x = 0;                             \
+    else if ((x & 0x00FFFFFF) == 0x00202020) x = x & 0xFF000000;   \
+    else if ((x & 0x0000FFFF) == 0x00002020) x = x & 0xFFFF0000;   \
+    else if ((x & 0x000000FF) == 0x00000020) x = x & 0xFFFFFF00;
 
 gr_feature_val* gr_face_featureval_for_lang(const gr_face* pFace, gr_uint32 langname/*0 means clone default*/) //clones the features. if none for language, clones the default
 {
     assert(pFace);
-    if (langname == 0x20202020) langname = 0;
-    else if ((langname & 0x00FFFFFF) == 0x00202020) langname = langname & 0xFF000000;
-    else if ((langname & 0x0000FFFF) == 0x00002020) langname = langname & 0xFFFF0000;
-    else if ((langname & 0x000000FF) == 0x00000020) langname = langname & 0xFFFFFF00;
+    zeropad(langname)
     return static_cast<gr_feature_val *>(pFace->theSill().cloneFeatures(langname));
 }
 
@@ -136,6 +137,7 @@ gr_feature_val* gr_face_featureval_for_lang(const gr_face* pFace, gr_uint32 lang
 const gr_feature_ref* gr_face_find_fref(const gr_face* pFace, gr_uint32 featId)  //When finished with the FeatureRef, call destroy_FeatureRef
 {
     assert(pFace);
+    zeropad(featId)
     const FeatureRef* pRef = pFace->featureById(featId);
     return static_cast<const gr_feature_ref*>(pRef);
 }
