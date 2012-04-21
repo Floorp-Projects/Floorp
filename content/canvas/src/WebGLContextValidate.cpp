@@ -51,6 +51,8 @@
 
 #include <algorithm>
 
+#include "nsIObserverService.h"
+
 using namespace mozilla;
 
 /*
@@ -677,6 +679,16 @@ WebGLContext::InitAndValidateGL()
     if (error != LOCAL_GL_NO_ERROR) {
         LogMessage("GL error 0x%x occurred during WebGL context initialization!", error);
         return false;
+    }
+
+    mMemoryPressureObserver
+        = new WebGLMemoryPressureObserver(this);
+    nsCOMPtr<nsIObserverService> observerService
+        = mozilla::services::GetObserverService();
+    if (observerService) {
+        observerService->AddObserver(mMemoryPressureObserver,
+                                     "memory-pressure",
+                                     false);
     }
 
     return true;
