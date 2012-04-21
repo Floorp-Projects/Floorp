@@ -369,10 +369,25 @@ function runTest(testNum) {
                           "context-sendvideo",          true
                          ].concat(inspectItems));
         closeContextMenu();
-        openContextMenuFor(video_bad); // Invoke context menu for next test.
+        openContextMenuFor(audio_in_video); // Invoke context menu for next test.
         break;
 
     case 9:
+        // Context menu for a video (with an audio-only file)
+          checkContextMenu(["context-media-play",         true,
+                            "context-media-mute",         true,
+                            "context-media-showcontrols", true,
+                            "---",                        null,
+                            "context-copyaudiourl",       true,
+                            "---",                        null,
+                            "context-saveaudio",          true,
+                            "context-sendaudio",          true
+                           ].concat(inspectItems));
+        closeContextMenu();
+        openContextMenuFor(video_bad); // Invoke context menu for next test.
+        break;
+
+    case 10:
         // Context menu for a video (with an INVALID media source)
         checkContextMenu(["context-media-play",         false,
                           "context-media-mute",         false,
@@ -391,7 +406,7 @@ function runTest(testNum) {
         openContextMenuFor(video_bad2); // Invoke context menu for next test.
         break;
 
-    case 10:
+    case 11:
         // Context menu for a video (with an INVALID media source)
         checkContextMenu(["context-media-play",         false,
                           "context-media-mute",         false,
@@ -410,7 +425,7 @@ function runTest(testNum) {
         openContextMenuFor(iframe); // Invoke context menu for next test.
         break;
 
-    case 11:
+    case 12:
         // Context menu for an iframe
         checkContextMenu(["context-back",         false,
                           "context-forward",      false,
@@ -445,7 +460,7 @@ function runTest(testNum) {
         openContextMenuFor(video_in_iframe); // Invoke context menu for next test.
         break;
 
-    case 12:
+    case 13:
         // Context menu for a video in an iframe
         checkContextMenu(["context-media-play",         true,
                           "context-media-mute",         true,
@@ -476,7 +491,7 @@ function runTest(testNum) {
         openContextMenuFor(image_in_iframe); // Invoke context menu for next test.
         break;
 
-    case 13:
+    case 14:
         // Context menu for an image in an iframe
         checkContextMenu(["context-viewimage",            true,
                           "context-copyimage-contents",   true,
@@ -503,7 +518,7 @@ function runTest(testNum) {
         openContextMenuFor(textarea, false, true); // Invoke context menu for next test, but wait for the spellcheck.
         break;
 
-    case 14:
+    case 15:
         // Context menu for textarea
         checkContextMenu(["*chubbiness",         true, // spelling suggestion
                           "spell-add-to-dictionary", true,
@@ -528,14 +543,14 @@ function runTest(testNum) {
         openContextMenuFor(text); // Invoke context menu for next test.
         break;
 
-    case 15:
+    case 16:
         // Re-check context menu for plain text to make sure it hasn't changed
         checkContextMenu(plainTextItems);
         closeContextMenu();
         openContextMenuFor(textarea, false, true); // Invoke context menu for next test.
         break;
 
-    case 16:
+    case 17:
         // Context menu for textarea after a word has been added
         // to the dictionary
         checkContextMenu(["spell-undo-add-to-dictionary", true,
@@ -560,7 +575,7 @@ function runTest(testNum) {
         openContextMenuFor(contenteditable);
         break;
 
-    case 17:
+    case 18:
         // Context menu for contenteditable
         checkContextMenu(["spell-no-suggestions", false,
                           "spell-add-to-dictionary", true,
@@ -585,7 +600,7 @@ function runTest(testNum) {
         openContextMenuFor(inputspell); // Invoke context menu for next test.
         break;
 
-    case 18:
+    case 19:
         // Context menu for spell-check input
         checkContextMenu(["*prodigality",        true, // spelling suggestion
                           "spell-add-to-dictionary", true,
@@ -610,13 +625,13 @@ function runTest(testNum) {
         openContextMenuFor(link); // Invoke context menu for next test.
         break;
 
-    case 19:
+    case 20:
         executeCopyCommand("cmd_copyLink", "http://mozilla.com/");
         closeContextMenu();
         openContextMenuFor(pagemenu); // Invoke context menu for next test.
         break;
 
-    case 20:
+    case 21:
         // Context menu for element with assigned content context menu
         checkContextMenu(["+Plain item",          {type: "", icon: "", checked: false, disabled: false},
                           "+Disabled item",       {type: "", icon: "", checked: false, disabled: true},
@@ -659,7 +674,7 @@ function runTest(testNum) {
         openContextMenuFor(pagemenu, true); // Invoke context menu for next test.
         break;
 
-    case 21:
+    case 22:
         // Context menu for element with assigned content context menu
         // The shift key should bypass content context menu processing
         checkContextMenu(["context-back",         false,
@@ -682,7 +697,7 @@ function runTest(testNum) {
         openContextMenuFor(selecttext); // Invoke context menu for next test.
         return;
 
-    case 22:
+    case 23:
         // Context menu for selected text
         if (Services.appinfo.OS == "Darwin") {
           // This test is only enabled on Mac due to bug 736399.
@@ -698,7 +713,7 @@ function runTest(testNum) {
         openContextMenuFor(selecttextlink); // Invoke context menu for next test.
         return;
 
-    case 23:
+    case 24:
         // Context menu for selected text which matches valid URL pattern
         if (Services.appinfo.OS == "Darwin") {
           // This test is only enabled on Mac due to bug 736399.
@@ -742,7 +757,8 @@ function runTest(testNum) {
 var testNum = 1;
 var subwindow, chromeWin, contextMenu, lastElement;
 var text, link, mailto, input, img, canvas, video_ok, video_bad, video_bad2,
-    iframe, video_in_iframe, image_in_iframe, textarea, contenteditable, inputspell, pagemenu, plainTextItems;
+    iframe, video_in_iframe, image_in_iframe, textarea, contenteditable,
+    inputspell, pagemenu, plainTextItems, audio_in_video;
 
 function startTest() {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
@@ -772,6 +788,7 @@ function startTest() {
     img    = subwindow.document.getElementById("test-image");
     canvas = subwindow.document.getElementById("test-canvas");
     video_ok   = subwindow.document.getElementById("test-video-ok");
+    audio_in_video = subwindow.document.getElementById("test-audio-in-video");
     video_bad  = subwindow.document.getElementById("test-video-bad");
     video_bad2 = subwindow.document.getElementById("test-video-bad2");
     iframe = subwindow.document.getElementById("test-iframe");
