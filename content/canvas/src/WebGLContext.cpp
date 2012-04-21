@@ -182,8 +182,8 @@ WebGLContext::WebGLContext()
     WebGLMemoryMultiReporterWrapper::AddWebGLContext(this);
 
     mAllowRestore = true;
-    mRobustnessTimerRunning = false;
-    mDrawSinceRobustnessTimerSet = false;
+    mContextLossTimerRunning = false;
+    mDrawSinceContextLossTimerSet = false;
     mContextRestorer = do_CreateInstance("@mozilla.org/timer;1");
     mContextStatus = ContextStable;
     mContextLostErrorSet = false;
@@ -203,7 +203,7 @@ WebGLContext::~WebGLContext()
 {
     DestroyResourcesAndContext();
     WebGLMemoryMultiReporterWrapper::RemoveWebGLContext(this);
-    TerminateRobustnessTimer();
+    TerminateContextLossTimer();
     mContextRestorer = nsnull;
 }
 
@@ -1054,7 +1054,7 @@ WebGLContext::DummyFramebufferOperation(const char *info)
 NS_IMETHODIMP
 WebGLContext::Notify(nsITimer* timer)
 {
-    TerminateRobustnessTimer();
+    TerminateContextLossTimer();
     // If the context has been lost and we're waiting for it to be restored, do
     // that now.
     if (mContextStatus == ContextLostAwaitingEvent) {
@@ -1077,14 +1077,14 @@ WebGLContext::Notify(nsITimer* timer)
             ForceRestoreContext();
             // Restart the timer so that it will be restored on the next
             // callback.
-            SetupRobustnessTimer();
+            SetupContextLossTimer();
         } else {
             mContextStatus = ContextLost;
         }
     } else if (mContextStatus == ContextLostAwaitingRestore) {
         // Try to restore the context. If it fails, try again later.
         if (NS_FAILED(SetDimensions(mWidth, mHeight))) {
-            SetupRobustnessTimer();
+            SetupContextLossTimer();
             return NS_OK;
         }
         mContextStatus = ContextStable;
@@ -1138,8 +1138,8 @@ WebGLContext::MaybeRestoreContext()
             // If there has been activity since the timer was set, it's possible
             // that we did or are going to miss something, so clear this flag and
             // run it again some time later.
-            if (mDrawSinceRobustnessTimerSet)
-                SetupRobustnessTimer();
+            if (mDrawSinceContextLossTimerSet)
+                SetupContextLossTimer();
             break;
         case GLContext::CONTEXT_GUILTY_CONTEXT_RESET_ARB:
             NS_WARNING("WebGL content on the page caused the graphics card to reset; not restoring the context");
@@ -1165,7 +1165,7 @@ WebGLContext::ForceLoseContext()
 {
     mContextStatus = ContextLostAwaitingEvent;
     // Queue up a task to restore the event.
-    SetupRobustnessTimer();
+    SetupContextLossTimer();
     DestroyResourcesAndContext();
 }
 

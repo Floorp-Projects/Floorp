@@ -641,39 +641,27 @@ public:
         return mMinCapability;
     }
 
-    // See the comment over WebGLContext::Notify() for more information on this.
-    bool ShouldEnableRobustnessTimer() {
-        return mHasRobustness ||
-               IsExtensionEnabled(WebGL_MOZ_WEBGL_lose_context) ||
-               (gl != nsnull && gl->GetContextType() == gl::GLContext::ContextTypeEGL);
-    }
-
-    // Sets up the GL_ARB_robustness timer if it isn't already, so that if the
-    // driver gets restarted, the context may get reset with it.
-    void SetupRobustnessTimer() {
-        if (!ShouldEnableRobustnessTimer())
-            return;
-
+    void SetupContextLossTimer() {
         // If the timer was already running, don't restart it here. Instead,
         // wait until the previous call is done, then fire it one more time.
         // This is an optimization to prevent unnecessary cross-communication
         // between threads.
-        if (mRobustnessTimerRunning) {
-            mDrawSinceRobustnessTimerSet = true;
+        if (mContextLossTimerRunning) {
+            mDrawSinceContextLossTimerSet = true;
             return;
         }
         
         mContextRestorer->InitWithCallback(static_cast<nsITimerCallback*>(this),
                                            PR_MillisecondsToInterval(1000),
                                            nsITimer::TYPE_ONE_SHOT);
-        mRobustnessTimerRunning = true;
-        mDrawSinceRobustnessTimerSet = false;
+        mContextLossTimerRunning = true;
+        mDrawSinceContextLossTimerSet = false;
     }
 
-    void TerminateRobustnessTimer() {
-        if (mRobustnessTimerRunning) {
+    void TerminateContextLossTimer() {
+        if (mContextLossTimerRunning) {
             mContextRestorer->Cancel();
-            mRobustnessTimerRunning = false;
+            mContextLossTimerRunning = false;
         }
     }
 
@@ -957,8 +945,8 @@ protected:
 
     nsCOMPtr<nsITimer> mContextRestorer;
     bool mAllowRestore;
-    bool mRobustnessTimerRunning;
-    bool mDrawSinceRobustnessTimerSet;
+    bool mContextLossTimerRunning;
+    bool mDrawSinceContextLossTimerSet;
     ContextStatus mContextStatus;
     bool mContextLostErrorSet;
 
