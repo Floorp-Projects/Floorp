@@ -1170,6 +1170,9 @@ WebGLContext::MaybeRestoreContext()
 void
 WebGLContext::ForceLoseContext()
 {
+    if (mContextStatus == ContextLostAwaitingEvent)
+        return;
+
     mContextStatus = ContextLostAwaitingEvent;
     // Queue up a task to restore the event.
     SetupContextLossTimer();
