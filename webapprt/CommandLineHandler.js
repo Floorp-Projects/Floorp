@@ -9,6 +9,9 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+// Initialize DOMApplicationRegistry so it can receive and respond to messages
+Cu.import("resource://gre/modules/Webapps.jsm");
+
 function CommandLineHandler() {}
 
 CommandLineHandler.prototype = {

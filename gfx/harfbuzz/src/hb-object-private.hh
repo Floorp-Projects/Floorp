@@ -49,10 +49,9 @@
 
 /* We need external help for these */
 
-#ifdef HAVE_GLIB
+#if !defined(HB_NO_MT) && defined(HAVE_GLIB)
 
 #include <glib.h>
-
 typedef volatile int hb_atomic_int_t;
 #if GLIB_CHECK_VERSION(2,29,5)
 #define hb_atomic_int_add(AI, V)	g_atomic_int_add (&(AI), V)
@@ -60,32 +59,29 @@ typedef volatile int hb_atomic_int_t;
 #define hb_atomic_int_add(AI, V)	g_atomic_int_exchange_and_add (&(AI), V)
 #endif
 #define hb_atomic_int_get(AI)		g_atomic_int_get (&(AI))
-#define hb_atomic_int_set(AI, V)	g_atomic_int_set (&(AI), V)
 
 
-#elif defined(_MSC_VER) && _MSC_VER >= 1600
+#elif !defined(HB_NO_MT) && defined(_MSC_VER) && _MSC_VER >= 1600
 
 #include <intrin.h>
-
 typedef long hb_atomic_int_t;
 #define hb_atomic_int_add(AI, V)	_InterlockedExchangeAdd (&(AI), V)
 #define hb_atomic_int_get(AI)		(_ReadBarrier (), (AI))
-#define hb_atomic_int_set(AI, V)	((void) _InterlockedExchange (&(AI), (V)))
 
+#elif !defined(HB_NO_MT) && defined(__APPLE__)
+
+#include <libkern/OSAtomic.h>
+typedef int32_t hb_atomic_int_t;
+#define hb_atomic_int_add(AI, V)	(OSAtomicAdd32Barrier((V), &(AI)), (AI) - (V))
+#define hb_atomic_int_get(AI)		OSAtomicAdd32Barrier(0, &(AI))
 
 #else
 
-#ifdef _MSC_VER
-#pragma message("Could not find any system to define atomic_int macros, library will NOT be thread-safe")
-#else
-#warning "Could not find any system to define atomic_int macros, library will NOT be thread-safe"
-#endif
+#define HB_ATOMIC_INT_NIL 1
 
 typedef volatile int hb_atomic_int_t;
 #define hb_atomic_int_add(AI, V)	((AI) += (V), (AI) - (V))
 #define hb_atomic_int_get(AI)		(AI)
-#define hb_atomic_int_set(AI, V)	((void) ((AI) = (V)))
-
 
 #endif
 
@@ -103,10 +99,10 @@ typedef struct {
   inline void init (int v) { ref_count = v; /* non-atomic is fine */ }
   inline int inc (void) { return hb_atomic_int_add (ref_count,  1); }
   inline int dec (void) { return hb_atomic_int_add (ref_count, -1); }
-  inline void set (int v) { hb_atomic_int_set (ref_count, v); }
 
-  inline int get (void) const { return hb_atomic_int_get (ref_count); }
-  inline bool is_invalid (void) const { return get () == HB_REFERENCE_COUNT_INVALID_VALUE; }
+  inline int get (void) { return hb_atomic_int_get (ref_count); }
+  inline int get_unsafe (void) const { return ref_count; }
+  inline bool is_invalid (void) const { return ref_count == HB_REFERENCE_COUNT_INVALID_VALUE; }
 
 } hb_reference_count_t;
 
@@ -202,7 +198,7 @@ struct _hb_object_header_t {
   inline void trace (const char *function) const {
     DEBUG_MSG (OBJECT, (void *) this,
 	       "refcount=%d %s",
-	       this ? ref_count.get () : 0,
+	       this ? ref_count.get_unsafe () : 0,
 	       function);
   }
 

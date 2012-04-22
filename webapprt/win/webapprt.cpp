@@ -27,6 +27,7 @@ XRE_mainType XRE_main;
 namespace {
   const char kAPP_INI[] = "application.ini";
   const char kWEBAPP_INI[] = "webapp.ini";
+  const char kWEBAPPRT_INI[] = "webapprt.ini";
   const char kWEBAPPRT_PATH[] = "webapprt";
   const char kAPP_ENV_PREFIX[] = "XUL_APP_FILE=";
   const char kAPP_RT[] = "webapprt-stub.exe";
@@ -269,7 +270,7 @@ namespace {
 
       // Get the path to the runtime's INI file.
       char rtIniPath[MAXPATHLEN];
-      rv = joinPath(rtIniPath, rtPath, kAPP_INI, MAXPATHLEN);
+      rv = joinPath(rtIniPath, rtPath, kWEBAPPRT_INI, MAXPATHLEN);
       NS_ENSURE_SUCCESS(rv, false);
 
       // Load the runtime's INI from its path.

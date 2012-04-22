@@ -632,7 +632,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/webapp-uninstaller@BIN_SUFFIX@
 #endif
 @BINPATH@/webapprt-stub@BIN_SUFFIX@
-@BINPATH@/webapprt/application.ini
+@BINPATH@/webapprt/webapprt.ini
 @BINPATH@/webapprt/chrome.manifest
 @BINPATH@/webapprt/chrome/webapprt@JAREXT@
 @BINPATH@/webapprt/chrome/webapprt.manifest

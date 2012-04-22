@@ -280,7 +280,7 @@ public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
     public interface Listener {
         void renderRequested();
         void compositionPauseRequested();
-        void compositionResumeRequested();
+        void compositionResumeRequested(int width, int height);
         void surfaceChanged(int width, int height);
     }
 

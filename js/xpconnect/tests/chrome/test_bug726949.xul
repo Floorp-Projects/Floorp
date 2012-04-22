@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=726949
+-->
+<window title="Mozilla Bug 726949"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=726949"
+     target="_blank">Mozilla Bug 726949</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 726949 **/
+      var Cu = Components.utils;
+      var s = new Cu.Sandbox(window, { sandboxPrototype: window } );
+      var t;
+      var desc;
+      try {
+          t = Cu.evalInSandbox('top', s);
+          is(t, window.top, "Should have gotten the right thing back");
+          desc = Cu.evalInSandbox('Object.getOwnPropertyDescriptor(Object.getPrototypeOf(this), "Cu")', s);
+          isnot(desc, undefined,
+		"Should have an own 'Cu' property");
+	  is(desc.value, Cu, "Should have the right value");
+      } catch (e) {
+          ok(false, "Should not get an exception: " + e);
+      }
+  ]]>
+  </script>
+</window>

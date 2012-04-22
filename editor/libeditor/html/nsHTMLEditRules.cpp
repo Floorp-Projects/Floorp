@@ -7683,7 +7683,17 @@ nsHTMLEditRules::CheckInterlinePosition(nsISelection *aSelection)
   PRInt32 selOffset;
   res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
   NS_ENSURE_SUCCESS(res, res);
-  
+
+  // First, let's check to see if we are after a <br>.  We take care of this
+  // special-case first so that we don't accidentally fall through into one
+  // of the other conditionals.
+  mHTMLEditor->GetPriorHTMLNode(selNode, selOffset, address_of(node), true);
+  if (node && nsTextEditUtils::IsBreak(node))
+  {
+    selPriv->SetInterlinePosition(true);
+    return NS_OK;
+  }
+
   // are we after a block?  If so try set caret to following content
   mHTMLEditor->GetPriorHTMLSibling(selNode, selOffset, address_of(node));
   if (node && IsBlockNode(node))
@@ -7695,15 +7705,7 @@ nsHTMLEditRules::CheckInterlinePosition(nsISelection *aSelection)
   // are we before a block?  If so try set caret to prior content
   mHTMLEditor->GetNextHTMLSibling(selNode, selOffset, address_of(node));
   if (node && IsBlockNode(node))
-  {
     selPriv->SetInterlinePosition(false);
-    return NS_OK;
-  }
-  
-  // are we after a <br>?  If so we want to stick to whatever is after <br>.
-  mHTMLEditor->GetPriorHTMLNode(selNode, selOffset, address_of(node), true);
-  if (node && nsTextEditUtils::IsBreak(node))
-      selPriv->SetInterlinePosition(true);
   return NS_OK;
 }
 

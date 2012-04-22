@@ -67,6 +67,28 @@ struct hb_apply_context_t
   unsigned int lookup_props;
   unsigned int property; /* propety of first glyph */
 
+
+  hb_apply_context_t (hb_font_t *font_,
+		      hb_face_t *face_,
+		      hb_buffer_t *buffer_,
+		      hb_mask_t lookup_mask_,
+		      const Lookup &l,
+		      unsigned int context_length_ = NO_CONTEXT,
+		      unsigned int nesting_level_left_ = MAX_NESTING_LEVEL) :
+			font (font_), face (face_), buffer (buffer_),
+			direction (buffer_->props.direction),
+			lookup_mask (lookup_mask_),
+			context_length (context_length_),
+			nesting_level_left (nesting_level_left_),
+			lookup_props (l.get_props ()),
+			property (0) {}
+
+  hb_apply_context_t (const hb_apply_context_t &c, const Lookup &l) {
+    *this = c;
+    nesting_level_left--;
+    lookup_props = l.get_props ();
+  }
+
   struct mark_skipping_forward_iterator_t
   {
     inline mark_skipping_forward_iterator_t (hb_apply_context_t *c_,

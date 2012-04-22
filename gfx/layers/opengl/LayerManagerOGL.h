@@ -90,7 +90,8 @@ class THEBES_API LayerManagerOGL :
   typedef mozilla::gl::ShaderProgramType ProgramType;
 
 public:
-  LayerManagerOGL(nsIWidget *aWidget);
+  LayerManagerOGL(nsIWidget *aWidget, int aSurfaceWidth = -1, int aSurfaceHeight = -1,
+                  bool aIsRenderingToEGLSurface = false);
   virtual ~LayerManagerOGL();
 
   void CleanupResources();
@@ -392,10 +393,18 @@ public:
   gfxMatrix& GetWorldTransform(void);
   void WorldTransformRect(nsIntRect& aRect);
 
+  /**
+   * Set the size of the surface we're rendering to.
+   */
+  void SetSurfaceSize(int width, int height);
+
 private:
   /** Widget associated with this layer manager */
   nsIWidget *mWidget;
   nsIntSize mWidgetSize;
+
+  /** The size of the surface we are rendering to */
+  nsIntSize mSurfaceSize;
 
   /** 
    * Context target, NULL when drawing directly to our swap chain.
@@ -429,6 +438,13 @@ private:
 
   /** Misc */
   bool mHasBGRA;
+
+  /**
+   * When rendering to an EGL surface (e.g. on Android), we rely on being told
+   * about size changes (via SetSurfaceSize) rather than pulling this information
+   * from the widget, since the widget's information can lag behind.
+   */
+  bool mIsRenderingToEGLSurface;
 
   /** Current root layer. */
   LayerOGL *RootLayer() const;

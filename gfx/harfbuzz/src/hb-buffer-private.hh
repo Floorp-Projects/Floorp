@@ -131,6 +131,11 @@ struct _hb_buffer_t {
 			      unsigned int cluster_start,
 			      unsigned int cluster_end);
 
+  HB_INTERNAL void merge_clusters (unsigned int start,
+				   unsigned int end);
+  HB_INTERNAL void merge_out_clusters (unsigned int start,
+				       unsigned int end);
+
   /* Internal methods */
   HB_INTERNAL bool enlarge (unsigned int size);
 

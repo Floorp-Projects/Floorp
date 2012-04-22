@@ -89,6 +89,7 @@ CPPSRCS = \
   testSetProperty.cpp \
   testStringBuffer.cpp \
   testTrap.cpp \
+  testTypedArrays.cpp \
   testUTF8.cpp \
   testValueABI.cpp \
   testVersion.cpp \

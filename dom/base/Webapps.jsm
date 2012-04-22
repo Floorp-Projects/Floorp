@@ -47,16 +47,14 @@ let DOMApplicationRegistry = {
 
     Services.obs.addObserver(this, "xpcom-shutdown", false);
 
-    let appsDir = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], true, true);
     this.appsFile = FileUtils.getFile(DIRECTORY_NAME, ["webapps", "webapps.json"], true);
 
-    if (!this.appsFile.exists())
-      return;
-
-    this._loadJSONAsync(this.appsFile, (function(aData) { this.webapps = aData; }).bind(this));
+    if (this.appsFile.exists()) {
+      this._loadJSONAsync(this.appsFile, (function(aData) { this.webapps = aData; }).bind(this));
+    }
 
     try {
-      let hosts = Services.prefs.getCharPref("dom.mozApps.whitelist")
+      let hosts = Services.prefs.getCharPref("dom.mozApps.whitelist");
       hosts.split(",").forEach(function(aHost) {
         Services.perms.add(Services.io.newURI(aHost, null, null), "webapps-manage",
                            Ci.nsIPermissionManager.ALLOW_ACTION);

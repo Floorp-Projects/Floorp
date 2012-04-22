@@ -59,7 +59,7 @@ class nsString;
  * http://dev.w3.org/html5/websockets/
  *
  */
-[scriptable, uuid(f463b9b5-1408-4057-9224-e4f5bc33f17b)]
+[scriptable, uuid(e59c8c65-df29-485c-a00b-8fac3dc1573a)]
 interface nsIWebSocket : nsISupports
 {
   readonly attribute DOMString url;
@@ -93,7 +93,7 @@ interface nsIWebSocket : nsISupports
    * @return if the connection is still established and the data was queued or
    *         sent successfully.
    */
-  void send(in nsIVariant data);
+  [implicit_jscontext] void send(in nsIVariant data);
 
   /**
    * Closes the Web Socket connection or connection attempt, if any.

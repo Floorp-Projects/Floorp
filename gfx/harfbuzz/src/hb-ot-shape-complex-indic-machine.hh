@@ -1,5 +1,5 @@
 
-#line 1 "hb-ot-shape-complex-indic-machine.rl"
+#line 1 "../../src/hb-ot-shape-complex-indic-machine.rl"
 /*
  * Copyright © 2011  Google, Inc.
  *
@@ -34,9 +34,9 @@
 HB_BEGIN_DECLS
 
 
-#line 38 "hb-ot-shape-complex-indic-machine.hh"
+#line 38 "hb-ot-shape-complex-indic-machine.hh.tmp"
 static const unsigned char _indic_syllable_machine_trans_keys[] = {
-	0u, 0u, 5u, 5u, 1u, 2u, 1u, 2u, 5u, 5u, 1u, 5u, 5u, 5u, 1u, 2u, 
+	0u, 0u, 1u, 2u, 1u, 2u, 5u, 5u, 5u, 5u, 1u, 5u, 5u, 5u, 1u, 2u, 
 	0u, 12u, 0u, 12u, 0u, 12u, 0u, 12u, 0u, 12u, 0u, 12u, 0u, 12u, 0u, 12u, 
 	0u, 12u, 0u, 12u, 0u, 12u, 0u, 12u, 0u, 12u, 0u, 12u, 0u, 12u, 0u, 12u, 
 	0u, 12u, 0u, 12u, 0u, 12u, 0u, 12u, 0u, 12u, 0u, 12u, 0u, 12u, 0u, 12u, 
@@ -45,7 +45,7 @@ static const unsigned char _indic_syllable_machine_trans_keys[] = {
 };
 
 static const char _indic_syllable_machine_key_spans[] = {
-	0, 1, 2, 2, 1, 5, 1, 2, 
+	0, 2, 2, 1, 1, 5, 1, 2, 
 	13, 13, 13, 13, 13, 13, 13, 13, 
 	13, 13, 13, 13, 13, 13, 13, 13, 
 	13, 13, 13, 13, 13, 13, 13, 13, 
@@ -54,7 +54,7 @@ static const char _indic_syllable_machine_key_spans[] = {
 };
 
 static const short _indic_syllable_machine_index_offsets[] = {
-	0, 0, 2, 5, 8, 10, 16, 18, 
+	0, 0, 3, 6, 8, 10, 16, 18, 
 	21, 35, 49, 63, 77, 91, 105, 119, 
 	133, 147, 161, 175, 189, 203, 217, 231, 
 	245, 259, 273, 287, 301, 315, 329, 343, 
@@ -63,8 +63,8 @@ static const short _indic_syllable_machine_index_offsets[] = {
 };
 
 static const char _indic_syllable_machine_indicies[] = {
-	0, 1, 2, 2, 1, 3, 3, 
-	1, 4, 1, 2, 2, 1, 1, 0, 
+	0, 0, 1, 2, 2, 1, 3, 
+	1, 4, 1, 0, 0, 1, 1, 4, 
 	1, 5, 1, 6, 6, 1, 7, 6, 
 	8, 9, 1, 1, 1, 1, 1, 1, 
 	1, 1, 10, 1, 11, 12, 13, 14, 
@@ -73,28 +73,28 @@ static const char _indic_syllable_machine_indicies[] = {
 	22, 22, 23, 24, 25, 26, 27, 1, 
 	16, 17, 18, 19, 20, 28, 22, 22, 
 	23, 24, 25, 26, 27, 1, 29, 30, 
-	31, 32, 33, 1, 34, 35, 36, 37, 
+	31, 32, 33, 4, 34, 35, 36, 37, 
 	38, 1, 39, 1, 29, 30, 31, 32, 
-	1, 1, 34, 35, 36, 37, 38, 1, 
+	1, 4, 34, 35, 36, 37, 38, 1, 
 	39, 1, 29, 30, 31, 32, 1, 1, 
 	1, 1, 36, 37, 38, 1, 39, 1, 
-	29, 30, 31, 32, 40, 2, 1, 1, 
+	29, 30, 31, 32, 40, 0, 1, 1, 
 	36, 37, 38, 1, 39, 1, 29, 30, 
-	31, 32, 1, 2, 1, 1, 36, 37, 
+	31, 32, 1, 0, 1, 1, 36, 37, 
 	38, 1, 39, 1, 29, 30, 31, 32, 
 	1, 1, 1, 1, 1, 1, 38, 1, 
 	39, 1, 29, 30, 31, 32, 1, 1, 
 	1, 1, 1, 1, 41, 1, 39, 1, 
 	29, 30, 31, 32, 1, 1, 1, 1, 
 	1, 1, 1, 1, 39, 1, 42, 43, 
-	44, 45, 46, 4, 47, 47, 48, 49, 
+	44, 45, 46, 3, 47, 47, 48, 49, 
 	50, 1, 51, 1, 42, 43, 44, 45, 
-	1, 4, 47, 47, 48, 49, 50, 1, 
+	1, 3, 47, 47, 48, 49, 50, 1, 
 	51, 1, 42, 43, 44, 45, 1, 1, 
 	1, 1, 48, 49, 50, 1, 51, 1, 
-	42, 43, 44, 45, 52, 3, 1, 1, 
+	42, 43, 44, 45, 52, 2, 1, 1, 
 	48, 49, 50, 1, 51, 1, 42, 43, 
-	44, 45, 1, 3, 1, 1, 48, 49, 
+	44, 45, 1, 2, 1, 1, 48, 49, 
 	50, 1, 51, 1, 42, 43, 44, 45, 
 	1, 1, 1, 1, 1, 1, 50, 1, 
 	51, 1, 42, 43, 44, 45, 1, 1, 
@@ -127,12 +127,12 @@ static const char _indic_syllable_machine_indicies[] = {
 };
 
 static const char _indic_syllable_machine_trans_targs[] = {
-	2, 0, 14, 22, 3, 7, 10, 9, 
+	14, 0, 22, 2, 1, 7, 10, 9, 
 	11, 12, 20, 9, 10, 11, 12, 20, 
 	9, 10, 11, 12, 28, 29, 6, 34, 
 	31, 32, 37, 20, 40, 9, 10, 11, 
-	12, 13, 1, 5, 15, 17, 18, 20, 
-	16, 19, 9, 10, 11, 12, 21, 4, 
+	12, 13, 4, 5, 15, 17, 18, 20, 
+	16, 19, 9, 10, 11, 12, 21, 3, 
 	23, 25, 26, 20, 24, 27, 30, 33, 
 	35, 36, 38, 39
 };
@@ -164,25 +164,13 @@ static const int indic_syllable_machine_error = 0;
 static const int indic_syllable_machine_en_main = 8;
 
 
-#line 38 "hb-ot-shape-complex-indic-machine.rl"
+#line 38 "../../src/hb-ot-shape-complex-indic-machine.rl"
 
 
 
-#line 83 "hb-ot-shape-complex-indic-machine.rl"
+#line 83 "../../src/hb-ot-shape-complex-indic-machine.rl"
 
 
-
-static void
-set_cluster (hb_buffer_t *buffer,
-	     unsigned int start, unsigned int end)
-{
-  unsigned int cluster = buffer->info[start].cluster;
-
-  for (unsigned int i = start + 1; i < end; i++)
-    cluster = MIN (cluster, buffer->info[i].cluster);
-  for (unsigned int i = start; i < end; i++)
-    buffer->info[i].cluster = cluster;
-}
 
 static void
 find_syllables (const hb_ot_map_t *map, hb_buffer_t *buffer, hb_mask_t *mask_array)
@@ -190,12 +178,12 @@ find_syllables (const hb_ot_map_t *map, hb_buffer_t *buffer, hb_mask_t *mask_arr
   unsigned int p, pe, eof;
   int cs;
   
-#line 194 "hb-ot-shape-complex-indic-machine.hh"
+#line 182 "hb-ot-shape-complex-indic-machine.hh.tmp"
 	{
 	cs = indic_syllable_machine_start;
 	}
 
-#line 106 "hb-ot-shape-complex-indic-machine.rl"
+#line 94 "../../src/hb-ot-shape-complex-indic-machine.rl"
 
 
   p = 0;
@@ -203,7 +191,7 @@ find_syllables (const hb_ot_map_t *map, hb_buffer_t *buffer, hb_mask_t *mask_arr
 
   unsigned int last = 0;
   
-#line 207 "hb-ot-shape-complex-indic-machine.hh"
+#line 195 "hb-ot-shape-complex-indic-machine.hh.tmp"
 	{
 	int _slen;
 	int _trans;
@@ -229,30 +217,30 @@ _resume:
 
 	switch ( _indic_syllable_machine_trans_actions[_trans] ) {
 	case 2:
-#line 62 "hb-ot-shape-complex-indic-machine.rl"
+#line 62 "../../src/hb-ot-shape-complex-indic-machine.rl"
 	{ found_consonant_syllable (map, buffer, mask_array, last, p); }
-#line 67 "hb-ot-shape-complex-indic-machine.rl"
-	{ set_cluster (buffer, last, p); last = p; }
+#line 67 "../../src/hb-ot-shape-complex-indic-machine.rl"
+	{ buffer->merge_clusters (last, p); last = p; }
 	break;
 	case 3:
-#line 63 "hb-ot-shape-complex-indic-machine.rl"
+#line 63 "../../src/hb-ot-shape-complex-indic-machine.rl"
 	{ found_vowel_syllable (map, buffer, mask_array, last, p); }
-#line 67 "hb-ot-shape-complex-indic-machine.rl"
-	{ set_cluster (buffer, last, p); last = p; }
+#line 67 "../../src/hb-ot-shape-complex-indic-machine.rl"
+	{ buffer->merge_clusters (last, p); last = p; }
 	break;
 	case 4:
-#line 64 "hb-ot-shape-complex-indic-machine.rl"
+#line 64 "../../src/hb-ot-shape-complex-indic-machine.rl"
 	{ found_standalone_cluster (map, buffer, mask_array, last, p); }
-#line 67 "hb-ot-shape-complex-indic-machine.rl"
-	{ set_cluster (buffer, last, p); last = p; }
+#line 67 "../../src/hb-ot-shape-complex-indic-machine.rl"
+	{ buffer->merge_clusters (last, p); last = p; }
 	break;
 	case 1:
-#line 65 "hb-ot-shape-complex-indic-machine.rl"
+#line 65 "../../src/hb-ot-shape-complex-indic-machine.rl"
 	{ found_non_indic (map, buffer, mask_array, last, p); }
-#line 67 "hb-ot-shape-complex-indic-machine.rl"
-	{ set_cluster (buffer, last, p); last = p; }
+#line 67 "../../src/hb-ot-shape-complex-indic-machine.rl"
+	{ buffer->merge_clusters (last, p); last = p; }
 	break;
-#line 256 "hb-ot-shape-complex-indic-machine.hh"
+#line 244 "hb-ot-shape-complex-indic-machine.hh.tmp"
 	}
 
 _again:
@@ -265,37 +253,37 @@ _again:
 	{
 	switch ( _indic_syllable_machine_eof_actions[cs] ) {
 	case 2:
-#line 62 "hb-ot-shape-complex-indic-machine.rl"
+#line 62 "../../src/hb-ot-shape-complex-indic-machine.rl"
 	{ found_consonant_syllable (map, buffer, mask_array, last, p); }
-#line 67 "hb-ot-shape-complex-indic-machine.rl"
-	{ set_cluster (buffer, last, p); last = p; }
+#line 67 "../../src/hb-ot-shape-complex-indic-machine.rl"
+	{ buffer->merge_clusters (last, p); last = p; }
 	break;
 	case 3:
-#line 63 "hb-ot-shape-complex-indic-machine.rl"
+#line 63 "../../src/hb-ot-shape-complex-indic-machine.rl"
 	{ found_vowel_syllable (map, buffer, mask_array, last, p); }
-#line 67 "hb-ot-shape-complex-indic-machine.rl"
-	{ set_cluster (buffer, last, p); last = p; }
+#line 67 "../../src/hb-ot-shape-complex-indic-machine.rl"
+	{ buffer->merge_clusters (last, p); last = p; }
 	break;
 	case 4:
-#line 64 "hb-ot-shape-complex-indic-machine.rl"
+#line 64 "../../src/hb-ot-shape-complex-indic-machine.rl"
 	{ found_standalone_cluster (map, buffer, mask_array, last, p); }
-#line 67 "hb-ot-shape-complex-indic-machine.rl"
-	{ set_cluster (buffer, last, p); last = p; }
+#line 67 "../../src/hb-ot-shape-complex-indic-machine.rl"
+	{ buffer->merge_clusters (last, p); last = p; }
 	break;
 	case 1:
-#line 65 "hb-ot-shape-complex-indic-machine.rl"
+#line 65 "../../src/hb-ot-shape-complex-indic-machine.rl"
 	{ found_non_indic (map, buffer, mask_array, last, p); }
-#line 67 "hb-ot-shape-complex-indic-machine.rl"
-	{ set_cluster (buffer, last, p); last = p; }
+#line 67 "../../src/hb-ot-shape-complex-indic-machine.rl"
+	{ buffer->merge_clusters (last, p); last = p; }
 	break;
-#line 292 "hb-ot-shape-complex-indic-machine.hh"
+#line 280 "hb-ot-shape-complex-indic-machine.hh.tmp"
 	}
 	}
 
 	_out: {}
 	}
 
-#line 114 "hb-ot-shape-complex-indic-machine.rl"
+#line 102 "../../src/hb-ot-shape-complex-indic-machine.rl"
 
 }
 
