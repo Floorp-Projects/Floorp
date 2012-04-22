@@ -1,2 +1,0 @@
-component {00790a19-27e2-4d9a-bef0-244080feabfd} nsXULAppInstall.js
-contract @mozilla.org/xulrunner/app-install-service;1 {00790a19-27e2-4d9a-bef0-244080feabfd}
