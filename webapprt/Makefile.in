@@ -46,10 +46,10 @@ GRE_MILESTONE := $(shell tail -n 1 $(topsrcdir)/config/milestone.txt 2>/dev/null
 GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
 
-application.ini: application.ini.in $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
+webapprt.ini: application.ini.in $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
 
-libs:: application.ini
-	$(INSTALL) application.ini $(FINAL_TARGET)
+libs:: webapprt.ini
+	$(INSTALL) webapprt.ini $(FINAL_TARGET)
 
-GARBAGE += application.ini
+GARBAGE += webapprt.ini
