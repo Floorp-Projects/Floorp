@@ -596,5 +596,83 @@ UnlockScreenOrientation()
   PROXY_IF_SANDBOXED(UnlockScreenOrientation());
 }
 
+void
+EnableSwitchNotifications(hal::SwitchDevice aDevice) {
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(EnableSwitchNotifications(aDevice));
+}
+
+void
+DisableSwitchNotifications(hal::SwitchDevice aDevice) {
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(DisableSwitchNotifications(aDevice));
+}
+
+hal::SwitchState GetCurrentSwitchState(hal::SwitchDevice aDevice)
+{
+  AssertMainThread();
+  RETURN_PROXY_IF_SANDBOXED(GetCurrentSwitchState(aDevice));
+}
+
+typedef mozilla::ObserverList<SwitchEvent> SwitchObserverList;
+
+static SwitchObserverList *sSwitchObserverLists = NULL;
+
+static SwitchObserverList&
+GetSwitchObserverList(hal::SwitchDevice aDevice) {
+  MOZ_ASSERT(0 <= aDevice && aDevice < NUM_SWITCH_DEVICE); 
+  if (sSwitchObserverLists == NULL) {
+    sSwitchObserverLists = new SwitchObserverList[NUM_SWITCH_DEVICE];
+  }
+  return sSwitchObserverLists[aDevice];
+}
+
+static void
+ReleaseObserversIfNeeded() {
+  for (int i = 0; i < NUM_SWITCH_DEVICE; i++) {
+    if (sSwitchObserverLists[i].Length() != 0)
+      return;
+  }
+
+  //The length of every list is 0, no observer in the list.
+  delete [] sSwitchObserverLists;
+  sSwitchObserverLists = NULL;
+}
+
+void
+RegisterSwitchObserver(hal::SwitchDevice aDevice, hal::SwitchObserver *aObserver)
+{
+  AssertMainThread();
+  SwitchObserverList& observer = GetSwitchObserverList(aDevice);
+  observer.AddObserver(aObserver);
+  if (observer.Length() == 1) {
+    EnableSwitchNotifications(aDevice);
+  }
+}
+
+void
+UnregisterSwitchObserver(hal::SwitchDevice aDevice, hal::SwitchObserver *aObserver)
+{
+  AssertMainThread();
+  SwitchObserverList& observer = GetSwitchObserverList(aDevice);
+  observer.RemoveObserver(aObserver);
+  if (observer.Length() == 0) {
+    DisableSwitchNotifications(aDevice);
+    ReleaseObserversIfNeeded();
+  }
+}
+
+void
+NotifySwitchChange(const hal::SwitchEvent& aEvent)
+{
+  // When callback this notification, main thread may call unregister function
+  // first. We should check if this pointer is valid.
+  if (!sSwitchObserverLists)
+    return;
+
+  SwitchObserverList& observer = GetSwitchObserverList(aEvent.device());
+  observer.Broadcast(aEvent);
+}
+
 } // namespace hal
 } // namespace mozilla
