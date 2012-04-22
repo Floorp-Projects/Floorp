@@ -8,7 +8,6 @@ CONFIGURE_SUBST_FILES += ['installer/Makefile']
 
 PARALLEL_DIRS += [
     'app',
-    'setup',
     'stub',
     'examples',
 ]
