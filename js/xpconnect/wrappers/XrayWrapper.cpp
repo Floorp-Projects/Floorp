@@ -63,13 +63,6 @@ static const uint32_t JSSLOT_WN = 0;
 static const uint32_t JSSLOT_RESOLVING = 1;
 static const uint32_t JSSLOT_EXPANDO = 2;
 
-static JSBool
-holder_get(JSContext *cx, JSObject *holder, jsid id, jsval *vp);
-
-static JSBool
-holder_set(JSContext *cx, JSObject *holder, jsid id, JSBool strict, jsval *vp);
-
-
 static XPCWrappedNative *GetWrappedNative(JSObject *obj);
 
 namespace XrayUtils {
@@ -325,8 +318,14 @@ static inline JSObject *
 FindWrapper(JSObject *wrapper)
 {
     while (!js::IsWrapper(wrapper) ||
-           !(Wrapper::wrapperHandler(wrapper)->flags() & WrapperFactory::IS_XRAY_WRAPPER_FLAG)) {
-        wrapper = js::GetObjectProto(wrapper);
+           !(AbstractWrapper::wrapperHandler(wrapper)->flags() &
+             WrapperFactory::IS_XRAY_WRAPPER_FLAG)) {
+        if (js::IsWrapper(wrapper) &&
+            js::GetProxyHandler(wrapper) == &sandboxProxyHandler) {
+            wrapper = SandboxProxyHandler::wrappedObject(wrapper);
+        } else {
+            wrapper = js::GetObjectProto(wrapper);
+        }
         // NB: we must eventually hit our wrapper.
     }
 
@@ -368,7 +367,7 @@ XPCWrappedNativeXrayTraits::isResolving(JSContext *cx, JSObject *holder,
 // Some DOM objects have shared properties that don't have an explicit
 // getter/setter and rely on the class getter/setter. We install a
 // class getter/setter on the holder object to trigger them.
-static JSBool
+JSBool
 holder_get(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
 {
     wrapper = FindWrapper(wrapper);
@@ -392,7 +391,7 @@ holder_get(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
     return true;
 }
 
-static JSBool
+JSBool
 holder_set(JSContext *cx, JSObject *wrapper, jsid id, JSBool strict, jsval *vp)
 {
     wrapper = FindWrapper(wrapper);

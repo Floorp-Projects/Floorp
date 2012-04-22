@@ -40,10 +40,9 @@
 
 /* We need external help for these */
 
-#ifdef HAVE_GLIB
+#if !defined(HB_NO_MT) && defined(HAVE_GLIB)
 
 #include <glib.h>
-
 typedef GStaticMutex hb_mutex_impl_t;
 #define HB_MUTEX_IMPL_INIT	G_STATIC_MUTEX_INIT
 #define hb_mutex_impl_init(M)	g_static_mutex_init (M)
@@ -51,11 +50,9 @@ typedef GStaticMutex hb_mutex_impl_t;
 #define hb_mutex_impl_unlock(M)	g_static_mutex_unlock (M)
 #define hb_mutex_impl_free(M)	g_static_mutex_free (M)
 
-
-#elif defined(_MSC_VER) || defined(__MINGW32__)
+#elif !defined(HB_NO_MT) && defined(_MSC_VER) || defined(__MINGW32__)
 
 #include <windows.h>
-
 typedef CRITICAL_SECTION hb_mutex_impl_t;
 #define HB_MUTEX_IMPL_INIT	{ NULL, 0, 0, NULL, NULL, 0 }
 #define hb_mutex_impl_init(M)	InitializeCriticalSection (M)
@@ -63,18 +60,25 @@ typedef CRITICAL_SECTION hb_mutex_impl_t;
 #define hb_mutex_impl_unlock(M)	LeaveCriticalSection (M)
 #define hb_mutex_impl_free(M)	DeleteCriticalSection (M)
 
+#elif !defined(HB_NO_MT) && defined(__APPLE__)
+
+#include <pthread.h>
+typedef pthread_mutex_t hb_mutex_impl_t;
+#define HB_MUTEX_IMPL_INIT	PTHREAD_MUTEX_INITIALIZER
+#define hb_mutex_impl_init(M)	pthread_mutex_init (M, NULL)
+#define hb_mutex_impl_lock(M)	pthread_mutex_lock (M)
+#define hb_mutex_impl_unlock(M)	pthread_mutex_unlock (M)
+#define hb_mutex_impl_free(M)	pthread_mutex_destroy (M)
 
 #else
 
-#warning "Could not find any system to define platform macros, library will NOT be thread-safe"
-
+#define HB_MUTEX_IMPL_NIL 1
 typedef volatile int hb_mutex_impl_t;
 #define HB_MUTEX_IMPL_INIT	0
 #define hb_mutex_impl_init(M)	((void) (*(M) = 0))
 #define hb_mutex_impl_lock(M)	((void) (*(M) = 1))
 #define hb_mutex_impl_unlock(M)	((void) (*(M) = 0))
 #define hb_mutex_impl_free(M)	((void) (*(M) = 2))
-
 
 #endif
 

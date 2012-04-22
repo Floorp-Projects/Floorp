@@ -3181,7 +3181,8 @@ CopySlots(JSContext *cx, JSObject *from, JSObject *to)
 
     size_t n = 0;
     if (from->isWrapper() &&
-        (Wrapper::wrapperHandler(from)->flags() & Wrapper::CROSS_COMPARTMENT)) {
+        (Wrapper::wrapperHandler(from)->flags() &
+         Wrapper::CROSS_COMPARTMENT)) {
         to->setSlot(0, from->getSlot(0));
         to->setSlot(1, from->getSlot(1));
         n = 2;

@@ -77,7 +77,7 @@ function runInspectorTests()
   ok(!InspectorUI.toolbar.hidden, "toolbar is visible");
   ok(InspectorUI.inspecting, "Inspector is inspecting");
   ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
-  ok(!InspectorUI.isSidebarOpen, "Inspector Sidebar is not open");
+  ok(!InspectorUI.sidebar.visible, "Inspector sidebar should not visible.");
   ok(InspectorUI.highlighter, "Highlighter is up");
   InspectorUI.inspectNode(doc.body);
   InspectorUI.stopInspecting();
@@ -91,6 +91,10 @@ function treePanelTests()
     InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY);
   ok(InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is open");
 
+  InspectorUI.toggleSidebar();
+  ok(InspectorUI.sidebar.visible, "Inspector Sidebar should be open");
+  InspectorUI.toggleSidebar();
+  ok(!InspectorUI.sidebar.visible, "Inspector Sidebar should be closed");
   InspectorUI.sidebar.show();
   InspectorUI.currentInspector.once("sidebaractivated-computedview",
     stylePanelTests)

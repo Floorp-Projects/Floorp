@@ -678,7 +678,7 @@ struct SubstLookupSubTable
 {
   friend struct SubstLookup;
 
-  enum {
+  enum Type {
     Single		= 1,
     Multiple		= 2,
     Alternate		= 3,
@@ -754,22 +754,9 @@ struct SubstLookup : Lookup
   }
 
 
-  inline bool apply_once (hb_face_t *face,
-			  hb_buffer_t *buffer,
-			  hb_mask_t lookup_mask,
-			  unsigned int context_length,
-			  unsigned int nesting_level_left) const
+  inline bool apply_once (hb_apply_context_t *c) const
   {
     unsigned int lookup_type = get_type ();
-    hb_apply_context_t c[1] = {{0}};
-
-    c->face = face;
-    c->buffer = buffer;
-    c->direction = buffer->props.direction;
-    c->lookup_mask = lookup_mask;
-    c->context_length = context_length;
-    c->nesting_level_left = nesting_level_left;
-    c->lookup_props = get_props ();
 
     if (!_hb_ot_layout_check_glyph_property (c->face, &c->buffer->info[c->buffer->idx], c->lookup_props, &c->property))
       return false;
@@ -805,6 +792,8 @@ struct SubstLookup : Lookup
     if (unlikely (!buffer->len))
       return false;
 
+    hb_apply_context_t c (NULL, face, buffer, mask, *this);
+
     if (likely (!is_reverse ()))
     {
 	/* in/out forward substitution */
@@ -812,8 +801,7 @@ struct SubstLookup : Lookup
 	buffer->idx = 0;
 	while (buffer->idx < buffer->len)
 	{
-	  if ((buffer->info[buffer->idx].mask & mask) &&
-	      apply_once (face, buffer, mask, NO_CONTEXT, MAX_NESTING_LEVEL))
+	  if ((buffer->info[buffer->idx].mask & mask) && apply_once (&c))
 	    ret = true;
 	  else
 	    buffer->next_glyph ();
@@ -828,8 +816,7 @@ struct SubstLookup : Lookup
 	buffer->idx = buffer->len - 1;
 	do
 	{
-	  if ((buffer->info[buffer->idx].mask & mask) &&
-	      apply_once (face, buffer, mask, NO_CONTEXT, MAX_NESTING_LEVEL))
+	  if ((buffer->info[buffer->idx].mask & mask) && apply_once (&c))
 	    ret = true;
 	  else
 	    buffer->idx--;
@@ -936,7 +923,8 @@ static inline bool substitute_lookup (hb_apply_context_t *c, unsigned int lookup
   if (unlikely (c->context_length < 1))
     return false;
 
-  return l.apply_once (c->face, c->buffer, c->lookup_mask, c->context_length, c->nesting_level_left - 1);
+  hb_apply_context_t new_c (*c, l);
+  return l.apply_once (&new_c);
 }
 
 

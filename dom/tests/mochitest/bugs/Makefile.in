@@ -156,6 +156,7 @@ _TEST_FILES	= \
 		test_onerror_message.html \
 		test_bug735237.html \
 		test_bug739038.html \
+		test_bug740811.html \
 		$(NULL)
 
 libs:: 	$(_TEST_FILES)

@@ -94,7 +94,7 @@ enum gr_attrCode {
     /// bidi directionality of this glyph (not implemented)
     gr_slatDir,             
     /// Whether insertion is allowed before this glyph
-    gr_slatInsert,          
+    gr_slatInsert,
     /// Final positioned position of this glyph relative to its parent in x-direction in pixels
     gr_slatPosX,            
     /// Final positioned position of this glyph relative to its parent in y-direction in pixels
@@ -119,8 +119,10 @@ enum gr_attrCode {
     gr_slatJWeight,         
     /// Amount this slot mush shrink or stretch in design units
     gr_slatJWidth,          
+    /// SubSegment split point
+    gr_slatSegSplit = gr_slatJStretch + 29,
     /// User defined attribute, see subattr for user attr number
-    gr_slatUserDefn = gr_slatJStretch + 30,
+    gr_slatUserDefn,
                             
     /// not implemented
     gr_slatMax,             

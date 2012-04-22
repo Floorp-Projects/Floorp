@@ -102,9 +102,12 @@ extern bool stack_key_initialized;
 // In one sample measurement on Galaxy Nexus, out of about 700 backtraces,
 // 60 of them took more than 25ms, and the average and standard deviation
 // were 6.17ms and 9.71ms respectively.
-#define PROFILE_DEFAULT_INTERVAL 25
+
+// For now since we don't support stackwalking let's use 1ms since it's fast
+// enough.
+#define PROFILE_DEFAULT_INTERVAL 1
 #else
-#define PROFILE_DEFAULT_INTERVAL 10
+#define PROFILE_DEFAULT_INTERVAL 1
 #endif
 #define PROFILE_DEFAULT_FEATURES NULL
 #define PROFILE_DEFAULT_FEATURE_COUNT 0
