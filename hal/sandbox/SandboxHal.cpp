@@ -240,12 +240,33 @@ GetWakeLockInfo(const nsAString &aTopic, WakeLockInformation *aWakeLockInfo)
   Hal()->SendGetWakeLockInfo(nsString(aTopic), aWakeLockInfo);
 }
 
+void
+EnableSwitchNotifications(SwitchDevice aDevice)
+{
+  Hal()->SendEnableSwitchNotifications(aDevice);
+}
+
+void
+DisableSwitchNotifications(SwitchDevice aDevice)
+{
+  Hal()->SendDisableSwitchNotifications(aDevice);
+}
+
+SwitchState
+GetCurrentSwitchState(SwitchDevice aDevice)
+{
+  SwitchState state;
+  Hal()->SendGetCurrentSwitchState(aDevice, &state);
+  return state;
+}
+
 class HalParent : public PHalParent
                 , public BatteryObserver
                 , public NetworkObserver
                 , public ISensorObserver
                 , public WakeLockObserver
                 , public ScreenOrientationObserver
+                , public SwitchObserver
 {
 public:
   NS_OVERRIDE virtual bool
@@ -501,6 +522,32 @@ public:
   {
     unused << SendNotifyWakeLockChange(aWakeLockInfo);
   }
+
+  NS_OVERRIDE virtual bool
+  RecvEnableSwitchNotifications(const SwitchDevice& aDevice) 
+  {
+    hal::RegisterSwitchObserver(aDevice, this);
+    return true;
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvDisableSwitchNotifications(const SwitchDevice& aDevice) 
+  {
+    hal::UnregisterSwitchObserver(aDevice, this);
+    return true;
+  }
+
+  void Notify(const SwitchEvent& aSwitchEvent)
+  {
+    unused << SendNotifySwitchChange(aSwitchEvent);
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvGetCurrentSwitchState(const SwitchDevice& aDevice, hal::SwitchState *aState)
+  {
+    *aState = hal::GetCurrentSwitchState(aDevice);
+    return true;
+  }
 };
 
 class HalChild : public PHalChild {
@@ -529,6 +576,12 @@ public:
   NS_OVERRIDE virtual bool
   RecvNotifyScreenOrientationChange(const ScreenOrientation& aScreenOrientation) {
     hal::NotifyScreenOrientationChange(aScreenOrientation);
+    return true;
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvNotifySwitchChange(const mozilla::hal::SwitchEvent& aEvent) {
+    hal::NotifySwitchChange(aEvent);
     return true;
   }
 };
