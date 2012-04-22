@@ -109,7 +109,7 @@
 #include <algorithm>
 
 #include "jsapi.h"
-#include "jstypedarray.h"
+#include "jsfriendapi.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/ContentParent.h"
@@ -4103,8 +4103,7 @@ nsCanvasRenderingContext2DAzure::GetImageDataArray(JSContext* aCx,
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
-  JSObject* darray =
-    js_CreateTypedArray(aCx, js::TypedArray::TYPE_UINT8_CLAMPED, len.value());
+  JSObject* darray = JS_NewUint8ClampedArray(aCx, len.value());
   if (!darray) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -4114,7 +4113,7 @@ nsCanvasRenderingContext2DAzure::GetImageDataArray(JSContext* aCx,
     return NS_OK;
   }
 
-  uint8_t* data = static_cast<uint8_t*>(JS_GetTypedArrayData(darray));
+  uint8_t* data = JS_GetUint8ClampedArrayData(darray, aCx);
 
   IntRect srcRect(0, 0, mWidth, mHeight);
   IntRect destRect(aX, aY, aWidth, aHeight);

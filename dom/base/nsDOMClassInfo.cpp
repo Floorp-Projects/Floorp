@@ -3622,7 +3622,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_SVG_TEXT_CONTENT_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(SVGUnknownElement, nsIDOMSVGElement)
+  DOM_CLASSINFO_MAP_BEGIN(SVGUnknownElement, nsIDOMSVGElement)
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -6100,7 +6100,10 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
       return NS_ERROR_UNEXPECTED;
     }
 
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(val));
+    if (JSVAL_IS_PRIMITIVE(val)) {
+      return NS_OK;
+    }
+
     JSObject *dot_prototype = JSVAL_TO_OBJECT(val);
 
     JSObject *proto = JS_GetPrototype(dom_obj);

@@ -120,7 +120,6 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
-#include "gfxXlibNativeRenderer.h"
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -3041,8 +3040,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   Visual* visual = gdk_x11_visual_get_xvisual(gdkVisual);
   Screen* screen =
     gdk_x11_screen_get_xscreen(gdk_visual_get_screen(gdkVisual));
-#endif
-#ifdef MOZ_WIDGET_QT
+#else
   Display* dpy = mozilla::DefaultXDisplay();
   Screen* screen = DefaultScreenOfDisplay(dpy);
   Visual* visual = DefaultVisualOfScreen(screen);

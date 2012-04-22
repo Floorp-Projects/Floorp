@@ -109,6 +109,7 @@ public:
     , mContentSize(0, 0)
     , mViewportScrollOffset(0, 0)
     , mScrollId(NULL_SCROLL_ID)
+    , mCSSContentSize(0, 0)
   {}
 
   // Default copy ctor and operator= are fine
@@ -146,6 +147,10 @@ public:
   nsIntPoint mViewportScrollOffset;
   nsIntRect mDisplayPort;
   ViewID mScrollId;
+
+  // Consumers often want to know the size before scaling to pixels
+  // so we record this size as well.
+  gfx::Size mCSSContentSize;
 };
 
 #define MOZ_LAYER_DECL_NAME(n, e)                           \

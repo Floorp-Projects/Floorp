@@ -32,7 +32,7 @@
 const char WEBAPPRT_EXECUTABLE[] = "webapprt-stub";
 const char FXAPPINI_NAME[] = "application.ini";
 const char WEBAPPINI_NAME[] = "webapp.ini";
-const char WEBRTINI_NAME[] = "application.ini";
+const char WEBRTINI_NAME[] = "webapprt.ini";
 
 //need the correct relative path here
 const char APP_CONTENTS_PATH[] = "/Contents/MacOS/";

@@ -2686,28 +2686,9 @@ function SetPageProxyState(aState)
   if (aState == "valid") {
     gLastValidURLStr = gURLBar.value;
     gURLBar.addEventListener("input", UpdatePageProxyState, false);
-
-    PageProxySetIcon(gBrowser.getIcon());
   } else if (aState == "invalid") {
     gURLBar.removeEventListener("input", UpdatePageProxyState, false);
-    PageProxyClearIcon();
   }
-}
-
-function PageProxySetIcon (aURL)
-{
-  if (!gProxyFavIcon)
-    return;
-
-  if (!aURL)
-    PageProxyClearIcon();
-  else if (gProxyFavIcon.getAttribute("src") != aURL)
-    gProxyFavIcon.setAttribute("src", aURL);
-}
-
-function PageProxyClearIcon ()
-{
-  gProxyFavIcon.removeAttribute("src");
 }
 
 function PageProxyClickHandler(aEvent)
@@ -4627,11 +4608,6 @@ var XULBrowserWindow = {
       return originalTarget;
 
     return "_blank";
-  },
-
-  onLinkIconAvailable: function (aIconURL) {
-    if (gProxyFavIcon && gBrowser.userTypedValue === null)
-      PageProxySetIcon(aIconURL); // update the favicon in the URL bar
   },
 
   onProgressChange: function (aWebProgress, aRequest,
