@@ -287,6 +287,7 @@ namespace {
       NS_ENSURE_SUCCESS(rv, rv);
 
       SetAllocatedString(webShellAppData->profile, profile);
+      SetAllocatedString(webShellAppData->name, profile);
 
       nsCOMPtr<nsILocalFile> directory;
       rv = XRE_GetFileFromPath(rtPath, getter_AddRefs(directory));

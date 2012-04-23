@@ -44,9 +44,15 @@ namespace dom {
 
 enum StructuredCloneTags {
   SCTAG_BASE = JS_SCTAG_USER_MIN,
+
+  // These tags are used only for main thread structured clone.
   SCTAG_DOM_BLOB,
   SCTAG_DOM_FILE,
   SCTAG_DOM_FILELIST,
+
+  // These tags are used for both main thread and workers.
+  SCTAG_DOM_IMAGEDATA,
+
   SCTAG_DOM_MAX
 };
 
