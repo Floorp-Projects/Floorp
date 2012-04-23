@@ -831,8 +831,6 @@ PresShell::PresShell()
   mYResolution = 1.0;
   mViewportOverridden = false;
 
-  mScrollPositionClampingScrollPortSizeSet = false;
-
   static bool addedSynthMouseMove = false;
   if (!addedSynthMouseMove) {
     Preferences::AddBoolVarCache(&sSynthMouseMove,
@@ -9149,10 +9147,3 @@ PresShell::SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf) const
                                                 /* clear = */false);
 }
 
-void
-nsIPresShell::SetScrollPositionClampingScrollPortSize(nscoord aWidth, nscoord aHeight)
-{
-  mScrollPositionClampingScrollPortSizeSet = true;
-  mScrollPositionClampingScrollPortSize.width = aWidth;
-  mScrollPositionClampingScrollPortSize.height = aHeight;
-}
