@@ -1,4 +1,4 @@
-fuzzy-if(Android, 6, 8) == bdi-element.html bdi-element-ref.html
+fuzzy-if(Android,6,8) == bdi-element.html bdi-element-ref.html
 == bidi-000.html bidi-000-ref.html
 == bidi-001.html bidi-001-ref.html
 == bidi-001-j.html bidi-001-ref.html
