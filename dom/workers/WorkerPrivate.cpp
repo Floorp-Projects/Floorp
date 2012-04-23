@@ -466,12 +466,6 @@ struct MainThreadWorkerStructuredCloneCallbacks
       }
     }
 
-    JSObject* clone =
-      WorkerStructuredCloneCallbacks::Read(aCx, aReader, aTag, aData, aClosure);
-    if (clone) {
-      return clone;
-    }
-
     JS_ClearPendingException(aCx);
     return NS_DOMReadStructuredClone(aCx, aReader, aTag, aData, nsnull);
   }
@@ -525,12 +519,6 @@ struct MainThreadWorkerStructuredCloneCallbacks
           }
         }
       }
-    }
-
-    JSBool ok =
-      WorkerStructuredCloneCallbacks::Write(aCx, aWriter, aObj, aClosure);
-    if (ok) {
-      return ok;
     }
 
     JS_ClearPendingException(aCx);
