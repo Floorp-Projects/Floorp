@@ -11,10 +11,6 @@
   -  application menu item that opens the debugger UI. -->
 <!ENTITY debuggerMenu.label          "Script Debugger">
 
-<!-- LOCALIZATION NOTE (remoteDebuggerMenu.label): This is the label for the
-  -  application menu item that opens the remote debugger UI. -->
-<!ENTITY remoteDebuggerMenu.label    "Remote Debugger">
-
 <!-- LOCALIZATION NOTE (debuggerMenu.commandkey): This is the command key that
   -  launches the debugger UI. Do not translate this one! -->
 <!ENTITY debuggerMenu.commandkey     "S">
@@ -48,7 +44,3 @@
   -  widget that displays the variables in the various available scopes in the
   -  debugger. -->
 <!ENTITY debuggerUI.propertiesTitle  "Scope variables">
-
-<!-- LOCALIZATION NOTE (debuggerUI.emptyFilterText): This is the text that
-  -  appears in the filter text box when it is empty. -->
-<!ENTITY debuggerUI.emptyFilterText  "Filter scripts">
