@@ -3321,6 +3321,55 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Read TP-Data-Coding-Scheme(TP-DCS)
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.040 9.2.3.10, 3GPP TS 23.038 4.
+   */
+  readDataCodingScheme: function readDataCodingScheme(msg) {
+    let dcs = this.readHexOctet();
+
+    // 7 bit is the default fallback encoding.
+    let encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+    switch (dcs & 0xC0) {
+      case 0x0:
+        // bits 7..4 = 00xx
+        switch (dcs & 0x0C) {
+          case 0x4:
+            encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
+            break;
+          case 0x8:
+            encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
+            break;
+        }
+        break;
+      case 0xC0:
+        // bits 7..4 = 11xx
+        switch (dcs & 0x30) {
+          case 0x20:
+            encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
+            break;
+          case 0x30:
+            if (!dcs & 0x04) {
+              encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
+            }
+            break;
+        }
+        break;
+      default:
+        // Falling back to default encoding.
+        break;
+    }
+
+    msg.dcs = dcs;
+    msg.encoding = encoding;
+
+    if (DEBUG) debug("PDU: message encoding is " + encoding + " bit.");
+  },
+
+  /**
    * Read GSM TP-Service-Centre-Time-Stamp(TP-SCTS).
    *
    * @see 3GPP TS 23.040 9.2.3.11
@@ -3357,50 +3406,15 @@ let GsmPDUHelper = {
    *        length of user data to read in octets.
    */
   readUserData: function readUserData(msg, length) {
-    let dcs = msg.dcs;
     if (DEBUG) {
       debug("Reading " + length + " bytes of user data.");
-      debug("Coding scheme: " + dcs);
     }
-    // 7 bit is the default fallback encoding.
-    let encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
-    switch (dcs & 0xC0) {
-      case 0x0:
-        // bits 7..4 = 00xx
-        switch (dcs & 0x0C) {
-          case 0x4:
-            encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
-            break;
-          case 0x8:
-            encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
-            break;
-        }
-        break;
-      case 0xC0:
-        // bits 7..4 = 11xx
-        switch (dcs & 0x30) {
-          case 0x20:
-            encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
-            break;
-          case 0x30:
-            if (!dcs & 0x04) {
-              encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
-            }
-            break;
-        }
-        break;
-      default:
-        // Falling back to default encoding.
-        break;
-    }
-
-    if (DEBUG) debug("PDU: message encoding is " + encoding + " bit.");
 
     let paddingBits = 0;
     if (msg.udhi) {
       msg.header = this.readUserDataHeader();
 
-      if (encoding == PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
+      if (msg.encoding == PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
         let headerBits = (msg.header.length + 1) * 8;
         let headerSeptets = Math.ceil(headerBits / 7);
 
@@ -3412,7 +3426,7 @@ let GsmPDUHelper = {
     }
 
     msg.body = null;
-    switch (encoding) {
+    switch (msg.encoding) {
       case PDU_DCS_MSG_CODING_7BITS_ALPHABET:
         // 7 bit encoding allows 140 octets, which means 160 characters
         // ((140x8) / 7 = 160 chars)
@@ -3463,6 +3477,7 @@ let GsmPDUHelper = {
     // the receiving entity shall for TP-DCS assume a value of 0x00, i.e. the
     // 7bit default alphabet.` ~ 3GPP 23.040 9.2.3.27
     msg.dcs = 0;
+    msg.encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
 
     // TP-Protocol-Identifier
     if (pi & PDU_PI_PROTOCOL_IDENTIFIER) {
@@ -3470,7 +3485,7 @@ let GsmPDUHelper = {
     }
     // TP-Data-Coding-Scheme
     if (pi & PDU_PI_DATA_CODING_SCHEME) {
-      msg.dcs = this.readHexOctet();
+      this.readDataCodingScheme(msg);
     }
     // TP-User-Data-Length
     if (pi & PDU_PI_USER_DATA_LENGTH) {
@@ -3500,6 +3515,7 @@ let GsmPDUHelper = {
       pid:       null, // M  O  M  O  O  M
       epid:      null, // M  O  M  O  O  M
       dcs:       null, // M  O  M  O  O  X
+      encoding:  null, // M  O  M  O  O  X
       body:      null, // M  O  M  O  O  O
       timestamp: null, // M  X  X  X  X  X
       status:    null, // X  X  X  X  M  X
@@ -3552,7 +3568,7 @@ let GsmPDUHelper = {
     // - TP-Protocolo-Identifier -
     this.readProtocolIndicator(msg);
     // - TP-Data-Coding-Scheme -
-    msg.dcs = this.readHexOctet();
+    this.readDataCodingScheme(msg);
     // - TP-Service-Center-Time-Stamp -
     msg.timestamp = this.readTimestamp();
     // - TP-User-Data-Length -
