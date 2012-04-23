@@ -5184,16 +5184,10 @@ JS_PUBLIC_API(JSBool)
 JS_ReadBytes(JSStructuredCloneReader *r, void *p, size_t len);
 
 JS_PUBLIC_API(JSBool)
-JS_ReadTypedArray(JSStructuredCloneReader *r, jsval *vp);
-
-JS_PUBLIC_API(JSBool)
 JS_WriteUint32Pair(JSStructuredCloneWriter *w, uint32_t tag, uint32_t data);
 
 JS_PUBLIC_API(JSBool)
 JS_WriteBytes(JSStructuredCloneWriter *w, const void *p, size_t len);
-
-JS_PUBLIC_API(JSBool)
-JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v);
 
 /************************************************************************/
 
