@@ -1025,7 +1025,6 @@ toolbar[mode="icons"] #zoom-in-button {
 }
 
 #identity-box.verifiedIdentity {
-  background-color: #fff;
   color: hsl(92,100%,20%);
   -moz-border-end: 1px solid hsla(92,81%,16%,.2);
   -moz-padding-end: 4px;
