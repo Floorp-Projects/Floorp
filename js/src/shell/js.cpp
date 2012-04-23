@@ -4973,7 +4973,9 @@ main(int argc, char **argv, char **envp)
     if (!op.addMultiStringOption('f', "file", "PATH", "File path to run")
         || !op.addMultiStringOption('e', "execute", "CODE", "Inline code to run")
         || !op.addBoolOption('i', "shell", "Enter prompt after running code")
+        || !op.addBoolOption('m', "jm", "Enable the JaegerMonkey method JIT (default)")
         || !op.addBoolOption('\0', "no-jm", "Disable the JaegerMonkey method JIT")
+        || !op.addBoolOption('n', "ti", "Enable type inference (default)")
         || !op.addBoolOption('\0', "no-ti", "Disable type inference")
         || !op.addBoolOption('c', "compileonly", "Only compile, don't run (syntax checking mode)")
         || !op.addBoolOption('d', "debugjit", "Enable runtime debug mode for method JIT code")
@@ -4998,6 +5000,7 @@ main(int argc, char **argv, char **envp)
         || !op.addOptionalMultiStringArg("scriptArgs",
                                          "String arguments to bind as |arguments| in the "
                                          "shell's global")
+        || !op.addBoolOption('\0', "ion", "Enable IonMonkey (default)")
         || !op.addBoolOption('\0', "no-ion", "Disable IonMonkey")
         || !op.addStringOption('\0', "ion-gvn", "[mode]",
                                "Specify Ion global value numbering:\n"
