@@ -173,6 +173,7 @@ function RadioInterfaceLayer() {
   Services.obs.addObserver(this, "xpcom-shutdown", false);
 
   this._sentSmsEnvelopes = {};
+  this.portAddressedSmsApps = {};
 }
 RadioInterfaceLayer.prototype = {
 
@@ -460,8 +461,20 @@ RadioInterfaceLayer.prototype = {
     }
   },
 
+  portAddressedSmsApps: null,
   handleSmsReceived: function handleSmsReceived(message) {
     debug("handleSmsReceived: " + JSON.stringify(message));
+
+    // Dispatch to registered handler if application port addressing is
+    // available. Note that the destination port can possibly be zero when
+    // representing a UDP/TCP port.
+    if (message.header.destinationPort != null) {
+      let handler = this.portAddressedSmsApps[message.header.destinationPort];
+      if (handler) {
+        handler(message);
+      }
+      return;
+    }
 
     if (message.encoding == RIL.PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
       // Don't know how to handle binary data yet.

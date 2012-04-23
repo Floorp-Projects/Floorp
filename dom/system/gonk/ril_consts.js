@@ -658,6 +658,10 @@ const PDU_IEI_ENHANCED_VOICE_MAIL_INFORMATION          = 0x23;
 const PDU_IEI_NATIONAL_LANGUAGE_SINGLE_SHIFT           = 0x24;
 const PDU_IEI_NATIONAL_LANGUAGE_LOCKING_SHIFT          = 0x25;
 
+// Application Port Addressing, see 3GPP TS 23.040 9.2.3.24.3
+const PDU_APA_RESERVED_8BIT_PORTS = 240;
+const PDU_APA_VALID_16BIT_PORTS   = 49152;
+
 // 7bit alphabet escape character. The encoded value of this code point is left
 // undefined in official spec. Its code value is internally assigned to \uffff,
 // <noncharacter-FFFF> in Unicode basic multilingual plane.
