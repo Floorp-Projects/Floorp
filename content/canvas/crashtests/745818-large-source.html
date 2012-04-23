@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var a = document.getElementById("a");
+  var b = document.getElementById("b");
+  a.getContext('2d').createPattern(b, 'no-repeat');
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<canvas id="a" width="61" height="26"></canvas>
+<canvas id="b" width="611" height="439807"></canvas>
+</body>
+
+</html>
