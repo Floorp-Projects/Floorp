@@ -54,9 +54,14 @@
 #       - BidiMirroring.txt
 #       - HangulSyllableType.txt
 #       - ReadMe.txt (to record version/date of the UCD)
+#       - Unihan_Variants.txt (from Unihan.zip)
 #     though this may change if we find a need for additional properties.
 #
-#     The Unicode data files should be together in a single directory.
+#     The Unicode data files listed above should be together in one directory.
+#     We also require the file 
+#        http://www.unicode.org/Public/security/latest/xidmodifications.txt
+#     This file should be in a sub-directory "security" immediately below the
+#        directory containing the other Unicode data files.
 #
 # (2) Run this tool using a command line of the form
 #
@@ -74,6 +79,7 @@
 #     in the current directory.
 
 use strict;
+use List::Util qw(first);
 
 if ($#ARGV != 1) {
     print <<__EOT;
@@ -251,6 +257,41 @@ while (<FH>) {
 }
 close FH;
 
+my %xidmodCode = (
+'inclusion'         => 0,
+'recommended'       => 1,
+'default-ignorable' => 2,
+'historic'          => 3,
+'limited-use'       => 4,
+'not-NFKC'          => 5,
+'not-xid'           => 6,
+'obsolete'          => 7,
+'technical'         => 8,
+'not-chars'         => 9
+);
+
+my %bidicategoryCode = (
+  "L"   =>  "0", # Left-to-Right
+  "R"   =>  "1", # Right-to-Left
+  "EN"  =>  "2", # European Number
+  "ES"  =>  "3", # European Number Separator
+  "ET"  =>  "4", # European Number Terminator
+  "AN"  =>  "5", # Arabic Number
+  "CS"  =>  "6", # Common Number Separator
+  "B"   =>  "7", # Paragraph Separator
+  "S"   =>  "8", # Segment Separator
+  "WS"  =>  "9", # Whitespace
+  "ON"  => "10", # Other Neutrals
+  "LRE" => "11", # Left-to-Right Embedding
+  "LRO" => "12", # Left-to-Right Override
+  "AL"  => "13", # Right-to-Left Arabic
+  "RLE" => "14", # Right-to-Left Embedding
+  "RLO" => "15", # Right-to-Left Override
+  "PDF" => "16", # Pop Directional Format
+  "NSM" => "17", # Non-Spacing Mark
+  "BN"  => "18"  # Boundary Neutral
+);
+
 # initialize default properties
 my @script;
 my @category;
@@ -259,11 +300,27 @@ my @eaw;
 my @mirror;
 my @hangul;
 my @casemap;
+my @xidmod;
+my @numericvalue;
+my @hanVariant;
+my @bidicategory;
 for (my $i = 0; $i < 0x110000; ++$i) {
     $script[$i] = $scriptCode{"UNKNOWN"};
     $category[$i] = $catCode{"UNASSIGNED"};
     $combining[$i] = 0;
     $casemap[$i] = 0;
+    $xidmod[$i] = $xidmodCode{"not-chars"};
+    $numericvalue[$i] = -1;
+    $hanVariant[$i] = 0;
+    $bidicategory[$i] = $bidicategoryCode{"L"};
+}
+
+# blocks where the default for bidi category is not L
+for my $i (0x0600..0x07BF, 0x08A0..0x08FF, 0xFB50..0xFDCF, 0xFDF0..0xFDFF, 0xFE70..0xFEFF, 0x1EE00..0x0001EEFF) {
+  $bidicategory[$i] = $bidicategoryCode{"AL"};
+}
+for my $i (0x0590..0x05FF, 0x07C0..0x089F, 0xFB1D..0xFB4F, 0x00010800..0x00010FFF, 0x0001E800..0x0001EDFF, 0x0001EF00..0x0001EFFF) {
+  $bidicategory[$i] = $bidicategoryCode{"R"};
 }
 
 my %ucd2hb = (
@@ -328,6 +385,13 @@ while (<FH>) {
             do {
                 $category[$first] = $catCode{$ucd2hb{$fields[2]}};
                 $combining[$first] = $fields[3];
+                $bidicategory[$first] = $bidicategoryCode{$fields[4]};
+                unless (length($fields[7]) == 0) {
+                  $numericvalue[$first] = $fields[7];
+                }
+                if ($fields[1] =~ /CJK/) {
+                  @hanVariant[$first] = 3;
+                }
                 $first++;
             } while ($first <= $last);
         } else {
@@ -357,6 +421,13 @@ while (<FH>) {
         elsif ($upper) {
             $casemap[$usv] |= $kLowerToUpper;
             $casemap[$usv] |= ($usv ^ $upper);
+        }
+        $bidicategory[$usv] = $bidicategoryCode{$fields[4]};
+        unless (length($fields[7]) == 0) {
+          $numericvalue[$usv] = $fields[7];
+        }
+        if ($fields[1] =~ /CJK/) {
+          @hanVariant[$usv] = 3;
         }
     }
 }
@@ -416,8 +487,9 @@ while (<FH>) {
 close FH;
 
 # read BidiMirroring.txt
-my @distantMirrors = ();
-my $smallMirrorOffset = 64;
+my @offsets = ();
+push @offsets, 0;
+
 open FH, "< $ARGV[1]/BidiMirroring.txt" or die "can't open UCD file BidiMirroring.txt\n";
 push @versionInfo, "";
 while (<FH>) {
@@ -429,13 +501,13 @@ while (<FH>) {
     s/#.*//;
     if (m/([0-9A-F]{4,6});\s*([0-9A-F]{4,6})/) {
         my $mirrorOffset = hex("0x$2") - hex("0x$1");
-        if ($mirrorOffset < $smallMirrorOffset && $mirrorOffset >= -128) {
-            $mirror[hex "0x$1"] = $mirrorOffset;
-        } else {
-            die "too many distant mirror codes\n" if scalar @distantMirrors == 128 - $smallMirrorOffset;
-            $mirror[hex "0x$1"] = $smallMirrorOffset + scalar @distantMirrors;
-            push @distantMirrors, hex("0x$2");
+	my $offsetIndex = first { $offsets[$_] eq $mirrorOffset } 0..$#offsets;
+	if ($offsetIndex == undef) {
+            die "too many offset codes\n" if scalar @offsets == 31;
+            push @offsets, $mirrorOffset;
+	    $offsetIndex = $#offsets;
         }
+	$mirror[hex "0x$1"] = $offsetIndex;
     }
 }
 close FH;
@@ -467,6 +539,66 @@ while (<FH>) {
             $hangul[$i] = $hangul;
         }
     }
+}
+close FH;
+
+# read xidmodifications.txt
+open FH, "< $ARGV[1]/security/xidmodifications.txt" or die "can't open UCD file xidmodifications.txt\n";
+push @versionInfo, "";
+while (<FH>) {
+  chomp;
+  unless (/\xef\xbb\xbf/) {
+    push @versionInfo, $_;
+  }
+  last if /Generated:/;
+}
+while (<FH>) {
+  if (m/([0-9A-F]{4,6})(?:\.\.([0-9A-F]{4,6}))*\s+;\s+[^ ]+\s+;\s+([^ ]+)/) {
+    my $xidmod = $3;
+    warn "unknown Identifier Modification $xidmod" unless exists $xidmodCode{$xidmod};
+    $xidmod = $xidmodCode{$xidmod};
+    my $start = hex "0x$1";
+    my $end = (defined $2) ? hex "0x$2" : $start;
+    for (my $i = $start; $i <= $end; ++$i) {
+      $xidmod[$i] = $xidmod;
+    }
+  }
+}
+close FH;
+
+open FH, "< $ARGV[1]/Unihan_Variants.txt" or die "can't open UCD file Unihan_Variants.txt (from Unihan.zip)\n";
+push @versionInfo, "";
+while (<FH>) {
+  chomp;
+  push @versionInfo, $_;
+  last if /Date:/;
+}
+my $savedusv = 0;
+my $hasTC = 0;
+my $hasSC = 0;
+while (<FH>) {
+  chomp;
+  if (m/U\+([0-9A-F]{4,6})\s+k([^ ]+)Variant/) {
+    my $usv = hex "0x$1";
+    if ($usv != $savedusv) {
+      unless ($savedusv == 0) {
+        if ($hasTC && !$hasSC) {
+          $hanVariant[$savedusv] = 1;
+        } elsif (!$hasTC && $hasSC) {
+          $hanVariant[$savedusv] = 2;
+        }
+      }
+      $savedusv = $usv;
+      $hasTC = 0;
+      $hasSC = 0;
+    }
+    if ($2 eq "Traditional") {
+      $hasTC = 1;
+    }
+    if ($2 eq "Simplified") {
+      $hasSC = 1;
+    }
+  } 
 }
 close FH;
 
@@ -532,8 +664,26 @@ $versionInfo
  */
 
 #include "mozilla/StandardInteger.h"
-#include "harfbuzz/hb-common.h"
+#include "harfbuzz/hb.h"
 
+__END
+
+open HEADER, "> nsUnicodeScriptCodes.h" or die "unable to open nsUnicodeScriptCodes.h for output";
+
+print HEADER <<__END;
+$licenseBlock
+/*
+ * Created on $timestamp from UCD data files with version info:
+ *
+
+$versionInfo
+
+ *
+ * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
+ */
+
+#ifndef NS_UNICODE_SCRIPT_CODES
+#define NS_UNICODE_SCRIPT_CODES
 __END
 
 print DATA_TABLES "static const PRUint32 sScriptCodeToTag[] = {\n";
@@ -543,56 +693,54 @@ for (my $i = 0; $i < scalar @scriptCodeToTag; ++$i) {
 }
 print DATA_TABLES "};\n\n";
 
-sub sprintScript
-{
-  my $usv = shift;
-  return sprintf("%d,", $script[$usv]);
-}
-&genTables("Script", "PRUint8", 10, 6, \&sprintScript, 16);
+our $totalData = 0;
 
-sub sprintCC
-{
-  my $usv = shift;
-  return sprintf("%d,", $combining[$usv]);
-}
-&genTables("CClass", "PRUint8", 10, 6, \&sprintCC, 1);
-
-print DATA_TABLES "static const PRInt32 kSmallMirrorOffset = $smallMirrorOffset;\n";
-print DATA_TABLES "static const PRUint16 sDistantMirrors[] = {\n";
-for (my $i = 0; $i < scalar @distantMirrors; ++$i) {
-    printf DATA_TABLES "  0x%04X", $distantMirrors[$i];
-    print DATA_TABLES $i < $#distantMirrors ? ",\n" : "\n";
+print DATA_TABLES "static const PRInt16 sMirrorOffsets[] = {\n";
+for (my $i = 0; $i < scalar @offsets; ++$i) {
+    printf DATA_TABLES "  $offsets[$i]";
+    print DATA_TABLES $i < $#offsets ? ",\n" : "\n";
 }
 print DATA_TABLES "};\n\n";
 
-sub sprintMirror
+sub sprintCharProps1
 {
   my $usv = shift;
-  return sprintf("%d,", $mirror[$usv]);
+  return sprintf("{%d,%d,%d}, ", $mirror[$usv], $hangul[$usv], $combining[$usv]);
 }
-&genTables("Mirror", "PRInt8", 9, 7, \&sprintMirror, 0);
+&genTables("CharProp1", "struct nsCharProps1 {\n  unsigned char  mMirrorOffsetIndex:5;\n  unsigned char mHangulType:3;\n  unsigned char mCombiningClass:8;\n};",
+           "nsCharProps1", 11, 5, \&sprintCharProps1, 1, 2, 1);
 
-sub sprintCatEAW
+sub sprintCharProps2
 {
   my $usv = shift;
-  return sprintf("{%d,%d},", $eaw[$usv], $category[$usv]);
+  return sprintf("{%d,%d,%d,%d,%d,%d},",
+                 $script[$usv], $eaw[$usv], $category[$usv],
+                 $bidicategory[$usv], $xidmod[$usv], $numericvalue[$usv]);
 }
-&genTables("CatEAW", "struct {\n  unsigned char mEAW:3;\n  unsigned char mCategory:5;\n}",
-           9, 7, \&sprintCatEAW, 16);
+&genTables("CharProp2", "struct nsCharProps2 {\n  unsigned char mScriptCode:8;\n  unsigned char mEAW:3;\n  unsigned char mCategory:5;\n  unsigned char mBidiCategory:5;\n  unsigned char mXidmod:4;\n  signed char mNumericValue:5;\n  unsigned char mHanVariant:2;\n};",
+           "nsCharProps2", 11, 5, \&sprintCharProps2, 16, 4, 1);
 
-sub sprintHangulType
+sub sprintHanVariants
 {
-  my $usv = shift;
-  return sprintf("%d,", $hangul[$usv]);
+  my $baseUsv = shift;
+  my $varShift = 0;
+  my $val = 0;
+  while ($varShift < 8) {
+    $val |= $hanVariant[$baseUsv++] << $varShift;
+    $varShift += 2;
+  }
+  return sprintf("0x%02x,", $val);
 }
-&genTables("Hangul", "PRUint8", 10, 6, \&sprintHangulType, 0);
+&genTables("HanVariant", "", "PRUint8", 9, 7, \&sprintHanVariants, 2, 1, 4);
 
 sub sprintCasemap
 {
   my $usv = shift;
   return sprintf("0x%08x,", $casemap[$usv]);
 }
-&genTables("CaseMap", "PRUint32", 11, 5, \&sprintCasemap, 1);
+&genTables("CaseMap", "", "PRUint32", 11, 5, \&sprintCasemap, 1, 4, 1);
+
+print STDERR "Total data = $totalData\n";
 
 printf DATA_TABLES "const PRUint32 kTitleToUpper = 0x%08x;\n", $kTitleToUpper;
 printf DATA_TABLES "const PRUint32 kUpperToLower = 0x%08x;\n", $kUpperToLower;
@@ -602,14 +750,14 @@ printf DATA_TABLES "const PRUint32 kCaseMapCharMask = 0x%08x;\n\n", $kCaseMapCha
 
 sub genTables
 {
-  my ($prefix, $type, $indexBits, $charBits, $func, $maxPlane) = @_;
+  my ($prefix, $typedef, $type, $indexBits, $charBits, $func, $maxPlane, $bytesPerEntry, $charsPerEntry) = @_;
 
   print DATA_TABLES "#define k${prefix}MaxPlane  $maxPlane\n";
   print DATA_TABLES "#define k${prefix}IndexBits $indexBits\n";
   print DATA_TABLES "#define k${prefix}CharBits  $charBits\n";
 
   my $indexLen = 1 << $indexBits;
-  my $dataLen = 1 << $charBits;
+  my $charsPerPage = 1 << $charBits;
   my %charIndex = ();
   my %pageMapIndex = ();
   my @pageMap = ();
@@ -620,8 +768,8 @@ sub genTables
     my $pageMap = "\x00" x $indexLen * 2;
     foreach my $page (0 .. $indexLen - 1) {
         my $charValues = "";
-        foreach my $ch (0 .. $dataLen - 1) {
-            my $usv = $plane * 0x10000 + $page * $dataLen + $ch;
+        for (my $ch = 0; $ch < $charsPerPage; $ch += $charsPerEntry) {
+            my $usv = $plane * 0x10000 + $page * $charsPerPage + $ch;
             $charValues .= &$func($usv);
         }
         chop $charValues;
@@ -659,7 +807,10 @@ sub genTables
   }
   print DATA_TABLES "};\n\n";
 
-  print DATA_TABLES "static const $type s${prefix}Values[$chCount][$dataLen] = {\n";
+  print HEADER "$typedef\n\n" if $typedef ne '';
+
+  my $pageLen = $charsPerPage / $charsPerEntry;
+  print DATA_TABLES "static const $type s${prefix}Values[$chCount][$pageLen] = {\n";
   for (my $i = 0; $i < scalar @char; ++$i) {
     print DATA_TABLES "  {";
     print DATA_TABLES $char[$i];
@@ -667,9 +818,12 @@ sub genTables
   }
   print DATA_TABLES "};\n\n";
 
-  print STDERR "Data for $prefix = ", $pmCount*$indexLen*$pmBits/8 +
-                                      $chCount*$dataLen*(($type =~ /32/) ? 4 : 1) +
-                                      $maxPlane, "\n";
+  my $dataSize = $pmCount * $indexLen * $pmBits/8 +
+                 $chCount * $pageLen * $bytesPerEntry + 
+                 $maxPlane;
+  $totalData += $dataSize;
+
+  print STDERR "Data for $prefix = $dataSize\n";
 }
 
 print DATA_TABLES <<__END;
@@ -679,24 +833,6 @@ print DATA_TABLES <<__END;
 __END
 
 close DATA_TABLES;
-
-open HEADER, "> nsUnicodeScriptCodes.h" or die "unable to open nsUnicodeScriptCodes.h for output";
-
-print HEADER <<__END;
-$licenseBlock
-/*
- * Created on $timestamp from UCD data files with version info:
- *
-
-$versionInfo
-
- *
- * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
- */
-
-#ifndef NS_UNICODE_SCRIPT_CODES
-#define NS_UNICODE_SCRIPT_CODES
-__END
 
 print HEADER "enum {\n";
 for (my $i = 0; $i < scalar @scriptCodeToName; ++$i) {
