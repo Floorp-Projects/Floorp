@@ -3,7 +3,7 @@ function buildTable()
     var seed = 0;
 
     var neutrals = ['"', ")", "("];
-    var strongRTLs = ['ש', 'נ', 'ב', 'ג', 'ק', 'כ', 'ע'];
+    var strongRTLs = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז'];
     var strongLTRs = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
     var neutral = function() { return neutrals[seed++ % neutrals.length]; }
     var strongRTL = function() { return strongRTLs[seed++ % strongRTLs.length]; }
