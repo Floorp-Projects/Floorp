@@ -139,6 +139,12 @@
                 onset="this.setAttribute('timeout', val); return val;"
                 onget="return parseInt(this.getAttribute('timeout')) || 0;"/>
 
+      <method name="onSearchBegin">
+        <body><![CDATA[
+          this._fireEvent("searchbegin");
+        ]]></body>
+      </method>
+
       <!-- =================== nsIDOMXULMenuListElement =================== -->
 
       <property name="editable" readonly="true"
@@ -659,6 +665,9 @@
           this.mSessionReturns = this.sessionCount;
           this.mFailureItems = 0;
           this.mDefaultMatchFilled = false; // clear out our prefill state.
+
+          // Notify the input that the search is beginning.
+          this.onSearchBegin();
 
           // tell each session to start searching...
           for (var name in this.mSessions)

@@ -405,9 +405,9 @@ void *_mmap(void *addr, size_t length, int prot, int flags,
 	struct {
 		void *addr;
 		size_t length;
-		int prot;
-		int flags;
-		int fd;
+		long prot;
+		long flags;
+		long fd;
 		off_t offset;
 	} args = { addr, length, prot, flags, fd, offset };
 	return (void *) syscall(SYS_mmap, &args);
