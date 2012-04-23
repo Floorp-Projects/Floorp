@@ -26,10 +26,10 @@ function styleOf(name, attributes) {
 
 var tests = [
     ['div', {}, 'ltr', '-moz-isolate'],
-    ['div', {'dir': 'ltr'}, 'ltr', 'embed'],
-    ['div', {'dir': 'rtl'}, 'rtl', 'embed'],
+    ['div', {'dir': 'ltr'}, 'ltr', '-moz-isolate'],
+    ['div', {'dir': 'rtl'}, 'rtl', '-moz-isolate'],
     ['div', {'dir': 'auto'}, 'ltr', '-moz-isolate'],
-    ['div', {'dir': ''}, 'ltr', 'embed'],
+    ['div', {'dir': ''}, 'ltr', '-moz-isolate'],
 
     ['span', {}, 'ltr', 'normal'],
     ['span', {'dir': 'ltr'}, 'ltr', 'embed'],
@@ -61,11 +61,11 @@ var tests = [
     ['textarea', {'dir': 'auto'}, 'ltr', '-moz-plaintext'],
     ['textarea', {'dir': ''}, 'ltr', 'embed'],
 
-    ['pre', {}, 'ltr', 'normal'],
-    ['pre', {'dir': 'ltr'}, 'ltr', 'embed'],
-    ['pre', {'dir': 'rtl'}, 'rtl', 'embed'],
+    ['pre', {}, 'ltr', '-moz-isolate'],
+    ['pre', {'dir': 'ltr'}, 'ltr', '-moz-isolate'],
+    ['pre', {'dir': 'rtl'}, 'rtl', '-moz-isolate'],
     ['pre', {'dir': 'auto'}, 'ltr', '-moz-plaintext'],
-    ['pre', {'dir': ''}, 'ltr', 'embed'],
+    ['pre', {'dir': ''}, 'ltr', '-moz-isolate'],
 ].forEach(function (test) {
     var style = styleOf(test[0], test[1]);
     is(style.direction, test[2], "default value for direction");
