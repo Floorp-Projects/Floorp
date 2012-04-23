@@ -833,8 +833,8 @@ abstract public class GeckoApp
                     if (backgroundColor != null) {
                         getLayerController().setCheckerboardColor(backgroundColor);
                     } else {
-                        // Default to black if no color is given
-                        getLayerController().setCheckerboardColor(0);
+                        // Default to white if no color is given
+                        getLayerController().setCheckerboardColor(Color.WHITE);
                     }
                 }
                 Log.i(LOGTAG, "URI - " + uri + ", title - " + title);
