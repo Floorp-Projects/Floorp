@@ -481,6 +481,10 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/address_bar_texture_port.png \
   res/drawable-xhdpi-v11/address_bar_url_bg.9.png \
   res/drawable-xhdpi-v11/address_bar_url_outline.9.png \
+  res/drawable-xhdpi-v11/doorhanger_arrow.png \
+  res/drawable-xhdpi-v11/doorhanger_bg.9.png \
+  res/drawable-xhdpi-v11/doorhanger_shadow_bg.9.png \
+  res/drawable-xhdpi-v11/doorhanger_popup_bg.9.png \
   res/drawable-xhdpi-v11/urlbar_stop.png \
   res/drawable-xhdpi-v11/site_security_identified.png \
   res/drawable-xhdpi-v11/site_security_verified.png \
