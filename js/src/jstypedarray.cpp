@@ -138,29 +138,27 @@ ToClampedIndex(JSContext *cx, const Value &v, int32_t length, int32_t *out)
  */
 
 /**
- * Walks up the prototype chain to find the actual ArrayBuffer data.
- * This MAY return NULL. Callers should always use isArrayBuffer()
- * first.
+ * Walks up the prototype chain to find the actual ArrayBuffer data, if any.
  */
-JSObject *
-ArrayBufferObject::getArrayBuffer(JSObject *obj)
+static ArrayBufferObject *
+getArrayBuffer(JSObject *obj)
 {
     while (obj && !obj->isArrayBuffer())
         obj = obj->getProto();
-    return obj;
+    return obj ? &obj->asArrayBuffer() : NULL;
 }
 
 JSBool
 ArrayBufferObject::prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    JSObject *bufobj = getArrayBuffer(obj);
-    if (!bufobj) {
-        vp->setInt32(0);
-        return true;
+    ArrayBufferObject *buffer = getArrayBuffer(obj);
+    if (!buffer) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_INCOMPATIBLE_PROTO, "ArrayBuffer", "byteLength", "object");
+        return false;
     }
 
-    ArrayBufferObject &arrayBuffer = bufobj->asArrayBuffer();
-    vp->setInt32(int32_t(arrayBuffer.byteLength()));
+    vp->setInt32(int32_t(buffer->byteLength()));
     return true;
 }
 
@@ -505,7 +503,15 @@ ArrayBufferObject::obj_getProperty(JSContext *cx, JSObject *obj_,
     RootedVarObject obj(cx, obj_), receiver(cx, receiver_);
     RootedVarPropertyName name(cx, name_);
 
-    obj = getArrayBuffer(obj);
+    if (!(obj = getArrayBuffer(obj))) {
+        JSAutoByteString bs(cx, name);
+        if (!bs)
+            return false;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_INCOMPATIBLE_PROTO, "ArrayBuffer", bs.ptr(), "object");
+        return false;
+    }
+
     if (name == cx->runtime->atomState.byteLengthAtom) {
         vp->setInt32(obj->asArrayBuffer().byteLength());
         return true;
@@ -787,12 +793,15 @@ ArrayBufferObject::obj_typeOf(JSContext *cx, JSObject *obj)
  * the subclasses.
  */
 
-JSObject *
-TypedArray::getTypedArray(JSObject *obj)
+static JSObject *
+getTypedArray(JSObject *obj)
 {
-    while (!obj->isTypedArray())
-        obj = obj->getProto();
-    return obj;
+    MOZ_ASSERT(obj);
+    do {
+        if (obj->isTypedArray())
+            return obj;
+    } while ((obj = obj->getProto()));
+    return NULL;
 }
 
 inline bool
@@ -808,75 +817,60 @@ TypedArray::isArrayIndex(JSContext *cx, JSObject *obj, jsid id, uint32_t *ip)
     return false;
 }
 
-typedef Value (* TypedArrayPropertyGetter)(JSObject *tarray);
-
-template <TypedArrayPropertyGetter Get>
-class TypedArrayGetter {
-  public:
-    static inline bool get(JSContext *cx, JSObject *obj, jsid id, Value *vp) {
-        do {
-            if (obj->isTypedArray()) {
-                JSObject *tarray = TypedArray::getTypedArray(obj);
-                if (tarray)
-                    *vp = Get(tarray);
-                return true;
-            }
-        } while ((obj = obj->getProto()) != NULL);
-        return true;
-    }
-};
-
 /*
  * For now (until slots directly hold data)
  * slots data element points to the JSObject representing the ArrayBuffer.
  */
-inline Value
-getBufferValue(JSObject *tarray)
-{
-    JSObject *buffer = TypedArray::getBuffer(tarray);
-    return ObjectValue(*buffer);
-}
-
 JSBool
 TypedArray::prop_getBuffer(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    return TypedArrayGetter<getBufferValue>::get(cx, obj, id, vp);
-}
+    if (!(obj = getTypedArray(obj))) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_INCOMPATIBLE_PROTO, "TypedArray", "buffer", "object");
+        return false;
+    }
 
-inline Value
-getByteOffsetValue(JSObject *tarray)
-{
-    return Int32Value(TypedArray::getByteOffset(tarray));
+    JS_SET_RVAL(cx, vp, ObjectValue(*TypedArray::getBuffer(obj)));
+    return true;
 }
 
 JSBool
 TypedArray::prop_getByteOffset(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    return TypedArrayGetter<getByteOffsetValue>::get(cx, obj, id, vp);
-}
+    if (!(obj = getTypedArray(obj))) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_INCOMPATIBLE_PROTO, "TypedArray", "byteOffset", "object");
+        return false;
+    }
 
-inline Value
-getByteLengthValue(JSObject *tarray)
-{
-    return Int32Value(TypedArray::getByteLength(tarray));
+    JS_SET_RVAL(cx, vp, Int32Value(TypedArray::getByteOffset(obj)));
+    return true;
 }
 
 JSBool
 TypedArray::prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    return TypedArrayGetter<getByteLengthValue>::get(cx, obj, id, vp);
-}
+    if (!(obj = getTypedArray(obj))) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_INCOMPATIBLE_PROTO, "TypedArray", "byteLength", "object");
+        return false;
+    }
 
-inline Value
-getLengthValue(JSObject *tarray)
-{
-    return Int32Value(TypedArray::getLength(tarray));
+    JS_SET_RVAL(cx, vp, Int32Value(TypedArray::getByteLength(obj)));
+    return true;
 }
 
 JSBool
 TypedArray::prop_getLength(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    return TypedArrayGetter<getLengthValue>::get(cx, obj, id, vp);
+    if (!(obj = getTypedArray(obj))) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_INCOMPATIBLE_PROTO, "TypedArray", "length", "object");
+        return false;
+    }
+
+    JS_SET_RVAL(cx, vp, Int32Value(TypedArray::getLength(obj)));
+    return true;
 }
 
 JSBool
@@ -1090,7 +1084,7 @@ class TypedArrayTemplate
 
     static inline Class *fastClass()
     {
-        return &TypedArray::fastClasses[ArrayTypeID()];
+        return &TypedArray::classes[ArrayTypeID()];
     }
 
     static void
@@ -1354,7 +1348,7 @@ class TypedArrayTemplate
     static JSBool
     obj_deleteElement(JSContext *cx, JSObject *obj, uint32_t index, Value *rval, JSBool strict)
     {
-        JSObject *tarray = TypedArray::getTypedArray(obj);
+        JSObject *tarray = getTypedArray(obj);
         JS_ASSERT(tarray);
 
         if (index < getLength(tarray)) {
@@ -1627,56 +1621,52 @@ class TypedArrayTemplate
         if (!tarray)
             return true;
 
-        // these are the default values
-        int32_t off = 0;
+        // first arg must be either a typed array or a JS array
+        if (args.length() == 0 || !args[0].isObject()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPED_ARRAY_BAD_ARGS);
+            return false;
+        }
 
+        int32_t offset = 0;
         if (args.length() > 1) {
-            if (!ToInt32(cx, args[1], &off))
+            if (!ToInt32(cx, args[1], &offset))
                 return false;
 
-            if (off < 0 || uint32_t(off) > getLength(tarray)) {
+            if (offset < 0 || uint32_t(offset) > getLength(tarray)) {
                 // the given offset is bogus
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_TYPED_ARRAY_BAD_ARGS);
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPED_ARRAY_BAD_INDEX, "2");
                 return false;
             }
         }
 
-        uint32_t offset(off);
-
-        // first arg must be either a typed array or a JS array
-        if (args.length() == 0 || !args[0].isObject()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_TYPED_ARRAY_BAD_ARGS);
+        if (!args[0].isObject()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return false;
         }
 
         RootedVarObject arg0(cx, args[0].toObjectOrNull());
-        if (arg0->isTypedArray()) {
-            JSObject *src = TypedArray::getTypedArray(arg0);
-            if (!src ||
-                getLength(src) > getLength(tarray) - offset)
-            {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_TYPED_ARRAY_BAD_ARGS);
+        RootedVarObject src(getTypedArray(arg0));
+        if (src) {
+            if (getLength(src) > getLength(tarray) - offset) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_ARRAY_LENGTH);
                 return false;
             }
 
             if (!copyFromTypedArray(cx, obj, src, offset))
                 return false;
         } else {
+            src = arg0;
             uint32_t len;
-            if (!js_GetLengthProperty(cx, arg0, &len))
+            if (!js_GetLengthProperty(cx, src, &len))
                 return false;
 
             // avoid overflow; we know that offset <= length
             if (len > getLength(tarray) - offset) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_TYPED_ARRAY_BAD_ARGS);
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_ARRAY_LENGTH);
                 return false;
             }
 
-            if (!copyFromArray(cx, obj, arg0, len, offset))
+            if (!copyFromArray(cx, obj, src, len, offset))
                 return false;
         }
 
@@ -2145,10 +2135,7 @@ TypedArrayTemplate<float>::copyIndexToValue(JSContext *cx, JSObject *tarray, uin
      * This could be removed for platforms/compilers known to convert a 32-bit
      * non-canonical nan to a 64-bit canonical nan.
      */
-    if (JS_UNLIKELY(MOZ_DOUBLE_IS_NaN(dval)))
-        dval = js_NaN;
-
-    vp->setDouble(dval);
+    vp->setDouble(JS_CANONICALIZE_NAN(dval));
 }
 
 template<>
@@ -2335,7 +2322,7 @@ NewArrayWithBuffer(JSContext *cx, HandleObject arrayBuffer, int32_t byteoffset, 
   {                                                                                          \
       obj = UnwrapObject(obj);                                                               \
       Class *clasp = obj->getClass();                                                        \
-      return (clasp == &TypedArray::fastClasses[TypedArrayTemplate<NativeType>::ArrayTypeID()]); \
+      return (clasp == &TypedArray::classes[TypedArrayTemplate<NativeType>::ArrayTypeID()]); \
   }
 
 IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Int8, int8_t)
@@ -2350,7 +2337,7 @@ IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Float64, double)
 
 #define IMPL_TYPED_ARRAY_PROTO_CLASS(_typedArray)                               \
 {                                                                              \
-    #_typedArray,                                                              \
+    #_typedArray "Prototype",                                                  \
     JSCLASS_HAS_RESERVED_SLOTS(TypedArray::FIELD_MAX) |                        \
     JSCLASS_HAS_PRIVATE |                                                      \
     JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray),                           \
@@ -2475,7 +2462,7 @@ IMPL_TYPED_ARRAY_STATICS(Float32Array);
 IMPL_TYPED_ARRAY_STATICS(Float64Array);
 IMPL_TYPED_ARRAY_STATICS(Uint8ClampedArray);
 
-Class TypedArray::fastClasses[TYPE_MAX] = {
+Class TypedArray::classes[TYPE_MAX] = {
     IMPL_TYPED_ARRAY_FAST_CLASS(Int8Array),
     IMPL_TYPED_ARRAY_FAST_CLASS(Uint8Array),
     IMPL_TYPED_ARRAY_FAST_CLASS(Int16Array),
@@ -2552,27 +2539,6 @@ js_InitTypedArrayClasses(JSContext *cx, JSObject *obj)
     }
 
     return InitArrayBufferClass(cx, global);
-}
-
-bool
-js::IsFastTypedArrayClass(const Class *clasp)
-{
-    return &TypedArray::fastClasses[0] <= clasp &&
-           clasp < &TypedArray::fastClasses[TypedArray::TYPE_MAX];
-}
-
-static inline bool
-IsSlowTypedArrayClass(const Class *clasp)
-{
-    return &TypedArray::protoClasses[0] <= clasp &&
-           clasp < &TypedArray::protoClasses[TypedArray::TYPE_MAX];
-}
-
-bool
-js::IsFastOrSlowTypedArray(JSObject *obj)
-{
-    Class *clasp = obj->getClass();
-    return IsFastTypedArrayClass(clasp) || IsSlowTypedArrayClass(clasp);
 }
 
 /* JS Friend API */

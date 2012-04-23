@@ -83,37 +83,37 @@ ClampIntForUint8Array(int32_t x)
 
 inline uint32_t
 TypedArray::getLength(JSObject *obj) {
-    JS_ASSERT(IsFastOrSlowTypedArray(obj));
+    JS_ASSERT(obj->isTypedArray());
     return obj->getFixedSlot(FIELD_LENGTH).toInt32();
 }
 
 inline uint32_t
 TypedArray::getByteOffset(JSObject *obj) {
-    JS_ASSERT(IsFastOrSlowTypedArray(obj));
+    JS_ASSERT(obj->isTypedArray());
     return obj->getFixedSlot(FIELD_BYTEOFFSET).toInt32();
 }
 
 inline uint32_t
 TypedArray::getByteLength(JSObject *obj) {
-    JS_ASSERT(IsFastOrSlowTypedArray(obj));
+    JS_ASSERT(obj->isTypedArray());
     return obj->getFixedSlot(FIELD_BYTELENGTH).toInt32();
 }
 
 inline uint32_t
 TypedArray::getType(JSObject *obj) {
-    JS_ASSERT(IsFastOrSlowTypedArray(obj));
+    JS_ASSERT(obj->isTypedArray());
     return obj->getFixedSlot(FIELD_TYPE).toInt32();
 }
 
 inline ArrayBufferObject *
 TypedArray::getBuffer(JSObject *obj) {
-    JS_ASSERT(IsFastOrSlowTypedArray(obj));
+    JS_ASSERT(obj->isTypedArray());
     return &obj->getFixedSlot(FIELD_BUFFER).toObject().asArrayBuffer();
 }
 
 inline void *
 TypedArray::getDataOffset(JSObject *obj) {
-    JS_ASSERT(IsFastOrSlowTypedArray(obj));
+    JS_ASSERT(obj->isTypedArray());
     return (void *)obj->getPrivate(NUM_FIXED_SLOTS);
 }
 
