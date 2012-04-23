@@ -86,4 +86,10 @@ interface nsIXULAppInfo : nsISupports
    * The build ID/date of gecko and the XULRunner platform.
    */
   readonly attribute ACString platformBuildID;
+  
+  /**
+   * @see nsXREAppData.UAName
+   * @returns an empty string if nsXREAppData.UAName is not set.
+   */
+  readonly attribute ACString UAName;
 };

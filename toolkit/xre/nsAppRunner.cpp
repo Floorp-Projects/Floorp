@@ -714,6 +714,18 @@ nsXULAppInfo::GetPlatformBuildID(nsACString& aResult)
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetUAName(nsACString& aResult)
+{
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    NS_WARNING("Attempt to get unavailable information in content process.");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  aResult.Assign(gAppData->UAName);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::GetLogConsoleErrors(bool *aResult)
 {
   *aResult = gLogConsoleErrors;
