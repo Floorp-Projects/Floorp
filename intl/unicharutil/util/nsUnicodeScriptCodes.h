@@ -41,7 +41,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * Created on Mon Apr 23 14:51:01 2012 from UCD data files with version info:
+ * Created on Mon Apr 23 20:03:29 2012 from UCD data files with version info:
  *
 
 # Date: 2012-01-26, 22:03:00 GMT [KW]
@@ -70,12 +70,36 @@ for the Unicode Character Database (UCD) for Unicode 6.1.0.
 # HangulSyllableType-6.1.0.txt
 # Date: 2011-08-25, 00:02:18 GMT [MD]
 
+# File: xidmodifications.txt
+# Version: 2.1
+# Generated: 2010-04-13, 01:33:09 GMT
+
+#
+# Unihan_Variants.txt
+# Date: 2011-08-08 22:10:53 GMT [JHJ]
+
  *
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
  */
 
 #ifndef NS_UNICODE_SCRIPT_CODES
 #define NS_UNICODE_SCRIPT_CODES
+struct nsCharProps1 {
+  unsigned char  mMirrorOffsetIndex:5;
+  unsigned char mHangulType:3;
+  unsigned char mCombiningClass:8;
+};
+
+struct nsCharProps2 {
+  unsigned char mScriptCode:8;
+  unsigned char mEAW:3;
+  unsigned char mCategory:5;
+  unsigned char mBidiCategory:5;
+  unsigned char mXidmod:4;
+  signed char mNumericValue:5;
+  unsigned char mHanVariant:2;
+};
+
 enum {
   MOZ_SCRIPT_COMMON = 0,
   MOZ_SCRIPT_INHERITED = 1,
