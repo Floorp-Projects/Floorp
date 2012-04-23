@@ -35,7 +35,7 @@ var tests = [
     ['span', {'dir': 'ltr'}, 'ltr', 'embed'],
     ['span', {'dir': 'rtl'}, 'rtl', 'embed'],
     ['span', {'dir': 'auto'}, 'ltr', '-moz-isolate'],
-    ['span', {'dir': ''}, 'ltr', 'embed'],
+    ['span', {'dir': ''}, 'ltr', 'normal'],
 
     ['bdi', {}, 'ltr', '-moz-isolate'],
     ['bdi', {'dir': 'ltr'}, 'ltr', '-moz-isolate'],
@@ -59,7 +59,7 @@ var tests = [
     ['textarea', {'dir': 'ltr'}, 'ltr', 'embed'],
     ['textarea', {'dir': 'rtl'}, 'rtl', 'embed'],
     ['textarea', {'dir': 'auto'}, 'ltr', '-moz-plaintext'],
-    ['textarea', {'dir': ''}, 'ltr', 'embed'],
+    ['textarea', {'dir': ''}, 'ltr', 'normal'],
 
     ['pre', {}, 'ltr', '-moz-isolate'],
     ['pre', {'dir': 'ltr'}, 'ltr', '-moz-isolate'],
