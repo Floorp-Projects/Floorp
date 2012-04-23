@@ -1641,7 +1641,9 @@ abstract public class GeckoApp
         }
 
         mRestoreSession |= getProfile().shouldRestoreSession();
-        if (passedUri == null || passedUri.equals("about:home")) {
+
+        boolean isExternalURL = passedUri != null && !passedUri.equals("about:home");
+        if (!isExternalURL) {
             // show about:home if we aren't restoring previous session
             if (!mRestoreSession) {
                 mBrowserToolbar.updateTabCount(1);
@@ -1650,6 +1652,8 @@ abstract public class GeckoApp
         } else {
             mBrowserToolbar.updateTabCount(1);
         }
+
+        mBrowserToolbar.setProgressVisibility(isExternalURL || mRestoreSession);
 
         // Start migrating as early as possible, can do this in
         // parallel with Gecko load.
