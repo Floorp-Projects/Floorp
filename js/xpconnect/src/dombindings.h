@@ -108,7 +108,8 @@ public:
 
 class NoBase {
 public:
-    static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope);
+    static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope,
+                                  JSObject *receiver);
     static bool shouldCacheProtoShape(JSContext *cx, JSObject *proto, bool *shouldCache)
     {
         *shouldCache = true;
@@ -194,14 +195,10 @@ public:
     static JSObject *create(JSContext *cx, JSObject *scope, ListType *list,
                             nsWrapperCache* cache, bool *triedToWrap);
 
-    static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled)
+    static JSObject *getPrototype(JSContext *cx, JSObject *receiver, bool *enabled);
+    static bool DefineDOMInterface(JSContext *cx, JSObject *receiver, bool *enabled)
     {
-        *enabled = true;
-        return getPrototype(cx, scope);
-    }
-    static bool DefineDOMInterface(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled)
-    {
-        return !!getPrototype(cx, scope, enabled);
+        return !!getPrototype(cx, receiver, enabled);
     }
 
     bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
@@ -243,7 +240,8 @@ public:
     }
     static inline ListType *getListObject(JSObject *obj);
 
-    static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope);
+    static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope,
+                                  JSObject *receiver);
     static inline bool protoIsClean(JSContext *cx, JSObject *proto, bool *isClean);
     static bool shouldCacheProtoShape(JSContext *cx, JSObject *proto, bool *shouldCache);
     static bool resolveNativeName(JSContext *cx, JSObject *proxy, jsid id,
