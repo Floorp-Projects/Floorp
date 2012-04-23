@@ -8,6 +8,10 @@
 
 const TAB_URL = EXAMPLE_URL + "browser_dbg_script-switching.html";
 
+let tempScope = {};
+Cu.import("resource:///modules/source-editor.jsm", tempScope);
+let SourceEditor = tempScope.SourceEditor;
+
 var gPane = null;
 var gTab = null;
 var gDebuggee = null;
@@ -123,8 +127,6 @@ function testSwitchPaused()
 
 function testSwitchRunning()
 {
-  dump("Debugger editor text:\n" + gDebugger.editor.getText() + "\n");
-
   ok(gDebugger.editor.getText().search(/debugger/) != -1,
     "The second script is displayed again.");
 

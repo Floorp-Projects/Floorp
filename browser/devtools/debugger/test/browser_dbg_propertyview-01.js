@@ -85,8 +85,7 @@ function resumeAndFinish() {
   gDebugger.DebuggerController.activeThread.resume(function() {
     let vs = gDebugger.DebuggerView.Scripts;
     let ss = gDebugger.DebuggerController.SourceScripts;
-    vs.empty();
-    vs._scripts.removeEventListener("select", vs._onScriptsChange, false);
+    ss._onScriptsCleared();
 
     is(ss._trimUrlQuery("a/b/c.d?test=1&random=4"), "a/b/c.d",
       "Trimming the url query isn't done properly.");
@@ -102,11 +101,12 @@ function resumeAndFinish() {
       { href: "si://interesting.address.moc/random/x/y/", leaf: "script.js?a=1&b=2&c=3" }
     ];
 
+    vs._scripts.removeEventListener("select", vs._onScriptsChange, false);
+
     urls.forEach(function(url) {
       executeSoon(function() {
         let loc = url.href + url.leaf;
         vs.addScript(ss._getScriptLabel(loc, url.href), { url: loc });
-        vs.commitScripts();
       });
     });
 
