@@ -670,6 +670,7 @@ abstract public class GeckoApp
         tab.updateSecurityMode("unknown");
         tab.removeTransientDoorHangers();
         tab.setHasTouchListeners(false);
+        tab.setCheckerboardColor(Color.WHITE);
 
         maybeCancelFaviconLoad(tab);
 
@@ -829,14 +830,20 @@ abstract public class GeckoApp
                 final String title = message.getString("title");
                 final String backgroundColor = message.getString("bgColor");
                 handleContentLoaded(tabId, uri, title);
-                if (getLayerController() != null) {
-                    if (backgroundColor != null) {
-                        getLayerController().setCheckerboardColor(backgroundColor);
-                    } else {
-                        // Default to white if no color is given
-                        getLayerController().setCheckerboardColor(Color.WHITE);
-                    }
+                Tab tab = Tabs.getInstance().getTab(tabId);
+                if (backgroundColor != null) {
+                    tab.setCheckerboardColor(backgroundColor);
+                } else {
+                    // Default to white if no color is given
+                    tab.setCheckerboardColor(Color.WHITE);
                 }
+
+                // Sync up the LayerController and the tab if the tab's
+                // currently displayed.
+                if (getLayerController() != null && Tabs.getInstance().isSelectedTab(tab)) {
+                    getLayerController().setCheckerboardColor(tab.getCheckerboardColor());
+                }
+
                 Log.i(LOGTAG, "URI - " + uri + ", title - " + title);
             } else if (event.equals("DOMTitleChanged")) {
                 final int tabId = message.getInt("tabID");
