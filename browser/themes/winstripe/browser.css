@@ -1406,10 +1406,13 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 }
 
 #identity-box.verifiedIdentity {
-  background-color: #fff;
   color: hsl(92,100%,20%);
   -moz-border-end: 1px solid hsla(92,81%,16%,.2);
   -moz-margin-end: 4px;
+}
+
+#identity-box.verifiedIdentity:not(:-moz-lwtheme) {
+  background-color: #fff;
 }
 
 #identity-box:-moz-focusring {
