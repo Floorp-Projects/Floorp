@@ -91,7 +91,7 @@ public class LayerController {
     private GeckoLayerClient mLayerClient;          /* The layer client. */
 
     /* The new color for the checkerboard. */
-    private int mCheckerboardColor;
+    private int mCheckerboardColor = Color.WHITE;
     private boolean mCheckerboardShouldShowChecks;
 
     private boolean mForceRedraw;
