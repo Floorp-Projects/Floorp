@@ -630,7 +630,8 @@ abstract public class GeckoApp
     }
 
     void handleLocationChange(final int tabId, final String uri,
-                              final String documentURI, final String contentType) {
+                              final String documentURI, final String contentType,
+                              final boolean sameDocument) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
@@ -642,19 +643,10 @@ abstract public class GeckoApp
                 hideAboutHome();
         }
         
-        String oldBaseURI = tab.getURL();
         tab.updateURL(uri);
         tab.setDocumentURI(documentURI);
-        tab.setContentType(contentType);
 
-        String baseURI = uri;
-        if (baseURI.indexOf('#') != -1)
-            baseURI = uri.substring(0, uri.indexOf('#'));
-
-        if (oldBaseURI != null && oldBaseURI.indexOf('#') != -1)
-            oldBaseURI = oldBaseURI.substring(0, oldBaseURI.indexOf('#'));
-        
-        if (baseURI.equals(oldBaseURI)) {
+        if (sameDocument) {
             mMainHandler.post(new Runnable() {
                 public void run() {
                     if (Tabs.getInstance().isSelectedTab(tab)) {
@@ -665,6 +657,7 @@ abstract public class GeckoApp
             return;
         }
 
+        tab.setContentType(contentType);
         tab.updateFavicon(null);
         tab.updateFaviconURL(null);
         tab.updateSecurityMode("unknown");
@@ -868,8 +861,9 @@ abstract public class GeckoApp
                 final String uri = message.getString("uri");
                 final String documentURI = message.getString("documentURI");
                 final String contentType = message.getString("contentType");
+                final boolean sameDocument = message.getBoolean("sameDocument");
                 Log.i(LOGTAG, "URI - " + uri);
-                handleLocationChange(tabId, uri, documentURI, contentType);
+                handleLocationChange(tabId, uri, documentURI, contentType, sameDocument);
             } else if (event.equals("Content:SecurityChange")) {
                 final int tabId = message.getInt("tabID");
                 final String mode = message.getString("mode");

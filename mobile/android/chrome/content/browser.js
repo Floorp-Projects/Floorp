@@ -2084,6 +2084,7 @@ Tab.prototype = {
     let uri = browser.currentURI.spec;
     let documentURI = "";
     let contentType = "";
+    let sameDocument = (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) != 0;
     if (browser.contentDocument) {
       documentURI = browser.contentDocument.documentURIObject.spec;
       contentType = browser.contentDocument.contentType;
@@ -2099,13 +2100,14 @@ Tab.prototype = {
         tabID: this.id,
         uri: uri,
         documentURI: documentURI,
-        contentType: contentType
+        contentType: contentType,
+        sameDocument: sameDocument
       }
     };
 
     sendMessageToJava(message);
 
-    if ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) == 0) {
+    if (!sameDocument) {
       // XXX This code assumes that this is the earliest hook we have at which
       // browser.contentDocument is changed to the new document we're loading
       this.contentDocumentIsDisplayed = false;
