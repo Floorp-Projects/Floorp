@@ -2044,11 +2044,6 @@ Tab.prototype = {
         return;
       }
 
-      let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
-      let uri = "";
-      if (browser)
-        uri = browser.currentURI.spec;
-
       // Check to see if we restoring the content from a previous presentation (session)
       // since there should be no real network activity
       let restoring = aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING;
@@ -2056,6 +2051,10 @@ Tab.prototype = {
 
       // true if the page loaded successfully (i.e., no 404s or other errors)
       let success = false; 
+      let uri = "";
+      try {
+        uri = aRequest.QueryInterface(Components.interfaces.nsIChannel).originalURI.spec;
+      } catch (e) { }
       try {
         success = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel).requestSucceeded;
       } catch (e) { }
