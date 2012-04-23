@@ -1299,6 +1299,10 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 .urlbar-textbox-container {
   -moz-box-align: stretch;
 }
+ 
+.urlbar-input-box {
+  -moz-margin-start: 0;
+}
 
 #urlbar-icons {
   -moz-box-align: center;
@@ -1347,6 +1351,7 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 #urlbar-display {
   margin-top: 0;
   margin-bottom: 0;
+  -moz-margin-start: 0;
   color: GrayText;
 }
 
@@ -1401,9 +1406,13 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 }
 
 #identity-box.verifiedIdentity {
-  background-color: #fff;
   color: hsl(92,100%,20%);
   -moz-border-end: 1px solid hsla(92,81%,16%,.2);
+  -moz-margin-end: 4px;
+}
+
+#identity-box.verifiedIdentity:not(:-moz-lwtheme) {
+  background-color: #fff;
 }
 
 #identity-box:-moz-focusring {
@@ -1412,8 +1421,8 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 }
 
 #identity-icon-labels {
-  -moz-margin-start: 5px;
-  -moz-margin-end: 3px;
+  -moz-padding-start: 2px;
+  -moz-padding-end: 5px;
 }
 
 /* Location bar dropmarker */
@@ -1448,10 +1457,7 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 #page-proxy-favicon {
   width: 16px;
   height: 16px;
-  margin-top: 1px;
-  margin-bottom: 1px;
-  -moz-margin-start: 4px;
-  -moz-margin-end: 0;
+  margin: 1px 3px;
   list-style-image: url(chrome://browser/skin/identity-icons-generic.png);
   -moz-image-region: rect(0, 16px, 16px, 0);
 }

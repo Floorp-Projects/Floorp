@@ -212,12 +212,6 @@ pref("gfx.downloadable_fonts.enabled", true);
 pref("gfx.downloadable_fonts.fallback_delay", 3000);
 pref("gfx.downloadable_fonts.sanitize", true);
 
-#ifdef ANDROID
-pref("gfx.filter.nearest.force-enabled", true);
-#else
-pref("gfx.filter.nearest.force-enabled", false);
-#endif
-
 // whether to always search all font cmaps during system font fallback
 pref("gfx.font_rendering.fallback.always_use_cmaps", false);
 
