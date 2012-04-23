@@ -870,7 +870,6 @@ abstract public class GeckoApp
                 handleSecurityChange(tabId, mode);
             } else if (event.equals("Content:StateChange")) {
                 final int tabId = message.getInt("tabID");
-                final String uri = message.getString("uri");
                 final boolean success = message.getBoolean("success");
                 int state = message.getInt("state");
                 Log.i(LOGTAG, "State - " + state);
@@ -878,7 +877,7 @@ abstract public class GeckoApp
                     if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
                         Log.i(LOGTAG, "Got a document start");
                         final boolean showProgress = message.getBoolean("showProgress");
-                        handleDocumentStart(tabId, showProgress, uri);
+                        handleDocumentStart(tabId, showProgress);
                     } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
                         Log.i(LOGTAG, "Got a document stop");
                         handleDocumentStop(tabId, success);
@@ -1184,12 +1183,11 @@ abstract public class GeckoApp
         });
     }
 
-    void handleDocumentStart(int tabId, final boolean showProgress, String uri) {
+    void handleDocumentStart(int tabId, final boolean showProgress) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
 
-        tab.updateURL(uri);
         tab.setState(Tab.STATE_LOADING);
         tab.updateSecurityMode("unknown");
 
@@ -1197,7 +1195,7 @@ abstract public class GeckoApp
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
-                    if (showProgress && tab.getState() == Tab.STATE_LOADING)
+                    if (showProgress)
                         mBrowserToolbar.setProgressVisibility(true);
                 }
                 Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.START);
