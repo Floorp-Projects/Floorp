@@ -83,7 +83,12 @@ struct Arena {
 
 // Use a macro instead of a function because gcc 4.4.3 creates static
 // initializers in that case. Note this macro assumes a little-endian system.
+#if defined(__BIG_ENDIAN__) || defined(_BIG_ENDIAN)
+// This is the big-endian equivalent.
+#define TAG(d, c, b, a) (a | (b << 8) | (c << 16) | (d << 24))
+#else
 #define TAG(a, b, c, d) (a | (b << 8) | (c << 16) | (d << 24))
+#endif
 
 const struct {
   uint32_t tag;

@@ -24,6 +24,7 @@ CPPSRCS = \
   File.cpp \
   FileReaderSync.cpp \
   FileReaderSyncPrivate.cpp \
+  ImageData.cpp \
   Location.cpp \
   Navigator.cpp \
   Principal.cpp \
