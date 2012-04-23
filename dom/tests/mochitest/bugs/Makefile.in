@@ -157,9 +157,6 @@ _TEST_FILES	= \
 		test_bug735237.html \
 		test_bug739038.html \
 		test_bug740811.html \
-		test_bug743615.html \
-		utils_bug743615.js \
-		worker_bug743615.js \
 		$(NULL)
 
 libs:: 	$(_TEST_FILES)

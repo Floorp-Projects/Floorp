@@ -55,7 +55,6 @@
 #include "nsStringGlue.h"
 #include "nsTArray.h"
 #include "nsTPriorityQueue.h"
-#include "StructuredCloneTags.h"
 
 #include "EventTarget.h"
 #include "Queue.h"
@@ -813,7 +812,7 @@ GetWorkerPrivateFromContext(JSContext* aCx);
 
 enum WorkerStructuredDataType
 {
-  DOMWORKER_SCTAG_FILE = SCTAG_DOM_MAX,
+  DOMWORKER_SCTAG_FILE = JS_SCTAG_USER_MIN + 0x1000,
   DOMWORKER_SCTAG_BLOB,
 
   DOMWORKER_SCTAG_END

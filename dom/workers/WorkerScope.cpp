@@ -62,7 +62,6 @@
 #include "File.h"
 #include "FileReaderSync.h"
 #include "Location.h"
-#include "ImageData.h"
 #include "Navigator.h"
 #include "Principal.h"
 #include "ScriptLoader.h"
@@ -997,7 +996,6 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
       !filereadersync::InitClass(aCx, global) ||
       !exceptions::InitClasses(aCx, global) ||
       !location::InitClass(aCx, global) ||
-      !imagedata::InitClass(aCx, global) ||
       !navigator::InitClass(aCx, global)) {
     return NULL;
   }
