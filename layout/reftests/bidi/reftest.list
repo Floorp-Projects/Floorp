@@ -1,4 +1,4 @@
-fuzzy-if(Android,6,8) == bdi-element.html bdi-element-ref.html
+fails-if(Android) == bdi-element.html bdi-element-ref.html # sub-pixel AA
 == bidi-000.html bidi-000-ref.html
 == bidi-001.html bidi-001-ref.html
 == bidi-001-j.html bidi-001-ref.html
@@ -35,7 +35,7 @@ random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
 == unicode-bidi-anonymous-002.html unicode-bidi-anonymous-002-ref.html
 fails == unicode-bidi-isolate-basic.html unicode-bidi-isolate-basic-ref.html # bug 712600
 fails == unicode-bidi-isolate-aharon.html unicode-bidi-isolate-aharon-ref.html # bug 712600
-fuzzy-if(d2d,1,73) == unicode-bidi-plaintext.html unicode-bidi-plaintext-ref.html
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == unicode-bidi-plaintext.html unicode-bidi-plaintext-ref.html # sub-pixel AA
 == unicode-bidi-plaintext-textarea-1.html unicode-bidi-plaintext-textarea-ref.html
 == unicode-bidi-plaintext-textarea-2.html unicode-bidi-plaintext-textarea-ref.html
 == unicode-bidi-plaintext-textarea-3.html unicode-bidi-plaintext-textarea-ref.html
