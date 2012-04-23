@@ -28,7 +28,7 @@ function test()
 
     var TODO = 1;
 
-    function check(fun, todo) {
+    function check(fun, msg, todo) {
         var thrown = null;
         var success = false;
         try {
@@ -60,6 +60,8 @@ function test()
 
             var ex = new Error;
             print ("=== FAILED ===");
+            if (msg)
+                print (msg);
             print (ex.stack);
             if (thrown) {
                 print ("    threw exception:");
@@ -69,18 +71,29 @@ function test()
         }
     }
 
-    function checkThrows(fun, todo) {
-        let thrown = false;
+    function checkThrows(fun, type, todo) {
+        var thrown = false;
         try {
             fun();
         } catch (x) {
-            thrown = true;
+            thrown = x;
         }
 
-        check(function() thrown, todo);
+        if (typeof(type) !== 'undefined')
+            if (thrown) {
+                check(function () thrown instanceof type,
+                      "expected " + type.name + " but saw " + thrown,
+                      todo);
+            } else {
+                check(function () thrown, "expected " + type.name + " but no exception thrown", todo);
+            }
+        else
+            check(function () thrown, undefined, todo);
     }
 
-    check(function() ArrayBuffer.prototype.byteLength == 0);
+    function checkThrowsTODO(fun, type) {
+        checkThrows(fun, type, true);
+    }
 
     var buf, buf2;
 
@@ -101,9 +114,9 @@ function test()
     var zerobuf2 = new ArrayBuffer();
     check(function() zerobuf2.byteLength == 0);
 
-    checkThrows(function() new ArrayBuffer(-100));
+    checkThrows(function() new ArrayBuffer(-100), RangeError);
     // this is using js_ValueToECMAUInt32, which is giving 0 for "abc"
-    checkThrows(function() new ArrayBuffer("abc"), TODO);
+    checkThrowsTODO(function() new ArrayBuffer("abc"), TypeError);
 
     var zeroarray = new Int32Array(0);
     check(function() zeroarray.length == 0);
@@ -187,15 +200,15 @@ function test()
     check(function() a[1] == 0xbb);
 
     // not sure if this is supposed to throw or to treat "foo"" as 0.
-    checkThrows(function() new Int32Array([0xaa, "foo", 0xbb]), TODO);
+    checkThrowsTODO(function() new Int32Array([0xaa, "foo", 0xbb]), Error);
 
     checkThrows(function() new Int32Array(-100));
 
     a = new Uint8Array(3);
     // XXX these are ignored now and return undefined
-    //checkThrows(function() a[5000] = 0);
-    //checkThrows(function() a["hello"] = 0);
-    //checkThrows(function() a[-10] = 0);
+    //checkThrows(function() a[5000] = 0, RangeError);
+    //checkThrows(function() a["hello"] = 0, TypeError);
+    //checkThrows(function() a[-10] = 0, RangeError);
     check(function() (a[0] = "10") && (a[0] == 10));
 
     // check Uint8ClampedArray, which is an extension to this extension
@@ -265,8 +278,8 @@ function test()
     checkThrows(function() a.set([1,2,3], 2147483647));
 
     a.set(ArrayBuffer.prototype);
-    a.set(Int16Array.prototype);
-    a.set(Int32Array.prototype);
+    checkThrows(function () a.set(Int16Array.prototype), TypeError);
+    checkThrows(function () a.set(Int32Array.prototype), TypeError);
 
     a.set([1,2,3]);
     a.set([4,5,6], 3);
@@ -317,16 +330,43 @@ function test()
     a = new Uint8Array(0x100);
     checkThrows(function() Uint32Array.prototype.subarray.apply(a, [0, 0x100]));
 
-    // The prototypes are objects that don't have a length property, so they act
-    // like empty arrays.
-    check(function() new Int32Array(ArrayBuffer.prototype).length == 0);
-    check(function() new Int32Array(Int32Array.prototype).length == 0);
-    check(function() new Int32Array(Float64Array.prototype).length == 0);
+    // webidl section 4.4.6, getter bullet point 2.2: prototypes are not
+    // platform objects, and calling the getter of any attribute defined on the
+    // interface should throw a TypeError according to
+    checkThrows(function() ArrayBuffer.prototype.byteLength, TypeError);
+    checkThrows(function() Int32Array.prototype.length, TypeError);
+    checkThrows(function() Int32Array.prototype.byteLength, TypeError);
+    checkThrows(function() Int32Array.prototype.byteOffset, TypeError);
+    checkThrows(function() Float64Array.prototype.length, TypeError);
+    checkThrows(function() Float64Array.prototype.byteLength, TypeError);
+    checkThrows(function() Float64Array.prototype.byteOffset, TypeError);
 
-    // ArrayBuffer, Int32Array and Float64Array are native functions and have a .length
-    // checkThrows(function() new Int32Array(ArrayBuffer));
-    // checkThrows(function() new Int32Array(Int32Array));
-    // checkThrows(function() new Int32Array(Float64Array));
+    // webidl 4.4.6: a readonly attribute's setter is undefined. From
+    // observation, that seems to mean it silently does nothing, and returns
+    // the value that you tried to set it to.
+    check(function() Int32Array.prototype.length = true);
+    check(function() Float64Array.prototype.length = true);
+    check(function() Int32Array.prototype.byteLength = true);
+    check(function() Float64Array.prototype.byteLength = true);
+    check(function() Int32Array.prototype.byteOffset = true);
+    check(function() Float64Array.prototype.byteOffset = true);
+
+    // ArrayBuffer, Int32Array and Float64Array are native functions and have a
+    // .length, so none of these should throw:
+    check(function() (new Int32Array(ArrayBuffer)).length >= 0);
+    check(function() (new Int32Array(Int32Array)).length >= 0);
+    check(function() (new Int32Array(Float64Array)).length >= 0);
+
+    // webidl 4.4.6, under getters: "The value of the Function object’s
+    // 'length' property is the Number value 0"
+    //
+    // Except this fails in getOwnPropertyDescriptor, I think because
+    // Int32Array.prototype does not provide a lookup hook, and the fallback
+    // case ends up calling the getter. Which seems odd to me, but much of this
+    // stuff baffles me. It does seem strange that there's no way to do
+    // getOwnPropertyDescriptor on any of these attributes.
+    //
+    //check(Object.getOwnPropertyDescriptor(Int32Array.prototype, 'byteOffset')['get'].length == 0);
 
     check(function() Int32Array.BYTES_PER_ELEMENT == 4);
     check(function() (new Int32Array(4)).BYTES_PER_ELEMENT == 4);
