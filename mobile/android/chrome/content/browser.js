@@ -1560,6 +1560,7 @@ Tab.prototype = {
 
     let frameLoader = this.browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     frameLoader.renderMode = Ci.nsIFrameLoader.RENDER_MODE_ASYNC_SCROLL;
+    frameLoader.clampScrollPosition = false;
 
     // only set tab uri if uri is valid
     let uri = null;
@@ -1725,10 +1726,8 @@ Tab.prototype = {
     let x = aViewport.x / aViewport.zoom;
     let y = aViewport.y / aViewport.zoom;
 
-    // Set scroll-port size and scroll position (both in CSS pixels)
+    // Set scroll position
     let win = this.browser.contentWindow;
-    win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).setScrollPositionClampingScrollPortSize(
-        gScreenWidth / aViewport.zoom, gScreenHeight / aViewport.zoom);
     win.scrollTo(x, y);
     this.userScrollPos.x = win.scrollX;
     this.userScrollPos.y = win.scrollY;
@@ -2044,11 +2043,6 @@ Tab.prototype = {
         return;
       }
 
-      let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
-      let uri = "";
-      if (browser)
-        uri = browser.currentURI.spec;
-
       // Check to see if we restoring the content from a previous presentation (session)
       // since there should be no real network activity
       let restoring = aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING;
@@ -2056,6 +2050,10 @@ Tab.prototype = {
 
       // true if the page loaded successfully (i.e., no 404s or other errors)
       let success = false; 
+      let uri = "";
+      try {
+        uri = aRequest.QueryInterface(Components.interfaces.nsIChannel).originalURI.spec;
+      } catch (e) { }
       try {
         success = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel).requestSucceeded;
       } catch (e) { }

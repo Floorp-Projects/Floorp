@@ -670,6 +670,7 @@ abstract public class GeckoApp
         tab.updateSecurityMode("unknown");
         tab.removeTransientDoorHangers();
         tab.setHasTouchListeners(false);
+        tab.setCheckerboardColor(Color.WHITE);
 
         maybeCancelFaviconLoad(tab);
 
@@ -829,14 +830,20 @@ abstract public class GeckoApp
                 final String title = message.getString("title");
                 final String backgroundColor = message.getString("bgColor");
                 handleContentLoaded(tabId, uri, title);
-                if (getLayerController() != null) {
-                    if (backgroundColor != null) {
-                        getLayerController().setCheckerboardColor(backgroundColor);
-                    } else {
-                        // Default to black if no color is given
-                        getLayerController().setCheckerboardColor(0);
-                    }
+                Tab tab = Tabs.getInstance().getTab(tabId);
+                if (backgroundColor != null) {
+                    tab.setCheckerboardColor(backgroundColor);
+                } else {
+                    // Default to white if no color is given
+                    tab.setCheckerboardColor(Color.WHITE);
                 }
+
+                // Sync up the LayerController and the tab if the tab's
+                // currently displayed.
+                if (getLayerController() != null && Tabs.getInstance().isSelectedTab(tab)) {
+                    getLayerController().setCheckerboardColor(tab.getCheckerboardColor());
+                }
+
                 Log.i(LOGTAG, "URI - " + uri + ", title - " + title);
             } else if (event.equals("DOMTitleChanged")) {
                 final int tabId = message.getInt("tabID");
@@ -1639,7 +1646,9 @@ abstract public class GeckoApp
         }
 
         mRestoreSession |= getProfile().shouldRestoreSession();
-        if (passedUri == null || passedUri.equals("about:home")) {
+
+        boolean isExternalURL = passedUri != null && !passedUri.equals("about:home");
+        if (!isExternalURL) {
             // show about:home if we aren't restoring previous session
             if (!mRestoreSession) {
                 mBrowserToolbar.updateTabCount(1);
@@ -1648,6 +1657,8 @@ abstract public class GeckoApp
         } else {
             mBrowserToolbar.updateTabCount(1);
         }
+
+        mBrowserToolbar.setProgressVisibility(isExternalURL || mRestoreSession);
 
         // Start migrating as early as possible, can do this in
         // parallel with Gecko load.

@@ -16,10 +16,10 @@
 
     </ScrollView>
 
-    <ImageView android:layout_width="43dip"
-               android:layout_height="15dip"
+    <ImageView android:layout_width="44dip"
+               android:layout_height="16dip"
                android:layout_marginLeft="4dip"
-               android:layout_marginTop="10dip"
+               android:layout_marginTop="9dip"
                android:layout_alignParentTop="true"
                android:src="@drawable/doorhanger_arrow"
                android:scaleType="fitXY"/>
