@@ -811,7 +811,7 @@ inline bool JSObject::isStaticBlock() const { return isBlock() && !getProto(); }
 inline bool JSObject::isStopIteration() const { return hasClass(&js::StopIterationClass); }
 inline bool JSObject::isStrictArguments() const { return hasClass(&js::StrictArgumentsObjectClass); }
 inline bool JSObject::isString() const { return hasClass(&js::StringClass); }
-inline bool JSObject::isTypedArray() const { return IsFastTypedArrayClass(getClass()); }
+inline bool JSObject::isTypedArray() const { return IsTypedArrayClass(getClass()); }
 inline bool JSObject::isWeakMap() const { return hasClass(&js::WeakMapClass); }
 inline bool JSObject::isWith() const { return hasClass(&js::WithClass); }
 inline bool JSObject::isXML() const { return hasClass(&js::XMLClass); }

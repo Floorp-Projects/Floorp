@@ -161,9 +161,6 @@ class ArrayBufferObject : public JSObject
     static JSType
     obj_typeOf(JSContext *cx, JSObject *obj);
 
-    static JSObject *
-    getArrayBuffer(JSObject *obj);
-
     bool
     allocateSlots(JSContext *cx, uint32_t size, uint8_t *contents = NULL);
 
@@ -218,15 +215,13 @@ struct TypedArray {
     };
 
     // and MUST NOT be used to construct new objects.
-    static Class fastClasses[TYPE_MAX];
+    static Class classes[TYPE_MAX];
 
     // These are the proto/original classes, used
     // fo constructing new objects
     static Class protoClasses[TYPE_MAX];
 
     static JSPropertySpec jsprops[];
-
-    static JSObject *getTypedArray(JSObject *obj);
 
     static JSBool prop_getBuffer(JSContext *cx, JSObject *obj, jsid id, Value *vp);
     static JSBool prop_getByteOffset(JSContext *cx, JSObject *obj, jsid id, Value *vp);
@@ -292,14 +287,31 @@ struct TypedArray {
     static int dataOffset();
 };
 
-bool
-IsFastOrSlowTypedArray(JSObject *obj);
+inline bool
+IsTypedArrayClass(const Class *clasp)
+{
+    return &TypedArray::classes[0] <= clasp &&
+           clasp < &TypedArray::classes[TypedArray::TYPE_MAX];
+}
 
-bool
-IsFastOrSlowTypedArrayClass(const Class *clasp);
+inline bool
+IsTypedArrayProtoClass(const Class *clasp)
+{
+    return &TypedArray::protoClasses[0] <= clasp &&
+           clasp < &TypedArray::protoClasses[TypedArray::TYPE_MAX];
+}
 
-bool
-IsFastTypedArrayClass(const Class *clasp);
+inline bool
+IsTypedArray(JSObject *obj)
+{
+    return IsTypedArrayClass(obj->getClass());
+}
+
+inline bool
+IsTypedArrayProto(JSObject *obj)
+{
+    return IsTypedArrayProtoClass(obj->getClass());
+}
 
 } // namespace js
 
