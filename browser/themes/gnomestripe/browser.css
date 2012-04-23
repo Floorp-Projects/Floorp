@@ -950,6 +950,10 @@ toolbar[iconsize="small"] #feed-button {
   -moz-box-align: stretch;
 }
 
+.urlbar-input-box {
+  -moz-margin-start: 0;
+}
+
 .urlbar-history-dropmarker {
   -moz-appearance: toolbarbutton-dropdown;
 }
@@ -1023,6 +1027,7 @@ toolbar[iconsize="small"] #feed-button {
 #urlbar-display {
   margin-top: 0;
   margin-bottom: 0;
+  -moz-margin-start: 0;
   color: GrayText;
 }
 
@@ -1033,7 +1038,7 @@ toolbar[iconsize="small"] #feed-button {
   margin-top: 2px;
   margin-bottom: 2px;
   -moz-margin-start: 4px;
-  -moz-margin-end: 0;
+  -moz-margin-end: 3px;
   list-style-image: url(chrome://browser/skin/identity-icons-generic.png);
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
@@ -1082,7 +1087,6 @@ toolbar[iconsize="small"] #feed-button {
 }
 
 #identity-icon-labels {
-  -moz-margin-start: 4px;
   -moz-padding-start: 2px;
   -moz-padding-end: 5px;
 }
@@ -1091,6 +1095,7 @@ toolbar[iconsize="small"] #feed-button {
   background-color: #fff;
   color: hsl(92,81%,16%);
   -moz-border-end: 1px solid hsla(92,81%,16%,.2);
+  -moz-margin-end: 4px;
 }
 
 /* Identity popup icons */
