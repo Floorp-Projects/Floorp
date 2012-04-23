@@ -8,9 +8,9 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource:///modules/Services.jsm");
-Cu.import("resource:///modules/FileUtils.jsm");
-Cu.import("resource:///modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 let WebappsInstaller = {
   /**
@@ -495,7 +495,7 @@ MacNativeApp.prototype = {
       throw(ex);
     }
 
-    getIconForApp(this);
+    getIconForApp(this, this._createPListFile);
   },
 
   _removeInstallation: function(keepProfile) {
@@ -561,7 +561,10 @@ MacNativeApp.prototype = {
     writer.setString("Webapp", "Name", this.appName);
     writer.setString("Webapp", "Profile", this.appProfileDir.leafName);
     writer.writeFile();
+  },
 
+  _createPListFile: function() {
+    // ${InstallDir}/Contents/Info.plist
     let infoPListContent = '<?xml version="1.0" encoding="UTF-8"?>\n\
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n\
 <plist version="1.0">\n\
@@ -616,7 +619,7 @@ MacNativeApp.prototype = {
    * @param aCallback     a callback function to be called
    *                      after the process finishes
    */
-  processIcon: function(aMimeType, aIcon) {
+  processIcon: function(aMimeType, aIcon, aCallback) {
     try {
       let process = Cc["@mozilla.org/process/util;1"]
                     .createInstance(Ci.nsIProcess);
@@ -633,6 +636,8 @@ MacNativeApp.prototype = {
                   9);
     } catch(e) {
       throw(e);
+    } finally {
+      aCallback.call(this);
     }
   }
 

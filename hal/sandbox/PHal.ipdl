@@ -52,6 +52,8 @@ using mozilla::hal::SensorType;
 using mozilla::hal::SensorAccuracyType;
 using mozilla::hal::WakeLockControl;
 using mozilla::dom::ScreenOrientation;
+using mozilla::hal::SwitchState;
+using mozilla::hal::SwitchDevice;
 
 namespace mozilla {
 
@@ -82,6 +84,11 @@ namespace hal {
     double bandwidth;
     bool   canBeMetered;
   };
+
+  struct SwitchEvent {
+    SwitchDevice device;
+    SwitchState status;
+  };
 }
 
 namespace hal {
@@ -102,6 +109,7 @@ child:
     NotifyNetworkChange(NetworkInformation aNetworkInfo);
     NotifyWakeLockChange(WakeLockInformation aWakeLockInfo);
     NotifyScreenOrientationChange(ScreenOrientation aScreenOrientation);
+    NotifySwitchChange(SwitchEvent aEvent);
 
 parent:
     Vibrate(uint32[] pattern, uint64[] id, PBrowser browser);
@@ -150,6 +158,11 @@ parent:
     sync LockScreenOrientation(ScreenOrientation aOrientation)
       returns (bool allowed);
     UnlockScreenOrientation();
+ 
+    EnableSwitchNotifications(SwitchDevice aDevice);
+    DisableSwitchNotifications(SwitchDevice aDevice);
+    sync GetCurrentSwitchState(SwitchDevice aDevice)
+      returns (SwitchState aState);
 
 child:
     NotifySensorChange(SensorData aSensorData);
