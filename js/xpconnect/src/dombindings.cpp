@@ -208,7 +208,7 @@ bool
 DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine, nsresult *aResult)
 {
     bool enabled;
-    bool defined = aDefine(cx, XPCWrappedNativeScope::FindInJSObjectScope(cx, obj), &enabled);
+    bool defined = aDefine(cx, obj, &enabled);
     NS_ASSERTION(!defined || enabled,
                  "We defined a constructor but the new bindings are disabled?");
     *aResult = defined ? NS_OK : NS_ERROR_FAILURE;
@@ -414,7 +414,22 @@ InvalidateProtoShape_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, j
 
 template<class LC>
 JSObject *
-ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
+ListBase<LC>::getPrototype(JSContext *cx, JSObject *receiver, bool *enabled)
+{
+    *enabled = true;
+
+    XPCWrappedNativeScope *scope =
+        XPCWrappedNativeScope::FindInJSObjectScope(cx, receiver);
+    if (!scope)
+        return false;
+
+    return getPrototype(cx, scope, receiver);
+}
+
+template<class LC>
+JSObject *
+ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope,
+                           JSObject *receiver)
 {
     nsDataHashtable<nsDepCharHashKey, JSObject*> &cache =
         scope->GetCachedDOMPrototypes();
@@ -429,7 +444,7 @@ ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
         return NULL;
     }
 
-    JSObject* proto = Base::getPrototype(cx, scope);
+    JSObject* proto = Base::getPrototype(cx, scope, receiver);
     if (!proto)
         return NULL;
 
@@ -468,7 +483,7 @@ ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
     if (!JS_LinkConstructorAndPrototype(cx, interface, interfacePrototype))
         return NULL;
 
-    if (!JS_DefineProperty(cx, global, sInterfaceClass.name, OBJECT_TO_JSVAL(interface), NULL,
+    if (!JS_DefineProperty(cx, receiver, sInterfaceClass.name, OBJECT_TO_JSVAL(interface), NULL,
                            NULL, 0))
         return NULL;
 
@@ -493,15 +508,15 @@ ListBase<LC>::create(JSContext *cx, JSObject *scope, ListType *aList,
     if (!parent)
         return NULL;
 
+    JSObject *global = js::GetGlobalForObjectCrossCompartment(parent);
+
     JSAutoEnterCompartment ac;
-    if (js::GetGlobalForObjectCrossCompartment(parent) != scope) {
-        if (!ac.enter(cx, parent))
+    if (global != scope) {
+        if (!ac.enter(cx, global))
             return NULL;
     }
 
-    XPCWrappedNativeScope *xpcscope =
-        XPCWrappedNativeScope::FindInJSObjectScope(cx, parent);
-    JSObject *proto = getPrototype(cx, xpcscope, triedToWrap);
+    JSObject *proto = getPrototype(cx, global, triedToWrap);
     if (!proto && !*triedToWrap)
         aWrapperCache->ClearIsDOMBinding();
     if (!proto)
@@ -1244,12 +1259,12 @@ ListBase<LC>::finalize(JSFreeOp *fop, JSObject *proxy)
 
 
 JSObject*
-NoBase::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
+NoBase::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, JSObject *receiver)
 {
     // We need to pass the object prototype to JS_NewObject. If we pass NULL then the JS engine
     // will look up a prototype on the global by using the class' name and we'll recurse into
     // getPrototype.
-    return JS_GetObjectPrototype(cx, scope->GetGlobalJSObject());
+    return JS_GetObjectPrototype(cx, receiver);
 }
 
 
