@@ -2163,7 +2163,8 @@ abstract public class GeckoApp
         Log.i(LOGTAG, "application paused");
         GeckoAppShell.sendEventToGecko(GeckoEvent.createPauseEvent(true));
 
-        mConnectivityReceiver.unregisterFor(mAppContext);
+        if (mConnectivityReceiver != null)
+            mConnectivityReceiver.unregisterFor(mAppContext);
         GeckoNetworkManager.getInstance().stop();
         GeckoScreenOrientationListener.getInstance().stop();
     }
@@ -2174,7 +2175,8 @@ abstract public class GeckoApp
         if (checkLaunchState(LaunchState.GeckoRunning))
             GeckoAppShell.sendEventToGecko(GeckoEvent.createResumeEvent(true));
 
-        mConnectivityReceiver.registerFor(mAppContext);
+        if (mConnectivityReceiver != null)
+            mConnectivityReceiver.registerFor(mAppContext);
         GeckoNetworkManager.getInstance().start();
         GeckoScreenOrientationListener.getInstance().start();
     }
