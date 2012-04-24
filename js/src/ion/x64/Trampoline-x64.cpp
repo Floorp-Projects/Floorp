@@ -67,8 +67,6 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     const Register reg_frame = IntArgReg3;
 
 #if defined(_WIN64)
-    // TODO: All these values are wrong. Need to test.
-    JS_ASSERT(!"Need to determine correct offsets for generateEnterJIT() args on Win64.");
     const Operand token  = Operand(rbp, 16 + ShadowStackSpace);
     const Operand result = Operand(rbp, 24 + ShadowStackSpace);
 #else
