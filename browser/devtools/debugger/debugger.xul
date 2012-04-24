@@ -95,7 +95,8 @@
               class="devtools-toolbarbutton"
               label="&debuggerUI.stepOutButton;"
               tabindex="0"/>
-      <menulist id="scripts" class="devtools-menulist"/>
+      <menulist id="scripts" class="devtools-menulist"
+                label="&debuggerUI.emptyScriptText;"/>
       <textbox id="scripts-search" type="search"
                emptytext="&debuggerUI.emptyFilterText;"/>
       <spacer flex="1"/>
