@@ -56,10 +56,6 @@
 
 class nsIWidget;
 
-namespace base {
-class Thread;
-}
-
 namespace mozilla {
 namespace layers {
 
@@ -90,7 +86,8 @@ class CompositorParent : public PCompositorParent,
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorParent)
 public:
-  CompositorParent(nsIWidget* aWidget, base::Thread* aCompositorThread);
+  CompositorParent(nsIWidget* aWidget, MessageLoop* aMsgLoop, PlatformThreadId aThreadID);
+
   virtual ~CompositorParent();
 
   virtual bool RecvWillStop() MOZ_OVERRIDE;
@@ -124,6 +121,9 @@ private:
   void ScheduleComposition();
   void TransformShadowTree();
 
+  inline MessageLoop* CompositorLoop();
+  inline PlatformThreadId CompositorThreadID();
+
   // Platform specific functions
 #ifdef MOZ_WIDGET_ANDROID
   /**
@@ -134,7 +134,6 @@ private:
 #endif
 
   nsRefPtr<LayerManager> mLayerManager;
-  base::Thread* mCompositorThread;
   nsIWidget* mWidget;
   CancelableTask *mCurrentCompositeTask;
   TimeStamp mLastCompose;
@@ -158,6 +157,9 @@ private:
   // This flag is set during a layers update, so that the first composition
   // after a layers update has it set. It is cleared after that first composition.
   bool mLayersUpdated;
+
+  MessageLoop* mCompositorLoop;
+  PlatformThreadId mThreadID;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };
