@@ -79,6 +79,8 @@ ToNSString(id aValue)
       NSAccessibilityNumberOfCharactersAttribute, // required
       NSAccessibilityVisibleCharacterRangeAttribute, // required
       NSAccessibilityInsertionPointLineNumberAttribute,
+      @"AXRequired",
+      @"AXInvalid",
       nil
     ];
     [supportedAttributes addObjectsFromArray:[super accessibilityAttributeNames]];
@@ -114,6 +116,12 @@ ToNSString(id aValue)
 
     return [self text];
   }
+
+  if ([attribute isEqualToString:@"AXRequired"])
+    return [NSNumber numberWithBool:!!(mGeckoAccessible->State() & states::REQUIRED)];
+
+  if ([attribute isEqualToString:@"AXInvalid"])
+    return [NSNumber numberWithBool:!!(mGeckoAccessible->State() & states::INVALID)];
 
   if ([attribute isEqualToString:NSAccessibilityVisibleCharacterRangeAttribute])
     return [self visibleCharacterRange];
