@@ -171,6 +171,7 @@ public:
   void MaybeLoadImage();
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
+  nsIntPoint GetXY();
   nsSize GetWidthHeight();
 };
 
@@ -273,6 +274,42 @@ nsHTMLImageElement::GetComplete(bool* aComplete)
   *aComplete =
     (status &
      (imgIRequest::STATUS_LOAD_COMPLETE | imgIRequest::STATUS_ERROR)) != 0;
+
+  return NS_OK;
+}
+
+nsIntPoint
+nsHTMLImageElement::GetXY()
+{
+  nsIntPoint point(0, 0);
+
+  nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
+
+  if (!frame) {
+    return point;
+  }
+
+  nsIFrame* layer = nsLayoutUtils::GetClosestLayer(frame->GetParent());
+  nsPoint origin(frame->GetOffsetTo(layer));
+  // Convert to pixels using that scale
+  point.x = nsPresContext::AppUnitsToIntCSSPixels(origin.x);
+  point.y = nsPresContext::AppUnitsToIntCSSPixels(origin.y);
+
+  return point;
+}
+
+NS_IMETHODIMP
+nsHTMLImageElement::GetX(PRInt32* aX)
+{
+  *aX = GetXY().x;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLImageElement::GetY(PRInt32* aY)
+{
+  *aY = GetXY().y;
 
   return NS_OK;
 }
