@@ -704,68 +704,10 @@ MagicValue(JSWhyMagic why)
 }
 
 static JS_ALWAYS_INLINE Value
-NumberValue(float f)
-{
-    Value v;
-    v.setNumber(f);
-    return v;
-}
-
-static JS_ALWAYS_INLINE Value
 NumberValue(double dbl)
 {
     Value v;
     v.setNumber(dbl);
-    return v;
-}
-
-static JS_ALWAYS_INLINE Value
-NumberValue(int8_t i)
-{
-    return Int32Value(i);
-}
-
-static JS_ALWAYS_INLINE Value
-NumberValue(uint8_t i)
-{
-    return Int32Value(i);
-}
-
-static JS_ALWAYS_INLINE Value
-NumberValue(int16_t i)
-{
-    return Int32Value(i);
-}
-
-static JS_ALWAYS_INLINE Value
-NumberValue(uint16_t i)
-{
-    return Int32Value(i);
-}
-
-static JS_ALWAYS_INLINE Value
-NumberValue(int32_t i)
-{
-    return Int32Value(i);
-}
-
-static JS_ALWAYS_INLINE Value
-NumberValue(uint32_t i)
-{
-    Value v;
-    v.setNumber(i);
-    return v;
-}
-
-static JS_ALWAYS_INLINE Value
-NumberValue(uint64_t i)
-{
-    MOZ_ASSERT(uint64_t(double(i)) == i, "value creation from uint64_t was lossy");
-    Value v;
-    if (i > JSVAL_INT_MAX)
-        v.setDouble(i);
-    else
-        v.setInt32(int32_t(i));
     return v;
 }
 
