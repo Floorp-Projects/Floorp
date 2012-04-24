@@ -81,11 +81,4 @@ public class ImmutableViewportMetrics {
     public FloatSize getCssPageSize() {
         return new FloatSize(cssPageSizeWidth, cssPageSizeHeight);
     }
-
-    @Override
-    public String toString() {
-        return "ImmutableViewportMetrics v=(" + viewportRectLeft + "," + viewportRectTop + ","
-                + viewportRectRight + "," + viewportRectBottom + ") p=(" + pageSizeWidth + ","
-                + pageSizeHeight + ") z=" + zoomFactor;
-    }
 }
