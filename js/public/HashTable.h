@@ -384,7 +384,7 @@ class HashTable : private AllocPolicy
         mutationCount(0)
     {}
 
-    bool init(uint32_t length)
+    MOZ_WARN_UNUSED_RESULT bool init(uint32_t length)
     {
         /* Make sure that init isn't called twice. */
         JS_ASSERT(table == NULL);
