@@ -3128,7 +3128,7 @@ BasicShadowLayerManager::CreateThebesLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
 #ifdef FORCE_BASICTILEDTHEBESLAYER
-  if (HasShadowManager()) {
+  if (HasShadowManager() && GetParentBackendType() == LayerManager::LAYERS_OPENGL) {
     // BasicTiledThebesLayer doesn't support main
     // thread compositing so only return this layer
     // type if we have a shadow manager.

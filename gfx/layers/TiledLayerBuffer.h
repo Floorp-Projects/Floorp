@@ -8,7 +8,11 @@
 #define TILEDLAYERBUFFER_TILE_SIZE 256
 
 // Debug defines
-//#define FORCE_BASICTILEDTHEBESLAYER
+#ifdef MOZ_JAVA_COMPOSITOR
+  // This needs to go away as we enabled tiled
+  // layers everywhere.
+  #define FORCE_BASICTILEDTHEBESLAYER
+#endif
 //#define GFX_TILEDLAYER_DEBUG_OVERLAY
 //#define GFX_TILEDLAYER_PREF_WARNINGS
 
