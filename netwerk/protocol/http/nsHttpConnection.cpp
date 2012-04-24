@@ -73,6 +73,7 @@ using namespace mozilla::net;
 
 nsHttpConnection::nsHttpConnection()
     : mTransaction(nsnull)
+    , mIdleTimeout(0)
     , mConsiderReusedAfterInterval(0)
     , mConsiderReusedAfterEpoch(0)
     , mCurrentBytesRead(0)
@@ -821,7 +822,7 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
             if (cp)
                 mIdleTimeout = PR_SecondsToInterval((PRUint32) atoi(cp + 8));
             else
-                mIdleTimeout = gHttpHandler->SpdyTimeout();
+                mIdleTimeout = gHttpHandler->IdleTimeout();
 
             cp = PL_strcasestr(val, "max=");
             if (cp) {
