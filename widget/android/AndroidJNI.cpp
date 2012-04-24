@@ -897,5 +897,5 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyFilePickerResult(JNIEnv* jenv, jclass
     NS_DispatchToMainThread(runnable);
 }
 
-}
 #endif
+}
