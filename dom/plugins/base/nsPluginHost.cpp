@@ -86,7 +86,6 @@
 #include "nsIScriptChannel.h"
 #include "nsIBlocklistService.h"
 #include "nsVersionComparator.h"
-#include "nsIPrivateBrowsingService.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsPluginStreamListenerPeer.h"
@@ -357,7 +356,6 @@ nsPluginHost::nsPluginHost()
     mozilla::services::GetObserverService();
   if (obsService) {
     obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-    obsService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, false);
 #ifdef MOZ_WIDGET_ANDROID
     obsService->AddObserver(this, "application-foreground", false);
     obsService->AddObserver(this, "application-background", false);
@@ -3329,12 +3327,6 @@ NS_IMETHODIMP nsPluginHost::Observe(nsISupports *aSubject,
     OnShutdown();
     Destroy();
     sInst->Release();
-  }
-  if (!nsCRT::strcmp(NS_PRIVATE_BROWSING_SWITCH_TOPIC, aTopic)) {
-    // inform all active plugins of changed private mode state
-    for (PRUint32 i = 0; i < mInstances.Length(); i++) {
-      mInstances[i]->PrivateModeStateChanged();
-    }
   }
 #ifdef MOZ_WIDGET_ANDROID
   if (!nsCRT::strcmp("application-background", aTopic)) {
