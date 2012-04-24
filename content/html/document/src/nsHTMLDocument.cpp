@@ -2948,7 +2948,7 @@ ConvertToMidasInternalCommandInner(const nsAString& inCommandID,
   }
 
   // String parameter -- see if we need to convert it (necessary for
-  // cmd_paragraphState)
+  // cmd_paragraphState and cmd_fontSize)
   if (outCommandID.EqualsLiteral("cmd_paragraphState")) {
     const PRUnichar* start = inParam.BeginReading();
     const PRUnichar* end = inParam.EndReading();
@@ -2969,6 +2969,16 @@ ConvertToMidasInternalCommandInner(const nsAString& inCommandID,
 
     if (j == ArrayLength(gBlocks)) {
       outParam.Truncate();
+    }
+  } else if (outCommandID.EqualsLiteral("cmd_fontSize")) {
+    // Per editing spec as of April 23, 2012, we need to reject the value if
+    // it's not a valid floating-point number surrounded by optional whitespace.
+    // Otherwise, we parse it as a legacy font size.  For now, we just parse as
+    // a legacy font size regardless (matching WebKit) -- bug 747879.
+    outParam.Truncate();
+    PRInt32 size = nsContentUtils::ParseLegacyFontSize(inParam);
+    if (size) {
+      outParam.AppendInt(size);
     }
   } else {
     CopyUTF16toUTF8(inParam, outParam);
@@ -3106,7 +3116,8 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
                                      cmdToDispatch, paramStr, isBool, boolVal))
     return NS_OK;
 
-  if (cmdToDispatch.EqualsLiteral("cmd_paragraphState") && paramStr.IsEmpty()) {
+  if ((cmdToDispatch.EqualsLiteral("cmd_paragraphState") ||
+       cmdToDispatch.EqualsLiteral("cmd_fontSize")) && paramStr.IsEmpty()) {
     // Invalid value
     return NS_OK;
   }
