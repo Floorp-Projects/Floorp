@@ -52,6 +52,7 @@ import org.mozilla.gecko.gfx.TileLayer;
 import org.mozilla.gecko.GeckoAppShell;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -90,8 +91,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
     private final LayerView mView;
     private final SingleTileLayer mBackgroundLayer;
-    private final CheckerboardImage mCheckerboardImage;
-    private final SingleTileLayer mCheckerboardLayer;
+    private final ScreenshotLayer mCheckerboardLayer;
     private final NinePatchTileLayer mShadowLayer;
     private TextLayer mFrameRateLayer;
     private final ScrollbarLayer mHorizScrollLayer;
@@ -158,6 +158,36 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         "    gl_FragColor = texture2D(sTexture, vec2(vTexCoord.x, 1.0 - vTexCoord.y));\n" +
         "}\n";
 
+    public void setCheckerboardBitmap(Bitmap bitmap) {
+        mCheckerboardLayer.setBitmap(bitmap);
+        mCheckerboardLayer.beginTransaction();
+        try {
+            mCheckerboardLayer.invalidate();
+        } finally {
+            mCheckerboardLayer.endTransaction();
+        }
+    }
+
+    public void updateCheckerboardBitmap(Bitmap bitmap, float x, float y, float width, float height) {
+        mCheckerboardLayer.updateBitmap(bitmap, x, y, width, height);
+        mCheckerboardLayer.beginTransaction();
+        try {
+            mCheckerboardLayer.invalidate();
+        } finally {
+            mCheckerboardLayer.endTransaction();
+        }
+    }
+
+    public void resetCheckerboard() {
+        mCheckerboardLayer.reset();
+        mCheckerboardLayer.beginTransaction();
+        try {
+            mCheckerboardLayer.invalidate();
+        } finally {
+            mCheckerboardLayer.endTransaction();
+        }
+    }
+
     public LayerRenderer(LayerView view) {
         mView = view;
 
@@ -166,8 +196,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         CairoImage backgroundImage = new BufferedCairoImage(controller.getBackgroundPattern());
         mBackgroundLayer = new SingleTileLayer(true, backgroundImage);
 
-        mCheckerboardImage = new CheckerboardImage();
-        mCheckerboardLayer = new SingleTileLayer(true, mCheckerboardImage);
+        mCheckerboardLayer = ScreenshotLayer.create();
 
         CairoImage shadowImage = new BufferedCairoImage(controller.getShadowPattern());
         mShadowLayer = new NinePatchTileLayer(shadowImage);
@@ -391,18 +420,15 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private void updateCheckerboardImage() {
         int checkerboardColor = mView.getController().getCheckerboardColor();
         boolean showChecks = mView.getController().checkerboardShouldShowChecks();
-        if (checkerboardColor == mCheckerboardImage.getColor() &&
-            showChecks == mCheckerboardImage.getShowChecks()) {
-            return;
-        }
 
         mCheckerboardLayer.beginTransaction();  // called on compositor thread
         try {
-            mCheckerboardImage.update(showChecks, checkerboardColor);
-            mCheckerboardLayer.invalidate();
+            if (mCheckerboardLayer.updateBackground(showChecks, checkerboardColor))
+                mCheckerboardLayer.invalidate();
         } finally {
             mCheckerboardLayer.endTransaction();
         }
+
     }
 
     /*
@@ -533,7 +559,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             mUpdated &= mBackgroundLayer.update(mScreenContext);    // called on compositor thread
             mUpdated &= mShadowLayer.update(mPageContext);  // called on compositor thread
             updateCheckerboardImage();
-            mUpdated &= mCheckerboardLayer.update(mScreenContext);   // called on compositor thread
+            mUpdated &= mCheckerboardLayer.update(mPageContext);   // called on compositor thread
             if (mFrameRateLayer != null) mUpdated &= mFrameRateLayer.update(mScreenContext); // called on compositor thread
             mUpdated &= mVertScrollLayer.update(mPageContext);  // called on compositor thread
             mUpdated &= mHorizScrollLayer.update(mPageContext); // called on compositor thread
@@ -569,7 +595,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             /* Draw the checkerboard. */
             setScissorRect();
             mCheckerboardLayer.setMask(rootMask);
-            mCheckerboardLayer.draw(mScreenContext);
+            mCheckerboardLayer.draw(mPageContext);
             GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
         }
 
