@@ -1560,7 +1560,6 @@ Tab.prototype = {
 
     let frameLoader = this.browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     frameLoader.renderMode = Ci.nsIFrameLoader.RENDER_MODE_ASYNC_SCROLL;
-    frameLoader.clampScrollPosition = false;
 
     // only set tab uri if uri is valid
     let uri = null;
@@ -1852,6 +1851,8 @@ Tab.prototype = {
 
     // Set scroll position
     let win = this.browser.contentWindow;
+    win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).setScrollPositionClampingScrollPortSize(
+        gScreenWidth / aViewport.zoom, gScreenHeight / aViewport.zoom);
     win.scrollTo(x, y);
     this.userScrollPos.x = win.scrollX;
     this.userScrollPos.y = win.scrollY;
