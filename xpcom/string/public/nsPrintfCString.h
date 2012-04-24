@@ -63,17 +63,6 @@ class nsPrintfCString : public nsFixedCString
           va_end(ap);
         }
 
-      // Obsolete form required you to specify a length in advance. The length is now
-      // unused.
-      nsPrintfCString( size_type n, const char_type* format, ...)
-        : nsFixedCString(mLocalBuffer, kLocalBufferSize, 0)
-        {
-          va_list ap;
-          va_start(ap, format);
-          AppendPrintf(format, ap);
-          va_end(ap);
-        }
-
     private:
       enum { kLocalBufferSize=15 };
       // ought to be large enough for most things ... a |long long| needs at most 20 (so you'd better ask)

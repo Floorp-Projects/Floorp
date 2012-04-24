@@ -396,7 +396,7 @@ public:
         "value.");
     }
     else {
-      aDescription.Append(nsPrintfCString(1024,
+      aDescription.Append(nsPrintfCString(
         "We fire such an event if we notice there is less than %d MB of virtual "
         "address space available (controlled by the "
         "'memory.low_virtual_mem_threshold_mb' pref).  We'll likely crash if "
@@ -438,7 +438,7 @@ public:
         "value.");
     }
     else {
-      aDescription.Append(nsPrintfCString(1024,
+      aDescription.Append(nsPrintfCString(
         "We fire such an event if we notice there is less than %d MB of "
         "available commit space (controlled by the "
         "'memory.low_commit_space_threshold_mb' pref).  Windows will likely "
@@ -480,7 +480,7 @@ public:
         "value.");
     }
     else {
-      aDescription.Append(nsPrintfCString(1024,
+      aDescription.Append(nsPrintfCString(
         "We fire such an event if we notice there is less than %d MB of "
         "available physical memory (controlled by the "
         "'memory.low_physical_memory_threshold_mb' pref).  The machine will start "
