@@ -105,9 +105,130 @@ __EOT
 # We therefore define a set of MOZ_SCRIPT_* constants that are script _codes_
 # compatible with those libraries, and map these to HB_SCRIPT_* _tags_ as needed.
 
+# CHECK that this matches Pango source (as found for example at 
+# http://git.gnome.org/browse/pango/tree/pango/pango-script.h)
+# for as many codes as that defines (currently up through Unicode 5.1)
+# and the GLib enumeration
+# http://developer.gnome.org/glib/2.30/glib-Unicode-Manipulation.html#GUnicodeScript
+# (currently defined up through Unicode 6.0).
+# Constants beyond these may be regarded as unstable for now, but we don't actually
+# depend on the specific values.
+my %scriptCode = (
+  INVALID => -1,
+  COMMON => 0,
+  INHERITED => 1,
+  ARABIC => 2,
+  ARMENIAN => 3,
+  BENGALI => 4,
+  BOPOMOFO => 5,
+  CHEROKEE => 6,
+  COPTIC => 7,
+  CYRILLIC => 8,
+  DESERET => 9,
+  DEVANAGARI => 10,
+  ETHIOPIC => 11,
+  GEORGIAN => 12,
+  GOTHIC => 13,
+  GREEK => 14,
+  GUJARATI => 15,
+  GURMUKHI => 16,
+  HAN => 17,
+  HANGUL => 18,
+  HEBREW => 19,
+  HIRAGANA => 20,
+  KANNADA => 21,
+  KATAKANA => 22,
+  KHMER => 23,
+  LAO => 24,
+  LATIN => 25,
+  MALAYALAM => 26,
+  MONGOLIAN => 27,
+  MYANMAR => 28,
+  OGHAM => 29,
+  OLD_ITALIC => 30,
+  ORIYA => 31,
+  RUNIC => 32,
+  SINHALA => 33,
+  SYRIAC => 34,
+  TAMIL => 35,
+  TELUGU => 36,
+  THAANA => 37,
+  THAI => 38,
+  TIBETAN => 39,
+  CANADIAN_ABORIGINAL => 40,
+  YI => 41,
+  TAGALOG => 42,
+  HANUNOO => 43,
+  BUHID => 44,
+  TAGBANWA => 45,
+# unicode 4.0 additions
+  BRAILLE => 46,
+  CYPRIOT => 47,
+  LIMBU => 48,
+  OSMANYA => 49,
+  SHAVIAN => 50,
+  LINEAR_B => 51,
+  TAI_LE => 52,
+  UGARITIC => 53,
+# unicode 4.1 additions
+  NEW_TAI_LUE => 54,
+  BUGINESE => 55,
+  GLAGOLITIC => 56,
+  TIFINAGH => 57,
+  SYLOTI_NAGRI => 58,
+  OLD_PERSIAN => 59,
+  KHAROSHTHI => 60,
+# unicode 5.0 additions
+  UNKNOWN => 61,
+  BALINESE => 62,
+  CUNEIFORM => 63,
+  PHOENICIAN => 64,
+  PHAGS_PA => 65,
+  NKO => 66,
+# unicode 5.1 additions
+  KAYAH_LI => 67,
+  LEPCHA => 68,
+  REJANG => 69,
+  SUNDANESE => 70,
+  SAURASHTRA => 71,
+  CHAM => 72,
+  OL_CHIKI => 73,
+  VAI => 74,
+  CARIAN => 75,
+  LYCIAN => 76,
+  LYDIAN => 77,
+# unicode 5.2 additions
+  AVESTAN => 78,
+  BAMUM => 79,
+  EGYPTIAN_HIEROGLYPHS => 80,
+  IMPERIAL_ARAMAIC => 81,
+  INSCRIPTIONAL_PAHLAVI => 82,
+  INSCRIPTIONAL_PARTHIAN => 83,
+  JAVANESE => 84,
+  KAITHI => 85,
+  LISU => 86,
+  MEETEI_MAYEK => 87,
+  OLD_SOUTH_ARABIAN => 88,
+  OLD_TURKIC => 89,
+  SAMARITAN => 90,
+  TAI_THAM => 91,
+  TAI_VIET => 92,
+# unicode 6.0 additions
+  BATAK => 93,
+  BRAHMI => 94,
+  MANDAIC => 95,
+# unicode 6.1 additions
+  CHAKMA => 96,
+  MEROITIC_CURSIVE => 97,
+  MEROITIC_HIEROGLYPHS => 98,
+  MIAO => 99,
+  SHARADA => 100,
+  SORA_SOMPENG => 101,
+  TAKRI => 102
+);
+
 my $sc = -1;
 my $cc = -1;
-my %scriptCode;
 my %catCode;
 my @scriptCodeToTag;
 my @scriptCodeToName;
@@ -115,9 +236,13 @@ my @scriptCodeToName;
 open FH, "< $ARGV[0]" or die "can't open $ARGV[0] (should be header file hb-common.h)\n";
 while (<FH>) {
     if (m/HB_SCRIPT_([A-Z_]+)\s*=\s*HB_TAG\s*\(('.','.','.','.')\)\s*,/) {
-        $scriptCodeToTag[++$sc] = $2;
+        unless (exists $scriptCode{$1}) {
+            warn "unknown script name $1 found in hb-common.h\n";
+            next;
+        }
+        $sc = $scriptCode{$1};
+        $scriptCodeToTag[$sc] = $2;
         $scriptCodeToName[$sc] = $1;
-        $scriptCode{$1} = $sc;
     }
     if (m/HB_UNICODE_GENERAL_CATEGORY_([A-Z_]+)/) {
         $cc++;
