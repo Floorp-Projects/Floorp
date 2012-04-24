@@ -1973,7 +1973,7 @@ nsCanvasRenderingContext2DAzure::CreatePattern(nsIDOMHTMLElement *image,
   }
 
   // Ignore nsnull cairo surfaces! See bug 666312.
-  if (!res.mSurface->CairoSurface()) {
+  if (!res.mSurface->CairoSurface() || res.mSurface->CairoStatus()) {
     return NS_OK;
   }
 
