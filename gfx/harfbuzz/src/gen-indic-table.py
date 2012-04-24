@@ -2,11 +2,11 @@
 
 import sys
 
-if len (sys.argv) < 4:
+if len (sys.argv) != 4:
 	print >>sys.stderr, "usage: ./gen-indic-table.py IndicSyllabicCategory.txt IndicMatraCategory.txt Blocks.txt"
 	sys.exit (1)
 
-files = [file (sys.argv[i+1]) for i in range (3)]
+files = [file (x) for x in sys.argv[1:]]
 
 headers = [[f.readline () for i in range (2)] for f in files]
 
@@ -74,9 +74,12 @@ for h in headers:
 	for l in h:
 		print " * %s" % (l.strip())
 print " */"
+print
+print "#ifndef HB_OT_SHAPE_COMPLEX_INDIC_TABLE_HH"
+print "#define HB_OT_SHAPE_COMPLEX_INDIC_TABLE_HH"
+print
 
 # Shorten values
-print
 short = [{
 	"Bindu":		'Bi',
 	"Visarga":		'Vs',
@@ -120,6 +123,8 @@ print "#define _(S,M) INDIC_COMBINE_CATEGORIES (ISC_##S, IMC_##M)"
 print
 print
 
+total = 0
+used = 0
 def print_block (block, start, end, data):
 	print
 	print
@@ -134,14 +139,9 @@ def print_block (block, start, end, data):
 		d = data.get (u, defaults)
 		sys.stdout.write ("%9s" % ("_(%s,%s)," % (short[0][d[0]], short[1][d[1]])))
 
-	if num == 0:
-		# Filler block, don't check occupancy
-		return
-	total = end - start + 1
-	occupancy = num * 100. / total
-	# Maintain at least 30% occupancy in the table */
-	if occupancy < 30:
-		raise Exception ("Table too sparse, please investigate: ", occupancy, block)
+	global total, used
+	total += end - start + 1
+	used += num
 
 uu = data.keys ()
 uu.sort ()
@@ -179,8 +179,8 @@ print
 print
 print "#define indic_offset_total %d" % offset
 print
-print "};"
-
+occupancy = used * 100. / total
+print "}; /* Table occupancy: %d%% */" % occupancy
 print
 print "static INDIC_TABLE_ELEMENT_TYPE"
 print "get_indic_categories (hb_codepoint_t u)"
@@ -192,7 +192,6 @@ for u,d in singles.items ():
 	print "  if (unlikely (u == 0x%04X)) return _(%s,%s);" % (u, short[0][d[0]], short[1][d[1]])
 print "  return _(x,x);"
 print "}"
-
 print
 print "#undef _"
 for i in range (2):
@@ -202,7 +201,11 @@ for i in range (2):
 	for v in vv:
 		print "#undef %s_%s" % \
 			(what_short[i], short[i][v])
-
 print
+print "#endif /* HB_OT_SHAPE_COMPLEX_INDIC_TABLE_HH */"
 print
 print "/* == End of generated table == */"
+
+# Maintain at least 30% occupancy in the table */
+if occupancy < 30:
+	raise Exception ("Table too sparse, please investigate: ", occupancy)

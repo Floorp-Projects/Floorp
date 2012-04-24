@@ -63,8 +63,8 @@
 #include "gfxPangoFonts.h"
 #include "gfxFT2FontBase.h"
 #include "gfxFT2Utils.h"
-#include "harfbuzz/hb-unicode.h"
-#include "harfbuzz/hb-ot-tag.h"
+#include "harfbuzz/hb.h"
+#include "harfbuzz/hb-ot.h"
 #include "gfxHarfBuzzShaper.h"
 #ifdef MOZ_GRAPHITE
 #include "gfxGraphiteShaper.h"

@@ -5,6 +5,7 @@
 #ifndef GFXCOWSURFACEWRAPPER
 #define GFXCOWSURFACEWRAPPER
 
+#include "gfxASurface.h"
 #include "nsISupportsImpl.h"
 #include "nsAutoPtr.h"
 
@@ -43,6 +44,8 @@ public:
     return mSurfaceData;
   }
 
+  const gfxASurface::gfxImageFormat& Format() { return mFormat; }
+
   /**
    * Get a writable copy of the image.
    * If necessary this will copy the wrapper. If there are no contention
@@ -60,9 +63,10 @@ public:
 
 private:
   NS_DECL_OWNINGTHREAD
-  nsRefPtr<gfxImageSurface>   mSurface;
-  const unsigned char*        mSurfaceData;
-  PRInt32                     mReadCount;
+  nsRefPtr<gfxImageSurface>         mSurface;
+  const gfxASurface::gfxImageFormat mFormat;
+  const unsigned char*              mSurfaceData;
+  PRInt32                           mReadCount;
 };
 
 #endif // GFXCOWSURFACEWRAPPER

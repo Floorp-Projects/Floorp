@@ -58,7 +58,6 @@ enum FormControlsTypes {
   NS_FORM_SELECT,
   NS_FORM_TEXTAREA,
   NS_FORM_OBJECT,
-  NS_FORM_PROGRESS,
   eFormControlsWithoutSubTypesMax,
   // After this, all types will have sub-types which introduce new enum lists.
   // eFormControlsWithoutSubTypesMax let us know if the previous types values
@@ -284,7 +283,6 @@ nsIFormControl::IsLabelableControl() const
          // type == NS_FORM_KEYGEN ||
          // type == NS_FORM_METER ||
          type == NS_FORM_OUTPUT ||
-         type == NS_FORM_PROGRESS ||
          type == NS_FORM_SELECT ||
          type == NS_FORM_TEXTAREA;
 }

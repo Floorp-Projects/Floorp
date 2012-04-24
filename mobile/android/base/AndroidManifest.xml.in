@@ -10,7 +10,7 @@
 #endif
       >
     <uses-sdk android:minSdkVersion="8"
-              android:targetSdkVersion="14"/>
+              android:targetSdkVersion="11"/>
 
 #include ../sync/manifests/SyncAndroidManifest_permissions.xml.in
 

@@ -324,7 +324,7 @@ class CGHeaders(CGWrapper):
             for t in types:
                 if t.unroll().isInterface():
                     if t.unroll().isArrayBuffer():
-                        bindingHeaders.add("jstypedarray.h")
+                        bindingHeaders.add("jsfriendapi.h")
                     else:
                         typeDesc = d.getDescriptor(t.unroll().inner.identifier.name)
                         if typeDesc is not None:
@@ -1189,7 +1189,7 @@ def getArgumentConversionTemplate(type, descriptor):
     if type.isArrayBuffer():
         template = (
             "  JSObject* ${name};\n"
-            "  if (${argVal}.isObject() && JS_IsArrayBufferObject(&${argVal}.toObject())) {\n"
+            "  if (${argVal}.isObject() && JS_IsArrayBufferObject(&${argVal}.toObject(), cx)) {\n"
             "    ${name} = &${argVal}.toObject();\n"
             "  }")
         if type.nullable():
@@ -1900,7 +1900,7 @@ class CGMethodCall(CGThing):
             # other things.
             # XXXbz Do we need to worry about security
             # wrappers around the array buffer?
-            pickFirstSignature("%s.isObject() && JS_IsArrayBufferObject(&%s.toObject())" %
+            pickFirstSignature("%s.isObject() && JS_IsArrayBufferObject(&%s.toObject(), cx)" %
                                (distinguishingArg, distinguishingArg),
                                lambda s: (s[1][distinguishingIndex].type.isArrayBuffer() or
                                           s[1][distinguishingIndex].type.isObject()))

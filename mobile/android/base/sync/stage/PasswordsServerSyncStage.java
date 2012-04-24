@@ -5,6 +5,7 @@
 package org.mozilla.gecko.sync.stage;
 
 import org.mozilla.gecko.sync.CryptoRecord;
+import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.android.PasswordsRepositorySession;
@@ -12,11 +13,15 @@ import org.mozilla.gecko.sync.repositories.domain.PasswordRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
 public class PasswordsServerSyncStage extends ServerSyncStage {
+  public PasswordsServerSyncStage(GlobalSession session) {
+    super(session);
+  }
 
   @Override
   protected String getCollection() {
     return "passwords";
   }
+
   @Override
   protected String getEngineName() {
     return "passwords";
@@ -41,5 +46,4 @@ public class PasswordsServerSyncStage extends ServerSyncStage {
       return r;
     }
   }
-
 }

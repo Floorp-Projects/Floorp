@@ -74,7 +74,7 @@
 #include "cairo.h"
 #include "gfxFontTest.h"
 
-#include "harfbuzz/hb-blob.h"
+#include "harfbuzz/hb.h"
 
 #include "nsCRT.h"
 #include "sampler.h"
