@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: MediaDocument hashchange mediafragment.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+    SimpleTest.waitForExplicitFinish();
+
+    var iframe;
+    var url = "../../../media/test/seek.ogv";
+    var expects = 5;
+    var count = 0;
+    var test;
+    var tests = [
+        { start: 1, end: 2 },
+        { start: 3, end: 4 }
+    ];
+
+    var next = function () {
+
+        test = tests.shift();
+        if (test) {
+
+            iframe.src = url + "#t=" + test.start + "," + test.end;
+        } else {
+
+            ok(expects === ++count, "Expected number of tests run. Expected: " + expects + " Actual: " + count);
+            SimpleTest.finish();
+        }
+    };
+
+    var load = function (e) {
+
+        iframe = document.getElementById("iframe");
+        var media = iframe.contentWindow.document.querySelector("audio,video");
+
+        media.addEventListener("seeked", function () {
+
+            var currentTime = Math.round(media.currentTime);
+
+            count++;
+            ok(currentTime >= test.start, "Hashchange mediafragment start. Expected: " + test.start + " Actual: " + currentTime);
+        }, false);
+
+        // This is testing the first test.
+        // The fist test's end happens to be in the middle of the video,
+        // so a pause is fired.
+        media.addEventListener("pause", function () {
+
+            var currentTime = Math.round(media.currentTime);
+
+            if (count === 1) {
+
+                count++;
+                ok(currentTime === test.end, "Hashchange mediafragment end. Expected: " + test.end + " Actual: " + currentTime);
+            }
+
+            // Give whatever the media code is doing right now a chance to complete
+            // before we seek.
+            SimpleTest.executeSoon(next);
+        }, false);
+
+        // Having an ended event ensures we're more likely to fail, instead of timing out.
+        // This is testing the end in the second test.
+        // The second test's end happens at the end of the video,
+        // so a end is fired.
+        media.addEventListener("ended", function () {
+
+            var currentTime = Math.round(media.currentTime);
+
+            if (count === 3) {
+
+                count++;
+                ok(currentTime === test.end, "Hashchange mediafragment end. Expected: " + test.end + " Actual: " + currentTime);
+            }
+
+            // Give whatever the media code is doing right now a chance to complete
+            // before we seek.
+            SimpleTest.executeSoon(next);
+        }, false);
+
+        // Give whatever the media code is doing right now a chance to complete
+        // before we seek.
+        SimpleTest.executeSoon(next);
+    };
+</script>
+</pre>
+<iframe id="iframe" src="../../../media/test/seek.ogv" onload="load()"></iframe>
+</body>
+</html>
