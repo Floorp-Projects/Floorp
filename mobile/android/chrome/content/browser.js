@@ -1560,6 +1560,7 @@ Tab.prototype = {
 
     let frameLoader = this.browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     frameLoader.renderMode = Ci.nsIFrameLoader.RENDER_MODE_ASYNC_SCROLL;
+    frameLoader.clampScrollPosition = false;
 
     // only set tab uri if uri is valid
     let uri = null;
@@ -1725,10 +1726,8 @@ Tab.prototype = {
     let x = aViewport.x / aViewport.zoom;
     let y = aViewport.y / aViewport.zoom;
 
-    // Set scroll-port size and scroll position (both in CSS pixels)
+    // Set scroll position
     let win = this.browser.contentWindow;
-    win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).setScrollPositionClampingScrollPortSize(
-        gScreenWidth / aViewport.zoom, gScreenHeight / aViewport.zoom);
     win.scrollTo(x, y);
     this.userScrollPos.x = win.scrollX;
     this.userScrollPos.y = win.scrollY;
@@ -2044,11 +2043,6 @@ Tab.prototype = {
         return;
       }
 
-      let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
-      let uri = "";
-      if (browser)
-        uri = browser.currentURI.spec;
-
       // Check to see if we restoring the content from a previous presentation (session)
       // since there should be no real network activity
       let restoring = aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING;
@@ -2056,6 +2050,10 @@ Tab.prototype = {
 
       // true if the page loaded successfully (i.e., no 404s or other errors)
       let success = false; 
+      let uri = "";
+      try {
+        uri = aRequest.QueryInterface(Components.interfaces.nsIChannel).originalURI.spec;
+      } catch (e) { }
       try {
         success = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel).requestSucceeded;
       } catch (e) { }
@@ -2086,6 +2084,7 @@ Tab.prototype = {
     let uri = browser.currentURI.spec;
     let documentURI = "";
     let contentType = "";
+    let sameDocument = (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) != 0;
     if (browser.contentDocument) {
       documentURI = browser.contentDocument.documentURIObject.spec;
       contentType = browser.contentDocument.contentType;
@@ -2101,13 +2100,14 @@ Tab.prototype = {
         tabID: this.id,
         uri: uri,
         documentURI: documentURI,
-        contentType: contentType
+        contentType: contentType,
+        sameDocument: sameDocument
       }
     };
 
     sendMessageToJava(message);
 
-    if ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) == 0) {
+    if (!sameDocument) {
       // XXX This code assumes that this is the earliest hook we have at which
       // browser.contentDocument is changed to the new document we're loading
       this.contentDocumentIsDisplayed = false;
@@ -3068,7 +3068,7 @@ var FormAssistant = {
 
   // We only want to show autocomplete suggestions for certain elements
   _isAutoComplete: function _isAutoComplete(aElement) {
-    if (!(aElement instanceof HTMLInputElement) ||
+    if (!(aElement instanceof HTMLInputElement) || aElement.readOnly ||
         (aElement.getAttribute("type") == "password") ||
         (aElement.hasAttribute("autocomplete") &&
          aElement.getAttribute("autocomplete").toLowerCase() == "off"))

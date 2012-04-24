@@ -1,6 +1,9 @@
 /* Tests for correct behaviour of getEffectiveHost on identity handler */
 function test() {
   waitForExplicitFinish();
+  registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("browser.identity.ssl_domain_display");
+  });
 
   ok(gIdentityHandler, "gIdentityHandler should exist");
 
@@ -72,34 +75,48 @@ let gCurrentTest, gCurrentTestIndex = -1, gTestDesc;
 // Go through the tests in both directions, to add additional coverage for
 // transitions between different states.
 let gForward = true;
+let gCheckETLD = false;
 function nextTest() {
-  if (gForward)
-    gCurrentTestIndex++;
-  else
-    gCurrentTestIndex--;
+  if (!gCheckETLD) {
+    if (gForward)
+      gCurrentTestIndex++;
+    else
+      gCurrentTestIndex--;
 
-  if (gCurrentTestIndex == tests.length) {
-    // Went too far, reverse
-    gCurrentTestIndex--;
-    gForward = false;
+    if (gCurrentTestIndex == tests.length) {
+      // Went too far, reverse
+      gCurrentTestIndex--;
+      gForward = false;
+    }
+
+    if (gCurrentTestIndex == -1) {
+      gBrowser.selectedBrowser.removeEventListener("load", checkResult, true);
+      gBrowser.removeCurrentTab();
+      finish();
+      return;
+    }
+
+    gCurrentTest = tests[gCurrentTestIndex];
+    gTestDesc = "#" + gCurrentTestIndex + " (" + gCurrentTest.name + ")";
+    if (!gForward)
+      gTestDesc += " (second time)";
+    if (gCurrentTest.isHTTPS) {
+      gCheckETLD = true;
+      Services.prefs.setIntPref("browser.identity.ssl_domain_display", 1);
+    }
+    content.location = gCurrentTest.location;
+  } else {
+    gCheckETLD = false;
+    gTestDesc = "#" + gCurrentTestIndex + " (" + gCurrentTest.name + " without eTLD in identity icon label)";
+    if (!gForward)
+      gTestDesc += " (second time)";
+    Services.prefs.clearUserPref("browser.identity.ssl_domain_display");
+    content.location.reload(true);
   }
-
-  if (gCurrentTestIndex == -1) {
-    gBrowser.selectedBrowser.removeEventListener("load", checkResult, true);
-    gBrowser.removeCurrentTab();
-    finish();
-    return;
-  }
-
-  gCurrentTest = tests[gCurrentTestIndex];
-  gTestDesc = "#" + gCurrentTestIndex + " (" + gCurrentTest.name + ")";
-  if (!gForward)
-    gTestDesc += " (second time)";
-  content.location = gCurrentTest.location;
 }
 
 function checkResult() {
-  if (gCurrentTest.isHTTPS) {
+  if (gCurrentTest.isHTTPS && Services.prefs.getIntPref("browser.identity.ssl_domain_display") == 1) {
     // Check that the effective host is displayed in the UI
     let label = document.getElementById("identity-icon-label");
     is(label.value, gCurrentTest.effectiveHost, "effective host is displayed in identity icon label for test " + gTestDesc);

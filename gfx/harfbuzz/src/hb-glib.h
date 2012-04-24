@@ -30,6 +30,7 @@
 #define HB_GLIB_H
 
 #include "hb.h"
+
 #include <glib.h>
 
 HB_BEGIN_DECLS

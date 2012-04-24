@@ -53,7 +53,7 @@
 #include "nsUnicodeScriptCodes.h"
 #include "nsUnicodeNormalizer.h"
 
-#include "harfbuzz/hb-unicode.h"
+#include "harfbuzz/hb.h"
 #include "harfbuzz/hb-ot.h"
 
 #include "cairo.h"

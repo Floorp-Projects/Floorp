@@ -542,9 +542,8 @@
             <hbox id="identity-box-inner" align="center">
               <hbox id="page-proxy-stack"
                     onclick="PageProxyClickHandler(event);">
-                <image id="page-proxy-favicon" validate="never"
-                       pageproxystate="invalid"
-                       onerror="this.removeAttribute('src');"/>
+                <image id="page-proxy-favicon"
+                       pageproxystate="invalid"/>
               </hbox>
               <hbox id="identity-icon-labels">
                 <label id="identity-icon-label" class="plain" flex="1"/>

@@ -2398,7 +2398,7 @@ GetElementIC::update(VMFrame &f, JSObject *obj, const Value &v, jsid id, Value *
      * Since we can use type information to generate inline paths for typed
      * arrays, just don't generate these ICs with inference enabled.
      */
-    if (!f.cx->typeInferenceEnabled() && js_IsTypedArray(obj))
+    if (!f.cx->typeInferenceEnabled() && obj->isTypedArray())
         return attachTypedArray(f, obj, v, id, vp);
 #endif
 
@@ -2720,7 +2720,7 @@ SetElementIC::update(VMFrame &f, const Value &objval, const Value &idval)
 
 #if defined JS_METHODJIT_TYPED_ARRAY
     /* Not attaching typed array stubs with linear scan allocator, see GetElementIC. */
-    if (!f.cx->typeInferenceEnabled() && js_IsTypedArray(obj))
+    if (!f.cx->typeInferenceEnabled() && obj->isTypedArray())
         return attachTypedArray(f, obj, key);
 #endif
 
