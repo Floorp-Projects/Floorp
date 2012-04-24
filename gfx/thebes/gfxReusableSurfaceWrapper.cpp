@@ -48,6 +48,7 @@ void
 gfxReusableSurfaceWrapper::ReadUnlock()
 {
   PR_ATOMIC_DECREMENT(&mReadCount);
+  NS_ABORT_IF_FALSE(mReadCount >= 0, "Should not be negative");
 }
 
 gfxReusableSurfaceWrapper*
