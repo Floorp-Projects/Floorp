@@ -3347,7 +3347,7 @@ esac
 
 _SAVE_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS -D_GNU_SOURCE"
-AC_CHECK_FUNCS(dladdr memmem)
+AC_CHECK_FUNC(dladdr)
 CFLAGS="$_SAVE_CFLAGS"
 
 if test ! "$GNU_CXX"; then
