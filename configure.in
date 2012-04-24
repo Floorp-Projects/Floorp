@@ -678,25 +678,49 @@ fi
 dnl ========================================================
 dnl Special win32 checks
 dnl ========================================================
-WINVER=502
-dnl Target the Windows 7 SDK by default
-WINSDK_TARGETVER=601
+
+# With win8, sdk target=602, WINVER=602
+MOZ_ARG_ENABLE_BOOL(metro,
+[  --enable-metro           Enable Windows Metro build targets],
+    MOZ_METRO=1,
+    MOZ_METRO=)
+if test -n "$MOZ_METRO"; then
+    AC_DEFINE(MOZ_METRO)
+    # Target the Windows 8 Kit
+    WINSDK_TARGETVER=602
+    # Allow a higher api set
+    WINVER=602
+else
+    # Target the Windows 7 SDK by default
+    WINSDK_TARGETVER=601
+    WINVER=502
+fi
+
+if test -n "$MOZ_METRO"; then
+  case "$target" in
+  *-mingw*)
+    ;;
+  *)
+    AC_MSG_ERROR([Metro builds only valid on the windows platform.]);
+    ;;
+  esac
+fi
 
 MOZ_ARG_WITH_STRING(windows-version,
 [  --with-windows-version=WINSDK_TARGETVER
-                          Highest Windows version to target using this SDK
-                              601: Windows 7],
+                          Windows SDK version to target. Lowest version
+                          currently allowed is 601 (Win7), highest is 602 (Win8)],
   WINSDK_TARGETVER=$withval)
 
+# Currently only two sdk versions allowed, 601 and 602
 case "$WINSDK_TARGETVER" in
-601)
+601|602)
     MOZ_WINSDK_TARGETVER=0${WINSDK_TARGETVER}0000
     ;;
 
 *)
-    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER), must be 601]);
+    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER)]);
     ;;
-
 esac
 
 case "$target" in
@@ -776,6 +800,16 @@ case "$target" in
             AC_MSG_ERROR([Invalid Win32 Redist directory: ${WIN32_REDIST_DIR}])
           fi
           WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd`
+        fi
+
+        dnl Confirm we have the pri tools on win8 builds
+        if test -n "$MOZ_METRO"; then
+          AC_MSG_CHECKING([for makepri])
+          AC_CHECK_PROGS(MAKEPRI, makepri, "")
+          if test -z "MAKEPRI" ; then
+              AC_MSG_ERROR([makepri.exe is required for generating metro browser install components. It should be in the Win8 SDK.])
+          fi
+          AC_SUBST(MAKEPRI)
         fi
 
         dnl Ensure that mt.exe is 'Microsoft (R) Manifest Tool',
@@ -966,7 +1000,7 @@ EOF
             AC_MSG_ERROR([windres version $WINDRES_VERSION or higher is required to build.])
         fi
 
-        MOZ_WINSDK_MAXVER=0x06010000
+        MOZ_WINSDK_MAXVER=0x06020000
     fi # !GNU_CC
 
     AC_DEFINE_UNQUOTED(WINVER,0x$WINVER)
@@ -983,7 +1017,18 @@ EOF
         AC_MSG_RESULT("no")
         AC_MSG_ERROR([You are targeting Windows version 0x$MOZ_WINSDK_TARGETVER, but your SDK only supports up to version $MOZ_WINSDK_MAXVER. Install and use an updated SDK, or target a lower version using --with-windows-version. Alternatively, try running the Windows SDK Configuration Tool and selecting a newer SDK. See https://developer.mozilla.org/En/Windows_SDK_versions for more details on fixing this.])
     fi
-
+    
+    # Make sure the sdk / code we're targeting has the right toolset
+    AC_MSG_CHECKING([SDK and tools are in sync])
+    if test -n "$MOZ_METRO"; then
+      if test "$MOZ_MSVCVERSION" -gt "10"; then
+        AC_MSG_RESULT("yes")
+      else
+        AC_MSG_RESULT("no")
+        AC_MSG_ERROR([Your MOZ_MSVCVERSION equals $MOZ_MSVCVERSION and you've enabled metro build support. You can't target metro without msvc 11 or higher. Disable metro support or switch to a newer set of tools.])
+      fi
+    fi
+      
     AC_DEFINE_UNQUOTED(MOZ_WINSDK_TARGETVER,0x$MOZ_WINSDK_TARGETVER)
     # Definitions matching sdkddkver.h
     AC_DEFINE_UNQUOTED(MOZ_NTDDI_WIN7, 0x06010000)
@@ -8445,6 +8490,7 @@ AC_SUBST(MOZ_D3DX9_CAB)
 AC_SUBST(MOZ_D3DCOMPILER_CAB)
 AC_SUBST(MOZ_D3DX9_DLL)
 AC_SUBST(MOZ_D3DCOMPILER_DLL)
+AC_SUBST(MOZ_METRO)
 
 AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)

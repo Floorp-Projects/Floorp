@@ -663,25 +663,49 @@ fi
 
 dnl Special win32 checks
 dnl ========================================================
-WINVER=502
-dnl Target the Windows 7 SDK by default
-WINSDK_TARGETVER=601
+
+# With win8, sdk target=602, WINVER=602
+MOZ_ARG_ENABLE_BOOL(metro,
+[  --enable-metro           Enable Windows Metro build targets],
+    MOZ_METRO=1,
+    MOZ_METRO=)
+if test -n "$MOZ_METRO"; then
+    AC_DEFINE(MOZ_METRO)
+    # Target the Windows 8 Kit
+    WINSDK_TARGETVER=602
+    # Allow a higher api set
+    WINVER=602
+else
+    # Target the Windows 7 SDK by default
+    WINSDK_TARGETVER=601
+    WINVER=502
+fi
+
+if test -n "$MOZ_METRO"; then
+  case "$target" in
+  *-mingw*)
+    ;;
+  *)
+    AC_MSG_ERROR([Metro builds only valid on the windows platform.]);
+    ;;
+  esac
+fi
 
 MOZ_ARG_WITH_STRING(windows-version,
 [  --with-windows-version=WINSDK_TARGETVER
-                          Highest Windows version to target using this SDK
-                              601: Windows 7],
+                          Windows SDK version to target. Lowest version
+                          currently allowed is 601, highest is 602],
   WINSDK_TARGETVER=$withval)
 
+# Currently only two sdk versions allowed, 601 and 602
 case "$WINSDK_TARGETVER" in
-601)
+601|602)
     MOZ_WINSDK_TARGETVER=0${WINSDK_TARGETVER}0000
     ;;
 
 *)
-    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER), must be 601]);
+    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER)]);
     ;;
-
 esac
 
 case "$target" in
@@ -4859,6 +4883,7 @@ AC_SUBST(COMPILE_CXXFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(LIBS)
 AC_SUBST(CROSS_COMPILE)
+AC_SUBST(MOZ_METRO)
 
 AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CXX)
