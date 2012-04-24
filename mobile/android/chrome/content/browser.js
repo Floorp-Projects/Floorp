@@ -3104,6 +3104,7 @@ var FormAssistant = {
 
     // We need to use a capturing listener for focus events
     BrowserApp.deck.addEventListener("focus", this, true);
+    BrowserApp.deck.addEventListener("click", this, true);
     BrowserApp.deck.addEventListener("input", this, false);
     BrowserApp.deck.addEventListener("pageshow", this, false);
   },
@@ -3114,6 +3115,7 @@ var FormAssistant = {
     Services.obs.removeObserver(this, "invalidformsubmit");
 
     BrowserApp.deck.removeEventListener("focus", this);
+    BrowserApp.deck.removeEventListener("click", this);
     BrowserApp.deck.removeEventListener("input", this);
     BrowserApp.deck.removeEventListener("pageshow", this);
   },
@@ -3159,12 +3161,19 @@ var FormAssistant = {
       case "focus":
         let currentElement = aEvent.target;
 
+        // Only show a validation message on focus.
+        this._showValidationMessage(currentElement);
+        break;
+
+      case "click":
+        currentElement = aEvent.target;
+
         // Prioritize a form validation message over autocomplete suggestions
         // when the element is first focused (a form validation message will
         // only be available if an invalid form was submitted)
         if (this._showValidationMessage(currentElement))
           break;
-        this._showAutoCompleteSuggestions(currentElement)
+        this._showAutoCompleteSuggestions(currentElement);
         break;
 
       case "input":
