@@ -62,8 +62,8 @@ interface nsIRILTelephonyCallback : nsISupports
                         in AString number);
 
   /**
-   * Called when nsIRadioInterfaceLayer is asked to enumerate the current
-   * telephony call state (nsIRadioInterfaceLayer::enumerateCalls). This is
+   * Called when nsIRILContentHelper is asked to enumerate the current
+   * telephony call state (nsIRILContentHelper::enumerateCalls). This is
    * called once per call that is currently managed by the RIL.
    *
    * @param callIndex
@@ -125,38 +125,11 @@ interface nsIRILDataCallback : nsISupports
  * Helper that runs in the content process and exposes information
  * to the DOM.
  */
-[scriptable, uuid(cc9832fd-d3ce-4cab-9abe-48c6046bcebe)]
+[scriptable, uuid(2f8b0929-2ecf-498c-bfa7-42690509696e)]
 interface nsIRILContentHelper : nsIMobileConnectionProvider
 {
-};
-
-[scriptable, uuid(d2025763-fc32-436e-b207-0228ea1ccd12)]
-interface nsIRadioInterfaceLayer : nsISupports
-{
-  const unsigned short CALL_STATE_UNKNOWN = 0;
-  const unsigned short CALL_STATE_DIALING = 1;
-  const unsigned short CALL_STATE_ALERTING = 2;
-  const unsigned short CALL_STATE_BUSY = 3;
-  const unsigned short CALL_STATE_CONNECTING = 4;
-  const unsigned short CALL_STATE_CONNECTED = 5;
-  const unsigned short CALL_STATE_HOLDING = 6;
-  const unsigned short CALL_STATE_HELD = 7;
-  const unsigned short CALL_STATE_RESUMING = 8;
-  const unsigned short CALL_STATE_DISCONNECTING = 9;
-  const unsigned short CALL_STATE_DISCONNECTED = 10;
-  const unsigned short CALL_STATE_INCOMING = 11;
-
-  // Keep consistent with GECKO_DATACALL_STATE_* values in ril_consts.js
-  const unsigned short DATACALL_STATE_UNKNOWN = 0;
-  const unsigned short DATACALL_STATE_CONNECTING = 1;
-  const unsigned short DATACALL_STATE_CONNECTED = 2;
-  const unsigned short DATACALL_STATE_DISCONNECTING = 3;
-  const unsigned short DATACALL_STATE_DISCONNECTED = 4;
-
-  readonly attribute jsval radioState;
-
-  void registerCallback(in nsIRILTelephonyCallback callback);
-  void unregisterCallback(in nsIRILTelephonyCallback callback);
+  void registerTelephonyCallback(in nsIRILTelephonyCallback callback);
+  void unregisterTelephonyCallback(in nsIRILTelephonyCallback callback);
 
   /**
    * Will continue calling callback.enumerateCallState until the callback
@@ -180,6 +153,32 @@ interface nsIRadioInterfaceLayer : nsISupports
 
   attribute bool microphoneMuted;
   attribute bool speakerEnabled;
+};
+
+[scriptable, uuid(d976f4c2-af5b-4fe1-97c2-c9c5d0d1af5c)]
+interface nsIRadioInterfaceLayer : nsISupports
+{
+  const unsigned short CALL_STATE_UNKNOWN = 0;
+  const unsigned short CALL_STATE_DIALING = 1;
+  const unsigned short CALL_STATE_ALERTING = 2;
+  const unsigned short CALL_STATE_BUSY = 3;
+  const unsigned short CALL_STATE_CONNECTING = 4;
+  const unsigned short CALL_STATE_CONNECTED = 5;
+  const unsigned short CALL_STATE_HOLDING = 6;
+  const unsigned short CALL_STATE_HELD = 7;
+  const unsigned short CALL_STATE_RESUMING = 8;
+  const unsigned short CALL_STATE_DISCONNECTING = 9;
+  const unsigned short CALL_STATE_DISCONNECTED = 10;
+  const unsigned short CALL_STATE_INCOMING = 11;
+
+  // Keep consistent with GECKO_DATACALL_STATE_* values in ril_consts.js
+  const unsigned short DATACALL_STATE_UNKNOWN = 0;
+  const unsigned short DATACALL_STATE_CONNECTING = 1;
+  const unsigned short DATACALL_STATE_CONNECTED = 2;
+  const unsigned short DATACALL_STATE_DISCONNECTING = 3;
+  const unsigned short DATACALL_STATE_DISCONNECTED = 4;
+
+  readonly attribute jsval radioState;
 
   /**
    * PDP APIs
