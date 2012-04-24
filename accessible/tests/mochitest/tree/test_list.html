@@ -88,17 +88,17 @@
 
       // dl list
       var tree =
-        { LIST: [ // dl
-          { LISTITEM: [ // dt
+        { DEFINITION_LIST: [ // dl
+          { TERM: [ // dt
             { TEXT_LEAF: [] },
           ] },
-          { PARAGRAPH: [ // dd
+          { DEFINITION: [ // dd
             { TEXT_LEAF: [] }
           ] },
-          { LISTITEM: [ // dt
+          { TERM: [ // dt
             { TEXT_LEAF: [] }
           ] },
-          { PARAGRAPH: [ // dd
+          { DEFINITION: [ // dd
             { TEXT_LEAF: [] }
           ] }
         ] };
@@ -110,11 +110,11 @@
         { LIST: [ // ol
           { LISTITEM: [ // li
             { STATICTEXT: [ ] },
-            { LIST: [ // dl
-              { LISTITEM: [ // dt
+            { DEFINITION_LIST: [ // dl
+              { TERM: [ // dt
                 { TEXT_LEAF: [] }
               ] },
-              { PARAGRAPH: [ // dd
+              { DEFINITION: [ // dd
                 { TEXT_LEAF: [] }
               ] }
             ] }

@@ -799,10 +799,25 @@ namespace roles {
   CHECK_RICH_OPTION = 125,
 
   /**
+   * Represent a definition list (dl in HTML).
+   */
+  DEFINITION_LIST = 126,
+
+  /**
+   * Represent a term in a definition list (dt in HTML).
+   */
+  TERM = 127,
+
+  /**
+   * Represent a definition in a definition list (dd in HTML)
+   */
+  DEFINITION = 128,
+
+  /**
    * It's not role actually. This constant is important to help ensure
    * nsRoleMap's are synchronized.
    */
-  LAST_ENTRY = 126
+  LAST_ENTRY = 129
   };
 } // namespace role
 typedef enum mozilla::a11y::roles::Role role;

@@ -423,7 +423,10 @@ static const char kRoleNames[][20] = {
   "embedded object",     //ROLE_EMBEDDED_OBJECT
   "note",                //ROLE_NOTE
   "figure",              //ROLE_FIGURE
-  "check rich option"    //ROLE_CHECK_RICH_OPTION
+  "check rich option",   //ROLE_CHECK_RICH_OPTION
+  "definitionlist",      //ROLE_DEFINITION_LIST
+  "term",                //ROLE_TERM
+  "definition"           //ROLE_DEFINITION
 };
 
 /**
