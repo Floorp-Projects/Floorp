@@ -722,7 +722,7 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, PRUint32
     else if ((((PrefType)(pref->flags)) & PREF_VALUETYPE_MASK) !=
                  (type & PREF_VALUETYPE_MASK))
     {
-        NS_WARNING(nsPrintfCString(192, "Trying to set pref %s to with the wrong type!", key).get());
+        NS_WARNING(nsPrintfCString("Trying to set pref %s to with the wrong type!", key).get());
         return NS_ERROR_UNEXPECTED;
     }
 

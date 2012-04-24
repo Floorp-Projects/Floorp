@@ -75,7 +75,7 @@ AppendToString(nsACString& s, const void* p,
                const char* pfx="", const char* sfx="")
 {
   s += pfx;
-  s += nsPrintfCString(64, "%p", p);
+  s += nsPrintfCString("%p", p);
   return s += sfx;
 }
 
@@ -113,7 +113,7 @@ AppendToString(nsACString& s, const gfxRGBA& c,
 {
   s += pfx;
   s += nsPrintfCString(
-    128, "rgba(%d, %d, %d, %g)",
+    "rgba(%d, %d, %d, %g)",
     PRUint8(c.r*255.0), PRUint8(c.g*255.0), PRUint8(c.b*255.0), c.a);
   return s += sfx;
 }
@@ -129,11 +129,11 @@ AppendToString(nsACString& s, const gfx3DMatrix& m,
     gfxMatrix matrix;
     if (m.Is2D(&matrix)) {
       s += nsPrintfCString(
-        96, "[ %g %g; %g %g; %g %g; ]",
+        "[ %g %g; %g %g; %g %g; ]",
         matrix.xx, matrix.yx, matrix.xy, matrix.yy, matrix.x0, matrix.y0);
     } else {
       s += nsPrintfCString(
-        256, "[ %g %g %g %g; %g %g %g %g; %g %g %g %g; %g %g %g %g; ]",
+        "[ %g %g %g %g; %g %g %g %g; %g %g %g %g; %g %g %g %g; ]",
         m._11, m._12, m._13, m._14,
         m._21, m._22, m._23, m._24,
         m._31, m._32, m._33, m._34,
@@ -148,7 +148,7 @@ AppendToString(nsACString& s, const nsIntPoint& p,
                const char* pfx="", const char* sfx="")
 {
   s += pfx;
-  s += nsPrintfCString(128, "(x=%d, y=%d)", p.x, p.y);
+  s += nsPrintfCString("(x=%d, y=%d)", p.x, p.y);
   return s += sfx;
 }
 
@@ -158,7 +158,7 @@ AppendToString(nsACString& s, const nsIntRect& r,
 {
   s += pfx;
   s += nsPrintfCString(
-    256, "(x=%d, y=%d, w=%d, h=%d)",
+    "(x=%d, y=%d, w=%d, h=%d)",
     r.x, r.y, r.width, r.height);
   return s += sfx;
 }
@@ -183,7 +183,7 @@ AppendToString(nsACString& s, const nsIntSize& sz,
                const char* pfx="", const char* sfx="")
 {
   s += pfx;
-  s += nsPrintfCString(128, "(w=%d, h=%d)", sz.width, sz.height);
+  s += nsPrintfCString("(w=%d, h=%d)", sz.width, sz.height);
   return s += sfx;
 }
 
@@ -657,7 +657,7 @@ nsACString&
 Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   aTo += aPrefix;
-  aTo += nsPrintfCString(64, "%s%s (0x%p)", mManager->Name(), Name(), this);
+  aTo += nsPrintfCString("%s%s (0x%p)", mManager->Name(), Name(), this);
 
   ::PrintInfo(aTo, AsShadowLayer());
 
@@ -821,7 +821,7 @@ nsACString&
 LayerManager::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   aTo += aPrefix;
-  return aTo += nsPrintfCString(64, "%sLayerManager (0x%p)", Name(), this);
+  return aTo += nsPrintfCString("%sLayerManager (0x%p)", Name(), this);
 }
 
 /*static*/ void
