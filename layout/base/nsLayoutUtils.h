@@ -1497,6 +1497,12 @@ public:
   static bool Are3DTransformsEnabled();
 
   /**
+   * Checks if we should forcibly use nearest pixel filtering for the
+   * background.
+   */
+  static bool UseBackgroundNearestFiltering();
+
+  /**
    * Unions the overflow areas of all non-popup children of aFrame with
    * aOverflowAreas.
    */
