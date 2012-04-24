@@ -1307,6 +1307,59 @@ nsContentUtils::ParseIntMarginValue(const nsAString& aString, nsIntMargin& resul
   return true;
 }
 
+// static
+PRInt32
+nsContentUtils::ParseLegacyFontSize(const nsAString& aValue)
+{
+  nsAString::const_iterator iter, end;
+  aValue.BeginReading(iter);
+  aValue.EndReading(end);
+
+  while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {
+    ++iter;
+  }
+
+  if (iter == end) {
+    return 0;
+  }
+
+  bool relative = false;
+  bool negate = false;
+  if (*iter == PRUnichar('-')) {
+    relative = true;
+    negate = true;
+    ++iter;
+  } else if (*iter == PRUnichar('+')) {
+    relative = true;
+    ++iter;
+  }
+
+  if (*iter < PRUnichar('0') || *iter > PRUnichar('9')) {
+    return 0;
+  }
+
+  // We don't have to worry about overflow, since we can bail out as soon as
+  // we're bigger than 7.
+  PRInt32 value = 0;
+  while (iter != end && *iter >= PRUnichar('0') && *iter <= PRUnichar('9')) {
+    value = 10*value + (*iter - PRUnichar('0'));
+    if (value >= 7) {
+      break;
+    }
+    ++iter;
+  }
+
+  if (relative) {
+    if (negate) {
+      value = 3 - value;
+    } else {
+      value = 3 + value;
+    }
+  }
+
+  return clamped(value, 1, 7);
+}
+
 /* static */
 void
 nsContentUtils::GetOfflineAppManifest(nsIDocument *aDocument, nsIURI **aURI)
