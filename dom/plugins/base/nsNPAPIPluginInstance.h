@@ -204,7 +204,7 @@ public:
 
   already_AddRefed<nsPIDOMWindow> GetDOMWindow();
 
-  nsresult PrivateModeStateChanged();
+  nsresult PrivateModeStateChanged(bool aEnabled);
 
   nsresult GetDOMElement(nsIDOMElement* *result);
 
