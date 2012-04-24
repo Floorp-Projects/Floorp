@@ -43,9 +43,10 @@ public final class DisplayPortMetrics {
         return sb.toString();
     }
 
+    @Override
     public String toString() {
-        return "DisplayPortMetrics(" + mPosition.left + ","
+        return "DisplayPortMetrics v=(" + mPosition.left + ","
                 + mPosition.top + "," + mPosition.right + ","
-                + mPosition.bottom + "," + mResolution + ")";
+                + mPosition.bottom + ") z=" + mResolution;
     }
 }
