@@ -150,7 +150,7 @@ function RadioInterfaceLayer() {
   this.radioState = {
     radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
     cardState:      RIL.GECKO_CARDSTATE_UNAVAILABLE,
-    msisdn:         null,
+    icc:            null,
 
     // These objects implement the nsIDOMMozMobileConnectionInfo interface,
     // although the actual implementation lives in the content process.
@@ -173,6 +173,7 @@ function RadioInterfaceLayer() {
   Services.obs.addObserver(this, "xpcom-shutdown", false);
 
   this._sentSmsEnvelopes = {};
+  this.portAddressedSmsApps = {};
 }
 RadioInterfaceLayer.prototype = {
 
@@ -276,8 +277,8 @@ RadioInterfaceLayer.prototype = {
               " dst=" + message.dstFlag +
               " timestamp=" + message.localTimeStampInMS);
         break;
-      case "siminfo":
-        this.radioState.msisdn = message.msisdn;
+      case "iccinfochange":
+        this.radioState.icc = message;
         break;
       default:
         throw new Error("Don't know about this message type: " + message.type);
@@ -460,8 +461,26 @@ RadioInterfaceLayer.prototype = {
     }
   },
 
+  portAddressedSmsApps: null,
   handleSmsReceived: function handleSmsReceived(message) {
     debug("handleSmsReceived: " + JSON.stringify(message));
+
+    // Dispatch to registered handler if application port addressing is
+    // available. Note that the destination port can possibly be zero when
+    // representing a UDP/TCP port.
+    if (message.header.destinationPort != null) {
+      let handler = this.portAddressedSmsApps[message.header.destinationPort];
+      if (handler) {
+        handler(message);
+      }
+      return;
+    }
+
+    if (message.encoding == RIL.PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+      // Don't know how to handle binary data yet.
+      return;
+    }
+
     let id = gSmsDatabaseService.saveReceivedMessage(message.sender || null,
                                                      message.fullBody || null,
                                                      message.timestamp);
