@@ -147,6 +147,7 @@ public class AwesomeBarTabs extends TabHost {
                 viewHolder.titleView = (TextView) convertView.findViewById(R.id.title);
                 viewHolder.urlView = (TextView) convertView.findViewById(R.id.url);
                 viewHolder.faviconView = (ImageView) convertView.findViewById(R.id.favicon);
+                viewHolder.starView = (ImageView) convertView.findViewById(R.id.bookmark_star);
 
                 convertView.setTag(viewHolder);
             } else {
@@ -174,6 +175,13 @@ public class AwesomeBarTabs extends TabHost {
                 Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
                 viewHolder.faviconView.setImageBitmap(bitmap);
             }
+
+            Long bookmarkId = (Long) historyItem.get(Combined.BOOKMARK_ID);
+
+            // The bookmark id will be 0 (null in database) when the url
+            // is not a bookmark.
+            int visibility = (bookmarkId == 0 ? View.GONE : View.VISIBLE);
+            viewHolder.starView.setVisibility(visibility);
 
             return convertView;
         }
@@ -481,6 +489,7 @@ public class AwesomeBarTabs extends TabHost {
             String url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
             String title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
             byte[] favicon = cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
+            Long bookmarkId = cursor.getLong(cursor.getColumnIndexOrThrow(Combined.BOOKMARK_ID));
 
             // Use the URL instead of an empty title for consistency with the normal URL
             // bar view - this is the equivalent of getDisplayTitle() in Tab.java
@@ -492,6 +501,8 @@ public class AwesomeBarTabs extends TabHost {
 
             if (favicon != null)
                 historyItem.put(URLColumns.FAVICON, favicon);
+
+            historyItem.put(Combined.BOOKMARK_ID, bookmarkId);
 
             return historyItem;
         }
