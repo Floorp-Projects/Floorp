@@ -143,6 +143,8 @@ struct JSStructuredCloneReader {
 
     // Any value passed to JS_ReadStructuredClone.
     void *closure;
+
+    friend JSBool JS_ReadTypedArray(JSStructuredCloneReader *r, jsval *vp);
 };
 
 struct JSStructuredCloneWriter {
@@ -196,6 +198,8 @@ struct JSStructuredCloneWriter {
 
     // Any value passed to JS_WriteStructuredClone.
     void *closure;
+
+    friend JSBool JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v);
 };
 
 #endif /* jsclone_h___ */
