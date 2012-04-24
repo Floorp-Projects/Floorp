@@ -184,6 +184,16 @@ CompositorParent::ScheduleResumeOnCompositorThread(int width, int height)
 }
 
 void
+CompositorParent::ScheduleTask(CancelableTask* task, int time)
+{
+  if (time) {
+    MessageLoop::current()->PostTask(FROM_HERE, task);
+  } else {
+    MessageLoop::current()->PostDelayedTask(FROM_HERE, task, time);
+  }
+}
+
+void
 CompositorParent::ScheduleComposition()
 {
   if (mCurrentCompositeTask) {
@@ -207,9 +217,9 @@ CompositorParent::ScheduleComposition()
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
     mExpectedComposeTime = mozilla::TimeStamp::Now() + TimeDuration::FromMilliseconds(15 - delta.ToMilliseconds());
 #endif
-    MessageLoop::current()->PostDelayedTask(FROM_HERE, mCurrentCompositeTask, 15 - delta.ToMilliseconds());
+    ScheduleTask(mCurrentCompositeTask, 15 - delta.ToMilliseconds());
   } else {
-    MessageLoop::current()->PostTask(FROM_HERE, mCurrentCompositeTask);
+    ScheduleTask(mCurrentCompositeTask, 0);
   }
 }
 
