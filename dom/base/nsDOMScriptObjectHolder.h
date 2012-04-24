@@ -99,8 +99,6 @@ public:
   }
 
   nsresult set(T* object) {
-    NS_ASSERTION(getScriptTypeID() != nsIProgrammingLanguage::UNKNOWN,
-                 "Must know the language!");
     nsresult rv = drop();
     if (NS_FAILED(rv))
       return rv;
@@ -114,17 +112,12 @@ public:
     return rv;
   }
   nsresult set(const nsScriptObjectHolder<T> &other) {
-    NS_ASSERTION(getScriptTypeID() == other.getScriptTypeID(),
-                 "Must have identical languages!");
     nsresult rv = drop();
     if (NS_FAILED(rv))
       return rv;
     return set(other.mObject);
   }
-  // Get the language ID.
-  PRUint32 getScriptTypeID() const {
-    return nsIProgrammingLanguage::JAVASCRIPT;
-  }
+
 protected:
   T* mObject;
   nsCOMPtr<nsIScriptContext> mContext;
