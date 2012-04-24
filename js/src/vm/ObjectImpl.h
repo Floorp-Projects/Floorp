@@ -564,18 +564,19 @@ ElementsHeader::asArrayBufferElements()
     return *static_cast<ArrayBufferElementsHeader *>(this);
 }
 
+class ArrayBufferObject;
+
 /*
  * Header structure for object element arrays. This structure is immediately
  * followed by an array of elements, with the elements member in an object
  * pointing to the beginning of that array (the end of this structure).
  * See below for usage of this structure.
  */
-class ArrayBufferObject;
 class ObjectElements
 {
     friend struct ::JSObject;
     friend class ObjectImpl;
-    friend struct js::ArrayBufferObject;
+    friend class ArrayBufferObject;
 
     /* Number of allocated slots. */
     uint32_t capacity;
