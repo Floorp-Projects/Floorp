@@ -112,9 +112,7 @@ public:
   nsresult Init();
   nsresult LoadPlugins();
   nsresult UnloadPlugins();
-  nsresult CreateListenerForChannel(nsIChannel* aChannel,
-                                    nsObjectLoadingContent* aContent,
-                                    nsIStreamListener** aListener);
+
   nsresult SetUpPluginInstance(const char *aMimeType,
                                nsIURI *aURL,
                                nsIPluginInstanceOwner *aOwner);
@@ -233,22 +231,20 @@ public:
 
   nsresult GetPlugin(const char *aMimeType, nsNPAPIPlugin** aPlugin);
 
+  nsresult NewEmbeddedPluginStreamListener(nsIURI* aURL, nsObjectLoadingContent *aContent,
+                                           nsNPAPIPluginInstance* aInstance,
+                                           nsIStreamListener **aStreamListener);
+
+  nsresult NewFullPagePluginStreamListener(nsIURI* aURI,
+                                           nsNPAPIPluginInstance *aInstance,
+                                           nsIStreamListener **aStreamListener);
+
 private:
   nsresult
   TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
 
   nsresult
-  NewEmbeddedPluginStreamListener(nsIURI* aURL, nsObjectLoadingContent *aContent,
-                                  nsNPAPIPluginInstance* aInstance,
-                                  nsIStreamListener** aListener);
-
-  nsresult
   NewEmbeddedPluginStream(nsIURI* aURL, nsObjectLoadingContent *aContent, nsNPAPIPluginInstance* aInstance);
-
-  nsresult
-  NewFullPagePluginStreamListener(nsIURI* aURI,
-                                  nsNPAPIPluginInstance *aInstance,
-                                  nsIStreamListener **aStreamListener);
 
   // Return an nsPluginTag for this type, if any.  If aCheckEnabled is
   // true, only enabled plugins will be returned.
