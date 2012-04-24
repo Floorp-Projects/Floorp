@@ -703,8 +703,8 @@ AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, float a
     NS_ABORT_IF_FALSE(viewTransformJObj, "No view transform object!");
     viewTransform.Init(viewTransformJObj);
 
-    aScrollOffset = nsIntPoint(viewTransform.GetX(), viewTransform.GetY());
-    aScaleX = aScaleY = viewTransform.GetScale();
+    aScrollOffset = nsIntPoint(viewTransform.GetX(env), viewTransform.GetY(env));
+    aScaleX = aScaleY = viewTransform.GetScale(env);
 }
 
 jobject
@@ -830,27 +830,24 @@ AndroidLayerRendererFrame::EndDrawing()
 }
 
 float
-AndroidViewTransform::GetX()
+AndroidViewTransform::GetX(JNIEnv *env)
 {
-    JNIEnv *env = GetJNIForThread();
     if (!env)
         return 0.0f;
     return env->GetFloatField(wrapped_obj, jXField);
 }
 
 float
-AndroidViewTransform::GetY()
+AndroidViewTransform::GetY(JNIEnv *env)
 {
-    JNIEnv *env = GetJNIForThread();
     if (!env)
         return 0.0f;
     return env->GetFloatField(wrapped_obj, jYField);
 }
 
 float
-AndroidViewTransform::GetScale()
+AndroidViewTransform::GetScale(JNIEnv *env)
 {
-    JNIEnv *env = GetJNIForThread();
     if (!env)
         return 0.0f;
     return env->GetFloatField(wrapped_obj, jScaleField);
