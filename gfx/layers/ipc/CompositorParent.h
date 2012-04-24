@@ -111,14 +111,15 @@ public:
 protected:
   virtual PLayersParent* AllocPLayers(const LayersBackend &backendType);
   virtual bool DeallocPLayers(PLayersParent* aLayers);
+  virtual void ScheduleTask(CancelableTask*, int);
+  virtual void Composite();
+  virtual void ScheduleComposition();
 
 private:
   void PauseComposition();
   void ResumeComposition();
   void ResumeCompositionAndResize(int width, int height);
 
-  void Composite();
-  void ScheduleComposition();
   void TransformShadowTree();
 
   inline MessageLoop* CompositorLoop();
