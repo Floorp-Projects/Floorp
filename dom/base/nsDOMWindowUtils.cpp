@@ -2317,3 +2317,26 @@ nsDOMWindowUtils::GetPlugins(JSContext* cx, jsval* aPlugins)
   *aPlugins = OBJECT_TO_JSVAL(jsPlugins);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SetScrollPositionClampingScrollPortSize(float aWidth, float aHeight)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  if (!(aWidth >= 0.0 && aHeight >= 0.0)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  presShell->SetScrollPositionClampingScrollPortSize(
+    nsPresContext::CSSPixelsToAppUnits(aWidth),
+    nsPresContext::CSSPixelsToAppUnits(aHeight));
+
+  return NS_OK;
+}
