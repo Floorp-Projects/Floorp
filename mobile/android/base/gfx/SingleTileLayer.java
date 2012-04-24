@@ -65,7 +65,11 @@ public class SingleTileLayer extends TileLayer {
     public SingleTileLayer(CairoImage image) { this(false, image); }
 
     public SingleTileLayer(boolean repeat, CairoImage image) {
-        super(repeat, image);
+        super(image, repeat ? TileLayer.PaintMode.REPEAT : TileLayer.PaintMode.NORMAL);
+    }
+
+    public SingleTileLayer(CairoImage image, TileLayer.PaintMode paintMode) {
+        super(image, paintMode);
     }
 
     /**
@@ -86,7 +90,7 @@ public class SingleTileLayer extends TileLayer {
         Rect position = getPosition();
         RectF viewport = context.viewport;
 
-        if (repeats()) {
+        if (repeats() || stretches()) {
             bounds = new RectF(0.0f, 0.0f, viewport.width(), viewport.height());
             int width = Math.round(viewport.width());
             int height = Math.round(viewport.height());

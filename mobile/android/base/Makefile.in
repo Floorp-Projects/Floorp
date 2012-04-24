@@ -138,6 +138,7 @@ FENNEC_JAVA_FILES = \
   gfx/PanningPerfAPI.java \
   gfx/PointUtils.java \
   gfx/RectUtils.java \
+  gfx/ScreenshotLayer.java \
   gfx/ScrollbarLayer.java \
   gfx/SingleTileLayer.java \
   gfx/SurfaceTextureLayer.java \
