@@ -1607,6 +1607,23 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 }
 
 static void
+FillPBufferAttribs_Minimal(nsTArray<EGLint>& aAttrs)
+{
+    aAttrs.Clear();
+
+#define A1(_x)      do { aAttrs.AppendElement(_x); } while (0)
+#define A2(_x,_y)   do { A1(_x); A1(_y); } while (0)
+
+    A2(LOCAL_EGL_RENDERABLE_TYPE, LOCAL_EGL_OPENGL_ES2_BIT);
+
+    A2(LOCAL_EGL_SURFACE_TYPE, LOCAL_EGL_PBUFFER_BIT);
+
+    A1(LOCAL_EGL_NONE);
+#undef A1
+#undef A2
+}
+
+static void
 FillPBufferAttribs(nsTArray<EGLint>& aAttrs,
                    const ContextFormat& aFormat,
                    bool aCanBindToTexture,
@@ -1619,6 +1636,8 @@ FillPBufferAttribs(nsTArray<EGLint>& aAttrs,
 #define A2(_x,_y)   do { A1(_x); A1(_y); } while (0)
 
     A2(LOCAL_EGL_RENDERABLE_TYPE, LOCAL_EGL_OPENGL_ES2_BIT);
+
+    A2(LOCAL_EGL_SURFACE_TYPE, LOCAL_EGL_PBUFFER_BIT);
 
     if (aColorBitsOverride == -1) {
         A2(LOCAL_EGL_RED_SIZE, aFormat.red);
@@ -1676,16 +1695,20 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& aSize,
     int tryDepthSize = (aFormat.depth > 0) ? 24 : 0;
 
 TRY_ATTRIBS_AGAIN:
-    switch (attribAttempt) {
-    case 0:
-        FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, 8, tryDepthSize);
-        break;
-    case 1:
-        FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, -1, tryDepthSize);
-        break;
-    case 2:
-        FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, -1, -1);
-        break;
+    if (bufferUnused) {
+        FillPBufferAttribs_Minimal(attribs);
+    } else {
+        switch (attribAttempt) {
+        case 0:
+            FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, 8, tryDepthSize);
+            break;
+        case 1:
+            FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, -1, tryDepthSize);
+            break;
+        case 2:
+            FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, -1, -1);
+            break;
+        }
     }
 
     if (!sEGLLibrary.fChooseConfig(EGL_DISPLAY(),
@@ -1694,6 +1717,11 @@ TRY_ATTRIBS_AGAIN:
                                    &foundConfigs)
         || foundConfigs == 0)
     {
+        if (bufferUnused) {
+            NS_WARNING("No EGL Config for minimal PBuffer!");
+            return nsnull;
+        }
+
         if (attribAttempt < 3) {
             attribAttempt++;
             goto TRY_ATTRIBS_AGAIN;
