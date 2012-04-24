@@ -109,7 +109,11 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
 
     @Override
     public void handleRequestSuccess(SyncStorageResponse response) {
-      BaseResource.consumeEntity(response); // We don't need the response at all.
+
+      // Hang onto the server's last modified timestamp to use
+      // in X-If-Unmodified-Since for upload.
+      session.config.persistServerClientsTimestamp(response.normalizedWeaveTimestamp());
+      BaseResource.consumeEntity(response);
 
       // If we successfully downloaded all records but ours was not one of them
       // then reset the timestamp.
@@ -170,13 +174,9 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
         r = (ClientRecord) factory.createRecord(record.decrypt());
         if (clientsDelegate.isLocalGUID(r.guid)) {
           Logger.info(LOG_TAG, "Local client GUID exists on server and was downloaded");
-          localAccountGUIDDownloaded = true;
-          // Oh hey! Our record is on the server. This is the authoritative
-          // server timestamp, so let's hang on to it to decide whether we
-          // need to upload.
-          session.config.persistServerClientRecordTimestamp(r.lastModified);
 
-          // Process commands.
+          localAccountGUIDDownloaded = true;
+          session.config.persistServerClientRecordTimestamp(r.lastModified);
           processCommands(r.commands);
         }
         RepoUtils.logClient(r);
@@ -208,7 +208,8 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
 
     @Override
     public String ifUnmodifiedSince() {
-      Long timestampInMilliseconds = session.config.getPersistedServerClientRecordTimestamp();
+      // Use the timestamp for the whole collection per Sync storage 1.1 spec.
+      Long timestampInMilliseconds = session.config.getPersistedServerClientsTimestamp();
 
       // It's the first upload so we don't care about X-If-Unmodified-Since.
       if (timestampInMilliseconds == 0) {
@@ -225,12 +226,14 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
         commandsProcessedShouldUpload = false;
         uploadAttemptsCount.set(0);
 
-        long timestamp = Utils.decimalSecondsToMilliseconds(response.body());
+        // Persist the timestamp for the record we just uploaded,
+        // and bump the collection timestamp, too.
+        long timestamp = response.normalizedWeaveTimestamp();
         session.config.persistServerClientRecordTimestamp(timestamp);
+        session.config.persistServerClientsTimestamp(timestamp);
         BaseResource.consumeEntity(response);
 
-        Logger.debug(LOG_TAG, "Timestamp from body is: " + timestamp);
-        Logger.debug(LOG_TAG, "Timestamp from header is: " + response.normalizedWeaveTimestamp());
+        Logger.debug(LOG_TAG, "Timestamp is " + timestamp);
       } catch (Exception e) {
         session.abort(e, "Unable to fetch timestamp.");
         return;
@@ -289,7 +292,9 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
   @Override
   public void resetLocal() {
     // Clear timestamps and local data.
-    session.config.persistServerClientRecordTimestamp(0L);
+    session.config.persistServerClientRecordTimestamp(0L);   // TODO: roll these into one.
+    session.config.persistServerClientsTimestamp(0L);
+
     session.getClientsDelegate().setClientsCount(0);
     try {
       getClientsDatabaseAccessor().wipe();
@@ -391,14 +396,16 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
     }
   }
 
+  /**
+   * Upload a client record via HTTP POST to the parent collection.
+   */
   protected void uploadClientRecord(CryptoRecord record) {
     Logger.debug(LOG_TAG, "Uploading client record " + record.guid);
     try {
-      URI putURI = session.config.wboURI(COLLECTION_NAME, record.guid);
-
-      SyncStorageRecordRequest request = new SyncStorageRecordRequest(putURI);
+      URI postURI = session.config.collectionURI(COLLECTION_NAME);
+      SyncStorageRecordRequest request = new SyncStorageRecordRequest(postURI);
       request.delegate = clientUploadDelegate;
-      request.put(record);
+      request.post(record);
     } catch (URISyntaxException e) {
       session.abort(e, "Invalid URI.");
     }
