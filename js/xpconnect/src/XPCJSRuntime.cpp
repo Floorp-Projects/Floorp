@@ -1235,8 +1235,7 @@ GetCompartmentName(JSCompartment *c, bool getAddress, nsCString &name)
             
             if (getAddress) {
                 // ample; 64-bit address max is 18 chars
-                const int maxLength = 31;
-                nsPrintfCString address(maxLength, ", 0x%llx", PRUint64(c));
+                nsPrintfCString address(", 0x%llx", PRUint64(c));
                 name.Append(address);
             }
         }

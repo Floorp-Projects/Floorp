@@ -677,7 +677,7 @@ NS_IMETHODIMP
 nsWindowMemoryReporter::
 NumGhostsReporter::GetDescription(nsACString& aDesc)
 {
-  nsPrintfCString str(1024,
+  nsPrintfCString str(
 "The number of ghost windows present (the number of nodes underneath \
 explicit/window-objects/top(none)/ghost, modulo race conditions).  A ghost \
 window is not shown in any tab, does not share a domain with any non-detached \

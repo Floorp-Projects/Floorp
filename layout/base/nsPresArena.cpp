@@ -267,7 +267,7 @@ ARENA_POISON_init()
   bool enabled;
   if (cr && NS_SUCCEEDED(cr->GetEnabled(&enabled)) && enabled) {
     cr->AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonBase"),
-                            nsPrintfCString(17, "%.16llx", PRUint64(rgnbase)));
+                            nsPrintfCString("%.16llx", PRUint64(rgnbase)));
     cr->AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonSize"),
                             nsPrintfCString("%lu", PRUint32(rgnsize)));
   }

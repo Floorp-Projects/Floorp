@@ -1175,7 +1175,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
       }
 
       // Assemble everything and pass to listener.
-      nsPrintfCString status(100, "HTTP%s %lu %s", ver.get(), statusNum,
+      nsPrintfCString status("HTTP%s %lu %s", ver.get(), statusNum,
                              statusText.get());
       static_cast<nsIHTTPHeaderListener*>(mPStreamListener)->StatusLine(status.get());
     }

@@ -741,8 +741,7 @@ nsUserFontSet::LogMessage(gfxProxyFontEntry *aProxy,
   }
 
   nsPrintfCString
-    msg(1024,
-        "downloadable font: %s "
+    msg("downloadable font: %s "
         "(font-family: \"%s\" style:%s weight:%s stretch:%s src index:%d)",
         aMessage,
         familyName.get(),

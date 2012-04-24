@@ -366,8 +366,7 @@ ContentChild::RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* chi
 
     InfallibleTArray<MemoryReport> reports;
 
-    static const int maxLength = 31;   // big enough; pid is only a few chars
-    nsPrintfCString process(maxLength, "Content (%d)", getpid());
+    nsPrintfCString process("Content (%d)", getpid());
 
     // First do the vanilla memory reporters.
     nsCOMPtr<nsISimpleEnumerator> e;
