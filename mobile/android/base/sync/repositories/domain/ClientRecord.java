@@ -64,8 +64,18 @@ public class ClientRecord extends Record {
     putPayload(payload, "type", this.type);
   }
 
+  @Override
   public boolean equals(Object o) {
     if (!(o instanceof ClientRecord) || !super.equals(o)) {
+      return false;
+    }
+
+    return this.equalPayloads(o);
+  }
+
+  @Override
+  public boolean equalPayloads(Object o) {
+    if (!(o instanceof ClientRecord) || !super.equalPayloads(o)) {
       return false;
     }
 
