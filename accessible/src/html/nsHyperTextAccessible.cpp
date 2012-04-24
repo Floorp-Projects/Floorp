@@ -123,6 +123,9 @@ nsHyperTextAccessible::NativeRole()
 {
   nsIAtom *tag = mContent->Tag();
 
+  if (tag == nsGkAtoms::dd)
+    return roles::DEFINITION;
+
   if (tag == nsGkAtoms::form)
     return roles::FORM;
 
