@@ -1270,9 +1270,23 @@ nsEditor::RemoveAttribute(nsIDOMElement *aElement, const nsAString& aAttribute)
 }
 
 
+bool
+nsEditor::OutputsMozDirty()
+{
+  // Return true for Composer (!eEditorAllowInteraction) or mail
+  // (eEditorMailMask), but false for webpages.
+  return !(mFlags & nsIPlaintextEditor::eEditorAllowInteraction) ||
+          (mFlags & nsIPlaintextEditor::eEditorMailMask);
+}
+
+
 NS_IMETHODIMP
 nsEditor::MarkNodeDirty(nsIDOMNode* aNode)
 {  
+  // Mark the node dirty, but not for webpages (bug 599983)
+  if (!OutputsMozDirty()) {
+    return NS_OK;
+  }
   nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
   if (element) {
     element->SetAttr(kNameSpaceID_None, nsEditProperty::mozdirty,
