@@ -75,6 +75,8 @@ const UINT16_SIZE = 2;
 const UINT32_SIZE = 4;
 const PARCEL_SIZE_SIZE = UINT32_SIZE;
 
+const PDU_HEX_OCTET_SIZE = 4;
+
 let RILQUIRKS_CALLSTATE_EXTRA_UINT32 = false;
 let RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = false;
 // This flag defaults to true since on RIL v6 and later, we get the
@@ -202,6 +204,51 @@ let Buf = {
    * These are all little endian, apart from readParcelSize();
    */
 
+  /**
+   * Ensure position specified is readable.
+   *
+   * @param index
+   *        Data position in incoming parcel, valid from 0 to
+   *        this.currentParcelSize.
+   */
+  ensureIncomingAvailable: function ensureIncomingAvailable(index) {
+    if (index >= this.currentParcelSize) {
+      throw new Error("Trying to read data beyond the parcel end!");
+    } else if (index < 0) {
+      throw new Error("Trying to read data before the parcel begin!");
+    }
+  },
+
+  /**
+   * Seek in current incoming parcel.
+   *
+   * @param offset
+   *        Seek offset in relative to current position.
+   */
+  seekIncoming: function seekIncoming(offset) {
+    // Translate to 0..currentParcelSize
+    let cur = this.currentParcelSize - this.readAvailable;
+
+    let newIndex = cur + offset;
+    this.ensureIncomingAvailable(newIndex);
+
+    // ... incomingReadIndex -->|
+    // 0               new     cur           currentParcelSize
+    // |================|=======|===================|
+    // |<--        cur       -->|<- readAvailable ->|
+    // |<-- newIndex -->|<--  new readAvailable  -->|
+    this.readAvailable = this.currentParcelSize - newIndex;
+
+    // Translate back:
+    if (this.incomingReadIndex < cur) {
+      // The incomingReadIndex is wrapped.
+      newIndex += this.INCOMING_BUFFER_LENGTH;
+    }
+    newIndex += (this.incomingReadIndex - cur);
+    newIndex %= this.INCOMING_BUFFER_LENGTH;
+    this.incomingReadIndex = newIndex;
+  },
+
   readUint8Unchecked: function readUint8Unchecked() {
     let value = this.incomingBytes[this.incomingReadIndex];
     this.incomingReadIndex = (this.incomingReadIndex + 1) %
@@ -210,9 +257,9 @@ let Buf = {
   },
 
   readUint8: function readUint8() {
-    if (!this.readAvailable) {
-      throw new Error("Trying to read data beyond the parcel end!");
-    }
+    // Translate to 0..currentParcelSize
+    let cur = this.currentParcelSize - this.readAvailable;
+    this.ensureIncomingAvailable(cur);
 
     this.readAvailable--;
     return this.readUint8Unchecked();
@@ -567,9 +614,12 @@ let RIL = {
    */
   IMEI: null,
   IMEISV: null,
-  IMSI: null,
   SMSC: null,
-  MSISDN: null,
+
+  /**
+   * ICC information, such as MSISDN, IMSI, ...etc.
+   */
+  iccInfo: {},
 
   voiceRegistrationState: {},
   dataRegistrationState: {},
@@ -766,10 +816,10 @@ let RIL = {
    *
    *  @param command 
    *         The I/O command, one of the ICC_COMMAND_* constants.
-   *  @param fileid
+   *  @param fileId
    *         The file to operate on, one of the ICC_EF_* constants.
-   *  @param pathid
-   *         String type, check pathid from TS 27.007 +CRSM  
+   *  @param pathId
+   *         String type, check the 'pathid' parameter from TS 27.007 +CRSM.
    *  @param p1, p2, p3
    *         Arbitrary integer parameters for the command.
    *  @param data
@@ -780,8 +830,8 @@ let RIL = {
   iccIO: function iccIO(options) {
     let token = Buf.newParcel(REQUEST_SIM_IO, options);
     Buf.writeUint32(options.command);
-    Buf.writeUint32(options.fileid);
-    Buf.writeString(options.pathid);
+    Buf.writeUint32(options.fileId);
+    Buf.writeString(options.pathId);
     Buf.writeUint32(options.p1);
     Buf.writeUint32(options.p2);
     Buf.writeUint32(options.p3);
@@ -793,18 +843,182 @@ let RIL = {
   },
 
   /**
+   * Fetch ICC records.
+   */
+  fetchICCRecords: function fetchICCRecords() {
+    this.getIMSI();
+    this.getMSISDN();
+    this.getAD();
+    this.getUST();
+  },
+
+  /**
+   * Update the ICC information to RadioInterfaceLayer.
+   */
+  _handleICCInfoChange: function _handleICCInfoChange() {
+    this.iccInfo.type = "iccinfochange";
+    this.sendDOMMessage(this.iccInfo);
+  },
+
+  getIMSI: function getIMSI() {
+    Buf.simpleRequest(REQUEST_GET_IMSI);
+  },
+
+  /**
    * Read the MSISDN from the ICC.
    */
   getMSISDN: function getMSISDN() {
+    function callback() {
+      let length = Buf.readUint32();
+      // Each octet is encoded into two chars.
+      let recordLength = length / 2;
+      // Skip prefixed alpha identifier
+      Buf.seekIncoming((recordLength - MSISDN_FOOTER_SIZE_BYTES) *
+                        PDU_HEX_OCTET_SIZE);
+
+      // Dialling Number/SSC String
+      let len = GsmPDUHelper.readHexOctet();
+      if (len > MSISDN_MAX_NUMBER_SIZE_BYTES) {
+        debug("ICC_EF_MSISDN: invalid length of BCD number/SSC contents - " + len);
+        return;
+      }
+      this.iccInfo.MSISDN = GsmPDUHelper.readAddress(len);
+      let delimiter = Buf.readUint16();
+      if (!(length & 1)) {
+        delimiter |= Buf.readUint16();
+      }
+      if (DEBUG) {
+        if (delimiter != 0) {
+          debug("Something's wrong, found string delimiter: " + delimiter);
+        }
+      }
+
+      if (DEBUG) debug("MSISDN: " + this.iccInfo.MSISDN);
+      if (this.iccInfo.MSISDN) {
+        this._handleICCInfoChange();
+      }
+    }
+
     this.iccIO({
-      command: ICC_COMMAND_GET_RESPONSE,
-      fileid:  ICC_EF_MSISDN,
-      pathid:  EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
-      p1:      0, // For GET_RESPONSE, p1 = 0
-      p2:      0, // For GET_RESPONSE, p2 = 0
-      p3:      GET_RESPONSE_EF_SIZE_BYTES,
-      data:    null,
-      pin2:    null,
+      command:   ICC_COMMAND_GET_RESPONSE,
+      fileId:    ICC_EF_MSISDN,
+      pathId:    EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
+      p1:        0, // For GET_RESPONSE, p1 = 0
+      p2:        0, // For GET_RESPONSE, p2 = 0
+      p3:        GET_RESPONSE_EF_SIZE_BYTES,
+      data:      null,
+      pin2:      null,
+      type:      EF_TYPE_LINEAR_FIXED,
+      callback:  callback,
+    });
+  },
+
+  /**
+   * Read the AD from the ICC.
+   */
+  getAD: function getAD() {
+    function callback() {
+      let length = Buf.readUint32();
+      // Each octet is encoded into two chars.
+      let len = length / 2;
+      this.iccInfo.AD = GsmPDUHelper.readHexOctetArray(len);
+      let delimiter = Buf.readUint16();
+      if (!(length & 1)) {
+        delimiter |= Buf.readUint16();
+      }
+      if (DEBUG) {
+        if (delimiter != 0) {
+          debug("Something's wrong, found string delimiter: " + delimiter);
+        }
+      }
+
+      if (DEBUG) {
+        let str = "";
+        for (let i = 0; i < this.iccInfo.AD.length; i++) {
+          str += this.iccInfo.AD[i] + ", ";
+        }
+        debug("AD: " + str);
+      }
+
+      if (this.iccInfo.IMSI) {
+        // MCC is the first 3 digits of IMSI
+        this.iccInfo.MCC = this.iccInfo.IMSI.substr(0,3);
+        // The 4th byte of the response is the length of MNC
+        this.iccInfo.MNC = this.iccInfo.IMSI.substr(3, this.iccInfo.AD[3]);
+        if (DEBUG) debug("MCC: " + this.iccInfo.MCC + " MNC: " + this.iccInfo.MNC);
+        this._handleICCInfoChange();
+      }
+    }
+
+    this.iccIO({
+      command:   ICC_COMMAND_GET_RESPONSE,
+      fileId:    ICC_EF_AD,
+      pathId:    EF_PATH_MF_SIM + EF_PATH_DF_GSM,
+      p1:        0, // For GET_RESPONSE, p1 = 0
+      p2:        0, // For GET_RESPONSE, p2 = 0
+      p3:        GET_RESPONSE_EF_SIZE_BYTES,
+      data:      null,
+      pin2:      null,
+      type:      EF_TYPE_TRANSPARENT,
+      callback:  callback,
+    });
+  },
+
+  /**
+   * Get whether specificed USIM service is available.
+   *
+   * @param service
+   *        Service id, valid in 1..N. See 3GPP TS 31.102 4.2.8.
+   * @return
+   *        true if the service is enabled,
+   *        false otherwise.
+   */
+  isUSTServiceAvailable: function isUSTServiceAvailable(service) {
+    service -= 1;
+    let index = service / 8;
+    let bitmask = 1 << (service % 8);
+    return this.UST && (index < this.UST.length) && (this.UST[index] & bitmask);
+  },
+
+  /**
+   * Read the UST from the ICC.
+   */
+  getUST: function getUST() {
+    function callback() {
+      let length = Buf.readUint32();
+      // Each octet is encoded into two chars.
+      let len = length / 2;
+      this.iccInfo.UST = GsmPDUHelper.readHexOctetArray(len);
+      let delimiter = Buf.readUint16();
+      if (!(length & 1)) {
+        delimiter |= Buf.readUint16();
+      }
+      if (DEBUG) {
+        if (delimiter != 0) {
+          debug("Something's wrong, found string delimiter: " + delimiter);
+        }
+      }
+      
+      if (DEBUG) {
+        let str = "";
+        for (let i = 0; i < this.iccInfo.UST.length; i++) {
+          str += this.iccInfo.UST[i] + ", ";
+        }
+        debug("UST: " + str);
+      }
+    }
+
+    this.iccIO({
+      command:   ICC_COMMAND_GET_RESPONSE,
+      fileId:    ICC_EF_UST,
+      pathId:    EF_PATH_MF_SIM + EF_PATH_DF_GSM,
+      p1:        0, // For GET_RESPONSE, p1 = 0
+      p2:        0, // For GET_RESPONSE, p2 = 0
+      p3:        GET_RESPONSE_EF_SIZE_BYTES,
+      data:      null,
+      pin2:      null,
+      type:      EF_TYPE_TRANSPARENT,
+      callback:  callback,
     });
   },
 
@@ -1263,7 +1477,7 @@ let RIL = {
       case CARD_APPSTATE_READY:
         this.requestNetworkInfo();
         this.getSignalStrength();
-        this.getMSISDN();
+        this.fetchICCRecords();
         newCardState = GECKO_CARDSTATE_READY;
         break;
       case CARD_APPSTATE_UNKNOWN:
@@ -1281,33 +1495,119 @@ let RIL = {
   },
 
   /**
-   * Process the MSISDN ICC I/O response.
+   * Process a ICC_COMMAND_GET_RESPONSE type command for REQUEST_SIM_IO.
    */
-  _processMSISDNResponse: function _processMSISDNResponse(options) {
+  _processICCIOGetResponse: function _processICCIOGetResponse(options) {
+    let length = Buf.readUint32();
+
+    // The format is from TS 51.011, clause 9.2.1
+
+    // Skip RFU, data[0] data[1]
+    Buf.seekIncoming(2 * PDU_HEX_OCTET_SIZE);
+
+    // File size, data[2], data[3]
+    let fileSize = (GsmPDUHelper.readHexOctet() << 8) |
+                    GsmPDUHelper.readHexOctet();
+
+    // 2 bytes File id. data[4], data[5]
+    let fileId = (GsmPDUHelper.readHexOctet() << 8) |
+                  GsmPDUHelper.readHexOctet();
+    if (fileId != options.fileId) {
+      if (DEBUG) {
+        debug("Expected file ID " + options.fileId + " but read " + fileId);
+      }
+      return;
+    }
+
+    // Type of file, data[6]
+    let fileType = GsmPDUHelper.readHexOctet();
+    if (fileType != TYPE_EF) {
+      if (DEBUG) {
+        debug("Unexpected file type " + fileType);
+      }
+      return;
+    }
+
+    // Skip 1 byte RFU, data[7],
+    //      3 bytes Access conditions, data[8] data[9] data[10],
+    //      1 byte File status, data[11],
+    //      1 byte Length of the following data, data[12].
+    Buf.seekIncoming(((RESPONSE_DATA_STRUCTURE - RESPONSE_DATA_FILE_TYPE - 1) *
+        PDU_HEX_OCTET_SIZE));
+
+    // Read Structure of EF, data[13]
+    let efType = GsmPDUHelper.readHexOctet();
+    if (efType != options.type) {
+      if (DEBUG) {
+        debug("Expected EF type " + options.type + " but read " + efType);
+      }
+      return;
+    }
+
+    // Length of a record, data[14]
+    let recordSize = GsmPDUHelper.readHexOctet();
+
+    let delimiter = Buf.readUint16();
+    if (!(length & 1)) {
+      delimiter |= Buf.readUint16();
+    }
+    if (DEBUG) {
+      if (delimiter != 0) {
+        debug("Something's wrong, found string delimiter: " + delimiter);
+      }
+    }
+
+    switch (options.type) {
+      case EF_TYPE_LINEAR_FIXED:
+        // Reuse the options object and update some properties.
+        options.command = ICC_COMMAND_READ_RECORD;
+        options.p1 = 1; // Record number, always use the 1st record
+        options.p2 = READ_RECORD_ABSOLUTE_MODE;
+        options.p3 = recordSize;
+        this.iccIO(options);
+        break;
+      case EF_TYPE_TRANSPARENT:
+        // Reuse the options object and update some properties.
+        options.command = ICC_COMMAND_READ_BINARY;
+        options.p3 = fileSize;
+        this.iccIO(options);
+        break;
+    }
+  },
+
+  /**
+   * Process a ICC_COMMAND_READ_RECORD type command for REQUEST_SIM_IO.
+   */
+  _processICCIOReadRecord: function _processICCIOReadRecord(options) {
+    if (options.callback) {
+      options.callback.call(this);
+    }
+  },
+
+  /**
+   * Process a ICC_COMMAND_READ_BINARY type command for REQUEST_SIM_IO.
+   */
+  _processICCIOReadBinary: function _processICCIOReadBinary(options) {
+    if (options.callback) {
+      options.callback.call(this);
+    }
+  },
+
+  /**
+   * Process ICC I/O response.
+   */
+  _processICCIO: function _processICCIO(options) {
     switch (options.command) {
       case ICC_COMMAND_GET_RESPONSE:
-        let response = Buf.readString();
-        let recordSize = parseInt(
-            response.substr(RESPONSE_DATA_RECORD_LENGTH * 2, 2), 16) & 0xff;
-        let options = {
-          command: ICC_COMMAND_READ_RECORD,
-          fileid:  ICC_EF_MSISDN,
-          pathid:  EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
-          p1:      1, // Record number, MSISDN is always in the 1st record
-          p2:      READ_RECORD_ABSOLUTE_MODE,
-          p3:      recordSize,
-          data:    null,
-          pin2:    null,
-        };
-        this.iccIO(options);
+        this._processICCIOGetResponse(options);
         break;
 
       case ICC_COMMAND_READ_RECORD:
-        // Ignore 2 bytes prefix, which is 4 chars
-        let number = GsmPDUHelper.readStringAsBCD().toString().substr(4); 
-        if (DEBUG) debug("MSISDN: " + number);
-        this.MSISDN = number || null;
-        this.sendDOMMessage({type: "siminfo", msisdn: this.MSISDN});
+        this._processICCIOReadRecord(options);
+        break;
+
+      case ICC_COMMAND_READ_BINARY:
+        this._processICCIOReadBinary(options);
         break;
     } 
   },
@@ -1550,7 +1850,13 @@ let RIL = {
     if (message.header && (message.header.segmentMaxSeq > 1)) {
       message = this._processReceivedSmsSegment(message);
     } else {
-      message.fullBody = message.body;
+      if (message.encoding == PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+        message.fullData = message.data;
+        delete message.data;
+      } else {
+        message.fullBody = message.body;
+        delete message.body;
+      }
     }
 
     if (message) {
@@ -1629,7 +1935,7 @@ let RIL = {
    * Helper for processing received multipart SMS.
    *
    * @return null for handled segments, and an object containing full message
-   *         body once all segments are received.
+   *         body/data once all segments are received.
    */
   _processReceivedSmsSegment: function _processReceivedSmsSegment(original) {
     let hash = original.sender + ":" + original.header.segmentRef;
@@ -1652,7 +1958,13 @@ let RIL = {
       return null;
     }
 
-    options.segments[seq] = original.body;
+    if (options.encoding == PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+      options.segments[seq] = original.data;
+      delete original.data;
+    } else {
+      options.segments[seq] = original.body;
+      delete original.body;
+    }
     options.receivedSegments++;
     if (options.receivedSegments < options.segmentMaxSeq) {
       if (DEBUG) {
@@ -1666,9 +1978,23 @@ let RIL = {
     delete this._receivedSmsSegmentsMap[hash];
 
     // Rebuild full body
-    options.fullBody = "";
-    for (let i = 1; i <= options.segmentMaxSeq; i++) {
-      options.fullBody += options.segments[i];
+    if (options.encoding == PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+      // Uint8Array doesn't have `concat`, so we have to merge all segements
+      // by hand.
+      let fullDataLen = 0;
+      for (let i = 1; i <= options.segmentMaxSeq; i++) {
+        fullDataLen += options.segments[i].length;
+      }
+
+      options.fullData = new Uint8Array(fullDataLen);
+      for (let d= 0, i = 1; i <= options.segmentMaxSeq; i++) {
+        let data = options.segments[i];
+        for (let j = 0; j < data.length; j++) {
+          options.fullData[d++] = data[j];
+        }
+      }
+    } else {
+      options.fullBody = options.segments.join("");
     }
 
     if (DEBUG) {
@@ -1869,7 +2195,7 @@ RIL[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length, options) {
     return;
   }
 
-  this.IMSI = Buf.readString();
+  this.iccInfo.IMSI = Buf.readString();
 };
 RIL[REQUEST_HANGUP] = function REQUEST_HANGUP(length, options) {
   if (options.rilRequestError) {
@@ -2106,18 +2432,13 @@ RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
     // See GSM11.11, TS 51.011 clause 9.4, and ISO 7816-4 for the error
     // description.
     if (DEBUG) {
-      debug("ICC I/O Error EF id = " + options.fileid.toString(16) +
+      debug("ICC I/O Error EF id = " + options.fileId.toString(16) +
             " command = " + options.command.toString(16) +
             "(" + sw1.toString(16) + "/" + sw2.toString(16) + ")");
     }
     return;
   }
-
-  switch (options.fileid) {
-    case ICC_EF_MSISDN:
-      this._processMSISDNResponse(options);
-      break;
-  }
+  this._processICCIO(options);
 };
 RIL[REQUEST_SEND_USSD] = null;
 RIL[REQUEST_CANCEL_USSD] = null;
@@ -2560,6 +2881,17 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Read an array of hex-encoded octets.
+   */
+  readHexOctetArray: function readHexOctetArray(length) {
+    let array = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+      array[i] = this.readHexOctet();
+    }
+    return array;
+  },
+
+  /**
    * Convert an octet (number) to a BCD number.
    *
    * Any nibbles that are not in the BCD range count as 0.
@@ -2863,6 +3195,35 @@ let GsmPDUHelper = {
           }
           break;
         }
+        case PDU_IEI_APPLICATION_PORT_ADDREESING_SCHEME_8BIT: {
+          let dstp = this.readHexOctet();
+          let orip = this.readHexOctet();
+          dataAvailable -= 2;
+          if ((dstp < PDU_APA_RESERVED_8BIT_PORTS)
+              || (orip < PDU_APA_RESERVED_8BIT_PORTS)) {
+            // 3GPP TS 23.040 clause 9.2.3.24.3: "A receiving entity shall
+            // ignore any information element where the value of the
+            // Information-Element-Data is Reserved or not supported"
+            break;
+          }
+          header.destinationPort = dstp;
+          header.originatorPort = orip;
+          break;
+        }
+        case PDU_IEI_APPLICATION_PORT_ADDREESING_SCHEME_16BIT: {
+          let dstp = (this.readHexOctet() << 8) | this.readHexOctet();
+          let orip = (this.readHexOctet() << 8) | this.readHexOctet();
+          dataAvailable -= 4;
+          // 3GPP TS 23.040 clause 9.2.3.24.4: "A receiving entity shall
+          // ignore any information element where the value of the
+          // Information-Element-Data is Reserved or not supported"
+          if ((dstp < PDU_APA_VALID_16BIT_PORTS)
+              && (orip < PDU_APA_VALID_16BIT_PORTS)) {
+            header.destinationPort = dstp;
+            header.originatorPort = orip;
+          }
+          break;
+        }
         case PDU_IEI_CONCATENATED_SHORT_MESSAGES_16BIT: {
           let ref = (this.readHexOctet() << 8) | this.readHexOctet();
           let max = this.readHexOctet();
@@ -3015,6 +3376,55 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Read TP-Data-Coding-Scheme(TP-DCS)
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.040 9.2.3.10, 3GPP TS 23.038 4.
+   */
+  readDataCodingScheme: function readDataCodingScheme(msg) {
+    let dcs = this.readHexOctet();
+
+    // 7 bit is the default fallback encoding.
+    let encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+    switch (dcs & 0xC0) {
+      case 0x0:
+        // bits 7..4 = 00xx
+        switch (dcs & 0x0C) {
+          case 0x4:
+            encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
+            break;
+          case 0x8:
+            encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
+            break;
+        }
+        break;
+      case 0xC0:
+        // bits 7..4 = 11xx
+        switch (dcs & 0x30) {
+          case 0x20:
+            encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
+            break;
+          case 0x30:
+            if (!dcs & 0x04) {
+              encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
+            }
+            break;
+        }
+        break;
+      default:
+        // Falling back to default encoding.
+        break;
+    }
+
+    msg.dcs = dcs;
+    msg.encoding = encoding;
+
+    if (DEBUG) debug("PDU: message encoding is " + encoding + " bit.");
+  },
+
+  /**
    * Read GSM TP-Service-Centre-Time-Stamp(TP-SCTS).
    *
    * @see 3GPP TS 23.040 9.2.3.11
@@ -3051,50 +3461,15 @@ let GsmPDUHelper = {
    *        length of user data to read in octets.
    */
   readUserData: function readUserData(msg, length) {
-    let dcs = msg.dcs;
     if (DEBUG) {
       debug("Reading " + length + " bytes of user data.");
-      debug("Coding scheme: " + dcs);
     }
-    // 7 bit is the default fallback encoding.
-    let encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
-    switch (dcs & 0xC0) {
-      case 0x0:
-        // bits 7..4 = 00xx
-        switch (dcs & 0x0C) {
-          case 0x4:
-            encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
-            break;
-          case 0x8:
-            encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
-            break;
-        }
-        break;
-      case 0xC0:
-        // bits 7..4 = 11xx
-        switch (dcs & 0x30) {
-          case 0x20:
-            encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
-            break;
-          case 0x30:
-            if (!dcs & 0x04) {
-              encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
-            }
-            break;
-        }
-        break;
-      default:
-        // Falling back to default encoding.
-        break;
-    }
-
-    if (DEBUG) debug("PDU: message encoding is " + encoding + " bit.");
 
     let paddingBits = 0;
     if (msg.udhi) {
       msg.header = this.readUserDataHeader();
 
-      if (encoding == PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
+      if (msg.encoding == PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
         let headerBits = (msg.header.length + 1) * 8;
         let headerSeptets = Math.ceil(headerBits / 7);
 
@@ -3106,7 +3481,8 @@ let GsmPDUHelper = {
     }
 
     msg.body = null;
-    switch (encoding) {
+    msg.data = null;
+    switch (msg.encoding) {
       case PDU_DCS_MSG_CODING_7BITS_ALPHABET:
         // 7 bit encoding allows 140 octets, which means 160 characters
         // ((140x8) / 7 = 160 chars)
@@ -3121,7 +3497,7 @@ let GsmPDUHelper = {
                                             langShiftIndex);
         break;
       case PDU_DCS_MSG_CODING_8BITS_ALPHABET:
-        // Unsupported.
+        msg.data = this.readHexOctetArray(length);
         break;
       case PDU_DCS_MSG_CODING_16BITS_ALPHABET:
         msg.body = this.readUCS2String(length);
@@ -3157,6 +3533,7 @@ let GsmPDUHelper = {
     // the receiving entity shall for TP-DCS assume a value of 0x00, i.e. the
     // 7bit default alphabet.` ~ 3GPP 23.040 9.2.3.27
     msg.dcs = 0;
+    msg.encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
 
     // TP-Protocol-Identifier
     if (pi & PDU_PI_PROTOCOL_IDENTIFIER) {
@@ -3164,7 +3541,7 @@ let GsmPDUHelper = {
     }
     // TP-Data-Coding-Scheme
     if (pi & PDU_PI_DATA_CODING_SCHEME) {
-      msg.dcs = this.readHexOctet();
+      this.readDataCodingScheme(msg);
     }
     // TP-User-Data-Length
     if (pi & PDU_PI_USER_DATA_LENGTH) {
@@ -3194,7 +3571,9 @@ let GsmPDUHelper = {
       pid:       null, // M  O  M  O  O  M
       epid:      null, // M  O  M  O  O  M
       dcs:       null, // M  O  M  O  O  X
+      encoding:  null, // M  O  M  O  O  X
       body:      null, // M  O  M  O  O  O
+      data:      null, // M  O  M  O  O  O
       timestamp: null, // M  X  X  X  X  X
       status:    null, // X  X  X  X  M  X
       scts:      null, // X  X  X  M  M  X
@@ -3246,7 +3625,7 @@ let GsmPDUHelper = {
     // - TP-Protocolo-Identifier -
     this.readProtocolIndicator(msg);
     // - TP-Data-Coding-Scheme -
-    msg.dcs = this.readHexOctet();
+    this.readDataCodingScheme(msg);
     // - TP-Service-Center-Time-Stamp -
     msg.timestamp = this.readTimestamp();
     // - TP-User-Data-Length -

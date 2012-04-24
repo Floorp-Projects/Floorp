@@ -177,7 +177,7 @@ interface nsIWebGLExtensionTextureFilterAnisotropic : nsIWebGLExtension
   const WebGLenum MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
 };
 
-[scriptable, builtinclass, uuid(dcba5412-42b4-4897-b2f4-56a5cae7ef2d)]
+[scriptable, builtinclass, uuid(ba7635d7-98af-41ac-8bf9-9f08cf441958)]
 interface nsIDOMWebGLRenderingContext : nsISupports
 {
   //
@@ -624,7 +624,7 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   // Modified: void glBufferData(WebGLenum target, long size, const void* data, WebGLenum usage);
   [implicit_jscontext] void bufferData(in long target, in jsval data, in long usage);
 
-  void bufferSubData(in long target, in long offset, in jsval data);
+  [implicit_jscontext] void bufferSubData(in long target, in long offset, in jsval data);
 
   WebGLenum checkFramebufferStatus(in WebGLenum target);
   void clear(in WebGLbitfield mask);
@@ -634,11 +634,11 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void colorMask(in WebGLboolean red, in WebGLboolean green, in WebGLboolean blue, in WebGLboolean alpha);
   void compileShader([optional] in nsIWebGLShader shader);
 
-  void compressedTexImage2D(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
+  [implicit_jscontext] void compressedTexImage2D(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
                             in WebGLsizei width, in WebGLsizei height, in WebGLint border,
                             in jsval pixels);
 
-  void compressedTexSubImage2D(in WebGLenum target, in WebGLint level, in WebGLint xoffset,
+  [implicit_jscontext] void compressedTexSubImage2D(in WebGLenum target, in WebGLint level, in WebGLint xoffset,
                                in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
                                in WebGLenum format, in jsval pixels);
 
@@ -749,7 +749,7 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void pixelStorei(in WebGLenum pname, in WebGLint param);
   void polygonOffset(in WebGLfloat factor, in WebGLfloat units);
 
-  void readPixels(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height,
+  [implicit_jscontext] void readPixels(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height,
                   in WebGLenum format, in WebGLenum type, in jsval pixels);
 
   //void glReleaseShaderCompiler();
@@ -769,10 +769,10 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void stencilOpSeparate(in WebGLenum face, in WebGLenum fail, in WebGLenum zfail, in WebGLenum zpass);
 
   void texImage2D([optional] in long dummy);
-  [noscript] void texImage2D_array(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
+  [noscript,implicit_jscontext] void texImage2D_array(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
                                    in WebGLsizei width, in WebGLsizei height,
                                    in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
-  [noscript] void texImage2D_imageData(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
+  [noscript,implicit_jscontext] void texImage2D_imageData(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
                                    in WebGLsizei width, in WebGLsizei height,
                                    in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
 
@@ -781,10 +781,10 @@ interface nsIDOMWebGLRenderingContext : nsISupports
                                  in WebGLenum format, in WebGLenum type, in Element element);
 
   void texSubImage2D([optional] in long dummy);
-  [noscript] void texSubImage2D_array(in WebGLenum target, in WebGLint level,
+  [noscript,implicit_jscontext] void texSubImage2D_array(in WebGLenum target, in WebGLint level,
                                       in WebGLint xoffset, in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
                                       in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
-  [noscript] void texSubImage2D_imageData(in WebGLenum target, in WebGLint level,
+  [noscript,implicit_jscontext] void texSubImage2D_imageData(in WebGLenum target, in WebGLint level,
                                       in WebGLint xoffset, in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
                                       in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
   // HTMLImageElement, HTMLCanvasElement, HTMLVideoElement

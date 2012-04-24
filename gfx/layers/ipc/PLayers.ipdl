@@ -162,6 +162,13 @@ struct OpPaintThebesBuffer {
   nsIntRegion updatedRegion;
 };
 
+struct OpPaintTiledLayerBuffer {
+  PLayer layer;
+  // Bug 747811
+  // FIXME: We need to support sharing tile across process.
+  uintptr_t tiledLayerBuffer;
+};
+
 struct OpPaintCanvas  {
   PLayer layer;
   CanvasSurface newFrontBuffer;
@@ -190,6 +197,7 @@ union Edit {
   OpRemoveChild;
 
   OpPaintThebesBuffer;
+  OpPaintTiledLayerBuffer;
   OpPaintCanvas;
   OpPaintImage;
 };

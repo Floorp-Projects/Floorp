@@ -130,6 +130,7 @@ static void _hb_gr_font_data_destroy (void *data)
   hb_gr_font_data_t *f = (hb_gr_font_data_t *) data;
 
   gr_font_destroy (f->grfont);
+  free (f);
 }
 
 static hb_user_data_key_t hb_gr_data_key;
@@ -212,14 +213,16 @@ _hb_gr_font_get_data (hb_font_t *font)
 
 
 hb_bool_t
-hb_graphite_shape (hb_font_t          *font,
+_hb_graphite_shape (hb_font_t          *font,
 		   hb_buffer_t        *buffer,
 		   const hb_feature_t *features,
-		   unsigned int        num_features,
-		   const char * const *shaper_options)
+		   unsigned int        num_features)
 {
 
   buffer->guess_properties ();
+
+  /* XXX We do a hell of a lot of stuff just to figure out this font
+   * is not graphite!  Shouldn't do. */
 
   hb_gr_font_data_t *data = _hb_gr_font_get_data (font);
   if (!data->grface) return FALSE;

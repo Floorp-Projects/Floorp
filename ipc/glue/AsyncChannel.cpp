@@ -337,13 +337,13 @@ AsyncChannel::Open(AsyncChannel *aTargetChan,
 
     mMonitor = new RefCountedMonitor();
 
+    MonitorAutoLock lock(*mMonitor);
+    mChannelState = ChannelOpening;
     aTargetLoop->PostTask(
         FROM_HERE,
         NewRunnableMethod(aTargetChan, &AsyncChannel::OnOpenAsSlave,
                           this, oppSide));
 
-    MonitorAutoLock lock(*mMonitor);
-    mChannelState = ChannelOpening;
     while (ChannelOpening == mChannelState)
         mMonitor->Wait();
     NS_ASSERTION(ChannelConnected == mChannelState, "not connected when awoken");

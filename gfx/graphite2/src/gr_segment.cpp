@@ -168,7 +168,7 @@ void gr_seg_justify(gr_segment* pSeg/*not NULL*/, gr_slot* pSlot/*not NULL*/, co
 {
     assert(pSeg);
     assert(pSlot);
-    pSeg->justify(pSlot, pFont, width, justFlags(flags), pFirst, pLast);
+    pSeg->justify(pSlot, pFont, float(width), justFlags(flags), pFirst, pLast);
 }
 
 } // extern "C"
