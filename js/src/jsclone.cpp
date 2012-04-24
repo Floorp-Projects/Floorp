@@ -424,6 +424,13 @@ JSStructuredCloneWriter::checkStack()
 #endif
 }
 
+JS_PUBLIC_API(JSBool)
+JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v)
+{
+    JS_ASSERT(v.isObject());
+    return w->writeTypedArray(&v.toObject());
+}
+
 bool
 JSStructuredCloneWriter::writeTypedArray(JSObject *obj)
 {
@@ -687,6 +694,16 @@ JSStructuredCloneReader::readString(uint32_t nchars)
     if (str)
         chars.forget();
     return str;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_ReadTypedArray(JSStructuredCloneReader *r, jsval *vp)
+{
+    uint32_t tag, nelems;
+    if (!r->input().readPair(&tag, &nelems))
+        return false;
+    JS_ASSERT(tag >= SCTAG_TYPED_ARRAY_MIN && tag <= SCTAG_TYPED_ARRAY_MAX);
+    return r->readTypedArray(tag, nelems, vp);
 }
 
 bool
