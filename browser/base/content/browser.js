@@ -8038,6 +8038,10 @@ var gIdentityHandler = {
     delete this._identityIconCountryLabel;
     return this._identityIconCountryLabel = document.getElementById("identity-icon-country-label");
   },
+  get _identityIcon () {
+    delete this._identityIcon;
+    return this._identityIcon = document.getElementById("page-proxy-favicon");
+  },
 
   /**
    * Rebuild cache of the elements that may or may not exist depending
@@ -8047,9 +8051,11 @@ var gIdentityHandler = {
     delete this._identityBox;
     delete this._identityIconLabel;
     delete this._identityIconCountryLabel;
+    delete this._identityIcon;
     this._identityBox = document.getElementById("identity-box");
     this._identityIconLabel = document.getElementById("identity-icon-label");
     this._identityIconCountryLabel = document.getElementById("identity-icon-country-label");
+    this._identityIcon = document.getElementById("page-proxy-favicon");
   },
 
   /**
@@ -8354,7 +8360,7 @@ var gIdentityHandler = {
     }, false);
 
     // Now open the popup, anchored off the primary chrome element
-    this._identityPopup.openPopup(this._identityBox, "bottomcenter topleft");
+    this._identityPopup.openPopup(this._identityIcon, "bottomcenter topleft");
   },
 
   onPopupShown : function(event) {
