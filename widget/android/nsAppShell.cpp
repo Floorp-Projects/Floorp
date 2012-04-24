@@ -49,6 +49,10 @@
 #include "nsIAppStartup.h"
 #include "nsIGeolocationProvider.h"
 #include "nsCacheService.h"
+#include "nsIDOMEventListener.h"
+#include "nsDOMNotifyPaintEvent.h"
+#include "nsIDOMClientRectList.h"
+#include "nsIDOMClientRect.h"
 
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
@@ -92,6 +96,64 @@ nsAppShell *nsAppShell::gAppShell = nsnull;
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsAppShell, nsBaseAppShell, nsIObserver)
 
+class AfterPaintListener : public nsIDOMEventListener {
+  public:
+    NS_DECL_ISUPPORTS
+
+    void Register(nsIDOMWindow* window) {
+        if (mEventTarget)
+            Unregister();
+        nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(window);
+        if (!win)
+            return;
+        mEventTarget = win->GetChromeEventHandler();
+        if (mEventTarget)
+            mEventTarget->AddEventListener(NS_LITERAL_STRING("MozAfterPaint"), this, false);
+    }
+
+    void Unregister() {
+        if (mEventTarget)
+            mEventTarget->RemoveEventListener(NS_LITERAL_STRING("MozAfterPaint"), this, false);
+        mEventTarget = nsnull;
+    }
+
+    virtual nsresult HandleEvent(nsIDOMEvent* aEvent) {
+        nsCOMPtr<nsIDOMNotifyPaintEvent> paintEvent = do_QueryInterface(aEvent);
+        if (!paintEvent)
+            return NS_OK;
+
+        nsCOMPtr<nsIDOMClientRectList> rects;
+        paintEvent->GetClientRects(getter_AddRefs(rects));
+        if (!rects)
+            return NS_OK;
+        PRUint32 length;
+        rects->GetLength(&length);
+        for (PRUint32 i = 0; i < length; ++i) {
+            float top, left, bottom, right;
+            nsCOMPtr<nsIDOMClientRect> rect = rects->GetItemAt(i);
+            if (!rect)
+                continue;
+            rect->GetTop(&top);
+            rect->GetLeft(&left);
+            rect->GetRight(&right);
+            rect->GetBottom(&bottom);
+            AndroidBridge::NotifyPaintedRect(top, left, bottom, right);
+        }
+        return NS_OK;
+    }
+
+    ~AfterPaintListener() {
+        if (mEventTarget)
+            Unregister();
+    }
+
+  private:
+    nsCOMPtr<nsIDOMEventTarget> mEventTarget;
+};
+
+NS_IMPL_ISUPPORTS1(AfterPaintListener, nsIDOMEventListener)
+nsCOMPtr<AfterPaintListener> sAfterPaintListener = nsnull;
+
 nsAppShell::nsAppShell()
     : mQueueLock("nsAppShell.mQueueLock"),
       mCondLock("nsAppShell.mCondLock"),
@@ -101,11 +163,13 @@ nsAppShell::nsAppShell()
       mAllowCoalescingNextDraw(false)
 {
     gAppShell = this;
+    sAfterPaintListener = new AfterPaintListener();
 }
 
 nsAppShell::~nsAppShell()
 {
     gAppShell = nsnull;
+    delete sAfterPaintListener;
 }
 
 void
@@ -369,6 +433,21 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         break;
     }
 
+    case AndroidGeckoEvent::PAINT_LISTEN_START_EVENT: {
+        nsCOMPtr<nsIDOMWindow> domWindow;
+        nsCOMPtr<nsIBrowserTab> tab;
+        mBrowserApp->GetBrowserTab(curEvent->MetaState(), getter_AddRefs(tab));
+        if (!tab)
+            break;
+
+        tab->GetWindow(getter_AddRefs(domWindow));
+        if (!domWindow)
+            break;
+
+        sAfterPaintListener->Register(domWindow);
+        break;
+    }
+
     case AndroidGeckoEvent::SCREENSHOT: {
         if (!mBrowserApp)
             break;
@@ -392,8 +471,8 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
             break;
 
         nsTArray<nsIntPoint> points = curEvent->Points();
-        NS_ASSERTION(points.Length() == 2, "Screenshot event does not have enough coordinates");
-        bridge->TakeScreenshot(domWindow, 0, 0, points[0].x, points[0].y, points[1].x, points[1].y, curEvent->MetaState(), scale);
+        NS_ASSERTION(points.Length() == 4, "Screenshot event does not have enough coordinates");
+        bridge->TakeScreenshot(domWindow, points[0].x, points[0].y, points[1].x, points[1].y, points[3].x, points[3].y, curEvent->MetaState(), scale, curEvent->Flags());
         break;
     }
 

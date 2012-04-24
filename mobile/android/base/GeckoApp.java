@@ -556,7 +556,7 @@ abstract public class GeckoApp
             int sh = tab.getMinScreenshotHeight();
             int dw = tab.getThumbnailWidth();
             int dh = tab.getThumbnailHeight();
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), sw, sh, dw, dh));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), 0, 0, sw, sh, 0, 0, dw, dh, GeckoAppShell.SCREENSHOT_THUMBNAIL));
         }
     }
     
@@ -1193,7 +1193,8 @@ abstract public class GeckoApp
         tab.updateURL(uri);
         tab.setState(Tab.STATE_LOADING);
         tab.updateSecurityMode("unknown");
-
+        if (Tabs.getInstance().isSelectedTab(tab))
+            getLayerController().getView().getRenderer().resetCheckerboard();
         mMainHandler.post(new Runnable() {
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab)) {
@@ -1223,6 +1224,11 @@ abstract public class GeckoApp
         GeckoAppShell.getHandler().postDelayed(new Runnable() {
             public void run() {
                 getAndProcessThumbnailForTab(tab);
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createStartPaintListentingEvent(tab.getId()));
+                    GeckoAppShell.screenshotWholePage(tab);
+                }
+
             }
         }, 500);
     }

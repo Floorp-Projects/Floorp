@@ -58,20 +58,23 @@ public abstract class TileLayer extends Layer {
 
     private final Rect mDirtyRect;
     private final CairoImage mImage;
-    private final boolean mRepeat;
     private IntSize mSize;
     private int[] mTextureIDs;
 
-    public TileLayer(boolean repeat, CairoImage image) {
+    public enum PaintMode { NORMAL, REPEAT, STRETCH };
+    private PaintMode mPaintMode;
+
+    public TileLayer(CairoImage image, PaintMode paintMode) {
         super(image.getSize());
 
-        mRepeat = repeat;
+        mPaintMode = paintMode;
         mImage = image;
         mSize = new IntSize(0, 0);
         mDirtyRect = new Rect();
     }
 
-    protected boolean repeats() { return mRepeat; }
+    protected boolean repeats() { return mPaintMode == PaintMode.REPEAT; }
+    protected boolean stretches() { return mPaintMode == PaintMode.STRETCH; }
     protected int getTextureID() { return mTextureIDs[0]; }
     protected boolean initialized() { return mImage != null && mTextureIDs != null; }
 
@@ -186,7 +189,7 @@ public abstract class TileLayer extends Layer {
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER,
                                GLES20.GL_LINEAR);
 
-        int repeatMode = mRepeat ? GLES20.GL_REPEAT : GLES20.GL_CLAMP_TO_EDGE;
+        int repeatMode = repeats() ? GLES20.GL_REPEAT : GLES20.GL_CLAMP_TO_EDGE;
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, repeatMode);
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, repeatMode);
     }

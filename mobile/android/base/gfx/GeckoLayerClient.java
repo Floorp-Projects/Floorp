@@ -43,6 +43,7 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoEventResponder;
+import org.mozilla.gecko.Tabs;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -341,6 +342,8 @@ public class GeckoLayerClient implements GeckoEventResponder,
             mLayerController.abortPanZoomAnimation();
             mLayerController.getView().setPaintState(LayerView.PAINT_BEFORE_FIRST);
         }
+        mLayerController.getView().getRenderer().resetCheckerboard();
+        GeckoAppShell.screenshotWholePage(Tabs.getInstance().getSelectedTab());
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature.
