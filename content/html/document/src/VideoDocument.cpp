@@ -63,6 +63,7 @@ protected:
 
   // Sets document <title> to reflect the file name and description.
   void UpdateTitle(nsIChannel* aChannel);
+  void InsertMediaFragmentScript();
 
   nsresult CreateSyntheticVideoDocument(nsIChannel* aChannel,
                                         nsIStreamListener** aListener);
@@ -106,6 +107,29 @@ VideoDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
     LinkStylesheet(NS_LITERAL_STRING("resource://gre/res/TopLevelVideoDocument.css"));
     LinkStylesheet(NS_LITERAL_STRING("chrome://global/skin/TopLevelVideoDocument.css"));
   }
+
+  if (aScriptGlobalObject) {
+    InsertMediaFragmentScript();
+  }
+}
+
+void
+VideoDocument::InsertMediaFragmentScript()
+{
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::script, nsnull,
+                                           kNameSpaceID_XHTML,
+                                           nsIDOMNode::ELEMENT_NODE);
+  if (!nodeInfo)
+  {
+    return;
+  }
+
+  nsRefPtr<nsGenericHTMLElement> script = NS_NewHTMLScriptElement(nodeInfo.forget());
+  script->SetTextContent(NS_LITERAL_STRING("window.addEventListener('hashchange',function(e){document.querySelector('audio,video').src=e.newURL;},false);"));
+
+  Element* head = GetHeadElement();
+  head->AppendChildTo(script, false);
 }
 
 nsresult
