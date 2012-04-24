@@ -798,9 +798,24 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_CHECK_RICH_OPTION = 125;
 
   /**
+   * An HTML definition list <dl>
+   */
+  const unsigned long ROLE_DEFINITION_LIST = 126;
+
+  /**
+   * An HTML definition term <dt>
+   */
+  const unsigned long ROLE_TERM = 127;
+
+  /**
+   * An HTML definition <dd>
+   */
+  const unsigned long ROLE_DEFINITION = 128;
+
+  /**
    * It's not role actually. This constant is important to help ensure
    * nsRoleMap's are synchronized.
    */
-  const unsigned long ROLE_LAST_ENTRY = 126;
+  const unsigned long ROLE_LAST_ENTRY = 129;
 };
 
