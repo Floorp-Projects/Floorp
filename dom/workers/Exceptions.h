@@ -71,28 +71,12 @@
 #define INVALID_NODE_TYPE_ERR 24
 #define DATA_CLONE_ERR 25
 
-// This one isn't actually spec'd anywhere, use it when we can't find a match.
-#define UNKNOWN_ERR 0
-
-// FileException Codes
-#define FILE_NOT_FOUND_ERR 1
-#define FILE_SECURITY_ERR 2
-#define FILE_ABORT_ERR 3
-#define FILE_NOT_READABLE_ERR 4
-#define FILE_ENCODING_ERR 5
-
 BEGIN_WORKERS_NAMESPACE
 
 namespace exceptions {
 
 bool
 InitClasses(JSContext* aCx, JSObject* aGlobal);
-
-void
-ThrowDOMExceptionForCode(JSContext* aCx, int aCode);
-
-void
-ThrowFileExceptionForCode(JSContext* aCx, int aCode);
 
 } // namespace exceptions
 
