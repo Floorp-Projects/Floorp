@@ -521,6 +521,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
         case SCREENSHOT: {
             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
             ReadPointArray(mPoints, jenv, jPoints, 2);
+            break;
         }
 
         case SCREENORIENTATION_CHANGED: {
