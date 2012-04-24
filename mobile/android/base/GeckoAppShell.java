@@ -227,6 +227,8 @@ public class GeckoAppShell
     public static native void schedulePauseComposition();
     public static native void scheduleResumeComposition(int width, int height);
 
+    public static native void unlockDatabaseFile(String databasePath);
+
     private static class GeckoMediaScannerClient implements MediaScannerConnectionClient {
         private String mFile = "";
         private String mMimeType = "";
