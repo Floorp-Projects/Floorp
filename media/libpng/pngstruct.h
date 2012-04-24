@@ -5,7 +5,7 @@
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
- * Last changed in libpng 1.5.9 [February 18, 2012]
+ * Last changed in libpng 1.5.9 [March 29, 2012]
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -121,6 +121,12 @@ struct png_struct_def
    png_uint_32 crc;           /* current chunk CRC value */
    png_colorp palette;        /* palette from the input file */
    png_uint_16 num_palette;   /* number of color entries in palette */
+
+/* Added at libpng-1.5.10 */
+#ifdef PNG_CHECK_FOR_INVALID_INDEX_SUPPORTED
+   int num_palette_max;       /* maximum palette index found in IDAT */
+#endif
+
    png_uint_16 num_trans;     /* number of transparency values */
    png_byte compression;      /* file compression type (always 0) */
    png_byte filter;           /* file filter type (always 0) */
@@ -210,13 +216,6 @@ struct png_struct_def
    png_size_t current_buffer_size;   /* amount of data now in current_buffer */
    int process_mode;                 /* what push library is currently doing */
    int cur_palette;                  /* current push library palette index */
-
-#  ifdef PNG_TEXT_SUPPORTED
-     png_size_t current_text_size;   /* current size of text input data */
-     png_size_t current_text_left;   /* how much text left to read in input */
-     png_charp current_text;         /* current text chunk buffer */
-     png_charp current_text_ptr;     /* current location in current_text */
-#  endif /* PNG_PROGRESSIVE_READ_SUPPORTED && PNG_TEXT_SUPPORTED */
 
 #endif /* PNG_PROGRESSIVE_READ_SUPPORTED */
 
