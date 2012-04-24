@@ -66,6 +66,16 @@ onmessage = function(event) {
       throw new Error("Failed to throw when getting responseText on '" + type +
                       "' type");
     }
+
+    if (exception.name != "InvalidStateError") {
+      throw new Error("Unexpected error when getting responseText on '" + type +
+                      "' type");
+    }
+
+    if (exception.code != DOMException.INVALID_STATE_ERR) {
+      throw new Error("Unexpected error code when getting responseText on '" + type +
+                      "' type");
+    }
   }
 
   testResponseTextException("arraybuffer");
@@ -99,6 +109,16 @@ onmessage = function(event) {
 
   if (!exception) {
     throw new Error("Failed to throw when setting responseType before " +
+                    "calling open()");
+  }
+
+  if (exception.name != "InvalidStateError") {
+    throw new Error("Unexpected error when setting responseType before " +
+                    "calling open()");
+  }
+
+  if (exception.code != DOMException.INVALID_STATE_ERR) {
+    throw new Error("Unexpected error code when setting responseType before " +
                     "calling open()");
   }
 
@@ -150,6 +170,16 @@ onmessage = function(event) {
 
   if (!exception) {
     throw new Error("Failed to throw when setting responseType after " +
+                    "calling send()");
+  }
+
+  if (exception.name != "InvalidStateError") {
+    throw new Error("Unexpected error when setting responseType after " +
+                    "calling send()");
+  }
+
+  if (exception.code != DOMException.INVALID_STATE_ERR) {
+    throw new Error("Unexpected error code when setting responseType after " +
                     "calling send()");
   }
 }
