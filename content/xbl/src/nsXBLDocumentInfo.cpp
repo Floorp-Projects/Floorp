@@ -308,8 +308,7 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment()
   nsresult rv;
 
   nsCOMPtr<nsIScriptRuntime> scriptRuntime;
-  rv = NS_GetScriptRuntimeByID(nsIProgrammingLanguage::JAVASCRIPT,
-                               getter_AddRefs(scriptRuntime));
+  rv = NS_GetJSRuntime(getter_AddRefs(scriptRuntime));
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIScriptContext> newCtx = scriptRuntime->CreateContext();
   rv = SetScriptContext(newCtx);

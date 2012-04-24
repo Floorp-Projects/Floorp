@@ -227,8 +227,8 @@ nsDOMScriptObjectFactory::RegisterDOMClassInfo(const char *aName,
 
 
 // Factories
-static nsresult
-GetJSRuntime(nsIScriptRuntime** aLanguage)
+nsresult
+NS_GetJSRuntime(nsIScriptRuntime** aLanguage)
 {
   nsCOMPtr<nsIDOMScriptObjectFactory> factory =
     do_GetService(kDOMScriptObjectFactoryCID);
@@ -246,7 +246,7 @@ nsresult NS_GetScriptRuntime(const nsAString &aLanguageName,
   NS_ENSURE_TRUE(aLanguageName.EqualsLiteral("application/javascript"),
                  NS_ERROR_FAILURE);
 
-  return GetJSRuntime(aLanguage);
+  return NS_GetJSRuntime(aLanguage);
 }
 
 nsresult NS_GetScriptRuntimeByID(PRUint32 aScriptTypeID,
@@ -257,7 +257,7 @@ nsresult NS_GetScriptRuntimeByID(PRUint32 aScriptTypeID,
   NS_ENSURE_TRUE(aScriptTypeID == nsIProgrammingLanguage::JAVASCRIPT,
                  NS_ERROR_FAILURE);
 
-  return GetJSRuntime(aLanguage);
+  return NS_GetJSRuntime(aLanguage);
 }
 
 
