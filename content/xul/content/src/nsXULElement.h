@@ -303,7 +303,7 @@ class nsXULDocument;
 class nsXULPrototypeScript : public nsXULPrototypeNode
 {
 public:
-    nsXULPrototypeScript(PRUint32 aLangID, PRUint32 aLineNo, PRUint32 version);
+    nsXULPrototypeScript(PRUint32 aLineNo, PRUint32 version);
     virtual ~nsXULPrototypeScript();
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -332,23 +332,18 @@ public:
 
     void Set(nsScriptObjectHolder<JSScript>& aHolder)
     {
-        NS_ASSERTION(mScriptObject.mLangID == aHolder.getScriptTypeID(),
-                     "Wrong language, this will leak the previous object.");
-
-        mScriptObject.mLangID = aHolder.getScriptTypeID();
         Set(aHolder.get());
     }
     void Set(JSScript* aObject);
 
     struct ScriptObjectHolder
     {
-        ScriptObjectHolder(PRUint32 aLangID) : mLangID(aLangID),
-                                               mObject(nsnull)
+        ScriptObjectHolder() : mObject(nsnull)
         {
         }
-        PRUint32 mLangID;
         JSScript* mObject;
     };
+
     nsCOMPtr<nsIURI>         mSrcURI;
     PRUint32                 mLineNo;
     bool                     mSrcLoading;
