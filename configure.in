@@ -4186,6 +4186,10 @@ MOZ_ARG_WITH_BOOL(system-libxul,
 [  --with-system-libxul    Use system installed libxul SDK],
     SYSTEM_LIBXUL=1)
 
+if test -n "$SYSTEM_LIBXUL"; then
+    AC_DEFINE(SYSTEM_LIBXUL)
+fi
+
 dnl ========================================================
 dnl = If NSPR was not detected in the system,
 dnl = use the one in the source tree (mozilla/nsprpub)
