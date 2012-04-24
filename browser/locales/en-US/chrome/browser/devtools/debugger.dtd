@@ -56,3 +56,7 @@
 <!-- LOCALIZATION NOTE (debuggerUI.emptyFilterText): This is the text that
   -  appears in the filter text box when it is empty. -->
 <!ENTITY debuggerUI.emptyFilterText  "Filter scripts">
+
+<!-- LOCALIZATION NOTE (emptyScriptText): The text to display in the menulist when
+  - there are no scripts. -->
+<!ENTITY debuggerUI.emptyScriptText  "No scripts.">
