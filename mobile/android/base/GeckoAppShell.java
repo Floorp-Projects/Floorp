@@ -2171,14 +2171,16 @@ public class GeckoAppShell
 
             Tab tab = Tabs.getInstance().getSelectedTab();
             ImmutableViewportMetrics viewport = GeckoApp.mAppContext.getLayerController().getViewportMetrics();
+            /*
             if (FloatUtils.fuzzyEquals(sCheckerboardPageWidth, viewport.pageSizeWidth) &&
                 FloatUtils.fuzzyEquals(sCheckerboardPageHeight, viewport.pageSizeHeight)) {
                 float width = right - left;
                 float height = bottom - top;
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), (int)top, (int)left, (int)width, (int)height, 0, 0, (int)(sLastCheckerboardWidthRatio * width), (int)(sLastCheckerboardHeightRatio * height), GeckoAppShell.SCREENSHOT_UPDATE));
             } else {
+            */
                 GeckoAppShell.screenshotWholePage(tab);
-            }
+            //}
         }
 
         void addRectToRepaint(float top, float left, float bottom, float right) {
