@@ -5229,9 +5229,11 @@ var TabsProgressListener = {
 
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         Components.isSuccessCode(aStatus) &&
-        /^about:/.test(aWebProgress.DOMWindow.document.documentURI)) {
+        /^about:(?!newtab)/.test(aWebProgress.DOMWindow.document.documentURI)) {
       aBrowser.addEventListener("click", BrowserOnClick, false);
-      aBrowser.addEventListener("pagehide", function onPageHide() {
+      aBrowser.addEventListener("pagehide", function onPageHide(event) {
+        if (aBrowser.contentDocument && event.target != aBrowser.contentDocument)
+          return;
         aBrowser.removeEventListener("click", BrowserOnClick, false);
         aBrowser.removeEventListener("pagehide", onPageHide, true);
       }, true);
