@@ -52,7 +52,6 @@
 #include "gfxipc/ShadowLayerUtils.h"
 #include "RenderTrace.h"
 #include "sampler.h"
-#include "nsXULAppAPI.h"
 
 using namespace mozilla::ipc;
 
@@ -240,17 +239,6 @@ ShadowLayerForwarder::PaintedThebesBuffer(ShadowableLayer* aThebes,
                                                   aBufferRotation),
                                      aUpdatedRegion));
 }
-
-void
-ShadowLayerForwarder::PaintedTiledLayerBuffer(ShadowableLayer* aLayer,
-                                              BasicTiledLayerBuffer* aTiledLayerBuffer)
-{
-  if (XRE_GetProcessType() != GeckoProcessType_Default)
-    NS_RUNTIMEABORT("PaintedTiledLayerBuffer must be made IPC safe (not share pointers)");
-  mTxn->AddPaint(OpPaintTiledLayerBuffer(NULL, Shadow(aLayer),
-                                         uintptr_t(aTiledLayerBuffer)));
-}
-
 void
 ShadowLayerForwarder::PaintedImage(ShadowableLayer* aImage,
                                    const SharedImage& aNewFrontImage)

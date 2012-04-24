@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/layers/PLayers.h"
-#include "TiledLayerBuffer.h"
 
 /* This must occur *after* layers/PLayers.h to avoid typedefs conflicts. */
 #include "mozilla/Util.h"
@@ -987,9 +986,6 @@ ShadowThebesLayerOGL::ShadowThebesLayerOGL(LayerManagerOGL *aManager)
   , LayerOGL(aManager)
   , mUploadTask(nsnull)
 {
-#ifdef FORCE_BASICTILEDTHEBESLAYER
-  NS_ABORT();
-#endif
   mImplData = static_cast<LayerOGL*>(this);
 }
 

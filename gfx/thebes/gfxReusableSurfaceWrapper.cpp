@@ -9,7 +9,6 @@
 gfxReusableSurfaceWrapper::gfxReusableSurfaceWrapper(gfxImageSurface* aSurface)
   : mSurface(aSurface)
   , mSurfaceData(aSurface->Data())
-  , mFormat(aSurface->Format())
   , mReadCount(0)
 {
   MOZ_COUNT_CTOR(gfxReusableSurfaceWrapper);
@@ -48,7 +47,6 @@ void
 gfxReusableSurfaceWrapper::ReadUnlock()
 {
   PR_ATOMIC_DECREMENT(&mReadCount);
-  NS_ABORT_IF_FALSE(mReadCount >= 0, "Should not be negative");
 }
 
 gfxReusableSurfaceWrapper*
@@ -62,7 +60,7 @@ gfxReusableSurfaceWrapper::GetWritable(gfxImageSurface** aSurface)
   }
 
   // Something else is reading the surface, copy it
-  gfxImageSurface* copySurface = new gfxImageSurface(mSurface->GetSize(), mSurface->Format(), false);
+  gfxImageSurface* copySurface = new gfxImageSurface(mSurface->GetSize(), mSurface->Format());
   copySurface->CopyFrom(mSurface);
   *aSurface = copySurface;
 

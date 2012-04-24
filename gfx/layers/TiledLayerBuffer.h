@@ -8,11 +8,7 @@
 #define TILEDLAYERBUFFER_TILE_SIZE 256
 
 // Debug defines
-#ifdef ANDROID
-  // This needs to go away as we enabled tiled
-  // layers everywhere.
-  #define FORCE_BASICTILEDTHEBESLAYER
-#endif
+//#define FORCE_BASICTILEDTHEBESLAYER
 //#define GFX_TILEDLAYER_DEBUG_OVERLAY
 //#define GFX_TILEDLAYER_PREF_WARNINGS
 
@@ -120,6 +116,8 @@ protected:
   int             mRetainedHeight; // in tiles
 
 private:
+  TiledLayerBuffer(const TiledLayerBuffer&) MOZ_DELETE;
+
   const Derived& AsDerived() const { return *static_cast<const Derived*>(this); }
   Derived& AsDerived() { return *static_cast<Derived*>(this); }
 

@@ -49,7 +49,6 @@
 
 #include "BasicLayers.h"
 #include "BasicImplData.h"
-#include "BasicTiledThebesLayer.h"
 #include "ImageLayers.h"
 #include "RenderTrace.h"
 
@@ -3127,23 +3126,10 @@ already_AddRefed<ThebesLayer>
 BasicShadowLayerManager::CreateThebesLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-#ifdef FORCE_BASICTILEDTHEBESLAYER
-  if (HasShadowManager()) {
-    // BasicTiledThebesLayer doesn't support main
-    // thread compositing so only return this layer
-    // type if we have a shadow manager.
-    nsRefPtr<BasicTiledThebesLayer> layer =
-      new BasicTiledThebesLayer(this);
-    MAYBE_CREATE_SHADOW(Thebes);
-    return layer.forget();
-  } else
-#endif
-  {
-    nsRefPtr<BasicShadowableThebesLayer> layer =
-      new BasicShadowableThebesLayer(this);
-    MAYBE_CREATE_SHADOW(Thebes);
-    return layer.forget();
-  }
+  nsRefPtr<BasicShadowableThebesLayer> layer =
+    new BasicShadowableThebesLayer(this);
+  MAYBE_CREATE_SHADOW(Thebes);
+  return layer.forget();
 }
 
 already_AddRefed<ContainerLayer>
