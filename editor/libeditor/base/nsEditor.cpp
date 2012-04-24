@@ -1273,11 +1273,11 @@ nsEditor::RemoveAttribute(nsIDOMElement *aElement, const nsAString& aAttribute)
 NS_IMETHODIMP
 nsEditor::MarkNodeDirty(nsIDOMNode* aNode)
 {  
-  //  mark the node dirty.
-  nsCOMPtr<nsIContent> element (do_QueryInterface(aNode));
-  if (element)
+  nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
+  if (element) {
     element->SetAttr(kNameSpaceID_None, nsEditProperty::mozdirty,
                      EmptyString(), false);
+  }
   return NS_OK;
 }
 
