@@ -853,77 +853,64 @@ nsHTMLCSSUtils::GenerateCSSDeclarationsFromHTMLStyle(dom::Element* aElement,
 {
   MOZ_ASSERT(aElement);
   nsIAtom* tagName = aElement->Tag();
+  const nsHTMLCSSUtils::CSSEquivTable* equivTable = nsnull;
 
   if (nsEditProperty::b == aHTMLProperty) {
-    BuildCSSDeclarations(cssPropertyArray, cssValueArray, boldEquivTable, aValue, aGetOrRemoveRequest);
-  }
-  else if (nsEditProperty::i == aHTMLProperty) {
-    BuildCSSDeclarations(cssPropertyArray, cssValueArray, italicEquivTable, aValue, aGetOrRemoveRequest);
-  }
-  else if (nsEditProperty::u == aHTMLProperty) {
-    BuildCSSDeclarations(cssPropertyArray, cssValueArray, underlineEquivTable, aValue, aGetOrRemoveRequest);
-  }
-  else if (nsEditProperty::strike == aHTMLProperty) {
-    BuildCSSDeclarations(cssPropertyArray, cssValueArray, strikeEquivTable, aValue, aGetOrRemoveRequest);
-  }
-  else if (nsEditProperty::tt == aHTMLProperty) {
-    BuildCSSDeclarations(cssPropertyArray, cssValueArray, ttEquivTable, aValue, aGetOrRemoveRequest);
-  }
-  else if (aAttribute) {
+    equivTable = boldEquivTable;
+  } else if (nsEditProperty::i == aHTMLProperty) {
+    equivTable = italicEquivTable;
+  } else if (nsEditProperty::u == aHTMLProperty) {
+    equivTable = underlineEquivTable;
+  } else if (nsEditProperty::strike == aHTMLProperty) {
+    equivTable = strikeEquivTable;
+  } else if (nsEditProperty::tt == aHTMLProperty) {
+    equivTable = ttEquivTable;
+  } else if (aAttribute) {
     if (nsEditProperty::font == aHTMLProperty &&
         aAttribute->EqualsLiteral("color")) {
-      BuildCSSDeclarations(cssPropertyArray, cssValueArray, fontColorEquivTable, aValue, aGetOrRemoveRequest);
-    }
-    else if (nsEditProperty::font == aHTMLProperty &&
-             aAttribute->EqualsLiteral("face")) {
-      BuildCSSDeclarations(cssPropertyArray, cssValueArray, fontFaceEquivTable, aValue, aGetOrRemoveRequest);
-    }
-    else if (aAttribute->EqualsLiteral("bgcolor")) {
-      BuildCSSDeclarations(cssPropertyArray, cssValueArray, bgcolorEquivTable, aValue, aGetOrRemoveRequest);
-    }
-    else if (aAttribute->EqualsLiteral("background")) {
-      BuildCSSDeclarations(cssPropertyArray, cssValueArray, backgroundImageEquivTable, aValue, aGetOrRemoveRequest);
-    }
-    else if (aAttribute->EqualsLiteral("text")) {
-      BuildCSSDeclarations(cssPropertyArray, cssValueArray, textColorEquivTable, aValue, aGetOrRemoveRequest);
-    }
-    else if (aAttribute->EqualsLiteral("border")) {
-      BuildCSSDeclarations(cssPropertyArray, cssValueArray, borderEquivTable, aValue, aGetOrRemoveRequest);
-    }
-    else if (aAttribute->EqualsLiteral("align")) {
+      equivTable = fontColorEquivTable;
+    } else if (nsEditProperty::font == aHTMLProperty &&
+               aAttribute->EqualsLiteral("face")) {
+      equivTable = fontFaceEquivTable;
+    } else if (aAttribute->EqualsLiteral("bgcolor")) {
+      equivTable = bgcolorEquivTable;
+    } else if (aAttribute->EqualsLiteral("background")) {
+      equivTable = backgroundImageEquivTable;
+    } else if (aAttribute->EqualsLiteral("text")) {
+      equivTable = textColorEquivTable;
+    } else if (aAttribute->EqualsLiteral("border")) {
+      equivTable = borderEquivTable;
+    } else if (aAttribute->EqualsLiteral("align")) {
       if (nsEditProperty::table  == tagName) {
-        BuildCSSDeclarations(cssPropertyArray, cssValueArray, tableAlignEquivTable, aValue, aGetOrRemoveRequest);
-      }
-      else if (nsEditProperty::hr  == tagName) {
-        BuildCSSDeclarations(cssPropertyArray, cssValueArray, hrAlignEquivTable, aValue, aGetOrRemoveRequest);
-      }
-      else if (nsEditProperty::legend  == tagName ||
+        equivTable = tableAlignEquivTable;
+      } else if (nsEditProperty::hr  == tagName) {
+        equivTable = hrAlignEquivTable;
+      } else if (nsEditProperty::legend  == tagName ||
                nsEditProperty::caption == tagName) {
-        BuildCSSDeclarations(cssPropertyArray, cssValueArray, captionAlignEquivTable, aValue, aGetOrRemoveRequest);
+        equivTable = captionAlignEquivTable;
+      } else {
+        equivTable = textAlignEquivTable;
       }
-      else {
-        BuildCSSDeclarations(cssPropertyArray, cssValueArray, textAlignEquivTable, aValue, aGetOrRemoveRequest);
-      }
+    } else if (aAttribute->EqualsLiteral("valign")) {
+      equivTable = verticalAlignEquivTable;
+    } else if (aAttribute->EqualsLiteral("nowrap")) {
+      equivTable = nowrapEquivTable;
+    } else if (aAttribute->EqualsLiteral("width")) {
+      equivTable = widthEquivTable;
+    } else if (aAttribute->EqualsLiteral("height") ||
+               (nsEditProperty::hr == tagName &&
+                aAttribute->EqualsLiteral("size"))) {
+      equivTable = heightEquivTable;
+    } else if (aAttribute->EqualsLiteral("type") &&
+               (nsEditProperty::ol == tagName
+                || nsEditProperty::ul == tagName
+                || nsEditProperty::li == tagName)) {
+      equivTable = listStyleTypeEquivTable;
     }
-    else if (aAttribute->EqualsLiteral("valign")) {
-      BuildCSSDeclarations(cssPropertyArray, cssValueArray, verticalAlignEquivTable, aValue, aGetOrRemoveRequest);
-    }
-    else if (aAttribute->EqualsLiteral("nowrap")) {
-      BuildCSSDeclarations(cssPropertyArray, cssValueArray, nowrapEquivTable, aValue, aGetOrRemoveRequest);
-    }
-    else if (aAttribute->EqualsLiteral("width")) {
-      BuildCSSDeclarations(cssPropertyArray, cssValueArray, widthEquivTable, aValue, aGetOrRemoveRequest);
-    }
-    else if (aAttribute->EqualsLiteral("height") ||
-             (nsEditProperty::hr == tagName && aAttribute->EqualsLiteral("size"))) {
-      BuildCSSDeclarations(cssPropertyArray, cssValueArray, heightEquivTable, aValue, aGetOrRemoveRequest);
-    }
-    else if (aAttribute->EqualsLiteral("type") &&
-             (nsEditProperty::ol == tagName
-              || nsEditProperty::ul == tagName
-              || nsEditProperty::li == tagName)) {
-      BuildCSSDeclarations(cssPropertyArray, cssValueArray, listStyleTypeEquivTable, aValue, aGetOrRemoveRequest);
-    }
+  }
+  if (equivTable) {
+    BuildCSSDeclarations(cssPropertyArray, cssValueArray, equivTable,
+                         aValue, aGetOrRemoveRequest);
   }
 }
 
