@@ -60,6 +60,7 @@ const nsIRadioInterfaceLayer = Ci.nsIRadioInterfaceLayer;
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kSmsReceivedObserverTopic          = "sms-received";
 const kSmsDeliveredObserverTopic         = "sms-delivered";
+const kMozSettingsChangedObserverTopic   = "mozsettings-changed";
 const DOM_SMS_DELIVERY_RECEIVED          = "received";
 const DOM_SMS_DELIVERY_SENT              = "sent";
 
@@ -190,6 +191,7 @@ function RadioInterfaceLayer() {
     ppmm.addMessageListener(msgname, this);
   }
   Services.obs.addObserver(this, "xpcom-shutdown", false);
+  Services.obs.addObserver(this, kMozSettingsChangedObserverTopic, false);
 
   this._sentSmsEnvelopes = {};
   this.portAddressedSmsApps = {};
@@ -203,7 +205,8 @@ RadioInterfaceLayer.prototype = {
                                                  Ci.nsIRadioInterfaceLayer]}),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWorkerHolder,
-                                         Ci.nsIRadioInterfaceLayer]),
+                                         Ci.nsIRadioInterfaceLayer,
+                                         Ci.nsIObserver]),
 
   /**
    * Process a message from the content process.
@@ -632,15 +635,44 @@ RadioInterfaceLayer.prototype = {
                                   [datacalls, datacalls.length]);
   },
 
+  /**
+   * Handle setting changes.
+   */
+  handleMozSettingsChanged: function handleMozSettingsChanged(setting) {
+    // We only watch at "ril.data.enabled" flag changes for connecting or
+    // disconnecting the data call. If the value of "ril.data.enabled" is
+    // true and any of the remaining flags change the setting application
+    // should turn this flag to false and then to true in order to reload
+    // the new values and reconnect the data call.
+    if (setting.key != "ril.data.enabled") {
+      return;
+    }
+    if (!setting.value && RILNetworkInterface.connected) {
+      debug("Data call settings: disconnect data call.");
+      RILNetworkInterface.disconnect();
+    }
+    if (setting.value && !RILNetworkInterface.connected) {
+      debug("Data call settings connect data call.");
+      RILNetworkInterface.connect();
+    }
+  },
+
   // nsIObserver
 
   observe: function observe(subject, topic, data) {
-    if (topic == "xpcom-shutdown") {
-      for each (let msgname in RIL_IPC_MSG_NAMES) {
-        ppmm.removeMessageListener(msgname, this);
-      }
-      Services.obs.removeObserver(this, "xpcom-shutdown");
-      ppmm = null;
+    switch (topic) {
+      case kMozSettingsChangedObserverTopic:
+        let setting = JSON.parse(data);
+        this.handleMozSettingsChanged(setting);
+        break;
+      case "xpcom-shutdown":
+        for each (let msgname in RIL_IPC_MSG_NAMES) {
+          ppmm.removeMessageListener(msgname, this);
+        }
+        ppmm = null;
+        Services.obs.removeObserver(this, "xpcom-shutdown");
+        Services.obs.removeObserver(this, kMozSettingsChangedObserverTopic);
+        break;
     }
   },
 
@@ -1211,13 +1243,13 @@ let RILNetworkInterface = {
   // nsIRILDataCallback
 
   dataCallStateChanged: function dataCallStateChanged(cid, interfaceName, callState) {
+    debug("Data call ID: " + cid + ", interface name: " + interfaceName);
     if (this.connecting &&
         (callState == RIL.GECKO_NETWORK_STATE_CONNECTING ||
          callState == RIL.GECKO_NETWORK_STATE_CONNECTED)) {
       this.connecting = false;
       this.cid = cid;
       this.name = interfaceName;
-      debug("Data call ID: " + cid + ", interface name: " + interfaceName);
       if (!this.registeredAsNetworkInterface) {
         let networkManager = Cc["@mozilla.org/network/manager;1"]
                                .getService(Ci.nsINetworkManager);
@@ -1255,11 +1287,14 @@ let RILNetworkInterface = {
                          .getInterface(Ci.nsIRadioInterfaceLayer);
   },
 
+  get connected() {
+    return this.state == RIL.GECKO_NETWORK_STATE_CONNECTED;
+  },
+
   connect: function connect() {
     if (this.connecting ||
         this.state == RIL.GECKO_NETWORK_STATE_CONNECTED ||
-        this.state == RIL.GECKO_NETWORK_STATE_SUSPENDED ||
-        this.state == RIL.GECKO_NETWORK_STATE_DISCONNECTING) {
+        this.state == RIL.GECKO_NETWORK_STATE_SUSPENDED) {
       return;
     }
     if (!this.registeredAsDataCallCallback) {
@@ -1286,7 +1321,13 @@ let RILNetworkInterface = {
   },
 
   disconnect: function disconnect() {
-    this.mRIL.deactivateDataCall(this.cid);
+    if (this.state == RIL.GECKO_NETWORK_STATE_DISCONNECTING ||
+        this.state == RIL.GECKO_NETWORK_STATE_DISCONNECTED) {
+      return;
+    }
+    let reason = RIL.DATACALL_DEACTIVATE_NO_REASON;
+    debug("Going to disconnet data connection " + this.cid);
+    this.mRIL.deactivateDataCall(this.cid, reason);
   },
 
 };

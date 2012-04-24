@@ -173,7 +173,7 @@ NetworkManager.prototype = {
         break;
       }
     }
-    if (oldActive != this.active) {
+    if (this.active && (oldActive != this.active)) {
       this.setDefaultRouteAndDNS();
     }
   },
