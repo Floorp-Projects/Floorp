@@ -54,7 +54,7 @@ BEGIN_TELEPHONY_NAMESPACE
 class Telephony : public nsDOMEventTargetHelper,
                   public nsIDOMTelephony
 {
-  nsCOMPtr<nsIRadioInterfaceLayer> mRIL;
+  nsCOMPtr<nsIRILContentHelper> mRIL;
   nsCOMPtr<nsIRILTelephonyCallback> mRILTelephonyCallback;
 
   NS_DECL_EVENT_HANDLER(incoming)
@@ -79,7 +79,7 @@ public:
                                                    nsDOMEventTargetHelper)
 
   static already_AddRefed<Telephony>
-  Create(nsPIDOMWindow* aOwner, nsIRadioInterfaceLayer* aRIL);
+  Create(nsPIDOMWindow* aOwner, nsIRILContentHelper* aRIL);
 
   nsIDOMEventTarget*
   ToIDOMEventTarget() const
@@ -112,7 +112,7 @@ public:
     NotifyCallsChanged(aCall);
   }
 
-  nsIRadioInterfaceLayer*
+  nsIRILContentHelper*
   RIL() const
   {
     return mRIL;
