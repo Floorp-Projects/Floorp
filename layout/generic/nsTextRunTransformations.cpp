@@ -47,8 +47,7 @@
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
-
-#define SZLIG 0x00DF
+#include "nsSpecialCasingData.h"
 
 // Unicode characters needing special casing treatment in tr/az languages
 #define LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE  0x0130
@@ -158,11 +157,18 @@ nsTransformingTextRunFactory::MakeTextRun(const PRUint8* aString, PRUint32 aLeng
  * are identical.
  * 
  * This is used for text-transform:uppercase when we encounter a SZLIG,
- * whose uppercase form is "SS".
+ * whose uppercase form is "SS", or other ligature or precomposed form
+ * that expands to multiple codepoints during case transformation.
  * 
  * This function is unable to merge characters when they occur in different
- * glyph runs. It's hard to see how this could happen, but if it does, we just
- * discard the characters-to-merge.
+ * glyph runs. This only happens in tricky edge cases where a character was
+ * decomposed by case-mapping (e.g. there's no precomposed uppercase version
+ * of an accented lowercase letter), and then font-matching caused the
+ * diacritics to be assigned to a different font than the base character.
+ * In this situation, the diacritic(s) get discarded, which is less than
+ * ideal, but they probably weren't going to render very well anyway.
+ * Bug 543200 will improve this by making font-matching operate on entire
+ * clusters instead of individual codepoints.
  * 
  * For simplicity, this produces a textrun containing all DetailedGlyphs,
  * no simple glyphs. So don't call it unless you really have merging to do.
@@ -188,9 +194,11 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
 
     bool anyMissing = false;
     PRUint32 mergeRunStart = iter.GetStringStart();
-    PRUint32 k;
-    for (k = iter.GetStringStart(); k < iter.GetStringEnd(); ++k) {
-      const gfxTextRun::CompressedGlyph g = aSrc->GetCharacterGlyphs()[k];
+    const gfxTextRun::CompressedGlyph *srcGlyphs = aSrc->GetCharacterGlyphs();
+    gfxTextRun::CompressedGlyph mergedGlyph = srcGlyphs[mergeRunStart];
+    PRUint32 stringEnd = iter.GetStringEnd();
+    for (PRUint32 k = iter.GetStringStart(); k < stringEnd; ++k) {
+      const gfxTextRun::CompressedGlyph g = srcGlyphs[k];
       if (g.IsSimpleGlyph()) {
         if (!anyMissing) {
           gfxTextRun::DetailedGlyph details;
@@ -210,40 +218,39 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
         }
       }
 
-      // We could teach this method to handle merging of characters that aren't
-      // cluster starts or ligature group starts, but this is really only used
-      // to merge S's (uppercase &szlig;), so it's not worth it.
-
       if (k + 1 < iter.GetStringEnd() && aCharsToMerge[k + 1]) {
-        NS_ASSERTION(g.IsClusterStart() && g.IsLigatureGroupStart(),
-                     "Don't know how to merge this stuff");
+        // next char is supposed to merge with current, so loop without
+        // writing current merged glyph to the destination
         continue;
       }
 
-      NS_ASSERTION(mergeRunStart == k ||
-                   (g.IsClusterStart() && g.IsLigatureGroupStart()),
-                   "Don't know how to merge this stuff");
-
       // If the start of the merge run is actually a character that should
       // have been merged with the previous character (this can happen
-      // if there's a font change in the middle of a szlig, for example),
+      // if there's a font change in the middle of a case-mapped character,
+      // that decomposed into a sequence of base+diacritics, for example),
       // just discard the entire merge run. See comment at start of this
       // function.
+      NS_WARN_IF_FALSE(!aCharsToMerge[mergeRunStart],
+                       "unable to merge across a glyph run boundary, "
+                       "glyph(s) discarded");
       if (!aCharsToMerge[mergeRunStart]) {
-        gfxTextRun::CompressedGlyph mergedGlyphs =
-          aSrc->GetCharacterGlyphs()[mergeRunStart];
         if (anyMissing) {
-          mergedGlyphs.SetMissing(glyphs.Length());
+          mergedGlyph.SetMissing(glyphs.Length());
         } else {
-          mergedGlyphs.SetComplex(true, true, glyphs.Length());
+          mergedGlyph.SetComplex(mergedGlyph.IsClusterStart(),
+                                 mergedGlyph.IsLigatureGroupStart(),
+                                 glyphs.Length());
         }
-        aDest->SetGlyphs(offset, mergedGlyphs, glyphs.Elements());
+        aDest->SetGlyphs(offset, mergedGlyph, glyphs.Elements());
         ++offset;
       }
 
       glyphs.Clear();
       anyMissing = false;
       mergeRunStart = k + 1;
+      if (mergeRunStart < stringEnd) {
+        mergedGlyph = srcGlyphs[mergeRunStart];
+      }
     }
     NS_ASSERTION(glyphs.Length() == 0,
                  "Leftover glyphs, don't request merging of the last character with its next!");  
@@ -310,7 +317,7 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
             ch = SURROGATE_TO_UCS4(ch, str[i + 1]);
           }
           PRUint32 ch2 = ToUpperCase(ch);
-          isLowercase = ch != ch2 || ch == SZLIG;
+          isLowercase = ch != ch2 || mozilla::unicode::SpecialUpper(ch);
         } else {
           // Don't transform the character! I.e., pretend that it's not lowercase
         }
@@ -399,7 +406,8 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
 
     PRUint8 style = mAllUppercase ? NS_STYLE_TEXT_TRANSFORM_UPPERCASE
       : styleContext->GetStyleText()->mTextTransform;
-    bool extraChar = false;
+    int extraChars = 0;
+    const mozilla::unicode::MultiCharMapping *mcm;
 
     if (NS_IS_HIGH_SURROGATE(ch) && i < length - 1 && NS_IS_LOW_SURROGATE(str[i + 1])) {
       ch = SURROGATE_TO_UCS4(ch, str[i + 1]);
@@ -420,11 +428,19 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
 
     switch (style) {
     case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
-      if (languageSpecificCasing == eTurkish && ch == 'I') {
-        ch = LATIN_SMALL_LETTER_DOTLESS_I;
-        prevIsLetter = true;
-        sigmaIndex = PRUint32(-1);
-        break;
+      if (languageSpecificCasing == eTurkish) {
+        if (ch == 'I') {
+          ch = LATIN_SMALL_LETTER_DOTLESS_I;
+          prevIsLetter = true;
+          sigmaIndex = PRUint32(-1);
+          break;
+        }
+        if (ch == LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE) {
+          ch = 'i';
+          prevIsLetter = true;
+          sigmaIndex = PRUint32(-1);
+          break;
+        }
       }
 
       // Special lowercasing behavior for Greek Sigma: note that this is listed
@@ -473,8 +489,6 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         break;
       }
 
-      ch = ToLowerCase(ch);
-
       // ignore diacritics for the purpose of contextual sigma mapping;
       // otherwise, reset prevIsLetter appropriately and clear the
       // sigmaIndex marker
@@ -482,19 +496,40 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         prevIsLetter = (cat == nsIUGenCategory::kLetter);
         sigmaIndex = PRUint32(-1);
       }
+
+      mcm = mozilla::unicode::SpecialLower(ch);
+      if (mcm) {
+        int j = 0;
+        while (j < 2 && mcm->mMappedChars[j + 1]) {
+          convertedString.Append(mcm->mMappedChars[j]);
+          ++extraChars;
+          ++j;
+        }
+        ch = mcm->mMappedChars[j];
+        break;
+      }
+
+      ch = ToLowerCase(ch);
       break;
 
     case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
-      if (ch == SZLIG) {
-        convertedString.Append('S');
-        extraChar = true;
-        ch = 'S';
-        break;
-      }
       if (languageSpecificCasing == eTurkish && ch == 'i') {
         ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
         break;
       }
+
+      mcm = mozilla::unicode::SpecialUpper(ch);
+      if (mcm) {
+        int j = 0;
+        while (j < 2 && mcm->mMappedChars[j + 1]) {
+          convertedString.Append(mcm->mMappedChars[j]);
+          ++extraChars;
+          ++j;
+        }
+        ch = mcm->mMappedChars[j];
+        break;
+      }
+
       ch = ToUpperCase(ch);
       break;
 
@@ -506,12 +541,6 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       }
       capitalizeDutchIJ = false;
       if (i < aTextRun->mCapitalize.Length() && aTextRun->mCapitalize[i]) {
-        if (ch == SZLIG) {
-          convertedString.Append('S');
-          extraChar = true;
-          ch = 'S';
-          break;
-        }
         if (languageSpecificCasing == eTurkish && ch == 'i') {
           ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
           break;
@@ -521,6 +550,19 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
           capitalizeDutchIJ = true;
           break;
         }
+
+        mcm = mozilla::unicode::SpecialTitle(ch);
+        if (mcm) {
+          int j = 0;
+          while (j < 2 && mcm->mMappedChars[j + 1]) {
+            convertedString.Append(mcm->mMappedChars[j]);
+            ++extraChars;
+            ++j;
+          }
+          ch = mcm->mMappedChars[j];
+          break;
+        }
+
         ch = ToTitleCase(ch);
       }
       break;
@@ -540,11 +582,12 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       canBreakBeforeArray.AppendElement(false);
     }
 
-    if (extraChar) {
+    while (extraChars > 0) {
       ++extraCharsCount;
       charsToMergeArray.AppendElement(true);
       styleArray.AppendElement(styleContext);
       canBreakBeforeArray.AppendElement(false);
+      --extraChars;
     }
   }
 
