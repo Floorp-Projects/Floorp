@@ -2715,11 +2715,14 @@ nsWindow::createQWidget(MozQWidget *parent,
             newView->setWindowModality(Qt::WindowModal);
         }
 
-#ifdef MOZ_PLATFORM_MAEMO
+#if defined(MOZ_PLATFORM_MAEMO) || defined(MOZ_GL_PROVIDER)
         if (GetShouldAccelerate()) {
             // Only create new OGL widget if it is not yet installed
             if (!HasGLContext()) {
-                newView->setViewport(new QGLWidget());
+                MozQGraphicsView *qview = qobject_cast<MozQGraphicsView*>(newView);
+                if (qview) {
+                    qview->setGLWidgetEnabled(true);
+                }
             }
         }
 #endif
