@@ -365,6 +365,54 @@ var shell = {
   };
 })();
 
+const DATA_CALL_SETTING_BOLKEYS  = ["ril.data.enabled",
+                                    "ril.data.roaming.enabled"];
+const DATA_CALL_SETTING_CHARKEYS = ["ril.data.apn",
+                                    "ril.data.user",
+                                    "ril.data.passwd"];
+(function DataCallSettings() {
+  let sm = navigator.mozSettings;
+  let lock = sm.getLock();
+  DATA_CALL_SETTING_BOLKEYS.forEach(function(key) {
+    let request = lock.get(key);
+    request.onsuccess = function onSuccess() {
+      let value = request.result[key] || false;
+      Services.prefs.setBoolPref(key, value);
+      dump("DataCallSettings - " + key + ":" + value);
+    };
+    request.onerror = function onError() {
+      Services.prefs.setBoolPref(key, false);
+    };
+  });
+
+  DATA_CALL_SETTING_CHARKEYS.forEach(function(key) {
+    let request = lock.get(key);
+    request.onsuccess = function onSuccess() {
+      let value = request.result[key] || "";
+      Services.prefs.setCharPref(key, value);
+      dump("DataCallSettings - " + key + ":" + value);
+    };
+    request.onerror = function onError() {
+      Services.prefs.setCharPref(key, "");
+    };
+  });
+
+  navigator.mozSettings.onsettingchange = function onSettingChange(e) {
+    dump("DataCallSettings - onsettingchange: " + e.settingName +
+         ": " + e.settingValue);
+    if (e.settingValue) {
+      if (DATA_CALL_SETTING_BOLKEYS.indexOf(e.settingName) > -1 ) {
+        Services.prefs.setBoolPref(e.settingName, e.settingValue);
+        return;
+      }
+      if (DATA_CALL_SETTING_CHARKEYS.indexOf(e.settingName) > -1) {
+        Services.prefs.setCharPref(e.settingName, e.settingValue);
+      }
+    }
+  };
+
+})();
+
 function nsBrowserAccess() {
 }
 
