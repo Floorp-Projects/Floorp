@@ -7459,18 +7459,34 @@ nsDocShell::CreateContentViewer(const char *aContentType,
         mLoadType = mFailedLoadType;
 
         nsCOMPtr<nsIChannel> failedChannel = mFailedChannel;
-        nsCOMPtr<nsIURI> failedURI = mFailedURI;
+
+        // Make sure we have a URI to set currentURI.
+        nsCOMPtr<nsIURI> failedURI;
+        if (failedChannel) {
+            NS_GetFinalChannelURI(failedChannel, getter_AddRefs(failedURI));
+        }
+
+        if (!failedURI) {
+            failedURI = mFailedURI;
+        }
+
+        // When we don't have failedURI, something wrong will happen. See
+        // bug 291876.
+        MOZ_ASSERT(failedURI, "We don't have a URI for history APIs.");
+
         mFailedChannel = nsnull;
         mFailedURI = nsnull;
 
-        // Create an shistory entry for the old load, if we have a channel
-        if (failedChannel) {
-            mURIResultedInDocument = true;
-            OnLoadingSite(failedChannel, true, false);
-        } else if (failedURI) {
-            mURIResultedInDocument = true;
-            OnNewURI(failedURI, nsnull, nsnull, mLoadType, true, false,
+        // Create an shistory entry for the old load.
+        if (failedURI) {
+#ifdef DEBUG
+            bool errorOnLocationChangeNeeded =
+#endif
+            OnNewURI(failedURI, failedChannel, nsnull, mLoadType, true, false,
                      false);
+
+            MOZ_ASSERT(!errorOnLocationChangeNeeded,
+                       "We have to fire onLocationChange again.");
         }
 
         // Be sure to have a correct mLSHE, it may have been cleared by
@@ -7486,9 +7502,6 @@ nsDocShell::CreateContentViewer(const char *aContentType,
                                              getter_AddRefs(entry));
             mLSHE = do_QueryInterface(entry);
         }
-
-        // Set our current URI
-        SetCurrentURI(failedURI);
 
         mLoadType = LOAD_ERROR_PAGE;
     }
