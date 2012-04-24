@@ -118,59 +118,6 @@ NS_IMPL_STRING_ATTR(nsHTMLFontElement, Face, face)
 NS_IMPL_STRING_ATTR(nsHTMLFontElement, Size, size)
 
 
-// Returns 1 to 7, or 0 on error.  Follows HTML spec as of April 16, 2012.
-static PRInt32
-ParseLegacyFontSize(const nsAString& aValue)
-{
-  nsAString::const_iterator iter, end;
-  aValue.BeginReading(iter);
-  aValue.EndReading(end);
-
-  while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {
-    ++iter;
-  }
-
-  if (iter == end) {
-    return 0;
-  }
-
-  bool relative = false;
-  bool negate = false;
-  if (*iter == PRUnichar('-')) {
-    relative = true;
-    negate = true;
-    ++iter;
-  } else if (*iter == PRUnichar('+')) {
-    relative = true;
-    ++iter;
-  }
-
-  if (*iter < PRUnichar('0') || *iter > PRUnichar('9')) {
-    return 0;
-  }
-
-  // We don't have to worry about overflow, since we can bail out as soon as
-  // we're bigger than 7.
-  PRInt32 value = 0;
-  while (iter != end && *iter >= PRUnichar('0') && *iter <= PRUnichar('9')) {
-    value = 10*value + (*iter - PRUnichar('0'));
-    if (value >= 7) {
-      break;
-    }
-    ++iter;
-  }
-
-  if (relative) {
-    if (negate) {
-      value = 3 - value;
-    } else {
-      value = 3 + value;
-    }
-  }
-
-  return clamped(value, 1, 7);
-}
-
 bool
 nsHTMLFontElement::ParseAttribute(PRInt32 aNamespaceID,
                                   nsIAtom* aAttribute,
@@ -179,7 +126,7 @@ nsHTMLFontElement::ParseAttribute(PRInt32 aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::size) {
-      PRInt32 size = ParseLegacyFontSize(aValue);
+      PRInt32 size = nsContentUtils::ParseLegacyFontSize(aValue);
       if (size) {
         aResult.SetTo(size, &aValue);
         return true;
