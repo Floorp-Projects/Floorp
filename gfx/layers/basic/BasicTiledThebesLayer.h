@@ -79,6 +79,9 @@ class BasicTiledLayerBuffer : public TiledLayerBuffer<BasicTiledLayerBuffer, Bas
   friend class TiledLayerBuffer<BasicTiledLayerBuffer, BasicTiledLayerTile>;
 
 public:
+  BasicTiledLayerBuffer()
+    {}
+
   void PaintThebes(BasicTiledThebesLayer* aLayer,
                    const nsIntRegion& aNewValidRegion,
                    const nsIntRegion& aPaintRegion,
