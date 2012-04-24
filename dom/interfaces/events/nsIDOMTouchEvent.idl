@@ -73,8 +73,7 @@ interface nsIDOMTouch : nsISupports {
 [scriptable, uuid(60706eb7-d50d-4379-b01c-e78e6af84213)]
 interface nsIDOMTouchList : nsISupports {
   readonly attribute unsigned long length;
-  [getter,forward(getItemAt)] nsIDOMTouch item(in unsigned long index);
-  [noscript,notxpcom,nostdcall] nsIDOMTouch getItemAt(in unsigned long index);
+  nsIDOMTouch item(in unsigned long index);
   nsIDOMTouch identifiedTouch(in long identifier);
 };
 
