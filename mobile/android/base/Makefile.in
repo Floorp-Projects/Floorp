@@ -340,6 +340,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/ic_addons_empty.png \
   res/drawable/ic_awesomebar_go.png \
   res/drawable/ic_awesomebar_search.png \
+  res/drawable/ic_awesomebar_star.png \
   res/drawable/ic_menu_bookmark_add.png \
   res/drawable/ic_menu_bookmark_remove.png \
   res/drawable/ic_menu_find_in_page.png \
@@ -396,6 +397,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_addons_empty.png \
   res/drawable-hdpi/ic_awesomebar_go.png \
   res/drawable-hdpi/ic_awesomebar_search.png \
+  res/drawable-hdpi/ic_awesomebar_star.png \
   res/drawable-hdpi/ic_menu_bookmark_add.png \
   res/drawable-hdpi/ic_menu_bookmark_remove.png \
   res/drawable-hdpi/ic_menu_find_in_page.png \
@@ -464,6 +466,7 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_addons_empty.png \
   res/drawable-xhdpi-v11/ic_awesomebar_go.png \
   res/drawable-xhdpi-v11/ic_awesomebar_search.png \
+  res/drawable-xhdpi-v11/ic_awesomebar_star.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_remove.png \
   res/drawable-xhdpi-v11/ic_menu_find_in_page.png \
