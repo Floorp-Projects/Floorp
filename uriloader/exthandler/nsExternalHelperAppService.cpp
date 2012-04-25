@@ -2208,8 +2208,11 @@ nsresult nsExternalAppHandler::OpenWithApplication()
     }
     // Always schedule files to be deleted at the end of the private browsing
     // mode, regardless of the value of the pref.
-    else if (deleteTempFileOnExit || mExtProtSvc->InPrivateBrowsing()) {
+    else if (deleteTempFileOnExit) {
       mExtProtSvc->DeleteTemporaryFileOnExit(mFinalFileDestination);
+    }
+    else if (mExtProtSvc->InPrivateBrowsing()) {
+      mExtProtSvc->DeleteTemporaryPrivateFileWhenPossible(mFinalFileDestination);
     }
   }
 
