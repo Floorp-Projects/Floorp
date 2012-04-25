@@ -291,10 +291,8 @@ nsDOMTouchEvent::InitTouchEvent(const nsAString& aType,
                                           aDetail);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  static_cast<nsInputEvent*>(mEvent)->isControl = aCtrlKey;
-  static_cast<nsInputEvent*>(mEvent)->isAlt = aAltKey;
-  static_cast<nsInputEvent*>(mEvent)->isShift = aShiftKey;
-  static_cast<nsInputEvent*>(mEvent)->isMeta = aMetaKey;
+  static_cast<nsInputEvent*>(mEvent)->InitBasicModifiers(aCtrlKey, aAltKey,
+                                                         aShiftKey, aMetaKey);
   mTouches = aTouches;
   mTargetTouches = aTargetTouches;
   mChangedTouches = aChangedTouches;
@@ -383,28 +381,28 @@ nsDOMTouchEvent::GetChangedTouches(nsIDOMTouchList** aChangedTouches)
 NS_IMETHODIMP
 nsDOMTouchEvent::GetAltKey(bool* aAltKey)
 {
-  *aAltKey = static_cast<nsInputEvent*>(mEvent)->isAlt;
+  *aAltKey = static_cast<nsInputEvent*>(mEvent)->IsAlt();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMTouchEvent::GetMetaKey(bool* aMetaKey)
 {
-  *aMetaKey = static_cast<nsInputEvent*>(mEvent)->isMeta;
+  *aMetaKey = static_cast<nsInputEvent*>(mEvent)->IsMeta();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMTouchEvent::GetCtrlKey(bool* aCtrlKey)
 {
-  *aCtrlKey = static_cast<nsInputEvent*>(mEvent)->isControl;
+  *aCtrlKey = static_cast<nsInputEvent*>(mEvent)->IsControl();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMTouchEvent::GetShiftKey(bool* aShiftKey)
 {
-  *aShiftKey = static_cast<nsInputEvent*>(mEvent)->isShift;
+  *aShiftKey = static_cast<nsInputEvent*>(mEvent)->IsShift();
   return NS_OK;
 }
 
