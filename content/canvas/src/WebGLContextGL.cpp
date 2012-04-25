@@ -5184,20 +5184,6 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
         int actualSrcFormat = srcFormat == WebGLTexelFormat::Auto ? dstFormat : srcFormat;
         size_t srcStride = srcStrideOrZero ? srcStrideOrZero : checked_alignedRowSize.value();
 
-        if (gl->CanUploadBGRA() &&
-            actualSrcFormat == WebGLTexelFormat::BGRA8 &&
-            dstFormat == WebGLTexelFormat::RGBA8)
-        {
-            dstFormat = WebGLTexelFormat::BGRA8;
-            format = LOCAL_GL_BGRA;
-            if (gl->IsGLES2()) {
-                internalformat = LOCAL_GL_BGRA;
-            } else {
-                internalformat = LOCAL_GL_RGBA;
-                type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
-            }
-        }
-
         size_t dstPlainRowSize = texelSize * width;
         size_t unpackAlignment = mPixelStoreUnpackAlignment;
         size_t dstStride = ((dstPlainRowSize + unpackAlignment-1) / unpackAlignment) * unpackAlignment;
@@ -5407,17 +5393,6 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
     size_t dstPlainRowSize = texelSize * width;
     // There are checks above to ensure that this won't overflow.
     size_t dstStride = RoundedToNextMultipleOf(dstPlainRowSize, mPixelStoreUnpackAlignment).value();
-
-    if (gl->CanUploadBGRA() &&
-        actualSrcFormat == WebGLTexelFormat::BGRA8 &&
-        dstFormat == WebGLTexelFormat::RGBA8)
-    {
-        dstFormat = WebGLTexelFormat::BGRA8;
-        format = LOCAL_GL_BGRA;
-        if (!gl->IsGLES2()) {
-            type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
-        }
-    }
 
     if (actualSrcFormat == dstFormat &&
         srcPremultiplied == mPixelStorePremultiplyAlpha &&
