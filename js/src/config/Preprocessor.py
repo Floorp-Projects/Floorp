@@ -134,6 +134,11 @@ class Preprocessor:
     rv.out = self.out
     return rv
   
+  def applyFilters(self, aLine):
+    for f in self.filters:
+      aLine = f[1](aLine)
+    return aLine
+  
   def write(self, aLine):
     """
     Internal method for handling output.
@@ -146,8 +151,7 @@ class Preprocessor:
                                                             'file': self.context['FILE'],
                                                             'le': self.LE})
         self.writtenLines = ln
-    for f in self.filters:
-      aLine = f[1](aLine)
+    aLine = self.applyFilters(aLine)
     # ensure our line ending. Only need to handle \n, as we're reading
     # with universal line ending support, at least for files.
     aLine = re.sub('\n', self.LE, aLine)
@@ -242,7 +246,7 @@ class Preprocessor:
       raise Preprocessor.Error(self, 'SYNTAX_DEF', args)
     val = 1
     if m.group('value'):
-      val = m.group('value')
+      val = self.applyFilters(m.group('value'))
       try:
         val = int(val)
       except:
@@ -423,6 +427,7 @@ class Preprocessor:
     if isName:
       try:
         args = str(args)
+        args = self.applyFilters(args)
         if not os.path.isabs(args):
           args = os.path.join(self.context['DIRECTORY'], args)
         args = open(args, 'rU')
