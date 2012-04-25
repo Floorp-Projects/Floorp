@@ -87,7 +87,7 @@ ThreadActor.prototype = {
   _scripts: {},
 
   /**
-   * Add a debuggee global to the JSInspector.
+   * Add a debuggee global to the Debugger object.
    */
   addDebuggee: function TA_addDebuggee(aGlobal) {
     // Use the inspector xpcom component to turn on debugging
