@@ -444,6 +444,15 @@ public:
    */
   static bool ParseIntMarginValue(const nsAString& aString, nsIntMargin& aResult);
 
+  /**
+   * Parse the value of the <font size=""> attribute according to the HTML5
+   * spec as of April 16, 2012.
+   *
+   * @param aValue the value to parse
+   * @return 1 to 7, or 0 if the value couldn't be parsed
+   */
+  static PRInt32 ParseLegacyFontSize(const nsAString& aValue);
+
   static void Shutdown();
 
   /**

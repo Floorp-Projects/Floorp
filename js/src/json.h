@@ -53,6 +53,10 @@ extern JSBool
 js_Stringify(JSContext *cx, js::Value *vp, JSObject *replacer, js::Value space,
              js::StringBuffer &sb);
 
+// Avoid build errors on certain platforms that define these names as constants
+#undef STRICT
+#undef LEGACY
+
 /*
  * The type of JSON decoding to perform.  Strict decoding is to-the-spec;
  * legacy decoding accepts a few non-JSON syntaxes historically accepted by the
