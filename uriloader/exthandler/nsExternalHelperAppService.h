@@ -191,10 +191,6 @@ protected:
    * added during the private browsing mode)
    */
   nsCOMArray<nsIFile> mTemporaryPrivateFilesList;
-  /**
-   * Whether we are in private browsing mode
-   */
-  bool mInPrivateBrowsing;
 };
 
 /**
