@@ -3956,13 +3956,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
   outGeckoEvent->widget = [self widget];
   outGeckoEvent->time = PR_IntervalNow();
 
-  if (inEvent) {
-    unsigned int modifiers = [inEvent modifierFlags];
-    outGeckoEvent->isShift   = ((modifiers & NSShiftKeyMask) != 0);
-    outGeckoEvent->isControl = ((modifiers & NSControlKeyMask) != 0);
-    outGeckoEvent->isAlt     = ((modifiers & NSAlternateKeyMask) != 0);
-    outGeckoEvent->isMeta    = ((modifiers & NSCommandKeyMask) != 0);
-  }
+  NSUInteger modifiers =
+    inEvent ? [inEvent modifierFlags] : ::GetCurrentKeyModifiers();
+  outGeckoEvent->isShift   = ((modifiers & NSShiftKeyMask) != 0);
+  outGeckoEvent->isControl = ((modifiers & NSControlKeyMask) != 0);
+  outGeckoEvent->isAlt     = ((modifiers & NSAlternateKeyMask) != 0);
+  outGeckoEvent->isMeta    = ((modifiers & NSCommandKeyMask) != 0);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -3982,6 +3981,68 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NSPoint localPoint = [self convertPoint:locationInWindow fromView:nil];
   outGeckoEvent->refPoint.x = static_cast<nscoord>(localPoint.x);
   outGeckoEvent->refPoint.y = static_cast<nscoord>(localPoint.y);
+
+
+  nsMouseEvent_base* mouseEvent =
+    static_cast<nsMouseEvent_base*>(outGeckoEvent);
+  NSUInteger modifiers =
+    aMouseEvent ? [aMouseEvent modifierFlags] : ::GetCurrentKeyModifiers();
+  mouseEvent->modifiers = 0;
+  if (mouseEvent->isShift) {
+    mouseEvent->modifiers |= MODIFIER_SHIFT;
+  }
+  if (mouseEvent->isControl) {
+    mouseEvent->modifiers |= MODIFIER_CONTROL;
+  }
+  if (mouseEvent->isAlt) {
+    mouseEvent->modifiers |= MODIFIER_ALT;
+    // Mac's option key is similar to other platforms' AltGr key.
+    // Let's set AltGr flag when option key is pressed for consistency with
+    // other platforms.
+    mouseEvent->modifiers |= MODIFIER_ALTGRAPH;
+  }
+  if (mouseEvent->isMeta) {
+    mouseEvent->modifiers |= MODIFIER_META;
+  }
+
+  if (modifiers & NSAlphaShiftKeyMask) {
+    mouseEvent->modifiers |= MODIFIER_CAPSLOCK;
+  }
+  // Mac doesn't have NumLock key.  We can assume that NumLock is always locked
+  // if user is using a keyboard which has numpad.  Otherwise, if user is using
+  // a keyboard which doesn't have numpad, e.g., MacBook's keyboard, we can
+  // assume that NumLock is always unlocked.
+  // Unfortunately, we cannot know whether current keyboard has numpad or not.
+  // We should notify locked state only when keys in numpad are pressed.
+  // By this, web applications may not be confused by unexpected numpad key's
+  // key event with unlocked state.
+  if (modifiers & NSNumericPadKeyMask) {
+    mouseEvent->modifiers |= MODIFIER_NUMLOCK;
+  }
+
+  // Be aware, NSFunctionKeyMask is included when arrow keys, home key or some
+  // other keys are pressed. We cannot check whether 'fn' key is pressed or
+  // not by the flag.
+
+  mouseEvent->buttons = 0;
+  NSUInteger mouseButtons =
+    nsToolkit::OnSnowLeopardOrLater() ? [NSEvent pressedMouseButtons] : 0;
+
+  if (mouseButtons & 0x01) {
+    mouseEvent->buttons |= nsMouseEvent::eLeftButtonFlag;
+  }
+  if (mouseButtons & 0x02) {
+    mouseEvent->buttons |= nsMouseEvent::eRightButtonFlag;
+  }
+  if (mouseButtons & 0x04) {
+    mouseEvent->buttons |= nsMouseEvent::eMiddleButtonFlag;
+  }
+  if (mouseButtons & 0x08) {
+    mouseEvent->buttons |= nsMouseEvent::e4thButtonFlag;
+  }
+  if (mouseButtons & 0x10) {
+    mouseEvent->buttons |= nsMouseEvent::e5thButtonFlag;
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
