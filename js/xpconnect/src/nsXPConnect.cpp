@@ -578,12 +578,6 @@ nsXPConnect::FinishTraverse()
     return NS_OK;
 }
 
-nsresult
-nsXPConnect::FinishCycleCollection()
-{
-    return NS_OK;
-}
-
 nsCycleCollectionParticipant *
 nsXPConnect::ToParticipant(void *p)
 {
