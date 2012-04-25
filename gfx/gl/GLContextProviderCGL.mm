@@ -289,7 +289,7 @@ GLContextCGL::ResizeOffscreen(const gfxIntSize& aNewSize)
             return false;
         }
 
-        if (!ResizeOffscreenFBO(aNewSize, false)) {
+        if (!ResizeOffscreenFBOs(aNewSize, false)) {
             [pb release];
             return false;
         }
@@ -309,7 +309,7 @@ GLContextCGL::ResizeOffscreen(const gfxIntSize& aNewSize)
         return true;
     }
 
-    return ResizeOffscreenFBO(aNewSize, true);
+    return ResizeOffscreenFBOs(aNewSize, true);
 }
 
 class TextureImageCGL : public BasicTextureImage
@@ -601,7 +601,7 @@ GLContextProviderCGL::CreateOffscreen(const gfxIntSize& aSize,
         glContext = CreateOffscreenPBufferContext(aSize, actualFormat);
         if (glContext &&
             glContext->Init() &&
-            glContext->ResizeOffscreenFBO(aSize, false))
+            glContext->ResizeOffscreenFBOs(aSize, false))
         {
             glContext->mOffscreenSize = aSize;
             glContext->mOffscreenActualSize = aSize;
@@ -614,7 +614,7 @@ GLContextProviderCGL::CreateOffscreen(const gfxIntSize& aSize,
     glContext = CreateOffscreenFBOContext(actualFormat);
     if (glContext &&
         glContext->Init() &&
-        glContext->ResizeOffscreenFBO(aSize, true))
+        glContext->ResizeOffscreenFBOs(aSize, true))
     {
         return glContext.forget();
     }
