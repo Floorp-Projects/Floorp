@@ -107,6 +107,16 @@ nsDOMKeyboardEvent::GetMetaKey(bool* aIsDown)
 }
 
 NS_IMETHODIMP
+nsDOMKeyboardEvent::GetModifierState(const nsAString& aKey,
+                                     bool* aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  *aState = GetModifierStateInternal(aKey);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMKeyboardEvent::GetCharCode(PRUint32* aCharCode)
 {
   NS_ENSURE_ARG_POINTER(aCharCode);
