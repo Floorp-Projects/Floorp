@@ -5,6 +5,7 @@
 
 #include "ScaledFontDWrite.h"
 #include "PathD2D.h"
+#include "Logging.h"
 
 #include <vector>
 
@@ -16,6 +17,7 @@ ScaledFontDWrite::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget 
 {
   if (aTarget->GetType() != BACKEND_DIRECT2D) {
     // For now we only support Direct2D.
+    gfxWarning() << "Attempt to use Direct Write font with non-Direct2D backend";
     return NULL;
   }
 
