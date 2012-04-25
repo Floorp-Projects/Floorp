@@ -362,18 +362,24 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
     }
   }
 
-  if (cleanupJS) {
-    nsContentUtils::UnmarkGrayJSListenersInCCGenerationDocuments(sGeneration);
-    MarkMessageManagers();
-    xpc_UnmarkSkippableJSHolders();
-  }
-
 #ifdef MOZ_XUL
   nsXULPrototypeCache* xulCache = nsXULPrototypeCache::GetInstance();
   if (xulCache) {
     xulCache->MarkInCCGeneration(sGeneration);
   }
 #endif
+
+  static bool previousWasJSCleanup = false;
+  if (cleanupJS) {
+    nsContentUtils::UnmarkGrayJSListenersInCCGenerationDocuments(sGeneration);
+    MarkMessageManagers();
+    previousWasJSCleanup = true;
+  } else if (previousWasJSCleanup) {
+    previousWasJSCleanup = false;
+    if (!prepareForCC) {
+      xpc_UnmarkSkippableJSHolders();
+    }
+  }
 
   return NS_OK;
 }
