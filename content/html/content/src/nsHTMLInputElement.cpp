@@ -2136,8 +2136,8 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             } // switch
           }
           if (aVisitor.mEvent->message == NS_KEY_PRESS &&
-              mType == NS_FORM_INPUT_RADIO && !keyEvent->isAlt &&
-              !keyEvent->isControl && !keyEvent->isMeta) {
+              mType == NS_FORM_INPUT_RADIO && !keyEvent->IsAlt() &&
+              !keyEvent->IsControl() && !keyEvent->IsMeta()) {
             bool isMovingBack = false;
             switch (keyEvent->keyCode) {
               case NS_VK_UP: 

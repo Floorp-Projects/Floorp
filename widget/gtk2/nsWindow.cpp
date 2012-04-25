@@ -6099,10 +6099,12 @@ get_inner_gdk_window (GdkWindow *aWindow,
 static inline bool
 is_context_menu_key(const nsKeyEvent& aKeyEvent)
 {
-    return ((aKeyEvent.keyCode == NS_VK_F10 && aKeyEvent.isShift &&
-             !aKeyEvent.isControl && !aKeyEvent.isMeta && !aKeyEvent.isAlt) ||
-            (aKeyEvent.keyCode == NS_VK_CONTEXT_MENU && !aKeyEvent.isShift &&
-             !aKeyEvent.isControl && !aKeyEvent.isMeta && !aKeyEvent.isAlt));
+    return ((aKeyEvent.keyCode == NS_VK_F10 && aKeyEvent.IsShift() &&
+             !aKeyEvent.IsControl() && !aKeyEvent.IsMeta() &&
+             !aKeyEvent.IsAlt()) ||
+            (aKeyEvent.keyCode == NS_VK_CONTEXT_MENU && !aKeyEvent.IsShift() &&
+             !aKeyEvent.IsControl() && !aKeyEvent.IsMeta() &&
+             !aKeyEvent.IsAlt()));
 }
 
 static int

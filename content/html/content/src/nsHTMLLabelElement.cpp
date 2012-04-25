@@ -228,8 +228,8 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           // have a kbd modifier (which adjusts a selection), or if it's a
           // double click (we already forwarded the first click event).
           if (dragSelect || event->clickCount > 1 ||
-              event->isShift || event->isControl || event->isAlt ||
-              event->isMeta) {
+              event->IsShift() || event->IsControl() || event->IsAlt() ||
+              event->IsMeta()) {
             break;
           }
 
