@@ -7901,10 +7901,9 @@ else
     fi
     AC_SUBST(CL_INCLUDES_PREFIX)
     rm -f dummy-hello.c
-    _topsrcdirwin=`cd \`dirname $0\`; pwd -W`
     dnl cl.py provides dependency generation for MSVC
-    CC_WRAPPER="$PYTHON -O $_topsrcdirwin/build/cl.py"
-    CXX_WRAPPER="$PYTHON -O $_topsrcdirwin/build/cl.py"
+    CC_WRAPPER='$(PYTHON) -O $(topsrcdir)/build/cl.py'
+    CXX_WRAPPER='$(PYTHON) -O $(topsrcdir)/build/cl.py'
     COMPILER_DEPEND=1
   fi
 fi
@@ -8544,7 +8543,6 @@ AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)
 AC_SUBST(MOZ_TOOLS_DIR)
 AC_SUBST(WIN32_REDIST_DIR)
-AC_SUBST(PYTHON)
 AC_SUBST(MAKENSISU)
 
 dnl Echo the CFLAGS to remove extra whitespace.
@@ -8926,6 +8924,22 @@ AC_SUBST(MOZ_DEFINES)
 rm -f confdefs.h
 mv confdefs.h.save confdefs.h
 
+dnl Create a virtualenv where we can install local Python packages
+AC_MSG_RESULT([Creating Python virtualenv])
+rm -rf _virtualenv
+mkdir _virtualenv
+$PYTHON $_topsrcdir/other-licenses/virtualenv/virtualenv.py ./_virtualenv
+case "$host_os" in
+mingw*)
+    PYTHON=`pwd`/_virtualenv/Scripts/python.exe
+    ;;
+*)
+    PYTHON=`pwd`/_virtualenv/bin/python
+    ;;
+esac
+
+AC_SUBST(PYTHON)
+
 dnl Load the list of Makefiles to generate.
 dnl   To add new Makefiles, edit allmakefiles.sh.
 dnl   allmakefiles.sh sets the variable, MAKEFILES.
@@ -8948,6 +8962,10 @@ echo $MAKEFILES > unallmakefiles
 mv -f config/autoconf.mk config/autoconf.mk.orig 2> /dev/null
 
 AC_OUTPUT($MAKEFILES)
+
+# Populate the virtualenv
+AC_MSG_RESULT([Populating Python virtualenv])
+$MAKE -C build/virtualenv || exit 1
 
 # Generate a JSON config file for unittest harnesses etc to read
 # build configuration details from in a standardized way.
