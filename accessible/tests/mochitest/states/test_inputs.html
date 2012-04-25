@@ -110,6 +110,7 @@
     testStates("autocomplete-list", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
     testStates("autocomplete-list2", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
     testStates("autocomplete-tel", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+    testStates("autocomplete-email", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
     SimpleTest.finish();
   }
 
@@ -234,6 +235,13 @@
   <input id="autocomplete-list" list="cities">
   <input id="autocomplete-list2" list="cities" autocomplete="off">
   <input id="autocomplete-tel" type="tel">
+
+  Email Address:
+  <input id="autocomplete-email" type="email" list="contacts" value="xyzzy">
+  <datalist id="contacts">
+    <option>xyzzy@plughs.com</option>
+    <option>nobody@mozilla.org</option>
+  </datalist>
 
   </body>
 </html>
