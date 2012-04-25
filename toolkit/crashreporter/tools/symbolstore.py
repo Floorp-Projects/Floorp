@@ -352,7 +352,10 @@ def GetVCSFilename(file, srcdirs):
 def GetPlatformSpecificDumper(**kwargs):
     """This function simply returns a instance of a subclass of Dumper
     that is appropriate for the current platform."""
+    # Python 2.5 has a bug where platform.system() returns 'Microsoft'.
+    # Remove this when we no longer support Python 2.5.
     return {'Windows': Dumper_Win32,
+            'Microsoft': Dumper_Win32,
             'Linux': Dumper_Linux,
             'Sunos5': Dumper_Solaris,
             'Darwin': Dumper_Mac}[platform.system()](**kwargs)
