@@ -7,12 +7,7 @@
 // Tests that console.group/groupEnd works as intended.
 const GROUP_INDENT = 12;
 
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.gcli.enable");
-});
-
 function test() {
-  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab("data:text/html;charset=utf-8,Web Console test for bug 664131: Expand console " +
          "object with group methods");
   browser.addEventListener("load", onLoad, true);

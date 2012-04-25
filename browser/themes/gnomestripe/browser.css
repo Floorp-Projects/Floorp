@@ -2411,3 +2411,70 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
   margin-bottom: -3px;
   position: relative;
 }
+
+.gcli-panel-inner-arrowcontent {
+  padding: 0;
+}
+
+.gclitoolbar-input-node,
+.gclitoolbar-complete-node,
+.gclitoolbar-prompt {
+  font-family: monospace;
+}
+
+.gclitoolbar-input-node {
+  background-color: transparent;
+  -moz-appearance: none;
+  border: none;
+  padding: 0 0 0 22px;
+}
+
+.gclitoolbar-complete-node {
+  background-color: transparent;
+  color: transparent;
+  height: 100%;
+  line-height: 100%;
+  padding: 10px 0 0 27px;
+  margin: 0;
+}
+
+.gclitoolbar-prompt {
+  color: hsl(25,78%,50%);
+  -moz-appearance: textfield;
+  font-size: 150%;
+  font-weight: bold;
+  line-height: 100%;
+  padding-top: 1px;
+  padding-left: 3px;
+}
+
+.gcli-in-incomplete,
+.gcli-in-error,
+.gcli-in-ontab,
+.gcli-in-todo,
+.gcli-in-closebrace,
+.gcli-in-param,
+.gcli-in-valid {
+  margin: 0;
+  padding: 0;
+}
+
+.gcli-in-incomplete {
+  border-bottom: 2px dotted #999;
+}
+
+.gcli-in-error {
+  border-bottom: 2px dotted #F00;
+}
+
+.gcli-in-ontab {
+  color: hsl(200,40%,70%);
+}
+
+.gcli-in-todo {
+  color: hsl(48,28%,76%);
+}
+
+.gcli-in-closebrace {
+  color: hsl(0,0%,80%);
+}
