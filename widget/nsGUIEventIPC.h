@@ -118,6 +118,7 @@ struct ParamTraits<nsMouseEvent_base>
   {
     WriteParam(aMsg, static_cast<nsInputEvent>(aParam));
     WriteParam(aMsg, aParam.button);
+    WriteParam(aMsg, aParam.buttons);
     WriteParam(aMsg, aParam.modifiers);
     WriteParam(aMsg, aParam.pressure);
     WriteParam(aMsg, aParam.inputSource);
@@ -127,6 +128,7 @@ struct ParamTraits<nsMouseEvent_base>
   {
     return ReadParam(aMsg, aIter, static_cast<nsInputEvent*>(aResult)) &&
            ReadParam(aMsg, aIter, &aResult->button) &&
+           ReadParam(aMsg, aIter, &aResult->buttons) &&
            ReadParam(aMsg, aIter, &aResult->modifiers) &&
            ReadParam(aMsg, aIter, &aResult->pressure) &&
            ReadParam(aMsg, aIter, &aResult->inputSource);
