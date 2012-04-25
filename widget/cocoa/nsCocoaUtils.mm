@@ -53,6 +53,8 @@
 #include "nsToolkit.h"
 #include "nsGUIEvent.h"
 
+using namespace mozilla::widget;
+
 float nsCocoaUtils::MenuBarScreenHeight()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -414,4 +416,64 @@ nsCocoaUtils::InitPluginEvent(nsPluginEvent &aPluginEvent,
   aPluginEvent.time = PR_IntervalNow();
   aPluginEvent.pluginEvent = (void*)&aCocoaEvent;
   aPluginEvent.retargetToFocusedDocument = false;
+}
+
+// static
+void
+nsCocoaUtils::InitInputEvent(nsInputEvent &aInputEvent,
+                             NSEvent* aNativeEvent)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  NSUInteger modifiers =
+    aNativeEvent ? [aNativeEvent modifierFlags] : ::GetCurrentKeyModifiers();
+  InitInputEvent(aInputEvent, modifiers);
+
+  aInputEvent.time = PR_IntervalNow();
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+// static
+void
+nsCocoaUtils::InitInputEvent(nsInputEvent &aInputEvent,
+                             NSUInteger aModifiers)
+{
+  aInputEvent.modifiers = 0;
+  if (aModifiers & NSShiftKeyMask) {
+    aInputEvent.modifiers |= MODIFIER_SHIFT;
+  }
+  if (aModifiers & NSControlKeyMask) {
+    aInputEvent.modifiers |= MODIFIER_CONTROL;
+  }
+  if (aModifiers & NSAlternateKeyMask) {
+    aInputEvent.modifiers |= MODIFIER_ALT;
+    // Mac's option key is similar to other platforms' AltGr key.
+    // Let's set AltGr flag when option key is pressed for consistency with
+    // other platforms.
+    aInputEvent.modifiers |= MODIFIER_ALTGRAPH;
+  }
+  if (aModifiers & NSCommandKeyMask) {
+    aInputEvent.modifiers |= MODIFIER_META;
+  }
+
+  if (aModifiers & NSAlphaShiftKeyMask) {
+    aInputEvent.modifiers |= MODIFIER_CAPSLOCK;
+  }
+  // Mac doesn't have NumLock key.  We can assume that NumLock is always locked
+  // if user is using a keyboard which has numpad.  Otherwise, if user is using
+  // a keyboard which doesn't have numpad, e.g., MacBook's keyboard, we can
+  // assume that NumLock is always unlocked.
+  // Unfortunately, we cannot know whether current keyboard has numpad or not.
+  // We should notify locked state only when keys in numpad are pressed.
+  // By this, web applications may not be confused by unexpected numpad key's
+  // key event with unlocked state.
+  if (aModifiers & NSNumericPadKeyMask) {
+    aInputEvent.modifiers |= MODIFIER_NUMLOCK;
+  }
+
+  // Be aware, NSFunctionKeyMask is included when arrow keys, home key or some
+  // other keys are pressed. We cannot check whether 'fn' key is pressed or
+  // not by the flag.
+
 }
