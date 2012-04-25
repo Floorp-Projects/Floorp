@@ -76,7 +76,6 @@
 
 #include "builtin/RegExp.h"
 #include "vm/GlobalObject.h"
-#include "vm/NumericConversions.h"
 #include "vm/RegExpObject.h"
 #include "vm/StringBuffer.h"
 
@@ -1243,7 +1242,7 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
             if (!ToNumber(cx, args[1], &d))
                 return false;
             if (!MOZ_DOUBLE_IS_NaN(d)) {
-                d = ToInteger(d);
+                d = js_DoubleToInteger(d);
                 if (d <= 0)
                     i = 0;
                 else if (d < i)
@@ -2604,7 +2603,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
         double d;
         if (!ToNumber(cx, args[1], &d))
             return false;
-        limit = ToUint32(d);
+        limit = js_DoubleToECMAUint32(d);
     } else {
         limit = UINT32_MAX;
     }

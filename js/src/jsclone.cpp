@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/FloatingPoint.h"
-
 #include "jsclone.h"
 #include "jsdate.h"
 #include "jstypedarray.h"
@@ -837,7 +835,7 @@ JSStructuredCloneReader::startRead(Value *vp)
         double d;
         if (!in.readDouble(&d) || !checkDouble(d))
             return false;
-        if (!MOZ_DOUBLE_IS_NaN(d) && d != TimeClip(d)) {
+        if (d == d && d != TIMECLIP(d)) {
             JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL, JSMSG_SC_BAD_SERIALIZED_DATA,
                                  "date");
             return false;

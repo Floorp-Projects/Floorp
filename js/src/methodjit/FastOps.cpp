@@ -41,18 +41,16 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jslibmath.h"
+#include "jsnum.h"
 #include "jsscope.h"
+#include "jsobjinlines.h"
+#include "jsscriptinlines.h"
+#include "jstypedarrayinlines.h"
 
 #include "frontend/BytecodeEmitter.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
-#include "vm/NumericConversions.h"
-
-#include "jsobjinlines.h"
-#include "jsscriptinlines.h"
-#include "jstypedarrayinlines.h"
-
 #include "methodjit/FrameState-inl.h"
 
 #include "jsautooplen.h"
@@ -1264,7 +1262,7 @@ mjit::Compiler::convertForTypedArray(int atype, ValueRemat *vr, bool *allocated)
             } else {
                 i32 = (atype == TypedArray::TYPE_UINT8_CLAMPED)
                     ? ClampDoubleToUint8(v.toDouble())
-                    : ToInt32(v.toDouble());
+                    : js_DoubleToECMAInt32(v.toDouble());
             }
             *vr = ValueRemat::FromConstant(Int32Value(i32));
         }
@@ -1700,8 +1698,9 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     ic.fastPathRejoin = masm.label();
 
     // When generating typed array stubs, it may be necessary to call
-    // ToInt32(), which would clobber registers. To deal with this, we tell the
-    // IC exactly which registers need to be saved across calls.
+    // js_DoubleToECMAInt32(), which would clobber registers. To deal with
+    // this, we tell the IC exactly which registers need to be saved
+    // across calls.
     ic.volatileMask = frame.regsInUse();
 
     // If the RHS will be popped, and doesn't overlap any live values, then
