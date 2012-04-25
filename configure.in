@@ -4605,7 +4605,6 @@ MOZ_GRAPHITE=1
 case "${target}" in
 *darwin*)
     ACCESSIBILITY=
-    MOZ_WEBAPP_RUNTIME=1
     ;;
 *)
     ACCESSIBILITY=1
@@ -4616,7 +4615,6 @@ case "$target_os" in
     mingw*)
         NS_ENABLE_TSF=1
         AC_DEFINE(NS_ENABLE_TSF)
-        MOZ_WEBAPP_RUNTIME=1
         ;;
 esac
 
