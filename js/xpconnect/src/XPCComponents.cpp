@@ -60,7 +60,6 @@
 #include "nsContentUtils.h"
 #include "jsgc.h"
 #include "jsfriendapi.h"
-#include "AccessCheck.h"
 #include "mozilla/dom/bindings/Utils.h"
 
 using namespace mozilla;
@@ -4194,8 +4193,7 @@ NS_IMETHODIMP
 nsXPCComponents::GetHelperForLanguage(PRUint32 language,
                                       nsISupports **retval)
 {
-    *retval = static_cast<nsIXPCComponents*>(this);
-    NS_ADDREF(this);
+    *retval = nsnull;
     return NS_OK;
 }
 
@@ -4247,9 +4245,8 @@ nsXPCComponents::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
     return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsXPCComponents::nsXPCComponents(XPCWrappedNativeScope* aScope)
-    :   mScope(aScope),
-        mInterfaces(nsnull),
+nsXPCComponents::nsXPCComponents()
+    :   mInterfaces(nsnull),
         mInterfacesByID(nsnull),
         mClasses(nsnull),
         mClassesByID(nsnull),
@@ -4259,7 +4256,6 @@ nsXPCComponents::nsXPCComponents(XPCWrappedNativeScope* aScope)
         mConstructor(nsnull),
         mUtils(nsnull)
 {
-    MOZ_ASSERT(aScope, "aScope must not be null");
 }
 
 nsXPCComponents::~nsXPCComponents()
@@ -4343,7 +4339,6 @@ nsXPCComponents::GetManager(nsIComponentManager * *aManager)
 #define                             XPC_MAP_WANT_NEWRESOLVE
 #define                             XPC_MAP_WANT_GETPROPERTY
 #define                             XPC_MAP_WANT_SETPROPERTY
-#define                             XPC_MAP_WANT_PRECREATE
 #define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
@@ -4432,20 +4427,16 @@ nsXPCComponents::SetProperty(nsIXPConnectWrappedNative *wrapper,
 
 // static
 JSBool
-nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
-                                        XPCWrappedNativeScope* aScope,
-                                        JSObject* aGlobal)
+nsXPCComponents::AttachNewComponentsObject(XPCCallContext& ccx,
+                                           XPCWrappedNativeScope* aScope,
+                                           JSObject* aGlobal)
 {
     if (!aGlobal)
         return false;
 
-    nsXPCComponents* components = aScope->GetComponents();
-    if (!components) {
-        components = new nsXPCComponents(aScope);
-        if (!components)
-            return false;
-        aScope->SetComponents(components);
-    }
+    nsXPCComponents* components = new nsXPCComponents();
+    if (!components)
+        return false;
 
     nsCOMPtr<nsIXPCComponents> cholder(components);
 
@@ -4461,14 +4452,15 @@ nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
     if (!wrapper)
         return false;
 
+    aScope->SetComponents(components);
+
     jsid id = ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_COMPONENTS);
-    JSObject* obj = wrapper->GetSameCompartmentSecurityWrapper(ccx);
-    if (!wrapper)
-        return false;
-   
-    return JS_DefinePropertyById(ccx, aGlobal, id, OBJECT_TO_JSVAL(obj),
-                                 nsnull, nsnull,
-                                 JSPROP_PERMANENT | JSPROP_READONLY);
+    JSObject* obj;
+
+    return NS_SUCCEEDED(wrapper->GetJSObject(&obj)) &&
+           obj && JS_DefinePropertyById(ccx, aGlobal, id, OBJECT_TO_JSVAL(obj),
+                                        nsnull, nsnull,
+                                        JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
 /* void lookupMethod (); */
@@ -4535,16 +4527,4 @@ nsXPCComponents::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName
     // If you have to ask, then the answer is NO
     *_retval = nsnull;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPCComponents::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj, JSObject **parentObj)
-{
-  // this should never happen
-  if (!mScope) {
-      NS_WARNING("mScope must not be null when nsXPCComponents::PreCreate is called");
-      return NS_ERROR_FAILURE;
-  }
-  *parentObj = mScope->GetGlobalJSObject();
-  return NS_OK;
 }
