@@ -2137,7 +2137,8 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
   case NPNVprivateModeBool: {
     nsCOMPtr<nsIDocument> doc = GetDocumentFromNPP(npp);
-    nsCOMPtr<nsPIDOMWindow> domwindow = do_QueryInterface(doc);
+    NS_ENSURE_TRUE(doc, NPERR_GENERIC_ERROR);
+    nsCOMPtr<nsPIDOMWindow> domwindow = doc->GetWindow();
     if (domwindow) {
       nsCOMPtr<nsIDocShell> docShell = domwindow->GetDocShell();
       nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
