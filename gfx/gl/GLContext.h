@@ -1517,7 +1517,7 @@ public:
         Extensions_Max
     };
 
-    bool IsExtensionSupported(GLExtensions aKnownExtension) const {
+    bool IsExtensionSupported(GLExtensions aKnownExtension) {
         return mAvailableExtensions[aKnownExtension];
     }
 
@@ -1545,12 +1545,7 @@ public:
         }
 
         bool& operator[](size_t index) {
-            NS_ABORT_IF_FALSE(index < setlen, "out of range");
-            return values[index];
-        }
-
-        const bool& operator[](size_t index) const {
-            NS_ABORT_IF_FALSE(index < setlen, "out of range");
+            NS_ASSERTION(index < setlen, "out of range");
             return values[index];
         }
 
@@ -1708,16 +1703,6 @@ public:
     void ClearSafely();
 
     bool WorkAroundDriverBugs() const { return mWorkAroundDriverBugs; }
-
-    bool CanUploadBGRA() const {
-        if (!IsGLES2())
-            return true;
-
-        if (IsExtensionSupported(EXT_texture_format_BGRA8888))
-            return true;
-
-        return false;
-    }
 
 protected:
 
