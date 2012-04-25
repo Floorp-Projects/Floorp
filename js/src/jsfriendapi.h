@@ -724,9 +724,6 @@ IsIncrementalBarrierNeeded(JSContext *cx);
 extern JS_FRIEND_API(bool)
 IsIncrementalBarrierNeededOnObject(JSObject *obj);
 
-extern JS_FRIEND_API(bool)
-IsIncrementalBarrierNeededOnScript(JSScript *obj);
-
 extern JS_FRIEND_API(void)
 IncrementalReferenceBarrier(void *ptr);
 
