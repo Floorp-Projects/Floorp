@@ -233,12 +233,10 @@ protected:
 
     float mDPI;
     bool mActive;
-    bool mShown;
 
 private:
     already_AddRefed<nsFrameLoader> GetFrameLoader() const;
     already_AddRefed<nsIWidget> GetWidget() const;
-    void TryCacheDPI();
 };
 
 } // namespace dom
