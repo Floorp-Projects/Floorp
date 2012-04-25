@@ -661,12 +661,6 @@ endif
 -include $(MY_CONFIG)
 
 ######################################################################
-# Now test variables that might have been set or overridden by $(MY_CONFIG).
-
-DEFINES		+= -DOSTYPE=\"$(OS_CONFIG)\"
-DEFINES		+= -DOSARCH=$(OS_ARCH)
-
-######################################################################
 
 GARBAGE		+= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB
 
