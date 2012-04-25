@@ -35,293 +35,57 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* From: $GCLI/mozilla/gcli/ui/gcliterm.css */
-
-/* Bug 678152 calls for UX review which will fix the color names */
-
-.gcliterm-input-node,
-.gcliterm-complete-node {
-  border: none;
-  -moz-appearance: none;
-  height: 100%;
-  vertical-align: middle;
-  background-color: transparent;
+#gclichrome-body {
+  margin: 0;
+  padding: 0;
+  font: message-box;
+  color: #fff;
 }
 
-.gcliterm-input-node {
-  padding-top: 2px;
-  padding-bottom: 0;
-  -moz-padding-start: 16px;
-  -moz-padding-end: 0;
+.gcli-row-out {
+  padding: 0 5px;
+  line-height: 1.2em;
+  border-top: none;
+  border-bottom: none;
+  color: hsl(210,30%,85%);
 }
 
-.gcliterm-complete-node {
-  color: #FFF;
-  padding-top: 4px;
-  padding-bottom: 2px;
-  -moz-padding-start: 21px;
-  -moz-padding-end: 4px;
+.gcli-row-out p,
+.gcli-row-out h1,
+.gcli-row-out h2,
+.gcli-row-out h3 {
+  margin: 5px 0;
 }
 
-.gcliterm-stack-node {
-  background: url("chrome://browser/skin/devtools/commandline.png") 4px center no-repeat;
-  width: 100%;
+.gcli-row-out h1,
+.gcli-row-out h2,
+.gcli-row-out h3,
+.gcli-row-out th,
+.gcli-row-out strong {
+  color: #fff;
 }
-
-.gcliterm-argfetcher {
-  display: -moz-box;
-  -moz-box-flex: 1;
-}
-
-.gcliterm-hint-node {
-  border-top: 1px solid threedshadow;
-  border-bottom: 1px solid #FFF;
-  border-left: 1px solid threedshadow;
-  border-right: 1px solid threedshadow;
-  border-top-right-radius: 5px;
-  border-top-left-radius: 5px;
-  margin-bottom: -1px;
-}
-
-.gcliterm-hint-parent {
-  width: 300px;
-  padding: 10px 10px 0;
-  border-top: 1px solid threedshadow;
-  border-bottom: 1px solid threedshadow;
-}
-
-.gcliterm-menu {
-  display: -moz-box;
-  -moz-box-flex: 1;
-  border-bottom-color: white;
-}
-
-.gcliterm-hint-scroll {
-  overflow-y: scroll;
-  border-bottom-color: threedshadow;
-}
-
-.gcliterm-hint-nospace {
-  display: none;
-}
-
-.gcliterm-msg-body {
-  margin-top: 0;
-  margin-bottom: 3px;
-  -moz-margin-start: 3px;
-  -moz-margin-end: 6px;
-  list-style-image: none;
-}
-
-/* Extract from display.css, we only want these 2 rules */
 
 .gcli-out-shortcut {
   border: 1px solid #999;
   border-radius: 3px;
-  padding: 0 4px;
+  padding: 1px 4px 0;
   margin: 0 4px;
-  font-size: 70%;
-  color: #666;
+  font-size: 80%;
+  font-family: Menlo, Monaco, monospace;
   cursor: pointer;
   vertical-align: bottom;
+  white-space: pre;
+  color: #000;
+  background-color: #fff;
 }
 
 .gcli-out-shortcut:before {
   color: #66F;
   content: '\bb';
-  padding: 0 2px;
 }
 
-/*
- * The language of a console is not en_US or any other common language
- * (i.e we don't attempt to translate 'console.log(x)')
- * So we fix .gcliterm-input-node/.gcliterm-complete-node elements to be ltr.
- * As a result we also want the hints to pop up on the left (above the prompt)
- */
-.gcliterm-input-node,
-.gcliterm-complete-node,
-.gcliterm-display {
-  direction: ltr;
-}
-
-/*
- * We want the stuff under .gcliterm-display to obey normal direction rules
- * so we need to swap back when the document is in rtl mode.
- * The selectors below are faster, but equivalent to:
- * .gcliterm-display > *:-moz-locale-dir(rtl) {
- *   direction: rtl;
- * }
- * In non-performance critical situations the above is preferred due to it's
- * greater resilience to refactoring
- */
-.gcliterm-hint-parent:-moz-locale-dir(rtl),
-.hud-output-node:-moz-locale-dir(rtl) {
-  direction: rtl;
-}
-
-/* From: $GCLI/mozilla/gcli/ui/gcliterm-pinstripe.css */
-
-.gcliterm-input-node,
-.gcliterm-complete-node {
-  font: 11px Menlo, Monaco, monospace;
-}
-
-.gcliterm-complete-node {
-  padding-top: 6px !important;
-}
-
-.gcli-out-shortcut {
-  font-family: Menlo, Monaco, monospace;
-}
-
-/* From: $GCLI/lib/gcli/ui/arg_fetch.css */
-
-.gcli-argfetch {
-  width: 100%;
-  -moz-box-sizing: border-box;
-}
-
-.gcli-af-cmddesc {
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 5px;
-  padding: 3px 10px 0;
-}
-
-.gcli-af-params {
-  padding: 0 10px;
-  width: 100%;
-  -moz-box-sizing: border-box;
-}
-
-.gcli-af-paramname {
-  text-align: right;
-  font-size: 90%;
-}
-
-.gcli-af-required {
-  font-size: 90%;
-  color: #f66;
-  -moz-padding-start: 5px;
-}
-
-.gcli-af-error {
-  font-size: 80%;
-  color: #900;
-}
-
-.gcli-af-submit {
-  text-align: right;
-}
-
-.gcli-field {
-  width: 100%;
-}
-
-.gcli-field-javascript {
-  margin-bottom: 0;
-}
-
-/* From: $GCLI/lib/gcli/ui/menu.css */
-
-.gcli-menu {
-  width: 100%;
-  overflow: hidden;
-}
-
-.gcli-menu-field {
-  border: 1px solid #aaa;
-  border-top: 0;
-  border-bottom-right-radius: 5px;
-  border-bottom-left-radius: 5px;
-  max-height: 300px;
-  margin: 0 3px;
-  padding: 0;
-}
-
-.gcli-menu-template {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 10px 0;
-}
-
-.gcli-menu-option {
-  overflow: hidden;
-  white-space: nowrap;
-  cursor: pointer;
-  padding: 2px;
-}
-
-.gcli-menu-option:hover {
-  background-color: rgb(230, 230, 230);
-}
-
-.gcli-menu-name {
-  padding-top: 0;
-  padding-bottom: 0;
-  -moz-padding-start: 10px;
-  -moz-padding-end: 2px;
-}
-
-.gcli-menu-desc {
-  font-size: 80%;
-  color: #999;
-}
-
-.gcli-menu-error {
-  overflow: hidden;
-  white-space: nowrap;
-  padding-top: 8px;
-  padding-bottom: 2px;
-  -moz-padding-start: 10px;
-  -moz-padding-end: 2px;
-  font-size: 80%;
-  color: red;
-}
-
-/* From: $GCLI/lib/gcli/ui/inputter.css */
-
-.gcli-in-complete {
-  position: absolute;
-  z-index: -1000;
-  border: 1px transparent solid;
-  padding: 1px 1px 1px 2px;
-  color: #DDD;
-}
-
-.gcli-in-incomplete {
-  border-bottom: 2px dotted #999;
-}
-
-.gcli-in-error {
-  border-bottom: 2px dotted #F00;
-}
-
-.gcli-in-ontab {
-  color: #999;
-}
-
-.gcli-in-closebrace {
-  color: #999;
-}
-
-.gcli-prompt {
-  color: #66F;
-  font-weight: bold;
-}
-
-.gcli-in-scratchlink {
-  float: right;
-  font-size: 85%;
-  color: #888;
-  padding-right: 10px;
-}
 
 /* From: $GCLI/lib/gcli/commands/help.css */
-
-.gcli-help-name {
-  text-align: end;
-}
 
 .gcli-help-arrow {
   font-size: 70%;
@@ -329,20 +93,17 @@
 }
 
 .gcli-help-synopsis {
-  font-family: monospace;
+  font-family: Menlo, Monaco, monospace;
   font-weight: normal;
   padding: 0 3px;
   margin: 0 10px;
   border: 1px solid #999;
   border-radius: 3px;
-  color: #666;
-  cursor: pointer;
-  display: inline-block;
+  color: #000;
 }
 
 .gcli-help-synopsis:before {
   color: #66F;
-  content: '\bb';
 }
 
 .gcli-help-description {
@@ -357,4 +118,37 @@
 
 .gcli-help-header {
   margin: 10px 0 6px;
+}
+
+
+/* From: $GCLI/lib/gcli/ui/fields/menu.css */
+
+.gcli-menu-name {
+  -moz-padding-start: 8px;
+}
+
+.gcli-menu-desc {
+  -moz-padding-end: 8px;
+  color: #999;
+}
+
+.gcli-menu-option:hover {
+  background-image: url(background-noise-toolbar.png),
+                    -moz-linear-gradient(top, hsl(210,11%,22%), hsl(210,11%,18%));
+}
+
+.gcli-menu-highlight,
+.gcli-menu-highlight.gcli-menu-option:hover {
+  background-image: url(background-noise-toolbar.png),
+                    -moz-linear-gradient(top, hsl(210,11%,18%), hsl(210,11%,14%));
+}
+
+.gcli-menu-error {
+  padding: 8px 10px 2px;
+  font-size: 80%;
+  color: red;
+}
+
+.gcli-menu-typed {
+  color: hsl(25,78%,50%);
 }

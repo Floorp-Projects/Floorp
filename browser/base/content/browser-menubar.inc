@@ -531,8 +531,15 @@
               <menu id="webDeveloperMenu"
                     label="&webDeveloperMenu.label;"
                     accesskey="&webDeveloperMenu.accesskey;">
-                <menupopup id="menuWebDeveloperPopup"
-                           onpopupshowing="onWebDeveloperMenuShowing();">
+                <menupopup id="menuWebDeveloperPopup">
+                  <menuitem id="menu_devToolbar"
+                            type="checkbox"
+                            autocheck="false"
+                            hidden="true"
+                            label="&devToolbarMenu.label;"
+                            accesskey="&devToolbarMenu.accesskey;"
+                            key="key_devToolbar"
+                            command="Tools:DevToolbar"/>
                   <menuitem id="webConsole"
                             type="checkbox"
                             label="&webConsoleCmd.label;"
@@ -548,6 +555,7 @@
                             command="Tools:Inspect"/>
                   <menuitem id="menu_debugger"
                             hidden="true"
+                            type="checkbox"
                             label="&debuggerMenu.label;"
                             key="key_debugger"
                             command="Tools:Debugger"/>
