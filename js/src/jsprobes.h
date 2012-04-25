@@ -258,17 +258,17 @@ public:
                                      mjit::JSActiveFrame *outerFrame,
                                      mjit::JSActiveFrame **inlineFrames);
 
-    virtual void registerMJITCode(JSContext *cx, js::mjit::JITChunk *chunk,
+    virtual void registerMJITCode(JSContext *cx, js::mjit::JITScript *jscr,
                                   mjit::JSActiveFrame *outerFrame,
                                   mjit::JSActiveFrame **inlineFrames,
                                   void *mainCodeAddress, size_t mainCodeSize,
                                   void *stubCodeAddress, size_t stubCodeSize) = 0;
 
-    virtual void discardMJITCode(FreeOp *fop, mjit::JITScript *jscr, mjit::JITChunk *chunk,
+    virtual void discardMJITCode(FreeOp *fop, mjit::JITScript *jscr, JSScript *script,
                                  void* address) = 0;
 
     virtual void registerICCode(JSContext *cx,
-                                js::mjit::JITChunk *chunk, JSScript *script, jsbytecode* pc,
+                                js::mjit::JITScript *jscr, JSScript *script, jsbytecode* pc,
                                 void *start, size_t size) = 0;
 #endif
 
@@ -306,7 +306,7 @@ JITGranularityRequested();
  * New method JIT code has been created
  */
 void
-registerMJITCode(JSContext *cx, js::mjit::JITChunk *chunk,
+registerMJITCode(JSContext *cx, js::mjit::JITScript *jscr,
                  mjit::JSActiveFrame *outerFrame,
                  mjit::JSActiveFrame **inlineFrames,
                  void *mainCodeAddress, size_t mainCodeSize,
@@ -316,14 +316,14 @@ registerMJITCode(JSContext *cx, js::mjit::JITChunk *chunk,
  * Method JIT code is about to be discarded
  */
 void
-discardMJITCode(FreeOp *fop, mjit::JITScript *jscr, mjit::JITChunk *chunk, void* address);
+discardMJITCode(FreeOp *fop, mjit::JITScript *jscr, JSScript *script, void* address);
 
 /*
- * IC code has been allocated within the given JITChunk
+ * IC code has been allocated within the given JITScript
  */
 void
 registerICCode(JSContext *cx,
-               mjit::JITChunk *chunk, JSScript *script, jsbytecode* pc,
+               mjit::JITScript *jscr, JSScript *script, jsbytecode* pc,
                void *start, size_t size);
 #endif /* JS_METHODJIT */
 

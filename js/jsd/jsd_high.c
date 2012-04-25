@@ -148,9 +148,6 @@ _newJSDContext(JSRuntime*         jsrt,
     if( ! call )
         goto label_newJSDContext_failure;
 
-    if ( ! JS_AddNamedObjectRoot(jsdc->dumbContext, &jsdc->glob, "JSD context global") )
-        goto label_newJSDContext_failure;
-
     ok = JS_InitStandardClasses(jsdc->dumbContext, jsdc->glob);
 
     JS_LeaveCrossCompartmentCall(call);
@@ -170,8 +167,6 @@ _newJSDContext(JSRuntime*         jsrt,
 
 label_newJSDContext_failure:
     if( jsdc ) {
-        if ( jsdc->dumbContext && jsdc->glob )
-            JS_RemoveObjectRoot(jsdc->dumbContext, &jsdc->glob);
         jsd_DestroyObjectManager(jsdc);
         jsd_DestroyAtomTable(jsdc);
         if( jsdc->dumbContext )
@@ -190,8 +185,6 @@ _destroyJSDContext(JSDContext* jsdc)
     JS_REMOVE_LINK(&jsdc->links);
     JSD_UNLOCK();
 
-    if ( jsdc->dumbContext && jsdc->glob )
-        JS_RemoveObjectRoot(jsdc->dumbContext, &jsdc->glob);
     jsd_DestroyObjectManager(jsdc);
     jsd_DestroyAtomTable(jsdc);
 

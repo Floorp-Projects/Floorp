@@ -774,19 +774,17 @@ UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 }
 
 void
-xpc_UnmarkGrayGCThingRecursive(void *thing, JSGCTraceKind kind)
+xpc_UnmarkGrayObjectRecursive(JSObject *obj)
 {
-    MOZ_ASSERT(thing, "Don't pass me null!");
-    MOZ_ASSERT(kind != JSTRACE_SHAPE, "UnmarkGrayGCThingRecursive not intended for Shapes");
+    NS_ASSERTION(obj, "Don't pass me null!");
 
     // Unmark.
-    static_cast<js::gc::Cell *>(thing)->unmark(js::gc::GRAY);
+    js::gc::AsCell(obj)->unmark(js::gc::GRAY);
 
     // Trace children.
     UnmarkGrayTracer trc;
-    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
-    JS_TracerInit(&trc, rt, UnmarkGrayChildren);
-    JS_TraceChildren(&trc, thing, kind);
+    JS_TracerInit(&trc, JS_GetObjectRuntime(obj), UnmarkGrayChildren);
+    JS_TraceChildren(&trc, obj, JSTRACE_OBJECT);
 }
 
 struct TraversalTracer : public JSTracer
@@ -2487,7 +2485,7 @@ nsXPConnect::Peek(JSContext * *_retval)
         return NS_ERROR_FAILURE;
     }
 
-    *_retval = xpc_UnmarkGrayContext(data->GetJSContextStack()->Peek());
+    *_retval = data->GetJSContextStack()->Peek();
     return NS_OK;
 }
 
@@ -2592,7 +2590,7 @@ nsXPConnect::Pop(JSContext * *_retval)
 
     JSContext *cx = data->GetJSContextStack()->Pop();
     if (_retval)
-        *_retval = xpc_UnmarkGrayContext(cx);
+        *_retval = cx;
     return NS_OK;
 }
 
