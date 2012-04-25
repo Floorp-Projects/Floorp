@@ -3595,10 +3595,7 @@ bool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
           IS_VK_DOWN(VK_RSHIFT) ? 'S' : ' '));
 #endif
 
-  event.isShift   = aModKeyState.mIsShiftDown;
-  event.isControl = aModKeyState.mIsControlDown;
-  event.isMeta    = false;
-  event.isAlt     = aModKeyState.mIsAltDown;
+  aModKeyState.InitInputEvent(event);
 
   NPEvent pluginEvent;
   if (aMsg && PluginHasFocus()) {
@@ -3999,10 +3996,8 @@ nsWindow::DispatchAccessibleEvent(PRUint32 aEventType)
   nsAccessibleEvent event(true, aEventType, this);
   InitEvent(event, nsnull);
 
-  event.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
-  event.isControl = IS_VK_DOWN(NS_VK_CONTROL);
-  event.isMeta    = false;
-  event.isAlt     = IS_VK_DOWN(NS_VK_ALT);
+  nsModifierKeyState modifierKeyState;
+  modifierKeyState.InitInputEvent(event);
 
   DispatchWindowEvent(&event);
 
@@ -6180,10 +6175,9 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
 
     nsEventStatus status;
 
-    event.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
-    event.isControl = IS_VK_DOWN(NS_VK_CONTROL);
-    event.isMeta    = false;
-    event.isAlt     = IS_VK_DOWN(NS_VK_ALT);
+    nsModifierKeyState modifierKeyState;
+    modifierKeyState.InitInputEvent(event);
+
     event.button    = 0;
     event.time      = ::GetMessageTime();
     event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
@@ -7943,10 +7937,35 @@ nsModifierKeyState::Update()
 void
 nsModifierKeyState::InitInputEvent(nsInputEvent& aInputEvent) const
 {
-  aInputEvent.isShift   = mIsShiftDown;
-  aInputEvent.isControl = mIsControlDown;
-  aInputEvent.isMeta    = false;
-  aInputEvent.isAlt     = mIsAltDown;
+  aInputEvent.modifiers = 0;
+  if (mIsShiftDown) {
+    aInputEvent.modifiers |= MODIFIER_SHIFT;
+  }
+  if (mIsControlDown) {
+    aInputEvent.modifiers |= MODIFIER_CONTROL;
+  }
+  if (mIsAltDown) {
+    aInputEvent.modifiers |= MODIFIER_ALT;
+  }
+  if (mIsWinDown) {
+    aInputEvent.modifiers |= MODIFIER_WIN;
+  }
+  if (mIsCapsLocked) {
+    aInputEvent.modifiers |= MODIFIER_CAPSLOCK;
+  }
+  if (mIsNumLocked) {
+    aInputEvent.modifiers |= MODIFIER_NUMLOCK;
+  }
+  if (mIsScrollLocked) {
+    aInputEvent.modifiers |= MODIFIER_SCROLL;
+  }
+  // If both Control key and Alt key are pressed, it means AltGr is pressed.
+  // Ideally, we should check whether the current keyboard layout has AltGr
+  // or not.  However, setting AltGr flags for keyboard which doesn't have
+  // AltGr must not be serious bug.  So, it should be OK for now.
+  if (mIsControlDown && mIsAltDown) {
+    aInputEvent.modifiers |= MODIFIER_ALTGRAPH;
+  }
 
   switch(aInputEvent.eventStructType) {
     case NS_MOUSE_EVENT:
@@ -7960,36 +7979,6 @@ nsModifierKeyState::InitInputEvent(nsInputEvent& aInputEvent) const
   }
 
   nsMouseEvent_base& mouseEvent = static_cast<nsMouseEvent_base&>(aInputEvent);
-  mouseEvent.modifiers = 0;
-  if (mIsShiftDown) {
-    mouseEvent.modifiers |= MODIFIER_SHIFT;
-  }
-  if (mIsControlDown) {
-    mouseEvent.modifiers |= MODIFIER_CONTROL;
-  }
-  if (mIsAltDown) {
-    mouseEvent.modifiers |= MODIFIER_ALT;
-  }
-  if (mIsWinDown) {
-    mouseEvent.modifiers |= MODIFIER_WIN;
-  }
-  if (mIsCapsLocked) {
-    mouseEvent.modifiers |= MODIFIER_CAPSLOCK;
-  }
-  if (mIsNumLocked) {
-    mouseEvent.modifiers |= MODIFIER_NUMLOCK;
-  }
-  if (mIsScrollLocked) {
-    mouseEvent.modifiers |= MODIFIER_SCROLL;
-  }
-  // If both Control key and Alt key are pressed, it means AltGr is pressed.
-  // Ideally, we should check whether the current keyboard layout has AltGr
-  // or not.  However, setting AltGr flags for keyboard which doesn't have
-  // AltGr must not be serious bug.  So, it should be OK for now.
-  if (mIsControlDown && mIsAltDown) {
-    mouseEvent.modifiers |= MODIFIER_ALTGRAPH;
-  }
-
   mouseEvent.buttons = 0;
   if (::GetKeyState(VK_LBUTTON) < 0) {
     mouseEvent.buttons |= nsMouseEvent::eLeftButtonFlag;
