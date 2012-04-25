@@ -457,8 +457,13 @@ nsFrameLoader::ReallyStartLoadingInternal()
       }
     }
 
-    // FIXME get error codes from child
-    mRemoteBrowser->LoadURL(mURIToLoad);
+    if (mRemoteBrowserShown || ShowRemoteFrame(nsIntSize(0, 0))) {
+      // FIXME get error codes from child
+      mRemoteBrowser->LoadURL(mURIToLoad);
+    } else {
+      NS_WARNING("[nsFrameLoader] ReallyStartLoadingInternal tried but couldn't show remote browser.\n");
+    }
+
     return NS_OK;
   }
 
@@ -912,6 +917,18 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
   // cross-process layers; need to figure out what behavior we really
   // want here.  For now, hack.
   if (!mRemoteBrowserShown) {
+    if (!mOwnerContent ||
+        !mOwnerContent->GetCurrentDoc()) {
+      return false;
+    }
+
+    nsRefPtr<layers::LayerManager> layerManager =
+      nsContentUtils::LayerManagerForDocument(mOwnerContent->GetCurrentDoc());
+    if (!layerManager) {
+      // This is just not going to work.
+      return false;
+    }
+
     mRemoteBrowser->Show(size);
     mRemoteBrowserShown = true;
 
@@ -1356,18 +1373,26 @@ nsFrameLoader::SetOwnerContent(Element* aContent)
 }
 
 bool
+nsFrameLoader::OwnerIsBrowserFrame()
+{
+  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwnerContent);
+  bool isBrowser = false;
+  if (browserFrame) {
+    browserFrame->GetReallyIsBrowser(&isBrowser);
+  }
+  return isBrowser;
+}
+
+bool
 nsFrameLoader::ShouldUseRemoteProcess()
 {
-  // Check for *disabled* multi-process first: environment, pref
-  // Then check for *enabled* multi-process attribute
-  // Default is not-remote.
-
   if (PR_GetEnv("MOZ_DISABLE_OOP_TABS") ||
       Preferences::GetBool("dom.ipc.tabs.disabled", false)) {
     return false;
   }
 
-  return (bool) mOwnerContent->AttrValueIs(kNameSpaceID_None,
+  return OwnerIsBrowserFrame() ||
+         (bool) mOwnerContent->AttrValueIs(kNameSpaceID_None,
                                            nsGkAtoms::Remote,
                                            nsGkAtoms::_true,
                                            eCaseMatters);
@@ -1842,24 +1867,27 @@ nsFrameLoader::TryRemoteBrowser()
 
   nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(parentAsWebNav));
 
-  PRInt32 parentType;
-  parentAsItem->GetItemType(&parentType);
+  // <iframe mozbrowser> gets to skip these checks.
+  if (!OwnerIsBrowserFrame()) {
+    PRInt32 parentType;
+    parentAsItem->GetItemType(&parentType);
 
-  if (parentType != nsIDocShellTreeItem::typeChrome) {
-    return false;
-  }
+    if (parentType != nsIDocShellTreeItem::typeChrome) {
+      return false;
+    }
 
-  if (!mOwnerContent->IsXUL()) {
-    return false;
-  }
+    if (!mOwnerContent->IsXUL()) {
+      return false;
+    }
 
-  nsAutoString value;
-  mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
+    nsAutoString value;
+    mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
 
-  if (!value.LowerCaseEqualsLiteral("content") &&
-      !StringBeginsWith(value, NS_LITERAL_STRING("content-"),
-                        nsCaseInsensitiveStringComparator())) {
-    return false;
+    if (!value.LowerCaseEqualsLiteral("content") &&
+        !StringBeginsWith(value, NS_LITERAL_STRING("content-"),
+                          nsCaseInsensitiveStringComparator())) {
+      return false;
+    }
   }
 
   PRUint32 chromeFlags = 0;
@@ -2131,6 +2159,19 @@ nsFrameLoader::GetRootContentView(nsIContentView** aContentView)
   return NS_OK;
 }
 
+static already_AddRefed<nsIDocShell>
+GetRootDocShell(nsIDocument *aDocument)
+{
+  nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(aDocument->GetWindow());
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(webNav);
+  NS_ENSURE_TRUE(treeItem, NULL);
+
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+  nsCOMPtr<nsIDocShell> rootDocShell = do_QueryInterface(rootItem);
+  return rootDocShell.forget();
+}
+
 nsresult
 nsFrameLoader::EnsureMessageManager()
 {
@@ -2159,8 +2200,12 @@ nsFrameLoader::EnsureMessageManager()
   NS_ENSURE_STATE(cx);
 
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow =
-    do_QueryInterface(mOwnerContent->OwnerDoc()->GetWindow());
-  NS_ENSURE_STATE(chromeWindow);
+    do_QueryInterface(OwnerDoc()->GetWindow());
+  if (!chromeWindow) {
+    nsCOMPtr<nsIDocShell> rootDocShell = GetRootDocShell(OwnerDoc());
+    nsCOMPtr<nsIDOMWindow> rootWindow = do_GetInterface(rootDocShell);
+    chromeWindow = do_GetInterface(rootWindow);
+  }
   nsCOMPtr<nsIChromeFrameMessageManager> parentManager;
   chromeWindow->GetMessageManager(getter_AddRefs(parentManager));
 
