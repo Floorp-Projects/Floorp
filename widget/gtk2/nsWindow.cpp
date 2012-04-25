@@ -2656,7 +2656,27 @@ nsWindow::InitButtonEvent(nsMouseEvent &aEvent,
         aEvent.refPoint = point - WidgetToScreenOffset();
     }
 
-    KeymapWrapper::InitInputEvent(aEvent, aGdkEvent->state);
+    guint modifierState = aGdkEvent->state;
+    // aEvent's state doesn't include this event's information.  Therefore,
+    // if aEvent is mouse button down event, we need to set it manually.
+    // Note that we cannot do same thing for NS_MOUSE_BUTTON_UP because
+    // system may have two or more mice and same button of another mouse
+    // may be still pressed.
+    if (aGdkEvent->type != GDK_BUTTON_RELEASE) {
+        switch (aGdkEvent->button) {
+            case 1:
+                modifierState |= GDK_BUTTON1_MASK;
+                break;
+            case 2:
+                modifierState |= GDK_BUTTON2_MASK;
+                break;
+            case 3:
+                modifierState |= GDK_BUTTON3_MASK;
+                break;
+        }
+    }
+
+    KeymapWrapper::InitInputEvent(aEvent, modifierState);
 
     aEvent.time = aGdkEvent->time;
 

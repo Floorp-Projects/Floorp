@@ -562,11 +562,86 @@ KeymapWrapper::InitInputEvent(nsInputEvent& aInputEvent,
     aInputEvent.isMeta = false;
 
     PR_LOG(gKeymapWrapperLog, PR_LOG_DEBUG,
-        ("KeymapWrapper(%p): InitInputEvent, aModifierState=0x%08X "
-         "aKeyEvent={ isShift=%s, isControl=%s, isAlt=%s, isMeta=%s }",
+        ("KeymapWrapper(%p): InitInputEvent, aModifierState=0x%08X, "
+         "aInputEvent={ isShift=%s, isControl=%s, isAlt=%s, isMeta=%s }",
          keymapWrapper, aModifierState,
          GetBoolName(aInputEvent.isShift), GetBoolName(aInputEvent.isControl),
          GetBoolName(aInputEvent.isAlt), GetBoolName(aInputEvent.isMeta)));
+
+    switch(aInputEvent.eventStructType) {
+        case NS_MOUSE_EVENT:
+        case NS_MOUSE_SCROLL_EVENT:
+        case NS_DRAG_EVENT:
+        case NS_SIMPLE_GESTURE_EVENT:
+        case NS_MOZTOUCH_EVENT:
+            break;
+        default:
+            return;
+    }
+
+    nsMouseEvent_base& mouseEvent = static_cast<nsMouseEvent_base&>(aInputEvent);
+    mouseEvent.modifiers = 0;
+    if (aInputEvent.isShift) {
+        mouseEvent.modifiers |= MODIFIER_SHIFT;
+    }
+    if (aInputEvent.isControl) {
+        mouseEvent.modifiers |= MODIFIER_CONTROL;
+    }
+    if (aInputEvent.isAlt) {
+        mouseEvent.modifiers |= MODIFIER_ALT;
+    }
+    if (keymapWrapper->AreModifiersActive(SUPER, aModifierState) ||
+        keymapWrapper->AreModifiersActive(HYPER, aModifierState)) {
+        mouseEvent.modifiers |= MODIFIER_WIN;
+    }
+    if (keymapWrapper->AreModifiersActive(ALTGR, aModifierState)) {
+        mouseEvent.modifiers |= MODIFIER_ALTGRAPH;
+    }
+    if (keymapWrapper->AreModifiersActive(CAPS_LOCK, aModifierState)) {
+        mouseEvent.modifiers |= MODIFIER_CAPSLOCK;
+    }
+    if (keymapWrapper->AreModifiersActive(NUM_LOCK, aModifierState)) {
+        mouseEvent.modifiers |= MODIFIER_NUMLOCK;
+    }
+    if (keymapWrapper->AreModifiersActive(SCROLL_LOCK, aModifierState)) {
+        mouseEvent.modifiers |= MODIFIER_SCROLL;
+    }
+
+    PR_LOG(gKeymapWrapperLog, PR_LOG_DEBUG,
+        ("KeymapWrapper(%p): InitInputEvent, aInputEvent has modifiers, "
+         "aInputEvent.modifiers=0x%04X (Shift: %s, Control: %s, Alt: %s, "
+         "Win: %s, AltGr: %s, CapsLock: %s, NumLock: %s, ScrollLock: %s)",
+         keymapWrapper, mouseEvent.modifiers,
+         GetBoolName(mouseEvent.modifiers & MODIFIER_SHIFT),
+         GetBoolName(mouseEvent.modifiers & MODIFIER_CONTROL),
+         GetBoolName(mouseEvent.modifiers & MODIFIER_ALT),
+         GetBoolName(mouseEvent.modifiers & MODIFIER_WIN),
+         GetBoolName(mouseEvent.modifiers & MODIFIER_ALTGRAPH),
+         GetBoolName(mouseEvent.modifiers & MODIFIER_CAPSLOCK),
+         GetBoolName(mouseEvent.modifiers & MODIFIER_NUMLOCK),
+         GetBoolName(mouseEvent.modifiers & MODIFIER_SCROLL)));
+
+    mouseEvent.buttons = 0;
+    if (aModifierState & GDK_BUTTON1_MASK) {
+        mouseEvent.buttons |= nsMouseEvent::eLeftButtonFlag;
+    }
+    if (aModifierState & GDK_BUTTON3_MASK) {
+        mouseEvent.buttons |= nsMouseEvent::eRightButtonFlag;
+    }
+    if (aModifierState & GDK_BUTTON2_MASK) {
+        mouseEvent.buttons |= nsMouseEvent::eMiddleButtonFlag;
+    }
+
+    PR_LOG(gKeymapWrapperLog, PR_LOG_DEBUG,
+        ("KeymapWrapper(%p): InitInputEvent, aInputEvent has buttons, "
+         "aInputEvent.buttons=0x%04X (Left: %s, Right: %s, Middle: %s, "
+         "4th (BACK): %s, 5th (FORWARD): %s)",
+         keymapWrapper, mouseEvent.buttons,
+         GetBoolName(mouseEvent.buttons & nsMouseEvent::eLeftButtonFlag),
+         GetBoolName(mouseEvent.buttons & nsMouseEvent::eRightButtonFlag),
+         GetBoolName(mouseEvent.buttons & nsMouseEvent::eMiddleButtonFlag),
+         GetBoolName(mouseEvent.buttons & nsMouseEvent::e4thButtonFlag),
+         GetBoolName(mouseEvent.buttons & nsMouseEvent::e5thButtonFlag)));
 }
 
 /* static */ PRUint32
