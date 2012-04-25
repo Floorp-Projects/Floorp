@@ -77,6 +77,8 @@ public:
                               bool aCompileEventHandlers);
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 };
 
 

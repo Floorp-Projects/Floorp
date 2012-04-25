@@ -146,6 +146,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
+  virtual nsIDOMNode* AsDOMNode() { return this; }
   static nsHTMLFrameSetElement* FromContent(nsIContent *aContent)
   {
     if (aContent->IsHTML(nsGkAtoms::frameset))
