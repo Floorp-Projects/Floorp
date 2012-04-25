@@ -3903,9 +3903,9 @@ public:
 
 public:
     static JSBool
-    AttachNewComponentsObject(XPCCallContext& ccx,
-                              XPCWrappedNativeScope* aScope,
-                              JSObject* aGlobal);
+    AttachComponentsObject(XPCCallContext& ccx,
+                           XPCWrappedNativeScope* aScope,
+                           JSObject* aGlobal);
 
     void SystemIsBeingShutDown() {ClearMembers();}
 
