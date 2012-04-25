@@ -1,8 +1,173 @@
 Changes & News
 --------------
 
+1.7.1.2 (2012-02-17)
+~~~~~~~~~~~~~~~~~~~~
+
+* Fixed minor issue in `--relocatable`. Thanks, Cap Petschulat.
+
+1.7.1.1 (2012-02-16)
+~~~~~~~~~~~~~~~~~~~~
+
+* Bumped the version string in ``virtualenv.py`` up, too.
+
+* Fixed rST rendering bug of long description.
+
+1.7.1 (2012-02-16)
+~~~~~~~~~~~~~~~~~~
+
+* Update embedded pip to version 1.1.
+
+* Fix `--relocatable` under Python 3. Thanks Doug Hellmann.
+
+* Added environ PATH modification to activate_this.py. Thanks Doug
+  Napoleone. Fixes #14.
+
+* Support creating virtualenvs directly from a Python build directory on
+  Windows. Thanks CBWhiz. Fixes #139.
+
+* Use non-recursive symlinks to fix things up for posix_local install
+  scheme. Thanks michr.
+
+* Made activate script available for use with msys and cygwin on Windows.
+  Thanks Greg Haskins, Cliff Xuan, Jonathan Griffin and Doug Napoleone.
+  Fixes #176.
+
+* Fixed creation of virtualenvs on Windows when Python is not installed for
+  all users. Thanks Anatoly Techtonik for report and patch and Doug
+  Napoleone for testing and confirmation. Fixes #87.
+
+* Fixed creation of virtualenvs using -p in installs where some modules
+  that ought to be in the standard library (e.g. `readline`) are actually
+  installed in `site-packages` next to `virtualenv.py`. Thanks Greg Haskins
+  for report and fix. Fixes #167.
+
+* Added activation script for Powershell (signed by Jannis Leidel). Many
+  thanks to Jason R. Coombs.
+
+1.7 (2011-11-30)
+~~~~~~~~~~~~~~~~
+
+* Gave user-provided ``--extra-search-dir`` priority over default dirs for
+  finding setuptools/distribute (it already had priority for finding pip).
+  Thanks Ethan Jucovy.
+
+* Updated embedded Distribute release to 0.6.24. Thanks Alex Gronholm.
+
+* Made ``--no-site-packages`` behavior the default behavior.  The
+  ``--no-site-packages`` flag is still permitted, but displays a warning when
+  used. Thanks Chris McDonough.
+
+* New flag: ``--system-site-packages``; this flag should be passed to get the
+  previous default global-site-package-including behavior back.
+
+* Added ability to set command options as environment variables and options
+  in a ``virtualenv.ini`` file.
+
+* Fixed various encoding related issues with paths. Thanks Gunnlaugur Thor Briem.
+
+* Made ``virtualenv.py`` script executable.
+
+1.6.4 (2011-07-21)
+~~~~~~~~~~~~~~~~~~
+
+* Restored ability to run on Python 2.4, too.
+
+1.6.3 (2011-07-16)
+~~~~~~~~~~~~~~~~~~
+
+* Restored ability to run on Python < 2.7.
+
+1.6.2 (2011-07-16)
+~~~~~~~~~~~~~~~~~~
+
+* Updated embedded distribute release to 0.6.19.
+
+* Updated embedded pip release to 1.0.2.
+
+* Fixed #141 - Be smarter about finding pkg_resources when using the
+  non-default Python intepreter (by using the ``-p`` option).
+
+* Fixed #112 - Fixed path in docs.
+
+* Fixed #109 - Corrected doctests of a Logger method.
+
+* Fixed #118 - Fixed creating virtualenvs on platforms that use the
+  "posix_local" install scheme, such as Ubuntu with Python 2.7.
+
+* Add missing library to Python 3 virtualenvs (``_dummy_thread``).
+
+
+1.6.1 (2011-04-30)
+~~~~~~~~~~~~~~~~~~
+
+* Start to use git-flow.
+
+* Added support for PyPy 1.5
+
+* Fixed #121 -- added sanity-checking of the -p argument. Thanks Paul Nasrat.
+
+* Added progress meter for pip installation as well as setuptools. Thanks Ethan
+  Jucovy.
+
+* Added --never-download and --search-dir options. Thanks Ethan Jucovy.
+
+1.6
+~~~
+
+* Added Python 3 support! Huge thanks to Vinay Sajip and Vitaly Babiy.
+
+* Fixed creation of virtualenvs on Mac OS X when standard library modules
+  (readline) are installed outside the standard library.
+
+* Updated bundled pip to 1.0.
+
+1.5.2
+~~~~~
+
+* Moved main repository to Github: https://github.com/pypa/virtualenv
+
+* Transferred primary maintenance from Ian to Jannis Leidel, Carl Meyer and Brian Rosner
+
+* Fixed a few more pypy related bugs.
+
+* Updated bundled pip to 0.8.2.
+
+* Handed project over to new team of maintainers.
+
+* Moved virtualenv to Github at https://github.com/pypa/virtualenv
+
+1.5.1
+~~~~~
+
+* Added ``_weakrefset`` requirement for Python 2.7.1.
+
+* Fixed Windows regression in 1.5
+
+1.5
+~~~
+
+* Include pip 0.8.1.
+
+* Add support for PyPy.
+
+* Uses a proper temporary dir when installing environment requirements.
+
+* Add ``--prompt`` option to be able to override the default prompt prefix.
+
+* Fix an issue with ``--relocatable`` on Windows.
+
+* Fix issue with installing the wrong version of distribute.
+
+* Add fish and csh activate scripts.
+
+1.4.9
+~~~~~
+
+* Include pip 0.7.2
+
 1.4.8
------
+~~~~~
 
 * Fix for Mac OS X Framework builds that use
   ``--universal-archs=intel``
@@ -16,7 +181,7 @@ Changes & News
 * Include pip 0.7.1
 
 1.4.7
------
+~~~~~
 
 * Include pip 0.7
 
