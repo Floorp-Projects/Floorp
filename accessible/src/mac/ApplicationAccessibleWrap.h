@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,13 +17,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Sun Microsystems, Inc.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bolian Yin (bolian.yin@sun.com)
- *   Ginn Chen (ginn.chen@sun.com)
+ *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,32 +38,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_APP_ROOT_ACCESSIBLE_H__
-#define __NS_APP_ROOT_ACCESSIBLE_H__
+#ifndef MOZILLA_A11Y_APPLICATION_ACCESSIBLE_WRAP_H__
+#define MOZILLA_A11Y_APPLICATION_ACCESSIBLE_WRAP_H__
 
-#include "nsApplicationAccessible.h"
+#include "ApplicationAccessible.h"
 
-class nsApplicationAccessibleWrap: public nsApplicationAccessible
+class ApplicationAccessibleWrap: public ApplicationAccessible
 {
 public:
-    static void Unload();
-    static void PreCreate();
-
-public:
-    nsApplicationAccessibleWrap();
-    virtual ~nsApplicationAccessibleWrap();
-
-    // nsAccessNode
-    virtual bool Init();
-
-    // nsAccessible
-    NS_IMETHOD GetName(nsAString &aName);
-
-    virtual bool AppendChild(nsAccessible* aChild);
-    virtual bool RemoveChild(nsAccessible* aChild);
-
-    // return the atk object for app root accessible
-    NS_IMETHOD GetNativeInterface(void **aOutAccessible);
+  static void PreCreate() {}
+  static void Unload() {}
 };
 
-#endif   /* __NS_APP_ROOT_ACCESSIBLE_H__ */
+#endif
+

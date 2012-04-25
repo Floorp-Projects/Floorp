@@ -1244,6 +1244,8 @@ DOMStorageImpl::RemoveValue(bool aCallerSecure, const nsAString& aKey,
     nsresult rv = InitDB();
     NS_ENSURE_SUCCESS(rv, rv);
 
+    CacheKeysFromDB();
+
     nsAutoString value;
     bool secureItem;
     rv = GetDBValue(aKey, value, &secureItem);
