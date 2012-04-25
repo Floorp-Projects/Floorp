@@ -129,7 +129,6 @@
 
 #include "vm/ArgumentsObject.h"
 #include "vm/MethodGuard.h"
-#include "vm/NumericConversions.h"
 #include "vm/StringBuffer.h"
 
 #include "ds/Sort.h"
@@ -3710,7 +3709,7 @@ js_Array(JSContext *cx, unsigned argc, Value *vp)
         length = uint32_t(i);
     } else {
         double d = args[0].toDouble();
-        length = ToUint32(d);
+        length = js_DoubleToECMAUint32(d);
         if (d != double(length)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_ARRAY_LENGTH);
             return false;

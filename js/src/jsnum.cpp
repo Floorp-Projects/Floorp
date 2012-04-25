@@ -79,7 +79,6 @@
 
 #include "vm/GlobalObject.h"
 #include "vm/MethodGuard.h"
-#include "vm/NumericConversions.h"
 #include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"
@@ -1275,7 +1274,7 @@ ToInt32Slow(JSContext *cx, const Value &v, int32_t *out)
         if (!ToNumberSlow(cx, v, &d))
             return false;
     }
-    *out = ToInt32(d);
+    *out = js_DoubleToECMAInt32(d);
     return true;
 }
 
@@ -1290,7 +1289,7 @@ ToUint32Slow(JSContext *cx, const Value &v, uint32_t *out)
         if (!ToNumberSlow(cx, v, &d))
             return false;
     }
-    *out = ToUint32(d);
+    *out = js_DoubleToECMAUint32(d);
     return true;
 }
 

@@ -61,7 +61,6 @@
 #include "jstypedarray.h"
 
 #include "vm/GlobalObject.h"
-#include "vm/NumericConversions.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
@@ -1187,7 +1186,7 @@ class TypedArrayTemplate
             setIndex(tarray, index, NativeType(d));
         } else if (ArrayTypeIsUnsigned()) {
             JS_ASSERT(sizeof(NativeType) <= 4);
-            uint32_t n = ToUint32(d);
+            uint32_t n = js_DoubleToECMAUint32(d);
             setIndex(tarray, index, NativeType(n));
         } else if (ArrayTypeID() == TypedArray::TYPE_UINT8_CLAMPED) {
             // The uint8_clamped type has a special rounding converter
@@ -1195,7 +1194,7 @@ class TypedArrayTemplate
             setIndex(tarray, index, NativeType(d));
         } else {
             JS_ASSERT(sizeof(NativeType) <= 4);
-            int32_t n = ToInt32(d);
+            int32_t n = js_DoubleToECMAInt32(d);
             setIndex(tarray, index, NativeType(n));
         }
 
@@ -1759,8 +1758,8 @@ class TypedArrayTemplate
         if (TypeIsFloatingPoint<NativeType>())
             return NativeType(d);
         if (TypeIsUnsigned<NativeType>())
-            return NativeType(ToUint32(d));
-        return NativeType(ToInt32(d));
+            return NativeType(js_DoubleToECMAUint32(d));
+        return NativeType(js_DoubleToECMAInt32(d));
     }
 
     static NativeType
