@@ -36,6 +36,14 @@ public:
     mIsNull = false;
   }
 
+  // For cases when |T| is some type with nontrivial copy behavior, we may want
+  // to get a reference to our internal copy of T and work with it directly
+  // instead of relying on the copying version of SetValue().
+  T& SetValue() {
+    mIsNull = false;
+    return mValue;
+  }
+
   void SetNull() {
     mIsNull = true;
   }

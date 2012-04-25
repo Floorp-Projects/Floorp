@@ -78,16 +78,16 @@ struct NS_GFX nsFont {
   // The variant of the font (normal, small-caps)
   PRUint8 variant;
 
+  // The decorations on the font (underline, overline,
+  // line-through). The decorations can be binary or'd together.
+  PRUint8 decorations;
+
   // The weight of the font; see gfxFontConstants.h.
   PRUint16 weight;
 
   // The stretch of the font (the sum of various NS_FONT_STRETCH_*
   // constants; see gfxFontConstants.h).
   PRInt16 stretch;
-
-  // The decorations on the font (underline, overline,
-  // line-through). The decorations can be binary or'd together.
-  PRUint8 decorations;
 
   // The logical size of the font, in nscoord units
   nscoord size;

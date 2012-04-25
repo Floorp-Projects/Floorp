@@ -136,12 +136,12 @@ static const nsStyleSet::sheetType gCSSSheetTypes[] = {
 
 nsStyleSet::nsStyleSet()
   : mRuleTree(nsnull),
-    mUnusedRuleNodeCount(0),
     mBatching(0),
     mInShutdown(false),
     mAuthorStyleDisabled(false),
     mInReconstruct(false),
-    mDirty(0)
+    mDirty(0),
+    mUnusedRuleNodeCount(0)
 {
 }
 

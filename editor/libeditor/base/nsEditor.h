@@ -218,8 +218,6 @@ public:
   void SwitchTextDirectionTo(PRUint32 aDirection);
 
 protected:
-  nsCString mContentMIMEType;       // MIME type of the doc we are editing.
-
   nsresult DetermineCurrentDirection();
 
   /** create a transaction for setting aAttribute to aValue on aElement
@@ -793,59 +791,60 @@ public:
   };
 
 protected:
-
-  PRUint32        mModCount;     // number of modifications (for undo/redo stack)
-  PRUint32        mFlags;        // behavior flags. See nsIPlaintextEditor.idl for the flags we use.
-
-  nsWeakPtr       mSelConWeak;   // weak reference to the nsISelectionController
-  PRInt32         mUpdateCount;
-
-  // Spellchecking
   enum Tristate {
     eTriUnset,
     eTriFalse,
     eTriTrue
-  }                 mSpellcheckCheckboxState;
+  };
+  // Spellchecking
+  nsCString mContentMIMEType;       // MIME type of the doc we are editing.
+
   nsCOMPtr<nsIInlineSpellChecker> mInlineSpellChecker;
 
   nsCOMPtr<nsITransactionManager> mTxnMgr;
-  nsWeakPtr         mPlaceHolderTxn;     // weak reference to placeholder for begin/end batch purposes
-  nsIAtom          *mPlaceHolderName;    // name of placeholder transaction
-  PRInt32           mPlaceHolderBatch;   // nesting count for batching
-  nsSelectionState *mSelState;           // saved selection state for placeholder txn batching
-  nsSelectionState  mSavedSel;           // cached selection for nsAutoSelectionReset
-  nsRangeUpdater    mRangeUpdater;       // utility class object for maintaining preserved ranges
-  nsCOMPtr<mozilla::dom::Element> mRootElement;   // cached root node
-  PRInt32           mAction;             // the current editor action
-  EDirection        mDirection;          // the current direction of editor action
-  
-  // data necessary to build IME transactions
+  nsCOMPtr<mozilla::dom::Element> mRootElement; // cached root node
   nsCOMPtr<nsIPrivateTextRangeList> mIMETextRangeList; // IME special selection ranges
   nsCOMPtr<nsIDOMCharacterData>     mIMETextNode;      // current IME text node
-  PRUint32                          mIMETextOffset;    // offset in text node where IME comp string begins
-  PRUint32                          mIMEBufferLength;  // current length of IME comp string
-  bool                              mInIMEMode;        // are we inside an IME composition?
-  bool                              mIsIMEComposing;   // is IME in composition state?
-                                                       // This is different from mInIMEMode. see Bug 98434.
+  nsCOMPtr<nsIDOMEventTarget> mEventTarget; // The form field as an event receiver
+  nsCOMPtr<nsIDOMEventListener> mEventListener;
+  nsWeakPtr        mSelConWeak;          // weak reference to the nsISelectionController
+  nsWeakPtr        mPlaceHolderTxn;      // weak reference to placeholder for begin/end batch purposes
+  nsWeakPtr        mDocWeak;             // weak reference to the nsIDOMDocument
+  nsIAtom          *mPlaceHolderName;    // name of placeholder transaction
+  nsSelectionState *mSelState;           // saved selection state for placeholder txn batching
+  nsString         *mPhonetic;
 
-  bool                          mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
-  bool                          mDidPreDestroy;    // whether PreDestroy has been called
-  bool                          mDidPostCreate;    // whether PostCreate has been called
-   // various listeners
+  // various listeners
   nsCOMArray<nsIEditActionListener> mActionListeners;  // listens to all low level actions on the doc
   nsCOMArray<nsIEditorObserver> mEditorObservers;  // just notify once per high level change
   nsCOMArray<nsIDocumentStateListener> mDocStateListeners;// listen to overall doc state (dirty or not, just created, etc)
 
-  PRInt8                        mDocDirtyState;		// -1 = not initialized
-  nsWeakPtr        mDocWeak;  // weak reference to the nsIDOMDocument
-  // The form field as an event receiver
-  nsCOMPtr<nsIDOMEventTarget> mEventTarget;
+  nsSelectionState  mSavedSel;           // cached selection for nsAutoSelectionReset
+  nsRangeUpdater    mRangeUpdater;       // utility class object for maintaining preserved ranges
 
-  nsString* mPhonetic;
+  PRUint32          mModCount;     // number of modifications (for undo/redo stack)
+  PRUint32          mFlags;        // behavior flags. See nsIPlaintextEditor.idl for the flags we use.
 
- nsCOMPtr<nsIDOMEventListener> mEventListener;
+  PRInt32           mUpdateCount;
 
-  PRUint32 mHandlingActionCount;
+  PRInt32           mPlaceHolderBatch;   // nesting count for batching
+  PRInt32           mAction;             // the current editor action
+  PRUint32          mHandlingActionCount;
+
+  PRUint32          mIMETextOffset;    // offset in text node where IME comp string begins
+  PRUint32          mIMEBufferLength;  // current length of IME comp string
+
+  EDirection        mDirection;          // the current direction of editor action
+  PRInt8            mDocDirtyState;      // -1 = not initialized
+  PRUint8           mSpellcheckCheckboxState; // a Tristate value
+
+  bool mInIMEMode;        // are we inside an IME composition?
+  bool mIsIMEComposing;   // is IME in composition state?
+                                                       // This is different from mInIMEMode. see Bug 98434.
+
+  bool mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
+  bool mDidPreDestroy;    // whether PreDestroy has been called
+  bool mDidPostCreate;    // whether PostCreate has been called
   bool mHandlingTrustedAction;
   bool mDispatchInputEvent;
 

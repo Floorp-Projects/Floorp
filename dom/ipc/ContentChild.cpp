@@ -819,5 +819,13 @@ ContentChild::RecvSetID(const PRUint64 &id)
     return true;
 }
 
+bool
+ContentChild::RecvLastPrivateDocShellDestroyed()
+{
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    obs->NotifyObservers(nsnull, "last-pb-context-exited", nsnull);
+    return true;
+}
+
 } // namespace dom
 } // namespace mozilla

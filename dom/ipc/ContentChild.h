@@ -170,6 +170,8 @@ public:
     virtual bool RecvAppInfo(const nsCString& version, const nsCString& buildID);
     virtual bool RecvSetID(const PRUint64 &id);
 
+    virtual bool RecvLastPrivateDocShellDestroyed();
+
 #ifdef ANDROID
     gfxIntSize GetScreenSize() { return mScreenSize; }
 #endif
