@@ -3163,7 +3163,7 @@ nsHttpChannel::InitOfflineCacheEntry()
         return NS_OK;
     }
 
-    if (mResponseHead && mResponseHead->NoStore()) {
+    if (!mResponseHead || mResponseHead->NoStore()) {
         CloseOfflineCacheEntry();
 
         return NS_OK;
