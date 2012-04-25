@@ -173,6 +173,11 @@ protected:
    */
   static void ExpungeTemporaryFilesHelper(nsCOMArray<nsIFile> &fileList);
   /**
+   * Helper function for DeleteTemporaryFileOnExit and DeleteTemporaryPrivateFileWhenPossible
+   */
+  static nsresult DeleteTemporaryFileHelper(nsIFile* aTemporaryFile,
+                                            nsCOMArray<nsIFile> &aFileList);
+  /**
    * Functions related to the tempory file cleanup service provided by
    * nsExternalHelperAppService
    */
