@@ -475,3 +475,13 @@ xpc_DumpJSObject(JSObject* obj)
 
     return true;
 }
+
+#ifdef DEBUG
+void
+xpc_PrintAllReferencesTo(void *p)
+{
+    /* p must be a JS object */
+    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
+    JS_DumpHeap(rt->GetJSRuntime(), stdout, nsnull, JSTRACE_OBJECT, p, 0x7fffffff, nsnull);
+}
+#endif
