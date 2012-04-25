@@ -296,6 +296,12 @@ private:
   bool ShouldUseRemoteProcess();
 
   /**
+   * Is this a frameloader for a bona fide <iframe mozbrowser>?  (I.e., does
+   * the frame return true for nsIMozBrowserFrame::GetReallyIsBrowser()?)
+   */
+  bool OwnerIsBrowserFrame();
+
+  /**
    * If we are an IPC frame, set mRemoteFrame. Otherwise, create and
    * initialize mDocShell.
    */
