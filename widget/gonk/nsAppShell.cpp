@@ -696,8 +696,15 @@ nsAppShell::NotifyNativeEvent()
     write(signalfds[1], "w", 1);
 }
 
-/*static*/ void
+/* static */ void
 nsAppShell::NotifyScreenInitialized()
 {
     gAppShell->InitInputDevices();
+}
+
+/* static */ void
+nsAppShell::NotifyScreenRotation()
+{
+    gAppShell->mReaderPolicy->setDisplayInfo();
+    gAppShell->mReader->requestRefreshConfiguration(InputReaderConfiguration::CHANGE_DISPLAY_INFO);
 }
