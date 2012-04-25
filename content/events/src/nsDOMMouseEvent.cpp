@@ -398,6 +398,16 @@ nsDOMMouseEvent::GetMetaKey(bool* aIsDown)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMMouseEvent::GetModifierState(const nsAString& aKey,
+                                  bool* aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  *aState = GetModifierStateInternal(aKey);
+  return NS_OK;
+}
+
 /* virtual */
 nsresult
 nsDOMMouseEvent::Which(PRUint32* aWhich)
