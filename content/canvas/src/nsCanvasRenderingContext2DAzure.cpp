@@ -3700,12 +3700,14 @@ nsCanvasRenderingContext2DAzure::DrawImage(const HTMLImageOrCanvasOrVideoElement
       // This might not be an Azure canvas!
       srcSurf = srcCanvas->GetSurfaceSnapshot();
 
-      if (srcSurf && mCanvasElement) {
-        // Do security check here.
-        CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement,
-                                              element->NodePrincipal(),
-                                              canvas->IsWriteOnly(),
-                                              false);
+      if (srcSurf) {
+        if (mCanvasElement) {
+          // Do security check here.
+          CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement,
+                                                element->NodePrincipal(),
+                                               canvas->IsWriteOnly(),
+                                                false);
+        }
         imgSize = gfxIntSize(srcSurf->GetSize().width, srcSurf->GetSize().height);
       }
     }
