@@ -64,8 +64,7 @@ protected:
 
 nsresult
 NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, const char** aName,
-                                   const char** aMessage,
-                                   PRUint16* aCode = nsnull);
+                                   const char** aMessage);
 
 #define DECL_INTERNAL_DOM_EXCEPTION(domname)                                 \
 nsresult                                                                     \

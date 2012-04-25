@@ -8,7 +8,6 @@
 #define mozilla_dom_bindings_Utils_h__
 
 #include "mozilla/dom/bindings/DOMJSClass.h"
-#include "mozilla/dom/workers/Workers.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -26,14 +25,12 @@ template<bool mainThread>
 inline bool
 Throw(JSContext* cx, nsresult rv)
 {
-  using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
-
   // XXX Introduce exception machinery.
   if (mainThread) {
     XPCThrower::Throw(rv, cx);
   } else {
     if (!JS_IsExceptionPending(cx)) {
-      ThrowDOMExceptionForNSResult(cx, rv);
+      JS_ReportError(cx, "Exception thrown (nsresult = %x).", rv);
     }
   }
   return false;
