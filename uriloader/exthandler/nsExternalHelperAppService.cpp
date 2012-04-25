@@ -532,6 +532,8 @@ nsresult nsExternalHelperAppService::Init()
 
   nsresult rv = obs->AddObserver(this, "profile-before-change", true);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = obs->AddObserver(this, "last-pb-context-exited", true);
+  NS_ENSURE_SUCCESS(rv, rv);
   return obs->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, true);
 }
 
@@ -1065,6 +1067,8 @@ nsExternalHelperAppService::Observe(nsISupports *aSubject, const char *aTopic, c
 {
   if (!strcmp(aTopic, "profile-before-change")) {
     ExpungeTemporaryFiles();
+  } else if (!strcmp(aTopic, "last-pb-context-exited")) {
+    ExpungeTemporaryPrivateFiles();
   } else if (!strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC)) {
     if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(someData))
       mInPrivateBrowsing = true;
