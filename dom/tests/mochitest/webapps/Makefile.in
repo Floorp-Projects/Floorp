@@ -1,0 +1,32 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH	 = ../../../..
+topsrcdir	 = @top_srcdir@
+srcdir	= @srcdir@
+VPATH	 = @srcdir@
+relativesrcdir	= dom/tests/mochitest/webapps
+
+include $(DEPTH)/config/autoconf.mk
+
+DIRS = \
+    apps \
+    $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+_TEST_FILES	= \
+    test_install_app.xul \
+    test_list_api.xul \
+    test_install_errors.xul \
+    test_cross_domain.xul \
+    test_install_utf8.xul \
+    test_install_receipts.xul \
+    jshelper.js \
+    apphelper.js \
+    $(NULL)
+
+libs:: 	$(_TEST_FILES)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+
