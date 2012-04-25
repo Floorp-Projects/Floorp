@@ -427,6 +427,16 @@ nsAccessibilityService::CreateHTMLTableCellAccessible(nsIContent* aContent,
 }
 
 already_AddRefed<nsAccessible>
+nsAccessibilityService::CreateHTMLTableRowAccessible(nsIContent* aContent,
+                                                     nsIPresShell* aPresShell)
+{
+  nsAccessible* accessible =
+    new nsEnumRoleAccessible(aContent, GetDocAccessible(aPresShell), roles::ROW);
+  NS_ADDREF(accessible);
+  return accessible;
+}
+
+already_AddRefed<nsAccessible>
 nsAccessibilityService::CreateHTMLTextAccessible(nsIContent* aContent,
                                                  nsIPresShell* aPresShell)
 {
@@ -1680,13 +1690,6 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
       tag == nsGkAtoms::h6 ||
       tag == nsGkAtoms::q) {
     nsAccessible* accessible = new nsHyperTextAccessibleWrap(aContent, aDoc);
-    NS_IF_ADDREF(accessible);
-    return accessible;
-  }
-
-  if (tag == nsGkAtoms::tr) {
-    nsAccessible* accessible = new nsEnumRoleAccessible(aContent, aDoc,
-                                                        roles::ROW);
     NS_IF_ADDREF(accessible);
     return accessible;
   }
