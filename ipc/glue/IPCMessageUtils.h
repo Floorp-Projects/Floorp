@@ -53,6 +53,7 @@
 #include "gfxColor.h"
 #include "gfxMatrix.h"
 #include "gfxPattern.h"
+#include "gfxPoint.h"
 #include "nsRect.h"
 #include "nsRegion.h"
 #include "gfxASurface.h"
@@ -455,6 +456,27 @@ struct ParamTraits<gfxMatrix>
   {
     aLog->append(StringPrintf(L"[[%g %g] [%g %g] [%g %g]]", aParam.xx, aParam.xy, aParam.yx, aParam.yy,
 	  						    aParam.x0, aParam.y0));
+  }
+};
+
+template<>
+struct ParamTraits<gfxSize>
+{
+  typedef gfxSize paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.width);
+    WriteParam(aMsg, aParam.height);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    if (ReadParam(aMsg, aIter, &aResult->width) &&
+        ReadParam(aMsg, aIter, &aResult->height))
+      return true;
+
+    return false;
   }
 };
 
