@@ -539,7 +539,6 @@ public:
     virtual void NotifyEnterMainThread();
     virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb);
     virtual nsresult FinishTraverse();
-    virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
     virtual bool NeedCollect();
     virtual void Collect(PRUint32 reason, PRUint32 kind);
