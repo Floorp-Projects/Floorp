@@ -863,14 +863,15 @@ public:
   }
 
   nsMouseEvent_base(bool isTrusted, PRUint32 msg, nsIWidget *w, PRUint8 type)
-    : nsInputEvent(isTrusted, msg, w, type), button(0), modifiers(0),
-      pressure(0), inputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE) {}
+    : nsInputEvent(isTrusted, msg, w, type), button(0), buttons(0),
+      modifiers(0), pressure(0),
+      inputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE) {}
 
   /// The possible related target
   nsCOMPtr<nsISupports> relatedTarget;
 
   PRInt16               button;
-
+  PRInt16               buttons;
   mozilla::widget::Modifiers modifiers;
 
   // Finger or touch pressure of event
@@ -889,6 +890,15 @@ private:
 
 public:
   enum buttonType  { eLeftButton = 0, eMiddleButton = 1, eRightButton = 2 };
+  enum buttonsFlag { eLeftButtonFlag   = 0x01,
+                     eRightButtonFlag  = 0x02,
+                     eMiddleButtonFlag = 0x04,
+                     // typicall, "back" button being left side of 5-button
+                     // mice, see "buttons" attribute document of DOM3 Events.
+                     e4thButtonFlag    = 0x08,
+                     // typicall, "forward" button being right side of 5-button
+                     // mice, see "buttons" attribute document of DOM3 Events.
+                     e5thButtonFlag    = 0x10 };
   enum reasonType  { eReal, eSynthesized };
   enum contextType { eNormal, eContextMenuKey };
   enum exitType    { eChild, eTopLevel };

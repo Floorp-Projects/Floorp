@@ -2009,6 +2009,7 @@ nsEventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
   mGestureDownAlt = inDownEvent->isAlt;
   mGestureDownMeta = inDownEvent->isMeta;
   mGestureModifiers = inDownEvent->modifiers;
+  mGestureDownButtons = inDownEvent->buttons;
 
   if (mClickHoldContextMenu) {
     // fire off a timer to track click-hold
@@ -2046,6 +2047,7 @@ nsEventStateManager::FillInEventFromGestureDown(nsMouseEvent* aEvent)
   aEvent->isAlt = mGestureDownAlt;
   aEvent->isMeta = mGestureDownMeta;
   aEvent->modifiers = mGestureModifiers;
+  aEvent->buttons = mGestureDownButtons;
 }
 
 //
@@ -2580,6 +2582,7 @@ nsEventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.isAlt = aEvent->isAlt;
   event.isMeta = aEvent->isMeta;
   event.modifiers = aEvent->modifiers;
+  event.buttons = aEvent->buttons;
   event.scrollFlags = aEvent->scrollFlags;
   event.delta = aNumLines;
   event.inputSource = static_cast<nsMouseEvent_base*>(aEvent)->inputSource;
@@ -2616,6 +2619,7 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.isAlt = aEvent->isAlt;
   event.isMeta = aEvent->isMeta;
   event.modifiers = aEvent->modifiers;
+  event.buttons = aEvent->buttons;
   event.scrollFlags = aEvent->scrollFlags;
   event.inputSource = static_cast<nsMouseEvent_base*>(aEvent)->inputSource;
   event.delta = aPresContext->AppUnitsToIntCSSPixels(aEvent->delta * lineHeight);
@@ -3416,6 +3420,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         event.isAlt = mouseEvent->isAlt;
         event.isMeta = mouseEvent->isMeta;
         event.modifiers = mouseEvent->modifiers;
+        event.buttons = mouseEvent->buttons;
         event.inputSource = mouseEvent->inputSource;
 
         nsEventStatus status = nsEventStatus_eIgnore;
@@ -3842,6 +3847,7 @@ nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
   event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
   event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
   event.modifiers = ((nsMouseEvent*)aEvent)->modifiers;
+  event.buttons = ((nsMouseEvent*)aEvent)->buttons;
   event.pluginEvent = ((nsMouseEvent*)aEvent)->pluginEvent;
   event.relatedTarget = aRelatedContent;
   event.inputSource = static_cast<nsMouseEvent*>(aEvent)->inputSource;
@@ -4256,6 +4262,7 @@ nsEventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
   event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
   event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
   event.modifiers = ((nsMouseEvent*)aEvent)->modifiers;
+  event.buttons = ((nsMouseEvent*)aEvent)->buttons;
   event.relatedTarget = aRelatedTarget;
   event.inputSource = static_cast<nsMouseEvent*>(aEvent)->inputSource;
 
@@ -4419,6 +4426,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
     event.isAlt = aEvent->isAlt;
     event.isMeta = aEvent->isMeta;
     event.modifiers = aEvent->modifiers;
+    event.buttons = aEvent->buttons;
     event.time = aEvent->time;
     event.flags |= flags;
     event.button = aEvent->button;
@@ -4441,6 +4449,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
         event2.isAlt = aEvent->isAlt;
         event2.isMeta = aEvent->isMeta;
         event2.modifiers = aEvent->modifiers;
+        event2.buttons = aEvent->buttons;
         event2.flags |= flags;
         event2.button = aEvent->button;
         event2.inputSource = aEvent->inputSource;
@@ -5044,6 +5053,7 @@ nsEventStateManager::DoQueryScrollTargetInfo(nsQueryContentEvent* aEvent,
   msEvent.isAlt = aEvent->mInput.mMouseScrollEvent->isAlt;
   msEvent.isMeta = aEvent->mInput.mMouseScrollEvent->isMeta;
   msEvent.modifiers = aEvent->mInput.mMouseScrollEvent->modifiers;
+  msEvent.buttons = aEvent->mInput.mMouseScrollEvent->buttons;
 
   msEvent.scrollFlags = aEvent->mInput.mMouseScrollEvent->scrollFlags;
   msEvent.delta = ComputeWheelDeltaFor(aEvent->mInput.mMouseScrollEvent);

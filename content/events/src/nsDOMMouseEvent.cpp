@@ -193,11 +193,26 @@ nsDOMMouseEvent::InitFromCtor(const nsAString& aType,
   mozilla::dom::MouseEventInit d;
   nsresult rv = d.Init(aCx, aVal);
   NS_ENSURE_SUCCESS(rv, rv);
-  return InitMouseEvent(aType, d.bubbles, d.cancelable,
-                        d.view, d.detail, d.screenX, d.screenY,
-                        d.clientX, d.clientY, 
-                        d.ctrlKey, d.altKey, d.shiftKey, d.metaKey,
-                        d.button, d.relatedTarget);
+  rv = InitMouseEvent(aType, d.bubbles, d.cancelable,
+                      d.view, d.detail, d.screenX, d.screenY,
+                      d.clientX, d.clientY, 
+                      d.ctrlKey, d.altKey, d.shiftKey, d.metaKey,
+                      d.button, d.relatedTarget);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  switch(mEvent->eventStructType) {
+    case NS_MOUSE_EVENT:
+    case NS_MOUSE_SCROLL_EVENT:
+    case NS_DRAG_EVENT:
+    case NS_SIMPLE_GESTURE_EVENT:
+    case NS_MOZTOUCH_EVENT:
+      static_cast<nsMouseEvent_base*>(mEvent)->buttons = d.buttons;
+      break;
+    default:
+      break;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -235,6 +250,27 @@ nsDOMMouseEvent::GetButton(PRUint16* aButton)
     default:
       NS_WARNING("Tried to get mouse button for non-mouse event!");
       *aButton = nsMouseEvent::eLeftButton;
+      break;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMMouseEvent::GetButtons(PRUint16* aButtons)
+{
+  NS_ENSURE_ARG_POINTER(aButtons);
+  switch(mEvent->eventStructType)
+  {
+    case NS_MOUSE_EVENT:
+    case NS_MOUSE_SCROLL_EVENT:
+    case NS_DRAG_EVENT:
+    case NS_SIMPLE_GESTURE_EVENT:
+    case NS_MOZTOUCH_EVENT:
+      *aButtons = static_cast<nsMouseEvent_base*>(mEvent)->buttons;
+      break;
+    default:
+      MOZ_NOT_REACHED("Tried to get mouse buttons for non-mouse event!");
+      *aButtons = 0;
       break;
   }
   return NS_OK;
