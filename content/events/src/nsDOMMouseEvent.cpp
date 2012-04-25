@@ -125,10 +125,7 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, bool aCanBubble, bool a
        static_cast<nsMouseEvent_base*>(mEvent)->relatedTarget = aRelatedTarget;
        static_cast<nsMouseEvent_base*>(mEvent)->button = aButton;
        nsInputEvent* inputEvent = static_cast<nsInputEvent*>(mEvent);
-       inputEvent->isControl = aCtrlKey;
-       inputEvent->isAlt = aAltKey;
-       inputEvent->isShift = aShiftKey;
-       inputEvent->isMeta = aMetaKey;
+       inputEvent->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);
        mClientPoint.x = aClientX;
        mClientPoint.y = aClientY;
        inputEvent->refPoint.x = aScreenX;
@@ -178,7 +175,7 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString& aType,
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
     case NS_MOZTOUCH_EVENT:
-      static_cast<nsMouseEvent_base*>(mEvent)->modifiers = modifiers;
+      static_cast<nsInputEvent*>(mEvent)->modifiers = modifiers;
       return NS_OK;
     default:
       MOZ_NOT_REACHED("There is no space to store the modifiers");
@@ -373,7 +370,7 @@ NS_IMETHODIMP
 nsDOMMouseEvent::GetAltKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = ((nsInputEvent*)mEvent)->isAlt;
+  *aIsDown = static_cast<nsInputEvent*>(mEvent)->IsAlt();
   return NS_OK;
 }
 
@@ -381,7 +378,7 @@ NS_IMETHODIMP
 nsDOMMouseEvent::GetCtrlKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = ((nsInputEvent*)mEvent)->isControl;
+  *aIsDown = static_cast<nsInputEvent*>(mEvent)->IsControl();
   return NS_OK;
 }
 
@@ -389,7 +386,7 @@ NS_IMETHODIMP
 nsDOMMouseEvent::GetShiftKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = ((nsInputEvent*)mEvent)->isShift;
+  *aIsDown = static_cast<nsInputEvent*>(mEvent)->IsShift();
   return NS_OK;
 }
 
@@ -397,7 +394,7 @@ NS_IMETHODIMP
 nsDOMMouseEvent::GetMetaKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = ((nsInputEvent*)mEvent)->isMeta;
+  *aIsDown = static_cast<nsInputEvent*>(mEvent)->IsMeta();
   return NS_OK;
 }
 
