@@ -100,8 +100,6 @@
 #include "plbase64.h"
 #include "prmem.h"
 
-#include "nsIPrivateBrowsingService.h"
-
 #include "ContentChild.h"
 #include "nsXULAppAPI.h"
 #include "nsPIDOMWindow.h"
@@ -505,18 +503,11 @@ NS_IMPL_ISUPPORTS6(
   nsIObserver,
   nsISupportsWeakReference)
 
-nsExternalHelperAppService::nsExternalHelperAppService() :
-  mInPrivateBrowsing(false)
+nsExternalHelperAppService::nsExternalHelperAppService()
 {
 }
 nsresult nsExternalHelperAppService::Init()
 {
-  nsCOMPtr<nsIPrivateBrowsingService> pbs =
-    do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
-  if (pbs) {
-    pbs->GetPrivateBrowsingEnabled(&mInPrivateBrowsing);
-  }
-
   // Add an observer for profile change
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs)
@@ -532,9 +523,7 @@ nsresult nsExternalHelperAppService::Init()
 
   nsresult rv = obs->AddObserver(this, "profile-before-change", true);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = obs->AddObserver(this, "last-pb-context-exited", true);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return obs->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, true);
+  return obs->AddObserver(this, "last-pb-context-exited", true);
 }
 
 nsExternalHelperAppService::~nsExternalHelperAppService()
@@ -1069,13 +1058,6 @@ nsExternalHelperAppService::Observe(nsISupports *aSubject, const char *aTopic, c
     ExpungeTemporaryFiles();
   } else if (!strcmp(aTopic, "last-pb-context-exited")) {
     ExpungeTemporaryPrivateFiles();
-  } else if (!strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC)) {
-    if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(someData))
-      mInPrivateBrowsing = true;
-    else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(someData)) {
-      mInPrivateBrowsing = false;
-      ExpungeTemporaryPrivateFiles();
-    }
   }
   return NS_OK;
 }
