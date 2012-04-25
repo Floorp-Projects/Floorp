@@ -3110,21 +3110,21 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
         AdjustedTarget(mCtx)->
           FillGlyphs(scaledFont, buffer,
                      CanvasGeneralPattern().
-                        ForStyle(mCtx, nsCanvasRenderingContext2DAzure::STYLE_FILL, mCtx->mTarget),
-                      DrawOptions(mState->globalAlpha, mCtx->UsedOperation()));
+                       ForStyle(mCtx, nsCanvasRenderingContext2DAzure::STYLE_FILL, mCtx->mTarget),
+                     DrawOptions(mState->globalAlpha, mCtx->UsedOperation()));
       } else if (mOp == nsCanvasRenderingContext2DAzure::TEXT_DRAW_OPERATION_STROKE) {
         RefPtr<Path> path = scaledFont->GetPathForGlyphs(buffer, mCtx->mTarget);
 
         const ContextState& state = *mState;
         AdjustedTarget(mCtx)->
           Stroke(path, CanvasGeneralPattern().
-                    ForStyle(mCtx, nsCanvasRenderingContext2DAzure::STYLE_STROKE, mCtx->mTarget),
-                  StrokeOptions(state.lineWidth, state.lineJoin,
-                                state.lineCap, state.miterLimit,
-                                state.dash.Length(),
-                                state.dash.Elements(),
-                                state.dashOffset),
-                  DrawOptions(state.globalAlpha, mCtx->UsedOperation()));
+                   ForStyle(mCtx, nsCanvasRenderingContext2DAzure::STYLE_STROKE, mCtx->mTarget),
+                 StrokeOptions(state.lineWidth, state.lineJoin,
+                               state.lineCap, state.miterLimit,
+                               state.dash.Length(),
+                               state.dash.Elements(),
+                               state.dashOffset),
+                 DrawOptions(state.globalAlpha, mCtx->UsedOperation()));
 
       }
     }
