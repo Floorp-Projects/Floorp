@@ -9266,7 +9266,7 @@ CSSParserImpl::ParsePaint(nsCSSProperty aPropID)
     return false;
   if (x.GetUnit() == eCSSUnit_URL) {
     if (!ParseVariant(y, VARIANT_COLOR | VARIANT_NONE, nsnull))
-      y.SetColorValue(NS_RGB(0, 0, 0));
+      y.SetNoneValue();
   }
   if (!ExpectEndProperty())
     return false;
