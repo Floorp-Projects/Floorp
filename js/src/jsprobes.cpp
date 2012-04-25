@@ -217,33 +217,33 @@ Probes::JITWatcher::CollectNativeRegions(RegionVector &regions,
 }
 
 void
-Probes::registerMJITCode(JSContext *cx, js::mjit::JITChunk *chunk,
+Probes::registerMJITCode(JSContext *cx, js::mjit::JITScript *jscr,
                          js::mjit::JSActiveFrame *outerFrame,
                          js::mjit::JSActiveFrame **inlineFrames,
                          void *mainCodeAddress, size_t mainCodeSize,
                          void *stubCodeAddress, size_t stubCodeSize)
 {
     for (JITWatcher **p = jitWatchers.begin(); p != jitWatchers.end(); ++p)
-        (*p)->registerMJITCode(cx, chunk, outerFrame,
+        (*p)->registerMJITCode(cx, jscr, outerFrame,
                                inlineFrames,
                                mainCodeAddress, mainCodeSize,
                                stubCodeAddress, stubCodeSize);
 }
 
 void
-Probes::discardMJITCode(FreeOp *fop, mjit::JITScript *jscr, mjit::JITChunk *chunk, void* address)
+Probes::discardMJITCode(FreeOp *fop, mjit::JITScript *jscr, JSScript *script, void* address)
 {
     for (JITWatcher **p = jitWatchers.begin(); p != jitWatchers.end(); ++p)
-        (*p)->discardMJITCode(fop, jscr, chunk, address);
+        (*p)->discardMJITCode(fop, jscr, script, address);
 }
 
 void
 Probes::registerICCode(JSContext *cx,
-                       mjit::JITChunk *chunk, JSScript *script, jsbytecode* pc,
+                       mjit::JITScript *jscr, JSScript *script, jsbytecode* pc,
                        void *start, size_t size)
 {
     for (JITWatcher **p = jitWatchers.begin(); p != jitWatchers.end(); ++p)
-        (*p)->registerICCode(cx, chunk, script, pc, start, size);
+        (*p)->registerICCode(cx, jscr, script, pc, start, size);
 }
 #endif
 
