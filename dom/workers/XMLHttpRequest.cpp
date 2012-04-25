@@ -34,7 +34,7 @@ USING_WORKERS_NAMESPACE
 namespace XMLHttpRequestResponseTypeValues = 
   mozilla::dom::bindings::prototypes::XMLHttpRequestResponseType;
 
-using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
+using mozilla::dom::workers::exceptions::ThrowDOMExceptionForCode;
 
 // XXX Need to figure this out...
 #define UNCATCHABLE_EXCEPTION NS_ERROR_OUT_OF_MEMORY
@@ -213,6 +213,21 @@ END_WORKERS_NAMESPACE
 
 
 namespace {
+
+inline int
+GetDOMExceptionCodeFromResult(nsresult aResult)
+{
+  if (NS_SUCCEEDED(aResult)) {
+    return 0;
+  }
+
+  if (NS_ERROR_GET_MODULE(aResult) == NS_ERROR_MODULE_DOM) {
+    return NS_ERROR_GET_CODE(aResult);
+  }
+
+  NS_WARNING("Update main thread implementation for a DOM error code here!");
+  return INVALID_STATE_ERR;
+}
 
 inline void
 ConvertResponseTypeToString(XMLHttpRequestResponseType aType, nsString& aString)
@@ -768,11 +783,11 @@ private:
   class ResponseRunnable : public MainThreadProxyRunnable
   {
     PRUint32 mSyncQueueKey;
-    nsresult mErrorCode;
+    int mErrorCode;
 
   public:
     ResponseRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
-                     PRUint32 aSyncQueueKey, nsresult aErrorCode)
+                     PRUint32 aSyncQueueKey, int aErrorCode)
     : MainThreadProxyRunnable(aWorkerPrivate, SkipWhenClearing, aProxy),
       mSyncQueueKey(aSyncQueueKey), mErrorCode(aErrorCode)
     {
@@ -782,8 +797,8 @@ private:
     bool
     WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     {
-      if (NS_FAILED(mErrorCode)) {
-        ThrowDOMExceptionForNSResult(aCx, mErrorCode);
+      if (mErrorCode) {
+        ThrowDOMExceptionForCode(aCx, mErrorCode);
         aWorkerPrivate->StopSyncLoop(mSyncQueueKey, false);
       }
       else {
@@ -821,7 +836,7 @@ public:
     return true;
   }
 
-  virtual nsresult
+  virtual int
   MainThreadRun() = 0;
 
   NS_IMETHOD
@@ -832,7 +847,7 @@ public:
     PRUint32 oldSyncQueueKey = mProxy->mSyncEventResponseSyncQueueKey;
     mProxy->mSyncEventResponseSyncQueueKey = mSyncQueueKey;
 
-    nsresult rv = MainThreadRun();
+    int rv = MainThreadRun();
 
     nsRefPtr<ResponseRunnable> response =
       new ResponseRunnable(mWorkerPrivate, mProxy, mSyncQueueKey, rv);
@@ -856,7 +871,7 @@ public:
     MOZ_ASSERT(aProxy);
   }
 
-  virtual nsresult
+  virtual int
   MainThreadRun()
   {
     AssertIsOnMainThread();
@@ -877,10 +892,10 @@ public:
   : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy), mValue(aValue)
   { }
 
-  nsresult
+  int
   MainThreadRun()
   {
-    return mProxy->mXHR->SetMultipart(mValue);
+    return GetDOMExceptionCodeFromResult(mProxy->mXHR->SetMultipart(mValue));
   }
 };
 
@@ -894,10 +909,11 @@ public:
   : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy), mValue(aValue)
   { }
 
-  nsresult
+  int
   MainThreadRun()
   {
-    return mProxy->mXHR->SetMozBackgroundRequest(mValue);
+    nsresult rv = mProxy->mXHR->SetMozBackgroundRequest(mValue);
+    return GetDOMExceptionCodeFromResult(rv);
   }
 };
 
@@ -911,10 +927,11 @@ public:
   : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy), mValue(aValue)
   { }
 
-  nsresult
+  int
   MainThreadRun()
   {
-    return mProxy->mXHR->SetWithCredentials(mValue);
+    nsresult rv = mProxy->mXHR->SetWithCredentials(mValue);
+    return GetDOMExceptionCodeFromResult(rv);
   }
 };
 
@@ -929,7 +946,7 @@ public:
     mResponseType(aResponseType)
   { }
 
-  nsresult
+  int
   MainThreadRun()
   {
     nsresult rv = mProxy->mXHR->SetResponseType(mResponseType);
@@ -937,7 +954,7 @@ public:
     if (NS_SUCCEEDED(rv)) {
       rv = mProxy->mXHR->GetResponseType(mResponseType);
     }
-    return rv;
+    return GetDOMExceptionCodeFromResult(rv);
   }
 
   void
@@ -957,10 +974,10 @@ public:
     mTimeout(aTimeout)
   { }
 
-  nsresult
+  int
   MainThreadRun()
   {
-    return mProxy->mXHR->SetTimeout(mTimeout);
+    return GetDOMExceptionCodeFromResult(mProxy->mXHR->SetTimeout(mTimeout));
   }
 };
 
@@ -971,7 +988,7 @@ public:
   : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy)
   { }
 
-  nsresult
+  int
   MainThreadRun()
   {
     mProxy->mInnerEventStreamId++;
@@ -985,7 +1002,7 @@ public:
 
     mProxy->Reset();
 
-    return NS_OK;
+    return 0;
   }
 };
 
@@ -1000,11 +1017,11 @@ public:
     mResponseHeaders(aResponseHeaders)
   { }
 
-  nsresult
+  int
   MainThreadRun()
   {
     mProxy->mXHR->GetAllResponseHeaders(mResponseHeaders);
-    return NS_OK;
+    return 0;
   }
 };
 
@@ -1020,10 +1037,11 @@ public:
     mValue(aValue)
   { }
 
-  nsresult
+  int
   MainThreadRun()
   {
-    return mProxy->mXHR->GetResponseHeader(mHeader, mValue);
+    nsresult rv = mProxy->mXHR->GetResponseHeader(mHeader, mValue);
+    return GetDOMExceptionCodeFromResult(rv);
   }
 };
 
@@ -1050,45 +1068,53 @@ public:
     mTimeout(aTimeout)
   { }
 
-  nsresult
+  int
   MainThreadRun()
   {
     WorkerPrivate* oldWorker = mProxy->mWorkerPrivate;
     mProxy->mWorkerPrivate = mWorkerPrivate;
 
-    nsresult rv = MainThreadRunInternal();
+    int retval = MainThreadRunInternal();
 
     mProxy->mWorkerPrivate = oldWorker;
-    return rv;
+    return retval;
   }
 
-  nsresult
+  int
   MainThreadRunInternal()
   {
     if (!mProxy->Init()) {
-      return NS_ERROR_DOM_INVALID_STATE_ERR;
+      return INVALID_STATE_ERR;
     }
 
     nsresult rv;
 
     if (mMultipart) {
       rv = mProxy->mXHR->SetMultipart(mMultipart);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv)) {
+        return GetDOMExceptionCodeFromResult(rv);
+      }
     }
 
     if (mBackgroundRequest) {
       rv = mProxy->mXHR->SetMozBackgroundRequest(mBackgroundRequest);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv)) {
+        return GetDOMExceptionCodeFromResult(rv);
+      }
     }
 
     if (mWithCredentials) {
       rv = mProxy->mXHR->SetWithCredentials(mWithCredentials);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv)) {
+        return GetDOMExceptionCodeFromResult(rv);
+      }
     }
 
     if (mTimeout) {
       rv = mProxy->mXHR->SetTimeout(mTimeout);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv)) {
+        return GetDOMExceptionCodeFromResult(rv);
+      }
     }
 
     NS_ASSERTION(!mProxy->mInOpen, "Reentrancy is bad!");
@@ -1103,7 +1129,7 @@ public:
       rv = mProxy->mXHR->SetResponseType(NS_LITERAL_STRING("text"));
     }
 
-    return rv;
+    return GetDOMExceptionCodeFromResult(rv);
   }
 };
 
@@ -1128,7 +1154,7 @@ public:
     mClonedObjects.SwapElements(aClonedObjects);
   }
 
-  nsresult
+  int
   MainThreadRun()
   {
     nsCOMPtr<nsIVariant> variant;
@@ -1138,7 +1164,7 @@ public:
       nsIXPConnect* xpc = nsContentUtils::XPConnect();
       NS_ASSERTION(xpc, "This should never be null!");
 
-      nsresult rv = NS_OK;
+      int error = 0;
 
       JSStructuredCloneCallbacks* callbacks =
         mWorkerPrivate->IsChromeWorker() ?
@@ -1149,22 +1175,24 @@ public:
       if (mBody.read(cx, &body, callbacks, &mClonedObjects)) {
         if (NS_FAILED(xpc->JSValToVariant(cx, &body,
                                           getter_AddRefs(variant)))) {
-          rv = NS_ERROR_DOM_INVALID_STATE_ERR;
+          error = INVALID_STATE_ERR;
         }
       }
       else {
-        rv = NS_ERROR_DOM_DATA_CLONE_ERR;
+        error = DATA_CLONE_ERR;
       }
 
       mBody.clear();
       mClonedObjects.Clear();
 
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (error) {
+        return error;
+      }
     }
     else {
       nsCOMPtr<nsIWritableVariant> wvariant =
         do_CreateInstance(NS_VARIANT_CONTRACTID);
-      NS_ENSURE_TRUE(wvariant, NS_ERROR_UNEXPECTED);
+      NS_ENSURE_TRUE(wvariant, UNKNOWN_ERR);
 
       if (NS_FAILED(wvariant->SetAsAString(mStringBody))) {
         NS_ERROR("This should never fail!");
@@ -1201,7 +1229,7 @@ public:
       }
     }
 
-    return rv;
+    return GetDOMExceptionCodeFromResult(rv);
   }
 };
 
@@ -1217,10 +1245,11 @@ public:
     mValue(aValue)
   { }
 
-  nsresult
+  int
   MainThreadRun()
   {
-    return mProxy->mXHR->SetRequestHeader(mHeader, mValue);
+    nsresult rv = mProxy->mXHR->SetRequestHeader(mHeader, mValue);
+    return GetDOMExceptionCodeFromResult(rv);
   }
 };
 
@@ -1234,11 +1263,11 @@ public:
   : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy), mMimeType(aMimeType)
   { }
 
-  nsresult
+  int
   MainThreadRun()
   {
     mProxy->mXHR->OverrideMimeType(mMimeType);
-    return NS_OK;
+    return 0;
   }
 };
 

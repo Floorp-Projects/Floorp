@@ -40,7 +40,6 @@
 #include "FileReaderSync.h"
 
 #include "nsIDOMFile.h"
-#include "nsDOMError.h"
 
 #include "jsapi.h"
 #include "jsatom.h"
@@ -57,7 +56,7 @@
 
 USING_WORKERS_NAMESPACE
 
-using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
+using mozilla::dom::workers::exceptions::ThrowFileExceptionForCode;
 
 namespace {
 
@@ -68,10 +67,10 @@ EnsureSucceededOrThrow(JSContext* aCx, nsresult rv)
     return true;
   }
 
-  rv = rv == NS_ERROR_FILE_NOT_FOUND ?
-              NS_ERROR_DOM_FILE_NOT_FOUND_ERR :
-              NS_ERROR_DOM_FILE_NOT_READABLE_ERR;
-  ThrowDOMExceptionForNSResult(aCx, rv);
+  int code = rv == NS_ERROR_FILE_NOT_FOUND ?
+              FILE_NOT_FOUND_ERR :
+              FILE_NOT_READABLE_ERR;
+  ThrowFileExceptionForCode(aCx, code);
   return false;
 }
 
