@@ -97,14 +97,6 @@ GetWorkerCrossThreadDispatcher(JSContext* aCx, jsval aWorker);
 // Random unique constant to facilitate JSPrincipal debugging
 const uint32_t kJSPrincipalsDebugToken = 0x7e2df9d2;
 
-namespace exceptions {
-
-// Implemented in Exceptions.cpp
-void
-ThrowDOMExceptionForNSResult(JSContext* aCx, nsresult aNSResult);
-
-} // namespace exceptions
-
 END_WORKERS_NAMESPACE
 
 #endif // mozilla_dom_workers_workers_h__
