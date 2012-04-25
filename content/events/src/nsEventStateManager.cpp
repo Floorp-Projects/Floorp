@@ -357,13 +357,13 @@ GetBasePrefKeyForMouseWheel(nsMouseScrollEvent* aEvent, nsACString& aPref)
   if (aEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal) {
     aPref.Append(horizscroll);
   }
-  if (aEvent->isShift) {
+  if (aEvent->IsShift()) {
     aPref.Append(withshift);
-  } else if (aEvent->isControl) {
+  } else if (aEvent->IsControl()) {
     aPref.Append(withcontrol);
-  } else if (aEvent->isAlt) {
+  } else if (aEvent->IsAlt()) {
     aPref.Append(withalt);
-  } else if (aEvent->isMeta) {
+  } else if (aEvent->IsMeta()) {
     aPref.Append(withmetakey);
   } else {
     aPref.Append(withno);
@@ -1198,13 +1198,13 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
 
       PRInt32 modifierMask = 0;
-      if (keyEvent->isShift)
+      if (keyEvent->IsShift())
         modifierMask |= NS_MODIFIER_SHIFT;
-      if (keyEvent->isControl)
+      if (keyEvent->IsControl())
         modifierMask |= NS_MODIFIER_CONTROL;
-      if (keyEvent->isAlt)
+      if (keyEvent->IsAlt())
         modifierMask |= NS_MODIFIER_ALT;
-      if (keyEvent->isMeta)
+      if (keyEvent->IsMeta())
         modifierMask |= NS_MODIFIER_META;
 
       // Prevent keyboard scrolling while an accesskey modifier is in use.
@@ -2004,10 +2004,6 @@ nsEventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
                                   getter_AddRefs(mGestureDownContent));
 
   mGestureDownFrameOwner = inDownFrame->GetContent();
-  mGestureDownShift = inDownEvent->isShift;
-  mGestureDownControl = inDownEvent->isControl;
-  mGestureDownAlt = inDownEvent->isAlt;
-  mGestureDownMeta = inDownEvent->isMeta;
   mGestureModifiers = inDownEvent->modifiers;
   mGestureDownButtons = inDownEvent->buttons;
 
@@ -2042,10 +2038,6 @@ nsEventStateManager::FillInEventFromGestureDown(nsMouseEvent* aEvent)
   // different
   nsIntPoint tmpPoint = aEvent->widget->WidgetToScreenOffset();
   aEvent->refPoint = mGestureDownPoint - tmpPoint;
-  aEvent->isShift = mGestureDownShift;
-  aEvent->isControl = mGestureDownControl;
-  aEvent->isAlt = mGestureDownAlt;
-  aEvent->isMeta = mGestureDownMeta;
   aEvent->modifiers = mGestureModifiers;
   aEvent->buttons = mGestureDownButtons;
 }
@@ -2218,8 +2210,9 @@ nsEventStateManager::DetermineDragTarget(nsPresContext* aPresContext,
   // occurred, and aSelectionTarget is the node to use when a selection is used
   bool canDrag;
   nsCOMPtr<nsIContent> dragDataNode;
+  bool wasAlt = (mGestureModifiers & widget::MODIFIER_ALT) != 0;
   nsresult rv = nsContentAreaDragDrop::GetDragData(window, mGestureDownContent,
-                                                   aSelectionTarget, mGestureDownAlt,
+                                                   aSelectionTarget, wasAlt,
                                                    aDataTransfer, &canDrag, aSelection,
                                                    getter_AddRefs(dragDataNode));
   if (NS_FAILED(rv) || !canDrag)
@@ -2577,10 +2570,6 @@ nsEventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.refPoint = aEvent->refPoint;
   event.widget = aEvent->widget;
   event.time = aEvent->time;
-  event.isShift = aEvent->isShift;
-  event.isControl = aEvent->isControl;
-  event.isAlt = aEvent->isAlt;
-  event.isMeta = aEvent->isMeta;
   event.modifiers = aEvent->modifiers;
   event.buttons = aEvent->buttons;
   event.scrollFlags = aEvent->scrollFlags;
@@ -2614,10 +2603,6 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.refPoint = aEvent->refPoint;
   event.widget = aEvent->widget;
   event.time = aEvent->time;
-  event.isShift = aEvent->isShift;
-  event.isControl = aEvent->isControl;
-  event.isAlt = aEvent->isAlt;
-  event.isMeta = aEvent->isMeta;
   event.modifiers = aEvent->modifiers;
   event.buttons = aEvent->buttons;
   event.scrollFlags = aEvent->scrollFlags;
@@ -3415,10 +3400,6 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           event.refPoint += mouseEvent->widget->WidgetToScreenOffset();
         }
         event.refPoint -= widget->WidgetToScreenOffset();
-        event.isShift = mouseEvent->isShift;
-        event.isControl = mouseEvent->isControl;
-        event.isAlt = mouseEvent->isAlt;
-        event.isMeta = mouseEvent->isMeta;
         event.modifiers = mouseEvent->modifiers;
         event.buttons = mouseEvent->buttons;
         event.inputSource = mouseEvent->inputSource;
@@ -3447,7 +3428,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     if (nsEventStatus_eConsumeNoDefault != *aStatus) {
       nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
       //This is to prevent keyboard scrolling while alt modifier in use.
-      if (!keyEvent->isAlt) {
+      if (!keyEvent->IsAlt()) {
         switch(keyEvent->keyCode) {
           case NS_VK_TAB:
           case NS_VK_F6:
@@ -3455,10 +3436,10 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             nsIFocusManager* fm = nsFocusManager::GetFocusManager();
             if (fm && mDocument) {
               // Shift focus forward or back depending on shift key
-              bool isDocMove = ((nsInputEvent*)aEvent)->isControl ||
+              bool isDocMove = ((nsInputEvent*)aEvent)->IsControl() ||
                                  (keyEvent->keyCode == NS_VK_F6);
               PRUint32 dir =
-                static_cast<nsInputEvent*>(aEvent)->isShift ?
+                static_cast<nsInputEvent*>(aEvent)->IsShift() ?
                   (isDocMove ? static_cast<PRUint32>(nsIFocusManager::MOVEFOCUS_BACKWARDDOC) :
                                static_cast<PRUint32>(nsIFocusManager::MOVEFOCUS_BACKWARD)) :
                   (isDocMove ? static_cast<PRUint32>(nsIFocusManager::MOVEFOCUS_FORWARDDOC) :
@@ -3842,10 +3823,6 @@ nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
   nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent), aMessage, aEvent->widget,
                      nsMouseEvent::eReal);
   event.refPoint = aEvent->refPoint;
-  event.isShift = ((nsMouseEvent*)aEvent)->isShift;
-  event.isControl = ((nsMouseEvent*)aEvent)->isControl;
-  event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
-  event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
   event.modifiers = ((nsMouseEvent*)aEvent)->modifiers;
   event.buttons = ((nsMouseEvent*)aEvent)->buttons;
   event.pluginEvent = ((nsMouseEvent*)aEvent)->pluginEvent;
@@ -4257,10 +4234,6 @@ nsEventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
   nsEventStatus status = nsEventStatus_eIgnore;
   nsDragEvent event(NS_IS_TRUSTED_EVENT(aEvent), aMsg, aEvent->widget);
   event.refPoint = aEvent->refPoint;
-  event.isShift = ((nsMouseEvent*)aEvent)->isShift;
-  event.isControl = ((nsMouseEvent*)aEvent)->isControl;
-  event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
-  event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
   event.modifiers = ((nsMouseEvent*)aEvent)->modifiers;
   event.buttons = ((nsMouseEvent*)aEvent)->buttons;
   event.relatedTarget = aRelatedTarget;
@@ -4421,10 +4394,6 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
                        nsMouseEvent::eReal);
     event.refPoint = aEvent->refPoint;
     event.clickCount = aEvent->clickCount;
-    event.isShift = aEvent->isShift;
-    event.isControl = aEvent->isControl;
-    event.isAlt = aEvent->isAlt;
-    event.isMeta = aEvent->isMeta;
     event.modifiers = aEvent->modifiers;
     event.buttons = aEvent->buttons;
     event.time = aEvent->time;
@@ -4444,10 +4413,6 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
                             aEvent->widget, nsMouseEvent::eReal);
         event2.refPoint = aEvent->refPoint;
         event2.clickCount = aEvent->clickCount;
-        event2.isShift = aEvent->isShift;
-        event2.isControl = aEvent->isControl;
-        event2.isAlt = aEvent->isAlt;
-        event2.isMeta = aEvent->isMeta;
         event2.modifiers = aEvent->modifiers;
         event2.buttons = aEvent->buttons;
         event2.flags |= flags;
@@ -5048,10 +5013,6 @@ nsEventStateManager::DoQueryScrollTargetInfo(nsQueryContentEvent* aEvent,
     aEvent->mInput.mMouseScrollEvent->message,
     aEvent->mInput.mMouseScrollEvent->widget);
 
-  msEvent.isShift = aEvent->mInput.mMouseScrollEvent->isShift;
-  msEvent.isControl = aEvent->mInput.mMouseScrollEvent->isControl;
-  msEvent.isAlt = aEvent->mInput.mMouseScrollEvent->isAlt;
-  msEvent.isMeta = aEvent->mInput.mMouseScrollEvent->isMeta;
   msEvent.modifiers = aEvent->mInput.mMouseScrollEvent->modifiers;
   msEvent.buttons = aEvent->mInput.mMouseScrollEvent->buttons;
 

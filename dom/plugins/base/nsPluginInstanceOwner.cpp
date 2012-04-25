@@ -2123,10 +2123,10 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
 static unsigned int XInputEventState(const nsInputEvent& anEvent)
 {
   unsigned int state = 0;
-  if (anEvent.isShift) state |= ShiftMask;
-  if (anEvent.isControl) state |= ControlMask;
-  if (anEvent.isAlt) state |= Mod1Mask;
-  if (anEvent.isMeta) state |= Mod4Mask;
+  if (anEvent.IsShift()) state |= ShiftMask;
+  if (anEvent.IsControl()) state |= ControlMask;
+  if (anEvent.IsAlt()) state |= Mod1Mask;
+  if (anEvent.IsMeta()) state |= Mod4Mask;
   return state;
 }
 #endif
