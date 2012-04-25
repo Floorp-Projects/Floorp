@@ -435,6 +435,13 @@ HISTOGRAM_FLAG(STARTUP_CRASH_DETECTED, "Whether there was a crash during the las
 HISTOGRAM_ENUMERATED_VALUES(SAFE_MODE_USAGE, 3, "Whether the user is in safe mode (No, Yes, Forced)")
 
 /**
+ * New Tab Page telemetry.
+ */
+HISTOGRAM(NEWTAB_PAGE_ENABLED, 0, 1, 2, BOOLEAN, "New tab page is enabled.")
+HISTOGRAM(NEWTAB_PAGE_PINNED_SITES_COUNT, 1, 9, 10, EXPONENTIAL, "Number of pinned sites on the new tab page.")
+HISTOGRAM(NEWTAB_PAGE_BLOCKED_SITES_COUNT, 1, 100, 10, EXPONENTIAL, "Number of sites blocked from the new tab page.")
+
+/**
  * Native Fennec Telemetry
  */
 #if defined(ANDROID)
