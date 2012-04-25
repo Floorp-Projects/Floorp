@@ -73,6 +73,7 @@ import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.provider.Settings;
 import android.view.accessibility.AccessibilityManager;
 import android.view.accessibility.AccessibilityEvent;
+import android.opengl.GLES20;
 
 import android.util.*;
 import android.net.Uri;
@@ -129,6 +130,7 @@ public class GeckoAppShell
     private static float sCheckerboardPageWidth, sCheckerboardPageHeight;
     private static float sLastCheckerboardWidthRatio, sLastCheckerboardHeightRatio;
     private static RepaintRunnable sRepaintRunnable = new RepaintRunnable();
+    static private int sMaxTextureSize = 0;
 
     private static Map<String, CopyOnWriteArrayList<GeckoEventListener>> mEventListeners
             = new HashMap<String, CopyOnWriteArrayList<GeckoEventListener>>();
@@ -2202,17 +2204,34 @@ public class GeckoAppShell
         sRepaintRunnable.addRectToRepaint(top, left, bottom, right);
     }
 
+    private static int clamp(int min, int val, int max) {
+        return Math.max(Math.min(max, val), min);
+    }
+
     public static void screenshotWholePage(Tab tab) {
+        if (sMaxTextureSize == 0) {
+            int[] maxTextureSize = new int[1];
+            GLES20.glGetIntegerv(GLES20.GL_MAX_TEXTURE_SIZE, maxTextureSize, 0);
+            sMaxTextureSize = maxTextureSize[0];
+            if (sMaxTextureSize == 0)
+                return;
+        }
         ImmutableViewportMetrics viewport = GeckoApp.mAppContext.getLayerController().getViewportMetrics();
         // source width and height to screenshot
         float sw = viewport.pageSizeWidth;
         float sh = viewport.pageSizeHeight;
+        int maxPixels = Math.min(ScreenshotLayer.getMaxNumPixels(), sMaxTextureSize * sMaxTextureSize);
         // 2Mb of 16bit image data
         // may be bumped by up to 4x for power of 2 alignment
-        float ratio = (float)Math.sqrt((sw * sh) / (ScreenshotLayer.getMaxNumPixels() / 4));
-        // destination width and hight
-        int dw = IntSize.nextPowerOfTwo(sw / ratio);
-        int dh = IntSize.nextPowerOfTwo(sh / ratio);
+        float idealZoomFactor = (float)Math.sqrt((sw * sh) / (maxPixels / 4));
+
+        // calc destination width and hight
+        int idealDstWidth = IntSize.nextPowerOfTwo(sw / idealZoomFactor);
+        // min texture size such that the other dimention doesn't excede the max
+        int minTextureSize = maxPixels / sMaxTextureSize;
+        int dw = clamp(minTextureSize, idealDstWidth, sMaxTextureSize);
+        int dh = maxPixels / dw;
+
         sLastCheckerboardWidthRatio = dw / sw;
         sLastCheckerboardHeightRatio = dh / sh;
         sCheckerboardPageWidth = viewport.pageSizeWidth;
