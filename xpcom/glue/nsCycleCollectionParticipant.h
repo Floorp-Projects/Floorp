@@ -40,10 +40,6 @@
 
 #include "nsISupports.h"
 
-// NOTE: If you use header files to define DEBUG_CC, you must do so here
-// *and* in nsCycleCollector.h
-//#define DEBUG_CC
-
 #define NS_CYCLECOLLECTIONPARTICIPANT_IID                                      \
 {                                                                              \
     0x9674489b,                                                                \
