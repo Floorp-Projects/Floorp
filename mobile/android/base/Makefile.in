@@ -124,6 +124,7 @@ FENNEC_JAVA_FILES = \
   gfx/CheckerboardImage.java \
   gfx/DisplayPortCalculator.java \
   gfx/DisplayPortMetrics.java \
+  gfx/DrawTimingQueue.java \
   gfx/FloatSize.java \
   gfx/GeckoLayerClient.java \
   gfx/GLController.java \
