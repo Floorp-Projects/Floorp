@@ -74,7 +74,7 @@ public:
                                            nsGenericHTMLElement)
 
   virtual nsXPCClassInfo* GetClassInfo();
-
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
 
   // <option>'s list inside the datalist element.
