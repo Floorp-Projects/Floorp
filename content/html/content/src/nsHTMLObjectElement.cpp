@@ -155,6 +155,8 @@ public:
                                                      nsGenericHTMLFormElement)
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 private:
   /**
    * Calls LoadObject with the correct arguments to start the plugin load.

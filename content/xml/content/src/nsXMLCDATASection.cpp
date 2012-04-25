@@ -70,6 +70,8 @@ public:
                                               bool aCloneText) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent,bool aDumpAll) const;
