@@ -39,7 +39,7 @@
 
 #include "nsIDOMUIEvent.idl"
 
-[scriptable, uuid(def974c3-b491-481b-bc67-29174af4b26a)]
+[scriptable, uuid(5d33fb45-dd4b-4342-bff8-ff33737b2b54)]
 interface nsIDOMKeyEvent : nsIDOMUIEvent
 {
   const unsigned long DOM_VK_CANCEL         = 0x03;
@@ -200,4 +200,6 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
                                          in boolean metaKeyArg,
                                          in unsigned long keyCodeArg,
                                          in unsigned long charCodeArg);
+
+  bool getModifierState(in DOMString keyArg);
 };

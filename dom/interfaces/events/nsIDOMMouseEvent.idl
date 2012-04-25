@@ -48,7 +48,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Events/
  */
 
-[scriptable, uuid(8de83489-863a-4377-8ce4-f1965c23b8c7)]
+[scriptable, uuid(22f9f2ef-18f0-4f8f-a459-6ec8cfaa4f59)]
 interface nsIDOMMouseEvent : nsIDOMUIEvent
 {
   readonly attribute long               screenX;
@@ -116,6 +116,8 @@ interface nsIDOMMouseEvent : nsIDOMUIEvent
                                        in nsIDOMEventTarget relatedTargetArg,
                                        in float pressure,
                                        in unsigned short inputSourceArg);
+
+  bool getModifierState(in DOMString keyArg);
 };
 
 dictionary MouseEventInit : UIEventInit
