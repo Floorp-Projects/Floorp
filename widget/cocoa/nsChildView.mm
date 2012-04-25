@@ -153,9 +153,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild;
 - (void)forceRefreshOpenGL;
 
-// do generic gecko event setup with a generic cocoa event. accepts nil inEvent.
-- (void) convertGenericCocoaEvent:(NSEvent*)inEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent;
-
 // set up a gecko mouse event based on a cocoa mouse event
 - (void) convertCocoaMouseEvent:(NSEvent*)aMouseEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent;
 
@@ -3241,7 +3238,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   NSUInteger modifierFlags = [theEvent modifierFlags];
 
-  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_DOWN, mGeckoChild, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
   NSInteger clickCount = [theEvent clickCount];
@@ -3309,7 +3306,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif // ifndef NP_NO_CARBON
   NPCocoaEvent cocoaEvent;
 	
-  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_UP, mGeckoChild, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   if ([theEvent modifierFlags] & NSControlKeyMask)
     geckoEvent.button = nsMouseEvent::eRightButton;
@@ -3358,7 +3355,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif
     {
       if (ChildViewMouseTracker::ViewForEvent(theEvent) != self) {
-        nsMouseEvent geckoExitEvent(true, NS_MOUSE_EXIT, nsnull, nsMouseEvent::eReal);
+        nsMouseEvent geckoExitEvent(true, NS_MOUSE_EXIT, mGeckoChild, nsMouseEvent::eReal);
         [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoExitEvent];
 
         NPCocoaEvent cocoaEvent;
@@ -3442,7 +3439,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return;
 
-  nsMouseEvent geckoEvent(true, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_MOVE, mGeckoChild, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
   // Create event for use by plugins.
@@ -3497,7 +3494,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif // ifndef NP_NO_CARBON
   NPCocoaEvent cocoaEvent;
 
-  nsMouseEvent geckoEvent(true, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_MOVE, mGeckoChild, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
   // create event for use by plugins
@@ -3550,7 +3547,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
 
   // The right mouse went down, fire off a right mouse down event to gecko
-  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_DOWN, mGeckoChild, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
   geckoEvent.clickCount = [theEvent clickCount];
@@ -3605,7 +3602,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif // ifndef NP_NO_CARBON
   NPCocoaEvent cocoaEvent;
 
-  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_UP, mGeckoChild, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
   geckoEvent.clickCount = [theEvent clickCount];
@@ -3649,7 +3646,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return;
 
-  nsMouseEvent geckoEvent(true, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_MOVE, mGeckoChild, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
 
@@ -3671,7 +3668,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return;
 
-  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_DOWN, mGeckoChild, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eMiddleButton;
   geckoEvent.clickCount = [theEvent clickCount];
@@ -3686,7 +3683,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return;
 
-  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_UP, mGeckoChild, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eMiddleButton;
 
@@ -3698,7 +3695,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return;
 
-  nsMouseEvent geckoEvent(true, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_MOVE, mGeckoChild, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eMiddleButton;
 
@@ -3759,7 +3756,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   if (scrollDelta != 0) {
     // Send the line scroll event.
-    nsMouseScrollEvent geckoEvent(true, NS_MOUSE_SCROLL, nsnull);
+    nsMouseScrollEvent geckoEvent(true, NS_MOUSE_SCROLL, mGeckoChild);
     [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
     geckoEvent.scrollFlags |= inAxis;
 
@@ -3851,7 +3848,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   if (hasPixels) {
     // Send the pixel scroll event.
-    nsMouseScrollEvent geckoEvent(true, NS_MOUSE_PIXEL_SCROLL, nsnull);
+    nsMouseScrollEvent geckoEvent(true, NS_MOUSE_PIXEL_SCROLL, mGeckoChild);
     [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
     geckoEvent.scrollFlags |= inAxis;
     if (isMomentumScroll)
@@ -3915,7 +3912,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       return nil;
   }
 
-  nsMouseEvent geckoEvent(true, NS_CONTEXTMENU, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_CONTEXTMENU, mGeckoChild, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
   mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -3943,29 +3940,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-// Basic conversion for cocoa to gecko events, common to all conversions.
-// Note that it is OK for inEvent to be nil.
-- (void) convertGenericCocoaEvent:(NSEvent*)inEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  NS_ASSERTION(outGeckoEvent, "convertGenericCocoaEvent:toGeckoEvent: requires non-null outGeckoEvent");
-  if (!outGeckoEvent)
-    return;
-
-  outGeckoEvent->widget = [self widget];
-  outGeckoEvent->time = PR_IntervalNow();
-
-  NSUInteger modifiers =
-    inEvent ? [inEvent modifierFlags] : ::GetCurrentKeyModifiers();
-  outGeckoEvent->isShift   = ((modifiers & NSShiftKeyMask) != 0);
-  outGeckoEvent->isControl = ((modifiers & NSControlKeyMask) != 0);
-  outGeckoEvent->isAlt     = ((modifiers & NSAlternateKeyMask) != 0);
-  outGeckoEvent->isMeta    = ((modifiers & NSCommandKeyMask) != 0);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
 - (void) convertCocoaMouseEvent:(NSEvent*)aMouseEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -3974,7 +3948,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!outGeckoEvent)
     return;
 
-  [self convertGenericCocoaEvent:aMouseEvent toGeckoEvent:outGeckoEvent];
+  nsCocoaUtils::InitInputEvent(*outGeckoEvent, aMouseEvent);
 
   // convert point to view coordinate system
   NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(aMouseEvent, [self window]);
@@ -3982,48 +3956,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
   outGeckoEvent->refPoint.x = static_cast<nscoord>(localPoint.x);
   outGeckoEvent->refPoint.y = static_cast<nscoord>(localPoint.y);
 
-
   nsMouseEvent_base* mouseEvent =
     static_cast<nsMouseEvent_base*>(outGeckoEvent);
-  NSUInteger modifiers =
-    aMouseEvent ? [aMouseEvent modifierFlags] : ::GetCurrentKeyModifiers();
-  mouseEvent->modifiers = 0;
-  if (mouseEvent->isShift) {
-    mouseEvent->modifiers |= MODIFIER_SHIFT;
-  }
-  if (mouseEvent->isControl) {
-    mouseEvent->modifiers |= MODIFIER_CONTROL;
-  }
-  if (mouseEvent->isAlt) {
-    mouseEvent->modifiers |= MODIFIER_ALT;
-    // Mac's option key is similar to other platforms' AltGr key.
-    // Let's set AltGr flag when option key is pressed for consistency with
-    // other platforms.
-    mouseEvent->modifiers |= MODIFIER_ALTGRAPH;
-  }
-  if (mouseEvent->isMeta) {
-    mouseEvent->modifiers |= MODIFIER_META;
-  }
-
-  if (modifiers & NSAlphaShiftKeyMask) {
-    mouseEvent->modifiers |= MODIFIER_CAPSLOCK;
-  }
-  // Mac doesn't have NumLock key.  We can assume that NumLock is always locked
-  // if user is using a keyboard which has numpad.  Otherwise, if user is using
-  // a keyboard which doesn't have numpad, e.g., MacBook's keyboard, we can
-  // assume that NumLock is always unlocked.
-  // Unfortunately, we cannot know whether current keyboard has numpad or not.
-  // We should notify locked state only when keys in numpad are pressed.
-  // By this, web applications may not be confused by unexpected numpad key's
-  // key event with unlocked state.
-  if (modifiers & NSNumericPadKeyMask) {
-    mouseEvent->modifiers |= MODIFIER_NUMLOCK;
-  }
-
-  // Be aware, NSFunctionKeyMask is included when arrow keys, home key or some
-  // other keys are pressed. We cannot check whether 'fn' key is pressed or
-  // not by the flag.
-
   mouseEvent->buttons = 0;
   NSUInteger mouseButtons =
     nsToolkit::OnSnowLeopardOrLater() ? [NSEvent pressedMouseButtons] : 0;
@@ -4281,7 +4215,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return YES;
 
-  nsMouseEvent geckoEvent(true, NS_MOUSE_ACTIVATE, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_ACTIVATE, mGeckoChild, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:aEvent toGeckoEvent:&geckoEvent];
   return !mGeckoChild->DispatchWindowEvent(geckoEvent);
 }
@@ -4524,8 +4458,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   // set up gecko event
-  nsDragEvent geckoEvent(true, aMessage, nsnull);
-  [self convertGenericCocoaEvent:[NSApp currentEvent] toGeckoEvent:&geckoEvent];
+  nsDragEvent geckoEvent(true, aMessage, mGeckoChild);
+  nsCocoaUtils::InitInputEvent(geckoEvent, [NSApp currentEvent]);
 
   // Use our own coordinates in the gecko event.
   // Convert event from gecko global coords to gecko view coords.
