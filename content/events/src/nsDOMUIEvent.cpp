@@ -510,56 +510,42 @@ nsDOMUIEvent::ComputeModifierState(const nsAString& aModifiersList)
 bool
 nsDOMUIEvent::GetModifierStateInternal(const nsAString& aKey)
 {
-  mozilla::widget::Modifiers modifiers = 0;
-  switch(mEvent->eventStructType) {
-    case NS_MOUSE_EVENT:
-    case NS_MOUSE_SCROLL_EVENT:
-    case NS_DRAG_EVENT:
-    case NS_SIMPLE_GESTURE_EVENT:
-    case NS_MOZTOUCH_EVENT:
-      modifiers = static_cast<nsMouseEvent_base*>(mEvent)->modifiers;
-      break;
-    default:
-      MOZ_NOT_REACHED("There is no space to store the modifiers");
-      return false;
-  }
-
+  nsInputEvent* inputEvent = static_cast<nsInputEvent*>(mEvent);
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SHIFT)) {
-    return static_cast<nsInputEvent*>(mEvent)->isShift;
+    return inputEvent->IsShift();
   }
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_CONTROL)) {
-    return static_cast<nsInputEvent*>(mEvent)->isControl;
+    return inputEvent->IsControl();
   }
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_META)) {
-    return static_cast<nsInputEvent*>(mEvent)->isMeta;
+    return inputEvent->IsMeta();
   }
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_ALT)) {
-    return static_cast<nsInputEvent*>(mEvent)->isAlt;
+    return inputEvent->IsAlt();
   }
 
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_ALTGRAPH)) {
-    return (modifiers & widget::MODIFIER_ALTGRAPH) != 0;
+    return inputEvent->IsAltGraph();
   }
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_WIN)) {
-    return (modifiers & widget::MODIFIER_WIN) != 0;
+    return inputEvent->IsWin();
   }
-
 
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_CAPSLOCK)) {
-    return (modifiers & widget::MODIFIER_CAPSLOCK) != 0;
+    return inputEvent->IsCapsLocked();
   }
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_NUMLOCK)) {
-    return (modifiers & widget::MODIFIER_NUMLOCK) != 0;
+    return inputEvent->IsNumLocked();
   }
 
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_FN)) {
-    return (modifiers & widget::MODIFIER_FN) != 0;
+    return inputEvent->IsFn();
   }
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SCROLL)) {
-    return (modifiers & widget::MODIFIER_SCROLL) != 0;
+    return inputEvent->IsScrollLocked();
   }
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SYMBOLLOCK)) {
-    return (modifiers & widget::MODIFIER_SYMBOLLOCK) != 0;
+    return inputEvent->IsSymbolLocked();
   }
   return false;
 }
