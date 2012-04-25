@@ -73,7 +73,6 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mViewportScrollOffset);
     WriteParam(aMsg, aParam.mDisplayPort);
     WriteParam(aMsg, aParam.mScrollId);
-    WriteParam(aMsg, aParam.mResolution);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -83,8 +82,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter, &aResult->mContentSize) &&
             ReadParam(aMsg, aIter, &aResult->mViewportScrollOffset) &&
             ReadParam(aMsg, aIter, &aResult->mDisplayPort) &&
-            ReadParam(aMsg, aIter, &aResult->mScrollId) &&
-            ReadParam(aMsg, aIter, &aResult->mResolution));
+            ReadParam(aMsg, aIter, &aResult->mScrollId));
   }
 };
 
