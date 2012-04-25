@@ -155,10 +155,6 @@ var MetadataProvider = {
   getDrawMetadata: function getDrawMetadata() {
     return JSON.stringify(BrowserApp.selectedTab.getViewport());
   },
-
-  paintingSuppressed: function paintingSuppressed() {
-    return false;
-  }
 };
 
 var BrowserApp = {
