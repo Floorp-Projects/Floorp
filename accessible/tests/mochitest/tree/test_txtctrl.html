@@ -90,6 +90,19 @@
 
       testAccessibleTree("txc6", accTree);
 
+      // input@type="email", value
+      accTree = {
+        role: ROLE_ENTRY,
+        children: [
+          { // text child
+            role: ROLE_TEXT_LEAF,
+            children: []
+          }
+        ]
+      };
+
+      testAccessibleTree("txc7", accTree);
+
       SimpleTest.finish();
     }
 
@@ -131,6 +144,13 @@
   </textarea>
   <input id="txc5" type="password" value="hello">
   <input id="txc6" type="tel" value="4167771234">
+
+  Email Address:
+  <input id="txc7" type="email" list="contacts" value="xyzzy">
+  <datalist id="contacts">
+    <option>xyzzy@plughs.com</option>
+    <option>nobody@mozilla.org</option>
+  </datalist>
 
 </body>
 </html>
