@@ -40,15 +40,16 @@
 
 #include "mozilla/FloatingPoint.h"
 
+#include "frontend/FoldConstants.h"
+
 #include "jslibmath.h"
+
+#include "frontend/BytecodeEmitter.h"
+#include "frontend/ParseNode.h"
+
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
 #endif
-
-#include "frontend/BytecodeEmitter.h"
-#include "frontend/FoldConstants.h"
-#include "frontend/ParseNode.h"
-#include "vm/NumericConversions.h"
 
 #include "jsatominlines.h"
 
@@ -156,16 +157,16 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
     switch (op) {
       case JSOP_LSH:
       case JSOP_RSH:
-        i = ToInt32(d);
-        j = ToInt32(d2);
+        i = js_DoubleToECMAInt32(d);
+        j = js_DoubleToECMAInt32(d2);
         j &= 31;
         d = (op == JSOP_LSH) ? i << j : i >> j;
         break;
 
       case JSOP_URSH:
-        j = ToInt32(d2);
+        j = js_DoubleToECMAInt32(d2);
         j &= 31;
-        d = ToUint32(d) >> j;
+        d = js_DoubleToECMAUint32(d) >> j;
         break;
 
       case JSOP_ADD:
@@ -827,7 +828,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             d = pn1->pn_dval;
             switch (pn->getOp()) {
               case JSOP_BITNOT:
-                d = ~ToInt32(d);
+                d = ~js_DoubleToECMAInt32(d);
                 break;
 
               case JSOP_NEG:

@@ -44,8 +44,6 @@
 #include "jsprvtd.h"
 #include "jsnum.h"
 
-#include "vm/NumericConversions.h"
-
 namespace js {
 
 /*
@@ -214,44 +212,25 @@ class XDRState {
         return true;
     }
 
-    bool codeUint64(uint64_t *n) {
+    bool codeDouble(double *dp) {
+        jsdpun tmp;
         if (mode == XDR_ENCODE) {
-            uint8_t *ptr = buf.write(sizeof(*n));
+            uint8_t *ptr = buf.write(sizeof tmp);
             if (!ptr)
                 return false;
-            ptr[0] = (*n >>  0) & 0xFF;
-            ptr[1] = (*n >>  8) & 0xFF;
-            ptr[2] = (*n >> 16) & 0xFF;
-            ptr[3] = (*n >> 24) & 0xFF;
-            ptr[4] = (*n >> 32) & 0xFF;
-            ptr[5] = (*n >> 40) & 0xFF;
-            ptr[6] = (*n >> 48) & 0xFF;
-            ptr[7] = (*n >> 56) & 0xFF;
+            tmp.d = *dp;
+            tmp.s.lo = NormalizeByteOrder32(tmp.s.lo);
+            tmp.s.hi = NormalizeByteOrder32(tmp.s.hi);
+            memcpy(ptr, &tmp.s.lo, sizeof tmp.s.lo);
+            memcpy(ptr + sizeof tmp.s.lo, &tmp.s.hi, sizeof tmp.s.hi);
         } else {
-            const uint8_t *ptr = buf.read(sizeof(*n));
-            *n = (uint64_t(ptr[0]) <<  0) |
-                 (uint64_t(ptr[1]) <<  8) |
-                 (uint64_t(ptr[2]) << 16) |
-                 (uint64_t(ptr[3]) << 24) |
-                 (uint64_t(ptr[4]) << 32) |
-                 (uint64_t(ptr[5]) << 40) |
-                 (uint64_t(ptr[6]) << 48) |
-                 (uint64_t(ptr[7]) << 56);
+            const uint8_t *ptr = buf.read(sizeof tmp);
+            memcpy(&tmp.s.lo, ptr, sizeof tmp.s.lo);
+            memcpy(&tmp.s.hi, ptr + sizeof tmp.s.lo, sizeof tmp.s.hi);
+            tmp.s.lo = NormalizeByteOrder32(tmp.s.lo);
+            tmp.s.hi = NormalizeByteOrder32(tmp.s.hi);
+            *dp = tmp.d;
         }
-        return true;
-    }
-
-    bool codeDouble(double *dp) {
-        union DoublePun {
-            double d;
-            uint64_t u;
-        } pun;
-        if (mode == XDR_ENCODE)
-            pun.d = *dp;
-        if (!codeUint64(&pun.u))
-            return false;
-        if (mode == XDR_DECODE)
-            *dp = pun.d;
         return true;
     }
 
