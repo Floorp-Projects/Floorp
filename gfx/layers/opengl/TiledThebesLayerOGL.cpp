@@ -134,9 +134,6 @@ TiledThebesLayerOGL::PaintedTiledLayerBuffer(const BasicTiledLayerBuffer* mTiled
   mMainMemoryTiledBuffer = *mTiledBuffer;
   mRegionToUpload.Or(mRegionToUpload, mMainMemoryTiledBuffer.GetLastPaintRegion());
 
-  gl()->MakeCurrent();
-
-  ProcessUploadQueue(); // TODO: Remove me; this should be unnecessary.
 }
 
 void
