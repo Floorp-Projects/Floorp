@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsApplicationAccessibleWrap.h"
+#include "ApplicationAccessibleWrap.h"
 
 #include "AccessibleApplication_i.c"
 
@@ -48,11 +48,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
-NS_IMPL_ISUPPORTS_INHERITED0(nsApplicationAccessibleWrap,
-                             nsApplicationAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(ApplicationAccessibleWrap,
+                             ApplicationAccessible)
 
 NS_IMETHODIMP
-nsApplicationAccessibleWrap::GetAttributes(nsIPersistentProperties** aAttributes)
+ApplicationAccessibleWrap::GetAttributes(nsIPersistentProperties** aAttributes)
 {
   NS_ENSURE_ARG_POINTER(aAttributes);
   *aAttributes = nsnull;
@@ -80,7 +80,7 @@ nsApplicationAccessibleWrap::GetAttributes(nsIPersistentProperties** aAttributes
 // IUnknown
 
 STDMETHODIMP
-nsApplicationAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
+ApplicationAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = NULL;
 
@@ -97,7 +97,7 @@ nsApplicationAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 // IAccessibleApplication
 
 STDMETHODIMP
-nsApplicationAccessibleWrap::get_appName(BSTR *aName)
+ApplicationAccessibleWrap::get_appName(BSTR* aName)
 {
 __try {
   *aName = NULL;
@@ -121,7 +121,7 @@ __try {
 }
 
 STDMETHODIMP
-nsApplicationAccessibleWrap::get_appVersion(BSTR *aVersion)
+ApplicationAccessibleWrap::get_appVersion(BSTR* aVersion)
 {
 __try {
   *aVersion = NULL;
@@ -145,7 +145,7 @@ __try {
 }
 
 STDMETHODIMP
-nsApplicationAccessibleWrap::get_toolkitName(BSTR *aName)
+ApplicationAccessibleWrap::get_toolkitName(BSTR* aName)
 {
 __try {
   if (IsDefunct())
@@ -167,7 +167,7 @@ __try {
 }
 
 STDMETHODIMP
-nsApplicationAccessibleWrap::get_toolkitVersion(BSTR *aVersion)
+ApplicationAccessibleWrap::get_toolkitVersion(BSTR* aVersion)
 {
 __try {
   *aVersion = NULL;
@@ -191,15 +191,15 @@ __try {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsApplicationAccessibleWrap public static
+// ApplicationAccessibleWrap public static
 
 void
-nsApplicationAccessibleWrap::PreCreate()
+ApplicationAccessibleWrap::PreCreate()
 {
 }
 
 void
-nsApplicationAccessibleWrap::Unload()
+ApplicationAccessibleWrap::Unload()
 {
 }
 
