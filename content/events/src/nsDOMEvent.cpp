@@ -695,6 +695,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       mouseEvent->context = oldMouseEvent->context;
       mouseEvent->relatedTarget = oldMouseEvent->relatedTarget;
       mouseEvent->button = oldMouseEvent->button;
+      mouseEvent->modifiers = oldMouseEvent->modifiers;
       mouseEvent->pressure = oldMouseEvent->pressure;
       mouseEvent->inputSource = oldMouseEvent->inputSource;
       newEvent = mouseEvent;
@@ -712,6 +713,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       dragEvent->acceptActivation = oldDragEvent->acceptActivation;
       dragEvent->relatedTarget = oldDragEvent->relatedTarget;
       dragEvent->button = oldDragEvent->button;
+      dragEvent->modifiers = oldDragEvent->modifiers;
       static_cast<nsMouseEvent*>(dragEvent)->inputSource =
         static_cast<nsMouseEvent*>(oldDragEvent)->inputSource;
       newEvent = dragEvent;
@@ -753,6 +755,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       mouseScrollEvent->delta = oldMouseScrollEvent->delta;
       mouseScrollEvent->relatedTarget = oldMouseScrollEvent->relatedTarget;
       mouseScrollEvent->button = oldMouseScrollEvent->button;
+      mouseScrollEvent->modifiers = oldMouseScrollEvent->modifiers;
       static_cast<nsMouseEvent_base*>(mouseScrollEvent)->inputSource =
         static_cast<nsMouseEvent_base*>(oldMouseScrollEvent)->inputSource;
       newEvent = mouseScrollEvent;
@@ -863,6 +866,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
         new nsSimpleGestureEvent(false, msg, nsnull, 0, 0.0);
       NS_ENSURE_TRUE(simpleGestureEvent, NS_ERROR_OUT_OF_MEMORY);
       isInputEvent = true;
+      simpleGestureEvent->modifiers = oldSimpleGestureEvent->modifiers;
       simpleGestureEvent->direction = oldSimpleGestureEvent->direction;
       simpleGestureEvent->delta = oldSimpleGestureEvent->delta;
       newEvent = simpleGestureEvent;
@@ -890,10 +894,14 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
     }
     case NS_MOZTOUCH_EVENT:
     {
-      newEvent = new nsMozTouchEvent(false, msg, nsnull,
-                                     static_cast<nsMozTouchEvent*>(mEvent)->streamId);
-      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
+      nsMozTouchEvent* oldMozTouchEvent = static_cast<nsMozTouchEvent*>(mEvent);
+      nsMozTouchEvent* mozTouchEvent =
+        new nsMozTouchEvent(false, msg, nsnull,
+                            static_cast<nsMozTouchEvent*>(mEvent)->streamId);
+      NS_ENSURE_TRUE(mozTouchEvent, NS_ERROR_OUT_OF_MEMORY);
       isInputEvent = true;
+      mozTouchEvent->modifiers = oldMozTouchEvent->modifiers;
+      newEvent = mozTouchEvent;
       break;
     }
     case NS_TOUCH_EVENT:

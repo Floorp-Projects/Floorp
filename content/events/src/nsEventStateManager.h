@@ -510,6 +510,7 @@ private:
   bool mGestureDownControl;
   bool mGestureDownAlt;
   bool mGestureDownMeta;
+  mozilla::widget::Modifiers mGestureModifiers;
 
   nsCOMPtr<nsIContent> mLastLeftMouseDownContent;
   nsCOMPtr<nsIContent> mLastLeftMouseDownContentParent;
