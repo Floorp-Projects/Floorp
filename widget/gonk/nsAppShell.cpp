@@ -148,10 +148,6 @@ sendMouseEvent(PRUint32 msg, uint64_t timeMs, int x, int y)
     event.refPoint.x = x;
     event.refPoint.y = y;
     event.time = timeMs;
-    event.isShift = false;
-    event.isControl = false;
-    event.isMeta = false;
-    event.isAlt = false;
     event.button = nsMouseEvent::eLeftButton;
     if (msg != NS_MOUSE_MOVE)
         event.clickCount = 1;
@@ -199,10 +195,6 @@ sendTouchEvent(UserInputData& data)
     nsTouchEvent event(true, msg, NULL);
 
     event.time = data.timeMs;
-    event.isShift = false;
-    event.isControl = false;
-    event.isMeta = false;
-    event.isAlt = false;
 
     int32_t i;
     if (msg == NS_TOUCH_END) {

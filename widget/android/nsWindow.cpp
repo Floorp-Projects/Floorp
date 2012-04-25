@@ -1462,10 +1462,7 @@ nsWindow::DispatchMultitouchEvent(nsTouchEvent &event, AndroidGeckoEvent *ae)
 {
     nsIntPoint offset = WidgetToScreenOffset();
 
-    event.isShift = false;
-    event.isControl = false;
-    event.isMeta = false;
-    event.isAlt = false;
+    event.modifiers = 0;
     event.time = ae->Time();
 
     int action = ae->Action() & AndroidMotionEvent::ACTION_MASK;
@@ -1580,10 +1577,7 @@ nsWindow::DispatchGestureEvent(PRUint32 msg, PRUint32 direction, double delta,
 {
     nsSimpleGestureEvent event(true, msg, this, direction, delta);
 
-    event.isShift = false;
-    event.isControl = false;
-    event.isMeta = false;
-    event.isAlt = false;
+    event.modifiers = 0;
     event.time = time;
     event.refPoint = refPoint;
 
@@ -1597,10 +1591,7 @@ nsWindow::DispatchMotionEvent(nsInputEvent &event, AndroidGeckoEvent *ae,
 {
     nsIntPoint offset = WidgetToScreenOffset();
 
-    event.isShift = false;
-    event.isControl = false;
-    event.isMeta = false;
-    event.isAlt = false;
+    event.modifiers = 0;
     event.time = ae->Time();
 
     // XXX possibly bound the range of event.refPoint here.
@@ -1762,10 +1753,10 @@ nsWindow::InitKeyEvent(nsKeyEvent& event, AndroidGeckoEvent& key,
         event.pluginEvent = pluginEvent;
     }
 
-    event.isShift = key.IsShiftPressed();
-    event.isControl = gMenu;
-    event.isAlt = key.IsAltPressed();
-    event.isMeta = false;
+    event.InitBasicModifiers(gMenu,
+                             key.IsAltPressed(),
+                             key.IsShiftPressed(),
+                             false);
     event.time = key.Time();
 
     if (gMenu)
@@ -1893,7 +1884,7 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
         pressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
     }
 #ifdef DEBUG_ANDROID_WIDGET
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", "Dispatching key pressEvent with keyCode %d charCode %d shift %d alt %d sym/ctrl %d metamask %d", pressEvent.keyCode, pressEvent.charCode, pressEvent.isShift, pressEvent.isAlt, pressEvent.isControl, ae->MetaState());
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", "Dispatching key pressEvent with keyCode %d charCode %d shift %d alt %d sym/ctrl %d metamask %d", pressEvent.keyCode, pressEvent.charCode, pressEvent.IsShift(), pressEvent.IsAlt(), pressEvent.IsControl(), ae->MetaState());
 #endif
     DispatchEvent(&pressEvent);
 }

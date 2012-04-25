@@ -1666,10 +1666,10 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
                   NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
                   aVisitor.mDOMEvent,
                   nsnull,
-                  orig->isControl,
-                  orig->isAlt,
-                  orig->isShift,
-                  orig->isMeta);
+                  orig->IsControl(),
+                  orig->IsAlt(),
+                  orig->IsShift(),
+                  orig->IsMeta());
             } else {
                 NS_WARNING("A XUL element is attached to a command that doesn't exist!\n");
             }
