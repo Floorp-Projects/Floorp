@@ -52,7 +52,7 @@ if (typeof window == 'undefined')
 }
 else
 {
-  expect = /(Script error.|Permission denied to access property 'classes')/;
+  expect = /(Script error.|Permission denied for <file:\/\/> to get property XPCComponents.classes)/;
 
   window._onerror = window.onerror;
   window.onerror = (function (msg, page, line) { 
@@ -64,8 +64,7 @@ else
 
   gDelayTestDriverEnd = true;
 
-  // Trying to set Components.classes will trigger a Permission denied exception
-  window.location="javascript:Components.classes = 42";
+  window.location="javascript:Components.classes";
   actual = 'No Error';
 }
 
