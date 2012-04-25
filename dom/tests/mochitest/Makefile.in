@@ -59,6 +59,7 @@ DIRS	+= \
 	storageevent \
 	pointerlock \
 	browser-frame \
+	webapps \
 	$(NULL)
 
 #needs IPC support, also tests do not run successfully in Firefox for now
