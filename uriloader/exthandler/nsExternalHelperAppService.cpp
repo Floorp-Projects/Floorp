@@ -923,7 +923,10 @@ NS_IMETHODIMP nsExternalHelperAppService::GetApplicationDescription(const nsACSt
 // Methods related to deleting temporary files on exit
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsExternalHelperAppService::DeleteTemporaryFileOnExit(nsIFile * aTemporaryFile)
+/* static */
+nsresult
+nsExternalHelperAppService::DeleteTemporaryFileHelper(nsIFile * aTemporaryFile,
+                                                      nsCOMArray<nsILocalFile> &aFileList)
 {
   bool isFile = false;
 
@@ -931,12 +934,21 @@ NS_IMETHODIMP nsExternalHelperAppService::DeleteTemporaryFileOnExit(nsIFile * aT
   aTemporaryFile->IsFile(&isFile);
   if (!isFile) return NS_OK;
 
-  if (mInPrivateBrowsing)
-    mTemporaryPrivateFilesList.AppendObject(aTemporaryFile);
-  else
-    mTemporaryFilesList.AppendObject(aTemporaryFile);
+  aFileList.AppendObject(localFile);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsExternalHelperAppService::DeleteTemporaryFileOnExit(nsIFile* aTemporaryFile)
+{
+  return DeleteTemporaryFileHelper(aTemporaryFile, mTemporaryFilesList);
+}
+
+NS_IMETHODIMP
+nsExternalHelperAppService::DeleteTemporaryPrivateFileWhenPossible(nsIFile* aTemporaryFile)
+{
+  return DeleteTemporaryFileHelper(aTemporaryFile, mTemporaryPrivateFilesList);
 }
 
 void nsExternalHelperAppService::FixFilePermissions(nsIFile* aFile)

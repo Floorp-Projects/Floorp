@@ -53,7 +53,7 @@ interface nsIExternalHelperAppService : nsISupports
  * This is a private interface shared between external app handlers and the platform specific
  * external helper app service
  */
-[scriptable, uuid(d0b5d7d3-9565-403d-9fb5-e5089c4567c6)]
+[scriptable, uuid(6613e2e7-feab-4e3a-bb1f-b03200d544ec)]
 interface nsPIExternalAppLauncher : nsISupports
 {
   /**
@@ -62,6 +62,11 @@ interface nsPIExternalAppLauncher : nsISupports
    * @param aTemporaryFile A temporary file we should delete on exit.
    */
   void deleteTemporaryFileOnExit(in nsIFile aTemporaryFile); 
+  /**
+   * Delete a temporary file created inside private browsing mode when
+   * the private browsing mode has ended.
+   */
+  void deleteTemporaryPrivateFileWhenPossible(in nsIFile aTemporaryFile);
 };
 
 /**
