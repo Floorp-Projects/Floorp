@@ -15,3 +15,4 @@ See the relevant bugs in bugzilla for information on these patches:
 0010-Bug-689069-ARM-Opts.patch
 0011-Bug-719575-Fix-clang-build.patch
 0012-Bug-759683-make-ssse3-conditional.patch
+0013-Bug-761890-fonts.patch
