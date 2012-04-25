@@ -366,9 +366,6 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
             wrapper = &FilteringWrapper<XrayProxy, CrossOriginAccessiblePropertiesOnly>::singleton;
         } else if (mozilla::dom::bindings::IsDOMClass(JS_GetClass(obj))) {
             wrapper = &FilteringWrapper<XrayDOM, CrossOriginAccessiblePropertiesOnly>::singleton;
-        } else if (IsComponentsObject(obj)) {
-            wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
-                                        ComponentsObjectPolicy>::singleton;
         } else {
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                         ExposedPropertiesOnly>::singleton;
@@ -403,9 +400,6 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
         if (AccessCheck::needsSystemOnlyWrapper(obj)) {
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                         OnlyIfSubjectIsSystem>::singleton;
-        } else if (IsComponentsObject(obj)) {
-            wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
-                                        ComponentsObjectPolicy>::singleton;
         } else if (!targetdata || !targetdata->wantXrays ||
                    (type = GetXrayType(obj)) == NotXray) {
             // Do the double-wrapping if need be.
@@ -527,23 +521,6 @@ WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *obj)
         Wrapper::New(cx, obj, JS_GetPrototype(obj), JS_GetGlobalForObject(cx, obj),
                      &FilteringWrapper<SameCompartmentSecurityWrapper,
                      OnlyIfSubjectIsSystem>::singleton);
-    return wrapperObj;
-}
-
-bool
-WrapperFactory::IsComponentsObject(JSObject *obj)
-{
-    const char *name = js::GetObjectClass(obj)->name;
-    return name[0] == 'n' && !strcmp(name, "nsXPCComponents");
-}
-
-JSObject *
-WrapperFactory::WrapComponentsObject(JSContext *cx, JSObject *obj)
-{
-    JSObject *wrapperObj =
-        Wrapper::New(cx, obj, JS_GetPrototype(obj), JS_GetGlobalForObject(cx, obj),
-                     &FilteringWrapper<SameCompartmentSecurityWrapper, ComponentsObjectPolicy>::singleton);
-
     return wrapperObj;
 }
 
