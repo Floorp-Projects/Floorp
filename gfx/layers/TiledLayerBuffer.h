@@ -87,7 +87,19 @@ public:
   // (x*GetTileLength(), y*GetTileLength(), GetTileLength(), GetTileLength())
   Tile GetTile(int x, int y) const;
 
+  // This operates the same as GetTile(aTileOrigin), but will also replace the
+  // specified tile with the placeholder tile. This does not call ReleaseTile
+  // on the removed tile.
+  bool RemoveTile(const nsIntPoint& aTileOrigin, Tile& aRemovedTile);
+
+  // This operates the same as GetTile(x, y), but will also replace the
+  // specified tile with the placeholder tile. This does not call ReleaseTile
+  // on the removed tile.
+  bool RemoveTile(int x, int y, Tile& aRemovedTile);
+
   uint16_t GetTileLength() const { return TILEDLAYERBUFFER_TILE_SIZE; }
+
+  unsigned int GetTileCount() const { return mRetainedTiles.Length(); }
 
   const nsIntRegion& GetValidRegion() const { return mValidRegion; }
   const nsIntRegion& GetLastPaintRegion() const { return mLastPaintRegion; }
@@ -161,6 +173,30 @@ TiledLayerBuffer<Derived, Tile>::GetTile(int x, int y) const
   return mRetainedTiles.SafeElementAt(index, AsDerived().GetPlaceholderTile());
 }
 
+template<typename Derived, typename Tile> bool
+TiledLayerBuffer<Derived, Tile>::RemoveTile(const nsIntPoint& aTileOrigin,
+                                            Tile& aRemovedTile)
+{
+  int firstTileX = mValidRegion.GetBounds().x / GetTileLength();
+  int firstTileY = mValidRegion.GetBounds().y / GetTileLength();
+  return RemoveTile(aTileOrigin.x / GetTileLength() - firstTileX,
+                    aTileOrigin.y / GetTileLength() - firstTileY,
+                    aRemovedTile);
+}
+
+template<typename Derived, typename Tile> bool
+TiledLayerBuffer<Derived, Tile>::RemoveTile(int x, int y, Tile& aRemovedTile)
+{
+  int index = x * mRetainedHeight + y;
+  const Tile& tileToRemove = mRetainedTiles.SafeElementAt(index, AsDerived().GetPlaceholderTile());
+  if (!IsPlaceholder(tileToRemove)) {
+    aRemovedTile = tileToRemove;
+    mRetainedTiles[index] = AsDerived().GetPlaceholderTile();
+    return true;
+  }
+  return false;
+}
+
 template<typename Derived, typename Tile> void
 TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
                                         const nsIntRegion& aPaintRegion)
@@ -209,14 +245,16 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
         int tileY = (y - oldBufferOrigin.y) / GetTileLength();
         int index = tileX * oldRetainedHeight + tileY;
 
-        NS_ABORT_IF_FALSE(!IsPlaceholder(oldRetainedTiles.
-                                         SafeElementAt(index, AsDerived().GetPlaceholderTile())),
-                          "Expected tile");
+        // The tile may have been removed, skip over it in this case.
+        if (IsPlaceholder(oldRetainedTiles.
+                          SafeElementAt(index, AsDerived().GetPlaceholderTile()))) {
+          newRetainedTiles.AppendElement(AsDerived().GetPlaceholderTile());
+        } else {
+          Tile tileWithPartialValidContent = oldRetainedTiles[index];
+          newRetainedTiles.AppendElement(tileWithPartialValidContent);
+          oldRetainedTiles[index] = AsDerived().GetPlaceholderTile();
+        }
 
-        Tile tileWithPartialValidContent = oldRetainedTiles[index];
-        newRetainedTiles.AppendElement(tileWithPartialValidContent);
-
-        oldRetainedTiles[index] = AsDerived().GetPlaceholderTile();
       } else {
         // This tile is either:
         // 1) Outside the new valid region and will simply be an empty

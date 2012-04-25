@@ -41,9 +41,9 @@
 #include "nsAccessibleWrap.h"
 
 #include "Accessible-inl.h"
+#include "ApplicationAccessibleWrap.h"
 #include "InterfaceInitFuncs.h"
 #include "nsAccUtils.h"
-#include "nsApplicationAccessibleWrap.h"
 #include "nsIAccessibleRelation.h"
 #include "nsRootAccessible.h"
 #include "nsDocAccessibleWrap.h"
@@ -68,7 +68,7 @@ using namespace mozilla::a11y;
 nsAccessibleWrap::EAvailableAtkSignals nsAccessibleWrap::gAvailableAtkSignals =
   eUnknown;
 
-//defined in nsApplicationAccessibleWrap.cpp
+//defined in ApplicationAccessibleWrap.cpp
 extern "C" GType g_atk_hyperlink_impl_type;
 
 /* MaiAtkObject */
@@ -976,25 +976,20 @@ refRelationSetCB(AtkObject *aAtkObj)
 // for it.
 nsAccessibleWrap *GetAccessibleWrap(AtkObject *aAtkObj)
 {
-    NS_ENSURE_TRUE(IS_MAI_OBJECT(aAtkObj), nsnull);
-    nsAccessibleWrap *tmpAccWrap = MAI_ATK_OBJECT(aAtkObj)->accWrap;
+  NS_ENSURE_TRUE(IS_MAI_OBJECT(aAtkObj), nsnull);
+  nsAccessibleWrap* accWrap = MAI_ATK_OBJECT(aAtkObj)->accWrap;
 
-    // Check if AccessibleWrap was deconstructed
-    if (tmpAccWrap == nsnull) {
-        return nsnull;
-    }
+  // Check if the accessible was deconstructed.
+  if (!accWrap)
+    return nsnull;
 
-    NS_ENSURE_TRUE(tmpAccWrap->GetAtkObject() == aAtkObj, nsnull);
+  NS_ENSURE_TRUE(accWrap->GetAtkObject() == aAtkObj, nsnull);
 
-    nsApplicationAccessible *applicationAcc =
-        nsAccessNode::GetApplicationAccessible();
-    nsAccessibleWrap* tmpAppAccWrap =
-        static_cast<nsAccessibleWrap*>(applicationAcc);
+  nsAccessibleWrap* appAccWrap = nsAccessNode::GetApplicationAccessible();
+  if (appAccWrap != accWrap && !accWrap->IsValidObject())
+    return nsnull;
 
-    if (tmpAppAccWrap != tmpAccWrap && !tmpAccWrap->IsValidObject())
-        return nsnull;
-
-    return tmpAccWrap;
+  return accWrap;
 }
 
 nsresult
