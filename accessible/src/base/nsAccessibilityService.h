@@ -63,7 +63,7 @@ FocusManager* FocusMgr();
 /**
  * Perform initialization that should be done as soon as possible, in order
  * to minimize startup time.
- * XXX: this function and the next defined in nsApplicationAccessibleWrap.cpp
+ * XXX: this function and the next defined in ApplicationAccessibleWrap.cpp
  */
 void PreInit();
 

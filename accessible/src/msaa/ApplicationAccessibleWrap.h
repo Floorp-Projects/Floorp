@@ -38,16 +38,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_APPLICATION_ACCESSIBLE_WRAP_H__
-#define __NS_APPLICATION_ACCESSIBLE_WRAP_H__
+#ifndef MOZILLA_A11Y_APPLICATION_ACCESSIBLE_WRAP_H__
+#define MOZILLA_A11Y_APPLICATION_ACCESSIBLE_WRAP_H__
 
-#include "nsApplicationAccessible.h"
+#include "ApplicationAccessible.h"
 
-class nsApplicationAccessibleWrap: public nsApplicationAccessible
+#include "AccessibleApplication.h"
+
+class ApplicationAccessibleWrap: public ApplicationAccessible,
+                                 public IAccessibleApplication
 {
 public:
-  static void PreCreate() {}
-  static void Unload() {}
+  // nsISupporst
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIAccessible
+  NS_IMETHOD GetAttributes(nsIPersistentProperties** aAttributes);
+
+  // IUnknown
+  STDMETHODIMP QueryInterface(REFIID, void**);
+
+  // IAccessibleApplication
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_appName(
+            /* [retval][out] */ BSTR *name);
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_appVersion(
+      /* [retval][out] */ BSTR *version);
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_toolkitName(
+      /* [retval][out] */ BSTR *name);
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_toolkitVersion(
+          /* [retval][out] */ BSTR *version);
+
+public:
+  static void PreCreate();
+  static void Unload();
 };
 
 #endif
