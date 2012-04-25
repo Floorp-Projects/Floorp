@@ -511,6 +511,7 @@ private:
   bool mGestureDownAlt;
   bool mGestureDownMeta;
   mozilla::widget::Modifiers mGestureModifiers;
+  PRUint16 mGestureDownButtons;
 
   nsCOMPtr<nsIContent> mLastLeftMouseDownContent;
   nsCOMPtr<nsIContent> mLastLeftMouseDownContentParent;
