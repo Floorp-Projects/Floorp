@@ -40,6 +40,7 @@
 
 // NOTE: alphabetically ordered
 #include "Accessible-inl.h"
+#include "ApplicationAccessibleWrap.h"
 #include "ARIAGridAccessibleWrap.h"
 #ifdef MOZ_ACCESSIBILITY_ATK
 #include "AtkSocketAccessible.h"
@@ -48,7 +49,6 @@
 #include "nsAccessiblePivot.h"
 #include "nsAccUtils.h"
 #include "nsARIAMap.h"
-#include "nsApplicationAccessibleWrap.h"
 #include "nsIAccessibleProvider.h"
 #include "nsHTMLCanvasAccessible.h"
 #include "nsHTMLImageMapAccessible.h"
@@ -678,7 +678,7 @@ nsAccessibilityService::RecreateAccessible(nsIPresShell* aPresShell,
 // nsIAccessibleRetrieval
 
 NS_IMETHODIMP
-nsAccessibilityService::GetApplicationAccessible(nsIAccessible **aAccessibleApplication)
+nsAccessibilityService::GetApplicationAccessible(nsIAccessible** aAccessibleApplication)
 {
   NS_ENSURE_ARG_POINTER(aAccessibleApplication);
 
@@ -1724,7 +1724,7 @@ nsAccessible*
 nsAccessibilityService::AddNativeRootAccessible(void* aAtkAccessible)
  {
 #ifdef MOZ_ACCESSIBILITY_ATK
-  nsApplicationAccessible* applicationAcc =
+  ApplicationAccessible* applicationAcc =
     nsAccessNode::GetApplicationAccessible();
   if (!applicationAcc)
     return nsnull;
@@ -1745,7 +1745,7 @@ void
 nsAccessibilityService::RemoveNativeRootAccessible(nsAccessible* aAccessible)
 {
 #ifdef MOZ_ACCESSIBILITY_ATK
-  nsApplicationAccessible* applicationAcc =
+  ApplicationAccessible* applicationAcc =
     nsAccessNode::GetApplicationAccessible();
 
   if (applicationAcc)
