@@ -8217,6 +8217,8 @@ CSSParserImpl::ParseFontSrc(nsCSSValue& aValue)
       cur.SetStringValue(dat.mFamilyName, eCSSUnit_Local_Font);
       values.AppendElement(cur);
     } else {
+      // We don't know what to do with this token; unget it and error out
+      UngetToken();
       return false;
     }
 
