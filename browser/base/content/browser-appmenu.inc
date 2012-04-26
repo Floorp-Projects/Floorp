@@ -198,6 +198,10 @@
                     hidden="true"
                     label="&remoteDebuggerMenu.label;"
                     command="Tools:RemoteDebugger"/>
+          <menuitem id="appmenu_chromeDebugger"
+                    hidden="true"
+                    label="&chromeDebuggerMenu.label;"
+                    command="Tools:ChromeDebugger"/>
           <menuitem id="appmenu_scratchpad"
                     hidden="true"
                     label="&scratchpad.label;"
