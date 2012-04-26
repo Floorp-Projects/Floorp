@@ -200,7 +200,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>%APP_VERSION%</string>
+	<string>%MAC_BUNDLE_VERSION%</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>LSMinimumSystemVersion</key>
