@@ -23,6 +23,7 @@ pref("services.sync.engine.history", true);
 pref("services.sync.engine.passwords", true);
 pref("services.sync.engine.prefs", true);
 pref("services.sync.engine.tabs", true);
+pref("services.sync.engine.apps", false);
 pref("services.sync.engine.tabs.filteredUrls", "^(about:.*|chrome://weave/.*|wyciwyg:.*|file:.*)$");
 
 pref("services.sync.jpake.serverURL", "https://setup.services.mozilla.com/");
@@ -62,4 +63,5 @@ pref("services.sync.log.logger.engine.passwords", "Debug");
 pref("services.sync.log.logger.engine.prefs", "Debug");
 pref("services.sync.log.logger.engine.tabs", "Debug");
 pref("services.sync.log.logger.engine.addons", "Debug");
+pref("services.sync.log.logger.engine.apps", "Debug");
 pref("services.sync.log.cryptoDebug", false);
