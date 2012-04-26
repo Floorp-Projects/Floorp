@@ -98,7 +98,18 @@ nsNSSErrors::getErrorMessageFromCode(PRErrorCode err,
       returnedMessage.Append(defMsg);
       returnedMessage.Append(NS_LITERAL_STRING("\n"));
     }
-
+  }
+  
+  if (returnedMessage.IsEmpty())
+  {
+    // no localized string available, use NSS' internal
+    returnedMessage.AppendASCII(PR_ErrorToString(err, PR_LANGUAGE_EN));
+    returnedMessage.Append(NS_LITERAL_STRING("\n"));
+  }
+  
+  if (nss_error_id_str)
+  {
+    nsresult rv;
     nsCString error_id(nss_error_id_str);
     ToLowerCase(error_id);
     NS_ConvertASCIItoUTF16 idU(error_id);
