@@ -2022,8 +2022,14 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
     }
   }
 
-  return hasAlternateContent ? ePluginOtherState :
-    GetPluginDisabledState(aContentType);
+  PluginSupportState pluginDisabledState = GetPluginDisabledState(aContentType);
+  if (pluginDisabledState == ePluginClickToPlay) {
+    return ePluginClickToPlay;
+  } else if (hasAlternateContent) {
+    return ePluginOtherState;
+  } else {
+    return pluginDisabledState;
+  }
 }
 
 PluginSupportState
