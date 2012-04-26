@@ -366,41 +366,48 @@ public class AwesomeBarTabs extends TabHost {
         }
 
         @Override
-        protected void onPostExecute(Cursor cursor) {
-            ListView list = (ListView) findViewById(R.id.bookmarks_list);
-            list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    handleBookmarkItemClick(parent, view, position, id);
+        protected void onPostExecute(final Cursor cursor) {
+            final ListView list = (ListView) findViewById(R.id.bookmarks_list);
+
+            // Hack: force this to the main thread, even though it should already be on it
+            GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+                public void run() {
+                    list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                            handleBookmarkItemClick(parent, view, position, id);
+                        }
+                    });
+                    
+                    // We need to add the header before we set the adapter, hence make it null
+                    list.setAdapter(null);
+
+                    if (mBookmarksAdapter == null) {
+                        mBookmarksAdapter = new BookmarksListAdapter(mContext, cursor);
+                    } else {
+                        mBookmarksAdapter.changeCursor(cursor);
+                    }
+
+                    LinearLayout headerView = mBookmarksAdapter.getHeaderView();
+                    if (headerView == null) {
+                        headerView = (LinearLayout) mInflater.inflate(R.layout.awesomebar_header_row, null);
+                        mBookmarksAdapter.setHeaderView(headerView);
+                    }
+
+                    // Add/Remove header based on the root folder
+                    if (mFolderId == Bookmarks.FIXED_ROOT_ID) {
+                        if (list.getHeaderViewsCount() == 1)
+                            list.removeHeaderView(headerView);
+                    } else {
+                        if (list.getHeaderViewsCount() == 0)
+                            list.addHeaderView(headerView, null, true);
+
+                        ((TextView) headerView.findViewById(R.id.title)).setText(mFolderTitle);
+                    }
+
+                    list.setAdapter(mBookmarksAdapter);
                 }
             });
-            
-            // We need to add the header before we set the adapter, hence make it null
-            list.setAdapter(null);
 
-            if (mBookmarksAdapter == null) {
-                mBookmarksAdapter = new BookmarksListAdapter(mContext, cursor);
-            } else {
-                mBookmarksAdapter.changeCursor(cursor);
-            }
-
-            LinearLayout headerView = mBookmarksAdapter.getHeaderView();
-            if (headerView == null) {
-                headerView = (LinearLayout) mInflater.inflate(R.layout.awesomebar_header_row, null);
-                mBookmarksAdapter.setHeaderView(headerView);
-            }
-
-            // Add/Remove header based on the root folder
-            if (mFolderId == Bookmarks.FIXED_ROOT_ID) {
-                if (list.getHeaderViewsCount() == 1)
-                    list.removeHeaderView(headerView);
-            } else {
-                if (list.getHeaderViewsCount() == 0)
-                    list.addHeaderView(headerView, null, true);
-
-                ((TextView) headerView.findViewById(R.id.title)).setText(mFolderTitle);
-            }
-
-            list.setAdapter(mBookmarksAdapter);
             mBookmarksQueryTask = null;
         }
     }
@@ -575,27 +582,31 @@ public class AwesomeBarTabs extends TabHost {
             final ExpandableListView historyList =
                     (ExpandableListView) findViewById(R.id.history_list);
 
-            historyList.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
-                public boolean onChildClick(ExpandableListView parent, View view,
-                        int groupPosition, int childPosition, long id) {
-                    handleHistoryItemClick(groupPosition, childPosition);
-                    return true;
+            // Hack: force this to the main thread, even though it should already be on it
+            GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+                public void run() {
+                    historyList.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+                        public boolean onChildClick(ExpandableListView parent, View view,
+                                int groupPosition, int childPosition, long id) {
+                            handleHistoryItemClick(groupPosition, childPosition);
+                            return true;
+                        }
+                    });
+
+                    // This is to disallow collapsing the expandable groups in the
+                    // history expandable list view to mimic simpler sections. We should
+                    // Remove this if we decide to allow expanding/collapsing groups.
+                    historyList.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
+                        public boolean onGroupClick(ExpandableListView parent, View v,
+                                int groupPosition, long id) {
+                            return true;
+                        }
+                    });
+
+                    historyList.setAdapter(mHistoryAdapter);
+                    expandAllGroups(historyList);
                 }
             });
-
-            // This is to disallow collapsing the expandable groups in the
-            // history expandable list view to mimic simpler sections. We should
-            // Remove this if we decide to allow expanding/collapsing groups.
-            historyList.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
-                public boolean onGroupClick(ExpandableListView parent, View v,
-                        int groupPosition, long id) {
-                    return true;
-                }
-            });
-
-            historyList.setAdapter(mHistoryAdapter);
-
-            expandAllGroups(historyList);
 
             mHistoryQueryTask = null;
         }
