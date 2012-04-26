@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:focusable="true"
+                android:nextFocusLeft="@+id/close"
                 android:id="@+id/info"
                 android:layout_width="fill_parent"
                 android:layout_height="100dip"
@@ -49,6 +51,7 @@
               android:shadowDy="1"/>
 
     <ImageButton android:id="@+id/close"
+                 android:nextFocusRight="@+id/info"
                  android:layout_width="34dip"
                  android:layout_height="34dip"
                  android:layout_alignParentLeft="true"
