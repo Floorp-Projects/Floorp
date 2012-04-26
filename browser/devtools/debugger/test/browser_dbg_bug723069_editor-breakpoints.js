@@ -23,37 +23,44 @@ function test()
   let SourceEditor = tempScope.SourceEditor;
   let scriptShown = false;
   let framesAdded = false;
+  let resumed = false;
+  let testStarted = false;
 
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
     gDebugger = gPane.debuggerWindow;
+    resumed = true;
+
     gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
       framesAdded = true;
-      runTest();
+      executeSoon(startTest);
     });
 
-    gDebuggee.firstCall();
+    executeSoon(function() {
+      gDebuggee.firstCall();
+    });
   });
 
-  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
-    let url = aEvent.detail.url;
-    if (url.indexOf("-02.js") != -1) {
-      scriptShown = true;
-      window.removeEventListener(aEvent.type, _onEvent);
-      runTest();
-    }
-  });
-
-  function runTest()
+  function onScriptShown(aEvent)
   {
-    if (scriptShown && framesAdded) {
-      Services.tm.currentThread.dispatch({ run: onScriptShown }, 0);
+    scriptShown = aEvent.detail.url.indexOf("-02.js") != -1;
+    executeSoon(startTest);
+  }
+
+  window.addEventListener("Debugger:ScriptShown", onScriptShown);
+
+  function startTest()
+  {
+    if (scriptShown && framesAdded && resumed && !testStarted) {
+      window.removeEventListener("Debugger:ScriptShown", onScriptShown);
+      testStarted = true;
+      Services.tm.currentThread.dispatch({ run: performTest }, 0);
     }
   }
 
-  function onScriptShown()
+  function performTest()
   {
     gScripts = gDebugger.DebuggerView.Scripts;
 
