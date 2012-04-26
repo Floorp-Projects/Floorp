@@ -59,6 +59,7 @@
                  android:background="@drawable/tabs_tray_close_button"
                  android:padding="10dip"
                  android:scaleType="centerInside"
+                 android:contentDescription="@string/close_tab"
                  android:src="@drawable/tab_close"/>
 
 </RelativeLayout>
