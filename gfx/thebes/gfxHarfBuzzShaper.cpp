@@ -842,6 +842,18 @@ HBUnicodeDecompose(hb_unicode_funcs_t *ufuncs,
     return nsUnicodeNormalizer::DecomposeNonRecursively(ab, a, b);
 }
 
+static PLDHashOperator
+AddFeature(const PRUint32& aTag, PRUint32& aValue, void *aUserArg)
+{
+    nsTArray<hb_feature_t>* features = static_cast<nsTArray<hb_feature_t>*> (aUserArg);
+
+    hb_feature_t feat = { 0, 0, 0, UINT_MAX };
+    feat.tag = aTag;
+    feat.value = aValue;
+    features->AppendElement(feat);
+    return PL_DHASH_NEXT;
+}
+
 /*
  * gfxFontShaper override to initialize the text run using HarfBuzz
  */
@@ -973,35 +985,16 @@ gfxHarfBuzzShaper::ShapeWord(gfxContext      *aContext,
 
     nsAutoTArray<hb_feature_t,20> features;
 
-    // Ligature features are enabled by default in the generic shaper,
-    // so we explicitly turn them off if necessary (for letter-spacing)
-    if (aShapedWord->DisableLigatures()) {
-        hb_feature_t ligaOff = { HB_TAG('l','i','g','a'), 0, 0, UINT_MAX };
-        hb_feature_t cligOff = { HB_TAG('c','l','i','g'), 0, 0, UINT_MAX };
-        features.AppendElement(ligaOff);
-        features.AppendElement(cligOff);
-    }
-
-    // css features need to be merged with the existing ones, if any
     gfxFontEntry *entry = mFont->GetFontEntry();
     const gfxFontStyle *style = mFont->GetStyle();
-    const nsTArray<gfxFontFeature> *cssFeatures = &style->featureSettings;
-    if (cssFeatures->IsEmpty()) {
-        cssFeatures = &entry->mFeatureSettings;
-    }
-    for (PRUint32 i = 0; i < cssFeatures->Length(); ++i) {
-        PRUint32 j;
-        for (j = 0; j < features.Length(); ++j) {
-            if (cssFeatures->ElementAt(i).mTag == features[j].tag) {
-                features[j].value = cssFeatures->ElementAt(i).mValue;
-                break;
-            }
-        }
-        if (j == features.Length()) {
-            const gfxFontFeature& f = cssFeatures->ElementAt(i);
-            hb_feature_t hbf = { f.mTag, f.mValue, 0, UINT_MAX };
-            features.AppendElement(hbf);
-        }
+
+    nsDataHashtable<nsUint32HashKey,PRUint32> mergedFeatures;
+
+    if (MergeFontFeatures(style->featureSettings,
+                      mFont->GetFontEntry()->mFeatureSettings,
+                      aShapedWord->DisableLigatures(), mergedFeatures)) {
+        // enumerate result and insert into hb_feature array
+        mergedFeatures.Enumerate(AddFeature, &features);
     }
 
     bool isRightToLeft = aShapedWord->IsRightToLeft();

@@ -58,6 +58,8 @@
 
 class nsHttpPipeline;
 
+class nsIHttpUpgradeListener;
+
 //-----------------------------------------------------------------------------
 
 class nsHttpConnectionMgr : public nsIObserver
@@ -146,6 +148,13 @@ public:
     // connection can be reused then it will be added to the idle list, else
     // it will be closed.
     nsresult ReclaimConnection(nsHttpConnection *conn);
+
+    // called by the main thread to execute the taketransport() logic on the
+    // socket thread after a 101 response has been received and the socket
+    // needs to be transferred to an expectant upgrade listener such as
+    // websockets.
+    nsresult CompleteUpgrade(nsAHttpConnection *aConn,
+                             nsIHttpUpgradeListener *aUpgradeListener);
 
     // called to update a parameter after the connection manager has already
     // been initialized.
@@ -578,6 +587,7 @@ private:
     void OnMsgPruneDeadConnections (PRInt32, void *);
     void OnMsgSpeculativeConnect   (PRInt32, void *);
     void OnMsgReclaimConnection    (PRInt32, void *);
+    void OnMsgCompleteUpgrade      (PRInt32, void *);
     void OnMsgUpdateParam          (PRInt32, void *);
     void OnMsgClosePersistentConnections (PRInt32, void *);
     void OnMsgProcessFeedback      (PRInt32, void *);

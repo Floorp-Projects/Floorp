@@ -258,6 +258,7 @@
   background: black;
   width: 100% !important;
   height: 100% !important;
+  margin: 0 !important;
   min-width: 0 !important;
   max-width: none !important;
   min-height: 0 !important;

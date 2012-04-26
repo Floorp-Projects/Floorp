@@ -561,7 +561,7 @@ void nsTimerEvent::Init()
   sAllocator = new TimerEventAllocator();
   static const size_t kBucketSizes[] = {sizeof(nsTimerEvent)};
   static const PRInt32 kNumBuckets = mozilla::ArrayLength(kBucketSizes);
-  static const PRInt32 kInitialPoolSize = 1024 * NS_SIZE_IN_HEAP(sizeof(nsTimerEvent));
+  static const PRInt32 kInitialPoolSize = 1024 * sizeof(nsTimerEvent);
   sAllocator->Init("TimerEventPool", kBucketSizes, kNumBuckets, kInitialPoolSize);
 }
 

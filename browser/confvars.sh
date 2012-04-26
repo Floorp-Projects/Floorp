@@ -48,6 +48,10 @@ if test "$OS_ARCH" = "WINNT"; then
   fi
 fi
 
+if (test "$OS_TARGET" = "WINNT" -o "$OS_TARGET" = "Darwin"); then
+  MOZ_WEBAPP_RUNTIME=1
+fi
+
 MOZ_CHROME_FILE_FORMAT=omni
 MOZ_SAFE_BROWSING=1
 MOZ_SERVICES_SYNC=1

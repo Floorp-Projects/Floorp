@@ -1268,8 +1268,7 @@ GetJSUserCompartmentCount()
 // XPConnectJSCompartmentCount to avoid that problem, but then we couldn't
 // easily report them via telemetry, so we live with the small risk of
 // inconsistencies.
-NS_MEMORY_REPORTER_IMPLEMENT(
-    XPConnectJSSystemCompartmentCount,
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSSystemCompartmentCount,
     "js-compartments-system",
     KIND_OTHER,
     nsIMemoryReporter::UNITS_COUNT,
@@ -1279,8 +1278,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(
     "listed under 'js' if a garbage collection occurs at an inopportune time, "
     "but such cases should be rare.")
 
-NS_MEMORY_REPORTER_IMPLEMENT(
-    XPConnectJSUserCompartmentCount,
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSUserCompartmentCount,
     "js-compartments-user",
     KIND_OTHER,
     nsIMemoryReporter::UNITS_COUNT,

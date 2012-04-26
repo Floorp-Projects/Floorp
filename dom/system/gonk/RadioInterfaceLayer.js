@@ -513,7 +513,7 @@ RadioInterfaceLayer.prototype = {
     // Dispatch to registered handler if application port addressing is
     // available. Note that the destination port can possibly be zero when
     // representing a UDP/TCP port.
-    if (message.header.destinationPort != null) {
+    if (message.header && message.header.destinationPort != null) {
       let handler = this.portAddressedSmsApps[message.header.destinationPort];
       if (handler) {
         handler(message);

@@ -60,6 +60,8 @@ public class TabsTray extends GeckoActivity implements Tabs.OnTabsChangedListene
         mWaitingForClose = false;
 
         mList = (ListView) findViewById(R.id.list);
+        mList.setItemsCanFocus(true);
+
         mListContainer = (TabsListContainer) findViewById(R.id.list_container);
 
         ImageButton addTab = (ImageButton) findViewById(R.id.add_tab);
