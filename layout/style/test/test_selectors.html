@@ -239,6 +239,8 @@ function run() {
           ifdoc.body.mozMatchesSelector(selector);
           ok(false, "selector '" + selector + "' plus EOF is parse error");
         } catch(ex) {
+          is(ex.name, "SyntaxError",
+             "selector '" + selector + "' plus EOF is parse error");
           is(ex.code, DOMException.SYNTAX_ERR,
              "selector '" + selector + "' plus EOF is parse error");
         }

@@ -19,21 +19,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=466751
 /** Test for Bug 466751 **/
 
 var el = $("test");
-var result, message;
+var name, message;
 
 try {
   el.innerHTML = '<div ">bla</div>';
 } catch (ex) {
-  // ex.toString() == [Exception... "Component returned failure code: 0x80004003 (NS_ERROR_INVALID_POINTER) [nsIDOMHTMLElement.innerHTML]"  nsresult: "0x80004003 (NS_ERROR_INVALID_POINTER)"  location: "JS frame :: file:///Users/gavin/mobile/mozilla/content/base/test/test_bug466751.xhtml :: <TOP_LEVEL> :: line 30"  data: no]
-  // ex.result == NS_ERROR_DOM_SYNTAX_ERR
-  // ex.message == Component returned failure code: 0x80004003 (NS_ERROR_INVALID_POINTER) [nsIDOMHTMLElement.innerHTML]
-  result = ex.result;
+  name = ex.name;
   message = ex.message;
 }
 
 const NS_ERROR_DOM_SYNTAX_ERR = 0x8053000C;
-ok(/An invalid or illegal string was specified/.test(message), "threw NS_ERROR_DOM_SYNTAX_ERR message");
-is(result, NS_ERROR_DOM_SYNTAX_ERR, "threw NS_ERROR_DOM_SYNTAX_ERR result");
+ok(/An invalid or illegal string was specified/.test(message), "threw SyntaxError message");
+is(name, "SyntaxError", "threw SyntaxError");
 
 ]]>
 </script>
