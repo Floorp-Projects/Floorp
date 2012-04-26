@@ -288,10 +288,9 @@ class CGNamespace(CGWrapper):
         Static helper method to build multiple wrapped namespaces.
         """
         if not namespaces:
-            return child
-        return CGNamespace(namespaces[0], CGNamespace.build(namespaces[1:],
-                                                            child),
-                           declareOnly=declareOnly)
+            return CGWrapper(child, declareOnly=declareOnly)
+        inner = CGNamespace.build(namespaces[1:], child, declareOnly=declareOnly)
+        return CGNamespace(namespaces[0], inner, declareOnly=declareOnly)
 
 class CGIncludeGuard(CGWrapper):
     """
