@@ -364,11 +364,13 @@ CompositorParent::TransformShadowTree()
   // primary scrollable layer. We compare this to the desired zoom and scroll
   // offset in the view transform we obtained from Java in order to compute the
   // transformation we need to apply.
-  if (metrics && metrics->IsScrollable()) {
+  if (metrics) {
     float tempScaleDiffX = rootScaleX * mXScale;
     float tempScaleDiffY = rootScaleY * mYScale;
 
-    nsIntPoint metricsScrollOffset = metrics->mViewportScrollOffset;
+    nsIntPoint metricsScrollOffset(0, 0);
+    if (metrics->IsScrollable())
+      metricsScrollOffset = metrics->mViewportScrollOffset;
 
     nsIntPoint scrollCompensation(
       (mScrollOffset.x / tempScaleDiffX - metricsScrollOffset.x) * mXScale,
