@@ -574,7 +574,7 @@ class CGClassConstructHook(CGAbstractStaticMethod):
         name = MakeNativeName(self._ctor.identifier.name)
         nativeName = self.descriptor.binaryNames.get(name, name)
         callGenerator = CGMethodCall(preArgs, nativeName, True,
-                                     self.descriptor, self._ctor, {})
+                                     self.descriptor, self._ctor)
         return preamble + callGenerator.define();
 
 class CGClassHasInstanceHook(CGAbstractStaticMethod):
@@ -1837,13 +1837,17 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
     return result
 
 
+def isResultAlreadyAddRefed(descriptor, extendedAttributes):
+    # Default to already_AddRefed on the main thread, raw pointer in workers
+    return not descriptor.workers and not 'resultNotAddRefed' in extendedAttributes
+
 class CGCallGenerator(CGThing):
     """
     A class to generate an actual call to a C++ object.  Assumes that the C++
     object is stored in a variable named "self".
     """
     def __init__(self, errorReport, argCount, argsPre, returnType,
-                 resultAlreadyAddRefed, descriptorProvider, nativeMethodName, static):
+                 extendedAttributes, descriptorProvider, nativeMethodName, static):
         CGThing.__init__(self)
 
         isFallible = errorReport is not None
@@ -1857,8 +1861,13 @@ class CGCallGenerator(CGThing):
         if isFallible:
             args.append(CGGeneric("rv"))
 
+        resultAlreadyAddRefed = isResultAlreadyAddRefed(descriptorProvider,
+                                                        extendedAttributes)
         result = getRetvalDeclarationForType(returnType, descriptorProvider,
                                              resultAlreadyAddRefed)
+
+        if 'implicitJSContext' in extendedAttributes:
+            argsPre = "cx, " + argsPre
 
         # Build up our actual call
         self.cgRoot = CGList([], "\n")
@@ -1912,16 +1921,16 @@ class CGPerSignatureCall(CGThing):
     # there.
 
     def __init__(self, returnType, argsPre, arguments, nativeMethodName, static,
-                 descriptor, idlNode, extendedAttributes, argConversionStartsAt=0):
+                 descriptor, idlNode, argConversionStartsAt=0,
+                 getter=False, setter=False):
         CGThing.__init__(self)
         self.returnType = returnType
         self.descriptor = descriptor
         self.idlNode = idlNode
-        self.extendedAttributes = extendedAttributes
-        # Default to already_AddRefed on the main thread, raw pointer in workers
-        self.resultAlreadyAddRefed = not descriptor.workers and not 'resultNotAddRefed' in self.extendedAttributes
-        self.argsPre = "cx, " if 'implicitJSContext' in self.extendedAttributes else ""
-        self.argsPre += argsPre
+        self.extendedAttributes = descriptor.getExtendedAttributes(idlNode,
+                                                                   getter=getter,
+                                                                   setter=setter)
+        self.argsPre = argsPre
         self.argCount = len(arguments)
         if self.argCount > argConversionStartsAt:
             # Insert our argv in there
@@ -1935,7 +1944,7 @@ class CGPerSignatureCall(CGThing):
         cgThings.append(CGCallGenerator(
                     self.getErrorReport() if self.isFallible() else None,
                     self.argCount, self.argsPre, returnType,
-                    self.resultAlreadyAddRefed, descriptor, nativeMethodName,
+                    self.extendedAttributes, descriptor, nativeMethodName,
                     static))
         self.cgRoot = CGList(cgThings, "\n")
 
@@ -2014,8 +2023,7 @@ class CGMethodCall(CGThing):
     A class to generate selection of a method signature from a set of
     signatures and generation of a call to that signature.
     """
-    def __init__(self, argsPre, nativeMethodName, static, descriptor, method,
-                 extendedAttributes):
+    def __init__(self, argsPre, nativeMethodName, static, descriptor, method):
         CGThing.__init__(self)
 
         def requiredArgCount(signature):
@@ -2053,8 +2061,7 @@ class CGMethodCall(CGThing):
         def getPerSignatureCall(signature, argConversionStartsAt=0):
             return CGPerSignatureCall(signature[0], argsPre, signature[1],
                                       nativeMethodName, static, descriptor,
-                                      method, extendedAttributes,
-                                      argConversionStartsAt)
+                                      method, argConversionStartsAt)
             
 
         signatures = method.signatures()
@@ -2282,10 +2289,11 @@ class CGGetterSetterCall(CGPerSignatureCall):
     particular IDL getter or setter.
     """
     def __init__(self, returnType, arguments, nativeMethodName, descriptor,
-                 attr, extendedAttributes):
+                 attr, getter=False, setter=False):
+        assert bool(getter) != bool(setter)
         CGPerSignatureCall.__init__(self, returnType, "", arguments,
                                     nativeMethodName, False, descriptor, attr,
-                                    extendedAttributes)
+                                    getter=getter, setter=setter)
     def getArgv(self):
         if generateNativeAccessors:
             return CGPerSignatureCall.getArgv(self)
@@ -2296,10 +2304,9 @@ class CGGetterCall(CGGetterSetterCall):
     A class to generate a native object getter call for a particular IDL
     getter.
     """
-    def __init__(self, returnType, nativeMethodName, descriptor, attr,
-                 extendedAttributes):
+    def __init__(self, returnType, nativeMethodName, descriptor, attr):
         CGGetterSetterCall.__init__(self, returnType, [], nativeMethodName,
-                                    descriptor, attr, extendedAttributes)
+                                    descriptor, attr, getter=True)
     def getArgc(self):
         if generateNativeAccessors:
             return CGGetterSetterCall.getArgc()
@@ -2320,11 +2327,10 @@ class CGSetterCall(CGGetterSetterCall):
     A class to generate a native object setter call for a particular IDL
     setter.
     """
-    def __init__(self, argType, nativeMethodName, descriptor, attr,
-                 extendedAttributes):
+    def __init__(self, argType, nativeMethodName, descriptor, attr):
         CGGetterSetterCall.__init__(self, None, [FakeArgument(argType)],
                                     nativeMethodName, descriptor, attr,
-                                    extendedAttributes)
+                                    setter=True)
     def wrap_return_value(self):
         if generateNativeAccessors:
             return CGGetterSetterCall.wrap_return_value(self)
@@ -2353,8 +2359,7 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
     function to do the rest of the work.  This function should return a
     CGThing which is already properly indented.
     """
-    def __init__(self, descriptor, name, args, extendedAttributes):
-        self.extendedAttributes = extendedAttributes
+    def __init__(self, descriptor, name, args):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "JSBool", args)
 
     def definition_body(self):
@@ -2388,14 +2393,12 @@ class CGNativeMethod(CGAbstractBindingMethod):
         baseName = method.identifier.name
         args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
                 Argument('JS::Value*', 'vp')]
-        CGAbstractBindingMethod.__init__(self, descriptor, baseName, args,
-                                         descriptor.getExtendedAttributes(method))
+        CGAbstractBindingMethod.__init__(self, descriptor, baseName, args)
     def generate_code(self):
         name = self.method.identifier.name
         nativeName = self.descriptor.binaryNames.get(name, MakeNativeName(name))
         return CGMethodCall("", nativeName, self.method.isStatic(),
-                            self.descriptor, self.method,
-                            self.extendedAttributes)
+                            self.descriptor, self.method)
 
 class CGNativeGetter(CGAbstractBindingMethod):
     """
@@ -2410,8 +2413,7 @@ class CGNativeGetter(CGAbstractBindingMethod):
         else:
             args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
                     Argument('JSHandleId', 'id'), Argument('JS::Value*', 'vp')]
-        CGAbstractBindingMethod.__init__(self, descriptor, name, args,
-                                         descriptor.getExtendedAttributes(self.attr, getter=True))
+        CGAbstractBindingMethod.__init__(self, descriptor, name, args)
 
     def getThis(self):
         if generateNativeAccessors:
@@ -2423,7 +2425,7 @@ class CGNativeGetter(CGAbstractBindingMethod):
 
         nativeMethodName = "Get" + MakeNativeName(self.attr.identifier.name)
         return CGIndenter(CGGetterCall(self.attr.type, nativeMethodName, self.descriptor,
-                                       self.attr, self.extendedAttributes))
+                                       self.attr))
 
 class CGNativeSetter(CGAbstractBindingMethod):
     """
@@ -2440,8 +2442,7 @@ class CGNativeSetter(CGAbstractBindingMethod):
             args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
                     Argument('JSHandleId', 'id'), Argument('JSBool', 'strict'),
                     Argument('JS::Value*', 'vp')]
-        CGAbstractBindingMethod.__init__(self, descriptor, name, args,
-                                         descriptor.getExtendedAttributes(self.attr, setter=True))
+        CGAbstractBindingMethod.__init__(self, descriptor, name, args)
 
     def getThis(self):
         if generateNativeAccessors:
@@ -2452,7 +2453,7 @@ class CGNativeSetter(CGAbstractBindingMethod):
     def generate_code(self):
         nativeMethodName = "Set" + MakeNativeName(self.attr.identifier.name)
         return CGIndenter(CGSetterCall(self.attr.type, nativeMethodName, self.descriptor,
-                                       self.attr, self.extendedAttributes))
+                                       self.attr))
 
 def getEnumValueName(value):
     # Some enum values can be empty strings.  Others might have weird
