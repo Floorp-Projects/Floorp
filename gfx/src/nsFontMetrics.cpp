@@ -137,6 +137,8 @@ nsFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
                        aFont.featureSettings,
                        aFont.languageOverride);
 
+    aFont.AddFontFeaturesToStyle(&style);
+
     mFontGroup = gfxPlatform::GetPlatform()->
         CreateFontGroup(aFont.name, &style, aUserFontSet);
     if (mFontGroup->FontListLength() < 1)
