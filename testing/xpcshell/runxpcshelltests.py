@@ -69,10 +69,11 @@ class XPCShellTests(object):
   oldcwd = os.getcwd()
 
   def __init__(self, log=sys.stdout):
-    """ Init logging """
+    """ Init logging and node status """
     handler = logging.StreamHandler(log)
     self.log.setLevel(logging.INFO)
     self.log.addHandler(handler)
+    self.nodeProc = None
 
   def buildTestList(self):
     """
@@ -393,6 +394,54 @@ class XPCShellTests(object):
     return ['-e', 'const _TEST_FILE = ["%s"];' %
               replaceBackSlashes(name)]
 
+  def trySetupNode(self):
+    """
+      Run node for SPDY tests, if available, and updates mozinfo as appropriate.
+    """
+    nodeMozInfo = {'hasNode': False} # Assume the worst
+    nodeBin = None
+
+    # We try to find the node executable in the path given to us by the user in
+    # the MOZ_NODE_PATH environment variable
+    localPath = os.getenv('MOZ_NODE_PATH', None)
+    if localPath and os.path.exists(localPath) and os.path.isfile(localPath):
+      nodeBin = localPath
+
+    if nodeBin:
+      self.log.info('Found node at %s' % (nodeBin,))
+      myDir = os.path.split(os.path.abspath(__file__))[0]
+      mozSpdyJs = os.path.join(myDir, 'moz-spdy', 'moz-spdy.js')
+
+      if os.path.exists(mozSpdyJs):
+        # OK, we found our SPDY server, let's try to get it running
+        self.log.info('Found moz-spdy at %s' % (mozSpdyJs,))
+        stdout, stderr = self.getPipes()
+        try:
+          # We pipe stdin to node because the spdy server will exit when its
+          # stdin reaches EOF
+          self.nodeProc = Popen([nodeBin, mozSpdyJs], stdin=PIPE, stdout=PIPE,
+                  stderr=STDOUT, env=self.env, cwd=os.getcwd())
+
+          # Check to make sure the server starts properly by waiting for it to
+          # tell us it's started
+          msg = self.nodeProc.stdout.readline()
+          if msg.startswith('SPDY server listening'):
+              nodeMozInfo['hasNode'] = True
+        except OSError, e:
+          # This occurs if the subprocess couldn't be started
+          self.log.error('Could not run node SPDY server: %s' % (str(e),))
+
+    mozinfo.update(nodeMozInfo)
+
+  def shutdownNode(self):
+    """
+      Shut down our node process, if it exists
+    """
+    if self.nodeProc:
+      self.log.info('Node SPDY server shutting down ...')
+      # moz-spdy exits when its stdin reaches EOF, so force that to happen here
+      self.nodeProc.communicate()
+
   def writeXunitResults(self, results, name=None, filename=None, fh=None):
     """
       Write Xunit XML from results.
@@ -597,6 +646,10 @@ class XPCShellTests(object):
         return False
       self.mozInfo = parse_json(open(mozInfoFile).read())
     mozinfo.update(self.mozInfo)
+
+    # We have to do this before we build the test list so we know whether or
+    # not to run tests that depend on having the node spdy server
+    self.trySetupNode()
     
     pStdout, pStderr = self.getPipes()
 
@@ -768,6 +821,8 @@ class XPCShellTests(object):
           break
 
       xunitResults.append(xunitResult)
+
+    self.shutdownNode()
 
     if self.testCount == 0:
       self.log.error("TEST-UNEXPECTED-FAIL | runxpcshelltests.py | No tests run. Did you pass an invalid --test-path?")
