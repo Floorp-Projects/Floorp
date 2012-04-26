@@ -1350,6 +1350,48 @@ gfxFontCache::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
     SizeOfExcludingThis(aMallocSizeOf, aSizes);
 }
 
+/* static */ bool
+gfxFontShaper::MergeFontFeatures(
+    const nsTArray<gfxFontFeature>& aStyleRuleFeatures,
+    const nsTArray<gfxFontFeature>& aFontFeatures,
+    bool aDisableLigatures,
+    nsDataHashtable<nsUint32HashKey,PRUint32>& aMergedFeatures)
+{
+    // bail immediately if nothing to do
+    if (aStyleRuleFeatures.IsEmpty() &&
+        aFontFeatures.IsEmpty() &&
+        !aDisableLigatures) {
+        return false;
+    }
+
+    aMergedFeatures.Init();
+
+    // Ligature features are enabled by default in the generic shaper,
+    // so we explicitly turn them off if necessary (for letter-spacing)
+    if (aDisableLigatures) {
+        aMergedFeatures.Put(HB_TAG('l','i','g','a'), 0);
+        aMergedFeatures.Put(HB_TAG('c','l','i','g'), 0);
+    }
+
+    // add feature values from font
+    PRUint32 i, count;
+
+    count = aFontFeatures.Length();
+    for (i = 0; i < count; i++) {
+        const gfxFontFeature& feature = aFontFeatures.ElementAt(i);
+        aMergedFeatures.Put(feature.mTag, feature.mValue);
+    }
+
+    // add feature values from style rules
+    count = aStyleRuleFeatures.Length();
+    for (i = 0; i < count; i++) {
+        const gfxFontFeature& feature = aStyleRuleFeatures.ElementAt(i);
+        aMergedFeatures.Put(feature.mTag, feature.mValue);
+    }
+
+    return aMergedFeatures.Count() != 0;
+}
+
 void
 gfxFont::RunMetrics::CombineWith(const RunMetrics& aOther, bool aOtherIsOnLeft)
 {

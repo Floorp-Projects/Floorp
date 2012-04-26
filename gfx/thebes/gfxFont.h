@@ -1154,6 +1154,13 @@ public:
 
     gfxFont *GetFont() const { return mFont; }
 
+    // returns true if features exist in output, false otherwise
+    static bool
+    MergeFontFeatures(const nsTArray<gfxFontFeature>& aStyleRuleFeatures,
+                      const nsTArray<gfxFontFeature>& aFontFeatures,
+                      bool aDisableLigatures,
+                      nsDataHashtable<nsUint32HashKey,PRUint32>& aMergedFeatures);
+
 protected:
     // the font this shaper is working with
     gfxFont * mFont;
