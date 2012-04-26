@@ -384,8 +384,8 @@
     var gInitQueue = null;
     function initTests()
     {
-      if (SEAMONKEY) {
-        todo(false, "Skipping this test on SeaMonkey ftb. (Bug 718237)");
+      if (SEAMONKEY || MAC) {
+        todo(false, "Skipping this test on SeaMonkey ftb. (Bug 718237), and on Mac (bug 746177)");
         shutdownAutoComplete();
         SimpleTest.finish();
         return;
