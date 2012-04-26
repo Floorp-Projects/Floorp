@@ -110,6 +110,7 @@ public:
     , mViewportScrollOffset(0, 0)
     , mScrollId(NULL_SCROLL_ID)
     , mCSSContentSize(0, 0)
+    , mResolution(1, 1)
   {}
 
   // Default copy ctor and operator= are fine
@@ -151,6 +152,10 @@ public:
   // Consumers often want to know the size before scaling to pixels
   // so we record this size as well.
   gfx::Size mCSSContentSize;
+
+  // This represents the resolution at which the associated layer
+  // will been rendered.
+  gfxSize mResolution;
 };
 
 #define MOZ_LAYER_DECL_NAME(n, e)                           \

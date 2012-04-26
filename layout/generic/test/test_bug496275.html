@@ -78,12 +78,6 @@ function run() {
   sel.removeAllRanges();
   sel.modify("move", "forward", "character");
 
-  // Similarly, we should silently fail if the selection has been detached.
-  $("c").focus();
-  sel.collapse($("p1"), 0);
-  sel.getRangeAt(0).detach();
-  sel.modify("move", "forward", "character");
-
   // Now focus our first div and put the cursor at the beginning of p1.
   $("c").focus();
   sel.collapse($("p1"), 0);

@@ -369,33 +369,6 @@ function run_extract_test() {
 
     // Clean up after ourselves.
     walker = null;
-
-    /* Whenever a DOM range is detached, we cannot use any methods on
-       it - including extracting its contents or deleting its contents.  It
-       should throw a NS_ERROR_DOM_INVALID_STATE_ERR exception.
-    */
-    dump("Detached range test\n");
-    var compareFrag = getFragment(baseSource);
-    baseFrag = getFragment(baseSource);
-    baseRange = getRange(baseSource, baseFrag);
-    baseRange.detach();
-    try {
-      var cutFragment = baseRange.extractContents();
-      do_throw("Should have thrown INVALID_STATE_ERR!");
-    } catch (e if (e instanceof C_i.nsIException &&
-                   e.result == INVALID_STATE_ERR)) {
-      // do nothing
-    }
-    do_check_true(compareFrag.isEqualNode(baseFrag));
-
-    try {
-      baseRange.deleteContents();
-      do_throw("Should have thrown INVALID_STATE_ERR!");
-    } catch (e if (e instanceof C_i.nsIException &&
-                   e.result == INVALID_STATE_ERR)) {
-      // do nothing
-    }
-    do_check_true(compareFrag.isEqualNode(baseFrag));
   }
 }
 

@@ -41,6 +41,7 @@
 
 #include "nsIDOMFile.h"
 #include "nsDOMBlobBuilder.h"
+#include "nsDOMError.h"
 
 #include "jsapi.h"
 #include "jsatom.h"
@@ -58,8 +59,7 @@
 
 USING_WORKERS_NAMESPACE
 
-using mozilla::dom::workers::exceptions::ThrowDOMExceptionForCode;
-using mozilla::dom::workers::exceptions::ThrowFileExceptionForCode;
+using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
 
 namespace {
 
@@ -125,9 +125,7 @@ private:
     nsresult rv = file->InitInternal(aCx, aArgc, JS_ARGV(aCx, aVp),
                                      Unwrap);
     if (NS_FAILED(rv)) {
-      ThrowDOMExceptionForCode(aCx,
-        NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM ?
-          NS_ERROR_GET_CODE(rv) : UNKNOWN_ERR);
+      ThrowDOMExceptionForNSResult(aCx, rv);
       return false;
     }
 
@@ -159,7 +157,8 @@ private:
 
     PRUint64 size;
     if (NS_FAILED(blob->GetSize(&size))) {
-      ThrowFileExceptionForCode(aCx, FILE_NOT_READABLE_ERR);
+      ThrowDOMExceptionForNSResult(aCx, NS_ERROR_DOM_FILE_NOT_READABLE_ERR);
+      return false;
     }
 
     if (!JS_NewNumberValue(aCx, double(size), aVp)) {
@@ -179,7 +178,8 @@ private:
 
     nsString type;
     if (NS_FAILED(blob->GetType(type))) {
-      ThrowFileExceptionForCode(aCx, FILE_NOT_READABLE_ERR);
+      ThrowDOMExceptionForNSResult(aCx, NS_ERROR_DOM_FILE_NOT_READABLE_ERR);
+      return false;
     }
 
     JSString* jsType = JS_NewUCStringCopyN(aCx, type.get(), type.Length());
@@ -223,7 +223,7 @@ private:
                               static_cast<PRUint64>(end),
                               contentType, optionalArgc,
                               getter_AddRefs(rtnBlob)))) {
-      ThrowFileExceptionForCode(aCx, FILE_NOT_READABLE_ERR);
+      ThrowDOMExceptionForNSResult(aCx, NS_ERROR_DOM_FILE_NOT_READABLE_ERR);
       return false;
     }
 
@@ -350,7 +350,7 @@ private:
 
     if (GetWorkerPrivateFromContext(aCx)->UsesSystemPrincipal() &&
         NS_FAILED(file->GetMozFullPathInternal(fullPath))) {
-      ThrowFileExceptionForCode(aCx, FILE_NOT_READABLE_ERR);
+      ThrowDOMExceptionForNSResult(aCx, NS_ERROR_DOM_FILE_NOT_READABLE_ERR);
       return false;
     }
 
