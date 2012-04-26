@@ -1139,28 +1139,20 @@ nsHTMLTableAccessible::SelectColumn(PRInt32 aColumn)
                                    nsISelectionPrivate::TABLESELECTION_COLUMN);
 }
 
-NS_IMETHODIMP
-nsHTMLTableAccessible::UnselectRow(PRInt32 aRow)
+void
+nsHTMLTableAccessible::UnselectRow(PRUint32 aRowIdx)
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  return
-    RemoveRowsOrColumnsFromSelection(aRow,
-                                     nsISelectionPrivate::TABLESELECTION_ROW,
-                                     false);
+  RemoveRowsOrColumnsFromSelection(aRowIdx,
+                                   nsISelectionPrivate::TABLESELECTION_ROW,
+                                   false);
 }
 
-NS_IMETHODIMP
-nsHTMLTableAccessible::UnselectColumn(PRInt32 aColumn)
+void
+nsHTMLTableAccessible::UnselectCol(PRUint32 aColIdx)
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  return
-    RemoveRowsOrColumnsFromSelection(aColumn,
-                                     nsISelectionPrivate::TABLESELECTION_COLUMN,
-                                     false);
+  RemoveRowsOrColumnsFromSelection(aColIdx,
+                                   nsISelectionPrivate::TABLESELECTION_COLUMN,
+                                   false);
 }
 
 nsresult
