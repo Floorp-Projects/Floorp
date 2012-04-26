@@ -33,7 +33,7 @@ public:
 #endif
 
   void
-  _Trace(JSTracer* aTrc) const
+  _trace(JSTracer* aTrc) const
   {
     if (!PR_CLIST_IS_EMPTY(&mCollectionHead)) {
       TraceInternal(aTrc);
@@ -41,7 +41,7 @@ public:
   }
 
   void
-  _Finalize(JSFreeOp* aFop)
+  _finalize(JSFreeOp* aFop)
   {
     if (!PR_CLIST_IS_EMPTY(&mCollectionHead)) {
       FinalizeInternal(aFop);
