@@ -212,6 +212,7 @@ class TypeAnalyzer
         return phi;
     }
 
+    bool respecialize(MPhi *phi, MIRType type);
     bool propagateSpecialization(MPhi *phi);
     bool specializePhis();
     void replaceRedundantPhi(MPhi *phi);
@@ -252,6 +253,15 @@ GuessPhiType(MPhi *phi)
 }
 
 bool
+TypeAnalyzer::respecialize(MPhi *phi, MIRType type)
+{
+    if (phi->type() == type)
+        return true;
+    phi->specialize(type);
+    return addPhiToWorklist(phi);
+}
+
+bool
 TypeAnalyzer::propagateSpecialization(MPhi *phi)
 {
     // Verify that this specialization matches any phis depending on it.
@@ -265,21 +275,20 @@ TypeAnalyzer::propagateSpecialization(MPhi *phi)
             // We tried to specialize this phi, but were unable to guess its
             // type. Now that we know the type of one of its operands, we can
             // specialize it.
-            use->specialize(phi->type());
-            if (!addPhiToWorklist(use))
+            if (!respecialize(use, phi->type()))
                 return false;
             continue;
         }
         if (use->type() != phi->type()) {
             // Specialize phis with int32 and double operands as double.
             if (IsNumberType(use->type()) && IsNumberType(phi->type())) {
-                use->specialize(MIRType_Double);
+                if (!respecialize(use, MIRType_Double))
+                    return false;
                 continue;
             }
 
             // This phi in our use chain can now no longer be specialized.
-            use->specialize(MIRType_Value);
-            if (!addPhiToWorklist(use))
+            if (!respecialize(use, MIRType_Value))
                 return false;
         }
     }
