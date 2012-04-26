@@ -232,6 +232,7 @@ WinNativeApp.prototype = {
       if(uninstallKey.hasChild(this.uninstallSubkeyStr)) {
         uninstallKey.removeChild(this.uninstallSubkeyStr);
       }
+    } catch (e) {
     } finally {
       if(uninstallKey)
         uninstallKey.close();
