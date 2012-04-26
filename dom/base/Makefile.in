@@ -52,25 +52,27 @@ DIRS = \
   $(NULL)
 
 EXTRA_PP_COMPONENTS = \
-		ConsoleAPI.js \
-		ConsoleAPI.manifest \
-		BrowserElementAPI.js \
-		BrowserElementAPI.manifest \
-		$(NULL)
+  ConsoleAPI.js \
+  ConsoleAPI.manifest \
+  BrowserElementAPI.js \
+  BrowserElementAPI.manifest \
+  $(NULL)
 
 EXTRA_JS_MODULES = ConsoleAPIStorage.jsm \
-		$(NULL)
+  $(NULL)
 
 EXTRA_COMPONENTS = \
-	        Webapps.js \
-	        Webapps.manifest \
-		$(NULL)
+  Webapps.js \
+  Webapps.manifest \
+  $(NULL)
 
 EXTRA_PP_JS_MODULES += Webapps.jsm \
-		$(NULL)
+  $(NULL)
 
-EXTRA_JS_MODULES += DOMRequestHelper.jsm \
-		$(NULL)
+EXTRA_JS_MODULES += \
+  DOMRequestHelper.jsm \
+  IndexedDBHelper.jsm \
+  $(NULL)
 
 XPIDLSRCS = \
   nsIDOMDOMError.idl \

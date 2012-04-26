@@ -37,6 +37,7 @@ let DOMContactManager = {
     var idbManager = Components.classes["@mozilla.org/dom/indexeddb/manager;1"].getService(Ci.nsIIndexedDatabaseManager);
     idbManager.initWindowless(myGlobal);
     this._db = new ContactDB(myGlobal);
+    this._db.init(myGlobal);
 
     Services.obs.addObserver(this, "profile-before-change", false);
 

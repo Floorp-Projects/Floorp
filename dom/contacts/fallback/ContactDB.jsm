@@ -8,16 +8,18 @@ const EXPORTED_SYMBOLS = ['ContactDB'];
 
 let DEBUG = 0;
 /* static functions */
-if (DEBUG)
-    debug = function (s) { dump("-*- ContactDB component: " + s + "\n"); }
-else
-    debug = function (s) {}
+if (DEBUG) {
+  debug = function (s) { dump("-*- ContactDB component: " + s + "\n"); }
+} else {
+  debug = function (s) {}
+}
 
 const Cu = Components.utils; 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 
 const DB_NAME = "contacts";
 const DB_VERSION = 1;
@@ -29,66 +31,7 @@ function ContactDB(aGlobal) {
 }
 
 ContactDB.prototype = {
-
-  // Cache the DB
-  db: null,
-
-  close: function close() {
-    debug("close");
-    if (this.db)
-      this.db.close();
-  },
-
-  /**
-   * Prepare the database. This may include opening the database and upgrading
-   * it to the latest schema version.
-   * 
-   * @return (via callback) a database ready for use.
-   */
-  ensureDB: function ensureDB(callback, failureCb) {
-    if (this.db) {
-      debug("ensureDB: already have a database, returning early.");
-      callback(this.db);
-      return;
-    }
-
-    let self = this;
-    debug("try to open database:" + DB_NAME + " " + DB_VERSION);
-    let request = this._global.mozIndexedDB.open(DB_NAME, DB_VERSION);
-    request.onsuccess = function (event) {
-      debug("Opened database:", DB_NAME, DB_VERSION);
-      self.db = event.target.result;
-      self.db.onversionchange = function(event) {
-        debug("WARNING: DB modified from a different window.");
-      }
-      callback(self.db);
-    };
-    request.onupgradeneeded = function (event) {
-      debug("Database needs upgrade:" + DB_NAME + event.oldVersion + event.newVersion);
-      debug("Correct new database version:" + event.newVersion == DB_VERSION);
-
-      let db = event.target.result;
-      switch (event.oldVersion) {
-        case 0:
-          debug("New database");
-          self.createSchema(db);
-          break;
-
-        default:
-          debug("No idea what to do with old database version:" + event.oldVersion);
-          failureCb(event.target.errorMessage);
-          break;
-      }
-    };
-    request.onerror = function (event) {
-      debug("Failed to open database:", DB_NAME);
-      failureCb(event.target.errorMessage);
-    };
-    request.onblocked = function (event) {
-      debug("Opening database request is blocked.");
-    };
-  },
-
+  __proto__: IndexedDBHelper.prototype,
   /**
    * Create the initial database schema.
    *
@@ -101,7 +44,7 @@ ContactDB.prototype = {
    * }
    */
   createSchema: function createSchema(db) {
-    let objectStore = db.createObjectStore(STORE_NAME, {keyPath: "id"});
+    let objectStore = db.createObjectStore(this.dbStoreName, {keyPath: "id"});
 
     // Metadata indexes
     objectStore.createIndex("published", "published", { unique: false });
@@ -125,41 +68,6 @@ ContactDB.prototype = {
     objectStore.createIndex("noteLowerCase",       "search.note",       { unique: false, multiEntry: true });
 
     debug("Created object stores and indexes");
-  },
-
-  /**
-   * Start a new transaction.
-   * 
-   * @param txn_type
-   *        Type of transaction (e.g. "readwrite")
-   * @param callback
-   *        Function to call when the transaction is available. It will
-   *        be invoked with the transaction and the 'contacts' object store.
-   * @param successCb [optional]
-   *        Success callback to call on a successful transaction commit.
-   * @param failureCb [optional]
-   *        Error callback to call when an error is encountered.
-   */
-  newTxn: function newTxn(txn_type, callback, successCb, failureCb) {
-    this.ensureDB(function (db) {
-      debug("Starting new transaction" + txn_type);
-      let txn = db.transaction(STORE_NAME, txn_type);
-      debug("Retrieving object store", STORE_NAME);
-      let store = txn.objectStore(STORE_NAME);
-
-      txn.oncomplete = function (event) {
-        debug("Transaction complete. Returning to callback.");
-        successCb(txn.result);
-      };
-
-      txn.onabort = function (event) {
-        debug("Caught error on transaction");
-        // FIXXMEE: this will work in the future. Bug 748630
-        // failureCb(event.target.error.name);
-        failureCb("UnknownError");
-      };
-      callback(txn, store);
-    }, failureCb);
   },
 
   makeImport: function makeImport(aContact) {
@@ -403,5 +311,9 @@ ContactDB.prototype = {
       for (let i in event.target.result)
         txn.result[event.target.result[i].id] = this.makeExport(event.target.result[i]);
     }.bind(this);
+  },
+
+  init: function init(aGlobal) {
+      this.initDBHelper(DB_NAME, DB_VERSION, STORE_NAME, aGlobal);
   }
 };
