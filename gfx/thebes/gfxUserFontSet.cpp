@@ -117,7 +117,7 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
                             PRUint32 aWeight,
                             PRUint32 aStretch,
                             PRUint32 aItalicStyle,
-                            const nsString& aFeatureSettings,
+                            const nsTArray<gfxFontFeature>& aFeatureSettings,
                             const nsString& aLanguageOverride,
                             gfxSparseBitSet *aUnicodeRanges)
 {
@@ -140,15 +140,12 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
     }
 
     // construct a new face and add it into the family
-    nsTArray<gfxFontFeature> featureSettings;
-    gfxFontStyle::ParseFontFeatureSettings(aFeatureSettings,
-                                           featureSettings);
     PRUint32 languageOverride =
         gfxFontStyle::ParseFontLanguageOverride(aLanguageOverride);
     proxyEntry =
         new gfxProxyFontEntry(aFontFaceSrcList, family, aWeight, aStretch,
                               aItalicStyle,
-                              featureSettings,
+                              aFeatureSettings,
                               languageOverride,
                               aUnicodeRanges);
     family->AddFontEntry(proxyEntry);

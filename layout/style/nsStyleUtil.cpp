@@ -53,6 +53,7 @@
 #include "nsContentUtils.h"
 #include "nsTextFormatter.h"
 #include "nsCSSProps.h"
+#include "nsRuleNode.h"
 
 using namespace mozilla;
 
@@ -487,6 +488,59 @@ nsStyleUtil::AppendBitmaskCSSValue(nsCSSProperty aProperty,
     }
   }
   NS_ABORT_IF_FALSE(aMaskedValue == 0, "unexpected bit remaining in bitfield");
+}
+
+/* static */ void
+nsStyleUtil::AppendFontFeatureSettings(const nsTArray<gfxFontFeature>& aFeatures,
+                                       nsAString& aResult)
+{
+  for (PRUint32 i = 0, numFeat = aFeatures.Length(); i < numFeat; i++) {
+    const gfxFontFeature& feat = aFeatures[i];
+
+    if (i != 0) {
+        aResult.AppendLiteral(", ");
+    }
+
+    // output tag
+    char tag[7];
+    tag[0] = '"';
+    tag[1] = (feat.mTag >> 24) & 0xff;
+    tag[2] = (feat.mTag >> 16) & 0xff;
+    tag[3] = (feat.mTag >> 8) & 0xff;
+    tag[4] = feat.mTag & 0xff;
+    tag[5] = '"';
+    tag[6] = 0;
+    aResult.AppendASCII(tag);
+
+    // output value, if necessary
+    if (feat.mValue == 0) {
+      // 0 ==> off
+      aResult.AppendLiteral(" off");
+    } else if (feat.mValue > 1) {
+      aResult.AppendLiteral(" ");
+      aResult.AppendInt(feat.mValue);
+    }
+    // else, omit value if 1, implied by default
+  }
+}
+
+/* static */ void
+nsStyleUtil::AppendFontFeatureSettings(const nsCSSValue& aSrc,
+                                       nsAString& aResult)
+{
+  nsCSSUnit unit = aSrc.GetUnit();
+
+  if (unit == eCSSUnit_Normal) {
+    aResult.AppendLiteral("normal");
+    return;
+  }
+
+  NS_PRECONDITION(unit == eCSSUnit_PairList || unit == eCSSUnit_PairListDep,
+                  "improper value unit for font-feature-settings:");
+
+  nsTArray<gfxFontFeature> featureSettings;
+  nsRuleNode::ComputeFontFeatures(aSrc.GetPairListValue(), featureSettings);
+  AppendFontFeatureSettings(featureSettings, aResult);
 }
 
 /* static */ float
