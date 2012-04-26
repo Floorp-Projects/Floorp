@@ -27,13 +27,6 @@
     var gQueue = null;
     function doTests()
     {
-      // bug 746183 - Whole file times out on OS X
-      if (MAC) {
-        todo(false, "Reenable on mac after fixing bug 746183!");
-        SimpleTest.finish();
-        return;
-      }
-
       // Test focus events.
       gQueue = new eventQueue();
 

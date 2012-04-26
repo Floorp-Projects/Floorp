@@ -73,7 +73,6 @@
       // show popup again for the next test
       gQueue.push(new synthClick("popupbutton", new nofocusChecker()));
 
-if (MAC) {
       // click menubutton of the 'menubutton' button while popup of button open.
       gQueue.push(new synthClick("mbb", new focusChecker("mbb"), { where: "right" }));
       // close popup, focus stays on menubutton, fire focus event
@@ -90,9 +89,6 @@ if (MAC) {
       gQueue.push(new synthUpKey("menubutton", new focusChecker("mbb_item2")));
       // click on menu item of menubutton menu, focus menubutton
       gQueue.push(new synthClick("mbb_item2", new focusChecker("mbb")));
-} else {
-      todo(false, "mbb tests time out on OS X, fix bug 746970 and reenable!");
-}
 
       // focus colorpicker button
       gQueue.push(new synthFocus("colorpicker"));
