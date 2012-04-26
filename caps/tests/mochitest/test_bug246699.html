@@ -5,14 +5,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=246699
 -->
 <head>
   <title>Test for Bug 246699</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=246699">Mozilla Bug 246699</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-<iframe id="load-frame"></iframe>  
+<iframe id="load-frame"></iframe>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -21,9 +21,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=246699
  ** Test for Bug 246699
  ** (should produce stack information for caps errors)
  **/
+function isError(e)
+{
+  return e.constructor.name === "Error" || e.constructor.name === "TypeError";
+}
+
 function hasStack(e)
 {
-  return e.constructor.name === "Error" && /inciteCaps/.test(e.stack);
+  return isError(e) && /inciteCaps/.test(e.stack);
 }
 
 function inciteCaps(f)
