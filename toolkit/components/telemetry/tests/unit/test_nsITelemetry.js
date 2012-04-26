@@ -125,6 +125,40 @@ function test_getHistogramById() {
   do_check_eq(s.max, 10000);
 }
 
+function compareHistograms(h1, h2) {
+  let s1 = h1.snapshot();
+  let s2 = h2.snapshot();
+
+  do_check_eq(s1.histogram_type, s2.histogram_type);
+  do_check_eq(s1.min, s2.min);
+  do_check_eq(s1.max, s2.max);
+
+  // XXX Don't compare flag sums until bug 747379 is fixed
+  if (s1.histogram_type != Telemetry.HISTOGRAM_FLAG) {
+    do_check_eq(s1.sum, s2.sum);
+
+    do_check_eq(s1.counts.length, s2.counts.length);
+    for (let i = 0; i < s1.counts.length; i++)
+      do_check_eq(s1.counts[i], s2.counts[i]);
+  }
+
+  do_check_eq(s1.ranges.length, s2.ranges.length);
+  for (let i = 0; i < s1.ranges.length; i++)
+    do_check_eq(s1.ranges[i], s2.ranges[i]);
+}
+
+function test_histogramFrom() {
+  // One histogram of each type
+  let names = ["CYCLE_COLLECTOR", "GC_REASON", "GC_RESET", "TELEMETRY_TEST_FLAG"];
+
+  for each (let name in names) {
+    let [min, max, bucket_count] = [1, INT_MAX - 1, 10]
+    let original = Telemetry.getHistogramById(name);
+    let clone = Telemetry.histogramFrom("clone" + name, name);
+    compareHistograms(original, clone);
+  }
+}
+
 function test_getSlowSQL() {
   var slow = Telemetry.slowSQL;
   do_check_true(("mainThread" in slow) && ("otherThreads" in slow));
@@ -280,6 +314,7 @@ function run_test()
 
   test_boolean_histogram();
   test_getHistogramById();
+  test_histogramFrom();
   test_getSlowSQL();
   test_privateMode();
   test_addons();
