@@ -112,10 +112,7 @@ public abstract class TileLayer extends Layer {
          *
          * XXX Currently, we don't pick a GLES 2.0 context, so always round.
          */
-        IntSize bufferSize = mImage.getSize();
-        IntSize textureSize = bufferSize;
-
-        textureSize = bufferSize.nextPowerOfTwo();
+        IntSize textureSize = mImage.getSize().nextPowerOfTwo();
 
         if (!textureSize.equals(mSize)) {
             mSize = textureSize;
@@ -178,8 +175,35 @@ public abstract class TileLayer extends Layer {
 
         bindAndSetGLParameters();
 
-        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width,
-                            mSize.height, 0, glInfo.format, glInfo.type, imageBuffer);
+        // XXX TexSubImage2D is too broken to rely on on Adreno, and very slow
+        //     on other chipsets, so we always upload the entire buffer.
+        IntSize bufferSize = mImage.getSize();
+        if (mSize.equals(bufferSize)) {
+            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width,
+                                mSize.height, 0, glInfo.format, glInfo.type, imageBuffer);
+        } else {
+            // Our texture has been expanded to the next power of two.
+            // XXX We probably never want to take this path, so throw an exception.
+            throw new RuntimeException("Buffer/image size mismatch in TileLayer!");
+
+            /*
+            int bpp = CairoUtils.bitsPerPixelForCairoFormat(cairoFormat)/8;
+            ByteBuffer tempBuffer =
+                GeckoAppShell.allocateDirectBuffer(mSize.width * mSize.height * bpp);
+            for (int y = 0; y < bufferSize.height; y++) {
+                tempBuffer.position(y * mSize.width * bpp);
+                imageBuffer.limit((y + 1) * bufferSize.width * bpp);
+                imageBuffer.position(y * bufferSize.width * bpp);
+                tempBuffer.put(imageBuffer);
+            }
+            imageBuffer.position(0);
+            tempBuffer.position(0);
+
+            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width,
+                                mSize.height, 0, glInfo.format, glInfo.type, tempBuffer);
+            GeckoAppShell.freeDirectBuffer(tempBuffer);
+            */
+        }
     }
 
     private void bindAndSetGLParameters() {
