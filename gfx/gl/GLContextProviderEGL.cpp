@@ -724,7 +724,7 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
             return false;
         }
 
-        if (!ResizeOffscreenFBO(pbsize, false))
+        if (!ResizeOffscreenFBOs(pbsize, false))
             return false;
 
         SetOffscreenSize(aNewSize, pbsize);
@@ -771,7 +771,7 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
         if (!config) {
             return false;
         }
-        if (!ResizeOffscreenFBO(aNewSize, true))
+        if (!ResizeOffscreenFBOs(aNewSize, true))
             return false;
 
         mThebesSurface = xsurface;
@@ -782,12 +782,12 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 
 #if defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
     if (ResizeOffscreenPixmapSurface(aNewSize)) {
-        if (ResizeOffscreenFBO(aNewSize, true))
+        if (ResizeOffscreenFBOs(aNewSize, true))
             return true;
     }
 #endif
 
-    return ResizeOffscreenFBO(aNewSize, true);
+    return ResizeOffscreenFBOs(aNewSize, true);
 }
 
 
@@ -1964,7 +1964,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
 
     gfxIntSize fboSize = usePBuffers ? glContext->OffscreenActualSize() : aSize;
-    if (!(aFlags & GLContext::ContextFlagsGlobal) && !glContext->ResizeOffscreenFBO(fboSize, !usePBuffers))
+    if (!(aFlags & GLContext::ContextFlagsGlobal) && !glContext->ResizeOffscreenFBOs(fboSize, !usePBuffers))
         return nsnull;
 
     return glContext.forget();
@@ -1975,7 +1975,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
     if (!glContext)
         return nsnull;
 
-    if (!(aFlags & GLContext::ContextFlagsGlobal) && !glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), true))
+    if (!(aFlags & GLContext::ContextFlagsGlobal) && !glContext->ResizeOffscreenFBOs(glContext->OffscreenActualSize(), true))
         return nsnull;
 
     return glContext.forget();
@@ -1987,7 +1987,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
     }
 
-    if (!(aFlags & GLContext::ContextFlagsGlobal) && !gUseBackingSurface && !glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), true)) {
+    if (!(aFlags & GLContext::ContextFlagsGlobal) && !gUseBackingSurface && !glContext->ResizeOffscreenFBOs(glContext->OffscreenActualSize(), true)) {
         // we weren't able to create the initial
         // offscreen FBO, so this is dead
         return nsnull;

@@ -1,5 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Web Workers.
+ * The Original Code is Mozilla.
  *
  * The Initial Developer of the Original Code is
- *   The Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * Netscape Communications.
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ben Turner <bent.mozilla@gmail.com> (Original Author)
+ *   Patrick McManus <mcmanus@ducksong.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,49 +36,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_workers_exceptions_h__
-#define mozilla_dom_workers_exceptions_h__
+#include "nsISupports.idl"
 
-#include "Workers.h"
+interface nsIURI;
+interface nsIInterfaceRequestor;
+interface nsIEventTarget;
 
-#include "jspubtd.h"
+[scriptable, uuid(b3c53863-1313-480a-90a2-5b0da651ee5e)]
+interface nsISpeculativeConnect : nsISupports
+{
+    /**
+     * Called as a hint to indicate a new transaction for the URI is likely coming
+     * soon. The implementer may use this information to start a TCP
+     * and/or SSL level handshake for that resource immediately so that it is
+     * ready and/or progressed when the transaction is actually submitted.
+     *
+     * No obligation is taken on by the implementer, nor is the submitter obligated
+     * to actually open the new channel. 
+     *
+     * @param aURI the URI of the hinted transaction
+     * @param aCallbacks any security callbacks for use with SSL for interfaces
+     *        such as nsIBadCertListener. May be null.
+     * @param aTarget the thread on which the release of the callbacks will
+     *        occur. May be null for "any thread".
+     *
+     */
+    void speculativeConnect(in nsIURI aURI,
+                            in nsIInterfaceRequestor aCallbacks,
+                            in nsIEventTarget aTarget);
 
-// DOMException Codes.
-#define INDEX_SIZE_ERR 1
-#define DOMSTRING_SIZE_ERR 2
-#define HIERARCHY_REQUEST_ERR 3
-#define WRONG_DOCUMENT_ERR 4
-#define INVALID_CHARACTER_ERR 5
-#define NO_DATA_ALLOWED_ERR 6
-#define NO_MODIFICATION_ALLOWED_ERR 7
-#define NOT_FOUND_ERR 8
-#define NOT_SUPPORTED_ERR 9
-#define INUSE_ATTRIBUTE_ERR 10
-#define INVALID_STATE_ERR 11
-#define SYNTAX_ERR 12
-#define INVALID_MODIFICATION_ERR 13
-#define NAMESPACE_ERR 14
-#define INVALID_ACCESS_ERR 15
-#define VALIDATION_ERR 16
-#define TYPE_MISMATCH_ERR 17
-#define SECURITY_ERR 18
-#define NETWORK_ERR 19
-#define ABORT_ERR 20
-#define URL_MISMATCH_ERR 21
-#define QUOTA_EXCEEDED_ERR 22
-#define TIMEOUT_ERR 23
-#define INVALID_NODE_TYPE_ERR 24
-#define DATA_CLONE_ERR 25
+};
 
-BEGIN_WORKERS_NAMESPACE
-
-namespace exceptions {
-
-bool
-InitClasses(JSContext* aCx, JSObject* aGlobal);
-
-} // namespace exceptions
-
-END_WORKERS_NAMESPACE
-
-#endif // mozilla_dom_workers_exceptions_h__

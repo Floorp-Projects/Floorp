@@ -42,7 +42,6 @@
 
 #include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
-#include "nsApplicationAccessibleWrap.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "Relation.h"

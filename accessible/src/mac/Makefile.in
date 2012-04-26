@@ -62,6 +62,7 @@ CMMSRCS = nsAccessNodeWrap.mm \
 
 
 EXPORTS = \
+  ApplicationAccessibleWrap.h \
   ARIAGridAccessibleWrap.h \
   nsAccessNodeWrap.h \
   nsTextAccessibleWrap.h \
@@ -74,7 +75,6 @@ EXPORTS = \
   nsHyperTextAccessibleWrap.h \
   nsHTMLImageAccessibleWrap.h \
   nsHTMLTableAccessibleWrap.h \
-  nsApplicationAccessibleWrap.h \
   mozDocAccessible.h \
   mozAccessible.h \
   mozAccessibleProtocol.h \
