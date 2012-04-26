@@ -50,9 +50,13 @@
       gQueue.push(new synthClick("menulist", new focusChecker("ml_tangerine")));
       gQueue.push(new synthDownKey("ml_tangerine", new focusChecker("ml_marmalade")));
       gQueue.push(new synthEscapeKey("ml_marmalade", new focusChecker("menulist")));
+if (MAC) {
       gQueue.push(new synthDownKey("menulist", new nofocusChecker("ml_marmalade")));
       gQueue.push(new synthOpenComboboxKey("menulist", new focusChecker("ml_marmalade")));
       gQueue.push(new synthEnterKey("ml_marmalade", new focusChecker("menulist")));
+} else {
+      todo(false, "Bug 746531 - timeouts of last three menulist tests on OS X");
+}
 
       var textentry = getAccessible("emenulist").firstChild;
       gQueue.push(new synthFocus("emenulist", new focusChecker(textentry)));
@@ -68,7 +72,9 @@
 
       gQueue.push(new changeCurrentItem("listbox", "lb_item1"));
       gQueue.push(new changeCurrentItem("richlistbox", "rlb_item1"));
+if (!MAC) {
       gQueue.push(new changeCurrentItem("menulist", "ml_tangerine"));
+}
       gQueue.push(new changeCurrentItem("emenulist", "eml_tangerine"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
