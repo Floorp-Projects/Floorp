@@ -75,23 +75,25 @@ txExprLexer::~txExprLexer()
 Token*
 txExprLexer::nextToken()
 {
-  NS_ASSERTION(mCurrentItem, "nextToken called beyoned the end");
+  if (!mCurrentItem) {
+    NS_NOTREACHED("nextToken called on uninitialized lexer");
+    return nsnull;
+  }
+
+  if (mCurrentItem->mType == Token::END) {
+    // Do not progress beyond the end token
+    return mCurrentItem;
+  }
+
   Token* token = mCurrentItem;
   mCurrentItem = mCurrentItem->mNext;
   return token;
 }
 
 void
-txExprLexer::pushBack()
-{
-  mCurrentItem = mCurrentItem ? mCurrentItem->mPrevious : mLastItem;
-}
-
-void
 txExprLexer::addToken(Token* aToken)
 {
   if (mLastItem) {
-    aToken->mPrevious = mLastItem;
     mLastItem->mNext = aToken;
   }
   if (!mFirstItem) {
