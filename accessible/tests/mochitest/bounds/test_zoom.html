@@ -22,14 +22,6 @@
   <script type="application/javascript">
     function doTest()
     {
-      // Bug 746176: Failure of this whole test file on OS X.
-      if (MAC) {
-        todo(false, "Fix bug 746176 on Mac");
-        closeBrowserWindow();
-        SimpleTest.finish();
-        return;
-      }
-
       var tabDocument = currentTabDocument();
       var p1 = tabDocument.getElementById("p1");
       var p2 = tabDocument.getElementById("p2");
