@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=740784
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
 </head>
 
-<body onload="doTest();">
+<body>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=740784">Mozilla Bug 740784</a>
   <p id="display"></p>
   <div id="content" style="display: none">
@@ -27,8 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=740784
       /** Test for Bug 740784 **/
 
       SimpleTest.waitForExplicitFinish();
-
-      function doTest() {
+      SimpleTest.waitForFocus(function() {
         var t1 = $("t1");
 
         t1.focus();
@@ -40,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=740784
         is(t1.value, "a", "trailing <br> correctly ignored");
 
         SimpleTest.finish();
-      }
+      });
    </script>
   </pre>
 
