@@ -2158,6 +2158,7 @@ abstract public class GeckoApp
         if (checkLaunchState(LaunchState.GeckoRunning))
             GeckoAppShell.onLowMemory();
         super.onLowMemory();
+        GeckoAppShell.geckoEventSync();
     }
 
     @Override
