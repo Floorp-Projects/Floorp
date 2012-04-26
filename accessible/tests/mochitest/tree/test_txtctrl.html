@@ -103,6 +103,19 @@
 
       testAccessibleTree("txc7", accTree);
 
+      // input@type="search", value
+      accTree = {
+        role: ROLE_ENTRY,
+        children: [
+          { // text child
+            role: ROLE_TEXT_LEAF,
+            children: []
+          }
+        ]
+      };
+
+      testAccessibleTree("txc8", accTree);
+
       SimpleTest.finish();
     }
 
@@ -150,6 +163,13 @@
   <datalist id="contacts">
     <option>xyzzy@plughs.com</option>
     <option>nobody@mozilla.org</option>
+  </datalist>
+
+  </br>Search for:
+  <input id="txc8" type="search" list="searchhisty" value="Gamma">
+  <datalist id="searchhisty">
+    <option>Gamma Rays</option>
+    <option>Gamma Ray Bursts</option>
   </datalist>
 
 </body>
