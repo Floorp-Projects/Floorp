@@ -2587,6 +2587,8 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
                        fontStyle->mFont.featureSettings,
                        fontStyle->mFont.languageOverride);
 
+    fontStyle->mFont.AddFontFeaturesToStyle(&style);
+
     CurrentState().fontGroup =
         gfxPlatform::GetPlatform()->CreateFontGroup(fontStyle->mFont.name,
                                                     &style,
