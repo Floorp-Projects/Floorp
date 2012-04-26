@@ -1683,8 +1683,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                 JSObject *ww = wrapper->GetWrapper();
                 if (ww) {
                     JSObject *newwrapper;
-                    MOZ_ASSERT(!xpc::WrapperFactory::IsComponentsObject(flat), 
-                               "Components object should never get here");
                     if (xpc::WrapperFactory::IsLocationObject(flat)) {
                         newwrapper = xpc::WrapperFactory::WrapLocationObject(ccx, newobj);
                         if (!newwrapper)
@@ -2240,10 +2238,6 @@ XPCWrappedNative::GetSameCompartmentSecurityWrapper(JSContext *cx)
             return NULL;
     } else if (NeedsSOW()) {
         wrapper = xpc::WrapperFactory::WrapSOWObject(cx, flat);
-        if (!wrapper)
-            return NULL;
-    } else if (xpc::WrapperFactory::IsComponentsObject(flat)) {
-        wrapper = xpc::WrapperFactory::WrapComponentsObject(cx, flat);
         if (!wrapper)
             return NULL;
     }

@@ -110,12 +110,6 @@ class WrapperFactory {
 
     // Wrap a (same compartment) object in a SOW.
     static JSObject *WrapSOWObject(JSContext *cx, JSObject *obj);
-
-    // Return true if this is a Components object.
-    static bool IsComponentsObject(JSObject *obj);
-
-    // Wrap a (same compartment) Components object.
-    static JSObject *WrapComponentsObject(JSContext *cx, JSObject *obj);
 };
 
 extern js::Wrapper WaiveXrayWrapperWrapper;
