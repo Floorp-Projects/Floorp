@@ -234,6 +234,40 @@ private:
 NS_IMPL_THREADSAFE_ISUPPORTS1(CallAcknowledge, nsIRunnable)
 
 //-----------------------------------------------------------------------------
+// CallOnTransportAvailable
+//-----------------------------------------------------------------------------
+
+class CallOnTransportAvailable : public nsIRunnable
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  CallOnTransportAvailable(WebSocketChannel *aChannel,
+                           nsISocketTransport *aTransport,
+                           nsIAsyncInputStream *aSocketIn,
+                           nsIAsyncOutputStream *aSocketOut)
+    : mChannel(aChannel),
+      mTransport(aTransport),
+      mSocketIn(aSocketIn),
+      mSocketOut(aSocketOut) {}
+
+  NS_IMETHOD Run()
+  {
+    LOG(("WebSocketChannel::CallOnTransportAvailable %p\n", this));
+    return mChannel->OnTransportAvailable(mTransport, mSocketIn, mSocketOut);
+  }
+
+private:
+  ~CallOnTransportAvailable() {}
+
+  nsRefPtr<WebSocketChannel>     mChannel;
+  nsCOMPtr<nsISocketTransport>   mTransport;
+  nsCOMPtr<nsIAsyncInputStream>  mSocketIn;
+  nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
+};
+NS_IMPL_THREADSAFE_ISUPPORTS1(CallOnTransportAvailable, nsIRunnable)
+
+//-----------------------------------------------------------------------------
 // OutboundMessage
 //-----------------------------------------------------------------------------
 
@@ -693,6 +727,7 @@ WebSocketChannel::WebSocketChannel() :
   mOpenBlocked(0),
   mOpenRunning(0),
   mChannelWasOpened(0),
+  mDataStarted(0),
   mMaxMessageSize(PR_INT32_MAX),
   mStopOnClose(NS_OK),
   mServerCloseCode(CLOSE_ABNORMAL),
@@ -1880,6 +1915,14 @@ nsresult
 WebSocketChannel::StartWebsocketData()
 {
   LOG(("WebSocketChannel::StartWebsocketData() %p", this));
+  NS_ABORT_IF_FALSE(!mDataStarted, "StartWebsocketData twice");
+  mDataStarted = 1;
+  
+  LOG(("WebSocketChannel::StartWebsocketData Notifying Listener %p\n",
+       mListener.get()));
+
+  if (mListener)
+    mListener->OnStart(mContext);
 
   return mSocketIn->AsyncWait(this, 0, 0, mSocketThread);
 }
@@ -2384,6 +2427,13 @@ WebSocketChannel::OnTransportAvailable(nsISocketTransport *aTransport,
                                        nsIAsyncInputStream *aSocketIn,
                                        nsIAsyncOutputStream *aSocketOut)
 {
+  if (!NS_IsMainThread()) {
+    return NS_DispatchToMainThread(new CallOnTransportAvailable(this,
+                                                                aTransport,
+                                                                aSocketIn,
+                                                                aSocketOut));
+  }
+
   LOG(("WebSocketChannel::OnTransportAvailable %p [%p %p %p] rcvdonstart=%d\n",
        this, aTransport, aSocketIn, aSocketOut, mRecvdHttpOnStartRequest));
 
@@ -2558,12 +2608,6 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest,
   rv = HandleExtensions();
   if (NS_FAILED(rv))
     return rv;
-
-  LOG(("WebSocketChannel::OnStartRequest: Notifying Listener %p\n",
-       mListener.get()));
-
-  if (mListener)
-    mListener->OnStart(mContext);
 
   mRecvdHttpOnStartRequest = 1;
   if (mRecvdHttpUpgradeTransport)

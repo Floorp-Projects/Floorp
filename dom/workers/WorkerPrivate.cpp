@@ -100,7 +100,7 @@
 using mozilla::MutexAutoLock;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
-using mozilla::dom::workers::exceptions::ThrowDOMExceptionForCode;
+using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
 
 USING_WORKERS_NAMESPACE
 using namespace mozilla::dom::workers::events;
@@ -415,7 +415,7 @@ struct WorkerStructuredCloneCallbacks
   static void
   Error(JSContext* aCx, uint32_t /* aErrorId */)
   {
-    ThrowDOMExceptionForCode(aCx, DATA_CLONE_ERR);
+    ThrowDOMExceptionForNSResult(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
   }
 };
 

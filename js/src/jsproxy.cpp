@@ -1251,6 +1251,8 @@ proxy_DeleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JS
 static void
 proxy_TraceObject(JSTracer *trc, JSObject *obj)
 {
+    // NB: If you add new slots here, make sure to change
+    // js::NukeChromeCrossCompartmentWrappers to cope.
     GetProxyHandler(obj)->trace(trc, obj);
     MarkCrossCompartmentSlot(trc, &obj->getReservedSlotRef(JSSLOT_PROXY_PRIVATE), "private");
     MarkCrossCompartmentSlot(trc, &obj->getReservedSlotRef(JSSLOT_PROXY_EXTRA + 0), "extra0");
@@ -1260,6 +1262,8 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
 static void
 proxy_TraceFunction(JSTracer *trc, JSObject *obj)
 {
+    // NB: If you add new slots here, make sure to change
+    // js::NukeChromeCrossCompartmentWrappers to cope.
     MarkCrossCompartmentSlot(trc, &GetCall(obj), "call");
     MarkCrossCompartmentSlot(trc, &GetFunctionProxyConstruct(obj), "construct");
     proxy_TraceObject(trc, obj);

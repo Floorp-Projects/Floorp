@@ -20,6 +20,8 @@ class GLContext;
 
 namespace layers {
 
+class ReusableTileStoreOGL;
+
 class TiledTexture {
 public:
   // Constructs a placeholder TiledTexture. See the comments above
@@ -73,9 +75,12 @@ public:
 
   void Upload(const BasicTiledLayerBuffer* aMainMemoryTiledBuffer,
               const nsIntRegion& aNewValidRegion,
-              const nsIntRegion& aInvalidateRegion);
+              const nsIntRegion& aInvalidateRegion,
+              const gfxSize& aResolution);
 
   TiledTexture GetPlaceholderTile() const { return TiledTexture(); }
+
+  const gfxSize& GetResolution() { return mResolution; }
 
 protected:
   TiledTexture ValidateTile(TiledTexture aTile,
@@ -91,6 +96,7 @@ protected:
 private:
   nsRefPtr<gl::GLContext> mContext;
   const BasicTiledLayerBuffer* mMainMemoryTiledBuffer;
+  gfxSize mResolution;
 
   void GetFormatAndTileForImageFormat(gfxASurface::gfxImageFormat aFormat,
                                       GLenum& aOutFormat,
@@ -103,10 +109,7 @@ class TiledThebesLayerOGL : public ShadowThebesLayer,
 {
 public:
   TiledThebesLayerOGL(LayerManagerOGL *aManager);
-  virtual ~TiledThebesLayerOGL()
-  {
-    mMainMemoryTiledBuffer.ReadUnlock();
-  }
+  virtual ~TiledThebesLayerOGL();
 
   // LayerOGL impl
   void Destroy() {}
@@ -126,10 +129,22 @@ public:
   }
   void PaintedTiledLayerBuffer(const BasicTiledLayerBuffer* mTiledBuffer);
   void ProcessUploadQueue();
+
+  // Renders a single given tile.
+  // XXX This currently takes an nsIntRect, but should actually take an
+  //     nsIntRegion and iterate over each rectangle in the region.
+  void RenderTile(TiledTexture aTile,
+                  const gfx3DMatrix& aTransform,
+                  const nsIntPoint& aOffset,
+                  nsIntRect aScreenRect,
+                  nsIntRect aTextureRect,
+                  nsIntSize aTextureBounds);
+
 private:
   nsIntRegion                  mRegionToUpload;
   BasicTiledLayerBuffer        mMainMemoryTiledBuffer;
   TiledLayerBufferOGL          mVideoMemoryTiledBuffer;
+  ReusableTileStoreOGL*        mReusableTileStore;
 };
 
 } // layers

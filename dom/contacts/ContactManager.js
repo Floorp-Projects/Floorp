@@ -334,8 +334,6 @@ ContactManager.prototype = {
                      "Contact:Save:Return:OK", "Contact:Save:Return:KO",
                      "Contact:Remove:Return:OK", "Contact:Remove:Return:KO"]);
 
-    Services.obs.addObserver(this, "inner-window-destroyed", false);
-
     let principal = aWindow.document.nodePrincipal;
     let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
 

@@ -38,8 +38,6 @@
 #ifndef nsCycleCollector_h__
 #define nsCycleCollector_h__
 
-// NOTE: If you use header files to define DEBUG_CC, you must do so here
-// *and* in nsCycleCollectionParticipant.h
 //#define DEBUG_CC
 
 class nsISupports;
@@ -52,14 +50,9 @@ class nsCycleCollectionTraversalCallback;
 
 struct nsCycleCollectionLanguageRuntime
 {
-    virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
-                                          bool explainLiveExpectedGarbage) = 0;
+    virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb) = 0;
     virtual nsresult FinishTraverse() = 0;
-    virtual nsresult FinishCycleCollection() = 0;
     virtual nsCycleCollectionParticipant *ToParticipant(void *p) = 0;
-#ifdef DEBUG_CC
-    virtual void PrintAllReferencesTo(void *p) = 0;
-#endif
 };
 
 // Contains various stats about the cycle collection.

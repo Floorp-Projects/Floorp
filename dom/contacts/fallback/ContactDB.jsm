@@ -153,27 +153,10 @@ ContactDB.prototype = {
       };
 
       txn.onabort = function (event) {
-        debug("Caught error on transaction" + event.target.error.name);
-        switch(event.target.error.name) {
-          case "AbortError":
-          case "ConstraintError":
-          case "DataError":
-          case "SyntaxError":
-          case "InvalidStateError":
-          case "NotFoundError":
-          case "QuotaExceededError":
-          case "ReadOnlyError":
-          case "TimeoutError":
-          case "TransactionInactiveError":
-          case "VersionError":
-          case "UnknownError":
-            failureCb("UnknownError");
-            break;
-          default:
-            debug("Unknown error", event.target.error.name);
-            failureCb("UnknownError");
-            break;
-        }
+        debug("Caught error on transaction");
+        // FIXXMEE: this will work in the future. Bug 748630
+        // failureCb(event.target.error.name);
+        failureCb("UnknownError");
       };
       callback(txn, store);
     }, failureCb);

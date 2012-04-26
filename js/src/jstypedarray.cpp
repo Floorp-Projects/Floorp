@@ -2542,6 +2542,13 @@ JS_IsTypedArrayObject(JSObject *obj, JSContext *cx)
     return obj->isTypedArray();
 }
 
+JS_FRIEND_API(JSBool)
+JS_IsArrayBufferViewObject(JSObject *obj, JSContext *cx)
+{
+    obj = UnwrapObject(obj);
+    return obj->isTypedArray();
+}
+
 JS_FRIEND_API(uint32_t)
 JS_GetArrayBufferByteLength(JSObject *obj, JSContext *cx)
 {

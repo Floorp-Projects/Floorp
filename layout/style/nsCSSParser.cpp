@@ -527,6 +527,7 @@ protected:
   bool ParseFontWeight(nsCSSValue& aValue);
   bool ParseOneFamily(nsAString& aValue);
   bool ParseFamily(nsCSSValue& aValue);
+  bool ParseFontFeatureSettings(nsCSSValue& aValue);
   bool ParseFontSrc(nsCSSValue& aValue);
   bool ParseFontSrcFormat(InfallibleTArray<nsCSSValue>& values);
   bool ParseFontRanges(nsCSSValue& aValue);
@@ -5679,6 +5680,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     switch (aPropID) {
       case eCSSProperty_font_family:
         return ParseFamily(aValue);
+      case eCSSProperty_font_feature_settings:
+        return ParseFontFeatureSettings(aValue);
       case eCSSProperty_font_weight:
         return ParseFontWeight(aValue);
       case eCSSProperty_marks:
@@ -5797,6 +5800,8 @@ CSSParserImpl::ParseFontDescriptorValue(nsCSSFontDesc aDescID,
     return ParseFontRanges(aValue);
 
   case eCSSFontDesc_FontFeatureSettings:
+    return ParseFontFeatureSettings(aValue);
+
   case eCSSFontDesc_FontLanguageOverride:
     return ParseVariant(aValue, VARIANT_NORMAL | VARIANT_STRING, nsnull);
 
@@ -8217,6 +8222,8 @@ CSSParserImpl::ParseFontSrc(nsCSSValue& aValue)
       cur.SetStringValue(dat.mFamilyName, eCSSUnit_Local_Font);
       values.AppendElement(cur);
     } else {
+      // We don't know what to do with this token; unget it and error out
+      UngetToken();
       return false;
     }
 
@@ -8316,6 +8323,86 @@ CSSParserImpl::ParseFontRanges(nsCSSValue& aValue)
   for (PRUint32 i = 0; i < ranges.Length(); i++)
     srcVals->Item(i).SetIntValue(ranges[i], eCSSUnit_Integer);
   aValue.SetArrayValue(srcVals, eCSSUnit_Array);
+  return true;
+}
+
+// font-feature-settings: normal | <feature-tag-value> [, <feature-tag-value>]*
+// <feature-tag-value> = <string> [ <integer> | on | off ]?
+
+// minimum - "tagx", "tagy", "tagz"
+// edge error case - "tagx" on 1, "tagx" "tagy", "tagx" -1, "tagx" big
+
+// pair value is always x = string, y = int
+
+// font feature tags must be four ASCII characters
+#define FEATURE_TAG_LENGTH   4
+
+static bool
+ValidFontFeatureTag(const nsString& aTag)
+{
+  if (aTag.Length() != FEATURE_TAG_LENGTH) {
+    return false;
+  }
+  PRUint32 i;
+  for (i = 0; i < FEATURE_TAG_LENGTH; i++) {
+    PRUint32 ch = aTag[i];
+    if (ch < 0x20 || ch > 0x7e) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool
+CSSParserImpl::ParseFontFeatureSettings(nsCSSValue& aValue)
+{
+  if (ParseVariant(aValue, VARIANT_INHERIT | VARIANT_NORMAL, nsnull)) {
+    return true;
+  }
+
+  nsCSSValuePairList *cur = aValue.SetPairListValue();
+  for (;;) {
+    // feature tag
+    if (!GetToken(true)) {
+      return false;
+    }
+
+    if (mToken.mType != eCSSToken_String ||
+        !ValidFontFeatureTag(mToken.mIdent)) {
+      UngetToken();
+      return false;
+    }
+    cur->mXValue.SetStringValue(mToken.mIdent, eCSSUnit_String);
+
+    if (!GetToken(true)) {
+      cur->mYValue.SetIntValue(1, eCSSUnit_Integer);
+      break;
+    }
+
+    // optional value or on/off keyword
+    if (mToken.mType == eCSSToken_Number && mToken.mIntegerValid &&
+        mToken.mInteger >= 0) {
+      cur->mYValue.SetIntValue(mToken.mInteger, eCSSUnit_Integer);
+    } else if (mToken.mType == eCSSToken_Ident &&
+               mToken.mIdent.LowerCaseEqualsLiteral("on")) {
+      cur->mYValue.SetIntValue(1, eCSSUnit_Integer);
+    } else if (mToken.mType == eCSSToken_Ident &&
+               mToken.mIdent.LowerCaseEqualsLiteral("off")) {
+      cur->mYValue.SetIntValue(0, eCSSUnit_Integer);
+    } else {
+      // something other than value/on/off, set default value
+      cur->mYValue.SetIntValue(1, eCSSUnit_Integer);
+      UngetToken();
+    }
+
+    if (!ExpectSymbol(',', true)) {
+      break;
+    }
+
+    cur->mNext = new nsCSSValuePairList;
+    cur = cur->mNext;
+  }
+
   return true;
 }
 
@@ -9266,7 +9353,7 @@ CSSParserImpl::ParsePaint(nsCSSProperty aPropID)
     return false;
   if (x.GetUnit() == eCSSUnit_URL) {
     if (!ParseVariant(y, VARIANT_COLOR | VARIANT_NONE, nsnull))
-      y.SetColorValue(NS_RGB(0, 0, 0));
+      y.SetNoneValue();
   }
   if (!ExpectEndProperty())
     return false;
