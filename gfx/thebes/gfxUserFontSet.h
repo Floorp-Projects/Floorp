@@ -51,6 +51,7 @@
 
 class nsIURI;
 class gfxMixedFontFamily;
+class nsFontFaceLoader;
 
 // parsed CSS @font-face rule information
 // lifetime: from when @font-face rule processed until font is loaded
@@ -340,6 +341,7 @@ public:
 
     nsTArray<gfxFontFaceSrc> mSrcList;
     PRUint32                 mSrcIndex; // index of loading src item
+    nsFontFaceLoader        *mLoader; // current loader for this entry, if any
 };
 
 
