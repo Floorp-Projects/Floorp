@@ -42,6 +42,7 @@
 #include "nsCoord.h"
 #include "nsStringGlue.h"
 #include "gfxFontConstants.h"
+#include "gfxFontFeatures.h"
 
 // XXX we need a method to enumerate all of the possible fonts on the
 // system across family, weight, style, size, etc. But not here!
@@ -62,6 +63,8 @@ const PRUint8 kGenericFont_sans_serif   = 0x04;
 const PRUint8 kGenericFont_monospace    = 0x08;
 const PRUint8 kGenericFont_cursive      = 0x10;
 const PRUint8 kGenericFont_fantasy      = 0x20;
+
+class gfxFontStyle;
 
 // Font structure.
 struct NS_GFX nsFont {
@@ -99,6 +102,9 @@ struct NS_GFX nsFont {
   float sizeAdjust;
 
   // Font features from CSS font-feature-settings
+  nsTArray<gfxFontFeature> fontFeatureSettings;
+
+  // old-style font-feature-settings (trimmed in later patch)
   nsString featureSettings;
 
   // Language system tag, to override document language;
@@ -135,6 +141,9 @@ struct NS_GFX nsFont {
   bool BaseEquals(const nsFont& aOther) const;
 
   nsFont& operator=(const nsFont& aOther);
+
+  // Add featureSettings into style
+  void AddFontFeaturesToStyle(gfxFontStyle *aStyle) const;
 
   // Utility method to interpret name string
   // enumerates all families specified by this font only
