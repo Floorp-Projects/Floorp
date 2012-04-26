@@ -233,7 +233,7 @@ nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont&
       (aFont1.weight == aFont2.weight) &&
       (aFont1.stretch == aFont2.stretch) &&
       (aFont1.name == aFont2.name) &&
-      (aFont1.featureSettings == aFont2.featureSettings) &&
+      (aFont1.fontFeatureSettings == aFont2.fontFeatureSettings) &&
       (aFont1.languageOverride == aFont2.languageOverride)) {
     if ((aFont1.decorations == aFont2.decorations)) {
       return NS_STYLE_HINT_NONE;
