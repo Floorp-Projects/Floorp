@@ -12,17 +12,19 @@ Cu.import("resource://gre/modules/Services.jsm");
 function onLoad() {
   window.removeEventListener("load", onLoad, false);
 
-  let installRecord = WebappRT.config.app;
+  // Set the title of the window to the name of the webapp
   let manifest = WebappRT.config.app.manifest;
-
-  // Set the title of the window to the name of the webapp.
   document.documentElement.setAttribute("title", manifest.name);
 
-  // Load the webapp's launch path.
-  let url = Services.io.newURI(installRecord.origin, null, null);
-  if (manifest.launch_path)
-    url = Services.io.newURI(manifest.launch_path, null, url);
-  document.getElementById("content").setAttribute("src", url.spec);
+  // Only load the webapp on the initially launched main window
+  if ("arguments" in window) {
+    // Load the webapp's launch URL
+    let installRecord = WebappRT.config.app;
+    let url = Services.io.newURI(installRecord.origin, null, null);
+    if (manifest.launch_path)
+      url = Services.io.newURI(manifest.launch_path, null, url);
+    document.getElementById("content").setAttribute("src", url.spec);
+  }
 }
 window.addEventListener("load", onLoad, false);
 
