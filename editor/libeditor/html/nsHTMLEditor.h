@@ -709,7 +709,7 @@ protected:
   nsresult RemoveStyleInside(nsIDOMNode *aNode, 
                              nsIAtom *aProperty, 
                              const nsAString *aAttribute, 
-                             bool aChildrenOnly = false);
+                             const bool aChildrenOnly = false);
   nsresult RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAString *aAttribute);
 
   bool NodeIsProperty(nsIDOMNode *aNode);
@@ -971,6 +971,13 @@ friend class nsHTMLEditRules;
 friend class nsTextEditRules;
 friend class nsWSRunObject;
 friend class nsHTMLEditorEventListener;
+
+private:
+  // Helper
+  nsresult SetInlinePropertyOnNodeImpl(nsIDOMNode *aNode,
+                                       nsIAtom *aProperty,
+                                       const nsAString *aAttribute,
+                                       const nsAString *aValue);
 
 };
 #endif //nsHTMLEditor_h__

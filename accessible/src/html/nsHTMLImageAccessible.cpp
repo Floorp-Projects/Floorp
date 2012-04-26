@@ -65,6 +65,7 @@ nsHTMLImageAccessible::
   nsHTMLImageAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
   nsLinkableAccessible(aContent, aDoc)
 {
+  mFlags |= eImageAccessible;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLImageAccessible, nsAccessible,

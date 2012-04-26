@@ -171,6 +171,16 @@ nsMathMLmactionFrame::GetSelectedFrame()
   nsAutoString value;
   PRInt32 selection; 
 
+  // selection is applied only to toggle, return first child otherwise
+  if (NS_MATHML_ACTION_TYPE_TOGGLE != mActionType) {
+    // We don't touch mChildCount here. It's incorrect to assign it 1,
+    // and it's inefficient to count the children. It's fine to leave
+    // it be equal -1 because it's not used with other actiontypes.
+    mSelection = 1;
+    mSelectedFrame = mFrames.FirstChild();
+    return mSelectedFrame;
+  }
+
   GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::selection_,
                value);
   if (!value.IsEmpty()) {

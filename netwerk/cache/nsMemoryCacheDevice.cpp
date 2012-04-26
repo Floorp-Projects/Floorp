@@ -114,7 +114,7 @@ nsMemoryCacheDevice::Shutdown()
             PR_REMOVE_AND_INIT_LINK(entry);
         
             // update statistics
-            PRInt32 memoryRecovered = (PRInt32)entry->Size();
+            PRInt32 memoryRecovered = (PRInt32)entry->DataSize();
             mTotalSize    -= memoryRecovered;
             mInactiveSize -= memoryRecovered;
             --mEntryCount;
@@ -155,7 +155,7 @@ nsMemoryCacheDevice::FindEntry(nsCString * key, bool *collision)
     PR_REMOVE_AND_INIT_LINK(entry);
     PR_APPEND_LINK(entry, &mEvictionList[EvictionList(entry, 0)]);
     
-    mInactiveSize -= entry->Size();
+    mInactiveSize -= entry->DataSize();
 
     return entry;
 }
@@ -183,7 +183,7 @@ nsMemoryCacheDevice::DeactivateEntry(nsCacheEntry * entry)
         return NS_ERROR_INVALID_POINTER;
 #endif
 
-    mInactiveSize += entry->Size();
+    mInactiveSize += entry->DataSize();
     EvictEntriesIfNecessary();
 
     return NS_OK;
@@ -210,7 +210,7 @@ nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
         ++mEntryCount;
         if (mMaxEntryCount < mEntryCount) mMaxEntryCount = mEntryCount;
 
-        mTotalSize += entry->Size();
+        mTotalSize += entry->DataSize();
         EvictEntriesIfNecessary();
     }
 
@@ -368,7 +368,7 @@ nsMemoryCacheDevice::EvictEntry(nsCacheEntry * entry, bool deleteEntry)
     PR_REMOVE_AND_INIT_LINK(entry);
     
     // update statistics
-    PRInt32 memoryRecovered = (PRInt32)entry->Size();
+    PRInt32 memoryRecovered = (PRInt32)entry->DataSize();
     mTotalSize    -= memoryRecovered;
     if (!entry->IsDoomed())
         mInactiveSize -= memoryRecovered;
@@ -409,7 +409,7 @@ nsMemoryCacheDevice::EvictEntriesIfNecessary(void)
 
             if (entry != &mEvictionList[i]) {
                 entryCost = (PRUint64)
-                    (now - entry->LastFetched()) * entry->Size() / 
+                    (now - entry->LastFetched()) * entry->DataSize() / 
                     PR_MAX(1, entry->FetchCount());
                 if (!maxEntry || (entryCost > maxCost)) {
                     maxEntry = entry;
@@ -436,7 +436,7 @@ nsMemoryCacheDevice::EvictionList(nsCacheEntry * entry, PRInt32  deltaSize)
 
     // compute which eviction queue this entry should go into,
     // based on floor(log2(size/nref))
-    PRInt32  size       = deltaSize + (PRInt32)entry->Size();
+    PRInt32  size       = deltaSize + (PRInt32)entry->DataSize();
     PRInt32  fetchCount = NS_MAX(1, entry->FetchCount());
 
     return NS_MIN(PR_FloorLog2(size / fetchCount), kQueueCount - 1);

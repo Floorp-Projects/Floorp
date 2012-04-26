@@ -1440,7 +1440,7 @@ js_NewGenerator(JSContext *cx)
     JS_ASSERT(stackfp->base() == cx->regs().sp);
     JS_ASSERT(stackfp->actualArgs() <= stackfp->formalArgs());
 
-    GlobalObject *global = &stackfp->scopeChain().global();
+    GlobalObject *global = &stackfp->global();
     JSObject *proto = global->getOrCreateGeneratorPrototype(cx);
     if (!proto)
         return NULL;

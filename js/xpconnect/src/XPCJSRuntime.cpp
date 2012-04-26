@@ -1235,8 +1235,7 @@ GetCompartmentName(JSCompartment *c, bool getAddress, nsCString &name)
             
             if (getAddress) {
                 // ample; 64-bit address max is 18 chars
-                const int maxLength = 31;
-                nsPrintfCString address(maxLength, ", 0x%llx", PRUint64(c));
+                nsPrintfCString address(", 0x%llx", PRUint64(c));
                 name.Append(address);
             }
         }
@@ -1916,7 +1915,7 @@ AccumulateTelemetryCallback(int id, uint32_t sample)
 }
 
 bool XPCJSRuntime::gNewDOMBindingsEnabled;
-bool XPCJSRuntime::gParisBindingsEnabled;
+bool XPCJSRuntime::gExperimentalBindingsEnabled;
 
 bool PreserveWrapper(JSContext *cx, JSObject *obj)
 {
@@ -1969,7 +1968,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     DOM_InitInterfaces();
     Preferences::AddBoolVarCache(&gNewDOMBindingsEnabled, "dom.new_bindings",
                                  false);
-    Preferences::AddBoolVarCache(&gParisBindingsEnabled, "dom.paris_bindings",
+    Preferences::AddBoolVarCache(&gExperimentalBindingsEnabled,
+                                 "dom.experimental_bindings",
                                  false);
 
 

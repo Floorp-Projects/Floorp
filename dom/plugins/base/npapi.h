@@ -415,7 +415,7 @@ typedef enum {
   , NPPVpluginCoreAnimationLayer = 1003
 #endif
 
-#if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
+#if defined(MOZ_PLATFORM_MAEMO) && ((MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6))
   , NPPVpluginWindowlessLocalBool = 2002
 #endif
 } NPPVariable;
@@ -479,7 +479,7 @@ typedef enum {
   , NPNVsupportsCompositingCoreAnimationPluginsBool = 74656 /* TRUE if the browser supports
                                                                CA model compositing */
 #endif
-#if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
+#if defined(MOZ_PLATFORM_MAEMO) && ((MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6))
   , NPNVSupportsWindowlessLocal = 2002
 #endif
 } NPNVariable;

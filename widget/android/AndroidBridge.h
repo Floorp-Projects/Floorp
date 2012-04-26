@@ -183,7 +183,9 @@ public:
 
     static void RemovePluginView(void* surface);
 
-    nsresult TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt32 srcY, PRInt32 srcW, PRInt32 srcH, PRInt32 dstW, PRInt32 dstH, PRInt32 tabId, float scale);
+    nsresult TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt32 srcY, PRInt32 srcW, PRInt32 srcH, PRInt32 dstW, PRInt32 dstH, PRInt32 tabId, float scale, PRInt32 token);
+
+    static void NotifyPaintedRect(float top, float left, float bottom, float right);
 
     void AcknowledgeEventSync();
 
@@ -524,6 +526,7 @@ protected:
     jmethodID jCheckUriVisited;
     jmethodID jMarkUriVisited;
     jmethodID jRemovePluginView;
+    jmethodID jNotifyPaintedRect;
 
     jmethodID jNumberOfMessages;
     jmethodID jSendMessage;

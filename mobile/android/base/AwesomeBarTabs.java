@@ -82,6 +82,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 
@@ -122,6 +123,7 @@ public class AwesomeBarTabs extends TabHost {
         public TextView titleView;
         public TextView urlView;
         public ImageView faviconView;
+        public ImageView starView;
     }
 
     private class HistoryListAdapter extends SimpleExpandableListAdapter {
@@ -145,6 +147,7 @@ public class AwesomeBarTabs extends TabHost {
                 viewHolder.titleView = (TextView) convertView.findViewById(R.id.title);
                 viewHolder.urlView = (TextView) convertView.findViewById(R.id.url);
                 viewHolder.faviconView = (ImageView) convertView.findViewById(R.id.favicon);
+                viewHolder.starView = (ImageView) convertView.findViewById(R.id.bookmark_star);
 
                 convertView.setTag(viewHolder);
             } else {
@@ -172,6 +175,13 @@ public class AwesomeBarTabs extends TabHost {
                 Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
                 viewHolder.faviconView.setImageBitmap(bitmap);
             }
+
+            Long bookmarkId = (Long) historyItem.get(Combined.BOOKMARK_ID);
+
+            // The bookmark id will be 0 (null in database) when the url
+            // is not a bookmark.
+            int visibility = (bookmarkId == 0 ? View.GONE : View.VISIBLE);
+            viewHolder.starView.setVisibility(visibility);
 
             return convertView;
         }
@@ -479,6 +489,7 @@ public class AwesomeBarTabs extends TabHost {
             String url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
             String title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
             byte[] favicon = cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
+            Long bookmarkId = cursor.getLong(cursor.getColumnIndexOrThrow(Combined.BOOKMARK_ID));
 
             // Use the URL instead of an empty title for consistency with the normal URL
             // bar view - this is the equivalent of getDisplayTitle() in Tab.java
@@ -490,6 +501,8 @@ public class AwesomeBarTabs extends TabHost {
 
             if (favicon != null)
                 historyItem.put(URLColumns.FAVICON, favicon);
+
+            historyItem.put(Combined.BOOKMARK_ID, bookmarkId);
 
             return historyItem;
         }
@@ -644,6 +657,7 @@ public class AwesomeBarTabs extends TabHost {
                 viewHolder.titleView = (TextView) convertView.findViewById(R.id.title);
                 viewHolder.urlView = (TextView) convertView.findViewById(R.id.url);
                 viewHolder.faviconView = (ImageView) convertView.findViewById(R.id.favicon);
+                viewHolder.starView = (ImageView) convertView.findViewById(R.id.bookmark_star);
 
                 convertView.setTag(viewHolder);
             } else {
@@ -659,6 +673,7 @@ public class AwesomeBarTabs extends TabHost {
                 updateTitle(viewHolder.titleView, cursor);
                 updateUrl(viewHolder.urlView, cursor);
                 updateFavicon(viewHolder.faviconView, cursor);
+                updateBookmarkStar(viewHolder.starView, cursor);
             } else {
                 bindSearchEngineView(position - resultCount, viewHolder);
             }
@@ -697,6 +712,7 @@ public class AwesomeBarTabs extends TabHost {
             viewHolder.urlView.setText(searchText);
             Drawable drawable = getDrawableFromDataURI(iconURI);
             viewHolder.faviconView.setImageDrawable(drawable);
+            viewHolder.starView.setVisibility(View.GONE);
         }
     };
 
@@ -946,6 +962,16 @@ public class AwesomeBarTabs extends TabHost {
         String url = cursor.getString(urlIndex);
 
         urlView.setText(url);
+    }
+
+    private void updateBookmarkStar(ImageView starView, Cursor cursor) {
+        int bookmarkIdIndex = cursor.getColumnIndexOrThrow(Combined.BOOKMARK_ID);
+        long id = cursor.getLong(bookmarkIdIndex);
+
+        // The bookmark id will be 0 (null in database) when the url
+        // is not a bookmark.
+        int visibility = (id == 0 ? View.GONE : View.VISIBLE);
+        starView.setVisibility(visibility);
     }
 
     public void setOnUrlOpenListener(OnUrlOpenListener listener) {

@@ -388,8 +388,8 @@ CheckVersionFlag(const nsString& aFlag, const nsString& aData,
     return false;
 
   if (aResult != eOK) {
-    PRInt32 c = NS_CompareVersions(NS_ConvertUTF16toUTF8(aValue).get(),
-                                   NS_ConvertUTF16toUTF8(testdata).get());
+    PRInt32 c = mozilla::CompareVersions(NS_ConvertUTF16toUTF8(aValue).get(),
+                                         NS_ConvertUTF16toUTF8(testdata).get());
     if ((c == 0 && comparison & COMPARE_EQ) ||
 	(c < 0 && comparison & COMPARE_LT) ||
 	(c > 0 && comparison & COMPARE_GT))

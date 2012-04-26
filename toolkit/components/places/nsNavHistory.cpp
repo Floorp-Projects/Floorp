@@ -1969,7 +1969,7 @@ PlacesSQLQueryBuilder::SelectAsDay()
   // beginTime will become the node's time property, we don't use endTime
   // because it could overlap, and we use time to sort containers and find
   // insert position in a result.
-  mQueryString = nsPrintfCString(1024,
+  mQueryString = nsPrintfCString(
      "SELECT null, "
        "'place:type=%ld&sort=%ld&beginTime='||beginTime||'&endTime='||endTime, "
       "dayTitle, null, null, beginTime, null, null, null, null, null, null "
@@ -2117,7 +2117,7 @@ PlacesSQLQueryBuilder::SelectAsDay()
     nsPrintfCString dateParam("dayTitle%d", i);
     mAddParams.Put(dateParam, dateName);
 
-    nsPrintfCString dayRange(1024,
+    nsPrintfCString dayRange(
       "SELECT :%s AS dayTitle, "
              "%s AS beginTime, "
              "%s AS endTime "
@@ -2173,7 +2173,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
                                     "'&endTime='||:end_time");
   }
 
-  mQueryString = nsPrintfCString(2048,
+  mQueryString = nsPrintfCString(
     "SELECT null, 'place:type=%ld&sort=%ld&domain=&domainIsHost=true'%s, "
            ":localhost, :localhost, null, null, null, null, null, null, null "
     "WHERE EXISTS ( "
@@ -2225,7 +2225,7 @@ PlacesSQLQueryBuilder::SelectAsTag()
   // other history queries.
   mHasDateColumns = true; 
 
-  mQueryString = nsPrintfCString(2048,
+  mQueryString = nsPrintfCString(
     "SELECT null, 'place:folder=' || id || '&queryType=%d&type=%ld', "
            "title, null, null, null, null, null, null, dateAdded, "
            "lastModified, null, null "
@@ -2390,23 +2390,23 @@ PlacesSQLQueryBuilder::OrderBy()
 
 void PlacesSQLQueryBuilder::OrderByColumnIndexAsc(PRInt32 aIndex)
 {
-  mQueryString += nsPrintfCString(128, " ORDER BY %d ASC", aIndex+1);
+  mQueryString += nsPrintfCString(" ORDER BY %d ASC", aIndex+1);
 }
 
 void PlacesSQLQueryBuilder::OrderByColumnIndexDesc(PRInt32 aIndex)
 {
-  mQueryString += nsPrintfCString(128, " ORDER BY %d DESC", aIndex+1);
+  mQueryString += nsPrintfCString(" ORDER BY %d DESC", aIndex+1);
 }
 
 void PlacesSQLQueryBuilder::OrderByTextColumnIndexAsc(PRInt32 aIndex)
 {
-  mQueryString += nsPrintfCString(128, " ORDER BY %d COLLATE NOCASE ASC",
+  mQueryString += nsPrintfCString(" ORDER BY %d COLLATE NOCASE ASC",
                                   aIndex+1);
 }
 
 void PlacesSQLQueryBuilder::OrderByTextColumnIndexDesc(PRInt32 aIndex)
 {
-  mQueryString += nsPrintfCString(128, " ORDER BY %d COLLATE NOCASE DESC",
+  mQueryString += nsPrintfCString(" ORDER BY %d COLLATE NOCASE DESC",
                                   aIndex+1);
 }
 
@@ -3978,7 +3978,7 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
     // it can match everything and work as a nice case insensitive comparator.
     clause.Condition("AUTOCOMPLETE_MATCH(").Param(":search_string")
           .Str(", h.url, page_title, tags, ")
-          .Str(nsPrintfCString(17, "0, 0, 0, 0, %d, 0)",
+          .Str(nsPrintfCString("0, 0, 0, 0, %d, 0)",
                                mozIPlacesAutoComplete::MATCH_ANYWHERE_UNMODIFIED).get());
     // Serching by terms implicitly exclude queries.
     excludeQueries = true;

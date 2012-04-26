@@ -1137,16 +1137,6 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     return;
   }
 
-  // For aria drag and drop changes we fire a generic attribute change event;
-  // at least until native API comes up with a more meaningful event.
-  if (aAttribute == nsGkAtoms::aria_grabbed ||
-      aAttribute == nsGkAtoms::aria_dropeffect ||
-      aAttribute == nsGkAtoms::aria_hidden ||
-      aAttribute == nsGkAtoms::aria_sort) {
-    FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
-                               aContent);
-  }
-
   // We treat aria-expanded as a global ARIA state for historical reasons
   if (aAttribute == nsGkAtoms::aria_expanded) {
     nsRefPtr<AccEvent> event =
@@ -1154,6 +1144,13 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     FireDelayedAccessibleEvent(event);
     return;
   }
+
+  // For aria attributes like drag and drop changes we fire a generic attribute
+  // change event; at least until native API comes up with a more meaningful event.
+  PRUint8 attrFlags = nsAccUtils::GetAttributeCharacteristics(aAttribute);
+  if (!(attrFlags & ATTR_BYPASSOBJ))
+    FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
+                               aContent);
 
   if (!aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::role)) {
     // We don't care about these other ARIA attribute changes unless there is

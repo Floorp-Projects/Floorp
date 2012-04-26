@@ -115,6 +115,8 @@ _TEST_FILES = \
 		test_eventctors.html \
 		test_bug635465.html \
 		test_bug741666.html \
+		test_dom_keyboard_event.html \
+		test_dom_mouse_event.html \
 		$(NULL)
 
 #bug 585630

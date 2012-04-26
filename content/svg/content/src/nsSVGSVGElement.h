@@ -217,6 +217,8 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 
+  virtual nsIDOMNode* AsDOMNode() { return this; }
+
 private:
   // Methods for <image> elements to override my "PreserveAspectRatio" value.
   // These are private so that only our friends (nsSVGImageFrame in

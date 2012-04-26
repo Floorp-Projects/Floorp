@@ -40,8 +40,10 @@
 
 #include "prmem.h"
 #include "nsBidi.h"
-#include "nsBidiUtils.h"
+#include "nsUnicodeProperties.h"
 #include "nsCRT.h"
+
+using namespace mozilla::unicode;
 
 // These are #defined in <sys/regset.h> under Solaris 10 x86
 #undef CS
@@ -460,11 +462,11 @@ void nsBidi::GetDirProps(const PRUnichar *aText)
       uchar=aText[i];
       if(!IS_FIRST_SURROGATE(uchar) || i+1==length || !IS_SECOND_SURROGATE(aText[i+1])) {
         /* not a surrogate pair */
-        flags|=DIRPROP_FLAG(dirProps[i]=dirProp=GetCharType((PRUint32)uchar));
+        flags|=DIRPROP_FLAG(dirProps[i]=dirProp=GetBidiCat((PRUint32)uchar));
       } else {
         /* a surrogate pair */
         dirProps[i++]=BN;   /* first surrogate in the pair gets the BN type */
-        flags|=DIRPROP_FLAG(dirProps[i]=dirProp=GetCharType(GET_UTF_32(uchar, aText[i])))|DIRPROP_FLAG(BN);
+        flags|=DIRPROP_FLAG(dirProps[i]=dirProp=GetBidiCat(GET_UTF_32(uchar, aText[i])))|DIRPROP_FLAG(BN);
       }
       ++i;
       if(dirProp==L) {
@@ -490,11 +492,11 @@ void nsBidi::GetDirProps(const PRUnichar *aText)
     uchar=aText[i];
     if(!IS_FIRST_SURROGATE(uchar) || i+1==length || !IS_SECOND_SURROGATE(aText[i+1])) {
       /* not a surrogate pair */
-      flags|=DIRPROP_FLAG(dirProps[i]=GetCharType((PRUint32)uchar));
+      flags|=DIRPROP_FLAG(dirProps[i]=GetBidiCat((PRUint32)uchar));
     } else {
       /* a surrogate pair */
       dirProps[i++]=BN;   /* second surrogate in the pair gets the BN type */
-      flags|=DIRPROP_FLAG(dirProps[i]=GetCharType(GET_UTF_32(uchar, aText[i])))|DIRPROP_FLAG(BN);
+      flags|=DIRPROP_FLAG(dirProps[i]=GetBidiCat(GET_UTF_32(uchar, aText[i])))|DIRPROP_FLAG(BN);
     }
     ++i;
   }

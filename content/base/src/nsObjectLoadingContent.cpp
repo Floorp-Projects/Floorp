@@ -823,6 +823,9 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
 
   nsCOMPtr<nsIURI> uri;
   chan->GetURI(getter_AddRefs(uri));
+  if (!uri) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (mContentType.EqualsASCII(APPLICATION_OCTET_STREAM)) {
     nsCAutoString extType;
@@ -954,7 +957,8 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
       if (!pluginHost) {
         return NS_ERROR_NOT_AVAILABLE;
       }
-      pluginHost->CreateListenerForChannel(chan, this, getter_AddRefs(mFinalListener));
+      pluginHost->NewEmbeddedPluginStreamListener(uri, this, nsnull,
+                                                  getter_AddRefs(mFinalListener));
       break;
     }
     case eType_Loading:

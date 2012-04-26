@@ -3993,11 +3993,11 @@ JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj, jsid id,
 
 struct JSPropertyDescriptor {
     JSObject           *obj;
-    unsigned              attrs;
+    unsigned           attrs;
+    unsigned           shortid;
     JSPropertyOp       getter;
     JSStrictPropertyOp setter;
     jsval              value;
-    unsigned              shortid;
 };
 
 /*

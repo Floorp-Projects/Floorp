@@ -1633,8 +1633,7 @@ nsGlobalWindow::EnsureScriptEnvironment()
                "mJSObject is null, but we have an inner window?");
 
   nsCOMPtr<nsIScriptRuntime> scriptRuntime;
-  nsresult rv = NS_GetScriptRuntimeByID(nsIProgrammingLanguage::JAVASCRIPT,
-                                        getter_AddRefs(scriptRuntime));
+  nsresult rv = NS_GetJSRuntime(getter_AddRefs(scriptRuntime));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIScriptContext> context = scriptRuntime->CreateContext();

@@ -92,6 +92,7 @@
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "sampler.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
@@ -420,6 +421,47 @@ nsDOMWindowUtils::GetIsFirstPaint(bool *aIsFirstPaint)
   return NS_ERROR_FAILURE;
 }
 
+/* static */
+mozilla::widget::Modifiers
+nsDOMWindowUtils::GetWidgetModifiers(PRInt32 aModifiers)
+{
+  widget::Modifiers result = 0;
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_SHIFT) {
+    result |= widget::MODIFIER_SHIFT;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_CONTROL) {
+    result |= widget::MODIFIER_CONTROL;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_ALT) {
+    result |= widget::MODIFIER_ALT;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_META) {
+    result |= widget::MODIFIER_META;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_ALTGRAPH) {
+    result |= widget::MODIFIER_ALTGRAPH;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_CAPSLOCK) {
+    result |= widget::MODIFIER_CAPSLOCK;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_FN) {
+    result |= widget::MODIFIER_FN;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_NUMLOCK) {
+    result |= widget::MODIFIER_NUMLOCK;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_SCROLL) {
+    result |= widget::MODIFIER_SCROLL;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_SYMBOLLOCK) {
+    result |= widget::MODIFIER_SYMBOLLOCK;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_WIN) {
+    result |= widget::MODIFIER_WIN;
+  }
+  return result;
+}
+
 NS_IMETHODIMP
 nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
                                  float aX,
@@ -487,10 +529,7 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
   nsMouseEvent event(true, msg, widget, nsMouseEvent::eReal,
                      contextMenuKey ?
                        nsMouseEvent::eContextMenuKey : nsMouseEvent::eNormal);
-  event.isShift = (aModifiers & nsIDOMNSEvent::SHIFT_MASK) ? true : false;
-  event.isControl = (aModifiers & nsIDOMNSEvent::CONTROL_MASK) ? true : false;
-  event.isAlt = (aModifiers & nsIDOMNSEvent::ALT_MASK) ? true : false;
-  event.isMeta = (aModifiers & nsIDOMNSEvent::META_MASK) ? true : false;
+  event.modifiers = GetWidgetModifiers(aModifiers);
   event.button = aButton;
   event.widget = widget;
 
@@ -557,10 +596,7 @@ nsDOMWindowUtils::SendMouseScrollEvent(const nsAString& aType,
     return NS_ERROR_UNEXPECTED;
 
   nsMouseScrollEvent event(true, msg, widget);
-  event.isShift = (aModifiers & nsIDOMNSEvent::SHIFT_MASK) ? true : false;
-  event.isControl = (aModifiers & nsIDOMNSEvent::CONTROL_MASK) ? true : false;
-  event.isAlt = (aModifiers & nsIDOMNSEvent::ALT_MASK) ? true : false;
-  event.isMeta = (aModifiers & nsIDOMNSEvent::META_MASK) ? true : false;
+  event.modifiers = GetWidgetModifiers(aModifiers);
   event.button = aButton;
   event.widget = widget;
   event.delta = aDelta;
@@ -622,10 +658,7 @@ nsDOMWindowUtils::SendTouchEvent(const nsAString& aType,
     return NS_ERROR_UNEXPECTED;
   }
   nsTouchEvent event(true, msg, widget);
-  event.isShift = (aModifiers & nsIDOMNSEvent::SHIFT_MASK) ? true : false;
-  event.isControl = (aModifiers & nsIDOMNSEvent::CONTROL_MASK) ? true : false;
-  event.isAlt = (aModifiers & nsIDOMNSEvent::ALT_MASK) ? true : false;
-  event.isMeta = (aModifiers & nsIDOMNSEvent::META_MASK) ? true : false;
+  event.modifiers = GetWidgetModifiers(aModifiers);
   event.widget = widget;
   event.time = PR_Now();
 
@@ -685,10 +718,7 @@ nsDOMWindowUtils::SendKeyEvent(const nsAString& aType,
     return NS_ERROR_FAILURE;
 
   nsKeyEvent event(true, msg, widget);
-  event.isShift = (aModifiers & nsIDOMNSEvent::SHIFT_MASK) ? true : false;
-  event.isControl = (aModifiers & nsIDOMNSEvent::CONTROL_MASK) ? true : false;
-  event.isAlt = (aModifiers & nsIDOMNSEvent::ALT_MASK) ? true : false;
-  event.isMeta = (aModifiers & nsIDOMNSEvent::META_MASK) ? true : false;
+  event.modifiers = GetWidgetModifiers(aModifiers);
 
   event.keyCode = aKeyCode;
   event.charCode = aCharCode;
@@ -942,10 +972,7 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
     return NS_ERROR_FAILURE;
  
   nsSimpleGestureEvent event(true, msg, widget, aDirection, aDelta);
-  event.isShift = (aModifiers & nsIDOMNSEvent::SHIFT_MASK) ? true : false;
-  event.isControl = (aModifiers & nsIDOMNSEvent::CONTROL_MASK) ? true : false;
-  event.isAlt = (aModifiers & nsIDOMNSEvent::ALT_MASK) ? true : false;
-  event.isMeta = (aModifiers & nsIDOMNSEvent::META_MASK) ? true : false;
+  event.modifiers = GetWidgetModifiers(aModifiers);
   event.time = PR_IntervalNow();
 
   nsPresContext* presContext = GetPresContext();
@@ -2315,5 +2342,28 @@ nsDOMWindowUtils::GetPlugins(JSContext* cx, jsval* aPlugins)
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aPlugins = OBJECT_TO_JSVAL(jsPlugins);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SetScrollPositionClampingScrollPortSize(float aWidth, float aHeight)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  if (!(aWidth >= 0.0 && aHeight >= 0.0)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  presShell->SetScrollPositionClampingScrollPortSize(
+    nsPresContext::CSSPixelsToAppUnits(aWidth),
+    nsPresContext::CSSPixelsToAppUnits(aHeight));
+
   return NS_OK;
 }
