@@ -553,9 +553,8 @@ class CGClassConstructHook(CGAbstractStaticMethod):
         preamble = """
   JSObject* obj = JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
 """
-        preArgs = ""
         if self.descriptor.workers:
-            preArgs = "cx, obj, "
+            preArgs = ["cx", "obj"]
         else:
             preamble += """
   nsISupports* global;
@@ -569,7 +568,7 @@ class CGClassConstructHook(CGAbstractStaticMethod):
     }
   }
 """
-            preArgs = "global, "
+            preArgs = ["global"]
 
         name = MakeNativeName(self._ctor.identifier.name)
         nativeName = self.descriptor.binaryNames.get(name, name)
@@ -1197,10 +1196,18 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
     before the generated code is entered.
     """
 
+    # A helper function for dealing with failures due to the JS value being the
+    # wrong type of value
+    def onFailure(failureCode, isWorker):
+        return CGWrapper(CGGeneric(
+                failureCode or
+                "return Throw<%s>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);"
+                % toStringBool(isWorker)), post="\n")
+
     # A helper function for wrapping up the template body for
     # possibly-nullable objecty stuff
     def wrapObjectTemplate(templateBody, isDefinitelyObject, type,
-                           codeToSetNull, isWorker):
+                           codeToSetNull, isWorker, failureCode=None):
         if not isDefinitelyObject:
             # Handle the non-object cases by wrapping up the whole
             # thing in an if cascade.
@@ -1212,9 +1219,9 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
                     "} else if (${val}.isNullOrUndefined()) {\n"
                     "  %s;\n" % codeToSetNull)
             templateBody += (
-                "} else {\n"
-                "  return Throw<%s>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);\n"
-                "}" % toStringBool(not isWorker))
+                "} else {\n" +
+                CGIndenter(onFailure(failureCode, isWorker)).define() +
+                "}")
         return templateBody
 
     if type.isArray():
@@ -1368,12 +1375,8 @@ ${declName}.SwapElements(arr);
                 "jsval tmpVal = ${val};\n" +
                 typePtr + " tmp;\n"
                 "if (NS_FAILED(xpc_qsUnwrapArg<" + typeName + ">(cx, ${val}, &tmp, getter_AddRefs(${holderName}), &tmpVal))) {\n")
-            if failureCode is not None:
-                templateBody += "  " + failureCode + "\n"
-            else:
-                templateBody += (
-                    "  return Throw<%s>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);\n"
-                    % toStringBool(not descriptor.workers))
+            templateBody += CGIndenter(onFailure(failureCode,
+                                                 descriptor.workers)).define()
             templateBody += ("}\n"
                 "MOZ_ASSERT(tmp);\n")
 
@@ -1414,9 +1417,9 @@ ${declName}.SwapElements(arr);
                 "}")
 
         template += (
-            # XXXbz We don't know whether we're on workers, so play it safe
-            " else {\n"
-            "  return Throw<false>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);\n"
+            " else {\n" +
+            CGIndenter(onFailure(failureCode,
+                                 descriptorProvider.workers)).define() +
             "}")
 
         return (template, CGGeneric(declType), None)
@@ -1476,6 +1479,19 @@ ${declName}.SwapElements(arr);
         if isSequenceMember:
             raise TypeError("Can't handle sequences of 'any'")
         return ("${declName} = ${val};", CGGeneric("JS::Value"), None)
+
+    if type.isObject():
+        if isSequenceMember:
+            raise TypeError("Can't handle sequences of 'object'")
+        template = wrapObjectTemplate("${declName} = &${val}.toObject();",
+                                      isDefinitelyObject, type,
+                                      "${declName} = NULL",
+                                      descriptorProvider.workers, failureCode)
+        if type.nullable():
+            declType = CGGeneric("JSObject*")
+        else:
+            declType = CGGeneric("NonNull<JSObject>")
+        return (template, declType, None)
 
     if not type.isPrimitive():
         raise TypeError("Need conversion for argument type '%s'" % type)
@@ -1735,6 +1751,15 @@ if (!%(resultStr)s) {
         # to wrap here.
         return setValue(result, True)
 
+    if type.isObject():
+        # See comments in WrapNewBindingObject explaining why we need
+        # to wrap here.
+        if type.nullable():
+            toValue = "JS::ObjectOrNullValue(%s)"
+        else:
+            toValue = "JS::ObjectValue(*%s)"
+        return setValue(toValue % result, True)
+
     if not type.isPrimitive():
         raise TypeError("Need to learn to wrap %s" % type)
 
@@ -1792,49 +1817,56 @@ def wrapForType(type, descriptorProvider, templateValues):
     defaultValues = {'obj': 'obj'}
     return string.Template(wrap).substitute(defaultValues, **templateValues)
 
+# Returns a tuple consisting of a CGThing containing the type of the return
+# value and a boolean signalling whether we need to pass a JSContext as the
+# first argument of the call.
 def getRetvalDeclarationForType(returnType, descriptorProvider,
                                 resultAlreadyAddRefed):
     if returnType is None or returnType.isVoid():
         # Nothing to declare
-        result = None
-    elif returnType.isPrimitive() and returnType.tag() in builtinNames:
+        return None, False
+    if returnType.isPrimitive() and returnType.tag() in builtinNames:
         result = CGGeneric(builtinNames[returnType.tag()])
         if returnType.nullable():
             result = CGWrapper(result, pre="Nullable<", post=">")
-    elif returnType.isString():
-        result = CGGeneric("nsString")
-    elif returnType.isEnum():
+        return result, False
+    if returnType.isString():
+        return CGGeneric("nsString"), False
+    if returnType.isEnum():
         if returnType.nullable():
             raise TypeError("We don't support nullable enum return values")
-        result = CGGeneric(returnType.inner.identifier.name)
-    elif returnType.isInterface() and not returnType.isArrayBuffer():
+        return CGGeneric(returnType.inner.identifier.name), False
+    if returnType.isInterface() and not returnType.isArrayBuffer():
         result = CGGeneric(descriptorProvider.getDescriptor(
             returnType.unroll().inner.identifier.name).nativeType)
         if resultAlreadyAddRefed:
             result = CGWrapper(result, pre="nsRefPtr<", post=">")
         else:
             result = CGWrapper(result, post="*")
-    elif returnType.isCallback():
+        return result, False
+    if returnType.isCallback():
         # XXXbz we're going to assume that callback types are always
         # nullable for now.
-        result = CGGeneric("JSObject*")
-    elif returnType.tag() is IDLType.Tags.any:
-        result = CGGeneric("JS::Value")
-    elif returnType.isSequence():
+        return CGGeneric("JSObject*"), False
+    if returnType.tag() is IDLType.Tags.any:
+        return CGGeneric("JS::Value"), False
+    if returnType.isObject():
+        return CGGeneric("JSObject*"), True
+    if returnType.isSequence():
         nullable = returnType.nullable()
         if nullable:
             returnType = returnType.inner
         # Assume no need to addref for now
-        result = CGWrapper(getRetvalDeclarationForType(returnType.inner,
-                                                       descriptorProvider,
-                                                       False),
-                           pre="nsTArray< ", post=" >")
+        (result, needsCx) = getRetvalDeclarationForType(returnType.inner,
+                                                        descriptorProvider,
+                                                        False)
+        result = CGWrapper(result, pre="nsTArray< ", post=" >")
         if nullable:
             result = CGWrapper(result, pre="Nullable< ", post=" >")
-    else:
-        raise TypeError("Don't know how to declare return value for %s" %
-                        returnType)
-    return result
+        return result, needsCx
+    raise TypeError("Don't know how to declare return value for %s" %
+                    returnType)
+
 
 
 def isResultAlreadyAddRefed(descriptor, extendedAttributes):
@@ -1846,13 +1878,19 @@ class CGCallGenerator(CGThing):
     A class to generate an actual call to a C++ object.  Assumes that the C++
     object is stored in a variable named "self".
     """
-    def __init__(self, errorReport, argCount, argsPre, returnType,
+    def __init__(self, errorReport, arguments, argsPre, returnType,
                  extendedAttributes, descriptorProvider, nativeMethodName, static):
         CGThing.__init__(self)
 
         isFallible = errorReport is not None
 
-        args = CGList([CGGeneric("arg" + str(i)) for i in range(argCount)], ", ")
+        args = CGList([CGGeneric(arg) for arg in argsPre], ", ")
+        for (i, a) in enumerate(arguments):
+            arg = "arg" + str(i)
+            # This is a workaround for a bug in Apple's clang.
+            if a.type.isObject() and not a.type.nullable():
+                arg = "(JSObject&)" + arg
+            args.append(CGGeneric(arg))
         resultOutParam = (returnType is not None and
                           (returnType.isString() or returnType.isSequence()))
         # Return values that go in outparams go here
@@ -1863,11 +1901,16 @@ class CGCallGenerator(CGThing):
 
         resultAlreadyAddRefed = isResultAlreadyAddRefed(descriptorProvider,
                                                         extendedAttributes)
-        result = getRetvalDeclarationForType(returnType, descriptorProvider,
-                                             resultAlreadyAddRefed)
+        (result, needsCx) = getRetvalDeclarationForType(returnType,
+                                                        descriptorProvider,
+                                                        resultAlreadyAddRefed)
 
-        if 'implicitJSContext' in extendedAttributes:
-            argsPre = "cx, " + argsPre
+        if not needsCx:
+            needsCx = reduce(lambda b, a: b or a.type.isObject(), arguments,
+                             False)
+
+        if not "cx" in argsPre and (needsCx or 'implicitJSContext' in extendedAttributes):
+            args.prepend(CGGeneric("cx"))
 
         # Build up our actual call
         self.cgRoot = CGList([], "\n")
@@ -1878,7 +1921,7 @@ class CGCallGenerator(CGThing):
                 returnType.unroll().inner.identifier.name).nativeType))
         else: 
             call = CGWrapper(call, pre="self->")
-        call = CGList([call, CGWrapper(args, pre="(" + argsPre, post=");")])
+        call = CGList([call, CGWrapper(args, pre="(", post=");")])
         if result is not None:
             result = CGWrapper(result, post=" result;")
             self.cgRoot.prepend(result)
@@ -1931,6 +1974,7 @@ class CGPerSignatureCall(CGThing):
                                                                    getter=getter,
                                                                    setter=setter)
         self.argsPre = argsPre
+        self.arguments = arguments
         self.argCount = len(arguments)
         if self.argCount > argConversionStartsAt:
             # Insert our argv in there
@@ -1943,7 +1987,7 @@ class CGPerSignatureCall(CGThing):
 
         cgThings.append(CGCallGenerator(
                     self.getErrorReport() if self.isFallible() else None,
-                    self.argCount, self.argsPre, returnType,
+                    self.arguments, self.argsPre, returnType,
                     self.extendedAttributes, descriptor, nativeMethodName,
                     static))
         self.cgRoot = CGList(cgThings, "\n")
@@ -2291,7 +2335,7 @@ class CGGetterSetterCall(CGPerSignatureCall):
     def __init__(self, returnType, arguments, nativeMethodName, descriptor,
                  attr, getter=False, setter=False):
         assert bool(getter) != bool(setter)
-        CGPerSignatureCall.__init__(self, returnType, "", arguments,
+        CGPerSignatureCall.__init__(self, returnType, [], arguments,
                                     nativeMethodName, False, descriptor, attr,
                                     getter=getter, setter=setter)
     def getArgv(self):
@@ -2397,7 +2441,7 @@ class CGNativeMethod(CGAbstractBindingMethod):
     def generate_code(self):
         name = self.method.identifier.name
         nativeName = self.descriptor.binaryNames.get(name, MakeNativeName(name))
-        return CGMethodCall("", nativeName, self.method.isStatic(),
+        return CGMethodCall([], nativeName, self.method.isStatic(),
                             self.descriptor, self.method)
 
 class CGNativeGetter(CGAbstractBindingMethod):
