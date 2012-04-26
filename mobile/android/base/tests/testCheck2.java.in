@@ -6,7 +6,7 @@ import @ANDROID_PACKAGE_NAME@.*;
 public class testCheck2 extends PixelTest {
     public void testCheck2() {
         setTestType("talos");
-        String url = getAbsoluteUrl("/startup_test/fennecmark/timecube.html");
+        String url = getAbsoluteUrl("/startup_test/fennecmark/cnn/cnn.com/index.html");
 
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
         loadAndPaint(url);
