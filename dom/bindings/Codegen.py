@@ -509,7 +509,7 @@ class CGClassFinalizeHook(CGAbstractClassHook):
             release = """
   XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
   if (rt) {
-    rt->DeferredRelease(NativeToSupports(self));
+    rt->DeferredRelease(reinterpret_cast<nsISupports*>(self));
   } else {
     NS_RELEASE(self);
   }"""
@@ -1013,24 +1013,6 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
                 """
   *aEnabled = true;
   return !!%s(aCx, global, aReceiver);""" % (getter))
-
-class CGNativeToSupportsMethod(CGAbstractStaticMethod):
-    """
-    A method to cast our native to an nsISupports.  We do it by casting up the
-    interface chain in hopes of getting to something that singly-inherits from
-    nsISupports.
-    """
-    def __init__(self, descriptor):
-        args = [Argument(descriptor.nativeType + '*', 'aNative')]
-        CGAbstractStaticMethod.__init__(self, descriptor, 'NativeToSupports', 'nsISupports*', args)
-
-    def definition_body(self):
-        cur = CGGeneric("aNative")
-        for proto in reversed(self.descriptor.prototypeChain[:-1]):
-            d = self.descriptor.getDescriptor(proto)
-            cast = "static_cast<%s*>(\n" % d.nativeType;
-            cur = CGWrapper(CGIndenter(cur), pre=cast, post=")")
-        return CGIndenter(CGWrapper(cur, pre="return ", post=";")).define();
 
 class CGWrapMethod(CGAbstractMethod):
     def __init__(self, descriptor):
@@ -2944,8 +2926,6 @@ class CGDescriptor(CGThing):
 
             # Always have a finalize hook, regardless of whether the class wants a
             # custom hook.
-            if descriptor.nativeIsISupports:
-                cgThings.append(CGNativeToSupportsMethod(descriptor))
             cgThings.append(CGClassFinalizeHook(descriptor))
 
             # Only generate a trace hook if the class wants a custom hook.
