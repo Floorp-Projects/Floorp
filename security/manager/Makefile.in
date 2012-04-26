@@ -283,6 +283,7 @@ DEFAULT_GMAKE_FLAGS += ZDEFS_FLAG=
 endif
 ifdef MOZ_CFLAGS_NSS
 DEFAULT_GMAKE_FLAGS += XCFLAGS="$(CFLAGS)"
+DEFAULT_GMAKE_FLAGS += DARWIN_DYLIB_VERSIONS="-compatibility_version 1 -current_version 1 $(LDFLAGS)"
 endif
 
 SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile locales/Makefile
