@@ -3012,7 +3012,7 @@ CheckThisFrame(JSContext *cx, const CallArgs &args, const char *fnname, bool che
         }
         if (checkLive) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_LIVE,
-                                 "Debugger.Frame", fnname, "stack frame");
+                                 "Debugger.Frame");
             return NULL;
         }
     }

@@ -1,5 +1,4 @@
 // arguments works in evalWithBindings (it does not interpose a function scope)
-// when the function expects 'arguments'
 var g = newGlobal('new-compartment');
 var dbg = new Debugger;
 var global = dbg.addDebuggee(g);
@@ -12,6 +11,6 @@ dbg.onDebuggerStatement = function (frame) {
         assertEq(frame.evalWithBindings("arguments[i]", {i: i}).return, frame.arguments[i]);
     hits++;
 };
-g.eval("function f() { eval('arguments'); debugger; }");
+g.eval("function f() { debugger; }");
 g.eval("f(undefined, -0, NaN, '\uffff', Array.prototype, Math, f);");
 assertEq(hits, 1);
