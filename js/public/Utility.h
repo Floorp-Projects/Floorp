@@ -847,7 +847,7 @@ class MoveRef {
     explicit MoveRef(T &t) : pointer(&t) { }
     T &operator*()  const { return *pointer; }
     T *operator->() const { return  pointer; }
-#ifdef __GXX_EXPERIMENTAL_CXX0X__
+#if defined(__GXX_EXPERIMENTAL_CXX0X__) && defined(__clang__)
     /*
      * If MoveRef is used in a rvalue position (which is expected), we can
      * end up in a situation where, without this ifdef, we would try to pass
