@@ -265,11 +265,11 @@ public class FennecNativeDriver implements Driver {
         try {
             Object [] params = null;
             List<Float> checkerboard = (List<Float>)_stopCheckerboardRecording.invoke(null, params);
-            float completeness = 0;
+            float total = 0;
             for (float val : checkerboard) {
-                completeness += (1.0f - val);
+                total += val;
             }
-            return completeness / (float)checkerboard.size();
+            return total * 100.0f;
         } catch (IllegalAccessException e) {
             log(LogLevel.ERROR, e);
         } catch (InvocationTargetException e) {
