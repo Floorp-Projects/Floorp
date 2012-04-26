@@ -423,7 +423,7 @@ public:
         static const size_t kBucketSizes[] = { sizeof(nsEventTargetChainItem) };
         static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
         static const PRInt32 kInitialPoolSize =
-          NS_SIZE_IN_HEAP(sizeof(nsEventTargetChainItem)) * NS_CHAIN_POOL_SIZE;
+          sizeof(nsEventTargetChainItem) * NS_CHAIN_POOL_SIZE;
         nsresult rv = sEtciPool->Init("EventTargetChainItem Pool", kBucketSizes,
                                       kNumBuckets, kInitialPoolSize);
         if (NS_FAILED(rv)) {

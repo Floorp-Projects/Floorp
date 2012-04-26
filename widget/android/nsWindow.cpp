@@ -1118,24 +1118,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         return;
     }
 
-    /*
-     * Check to see whether the presentation shell corresponding to the document on the screen
-     * is suppressing painting. If it is, we bail out, as continuing would result in a mismatch
-     * between the content on the screen and the current viewport metrics.
-     */
-    nsCOMPtr<nsIAndroidDrawMetadataProvider> metadataProvider =
-        AndroidBridge::Bridge()->GetDrawMetadataProvider();
-
-    layers::renderTraceEventStart("Check supress", "424242");
-    bool paintingSuppressed = false;
-    if (metadataProvider) {
-        metadataProvider->PaintingSuppressed(&paintingSuppressed);
-    }
-    if (paintingSuppressed) {
-        return;
-    }
-    layers::renderTraceEventEnd("Check supress", "424242");
-
     layers::renderTraceEventStart("Get surface", "424545");
     static unsigned char bits2[32 * 32 * 2];
     nsRefPtr<gfxImageSurface> targetSurface =
@@ -1622,7 +1604,7 @@ static unsigned int ConvertAndroidKeyCodeToDOMKeyCode(int androidKeyCode)
         case AndroidKeyEvent::KEYCODE_DPAD_DOWN:          return NS_VK_DOWN;
         case AndroidKeyEvent::KEYCODE_DPAD_LEFT:          return NS_VK_LEFT;
         case AndroidKeyEvent::KEYCODE_DPAD_RIGHT:         return NS_VK_RIGHT;
-        case AndroidKeyEvent::KEYCODE_DPAD_CENTER:        return NS_VK_RETURN;
+        case AndroidKeyEvent::KEYCODE_DPAD_CENTER:        return NS_VK_ENTER;
         // KEYCODE_VOLUME_UP (24) ... KEYCODE_Z (54)
         case AndroidKeyEvent::KEYCODE_COMMA:              return NS_VK_COMMA;
         case AndroidKeyEvent::KEYCODE_PERIOD:             return NS_VK_PERIOD;

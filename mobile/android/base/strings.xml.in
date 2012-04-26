@@ -85,6 +85,7 @@
 
   <string name="reload">&reload;</string>
   <string name="forward">&forward;</string>
+  <string name="close_tab">&close_tab;</string>
   <string name="new_tab">&new_tab;</string>
   <string name="new_tab_opened">&new_tab_opened;</string>
   <string name="addons">&addons;</string>

@@ -227,7 +227,7 @@ static const size_t kBucketSizes[] = {
 
 static const PRInt32 kNumBuckets = sizeof(kBucketSizes)/sizeof(size_t);
 static const PRInt32 kNumElements = 64;
-static const PRInt32 kInitialSize = (NS_SIZE_IN_HEAP(sizeof(nsXBLBindingRequest))) * kNumElements;
+static const PRInt32 kInitialSize = sizeof(nsXBLBindingRequest) * kNumElements;
 
 nsIXBLService* nsXBLBindingRequest::gXBLService = nsnull;
 int nsXBLBindingRequest::gRefCnt = 0;
