@@ -36,10 +36,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=417075
 
 SimpleTest.waitForExplicitFinish();
 
-function errorCheck(i, called, errorCode, actualCode)
+function errorCheck(i, called, error, actual)
 {
   ok(!called, "receiver should not have been called for test #" + i);
-  is(actualCode, errorCode, "wrong error thrown in test #" + i);
+  is(actual, error, "wrong error thrown in test #" + i);
 }
 
 var tests =
@@ -48,26 +48,31 @@ var tests =
    {
      args: ["NOT-RECEIVED", ""],
      source: "sameDomain",
+     name: "SyntaxError",
      code: DOMException.SYNTAX_ERR
    },
    {
      args: ["NOT-RECEIVED", "null"],
      source: "sameDomain",
+     name: "SyntaxError",
      code: DOMException.SYNTAX_ERR
    },
    {
      args: ["NOT-RECEIVED", "a"],
      source: "sameDomain",
+     name: "SyntaxError",
      code: DOMException.SYNTAX_ERR
    },
    {
      args: ["NOT-RECEIVED", "http :"],
      source: "sameDomain",
+     name: "SyntaxError",
      code: DOMException.SYNTAX_ERR
    },
    {
      args: ["NOT-RECEIVED", "http: //"],
      source: "sameDomain",
+     name: "SyntaxError",
      code: DOMException.SYNTAX_ERR,
 
      hasThrowsNoExceptionBug: true
@@ -76,11 +81,13 @@ var tests =
    {
      args: ["NOT-RECEIVED", "http ://"],
      source: "sameDomain",
+     name: "SyntaxError",
      code: DOMException.SYNTAX_ERR
    },
    {
      args: ["TODO", " http://localhost:8888"],
      source: "sameDomain",
+     name: "SyntaxError",
      code: DOMException.SYNTAX_ERR,
 
      returnOrigin: "http://mochi.test:8888",
@@ -89,16 +96,19 @@ var tests =
    {
      args: ["NOT-RECEIVED", "hä"],
      source: "sameDomain",
+     name: "SyntaxError",
      code: DOMException.SYNTAX_ERR
    },
    {
      args: ["NOT-RECEIVED", "http://lo\0k.com"],
      source: "sameDomain",
+     name: "SyntaxError",
      code: DOMException.SYNTAX_ERR
    },
    {
      args: ["NOT-RECEIVED", "http: //localhost:8888"],
      source: "sameDomain",
+     name: "SyntaxError",
      code: DOMException.SYNTAX_ERR,
 
      hasThrowsNoExceptionBug: true
@@ -107,11 +117,13 @@ var tests =
    {
      args: ["NOT-RECEIVED", "http://localhost :8888"],
      source: "sameDomain",
+     name: "SyntaxError",
      code: DOMException.SYNTAX_ERR
    },
    {
      args: ["NOT-RECEIVED", "http:// localhost:8888"],
      source: "sameDomain",
+     name: "SyntaxError",
      code: DOMException.SYNTAX_ERR,
 
      hasThrowsNoExceptionBug: true
@@ -119,6 +131,7 @@ var tests =
    {
      args: ["TODO", "http://\nlocalhost:8888"],
      source: "sameDomain",
+     name: "SyntaxError",
      code: DOMException.SYNTAX_ERR,
 
      returnOrigin: "http://mochi.test:8888",
@@ -127,6 +140,7 @@ var tests =
    {
      args: ["TODO", "http://localhost:8888\0"],
      source: "sameDomain",
+     name: "SyntaxError",
      code: DOMException.SYNTAX_ERR,
 
      returnOrigin: "http://mochi.test:8888",
@@ -135,6 +149,7 @@ var tests =
    {
      args: ["TODO", "http://localhost:8888\n"],
      source: "sameDomain",
+     name: "SyntaxError",
      code: DOMException.SYNTAX_ERR,
 
      returnOrigin: "http://mochi.test:8888",
@@ -372,6 +387,7 @@ var tests =
    {
      args: ["NOT-RECEIVED", undefined],
      source: "sameDomain",
+     name: "SyntaxError",
      code: DOMException.SYNTAX_ERR
    },
   ];
@@ -422,6 +438,7 @@ function allTests(callback)
       // Since an exception was thrown, we know at this point that we're not
       // waiting on anything else in the queue of script to run, and we can just
       // call nextTest directly.
+      errorCheck(i, called, e.name, test.name);
       errorCheck(i, called, e.code, test.code);
       nextTest();
       return;

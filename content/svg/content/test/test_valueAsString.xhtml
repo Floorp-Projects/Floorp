@@ -36,7 +36,8 @@ function run()
   try {
     c.r.baseVal.valueAsString = 'rubbish';
   } catch (e) {
-    is(DOMException.SYNTAX_ERR, e.code, 'syntax error expected');
+    is(e.name, 'SyntaxError', 'syntax error expected');
+    is(e.code, DOMException.SYNTAX_ERR, 'syntax error expected');
   }
 
   is(SVGAngle.SVG_ANGLETYPE_RAD, m.orientAngle.baseVal.unitType, 'unexpected units');
@@ -46,7 +47,8 @@ function run()
   try {
     m.orientAngle.baseVal.valueAsString = 'rubbish';
   } catch (e) {
-    is(DOMException.SYNTAX_ERR, e.code, 'syntax error expected');
+    is(e.name, 'SyntaxError', 'syntax error expected');
+    is(e.code, DOMException.SYNTAX_ERR, 'syntax error expected');
   }
 
   SimpleTest.finish();

@@ -15,6 +15,8 @@ try {
   getSelection().extend(document.body, 0);
 } catch(e) {
   thrown = true;
+  is(e.name, "InvalidStateError",
+     "Need to throw InvalidStateError for extend() with no ranges");
   ok(e instanceof DOMException,
      "Need to throw DOMException for extend() with no ranges");
   is(e.code, DOMException.INVALID_STATE_ERR,

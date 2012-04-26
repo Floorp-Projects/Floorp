@@ -35,7 +35,7 @@ function resolverTest(expr, resolver, result, extype) {
       ok(false, "Should have got an exception!");
     }
   } catch(ex) {
-    is(ex.code, extype, "Wrong exception");
+    is(ex.name, extype, "Wrong exception");
   }
 }
 
@@ -56,21 +56,20 @@ resolverTest("*", document.documentElement.firstChild.nextSibling,
 
 // Expression should return foo element, but because of the
 // resolver it may throw an exception.
-var NAMESPACE_ERR = 14;
 var foo = document.getElementById("test").firstChild;
 // Document resolver
-resolverTest("//foo:foo", document, foo, NAMESPACE_ERR);
+resolverTest("//foo:foo", document, foo, "NamespaceError");
 // Element resolver
-resolverTest("//foo:foo", document.documentElement, foo, NAMESPACE_ERR);
+resolverTest("//foo:foo", document.documentElement, foo, "NamespaceError");
 // Attribute resolver
 resolverTest("//foo:foo", document.documentElement.getAttributeNode("attr"),
-             foo, NAMESPACE_ERR);
+             foo, "NamespaceError");
 // Text node resolver
 resolverTest("//foo:foo", document.documentElement.firstChild,
-             foo, NAMESPACE_ERR);
+             foo, "NamespaceError");
 // Comment node resolver
 resolverTest("//foo:foo", document.documentElement.firstChild.nextSibling,
-             foo, NAMESPACE_ERR);
+             foo, "NamespaceError");
 // Function resolver
 resolverTest("//foo:foo",
              function(p) { return (p == "foo") ? "http://www.foo.org" : ""; },

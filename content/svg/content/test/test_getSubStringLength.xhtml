@@ -34,6 +34,9 @@ function runTests(text, charWidth)
     }
     catch (e)
     {
+      is(e.name, "IndexSizeError",
+         "expected an index error for " +
+         "text.getSubStringLength(" + charnum + "," + nchars + ")");
       is(e.code, DOMException.INDEX_SIZE_ERR,
          "expected an index error for " +
          "text.getSubStringLength(" + charnum + "," + nchars + ")");

@@ -82,7 +82,8 @@ function testSpecs() {
         ok(false, "Unexpected success with spec: " + spec);
       }
     } catch(e) {
-      if (e.code == DOMException.INVALID_STATE_ERR) {
+      if (e.name == "InvalidStateError" &&
+          e.code == DOMException.INVALID_STATE_ERR) {
         if (typeof(expected) == 'number')
           ok(false, "Failed with spec: " + spec);
         else if (expected == 'todo')
@@ -162,6 +163,8 @@ function noStart(elem) {
     elem.getStartTime();
   } catch(e) {
     exceptionCaught = true;
+    is (e.name, "InvalidStateError",
+        "Unexpected exception from getStartTime.");
     is (e.code, DOMException.INVALID_STATE_ERR,
         "Unexpected exception code from getStartTime.");
   }

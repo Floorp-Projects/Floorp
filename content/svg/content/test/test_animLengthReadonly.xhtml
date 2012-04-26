@@ -93,7 +93,8 @@ function checkReadOnly(animLength) {
   try {
     animLength.animVal.value = (animLength.animVal.value == 77) ? 88 : 77;
   } catch (e) {
-    if (e.code == DOMException.NO_MODIFICATION_ALLOWED_ERR) {
+    if (e.name == "NoModificationAllowedError" &&
+        e.code == DOMException.NO_MODIFICATION_ALLOWED_ERR) {
       exceptionCaught = true;
     } else {
       ok(false, "Got unexpected exception " + e);
