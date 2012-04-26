@@ -5226,13 +5226,15 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, unsigned indent)
                                 false, false, js_DecompileFunctionBody);
 }
 
-JS_PUBLIC_API(JSBool)
+JS_NEVER_INLINE JS_PUBLIC_API(JSBool)
 JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *scriptArg, jsval *rval)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
+    if (cx->compartment != obj->compartment())
+        *(int *) 0 = 0xf0;
     AutoLastFrameCheck lfc(cx);
 
     JS::Anchor<JSScript *> script;
