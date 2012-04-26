@@ -190,13 +190,9 @@ XPCWrappedNativeScope::IsDyingScope(XPCWrappedNativeScope *scope)
 void
 XPCWrappedNativeScope::SetComponents(nsXPCComponents* aComponents)
 {
+    NS_IF_ADDREF(aComponents);
+    NS_IF_RELEASE(mComponents);
     mComponents = aComponents;
-}
-
-nsXPCComponents*
-XPCWrappedNativeScope::GetComponents()
-{
-    return mComponents;
 }
 
 // Dummy JS class to let wrappers w/o an xpc prototype share
@@ -312,14 +308,9 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
     if (mContext)
         mContext->RemoveScope(this);
 
-    // This should not be necessary, since the Components object should die
-    // with the scope but just in case.
-    if (mComponents)
-        mComponents->mScope = nsnull;
-
     // XXX we should assert that we are dead or that xpconnect has shutdown
     // XXX might not want to do this at xpconnect shutdown time???
-    mComponents = nsnull;
+    NS_IF_RELEASE(mComponents);
 
     JSRuntime *rt = mRuntime->GetJSRuntime();
     mGlobalJSObject.finalize(rt);
@@ -915,7 +906,7 @@ XPCWrappedNativeScope::DebugDump(PRInt16 depth)
     XPC_LOG_INDENT();
         XPC_LOG_ALWAYS(("mRuntime @ %x", mRuntime));
         XPC_LOG_ALWAYS(("mNext @ %x", mNext));
-        XPC_LOG_ALWAYS(("mComponents @ %x", mComponents.get()));
+        XPC_LOG_ALWAYS(("mComponents @ %x", mComponents));
         XPC_LOG_ALWAYS(("mGlobalJSObject @ %x", mGlobalJSObject.get()));
         XPC_LOG_ALWAYS(("mPrototypeJSObject @ %x", mPrototypeJSObject.get()));
         XPC_LOG_ALWAYS(("mPrototypeNoHelper @ %x", mPrototypeNoHelper));
