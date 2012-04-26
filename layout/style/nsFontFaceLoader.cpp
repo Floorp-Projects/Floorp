@@ -98,6 +98,9 @@ nsFontFaceLoader::nsFontFaceLoader(gfxProxyFontEntry *aProxy, nsIURI *aFontURI,
 
 nsFontFaceLoader::~nsFontFaceLoader()
 {
+  if (mFontEntry) {
+    mFontEntry->mLoader = nsnull;
+  }
   if (mLoadTimer) {
     mLoadTimer->Cancel();
     mLoadTimer = nsnull;
@@ -259,6 +262,7 @@ void
 nsFontFaceLoader::Cancel()
 {
   mFontEntry->mLoadingState = gfxProxyFontEntry::NOT_LOADING;
+  mFontEntry->mLoader = nsnull;
   mFontSet = nsnull;
   if (mLoadTimer) {
     mLoadTimer->Cancel();
@@ -421,6 +425,8 @@ nsUserFontSet::StartLoad(gfxProxyFontEntry *aProxy,
   if (NS_SUCCEEDED(rv)) {
     mLoaders.PutEntry(fontLoader);
     fontLoader->StartedLoading(streamLoader);
+    aProxy->mLoader = fontLoader; // let the font entry remember the loader,
+                                  // in case we need to cancel it
   }
 
   return rv;
@@ -466,6 +472,19 @@ nsUserFontSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
   // if any rules are left in the old list, note that the set has changed
   if (oldRules.Length() > 0) {
     modified = true;
+    // any in-progress loaders for obsolete rules should be cancelled
+    size_t count = oldRules.Length();
+    for (size_t i = 0; i < count; ++i) {
+      gfxFontEntry *fe = oldRules[i].mFontEntry;
+      if (!fe->mIsProxy) {
+        continue;
+      }
+      gfxProxyFontEntry *proxy = static_cast<gfxProxyFontEntry*>(fe);
+      if (proxy->mLoader != nsnull) {
+        proxy->mLoader->Cancel();
+        RemoveLoader(proxy->mLoader);
+      }
+    }
   }
 
   if (modified) {
