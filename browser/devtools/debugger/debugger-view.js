@@ -499,7 +499,7 @@ StackFramesView.prototype = {
 
     // The empty node should look grayed out to avoid confusion.
     item.className = "empty list-item";
-    item.appendChild(document.createTextNode(L10N.getStr("emptyText")));
+    item.appendChild(document.createTextNode(L10N.getStr("emptyStackText")));
 
     this._frames.appendChild(item);
   },
