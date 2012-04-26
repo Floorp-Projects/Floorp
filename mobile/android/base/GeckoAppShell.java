@@ -558,15 +558,19 @@ public class GeckoAppShell
                     switch (token) {
                     case SCREENSHOT_WHOLE_PAGE:
                         GeckoApp.mAppContext.getLayerController()
-                            .getView().getRenderer().setCheckerboardBitmap(b);
+                            .getView().getRenderer()
+                            .setCheckerboardBitmap(b, sCheckerboardPageWidth,
+                                                   sCheckerboardPageHeight);
                         break;
                     case SCREENSHOT_UPDATE:
                         GeckoApp.mAppContext.getLayerController().getView().getRenderer().
                             updateCheckerboardBitmap(
-                                b, sLastCheckerboardWidthRatio * x, 
+                                b, sLastCheckerboardWidthRatio * x,
                                 sLastCheckerboardHeightRatio * y,
-                                sLastCheckerboardWidthRatio * width, 
-                                sLastCheckerboardHeightRatio * height);
+                                sLastCheckerboardWidthRatio * width,
+                                sLastCheckerboardHeightRatio * height,
+                                sCheckerboardPageWidth,
+                                sCheckerboardPageHeight);
                         break;
                     case SCREENSHOT_THUMBNAIL:
                         GeckoApp.mAppContext.processThumbnail(tab, b, null);
@@ -2217,9 +2221,10 @@ public class GeckoAppShell
                 return;
         }
         ImmutableViewportMetrics viewport = GeckoApp.mAppContext.getLayerController().getViewportMetrics();
+        Log.i(LOGTAG, "Taking whole-screen screenshot, viewport: " + viewport);
         // source width and height to screenshot
-        float sw = viewport.pageSizeWidth;
-        float sh = viewport.pageSizeHeight;
+        float sw = viewport.pageSizeWidth / viewport.zoomFactor;
+        float sh = viewport.pageSizeHeight / viewport.zoomFactor;
         int maxPixels = Math.min(ScreenshotLayer.getMaxNumPixels(), sMaxTextureSize * sMaxTextureSize);
         // 2Mb of 16bit image data
         // may be bumped by up to 4x for power of 2 alignment
@@ -2234,8 +2239,8 @@ public class GeckoAppShell
 
         sLastCheckerboardWidthRatio = dw / sw;
         sLastCheckerboardHeightRatio = dh / sh;
-        sCheckerboardPageWidth = viewport.pageSizeWidth;
-        sCheckerboardPageHeight = viewport.pageSizeHeight;
+        sCheckerboardPageWidth = sw;
+        sCheckerboardPageHeight = sh;
 
         GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), 0, 0, (int)sw, (int)sh, 0, 0,  dw, dh, GeckoAppShell.SCREENSHOT_WHOLE_PAGE));
     }

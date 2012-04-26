@@ -456,9 +456,10 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         if (!bridge)
             break;
 
+        PRInt32 token = curEvent->Flags();
+
         nsCOMPtr<nsIDOMWindow> domWindow;
         nsCOMPtr<nsIBrowserTab> tab;
-        float scale;
         mBrowserApp->GetBrowserTab(curEvent->MetaState(), getter_AddRefs(tab));
         if (!tab)
             break;
@@ -467,8 +468,11 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         if (!domWindow)
             break;
 
-        if (NS_FAILED(tab->GetScale(&scale)))
-            break;
+        float scale = 1.0;
+        if (token == AndroidBridge::SCREENSHOT_THUMBNAIL) {
+            if (NS_FAILED(tab->GetScale(&scale)))
+                break;
+        }
 
         nsTArray<nsIntPoint> points = curEvent->Points();
         NS_ASSERTION(points.Length() == 4, "Screenshot event does not have enough coordinates");
