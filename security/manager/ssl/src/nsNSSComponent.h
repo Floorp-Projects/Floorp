@@ -387,9 +387,9 @@ private:
 class nsNSSErrors
 {
 public:
-  static const char *getDefaultErrorStringName(PRInt32 err);
-  static const char *getOverrideErrorStringName(PRInt32 aErrorCode);
-  static nsresult getErrorMessageFromCode(PRInt32 err,
+  static const char *getDefaultErrorStringName(PRErrorCode err);
+  static const char *getOverrideErrorStringName(PRErrorCode aErrorCode);
+  static nsresult getErrorMessageFromCode(PRErrorCode err,
                                           nsINSSComponent *component,
                                           nsString &returnedMessage);
 };
