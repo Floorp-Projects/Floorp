@@ -156,7 +156,7 @@ static void
 InlineReturn(VMFrame &f)
 {
     JS_ASSERT(f.fp() != f.entryfp);
-    JS_ASSERT(!IsActiveWithOrBlock(f.cx, f.fp()->scopeChain(), 0));
+    JS_ASSERT(!IsActiveWithOrBlock(f.cx, *f.fp()->scopeChain(), 0));
     JS_ASSERT(!f.fp()->hasBlockChain());
     f.cx->stack.popInlineFrame(f.regs);
 
@@ -430,7 +430,7 @@ stubs::Eval(VMFrame &f, uint32_t argc)
 {
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
 
-    if (!IsBuiltinEvalForScope(&f.fp()->scopeChain(), args.calleev())) {
+    if (!IsBuiltinEvalForScope(f.fp()->scopeChain(), args.calleev())) {
         if (!InvokeKernel(f.cx, args))
             THROW();
 

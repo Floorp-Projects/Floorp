@@ -604,7 +604,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         *data->ValueFor(eCSSProperty_text_decoration_style);
 
       NS_ABORT_IF_FALSE(decorationStyle.GetUnit() == eCSSUnit_Enumerated,
-                        nsPrintfCString(32, "bad text-decoration-style unit %d",
+                        nsPrintfCString("bad text-decoration-style unit %d",
                                         decorationStyle.GetUnit()).get());
 
       if (decorationColor.GetUnit() != eCSSUnit_Enumerated ||
@@ -620,10 +620,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         *data->ValueFor(eCSSProperty_text_decoration_line);
 
       NS_ABORT_IF_FALSE(textBlink.GetUnit() == eCSSUnit_Enumerated,
-                        nsPrintfCString(32, "bad text-blink unit %d",
+                        nsPrintfCString("bad text-blink unit %d",
                                         textBlink.GetUnit()).get());
       NS_ABORT_IF_FALSE(decorationLine.GetUnit() == eCSSUnit_Enumerated,
-                        nsPrintfCString(32, "bad text-decoration-line unit %d",
+                        nsPrintfCString("bad text-decoration-line unit %d",
                                         decorationLine.GetUnit()).get());
 
       bool blinkNone = (textBlink.GetIntValue() == NS_STYLE_TEXT_BLINK_NONE);
@@ -657,15 +657,15 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
 
       NS_ABORT_IF_FALSE(transDuration.GetUnit() == eCSSUnit_List ||
                         transDuration.GetUnit() == eCSSUnit_ListDep,
-                        nsPrintfCString(32, "bad t-duration unit %d",
+                        nsPrintfCString("bad t-duration unit %d",
                                         transDuration.GetUnit()).get());
       NS_ABORT_IF_FALSE(transTiming.GetUnit() == eCSSUnit_List ||
                         transTiming.GetUnit() == eCSSUnit_ListDep,
-                        nsPrintfCString(32, "bad t-timing unit %d",
+                        nsPrintfCString("bad t-timing unit %d",
                                         transTiming.GetUnit()).get());
       NS_ABORT_IF_FALSE(transDelay.GetUnit() == eCSSUnit_List ||
                         transDelay.GetUnit() == eCSSUnit_ListDep,
-                        nsPrintfCString(32, "bad t-delay unit %d",
+                        nsPrintfCString("bad t-delay unit %d",
                                         transDelay.GetUnit()).get());
 
       const nsCSSValueList* dur = transDuration.GetListValue();
@@ -692,7 +692,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       } else {
         NS_ABORT_IF_FALSE(transProp.GetUnit() == eCSSUnit_List ||
                           transProp.GetUnit() == eCSSUnit_ListDep,
-                          nsPrintfCString(32, "bad t-prop unit %d",
+                          nsPrintfCString("bad t-prop unit %d",
                                           transProp.GetUnit()).get());
         const nsCSSValueList* pro = transProp.GetListValue();
         for (;;) {
@@ -736,7 +736,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         values[i] = data->ValueFor(subprops[i]);
         NS_ABORT_IF_FALSE(values[i]->GetUnit() == eCSSUnit_List ||
                           values[i]->GetUnit() == eCSSUnit_ListDep,
-                          nsPrintfCString(32, "bad a-duration unit %d",
+                          nsPrintfCString("bad a-duration unit %d",
                                           values[i]->GetUnit()).get());
         lists[i] = values[i]->GetListValue();
       }

@@ -149,6 +149,9 @@ child:
 
     SetID(PRUint64 id);
 
+    // Notify child that last-pb-context-exited notification was observed
+    LastPrivateDocShellDestroyed();
+
 parent:
     PAudio(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat);
 
@@ -225,6 +228,9 @@ parent:
 
     sync GetShowPasswordSetting()
         returns (bool showPassword);
+
+    // Notify the parent of the presence or absence of private docshells
+    PrivateDocShellsExist(bool aExist);
 
 both:
      AsyncMessage(nsString aMessage, nsString aJSON);

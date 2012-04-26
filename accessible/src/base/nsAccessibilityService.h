@@ -132,6 +132,8 @@ public:
   already_AddRefed<nsAccessible>
     CreateHTMLTableCellAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
   already_AddRefed<nsAccessible>
+    CreateHTMLTableRowAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  already_AddRefed<nsAccessible>
     CreateHTMLTextAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
   already_AddRefed<nsAccessible>
     CreateHTMLTextFieldAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
@@ -423,7 +425,10 @@ static const char kRoleNames[][20] = {
   "embedded object",     //ROLE_EMBEDDED_OBJECT
   "note",                //ROLE_NOTE
   "figure",              //ROLE_FIGURE
-  "check rich option"    //ROLE_CHECK_RICH_OPTION
+  "check rich option",   //ROLE_CHECK_RICH_OPTION
+  "definitionlist",      //ROLE_DEFINITION_LIST
+  "term",                //ROLE_TERM
+  "definition"           //ROLE_DEFINITION
 };
 
 /**

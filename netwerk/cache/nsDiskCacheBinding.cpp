@@ -119,6 +119,11 @@ nsDiskCacheBinding::nsDiskCacheBinding(nsCacheEntry* entry, nsDiskCacheRecord * 
 
 nsDiskCacheBinding::~nsDiskCacheBinding()
 {
+    // Grab the cache lock since the binding is stored in nsCacheEntry::mData
+    // and it is released using nsCacheService::ReleaseObject_Locked() which
+    // releases the object outside the cache lock.
+    nsCacheServiceAutoLock lock;
+
     NS_ASSERTION(PR_CLIST_IS_EMPTY(this), "binding deleted while still on list");
     if (!PR_CLIST_IS_EMPTY(this))
         PR_REMOVE_LINK(this);       // XXX why are we still on a list?

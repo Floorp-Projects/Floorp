@@ -106,10 +106,20 @@ public:
     * @return               a boolean saying if the tag/attribute has a css equiv
     * @param aNode          [IN] a DOM node
     * @param aProperty      [IN] an atom containing a HTML tag name
-    * @param aAttribute     [IN] a string containing the name of a HTML attribute carried by the element above
+    * @param aAttribute     [IN] a string containing the name of a HTML
+    *                            attribute carried by the element above
+    * @param aValue         [IN] an optional string containing the attribute's
+    *                            HTML value -- this matters for <font size>,
+    *                            since size=7 has no CSS equivalent.  Make sure
+    *                            you pass the HTML value (e.g. "4"), not the
+    *                            CSS value (e.g. "large").
     */
-  bool IsCSSEditableProperty(nsIContent* aNode, nsIAtom* aProperty, const nsAString* aAttribute);
-  bool IsCSSEditableProperty(nsIDOMNode* aNode, nsIAtom* aProperty, const nsAString* aAttribute);
+  bool IsCSSEditableProperty(nsIContent* aNode, nsIAtom* aProperty,
+                             const nsAString* aAttribute,
+                             const nsAString* aValue = nsnull);
+  bool IsCSSEditableProperty(nsIDOMNode* aNode, nsIAtom* aProperty,
+                             const nsAString* aAttribute,
+                             const nsAString* aValue = nsnull);
 
   /** adds/remove a CSS declaration to the STYLE atrribute carried by a given element
     *

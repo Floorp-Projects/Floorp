@@ -57,7 +57,7 @@ public class NinePatchTileLayer extends TileLayer {
     private static final int TEXTURE_SIZE = 64;
 
     public NinePatchTileLayer(CairoImage image) {
-        super(false, image);
+        super(image, TileLayer.PaintMode.NORMAL);
     }
 
     @Override

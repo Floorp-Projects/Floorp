@@ -939,14 +939,13 @@ protected:
 public:
   nsStyleCorners mBorderRadius;       // [reset] coord, percent
   nsStyleSides   mBorderImageSlice;   // [reset] factor, percent
-  PRUint8        mBorderImageFill;    // [reset]
   nsStyleSides   mBorderImageWidth;   // [reset] length, factor, percent, auto
   nsStyleSides   mBorderImageOutset;  // [reset] length, factor
 
+  PRUint8        mBorderImageFill;    // [reset]
   PRUint8        mBorderImageRepeatH; // [reset] see nsStyleConsts.h
   PRUint8        mBorderImageRepeatV; // [reset]
   PRUint8        mFloatEdge;          // [reset]
-  // 8 bits free here
 
 protected:
   // mComputedBorder holds the CSS2.1 computed border-width values.
@@ -1325,10 +1324,10 @@ struct nsStyleText {
   PRUint8 mTextSizeAdjust;              // [inherited] see nsStyleConsts.h
   PRInt32 mTabSize;                     // [inherited] see nsStyleConsts.h
 
+  nscoord mWordSpacing;                 // [inherited]
   nsStyleCoord  mLetterSpacing;         // [inherited] coord, normal
   nsStyleCoord  mLineHeight;            // [inherited] coord, factor, normal
   nsStyleCoord  mTextIndent;            // [inherited] coord, percent, calc
-  nscoord mWordSpacing;                 // [inherited]
 
   nsRefPtr<nsCSSShadowArray> mTextShadow; // [inherited] NULL in case of a zero-length
 
@@ -1601,12 +1600,12 @@ struct nsStyleDisplay {
   // specified, or null to indicate there is no transform.  (inherit or
   // initial are replaced by an actual list of transform functions, or
   // null, as appropriate.) (owned by the style rule)
+  PRUint8 mBackfaceVisibility;
+  PRUint8 mTransformStyle;
   const nsCSSValueList *mSpecifiedTransform; // [reset]
   nsStyleCoord mTransformOrigin[3]; // [reset] percent, coord, calc, 3rd param is coord, calc only
   nsStyleCoord mChildPerspective; // [reset] coord
   nsStyleCoord mPerspectiveOrigin[2]; // [reset] percent, coord, calc
-  PRUint8 mBackfaceVisibility;
-  PRUint8 mTransformStyle;
 
   nsAutoTArray<nsTransition, 1> mTransitions; // [reset]
   // The number of elements in mTransitions that are not from repeating

@@ -1529,7 +1529,7 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp)
 inline GlobalObject *
 GetCurrentGlobal(JSContext *cx)
 {
-    JSObject *scopeChain = (cx->hasfp()) ? &cx->fp()->scopeChain() : cx->globalObject;
+    JSObject *scopeChain = (cx->hasfp()) ? cx->fp()->scopeChain() : cx->globalObject;
     return scopeChain ? &scopeChain->global() : NULL;
 }
 

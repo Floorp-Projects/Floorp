@@ -795,9 +795,9 @@ public:
         return gNewDOMBindingsEnabled;
     }
 
-    bool ParisBindingsEnabled()
+    bool ExperimentalBindingsEnabled()
     {
-        return gParisBindingsEnabled;
+        return gExperimentalBindingsEnabled;
     }
 
     size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
@@ -812,7 +812,7 @@ private:
     static void WatchdogMain(void *arg);
 
     static bool gNewDOMBindingsEnabled;
-    static bool gParisBindingsEnabled;
+    static bool gExperimentalBindingsEnabled;
 
     static const char* mStrings[IDX_TOTAL_COUNT];
     jsid mStrIDs[IDX_TOTAL_COUNT];
@@ -1310,12 +1310,13 @@ public:
     XPCCallContext &GetXPCCallContext()
     {
         if (!mCcx) {
+            XPCCallContext *data = mData.addr();
             mCcxToDestroy = mCcx =
-                new (mData) XPCCallContext(mCallerLanguage, mCx,
-                                           mCallBeginRequest == CALL_BEGINREQUEST,
-                                           mObj,
-                                           mFlattenedJSObject, mWrapper,
-                                           mTearOff);
+                new (data) XPCCallContext(mCallerLanguage, mCx,
+                                          mCallBeginRequest == CALL_BEGINREQUEST,
+                                          mObj,
+                                          mFlattenedJSObject, mWrapper,
+                                          mTearOff);
             if (!mCcx->IsValid()) {
                 NS_ERROR("This is not supposed to fail!");
             }
@@ -1343,7 +1344,7 @@ private:
     JSObject *mFlattenedJSObject;
     XPCWrappedNative *mWrapper;
     XPCWrappedNativeTearOff *mTearOff;
-    char mData[sizeof(XPCCallContext)];
+    mozilla::AlignedStorage2<XPCCallContext> mData;
 };
 
 /***************************************************************************
@@ -1629,9 +1630,9 @@ public:
         return mNewDOMBindingsEnabled;
     }
 
-    JSBool ParisBindingsEnabled()
+    JSBool ExperimentalBindingsEnabled()
     {
-        return mParisBindingsEnabled;
+        return mExperimentalBindingsEnabled;
     }
 
 protected:
@@ -1675,7 +1676,7 @@ private:
     nsDataHashtable<nsDepCharHashKey, JSObject*> mCachedDOMPrototypes;
 
     JSBool mNewDOMBindingsEnabled;
-    JSBool mParisBindingsEnabled;
+    JSBool mExperimentalBindingsEnabled;
 };
 
 /***************************************************************************/

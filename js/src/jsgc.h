@@ -1382,7 +1382,7 @@ MaybeGC(JSContext *cx);
 extern void
 ShrinkGCBuffers(JSRuntime *rt);
 
-extern void
+extern JS_FRIEND_API(void)
 PrepareForFullGC(JSRuntime *rt);
 
 /*

@@ -106,6 +106,8 @@ public:
                                               bool aCloneText) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
   nsString mPublicId;
   nsString mSystemId;

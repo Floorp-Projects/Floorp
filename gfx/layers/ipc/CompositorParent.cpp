@@ -56,15 +56,28 @@ using base::Thread;
 namespace mozilla {
 namespace layers {
 
-CompositorParent::CompositorParent(nsIWidget* aWidget, base::Thread* aCompositorThread)
-  : mCompositorThread(aCompositorThread)
-  , mWidget(aWidget)
+CompositorParent::CompositorParent(nsIWidget* aWidget, MessageLoop* aMsgLoop, PlatformThreadId aThreadID)
+  : mWidget(aWidget)
   , mCurrentCompositeTask(NULL)
   , mPaused(false)
   , mIsFirstPaint(false)
   , mLayersUpdated(false)
+  , mCompositorLoop(aMsgLoop)
+  , mThreadID(aThreadID)
 {
   MOZ_COUNT_CTOR(CompositorParent);
+}
+
+MessageLoop*
+CompositorParent::CompositorLoop()
+{
+  return mCompositorLoop;
+}
+
+PlatformThreadId
+CompositorParent::CompositorThreadID()
+{
+  return mThreadID;
 }
 
 CompositorParent::~CompositorParent()
@@ -118,13 +131,13 @@ void
 CompositorParent::ScheduleRenderOnCompositorThread()
 {
   CancelableTask *renderTask = NewRunnableMethod(this, &CompositorParent::ScheduleComposition);
-  mCompositorThread->message_loop()->PostTask(FROM_HERE, renderTask);
+  CompositorLoop()->PostTask(FROM_HERE, renderTask);
 }
 
 void
 CompositorParent::PauseComposition()
 {
-  NS_ABORT_IF_FALSE(mCompositorThread->thread_id() == PlatformThread::CurrentId(),
+  NS_ABORT_IF_FALSE(CompositorThreadID() == PlatformThread::CurrentId(),
                     "PauseComposition() can only be called on the compositor thread");
   if (!mPaused) {
     mPaused = true;
@@ -138,7 +151,7 @@ CompositorParent::PauseComposition()
 void
 CompositorParent::ResumeComposition()
 {
-  NS_ABORT_IF_FALSE(mCompositorThread->thread_id() == PlatformThread::CurrentId(),
+  NS_ABORT_IF_FALSE(CompositorThreadID() == PlatformThread::CurrentId(),
                     "ResumeComposition() can only be called on the compositor thread");
   mPaused = false;
 
@@ -159,7 +172,7 @@ CompositorParent::SchedulePauseOnCompositorThread()
 {
   CancelableTask *pauseTask = NewRunnableMethod(this,
                                                 &CompositorParent::PauseComposition);
-  mCompositorThread->message_loop()->PostTask(FROM_HERE, pauseTask);
+  CompositorLoop()->PostTask(FROM_HERE, pauseTask);
 }
 
 void
@@ -167,7 +180,17 @@ CompositorParent::ScheduleResumeOnCompositorThread(int width, int height)
 {
   CancelableTask *resumeTask =
     NewRunnableMethod(this, &CompositorParent::ResumeCompositionAndResize, width, height);
-  mCompositorThread->message_loop()->PostTask(FROM_HERE, resumeTask);
+  CompositorLoop()->PostTask(FROM_HERE, resumeTask);
+}
+
+void
+CompositorParent::ScheduleTask(CancelableTask* task, int time)
+{
+  if (time) {
+    MessageLoop::current()->PostTask(FROM_HERE, task);
+  } else {
+    MessageLoop::current()->PostDelayedTask(FROM_HERE, task, time);
+  }
 }
 
 void
@@ -194,9 +217,9 @@ CompositorParent::ScheduleComposition()
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
     mExpectedComposeTime = mozilla::TimeStamp::Now() + TimeDuration::FromMilliseconds(15 - delta.ToMilliseconds());
 #endif
-    MessageLoop::current()->PostDelayedTask(FROM_HERE, mCurrentCompositeTask, 15 - delta.ToMilliseconds());
+    ScheduleTask(mCurrentCompositeTask, 15 - delta.ToMilliseconds());
   } else {
-    MessageLoop::current()->PostTask(FROM_HERE, mCurrentCompositeTask);
+    ScheduleTask(mCurrentCompositeTask, 0);
   }
 }
 
@@ -211,7 +234,7 @@ CompositorParent::SetTransformation(float aScale, nsIntPoint aScrollOffset)
 void
 CompositorParent::Composite()
 {
-  NS_ABORT_IF_FALSE(mCompositorThread->thread_id() == PlatformThread::CurrentId(),
+  NS_ABORT_IF_FALSE(CompositorThreadID() == PlatformThread::CurrentId(),
                     "Composite can only be called on the compositor thread");
   mCurrentCompositeTask = NULL;
 

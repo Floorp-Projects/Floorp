@@ -72,11 +72,6 @@
 
 using namespace mozilla;
 
-#define FLAG_ALT        0x01
-#define FLAG_CONTROL    0x02
-#define FLAG_SHIFT      0x04
-#define FLAG_META       0x08
-
 const nsNavigationDirection DirectionFromKeyCodeTable[2][6] = {
   {
     eNavigationDirection_Last,   // NS_VK_END
@@ -480,19 +475,7 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
       if (event) {
         if (event->eventStructType == NS_MOUSE_EVENT ||
             event->eventStructType == NS_KEY_EVENT) {
-          nsInputEvent* inputEvent = static_cast<nsInputEvent*>(event);
-          if (inputEvent->isAlt) {
-            mCachedModifiers |= FLAG_ALT;
-          }
-          if (inputEvent->isControl) {
-            mCachedModifiers |= FLAG_CONTROL;
-          }
-          if (inputEvent->isShift) {
-            mCachedModifiers |= FLAG_SHIFT;
-          }
-          if (inputEvent->isMeta) {
-            mCachedModifiers |= FLAG_META;
-          }
+          mCachedModifiers = static_cast<nsInputEvent*>(event)->modifiers;
         }
         nsIDocument* doc = aPopup->GetCurrentDoc();
         if (doc) {
@@ -1200,12 +1183,7 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
   }
 
   event.refPoint = mCachedMousePoint;
-
-  event.isAlt = !!(mCachedModifiers & FLAG_ALT);
-  event.isControl = !!(mCachedModifiers & FLAG_CONTROL);
-  event.isShift = !!(mCachedModifiers & FLAG_SHIFT);
-  event.isMeta = !!(mCachedModifiers & FLAG_META);
-
+  event.modifiers = mCachedModifiers;
   nsEventDispatcher::Dispatch(popup, presContext, &event, nsnull, &status);
 
   mCachedMousePoint = nsIntPoint(0, 0);
