@@ -782,32 +782,10 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
 
 /* This all should be reworked to avoid requiring JSScopeProperty types. */
 
-JS_PUBLIC_API(JSScopeProperty *)
-JS_PropertyIterator(JSObject *obj, JSScopeProperty **iteratorp)
-{
-    const Shape *shape;
-
-    /* The caller passes null in *iteratorp to get things started. */
-    shape = (Shape *) *iteratorp;
-    if (!shape)
-        shape = obj->lastProperty();
-    else
-        shape = shape->previous();
-
-    if (!shape->previous()) {
-        JS_ASSERT(shape->isEmptyShape());
-        shape = NULL;
-    }
-
-    return *iteratorp = reinterpret_cast<JSScopeProperty *>(const_cast<Shape *>(shape));
-}
-
-JS_PUBLIC_API(JSBool)
-JS_GetPropertyDesc(JSContext *cx, JSObject *obj_, JSScopeProperty *sprop,
-                   JSPropertyDesc *pd)
+static JSBool
+GetPropertyDesc(JSContext *cx, JSObject *obj_, Shape *shape, JSPropertyDesc *pd)
 {
     assertSameCompartment(cx, obj_);
-    Shape *shape = (Shape *) sprop;
     pd->id = IdToJsval(shape->propid());
 
     RootedVarObject obj(cx, obj_);
@@ -855,6 +833,7 @@ JS_PUBLIC_API(JSBool)
 JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
 {
     assertSameCompartment(cx, obj);
+
     Class *clasp = obj->getClass();
     if (!obj->isNative() || (clasp->flags & JSCLASS_NEW_ENUMERATE)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -882,7 +861,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
         if (!js_AddRoot(cx, &pd[i].value, NULL))
             goto bad;
         Shape *shape = const_cast<Shape *>(&r.front());
-        if (!JS_GetPropertyDesc(cx, obj, reinterpret_cast<JSScopeProperty *>(shape), &pd[i]))
+        if (!GetPropertyDesc(cx, obj, shape, &pd[i]))
             goto bad;
         if ((pd[i].flags & JSPD_ALIAS) && !js_AddRoot(cx, &pd[i].alias, NULL))
             goto bad;
