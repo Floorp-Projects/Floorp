@@ -87,15 +87,24 @@ public class SingleTileLayer extends TileLayer {
             return;
 
         RectF bounds;
-        Rect position = getPosition();
+        RectF textureBounds;
         RectF viewport = context.viewport;
 
-        if (repeats() || stretches()) {
+        if (repeats()) {
+            // If we're repeating, we want to adjust the texture bounds so that
+            // the texture repeats the correct number of times when drawn at
+            // the size of the viewport.
+            bounds = getBounds(context);
+            textureBounds = new RectF(0.0f, 0.0f, bounds.width(), bounds.height());
             bounds = new RectF(0.0f, 0.0f, viewport.width(), viewport.height());
-            int width = Math.round(viewport.width());
-            int height = Math.round(viewport.height());
+        } else if (stretches()) {
+            // If we're stretching, we just want the bounds and texture bounds
+            // to fit to the page.
+            bounds = new RectF(0.0f, 0.0f, context.pageSize.width, context.pageSize.height);
+            textureBounds = bounds;
         } else {
             bounds = getBounds(context);
+            textureBounds = bounds;
         }
 
         Rect intBounds = new Rect();
@@ -118,28 +127,31 @@ public class SingleTileLayer extends TileLayer {
                                        Math.min(bounds.right, (float)subRect.right),
                                        Math.min(bounds.bottom, (float)subRect.bottom));
 
+            // This is the left/top/right/bottom of the rect, relative to the
+            // bottom-left of the layer, to use for texture coordinates.
             int[] cropRect = new int[] { Math.round(subRectF.left - bounds.left),
-                                         Math.round(subRectF.bottom - bounds.top),
+                                         Math.round(bounds.bottom - subRectF.top),
                                          Math.round(subRectF.right - bounds.left),
-                                         Math.round(subRectF.top - bounds.top) };
+                                         Math.round(bounds.bottom - subRectF.bottom) };
 
-            float height = subRectF.height();
             float left = subRectF.left - viewport.left;
-            float top = viewport.height() - (subRectF.top + height - viewport.top);
+            float top = viewport.bottom - subRectF.bottom;
+            float right = left + subRectF.width();
+            float bottom = top + subRectF.height();
 
             float[] coords = {
                 //x, y, z, texture_x, texture_y
+                left/viewport.width(), bottom/viewport.height(), 0,
+                cropRect[0]/textureBounds.width(), cropRect[1]/textureBounds.height(),
+
                 left/viewport.width(), top/viewport.height(), 0,
-                cropRect[0]/(float)position.width(), cropRect[1]/(float)position.height(),
+                cropRect[0]/textureBounds.width(), cropRect[3]/textureBounds.height(),
 
-                left/viewport.width(), (top+height)/viewport.height(), 0,
-                cropRect[0]/(float)position.width(), cropRect[3]/(float)position.height(),
+                right/viewport.width(), bottom/viewport.height(), 0,
+                cropRect[2]/textureBounds.width(), cropRect[1]/textureBounds.height(),
 
-                (left+subRectF.width())/viewport.width(), top/viewport.height(), 0,
-                cropRect[2]/(float)position.width(), cropRect[1]/(float)position.height(),
-
-                (left+subRectF.width())/viewport.width(), (top+height)/viewport.height(), 0,
-                cropRect[2]/(float)position.width(), cropRect[3]/(float)position.height()
+                right/viewport.width(), top/viewport.height(), 0,
+                cropRect[2]/textureBounds.width(), cropRect[3]/textureBounds.height()
             };
 
             FloatBuffer coordBuffer = context.coordBuffer;
