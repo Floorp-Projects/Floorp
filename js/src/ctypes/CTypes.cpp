@@ -1173,25 +1173,25 @@ JS_InitCTypesClass(JSContext* cx, JSObject* global)
   // Set up ctypes.CDataFinalizer.prototype.
   JSObject* ctor;
   if (!GetObjectProperty(cx, ctypes, "CDataFinalizer", &ctor)) {
-    return NULL;
+    return false;
   }
 
   JSObject* prototype = JS_NewObject(cx, &sCDataFinalizerProtoClass,
                                      NULL, ctypes);
   if (!prototype)
-    return NULL;
+    return false;
 
   if (!JS_DefineProperties(cx, prototype, sCDataFinalizerProps) ||
       !JS_DefineFunctions(cx, prototype, sCDataFinalizerFunctions))
-    return NULL;
+    return false;
 
   if (!JS_DefineProperty(cx, ctor, "prototype", OBJECT_TO_JSVAL(prototype),
                          NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
-    return NULL;
+    return false;
 
   if (!JS_DefineProperty(cx, prototype, "constructor", OBJECT_TO_JSVAL(ctor),
                          NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
-    return NULL;
+    return false;
 
 
   // Seal the ctypes object, to prevent modification.
