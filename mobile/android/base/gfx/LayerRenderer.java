@@ -158,20 +158,26 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         "    gl_FragColor = texture2D(sTexture, vec2(vTexCoord.x, 1.0 - vTexCoord.y));\n" +
         "}\n";
 
-    public void setCheckerboardBitmap(Bitmap bitmap) {
+    public void setCheckerboardBitmap(Bitmap bitmap, float pageWidth, float pageHeight) {
         mCheckerboardLayer.setBitmap(bitmap);
         mCheckerboardLayer.beginTransaction();
         try {
+            mCheckerboardLayer.setPosition(new Rect(0, 0, Math.round(pageWidth),
+                                                    Math.round(pageHeight)));
             mCheckerboardLayer.invalidate();
         } finally {
             mCheckerboardLayer.endTransaction();
         }
     }
 
-    public void updateCheckerboardBitmap(Bitmap bitmap, float x, float y, float width, float height) {
+    public void updateCheckerboardBitmap(Bitmap bitmap, float x, float y,
+                                         float width, float height,
+                                         float pageWidth, float pageHeight) {
         mCheckerboardLayer.updateBitmap(bitmap, x, y, width, height);
         mCheckerboardLayer.beginTransaction();
         try {
+            mCheckerboardLayer.setPosition(new Rect(0, 0, Math.round(pageWidth),
+                                                    Math.round(pageHeight)));
             mCheckerboardLayer.invalidate();
         } finally {
             mCheckerboardLayer.endTransaction();
@@ -570,6 +576,39 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
         }
 
+        /** Retrieves the bounds for the layer, rounded in such a way that it
+         * can be used as a mask for something that will render underneath it.
+         * This will round the bounds inwards, but stretch the mask towards any
+         * near page edge, where near is considered to be 'within 2 pixels'.
+         * Returns null if the given layer is null.
+         */
+        private Rect getMaskForLayer(Layer layer) {
+            if (layer == null) {
+                return null;
+            }
+
+            RectF bounds = RectUtils.contract(layer.getBounds(mPageContext), 1.0f, 1.0f);
+            Rect mask = RectUtils.roundIn(bounds);
+
+            // If the mask is within two pixels of any page edge, stretch it over
+            // that edge. This is to avoid drawing thin slivers when masking
+            // layers.
+            if (mask.top <= 2) {
+                mask.top = -1;
+            }
+            if (mask.left <= 2) {
+                mask.left = -1;
+            }
+            if (mask.right >= mPageRect.right - 2) {
+                mask.right = mPageRect.right + 1;
+            }
+            if (mask.bottom >= mPageRect.bottom - 2) {
+                mask.bottom = mPageRect.bottom + 1;
+            }
+
+            return mask;
+        }
+
         /** This function is invoked via JNI; be careful when modifying signature. */
         public void drawBackground() {
             /* Draw the background. */
@@ -582,15 +621,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             if (!untransformedPageRect.contains(mView.getController().getViewport()))
                 mShadowLayer.draw(mPageContext);
 
-            /* Find the area the root layer will render into, to mask the scissor rect */
-            Rect rootMask = null;
-            Layer rootLayer = mView.getController().getRoot();
-            if (rootLayer != null) {
-                RectF rootBounds = rootLayer.getBounds(mPageContext);
-                rootBounds.offset(-mPageContext.viewport.left, -mPageContext.viewport.top);
-                rootMask = new Rect();
-                rootBounds.roundOut(rootMask);
-            }
+            /* Find the area the root layer will render into, to mask the checkerboard layer */
+            Rect rootMask = getMaskForLayer(mView.getController().getRoot());
 
             /* Draw the checkerboard. */
             setScissorRect();

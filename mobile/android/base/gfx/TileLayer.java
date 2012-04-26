@@ -84,12 +84,8 @@ public abstract class TileLayer extends Layer {
             TextureReaper.get().add(mTextureIDs);
     }
 
-    @Override
-    public void setPosition(Rect newPosition) {
-        if (newPosition.width() != mImage.getSize().width || newPosition.height() != mImage.getSize().height) {
-            throw new RuntimeException("Error: changing the size of a tile layer is not allowed!");
-        }
-        super.setPosition(newPosition);
+    public void setPaintMode(PaintMode mode) {
+        mPaintMode = mode;
     }
 
     /**
