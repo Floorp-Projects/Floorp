@@ -4498,18 +4498,8 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         
         if (mUpgradeProtocolCallback && stickyConn &&
             mResponseHead && mResponseHead->Status() == 101) {
-            nsCOMPtr<nsISocketTransport>    socketTransport;
-            nsCOMPtr<nsIAsyncInputStream>   socketIn;
-            nsCOMPtr<nsIAsyncOutputStream>  socketOut;
-
-            nsresult rv;
-            rv = stickyConn->TakeTransport(getter_AddRefs(socketTransport),
-                                           getter_AddRefs(socketIn),
-                                           getter_AddRefs(socketOut));
-            if (NS_SUCCEEDED(rv))
-                mUpgradeProtocolCallback->OnTransportAvailable(socketTransport,
-                                                               socketIn,
-                                                               socketOut);
+            gHttpHandler->ConnMgr()->CompleteUpgrade(stickyConn,
+                                                     mUpgradeProtocolCallback);
         }
     }
 
