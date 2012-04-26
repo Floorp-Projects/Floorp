@@ -674,7 +674,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
                 /* restrict the viewport to page bounds so we don't
                  * count overscroll as checkerboard */
-                if (!viewport.intersect(mPageRect)) {
+                if (!viewport.intersect(0, 0, mPageRect.width(), mPageRect.height())) {
                     /* if the rectangles don't intersect
                        intersect() doesn't change viewport
                        so we set it to empty by hand */
@@ -683,8 +683,9 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
                 validRegion.op(viewport, Region.Op.INTERSECT);
 
                 float checkerboard = 0.0f;
-                if (!(validRegion.isRect() && validRegion.getBounds().equals(viewport))) {
-                    int screenArea = viewport.width() * viewport.height();
+
+                int screenArea = viewport.width() * viewport.height();
+                if (screenArea > 0 && !(validRegion.isRect() && validRegion.getBounds().equals(viewport))) {
                     validRegion.op(viewport, Region.Op.REVERSE_DIFFERENCE);
 
                     // XXX The assumption here is that a Region never has overlapping
