@@ -891,7 +891,7 @@ nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
   nsCOMPtr<nsINode> node = do_QueryInterface(target);
   NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
 
-  // If the traget is a document node but it's not editable, we should ignore
+  // If the target is a document node but it's not editable, we should ignore
   // it because actual focused element's event is going to come.
   if (node->IsNodeOfType(nsINode::eDOCUMENT) &&
       !node->HasFlag(NODE_IS_EDITABLE)) {
