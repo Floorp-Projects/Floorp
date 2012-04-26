@@ -2052,9 +2052,10 @@ public class BrowserProvider extends ContentProvider {
         values.put(History.DATE_CREATED, 0);
         values.put(History.DATE_LAST_VISITED, 0);
         values.put(History.VISITS, 0);
+        values.put(History.DATE_MODIFIED, System.currentTimeMillis());
 
         cleanupSomeDeletedRecords(uri, History.CONTENT_URI, TABLE_HISTORY);
-        return updateHistory(uri, values, selection, selectionArgs);
+        return db.update(TABLE_HISTORY, values, selection, selectionArgs);
     }
 
     int deleteBookmarks(Uri uri, String selection, String[] selectionArgs) {
