@@ -1468,14 +1468,17 @@ def getWrapTemplateForTypeImpl(type, result, descriptorProvider,
   if (WrapNewBindingObject(cx, obj, %s, ${jsvalPtr})) {
     return true;
   }""" % result
-            if descriptor.workers:
-                # Worker bindings can only fail to wrap as a new-binding object
-                # if they already threw an exception
+            # We don't support prefable stuff in workers.
+            assert(not descriptor.prefable or not descriptor.workers)
+            if not descriptor.prefable:
+                # Non-prefable bindings can only fail to wrap as a new-binding object
+                # if they already threw an exception.  Same thing for
+                # non-prefable bindings.
                 wrappingCode += """
   MOZ_ASSERT(JS_IsExceptionPending(cx));
   return false;"""
             else:
-                # Try old-style wrapping for non-worker bindings
+                # Try old-style wrapping for bindings which might be preffed off.
                 wrappingCode += """
   return HandleNewBindingWrappingFailure(cx, obj, %s, ${jsvalPtr});""" % result
         else:
