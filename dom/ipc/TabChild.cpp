@@ -907,6 +907,8 @@ TabChild::InitTabChildGlobal()
   
   NS_ENSURE_TRUE(InitTabChildGlobalInternal(scopeSupports), false); 
 
+  scope->Init();
+
   nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(chromeHandler);
   NS_ENSURE_TRUE(root, false);
   root->SetParentTarget(scope);
@@ -990,13 +992,19 @@ SendAsyncMessageToParent(void* aCallbackData,
 TabChildGlobal::TabChildGlobal(TabChild* aTabChild)
 : mTabChild(aTabChild)
 {
+}
+
+void
+TabChildGlobal::Init()
+{
+  NS_ASSERTION(!mMessageManager, "Re-initializing?!?");
   mMessageManager = new nsFrameMessageManager(false,
                                               SendSyncMessageToParent,
                                               SendAsyncMessageToParent,
                                               nsnull,
                                               mTabChild,
                                               nsnull,
-                                              aTabChild->GetJSContext());
+                                              mTabChild->GetJSContext());
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(TabChildGlobal)
