@@ -20,9 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=682299
 
 /** Test for Bug 682299 **/
 
-const MEDIA_ERR_SRC_NOT_SUPPORTED = 4;
-const SECURITY_ERR = 0x80530012;
-
 function createCanvas(width, height) {
   var c = document.createElement("canvas");
   c.width = width;
@@ -39,7 +36,7 @@ function testCanvasDrawImage(v) {
     var data = ctx.getImageData(0, 0, 1, 1);
     ok(true, "drawImage '" + v.src + "' then getImageData with crossorigin='" + v.crossorigin + "' worked");
   } catch(error) {
-    ok(!v.crossorigin && error.result === SECURITY_ERR, "drawImage '" + v.src + "' then getImageData with crossorigin='" + v.crossorigin + "' failed");
+    ok(!v.crossorigin && error.name === "SecurityError", "drawImage '" + v.src + "' then getImageData with crossorigin='" + v.crossorigin + "' failed");
     v.tainted = true;
   }
 }
@@ -54,7 +51,7 @@ function testCanvasCreatePattern(v) {
     var data = ctx.getImageData(0, 0, 1, 1);
     ok(true, "createPattern '" + v.src + "' then getImageData with crossorigin='" + v.crossorigin + "' worked");
   } catch(error) {
-    ok(!v.crossorigin && error.result === SECURITY_ERR, "createPattern '" + v.src + "' then getImageData with crossorigin='" + v.crossorigin + "' failed");
+    ok(!v.crossorigin && error.name === "SecurityError", "createPattern '" + v.src + "' then getImageData with crossorigin='" + v.crossorigin + "' failed");
     v.tainted = true;
   }
 }
@@ -67,7 +64,7 @@ function testWebGL(v) {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, v);
     ok(true, "createTexture from '" + v.src + "' with crossorigin='" + v.crossorigin + "' worked");
   } catch (error) {
-    ok(!v.crossorigin && error.result === SECURITY_ERR, "createTexture from '" + v.src + "' with crossorigin='" + v.crossorigin + "' failed");
+    ok(!v.crossorigin && error.name === "SecurityError", "createTexture from '" + v.src + "' with crossorigin='" + v.crossorigin + "' failed");
     v.tainted = true;
   }
 }
@@ -81,7 +78,7 @@ function testTaintedCanvas(v) {
     var data = ctx.getImageData(0, 0, 1, 1);
     ok(false, "changing the CORS mode should not allow reading data from remote videos");
   } catch (error) {
-    ok(error.result === SECURITY_ERR, "changing the CORS mode, drawImage '" + v.src + "' then getImageData with crossorigin='" + v.crossorigin + "' failed");
+    ok(error.name === "SecurityError", "changing the CORS mode, drawImage '" + v.src + "' then getImageData with crossorigin='" + v.crossorigin + "' failed");
   }
 }
 
@@ -108,7 +105,7 @@ function vidLoadFailure(e) {
 }
 
 function vidErrorSuccess(e) {
-  ok(e.target.error.code === MEDIA_ERR_SRC_NOT_SUPPORTED, 
+  ok(e.target.error.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED, 
     "Load '" + e.target.src + "' with crossorigin='" + e.target.crossorigin + "'");
   doneTest(e);
 }

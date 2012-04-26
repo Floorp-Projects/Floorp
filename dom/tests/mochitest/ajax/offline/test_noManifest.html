@@ -12,7 +12,8 @@ function expectInvalidState(fn, desc) {
   try {
     fn();
   } catch(e) {
-    if (e.code == DOMException.INVALID_STATE_ERR) {
+    if (e.name == "InvalidStateError" &&
+        e.code == DOMException.INVALID_STATE_ERR) {
       gotInvalidState = true;
     }
   }
@@ -25,9 +26,9 @@ is(applicationCache.mozLength, 0, "applicationCache.mozLength should be 0");
 is(applicationCache.status, 0, "applicationCache.status should be 0 (UNCACHED)");
 
 expectInvalidState(function() { applicationCache.update(); },
-                   "applicationCache.update should throw INVALID_STATE_ERR");
+                   "applicationCache.update should throw InvalidStateError");
 expectInvalidState(function() { applicationCache.swapCache(); },
-                   "applicationCache.update should throw INVALID_STATE_ERR");
+                   "applicationCache.update should throw InvalidStateError");
 
 
 </script>

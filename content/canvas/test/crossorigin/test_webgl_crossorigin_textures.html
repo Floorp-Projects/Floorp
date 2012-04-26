@@ -11,28 +11,18 @@
 
   SimpleTest.waitForExplicitFinish();
 
-  const SECURITY_ERR = 0x80530012;
-  const OK = 0;
+  const OK = "";
 
   var gl;
   var number_of_tests_live = 0;
   var all_tests_started = false;
 
-  function nameForErrorCode(code) {
-    switch(code) {
-      case OK: return "no error";
-      case SECURITY_ERR: return "security error";
-    }
-    return "unexpected error (" + code + ")";
-  }
-
   function verifyError(actual_error, expected_error, message) {
     ok(actual_error == expected_error,
-       message + ": expected " + nameForErrorCode(expected_error)
-               + ", got " + nameForErrorCode(actual_error));
+       message + ": expected " + expected_error + ", got " + actual_error);
   }
 
-  function testTexture(url, crossOriginAttribute, expected_result) {
+  function testTexture(url, crossOriginAttribute, expected_error) {
     number_of_tests_live++;
     var image = new Image();
     if (crossOriginAttribute == "just-crossOrigin-without-value") {
@@ -54,19 +44,19 @@
     image.onload = function() {
       var tex = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, tex);
-      var actual_result = OK;
+      var actual_error = OK;
       try {
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
       } catch(e) {
-        actual_result = e.result;
+        actual_error = e.name;
       }
-      verifyError(actual_result, expected_result, "texImage2D on " + url + " with crossOrigin=" + image.crossOrigin);
+      verifyError(actual_error, expected_error, "texImage2D on " + url + " with crossOrigin=" + image.crossOrigin);
 
       testDone();
     };
 
     image.onerror = function(event) {
-      ok(expected_result != OK, "Got an error but expected OK!");
+      ok(expected_error != OK, "Got an error but expected OK!");
 
       testDone();
     }
@@ -96,17 +86,17 @@
                 OK);
     testTexture("http://example.com/tests/content/canvas/test/crossorigin/image.png",
                 "missing-value-default",
-                SECURITY_ERR);
+                "SecurityError");
     testTexture("http://example.com/tests/content/canvas/test/crossorigin/image.png",
                 "",
-                SECURITY_ERR);
+                "SecurityError");
     testTexture("http://example.com/tests/content/canvas/test/crossorigin/image.png",
                 "just-crossOrigin-without-value",
-                SECURITY_ERR);
+                "SecurityError");
 
     testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-star.png",
                 "missing-value-default",
-                SECURITY_ERR);
+                "SecurityError");
     testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-star.png",
                 "",
                 OK);
@@ -118,11 +108,11 @@
                 OK);
     testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-star.png",
                 "use-credentials",
-                SECURITY_ERR);
+                "SecurityError");
 
     testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-credentials.png",
                 "missing-value-default",
-                SECURITY_ERR);
+                "SecurityError");
     testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-credentials.png",
                 "",
                 OK);
@@ -142,7 +132,7 @@
                 OK);
     testTexture("http://example.com/tests/content/canvas/test/crossorigin/image.png",
                 "foobar",
-                SECURITY_ERR);
+                "SecurityError");
     testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-star.png",
                 "foobar",
                 OK);

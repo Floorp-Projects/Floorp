@@ -34,6 +34,8 @@ function main() {
     anim.getStartTime();
   } catch(e) {
     exceptionCaught = true;
+    is(e.name, "InvalidStateError",
+       "Unexpected exception from getStartTime.");
     is(e.code, DOMException.INVALID_STATE_ERR,
        "Unexpected exception code from getStartTime.");
   }
@@ -83,6 +85,8 @@ function main() {
     anim.getStartTime();
   } catch(e) {
     exceptionCaught = true;
+    is(e.name, "InvalidStateError",
+       "Unexpected exception from getStartTime.");
     is(e.code, DOMException.INVALID_STATE_ERR,
        "Unexpected exception code from getStartTime.");
   }

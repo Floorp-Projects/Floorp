@@ -301,7 +301,7 @@ r.onabort = function (event) {
   is(loadEndHasRun, false, "loadend shouldn't have fired yet");
   abortHasRun = true;
   is(event.target.readyState, FileReader.DONE, "should be DONE while firing onabort");
-  is(event.target.error.code, FileError.ABORT_ERR, "error code set to ABORT for aborted reads");
+  is(event.target.error.name, "AbortError", "error set to AbortError for aborted reads");
   is(event.target.result, null, "file data should be null on aborted reads");
 }
 r.onloadend = function (event) {
@@ -309,7 +309,7 @@ r.onloadend = function (event) {
   is(loadEndHasRun, false, "loadend should only fire once");
   loadEndHasRun = true;
   is(event.target.readyState, FileReader.DONE, "should be DONE while firing onabort");
-  is(event.target.error.code, FileError.ABORT_ERR, "error code set to ABORT for aborted reads");
+  is(event.target.error.name, "AbortError", "error set to AbortError for aborted reads");
   is(event.target.result, null, "file data should be null on aborted reads");
 }
 r.onload = function() { ok(false, "load should not fire for aborted reads") };
@@ -335,7 +335,7 @@ r.onabort = function (event) {
   is(reuseAbortHasRun, false, "abort should only fire once");
   reuseAbortHasRun = true;
   is(event.target.readyState, FileReader.DONE, "should be DONE while firing onabort");
-  is(event.target.error.code, FileError.ABORT_ERR, "error code set to ABORT for aborted reads");
+  is(event.target.error.name, "AbortError", "error set to AbortError for aborted reads");
   is(event.target.result, null, "file data should be null on aborted reads");
 }
 r.onload = function() { ok(false, "load should not fire for aborted reads") };

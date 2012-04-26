@@ -3,7 +3,7 @@
 <head>
 <script type="text/javascript">
 function init() {
-  // This will throw a NS_ERROR_DOM_WRONG_DOCUMENT_ERR exception
+  // This will throw a HierarchyRequestError exception
   var doc = document.implementation.createDocument(null, 'DOC', null);
   doc.documentElement.appendChild(doc);
 }
