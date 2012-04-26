@@ -607,4 +607,29 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
     return true; // Allow
 }
 
+bool
+ComponentsObjectPolicy::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper::Action act,
+                              Permission &perm) 
+{
+    perm = DenyAccess;
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, wrapper))
+        return false;
+
+    if (JSID_IS_STRING(id) && act == Wrapper::GET) {
+        JSFlatString *flatId = JSID_TO_FLAT_STRING(id);
+        if (JS_FlatStringEqualsAscii(flatId, "isSuccessCode") ||
+            JS_FlatStringEqualsAscii(flatId, "lookupMethod") ||
+            JS_FlatStringEqualsAscii(flatId, "interfaces") ||
+            JS_FlatStringEqualsAscii(flatId, "interfacesByID") ||
+            JS_FlatStringEqualsAscii(flatId, "results"))
+        {
+            perm = PermitPropertyAccess;
+            return true;
+        }
+    }
+
+    return PermitIfUniversalXPConnect(cx, id, act, perm);  // Deny
+}
+
 }
