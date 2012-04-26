@@ -1965,43 +1965,6 @@ DisassWithSrc(JSContext *cx, unsigned argc, jsval *vp)
 #undef LINE_BUF_LEN
 }
 
-static void
-DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
-{
-    unsigned i = 0;
-    for (JSScopeProperty *sprop = NULL; JS_PropertyIterator(obj, &sprop);) {
-        fprintf(fp, "%3u %p ", i++, (void *) sprop);
-        ((Shape *) sprop)->dump(cx, fp);
-    }
-}
-
-static JSBool
-DumpStats(JSContext *cx, unsigned argc, jsval *vp)
-{
-    jsval *argv = JS_ARGV(cx, vp);
-    for (unsigned i = 0; i < argc; i++) {
-        JSString *str = JS_ValueToString(cx, argv[i]);
-        if (!str)
-            return JS_FALSE;
-        argv[i] = STRING_TO_JSVAL(str);
-        JSFlatString *flatStr = JS_FlattenString(cx, str);
-        if (!flatStr)
-            return JS_FALSE;
-        if (JS_FlatStringEqualsAscii(flatStr, "atom")) {
-            js_DumpAtoms(cx, gOutFile);
-        } else if (JS_FlatStringEqualsAscii(flatStr, "global")) {
-            DumpScope(cx, cx->globalObject, stdout);
-        } else {
-            fputs("js: invalid stats argument ", gErrFile);
-            JS_FileEscapedString(gErrFile, str, 0);
-            putc('\n', gErrFile);
-            continue;
-        }
-    }
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
-}
-
 static JSBool
 DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -3639,10 +3602,6 @@ static JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("notes", Notes, 1, 0,
 "notes([fun])",
 "  Show source notes for functions."),
-
-    JS_FN_HELP("stats", DumpStats, 1, 0,
-"stats([string ...])",
-"  Dump 'atom' or 'global' stats."),
 
     JS_FN_HELP("findReferences", FindReferences, 1, 0,
 "findReferences(target)",
