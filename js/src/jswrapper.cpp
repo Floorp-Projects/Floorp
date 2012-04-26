@@ -357,7 +357,7 @@ Wrapper::fun_toString(JSContext *cx, JSObject *wrapper, unsigned indent)
 bool
 Wrapper::regexp_toShared(JSContext *cx, JSObject *wrapper, RegExpGuard *g)
 {
-    return wrappedObject(wrapper)->asRegExp().getShared(cx, g);
+    return RegExpToShared(cx, *wrappedObject(wrapper), g);
 }
 
 bool
