@@ -56,6 +56,8 @@ TEST_HARNESS_FILES := \
   runxpcshelltests.py \
   remotexpcshelltests.py \
   head.js \
+  node-spdy \
+  moz-spdy \
   $(NULL)
 
 # Extra files needed from $(topsrcdir)/build
