@@ -71,3 +71,31 @@ xpcAccessibleTable::IsProbablyForLayout(bool* aResult)
   *aResult = mTable->IsProbablyLayoutTable();
   return NS_OK;
 }
+
+nsresult
+xpcAccessibleTable::UnselectColumn(PRInt32 aColIdx)
+{
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aColIdx < 0 || aColIdx >= mTable->ColCount())
+    return NS_ERROR_INVALID_ARG;
+
+  mTable->UnselectCol(aColIdx);
+  return NS_OK;
+}
+
+nsresult
+xpcAccessibleTable::UnselectRow(PRInt32 aRowIdx)
+{
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aRowIdx < 0 || aRowIdx >= mTable->RowCount())
+    return NS_ERROR_INVALID_ARG;
+
+  mTable->UnselectRow(aRowIdx);
+  return NS_OK;
+}
+
+

@@ -545,23 +545,17 @@ nsXULTreeGridAccessible::SelectColumn(PRInt32 aColumnIndex)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULTreeGridAccessible::UnselectRow(PRInt32 aRowIndex)
+void
+nsXULTreeGridAccessible::UnselectRow(PRUint32 aRowIdx)
 {
   if (!mTreeView)
-    return NS_ERROR_INVALID_ARG;
+    return;
 
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_STATE(selection);
-
-  return selection->ClearRange(aRowIndex, aRowIndex);
-}
-
-NS_IMETHODIMP
-nsXULTreeGridAccessible::UnselectColumn(PRInt32 aColumnIndex)
-{
-  return NS_OK;
+  
+  if (selection)
+    selection->ClearRange(aRowIdx, aRowIdx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

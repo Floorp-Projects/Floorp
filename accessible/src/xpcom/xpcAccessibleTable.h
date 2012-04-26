@@ -23,9 +23,11 @@ public:
   xpcAccessibleTable(mozilla::a11y::TableAccessible* aTable) : mTable(aTable) { }
 
   nsresult GetCaption(nsIAccessible** aCaption);
+  nsresult GetSummary(nsAString& aSummary);
   nsresult GetColumnCount(PRInt32* aColumnCount);
   nsresult GetRowCount(PRInt32* aRowCount);
-  nsresult GetSummary(nsAString& aSummary);
+  nsresult UnselectColumn(PRInt32 aColIdx);
+  nsresult UnselectRow(PRInt32 aRowIdx);
   nsresult IsProbablyForLayout(bool* aIsForLayout);
 
 protected:
@@ -62,8 +64,10 @@ protected:
   NS_SCRIPTABLE NS_IMETHOD GetSelectedRowIndices(PRUint32 *rowsArraySize NS_OUTPARAM, PRInt32 **rowsArray NS_OUTPARAM); \
   NS_SCRIPTABLE NS_IMETHOD SelectRow(PRInt32 rowIndex); \
   NS_SCRIPTABLE NS_IMETHOD SelectColumn(PRInt32 columnIndex); \
-  NS_SCRIPTABLE NS_IMETHOD UnselectColumn(PRInt32 columnIndex); \
-  NS_IMETHOD UnselectRow(PRInt32 aRowIdx); \
+  NS_SCRIPTABLE NS_IMETHOD UnselectColumn(PRInt32 aColIdx) \
+    { return xpcAccessibleTable::UnselectColumn(aColIdx); } \
+  NS_IMETHOD UnselectRow(PRInt32 aRowIdx) \
+    { return xpcAccessibleTable::UnselectRow(aRowIdx); } \
   NS_IMETHOD IsProbablyForLayout(bool* aResult) \
   { return xpcAccessibleTable::IsProbablyForLayout(aResult); } \
 

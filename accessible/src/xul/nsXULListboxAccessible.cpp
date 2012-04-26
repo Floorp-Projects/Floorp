@@ -775,29 +775,19 @@ nsXULListboxAccessible::SelectColumn(PRInt32 aColumn)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULListboxAccessible::UnselectRow(PRInt32 aRow)
+void
+nsXULListboxAccessible::UnselectRow(PRUint32 aRowIdx)
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-  
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
     do_QueryInterface(mContent);
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
-  control->GetItemAtIndex(aRow, getter_AddRefs(item));
-  NS_ENSURE_TRUE(item, NS_ERROR_INVALID_ARG);
-
-  return control->RemoveItemFromSelection(item);
-}
-
-NS_IMETHODIMP
-nsXULListboxAccessible::UnselectColumn(PRInt32 aColumn)
-{
-  // xul:listbox and xul:richlistbox support row selection only.
-  return NS_OK;
+  if (control) {
+    nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
+    control->GetItemAtIndex(aRowIdx, getter_AddRefs(item));
+    control->RemoveItemFromSelection(item);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
