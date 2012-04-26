@@ -39,8 +39,6 @@
 #include "nsDocAccessible.h"
 #include "nsObjCExceptions.h"
 
-#import "nsRoleMap.h"
-
 #include "Accessible-inl.h"
 #include "Role.h"
 
