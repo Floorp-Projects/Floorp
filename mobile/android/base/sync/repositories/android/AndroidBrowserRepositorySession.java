@@ -94,7 +94,23 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
   }
 
   /**
+   * Perform any necessary transformation of a record prior to searching by
+   * any field other than GUID.
+   *
+   * Example: translating remote folder names into local names.
+   */
+  protected void fixupRecord(Record record) {
+    return;
+  }
+
+  /**
    * Override in subclass to implement record extension.
+   *
+   * Populate any fields of the record that are expensive to calculate,
+   * prior to reconciling.
+   *
+   * Example: computing children arrays.
+   *
    * Return null if this record should not be processed.
    *
    * @param record
@@ -429,6 +445,9 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
           // End deletion logic.
 
           // Now we're processing a non-deleted incoming record.
+          // Apply any changes we need in order to correctly find existing records.
+          fixupRecord(record);
+
           if (existingRecord == null) {
             trace("Looking up match for record " + record.guid);
             existingRecord = findExistingRecord(record);
@@ -649,6 +668,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
   }
 
   protected abstract Record prepareRecord(Record record);
+
   protected void updateBookkeeping(Record record) throws NoGuidForIdException,
                                                  NullCursorException,
                                                  ParentNotFoundException {
