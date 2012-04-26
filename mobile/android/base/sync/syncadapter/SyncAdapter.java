@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
+
 import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.sync.AlreadySyncingException;
 import org.mozilla.gecko.sync.GlobalConstants;
@@ -23,6 +24,7 @@ import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
 import org.mozilla.gecko.sync.net.ConnectionMonitorThread;
 import org.mozilla.gecko.sync.setup.Constants;
+import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
 
 import android.accounts.Account;
@@ -210,7 +212,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
                             final String authority,
                             final ContentProviderClient provider,
                             final SyncResult syncResult) {
+
     Utils.reseedSharedRandom(); // Make sure we don't work with the same random seed for too long.
+
+    // Set these so that we don't need to thread them through assorted calls and callbacks.
+    this.syncResult   = syncResult;
+    this.localAccount = account;
 
     boolean force = (extras != null) && (extras.getBoolean("force", false));
     long delay = delayMilliseconds();
@@ -253,18 +260,42 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
           Log.d(LOG_TAG, "Server:   " + serverURL);
           Log.d(LOG_TAG, "Password? " + (password != null));
           Log.d(LOG_TAG, "Key?      " + (syncKey != null));
+
+          if (password  == null &&
+              username  == null &&
+              syncKey   == null &&
+              serverURL == null) {
+
+            // Totally blank. Most likely the user has two copies of Firefox
+            // installed, and something is misbehaving.
+            // Disable this account.
+            Logger.error(LOG_TAG, "No credentials attached to account. Aborting sync.");
+            try {
+              SyncAccounts.setSyncAutomatically(account, false);
+            } catch (Exception e) {
+              Logger.error(LOG_TAG, "Unable to disable account " + account.name + " for " + authority + ".", e);
+            }
+            syncResult.stats.numAuthExceptions++;
+            localAccount = null;
+            notifyMonitor();
+            return;
+          }
+
+          // Now catch the individual cases.
           if (password == null) {
             Log.e(LOG_TAG, "No password: aborting sync.");
             syncResult.stats.numAuthExceptions++;
             notifyMonitor();
             return;
           }
+
           if (syncKey == null) {
             Log.e(LOG_TAG, "No Sync Key: aborting sync.");
             syncResult.stats.numAuthExceptions++;
             notifyMonitor();
             return;
           }
+
           KeyBundle keyBundle = new KeyBundle(username, syncKey);
 
           // Support multiple accounts by mapping each server/account pair to a branch of the
@@ -312,6 +343,11 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
  }
 
   public int getSyncInterval() {
+    // Must have been a problem that means we can't access the Account.
+    if (this.localAccount == null) {
+      return SINGLE_DEVICE_INTERVAL_MILLISECONDS;
+    }
+
     int clientsCount = this.getClientsCount();
     if (clientsCount <= 1) {
       return SINGLE_DEVICE_INTERVAL_MILLISECONDS;
@@ -345,8 +381,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
                                         IOException, ParseException,
                                         NonObjectJSONException {
     Log.i(LOG_TAG, "Performing sync.");
-    this.syncResult   = syncResult;
-    this.localAccount = account;
 
     // TODO: default serverURL.
     GlobalSession globalSession = new GlobalSession(SyncConfiguration.DEFAULT_USER_API,

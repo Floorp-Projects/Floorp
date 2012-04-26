@@ -3284,7 +3284,7 @@ nsCycleCollector::WasFreed(nsISupports *n)
 ////////////////////////
 
 static PRInt64
-ReportCycleCollectorMem()
+GetCycleCollectorSize()
 {
     if (!sCollector)
         return 0;
@@ -3300,7 +3300,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(CycleCollector,
                              "explicit/cycle-collector",
                              KIND_HEAP,
                              UNITS_BYTES,
-                             ReportCycleCollectorMem,
+                             GetCycleCollectorSize,
                              "Memory used by the cycle collector.  This "
                              "includes the cycle collector structure, the "
                              "purple buffer, the graph, and the white nodes.  "

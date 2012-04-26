@@ -1,0 +1,33 @@
+{
+  "name": "spdy",
+  "version": "1.2.0",
+  "description": "Implementation of the SPDY protocol on node.js.",
+  "keywords": [
+    "spdy"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/indutny/node-spdy.git"
+  },
+  "homepage": "https://github.com/indutny/node-spdy",
+  "bugs": {
+    "email": "node-spdy+bugs@indutny.com",
+    "url": "https://github.com/indunty/node-spdy/issues"
+  },
+  "author": "Fedor Indutny <fedor.indutny@gmail.com>",
+  "contributors": [
+    "Chris Storm <github@eeecooks.com>",
+    "François de Metz <francois@2metz.fr>"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "~ 0.10.1"
+  },
+  "scripts": {
+    "test": "mocha --ui tdd --growl --reporter spec test/unit/*-test.js"
+  },
+  "engines": [
+    "node ~ 0.7.0"
+  ],
+  "main": "./lib/spdy"
+}

@@ -147,7 +147,7 @@ if __name__ == '__main__':
             xul_info = manifest.XULInfo(xul_abi, xul_os, xul_debug)
         xul_tester = manifest.XULInfoTester(xul_info, JS)
 
-    test_dir = os.path.dirname(os.path.realpath(__file__))
+    test_dir = os.path.dirname(os.path.abspath(__file__))
     test_list = manifest.load(test_dir, xul_tester)
     skipped_list = []
 
