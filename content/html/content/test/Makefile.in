@@ -202,10 +202,6 @@ _TEST_FILES = \
 		test_bug558788-1.html \
 		test_bug558788-2.html \
 		test_bug561634.html \
-		test_bug588683-1.html \
-		test_bug588683-2.html \
-		test_bug588683-3.html \
-		test_bug588683-4.html \
 		test_bug590353-1.html \
 		test_bug590353-2.html \
 		test_bug593689.html \
@@ -256,7 +252,6 @@ _TEST_FILES = \
 		test_bug641219.html \
 		test_bug643051.html \
 		test_bug583514.html \
-		test_bug514437.html \
 		test_bug560112.html \
 		test_bug586786.html \
 		test_bug646157.html \
