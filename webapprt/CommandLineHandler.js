@@ -25,11 +25,12 @@ CommandLineHandler.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),
 
   handle: function handle(cmdLine) {
+    // Open the window with arguments to identify it as the main window
     Services.ww.openWindow(null,
                            "chrome://webapprt/content/webapp.xul",
                            "_blank",
                            "chrome,dialog=no,all,resizable",
-                           null);
+                           []);
   },
 
   helpInfo : "",
