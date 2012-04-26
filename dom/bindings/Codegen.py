@@ -1247,9 +1247,9 @@ def getArgumentConversionTemplate(type, descriptor):
             undefinedBehavior = "eStringify"
 
         return (
-            "  xpc_qsDOMString ${name}(cx, ${argVal}, ${argPtr},\n"
-            "                       xpc_qsDOMString::%s,\n"
-            "                       xpc_qsDOMString::%s);\n"
+            "  const xpc_qsDOMString ${name}(cx, ${argVal}, ${argPtr},\n"
+            "                             xpc_qsDOMString::%s,\n"
+            "                             xpc_qsDOMString::%s);\n"
             "  if (!${name}.IsValid()) {\n"
             "    return false;\n"
             "  }\n" % (nullBehavior, undefinedBehavior))
