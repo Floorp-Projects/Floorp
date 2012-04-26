@@ -200,6 +200,20 @@ GetProxyExtra(const JSObject *obj, size_t n)
 }
 
 inline void
+SetProxyHandler(JSObject *obj, ProxyHandler *handler)
+{
+    JS_ASSERT(IsProxy(obj));
+    SetReservedSlot(obj, JSSLOT_PROXY_HANDLER, PrivateValue(handler));
+}
+
+inline void
+SetProxyPrivate(JSObject *obj, const Value &value)
+{
+    JS_ASSERT(IsProxy(obj));
+    SetReservedSlot(obj, JSSLOT_PROXY_PRIVATE, value);
+}
+
+inline void
 SetProxyExtra(JSObject *obj, size_t n, const Value &extra)
 {
     JS_ASSERT(IsProxy(obj));
