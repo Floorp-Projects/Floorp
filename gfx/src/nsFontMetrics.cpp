@@ -134,7 +134,6 @@ nsFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
                        aFont.sizeAdjust,
                        aFont.systemFont,
                        mDeviceContext->IsPrinterSurface(),
-                       aFont.featureSettings,
                        aFont.languageOverride);
 
     aFont.AddFontFeaturesToStyle(&style);
