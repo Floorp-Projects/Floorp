@@ -30,7 +30,7 @@ DOMBindingBase::~DOMBindingBase()
 }
 
 void
-DOMBindingBase::_Trace(JSTracer* aTrc)
+DOMBindingBase::_trace(JSTracer* aTrc)
 {
   JSObject* obj = GetJSObject();
   if (obj) {
@@ -39,7 +39,7 @@ DOMBindingBase::_Trace(JSTracer* aTrc)
 }
 
 void
-DOMBindingBase::_Finalize(JSFreeOp* aFop)
+DOMBindingBase::_finalize(JSFreeOp* aFop)
 {
   ClearWrapper();
   NS_RELEASE_THIS();
