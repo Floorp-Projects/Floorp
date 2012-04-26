@@ -1043,6 +1043,7 @@ PKIX_PL_CRL_VerifySignature(
         status = CERT_VerifySignedDataWithPublicKey(tbsCrl, nssPubKey, wincx);
 
         if (status != SECSuccess) {
+                PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
                 PKIX_ERROR(PKIX_SIGNATUREDIDNOTVERIFYWITHTHEPUBLICKEY);
         }
 
