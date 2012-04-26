@@ -111,6 +111,7 @@
     testStates("autocomplete-list2", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
     testStates("autocomplete-tel", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
     testStates("autocomplete-email", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+    testStates("autocomplete-search", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
     SimpleTest.finish();
   }
 
@@ -160,6 +161,7 @@
      title="Editable state bit should be present on readonly inputs">
     Mozilla Bug 733382
   </a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -241,6 +243,13 @@
   <datalist id="contacts">
     <option>xyzzy@plughs.com</option>
     <option>nobody@mozilla.org</option>
+  </datalist>
+
+  </br>Search for:
+  <input id="autocomplete-search" type="search" list="searchhisty" value="Gamma">
+  <datalist id="searchhisty">
+    <option>Gamma Rays</option>
+    <option>Gamma Ray Bursts</option>
   </datalist>
 
   </body>
