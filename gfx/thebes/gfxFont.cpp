@@ -1350,6 +1350,48 @@ gfxFontCache::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
     SizeOfExcludingThis(aMallocSizeOf, aSizes);
 }
 
+/* static */ bool
+gfxFontShaper::MergeFontFeatures(
+    const nsTArray<gfxFontFeature>& aStyleRuleFeatures,
+    const nsTArray<gfxFontFeature>& aFontFeatures,
+    bool aDisableLigatures,
+    nsDataHashtable<nsUint32HashKey,PRUint32>& aMergedFeatures)
+{
+    // bail immediately if nothing to do
+    if (aStyleRuleFeatures.IsEmpty() &&
+        aFontFeatures.IsEmpty() &&
+        !aDisableLigatures) {
+        return false;
+    }
+
+    aMergedFeatures.Init();
+
+    // Ligature features are enabled by default in the generic shaper,
+    // so we explicitly turn them off if necessary (for letter-spacing)
+    if (aDisableLigatures) {
+        aMergedFeatures.Put(HB_TAG('l','i','g','a'), 0);
+        aMergedFeatures.Put(HB_TAG('c','l','i','g'), 0);
+    }
+
+    // add feature values from font
+    PRUint32 i, count;
+
+    count = aFontFeatures.Length();
+    for (i = 0; i < count; i++) {
+        const gfxFontFeature& feature = aFontFeatures.ElementAt(i);
+        aMergedFeatures.Put(feature.mTag, feature.mValue);
+    }
+
+    // add feature values from style rules
+    count = aStyleRuleFeatures.Length();
+    for (i = 0; i < count; i++) {
+        const gfxFontFeature& feature = aStyleRuleFeatures.ElementAt(i);
+        aMergedFeatures.Put(feature.mTag, feature.mValue);
+    }
+
+    return aMergedFeatures.Count() != 0;
+}
+
 void
 gfxFont::RunMetrics::CombineWith(const RunMetrics& aOther, bool aOtherIsOnLeft)
 {
@@ -3963,57 +4005,6 @@ nsILanguageAtomService* gfxFontGroup::gLangService = nsnull;
 
 #define DEFAULT_PIXEL_FONT_SIZE 16.0f
 
-/*static*/ void
-gfxFontStyle::ParseFontFeatureSettings(const nsString& aFeatureString,
-                                       nsTArray<gfxFontFeature>& aFeatures)
-{
-  aFeatures.Clear();
-  PRUint32 offset = 0;
-  while (offset < aFeatureString.Length()) {
-    // skip whitespace
-    while (offset < aFeatureString.Length() &&
-           nsCRT::IsAsciiSpace(aFeatureString[offset])) {
-      ++offset;
-    }
-    PRInt32 limit = aFeatureString.FindChar(',', offset);
-    if (limit < 0) {
-      limit = aFeatureString.Length();
-    }
-    // check that we have enough text for a 4-char tag,
-    // the '=' sign, and at least one digit
-    if (offset + 6 <= PRUint32(limit) &&
-      aFeatureString[offset+4] == '=') {
-      gfxFontFeature setting;
-      setting.mTag =
-        ((aFeatureString[offset] & 0xff) << 24) +
-        ((aFeatureString[offset+1] & 0xff) << 16) +
-        ((aFeatureString[offset+2] & 0xff) << 8) +
-         (aFeatureString[offset+3] & 0xff);
-      nsString valString;
-      aFeatureString.Mid(valString, offset+5, limit-offset-5);
-      PRInt32 rv;
-      setting.mValue = valString.ToInteger(&rv);
-      if (rv == NS_OK) {
-        PRUint32 i;
-        // could optimize this based on the fact that the features array
-        // is sorted, but it's unlikely to be more than a few entries
-        for (i = 0; i < aFeatures.Length(); i++) {
-          if (aFeatures[i].mTag == setting.mTag) {
-            aFeatures[i].mValue = setting.mValue;
-            break;
-          }
-        }
-        if (i == aFeatures.Length()) {
-          // we keep the features array sorted so that we can
-          // use nsTArray<>::Equals() to compare feature lists
-          aFeatures.InsertElementSorted(setting);
-        }
-      }
-    }
-    offset = limit + 1;
-  }
-}
-
 /*static*/ PRUint32
 gfxFontStyle::ParseFontLanguageOverride(const nsString& aLangTag)
 {
@@ -4048,7 +4039,6 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
                            gfxFloat aSize, nsIAtom *aLanguage,
                            float aSizeAdjust, bool aSystemFont,
                            bool aPrinterFont,
-                           const nsString& aFeatureSettings,
                            const nsString& aLanguageOverride):
     language(aLanguage),
     size(aSize), sizeAdjust(aSizeAdjust),
@@ -4057,8 +4047,6 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
     systemFont(aSystemFont), printerFont(aPrinterFont),
     style(aStyle)
 {
-    ParseFontFeatureSettings(aFeatureSettings, featureSettings);
-
     if (weight > 900)
         weight = 900;
     if (weight < 100)

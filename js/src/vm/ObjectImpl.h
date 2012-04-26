@@ -575,7 +575,7 @@ class ObjectElements
 {
     friend struct ::JSObject;
     friend class ObjectImpl;
-    friend struct js::ArrayBufferObject;
+    friend class ArrayBufferObject;
 
     /* Number of allocated slots. */
     uint32_t capacity;

@@ -40,8 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_APPLICATION_ACCESSIBLE_H__
-#define __NS_APPLICATION_ACCESSIBLE_H__
+#ifndef MOZILLA_A11Y_APPLICATION_ACCESSIBLE_H__
+#define MOZILLA_A11Y_APPLICATION_ACCESSIBLE_H__
 
 #include "nsAccessibleWrap.h"
 #include "nsIAccessibleApplication.h"
@@ -50,21 +50,21 @@
 #include "nsIXULAppInfo.h"
 
 /**
- * nsApplicationAccessible is for the whole application of Mozilla.
- * Only one instance of nsApplicationAccessible exists for one Mozilla instance.
+ * ApplicationAccessible is for the whole application of Mozilla.
+ * Only one instance of ApplicationAccessible exists for one Mozilla instance.
  * And this one should be created when Mozilla Startup (if accessibility
  * feature has been enabled) and destroyed when Mozilla Shutdown.
  *
  * All the accessibility objects for toplevel windows are direct children of
- * the nsApplicationAccessible instance.
+ * the ApplicationAccessible instance.
  */
 
-class nsApplicationAccessible: public nsAccessibleWrap,
-                               public nsIAccessibleApplication
+class ApplicationAccessible: public nsAccessibleWrap,
+                             public nsIAccessibleApplication
 {
 public:
 
-  nsApplicationAccessible();
+  ApplicationAccessible();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

@@ -61,6 +61,7 @@ let DOMContactManager = {
     this._messages = null;
     if (this._db)
       this._db.close();
+    this._db = null;
   },
 
   receiveMessage: function(aMessage) {

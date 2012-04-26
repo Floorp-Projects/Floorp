@@ -48,7 +48,7 @@ public:
     mIsNull = true;
   }
 
-  T Value() const {
+  const T& Value() const {
     MOZ_ASSERT(!mIsNull);
     return mValue;
   }

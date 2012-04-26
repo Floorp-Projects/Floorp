@@ -124,7 +124,7 @@ MSG_DEF(JSMSG_COMPILE_EXECED_SCRIPT,   37, 0, JSEXN_TYPEERR, "can't compile over
 MSG_DEF(JSMSG_CANT_CONVERT_TO,         38, 2, JSEXN_TYPEERR, "can't convert {0} to {1}")
 MSG_DEF(JSMSG_NO_PROPERTIES,           39, 1, JSEXN_TYPEERR, "{0} has no properties")
 MSG_DEF(JSMSG_CANT_FIND_CLASS,         40, 1, JSEXN_TYPEERR, "can't find class id {0}")
-MSG_DEF(JSMSG_UNUSED41      ,          41, 0, JSEXN_NONE,    "")
+MSG_DEF(JSMSG_DEAD_OBJECT,             41, 0, JSEXN_TYPEERR, "can't access dead object")
 MSG_DEF(JSMSG_BYTECODE_TOO_BIG,        42, 2, JSEXN_INTERNALERR, "bytecode {0} too large (limit {1})")
 MSG_DEF(JSMSG_UNKNOWN_FORMAT,          43, 1, JSEXN_INTERNALERR, "unknown bytecode format {0}")
 MSG_DEF(JSMSG_TOO_MANY_CON_ARGS,       44, 0, JSEXN_SYNTAXERR, "too many constructor arguments")
@@ -378,4 +378,3 @@ MSG_DEF(JSMSG_NOT_ITERABLE,           291, 1, JSEXN_TYPEERR, "{0} is not iterabl
 MSG_DEF(JSMSG_QUERY_LINE_WITHOUT_URL, 292, 0, JSEXN_TYPEERR, "findScripts query object has 'line' property, but no 'url' property")
 MSG_DEF(JSMSG_QUERY_INNERMOST_WITHOUT_LINE_URL, 293, 0, JSEXN_TYPEERR, "findScripts query object has 'innermost' property without both 'url' and 'line' properties")
 MSG_DEF(JSMSG_DEBUG_VARIABLE_NOT_FOUND, 294, 0, JSEXN_TYPEERR, "variable not found in environment")
-

@@ -1328,7 +1328,7 @@ JITScript::destroyChunk(FreeOp *fop, unsigned chunkIndex, bool resetUses)
     ChunkDescriptor &desc = chunkDescriptor(chunkIndex);
 
     if (desc.chunk) {
-        Probes::discardMJITCode(fop, this, script, desc.chunk->code.m_code.executableAddress());
+        Probes::discardMJITCode(fop, this, desc.chunk, desc.chunk->code.m_code.executableAddress());
         fop->delete_(desc.chunk);
         desc.chunk = NULL;
 
@@ -1483,6 +1483,8 @@ JITScript::nativeToPC(void *returnAddress, CallSite **pinline)
 {
     JITChunk *chunk = findCodeChunk(returnAddress);
     JS_ASSERT(chunk);
+
+    JS_ASSERT(chunk->isValidCode(returnAddress));
 
     size_t low = 0;
     size_t high = chunk->nCallICs;

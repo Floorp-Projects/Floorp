@@ -537,16 +537,11 @@ public:
     virtual void NotifyEnterCycleCollectionThread();
     virtual void NotifyLeaveCycleCollectionThread();
     virtual void NotifyEnterMainThread();
-    virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
-                                          bool explainExpectedLiveGarbage);
+    virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb);
     virtual nsresult FinishTraverse();
-    virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
     virtual bool NeedCollect();
     virtual void Collect(PRUint32 reason, PRUint32 kind);
-#ifdef DEBUG_CC
-    virtual void PrintAllReferencesTo(void *p);
-#endif
 
     XPCCallContext *GetCycleCollectionContext()
     {
@@ -598,9 +593,6 @@ private:
     // an 'after' notification without getting an 'on' notification. If we don't
     // watch out for this, we'll do an unmatched |pop| on the context stack.
     PRUint16                   mEventDepth;
-#ifdef DEBUG_CC
-    PLDHashTable             mJSRoots;
-#endif
     nsAutoPtr<XPCCallContext> mCycleCollectionContext;
 
     typedef nsBaseHashtable<nsPtrHashKey<void>, nsISupports*, nsISupports*> ScopeSet;
