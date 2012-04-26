@@ -1354,6 +1354,18 @@ nsGlobalWindow::FreeInnerObjects()
 
   NotifyWindowIDDestroyed("inner-window-destroyed");
 
+  JSObject* obj = FastGetGlobalJSObject();
+  if (obj) {
+    if (!cx) {
+      nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
+    }
+
+    JSAutoRequest ar(cx);
+
+    js::NukeChromeCrossCompartmentWrappersForGlobal(cx, obj,
+                                                    js::DontNukeForGlobalObject);
+  }
+
   if (mDummyJavaPluginOwner) {
     // Tear down the dummy java plugin.
 
@@ -2450,6 +2462,17 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
     nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
 
     if (currentInner) {
+      JSObject* obj = currentInner->FastGetGlobalJSObject();
+      if (obj) {
+        JSContext* cx;
+        nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
+
+        JSAutoRequest ar(cx);
+
+        js::NukeChromeCrossCompartmentWrappersForGlobal(cx, obj,
+                                                        js::NukeForGlobalObject);
+      }
+
       NS_ASSERTION(mDoc, "Must have doc!");
       
       // Remember the document's principal.

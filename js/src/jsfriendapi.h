@@ -790,6 +790,16 @@ CastToJSFreeOp(FreeOp *fop)
 extern JS_FRIEND_API(const jschar*)
 GetErrorTypeNameFromNumber(JSContext* cx, const unsigned errorNumber);
 
+/* Implemented in jswrapper.cpp. */
+typedef enum NukedGlobalHandling {
+    NukeForGlobalObject,
+    DontNukeForGlobalObject
+} NukedGlobalHandling;
+
+extern JS_FRIEND_API(JSBool)
+NukeChromeCrossCompartmentWrappersForGlobal(JSContext *cx, JSObject *obj,
+                                            NukedGlobalHandling nukeGlobal);
+
 } /* namespace js */
 
 #endif
