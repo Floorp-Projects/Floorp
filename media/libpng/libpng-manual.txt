@@ -1,6 +1,6 @@
 libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.5.9 - February 18, 2012
+ libpng version 1.5.10 - March 29, 2012
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2011 Glenn Randers-Pehrson
@@ -11,7 +11,7 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.5.9 - February 18, 2012
+ libpng versions 0.97, January 1998, through 1.5.10 - March 29, 2012
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2011 Glenn Randers-Pehrson
 
@@ -4142,6 +4142,16 @@ X.  Changes to Libpng from version 1.4.x to 1.5.x
 From libpng-1.4.0 until 1.4.4, the png_get_uint_16 macro (but not the
 function) incorrectly returned a value of type png_uint_32.
 
+Checking for invalid palette index on read or write was added at libpng
+1.5.10.  When an invalid index is found, libpng issues a benign error.
+This is enabled by default but can be disabled in each png_ptr with
+
+   png_set_check_for_invalid_index(png_ptr, allowed);
+
+      allowed  - one of
+                 0: disable
+                 1: enable
+
 A. Changes that affect users of libpng
 
 There are no substantial API changes between the non-deprecated parts of
@@ -4259,6 +4269,20 @@ used to reduce the width and height limits from the value of
 PNG_USER_WIDTH_MAX and PNG_USER_HEIGHT_MAX, although this document said
 that it could be used to override them.  Now this function will reduce or
 increase the limits.
+
+Starting in libpng-1.5.10, the user limits can be set en masse with the
+configuration option PNG_SAFE_LIMITS_SUPPORTED.  If this option is enabled,
+a set of "safe" limits is applied in pngpriv.h.  These can be overridden by
+application calls to png_set_user_limits(), png_set_user_chunk_cache_max(),
+and/or png_set_user_malloc_max() that increase or decrease the limits.  Also,
+in libpng-1.5.10 the default width and height limits were increased
+from 1,000,000 to 0x7ffffff (i.e., made unlimited).  Therefore, the
+limits are now
+                               default      safe
+   png_user_width_max        0x7fffffff    1,000,000
+   png_user_height_max       0x7fffffff    1,000,000
+   png_user_chunk_cache_max  0 (unlimited)   128
+   png_user_chunk_malloc_max 0 (unlimited) 8,000,000
 
 B. Changes to the build and configuration of libpng
 
@@ -4545,8 +4569,8 @@ above the comment that says
   /* Maintainer: Put new private prototypes here ^ and in libpngpf.3 */
 
 To avoid polluting the global namespace, the names of all exported
-functions and variables begin with  "png_", and all publicly visible C
-preprocessor macros begin with "PNG_".  We request that applications that
+functions and variables begin with "png_", and all publicly visible C
+preprocessor macros begin with "PNG".  We request that applications that
 use libpng *not* begin any of their own symbols with either of these strings.
 
 We put a space after each comma and after each semicolon
@@ -4573,13 +4597,13 @@ Other rules can be inferred by inspecting the libpng source.
 
 XIV. Y2K Compliance in libpng
 
-February 18, 2012
+March 29, 2012
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.5.9 are Y2K compliant.  It is my belief that earlier
+upward through 1.5.10 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has three year fields.  One is a 2-byte unsigned integer that

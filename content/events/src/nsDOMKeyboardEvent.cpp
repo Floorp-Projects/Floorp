@@ -78,7 +78,7 @@ NS_IMETHODIMP
 nsDOMKeyboardEvent::GetAltKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = ((nsInputEvent*)mEvent)->isAlt;
+  *aIsDown = static_cast<nsInputEvent*>(mEvent)->IsAlt();
   return NS_OK;
 }
 
@@ -86,7 +86,7 @@ NS_IMETHODIMP
 nsDOMKeyboardEvent::GetCtrlKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = ((nsInputEvent*)mEvent)->isControl;
+  *aIsDown = static_cast<nsInputEvent*>(mEvent)->IsControl();
   return NS_OK;
 }
 
@@ -94,7 +94,7 @@ NS_IMETHODIMP
 nsDOMKeyboardEvent::GetShiftKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = ((nsInputEvent*)mEvent)->isShift;
+  *aIsDown = static_cast<nsInputEvent*>(mEvent)->IsShift();
   return NS_OK;
 }
 
@@ -102,7 +102,17 @@ NS_IMETHODIMP
 nsDOMKeyboardEvent::GetMetaKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = ((nsInputEvent*)mEvent)->isMeta;
+  *aIsDown = static_cast<nsInputEvent*>(mEvent)->IsMeta();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMKeyboardEvent::GetModifierState(const nsAString& aKey,
+                                     bool* aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  *aState = GetModifierStateInternal(aKey);
   return NS_OK;
 }
 
@@ -184,10 +194,7 @@ nsDOMKeyboardEvent::InitKeyEvent(const nsAString& aType, bool aCanBubble, bool a
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsKeyEvent* keyEvent = static_cast<nsKeyEvent*>(mEvent);
-  keyEvent->isControl = aCtrlKey;
-  keyEvent->isAlt = aAltKey;
-  keyEvent->isShift = aShiftKey;
-  keyEvent->isMeta = aMetaKey;
+  keyEvent->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);
   keyEvent->keyCode = aKeyCode;
   keyEvent->charCode = aCharCode;
 

@@ -1595,7 +1595,7 @@ nsNavBookmarks::SetItemDateAdded(PRInt64 aItemId, PRTime aDateAdded)
                    OnItemChanged(bookmark.id,
                                  NS_LITERAL_CSTRING("dateAdded"),
                                  false,
-                                 nsPrintfCString(16, "%lld", bookmark.dateAdded),
+                                 nsPrintfCString("%lld", bookmark.dateAdded),
                                  bookmark.dateAdded,
                                  bookmark.type,
                                  bookmark.parentId,
@@ -1639,7 +1639,7 @@ nsNavBookmarks::SetItemLastModified(PRInt64 aItemId, PRTime aLastModified)
                    OnItemChanged(bookmark.id,
                                  NS_LITERAL_CSTRING("lastModified"),
                                  false,
-                                 nsPrintfCString(16, "%lld", bookmark.lastModified),
+                                 nsPrintfCString("%lld", bookmark.lastModified),
                                  bookmark.lastModified,
                                  bookmark.type,
                                  bookmark.parentId,
@@ -2095,7 +2095,7 @@ nsNavBookmarks::GetBookmarkedURIFor(nsIURI* aURI, nsIURI** _retval)
   // As a bonus the query also checks first if place_id is already a bookmark,
   // so you don't have to check that apart.
 
-  nsCString query = nsPrintfCString(512,
+  nsCString query = nsPrintfCString(
     "SELECT url FROM moz_places WHERE id = ( "
       "SELECT :page_id FROM moz_bookmarks WHERE fk = :page_id "
       "UNION ALL "

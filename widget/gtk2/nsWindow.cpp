@@ -2656,7 +2656,27 @@ nsWindow::InitButtonEvent(nsMouseEvent &aEvent,
         aEvent.refPoint = point - WidgetToScreenOffset();
     }
 
-    KeymapWrapper::InitInputEvent(aEvent, aGdkEvent->state);
+    guint modifierState = aGdkEvent->state;
+    // aEvent's state doesn't include this event's information.  Therefore,
+    // if aEvent is mouse button down event, we need to set it manually.
+    // Note that we cannot do same thing for NS_MOUSE_BUTTON_UP because
+    // system may have two or more mice and same button of another mouse
+    // may be still pressed.
+    if (aGdkEvent->type != GDK_BUTTON_RELEASE) {
+        switch (aGdkEvent->button) {
+            case 1:
+                modifierState |= GDK_BUTTON1_MASK;
+                break;
+            case 2:
+                modifierState |= GDK_BUTTON2_MASK;
+                break;
+            case 3:
+                modifierState |= GDK_BUTTON3_MASK;
+                break;
+        }
+    }
+
+    KeymapWrapper::InitInputEvent(aEvent, modifierState);
 
     aEvent.time = aGdkEvent->time;
 
@@ -6079,10 +6099,12 @@ get_inner_gdk_window (GdkWindow *aWindow,
 static inline bool
 is_context_menu_key(const nsKeyEvent& aKeyEvent)
 {
-    return ((aKeyEvent.keyCode == NS_VK_F10 && aKeyEvent.isShift &&
-             !aKeyEvent.isControl && !aKeyEvent.isMeta && !aKeyEvent.isAlt) ||
-            (aKeyEvent.keyCode == NS_VK_CONTEXT_MENU && !aKeyEvent.isShift &&
-             !aKeyEvent.isControl && !aKeyEvent.isMeta && !aKeyEvent.isAlt));
+    return ((aKeyEvent.keyCode == NS_VK_F10 && aKeyEvent.IsShift() &&
+             !aKeyEvent.IsControl() && !aKeyEvent.IsMeta() &&
+             !aKeyEvent.IsAlt()) ||
+            (aKeyEvent.keyCode == NS_VK_CONTEXT_MENU && !aKeyEvent.IsShift() &&
+             !aKeyEvent.IsControl() && !aKeyEvent.IsMeta() &&
+             !aKeyEvent.IsAlt()));
 }
 
 static int

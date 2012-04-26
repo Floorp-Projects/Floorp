@@ -72,32 +72,21 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeGridAccessible,
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeGridAccessible: nsIAccessibleTable implementation
 
-NS_IMETHODIMP
-nsXULTreeGridAccessible::GetColumnCount(PRInt32 *aColumnCount)
+PRUint32
+nsXULTreeGridAccessible::ColCount()
 {
-  NS_ENSURE_ARG_POINTER(aColumnCount);
-  *aColumnCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  *aColumnCount = nsCoreUtils::GetSensibleColumnCount(mTree);
-  return NS_OK;
+  return nsCoreUtils::GetSensibleColumnCount(mTree);
 }
 
-NS_IMETHODIMP
-nsXULTreeGridAccessible::GetRowCount(PRInt32* aRowCount)
+PRUint32
+nsXULTreeGridAccessible::RowCount()
 {
-  NS_ENSURE_ARG_POINTER(aRowCount);
-  *aRowCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   if (!mTreeView)
-    return NS_OK;
+    return 0;
 
-  return mTreeView->GetRowCount(aRowCount);
+  PRInt32 rowCount = 0;
+  mTreeView->GetRowCount(&rowCount);
+  return rowCount >= 0 ? rowCount : 0;
 }
 
 NS_IMETHODIMP

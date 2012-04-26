@@ -1722,7 +1722,7 @@ static JSObject *
 GetCurrentScopeChain(JSContext *cx)
 {
     if (cx->hasfp())
-        return &cx->fp()->scopeChain();
+        return cx->fp()->scopeChain();
     return JS_ObjectToInnerObject(cx, cx->globalObject);
 }
 
@@ -7703,7 +7703,7 @@ js_ValueToXMLString(JSContext *cx, const Value &v)
 JSBool
 js_GetAnyName(JSContext *cx, jsid *idp)
 {
-    JSObject *global = cx->hasfp() ? &cx->fp()->scopeChain().global() : cx->globalObject;
+    JSObject *global = cx->hasfp() ? &cx->fp()->global() : cx->globalObject;
     Value v = global->getReservedSlot(JSProto_AnyName);
     if (v.isUndefined()) {
         JSObject *obj = NewObjectWithGivenProto(cx, &AnyNameClass, NULL, global);

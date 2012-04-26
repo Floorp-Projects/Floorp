@@ -1,0 +1,105 @@
+<!doctype html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=745685
+-->
+<title>Test for Bug 745685</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=745685">Mozilla Bug 745685</a>
+<font>Test text</font>
+<font size=1>1</font>
+<font size=2>2</font>
+<font size=3>3</font>
+<font size=4>4</font>
+<font size=5>5</font>
+<font size=6>6</font>
+<font size=7>7</font>
+<script>
+/** Test for Bug 745685 **/
+
+var referenceSizes = {};
+for (var i = 1; i <= 7; i++) {
+  referenceSizes[i] =
+    getComputedStyle(document.querySelector('[size="' + i + '"]'))
+    .fontSize;
+  if (i > 1) {
+    isnot(referenceSizes[i], referenceSizes[i - 1],
+          "Sanity check: different <font size>s give different .fontSize");
+  }
+}
+
+function testFontSize(input, expected) {
+  var font = document.querySelector("font");
+  font.setAttribute("size", input);
+  is(font.getAttribute("size"), input,
+     "Setting doesn't round-trip (.getAttribute)");
+  is(font.size, input,
+     "Setting doesn't round-trip (.size)");
+  is(getComputedStyle(font).fontSize, referenceSizes[expected],
+     'Incorrect size for "' + input + '" : expected the same as ' + expected);
+}
+
+function testFontSizes(input, expected) {
+  testFontSize(input, expected);
+  // Leading whitespace
+  testFontSize(" " + input, expected);
+  testFontSize("\t" + input, expected);
+  testFontSize("\n" + input, expected);
+  testFontSize("\f" + input, expected);
+  testFontSize("\r" + input, expected);
+  // Trailing garbage
+  testFontSize(input + "abcd", expected);
+  testFontSize(input + ".5", expected);
+  testFontSize(input + "e2", expected);
+}
+
+// Parse error
+testFontSizes("", 3);
+
+// No sign
+testFontSizes("0", 1);
+testFontSizes("1", 1);
+testFontSizes("2", 2);
+testFontSizes("3", 3);
+testFontSizes("4", 4);
+testFontSizes("5", 5);
+testFontSizes("6", 6);
+testFontSizes("7", 7);
+testFontSizes("8", 7);
+testFontSizes("9", 7);
+testFontSizes("10", 7);
+testFontSizes("10000000000000000000000", 7);
+
+// Minus sign
+testFontSizes("-0", 3);
+testFontSizes("-1", 2);
+testFontSizes("-2", 1);
+testFontSizes("-3", 1);
+testFontSizes("-4", 1);
+testFontSizes("-5", 1);
+testFontSizes("-6", 1);
+testFontSizes("-7", 1);
+testFontSizes("-8", 1);
+testFontSizes("-9", 1);
+testFontSizes("-10", 1);
+testFontSizes("-10000000000000000000000", 1);
+
+// Plus sign
+testFontSizes("+0", 3);
+testFontSizes("+1", 4);
+testFontSizes("+2", 5);
+testFontSizes("+3", 6);
+testFontSizes("+4", 7);
+testFontSizes("+5", 7);
+testFontSizes("+6", 7);
+testFontSizes("+7", 7);
+testFontSizes("+8", 7);
+testFontSizes("+9", 7);
+testFontSizes("+10", 7);
+testFontSizes("+10000000000000000000000", 7);
+
+// Non-HTML5 whitespace
+testFontSize("\b1", 3);
+testFontSize("\v1", 3);
+testFontSize("\0u00a01", 3);
+</script>

@@ -475,15 +475,6 @@ pref("full-screen-api.enabled", true);
 
 pref("media.volume.steps", 10);
 
-// Data connection settings. These will eventually live in the
-// navigator.settings API, or even in a database where we can look
-// it up automatically (bug 729440), but for this will have to do.
-pref("ril.data.enabled", false);
-pref("ril.data.roaming.enabled", false);
-pref("ril.data.apn", "");
-pref("ril.data.user", "");
-pref("ril.data.passwd", "");
-
 //Enable/disable marionette server, set listening port
 pref("marionette.defaultPrefs.enabled", true);
 pref("marionette.defaultPrefs.port", 2828);

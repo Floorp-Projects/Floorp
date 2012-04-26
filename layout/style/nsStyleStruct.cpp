@@ -457,9 +457,9 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
     mBorderImageSource(aSrc.mBorderImageSource),
     mBorderRadius(aSrc.mBorderRadius),
     mBorderImageSlice(aSrc.mBorderImageSlice),
-    mBorderImageFill(aSrc.mBorderImageFill),
     mBorderImageWidth(aSrc.mBorderImageWidth),
     mBorderImageOutset(aSrc.mBorderImageOutset),
+    mBorderImageFill(aSrc.mBorderImageFill),
     mBorderImageRepeatH(aSrc.mBorderImageRepeatH),
     mBorderImageRepeatV(aSrc.mBorderImageRepeatV),
     mFloatEdge(aSrc.mFloatEdge),
@@ -2846,10 +2846,10 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
     mHyphens(aSource.mHyphens),
     mTextSizeAdjust(aSource.mTextSizeAdjust),
     mTabSize(aSource.mTabSize),
+    mWordSpacing(aSource.mWordSpacing),
     mLetterSpacing(aSource.mLetterSpacing),
     mLineHeight(aSource.mLineHeight),
     mTextIndent(aSource.mTextIndent),
-    mWordSpacing(aSource.mWordSpacing),
     mTextShadow(aSource.mTextShadow)
 {
   MOZ_COUNT_CTOR(nsStyleText);

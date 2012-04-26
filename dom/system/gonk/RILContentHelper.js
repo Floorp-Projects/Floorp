@@ -23,6 +23,8 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:CardStateChanged",
   "RIL:VoiceInfoChanged",
   "RIL:DataInfoChanged",
+  "RIL:EnumerateCalls",
+  "RIL:CallStateChanged",
 ];
 
 const kVoiceChangedTopic     = "mobile-connection-voice-changed";
@@ -101,6 +103,93 @@ RILContentHelper.prototype = {
     throw Components.Exception("Not implemented", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
+  _telephonyCallbacks: null,
+  _enumerationTelephonyCallbacks: null,
+
+  registerTelephonyCallback: function registerTelephonyCallback(callback) {
+    if (this._telephonyCallbacks) {
+      if (this._telephonyCallbacks.indexOf(callback) != -1) {
+        throw new Error("Already registered this callback!");
+      }
+    } else {
+      this._telephonyCallbacks = [];
+    }
+    this._telephonyCallbacks.push(callback);
+    debug("Registered telephony callback: " + callback);
+  },
+
+  unregisterTelephonyCallback: function unregisterTelephonyCallback(callback) {
+    if (!this._telephonyCallbacks) {
+      return;
+    }
+    let index = this._telephonyCallbacks.indexOf(callback);
+    if (index != -1) {
+      this._telephonyCallbacks.splice(index, 1);
+      debug("Unregistered telephony callback: " + callback);
+    }
+  },
+
+  enumerateCalls: function enumerateCalls(callback) {
+    debug("Requesting enumeration of calls for callback: " + callback);
+    cpmm.sendAsyncMessage("RIL:EnumerateCalls");
+    if (!this._enumerationTelephonyCallbacks) {
+      this._enumerationTelephonyCallbacks = [];
+    }
+    this._enumerationTelephonyCallbacks.push(callback);
+  },
+
+  startTone: function startTone(dtmfChar) {
+    debug("Sending Tone for " + dtmfChar);
+    cpmm.sendAsyncMessage("RIL:StartTone", dtmfChar);
+  },
+
+  stopTone: function stopTone() {
+    debug("Stopping Tone");
+    cpmm.sendAsyncMessage("RIL:StopTone");
+  },
+
+  dial: function dial(number) {
+    debug("Dialing " + number);
+    cpmm.sendAsyncMessage("RIL:Dial", number);
+  },
+
+  hangUp: function hangUp(callIndex) {
+    debug("Hanging up call no. " + callIndex);
+    cpmm.sendAsyncMessage("RIL:HangUp", callIndex);
+  },
+
+  answerCall: function answerCall(callIndex) {
+    cpmm.sendAsyncMessage("RIL:AnswerCall", callIndex);
+  },
+
+  rejectCall: function rejectCall(callIndex) {
+    cpmm.sendAsyncMessage("RIL:RejectCall", callIndex);
+  },
+
+  holdCall: function holdCall(callIndex) {
+    cpmm.sendAsyncMessage("RIL:HoldCall", callIndex);
+  },
+
+  resumeCall: function resumeCall(callIndex) {
+    cpmm.sendAsyncMessage("RIL:ResumeCall", callIndex);
+  },
+
+  get microphoneMuted() {
+    return cpmm.sendSyncMessage("RIL:GetMicrophoneMuted")[0];
+  },
+
+  set microphoneMuted(value) {
+    cpmm.sendAsyncMessage("RIL:SetMicrophoneMuted", value);
+  },
+
+  get speakerEnabled() {
+    return cpmm.sendSyncMessage("RIL:GetSpeakerEnabled")[0];
+  },
+
+  set speakerEnabled(value) {
+    cpmm.sendAsyncMessage("RIL:SetSpeakerEnabled", value);
+  },
+
   // nsIObserver
 
   observe: function observe(subject, topic, data) {
@@ -136,6 +225,58 @@ RILContentHelper.prototype = {
         }
         Services.obs.notifyObservers(null, kDataChangedTopic, null);
         break;
+      case "RIL:EnumerateCalls":
+        this.handleEnumerateCalls(msg.json);
+        break;
+      case "RIL:CallStateChanged":
+        this._deliverTelephonyCallback("callStateChanged",
+                                       [msg.json.callIndex, msg.json.state,
+                                        msg.json.number]);
+    }
+  },
+
+  handleEnumerateCalls: function handleEnumerateCalls(message) {
+    debug("handleEnumerateCalls: " + JSON.stringify(message));
+    let callback = this._enumerationTelephonyCallbacks.shift();
+    let calls = message.calls;
+    let activeCallIndex = message.activeCallIndex;
+    for (let i in calls) {
+      let call = calls[i];
+      let keepGoing;
+      try {
+        keepGoing =
+          callback.enumerateCallState(call.callIndex, call.state, call.number,
+                                      call.callIndex == activeCallIndex);
+      } catch (e) {
+        debug("callback handler for 'enumerateCallState' threw an " +
+              " exception: " + e);
+        keepGoing = true;
+      }
+      if (!keepGoing) {
+        break;
+      }
+    }
+  },
+
+  _deliverTelephonyCallback: function _deliverTelephonyCallback(name, args) {
+    if (!this._telephonyCallbacks) {
+      return;
+    }
+
+    let callbacks = this._telephonyCallbacks.slice();
+    for each (let callback in callbacks) {
+      if (this._telephonyCallbacks.indexOf(callback) == -1) {
+        continue;
+      }
+      let handler = callback[name];
+      if (typeof handler != "function") {
+        throw new Error("No handler for " + name);
+      }
+      try {
+        handler.apply(callback, args);
+      } catch (e) {
+        debug("callback handler for " + name + " threw an exception: " + e);
+      }
     }
   },
 

@@ -724,8 +724,7 @@ nsXULPDGlobalObject::EnsureScriptEnvironment()
   NS_ASSERTION(!mJSObject, "Have global without context?");
 
   nsCOMPtr<nsIScriptRuntime> languageRuntime;
-  nsresult rv = NS_GetScriptRuntimeByID(nsIProgrammingLanguage::JAVASCRIPT,
-                                        getter_AddRefs(languageRuntime));
+  nsresult rv = NS_GetJSRuntime(getter_AddRefs(languageRuntime));
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
   nsCOMPtr<nsIScriptContext> ctxNew = languageRuntime->CreateContext();

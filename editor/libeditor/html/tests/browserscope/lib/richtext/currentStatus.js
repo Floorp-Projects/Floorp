@@ -19,7 +19,6 @@ var knownFailures = {
   },
   'a' : {
     'createbookmark-0' : true,
-    'fontsize-1' : true,
     'subscript-1' : true,
     'superscript-1' : true,
   },
@@ -34,15 +33,6 @@ var knownFailures = {
   'q': {
     'fontsize-1' : true,
     'fontsize-2' : true,
-  },
-  'c': {
-    'fontname-0' : true,
-    'fontname-2' : true,
-    'fontname-3' : true,
-    'fontsize-1' : true,
-    'fontsize-2' : true,
-    'forecolor-0' : true,
-    'forecolor-2' : true,
   },
 };
 

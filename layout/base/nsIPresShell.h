@@ -1265,6 +1265,15 @@ public:
   // clears that capture.
   static void ClearMouseCapture(nsIFrame* aFrame);
 
+  void SetScrollPositionClampingScrollPortSize(nscoord aWidth, nscoord aHeight);
+  bool IsScrollPositionClampingScrollPortSizeSet() {
+    return mScrollPositionClampingScrollPortSizeSet;
+  }
+  nsSize GetScrollPositionClampingScrollPortSize() {
+    NS_ASSERTION(mScrollPositionClampingScrollPortSizeSet, "asking for scroll port when its not set?");
+    return mScrollPositionClampingScrollPortSize;
+  }
+
 protected:
   friend class nsRefreshDriver;
 
@@ -1315,6 +1324,8 @@ protected:
 
   bool                      mSuppressInterruptibleReflows;
 
+  bool                      mScrollPositionClampingScrollPortSizeSet;
+
   // A list of weak frames. This is a pointer to the last item in the list.
   nsWeakFrame*              mWeakFrames;
 
@@ -1332,6 +1343,8 @@ protected:
   // less pixels in the given dimension.
   float                     mXResolution;
   float                     mYResolution;
+
+  nsSize                    mScrollPositionClampingScrollPortSize;
 
   static nsIContent* gKeyDownTarget;
 };

@@ -9250,7 +9250,4 @@ nsHTMLEditRules::DocumentModifiedWorker()
 
   // Try to recreate the bogus node if needed.
   CreateBogusNodeIfNeeded(selection);
-
-  // Reset the spell checker
-  mEditor->SyncRealTimeSpell();
 }

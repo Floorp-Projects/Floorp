@@ -241,15 +241,9 @@ nsXULListboxAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULListboxAccessible. nsIAccessibleTable
 
-NS_IMETHODIMP
-nsXULListboxAccessible::GetColumnCount(PRInt32 *aColumnsCout)
+PRUint32
+nsXULListboxAccessible::ColCount()
 {
-  NS_ENSURE_ARG_POINTER(aColumnsCout);
-  *aColumnsCout = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   nsIContent* headContent = nsnull;
   for (nsIContent* childContent = mContent->GetFirstChild(); childContent;
        childContent = childContent->GetNextSibling()) {
@@ -259,7 +253,7 @@ nsXULListboxAccessible::GetColumnCount(PRInt32 *aColumnsCout)
     }
   }
   if (!headContent)
-    return NS_OK;
+    return 0;
 
   PRUint32 columnCount = 0;
   for (nsIContent* childContent = headContent->GetFirstChild(); childContent;
@@ -270,28 +264,19 @@ nsXULListboxAccessible::GetColumnCount(PRInt32 *aColumnsCout)
     }
   }
 
-  *aColumnsCout = columnCount;
-  return NS_OK;
+  return columnCount;
 }
 
-NS_IMETHODIMP
-nsXULListboxAccessible::GetRowCount(PRInt32 *aRowCount)
+PRUint32
+nsXULListboxAccessible::RowCount()
 {
-  NS_ENSURE_ARG_POINTER(aRowCount);
-  *aRowCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIDOMXULSelectControlElement> element(do_QueryInterface(mContent));
-  NS_ENSURE_STATE(element);
 
   PRUint32 itemCount = 0;
-  nsresult rv = element->GetItemCount(&itemCount);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if(element)
+    element->GetItemCount(&itemCount);
 
-  *aRowCount = itemCount;
-  return NS_OK;
+  return itemCount;
 }
 
 NS_IMETHODIMP

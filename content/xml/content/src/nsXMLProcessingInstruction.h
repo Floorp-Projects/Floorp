@@ -77,6 +77,8 @@ public:
 #endif
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
   /**
    * This will parse the content of the PI, to extract the value of the pseudo
