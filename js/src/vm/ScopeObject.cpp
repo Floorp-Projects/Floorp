@@ -308,10 +308,7 @@ CallObject::getVarOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     else
         *vp = callobj.var(i);
 
-    /* This can only happen via the debugger. Bug 659577 will remove it. */
-    if (vp->isMagic(JS_OPTIMIZED_ARGUMENTS))
-        *vp = UndefinedValue();
-
+    JS_ASSERT(!vp->isMagic(JS_OPTIMIZED_ARGUMENTS));
     return true;
 }
 
@@ -1273,8 +1270,60 @@ namespace js {
  *    proxy can either hide these optimizations or make the situation more
  *    clear to the debugger. An example is 'arguments'.
  */
-struct DebugScopeProxy : BaseProxyHandler
+class DebugScopeProxy : public BaseProxyHandler
 {
+    static bool isArguments(JSContext *cx, jsid id)
+    {
+        return id == NameToId(cx->runtime->atomState.argumentsAtom);
+    }
+
+    static bool isFunctionScope(ScopeObject &scope)
+    {
+        return scope.isCall() && !scope.asCall().isForEval();
+    }
+
+    /*
+     * In theory, every function scope contains an 'arguments' bindings.
+     * However, the engine only adds a binding if 'arguments' is used in the
+     * function body. Thus, from the debugger's perspective, 'arguments' may be
+     * missing from the list of bindings.
+     */
+    static bool isMissingArgumentsBinding(ScopeObject &scope)
+    {
+        return isFunctionScope(scope) &&
+               !scope.asCall().getCalleeFunction()->script()->argumentsHasLocalBinding();
+    }
+
+    /*
+     * This function creates an arguments object when the debugger requests
+     * 'arguments' for a function scope where the arguments object has been
+     * optimized away (either because the binding is missing altogether or
+     * because !ScriptAnalysis::needsArgsObj).
+     */
+    static bool checkForMissingArguments(JSContext *cx, jsid id, ScopeObject &scope,
+                                         ArgumentsObject **maybeArgsObj)
+    {
+        *maybeArgsObj = NULL;
+
+        if (!isArguments(cx, id) || !isFunctionScope(scope))
+            return true;
+
+        JSScript *script = scope.asCall().getCalleeFunction()->script();
+        if (script->needsArgsObj())
+            return true;
+
+        StackFrame *fp = scope.maybeStackFrame();
+        if (!fp) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_LIVE,
+                                 "Debugger scope");
+            return false;
+        }
+
+        *maybeArgsObj = ArgumentsObject::createUnexpected(cx, fp);
+        return true;
+    }
+
+  public:
     static int family;
     static DebugScopeProxy singleton;
 
@@ -1289,15 +1338,38 @@ struct DebugScopeProxy : BaseProxyHandler
     bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                   PropertyDescriptor *desc) MOZ_OVERRIDE
     {
-        AutoAllowUnaliasedVarAccess a(cx);
         ScopeObject &scope = proxy->asDebugScope().scope();
+
+        ArgumentsObject *maybeArgsObj;
+        if (!checkForMissingArguments(cx, id, scope, &maybeArgsObj))
+            return false;
+
+        if (maybeArgsObj) {
+            PodZero(desc);
+            desc->obj = proxy;
+            desc->attrs = JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT;
+            desc->value = ObjectValue(*maybeArgsObj);
+            return true;
+        }
+
+        AutoAllowUnaliasedVarAccess a(cx);
         return JS_GetPropertyDescriptorById(cx, &scope, id, JSRESOLVE_QUALIFIED, desc);
     }
 
     bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp) MOZ_OVERRIDE
     {
-        AutoAllowUnaliasedVarAccess a(cx);
         ScopeObject &scope = proxy->asDebugScope().scope();
+
+        ArgumentsObject *maybeArgsObj;
+        if (!checkForMissingArguments(cx, id, scope, &maybeArgsObj))
+            return false;
+
+        if (maybeArgsObj) {
+            *vp = ObjectValue(*maybeArgsObj);
+            return true;
+        }
+
+        AutoAllowUnaliasedVarAccess a(cx);
         return scope.getGeneric(cx, &scope, id, vp);
     }
 
@@ -1317,6 +1389,13 @@ struct DebugScopeProxy : BaseProxyHandler
     bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props) MOZ_OVERRIDE
     {
         ScopeObject &scope = proxy->asDebugScope().scope();
+
+        if (isMissingArgumentsBinding(scope) &&
+            !props.append(NameToId(cx->runtime->atomState.argumentsAtom)))
+        {
+            return false;
+        }
+
         return GetPropertyNames(cx, &scope, JSITER_OWNONLY, &props);
     }
 
@@ -1330,7 +1409,31 @@ struct DebugScopeProxy : BaseProxyHandler
     bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props) MOZ_OVERRIDE
     {
         ScopeObject &scope = proxy->asDebugScope().scope();
+
+        if (isMissingArgumentsBinding(scope) &&
+            !props.append(NameToId(cx->runtime->atomState.argumentsAtom)))
+        {
+            return false;
+        }
+
         return GetPropertyNames(cx, &scope, 0, &props);
+    }
+
+    bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE
+    {
+        ScopeObject &scope = proxy->asDebugScope().scope();
+
+        if (isArguments(cx, id) && isFunctionScope(scope)) {
+            *bp = true;
+            return true;
+        }
+
+        JSBool found;
+        if (!JS_HasPropertyById(cx, &scope, id, &found))
+            return false;
+
+        *bp = found;
+        return true;
     }
 };
 
