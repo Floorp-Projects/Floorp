@@ -4245,8 +4245,9 @@ nsXPCComponents::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
     return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsXPCComponents::nsXPCComponents()
-    :   mInterfaces(nsnull),
+nsXPCComponents::nsXPCComponents(XPCWrappedNativeScope* aScope)
+    :   mScope(aScope),
+        mInterfaces(nsnull),
         mInterfacesByID(nsnull),
         mClasses(nsnull),
         mClassesByID(nsnull),
@@ -4256,6 +4257,7 @@ nsXPCComponents::nsXPCComponents()
         mConstructor(nsnull),
         mUtils(nsnull)
 {
+    MOZ_ASSERT(aScope, "aScope must not be null");
 }
 
 nsXPCComponents::~nsXPCComponents()
@@ -4434,7 +4436,7 @@ nsXPCComponents::AttachNewComponentsObject(XPCCallContext& ccx,
     if (!aGlobal)
         return false;
 
-    nsXPCComponents* components = new nsXPCComponents();
+    nsXPCComponents* components = new nsXPCComponents(aScope);
     if (!components)
         return false;
 
