@@ -467,8 +467,9 @@ MacNativeApp.prototype = {
                               this.launchURI.scheme + ";" +
                               this.launchURI.port);
 
-    this.installDir = Services.dirsvc.get("LocApp", Ci.nsILocalFile);
+    this.installDir = Services.dirsvc.get("TmpD", Ci.nsILocalFile);
     this.installDir.append(this.appNameAsFilename + ".app");
+    this.installDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0755);
 
     this.contentsDir = this.installDir.clone();
     this.contentsDir.append("Contents");
@@ -496,7 +497,7 @@ MacNativeApp.prototype = {
       throw(ex);
     }
 
-    getIconForApp(this, this._createPListFile);
+    getIconForApp(this, this._moveToApplicationsFolder);
   },
 
   _removeInstallation: function(keepProfile) {
@@ -524,7 +525,6 @@ MacNativeApp.prototype = {
     if (!this.appProfileDir.exists())
       this.appProfileDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
 
-    this.installDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
     this.contentsDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
     this.macOSDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
     this.resourcesDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
@@ -562,9 +562,7 @@ MacNativeApp.prototype = {
     writer.setString("Webapp", "Name", this.appName);
     writer.setString("Webapp", "Profile", this.appProfileDir.leafName);
     writer.writeFile();
-  },
 
-  _createPListFile: function() {
     // ${InstallDir}/Contents/Info.plist
     let infoPListContent = '<?xml version="1.0" encoding="UTF-8"?>\n\
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n\
@@ -600,6 +598,17 @@ MacNativeApp.prototype = {
     let infoPListFile = this.contentsDir.clone();
     infoPListFile.append("Info.plist");
     writeToFile(infoPListFile, infoPListContent, function() {});
+  },
+
+  _moveToApplicationsFolder: function() {
+    let appDir = Services.dirsvc.get("LocApp", Ci.nsILocalFile);
+    let destination = getAvailableFile(appDir,
+                                       this.appNameAsFilename,
+                                       ".app");
+    if (!destination) {
+      return false;
+    }
+    this.installDir.moveTo(destination.parent, destination.leafName);
   },
 
   /**
@@ -684,6 +693,47 @@ function stripStringForFilename(aPossiblyBadFilenameString) {
   let stripped = aPossiblyBadFilenameString.replace(stripFrontRE, "");
   stripped = stripped.replace(stripBackRE, "");
   return stripped;
+}
+
+/**
+ * Finds a unique name available in a folder (i.e., non-existent file)
+ *
+ * @param aFolder nsIFile that represents the directory where we want to write
+ * @param aName   string with the filename (minus the extension) desired
+ * @param aExtension string with the file extension, including the dot
+
+ * @return nsILocalFile or null if folder is unwritable or unique name
+ *         was not available
+ */
+function getAvailableFile(aFolder, aName, aExtension) {
+  let folder = aFolder.QueryInterface(Ci.nsILocalFile);
+  folder.followLinks = false;
+  if (!folder.isDirectory() || !folder.isWritable()) {
+    return null;
+  }
+
+  let file = folder.clone();
+  file.append(aName + aExtension);
+
+  if (!file.exists()) {
+    return file;
+  }
+
+  for (let i = 2; i < 10; i++) {
+    file.leafName = aName + " (" + i + ")" + aExtension;
+    if (!file.exists()) {
+      return file;
+    }
+  }
+
+  for (let i = 10; i < 100; i++) {
+    file.leafName = aName + "-" + i + aExtension;
+    if (!file.exists()) {
+      return file;
+    }
+  }
+
+  return null;
 }
 
 function escapeXML(aStr) {
