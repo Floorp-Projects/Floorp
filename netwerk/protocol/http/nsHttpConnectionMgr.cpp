@@ -40,6 +40,7 @@
 #include "nsHttpConnection.h"
 #include "nsHttpPipeline.h"
 #include "nsHttpHandler.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsNetCID.h"
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
@@ -398,6 +399,32 @@ nsHttpConnectionMgr::ReclaimConnection(nsHttpConnection *conn)
     return rv;
 }
 
+// A structure used to marshall 2 pointers across the various necessary
+// threads to complete an HTTP upgrade. 
+class nsCompleteUpgradeData
+{
+public:
+nsCompleteUpgradeData(nsAHttpConnection *aConn,
+                      nsIHttpUpgradeListener *aListener)
+    : mConn(aConn), mUpgradeListener(aListener) {}
+        
+    nsRefPtr<nsAHttpConnection> mConn;
+    nsCOMPtr<nsIHttpUpgradeListener> mUpgradeListener;
+};
+
+nsresult
+nsHttpConnectionMgr::CompleteUpgrade(nsAHttpConnection *aConn,
+                                     nsIHttpUpgradeListener *aUpgradeListener)
+{
+    nsCompleteUpgradeData *data =
+        new nsCompleteUpgradeData(aConn, aUpgradeListener);
+    nsresult rv;
+    rv = PostEvent(&nsHttpConnectionMgr::OnMsgCompleteUpgrade, 0, data);
+    if (NS_FAILED(rv))
+        delete data;
+    return rv;
+}
+    
 nsresult
 nsHttpConnectionMgr::UpdateParam(nsParamName name, PRUint16 value)
 {
@@ -1994,6 +2021,31 @@ nsHttpConnectionMgr::OnMsgReclaimConnection(PRInt32, void *param)
  
     OnMsgProcessPendingQ(NS_OK, ci); // releases |ci|
     NS_RELEASE(conn);
+}
+
+void
+nsHttpConnectionMgr::OnMsgCompleteUpgrade(PRInt32, void *param)
+{
+    NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    nsCompleteUpgradeData *data = (nsCompleteUpgradeData *) param;
+    LOG(("nsHttpConnectionMgr::OnMsgCompleteUpgrade "
+         "this=%p conn=%p listener=%p\n", this, data->mConn.get(),
+         data->mUpgradeListener.get()));
+
+    nsCOMPtr<nsISocketTransport> socketTransport;
+    nsCOMPtr<nsIAsyncInputStream> socketIn;
+    nsCOMPtr<nsIAsyncOutputStream> socketOut;
+
+    nsresult rv;
+    rv = data->mConn->TakeTransport(getter_AddRefs(socketTransport),
+                                    getter_AddRefs(socketIn),
+                                    getter_AddRefs(socketOut));
+
+    if (NS_SUCCEEDED(rv))
+        data->mUpgradeListener->OnTransportAvailable(socketTransport,
+                                                     socketIn,
+                                                     socketOut);
+    delete data;
 }
 
 void

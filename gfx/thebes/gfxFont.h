@@ -60,6 +60,7 @@
 #include "gfxPattern.h"
 #include "mozilla/HashFunctions.h"
 #include "nsIMemoryReporter.h"
+#include "gfxFontFeatures.h"
 
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
 
@@ -84,27 +85,7 @@ typedef struct _hb_blob_t hb_blob_t;
 
 #define NO_FONT_LANGUAGE_OVERRIDE      0
 
-// An OpenType feature tag and value pair
-struct THEBES_API gfxFontFeature {
-    PRUint32 mTag; // see http://www.microsoft.com/typography/otspec/featuretags.htm
-    PRUint32 mValue; // 0 = off, 1 = on, larger values may be used as parameters
-                     // to features that select among multiple alternatives
-};
-
 struct FontListSizes;
-
-inline bool
-operator<(const gfxFontFeature& a, const gfxFontFeature& b)
-{
-    return (a.mTag < b.mTag) || ((a.mTag == b.mTag) && (a.mValue < b.mValue));
-}
-
-inline bool
-operator==(const gfxFontFeature& a, const gfxFontFeature& b)
-{
-    return (a.mTag == b.mTag) && (a.mValue == b.mValue);
-}
-
 
 struct THEBES_API gfxFontStyle {
     gfxFontStyle();
@@ -112,7 +93,6 @@ struct THEBES_API gfxFontStyle {
                  gfxFloat aSize, nsIAtom *aLanguage,
                  float aSizeAdjust, bool aSystemFont,
                  bool aPrinterFont,
-                 const nsString& aFeatureSettings,
                  const nsString& aLanguageOverride);
     gfxFontStyle(const gfxFontStyle& aStyle);
 
@@ -1172,6 +1152,13 @@ public:
                            const PRUnichar *aText) = 0;
 
     gfxFont *GetFont() const { return mFont; }
+
+    // returns true if features exist in output, false otherwise
+    static bool
+    MergeFontFeatures(const nsTArray<gfxFontFeature>& aStyleRuleFeatures,
+                      const nsTArray<gfxFontFeature>& aFontFeatures,
+                      bool aDisableLigatures,
+                      nsDataHashtable<nsUint32HashKey,PRUint32>& aMergedFeatures);
 
 protected:
     // the font this shaper is working with

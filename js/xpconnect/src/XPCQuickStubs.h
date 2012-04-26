@@ -262,7 +262,7 @@ public:
             Ptr()->~implementation_type();
     }
 
-    JSBool IsValid() { return mValid; }
+    JSBool IsValid() const { return mValid; }
 
     implementation_type *Ptr()
     {
@@ -270,7 +270,19 @@ public:
         return reinterpret_cast<implementation_type *>(mBuf);
     }
 
+    const implementation_type *Ptr() const
+    {
+        MOZ_ASSERT(mValid);
+        return reinterpret_cast<const implementation_type *>(mBuf);
+    }
+
     operator interface_type &()
+    {
+        MOZ_ASSERT(mValid);
+        return *Ptr();
+    }
+
+    operator const interface_type &() const
     {
         MOZ_ASSERT(mValid);
         return *Ptr();

@@ -39,6 +39,9 @@
 
 #include "nsCoord.h"
 #include "nsCSSProperty.h"
+#include "gfxFontFeatures.h"
+#include "nsTArray.h"
+#include "nsCSSValue.h"
 
 class nsPresContext;
 struct nsStyleBackground;
@@ -89,6 +92,12 @@ public:
                                     PRInt32 aFirstMask,
                                     PRInt32 aLastMask,
                                     nsAString& aResult);
+
+  static void AppendFontFeatureSettings(const nsTArray<gfxFontFeature>& aFeatures,
+                                        nsAString& aResult);
+
+  static void AppendFontFeatureSettings(const nsCSSValue& src,
+                                        nsAString& aResult);
 
   /*
    * Convert an author-provided floating point number to an integer (0

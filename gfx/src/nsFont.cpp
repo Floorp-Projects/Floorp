@@ -39,11 +39,11 @@
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
+#include "gfxFont.h"
 
 nsFont::nsFont(const char* aName, PRUint8 aStyle, PRUint8 aVariant,
                PRUint16 aWeight, PRInt16 aStretch, PRUint8 aDecoration,
                nscoord aSize, float aSizeAdjust,
-               const nsString* aFeatureSettings,
                const nsString* aLanguageOverride)
 {
   NS_ASSERTION(aName && IsASCII(nsDependentCString(aName)),
@@ -57,9 +57,6 @@ nsFont::nsFont(const char* aName, PRUint8 aStyle, PRUint8 aVariant,
   decorations = aDecoration;
   size = aSize;
   sizeAdjust = aSizeAdjust;
-  if (aFeatureSettings) {
-    featureSettings = *aFeatureSettings;
-  }
   if (aLanguageOverride) {
     languageOverride = *aLanguageOverride;
   }
@@ -68,7 +65,6 @@ nsFont::nsFont(const char* aName, PRUint8 aStyle, PRUint8 aVariant,
 nsFont::nsFont(const nsString& aName, PRUint8 aStyle, PRUint8 aVariant,
                PRUint16 aWeight, PRInt16 aStretch, PRUint8 aDecoration,
                nscoord aSize, float aSizeAdjust,
-               const nsString* aFeatureSettings,
                const nsString* aLanguageOverride)
   : name(aName)
 {
@@ -80,9 +76,6 @@ nsFont::nsFont(const nsString& aName, PRUint8 aStyle, PRUint8 aVariant,
   decorations = aDecoration;
   size = aSize;
   sizeAdjust = aSizeAdjust;
-  if (aFeatureSettings) {
-    featureSettings = *aFeatureSettings;
-  }
   if (aLanguageOverride) {
     languageOverride = *aLanguageOverride;
   }
@@ -99,8 +92,8 @@ nsFont::nsFont(const nsFont& aOther)
   decorations = aOther.decorations;
   size = aOther.size;
   sizeAdjust = aOther.sizeAdjust;
-  featureSettings = aOther.featureSettings;
   languageOverride = aOther.languageOverride;
+  fontFeatureSettings = aOther.fontFeatureSettings;
 }
 
 nsFont::nsFont()
@@ -120,8 +113,8 @@ bool nsFont::BaseEquals(const nsFont& aOther) const
       (size == aOther.size) &&
       (sizeAdjust == aOther.sizeAdjust) &&
       name.Equals(aOther.name, nsCaseInsensitiveStringComparator()) &&
-      (featureSettings == aOther.featureSettings) &&
-      (languageOverride == aOther.languageOverride)) {
+      (languageOverride == aOther.languageOverride) &&
+      (fontFeatureSettings == aOther.fontFeatureSettings)) {
     return true;
   }
   return false;
@@ -148,9 +141,16 @@ nsFont& nsFont::operator=(const nsFont& aOther)
   decorations = aOther.decorations;
   size = aOther.size;
   sizeAdjust = aOther.sizeAdjust;
-  featureSettings = aOther.featureSettings;
   languageOverride = aOther.languageOverride;
+  fontFeatureSettings = aOther.fontFeatureSettings;
   return *this;
+}
+
+void
+nsFont::AddFontFeaturesToStyle(gfxFontStyle *aStyle) const
+{
+  // simple copy for now, font-variant implementation will expand
+  aStyle->featureSettings.AppendElements(fontFeatureSettings);
 }
 
 static bool IsGenericFontFamily(const nsString& aFamily)

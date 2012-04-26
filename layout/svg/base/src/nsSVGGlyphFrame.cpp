@@ -1605,8 +1605,9 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
                            mStyleContext->GetStyleFont()->mLanguage,
                            font.sizeAdjust, font.systemFont,
                            printerFont,
-                           font.featureSettings,
                            font.languageOverride);
+
+    font.AddFontFeaturesToStyle(&fontStyle);
 
     nsRefPtr<gfxFontGroup> fontGroup =
       gfxPlatform::GetPlatform()->CreateFontGroup(font.name, &fontStyle, presContext->GetUserFontSet());

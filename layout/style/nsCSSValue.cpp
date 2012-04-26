@@ -1037,7 +1037,14 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
   } else if (eCSSUnit_List == unit || eCSSUnit_ListDep == unit) {
     GetListValue()->AppendToString(aProperty, aResult);
   } else if (eCSSUnit_PairList == unit || eCSSUnit_PairListDep == unit) {
-    GetPairListValue()->AppendToString(aProperty, aResult);
+    switch (aProperty) {
+      case eCSSProperty_font_feature_settings:
+        nsStyleUtil::AppendFontFeatureSettings(*this, aResult);
+        break;
+      default:
+        GetPairListValue()->AppendToString(aProperty, aResult);
+        break;
+    }
   }
 
   switch (unit) {

@@ -211,7 +211,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 
 #include "nsWrapperCacheInlines.h"
 #include "nsIDOMDocumentType.h"
-#include "nsIDOMWindowUtils.h"
 #include "nsCharSeparatedTokenizer.h"
 
 extern "C" int MOZ_XMLTranslateEntity(const char* ptr, const char* end,
@@ -4897,13 +4896,6 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
 
   if (aDocument->IsXUL()) {
     ret.autoScale = false;
-    return ret;
-  }
-
-  nsIDOMWindow* window = aDocument->GetWindow();
-  nsCOMPtr<nsIDOMWindowUtils> windowUtils(do_GetInterface(window));
-
-  if (!windowUtils) {
     return ret;
   }
 
