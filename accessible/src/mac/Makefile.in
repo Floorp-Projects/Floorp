@@ -80,7 +80,6 @@ EXPORTS = \
   mozAccessibleProtocol.h \
   mozActionElements.h \
   mozTextAccessible.h \
-  nsRoleMap.h \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
