@@ -263,6 +263,7 @@ TelemetryHistogramType(Histogram *h, PRUint32 *result)
     break;
   case Histogram::FLAG_HISTOGRAM:
     *result = nsITelemetry::HISTOGRAM_FLAG;
+    break;
   default:
     return false;
   }
