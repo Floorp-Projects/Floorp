@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
+
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,15 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Original Author: Aaron Leventhal (aaronl@netscape.com)
+ *   Patrick McManus <mcmanus@ducksong.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,41 +37,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccessNodeWrap.h"
+#ifndef mozilla_net_NullHttpTransaction_h
+#define mozilla_net_NullHttpTransaction_h
 
-/* For documentation of the accessibility architecture, 
- * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
- */
+#include "nsAHttpTransaction.h"
+#include "nsAHttpConnection.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIEventTarget.h"
+#include "nsHttpConnectionInfo.h"
+#include "nsHttpRequestHead.h"
 
+// This is the minimal nsAHttpTransaction implementation. A NullHttpTransaction
+// can be used to drive connection level semantics (such as SSL handshakes
+// tunnels) so that a nsHttpConnection becomes fully established in
+// anticiation of a real transaction needing to use it soon.
 
-////////////////////////////////////////////////////////////////////////////////
-// nsAccessNodeWrap
-////////////////////////////////////////////////////////////////////////////////
+namespace mozilla { namespace net {
 
-//-----------------------------------------------------
-// construction 
-//-----------------------------------------------------
-
-nsAccessNodeWrap::
-  nsAccessNodeWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessNode(aContent, aDoc)
+class NullHttpTransaction : public nsAHttpTransaction
 {
-}
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSAHTTPTRANSACTION
 
-//-----------------------------------------------------
-// destruction
-//-----------------------------------------------------
-nsAccessNodeWrap::~nsAccessNodeWrap()
-{
-}
+  NullHttpTransaction(nsHttpConnectionInfo *ci,
+                      nsIInterfaceRequestor *callbacks,
+                      nsIEventTarget *target,
+                      PRUint8 caps);
+  ~NullHttpTransaction();
 
-void nsAccessNodeWrap::InitAccessibility()
-{
-  nsAccessNode::InitXPAccessibility();
-}
+  nsHttpConnectionInfo *ConnectionInfo() { return mConnectionInfo; }
 
-void nsAccessNodeWrap::ShutdownAccessibility()
-{
-  nsAccessNode::ShutdownXPAccessibility();
-}
+private:
 
+  nsresult mStatus;
+  PRUint8  mCaps;
+  nsRefPtr<nsAHttpConnection> mConnection;
+  nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+  nsCOMPtr<nsIEventTarget> mEventTarget;
+  nsRefPtr<nsHttpConnectionInfo> mConnectionInfo;
+  nsHttpRequestHead *mRequestHead;
+};
+
+}} // namespace mozilla::net
+
+#endif // mozilla_net_NullHttpTransaction_h

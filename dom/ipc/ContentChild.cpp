@@ -233,9 +233,9 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
 ContentChild* ContentChild::sSingleton;
 
 ContentChild::ContentChild()
+ : mID(PRUint64(-1))
 #ifdef ANDROID
- : mScreenSize(0, 0)
- , mID(PRUint64(-1))
+ , mScreenSize(0, 0)
 #endif
 {
     // This process is a content process, so it's clearly running in
