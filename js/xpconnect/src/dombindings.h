@@ -214,7 +214,6 @@ public:
     bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, JS::AutoIdVector &props);
     bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     bool enumerate(JSContext *cx, JSObject *proxy, JS::AutoIdVector &props);
-    bool fix(JSContext *cx, JSObject *proxy, JS::Value *vp);
 
     bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
