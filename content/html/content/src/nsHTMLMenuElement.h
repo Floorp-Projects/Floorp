@@ -81,6 +81,8 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 
+  virtual nsIDOMNode* AsDOMNode() { return this; }
+
   PRUint8 GetType() const { return mType; }
 
 protected:

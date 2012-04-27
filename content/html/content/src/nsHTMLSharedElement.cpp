@@ -132,6 +132,11 @@ public:
     return static_cast<nsXPCClassInfo*>(GetClassInfoInternal());
   }
   nsIClassInfo* GetClassInfoInternal();
+
+  virtual nsIDOMNode* AsDOMNode()
+  {
+    return static_cast<nsIDOMHTMLParamElement*>(this);
+  }
 };
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Shared)

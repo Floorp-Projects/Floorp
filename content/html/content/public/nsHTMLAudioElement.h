@@ -79,6 +79,8 @@ public:
   virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel);
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 };
 
 #endif
