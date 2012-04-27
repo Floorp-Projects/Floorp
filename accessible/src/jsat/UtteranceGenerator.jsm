@@ -54,7 +54,7 @@ var UtteranceGenerator = {
   },
 
   genForAction: function(aObject, aActionName) {
-    return gStringBundle.GetStringFromName(this.gActionMap[aActionName]);
+    return [gStringBundle.GetStringFromName(this.gActionMap[aActionName])];
   },
 
   verbosityRoleMap: {
