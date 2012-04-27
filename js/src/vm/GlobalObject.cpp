@@ -41,6 +41,7 @@
 #include "GlobalObject.h"
 
 #include "jscntxt.h"
+#include "jsdate.h"
 #include "jsexn.h"
 #include "jsmath.h"
 #include "json.h"
