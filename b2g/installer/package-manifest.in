@@ -408,6 +408,8 @@
 @BINPATH@/components/messageWakeupService.manifest
 @BINPATH@/components/SettingsManager.js
 @BINPATH@/components/SettingsManager.manifest
+@BINPATH@/components/SettingsService.js
+@BINPATH@/components/SettingsService.manifest
 @BINPATH@/components/nsFilePicker.js
 @BINPATH@/components/nsFilePicker.manifest
 #ifdef MOZ_B2G_RIL
