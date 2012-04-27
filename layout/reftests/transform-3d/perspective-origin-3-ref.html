@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <style type="text/css">
+
+.parentWithPerspective {
+  -moz-perspective: 100px;
+  -moz-perspective-origin: 150px 150px;
+  -webkit-perspective: 100px;
+  -webkit-perspective-origin: 150px 150px;
+  /* Changing width/height to 500px should not change the rendering. */
+  height:100%;
+}
+
+.parentWithPerspective > div {
+  position:absolute;
+  top:100px;
+  left:100px;
+  width:100px;
+  height:100px;
+}
+
+.notTransformed {
+  outline: 1px solid black;
+}
+
+.transformed {
+  background:blue;
+  -moz-transform-origin: 0% 0%;
+  -moz-transform: rotateY(45deg);
+  -webkit-transform-origin: 0% 0%;
+  -webkit-transform: rotateY(45deg);
+}
+
+  </style>
+  <body>
+    <div class="parentWithPerspective">
+      <div class="notTransformed"></div>
+      <div class="transformed"></div>
+    </div>
+  </body>
+</html>
