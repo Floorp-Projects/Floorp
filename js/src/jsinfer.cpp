@@ -3045,14 +3045,16 @@ TypeObject::clearNewScript(JSContext *cx)
      * script keeps track of where each property is initialized so we can walk
      * the stack and fix up any such objects.
      */
+    Vector<uint32_t, 32> pcOffsets(cx);
     for (FrameRegsIter iter(cx); !iter.done(); ++iter) {
-        StackFrame *fp = iter.fp();
-        if (fp->isScriptFrame() && fp->isConstructing() &&
-            fp->fun() == newScript->fun && fp->thisValue().isObject() &&
-            !fp->thisValue().toObject().hasLazyType() &&
-            fp->thisValue().toObject().type() == this) {
-            JSObject *obj = &fp->thisValue().toObject();
-            jsbytecode *pc = iter.pc();
+        pcOffsets.append(uint32_t(iter.pc() - iter.script()->code));
+        if (iter.isConstructing() &&
+            iter.callee() == newScript->fun &&
+            iter.thisv().isObject() &&
+            !iter.thisv().toObject().hasLazyType() &&
+            iter.thisv().toObject().type() == this)
+        {
+            JSObject *obj = &iter.thisv().toObject();
 
             /* Whether all identified 'new' properties have been initialized. */
             bool finished = false;
@@ -3065,9 +3067,10 @@ TypeObject::clearNewScript(JSContext *cx)
              * already finished.
              */
             size_t depth = 0;
+            size_t callDepth = pcOffsets.length() - 1;
+            uint32_t offset = pcOffsets[callDepth];
 
             for (TypeNewScript::Initializer *init = newScript->initializerList;; init++) {
-                uint32_t offset = uint32_t(pc - fp->script()->code);
                 if (init->kind == TypeNewScript::Initializer::SETPROP) {
                     if (!depth && init->offset > offset) {
                         /* Advanced past all properties which have been initialized. */
@@ -3081,11 +3084,9 @@ TypeObject::clearNewScript(JSContext *cx)
                         /* Advanced past all properties which have been initialized. */
                         break;
                     } else if (init->offset == offset) {
-                        StackSegment &seg = cx->stack.space().containingSegment(fp);
-                        if (seg.maybefp() == fp)
+                        if (!callDepth)
                             break;
-                        fp = seg.computeNextFrame(fp);
-                        pc = fp->pcQuadratic(cx->stack);
+                        offset = pcOffsets[--callDepth];
                     } else {
                         /* This call has already finished. */
                         depth = 1;
