@@ -808,14 +808,6 @@ ListBase<LC>::enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 
 template<class LC>
 bool
-ListBase<LC>::fix(JSContext *cx, JSObject *proxy, Value *vp)
-{
-    vp->setUndefined();
-    return true;
-}
-
-template<class LC>
-bool
 ListBase<LC>::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     if (hasIndexGetter) {
