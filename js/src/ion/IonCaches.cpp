@@ -456,6 +456,10 @@ IsEligibleForInlinePropertyAdd(JSContext *cx, JSObject *obj, jsid propId, uint32
     if (!propShape || propShape->inDictionary() || !propShape->hasSlot() || !propShape->hasDefaultSetter())
         return false;
 
+    // If object has a non-default resolve hook, don't inline
+    if (obj->getClass()->resolve != JS_ResolveStub)
+        return false;
+
     // walk up the object prototype chain and ensure that all prototypes
     // are native, and that all prototypes have no getter or setter
     // defined on the property
@@ -466,7 +470,21 @@ IsEligibleForInlinePropertyAdd(JSContext *cx, JSObject *obj, jsid propId, uint32
 
         // if prototype defines this property in a non-plain way, don't optimize
         const Shape *protoShape = proto->nativeLookup(cx, propId);
-        if (protoShape && !protoShape->hasDefaultSetter())
+        if (protoShape) {
+            // If the prototype has a property with this name, we may be able to
+            // inline-add if the property has a default setter.  If there's no
+            // default setter, then setting would potentially cause special
+            // behaviour, so we choose not to optimize.
+            if (protoShape->hasDefaultSetter()) {
+                *propShapeOut = propShape;
+                return true;
+            }
+            return false;
+        }
+
+        // Otherise, if there's no such property, watch out for a resolve hook that would need
+        // to be invoked and thus prevent inlining of property addition.
+        if (proto->getClass()->resolve != JS_ResolveStub)
             return false;
     }
 
