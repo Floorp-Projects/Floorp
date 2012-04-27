@@ -155,12 +155,12 @@ class DoubleToStringConverter {
   // Returns true if the conversion succeeds. The conversion always succeeds
   // except when the input value is special and no infinity_symbol or
   // nan_symbol has been given to the constructor.
-  MFBT_API(bool) ToShortest(double value, StringBuilder* result_builder) const {
+  bool ToShortest(double value, StringBuilder* result_builder) const {
     return ToShortestIeeeNumber(value, result_builder, SHORTEST);
   }
 
   // Same as ToShortest, but for single-precision floats.
-  MFBT_API(bool) ToShortestSingle(float value, StringBuilder* result_builder) const {
+  bool ToShortestSingle(float value, StringBuilder* result_builder) const {
     return ToShortestIeeeNumber(value, result_builder, SHORTEST_SINGLE);
   }
 
