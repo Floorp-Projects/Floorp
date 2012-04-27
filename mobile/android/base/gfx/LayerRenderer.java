@@ -100,6 +100,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private final FloatBuffer mCoordBuffer;
     private RenderContext mLastPageContext;
     private int mMaxTextureSize;
+    private int mBackgroundColor;
 
     private ArrayList<Layer> mExtraLayers = new ArrayList<Layer>();
 
@@ -186,12 +187,6 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
     public void resetCheckerboard() {
         mCheckerboardLayer.reset();
-        mCheckerboardLayer.beginTransaction();
-        try {
-            mCheckerboardLayer.invalidate();
-        } finally {
-            mCheckerboardLayer.endTransaction();
-        }
     }
 
     public LayerRenderer(LayerView view) {
@@ -423,20 +418,6 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         }).start();
     }
 
-    private void updateCheckerboardImage() {
-        int checkerboardColor = mView.getController().getCheckerboardColor();
-        boolean showChecks = mView.getController().checkerboardShouldShowChecks();
-
-        mCheckerboardLayer.beginTransaction();  // called on compositor thread
-        try {
-            if (mCheckerboardLayer.updateBackground(showChecks, checkerboardColor))
-                mCheckerboardLayer.invalidate();
-        } finally {
-            mCheckerboardLayer.endTransaction();
-        }
-
-    }
-
     /*
      * create a vertex shader type (GLES20.GL_VERTEX_SHADER)
      * or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
@@ -564,7 +545,6 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             if (rootLayer != null) mUpdated &= rootLayer.update(mPageContext);  // called on compositor thread
             mUpdated &= mBackgroundLayer.update(mScreenContext);    // called on compositor thread
             mUpdated &= mShadowLayer.update(mPageContext);  // called on compositor thread
-            updateCheckerboardImage();
             mUpdated &= mCheckerboardLayer.update(mPageContext);   // called on compositor thread
             if (mFrameRateLayer != null) mUpdated &= mFrameRateLayer.update(mScreenContext); // called on compositor thread
             mUpdated &= mVertScrollLayer.update(mPageContext);  // called on compositor thread
@@ -599,11 +579,17 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             if (mask.left <= 2) {
                 mask.left = -1;
             }
-            if (mask.right >= mPageRect.right - 2) {
-                mask.right = mPageRect.right + 1;
+
+            // Because we're drawing relative to the page-rect, we only need to
+            // take into account its width and height (and not its origin)
+            int pageRight = mPageRect.width();
+            int pageBottom = mPageRect.height();
+
+            if (mask.right >= pageRight - 2) {
+                mask.right = pageRight + 1;
             }
-            if (mask.bottom >= mPageRect.bottom - 2) {
-                mask.bottom = mPageRect.bottom + 1;
+            if (mask.bottom >= pageBottom - 2) {
+                mask.bottom = pageBottom + 1;
             }
 
             return mask;
@@ -611,6 +597,19 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
         /** This function is invoked via JNI; be careful when modifying signature. */
         public void drawBackground() {
+            /* Update background color. */
+            mBackgroundColor = mView.getController().getCheckerboardColor();
+
+            /* Clear to the page background colour. The bits set here need to
+             * match up with those used in gfx/layers/opengl/LayerManagerOGL.cpp.
+             */
+            GLES20.glClearColor(((mBackgroundColor>>16)&0xFF) / 255.0f,
+                                ((mBackgroundColor>>8)&0xFF) / 255.0f,
+                                (mBackgroundColor&0xFF) / 255.0f,
+                                0.0f);
+            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT |
+                           GLES20.GL_DEPTH_BUFFER_BIT);
+
             /* Draw the background. */
             mBackgroundLayer.setMask(mPageRect);
             mBackgroundLayer.draw(mScreenContext);
@@ -621,14 +620,21 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             if (!untransformedPageRect.contains(mView.getController().getViewport()))
                 mShadowLayer.draw(mPageContext);
 
-            /* Find the area the root layer will render into, to mask the checkerboard layer */
-            Rect rootMask = getMaskForLayer(mView.getController().getRoot());
+            /* Draw the 'checkerboard'. We use gfx.show_checkerboard_pattern to
+             * determine whether to draw the screenshot layer.
+             */
+            if (mView.getController().checkerboardShouldShowChecks()) {
+                /* Find the area the root layer will render into, to mask the checkerboard layer */
+                Rect rootMask = getMaskForLayer(mView.getController().getRoot());
+                mCheckerboardLayer.setMask(rootMask);
 
-            /* Draw the checkerboard. */
-            setScissorRect();
-            mCheckerboardLayer.setMask(rootMask);
-            mCheckerboardLayer.draw(mPageContext);
-            GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
+                /* Scissor around the page-rect, in case the page has shrunk
+                 * since the screenshot layer was last updated.
+                 */
+                setScissorRect();
+                mCheckerboardLayer.draw(mPageContext);
+                GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
+            }
         }
 
         // Draws the layer the client added to us.
