@@ -13,4 +13,4 @@ cp $1/src/*.h ./
 cp $1/src/*.cc ./
 
 patch -p3 < add-mfbt-api-markers.patch
-patch -p3 < useStandardInteger.patch
+patch -p3 < use-StandardInteger.patch
