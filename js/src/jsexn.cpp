@@ -292,36 +292,31 @@ InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
     Vector<JSStackTraceStackElem> frames(cx);
     {
         SuppressErrorsGuard seg(cx);
-        for (FrameRegsIter i(cx); !i.done(); ++i) {
+        for (ScriptFrameIter i(cx); !i.done(); ++i) {
             StackFrame *fp = i.fp();
 
             /*
              * Ask the crystal CAPS ball whether we can see across compartments.
              * NB: this means 'fp' may point to cross-compartment frames.
              */
-            if (checkAccess && fp->isNonEvalFunctionFrame()) {
+            if (checkAccess && i.isNonEvalFunctionFrame()) {
                 Value v = NullValue();
                 jsid callerid = ATOM_TO_JSID(cx->runtime->atomState.callerAtom);
-                if (!checkAccess(cx, &fp->callee(), callerid, JSACC_READ, &v))
+                if (!checkAccess(cx, i.callee(), callerid, JSACC_READ, &v))
                     break;
             }
 
             if (!frames.growBy(1))
                 return false;
             JSStackTraceStackElem &frame = frames.back();
-            if (fp->isNonEvalFunctionFrame())
+            if (i.isNonEvalFunctionFrame())
                 frame.funName = fp->fun()->atom ? fp->fun()->atom : cx->runtime->emptyString;
             else
                 frame.funName = NULL;
-            if (fp->isScriptFrame()) {
-                frame.filename = SaveScriptFilename(cx, fp->script()->filename);
-                if (!frame.filename)
-                    return false;
-                frame.ulineno = PCToLineNumber(fp->script(), i.pc());
-            } else {
-                frame.ulineno = 0;
-                frame.filename = NULL;
-            }
+            frame.filename = SaveScriptFilename(cx, i.script()->filename);
+            if (!frame.filename)
+                return false;
+            frame.ulineno = PCToLineNumber(i.script(), i.pc());
         }
     }
 
@@ -660,9 +655,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* Find the scripted caller. */
-    FrameRegsIter iter(cx);
-    while (!iter.done() && !iter.fp()->isScriptFrame())
-        ++iter;
+    ScriptFrameIter iter(cx);
 
     /* Set the 'fileName' property. */
     RootedVarString filename(cx);
@@ -673,7 +666,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
         args[1].setString(filename);
     } else {
         if (!iter.done()) {
-            filename = FilenameToString(cx, iter.fp()->script()->filename);
+            filename = FilenameToString(cx, iter.script()->filename);
             if (!filename)
                 return false;
         } else {
@@ -687,7 +680,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
         if (!ToUint32(cx, args[2], &lineno))
             return false;
     } else {
-        lineno = iter.done() ? 0 : PCToLineNumber(iter.fp()->script(), iter.pc());
+        lineno = iter.done() ? 0 : PCToLineNumber(iter.script(), iter.pc());
     }
 
     int exnType = args.callee().toFunction()->getExtendedSlot(0).toInt32();

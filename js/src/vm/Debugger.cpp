@@ -2109,9 +2109,9 @@ class Debugger::ScriptQuery {
          * Since eval scripts have no global, we need to find them via the call
          * stack, where frame's scope tells us the global in use.
          */
-        for (FrameRegsIter fri(cx); !fri.done(); ++fri) {
-            if (fri.fp()->isEvalFrame()) {
-                JSScript *script = fri.fp()->script();
+        for (ScriptFrameIter fri(cx); !fri.done(); ++fri) {
+            if (fri.isEvalFrame()) {
+                JSScript *script = fri.script();
 
                 /*
                  * If eval scripts never have global objects set, then we don't need
