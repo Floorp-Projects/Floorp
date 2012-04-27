@@ -78,6 +78,11 @@ DownloadsUI.prototype = {
     // Show the panel in the most recent browser window, if present.
     let browserWin = gBrowserGlue.getMostRecentBrowserWindow();
     if (browserWin) {
+      // The most recent browser window could have been minimized, in that case
+      // it must be restored to allow the panel to open properly.
+      if (browserWin.windowState == Ci.nsIDOMChromeWindow.STATE_MINIMIZED) {
+        browserWin.restore();
+      }
       browserWin.focus();
       browserWin.DownloadsPanel.showPanel();
       return;
