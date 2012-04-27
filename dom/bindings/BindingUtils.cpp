@@ -146,8 +146,14 @@ CreateInterfaceObject(JSContext* cx, JSObject* global, JSObject* receiver,
     return NULL;
   }
 
+  JSBool alreadyDefined;
+  if (!JS_AlreadyHasOwnProperty(cx, receiver, name, &alreadyDefined)) {
+    return NULL;
+  }
+
   // This is Enumerable: False per spec.
-  if (!JS_DefineProperty(cx, receiver, name, OBJECT_TO_JSVAL(constructor), NULL,
+  if (!alreadyDefined &&
+      !JS_DefineProperty(cx, receiver, name, OBJECT_TO_JSVAL(constructor), NULL,
                          NULL, 0)) {
     return NULL;
   }
