@@ -653,38 +653,26 @@ ARIAGridAccessible::SelectColumn(PRInt32 aColumn)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-ARIAGridAccessible::UnselectRow(PRInt32 aRow)
+void
+ARIAGridAccessible::UnselectRow(PRUint32 aRowIdx)
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
+  nsAccessible* row = GetRowAt(aRowIdx);
 
-  nsAccessible *row = GetRowAt(aRow);
-  NS_ENSURE_ARG(row);
-
-  return SetARIASelected(row, false);
+  if (row)
+    SetARIASelected(row, false);
 }
 
-NS_IMETHODIMP
-ARIAGridAccessible::UnselectColumn(PRInt32 aColumn)
+void
+ARIAGridAccessible::UnselectCol(PRUint32 aColIdx)
 {
-  NS_ENSURE_ARG(IsValidColumn(aColumn));
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   AccIterator rowIter(this, filters::GetRow);
 
-  nsAccessible *row = nsnull;
+  nsAccessible* row = nsnull;
   while ((row = rowIter.Next())) {
-    nsAccessible *cell = GetCellInRowAt(row, aColumn);
-    if (cell) {
-      nsresult rv = SetARIASelected(cell, false);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    nsAccessible* cell = GetCellInRowAt(row, aColIdx);
+    if (cell)
+      SetARIASelected(cell, false);
   }
-
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

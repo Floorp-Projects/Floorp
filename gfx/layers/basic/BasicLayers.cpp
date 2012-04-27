@@ -1909,6 +1909,19 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
         gfxPoint offset;
         bool dontBlit = needsClipToVisibleRegion || mTransactionIncomplete ||
                           aLayer->GetEffectiveOpacity() != 1.0f;
+#ifdef DEBUG
+        if (aLayer->GetDebugColorIndex() != 0) {
+          gfxRGBA  color((aLayer->GetDebugColorIndex() & 1) ? 1.0 : 0.0,
+                         (aLayer->GetDebugColorIndex() & 2) ? 1.0 : 0.0,
+                         (aLayer->GetDebugColorIndex() & 4) ? 1.0 : 0.0,
+                         1.0);
+
+          nsRefPtr<gfxContext> temp = new gfxContext(untransformedSurface);
+          temp->SetColor(color);
+          temp->Paint();
+        }
+#endif
+
         nsRefPtr<gfxASurface> result =
           Transform3D(untransformedSurface, aTarget, bounds,
                       effectiveTransform, offset, dontBlit);

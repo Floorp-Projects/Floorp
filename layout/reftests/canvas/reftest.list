@@ -80,3 +80,5 @@ fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)) == 672646-alpha-radial-g
 == transformed-clip.html transformed-clip-ref.html
 == transformed-gradient.html transformed-gradient-ref.html
 == transformed-path.html transformed-path.html
+
+== 749467-1.html 749467-1-ref.html
