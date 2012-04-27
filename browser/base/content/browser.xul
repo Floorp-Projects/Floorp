@@ -1039,6 +1039,60 @@
                      tooltiptext="&inspectCloseButton.tooltiptext;"/>
 #endif
     </toolbar>
+
+    <panel id="gcli-tooltip"
+           type="arrow"
+           noautofocus="true"
+           noautohide="true"
+           class="gcli-panel">
+      <iframe id="gcli-tooltip-frame"
+              src="chrome://browser/content/devtools/gcliblank.xhtml"
+              flex="1"/>
+    </panel>
+    <panel id="gcli-output"
+           type="arrow"
+           noautofocus="true"
+           noautohide="true"
+           class="gcli-panel">
+      <iframe id="gcli-output-frame"
+              src="chrome://browser/content/devtools/gcliblank.xhtml"
+              flex="1"/>
+    </panel>
+
+    <toolbar id="developer-toolbar"
+             class="devtools-toolbar"
+             hidden="true">
+#ifdef XP_MACOSX
+          <toolbarbutton id="developer-toolbar-closebutton"
+                         oncommand="DeveloperToolbar.hide();"
+                         tooltiptext="&devToolbarCloseButton.tooltiptext;"/>
+#endif
+          <stack class="gclitoolbar-stack-node" flex="1">
+            <description class="gclitoolbar-prompt">&#187;</description>
+            <description class="gclitoolbar-complete-node"/>
+            <textbox class="gclitoolbar-input-node" rows="1"/>
+          </stack>
+          <toolbarbutton id="developer-toolbar-webconsole"
+                         label="&webConsoleButton.label;"
+                         class="devtools-toolbarbutton"
+                         command="Tools:WebConsole"/>
+          <toolbarbutton id="developer-toolbar-inspector"
+                         label="&inspectorButton.label;"
+                         class="devtools-toolbarbutton"
+                         hidden="true"
+                         command="Tools:Inspect"/>
+          <toolbarbutton id="developer-toolbar-debugger"
+                         label="&scriptsButton.label;"
+                         class="devtools-toolbarbutton"
+                         hidden="true"
+                         command="Tools:Debugger"/>
+#ifndef XP_MACOSX
+          <toolbarbutton id="developer-toolbar-closebutton"
+                         oncommand="DeveloperToolbar.hide();"
+                         tooltiptext="&devToolbarCloseButton.tooltiptext;"/>
+#endif
+   </toolbar>
+
     <toolbar id="addon-bar"
              toolbarname="&addonBarCmd.label;" accesskey="&addonBarCmd.accesskey;"
              collapsed="true"
