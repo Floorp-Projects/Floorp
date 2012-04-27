@@ -102,8 +102,9 @@ template <typename T>
 struct RootMethods { };
 
 /*
- * Reference to a stack location rooted for GC. See the "Moving GC Stack
- * Rooting" comment above.
+ * Reference to a T that has been rooted elsewhere. This is most useful
+ * as a parameter type, which guarantees that the T lvalue is properly
+ * rooted. See "Move GC Stack Rooting" above.
  */
 template <typename T>
 class Handle
@@ -116,8 +117,11 @@ class Handle
     }
 
     /*
-     * Get a handle to a location that may not be a Root or RootedVar, but is
-     * marked and updated by the GC.
+     * This may be called only if the location of the T is guaranteed
+     * to be marked (for some reason other than being a Root or RootedVar),
+     * e.g., if it is guaranteed to be reachable from an implicit root.
+     *
+     * Create a Handle from a raw location of a T.
      */
     static Handle fromMarkedLocation(const T *p) {
         Handle h;
@@ -125,7 +129,10 @@ class Handle
         return h;
     }
 
-    /* Get a handle from a rooted stack location, with implicit coercion. */
+    /*
+     * Construct a handle from an explicitly rooted location. This is the
+     * normal way to create a handle.
+     */
     template <typename S> inline Handle(const Root<S> &root);
     template <typename S> inline Handle(const RootedVar<S> &root);
 
