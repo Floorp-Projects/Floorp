@@ -1203,8 +1203,7 @@ abstract public class GeckoApp
         if (tab == null)
             return;
 
-        tab.updateURL(uri);
-        tab.setState(Tab.STATE_LOADING);
+        tab.setState("about:home".equals(uri) ? Tab.STATE_SUCCESS : Tab.STATE_LOADING);
         tab.updateSecurityMode("unknown");
         if (Tabs.getInstance().isSelectedTab(tab))
             getLayerController().getView().getRenderer().resetCheckerboard();
