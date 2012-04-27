@@ -769,6 +769,12 @@ IsIncrementalBarrierNeededOnObject(JSObject *obj)
     return obj->compartment()->needsBarrier();
 }
 
+JS_FRIEND_API(bool)
+IsIncrementalBarrierNeededOnScript(JSScript *script)
+{
+    return script->compartment()->needsBarrier();
+}
+
 extern JS_FRIEND_API(void)
 IncrementalReferenceBarrier(void *ptr)
 {
