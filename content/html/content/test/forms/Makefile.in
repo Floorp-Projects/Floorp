@@ -65,6 +65,11 @@ _TEST_FILES = \
 		test_datalist_element.html \
 		test_form_attributes_reflection.html \
 		test_option_index_attribute.html \
+		test_progress_element.html \
+		test_form_attribute-1.html \
+		test_form_attribute-2.html \
+		test_form_attribute-3.html \
+		test_form_attribute-4.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

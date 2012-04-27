@@ -110,7 +110,7 @@ class StatisticsSerializer
 
     void appendDecimal(const char *name, const char *units, double d) {
         if (asJSON_)
-            appendNumber(name, "%.1F", units, d);
+            appendNumber(name, "%d.%d", units, (int)d, (int)(d * 10.) % 10);
         else
             appendNumber(name, "%.1f", units, d);
     }

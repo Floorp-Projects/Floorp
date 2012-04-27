@@ -62,6 +62,7 @@ public:
   // aNewValidRegion and aNewResolution should be the valid region and
   // resolution of the data that is about to update aVideoMemoryTiledBuffer.
   void HarvestTiles(TiledLayerBufferOGL* aVideoMemoryTiledBuffer,
+                    const nsIntSize& aContentSize,
                     const nsIntRegion& aOldValidRegion,
                     const nsIntRegion& aNewValidRegion,
                     const gfxSize& aOldResolution,
@@ -71,6 +72,7 @@ public:
   // Differences in resolution will be reconciled via altering the given
   // transformation.
   void DrawTiles(TiledThebesLayerOGL* aLayer,
+                 const nsIntSize& aContentSize,
                  const nsIntRegion& aValidRegion,
                  const gfxSize& aResolution,
                  const gfx3DMatrix& aTransform,

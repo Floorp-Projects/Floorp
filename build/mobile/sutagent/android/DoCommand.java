@@ -1944,6 +1944,14 @@ private void CancelNotification()
             if (dstFile != null) {
                 dstFile.flush();
                 dstFile.close();
+                // set the new file's permissions to rwxrwxrwx, if possible
+                Process pProc = Runtime.getRuntime().exec("chmod 777 "+sTmpFileName);
+                RedirOutputThread outThrd = new RedirOutputThread(pProc, null);
+                outThrd.start();
+                try {
+                    outThrd.join(5000);
+                } catch (InterruptedException e) {
+                }
             }
 
             if (lRead == lSize)    {
@@ -2283,8 +2291,21 @@ private void CancelNotification()
         else {
             File dir = new File(sTmpDir);
 
-            if (dir.mkdirs())
+            if (dir.mkdirs()) {
+                // set the new dir's permissions to rwxrwxrwx, if possible
+                try {
+                    Process pProc = Runtime.getRuntime().exec("chmod 777 "+sTmpDir);
+                    RedirOutputThread outThrd = new RedirOutputThread(pProc, null);
+                    outThrd.start();
+                    try {
+                        outThrd.join(5000);
+                    } catch (InterruptedException e) {
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 sRet = sDir + " successfully created";
+            }
         }
 
         return (sRet);

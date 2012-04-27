@@ -84,13 +84,13 @@ MarkGCThingRoot(JSTracer *trc, void **thingp, const char *name);
 /*** ID Marking ***/
 
 void
-MarkId(JSTracer *trc, HeapId *id, const char *name);
+MarkId(JSTracer *trc, EncapsulatedId *id, const char *name);
 
 void
 MarkIdRoot(JSTracer *trc, jsid *id, const char *name);
 
 void
-MarkIdRange(JSTracer *trc, size_t len, js::HeapId *vec, const char *name);
+MarkIdRange(JSTracer *trc, size_t len, HeapId *vec, const char *name);
 
 void
 MarkIdRootRange(JSTracer *trc, size_t len, jsid *vec, const char *name);

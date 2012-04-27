@@ -77,6 +77,15 @@ public final class RectUtils {
                          rect.bottom + halfMoreHeight);
     }
 
+    public static RectF contract(RectF rect, float lessWidth, float lessHeight) {
+        float halfLessWidth = lessWidth / 2.0f;
+        float halfLessHeight = lessHeight / 2.0f;
+        return new RectF(rect.left + halfLessWidth,
+                         rect.top + halfLessHeight,
+                         rect.right - halfLessWidth,
+                         rect.bottom - halfLessHeight);
+    }
+
     public static RectF intersect(RectF one, RectF two) {
         float left = Math.max(one.left, two.left);
         float top = Math.max(one.top, two.top);
@@ -97,6 +106,11 @@ public final class RectUtils {
     public static Rect round(RectF rect) {
         return new Rect(Math.round(rect.left), Math.round(rect.top),
                         Math.round(rect.right), Math.round(rect.bottom));
+    }
+
+    public static Rect roundIn(RectF rect) {
+        return new Rect((int)Math.ceil(rect.left), (int)Math.ceil(rect.top),
+                        (int)Math.floor(rect.right), (int)Math.floor(rect.bottom));
     }
 
     public static IntSize getSize(Rect rect) {

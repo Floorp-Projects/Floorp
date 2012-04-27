@@ -688,7 +688,7 @@ function stripStringForFilename(aPossiblyBadFilenameString) {
   //strip everything from the front up to the first [0-9a-zA-Z]
 
   let stripFrontRE = new RegExp("^\\W*","gi");
-  let stripBackRE = new RegExp("\\W*$","gi");
+  let stripBackRE = new RegExp("\\s*$","gi");
 
   let stripped = aPossiblyBadFilenameString.replace(stripFrontRE, "");
   stripped = stripped.replace(stripBackRE, "");

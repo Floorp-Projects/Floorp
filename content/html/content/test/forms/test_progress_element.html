@@ -5,7 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=514437
 https://bugzilla.mozilla.org/show_bug.cgi?id=633913
 -->
 <head>
-  <title>Test for Bug 514437 and Bug 633913</title>
+  <title>Test for progress element content and layout</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
@@ -23,7 +23,7 @@ and
 <pre id="test">
 <script type="application/javascript">
 
-/** Test for Bug 514437 and Bug 633913 **/
+/** Test for progress element content and layout **/
 
 function checkFormIDLAttribute(aElement)
 {
@@ -248,7 +248,7 @@ function checkNotResetableAndFormSubmission(aElement)
      * element value should not appear.
      */
     is(frames['submit_frame'].location.href,
-      'http://mochi.test:8888/tests/content/html/content/test/foo?a=tulip',
+      'http://mochi.test:8888/tests/content/html/content/test/forms/foo?a=tulip',
        "The progress element value should not be submitted");
 
     checkNotResetable();
