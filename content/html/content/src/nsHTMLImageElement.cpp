@@ -170,6 +170,7 @@ public:
 
   void MaybeLoadImage();
   virtual nsXPCClassInfo* GetClassInfo();
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
   nsIntPoint GetXY();
   nsSize GetWidthHeight();
