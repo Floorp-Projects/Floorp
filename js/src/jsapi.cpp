@@ -6619,7 +6619,7 @@ JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno)
     if (lineno)
         *lineno = 0;
 
-    FrameRegsIter i(cx);
+    ScriptFrameIter i(cx);
     if (i.done())
         return JS_FALSE;
 
@@ -6724,7 +6724,7 @@ JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length,
 JS_PUBLIC_API(JSObject *)
 JS_GetScriptedGlobal(JSContext *cx)
 {
-    FrameRegsIter i(cx);
+    ScriptFrameIter i(cx);
     if (i.done())
         return JS_GetGlobalForScopeChain(cx);
 

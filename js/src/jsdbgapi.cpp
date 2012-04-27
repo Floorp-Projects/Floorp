@@ -1797,7 +1797,7 @@ JS_UnwrapObject(JSObject *obj)
 JS_FRIEND_API(JSBool)
 js_CallContextDebugHandler(JSContext *cx)
 {
-    FrameRegsIter iter(cx);
+    ScriptFrameIter iter(cx);
     JS_ASSERT(!iter.done());
 
     jsval rval;
