@@ -1,0 +1,27 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+[scriptable, uuid(83d67430-8516-11e1-b0c4-0800200c9a66)]
+interface nsISettingsServiceCallback : nsISupports
+{
+  [implicit_jscontext]
+  void handle(in DOMString aName, in jsval aResult);
+  [implicit_jscontext]
+  void handleError(in DOMString aErrorMessage);
+};
+
+[scriptable, uuid(3ab3cbc0-8513-11e1-b0c4-0800200c9a66)]
+interface nsISettingsServiceLock : nsISupports
+{
+  void set(in string aName, in jsval aValue, in nsISettingsServiceCallback aCallback);
+  void get(in string aName, in nsISettingsServiceCallback aCallback);
+};
+
+[scriptable, uuid(3458e760-8513-11e1-b0c4-0800200c9a66)]
+interface nsISettingsService : nsISupports
+{
+  nsISettingsServiceLock getLock();
+};

@@ -11,9 +11,6 @@ relativesrcdir   = dom/settings/tests
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
