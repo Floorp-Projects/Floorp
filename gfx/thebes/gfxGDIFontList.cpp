@@ -229,6 +229,7 @@ GDIFontEntry::ReadCMAP()
         mFontType != GFX_FONT_TYPE_TRUETYPE) 
     {
         mCharacterMap = new gfxCharacterMap();
+        mCharacterMap->mBuildOnTheFly = true;
         return NS_ERROR_FAILURE;
     }
 
