@@ -3944,8 +3944,7 @@ DebuggerObject_sealHelper(JSContext *cx, unsigned argc, Value *vp, SealHelperOp 
             args.rval().setUndefined();
             return true;
         }
-        AutoIdVector props(cx);
-        ok = obj->preventExtensions(cx, &props);
+        ok = obj->preventExtensions(cx);
     }
     if (!ok)
         return false;

@@ -211,13 +211,6 @@ AbstractWrapper::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props
     GET(GetPropertyNames(cx, wrappedObject(wrapper), 0, &props));
 }
 
-bool
-AbstractWrapper::fix(JSContext *cx, JSObject *wrapper, Value *vp)
-{
-    vp->setUndefined();
-    return true;
-}
-
 static bool
 Cond(JSBool b, bool *bp)
 {
@@ -961,7 +954,6 @@ class JS_FRIEND_API(DeadObjectProxy) : public ProxyHandler
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper, AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp) MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props) MOZ_OVERRIDE;
-    virtual bool fix(JSContext *cx, JSObject *wrapper, Value *vp) MOZ_OVERRIDE;
 
     /* Spidermonkey extensions. */
     virtual bool call(JSContext *cx, JSObject *proxy, unsigned argc, Value *vp);
@@ -1030,13 +1022,6 @@ DeadObjectProxy::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 bool
 DeadObjectProxy::enumerate(JSContext *cx, JSObject *wrapper,
                            AutoIdVector &props)
-{
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
-    return false;
-}
-
-bool
-DeadObjectProxy::fix(JSContext *cx, JSObject *wrapper, Value *vp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
     return false;

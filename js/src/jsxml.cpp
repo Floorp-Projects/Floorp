@@ -5164,14 +5164,6 @@ xml_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
-static JSBool
-xml_fix(JSContext *cx, JSObject *obj, bool *success, AutoIdVector *props)
-{
-    JS_ASSERT(obj->isExtensible());
-    *success = false;
-    return true;
-}
-
 static void
 xml_clear(JSContext *cx, JSObject *obj)
 {
@@ -5412,7 +5404,6 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
         xml_deleteSpecial,
         xml_enumerate,
         xml_typeOf,
-        xml_fix,
         NULL,       /* thisObject     */
         xml_clear
     }

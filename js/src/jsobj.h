@@ -559,7 +559,7 @@ struct JSObject : public js::ObjectImpl
     static inline unsigned getSealedOrFrozenAttributes(unsigned attrs, ImmutabilityType it);
 
   public:
-    bool preventExtensions(JSContext *cx, js::AutoIdVector *props);
+    bool preventExtensions(JSContext *cx);
 
     /* ES5 15.2.3.8: non-extensible, all props non-configurable */
     inline bool seal(JSContext *cx) { return sealOrFreeze(cx, SEAL); }

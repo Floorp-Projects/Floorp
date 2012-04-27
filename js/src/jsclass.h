@@ -235,16 +235,6 @@ typedef JSBool
 typedef JSType
 (* TypeOfOp)(JSContext *cx, JSObject *obj);
 
-/*
- * Prepare to make |obj| non-extensible; in particular, fully resolve its properties.
- * On error, return false.
- * If |obj| is now ready to become non-extensible, set |*fixed| to true and return true.
- * If |obj| refuses to become non-extensible, set |*fixed| to false and return true; the
- * caller will throw an appropriate error.
- */
-typedef JSBool
-(* FixOp)(JSContext *cx, JSObject *obj, bool *fixed, AutoIdVector *props);
-
 typedef JSObject *
 (* ObjectOp)(JSContext *cx, JSObject *obj);
 typedef void
@@ -332,7 +322,6 @@ struct ObjectOps
 
     JSNewEnumerateOp    enumerate;
     TypeOfOp            typeOf;
-    FixOp               fix;
     ObjectOp            thisObject;
     ClearOp             clear;
 };
@@ -340,7 +329,7 @@ struct ObjectOps
 #define JS_NULL_OBJECT_OPS                                                    \
     {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,   \
      NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,        \
-     NULL,NULL,NULL,NULL,NULL,NULL}
+     NULL,NULL,NULL,NULL,NULL}
 
 struct Class
 {
