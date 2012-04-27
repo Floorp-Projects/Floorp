@@ -20,6 +20,7 @@ ReusableTileStoreOGL::~ReusableTileStoreOGL()
 
 void
 ReusableTileStoreOGL::HarvestTiles(TiledLayerBufferOGL* aVideoMemoryTiledBuffer,
+                                   const nsIntSize& aContentSize,
                                    const nsIntRegion& aOldValidRegion,
                                    const nsIntRegion& aNewValidRegion,
                                    const gfxSize& aOldResolution,
@@ -33,20 +34,32 @@ ReusableTileStoreOGL::HarvestTiles(TiledLayerBufferOGL* aVideoMemoryTiledBuffer,
 #endif
 
   // Iterate over existing harvested tiles and release any that are contained
-  // within the new valid region.
+  // within the new valid region, or that fall outside of the layer.
   mContext->MakeCurrent();
   for (int i = 0; i < mTiles.Length();) {
     ReusableTiledTextureOGL* tile = mTiles[i];
 
+    nsIntRect tileRect;
     bool release = false;
     if (tile->mResolution == aNewResolution) {
-      if (aNewValidRegion.Contains(tile->mTileRegion))
+      if (aNewValidRegion.Contains(tile->mTileRegion)) {
         release = true;
+      } else {
+        tileRect = tile->mTileRegion.GetBounds();
+      }
     } else {
       nsIntRegion transformedTileRegion(tile->mTileRegion);
       transformedTileRegion.ScaleRoundOut(tile->mResolution.width / aNewResolution.width,
                                           tile->mResolution.height / aNewResolution.height);
       if (aNewValidRegion.Contains(transformedTileRegion))
+        release = true;
+      else
+        tileRect = transformedTileRegion.GetBounds();
+    }
+
+    if (!release) {
+      if (tileRect.width > aContentSize.width ||
+          tileRect.height > aContentSize.height)
         release = true;
     }
 
@@ -143,6 +156,7 @@ ReusableTileStoreOGL::HarvestTiles(TiledLayerBufferOGL* aVideoMemoryTiledBuffer,
 
 void
 ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
+                                const nsIntSize& aContentSize,
                                 const nsIntRegion& aValidRegion,
                                 const gfxSize& aResolution,
                                 const gfx3DMatrix& aTransform,
@@ -163,6 +177,13 @@ ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
 
     // Skip drawing tiles that will be completely drawn over.
     if (aValidRegion.Contains(transformedTileRegion))
+      continue;
+
+    // Skip drawing tiles that have fallen outside of the layer area (these
+    // will be discarded next time tiles are harvested).
+    nsIntRect transformedTileRect = transformedTileRegion.GetBounds();
+    if (transformedTileRect.XMost() > aContentSize.width ||
+        transformedTileRect.YMost() > aContentSize.height)
       continue;
 
     // Reconcile the resolution difference by adjusting the transform.

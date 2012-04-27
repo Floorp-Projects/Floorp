@@ -173,7 +173,8 @@ function checkStartTime(anim, expectedStartTime, sampleTime, caseNum, id)
   try {
     startTime = anim.getStartTime();
   } catch (e) {
-    if (e.code != DOMException.INVALID_STATE_ERR)
+    if (e.name != "InvalidStateError" ||
+        e.code != DOMException.INVALID_STATE_ERR)
       throw e;
   }
 

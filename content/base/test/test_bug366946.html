@@ -60,9 +60,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366946
       var result2 = range3.compareBoundaryPoints(Range.START_TO_START, range1);
     }
     catch (ex) {
+      var error = ex.name;
       var errorCode = ex.code;
     }
 
+    ok(error == "WrongDocumentError",
+      "The WrongDocumentError exception thrown when comparing ranges from " +
+      "different documents ");
     ok(errorCode == DOMException.WRONG_DOCUMENT_ERR,
       "The exception thrown when comparing ranges from different documents " +
       "has the code DOMException.WRONG_DOCUMENT_ERR");

@@ -400,7 +400,15 @@ case "$target" in
 
         # With newer NDK, the toolchain path has changed.
         if ! test -d "$android_toolchain" ; then
-            android_toolchain="$android_ndk"/toolchains/arm-$kernel_name-androideabi-4.4.3/prebuilt/$kernel_name-x86
+            case "$target_cpu" in
+            arm)
+                target_name=arm-linux-androideabi-4.4.3
+                ;;
+            i?86)
+                target_name=x86-4.4.3
+                ;;
+            esac
+            android_toolchain="$android_ndk"/toolchains/$target_name/prebuilt/$kernel_name-x86
         fi
 
         if test -d "$android_toolchain" ; then
@@ -8020,10 +8028,8 @@ dnl ========================================================
 
 if test -z "$SKIP_PATH_CHECKS"; then
 if test -z "${GLIB_CFLAGS}" -o -z "${GLIB_LIBS}" ; then
-    if test "$MOZ_ENABLE_GTK2" -o "$USE_ELF_DYNSTR_GC" ; then
+    if test "$MOZ_ENABLE_GTK2" -o "$MOZ_ENABLE_QT" -o "$USE_ELF_DYNSTR_GC" ; then
         PKG_CHECK_MODULES(GLIB, glib-2.0 >= 1.3.7 gobject-2.0)
-    else
-        AM_PATH_GLIB(${GLIB_VERSION})
     fi
 fi
 fi

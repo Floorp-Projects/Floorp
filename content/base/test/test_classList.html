@@ -35,10 +35,9 @@ function onAttrModified(event) {
   });
 }
 
-function checkModification(e, funcName, argument, expectedRes, before, after) {
-  var shouldThrow = typeof(after) === "number";
+function checkModification(e, funcName, argument, expectedRes, before, after, expectedException) {
+  var shouldThrow = typeof(expectedException) === "string";
   if (shouldThrow) {
-    var expectedException = after;
     // If an exception is thrown, the class attribute shouldn't change.
     after = before;
   }
@@ -60,7 +59,7 @@ function checkModification(e, funcName, argument, expectedRes, before, after) {
   } catch (e) {
     if (!shouldThrow)
       ok(false, "classList modification threw an exception " + contextMsg);
-    is(e.code, expectedException, "wrong exception thrown " + contextMsg);
+    is(e.name, expectedException, "wrong exception thrown " + contextMsg);
   }
   e.removeEventListener("DOMAttrModified", onAttrModified, false);
   if (expectedRes !== null)
@@ -206,18 +205,21 @@ function testClassList(e) {
     e.classList.contains("");
     ok(false, "classList.contains() didn't throw");
   } catch (e) {
+    is(e.name, "SyntaxError", "wrong exception thrown");
     is(e.code, DOMException.SYNTAX_ERR, "wrong exception thrown");
   }
   try {
     e.classList.contains("  ");
     ok(false, "classList.contains() didn't throw");
   } catch (e) {
+    is(e.name, "InvalidCharacterError", "wrong exception thrown");
     is(e.code, DOMException.INVALID_CHARACTER_ERR, "wrong exception thrown");
   }
   try {
     e.classList.contains("aa ");
     ok(false, "classList.contains() didn't throw");
   } catch (e) {
+    is(e.name, "InvalidCharacterError", "wrong exception thrown");
     is(e.code, DOMException.INVALID_CHARACTER_ERR, "wrong exception thrown");
   }
 
@@ -250,13 +252,13 @@ function testClassList(e) {
 
   // add() method
 
-  function checkAdd(before, argument, after) {
-    checkModification(e, "add", argument, null, before, after);
+  function checkAdd(before, argument, after, expectedException) {
+    checkModification(e, "add", argument, null, before, after, expectedException);
   }
 
-  checkAdd(null, "", DOMException.SYNTAX_ERR);
-  checkAdd(null, " ", DOMException.INVALID_CHARACTER_ERR);
-  checkAdd(null, "aa ", DOMException.INVALID_CHARACTER_ERR);
+  checkAdd(null, "", null, "SyntaxError");
+  checkAdd(null, " ", null, "InvalidCharacterError");
+  checkAdd(null, "aa ", null, "InvalidCharacterError");
 
   checkAdd("a", "a", "a");
   checkAdd("aa", "AA", "aa AA");
@@ -276,13 +278,13 @@ function testClassList(e) {
 
   // remove() method
 
-  function checkRemove(before, argument, after) {
-    checkModification(e, "remove", argument, null, before, after);
+  function checkRemove(before, argument, after, expectedException) {
+    checkModification(e, "remove", argument, null, before, after, expectedException);
   }
 
-  checkRemove(null, "", DOMException.SYNTAX_ERR);
-  checkRemove(null, " ", DOMException.INVALID_CHARACTER_ERR);
-  checkRemove(null, "aa ", DOMException.INVALID_CHARACTER_ERR);
+  checkRemove(null, "", null, "SyntaxError");
+  checkRemove(null, " ", null, "InvalidCharacterError");
+  checkRemove(null, "aa ", null, "InvalidCharacterError");
 
   checkRemove(null, "a", null);
   checkRemove("", "a", "");
@@ -315,12 +317,12 @@ function testClassList(e) {
 
   // toggle() method
 
-  function checkToggle(before, argument, expectedRes, after) {
-    checkModification(e, "toggle", argument, expectedRes, before, after);
+  function checkToggle(before, argument, expectedRes, after, expectedException) {
+    checkModification(e, "toggle", argument, expectedRes, before, after, expectedException);
   }
 
-  checkToggle(null, "", null, DOMException.SYNTAX_ERR);
-  checkToggle(null, "aa ", null, DOMException.INVALID_CHARACTER_ERR);
+  checkToggle(null, "", null, null, "SyntaxError");
+  checkToggle(null, "aa ", null, null, "InvalidCharacterError");
 
   checkToggle(null, "a", true, "a");
   checkToggle("", "a", true, "a");

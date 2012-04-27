@@ -151,6 +151,6 @@
     </menu>
   </menubar>
 
-  <browser type="content" id="content" flex="1"/>
+  <browser type="content-primary" id="content" flex="1"/>
 
 </window>

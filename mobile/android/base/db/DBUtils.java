@@ -4,9 +4,14 @@
 
 package org.mozilla.gecko.db;
 
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.sync.Utils;
 
 import android.content.ContentValues;
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Build;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
@@ -15,6 +20,8 @@ import java.util.UUID;
 import java.util.Random;
 
 public class DBUtils {
+    private static final String LOGTAG = "GeckoDBUtils";
+
     public static final String qualifyColumn(String table, String column) {
         return table + "." + column;
     }
@@ -61,6 +68,27 @@ public class DBUtils {
 
         if (!aValues.containsKey(aNewKey)) {
             aValues.put(aNewKey, value);
+        }
+    }
+
+    public static void ensureDatabaseIsNotLocked(SQLiteOpenHelper dbHelper, String databasePath) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        // The returned writable database is read-only, this probably means that the
+        // database is permanently locked due to a crash or a non-clean quit in Fennec.
+        // We can assume it's safe to forcefully unlock the database file in this case
+        // as all database access happens through this content provider (see bug 741718).
+        if (db.isReadOnly()) {
+            // Close read-only connection, we don't want to use it
+            dbHelper.close();
+
+            Log.d(LOGTAG, "Database is in read-only mode, trying to forcefully unlock the database file: " + databasePath);
+
+            // Forcefully unlock the database file
+            GeckoAppShell.unlockDatabaseFile(databasePath);
+
+            // TODO: maybe check if the connection is still read-only and let the
+            // user know that the device needs rebooting?
         }
     }
 }
