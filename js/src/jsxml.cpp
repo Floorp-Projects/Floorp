@@ -1783,12 +1783,12 @@ ParseXMLSource(JSContext *cx, JSString *src)
     xml = NULL;
     filename = NULL;
     lineno = 1;
-    FrameRegsIter i(cx);
+    ScriptFrameIter i(cx);
     if (!i.done()) {
         op = (JSOp) *i.pc();
         if (op == JSOP_TOXML || op == JSOP_TOXMLLIST) {
-            filename = i.fp()->script()->filename;
-            lineno = PCToLineNumber(i.fp()->script(), i.pc());
+            filename = i.script()->filename;
+            lineno = PCToLineNumber(i.script(), i.pc());
             for (endp = srcp + srclen; srcp < endp; srcp++) {
                 if (*srcp == '\n')
                     --lineno;

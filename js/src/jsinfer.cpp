@@ -3046,7 +3046,7 @@ TypeObject::clearNewScript(JSContext *cx)
      * the stack and fix up any such objects.
      */
     Vector<uint32_t, 32> pcOffsets(cx);
-    for (FrameRegsIter iter(cx); !iter.done(); ++iter) {
+    for (ScriptFrameIter iter(cx); !iter.done(); ++iter) {
         pcOffsets.append(uint32_t(iter.pc() - iter.script()->code));
         if (iter.isConstructing() &&
             iter.callee() == newScript->fun &&
