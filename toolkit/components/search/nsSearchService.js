@@ -3756,6 +3756,7 @@ var engineMetadataService = {
 
         let callback = function(result) {
           if (Components.isSuccessCode(result)) {
+            ostream.close();
             Services.obs.notifyObservers(null,
                                          SEARCH_SERVICE_TOPIC,
                                          SEARCH_SERVICE_METADATA_WRITTEN);
