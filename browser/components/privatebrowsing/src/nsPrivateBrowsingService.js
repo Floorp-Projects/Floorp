@@ -133,6 +133,10 @@ PrivateBrowsingService.prototype = {
   // Whether private browsing has been turned on from the command line
   _lastChangedByCommandLine: false,
 
+  // Telemetry measurements
+  _enterTimestamps: {},
+  _exitTimestamps: {},
+
   // XPCOM registration
   classID: Components.ID("{c31f4883-839b-45f6-82ad-a6a9bc5ad599}"),
 
@@ -308,6 +312,7 @@ PrivateBrowsingService.prototype = {
         // restore has been completed
         this._currentStatus = STATE_IDLE;
         this._obs.notifyObservers(null, "private-browsing-transition-complete", "");
+        this._recordTransitionTime("completed");
         break;
       case STATE_WAITING_FOR_RESTORE:
         // too soon to notify...
@@ -321,6 +326,51 @@ PrivateBrowsingService.prototype = {
                        this._currentStatus);
         break;
     }
+  },
+
+  _recordTransitionTime: function PBS__recordTransitionTime(aPhase) {
+    // To record the time spent in private browsing transitions, note that we
+    // cannot use the TelemetryStopwatch module, because it reports its results
+    // immediately when the timer is stopped.  In this case, we need to delay
+    // the actual histogram update after we are out of private browsing mode.
+    if (this._inPrivateBrowsing) {
+      this._enterTimestamps[aPhase] = Date.now();
+    } else {
+      if (this._quitting) {
+        // If we are quitting the browser, we don't care collecting the data,
+        // because we wouldn't be able to record it with telemetry.
+        return;
+      }
+      this._exitTimestamps[aPhase] = Date.now();
+      if (aPhase == "completed") {
+        // After we finished exiting the private browsing mode, we can finally
+        // record the telemetry data, for the enter and the exit processes.
+        this._reportTelemetry();
+      }
+    }
+  },
+
+  _reportTelemetry: function PBS__reportTelemetry() {
+    function reportTelemetryEntry(aHistogramId, aValue) {
+      try {
+        Services.telemetry.getHistogramById(aHistogramId).add(aValue);
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
+    }
+
+    reportTelemetryEntry(
+          "PRIVATE_BROWSING_TRANSITION_ENTER_PREPARATION_MS",
+          this._enterTimestamps.prepared - this._enterTimestamps.started);
+    reportTelemetryEntry(
+          "PRIVATE_BROWSING_TRANSITION_ENTER_TOTAL_MS",
+          this._enterTimestamps.completed - this._enterTimestamps.started);
+    reportTelemetryEntry(
+          "PRIVATE_BROWSING_TRANSITION_EXIT_PREPARATION_MS",
+          this._exitTimestamps.prepared - this._exitTimestamps.started);
+    reportTelemetryEntry(
+          "PRIVATE_BROWSING_TRANSITION_EXIT_TOTAL_MS",
+          this._exitTimestamps.completed - this._exitTimestamps.started);
   },
 
   _canEnterPrivateBrowsingMode: function PBS__canEnterPrivateBrowsingMode() {
@@ -537,6 +587,8 @@ PrivateBrowsingService.prototype = {
       this._autoStarted = this._prefs.getBoolPref("browser.privatebrowsing.autostart");
       this._inPrivateBrowsing = val != false;
 
+      this._recordTransitionTime("started");
+
       let data = val ? "enter" : "exit";
 
       let quitting = Cc["@mozilla.org/supports-PRBool;1"].
@@ -550,6 +602,8 @@ PrivateBrowsingService.prototype = {
       this._onBeforePrivateBrowsingModeChange();
 
       this._obs.notifyObservers(quitting, "private-browsing", data);
+
+      this._recordTransitionTime("prepared");
 
       // load the appropriate session
       this._onAfterPrivateBrowsingModeChange();
