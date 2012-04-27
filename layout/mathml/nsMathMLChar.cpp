@@ -1899,8 +1899,9 @@ class nsDisplayMathMLCharForeground : public nsDisplayItem {
 public:
   nsDisplayMathMLCharForeground(nsDisplayListBuilder* aBuilder,
                                 nsIFrame* aFrame, nsMathMLChar* aChar,
-				                        bool aIsSelected)
-    : nsDisplayItem(aBuilder, aFrame), mChar(aChar), mIsSelected(aIsSelected) {
+				                PRUint32 aIndex, bool aIsSelected)
+    : nsDisplayItem(aBuilder, aFrame), mChar(aChar), 
+      mIndex(aIndex), mIsSelected(aIsSelected) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharForeground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1934,9 +1935,12 @@ public:
     bool snap;
     return GetBounds(aBuilder, &snap);
   }
+  
+  virtual PRUint32 GetPerFrameKey() { return (mIndex << nsDisplayItem::TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); }
 
 private:
   nsMathMLChar* mChar;
+  PRUint32      mIndex;
   bool          mIsSelected;
 };
 
@@ -1982,6 +1986,7 @@ nsresult
 nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
                       nsIFrame*               aForFrame,
                       const nsDisplayListSet& aLists,
+                      PRUint32                aIndex,
                       const nsRect*           aSelectedRect)
 {
   nsresult rv = NS_OK;
@@ -2026,6 +2031,7 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
   }
   return aLists.Content()->AppendNewToTop(new (aBuilder)
         nsDisplayMathMLCharForeground(aBuilder, aForFrame, this,
+                                      aIndex,
                                       aSelectedRect && !aSelectedRect->IsEmpty()));
 }
 
