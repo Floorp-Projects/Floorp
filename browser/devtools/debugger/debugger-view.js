@@ -94,6 +94,53 @@ let DebuggerView = {
 };
 
 /**
+ * A simple way of displaying a "Connect to..." prompt.
+ */
+function RemoteDebuggerPrompt() {
+
+  /**
+   * The remote uri the user wants to connect to.
+   */
+  this.uri = null;
+}
+
+RemoteDebuggerPrompt.prototype = {
+
+  /**
+   * Shows the prompt and sets the uri using the user input.
+   *
+   * @param boolean aIsReconnectingFlag
+   *                True to show the reconnect message instead.
+   */
+  show: function RDP_show(aIsReconnectingFlag) {
+    let check = { value: Prefs.remoteAutoConnect };
+    let input = { value: "http://" + Prefs.remoteHost +
+                               ":" + Prefs.remotePort + "/" };
+
+    while (true) {
+      let result = Services.prompt.prompt(null,
+        L10N.getStr("remoteDebuggerPromptTitle"),
+        L10N.getStr(aIsReconnectingFlag
+          ? "remoteDebuggerReconnectMessage"
+          : "remoteDebuggerPromptMessage"), input,
+        L10N.getStr("remoteDebuggerPromptCheck"), check);
+
+      Prefs.remoteAutoConnect = check.value;
+
+      try {
+        let uri = Services.io.newURI(input.value, null, null);
+        let url = uri.QueryInterface(Ci.nsIURL);
+
+        // If a url could be successfully retrieved, then the uri is correct.
+        this.uri = uri;
+        return result;
+      }
+      catch(e) { }
+    }
+  }
+};
+
+/**
  * Functions handling the scripts UI.
  */
 function ScriptsView() {
