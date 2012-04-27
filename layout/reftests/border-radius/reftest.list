@@ -82,3 +82,5 @@ random-if(winWidget) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml
 
 # Test for antialiasing gaps between background and border
 fails-if(winWidget) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
+
+== color-layer-1a.html color-layer-1-ref.html
