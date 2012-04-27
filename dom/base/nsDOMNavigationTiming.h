@@ -95,6 +95,12 @@ public:
   nsresult TimeStampToDOMOrFetchStart(mozilla::TimeStamp aStamp, 
                                       DOMTimeMilliSec* aResult);
 
+  inline DOMHighResTimeStamp TimeStampToDOMHighRes(mozilla::TimeStamp aStamp)
+  {
+    mozilla::TimeDuration duration = aStamp - mNavigationStartTimeStamp;
+    return duration.ToMilliseconds();
+  }
+
 private:
   nsDOMNavigationTiming(const nsDOMNavigationTiming &){};
   ~nsDOMNavigationTiming();
