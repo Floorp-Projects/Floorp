@@ -419,6 +419,9 @@ class LCallGeneric : public LCallInstructionHelper<BOX_PIECES, 1, 2>
         JS_ASSERT(mir()->argc() >= 1);
         return mir()->argc() - 1; // |this| is not a formal argument.
     }
+    uint32 bytecodeArgc() const {
+        return mir()->bytecodeArgc();
+    }
 
     bool hasSingleTarget() const {
         return getSingleTarget() != NULL;
