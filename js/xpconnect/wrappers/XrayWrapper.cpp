@@ -1012,7 +1012,9 @@ static JSBool
 XrayToString(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSObject *wrapper = JS_THIS_OBJECT(cx, vp);
-    if (!wrapper || !IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper)) {
+    if (!wrapper)
+        return false;
+    if (!IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper)) {
         JS_ReportError(cx, "XrayToString called on an incompatible object");
         return false;
     }
