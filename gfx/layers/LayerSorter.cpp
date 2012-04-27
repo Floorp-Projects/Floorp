@@ -156,7 +156,7 @@ static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
     }
   }
   // If layers have the same depth keep the original order
-  if (highest >= 0) {
+  if (fabs(highest) < 0.1 || highest >= 0) {
     return ABeforeB;
   } else {
     return BBeforeA;
