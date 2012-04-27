@@ -396,6 +396,14 @@ HISTOGRAM_BOOLEAN(XMLHTTPREQUEST_ASYNC_OR_SYNC, "Type of XMLHttpRequest, async o
 HISTOGRAM_BOOLEAN(MULTIPART_XHR_RESPONSE, "XMLHttpRequest response was of type multipart/x-mixed-replace.")
 
 /**
+ * Private browsing transition telemetry.
+ */
+HISTOGRAM(PRIVATE_BROWSING_TRANSITION_ENTER_PREPARATION_MS, 1, 3000, 10, EXPONENTIAL, "Time spent on private browsing enter transition, excluding session restore (ms)")
+HISTOGRAM(PRIVATE_BROWSING_TRANSITION_ENTER_TOTAL_MS, 1, 10000, 50, EXPONENTIAL, "Time spent on private browsing enter transition, including session restore (ms)")
+HISTOGRAM(PRIVATE_BROWSING_TRANSITION_EXIT_PREPARATION_MS, 1, 3000, 10, EXPONENTIAL, "Time spent on private browsing exit transition, excluding session restore (ms)")
+HISTOGRAM(PRIVATE_BROWSING_TRANSITION_EXIT_TOTAL_MS, 1, 10000, 50, EXPONENTIAL, "Time spent on private browsing exit transition, including session restore (ms)")
+
+/**
  * DOM telemetry.
  */
 HISTOGRAM(DOM_TIMERS_FIRED_PER_NATIVE_TIMEOUT, 1, 3000, 10, EXPONENTIAL, "DOM: Timer handlers called per native timer expiration")
