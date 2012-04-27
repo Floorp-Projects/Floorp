@@ -140,7 +140,7 @@ nsMathMLmoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       selectedRect = firstChild->GetRect();
       isSelected = true;
     }
-    rv = mMathMLChar.Display(aBuilder, this, aLists, isSelected ? &selectedRect : nsnull);
+    rv = mMathMLChar.Display(aBuilder, this, aLists, 0, isSelected ? &selectedRect : nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
   
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
