@@ -616,9 +616,9 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
         // Each path must account for framePushed_ separately, for callVM to be valid.
         masm.freeStack(unusedStack);
 
-        pushArg(StackPointer);          // argv.
-        pushArg(Imm32(call->nargs()));  // argc.
-        pushArg(calleereg);             // JSFunction *.
+        pushArg(StackPointer);                 // argv.
+        pushArg(Imm32(call->bytecodeArgc()));  // argc.
+        pushArg(calleereg);                    // JSFunction *.
 
         if (!callVM(InvokeFunctionInfo, call))
             return false;
