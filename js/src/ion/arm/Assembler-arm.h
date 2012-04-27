@@ -1498,12 +1498,15 @@ class Assembler
     // determined by the float2core.
 
     void as_vxfer(Register vt1, Register vt2, VFPRegister vm, FloatToCore_ f2c,
-                  Condition c = Always);
+                  Condition c = Always, int idx = 0);
 
     // our encoding actually allows just the src and the dest (and theiyr types)
     // to uniquely specify the encoding that we are going to use.
     void as_vcvt(VFPRegister vd, VFPRegister vm,
                  Condition c = Always);
+    // hard coded to a 32 bit fixed width result for now
+    void as_vcvtFixed(VFPRegister vd, bool isSigned, uint32 fixedPoint, bool toFixed, Condition c = Always);
+
     /* xfer between VFP and memory*/
     void as_vdtr(LoadStore ls, VFPRegister vd, VFPAddr addr,
                  Condition c = Always /* vfp doesn't have a wb option*/,
