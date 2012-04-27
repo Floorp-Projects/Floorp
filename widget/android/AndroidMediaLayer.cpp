@@ -49,12 +49,12 @@ AndroidMediaLayer::AndroidMediaLayer()
 }
 
 AndroidMediaLayer::~AndroidMediaLayer() {
-  if (mContentData.window) {
+  if (mContentData.window && AndroidBridge::Bridge()) {
     AndroidBridge::Bridge()->ReleaseNativeWindow(mContentData.window);
     mContentData.window = NULL;
   }
 
-  if (mContentData.surface) {
+  if (mContentData.surface && AndroidBridge::Bridge()) {
     AndroidBridge::Bridge()->DestroySurface(mContentData.surface);
     mContentData.surface = NULL;
   }
@@ -64,8 +64,11 @@ AndroidMediaLayer::~AndroidMediaLayer() {
   for (it = mVideoSurfaces.begin(); it != mVideoSurfaces.end(); it++) {
     SurfaceData* data = it->second;
 
-    AndroidBridge::Bridge()->ReleaseNativeWindow(data->window);
-    AndroidBridge::Bridge()->DestroySurface(data->surface);
+    if (AndroidBridge::Bridge()) {
+      AndroidBridge::Bridge()->ReleaseNativeWindow(data->window);
+      AndroidBridge::Bridge()->DestroySurface(data->surface);
+    }
+
     delete data;
   }
 
@@ -73,10 +76,10 @@ AndroidMediaLayer::~AndroidMediaLayer() {
 }
 
 bool AndroidMediaLayer::EnsureContentSurface() {
-  if (!mContentData.surface) {
+  if (!mContentData.surface && AndroidBridge::Bridge()) {
     mContentData.surface = AndroidBridge::Bridge()->CreateSurface();
     if (mContentData.surface) {
-      mContentData.window = AndroidBridge::Bridge()->AcquireNativeWindow(mContentData.surface);
+      mContentData.window = AndroidBridge::Bridge()->AcquireNativeWindow(AndroidBridge::GetJNIEnv(), mContentData.surface);
       AndroidBridge::Bridge()->SetNativeWindowFormat(mContentData.window, 0, 0, AndroidBridge::WINDOW_FORMAT_RGBA_8888);
     }
   }
@@ -92,9 +95,12 @@ void* AndroidMediaLayer::GetNativeWindowForContent() {
 }
 
 void* AndroidMediaLayer::RequestNativeWindowForVideo() {
+  if (!AndroidBridge::Bridge())
+    return NULL;
+
   jobject surface = AndroidBridge::Bridge()->CreateSurface();
   if (surface) {
-    void* window = AndroidBridge::Bridge()->AcquireNativeWindow(surface);
+    void* window = AndroidBridge::Bridge()->AcquireNativeWindow(AndroidBridge::GetJNIEnv(), surface);
     if (window) {
       AndroidBridge::Bridge()->SetNativeWindowFormat(window, 0, 0, AndroidBridge::WINDOW_FORMAT_RGBA_8888);
       mVideoSurfaces[window] = new SurfaceData(surface, window);
@@ -111,7 +117,7 @@ void* AndroidMediaLayer::RequestNativeWindowForVideo() {
 }
 
 void AndroidMediaLayer::ReleaseNativeWindowForVideo(void* aWindow) {
-  if (mVideoSurfaces.find(aWindow) == mVideoSurfaces.end())
+  if (mVideoSurfaces.find(aWindow) == mVideoSurfaces.end() || !AndroidBridge::Bridge())
     return;
 
   SurfaceData* data = mVideoSurfaces[aWindow];
@@ -131,8 +137,8 @@ void AndroidMediaLayer::SetNativeWindowDimensions(void* aWindow, const gfxRect& 
   data->dimensions = aDimensions;
 }
 
-void AndroidMediaLayer::UpdatePosition(const gfxRect& aRect, float aZoomLevel) {
-  if (!mVisible)
+void AndroidMediaLayer::UpdatePosition(const gfxRect& aRect) {
+  if (!mVisible || !AndroidBridge::Bridge())
     return;
 
   std::map<void*, SurfaceData*>::iterator it;
@@ -140,13 +146,9 @@ void AndroidMediaLayer::UpdatePosition(const gfxRect& aRect, float aZoomLevel) {
   for (it = mVideoSurfaces.begin(); it != mVideoSurfaces.end(); it++) {
     SurfaceData* data = it->second;
 
-    // The video window dimension we get is not adjusted by zoom factor (unlike the
-    // content window). Fix it up here.
-    gfxRect scaledDimensions = data->dimensions;
-    scaledDimensions.Scale(aZoomLevel);
+    gfxRect videoRect(aRect.x + data->dimensions.x, aRect.y + data->dimensions.y,
+                      data->dimensions.width, data->dimensions.height);
 
-    gfxRect videoRect(aRect.x + scaledDimensions.x, aRect.y + scaledDimensions.y,
-                      scaledDimensions.width, scaledDimensions.height);
     AndroidBridge::Bridge()->ShowSurface(data->surface, videoRect, mInverted, false);
   }
 
@@ -156,7 +158,7 @@ void AndroidMediaLayer::UpdatePosition(const gfxRect& aRect, float aZoomLevel) {
 }
 
 void AndroidMediaLayer::SetVisible(bool aVisible) {
-  if (aVisible == mVisible)
+  if (aVisible == mVisible || !AndroidBridge::Bridge())
     return;
 
   mVisible = aVisible;

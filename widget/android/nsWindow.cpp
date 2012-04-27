@@ -916,7 +916,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
                 jobject surface = sview.GetSurface();
                 if (surface) {
-                    sNativeWindow = AndroidBridge::Bridge()->AcquireNativeWindow(surface);
+                    sNativeWindow = AndroidBridge::Bridge()->AcquireNativeWindow(AndroidBridge::GetJNIEnv(), surface);
                     if (sNativeWindow) {
                         AndroidBridge::Bridge()->SetNativeWindowFormat(sNativeWindow, 0, 0, AndroidBridge::WINDOW_FORMAT_RGB_565);
                     }

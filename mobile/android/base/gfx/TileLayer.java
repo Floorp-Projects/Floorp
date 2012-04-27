@@ -57,9 +57,10 @@ public abstract class TileLayer extends Layer {
     private static final String LOGTAG = "GeckoTileLayer";
 
     private final Rect mDirtyRect;
-    private final CairoImage mImage;
     private IntSize mSize;
     private int[] mTextureIDs;
+
+    protected final CairoImage mImage;
 
     public enum PaintMode { NORMAL, REPEAT, STRETCH };
     private PaintMode mPaintMode;

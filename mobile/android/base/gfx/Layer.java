@@ -55,6 +55,7 @@ public abstract class Layer {
 
     protected Rect mPosition;
     protected float mResolution;
+    protected boolean mUsesDefaultProgram = true;
 
     public Layer() {
         this(null);
@@ -163,6 +164,10 @@ public abstract class Layer {
         if (!mInTransaction)
             throw new RuntimeException("setResolution() is only valid inside a transaction");
         mNewResolution = newResolution;
+    }
+
+    public boolean usesDefaultProgram() {
+        return mUsesDefaultProgram;
     }
 
     /**

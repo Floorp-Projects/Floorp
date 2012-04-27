@@ -1773,47 +1773,8 @@ bool nsPluginInstanceOwner::AddPluginView(const gfxRect& aRect)
     return false;
   }
 
-  JNIEnv* env = GetJNIForThread();
-  if (!env)
-    return false;
-
-  AndroidBridge::AutoLocalJNIFrame frame(env, 1);
-
-  jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
-
-#ifdef MOZ_JAVA_COMPOSITOR
-  nsAutoString metadata;
-  nsCOMPtr<nsIAndroidDrawMetadataProvider> metadataProvider =
-      AndroidBridge::Bridge()->GetDrawMetadataProvider();
-  metadataProvider->GetDrawMetadata(metadata);
-
-  jstring jMetadata = env->NewString(nsPromiseFlatString(metadata).get(), metadata.Length());
-
-  jmethodID method = env->GetStaticMethodID(cls,
-                                            "addPluginView",
-                                            "(Landroid/view/View;IIIILjava/lang/String;)V");
-
-  env->CallStaticVoidMethod(cls,
-                            method,
-                            javaSurface,
-                            (int)aRect.x,
-                            (int)aRect.y,
-                            (int)aRect.width,
-                            (int)aRect.height,
-                            jMetadata);
-#else
-  jmethodID method = env->GetStaticMethodID(cls,
-                                            "addPluginView",
-                                            "(Landroid/view/View;DDDD)V");
-
-  env->CallStaticVoidMethod(cls,
-                            method,
-                            javaSurface,
-                            aRect.x,
-                            aRect.y,
-                            aRect.width,
-                            aRect.height);
-#endif
+  if (AndroidBridge::Bridge())
+    AndroidBridge::Bridge()->AddPluginView((jobject)javaSurface, aRect);
 
   return true;
 }
@@ -1827,7 +1788,8 @@ void nsPluginInstanceOwner::RemovePluginView()
   if (!surface)
     return;
 
-  AndroidBridge::RemovePluginView(surface);
+  if (AndroidBridge::Bridge())
+    AndroidBridge::Bridge()->RemovePluginView((jobject)surface);
 }
 
 void nsPluginInstanceOwner::Invalidate() {
@@ -2913,14 +2875,21 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
 
   PRInt32 model = mInstance->GetANPDrawingModel();
 
-  float xResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetXResolution();
-  float yResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetYResolution();
+  // Get the offset of the content relative to the page
 
-  gfxRect scaledFrameRect = aFrameRect;
-  scaledFrameRect.Scale(xResolution, yResolution);
+  nsPoint offset = nsPoint(0, 0);
+  nsIFrame* current = (nsIFrame*)mObjectFrame;
+  while (current && current->GetContent() && current->GetContent()->Tag() != nsGkAtoms::html) {    
+    offset += current->GetPosition();
+    current = current->GetParent();
+  }
+
+  nsRect bounds = nsRect(offset, mObjectFrame->GetSize());
+  nsIntRect intBounds = bounds.ToNearestPixels(mObjectFrame->PresContext()->AppUnitsPerDevPixel());
+  gfxRect pluginRect(intBounds);
 
   if (model == kSurface_ANPDrawingModel) {
-    if (!AddPluginView(scaledFrameRect)) {
+    if (!AddPluginView(pluginRect)) {
       Invalidate();
     }
     return;
@@ -2930,9 +2899,13 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
     if (!mLayer)
       mLayer = new AndroidMediaLayer();
 
-    mLayer->UpdatePosition(scaledFrameRect, xResolution);
+    mLayer->UpdatePosition(pluginRect);
 
-    SendSize((int)scaledFrameRect.width, (int)scaledFrameRect.height);
+    float xResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetXResolution();
+    float yResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetYResolution();
+    pluginRect.Scale(xResolution, yResolution);
+
+    SendSize((int)pluginRect.width, (int)pluginRect.height);
     return;
   }
 

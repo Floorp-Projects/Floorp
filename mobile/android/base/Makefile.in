@@ -110,7 +110,7 @@ FENNEC_JAVA_FILES = \
   sqlite/SQLiteBridgeException.java \
   RemoteTabs.java \
   SetupScreen.java \
-  SurfaceLockInfo.java \
+  SurfaceBits.java \
   Tab.java \
   Tabs.java \
   TabsTray.java \
@@ -135,6 +135,7 @@ FENNEC_JAVA_FILES = \
   gfx/LayerController.java \
   gfx/LayerRenderer.java \
   gfx/LayerView.java \
+  gfx/PluginLayer.java \
   gfx/NinePatchTileLayer.java \
   gfx/PanningPerfAPI.java \
   gfx/PointUtils.java \

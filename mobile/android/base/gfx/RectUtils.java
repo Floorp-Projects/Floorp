@@ -137,9 +137,14 @@ public final class RectUtils {
     }
 
     public static boolean fuzzyEquals(RectF a, RectF b) {
-        return FloatUtils.fuzzyEquals(a.top, b.top)
-            && FloatUtils.fuzzyEquals(a.left, b.left)
-            && FloatUtils.fuzzyEquals(a.right, b.right)
-            && FloatUtils.fuzzyEquals(a.bottom, b.bottom);
+        if (a == null && b == null)
+            return true;
+        else if ((a == null && b != null) || (a != null && b == null))
+            return false;
+        else
+            return FloatUtils.fuzzyEquals(a.top, b.top)
+                && FloatUtils.fuzzyEquals(a.left, b.left)
+                && FloatUtils.fuzzyEquals(a.right, b.right)
+                && FloatUtils.fuzzyEquals(a.bottom, b.bottom);
     }
 }

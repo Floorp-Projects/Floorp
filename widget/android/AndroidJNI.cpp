@@ -46,6 +46,7 @@
 #include <pthread.h>
 #include <dlfcn.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "nsAppShell.h"
 #include "nsWindow.h"
@@ -896,6 +897,96 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyFilePickerResult(JNIEnv* jenv, jclass
         new NotifyFilePickerResultRunnable(path, (long)callback);
     NS_DispatchToMainThread(runnable);
 }
+
+static int
+NextPowerOfTwo(int value) {
+    // code taken from http://acius2.blogspot.com/2007/11/calculating-next-power-of-2.html
+    if (0 == value--) {
+        return 1;
+    }
+    value = (value >> 1) | value;
+    value = (value >> 2) | value;
+    value = (value >> 4) | value;
+    value = (value >> 8) | value;
+    value = (value >> 16) | value;
+    return value + 1;
+}
+
+NS_EXPORT jobject JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits(JNIEnv* jenv, jclass, jobject surface)
+{
+    static jclass jSurfaceBitsClass = nsnull;
+    static jmethodID jSurfaceBitsCtor = 0;
+    static jfieldID jSurfaceBitsWidth, jSurfaceBitsHeight, jSurfaceBitsFormat, jSurfaceBitsBuffer;
+
+    jobject surfaceBits = nsnull;
+    unsigned char* bitsCopy = nsnull;
+    int dstWidth, dstHeight, dstSize;
+
+    void* window = AndroidBridge::Bridge()->AcquireNativeWindow(jenv, surface);
+    if (!window)
+        return nsnull;
+
+    unsigned char* bits;
+    int srcWidth, srcHeight, format, srcStride;
+
+    // So we lock/unlock once here in order to get whatever is currently the front buffer. It sucks.
+    while (!AndroidBridge::Bridge()->LockWindow(window, &bits, &srcWidth, &srcHeight, &format, &srcStride)) {
+        usleep(1000);
+    }
+    AndroidBridge::Bridge()->UnlockWindow(window);
+
+    // This is lock will result in the front buffer, since the last unlock rotated it to the back. Probably.
+    while (!AndroidBridge::Bridge()->LockWindow(window, &bits, &srcWidth, &srcHeight, &format, &srcStride)) {
+        usleep(1000);
+    }
+
+    // These are from android.graphics.PixelFormat
+    int bpp;
+    switch (format) {
+    case 1: // RGBA_8888
+        bpp = 4;
+        break;
+    case 4: // RGB_565
+        bpp = 2;
+        break;
+    default:
+        goto cleanup;
+    }
+
+    dstWidth = NextPowerOfTwo(srcWidth);
+    dstHeight = NextPowerOfTwo(srcHeight);
+    dstSize = dstWidth * dstHeight * bpp;
+
+    bitsCopy = (unsigned char*)malloc(dstSize);
+    bzero(bitsCopy, dstSize);
+    for (int i = 0; i < srcHeight; i++) {
+        memcpy(bitsCopy + ((dstHeight - i - 1) * dstWidth * bpp), bits + (i * srcStride * bpp), srcStride * bpp);
+    }
+    
+    if (!jSurfaceBitsClass) {
+        jSurfaceBitsClass = (jclass)jenv->NewGlobalRef(jenv->FindClass("org/mozilla/gecko/SurfaceBits"));
+        jSurfaceBitsCtor = jenv->GetMethodID(jSurfaceBitsClass, "<init>", "()V");
+
+        jSurfaceBitsWidth = jenv->GetFieldID(jSurfaceBitsClass, "width", "I");
+        jSurfaceBitsHeight = jenv->GetFieldID(jSurfaceBitsClass, "height", "I");
+        jSurfaceBitsFormat = jenv->GetFieldID(jSurfaceBitsClass, "format", "I");
+        jSurfaceBitsBuffer = jenv->GetFieldID(jSurfaceBitsClass, "buffer", "Ljava/nio/ByteBuffer;");
+    }
+
+    surfaceBits = jenv->NewObject(jSurfaceBitsClass, jSurfaceBitsCtor);
+    jenv->SetIntField(surfaceBits, jSurfaceBitsWidth, dstWidth);
+    jenv->SetIntField(surfaceBits, jSurfaceBitsHeight, dstHeight);
+    jenv->SetIntField(surfaceBits, jSurfaceBitsFormat, format);
+    jenv->SetObjectField(surfaceBits, jSurfaceBitsBuffer, jenv->NewDirectByteBuffer(bitsCopy, dstSize));
+
+cleanup:
+    AndroidBridge::Bridge()->UnlockWindow(window);
+    AndroidBridge::Bridge()->ReleaseNativeWindow(window);
+
+    return surfaceBits;
+}
+
 
 #endif
 }
