@@ -7,6 +7,7 @@
 
 var gWindow = null;
 var gTab = null;
+var gAutoConnect = null;
 
 const TEST_URL = EXAMPLE_URL + "browser_dbg_iframes.html";
 
@@ -51,11 +52,29 @@ function test() {
     is(iframe.document.title, "Browser Debugger Test Tab", "Found the iframe");
 
     iframe.runDebuggerStatement();
+  },
+  function beforeTabAdded() {
+    if (!DebuggerServer.initialized) {
+      DebuggerServer.init();
+      DebuggerServer.addBrowserActors();
+    }
+    DebuggerServer.closeListener();
+
+    gAutoConnect = Services.prefs.getBoolPref("devtools.debugger.remote-autoconnect");
+    Services.prefs.setBoolPref("devtools.debugger.remote-autoconnect", true);
+
+    // Open the listener at some point in the future to test automatic reconnect.
+    window.setTimeout(function() {
+      DebuggerServer.openListener(
+        Services.prefs.getIntPref("devtools.debugger.remote-port"));
+    }, Math.random() * 1000);
   });
 }
 
 registerCleanupFunction(function() {
+  Services.prefs.setBoolPref("devtools.debugger.remote-autoconnect", gAutoConnect);
   removeTab(gTab);
   gWindow = null;
   gTab = null;
+  gAutoConnect = null;
 });
