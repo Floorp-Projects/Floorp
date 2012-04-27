@@ -146,10 +146,11 @@ nsXULTreeAccessible::NativeState()
 void
 nsXULTreeAccessible::Value(nsString& aValue)
 {
-  // Return the value is the first selected child.
-
   aValue.Truncate();
+  if (!mTreeView)
+    return;
 
+  // Return the value is the first selected child.
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
   if (!selection)
