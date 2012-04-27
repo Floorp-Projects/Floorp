@@ -60,6 +60,7 @@ class MacroAssemblerARM : public Assembler
   public:
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest);
     void convertUInt32ToDouble(const Register &src, const FloatRegister &dest);
+    void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest);
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
 
     // somewhat direct wrappers for the low-level assembler funcitons
@@ -133,7 +134,6 @@ class MacroAssemblerARM : public Assembler
     // bit clear (dest <- dest & ~imm) or (dest <- src1 & ~src2)
     void ma_bic(Imm32 imm, Register dest,
                 SetCond_ sc = NoSetCond, Condition c = Always);
-
 
     // exclusive or
     void ma_eor(Register src, Register dest,
@@ -255,6 +255,8 @@ class MacroAssemblerARM : public Assembler
     void ma_ldrsh(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
     void ma_ldrsb(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
     void ma_ldrd(EDtrAddr addr, Register rt, DebugOnly<Register> rt2, Index mode = Offset, Condition cc = Always);
+    void ma_strb(Register rt, DTRAddr addr, Index mode = Offset, Condition cc = Always);
+    void ma_strh(Register rt, EDtrAddr addr, Index mode = Offset, Condition cc = Always);
     void ma_strd(Register rt, DebugOnly<Register> rt2, EDtrAddr addr, Index mode = Offset, Condition cc = Always);
     // specialty for moving N bits of data, where n == 8,16,32,64
     void ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
@@ -310,13 +312,13 @@ class MacroAssemblerARM : public Assembler
 
     void ma_vdtr(LoadStore ls, const Operand &addr, VFPRegister dest, Condition cc = Always);
 
-    void ma_vldr(VFPAddr addr, FloatRegister dest);
-    void ma_vldr(const Operand &addr, FloatRegister dest);
+    void ma_vldr(VFPAddr addr, VFPRegister dest);
+    void ma_vldr(const Operand &addr, VFPRegister dest);
 
-    void ma_vstr(FloatRegister src, VFPAddr addr);
-    void ma_vstr(FloatRegister src, const Operand &addr);
+    void ma_vstr(VFPRegister src, VFPAddr addr);
+    void ma_vstr(VFPRegister src, const Operand &addr);
 
-    void ma_vstr(FloatRegister src, Register base, Register index, int32 shift = defaultShift);
+    void ma_vstr(VFPRegister src, Register base, Register index, int32 shift = defaultShift);
     // calls an Ion function, assumes that the stack is untouched (8 byte alinged)
     void ma_callIon(const Register reg);
     // callso an Ion function, assuming that sp has already been decremented
@@ -914,10 +916,22 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadFloatAsDouble(const Address &addr, const FloatRegister &dest);
     void loadFloatAsDouble(const BaseIndex &src, const FloatRegister &dest);
 
+    void store8(const Register &src, const Address &address);
+    void store8(const Imm32 &imm, const Address &address);
+    void store8(const Register &src, const BaseIndex &address);
+    void store8(const Imm32 &imm, const BaseIndex &address);
+
     void store16(const Register &src, const Address &address);
-    void store32(Register src, const AbsoluteAddress &address);
-    void store32(Register src, const Address &address);
-    void store32(Imm32 src, const Address &address);
+    void store16(const Imm32 &imm, const Address &address);
+    void store16(const Register &src, const BaseIndex &address);
+    void store16(const Imm32 &imm, const BaseIndex &address);
+
+    void store32(const Register &src, const AbsoluteAddress &address);
+    void store32(const Register &src, const Address &address);
+    void store32(const Register &src, const BaseIndex &address);
+    void store32(const Imm32 &src, const Address &address);
+    void store32(const Imm32 &src, const BaseIndex &address);
+
     void storePtr(ImmWord imm, const Address &address);
     void storePtr(ImmGCPtr imm, const Address &address);
     void storePtr(Register src, const Address &address);
@@ -928,11 +942,27 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void storeDouble(FloatRegister src, BaseIndex addr) {
         // Harder cases not handled yet.
         JS_ASSERT(addr.offset == 0);
-        ma_vstr(src, addr.base, addr.index);
+        uint32 scale = Imm32::ShiftOf(addr.scale).value;
+        ma_vstr(src, addr.base, addr.index, scale);
+    }
+
+    void storeFloat(FloatRegister src, Address addr) {
+        ma_vstr(VFPRegister(src).singleOverlay(), Operand(addr));
+    }
+    void storeFloat(FloatRegister src, BaseIndex addr) {
+        // Harder cases not handled yet.
+        JS_ASSERT(addr.offset == 0);
+        uint32 scale = Imm32::ShiftOf(addr.scale).value;
+        ma_vstr(VFPRegister(src).singleOverlay(), addr.base, addr.index, scale);
     }
 
     void clampIntToUint8(Register src, Register dest) {
-        JS_NOT_REACHED("NYI clampIntToUint8");
+        // look at (src >> 8) if it is 0, then src shouldn't be clamped
+        // if it is <0, then we want to clamp to 0, otherwise, we wish to clamp to 255
+        as_mov(ScratchRegister, asr(src, 8), SetCond);
+        ma_mov(src, dest);
+        ma_mov(Imm32(0xff), dest, NoSetCond, NotEqual);
+        ma_mov(Imm32(0), dest, NoSetCond, Signed);
     }
 
     void cmp32(const Register &lhs, const Imm32 &rhs);

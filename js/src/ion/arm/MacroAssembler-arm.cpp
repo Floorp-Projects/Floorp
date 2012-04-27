@@ -76,6 +76,11 @@ MacroAssemblerARM::convertUInt32ToDouble(const Register &src, const FloatRegiste
     as_vcvt(dest, dest.uintOverlay());
 }
 
+void MacroAssemblerARM::convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest)
+{
+    as_vcvt(VFPRegister(dest).singleOverlay(), VFPRegister(src));
+}
+
 // there are two options for implementing emitTruncateDouble.
 // 1) convert the floating point value to an integer, if it did not fit,
 //        then it was clamped to INT_MIN/INT_MAX, and we can test it.
@@ -876,6 +881,17 @@ MacroAssemblerARM::ma_ldrd(EDtrAddr addr, Register rt, DebugOnly<Register> rt2, 
     JS_ASSERT(rt2.value.code() == rt.code() + 1);
     as_extdtr(IsLoad, 64, true, mode, rt, addr, cc);
 }
+void
+MacroAssemblerARM::ma_strh(Register rt, EDtrAddr addr, Index mode, Condition cc)
+{
+    as_extdtr(IsStore, 16, false, mode, rt, addr, cc);
+}
+
+void
+MacroAssemblerARM::ma_strb(Register rt, DTRAddr addr, Index mode, Condition cc)
+{
+    as_dtr(IsStore, 8, mode, rt, addr, cc);
+}
 
 // specialty for moving N bits of data, where n == 8,16,32,64
 void
@@ -1220,29 +1236,29 @@ MacroAssemblerARM::ma_vdtr(LoadStore ls, const Operand &addr, VFPRegister rt, Co
 }
 
 void
-MacroAssemblerARM::ma_vldr(VFPAddr addr, FloatRegister dest)
+MacroAssemblerARM::ma_vldr(VFPAddr addr, VFPRegister dest)
 {
     as_vdtr(IsLoad, dest, addr);
 }
 void
-MacroAssemblerARM::ma_vldr(const Operand &addr, FloatRegister dest)
+MacroAssemblerARM::ma_vldr(const Operand &addr, VFPRegister dest)
 {
     ma_vdtr(IsLoad, addr, dest);
 }
 
 void
-MacroAssemblerARM::ma_vstr(FloatRegister src, VFPAddr addr)
+MacroAssemblerARM::ma_vstr(VFPRegister src, VFPAddr addr)
 {
     as_vdtr(IsStore, src, addr);
 }
 
 void
-MacroAssemblerARM::ma_vstr(FloatRegister src, const Operand &addr)
+MacroAssemblerARM::ma_vstr(VFPRegister src, const Operand &addr)
 {
     ma_vdtr(IsStore, addr, src);
 }
 void
-MacroAssemblerARM::ma_vstr(FloatRegister src, Register base, Register index, int32 shift)
+MacroAssemblerARM::ma_vstr(VFPRegister src, Register base, Register index, int32 shift)
 {
     as_add(ScratchRegister, base, lsl(index, shift));
     ma_vstr(src, Operand(ScratchRegister, 0));
@@ -1580,28 +1596,110 @@ MacroAssemblerARMCompat::loadFloatAsDouble(const BaseIndex &src, const FloatRegi
 }
 
 void
+MacroAssemblerARMCompat::store8(const Imm32 &imm, const Address &address)
+{
+    ma_mov(imm, lr);
+    store8(lr, address);
+}
+
+void
+MacroAssemblerARMCompat::store8(const Register &src, const Address &address)
+{
+    ma_dataTransferN(IsStore, 8, false, address.base, Imm32(address.offset), src);
+}
+
+void
+MacroAssemblerARMCompat::store8(const Imm32 &imm, const BaseIndex &dest)
+{
+    ma_mov(imm, lr);
+    store8(lr, dest);
+}
+
+void
+MacroAssemblerARMCompat::store8(const Register &src, const BaseIndex &dest)
+{
+    Register base = dest.base;
+    uint32 scale = Imm32::ShiftOf(dest.scale).value;
+
+    if (dest.offset != 0) {
+        ma_add(base, Imm32(dest.offset), ScratchRegister);
+        base = ScratchRegister;
+    }
+    ma_strb(src, DTRAddr(base, DtrRegImmShift(dest.index, LSL, scale)));
+}
+
+void
+MacroAssemblerARMCompat::store16(const Imm32 &imm, const Address &address)
+{
+    ma_mov(imm, lr);
+    store16(lr, address);
+}
+
+void
 MacroAssemblerARMCompat::store16(const Register &src, const Address &address)
 {
     ma_dataTransferN(IsStore, 16, false, address.base, Imm32(address.offset), src);
 }
 
 void
-MacroAssemblerARMCompat::store32(Register src, const AbsoluteAddress &address)
+MacroAssemblerARMCompat::store16(const Imm32 &imm, const BaseIndex &dest)
+{
+    ma_mov(imm, lr);
+    store16(lr, dest);
+}
+void
+MacroAssemblerARMCompat::store16(const Register &src, const BaseIndex &address)
+{
+    Register index = address.index;
+
+    // We don't have LSL on index register yet.
+    if (address.scale != TimesOne) {
+        ma_lsl(Imm32::ShiftOf(address.scale), index, ScratchRegister);
+        index = ScratchRegister;
+    }
+    if (address.offset != 0) {
+        ma_add(index, Imm32(address.offset), ScratchRegister);
+        index = ScratchRegister;
+    }
+    ma_strh(src, EDtrAddr(address.base, EDtrOffReg(index)));
+}
+void
+MacroAssemblerARMCompat::store32(const Register &src, const AbsoluteAddress &address)
 {
     storePtr(src, address);
 }
 
 void
-MacroAssemblerARMCompat::store32(Register src, const Address &address)
+MacroAssemblerARMCompat::store32(const Register &src, const Address &address)
 {
     storePtr(src, address);
 }
 
 void
-MacroAssemblerARMCompat::store32(Imm32 src, const Address &address)
+MacroAssemblerARMCompat::store32(const Imm32 &src, const Address &address)
 {
     move32(src, ScratchRegister);
     storePtr(ScratchRegister, address);
+}
+
+void
+MacroAssemblerARMCompat::store32(const Imm32 &imm, const BaseIndex &dest)
+{
+    ma_mov(imm, lr);
+    store32(lr, dest);
+}
+
+void
+MacroAssemblerARMCompat::store32(const Register &src, const BaseIndex &dest)
+{
+    Register base = dest.base;
+    uint32 scale = Imm32::ShiftOf(dest.scale).value;
+
+    if (dest.offset != 0) {
+        ma_add(base, Imm32(dest.offset), ScratchRegister);
+        base = ScratchRegister;
+    }
+    ma_str(src, DTRAddr(base, DtrRegImmShift(dest.index, LSL, scale)));
 }
 
 void
