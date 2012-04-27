@@ -4316,11 +4316,11 @@ global_resolve(JSContext *cx, JSObject *obj_, jsid id, unsigned flags,
 }
 
 JSClass global_class = {
-    "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS | JSCLASS_HAS_PRIVATE,
+    "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_StrictPropertyStub,
     global_enumerate, (JSResolveOp) global_resolve,
-    JS_ConvertStub,   its_finalize
+    JS_ConvertStub,   NULL
 };
 
 static JSBool
