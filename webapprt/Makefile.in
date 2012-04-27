@@ -26,6 +26,7 @@ endif # windows
 EXTRA_PP_COMPONENTS = \
   components.manifest \
   CommandLineHandler.js \
+  ContentPolicy.js \
   DirectoryProvider.js \
   $(NULL)
 

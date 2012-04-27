@@ -43,6 +43,7 @@ function filter(node) {
       ex = e;
     }
     ++testCount;
+    is(ex.name, "InvalidStateError", "Should have thrown an exception!");
     is(ex.code, DOMException.INVALID_STATE_ERR, "Should have thrown an exception!");
     recurse = false;
   }

@@ -144,17 +144,10 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_678816.js \
 	browser_webconsole_bug_664131_console_group.js \
 	browser_webconsole_bug_704295.js \
-	browser_gcli_commands.js \
-	browser_gcli_helpers.js \
-	browser_gcli_inspect.js \
-	browser_gcli_integrate.js \
-	browser_gcli_require.js \
-	browser_gcli_web.js \
 	browser_webconsole_bug_658368_time_methods.js \
 	browser_webconsole_bug_622303_persistent_filters.js \
 	browser_webconsole_window_zombie.js \
 	browser_cached_messages.js \
-	browser_gcli_break.js \
 	head.js \
 	$(NULL)
 
@@ -225,11 +218,9 @@ _BROWSER_TEST_PAGES = \
 	test-bug-646025-console-file-location.html \
 	test-bug-678816-content.js \
 	test-file-location.js \
-	browser_gcli_inspect.html \
 	test-bug-658368-time-methods.html \
 	test-webconsole-error-observer.html \
 	test-for-of.html \
-	browser_gcli_break.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

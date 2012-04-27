@@ -5791,6 +5791,10 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
       // if the mouse is being captured then retarget the mouse event at the
       // document that is being captured.
       retargetEventDoc = capturingContent->GetCurrentDoc();
+#ifdef ANDROID
+    } else if (aEvent->eventStructType == NS_TOUCH_EVENT) {
+      retargetEventDoc = GetTouchEventTargetDocument();
+#endif
     }
 
     if (retargetEventDoc) {
@@ -6191,6 +6195,36 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
 
   return rv;
 }
+
+#ifdef ANDROID
+nsIDocument*
+PresShell::GetTouchEventTargetDocument()
+{
+  nsPresContext* context = GetPresContext();
+  if (!context || !context->IsRoot()) {
+    return nsnull;
+  }
+
+  nsCOMPtr<nsISupports> container = context->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> shellAsTreeItem = do_QueryInterface(container);
+  if (!shellAsTreeItem) {
+    return nsnull;
+  }
+
+  nsCOMPtr<nsIDocShellTreeOwner> owner;
+  shellAsTreeItem->GetTreeOwner(getter_AddRefs(owner));
+  if (!owner) {
+    return nsnull;
+  }
+
+  // now get the primary content shell (active tab)
+  nsCOMPtr<nsIDocShellTreeItem> item;
+  owner->GetPrimaryContentShell(getter_AddRefs(item));
+  nsCOMPtr<nsIDocShell> childDocShell = do_QueryInterface(item);
+  nsCOMPtr<nsIDocument> result = do_GetInterface(childDocShell);
+  return result;
+}
+#endif
 
 #ifdef NS_DEBUG
 void

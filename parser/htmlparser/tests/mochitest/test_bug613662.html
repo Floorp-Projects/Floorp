@@ -34,6 +34,7 @@ try {
   content.insertAdjacentHTML("bar", "foo");
   ok(false, "insertAdjacentHTML should have thrown");
 } catch (e) {
+  is(e.name, "SyntaxError", "insertAdjacentHTML should throw SyntaxError");
   is(e.code, 12, "insertAdjacentHTML should throw SYNTAX_ERR");
 }
 
@@ -44,6 +45,7 @@ try {
   child.insertAdjacentHTML("Beforebegin", "foo");
   ok(false, "insertAdjacentHTML should have thrown");
 } catch (e) {
+  is(e.name, "NoModificationAllowedError", "insertAdjacentHTML should throw NoModificationAllowedError");
   is(e.code, 7, "insertAdjacentHTML should throw NO_MODIFICATION_ALLOWED_ERR");
 }
 
@@ -51,6 +53,7 @@ try {
   child.insertAdjacentHTML("AfterEnd", "foo");
   ok(false, "insertAdjacentHTML should have thrown");
 } catch (e) {
+  is(e.name, "NoModificationAllowedError", "insertAdjacentHTML should throw NoModificationAllowedError");
   is(e.code, 7, "insertAdjacentHTML should throw NO_MODIFICATION_ALLOWED_ERR");
 }
 
@@ -66,6 +69,7 @@ try {
   document.documentElement.insertAdjacentHTML("afterend", "<div></div>");
   ok(false, "insertAdjacentHTML should have thrown");
 } catch (e) {
+  is(e.name, "NoModificationAllowedError", "insertAdjacentHTML should throw NoModificationAllowedError");
   is(e.code, 7, "insertAdjacentHTML should throw NO_MODIFICATION_ALLOWED_ERR");
 }
 

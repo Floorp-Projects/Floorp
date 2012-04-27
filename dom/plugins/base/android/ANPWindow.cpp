@@ -67,7 +67,7 @@ void
 anp_window_showKeyboard(NPP instance, bool value)
 {
   InputContext context;
-  context.mIMEState.mEnabled = IMEState::PLUGIN;
+  context.mIMEState.mEnabled = value ? IMEState::PLUGIN : IMEState::DISABLED;
   context.mIMEState.mOpen = value ? IMEState::OPEN : IMEState::CLOSED;
   context.mActionHint.Assign(EmptyString());
 
