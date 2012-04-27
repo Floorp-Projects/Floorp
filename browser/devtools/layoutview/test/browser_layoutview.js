@@ -82,6 +82,8 @@ function test() {
   function viewReady(e) {
     if (e.data != "layoutview-ready") return;
 
+    window.removeEventListener("message", viewReady, true);
+
     info("Layout view ready");
 
     view = InspectorUI._sidebar._layoutview;
