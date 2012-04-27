@@ -891,6 +891,11 @@ public:
 
   static bool IsLogEnabled() { return LayerManager::IsLogEnabled(); }
 
+#ifdef DEBUG
+  void SetDebugColorIndex(PRUint32 aIndex) { mDebugColorIndex = aIndex; }
+  PRUint32 GetDebugColorIndex() { return mDebugColorIndex; }
+#endif
+
 protected:
   Layer(LayerManager* aManager, void* aImplData) :
     mManager(aManager),
@@ -902,7 +907,8 @@ protected:
     mContentFlags(0),
     mUseClipRect(false),
     mUseTileSourceRect(false),
-    mIsFixedPosition(false)
+    mIsFixedPosition(false),
+    mDebugColorIndex(0)
     {}
 
   void Mutated() { mManager->Mutated(this); }
@@ -951,6 +957,7 @@ protected:
   bool mUseClipRect;
   bool mUseTileSourceRect;
   bool mIsFixedPosition;
+  DebugOnly<PRUint32> mDebugColorIndex;
 };
 
 /**
