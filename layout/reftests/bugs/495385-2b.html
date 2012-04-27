@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html>
+<html class="reftest-wait">
 <head>
 <!-- Test that inserting inline content can create frames for text around it -->
 <style>
@@ -22,10 +22,12 @@ function loaded() {
   d3.insertBefore(makeSpan("Hello"), d3.firstChild.nextSibling);
   var d4 = document.getElementById("d4");
   d4.insertBefore(makeSpan("Kitty"), d4.lastChild);
+  document.documentElement.removeAttribute('class');
 }
+document.addEventListener("MozReftestInvalidate", loaded, false);
 </script>
 </head>
-<body onload="loaded()">
+<body>
   <div id="d1"> <span>Kitty</span></div>
   <div id="d2"><span>Hello</span> </div>
   <div id="d3"><div></div> <span>Kitty</span></div>
