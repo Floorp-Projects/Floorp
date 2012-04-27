@@ -384,9 +384,9 @@ MParameter::congruentTo(MDefinition * const &ins) const
 }
 
 MCall *
-MCall::New(size_t argc, bool construct)
+MCall::New(size_t argc, size_t bytecodeArgc, bool construct)
 {
-    MCall *ins = new MCall(construct);
+    MCall *ins = new MCall(construct, bytecodeArgc);
     if (!ins->init(argc + NumNonArgumentOperands))
         return NULL;
     return ins;
