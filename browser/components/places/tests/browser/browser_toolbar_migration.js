@@ -8,6 +8,7 @@
 
 let bg = Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver);
 let gOriginalMigrationVersion;
+const BROWSER_URL = getBrowserURL();
 
 let localStore = {
   get RDF() Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService),
@@ -16,10 +17,10 @@ let localStore = {
   get toolbar()
   {
     delete this.toolbar;
-    let toolbar = this.RDF.GetResource("chrome://browser/content/browser.xul#PersonalToolbar");
+    let toolbar = this.RDF.GetResource(BROWSER_URL + "#PersonalToolbar");
     // Add the entry to the persisted set for this document if it's not there.
     // See nsXULDocument::Persist.
-    let doc = this.RDF.GetResource("chrome://browser/content/browser.xul");
+    let doc = this.RDF.GetResource(BROWSER_URL);
     let persist = this.RDF.GetResource("http://home.netscape.com/NC-rdf#persist");
     if (!this.store.HasAssertion(doc, persist, toolbar, true)) {
       this.store.Assert(doc, persist, toolbar, true);
