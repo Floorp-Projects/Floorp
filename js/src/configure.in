@@ -391,7 +391,15 @@ case "$target" in
 
         # With newer NDK, the toolchain path has changed.
         if ! test -d "$android_toolchain" ; then
-            android_toolchain="$android_ndk"/toolchains/arm-$kernel_name-androideabi-4.4.3/prebuilt/$kernel_name-x86
+            case "$target_cpu" in
+            arm)
+                target_name=arm-linux-androideabi-4.4.3
+                ;;
+            i?86)
+                target_name=x86-4.4.3
+                ;;
+            esac
+            android_toolchain="$android_ndk"/toolchains/$target_name/prebuilt/$kernel_name-x86
         fi
 
         if test -d "$android_toolchain" ; then

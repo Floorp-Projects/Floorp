@@ -1216,7 +1216,7 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
         isUniform = false;
       }
     }
-    if (isUniform) {
+    if (isUniform && aClip.mRoundedClipRects.IsEmpty()) {
       if (mVisibleRegion.IsEmpty()) {
         // This color is all we have
         mSolidColor = uniformColor;

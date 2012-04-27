@@ -34,3 +34,20 @@ argv +=)
 ##    $(call banner,ref) ; ref=foo bar tans
 ## getarglist() would be a more accurate name but is longer to type
 getargv = $(if $(call isvar,$(1)),$($(1)),$(argv))
+
+## http://www.gnu.org/software/make/manual/make.html#Call-Function
+## Usage: o = $(call map,origin,o map $(MAKE))
+map = $(foreach val,$(2),$(call $(1),$(val)))
+
+
+## Disable checking for clean targets
+ifeq (,$(filter %clean clean%,$(MAKECMDGOALS)))
+
+# Usage: $(call checkIfEmpty,[error|warning] foo NULL bar)
+checkIfEmpty =$(foreach var,$(wordlist 2,100,$(argv)),$(if $(strip $($(var))),$(NOP),$(call $(1),Variable $(var) does not contain a value)))
+
+# Usage: $(call errorIfEmpty,foo NULL bar)
+errorIfEmpty =$(call checkIfEmpty,error $(argv))
+warnIfEmpty  =$(call checkIfEmpty,warning $(argv))
+
+endif

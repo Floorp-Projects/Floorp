@@ -84,6 +84,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=454326
       is(r3.toString(), "Hello ", "Wrong range!");
     } catch(e) {
       ex = e;
+      is(e.name, "InvalidStateError", "Didn't get InvalidStateError exception!");
       is(Object.getPrototypeOf(e), DOMException.prototype, "Didn't get DOMException!");
       is(e.code, 11, "Didn't get INVALID_STATE_ERR exception!");
     }
@@ -100,6 +101,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=454326
       is(r3.toString(), "World!", "Wrong range!");
     } catch(e) {
       ex = e;
+      is(e.name, "InvalidStateError", "Didn't get InvalidStateError exception!");
       is(Object.getPrototypeOf(e), DOMException.prototype, "Didn't get DOMException!");
       is(e.code, 11, "Didn't get INVALID_STATE_ERR exception!");
     }
@@ -116,6 +118,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=454326
       is(r4.toString(), "Hello World!", "Wrong range!");
     } catch(e) {
       ex = e;
+      is(e.name, "InvalidStateError", "Didn't get InvalidStateError exception!");
       is(Object.getPrototypeOf(e), DOMException.prototype, "Didn't get DOMException!");
       is(e.code, 11, "Didn't get INVALID_STATE_ERR exception!");
     }

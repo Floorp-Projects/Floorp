@@ -35,9 +35,10 @@ function checkNegativeMaxLengthException(element)
   try {
     element.maxLength = -20;
   } catch(e) {
+    is(e.name, "IndexSizeError", "Should be an IndexSizeError exception");
     caught = true;
   }
-  ok(caught, "Setting negative maxLength from the DOM should throw an INDEX_SIZE_ERR exception");
+  ok(caught, "Setting negative maxLength from the DOM should throw an exception");
 
   is(element.getAttribute('maxLength'), -10, "When the exception is raised, the maxLength attribute shouldn't change");
 }

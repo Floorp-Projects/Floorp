@@ -297,12 +297,12 @@
       while(sheet.cssRules.length > 0)
         sheet.deleteRule(0);
       sheet.insertRule(testset[curTest].rule, 0);
-    } catch (e if e instanceof DOMException) {
-      ok(e.code == DOMException.SYNTAX_ERR
+    } catch (e) {
+      ok(e.name == "SyntaxError"
+         && e instanceof DOMException
+         && e.code == DOMException.SYNTAX_ERR
          && !('d' in testset[curTest]),
          testset[curTest].rule + " syntax error thrown", e);
-    } catch (e) {
-      ok(false, testset[curTest].rule, "During prep: " + e);
     }
 
     try {

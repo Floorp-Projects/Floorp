@@ -33,6 +33,7 @@ function runTest() {
         this.responseText;
         ok(false, "responseText access should have thrown.");
       } catch (e) {
+        is(e.name, "InvalidStateError", "Should have thrown InvalidStateError.");
         is(e.code, 11, "Should have thrown INVALID_STATE_ERR.");
       }
       is(this.responseXML.getElementsByTagName("div").length, 1, "There should be one div.");
