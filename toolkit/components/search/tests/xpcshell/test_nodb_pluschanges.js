@@ -67,6 +67,7 @@ function run_test()
 
             // Check that the entries are placed as specified correctly
             let stream = NetUtil.newChannel(metadata).open();
+            do_print("Parsing metadata");
             let json = parseJsonFromStream(stream);
             do_check_eq(json["[app]/test-search-engine.xml"].order, 1);
             do_check_eq(json["[profile]/sherlock-test-search-engine.xml"].order, 2);
