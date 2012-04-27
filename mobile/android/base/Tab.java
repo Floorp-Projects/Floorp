@@ -90,7 +90,7 @@ public final class Tab {
     private String mContentType;
     private boolean mHasTouchListeners;
     private ArrayList<View> mPluginViews;
-    private HashMap<Surface, Layer> mPluginLayers;
+    private HashMap<Object, Layer> mPluginLayers;
     private ContentResolver mContentResolver;
     private ContentObserver mContentObserver;
     private int mCheckerboardColor = Color.WHITE;
@@ -129,7 +129,7 @@ public final class Tab {
         mDocumentURI = "";
         mContentType = "";
         mPluginViews = new ArrayList<View>();
-        mPluginLayers = new HashMap<Surface, Layer>();
+        mPluginLayers = new HashMap<Object, Layer>();
         setState(STATE_LOADING);
         mContentResolver = Tabs.getInstance().getContentResolver();
         mContentObserver = new ContentObserver(GeckoAppShell.getHandler()) {
@@ -551,20 +551,20 @@ public final class Tab {
         return mPluginViews.toArray(new View[mPluginViews.size()]);
     }
 
-    public void addPluginLayer(Surface surface, Layer layer) {
-        mPluginLayers.put(surface, layer);
+    public void addPluginLayer(Object surfaceOrView, Layer layer) {
+        mPluginLayers.put(surfaceOrView, layer);
     }
 
-    public Layer getPluginLayer(Surface surface) {
-        return mPluginLayers.get(surface);
+    public Layer getPluginLayer(Object surfaceOrView) {
+        return mPluginLayers.get(surfaceOrView);
     }
 
     public Collection<Layer> getPluginLayers() {
         return mPluginLayers.values();
     }
 
-    public Layer removePluginLayer(Surface surface) {
-        return mPluginLayers.remove(surface);
+    public Layer removePluginLayer(Object surfaceOrView) {
+        return mPluginLayers.remove(surfaceOrView);
     }
 
     public int getCheckerboardColor() {

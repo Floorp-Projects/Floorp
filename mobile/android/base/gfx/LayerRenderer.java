@@ -651,15 +651,15 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         public void drawForeground() {
             /* Draw any extra layers that were added (likely plugins) */
             if (mExtraLayers.size() > 0) {
-                // This is a hack. SurfaceTextureLayer draws with its own program, so disable ours here
-                // and re-enable when done. If we end up adding other types of Layer here we'll need
-                // to do something different.
-                deactivateDefaultProgram();
-                
-                for (Layer layer : mExtraLayers)
+                for (Layer layer : mExtraLayers) {
+                    if (!layer.usesDefaultProgram())
+                        deactivateDefaultProgram();
+
                     layer.draw(mPageContext);
 
-                activateDefaultProgram();
+                    if (!layer.usesDefaultProgram())
+                        activateDefaultProgram();
+                }
             }
 
             /* Draw the vertical scrollbar. */
