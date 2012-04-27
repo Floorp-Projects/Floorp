@@ -119,11 +119,58 @@ let DebuggerController = {
   },
 
   /**
+   * Prepares the hostname and port number for a remote debugger connection
+   * and handles connection retries and timeouts.
+   *
+   * @return boolean true if connection should proceed normally
+   */
+  _prepareConnection: function DC__prepareConnection() {
+    // If we exceeded the total number of connection retries, bail.
+    if (this._remoteConnectionTry === Prefs.remoteConnectionRetries) {
+      Services.prompt.alert(null,
+        L10N.getStr("remoteDebuggerPromptTitle"),
+        L10N.getStr("remoteDebuggerConnectionFailedMessage"));
+      this.dispatchEvent("Debugger:Close");
+      return false;
+    }
+
+    // TODO: This is ugly, need to rethink the design for the UI in #751677.
+    if (!Prefs.remoteAutoConnect) {
+      let prompt = new RemoteDebuggerPrompt();
+      let result = prompt.show(!!this._remoteConnectionTimeout);
+      if (!result) {
+        this.dispatchEvent("Debugger:Close");
+        return false;
+      }
+      Prefs.remoteHost = prompt.uri.host;
+      Prefs.remotePort = prompt.uri.port;
+    }
+
+    // If this debugger is connecting remotely to a server, we need to check
+    // after a while if the connection actually succeeded.
+    this._remoteConnectionTry = ++this._remoteConnectionTry || 1;
+    this._remoteConnectionTimeout = window.setTimeout(function() {
+      // If we couldn't connect to any server yet, try again...
+      if (!DebuggerController.activeThread) {
+        DebuggerController._connect();
+      }
+    }, Prefs.remoteTimeout);
+
+    return true;
+  },
+
+  /**
    * Initializes a debugger client and connects it to the debugger server,
    * wiring event handlers as necessary.
    */
   _connect: function DC__connect() {
-    let transport = this._isChromeDebugger
+    if (this._isRemoteDebugger) {
+      if (!this._prepareConnection()) {
+        return;
+      }
+    }
+
+    let transport = (this._isChromeDebugger || this._isRemoteDebugger)
       ? debuggerSocketConnect(Prefs.remoteHost, Prefs.remotePort)
       : DebuggerServer.connectPipe();
 
@@ -1334,7 +1381,29 @@ XPCOMUtils.defineLazyGetter(L10N, "stringBundle", function() {
 /**
  * Shortcuts for accessing various debugger preferences.
  */
-let Prefs = {};
+let Prefs = {
+
+  /**
+   * Gets a flag specifying if the the debugger should automatically connect to
+   * the default host and port number.
+   * @return boolean
+   */
+  get remoteAutoConnect() {
+    if (this._autoConn === undefined) {
+      this._autoConn = Services.prefs.getBoolPref("devtools.debugger.remote-autoconnect");
+    }
+    return this._autoConn;
+  },
+
+  /**
+   * Sets a flag specifying if the the debugger should automatically connect.
+   * @param boolean value
+   */
+  set remoteAutoConnect(value) {
+    Services.prefs.setBoolPref("devtools.debugger.remote-autoconnect", value);
+    this._autoConn = value;
+  }
+};
 
 /**
  * Gets the preferred default remote debugging host.
@@ -1350,6 +1419,22 @@ XPCOMUtils.defineLazyGetter(Prefs, "remoteHost", function() {
  */
 XPCOMUtils.defineLazyGetter(Prefs, "remotePort", function() {
   return Services.prefs.getIntPref("devtools.debugger.remote-port");
+});
+
+/**
+ * Gets the max number of attempts to reconnect to a remote server.
+ * @return number
+ */
+XPCOMUtils.defineLazyGetter(Prefs, "remoteConnectionRetries", function() {
+  return Services.prefs.getIntPref("devtools.debugger.remote-connection-retries");
+});
+
+/**
+ * Gets the remote debugging connection timeout (in milliseconds).
+ * @return number
+ */
+XPCOMUtils.defineLazyGetter(Prefs, "remoteTimeout", function() {
+  return Services.prefs.getIntPref("devtools.debugger.remote-timeout");
 });
 
 /**
