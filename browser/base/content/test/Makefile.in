@@ -250,6 +250,7 @@ _BROWSER_FILES = \
                  plugin_test.html \
                  plugin_test2.html \
                  plugin_test3.html \
+                 plugin_alternate_content.html \
                  plugin_both.html \
                  plugin_both2.html \
                  plugin_clickToPlayAllow.html \

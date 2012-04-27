@@ -407,7 +407,7 @@ class DeviceManagerSUT(DeviceManager):
   #  failure: None
   def pushDir(self, localDir, remoteDir):
     if (self.debug >= 2): print "pushing directory: %s to %s" % (localDir, remoteDir)
-    for root, dirs, files in os.walk(localDir):
+    for root, dirs, files in os.walk(localDir, followlinks=True):
       parts = root.split(localDir)
       for file in files:
         remoteRoot = remoteDir + '/' + parts[1]
@@ -428,7 +428,7 @@ class DeviceManagerSUT(DeviceManager):
   #  success: True
   #  failure: False
   def dirExists(self, dirname):
-    match = ".*" + dirname + "$"
+    match = ".*" + dirname.replace('^', '\^') + "$"
     dirre = re.compile(match)
     try:
       data = self.runCmds(['cd ' + dirname, 'cwd'])

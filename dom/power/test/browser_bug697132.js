@@ -41,6 +41,7 @@ let gSteps = [
         gLock.unlock();
         ok(false, "Should have thrown an error.");
       } catch (e) {
+        is(e.name, "InvalidStateError", "double unlock should throw InvalidStateError");
         is(e.code, DOMException.INVALID_STATE_ERR, "double unlock should throw InvalidStateError");
       }
 

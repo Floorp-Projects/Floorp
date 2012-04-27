@@ -8,6 +8,7 @@ package org.mozilla.gecko.gfx;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.gfx.BufferedCairoImage;
 import org.mozilla.gecko.gfx.CairoImage;
+import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.SingleTileLayer;
 import android.graphics.Bitmap;
@@ -47,6 +48,7 @@ public class ScreenshotLayer extends SingleTileLayer {
     public void reset() {
         mIsSingleColor = true;
         updateBackground(mForceSingleColor, Color.WHITE);
+        setPaintMode(TileLayer.PaintMode.STRETCH);
     }
 
     void setBitmap(Bitmap bitmap) {
@@ -58,6 +60,7 @@ public class ScreenshotLayer extends SingleTileLayer {
         mBufferSize = new IntSize(width, height);
         mImage.setBitmap(bitmap, width, height, CairoImage.FORMAT_RGB16_565);
         mIsSingleColor = false;
+        setPaintMode(TileLayer.PaintMode.NORMAL);
     }
 
     public void updateBitmap(Bitmap bitmap, float x, float y, float width, float height) {
@@ -92,70 +95,6 @@ public class ScreenshotLayer extends SingleTileLayer {
         super(image, TileLayer.PaintMode.STRETCH);
         mBufferSize = size;
         mImage = image;
-    }
-
-    @Override
-    public void draw(RenderContext context) {
-        // mTextureIDs may be null here during startup if Layer.java's draw method
-        // failed to acquire the transaction lock and call performUpdates.
-        if (!initialized())
-            return;
-
-        float txl, txr, txb, txt;
-        if (mIsSingleColor) {
-            txt = 1.0f;
-            txr = 0.5f / mBufferSize.width;;
-            txb = 1.0f - 0.5f / mBufferSize.height;
-            txl = 0.0f;
-        } else {
-            Rect position = getPosition();
-
-            float bw = mBufferSize.width;
-            float bh = mBufferSize.height;
-            float iw = mImageSize.width;
-            float ih = mImageSize.height;
-
-            float pw = context.pageSize.width;
-            float ph = context.pageSize.height;
-
-            float vl = context.viewport.left;
-            float vr = context.viewport.right;
-            float vt = context.viewport.top;
-            float vb = context.viewport.bottom;
-
-            float vw =  vr - vl;
-            float vh =  vb - vt;
-
-            txl = (iw/bw) * (vl / pw);
-            txr = (iw/bw) * (vr / pw);
-            txt = 1.0f - ((ih/bh) * (vt / ph));
-            txb = 1.0f - ((ih/bh) * (vb / ph));
-        }
-        float[] coords = {
-            0.0f, 0.0f, 0.0f, txl, txb,
-            0.0f, 1.0f, 0.0f, txl, txt,
-            1.0f, 0.0f, 0.0f, txr, txb,
-            1.0f, 1.0f, 0.0f, txr, txt,
-        };
-
-        FloatBuffer coordBuffer = context.coordBuffer;
-        int positionHandle = context.positionHandle;
-        int textureHandle = context.textureHandle;
-
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, getTextureID());
-
-        // Make sure we are at position zero in the buffer
-        coordBuffer.position(0);
-        coordBuffer.put(coords);
-
-        // Vertex coordinates are x,y,z starting at position 0 into the buffer.
-        coordBuffer.position(0);
-        GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20, coordBuffer);
-
-        // Texture coordinates are texture_x, texture_y starting at position 3 into the buffer.
-        coordBuffer.position(3);
-        GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20, coordBuffer);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
     }
 
     public boolean updateBackground(boolean showChecks, int color) {

@@ -39,11 +39,11 @@ try {
   c.putImageData({ width: 1, height: 1, data: null }, 0, 0);
   threw = false;
 } catch(e) {
-  threw = e.code;
+  threw = e.name;
 }
 
-is(threw, DOMException.TYPE_MISMATCH_ERR,
-   "Should throw type error when data is not an array");
+is(threw, "TypeMismatchError",
+   "Should throw TypeMismatchError when data is not an array");
 
 </script>
 </pre>

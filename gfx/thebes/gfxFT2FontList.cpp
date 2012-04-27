@@ -797,6 +797,17 @@ gfxFT2FontList::AppendFacesFromFontFile(nsCString& aFileName,
                     fe->mIgnoreGSUB = true;
                 }
 
+                // bug 706888 - set the IgnoreGSUB flag on the broken version of
+                // Droid Sans Arabic from certain phones, as identified by the
+                // font checksum in the 'head' table
+                else if (name.EqualsLiteral("droid sans arabic")) {
+                    const TT_Header *head = static_cast<const TT_Header*>
+                        (FT_Get_Sfnt_Table(face, ft_sfnt_head));
+                    if (head && head->CheckSum_Adjust == 0xe445242) {
+                        fe->mIgnoreGSUB = true;
+                    }
+                }
+
                 AppendToFaceList(faceList, name, fe);
 #ifdef PR_LOGGING
                 if (LOG_ENABLED()) {

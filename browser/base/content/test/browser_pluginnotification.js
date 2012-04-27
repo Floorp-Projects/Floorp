@@ -407,5 +407,21 @@ function test14() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(objLoadingContent.activated, "Test 14, Plugin should be activated");
 
+  var plugin = get_test_plugin();
+  plugin.disabled = false;
+  plugin.blocklisted = false;
+  Services.perms.removeAll();
+  Services.prefs.setBoolPref("plugins.click_to_play", true);
+  prepareTest(test15, gTestRoot + "plugin_alternate_content.html");
+}
+
+// Tests that the overlay is shown instead of alternate content when
+// plugins are click to play
+function test15() {
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  var doc = gTestBrowser.contentDocument;
+  var mainBox = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+  ok(mainBox, "Test 15, Plugin with id=" + plugin.id + " overlay should exist");
+
   finishTest();
 }
