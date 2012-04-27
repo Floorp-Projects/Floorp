@@ -82,6 +82,8 @@ import android.graphics.drawable.BitmapDrawable;
 import android.widget.*;
 import android.hardware.*;
 import android.location.*;
+import android.view.accessibility.AccessibilityManager;
+import android.view.accessibility.AccessibilityEvent;
 
 import android.util.*;
 import android.net.*;
@@ -1017,22 +1019,30 @@ abstract public class GeckoApp
                     }
                 });
             } else if (event.equals("Accessibility:Event")) {
-                final int eventType = message.getInt("eventType");
+                final AccessibilityEvent accEvent = AccessibilityEvent.obtain(message.getInt("eventType"));
+                accEvent.setClassName(LayerView.class.getName());
+                accEvent.setPackageName(mAppContext.getPackageName());
 
                 final JSONArray text = message.getJSONArray("text");
-                final int len = text.length();
-                final String[] textList = new String[len];
-                for (int i = 0; i < len; i++)
-                    textList[i] = text.getString(i);
+                for (int i = 0; i < text.length(); i++)
+                    accEvent.getText().add(text.getString(i));
 
-                final String description = message.optString("description");
-                final boolean enabled = message.optBoolean("enabled", true);
-                final boolean checked = message.optBoolean("checked");
-                final boolean password = message.optBoolean("password");
+                accEvent.setContentDescription(message.optString("description"));
+                accEvent.setEnabled(message.optBoolean("enabled", true));
+                accEvent.setChecked(message.optBoolean("checked"));
+                accEvent.setPassword(message.optBoolean("password"));
+                accEvent.setAddedCount(message.optInt("addedCount"));
+                accEvent.setRemovedCount(message.optInt("removedCount"));
+                accEvent.setFromIndex(message.optInt("fromIndex"));
+                accEvent.setItemCount(message.optInt("itemCount"));
+                accEvent.setCurrentItemIndex(message.optInt("currentItemIndex"));
+                accEvent.setBeforeText(message.optString("beforeText"));
+
                 mMainHandler.post(new Runnable() {
                     public void run() {
-                        GeckoAppShell.emitGeckoAccessibilityEvent(eventType, textList, description,
-                                                                  enabled, checked, password);
+                        AccessibilityManager accessibilityManager =
+                            (AccessibilityManager) mAppContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
+                        accessibilityManager.sendAccessibilityEvent(accEvent);
                     }
                 });
             }
