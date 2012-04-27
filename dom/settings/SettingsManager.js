@@ -11,57 +11,12 @@ if (DEBUG)
 else
   debug = function (s) {}
 
-function Queue() {
-  this._queue = [];
-  this._index = 0;
-}
-
-Queue.prototype = {
-  getLength: function() { return (this._queue.length - this._index); },
-
-  isEmpty: function() { return (this._queue.length == 0); },
-
-  enqueue: function(item) { this._queue.push(item); },
-
-  dequeue: function() {
-    if(this.isEmpty())
-      return undefined;
-
-    var item = this._queue[this._index];
-    if (++this._index * 2 >= this._queue.length){
-      this._queue  = this._queue.slice(this._index);
-      this._index = 0;
-    }
-    return item;
-  }
-}
-
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
-
-const DB_NAME = "settings";
-const DB_VERSION = 1;
-const STORE_NAME = "settings";
-
-function SettingsDB() {}
-
-SettingsDB.prototype = {
-  __proto__: IndexedDBHelper.prototype,
-
-  createSchema: function createSchema(aDb) {
-    let objectStore = aDb.createObjectStore(STORE_NAME, { keyPath: "settingName" });
-    objectStore.createIndex("settingValue", "settingValue", { unique: false });
-    debug("Created object stores and indexes");
-  },
-
-  init: function init(aGlobal) {
-      this.initDBHelper(DB_NAME, DB_VERSION, STORE_NAME, aGlobal);
-  }
-}
-
+Cu.import("resource://gre/modules/SettingsQueue.jsm");
+Cu.import("resource://gre/modules/SettingsDB.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -83,7 +38,7 @@ SettingsLock.prototype = {
   process: function process() {
     let lock = this;
     lock._open = false;
-    let store = lock._transaction.objectStore(STORE_NAME);
+    let store = lock._transaction.objectStore(SETTINGSSTORE_NAME);
 
     while (!lock._requests.isEmpty()) {
       let info = lock._requests.dequeue();
@@ -152,7 +107,7 @@ SettingsLock.prototype = {
       var lock;
       while (lock = this._settingsManager._locks.dequeue()) {
         if (!lock._transaction) {
-          lock._transaction = lock._settingsManager._settingsDB._db.transaction(STORE_NAME, "readwrite");
+          lock._transaction = lock._settingsManager._settingsDB._db.transaction(SETTINGSSTORE_NAME, "readwrite");
         }
         lock.process();
       }
