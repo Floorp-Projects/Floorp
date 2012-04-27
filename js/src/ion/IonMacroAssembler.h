@@ -354,9 +354,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     template<typename S, typename T>
     void storeToTypedIntArray(int arrayType, const S &value, const T &dest) {
-#ifdef JS_CPU_ARM
-    JS_NOT_REACHED("NYI typed arrays ARM");
-#else
         switch (arrayType) {
           case TypedArray::TYPE_INT8:
           case TypedArray::TYPE_UINT8:
@@ -375,14 +372,10 @@ class MacroAssembler : public MacroAssemblerSpecific
             JS_NOT_REACHED("Invalid typed array type");
             break;
         }
-#endif
     }
 
     template<typename S, typename T>
     void storeToTypedFloatArray(int arrayType, const S &value, const T &dest) {
-#ifdef JS_CPU_ARM
-    JS_NOT_REACHED("NYI typed arrays ARM");
-#else
         switch (arrayType) {
           case TypedArray::TYPE_FLOAT32:
             convertDoubleToFloat(value, value);
@@ -395,7 +388,6 @@ class MacroAssembler : public MacroAssemblerSpecific
             JS_NOT_REACHED("Invalid typed array type");
             break;
         }
-#endif
     }
 
     // Inline version of js_TypedArray_uint8_clamp_double.
