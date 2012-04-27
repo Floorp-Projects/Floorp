@@ -126,7 +126,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     for (; !iter.done(); ++iter) {
         if (!iter.isFunctionFrame() || iter.isEvalFrame())
             continue;
-        if (iter.callee().toFunction() == fun)
+        if (iter.callee() == fun)
             break;
     }
     if (iter.done())
