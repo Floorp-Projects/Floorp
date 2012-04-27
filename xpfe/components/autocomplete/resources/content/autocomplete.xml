@@ -156,6 +156,12 @@
         ]]></body>
       </method>
 
+      <method name="onTextReverted">
+        <body><![CDATA[
+          return this._fireEvent("textreverted");
+        ]]></body>
+      </method>
+
       <!-- =================== nsIDOMXULMenuListElement =================== -->
 
       <property name="editable" readonly="true"
@@ -942,7 +948,7 @@
         <body><![CDATA[
           var val = this.currentSearchString;
 
-          var ok = this._fireEvent("textreverted");
+          var ok = this.onTextReverted();
           if ((ok || ok == undefined) && val)
             this.setTextValue(val);
 
