@@ -226,8 +226,8 @@ ToInt32(double d)
     // will result in a conversion of '0'.
 "   mov     %0, #0\n"
 "9:\n"
-    : "=r" (i), "=&r" (tmp0), "=&r" (tmp1), "=&r" (tmp2)
-    : "r" (d)
+    : "=r" (i), "=&r" (tmp0), "=&r" (tmp1), "=&r" (tmp2), "=&r" (d)
+    : "4" (d)
     : "cc"
         );
     return i;
