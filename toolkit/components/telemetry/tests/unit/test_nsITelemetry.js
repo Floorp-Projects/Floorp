@@ -132,15 +132,11 @@ function compareHistograms(h1, h2) {
   do_check_eq(s1.histogram_type, s2.histogram_type);
   do_check_eq(s1.min, s2.min);
   do_check_eq(s1.max, s2.max);
+  do_check_eq(s1.sum, s2.sum);
 
-  // XXX Don't compare flag sums until bug 747379 is fixed
-  if (s1.histogram_type != Telemetry.HISTOGRAM_FLAG) {
-    do_check_eq(s1.sum, s2.sum);
-
-    do_check_eq(s1.counts.length, s2.counts.length);
-    for (let i = 0; i < s1.counts.length; i++)
-      do_check_eq(s1.counts[i], s2.counts[i]);
-  }
+  do_check_eq(s1.counts.length, s2.counts.length);
+  for (let i = 0; i < s1.counts.length; i++)
+    do_check_eq(s1.counts[i], s2.counts[i]);
 
   do_check_eq(s1.ranges.length, s2.ranges.length);
   for (let i = 0; i < s1.ranges.length; i++)
@@ -148,7 +144,7 @@ function compareHistograms(h1, h2) {
 }
 
 function test_histogramFrom() {
-  // One histogram of each type
+  // Test one histogram of each type.
   let names = ["CYCLE_COLLECTOR", "GC_REASON", "GC_RESET", "TELEMETRY_TEST_FLAG"];
 
   for each (let name in names) {
@@ -157,6 +153,12 @@ function test_histogramFrom() {
     let clone = Telemetry.histogramFrom("clone" + name, name);
     compareHistograms(original, clone);
   }
+
+  // Additionally, set the flag on TELEMETRY_TEST_FLAG, and check it gets set on the clone.
+  let testFlag = Telemetry.getHistogramById("TELEMETRY_TEST_FLAG");
+  testFlag.add(1);
+  let clone = Telemetry.histogramFrom("FlagClone", "TELEMETRY_TEST_FLAG");
+  compareHistograms(testFlag, clone);
 }
 
 function test_getSlowSQL() {
