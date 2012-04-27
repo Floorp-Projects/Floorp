@@ -85,7 +85,7 @@ public:
     nsIFrame* frame = mWeakFrame.GetFrame();
     if (frame) {
       nsAutoScriptBlocker scriptBlocker;
-      frame->AttributeChanged(kNameSpaceID_None, nsGkAtoms::value, 0);
+      frame->AttributeChanged(kNameSpaceID_None, nsGkAtoms::mode, 0);
       shouldFlush = true;
     }
     delete this;
@@ -127,7 +127,11 @@ nsProgressMeterFrame::AttributeChanged(PRInt32 aNameSpaceID,
   }
 
   // did the progress change?
-  if (nsGkAtoms::value == aAttribute || nsGkAtoms::max == aAttribute) {
+  bool undetermined = mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::mode,
+                                            nsGkAtoms::undetermined, eCaseMatters);
+  if (nsGkAtoms::mode == aAttribute ||
+      (!undetermined &&
+       (nsGkAtoms::value == aAttribute || nsGkAtoms::max == aAttribute))) {
     nsIFrame* barChild = GetFirstPrincipalChild();
     if (!barChild) return NS_OK;
     nsIFrame* remainderChild = barChild->GetNextSibling();
@@ -135,24 +139,27 @@ nsProgressMeterFrame::AttributeChanged(PRInt32 aNameSpaceID,
     nsCOMPtr<nsIContent> remainderContent = remainderChild->GetContent();
     if (!remainderContent) return NS_OK;
 
-    nsAutoString value, maxValue;
-    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, value);
-    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxValue);
+    PRInt32 flex = 1, maxFlex = 1;
+    if (!undetermined) {
+      nsAutoString value, maxValue;
+      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, value);
+      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxValue);
 
-    PRInt32 error;
-    PRInt32 flex = value.ToInteger(&error);
-    PRInt32 maxFlex = maxValue.ToInteger(&error);
-    if (NS_FAILED(error) || maxValue.IsEmpty()) {
-      maxFlex = 100;
-    }
-    if (maxFlex < 1) {
-      maxFlex = 1;
-    }
-    if (flex < 0) {
-      flex = 0;
-    }
-    if (flex > maxFlex) {
-      flex = maxFlex;
+      nsresult error;
+      flex = value.ToInteger(&error);
+      maxFlex = maxValue.ToInteger(&error);
+      if (NS_FAILED(error) || maxValue.IsEmpty()) {
+        maxFlex = 100;
+      }
+      if (maxFlex < 1) {
+        maxFlex = 1;
+      }
+      if (flex < 0) {
+        flex = 0;
+      }
+      if (flex > maxFlex) {
+        flex = maxFlex;
+      }
     }
 
     nsContentUtils::AddScriptRunner(new nsSetAttrRunnable(
