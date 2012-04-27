@@ -714,29 +714,29 @@ ThreadActor.prototype = {
   },
 
   /**
-   * Create and return an environment actor that corresponds to the
-   * Debugger.Environment for the provided object.
-   * @param Debugger.Object aObject
-   *        The object whose lexical environment we want to extract.
+   * Create and return an environment actor that corresponds to the provided
+   * Debugger.Environment.
+   * @param Debugger.Environment aEnvironment
+   *        The lexical environment we want to extract.
    * @param object aPool
    *        The pool where the newly-created actor will be placed.
-   * @return The EnvironmentActor for aObject or undefined for host functions or
-   *         functions scoped to a non-debuggee global.
+   * @return The EnvironmentActor for aEnvironment or undefined for host
+   *         functions or functions scoped to a non-debuggee global.
    */
-  createEnvironmentActor: function TA_createEnvironmentActor(aObject, aPool) {
-    let environment = aObject.environment;
-    if (!environment) {
+  createEnvironmentActor:
+  function TA_createEnvironmentActor(aEnvironment, aPool) {
+    if (!aEnvironment) {
       return undefined;
     }
 
-    if (environment.actor) {
-      return environment.actor;
+    if (aEnvironment.actor) {
+      return aEnvironment.actor;
     }
 
-    let actor = new EnvironmentActor(aObject, this);
+    let actor = new EnvironmentActor(aEnvironment, this);
     this._environmentActors.push(actor);
     aPool.addActor(actor);
-    environment.actor = actor;
+    aEnvironment.actor = actor;
 
     return actor;
   },
@@ -1054,7 +1054,7 @@ ObjectActor.prototype = {
     let descriptor = {};
     descriptor.configurable = aObject.configurable;
     descriptor.enumerable = aObject.enumerable;
-    if (aObject.value) {
+    if (aObject.value !== undefined) {
       descriptor.writable = aObject.writable;
       descriptor.value = this.threadActor.createValueGrip(aObject.value);
     } else {
@@ -1102,7 +1102,7 @@ ObjectActor.prototype = {
                         " 'Function' class." };
     }
 
-    let envActor = this.threadActor.createEnvironmentActor(this.obj,
+    let envActor = this.threadActor.createEnvironmentActor(this.obj.environment,
                                                            this.registeredPool);
     if (!envActor) {
       return { error: "notDebuggee",
@@ -1110,7 +1110,7 @@ ObjectActor.prototype = {
     }
 
     return { name: this.obj.name || null,
-             scope: envActor.form() };
+             scope: envActor.form(this.obj) };
   },
 
   /**
@@ -1239,9 +1239,9 @@ FrameActor.prototype = {
     }
 
     let envActor = this.threadActor
-                       .createEnvironmentActor(this.frame,
+                       .createEnvironmentActor(this.frame.environment,
                                                this.frameLifetimePool);
-    form.environment = envActor ? envActor.form() : envActor;
+    form.environment = envActor ? envActor.form(this.frame) : envActor;
     form.this = this.threadActor.createValueGrip(this.frame.this);
     form.arguments = this._args();
     if (this.frame.script) {
@@ -1350,14 +1350,14 @@ BreakpointActor.prototype.requestTypes = {
  * the bindings introduced by a lexical environment and assigning new values to
  * those identifier bindings.
  *
- * @param Debugger.Object aObject
- *        The object whose lexical environment will be used to create the actor.
+ * @param Debugger.Environment aEnvironment
+ *        The lexical environment that will be used to create the actor.
  * @param ThreadActor aThreadActor
  *        The parent thread actor that contains this environment.
  */
-function EnvironmentActor(aObject, aThreadActor)
+function EnvironmentActor(aEnvironment, aThreadActor)
 {
-  this.obj = aObject;
+  this.obj = aEnvironment;
   this.threadActor = aThreadActor;
 }
 
@@ -1365,41 +1365,47 @@ EnvironmentActor.prototype = {
   actorPrefix: "environment",
 
   /**
-   * Returns an environment form for use in a protocol message.
+   * Returns an environment form for use in a protocol message. Note that the
+   * requirement of passing the frame or function as a parameter is only
+   * temporary, since when bug 747514 lands, the environment will have a callee
+   * property that will contain it.
+   *
+   * @param object aObject
+   *        The stack frame or function object whose environment bindings are
+   *        being generated.
    */
-  form: function EA_form() {
+  form: function EA_form(aObject) {
     // Debugger.Frame might be dead by the time we get here, which will cause
     // accessing its properties to throw.
-    if (!this.obj.live) {
+    if (!aObject.live) {
       return undefined;
     }
 
     let parent;
-    if (this.obj.environment.parent) {
-      parent = this.threadActor
-                   .createEnvironmentActor(this.obj.environment.parent,
-                                           this.registeredPool);
+    if (this.obj.parent) {
+      let thread = this.threadActor;
+      parent = thread.createEnvironmentActor(this.obj.parent.environment,
+                                             this.registeredPool);
     }
     let form = { actor: this.actorID,
-                 parent: parent ? parent.form() : parent };
+                 parent: parent ? parent.form(this.obj.parent) : parent };
 
-    if (this.obj.environment.type == "object") {
-      if (this.obj.environment.parent) {
+    if (aObject.type == "object") {
+      if (this.obj.parent) {
         form.type = "with";
       } else {
         form.type = "object";
       }
-      form.object = this.threadActor.createValueGrip(this.obj.environment.object);
+      form.object = this.threadActor.createValueGrip(aObject.object);
     } else {
-      if (this.obj.class == "Function") {
+      if (aObject.class == "Function") {
         form.type = "function";
-        form.function = this.threadActor.createValueGrip(this.obj);
-        form.functionName = this.obj.name;
+        form.function = this.threadActor.createValueGrip(aObject);
+        form.functionName = aObject.name;
       } else {
         form.type = "block";
       }
-
-      form.bindings = this._bindings();
+      form.bindings = this._bindings(aObject);
     }
 
     return form;
@@ -1407,19 +1413,41 @@ EnvironmentActor.prototype = {
 
   /**
    * Return the identifier bindings object as required by the remote protocol
-   * specification.
+   * specification. Note that the requirement of passing the frame or function
+   * as a parameter is only temporary, since when bug 747514 lands, the
+   * environment will have a callee property that will contain it.
+   *
+   * @param object aObject [optional]
+   *        The stack frame or function object whose environment bindings are
+   *        being generated. When left unspecified, the bindings do not contain
+   *        an 'arguments' property.
    */
-  _bindings: function EA_bindings() {
+  _bindings: function EA_bindings(aObject) {
     let bindings = { arguments: [], variables: {} };
 
-    // TODO: this will be redundant after bug 692984 is fixed.
-    if (typeof this.obj.environment.getVariableDescriptor != "function") {
+    // TODO: this part should be removed in favor of the commented-out part
+    // below when getVariableDescriptor lands (bug 725815).
+    if (typeof this.obj.getVariable != "function") {
+    //if (typeof this.obj.getVariableDescriptor != "function") {
       return bindings;
     }
 
-    for (let name in this.obj.parameterNames) {
+    let parameterNames;
+    if (aObject && aObject.callee) {
+      parameterNames = aObject.callee.parameterNames;
+    }
+    for each (let name in parameterNames) {
       let arg = {};
-      let desc = this.obj.environment.getVariableDescriptor(name);
+      // TODO: this part should be removed in favor of the commented-out part
+      // below when getVariableDescriptor lands (bug 725815).
+      let desc = {
+        value: this.obj.getVariable(name),
+        configurable: false,
+        writable: true,
+        enumerable: true
+      };
+
+      // let desc = this.obj.getVariableDescriptor(name);
       let descForm = {
         enumerable: true,
         configurable: desc.configurable
@@ -1435,14 +1463,22 @@ EnvironmentActor.prototype = {
       bindings.arguments.push(arg);
     }
 
-    for (let name in this.obj.environment.names()) {
+    for each (let name in this.obj.names()) {
       if (bindings.arguments.some(function exists(element) {
                                     return !!element[name];
                                   })) {
         continue;
       }
 
-      let desc = this.obj.environment.getVariableDescriptor(name);
+      // TODO: this part should be removed in favor of the commented-out part
+      // below when getVariableDescriptor lands.
+      let desc = {
+        value: this.obj.getVariable(name),
+        configurable: false,
+        writable: true,
+        enumerable: true
+      };
+      //let desc = this.obj.getVariableDescriptor(name);
       let descForm = {
         enumerable: true,
         configurable: desc.configurable
@@ -1468,7 +1504,7 @@ EnvironmentActor.prototype = {
    *        The protocol request object.
    */
   onAssign: function EA_onAssign(aRequest) {
-    let desc = this.obj.environment.getVariableDescriptor(aRequest.name);
+    let desc = this.obj.getVariableDescriptor(aRequest.name);
 
     if (!desc.writable) {
       return { error: "immutableBinding",
@@ -1477,7 +1513,7 @@ EnvironmentActor.prototype = {
     }
 
     try {
-      this.obj.environment.setVariable(aRequest.name, aRequest.value);
+      this.obj.setVariable(aRequest.name, aRequest.value);
     } catch (e) {
       if (e instanceof Debugger.DebuggeeWouldRun) {
         return { error: "threadWouldRun",

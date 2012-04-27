@@ -172,7 +172,6 @@ function testNext() {
 }
 
 function testEnd() {
-  Services.prefs.clearUserPref("devtools.gcli.enable");
   Services.console.unregisterListener(TestObserver);
   output.removeEventListener("DOMNodeInserted", onDOMNodeInserted, false);
   output = jsterm = null;
@@ -192,7 +191,6 @@ function onDOMNodeInserted(aEvent) {
 }
 
 function test() {
-  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   registerCleanupFunction(testEnd);
 
   addTab("data:text/html;charset=utf-8,Web Console test for bug 595934 - message categories coverage.");
