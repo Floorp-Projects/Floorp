@@ -555,7 +555,8 @@ public:
   // Called when the metadata from the media file has been read.
   // Call on the main thread only.
   void MetadataLoaded(PRUint32 aChannels,
-                      PRUint32 aRate);
+                      PRUint32 aRate,
+                      bool aHasAudio);
 
   // Called when the first frame has been loaded.
   // Call on the main thread only.
