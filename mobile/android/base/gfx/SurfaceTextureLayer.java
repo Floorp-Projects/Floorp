@@ -281,6 +281,9 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
 
         GLES20.glUniformMatrix4fv(mTextureMatrixHandle, 1, false, mTextureTransform, 0);
 
+        // Unbind any the current array buffer so we can use client side buffers
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
+        
         // Vertex coordinates are x,y,z starting at position 0 into the buffer.
         coordBuffer.position(0);
         GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false, 20,
