@@ -73,12 +73,15 @@ function test() {
   let uniqueValue = "unik" + Date.now();
   let uniqueText = "pi != " + Math.random();
 
+  // Be consistent: let the page actually display, as we are "interacting" with it.
+  Services.prefs.setBoolPref("general.warnOnAboutConfig", false);
+
   // make sure that the next closed window will increase getClosedWindowCount
-  let max_windows_undo = gPrefService.getIntPref("browser.sessionstore.max_windows_undo");
-  gPrefService.setIntPref("browser.sessionstore.max_windows_undo", max_windows_undo + 1);
+  let max_windows_undo = Services.prefs.getIntPref("browser.sessionstore.max_windows_undo");
+  Services.prefs.setIntPref("browser.sessionstore.max_windows_undo", max_windows_undo + 1);
   let closedWindowCount = ss.getClosedWindowCount();
 
-  provideWindow(function (newWin) {
+  provideWindow(function onTestURLLoaded(newWin) {
     newWin.gBrowser.addTab().linkedBrowser.stop();
 
     // mark the window with some unique data to be restored later on
@@ -105,28 +108,31 @@ function test() {
     // SSTabRestored will fire more than once, so we need to make sure we count them
     let restoredTabs = 0;
     let expectedTabs = data.tabs.length;
-    whenWindowLoaded(newWin2, function () {
-      newWin2.gBrowser.tabContainer.addEventListener("SSTabRestored", function(aEvent) {
-        if (++restoredTabs < expectedTabs)
-          return;
-        newWin2.gBrowser.tabContainer.removeEventListener("SSTabRestored", arguments.callee, true);
+    newWin2.addEventListener("SSTabRestored", function sstabrestoredListener(aEvent) {
+      ++restoredTabs;
+      info("Restored tab " + restoredTabs + "/" + expectedTabs);
+      if (restoredTabs < expectedTabs) {
+        return;
+      }
 
-        is(newWin2.gBrowser.tabs.length, 2,
-           "The window correctly restored 2 tabs");
-        is(newWin2.gBrowser.currentURI.spec, testURL,
-           "The window correctly restored the URL");
+      newWin2.removeEventListener("SSTabRestored", sstabrestoredListener, true);
 
-        let textbox = newWin2.content.document.getElementById("textbox");
-        is(textbox.value, uniqueText,
-           "The window correctly restored the form");
-        is(ss.getWindowValue(newWin2, uniqueKey), uniqueValue,
-           "The window correctly restored the data associated with it");
+      is(newWin2.gBrowser.tabs.length, 2,
+         "The window correctly restored 2 tabs");
+      is(newWin2.gBrowser.currentURI.spec, testURL,
+         "The window correctly restored the URL");
 
-        // clean up
-        newWin2.close();
-        gPrefService.clearUserPref("browser.sessionstore.max_windows_undo");
-        finish();
-      }, true);
-    });
+      let textbox = newWin2.content.document.getElementById("textbox");
+      is(textbox.value, uniqueText,
+         "The window correctly restored the form");
+      is(ss.getWindowValue(newWin2, uniqueKey), uniqueValue,
+         "The window correctly restored the data associated with it");
+
+      // clean up
+      newWin2.close();
+      Services.prefs.clearUserPref("browser.sessionstore.max_windows_undo");
+      Services.prefs.clearUserPref("general.warnOnAboutConfig");
+      finish();
+    }, true);
   }, testURL);
 }
