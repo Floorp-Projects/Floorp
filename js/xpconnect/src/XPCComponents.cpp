@@ -60,6 +60,7 @@
 #include "nsContentUtils.h"
 #include "jsgc.h"
 #include "jsfriendapi.h"
+#include "AccessCheck.h"
 #include "mozilla/dom/bindings/Utils.h"
 
 using namespace mozilla;
@@ -4461,12 +4462,13 @@ nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
         return false;
 
     jsid id = ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_COMPONENTS);
-    JSObject* obj;
-
-    return NS_SUCCEEDED(wrapper->GetJSObject(&obj)) &&
-           obj && JS_DefinePropertyById(ccx, aGlobal, id, OBJECT_TO_JSVAL(obj),
-                                        nsnull, nsnull,
-                                        JSPROP_PERMANENT | JSPROP_READONLY);
+    JSObject* obj = wrapper->GetSameCompartmentSecurityWrapper(ccx);
+    if (!wrapper)
+        return false;
+   
+    return JS_DefinePropertyById(ccx, aGlobal, id, OBJECT_TO_JSVAL(obj),
+                                 nsnull, nsnull,
+                                 JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
 /* void lookupMethod (); */
