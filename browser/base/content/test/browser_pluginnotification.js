@@ -502,5 +502,16 @@ function test16d() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 16d, Plugin should not be activated");
 
+  prepareTest(test17, gTestRoot + "plugin_bug749455.html");
+}
+
+// Tests that mContentType is used for click-to-play plugins, and not the
+// inspected type.
+function test17() {
+  var clickToPlayNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(clickToPlayNotification, "Test 17, Should have a click-to-play notification");
+  var missingNotification = PopupNotifications.getNotification("missing-plugins", gTestBrowser);
+  ok(!missingNotification, "Test 17, Should not have a missing plugin notification");
+
   finishTest();
 }
