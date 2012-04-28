@@ -62,6 +62,10 @@ DEFINES += \
   -DAPP_VERSION="$(MOZ_APP_VERSION)" \
   -DFIREFOX_ICO=\"$(DIST)/branding/firefox.ico\" \
   -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\" \
+  -DNEWWINDOW_ICO=\"$(DIST)/branding/newwindow.ico\" \
+  -DNEWTAB_ICO=\"$(DIST)/branding/newtab.ico\" \
+  -DPBMODE_ICO=\"$(DIST)/branding/pbmode.ico\" \
+
   $(NULL)
 
 ifdef LIBXUL_SDK #{
