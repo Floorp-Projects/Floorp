@@ -800,20 +800,25 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
     chan->SetContentType(channelType);
   }
 
-  // We want to use the channel type unless one of the following is true:
+  // We want to ignore the channel type if one of the following is true:
   //
-  // 1) The channel type is application/octet-stream and we have a
-  //    type hint and the type hint is not a document type.
-  // 2) Our type hint is a type that we support with a plugin.
-  if (((channelType.EqualsASCII(APPLICATION_OCTET_STREAM) ||
-        channelType.EqualsASCII(BINARY_OCTET_STREAM)) && 
-       !mContentType.IsEmpty() &&
-       GetTypeOfContent(mContentType) != eType_Document) ||
-      // Need to check IsPluginEnabledForType() in addition to GetTypeOfContent()
-      // because otherwise the default plug-in's catch-all behavior would
-      // confuse things.
-      (NS_SUCCEEDED(IsPluginEnabledForType(mContentType)) && 
-       GetTypeOfContent(mContentType) == eType_Plugin)) {
+  // 1) The channel type is application/octet-stream or binary/octet-stream 
+  //    and we have a type hint (in mContentType) and the type hint is not a
+  //    document type.
+  // 2) Our type hint is a type that we support with a plugin
+  //    (where "support" means it is enabled or it is click-to-play)
+  //    and this object loading content has the capability to load a plugin
+  bool isOctetStream = (channelType.EqualsASCII(APPLICATION_OCTET_STREAM) ||
+                        channelType.EqualsASCII(BINARY_OCTET_STREAM));
+  bool caseOne = (isOctetStream &&
+                  !mContentType.IsEmpty() &&
+                  GetTypeOfContent(mContentType) != eType_Document);
+  nsresult pluginState = IsPluginEnabledForType(mContentType);
+  bool pluginSupported = (NS_SUCCEEDED(pluginState) || 
+                          pluginState == NS_ERROR_PLUGIN_CLICKTOPLAY);
+  PRUint32 caps = GetCapabilities();
+  bool caseTwo = (pluginSupported && (caps & eSupportPlugins));
+  if (caseOne || caseTwo) {
     // Set the type we'll use for dispatch on the channel.  Otherwise we could
     // end up trying to dispatch to a nsFrameLoader, which will complain that
     // it couldn't find a way to handle application/octet-stream
