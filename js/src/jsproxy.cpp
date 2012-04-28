@@ -82,6 +82,7 @@ GetFunctionProxyConstruct(JSObject *proxy)
     return proxy->getSlotRef(JSSLOT_PROXY_CONSTRUCT);
 }
 
+#ifdef DEBUG
 static bool
 OperationInProgress(JSContext *cx, JSObject *proxy)
 {
@@ -93,6 +94,7 @@ OperationInProgress(JSContext *cx, JSObject *proxy)
     }
     return false;
 }
+#endif
 
 ProxyHandler::ProxyHandler(void *family) : mFamily(family)
 {
