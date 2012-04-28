@@ -247,6 +247,9 @@ public class PluginLayer extends TileLayer
         coordBuffer.position(0);
         coordBuffer.put(coords);
 
+        // Unbind any the current array buffer so we can use client side buffers
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
+
         // Vertex coordinates are x,y,z starting at position 0 into the buffer.
         coordBuffer.position(0);
         GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20, coordBuffer);
