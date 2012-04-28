@@ -1345,13 +1345,15 @@ StackIter::thisv() const
 {
     switch (state_) {
       case DONE:
-        JS_NOT_REACHED("Unexpected state");
+        MOZ_NOT_REACHED("Unexpected state");
         return Value();
       case SCRIPTED:
       case NATIVE:
       case IMPLICIT_NATIVE:
         return fp()->thisValue();
     }
+    MOZ_NOT_REACHED("unexpected state");
+    return Value();
 }
 
 /*****************************************************************************/
