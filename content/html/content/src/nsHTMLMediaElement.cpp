@@ -1459,7 +1459,8 @@ nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mShuttingDown(false),
     mLoadIsSuspended(false),
     mMediaSecurityVerified(false),
-    mCORSMode(CORS_NONE)
+    mCORSMode(CORS_NONE),
+    mHasAudio(false)
 {
 #ifdef PR_LOGGING
   if (!gMediaElementLog) {
@@ -2258,10 +2259,11 @@ void nsHTMLMediaElement::ProcessMediaFragmentURI()
   }
 }
 
-void nsHTMLMediaElement::MetadataLoaded(PRUint32 aChannels, PRUint32 aRate)
+void nsHTMLMediaElement::MetadataLoaded(PRUint32 aChannels, PRUint32 aRate, bool aHasAudio)
 {
   mChannels = aChannels;
   mRate = aRate;
+  mHasAudio = aHasAudio;
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
   DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));
