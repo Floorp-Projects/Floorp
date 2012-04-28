@@ -2080,7 +2080,8 @@ abstract public class GeckoApp
 
         if (mOrientation != newConfig.orientation) {
             mOrientation = newConfig.orientation;
-            mFormAssistPopup.hide();
+            if (mFormAssistPopup != null)
+                mFormAssistPopup.hide();
             refreshActionBar();
         }
     }
