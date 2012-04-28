@@ -427,5 +427,16 @@ function test15() {
   var mainBox = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
   ok(mainBox, "Test 15, Plugin with id=" + plugin.id + " overlay should exist");
 
+  prepareTest(test16, gTestRoot + "plugin_bug749455.html");
+}
+
+// Tests that mContentType is used for click-to-play plugins, and not the
+// inspected type.
+function test16() {
+  var clickToPlayNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(clickToPlayNotification, "Test 16, Should have a click-to-play notification");
+  var missingNotification = PopupNotifications.getNotification("missing-plugins", gTestBrowser);
+  ok(!missingNotification, "Test 16, Should not have a missing plugin notification");
+
   finishTest();
 }
