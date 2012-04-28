@@ -4748,8 +4748,9 @@ var ActivityObserver = {
         break;
     }
 
-    if (BrowserApp.selectedTab.getActive() != isForeground) {
-      BrowserApp.selectedTab.setActive(isForeground);
+    let tab = BrowserApp.selectedTab;
+    if (tab && tab.getActive() != isForeground) {
+      tab.setActive(isForeground);
     }
   }
 };
