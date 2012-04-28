@@ -5234,7 +5234,7 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *scriptArg, jsval *rval)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     if (cx->compartment != obj->compartment())
-        *(int *) 0 = 0xf0;
+        *(volatile int *) 0 = 0xf0;
     AutoLastFrameCheck lfc(cx);
 
     JS::Anchor<JSScript *> script;
