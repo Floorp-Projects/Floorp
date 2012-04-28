@@ -219,3 +219,11 @@ NS_IMETHODIMP nsHTMLVideoElement::GetMozFrameDelay(double *aMozFrameDelay) {
   *aMozFrameDelay = container ?  container->GetFrameDelay() : 0;
   return NS_OK;
 }
+
+
+/* readonly attribute bool mozHasAudio */
+NS_IMETHODIMP nsHTMLVideoElement::GetMozHasAudio(bool *aHasAudio) {
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  *aHasAudio = mHasAudio;
+  return NS_OK;
+}
