@@ -176,7 +176,8 @@ struct RVAMap {
     mRealView = ::MapViewOfFile(map, FILE_MAP_READ, 0, alignedOffset,
                                 sizeof(T) + (offset - alignedOffset));
 
-    mMappedView = reinterpret_cast<T*>((char*)mRealView + (offset - alignedOffset));
+    mMappedView = mRealView ? reinterpret_cast<T*>((char*)mRealView + (offset - alignedOffset)) :
+                              nsnull;
   }
   ~RVAMap() {
     if (mRealView) {
