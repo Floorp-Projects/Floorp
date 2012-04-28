@@ -259,6 +259,7 @@ _BROWSER_FILES = \
                  plugin_bug743421.html \
                  plugin_clickToPlayAllow.html \
                  plugin_clickToPlayDeny.html \
+                 plugin_bug749455.html \
                  alltabslistener.html \
                  zoom_test.html \
                  dummy_page.html \
