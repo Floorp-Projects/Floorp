@@ -588,10 +588,8 @@ MacNativeApp.prototype = {
     <string>MOZB</string>\n\
     <key>CFBundleVersion</key>\n\
     <string>0</string>\n\
-#ifdef DEBUG
     <key>FirefoxBinary</key>\n\
-    <string>org.mozilla.NightlyDebug</string>\n\
-#endif
+#expand     <string>__MOZ_MACBUNDLE_ID__</string>\n\
   </dict>\n\
 </plist>';
 
