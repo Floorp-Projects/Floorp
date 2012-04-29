@@ -8508,6 +8508,16 @@ else
 fi
 AC_SUBST(MOZ_MACBUNDLE_NAME)
 
+dnl Mac bundle identifier (based on MOZ_APP_DISPLAYNAME)
+MOZ_MACBUNDLE_ID=`echo $MOZ_APP_DISPLAYNAME | tr '[A-Z]' '[a-z]'`
+MOZ_MACBUNDLE_ID=${MOZ_DISTRIBUTION_ID}.${MOZ_MACBUNDLE_ID}
+if test "$MOZ_DEBUG"; then
+  MOZ_MACBUNDLE_ID=${MOZ_MACBUNDLE_ID}debug
+fi
+
+AC_DEFINE_UNQUOTED(MOZ_MACBUNDLE_ID,$MOZ_MACBUNDLE_ID)
+AC_SUBST(MOZ_MACBUNDLE_ID)
+
 # The following variables are available to branding and application
 # configuration ($BRANDING/configure.sh and $APPLICATION/confvars.sh):
 # - MOZ_APP_VENDOR: Used for application.ini's "Vendor" field, which also
