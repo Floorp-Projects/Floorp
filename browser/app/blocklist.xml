@@ -1,7 +1,11 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1333739604000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1335396801000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
+                        <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i86" id="{45147e67-4020-47e2-8f7a-55464fb535aa}">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
@@ -81,6 +85,10 @@
                         <versionRange  minVersion="2.0.3" maxVersion="2.0.3">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i83" id="flash@adobee.com">
+                        <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i59" id="ghostviewer@youtube2.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -99,6 +107,10 @@
                   </emItem>
       <emItem  blockID="i7" id="{2224e955-00e9-4613-a844-ce69fccaae91}">
                         </emItem>
+      <emItem  blockID="i84" id="pink@rosaplugin.info">
+                        <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i67" id="youtube2@youtube2.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -161,6 +173,10 @@
                         <versionRange  minVersion="2.2" maxVersion="2.2">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i82" id="{8f42fb8b-b6f6-45de-81c0-d6d39f54f971}">
+                        <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i19" id="{46551EC9-40F0-4e47-8E18-8E5CF550CFB8}">
                         <versionRange  minVersion="1.1b1" maxVersion="1.1b1">
                     </versionRange>
@@ -195,6 +211,9 @@
                   </pluginItem>
       <pluginItem  blockID="p80">
             <match name="description" exp="[^\d\._]((0(\.\d+(\.\d+([_\.]\d+)?)?)?)|(1\.(([0-5](\.\d+([_\.]\d+)?)?)|(6(\.0([_\.](0?\d|1\d|2\d|30))?)?)|(7(\.0([_\.][0-2])?)?))))([^\d\._]|$)" />      <match name="filename" exp="(npjp2\.dll)|(libnpjp2\.so)" />                      <versionRange  severity="1"></versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p85">
+                  <match name="filename" exp="JavaPlugin2_NPAPI\.plugin" />                      <versionRange  minVersion="0" maxVersion="12.9.0" severity="1"></versionRange>
                   </pluginItem>
     </pluginItems>
 
