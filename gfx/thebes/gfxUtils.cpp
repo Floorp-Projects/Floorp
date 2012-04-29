@@ -547,7 +547,9 @@ gfxUtils::ClampToScaleFactor(gfxFloat aVal)
     power = ceil(power);
   }
 
-  return pow(kScaleResolution, power);
+  gfxFloat scale = pow(kScaleResolution, power);
+
+  return NS_MAX(scale, 1.0);
 }
 
 
