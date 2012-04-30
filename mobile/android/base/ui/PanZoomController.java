@@ -369,7 +369,6 @@ public class PanZoomController
             }
             cancelTouch();
             startPanning(event.getX(0), event.getY(0), event.getEventTime());
-            GeckoApp.mAppContext.hidePlugins(false /* don't hide layers */);
             GeckoApp.mFormAssistPopup.hide();
             track(event);
             return true;
@@ -564,8 +563,6 @@ public class PanZoomController
             stopAnimationTimer();
         }
 
-        GeckoApp.mAppContext.hidePlugins(false /* don't hide layers */);
-
         mAnimationTimer = new Timer("Animation Timer");
         mAnimationRunnable = runnable;
         mAnimationTimer.scheduleAtFixedRate(new TimerTask() {
@@ -584,8 +581,6 @@ public class PanZoomController
             mAnimationRunnable.terminate();
             mAnimationRunnable = null;
         }
-
-        GeckoApp.mAppContext.showPlugins();
     }
 
     private float getVelocity() {
@@ -761,7 +756,6 @@ public class PanZoomController
         stopAnimationTimer();
 
         // Force a viewport synchronisation
-        GeckoApp.mAppContext.showPlugins();
         mController.setForceRedraw();
         mController.notifyLayerClientOfGeometryChange();
     }
@@ -845,7 +839,6 @@ public class PanZoomController
 
         mState = PanZoomState.PINCHING;
         mLastZoomFocus = new PointF(detector.getFocusX(), detector.getFocusY());
-        GeckoApp.mAppContext.hidePlugins(false /* don't hide layers, only views */);
         GeckoApp.mFormAssistPopup.hide();
         cancelTouch();
 
@@ -913,7 +906,6 @@ public class PanZoomController
         startTouch(detector.getFocusX(), detector.getFocusY(), detector.getEventTime());
 
         // Force a viewport synchronisation
-        GeckoApp.mAppContext.showPlugins();
         mController.setForceRedraw();
         mController.notifyLayerClientOfGeometryChange();
     }

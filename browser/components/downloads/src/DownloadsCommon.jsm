@@ -395,11 +395,6 @@ const DownloadsData = {
   //// Persistent data loading
 
   /**
-   * Asynchronous database statement used to read the list of downloads.
-   */
-  _statement: null,
-
-  /**
    * Represents an executing statement, allowing its cancellation.
    */
   _pendingStatement: null,
@@ -455,10 +450,19 @@ const DownloadsData = {
       }
     } else {
       if (this._loadState != this.kLoadAll) {
-        // Reload the list from the database asynchronously.
-        this._statement = Services.downloads.DBConnection.createAsyncStatement(
-                                "SELECT * FROM moz_downloads ORDER BY id DESC");
-        this._pendingStatement = this._statement.executeAsync(this);
+        // Load only the relevant columns from the downloads database.  The
+        // columns are read in the init_FromDataRow method of DownloadsDataItem.
+        let statement = Services.downloads.DBConnection.createAsyncStatement(
+          "SELECT id, target, name, source, referrer, state, "
+        +        "startTime, endTime, currBytes, maxBytes "
+        + "FROM moz_downloads "
+        + "ORDER BY id DESC"
+        );
+        try {
+          this._pendingStatement = statement.executeAsync(this);
+        } finally {
+          statement.finalize();
+        }
       }
     }
   },
@@ -471,10 +475,6 @@ const DownloadsData = {
     if (this._pendingStatement) {
       this._pendingStatement.cancel();
       this._pendingStatement = null;
-    }
-    if (this._statement) {
-      this._statement.finalize();
-      this._statement = null;
     }
 
     // Close all the views on the current data.  Create a copy of the array

@@ -1328,14 +1328,6 @@ XrayWrapper<Base, Traits>::enumerate(JSContext *cx, JSObject *wrapper, JS::AutoI
 
 template <typename Base, typename Traits>
 bool
-XrayWrapper<Base, Traits>::fix(JSContext *cx, JSObject *proxy, js::Value *vp)
-{
-    vp->setUndefined();
-    return true;
-}
-
-template <typename Base, typename Traits>
-bool
 XrayWrapper<Base, Traits>::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
                                js::Value *vp)
 {

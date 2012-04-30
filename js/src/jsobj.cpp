@@ -2468,8 +2468,7 @@ obj_preventExtensions(JSContext *cx, unsigned argc, Value *vp)
     if (!obj->isExtensible())
         return true;
 
-    AutoIdVector props(cx);
-    return obj->preventExtensions(cx, &props);
+    return obj->preventExtensions(cx);
 }
 
 /* static */ inline unsigned
@@ -2489,14 +2488,12 @@ JSObject::sealOrFreeze(JSContext *cx, ImmutabilityType it)
 
     RootedVarObject self(cx, this);
 
+    if (isExtensible() && !preventExtensions(cx))
+        return false;
+
     AutoIdVector props(cx);
-    if (isExtensible()) {
-        if (!preventExtensions(cx, &props))
-            return false;
-    } else {
-        if (!GetPropertyNames(cx, this, JSITER_HIDDEN | JSITER_OWNONLY, &props))
-            return false;
-    }
+    if (!GetPropertyNames(cx, this, JSITER_HIDDEN | JSITER_OWNONLY, &props))
+        return false;
 
     /* preventExtensions must slowify dense arrays, so we can assign to holes without checks. */
     JS_ASSERT(!self->isDenseArray());
@@ -6206,7 +6203,7 @@ JS_FRIEND_API(void)
 js_DumpStackFrame(JSContext *cx, StackFrame *start)
 {
     /* This should only called during live debugging. */
-    FrameRegsIter i(cx, StackIter::GO_THROUGH_SAVED);
+    ScriptFrameIter i(cx, StackIter::GO_THROUGH_SAVED);
     if (!start) {
         if (i.done()) {
             fprintf(stderr, "no stack for cx = %p\n", (void*) cx);

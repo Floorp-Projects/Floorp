@@ -64,7 +64,6 @@ class JS_FRIEND_API(ProxyHandler) {
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props) = 0;
     virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp) = 0;
     virtual bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props) = 0;
-    virtual bool fix(JSContext *cx, JSObject *proxy, Value *vp) = 0;
 
     /* ES5 Harmony derived proxy traps. */
     virtual bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
@@ -117,7 +116,6 @@ class Proxy {
     static bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props);
     static bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     static bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props);
-    static bool fix(JSContext *cx, JSObject *proxy, Value *vp);
 
     /* ES5 Harmony derived proxy traps. */
     static bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);

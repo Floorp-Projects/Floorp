@@ -91,7 +91,6 @@ class XrayWrapper : public Base {
                                      js::AutoIdVector &props);
     virtual bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
     virtual bool enumerate(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
-    virtual bool fix(JSContext *cx, JSObject *proxy, js::Value *vp);
 
     /* Derived proxy traps. */
     virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,

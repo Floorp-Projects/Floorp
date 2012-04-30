@@ -4609,15 +4609,7 @@ MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
 MOZ_GRAPHITE=1
-
-case "${target}" in
-*darwin*)
-    ACCESSIBILITY=
-    ;;
-*)
-    ACCESSIBILITY=1
-    ;;
-esac
+ACCESSIBILITY=1
 
 case "$target_os" in
     mingw*)
@@ -5550,10 +5542,9 @@ AC_DEFINE(IBMBIDI)
 
 dnl ========================================================
 dnl accessibility support on by default on all platforms
-dnl except OS X.
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(accessibility,
-[  --disable-accessibility Disable accessibility support (off by default on OS X)],
+[  --disable-accessibility Disable accessibility support],
     ACCESSIBILITY=,
     ACCESSIBILITY=1 )
 if test "$ACCESSIBILITY"; then
@@ -5835,14 +5826,10 @@ dnl = Check alsa availability on Linux if using sydneyaudio
 dnl ========================================================
 
 dnl If using sydneyaudio with Linux, ensure that the alsa library is available
-if test -n "$MOZ_SYDNEYAUDIO"; then
-   case "$target_os" in
-linux*)
-      PKG_CHECK_MODULES(MOZ_ALSA, alsa, ,
+if test -n "$MOZ_SYDNEYAUDIO" -a "$OS_TARGET" = "Linux"; then
+    PKG_CHECK_MODULES(MOZ_ALSA, alsa, ,
          [echo "$MOZ_ALSA_PKG_ERRORS"
           AC_MSG_ERROR([Need alsa for Ogg, Wave or WebM decoding on Linux.  Disable with --disable-ogg --disable-wave --disable-webm.  (On Ubuntu, you might try installing the package libasound2-dev.)])])
-      ;;
-   esac
 fi
 
 dnl ========================================================
