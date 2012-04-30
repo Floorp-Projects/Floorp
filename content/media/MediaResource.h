@@ -375,6 +375,8 @@ public:
   // if this stream didn't read any data, since another stream might have
   // received data for the same resource.
   void CacheClientNotifyDataEnded(nsresult aStatus);
+  // Notify that the principal for the cached resource changed.
+  void CacheClientNotifyPrincipalChanged();
 
   // These are called on the main thread by nsMediaCache. These shouldn't block,
   // but they may grab locks --- the media cache is not holding its lock

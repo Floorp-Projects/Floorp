@@ -71,6 +71,21 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 #define SEEK_LOG(type, msg)
 #endif
 
+void
+AudioData::EnsureAudioBuffer()
+{
+  if (mAudioBuffer)
+    return;
+  mAudioBuffer = SharedBuffer::Create(mFrames*mChannels*sizeof(AudioDataValue));
+
+  AudioDataValue* data = static_cast<AudioDataValue*>(mAudioBuffer->Data());
+  for (PRUint32 i = 0; i < mFrames; ++i) {
+    for (PRUint32 j = 0; j < mChannels; ++j) {
+      data[j*mFrames + i] = mAudioData[i*mChannels + j];
+    }
+  }
+}
+
 static bool
 ValidatePlane(const VideoData::YCbCrBuffer::Plane& aPlane)
 {
@@ -115,7 +130,15 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
                              nsIntRect aPicture)
 {
   if (!aContainer) {
-    return nsnull;
+    // Create a dummy VideoData with no image. This gives us something to
+    // send to media streams if necessary.
+    nsAutoPtr<VideoData> v(new VideoData(aOffset,
+                                         aTime,
+                                         aEndTime,
+                                         aKeyframe,
+                                         aTimecode,
+                                         aInfo.mDisplay));
+    return v.forget();
   }
 
   // The following situation should never happen unless there is a bug

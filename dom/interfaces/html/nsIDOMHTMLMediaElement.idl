@@ -40,6 +40,8 @@
 #include "nsIDOMMediaError.idl"
 #include "nsIDOMTimeRanges.idl"
 
+interface nsIDOMMediaStream;
+
 /**
  * The nsIDOMHTMLMediaElement interface is an interface to be implemented by the HTML
  * <audio> and <video> elements.
@@ -57,7 +59,7 @@
 #endif
 %}
 
-[scriptable, uuid(3e672e79-a0ea-45ef-87de-828402f1f6d7)]
+[scriptable, uuid(6b938133-a8c2-424a-9401-a631f74aeff5)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -104,6 +106,11 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
            attribute double volume;
            attribute boolean muted;
            attribute boolean defaultMuted;
+
+  // Mozilla extension: stream capture
+  nsIDOMMediaStream mozCaptureStream();
+  nsIDOMMediaStream mozCaptureStreamUntilEnded();
+  readonly attribute boolean mozAudioCaptured;
 
   // Mozilla extension: extra stream metadata information, used as part
   // of MozAudioAvailable events and the mozWriteAudio() method.  The

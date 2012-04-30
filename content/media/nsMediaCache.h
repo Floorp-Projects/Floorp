@@ -230,10 +230,10 @@ public:
   // aClient provides the underlying transport that cache will use to read
   // data for this stream.
   nsMediaCacheStream(ChannelMediaResource* aClient)
-    : mClient(aClient), mResourceID(0), mInitialized(false),
+    : mClient(aClient), mInitialized(false),
       mHasHadUpdate(false),
       mClosed(false),
-      mDidNotifyDataEnded(false),
+      mDidNotifyDataEnded(false), mResourceID(0),
       mIsSeekable(false), mCacheSuspended(false),
       mChannelEnded(false),
       mChannelOffset(0), mStreamLength(-1),  
@@ -326,7 +326,8 @@ public:
   // If we've successfully read data beyond the originally reported length,
   // we return the end of the data we've read.
   PRInt64 GetLength();
-  // Returns the unique resource ID
+  // Returns the unique resource ID. Call only on the main thread or while
+  // holding the media cache lock.
   PRInt64 GetResourceID() { return mResourceID; }
   // Returns the end of the bytes starting at the given offset
   // which are in cache.
@@ -459,15 +460,11 @@ private:
   // blocked on reading from this stream.
   void CloseInternal(ReentrantMonitorAutoEnter& aReentrantMonitor);
   // Update mPrincipal given that data has been received from aPrincipal
-  void UpdatePrincipal(nsIPrincipal* aPrincipal);
+  bool UpdatePrincipal(nsIPrincipal* aPrincipal);
 
   // These fields are main-thread-only.
   ChannelMediaResource*  mClient;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  // This is a unique ID representing the resource we're loading.
-  // All streams with the same mResourceID are loading the same
-  // underlying resource and should share data.
-  PRInt64                mResourceID;
   // Set to true when Init or InitAsClone has been called
   bool                   mInitialized;
   // Set to true when nsMediaCache::Update() has finished while this stream
@@ -479,9 +476,14 @@ private:
   // True if CacheClientNotifyDataEnded has been called for this stream.
   bool                   mDidNotifyDataEnded;
 
-  // The following fields are protected by the cache's monitor but are
-  // only written on the main thread. 
+  // The following fields must be written holding the cache's monitor and
+  // only on the main thread, thus can be read either on the main thread
+  // or while holding the cache's monitor.
 
+  // This is a unique ID representing the resource we're loading.
+  // All streams with the same mResourceID are loading the same
+  // underlying resource and should share data.
+  PRInt64 mResourceID;
   // The last reported seekability state for the underlying channel
   bool mIsSeekable;
   // True if the cache has suspended our channel because the cache is
