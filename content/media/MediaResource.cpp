@@ -762,6 +762,14 @@ ChannelMediaResource::CacheClientNotifyDataEnded(nsresult aStatus)
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 
+void
+ChannelMediaResource::CacheClientNotifyPrincipalChanged()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
+
+  mDecoder->NotifyPrincipalChanged();
+}
+
 nsresult
 ChannelMediaResource::CacheClientSeek(PRInt64 aOffset, bool aResume)
 {
