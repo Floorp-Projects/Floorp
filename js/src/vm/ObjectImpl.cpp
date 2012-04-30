@@ -322,14 +322,14 @@ SparseElementsHeader::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t ind
 
 template<typename T>
 static Value
-ElementToValue(const T t)
+ElementToValue(const T &t)
 {
     return NumberValue(t);
 }
 
 template<>
 /* static */ Value
-ElementToValue(const uint8_clamped u)
+ElementToValue(const uint8_clamped &u)
 {
     return NumberValue(uint8_t(u));
 }
