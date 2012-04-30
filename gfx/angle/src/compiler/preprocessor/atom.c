@@ -331,12 +331,7 @@ static int GrowAtomTable(AtomTable *atable, int size)
             atable->size = 0;
         }
         if (!newmap || !newrev) {
-            /* failed to grow -- error */
-            if (newmap)
-                atable->amap = newmap;
-            if (newrev)
-                atable->arev = newrev;
-            return -1;
+            abort();
         }
         memset(&newmap[atable->size], 0, (size - atable->size) * sizeof(int));
         memset(&newrev[atable->size], 0, (size - atable->size) * sizeof(int));
