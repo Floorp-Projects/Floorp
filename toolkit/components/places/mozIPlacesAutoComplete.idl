@@ -79,6 +79,12 @@ interface mozIPlacesAutoComplete : nsISupports
    */
   const long MATCH_ANYWHERE_UNMODIFIED = 4;
 
+  /**
+   * Match only the beginning of each search term using a case sensitive
+   * comparator.
+   */
+  const long MATCH_BEGINNING_CASE_SENSITIVE = 5;
+
   //////////////////////////////////////////////////////////////////////////////
   //// Search Behavior Constants
 

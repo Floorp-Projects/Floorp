@@ -197,11 +197,20 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
 
     if (SPECIAL_GUIDS_MAP == null) {
       HashMap<String, String> m = new HashMap<String, String>();
+
+      // Note that we always use the literal name "mobile" for the Mobile Bookmarks
+      // folder, regardless of its actual name in the database or the Fennec UI.
+      // This is to match desktop (working around Bug 747699) and to avoid a similar
+      // issue locally. See Bug 748898.
+      m.put("mobile",  "mobile");
+
+      // Other folders use their contextualized names, and we simply rely on
+      // these not changing, matching desktop, and such to avoid issues.
       m.put("menu",    context.getString(R.string.bookmarks_folder_menu));
       m.put("places",  context.getString(R.string.bookmarks_folder_places));
       m.put("toolbar", context.getString(R.string.bookmarks_folder_toolbar));
       m.put("unfiled", context.getString(R.string.bookmarks_folder_unfiled));
-      m.put("mobile",  context.getString(R.string.bookmarks_folder_mobile));
+
       SPECIAL_GUIDS_MAP = Collections.unmodifiableMap(m);
     }
 
@@ -431,6 +440,12 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     String parentName = getParentName(androidParentGUID);
     BookmarkRecord bookmark = AndroidBrowserBookmarksRepositorySession.bookmarkFromMirrorCursor(cur, androidParentGUID, parentName, childArray);
 
+    if (bookmark == null) {
+      Logger.warn(LOG_TAG, "Unable to extract bookmark from cursor. Record GUID " + recordGUID +
+                           ", parent " + androidParentGUID + "/" + androidParentID);
+      return null;
+    }
+
     if (needsReparenting) {
       Logger.warn(LOG_TAG, "Bookmark record " + recordGUID + " has a bad parent pointer. Reparenting now.");
 
@@ -586,6 +601,27 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     // We won't write it into the database yet; we'll record it and process as we go.
     reconciled.children = ((BookmarkRecord) remoteRecord).children;
     return reconciled;
+  }
+
+  /**
+   * Rename mobile folders to "mobile", both in and out. The other half of
+   * this logic lives in {@link #computeParentFields(BookmarkRecord, String, String)}, where
+   * the parent name of a record is set from {@link #SPECIAL_GUIDS_MAP} rather than
+   * from source data.
+   *
+   * Apply this approach generally for symmetry.
+   */
+  @Override
+  protected void fixupRecord(Record record) {
+    final BookmarkRecord r = (BookmarkRecord) record;
+    final String parentName = SPECIAL_GUIDS_MAP.get(r.parentID);
+    if (parentName == null) {
+      return;
+    }
+    if (Logger.logVerbose(LOG_TAG)) {
+      Logger.trace(LOG_TAG, "Replacing parent name \"" + r.parentName + "\" with \"" + parentName + "\".");
+    }
+    r.parentName = parentName;
   }
 
   @Override
@@ -786,13 +822,13 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     @Override
     public void run() {
       try {
+        // Clear our queued deletions.
+        deletionManager.clear();
         super.run();
       } catch (Exception ex) {
         delegate.onWipeFailed(ex);
         return;
       }
-      // Clear our queued deletions.
-      deletionManager.clear();
     }
   }
 
@@ -908,6 +944,8 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     if (typeString == null) {
       Logger.warn(LOG_TAG, "Unsupported type code " + rowType);
       return null;
+    } else {
+      Logger.trace(LOG_TAG, "Record " + guid + " has type " + typeString);
     }
 
     rec.type = typeString;

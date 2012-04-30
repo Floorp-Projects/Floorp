@@ -831,6 +831,8 @@ PresShell::PresShell()
   mYResolution = 1.0;
   mViewportOverridden = false;
 
+  mScrollPositionClampingScrollPortSizeSet = false;
+
   static bool addedSynthMouseMove = false;
   if (!addedSynthMouseMove) {
     Preferences::AddBoolVarCache(&sSynthMouseMove,
@@ -5060,7 +5062,8 @@ void PresShell::UpdateCanvasBackground()
 nscolor PresShell::ComputeBackstopColor(nsIView* aDisplayRoot)
 {
   nsIWidget* widget = aDisplayRoot->GetWidget();
-  if (widget && widget->GetTransparencyMode() != eTransparencyOpaque) {
+  if (widget && (widget->GetTransparencyMode() != eTransparencyOpaque ||
+                 widget->WidgetPaintsBackground())) {
     // Within a transparent widget, so the backstop color must be
     // totally transparent.
     return NS_RGBA(0,0,0,0);
@@ -5318,7 +5321,8 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
                      nsMouseEvent::eSynthesized);
   event.refPoint = refpoint.ToNearestPixels(viewAPD);
   event.time = PR_IntervalNow();
-  // XXX set event.isShift, event.isControl, event.isAlt, event.isMeta ?
+  // XXX set event.modifiers ?
+  // XXX mnakano I think that we should get the latest information from widget.
 
   nsCOMPtr<nsIPresShell> shell = pointVM->GetPresShell();
   if (shell) {
@@ -5709,10 +5713,6 @@ EvictTouchPoint(nsCOMPtr<nsIDOMTouch>& aTouch)
     return;
   }
   nsTouchEvent event(true, NS_TOUCH_END, widget);
-  event.isShift = false;
-  event.isControl = false;
-  event.isAlt = false;
-  event.isMeta = false;
   event.widget = widget;
   event.time = PR_IntervalNow();
   event.touches.AppendElement(aTouch);
@@ -5791,6 +5791,10 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
       // if the mouse is being captured then retarget the mouse event at the
       // document that is being captured.
       retargetEventDoc = capturingContent->GetCurrentDoc();
+#ifdef ANDROID
+    } else if (aEvent->eventStructType == NS_TOUCH_EVENT) {
+      retargetEventDoc = GetTouchEventTargetDocument();
+#endif
     }
 
     if (retargetEventDoc) {
@@ -5932,6 +5936,12 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
         ClearMouseCapture(nsnull);
         capturingContent = nsnull;
       }
+    }
+
+    // all touch events except for touchstart use a captured target
+    if (aEvent->eventStructType == NS_TOUCH_EVENT &&
+        aEvent->message != NS_TOUCH_START) {
+      captureRetarget = true;
     }
 
     bool isWindowLevelMouseExit = (aEvent->message == NS_MOUSE_EXIT) &&
@@ -6185,6 +6195,36 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
 
   return rv;
 }
+
+#ifdef ANDROID
+nsIDocument*
+PresShell::GetTouchEventTargetDocument()
+{
+  nsPresContext* context = GetPresContext();
+  if (!context || !context->IsRoot()) {
+    return nsnull;
+  }
+
+  nsCOMPtr<nsISupports> container = context->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> shellAsTreeItem = do_QueryInterface(container);
+  if (!shellAsTreeItem) {
+    return nsnull;
+  }
+
+  nsCOMPtr<nsIDocShellTreeOwner> owner;
+  shellAsTreeItem->GetTreeOwner(getter_AddRefs(owner));
+  if (!owner) {
+    return nsnull;
+  }
+
+  // now get the primary content shell (active tab)
+  nsCOMPtr<nsIDocShellTreeItem> item;
+  owner->GetPrimaryContentShell(getter_AddRefs(item));
+  nsCOMPtr<nsIDocShell> childDocShell = do_QueryInterface(item);
+  nsCOMPtr<nsIDocument> result = do_GetInterface(childDocShell);
+  return result;
+}
+#endif
 
 #ifdef NS_DEBUG
 void
@@ -6534,7 +6574,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
           !AdjustContextMenuKeyEvent(me)) {
         return NS_OK;
       }
-      if (me->isShift)
+      if (me->IsShift())
         aEvent->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH |
                          NS_EVENT_RETARGET_TO_NON_NATIVE_ANONYMOUS;
     }
@@ -9140,3 +9180,10 @@ PresShell::SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf) const
                                                 /* clear = */false);
 }
 
+void
+nsIPresShell::SetScrollPositionClampingScrollPortSize(nscoord aWidth, nscoord aHeight)
+{
+  mScrollPositionClampingScrollPortSizeSet = true;
+  mScrollPositionClampingScrollPortSize.width = aWidth;
+  mScrollPositionClampingScrollPortSize.height = aHeight;
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=743615
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 743615</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="utils_bug743615.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=743615">Mozilla Bug 743615</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<canvas id="c" width="200" height="200"><canvas>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for structured cloning ImageData. **/
+
+SimpleTest.waitForExplicitFinish();
+window.addEventListener('message', windowMessage);
+startTest();
+
+function startTest() {
+  // Make an ImageData.
+  var ctx = document.getElementById('c').getContext('2d');
+  ctx.fillStyle = 'rgb(';
+  ctx.fillRect(30, 30, 50, 50);
+
+  // Make a blank ImageData.
+  var imageData = ctx.createImageData(200, 200);
+  is(imageData.data.length, imageData.width * imageData.height * 4,
+   'right size for data');
+
+  // Write some things into it.
+  var pattern = makePattern(imageData.data.length, 42, 7);
+  setPattern(imageData, pattern);
+  ok(checkPattern(imageData, pattern), 'Can read it back before sending');
+
+  // PostMessage it to ourselves.
+  window.postMessage({ imageData: imageData,
+                       pattern: pattern,
+                       dataRef: imageData.data }, '*');
+}
+
+function windowMessage(evt) {
+  // Check the pattern we received.
+  var imageData = evt.data.imageData;
+  var pattern = evt.data.pattern;
+  ok(checkPattern(imageData, pattern),
+     'postMessage from self worked correctly');
+
+  // We're not spec compliant on this yet.
+  todo_is(imageData.data, evt.data.dataRef,
+          'Should have backrefs for imagedata buffer');
+
+  // Make a new pattern, and send it to a worker.
+  pattern = makePattern(imageData.data.length, 4, 3);
+  setPattern(imageData, pattern);
+  var worker = new Worker('worker_bug743615.js');
+  worker.onmessage = workerMessage;
+  worker.postMessage( {imageData: imageData, pattern: pattern });
+}
+
+function workerMessage(evt) {
+  // Relay the results of the worker-side tests.
+  is(evt.data.statusMessage, 'PASS', evt.data.statusMessage);
+
+  // Test what the worker sent us.
+  ok(checkPattern(evt.data.imageData, evt.data.pattern),
+     'postMessage from worker worked correctly');
+
+  // All done.
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

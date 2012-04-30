@@ -222,18 +222,18 @@ namespace mozilla {
 MediaMemoryReporter* MediaMemoryReporter::sUniqueInstance;
 
 NS_MEMORY_REPORTER_IMPLEMENT(MediaDecodedVideoMemory,
-                             "explicit/media/decoded-video",
-                             KIND_HEAP,
-                             UNITS_BYTES,
-                             MediaMemoryReporter::GetDecodedVideoMemory,
-                             "Memory used by decoded video frames.")
+  "explicit/media/decoded-video",
+  KIND_HEAP,
+  UNITS_BYTES,
+  MediaMemoryReporter::GetDecodedVideoMemory,
+  "Memory used by decoded video frames.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(MediaDecodedAudioMemory,
-                             "explicit/media/decoded-audio",
-                             KIND_HEAP,
-                             UNITS_BYTES,
-                             MediaMemoryReporter::GetDecodedAudioMemory,
-                             "Memory used by decoded audio chunks.")
+  "explicit/media/decoded-audio",
+  KIND_HEAP,
+  UNITS_BYTES,
+  MediaMemoryReporter::GetDecodedAudioMemory,
+  "Memory used by decoded audio chunks.")
 
 MediaMemoryReporter::MediaMemoryReporter()
   : mMediaDecodedVideoMemory(new NS_MEMORY_REPORTER_NAME(MediaDecodedVideoMemory))

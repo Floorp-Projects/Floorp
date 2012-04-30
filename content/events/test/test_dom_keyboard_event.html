@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for DOM KeyboardEvent</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests, window);
+
+function testInitializingUntrustedEvent()
+{
+  const kTests = [
+    { createEventArg: "KeyboardEvent",
+      type: "keydown", bubbles: true, cancelable: true, view: null,
+      ctrlKey: false, altKey: false, shiftKey: false, metaKey: false,
+      keyCode: 0x00, charCode: 0x00 },
+
+    { createEventArg: "keyboardevent",
+      type: "keyup", bubbles: false, cancelable: true, view: window,
+      ctrlKey: true, altKey: false, shiftKey: false, metaKey: false,
+      keyCode: 0x10, charCode: 0x00 },
+
+    { createEventArg: "Keyboardevent",
+      type: "keypess", bubbles: true, cancelable: false, view: null,
+      ctrlKey: false, altKey: true, shiftKey: false, metaKey: false,
+      keyCode: 0x11, charCode: 0x30 },
+
+    { createEventArg: "keyboardEvent",
+      type: "boo", bubbles: false, cancelable: false, view: window,
+      ctrlKey: false, altKey: false, shiftKey: true, metaKey: false,
+      keyCode: 0x30, charCode: 0x40 },
+
+    { createEventArg: "KeyEvents",
+      type: "foo", bubbles: true, cancelable: true, view: null,
+      ctrlKey: false, altKey: false, shiftKey: false, metaKey: true,
+      keyCode: 0x00, charCode: 0x50 },
+
+    { createEventArg: "keyevents",
+      type: "bar", bubbles: false, cancelable: true, view: window,
+      ctrlKey: true, altKey: true, shiftKey: false, metaKey: false,
+      keyCode: 0x00, charCode: 0x60 },
+
+    { createEventArg: "Keyevents",
+      type: "keydown", bubbles: true, cancelable: false, view: null,
+      ctrlKey: false, altKey: true, shiftKey: false, metaKey: true,
+      keyCode: 0x30, charCode: 0x00 },
+
+    { createEventArg: "keyEvents",
+      type: "keyup", bubbles: false, cancelable: false, view: window,
+      ctrlKey: true, altKey: false, shiftKey: true, metaKey: false,
+      keyCode: 0x10, charCode: 0x80 },
+
+    { createEventArg: "KeyboardEvent",
+      type: "keypress", bubbles: false, cancelable: false, view: window,
+      ctrlKey: true, altKey: false, shiftKey: true, metaKey: true,
+      keyCode: 0x10, charCode: 0x80 },
+
+    { createEventArg: "KeyboardEvent",
+      type: "foo", bubbles: false, cancelable: false, view: window,
+      ctrlKey: true, altKey: true, shiftKey: true, metaKey: true,
+      keyCode: 0x10, charCode: 0x80 },
+  ];
+
+  const kOtherModifierName = [
+    "CapsLock", "NumLock", "Scroll", "SymbolLock", "Fn", "Win", "AltGraph"
+  ];
+
+  const kInvalidModifierName = [
+    "shift", "control", "alt", "meta", "capslock", "numlock", "scroll",
+    "symbollock", "fn", "win", "altgraph", "Invalid", "Shift Control"
+  ];
+
+  for (var i = 0; i < kTests.length; i++) {
+    var description = "testInitializingUntrustedEvent, Index: " + i + ", ";
+    const kTest = kTests[i];
+    var e = document.createEvent(kTest.createEventArg);
+    e.initKeyEvent(kTest.type, kTest.bubbles, kTest.cancelable, kTest.view,
+                   kTest.ctrlKey, kTest.altKey, kTest.shiftKey, kTest.metaKey,
+                   kTest.keyCode, kTest.charCode);
+
+    for (var attr in kTest) {
+      if (attr == "createEventArg") {
+        continue;
+      }
+      if (attr == "keyCode") {
+        // If this is keydown, keyup of keypress event, keycod must be correct.
+        if (kTest.type == "keydown" || kTest.type == "keyup" || kTest.type == "keypress") {
+          is(e[attr], kTest[attr], description + attr + " returns wrong value");
+        // Otherwise, should be always zero (why?)
+        } else {
+          is(e[attr], 0, description + attr + " returns non-zero for invalid event");
+        }
+      } else if (attr == "charCode") {
+        // If this is keydown or keyup event, charCode always 0.
+        if (kTest.type == "keydown" || kTest.type == "keyup") {
+          is(e[attr], 0, description + attr + " returns non-zero for keydown or keyup event");
+        // If this is keypress event, charCode must be correct.
+        } else if (kTest.type == "keypress") {
+          is(e[attr], kTest[attr], description + attr + " returns wrong value");
+        // Otherwise, we have a bug.
+        } else {
+          if (e[attr] != kTest[attr]) { // avoid random unexpected pass.
+            todo_is(e[attr], kTest[attr], description + attr + " returns wrong value");
+          }
+        }
+      } else {
+        is(e[attr], kTest[attr], description + attr + " returns wrong value");
+      }
+    }
+    is(e.isTrusted, false, description + "isTrusted returns wrong value");
+
+    // getModifierState() tests
+    is(e.getModifierState("Shift"), kTest.shiftKey,
+       description + "getModifierState(\"Shift\") returns wrong value");
+    is(e.getModifierState("Control"), kTest.ctrlKey,
+       description + "getModifierState(\"Control\") returns wrong value");
+    is(e.getModifierState("Alt"), kTest.altKey,
+       description + "getModifierState(\"Alt\") returns wrong value");
+    is(e.getModifierState("Meta"), kTest.metaKey,
+       description + "getModifierState(\"Meta\") returns wrong value");
+
+    for (var j = 0; j < kOtherModifierName.length; j++) {
+      ok(!e.getModifierState(kOtherModifierName[j]),
+         description + "getModifierState(\"" + kOtherModifierName[j] + "\") returns wrong value");
+    }
+    for (var k = 0; k < kInvalidModifierName.length; k++) {
+      ok(!e.getModifierState(kInvalidModifierName[k]),
+         description + "getModifierState(\"" + kInvalidModifierName[k] + "\") returns wrong value");
+    }
+  }
+}
+
+function runTests()
+{
+  testInitializingUntrustedEvent();
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

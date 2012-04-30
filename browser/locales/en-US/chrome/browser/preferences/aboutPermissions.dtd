@@ -28,6 +28,8 @@
 
 <!ENTITY geo.label                       "Share Location">
 
+<!ENTITY plugins.label                   "Plugins">
+
 <!-- LOCALIZATION NOTE (indexedDB.label): This is describing indexedDB storage
      using the same language used for the permIndexedDB string in browser/pageInfo.dtd -->
 <!ENTITY indexedDB.label                 "Maintain Offline Storage">

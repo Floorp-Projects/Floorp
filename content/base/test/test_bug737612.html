@@ -17,6 +17,8 @@ try {
   range.insertNode(document.head);
 } catch(e) {
   var threw = true;
+  is(e.name, "HierarchyRequestError",
+     "Must throw HierarchyRequestError");
   is(Object.getPrototypeOf(e), DOMException.prototype,
      "Must throw DOMException");
   is(e.code, DOMException.HIERARCHY_REQUEST_ERR,

@@ -112,7 +112,12 @@ var shell = {
     // a specific value when the device starts. This way the front-end
     // can display a notification when the volume change and show a volume
     // level modified from this point.
-    Services.audioManager.masterVolume = 0.5;
+    // try catch block must be used since the emulator fails here. bug 746429
+    try {
+      Services.audioManager.masterVolume = 0.5;
+    } catch(e) {
+      dump('Error setting master volume: ' + e + '\n');
+    }
 
     let domains = "";
     try {
@@ -323,6 +328,10 @@ var shell = {
         navigator.mozPower.screenEnabled = true;
       }
     }
+    if (topic == "cpu") {
+      navigator.mozPower.cpuSleepAllowed = (state != "locked-foreground" &&
+                                            state != "locked-background");
+    }
   }
 
   let idleTimeout = Services.prefs.getIntPref("power.screen.timeout");
@@ -354,6 +363,54 @@ var shell = {
       Services.idle.addIdleObserver(idleHandler, idleTimeout);
     }
   };
+})();
+
+const DATA_CALL_SETTING_BOLKEYS  = ["ril.data.enabled",
+                                    "ril.data.roaming.enabled"];
+const DATA_CALL_SETTING_CHARKEYS = ["ril.data.apn",
+                                    "ril.data.user",
+                                    "ril.data.passwd"];
+(function DataCallSettings() {
+  let sm = navigator.mozSettings;
+  let lock = sm.getLock();
+  DATA_CALL_SETTING_BOLKEYS.forEach(function(key) {
+    let request = lock.get(key);
+    request.onsuccess = function onSuccess() {
+      let value = request.result[key] || false;
+      Services.prefs.setBoolPref(key, value);
+      dump("DataCallSettings - " + key + ":" + value);
+    };
+    request.onerror = function onError() {
+      Services.prefs.setBoolPref(key, false);
+    };
+  });
+
+  DATA_CALL_SETTING_CHARKEYS.forEach(function(key) {
+    let request = lock.get(key);
+    request.onsuccess = function onSuccess() {
+      let value = request.result[key] || "";
+      Services.prefs.setCharPref(key, value);
+      dump("DataCallSettings - " + key + ":" + value);
+    };
+    request.onerror = function onError() {
+      Services.prefs.setCharPref(key, "");
+    };
+  });
+
+  navigator.mozSettings.onsettingchange = function onSettingChange(e) {
+    dump("DataCallSettings - onsettingchange: " + e.settingName +
+         ": " + e.settingValue);
+    if (e.settingValue) {
+      if (DATA_CALL_SETTING_BOLKEYS.indexOf(e.settingName) > -1 ) {
+        Services.prefs.setBoolPref(e.settingName, e.settingValue);
+        return;
+      }
+      if (DATA_CALL_SETTING_CHARKEYS.indexOf(e.settingName) > -1) {
+        Services.prefs.setCharPref(e.settingName, e.settingValue);
+      }
+    }
+  };
+
 })();
 
 function nsBrowserAccess() {

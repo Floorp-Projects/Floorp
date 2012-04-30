@@ -353,6 +353,8 @@ ThebesLayerD3D10::VerifyContentType(SurfaceMode aMode)
         NS_WARNING("Failed to create drawtarget for ThebesLayerD3D10.");
         return;
       }
+
+      mValidRegion.SetEmpty();
     }
   }    
 

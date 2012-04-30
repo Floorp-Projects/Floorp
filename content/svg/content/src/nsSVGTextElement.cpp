@@ -100,6 +100,8 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
   nsSVGTextContainerFrame* GetTextContainerFrame() {
     return do_QueryFrame(GetPrimaryFrame(Flush_Layout));

@@ -61,6 +61,8 @@ endif
 
 EXPORTS = \
         BasicLayers.h \
+        BasicTiledThebesLayer.h \
+        BasicImplData.h \
         ImageLayers.h \
         Layers.h \
         LayerManagerOGL.h \
@@ -72,6 +74,7 @@ EXPORTS = \
 CPPSRCS = \
         BasicImages.cpp \
         BasicLayers.cpp \
+        BasicTiledThebesLayer.cpp \
         Layers.cpp \
         RenderTrace.cpp \
         ReadbackProcessor.cpp \
@@ -82,6 +85,8 @@ CPPSRCS = \
         ImageLayerOGL.cpp \
         LayerManagerOGL.cpp \
         ThebesLayerOGL.cpp \
+        TiledThebesLayerOGL.cpp \
+        ReusableTileStoreOGL.cpp \
         LayerSorter.cpp \
         ImageLayers.cpp \
         $(NULL)

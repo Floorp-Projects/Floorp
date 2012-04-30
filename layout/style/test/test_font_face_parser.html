@@ -253,14 +253,26 @@
     { rule: _("unicode-range: U+A5, U+220043"),
       d: { "unicode-range" : "U+00A5" }, noncanonical: true },
 
-    // -moz-font-feature-settings, -moz-font-language-override:
+    // -moz-font-feature-settings
     { rule: _("-moz-font-feature-settings: normal;"),
       d: { "-moz-font-feature-settings" : "normal" } },
-    { rule: _("-moz-font-feature-settings: \"dlig=1\";"),
-      d: { "-moz-font-feature-settings" : "\"dlig=1\"" } },
-    { rule: _("-moz-font-feature-settings: 'dlig=1'"),
-      d: { "-moz-font-feature-settings" : "\"dlig=1\"" }, noncanonical: true },
+    { rule: _("-moz-font-feature-settings: \"dlig\";"),
+      d: { "-moz-font-feature-settings" : "\"dlig\"" } },
+    { rule: _("-moz-font-feature-settings: \"dlig\" 1;"),
+      d: { "-moz-font-feature-settings" : "\"dlig\"" }, noncanonical: true },
+    { rule: _("-moz-font-feature-settings: 'dlig' 1"),
+      d: { "-moz-font-feature-settings" : "\"dlig\"" }, noncanonical: true },
 
+    // incorrect -moz-font-feature-settings
+    { rule: _("-moz-font-feature-settings: dlig 1"), d: {} },
+    { rule: _("-moz-font-feature-settings: none;"), d: {} },
+    { rule: _("-moz-font-feature-settings: 0;"), d: {} },
+    { rule: _("-moz-font-feature-settings: 3.14;"), d: {} },
+    { rule: _("-moz-font-feature-settings: 'blah' 3.14;"), d: {} },
+    { rule: _("-moz-font-feature-settings: 'dlig' 1 'hist' 0;"), d: {} },
+    { rule: _("-moz-font-feature-settings: 'dlig=1,hist=1'"), d: {} },
+
+    // -moz-font-language-override:
     { rule: _("-moz-font-language-override: normal;"),
       d: { "-moz-font-language-override" : "normal" } },
     { rule: _("-moz-font-language-override: \"TRK\";"),
@@ -268,21 +280,11 @@
     { rule: _("-moz-font-language-override: 'TRK'"),
       d: { "-moz-font-language-override" : "\"TRK\"" }, noncanonical: true },
 
-    // incorrect -moz-font-feature-settings, -moz-font-language-override
-    // with unquoted values and other bad types:
-    { rule: _("-moz-font-feature-settings: dlig=1"), d: {} },
+    // incorrect -moz-font-language-override
     { rule: _("-moz-font-language-override: TRK"), d: {} },
-    { rule: _("-moz-font-feature-settings: none;"), d: {} },
     { rule: _("-moz-font-language-override: none;"), d: {} },
-    { rule: _("-moz-font-feature-settings: 0;"), d: {} },
     { rule: _("-moz-font-language-override: 0;"), d: {} },
-    { rule: _("-moz-font-feature-settings: 3.14;"), d: {} },
     { rule: _("-moz-font-language-override: #999;"), d: {} },
-
-    // incorrect -moz-font-feature-settings, -moz-font-language-override
-    // with multiple values:
-    { rule: _("-moz-font-feature-settings: 'dlig=1' 'hist=1'"), d: {} },
-    { rule: _("-moz-font-feature-settings: 'dlig=1', 'hist=1'"), d: {} },
     { rule: _("-moz-font-language-override: 'TRK' 'SRB'"), d: {} },
     { rule: _("-moz-font-language-override: 'TRK', 'SRB'"), d: {} },
   ];
@@ -295,12 +297,12 @@
       while(sheet.cssRules.length > 0)
         sheet.deleteRule(0);
       sheet.insertRule(testset[curTest].rule, 0);
-    } catch (e if e instanceof DOMException) {
-      ok(e.code == DOMException.SYNTAX_ERR
+    } catch (e) {
+      ok(e.name == "SyntaxError"
+         && e instanceof DOMException
+         && e.code == DOMException.SYNTAX_ERR
          && !('d' in testset[curTest]),
          testset[curTest].rule + " syntax error thrown", e);
-    } catch (e) {
-      ok(false, testset[curTest].rule, "During prep: " + e);
     }
 
     try {

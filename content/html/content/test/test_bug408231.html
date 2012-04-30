@@ -58,49 +58,89 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
       ["unlink", "true"],
       ["not-a-command", "false"]
     ];
-    
-    var commandStateResults = [
-      ["contentReadOnly", "exception"],
-      ["copy", "exception"],
-      ["createlink", "exception"],
-      ["cut", "exception"],
-      ["decreasefontsize", "exception"],
-      ["delete", "exception"],
-      ["fontname", "exception"],
-      ["fontsize", "exception"],
-      ["formatblock", "exception"],
-      ["heading", "exception"],
-      ["hilitecolor", "exception"],
-      ["increasefontsize", "exception"],
-      ["indent", "exception"],
-      ["inserthorizontalrule", "exception"],
-      ["inserthtml", "exception"],
-      ["insertimage", "exception"],
+
+    var commandIndetermResults = [
+      ["contentReadOnly", "false"],
+      ["copy", "false"],
+      ["createlink", "false"],
+      ["cut", "false"],
+      ["decreasefontsize", "false"],
+      ["delete", "false"],
+      ["fontname", "false"],
+      ["fontsize", "false"],
+      ["formatblock", "false"],
+      ["heading", "false"],
+      ["hilitecolor", "false"],
+      ["increasefontsize", "false"],
+      ["indent", "false"],
+      ["inserthorizontalrule", "false"],
+      ["inserthtml", "false"],
+      ["insertimage", "false"],
       ["insertorderedlist", "false"],
       ["insertunorderedlist", "false"],
-      ["insertparagraph", "exception"],
+      ["insertparagraph", "false"],
       ["italic", "false"],
       ["justifycenter", "false"],
       ["justifyfull", "false"],
-      ["justifyleft", "true"],
+      ["justifyleft", "false"],
       ["justifyright", "false"],
-      ["outdent", "exception"],
-      //["paste", "exception"],
-      ["redo", "exception"],
-      ["removeformat", "exception"],
-      ["selectall", "exception"],
+      ["outdent", "false"],
+      //["paste", "false"],
+      ["redo", "false"],
+      ["removeformat", "false"],
+      ["selectall", "false"],
       ["strikethrough", "false"],
       ["styleWithCSS", "false"],
       ["subscript", "false"],
       ["superscript", "false"],
       ["underline", "false"],
-      ["undo", "exception"],
+      ["undo", "false"],
       ["unlink", "false"],
-      ["not-a-command", "exception"]
+      ["not-a-command", "NS_ERROR_NOT_IMPLEMENTED"]
+    ];
+    
+    var commandStateResults = [
+      ["contentReadOnly", "false"],
+      ["copy", "false"],
+      ["createlink", "false"],
+      ["cut", "false"],
+      ["decreasefontsize", "false"],
+      ["delete", "false"],
+      ["fontname", "false"],
+      ["fontsize", "false"],
+      ["formatblock", "false"],
+      ["heading", "false"],
+      ["hilitecolor", "false"],
+      ["increasefontsize", "false"],
+      ["indent", "false"],
+      ["inserthorizontalrule", "false"],
+      ["inserthtml", "false"],
+      ["insertimage", "false"],
+      ["insertorderedlist", "false"],
+      ["insertunorderedlist", "false"],
+      ["insertparagraph", "false"],
+      ["italic", "false"],
+      ["justifycenter", "false"],
+      ["justifyfull", "false"],
+      ["justifyleft", "true"],
+      ["justifyright", "false"],
+      ["outdent", "false"],
+      //["paste", "false"],
+      ["redo", "false"],
+      ["removeformat", "false"],
+      ["selectall", "false"],
+      ["strikethrough", "false"],
+      ["styleWithCSS", "false"],
+      ["subscript", "false"],
+      ["superscript", "false"],
+      ["underline", "false"],
+      ["undo", "false"],
+      ["unlink", "false"],
+      ["not-a-command", "NS_ERROR_NOT_IMPLEMENTED"]
     ];
     
     var commandValueResults = [
-      ["contentReadOnly", "exception"],
+      ["contentReadOnly", ""],
       ["copy", ""],
       ["createlink", ""],
       ["cut", ""],
@@ -136,7 +176,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
       ["underline", ""],
       ["undo", ""],
       ["unlink", ""],
-      ["not-a-command", "exception"],
+      ["not-a-command", "NS_ERROR_NOT_IMPLEMENTED"],
     ];
     
   
@@ -145,7 +185,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
       try {
         result = '' + document.queryCommandEnabled( cmdName );
       } catch( error ) {
-        result = 'exception';
+        result = 'name' in error ? error.name : 'exception';
+      }
+      return result;
+    }
+
+    function callQueryCommandIndeterm(cmdName) {
+      var result;
+      try {
+        result = '' + document.queryCommandIndeterm( cmdName );
+      } catch( error ) {
+        result = 'name' in error ? error.name : 'exception';
       }
       return result;
     }
@@ -155,7 +205,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
       try {
         result = '' + document.queryCommandState( cmdName );
       } catch( error ) {
-        result = 'exception';
+        result = 'name' in error ? error.name : 'exception';
       }
       return result;
     }
@@ -165,7 +215,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
       try {
         result = '' + document.queryCommandValue( cmdName );
       } catch( error ) {
-        result = 'exception';
+        result = 'name' in error ? error.name : 'exception';
       }
       return result;    
     }
@@ -183,6 +233,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
       document.designMode='on';
       window.getSelection().collapse(document.body, 0);
       testQueryCommand(commandEnabledResults, callQueryCommandEnabled, "queryCommandEnabled");
+      testQueryCommand(commandIndetermResults, callQueryCommandIndeterm, "queryCommandIndeterm");
       testQueryCommand(commandStateResults, callQueryCommandState, "queryCommandState");
       testQueryCommand(commandValueResults, callQueryCommandValue, "queryCommandValue");
       document.designMode='off';

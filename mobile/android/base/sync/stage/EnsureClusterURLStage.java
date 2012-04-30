@@ -24,7 +24,11 @@ import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
 
-public class EnsureClusterURLStage implements GlobalSyncStage {
+public class EnsureClusterURLStage extends AbstractNonRepositorySyncStage {
+  public EnsureClusterURLStage(GlobalSession session) {
+    super(session);
+  }
+
   public interface ClusterURLFetchDelegate {
     /**
      * 200 - Success.
@@ -172,7 +176,7 @@ public class EnsureClusterURLStage implements GlobalSyncStage {
     resource.get();
   }
 
-  public void execute(final GlobalSession session) throws NoSuchStageException {
+  public void execute() throws NoSuchStageException {
     final URI oldClusterURL = session.config.getClusterURL();
     final boolean wantNodeAssignment = session.callback.wantNodeAssignment();
 

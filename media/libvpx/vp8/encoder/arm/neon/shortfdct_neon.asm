@@ -11,134 +11,211 @@
 
     EXPORT  |vp8_short_fdct4x4_neon|
     EXPORT  |vp8_short_fdct8x4_neon|
+
     ARM
     REQUIRE8
     PRESERVE8
 
+    AREA ||.text||, CODE, READONLY, ALIGN=4
 
-    AREA ||.text||, CODE, READONLY, ALIGN=2
 
-; r0    short *input
-; r1    short *output
-; r2    int pitch
-; Input has a pitch, output is contiguous
+    ALIGN 16    ; enable use of @128 bit aligned loads
+coeff
+    DCW      5352,  5352,  5352, 5352
+    DCW      2217,  2217,  2217, 2217
+    DCD     14500, 14500, 14500, 14500
+    DCD      7500,  7500,  7500, 7500
+    DCD     12000, 12000, 12000, 12000
+    DCD     51000, 51000, 51000, 51000
+
+;void vp8_short_fdct4x4_c(short *input, short *output, int pitch)
 |vp8_short_fdct4x4_neon| PROC
-    ldr             r12, _dct_matrix_
-    vld1.16         d0, [r0], r2
-    vld1.16         d1, [r0], r2
-    vld1.16         d2, [r0], r2
-    vld1.16         d3, [r0]
-    vld1.16         {q2, q3}, [r12]
 
-;first stage
-    vmull.s16       q11, d4, d0[0]              ;i=0
-    vmull.s16       q12, d4, d1[0]              ;i=1
-    vmull.s16       q13, d4, d2[0]              ;i=2
-    vmull.s16       q14, d4, d3[0]              ;i=3
+    ; Part one
+    vld1.16         {d0}, [r0@64], r2
+    adr             r12, coeff
+    vld1.16         {d1}, [r0@64], r2
+    vld1.16         {q8}, [r12@128]!        ; d16=5352,  d17=2217
+    vld1.16         {d2}, [r0@64], r2
+    vld1.32         {q9, q10}, [r12@128]!   ;  q9=14500, q10=7500
+    vld1.16         {d3}, [r0@64], r2
 
-    vmlal.s16       q11, d5, d0[1]
-    vmlal.s16       q12, d5, d1[1]
-    vmlal.s16       q13, d5, d2[1]
-    vmlal.s16       q14, d5, d3[1]
+    ; transpose d0=ip[0], d1=ip[1], d2=ip[2], d3=ip[3]
+    vtrn.32         d0, d2
+    vtrn.32         d1, d3
+    vld1.32         {q11,q12}, [r12@128]    ; q11=12000, q12=51000
+    vtrn.16         d0, d1
+    vtrn.16         d2, d3
 
-    vmlal.s16       q11, d6, d0[2]
-    vmlal.s16       q12, d6, d1[2]
-    vmlal.s16       q13, d6, d2[2]
-    vmlal.s16       q14, d6, d3[2]
+    vadd.s16        d4, d0, d3      ; a1 = ip[0] + ip[3]
+    vadd.s16        d5, d1, d2      ; b1 = ip[1] + ip[2]
+    vsub.s16        d6, d1, d2      ; c1 = ip[1] - ip[2]
+    vsub.s16        d7, d0, d3      ; d1 = ip[0] - ip[3]
 
-    vmlal.s16       q11, d7, d0[3]              ;sumtemp for i=0
-    vmlal.s16       q12, d7, d1[3]              ;sumtemp for i=1
-    vmlal.s16       q13, d7, d2[3]              ;sumtemp for i=2
-    vmlal.s16       q14, d7, d3[3]              ;sumtemp for i=3
+    vshl.s16        q2, q2, #3      ; (a1, b1) << 3
+    vshl.s16        q3, q3, #3      ; (c1, d1) << 3
 
-    ; rounding
-    vrshrn.i32      d22, q11, #14
-    vrshrn.i32      d24, q12, #14
-    vrshrn.i32      d26, q13, #14
-    vrshrn.i32      d28, q14, #14
+    vadd.s16        d0, d4, d5      ; op[0] = a1 + b1
+    vsub.s16        d2, d4, d5      ; op[2] = a1 - b1
 
-;second stage
-    vmull.s16       q4, d22, d4[0]              ;i=0
-    vmull.s16       q5, d22, d4[1]              ;i=1
-    vmull.s16       q6, d22, d4[2]              ;i=2
-    vmull.s16       q7, d22, d4[3]              ;i=3
+    vmlal.s16       q9, d7, d16     ; d1*5352 + 14500
+    vmlal.s16       q10, d7, d17    ; d1*2217 + 7500
+    vmlal.s16       q9, d6, d17     ; c1*2217 + d1*5352 + 14500
+    vmlsl.s16       q10, d6, d16    ; d1*2217 - c1*5352 + 7500
 
-    vmlal.s16       q4, d24, d5[0]
-    vmlal.s16       q5, d24, d5[1]
-    vmlal.s16       q6, d24, d5[2]
-    vmlal.s16       q7, d24, d5[3]
+    vshrn.s32       d1, q9, #12     ; op[1] = (c1*2217 + d1*5352 + 14500)>>12
+    vshrn.s32       d3, q10, #12    ; op[3] = (d1*2217 - c1*5352 +  7500)>>12
 
-    vmlal.s16       q4, d26, d6[0]
-    vmlal.s16       q5, d26, d6[1]
-    vmlal.s16       q6, d26, d6[2]
-    vmlal.s16       q7, d26, d6[3]
 
-    vmlal.s16       q4, d28, d7[0]              ;sumtemp for i=0
-    vmlal.s16       q5, d28, d7[1]              ;sumtemp for i=1
-    vmlal.s16       q6, d28, d7[2]              ;sumtemp for i=2
-    vmlal.s16       q7, d28, d7[3]              ;sumtemp for i=3
+    ; Part two
 
-    vrshr.s32       q0, q4, #16
-    vrshr.s32       q1, q5, #16
-    vrshr.s32       q2, q6, #16
-    vrshr.s32       q3, q7, #16
+    ; transpose d0=ip[0], d1=ip[4], d2=ip[8], d3=ip[12]
+    vtrn.32         d0, d2
+    vtrn.32         d1, d3
+    vtrn.16         d0, d1
+    vtrn.16         d2, d3
 
-    vmovn.i32       d0, q0
-    vmovn.i32       d1, q1
-    vmovn.i32       d2, q2
-    vmovn.i32       d3, q3
+    vmov.s16        d26, #7
 
-    vst1.16         {q0, q1}, [r1]
+    vadd.s16        d4, d0, d3      ; a1 = ip[0] + ip[12]
+    vadd.s16        d5, d1, d2      ; b1 = ip[4] + ip[8]
+    vsub.s16        d6, d1, d2      ; c1 = ip[4] - ip[8]
+    vadd.s16        d4, d4, d26     ; a1 + 7
+    vsub.s16        d7, d0, d3      ; d1 = ip[0] - ip[12]
+
+    vadd.s16        d0, d4, d5      ; op[0] = a1 + b1 + 7
+    vsub.s16        d2, d4, d5      ; op[8] = a1 - b1 + 7
+
+    vmlal.s16       q11, d7, d16    ; d1*5352 + 12000
+    vmlal.s16       q12, d7, d17    ; d1*2217 + 51000
+
+    vceq.s16        d4, d7, #0
+
+    vshr.s16        d0, d0, #4
+    vshr.s16        d2, d2, #4
+
+    vmlal.s16       q11, d6, d17    ; c1*2217 + d1*5352 + 12000
+    vmlsl.s16       q12, d6, d16    ; d1*2217 - c1*5352 + 51000
+
+    vmvn.s16        d4, d4
+    vshrn.s32       d1, q11, #16    ; op[4] = (c1*2217 + d1*5352 + 12000)>>16
+    vsub.s16        d1, d1, d4      ; op[4] += (d1!=0)
+    vshrn.s32       d3, q12, #16    ; op[12]= (d1*2217 - c1*5352 + 51000)>>16
+
+    vst1.16         {q0, q1}, [r1@128]
 
     bx              lr
 
     ENDP
 
-; r0    short *input
-; r1    short *output
-; r2    int pitch
+;void vp8_short_fdct8x4_c(short *input, short *output, int pitch)
 |vp8_short_fdct8x4_neon| PROC
-    ; Store link register and input before calling
-    ;  first 4x4 fdct.  Do not need to worry about
-    ;  output or pitch because those pointers are not
-    ;  touched in the 4x4 fdct function
-    stmdb           sp!, {r0, lr}
 
-    bl              vp8_short_fdct4x4_neon
+    ; Part one
 
-    ldmia           sp!, {r0, lr}
+    vld1.16         {q0}, [r0@128], r2
+    adr             r12, coeff
+    vld1.16         {q1}, [r0@128], r2
+    vld1.16         {q8}, [r12@128]!        ; d16=5352,  d17=2217
+    vld1.16         {q2}, [r0@128], r2
+    vld1.32         {q9, q10}, [r12@128]!   ;  q9=14500, q10=7500
+    vld1.16         {q3}, [r0@128], r2
 
-    ; Move to the next block of data.
-    add             r0, r0, #8
-    add             r1, r1, #32
+    ; transpose q0=ip[0], q1=ip[1], q2=ip[2], q3=ip[3]
+    vtrn.32         q0, q2          ; [A0|B0]
+    vtrn.32         q1, q3          ; [A1|B1]
+    vtrn.16         q0, q1          ; [A2|B2]
+    vtrn.16         q2, q3          ; [A3|B3]
 
-    ; Second time through do not store off the
-    ;  link register, just return from the 4x4 fdtc
-    b               vp8_short_fdct4x4_neon
+    vadd.s16        q11, q0, q3     ; a1 = ip[0] + ip[3]
+    vadd.s16        q12, q1, q2     ; b1 = ip[1] + ip[2]
+    vsub.s16        q13, q1, q2     ; c1 = ip[1] - ip[2]
+    vsub.s16        q14, q0, q3     ; d1 = ip[0] - ip[3]
 
-    ; Should never get to this.
+    vshl.s16        q11, q11, #3    ; a1 << 3
+    vshl.s16        q12, q12, #3    ; b1 << 3
+    vshl.s16        q13, q13, #3    ; c1 << 3
+    vshl.s16        q14, q14, #3    ; d1 << 3
+
+    vadd.s16        q0, q11, q12    ; [A0 | B0] = a1 + b1
+    vsub.s16        q2, q11, q12    ; [A2 | B2] = a1 - b1
+
+    vmov.s16        q11, q9         ; 14500
+    vmov.s16        q12, q10        ; 7500
+
+    vmlal.s16       q9, d28, d16    ; A[1] = d1*5352 + 14500
+    vmlal.s16       q10, d28, d17   ; A[3] = d1*2217 + 7500
+    vmlal.s16       q11, d29, d16   ; B[1] = d1*5352 + 14500
+    vmlal.s16       q12, d29, d17   ; B[3] = d1*2217 + 7500
+
+    vmlal.s16       q9, d26, d17    ; A[1] = c1*2217 + d1*5352 + 14500
+    vmlsl.s16       q10, d26, d16   ; A[3] = d1*2217 - c1*5352 + 7500
+    vmlal.s16       q11, d27, d17   ; B[1] = c1*2217 + d1*5352 + 14500
+    vmlsl.s16       q12, d27, d16   ; B[3] = d1*2217 - c1*5352 + 7500
+
+    vshrn.s32       d2, q9, #12     ; A[1] = (c1*2217 + d1*5352 + 14500)>>12
+    vshrn.s32       d6, q10, #12    ; A[3] = (d1*2217 - c1*5352 +  7500)>>12
+    vshrn.s32       d3, q11, #12    ; B[1] = (c1*2217 + d1*5352 + 14500)>>12
+    vshrn.s32       d7, q12, #12    ; B[3] = (d1*2217 - c1*5352 +  7500)>>12
+
+
+    ; Part two
+    vld1.32         {q9,q10}, [r12@128]    ; q9=12000, q10=51000
+
+    ; transpose q0=ip[0], q1=ip[4], q2=ip[8], q3=ip[12]
+    vtrn.32         q0, q2          ; q0=[A0 | B0]
+    vtrn.32         q1, q3          ; q1=[A4 | B4]
+    vtrn.16         q0, q1          ; q2=[A8 | B8]
+    vtrn.16         q2, q3          ; q3=[A12|B12]
+
+    vmov.s16        q15, #7
+
+    vadd.s16        q11, q0, q3     ; a1 = ip[0] + ip[12]
+    vadd.s16        q12, q1, q2     ; b1 = ip[4] + ip[8]
+    vadd.s16        q11, q11, q15   ; a1 + 7
+    vsub.s16        q13, q1, q2     ; c1 = ip[4] - ip[8]
+    vsub.s16        q14, q0, q3     ; d1 = ip[0] - ip[12]
+
+    vadd.s16        q0, q11, q12    ; a1 + b1 + 7
+    vsub.s16        q1, q11, q12    ; a1 - b1 + 7
+
+    vmov.s16        q11, q9         ; 12000
+    vmov.s16        q12, q10        ; 51000
+
+    vshr.s16        d0, d0, #4      ; A[0] = (a1 + b1 + 7)>>4
+    vshr.s16        d4, d1, #4      ; B[0] = (a1 + b1 + 7)>>4
+    vshr.s16        d2, d2, #4      ; A[8] = (a1 + b1 + 7)>>4
+    vshr.s16        d6, d3, #4      ; B[8] = (a1 + b1 + 7)>>4
+
+
+    vmlal.s16       q9, d28, d16    ; A[4]  = d1*5352 + 12000
+    vmlal.s16       q10, d28, d17   ; A[12] = d1*2217 + 51000
+    vmlal.s16       q11, d29, d16   ; B[4]  = d1*5352 + 12000
+    vmlal.s16       q12, d29, d17   ; B[12] = d1*2217 + 51000
+
+    vceq.s16        q14, q14, #0
+
+    vmlal.s16       q9, d26, d17    ; A[4]  = c1*2217 + d1*5352 + 12000
+    vmlsl.s16       q10, d26, d16   ; A[12] = d1*2217 - c1*5352 + 51000
+    vmlal.s16       q11, d27, d17   ; B[4]  = c1*2217 + d1*5352 + 12000
+    vmlsl.s16       q12, d27, d16   ; B[12] = d1*2217 - c1*5352 + 51000
+
+    vmvn.s16        q14, q14
+
+    vshrn.s32       d1, q9, #16     ; A[4] = (c1*2217 + d1*5352 + 12000)>>16
+    vshrn.s32       d3, q10, #16    ; A[12]= (d1*2217 - c1*5352 + 51000)>>16
+    vsub.s16        d1, d1, d28     ; A[4] += (d1!=0)
+
+    vshrn.s32       d5, q11, #16    ; B[4] = (c1*2217 + d1*5352 + 12000)>>16
+    vshrn.s32       d7, q12, #16    ; B[12]= (d1*2217 - c1*5352 + 51000)>>16
+    vsub.s16        d5, d5, d29     ; B[4] += (d1!=0)
+
+    vst1.16         {q0, q1}, [r1@128]! ; block A
+    vst1.16         {q2, q3}, [r1@128]! ; block B
+
     bx              lr
 
     ENDP
-
-;-----------------
-
-_dct_matrix_
-    DCD     dct_matrix
-dct_matrix
-;   DCW     23170,  30274,  23170, 12540
-;   DCW     23170,  12540, -23170,-30274
-;   DCW     23170, -12540, -23170, 30274
-;   DCW     23170, -30274,  23170,-12540
-; 23170 =  0x5a82
-; -23170 =  0xa57e
-; 30274 =  0x7642
-; -30274 =  0x89be
-; 12540 =  0x30fc
-; -12540 = 0xcf04
-    DCD     0x76425a82, 0x30fc5a82
-    DCD     0x30fc5a82, 0x89bea57e
-    DCD     0xcf045a82, 0x7642a57e
-    DCD     0x89be5a82, 0xcf045a82
 
     END
+

@@ -110,7 +110,7 @@ FENNEC_JAVA_FILES = \
   sqlite/SQLiteBridgeException.java \
   RemoteTabs.java \
   SetupScreen.java \
-  SurfaceLockInfo.java \
+  SurfaceBits.java \
   Tab.java \
   Tabs.java \
   TabsTray.java \
@@ -124,6 +124,7 @@ FENNEC_JAVA_FILES = \
   gfx/CheckerboardImage.java \
   gfx/DisplayPortCalculator.java \
   gfx/DisplayPortMetrics.java \
+  gfx/DrawTimingQueue.java \
   gfx/FloatSize.java \
   gfx/GeckoLayerClient.java \
   gfx/GLController.java \
@@ -134,10 +135,12 @@ FENNEC_JAVA_FILES = \
   gfx/LayerController.java \
   gfx/LayerRenderer.java \
   gfx/LayerView.java \
+  gfx/PluginLayer.java \
   gfx/NinePatchTileLayer.java \
   gfx/PanningPerfAPI.java \
   gfx/PointUtils.java \
   gfx/RectUtils.java \
+  gfx/ScreenshotLayer.java \
   gfx/ScrollbarLayer.java \
   gfx/SingleTileLayer.java \
   gfx/SurfaceTextureLayer.java \
@@ -339,6 +342,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/ic_addons_empty.png \
   res/drawable/ic_awesomebar_go.png \
   res/drawable/ic_awesomebar_search.png \
+  res/drawable/ic_awesomebar_star.png \
   res/drawable/ic_menu_bookmark_add.png \
   res/drawable/ic_menu_bookmark_remove.png \
   res/drawable/ic_menu_find_in_page.png \
@@ -366,6 +370,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/site_security_verified.png \
   res/drawable/urlbar_stop.png \
   res/drawable/validation_arrow.png \
+  res/drawable/validation_arrow_inverted.png \
   res/drawable/validation_bg.9.png \
   res/drawable/bookmarkdefaults_favicon_support.png \
   res/drawable/bookmarkdefaults_favicon_addons.png \
@@ -394,6 +399,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_addons_empty.png \
   res/drawable-hdpi/ic_awesomebar_go.png \
   res/drawable-hdpi/ic_awesomebar_search.png \
+  res/drawable-hdpi/ic_awesomebar_star.png \
   res/drawable-hdpi/ic_menu_bookmark_add.png \
   res/drawable-hdpi/ic_menu_bookmark_remove.png \
   res/drawable-hdpi/ic_menu_find_in_page.png \
@@ -420,6 +426,9 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/site_security_identified.png \
   res/drawable-hdpi/site_security_verified.png \
   res/drawable-hdpi/urlbar_stop.png \
+  res/drawable-hdpi/validation_arrow.png \
+  res/drawable-hdpi/validation_arrow_inverted.png \
+  res/drawable-hdpi/validation_bg.9.png \
   $(addprefix res/drawable-hdpi/,$(notdir $(SYNC_RES_DRAWABLE_HDPI))) \
   $(NULL)
 
@@ -459,6 +468,7 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_addons_empty.png \
   res/drawable-xhdpi-v11/ic_awesomebar_go.png \
   res/drawable-xhdpi-v11/ic_awesomebar_search.png \
+  res/drawable-xhdpi-v11/ic_awesomebar_star.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_remove.png \
   res/drawable-xhdpi-v11/ic_menu_find_in_page.png \
@@ -477,10 +487,17 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/address_bar_texture_port.png \
   res/drawable-xhdpi-v11/address_bar_url_bg.9.png \
   res/drawable-xhdpi-v11/address_bar_url_outline.9.png \
+  res/drawable-xhdpi-v11/doorhanger_arrow.png \
+  res/drawable-xhdpi-v11/doorhanger_bg.9.png \
+  res/drawable-xhdpi-v11/doorhanger_shadow_bg.9.png \
+  res/drawable-xhdpi-v11/doorhanger_popup_bg.9.png \
   res/drawable-xhdpi-v11/urlbar_stop.png \
   res/drawable-xhdpi-v11/site_security_identified.png \
   res/drawable-xhdpi-v11/site_security_verified.png \
   res/drawable-xhdpi-v11/tabs_button_tail.9.png \
+  res/drawable-xhdpi-v11/validation_arrow.png \
+  res/drawable-xhdpi-v11/validation_arrow_inverted.png \
+  res/drawable-xhdpi-v11/validation_bg.9.png \
   $(NULL)
 
 RES_DRAWABLE_LAND_V14 = \

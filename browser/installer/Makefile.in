@@ -48,7 +48,10 @@ include $(topsrcdir)/config/rules.mk
 MOZ_PKG_REMOVALS = $(srcdir)/removed-files.in
 
 MOZ_PKG_MANIFEST_P = $(srcdir)/package-manifest.in
+# Some files have been already bundled with xulrunner
+ifndef SYSTEM_LIBXUL
 MOZ_PKG_FATAL_WARNINGS = 1
+endif
 
 MOZ_NONLOCALIZED_PKG_LIST = \
 	xpcom \

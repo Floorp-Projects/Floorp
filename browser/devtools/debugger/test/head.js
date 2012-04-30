@@ -92,7 +92,6 @@ function debug_tab_pane(aURL, aOnDebugging)
 {
   let tab = addTab(aURL, function() {
     gBrowser.selectedTab = gTab;
-
     let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
 
     let pane = DebuggerUI.toggleDebugger();
@@ -104,5 +103,19 @@ function debug_tab_pane(aURL, aOnDebugging)
         aOnDebugging(tab, debuggee, pane);
       });
     }, true);
+  });
+}
+
+function remote_debug_tab_pane(aURL, aOnClosing, aOnDebugging)
+{
+  let tab = addTab(aURL, function() {
+    gBrowser.selectedTab = gTab;
+    let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
+
+    DebuggerUI.toggleRemoteDebugger(aOnClosing, function dbgRan(process) {
+
+      // Wait for the remote debugging process to start...
+      aOnDebugging(tab, debuggee, process);
+    });
   });
 }

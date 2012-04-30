@@ -181,9 +181,16 @@ public:
 
     static void NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen, int aStart, int aEnd, int aNewEnd);
 
-    static void RemovePluginView(void* surface);
+    /* These are defined in mobile/android/base/GeckoAppShell.java */
+    enum {
+        SCREENSHOT_THUMBNAIL = 0,
+        SCREENSHOT_WHOLE_PAGE = 1,
+        SCREENSHOT_UPDATE = 2
+    };
 
-    nsresult TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt32 srcY, PRInt32 srcW, PRInt32 srcH, PRInt32 dstW, PRInt32 dstH, PRInt32 tabId, float scale);
+    nsresult TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt32 srcY, PRInt32 srcW, PRInt32 srcH, PRInt32 dstW, PRInt32 dstH, PRInt32 tabId, float scale, PRInt32 token);
+
+    static void NotifyPaintedRect(float top, float left, float bottom, float right);
 
     void AcknowledgeEventSync();
 
@@ -309,15 +316,22 @@ public:
             }
         }
 
-        ~AutoLocalJNIFrame() {
-            if (!mJNIEnv)
-                return;
-
+        bool CheckForException() {
             jthrowable exception = mJNIEnv->ExceptionOccurred();
             if (exception) {
                 mJNIEnv->ExceptionDescribe();
                 mJNIEnv->ExceptionClear();
+                return true;
             }
+
+            return false;
+        }
+
+        ~AutoLocalJNIFrame() {
+            if (!mJNIEnv)
+                return;
+
+            CheckForException();
 
             mJNIEnv->PopLocalFrame(NULL);
         }
@@ -344,9 +358,9 @@ public:
     void RegisterCompositor();
     EGLSurface ProvideEGLSurface();
 
-    bool GetStaticStringField(const char *classID, const char *field, nsAString &result);
+    bool GetStaticStringField(const char *classID, const char *field, nsAString &result, JNIEnv* env = nsnull);
 
-    bool GetStaticIntField(const char *className, const char *fieldName, PRInt32* aInt);
+    bool GetStaticIntField(const char *className, const char *fieldName, PRInt32* aInt, JNIEnv* env = nsnull);
 
     void SetKeepScreenOn(bool on);
 
@@ -376,7 +390,7 @@ public:
 
     bool HasNativeWindowAccess();
 
-    void *AcquireNativeWindow(jobject surface);
+    void *AcquireNativeWindow(JNIEnv* aEnv, jobject aSurface);
     void ReleaseNativeWindow(void *window);
     bool SetNativeWindowFormat(void *window, int width, int height, int format);
 
@@ -413,8 +427,9 @@ public:
     void EnableNetworkNotifications();
     void DisableNetworkNotifications();
 
-    void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight);
-    void SetPageSize(float aZoom, float aPageWidth, float aPageHeight);
+    void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight,
+                               float aCssPageWidth, float aCssPageHeight);
+    void SetPageSize(float aZoom, float aPageWidth, float aPageHeight, float aCssPageWidth, float aCssPageHeight);
     void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                           nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
 
@@ -422,6 +437,9 @@ public:
     void DestroySurface(jobject surface);
     void ShowSurface(jobject surface, const gfxRect& aRect, bool aInverted, bool aBlend);
     void HideSurface(jobject surface);
+
+    void AddPluginView(jobject view, const gfxRect& rect);
+    void RemovePluginView(jobject view);
 
     // This method doesn't take a ScreenOrientation because it's an enum and
     // that would require including the header which requires include IPC
@@ -458,9 +476,11 @@ protected:
 
     bool mOpenedGraphicsLibraries;
     void OpenGraphicsLibraries();
+    void* GetNativeSurface(JNIEnv* env, jobject surface);
 
     bool mHasNativeBitmapAccess;
     bool mHasNativeWindowAccess;
+    bool mHasNativeWindowFallback;
 
     nsCOMArray<nsIRunnable> mRunnableQueue;
 
@@ -522,7 +542,14 @@ protected:
     jmethodID jHandleGeckoMessage;
     jmethodID jCheckUriVisited;
     jmethodID jMarkUriVisited;
+    jmethodID jAddPluginView;
     jmethodID jRemovePluginView;
+    jmethodID jCreateSurface;
+    jmethodID jShowSurface;
+    jmethodID jHideSurface;
+    jmethodID jDestroySurface;
+
+    jmethodID jNotifyPaintedRect;
 
     jmethodID jNumberOfMessages;
     jmethodID jSendMessage;
@@ -542,6 +569,10 @@ protected:
     jmethodID jDisableScreenOrientationNotifications;
     jmethodID jLockScreenOrientation;
     jmethodID jUnlockScreenOrientation;
+
+    // For native surface stuff
+    jclass jSurfaceClass;
+    jfieldID jSurfacePointerField;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;
@@ -568,6 +599,11 @@ protected:
 
     int (* ANativeWindow_lock)(void *window, void *outBuffer, void *inOutDirtyBounds);
     int (* ANativeWindow_unlockAndPost)(void *window);
+
+    int (* Surface_lock)(void* surface, void* surfaceInfo, void* region, bool block);
+    int (* Surface_unlockAndPost)(void* surface);
+    void (* Region_constructor)(void* region);
+    void (* Region_set)(void* region, void* rect);
 };
 
 }

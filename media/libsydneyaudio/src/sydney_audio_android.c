@@ -218,6 +218,7 @@ sa_stream_open(sa_stream_t *s) {
 
   s->at_class = init_jni_bindings(jenv);
   if (!s->at_class) {
+    (*jenv)->PopLocalFrame(jenv, NULL);
     return SA_ERROR_NO_DEVICE;
   }
 

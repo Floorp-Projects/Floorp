@@ -92,6 +92,26 @@ __wrap_dladdr(void *addr, Dl_info *info)
   return 1;
 }
 
+int
+__wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
+{
+  if (ElfLoader::Singleton.dbg == NULL)
+    return -1;
+
+  for (ElfLoader::r_debug::iterator it = ElfLoader::Singleton.dbg->begin();
+       it < ElfLoader::Singleton.dbg->end(); ++it) {
+    dl_phdr_info info;
+    info.dlpi_addr = reinterpret_cast<Elf::Addr>(it->l_addr);
+    info.dlpi_name = it->l_name;
+    info.dlpi_phdr = NULL;
+    info.dlpi_phnum = 0;
+    int ret = callback(&info, sizeof(dl_phdr_info), data);
+    if (ret)
+      return ret;
+  }
+  return 0;
+}
+
 namespace {
 
 /**

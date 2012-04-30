@@ -62,7 +62,7 @@ function inspectorUIOpen1()
   // Make sure the inspector is open.
   ok(InspectorUI.inspecting, "Inspector is highlighting");
   ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
-  ok(!InspectorUI.isSidebarOpen, "Inspector Sidebar is not open");
+  ok(!InspectorUI.sidebar.visible, "Inspector Sidebar is not open");
   ok(!InspectorUI.store.isEmpty(), "InspectorUI.store is not empty");
   is(InspectorUI.store.length, 1, "Inspector.store.length = 1");
 
@@ -89,7 +89,6 @@ function inspectorTabOpen2()
   // Make sure the inspector is closed.
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
   ok(!InspectorUI.treePanel, "Inspector Tree Panel is closed");
-  ok(!InspectorUI.isSidebarOpen, "Inspector Sidebar is not open");
   is(InspectorUI.store.length, 1, "Inspector.store.length = 1");
 
   // Activate the inspector again.
@@ -114,6 +113,7 @@ function inspectorUIOpen2()
   // Disable highlighting.
   InspectorUI.toggleInspection();
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
+
 
   // Switch back to tab 1.
   executeSoon(function() {
@@ -150,24 +150,25 @@ function inspectorOpenTreePanelTab1()
   is(InspectorUI.store.length, 2, "Inspector.store.length = 2");
   is(InspectorUI.selection, div, "selection matches the div element");
 
-  Services.obs.addObserver(inspectorSidebarStyleView1, "StyleInspector-opened", false);
+  InspectorUI.currentInspector.once("sidebaractivated-computedview",
+    inspectorSidebarStyleView1);
 
   executeSoon(function() {
-    InspectorUI.showSidebar();
-    InspectorUI.activateSidebarPanel("styleinspector");
+    InspectorUI.sidebar.show();
+    InspectorUI.sidebar.activatePanel("computedview");
   });
 }
 
 function inspectorSidebarStyleView1()
 {
-  Services.obs.removeObserver(inspectorSidebarStyleView1, "StyleInspector-opened");
-  ok(InspectorUI.isSidebarOpen, "Inspector Sidebar is open");
-  ok(InspectorUI.stylePanel, "Inspector Has a Style Panel Instance");
-  InspectorUI.sidebarTools.forEach(function(aTool) {
-    let btn = document.getElementById(InspectorUI.getToolbarButtonId(aTool.id));
+  ok(InspectorUI.sidebar.visible, "Inspector Sidebar is open");
+  ok(computedView(), "Inspector Has a computed view Instance");
+
+  InspectorUI.sidebar._toolObjects().forEach(function (aTool) {
+    let btn = aTool.button;
     is(btn.hasAttribute("checked"),
-      (aTool == InspectorUI.stylePanel.registrationObject),
-      "Button " + btn.id + " has correct checked attribute");
+      (aTool.id == "computedview"),
+      "Button " + btn.label + " has correct checked attribute");
   });
 
   // Switch back to tab 2.
@@ -184,14 +185,15 @@ function inspectorFocusTab2()
   // Make sure the inspector is still open.
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
   ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
-  ok(!InspectorUI.isSidebarOpen, "Inspector Sidebar is not open");
+  ok(!InspectorUI.sidebar.visible, "Inspector Sidebar is not open");
   is(InspectorUI.store.length, 2, "Inspector.store.length is 2");
   isnot(InspectorUI.selection, div, "selection does not match the div element");
 
-  // Make sure keybindings still sork
-  EventUtils.synthesizeKey("VK_RETURN", { });
 
   executeSoon(function() {
+    // Make sure keybindings still work
+    synthesizeKeyFromKeyTag("key_inspect");
+
     ok(InspectorUI.inspecting, "Inspector is highlighting");
     InspectorUI.toggleInspection();
 
@@ -212,13 +214,13 @@ function inspectorSecondFocusTab1()
   is(InspectorUI.store.length, 2, "Inspector.store.length = 2");
   is(InspectorUI.selection, div, "selection matches the div element");
 
-  ok(InspectorUI.isSidebarOpen, "Inspector Sidebar is open");
-  ok(InspectorUI.stylePanel, "Inspector Has a Style Panel Instance");
-  InspectorUI.sidebarTools.forEach(function(aTool) {
-    let btn = document.getElementById(InspectorUI.getToolbarButtonId(aTool.id));
+  ok(InspectorUI.sidebar.visible, "Inspector Sidebar is open");
+  ok(computedView(), "Inspector Has a Style Panel Instance");
+  InspectorUI.sidebar._toolObjects().forEach(function(aTool) {
+    let btn = aTool.button;
     is(btn.hasAttribute("checked"),
-      (aTool == InspectorUI.stylePanel.registrationObject),
-      "Button " + btn.id + " has correct checked attribute");
+      (aTool.id == "computedview"),
+      "Button " + btn.label + " has correct checked attribute");
   });
 
   // Switch back to tab 2.

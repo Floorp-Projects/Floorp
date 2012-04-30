@@ -45,11 +45,11 @@
 #include "nsXULAppAPI.h"
 #include "nsNetUtil.h"
 #include "prio.h"
+#include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "MediaResource.h"
 #include "nsMathUtils.h"
 #include "prlog.h"
-#include "nsIPrivateBrowsingService.h"
 #include "mozilla/Preferences.h"
 #include "FileBlockCache.h"
 
@@ -123,7 +123,7 @@ void nsMediaCacheFlusher::Init()
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (observerService) {
-    observerService->AddObserver(gMediaCacheFlusher, NS_PRIVATE_BROWSING_SWITCH_TOPIC, true);
+    observerService->AddObserver(gMediaCacheFlusher, "last-pb-context-exited", true);
   }
 }
 
@@ -239,6 +239,7 @@ public:
   /**
    * An iterator that makes it easy to iterate through all streams that
    * have a given resource ID and are not closed.
+   * Can be used on the main thread or while holding the media cache lock.
    */
   class ResourceStreamIterator {
   public:
@@ -351,13 +352,14 @@ protected:
   // This member is main-thread only. It's used to allocate unique
   // resource IDs to streams.
   PRInt64                       mNextResourceID;
-  // This member is main-thread only. It contains all the streams.
-  nsTArray<nsMediaCacheStream*> mStreams;
 
   // The monitor protects all the data members here. Also, off-main-thread
   // readers that need to block will Wait() on this monitor. When new
   // data becomes available in the cache, we NotifyAll() on this monitor.
   ReentrantMonitor         mReentrantMonitor;
+  // This is only written while on the main thread and the monitor is held.
+  // Thus, it can be safely read from the main thread or while holding the monitor.
+  nsTArray<nsMediaCacheStream*> mStreams;
   // The Blocks describing the cache entries.
   nsTArray<Block> mIndex;
   // Writer which performs IO, asynchronously writing cache blocks.
@@ -374,8 +376,7 @@ protected:
 NS_IMETHODIMP
 nsMediaCacheFlusher::Observe(nsISupports *aSubject, char const *aTopic, PRUnichar const *aData)
 {
-  if (strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0 &&
-      NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData)) {
+  if (strcmp(aTopic, "last-pb-context-exited") == 0) {
     nsMediaCache::Flush();
   }
   return NS_OK;
@@ -1704,38 +1705,10 @@ nsMediaCacheStream::NotifyDataStarted(PRInt64 aOffset)
   }
 }
 
-void
+bool
 nsMediaCacheStream::UpdatePrincipal(nsIPrincipal* aPrincipal)
 {
-  if (!mPrincipal) {
-    NS_ASSERTION(!mUsingNullPrincipal, "Are we using a null principal or not?");
-    if (mUsingNullPrincipal) {
-      // Don't let mPrincipal be set to anything
-      return;
-    }
-    mPrincipal = aPrincipal;
-    return;
-  }
-
-  if (mPrincipal == aPrincipal) {
-    // Common case
-    NS_ASSERTION(!mUsingNullPrincipal, "We can't receive data from a null principal");
-    return;
-  }
-  if (mUsingNullPrincipal) {
-    // We've already fallen back to a null principal, so nothing more
-    // to do.
-    return;
-  }
-
-  bool equal;
-  nsresult rv = mPrincipal->Equals(aPrincipal, &equal);
-  if (NS_SUCCEEDED(rv) && equal)
-    return;
-
-  // Principals are not equal, so set mPrincipal to a null principal.
-  mPrincipal = do_CreateInstance("@mozilla.org/nullprincipal;1");
-  mUsingNullPrincipal = true;
+  return nsContentUtils::CombineResourcePrincipals(&mPrincipal, aPrincipal);
 }
 
 void
@@ -1743,6 +1716,20 @@ nsMediaCacheStream::NotifyDataReceived(PRInt64 aSize, const char* aData,
     nsIPrincipal* aPrincipal)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  // Update principals before putting the data in the cache. This is important,
+  // we want to make sure all principals are updated before any consumer
+  // can see the new data.
+  // We do this without holding the cache monitor, in case the client wants
+  // to do something that takes a lock.
+  {
+    nsMediaCache::ResourceStreamIterator iter(mResourceID);
+    while (nsMediaCacheStream* stream = iter.Next()) {
+      if (stream->UpdatePrincipal(aPrincipal)) {
+        stream->mClient->CacheClientNotifyPrincipalChanged();
+      }
+    }
+  }
 
   ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
   PRInt64 size = aSize;
@@ -1798,7 +1785,6 @@ nsMediaCacheStream::NotifyDataReceived(PRInt64 aSize, const char* aData,
       // The stream is at least as long as what we've read
       stream->mStreamLength = NS_MAX(stream->mStreamLength, mChannelOffset);
     }
-    stream->UpdatePrincipal(aPrincipal);
     stream->mClient->CacheClientNotifyDataReceived();
   }
 

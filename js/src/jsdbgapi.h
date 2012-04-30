@@ -532,6 +532,16 @@ js_ResumeVtune();
 
 #endif /* MOZ_VTUNE */
 
+#ifdef __linux__
+
+extern JS_FRIEND_API(JSBool)
+js_StartPerf();
+
+extern JS_FRIEND_API(JSBool)
+js_StopPerf();
+
+#endif /* __linux__ */
+
 extern JS_PUBLIC_API(void)
 JS_DumpBytecode(JSContext *cx, JSScript *script);
 

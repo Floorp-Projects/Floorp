@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that reloading and seeking in a media element that's being captured doesn't crash</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<video id="v"></video>
+<video id="vout"></video>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var v = document.getElementById('v');
+var vout = document.getElementById('vout');
+var stream = v.mozCaptureStream();
+vout.src = stream;
+
+function startTest(test) {
+  var seekTime = test.duration/2;
+
+  function ended() {
+    ok(true, "Final ended after changing src");
+    SimpleTest.finish();
+  };
+  function timeupdateAfterSeek() {
+    if (v.currentTime < seekTime + 0.001)
+      return;
+    ok(true, "timeupdate after seek");
+    v.removeEventListener("timeupdate", timeupdateAfterSeek, false);
+    v.src = test.name + "?1";
+    v.play();
+    v.addEventListener("ended", ended, false);
+  };
+  function seeked() {
+    ok(true, "Finished seeking");
+    v.removeEventListener("seeked", seeked, false);
+    v.addEventListener("timeupdate", timeupdateAfterSeek, false);
+  };
+  function timeupdate() {
+    if (v.currentTime == 0)
+      return;
+    ok(true, "Initial timeupdate");
+    v.removeEventListener("timeupdate", timeupdate, false);
+    v.currentTime = seekTime;
+    v.addEventListener("seeked", seeked, false);
+  };
+  v.addEventListener("timeupdate", timeupdate, false);
+
+  v.src = test.name;
+  v.play();
+  vout.play();
+}
+
+var testVideo = getPlayableVideo(gSmallTests);
+if (testVideo) {
+  startTest(testVideo);
+} else {
+  todo(false, "No playable video");
+}
+</script>
+</pre>
+</body>
+</html>

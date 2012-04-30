@@ -126,7 +126,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     for (; !iter.done(); ++iter) {
         if (!iter.isFunctionFrame() || iter.isEvalFrame())
             continue;
-        if (iter.callee().toFunction() == fun)
+        if (iter.callee() == fun)
             break;
     }
     if (iter.done())
@@ -145,7 +145,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
         ArgumentsObject *argsobj;
         if (!fp) {
-            RootedVarFunction f(cx, iter.callee().toFunction());
+            RootedVarFunction f(cx, iter.callee());
             argsobj = ArgumentsObject::createPoison(cx, f->nargs, f);
         } else {
             argsobj = ArgumentsObject::createUnexpected(cx, fp);
@@ -1383,9 +1383,9 @@ js_ReportIsNotFunction(JSContext *cx, const Value *vp, unsigned flags)
      */
     ptrdiff_t spindex = 0;
 
-    FrameRegsIter i(cx);
+    ScriptFrameIter i(cx);
     if (!i.done()) {
-        unsigned depth = js_ReconstructStackDepth(cx, i.fp()->script(), i.pc());
+        unsigned depth = js_ReconstructStackDepth(cx, i.script(), i.pc());
         Value *simsp = i.fp()->base() + depth;
         if (i.fp()->base() <= vp && vp < Min(simsp, i.sp()))
             spindex = vp - simsp;

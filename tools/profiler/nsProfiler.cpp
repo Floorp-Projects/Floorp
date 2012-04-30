@@ -105,7 +105,7 @@ AddSharedLibraryInfoToStream(std::ostream& aStream, SharedLibrary& aLib)
   aStream << "}";
 }
 
-static std::string
+std::string
 GetSharedLibraryInfoString()
 {
   SharedLibraryInfo info = SharedLibraryInfo::GetInfoForSelf();

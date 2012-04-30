@@ -563,36 +563,24 @@ nsHTMLTableAccessible::Summary(nsString& aSummary)
     table->GetSummary(aSummary);
 }
 
-NS_IMETHODIMP
-nsHTMLTableAccessible::GetColumnCount(PRInt32 *acolumnCount)
+PRUint32
+nsHTMLTableAccessible::ColCount()
 {
-  NS_ENSURE_ARG_POINTER(acolumnCount);
-  *acolumnCount = nsnull;
+  nsITableLayout* tableLayout = GetTableLayout();
 
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsITableLayout *tableLayout = GetTableLayout();
-  NS_ENSURE_STATE(tableLayout);
-
-  PRInt32 rows;
-  return tableLayout->GetTableSize(rows, *acolumnCount);
+  PRInt32 rowCount = 0, colCount = 0;
+  tableLayout->GetTableSize(rowCount, colCount);
+  return colCount;
 }
 
-NS_IMETHODIMP
-nsHTMLTableAccessible::GetRowCount(PRInt32 *arowCount)
+PRUint32
+nsHTMLTableAccessible::RowCount()
 {
-  NS_ENSURE_ARG_POINTER(arowCount);
-  *arowCount = 0;
+  nsITableLayout* tableLayout = GetTableLayout();
 
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsITableLayout *tableLayout = GetTableLayout();
-  NS_ENSURE_STATE(tableLayout);
-
-  PRInt32 columns;
-  return tableLayout->GetTableSize(*arowCount, columns);
+  PRInt32 rowCount = 0, colCount = 0;
+  tableLayout->GetTableSize(rowCount, colCount);
+  return rowCount;
 }
 
 NS_IMETHODIMP
@@ -1151,28 +1139,20 @@ nsHTMLTableAccessible::SelectColumn(PRInt32 aColumn)
                                    nsISelectionPrivate::TABLESELECTION_COLUMN);
 }
 
-NS_IMETHODIMP
-nsHTMLTableAccessible::UnselectRow(PRInt32 aRow)
+void
+nsHTMLTableAccessible::UnselectRow(PRUint32 aRowIdx)
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  return
-    RemoveRowsOrColumnsFromSelection(aRow,
-                                     nsISelectionPrivate::TABLESELECTION_ROW,
-                                     false);
+  RemoveRowsOrColumnsFromSelection(aRowIdx,
+                                   nsISelectionPrivate::TABLESELECTION_ROW,
+                                   false);
 }
 
-NS_IMETHODIMP
-nsHTMLTableAccessible::UnselectColumn(PRInt32 aColumn)
+void
+nsHTMLTableAccessible::UnselectCol(PRUint32 aColIdx)
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  return
-    RemoveRowsOrColumnsFromSelection(aColumn,
-                                     nsISelectionPrivate::TABLESELECTION_COLUMN,
-                                     false);
+  RemoveRowsOrColumnsFromSelection(aColIdx,
+                                   nsISelectionPrivate::TABLESELECTION_COLUMN,
+                                   false);
 }
 
 nsresult

@@ -26,25 +26,18 @@ function tabLoaded()
   browser.removeEventListener("load", tabLoaded, true);
   doc = content.document;
   // ok(StyleInspector.isEnabled, "style inspector preference is enabled");
-  stylePanel = new StyleInspector(window);
-  Services.obs.addObserver(runTests, "StyleInspector-opened", false);
-  stylePanel.createPanel(false, function() {
-    stylePanel.open(doc.body);
-  });
+  stylePanel = new ComputedViewPanel(window);
+  stylePanel.createPanel(doc.body, runTests);
 }
 
 function runTests()
 {
-  Services.obs.removeObserver(runTests, "StyleInspector-opened", false);
-
-  ok(stylePanel.isOpen(), "style inspector is open");
-
   testMatchedSelectors();
   //testUnmatchedSelectors();
 
   info("finishing up");
-  Services.obs.addObserver(finishUp, "StyleInspector-closed", false);
-  stylePanel.close();
+  stylePanel.destroy();
+  finishUp();
 }
 
 function testMatchedSelectors()
@@ -97,8 +90,6 @@ function testUnmatchedSelectors()
 
 function finishUp()
 {
-  Services.obs.removeObserver(finishUp, "StyleInspector-closed", false);
-  ok(!stylePanel.isOpen(), "style inspector is closed");
   doc = stylePanel = null;
   gBrowser.removeCurrentTab();
   finish();

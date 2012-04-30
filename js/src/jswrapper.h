@@ -51,15 +51,18 @@ namespace js {
 
 class DummyFrameGuard;
 
-/* Base class that just implements no-op forwarding methods for funamental
+/* Base class that just implements no-op forwarding methods for fundamental
  * traps. This is meant to be used as a base class for ProxyHandlers that
  * want transparent forwarding behavior but don't want to use the derived
  * traps and other baggage of js::Wrapper.
  */
 class JS_FRIEND_API(AbstractWrapper) : public ProxyHandler
 {
+    unsigned mFlags;
   public:
-    explicit AbstractWrapper();
+    unsigned flags() const { return mFlags; }
+
+    explicit AbstractWrapper(unsigned flags);
 
     /* ES5 Harmony fundamental wrapper traps. */
     virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, bool set,
@@ -71,7 +74,6 @@ class JS_FRIEND_API(AbstractWrapper) : public ProxyHandler
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper, AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp) MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props) MOZ_OVERRIDE;
-    virtual bool fix(JSContext *cx, JSObject *wrapper, Value *vp) MOZ_OVERRIDE;
 
     /* Policy enforcement traps.
      *
@@ -106,16 +108,13 @@ class JS_FRIEND_API(AbstractWrapper) : public ProxyHandler
     virtual void leave(JSContext *cx, JSObject *wrapper);
 
     static JSObject *wrappedObject(const JSObject *wrapper);
-    static Wrapper *wrapperHandler(const JSObject *wrapper);
+    static AbstractWrapper *wrapperHandler(const JSObject *wrapper);
 };
 
 /* No-op wrapper handler base class. */
 class JS_FRIEND_API(Wrapper) : public AbstractWrapper
 {
-    unsigned mFlags;
   public:
-    unsigned flags() const { return mFlags; }
-
     explicit Wrapper(unsigned flags);
 
     typedef enum { PermitObjectAccess, PermitPropertyAccess, DenyAccess } Permission;

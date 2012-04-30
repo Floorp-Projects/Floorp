@@ -36,22 +36,12 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
-#define NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "@mozilla.org/profile/migrator;1?app=browser&type="
-
 #ifdef XP_WIN
-#define NS_WINIEPROFILEMIGRATOR_CID \
-{ 0xbc15c73d, 0xc05b, 0x497b, { 0xa3, 0x73, 0x4b, 0xae, 0x6c, 0x17, 0x86, 0x31 } }
-
 #define NS_WINIEHISTORYENUMERATOR_CID \
 { 0x93480624, 0x806e, 0x4756, { 0xb7, 0xcb, 0x0f, 0xb7, 0xdd, 0x74, 0x6a, 0x8f } }
 
 #define NS_IEHISTORYENUMERATOR_CONTRACTID \
   "@mozilla.org/profile/migrator/iehistoryenumerator;1"
-#endif
-
-#ifdef XP_MACOSX
-#define NS_SAFARIPROFILEMIGRATOR_CID \
-{ 0x29e3b139, 0xad19, 0x44f3, { 0xb2, 0xc2, 0xe9, 0xf1, 0x3b, 0xa2, 0xbb, 0xc6 } }
 #endif
 
 #define NS_SHELLSERVICE_CID \

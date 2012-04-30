@@ -95,13 +95,12 @@ GetStartupCacheMappingSize()
 }
 
 NS_MEMORY_REPORTER_IMPLEMENT(StartupCacheMapping,
-                             "explicit/startup-cache/mapping",
-                             KIND_NONHEAP,
-                             nsIMemoryReporter::UNITS_BYTES,
-                             GetStartupCacheMappingSize,
-                             "Memory used to hold the mapping of the startup "
-                             "cache from file.  This memory is likely to be "
-                             "swapped out shortly after start-up.")
+    "explicit/startup-cache/mapping",
+    KIND_NONHEAP,
+    nsIMemoryReporter::UNITS_BYTES,
+    GetStartupCacheMappingSize,
+    "Memory used to hold the mapping of the startup cache from file.  This "
+    "memory is likely to be swapped out shortly after start-up.")
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(StartupCacheDataMallocSizeOf, "startup-cache/data")
 
@@ -113,12 +112,11 @@ GetStartupCacheDataSize()
 }
 
 NS_MEMORY_REPORTER_IMPLEMENT(StartupCacheData,
-                             "explicit/startup-cache/data",
-                             KIND_HEAP,
-                             nsIMemoryReporter::UNITS_BYTES,
-                             GetStartupCacheDataSize,
-                             "Memory used by the startup cache for things "
-                             "other than the file mapping.")
+    "explicit/startup-cache/data",
+    KIND_HEAP,
+    nsIMemoryReporter::UNITS_BYTES,
+    GetStartupCacheDataSize,
+    "Memory used by the startup cache for things other than the file mapping.")
 
 static const char sStartupCacheName[] = "startupCache." SC_WORDSIZE "." SC_ENDIAN;
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);

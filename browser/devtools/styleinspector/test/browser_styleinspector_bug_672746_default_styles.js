@@ -15,19 +15,12 @@ function createDocument()
     '</div>';
   doc.title = "Style Inspector Default Styles Test";
   // ok(StyleInspector.isEnabled, "style inspector preference is enabled");
-  stylePanel = new StyleInspector(window);
-  Services.obs.addObserver(runStyleInspectorTests, "StyleInspector-opened", false);
-  stylePanel.createPanel(false, function() {
-    stylePanel.open(doc.body);
-  });
+  stylePanel = new ComputedViewPanel(window);
+  stylePanel.createPanel(doc.body, runStyleInspectorTests);
 }
 
 function runStyleInspectorTests()
 {
-  Services.obs.removeObserver(runStyleInspectorTests, "StyleInspector-opened", false);
-
-  ok(stylePanel.isOpen(), "style inspector is open");
-
   Services.obs.addObserver(SI_check, "StyleInspector-populated", false);
   SI_inspectNode();
 }
@@ -75,8 +68,8 @@ function SI_checkDefaultStyles()
   is(propertyVisible("background-color"), true,
       "span background-color property is visible");
 
-  Services.obs.addObserver(finishUp, "StyleInspector-closed", false);
-  stylePanel.close();
+  stylePanel.destroy();
+  finishUp();
 }
 
 function propertyVisible(aName)
@@ -88,12 +81,11 @@ function propertyVisible(aName)
       return propView.visible;
     }
   }
+  return false;
 }
 
 function finishUp()
 {
-  Services.obs.removeObserver(finishUp, "StyleInspector-closed", false);
-  ok(!stylePanel.isOpen(), "style inspector is closed");
   doc = stylePanel = null;
   gBrowser.removeCurrentTab();
   finish();

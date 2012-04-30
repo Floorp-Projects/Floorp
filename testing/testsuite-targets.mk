@@ -86,22 +86,22 @@ RUN_MOCHITEST_ROBOTIUM = \
   rm -f ./$@.log && \
   $(PYTHON) _tests/testing/mochitest/runtestsremote.py --robocop-path=$(DEPTH)/dist \
     --robocop-ids=$(DEPTH)/build/mobile/robocop/fennec_ids.txt \
-    --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=adb \
+    --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
     --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
     --robocop=$(DEPTH)/build/mobile/robocop/robocop.ini $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
 ifndef NO_FAIL_ON_TEST_ERRORS
-define CHECK_TEST_ERROR
+define check_test_error_internal
   @errors=`grep "TEST-UNEXPECTED-" $@.log` ;\
   if test "$$errors" ; then \
 	  echo "$@ failed:"; \
 	  echo "$$errors"; \
-          echo "To rerun your failures please run 'make mochitest-plain-rerun-failures'"; \
+          $(if $(1),echo $(1)) \
 	  exit 1; \
-  else \
-	  echo "$@ passed"; \
   fi
 endef
+CHECK_TEST_ERROR = $(call check_test_error_internal)
+CHECK_TEST_ERROR_RERUN = $(call check_test_error_internal,"To rerun your failures please run 'make $@-rerun-failures'")
 endif
 
 mochitest-remote: DM_TRANS?=adb
@@ -127,11 +127,11 @@ mochitest-robotium:
 
 mochitest-plain:
 	$(RUN_MOCHITEST)
-	$(CHECK_TEST_ERROR)
+	$(CHECK_TEST_ERROR_RERUN)
 
 mochitest-plain-rerun-failures:
 	$(RERUN_MOCHITEST)
-	$(CHECK_TEST_ERROR)
+	$(CHECK_TEST_ERROR_RERUN)
 
 # Allow mochitest-1 ... mochitest-5 for developer ease
 mochitest-1 mochitest-2 mochitest-3 mochitest-4 mochitest-5: mochitest-%:
@@ -224,9 +224,12 @@ crashtest-ipc-gpu:
 	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH) $(OOP_CONTENT) $(GPU_RENDERING))
 	$(CHECK_TEST_ERROR)
 
-jstestbrowser: TEST_PATH?=js/src/tests/jstests.list
+jstestbrowser: TESTS_PATH?=test-package-stage/jsreftest/tests/
 jstestbrowser:
-	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH) --extra-profile-file=$(topsrcdir)/js/src/tests/user.js)
+	$(MAKE) -C $(DEPTH)/config
+	$(MAKE) -C $(DEPTH)/js/src/config
+	$(MAKE) stage-jstests
+	$(call RUN_REFTEST,$(DIST)/$(TESTS_PATH)/jstests.list --extra-profile-file=$(TESTS_PATH)/user.js)
 	$(CHECK_TEST_ERROR)
 
 GARBAGE += $(addsuffix .log,$(MOCHITESTS) reftest crashtest jstestbrowser)

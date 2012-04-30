@@ -44,6 +44,7 @@
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
+#include "nsIPresShell.h"
 
 class nsAccessible;
 class nsDocAccessible;
@@ -68,6 +69,14 @@ public:
    * Return document accessible for the given DOM node.
    */
   nsDocAccessible *GetDocAccessible(nsIDocument *aDocument);
+
+  /**
+   * Return document accessible for the given presshell.
+   */
+  nsDocAccessible* GetDocAccessible(const nsIPresShell* aPresShell)
+  {
+    return aPresShell ? GetDocAccessible(aPresShell->GetDocument()) : nsnull;
+  }
 
   /**
    * Search through all document accessibles for an accessible with the given

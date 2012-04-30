@@ -79,11 +79,6 @@ function step1A() {
 }
 
 function step1B(aWebProgress, aRequest, aLocation, aFlags) {
-  /* XXX Here we receive 2 notifications, due to bug 673752. */
-  if (!aRequest) {
-    return;
-  }
-
   is(aLocation.spec, kDNSErrorURI, "Error page's URI (1)");
 
   ok(!(aFlags & Components.interfaces.nsIWebProgressListener
@@ -161,9 +156,6 @@ function step4A() {
 }
 
 function step4B(aWebProgress, aRequest, aLocation, aFlags) {
-  if (!aRequest) // See step1B(...) and bug 673752.
-    return;
-
   is(aLocation.spec, kDNSErrorURI, "Go back to the error URI (4)");
 
   ok(!(aFlags & Components.interfaces.nsIWebProgressListener

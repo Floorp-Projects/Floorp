@@ -40,15 +40,8 @@
 
 // Tests that code completion works properly.
 
-const TEST_URI = "chrome://browser/content/browser.xul";
-
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.gcli.enable");
-});
-
 function test() {
-  Services.prefs.setBoolPref("devtools.gcli.enable", false);
-  addTab(TEST_URI);
+  addTab(getBrowserURL());
   browser.addEventListener("DOMContentLoaded", testChrome, false);
 }
 

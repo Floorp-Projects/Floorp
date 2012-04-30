@@ -310,6 +310,7 @@ if test -n "$gonkdir" ; then
     kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
     android_source="$gonkdir"
     ANDROID_SOURCE="$android_source"
+    ANDROID_NDK="${ANDROID_SOURCE}/ndk"
 
     dnl set up compilers
     AS="$gonk_toolchain_prefix"as
@@ -400,7 +401,15 @@ case "$target" in
 
         # With newer NDK, the toolchain path has changed.
         if ! test -d "$android_toolchain" ; then
-            android_toolchain="$android_ndk"/toolchains/arm-$kernel_name-androideabi-4.4.3/prebuilt/$kernel_name-x86
+            case "$target_cpu" in
+            arm)
+                target_name=arm-linux-androideabi-4.4.3
+                ;;
+            i?86)
+                target_name=x86-4.4.3
+                ;;
+            esac
+            android_toolchain="$android_ndk"/toolchains/$target_name/prebuilt/$kernel_name-x86
         fi
 
         if test -d "$android_toolchain" ; then
@@ -678,25 +687,49 @@ fi
 dnl ========================================================
 dnl Special win32 checks
 dnl ========================================================
-WINVER=502
-dnl Target the Windows 7 SDK by default
-WINSDK_TARGETVER=601
+
+# With win8, sdk target=602, WINVER=602
+MOZ_ARG_ENABLE_BOOL(metro,
+[  --enable-metro           Enable Windows Metro build targets],
+    MOZ_METRO=1,
+    MOZ_METRO=)
+if test -n "$MOZ_METRO"; then
+    AC_DEFINE(MOZ_METRO)
+    # Target the Windows 8 Kit
+    WINSDK_TARGETVER=602
+    # Allow a higher api set
+    WINVER=602
+else
+    # Target the Windows 7 SDK by default
+    WINSDK_TARGETVER=601
+    WINVER=502
+fi
+
+if test -n "$MOZ_METRO"; then
+  case "$target" in
+  *-mingw*)
+    ;;
+  *)
+    AC_MSG_ERROR([Metro builds only valid on the windows platform.]);
+    ;;
+  esac
+fi
 
 MOZ_ARG_WITH_STRING(windows-version,
 [  --with-windows-version=WINSDK_TARGETVER
-                          Highest Windows version to target using this SDK
-                              601: Windows 7],
+                          Windows SDK version to target. Lowest version
+                          currently allowed is 601 (Win7), highest is 602 (Win8)],
   WINSDK_TARGETVER=$withval)
 
+# Currently only two sdk versions allowed, 601 and 602
 case "$WINSDK_TARGETVER" in
-601)
+601|602)
     MOZ_WINSDK_TARGETVER=0${WINSDK_TARGETVER}0000
     ;;
 
 *)
-    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER), must be 601]);
+    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER)]);
     ;;
-
 esac
 
 case "$target" in
@@ -776,6 +809,16 @@ case "$target" in
             AC_MSG_ERROR([Invalid Win32 Redist directory: ${WIN32_REDIST_DIR}])
           fi
           WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd`
+        fi
+
+        dnl Confirm we have the pri tools on win8 builds
+        if test -n "$MOZ_METRO"; then
+          AC_MSG_CHECKING([for makepri])
+          AC_CHECK_PROGS(MAKEPRI, makepri, "")
+          if test -z "MAKEPRI" ; then
+              AC_MSG_ERROR([makepri.exe is required for generating metro browser install components. It should be in the Win8 SDK.])
+          fi
+          AC_SUBST(MAKEPRI)
         fi
 
         dnl Ensure that mt.exe is 'Microsoft (R) Manifest Tool',
@@ -966,7 +1009,7 @@ EOF
             AC_MSG_ERROR([windres version $WINDRES_VERSION or higher is required to build.])
         fi
 
-        MOZ_WINSDK_MAXVER=0x06010000
+        MOZ_WINSDK_MAXVER=0x06020000
     fi # !GNU_CC
 
     AC_DEFINE_UNQUOTED(WINVER,0x$WINVER)
@@ -983,7 +1026,18 @@ EOF
         AC_MSG_RESULT("no")
         AC_MSG_ERROR([You are targeting Windows version 0x$MOZ_WINSDK_TARGETVER, but your SDK only supports up to version $MOZ_WINSDK_MAXVER. Install and use an updated SDK, or target a lower version using --with-windows-version. Alternatively, try running the Windows SDK Configuration Tool and selecting a newer SDK. See https://developer.mozilla.org/En/Windows_SDK_versions for more details on fixing this.])
     fi
-
+    
+    # Make sure the sdk / code we're targeting has the right toolset
+    AC_MSG_CHECKING([SDK and tools are in sync])
+    if test -n "$MOZ_METRO"; then
+      if test "$MOZ_MSVCVERSION" -gt "10"; then
+        AC_MSG_RESULT("yes")
+      else
+        AC_MSG_RESULT("no")
+        AC_MSG_ERROR([Your MOZ_MSVCVERSION equals $MOZ_MSVCVERSION and you've enabled metro build support. You can't target metro without msvc 11 or higher. Disable metro support or switch to a newer set of tools.])
+      fi
+    fi
+      
     AC_DEFINE_UNQUOTED(MOZ_WINSDK_TARGETVER,0x$MOZ_WINSDK_TARGETVER)
     # Definitions matching sdkddkver.h
     AC_DEFINE_UNQUOTED(MOZ_NTDDI_WIN7, 0x06010000)
@@ -4497,6 +4551,7 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
 MOZ_FLEXBOX=
+MOZ_WEBAPP_RUNTIME=
 MOZ_JSDEBUGGER=1
 MOZ_AUTH_EXTENSION=1
 MOZ_OGG=1
@@ -4555,15 +4610,7 @@ MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
 MOZ_GRAPHITE=1
-
-case "${target}" in
-*darwin*)
-    ACCESSIBILITY=
-    ;;
-*)
-    ACCESSIBILITY=1
-    ;;
-esac
+ACCESSIBILITY=1
 
 case "$target_os" in
     mingw*)
@@ -5496,10 +5543,9 @@ AC_DEFINE(IBMBIDI)
 
 dnl ========================================================
 dnl accessibility support on by default on all platforms
-dnl except OS X.
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(accessibility,
-[  --disable-accessibility Disable accessibility support (off by default on OS X)],
+[  --disable-accessibility Disable accessibility support],
     ACCESSIBILITY=,
     ACCESSIBILITY=1 )
 if test "$ACCESSIBILITY"; then
@@ -5588,12 +5634,10 @@ MOZ_ARG_DISABLE_BOOL(webm,
 
 dnl system libvpx Support
 dnl ========================================================
-MOZ_ARG_WITH_STRING(system-libvpx,
-[  --with-system-libvpx=[PFX]
-                          Use system libvpx [installed at prefix PFX]],
-    LIBVPX_DIR=$withval)
+MOZ_ARG_WITH_BOOL(system-libvpx,
+[  --with-system-libvpx    Use system libvpx (located with pkgconfig)],
+    MOZ_NATIVE_LIBVPX=1)
 
-MOZ_NATIVE_LIBVPX=
 MOZ_LIBVPX_INCLUDES=
 MOZ_LIBVPX_LIBS=
 
@@ -5606,54 +5650,18 @@ if test -n "$MOZ_WEBM"; then
         AC_DEFINE(MOZ_VP8_ENCODER)
     fi
 
-    if test -n "$LIBVPX_DIR" -a "$LIBVPX_DIR" != no; then
-        _SAVE_CFLAGS=$CFLAGS
-        _SAVE_LDFLAGS=$LDFLAGS
-        _SAVE_LIBS=$LIBS
-        if test "${LIBVPX_DIR}" = "yes"; then
-            LIBVPX_DIR=/usr
-        fi
-        CFLAGS="-I${LIBVPX_DIR}/include $CFLAGS"
-        LDFLAGS="-L${LIBVPX_DIR}/lib $LDFLAGS"
-        MOZ_NATIVE_LIBVPX_DEC_TEST=
-        MOZ_CHECK_HEADER(vpx/vpx_decoder.h,
-            [if test ! -f "${LIBVPX_DIR}/include/vpx/vpx_decoder.h"; then
-             AC_MSG_ERROR([vpx/vpx_decoder.h found, but is not in ${LIBVPX_DIR}/include])
-            fi],
-            AC_MSG_ERROR([--with-system-libvpx requested but vpx/vpx_decoder.h not found]))
-        AC_CHECK_LIB(vpx, vpx_codec_dec_init_ver,
-                     [MOZ_NATIVE_LIBVPX_DEC_TEST=1],
-                     ([--with-system-libvpx requested but symbol vpx_codec_dec_init_ver not found]))
-        if test -n "$MOZ_NATIVE_LIBVPX_DEC_TEST" ; then
-            AC_MSG_CHECKING([for libvpx version >= v1.0.0])
-            dnl We need at least v1.0.0 to fix several crash bugs (for which we
-            dnl had local patches prior to v1.0.0).
-            dnl
-            dnl This is a terrible test for the library version, but we don't
-            dnl have a good one. There is no version number in a public header,
-            dnl and testing the headers still doesn't guarantee we link against
-            dnl the right version. While we could call vpx_codec_version() at
-            dnl run-time, that would break cross-compiling. There are no
-            dnl additional exported decoder symbols between the v1.0.0 release
-            dnl and the v0.9.7 one to check for.
-            AC_TRY_COMPILE([
-                #include <vpx/vpx_decoder.h>
-                #if !defined(VPX_CODEC_USE_INPUT_FRAGMENTS)
-                    #error "test failed."
-                #endif
-                ],
-                [return 0;],
-                [AC_MSG_RESULT([yes])
-                 MOZ_NATIVE_LIBVPX=1
-                 AC_DEFINE(MOZ_NATIVE_LIBVPX)
-                 MOZ_LIBVPX_INCLUDES="-I${LIBVPX_DIR}/include"
-                 MOZ_LIBVPX_LIBS="-L${LIBVPX_DIR}/lib -lvpx"],
-                [AC_MSG_RESULT([no])
-                 AC_MSG_ERROR([--with-system-libvpx requested but it is not v1.0.0 or later])])
-        fi
-        CFLAGS=$_SAVE_CFLAGS
-        LDFLAGS=$_SAVE_LDFLAGS
-        LIBS=$_SAVE_LIBS
+    if test -n "$MOZ_NATIVE_LIBVPX"; then
+        dnl ============================
+        dnl === libvpx Version check ===
+        dnl ============================
+        dnl Check to see if we have a system libvpx package.
+        PKG_CHECK_MODULES(LIBVPX, vpx >= 1.0.0)
+
+        MOZ_CHECK_HEADER([vpx/vpx_decoder.h], [], 
+         [AC_MSG_ERROR([Couldn't find vpx/vpx_decoder.h which is required for build with system libvpx. Use --without-system-libvpx to build with in-tree libvpx.])])
+
+        AC_CHECK_LIB(vpx, vpx_codec_dec_init_ver, [], 
+         [AC_MSG_ERROR([--with-system-libvpx requested but symbol vpx_codec_dec_init_ver not found])])
     fi
 fi
 
@@ -5819,15 +5827,54 @@ dnl = Check alsa availability on Linux if using sydneyaudio
 dnl ========================================================
 
 dnl If using sydneyaudio with Linux, ensure that the alsa library is available
-if test -n "$MOZ_SYDNEYAUDIO"; then
-   case "$target_os" in
-linux*)
-      PKG_CHECK_MODULES(MOZ_ALSA, alsa, ,
+if test -n "$MOZ_SYDNEYAUDIO" -a "$OS_TARGET" = "Linux"; then
+    PKG_CHECK_MODULES(MOZ_ALSA, alsa, ,
          [echo "$MOZ_ALSA_PKG_ERRORS"
           AC_MSG_ERROR([Need alsa for Ogg, Wave or WebM decoding on Linux.  Disable with --disable-ogg --disable-wave --disable-webm.  (On Ubuntu, you might try installing the package libasound2-dev.)])])
-      ;;
-   esac
 fi
+
+dnl ========================================================
+dnl = Enable GStreamer
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(gstreamer,
+[  --enable-gstreamer           Enable GStreamer support],
+MOZ_GSTREAMER=1,
+MOZ_GSTREAMER=)
+
+if test "$MOZ_GSTREAMER"; then
+    # API version, eg 0.10, 1.0 etc
+    GST_API_VERSION=0.10
+    # core/base release number
+    # depend on >= 0.10.33 as that's when the playbin2 source-setup signal was
+    # introduced
+    GST_VERSION=0.10.33
+    PKG_CHECK_MODULES(GSTREAMER,
+                      gstreamer-$GST_API_VERSION >= $GST_VERSION
+                      gstreamer-app-$GST_API_VERSION
+                      gstreamer-plugins-base-$GST_API_VERSION)
+    if test -n "$GSTREAMER_LIBS"; then
+       _SAVE_LDFLAGS=$LDFLAGS
+       LDFLAGS="$LDFLAGS -lgstvideo-$GST_API_VERSION"
+       AC_TRY_LINK(,[return 0;],_HAVE_LIBGSTVIDEO=1,_HAVE_LIBGSTVIDEO=)
+       if test -n "$_HAVE_LIBGSTVIDEO" ; then
+          GSTREAMER_LIBS="$GSTREAMER_LIBS -lgstvideo-$GST_API_VERSION"
+       else
+          AC_MSG_ERROR([gstreamer video backend requires libgstvideo])
+       fi
+       LDFLAGS=$_SAVE_LDFLAGS
+    else
+       AC_MSG_ERROR([gstreamer backend requires the gstreamer packages])
+    fi
+fi
+AC_SUBST(GSTREAMER_CFLAGS)
+AC_SUBST(GSTREAMER_LIBS)
+AC_SUBST(MOZ_GSTREAMER)
+
+if test -n "$MOZ_GSTREAMER"; then
+   AC_DEFINE(MOZ_GSTREAMER)
+   MOZ_MEDIA=1
+fi
+
 
 dnl ========================================================
 dnl Permissions System
@@ -6310,6 +6357,21 @@ if test "$OS_ARCH" = "WINNT"; then
     else
       MAKENSISU=
     fi
+fi
+
+dnl ========================================================
+dnl Web App Runtime
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(webapp-runtime,
+[  --disable-webapp-runtime  Disable Web App Runtime],
+    MOZ_WEBAPP_RUNTIME=,
+    MOZ_WEBAPP_RUNTIME=1)
+if test "$OS_ARCH" = "WINNT" -a -z "$MAKENSISU" -a -n "$CROSS_COMPILE"; then
+    MOZ_WEBAPP_RUNTIME=
+fi
+AC_SUBST(MOZ_WEBAPP_RUNTIME)
+if test "$MOZ_WEBAPP_RUNTIME"; then
+    AC_DEFINE(MOZ_WEBAPP_RUNTIME)
 fi
 
 AC_MSG_CHECKING([for tar archiver])
@@ -7457,7 +7519,7 @@ dnl ========================================================
 STDCXX_COMPAT=
 MOZ_ARG_ENABLE_BOOL(stdcxx-compat,
 [  --enable-stdcxx-compat  Enable compatibility with older libstdc++],
-    STDCXX_COMPAT=stdc++compat.cpp)
+    STDCXX_COMPAT=1)
 
 AC_SUBST(STDCXX_COMPAT)
 
@@ -7835,7 +7897,9 @@ fi # ! SKIP_COMPILER_CHECKS
 AC_DEFINE(CPP_THROW_NEW, [throw()])
 AC_LANG_C
 
+if test "$COMPILE_ENVIRONMENT"; then
 MOZ_EXPAND_LIBS
+fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
 dnl =
@@ -7952,10 +8016,8 @@ dnl ========================================================
 
 if test -z "$SKIP_PATH_CHECKS"; then
 if test -z "${GLIB_CFLAGS}" -o -z "${GLIB_LIBS}" ; then
-    if test "$MOZ_ENABLE_GTK2" -o "$USE_ELF_DYNSTR_GC" ; then
+    if test "$MOZ_ENABLE_GTK2" -o "$MOZ_ENABLE_QT" -o "$USE_ELF_DYNSTR_GC" ; then
         PKG_CHECK_MODULES(GLIB, glib-2.0 >= 1.3.7 gobject-2.0)
-    else
-        AM_PATH_GLIB(${GLIB_VERSION})
     fi
 fi
 fi
@@ -8399,6 +8461,7 @@ AC_SUBST(MOZ_D3DX9_CAB)
 AC_SUBST(MOZ_D3DCOMPILER_CAB)
 AC_SUBST(MOZ_D3DX9_DLL)
 AC_SUBST(MOZ_D3DCOMPILER_DLL)
+AC_SUBST(MOZ_METRO)
 
 AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)
@@ -8472,6 +8535,20 @@ if test -z "$MOZ_APP_NAME"; then
    MOZ_APP_NAME=`echo $MOZ_APP_BASENAME | tr A-Z a-z`
 fi
 
+# For extensions and langpacks, we require a max version that is compatible
+# across security releases. MOZ_APP_MAXVERSION is our method for doing that.
+# 10.0a1 and 10.0a2 aren't affected
+# 10.0 becomes 10.0.*
+# 10.0.1 becomes 10.0.*
+IS_ALPHA=`echo $MOZ_APP_VERSION | grep a`
+if test -z "$IS_ALPHA"; then
+  changequote(,)
+  MOZ_APP_MAXVERSION=`echo $MOZ_APP_VERSION | sed "s|\(^[0-9]*.[0-9]*\).*|\1|"`.*
+  changequote([,])
+else
+  MOZ_APP_MAXVERSION=$MOZ_APP_VERSION
+fi
+
 AC_SUBST(MOZ_APP_NAME)
 AC_SUBST(MOZ_APP_DISPLAYNAME)
 AC_SUBST(MOZ_APP_BASENAME)
@@ -8486,11 +8563,10 @@ AC_DEFINE_UNQUOTED(MOZ_APP_UA_NAME, "$MOZ_APP_UA_NAME")
 AC_SUBST(MOZ_APP_UA_NAME)
 AC_DEFINE_UNQUOTED(MOZ_APP_UA_VERSION, "$MOZ_APP_VERSION")
 AC_SUBST(MOZ_APP_VERSION)
+AC_SUBST(MOZ_APP_MAXVERSION)
 AC_DEFINE_UNQUOTED(MOZ_UA_FIREFOX_VERSION, "$FIREFOX_VERSION")
 AC_DEFINE_UNQUOTED(FIREFOX_VERSION,$FIREFOX_VERSION)
 AC_SUBST(FIREFOX_VERSION)
-AC_DEFINE_UNQUOTED(MOZ_UA_BUILDID, "$MOZ_UA_BUILDID")
-AC_SUBST(MOZ_UA_BUILDID)
 
 # We can't use the static application.ini data when building against
 # a libxul SDK.

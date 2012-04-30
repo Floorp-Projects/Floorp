@@ -1722,7 +1722,7 @@ static JSObject *
 GetCurrentScopeChain(JSContext *cx)
 {
     if (cx->hasfp())
-        return &cx->fp()->scopeChain();
+        return cx->fp()->scopeChain();
     return JS_ObjectToInnerObject(cx, cx->globalObject);
 }
 
@@ -1783,12 +1783,12 @@ ParseXMLSource(JSContext *cx, JSString *src)
     xml = NULL;
     filename = NULL;
     lineno = 1;
-    FrameRegsIter i(cx);
+    ScriptFrameIter i(cx);
     if (!i.done()) {
         op = (JSOp) *i.pc();
         if (op == JSOP_TOXML || op == JSOP_TOXMLLIST) {
-            filename = i.fp()->script()->filename;
-            lineno = PCToLineNumber(i.fp()->script(), i.pc());
+            filename = i.script()->filename;
+            lineno = PCToLineNumber(i.script(), i.pc());
             for (endp = srcp + srclen; srcp < endp; srcp++) {
                 if (*srcp == '\n')
                     --lineno;
@@ -5164,14 +5164,6 @@ xml_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
-static JSBool
-xml_fix(JSContext *cx, JSObject *obj, bool *success, AutoIdVector *props)
-{
-    JS_ASSERT(obj->isExtensible());
-    *success = false;
-    return true;
-}
-
 static void
 xml_clear(JSContext *cx, JSObject *obj)
 {
@@ -5412,7 +5404,6 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
         xml_deleteSpecial,
         xml_enumerate,
         xml_typeOf,
-        xml_fix,
         NULL,       /* thisObject     */
         xml_clear
     }
@@ -7703,7 +7694,7 @@ js_ValueToXMLString(JSContext *cx, const Value &v)
 JSBool
 js_GetAnyName(JSContext *cx, jsid *idp)
 {
-    JSObject *global = cx->hasfp() ? &cx->fp()->scopeChain().global() : cx->globalObject;
+    JSObject *global = cx->hasfp() ? &cx->fp()->global() : cx->globalObject;
     Value v = global->getReservedSlot(JSProto_AnyName);
     if (v.isUndefined()) {
         JSObject *obj = NewObjectWithGivenProto(cx, &AnyNameClass, NULL, global);

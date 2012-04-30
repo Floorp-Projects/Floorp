@@ -826,9 +826,6 @@ endif # NO_PROFILE_GUIDED_OPTIMIZE
 
 ##############################################
 
-stdc++compat.$(OBJ_SUFFIX): CXXFLAGS+=-DMOZ_LIBSTDCXX_VERSION=$(MOZ_LIBSTDCXX_TARGET_VERSION)
-host_stdc++compat.$(OBJ_SUFFIX): CXXFLAGS+=-DMOZ_LIBSTDCXX_VERSION=$(MOZ_LIBSTDCXX_HOST_VERSION)
-
 checkout:
 	$(MAKE) -C $(topsrcdir) -f client.mk checkout
 
@@ -1371,7 +1368,7 @@ $(foreach namespace,$(EXPORTS_NAMESPACES),$(eval $(EXPORT_NAMESPACE_RULE)))
 ifdef GRE_MODULE
 PREF_DIR = greprefs
 else
-ifneq (,$(XPI_NAME)$(LIBXUL_SDK))
+ifneq (,$(XPI_NAME)$(LIBXUL_SDK)$(MOZ_PHOENIX))
 PREF_DIR = defaults/preferences
 else
 PREF_DIR = defaults/pref

@@ -28,6 +28,10 @@
  * Google Author(s): Behdad Esfahbod
  */
 
+#ifndef HB_H_IN
+#error "Include <hb.h> instead."
+#endif
+
 #ifndef HB_UNICODE_H
 #define HB_UNICODE_H
 

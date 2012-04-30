@@ -1403,7 +1403,22 @@ StackIter::isNonEvalFunctionFrame() const
     return false;
 }
 
-JSObject &
+bool
+StackIter::isConstructing() const
+{
+    switch (state_) {
+      case DONE:
+        JS_NOT_REACHED("Unexpected state");
+        return false;
+      case SCRIPTED:
+      case NATIVE:
+      case IMPLICIT_NATIVE:
+        return fp()->isConstructing();
+    }
+    return false;
+}
+
+JSFunction *
 StackIter::callee() const
 {
     switch (state_) {
@@ -1411,15 +1426,15 @@ StackIter::callee() const
         break;
       case SCRIPTED:
         JS_ASSERT(isFunctionFrame());
-        return fp()->callee();
+        return fp()->callee().toFunction();
       case ION:
-        return *ionInlineFrames_.callee();
+        return ionInlineFrames_.callee();
       case NATIVE:
       case IMPLICIT_NATIVE:
-        return nativeArgs().callee();
+        return nativeArgs().callee().toFunction();
     }
     JS_NOT_REACHED("Unexpected state");
-    return *(JSObject *) NULL;
+    return NULL;
 }
 
 Value
@@ -1438,6 +1453,22 @@ StackIter::calleev() const
         return nativeArgs().calleev();
     }
     JS_NOT_REACHED("Unexpected state");
+    return Value();
+}
+
+Value
+StackIter::thisv() const
+{
+    switch (state_) {
+      case DONE:
+        MOZ_NOT_REACHED("Unexpected state");
+        return Value();
+      case SCRIPTED:
+      case NATIVE:
+      case IMPLICIT_NATIVE:
+        return fp()->thisValue();
+    }
+    MOZ_NOT_REACHED("unexpected state");
     return Value();
 }
 

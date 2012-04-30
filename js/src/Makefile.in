@@ -206,7 +206,6 @@ INSTALLED_HEADERS = \
 		jsproto.tbl \
 		jsprvtd.h \
 		jspubtd.h \
-		jstypedarray.h \
 		jstypes.h \
 		jsutil.h \
 		jsversion.h \

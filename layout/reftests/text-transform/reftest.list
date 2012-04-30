@@ -9,9 +9,10 @@
 == small-caps-1.html small-caps-1-ref.html
 == uppercase-1.html uppercase-ref.html
 == uppercase-szlig-1.html uppercase-szlig-ref.html
-== all-upper.html all-upper-ref.html
-== all-lower.html all-lower-ref.html
-== all-title.html all-title-ref.html
+# these use DejaVu Sans via @font-face for consistency of results
+HTTP(..) == all-upper.html all-upper-ref.html
+HTTP(..) == all-lower.html all-lower-ref.html
+HTTP(..) == all-title.html all-title-ref.html
 == smtp-upper.html smtp-upper-ref.html
 == smtp-lower.html smtp-lower-ref.html
 == smtp-title.html smtp-title-ref.html

@@ -116,19 +116,45 @@ function sendKey(aKey, aWindow) {
  */
 function _parseModifiers(aEvent)
 {
-  const masks = Components.interfaces.nsIDOMNSEvent;
+  const nsIDOMWindowUtils = Components.interfaces.nsIDOMWindowUtils;
   var mval = 0;
-  if (aEvent.shiftKey)
-    mval |= masks.SHIFT_MASK;
-  if (aEvent.ctrlKey)
-    mval |= masks.CONTROL_MASK;
-  if (aEvent.altKey)
-    mval |= masks.ALT_MASK;
-  if (aEvent.metaKey)
-    mval |= masks.META_MASK;
-  if (aEvent.accelKey)
-    mval |= (navigator.platform.indexOf("Mac") >= 0) ? masks.META_MASK :
-                                                       masks.CONTROL_MASK;
+  if (aEvent.shiftKey) {
+    mval |= nsIDOMWindowUtils.MODIFIER_SHIFT;
+  }
+  if (aEvent.ctrlKey) {
+    mval |= nsIDOMWindowUtils.MODIFIER_CONTROL;
+  }
+  if (aEvent.altKey) {
+    mval |= nsIDOMWindowUtils.MODIFIER_ALT;
+  }
+  if (aEvent.metaKey) {
+    mval |= nsIDOMWindowUtils.MODIFIER_META;
+  }
+  if (aEvent.accelKey) {
+    mval |= (navigator.platform.indexOf("Mac") >= 0) ?
+      nsIDOMWindowUtils.MODIFIER_META : nsIDOMWindowUtils.MODIFIER_CONTROL;
+  }
+  if (aEvent.altGrKey) {
+    mval |= nsIDOMWindowUtils.MODIFIER_ALTGRAPH;
+  }
+  if (aEvent.capsLockKey) {
+    mval |= nsIDOMWindowUtils.MODIFIER_CAPSLOCK;
+  }
+  if (aEvent.fnKey) {
+    mval |= nsIDOMWindowUtils.MODIFIER_FN;
+  }
+  if (aEvent.numLockKey) {
+    mval |= nsIDOMWindowUtils.MODIFIER_NUMLOCK;
+  }
+  if (aEvent.scrollLockKey) {
+    mval |= nsIDOMWindowUtils.MODIFIER_SCROLL;
+  }
+  if (aEvent.symbolLockKey) {
+    mval |= nsIDOMWindowUtils.MODIFIER_SYMBOLLOCK;
+  }
+  if (aEvent.winKey) {
+    mval |= nsIDOMWindowUtils.MODIFIER_WIN;
+  }
 
   return mval;
 }

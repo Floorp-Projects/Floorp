@@ -461,8 +461,7 @@ function testWrongTable()
     "tableData" : "test-phish-simple;a:1",
     // The urls were added as phishing urls, but the completer is claiming
     // that they are malware urls, and we trust the completer in this case.
-    // The result will be discarded, so we can only check for non-existence.
-    "urlsDontExist" : addUrls,
+    "malwareUrlsExist" : addUrls,
     // Make sure the completer was actually queried.
     "completerQueried" : [completer, addUrls]
   };
@@ -471,14 +470,57 @@ function testWrongTable()
                function() {
                  // Give the dbservice a chance to (not) cache the result.
                  var timer = new Timer(3000, function() {
-                     // The miss earlier will have caused a miss to be cached.
-                     // Resetting the completer does not count as an update,
-                     // so we will not be probed again.
-                     var newCompleter = installCompleter('test-malware-simple', [[1, addUrls]], []);                     dbservice.setHashCompleter("test-phish-simple",
+                     // The dbservice shouldn't have cached this result,
+                     // so this completer should be queried.
+                     var newCompleter = installCompleter('test-malware-simple', [[1, addUrls]], []);
+
+                     // The above installCompleter installs the
+                     // completer for test-malware-simple, we want it
+                     // to be used for test-phish-simple too.
+                     dbservice.setHashCompleter("test-phish-simple",
                                                 newCompleter);
 
+
                      var assertions = {
-                       "urlsDontExist" : addUrls
+                       "malwareUrlsExist" : addUrls,
+                       "completerQueried" : [newCompleter, addUrls]
+                     };
+                     checkAssertions(assertions, runNextTest);
+                   });
+               }, updateError);
+}
+
+function testWrongChunk()
+{
+  var addUrls = [ "foo.com/a" ];
+  var update = buildPhishingUpdate(
+        [
+          { "chunkNum" : 1,
+            "urls" : addUrls
+          }],
+        4);
+  var completer = installCompleter('test-phish-simple',
+                                   [[2, // wrong chunk number
+                                     addUrls]], []);
+
+  var assertions = {
+    "tableData" : "test-phish-simple;a:1",
+    "urlsExist" : addUrls,
+    // Make sure the completer was actually queried.
+    "completerQueried" : [completer, addUrls]
+  };
+
+  doUpdateTest([update], assertions,
+               function() {
+                 // Give the dbservice a chance to (not) cache the result.
+                 var timer = new Timer(3000, function() {
+                     // The dbservice shouldn't have cached this result,
+                     // so this completer should be queried.
+                     var newCompleter = installCompleter('test-phish-simple', [[2, addUrls]], []);
+
+                     var assertions = {
+                       "urlsExist" : addUrls,
+                       "completerQueried" : [newCompleter, addUrls]
                      };
                      checkAssertions(assertions, runNextTest);
                    });
@@ -776,6 +818,7 @@ function run_test()
       testMixedSizesDifferentDomains,
       testInvalidHashSize,
       testWrongTable,
+      testWrongChunk,
       testCachedResults,
       testCachedResultsWithSub,
       testCachedResultsWithExpire,
@@ -783,7 +826,7 @@ function run_test()
       testStaleList,
       testStaleListEmpty,
       testErrorList,
-      testErrorListIndependent
+      testErrorListIndependent,
   ]);
 }
 

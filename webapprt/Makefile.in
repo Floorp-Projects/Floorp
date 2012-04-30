@@ -1,0 +1,56 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH     = ..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+
+include $(topsrcdir)/config/config.mk
+
+# config.mk sets FINAL_TARGET to $(DIST)/bin, but we want to copy build products
+# into a WebappRT-specific subdirectory, so we redefine it here.
+FINAL_TARGET = $(DIST)/bin/webapprt
+
+DIRS = $(NULL)
+
+ifneq (,$(filter WINNT,$(OS_ARCH)))
+DIRS += win
+else
+ifeq ($(OS_ARCH),Darwin)
+DIRS += mac
+endif # mac
+endif # windows
+
+EXTRA_PP_COMPONENTS = \
+  components.manifest \
+  CommandLineHandler.js \
+  ContentPolicy.js \
+  DirectoryProvider.js \
+  $(NULL)
+
+EXTRA_JS_MODULES = \
+  WebappRT.jsm \
+  $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+libs::
+	$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/chrome.manifest "resource webapprt ./"
+
+libs:: prefs.js
+	$(NSINSTALL) -D $(FINAL_TARGET)/defaults/preferences
+	$(INSTALL) $^ $(FINAL_TARGET)/defaults/preferences
+
+GRE_MILESTONE := $(shell tail -n 1 $(topsrcdir)/config/milestone.txt 2>/dev/null || tail -1 $(topsrcdir)/config/milestone.txt)
+GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
+DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
+
+webapprt.ini: application.ini.in $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
+
+libs:: webapprt.ini
+	$(INSTALL) webapprt.ini $(FINAL_TARGET)
+
+GARBAGE += webapprt.ini

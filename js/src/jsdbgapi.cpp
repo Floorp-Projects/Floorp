@@ -79,6 +79,7 @@
 #include "vm/Stack-inl.h"
 
 #include "jsautooplen.h"
+#include "mozilla/Util.h"
 
 #ifdef __APPLE__
 #include "sharkctl.h"
@@ -86,6 +87,7 @@
 
 using namespace js;
 using namespace js::gc;
+using namespace mozilla;
 
 JS_PUBLIC_API(JSBool)
 JS_GetDebugMode(JSContext *cx)
@@ -523,7 +525,7 @@ JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fpArg)
 {
     StackFrame *fp = Valueify(fpArg);
     if (fp->annotation() && fp->isScriptFrame()) {
-        JSPrincipals *principals = fp->scopeChain().principals(cx);
+        JSPrincipals *principals = fp->scopeChain()->principals(cx);
 
         if (principals) {
             /*
@@ -555,7 +557,7 @@ JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fpArg)
     StackFrame *fp = Valueify(fpArg);
     JS_ASSERT(cx->stack.containsSlow(fp));
 
-    js::AutoCompartment ac(cx, &fp->scopeChain());
+    js::AutoCompartment ac(cx, fp->scopeChain());
     if (!ac.enter())
         return NULL;
 
@@ -576,7 +578,7 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fpArg)
     if (!fp->isFunctionFrame())
         return NULL;
 
-    js::AutoCompartment ac(cx, &fp->scopeChain());
+    js::AutoCompartment ac(cx, fp->scopeChain());
     if (!ac.enter())
         return NULL;
 
@@ -596,7 +598,7 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fpArg, jsval *thisv)
     if (fp->isDummyFrame())
         return false;
 
-    js::AutoCompartment ac(cx, &fp->scopeChain());
+    js::AutoCompartment ac(cx, fp->scopeChain());
     if (!ac.enter())
         return false;
 
@@ -1115,6 +1117,10 @@ JS_StartProfiling(const char *profileName)
     if (!js_StartVtune(profileName))
         ok = JS_FALSE;
 #endif
+#ifdef __linux__
+    if (!js_StartPerf())
+        ok = JS_FALSE;
+#endif
     return ok;
 }
 
@@ -1127,6 +1133,10 @@ JS_StopProfiling(const char *profileName)
 #endif
 #ifdef MOZ_VTUNE
     if (!js_StopVtune())
+        ok = JS_FALSE;
+#endif
+#ifdef __linux__
+    if (!js_StopPerf())
         ok = JS_FALSE;
 #endif
     return ok;
@@ -1581,6 +1591,136 @@ js_ResumeVtune()
 
 #endif /* MOZ_VTUNE */
 
+#ifdef __linux__
+
+/*
+ * Code for starting and stopping |perf|, the Linux profiler.
+ *
+ * Output from profiling is written to mozperf.data in your cwd.
+ *
+ * To enable, set MOZ_PROFILE_WITH_PERF=1 in your environment.
+ *
+ * To pass additional parameters to |perf record|, provide them in the
+ * MOZ_PROFILE_PERF_FLAGS environment variable.  If this variable does not
+ * exist, we default it to "--call-graph".  (If you don't want --call-graph but
+ * don't want to pass any other args, define MOZ_PROFILE_PERF_FLAGS to the empty
+ * string.)
+ *
+ * If you include --pid or --output in MOZ_PROFILE_PERF_FLAGS, you're just
+ * asking for trouble.
+ *
+ * Our split-on-spaces logic is lame, so don't expect MOZ_PROFILE_PERF_FLAGS to
+ * work if you pass an argument which includes a space (e.g.
+ * MOZ_PROFILE_PERF_FLAGS="-e 'foo bar'").
+ */
+
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <signal.h>
+
+static bool perfInitialized = false;
+static pid_t perfPid = 0;
+
+JSBool js_StartPerf()
+{
+    const char *outfile = "mozperf.data";
+
+    if (perfPid != 0) {
+        UnsafeError("js_StartPerf: called while perf was already running!\n");
+        return false;
+    }
+
+    // Bail if MOZ_PROFILE_WITH_PERF is empty or undefined.
+    if (!getenv("MOZ_PROFILE_WITH_PERF") ||
+        !strlen(getenv("MOZ_PROFILE_WITH_PERF"))) {
+        return true;
+    }
+
+    /*
+     * Delete mozperf.data the first time through -- we're going to append to it
+     * later on, so we want it to be clean when we start out.
+     */
+    if (!perfInitialized) {
+        perfInitialized = true;
+        unlink(outfile);
+        char cwd[4096];
+        printf("Writing perf profiling data to %s/%s\n",
+               getcwd(cwd, sizeof(cwd)), outfile);
+    }
+
+    pid_t mainPid = getpid();
+
+    pid_t childPid = fork();
+    if (childPid == 0) {
+        /* perf record --append --pid $mainPID --output=$outfile $MOZ_PROFILE_PERF_FLAGS */
+
+        char mainPidStr[16];
+        snprintf(mainPidStr, sizeof(mainPidStr), "%d", mainPid);
+        const char *defaultArgs[] = {"perf", "record", "--append",
+                                     "--pid", mainPidStr, "--output", outfile};
+
+        Vector<const char*, 0, SystemAllocPolicy> args;
+        args.append(defaultArgs, ArrayLength(defaultArgs));
+
+        const char *flags = getenv("MOZ_PROFILE_PERF_FLAGS");
+        if (!flags) {
+            flags = "--call-graph";
+        }
+
+        // Split |flags| on spaces.  (Don't bother to free it -- we're going to
+        // exec anyway.)
+        char *toksave;
+        char *tok = strtok_r(strdup(flags), " ", &toksave);
+        while (tok) {
+            args.append(tok);
+            tok = strtok_r(NULL, " ", &toksave);
+        }
+
+        args.append((char*) NULL);
+
+        execvp("perf", const_cast<char**>(args.begin()));
+
+        /* Reached only if execlp fails. */
+        fprintf(stderr, "Unable to start perf.\n");
+        exit(1);
+    }
+    else if (childPid > 0) {
+        perfPid = childPid;
+
+        /* Give perf a chance to warm up. */
+        usleep(500 * 1000);
+        return true;
+    }
+    else {
+        UnsafeError("js_StartPerf: fork() failed\n");
+        return false;
+    }
+}
+
+JSBool js_StopPerf()
+{
+    if (perfPid == 0) {
+        UnsafeError("js_StopPerf: perf is not running.\n");
+        return true;
+    }
+
+    if (kill(perfPid, SIGINT)) {
+        UnsafeError("js_StopPerf: kill failed\n");
+
+        // Try to reap the process anyway.
+        waitpid(perfPid, NULL, WNOHANG);
+    }
+    else {
+        waitpid(perfPid, NULL, 0);
+    }
+
+    perfPid = 0;
+    return true;
+}
+
+#endif /* __linux__ */
+
 JS_PUBLIC_API(void)
 JS_DumpBytecode(JSContext *cx, JSScript *script)
 {
@@ -1657,7 +1797,7 @@ JS_UnwrapObject(JSObject *obj)
 JS_FRIEND_API(JSBool)
 js_CallContextDebugHandler(JSContext *cx)
 {
-    FrameRegsIter iter(cx);
+    ScriptFrameIter iter(cx);
     JS_ASSERT(!iter.done());
 
     jsval rval;

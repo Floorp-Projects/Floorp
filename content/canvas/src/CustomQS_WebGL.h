@@ -41,7 +41,7 @@
  */
 
 #include "jsapi.h"
-#include "jstypedarray.h"
+#include "jsfriendapi.h"
 #include "CustomQS_Canvas.h"
 
 #define GET_INT32_ARG(var, index) \
@@ -84,10 +84,10 @@ public:
     {}
 
     nsresult DoCallForImageData(WebGLsizei width, WebGLsizei height,
-                                JSObject* pixels)
+                                JSObject* pixels, JSContext *cx)
     {
         return self->TexImage2D_imageData(target, level, internalformat, width,
-                                          height, 0, format, type, pixels);
+                                          height, 0, format, type, pixels, cx);
     }
     nsresult DoCallForElement(mozilla::dom::Element* elt)
     {
@@ -126,11 +126,11 @@ public:
     {}
 
     nsresult DoCallForImageData(WebGLsizei width, WebGLsizei height,
-                                JSObject* pixels)
+                                JSObject* pixels, JSContext *cx)
     {
         return self->TexSubImage2D_imageData(target, level, xoffset, yoffset,
                                              width, height, format, type,
-                                             pixels);
+                                             pixels, cx);
     }
     nsresult DoCallForElement(mozilla::dom::Element* elt)
     {
@@ -160,11 +160,11 @@ TexImage2DImageDataOrElement(JSContext* cx, T& self, JS::Value* object)
     if (!GetImageData(cx, *object, &int_width, &int_height, &obj_data)) {
         return false;
     }
-    if (!js_IsTypedArray(obj_data.get())) {
+    if (!JS_IsTypedArrayObject(obj_data.get(), cx)) {
         return xpc_qsThrow(cx, NS_ERROR_FAILURE);
     }
 
-    nsresult rv = self.DoCallForImageData(int_width, int_height, obj_data.get());
+    nsresult rv = self.DoCallForImageData(int_width, int_height, obj_data.get(), cx);
     return NS_SUCCEEDED(rv) || xpc_qsThrow(cx, rv);
 }
 
@@ -225,11 +225,11 @@ nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, unsigned argc, jsval *vp)
         if (argv8 == nsnull) {
             rv = self->TexImage2D_array(argv0, argv1, argv2, argv3,
                                         argv4, argv5, argv6, argv7,
-                                        nsnull);
-        } else if (js_IsTypedArray(argv8)) {
+                                        nsnull, cx);
+        } else if (JS_IsTypedArrayObject(argv8, cx)) {
             rv = self->TexImage2D_array(argv0, argv1, argv2, argv3,
                                         argv4, argv5, argv6, argv7,
-                                        js::TypedArray::getTypedArray(argv8));
+                                        argv8, cx);
         } else {
             xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 8);
             return JS_FALSE;
@@ -297,10 +297,10 @@ nsIDOMWebGLRenderingContext_TexSubImage2D(JSContext *cx, unsigned argc, jsval *v
 
         JSObject *argv8 = JSVAL_TO_OBJECT(argv[8]);
         // try to grab a js::TypedArray
-        if (js_IsTypedArray(argv8)) {
+        if (JS_IsTypedArrayObject(argv8, cx)) {
             rv = self->TexSubImage2D_array(argv0, argv1, argv2, argv3,
                                            argv4, argv5, argv6, argv7,
-                                           js::TypedArray::getTypedArray(argv8));
+                                           argv8, cx);
         } else {
             xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 8);
             return JS_FALSE;

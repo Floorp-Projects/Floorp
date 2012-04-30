@@ -8,6 +8,10 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 import org.json.simple.parser.ParseException;
+import org.mozilla.gecko.sync.MetaGlobalException.MetaGlobalMalformedSyncIDException;
+import org.mozilla.gecko.sync.MetaGlobalException.MetaGlobalMalformedVersionException;
+import org.mozilla.gecko.sync.MetaGlobalException.MetaGlobalStaleClientSyncIDException;
+import org.mozilla.gecko.sync.MetaGlobalException.MetaGlobalStaleClientVersionException;
 import org.mozilla.gecko.sync.delegates.MetaGlobalDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageRecordRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
@@ -103,6 +107,55 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
 
   public void setEngines(ExtendedJSONObject engines) {
     this.engines = engines;
+  }
+
+  /**
+   * Returns if the server settings and local settings match.
+   * Throws a specific exception if that's not the case.
+   */
+  public static void verifyEngineSettings(ExtendedJSONObject engineEntry,
+                                          EngineSettings engineSettings)
+  throws MetaGlobalMalformedVersionException, MetaGlobalMalformedSyncIDException, MetaGlobalStaleClientVersionException, MetaGlobalStaleClientSyncIDException {
+
+    if (engineEntry == null) {
+      throw new IllegalArgumentException("engineEntry cannot be null.");
+    }
+    if (engineSettings == null) {
+      throw new IllegalArgumentException("engineSettings cannot be null.");
+    }
+    try {
+      Integer version = engineEntry.getIntegerSafely("version");
+      if (version == null ||
+          version.intValue() == 0) {
+        // Invalid version. Wipe the server.
+        throw new MetaGlobalException.MetaGlobalMalformedVersionException();
+      }
+      if (version > engineSettings.version) {
+        // We're out of date.
+        throw new MetaGlobalException.MetaGlobalStaleClientVersionException(version);
+      }
+      try {
+        String syncID = engineEntry.getString("syncID");
+        if (syncID == null) {
+          // No syncID. This should never happen. Wipe the server.
+          throw new MetaGlobalException.MetaGlobalMalformedSyncIDException();
+        }
+        if (!syncID.equals(engineSettings.syncID)) {
+          // Our syncID is wrong. Reset client and take the server syncID.
+          throw new MetaGlobalException.MetaGlobalStaleClientSyncIDException(syncID);
+        }
+        // Great!
+        return;
+
+      } catch (ClassCastException e) {
+        // Malformed syncID on the server. Wipe the server.
+        throw new MetaGlobalException.MetaGlobalMalformedSyncIDException();
+      }
+    } catch (NumberFormatException e) {
+      // Invalid version. Wipe the server.
+      throw new MetaGlobalException.MetaGlobalMalformedVersionException();
+    }
+
   }
 
   public String getSyncID() {

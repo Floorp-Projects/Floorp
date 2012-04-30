@@ -139,7 +139,7 @@ _pixman_edge_multi_init (pixman_edge_t * e,
     if (ne > 0)
     {
 	int nx = ne / e->dy;
-	ne -= nx * e->dy;
+	ne -= nx * (pixman_fixed_48_16_t)e->dy;
 	stepx += nx * e->signdx;
     }
 

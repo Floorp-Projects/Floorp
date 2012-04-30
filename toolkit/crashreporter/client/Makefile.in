@@ -66,7 +66,6 @@ VPATH += $(topsrcdir)/build/
 
 CPPSRCS = \
   crashreporter.cpp \
-  $(STDCXX_COMPAT) \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

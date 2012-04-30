@@ -107,7 +107,7 @@ Machine::stack_t  Machine::run(const instr   * program,
                                slotref     * & is)
 {
     assert(program != 0);
-    assert(_status == finished);
+//    assert(_status == finished);
     
     const stack_t *sp = static_cast<const stack_t *>(
                 direct_run(false, program, data, _stack, is, &_map));

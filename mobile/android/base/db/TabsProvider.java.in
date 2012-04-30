@@ -206,8 +206,19 @@ public class TabsProvider extends ContentProvider {
             if (dbHelper != null) {
                 return dbHelper;
             }
-            dbHelper = new DatabaseHelper(getContext(), getDatabasePath(profile));
+
+            String databasePath = getDatabasePath(profile);
+            dbHelper = new DatabaseHelper(getContext(), databasePath);
             mDatabasePerProfile.put(profile, dbHelper);
+
+            // When running on Android releases older than 8, the returned
+            // database path is just filename, not the full path. We need
+            // the full path when unlocking the database.
+            if (Build.VERSION.SDK_INT <= 8) {
+                databasePath = mContext.getDatabasePath(databasePath).getAbsolutePath();
+            }
+
+            DBUtils.ensureDatabaseIsNotLocked(dbHelper, databasePath);
         }
 
         debug("Created database helper for profile: " + profile);

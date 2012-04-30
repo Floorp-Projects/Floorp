@@ -74,6 +74,8 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptRuntime, NS_ISCRIPTRUNTIME_IID)
 
 /* helper functions */
+nsresult NS_GetJSRuntime(nsIScriptRuntime** aLanguage);
+
 nsresult NS_GetScriptRuntime(const nsAString &aLanguageName,
                              nsIScriptRuntime **aRuntime);
 

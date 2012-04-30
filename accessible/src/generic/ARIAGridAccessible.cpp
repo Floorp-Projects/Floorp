@@ -84,43 +84,33 @@ ARIAGridAccessible::Shutdown()
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibleTable
 
-NS_IMETHODIMP
-ARIAGridAccessible::GetColumnCount(PRInt32* aColumnCount)
+PRUint32
+ARIAGridAccessible::ColCount()
 {
-  NS_ENSURE_ARG_POINTER(aColumnCount);
-  *aColumnCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   AccIterator rowIter(this, filters::GetRow);
   nsAccessible* row = rowIter.Next();
   if (!row)
-    return NS_OK;
+    return 0;
 
   AccIterator cellIter(row, filters::GetCell);
-  nsAccessible *cell = nsnull;
+  nsAccessible* cell = nsnull;
 
+  PRUint32 colCount = 0;
   while ((cell = cellIter.Next()))
-    (*aColumnCount)++;
+    colCount++;
 
-  return NS_OK;
+  return colCount;
 }
 
-NS_IMETHODIMP
-ARIAGridAccessible::GetRowCount(PRInt32* aRowCount)
+PRUint32
+ARIAGridAccessible::RowCount()
 {
-  NS_ENSURE_ARG_POINTER(aRowCount);
-  *aRowCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
+  PRUint32 rowCount = 0;
   AccIterator rowIter(this, filters::GetRow);
   while (rowIter.Next())
-    (*aRowCount)++;
+    rowCount++;
 
-  return NS_OK;
+  return rowCount;
 }
 
 NS_IMETHODIMP
@@ -663,38 +653,26 @@ ARIAGridAccessible::SelectColumn(PRInt32 aColumn)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-ARIAGridAccessible::UnselectRow(PRInt32 aRow)
+void
+ARIAGridAccessible::UnselectRow(PRUint32 aRowIdx)
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
+  nsAccessible* row = GetRowAt(aRowIdx);
 
-  nsAccessible *row = GetRowAt(aRow);
-  NS_ENSURE_ARG(row);
-
-  return SetARIASelected(row, false);
+  if (row)
+    SetARIASelected(row, false);
 }
 
-NS_IMETHODIMP
-ARIAGridAccessible::UnselectColumn(PRInt32 aColumn)
+void
+ARIAGridAccessible::UnselectCol(PRUint32 aColIdx)
 {
-  NS_ENSURE_ARG(IsValidColumn(aColumn));
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   AccIterator rowIter(this, filters::GetRow);
 
-  nsAccessible *row = nsnull;
+  nsAccessible* row = nsnull;
   while ((row = rowIter.Next())) {
-    nsAccessible *cell = GetCellInRowAt(row, aColumn);
-    if (cell) {
-      nsresult rv = SetARIASelected(cell, false);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    nsAccessible* cell = GetCellInRowAt(row, aColIdx);
+    if (cell)
+      SetARIASelected(cell, false);
   }
-
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

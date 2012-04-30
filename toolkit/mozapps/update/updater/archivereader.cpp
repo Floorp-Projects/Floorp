@@ -230,7 +230,7 @@ ArchiveReader::VerifyProductInformation(const char *MARChannelID,
         - 12.0a1 being older than 12.0
         - 12.0 being older than 12.1a1 */
     int versionCompareResult = 
-      NS_CompareVersions(appVersion, productInfoBlock.productVersion);
+      mozilla::CompareVersions(appVersion, productInfoBlock.productVersion);
     if (1 == versionCompareResult) {
       rv = VERSION_DOWNGRADE_ERROR;
     }

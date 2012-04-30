@@ -592,7 +592,7 @@ int32 Machine::Code::run(Machine & m, slotref * & map) const
     assert(_own);
     assert(*this);          // Check we are actually runnable
 
-    if (m.slotMap().size() <= _max_ref + m.slotMap().context())
+    if (m.slotMap().size() <= size_t(_max_ref + m.slotMap().context()))
     {
         m._status = Machine::slot_offset_out_bounds;
 //        return (m.slotMap().end() - map);

@@ -43,7 +43,7 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoEventResponder;
-import org.mozilla.gecko.ui.Axis;
+import org.mozilla.gecko.Tabs;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -59,6 +59,7 @@ import android.util.Log;
 import android.view.View;
 import java.util.Map;
 import java.util.HashMap;
+import org.mozilla.gecko.Tabs;
 
 public class GeckoLayerClient implements GeckoEventResponder,
                                          LayerView.Listener {
@@ -72,6 +73,9 @@ public class GeckoLayerClient implements GeckoEventResponder,
     private IntSize mWindowSize;
     private DisplayPortMetrics mDisplayPort;
     private DisplayPortMetrics mReturnDisplayPort;
+
+    private boolean mRecordDrawTimes;
+    private DrawTimingQueue mDrawTimingQueue;
 
     private VirtualLayer mRootLayer;
 
@@ -98,6 +102,8 @@ public class GeckoLayerClient implements GeckoEventResponder,
         mScreenSize = new IntSize(0, 0);
         mWindowSize = new IntSize(0, 0);
         mDisplayPort = new DisplayPortMetrics();
+        mRecordDrawTimes = true;
+        mDrawTimingQueue = new DrawTimingQueue();
         mCurrentViewTransform = new ViewTransform(0, 0, 1);
     }
 
@@ -124,7 +130,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
         JSONArray prefs = new JSONArray();
         DisplayPortCalculator.addPrefNames(prefs);
-        Axis.addPrefNames(prefs);
+        PluginLayer.addPrefNames(prefs);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Preferences:Get", prefs.toString()));
     }
 
@@ -193,6 +199,10 @@ public class GeckoLayerClient implements GeckoEventResponder,
         mDisplayPort = displayPort;
         mGeckoViewport = clampedMetrics;
 
+        if (mRecordDrawTimes) {
+            mDrawTimingQueue.add(displayPort);
+        }
+
         GeckoAppShell.sendEventToGecko(GeckoEvent.createViewportEvent(clampedMetrics, displayPort));
     }
 
@@ -227,7 +237,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
                 // and our zoom level (which may have diverged).
                 float scaleFactor = oldMetrics.zoomFactor / messageMetrics.getZoomFactor();
                 newMetrics = new ViewportMetrics(oldMetrics);
-                newMetrics.setPageSize(messageMetrics.getPageSize().scale(scaleFactor));
+                newMetrics.setPageSize(messageMetrics.getPageSize().scale(scaleFactor), messageMetrics.getCssPageSize());
                 break;
             }
 
@@ -261,13 +271,18 @@ public class GeckoLayerClient implements GeckoEventResponder,
                 Map<String, Integer> prefValues = new HashMap<String, Integer>();
                 for (int i = jsonPrefs.length() - 1; i >= 0; i--) {
                     JSONObject pref = jsonPrefs.getJSONObject(i);
-                    prefValues.put(pref.getString("name"), pref.getInt("value"));
+                    String name = pref.getString("name");
+                    try {
+                        prefValues.put(name, pref.getInt("value"));
+                    } catch (JSONException je) {
+                        // the pref value couldn't be parsed as an int. drop this pref
+                        // and continue with the rest
+                    }
                 }
                 // check return value from setStrategy to make sure that this is the
                 // right batch of prefs, since other java code may also have sent requests
                 // for prefs.
-                if (DisplayPortCalculator.setStrategy(prefValues)) {
-                    Axis.setPrefs(prefValues);
+                if (DisplayPortCalculator.setStrategy(prefValues) && PluginLayer.setUsePlaceholder(prefValues)) {
                     GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", this);
                 }
             }
@@ -319,13 +334,14 @@ public class GeckoLayerClient implements GeckoEventResponder,
       * viewport information provided. setPageSize will never be invoked on the same frame that
       * this function is invoked on; and this function will always be called prior to syncViewportInfo.
       */
-    public void setFirstPaintViewport(float offsetX, float offsetY, float zoom, float pageWidth, float pageHeight) {
+    public void setFirstPaintViewport(float offsetX, float offsetY, float zoom, float pageWidth, float pageHeight, float cssPageWidth, float cssPageHeight) {
         synchronized (mLayerController) {
             ViewportMetrics currentMetrics = new ViewportMetrics(mLayerController.getViewportMetrics());
             currentMetrics.setOrigin(new PointF(offsetX, offsetY));
             currentMetrics.setZoomFactor(zoom);
-            currentMetrics.setPageSize(new FloatSize(pageWidth, pageHeight));
+            currentMetrics.setPageSize(new FloatSize(pageWidth, pageHeight), new FloatSize(cssPageWidth, cssPageHeight));
             mLayerController.setViewportMetrics(currentMetrics);
+            mLayerController.setCheckerboardColor(Tabs.getInstance().getSelectedTab().getCheckerboardColor());
             // At this point, we have just switched to displaying a different document than we
             // we previously displaying. This means we need to abort any panning/zooming animations
             // that are in progress and send an updated display port request to browser.js as soon
@@ -336,6 +352,10 @@ public class GeckoLayerClient implements GeckoEventResponder,
             mLayerController.abortPanZoomAnimation();
             mLayerController.getView().setPaintState(LayerView.PAINT_BEFORE_FIRST);
         }
+        DisplayPortCalculator.resetPageState();
+        mDrawTimingQueue.reset();
+        mLayerController.getView().getRenderer().resetCheckerboard();
+        GeckoAppShell.screenshotWholePage(Tabs.getInstance().getSelectedTab());
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature.
@@ -344,7 +364,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
       * is invoked on a frame, then this function will not be. For any given frame, this
       * function will be invoked before syncViewportInfo.
       */
-    public void setPageSize(float zoom, float pageWidth, float pageHeight) {
+    public void setPageSize(float zoom, float pageWidth, float pageHeight, float cssPageWidth, float cssPageHeight) {
         synchronized (mLayerController) {
             // adjust the page dimensions to account for differences in zoom
             // between the rendered content (which is what the compositor tells us)
@@ -352,7 +372,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
             float ourZoom = mLayerController.getZoomFactor();
             pageWidth = pageWidth * ourZoom / zoom;
             pageHeight = pageHeight * ourZoom /zoom;
-            mLayerController.setPageSize(new FloatSize(pageWidth, pageHeight));
+            mLayerController.setPageSize(new FloatSize(pageWidth, pageHeight), new FloatSize(cssPageWidth, cssPageHeight));
             // Here the page size of the document has changed, but the document being displayed
             // is still the same. Therefore, we don't need to send anything to browser.js; any
             // changes we need to make to the display port will get sent the next time we call
@@ -385,6 +405,19 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
         mRootLayer.setPositionAndResolution(x, y, x + width, y + height, resolution);
 
+        if (layersUpdated && mRecordDrawTimes) {
+            // If we got a layers update, that means a draw finished. Check to see if the area drawn matches
+            // one of our requested displayports; if it does calculate the draw time and notify the
+            // DisplayPortCalculator
+            DisplayPortMetrics drawn = new DisplayPortMetrics(x, y, x + width, y + height, resolution);
+            long time = mDrawTimingQueue.findTimeFor(drawn);
+            if (time >= 0) {
+                long now = SystemClock.uptimeMillis();
+                time = now - time;
+                mRecordDrawTimes = DisplayPortCalculator.drawTimeUpdate(time, width * height);
+            }
+        }
+
         if (layersUpdated && mDrawListener != null) {
             /* Used by robocop for testing purposes */
             mDrawListener.drawFinished();
@@ -402,10 +435,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
             mLayerRendererInitialized = true;
         }
 
-        // Build the contexts and create the frame.
-        Layer.RenderContext pageContext = mLayerRenderer.createPageContext(mFrameMetrics);
-        Layer.RenderContext screenContext = mLayerRenderer.createScreenContext();
-        return mLayerRenderer.createFrame(pageContext, screenContext);
+        return mLayerRenderer.createFrame(mFrameMetrics);
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
@@ -431,12 +461,12 @@ public class GeckoLayerClient implements GeckoEventResponder,
     }
 
     /** Implementation of LayerView.Listener */
-    public void compositionResumeRequested() {
+    public void compositionResumeRequested(int width, int height) {
         // Asking Gecko to resume the compositor takes too long (see
         // https://bugzilla.mozilla.org/show_bug.cgi?id=735230#c23), so we
         // resume the compositor directly. We still need to inform Gecko about
         // the compositor resuming, so that Gecko knows that it can now draw.
-        GeckoAppShell.scheduleResumeComposition();
+        GeckoAppShell.scheduleResumeComposition(width, height);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createCompositorResumeEvent());
     }
 
@@ -447,7 +477,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
         // We need to make this call even when the compositor isn't currently
         // paused (e.g. during an orientation change), to make the compositor
         // aware of the changed surface.
-        compositionResumeRequested();
+        compositionResumeRequested(width, height);
         renderRequested();
     }
 

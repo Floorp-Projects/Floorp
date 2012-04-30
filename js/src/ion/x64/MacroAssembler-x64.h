@@ -669,12 +669,15 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     void loadConstantDouble(double d, const FloatRegister &dest) {
-        jsdpun dpun;
-        dpun.d = d;
-        if (dpun.u64 == 0) {
+        union DoublePun {
+            uint64_t u;
+            double d;
+        } pun;
+        pun.d = d;
+        if (pun.u == 0) {
             xorpd(dest, dest);
         } else {
-            movq(ImmWord(dpun.u64), ScratchReg);
+            movq(ImmWord(pun.u), ScratchReg);
             movqsd(ScratchReg, dest);
         }
     }

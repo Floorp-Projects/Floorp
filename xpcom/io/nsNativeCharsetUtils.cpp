@@ -564,9 +564,9 @@ nsNativeCharsetConverter::UnicodeToNative(const PRUnichar **input,
     if (gUnicodeToNative != INVALID_ICONV_T) {
         res = xp_iconv(gUnicodeToNative, (const char **) input, &inLeft, output, &outLeft);
 
+        *inputLeft = inLeft / 2;
+        *outputLeft = outLeft;
         if (res != (size_t) -1) {
-            *inputLeft = inLeft / 2;
-            *outputLeft = outLeft;
             return NS_OK;
         }
 
@@ -607,10 +607,10 @@ nsNativeCharsetConverter::UnicodeToNative(const PRUnichar **input,
             inLeft -= sizeof(PRUnichar);
         }
 
+        (*input) += (*inputLeft - inLeft / 2);
+        *inputLeft = inLeft / 2;
+        *outputLeft = outLeft;
         if (res != (size_t) -1) {
-            (*input) += (*inputLeft - inLeft/2);
-            *inputLeft = inLeft/2;
-            *outputLeft = outLeft;
             return NS_OK;
         }
 
@@ -621,6 +621,7 @@ nsNativeCharsetConverter::UnicodeToNative(const PRUnichar **input,
 #endif
 
     // fallback: truncate and hope for the best
+    // XXX This is lame and we have to do better.
     utf16_to_isolatin1(input, inputLeft, output, outputLeft);
 
     return NS_OK;

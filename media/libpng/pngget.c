@@ -1172,7 +1172,7 @@ png_get_next_frame_fcTL(png_structp png_ptr, png_infop info_ptr,
     if (png_ptr != NULL && info_ptr != NULL &&
         (info_ptr->valid & PNG_INFO_fcTL) &&
         width != NULL && height != NULL &&
-        x_offset != NULL && x_offset != NULL &&
+        x_offset != NULL && y_offset != NULL &&
         delay_num != NULL && delay_den != NULL &&
         dispose_op != NULL && blend_op != NULL)
     {

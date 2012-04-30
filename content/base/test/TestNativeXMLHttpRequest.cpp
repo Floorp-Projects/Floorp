@@ -95,7 +95,7 @@ nsresult TestNativeXMLHttpRequest()
   rv = xhr->Open(getString, testURL, false, empty, empty);
   TEST_ENSURE_SUCCESS(rv, "Open failed!");
 
-  rv = xhr->Send(nsnull);
+  rv = xhr->Send(nsnull, nsnull);
   TEST_ENSURE_SUCCESS(rv, "Send failed!");
 
   nsAutoString response;

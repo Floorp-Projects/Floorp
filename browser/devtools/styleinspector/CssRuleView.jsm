@@ -714,6 +714,7 @@ function CssRuleView(aDoc, aStore)
   this.element.addEventListener("copy", this._boundCopy);
 
   this._createContextMenu();
+  this._showEmpty();
 }
 
 CssRuleView.prototype = {
@@ -763,13 +764,14 @@ CssRuleView.prototype = {
 
     this.clear();
 
-    this._viewedElement = aElement;
-    if (!this._viewedElement) {
-      return;
+    if (this._elementStyle) {
+      delete this._elementStyle;
     }
 
-    if (this._elementStyle) {
-      delete this._elementStyle.onChanged;
+    this._viewedElement = aElement;
+    if (!this._viewedElement) {
+      this._showEmpty();
+      return;
     }
 
     this._elementStyle = new ElementStyle(aElement, this.store);
@@ -806,6 +808,21 @@ CssRuleView.prototype = {
     this._clearRules();
     this._elementStyle.populate();
     this._createEditors();
+  },
+
+  /**
+   * Show the user that the rule view has no node selected.
+   */
+  _showEmpty: function CssRuleView_showEmpty()
+  {
+    if (this.doc.getElementById("noResults") > 0) {
+      return;
+    }
+
+    createChild(this.element, "div", {
+      id: "noResults",
+      textContent: CssLogic.l10n("rule.empty")
+    });
   },
 
   /**
@@ -929,6 +946,10 @@ CssRuleView.prototype = {
 
     // Copy property, copy property name & copy property value.
     let node = this.doc.popupNode;
+    if (!node) {
+      return;
+    }
+
     if (!node.classList.contains("ruleview-property") &&
         !node.classList.contains("ruleview-computed")) {
       while (node = node.parentElement) {
@@ -1007,45 +1028,50 @@ CssRuleView.prototype = {
    */
   _onCopyRule: function CssRuleView_onCopyRule(aEvent)
   {
+    let terminator;
     let node = this.doc.popupNode;
-    if (node.className != "ruleview-code") {
-      if (node.className == "ruleview-rule-source") {
-        node = node.nextElementSibling;
-      } else {
-        while (node = node.parentElement) {
-          if (node.className == "ruleview-code") {
-            break;
-          }
+    if (!node) {
+      return;
+    }
+
+    if (node.className != "rule-view-row") {
+      while (node = node.parentElement) {
+        if (node.className == "rule-view-row") {
+          break;
         }
       }
     }
+    node = node.cloneNode();
 
-    if (node.className == "ruleview-code") {
-      // We need to strip expanded properties from the node because we use
-      // node.textContent below, which also gets text from hidden nodes. The
-      // simplest way to do this is to clone the node and remove them from the
-      // clone.
-      node = node.cloneNode();
-      let computed = node.querySelector(".ruleview-computedlist");
-      if (computed) {
-        computed.parentNode.removeChild(computed);
-      }
+    let computedLists = node.querySelectorAll(".ruleview-computedlist");
+    for (let computedList of computedLists) {
+      computedList.parentNode.removeChild(computedList);
     }
 
-    let text = node.textContent;
+    let autosizers = node.querySelectorAll(".autosizer");
+    for (let autosizer of autosizers) {
+      autosizer.parentNode.removeChild(autosizer);
+    }
+    let selector = node.querySelector(".ruleview-selector").textContent;
+    let propertyNames = node.querySelectorAll(".ruleview-propertyname");
+    let propertyValues = node.querySelectorAll(".ruleview-propertyvalue");
 
     // Format the rule
     if (osString == "WINNT") {
-      text = text.replace(/{/g, "{\r\n    ");
-      text = text.replace(/;/g, ";\r\n    ");
-      text = text.replace(/\s*}/g, "\r\n}");
+      terminator = "\r\n";
     } else {
-      text = text.replace(/{/g, "{\n    ");
-      text = text.replace(/;/g, ";\n    ");
-      text = text.replace(/\s*}/g, "\n}");
+      terminator = "\n";
     }
 
-    clipboardHelper.copyString(text);
+    let out = selector + " {" + terminator;
+    for (let i = 0; i < propertyNames.length; i++) {
+      let name = propertyNames[i].textContent;
+      let value = propertyValues[i].textContent;
+      out += "    " + name + ": " + value + ";" + terminator;
+    }
+    out += "}" + terminator;
+
+    clipboardHelper.copyString(out);
   },
 
   /**
@@ -1056,6 +1082,10 @@ CssRuleView.prototype = {
   _onCopyDeclaration: function CssRuleView_onCopyDeclaration(aEvent)
   {
     let node = this.doc.popupNode;
+    if (!node) {
+      return;
+    }
+
     if (!node.classList.contains("ruleview-property") &&
         !node.classList.contains("ruleview-computed")) {
       while (node = node.parentElement) {
@@ -1071,11 +1101,16 @@ CssRuleView.prototype = {
     // simplest way to do this is to clone the node and remove them from the
     // clone.
     node = node.cloneNode();
-    let computed = node.querySelector(".ruleview-computedlist");
-    if (computed) {
-      computed.parentNode.removeChild(computed);
+    let computedLists = node.querySelectorAll(".ruleview-computedlist");
+    for (let computedList of computedLists) {
+      computedList.parentNode.removeChild(computedList);
     }
-    clipboardHelper.copyString(node.textContent);
+
+    let propertyName = node.querySelector(".ruleview-propertyname").textContent;
+    let propertyValue = node.querySelector(".ruleview-propertyvalue").textContent;
+    let out = propertyName + ": " + propertyValue + ";";
+
+    clipboardHelper.copyString(out);
   },
 
   /**
@@ -1086,6 +1121,9 @@ CssRuleView.prototype = {
   _onCopyProperty: function CssRuleView_onCopyProperty(aEvent)
   {
     let node = this.doc.popupNode;
+    if (!node) {
+      return;
+    }
 
     if (!node.classList.contains("ruleview-propertyname")) {
       node = node.querySelector(".ruleview-propertyname");
@@ -1104,6 +1142,9 @@ CssRuleView.prototype = {
   _onCopyPropertyValue: function CssRuleView_onCopyPropertyValue(aEvent)
   {
     let node = this.doc.popupNode;
+    if (!node) {
+      return;
+    }
 
     if (!node.classList.contains("ruleview-propertyvalue")) {
       node = node.querySelector(".ruleview-propertyvalue");
@@ -1140,6 +1181,7 @@ RuleEditor.prototype = {
   _create: function RuleEditor_create()
   {
     this.element = this.doc.createElementNS(HTML_NS, "div");
+    this.element.className = "rule-view-row";
     this.element._ruleEditor = this;
 
     // Give a relative position for the inplace editor's measurement

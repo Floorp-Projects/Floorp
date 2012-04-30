@@ -128,6 +128,16 @@ nsHTMLScrollFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 NS_IMETHODIMP
+nsHTMLScrollFrame::Init(nsIContent* aContent,
+                        nsIFrame*   aParent,
+                        nsIFrame*   aPrevInFlow)
+{
+  nsresult rv = nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  mInner.Init();
+  return rv;
+}
+
+NS_IMETHODIMP
 nsHTMLScrollFrame::SetInitialChildList(ChildListID  aListID,
                                        nsFrameList& aChildList)
 {
@@ -1063,6 +1073,16 @@ nsXULScrollFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 NS_IMETHODIMP
+nsXULScrollFrame::Init(nsIContent* aContent,
+                       nsIFrame*   aParent,
+                       nsIFrame*   aPrevInFlow)
+{
+  nsresult rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
+  mInner.Init();
+  return rv;
+}
+
+NS_IMETHODIMP
 nsXULScrollFrame::SetInitialChildList(ChildListID     aListID,
                                       nsFrameList&    aChildList)
 {
@@ -1604,6 +1624,14 @@ nsGfxScrollFrameInner::~nsGfxScrollFrameInner()
   }
 }
 
+void
+nsGfxScrollFrameInner::Init()
+{
+  if (mOuter->GetStateBits() & NS_FRAME_FONT_INFLATION_CONTAINER) {
+    mOuter->AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
+  }
+}
+
 static nscoord
 Clamp(nscoord aLower, nscoord aVal, nscoord aUpper)
 {
@@ -1617,7 +1645,7 @@ Clamp(nscoord aLower, nscoord aVal, nscoord aUpper)
 nsPoint
 nsGfxScrollFrameInner::ClampScrollPosition(const nsPoint& aPt) const
 {
-  nsRect range = GetScrollRange();
+  nsRect range = GetScrollRangeForClamping();
   return nsPoint(Clamp(range.x, aPt.x, range.XMost()),
                  Clamp(range.y, aPt.y, range.YMost()));
 }
@@ -1943,7 +1971,7 @@ nsGfxScrollFrameInner::RestrictToDevPixels(const nsPoint& aPt,
   // pixels. But we also need to make sure that our position remains
   // inside the allowed region.
   if (aShouldClamp) {
-    nsRect scrollRange = GetScrollRange();
+    nsRect scrollRange = GetScrollRangeForClamping();
     *aPtDevPx = nsIntPoint(ClampInt(scrollRange.x, aPt.x, scrollRange.XMost(), appUnitsPerDevPixel),
                            ClampInt(scrollRange.y, aPt.y, scrollRange.YMost(), appUnitsPerDevPixel));
   } else {
@@ -2167,8 +2195,13 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   dirtyRect.IntersectRect(aDirtyRect, mScrollPort);
 
   // Override the dirty rectangle if the displayport has been set.
+  nsRect displayPort;
   bool usingDisplayport =
-    nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &dirtyRect);
+    nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort) &&
+    !aBuilder->IsForEventDelivery();
+  if (usingDisplayport) {
+    dirtyRect = displayPort;
+  }
 
   nsDisplayListCollection set;
   rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
@@ -2294,9 +2327,15 @@ AlignToDevPixelRoundingToZero(nscoord aVal, PRInt32 aAppUnitsPerDevPixel)
 nsRect
 nsGfxScrollFrameInner::GetScrollRange() const
 {
+  return GetScrollRange(mScrollPort.width, mScrollPort.height);
+}
+
+nsRect
+nsGfxScrollFrameInner::GetScrollRange(nscoord aWidth, nscoord aHeight) const
+{
   nsRect range = GetScrolledRect();
-  range.width -= mScrollPort.width;
-  range.height -= mScrollPort.height;
+  range.width -= aWidth;
+  range.height -= aHeight;
 
   nsPresContext* presContext = mOuter->PresContext();
   PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
@@ -2307,6 +2346,17 @@ nsGfxScrollFrameInner::GetScrollRange() const
   range.x = AlignToDevPixelRoundingToZero(range.x, appUnitsPerDevPixel);
   range.y = AlignToDevPixelRoundingToZero(range.y, appUnitsPerDevPixel);
   return range;
+}
+
+nsRect
+nsGfxScrollFrameInner::GetScrollRangeForClamping() const
+{
+  nsIPresShell* presShell = mOuter->PresContext()->PresShell();
+  if (mIsRoot && presShell->IsScrollPositionClampingScrollPortSizeSet()) {
+    nsSize size = presShell->GetScrollPositionClampingScrollPortSize();
+    return GetScrollRange(size.width, size.height);
+  }
+  return GetScrollRange();
 }
 
 static void

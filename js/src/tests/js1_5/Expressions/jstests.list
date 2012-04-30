@@ -1,6 +1,0 @@
-url-prefix ../../jsreftest.html?test=js1_5/Expressions/
-script regress-192288.js
-script regress-394673.js
-script regress-96526-argsub.js
-script regress-96526-delelem.js
-script regress-96526-noargsub.js

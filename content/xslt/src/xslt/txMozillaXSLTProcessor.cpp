@@ -687,6 +687,8 @@ txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument **aResult)
                 static_cast<txAOutputXMLEventHandler*>(es.mOutputHandler);
             handler->getOutputDocument(aResult);
             nsCOMPtr<nsIDocument> doc = do_QueryInterface(*aResult);
+            MOZ_ASSERT(doc->GetReadyStateEnum() ==
+                       nsIDocument::READYSTATE_INTERACTIVE, "Bad readyState");
             doc->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
         }
     }

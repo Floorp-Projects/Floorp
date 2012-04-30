@@ -924,6 +924,7 @@
 
             if (!this._previewMode) {
               this.mCurrentTab.removeAttribute("unread");
+              this.selectedTab.lastAccessed = Date.now();
 
 #ifdef MOZ_E10S_COMPAT
               // Bug 666816 - TypeAheadFind support for e10s
@@ -3816,6 +3817,7 @@
       <field name="mCorrespondingMenuitem">null</field>
       <field name="_fullyOpen">false</field>
       <field name="closing">false</field>
+      <field name="lastAccessed">0</field>
     </implementation>
 
     <handlers>

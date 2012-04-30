@@ -55,6 +55,7 @@
 #include "gfxPattern.h"
 #include "gfxPlatform.h"
 #include "gfxTeeSurface.h"
+#include "sampler.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -334,6 +335,7 @@ gfxContext::Stroke()
 void
 gfxContext::Fill()
 {
+  SAMPLE_LABEL("gfxContext", "Fill");
   if (mCairo) {
     cairo_fill_preserve(mCairo);
   } else {
@@ -1448,6 +1450,7 @@ gfxContext::Mask(gfxPattern *pattern)
 void
 gfxContext::Mask(gfxASurface *surface, const gfxPoint& offset)
 {
+  SAMPLE_LABEL("gfxContext", "Mask");
   if (mCairo) {
     cairo_mask_surface(mCairo, surface->CairoSurface(), offset.x, offset.y);
   } else {
@@ -1465,6 +1468,7 @@ gfxContext::Mask(gfxASurface *surface, const gfxPoint& offset)
 void
 gfxContext::Paint(gfxFloat alpha)
 {
+  SAMPLE_LABEL("gfxContext", "Paint");
   if (mCairo) {
     cairo_paint_with_alpha(mCairo, alpha);
   } else {

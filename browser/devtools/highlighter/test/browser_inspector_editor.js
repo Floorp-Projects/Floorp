@@ -77,8 +77,8 @@ function doEditorTestSteps()
     EventUtils.synthesizeMouse(attrValNode_id, 2, 2, {clickCount: 2}, attrValNode_id.ownerDocument.defaultView);
   });
 
-  yield; // End of Step 1
 
+  yield; // End of Step 1
 
   // Step 2: validate editing session, enter new attribute value into editor, and save input
   ok(InspectorUI.treePanel.editingContext, "Step 2: editor session started");

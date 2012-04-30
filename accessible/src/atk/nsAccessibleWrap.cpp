@@ -38,14 +38,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
-#include "nsAccessible.h"
 #include "nsAccessibleWrap.h"
 
+#include "Accessible-inl.h"
+#include "ApplicationAccessibleWrap.h"
 #include "InterfaceInitFuncs.h"
 #include "nsAccUtils.h"
-#include "nsApplicationAccessibleWrap.h"
 #include "nsIAccessibleRelation.h"
 #include "nsRootAccessible.h"
 #include "nsDocAccessibleWrap.h"
@@ -55,11 +53,11 @@
 #include "nsString.h"
 #include "nsAutoPtr.h"
 #include "prprf.h"
-#include "nsRoleMap.h"
 #include "nsStateMap.h"
 #include "Relation.h"
 #include "States.h"
 
+#include "mozilla/Util.h"
 #include "nsXPCOMStrings.h"
 #include "nsComponentManagerUtils.h"
 
@@ -69,7 +67,7 @@ using namespace mozilla::a11y;
 nsAccessibleWrap::EAvailableAtkSignals nsAccessibleWrap::gAvailableAtkSignals =
   eUnknown;
 
-//defined in nsApplicationAccessibleWrap.cpp
+//defined in ApplicationAccessibleWrap.cpp
 extern "C" GType g_atk_hyperlink_impl_type;
 
 /* MaiAtkObject */
@@ -723,24 +721,20 @@ getDescriptionCB(AtkObject *aAtkObj)
 AtkRole
 getRoleCB(AtkObject *aAtkObj)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(aAtkObj);
-    if (!accWrap) {
-        return ATK_ROLE_INVALID;
-    }
+  nsAccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
+  if (!accWrap)
+    return ATK_ROLE_INVALID;
 
 #ifdef DEBUG_A11Y
-    NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(accWrap),
-                 "Does not support nsIAccessibleText when it should");
+  NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(accWrap),
+      "Does not support nsIAccessibleText when it should");
 #endif
 
-    if (aAtkObj->role == ATK_ROLE_INVALID) {
-        // map to the actual value
-        PRUint32 atkRole = atkRoleMap[accWrap->Role()];
-        NS_ASSERTION(atkRoleMap[nsIAccessibleRole::ROLE_LAST_ENTRY] ==
-                     kROLE_ATK_LAST_ENTRY, "ATK role map skewed");
-        aAtkObj->role = static_cast<AtkRole>(atkRole);
-    }
+  if (aAtkObj->role != ATK_ROLE_INVALID)
     return aAtkObj->role;
+
+  return aAtkObj->role =
+    static_cast<AtkRole>(nsAccessibleWrap::AtkRoleFor(accWrap->Role()));
 }
 
 AtkAttributeSet*
@@ -977,25 +971,20 @@ refRelationSetCB(AtkObject *aAtkObj)
 // for it.
 nsAccessibleWrap *GetAccessibleWrap(AtkObject *aAtkObj)
 {
-    NS_ENSURE_TRUE(IS_MAI_OBJECT(aAtkObj), nsnull);
-    nsAccessibleWrap *tmpAccWrap = MAI_ATK_OBJECT(aAtkObj)->accWrap;
+  NS_ENSURE_TRUE(IS_MAI_OBJECT(aAtkObj), nsnull);
+  nsAccessibleWrap* accWrap = MAI_ATK_OBJECT(aAtkObj)->accWrap;
 
-    // Check if AccessibleWrap was deconstructed
-    if (tmpAccWrap == nsnull) {
-        return nsnull;
-    }
+  // Check if the accessible was deconstructed.
+  if (!accWrap)
+    return nsnull;
 
-    NS_ENSURE_TRUE(tmpAccWrap->GetAtkObject() == aAtkObj, nsnull);
+  NS_ENSURE_TRUE(accWrap->GetAtkObject() == aAtkObj, nsnull);
 
-    nsApplicationAccessible *applicationAcc =
-        nsAccessNode::GetApplicationAccessible();
-    nsAccessibleWrap* tmpAppAccWrap =
-        static_cast<nsAccessibleWrap*>(applicationAcc);
+  nsAccessibleWrap* appAccWrap = nsAccessNode::GetApplicationAccessible();
+  if (appAccWrap != accWrap && !accWrap->IsValidObject())
+    return nsnull;
 
-    if (tmpAppAccWrap != tmpAccWrap && !tmpAccWrap->IsValidObject())
-        return nsnull;
-
-    return tmpAccWrap;
+  return accWrap;
 }
 
 nsresult
@@ -1406,3 +1395,19 @@ nsAccessibleWrap::FireAtkShowHideEvent(AccEvent* aEvent,
     return NS_OK;
 }
 
+PRUint32
+nsAccessibleWrap::AtkRoleFor(role aRole)
+{
+#define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role) \
+  case roles::geckoRole: \
+    return atkRole;
+
+  switch (aRole) {
+#include "RoleMap.h"
+    default:
+      MOZ_NOT_REACHED("Unknown role.");
+      return ATK_ROLE_UNKNOWN;
+  }
+
+#undef ROLE
+}

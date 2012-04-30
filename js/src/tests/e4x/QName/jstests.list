@@ -1,9 +1,0 @@
-url-prefix ../../jsreftest.html?test=e4x/QName/
-script 13.3.1.js
-script 13.3.2.js
-script 13.3.5.js
-script regress-373595-01.js
-script regress-373595-02.js
-script regress-373595-03.js
-script regress-444608.js
-script regress-619529.js

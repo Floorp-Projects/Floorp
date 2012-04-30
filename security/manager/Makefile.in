@@ -184,9 +184,10 @@ ifdef NSS_DISABLE_DBM
 DEFAULT_GMAKE_FLAGS += NSS_DISABLE_DBM=1
 endif
 ABS_topsrcdir   := $(call core_abspath,$(topsrcdir))
-ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
-DEFAULT_GMAKE_FLAGS += BUILD_TREE=$(MOZ_BUILD_ROOT)
-endif
+# Hack to force NSS build system to use "normal" object directories
+DEFAULT_GMAKE_FLAGS += BUILD='$(MOZ_BUILD_ROOT)/security/$$(subst $(shell cd $(topsrcdir); pwd)/security/,,$$(CURDIR))'
+DEFAULT_GMAKE_FLAGS += BUILD_TREE='$$(BUILD)' OBJDIR='$$(BUILD)' DEPENDENCIES='$$(BUILD)/.deps' SINGLE_SHLIB_DIR='$$(BUILD)'
+DEFAULT_GMAKE_FLAGS += SOURCE_XP_DIR=$(ABS_DIST)
 ifndef MOZ_DEBUG
 DEFAULT_GMAKE_FLAGS += BUILD_OPT=1 OPT_CODE_SIZE=1
 endif
@@ -283,11 +284,8 @@ DEFAULT_GMAKE_FLAGS += ZDEFS_FLAG=
 endif
 ifdef MOZ_CFLAGS_NSS
 DEFAULT_GMAKE_FLAGS += XCFLAGS="$(CFLAGS)"
+DEFAULT_GMAKE_FLAGS += DARWIN_DYLIB_VERSIONS="-compatibility_version 1 -current_version 1 $(LDFLAGS)"
 endif
-
-SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile locales/Makefile
-
-include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_NSS_PATCH
 # If we're applying a patch, we'll copy the NSS source to the objdir
@@ -310,118 +308,81 @@ else
 NSS_SRCDIR = $(topsrcdir)
 endif
 
-dependclean export packages chrome::
-	$(MAKE) -C boot $@
-	$(MAKE) -C ssl $@
-	$(MAKE) -C locales $@
-ifdef MOZ_XUL
-	$(MAKE) -C pki $@
+NSS_DIRS =
+ifndef NSS_DISABLE_DBM
+NSS_DIRS += dbm
+endif
+NSS_DIRS += \
+  nss/lib \
+  nss/cmd/lib \
+  nss/cmd/shlibsign \
+  $(NULL)
+
+ifdef ENABLE_TESTS
+NSS_DIRS += \
+  nss/cmd/certutil \
+  nss/cmd/pk12util \
+  nss/cmd/modutil \
+  $(NULL)
 endif
 
+ifndef MOZ_NATIVE_NSS
+define build_rules
 libs::
-ifndef MOZ_NATIVE_NSS
-ifndef NSS_DISABLE_DBM
-	$(NSSMAKE) -C $(NSS_SRCDIR)/security/dbm $(DEFAULT_GMAKE_FLAGS) 
-endif
-	$(NSSMAKE) -C $(NSS_SRCDIR)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
-ifdef ENABLE_TESTS
-# Need certutil binary for mochitest certificates generation
-	$(NSSMAKE) -C $(NSS_SRCDIR)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS)
-	$(NSSMAKE) -C $(NSS_SRCDIR)/security/nss/cmd/certutil $(DEFAULT_GMAKE_FLAGS)
-	$(NSSMAKE) -C $(NSS_SRCDIR)/security/nss/cmd/pk12util $(DEFAULT_GMAKE_FLAGS)
-	$(NSSMAKE) -C $(NSS_SRCDIR)/security/nss/cmd/modutil $(DEFAULT_GMAKE_FLAGS)
-endif
-ifndef ENABLE_TESTS # Just avoid secondary compile
-	$(NSSMAKE) -C $(NSS_SRCDIR)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS)
-endif
-	$(NSSMAKE) -C $(NSS_SRCDIR)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS)
-	$(INSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
-ifeq ($(OS_ARCH), SunOS)
+	$$(NSSMAKE) -C $$(NSS_SRCDIR)/security/$(1) $$(DEFAULT_GMAKE_FLAGS)
+
+clean clobber clobber_all realclean distclean depend::
+	$$(NSSMAKE) -C $$(NSS_SRCDIR)/security/$(1) $$(DEFAULT_GMAKE_FLAGS) clean
+endef
+$(foreach dir,$(NSS_DIRS),$(eval $(call build_rules,$(dir))))
+
+NSS_LIBS = \
+  $(LOADABLE_ROOT_MODULE) \
+  $(SOFTOKEN3_LIB) \
+  $(NSSDBM3_LIB) \
+  $(NSS3_LIB) \
+  $(NSSUTIL3_LIB) \
+  $(SSL3_LIB) \
+  $(SMIME3_LIB) \
+  $(FREEBL_LIB) \
+  $(FREEBL_32INT_LIB) \
+  $(FREEBL_32FPU_LIB) \
+  $(FREEBL_32INT64_LIB) \
+  $(FREEBL_64INT_LIB) \
+  $(FREEBL_64FPU_LIB) \
+  $(NULL)
+
+define install_rules
+libs::
+ifeq ($(OS_ARCH)_$(1), SunOS_$(SOFTOKEN3_LIB))
 # has to use copy mode on Solaris, see #665509
-	$(NSINSTALL) -t -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DIST)/bin
+	$$(NSINSTALL) -t -m 755 $$(DIST)/lib/$(1) $$(DIST)/bin
 else
-	$(INSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DIST)/bin
+	$$(INSTALL) -m 755 $$(DIST)/lib/$(1) $$(DIST)/bin
 endif
-ifndef NSS_DISABLE_DBM
-	$(INSTALL) -m 755 $(DIST)/lib/$(NSSDBM3_LIB) $(DIST)/bin
-endif
-	$(INSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DIST)/bin
-	$(INSTALL) -m 755 $(DIST)/lib/$(NSSUTIL3_LIB) $(DIST)/bin
-	$(INSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DIST)/bin
-	$(INSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DIST)/bin
+
+install::
+	$$(SYSINSTALL) -m 755 $$(DIST)/lib/$(1) $$(DESTDIR)$$(mozappdir)
+endef
+$(foreach lib,$(NSS_LIBS),$(eval $(call install_rules,$(lib))))
+
+libs::
 	$(INSTALL) -m 755 $(SDK_LIBS) $(DIST)/sdk/lib
-ifdef HAVE_FREEBL_LIBS
-	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_LIB) $(DIST)/bin
-endif
-ifdef HAVE_FREEBL_LIBS_32
-	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_32INT_LIB) $(DIST)/bin
-	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_32FPU_LIB) $(DIST)/bin
-endif
-ifdef HAVE_FREEBL_LIBS_32INT64
-	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_32INT64_LIB) $(DIST)/bin
-endif
-ifdef HAVE_FREEBL_LIBS_64
-	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_64INT_LIB) $(DIST)/bin
-	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_64FPU_LIB) $(DIST)/bin
-endif
-endif
-ifndef MOZ_NATIVE_NSS
 # NSS installs headers to dist/public and we want them in dist/include
 	$(NSINSTALL) -D $(DIST)/include/nss
 	(cd $(DIST)/public/nss && tar $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DIST)/include && tar -xf -)
-endif
-	$(MAKE) -C boot $@
-	$(MAKE) -C ssl $@
-	$(MAKE) -C locales $@
+
+endif # MOZ_NATIVE_NSS
+
+DIRS = \
+  boot \
+  ssl \
+  locales \
+  $(NULL)
+
 ifdef MOZ_XUL
-	$(MAKE) -C pki $@
+DIRS += pki
 endif
 
-check::
-	$(MAKE) -C ssl $@
-
-install::
-ifndef MOZ_NATIVE_NSS
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DESTDIR)$(mozappdir)
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DESTDIR)$(mozappdir)
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSSDBM3_LIB) $(DESTDIR)$(mozappdir)
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DESTDIR)$(mozappdir)
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSSUTIL3_LIB) $(DESTDIR)$(mozappdir)
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DESTDIR)$(mozappdir)
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DESTDIR)$(mozappdir)
-ifdef HAVE_FREEBL_LIBS
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_LIB) $(DESTDIR)$(mozappdir)
-endif
-ifdef HAVE_FREEBL_LIBS_32
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_32INT_LIB) $(DESTDIR)$(mozappdir)
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_32FPU_LIB) $(DESTDIR)$(mozappdir)
-endif
-ifdef HAVE_FREEBL_LIBS_32INT64
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_32INT64_LIB) $(DESTDIR)$(mozappdir)
-endif
-ifdef HAVE_FREEBL_LIBS_64
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_64INT_LIB) $(DESTDIR)$(mozappdir)
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_64FPU_LIB) $(DESTDIR)$(mozappdir)
-endif
-endif
-	$(MAKE) -C boot $@
-	$(MAKE) -C ssl $@
-	$(MAKE) -C locales $@
-ifdef MOZ_XUL
-	$(MAKE) -C pki $@
-endif
-
-clean clobber clobber_all realclean distclean depend::
-	$(MAKE) -C boot $@
-	$(MAKE) -C ssl $@
-	$(MAKE) -C locales $@
-ifdef MOZ_XUL
-	$(MAKE) -C pki $@
-endif
-ifndef MOZ_NATIVE_NSS
-	$(NSSMAKE) -C $(NSS_SRCDIR)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean
-	$(NSSMAKE) -C $(NSS_SRCDIR)/security/nss/lib $(DEFAULT_GMAKE_FLAGS) clean
-	$(NSSMAKE) -C $(NSS_SRCDIR)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS) clean
-	$(NSSMAKE) -C $(NSS_SRCDIR)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS) clean
-endif
+include $(topsrcdir)/config/rules.mk

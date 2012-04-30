@@ -61,6 +61,8 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
     private boolean mHaveFrame;
     private float[] mTextureTransform = new float[16];
 
+    private Rect mPageRect;
+
     private boolean mInverted;
     private boolean mNewInverted;
     private boolean mBlend;
@@ -120,6 +122,9 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
         mHaveFrame = true;
         mInverted = false;
 
+        // We have our own special shaders necessary for rendering the SurfaceTexture
+        this.mUsesDefaultProgram = false;
+
         mSurfaceTexture = new SurfaceTexture(mTextureId);
         mSurfaceTexture.setOnFrameAvailableListener(this);
 
@@ -147,11 +152,10 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
         GeckoApp.mAppContext.requestRender();
     }
 
-    public void update(Rect position, float resolution, boolean inverted, boolean blend) {
-        beginTransaction(); // this is called on the Gecko thread
+    public void update(Rect rect, boolean inverted, boolean blend) {
+        beginTransaction();
 
-        setPosition(position);
-        setResolution(resolution);
+        setPosition(rect);
 
         mNewInverted = inverted;
         mNewBlend = blend;
@@ -177,13 +181,11 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
     }
 
     @Override
-    protected boolean performUpdates(RenderContext context) {
+    protected void performUpdates(RenderContext context) {
         super.performUpdates(context);
 
         mInverted = mNewInverted;
         mBlend = mNewBlend;
-
-        return true;
     }
 
     private static boolean ensureProgram() {
@@ -241,7 +243,6 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
 
         float[] textureCoords = mInverted ? TEXTURE_MAP_INVERTED : TEXTURE_MAP;
 
-        // Coordinates for the scrollbar's body combined with the texture coordinates
         float[] coords = {
             // x, y, z, texture_x, texture_y
             rect.left/viewWidth, bot/viewHeight, 0,
@@ -272,6 +273,7 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glUniform1i(mSampleHandle, 0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
         GLES20.glBindTexture(LOCAL_GL_TEXTURE_EXTERNAL_OES, mTextureId);
       
         mSurfaceTexture.updateTexImage();
@@ -279,6 +281,9 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
 
         GLES20.glUniformMatrix4fv(mTextureMatrixHandle, 1, false, mTextureTransform, 0);
 
+        // Unbind any the current array buffer so we can use client side buffers
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
+        
         // Vertex coordinates are x,y,z starting at position 0 into the buffer.
         coordBuffer.position(0);
         GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false, 20,
@@ -286,7 +291,7 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
 
         // Texture coordinates are texture_x, texture_y starting at position 3 into the buffer.
         coordBuffer.position(3);
-        GLES20.glVertexAttribPointer(mTextureHandle, 3, GLES20.GL_FLOAT, false, 20,
+        GLES20.glVertexAttribPointer(mTextureHandle, 2, GLES20.GL_FLOAT, false, 20,
                 coordBuffer);
 
         if (mBlend) {

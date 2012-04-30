@@ -85,6 +85,7 @@ CPPSRCS += \
   Power.cpp \
   GonkSensor.cpp \
   UeventPoller.cpp \
+  GonkSwitch.cpp \
   $(NULL)
 else ifeq (Linux,$(OS_TARGET))
 CPPSRCS += \
@@ -117,7 +118,12 @@ CPPSRCS += \
 endif
 
 ifneq (gonk,$(MOZ_WIDGET_TOOLKIT)) #{
-CPPSRCS += FallbackLights.cpp FallbackTime.cpp
+CPPSRCS += \
+  FallbackLights.cpp  \
+  FallbackTime.cpp \
+  FallbackWakeLocks.cpp \
+  FallbackSwitch.cpp \
+  $(NULL)
 endif #}
 
 # Screen Orientation backend

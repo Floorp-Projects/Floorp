@@ -24,6 +24,10 @@
  * Red Hat Author(s): Behdad Esfahbod
  */
 
+#ifndef HB_H_IN
+#error "Include <hb.h> instead."
+#endif
+
 #ifndef HB_SHAPE_H
 #define HB_SHAPE_H
 
@@ -53,7 +57,6 @@ hb_shape_full (hb_font_t          *font,
 	       hb_buffer_t        *buffer,
 	       const hb_feature_t *features,
 	       unsigned int        num_features,
-	       const char * const *shaper_options,
 	       const char * const *shaper_list);
 
 const char **

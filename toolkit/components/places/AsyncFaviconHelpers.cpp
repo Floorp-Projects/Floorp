@@ -80,7 +80,7 @@ FetchPageInfo(nsRefPtr<Database>& aDB,
 
   // This query finds the bookmarked uri we want to set the icon for,
   // walking up to two redirect levels.
-  nsCString query = nsPrintfCString(768,
+  nsCString query = nsPrintfCString(
     "SELECT h.id, h.favicon_id, h.guid, ( "
       "SELECT h.url FROM moz_bookmarks b WHERE b.fk = h.id "
       "UNION ALL " // Union not directly bookmarked pages.

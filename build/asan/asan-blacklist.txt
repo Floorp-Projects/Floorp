@@ -1,0 +1,8 @@
+fun:_ZN2js6Parser*
+fun:_ZN2js13FoldConstants*
+fun:_ZN2js8frontend.Emit*
+fun:_ZN2js8frontend..Emit*
+fun:_ZL.Emit*
+fun:_ZL..Emit*
+fun:_ZN2jsL23MarkRangeConservativelyEP8JSTracerPKmS3_
+fun:_ZN2jsL23MarkRangeConservativelyEP8JSTracerPKjS3_

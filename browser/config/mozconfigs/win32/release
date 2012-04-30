@@ -12,7 +12,7 @@ export MOZILLA_OFFICIAL=1
 
 export MOZ_TELEMETRY_REPORTING=1
 
-. $topsrcdir/browser/config/mozconfigs/win32/vs2010-mozconfig
+. $topsrcdir/build/win32/mozconfig.vs2010
 
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1

@@ -42,7 +42,9 @@ using namespace graphite2;
     const void* pMaxp = face.getTable(Tag::maxp);
     if (pMaxp == NULL) return false;
     m_nGlyphs = m_nGlyphsWithGraphics = (unsigned short)TtfUtil::GlyphCount(pMaxp);
-    
+    if (TtfUtil::LocaLookup(m_nGlyphs-1, m_pLoca, m_lLoca, m_pHead) == size_t(-1))
+    	return false; // This will fail if m_nGlyphs is wildly out of range.
+
     if (!dumb_font)
     {
 		if ((m_pGlat = face.getTable(Tag::Glat, &m_lGlat)) == NULL) return false;
