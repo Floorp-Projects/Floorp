@@ -1250,6 +1250,22 @@ GetCompartmentName(JSCompartment *c, bool getAddress, nsCString &name)
 }
 
 static PRInt64
+GetGCChunkTotalBytes()
+{
+    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+    return PRInt64(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) * js::gc::ChunkSize;
+}
+
+// Telemetry relies on this memory reporter being a single-reporter (rather
+// than part of the "js" multi-reporter, which is too slow to run during a
+// telemetry ping).
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSGCHeap,
+                             "js-gc-heap",
+                             KIND_OTHER,
+                             nsIMemoryReporter::UNITS_BYTES,
+                             GetGCChunkTotalBytes,
+                             "Memory used by the garbage-collected JavaScript heap.")
+static PRInt64
 GetJSSystemCompartmentCount()
 {
     return JS::SystemCompartmentCount(nsXPConnect::GetRuntimeInstance()->GetJSRuntime());
@@ -1766,13 +1782,26 @@ public:
                      "useful data but currently isn't. This is the sum of all "
                      "compartments' 'gc-heap/arena-unused' numbers.");
 
-        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-unused"),
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed-unused"),
                      nsIMemoryReporter::KIND_OTHER,
                      rtStats.gcHeapUnused,
                      "Amount of the GC heap that's committed, but that is "
                      "neither part of an active allocation nor being used for "
                      "bookkeeping.  Equal to 'gc-heap-chunk-dirty-unused' + "
                      "'gc-heap-chunk-clean-unused' + 'gc-heap-arena-unused'.");
+
+        // Why 10000x?  100x because it's a percentage, and another 100x
+        // because nsIMemoryReporter requires that for UNITS_PERCENTAGE
+        // reporters so we can get two decimal places out of the integer value.
+        REPORT(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed-unused-ratio"),
+               nsIMemoryReporter::KIND_OTHER,
+               nsIMemoryReporter::UNITS_PERCENTAGE,
+               (PRInt64) 10000 * rtStats.gcHeapUnused /
+                   ((double) rtStats.gcHeapCommitted - rtStats.gcHeapUnused),
+               "Ratio of committed, unused bytes to allocated bytes; i.e. "
+               "'gc-heap-committed-unused' / 'gc-heap-allocated'.  This "
+               "measures the overhead of the GC heap allocator relative to the "
+               "amount of memory allocated.");
 
         REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed"),
                      nsIMemoryReporter::KIND_OTHER,
@@ -1786,14 +1815,6 @@ public:
                      "Amount of the GC heap used for active allocations and "
                      "bookkeeping.  This is calculated as 'gc-heap-committed' "
                      "- 'gc-heap-unused'.");
-
-        REPORT(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-fragmentation"),
-               nsIMemoryReporter::KIND_OTHER,
-               nsIMemoryReporter::UNITS_PERCENTAGE,
-               rtStats.gcHeapFragmentationPercentage,
-               "Fraction of the committed part of the main JSRuntime's "
-               "garbage-collected heap that is unused. Computed as "
-               "'gc-heap-unused' / 'gc-heap-committed'.");
 
         REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-decommitted"),
                      nsIMemoryReporter::KIND_OTHER,
@@ -2007,6 +2028,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     JS_SetAccumulateTelemetryCallback(mJSRuntime, AccumulateTelemetryCallback);
     js::SetActivityCallback(mJSRuntime, ActivityCallback, this);
         
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSSystemCompartmentCount));
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSUserCompartmentCount));
     NS_RegisterMemoryMultiReporter(new JSMemoryMultiReporter);
