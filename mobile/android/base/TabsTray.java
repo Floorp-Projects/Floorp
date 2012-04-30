@@ -20,6 +20,7 @@ import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView.RecyclerListener;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -61,6 +62,13 @@ public class TabsTray extends GeckoActivity implements Tabs.OnTabsChangedListene
 
         mList = (ListView) findViewById(R.id.list);
         mList.setItemsCanFocus(true);
+
+        mList.setRecyclerListener(new RecyclerListener() {
+            @Override
+            public void onMovedToScrapHeap(View view) {
+                ((ImageView) view.findViewById(R.id.thumbnail)).setImageDrawable(null);
+            }
+        });
 
         mListContainer = (TabsListContainer) findViewById(R.id.list_container);
 
