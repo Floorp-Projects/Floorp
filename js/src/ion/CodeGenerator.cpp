@@ -1003,9 +1003,9 @@ CodeGenerator::visitInitProp(LInitProp *lir)
     typedef bool(*pf)(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value &value);
     static const VMFunction InitPropInfo = FunctionInfo<pf>(InitProp);
 
-    pushArg(objReg);
-    pushArg(ImmWord(lir->mir()->propertyName()));
     pushArg(ToValue(lir, LInitProp::ValueIndex));
+    pushArg(ImmWord(lir->mir()->propertyName()));
+    pushArg(objReg);
 
     return callVM(InitPropInfo, lir);
 }

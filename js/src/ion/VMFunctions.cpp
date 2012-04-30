@@ -224,7 +224,16 @@ NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type)
 JSObject*
 NewInitObject(JSContext *cx, HandleObject baseObj, types::TypeObject *type)
 {
-    RootedVarObject obj(cx, CopyInitializerObject(cx, baseObj));
+    RootedVarObject obj(cx);
+    if (*baseObj.address()) {
+        // JSOP_NEWOBJECT
+        obj = CopyInitializerObject(cx, baseObj);
+    } else {
+        // JSOP_NEWINIT
+        gc::AllocKind kind = GuessObjectGCKind(0);
+        obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
+    }
+
     if (!obj)
         return NULL;
 

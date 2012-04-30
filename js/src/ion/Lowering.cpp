@@ -120,9 +120,7 @@ LIRGenerator::visitDefVar(MDefVar *ins)
     LAllocation scopeChain = useRegister(ins->scopeChain());
     LDefVar *lir = new LDefVar(scopeChain, temp());
 
-    lir->setMir(ins);
-
-    if (!add(lir))
+    if (!add(lir, ins))
         return false;
     if (!assignSafepoint(lir, ins))
         return false;
@@ -151,7 +149,7 @@ LIRGenerator::visitInitProp(MInitProp *ins)
     if (!useBox(lir, LInitProp::ValueIndex, ins->getValue()))
         return false;
 
-    return add(lir) && assignSafepoint(lir, ins);
+    return add(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
