@@ -260,7 +260,18 @@ public:
 
         m_loadOffsets.append(AssemblerBuffer::size());
         bool isReusable = false;
-        jsdpun dpun;
+
+        union DoublePun {
+            struct {
+#if defined(IS_LITTLE_ENDIAN) && !defined(FPU_IS_ARM_FPA)
+                uint32_t lo, hi;
+#else
+                uint32_t hi, lo;
+#endif
+            } s;
+            double d;
+        } dpun;
+
         dpun.d = constant;
         
         m_pool[m_numConsts] = dpun.s.lo;

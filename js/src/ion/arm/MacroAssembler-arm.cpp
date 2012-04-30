@@ -1121,7 +1121,16 @@ MacroAssemblerARM::ma_vneg(FloatRegister src, FloatRegister dest)
 void
 MacroAssemblerARM::ma_vimm(double value, FloatRegister dest)
 {
-    jsdpun dpun;
+    union DoublePun {
+        struct {
+#if defined(IS_LITTLE_ENDIAN) && !defined(FPU_IS_ARM_FPA)
+            uint32_t lo, hi;
+#else
+            uint32_t hi, lo;
+#endif
+        } s;
+        double d;
+    } dpun;
     dpun.d = value;
     if ((dpun.s.lo) == 0) {
         if (dpun.s.hi == 0) {
