@@ -730,6 +730,33 @@ void nsBuiltinDecoderStateMachine::SendOutputStreamData()
   }
 }
 
+void nsBuiltinDecoderStateMachine::FinishOutputStreams()
+{
+  // Tell all our output streams that all tracks have ended and we've
+  // finished.
+  nsTArray<OutputMediaStream>& streams = mDecoder->OutputStreams();
+  for (PRUint32 i = 0; i < streams.Length(); ++i) {
+    OutputMediaStream* stream = &streams[i];
+    if (!stream->mStreamInitialized) {
+      continue;
+    }
+    SourceMediaStream* mediaStream = stream->mStream;
+    if (mInfo.mHasAudio && !stream->mHaveSentFinishAudio) {
+      mediaStream->EndTrack(TRACK_AUDIO);
+      stream->mHaveSentFinishAudio = true;
+    }
+    if (mInfo.mHasVideo && !stream->mHaveSentFinishVideo) {
+      mediaStream->EndTrack(TRACK_VIDEO);
+      stream->mHaveSentFinishVideo = true;
+    }
+    // XXX ignoring mFinishWhenEnded for now. Immediate goal is to not crash.
+    if (!stream->mHaveSentFinish) {
+      mediaStream->Finish();
+      stream->mHaveSentFinish = true;
+    }
+  }
+}
+
 bool nsBuiltinDecoderStateMachine::HaveEnoughDecodedAudio(PRInt64 aAmpleAudioUSecs)
 {
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
@@ -2008,6 +2035,10 @@ nsresult nsBuiltinDecoderStateMachine::RunStateMachine()
       StopDecodeThread();
       NS_ASSERTION(mState == DECODER_STATE_SHUTDOWN,
                    "How did we escape from the shutdown state?");
+      // Need to call this before dispatching nsDispatchDisposeEvent below, to
+      // ensure that any notifications dispatched by the stream graph
+      // will run before nsDispatchDisposeEvent below.
+      FinishOutputStreams();
       // We must daisy-chain these events to destroy the decoder. We must
       // destroy the decoder on the main thread, but we can't destroy the
       // decoder while this thread holds the decoder monitor. We can't
