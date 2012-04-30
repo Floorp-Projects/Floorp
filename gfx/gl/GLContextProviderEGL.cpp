@@ -140,7 +140,6 @@ public:
 #include "GLLibraryEGL.h"
 #include "nsDebug.h"
 #include "nsThreadUtils.h"
-#include "EGLUtils.h"
 
 #include "nsIWidget.h"
 
@@ -1512,16 +1511,6 @@ CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config)
 #endif
 
     return surface;
-}
-
-const char*
-GetVendor()
-{
-    if (!sEGLLibrary.EnsureInitialized()) {
-        return nsnull;
-    }
-
-    return reinterpret_cast<const char*>(sEGLLibrary.fQueryString(EGL_DISPLAY(), LOCAL_EGL_VENDOR));
 }
 
 already_AddRefed<GLContext>
