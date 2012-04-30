@@ -184,8 +184,8 @@ void
 TiledThebesLayerOGL::RenderTile(TiledTexture aTile,
                                 const gfx3DMatrix& aTransform,
                                 const nsIntPoint& aOffset,
-                                nsIntRect aScreenRect,
-                                nsIntRect aTextureRect,
+                                nsIntRegion aScreenRegion,
+                                nsIntPoint aTextureOffset,
                                 nsIntSize aTextureBounds)
 {
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, aTile.mTextureHandle);
@@ -200,11 +200,16 @@ TiledThebesLayerOGL::RenderTile(TiledTexture aTile,
     program->SetLayerOpacity(GetEffectiveOpacity());
     program->SetLayerTransform(aTransform);
     program->SetRenderOffset(aOffset);
-    program->SetLayerQuadRect(aScreenRect);
 
-    mOGLManager->BindAndDrawQuadWithTextureRect(program,
-                                                aTextureRect,
-                                                aTextureBounds);
+    nsIntRegionRectIterator it(aScreenRegion);
+    for (const nsIntRect* rect = it.Next(); rect != nsnull; rect = it.Next()) {
+      nsIntRect textureRect(rect->x - aTextureOffset.x, rect->y - aTextureOffset.y,
+                            rect->width, rect->height);
+      program->SetLayerQuadRect(*rect);
+      mOGLManager->BindAndDrawQuadWithTextureRect(program,
+                                                  textureRect,
+                                                  aTextureBounds);
+    }
 }
 
 void
@@ -244,9 +249,13 @@ TiledThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer, const nsIntPoint& aOf
         GetTile(nsIntPoint(mVideoMemoryTiledBuffer.RoundDownToTileEdge(x),
                            mVideoMemoryTiledBuffer.RoundDownToTileEdge(y)));
       if (tileTexture != mVideoMemoryTiledBuffer.GetPlaceholderTile()) {
+        nsIntRegion tileDrawRegion = nsIntRegion(nsIntRect(x, y, w, h));
+        tileDrawRegion.And(tileDrawRegion, mValidRegion);
+
+        nsIntPoint tileOffset(x - tileStartX, y - tileStartY);
         uint16_t tileSize = mVideoMemoryTiledBuffer.GetTileLength();
-        RenderTile(tileTexture, GetEffectiveTransform(), aOffset, nsIntRect(x,y,w,h),
-                   nsIntRect(tileStartX, tileStartY, w, h), nsIntSize(tileSize, tileSize));
+        RenderTile(tileTexture, GetEffectiveTransform(), aOffset, tileDrawRegion,
+                   tileOffset, nsIntSize(tileSize, tileSize));
       }
       tileY++;
       y += h;
