@@ -101,9 +101,14 @@ void nsBuiltinDecoder::AddOutputStream(SourceMediaStream* aStream, bool aFinishW
     ms->Init(PRInt64(mCurrentTime*USECS_PER_S), aStream, aFinishWhenEnded);
   }
 
-  // Make sure the state machine thread runs so that any buffered data
-  // is fed into our strema.
-  ScheduleStateMachineThread();
+  // This can be called before Load(), in which case our mDecoderStateMachine
+  // won't have been created yet and we can rely on Load() to schedule it
+  // once it is created.
+  if (mDecoderStateMachine) {
+    // Make sure the state machine thread runs so that any buffered data
+    // is fed into our stream.
+    ScheduleStateMachineThread();
+  }
 }
 
 double nsBuiltinDecoder::GetDuration()
