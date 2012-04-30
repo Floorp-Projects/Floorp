@@ -150,6 +150,7 @@ _TEST_FILES = \
 		test_source.html \
 		test_source_write.html \
 		test_standalone.html \
+		test_streams_element_capture.html \
 		test_timeupdate_small_files.html \
 		test_too_many_elements.html \
 		test_volume.html \
