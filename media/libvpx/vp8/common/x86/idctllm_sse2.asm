@@ -11,21 +11,19 @@
 
 %include "vpx_ports/x86_abi_support.asm"
 
-;void idct_dequant_0_2x_sse2
+;void vp8_idct_dequant_0_2x_sse2
 ; (
 ;   short *qcoeff       - 0
 ;   short *dequant      - 1
-;   unsigned char *pre  - 2
-;   unsigned char *dst  - 3
-;   int dst_stride      - 4
-;   int blk_stride      - 5
+;   unsigned char *dst  - 2
+;   int dst_stride      - 3
 ; )
 
-global sym(idct_dequant_0_2x_sse2)
-sym(idct_dequant_0_2x_sse2):
+global sym(vp8_idct_dequant_0_2x_sse2)
+sym(vp8_idct_dequant_0_2x_sse2):
     push        rbp
     mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 6
+    SHADOW_ARGS_TO_STACK 4
     GET_GOT     rbx
     ; end prolog
 
@@ -47,19 +45,20 @@ sym(idct_dequant_0_2x_sse2):
         movd        [rax],          xmm5
         movd        [rax+32],       xmm5
 ;pshufb
+        mov         rax,            arg(2) ; dst
+        movsxd      rdx,            dword ptr arg(3) ; dst_stride
+
         pshuflw     xmm4,           xmm4,       00000000b
         pshufhw     xmm4,           xmm4,       00000000b
 
-        mov         rax,            arg(2) ; pre
+        lea         rcx,            [rdx + rdx*2]
         paddw       xmm4,           [GLOBAL(fours)]
 
-        movsxd      rcx,            dword ptr arg(5) ; blk_stride
         psraw       xmm4,           3
 
         movq        xmm0,           [rax]
-        movq        xmm1,           [rax+rcx]
-        movq        xmm2,           [rax+2*rcx]
-        lea         rcx,            [3*rcx]
+        movq        xmm1,           [rax+rdx]
+        movq        xmm2,           [rax+2*rdx]
         movq        xmm3,           [rax+rcx]
 
         punpcklbw   xmm0,           xmm5
@@ -67,8 +66,6 @@ sym(idct_dequant_0_2x_sse2):
         punpcklbw   xmm2,           xmm5
         punpcklbw   xmm3,           xmm5
 
-        mov         rax,            arg(3) ; dst
-        movsxd      rdx,            dword ptr arg(4) ; dst_stride
 
     ; Add to predict buffer
         paddw       xmm0,           xmm4
@@ -97,11 +94,18 @@ sym(idct_dequant_0_2x_sse2):
     pop         rbp
     ret
 
-global sym(idct_dequant_full_2x_sse2)
-sym(idct_dequant_full_2x_sse2):
+;void vp8_idct_dequant_full_2x_sse2
+; (
+;   short *qcoeff       - 0
+;   short *dequant      - 1
+;   unsigned char *dst  - 2
+;   int dst_stride      - 3
+; )
+global sym(vp8_idct_dequant_full_2x_sse2)
+sym(vp8_idct_dequant_full_2x_sse2):
     push        rbp
     mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 7
+    SHADOW_ARGS_TO_STACK 4
     SAVE_XMM 7
     GET_GOT     rbx
     push        rsi
@@ -111,14 +115,13 @@ sym(idct_dequant_full_2x_sse2):
     ; special case when 2 blocks have 0 or 1 coeffs
     ; dc is set as first coeff, so no need to load qcoeff
         mov         rax,            arg(0) ; qcoeff
-        mov         rsi,            arg(2) ; pre
-        mov         rdi,            arg(3) ; dst
-        movsxd      rcx,            dword ptr arg(5) ; blk_stride
+        mov         rdx,            arg(1)  ; dequant
+        mov         rdi,            arg(2) ; dst
+
 
     ; Zero out xmm7, for use unpacking
         pxor        xmm7,           xmm7
 
-        mov         rdx,            arg(1)  ; dequant
 
     ; note the transpose of xmm1 and xmm2, necessary for shuffle
     ;   to spit out sensicle data
@@ -138,6 +141,7 @@ sym(idct_dequant_full_2x_sse2):
         pmullw      xmm2,           [rdx+16]
         pmullw      xmm1,           [rdx]
         pmullw      xmm3,           [rdx+16]
+        movsxd      rdx,            dword ptr arg(3) ; dst_stride
 
     ; repack so block 0 row x and block 1 row x are together
         movdqa      xmm4,           xmm0
@@ -162,6 +166,7 @@ sym(idct_dequant_full_2x_sse2):
         paddw       xmm2,           xmm0        ; a1 = 0+2
 
         pmulhw      xmm5,           [GLOBAL(x_s1sqr2)]
+        lea         rcx,            [rdx + rdx*2]   ;dst_stride * 3
         paddw       xmm5,           xmm1        ; ip1 * sin(pi/8) * sqrt(2)
 
         movdqa      xmm7,           xmm3
@@ -304,8 +309,8 @@ sym(idct_dequant_full_2x_sse2):
         pxor        xmm7,           xmm7
 
     ; Load up predict blocks
-        movq        xmm4,           [rsi]
-        movq        xmm5,           [rsi+rcx]
+        movq        xmm4,           [rdi]
+        movq        xmm5,           [rdi+rdx]
 
         punpcklbw   xmm4,           xmm7
         punpcklbw   xmm5,           xmm7
@@ -313,9 +318,8 @@ sym(idct_dequant_full_2x_sse2):
         paddw       xmm0,           xmm4
         paddw       xmm1,           xmm5
 
-        movq        xmm4,           [rsi+2*rcx]
-        lea         rcx,            [3*rcx]
-        movq        xmm5,           [rsi+rcx]
+        movq        xmm4,           [rdi+2*rdx]
+        movq        xmm5,           [rdi+rcx]
 
         punpcklbw   xmm4,           xmm7
         punpcklbw   xmm5,           xmm7
@@ -331,18 +335,11 @@ sym(idct_dequant_full_2x_sse2):
         packuswb    xmm2,           xmm7
         packuswb    xmm3,           xmm7
 
-    ; Load destination stride before writing out,
-    ;   doesn't need to persist
-        movsxd      rdx,            dword ptr arg(4) ; dst_stride
-
     ; store blocks back out
         movq        [rdi],          xmm0
         movq        [rdi + rdx],    xmm1
-
-        lea         rdi,            [rdi + 2*rdx]
-
-        movq        [rdi],          xmm2
-        movq        [rdi + rdx],    xmm3
+        movq        [rdi + rdx*2],  xmm2
+        movq        [rdi + rcx],    xmm3
 
     ; begin epilog
     pop         rdi
@@ -353,31 +350,29 @@ sym(idct_dequant_full_2x_sse2):
     pop         rbp
     ret
 
-;void idct_dequant_dc_0_2x_sse2
+;void vp8_idct_dequant_dc_0_2x_sse2
 ; (
 ;   short *qcoeff       - 0
 ;   short *dequant      - 1
-;   unsigned char *pre  - 2
-;   unsigned char *dst  - 3
-;   int dst_stride      - 4
-;   short *dc           - 5
+;   unsigned char *dst  - 2
+;   int dst_stride      - 3
+;   short *dc           - 4
 ; )
-global sym(idct_dequant_dc_0_2x_sse2)
-sym(idct_dequant_dc_0_2x_sse2):
+global sym(vp8_idct_dequant_dc_0_2x_sse2)
+sym(vp8_idct_dequant_dc_0_2x_sse2):
     push        rbp
     mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 7
+    SHADOW_ARGS_TO_STACK 5
     GET_GOT     rbx
-    push        rsi
     push        rdi
     ; end prolog
 
     ; special case when 2 blocks have 0 or 1 coeffs
     ; dc is set as first coeff, so no need to load qcoeff
         mov         rax,            arg(0) ; qcoeff
-        mov         rsi,            arg(2) ; pre
-        mov         rdi,            arg(3) ; dst
-        mov         rdx,            arg(5) ; dc
+
+        mov         rdi,            arg(2) ; dst
+        mov         rdx,            arg(4) ; dc
 
     ; Zero out xmm5, for use unpacking
         pxor        xmm5,           xmm5
@@ -385,11 +380,13 @@ sym(idct_dequant_dc_0_2x_sse2):
     ; load up 2 dc words here == 2*16 = doubleword
         movd        xmm4,           [rdx]
 
+        movsxd      rdx,            dword ptr arg(3) ; dst_stride
+        lea         rcx, [rdx + rdx*2]
     ; Load up predict blocks
-        movq        xmm0,           [rsi]
-        movq        xmm1,           [rsi+16]
-        movq        xmm2,           [rsi+32]
-        movq        xmm3,           [rsi+48]
+        movq        xmm0,           [rdi]
+        movq        xmm1,           [rdi+rdx*1]
+        movq        xmm2,           [rdi+rdx*2]
+        movq        xmm3,           [rdi+rcx]
 
     ; Duplicate and expand dc across
         punpcklwd   xmm4,           xmm4
@@ -417,48 +414,46 @@ sym(idct_dequant_dc_0_2x_sse2):
         packuswb    xmm2,           xmm5
         packuswb    xmm3,           xmm5
 
-    ; Load destination stride before writing out,
-    ;   doesn't need to persist
-        movsxd      rdx,            dword ptr arg(4) ; dst_stride
-
     ; store blocks back out
         movq        [rdi],          xmm0
         movq        [rdi + rdx],    xmm1
-
-        lea         rdi,            [rdi + 2*rdx]
-
-        movq        [rdi],          xmm2
-        movq        [rdi + rdx],    xmm3
+        movq        [rdi + rdx*2],  xmm2
+        movq        [rdi + rcx],    xmm3
 
     ; begin epilog
     pop         rdi
-    pop         rsi
     RESTORE_GOT
     UNSHADOW_ARGS
     pop         rbp
     ret
-
-global sym(idct_dequant_dc_full_2x_sse2)
-sym(idct_dequant_dc_full_2x_sse2):
+;void vp8_idct_dequant_dc_full_2x_sse2
+; (
+;   short *qcoeff       - 0
+;   short *dequant      - 1
+;   unsigned char *dst  - 2
+;   int dst_stride      - 3
+;   short *dc           - 4
+; )
+global sym(vp8_idct_dequant_dc_full_2x_sse2)
+sym(vp8_idct_dequant_dc_full_2x_sse2):
     push        rbp
     mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 7
+    SHADOW_ARGS_TO_STACK 5
     SAVE_XMM 7
     GET_GOT     rbx
-    push        rsi
     push        rdi
     ; end prolog
 
     ; special case when 2 blocks have 0 or 1 coeffs
     ; dc is set as first coeff, so no need to load qcoeff
         mov         rax,            arg(0) ; qcoeff
-        mov         rsi,            arg(2) ; pre
-        mov         rdi,            arg(3) ; dst
+        mov         rdx,            arg(1)  ; dequant
+
+        mov         rdi,            arg(2) ; dst
 
     ; Zero out xmm7, for use unpacking
         pxor        xmm7,           xmm7
 
-        mov         rdx,            arg(1)  ; dequant
 
     ; note the transpose of xmm1 and xmm2, necessary for shuffle
     ;   to spit out sensicle data
@@ -480,7 +475,7 @@ sym(idct_dequant_dc_full_2x_sse2):
         pmullw      xmm3,           [rdx+16]
 
     ; DC component
-        mov         rdx,            arg(5)
+        mov         rdx,            arg(4)
 
     ; repack so block 0 row x and block 1 row x are together
         movdqa      xmm4,           xmm0
@@ -651,8 +646,10 @@ sym(idct_dequant_dc_full_2x_sse2):
         pxor        xmm7,           xmm7
 
     ; Load up predict blocks
-        movq        xmm4,           [rsi]
-        movq        xmm5,           [rsi+16]
+        movsxd      rdx,            dword ptr arg(3) ; dst_stride
+        movq        xmm4,           [rdi]
+        movq        xmm5,           [rdi+rdx]
+        lea         rcx,            [rdx + rdx*2]
 
         punpcklbw   xmm4,           xmm7
         punpcklbw   xmm5,           xmm7
@@ -660,8 +657,8 @@ sym(idct_dequant_dc_full_2x_sse2):
         paddw       xmm0,           xmm4
         paddw       xmm1,           xmm5
 
-        movq        xmm4,           [rsi+32]
-        movq        xmm5,           [rsi+48]
+        movq        xmm4,           [rdi+rdx*2]
+        movq        xmm5,           [rdi+rcx]
 
         punpcklbw   xmm4,           xmm7
         punpcklbw   xmm5,           xmm7
@@ -679,7 +676,7 @@ sym(idct_dequant_dc_full_2x_sse2):
 
     ; Load destination stride before writing out,
     ;   doesn't need to persist
-        movsxd      rdx,            dword ptr arg(4) ; dst_stride
+        movsxd      rdx,            dword ptr arg(3) ; dst_stride
 
     ; store blocks back out
         movq        [rdi],          xmm0
@@ -693,7 +690,6 @@ sym(idct_dequant_dc_full_2x_sse2):
 
     ; begin epilog
     pop         rdi
-    pop         rsi
     RESTORE_GOT
     RESTORE_XMM
     UNSHADOW_ARGS

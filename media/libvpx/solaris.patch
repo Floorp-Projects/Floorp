@@ -1,21 +1,3 @@
-diff --git a/media/libvpx/vp8/common/loopfilter_filters.c b/media/libvpx/vp8/common/loopfilter_filters.c
---- a/media/libvpx/vp8/common/loopfilter_filters.c
-+++ b/media/libvpx/vp8/common/loopfilter_filters.c
-@@ -11,10 +11,14 @@
- 
- #include <stdlib.h>
- #include "loopfilter.h"
- #include "onyxc_int.h"
- 
-+#ifdef __SUNPRO_C
-+#define __inline inline
-+#endif
-+
- typedef unsigned char uc;
- 
- static __inline signed char vp8_signed_char_clamp(int t)
- {
-     t = (t < -128 ? -128 : t);
 diff --git a/media/libvpx/vpx_ports/mem.h b/media/libvpx/vpx_ports/mem.h
 --- a/media/libvpx/vpx_ports/mem.h
 +++ b/media/libvpx/vpx_ports/mem.h
@@ -41,7 +23,7 @@ diff --git a/media/libvpx/vpx_ports/mem.h b/media/libvpx/vpx_ports/mem.h
 diff --git a/media/libvpx/vpx_ports/x86.h b/media/libvpx/vpx_ports/x86.h
 --- a/media/libvpx/vpx_ports/x86.h
 +++ b/media/libvpx/vpx_ports/x86.h
-@@ -45,16 +45,36 @@
+@@ -45,16 +45,36 @@ typedef enum
  #define cpuid(func,ax,bx,cx,dx)\
      __asm__ __volatile__ (\
                            "mov %%ebx, %%edi   \n\t" \
@@ -78,7 +60,7 @@ diff --git a/media/libvpx/vpx_ports/x86.h b/media/libvpx/vpx_ports/x86.h
          int regs[4];\
          __cpuid(regs,func); a=regs[0];  b=regs[1];  c=regs[2];  d=regs[3];\
      } while(0)
-@@ -108,29 +128,36 @@ unsigned __int64 __rdtsc(void);
+@@ -131,29 +151,36 @@ unsigned __int64 __rdtsc(void);
  #endif
  static unsigned int
  x86_readtsc(void)
@@ -115,7 +97,7 @@ diff --git a/media/libvpx/vpx_ports/x86.h b/media/libvpx/vpx_ports/x86.h
  #define x86_pause_hint()\
      __asm pause
  #endif
-@@ -144,16 +171,29 @@ x87_set_control_word(unsigned short mode
+@@ -167,16 +194,29 @@ x87_set_control_word(unsigned short mode
  }
  static unsigned short
  x87_get_control_word(void)

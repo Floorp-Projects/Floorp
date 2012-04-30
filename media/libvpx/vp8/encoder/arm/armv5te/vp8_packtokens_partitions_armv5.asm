@@ -10,6 +10,7 @@
 
 
     EXPORT |vp8cx_pack_tokens_into_partitions_armv5|
+    IMPORT |vp8_validate_buffer_arm|
 
     INCLUDE asm_enc_offsets.asm
 
@@ -19,17 +20,31 @@
 
     AREA    |.text|, CODE, READONLY
 
+    ; macro for validating write buffer position
+    ; needs vp8_writer in r0
+    ; start shall not be in r1
+    MACRO
+    VALIDATE_POS $start, $pos
+    push {r0-r3, r12, lr}        ; rest of regs are preserved by subroutine call
+    ldr  r2, [r0, #vp8_writer_buffer_end]
+    ldr  r3, [r0, #vp8_writer_error]
+    mov  r1, $pos
+    mov  r0, $start
+    bl   vp8_validate_buffer_arm
+    pop  {r0-r3, r12, lr}
+    MEND
+
 ; r0 VP8_COMP *cpi
 ; r1 unsigned char *cx_data
-; r2 int num_part
-; r3 *size
+; r2 const unsigned char *cx_data_end
+; r3 int num_part
 ; s0 vp8_coef_encodings
 ; s1 vp8_extra_bits,
-; s2 const vp8_tree_index *,
+; s2 const vp8_tree_index *
 
 |vp8cx_pack_tokens_into_partitions_armv5| PROC
-    push    {r4-r11, lr}
-    sub     sp, sp, #44
+    push    {r4-r12, lr}
+    sub     sp, sp, #40
 
     ; Compute address of cpi->common.mb_rows
     ldr     r4, _VP8_COMP_common_
@@ -39,39 +54,38 @@
     ldr     r5, [r4, r6]                ; load up mb_rows
 
     str     r5, [sp, #36]               ; save mb_rows
-    str     r1, [sp, #24]               ; save cx_data
-    str     r2, [sp, #20]               ; save num_part
-    str     r3, [sp, #8]                ; save *size
-
-    ; *size = 3*(num_part -1 );
-    sub     r2, r2, #1                  ; num_part - 1
-    add     r2, r2, r2, lsl #1          ; 3*(num_part - 1)
-    str     r2, [r3]
-
-    add     r2, r2, r1                  ; cx_data + *size
-    str     r2, [sp, #40]               ; ptr
+    str     r1, [sp, #24]               ; save ptr = cx_data
+    str     r3, [sp, #20]               ; save num_part
+    str     r2, [sp, #8]                ; save cx_data_end
 
     ldr     r4, _VP8_COMP_tplist_
     add     r4, r0, r4
     ldr     r7, [r4, #0]                ; dereference cpi->tp_list
     str     r7, [sp, #32]               ; store start of cpi->tp_list
 
-    ldr     r11, _VP8_COMP_bc2_         ; load up vp8_writer out of cpi
+    ldr     r11, _VP8_COMP_bc_          ; load up vp8_writer out of cpi
     add     r0, r0, r11
 
     mov     r11, #0
     str     r11, [sp, #28]              ; i
 
 numparts_loop
-    ldr     r10, [sp, #40]              ; ptr
+    ldr     r2, _vp8_writer_sz_         ; load up sizeof(vp8_writer)
+    add     r0, r2                      ; bc[i + 1]
+
+    ldr     r10, [sp, #24]              ; ptr
     ldr     r5,  [sp, #36]              ; move mb_rows to the counting section
-    sub     r5, r5, r11                 ; move start point with each partition
+    subs    r5, r5, r11                 ; move start point with each partition
                                         ; mb_rows starts at i
     str     r5,  [sp, #12]
 
     ; Reset all of the VP8 Writer data for each partition that
     ; is processed.
     ; start_encode
+
+    ldr     r3, [sp, #8]
+    str     r3, [r0, #vp8_writer_buffer_end]
+
     mov     r2, #0                      ; vp8_writer_lowvalue
     mov     r5, #255                    ; vp8_writer_range
     mvn     r3, #23                     ; vp8_writer_count
@@ -79,6 +93,8 @@ numparts_loop
     str     r2,  [r0, #vp8_writer_value]
     str     r2,  [r0, #vp8_writer_pos]
     str     r10, [r0, #vp8_writer_buffer]
+
+    ble     end_partition               ; if (mb_rows <= 0) end partition
 
 mb_row_loop
 
@@ -123,7 +139,7 @@ token_loop
     ; off of v, so set a flag here based on this.
     ; This value is refered to as "bb"
     lsls    r12, r12, #1                ; bb = v >> n
-    mul     r4, r4, r7                  ; ((range-1) * pp[i>>1]))
+    mul     r6, r4, r7                  ; ((range-1) * pp[i>>1]))
 
     ; bb can only be 0 or 1.  So only execute this statement
     ; if bb == 1, otherwise it will act like i + 0
@@ -131,7 +147,7 @@ token_loop
 
     mov     r7, #1
     ldrsb   lr, [r10, lr]               ; i = vp8_coef_tree[i+bb]
-    add     r4, r7, r4, lsr #8          ; 1 + (((range-1) * pp[i>>1]) >> 8)
+    add     r4, r7, r6, lsr #8          ; 1 + (((range-1) * pp[i>>1]) >> 8)
 
     addcs   r2, r2, r4                  ; if  (bb) lowvalue += split
     subcs   r4, r5, r4                  ; if  (bb) range = range-split
@@ -180,6 +196,9 @@ token_high_bit_not_set
     bic     r2, r2, #0xff000000         ; lowvalue &= 0xffffff
     str     r11, [r0, #vp8_writer_pos]
     sub     r3, r3, #8                  ; count -= 8
+
+    VALIDATE_POS r10, r11               ; validate_buffer at pos
+
     strb    r7, [r10, r4]               ; w->buffer[w->pos++]
 
     ; r10 is used earlier in the loop, but r10 is used as
@@ -224,12 +243,12 @@ extra_bits_loop
     ldrb    r4, [r9, lr, asr #1]        ; pp[i>>1]
     sub     r7, r5, #1                  ; range-1
     lsls    r12, r12, #1                ; v >> n
-    mul     r4, r4, r7                  ; (range-1) * pp[i>>1]
+    mul     r6, r4, r7                  ; (range-1) * pp[i>>1]
     addcs   lr, lr, #1                  ; i + bb
 
     mov     r7, #1
     ldrsb   lr, [r10, lr]               ; i = b->tree[i+bb]
-    add     r4, r7, r4, lsr #8          ; split = 1 +  (((range-1) * pp[i>>1]) >> 8)
+    add     r4, r7, r6, lsr #8          ; split = 1 +  (((range-1) * pp[i>>1]) >> 8)
 
     addcs   r2, r2, r4                  ; if  (bb) lowvalue += split
     subcs   r4, r5, r4                  ; if  (bb) range = range-split
@@ -275,6 +294,9 @@ extra_high_bit_not_set
     bic     r2, r2, #0xff000000         ; lowvalue &= 0xffffff
     str     r11, [r0, #vp8_writer_pos]
     sub     r3, r3, #8                  ; count -= 8
+
+    VALIDATE_POS r10, r11               ; validate_buffer at pos
+
     strb    r7, [r10, r4]               ; w->buffer[w->pos++]=(lowvalue >> (24-offset))
     ldr     r10, [sp, #4]               ; b->tree
 extra_count_lt_zero
@@ -318,12 +340,15 @@ end_high_bit_not_set
     bne     end_count_zero
 
     ldr     r4, [r0, #vp8_writer_pos]
-    mvn     r3, #7
+    mvn     r3, #7                      ; count = -8
     ldr     r7, [r0, #vp8_writer_buffer]
     lsr     r6, r2, #24                 ; lowvalue >> 24
     add     r12, r4, #1                 ; w->pos++
     bic     r2, r2, #0xff000000         ; lowvalue &= 0xffffff
-    str     r12, [r0, #0x10]
+    str     r12, [r0, #vp8_writer_pos]
+
+    VALIDATE_POS r7, r12                ; validate_buffer at pos
+
     strb    r6, [r7, r4]
 end_count_zero
 skip_extra_bits
@@ -344,6 +369,7 @@ check_p_lt_stop
     str     r6, [sp, #12]
     bgt     mb_row_loop
 
+end_partition
     mov     r12, #32
 
 stop_encode_loop
@@ -398,6 +424,9 @@ token_high_bit_not_set_se
     bic     r2, r2, #0xff000000         ; lowvalue &= 0xffffff
     str     r11, [r0, #vp8_writer_pos]
     sub     r3, r3, #8                  ; count -= 8
+
+    VALIDATE_POS r10, r11               ; validate_buffer at pos
+
     strb    r7, [r10, r4]               ; w->buffer[w->pos++]
 
 token_count_lt_zero_se
@@ -406,33 +435,10 @@ token_count_lt_zero_se
     subs    r12, r12, #1
     bne     stop_encode_loop
 
-    ldr     r10, [sp, #8]               ; *size
-    ldr     r11, [r10]
     ldr     r4,  [r0, #vp8_writer_pos]  ; w->pos
-    add     r11, r11, r4                ; *size += w->pos
-    str     r11, [r10]
-
-    ldr     r9, [sp, #20]               ; num_parts
-    sub     r9, r9, #1
-    ldr     r10, [sp, #28]              ; i
-    cmp     r10, r9                     ; if(i<(num_part - 1))
-    bge     skip_write_partition
-
-    ldr     r12, [sp, #40]              ; ptr
+    ldr     r12, [sp, #24]              ; ptr
     add     r12, r12, r4                ; ptr += w->pos
-    str     r12, [sp, #40]
-
-    ldr     r9, [sp, #24]               ; cx_data
-    mov     r8, r4, asr #8
-    strb    r4, [r9, #0]
-    strb    r8, [r9, #1]
-    mov     r4, r4, asr #16
-    strb    r4, [r9, #2]
-
-    add     r9, r9, #3                  ; cx_data += 3
-    str     r9, [sp, #24]
-
-skip_write_partition
+    str     r12, [sp, #24]
 
     ldr     r11, [sp, #28]              ; i
     ldr     r10, [sp, #20]              ; num_parts
@@ -448,9 +454,8 @@ skip_write_partition
     cmp     r10, r11
     bgt     numparts_loop
 
-
-    add     sp, sp, #44
-    pop     {r4-r11, pc}
+    add     sp, sp, #40
+    pop     {r4-r12, pc}
     ENDP
 
 _VP8_COMP_common_
@@ -459,7 +464,9 @@ _VP8_COMMON_MBrows_
     DCD     vp8_common_mb_rows
 _VP8_COMP_tplist_
     DCD     vp8_comp_tplist
-_VP8_COMP_bc2_
-    DCD     vp8_comp_bc2
+_VP8_COMP_bc_
+    DCD     vp8_comp_bc
+_vp8_writer_sz_
+    DCD     vp8_writer_sz
 
     END

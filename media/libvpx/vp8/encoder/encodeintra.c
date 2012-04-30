@@ -9,7 +9,7 @@
  */
 
 
-#include "vpx_ports/config.h"
+#include "vpx_config.h"
 #include "vp8/common/idct.h"
 #include "quantize.h"
 #include "vp8/common/reconintra.h"
@@ -18,7 +18,6 @@
 #include "vp8/common/invtrans.h"
 #include "vp8/common/recon.h"
 #include "dct.h"
-#include "vp8/common/g_common.h"
 #include "encodeintra.h"
 
 
@@ -37,11 +36,15 @@ int vp8_encode_intra(VP8_COMP *cpi, MACROBLOCK *x, int use_dc_pred)
 
     if (use_dc_pred)
     {
+        const VP8_ENCODER_RTCD *rtcd = IF_RTCD(&cpi->rtcd);
+
         x->e_mbd.mode_info_context->mbmi.mode = DC_PRED;
         x->e_mbd.mode_info_context->mbmi.uv_mode = DC_PRED;
         x->e_mbd.mode_info_context->mbmi.ref_frame = INTRA_FRAME;
 
-        vp8_encode_intra16x16mby(IF_RTCD(&cpi->rtcd), x);
+        vp8_encode_intra16x16mby(rtcd, x);
+
+        vp8_inverse_transform_mby(&x->e_mbd, IF_RTCD(&cpi->common.rtcd));
     }
     else
     {
@@ -52,7 +55,7 @@ int vp8_encode_intra(VP8_COMP *cpi, MACROBLOCK *x, int use_dc_pred)
         }
     }
 
-    intra_pred_var = VARIANCE_INVOKE(&cpi->rtcd.variance, getmbss)(x->src_diff);
+    intra_pred_var = VARIANCE_INVOKE(&cpi->common.rtcd.variance, getmbss)(x->src_diff);
 
     return intra_pred_var;
 }
@@ -64,7 +67,8 @@ void vp8_encode_intra4x4block(const VP8_ENCODER_RTCD *rtcd,
     BLOCK *be = &x->block[ib];
 
     RECON_INVOKE(&rtcd->common->recon, intra4x4_predict)
-                (b, b->bmi.as_mode, b->predictor);
+                (*(b->base_dst) + b->dst, b->dst_stride,
+                 b->bmi.as_mode, b->predictor, 16);
 
     ENCODEMB_INVOKE(&rtcd->encodemb, subb)(be, b, 16);
 
@@ -72,9 +76,17 @@ void vp8_encode_intra4x4block(const VP8_ENCODER_RTCD *rtcd,
 
     x->quantize_b(be, b);
 
-    vp8_inverse_transform_b(IF_RTCD(&rtcd->common->idct), b, 32);
-
-    RECON_INVOKE(&rtcd->common->recon, recon)(b->predictor, b->diff, *(b->base_dst) + b->dst, b->dst_stride);
+    if (*b->eob > 1)
+    {
+        IDCT_INVOKE(IF_RTCD(&rtcd->common->idct), idct16)(b->dqcoeff,
+            b->predictor, 16, *(b->base_dst) + b->dst, b->dst_stride);
+    }
+    else
+    {
+        IDCT_INVOKE(IF_RTCD(&rtcd->common->idct), idct1_scalar_add)
+            (b->dqcoeff[0], b->predictor, 16, *(b->base_dst) + b->dst,
+                b->dst_stride);
+    }
 }
 
 void vp8_encode_intra4x4mby(const VP8_ENCODER_RTCD *rtcd, MACROBLOCK *mb)
@@ -92,10 +104,12 @@ void vp8_encode_intra4x4mby(const VP8_ENCODER_RTCD *rtcd, MACROBLOCK *mb)
 void vp8_encode_intra16x16mby(const VP8_ENCODER_RTCD *rtcd, MACROBLOCK *x)
 {
     BLOCK *b = &x->block[0];
+    MACROBLOCKD *xd = &x->e_mbd;
 
-    RECON_INVOKE(&rtcd->common->recon, build_intra_predictors_mby)(&x->e_mbd);
+    RECON_INVOKE(&rtcd->common->recon, build_intra_predictors_mby_s)(&x->e_mbd);
 
-    ENCODEMB_INVOKE(&rtcd->encodemb, submby)(x->src_diff, *(b->base_src), x->e_mbd.predictor, b->src_stride);
+    ENCODEMB_INVOKE(&rtcd->encodemb, submby) (x->src_diff, *(b->base_src),
+        b->src_stride, xd->dst.y_buffer, xd->dst.y_stride);
 
     vp8_transform_intra_mby(x);
 
@@ -103,19 +117,17 @@ void vp8_encode_intra16x16mby(const VP8_ENCODER_RTCD *rtcd, MACROBLOCK *x)
 
     if (x->optimize)
         vp8_optimize_mby(x, rtcd);
-
-    vp8_inverse_transform_mby(IF_RTCD(&rtcd->common->idct), &x->e_mbd);
-
-    RECON_INVOKE(&rtcd->common->recon, recon_mby)
-        (IF_RTCD(&rtcd->common->recon), &x->e_mbd);
-
 }
 
 void vp8_encode_intra16x16mbuv(const VP8_ENCODER_RTCD *rtcd, MACROBLOCK *x)
 {
-    RECON_INVOKE(&rtcd->common->recon, build_intra_predictors_mbuv)(&x->e_mbd);
+    MACROBLOCKD *xd = &x->e_mbd;
 
-    ENCODEMB_INVOKE(&rtcd->encodemb, submbuv)(x->src_diff, x->src.u_buffer, x->src.v_buffer, x->e_mbd.predictor, x->src.uv_stride);
+    RECON_INVOKE(&rtcd->common->recon, build_intra_predictors_mbuv_s)(&x->e_mbd);
+
+    ENCODEMB_INVOKE(&rtcd->encodemb, submbuv)(x->src_diff, x->src.u_buffer,
+        x->src.v_buffer, x->src.uv_stride, xd->dst.u_buffer,
+        xd->dst.v_buffer, xd->dst.uv_stride);
 
     vp8_transform_mbuv(x);
 
@@ -123,8 +135,4 @@ void vp8_encode_intra16x16mbuv(const VP8_ENCODER_RTCD *rtcd, MACROBLOCK *x)
 
     if (x->optimize)
         vp8_optimize_mbuv(x, rtcd);
-
-    vp8_inverse_transform_mbuv(IF_RTCD(&rtcd->common->idct), &x->e_mbd);
-
-    vp8_recon_intra_mbuv(IF_RTCD(&rtcd->common->recon), &x->e_mbd);
 }
