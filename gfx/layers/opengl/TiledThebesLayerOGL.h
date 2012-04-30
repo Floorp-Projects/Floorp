@@ -131,13 +131,11 @@ public:
   void ProcessUploadQueue();
 
   // Renders a single given tile.
-  // XXX This currently takes an nsIntRect, but should actually take an
-  //     nsIntRegion and iterate over each rectangle in the region.
   void RenderTile(TiledTexture aTile,
                   const gfx3DMatrix& aTransform,
                   const nsIntPoint& aOffset,
-                  nsIntRect aScreenRect,
-                  nsIntRect aTextureRect,
+                  nsIntRegion aScreenRegion,
+                  nsIntPoint aTextureOffset,
                   nsIntSize aTextureBounds);
 
 private:

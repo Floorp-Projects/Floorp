@@ -122,8 +122,8 @@ ReusableTileStoreOGL::HarvestTiles(TiledLayerBufferOGL* aVideoMemoryTiledBuffer,
         TiledTexture removedTile;
         if (aVideoMemoryTiledBuffer->RemoveTile(nsIntPoint(x, y), removedTile)) {
           ReusableTiledTextureOGL* reusedTile =
-            new ReusableTiledTextureOGL(removedTile, tileRegion, tileSize,
-                                        aOldResolution);
+            new ReusableTiledTextureOGL(removedTile, nsIntPoint(x, y), tileRegion,
+                                        tileSize, aOldResolution);
           mTiles.AppendElement(reusedTile);
         }
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
@@ -196,12 +196,11 @@ ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
     //     semi-transparent layers.
     //     Similarly, if we have multiple tiles covering the same area, we will
     //     end up with rendering artifacts if the aLayer isn't opaque.
-    nsIntRect tileRect = tile->mTileRegion.GetBounds();
-    uint16_t tileStartX = tileRect.x % tile->mTileSize;
-    uint16_t tileStartY = tileRect.y % tile->mTileSize;
-    nsIntRect textureRect(tileStartX, tileStartY, tileRect.width, tileRect.height);
+    uint16_t tileStartX = tile->mTileOrigin.x % tile->mTileSize;
+    uint16_t tileStartY = tile->mTileOrigin.y % tile->mTileSize;
+    nsIntPoint tileOffset(tile->mTileOrigin.x - tileStartX, tile->mTileOrigin.y - tileStartY);
     nsIntSize textureSize(tile->mTileSize, tile->mTileSize);
-    aLayer->RenderTile(tile->mTexture, transform, aRenderOffset, tileRect, textureRect, textureSize);
+    aLayer->RenderTile(tile->mTexture, transform, aRenderOffset, tile->mTileRegion, tileOffset, textureSize);
   }
 }
 
