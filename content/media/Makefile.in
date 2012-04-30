@@ -46,20 +46,26 @@ LIBRARY_NAME = gkconmedia_s
 LIBXUL_LIBRARY = 1
 
 EXPORTS = \
+  AudioSegment.h \
   FileBlockCache.h \
   MediaResource.h \
+  MediaSegment.h \
   nsAudioAvailableEventManager.h \
   nsBuiltinDecoder.h \
   nsBuiltinDecoderStateMachine.h \
   nsBuiltinDecoderReader.h \
   nsMediaCache.h \
   nsMediaDecoder.h \
+  SharedBuffer.h \
+  StreamBuffer.h \
   TimeVarying.h \
   VideoFrameContainer.h \
   VideoUtils.h \
+  VideoSegment.h \
   $(NULL)
 
 CPPSRCS = \
+  AudioSegment.cpp \
   FileBlockCache.cpp \
   MediaResource.cpp \
   nsAudioAvailableEventManager.cpp \
@@ -68,6 +74,7 @@ CPPSRCS = \
   nsBuiltinDecoderReader.cpp \
   nsMediaCache.cpp \
   nsMediaDecoder.cpp \
+  StreamBuffer.cpp \
   VideoFrameContainer.cpp \
   VideoUtils.cpp \
   $(NULL)
