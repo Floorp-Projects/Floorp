@@ -50,6 +50,7 @@ EXPORTS = \
   FileBlockCache.h \
   MediaResource.h \
   MediaSegment.h \
+  MediaStreamGraph.h \
   nsAudioAvailableEventManager.h \
   nsBuiltinDecoder.h \
   nsBuiltinDecoderStateMachine.h \
@@ -68,6 +69,7 @@ CPPSRCS = \
   AudioSegment.cpp \
   FileBlockCache.cpp \
   MediaResource.cpp \
+  MediaStreamGraph.cpp \
   nsAudioAvailableEventManager.cpp \
   nsBuiltinDecoder.cpp \
   nsBuiltinDecoderStateMachine.cpp \
