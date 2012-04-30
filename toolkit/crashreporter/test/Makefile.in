@@ -64,7 +64,6 @@ CPPSRCS = \
   logging.cc \
   minidump.cc \
   pathname_stripper.cc \
-  $(STDCXX_COMPAT) \
   $(NULL)
 
 LOCAL_INCLUDES += \

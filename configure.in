@@ -7519,7 +7519,7 @@ dnl ========================================================
 STDCXX_COMPAT=
 MOZ_ARG_ENABLE_BOOL(stdcxx-compat,
 [  --enable-stdcxx-compat  Enable compatibility with older libstdc++],
-    STDCXX_COMPAT=stdc++compat.cpp)
+    STDCXX_COMPAT=1)
 
 AC_SUBST(STDCXX_COMPAT)
 

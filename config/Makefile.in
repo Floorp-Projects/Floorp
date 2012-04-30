@@ -49,6 +49,10 @@ include $(DEPTH)/config/autoconf.mk
 # headers, so that we can use it to set up the wrapped system headers.
 VISIBILITY_FLAGS =
 
+# STDCXX_COMPAT is not needed here, and will actually fail because
+# libstdc++-compat is not built yet.
+STDCXX_COMPAT =
+
 HOST_PROGRAM	= nsinstall$(HOST_BIN_SUFFIX)
 
 ifeq (WINNT,$(HOST_OS_ARCH))
