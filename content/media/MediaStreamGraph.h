@@ -108,6 +108,22 @@ public:
    * Notify that the stream finished.
    */
   virtual void NotifyFinished(MediaStreamGraph* aGraph) {}
+
+  enum {
+    TRACK_EVENT_CREATED = 0x01,
+    TRACK_EVENT_ENDED = 0x02
+  };
+  /**
+   * Notify that changes to one of the stream tracks have been queued.
+   * aTrackEvents can be any combination of TRACK_EVENT_CREATED and
+   * TRACK_EVENT_ENDED. aQueuedMedia is the data being added to the track
+   * at aTrackOffset (relative to the start of the stream).
+   */
+  virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
+                                        TrackRate aTrackRate,
+                                        TrackTicks aTrackOffset,
+                                        PRUint32 aTrackEvents,
+                                        const MediaSegment& aQueuedMedia) {}
 };
 
 class MediaStreamGraphImpl;
@@ -419,8 +435,8 @@ public:
     nsCOMPtr<nsIRunnable> mRunnable;
   };
   enum TrackCommands {
-    TRACK_CREATE = 0x01,
-    TRACK_END = 0x02
+    TRACK_CREATE = MediaStreamListener::TRACK_EVENT_CREATED,
+    TRACK_END = MediaStreamListener::TRACK_EVENT_ENDED
   };
   /**
    * Data for each track that hasn't ended.
