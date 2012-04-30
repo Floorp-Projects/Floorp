@@ -575,6 +575,14 @@ nsHTMLMediaElement::OnChannelRedirect(nsIChannel *aChannel,
   return NS_OK;
 }
 
+void nsHTMLMediaElement::ShutdownDecoder()
+{
+  RemoveMediaElementFromURITable();
+  NS_ASSERTION(mDecoder, "Must have decoder to shut down");
+  mDecoder->Shutdown();
+  mDecoder = nsnull;
+}
+
 void nsHTMLMediaElement::AbortExistingLoads()
 {
   // Abort any already-running instance of the resource selection algorithm.
@@ -587,10 +595,8 @@ void nsHTMLMediaElement::AbortExistingLoads()
   bool fireTimeUpdate = false;
 
   if (mDecoder) {
-    RemoveMediaElementFromURITable();
     fireTimeUpdate = mDecoder->GetCurrentTime() != 0.0;
-    mDecoder->Shutdown();
-    mDecoder = nsnull;
+    ShutdownDecoder();
   }
   if (mStream) {
     EndMediaStreamPlayback();
@@ -1633,8 +1639,7 @@ nsHTMLMediaElement::~nsHTMLMediaElement()
   }
   UnregisterFreezableElement();
   if (mDecoder) {
-    RemoveMediaElementFromURITable();
-    mDecoder->Shutdown();
+    ShutdownDecoder();
   }
   if (mStream) {
     EndMediaStreamPlayback();
@@ -2349,9 +2354,7 @@ nsresult nsHTMLMediaElement::FinishDecoderSetup(nsMediaDecoder* aDecoder,
   }
 
   if (NS_FAILED(rv)) {
-    RemoveMediaElementFromURITable();
-    mDecoder->Shutdown();
-    mDecoder = nsnull;
+    ShutdownDecoder();
   }
 
   NS_ASSERTION(NS_SUCCEEDED(rv) == (MediaElementTableCount(this, mLoadingSrc) == 1),
@@ -2599,9 +2602,7 @@ void nsHTMLMediaElement::DecodeError()
   ReportLoadError("MediaLoadDecodeError", params, ArrayLength(params));
 
   if (mDecoder) {
-    RemoveMediaElementFromURITable();
-    mDecoder->Shutdown();
-    mDecoder = nsnull;
+    ShutdownDecoder();
   }
   mLoadingSrc = nsnull;
   if (mIsLoadingFromSourceChildren) {
