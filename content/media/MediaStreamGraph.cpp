@@ -206,6 +206,14 @@ public:
    */
   void ChooseActionTime();
   /**
+   * Extract any state updates pending in aStream, and apply them.
+   */
+  void ExtractPendingInput(SourceMediaStream* aStream);
+  /**
+   * Update "have enough data" flags in aStream.
+   */
+  void UpdateBufferSufficiencyState(SourceMediaStream* aStream);
+  /**
    * Compute the blocking states of streams from mBlockingDecisionsMadeUntilTime
    * until the desired future time (determined by heuristic).
    * Updates mBlockingDecisionsMadeUntilTime and sets MediaStream::mBlocked
@@ -603,6 +611,72 @@ MediaStreamGraphImpl::ChooseActionTime()
 {
   mLastActionTime = GetEarliestActionTime();
 }
+
+void
+MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream)
+{
+  bool finished;
+  {
+    MutexAutoLock lock(aStream->mMutex);
+    finished = aStream->mUpdateFinished;
+    for (PRInt32 i = aStream->mUpdateTracks.Length() - 1; i >= 0; --i) {
+      SourceMediaStream::TrackData* data = &aStream->mUpdateTracks[i];
+      if (data->mCommands & SourceMediaStream::TRACK_CREATE) {
+        MediaSegment* segment = data->mData.forget();
+        LOG(PR_LOG_DEBUG, ("SourceMediaStream %p creating track %d, rate %d, start %lld, initial end %lld",
+                           aStream, data->mID, data->mRate, PRInt64(data->mStart),
+                           PRInt64(segment->GetDuration())));
+        aStream->mBuffer.AddTrack(data->mID, data->mRate, data->mStart, segment);
+        // The track has taken ownership of data->mData, so let's replace
+        // data->mData with an empty clone.
+        data->mData = segment->CreateEmptyClone();
+        data->mCommands &= ~SourceMediaStream::TRACK_CREATE;
+      } else if (data->mData->GetDuration() > 0) {
+        MediaSegment* dest = aStream->mBuffer.FindTrack(data->mID)->GetSegment();
+        LOG(PR_LOG_DEBUG, ("SourceMediaStream %p track %d, advancing end from %lld to %lld",
+                           aStream, data->mID,
+                           PRInt64(dest->GetDuration()),
+                           PRInt64(dest->GetDuration() + data->mData->GetDuration())));
+        dest->AppendFrom(data->mData);
+      }
+      if (data->mCommands & SourceMediaStream::TRACK_END) {
+        aStream->mBuffer.FindTrack(data->mID)->SetEnded();
+        aStream->mUpdateTracks.RemoveElementAt(i);
+      }
+    }
+    aStream->mBuffer.AdvanceKnownTracksTime(aStream->mUpdateKnownTracksTime);
+  }
+  if (finished) {
+    FinishStream(aStream);
+  }
+}
+
+void
+MediaStreamGraphImpl::UpdateBufferSufficiencyState(SourceMediaStream* aStream)
+{
+  StreamTime desiredEnd = GetDesiredBufferEnd(aStream);
+  nsTArray<SourceMediaStream::ThreadAndRunnable> runnables;
+
+  {
+    MutexAutoLock lock(aStream->mMutex);
+    for (PRUint32 i = 0; i < aStream->mUpdateTracks.Length(); ++i) {
+      SourceMediaStream::TrackData* data = &aStream->mUpdateTracks[i];
+      if (data->mCommands & SourceMediaStream::TRACK_CREATE) {
+        continue;
+      }
+      StreamBuffer::Track* track = aStream->mBuffer.FindTrack(data->mID);
+      data->mHaveEnough = track->GetEndTimeRoundDown() >= desiredEnd;
+      if (!data->mHaveEnough) {
+        runnables.MoveElementsFrom(data->mDispatchWhenNotEnough);
+      }
+    }
+  }
+
+  for (PRUint32 i = 0; i < runnables.Length(); ++i) {
+    runnables[i].mThread->Dispatch(runnables[i].mRunnable, 0);
+  }
+}
+
 
 StreamTime
 MediaStreamGraphImpl::GraphTimeToStreamTime(MediaStream* aStream,
@@ -1186,6 +1260,14 @@ MediaStreamGraphImpl::RunThread()
     }
     messageQueue.Clear();
 
+    // Grab pending ProcessingEngine results.
+    for (PRUint32 i = 0; i < mStreams.Length(); ++i) {
+      SourceMediaStream* is = mStreams[i]->AsSourceStream();
+      if (is) {
+        ExtractPendingInput(is);
+      }
+    }
+
     GraphTime prevBlockingDecisionsMadeUntilTime = mBlockingDecisionsMadeUntilTime;
     RecomputeBlocking();
 
@@ -1202,6 +1284,10 @@ MediaStreamGraphImpl::RunThread()
         ++audioStreamsActive;
       }
       PlayVideo(stream);
+      SourceMediaStream* is = stream->AsSourceStream();
+      if (is) {
+        UpdateBufferSufficiencyState(is);
+      }
       GraphTime end;
       if (!stream->mBlocked.GetAt(mCurrentTime, &end) || end < GRAPH_TIME_MAX) {
         allBlockedForever = false;
@@ -1705,6 +1791,83 @@ MediaStream::RemoveListener(MediaStreamListener* aListener)
   GraphImpl()->AppendMessage(new Message(this, aListener));
 }
 
+void
+SourceMediaStream::AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
+                            MediaSegment* aSegment)
+{
+  {
+    MutexAutoLock lock(mMutex);
+    TrackData* data = mUpdateTracks.AppendElement();
+    data->mID = aID;
+    data->mRate = aRate;
+    data->mStart = aStart;
+    data->mCommands = TRACK_CREATE;
+    data->mData = aSegment;
+    data->mHaveEnough = false;
+  }
+  GraphImpl()->EnsureNextIteration();
+}
+
+void
+SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment)
+{
+  {
+    MutexAutoLock lock(mMutex);
+    FindDataForTrack(aID)->mData->AppendFrom(aSegment);
+  }
+  GraphImpl()->EnsureNextIteration();
+}
+
+bool
+SourceMediaStream::HaveEnoughBuffered(TrackID aID)
+{
+  MutexAutoLock lock(mMutex);
+  return FindDataForTrack(aID)->mHaveEnough;
+}
+
+void
+SourceMediaStream::DispatchWhenNotEnoughBuffered(TrackID aID,
+    nsIThread* aSignalThread, nsIRunnable* aSignalRunnable)
+{
+  MutexAutoLock lock(mMutex);
+  TrackData* data = FindDataForTrack(aID);
+  if (data->mHaveEnough) {
+    data->mDispatchWhenNotEnough.AppendElement()->Init(aSignalThread, aSignalRunnable);
+  } else {
+    aSignalThread->Dispatch(aSignalRunnable, 0);
+  }
+}
+
+void
+SourceMediaStream::EndTrack(TrackID aID)
+{
+  {
+    MutexAutoLock lock(mMutex);
+    FindDataForTrack(aID)->mCommands |= TRACK_END;
+  }
+  GraphImpl()->EnsureNextIteration();
+}
+
+void
+SourceMediaStream::AdvanceKnownTracksTime(StreamTime aKnownTime)
+{
+  {
+    MutexAutoLock lock(mMutex);
+    mUpdateKnownTracksTime = aKnownTime;
+  }
+  GraphImpl()->EnsureNextIteration();
+}
+
+void
+SourceMediaStream::Finish()
+{
+  {
+    MutexAutoLock lock(mMutex);
+    mUpdateFinished = true;
+  }
+  GraphImpl()->EnsureNextIteration();
+}
+
 static const PRUint32 kThreadLimit = 4;
 static const PRUint32 kIdleThreadLimit = 4;
 static const PRUint32 kIdleThreadTimeoutMs = 2000;
@@ -1767,6 +1930,15 @@ MediaStreamGraph::GetInstance()
   }
 
   return gGraph;
+}
+
+SourceMediaStream*
+MediaStreamGraph::CreateInputStream(nsDOMMediaStream* aWrapper)
+{
+  SourceMediaStream* stream = new SourceMediaStream(aWrapper);
+  NS_ADDREF(stream);
+  static_cast<MediaStreamGraphImpl*>(this)->AppendMessage(new CreateMessage(stream));
+  return stream;
 }
 
 }
