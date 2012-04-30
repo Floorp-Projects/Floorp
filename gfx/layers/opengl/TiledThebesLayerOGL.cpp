@@ -216,6 +216,7 @@ void
 TiledThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer, const nsIntPoint& aOffset)
 {
   gl()->MakeCurrent();
+  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   ProcessUploadQueue();
 
   // Render old tiles to fill in gaps we haven't had the time to render yet.
