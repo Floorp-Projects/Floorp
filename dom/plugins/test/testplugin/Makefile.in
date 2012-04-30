@@ -62,7 +62,6 @@ VPATH += $(topsrcdir)/build
 CPPSRCS   =  \
   nptest.cpp \
   nptest_utils.cpp \
-  $(STDCXX_COMPAT) \
   $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)

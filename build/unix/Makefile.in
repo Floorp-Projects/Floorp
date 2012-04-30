@@ -47,8 +47,12 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE       = build
 
+ifdef STDCXX_COMPAT
+DIRS += stdc++compat
+endif
+
 ifdef USE_ELF_HACK
-DIRS = elfhack
+DIRS += elfhack
 endif
 
 TEST_DIRS = test
