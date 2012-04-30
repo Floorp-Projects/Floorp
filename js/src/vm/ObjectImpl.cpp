@@ -321,6 +321,20 @@ SparseElementsHeader::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t ind
 }
 
 template<typename T>
+static Value
+ElementToValue(const T t)
+{
+    return NumberValue(t);
+}
+
+template<>
+/* static */ Value
+ElementToValue(const uint8_clamped u)
+{
+    return NumberValue(uint8_t(u));
+}
+
+template<typename T>
 bool
 TypedElementsHeader<T>::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index,
                                       PropDesc *desc)
@@ -332,7 +346,7 @@ TypedElementsHeader<T>::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t i
         return true;
     }
 
-    *desc = PropDesc(NumberValue(getElement(index)), PropDesc::Writable,
+    *desc = PropDesc(ElementToValue(getElement(index)), PropDesc::Writable,
                      PropDesc::Enumerable, PropDesc::Configurable);
     return false;
 }

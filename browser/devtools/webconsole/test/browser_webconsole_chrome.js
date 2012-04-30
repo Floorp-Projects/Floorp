@@ -40,10 +40,8 @@
 
 // Tests that code completion works properly.
 
-const TEST_URI = "chrome://browser/content/browser.xul";
-
 function test() {
-  addTab(TEST_URI);
+  addTab(getBrowserURL());
   browser.addEventListener("DOMContentLoaded", testChrome, false);
 }
 

@@ -597,6 +597,10 @@ public:
         return h;
     }
 
+    virtual bool HasLockSurface() {
+        return sEGLLibrary.HasKHRLockSurface();
+    }
+
 protected:
     friend class GLContextProviderEGL;
 
