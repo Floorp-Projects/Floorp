@@ -12,7 +12,8 @@
 #ifndef __INC_ENCODEMB_H
 #define __INC_ENCODEMB_H
 
-#include "vpx_ports/config.h"
+
+#include "vpx_config.h"
 #include "block.h"
 
 #define prototype_mberr(sym) \
@@ -28,11 +29,13 @@
     void (sym)(BLOCK *be,BLOCKD *bd, int pitch)
 
 #define prototype_submby(sym) \
-    void (sym)(short *diff, unsigned char *src, unsigned char *pred, int stride)
+    void (sym)(short *diff, unsigned char *src, int src_stride, \
+        unsigned char *pred, int pred_stride)
 
 #define prototype_submbuv(sym) \
     void (sym)(short *diff, unsigned char *usrc, unsigned char *vsrc,\
-               unsigned char *pred, int stride)
+               int src_stride, unsigned char *upred, unsigned char *vpred,\
+               int pred_stride)
 
 #if ARCH_X86 || ARCH_X86_64
 #include "x86/encodemb_x86.h"
@@ -99,7 +102,7 @@ void vp8_build_dcblock(MACROBLOCK *b);
 void vp8_transform_mb(MACROBLOCK *mb);
 void vp8_transform_mbuv(MACROBLOCK *x);
 void vp8_transform_intra_mby(MACROBLOCK *x);
-void vp8_encode_inter16x16uvrd(const struct VP8_ENCODER_RTCD *rtcd, MACROBLOCK *x);
+
 void vp8_optimize_mby(MACROBLOCK *x, const struct VP8_ENCODER_RTCD *rtcd);
 void vp8_optimize_mbuv(MACROBLOCK *x, const struct VP8_ENCODER_RTCD *rtcd);
 void vp8_encode_inter16x16y(const struct VP8_ENCODER_RTCD *rtcd, MACROBLOCK *x);

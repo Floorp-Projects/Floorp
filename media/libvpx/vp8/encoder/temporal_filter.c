@@ -22,7 +22,6 @@
 #include "ratectrl.h"
 #include "vp8/common/quant_common.h"
 #include "segmentation.h"
-#include "vp8/common/g_common.h"
 #include "vpx_scale/yv12extend.h"
 #include "vpx_mem/vpx_mem.h"
 #include "vp8/common/swapyv12buffer.h"
@@ -98,7 +97,7 @@ void vp8_temporal_filter_apply_c
     unsigned short *count
 )
 {
-    int i, j, k;
+    unsigned int i, j, k;
     int modifier;
     int byte = 0;
 
@@ -186,7 +185,7 @@ static int vp8_temporal_filter_find_matching_mb_c
     if (cpi->Speed < 8)
     {
         step_param = cpi->sf.first_step +
-                    ((cpi->Speed > 5) ? 1 : 0);
+                    (cpi->Speed > 5);
         further_steps =
             (cpi->sf.max_step_search_steps - 1)-step_param;
     }

@@ -49,6 +49,8 @@ DEFINE(vp8_writer_value,                        offsetof(vp8_writer, value));
 DEFINE(vp8_writer_count,                        offsetof(vp8_writer, count));
 DEFINE(vp8_writer_pos,                          offsetof(vp8_writer, pos));
 DEFINE(vp8_writer_buffer,                       offsetof(vp8_writer, buffer));
+DEFINE(vp8_writer_buffer_end,                   offsetof(vp8_writer, buffer_end));
+DEFINE(vp8_writer_error,                        offsetof(vp8_writer, error));
 
 DEFINE(tokenextra_token,                        offsetof(TOKENEXTRA, Token));
 DEFINE(tokenextra_extra,                        offsetof(TOKENEXTRA, Extra));
@@ -68,7 +70,8 @@ DEFINE(vp8_extra_bit_struct_base_val,           offsetof(vp8_extra_bit_struct, b
 
 DEFINE(vp8_comp_tplist,                         offsetof(VP8_COMP, tplist));
 DEFINE(vp8_comp_common,                         offsetof(VP8_COMP, common));
-DEFINE(vp8_comp_bc2,                            offsetof(VP8_COMP, bc2));
+DEFINE(vp8_comp_bc ,                            offsetof(VP8_COMP, bc));
+DEFINE(vp8_writer_sz ,                          sizeof(vp8_writer));
 
 DEFINE(tokenlist_start,                         offsetof(TOKENLIST, start));
 DEFINE(tokenlist_stop,                          offsetof(TOKENLIST, stop));

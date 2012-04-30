@@ -102,9 +102,10 @@ loop
     bne     loop
 
     ; PART 2: check position for eob...
+    ldr     r11, [sp, #0]           ; restore BLOCKD pointer
     mov     lr, #0                  ; init eob
     cmp     r1, #0                  ; coeffs after quantization?
-    ldr     r11, [sp, #0]           ; restore BLOCKD pointer
+    ldr     r12, [r11, #vp8_blockd_eob]
     beq     end                     ; skip eob calculations if all zero
 
     ldr     r0, [r11, #vp8_blockd_qcoeff]
@@ -212,7 +213,7 @@ quant_coeff_1_0
     mov     lr, #1              ; rc=0,  i=0
 
 end
-    str     lr, [r11, #vp8_blockd_eob]
+    strb    lr, [r12]
     ldmfd   sp!, {r1, r4-r11, pc}
 
     ENDP
