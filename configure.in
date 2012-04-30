@@ -4562,6 +4562,7 @@ MOZ_VORBIS=
 MOZ_TREMOR=
 MOZ_WAVE=1
 MOZ_MEDIA=
+MOZ_OPUS=1
 MOZ_WEBM=1
 MOZ_VP8_ERROR_CONCEALMENT=
 MOZ_VP8_ENCODER=
@@ -5625,6 +5626,14 @@ if test -n "$MOZ_OGG"; then
 fi
 
 dnl ========================================================
+dnl = Disable Opus audio codec support
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(opus,
+[  --disable-opus          Disable support for Opus audio],
+    MOZ_OPUS=,
+    MOZ_OPUS=1)
+
+dnl ========================================================
 dnl = Disable VP8 decoder support
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(webm,
@@ -5820,6 +5829,10 @@ fi
 
 if test -n "$MOZ_TREMOR"; then
     AC_DEFINE(MOZ_TREMOR)
+fi
+
+if test -n "$MOZ_OPUS"; then
+    AC_DEFINE(MOZ_OPUS)
 fi
 
 dnl ========================================================
@@ -8709,6 +8722,7 @@ AC_SUBST(MOZ_CUBEB)
 AC_SUBST(MOZ_WAVE)
 AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
+AC_SUBST(MOZ_OPUS)
 AC_SUBST(MOZ_WEBM)
 AC_SUBST(MOZ_VP8_ERROR_CONCEALMENT)
 AC_SUBST(MOZ_VP8_ENCODER)

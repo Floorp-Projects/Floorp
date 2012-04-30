@@ -1575,6 +1575,12 @@ if [ "$MOZ_TREMOR" ]; then
   "
 fi
 
+if [ "$MOZ_OPUS" ]; then
+ add_makefiles "
+   media/libopus/Makefile
+ "
+fi
+
 if [ "$MOZ_OGG" ]; then
   add_makefiles "
     content/media/ogg/Makefile
