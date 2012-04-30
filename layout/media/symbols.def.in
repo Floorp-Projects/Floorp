@@ -97,6 +97,14 @@ th_packet_isheader
 th_packet_iskeyframe
 th_setup_free
 #endif
+#ifdef MOZ_OPUS
+opus_decoder_create
+opus_decoder_destroy
+opus_decoder_ctl
+opus_decoder_get_nb_samples
+opus_decode
+opus_decode_float
+#endif
 ShInitialize
 ShFinalize
 ShGetObjectCode

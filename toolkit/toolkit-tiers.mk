@@ -133,6 +133,12 @@ tier_platform_dirs += \
 		$(NULL)
 endif
 
+ifdef MOZ_OPUS
+tier_platform_dirs += \
+  media/libopus \
+  $(NULL)
+endif
+
 ifdef MOZ_WEBM
 tier_platform_dirs += media/libnestegg
 ifndef MOZ_NATIVE_LIBVPX
