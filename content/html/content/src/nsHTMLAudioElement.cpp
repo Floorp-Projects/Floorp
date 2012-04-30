@@ -132,23 +132,9 @@ nsHTMLAudioElement::Initialize(nsISupports* aOwner, JSContext* aContext,
     return NS_OK;
   }
 
-  // The only (optional) argument is the url of the audio
-  JSString* jsstr = JS_ValueToString(aContext, argv[0]);
-  if (!jsstr)
-    return NS_ERROR_FAILURE;
-
-  nsDependentJSString str;
-  if (!str.init(aContext, jsstr))
-    return NS_ERROR_FAILURE;
-
-  rv = SetAttr(kNameSpaceID_None, nsGkAtoms::src, str, true);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // We have been specified with a src URL. Begin a load.
-  QueueSelectResourceTask();
-
-  return NS_OK;
+  // The only (optional) argument is the src of the audio (which can
+  // be a URL string or a MediaStream object)
+  return SetSrc(aContext, argv[0]);
 }
 
 NS_IMETHODIMP
