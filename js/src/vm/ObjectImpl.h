@@ -479,9 +479,6 @@ template<> inline const bool TypeIsUnsigned<uint8_t>() { return true; }
 template<> inline const bool TypeIsUnsigned<uint16_t>() { return true; }
 template<> inline const bool TypeIsUnsigned<uint32_t>() { return true; }
 
-template<typename T> static inline const bool TypeIsUint8Clamped() { return false; }
-template<> inline const bool TypeIsUint8Clamped<uint8_clamped>() { return true; }
-
 template <typename T>
 class TypedElementsHeader : public ElementsHeader
 {
