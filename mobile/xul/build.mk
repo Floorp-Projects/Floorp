@@ -70,6 +70,9 @@ installer:
 package:
 	@$(MAKE) -C mobile/xul/installer
 
+fast-package:
+	@MOZ_FAST_PACKAGE=1 $(MAKE) package
+
 install::
 	@echo "Mobile can't be installed directly."
 	@exit 1
