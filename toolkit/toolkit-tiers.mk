@@ -265,10 +265,6 @@ tier_platform_dirs    += toolkit/system/dbus
 endif
 endif
 
-ifdef MOZ_LEAKY
-tier_platform_dirs        += tools/leaky
-endif
-
 ifdef MOZ_MAPINFO
 tier_platform_dirs	+= tools/codesighs
 endif
