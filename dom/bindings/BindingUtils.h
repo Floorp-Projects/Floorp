@@ -232,6 +232,12 @@ struct ConstantSpec
   JS::Value value;
 };
 
+/**
+ * Add constants to an object.
+ */
+bool
+DefineConstants(JSContext* cx, JSObject* obj, ConstantSpec* cs);
+
 /*
  * Create a DOM interface object (if constructorClass is non-null) and/or a
  * DOM interface prototype object (if protoClass is non-null).
