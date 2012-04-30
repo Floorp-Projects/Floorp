@@ -427,6 +427,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLMediaElement, nsGenericH
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSourcePointer)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLoadBlockedDoc)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSourceLoadCandidate)
+  for (PRUint32 i = 0; i < tmp->mOutputStreams.Length(); ++i) {
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOutputStreams[i].mStream);
+  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLMediaElement, nsGenericHTMLElement)
@@ -439,6 +442,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLMediaElement, nsGenericHTM
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSourcePointer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLoadBlockedDoc)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSourceLoadCandidate)
+  for (PRUint32 i = 0; i < tmp->mOutputStreams.Length(); ++i) {
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOutputStreams[i].mStream);
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsHTMLMediaElement)
@@ -1422,6 +1428,43 @@ NS_IMETHODIMP nsHTMLMediaElement::SetMuted(bool aMuted)
   return NS_OK;
 }
 
+already_AddRefed<nsDOMMediaStream>
+nsHTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded)
+{
+  OutputMediaStream* out = mOutputStreams.AppendElement();
+  out->mStream = nsDOMMediaStream::CreateInputStream();
+  nsRefPtr<nsIPrincipal> principal = GetCurrentPrincipal();
+  out->mStream->CombineWithPrincipal(principal);
+  out->mFinishWhenEnded = aFinishWhenEnded;
+
+  mAudioCaptured = true;
+  if (mDecoder) {
+    mDecoder->SetAudioCaptured(true);
+    mDecoder->AddOutputStream(
+        out->mStream->GetStream()->AsSourceStream(), aFinishWhenEnded);
+  }
+  nsRefPtr<nsDOMMediaStream> result = out->mStream;
+  return result.forget();
+}
+
+NS_IMETHODIMP nsHTMLMediaElement::MozCaptureStream(nsIDOMMediaStream** aStream)
+{
+  *aStream = CaptureStreamInternal(false).get();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLMediaElement::MozCaptureStreamUntilEnded(nsIDOMMediaStream** aStream)
+{
+  *aStream = CaptureStreamInternal(true).get();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLMediaElement::GetMozAudioCaptured(bool *aCaptured)
+{
+  *aCaptured = mAudioCaptured;
+  return NS_OK;
+}
+
 class MediaElementSetForURI : public nsURIHashKey {
 public:
   MediaElementSetForURI(const nsIURI* aKey) : nsURIHashKey(aKey) {}
@@ -1548,6 +1591,7 @@ nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mAutoplayEnabled(true),
     mPaused(true),
     mMuted(false),
+    mAudioCaptured(false),
     mPlayingBeforeSeek(false),
     mPausedForInactiveDocument(false),
     mWaitingFired(false),
@@ -2267,7 +2311,13 @@ nsresult nsHTMLMediaElement::FinishDecoderSetup(nsMediaDecoder* aDecoder,
   // The new stream has not been suspended by us.
   mPausedForInactiveDocument = false;
 
+  aDecoder->SetAudioCaptured(mAudioCaptured);
   aDecoder->SetVolume(mMuted ? 0.0 : mVolume);
+  for (PRUint32 i = 0; i < mOutputStreams.Length(); ++i) {
+    OutputMediaStream* ms = &mOutputStreams[i];
+    aDecoder->AddOutputStream(ms->mStream->GetStream()->AsSourceStream(),
+        ms->mFinishWhenEnded);
+  }
 
   nsresult rv = aDecoder->Load(aStream, aListener, aCloneDonor);
   if (NS_FAILED(rv)) {
@@ -2281,6 +2331,7 @@ nsresult nsHTMLMediaElement::FinishDecoderSetup(nsMediaDecoder* aDecoder,
 
   mDecoder = aDecoder;
   AddMediaElementToURITable();
+  NotifyDecoderPrincipalChanged();
 
   // We may want to suspend the new stream now.
   // This will also do an AddRemoveSelfReference.
@@ -2390,6 +2441,8 @@ void nsHTMLMediaElement::SetupMediaStreamPlayback()
   NS_ASSERTION(!mStream && !mStreamListener, "Should have been ended already");
 
   mStream = mSrcAttrStream;
+  // XXX if we ever support capturing the output of a media element which is
+  // playing a stream, we'll need to add a CombineWithPrincipal call here.
   mStreamListener = new StreamListener(this);
   NS_ADDREF(mStreamListener);
   GetMediaStream()->AddListener(mStreamListener);
@@ -2909,6 +2962,15 @@ already_AddRefed<nsIPrincipal> nsHTMLMediaElement::GetCurrentPrincipal()
     return principal.forget();
   }
   return nsnull;
+}
+
+void nsHTMLMediaElement::NotifyDecoderPrincipalChanged()
+{
+  for (PRUint32 i = 0; i < mOutputStreams.Length(); ++i) {
+    OutputMediaStream* ms = &mOutputStreams[i];
+    nsRefPtr<nsIPrincipal> principal = GetCurrentPrincipal();
+    ms->mStream->CombineWithPrincipal(principal);
+  }
 }
 
 void nsHTMLMediaElement::UpdateMediaSize(nsIntSize size)
