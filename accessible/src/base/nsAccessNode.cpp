@@ -92,9 +92,6 @@ nsAccessNode::
   nsAccessNode(nsIContent* aContent, nsDocAccessible* aDoc) :
   mContent(aContent), mDoc(aDoc)
 {
-#ifdef DEBUG_A11Y
-  mIsInitialized = false;
-#endif
 }
 
 nsAccessNode::~nsAccessNode()
