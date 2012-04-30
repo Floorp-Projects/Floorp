@@ -1531,12 +1531,6 @@ if [ "$MOZ_JPROF" ]; then
   "
 fi
 
-if [ "$MOZ_LEAKY" ]; then
-  add_makefiles "
-    tools/leaky/Makefile
-  "
-fi
-
 if [ "$NS_TRACE_MALLOC" ]; then
   add_makefiles "
     tools/trace-malloc/Makefile
