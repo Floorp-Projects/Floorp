@@ -22,6 +22,7 @@ import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.StoreTrackingRepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
+import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSinceDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
@@ -53,9 +54,9 @@ import android.net.Uri;
  *
  */
 public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepositorySession {
+  public static final String LOG_TAG = "BrowserRepoSession";
 
   protected AndroidBrowserRepositoryDataAccessor dbHelper;
-  public static final String LOG_TAG = "BrowserRepoSession";
   private HashMap<String, String> recordToGuid;
 
   public AndroidBrowserRepositorySession(Repository repository) {
@@ -146,6 +147,13 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     }
     storeTracker = createStoreTracker();
     deferredDelegate.onBeginSucceeded(this);
+  }
+
+  @Override
+  public void finish(RepositorySessionFinishDelegate delegate) throws InactiveSessionException {
+    dbHelper = null;
+    recordToGuid = null;
+    super.finish(delegate);
   }
 
   protected abstract String buildRecordString(Record record);
@@ -353,6 +361,8 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     this.fetchSince(0, delegate);
   }
 
+  protected int storeCount = 0;
+
   @Override
   public void store(final Record record) throws NoStoreDelegateException {
     if (delegate == null) {
@@ -362,6 +372,9 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
       Logger.error(LOG_TAG, "Record sent to store was null");
       throw new IllegalArgumentException("Null record passed to AndroidBrowserRepositorySession.store().");
     }
+
+    storeCount += 1;
+    Logger.debug(LOG_TAG, "Storing record with GUID " + record.guid + " (stored " + storeCount + " records this session).");
 
     // Store Runnables *must* complete synchronously. It's OK, they
     // run on a background thread.
@@ -457,9 +470,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
           if (existingRecord == null) {
             // The record is new.
             trace("No match. Inserting.");
-            Record inserted = insert(record);
-            trackRecord(inserted);
-            delegate.onRecordStoreSucceeded(inserted);
+            insert(record);
             return;
           }
 
@@ -531,16 +542,19 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     delegate.onRecordStoreSucceeded(record);
   }
 
-  protected Record insert(Record record) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
+  protected void insert(Record record) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
     Record toStore = prepareRecord(record);
     Uri recordURI = dbHelper.insert(toStore);
-    long id = ContentUris.parseId(recordURI);
-    Logger.debug(LOG_TAG, "Inserted as " + id);
+    if (recordURI == null) {
+      throw new NullCursorException(new RuntimeException("Got null URI inserting record with guid " + record.guid));
+    }
+    toStore.androidID = ContentUris.parseId(recordURI);
 
-    toStore.androidID = id;
     updateBookkeeping(toStore);
-    Logger.debug(LOG_TAG, "insert() returning record " + toStore.guid);
-    return toStore;
+    trackRecord(toStore);
+    delegate.onRecordStoreSucceeded(toStore);
+
+    Logger.debug(LOG_TAG, "Inserted record with guid " + toStore.guid + " as androidID " + toStore.androidID);
   }
 
   protected Record replace(Record newRecord, Record existingRecord) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
