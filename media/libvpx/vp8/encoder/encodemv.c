@@ -186,7 +186,7 @@ void vp8_build_component_cost_table(int *mvcost[2], const MV_CONTEXT *mvc, int m
 #define MV_PROB_UPDATE_CORRECTION   -1
 
 
-__inline static void calc_prob(vp8_prob *p, const unsigned int ct[2])
+static void calc_prob(vp8_prob *p, const unsigned int ct[2])
 {
     const unsigned int tot = ct[0] + ct[1];
 
@@ -395,7 +395,7 @@ static void write_component_probs(
 
 void vp8_write_mvprobs(VP8_COMP *cpi)
 {
-    vp8_writer *const w  = & cpi->bc;
+    vp8_writer *const w  = cpi->bc;
     MV_CONTEXT *mvc = cpi->common.fc.mvc;
     int flags[2] = {0, 0};
 #ifdef ENTROPY_STATS

@@ -87,7 +87,6 @@ void vp8_setup_block_dptrs(MACROBLOCKD *x)
     {
         for (c = 0; c < 4; c++)
         {
-            x->block[r*4+c].diff      = &x->diff[r * 4 * 16 + c * 4];
             x->block[r*4+c].predictor = x->predictor + r * 4 * 16 + c * 4;
         }
     }
@@ -96,7 +95,6 @@ void vp8_setup_block_dptrs(MACROBLOCKD *x)
     {
         for (c = 0; c < 2; c++)
         {
-            x->block[16+r*2+c].diff      = &x->diff[256 + r * 4 * 8 + c * 4];
             x->block[16+r*2+c].predictor = x->predictor + 256 + r * 4 * 8 + c * 4;
 
         }
@@ -106,18 +104,16 @@ void vp8_setup_block_dptrs(MACROBLOCKD *x)
     {
         for (c = 0; c < 2; c++)
         {
-            x->block[20+r*2+c].diff      = &x->diff[320+ r * 4 * 8 + c * 4];
             x->block[20+r*2+c].predictor = x->predictor + 320 + r * 4 * 8 + c * 4;
 
         }
     }
 
-    x->block[24].diff = &x->diff[384];
-
     for (r = 0; r < 25; r++)
     {
         x->block[r].qcoeff  = x->qcoeff  + r * 16;
         x->block[r].dqcoeff = x->dqcoeff + r * 16;
+        x->block[r].eob     = x->eobs + r;
     }
 }
 

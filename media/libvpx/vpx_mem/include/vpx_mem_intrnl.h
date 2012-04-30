@@ -11,7 +11,7 @@
 
 #ifndef __VPX_MEM_INTRNL_H__
 #define __VPX_MEM_INTRNL_H__
-#include "vpx_ports/config.h"
+#include "vpx_config.h"
 
 #ifndef CONFIG_MEM_MANAGER
 # if defined(VXWORKS)

@@ -9,12 +9,15 @@
  */
 
 
-#include "vpx_ports/config.h"
+#include "vpx_config.h"
 #include "vpx_scale/yv12config.h"
 #include "postproc.h"
+#include "common.h"
+#include "recon.h"
 #include "vpx_scale/yv12extend.h"
 #include "vpx_scale/vpxscale.h"
 #include "systemdependent.h"
+#include "variance.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -26,6 +29,7 @@
     ( (0.439*(float)(t>>16)) - (0.368*(float)(t>>8&0xff)) - (0.071*(float)(t&0xff)) + 128)
 
 /* global constants */
+#define MFQE_PRECISION 4
 #if CONFIG_POSTPROC_VISUALIZER
 static const unsigned char MB_PREDICTION_MODE_colors[MB_MODE_COUNT][3] =
 {
@@ -121,7 +125,6 @@ const short vp8_rv[] =
     0, 9, 5, 5, 11, 10, 13, 9, 10, 13,
 };
 
-
 extern void vp8_blit_text(const char *msg, unsigned char *address, const int pitch);
 extern void vp8_blit_line(int x0, int x1, int y0, int y1, unsigned char *image, const int pitch);
 /***********************************************************************************************************
@@ -175,6 +178,12 @@ void vp8_post_proc_down_and_across_c
         p_src = dst_ptr;
         p_dst = dst_ptr;
 
+        for (i = -8; i<0; i++)
+          p_src[i]=p_src[0];
+
+        for (i = cols; i<cols+8; i++)
+          p_src[i]=p_src[cols-1];
+
         for (i = 0; i < 8; i++)
             d[i] = p_src[i];
 
@@ -225,11 +234,18 @@ void vp8_mbpost_proc_across_ip_c(unsigned char *src, int pitch, int rows, int co
     unsigned char *s = src;
     unsigned char d[16];
 
-
     for (r = 0; r < rows; r++)
     {
         int sumsq = 0;
         int sum   = 0;
+
+        for (i = -8; i<0; i++)
+          s[i]=s[0];
+
+        // 17 avoids valgrind warning - we buffer values in c in d
+        // and only write them when we've read 8 ahead...
+        for (i = cols; i<cols+17; i++)
+          s[i]=s[cols-1];
 
         for (i = -8; i <= 6; i++)
         {
@@ -269,13 +285,21 @@ void vp8_mbpost_proc_down_c(unsigned char *dst, int pitch, int rows, int cols, i
     int r, c, i;
     const short *rv3 = &vp8_rv[63&rand()];
 
-    for (c = 0; c < cols; c++)
+    for (c = 0; c < cols; c++ )
     {
         unsigned char *s = &dst[c];
         int sumsq = 0;
         int sum   = 0;
         unsigned char d[16];
         const short *rv2 = rv3 + ((c * 17) & 127);
+
+        for (i = -8; i < 0; i++)
+          s[i*pitch]=s[0];
+
+        // 17 avoids valgrind warning - we buffer values in c in d
+        // and only write them when we've read 8 ahead...
+        for (i = rows; i < rows+17; i++)
+          s[i*pitch]=s[(rows-1)*pitch];
 
         for (i = -8; i <= 6; i++)
         {
@@ -317,17 +341,18 @@ static void vp8_deblock_and_de_macro_block(YV12_BUFFER_CONFIG         *source,
     POSTPROC_INVOKE(rtcd, across)(post->y_buffer, post->y_stride, post->y_height, post->y_width, q2mbl(q));
     POSTPROC_INVOKE(rtcd, down)(post->y_buffer, post->y_stride, post->y_height, post->y_width, q2mbl(q));
 
+
     POSTPROC_INVOKE(rtcd, downacross)(source->u_buffer, post->u_buffer, source->uv_stride, post->uv_stride, source->uv_height, source->uv_width, ppl);
     POSTPROC_INVOKE(rtcd, downacross)(source->v_buffer, post->v_buffer, source->uv_stride, post->uv_stride, source->uv_height, source->uv_width, ppl);
 
 }
 
 void vp8_deblock(YV12_BUFFER_CONFIG         *source,
-                        YV12_BUFFER_CONFIG         *post,
-                        int                         q,
-                        int                         low_var_thresh,
-                        int                         flag,
-                        vp8_postproc_rtcd_vtable_t *rtcd)
+                 YV12_BUFFER_CONFIG         *post,
+                 int                         q,
+                 int                         low_var_thresh,
+                 int                         flag,
+                 vp8_postproc_rtcd_vtable_t *rtcd)
 {
     double level = 6.0e-05 * q * q * q - .0067 * q * q + .306 * q + .0065;
     int ppl = (int)(level + .5);
@@ -672,11 +697,221 @@ static void constrain_line (int x0, int *x1, int y0, int *y1, int width, int hei
 }
 
 
+static void multiframe_quality_enhance_block
+(
+    int blksize, /* Currently only values supported are 16, 8, 4 */
+    int qcurr,
+    int qprev,
+    unsigned char *y,
+    unsigned char *u,
+    unsigned char *v,
+    int y_stride,
+    int uv_stride,
+    unsigned char *yd,
+    unsigned char *ud,
+    unsigned char *vd,
+    int yd_stride,
+    int uvd_stride,
+    vp8_variance_rtcd_vtable_t *rtcd
+)
+{
+    static const unsigned char VP8_ZEROS[16]=
+    {
+         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    };
+    int blksizeby2 = blksize >> 1;
+    int qdiff = qcurr - qprev;
+
+    int i, j;
+    unsigned char *yp;
+    unsigned char *ydp;
+    unsigned char *up;
+    unsigned char *udp;
+    unsigned char *vp;
+    unsigned char *vdp;
+
+    unsigned int act, sse, sad, thr;
+    if (blksize == 16)
+    {
+        act = (VARIANCE_INVOKE(rtcd, var16x16)(yd, yd_stride, VP8_ZEROS, 0, &sse)+128)>>8;
+        sad = (VARIANCE_INVOKE(rtcd, sad16x16)(y, y_stride, yd, yd_stride, 0)+128)>>8;
+    }
+    else if (blksize == 8)
+    {
+        act = (VARIANCE_INVOKE(rtcd, var8x8)(yd, yd_stride, VP8_ZEROS, 0, &sse)+32)>>6;
+        sad = (VARIANCE_INVOKE(rtcd, sad8x8)(y, y_stride, yd, yd_stride, 0)+32)>>6;
+    }
+    else
+    {
+        act = (VARIANCE_INVOKE(rtcd, var4x4)(yd, yd_stride, VP8_ZEROS, 0, &sse)+8)>>4;
+        sad = (VARIANCE_INVOKE(rtcd, sad4x4)(y, y_stride, yd, yd_stride, 0)+8)>>4;
+    }
+    /* thr = qdiff/8 + log2(act) + log4(qprev) */
+    thr = (qdiff>>3);
+    while (act>>=1) thr++;
+    while (qprev>>=2) thr++;
+    if (sad < thr)
+    {
+        static const int roundoff = (1 << (MFQE_PRECISION - 1));
+        int ifactor = (sad << MFQE_PRECISION) / thr;
+        ifactor >>= (qdiff >> 5);
+        // TODO: SIMD optimize this section
+        if (ifactor)
+        {
+            int icfactor = (1 << MFQE_PRECISION) - ifactor;
+            for (yp = y, ydp = yd, i = 0; i < blksize; ++i, yp += y_stride, ydp += yd_stride)
+            {
+                for (j = 0; j < blksize; ++j)
+                    ydp[j] = (int)((yp[j] * ifactor + ydp[j] * icfactor + roundoff) >> MFQE_PRECISION);
+            }
+            for (up = u, udp = ud, i = 0; i < blksizeby2; ++i, up += uv_stride, udp += uvd_stride)
+            {
+                for (j = 0; j < blksizeby2; ++j)
+                    udp[j] = (int)((up[j] * ifactor + udp[j] * icfactor + roundoff) >> MFQE_PRECISION);
+            }
+            for (vp = v, vdp = vd, i = 0; i < blksizeby2; ++i, vp += uv_stride, vdp += uvd_stride)
+            {
+                for (j = 0; j < blksizeby2; ++j)
+                    vdp[j] = (int)((vp[j] * ifactor + vdp[j] * icfactor + roundoff) >> MFQE_PRECISION);
+            }
+        }
+    }
+    else
+    {
+        if (blksize == 16)
+        {
+            vp8_recon_copy16x16(y, y_stride, yd, yd_stride);
+            vp8_recon_copy8x8(u, uv_stride, ud, uvd_stride);
+            vp8_recon_copy8x8(v, uv_stride, vd, uvd_stride);
+        }
+        else if (blksize == 8)
+        {
+            vp8_recon_copy8x8(y, y_stride, yd, yd_stride);
+            for (up = u, udp = ud, i = 0; i < blksizeby2; ++i, up += uv_stride, udp += uvd_stride)
+                vpx_memcpy(udp, up, blksizeby2);
+            for (vp = v, vdp = vd, i = 0; i < blksizeby2; ++i, vp += uv_stride, vdp += uvd_stride)
+                vpx_memcpy(vdp, vp, blksizeby2);
+        }
+        else
+        {
+            for (yp = y, ydp = yd, i = 0; i < blksize; ++i, yp += y_stride, ydp += yd_stride)
+                vpx_memcpy(ydp, yp, blksize);
+            for (up = u, udp = ud, i = 0; i < blksizeby2; ++i, up += uv_stride, udp += uvd_stride)
+                vpx_memcpy(udp, up, blksizeby2);
+            for (vp = v, vdp = vd, i = 0; i < blksizeby2; ++i, vp += uv_stride, vdp += uvd_stride)
+                vpx_memcpy(vdp, vp, blksizeby2);
+        }
+    }
+}
+
 #if CONFIG_RUNTIME_CPU_DETECT
 #define RTCD_VTABLE(oci) (&(oci)->rtcd.postproc)
 #else
 #define RTCD_VTABLE(oci) NULL
 #endif
+
+void vp8_multiframe_quality_enhance
+(
+    VP8_COMMON *cm
+)
+{
+    YV12_BUFFER_CONFIG *show = cm->frame_to_show;
+    YV12_BUFFER_CONFIG *dest = &cm->post_proc_buffer;
+
+    FRAME_TYPE frame_type = cm->frame_type;
+    /* Point at base of Mb MODE_INFO list has motion vectors etc */
+    const MODE_INFO *mode_info_context = cm->mi;
+    int mb_row;
+    int mb_col;
+    int qcurr = cm->base_qindex;
+    int qprev = cm->postproc_state.last_base_qindex;
+
+    unsigned char *y_ptr, *u_ptr, *v_ptr;
+    unsigned char *yd_ptr, *ud_ptr, *vd_ptr;
+
+    /* Set up the buffer pointers */
+    y_ptr = show->y_buffer;
+    u_ptr = show->u_buffer;
+    v_ptr = show->v_buffer;
+    yd_ptr = dest->y_buffer;
+    ud_ptr = dest->u_buffer;
+    vd_ptr = dest->v_buffer;
+
+    /* postprocess each macro block */
+    for (mb_row = 0; mb_row < cm->mb_rows; mb_row++)
+    {
+        for (mb_col = 0; mb_col < cm->mb_cols; mb_col++)
+        {
+            /* if motion is high there will likely be no benefit */
+            if (((frame_type == INTER_FRAME &&
+                  abs(mode_info_context->mbmi.mv.as_mv.row) <= 10 &&
+                  abs(mode_info_context->mbmi.mv.as_mv.col) <= 10) ||
+                 (frame_type == KEY_FRAME)))
+            {
+                if (mode_info_context->mbmi.mode == B_PRED || mode_info_context->mbmi.mode == SPLITMV)
+                {
+                    int i, j;
+                    for (i=0; i<2; ++i)
+                        for (j=0; j<2; ++j)
+                            multiframe_quality_enhance_block(8,
+                                                             qcurr,
+                                                             qprev,
+                                                             y_ptr + 8*(i*show->y_stride+j),
+                                                             u_ptr + 4*(i*show->uv_stride+j),
+                                                             v_ptr + 4*(i*show->uv_stride+j),
+                                                             show->y_stride,
+                                                             show->uv_stride,
+                                                             yd_ptr + 8*(i*dest->y_stride+j),
+                                                             ud_ptr + 4*(i*dest->uv_stride+j),
+                                                             vd_ptr + 4*(i*dest->uv_stride+j),
+                                                             dest->y_stride,
+                                                             dest->uv_stride,
+                                                             &cm->rtcd.variance);
+                }
+                else
+                {
+                    multiframe_quality_enhance_block(16,
+                                                     qcurr,
+                                                     qprev,
+                                                     y_ptr,
+                                                     u_ptr,
+                                                     v_ptr,
+                                                     show->y_stride,
+                                                     show->uv_stride,
+                                                     yd_ptr,
+                                                     ud_ptr,
+                                                     vd_ptr,
+                                                     dest->y_stride,
+                                                     dest->uv_stride,
+                                                     &cm->rtcd.variance);
+
+                }
+            }
+            else
+            {
+                vp8_recon_copy16x16(y_ptr, show->y_stride, yd_ptr, dest->y_stride);
+                vp8_recon_copy8x8(u_ptr, show->uv_stride, ud_ptr, dest->uv_stride);
+                vp8_recon_copy8x8(v_ptr, show->uv_stride, vd_ptr, dest->uv_stride);
+            }
+            y_ptr += 16;
+            u_ptr += 8;
+            v_ptr += 8;
+            yd_ptr += 16;
+            ud_ptr += 8;
+            vd_ptr += 8;
+            mode_info_context++;     /* step to next MB */
+        }
+
+        y_ptr += show->y_stride  * 16 - 16 * cm->mb_cols;
+        u_ptr += show->uv_stride *  8 - 8 * cm->mb_cols;
+        v_ptr += show->uv_stride *  8 - 8 * cm->mb_cols;
+        yd_ptr += dest->y_stride  * 16 - 16 * cm->mb_cols;
+        ud_ptr += dest->uv_stride *  8 - 8 * cm->mb_cols;
+        vd_ptr += dest->uv_stride *  8 - 8 * cm->mb_cols;
+
+        mode_info_context++;         /* Skip border mb */
+    }
+}
 
 int vp8_post_proc_frame(VP8_COMMON *oci, YV12_BUFFER_CONFIG *dest, vp8_ppflags_t *ppflags)
 {
@@ -699,27 +934,75 @@ int vp8_post_proc_frame(VP8_COMMON *oci, YV12_BUFFER_CONFIG *dest, vp8_ppflags_t
         dest->y_width = oci->Width;
         dest->y_height = oci->Height;
         dest->uv_height = dest->y_height / 2;
+        oci->postproc_state.last_base_qindex = oci->base_qindex;
         return 0;
+    }
 
+    /* Allocate post_proc_buffer_int if needed */
+    if ((flags & VP8D_MFQE) && !oci->post_proc_buffer_int_used)
+    {
+        if ((flags & VP8D_DEBLOCK) || (flags & VP8D_DEMACROBLOCK))
+        {
+            int width = (oci->Width + 15) & ~15;
+            int height = (oci->Height + 15) & ~15;
+
+            if (vp8_yv12_alloc_frame_buffer(&oci->post_proc_buffer_int,
+                                            width, height, VP8BORDERINPIXELS))
+                vpx_internal_error(&oci->error, VPX_CODEC_MEM_ERROR,
+                                   "Failed to allocate MFQE framebuffer");
+
+            oci->post_proc_buffer_int_used = 1;
+
+            // insure that postproc is set to all 0's so that post proc
+            // doesn't pull random data in from edge
+            vpx_memset((&oci->post_proc_buffer_int)->buffer_alloc,126,(&oci->post_proc_buffer)->frame_size);
+
+        }
     }
 
 #if ARCH_X86||ARCH_X86_64
     vpx_reset_mmx_state();
 #endif
 
-    if (flags & VP8D_DEMACROBLOCK)
+    if ((flags & VP8D_MFQE) &&
+         oci->current_video_frame >= 2 &&
+         oci->base_qindex - oci->postproc_state.last_base_qindex >= 10)
+    {
+        vp8_multiframe_quality_enhance(oci);
+        if (((flags & VP8D_DEBLOCK) || (flags & VP8D_DEMACROBLOCK)) &&
+            oci->post_proc_buffer_int_used)
+        {
+            vp8_yv12_copy_frame_ptr(&oci->post_proc_buffer, &oci->post_proc_buffer_int);
+            if (flags & VP8D_DEMACROBLOCK)
+            {
+                vp8_deblock_and_de_macro_block(&oci->post_proc_buffer_int, &oci->post_proc_buffer,
+                                               q + (deblock_level - 5) * 10, 1, 0, RTCD_VTABLE(oci));
+            }
+            else if (flags & VP8D_DEBLOCK)
+            {
+                vp8_deblock(&oci->post_proc_buffer_int, &oci->post_proc_buffer,
+                            q, 1, 0, RTCD_VTABLE(oci));
+            }
+        }
+        /* Move partially towards the base q of the previous frame */
+        oci->postproc_state.last_base_qindex = (3*oci->postproc_state.last_base_qindex + oci->base_qindex)>>2;
+    }
+    else if (flags & VP8D_DEMACROBLOCK)
     {
         vp8_deblock_and_de_macro_block(oci->frame_to_show, &oci->post_proc_buffer,
                                        q + (deblock_level - 5) * 10, 1, 0, RTCD_VTABLE(oci));
+        oci->postproc_state.last_base_qindex = oci->base_qindex;
     }
     else if (flags & VP8D_DEBLOCK)
     {
         vp8_deblock(oci->frame_to_show, &oci->post_proc_buffer,
                     q, 1, 0, RTCD_VTABLE(oci));
+        oci->postproc_state.last_base_qindex = oci->base_qindex;
     }
     else
     {
         vp8_yv12_copy_frame_ptr(oci->frame_to_show, &oci->post_proc_buffer);
+        oci->postproc_state.last_base_qindex = oci->base_qindex;
     }
 
     if (flags & VP8D_ADDNOISE)

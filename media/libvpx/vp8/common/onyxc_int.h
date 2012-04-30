@@ -19,9 +19,11 @@
 #include "entropy.h"
 #include "idct.h"
 #include "recon.h"
+#include "variance.h"
 #if CONFIG_POSTPROC
 #include "postproc.h"
 #endif
+#include "dequantize.h"
 
 /*#ifdef PACKET_TESTING*/
 #include "header.h"
@@ -73,10 +75,12 @@ typedef enum
 typedef struct VP8_COMMON_RTCD
 {
 #if CONFIG_RUNTIME_CPU_DETECT
+    vp8_dequant_rtcd_vtable_t        dequant;
     vp8_idct_rtcd_vtable_t        idct;
     vp8_recon_rtcd_vtable_t       recon;
     vp8_subpix_rtcd_vtable_t      subpix;
     vp8_loopfilter_rtcd_vtable_t  loopfilter;
+    vp8_variance_rtcd_vtable_t    variance;
 #if CONFIG_POSTPROC
     vp8_postproc_rtcd_vtable_t    postproc;
 #endif
@@ -91,9 +95,9 @@ typedef struct VP8Common
 {
     struct vpx_internal_error_info  error;
 
-    DECLARE_ALIGNED(16, short, Y1dequant[QINDEX_RANGE][16]);
-    DECLARE_ALIGNED(16, short, Y2dequant[QINDEX_RANGE][16]);
-    DECLARE_ALIGNED(16, short, UVdequant[QINDEX_RANGE][16]);
+    DECLARE_ALIGNED(16, short, Y1dequant[QINDEX_RANGE][2]);
+    DECLARE_ALIGNED(16, short, Y2dequant[QINDEX_RANGE][2]);
+    DECLARE_ALIGNED(16, short, UVdequant[QINDEX_RANGE][2]);
 
     int Width;
     int Height;
@@ -112,6 +116,8 @@ typedef struct VP8Common
     YV12_BUFFER_CONFIG post_proc_buffer;
     YV12_BUFFER_CONFIG temp_scale_frame;
 
+    YV12_BUFFER_CONFIG post_proc_buffer_int;
+    int post_proc_buffer_int_used;
 
     FRAME_TYPE last_frame_type;  /* Save last frame's frame type for motion search. */
     FRAME_TYPE frame_type;

@@ -11,11 +11,11 @@
 
 #include "vpx_config.h"
 #include "vpx_ports/x86.h"
-#include "vp8/common/g_common.h"
 #include "vp8/common/subpixel.h"
 #include "vp8/common/loopfilter.h"
 #include "vp8/common/recon.h"
 #include "vp8/common/idct.h"
+#include "vp8/common/variance.h"
 #include "vp8/common/pragmas.h"
 #include "vp8/common/onyxc_int.h"
 
@@ -37,15 +37,15 @@ void vp8_arch_x86_common_init(VP8_COMMON *ctx)
 
     if (flags & HAS_MMX)
     {
-        rtcd->idct.idct1        = vp8_short_idct4x4llm_1_mmx;
+        rtcd->dequant.block               = vp8_dequantize_b_mmx;
+        rtcd->dequant.idct_add            = vp8_dequant_idct_add_mmx;
+        rtcd->dequant.idct_add_y_block    = vp8_dequant_idct_add_y_block_mmx;
+        rtcd->dequant.idct_add_uv_block   = vp8_dequant_idct_add_uv_block_mmx;
+
         rtcd->idct.idct16       = vp8_short_idct4x4llm_mmx;
         rtcd->idct.idct1_scalar_add = vp8_dc_only_idct_add_mmx;
         rtcd->idct.iwalsh16     = vp8_short_inv_walsh4x4_mmx;
-        rtcd->idct.iwalsh1     = vp8_short_inv_walsh4x4_1_mmx;
 
-
-
-        rtcd->recon.recon       = vp8_recon_b_mmx;
         rtcd->recon.copy8x8     = vp8_copy_mem8x8_mmx;
         rtcd->recon.copy8x4     = vp8_copy_mem8x4_mmx;
         rtcd->recon.copy16x16   = vp8_copy_mem16x16_mmx;
@@ -68,6 +68,33 @@ void vp8_arch_x86_common_init(VP8_COMMON *ctx)
         rtcd->loopfilter.simple_mb_h = vp8_loop_filter_simple_horizontal_edge_mmx;
         rtcd->loopfilter.simple_b_h  = vp8_loop_filter_bhs_mmx;
 
+        rtcd->variance.sad16x16              = vp8_sad16x16_mmx;
+        rtcd->variance.sad16x8               = vp8_sad16x8_mmx;
+        rtcd->variance.sad8x16               = vp8_sad8x16_mmx;
+        rtcd->variance.sad8x8                = vp8_sad8x8_mmx;
+        rtcd->variance.sad4x4                = vp8_sad4x4_mmx;
+
+        rtcd->variance.var4x4                = vp8_variance4x4_mmx;
+        rtcd->variance.var8x8                = vp8_variance8x8_mmx;
+        rtcd->variance.var8x16               = vp8_variance8x16_mmx;
+        rtcd->variance.var16x8               = vp8_variance16x8_mmx;
+        rtcd->variance.var16x16              = vp8_variance16x16_mmx;
+
+        rtcd->variance.subpixvar4x4          = vp8_sub_pixel_variance4x4_mmx;
+        rtcd->variance.subpixvar8x8          = vp8_sub_pixel_variance8x8_mmx;
+        rtcd->variance.subpixvar8x16         = vp8_sub_pixel_variance8x16_mmx;
+        rtcd->variance.subpixvar16x8         = vp8_sub_pixel_variance16x8_mmx;
+        rtcd->variance.subpixvar16x16        = vp8_sub_pixel_variance16x16_mmx;
+        rtcd->variance.halfpixvar16x16_h     = vp8_variance_halfpixvar16x16_h_mmx;
+        rtcd->variance.halfpixvar16x16_v     = vp8_variance_halfpixvar16x16_v_mmx;
+        rtcd->variance.halfpixvar16x16_hv    = vp8_variance_halfpixvar16x16_hv_mmx;
+        rtcd->variance.subpixmse16x16        = vp8_sub_pixel_mse16x16_mmx;
+
+        rtcd->variance.mse16x16              = vp8_mse16x16_mmx;
+        rtcd->variance.getmbss               = vp8_get_mb_ss_mmx;
+
+        rtcd->variance.get4x4sse_cs          = vp8_get4x4sse_cs_mmx;
+
 #if CONFIG_POSTPROC
         rtcd->postproc.down        = vp8_mbpost_proc_down_mmx;
         /*rtcd->postproc.across      = vp8_mbpost_proc_across_ip_c;*/
@@ -81,13 +108,18 @@ void vp8_arch_x86_common_init(VP8_COMMON *ctx)
 
     if (flags & HAS_SSE2)
     {
-        rtcd->recon.recon2      = vp8_recon2b_sse2;
-        rtcd->recon.recon4      = vp8_recon4b_sse2;
         rtcd->recon.copy16x16   = vp8_copy_mem16x16_sse2;
         rtcd->recon.build_intra_predictors_mbuv =
             vp8_build_intra_predictors_mbuv_sse2;
         rtcd->recon.build_intra_predictors_mbuv_s =
             vp8_build_intra_predictors_mbuv_s_sse2;
+        rtcd->recon.build_intra_predictors_mby =
+            vp8_build_intra_predictors_mby_sse2;
+        rtcd->recon.build_intra_predictors_mby_s =
+            vp8_build_intra_predictors_mby_s_sse2;
+
+        rtcd->dequant.idct_add_y_block    = vp8_dequant_idct_add_y_block_sse2;
+        rtcd->dequant.idct_add_uv_block   = vp8_dequant_idct_add_uv_block_sse2;
 
         rtcd->idct.iwalsh16     = vp8_short_inv_walsh4x4_sse2;
 
@@ -106,6 +138,41 @@ void vp8_arch_x86_common_init(VP8_COMMON *ctx)
         rtcd->loopfilter.simple_mb_h = vp8_loop_filter_simple_horizontal_edge_sse2;
         rtcd->loopfilter.simple_b_h  = vp8_loop_filter_bhs_sse2;
 
+        rtcd->variance.sad16x16              = vp8_sad16x16_wmt;
+        rtcd->variance.sad16x8               = vp8_sad16x8_wmt;
+        rtcd->variance.sad8x16               = vp8_sad8x16_wmt;
+        rtcd->variance.sad8x8                = vp8_sad8x8_wmt;
+        rtcd->variance.sad4x4                = vp8_sad4x4_wmt;
+        rtcd->variance.copy32xn              = vp8_copy32xn_sse2;
+
+        rtcd->variance.var4x4                = vp8_variance4x4_wmt;
+        rtcd->variance.var8x8                = vp8_variance8x8_wmt;
+        rtcd->variance.var8x16               = vp8_variance8x16_wmt;
+        rtcd->variance.var16x8               = vp8_variance16x8_wmt;
+        rtcd->variance.var16x16              = vp8_variance16x16_wmt;
+
+        rtcd->variance.subpixvar4x4          = vp8_sub_pixel_variance4x4_wmt;
+        rtcd->variance.subpixvar8x8          = vp8_sub_pixel_variance8x8_wmt;
+        rtcd->variance.subpixvar8x16         = vp8_sub_pixel_variance8x16_wmt;
+        rtcd->variance.subpixvar16x8         = vp8_sub_pixel_variance16x8_wmt;
+        rtcd->variance.subpixvar16x16        = vp8_sub_pixel_variance16x16_wmt;
+        rtcd->variance.halfpixvar16x16_h     = vp8_variance_halfpixvar16x16_h_wmt;
+        rtcd->variance.halfpixvar16x16_v     = vp8_variance_halfpixvar16x16_v_wmt;
+        rtcd->variance.halfpixvar16x16_hv    = vp8_variance_halfpixvar16x16_hv_wmt;
+        rtcd->variance.subpixmse16x16        = vp8_sub_pixel_mse16x16_wmt;
+
+        rtcd->variance.mse16x16              = vp8_mse16x16_wmt;
+        rtcd->variance.getmbss               = vp8_get_mb_ss_sse2;
+
+        /* rtcd->variance.get4x4sse_cs  not implemented for wmt */;
+
+#if CONFIG_INTERNAL_STATS
+#if ARCH_X86_64
+        rtcd->variance.ssimpf_8x8            = vp8_ssim_parms_8x8_sse2;
+        rtcd->variance.ssimpf_16x16          = vp8_ssim_parms_16x16_sse2;
+#endif
+#endif
+
 #if CONFIG_POSTPROC
         rtcd->postproc.down        = vp8_mbpost_proc_down_xmm;
         rtcd->postproc.across      = vp8_mbpost_proc_across_ip_xmm;
@@ -114,6 +181,26 @@ void vp8_arch_x86_common_init(VP8_COMMON *ctx)
 #endif
     }
 
+#endif
+
+#if HAVE_SSE3
+
+    if (flags & HAS_SSE3)
+    {
+        rtcd->variance.sad16x16              = vp8_sad16x16_sse3;
+        rtcd->variance.sad16x16x3            = vp8_sad16x16x3_sse3;
+        rtcd->variance.sad16x8x3             = vp8_sad16x8x3_sse3;
+        rtcd->variance.sad8x16x3             = vp8_sad8x16x3_sse3;
+        rtcd->variance.sad8x8x3              = vp8_sad8x8x3_sse3;
+        rtcd->variance.sad4x4x3              = vp8_sad4x4x3_sse3;
+        rtcd->variance.sad16x16x4d           = vp8_sad16x16x4d_sse3;
+        rtcd->variance.sad16x8x4d            = vp8_sad16x8x4d_sse3;
+        rtcd->variance.sad8x16x4d            = vp8_sad8x16x4d_sse3;
+        rtcd->variance.sad8x8x4d             = vp8_sad8x8x4d_sse3;
+        rtcd->variance.sad4x4x4d             = vp8_sad4x4x4d_sse3;
+        rtcd->variance.copy32xn              = vp8_copy32xn_sse3;
+
+    }
 #endif
 
 #if HAVE_SSSE3
@@ -131,6 +218,27 @@ void vp8_arch_x86_common_init(VP8_COMMON *ctx)
             vp8_build_intra_predictors_mbuv_ssse3;
         rtcd->recon.build_intra_predictors_mbuv_s =
             vp8_build_intra_predictors_mbuv_s_ssse3;
+        rtcd->recon.build_intra_predictors_mby =
+            vp8_build_intra_predictors_mby_ssse3;
+        rtcd->recon.build_intra_predictors_mby_s =
+            vp8_build_intra_predictors_mby_s_ssse3;
+
+        rtcd->variance.sad16x16x3            = vp8_sad16x16x3_ssse3;
+        rtcd->variance.sad16x8x3             = vp8_sad16x8x3_ssse3;
+
+        rtcd->variance.subpixvar16x8         = vp8_sub_pixel_variance16x8_ssse3;
+        rtcd->variance.subpixvar16x16        = vp8_sub_pixel_variance16x16_ssse3;
+    }
+#endif
+
+#if HAVE_SSE4_1
+    if (flags & HAS_SSE4_1)
+    {
+        rtcd->variance.sad16x16x8            = vp8_sad16x16x8_sse4;
+        rtcd->variance.sad16x8x8             = vp8_sad16x8x8_sse4;
+        rtcd->variance.sad8x16x8             = vp8_sad8x16x8_sse4;
+        rtcd->variance.sad8x8x8              = vp8_sad8x8x8_sse4;
+        rtcd->variance.sad4x4x8              = vp8_sad4x4x8_sse4;
     }
 #endif
 
