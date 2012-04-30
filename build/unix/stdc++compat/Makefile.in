@@ -15,6 +15,7 @@ HOST_LIBRARY_NAME = host_stdc++compat
 FORCE_STATIC_LIB= 1
 STL_FLAGS =
 NO_EXPAND_LIBS = 1
+NO_PROFILE_GUIDED_OPTIMIZE = 1
 
 CPPSRCS = \
   stdc++compat.cpp
