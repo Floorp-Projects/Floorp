@@ -473,6 +473,10 @@ protected:
   nsHTMLMediaElement* LookupMediaElementURITable(nsIURI* aURI);
 
   /**
+   * Shutdown and clear mDecoder and maintain associated invariants.
+   */
+  void ShutdownDecoder();
+  /**
    * Execute the initial steps of the load algorithm that ensure existing
    * loads are aborted, the element is emptied, and a new load ID is
    * created.
