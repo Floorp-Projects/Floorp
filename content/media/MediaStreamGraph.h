@@ -111,6 +111,7 @@ public:
 };
 
 class MediaStreamGraphImpl;
+class SourceMediaStream;
 
 /**
  * A stream of synchronized audio and video data. All (not blocked) streams
@@ -215,6 +216,8 @@ public:
   bool IsFinished() { return mMainThreadFinished; }
 
   friend class MediaStreamGraphImpl;
+
+  virtual SourceMediaStream* AsSourceStream() { return nsnull; }
 
   // media graph thread only
   void Init();
@@ -343,6 +346,119 @@ protected:
 };
 
 /**
+ * This is a stream into which a decoder can write audio and video.
+ *
+ * Audio and video can be written on any thread, but you probably want to
+ * always write from the same thread to avoid unexpected interleavings.
+ */
+class SourceMediaStream : public MediaStream {
+public:
+  SourceMediaStream(nsDOMMediaStream* aWrapper) :
+    MediaStream(aWrapper), mMutex("mozilla::media::SourceMediaStream"),
+    mUpdateKnownTracksTime(0), mUpdateFinished(false)
+  {}
+
+  virtual SourceMediaStream* AsSourceStream() { return this; }
+
+  // Call these on any thread.
+  /**
+   * Add a new track to the stream starting at the given base time (which
+   * must be greater than or equal to the last time passed to
+   * AdvanceKnownTracksTime). Takes ownership of aSegment. aSegment should
+   * contain data starting after aStart.
+   */
+  void AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
+                MediaSegment* aSegment);
+  /**
+   * Append media data to a track. Ownership of aSegment remains with the caller,
+   * but aSegment is emptied.
+   */
+  void AppendToTrack(TrackID aID, MediaSegment* aSegment);
+  /**
+   * Returns true if the buffer currently has enough data.
+   */
+  bool HaveEnoughBuffered(TrackID aID);
+  /**
+   * Ensures that aSignalRunnable will be dispatched to aSignalThread
+   * when we don't have enough buffered data in the track (which could be
+   * immediately).
+   */
+  void DispatchWhenNotEnoughBuffered(TrackID aID,
+      nsIThread* aSignalThread, nsIRunnable* aSignalRunnable);
+  /**
+   * Indicate that a track has ended. Do not do any more API calls
+   * affecting this track.
+   */
+  void EndTrack(TrackID aID);
+  /**
+   * Indicate that no tracks will be added starting before time aKnownTime.
+   * aKnownTime must be >= its value at the last call to AdvanceKnownTracksTime.
+   */
+  void AdvanceKnownTracksTime(StreamTime aKnownTime);
+  /**
+   * Indicate that this stream should enter the "finished" state. All tracks
+   * must have been ended via EndTrack. The finish time of the stream is
+   * when all tracks have ended and when latest time sent to
+   * AdvanceKnownTracksTime() has been reached.
+   */
+  void Finish();
+
+  // XXX need a Reset API
+
+  friend class MediaStreamGraph;
+  friend class MediaStreamGraphImpl;
+
+  struct ThreadAndRunnable {
+    void Init(nsIThread* aThread, nsIRunnable* aRunnable)
+    {
+      mThread = aThread;
+      mRunnable = aRunnable;
+    }
+
+    nsCOMPtr<nsIThread> mThread;
+    nsCOMPtr<nsIRunnable> mRunnable;
+  };
+  enum TrackCommands {
+    TRACK_CREATE = 0x01,
+    TRACK_END = 0x02
+  };
+  /**
+   * Data for each track that hasn't ended.
+   */
+  struct TrackData {
+    TrackID mID;
+    TrackRate mRate;
+    TrackTicks mStart;
+    // Each time the track updates are flushed to the media graph thread,
+    // this is cleared.
+    PRUint32 mCommands;
+    // Each time the track updates are flushed to the media graph thread,
+    // the segment buffer is emptied.
+    nsAutoPtr<MediaSegment> mData;
+    nsTArray<ThreadAndRunnable> mDispatchWhenNotEnough;
+    bool mHaveEnough;
+  };
+
+protected:
+  TrackData* FindDataForTrack(TrackID aID)
+  {
+    for (PRUint32 i = 0; i < mUpdateTracks.Length(); ++i) {
+      if (mUpdateTracks[i].mID == aID) {
+        return &mUpdateTracks[i];
+      }
+    }
+    NS_ERROR("Bad track ID!");
+    return nsnull;
+  }
+
+  Mutex mMutex;
+  // protected by mMutex
+  StreamTime mUpdateKnownTracksTime;
+  nsTArray<TrackData> mUpdateTracks;
+  bool mUpdateFinished;
+};
+
+/**
  * Initially, at least, we will have a singleton MediaStreamGraph per
  * process.
  */
@@ -351,6 +467,11 @@ public:
   // Main thread only
   static MediaStreamGraph* GetInstance();
   // Control API.
+  /**
+   * Create a stream that a media decoder (or some other source of
+   * media data, such as a camera) can write to.
+   */
+  SourceMediaStream* CreateInputStream(nsDOMMediaStream* aWrapper);
   /**
    * Returns the number of graph updates sent. This can be used to track
    * whether a given update has been processed by the graph thread and reflected
